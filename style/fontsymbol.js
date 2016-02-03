@@ -23,6 +23,7 @@ ol.style.FontSymbol = function(opt_options)
 	if (options.stroke) strokeWidth = options.stroke.getWidth();
 	ol.style.RegularShape.call (this,{ radius: options.radius + strokeWidth, fill:opt_options.fill });
 
+	this.fontSize_ = options.fontSize || 1;
 	this.stroke_ = options.stroke;
 	this.fill_ = options.fill;
 	this.radius_ = options.radius;
@@ -269,7 +270,7 @@ ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, 
 
 	// Draw the symbol
 	if (this.glyph_.char)
-	{	context.font = 2*tr.fac*this.radius_+"px "+this.glyph_.font;
+	{	context.font = (2*tr.fac*this.radius_*this.fontSize_)+"px "+this.glyph_.font;
 		context.strokeStyle = context.fillStyle;
 		context.lineWidth = renderOptions.strokeWidth * (this.form_ == "none" ? 2:1);
 		context.fillStyle = ol.color.asString(this.stroke_.getColor());

@@ -123,6 +123,9 @@
 				radius: <input id="radius" type="number" style="width:4em" value=15 onchange="vector.changed();" />
 			</li>
 			<li>
+				fontSize: <input id="fontsize" type="number" style="width:4em" value=1 onchange="vector.changed();" step="0.1" />
+			</li>
+			<li>
 				<input id="offset" type="checkbox" onchange="vector.changed();" /><label for="offset"> offset</label>
 			</li>
 			<li>
@@ -195,6 +198,7 @@
 						{	form: $("#form").val(), //"hexagone", 
 							gradient: $("#gradient").prop('checked'),
 							glyph: theGlyph,//car[Math.floor(Math.random()*car.length)], 
+							fontSize: Number($("#fontsize").val()),
 							radius: Number($("#radius").val()), 
 							//offsetX: -15,
 							offsetY: $("#offset").prop('checked') ? -Number($("#radius").val()):0 ,
