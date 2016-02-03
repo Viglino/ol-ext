@@ -1,0 +1,185 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+
+	Copyright (c) 2015 Jean-Marc VIGLINO,
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: Overview map control</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+
+	<link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	<!-- http://openlayers.org/en/v3.2.0/build/ol.js -->
+	<!-- http://openlayers.org/en/v3.2.0/build/ol-debug.js -->
+
+	<link rel="stylesheet" href="../control/layerswitchercontrol.css" />
+	<script type="text/javascript" src="../control/layerswitchercontrol.js"></script>
+
+	<link rel="stylesheet" href="../control/overview.css" />
+	<script type="text/javascript" src="../control/overview.js"></script>
+
+
+	<link rel="stylesheet" href="style.css" />
+
+	<style>
+		.oview {
+			color: #fff;
+			background: #369;
+			padding: 0.5em;
+			display: inline-block;
+			margin-right: 0.5em;
+		}
+	</style>
+</head>
+<body>
+	<a href="https://github.com/Viglino/Geoportail-KISS"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<h1>OL3-ext: Overview map control</h1>
+	<div class="info">
+		The <i>ol.control.Overview</i> create an overview similar to the <i>ol.control.overview</i>.
+		<br/>
+		The main differences is that you can limit the zoom level on the overview and force the overview to be oriented north.
+		<ul>
+		<li>
+		Limiting the min zoom of the overview will magnify the map.
+		</li>
+		<li>
+		Limiting the max zoom avoid to zoom in the overview and draw the position as a point on it when extent is too small.
+		</li>
+		<li>
+		You can use the <i>style</i> option choose the style of the box drawn on the overview. 
+		If the box is too small a point will be drawn instead (ol.style.Image of the style).
+		</li>
+		</ul>
+		Click on the overview map to move the center of the map to that point. 
+		The <i>elasticPan</i> option move the map with an elastic animation.
+	</div>
+
+	<!-- the map -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div>
+		<div class="oview">
+			External overview
+			<div class="overview" style="width:150px; height:150px;"></div>
+		</div>
+	</div>
+	
+	<div class="options">
+		Zoom min: <input id="minzoom" type="number" value="8" />
+		<br />
+		Zoom max: <input id="maxzoom" type="number" value="12" />
+		<br />
+		Layer: 
+		<select onchange="setOVLayer(this)">
+			<option value="0">OSM</option>
+			<option value="1" selected>Watercolor</option>
+		</select>
+		<br />
+		<input id="rotate" type="checkbox" /><label for="rotate"> Rotate overview map</label>
+		<br />
+		Position:
+		<select id="align" onchange="ov.setPosition(this.value)">
+			<option value="bottom-left">bottom-left</option>
+			<option value="bottom-right">bottom-right</option>
+			<option value="top-left">top-left</option>
+			<option value="top-right">top-right</option>
+		</select>
+	</div>
+
+	<script type="text/javascript">
+		// The map
+		var map=new ol.Map
+			({
+				target: 'map',
+				view: new ol.View
+				({	zoom: 15,
+					center: [270148, 6247782]
+				}),
+				layers: [ new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }) ]
+			});
+
+		// Layers for the overview
+		var layers2 =
+		[	new ol.layer.Tile({	source: new ol.source.OSM()	}),
+			new ol.layer.Tile(
+				{	source: new ol.source.Stamen({
+					layer: 'toner'
+				  })
+				})
+		];
+
+		// New control on the map
+		var ov = new ol.control.Overview(
+			{	layers: layers2,
+				minZoom: $("#minzoom").val(),
+				maxZoom: $("#maxzoom").val(),
+				rotation: $("#rotate").prop("checked"),
+				align: $("#align").val(),
+				panAnimation: true,
+				elasticPan: true
+			});
+		map.addControl(ov);
+
+		// New control outside the map (styled)
+		var ov2 = new ol.control.Overview(
+			{	element: ".overview",
+				layers: layers2,
+				minZoom: $("#minzoom").val(), maxZoom: $("#maxzoom").val(),
+				rotation: $("#rotate").prop("checked"),
+				style: [new ol.style.Style(
+						{
+							image: new ol.style.Circle(
+							{
+								fill: new ol.style.Fill({
+									color: 'rgba(0,255,102, 1)'
+								}),
+								stroke: new ol.style.Stroke(
+								{
+									width: 7,
+									color: 'rgba(0,255,102, 0.8)'
+								}),
+								radius: 5
+							}),
+							stroke: new ol.style.Stroke(
+							{
+								width: 3,
+								color: "rgba(0,255,102,1)",
+								lineDash: [5, 5]
+							})
+						}
+					)]
+			});
+		map.addControl(ov2);
+
+		// Options changes
+		function setOVLayer (e)
+		{	ov.getOverviewMap().getLayers().getArray()[$(e).val()].setVisible(true);
+			ov.getOverviewMap().getLayers().getArray()[1-$(e).val()].setVisible(false);
+		}
+		$("#rotate").on("change", function ()
+		{	ov.rotation = ov2.rotation=$("#rotate").prop("checked");
+			ov.setView();
+			ov2.setView();
+		});
+		$("#minzoom").on("change", function ()
+		{	ov.minZoom = ov2.minZoom=Number($("#minzoom").val());
+			ov.setView();
+			ov2.setView();
+		});
+		$("#maxzoom").on("change", function ()
+		{	ov.maxZoom = ov2.maxZoom=Number($("#maxzoom").val());
+			ov.setView();
+			ov2.setView();
+		});
+	</script>
+
+</body>
+</html>

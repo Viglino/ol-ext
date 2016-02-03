@@ -1,0 +1,98 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: Layerswitcher</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- OL3 -->
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	<!-- http://openlayers.org/en/v3.2.0/build/ol.js -->
+	<!-- http://openlayers.org/en/v3.2.0/build/ol-debug.js -->
+	
+	<!-- Control -->
+	<link rel="stylesheet" href="../control/layerpopupcontrol.css" />
+	<script type="text/javascript" src="../control/layerswitchercontrol.js"></script>
+	<script type="text/javascript" src="../control/layerpopupcontrol.js"></script>
+
+	<link rel="stylesheet" href="style.css" />
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/Geoportail-KISS"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<h1>OL3-ext: LayerSwitcher control</h1>
+	<p class="info">
+		Add a simple layer switcher to the map.
+	</p>
+
+	<!-- DIV pour la carte -->
+	<div id="map" style="width:600px; height:400px;"></div>
+	
+	<script type="text/javascript">
+
+	// Two base layers
+	var stamen = new ol.layer.Tile(
+				{	title: "Watercolor",
+					baseLayer: true,
+					source: new ol.source.Stamen({
+						layer: 'watercolor'
+					})
+				});
+	var stamen2 = new ol.layer.Tile(
+				{	title: "Toner",
+					baseLayer: true,
+					visible: false,
+					source: new ol.source.Stamen({
+						layer: 'toner'
+					})
+				});
+	var osm = new ol.layer.Tile(
+				{	title: "OSM",
+					baseLayer: true,
+					source: new ol.source.OSM(),
+					visible: false
+				});
+
+	// GeoJSON layer with a preview attribute
+	var vectorSource = new ol.source.Vector(
+	{	url: 'data/fond_guerre.geojson',
+		projection: 'EPSG:3857',
+		format: new ol.format.GeoJSON(),
+		attributions: [new ol.Attribution({ html: "&copy; <a href='https://www.data.gouv.fr/fr/datasets/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire/'>data.gouv.fr</a>" })],
+		logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+	});
+
+	var vector = new ol.layer.Vector(
+	{	name: '1914-18',
+		preview: "http://www.culture.gouv.fr/Wave/image/memoire/2445/sap40_z0004141_v.jpg",
+		source: vectorSource
+	});
+
+
+	// The map
+	var map = new ol.Map
+		({	target: 'map',
+			view: new ol.View
+			({	zoom: 6,
+				center: [173664, 6166327]
+			}),
+			controls: ol.control.defaults().extend
+			([	new ol.control.LayerPopup(),
+			]),
+			layers: [stamen, stamen2, osm, vector]
+		});
+
+	</script>
+	
+</body>
+</html>

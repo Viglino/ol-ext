@@ -1,0 +1,147 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: Layerswitcher</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- OL3 -->
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	<!-- http://openlayers.org/en/v3.2.0/build/ol.js -->
+	<!-- http://openlayers.org/en/v3.2.0/build/ol-debug.js -->
+	
+	<!-- Control -->
+	<link rel="stylesheet" href="../control/layerswitchercontrol.css" />
+	<script type="text/javascript" src="../control/layerswitchercontrol.js"></script>
+
+	<link rel="stylesheet" href="style.css" />
+	<style>
+		.hideOpacity .layerswitcher-opacity 
+		{	display:none;
+		}
+	</style>
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<h1>OL3-ext: LayerSwitcher control</h1>
+	<div class="info">
+		Add a layer switcher inside or outside the map.
+		<ul>
+		<li>
+		The <i>title</i> or <i>name</i> layer's property is used to named the ol.layer in the switcher.
+		</li>
+		<li>
+		It shows use of the <i>displayInLayerSwitcher</i> layer's property to cause it to not display in the LayerSwitcher
+		</li>
+		<li>
+		The <i>baseLayer</i> layer's property manage exclusive visibility on layers (only one base layer is shown at a time).
+		</li>
+		<li>
+		The <i>allwaysOnTop</i> layer's property make a layer to stay on top of others.
+		</li>
+		<li>
+		ol.layer.Group are grouped together and can be managed all together (visibility/opacity/ordering).
+		</li>
+		<li>
+		The <i>openInLayerSwitcher</i> property of an ol.layer.Group is used to code the visibility of the sublayers.
+		</li>
+		<li>
+		The <i>show_progress</i> option display a progress bar on tiled layers (only once per map).
+		</li>
+		</ul>
+	</div>
+
+	<!-- Map div -->
+	<div id="map" style="width:600px; height:400px;"></div>
+	<div class="layerSwitcher"><b>External layer switcher</b></div>
+
+	<div class="options">
+		<h2>Options:</h2>
+		<input id="dils" type="checkbox" onchange="displayInLayerSwitcher(this.checked);"/>
+		<label for="dils">display "Pirate Map" in LayerSwitcher (zoom out to make it visible).</label>
+		<br/>
+		<input id="opb" type="checkbox" onchange="$('body').toggleClass('hideOpacity');" />
+		<label for="opb">hide opacity bar</label>
+	</div>
+	
+	<script type="text/javascript">
+
+	// A group layer for base layers
+	var baseLayers = new ol.layer.Group(
+		{   title: 'Base Layers',
+			openInLayerSwitcher: true,
+			layers:
+			[	new ol.layer.Tile(
+				{	title: "Watercolor",
+					baseLayer: true,
+					source: new ol.source.Stamen({
+					layer: 'watercolor'
+				  })
+				}),
+				new ol.layer.Tile(
+				{	title: "OSM",
+					baseLayer: true,
+					source: new ol.source.OSM(),
+					visible: false
+				})
+			]
+		});
+	// A layer with minResolution (hidden on hight zoom level)
+	var mapbox = new ol.layer.Tile(
+		{	title: "Pirate Map", 
+			displayInLayerSwitcher: false,
+			minResolution: 1223,
+    		source: new ol.source.XYZ(
+				{	attributions: [
+						new ol.Attribution({ html: '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' }),
+						ol.source.OSM.ATTRIBUTION
+					],
+					url: 'http://{a-d}.tiles.mapbox.com/v3/aj.Sketchy2/{z}/{x}/{y}.png'
+    			})
+		});
+	// An overlay transparent layer
+	var labels = new ol.layer.Tile(
+				{	title: "Labels (on top)",
+					allwaysOnTop: true,
+					source: new ol.source.Stamen({ layer: 'terrain-labels' })
+				});
+	
+	// The Map
+	var map = new ol.Map
+		({	target: 'map',
+			view: new ol.View
+			({	zoom: 7,
+				center: [-8495927, 4760741]
+			}),
+			controls: ol.control.defaults().extend
+			([	// Add a new Layerswitcher to the map
+				new ol.control.LayerSwitcher(),
+				// Add a layer switcher outside the map
+				new ol.control.LayerSwitcher({ target:$(".layerSwitcher").get(0), show_progress:true })
+			]),
+			layers: [ baseLayers, mapbox, labels ]
+		});
+
+	// Insert mapbox layer in layer switcher
+	function displayInLayerSwitcher(b)
+	{	mapbox.set('displayInLayerSwitcher', b);
+	}
+	
+	// Get options values
+	if ($("#opb").prop("checked")) $('body').addClass('hideOpacity');
+	if ($("#dils").prop("checked")) displayInLayerSwitcher(true);
+
+	</script>
+	
+</body>
+</html>

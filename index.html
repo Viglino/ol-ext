@@ -1,0 +1,242 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Ol3-ext</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="description" content="Cool extensions to use with OL3." />
+	<meta name="keywords" content="ol3,extension,animation,layer,selection,control,openlayers" />
+	
+<style>
+	body
+	{	font-family: 'Lucida Grande',Verdana,Geneva,Lucida,Arial,Helvetica,sans-serif;
+		font-size: 16px;
+		margin: 0.5em;
+	}
+	a 
+	{	color: #337ab7;
+		text-decoration: none;
+	}
+	.navbar 
+	{	top:0; left: 0;
+		right: 0;
+		width:100%;
+		position: fixed;
+		z-index: 0;
+		background-color: #1f6b75;
+		color: white;
+	}
+	.navbar img
+	{	height:1.5em;
+		vertical-align: middle;
+	}
+	.navbar h1
+	{	display: inline-block;
+		font-size:1.5em;
+		margin: 0.5em;
+	}
+	h2
+	{	clear:both;
+		margin:1em 0 0;
+	}
+	.container
+	{	width:1170px;
+		max-width: 100%;
+		margin:auto;
+	}
+
+	.small, small 
+	{	font-size: 0.85em;
+	}
+
+	#examples
+	{	margin-top:4em;
+	}
+	#examples > div
+	{	box-sizing: border-box;
+		display: inline-block;
+		float: left;
+		padding: 0.5em;
+		width: 33.3333%;
+	}
+	@media (max-width: 1500px) 
+	{	#examples > div
+		{	width: 50%;
+		}
+	}
+	@media (max-width: 900px) 
+	{	#examples > div
+		{	width: 100%;
+		}
+	}
+
+	.example,
+	.desc 
+	{	background-color: #f5f5f5;
+		margin: 0;
+		overflow: auto;
+		padding: 10px;
+	}
+	#examples > div.desc
+	{	margin:-0.5em 0 1em;
+		padding:1em;
+		width:100%;
+		box-sizing: content-box;
+	}
+	
+	.example:hover
+	{	background-color: #ddd;
+	}
+	.example p.description 
+	{	font-size: 0.9em;
+		margin: 5px 0;
+	}
+	.example p.tag
+	{	font-size: 0.8em;
+		color:#693;
+		margin: 0;
+	}
+	.example img
+	{	display:none;
+		margin:auto;
+		float:right;
+	}
+
+	
+</style>
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<script type="text/javascript">
+		$(document).ready(function()
+		{	$(".example").wrap($("<div>"));
+
+			$(".example a.mainlink").each(function()
+			{	var href = /[^\/]*$/.exec( $(this).attr('href') ).pop();
+				$("<small>").text("("+href+")")
+						.appendTo($(this));
+				$("<img>").attr('src',"img/"+href.replace('html','jpg'))
+					.appendTo($(this))
+					.load(function(e)
+					{	console.log(e)
+						$(this).show();
+					});
+			})
+
+			$('#keywords').on('keyup', function()
+			{	var s = new RegExp ( $(this).val() , "i");
+				var k = 0;
+				$(".example").each(function()
+				{	var text = $(this).text();
+					var t = s.test(text);
+					if (!t) 
+					{	$(this).parent().hide();
+					}
+					else 
+					{	k++;
+						$(this).parent().show();
+					}
+				});
+				$("#count").text("("+k+")");
+			});
+		});
+	</script>
+</head>
+
+<body>
+	<header role="navigation" class="navbar navbar-fixed-top">
+		<div class="container">
+			<h1><img src="http://openlayers.org/en/master/examples/resources/logo-70x70.png">&nbsp;OL3-ext: Extensions for OpenLayers 3</h1>
+			<input type="text" placeholder="Search" class="search-query" id="keywords" name="q">
+			<span id="count"></span>
+		</div>
+	</header>
+	<div id="examples">
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+	
+	<div class="desc">
+		Cool extensions for OpenLayers 3 (OL3).
+		<br />
+		<br />
+		If you like this, you may like <a href="http://viglino.github.io/OL3-AnimatedCluster/">OL3-AnimatedCluster</a>
+	</div>
+
+	<h2>Canvas</h2>
+
+		<div class="example">
+			<a class="mainlink" href="examples/map.canvas.control.html">
+				<strong>Canvas control</strong><br>
+			</a>
+			<p class="description">Example of canvas controls, ie. controls that are drawn on the canvas to use with export (jepg/png) functions.</p>
+			<p class="tag">control, canvas, scale line, attribution, title, export</p>
+		</div>
+
+	<h2>LayerSwitcher</h2>
+
+		<div class="example">
+			<a class="mainlink" href="examples/map.switcher.html">
+				<strong>Layer switcher control example</strong><br>
+			</a>
+			<p class="description">Example of a layer switcher control with visibility, opacity and ordering.</p>
+			<p class="tag">layerswitcher, control</p>
+		</div>
+
+		<div class="example">
+			<a class="mainlink" href="examples/map.switcher.image.html">
+				<strong>LayerSwitcher image</strong><br>
+			</a>
+			<p class="description">A simple layer switcher with image buttons.</p>
+			<p class="tag">layerswitcher, control, preview</p>
+		</div>
+
+		<div class="example">
+			<a class="mainlink" href="examples/map.switcher.popup.html">
+				<strong>LayerSwitcher popup</strong><br>
+			</a>
+			<p class="description">A simple layer switcher as a menu.</p>
+			<p class="tag">layerswitcher, control</p>
+		</div>
+	
+	<h2>Styles</h2>
+	
+		<div class="example">
+			<a class="mainlink" href="examples/map.style.font.html">
+				<strong>Font style</strong><br>
+			</a>
+			<p class="description">Draw points using an iconic font (font Awesome) gives you scalable vector icons that can instantly be customized (form, size, color, drop shadow) using attributes..</p>
+			<p class="tag">style, vector, font, fontawesome, fonticon</p>
+		</div>
+		
+		<div class="example">
+			<a class="mainlink" href="examples/map.style.photo.html">
+				<strong>Photo style</strong><br>
+			</a>
+			<p class="description">The ol.style.Photo is a style to show photos or images on a map.
+				The photos are drawn in a box and can be anchored.
+			</p>
+			<p class="tag">style, vector, photo</p>
+		</div>
+
+	<h2>Overview</h2>
+
+		<div class="example">
+			<a class="mainlink" href="examples/map.overview.html">
+				<strong>Overview map</strong><br>
+			</a>
+			<p class="description">An overview map with zoom limit and custom styles.</p>
+			<p class="tag">overview, control</p>
+		</div>
+	
+		<div class="example">
+			<a class="mainlink" href="examples/map.preview.html">
+				<strong>Preview of a layer</strong><br>
+			</a>
+			<p class="description">Show a preview of a layer.</p>
+			<p class="tag">layer, preview</p>
+		</div>
+	
+	</div>
+
+
+</body>
+</html>

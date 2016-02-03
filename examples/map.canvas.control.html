@@ -1,0 +1,153 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: canvas control</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<link rel="stylesheet" href="style.css" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- OL3 -->
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	<!-- http://openlayers.org/en/v3.2.0/build/ol.js -->
+	<!-- http://openlayers.org/en/v3.2.0/build/ol-debug.js -->
+	
+	<!-- controls -->
+	<script type="text/javascript" src="../control/canvasscalelinecontrol.js"></script>
+	<script type="text/javascript" src="../control/canvastitlecontrol.js"></script>
+	<script type="text/javascript" src="../control/canvasattributioncontrol.js"></script>
+
+	<!--jQuery export map plugin -->
+	<script type="text/javascript" src="../utils/jspdf.min.js"></script>
+	<script type="text/javascript" src="../utils/jqExportMap.js"></script>
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<h1>OL3-ext: canvas controls</h1>
+	<div class="info">
+		Canvas controls are controls drawn on the map canvas so they can be exported to JPEG / PNG images.
+		<ul><li>
+			<b>ol.control.CanvasScaleLine</b> is an ol.control.scaleLine that is drawn on the canevas.
+		</li><li>
+			<b>ol.control.CanvasAttribution</b> is an ol.control.attribution that is drawn on the canevas. 
+			The <i>setCanvas</i> function toggles beetween standard/canvas attribution
+		</li><li>
+			<b>ol.control.CanvasTitle</b> draw a title on the map. Use the style option to style the title.
+		</li><li>
+			<b>jqExportMap</b> is a jQuery plugin used to export the map as an image (PNG/JPEG) or as a PDF file 
+			(use <a href="https://github.com/MrRio/jsPDF">MrRio/jsPDF</a> lib).
+		</li></ul>
+	</div>
+
+	<!-- Map div -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options">
+		<h2>Options:</h2>
+		<ul><li>
+			Title of the map : <input id="title" value ="Title" />
+		</li><li>
+			Font: <select id="font" onchange="setControlStyle()">
+				<option value="serif">serif</option>
+				<option value="sans-serif">sans-serif</option>
+				<option value="monospace">monospace</option>
+				<option value="Comic Sans MS">Comic Sans MS</option>
+			</select>
+		</li><li>
+			<input id="italic" type="checkbox" onchange="setControlStyle()"/><label for="italic"> italic</label>
+			<input id="bold" type="checkbox" onchange="setControlStyle()"/><label for="bold"> bold</label>
+		</li><li>
+			Color: <select id="color" onchange="setControlStyle()">
+				<option value="black">black</option>
+				<option value="red">red</option>
+				<option value="green">green</option>
+				<option value="blue">blue</option>
+			</select>
+		</li><li>
+			<hr />
+			<input id="attribution" type="checkbox"  /><label for="attribution">Draw attribution on canvas</label>
+		</li></ul>
+	</div>
+	<div class="block">
+		<a id="export-jpg" class="btn" download="map.jpg" target="_new">
+			Export JPEG
+		</a>
+		<a id="export-png" class="btn" download="map.png" target="_new">
+			Export PNG
+		</a>
+		<a id="export-pdf" class="btn" download="map.pdf" data-margin="10" target="_new">
+			Export PDF
+		</a>
+	</div>
+
+	<script type="text/javascript">
+
+		// The map
+		var map = new ol.Map
+			({	target: 'map',
+				view: new ol.View
+				({	zoom: 14,
+					center: [270148, 6247782]
+				}),
+				controls: ol.control.defaults({ "attribution": false }),
+				layers: [new ol.layer.Tile(
+					{	name: "OSM",
+						source: new ol.source.OSM(),
+						visible: true
+					})]
+			});
+
+		// CanvasScaleLine control
+		var scaleLineControl = new ol.control.CanvasScaleLine();
+		map.addControl(scaleLineControl);
+				
+		// CanvasAttribution control
+		var attributionControl = new ol.control.CanvasAttribution();
+		map.addControl(attributionControl);
+		attributionControl.setCanvas($("#attribution").prop("checked"));
+
+		// CanvasTitle control
+		var titleControl = new ol.control.CanvasTitle();
+		map.addControl(titleControl);
+
+		// setStyle function: Change control style
+		function setControlStyle(c)
+		{	if (!c) 
+			{	setControlStyle(scaleLineControl);
+				setControlStyle(attributionControl);
+				setControlStyle(titleControl);
+				return;
+			}
+			c.setStyle (new ol.style.Style(
+					{	text: new ol.style.Text(
+						{	text: $("#title").val(),
+							font: ($("#italic").prop("checked")?"italic ":"") 
+								+ ($("#bold").prop("checked")?"bold ":"")
+								+ (c===titleControl?28:10)+"px "+$("#font").val(),
+							fill: new ol.style.Fill(
+								{	color: $("#color").val()
+								})
+						}),
+						stroke: new ol.style.Stroke({ width: 2, color: $("#color").val() })
+					})); 
+		}
+		setControlStyle();
+
+		// Handle propertie changes
+		$("#title").on("change", function () { titleControl.setTitle(this.value); });
+		$("#attribution").on("change", function () { attributionControl.setCanvas($(this).prop("checked")); });
+	</script>
+
+</body>
+</html>

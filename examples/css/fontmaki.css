@@ -1,0 +1,174 @@
+@font-face {
+  font-family: 'fontmaki';
+  src: url('../font/fontmaki.eot?66752613');
+  src: url('../font/fontmaki.eot?66752613#iefix') format('embedded-opentype'),
+       url('../font/fontmaki.woff?66752613') format('woff'),
+       url('../font/fontmaki.ttf?66752613') format('truetype'),
+       url('../font/fontmaki.svg?66752613#fontmaki') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+/* Chrome hack: SVG is rendered more smooth in Windozze. 100% magic, uncomment if you need it. */
+/* Note, that will break hinting! In other OS-es font will be not as sharp as it could be */
+/*
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  @font-face {
+    font-family: 'fontmaki';
+    src: url('../font/fontmaki.svg?66752613#fontmaki') format('svg');
+  }
+}
+*/
+ 
+ [class^="maki-"]:before, [class*=" maki-"]:before {
+  font-family: "fontmaki";
+  font-style: normal;
+  font-weight: normal;
+  speak: none;
+ 
+  display: inline-block;
+  text-decoration: inherit;
+  width: 1em;
+  margin-right: .2em;
+  text-align: center;
+  /* opacity: .8; */
+ 
+  /* For safety - reset parent styles, that can break glyph codes*/
+  font-variant: normal;
+  text-transform: none;
+ 
+  /* fix buttons height, for twitter bootstrap */
+  line-height: 1em;
+ 
+  /* Animation center compensation - margins should be symmetric */
+  /* remove if not needed */
+  margin-left: .2em;
+ 
+  /* you can be more comfortable with increased icons size */
+  /* font-size: 120%; */
+ 
+  /* Font smoothing. That was taken from TWBS */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+ 
+  /* Uncomment for 3D effect */
+  /* text-shadow: 1px 1px 1px rgba(127, 127, 127, 0.3); */
+}
+ 
+.maki-bicycle:before { content: '\e800'; } /* '' */
+.maki-building:before { content: '\e801'; } /* '' */
+.maki-bus:before { content: '\e802'; } /* '' */
+.maki-cafe:before { content: '\e803'; } /* '' */
+.maki-camera:before { content: '\e804'; } /* '' */
+.maki-campsite:before { content: '\e805'; } /* '' */
+.maki-car:before { content: '\e806'; } /* '' */
+.maki-cemetery:before { content: '\e807'; } /* '' */
+.maki-chemist:before { content: '\e808'; } /* '' */
+.maki-cinema:before { content: '\e809'; } /* '' */
+.maki-circle:before { content: '\e80a'; } /* '' */
+.maki-circle_stroked:before { content: '\e80b'; } /* '' */
+.maki-city:before { content: '\e80c'; } /* '' */
+.maki-clothing_store:before { content: '\e80d'; } /* '' */
+.maki-college:before { content: '\e80e'; } /* '' */
+.maki-commercial:before { content: '\e80f'; } /* '' */
+.maki-cricket:before { content: '\e810'; } /* '' */
+.maki-cross:before { content: '\e811'; } /* '' */
+.maki-dam:before { content: '\e812'; } /* '' */
+.maki-danger:before { content: '\e813'; } /* '' */
+.maki-dentist:before { content: '\e814'; } /* '' */
+.maki-disability:before { content: '\e815'; } /* '' */
+.maki-dog_park:before { content: '\e816'; } /* '' */
+.maki-embassy:before { content: '\e817'; } /* '' */
+.maki-emergency_telephone:before { content: '\e818'; } /* '' */
+.maki-entrance:before { content: '\e819'; } /* '' */
+.maki-farm:before { content: '\e81a'; } /* '' */
+.maki-fast_food:before { content: '\e81b'; } /* '' */
+.maki-ferry:before { content: '\e81c'; } /* '' */
+.maki-fire_station:before { content: '\e81d'; } /* '' */
+.maki-fuel:before { content: '\e81e'; } /* '' */
+.maki-garden:before { content: '\e81f'; } /* '' */
+.maki-gift:before { content: '\e820'; } /* '' */
+.maki-golf:before { content: '\e821'; } /* '' */
+.maki-grocery:before { content: '\e822'; } /* '' */
+.maki-hairdresser:before { content: '\e823'; } /* '' */
+.maki-harbor:before { content: '\e824'; } /* '' */
+.maki-heart:before { content: '\e825'; } /* '' */
+.maki-heliport:before { content: '\e826'; } /* '' */
+.maki-hospital:before { content: '\e827'; } /* '' */
+.maki-ice_cream:before { content: '\e828'; } /* '' */
+.maki-industrial:before { content: '\e829'; } /* '' */
+.maki-land_use:before { content: '\e82a'; } /* '' */
+.maki-laundry:before { content: '\e82b'; } /* '' */
+.maki-library:before { content: '\e82c'; } /* '' */
+.maki-lighthouse:before { content: '\e82d'; } /* '' */
+.maki-lodging:before { content: '\e82e'; } /* '' */
+.maki-logging:before { content: '\e82f'; } /* '' */
+.maki-london_underground:before { content: '\e830'; } /* '' */
+.maki-marker:before { content: '\e831'; } /* '' */
+.maki-minefield:before { content: '\e832'; } /* '' */
+.maki-marker_stroked:before { content: '\e833'; } /* '' */
+.maki-mobilephone:before { content: '\e834'; } /* '' */
+.maki-monument:before { content: '\e835'; } /* '' */
+.maki-museum:before { content: '\e836'; } /* '' */
+.maki-music:before { content: '\e837'; } /* '' */
+.maki-oil_well:before { content: '\e838'; } /* '' */
+.maki-park:before { content: '\e839'; } /* '' */
+.maki-park2:before { content: '\e83a'; } /* '' */
+.maki-parking:before { content: '\e83b'; } /* '' */
+.maki-parking_garage:before { content: '\e83c'; } /* '' */
+.maki-pharmacy:before { content: '\e83d'; } /* '' */
+.maki-pitch:before { content: '\e83e'; } /* '' */
+.maki-playground:before { content: '\e83f'; } /* '' */
+.maki-police:before { content: '\e840'; } /* '' */
+.maki-polling_place:before { content: '\e841'; } /* '' */
+.maki-post:before { content: '\e842'; } /* '' */
+.maki-prison:before { content: '\e843'; } /* '' */
+.maki-rail:before { content: '\e844'; } /* '' */
+.maki-rail_above:before { content: '\e845'; } /* '' */
+.maki-rail_light:before { content: '\e846'; } /* '' */
+.maki-rail_metro:before { content: '\e847'; } /* '' */
+.maki-rail_underground:before { content: '\e848'; } /* '' */
+.maki-religious-christian:before { content: '\e849'; } /* '' */
+.maki-religious-jewish:before { content: '\e84a'; } /* '' */
+.maki-religious-muslim:before { content: '\e84b'; } /* '' */
+.maki-religious-place_of_worship:before { content: '\e84c'; } /* '' */
+.maki-restaurant:before { content: '\e84d'; } /* '' */
+.maki-roadblock:before { content: '\e84e'; } /* '' */
+.maki-rocket:before { content: '\e84f'; } /* '' */
+.maki-school:before { content: '\e850'; } /* '' */
+.maki-scooter:before { content: '\e851'; } /* '' */
+.maki-shop:before { content: '\e852'; } /* '' */
+.maki-skiing:before { content: '\e853'; } /* '' */
+.maki-slaughterhouse:before { content: '\e854'; } /* '' */
+.maki-soccer:before { content: '\e855'; } /* '' */
+.maki-square:before { content: '\e856'; } /* '' */
+.maki-square_stroked:before { content: '\e857'; } /* '' */
+.maki-star:before { content: '\e858'; } /* '' */
+.maki-star_stroked:before { content: '\e859'; } /* '' */
+.maki-suitcase:before { content: '\e85a'; } /* '' */
+.maki-swimming:before { content: '\e85b'; } /* '' */
+.maki-telephone:before { content: '\e85c'; } /* '' */
+.maki-tennis:before { content: '\e85d'; } /* '' */
+.maki-theatre:before { content: '\e85e'; } /* '' */
+.maki-toilets:before { content: '\e85f'; } /* '' */
+.maki-town:before { content: '\e860'; } /* '' */
+.maki-town_hall:before { content: '\e861'; } /* '' */
+.maki-triangle:before { content: '\e862'; } /* '' */
+.maki-triangle_stroked:before { content: '\e863'; } /* '' */
+.maki-village:before { content: '\e864'; } /* '' */
+.maki-warehouse:before { content: '\e865'; } /* '' */
+.maki-waste_basket:before { content: '\e866'; } /* '' */
+.maki-water:before { content: '\e867'; } /* '' */
+.maki-wetland:before { content: '\e868'; } /* '' */
+.maki-zoo:before { content: '\e869'; } /* '' */
+.maki-aerialway:before { content: '\e86a'; } /* '' */
+.maki-airfield:before { content: '\e86b'; } /* '' */
+.maki-airport:before { content: '\e86c'; } /* '' */
+.maki-alcohol_shop:before { content: '\e86d'; } /* '' */
+.maki-america_football:before { content: '\e86e'; } /* '' */
+.maki-art_gallery:before { content: '\e86f'; } /* '' */
+.maki-bakery:before { content: '\e870'; } /* '' */
+.maki-bank:before { content: '\e871'; } /* '' */
+.maki-bar:before { content: '\e872'; } /* '' */
+.maki-baseball:before { content: '\e873'; } /* '' */
+.maki-basketball:before { content: '\e874'; } /* '' */
+.maki-beer:before { content: '\e875'; } /* '' */

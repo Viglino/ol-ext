@@ -1,0 +1,254 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2013 Jean-Marc VIGLINO, 
+	released under the Beerware license (http://fr.wikipedia.org/wiki/Beerware).
+	
+	Affichage d'une carte Geoportail avec OL3
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: font style</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="css/fontmaki.css" />
+	<link rel="stylesheet" href="http://fontawesome.io/assets/font-awesome/css/font-awesome.css" type="text/css" />
+		
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	<!-- http://openlayers.org/en/v3.2.0/build/ol.js -->
+	<!-- http://openlayers.org/en/v3.2.0/build/ol-debug.js -->
+	
+	<script type="text/javascript" src="../utils/ol.ordering.js"></script>
+
+	<script type="text/javascript" src="../style/fontsymbol.js"></script>
+
+	<script type="text/javascript" src="../style/fontmaki.def.js"></script>
+	<script type="text/javascript" src="../style/fontawesome.def.js"></script>
+
+	<script type="text/javascript" src="../style/shadowstyle.js"></script>
+	
+	<style>
+		.options .fa
+		{	height: 1em;
+			margin: 0;
+			padding: 0.5em;
+			width: 1em;
+			cursor:pointer;
+		}
+		.options .fa:before
+		{	margin:0;
+			border: 1px solid transparent;
+			display:inline-block;
+			height: 1em;
+			width: 1em;
+			text-align:center;
+			padding:2px;
+		}
+		.options .fa:hover:before
+		{	border: 1px solid #369;
+			border-radius: 100%;
+			transform: scale(3);
+			-webkit-transform: scale(3);
+			background:#fff;
+		}
+		
+	</style>
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<h1>OL3-ext: Font style</h1>
+	<p class="info">
+		Use font to draw symbol on the map. 
+		<br />
+		It gives you scalable vector icons that can instantly be customized (form, size, color, drop shadow) using attributes.
+		<br />
+		<a href="https://github.com/mapbox/maki" >Maki</a> is a clean point of interest icon set made by 
+		<a href="https://www.mapbox.com/maki/">Mapbox</a> (CC0)
+		<br />
+		<a href="https://github.com/FortAwesome/Font-Awesome" >Font-Awesome</a> is a full suite of 605 pictographic icons for easy scalable 
+		vector graphics on websitescreated and maintained by  <a href="https://fortawesome.github.io/Font-Awesome/">Dave Gandy</a> (SIL OFL 1.1)
+	</p>
+
+	<!-- DIV pour la carte -->
+	<div id="map" style="width:600px; height:400px;"></div>
+	<div class="options">
+		<h2>Options:</h2>
+		<ul>
+			<li>
+				form: 
+				<select id="form" onchange="vector.changed();" >
+					<option value="none" selected="selected">none</option>
+					<option value="circle">circle</option>
+					<option value="poi">poi</option>
+					<option value="bubble">bubble</option>
+					<option value="marker">marker</option>
+					<option value="coma">coma</option>
+					<option value="shield">shield</option>
+					<option value="blazon">blazon</option>
+					<option value="bookmark">bookmark</option>
+					<option value="hexagon">hexagon</option>
+					<option value="square">square</option>
+				</select>
+			</li>
+			<li>
+				fill color: 
+				<select id="fill" onchange="vector.changed();" >
+					<option value="black" >black</option>
+					<option value="red">red</option>
+					<option value="green">green</option>
+					<option value="blue" selected="selected">blue</option>
+				</select>
+			</li>
+			<li>
+				stroke color: 
+				<select id="color" onchange="vector.changed();" >
+					<option value="white" selected="selected">white</option>
+					<option value="orange">orange</option>
+					<option value="yellow">yellow</option>
+				</select>
+			</li>
+			<li>
+				border: <input id="border" type="number" style="width:4em" value=3 onchange="vector.changed();" />
+			</li>
+			<li>
+				radius: <input id="radius" type="number" style="width:4em" value=15 onchange="vector.changed();" />
+			</li>
+			<li>
+				<input id="offset" type="checkbox" onchange="vector.changed();" /><label for="offset"> offset</label>
+			</li>
+			<li>
+				<input id="gradient" type="checkbox" onchange="vector.changed();" /><label for="gradient"> gradient (avaliable on form)</label>
+			</li>
+			<li>
+				<input id="shadow" type="checkbox" onchange="vector.changed();" /><label for="shadow"> shadow</label>
+			</li>
+		</ul>
+		<h2>Select a font glyph:</h2>
+	</div>
+	
+	<script type="text/javascript">
+	
+	// Layers
+	var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
+		
+	// The map
+	var map = new ol.Map
+		({	target: 'map',
+			view: new ol.View
+			({	zoom: 6,
+				center: [166326, 5992663]
+			}),
+			layers: [layer]
+		});
+
+
+	// Get font glyph
+	var theGlyph = "maki-building";
+	function setFont()
+	{	theGlyph = $(this).data("glyph");
+		vector.changed();
+	}
+	// Fill font glyphs
+	var glyph = ol.style.FontSymbol.prototype.defs.glyphs;
+	var opt = $(".options");
+	for (var font in ol.style.FontSymbol.prototype.defs.fonts)
+	{	$("<h2>").text(font+":").appendTo(opt);
+		for (var i in glyph)
+		{	if (glyph[i].font == font)	
+			{	$("<i>").addClass("fa "+i)
+						.data("glyph",i)
+						.attr("title", glyph[i].name)
+						.on("click", setFont)
+						.appendTo(opt);
+			}
+		}
+	}
+	
+	
+	// Style function
+	function getFeatureStyle (feature)
+	{	var st= [];
+		// Shadow style
+		if ($("#shadow").prop('checked')) st.push ( new ol.style.Style(
+					{	image: new ol.style.Shadow(
+						{	radius: 15,
+							blur: 5,
+							offsetX: 0,
+							offsetY: 0,
+							fill: new ol.style.Fill(
+							{	color: "rgba(0,0,0,0.5)"
+							})
+						})
+					}));
+		// Font style
+		st.push ( new ol.style.Style(
+					{	image: new ol.style.FontSymbol(
+						{	form: $("#form").val(), //"hexagone", 
+							gradient: $("#gradient").prop('checked'),
+							glyph: theGlyph,//car[Math.floor(Math.random()*car.length)], 
+							radius: Number($("#radius").val()), 
+							//offsetX: -15,
+							offsetY: $("#offset").prop('checked') ? -Number($("#radius").val()):0 ,
+							fill: new ol.style.Fill(
+							{	color: $("#fill").val()
+							}),
+							stroke: new ol.style.Stroke(
+							{	color: $("#color").val(),
+								width: Number($("#border").val())
+							})
+						}),
+						stroke: new ol.style.Stroke(
+						{	width: 2,
+							color: '#f80'
+						}),
+						fill: new ol.style.Fill(
+						{	color: [255, 136, 0, 0.6]
+						})
+					}));
+			return st;
+	}
+
+	function getStyle(feature, resolution) 
+	{	var s = getFeatureStyle(feature);
+		// Ne pas recalculer
+		//feature.setStyle(s);
+		return s;
+		
+	};
+
+	// GeoJSON layer
+	var vectorSource = new ol.source.Vector(
+	{	url: 'data/fond_guerre.geojson',
+		projection: 'EPSG:3857',
+		format: new ol.format.GeoJSON(),
+		attributions: [new ol.Attribution({ html: "&copy; <a href='https://www.data.gouv.fr/fr/datasets/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire/'>data.gouv.fr</a>" })],
+		logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+	});
+
+	var vector = new ol.layer.Vector(
+	{	name: '1914-18',
+		preview: "http://www.culture.gouv.fr/Wave/image/memoire/2445/sap40_z0004141_v.jpg",
+		source: vectorSource,
+		// y ordering
+		renderOrder: ol.ordering.yOrdering(),
+		style: getStyle
+	})
+
+	map.addLayer(vector);
+
+	// Redraw layer when fonts are loaded
+	$(window).on("load", function(){ console.log("loaded"); vector.changed(); });
+
+	</script>
+	
+</body>
+</html>
