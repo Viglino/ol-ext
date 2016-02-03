@@ -73,7 +73,8 @@ $.fn.exportMap = function(map, options)
 				// Copy the map
 				map.once('postcompose', function(event) 
 				{	saveCanvas (self, event.context.canvas, ext);
-					map.renderSync();
+					// Redraw map (if dpi change)
+					setTimeout(function(){ map.renderSync() }, 500);
 				});
 				map.renderSync();
 			});

@@ -51,6 +51,7 @@ h2
 	text-decoration:none;
 	cursor:pointer;
 	display:inline-block;
+	margin-right:0.5em;
 }
 
 .block,
