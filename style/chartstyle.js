@@ -30,23 +30,15 @@ ol.style.Chart = function(opt_options)
 	if (options.scale) this.setScale(options.scale);
 
 	this.stroke_ = options.stroke;
-	this.fill_ = options.fill;
 	this.radius_ = options.radius;
 	this.type_ = options.type;
-	this.offset_ = [options.offsetX ? options.offsetX :0, options.offsetY ? options.offsetY :0];
+	this.offset_ = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
 
 	this.data_ = options.data;
-	var colors;
-	switch (options.colors)
-	{	case "classic": colors = "#ffa500,blue,red,green,cyan,magenta,yellow,#0f0"; break;
-		case "dark": colors = "#960,#003,#900,#060,#099,#909,#990,#090"; break;
-		case "pale": colors = "#fd0,#369,#f64,#3b7,#880,#b5d,#666"; break;
-		case "pastel": colors = "#fb4,#79c,#f66,#7d7,#acc,#fdd,#ff9,#b9b"; break;
-		case "neon": colors = "#ff0,#0ff,#0f0,#f0f,#f00,#00f"; break;
-		default:
-			if (/,/.test(options.colors)) colors = options.colors;
-			else colors = "#ffa500,blue,red,green,cyan,magenta,yellow,#0f0";
-			break;
+	var colors = ol.style.Chart.colors[options.colors];
+	if (!colors) 
+	{	if (/,/.test(options.colors)) colors = options.colors;
+		else colors = ol.style.Chart.colors.classic;
 	}
 	this.colors_ = colors.split(',');
 
@@ -54,15 +46,29 @@ ol.style.Chart = function(opt_options)
 };
 ol.inherits(ol.style.Chart, ol.style.RegularShape);
 
-
+/** Default color thems
+*/
+ol.style.Chart.colors = 
+{	"classic":	"#ffa500,blue,red,green,cyan,magenta,yellow,#0f0",
+	"dark":		"#960,#003,#900,#060,#099,#909,#990,#090",
+	"pale":		"#fd0,#369,#f64,#3b7,#880,#b5d,#666",
+	"pastel":	"#fb4,#79c,#f66,#7d7,#acc,#fdd,#ff9,#b9b", 
+	"neon":		"#ff0,#0ff,#0f0,#f0f,#f00,#00f"
+}
+		
+/** Get data associatied with the chart
+*/
 ol.style.Chart.prototype.getData = function() 
 {	return this.data_;
 }
+/** Set data associatied with the chart
+*/
 ol.style.Chart.prototype.setData = function(data) 
 {	this.data_ = data;
 }
 
-
+/** @private
+*/
 ol.style.Chart.prototype.renderChart_ = function(atlasManager) 
 {
 	var strokeStyle;
@@ -80,6 +86,7 @@ ol.style.Chart.prototype.renderChart_ = function(atlasManager)
 	// draw the circle on the canvas
 	var context = (canvas.getContext('2d'));
 	context.clearRect(0, 0, canvas.width, canvas.height);
+	context.lineJoin = 'round';
 
 	var sum=0;
 	for (var i=0; i<this.data_.length; i++)
@@ -153,8 +160,6 @@ ol.style.Chart.prototype.getChecksum = function()
 {
 	var strokeChecksum = (this.stroke_!==null) ?
 		this.stroke_.getChecksum() : '-';
-	var fillChecksum = (this.fill_!==null) ?
-		this.fill_.getChecksum() : '-';
 
 	var recalculate = (this.checksums_===null) ||
 		(strokeChecksum != this.checksums_[1] ||

@@ -238,11 +238,11 @@ ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context)
  * @param {number} y The origin for the symbol (y).
  */
 ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, y) 
-{
+{	var fcolor = this.fill_.getColor();
+	var scolor = this.stroke_.getColor();
 	if (this.form_ == "none" && this.stroke_ && this.fill_)
-	{	var s = this.fill_.getColor();
-		this.fill_.setColor(this.stroke_.getColor());
-		this.stroke_.setColor(s);
+	{	scolor = this.fill_.getColor();
+		fcolor = this.stroke_.getColor();
 	}
 	// reset transform
 	context.setTransform(1, 0, 0, 1, 0, 0);
@@ -255,11 +255,11 @@ ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, 
 	if (this.fill_) 
 	{	if (this.gradient_)
 		{	var grd = context.createLinearGradient(0,0,renderOptions.size/2,renderOptions.size);
-			grd.addColorStop (1, ol.color.asString(this.fill_.getColor()));
-			grd.addColorStop (0, ol.color.asString(this.stroke_.getColor()));
+			grd.addColorStop (1, ol.color.asString(fcolor));
+			grd.addColorStop (0, ol.color.asString(scolor));
 			context.fillStyle = grd;
 		}
-		else context.fillStyle = ol.color.asString(this.fill_.getColor());
+		else context.fillStyle = ol.color.asString(fcolor);
 		context.fill();
 	}
 	if (this.stroke_ && renderOptions.strokeWidth) {
@@ -273,7 +273,7 @@ ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, 
 	{	context.font = (2*tr.fac*this.radius_*this.fontSize_)+"px "+this.glyph_.font;
 		context.strokeStyle = context.fillStyle;
 		context.lineWidth = renderOptions.strokeWidth * (this.form_ == "none" ? 2:1);
-		context.fillStyle = ol.color.asString(this.stroke_.getColor());
+		context.fillStyle = ol.color.asString(scolor);
 		context.textAlign = "center";
 		context.textBaseline = "middle";
 		var t = this.glyph_.char;

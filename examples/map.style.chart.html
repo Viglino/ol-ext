@@ -1,0 +1,140 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+
+	Copyright (c) 2015 Jean-Marc VIGLINO,
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: </title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <link rel="stylesheet" href="../style.css" />
+	
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	<!-- http://openlayers.org/en/v3.2.0/build/ol.js -->
+	<!-- http://openlayers.org/en/v3.2.0/build/ol-debug.js -->
+
+	<script type="text/javascript" src="../style/chartstyle.js"></script>
+	<link rel="stylesheet" href="style.css" />
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/Geoportail-KISS"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<h1>OL3-ext</h1>
+	<p class="info">
+		The <i>ol.style.Chart</i> is an image style to draw statistical graphics (bar or pie charts) on a map.
+	</p>
+
+	<!-- DIV pour la carte -->
+	<div id="map" style="width:600px; height:400px;"></div>
+	<div class="options">
+		<h2>Options:</h2>
+		Chart type: <select id="graph" onchange="vector.changed()">
+			<option value="pie">pie</option>
+			<option value="bar">bar</option>
+		</select>
+		<br/>
+		Colors scheme: 
+		<select id="color" onchange="vector.changed()">
+			<option value="classic">Classic</option>
+			<option value="dark">Dark</option>
+			<option value="pale">Pale</option>
+			<option value="pastel">Pastel</option>
+			<option value="neon">Neon</option>
+			<option value="red,green,blue,magenta">Custom</option>
+		</select>
+	</div>
+	<div id="select" class="info">No selection</div>
+
+	<script type="text/javascript">
+
+	// Layers
+	var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
+		
+	// The map
+	var map = new ol.Map
+		({	target: 'map',
+			view: new ol.View
+			({	zoom: 6,
+				center: [166326, 5992663]
+			}),
+			layers: [layer]
+		});
+
+	// ol.style.Chart
+	var styleCache={};
+	function getFeatureStyle (feature, sel)
+	{	var k = $("#graph").val()+"-"+ $("#color").val()+"-"+(sel?"1-":"")+feature.get("data");
+		var style = styleCache[k];
+		if (!style) 
+		{	var radius = 15;
+			// area proportional to data size: s=PI*r^2
+			if ($("#graph").val()=="pie")
+			{	radius = 8* Math.sqrt (feature.get("size") / Math.PI);
+			}
+			// Create chart style
+			styleCache[k] = style = new ol.style.Style(
+			{	image: new ol.style.Chart(
+				{	type: $("#graph").val(), 
+					radius: (sel?1.2:1)*radius, 
+					offsetY: $("#graph").val()=='pie' ? 0 : (sel?-1.2:-1)*feature.get("radius"),
+					data: feature.get("data") || [10,30,20], 
+					colors: $("#color").val(),
+					rotateWithView: true,
+					stroke: new ol.style.Stroke(
+					{	color: $("#color").val()!="neon" ? "#fff":"#000",
+						width: 2
+					}),
+				})
+			});
+		}
+		return [style];
+	}
+
+	// 30 random features with data: array of 4 values
+	var ext = map.getView().calculateExtent(map.getSize());
+	var features=[];
+	for (var i=0; i<30; ++i)
+	{	var n, nb=0, data=[];
+		for (var k=0; k<4; k++) 
+		{	n = Math.round(8*Math.random());
+			data.push(n);
+			nb += n;
+		}
+		features[i] = new ol.Feature(
+			{	geometry: new ol.geom.Point([ext[0]+(ext[2]-ext[0])*Math.random(), ext[1]+(ext[3]-ext[1])*Math.random()]),
+				data: data,
+				size: nb
+			});
+	}
+	var vector = new ol.layer.Vector(
+	{	name: 'Vecteur',
+		source: new ol.source.Vector({ features: features }),
+		style: function(f) { return getFeatureStyle(f); }
+	})
+
+	map.addLayer(vector);
+
+	// Control Select 
+	var select = new ol.interaction.Select({
+            style: function(f) { return getFeatureStyle(f, true); }
+          });
+	map.addInteraction(select);
+
+	select.getFeatures().on(['add','remove'], function(e)
+	{	if (e.type=="add") $("#select").html("Selection data: "+e.element.get("data").toString());
+		else $("#select").html("No selection");
+	})
+
+	</script>
+	
+</body>
+</html>

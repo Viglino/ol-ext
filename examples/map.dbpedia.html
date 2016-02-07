@@ -1,0 +1,130 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: DBPedia layer</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- OL3 -->
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	
+	<!-- DBPedia source -->
+	<script type="text/javascript" src="../layer/dbpediasource.js"></script>
+
+	<!-- Font symbols styles -->
+	<script type="text/javascript" src="../style/fontsymbol.js"></script>
+	<script type="text/javascript" src="../style/fontawesome.def.js"></script>
+
+	<link rel="stylesheet" href="style.css" />
+	<style>
+		#select img
+		{	max-height: 300px;
+		}
+	</style>
+</head>
+<body >
+	<a href="https://github.com/Viglino/Geoportail-KISS"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<h1>OL3-ext: DBPedia layer</h1>
+	<p class="info">
+		<i>ol.layer.DBPedia</i> is a tile vector layer that use RDF of the <a href="http://fr.dbpedia.org/">french DBpedia project</a>.
+		<br />
+		Symbolisation use Fontawesome with an <a href="map.style.font.html">ol.style.Font</a>.
+	</p>
+
+	<!-- DIV pour la carte -->
+	<div id="map" style="width:600px; height:400px;"></div>
+	<div class="options"></div>
+	<div id ="select" class="options" >Select an item.</div>
+	
+	<script type="text/javascript">
+	// The map
+	var map = new ol.Map
+		({	target: 'map',
+			view: new ol.View
+			({	zoom: 15,
+				center: [261204.43490751847, 6250258.191535994]
+			}),
+			interactions: ol.interaction.defaults(),
+			layers: [ new ol.layer.Tile({ name:"OSM", source: new ol.source.OSM() })]
+		});
+
+	// DBPedia layer source
+	var vectorSource = new ol.source.DBPedia(
+	{	// Tile strategy load at zoom 14
+        strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: 14, maxZoom: 14, tileSize:512  })),
+		// Bbox strategy : reload at each move
+		//strategy: ol.loadingstrategy.bbox,
+		// Language
+		lang:"fr"
+	});
+
+	// Force layer reload on resolution change 
+	map.getView().on('change:resolution', function(evt)
+	{	//vectorSource.clear();
+		if (map.getView().getZoom() < 14) $(".options").first().text("Zoom to load data...");
+		else $(".options").first().text("");
+	});
+
+	var vector = new ol.layer.Vector(
+	{	name: 'DBPedia',
+		source: vectorSource,
+		// Limit resolution to avoid large area request
+		maxResolution: 10, // > zoom 14
+		// default dbPedia style function
+		style: ol.style.dbPediaStyleFunction()
+	});
+
+	map.addLayer(vector);
+
+	// Control Select 
+	var select = new ol.interaction.Select(
+		{	// select dbPedia style function
+			style: ol.style.dbPediaStyleFunction({ prefix:"sel", radius:12, fill: new ol.style.Fill({ color:"red"}) })
+        })
+	map.addInteraction(select);
+	// On selected
+	select.getFeatures().on(['add','remove'], function(e)
+	{	var info = $("#select").html("");
+		if (e.type=="add") 
+		{	var el = e.element;
+			$("<h2>").text(el.get("label")).appendTo(info);
+			if (el.get("thumbnail")) $("<img>").attr('src',el.get("thumbnail")).appendTo(info);
+			$("<p>").text(el.get("abstract")).appendTo(info);
+		}
+	});
+
+	</script>
+
+	<!-- Script to test webfont loading -->
+	<!-- @see https://github.com/zachleat/fontfaceonload -->
+	<!-- @use https://github.com/typekit/webfontloader -->
+	<script src="https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js"></script>
+	<script type="text/javascript">
+	WebFont.load(
+	{	custom: {
+			families: ['FontAwesome'],
+			urls: ['http://fontawesome.io/assets/font-awesome/css/font-awesome.css'],
+			testStrings: { 'FontAwesome': '\uf240' }
+		},
+		classes: false,
+		// Clear the cache and force redraw when fonts are loaded
+		active: function() 
+		{	ol.style.clearDBPediaStyleCache(); 
+			vector.changed(); 
+			console.log("FontAwesome is loaded!");
+		}
+	});
+	</script>
+	<!-- -->
+</body>
+</html>
