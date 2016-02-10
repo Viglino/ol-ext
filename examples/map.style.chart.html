@@ -22,6 +22,8 @@
 	<!-- http://openlayers.org/en/v3.2.0/build/ol-debug.js -->
 
 	<script type="text/javascript" src="../style/chartstyle.js"></script>
+	<script type="text/javascript" src="../utils/ol.ordering.js"></script>
+
 	<link rel="stylesheet" href="style.css" />
 
 </head>
@@ -118,6 +120,8 @@
 	var vector = new ol.layer.Vector(
 	{	name: 'Vecteur',
 		source: new ol.source.Vector({ features: features }),
+		// y ordering
+		renderOrder: ol.ordering.yOrdering(),
 		style: function(f) { return getFeatureStyle(f); }
 	})
 

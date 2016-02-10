@@ -20,9 +20,9 @@
 	<!-- DBPedia source -->
 	<script type="text/javascript" src="../layer/dbpediasource.js"></script>
 
-	<!-- Font symbols styles -->
-	<script type="text/javascript" src="../style/fontsymbol.js"></script>
-	<script type="text/javascript" src="../style/fontawesome.def.js"></script>
+	<!-- Photo styles -->
+	<script type="text/javascript" src="../style/photostyle.js"></script>
+	<script type="text/javascript" src="../../OL3-AnimatedCluster/layer/animatedclusterlayer.js"></script>
 
 	<script type="text/javascript" src="../utils/ol.ordering.js"></script>
 
@@ -60,15 +60,51 @@
 			layers: [ new ol.layer.Tile({ name:"OSM", source: new ol.source.OSM() })]
 		});
 
+	// Style
+	var styleCache={};
+	function getFeatureStyle (feature, resolution, sel)
+	{	var f = feature.get("features")[0];
+		var nb = feature.get("features").length;
+		var th = f.get("thumbnail");
+		var k = th.replace(/(.*)\/(.*)\?(.*)/,"$2")+(nb>1?"_0":"_1")+(sel?"_1":"");
+		var style = styleCache[k];
+		if (!style)
+		{	styleCache[k] = style = new ol.style.Style
+			({	image: new ol.style.Photo (
+				{	src: th,
+					radius: 20,
+					crop: true,
+					kind: (nb>1) ? "folio":"square",
+					shadow: true,
+					onload: function() { vector.changed(); },
+					stroke: new ol.style.Stroke(
+					{	width: sel ? 5 : 3,
+						color: sel ? 'red' : '#fff'
+					})
+				})
+			});
+		}
+		return [style];
+	}
+
 	// DBPedia layer source
 	var vectorSource = new ol.source.DBPedia(
 	{	// Tile strategy load at zoom 14
         strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: 14, maxZoom: 14, tileSize:512  })),
 		// Bbox strategy : reload at each move
 		//strategy: ol.loadingstrategy.bbox,
+		//maxResolution: 10, // > zoom 14
 		// Language
 		lang:"fr"
 	});
+
+	// Force thumbnail to non optional
+	vectorSource.querySubject = function ()
+	{	return "?subject rdfs:label ?label. "
+			+ "?subject dbpedia-owl:thumbnail ?thumbnail."
+			+ "OPTIONAL {?subject dbpedia-owl:abstract ?abstract} . "
+			+ "OPTIONAL {?subject rdf:type ?type}";
+	}
 
 	// Force layer reload on resolution change 
 	map.getView().on('change:resolution', function(evt)
@@ -77,15 +113,20 @@
 		else $(".options").first().text("");
 	});
 
-	var vector = new ol.layer.Vector(
+	var clusterSource = new ol.source.Cluster({
+		distance: 60,
+		source: vectorSource
+	});
+
+	var vector = new ol.layer.AnimatedCluster(
 	{	name: 'DBPedia',
-		source: vectorSource,
+		source: clusterSource,
 		// Limit resolution to avoid large area request
-		maxResolution: 10, // > zoom 14
+		maxResolution: 40, // > zoom 12
 		// y ordering
 		renderOrder: ol.ordering.yOrdering(),
 		// default dbPedia style function
-		style: ol.style.dbPediaStyleFunction()
+		style: getFeatureStyle
 	});
 
 	map.addLayer(vector);
@@ -93,14 +134,14 @@
 	// Control Select 
 	var select = new ol.interaction.Select(
 		{	// select dbPedia style function
-			style: ol.style.dbPediaStyleFunction({ prefix:"sel", radius:12, fill: new ol.style.Fill({ color:"red"}) })
+			style: function(f,res){return getFeatureStyle(f,res,true);}
         })
 	map.addInteraction(select);
 	// On selected
 	select.getFeatures().on(['add','remove'], function(e)
 	{	var info = $("#select").html("");
 		if (e.type=="add") 
-		{	var el = e.element;
+		{	var el = e.element.get("features")[0];
 			$("<h2>").text(el.get("label")).appendTo(info);
 			if (el.get("thumbnail")) $("<img>").attr('src',el.get("thumbnail")).appendTo(info);
 			$("<p>").text(el.get("abstract")).appendTo(info);
@@ -108,27 +149,5 @@
 	});
 
 	</script>
-
-	<!-- Script to test webfont loading -->
-	<!-- @see https://github.com/zachleat/fontfaceonload -->
-	<!-- @use https://github.com/typekit/webfontloader -->
-	<script src="https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js"></script>
-	<script type="text/javascript">
-	WebFont.load(
-	{	custom: {
-			families: ['FontAwesome'],
-			urls: ['http://fontawesome.io/assets/font-awesome/css/font-awesome.css'],
-			testStrings: { 'FontAwesome': '\uf240' }
-		},
-		classes: false,
-		// Clear the cache and force redraw when fonts are loaded
-		active: function() 
-		{	ol.style.clearDBPediaStyleCache(); 
-			vector.changed(); 
-			console.log("FontAwesome is loaded!");
-		}
-	});
-	</script>
-	<!-- -->
 </body>
 </html>

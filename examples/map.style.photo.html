@@ -21,6 +21,8 @@
 	<script type="text/javascript" src="../style/imagecanvasstyle.js"></script>
 	<script type="text/javascript" src="../style/photostyle.js"></script>
 
+	<script type="text/javascript" src="../utils/ol.ordering.js"></script>
+
 	<link rel="stylesheet" href="style.css" />
 	<style>
 		.options { max-width:400px;  }
@@ -126,6 +128,8 @@
 	{	name: '1914-18',
 		preview: "http://www.culture.gouv.fr/Wave/image/memoire/2445/sap40_z0004141_v.jpg",
 		source: vectorSource,
+		// y ordering
+		renderOrder: ol.ordering.yOrdering(),
 		style: getFeatureStyle
 	});
 

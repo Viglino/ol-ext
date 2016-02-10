@@ -92,12 +92,18 @@ ol.control.CanvasTitle.prototype.drawTitle_ = function(e)
 {	if (!this.text_) return;
 	var ctx = e.context;
 	
-	var position = { top:0, left:ctx.canvas.width/2 };
+	// Retina device
+	var ratio = e.frameState.pixelRatio;
+	ctx.save();
+	ctx.scale(ratio,ratio);
+
+	var w = ctx.canvas.width/ratio;
 	var h = $(this.element).height();
+	var position = { top:0, left:w/2 };
 
 	ctx.beginPath();
     ctx.fillStyle = this.strokeStyle_;
-	ctx.rect(0,0, ctx.canvas.width, h);
+	ctx.rect(0,0, w, h);
 	ctx.fill();
 	ctx.closePath();
 
@@ -108,4 +114,6 @@ ol.control.CanvasTitle.prototype.drawTitle_ = function(e)
 	ctx.font = this.font_;
     ctx.fillText(this.text_, position.left, position.top +h/2);
 	ctx.closePath();
+
+	ctx.restore();
 }

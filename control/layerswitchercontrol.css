@@ -8,7 +8,7 @@
 {	background-color: #fff;
 	border-radius: 0 0 2px 2px;
 	clear: both;
-	display: none; /* display:block to show panel on over */
+	display: block; /* display:block to show panel on over */
 }
 
 .ol-layerswitcher .panel

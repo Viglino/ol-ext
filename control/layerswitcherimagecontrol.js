@@ -5,21 +5,25 @@
 /**
  * @classdesc OpenLayers 3 Layer Switcher Control.
  * @require layer.getPreview
+ * @require jQuery
  *
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol.control.LayerSwitcher}
  * @param {Object=} opt_options Control options.
  */
 ol.control.LayerSwitcherImage = function(options) 
 {	options = options || {};
 	options.switcherClass="ol-layerswitcher-image";
+	if (options.mouseover!==false) options.mouseover=true;
 	ol.control.LayerSwitcher.call(this, options);
 };
 ol.inherits(ol.control.LayerSwitcherImage, ol.control.LayerSwitcher);
 
-/**
-*	Render a list of layer
-*/
+/** Render a list of layer
+ * @param {elt} element to render
+ * @layers {Array{ol.layer}} list of layer to show
+ * @api stable
+ */
 ol.control.LayerSwitcherImage.prototype.drawList = function(ul, layers)
 {	var self = this;
 	
@@ -27,6 +31,7 @@ ol.control.LayerSwitcherImage.prototype.drawList = function(ul, layers)
 	{	e.preventDefault(); 
 		var l = $(this).data("layer");
 		self.switchLayerVisibility(l,layers);
+		if (e.type=="touchstart") $(self.element).addClass("ol-collapsed");
 	};
 	
 	for (var i=0; i<layers.length; i++)

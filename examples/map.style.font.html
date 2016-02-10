@@ -84,6 +84,16 @@
 		<h2>Options:</h2>
 		<ul>
 			<li>
+				Symbol color: 
+				<select id="color" onchange="vector.changed();" >
+					<option value="" >use stroke color</option>
+					<option value="black" >black</option>
+					<option value="orange">orange</option>
+					<option value="yellow">yellow</option>
+					<option value="blue" selected="selected">blue</option>
+				</select>
+			</li>
+			<li>
 				form: 
 				<select id="form" onchange="vector.changed();" >
 					<option value="none" selected="selected">none</option>
@@ -96,22 +106,27 @@
 					<option value="blazon">blazon</option>
 					<option value="bookmark">bookmark</option>
 					<option value="hexagon">hexagon</option>
+					<option value="diamond">diamond</option>
+					<option value="triangle">triangle</option>
+					<option value="sign">sign</option>
+					<option value="ban">ban</option>
 					<option value="square">square</option>
 				</select>
 			</li>
 			<li>
 				fill color: 
 				<select id="fill" onchange="vector.changed();" >
-					<option value="black" >black</option>
+					<option value="white" >white</option>
 					<option value="red">red</option>
 					<option value="green">green</option>
-					<option value="blue" selected="selected">blue</option>
+					<option value="navy" selected="selected">navy</option>
 				</select>
 			</li>
 			<li>
 				stroke color: 
-				<select id="color" onchange="vector.changed();" >
+				<select id="stroke" onchange="vector.changed();" >
 					<option value="white" selected="selected">white</option>
+					<option value="red">red</option>
 					<option value="orange">orange</option>
 					<option value="yellow">yellow</option>
 				</select>
@@ -202,11 +217,12 @@
 							radius: Number($("#radius").val()), 
 							//offsetX: -15,
 							offsetY: $("#offset").prop('checked') ? -Number($("#radius").val()):0 ,
+							color: $("#color").val(),
 							fill: new ol.style.Fill(
 							{	color: $("#fill").val()
 							}),
 							stroke: new ol.style.Stroke(
-							{	color: $("#color").val(),
+							{	color: $("#stroke").val(),
 								width: Number($("#border").val())
 							})
 						}),

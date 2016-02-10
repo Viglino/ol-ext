@@ -5,14 +5,8 @@
 	@classdesc
 	ol.source.DBPedia is a DBPedia layer source that load DBPedia located content in a vector layer.
 	
-	olx.source.DBPedia:
-	{	url: {string} url of the static image
-		image: {image} the static image, if not provided, use url to load an image
-		imageCenter: {ol.Coordinate} of the center of the image
-		imageScale: {ol.Size|Number} [scalex, scaley] of the image
-		imageRotate: {number} angle of the image in radian, default 0
-		imageCrop: {ol.Extent} of the image to be show (in the image) default: [0,0,imageWidth,imageHeight]
-		imageMask: {Array.<ol.Coordinate>} - linestring to mask the image on the map
+	olx.source.DBPedia: olx.source.Vector
+	{	url: {string} Url for DBPedia SPARQL 
 	}
 
 	@require jQuery
@@ -24,7 +18,7 @@
 /**
 * @constructor ol.source.DBPedia
 * @extends {ol.source.Vector}
-* @param {olx.source.Vector=} options
+* @param {olx.source.DBPedia=} options
 * @todo 
 */
 ol.source.DBPedia = function(opt_options)
@@ -37,13 +31,16 @@ ol.source.DBPedia = function(opt_options)
 	this._url = options.url || "http://fr.dbpedia.org/sparql";
 
 	/** Max resolution to load features  */
-	//this._maxResolution = options.maxResolution || 0;
+	this._maxResolution = options.maxResolution || 100;
 	
 	/** Result language */
 	this._lang = options.lang || "fr";
 
 	/** Query limit */
 	this._limit = options.limit || 1000;
+	
+	/** Default attribution */
+	if (!options.attributions) options.attributions = [ new ol.Attribution({ html:"&copy; <a href='http://dbpedia.org/'>DBpedia</a> CC-by-SA" }) ];
 
 	// Bbox strategy : reload at each move
     if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
@@ -102,7 +99,7 @@ ol.source.DBPedia.prototype.queryFilter = function ()
 * @private
 */
 ol.source.DBPedia.prototype._loaderFn = function(extent, resolution, projection) 
-{	//if (resolution > this._maxResolution) return;
+{	if (resolution > this._maxResolution) return;
 	var self = this;
 	var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
 	// SPARQL request: for more info @see http://fr.dbpedia.org/

@@ -256,6 +256,15 @@ ol.style.Photo.prototype.drawImage_ = function(img)
 
 	context.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 	context.restore();
+
+	// Draw a circle to avoid aliasing on clip
+	if (this.kind_=='circle' && strokeWidth)
+	{	context.beginPath();
+		context.strokeStyle = ol.color.asString(this.stroke_.getColor());
+		context.lineWidth = strokeWidth/4;
+		context.arc(this.radius_+strokeWidth, this.radius_+strokeWidth, this.radius_, 0, 2 * Math.PI, false);
+		context.stroke();
+	}
 }
 
 

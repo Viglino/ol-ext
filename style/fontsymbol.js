@@ -23,6 +23,7 @@ ol.style.FontSymbol = function(opt_options)
 	if (options.stroke) strokeWidth = options.stroke.getWidth();
 	ol.style.RegularShape.call (this,{ radius: options.radius + strokeWidth, fill:opt_options.fill });
 
+	this.color_ = options.color;
 	this.fontSize_ = options.fontSize || 1;
 	this.stroke_ = options.stroke;
 	this.fill_ = options.fill;
@@ -171,12 +172,14 @@ ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context)
 	switch (this.form_)
 	{	case "none": transfo.fac=1;  break;
 		case "circle":
+		case "ban":
 			context.arc ( c, c, this.radius_, 0, 2 * Math.PI, true);
 			break;
 		case "poi":
-			context.arc ( c, c -0.4*this.radius_, 0.6*this.radius_, 0.25*Math.PI, 0.75*Math.PI, true);
-			context.lineTo ( 0.5*s+w, s+w);
-			transfo = { fac:0.4, posX:c, posY:c -0.4*this.radius_ };
+			context.arc ( c, c -0.4*this.radius_, 0.6*this.radius_, 0.15*Math.PI, 0.85*Math.PI, true);
+			context.lineTo ( 0.45*s+w, 0.95*s+w);
+			context.arc ( 0.5*s+w, 0.95*s+w, 0.05*s, 0.85*Math.PI, 0.15*Math.PI, true);
+			transfo = { fac:0.5, posX:c, posY:c -0.35*this.radius_ };
 			break;
 		case "bubble":
 			context.arc ( c, c -0.2*this.radius_, 0.8*this.radius_, 0.4*Math.PI, 0.6*Math.PI, true);
@@ -194,7 +197,7 @@ ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context)
 			context.arc( renderOptions.size / 2, renderOptions.size / 2 -0.2*this.radius_, 0.8*this.radius_, 0, 0.5*Math.PI, true);
 		*/
 			context.moveTo ( c + 0.8*this.radius_, c -0.2*this.radius_);
-			context.quadraticCurveTo ( s+w, 0.8*s+w, 0.5*s+w, s+w);
+			context.quadraticCurveTo ( 0.95*s+w, 0.75*s+w, 0.5*s+w, s+w);
 			context.arc ( c, c -0.2*this.radius_, 0.8*this.radius_, 0.45*Math.PI, 0, false);
 			transfo = { fac:0.55, posX: c, posY: c -0.2*this.radius_ };
 			break;
@@ -203,20 +206,35 @@ ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context)
 			switch (this.form_)
 			{	case "shield": 
 					pts = [ 0.05,0, 0.95,0, 0.95,0.8, 0.5,1, 0.05,0.8, 0.05,0 ]; 
-					transfo.posY = 0.475*s+w ;
+					transfo.posY = 0.4*s+w ;
 					break;
 				case "blazon": 
 					pts = [ 0.1,0, 0.9,0, 0.9,0.8, 0.6,0.8, 0.5,1, 0.4,0.8, 0.1,0.8, 0.1,0 ]; 
 					transfo.fac = 0.7
-					transfo.posY = 0.45*s+w ;
+					transfo.posY = 0.4*s+w ;
 					break;
 				case "bookmark": 
 					pts = [ 0.05,0, 0.95,0, 0.95,1, 0.5,0.8, 0.05,1, 0.05,0 ]; 
-					transfo.posY = 0.475*s+w ;
+					transfo.posY = 0.4*s+w ;
 					break;
 				case "hexagon": 
 					pts = [ 0.05,0.2, 0.5,0, 0.95,0.2, 0.95,0.8, 0.5,1, 0.05,0.8, 0.05,0.2 ]; 
 					transfo.posY = 0.475*s+w ;
+					break;
+				case "diamond": 
+					pts = [ 0.25,0, 0.75,0, 1,0.2, 1,0.4, 0.5,1, 0,0.4, 0,0.2, 0.25,0 ]; 
+					transfo.posY = 0.35*s+w ;
+					transfo.fac = 0.65 ;
+					break;
+				case "triangle": 
+					pts = [ 0,0, 1,0, 0.5,1, 0,0 ]; 
+					transfo.posY = 0.3*s+w ;
+					transfo.fac = 0.6 ;
+					break;
+				case "sign": 
+					pts = [ 0.5,0.05, 1,0.95, 0,0.95, 0.5,0.05 ]; 
+					transfo.posY = 0.65*s+w ;
+					transfo.fac = 0.5 ;
 					break;
 				case "square": 
 				default: 
@@ -273,12 +291,22 @@ ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, 
 	{	context.font = (2*tr.fac*this.radius_*this.fontSize_)+"px "+this.glyph_.font;
 		context.strokeStyle = context.fillStyle;
 		context.lineWidth = renderOptions.strokeWidth * (this.form_ == "none" ? 2:1);
-		context.fillStyle = ol.color.asString(scolor);
+		context.fillStyle = ol.color.asString(this.color_ || scolor);
 		context.textAlign = "center";
 		context.textBaseline = "middle";
 		var t = this.glyph_.char;
 		if (renderOptions.strokeWidth) context.strokeText(t, tr.posX, tr.posY);
 		context.fillText(t, tr.posX, tr.posY);
+	}
+
+	if (this.form_=="ban" && this.stroke_ && renderOptions.strokeWidth) 
+	{	context.strokeStyle = renderOptions.strokeStyle;
+		context.lineWidth = renderOptions.strokeWidth;
+		var r = this.radius_ + renderOptions.strokeWidth;
+		var d = this.radius_ * Math.cos(Math.PI/4);
+		context.moveTo(r + d, r - d);
+		context.lineTo(r - d, r + d);
+		context.stroke();
 	}
 };
 

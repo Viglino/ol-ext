@@ -4,10 +4,14 @@
 */
 /**
  * @classdesc OpenLayers 3 Layer Switcher Control.
+ * @require jQuery
  *
  * @constructor
  * @extends {ol.control.Control}
  * @param {Object=} opt_options Control options.
+ *		- step_opacity {Number} step for opacity, default 0.5
+ *		- show_progress {boolean} show a progress bar on tile layers, default false
+ *		- mouseover {boolean} show the panel on mouseover, default false
  */
 ol.control.LayerSwitcher = function(opt_options) 
 {	var options = opt_options || {};
@@ -24,10 +28,12 @@ ol.control.LayerSwitcher = function(opt_options)
 	{	element = $("<div>").addClass((options.switcherClass || 'ol-layerswitcher') +' ol-unselectable ol-control ol-collapsed');
 	
 		$("<button>").on("touchstart", function(e){ element.toggleClass("ol-collapsed"); e.preventDefault(); })
-					.mouseover(function(){ element.removeClass("ol-collapsed"); })
 					.click (function(){ element.toggleClass("ol-forceopen").addClass("ol-collapsed"); })
 					.appendTo(element);
-		$(element).mouseleave (function(){ element.addClass("ol-collapsed"); })
+		if (options.mouseover)
+		{	$(element).mouseleave (function(){ element.addClass("ol-collapsed"); })
+				.mouseover(function(){ element.removeClass("ol-collapsed"); });
+		}
 	}
 	this.panel_ = $("<ul>").addClass("panel")
 				.appendTo(element);
@@ -47,49 +53,44 @@ ol.inherits(ol.control.LayerSwitcher, ol.control.Control);
 ol.control.LayerSwitcher.prototype.setMap = function(map) 
 {   ol.control.Control.prototype.setMap.call(this, map);
 	this.drawPanel();
-
+	
 	if (this.map_)
 	{	this.map_.getLayerGroup().un('change', this.drawPanel, this);
-		this.map_.getView().un('propertychange', this.viewChange, this);
+		this.map_.getView().un('change:resolution', this.viewChange, this);
+		console.log("remove")
 	}
 
 	this.map_ = map;
 	// Get change (new layer added or removed)
 	if (map) 
 	{	map.getLayerGroup().on('change', this.drawPanel, this);
-		map.getView().on('propertychange', this.viewChange, this);
+		map.getView().on('change:resolution', this.viewChange, this);
 	}
 
 };
 
 
 /**
-*	On view change hide layer depending on resolution
-*/
+ * On view change hide layer depending on resolution
+ * @param {ol.event} map The map instance.
+ * @private
+ */
 ol.control.LayerSwitcher.prototype.viewChange = function(e) 
-{	switch (e.key) 
-	{	case 'resolution':
-		{	var res = this.map_.getView().getResolution();
-			$("li", this.panel_).each(function()
-			{	var l = $(this).data('layer');
-				if (l)
-				{	if (l.getMaxResolution()<=res || l.getMinResolution()>=res) $(this).addClass("ol-layer-hidden");
-					else $(this).removeClass("ol-layer-hidden");
-				}
-			});
-			break;
+{	var res = this.map_.getView().getResolution();
+	$("li", this.panel_).each(function()
+	{	var l = $(this).data('layer');
+		if (l)
+		{	if (l.getMaxResolution()<=res || l.getMinResolution()>=res) $(this).addClass("ol-layer-hidden");
+			else $(this).removeClass("ol-layer-hidden");
 		}
-		default: 
-			break;
-	}
+	});
 }
 
 /**
-*	Draw the panel control
-*/
+ *	Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
+ */
 ol.control.LayerSwitcher.prototype.drawPanel = function(e) 
-{	var map = this.getMap();
-	if (!map) return;
+{	if (!this.getMap()) return;
 	var self = this;
 	// Multiple event simultaneously / draw once => put drawing in the event queue
 	this.dcount++;
@@ -97,7 +98,8 @@ ol.control.LayerSwitcher.prototype.drawPanel = function(e)
 }
 
 /** Delayed draw panel control 
-*/
+ * @private
+ */
 ol.control.LayerSwitcher.prototype.drawPanel_ = function(e) 
 {	if (--this.dcount) return;
 	this.panel_.html("");
@@ -105,7 +107,9 @@ ol.control.LayerSwitcher.prototype.drawPanel_ = function(e)
 }
 
 /** Change layer visibility
-*/
+ * @param {ol.layer}
+ * @param {Array{ol.layer}} related layers
+ */
 ol.control.LayerSwitcher.prototype.switchLayerVisibility = function(l, layers)
 {	if (!l.get('baseLayer')) l.setVisible(!l.getVisible());
 	else 
@@ -117,7 +121,8 @@ ol.control.LayerSwitcher.prototype.switchLayerVisibility = function(l, layers)
 }
 
 /** Check if layer is visible
-*/
+ * @param {ol.layer}
+ */
 ol.control.LayerSwitcher.prototype.testLayerVisibility = function(layer)
 {	if (this.map_)
 	{	var res = this.map_.getView().getResolution();
@@ -126,9 +131,11 @@ ol.control.LayerSwitcher.prototype.testLayerVisibility = function(layer)
 	return false;
 }
 
-/**
-*	Render a list of layer
-*/
+/** Render a list of layer
+ * @param {elt} element to render
+ * @layers {Array{ol.layer}} list of layer to show
+ * @api stable
+ */
 ol.control.LayerSwitcher.prototype.drawList = function(ul, layers)
 {	var self = this;
 	var setVisibility = function(e) 

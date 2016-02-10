@@ -87,8 +87,8 @@ ol.control.CanvasAttribution.prototype.drawAttribution_ = function(e)
 
 	// Position if transform:scale()
 	var container = $(this.getMap().getViewport()).parent();
-	var scx = container.width() / container.get(0).getBoundingClientRect().width;
-	var scy = container.height() / container.get(0).getBoundingClientRect().height;
+	var scx = container.outerWidth() / container.get(0).getBoundingClientRect().width;
+	var scy = container.outerHeight() / container.get(0).getBoundingClientRect().height;
 	position.left *= scx;
 	position.top *= scy;
 
