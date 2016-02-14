@@ -1,0 +1,126 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2013 Jean-Marc VIGLINO, 
+	released under the Beerware license (http://fr.wikipedia.org/wiki/Beerware).
+	
+	Affichage d'une carte Geoportail avec OL3
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: Map pulse</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+    <!-- OL3 -->
+	<link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	
+	<script type="text/javascript" src="../utils/ol.map.pulse.js"></script>
+
+	<link rel="stylesheet" href="style.css" />
+	</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: Map pulse</h1>
+	</a>
+	<p class="info">
+		Add a pulse method on ol.Map to pulse a circle on the map.
+	</p>
+
+	<!-- DIV pour la carte -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options">
+		<h2>Options:</h2>
+		Easing:
+		<select id="easing">
+			<option value="easeOut">easeOut</option>
+			<option value="upAndDown">upAndDown</option>
+			<option value="bounce">bounce</option>
+		</select>
+		<br />
+		Color:
+		<select id="color">
+			<option value="red">red</option>
+			<option value="orange">orange</option>
+			<option value="black">black</option>
+			<option value="green">green</option>
+		</select>
+		<br />
+		<button onclick="pulse([2.351828, 48.856578])">Paris</button>
+		<button onclick="pulse([-0.1275,51.507222])">London</button>
+		<button onclick="pulse([6.149985,46.200013])">Geneve</button>
+		<button onclick="pulse([4.35,50.83])">Bruxelles</button>
+		<button onclick="pulse([13.383333,52.516667])">Berlin</button>
+		<button onclick="pulse([-3.683333,40.433333])">Madrid</button>
+		<button onclick="pulse([12.48657,41.888732])">Roma</button>
+		<p>
+			> <i>Click on the map to pulse!</i>
+		</p>
+	</div>
+	
+	<script type="text/javascript">
+	// Layers
+	var layer = new ol.layer.Tile({
+			name: "Natural Earth", 
+			minResolution: 306,
+    		source: new ol.source.XYZ(
+			{	url: 'http://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
+				attributions: [new ol.Attribution({ html: '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' })] 
+    		})
+		});
+
+	// The map
+	var map = new ol.Map
+		({	target: 'map',
+			view: new ol.View
+			({	zoom: 5,
+				center: [166326, 5992663]
+			}),
+			layers: [layer]
+		});
+
+	// Bounce easing (custom)
+	var bounce = 5;
+	var a = (2*bounce+1) * Math.PI/2;
+	var b = -0.01;
+	var c = -Math.cos(a) * Math.pow(2, b);
+	ol.easing.bounce = function(t)
+	{	t = 1-Math.cos(t*Math.PI/2);
+		return 1 + Math.abs( Math.cos(a*t) ) * Math.pow(2, b*t) + c*t;
+	}
+
+	// Pulse on click 
+	map.on('singleclick', function(evt) 
+	{	var e =  ($("#easing").val());
+		map.pulse(evt.coordinate, { radius:(e=="bounce"?10:null), amplitude:(e=="bounce"?15:null), color:$("#color").val(), easing:ol.easing[$("#easing").val()] });
+	});
+
+	// Pulse on lonlat
+	function pulse(lonlat)
+	{	switch ($("#easing").val())
+		{	case 'easeOut': 
+			case 'upAndDown': 
+				for (var i=0; i<3; i++)
+				{	setTimeout (function()
+					{	map.pulse(lonlat, { projection:'EPSG:4326', color:$("#color").val(), easing:ol.easing[$("#easing").val()] });
+					}, i*500);
+				}
+				break;
+			case 'bounce': 
+			default:
+				map.pulse(lonlat, { projection:'EPSG:4326', radius:10, amplitude:15, color:$("#color").val(), easing:ol.easing[$("#easing").val()] });
+				break;
+		}
+	}
+
+	</script>
+	
+</body>
+</html>

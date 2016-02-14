@@ -21,13 +21,13 @@ ol.style.FontSymbol = function(opt_options)
 {	options = opt_options || {};
 	var strokeWidth = 0;
 	if (options.stroke) strokeWidth = options.stroke.getWidth();
-	ol.style.RegularShape.call (this,{ radius: options.radius + strokeWidth, fill:opt_options.fill });
+	ol.style.RegularShape.call (this,{ radius: options.radius, fill:opt_options.fill });
 
 	this.color_ = options.color;
 	this.fontSize_ = options.fontSize || 1;
 	this.stroke_ = options.stroke;
 	this.fill_ = options.fill;
-	this.radius_ = options.radius;
+	this.radius_ = options.radius -strokeWidth;
 	this.form_ = options.form || "none";
 	this.gradient_ = options.gradient;
 	this.offset_ = [options.offsetX ? options.offsetX :0, options.offsetY ? options.offsetY :0];
@@ -160,11 +160,11 @@ ol.style.FontSymbol.prototype.renderMarker_ = function(atlasManager)
  */
 ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context) 
 {
-	var s = 2*this.radius_;
-	var w = renderOptions.strokeWidth;
+	var s = 2*this.radius_+renderOptions.strokeWidth+1;
+	var w = renderOptions.strokeWidth/2;
 	var c = renderOptions.size / 2;
 	// Transfo to place the glyph at the right place
-	var transfo = { fac:0.8, posX:renderOptions.size / 2, posY:renderOptions.size / 2 };
+	var transfo = { fac:1, posX:renderOptions.size / 2, posY:renderOptions.size / 2 };
 	context.lineJoin = 'round';
 	context.beginPath();
 
@@ -173,23 +173,23 @@ ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context)
 	{	case "none": transfo.fac=1;  break;
 		case "circle":
 		case "ban":
-			context.arc ( c, c, this.radius_, 0, 2 * Math.PI, true);
+			context.arc ( c, c, s/2, 0, 2 * Math.PI, true);
 			break;
 		case "poi":
 			context.arc ( c, c -0.4*this.radius_, 0.6*this.radius_, 0.15*Math.PI, 0.85*Math.PI, true);
-			context.lineTo ( 0.45*s+w, 0.95*s+w);
-			context.arc ( 0.5*s+w, 0.95*s+w, 0.05*s, 0.85*Math.PI, 0.15*Math.PI, true);
-			transfo = { fac:0.5, posX:c, posY:c -0.35*this.radius_ };
+			context.lineTo ( c-0.89*0.05*s, (0.95+0.45*0.05)*s+w);
+			context.arc ( c, 0.95*s+w, 0.05*s, 0.85*Math.PI, 0.15*Math.PI, true);
+			transfo = { fac:0.45, posX:c, posY:c -0.35*this.radius_ };
 			break;
 		case "bubble":
 			context.arc ( c, c -0.2*this.radius_, 0.8*this.radius_, 0.4*Math.PI, 0.6*Math.PI, true);
 			context.lineTo ( 0.5*s+w, s+w);
-			transfo = { fac:0.6, posX:c, posY:c -0.2*this.radius_ };
+			transfo = { fac:0.7, posX:c, posY:c -0.2*this.radius_ };
 			break;
 		case "marker":
 			context.arc ( c, c -0.2*this.radius_, 0.8*this.radius_, 0.25*Math.PI, 0.75*Math.PI, true);
 			context.lineTo ( 0.5*s+w, s+w);
-			transfo = { fac:0.6, posX: c, posY: c -0.2*this.radius_ };
+			transfo = { fac:0.7, posX: c, posY: c -0.2*this.radius_ };
 			break;
 		case "coma":
 		/*
@@ -199,42 +199,48 @@ ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context)
 			context.moveTo ( c + 0.8*this.radius_, c -0.2*this.radius_);
 			context.quadraticCurveTo ( 0.95*s+w, 0.75*s+w, 0.5*s+w, s+w);
 			context.arc ( c, c -0.2*this.radius_, 0.8*this.radius_, 0.45*Math.PI, 0, false);
-			transfo = { fac:0.55, posX: c, posY: c -0.2*this.radius_ };
+			transfo = { fac:0.7, posX: c, posY: c -0.2*this.radius_ };
 			break;
 		default:
 		{	var pts;
 			switch (this.form_)
 			{	case "shield": 
 					pts = [ 0.05,0, 0.95,0, 0.95,0.8, 0.5,1, 0.05,0.8, 0.05,0 ]; 
-					transfo.posY = 0.4*s+w ;
+					transfo.posY = 0.45*s+w ;
 					break;
 				case "blazon": 
 					pts = [ 0.1,0, 0.9,0, 0.9,0.8, 0.6,0.8, 0.5,1, 0.4,0.8, 0.1,0.8, 0.1,0 ]; 
-					transfo.fac = 0.7
+					transfo.fac = 0.8;
 					transfo.posY = 0.4*s+w ;
 					break;
 				case "bookmark": 
 					pts = [ 0.05,0, 0.95,0, 0.95,1, 0.5,0.8, 0.05,1, 0.05,0 ]; 
+					transfo.fac = 0.9;
 					transfo.posY = 0.4*s+w ;
 					break;
 				case "hexagon": 
 					pts = [ 0.05,0.2, 0.5,0, 0.95,0.2, 0.95,0.8, 0.5,1, 0.05,0.8, 0.05,0.2 ]; 
-					transfo.posY = 0.475*s+w ;
+					transfo.fac = 0.9;
+					transfo.posY = 0.5*s+w ;
 					break;
 				case "diamond": 
 					pts = [ 0.25,0, 0.75,0, 1,0.2, 1,0.4, 0.5,1, 0,0.4, 0,0.2, 0.25,0 ]; 
+					transfo.fac = 0.75 ;
 					transfo.posY = 0.35*s+w ;
-					transfo.fac = 0.65 ;
 					break;
 				case "triangle": 
 					pts = [ 0,0, 1,0, 0.5,1, 0,0 ]; 
-					transfo.posY = 0.3*s+w ;
 					transfo.fac = 0.6 ;
+					transfo.posY = 0.3*s+w ;
 					break;
 				case "sign": 
 					pts = [ 0.5,0.05, 1,0.95, 0,0.95, 0.5,0.05 ]; 
+					transfo.fac = 0.7 ;
 					transfo.posY = 0.65*s+w ;
-					transfo.fac = 0.5 ;
+					break;
+				case "lozenge": 
+					pts = [ 0.5,0, 1,0.5, 0.5,1, 0,0.5, 0.5,0 ]; 
+					transfo.fac = 0.7;
 					break;
 				case "square": 
 				default: 
@@ -271,7 +277,7 @@ ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, 
 	var tr = this.drawPath_(renderOptions, context);
 
 	if (this.fill_) 
-	{	if (this.gradient_)
+	{	if (this.gradient_ && this.form_!="none")
 		{	var grd = context.createLinearGradient(0,0,renderOptions.size/2,renderOptions.size);
 			grd.addColorStop (1, ol.color.asString(fcolor));
 			grd.addColorStop (0, ol.color.asString(scolor));
@@ -288,14 +294,14 @@ ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, 
 
 	// Draw the symbol
 	if (this.glyph_.char)
-	{	context.font = (2*tr.fac*this.radius_*this.fontSize_)+"px "+this.glyph_.font;
+	{	context.font = (2*tr.fac*(this.radius_)*this.fontSize_)+"px "+this.glyph_.font;
 		context.strokeStyle = context.fillStyle;
 		context.lineWidth = renderOptions.strokeWidth * (this.form_ == "none" ? 2:1);
 		context.fillStyle = ol.color.asString(this.color_ || scolor);
 		context.textAlign = "center";
 		context.textBaseline = "middle";
 		var t = this.glyph_.char;
-		if (renderOptions.strokeWidth) context.strokeText(t, tr.posX, tr.posY);
+		if (renderOptions.strokeWidth && scolor!="transparent") context.strokeText(t, tr.posX, tr.posY);
 		context.fillText(t, tr.posX, tr.posY);
 	}
 

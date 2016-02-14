@@ -7,8 +7,10 @@
 /** Pulse a point on postcompose
 *	@param {ol.coordinates} point to pulse
 *	@param {ol.pulse.options} pulse options param
+*		- projection {ol.projection||String} projection of coords
 *		- duration {Number} animation duration in ms, default 3000
-*		- maxRadius {Number} radius of the circle, default 30
+*		- radius {Number} radius of the circle (in px), default 30
+*		- amplitude {Number} movement amplitude (in px), default 0
 *		- easing {ol.easing} easing function, default ol.easing.easeOut
 *		- width {Number} line width, default 2
 *		- color {ol.color} line color, default red
@@ -16,15 +18,23 @@
 ol.Map.prototype.pulse = function(coords, options)
 {	var listenerKey;
 	options = options || {};
-	var start = new Date().getTime();
-	var flashGeom = new ol.geom.Point(coords);
+
+	// Change to map's projection
+	if (options.projection)
+	{	coords = ol.proj.transform(coords, options.projection, this.getView().getProjection());
+	}
 	
+	// options
+	var start = new Date().getTime();
 	var duration = options.duration || 3000;
-	var maxRadius = (options.radius || 30) -5;
+	var maxRadius = options.radius || 30;
+	if (maxRadius<0) maxRadius = 5;
+	var minRadius = maxRadius - (options.amplitude || maxRadius); //options.minRadius || 0;
 	var easing = options.easing || ol.easing.easeOut;
 	var width = options.lineWidth || 2;
 	var color = options.color || 'red';
-			
+
+	// Animate function
 	function animate(event) 
 	{	var frameState = event.frameState;
 		var ratio = frameState.pixelRatio;
@@ -37,7 +47,9 @@ ol.Map.prototype.pulse = function(coords, options)
 			context.save();
 			context.scale(ratio,ratio);
 			context.beginPath();
-			context.arc(p[0], p[1], easing(elapsedRatio) * maxRadius + 5, 0, 2 * Math.PI, false);
+			var e = easing(elapsedRatio)
+			var r =  (1-e) * minRadius + e * maxRadius;
+			context.arc(p[0], p[1], (r>0?r:0), 0, 2 * Math.PI, false);
 			context.globalAlpha = easing(1 - elapsedRatio);
 			context.lineWidth = width;
 			context.strokeStyle = color;

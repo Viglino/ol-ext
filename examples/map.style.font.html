@@ -24,7 +24,7 @@
 	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
 	<!-- http://openlayers.org/en/v3.2.0/build/ol.js -->
 	<!-- http://openlayers.org/en/v3.2.0/build/ol-debug.js -->
-	
+
 	<script type="text/javascript" src="../utils/ol.ordering.js"></script>
 
 	<script type="text/javascript" src="../style/fontsymbol.js"></script>
@@ -35,6 +35,7 @@
 	<script type="text/javascript" src="../style/shadowstyle.js"></script>
 	
 	<style>
+		.options i.standard,
 		.options .fa
 		{	height: 1em;
 			margin: 0;
@@ -42,6 +43,7 @@
 			width: 1em;
 			cursor:pointer;
 		}
+		.options i.standard,
 		.options .fa:before
 		{	margin:0;
 			border: 1px solid transparent;
@@ -51,6 +53,15 @@
 			text-align:center;
 			padding:2px;
 		}
+		.options i.standard
+		{	font-style: normal;
+			font-weight: bold;
+			font-family: sherif;
+			padding-bottom:0.1em;
+			line-height:0.9em;
+			margin-left: 0.35em;
+		}
+		.options i.standard:hover,
 		.options .fa:hover:before
 		{	border: 1px solid #369;
 			border-radius: 100%;
@@ -65,32 +76,72 @@
 <body >
 	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
 
-	<h1>OL3-ext: Font style</h1>
-	<p class="info">
-		Use font to draw symbol on the map. 
-		<br />
+	<a href="../index.html">
+		<h1>OL3-ext: Font style</h1>
+	</a>
+	<div class="info">
+		<i>ol.style.FontSymbol</i> uses font to draw symbol on the map. 
 		It gives you scalable vector icons that can instantly be customized (form, size, color, drop shadow) using attributes.
+		<br/>
+		<i>ol.style.Shadow</i> is an image style to draw a shadow on a point. The shadow is not selectable 
+		(you have to add an other style on top to make it selectable).
+		<br/>
+		The symbols are composed of:
+		<ul>
+			<li>
+				a form (POI, cicle, square, sign, ...)
+			</li>
+			<li>
+				a glyph that overlap the form
+			</li>
+		</ul>
 		<br />
 		<a href="https://github.com/mapbox/maki" >Maki</a> is a clean point of interest icon set made by 
 		<a href="https://www.mapbox.com/maki/">Mapbox</a> (CC0)
 		<br />
 		<a href="https://github.com/FortAwesome/Font-Awesome" >Font-Awesome</a> is a full suite of 605 pictographic icons for easy scalable 
 		vector graphics on websitescreated and maintained by  <a href="https://fortawesome.github.io/Font-Awesome/">Dave Gandy</a> (SIL OFL 1.1)
-	</p>
+	</div>
 
 	<!-- DIV pour la carte -->
 	<div id="map" style="width:600px; height:400px;"></div>
+	<div class="info">
+		<h2>Examples:</h2>
+		<button onclick="setOptions('maki-circle', 'poi', '', 'white', 'navy', 3,20,1, true, true, true)">POI</button>
+		<button onclick="setOptions('maki-cafe', 'marker', 'blue', 'white', '#fd0', 3,20,1, true, true, true)">Cafe</button>
+		<button onclick="setOptions('maki-toilets', 'square', '', 'white', 'navy', 3,20,1, false, true)">Toilets</button>
+		<button onclick="setOptions('maki-telephone', 'circle', '', 'white', 'navy', 0,15,1.1, false, true)">Phone</button>
+		<button onclick="setOptions('fa-info', 'circle', '', 'white', 'navy', 3,20,1, false, true)">Information</button>
+		<button onclick="setOptions('maki-disability', 'square', 'black', 'blue', 'white', 3,20,1)">Facilities</button>
+		<button onclick="setOptions('fa-exclamation', 'sign', '', 'red', '#fd0', 3,20,1.1)">Warning</button>
+		<br/>
+		Road signs: 
+		<!--
+		<button onclick="setOptions('maki-roadblock', 'circle', 'red', 'transparent', 'white', 10, 20, 2.6)">No entry</button>
+		-->
+		<button onclick="setOptions('maki-roadblock', 'none', 'white', 'white', 'red', 3, 20, 1.3)">No entry</button>
+		<button onclick="setOptions('maki-school', 'sign', 'black', 'red', 'white', 4, 23, 1)">School</button>
+		<button onclick="setOptions('maki-slaughterhouse', 'sign', 'black', 'red', 'white', 4, 23, 1)">Animal</button>
+		<button onclick="setOptions('fa-road', 'square', '', 'white', 'navy', 4,20,0.8)">Road</button>
+		<button onclick="setOptions('maki-pitch', 'ban', 'black', 'red', 'white', 4, 20, 1)">No pedestrian</button>
+		<button onclick="setOptions('fa-bicycle', 'ban', 'black', 'red', 'white', 4, 20, 0.7)">No bicycle</button>
+		<button onclick="setOptions('fa-camera', 'ban', 'black', 'red', 'white', 4, 20, 0.7)">No camera</button>
+		<button onclick="setOptions('fa-train', 'lozenge', '', 'black', '#fd0', 4, 25, 0.7)">Train zone</button>
+		<button onclick="setOptions('fa-plane', 'lozenge', '', 'black', '#fd0', 4, 25, 0.8)">Airport</button>
+	</div>
+
 	<div class="options">
 		<h2>Options:</h2>
 		<ul>
 			<li>
 				Symbol color: 
 				<select id="color" onchange="vector.changed();" >
-					<option value="" >use stroke color</option>
+					<option value="" selected="selected">use stroke color</option>
 					<option value="black" >black</option>
+					<option value="red">red</option>
 					<option value="orange">orange</option>
 					<option value="yellow">yellow</option>
-					<option value="blue" selected="selected">blue</option>
+					<option value="blue">blue</option>
 				</select>
 			</li>
 			<li>
@@ -110,6 +161,7 @@
 					<option value="triangle">triangle</option>
 					<option value="sign">sign</option>
 					<option value="ban">ban</option>
+					<option value="lozenge">lozenge</option>
 					<option value="square">square</option>
 				</select>
 			</li>
@@ -119,16 +171,20 @@
 					<option value="white" >white</option>
 					<option value="red">red</option>
 					<option value="green">green</option>
+					<option value="#fd0">yellow</option>
 					<option value="navy" selected="selected">navy</option>
 				</select>
 			</li>
 			<li>
 				stroke color: 
 				<select id="stroke" onchange="vector.changed();" >
+					<option value="transparent">transparent</option>
 					<option value="white" selected="selected">white</option>
+					<option value="black">black</option>
 					<option value="red">red</option>
 					<option value="orange">orange</option>
 					<option value="yellow">yellow</option>
+					<option value="blue">blue</option>
 				</select>
 			</li>
 			<li>
@@ -151,8 +207,33 @@
 			</li>
 		</ul>
 		<h2>Select a font glyph:</h2>
+		<h2>Standard</h2>
+		<i class="standard" onclick="setFont('1')">1</i>
+		<i class="standard" onclick="setFont('2')">2</i>
+		<i class="standard" onclick="setFont('3')">3</i>
+		<i class="standard" onclick="setFont('8')">8</i>
+		<i class="standard" onclick="setFont('9')">9</i>
+		<i class="standard" onclick="setFont('0')">0</i>
+		<i class="standard" onclick="setFont('A')">A</i>
+		<i class="standard" onclick="setFont('B')">B</i>
+		<i class="standard" onclick="setFont('C')">C</i>
+		<i class="standard" onclick="setFont('X')">X</i>
+		<i class="standard" onclick="setFont('Y')">Y</i>
+		<i class="standard" onclick="setFont('Z')">Z</i>
+		<i class="standard" onclick="setFont('i')">i</i>
+		<i class="standard" onclick="setFont('$')">$</i>
+		<i class="standard" onclick="setFont('€')">€</i>
+		<i class="standard" onclick="setFont('@')">@</i>
+		<i class="standard" onclick="setFont('&')">&</i>
+		<i class="standard" onclick="setFont('&#x2600;')">&#x2600;</i>
+		<i class="standard" onclick="setFont('&#x2601;')">&#x2601;</i>
+		<i class="standard" onclick="setFont('&#x2603;')">&#x2603;</i>
+		<i class="standard" onclick="setFont('&#x2604;')">&#x2604;</i>
+		<i class="standard" onclick="setFont('&#x263A;')">&#x263A;</i>
+		<i class="standard" onclick="setFont('&#x2639;')">&#x2639;</i>
 	</div>
-	
+
+
 	<script type="text/javascript">
 	
 	// Layers
@@ -171,8 +252,9 @@
 
 	// Get font glyph
 	var theGlyph = "maki-building";
-	function setFont()
-	{	theGlyph = $(this).data("glyph");
+	function setFont(g)
+	{	if (typeof(g)=='string') theGlyph = g;
+		else theGlyph = $(this).data("glyph");
 		vector.changed();
 	}
 	// Fill font glyphs
@@ -264,6 +346,24 @@
 	})
 
 	map.addLayer(vector);
+
+
+	//
+	function setOptions(glyph, form, color, scolor, fcolor, border, radius, fsize, offset, gradient, shadow)
+	{	theGlyph = glyph;
+		$("#color").val(color);
+		$("#form").val(form);
+		$("#fill").val(fcolor);
+		$("#stroke").val(scolor);
+		$("#border").val(border);
+		$("#radius").val(radius);
+		$("#fontsize").val(fsize||1);
+		$("#offset").prop("checked", offset||false);
+		$("#gradient").prop("checked", gradient||false);
+		$("#shadow").prop("checked", shadow||false);
+		// Refresh
+		vector.changed();
+	}
 
 	// Redraw layer when fonts are loaded
 	$(window).on("load", function(){ console.log("loaded"); vector.changed(); });
