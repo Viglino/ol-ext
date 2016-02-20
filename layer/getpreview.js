@@ -23,6 +23,7 @@ ol.source.Source.prototype.getPreview = function(lonlat, resolution)
 ol.source.Tile.prototype.getPreview = function(lonlat, resolution)
 {	if (!lonlat) lonlat = [21020, 6355964];
 	if (!resolution) resolution = 150;
+	
 	var coord = this.getTileGrid().getTileCoordForCoordAndResolution(lonlat, resolution);
 	var fn = this.getTileUrlFunction();
 	return fn.call(this, coord, this.getProjection());
@@ -39,6 +40,7 @@ ol.source.Tile.prototype.getPreview = function(lonlat, resolution)
 ol.source.TileWMS.prototype.getPreview = function(lonlat, resolution)
 {	if (!lonlat) lonlat = [21020, 6355964];
 	if (!resolution) resolution = 150;
+
 /*	No way to acces tileUrlFunction...
 	var fn = this.getTileUrlFunction();
 	return fn.call(this, lonlat, this.getProjection());
@@ -59,7 +61,7 @@ ol.source.TileWMS.prototype.getPreview = function(lonlat, resolution)
  */
 ol.layer.Layer.prototype.getPreview = function(lonlat, resolution)
 {	if (this.get("preview")) return [ this.get("preview") ];
-	if (!resolution) resolution = -1;
+	if (!resolution) resolution = 150;
 	// Get middle resolution
 	if (resolution < this.getMinResolution() || resolution > this.getMaxResolution()) 
 	{	var rmin = this.getMinResolution(),
@@ -73,6 +75,10 @@ ol.layer.Layer.prototype.getPreview = function(lonlat, resolution)
 			resolution = rmin;
 		}
 	}
+	var e = this.getExtent();
+	if (!lonlat) lonlat = [21020, 6355964];	// Default lonlat
+	if (e && !ol.extent.containsCoordinate(e,lonlat)) lonlat = [ (e[0]+e[2])/2, (e[1]+e[3])/2 ];
+
 	if (this.getSource) return [ this.getSource().getPreview(lonlat, resolution) ];
 	return [];
 }
