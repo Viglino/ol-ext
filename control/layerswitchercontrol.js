@@ -12,6 +12,15 @@
  *		- step_opacity {Number} step for opacity, default 0.5
  *		- show_progress {boolean} show a progress bar on tile layers, default false
  *		- mouseover {boolean} show the panel on mouseover, default false
+ *		- oninfo {function} callback on click on info button
+ *		- trash {boolean} add a trash button to delete the layer
+ *		- extent {boolean} add an extent button
+ *		- onextent {function} callback when click on extent, default fit view to extent
+ *
+ * Layers attributes that control the switcher
+ *	- allwaysOnTop {boolean} true to prevent layer stay on top of the switcher, default false
+ *	- displayInLayerSwitcher {boolean} display in switcher, default true
+ *	- noSwitcherDelete {boolean} to prevent layer deletion (w. trash option), default false
  */
 ol.control.LayerSwitcher = function(opt_options) 
 {	var options = opt_options || {};
@@ -19,6 +28,10 @@ ol.control.LayerSwitcher = function(opt_options)
 	this.dcount = 0;
 	this.step_opacity = options.step_opacity || 0.5;
 	this.show_progress = options.show_progress;
+	this.oninfo = (typeof (options.oninfo) == "function" ? options.oninfo: null);
+	this.onextent = (typeof (options.onextent) == "function" ? options.onextent: null);
+	this.hasextent = options.extent || options.onextent;
+	this.hastrash = options.trash;
 
 	var element;
 	if (options.target) 
@@ -43,8 +56,23 @@ ol.control.LayerSwitcher = function(opt_options)
 		target: options.target
 	});
 
+	// Enable jQuery dataTransfert
+	$.event.props.push('dataTransfer');
+
 };
 ol.inherits(ol.control.LayerSwitcher, ol.control.Control);
+
+
+/** List of tips
+*/
+ol.control.LayerSwitcher.prototype.tip =
+{	up: "up",
+	down: "down",
+	info: "informations...",
+	extent: "zoom to extent",
+	trash: "remove layer",
+	plus: "expand/shrink"
+}
 
 /**
  * Set the map instance the control is associated with.
@@ -56,32 +84,43 @@ ol.control.LayerSwitcher.prototype.setMap = function(map)
 	
 	if (this.map_)
 	{	this.map_.getLayerGroup().un('change', this.drawPanel, this);
-		this.map_.getView().un('change:resolution', this.viewChange, this);
-		console.log("remove")
+//		this.map_.un('moveend', this.viewChange, this);
+		console.log("remove");
 	}
 
 	this.map_ = map;
 	// Get change (new layer added or removed)
 	if (map) 
 	{	map.getLayerGroup().on('change', this.drawPanel, this);
-		map.getView().on('change:resolution', this.viewChange, this);
+//		map.on('moveend', this.viewChange, this);
 	}
 
 };
 
 
 /**
- * On view change hide layer depending on resolution
+ * On view change hide layer depending on resolution / extent
  * @param {ol.event} map The map instance.
  * @private
  */
 ol.control.LayerSwitcher.prototype.viewChange = function(e) 
-{	var res = this.map_.getView().getResolution();
+{	var map = this.map_;
+	var res = this.map_.getView().getResolution();
 	$("li", this.panel_).each(function()
 	{	var l = $(this).data('layer');
 		if (l)
 		{	if (l.getMaxResolution()<=res || l.getMinResolution()>=res) $(this).addClass("ol-layer-hidden");
-			else $(this).removeClass("ol-layer-hidden");
+			else 
+			{	var ex0 = l.getExtent();
+				if (ex0)
+				{	var ex = map.getView().calculateExtent(map.getSize());
+					if (!ol.extent.intersects(ex, ex0)) 
+					{	$(this).addClass("ol-layer-hidden");
+					}
+					else $(this).removeClass("ol-layer-hidden");
+				}
+				else $(this).removeClass("ol-layer-hidden");
+			}
 		}
 	});
 }
@@ -103,7 +142,7 @@ ol.control.LayerSwitcher.prototype.drawPanel = function(e)
 ol.control.LayerSwitcher.prototype.drawPanel_ = function(e) 
 {	if (--this.dcount) return;
 	this.panel_.html("");
-	this.drawList (this.panel_, this.getMap().getLayers().getArray());
+	this.drawList (this.panel_, this.getMap().getLayers());
 }
 
 /** Change layer visibility
@@ -120,15 +159,24 @@ ol.control.LayerSwitcher.prototype.switchLayerVisibility = function(l, layers)
 	}
 }
 
-/** Check if layer is visible
+/** Check if layer is on the map (depending on zoom and extent)
  * @param {ol.layer}
+ * @return {boolean}
  */
 ol.control.LayerSwitcher.prototype.testLayerVisibility = function(layer)
 {	if (this.map_)
 	{	var res = this.map_.getView().getResolution();
-		return (layer.getMaxResolution()<=res || layer.getMinResolution()>=res);
+		if (layer.getMaxResolution()<=res || layer.getMinResolution()>=res) return false;
+		else 
+		{	var ex0 = layer.getExtent();
+			if (ex0)
+			{	var ex = this.map_.getView().calculateExtent(this.map_.getSize());
+				return ol.extent.intersects(ex, ex0);
+			}
+			return true;
+		}
 	}
-	return false;
+	return true;
 }
 
 /** Render a list of layer
@@ -136,8 +184,9 @@ ol.control.LayerSwitcher.prototype.testLayerVisibility = function(layer)
  * @layers {Array{ol.layer}} list of layer to show
  * @api stable
  */
-ol.control.LayerSwitcher.prototype.drawList = function(ul, layers)
+ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 {	var self = this;
+	var layers = collection.getArray();
 	var setVisibility = function(e) 
 	{	e.stopPropagation();
 		var l = $(this).parent().data("layer");
@@ -167,34 +216,121 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, layers)
 	{	e.preventDefault(); 
 		moveLayer($(this).parent().data("layer"), self.map_.getLayers(), -1); 
 	};
+	function onInfo(e) 
+	{	e.preventDefault(); 
+		self.oninfo($(this).parent().data("layer")); 
+	};
+	function zoomExtent(e) 
+	{	e.preventDefault(); 
+		if (self.onextent) self.onextent($(this).parent().data("layer")); 
+		else self.map_.getView().fit ($(this).parent().data("layer").getExtent(), self.map_.getSize()); 
+	};
+	function removeLayer(e) 
+	{	e.preventDefault();
+		var li = $(this).closest("ul").parent();
+		if (li.data("layer")) 
+		{	li.data("layer").getLayers().remove($(this).parent().data("layer"));
+			if (li.data("layer").getLayers().getLength()==0) removeLayer.call($(".layerTrash", li), e);
+		}
+		else self.map_.removeLayer($(this).parent().data("layer"));
+	};
+	
+	// Drag'n'drop
+	function drag(e)
+	{	// Reset drag
+		var li = $(e.target);
+		var sw = li.addClass("drag").parents(".ol-layerswitcher");
+		$("ul", sw).data("drag",false);
+		// New drag
+		li.parent().data("drag",e.target);
+		e.dataTransfer.setData("text", "switcher");
+	}
+	function dragend(e)
+	{	// Reset drag
+		var sw = $(e.target).removeClass("drag").parents(".ol-layerswitcher");
+		$("li", sw).removeClass("dropover");
+	}
+	function drop(e)
+	{	e.preventDefault();
+		e.stopPropagation();
+		if (e.dataTransfer.getData("text") == "switcher") 
+		{	// Get current position
+			var li = $(e.currentTarget);
+			//if (!li.is("li")) li = li.closest("li");
+			// Get drag on parent
+			var drop = $(li.parent("ul").data("drag")).data("layer");
+			var target = li.data("layer");
+			if (!drop || !target) return;
+			// switch layers
+			for (var i=0; i<layers.length; i++) 
+			{	if (layers[i]==drop) 
+				{	collection.removeAt (i);
+					break;
+				}
+			}
+			for (var j=0; j<layers.length; j++) 
+			{	if (layers[j]==target) 
+				{	if (i>j) collection.insertAt (j,drop);
+					else collection.insertAt (j+1,drop);
+					break;
+				}
+			}
+		}
+	}
+	function dragleave(e) 
+	{	var li = $(e.currentTarget);
+		// if (!li.is("li")) li = $(e.target).closest("li");
+		li.removeClass("dropover");
+	}
+	function dragover(e) 
+	{	var li = $(e.target);
+		if (!li.is("li")) li = li.closest("li");
+		var d = li.parents("ul").data("drag");
+		if (d && li.get(0)!=d)
+		{	var drop = $(d).data("layer");
+			var target = li.data("layer");
+			// Don't mix layer level
+			if (!target.get("allwaysOnTop") == !drop.get("allwaysOnTop"))
+			{	e.preventDefault();
+				li.addClass("dropover");
+			}
+		}
+	}
 	
 	// Add the layer list
 	//for (var i=0; i<layers.length; i++)
 	for (var i=layers.length-1; i>=0; i--)
 	{	var layer = layers[i];
 		if (layer.get("displayInLayerSwitcher")===false) continue;
-		
+
 		var d = $("<li>").addClass(layer.getVisible()?"visible":"")
+						.attr("draggable", true)
+						.on ("dragstart", drag)
+						.on ("dragend", dragend)
+						.on ("dragover", dragover)
+						.on ("dragleave", dragleave)
+						.on ("drop", drop)
 						.data("layer",layer); //.appendTo(ul);
-		if (this.testLayerVisibility(layer)) d.addClass("ol-layer-hidden");
+		if (!this.testLayerVisibility(layer)) d.addClass("ol-layer-hidden");
 		
 		//  up/down
 		if (i<layers.length-1) 
 		{	if (layer.get("allwaysOnTop") || !layers[i+1].get("allwaysOnTop"))
 			{	$("<div>").addClass("layerup")
-					.click (moveLayerUp)
-					.on ('touchstart', moveLayerUp)
+					.on ('click touchstart', moveLayerUp)
+					.attr("title", this.tip.up)
 					.appendTo(d);
 			}
 		}
 		if (i>0) 
 		{	if (!layer.get("allwaysOnTop") || layers[i-1].get("allwaysOnTop"))
 			{	$("<div>").addClass("layerdown")
-					.click (moveLayerDown)
-					.on ('touchstart', moveLayerDown)
+					.on ('click touchstart', moveLayerDown)
+					.attr("title", this.tip.down)
 					.appendTo(d);
 			}
 		}
+
 		// Show/hide sub layers
 		if (layer.getLayers) 
 		{	$("<div>").addClass(layer.get("openInLayerSwitcher") ? "collapse-layers" : "expend-layers" )
@@ -202,8 +338,31 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, layers)
 					{	var l = $(this).parent().data("layer");
 						l.set("openInLayerSwitcher", !l.get("openInLayerSwitcher") )
 					})
+					.attr("title", this.tip.plus)
 					.appendTo(d);
 		}
+		// Info button
+		if (this.oninfo)
+		{	$("<div>").addClass("layerInfo")
+					.on ('click touchstart', onInfo)
+					.attr("title", this.tip.info)
+					.appendTo(d);
+		}
+		// Layer extent
+		if (this.hastrash && !layer.get("noSwitcherDelete"))
+		{	$("<div>").addClass("layerTrash")
+					.on ('click touchstart', removeLayer)
+					.attr("title", this.tip.trash)
+					.appendTo(d);
+		}
+		// Layer extent
+		if (this.hasextent && layers[i].getExtent())
+		{	$("<div>").addClass("layerExtent")
+					.on ('click touchstart', zoomExtent)
+					.attr("title", this.tip.extent)
+					.appendTo(d);
+		}
+
 		// Visibility
 		$("<input>")
 			.attr('type', layer.get('baseLayer') ? 'radio' : 'checkbox')
@@ -226,7 +385,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, layers)
 				.addClass("layerswitcher-progress")
 				.appendTo(d);
 			this.setprogress_(layer);
-			layer.layerswitcher_progress = p;
+			layer.layerswitcher_progress = $("<div>").appendTo(p);
 		}
 
 		// Opacity
@@ -251,7 +410,9 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, layers)
 
 		// Layer group
 		if (layer.getLayers)
-		{	if (layer.get("openInLayerSwitcher")===true) this.drawList ($("<ul>").appendTo(d), layer.getLayers().getArray());
+		{	if (layer.get("openInLayerSwitcher")===true) 
+			{	this.drawList ($("<ul>").appendTo(d), layer.getLayers());
+			}
 		}
 		// Add to the list
 		d.appendTo(ul);
@@ -270,7 +431,7 @@ ol.control.LayerSwitcher.prototype.setprogress_ = function(layer)
 				layer.layerswitcher_progress.width(0);
 			}
 			else 
-			{	layer.layerswitcher_progress.css('width', (loaded / loading * 90).toFixed(1) + '%');
+			{	layer.layerswitcher_progress.css('width', (loaded / loading * 100).toFixed(1) + '%');
 			}
 		}
 		layer.getSource().on('tileloadstart', function()

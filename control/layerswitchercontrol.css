@@ -33,6 +33,19 @@
 {	display:none;
 }
 
+.ol-layerswitcher .panel li
+{	transition: transform 0.2s linear;
+	-weblit-transition: -webkit-transform 0.2s linear;
+}
+.ol-layerswitcher .panel li.drag
+{	opacity: 0.5;
+	transform:scale(0.8);
+	-webkit-transform:scale(0);
+}
+.ol-layerswitcher .panel li.dropover
+{	background: rgba(51, 102, 153, 0.5);
+}
+
 .ol-layerswitcher .panel li label
 {	display: inline-block;
 	height: 1.4em;
@@ -76,7 +89,7 @@
 }
 
 .ol-layerswitcher .panel li.ol-layer-hidden
-{	opacity: 0.5;
+{	opacity: 0.6;
 }
 
 
@@ -102,7 +115,7 @@
 {	cursor: pointer;
 	float: right;
 	height: 1em;
-	margin: 0 2px;
+	margin: 0 2px 2px;
 	position: relative;
 	width: 1em;
 }
@@ -119,6 +132,81 @@
 }
 .ol-layerswitcher .layerdown:before
 {	border-width: 0.5em 0.5em 0;
+}
+
+.ol-layerswitcher .layerInfo
+{	cursor: pointer;
+	float: right;
+	height: 1em;
+	width: 1em;
+	position: relative;
+	background: #369;
+	border-radius: 100%;
+	margin: 2px;
+	clear: right;
+}
+.ol-layerswitcher .layerInfo:before
+{	color: #fff;
+	content: "i";
+	display: block;
+	font-size: 0.8em;
+	font-weight: bold;
+	text-align: center;
+	width: 1.25em;
+}
+
+.ol-layerswitcher .layerTrash
+{	background: #369;
+	cursor: pointer;
+	float: right;
+	height: 1em;
+	margin: 2px;
+	position: relative;
+	width: 1em;
+}
+.ol-layerswitcher .layerTrash:before
+{	color: #fff;
+	content: "\00d7";
+	font-size:1em;
+	top: 50%;
+	left: 0;
+	right: 0;
+	text-align: center;
+	line-height: 1em;
+	margin: -0.5em 0;
+	position: absolute;
+}
+
+.ol-layerswitcher .layerExtent
+{	cursor: pointer;
+	float: right;
+	height: 1em;
+	width: 1em;
+	position: relative;
+	background: #369;
+	margin: 2px;
+}
+.ol-layerswitcher .layerExtent:before
+{	border-right: 1px solid #fff;
+	border-bottom: 1px solid #fff;
+	content: "";
+	display: block;
+	position: absolute;
+	left: 6px;
+	right: 2px;
+	top: 6px;
+	bottom: 3px;
+}
+.ol-layerswitcher .layerExtent:after
+{	border-left: 1px solid #fff;
+	border-top: 1px solid #fff;
+	content: "";
+	display: block;
+	position: absolute;
+	bottom: 6px;
+	left: 2px;
+	right: 6px;
+	top: 3px;
 }
 
 .ol-layerswitcher .expend-layers,
@@ -192,12 +280,16 @@
 }
 
 .ol-layerswitcher .layerswitcher-progress
-{	width:0;
-	background-color: #369;
+{	display:block;
+	margin:-4px 2em 2px 1.3em;
+}
+.ol-layerswitcher .layerswitcher-progress div
+{	background-color: #369;
 	height:2px;
 	display:block;
-	margin:-4px 0 2px 10%;
+	width:0;
 }
+
 
 .ol-layerswitcher .layerswitcher-opacity div:hover:before,
 .ol-layerswitcher .layerswitcher-opacity div.select:before
