@@ -84,7 +84,7 @@ ol.control.LayerSwitcher.prototype.setMap = function(map)
 	
 	if (this.map_)
 	{	this.map_.getLayerGroup().un('change', this.drawPanel, this);
-//		this.map_.un('moveend', this.viewChange, this);
+		this.map_.un('moveend', this.viewChange, this);
 		console.log("remove");
 	}
 
@@ -92,7 +92,7 @@ ol.control.LayerSwitcher.prototype.setMap = function(map)
 	// Get change (new layer added or removed)
 	if (map) 
 	{	map.getLayerGroup().on('change', this.drawPanel, this);
-//		map.on('moveend', this.viewChange, this);
+		map.on('moveend', this.viewChange, this);
 	}
 
 };
