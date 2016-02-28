@@ -1,0 +1,142 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: GeoImage source</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- OL3 -->
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	
+	<!-- -->
+	<script type="text/javascript" src="../layer/geoimagesource.js"></script>
+
+	<link rel="stylesheet" href="style.css" />
+	<style>
+		.options input[type="number"]
+		{	width:5em;
+		}
+		.options input[type="range"]
+		{	vertical-align: middle;
+		}
+
+	</style>
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: GeoImage source</h1>
+	</a>
+	<p class="info">
+		<i>ol.source.GeoImage</i> georeference images on a map.
+		<br />
+		You can choose the center, rotation and the scale (x and y axis) of the image.
+		The image can be crop by an extent (imageCrop) or by a polygon (imageMask).
+		<br />
+		Use the <a href="http://viglino.github.io/Map-georeferencer/">Map-georeferencer</a> project to calculate the parameters for an images.
+	</p>
+
+	<!-- DIV pour la carte -->
+	<div id="map" style="width:600px; height:400px;"></div>
+	
+	<div class="options">
+		<h2>Otions:</h2>
+		Opacity: <input id="opacity" class="option" type="range" value="0.7" min="0" max="1" step="0.1" />
+		<br />
+		Rotation: <input id="rotate" class="option" type="number" value="7.44" step="0.1" />
+		<br />
+		Center: 
+		<input id ="x" class="option" type="number" value="274764.75" />
+		<input id ="y" class="option" type="number" value="6243935.64" />
+		<br />
+		Scale:
+		<input id ="w" class="option" type="number" step="0.001" value="0.589" />
+		<input id ="h" class="option" type="number" step="0.001" value ="0.597" />
+		<br />
+		Crop:
+		<input id ="xmin" class="option" type="number" value="0" step="10" />
+		<input id ="ymin" class="option" type="number" value ="0" step="10" />
+		<input id ="xmax" class="option" type="number" value="5526" step="10" />
+		<input id ="ymax" class="option" type="number" value ="5000" step="10" />
+	</div>
+	
+	<script type="text/javascript">
+
+	// The map
+	var map = new ol.Map
+		({	target: 'map',
+			view: new ol.View
+			({	zoom: 14,
+				center: [274770, 6243929]
+			}),
+			layers: [ new ol.layer.Tile({ source: new ol.source.OSM() }) ]
+		});
+
+	// Options
+	$(".option").on("change", resetSource);
+
+	var x = Number($("#x").val());
+	var y = Number($("#y").val());
+	var sx = Number($("#w").val());
+	var sy = Number($("#h").val());
+	var xmin = Number($("#xmin").val());
+	var ymin = Number($("#ymin").val());
+	var xmax = Number($("#xmax").val());
+	var ymax = Number($("#ymax").val());
+	var opacity = Number($("#opacity").val());
+
+	var geoimg = new ol.layer.Image(
+	{	name: "Georef",
+		opacity: opacity,
+		source: new ol.source.GeoImage(
+		{	url: 'data/IGNF_PVA_1-0__1976-03-24_pt.jpg',
+			imageCenter: [x,y],
+			imageScale: [sx,sy],
+			imageCrop: [xmin,ymin,xmax,ymax],
+			imageRotate: Number($("#rotate").val()*Math.PI/180),
+			projection: 'EPSG:3857',
+			attributions: [ new ol.Attribution({html:"<a href='http://www.geoportail.gouv.fr/actualite/181/telechargez-les-cartes-et-photographies-aeriennes-historiques'>Photo historique &copy; IGN</a>"}) ]
+		})
+    })
+	map.addLayer(geoimg);
+
+	function resetSource ()
+	{	var x = Number($("#x").val());
+		var y = Number($("#y").val());
+		var sx = Number($("#w").val());
+		var sy = Number($("#h").val());
+		var xmin = Number($("#xmin").val());
+		var ymin = Number($("#ymin").val());
+		var xmax = Number($("#xmax").val());
+		var ymax = Number($("#ymax").val());
+		var opacity = Number($("#opacity").val());
+		if (opacity>1) opacity=1;
+		else if (opacity<0) opacity=0;
+		$("#opacity").val(opacity);
+		geoimg.setOpacity(opacity);
+		geoimg.getSource().setCenter([x,y]);
+		geoimg.getSource().setRotation($("#rotate").val()*Math.PI/180);
+		geoimg.getSource().setScale([sx,sy]);
+		geoimg.getSource().setCrop([xmin,ymin,xmax,ymax]);
+		var crop = geoimg.getSource().getCrop();
+		$("#xmin").val(crop[0]);
+		$("#ymin").val(crop[1]);
+		$("#xmax").val(crop[2]);
+		$("#ymax").val(crop[3]);
+	}
+
+	</script>
+	
+</body>
+</html>

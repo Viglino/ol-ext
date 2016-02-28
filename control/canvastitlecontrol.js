@@ -25,6 +25,7 @@ ol.control.CanvasTitle = function(options)
 					display: 'block',
 					visibility: 'hidden'
 				});
+
 	ol.control.Control.call(this, 
 	{	element: elt.get(0),
 		target: options.target
@@ -40,7 +41,7 @@ ol.inherits(ol.control.CanvasTitle, ol.control.Control);
  * @api stable
  */
 ol.control.CanvasTitle.prototype.setMap = function (map)
-{	ol.control.ScaleLine.prototype.setMap.call(this, map);
+{	ol.control.Control.prototype.setMap.call(this, map);
 
 	map.un('postcompose', this.drawTitle_, this);
 	// Get change (new layer added or removed)

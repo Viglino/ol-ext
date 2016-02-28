@@ -24,6 +24,7 @@
 {	list-style: none;
 	padding: 0 0 0 20px;
 	overflow: hidden;
+	clear: both;
 }
 
 /** Custumize checkbox
@@ -36,6 +37,7 @@
 .ol-layerswitcher .panel li
 {	transition: transform 0.2s linear;
 	-weblit-transition: -webkit-transform 0.2s linear;
+	clear: both;
 }
 .ol-layerswitcher .panel li.drag
 {	opacity: 0.5;
@@ -256,10 +258,11 @@
 
 .ol-layerswitcher .layerswitcher-opacity
 {	border: 1px solid #369;
-	height: 10px;
+	height: 12px;
 	width: 117px;
 	font-size:0;
 	margin:0 0 7px 20px;
+	box-sizing: border-box;
 }
 .ol-layerswitcher .layerswitcher-opacity div
 {	box-sizing: border-box;

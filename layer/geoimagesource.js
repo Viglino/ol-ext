@@ -220,6 +220,8 @@ ol.source.GeoImage.prototype.setScale = function(scale)
 		this.crop = [ Math.max(0,crop[0]), Math.max(0,crop[1]), Math.min(this.image.naturalWidth,crop[2]), Math.min(this.image.naturalHeight,crop[3]) ];
 	}
 	else this.crop = [0,0, this.image.naturalWidth,this.image.naturalHeight];
+	if (this.crop[2]<=this.crop[0]) this.crop[2] = this.crop[0]+1;
+	if (this.crop[3]<=this.crop[1]) this.crop[3] = this.crop[1]+1;
 	this.imageSize = [ this.crop[2]-this.crop[0], this.crop[3]-this.crop[1] ];
 	this.changed();
 }
