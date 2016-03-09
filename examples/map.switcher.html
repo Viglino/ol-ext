@@ -127,21 +127,27 @@
 					source: new ol.source.Stamen({ layer: 'terrain-labels' })
 				});
 	// WMS with bbox
-	var brgm = new ol.layer.Tile ({
-		"name": "BRGM-GEOLOGIE",
-		visible: false,
+	var brgm = new ol.layer.Tile (
+	{	"title": "GEOLOGIE",
+		"extent": [
+			-653182.6969582437,
+			5037463.842847037,
+			1233297.5065495989,
+			6646432.677299531
+		],
 		"minResolution": 3.527777777777778,
 		"maxResolution": 3527.777777777778,
-		"extent": ol.proj.transformExtent([-5.86764,41.1701,11.0789,51.1419], 'EPSG:4326', 'EPSG:3857'),
-		"source": new ol.source.TileWMS(
-		{	"url": "http://geoservices.brgm.fr/geologie",
+		"source": new ol.source.TileWMS({
+			"url": "http://geoservices.brgm.fr/geologie",
 			"projection": "EPSG:3857",
 			"params": {
 				"LAYERS": "GEOLOGIE",
 				"FORMAT": "image/png",
 				"VERSION": "1.3.0"
 			},
-			"attributions": [ new ol.Attribution({"html":"<a href='http://www.brgm.fr/'>&copy; Brgm</a>"}) ]
+			"attributions": [
+				new ol.Attribution({"html":"<a href='http://www.brgm.fr/'>&copy; Brgm</a>"})
+			]
 		})
 	});
 

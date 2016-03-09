@@ -197,6 +197,9 @@
 				fontSize: <input id="fontsize" type="number" style="width:4em" value=1 onchange="vector.changed();" step="0.1" />
 			</li>
 			<li>
+				rotation: <input id="rotation" type="number" style="width:4em" value=0 onchange="vector.changed();" step="1" />
+			</li>
+			<li>
 				<input id="offset" type="checkbox" onchange="vector.changed();" /><label for="offset"> offset</label>
 			</li>
 			<li>
@@ -298,6 +301,7 @@
 							fontSize: Number($("#fontsize").val()),
 							radius: Number($("#radius").val()), 
 							//offsetX: -15,
+							rotation: Number($("#rotation").val())*Math.PI/180,
 							offsetY: $("#offset").prop('checked') ? -Number($("#radius").val()):0 ,
 							color: $("#color").val(),
 							fill: new ol.style.Fill(

@@ -92,6 +92,7 @@ ol.source.GeoImage = function(opt_options)
 	}
 
 	ol.source.ImageCanvas.call (this, options);	
+	this.setCrop (this.crop);
 };
 ol.inherits (ol.source.GeoImage, ol.source.ImageCanvas);
 

@@ -256,6 +256,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 		if (e.dataTransfer.getData("text") == "switcher") 
 		{	// Get current position
 			var li = $(e.currentTarget);
+			if (!li.hasClass("dropover")) return;
 			//if (!li.is("li")) li = li.closest("li");
 			// Get drag on parent
 			var drop = $(li.parent("ul").data("drag")).data("layer");
