@@ -28,15 +28,15 @@ ol.control.LayerPopup.prototype.drawList = function(ul, layers)
 		self.switchLayerVisibility(l,layers);
 	};
 
-	for (var i=0; i<layers.length; i++)
-	{	var layer = layers[i];
-		if (layer.get("displayInLayerSwitcher")===false) continue;
-		var d = $("<li>").text(layer.get("title") || layer.get("name"))
-				.data ('layer', layer)
-				.click (setVisibility)
-				.on ("touchstart", setVisibility)
-				.appendTo(ul);
-		if (this.testLayerVisibility(layer)) d.addClass("ol-layer-hidden");
-		if (layer.getVisible()) d.addClass("select");
-	}
+	layers.forEach(function(layer)
+	{	if (layer.get("displayInLayerSwitcher")!==false) 
+		{	var d = $("<li>").text(layer.get("title") || layer.get("name"))
+					.data ('layer', layer)
+					.click (setVisibility)
+					.on ("touchstart", setVisibility)
+					.appendTo(ul);
+			if (self.testLayerVisibility(layer)) d.addClass("ol-layer-hidden");
+			if (layer.getVisible()) d.addClass("select");
+		}
+	});
 };

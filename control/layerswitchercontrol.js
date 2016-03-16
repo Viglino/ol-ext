@@ -8,17 +8,18 @@
  *
  * @constructor
  * @extends {ol.control.Control}
- * @param {Object=} opt_options Control options.
+ * @param {Object=} Control options.
  *		- step_opacity {Number} step for opacity, default 0.5
  *		- show_progress {boolean} show a progress bar on tile layers, default false
  *		- mouseover {boolean} show the panel on mouseover, default false
- *		- oninfo {function} callback on click on info button
+ *		- reordering {boolean} allow layer reordering, default true
  *		- trash {boolean} add a trash button to delete the layer
- *		- extent {boolean} add an extent button
+ *		- oninfo {function} callback on click on info button, if none no info button is shown
+ *		- extent {boolean} add an extent button to zoom to the extent of the layer
  *		- onextent {function} callback when click on extent, default fit view to extent
  *
  * Layers attributes that control the switcher
- *	- allwaysOnTop {boolean} true to prevent layer stay on top of the switcher, default false
+ *	- allwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false
  *	- displayInLayerSwitcher {boolean} display in switcher, default true
  *	- noSwitcherDelete {boolean} to prevent layer deletion (w. trash option), default false
  */
@@ -32,6 +33,7 @@ ol.control.LayerSwitcher = function(opt_options)
 	this.onextent = (typeof (options.onextent) == "function" ? options.onextent: null);
 	this.hasextent = options.extent || options.onextent;
 	this.hastrash = options.trash;
+	this.reordering = (options.reordering!==false);
 
 	var element;
 	if (options.target) 
@@ -153,9 +155,9 @@ ol.control.LayerSwitcher.prototype.switchLayerVisibility = function(l, layers)
 {	if (!l.get('baseLayer')) l.setVisible(!l.getVisible());
 	else 
 	{	if (!l.getVisible()) l.setVisible(true);
-		for (var i=0; i<layers.length; i++)
-		{	if (l!==layers[i] && layers[i].get('baseLayer') && layers[i].getVisible()) layers[i].setVisible(false);
-		}
+		layers.forEach(function(li)
+		{	if (l!==li && li.get('baseLayer') && li.getVisible()) li.setVisible(false);
+		});
 	}
 }
 
@@ -190,7 +192,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 	var setVisibility = function(e) 
 	{	e.stopPropagation();
 		var l = $(this).parent().data("layer");
-		self.switchLayerVisibility(l,layers);
+		self.switchLayerVisibility(l,collection);
 	};
 	var setOpacity = function(e)
 	{	e.stopPropagation();
@@ -210,29 +212,29 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 	};
 	function moveLayerUp(e) 
 	{	e.preventDefault(); 
-		moveLayer($(this).parent().data("layer"), self.map_.getLayers(), +1); 
+		moveLayer($(this).closest('li').data("layer"), self.map_.getLayers(), +1); 
 	};
 	function moveLayerDown(e) 
 	{	e.preventDefault(); 
-		moveLayer($(this).parent().data("layer"), self.map_.getLayers(), -1); 
+		moveLayer($(this).closest('li').data("layer"), self.map_.getLayers(), -1); 
 	};
 	function onInfo(e) 
 	{	e.preventDefault(); 
-		self.oninfo($(this).parent().data("layer")); 
+		self.oninfo($(this).closest('li').data("layer")); 
 	};
 	function zoomExtent(e) 
 	{	e.preventDefault(); 
-		if (self.onextent) self.onextent($(this).parent().data("layer")); 
-		else self.map_.getView().fit ($(this).parent().data("layer").getExtent(), self.map_.getSize()); 
+		if (self.onextent) self.onextent($(this).closest('li').data("layer")); 
+		else self.map_.getView().fit ($(this).closest('li').data("layer").getExtent(), self.map_.getSize()); 
 	};
 	function removeLayer(e) 
 	{	e.preventDefault();
 		var li = $(this).closest("ul").parent();
 		if (li.data("layer")) 
-		{	li.data("layer").getLayers().remove($(this).parent().data("layer"));
+		{	li.data("layer").getLayers().remove($(this).closest('li').data("layer"));
 			if (li.data("layer").getLayers().getLength()==0) removeLayer.call($(".layerTrash", li), e);
 		}
-		else self.map_.removeLayer($(this).parent().data("layer"));
+		else self.map_.removeLayer($(this).closest('li').data("layer"));
 	};
 	
 	// Drag'n'drop
@@ -305,7 +307,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 		if (layer.get("displayInLayerSwitcher")===false) continue;
 
 		var d = $("<li>").addClass(layer.getVisible()?"visible":"")
-						.attr("draggable", true)
+						.attr("draggable", this.reordering)
 						.on ("dragstart", drag)
 						.on ("dragend", dragend)
 						.on ("dragover", dragover)
@@ -314,56 +316,6 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 						.data("layer",layer); //.appendTo(ul);
 		if (!this.testLayerVisibility(layer)) d.addClass("ol-layer-hidden");
 		
-		//  up/down
-		if (i<layers.length-1) 
-		{	if (layer.get("allwaysOnTop") || !layers[i+1].get("allwaysOnTop"))
-			{	$("<div>").addClass("layerup")
-					.on ('click touchstart', moveLayerUp)
-					.attr("title", this.tip.up)
-					.appendTo(d);
-			}
-		}
-		if (i>0) 
-		{	if (!layer.get("allwaysOnTop") || layers[i-1].get("allwaysOnTop"))
-			{	$("<div>").addClass("layerdown")
-					.on ('click touchstart', moveLayerDown)
-					.attr("title", this.tip.down)
-					.appendTo(d);
-			}
-		}
-
-		// Show/hide sub layers
-		if (layer.getLayers) 
-		{	$("<div>").addClass(layer.get("openInLayerSwitcher") ? "collapse-layers" : "expend-layers" )
-					.click(function()
-					{	var l = $(this).parent().data("layer");
-						l.set("openInLayerSwitcher", !l.get("openInLayerSwitcher") )
-					})
-					.attr("title", this.tip.plus)
-					.appendTo(d);
-		}
-		// Info button
-		if (this.oninfo)
-		{	$("<div>").addClass("layerInfo")
-					.on ('click touchstart', onInfo)
-					.attr("title", this.tip.info)
-					.appendTo(d);
-		}
-		// Layer extent
-		if (this.hastrash && !layer.get("noSwitcherDelete"))
-		{	$("<div>").addClass("layerTrash")
-					.on ('click touchstart', removeLayer)
-					.attr("title", this.tip.trash)
-					.appendTo(d);
-		}
-		// Layer extent
-		if (this.hasextent && layers[i].getExtent())
-		{	$("<div>").addClass("layerExtent")
-					.on ('click touchstart', zoomExtent)
-					.attr("title", this.tip.extent)
-					.appendTo(d);
-		}
-
 		// Visibility
 		$("<input>")
 			.attr('type', layer.get('baseLayer') ? 'radio' : 'checkbox')
@@ -374,11 +326,69 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 			.appendTo(d);
 		// Label
 		$("<label>").text(layer.get("title") || layer.get("name"))
+			.attr('title', layer.get("title") || layer.get("name"))
 			.click(function(e){ $(this).prev().click(); })
 			.attr('unselectable', 'on')
 			.css('user-select', 'none')
 			.on('selectstart', false)
 			.appendTo(d);
+
+		var layer_buttons = $("<div>").addClass("ol-layerswitcher-buttons").appendTo(d);
+
+		// Show/hide sub layers
+		if (layer.getLayers) 
+		{	$("<div>").addClass(layer.get("openInLayerSwitcher") ? "collapse-layers" : "expend-layers" )
+					.click(function()
+					{	var l = $(this).closest('li').data("layer");
+						l.set("openInLayerSwitcher", !l.get("openInLayerSwitcher") )
+					})
+					.attr("title", this.tip.plus)
+					.appendTo(layer_buttons);
+		}
+
+		//  up/down
+		if (this.reordering)
+		{	if (i<layers.length-1) 
+			{	if (layer.get("allwaysOnTop") || !layers[i+1].get("allwaysOnTop"))
+				{	$("<div>").addClass("layerup")
+						.on ('click touchstart', moveLayerUp)
+						.attr("title", this.tip.up)
+						.appendTo(layer_buttons);
+				}
+			}
+			if (i>0) 
+			{	if (!layer.get("allwaysOnTop") || layers[i-1].get("allwaysOnTop"))
+				{	$("<div>").addClass("layerdown")
+						.on ('click touchstart', moveLayerDown)
+						.attr("title", this.tip.down)
+						.appendTo(layer_buttons);
+				}
+			}
+		}
+
+		$("<div>").addClass("ol-separator").appendTo(layer_buttons);
+
+		// Info button
+		if (this.oninfo)
+		{	$("<div>").addClass("layerInfo")
+					.on ('click touchstart', onInfo)
+					.attr("title", this.tip.info)
+					.appendTo(layer_buttons);
+		}
+		// Layer remove
+		if (this.hastrash && !layer.get("noSwitcherDelete"))
+		{	$("<div>").addClass("layerTrash")
+					.on ('click touchstart', removeLayer)
+					.attr("title", this.tip.trash)
+					.appendTo(layer_buttons);
+		}
+		// Layer extent
+		if (this.hasextent && layers[i].getExtent())
+		{	$("<div>").addClass("layerExtent")
+					.on ('click touchstart', zoomExtent)
+					.attr("title", this.tip.extent)
+					.appendTo(layer_buttons);
+		}
 
 		// Progress
 		if (this.show_progress && layer instanceof ol.layer.Tile)
@@ -408,6 +418,12 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 				op=false;
 			}
 		}
+		/*
+		$("<input>").attr({type:"range", min:0, max:1, step:0.1, draggable:false })
+			.val(layer.getOpacity())
+			.on('change', function(){ $(this).closest('li').data('layer').setOpacity(this.value); })
+			.appendTo(d);
+		*/
 
 		// Layer group
 		if (layer.getLayers)

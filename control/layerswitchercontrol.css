@@ -112,14 +112,33 @@
 	width: 38px;
 }
 
+.ol-layerswitcher-buttons 
+{	display:block;
+	float: right;
+	text-align:right;
+}
+.ol-layerswitcher-buttons > div
+{	display: inline-block;
+	position: relative;
+	cursor: pointer;
+	height:1em;
+	width:1em;
+	margin:2px;
+}
+
+/* line break */
+.ol-layerswitcher .ol-separator
+{	display:block;
+	width:0;
+	height:0;
+	padding:0;
+	margin:0;
+}
+
 .ol-layerswitcher .layerup,
 .ol-layerswitcher .layerdown
-{	cursor: pointer;
-	float: right;
-	height: 1em;
-	margin: 0 2px 2px;
-	position: relative;
-	width: 1em;
+{	margin: 0 2px 2px;
+
 }
 .ol-layerswitcher .layerdown:before,
 .ol-layerswitcher .layerup:before
@@ -130,6 +149,7 @@
 	height: 0;
 	position: absolute;
 	top: 30%;
+	left: 0;
 	width: 0;
 }
 .ol-layerswitcher .layerdown:before
@@ -137,15 +157,8 @@
 }
 
 .ol-layerswitcher .layerInfo
-{	cursor: pointer;
-	float: right;
-	height: 1em;
-	width: 1em;
-	position: relative;
-	background: #369;
+{	background: #369;
 	border-radius: 100%;
-	margin: 2px;
-	clear: right;
 }
 .ol-layerswitcher .layerInfo:before
 {	color: #fff;
@@ -155,16 +168,13 @@
 	font-weight: bold;
 	text-align: center;
 	width: 1.25em;
+	position:absolute;
+	left: 0;
+	top: 0;
 }
 
 .ol-layerswitcher .layerTrash
 {	background: #369;
-	cursor: pointer;
-	float: right;
-	height: 1em;
-	margin: 2px;
-	position: relative;
-	width: 1em;
 }
 .ol-layerswitcher .layerTrash:before
 {	color: #fff;
@@ -180,13 +190,7 @@
 }
 
 .ol-layerswitcher .layerExtent
-{	cursor: pointer;
-	float: right;
-	height: 1em;
-	width: 1em;
-	position: relative;
-	background: #369;
-	margin: 2px;
+{	background: #369;
 }
 .ol-layerswitcher .layerExtent:before
 {	border-right: 1px solid #fff;
@@ -213,18 +217,14 @@
 
 .ol-layerswitcher .expend-layers,
 .ol-layerswitcher .collapse-layers
-{	position: relative;
-	float:right;
-	width:1em;
-	height:1em;
-	cursor:pointer;
-	margin: 0 2px;
+{	margin: 0 2px;
 }
 .ol-layerswitcher .expend-layers:before,
 .ol-layerswitcher .collapse-layers:before
 {	content:"";
 	position:absolute;
 	top:50%;
+	left:0;
 	margin-top:-2px;
 	height:4px;
 	width:100%;
@@ -234,6 +234,7 @@
 {	content:"";
 	position:absolute;
 	left:50%;
+	top:0;
 	margin-left:-2px;
 	width:4px;
 	height:100%;
@@ -261,7 +262,7 @@
 	height: 12px;
 	width: 117px;
 	font-size:0;
-	margin:0 0 7px 20px;
+	margin:0 7px 7px 7px;
 	box-sizing: border-box;
 }
 .ol-layerswitcher .layerswitcher-opacity div

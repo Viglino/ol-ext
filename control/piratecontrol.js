@@ -20,14 +20,18 @@ ol.control.PirateMap = function(options)
 	this.saturation = options.saturation || 0.6;
 	this.opacity = options.opacity || 0.7;
 
-	// Get image on css
+	// Get image in css
 	this.asset.back = new Image();
 	this.asset.back.onload = function(){ if (self.map_) self.map_.renderSync(); }
-	this.asset.back.src = $("<img>").addClass("pirate_back").css("background-image").replace(/^url\(\"(.*)\"\)$/,"$1");
+	var i = $("<img>").addClass("pirate_back").appendTo("body");
+	this.asset.back.src = i.css("background-image").replace(/^url\(\"(.*)\"\)$/,"$1");
+	i.remove();
 
 	this.asset.compass = new Image();
 	this.asset.compass.onload = function(){ if (self.map_) self.map_.renderSync(); }
-	this.asset.compass.src =  $("<img>").addClass("pirate_compass").css("background-image").replace(/^url\(\"(.*)\"\)$/,"$1");
+	var i = $("<img>").addClass("pirate_compass").appendTo("body");
+	this.asset.compass.src =  i.css("background-image").replace(/^url\(\"(.*)\"\)$/,"$1");
+	i.remove();
 
 	var div = document.createElement('div');
 	div.className = "ol-pirate ol-unselectable ol-control";
@@ -69,9 +73,8 @@ ol.control.PirateMap.prototype.drawMask_ = function (event)
 {
 	var ctx = event.context;
 	var canvas = ctx.canvas;
-	var ratio = event.frameState.pixelRatio;
-	var w = canvas.width *ratio;
-	var h = canvas.height *ratio;
+	var w = canvas.width;
+	var h = canvas.height;
 		
 	ctx.save();
 /*
@@ -155,7 +158,7 @@ ol.control.PirateMap.prototype.drawPirate_ = function (event)
 	// Set back color hue
 	ctx.save();
 	
-		ctx.scale(ratio, ratio);
+		//ctx.scale(ratio, ratio);
 
 		ctx.globalCompositeOperation = "color";
 		ctx.fillStyle = this.hue;
@@ -196,8 +199,8 @@ ol.control.PirateMap.prototype.drawPirate_ = function (event)
 		ctx.globalCompositeOperation = "multiply";
 		ctx.globalAlpha = this.opacity;
 
-		drawCompass (ctx, compass, canvas.width*0.9, canvas.height*0.9, rot, 1, m*1.5);
-		drawCompass (ctx, compass, compass.width/2 + canvas.width*0.05, canvas.height*0.5, rot, 0.5, m*1.5);
+		drawCompass (ctx, compass, canvas.width*0.9, canvas.height*0.9, rot, ratio, m*1.5);
+		drawCompass (ctx, compass, compass.width/2 + canvas.width*0.05, canvas.height*0.5, rot, 0.5*ratio, m*1.5);
 	
 	ctx.restore();
 

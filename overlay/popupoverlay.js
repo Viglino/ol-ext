@@ -139,9 +139,11 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
 		coordinate = null;
 	}
 	
+	var self = this;
 	var map = this.getMap();
 	if (html) 
-	{	this.content.innerHTML = html;
+	{	// this.content.innerHTML = html;
+		$(this.content).html("").append(html);
 		// Refresh when loaded (img)
 		$("*", this.content).load(function()
 		{	map.renderSync(); 

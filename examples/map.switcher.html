@@ -52,7 +52,7 @@
 		The <i>allwaysOnTop</i> layer's property make a layer to stay on top of others.
 		</li>
 		<li>
-		ol.layer.Group are grouped together and can be managed all together (visibility/opacity/ordering).
+		Layers in an ol.layer.Group are grouped together and can be managed all together (visibility/opacity/ordering).
 		</li>
 		<li>
 		The <i>openInLayerSwitcher</i> property of an ol.layer.Group is used to code the visibility of the sublayers.
@@ -160,19 +160,19 @@
 			}),
 			controls: ol.control.defaults().extend
 			([	// Add a new Layerswitcher to the map
-				new ol.control.LayerSwitcher(),
-				// Add a layer switcher outside the map
-				new ol.control.LayerSwitcher(
-				{	target:$(".layerSwitcher").get(0), 
-					show_progress:true,
-					extent: true,
-					trash: true,
-					oninfo: function (l) { alert(l.get("title")); }
-				})
+				new ol.control.LayerSwitcher()
 			]),
 			layers: [ baseLayers, mapbox, brgm, labels ]
 		});
-
+	// Add a layer switcher outside the map
+	var switcher = new ol.control.LayerSwitcher(
+		{	target:$(".layerSwitcher").get(0), 
+			show_progress:true,
+			extent: true,
+			trash: true,
+			oninfo: function (l) { alert(l.get("title")); }
+		});
+	map.addControl(switcher);
 	// Insert mapbox layer in layer switcher
 	function displayInLayerSwitcher(b)
 	{	mapbox.set('displayInLayerSwitcher', b);

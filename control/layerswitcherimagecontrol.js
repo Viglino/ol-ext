@@ -34,22 +34,22 @@ ol.control.LayerSwitcherImage.prototype.drawList = function(ul, layers)
 		if (e.type=="touchstart") $(self.element).addClass("ol-collapsed");
 	};
 	
-	for (var i=0; i<layers.length; i++)
-	{	var layer = layers[i];
-		if (layer.get("displayInLayerSwitcher")===false) continue;
-		var prev = layer.getPreview ? layer.getPreview() : ["none"];
-		var d = $("<li>").addClass("ol-imgcontainer")
-					.data ('layer', layer)
-					.click (setVisibility)
-					.on ("touchstart", setVisibility);
-		if (layer.getVisible()) d.addClass("select");
-		for (var k=0; k<prev.length; k++)
-		{	$("<img>").attr('src', prev[k])
-					.appendTo(d);
-		}
-		$("<p>").text(layer.get("title") || layer.get("name")).appendTo(d);
+	layers.forEach(function(layer)
+	{	if (layer.get("displayInLayerSwitcher")!==false)
+		{	var prev = layer.getPreview ? layer.getPreview() : ["none"];
+			var d = $("<li>").addClass("ol-imgcontainer")
+						.data ('layer', layer)
+						.click (setVisibility)
+						.on ("touchstart", setVisibility);
+			if (layer.getVisible()) d.addClass("select");
+			for (var k=0; k<prev.length; k++)
+			{	$("<img>").attr('src', prev[k])
+						.appendTo(d);
+			}
+			$("<p>").text(layer.get("title") || layer.get("name")).appendTo(d);
 
-		if (this.testLayerVisibility(layer)) d.addClass("ol-layer-hidden");
-		d.appendTo(ul);
-	}
+			if (self.testLayerVisibility(layer)) d.addClass("ol-layer-hidden");
+			d.appendTo(ul);
+		}
+	});
 };
