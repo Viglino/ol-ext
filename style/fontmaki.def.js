@@ -1,7 +1,6 @@
 /* Copyright (c) 2014 by Jean-Marc.Viglino [at]ign.fr
 * Dual-licensed under the CeCILL-B Licence (http://www.cecill.info/)
 * and the Beerware license (http://en.wikipedia.org/wiki/Beerware), 
-* feel free to use and abuse it in your projects (the code, not the beer ;-). 
 *
 * Font definiton to use with fontsymbols
 */

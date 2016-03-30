@@ -1,10 +1,7 @@
-/*
-	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license 
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-	
 */
-
 /** ol.control.PirateMap adds an old map effect on a canvas renderer. 
 * It colors the map, adds a parchment texture and compass onto the map. 
 * @param {Object}
@@ -153,7 +150,7 @@ ol.control.PirateMap.prototype.drawPirate_ = function (event)
 	var compass = this.asset.compass;
 	
 	var m = Math.max(canvas.width, canvas.height);
-	var res = view.getResolution();
+	var res = view.getResolution()/ratio;
 	var rot = view.getRotation();
 
 	// Set back color hue
@@ -178,7 +175,6 @@ ol.control.PirateMap.prototype.drawPirate_ = function (event)
 		dy = img.height - dy % img.height;
 		if (dx<0) dx += img.width;
 		if (dy<0) dy += img.height;
-
 
 		ctx.globalCompositeOperation = "multiply";
 		ctx.globalAlpha = this.opacity;

@@ -1,7 +1,8 @@
-/*
-	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (http://www.cecill.info/).
-*//**
+/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
  * OpenLayers 3 Title Control integrated in the canvas (for jpeg/png export purposes).
  *
  * @constructor

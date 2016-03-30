@@ -1,5 +1,7 @@
-/* Copyright (c) IGN-2015 - Jean-Marc.Viglino [at]ign.fr
-*  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*
 *  Photo style for vector features
 */
 /**

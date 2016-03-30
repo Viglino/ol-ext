@@ -1,3 +1,7 @@
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
 /**
  * OpenLayers 3 Layer Overview Control.
  * The overview can rotate with map. 

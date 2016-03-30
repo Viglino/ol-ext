@@ -1,4 +1,7 @@
-/* Copyright (c) IGN-2015 - Jean-Marc.Viglino [at]ign.fr
+/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*
 *  Add a chart style to display charts (pies or bars) on a map 
 */
 /**
