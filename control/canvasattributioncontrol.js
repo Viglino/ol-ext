@@ -57,9 +57,12 @@ ol.control.CanvasAttribution.prototype.setStyle = function (style)
  * @api stable
  */
 ol.control.CanvasAttribution.prototype.setMap = function (map)
-{	ol.control.ScaleLine.prototype.setMap.call(this, map);
+{	var oldmap = this.getMap();
+	if (oldmap) oldmap.un('postcompose', this.drawAttribution_, this);
+	
+	ol.control.ScaleLine.prototype.setMap.call(this, map);
+	if (oldmap) oldmap.renderSync();
 
-	map.un('postcompose', this.drawAttribution_, this);
 	// Get change (new layer added or removed)
 	if (map) map.on('postcompose', this.drawAttribution_, this);
 	this.map_ = map;

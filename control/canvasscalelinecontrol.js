@@ -13,8 +13,7 @@
  */
 ol.control.CanvasScaleLine = function(options) 
 {	ol.control.ScaleLine.call(this, options);
-	// Hide the default DOM element
-	$(this.element).hide().css("visibility","hidden");
+	
 	this.scaleHeight_ = 6;
 
 	// Get style options
@@ -32,12 +31,17 @@ ol.inherits(ol.control.CanvasScaleLine, ol.control.ScaleLine);
  * @api stable
  */
 ol.control.CanvasScaleLine.prototype.setMap = function (map)
-{	ol.control.ScaleLine.prototype.setMap.call(this, map);
+{	var oldmap = this.getMap();
+	if (oldmap) oldmap.un('postcompose', this.drawScale_, this);
+	
+	ol.control.ScaleLine.prototype.setMap.call(this, map);
+	if (oldmap) oldmap.renderSync();
 
-	map.un('postcompose', this.drawScale_, this);
-	// Get change (new layer added or removed)
+	// Add postcompose on the map
 	if (map) map.on('postcompose', this.drawScale_, this);
 
+	// Hide the default DOM element
+	this.$element = $(this.element).css("visibility","hidden");
 	this.olscale = $(".ol-scale-line-inner", this.element);
 }
 
@@ -70,13 +74,14 @@ ol.control.CanvasScaleLine.prototype.setStyle = function (style)
  * @private
  */
 ol.control.CanvasScaleLine.prototype.drawScale_ = function(e)
-{	var ctx = e.context;
+{	if ( this.$element.css("display")=="none" ) return;
+	var ctx = e.context;
 
 	// Get size of the scale div
 	var scalewidth = this.olscale.width()/4;
 	if (!scalewidth) return;
 	var text = this.olscale.text();
-	var position = $(this.element).position();
+	var position = this.$element.position();
 	// Retina device
 	var ratio = e.frameState.pixelRatio;
 	ctx.save();
@@ -90,7 +95,7 @@ ol.control.CanvasScaleLine.prototype.drawScale_ = function(e)
 	position.top *= scy;
 
 	// On top
-	position.top += $(this.element).height() - this.scaleHeight_;
+	position.top += this.$element.height() - this.scaleHeight_;
 
 	// Draw scale text
 	ctx.beginPath();

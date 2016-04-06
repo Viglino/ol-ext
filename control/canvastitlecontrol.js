@@ -42,9 +42,12 @@ ol.inherits(ol.control.CanvasTitle, ol.control.Control);
  * @api stable
  */
 ol.control.CanvasTitle.prototype.setMap = function (map)
-{	ol.control.Control.prototype.setMap.call(this, map);
+{	var oldmap = this.getMap();
+	if (oldmap) oldmap.un('postcompose', this.drawTitle_, this);
+	
+	ol.control.Control.prototype.setMap.call(this, map);
+	if (oldmap) oldmap.renderSync();
 
-	map.un('postcompose', this.drawTitle_, this);
 	// Get change (new layer added or removed)
 	if (map) map.on('postcompose', this.drawTitle_, this);
 	this.map_ = map;
