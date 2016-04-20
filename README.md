@@ -20,4 +20,4 @@ Some resources (mapping services and API) used in this sofware may have a specif
 You must check before use.
 
 > Full text license in English: (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt)  
-> Full text license in French: (http://www.cecill.info/licences/Licence_CeCILL-C_V1-fr.txt)
+> Full text license in French: (http://www.cecill.info/licences/Licence_CeCILL-B_V1-fr.txt)
