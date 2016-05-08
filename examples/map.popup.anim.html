@@ -7,7 +7,7 @@
 ------------------------------------------------------------>
 <html>
 <head>
-	<title>OL3-ext: Popup overlay</title>
+	<title>OL3-ext: Animated popup overlay</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 	<!-- jQuery -->
@@ -23,6 +23,8 @@
 	<script type="text/javascript" src="../control/layerswitchercontrol.js"></script>
 
 	<link rel="stylesheet" href="../overlay/popupoverlay.css" />
+	<link rel="stylesheet" href="../overlay/popupoverlay.anim.css" />
+	<!-- CSS with bounce effect --> 
 	<script type="text/javascript" src="../overlay/popupoverlay.js"></script>
 
 	<link rel="stylesheet" href="style.css" />
@@ -40,45 +42,6 @@
 			max-width: 100px;
 			max-height: 100px;
 		}
-		/* no image content tooltips */
-		.ol-popup.tooltips img
-		{	display:none;
-		}
-
-		/* Custom orange style (tips) */
-		.ol-popup.tips.orange
-		{	border-color:#da7;
-			background-color:#eca;
-		}
-		.ol-popup.tips.orange .anchor::before
-		{	border-color: #da7 transparent;
-		}
-		.ol-popup-middle.tips.orange .anchor::before
-		{	border-color: transparent #da7;
-		}
-
-		/* orange style (default) */
-		.ol-popup.default.orange
-		{	border:4px solid #f96;
-		}
-		.ol-popup.default.orange .anchor::after
-		{	margin: 6px /*border:4 +2 px */ -9px; 
-		}
-		.ol-popup-middle.default.orange .anchor::after
-		{	margin: -9px 6px /*border:4 +2 px */; 
-		}
-		.ol-popup.default.orange .anchor::before
-		{	border-color: #f96 transparent;
-		}
-		.ol-popup-middle.default.orange .anchor::before
-		{	border-color: transparent #da7;
-		}
-		.ol-popup.default.orange .closeBox
-		{	background-color: rgba(255, 153, 102, 0.7);
-		}
-		.ol-popup.default.orange .closeBox:hover
-		{	background-color: rgba(255, 153, 102, 1);
-		}
 	</style>
 
 </head>
@@ -86,32 +49,14 @@
 	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
 
 	<a href="../index.html">
-		<h1>OL3-ext: Popup overlay</h1>
+		<h1>OL3-ext: Animated popup overlay</h1>
 	</a>
 
 	<div class="info">
-		Display popup on the map. 
-		<ul>
-			<li>
-				You can use classes to style the popup with a css (or choose an existing one).
-			</li>
-			<li>
-				You can control the position of the popup <i>top|center|bottom|auto</i> - <i>left|center|right|auto</i>.
-			</li>
-			<li>
-				The <i>auto</i> position lets the popup choose a good positioning according to the position on the map.
-			</li>
-			<li>
-				The <i>closeBox</i> option adds a close button to hide the popup.
-			</li>
-			<li>
-				The <i>onclose</i> option is a callback function when the close button is clicked.
-			</li>
-			<li>
-				You can add a bounce animation effect when popup appear just by adding the popupoverlay.anim.css (see <a href="map.popup.anim.html">example</a>)
-			</li>
-		</ul>
-		<i>ol.Overlay.Popup</i> necessite jQuery.
+		This example uses the <i>ol.Overlay.Popup</i> to display popup on the map.
+		It uses the CSS properties to add a bounce effect to the popup display
+		<br/>
+		See <a href="map.popup.html">popup overlay example</a> form more options.
 	</div>
 
 	<!-- DIV pour la carte -->
@@ -120,11 +65,11 @@
 	<div class="options">
 		<h2>Options:</h2>
 		Positioning:
-		<select onchange="popup.setPositioning(this.value); map.renderSync();">
+		<select id="positioning" onchange="popup.setPositioning(this.value); map.renderSync();">
 			<option value="auto">auto</option>
 			<option value="bottom-auto">bottom-auto</option>
 			<option value="bottom-left">bottom-left</option>
-			<option value="bottom-center">bottom-center</option>
+			<option value="bottom-center" selected="selected">bottom-center</option>
 			<option value="bottom-right">bottom-right</option>
 			<option value="top-auto">top-auto</option>
 			<option value="top-left">top-left</option>
@@ -134,23 +79,6 @@
 			<option value="center-left">center-left</option>
 			<option value="center-right">center-right</option>
 		</select>
-		<br />
-		Form:
-		<select onchange="popup.setPopupClass(this.value); if($('#ck').prop('checked')) popup.addPopupClass('shadow'); ">
-			<option value="default">default</option>
-			<option value="default orange">orange</option>
-			<option value="black">black</option>
-			<option value="tips">green tips</option>
-			<option value="tips orange">orange tips</option>
-			<option value="warning">warning</option>
-			<option value="tooltips">tooltips</option>
-		</select>
-		<br />
-		<input id="ck" type="checkbox" onchange="if (this.checked) popup.addPopupClass('shadow'); else popup.removePopupClass('shadow');" />
-		<label for="ck">shadow</label>
-		<br />
-		<input id="cb" type="checkbox" checked onchange="popup.setClosebox(this.checked);" />
-		<label for="cb">hasclosebox</label>
 	</div>
 	<p>Click on the points to show a popup !</p>
 	
@@ -172,9 +100,9 @@
 		{	popupClass: "default", //"tooltips", "warning" "black" "default", "tips", "shadow",
 			closeBox: true,
 			onclose: function(){ console.log("You close the box"); },
-			positioning: 'auto',
+			positioning: $("#positioning").val(),
 			autoPan: true,
-			autoPanAnimation: { duration: 250 }
+			autoPanAnimation: { duration: 100 }
 		});
 		
 	// The map
@@ -196,6 +124,19 @@
 		attributions: [new ol.Attribution({ html: "&copy; <a href='https://www.data.gouv.fr/fr/datasets/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire/'>data.gouv.fr</a>" })],
 		logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
 	});
+
+	/* Preload images */
+	var listenerKey = vectorSource.on('change', function(e) 
+	{	if (vectorSource.getState() == 'ready') 
+		{	ol.Observable.unByKey(listenerKey);
+			var f = vectorSource.getFeatures();
+			for (var i=0; i<f.length; i++) 
+			{	var img = new Image();
+				img.src = f[i].get("img");
+			}
+		}
+	});
+	/**/
 
 	map.addLayer(new ol.layer.Vector(
 	{	name: 'Fonds de guerre 14-18',

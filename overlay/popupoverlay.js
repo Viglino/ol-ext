@@ -172,6 +172,11 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
 		}
 		// Show
 		this.setPosition(coordinate);
+		// Set visible class (wait to compute the size/position first)
+		$(this.element).parent().show();
+		this._tout = setTimeout (function()
+		{	$(self.element).addClass("visible"); 
+		}, 0);
 	}
 }
 
@@ -181,4 +186,6 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
  */
 ol.Overlay.Popup.prototype.hide = function ()
 {	this.setPosition(undefined);
+	if (this._tout) clearTimeout(this._tout)
+	$(this.element).removeClass("visible");
 }

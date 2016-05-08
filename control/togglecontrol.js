@@ -11,15 +11,17 @@
  */
 ol.control.Toggle = function(options) 
 {	var element = $("<div>").addClass(options['class'] + ' ol-unselectable ol-control'+ (options.on ? " ol-active":""));
-	
-	function toggle(e)
+	var self = this;
+
+	this.togglefn_ = function(e)
 	{	element.toggleClass("ol-active");
-		e.preventDefault();  
-		options.toggleFn(element.hasClass("ol-active"));
+		if (e && e.preventDefault) e.preventDefault();  
+		if (options.toggleFn) options.toggleFn.call(self, element.hasClass("ol-active"));
+		self.dispatchEvent({ type:'activate', active:self.isOn() });
 	};
-	
+
 	$("<button>").html(options.html || "")
-				.on("touchstart click", toggle)
+				.on("touchstart click", this.togglefn_)
 				.appendTo(element);
 	
 	ol.control.Control.call(this, 
@@ -34,5 +36,17 @@ ol.inherits(ol.control.Toggle, ol.control.Control);
  * @api stable
  */
 ol.control.Toggle.prototype.isOn = function()
-{	return this.element.hasClass("ol-active");
+{	return $(this.element).hasClass("ol-active");
+}
+
+/**
+*/
+ol.control.Toggle.prototype.Toggle = function()
+{	this.togglefn_();
+}
+
+/**
+*/
+ol.control.Toggle.prototype.setActive = function(b)
+{	if (this.isOn() !== b ) this.togglefn_();
 }

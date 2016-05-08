@@ -1,0 +1,257 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: Transform interaction</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<link rel="stylesheet" href="style.css" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<!-- FontAwesome -->
+	<link rel="stylesheet" href="http://fontawesome.io/assets/font-awesome/css/font-awesome.css" type="text/css" />
+
+	<!-- OL3 -->
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	<!-- http://openlayers.org/en/v3.2.0/build/ol.js -->
+	<!-- http://openlayers.org/en/v3.2.0/build/ol-debug.js -->
+	
+	<!-- controls -->
+	<script type="text/javascript" src="../interaction/transforminteraction.js"></script>
+
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: Transform interaction</h1>
+	</a>
+	<div class="info">
+
+		<!-- force font to load -->
+		<i class="fa fa-rotate-left" style="position:absolute; top:-1000px;"></i>
+
+		<b>ol.interaction.Transform</b> is an interaction to transform features (scale, translate, rotate).
+		Handles are drawn on the map to manipulate the features
+		<ul><li>
+				Properties can be set to select transforming operations.
+			</li><li>
+				 Handles can be styled with ol.style.
+			</li><li>
+			 	ol.event are thrown to control the transformation (to set an angle propertie on point features to use with ol.style for example)
+			</li>
+		</li></ul>
+	</div>
+
+	<!-- Map div -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options" >
+		<h2>Options:</h2>
+		<ul><li>
+			<input id="style" type="checkbox" onchange="setHandleStyle()" /><label for="style"> styles transform handles (using fontawesome)</label>
+		</li><li>
+			<input id="scale" type="checkbox" onchange="setPropertie(this.id);" checked="checked" /><label for="scale"> enable scale</label>
+		</li><li>
+			<input id="stretch" type="checkbox" onchange="setPropertie(this.id);" checked="checked" /><label for="stretch"> enable stretch</label>
+		</li><li>
+			<input id="rotate" type="checkbox" onchange="setPropertie(this.id);" checked="checked" /><label for="rotate"> enable rotate</label>
+		</li><li>
+			<input id="translate" type="checkbox" onchange="setPropertie(this.id);" checked="checked" /><label for="translate"> enable translate</label>
+		</li><li>
+			<input id="translateFeature" type="checkbox" onchange="setPropertie(this.id);" /><label for="translateFeature"> translate when click on feature</label>
+		</li><li>
+			<hr/>
+			Use <i>Shift</i> key to preserve proportions when scaling.
+			<br />
+			Use <i>Ctrl</i> key to modify the center when scaling.
+		</li></ul>
+		<div style="background:white; padding:0 0.45em;"><span id="info"></span>&nbsp;</div>
+	</div>
+	
+
+	<script type="text/javascript">
+		// Layers
+		var layers = [
+			new ol.layer.Tile({
+				name: "Natural Earth", 
+				minResolution: 306,
+    			source: new ol.source.XYZ(
+				{	url: 'http://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
+					attributions: [new ol.Attribution({ html: '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' })] 
+    			})
+			})
+		]
+		// The map
+		var map = new ol.Map
+			({	target: 'map',
+				view: new ol.View
+				({	zoom: 5,
+					center: [261720, 5951081]
+				}),
+				controls: ol.control.defaults({ "attribution": false }),
+				layers: layers
+			});
+
+		// Style
+		function getStyle(feature)
+		{
+			return [ new ol.style.Style(
+				{	image: new ol.style.RegularShape({
+						fill: new ol.style.Fill({color: [0,0,255,0.4]}),
+						stroke: new ol.style.Stroke({color: [0,0,255,1],width: 1}),
+						radius: 10,
+						points: 3,
+						angle: feature.get('angle')||0
+					}),
+					fill: new ol.style.Fill({color: [0,0,255,0.4]}),
+					stroke: new ol.style.Stroke({color: [0,0,255,1],width: 1})
+				})];
+		}
+		
+		// New vector layer
+		var vector = new ol.layer.Vector(
+		{	name: 'Vecteur',
+			source: new ol.source.Vector(),
+			style: getStyle
+		})
+		map.addLayer(vector);
+		vector.getSource().addFeature(new ol.Feature(new ol.geom.Polygon([[[34243, 6305749], [-288626, 5757848], [210354, 5576845], [34243, 6305749]]])));
+		vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[406033, 5664901], [689767, 5718712], [699551, 6149206], [425601, 6183449]])));
+		vector.getSource().addFeature(new ol.Feature(new ol.geom.Point(	[269914, 6248592])));
+
+		/** Style the transform handles for the current interaction
+		*/
+		var defaultStyle = false;
+		function setHandleStyle()
+		{	if (!interaction instanceof ol.interaction.Transform) return;
+			// First save default style for reset
+			if (!defaultStyle) 
+			{	defaultStyle = $.extend({}, interaction.style);
+			}
+			if ($("#style").prop('checked'))
+			{	// Style the rotate handle
+				var circle = new ol.style.RegularShape({
+								fill: new ol.style.Fill({color:[255,255,255,0.8]}),
+								stroke: new ol.style.Stroke({width:1, color:[0,0,0,0.01]}),
+								radius: 8,
+								points: 10
+							});
+				circle.getAnchor()[0] = -8;
+				circle.getAnchor()[1] = 0;
+				interaction.setStyle ('rotate',
+						new ol.style.Style(
+						{	text: new ol.style.Text (
+								{	text:'\uf0e2', 
+									font:"16px Fontawesome",
+									offsetX:18, 
+									offsetY:10, 
+									fill:new ol.style.Fill({color:'red'})
+								}),
+							image: circle
+						}));
+				// Center of rotation
+				interaction.setStyle ('rotate0',
+						new ol.style.Style(
+						{	text: new ol.style.Text (
+								{	text:'\uf0e2', 
+									font:"20px Fontawesome",
+									fill: new ol.style.Fill({ color:[255,255,255,0.8] }),
+									stroke: new ol.style.Stroke({ width:2, color:'red' })
+								}),
+						}));
+				// Style the move handle
+				interaction.setStyle('translate',
+						new ol.style.Style(
+						{	text: new ol.style.Text (
+								{	text:'\uf047', 
+									font:"20px Fontawesome", 
+									fill: new ol.style.Fill({ color:[255,255,255,0.8] }),
+									stroke: new ol.style.Stroke({ width:2, color:'red' })
+								})
+						}));
+				// Style the strech handles
+				/* uncomment to style * /
+				interaction.setStyle ('scaleh1', 
+						new ol.style.Style(
+						{	text: new ol.style.Text (
+								{	text:'\uf07d', 
+									font:"bold 20px Fontawesome", 
+									fill: new ol.style.Fill({ color:[255,255,255,0.8] }),
+									stroke: new ol.style.Stroke({ width:2, color:'red' })
+								})
+						}));
+				interaction.style.scaleh3 = interaction.style.scaleh1;
+				interaction.setStyle('scalev',
+						new ol.style.Style(
+						{	text: new ol.style.Text (
+								{	text:'\uf07e', 
+									font:"bold 20px Fontawesome", 
+									fill: new ol.style.Fill({ color:[255,255,255,0.8] }),
+									stroke: new ol.style.Stroke({ width:2, color:'red' })
+								})
+						}));
+				interaction.style.scalev2 = interaction.style.scalev;
+				/**/
+			}
+			else
+			{	interaction.setStyle ($.extend({},defaultStyle));
+			}
+			// Refresh
+			interaction.set('translate', interaction.get('translate'));
+		};
+
+		/** Set properties
+		*/
+		function setPropertie (p)
+		{	interaction.set(p, $("#"+p).prop('checked'));
+			if (!$("#scale").prop("checked")) $("#stretch").prop('disabled', true);
+			else $("#stretch").prop('disabled', false);
+		}
+
+		var interaction = new ol.interaction.Transform (
+			{	translateFeature: $("#translateFeature").prop('checked'),
+				scale: $("#scale").prop('checked'),
+				rotate: $("#rotate").prop('checked'),
+				translate: $("#translate").prop('checked'),
+				stretch: $("#stretch").prop('checked'),
+			});
+		map.addInteraction(interaction);
+		// Style handles
+		setHandleStyle();
+		// Events handlers
+		var startangle = 0;
+		var d=[0,0];
+		interaction.on (['rotatestart','translatestart'], function(e)
+			{	// Rotation
+				startangle = e.feature.get('angle')||0;
+				// Translation
+				d=[0,0];
+			});
+		interaction.on('rotating', function (e)
+			{	$('#info').text("rotate: "+((e.angle*180/Math.PI -180)%360+180).toFixed(2)); 
+				// Set angle attribute to be used on style !
+				e.feature.set('angle', startangle - e.angle);
+			});
+		interaction.on('translating', function (e)
+			{	d[0]+=e.delta[0];
+				d[1]+=e.delta[1];
+				$('#info').text("translate: "+d[0].toFixed(2)+","+d[1].toFixed(2)); 
+			});
+		interaction.on('scaling', function (e)
+			{	$('#info').text("scale: "+e.scale[0].toFixed(2)+","+e.scale[1].toFixed(2)); 
+			});
+		interaction.on(['rotateend', 'translateend', 'scaleend'], function (e) { $('#info').text(""); });
+		
+	</script>
+
+</body>
+</html>
