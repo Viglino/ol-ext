@@ -1,0 +1,203 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: fill pattern</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	
+	<meta name="description" content="an OL3 fill style with a set of cartographic patterns to use in your maps." />
+	<meta name="keywords" content="ol3, vector, style, fill, pattern, hatch, hatching" />
+
+	<link rel="stylesheet" href="style.css" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<!-- FontAwesome -->
+	<link rel="stylesheet" href="http://fontawesome.io/assets/font-awesome/css/font-awesome.css" type="text/css" />
+
+	<!-- OL3 -->
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	<!-- http://openlayers.org/en/v3.2.0/build/ol-debug.js -->
+	
+	<script type="text/javascript" src="../style/fillpatternstyle.js"></script>
+
+	<style>
+		#img
+		{	box-shadow:1px 1px 3px #000;
+			background:#fff;
+			float:right; 
+			margin-left:0.5em;
+			display:block;
+			width:50px;
+			height:40px;
+		}
+		label
+		{	width:7em;
+			text-align:right;
+			display: inline-block;
+		}
+		input[type=number]
+		{	width:4em;
+		}
+	</style>
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: fill pattern</h1>
+	</a>
+	<div class="info">
+		<p>
+			<i>ol.style.FillPattern</i> set fill pattern style to vector features.
+			It defines a set of cartographic patterns to use in your maps.
+		</p>
+		<p>
+			Hatching can be defined with a <i>size </i> for the lines, <i>spacing</i> interval and an <i>angle</i>.
+			<br />
+			Cross, dot and circle patterns can be defines with a <i>size</i> and <i>spacing</i> interval. 
+			The <i>angle</i> option is a boolean (0|1) for 45&deg; pattern.
+		</p>
+	</div>
+
+	<!-- Map div -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options" >
+		<h2>Options:</h2>
+		<ul>
+			<li>
+				<div id="img" ></div>
+				Pattern: 
+				<select id="pattern">
+					<option value="IMG">Image</option>
+				</select>
+			</li>
+			<li style="clear:both;">
+				<label>Size:</label>
+				<input id="size" type="number" min=0 value=5 onchange="refresh()"> 
+			</li>
+			<li>
+				<label>Spacing: </label>
+				<input id="spacing" type="number" min=0 value=10 onchange="refresh()"> 
+			</li>
+			<li>
+				<label>Angle: </label>
+				<input id="angle" type="number" value=0 onchange="refresh()"> <small>(deg)</small>
+			</li>
+			<li>
+				<label>Color: </label>
+				<select id="color" onchange="refresh()">
+					<option value="blue">blue</option>
+					<option value="red">red</option>
+					<option value="green">green</option>
+					<option value="yellow">yellow</option>
+				</select>
+			</li>
+			<li>
+				<label>Background: </label>
+				<select id="bg" onchange="refresh()">
+					<option value="rgba(255,255,255,0.3)">white</option>
+					<option value="rgba(0,0,0,0)">transparent</option>
+					<option value="rgba(0,0,255,0.3)">blue</option>
+					<option value="rgba(255,0,0,0.3)">red</option>
+					<option value="rgba(0,255,0,0.3)">green</option>
+					<option value="rgba(255,255,0,0.3)">yellow</option>
+				</select>
+			</li>
+		</ul>
+	</div>
+	
+
+	<script type="text/javascript" id="data/target.png">
+		var pattern = $("#pattern");
+		for (var i in ol.style.FillPattern.prototype.patterns)
+		{	$("<option>").val(i).text(i).appendTo(pattern);
+		}
+		
+		function refresh()
+		{	vector.changed();
+			if ( $.inArray(pattern.val(),["hatch","cross","dot","circle"]) < 0 )
+			{	$("#size").prop("disabled",true);
+				$("#spacing").prop("disabled",true);
+				$("#angle").prop("disabled",true);
+			}
+			else
+			{	$("#size").prop("disabled",false);
+				$("#spacing").prop("disabled",false);
+				$("#angle").prop("disabled",false);
+			}
+			var p = new ol.style.FillPattern(
+						{	pattern: pattern.val(),
+							color: "#000",
+							size: Number($("#size").val()),
+							spacing: Number($("#spacing").val()),
+							angle: Number($("#angle").val())
+						});
+			$("#img").css('background-image', 'url('+p.getImage().toDataURL()+')');
+		};
+		pattern.on("change", refresh);
+
+
+		// Layers
+		var layer = new ol.layer.Tile({
+				name: "Natural Earth", 
+				minResolution: 306,
+    			source: new ol.source.XYZ(
+				{	url: 'http://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
+					attributions: [new ol.Attribution({ html: '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' })] 
+    			})
+			});
+
+		// The map
+		var map = new ol.Map
+			({	target: 'map',
+				view: new ol.View
+				({	zoom: 5,
+					center: [166326, 5992663]
+				}),
+				layers: [layer]
+			});
+
+		function getStyle(feature)
+		{	var p = pattern.val();
+			return [ new ol.style.Style(
+				{	fill: new ol.style.FillPattern(
+						{	pattern: p!='IMG' ? p : undefined,
+							icon: p=='IMG' ? new ol.style.Icon ({src:'data/target.png'}) : undefined,
+							color: $("#color").val(),
+							fill: new ol.style.Fill ({ color:$("#bg").val() }),
+							size: Number($("#size").val()),
+							spacing: Number($("#spacing").val()),
+							angle: Number($("#angle").val())
+						})
+				})];
+		}
+
+		// Nouvelle source de donnee
+		var vector = new ol.layer.Vector(
+		{	source: new ol.source.Vector(),
+			style: getStyle
+		})
+		map.addLayer(vector);
+		vector.getSource().addFeature(new ol.Feature(new ol.geom.Polygon([[[259274, 6398696], [63595, 5958419], [635956, 5772524], [259274, 6398696]]])));
+
+		// global so we can remove it later
+		var interaction = new ol.interaction.Draw
+			({	type: 'Polygon',
+				source: vector.getSource()
+			});
+		map.addInteraction(interaction); 
+
+		refresh();
+	</script>
+
+</body>
+</html>

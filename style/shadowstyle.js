@@ -2,7 +2,7 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 *
-*  Add a marker style to use with font symbols
+*  Shadow image style for point vector features
 */
 /**
  * @requires ol.style.Circle

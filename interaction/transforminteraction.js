@@ -137,6 +137,16 @@ ol.interaction.Transform.prototype.setMap = function(map)
 };
 
 /**
+ * Activate/deactivate interaction
+ * @param {bool} 
+ * @api stable
+ */
+ol.interaction.Transform.prototype.setActive = function(b) 
+{	ol.interaction.Pointer.prototype.setActive.call (this, b);
+	if (b) this.select(null);
+};
+
+/**
  * Set sketch style.
  * @param {ol.Map} map Map.
  * @api stable
@@ -250,7 +260,7 @@ ol.interaction.Transform.prototype.select = function(feature)
 {	this.feature_ = feature;
 	this.ispt_ = this.feature_ ? (this.feature_.getGeometry().getType() == "Point") : false;
 	this.drawSketch_();
-	this.dispatchEvent({ type:'select', feature: this.feature_, pixel: evt.pixel, coordinate: evt.coordinate });
+	this.dispatchEvent({ type:'select', feature: this.feature_ });
 }
 
 /**

@@ -10,25 +10,45 @@
  *		toggleFn {function} callback when control is clicked 
  */
 ol.control.Toggle = function(options) 
-{	var element = $("<div>").addClass(options['class'] + ' ol-unselectable ol-control'+ (options.on ? " ol-active":""));
+{	var element = $("<div>").addClass(options['class'] + ' ol-unselectable ol-control');
 	var self = this;
 
 	this.togglefn_ = function(e)
 	{	element.toggleClass("ol-active");
-		if (e && e.preventDefault) e.preventDefault();  
-		if (options.toggleFn) options.toggleFn.call(self, element.hasClass("ol-active"));
+		if (e && e.preventDefault) e.preventDefault();
+		if (self.interaction_) self.interaction_.setActive (self.isOn());
+		if (options.toggleFn) options.toggleFn.call (self, self.isOn());
 		self.dispatchEvent({ type:'activate', active:self.isOn() });
 	};
 
+	this.interaction = this.interaction_ = options.interaction;
+	this.title = options.title;
+
 	$("<button>").html(options.html || "")
+				.attr('title', options.title)
 				.on("touchstart click", this.togglefn_)
 				.appendTo(element);
 	
 	ol.control.Control.call(this, 
 	{	element: element.get(0)
 	});
+
+	this.setActive (options.active);
 }
 ol.inherits(ol.control.Toggle, ol.control.Control);
+
+/**
+*/
+ol.control.Bar.prototype.setMap = function (map)
+{	ol.control.Control.prototype.setMap.call(this, map);
+
+	console.log("setmap "+this.title)
+	this.map_ = map;
+	if (map && this.interaction_) 
+	{	map.addInteraction(this.interaction_);
+		console.log("add")
+	}
+}
 
 /**
  * Test if the control is on.
@@ -48,5 +68,22 @@ ol.control.Toggle.prototype.Toggle = function()
 /**
 */
 ol.control.Toggle.prototype.setActive = function(b)
-{	if (this.isOn() !== b ) this.togglefn_();
+{	if (this.isOn()) 
+	{	if (!b) this.togglefn_();
+	}
+	else 
+	{	if (b) this.togglefn_();
+	}
+}
+
+/**
+*/
+ol.control.Toggle.prototype.setInteraction = function(i)
+{	this.interaction_ = i;
+}
+
+/**
+*/
+ol.control.Toggle.prototype.getInteraction = function()
+{	return this.interaction_;
 }
