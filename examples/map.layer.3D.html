@@ -1,0 +1,120 @@
+﻿<DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>Layer 3D</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- OL3 -->
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	
+	<!-- 3D renderer -->
+	<script type="text/javascript" src="../layer/vectorrenderer3d.js"></script>
+
+	<link rel="stylesheet" href="style.css" />
+	<style>
+		#map 
+		{	position:fixed;
+			top: 4em;
+			left: 0;
+			right:0;
+			bottom:0;
+			margin:0;
+		}
+		.info
+		{	position: fixed;
+			right: 0.5em;
+			top: 4em;
+			width: 300px;
+			z-index: 1;
+		}
+		.loading
+		{	background: #fff;
+			border: 2px solid #369;
+			left: 50%;
+			margin: -2em -100px;
+			padding: 0.5em;
+			position: fixed;
+			text-align: center;
+			top: 50%;
+			width: 200px;
+			z-index: 1;
+			box-sizing: border-box;
+			box-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+		}
+	</style>
+</head>
+<body >
+	<a href="../index.html">
+		<h1>Layer 3D</h1>
+	</a>
+	<div class="info">
+		This example add a setRenderer3D function to vector layers that do the job in a postcompose loop.
+		<br />
+		Buildings from <a href="http://professionnels.ign.fr/bdtopo">BDTopo &copy; IGN-France</a>.
+		<br />
+		POI informations from <a href="https://www.wikipedia.org/">WikiPedia</a>
+	</div>
+
+	<!-- DIV pour la carte -->
+	<div id="map"></div>
+	<div class="loading">Please wait while loading data...</div>
+	
+	<script type="text/javascript">
+	// The map
+	var map = new ol.Map
+		({	target: 'map',
+			view: new ol.View
+			({	zoom: 19,
+				center: [-245406, 5986536]// [-245575, 5986863], //[-244777, 5989809]
+			}),
+			interactions: ol.interaction.defaults(),
+			layers: [ new ol.layer.Tile({ name:"OSM", source: new ol.source.OSM() })]
+		});
+
+	// Create layer
+	var vectorSource = new ol.source.Vector(
+	{	url: 'data/ignf.json',
+		// projection: 'EPSG:3857',
+		format: new ol.format.GeoJSON(),
+		attributions: [new ol.Attribution({ html: "&copy; <a href='http://professionnels.ign.fr/bdtopo'>ign.fr</a>" })]
+	});
+	var listenerKey = vectorSource.on('change', function(e) 
+	{	if (vectorSource.getState() == 'ready') 
+		{	vectorSource.unByKey(listenerKey)
+			$(".loading").hide();
+		}
+	});
+	var vector = new ol.layer.Vector(
+		{	source: vectorSource,
+			maxResolution: 2
+		});
+	map.addLayer(vector);
+
+	var dbpSource = new ol.source.Vector(
+	{	url: 'data/dbpedia.json',
+		format: new ol.format.GeoJSON(),
+		attributions: [new ol.Attribution({ html: "&copy; DBPedia" })]
+	});
+	var dbp = new ol.layer.Vector(
+	{	source: dbpSource
+	});
+	map.addLayer(dbp);
+	
+	// Set 3D renderer
+	vector.setRender3D({ height: "HAUTEUR", maxResolution:0.6, defaultHeight:3.5 });
+	dbp.setRender3D({ height:100, maxResolution:10 });
+
+	</script>
+
+</body>
+</html>

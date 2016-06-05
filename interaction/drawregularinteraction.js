@@ -200,7 +200,7 @@ ol.interaction.DrawRegular.prototype.drawSketch_ = function(evt)
 		if (g) 
 		{	var f = new ol.Feature(g);
 			this.overlayLayer_.getSource().addFeature(f);
-			if (this.canRotate_ && this.centered_ && this.square_) 
+			if (this.canRotate_ && this.centered_ && this.square_ && this.coord_) 
 			{	this.overlayLayer_.getSource().addFeature(new ol.Feature(new ol.geom.LineString([this.center_,this.coord_])));
 			}
 			return f;

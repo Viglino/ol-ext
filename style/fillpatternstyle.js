@@ -24,10 +24,12 @@ ol.style.FillPattern = function(options)
 	var pattern;
 
 	var canvas = this.canvas_ = document.createElement('canvas');
+	var ratio = options.ratio || ol.has.DEVICE_PIXEL_RATIO;
 
 	var ctx = canvas.getContext('2d');
-	canvas.width = pat.width;
-	canvas.height = pat.height;
+	canvas.width = pat.width *ratio;
+	canvas.height = pat.height *ratio;
+	ctx.scale(ratio,ratio);
 	ctx.lineCap="round";
 	ctx.beginPath();
 	ctx.lineWidth = pat.stroke || 1;

@@ -306,7 +306,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 	{	var layer = layers[i];
 		if (layer.get("displayInLayerSwitcher")===false) continue;
 
-		var d = $("<li>").addClass(layer.getVisible()?"visible":"")
+		var d = $("<li>").addClass((layer.getVisible()?"visible ":" ")+(layer.get('baseLayer')?"baselayer":""))
 						.attr("draggable", this.reordering)
 						.on ("dragstart", drag)
 						.on ("dragend", dragend)
