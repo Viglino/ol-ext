@@ -24,7 +24,7 @@ ol.style.FillPattern = function(options)
 	var pattern;
 
 	var canvas = this.canvas_ = document.createElement('canvas');
-	var ratio = options.ratio || ol.has.DEVICE_PIXEL_RATIO;
+	var ratio = options.ratio*ol.has.DEVICE_PIXEL_RATIO || ol.has.DEVICE_PIXEL_RATIO;
 
 	var ctx = canvas.getContext('2d');
 	canvas.width = pat.width *ratio;
@@ -235,13 +235,13 @@ ol.style.FillPattern.prototype.patterns =
 	"brick":
 	{	width:18,
 		height:16,
-		lines:[	[0,1,18,1],[0,10,18,10], [6,0,6,10],[12,10,12,18]],
+		lines:[	[0,1,18,1],[0,10,18,10], [6,1,6,10],[12,10,12,18],[12,0,12,1]],
 		stroke:1
 	},
 	"dolomite":
 	{	width:20,
 		height:16,
-		lines:[[0,1,20,1],[0,9,20,9],[1,9,6,1],[11,9,14,16]],
+		lines:[[0,1,20,1],[0,9,20,9],[1,9,6,1],[11,9,14,16],[14,0,14.4,1]],
 		stroke:1
 	},
 	"coal":
@@ -255,14 +255,14 @@ ol.style.FillPattern.prototype.patterns =
 	"breccia":
 	{	width:20,
 		height:16,
-		lines:[[1,5, 7,1, 7,7, 1,5], [11,10, 12,5, 18,9, 11,10], [5,10, 2,15, 9,15, 5,10], [15,16, 15,13, 22,18, 15,16], [15,0, 15,2, 20,0, 15,0]],
+		lines:[[1,5, 7,1, 7,7, 1,5], [11,10, 12,5, 18,9, 11,10], [5,10, 2,15, 9,15, 5,10], [15,16, 15,13, 22,18], [15,0, 15,2, 20,0] ],
 		stroke:1,
 		angle:10
 	},
 	"clay":
 	{	width:20,
 		height:20,
-		lines:[[0,0, 3,11, 0,20], [11,0, 10,3, 13,13, 11,20], [0,0, 10,3, 20,0], [0,11, 3,11, 13,13, 20,12]],
+		lines:[[0,0, 3,11, 0,20], [11,0, 10,3, 13,13, 11,20], [0,0, 10,3, 20,0], [0,12, 3,11, 13,13, 20,12]],
 		stroke:1
 	},
 	"flooded":
@@ -347,8 +347,7 @@ ol.style.FillPattern.prototype.patterns =
 	"pines":
 	{	width:22,
 		height:20,
-		lines:[[1,4,3.5,1,6,4],[1,8,3.5,5,6,8],[3.5,1,3.5,11],
-			[12,14.5,14.5,14,17,14.5],[12,17.5,17,17.5],[14.5,12,14.5,18]],
+		lines:[[1,4,3.5,1,6,4],[1,8,3.5,5,6,8],[3.5,1,3.5,11],[12,14.5,14.5,14,17,14.5],[12,18,17,18],[14.5,12,14.5,18]],
 		repeat: [[2,1]],
 		stroke:1
 	},
@@ -360,7 +359,7 @@ ol.style.FillPattern.prototype.patterns =
 				[0,11,9,11],[0,14,9,14],[0,17,9,17], 
 				[12,10,12,19],[15,10,15,19],[18,10,18,19] ],
 		repeat:[[0.5,0.5]],
-		stroke:1,
+		stroke:1
 	},
 	"rocks":
 	{	width:20,
@@ -378,7 +377,7 @@ ol.style.FillPattern.prototype.patterns =
 			[6,16, 9,15, 10,18, 5,19, 6,16], 
 			[10,16, 14,16, 14,18, 13,19, 11,18, 10,16], 
 			[15,15, 18,16, 18,18, 16,19, 15,18, 15,15]],
-		stroke:1,
+		stroke:1
 	},
 }
 
