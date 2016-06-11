@@ -86,6 +86,15 @@ ol.interaction.DrawRegular.prototype.setMap = function(map)
 	this.overlayLayer_.setMap(map);
 };
 
+/**
+ * Activate/deactivate the interaction
+ * @param {boolean}
+ * @api stable
+ */
+ol.interaction.DrawRegular.prototype.setActive = function(b) 
+{	this.overlayLayer_.getSource().clear();
+	ol.interaction.Pointer.prototype.setActive.call (this, b);
+}
 
 /**
  * Set the number of sides.
@@ -198,7 +207,8 @@ ol.interaction.DrawRegular.prototype.drawSketch_ = function(evt)
 		this.centered_ = this.centeredFn_ ? this.centeredFn_(evt) : evt.originalEvent.metaKey || evt.originalEvent.ctrlKey;
 		var g = this.getGeom_();
 		if (g) 
-		{	var f = new ol.Feature(g);
+		{	var f = this.feature_;
+			f.setGeometry (g);
 			this.overlayLayer_.getSource().addFeature(f);
 			if (this.canRotate_ && this.centered_ && this.square_ && this.coord_) 
 			{	this.overlayLayer_.getSource().addFeature(new ol.Feature(new ol.geom.LineString([this.center_,this.coord_])));
@@ -264,14 +274,16 @@ ol.interaction.DrawRegular.prototype.handleUpEvent_ = function(evt)
 		{	this.started_ = true;
 			this.center_ = evt.coordinate;
 			this.coord_ = null;
-			var f = this.drawSketch_(evt);
+			var f = this.feature_ = new ol.Feature();
+			this.drawSketch_(evt);
 			this.dispatchEvent({ type:'drawstart', feature: f, pixel: evt.pixel, coordinate: evt.coordinate });
 		}
 		else 
 		{	this.started_ = false;
 			// Add new feature
 			if (this.coord_ && this.center_[0]!=this.coord_[0] && this.center_[1]!=this.coord_[1])
-			{	var f = new ol.Feature(this.getGeom_());
+			{	var f = this.feature_;
+				f.setGeometry(this.getGeom_());
 				if (this.source_) this.source_.addFeature(f);
 				else if (this.features_) this.features_.push(f);
 				this.dispatchEvent({ type:'drawend', feature: f, pixel: evt.pixel, coordinate: evt.coordinate, square: this.square_, centered: this.centered_ });

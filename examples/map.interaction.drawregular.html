@@ -94,6 +94,10 @@
 				canRotate: $("#rotation").prop('checked')
 			});
 		map.addInteraction(interaction);
+		interaction.on('drawstart', function (e)
+		{	e.feature.on('change', function (){console.log('change');})
+		});
+
 		// Events handlers
 		interaction.on('drawing', function (e)
 			{	if (e.feature.getGeometry().getArea) $('#info').html(
