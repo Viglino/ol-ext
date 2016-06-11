@@ -14,8 +14,8 @@
 ol.control.CanvasAttribution = function(options) 
 {	ol.control.Attribution.call(this, options);
 
-	// Don't draw in canvas
-	this.isCanvas_ = false;
+	// Draw in canvas
+	this.isCanvas_ = !!options.canvas;
 
 	// Get style options
 	if (!options) options={};
@@ -66,6 +66,8 @@ ol.control.CanvasAttribution.prototype.setMap = function (map)
 	// Get change (new layer added or removed)
 	if (map) map.on('postcompose', this.drawAttribution_, this);
 	this.map_ = map;
+	
+	this.setCanvas (this.isCanvas_);
 }
 
 /** 
