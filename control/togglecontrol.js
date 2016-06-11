@@ -38,19 +38,6 @@ ol.control.Toggle = function(options)
 ol.inherits(ol.control.Toggle, ol.control.Control);
 
 /**
-*/
-ol.control.Bar.prototype.setMap = function (map)
-{	ol.control.Control.prototype.setMap.call(this, map);
-
-	console.log("setmap "+this.title)
-	this.map_ = map;
-	if (map && this.interaction_) 
-	{	map.addInteraction(this.interaction_);
-		console.log("add")
-	}
-}
-
-/**
  * Test if the control is on.
  * @return {bool}.
  * @api stable
