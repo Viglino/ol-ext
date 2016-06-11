@@ -45,51 +45,6 @@ ol.interaction.Transform = function(options)
 	{	this.drawSketch_();
 	});
 
-	// Style
-	var stroke = new ol.style.Stroke({ color: [255,0,0,1], width: 1 });
-	var strokedash = new ol.style.Stroke({ color: [255,0,0,1], width: 1, lineDash:[4,4] });
-	var fill0 = new ol.style.Fill({ color:[255,0,0,0.01] });
-	var fill = new ol.style.Fill({ color:[255,255,255,0.8] });
-	var circle = new ol.style.RegularShape({
-					fill: fill,
-					stroke: stroke,
-					radius: 6,
-					points: 10
-				});
-	circle.getAnchor()[0] = -5;
-	var bigpt = new ol.style.RegularShape({
-					fill: fill,
-					stroke: stroke,
-					radius: 8,
-					points: 4,
-					angle: Math.PI/4
-				});
-	var smallpt = new ol.style.RegularShape({
-					fill: fill,
-					stroke: stroke,
-					radius: 6,
-					points: 4,
-					angle: Math.PI/4
-				});
-	function createStyle (img, stroke, fill) 
-	{	return [ new ol.style.Style({image:img, stroke:stroke, fill:fill}) ];
-	}
-	/** Style for handles */
-	this.style = 
-	{	'default': createStyle (bigpt, strokedash, fill0),
-		'translate': createStyle (bigpt, stroke, fill),
-		'rotate': createStyle (circle, stroke, fill),
-		'rotate0': createStyle (bigpt, stroke, fill),
-		'scale': createStyle (bigpt, stroke, fill),
-		'scale1': createStyle (bigpt, stroke, fill),
-		'scale2': createStyle (bigpt, stroke, fill),
-		'scale3': createStyle (bigpt, stroke, fill),
-		'scalev': createStyle (smallpt, stroke, fill),
-		'scaleh1': createStyle (smallpt, stroke, fill),
-		'scalev2': createStyle (smallpt, stroke, fill),
-		'scaleh3': createStyle (smallpt, stroke, fill),
-	};
-
 	// Create a new overlay layer for the sketch
 	this.handles_ = new ol.Collection();
 	this.overlayLayer_ = new ol.layer.Vector(
@@ -104,6 +59,10 @@ ol.interaction.Transform = function(options)
 				{	return (self.style[(feature.get('handle')||'default')+(feature.get('constraint')||'')+(feature.get('option')||'')]);
 				}
 		});
+
+	// setstyle
+	this.setDefaultStyle();
+
 };
 ol.inherits(ol.interaction.Transform, ol.interaction.Pointer);
 
@@ -134,6 +93,8 @@ ol.interaction.Transform.prototype.setMap = function(map)
 {	if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_);
 	ol.interaction.Pointer.prototype.setMap.call (this, map);
 	this.overlayLayer_.setMap(map);
+	this.isTouch = /touch/.test(map.getViewport().className);
+	this.setDefaultStyle();
 };
 
 /**
@@ -146,18 +107,77 @@ ol.interaction.Transform.prototype.setActive = function(b)
 	if (b) this.select(null);
 };
 
+
+/** Set efault sketch style
+*/
+ol.interaction.Transform.prototype.setDefaultStyle = function() 
+{	// Style
+	var stroke = new ol.style.Stroke({ color: [255,0,0,1], width: 1 });
+	var strokedash = new ol.style.Stroke({ color: [255,0,0,1], width: 1, lineDash:[4,4] });
+	var fill0 = new ol.style.Fill({ color:[255,0,0,0.01] });
+	var fill = new ol.style.Fill({ color:[255,255,255,0.8] });
+	var circle = new ol.style.RegularShape({
+					fill: fill,
+					stroke: stroke,
+					radius: this.isTouch ? 12 : 6,
+					points: 15
+				});
+	circle.getAnchor()[0] = this.isTouch ? -10 : -5;
+	var bigpt = new ol.style.RegularShape({
+					fill: fill,
+					stroke: stroke,
+					radius: this.isTouch ? 16 : 8,
+					points: 4,
+					angle: Math.PI/4
+				});
+	var smallpt = new ol.style.RegularShape({
+					fill: fill,
+					stroke: stroke,
+					radius: this.isTouch ? 12 : 6,
+					points: 4,
+					angle: Math.PI/4
+				});
+	function createStyle (img, stroke, fill) 
+	{	return [ new ol.style.Style({image:img, stroke:stroke, fill:fill}) ];
+	}
+	/** Style for handles */
+	this.style = 
+	{	'default': createStyle (bigpt, strokedash, fill0),
+		'translate': createStyle (bigpt, stroke, fill),
+		'rotate': createStyle (circle, stroke, fill),
+		'rotate0': createStyle (bigpt, stroke, fill),
+		'scale': createStyle (bigpt, stroke, fill),
+		'scale1': createStyle (bigpt, stroke, fill),
+		'scale2': createStyle (bigpt, stroke, fill),
+		'scale3': createStyle (bigpt, stroke, fill),
+		'scalev': createStyle (smallpt, stroke, fill),
+		'scaleh1': createStyle (smallpt, stroke, fill),
+		'scalev2': createStyle (smallpt, stroke, fill),
+		'scaleh3': createStyle (smallpt, stroke, fill),
+	};
+	this.drawSketch_();
+}
+
 /**
  * Set sketch style.
  * @param {ol.Map} map Map.
  * @api stable
  */
 ol.interaction.Transform.prototype.setStyle = function(style, olstyle) 
-{	if (!olstyle)
-	{	if (style) this.style = style;
-	}
-	else 
-	{	if (olstyle instanceof Array) this.style[style] = olstyle;
-		else this.style[style] = [ olstyle ];
+{	if (!olstyle) return;
+	if (olstyle instanceof Array) this.style[style] = olstyle;
+	else this.style[style] = [ olstyle ];
+	for (var i=0; i<this.style[style].length; i++)
+	{	var im = this.style[style][i].getImage();
+		if (im) 
+		{	if (style == 'rotate') im.getAnchor()[0] = -5;
+			if (this.isTouch) im.setScale(1.8);
+		}
+		var tx = this.style[style][i].getText();
+		if (tx) 
+		{	if (style == 'rotate') tx.setOffsetX(this.isTouch ? 14 : 7);
+			if (this.isTouch) tx.setScale(1.8);
+		}
 	}
 	this.drawSketch_();
 };

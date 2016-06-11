@@ -10,6 +10,9 @@
 	<title>OL3-ext: Transform interaction</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
+	<meta name="description" content="transform interaction for OL3" />
+	<meta name="keywords" content="ol3, vector, transform, rotate, scale, stretch" />
+
 	<link rel="stylesheet" href="style.css" />
 
 	<!-- jQuery -->
@@ -130,30 +133,22 @@
 
 		/** Style the transform handles for the current interaction
 		*/
-		var defaultStyle = false;
 		function setHandleStyle()
 		{	if (!interaction instanceof ol.interaction.Transform) return;
-			// First save default style for reset
-			if (!defaultStyle) 
-			{	defaultStyle = $.extend({}, interaction.style);
-			}
 			if ($("#style").prop('checked'))
 			{	// Style the rotate handle
 				var circle = new ol.style.RegularShape({
-								fill: new ol.style.Fill({color:[255,255,255,0.8]}),
+								fill: new ol.style.Fill({color:[255,255,255,0.01]}),
 								stroke: new ol.style.Stroke({width:1, color:[0,0,0,0.01]}),
 								radius: 8,
 								points: 10
 							});
-				circle.getAnchor()[0] = -8;
-				circle.getAnchor()[1] = 0;
 				interaction.setStyle ('rotate',
 						new ol.style.Style(
 						{	text: new ol.style.Text (
 								{	text:'\uf0e2', 
 									font:"16px Fontawesome",
-									offsetX:18, 
-									offsetY:10, 
+									textAlign: "left",
 									fill:new ol.style.Fill({color:'red'})
 								}),
 							image: circle
@@ -203,7 +198,7 @@
 				/**/
 			}
 			else
-			{	interaction.setStyle ($.extend({},defaultStyle));
+			{	interaction.setDefaultStyle ();
 			}
 			// Refresh
 			interaction.set('translate', interaction.get('translate'));
