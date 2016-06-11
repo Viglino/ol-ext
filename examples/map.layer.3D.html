@@ -64,6 +64,8 @@
 		Buildings from <a href="http://professionnels.ign.fr/bdtopo">BDTopo &copy; IGN-France</a>.
 		<br />
 		POI informations from <a href="https://www.wikipedia.org/">WikiPedia</a>
+		<br/>
+		<button onclick="doAnime();">Animate!</button>
 	</div>
 
 	<!-- DIV pour la carte -->
@@ -89,12 +91,6 @@
 		format: new ol.format.GeoJSON(),
 		attributions: [new ol.Attribution({ html: "&copy; <a href='http://professionnels.ign.fr/bdtopo'>ign.fr</a>" })]
 	});
-	var listenerKey = vectorSource.on('change', function(e) 
-	{	if (vectorSource.getState() == 'ready') 
-		{	vectorSource.unByKey(listenerKey)
-			$(".loading").hide();
-		}
-	});
 	var vector = new ol.layer.Vector(
 		{	source: vectorSource,
 			maxResolution: 2
@@ -104,7 +100,7 @@
 	var dbpSource = new ol.source.Vector(
 	{	url: 'data/dbpedia.json',
 		format: new ol.format.GeoJSON(),
-		attributions: [new ol.Attribution({ html: "&copy; DBPedia" })]
+		attributions: [ new ol.Attribution({ html: "&copy; DBPedia" }) ]
 	});
 	var dbp = new ol.layer.Vector(
 	{	source: dbpSource
@@ -112,8 +108,25 @@
 	map.addLayer(dbp);
 	
 	// Set 3D renderer
-	vector.setRender3D({ height: "HAUTEUR", maxResolution:0.6, defaultHeight:3.5 });
-	dbp.setRender3D({ height:100, maxResolution:10 });
+	var r3D = new ol.render3D({ height:0, maxResolution:0.6, defaultHeight:3.5 });
+	vector.setRender3D(r3D);
+	var listenerKey = vectorSource.on('change', function(e) 
+	{	if (vectorSource.getState() == 'ready') 
+		{	vectorSource.unByKey(listenerKey)
+			$(".loading").hide();
+			setTimeout (doAnime, 200);
+		}
+	});
+	var r3D2 = new ol.render3D({ height:100, maxResolution:10 });
+	dbp.setRender3D(r3D2);
+
+	var height = 0;
+	function doAnime()
+	{	if (r3D.animating()) return;
+		r3D2.animate({ height: height ? 0:100 });
+		height = height ? 0 : "HAUTEUR";
+		r3D.animate({ height:height });
+	}
 
 	</script>
 
