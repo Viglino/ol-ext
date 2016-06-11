@@ -13,8 +13,6 @@
 	<meta name="description" content="ol.style.Chart is an image style to draw statistical graphics (bar or pie charts) on a map." />
 	<meta name="keywords" content="ol3, style, vector, statistic, chart, pie" />
 
-    <link rel="stylesheet" href="../style.css" />
-	
 	<!-- jQuery -->
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
 
@@ -38,13 +36,14 @@
 	</a>
 	<p class="info">
 		The <i>ol.style.Chart</i> is an image style to draw statistical graphics (bar or pie charts) on a map.
+		<br/>
 	</p>
 
 	<!-- DIV pour la carte -->
 	<div id="map" style="width:600px; height:400px;"></div>
 	<div class="options">
 		<h2>Options:</h2>
-		Chart type: <select id="graph" onchange="vector.changed()">
+		Chart type: <select id="graph" onchange="animate();">
 			<option value="pie">pie</option>
 			<option value="bar">bar</option>
 		</select>
@@ -58,6 +57,8 @@
 			<option value="neon">Neon</option>
 			<option value="red,green,blue,magenta">Custom</option>
 		</select>
+		<br/>
+		<button onclick="animate();">Animate!</button>
 	</div>
 	<div id="select" class="info">No selection</div>
 
@@ -77,7 +78,9 @@
 		});
 
 	// ol.style.Chart
+	var animation=false;
 	var styleCache={};
+
 	function getFeatureStyle (feature, sel)
 	{	var k = $("#graph").val()+"-"+ $("#color").val()+"-"+(sel?"1-":"")+feature.get("data");
 		var style = styleCache[k];
@@ -88,14 +91,16 @@
 			{	radius = 8* Math.sqrt (feature.get("size") / Math.PI);
 			}
 			// Create chart style
+			var c = $("#color").val();
 			styleCache[k] = style = new ol.style.Style(
 			{	image: new ol.style.Chart(
 				{	type: $("#graph").val(), 
 					radius: (sel?1.2:1)*radius, 
 					offsetY: $("#graph").val()=='pie' ? 0 : (sel?-1.2:-1)*feature.get("radius"),
 					data: feature.get("data") || [10,30,20], 
-					colors: $("#color").val(),
+					colors: /,/.test(c) ? c.split(",") : c,
 					rotateWithView: true,
+					animation: animation,
 					stroke: new ol.style.Stroke(
 					{	color: $("#color").val()!="neon" ? "#fff":"#000",
 						width: 2
@@ -103,6 +108,7 @@
 				})
 			});
 		}
+		style.getImage().setAnimation(animation);
 		return [style];
 	}
 
@@ -143,6 +149,33 @@
 		else $("#select").html("No selection");
 	})
 
+	// Animate function 
+	var listenerKey;
+	function animate()
+	{	if (listenerKey) return;
+		var start = new Date().getTime();
+		var duration = 1000;
+		animation = 0;
+		listenerKey = vector.on('precompose', function(event)
+		{	var frameState = event.frameState;
+			var elapsed = frameState.time - start;
+			if (elapsed > duration) 
+			{	ol.Observable.unByKey(listenerKey);
+				listenerKey = null;
+				animation = false;
+			}	
+			else
+			{	animation = ol.easing.easeOut (elapsed / duration);
+				frameState.animate = true;
+			}
+			vector.changed();
+		});
+		// Force redraw
+		vector.changed();
+		//map.renderSync();
+	}
+
+	animate();
 	</script>
 	
 </body>

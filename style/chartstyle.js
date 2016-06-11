@@ -15,7 +15,16 @@
  * Set chart style for vector features.
  *
  * @constructor
- * @param {olx.style.FontSymbolOptions=} opt_options Options.
+ * @param {olx.style.FontSymbolOptions=} Options.
+ *	- type {pie|bar}
+ *	- radius {number} chart radius
+ *	- rotation {number}
+ *	- snapToPixel {bool}
+ *	- stroke {ol.style.Stroke} stroke style
+ *	- colors {String|Array<color>} predefined color set "classic","dark","pale","pastel","neon" / array of color string, default classic
+ *	- offsetX {number}
+ *	- offsetY {number}
+ *	- animation {number} step in an animation sequence [0,1]
  * @extends {ol.style.RegularShape}
  * @implements {ol.structs.IHasChecksum}
  * @api
@@ -36,14 +45,16 @@ ol.style.Chart = function(opt_options)
 	this.radius_ = options.radius;
 	this.type_ = options.type;
 	this.offset_ = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
+	this.animation_ = (typeof(options.animation) == 'number') ? { animate:true, step:options.animation } : this.animation_ = { animate:false, step:1 };
 
 	this.data_ = options.data;
-	var colors = ol.style.Chart.colors[options.colors];
-	if (!colors) 
-	{	if (/,/.test(options.colors)) colors = options.colors;
-		else colors = ol.style.Chart.colors.classic;
+	if (options.colors instanceof Array)
+	{	this.colors_ = options.colors;
 	}
-	this.colors_ = colors.split(',');
+	else 
+	{	this.colors_ = ol.style.Chart.colors[options.colors];
+		if(!this.colors_) this.colors_ = ol.style.Chart.colors.classic;
+	}
 
 	this.renderChart_();
 };
@@ -52,11 +63,11 @@ ol.inherits(ol.style.Chart, ol.style.RegularShape);
 /** Default color thems
 */
 ol.style.Chart.colors = 
-{	"classic":	"#ffa500,blue,red,green,cyan,magenta,yellow,#0f0",
-	"dark":		"#960,#003,#900,#060,#099,#909,#990,#090",
-	"pale":		"#fd0,#369,#f64,#3b7,#880,#b5d,#666",
-	"pastel":	"#fb4,#79c,#f66,#7d7,#acc,#fdd,#ff9,#b9b", 
-	"neon":		"#ff0,#0ff,#0f0,#f0f,#f00,#00f"
+{	"classic":	["#ffa500","blue","red","green","cyan","magenta","yellow","#0f0"],
+	"dark":		["#960","#003","#900","#060","#099","#909","#990","#090"],
+	"pale":		["#fd0","#369","#f64","#3b7","#880","#b5d","#666"],
+	"pastel":	["#fb4","#79c","#f66","#7d7","#acc","#fdd","#ff9","#b9b"], 
+	"neon":		["#ff0","#0ff","#0f0","#f0f","#f00","#00f"]
 }
 		
 /** Get data associatied with the chart
@@ -65,16 +76,47 @@ ol.style.Chart.prototype.getData = function()
 {	return this.data_;
 }
 /** Set data associatied with the chart
+*	@param {Array<number>}
 */
 ol.style.Chart.prototype.setData = function(data) 
 {	this.data_ = data;
+	this.renderChart_();
 }
+
+/** Get data associatied with the chart
+*/
+ol.style.Chart.prototype.getRadius = function() 
+{	return this.radius_;
+}
+/** Set data associatied with the chart
+*	@param {number} get the symbol radius
+*/
+ol.style.Chart.prototype.setRadius = function(radius) 
+{	this.radius_ = radius_;
+	this.renderChart_();
+}
+
+/** Set animation step 
+*	@param {false|number} false to stop animation or the step of the animation [0,1]
+*/
+ol.style.Chart.prototype.setAnimation = function(step) 
+{	if (step===false) 
+	{	if (this.animation_.animate == false) return;
+		this.animation_.animate = false;
+	}
+	else
+	{	if (this.animation_.step == step) return;
+		this.animation_.animate = true;
+		this.animation_.step = step;
+	}
+	this.renderChart_();
+}
+
 
 /** @private
 */
 ol.style.Chart.prototype.renderChart_ = function(atlasManager) 
-{
-	var strokeStyle;
+{	var strokeStyle;
 	var strokeWidth = 0;
 
 	if (this.stroke_) 
@@ -100,11 +142,14 @@ ol.style.Chart.prototype.renderChart_ = function(atlasManager)
 
 	// then move to (x, y)
 	context.translate(0,0);
+
+	var step = this.animation_.animate ? this.animation_.step : 1;
+	//console.log(this.animation_.step)
 	
 	// Draw pie
 	switch (this.type_)
 	{	case "pie":
-		{	var a, a0 = -Math.PI/2;
+		{	var a, a0 = Math.PI * (step-1.5);
 			var c = canvas.width/2;
 			context.strokeStyle = strokeStyle;
 			context.lineWidth = strokeWidth;
@@ -112,8 +157,8 @@ ol.style.Chart.prototype.renderChart_ = function(atlasManager)
 			{	context.beginPath();
 				context.moveTo(c,c);
 				context.fillStyle = this.colors_[i%this.colors_.length];
-				a = a0 + 2*Math.PI*this.data_[i]/sum;
-				context.arc ( c, c, this.radius_, a0, a);
+				a = a0 + 2*Math.PI*this.data_[i]/sum *step;
+				context.arc ( c, c, this.radius_ *step, a0, a);
 				context.closePath();
 				context.fill();
 				context.stroke();
@@ -137,7 +182,8 @@ ol.style.Chart.prototype.renderChart_ = function(atlasManager)
 			{	context.beginPath();
 				context.fillStyle = this.colors_[i%this.colors_.length];
 				x = x0 + s;
-				context.rect ( x0, b-this.data_[i]/max*2*this.radius_, s, this.data_[i]/max*2*this.radius_);
+				var h = this.data_[i]/max*2*this.radius_ *step;
+				context.rect ( x0, b-h, s, h);
 				//console.log ( x0+", "+(b-this.data_[i]/max*2*this.radius_)+", "+x+", "+b);
 				context.closePath();
 				context.fill();
