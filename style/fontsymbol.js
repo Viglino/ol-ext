@@ -24,7 +24,8 @@ ol.style.FontSymbol = function(opt_options)
 {	options = opt_options || {};
 	var strokeWidth = 0;
 	if (options.stroke) strokeWidth = options.stroke.getWidth();
-	ol.style.RegularShape.call (this,{ radius: options.radius, fill:opt_options.fill, rotation:options.rotation });
+	ol.style.RegularShape.call (this,{ radius: options.radius, fill:options.fill, 
+									rotation:options.rotation, rotateWithView: options.rotateWithView });
 
 	this.color_ = options.color;
 	this.fontSize_ = options.fontSize || 1;
