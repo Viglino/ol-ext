@@ -146,6 +146,7 @@
 			// Calculate image to be drawn outside the map
 			var p = new ol.style.FillPattern(
 						{	pattern: pattern.val(),
+							image: (pattern.val()=='IMG') ? new ol.style.Icon({ src : 'data/pattern.png' }) : undefined,
 							ratio: 2,
 							color: "#000",
 							size: Number($("#size").val()),

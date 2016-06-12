@@ -39,15 +39,22 @@ ol.style.FillPattern = function(options)
 
 	if (options.image)
 	{	options.image.load();
+		
 		var img = options.image.getImage();
 		if (img.width)
-		{	pattern = ctx.createPattern(img, 'repeat');
+		{	canvas.width = Math.round(img.width *ratio);
+			canvas.height = Math.round(img.height *ratio);
+			ctx.drawImage(img, 0,0, img.width, img.height, 0, 0, canvas.width, canvas.height);
+			pattern = ctx.createPattern(canvas, 'repeat');
 		}
 		else 
 		{	var self = this;
 			pattern = [0,0,0,0];
 			img.onload = function ()
-			{	pattern = ctx.createPattern(img, 'repeat');
+			{	canvas.width = Math.round(img.width *ratio);
+				canvas.height = Math.round(img.height *ratio);
+				ctx.drawImage(img, 0,0, img.width, img.height, 0, 0, canvas.width, canvas.height);
+				pattern = ctx.createPattern(canvas, 'repeat');
 				self.setColor(pattern);
 			}
 		}
