@@ -33,14 +33,14 @@ ol.render3D.prototype.onPostcompose_ = function(e)
 		}
 	}
 
+	var ratio = e.frameState.pixelRatio;
 	var ctx = e.context;
 	this.matrix_ = m = e.frameState.coordinateToPixelMatrix;
-	this.center_ = [ctx.canvas.width/2, ctx.canvas.height];
+	this.center_ = [ctx.canvas.width/2/ratio, ctx.canvas.height/ratio];
 
 	var f = this.layer_.getSource().getFeaturesInExtent(e.frameState.extent);
 		
 	ctx.save();
-	var ratio = e.frameState.pixelRatio;
 	ctx.scale(ratio,ratio);
 	ctx.lineWidth = 1;
 	ctx.strokeStyle = "red";
