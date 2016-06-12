@@ -17,11 +17,11 @@
  *	- pattern {olx.style.fillPattern} pattern name if no image is passed
  *	- color {ol.color} pattern color
  *	- fill {ol.style.Fill} fill color (background)
- *	- offset {number} pattern offset
+ *	- offset {number} pattern offset for hash/dot/circle/cross pattern
  *	- size {number} line size for hash/dot/circle/cross pattern
  *	- spacing {number} spacing for hash/dot/circle/cross pattern
  *	- angle {number|bool} angle for hash pattern / true for 45deg dot/circle/cross
- *	- ratio [number} scale ratio
+ *	- scale [number} pattern scale 
  * @extends {ol.style.Fill}
  * @implements {ol.structs.IHasChecksum}
  * @api
@@ -32,7 +32,8 @@ ol.style.FillPattern = function(options)
 	var pattern;
 
 	var canvas = this.canvas_ = document.createElement('canvas');
-	var ratio = options.ratio*ol.has.DEVICE_PIXEL_RATIO || ol.has.DEVICE_PIXEL_RATIO;
+	var scale = Number(options.scale)>0 ? Number(options.scale) : 1;
+	var ratio = scale*ol.has.DEVICE_PIXEL_RATIO || ol.has.DEVICE_PIXEL_RATIO;
 
 	var ctx = canvas.getContext('2d');
 
@@ -53,16 +54,16 @@ ol.style.FillPattern = function(options)
 	}
 	else
 	{	var pat = this.getPattern_(options);
-		canvas.width = pat.width *ratio;
-		canvas.height = pat.height *ratio;
-		ctx.scale(ratio,ratio);
-		ctx.lineCap="round";
+		canvas.width = Math.round(pat.width *ratio);
+		canvas.height = Math.round(pat.height *ratio);
 		ctx.beginPath();
-		ctx.lineWidth = pat.stroke || 1;
 		if (options.fill) 
 		{	ctx.fillStyle = ol.color.asString(options.fill.getColor());
-			ctx.fillRect(0,0,canvas.width,canvas.height);
+			ctx.fillRect(0,0, canvas.width, canvas.height);
 		}
+		ctx.scale(ratio,ratio);
+		ctx.lineCap = "round";
+		ctx.lineWidth = pat.stroke || 1;
 
 		ctx.fillStyle = ol.color.asString(options.color||"#000");
 		ctx.strokeStyle = ol.color.asString(options.color||"#000");
@@ -87,6 +88,23 @@ ol.style.FillPattern = function(options)
 			if (pat.stroke) ctx.stroke();
 		}
 		pattern = ctx.createPattern(canvas, 'repeat');
+		if (options.offset)
+		{	var offset = options.offset;
+			if (typeof(offset) == "number") offset = [offset,offset];
+			if (offset instanceof Array) 
+			{	var dx = Math.round(Math.abs(offset[0]*ratio));
+				var dy = Math.round(Math.abs(offset[1]*ratio));
+				var c2 = document.createElement('canvas');
+				c2.width = canvas.width + dx;
+				c2.height = canvas.height + dy;
+				var ctx2 = c2.getContext('2d');
+				ctx2.fillStyle = pattern;
+				ctx2.fillRect (0,0,c2.width,c2.height);
+				ctx.clearRect(0,0,canvas.width,canvas.height);
+				ctx.drawImage (c2, dx, dy, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+				pattern = ctx.createPattern(canvas, 'repeat');
+			}
+		}
 	}
 	
 	ol.style.Fill.call (this, { color: pattern });

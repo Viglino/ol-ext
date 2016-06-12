@@ -80,15 +80,23 @@
 			</li>
 			<li style="clear:both;">
 				<label>Size:</label>
-				<input id="size" type="number" min=0 value=5 onchange="refresh()"> 
+				<input id="size" type="number" min=0 value=5 onchange="refresh()" /> 
 			</li>
 			<li>
 				<label>Spacing: </label>
-				<input id="spacing" type="number" min=0 value=10 onchange="refresh()"> 
+				<input id="spacing" type="number" min=0 value=10 onchange="refresh()" /> 
 			</li>
 			<li>
 				<label>Angle: </label>
-				<input id="angle" type="number" value=0 onchange="refresh()"> <small>(deg)</small>
+				<input id="angle" type="number" value=0 onchange="refresh()" /> <small>(deg)</small>
+			</li>
+			<li>
+				<label>Offset: </label>
+				<input id="offset" type="number" value=0 onchange="refresh()" min=0 />
+			</li>
+			<li>
+				<label>Scale: </label>
+				<input id="scale" type="number" value=1 onchange="refresh()" min=0 step=0.5 />
 			</li>
 			<li>
 				<label>Color: </label>
@@ -106,8 +114,8 @@
 					<option value="rgba(0,0,0,0)">transparent</option>
 					<option value="rgba(0,0,255,0.3)">blue</option>
 					<option value="rgba(255,0,0,0.3)">red</option>
-					<option value="rgba(0,255,0,0.3)">green</option>
-					<option value="rgba(255,255,0,0.3)">yellow</option>
+					<option value="rgba(0,255,0,0.5)">green</option>
+					<option value="rgba(255,255,0,0.5)">yellow</option>
 				</select>
 			</li>
 		</ul>
@@ -178,6 +186,8 @@
 							ratio: 1,
 							icon: p=='IMG' ? new ol.style.Icon ({src:'data/target.png'}) : undefined,
 							color: $("#color").val(),
+							offset: Number($("#offset").val()),
+							scale: Number($("#scale").val()),
 							fill: new ol.style.Fill ({ color:$("#bg").val() }),
 							size: Number($("#size").val()),
 							spacing: Number($("#spacing").val()),
