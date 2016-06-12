@@ -43,7 +43,7 @@
 	<div id="map" style="width:600px; height:400px;"></div>
 	<div class="options">
 		<h2>Options:</h2>
-		Chart type: <select id="graph" onchange="animate();">
+		Chart type: <select id="graph" onchange="doAnimate();">
 			<option value="pie">pie</option>
 			<option value="bar">bar</option>
 		</select>
@@ -58,7 +58,7 @@
 			<option value="red,green,blue,magenta">Custom</option>
 		</select>
 		<br/>
-		<button onclick="animate();">Animate!</button>
+		<button onclick="doAnimate();">Animate!</button>
 	</div>
 	<div id="select" class="info">No selection</div>
 
@@ -151,7 +151,7 @@
 
 	// Animate function 
 	var listenerKey;
-	function animate()
+	function doAnimate()
 	{	if (listenerKey) return;
 		var start = new Date().getTime();
 		var duration = 1000;
@@ -175,7 +175,7 @@
 		//map.renderSync();
 	}
 
-	animate();
+	doAnimate();
 	</script>
 	
 </body>
