@@ -13,54 +13,81 @@
  *
  * @constructor
  * @param {olx.style.FillPatternOption=}  Options
+ *	- image {ol.style.Image|undefined} an image pattern, image must be preloaded to draw on first call
+ *	- pattern {olx.style.fillPattern} pattern name if no image is passed
+ *	- color {ol.color} pattern color
+ *	- fill {ol.style.Fill} fill color (background)
+ *	- offset {number} pattern offset
+ *	- size {number} line size for hash/dot/circle/cross pattern
+ *	- spacing {number} spacing for hash/dot/circle/cross pattern
+ *	- angle {number|bool} angle for hash pattern / true for 45deg dot/circle/cross
+ *	- ratio [number} scale ratio
  * @extends {ol.style.Fill}
  * @implements {ol.structs.IHasChecksum}
  * @api
  */
 ol.style.FillPattern = function(options) 
-{	if (!options) opt_options = {};
+{	if (!options) options = {};
 
-	var pat = this.getPattern_(options);
 	var pattern;
 
 	var canvas = this.canvas_ = document.createElement('canvas');
 	var ratio = options.ratio*ol.has.DEVICE_PIXEL_RATIO || ol.has.DEVICE_PIXEL_RATIO;
 
 	var ctx = canvas.getContext('2d');
-	canvas.width = pat.width *ratio;
-	canvas.height = pat.height *ratio;
-	ctx.scale(ratio,ratio);
-	ctx.lineCap="round";
-	ctx.beginPath();
-	ctx.lineWidth = pat.stroke || 1;
-	if (options.fill) 
-	{	ctx.fillStyle = ol.color.asString(options.fill.getColor());
-		ctx.fillRect(0,0,canvas.width,canvas.height);
-	}
 
-	ctx.fillStyle = ol.color.asString(options.color||"#000");
-	ctx.strokeStyle = ol.color.asString(options.color||"#000");
-	if (pat.circles) for (var i=0; i<pat.circles.length; i++)
-	{	var ci = pat.circles[i]; 
-		ctx.beginPath();
-		ctx.arc(ci[0], ci[1], ci[2], 0,2*Math.PI);
-		if (pat.fill) ctx.fill();
-		if (pat.stroke) ctx.stroke();
-	}
-
-	if (!pat.repeat) pat.repeat=[[0,0]];
-
-	if (pat.lines) for (var i=0; i<pat.lines.length; i++) for (var r=0; r<pat.repeat.length; r++)
-	{	var li = pat.lines[i];
-		ctx.beginPath();
-		ctx.moveTo(li[0]+pat.repeat[r][0],li[1]+pat.repeat[r][1]);
-		for (var k=2; k<li.length; k+=2)
-		{	ctx.lineTo(li[k]+pat.repeat[r][0],li[k+1]+pat.repeat[r][1]);
+	if (options.image)
+	{	options.image.load();
+		var img = options.image.getImage();
+		if (img.width)
+		{	pattern = ctx.createPattern(img, 'repeat');
 		}
-		if (pat.fill) ctx.fill();
-		if (pat.stroke) ctx.stroke();
+		else 
+		{	var self = this;
+			pattern = [0,0,0,0];
+			img.onload = function ()
+			{	pattern = ctx.createPattern(img, 'repeat');
+				self.setColor(pattern);
+			}
+		}
 	}
-	pattern = ctx.createPattern(canvas, 'repeat');
+	else
+	{	var pat = this.getPattern_(options);
+		canvas.width = pat.width *ratio;
+		canvas.height = pat.height *ratio;
+		ctx.scale(ratio,ratio);
+		ctx.lineCap="round";
+		ctx.beginPath();
+		ctx.lineWidth = pat.stroke || 1;
+		if (options.fill) 
+		{	ctx.fillStyle = ol.color.asString(options.fill.getColor());
+			ctx.fillRect(0,0,canvas.width,canvas.height);
+		}
+
+		ctx.fillStyle = ol.color.asString(options.color||"#000");
+		ctx.strokeStyle = ol.color.asString(options.color||"#000");
+		if (pat.circles) for (var i=0; i<pat.circles.length; i++)
+		{	var ci = pat.circles[i]; 
+			ctx.beginPath();
+			ctx.arc(ci[0], ci[1], ci[2], 0,2*Math.PI);
+			if (pat.fill) ctx.fill();
+			if (pat.stroke) ctx.stroke();
+		}
+
+		if (!pat.repeat) pat.repeat=[[0,0]];
+
+		if (pat.lines) for (var i=0; i<pat.lines.length; i++) for (var r=0; r<pat.repeat.length; r++)
+		{	var li = pat.lines[i];
+			ctx.beginPath();
+			ctx.moveTo(li[0]+pat.repeat[r][0],li[1]+pat.repeat[r][1]);
+			for (var k=2; k<li.length; k+=2)
+			{	ctx.lineTo(li[k]+pat.repeat[r][0],li[k+1]+pat.repeat[r][1]);
+			}
+			if (pat.fill) ctx.fill();
+			if (pat.stroke) ctx.stroke();
+		}
+		pattern = ctx.createPattern(canvas, 'repeat');
+	}
 	
 	ol.style.Fill.call (this, { color: pattern });
 

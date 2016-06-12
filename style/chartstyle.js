@@ -126,7 +126,6 @@ ol.style.Chart.prototype.renderChart_ = function(atlasManager)
 
 	// no atlas manager is used, create a new canvas
 	var canvas = this.getImage();
-	//console.log(this.getImage().width+" / "+(2 * (this.radius_ + strokeWidth) + 1));
 
 	// draw the circle on the canvas
 	var context = (canvas.getContext('2d'));
