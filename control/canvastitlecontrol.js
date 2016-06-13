@@ -10,10 +10,10 @@
  * @param {Object=} Control options. The style {ol.style.Style} option is usesd to draw the text.
  */
 ol.control.CanvasTitle = function(options) 
-{	// Get style options
-	if (!options) options={};
+{	if (!options) options={};
+	
+	// Get style options
 	if (!options.style) options.style = new ol.style.Style();
-
 	this.setStyle(options.style);
 
 	// Initialize parent
@@ -50,7 +50,6 @@ ol.control.CanvasTitle.prototype.setMap = function (map)
 
 	// Get change (new layer added or removed)
 	if (map) map.on('postcompose', this.drawTitle_, this);
-	this.map_ = map;
 }
 
 
@@ -66,7 +65,9 @@ ol.control.CanvasTitle.prototype.setStyle = function (style)
 	var fill = text ? text.getFill() : null;
 	this.strokeStyle_ = stroke ? ol.color.asString(stroke.getColor()) : "#fff";
 	this.fillStyle_ = fill ? ol.color.asString(fill.getColor()) : "#000";
-	if (this.element) $(this.element).css ({font: this.font_});
+	if (this.element) 
+	{	$(this.element).text(this.text_).css ({font: this.font_});
+	}
 	// refresh
 	if (this.getMap()) this.getMap().render();
 }
@@ -79,7 +80,7 @@ ol.control.CanvasTitle.prototype.setStyle = function (style)
 ol.control.CanvasTitle.prototype.setTitle = function (title)
 {	this.text_ = title;
 	$(this.element).text(title);
-	if (this.map_) this.map_.renderSync();
+	if (this.getMap()) this.getMap().renderSync();
 }
 
 /**

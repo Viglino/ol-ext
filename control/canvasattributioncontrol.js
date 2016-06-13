@@ -12,7 +12,8 @@
  * @param {Object=} Control options. The style {ol.style.Style} option is usesd to draw the text.
  */
 ol.control.CanvasAttribution = function(options) 
-{	ol.control.Attribution.call(this, options);
+{	if (!options) options = {};
+	ol.control.Attribution.call(this, options);
 
 	// Draw in canvas
 	this.isCanvas_ = !!options.canvas;
