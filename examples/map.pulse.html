@@ -1,10 +1,8 @@
 ﻿<!DOCTYPE html>
 <!----------------------------------------------------------
  
-	Copyright (c) 2013 Jean-Marc VIGLINO, 
-	released under the Beerware license (http://fr.wikipedia.org/wiki/Beerware).
-	
-	Affichage d'une carte Geoportail avec OL3
+	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 	
 ------------------------------------------------------------>
 <html>
@@ -20,6 +18,7 @@
 	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
 	
 	<script type="text/javascript" src="../utils/ol.map.pulse.js"></script>
+	<script type="text/javascript" src="../utils/ol.map.markup.js"></script>
 
 	<link rel="stylesheet" href="style.css" />
 	</head>
@@ -38,6 +37,13 @@
 
 	<div class="options">
 		<h2>Options:</h2>
+		Form:
+		<select id="form">
+			<option value="Circle">circle</option>
+			<option value="RegularShape">square</option>
+			<option value="Icon">icon</option>
+		</select>
+		<br />
 		Easing:
 		<select id="easing">
 			<option value="easeOut">easeOut</option>
@@ -72,6 +78,7 @@
 			minResolution: 306,
     		source: new ol.source.XYZ(
 			{	url: 'http://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
+				crossOrigin: "Anonymous",
 				attributions: [new ol.Attribution({ html: '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' })] 
     		})
 		});
@@ -95,11 +102,27 @@
 	{	t = 1-Math.cos(t*Math.PI/2);
 		return 1 + Math.abs( Math.cos(a*t) ) * Math.pow(2, b*t) + c*t;
 	}
+	
+	// Preload image (?)
+	var icon = new ol.style.Icon ({ src:"data/smile.png" });
+	icon.load();
 
 	// Pulse on click 
 	map.on('singleclick', function(evt) 
 	{	var e =  ($("#easing").val());
-		map.pulse(evt.coordinate, { radius:(e=="bounce"?10:null), amplitude:(e=="bounce"?15:null), color:$("#color").val(), easing:ol.easing[$("#easing").val()] });
+		map.pulse(evt.coordinate, 
+			{	amplitude:(e=="bounce"?0.5:null), 
+				style: new ol.style.Style(
+					{	image: new ol.style[$("#form").val()] (
+						{	radius: (e=="bounce"?15:30), 
+							points: 4,
+							src: "data/smile.png",
+							stroke: new ol.style.Stroke ({ color: $("#color").val(), width:2 })
+						})
+					}),
+				easing: ol.easing[$("#easing").val()] 
+			});
+		//map.markup(evt.coordinate, { radius:10, color:$("#color").val() });
 	});
 
 	// Pulse on lonlat
@@ -109,13 +132,36 @@
 			case 'upAndDown': 
 				for (var i=0; i<3; i++)
 				{	setTimeout (function()
-					{	map.pulse(lonlat, { projection:'EPSG:4326', color:$("#color").val(), easing:ol.easing[$("#easing").val()] });
+					{	map.pulse(lonlat, 
+							{	projection: 'EPSG:4326', 
+								style: new ol.style.Style(
+								{	image: new ol.style[$("#form").val()] (
+									{	radius: 30, 
+										points: 4,
+										src: "data/smile.png",
+										stroke: new ol.style.Stroke ({ color: $("#color").val(), width:2 })
+									})
+								}), 
+								easing: ol.easing[$("#easing").val()] 
+							});
 					}, i*500);
 				}
 				break;
 			case 'bounce': 
 			default:
-				map.pulse(lonlat, { projection:'EPSG:4326', radius:10, amplitude:15, color:$("#color").val(), easing:ol.easing[$("#easing").val()] });
+				map.pulse(lonlat, 
+					{	projection:'EPSG:4326', 
+						amplitude:0.5, 
+						style: new ol.style.Style(
+						{	image: new ol.style[$("#form").val()] (
+							{	radius: 15,
+								points: 4,
+								src: "data/smile.png",
+								stroke: new ol.style.Stroke ({ color: $("#color").val(), width:2 })
+							})
+						}),
+						easing: ol.easing[$("#easing").val()] 
+					});
 				break;
 		}
 	}

@@ -73,9 +73,11 @@ ol.interaction.Flashlight.prototype.setColor = function(options)
 }
 
 /** Set position of the flashlight
+*	@param {ol.Pixel|ol.MapBrowserEvent}
 */
 ol.interaction.Flashlight.prototype.setPosition = function(e)
-{	this.pos = e.pixel;
+{	if (e.pixel) this.pos = e.pixel;
+	else this.pos = e;
 	if (this.getMap()) 
 	{	this.getMap().renderSync();
 	}
