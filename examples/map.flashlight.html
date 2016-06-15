@@ -10,6 +10,9 @@
 	<title>OL3-ext: Flashlight!</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
+	<meta name="description" content="Add flashlight effect on OL3 map." />
+	<meta name="keywords" content="ol3,canvas,animation,flashlight,effect,interaction" />
+
 	<!-- jQuery -->
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
 
@@ -17,7 +20,7 @@
 	<link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
 	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
 	
-	<script type="text/javascript" src="../utils/ol.map.flashlight.js"></script>
+	<script type="text/javascript" src="../interaction/flashlightinteraction.js"></script>
 
 	<link rel="stylesheet" href="style.css" />
 	</head>
@@ -28,7 +31,7 @@
 		<h1>OL3-ext: Flashlight!</h1>
 	</a>
 	<p class="info">
-		The flashlight function add a flahslight effect to reveal the map on mouse move.
+		The flashlight interaction add a flahslight effect to reveal the map on mouse move.
 	</p>
 
 	<!-- DIV pour la carte -->
@@ -37,15 +40,15 @@
 	<div class="options">
 		<h2>Options:</h2>
 		<ul><li>
-			radius: <input id="radius" type="range" min="30" max="400" value="100" onchange="refresh()">
+			radius: <input id="radius" type="range" min="30" max="400" value="100" onchange="fl.setRadius(Number(this.value))">
 		</li><li>
-			color: <select id="color" onchange="refresh()">
+			color: <select id="color" onchange="fl.setColor({color:this.value})">
 				<option value='rgba(0,0,0,0)'>none</option>
 				<option value='rgba(255,255,0,0.3)'>yellow</option>
 				<option value='rgba(255,0,0,0.3)'>red</option>
 			</select>
-		<li></li>
-			<button onclick="map.flashlight(false)">Stop!</button>
+		</li><li>
+			<button onclick="fl.setPosition(false);">Off!</button>
 		</li></ul>
 		<p>
 			<i>Move around to show the map!</i>
@@ -74,10 +77,8 @@
 			layers: [layer]
 		});
 
-	function refresh ()
-	{	map.flashlight({ radius: Number($("#radius").val()), color:$("#color").val() });
-	}
-	refresh();
+	var fl = new ol.interaction.Flashlight({ radius: Number($("#radius").val()), color:$("#color").val() });
+	map.addInteraction(fl);
 
 	</script>
 	
