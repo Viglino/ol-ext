@@ -1,4 +1,18 @@
-/**
+/*	
+	Water ripple effect.
+	Original code (Java) by Neil Wallis 
+	@link http://www.neilwallis.com/java/water.html
+	
+	Original code (JS) by Sergey Chikuyonok (serge.che@gmail.com)
+	@link http://chikuyonok.ru
+	@link http://media.chikuyonok.ru/ripple/
+
+	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+	@link https://github.com/Viglino
+ */
+ /**
  * @constructor
  * @extends {ol.interaction.Pointer}
  *	@param {ol.flashlight.options} flashlight options param
