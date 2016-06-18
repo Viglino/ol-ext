@@ -1,4 +1,4 @@
-/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+﻿/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
@@ -84,6 +84,24 @@ ol.style.FillPattern = function(options)
 
 		if (!pat.repeat) pat.repeat=[[0,0]];
 
+		if (pat.char)
+		{	ctx.font = pat.font || (pat.width)+"px Arial";
+			ctx.textAlign = 'center';
+			ctx.textBaseline = 'middle';
+			if (pat.angle) 
+			{	ctx.fillText(pat.char, pat.width/4, pat.height/4);
+				ctx.fillText(pat.char, 5*pat.width/4, 5*pat.height/4);
+				ctx.fillText(pat.char, pat.width/4, 5*pat.height/4);
+				ctx.fillText(pat.char, 5*pat.width/4, pat.height/4);
+
+				ctx.fillText(pat.char, 3*pat.width/4, 3*pat.height/4);
+				ctx.fillText(pat.char, -pat.width/4, -pat.height/4);
+				ctx.fillText(pat.char, 3*pat.width/4, -pat.height/4);
+				ctx.fillText(pat.char, -pat.width/4, 3*pat.height/4);
+			}
+			else ctx.fillText(pat.char, pat.width/2, pat.height/2);
+		}
+
 		if (pat.lines) for (var i=0; i<pat.lines.length; i++) for (var r=0; r<pat.repeat.length; r++)
 		{	var li = pat.lines[i];
 			ctx.beginPath();
@@ -93,20 +111,27 @@ ol.style.FillPattern = function(options)
 			}
 			if (pat.fill) ctx.fill();
 			if (pat.stroke) ctx.stroke();
+			ctx.save()
+			ctx.strokeStyle = 'red';
+			ctx.strokeWidth = 0.1;
+			//ctx.strokeRect(0,0,canvas.width,canvas.height);
+			ctx.restore()
 		}
 		pattern = ctx.createPattern(canvas, 'repeat');
 		if (options.offset)
 		{	var offset = options.offset;
 			if (typeof(offset) == "number") offset = [offset,offset];
 			if (offset instanceof Array) 
-			{	var dx = Math.round(Math.abs(offset[0]*ratio));
-				var dy = Math.round(Math.abs(offset[1]*ratio));
+			{	var dx = canvas.width - Math.round((offset[0]*ratio)%canvas.width);
+				var dy = canvas.height - Math.round((offset[1]*ratio)%canvas.height);
 				var c2 = document.createElement('canvas');
 				c2.width = canvas.width + dx;
 				c2.height = canvas.height + dy;
 				var ctx2 = c2.getContext('2d');
 				ctx2.fillStyle = pattern;
 				ctx2.fillRect (0,0,c2.width,c2.height);
+				// New pattern
+				ctx.scale(1/ratio,1/ratio)
 				ctx.clearRect(0,0,canvas.width,canvas.height);
 				ctx.drawImage (c2, dx, dy, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
 				pattern = ctx.createPattern(canvas, 'repeat');
@@ -168,6 +193,21 @@ ol.style.FillPattern.prototype.getPattern_ = function(options)
 			}
 			break;
 		}
+		case 'tile':
+		case 'square':
+		{	var size = options.size===0 ? 0 : options.size/2 || 2;
+			if (!options.angle)
+			{	pat.width = pat.height = d;
+				pat.lines = [[ d/2-size, d/2-size, d/2+size, d/2-size, d/2+size, d/2+size, d/2-size,d/2+size, d/2-size, d/2-size ]]
+			}
+			else
+			{	pat.width = pat.height = d;
+				//size *= Math.sqrt(2);
+				pat.lines = [[ d/2-size,d/2, d/2,d/2-size, d/2+size,d/2, d/2,d/2+size, d/2-size,d/2 ]]
+			}
+			if (options.pattern=='square') pat.repeat = [[0,0], [0,d], [d,0], [0,-d], [-d,0], [-d,-d], [d,d], [-d,d], [d,-d] ]
+			break;
+		}
 		case 'cross':
 		{	// Limit angle to 0 | 45
 			if (options.angle) options.angle = 45;
@@ -216,6 +256,34 @@ ol.style.FillPattern.prototype.getPattern_ = function(options)
 	return pat
 }
 
+/** Static fuction to add char patterns
+*	@param {title} 
+*	@param {olx.fillpattern.Option}
+*		- size {integer} default 10
+*		- width {integer} default 10
+*		- height {integer} default 10
+*		- circles {Array<circles>}
+*		- lines: {Array<pointlist>}
+*		- stroke {integer}
+*		- fill {bool}
+*		- char {char}
+*		- font {string} default "10px Arial"
+*/
+ol.style.FillPattern.addPattern = function (title, options)
+{	if (!options) options={};
+	ol.style.FillPattern.prototype.patterns[title || options.char] =
+	{	width: options.width || options.size || 10,
+		height: options.height || options.size || 10,
+		font: options.font,
+		char: options.char,
+		circles: options.circles,
+		lines: options.lines,
+		repeat: options.repeat,
+		stroke: options.stroke,
+		angle: options.angle,
+		fill: options.fill
+	}
+}
 
 /** Patterns definitions
 	Examples : http://seig.ensg.ign.fr/fichchap.php?NOFICHE=FP31&NOCHEM=CHEMS009&NOLISTE=1&N=8
@@ -248,6 +316,53 @@ ol.style.FillPattern.prototype.patterns =
 		stroke:1,
 		fill:false,
 	},
+	"square":
+	{	width:10,
+		height:10,
+		lines:[[3,3, 3,8, 8,8, 8,3, 3,3]],
+		stroke:1,
+		fill:false,
+	},
+	"tile":
+	{	width:10,
+		height:10,
+		lines:[[3,3, 3,8, 8,8, 8,3, 3,3]],
+		fill:true,
+	},
+	"woven":
+	{	width: 12,
+		height: 12,
+		lines: [[ 3,3, 9,9 ],[0,12, 3,9], [9,3, 12,0], [-1,1,1,-1], [13,11,11,13]],
+		stroke: 1
+	},
+	"crosses":
+	{	width: 8,
+		height: 8,
+		lines: [[ 2,2, 6,6 ],[2,6,6,2]],
+		stroke: 1
+	},
+	"caps":
+	{	width: 8,
+		height: 8,
+		lines: [[ 2,6, 4,2, 6,6 ]],
+		stroke: 1
+	},
+	"nylon":
+	{	width: 20,
+		height: 20,
+//		lines: [[ 0,5, 0,0, 5,0 ],[ 5,10, 10,10, 10,5 ], [ 10,15, 10,20, 15,20 ],[ 15,10, 20,10, 20,15 ]],
+//		repeat: [[0,0], [20,0], [0,20], [-20,0], [0,-20], [-20,-20]],
+		lines: [[ 1,6, 1,1, 6,1 ],[ 6,11, 11,11, 11,6 ], [ 11,16, 11,21, 16,21 ],[ 16,11, 21,11, 21,16 ]],
+		repeat: [[0,0], [-20,0], [0,-20] ],
+		stroke: 1
+	},
+	"hexagon":
+	{	width: 20,
+		height: 12,
+		lines: [[ 0,10, 4,4, 10,4, 14,10, 10,16, 4,16, 0,10 ]],
+		stroke:1,
+		repeat:[[0,0],[10,6],[10,-6],[-10,-6]]
+	},
 	"cemetry":
 	{	width:15,
 		height:19,
@@ -273,16 +388,14 @@ ol.style.FillPattern.prototype.patterns =
 		lines:[[7,5, 6,7, 9,9, 11,8, 11,6, 9,5, 7,5], 
 			[16,10, 15,13, 16,14, 19,15, 21,13, 22,9, 20,8, 19,8, 16,10], 
 			[24,6, 26,7, 27,5, 26,4, 24,4, 24,6]],
-		stroke:1,
-		angle:45
+		stroke:1
 	},
 	"gravel":
 	{	width:15,
 		height:10,
 		circles:[[4,2,1],[5,9,1],[1,7,1]],//[9,9,1],,[15,2,1]],
 		lines:[[7,5, 6,6, 7,7, 8,7, 9,7, 10,5, 9,4, 7,5], [11,2, 14,4, 14,1, 12,1, 11,2]],
-		stroke:1,
-		angle:50
+		stroke:1
 	},
 	"brick":
 	{	width:18,
@@ -300,16 +413,13 @@ ol.style.FillPattern.prototype.patterns =
 	{	width:20,
 		height:16,
 		lines:[[1,5, 7,1, 7,7], [11,10, 12,5, 18,9], [5,10, 2,15, 9,15,], [15,16, 15,13, 20,16], [15,0, 15,2, 20,0]],
-		fill:1,
-		stroke:1,
-		angle:10
+		fill:1
 	},
 	"breccia":
 	{	width:20,
 		height:16,
 		lines:[[1,5, 7,1, 7,7, 1,5], [11,10, 12,5, 18,9, 11,10], [5,10, 2,15, 9,15, 5,10], [15,16, 15,13, 22,18], [15,0, 15,2, 20,0] ],
 		stroke:1,
-		angle:10
 	},
 	"clay":
 	{	width:20,
@@ -341,7 +451,6 @@ ol.style.FillPattern.prototype.patterns =
 			[29,27, 32,28, 33,31, 30,29, 27,28, 29,27], 
 			[5,35, 1,33, 3,36, 13,38, 15,35, 10,36, 5,35]],
 		fill:1,
-		angle:160
 	},
 	"grass":
 	{	width:27,
@@ -430,7 +539,7 @@ ol.style.FillPattern.prototype.patterns =
 			[10,16, 14,16, 14,18, 13,19, 11,18, 10,16], 
 			[15,15, 18,16, 18,18, 16,19, 15,18, 15,15]],
 		stroke:1
-	},
+	}
 }
 
 

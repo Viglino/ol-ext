@@ -62,7 +62,7 @@
 		<p>
 			Hatching can be defined with a <i>size </i> for the lines, <i>spacing</i> interval and an <i>angle</i>.
 			<br />
-			Cross, dot and circle patterns can be defines with a <i>size</i> and <i>spacing</i> interval. 
+			Cross, square, tile, dot and circle patterns can be defines with a <i>size</i> and <i>spacing</i> interval. 
 			The <i>angle</i> option is a boolean (0|1) for 45&deg; pattern.
 		</p>
 	</div>
@@ -92,7 +92,7 @@
 			</li>
 			<li>
 				<label>Offset: </label>
-				<input id="offset" type="number" value=0 onchange="refresh()" min=0 />
+				<input id="offset" type="number" value=0 onchange="refresh()" />
 			</li>
 			<li>
 				<label>Scale: </label>
@@ -119,10 +119,18 @@
 				</select>
 			</li>
 		</ul>
+		<!-- force font loading -->
+		<i class="fa fa-bug" style="visibility:hidden"></i>
 	</div>
 	
 
-	<script type="text/javascript" id="data/target.png">
+	<script type="text/javascript">
+
+		// AddChar patterns
+		ol.style.FillPattern.addPattern ("copy (char pattern)", { char:"©" });
+		ol.style.FillPattern.addPattern ("bug (fontawesome)", { char:'\uf188', size:12, font:"10px Fontawesome" });
+		ol.style.FillPattern.addPattern ("smiley (width angle)", { char:'\uf118', size:20, angle:true, font:"15px Fontawesome" });
+
 		var pattern = $("#pattern");
 		for (var i in ol.style.FillPattern.prototype.patterns)
 		{	$("<option>").val(i).text(i).appendTo(pattern);
@@ -133,7 +141,7 @@
 		
 		function refresh()
 		{	vector.changed();
-			if ( $.inArray(pattern.val(),["hatch","cross","dot","circle"]) < 0 )
+			if ( $.inArray(pattern.val(),["hatch","cross","dot","circle","square","tile"]) < 0 )
 			{	$("#size").prop("disabled",true);
 				$("#spacing").prop("disabled",true);
 				$("#angle").prop("disabled",true);
