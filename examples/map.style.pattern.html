@@ -28,12 +28,11 @@
 	<script type="text/javascript" src="../style/fillpatternstyle.js"></script>
 
 	<style>
-		#img
+		#select
 		{	box-shadow:1px 1px 3px #000;
 			background:#fff;
-			float:right; 
 			margin-left:0.5em;
-			display:block;
+			display:inline-block;
 			width:50px;
 			height:40px;
 		}
@@ -44,6 +43,23 @@
 		}
 		input[type=number]
 		{	width:4em;
+		}
+		#pselect
+		{	max-width:300px;
+			position: absolute;
+			box-shadow:1px 1px 3px #000;
+			background:#fff;
+		}
+		#pselect > div
+		{	float: left;
+			width: 50px;
+			height: 40px;
+			background-color: #fff;
+			border:2px solid #000;
+			box-sizing: border-box;
+		}
+		#pselect > div:hover
+		{	border-color: red;
 		}
 	</style>
 
@@ -64,23 +80,24 @@
 			<br />
 			Cross, square, tile, dot and circle patterns can be defines with a <i>size</i> and <i>spacing</i> interval. 
 			The <i>angle</i> option is a boolean (0|1) for 45&deg; pattern.
+		</p><p>
+			You can use font to create a pattern (like FontAwesome patterns in the example <i class="fa fa-smile-o"></i>). NB the font must be loaded before pattern creation.
 		</p>
 	</div>
 
 	<!-- Map div -->
 	<div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options" >
+	<div class="options" style="min-width:300px;">
 		<h2>Options:</h2>
 		<ul>
 			<li>
-				<div id="img" ></div>
-				Pattern: 
-				<select id="pattern"></select>
+				Pattern: <div id="select"></div>
+				<div id="pselect"></div>
 			</li>
 			<li style="clear:both;">
 				<label>Size:</label>
-				<input id="size" type="number" min=0 value=5 onchange="refresh()" /> 
+				<input id="size" type="number" min=0 value=5 onchange="refresh()" />
 			</li>
 			<li>
 				<label>Spacing: </label>
@@ -128,43 +145,58 @@
 
 		// AddChar patterns
 		ol.style.FillPattern.addPattern ("copy (char pattern)", { char:"©" });
-		ol.style.FillPattern.addPattern ("bug (fontawesome)", { char:'\uf188', size:12, font:"10px Fontawesome" });
-		ol.style.FillPattern.addPattern ("smiley (width angle)", { char:'\uf118', size:20, angle:true, font:"15px Fontawesome" });
+		ol.style.FillPattern.addPattern ("bug (fontawesome)", { char:'\uf188', size:12, font:"10px FontAwesome" });
+		ol.style.FillPattern.addPattern ("smiley (width angle)", { char:'\uf118', size:20, angle:true, font:"15px FontAwesome" });
 
-		var pattern = $("#pattern");
+		// Popup
+		$("#select").click(function()
+		{	$("#pselect").toggle();
+		});
+
+		var pat = "hatch"
+		var spattern = $("#pselect");
 		for (var i in ol.style.FillPattern.prototype.patterns)
-		{	$("<option>").val(i).text(i).appendTo(pattern);
+		{	var p = new ol.style.FillPattern({ pattern:i })
+			$("<div>").attr('title',i)
+					.css("background-image",'url("'+p.getImage().toDataURL()+'")')
+					.click(function(){ pat = $(this).attr("title"); refresh(); })
+					.appendTo(spattern);
 		}
-		$("<option>").val("IMG").text("Image").appendTo(pattern);
-		// Preload image pattern
-		new ol.style.FillPattern({ image: new ol.style.Icon({ src : 'data/pattern.png' }) });
-		
+		var p = new ol.style.FillPattern({ image: new ol.style.Icon({ src : 'data/pattern.png' }) });
+		$("<div>").attr('title','Image (PNG)')
+				.css("background-image",'url("data/pattern.png")')
+				.click(function(){ pat = $(this).attr("title"); refresh(); })
+				.appendTo(spattern);
+
+		// Redraw map
 		function refresh()
-		{	vector.changed();
-			if ( $.inArray(pattern.val(),["hatch","cross","dot","circle","square","tile"]) < 0 )
+		{	$("#pselect").hide();
+			vector.changed();
+			if ( $.inArray(pat,["hatch","cross","dot","circle","square","tile"]) < 0 )
 			{	$("#size").prop("disabled",true);
 				$("#spacing").prop("disabled",true);
 				$("#angle").prop("disabled",true);
+				$("#angle").next().text("");
 			}
 			else
 			{	$("#size").prop("disabled",false);
 				$("#spacing").prop("disabled",false);
 				$("#angle").prop("disabled",false);
+				if (pat=="hatch") $("#angle").next().text("(deg)");
+				else $("#angle").next().text("(bool)");
 			}
 			// Calculate image to be drawn outside the map
 			var p = new ol.style.FillPattern(
-						{	pattern: pattern.val(),
-							image: (pattern.val()=='IMG') ? new ol.style.Icon({ src : 'data/pattern.png' }) : undefined,
+						{	pattern: pat,
+							image: (pat=='Image (PNG)') ? new ol.style.Icon({ src : 'data/pattern.png' }) : undefined,
 							ratio: 2,
 							color: "#000",
 							size: Number($("#size").val()),
 							spacing: Number($("#spacing").val()),
 							angle: Number($("#angle").val())
 						});
-			$("#img").css('background-image', 'url('+p.getImage().toDataURL()+')');
+			$("#select").css('background-image', 'url('+p.getImage().toDataURL()+')');
 		};
-		pattern.on("change", refresh);
-
 
 		// Layers
 		var layer = new ol.layer.Tile({
@@ -175,6 +207,13 @@
 					attributions: [new ol.Attribution({ html: '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' })] 
     			})
 			});
+
+		/* fix offset ?!
+		var offset;
+		layer.on('precompose', function(e)
+		{	offset=[e.frameState.coordinateToPixelMatrix[12],e.frameState.coordinateToPixelMatrix[12]];
+		});
+		*/
 
 		// The map
 		var map = new ol.Map
@@ -187,13 +226,13 @@
 			});
 
 		function getStyle(feature)
-		{	var p = pattern.val();
+		{	var p = pat;
 			return [ new ol.style.Style(
 				{	fill: new ol.style.FillPattern(
-						{	pattern: (p!='IMG') ? p : undefined,
-							image: (p=='IMG') ? new ol.style.Icon({ src : 'data/pattern.png' }) : undefined,
+						{	pattern: (p!='Image (PNG)') ? p : undefined,
+							image: (p=='Image (PNG)') ? new ol.style.Icon({ src : 'data/pattern.png' }) : undefined,
 							ratio: 1,
-							icon: p=='IMG' ? new ol.style.Icon ({src:'data/target.png'}) : undefined,
+							icon: p=='Image (PNG)' ? new ol.style.Icon ({src:'data/target.png'}) : undefined,
 							color: $("#color").val(),
 							offset: Number($("#offset").val()),
 							scale: Number($("#scale").val()),
