@@ -5,8 +5,6 @@
 /**
  * @requires 
  */
-
-
 /**
  * @classdesc
  * Fill style with named pattern
@@ -14,7 +12,8 @@
  * @constructor
  * @param {olx.style.FillPatternOption=}  Options
  *	- image {ol.style.Image|undefined} an image pattern, image must be preloaded to draw on first call
- *	- pattern {olx.style.fillPattern} pattern name if no image is passed
+ *	- opacity {number|undefined} opacity with image pattern, default:1
+ *	- pattern {olx.style.fillPattern} pattern name (override by image option)
  *	- color {ol.color} pattern color
  *	- fill {ol.style.Fill} fill color (background)
  *	- offset {number} pattern offset for hash/dot/circle/cross pattern
@@ -44,6 +43,7 @@ ol.style.FillPattern = function(options)
 		if (img.width)
 		{	canvas.width = Math.round(img.width *ratio);
 			canvas.height = Math.round(img.height *ratio);
+			ctx.globalAlpha = typeof(options.opacity) == 'number' ? options.opacity:1;
 			ctx.drawImage(img, 0,0, img.width, img.height, 0, 0, canvas.width, canvas.height);
 			pattern = ctx.createPattern(canvas, 'repeat');
 		}
@@ -53,6 +53,7 @@ ol.style.FillPattern = function(options)
 			img.onload = function ()
 			{	canvas.width = Math.round(img.width *ratio);
 				canvas.height = Math.round(img.height *ratio);
+				ctx.globalAlpha = typeof(options.opacity) == 'number' ? options.opacity:1;
 				ctx.drawImage(img, 0,0, img.width, img.height, 0, 0, canvas.width, canvas.height);
 				pattern = ctx.createPattern(canvas, 'repeat');
 				self.setColor(pattern);
@@ -122,18 +123,14 @@ ol.style.FillPattern = function(options)
 		{	var offset = options.offset;
 			if (typeof(offset) == "number") offset = [offset,offset];
 			if (offset instanceof Array) 
-			{	var dx = canvas.width - Math.round((offset[0]*ratio)%canvas.width);
-				var dy = canvas.height - Math.round((offset[1]*ratio)%canvas.height);
-				var c2 = document.createElement('canvas');
-				c2.width = canvas.width + dx;
-				c2.height = canvas.height + dy;
-				var ctx2 = c2.getContext('2d');
-				ctx2.fillStyle = pattern;
-				ctx2.fillRect (0,0,c2.width,c2.height);
+			{	var dx = Math.round((offset[0]*ratio));
+				var dy = Math.round((offset[1]*ratio));
 				// New pattern
 				ctx.scale(1/ratio,1/ratio)
 				ctx.clearRect(0,0,canvas.width,canvas.height);
-				ctx.drawImage (c2, dx, dy, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+				ctx.translate(dx,dy);
+				ctx.fillStyle = pattern;
+				ctx.fillRect(-dx, -dy, canvas.width,canvas.height);
 				pattern = ctx.createPattern(canvas, 'repeat');
 			}
 		}
@@ -213,7 +210,7 @@ ol.style.FillPattern.prototype.getPattern_ = function(options)
 			if (options.angle) options.angle = 45;
 		}
 		case 'hatch':
-		{	var a = Math.round((options.angle-90)%360);
+		{	var a = Math.round(((options.angle||0)-90)%360);
 			if (a>180) a -= 360;
 			a *= Math.PI/180;
 			var cos = Math.cos(a);
@@ -249,7 +246,7 @@ ol.style.FillPattern.prototype.getPattern_ = function(options)
 				}
 				
 			}
-			pat.stroke = options.size===0 ? 0 : options.size||1;
+			pat.stroke = options.size===0 ? 0 : options.size||4;
 		}
 		default: break;
 	}
