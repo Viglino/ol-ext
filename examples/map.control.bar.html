@@ -1,0 +1,166 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: interactions</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<link rel="stylesheet" href="style.css" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<!-- FontAwesome -->
+	<link rel="stylesheet" href="http://fontawesome.io/assets/font-awesome/css/font-awesome.css" type="text/css" />
+
+	<!-- OL3 -->
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	<!-- http://openlayers.org/en/v3.2.0/build/ol.js -->
+	<!-- http://openlayers.org/en/v3.2.0/build/ol-debug.js -->
+	
+	<!-- controls -->
+	<link rel="stylesheet" href="../control/controlbar.css" type="text/css" />
+	<script type="text/javascript" src="../control/controlbar.js"></script>
+	<script type="text/javascript" src="../control/togglecontrol.js"></script>
+
+	<style>
+		.ol-control i
+		{	color: white;
+		}
+	</style>
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: interactions</h1>
+	</a>
+	<div class="info">
+
+		<!-- force font loading -->
+		<i class="fa fa-rotate-left" style="position:absolute; top:-1000px;"></i>
+
+	</div>
+
+	<!-- Map div -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options" >
+		
+	</div>
+	
+
+	<script type="text/javascript">
+
+		// The map
+		var map = new ol.Map
+			({	target: 'map',
+				view: new ol.View
+				({	zoom: 14,
+					center: [270701, 6247637]
+				}),
+				controls: ol.control.defaults(),
+				layers: [new ol.layer.Tile(
+					{	name: "OSM",
+						source: new ol.source.OSM(),
+						visible: true
+					})]
+			});
+
+
+
+		function getStyle(feature, stroke, fill)
+		{
+			return [ new ol.style.Style(
+				{	image: new ol.style.RegularShape({
+						fill: fill,
+						stroke: stroke,
+						radius: 10,
+						points: 3,
+						angle: feature.get('angle')||0
+					}),
+					fill: fill,
+					stroke: stroke
+				})];
+		}
+		function getDefaultStyle (feature)
+		{	return getStyle (feature,
+					new ol.style.Stroke({
+					  color: [0,0,255,1],
+					  width: 1
+					}), 
+					new ol.style.Fill({
+						color: [0,0,255,0.5]
+					}));
+		}
+		function getSelectStyle (feature)
+		{	return getStyle (feature,
+					new ol.style.Stroke({
+					  color: [255,0,0,1],
+					  width: 1
+					}), 
+					new ol.style.Fill({
+						color: [255,0,0,0.5]
+					}));
+		}
+
+		// Nouvelle source de donnee
+		var vector = new ol.layer.Vector(
+		{	name: 'Vecteur',
+			source: new ol.source.Vector(),
+			style: getDefaultStyle
+		})
+		map.addLayer(vector);
+
+
+		var cbar0 = new ol.control.Bar(
+			{	toggleOne: true
+				/* controls: [new ol.control.Zoom()] */ 
+			});
+		map.addControl(cbar0);
+
+		var ictrl = new ol.control.Toggle(
+				{	html: '<i class="fa fa-hand-pointer-o"></i>',
+					title: "Select",
+					
+					interaction: new ol.interaction.Select(
+					{	layers: [vector],
+						style: getSelectStyle
+					}),
+					active:true
+				});
+		cbar0.addControl(ictrl);
+		
+		var cbar = new ol.control.Bar(
+			{	toggleOne: true
+				/* controls: [new ol.control.Zoom()] */ 
+			});
+		cbar0.addControl(cbar);
+
+		var t = {	
+				'Point' : '<i class="fa fa-map-marker" title="Point"></i>',
+				'LineString' : '<i class="fa fa-share-alt" title="LineString"></i>',
+				'Polygon' : '<i class="fa fa-image" title="Polygon"></i>'
+			};
+
+		for (i in t)
+		{	var ictrl = new ol.control.Toggle(
+				{	html: t[i],
+					title: i,
+					interaction: new ol.interaction.Draw
+					({	type: i,
+						source: vector.getSource()
+					})
+				});
+			cbar.addControl(ictrl);
+		}
+	</script>
+
+</body>
+</html>

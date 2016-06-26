@@ -1,0 +1,46 @@
+/* Bar style */
+.ol-control.ol-bar
+{	left: 50%;
+	min-height: 1em;
+	min-width: 1em;
+	position: absolute;
+	top: 0.5em;
+	transform: translate(-50%,0);
+	-webkit-transform: translate(-50%,0);
+}
+
+/* Default position for controls */
+.ol-control.ol-bar .ol-control
+{	position: static;
+	display: inline-block;
+	vertical-align: middle;
+	background: none;
+	padding: 0;
+	margin: 0;
+	transform: none;
+	-webkit-transform: none;
+}
+
+/* Group buttons */
+.ol-control.ol-bar.ol-group button
+{	margin-left:0.5px;
+	margin-right:0.5px;
+	border-radius:0;
+}
+.ol-control.ol-bar.ol-group .ol-control:first-child > button
+{	border-radius: 5px 0 0 5px;
+	margin-left: 1px;
+}
+.ol-control.ol-bar.ol-group .ol-control:last-child > button
+{	border-radius: 0 5px 5px 0;
+	margin-right: 1px;
+}
+
+/* Active buttons */
+.ol-control.ol-bar .ol-active button
+{	background: rgba(60, 136, 0, 0.7)
+}
+.ol-control.ol-bar .ol-active button:hover
+{	background: rgba(60, 136, 0, 0.7)
+}
+
