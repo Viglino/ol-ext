@@ -1,0 +1,102 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: Synchronized windows</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- OL3 -->
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	
+	<!-- Synchronize script -->
+	<script type="text/javascript" src="../utils/wsynchro.js"></script>
+	
+	<link rel="stylesheet" href="style.css" />
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: Synchronized windows</h1>
+	</a>
+	<div class="info">
+		This example synchronize maps in different windows. 
+		<br />
+		The WSynchro object do the job: WSynchro.synchronize will dispatch a synchro event.
+		<br />
+		<button onclick="openWin();">Open a new window!</button> Synchro: <span id="nb"></span>
+	</div>
+
+	<!-- map div -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<script type="text/javascript">
+
+	// Two base layers
+	var stamen = new ol.layer.Tile(
+				{	title: "Watercolor",
+					baseLayer: true,
+					source: new ol.source.Stamen({
+						layer: 'watercolor'
+					})
+				});
+
+	// The map
+	var z = 6; pt = [270148, 6247782]; rot = 0;
+	// Window has a source > get its position
+	if (WSynchro.source)
+	{	z = WSynchro.source.map.getView().getZoom();
+		pt = WSynchro.source.map.getView().getCenter();
+		rot = WSynchro.source.map.getView().getRotation();
+	}
+	var map = new ol.Map
+		({	target: 'map',
+			view: new ol.View
+			({	zoom: z,
+				center: pt,
+				rotation: rot
+			}),
+			layers: [stamen]
+		});
+
+	// Open a new window
+	function openWin() { WSynchro.open(); };
+	
+	// synchro count
+	var nb = 0;
+	// Synchronize function => set map position
+	WSynchro.on ('synchronize', function(e)
+	{	var view = map.getView();
+		// Tell we are synchro
+		if (e.pt == view.getCenter() && e.z == view.getZoom() && e.rot == view.getRotation()) 
+		{	WSynchro.synchronize();
+		}
+		// Set position (will call WSynchro.synchronize on move end)
+		else
+		{	view.setCenter(e.pt);
+			view.setZoom(e.z);
+			view.setRotation(e.rot||0);
+			$("#nb").text(++nb);
+		}
+	});
+
+	// Synchronize on move / rotate
+	map.on(['moveend','rotateend'], function(e)
+	{	var view = map.getView();
+		WSynchro.synchronize({ pt:view.getCenter(), z:view.getZoom(), rot:view.getRotation() });
+	});
+
+	</script>
+	
+</body>
+</html>
