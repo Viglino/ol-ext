@@ -73,7 +73,7 @@ ol.control.CanvasTitle.prototype.setStyle = function (style)
 }
 
 /**
- * Set the ma title to display
+ * Set the map title 
  * @param {string} map title.
  * @api stable
  */
@@ -84,7 +84,7 @@ ol.control.CanvasTitle.prototype.setTitle = function (title)
 }
 
 /**
- * Get the ma title to display
+ * Get the map title 
  * @param {string} map title.
  * @api stable
  */
@@ -92,10 +92,31 @@ ol.control.CanvasTitle.prototype.getTitle = function (title)
 {	return this.text_;
 }
 
+
+/**
+ * Set control visibility
+ * @param {bool}
+ * @api stable
+ */
+ol.control.CanvasTitle.prototype.setVisible = function (b)
+{	if (b) $(this.element).show();
+	else $(this.element).hide();
+	if (this.getMap()) this.getMap().renderSync();
+}
+
+/**
+ * Get control visibility
+ * @return {bool} 
+ * @api stable
+ */
+ol.control.CanvasTitle.prototype.getVisible = function (b)
+{	return ($(this.element).css('display') != 'none');
+}
+
 /** Draw scale line in the final canvas
 */
 ol.control.CanvasTitle.prototype.drawTitle_ = function(e)
-{	if (!this.text_) return;
+{	if (!this.getVisible()) return;
 	var ctx = e.context;
 	
 	// Retina device
