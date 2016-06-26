@@ -143,7 +143,8 @@
 
 	<script type="text/javascript">
 
-		// AddChar patterns
+	$(window).load (function()
+	{	// AddChar patterns
 		ol.style.FillPattern.addPattern ("copy (char pattern)", { char:"©" });
 		ol.style.FillPattern.addPattern ("bug (fontawesome)", { char:'\uf188', size:12, font:"10px FontAwesome" });
 		ol.style.FillPattern.addPattern ("smiley (width angle)", { char:'\uf118', size:20, angle:true, font:"15px FontAwesome" });
@@ -260,6 +261,7 @@
 		map.addInteraction(interaction); 
 
 		refresh();
+	});
 	</script>
 
 </body>
