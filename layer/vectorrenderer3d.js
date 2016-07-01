@@ -215,7 +215,7 @@ ol.render3D.prototype.drawFeature3D_ = function(ctx, build)
 					}
 					ctx.closePath();
 				}
-				ctx.fill();
+				ctx.fill("evenodd");
 				ctx.stroke();
 				break;
 			}
