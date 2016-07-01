@@ -95,7 +95,31 @@
 				})
 			});
 		}
-		return [style];
+		if (nb>1)
+		{	var count = new ol.style.Style(
+				{	image: new ol.style.RegularShape(
+					{	points: 12,
+						radius: 9,
+						fill: new ol.style.Fill({
+								color: '#fff'
+							})
+					}),
+					text: new ol.style.Text(
+					{	text: nb.toString(),
+						font: 'bold 12px helvetica,sans-serif',
+						offsetX: 20,
+						offsetY: -20,
+                        fill: new ol.style.Fill({
+                            color: '#000'
+                        })
+					})
+				});
+			var p = count.getImage().getAnchor();
+			p[0]-=20;
+			p[1]+=20;
+			return [ style, count ];
+		}
+		else return [style];
 	}
 
 	// DBPedia layer source
