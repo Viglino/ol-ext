@@ -9,7 +9,7 @@ if (!window.WSynchro) WSynchro = { windows: [] };
 *	@param {specs|undefined|null} specs (as for window.open), undefined to open in a new window, null to open in a new tab, default new window
 */
 WSynchro.open = function (href, specs)
-{	var w = window.open (href || window.location.href, "_blank", typeof(specs)=="undefined"?{}:specs);
+{	var w = window.open (href || window.location.href, "_blank", typeof(specs)=="undefined"? "location=1,menubar=1,toolbar=1,scrollbars=1" : specs);
 	if (!w.WSynchro) w.WSynchro = { windows: [ window ], source:window };
 	else
 	{	w.WSynchro.windows = [ window ];
