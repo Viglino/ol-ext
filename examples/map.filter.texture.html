@@ -7,7 +7,7 @@
 ------------------------------------------------------------>
 <html>
 <head>
-	<title>OL3-ext: Color filter on map</title>
+	<title>OL3-ext: Texture filter </title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 	<meta name="description" content="Crop and mask filter on an ol map or layer." />
@@ -26,7 +26,8 @@
 	
 	<!-- filters -->
 	<script type="text/javascript" src="../filter/filter.js"></script>
-	<script type="text/javascript" src="../filter/colorizefilter.js"></script>
+	<script type="text/javascript" src="../filter/texturefilter.js"></script>
+	<script type="text/javascript" src="../filter/texturefilterimage.js"></script>
 
 	<style>
 		input[type="range"] 
@@ -42,15 +43,10 @@
 	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
 
 	<a href="../index.html">
-		<h1>OL3-ext: Color filter on map</h1>
+		<h1>OL3-ext: Texture filter</h1>
 	</a>
 	<div class="info">
-		<i>ol.filter.Colorize</i> add colors effects on a map (hue, saturation, grayscale, invert, enhance...). 
-		It uses canvas composite operations to achieve the effects.
-		<br />
-		You can customize effetcs, colors and intensity (value) of the filters.
-		<br />
-		Predefined filters are avaliable as shortcut (grayscale, sepia, invert).
+		<i>ol.filter.Texture</i> add a texture effect on the map. 
 	</div>
 
 	<!-- Map div -->
@@ -58,33 +54,23 @@
 
 	<div class="options" >
 		<ul><li>
-			Filter:
-			<select id="filter" onchange="setFilter()">
-				<optgroup label="Operation">
-					<option value="color">color</option>
-					<option value="difference">difference</option>
-					<option value="color-dodge">color-dodge</option>
-					<option value="hue">hue</option>
-					<option value="saturation">saturation</option>
-					<option value="luminosity">luminosity</option>
-					<option value="enhance">enhance</option>
-				</optgroup>
-				<optgroup label="Predefined">
-					<option value="grayscale">grayscale</option>
-					<option value="invert">invert</option>
-					<option value="sepia">sepia</option>
-				</optgroup>
+			Texture:
+			<select id="texture" onchange="setFilter()">
+				<option value="stone">stone</option>
+				<option value="rust">rust</option>
+				<option value="metal">metal</option>
+				<option value="wood">wood</option>
+				<option value="cardboard">cardboard</option>
+				<option value="notebook">notebook</option>
+				<option value="http://opengameart.org/sites/default/files/parchment-gold.png.preview.jpg">parchemin</option>
+				<option value="http://opengameart.org/sites/default/files/WhiteIrregular_T.jpg">paving</option>
 			</select>
 		</li><li>
 			<input id="active" type="checkbox" checked="checked" /><label for="active"> active</label>
 		</li><li>
-			<input id="enhance" type="checkbox" /><label for="enhance"> enhance before filter</label>
+			<input id="rotate" type="checkbox" checked="checked" /><label for="rotate"> rotate with view</label>
 		</li><li>
-			R:<input id="red" type="number" min="0" max="255" value="153" />
-			G:<input id="green" type="number" min="0" max="255" value="102" />
-			B:<input id="blue" type="number" min="0" max="255" value="51" />
-		</li><li>
-			 Value: <input id="val" type="range" min="0" max="1" step="0.1" value="1" />
+			 Opacity: <input id="opacity" type="range" min="0" max="1" step="0.1" value="0.7" />
 		</li></ul>
 	</div>
 
@@ -105,32 +91,17 @@
 					]
 			});
 
-		// Enhance filter
-		var enhance = new ol.filter.Colorize({ operation:'enhance'});
-		map.addFilter(enhance);
-
 		// Custom filter
-		var filter = new ol.filter.Colorize();
+		var filter = new ol.filter.Texture();
 		map.addFilter(filter);
 
 		function setFilter()
-		{	enhance.setActive($("#enhance").prop('checked'));
-			filter.setActive($("#active").prop('checked'));
-			var f = $("#filter").val();
-			switch (f)
-			{	case 'grayscale':
-				case 'invert':
-				case 'sepia':
-					filter.setFilter(f);
-					break;
-				default:
-					filter.setFilter({ operation:f, red:Number($("#red").val()),
-						green: Number($("#green").val()), blue: Number($("#blue").val()), 
-						value: Number($("#val").val()),
-						});
-					break;
-
-			}
+		{	filter.setActive($("#active").prop('checked'));
+			filter.setFilter(
+				{	src: $("#texture").val(), 
+					rotateWithView: $("#rotate").prop('checked'),
+					opacity: Number($("#opacity").val()) 
+				});
 		}
 		setFilter();
 
