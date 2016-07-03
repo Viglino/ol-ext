@@ -89,6 +89,7 @@ ol.filter.Texture.prototype.postcompose = function(e)
 	
 	var m = 1.5 * Math.max(canvas.width, canvas.height);
 	var mt = e.frameState.pixelToCoordinateMatrix;
+	var ratio = e.frameState.pixelRatio;
 	var res = e.frameState.viewState.resolution;
 	var w = canvas.width/2, 
 		h = canvas.height/2;
@@ -99,6 +100,7 @@ ol.filter.Texture.prototype.postcompose = function(e)
 		//ctx.globalCompositeOperation = "overlay";
 		//ctx.globalCompositeOperation = "color";
 		ctx.globalAlpha = this.get('opacity');
+		ctx.scale(ratio,ratio);
 		
 		if (this.get('rotateWithView'))
 		{	// Translate pattern
