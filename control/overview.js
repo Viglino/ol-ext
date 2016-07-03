@@ -30,7 +30,7 @@ ol.control.Overview = function(opt_options)
 	{	element = $("<div>").addClass('ol-overview ol-unselectable ol-control ol-collapsed');
 		if (/top/.test(options.align)) element.addClass('ol-control-top');
 		if (/right/.test(options.align)) element.addClass('ol-control-right');
-		$("<button>").on("touchstart", function(){self.toggleMap()})
+		$("<button>").on("touchstart", function(e){ self.toggleMap(); e.preventDefault(); })
 					.click (function(){self.toggleMap()})
 					.appendTo(element);
 		this.panel_ = $("<div>").addClass("panel")
