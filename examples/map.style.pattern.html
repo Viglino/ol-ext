@@ -143,6 +143,8 @@
 
 	<script type="text/javascript">
 
+	var refreh;
+	
 	$(window).load (function()
 	{	// AddChar patterns
 		ol.style.FillPattern.addPattern ("copy (char pattern)", { char:"©" });
@@ -170,7 +172,7 @@
 				.appendTo(spattern);
 
 		// Redraw map
-		function refresh()
+		refresh = function()
 		{	$("#pselect").hide();
 			vector.changed();
 			if ( $.inArray(pat,["hatch","cross","dot","circle","square","tile"]) < 0 )
