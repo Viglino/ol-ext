@@ -45,6 +45,7 @@
 		<h2>Options:</h2>
 		Chart type: <select id="graph" onchange="doAnimate();">
 			<option value="pie">pie</option>
+			<option value="donut">donut</option>
 			<option value="bar">bar</option>
 		</select>
 		<br/>
@@ -87,7 +88,7 @@
 		if (!style) 
 		{	var radius = 15;
 			// area proportional to data size: s=PI*r^2
-			if ($("#graph").val()=="pie")
+			if ($("#graph").val()!="bar")
 			{	radius = 8* Math.sqrt (feature.get("size") / Math.PI);
 			}
 			// Create chart style

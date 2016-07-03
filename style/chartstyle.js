@@ -42,7 +42,8 @@ ol.style.Chart = function(opt_options)
 	if (options.scale) this.setScale(options.scale);
 
 	this.stroke_ = options.stroke;
-	this.radius_ = options.radius;
+	this.radius_ = options.radius || 20;
+	this.donutratio_ = options.donutRatio || 0.5;
 	this.type_ = options.type;
 	this.offset_ = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
 	this.animation_ = (typeof(options.animation) == 'number') ? { animate:true, step:options.animation } : this.animation_ = { animate:false, step:1 };
@@ -83,16 +84,18 @@ ol.style.Chart.prototype.setData = function(data)
 	this.renderChart_();
 }
 
-/** Get data associatied with the chart
+/** Get symbol radius
 */
 ol.style.Chart.prototype.getRadius = function() 
 {	return this.radius_;
 }
-/** Set data associatied with the chart
-*	@param {number} get the symbol radius
+/** Set symbol radius
+*	@param {number} symbol radius
+*	@param {number} donut ratio
 */
-ol.style.Chart.prototype.setRadius = function(radius) 
-{	this.radius_ = radius_;
+ol.style.Chart.prototype.setRadius = function(radius, ratio) 
+{	this.radius_ = radius;
+	this.donuratio_ = ratio || this.donuratio_;
 	this.renderChart_();
 }
 
@@ -147,11 +150,19 @@ ol.style.Chart.prototype.renderChart_ = function(atlasManager)
 	
 	// Draw pie
 	switch (this.type_)
-	{	case "pie":
+	{	case "donut":
+		case "pie":
 		{	var a, a0 = Math.PI * (step-1.5);
 			var c = canvas.width/2;
 			context.strokeStyle = strokeStyle;
 			context.lineWidth = strokeWidth;
+			if (this.type_=="donut")
+			{	context.save();
+				context.beginPath();
+				context.rect ( 0,0,2*c,2*c );
+				context.arc ( c, c, this.radius_ *step *this.donutratio_, 0, 2*Math.PI);
+				context.clip("evenodd");
+			}
 			for (var i=0; i<this.data_.length; i++)
 			{	context.beginPath();
 				context.moveTo(c,c);
@@ -162,6 +173,14 @@ ol.style.Chart.prototype.renderChart_ = function(atlasManager)
 				context.fill();
 				context.stroke();
 				a0 = a;
+			}
+			if (this.type_=="donut")
+			{	context.restore();
+				context.beginPath();
+				context.strokeStyle = strokeStyle;
+				context.lineWidth = strokeWidth;
+				context.arc ( c, c, this.radius_ *step *this.donutratio_, Math.PI * (step-1.5), a0);
+				context.stroke();
 			}
 			break;
 		}
