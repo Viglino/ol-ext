@@ -41,6 +41,34 @@ ol.control.Bar.prototype.setMap = function (map)
 	}
 }
 
+/** Get controls in the panel
+*	@param {Array<ol.control>}
+*/
+ol.control.Bar.prototype.getControls = function ()
+{	return this.controls_;
+}
+
+/** Set tool bar position
+*	@param {top|left|bottom|right}
+*/
+ol.control.Bar.prototype.setPosition = function (pos)
+{	$(this.element).removeClass('ol-left ol-top ol-bottom ol-right')
+	pos=pos.split ('-');
+	for (var i=0; i<pos.length; i++)
+	{	
+		console.log(pos[i]);
+		switch (pos[i])
+		{	case 'top':
+			case 'left':
+			case 'bottom':
+			case 'right':
+				$(this.element).addClass ("ol-"+pos[i]);
+				break;
+			default: break;
+		}
+	}
+}
+
 /** Add a control to the bar
 *	@param {ol.control}
 */
@@ -49,7 +77,7 @@ ol.control.Bar.prototype.addControl = function (c)
 	c.setTarget(this.element);
 	if (this.getMap()) 
 	{	this.getMap().addControl(c);
-		c.on ('activate', this.onActivateControl_, this);
+		c.on ('change:active', this.onActivateControl_, this);
 	}
 	//$(this.element).append(c.element);
 }

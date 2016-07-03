@@ -10,8 +10,8 @@
 	<title>OL3-ext: Control bar</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="ol.cnotrol.Bar is a control bar that contains controls." />
-	<meta name="keywords" content="ol3, control, bar, interaction" />
+	<meta name="description" content="ol.control.Bar is a control bar that contains controls." />
+	<meta name="keywords" content="ol3, control, bar, panel, ol3, openlayers, interaction" />
 
 	<link rel="stylesheet" href="style.css" />
 
@@ -23,8 +23,6 @@
 	<!-- OL3 -->
     <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
 	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
-	<!-- http://openlayers.org/en/v3.2.0/build/ol.js -->
-	<!-- http://openlayers.org/en/v3.2.0/build/ol-debug.js -->
 	
 	<!-- controls -->
 	<link rel="stylesheet" href="../control/controlbar.css" type="text/css" />
@@ -45,18 +43,42 @@
 		<h1>OL3-ext: control bar</h1>
 	</a>
 	<div class="info">
-		
+		<i>ol.control.Bar</i> is a panel that contains other controls. Control bar can be nested.
+		<br/>
+		<i>ol.control.Toogle</i> are customized ol3 controls buttons with an active/deactive position. 
+		If created with an interaction it controls its activation.
+		<br/>
+		ol.control.Toogle can be grouped into an ol.control.Bar with a toggleOne propertie to have only one activated at a time. 
+		You can compose toolbars with it.
 	</div>
 
 	<!-- Map div -->
 	<div id="map" style="width:600px; height:400px;"></div>
 
 	<div class="options" >
-		
+		<ul>
+			<li>
+				Position:
+				<select onchange="mainbar.setPosition(this.value)">
+					<option value="top">top</option>
+					<option value="top-right">top-right</option>
+					<option value="right">right</option>
+					<option value="bottom-right">bottom-right</option>
+					<option value="bottom">bottom</option>
+					<option value="bottom-left">bottom-left</option>
+					<option value="left">left</option>
+					<option value="top-left">top-left</option>
+				</select>
+			</li>
+		</ul>
+		Export:<br />
+		<textarea id="export" style="width:25em; height:10em"></textarea>
 	</div>
-	
 
 	<script type="text/javascript">
+
+		//  Vector layer
+		var vector = new ol.layer.Vector( { source: new ol.source.Vector() })
 
 		// The map
 		var map = new ol.Map
@@ -65,101 +87,67 @@
 				({	zoom: 14,
 					center: [270701, 6247637]
 				}),
-				controls: ol.control.defaults(),
-				layers: [new ol.layer.Tile(
-					{	name: "OSM",
-						source: new ol.source.OSM(),
-						visible: true
-					})]
+				layers: 
+					[	new ol.layer.Tile({ source: new ol.source.OSM() }),
+						vector
+					]
 			});
 
+		// Main control bar
+		var mainbar = new ol.control.Bar();
+		map.addControl(mainbar);
 
+		// Edit control bar (on control active at the same time)
+		var editbar = new ol.control.Bar({ toggleOne: true });
+		mainbar.addControl(editbar);
 
-		function getStyle(feature, stroke, fill)
-		{
-			return [ new ol.style.Style(
-				{	image: new ol.style.RegularShape({
-						fill: fill,
-						stroke: stroke,
-						radius: 10,
-						points: 3,
-						angle: feature.get('angle')||0
-					}),
-					fill: fill,
-					stroke: stroke
-				})];
-		}
-		function getDefaultStyle (feature)
-		{	return getStyle (feature,
-					new ol.style.Stroke({
-					  color: [0,0,255,1],
-					  width: 1
-					}), 
-					new ol.style.Fill({
-						color: [0,0,255,0.5]
-					}));
-		}
-		function getSelectStyle (feature)
-		{	return getStyle (feature,
-					new ol.style.Stroke({
-					  color: [255,0,0,1],
-					  width: 1
-					}), 
-					new ol.style.Fill({
-						color: [255,0,0,0.5]
-					}));
-		}
-
-		// Nouvelle source de donnee
-		var vector = new ol.layer.Vector(
-		{	name: 'Vecteur',
-			source: new ol.source.Vector(),
-			style: getDefaultStyle
-		})
-		map.addLayer(vector);
-
-
-		var cbar0 = new ol.control.Bar(
-			{	toggleOne: true
-				/* controls: [new ol.control.Zoom()] */ 
-			});
-		map.addControl(cbar0);
-
-		var ictrl = new ol.control.Toggle(
+		// Add selection tool (a toggle control with a select interaction)
+		editbar.addControl ( new ol.control.Toggle(
 				{	html: '<i class="fa fa-hand-pointer-o"></i>',
 					title: "Select",
-					
-					interaction: new ol.interaction.Select(
-					{	layers: [vector],
-						style: getSelectStyle
-					}),
+					interaction: new ol.interaction.Select (),
 					active:true
-				});
-		cbar0.addControl(ictrl);
+				}));
 		
-		var cbar = new ol.control.Bar(
-			{	toggleOne: true
-				/* controls: [new ol.control.Zoom()] */ 
-			});
-		cbar0.addControl(cbar);
-
+		// Add editing tools
 		var t = {	
-				'Point' : '<i class="fa fa-map-marker" title="Point"></i>',
-				'LineString' : '<i class="fa fa-share-alt" title="LineString"></i>',
-				'Polygon' : '<i class="fa fa-image" title="Polygon"></i>'
+				'Point' : '<i class="fa fa-map-marker" ></i>',
+				'LineString' : '<i class="fa fa-share-alt" ></i>',
+				'Polygon' : '<i class="fa fa-bookmark-o fa-rotate-270" ></i>'
 			};
 
 		for (i in t)
-		{	var ictrl = new ol.control.Toggle(
+		{	editbar.addControl ( new ol.control.Toggle(
 				{	html: t[i],
 					title: i,
 					interaction: new ol.interaction.Draw
 					({	type: i,
 						source: vector.getSource()
 					})
-				});
-			cbar.addControl(ictrl);
+				}));
 		}
+
+		// Add a custom push button with onToggle function
+		mainbar.addControl ( new ol.control.Toggle(
+				{	html: '<i class="fa fa-smile-o"></i>',
+					title: "Hello world!",
+					onToggle: function(active)
+						{	if (active) alert("Hello, I'm active"); 
+							else alert("Hello, I'm not active"); 
+						}
+				}));
+				
+		// Add a save button with on active event
+		var save = new ol.control.Toggle(
+				{	html: '<i class="fa fa-download"></i>',
+					title: "Save",
+					className: "noToggle"
+				});
+		mainbar.addControl ( save );
+		save.on("change:active", function(e)
+		{	var json= new ol.format.GeoJSON().writeFeatures(vector.getSource().getFeatures());
+			$("#export").text(json);
+		});
 	</script>
 
 </body>

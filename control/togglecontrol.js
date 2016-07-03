@@ -2,27 +2,34 @@
  *
  * @constructor
  * @extends {ol.control.Control}
+ * @fires change:active
  * @param {Object=} opt_options Control options.
  *		className {String} class of the control
  *		title {String} title of the control
  *		html {String} html to insert in the control
  *		interaction {ol.interaction} interaction associated with the control 
  *		active {bool} the control is active
- *		toggleFn {function} callback when control is clicked 
+ *		onToggle {function} callback when control is clicked (or use change:active event)
  */
 ol.control.Toggle = function(options) 
 {	var element = $("<div>").addClass((options.className || options['class'] || "") + ' ol-unselectable ol-control');
 	var self = this;
 
 	this.interaction_ = options.interaction;
+	if (this.interaction_)
+	{	this.interaction_.on("change:active", function(e)
+		{	self.setActive(!e.oldValue);
+		});
+	}
 	this.title = options.title;
+	if (options.toggleFn) options.onToggle = options.toggleFn;
 
 	$("<button>").html(options.html || "")
 				.attr('title', options.title)
 				.on("touchstart click", function(e)
 				{	if (e && e.preventDefault) e.preventDefault();
-					if (options.toggleFn) options.toggleFn(self.getActive());
 					self.toggle();
+					if (options.onToggle) options.onToggle.call(self, self.getActive());
 				})
 				.appendTo(element);
 	
@@ -57,7 +64,7 @@ ol.control.Toggle.prototype.setActive = function(b)
 	if (b) $(this.element).addClass("ol-active");
 	else $(this.element).removeClass("ol-active");
 	if (this.interaction_) this.interaction_.setActive (b);
-	this.dispatchEvent({ type:'activate', active:b });
+	this.dispatchEvent({ type:'change:active', key:'active', oldValue:!b, active:b });
 }
 
 /**

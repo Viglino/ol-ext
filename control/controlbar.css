@@ -21,6 +21,44 @@
 	-webkit-transform: none;
 }
 
+/* Positionning */
+.ol-control.ol-bar.ol-left
+{	left: 0.5em;
+	top: 50%;
+	transform: translate(0px, -50%);
+}
+.ol-control.ol-bar.ol-left .ol-control
+{	display: block;
+}
+
+.ol-control.ol-bar.ol-right
+{	left: auto;
+	right: 0.5em;
+	top: 50%;
+	transform: translate(0px, -50%);
+}
+.ol-control.ol-bar.ol-right .ol-control
+{	display: block;
+}
+
+.ol-control.ol-bar.ol-bottom
+{	top: auto;
+	bottom: 0.5em;
+}
+
+.ol-control.ol-bar.ol-top.ol-left,
+.ol-control.ol-bar.ol-top.ol-right
+{	top: 0.5em;
+	transform:none;
+}
+.ol-control.ol-bar.ol-bottom.ol-left,
+.ol-control.ol-bar.ol-bottom.ol-right
+{	top: auto;
+	bottom: 0.5em;
+	transform:none;
+}
+
+
 /* Group buttons */
 .ol-control.ol-bar.ol-group button
 {	margin-left:0.5px;
@@ -44,3 +82,6 @@
 {	background: rgba(60, 136, 0, 0.7)
 }
 
+.ol-control.ol-bar .ol-active.noToggle button
+{	background: rgba(0, 60, 136, 0.5)
+}
