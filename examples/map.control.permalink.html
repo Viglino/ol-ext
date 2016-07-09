@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: Premalinkl control</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="ol.control.Permalink add a premalink control to the map." />
+	<meta name="keywords" content="ol3, control, permalink, anchor" />
+
+	<link rel="stylesheet" href="style.css" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- OL3 -->
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	
+	<!-- controls -->
+	<link rel="stylesheet" href="../control/permalinkcontrol.css" type="text/css" />
+	<script type="text/javascript" src="../control/permalinkcontrol.js"></script>
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: Permalink control</h1>
+	</a>
+	<div class="info">
+		<i>ol.control.Permalink</i> is hyperlink that will return the user to the current map view. 
+		<br/>
+		The href is updated as the map is zoomed, panned, rotated and whilst layers are switched or opacity is changed 
+		(as soon as the layer has a <i>permalink</i> propertie).
+		<ul><li>
+			Only layers with a <i>permalink</i> properties are handled by the control.
+			The permalink propertie is used to name the layer in the url.
+		</li><li>
+		 	By default, clicking the control will enable/disable the url replacement. Use the <i>onclick</i> option to change this behavior (mail to a friend...).
+		</li><li>
+		 	The <i>getUrlParams</i> method enable you to add user parameters to the url to handle new functionnalities (layers ordering, etc.)
+		</li></ul>
+	</div>
+
+	<!-- Map div -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options" >
+		<ul><li>
+			<input id="url" type="checkbox" checked="checked" onchange="ctrl.setUrlReplace($(this).prop('checked'))" /><label for="url"> urlReplace (replace url in the browser bar).</label>
+		</li><li>
+		 	OSM opacity: <input type="range" min="0" max="1" step="0.1" value="1" onchange="osm.setOpacity(Number(this.value))" style="vertical-align:middle;"/>
+		</li><li>
+			User parameter: <input id="user" type="text" />
+		</li></ul>
+	</div>
+
+	<script type="text/javascript">
+		// Layers
+		var osm = new ol.layer.Tile(
+			{	permalink:"O",	// Name of the layer in the permalink
+				source: new ol.source.OSM() 
+			});
+		var stamen = new ol.layer.Tile(
+			{	permalink:"S",	// Name of the layer in the permalink
+				source: new ol.source.Stamen({ layer: 'watercolor' }) 
+			});
+
+		// The map
+		var map = new ol.Map
+			({	target: 'map',
+				view: new ol.View
+				({	zoom: 14,
+					center: [270701, 6247637]
+				}),
+				layers: [ stamen, osm ]
+			});
+
+		// Control
+		var ctrl = new ol.control.Permalink(
+			{	onclick: function(url) 
+				{	document.location = "mailto:?subject=subject&body="+encodeURIComponent(url);
+				}
+			});
+		map.addControl(ctrl);
+
+		// Handle user parameter
+		var userParam = ctrl.getUrlParams();
+		$("#user").val(decodeURIComponent (userParam['user'] || ""))
+				.on ('change', function()
+				{	userParam['user'] = encodeURIComponent (this.value);
+					// Refresh url
+					ctrl.changed();
+				});
+
+	</script>
+
+</body>
+</html>
