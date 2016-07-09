@@ -28,19 +28,19 @@ ol.inherits(ol.interaction.Flashlight, ol.interaction.Pointer);
 /** Set the map > start postcompose
 */
 ol.interaction.Flashlight.prototype.setMap = function(map)
-{	if (this.oncompose)
-	{	ol.Observable.unByKey(oncompose);
-		if (this.getMap()) this.getMap().render();
+{	if (this.getMap()) 
+	{	this.getMap().un('postcompose', this.postcompose_, this);
+		this.getMap().render();
 	}
 	
 	ol.interaction.Pointer.prototype.setMap.call(this, map);
 
 	if (map)
-	{	this.oncompose = map.on('postcompose', this.postcompose_, this);
+	{	map.on('postcompose', this.postcompose_, this);
 	}
 }
 
-/** Set flashlight color
+/** Set flashlight radius
  *	@param {integer} radius
  */
 ol.interaction.Flashlight.prototype.setRadius = function(radius)
