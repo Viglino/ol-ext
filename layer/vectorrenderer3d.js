@@ -45,7 +45,13 @@ ol.render3D.prototype.onPostcompose_ = function(e)
 
 	var ratio = e.frameState.pixelRatio;
 	var ctx = e.context;
-	this.matrix_ = m = e.frameState.coordinateToPixelMatrix;
+	this.matrix_ = m = e.frameState.coordinateToPixelMatrix || e.frameState.coordinateToPixelTransform;
+	if (m.length>6)
+	{	m[2] = m[4];
+		m[3] = m[5];
+		m[4] = m[12];
+		m[5] = m[13];
+	}
 	this.center_ = [ctx.canvas.width/2/ratio, ctx.canvas.height/ratio];
 
 	var f = this.layer_.getSource().getFeaturesInExtent(e.frameState.extent);
@@ -130,8 +136,8 @@ ol.render3D.prototype.getFeatureHeight = function (f)
 /**
 */
 ol.render3D.prototype.hvector_ = function (pt, h)
-{	p0 = [	pt[0]*this.matrix_[0] + pt[1]*this.matrix_[1] + this.matrix_[12],
-			pt[0]*this.matrix_[4] + pt[1]*this.matrix_[5] + this.matrix_[13]
+{	p0 = [	pt[0]*this.matrix_[0] + pt[1]*this.matrix_[1] + this.matrix_[4],
+			pt[0]*this.matrix_[2] + pt[1]*this.matrix_[3] + this.matrix_[5]
 		];
 	p1 = [	p0[0] + h/this.res_*(p0[0]-this.center_[0]),
 			p0[1] + h/this.res_*(p0[1]-this.center_[1])
