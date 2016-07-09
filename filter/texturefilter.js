@@ -31,7 +31,7 @@ ol.filter.Texture.prototype.setFilter = function(options)
 	if (options.img) img = option.img;
 	else 
 	{	img = new Image();
-		img.src = ol.filter.Texture[options.src] || options.src;
+		if (options.src) img.src = ol.filter.Texture[options.src] || options.src;
 		img.crossOrigin = options.crossOrigin || null;
 	}
 
