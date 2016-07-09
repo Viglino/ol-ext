@@ -34,12 +34,23 @@ ol.filter.Mask.prototype.drawFeaturePath_ = function(e, out)
 	var canvas = ctx.canvas;
 	var ratio = e.frameState.pixelRatio;
 	// Transform
-	var m = e.frameState.coordinateToPixelMatrix;
+	var m = e.frameState.coordinateToPixelTransform;
+	console.log(m)
 	function tr(pt)
 	{	return [
-			(pt[0]*m[0]+pt[1]*m[1]+m[12])*ratio,
-			(pt[0]*m[4]+pt[1]*m[5]+m[13])*ratio
+			(pt[0]*m[0]+pt[1]*m[1]+m[4])*ratio,
+			(pt[0]*m[2]+pt[1]*m[3]+m[5])*ratio
 		];
+	}
+	// Old version
+	if (!m)
+	{	m = e.frameState.coordinateToPixelMatrix;
+		tr = function(pt)
+		{	return [
+				(pt[0]*m[0]+pt[1]*m[1]+m[12])*ratio,
+				(pt[0]*m[4]+pt[1]*m[5]+m[13])*ratio
+			];
+		}
 	}
 	// Geometry
 	var ll = this.feature_.getGeometry().getCoordinates();
