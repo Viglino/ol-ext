@@ -1,0 +1,86 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: Swipe control</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="ol.control.Permalink add a premalink control to the map." />
+	<meta name="keywords" content="ol3, control, permalink, anchor" />
+
+	<link rel="stylesheet" href="style.css" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- OL3 -->
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	
+	<!-- controls -->
+	<link rel="stylesheet" href="../control/swipecontrol.css" type="text/css" />
+	<script type="text/javascript" src="../control/swipecontrol.js"></script>
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: Swipe control</h1>
+	</a>
+	<div class="info">
+		<i>ol.control.Swipe</i> is a control that add a split screen to compare two map overlays.
+		<br/>
+		Layers can be added to left (top) or right (bottom) side of the map.
+		Layers that are not added are display on both sides.
+	</div>
+
+	<!-- Map div -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options" >
+		<ul><li>
+			<input id="ori" type="checkbox" onchange="ctrl.set('orientation',$(this).prop('checked')?'horizontal':'vertical')" /><label for="ori"> horizontal swipe</label>
+		</li><li>
+		</li></ul>
+	</div>
+
+	<script type="text/javascript">
+		// Layers
+		var osm = new ol.layer.Tile(
+			{	source: new ol.source.OSM() 
+			});
+		var stamen = new ol.layer.Tile(
+			{	source: new ol.source.Stamen({ layer: 'watercolor' }) 
+			});
+		var label = new ol.layer.Tile(
+			{	source: new ol.source.Stamen({ layer: 'terrain-labels' }) 
+			});
+
+		// The map
+		var map = new ol.Map
+			({	target: 'map',
+				view: new ol.View
+				({	zoom: 12,
+					center: [270701, 6247637]
+				}),
+				layers: [ stamen, osm, label ]
+			});
+
+		// Control
+		var ctrl = new ol.control.Swipe();
+		map.addControl(ctrl);
+		// Set stamen on left
+		ctrl.addLayer(stamen);
+		// OSM on right
+		ctrl.addLayer(osm, true);
+
+	</script>
+
+</body>
+</html>
