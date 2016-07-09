@@ -88,7 +88,15 @@ ol.filter.Texture.prototype.postcompose = function(e)
 	var canvas = ctx.canvas;
 	
 	var m = 1.5 * Math.max(canvas.width, canvas.height);
-	var mt = e.frameState.pixelToCoordinateMatrix;
+	var mt = e.frameState.pixelToCoordinateTransform;
+	// Old version (matrix)
+	if (!mt)
+	{	mt = e.frameState.pixelToCoordinateMatrix,
+		mt[2] = mt[4];
+		mt[3] = mt[5];
+		mt[4] = mt[12];
+		mt[5] = mt[13];
+	}
 	var ratio = e.frameState.pixelRatio;
 	var res = e.frameState.viewState.resolution;
 	var w = canvas.width/2, 
@@ -104,7 +112,7 @@ ol.filter.Texture.prototype.postcompose = function(e)
 		
 		if (this.get('rotateWithView'))
 		{	// Translate pattern
-			ctx.fillStyle = this.getPattern ((w*mt[0] + h*mt[1] + mt[12])/res, (w*mt[4] + h*mt[5] + mt[13])/res);
+			ctx.fillStyle = this.getPattern ((w*mt[0] + h*mt[1] + mt[4])/res, (w*mt[2] + h*mt[3] + mt[5])/res);
 
 			// Rotate on canvas center and fill
 			ctx.translate(w, h);
@@ -114,8 +122,9 @@ ol.filter.Texture.prototype.postcompose = function(e)
 			ctx.fill(); 
 		}
 		else
-		{	var dx = -(w*mt[0] + h*mt[1] + mt[12])/res;
-			var dy = (w*mt[4] + h*mt[5] + mt[13])/res;
+		{	var dx = -(w*mt[0] + h*mt[1] + mt[4])/res;
+			var dy = (w*mt[2] + h*mt[3] + mt[5])/res;
+			
 			var cos = Math.cos(e.frameState.viewState.rotation);
 			var sin = Math.sin(e.frameState.viewState.rotation);
 			var offsetX = dx*cos - dy*sin;
