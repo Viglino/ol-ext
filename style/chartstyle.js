@@ -151,11 +151,22 @@ ol.style.Chart.prototype.renderChart_ = function(atlasManager)
 	// Draw pie
 	switch (this.type_)
 	{	case "donut":
+		case "pie3D":
 		case "pie":
 		{	var a, a0 = Math.PI * (step-1.5);
 			var c = canvas.width/2;
 			context.strokeStyle = strokeStyle;
 			context.lineWidth = strokeWidth;
+			context.save();
+			if (this.type_=="pie3D") 
+			{	context.translate(0, c*0.3);
+				context.scale(1, 0.7);
+				context.beginPath();
+				context.fillStyle = "#369";
+				context.arc ( c, c*1.4, this.radius_ *step, 0, 2*Math.PI);
+				context.fill();
+				context.stroke();
+			}
 			if (this.type_=="donut")
 			{	context.save();
 				context.beginPath();
@@ -182,6 +193,7 @@ ol.style.Chart.prototype.renderChart_ = function(atlasManager)
 				context.arc ( c, c, this.radius_ *step *this.donutratio_, Math.PI * (step-1.5), a0);
 				context.stroke();
 			}
+			context.restore();
 			break;
 		}
 		case "bar":
