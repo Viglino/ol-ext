@@ -45,9 +45,11 @@ ol.render3D.prototype.onPostcompose_ = function(e)
 
 	var ratio = e.frameState.pixelRatio;
 	var ctx = e.context;
-	this.matrix_ = m = e.frameState.coordinateToPixelMatrix || e.frameState.coordinateToPixelTransform;
-	if (m.length>6)
-	{	m[2] = m[4];
+	var m = this.matrix_ = e.frameState.coordinateToPixelTransform;
+	// Old version (matrix)
+	if (!m)
+	{	m = e.frameState.coordinateToPixelMatrix,
+		m[2] = m[4];
 		m[3] = m[5];
 		m[4] = m[12];
 		m[5] = m[13];
