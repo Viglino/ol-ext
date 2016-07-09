@@ -130,15 +130,23 @@ ol.control.Overview = function(opt_options)
 };
 ol.inherits(ol.control.Overview, ol.control.Control);
 
+/** Get overview map
+*	@return {ol.Map}
+*/
 ol.control.Overview.prototype.getOverviewMap = function() 
 {	return this.ovmap_;
 }
 
+/** Toggle overview map
+*/
 ol.control.Overview.prototype.toggleMap = function() 
 {	$(this.element).toggleClass("ol-collapsed");
 	this.ovmap_.updateSize();
 }
 
+/** Set overview map position
+*	@param {top|bottom-left|right} 
+*/
 ol.control.Overview.prototype.setPosition = function(align) 
 {	if (/top/.test(align)) $(this.element).addClass("ol-control-top");
 	else $(this.element).removeClass("ol-control-top");
@@ -147,7 +155,7 @@ ol.control.Overview.prototype.setPosition = function(align)
 }
 
 /**
- * Set the map instance the control is associated with.
+ * Set the map instance the control associated with.
  * @param {ol.Map} map The map instance.
  */
 ol.control.Overview.prototype.setMap = function(map) 
@@ -177,6 +185,7 @@ ol.control.Overview.prototype.calcExtent_ = function(extent)
 	var resolution = map.getView().getResolution();
 	var rotation = map.getView().getRotation();
 	var center = map.getView().getCenter();
+	if (!resolution) return;
 
 	var dx = resolution * size[0] / 2;
 	var dy = resolution * size[1] / 2;
@@ -200,6 +209,9 @@ ol.control.Overview.prototype.calcExtent_ = function(extent)
 	source.addFeature(f);
 }
 
+/**
+*	@private
+*/
 ol.control.Overview.prototype.setView = function(e) 
 {	if (!e) 
 	{	// refresh all
