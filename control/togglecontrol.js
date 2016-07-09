@@ -12,7 +12,7 @@
  *		onToggle {function} callback when control is clicked (or use change:active event)
  */
 ol.control.Toggle = function(options) 
-{	var element = $("<div>").addClass((options.className || options['class'] || "") + ' ol-unselectable ol-control');
+{	var element = $("<div>").addClass((options.className || options['class'] || "ol-toggle") + ' ol-unselectable ol-control');
 	var self = this;
 
 	this.interaction_ = options.interaction;

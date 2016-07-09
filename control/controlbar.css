@@ -20,6 +20,9 @@
 	transform: none;
 	-webkit-transform: none;
 }
+.ol-control.ol-bar .ol-control button
+{	margin:2px 1px;
+}
 
 /* Positionning */
 .ol-control.ol-bar.ol-left
@@ -59,29 +62,51 @@
 }
 
 
+
 /* Group buttons */
+.ol-control.ol-bar.ol-group
+{	margin: 1px 1px 1px 0;
+}
+.ol-control.ol-bar.ol-right .ol-group,
+.ol-control.ol-bar.ol-left .ol-group
+{	margin: 1px 1px 0 1px;
+}
+
 .ol-control.ol-bar.ol-group button
-{	margin-left:0.5px;
-	margin-right:0.5px;
-	border-radius:0;
+{	border-radius:0;
+	margin: 0 0 0 1px;
+}
+.ol-control.ol-bar.ol-right.ol-group button,
+.ol-control.ol-bar.ol-left.ol-group button,
+.ol-control.ol-bar.ol-right .ol-group button,
+.ol-control.ol-bar.ol-left .ol-group button
+{	margin: 0 0 1px 0;
 }
 .ol-control.ol-bar.ol-group .ol-control:first-child > button
 {	border-radius: 5px 0 0 5px;
-	margin-left: 1px;
 }
 .ol-control.ol-bar.ol-group .ol-control:last-child > button
 {	border-radius: 0 5px 5px 0;
-	margin-right: 1px;
 }
+.ol-control.ol-bar.ol-left.ol-group .ol-control:first-child > button,
+.ol-control.ol-bar.ol-right.ol-group .ol-control:first-child > button,
+.ol-control.ol-bar.ol-left .ol-group .ol-control:first-child > button,
+.ol-control.ol-bar.ol-right .ol-group .ol-control:first-child > button
+{	border-radius: 5px 5px 0 0;
+}
+.ol-control.ol-bar.ol-left.ol-group .ol-control:last-child > button,
+.ol-control.ol-bar.ol-right.ol-group .ol-control:last-child > button,
+.ol-control.ol-bar.ol-left .ol-group .ol-control:last-child > button,
+.ol-control.ol-bar.ol-right .ol-group .ol-control:last-child > button
+{	border-radius: 0 0 5px 5px;
+}
+
 
 /* Active buttons */
-.ol-control.ol-bar .ol-active button
+.ol-control.ol-bar .ol-toggle.ol-active button
 {	background: rgba(60, 136, 0, 0.7)
 }
-.ol-control.ol-bar .ol-active button:hover
+.ol-control.ol-bar .ol-toggle.ol-active button:hover
 {	background: rgba(60, 136, 0, 0.7)
 }
 
-.ol-control.ol-bar .ol-active.noToggle button
-{	background: rgba(0, 60, 136, 0.5)
-}

@@ -97,8 +97,11 @@
 		var mainbar = new ol.control.Bar();
 		map.addControl(mainbar);
 
-		// Edit control bar (on control active at the same time)
-		var editbar = new ol.control.Bar({ toggleOne: true });
+		// Edit control bar 
+		var editbar = new ol.control.Bar(
+			{	toggleOne: true,	// one control active at the same time
+				group:true			// group controls together
+			});
 		mainbar.addControl(editbar);
 
 		// Add selection tool (a toggle control with a select interaction)
