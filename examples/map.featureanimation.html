@@ -1,0 +1,109 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2013 Jean-Marc VIGLINO, 
+	released under the Beerware license (http://fr.wikipedia.org/wiki/Beerware).
+	
+	Affichage d'une carte Geoportail avec OL3
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: OL3 feature animation</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+    <!-- OL3 -->
+	<link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	
+	<script type="text/javascript" src="../featureanimation/ol.featureanimation.js"></script>
+
+	<link rel="stylesheet" href="style.css" />
+	</head>
+<body >
+	<a href="https://github.com/Viglino/Geoportail-KISS"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<h1>OL3-ext: OL3 feature animation</h1>
+	<p class="info">
+		Drop features on ol.map.
+	</p>
+
+	<!-- DIV pour la carte -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options">
+		<h2>Options:</h2>
+		<ul><li>
+			animation: 
+			<select id="anim">
+				<option value="Drop">Drop</option>
+				<option value="Slice">Slice</option>
+				<option value="Fade">Fade</option>
+			</select>
+		</li><li>
+			Easing:
+			<select id="easing">
+				<option value="easeOut">easeOut</option>
+				<option value="upAndDown">upAndDown</option>
+				<option value="bounce">bounce</option>
+			</select>
+		</li><li>
+			<input id="revers" type="checkbox" /><label for="revers"> revers</label>
+		</li><li>
+			speed: <input id="speed" type="range" min="0" max="3" step="0.1" value="0.8" style="vertical-align:middle" />
+		</li></ul>
+		<i>Click on the map to drop a features!</i>
+	</div>
+	
+	<script type="text/javascript">
+	// Layers
+	var layer = new ol.layer.Tile({
+			name: "Natural Earth", 
+			minResolution: 306,
+    		source: new ol.source.XYZ(
+			{	url: 'http://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
+				attributions: [new ol.Attribution({ html: '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' })] 
+    		})
+		});
+
+	// The map
+	var map = new ol.Map
+		({	target: 'map',
+			view: new ol.View
+			({	zoom: 5,
+				center: [166326, 5992663]
+			}),
+			layers: [layer]
+		});
+
+	var style = new ol.style.Circle(
+	{	  radius: 10,
+		  fill: new ol.style.Fill({color: 'blue' })
+	});
+	// Vector layer
+	var source = new ol.source.Vector();
+	var vector = new ol.layer.Vector(
+	{	source: source,
+		style: new ol.style.Style({ image: style})
+	});
+	map.addLayer(vector);
+
+	// Drop a feature on click 
+	map.on('singleclick', function(evt) 
+	{	var f = new ol.Feature(new ol.geom.Point(evt.coordinate));
+		vector.getSource().addFeature(f);
+		// Show animation before adding feature
+		//vector.animateFeature (f, ol.animation.feature.drop());
+		vector.animateFeature (f, new ol.featureAnimation[$('#anim').val()](
+			{	speed: Number($("#speed").val()), 
+				revers: $("#revers").prop('checked') 
+			}));
+	});
+
+	</script>
+	
+</body>
+</html>
