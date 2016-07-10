@@ -1,0 +1,269 @@
+﻿<DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>Drag and drop</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="2.5D/3D buildings on an OL3 map" />
+	<meta name="keywords" content="ol3, layer, vector, 3D, buildings, animation" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- OL3 -->
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	
+	<!-- ol3-ext -->
+	<script type="text/javascript" src="../interaction/dropfileinteraction.js"></script>
+	<script type="text/javascript" src="../control/permalinkcontrol.js"></script>
+
+	<link rel="stylesheet" href="style.css" />
+	<style>
+		#map 
+		{	position:fixed;
+			top: 4em;
+			left: 0;
+			right:0;
+			bottom:0;
+			margin:0;
+		}
+		.options
+		{	position: fixed;
+			right: 0.5em;
+			top: 4em;
+			width: 300px;
+			z-index: 1;
+		}
+		.loading
+		{	background: #fff;
+			border: 2px solid #369;
+			left: 50%;
+			margin: -2em -100px;
+			padding: 0.5em;
+			position: fixed;
+			text-align: center;
+			top: 50%;
+			width: 200px;
+			z-index: 1;
+			box-sizing: border-box;
+			box-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+		}
+	</style>
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0; z-index:2;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+	<a href="../index.html">
+		<h1>Drag and drop</h1>
+	</a>
+	<div class="options">
+		<ul><li>
+			<input id="imgvector" type="checkbox" onchange="setLayerVisibility();" /><label for="imgvector"> display as image</label>
+		</li><li>
+			<input id="addto" type="checkbox" /><label for="addto"> add to the map</label>
+		</li><li>
+			<input id="zoomto" type="checkbox" /><label for="zoomto"> zoom to extent on load</label>
+		</li><li>
+			Label: <input id="label" value="name" onchange="label=this.value; vectorSource.changed()" />
+		</li><li>
+			 <input id="fix" type="checkbox" onchange="fixStyle(this.value);" /><label for="fix"> fix styles</label>
+		</li></ul>
+		<div class="nb">Numbers of objects: <span>0</span></div>
+		<div class="vis">Visible objects: <span>-</span></div>
+		<div class="info"></div>
+	</div>
+
+	<!-- DIV pour la carte -->
+	<div id="map"></div>
+	<div class="loading"><p>Drop a file on the map...</p><span></span></div>
+	
+	<script type="text/javascript">
+	// The map
+	var map = new ol.Map
+		({	target: 'map',
+			view: new ol.View
+			({	zoom: 6,
+				center: [396249, 6009784]// [-245575, 5986863], //[-244777, 5989809]
+			}),
+			interactions: ol.interaction.defaults(),
+			layers: [ new ol.layer.Tile({ name:"OSM", source: new ol.source.OSM() })]
+		});
+
+
+	// Create layer vector
+	var vectorSource = new ol.source.Vector({ wrapX: false });
+	var vector = new ol.layer.Vector(
+		{	source: vectorSource,
+		});
+	map.addLayer(vector);
+
+	map.on ('moveend', function(e)
+	{	var ex = e.frameState.extent;
+		var t = new Date()
+		var f = vectorSource.getFeaturesInExtent(ex);
+		$(".vis span").text(f.length);
+		// console.log("Calcul "+(new Date() -t));
+	});
+	map.addControl(new ol.control.Permalink());
+
+	var defaultStyle = 	vector.getStyle();
+	var label = $("#label").val();
+
+	function setStyle(f,r)
+	{	var s = defaultStyle(f,r);
+		var text = f.get(label);
+		if (text && r<100000)
+		{	text = text.toString();
+			s = $.extend ([], s);
+			var g = f.getGeometry();
+			if (g.getType()=="MultiPolygon")
+			{	var p = g.getPolygons();
+				var max = 0;
+				var n = 0;
+				for (var i=0; i<p.length; i++)
+				{	var area = p[i].getArea();
+					if (area > max)
+					{	max = area;
+						n = i;
+						g = p[i];
+					}
+				}
+			}
+			s.push (new ol.style.Style(
+				{	text: new ol.style.Text(
+					{	text: text,
+						font: '12px helvetica,sans-serif',
+						fill: new ol.style.Fill(
+						{   color: 'red'//'#000'
+						}),
+						stroke: new ol.style.Stroke(
+						{   color: '#fff',
+							width: 2
+						})
+					}),
+					geometry: g
+				}));
+		}
+		return s;
+	};
+
+	vector.setStyle (setStyle)
+
+	// Create layer image-vector
+	var image = new ol.layer.Image(
+	{	source: new ol.source.ImageVector(
+		{	source: vectorSource,
+			style: vector.getStyle(),
+			wrapX: true
+		})
+	});
+	map.addLayer(image);
+
+	// Event handlers when source is ready
+	vectorSource.on('change',function(e)
+	{	if (vectorSource.getState() === 'ready') 
+		{	$(".nb span").text(vectorSource.getFeatures().length);
+		}
+	});
+
+	var select = new ol.interaction.Select();
+	map.addInteraction(select);
+	select.on("select", function(e)
+		{	if (e.selected && e.selected[0]) 
+			{	var prop = $.extend ({}, e.selected[0].getProperties());
+				delete prop.geometry;
+				$(".info").html( JSON.stringify(prop,null, " ").replace(/(^\{\n|\n\}$)/g,"").replace(/\n/g, "<br/>") );
+				if (prop.idcliche && prop.mission && prop.url)
+				{	var url = "http://wxs.ign.fr/yvmoikafaddadzmxvh6sdmjb/iipsrv?FIF=DEMAT.PVA/"+prop.mission+"/"+prop.url+"&WID=2048&CVT=JPEG";
+					var app = "http://localhost.ign.fr/exemples/Map-georeferencer/?photo="+encodeURIComponent(url)
+							+"&lon=" + prop.lon
+							+"&lat=" + prop.lat
+							+"&ori=" + prop.orientation
+							+"&res=" + prop.res
+							+"&w=" + prop.largeur
+							+"&h=" + prop.hauteur
+							;
+					$("<br/>").appendTo($(".info"));
+					var a = $("<a>").attr({href:app, target:"new"}).appendTo($(".info"));
+					$("<img>").attr('src', url).appendTo(a).width(100);
+
+				}
+			}
+			else
+			{	$(".info").html("");
+			}
+		})
+
+	var dd = new ol.interaction.DropFile(
+	{	formatConstructors: 
+		[	ol.format.GPX,
+			ol.format.GeoJSON,
+			ol.format.IGC,
+			ol.format.KML,
+			ol.format.TopoJSON
+		]
+	});
+	map.addInteraction (dd);
+	var loading = 0;
+	
+	// Drag and drop
+	dd.on ('loadstart', function (e) 
+	{	if (!$("#addto").prop('checked') && !loading) vectorSource.clear();
+		select.getFeatures().clear();
+		$(".info").html("");
+
+		loading++; 
+		$(".loading").show();
+		$(".loading p").html("LOADING ("+loading+")");
+	});
+	dd.on ('addfeatures', function(event) 
+	{   
+		loading--; 
+		$(".loading p").html("LOADING ("+loading+")");
+		$(".loading span").html(event.features.length);
+
+		setTimeout(function()
+		{	vectorSource.addFeatures(event.features);
+			
+			if (!loading) $(".loading").hide();
+
+			if (!$("#zoomto").prop('checked')) return;
+			var vext = map.getView().getProjection().getExtent();
+			var extent = vectorSource.getExtent();
+			if (extent[0]<vext[0]) extent[0] = vext[0];
+			if (extent[1]<vext[1]) extent[1] = vext[1];
+			if (extent[2]>vext[2]) extent[2] = vext[2];
+			if (extent[3]>vext[3]) extent[3] = vext[3];
+			map.getView().fit(extent, map.getSize());
+		},500);
+    });
+
+	function setLayerVisibility()
+	{	vector.setVisible(!$("#imgvector").prop('checked'));
+		image.setVisible($("#imgvector").prop('checked'));
+	}
+	setLayerVisibility();
+
+	function fixStyle(b)
+	{	var f = vectorSource.getFeatures();
+		var res = map.getView().getResolution();
+		vectorSource.clear();
+		for (var i=0; i<f.length; i++)
+		{	if (b) 
+			{	f[i].setStyle(setStyle(f[i], res));
+			} 
+			else f[i].setStyle();
+		}
+		vectorSource.addFeatures(f);
+	}
+
+	</script>
+
+</body>
+</html>

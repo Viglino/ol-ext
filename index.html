@@ -117,17 +117,11 @@
 			{	var href = /[^\/]*$/.exec( $(this).attr('href') ).pop();
 				$("<small>").text("("+href+")")
 						.appendTo($(this));
-				$("<img>").attr('src',"img/"+href.replace('html','jpg'))
+				$("<img>").attr('src',"img/"+href.replace('html',$(this).data('img')||'jpg'))
 					.appendTo($(this))
 					.load(function(e)
 					{	$(this).show();
 					})
-					.on('error', function() 
-					{	//console.log('error');
-						if (this.src != "img/"+href.replace('html','gif'))
-						{	this.src = "img/"+href.replace('html','gif')
-						}
-					});
 			})
 
 			$('#keywords').on('keyup', function()
@@ -288,6 +282,22 @@
 			<p class="tag">interaction, regular, interaction, draw, circle, triangle</p>
 		</div>
 	
+		<div class="example">
+			<a class="mainlink" href="examples/map.interaction.clip.html">
+				<strong>Clip interaction</strong><br>
+			</a>
+			<p class="description"><i>ol.interaction.Clip</i> clip layers by a circle on the map.</p>
+			<p class="tag">interaction, clip, circle, canvas</p>
+		</div>
+	
+		<div class="example">
+			<a class="mainlink" href="examples/map.ddrop.html">
+				<strong>Dropfile interaction</strong><br>
+			</a>
+			<p class="description"><i>ol.interaction.DropFile</i> is a drag and drop interaction. It fires a loadstart and loadend and errors.</p>
+			<p class="tag">interaction, drag, drop</p>
+		</div>
+	
 	<h2>Controls</h2>
 
 		<div class="example">
@@ -406,15 +416,15 @@
 				<strong>Map in the cloud</strong><br>
 			</a>
 			<p class="description">The ol.control.Cloud adds an animated clouds overlay over the map.</p>
-			<p class="tag">interaction, effect, clouds, birds, animation</p>
+			<p class="tag">control, effect, clouds, birds, animation</p>
 		</div>
 
 		<div class="example">
-			<a class="mainlink" href="examples/map.interaction.ripple.html">
+			<a class="mainlink" href="examples/map.interaction.ripple.html" data-img='gif'>
 				<strong>Watter ripple</strong><br>
 			</a>
 			<p class="description">The ripple interaction add a watter ripple effect on a map.</p>
-			<p class="tag">interaction, effect, animation, watter</p>
+			<p class="tag">interaction, effect, animation, watter, ripple</p>
 		</div>
 
 		<div class="example">
@@ -422,7 +432,7 @@
 				<strong>Synchronize Maps</strong><br>
 			</a>
 			<p class="description">Synchronize maps in different windows.</p>
-			<p class="tag">synchronization, map</p>
+			<p class="tag">synchronization, map, window</p>
 		</div>
 
 	
