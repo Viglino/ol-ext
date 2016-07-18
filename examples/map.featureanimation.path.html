@@ -1,0 +1,154 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2013 Jean-Marc VIGLINO, 
+	released under the Beerware license (http://fr.wikipedia.org/wiki/Beerware).
+	
+	Affichage d'une carte Geoportail avec OL3
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: OL3 feature animation</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+    <!-- OL3 -->
+	<link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	
+	<script type="text/javascript" src="../style/shadowstyle.js"></script>
+
+	<script type="text/javascript" src="../featureanimation/featureanimation.js"></script>
+	<script type="text/javascript" src="../featureanimation/pathanimation.js"></script>
+
+	<link rel="stylesheet" href="style.css" />
+	</head>
+<body >
+	<a href="https://github.com/Viglino/Geoportail-KISS"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: OL3 feature animation</h1>
+	</a>
+	<p class="info">
+		This example show how to use <i>ol.featureAnimation.Path</i> to animate a feature along a path.
+	</p>
+
+	<!-- DIV pour la carte -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options">
+		<h2>Options:</h2>
+		<ul><li>
+			Easing:
+			<select id="easing" >
+				<option value="linear">linear</option>
+				<option value="easeOut">easeOut</option>
+				<option value="easeIn">easeIn</option>
+				<option value="inAndOut">inAndOut</option>
+			</select>
+		</li><li>
+			<input id="revers" type="checkbox" /><label for="revers"> revers</label>
+		</li><li>
+			speed: <input id="speed" type="range" min="0" max="3" step="0.1" value="1.2" style="vertical-align:middle" />
+		</li><li>
+		 	<button onclick="animate()">Animate!</button>
+		</li></ul>
+	</div>
+	
+	<script type="text/javascript">
+	// Layers
+	var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
+
+	// The map
+	var map = new ol.Map
+		({	target: 'map',
+			view: new ol.View
+			({	zoom: 13,
+				//center: [740741, 5776642]
+				center: [646752, 5407059]
+			}),
+			layers: [layer]
+		});
+
+	var style = 
+	[	new ol.style.Style(
+			{	image: new ol.style.Shadow(
+				{	radius: 15,
+				}),
+				stroke: new ol.style.Stroke(
+				{	color: [0,0,0,0.3],
+					width: 2
+				}),
+				fill: new ol.style.Fill(
+					{	color: [0,0,0,0.3]
+					}),
+				zIndex: -1
+			}),
+		new ol.style.Style(
+			{	image: new ol.style.RegularShape(
+				{	radius: 10,
+					radius2: 5,
+					points: 5,
+					fill: new ol.style.Fill({ color: 'blue' })
+				}),
+			stroke: new ol.style.Stroke(
+				{	color: [0,0,255],
+					width: 2
+				}),
+			fill: new ol.style.Fill(
+				{	color: [0,0,255,0.3]
+				})
+			})
+	];
+	style[1].getImage().getAnchor()[1] += 10
+
+	// Vector layer
+	var source = new ol.source.Vector(
+		{	//url: 'data/192553.gpx',
+			url: 'data/2009-09-04_rando.gpx',
+			format: new ol.format.GPX()
+		});
+	var vector = new ol.layer.Vector(
+	{	source: source,
+		style: style
+	});
+	map.addLayer(vector);
+
+	// Animation
+	var path;
+	source.once('change',function(e)
+	{	if (source.getState() === 'ready') 
+		{	path = source.getFeatures()[0];
+		}
+	});
+	// Add a feature on the map
+	function animate()
+	{	if (path) 
+		{	var f = new ol.Feature(new ol.geom.Point([0,0]));
+			var anim = new ol.featureAnimation.Path(
+			{	path: path,
+				easing: ol.easing[$("#easing").val()],
+				speed: Number($("#speed").val()),
+				revers: $("#revers").prop('checked')
+			});
+			/* 
+			source.addFeature(f);
+			anim.on('animationend', function(e)
+			{	if (e.feature) source.removeFeature(e.feature);
+			});
+			*/
+			vector.animateFeature ( f, anim );
+		}
+	}
+
+	for (var i=0; i<4; i++)
+	{	setTimeout (animate, i*500);
+	}
+
+	</script>
+	
+</body>
+</html>
