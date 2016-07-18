@@ -10,6 +10,9 @@
 	<title>OL3-ext: Map pulse</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
+	<meta name="description" content="An example of ol.featureAnimation to add pulses on a map." />
+	<meta name="keywords" content="ol3, animation, pulse, map" />
+
 	<!-- jQuery -->
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
 
@@ -17,8 +20,8 @@
 	<link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
 	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
 	
-	<script type="text/javascript" src="../utils/ol.map.pulse.js"></script>
-	<script type="text/javascript" src="../utils/ol.map.markup.js"></script>
+	<script type="text/javascript" src="../featureanimation/ol.featureanimation.js"></script>
+	<script type="text/javascript" src="../featureanimation/zoomanimation.js"></script>
 
 	<link rel="stylesheet" href="style.css" />
 	</head>
@@ -29,7 +32,7 @@
 		<h1>OL3-ext: Map pulse</h1>
 	</a>
 	<p class="info">
-		Add a pulse method on ol.Map to pulse a circle on the map.
+		This example use ol.featureAnimation to add pulses on a map.
 	</p>
 
 	<!-- DIV pour la carte -->
@@ -100,70 +103,44 @@
 	var c = -Math.cos(a) * Math.pow(2, b);
 	ol.easing.bounce = function(t)
 	{	t = 1-Math.cos(t*Math.PI/2);
-		return 1 + Math.abs( Math.cos(a*t) ) * Math.pow(2, b*t) + c*t;
+		return (1 + Math.abs( Math.cos(a*t) ) * Math.pow(2, b*t) + c*t)/2;
 	}
 	
 	// Preload image (?)
 	var icon = new ol.style.Icon ({ src:"data/smile.png" });
 	icon.load();
 
-	// Pulse on click 
-	map.on('singleclick', function(evt) 
-	{	var e =  ($("#easing").val());
-		map.pulse(evt.coordinate, 
-			{	amplitude:(e=="bounce"?0.5:null), 
-				style: new ol.style.Style(
+	// Pulse feature at coord
+	function pulseFeature(coord)
+	{	var f = new ol.Feature (new ol.geom.Point(coord));
+		f.setStyle (new ol.style.Style(
 					{	image: new ol.style[$("#form").val()] (
-						{	radius: (e=="bounce"?15:30), 
+						{	radius: 30, 
 							points: 4,
 							src: "data/smile.png",
 							stroke: new ol.style.Stroke ({ color: $("#color").val(), width:2 })
 						})
-					}),
+					}));
+		map.animateFeature (f, new ol.featureAnimation.Zoom(
+			{	fade: ol.easing.easeOut, 
+				duration:3000, 
 				easing: ol.easing[$("#easing").val()] 
-			});
-		//map.markup(evt.coordinate, { radius:10, color:$("#color").val() });
+			}));
+	}
+
+	// Pulse on click 
+	map.on('singleclick', function(evt) 
+	{	pulseFeature(evt.coordinate);
 	});
 
-	// Pulse on lonlat
+	// Pulse at lonlat
 	function pulse(lonlat)
-	{	switch ($("#easing").val())
-		{	case 'easeOut': 
-			case 'upAndDown': 
-				for (var i=0; i<3; i++)
-				{	setTimeout (function()
-					{	map.pulse(lonlat, 
-							{	projection: 'EPSG:4326', 
-								style: new ol.style.Style(
-								{	image: new ol.style[$("#form").val()] (
-									{	radius: 30, 
-										points: 4,
-										src: "data/smile.png",
-										stroke: new ol.style.Stroke ({ color: $("#color").val(), width:2 })
-									})
-								}), 
-								easing: ol.easing[$("#easing").val()] 
-							});
-					}, i*500);
-				}
-				break;
-			case 'bounce': 
-			default:
-				map.pulse(lonlat, 
-					{	projection:'EPSG:4326', 
-						amplitude:0.5, 
-						style: new ol.style.Style(
-						{	image: new ol.style[$("#form").val()] (
-							{	radius: 15,
-								points: 4,
-								src: "data/smile.png",
-								stroke: new ol.style.Stroke ({ color: $("#color").val(), width:2 })
-							})
-						}),
-						easing: ol.easing[$("#easing").val()] 
-					});
-				break;
-		}
+	{	var nb = $("#easing").val()=='bounce' ? 1:3;
+		for (var i=0; i<nb; i++)
+		{	setTimeout (function()
+			{	pulseFeature (ol.proj.transform(lonlat, 'EPSG:4326', map.getView().getProjection()));
+			}, i*500);
+		};
 	}
 
 	</script>
