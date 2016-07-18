@@ -1,16 +1,25 @@
 /*
-	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL license (http://www.cecill.info/).
 	
 */
 
+/** 
+
 /**
+* @param {ol.featureAnimationOptions} options
+*	- duration {number}
+*	- revers {bool}
+*	- fade {ol.easing}
 */
 ol.featureAnimation = function(options)
 {	options = options || {};
-	this.duration_ = options.duration || 1000;
+	
+	this.duration_ = typeof (options.duration)=='number' ? (options.duration>=0 ? options.duration : 0) : 1000;
+	this.fade_ = typeof(options.fade) == 'function' ? options.fade : null;
+	this.repeat_ = Number(options.repeat);
 
-	var easing = options.easing || ol.easing.easeIn;
+	var easing = typeof(options.easing) =='function' ? options.easing : ol.easing.linear;
 	if (options.revers) this.easing_ = function(t) { return 1 - easing(t) };
 	else this.easing_ = easing;
 
@@ -19,114 +28,88 @@ ol.featureAnimation = function(options)
 ol.inherits(ol.featureAnimation, ol.Object);
 
 /** Draw a geometry 
+*	@param {olx.animateFeatureEvent} e
+*	@param {ol.geom} geom geometry for shadow
+*	@param {ol.geom} shadow geometry for shadow (ie. style with zIndex = -1)
 */
-ol.featureAnimation.prototype.drawGeom_ = function (e, geom)
-{	var style = e.style;
+ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
+{	if (this.fade_) 
+	{	e.context.globalAlpha = this.fade_(1-e.elapsed);
+	}
+	var style = e.style;
 	for (var i=0; i<style.length; i++)
-	{	e.vectorContext.setStyle(style[i]);
-		e.vectorContext.drawGeometry(geom);
+	{	var imgs = style[i].getImage();
+		if (imgs) 
+		{	var sc = imgs.getScale(); 
+			imgs.setScale(e.frameState.pixelRatio*sc);
+		}
+		e.vectorContext.setStyle(style[i]);
+		if (style[i].getZIndex()<0) e.vectorContext.drawGeometry(shadow||geom);
+		else e.vectorContext.drawGeometry(geom);
+		if (imgs) imgs.setScale(sc);
 	}
 }
+
 /** Function to perform manipulations onpostcompose. 
 *	This function is called with an olx.animateFeature argument. 
 *	Return true to keep this function for the next frame, false to remove it.
-* @param {ol.featureAnimation.event}
+* @param {ol.featureAnimation.event} e
+* @return {bool} true to continue animation.
 * @api 
 */
 ol.featureAnimation.prototype.animate = function (e)
 {	return false;
 }
 
-
-/** Drop animation: drop a feature on the map
+/** Animate feature on a map
+*	@fires animationend
+*	@param {ol.Feature} feature Feature to animate
+*	@param {ol.featureAnimation|Array<ol.featureAnimation>} fanim the animation to play
 */
-ol.featureAnimation.Drop = function(options)
-{	options = options || {};
-	this.speed_ = options.speed || 0;
-	ol.featureAnimation.call(this, options);
-}
-ol.inherits(ol.featureAnimation.Drop, ol.featureAnimation);
+ol.Map.prototype.animateFeature = 
 
-/** Animate
-*/
-ol.featureAnimation.Drop.prototype.animate = function (e)
-{	// First time > calculate duration / speed
-	if (!e.time && this.speed_) 
-	{	this.duration_ = Math.abs(e.coord[1]-e.extent[3])/this.speed_/e.frameState.viewState.resolution;
-	}
-	// Animate
-	// var resolution = e.frameState.viewState.resolution;
-	var flashGeom = new ol.geom.Point([ e.coord[0], e.extent[3] + (e.coord[1]-e.extent[3])*this.easing_(e.elapsed) ]);
-	this.drawGeom_(e, flashGeom);
-	
-	return (e.time <= this.duration_);
-}
-
-/** Slice animation: feature enter from left
-*/
-ol.featureAnimation.Slice = function(options)
-{	options = options || {};
-	this.speed_ = options.speed || 0;
-	ol.featureAnimation.call(this, options);
-}
-ol.inherits(ol.featureAnimation.Slice, ol.featureAnimation);
-
-/** Animate
-*/
-ol.featureAnimation.Slice.prototype.animate = function (e)
-{	// First time > calculate duration / speed
-	if (!e.time && this.speed_) 
-	{	this.duration_ = Math.abs(e.coord[0]-e.extent[0])/this.speed_/e.frameState.viewState.resolution;
-	}
-	// Animate
-	var flashGeom = new ol.geom.Point([ e.extent[0] + (e.coord[0]-e.extent[0])*this.easing_(e.elapsed), e.coord[1] ]);
-	this.drawGeom_(e, flashGeom);
-	
-	return (e.time <= this.duration_);
-}
-
-/** Fade animation: feature fade in
-*/
-ol.featureAnimation.Fade = function(options)
-{	options = options || {};
-	this.speed_ = options.speed || 0;
-	ol.featureAnimation.call(this, options);
-}
-ol.inherits(ol.featureAnimation.Fade, ol.featureAnimation);
-
-/** Animate
-*/
-ol.featureAnimation.Fade.prototype.animate = function (e)
-{	e.context.globalAlpha = this.easing_(e.elapsed);
-	this.drawGeom_(e, e.geom);
-	
-	return (e.time <= this.duration_);
-}
-
-/**
-
-/** Drop a feature on a map
-*	@param {ol.Feature} Feature to animate
-*	@param {ol.featureAnimation} 
+/** Animate feature on a vector layer 
+*	@fires animationend
+*	@param {ol.Feature} feature Feature to animate
+*	@param {ol.featureAnimation|Array<ol.featureAnimation>} fanim the animation to play
 */
 ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 {	var self = this;
 	var listenerKey;
 	
-	// Save style and hide feature
+	// Save style
 	var style = feature.getStyle();
-	feature.setStyle([]);
-	var flashStyle = style || this.getStyleFunction()(feature);
+	var flashStyle = style || (this.getStyleFunction ? this.getStyleFunction()(feature) : null);
+	if (!flashStyle) return;
 	if (!(flashStyle instanceof Array)) flashStyle = [flashStyle];
-	//
+	// Hide feature while animating
+	feature.setStyle([]);
+
+	// Structure pass for animating
 	var event = 
-		{	start: new Date().getTime(),
+		{	// Frame context
+			vectorContext: null,
+			frameState: null,
+			start: 0,
+			time: 0,
+			elapsed: 0,
+			extent: false,
+			// Feature information
 			feature: feature,
 			geom: feature.getGeometry(),
 			typeGeom: feature.getGeometry().getType(),
-			coord: feature.getGeometry().getCoordinates(),
+			bbox: feature.getGeometry().getExtent(),
+			coord: ol.extent.getCenter(feature.getGeometry().getExtent()),
 			style: flashStyle
 		};
+
+	if (!(fanim instanceof Array)) fanim = [fanim];
+	// Remove null animations
+	for (var i=fanim.length-1; i>=0; i--)
+	{	if (fanim[i].duration_==0) fanim.splice(i,1);
+	}
+
+	var nb=0, step = 0;
 
 	function animate(e) 
 	{	event.vectorContext = e.vectorContext;
@@ -137,24 +120,57 @@ ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 			event.context = e.context;
 		}
 		event.time = e.frameState.time - event.start;
-		event.elapsed = event.time / fanim.duration_;
+		event.elapsed = event.time / fanim[step].duration_;
 		if (event.elapsed > 1) event.elapsed = 1;
 
-		e.context.save();
 		// Stop animation?
-		if (!fanim.animate(event))
-		{	ol.Observable.unByKey(listenerKey);
-			feature.setStyle(style);
-			self.dispatchEvent({ type:'animationend', feature: feature });
-		};
-		e.context.restore();
+		if (!fanim[step].animate(event))
+		{	nb++;
+			// Repeat animation
+			if (nb < fanim[step].repeat_)
+			{	event.extent = false;
+			}
+			// newt step
+			else if (step < fanim.length-1)
+			{	fanim[step].dispatchEvent({ type:'animationend', feature: feature });
+				step++;
+				nb=0;
+				event.extent = false;
+			}
+			// the end
+			else 
+			{	stop();
+			}
+			
+		}
 
 		// tell OL3 to continue postcompose animation
 		e.frameState.animate = true;
 	}
 
-	// Launch animation
-	listenerKey = this.on('postcompose', animate, this);
-	this.changed();
-}
+	// Stop animation
+	function stop()
+	{	ol.Observable.unByKey(listenerKey);
+		listenerKey = null;
+		feature.setStyle(style);
+		fanim[step].dispatchEvent({ type:'animationend', feature: feature });
+		self.dispatchEvent({ type:'animationend', feature: feature });
+	}
 
+	// Launch animation
+	function start()
+	{	if (fanim.length)
+		{	listenerKey = self.on('postcompose', animate, self);
+			// map or layer?
+			if (self.renderSync) self.renderSync();
+			else self.changed();
+		}
+	}
+	start();
+
+	return {
+		start: start,
+		stop: stop,
+		isPlaying: function() { return (!!listenerKey); }
+	}
+}

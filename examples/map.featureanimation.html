@@ -1,16 +1,11 @@
 ﻿<!DOCTYPE html>
-<!----------------------------------------------------------
- 
-	Copyright (c) 2013 Jean-Marc VIGLINO, 
-	released under the Beerware license (http://fr.wikipedia.org/wiki/Beerware).
-	
-	Affichage d'une carte Geoportail avec OL3
-	
------------------------------------------------------------->
 <html>
 <head>
 	<title>OL3-ext: OL3 feature animation</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="ol.featureAnimation are used to play animations on ol3 maps." />
+	<meta name="keywords" content="ol3, animation, drop, slide, throw, fade, bounce, easing" />
 
 	<!-- jQuery -->
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
@@ -19,16 +14,38 @@
 	<link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
 	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
 	
+	<script type="text/javascript" src="../style/shadowstyle.js"></script>
+
 	<script type="text/javascript" src="../featureanimation/ol.featureanimation.js"></script>
+	<script type="text/javascript" src="../featureanimation/nullanimation.js"></script>
+	<script type="text/javascript" src="../featureanimation/showanimation.js"></script>
+	<script type="text/javascript" src="../featureanimation/dropanimation.js"></script>
+	<script type="text/javascript" src="../featureanimation/slideanimation.js"></script>
+	<script type="text/javascript" src="../featureanimation/fadeanimation.js"></script>
+	<script type="text/javascript" src="../featureanimation/bounceanimation.js"></script>
+	<script type="text/javascript" src="../featureanimation/shakeanimation.js"></script>
+	<script type="text/javascript" src="../featureanimation/throwanimation.js"></script>
+	<script type="text/javascript" src="../featureanimation/zoomanimation.js"></script>
+	<script type="text/javascript" src="../featureanimation/pathanimation.js"></script>
+	<script type="text/javascript" src="../featureanimation/teleportanimation.js"></script>
 
 	<link rel="stylesheet" href="style.css" />
 	</head>
 <body >
 	<a href="https://github.com/Viglino/Geoportail-KISS"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
 
-	<h1>OL3-ext: OL3 feature animation</h1>
+	<a href="../index.html">
+		<h1>OL3-ext: OL3 feature animation</h1>
+	</a>
 	<p class="info">
-		Drop features on ol.map.
+		<i>ol.featureAnimation</i> is a set of animations to animate features on an OL3 map.
+		Animation can be chained. 
+		<br />
+		Style with a zIndex of -1 are viewed as shadows and animated on the ground (drop or throw animation).
+		<br />
+		They are used with <i>animateFeature</i> function on <i>ol.layer.Vector</i> or <i>ol.Map</i>.
+		<br /> 
+		The animation is rendered in a postcompose frame.
 	</p>
 
 	<!-- DIV pour la carte -->
@@ -37,25 +54,43 @@
 	<div class="options">
 		<h2>Options:</h2>
 		<ul><li>
-			animation: 
-			<select id="anim">
+			animation 1: 
+			<select id="anim" onchange="add10()">
 				<option value="Drop">Drop</option>
-				<option value="Slice">Slice</option>
+				<option value="Slide">Slide</option>
+				<option value="Throw">Throw</option>
 				<option value="Fade">Fade</option>
+				<option value="Zoom">Zoom</option>
+				<option value="Show">Show</option>
+				<option value="Teleport">Teleport</option>
 			</select>
 		</li><li>
+		 	animation 2:
+			<select id="anim2" onchange="add10()">
+				<option value="Null">Null</option>
+				<option value="Bounce">Bounce</option>
+				<option value="Shake">Shake</option>
+			</select>
+		</li><li>
+			geometry: 
+			<select id="geom" onchange="add10()">
+				<option value="Point">Point</option>
+				<option value="LineString">LineString</option>
+				<option value="Polygon">Polygon</option>
+			</select>
+		</li><!-- <li>
 			Easing:
-			<select id="easing">
+			<select id="easing" >
 				<option value="easeOut">easeOut</option>
 				<option value="upAndDown">upAndDown</option>
 				<option value="bounce">bounce</option>
 			</select>
-		</li><li>
-			<input id="revers" type="checkbox" /><label for="revers"> revers</label>
+		</li>--><li>
+			<input id="side" type="checkbox" /><label for="side"> other side</label>
 		</li><li>
 			speed: <input id="speed" type="range" min="0" max="3" step="0.1" value="0.8" style="vertical-align:middle" />
 		</li></ul>
-		<i>Click on the map to drop a features!</i>
+		<i>Click on the map to drop a features / click on a feature to remove it!</i>
 	</div>
 	
 	<script type="text/javascript">
@@ -79,28 +114,126 @@
 			layers: [layer]
 		});
 
-	var style = new ol.style.Circle(
-	{	  radius: 10,
-		  fill: new ol.style.Fill({color: 'blue' })
-	});
+	var style = 
+	[	new ol.style.Style(
+			{	image: new ol.style.Shadow(
+				{	radius: 15,
+				}),
+				stroke: new ol.style.Stroke(
+				{	color: [0,0,0,0.3],
+					width: 2
+				}),
+				fill: new ol.style.Fill(
+					{	color: [0,0,0,0.3]
+					}),
+				zIndex: -1
+			}),
+		new ol.style.Style(
+			{	image: new ol.style.RegularShape(
+				{	radius: 10,
+					radius2: 5,
+					points: 5,
+					fill: new ol.style.Fill({ color: 'blue' })
+				}),
+			stroke: new ol.style.Stroke(
+				{	color: [0,0,255],
+					width: 2
+				}),
+			fill: new ol.style.Fill(
+				{	color: [0,0,255,0.3]
+				})
+			})
+	];
+	style[1].getImage().getAnchor()[1] += 10
+
 	// Vector layer
 	var source = new ol.source.Vector();
 	var vector = new ol.layer.Vector(
 	{	source: source,
-		style: new ol.style.Style({ image: style})
+		style: style
 	});
 	map.addLayer(vector);
 
+	// Add a feature on the map
+	function addFeatureAt(p)
+	{	var f, r = map.getView().getResolution() *10;
+		switch ($("#geom").val())
+		{	case 'LineString':
+				f = new ol.Feature(new ol.geom.LineString(
+					[	[p[0]-8*r,p[1]-3*r], 
+						[p[0]-2*r,p[1]+1*r], 
+						[p[0]+2*r,p[1]-1*r], 
+						[p[0]+8*r,p[1]+3*r]
+					]));
+				break;
+			case 'Polygon':
+				f = new ol.Feature(new ol.geom.Polygon(
+					[[	[p[0]-4*r,p[1]-2*r], 
+						[p[0]+3*r,p[1]-2*r], 
+						[p[0]+1*r,p[1]-0.5*r], 
+						[p[0]+4*r,p[1]+2*r], 
+						[p[0]-2*r,p[1]+2*r], 
+						[p[0]-4*r,p[1]-2*r]
+					]]));
+				break;
+			case 'Point':
+			default:
+				f = new ol.Feature(new ol.geom.Point(p));
+				break;
+		}
+		vector.getSource().addFeature(f);
+		vector.animateFeature (f, 
+			[	new ol.featureAnimation[$('#anim').val()](
+				{	speed: Number($("#speed").val()), 
+					duration: Number(1000-$("#speed").val()*300),
+					side: $("#side").prop('checked')
+				}),
+				new ol.featureAnimation[$('#anim2').val()](
+				{	speed: Number($("#speed").val()), 
+					duration: Number(1000-$("#speed").val()*300),
+					horizontal: /Slide/.test($('#anim').val())
+				})
+			]);
+	}
+
+	// Add 10 random features
+	function add10()
+	{	vector.getSource().clear();
+		var ex = map.getView().calculateExtent(map.getSize());
+		for (var i=0; i<10; i++)
+		{	setTimeout(function()
+				{	addFeatureAt(
+						[	ex[0] +Math.random()*(ex[2]-ex[0]),
+							ex[1] +Math.random()*(ex[3]-ex[1])
+						])
+				}, 100*i);
+		}
+	}
+	add10();
+
 	// Drop a feature on click 
 	map.on('singleclick', function(evt) 
-	{	var f = new ol.Feature(new ol.geom.Point(evt.coordinate));
-		vector.getSource().addFeature(f);
-		// Show animation before adding feature
-		//vector.animateFeature (f, ol.animation.feature.drop());
-		vector.animateFeature (f, new ol.featureAnimation[$('#anim').val()](
-			{	speed: Number($("#speed").val()), 
-				revers: $("#revers").prop('checked') 
-			}));
+	{	var f, revers=false;
+		map.forEachFeatureAtPixel (evt.pixel, function(feature)
+			{	f = feature;
+				return true;
+			});
+		if (f)
+		{	// Remove feature
+			vector.getSource().removeFeature(f);
+			// Show animation 
+			vector.animateFeature (f, 
+				[	new ol.featureAnimation[$('#anim').val()](
+					{	speed: Number($("#speed").val()), 
+						duration: Number(1000-$("#speed").val()*300),
+						side: $("#side").prop('checked'),
+						revers: true 
+					})
+				]);
+		}
+		else
+		{	addFeatureAt (evt.coordinate);
+		}
 	});
 
 	</script>
