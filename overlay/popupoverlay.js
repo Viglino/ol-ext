@@ -145,8 +145,11 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
 	
 	var self = this;
 	var map = this.getMap();
-	if (html) 
-	{	// this.content.innerHTML = html;
+	if (!map) return;
+	
+	if (html && html !== this.prevHTML) 
+	{	// Prevent flickering effect
+		this.prevHTML = html;
 		$(this.content).html("").append(html);
 		// Refresh when loaded (img)
 		$("*", this.content).load(function()

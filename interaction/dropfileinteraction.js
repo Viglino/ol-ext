@@ -57,7 +57,7 @@ ol.interaction.DropFile.prototype.ondrop = function(e)
 		var file;
 		var pat = /\.([0-9a-z]+)(?=[?#])|(\.)(?:[\w]+)$/;
 		for (var i=0; file=files[i]; i++) 
-		{	var ex = file.name.match(pat)[0]
+		{	var ex = file.name.match(pat)[0];
 			self.dispatchEvent({ type:'loadstart', file: file, filesize: file.size, filetype: file.type, fileextension: ex, projection: projection, target: self });
 						
 			// Load file
