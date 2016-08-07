@@ -258,7 +258,7 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e)
 		case 'mousedown': 
 		case 'touchstart':
 		{	e.stopPropagation();
-			e.preventDefault();
+			//e.preventDefault();
 			drag = 
 				{	self: drag.self,
 					elt: $(e.currentTarget), 
@@ -269,13 +269,17 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e)
 				};
 			drag.elt.parent().addClass('drag');
 			$(document).on("mouseup mousemove touchend touchcancel touchmove", drag, drag.self.dragOrdering_);
+		console.log("down")
 			break;
 		}
 		// Stop ordering
 		case 'touchcancel': 
 		case 'touchend': 
 		case 'mouseup':	
-		{	if (drag.target) 
+		{	
+		
+		console.log("up")
+			if (drag.target) 
 			{	// Get drag on parent
 				var drop = drag.layer;
 				var target = drag.target;
@@ -312,7 +316,10 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e)
 		}
 		// Ordering
 		default: 
-		{	// First drag (more than 2 px) => show drag element (ghost)
+		{	
+		
+		console.log("move")
+			// First drag (more than 2 px) => show drag element (ghost)
 			if (drag.start && Math.abs(drag.pageY - (e.pageY || e.originalEvent.touches[0].pageY)) > 2)
 			{	drag.start = false;
 				drag.elt.addClass("drag");
@@ -413,6 +420,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 	var layers = collection.getArray();
 	var setVisibility = function(e) 
 	{	e.stopPropagation();
+		e.preventDefault();
 		var l = $(this).parent().data("layer");
 		self.switchLayerVisibility(l,collection);
 	};
@@ -429,24 +437,29 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 		return false;
 	};
 	function moveLayerUp(e) 
-	{	e.preventDefault(); 
+	{	e.stopPropagation();
+		e.preventDefault(); 
 		moveLayer($(this).closest('li').data("layer"), self.map_.getLayers(), +1); 
 	};
 	function moveLayerDown(e) 
-	{	e.preventDefault(); 
+	{	e.stopPropagation();
+		e.preventDefault(); 
 		moveLayer($(this).closest('li').data("layer"), self.map_.getLayers(), -1); 
 	};
 	function onInfo(e) 
-	{	e.preventDefault(); 
+	{	e.stopPropagation();
+		e.preventDefault(); 
 		self.oninfo($(this).closest('li').data("layer")); 
 	};
 	function zoomExtent(e) 
-	{	e.preventDefault(); 
+	{	e.stopPropagation();
+		e.preventDefault(); 
 		if (self.onextent) self.onextent($(this).closest('li').data("layer")); 
 		else self.map_.getView().fit ($(this).closest('li').data("layer").getExtent(), self.map_.getSize()); 
 	};
 	function removeLayer(e) 
-	{	e.preventDefault();
+	{	e.stopPropagation();
+		e.preventDefault();
 		var li = $(this).closest("ul").parent();
 		if (li.data("layer")) 
 		{	li.data("layer").getLayers().remove($(this).closest('li').data("layer"));
@@ -474,14 +487,12 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 		$("<input>")
 			.attr('type', layer.get('baseLayer') ? 'radio' : 'checkbox')
 			.attr("checked",layer.getVisible())
-			//.on ('change', setVisibility)
-			.click (setVisibility)
-			.on ('touchstart', setVisibility)
+			.on ('click', setVisibility)
 			.appendTo(d);
 		// Label
 		$("<label>").text(layer.get("title") || layer.get("name"))
 			.attr('title', layer.get("title") || layer.get("name"))
-			.click(function(e){ $(this).prev().click(); })
+			.on ('click', setVisibility)
 			.attr('unselectable', 'on')
 			.css('user-select', 'none')
 			.on('selectstart', false)
@@ -504,7 +515,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 		{	if (i<layers.length-1) 
 			{	if (layer.get("allwaysOnTop") || !layers[i+1].get("allwaysOnTop"))
 				{	$("<div>").addClass("layerup")
-						.on ('click touchstart', moveLayerUp)
+						.on ('click', moveLayerUp)
 						.attr("title", this.tip.up)
 						.appendTo(layer_buttons);
 				}
@@ -512,7 +523,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 			if (i>0) 
 			{	if (!layer.get("allwaysOnTop") || layers[i-1].get("allwaysOnTop"))
 				{	$("<div>").addClass("layerdown")
-						.on ('click touchstart', moveLayerDown)
+						.on ('click', moveLayerDown)
 						.attr("title", this.tip.down)
 						.appendTo(layer_buttons);
 				}
@@ -524,21 +535,21 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 		// Info button
 		if (this.oninfo)
 		{	$("<div>").addClass("layerInfo")
-					.on ('click touchstart', onInfo)
+					.on ('click', onInfo)
 					.attr("title", this.tip.info)
 					.appendTo(layer_buttons);
 		}
 		// Layer remove
 		if (this.hastrash && !layer.get("noSwitcherDelete"))
 		{	$("<div>").addClass("layerTrash")
-					.on ('click touchstart', removeLayer)
+					.on ('click', removeLayer)
 					.attr("title", this.tip.trash)
 					.appendTo(layer_buttons);
 		}
 		// Layer extent
 		if (this.hasextent && layers[i].getExtent())
 		{	$("<div>").addClass("layerExtent")
-					.on ('click touchstart', zoomExtent)
+					.on ('click', zoomExtent)
 					.attr("title", this.tip.extent)
 					.appendTo(layer_buttons);
 		}
@@ -554,8 +565,10 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 
 		// Opacity
 		var opacity = $("<div>").addClass("layerswitcher-opacity")
-				.click(function(e)
-				{	var x = e.pageX || e.originalEvent.touches[0].pageX;
+				.on("click", function(e)
+				{	e.stopPropagation();
+					e.preventDefault();
+					var x = e.pageX || e.originalEvent.touches[0].pageX;
 					var dx = Math.max ( 0, Math.min( 1, (x - $(this).offset().left) / $(this).width() ));
 					$(this).closest("li").data('layer').setOpacity(dx);
 				})
