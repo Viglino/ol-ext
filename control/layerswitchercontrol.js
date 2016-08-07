@@ -269,17 +269,13 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e)
 				};
 			drag.elt.parent().addClass('drag');
 			$(document).on("mouseup mousemove touchend touchcancel touchmove", drag, drag.self.dragOrdering_);
-		console.log("down")
 			break;
 		}
 		// Stop ordering
 		case 'touchcancel': 
 		case 'touchend': 
 		case 'mouseup':	
-		{	
-		
-		console.log("up")
-			if (drag.target) 
+		{	if (drag.target) 
 			{	// Get drag on parent
 				var drop = drag.layer;
 				var target = drag.target;
@@ -316,10 +312,7 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e)
 		}
 		// Ordering
 		default: 
-		{	
-		
-		console.log("move")
-			// First drag (more than 2 px) => show drag element (ghost)
+		{	// First drag (more than 2 px) => show drag element (ghost)
 			if (drag.start && Math.abs(drag.pageY - (e.pageY || e.originalEvent.touches[0].pageY)) > 2)
 			{	drag.start = false;
 				drag.elt.addClass("drag");
