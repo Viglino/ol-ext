@@ -24,8 +24,7 @@ ol.control.Swipe = function(opt_options)
     element.className = (options.className || "ol-swipe") + " ol-unselectable ol-control";
     element.appendChild(button);
 
-	$(element).on ("mousedown touchstart", function(e) { self.move(e); });
-	$(document).on ("mouseup mousemove touchend touchcancel touchmove", function(e) { self.move(e); });
+	$(element).on ("mousedown touchstart", this, this.move );
     
 	ol.control.Control.call(this, 
 	{	element: element
@@ -133,36 +132,39 @@ ol.control.Swipe.prototype.removeLayer = function(layers)
 /** @private
 */
 ol.control.Swipe.prototype.move = function(e) 
-{	switch (e.type)
+{	var self = e.data;
+	switch (e.type)
 	{	case 'touchcancel': 
 		case 'touchend': 
 		case 'mouseup': 
-		{	this.isMoving = false;
+		{	self.isMoving = false;
+			$(document).off ("mouseup mousemove touchend touchcancel touchmove", self.move );
 			break;
 		}
 		case 'mousedown': 
 		case 'touchstart':
-		{	this.isMoving = true;
+		{	self.isMoving = true;
+			$(document).on ("mouseup mousemove touchend touchcancel touchmove", self, self.move );
 		}
 		default: 
-		{	if (this.isMoving)
-			{	if (this.get('orientation') === "vertical")
+		{	if (self.isMoving)
+			{	if (self.get('orientation') === "vertical")
 				{	var pageX = e.pageX || e.originalEvent.touches[0].pageX;
 					if (!pageX) break;
 					pageX -= $("#map").position().left;
 
-					var l = this.getMap().getSize()[0];
+					var l = self.getMap().getSize()[0];
 					l = Math.min(Math.max(0, 1-(l-pageX)/l), 1);
-					this.set('position', l);
+					self.set('position', l);
 				}
 				else
 				{	var pageY = e.pageY || e.originalEvent.touches[0].pageY;
 					if (!pageY) break;
 					pageY -= $("#map").position().top;
 				
-					var l = this.getMap().getSize()[1];
+					var l = self.getMap().getSize()[1];
 					l = Math.min(Math.max(0, 1-(l-pageY)/l), 1);
-					this.set('position', l);
+					self.set('position', l);
 				}
 			}
 			break;
