@@ -77,6 +77,7 @@ ol.control.LayerSwitcher = function(opt_options)
 
 	// Enable jQuery dataTransfert
 	// $.event.props.push('dataTransfer');
+	this.target = options.target;
 
 };
 ol.inherits(ol.control.LayerSwitcher, ol.control.Control);
@@ -121,13 +122,22 @@ ol.control.LayerSwitcher.prototype.setMap = function(map)
 *	@param {-1|0|1|+50%|-50%} dir scroll direction
 */
 ol.control.LayerSwitcher.prototype.overflow = function(dir)
-{	if (this.button && this.panel_.css('display')!='none')
-	{	var h = $(this.element).outerHeight();
+{	
+	if (this.button) 
+	{	// Nothing to show
+		if (this.panel_.css('display')=='none')
+		{	$(this.element).css("height", "auto");
+			return;
+		}
+		// Calculate offset
+		var h = $(this.element).outerHeight();
 		var hp = this.panel_.outerHeight();
 		var dh = this.button.position().top + this.button.outerHeight(true);
 		var top = this.panel_.position().top-dh;
 		if (hp > h-dh)
-		{	switch (dir)
+		{	// Bug IE: need to have an height defined
+			$(this.element).css("height", "100%");
+			switch (dir)
 			{	case 1: top += 2*$("li",this.panel_).height(); break;
 				case -1: top -= 2*$("li",this.panel_).height(); break;
 				case "+50%": top += Math.round(h/2); break;
@@ -153,7 +163,8 @@ ol.control.LayerSwitcher.prototype.overflow = function(dir)
 			this.panel_.css('top', top+"px");
 		}
 		else
-		{	this.panel_.css('top', "0px");
+		{	$(this.element).css("height", "auto");
+			this.panel_.css('top', "0px");
 			this.botv.hide();
 			this.topv.hide();
 		}
@@ -338,6 +349,12 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e)
 				var li;
 				if (e.pageX) li = $(e.target);
 				else li = $(document.elementFromPoint(e.originalEvent.touches[0].clientX, e.originalEvent.touches[0].clientY)); 
+				if (li.hasClass("ol-switcherbottomdiv")) 
+				{	drag.self.overflow(-1);
+				}
+				else if (li.hasClass("ol-switchertopdiv")) 
+				{	drag.self.overflow(1);
+				}
 				if (!li.is("li")) li = li.closest("li");
 				if (!li.hasClass('dropover')) $("li", drag.elt.parent()).removeClass("dropover");
 				if (li.parent().hasClass('drag') && li.get(0) !== drag.elt.get(0))
@@ -581,7 +598,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 		d.appendTo(ul);
 	}
 
-	this.overflow();
+	if (ul==this.panel_) this.overflow();
 };
 
 /** Handle progress bar for a layer

@@ -3,7 +3,7 @@
 	right: 0.5em;
 	text-align: left;
 	top: 3em;
-	max-height: calc(100% - 3.5em);
+	max-height: calc(100% - 6em);
 	box-sizing: border-box;
 	overflow: hidden;
 }
@@ -26,7 +26,7 @@
 	top:0;
 	left:0;
 	right:0;
-	height: 2em;
+	height: 45px;
 	background: #fff; 
 	z-index:2;
 	opacity:1;
@@ -39,6 +39,7 @@
 .ol-control.ol-layerswitcher .ol-switcherbottomdiv
 {	top: auto;
 	bottom: 0;
+	height: 2em;
 	border-top:2px solid #369;
 	border-bottom:2px solid transparent;
 }
@@ -55,6 +56,7 @@
 	-webkit-transform: translate(-50%, -50%);
 	opacity:0.8;
 }
+
 .ol-control.ol-layerswitcher .ol-switchertopdiv:hover:before,
 .ol-control.ol-layerswitcher .ol-switcherbottomdiv:hover:before
 {	opacity:1;
@@ -354,9 +356,8 @@
 {	position:relative;
 	border: 1px solid #369;
 	height: 3px;
-	width: 117px;
-	font-size:0;
-	margin:5px 7px 10px;
+	width: 120px;
+	margin:5px 1em 10px 7px;
 	box-sizing: border-box;
 	border-radius: 2px;
 	background: #69c;
@@ -385,7 +386,8 @@
 
 .ol-layerswitcher .layerswitcher-progress
 {	display:block;
-	margin:-4px 2em 2px 1.3em;
+	margin:-4px 1em 2px 7px;
+	width: 120px;
 }
 .ol-layerswitcher .layerswitcher-progress div
 {	background-color: #369;
