@@ -7,7 +7,7 @@
 *	@extends {ol.filter.Base}
 *	@param {ol.filter.cropOptions}
 *		- feature {ol.Feature} feature to mask with
-*		- fill {ol.style.Fill} style to fill with
+*		- color {Array<integer>} style to fill with
 *		- inner {bool} mask inner, default false
 */
 ol.filter.Colorize = function(options)
@@ -25,8 +25,9 @@ ol.filter.Colorize.prototype.setFilter = function(options)
 		case "sepia": options = { operation:'color', red:153, green:102, blue:51, value:0.6 }; break;
 		default: break;
 	}
-	this.set ('color', ol.color.asString([ options.red, options.green, options.blue, options.value]));
-	this.set ('value', options.value||1);
+	var color = options.color ? ol.color.asArray(options.color) : [ options.red, options.green, options.blue, options.value];
+	this.set('color', ol.color.asString(color))
+	this.set ('value', color[3]||1);
 	switch (options.operation)
 	{	case 'color':
 		case 'hue':
@@ -49,6 +50,21 @@ ol.filter.Colorize.prototype.setFilter = function(options)
 		default: 
 			this.set ('operation', 'color');
 			break;
+	}
+}
+
+ol.filter.Colorize.prototype.setValue = function(v)
+{	this.set ('value', v);
+	var c = ol.color.asArray(this.get("color"));
+	c[3] = v;
+	this.set("color", ol.color.asString(c));
+}
+
+ol.filter.Colorize.prototype.setColor = function(c)
+{	c = ol.color.asArray(c);
+	if (c)
+	{	c[3] = this.get("value");
+		this.set("color", ol.color.asString(c));
 	}
 }
 
