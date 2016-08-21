@@ -266,8 +266,8 @@ ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context)
  * @param {number} y The origin for the symbol (y).
  */
 ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, y) 
-{	var fcolor = this.fill_.getColor();
-	var scolor = this.stroke_.getColor();
+{	var fcolor = this.fill_ ? this.fill_.getColor() : "#000";
+	var scolor = this.stroke_ ? this.stroke_.getColor() : "#000";
 	if (this.form_ == "none" && this.stroke_ && this.fill_)
 	{	scolor = this.fill_.getColor();
 		fcolor = this.stroke_.getColor();
