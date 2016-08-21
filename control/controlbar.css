@@ -10,8 +10,11 @@
 }
 
 /* Default position for controls */
-.ol-control.ol-bar .ol-control
+.ol-control.ol-bar .ol-bar
 {	position: static;
+}
+.ol-control.ol-bar .ol-control
+{	position: relative;
 	display: inline-block;
 	vertical-align: middle;
 	background: none;
@@ -19,6 +22,9 @@
 	margin: 0;
 	transform: none;
 	-webkit-transform: none;
+}
+.ol-control.ol-bar .ol-bar
+{	position: static;
 }
 .ol-control.ol-bar .ol-control button
 {	margin:2px 1px;
@@ -51,8 +57,12 @@
 
 .ol-control.ol-bar.ol-top.ol-left,
 .ol-control.ol-bar.ol-top.ol-right
-{	top: 0.5em;
+{	top: 4.5em;
 	transform:none;
+}
+.ol-touch .ol-control.ol-bar.ol-top.ol-left,
+.ol-touch .ol-control.ol-bar.ol-top.ol-right
+{	top: 5.5em; 
 }
 .ol-control.ol-bar.ol-bottom.ol-left,
 .ol-control.ol-bar.ol-bottom.ol-right
@@ -60,8 +70,6 @@
 	bottom: 0.5em;
 	transform:none;
 }
-
-
 
 /* Group buttons */
 .ol-control.ol-bar.ol-group
@@ -108,5 +116,93 @@
 }
 .ol-control.ol-bar .ol-toggle.ol-active button:hover
 {	background: rgba(60, 136, 0, 0.7)
+}
+
+/* Option toolbar */
+.ol-control.ol-bar .ol-control.ol-option-bar 
+{	display: none;
+	position:absolute;
+	top:100%;
+	left:0;
+	margin: 5px 0;
+	border-radius: 0;
+	background: rgba(255,255,255, 0.8);
+	border: 1px solid rgba(0, 60, 136, 0.5);
+	box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+.ol-control.ol-bar .ol-active .ol-option-bar 
+{	display: block;
+}
+
+.ol-control.ol-bar .ol-option-bar:before
+{	content: "";
+	border: 0.5em solid transparent;
+	border-color: transparent transparent rgba(0, 60, 136, 0.5);
+	position: absolute;
+	bottom: 100%;
+	left: 0.3em;
+}
+
+.ol-control.ol-bar .ol-option-bar .ol-control
+{	display: table-cell;
+}
+.ol-control.ol-bar .ol-option-bar .ol-control button:hover,
+.ol-control.ol-bar .ol-option-bar .ol-control button
+{	background: none;
+	color: rgba(0, 60, 136, 0.5);
+	width: auto;
+	min-width: 1.375em;
+	margin: 0;
+}
+
+.ol-control.ol-bar .ol-control.ol-text-button
+{	font-size:0.9em;
+	border-left: 1px solid rgba(0, 60, 136, 0.8);
+	border-radius: 0;
+}
+.ol-control.ol-bar .ol-control.ol-text-button:first-child
+{	border-left:0;
+}
+.ol-control.ol-bar .ol-control.ol-text-button button
+{	padding:0 0.3em;
+	color: rgba(0, 60, 136, 1);
+	font-weight: normal;
+	height:1.4em;
+}
+
+.ol-control.ol-bar.ol-bottom .ol-option-bar
+{	top: auto;
+	bottom: 100%;
+}
+.ol-control.ol-bar.ol-bottom .ol-option-bar:before
+{	border-color: rgba(0, 60, 136, 0.5) transparent transparent ;
+	bottom: auto;
+	top: 100%;
+}
+.ol-control.ol-bar.ol-left .ol-option-bar
+{	left:100%;
+	top: 0;
+	bottom: auto;
+	margin: 0 5px;
+}
+.ol-control.ol-bar.ol-left .ol-option-bar:before
+{	border-color: transparent rgba(0, 60, 136, 0.5) transparent transparent;
+	bottom: auto;
+	right: 100%;
+	left: auto;
+	top: 0.3em;
+}
+.ol-control.ol-bar.ol-right .ol-option-bar
+{	right:100%;
+	left:auto;
+	top: 0;
+	bottom: auto;
+	margin: 0 5px;
+}
+.ol-control.ol-bar.ol-right .ol-option-bar:before
+{	border-color: transparent transparent transparent rgba(0, 60, 136, 0.5);
+	bottom: auto;
+	left: 100%;
+	top: 0.3em;
 }
 
