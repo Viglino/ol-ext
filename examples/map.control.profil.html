@@ -1,0 +1,138 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2013 Jean-Marc VIGLINO, 
+	released under the Beerware license (http://fr.wikipedia.org/wiki/Beerware).
+	
+	Affichage d'une carte Geoportail avec OL3
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: OL3 control profil</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	
+	<meta name="description" content="A profil control for OL3 that draw a profil of a 3D lineString." />
+	<meta name="keywords" content="ol3, profil, control, 3D, Z, altitude, GPX, GPS" />
+	
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+    <!-- OL3 -->
+	<link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	
+	<script type="text/javascript" src="../style/shadowstyle.js"></script>
+
+	<link rel="stylesheet" href="../control/profilcontrol.css" />
+	<script type="text/javascript" src="../control/profilcontrol.js"></script>
+
+	<link rel="stylesheet" href="style.css" />
+	</head>
+<body >
+	<a href="https://github.com/Viglino/Geoportail-KISS"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: OL3 control profil</h1>
+	</a>
+	<p class="info">
+		<i>ol.control.Profil</i> is a control that draw a profil of a 3D lineString (with a XYZ or XYZM layout).
+		<br/>
+		The control can be drawn inside or outside the map.
+		<br/>
+		It fires an <i>over</i> and <i>out</i> event with informations on the point of the profil that is pointed by the mouse (to show the point on the map).
+	</p>
+
+	<!-- DIV pour la carte -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options">
+		<h2>Options:</h2>
+		<a target="_new" download="profil.png" class="btn" onclick="$(this).attr('href',profil.getImage());">Export PNG</a>
+		<a target="_new" download="profil.png" class="btn" onclick="profil.toggle();">Toggle profile (programatically)</a>
+	</div>
+	
+	<script type="text/javascript">
+	// Layers
+	var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
+
+	// The map
+	var map = new ol.Map
+		({	target: 'map',
+			view: new ol.View
+			({	zoom: 13,
+				center: [649083, 5408224]
+			}),
+			layers: [layer]
+		});
+
+	// New profil in the map
+	var profil = new ol.control.Profil();
+	map.addControl(profil);
+	// New profil outside the map
+	var profil2 = new ol.control.Profil({ target: $(".options").get(0) });
+	map.addControl(profil2);
+
+	// Vector style
+	var style = 
+	[	new ol.style.Style(
+			{	image: new ol.style.RegularShape(
+				{	radius: 10,
+					radius2: 5,
+					points: 5,
+					fill: new ol.style.Fill({ color: 'blue' })
+				}),
+			stroke: new ol.style.Stroke(
+				{	color: [0,0,255],
+					width: 2
+				}),
+			fill: new ol.style.Fill(
+				{	color: [0,0,255,0.3]
+				})
+			})
+	];
+
+	// Vector layer
+	var source = new ol.source.Vector(
+		{	//url: 'data/192553.gpx',
+			url: 'data/2009-09-04_rando.gpx',
+			format: new ol.format.GPX()
+		});
+	var vector = new ol.layer.Vector(
+	{	source: source,
+		style: style
+	});
+	map.addLayer(vector);
+
+	// Show freature profile when loaded
+	var pt;
+	source.once('change',function(e)
+	{	if (source.getState() === 'ready') 
+		{	profil.setGeometry(source.getFeatures()[0]);
+			profil2.setGeometry(source.getFeatures()[0]);
+			pt = new ol.Feature(new ol.geom.Point([0,0]));
+			pt.setStyle([]);
+			source.addFeature(pt);
+		}
+	});
+
+	// Draw a point on the map when mouse fly over profil
+	function drawPoint(e)
+	{	if (!pt) return;
+		if (e.type=="over") 
+		{	// Show point at coord
+			pt.setGeometry(new ol.geom.Point(e.coord));
+			pt.setStyle(null);
+		}
+		else 
+		{	// hide point
+			pt.setStyle([]);
+		}
+	};
+	profil.on(["over","out"], drawPoint);
+	profil2.on(["over","out"], drawPoint);
+
+	</script>
+	
+</body>
+</html>
