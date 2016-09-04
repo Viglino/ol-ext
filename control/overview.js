@@ -22,9 +22,9 @@ ol.control.Overview = function(opt_options)
 	this.rotation = options.rotation;
 
 	var element;
-	if (options.element) 
-	{	element = $("<div>").hide();
-		this.panel_ = $(options.element);
+	if (options.target) 
+	{	element = $("<div>");
+		this.panel_ = $(options.target);
 	}
 	else
 	{	element = $("<div>").addClass('ol-overview ol-unselectable ol-control ol-collapsed');
