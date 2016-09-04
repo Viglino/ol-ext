@@ -32,7 +32,9 @@ ol.control.Bar = function(options)
 ol.inherits(ol.control.Bar, ol.control.Control);
 
 /**
-*/
+ * Set the map instance the control is associated with.
+ * @param {ol.Map} map The map instance.
+ */
 ol.control.Bar.prototype.setMap = function (map)
 {	ol.control.Control.prototype.setMap.call(this, map);
 
