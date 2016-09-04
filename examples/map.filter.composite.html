@@ -110,8 +110,8 @@
 		var vector = new ol.layer.Image( { source: new ol.source.ImageVector (
 			{	source: new ol.source.Vector(),
 				style: new ol.style.Style(
-					{	stroke: new ol.style.Stroke({ width:8, color:'blue' }),
-						fill: new ol.style.Fill({ color:[255,0,0,0.5] })
+					{	stroke: new ol.style.Stroke({ width:20, color:[51,102,153] }),
+						fill: new ol.style.Fill({ color:[51,102,153,0.8] })
 					})
 			})});
 		vector.getSource().getSource().addFeature(f);
