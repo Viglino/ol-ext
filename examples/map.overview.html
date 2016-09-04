@@ -132,7 +132,7 @@
 
 		// New control outside the map (styled)
 		var ov2 = new ol.control.Overview(
-			{	element: ".overview",
+			{	target: $(".overview").get(0),
 				layers: layers2,
 				minZoom: $("#minzoom").val(), maxZoom: $("#maxzoom").val(),
 				rotation: $("#rotate").prop("checked"),
