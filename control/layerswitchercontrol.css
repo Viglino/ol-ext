@@ -376,12 +376,21 @@
 	border-radius: 50%;
 	-webkit-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
+	z-index: 1;
 }
 .ol-layerswitcher .layerswitcher-opacity .layerswitcher-opacity-cursor:before
 {	content: "";
 	position: absolute;
 	width: 10px;
 	height: 10px;
+}
+.ol-touch .ol-layerswitcher .layerswitcher-opacity .layerswitcher-opacity-cursor
+{	width: 26px;
+	height: 26px;
+}
+.ol-touch .ol-layerswitcher .layerswitcher-opacity .layerswitcher-opacity-cursor:before
+{	width: 13px;
+	height: 13px;
 }
 
 .ol-layerswitcher .layerswitcher-progress

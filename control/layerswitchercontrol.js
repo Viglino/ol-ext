@@ -65,9 +65,10 @@ ol.control.LayerSwitcher = function(opt_options)
 	this.panel_ = $("<ul>").addClass("panel")
 				.appendTo(element);
 	this.panel_.on ('mousewheel DOMMouseScroll onmousewheel', function(e)
-		{	e.stopPropagation();
-			e.preventDefault();
-			self.overflow(Math.max(-1, Math.min(1, (e.originalEvent.wheelDelta || -e.originalEvent.detail))));
+		{	if (self.overflow(Math.max(-1, Math.min(1, (e.originalEvent.wheelDelta || -e.originalEvent.detail)))))
+			{	e.stopPropagation();
+				e.preventDefault();
+			}
 		});
 
 	ol.control.Control.call(this, 
@@ -161,14 +162,17 @@ ol.control.LayerSwitcher.prototype.overflow = function(dir)
 			}
 			// Scroll ?
 			this.panel_.css('top', top+"px");
+			return true;
 		}
 		else
 		{	$(this.element).css("height", "auto");
 			this.panel_.css('top', "0px");
 			this.botv.hide();
 			this.topv.hide();
+			return false;
 		}
 	}
+	else return false;
 }
 
 /**
@@ -558,10 +562,13 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 		}
 		// Layer extent
 		if (this.hasextent && layers[i].getExtent())
-		{	$("<div>").addClass("layerExtent")
+		{	var ex = layers[i].getExtent();
+			if (ex.length==4 && ex[0]<ex[2] && ex[1]<ex[3])
+			{	$("<div>").addClass("layerExtent")
 					.on ('click', zoomExtent)
 					.attr("title", this.tip.extent)
 					.appendTo(layer_buttons);
+			}
 		}
 
 		// Progress
