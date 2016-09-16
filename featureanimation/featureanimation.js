@@ -6,11 +6,12 @@
 
 /** 
 
-/**
-* @param {ol.featureAnimationOptions} options
-*	- duration {number}
-*	- revers {bool}
-*	- fade {ol.easing}
+/** Feature aniomation base class
+*	@fire animationstart|animationend
+*	@param {ol.featureAnimationOptions} options
+*		- duration {number}
+*		- revers {bool}
+*		- fade {ol.easing}
 */
 ol.featureAnimation = function(options)
 {	options = options || {};
@@ -22,6 +23,8 @@ ol.featureAnimation = function(options)
 	var easing = typeof(options.easing) =='function' ? options.easing : ol.easing.linear;
 	if (options.revers) this.easing_ = function(t) { return 1 - easing(t) };
 	else this.easing_ = easing;
+
+	this.hiddenStyle = options.hiddenStyle;
 
 	ol.Object.call(this);
 }
@@ -72,6 +75,10 @@ ol.Map.prototype.animateFeature =
 *	@fires animationend
 *	@param {ol.Feature} feature Feature to animate
 *	@param {ol.featureAnimation|Array<ol.featureAnimation>} fanim the animation to play
+*	@return {animationControler} an object to control animation with start|stop[isPlaying function
+*		- start {function} start animation
+*		- stop {function} stop animation option arguments can be passed and propagate in animationend event
+*		- isPlaying {function} return true if animation is playing
 */
 ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 {	var self = this;
@@ -82,8 +89,9 @@ ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 	var flashStyle = style || (this.getStyleFunction ? this.getStyleFunction()(feature) : null);
 	if (!flashStyle) return;
 	if (!(flashStyle instanceof Array)) flashStyle = [flashStyle];
+
 	// Hide feature while animating
-	feature.setStyle([]);
+	feature.setStyle(fanim.hiddenStyle || []);
 
 	// Structure pass for animating
 	var event = 
@@ -149,25 +157,34 @@ ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 	}
 
 	// Stop animation
-	function stop()
+	function stop(options)
 	{	ol.Observable.unByKey(listenerKey);
 		listenerKey = null;
 		feature.setStyle(style);
-		fanim[step].dispatchEvent({ type:'animationend', feature: feature });
-		self.dispatchEvent({ type:'animationend', feature: feature });
+		// Send event
+		var event = { type:'animationend', feature: feature };
+		if (options) for (var i in options) event[i] = options[i];
+		fanim[step].dispatchEvent(event);
+		self.dispatchEvent(event);
 	}
 
 	// Launch animation
-	function start()
-	{	if (fanim.length)
+	function start(options)
+	{	if (fanim.length && !listenerKey)
 		{	listenerKey = self.on('postcompose', animate, self);
 			// map or layer?
 			if (self.renderSync) self.renderSync();
 			else self.changed();
+			// Send event
+			var event = { type:'animationstart', feature: feature };
+			if (options) for (var i in options) event[i] = options[i];
+			fanim[step].dispatchEvent(event);
+			self.dispatchEvent(event);
 		}
 	}
 	start();
 
+	// Return animation controler
 	return {
 		start: start,
 		stop: stop,
