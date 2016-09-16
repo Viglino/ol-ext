@@ -28,6 +28,16 @@
 	<script type="text/javascript" src="../control/profilcontrol.js"></script>
 
 	<link rel="stylesheet" href="style.css" />
+	<style>
+		/* Hide info for profil on map */
+		.ol-control.ol-profil table
+		{	display: none;
+		}
+		/* Customize cursor color */
+		.options .ol-profilbar, .options .ol-profilcursor::before
+		{	background-color: blue;
+		}
+	</style>
 	</head>
 <body >
 	<a href="https://github.com/Viglino/Geoportail-KISS"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
@@ -35,20 +45,39 @@
 	<a href="../index.html">
 		<h1>OL3-ext: OL3 control profil</h1>
 	</a>
-	<p class="info">
-		<i>ol.control.Profil</i> is a control that draw a profil of a 3D lineString (with a XYZ or XYZM layout).
+	<div class="info">
+		<i>ol.control.Profil</i> is a control that draw a profil of a 3D lineString 
+		(with a XYZ or XYZM layout).
 		<br/>
 		The control can be drawn inside or outside the map.
 		<br/>
-		It fires an <i>over</i> and <i>out</i> event with informations on the point of the profil that is pointed by the mouse (to show the point on the map).
-	</p>
+		It fires an <i>over</i> and <i>out</i> event with informations on the point of the profil 
+		that is pointed by the mouse (to show the point on the map).
+		<ul>
+			<li>
+				<i>graduation</i> option let you specify the z axis graduation interval
+			</li>
+			<li>
+				<i>zmin</i> option let you specify the z axis origin
+			</li>
+			<li>
+				<i>zmax</i> option let you specify the z axis maximum
+			</li>
+			<li>
+				<i>amplitude</i> option let you specify the alitude amplitude
+			</li>
+			<li>
+				The <i>popup</i> function lets you show a popup when cursor fly over the profil.
+			</li>
+		</ul>
+	</div>
 
 	<!-- DIV pour la carte -->
 	<div id="map" style="width:600px; height:400px;"></div>
 
 	<div class="options">
 		<h2>Options:</h2>
-		<a target="_new" download="profil.png" class="btn" onclick="$(this).attr('href',profil.getImage());">Export PNG</a>
+		<a target="_new" download="profil.png" class="btn" onclick="$(this).attr('href',profil2.getImage());">Export PNG</a>
 		<a target="_new" download="profil.png" class="btn" onclick="profil.toggle();">Toggle profile (programatically)</a>
 	</div>
 	
@@ -70,7 +99,10 @@
 	var profil = new ol.control.Profil();
 	map.addControl(profil);
 	// New profil outside the map
-	var profil2 = new ol.control.Profil({ target: $(".options").get(0) });
+	var profil2 = new ol.control.Profil(
+		{	target: $(".options").get(0), 
+			width:400, height:200
+		});
 	map.addControl(profil2);
 
 	// Vector style
@@ -109,7 +141,11 @@
 	source.once('change',function(e)
 	{	if (source.getState() === 'ready') 
 		{	profil.setGeometry(source.getFeatures()[0]);
-			profil2.setGeometry(source.getFeatures()[0]);
+			profil2.setGeometry(source.getFeatures()[0], 
+				{	graduation:250,
+					amplitude:1000,
+					zmin:0
+				});
 			pt = new ol.Feature(new ol.geom.Point([0,0]));
 			pt.setStyle([]);
 			source.addFeature(pt);
@@ -129,8 +165,14 @@
 			pt.setStyle([]);
 		}
 	};
-	profil.on(["over","out"], drawPoint);
+	// Show a popup on over
+	profil.on(["over","out"], function(e)
+		{	if (e.type=="over") profil.popup(e.coord[2]+" m");
+			drawPoint(e);
+		});
+	// Just draw point
 	profil2.on(["over","out"], drawPoint);
+
 
 	</script>
 	
