@@ -7,11 +7,13 @@
 }
 .ol-profil .ol-inner 
 {	position: relative;
+	padding: 0.5em;
+	font-size: 0.8em;
 }
 .ol-control.ol-profil .ol-inner
 {	display: block;
 	background-color: rgba(255,255,255,0.7);
-	margin: 1.75em 2px 2px;
+	margin: 2.3em 2px 2px;
 }
 .ol-control.ol-profil.ol-collapsed .ol-inner
 {	display: none;
@@ -58,8 +60,24 @@
 
 .ol-profil table
 {	text-align: center;
-	font-size: 0.8em;
 }
+
+.ol-profil table span
+{	display: block;
+}
+
+.ol-profilpopup
+{	background-color: rgba(255, 255, 255, 0.5);
+	margin: 0.5em;
+	padding: 0 0.5em;
+	position: absolute;
+	top:-1em;
+	white-space: nowrap;
+}
+.ol-profilpopup.ol-left
+{	right:0;
+}
+
 
 .ol-profil table td
 {	padding: 0 2px;
@@ -76,4 +94,9 @@
 }
 .ol-profil .over table .point-info
 {	display: table-row;
+}
+
+.ol-profil p
+{	text-align: center;
+	margin:0;
 }
