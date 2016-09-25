@@ -106,7 +106,7 @@ ol.control.LayerSwitcher.prototype.setMap = function(map)
 	if (this.map_)
 	{	this.map_.getLayerGroup().un('change', this.drawPanel, this);
 		this.map_.un('moveend', this.viewChange, this);
-		this.map.un('change:size', this.overflow, this);
+		this.map_.un('change:size', this.overflow, this);
 		// console.log("remove");
 	}
 
