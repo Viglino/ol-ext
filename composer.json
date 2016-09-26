@@ -1,0 +1,11 @@
+{
+    "name": "viglino/ol3-ext",
+    "description": "Cool extensions for OpenLayers 3",
+    "license": "CeCILL-B",
+    "authors": [
+        {
+            "name": "Jean-Marc Viglino",
+            "email": "jean-marc.viglino@ign.fr"
+        }
+    ]
+}
