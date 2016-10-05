@@ -70,6 +70,7 @@ ol.control.LayerSwitcher = function(opt_options)
 				e.preventDefault();
 			}
 		});
+	this.header_ = $("<li>").addClass("ol-header").appendTo(this.panel_);
 
 	ol.control.Control.call(this, 
 	{	element: element.get(0),
@@ -87,7 +88,7 @@ ol.inherits(ol.control.LayerSwitcher, ol.control.Control);
 /** List of tips
 */
 ol.control.LayerSwitcher.prototype.tip =
-{	up: "up",
+{	up: "up/down",
 	down: "down",
 	info: "informations...",
 	extent: "zoom to extent",
@@ -117,6 +118,13 @@ ol.control.LayerSwitcher.prototype.setMap = function(map)
 		map.on('moveend', this.viewChange, this);
 		map.on('change:size', this.overflow, this);
 	}
+};
+
+/** Add a custom header
+
+*/
+ol.control.LayerSwitcher.prototype.setHeader = function(html)
+{	this.header_.html(html);
 };
 
 /** Calculate overflow and add scrolls
@@ -219,9 +227,8 @@ ol.control.LayerSwitcher.prototype.drawPanel = function(e)
  * @private
  */
 ol.control.LayerSwitcher.prototype.drawPanel_ = function(e) 
-{
-	if (--this.dcount || this.dragging_) return;
-	this.panel_.html("");
+{	if (--this.dcount || this.dragging_) return;
+	$("li", this.panel_).not(".ol-header").remove();
 	this.drawList (this.panel_, this.getMap().getLayers());
 }
 
@@ -276,7 +283,7 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e)
 			//e.preventDefault();
 			drag = 
 				{	self: drag.self,
-					elt: $(e.currentTarget), 
+					elt: $(e.currentTarget).closest("li"), 
 					start: true, 
 					element: drag.self.element, 
 					panel: drag.self.panel_, 
@@ -339,14 +346,14 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e)
 				drag.div.css ({ position: "absolute", "z-index":10000, left:drag.elt.position().left, opacity:0.5 })
 						.html($(drag.elt).html())
 						.addClass("ol-dragover")
-						.width(drag.elt.width())
+						.width(drag.elt.outerWidth())
 						.height(drag.elt.height());
 				$(drag.element).addClass('drag');
 			}
 			if (!drag.start)
 			{	e.preventDefault();
 				e.stopPropagation();
-				
+
 				// Ghost div
 				drag.div.css ({ top:(e.pageY || e.originalEvent.touches[0].pageY)-drag.panel.offset().top+5 });
 				
@@ -371,10 +378,16 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e)
 					else
 					{	drag.target = false;
 					}
-				} else drag.target = false;
-
-				if (!drag.target) drag.div.hide();
-				else drag.div.show();
+					drag.div.show();
+				} 
+				else 
+				{	drag.target = false;
+					if (li.get(0) === drag.elt.get(0)) drag.div.hide();
+					else drag.div.show();
+				}
+				
+				if (!drag.target) drag.div.addClass("forbidden");
+				else drag.div.removeClass("forbidden");
 			}
 			break;
 		}
@@ -435,7 +448,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 	var setVisibility = function(e) 
 	{	e.stopPropagation();
 		e.preventDefault();
-		var l = $(this).parent().data("layer");
+		var l = $(this).parent().parent().data("layer");
 		self.switchLayerVisibility(l,collection);
 	};
 	function moveLayer (l, layers, inc)
@@ -483,20 +496,17 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 	};
 	
 	// Add the layer list
-	//for (var i=0; i<layers.length; i++)
 	for (var i=layers.length-1; i>=0; i--)
 	{	var layer = layers[i];
 		if (layer.get("displayInLayerSwitcher")===false) continue;
 
-		var d = $("<li>").addClass((layer.getVisible()?"visible ":" ")+(layer.get('baseLayer')?"baselayer":""))
-						.data("layer",layer); //.appendTo(ul);
-		if (this.reordering)
-		{	d.on ("mousedown touchstart", {self:this}, this.dragOrdering_ );
-		}
+		var li = $("<li>").addClass((layer.getVisible()?"visible ":" ")+(layer.get('baseLayer')?"baselayer":""))
+						.data("layer",layer).appendTo(ul);
 		if (!this.testLayerVisibility(layer)) d.addClass("ol-layer-hidden");
 		
-		var layer_buttons = $("<div>").addClass("ol-layerswitcher-buttons").appendTo(d);
+		var layer_buttons = $("<div>").addClass("ol-layerswitcher-buttons").appendTo(li);
 
+		var d = $("<div>").addClass('li-content').appendTo(li);
 		// Visibility
 		$("<input>")
 			.attr('type', layer.get('baseLayer') ? 'radio' : 'checkbox')
@@ -512,6 +522,16 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 			.on('selectstart', false)
 			.appendTo(d);
 
+		//  up/down
+		if (this.reordering)
+		{	if ( (i<layers.length-1 && (layer.get("allwaysOnTop") || !layers[i+1].get("allwaysOnTop")) )
+				|| (i>0 && (!layer.get("allwaysOnTop") || layers[i-1].get("allwaysOnTop")) ) )
+			{	$("<div>").addClass("layerup")
+					.on ("mousedown touchstart", {self:this}, this.dragOrdering_ )
+					.attr("title", this.tip.up)
+					.appendTo(layer_buttons);
+			}
+		}
 
 		// Show/hide sub layers
 		if (layer.getLayers) 
@@ -524,27 +544,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 					.appendTo(layer_buttons);
 		}
 
-		//  up/down
-		if (this.reordering)
-		{	if (i<layers.length-1) 
-			{	if (layer.get("allwaysOnTop") || !layers[i+1].get("allwaysOnTop"))
-				{	$("<div>").addClass("layerup")
-						.on ('click', moveLayerUp)
-						.attr("title", this.tip.up)
-						.appendTo(layer_buttons);
-				}
-			}
-			if (i>0) 
-			{	if (!layer.get("allwaysOnTop") || layers[i-1].get("allwaysOnTop"))
-				{	$("<div>").addClass("layerdown")
-						.on ('click', moveLayerDown)
-						.attr("title", this.tip.down)
-						.appendTo(layer_buttons);
-				}
-			}
-		}
-
-		$("<div>").addClass("ol-separator").appendTo(layer_buttons);
+		// $("<div>").addClass("ol-separator").appendTo(layer_buttons);
 
 		// Info button
 		if (this.oninfo)
@@ -598,11 +598,9 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 		// Layer group
 		if (layer.getLayers)
 		{	if (layer.get("openInLayerSwitcher")===true) 
-			{	this.drawList ($("<ul>").appendTo(d), layer.getLayers());
+			{	this.drawList ($("<ul>").appendTo(li), layer.getLayers());
 			}
 		}
-		// Add to the list
-		d.appendTo(ul);
 	}
 
 	if (ul==this.panel_) this.overflow();
