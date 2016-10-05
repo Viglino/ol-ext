@@ -34,6 +34,8 @@ ol.control.LayerSwitcherImage.prototype.drawList = function(ul, layers)
 		if (e.type=="touchstart") $(self.element).addClass("ol-collapsed");
 	};
 	
+	ul.css("height","auto");
+
 	layers.forEach(function(layer)
 	{	if (layer.get("displayInLayerSwitcher")!==false)
 		{	var prev = layer.getPreview ? layer.getPreview() : ["none"];
@@ -53,3 +55,8 @@ ol.control.LayerSwitcherImage.prototype.drawList = function(ul, layers)
 		}
 	});
 };
+
+
+/** Disable overflow
+*/
+ol.control.LayerSwitcherImage.prototype.overflow = function(){};

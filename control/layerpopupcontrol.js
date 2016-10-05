@@ -18,6 +18,10 @@ ol.control.LayerPopup = function(options)
 };
 ol.inherits(ol.control.LayerPopup, ol.control.LayerSwitcher);
 
+/** Disable overflow
+*/
+ol.control.LayerPopup.prototype.overflow = function(){};
+
 /** Render a list of layer
  * @param {elt} element to render
  * @layers {Array{ol.layer}} list of layer to show
