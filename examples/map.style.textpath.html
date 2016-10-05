@@ -1,0 +1,134 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+
+	Copyright (c) 2015 Jean-Marc VIGLINO,
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: style textPath</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="setTextPathStyle is a function to draw text along a LineString on postcompose." />
+	<meta name="keywords" content="ol3, style, vector, textpath, text, along" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	<!-- http://openlayers.org/en/v3.2.0/build/ol.js -->
+	<!-- http://openlayers.org/en/v3.2.0/build/ol-debug.js -->
+
+	<script type="text/javascript" src="../style/settextpathstyle.js"></script>
+
+	<link rel="stylesheet" href="style.css" />
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: style textPath</h1>
+	</a>
+	<p class="info">
+		The <i>ol.vector.setTextPathStyle()</i> is a function to draw text along a linear feature (ol.geom.lineString) on postcompose.
+		<br/>
+		The function is called as the ol.vector.setStyle() function but rendered in a postcompose frame.
+		<br/>
+		The <i>rotateWithView</i> option is used to render readable text (the function tries to render text upward).
+	</p>
+
+	<!-- DIV pour la carte -->
+	<div id="map" style="width:600px; height:400px;"></div>
+	<div class="options">
+		<h2>Options:</h2>
+		textAlign: 
+		<select id="textAlign" onchange="setTextPathStyle()">
+			<option value="left">left</option>
+			<option value="center" selected="selected">center</option>
+			<option value="right">right</option>
+		</select>
+		<br />
+		textBaseline: <select id="textBaseline" onchange="setTextPathStyle();">
+			<option value="top">top</option>
+			<option value="middle" selected="selected">middle</option>
+			<option value="bottom">bottom</option>
+			<option value="alphabetic">alphabetic</option>
+			<option value="hanging">hanging</option>
+		</select>
+		<br />
+		<input id="rotation" type="checkbox" onchange="setTextPathStyle()" />
+		<label for="rotation"> rotateWithView <small>(readable)</small></label>
+	</div>
+
+	<script type="text/javascript">
+
+	// Layers
+	var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
+		
+	// The map
+	var map = new ol.Map
+		({	target: 'map',
+			view: new ol.View
+			({	zoom: 1,
+				center: [1957830, 3212031]
+			}),
+			layers: [layer]
+		});
+
+	// Data to draw on the map
+	var data = {
+		"Africa":[[430493,2755157],[1721973,1581084],[2856910,-923604],[2935182,-2802121]],
+		"Europe":[[-587036,4985895],[313086,5846882],[1643702,6433918],[3052589,7060091]],
+		"Asia":[[7474930,4751081],[11662456,8116756],[14206280,8977743]],
+		"Australia":[[12797393,-2684713],[14323688,-2606442],[15928254,-3232614],[16632697,-4054465]],
+		"North Ameria":[[-15654303,9564779],[-13580108,8273299],[-11897271,5964289],[-11075420,2989972]],
+		"SouthAmeria":[[-8375052,563555],[-7122708,-493111],[-6457400,-2762985],[-7631473,-5502488]],
+		"Atlantic Ocean":[[-313086,-6011253],[-1252344,-2762985],[-2856910,759233],[-4774563,3185651],[-6848758,4711945]],
+		"Pacific Ocean":[[18354671,4711945],[21642074,2950836],[25633922,-688790],[27982067,-5150266]],
+		"Antartica":[[-547901,-15129884],[3091725,-14308034],[8101102,-14112355],[14206280,-14855934]],
+		"Southern Ocean":[[469629,-9102978],[4578884,-7537547],[10057890,-7028782],[13814923,-7498412],[17493684,-8907299]],
+		"Indian Ocean":[[11271098,-4641501],[10175297,-2410763],[8727274,-1197554],[6457400,-453975]],
+		"Artic Ocean":[[5439870,13713170],[1995924,12969590],[-1174073,10973666],[-3013453,9056014]]
+	};
+
+	var features=[];
+	for (var i in data)
+	{	features.push (new ol.Feature(
+			{	geometry: new ol.geom.LineString(data[i]),
+				name: i
+			}));
+	}
+	var vector = new ol.layer.Vector(
+	{	name: 'Vecteur',
+		source: new ol.source.Vector({ features: features }),
+		style: new ol.style.Style({ stroke: new ol.style.Stroke({ color:"#ccc", width:1 }) })
+	})
+
+	// Set textPathStyle according inputs
+	function setTextPathStyle()
+	{	vector.setTextPathStyle(function (f)
+		{	return [ new ol.style.Style(
+			{	text: new ol.style.Text(
+				{	text: f.get("name"),
+					font: "15px Arial",
+					fill: new ol.style.Fill ({ color:"#369" }),
+					stroke: new ol.style.Stroke({ color:"#fff", width:3 }),
+					textBaseline: $("#textBaseline").val(),
+					textAlign: $("#textAlign").val(),
+					rotateWithView: $("#rotation").prop("checked")
+				})
+			})]
+		});
+	}
+	setTextPathStyle();
+
+	map.addLayer(vector);
+
+	</script>
+	
+</body>
+</html>
