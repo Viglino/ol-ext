@@ -23,6 +23,7 @@
 	<!-- http://openlayers.org/en/v3.2.0/build/ol-debug.js -->
 
 	<script type="text/javascript" src="../style/settextpathstyle.js"></script>
+	<script type="text/javascript" src="../utils/cspline.js"></script>
 
 	<link rel="stylesheet" href="style.css" />
 
@@ -33,13 +34,27 @@
 	<a href="../index.html">
 		<h1>OL3-ext: style textPath</h1>
 	</a>
-	<p class="info">
+	<div class="info">
 		The <i>ol.vector.setTextPathStyle()</i> is a function to draw text along a linear feature (ol.geom.lineString) on postcompose.
-		<br/>
+		<br />
 		The function is called as the ol.vector.setStyle() function but rendered in a postcompose frame.
 		<br/>
-		The <i>rotateWithView</i> option is used to render readable text (the function tries to render text upward).
-	</p>
+		An <i>ol.style.TextPath</i> is defined but <i>ol.style.Text</i> can be used instead.
+		<br/>
+		You can specify a <i>minResolution</i> to prevent drawing beneath this resolution.
+		<ul>
+			<li>
+				The <i>rotateWithView</i> option is used to render readable text (the function tries to display text upward).
+			</li>
+			<li>
+				The <i>textOverflow</i> option determines how overflowed content that is not displayed is signaled to users.
+			</li>
+			<li>
+				If the length of the linestring (in pixel) is less than <i>minWidth</i>, text won't be displayed.
+			</li>
+		</ul>
+		The example uses an <a href="map.geom.cspline.html">ol.geom.LineString.cspline</a> to smooth support and avoid letters collision.
+	</div>
 
 	<!-- DIV pour la carte -->
 	<div id="map" style="width:600px; height:400px;"></div>
@@ -50,6 +65,7 @@
 			<option value="left">left</option>
 			<option value="center" selected="selected">center</option>
 			<option value="right">right</option>
+			<option value="justify">justify</option>
 		</select>
 		<br />
 		textBaseline: <select id="textBaseline" onchange="setTextPathStyle();">
@@ -60,8 +76,28 @@
 			<option value="hanging">hanging</option>
 		</select>
 		<br />
+		textOverflow: <select id="overflow" onchange="setTextPathStyle();">
+			<option value="">hidden</option>
+			<option value="visible">visible</option>
+			<option value="ellipsis">ellipsis</option>
+			<option value=".">custom</option>
+		</select>
+		<br />
+		minWidth: <input id="minwidth" type="number" onchange="setTextPathStyle()" style="width:4em;" value="0" />px
+		<br />
 		<input id="rotation" type="checkbox" onchange="setTextPathStyle()" />
 		<label for="rotation"> rotateWithView <small>(readable)</small></label>
+		<br />
+		<input id="cspline" type="checkbox" onchange="setTextPathStyle()" />
+		<label for="cspline"> smooth support</label>
+		<hr/>
+		minZoom: <select id="resolution" onchange="setTextPathStyle();">
+			<option value="0">all</option>
+			<option value="78000">1</option>
+			<option value="39000">2</option>
+			<option value="19500">3</option>
+			<option value="9700">4</option>
+		</select> <small>(~ maxResolution)</small>
 	</div>
 
 	<script type="text/javascript">
@@ -85,8 +121,8 @@
 		"Europe":[[-587036,4985895],[313086,5846882],[1643702,6433918],[3052589,7060091]],
 		"Asia":[[7474930,4751081],[11662456,8116756],[14206280,8977743]],
 		"Australia":[[12797393,-2684713],[14323688,-2606442],[15928254,-3232614],[16632697,-4054465]],
-		"North Ameria":[[-15654303,9564779],[-13580108,8273299],[-11897271,5964289],[-11075420,2989972]],
-		"SouthAmeria":[[-8375052,563555],[-7122708,-493111],[-6457400,-2762985],[-7631473,-5502488]],
+		"North America":[[-15654303,9564779],[-13580108,8273299],[-11897271,5964289],[-11075420,2989972]],
+		"South America":[[-8375052,563555],[-7122708,-493111],[-6457400,-2762985],[-7631473,-5502488]],
 		"Atlantic Ocean":[[-313086,-6011253],[-1252344,-2762985],[-2856910,759233],[-4774563,3185651],[-6848758,4711945]],
 		"Pacific Ocean":[[18354671,4711945],[21642074,2950836],[25633922,-688790],[27982067,-5150266]],
 		"Antartica":[[-547901,-15129884],[3091725,-14308034],[8101102,-14112355],[14206280,-14855934]],
@@ -105,24 +141,33 @@
 	var vector = new ol.layer.Vector(
 	{	name: 'Vecteur',
 		source: new ol.source.Vector({ features: features }),
-		style: new ol.style.Style({ stroke: new ol.style.Stroke({ color:"#ccc", width:1 }) })
+		style: function(f) 
+		{	return [ new ol.style.Style(
+			{	stroke: new ol.style.Stroke({ color:"red", width:1 }),
+				geometry: $("#cspline").prop("checked") ? f.getGeometry().cspline() : null
+			})]
+		}
 	})
 
 	// Set textPathStyle according inputs
 	function setTextPathStyle()
 	{	vector.setTextPathStyle(function (f)
 		{	return [ new ol.style.Style(
-			{	text: new ol.style.Text(
+			{	text: new ol.style.TextPath(
 				{	text: f.get("name"),
 					font: "15px Arial",
 					fill: new ol.style.Fill ({ color:"#369" }),
 					stroke: new ol.style.Stroke({ color:"#fff", width:3 }),
 					textBaseline: $("#textBaseline").val(),
 					textAlign: $("#textAlign").val(),
-					rotateWithView: $("#rotation").prop("checked")
-				})
+					rotateWithView: $("#rotation").prop("checked"),
+					textOverflow: $("#overflow").val(),
+					minWidth: Number($("#minwidth").val())
+				}),
+				geometry: $("#cspline").prop("checked") ? f.getGeometry().cspline() : null
 			})]
-		});
+		}, 
+		Number($("#resolution").val()));
 	}
 	setTextPathStyle();
 
