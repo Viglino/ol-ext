@@ -33,22 +33,51 @@ ol.filter.Base.prototype.getActive = function (b)
 {	return this.set('active');
 }
 
+/** Internal function  
+* @private
+*/
+ol.filter.Base.prototype.precompose_ = function(e)
+{	if (this.get('active')) this.precompose(e);
+}
+/** Internal function  
+* @private
+*/
+ol.filter.Base.prototype.postcompose_ = function(e)
+{	if (this.get('active')) this.postcompose(e);
+}
+/** Force filter redraw / Internal function  
+*	NB: this is the object to redraw
+* @private
+*/
+ol.filter.Base.prototype.redraw_ = function(e)
+{	if (this.renderSync) this.renderSync();
+	else this.changed(); 
+}
+
 /** Add a filter to an ol object
 *	@private
 */
 ol.filter.Base.prototype.addFilter_ = function(filter)
 {	if (!this.filters_) this.filters_ = [];
 	this.filters_.push(filter);
-	if (filter.precompose) this.on('precompose', function(e)
-		{	if (filter.get('active')) filter.precompose(e)
-		}, this);
-	if (filter.postcompose) this.on('postcompose', function(e)
-		{	if (filter.get('active')) filter.postcompose(e)
-		}, this);
-	filter.on('propertychange', function()
-		{	if (this.renderSync) this.renderSync();
-			else this.changed(); 
-		}, this);
+	if (filter.precompose) this.on('precompose', filter.precompose_, filter);
+	if (filter.postcompose) this.on('postcompose', filter.postcompose_, filter);
+	filter.on('propertychange', filter.redraw_, this);
+	filter.redraw_.call (this);
+}
+
+/** Remove a filter to an ol object
+*	@private
+*/
+ol.filter.Base.prototype.removeFilter_ = function(filter)
+{	if (!this.filters_) this.filters_ = [];
+	for (var i=this.filters_.length-1; i>=0; i--)
+	{	if (this.filters_[i]===filter) this.filters_.splice(i,1);
+	}
+	if (filter.precompose) this.un('precompose', filter.precompose_, filter);
+	if (filter.postcompose) this.un('postcompose', filter.postcompose_, filter);
+	filter.un('propertychange', filter.redraw_, this);
+	filter.redraw_.call (this);
 }
 
 /** Add a filter to an ol.Map
@@ -56,6 +85,12 @@ ol.filter.Base.prototype.addFilter_ = function(filter)
 */
 ol.Map.prototype.addFilter = function (filter)
 {	ol.filter.Base.prototype.addFilter_.call (this, filter);
+}
+/** Remove a filter to an ol.Map
+*	@param {ol.filter}
+*/
+ol.Map.prototype.removeFilter = function (filter)
+{	ol.filter.Base.prototype.removeFilter_.call (this, filter);
 }
 /** Get filters associated with an ol.Map
 *	@return {Array<ol.filter>}
@@ -70,6 +105,13 @@ ol.Map.prototype.getFilters = function ()
 ol.layer.Base.prototype.addFilter = function (filter)
 {	ol.filter.Base.prototype.addFilter_.call (this, filter);
 }
+/** Remove a filter to an ol.Layer
+*	@param {ol.filter}
+*/
+ol.layer.Base.prototype.removeFilter = function (filter)
+{	ol.filter.Base.prototype.removeFilter_.call (this, filter);
+}
+
 /** Get filters associated with an ol.Map
 *	@return {Array<ol.filter>}
 */
