@@ -1,13 +1,17 @@
 /** Add a setTextPath style to draw text along linestrings
+@toto letterpadding/spacing, wordpadding/spacing
 */
 (function()
 {
-
+/** Internal drawing function called on postcompose
+* @param {ol.eventPoscompose} e postcompose event
+*/
 function drawTextPath (e)
-{
+{	// Prent drawing at large resolution
+	if (e.frameState.viewState.resolution > this.textPathMaxResolution_) return;
+	
 	var extent = e.frameState.extent;
 	var c2p = e.frameState.coordinateToPixelTransform;
-	var ctx = e.context;
 
 	// Get pixel path with coordinates
 	function getPath(c, readable)
@@ -28,6 +32,7 @@ function drawTextPath (e)
 		else return path1;
 	}
 
+	var ctx = e.context;
 	ctx.save();
 	ctx.scale(e.frameState.pixelRatio,e.frameState.pixelRatio);
 
@@ -53,6 +58,10 @@ function drawTextPath (e)
 				ctx.lineWidth = st.getStroke() ? (st.getStroke().getWidth()||0) : 0;
 				ctx.strokeStyle = st.getStroke() ? (st.getStroke().getColor()||"#fff") : "#fff";
 				ctx.fillStyle = st.getFill() ? st.getFill().getColor()||"#000" : "#000";
+				// New params
+				ctx.textJustify = st.getTextAlign()=="justify";
+				ctx.textOverflow = st.getTextOverflow ? st.getTextOverflow():"";
+				ctx.minWidth = st.getMinWidth ? st.getMinWidth():0;
 				// Draw textpath
 				ctx.textPath(st.getText()||f.get("name"), path);
 			}
@@ -68,8 +77,9 @@ function drawTextPath (e)
 *	If it is null the layer has no style (a null style). 
 *	See ol.style for information on the default style.
 *	@param {ol.style.Style|Array.<ol.style.Style>|ol.StyleFunction} style
+*	@param {Number} maxResolution to display text, default: 0
 */
-ol.layer.Vector.prototype.setTextPathStyle = function(style)
+ol.layer.Vector.prototype.setTextPathStyle = function(style, maxResolution)
 {
 	// Remove existing style
 	if (style===null)
@@ -88,15 +98,40 @@ ol.layer.Vector.prototype.setTextPathStyle = function(style)
 	}
 	if (typeof(style) == "function") this.textPathStyle_ = style;
 	else this.textPathStyle_ = function() { return style; };
+	this.textPathMaxResolution_ = Number(maxResolution) || Number.MAX_VALUE;
 
+	// Force redraw
 	this.changed();
-
 }
+
+
+/** Add new properties to ol.style.Text
+* @param {} options
+*	- textOverflow {visible|ellipsis|string} 
+*	- minWidth {number} minimum width (px) to draw text, default 0
+*/
+ol.style.TextPath = function(options)
+{	if (!options) options={};
+	ol.style.Text.call (this, options);
+	this.textOverflow_ = typeof(options.textOverflow)!="undefined" ?  options.textOverflow : "visible";
+	this.minWidth_ = options.minWidth || 0;
+}
+ol.inherits(ol.style.TextPath, ol.style.Text);
+
+ol.style.TextPath.prototype.getTextOverflow = function() 
+{	return this.textOverflow_; 
+};
+
+ol.style.TextPath.prototype.getMinWidth = function() 
+{	return this.minWidth_; 
+};
+
+/**/
 
 })();
 
 
-/** Draw text along path
+/** CanvasRenderingContext2D: draw text along path
 * @param {string} text
 * @param {Array<Number>} path
 */
@@ -142,21 +177,42 @@ CanvasRenderingContext2D.prototype.textPath = function (text, path)
 	}
 
 	var letterPadding = ctx.measureText(" ").width *0.25;
-	var w = text.length;
-	var ww = ctx.measureText(text).width;
   
 	var start = 0;
-	switch (ctx.textAlign)
-	{	case "center":
+
+	var d = 0;
+	for (var i=2; i<path.length; i+=2)
+	{	d += dist2D(path[i-2],path[i-1],path[i],path[i+1])
+	}
+	if (d < ctx.minWidth) return;
+	var nbspace = text.split(" ").length -1;
+
+	// Remove char for overflow
+	if (ctx.textOverflow != "visible")
+	{	if (d < ctx.measureText(text).width + (text.length-1 + nbspace) * letterPadding)
+		{	var overflow = (ctx.textOverflow=="ellipsis") ? '\u2026' : ctx.textOverflow;
+			do
+			{	nbspace = text.split(" ").length -1;
+				text = text.slice(0,text.length-1);
+			} while (text && d < ctx.measureText(text+overflow).width + (text.length + overflow.length-1 + nbspace) * letterPadding)
+			text += overflow;
+		}
+	}
+
+	switch (ctx.textJustify || ctx.textAlign)
+	{	case true: // justify
+		case "center":
 		case "end":
 		case "right":
-		{	var d = 0;
-			for (var i=2; i<path.length; i+=2)
-			{	d += dist2D(path[i-2],path[i-1],path[i],path[i+1])
+		{	// Text align
+			if (ctx.textJustify) 
+			{	start = 0;
+				letterPadding = (d - ctx.measureText(text).width) / (text.length-1 + nbspace);
 			}
-			var nbspace = text.split(" ").length -1;
-			start = d - ctx.measureText(text).width - text.length*letterPadding - nbspace*letterPadding;
-			if (ctx.textAlign == "center") start /= 2;
+			else
+			{	start = d - ctx.measureText(text).width - (text.length + nbspace) * letterPadding;
+				if (ctx.textAlign == "center") start /= 2;
+			}
 			break;
 		}
 		default: break;

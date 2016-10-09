@@ -1,0 +1,121 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+
+	Copyright (c) 2015 Jean-Marc VIGLINO,
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: geometry CSpline</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="setTextPathStyle is a function to draw text along a LineString on postcompose." />
+	<meta name="keywords" content="ol3, geom, linestring, spline, smooth, curve" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	<!-- http://openlayers.org/en/v3.2.0/build/ol.js -->
+	<!-- http://openlayers.org/en/v3.2.0/build/ol-debug.js -->
+
+	<script type="text/javascript" src="../style/settextpathstyle.js"></script>
+	<script type="text/javascript" src="../utils/cspline.js"></script>
+
+	<link rel="stylesheet" href="style.css" />
+	<style>
+		input[type="range"]
+		{	vertical-align: middle;
+		}
+	</style>
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: style textPath</h1>
+	</a>
+	<p class="info">
+		The <i>ol.geom.Geometry.cspline()</i> smooth lines by using <a href="https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Cardinal_spline">cardinal splines</a> 
+		(canonical spline) to draw smooth curves that goes through the points.
+	</p>
+
+	<!-- DIV pour la carte -->
+	<div id="map" style="width:600px; height:400px;"></div>
+	<div class="options">
+		<h2>Options:</h2>
+		<ul>
+			<li>
+				<input id="cspline" type="checkbox" onchange="vector.changed()" checked="checked" />
+				<label for="cspline"> smooth support</label>
+			</li>
+			<li>
+				tension:<input id="tension" type="range" min="0" max="1" step="0.1" value="0.5" onchange="vector.changed()" /> 
+			</li>
+			<li>
+				pointsPerSeg:<input id="pps" type="range" min="0" max="100" step="1" value="10" onchange="vector.changed()" /> 
+			</li>
+			<li>
+				<input id="dpt" type="checkbox" onchange="vector.changed()" />
+				<label for="dpt"> draw spline points</label>
+			</li>
+		</ul>
+		<i>Click on the line to move points</i>
+	</div>
+
+	<script type="text/javascript">
+
+	// Layers
+	var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
+		
+	// The map
+	var map = new ol.Map
+		({	target: 'map',
+			view: new ol.View
+			({	zoom: 6,
+				center: [166246, 6118863]
+			}),
+			layers: [layer]
+		});
+
+	// Data to draw on the map
+	var lstring = [[-315612,5859589],[-144393,6211811],[232288,6275406],[354587,5952536],[755728,6113971]];
+	
+	var features = new ol.Collection();
+	features.push (new ol.Feature( new ol.geom.LineString(lstring)));
+	
+	var vector = new ol.layer.Vector(
+	{	name: 'Vecteur',
+		source: new ol.source.Vector({ features: features }),
+		style: function(f) 
+		{	
+			var opt = { tension:Number($("#tension").val()), pointsPerSeg:Number($("#pps").val()) };
+			var csp = f.getGeometry().cspline(opt);
+			return [ new ol.style.Style(
+			{	stroke: new ol.style.Stroke({ color:"red", width:1 }),
+				geometry: $("#cspline").prop("checked") ? csp : null
+			}),
+			new ol.style.Style(
+			{	image: new ol.style.Circle({ stroke:new ol.style.Stroke({color:"blue",width:1}), radius:1 }),
+				geometry: ($("#dpt").prop("checked") && $("#cspline").prop("checked")) ? new ol.geom.MultiPoint(csp.getCoordinates()) : null
+			}),
+			new ol.style.Style(
+			{	image: new ol.style.Circle({ stroke:new ol.style.Stroke({color:"red",width:4}), radius:2 }),
+				geometry: new ol.geom.MultiPoint(f.getGeometry().getCoordinates())
+			})
+			]
+		}
+	})
+	map.addLayer(vector);
+
+	var mod = new ol.interaction.Modify({ features:features });
+	map.addInteraction(mod);
+
+	</script>
+	
+</body>
+</html>
