@@ -56,12 +56,12 @@
 		Limiting the max zoom avoid to zoom in the overview and draw the position as a point on it when extent is too small.
 		</li>
 		<li>
-		You can use the <i>style</i> option choose the style of the box drawn on the overview. 
+		You can use the <i>style</i> option to choose the style of the box drawn on the overview. 
 		If the box is too small a point will be drawn instead (ol.style.Image of the style).
 		</li>
 		</ul>
 		Click on the overview map to move the center of the map to that point. 
-		The <i>elasticPan</i> option move the map with an elastic animation.
+		The <i>elastic</i> option move the map with an elastic animation.
 	</div>
 
 	<!-- the map -->
@@ -125,8 +125,7 @@
 				maxZoom: $("#maxzoom").val(),
 				rotation: $("#rotate").prop("checked"),
 				align: $("#align").val(),
-				panAnimation: true,
-				elasticPan: true
+				panAnimation: "elastic"
 			});
 		map.addControl(ov);
 
