@@ -16,7 +16,7 @@ ol.filter.Base = function(options)
 {	ol.Object.call(this);
 	if (options && options.active===false) this.set('active', false);
 	else this.set('active', true);
-}
+};
 ol.inherits(ol.filter.Base, ol.Object);
 
 /** Activate / deactivate filter
@@ -24,98 +24,105 @@ ol.inherits(ol.filter.Base, ol.Object);
 */
 ol.filter.Base.prototype.setActive = function (b)
 {	this.set('active', b===true);
-}
+};
 
 /** Get filter active
 *	@return {bool}
 */
 ol.filter.Base.prototype.getActive = function (b)
 {	return this.set('active');
-}
+};
+
+(function(){
 
 /** Internal function  
+* @scoop {ol.filter} this the filter
 * @private
 */
-ol.filter.Base.prototype.precompose_ = function(e)
+function precompose_(e)
 {	if (this.get('active')) this.precompose(e);
 }
 /** Internal function  
+* @scoop {ol.filter} this the filter
 * @private
 */
-ol.filter.Base.prototype.postcompose_ = function(e)
+function postcompose_(e)
 {	if (this.get('active')) this.postcompose(e);
 }
 /** Force filter redraw / Internal function  
-*	NB: this is the object to redraw
+* @scoop {ol.map||ol.layer} this: the map or layer the filter is added to
 * @private
 */
-ol.filter.Base.prototype.redraw_ = function(e)
+function filterRedraw_(e)
 {	if (this.renderSync) this.renderSync();
 	else this.changed(); 
 }
 
 /** Add a filter to an ol object
-*	@private
+* @scoop {ol.map||ol.layer} this: the map or layer the filter is added to
+* @private
 */
-ol.filter.Base.prototype.addFilter_ = function(filter)
+function addFilter_(filter)
 {	if (!this.filters_) this.filters_ = [];
 	this.filters_.push(filter);
-	if (filter.precompose) this.on('precompose', filter.precompose_, filter);
-	if (filter.postcompose) this.on('postcompose', filter.postcompose_, filter);
-	filter.on('propertychange', filter.redraw_, this);
-	filter.redraw_.call (this);
-}
+	if (filter.precompose) this.on('precompose', precompose_, filter);
+	if (filter.postcompose) this.on('postcompose', postcompose_, filter);
+	filter.on('propertychange', filterRedraw_, this);
+	filterRedraw_.call (this);
+};
 
 /** Remove a filter to an ol object
-*	@private
+* @scoop {ol.map||ol.layer} this: the map or layer the filter is added to
+* @private
 */
-ol.filter.Base.prototype.removeFilter_ = function(filter)
+function removeFilter_(filter)
 {	if (!this.filters_) this.filters_ = [];
 	for (var i=this.filters_.length-1; i>=0; i--)
 	{	if (this.filters_[i]===filter) this.filters_.splice(i,1);
 	}
-	if (filter.precompose) this.un('precompose', filter.precompose_, filter);
-	if (filter.postcompose) this.un('postcompose', filter.postcompose_, filter);
-	filter.un('propertychange', filter.redraw_, this);
-	filter.redraw_.call (this);
-}
+	if (filter.precompose) this.un('precompose', precompose_, filter);
+	if (filter.postcompose) this.un('postcompose', postcompose_, filter);
+	filter.un('propertychange', filterRedraw_, this);
+	filterRedraw_.call (this);
+};
 
 /** Add a filter to an ol.Map
 *	@param {ol.filter}
 */
 ol.Map.prototype.addFilter = function (filter)
-{	ol.filter.Base.prototype.addFilter_.call (this, filter);
-}
+{	addFilter_.call (this, filter);
+};
 /** Remove a filter to an ol.Map
 *	@param {ol.filter}
 */
 ol.Map.prototype.removeFilter = function (filter)
-{	ol.filter.Base.prototype.removeFilter_.call (this, filter);
-}
+{	removeFilter_.call (this, filter);
+};
 /** Get filters associated with an ol.Map
 *	@return {Array<ol.filter>}
 */
 ol.Map.prototype.getFilters = function ()
 {	return this.filters_;
-}
+};
 
 /** Add a filter to an ol.Layer
 *	@param {ol.filter}
 */
 ol.layer.Base.prototype.addFilter = function (filter)
-{	ol.filter.Base.prototype.addFilter_.call (this, filter);
-}
+{	addFilter_.call (this, filter);
+};
 /** Remove a filter to an ol.Layer
 *	@param {ol.filter}
 */
 ol.layer.Base.prototype.removeFilter = function (filter)
-{	ol.filter.Base.prototype.removeFilter_.call (this, filter);
-}
+{	removeFilter_.call (this, filter);
+};
 
 /** Get filters associated with an ol.Map
 *	@return {Array<ol.filter>}
 */
 ol.layer.Base.prototype.getFilters = function ()
 {	return this.filters_;
-}
+};
 
+})();
