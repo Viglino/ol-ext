@@ -91,23 +91,35 @@ ol.geom.LineString.prototype.calcCSpline_ = function(options)
 	}
 
 	// ok, lets start..
+	function dist2d(x1, y1, x2, y2)
+	{	var dx = x2-x1;
+		var dy = y2-y1;
+		return Math.sqrt(dx*dx+dy*dy);
+	}
 
 	// 1. loop goes through point array
 	// 2. loop goes through each segment between the 2 pts + 1e point before and after
 	for (i=1; i < (pts.length - 2); i++) 
-	{	var dx = pts[i+1][0]-pts[i][0];
-		var dy = pts[i+1][1]-pts[i][1];
-		var numOfSegments = Math.round(Math.sqrt(dx*dx+dy*dy)/resolution);
-      
+	{	var d1 = dist2d (pts[i][0], pts[i][1], pts[i+1][0], pts[i+1][1]);
+		var numOfSegments = Math.round(d1/resolution);
+		
+		var d=1;
+		if (options.normalize)
+		{	var d1 = dist2d (pts[i+1][0], pts[i+1][1], pts[i-1][0], pts[i-1][1]);
+			var d2 = dist2d (pts[i+2][0], pts[i+2][1], pts[i][0], pts[i][1]);
+			if (d1<d2) d = d1/d2;
+			else d = d2/d1;
+		}
+
+		// calc tension vectors
+		t1x = (pts[i+1][0] - pts[i-1][0]) * tension *d;
+		t2x = (pts[i+2][0] - pts[i][0]) * tension *d;
+
+		t1y = (pts[i+1][1] - pts[i-1][1]) * tension *d;
+		t2y = (pts[i+2][1] - pts[i][1]) * tension *d;
+
 		for (t=0; t <= numOfSegments; t++) 
-		{	// calc tension vectors
-			t1x = (pts[i+1][0] - pts[i-1][0]) * tension;
-			t2x = (pts[i+2][0] - pts[i][0]) * tension;
-
-			t1y = (pts[i+1][1] - pts[i-1][1]) * tension;
-			t2y = (pts[i+2][1] - pts[i][1]) * tension;
-
-			// calc step
+		{	// calc step
 			st = t / numOfSegments;
 
 			// calc cardinals
