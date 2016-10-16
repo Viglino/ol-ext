@@ -52,14 +52,14 @@
 			<li>
 				<input id="cspline" type="checkbox" onchange="vector.changed()" checked="checked" />
 				<label for="cspline"> smooth support</label>
-			</li>
-			<li>
+			</li><li>
 				tension:<input id="tension" type="range" min="0" max="1" step="0.1" value="0.5" onchange="vector.changed()" /> 
-			</li>
-			<li>
+			</li><li>
 				pointsPerSeg:<input id="pps" type="range" min="0" max="100" step="1" value="10" onchange="vector.changed()" /> 
-			</li>
-			<li>
+			</li><li>
+				<input id="normalize" type="checkbox" onchange="vector.changed()" />
+				<label for="normalize"> normalize</label>
+			</li><li>
 				<input id="dpt" type="checkbox" onchange="vector.changed()" />
 				<label for="dpt"> draw spline points</label>
 			</li>
@@ -93,7 +93,11 @@
 		source: new ol.source.Vector({ features: features }),
 		style: function(f) 
 		{	
-			var opt = { tension:Number($("#tension").val()), pointsPerSeg:Number($("#pps").val()) };
+			var opt = 
+			{	tension: Number($("#tension").val()), 
+				pointsPerSeg: Number($("#pps").val()),
+				normalize: $("#normalize").prop("checked")
+			};
 			var csp = f.getGeometry().cspline(opt);
 			return [ new ol.style.Style(
 			{	stroke: new ol.style.Stroke({ color:"red", width:1 }),
@@ -114,6 +118,27 @@
 
 	var mod = new ol.interaction.Modify({ features:features });
 	map.addInteraction(mod);
+		
+	/* split function
+	mod.on("modifystart", function(e)
+	{	this.mod = true;
+		this.splitCoord = e.mapBrowserEvent.coordinate;
+		var f = e.features.item(0);
+		console.log(f.getGeometry().getCoordinates().length)
+	})
+	mod.on("modifyend", function(e)
+	{	this.mod = false;
+		console.log(e);
+		var f = e.features.item(0);
+		var g = f.getGeometry();
+		console.log(f.getGeometry().getCoordinates().length)
+	});
+	var save = mod.handleEvent;
+	mod.handleEvent = function(e)
+	{	if (!this.mod || this.type!="pointerup") save.call(this,e);
+		return true;
+	}
+	*/
 
 	</script>
 	
