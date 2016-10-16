@@ -7,10 +7,18 @@
  * The overview can rotate with map. 
  * Zoom levels are configurable.
  * Click on the overview will center the map.
+ * Change width/height of the overview trough css.
  *
  * @constructor
  * @extends {ol.control.Control}
  * @param {Object=} opt_options Control options.
+ *	- minZoom {Number} default 0
+ *	- maxZoom {Number} default 18
+ *	- rotation {boolean} enable rotation, default false
+ *	- align {top|bottom-left|right} position
+ *	- layers {Array<ol.layer>} list of layers
+ *	- style {ol.style.Style | Array.<ol.style.Style> | undefined} style to draw the map extent on the overveiw
+ *	- panAnimation {bool|elastic} use animation to center map on click, default true
  */
 ol.control.Overview = function(opt_options) 
 {	var options = opt_options || {};
@@ -107,7 +115,7 @@ ol.control.Overview = function(opt_options)
 	{	handleDownEvent: function(evt)
 		{	var pan;
 			if (options.panAnimation !==false)
-			{	if (options.elasticPan) 
+			{	if (options.panAnimation=="elastic" || options.elasticPan) 
 				{	pan = ol.animation.pan(
 					{	duration: 1000,
 						easing: ol.easing.elasticFn(2,0.3),
