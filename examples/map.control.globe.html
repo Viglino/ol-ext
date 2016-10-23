@@ -1,0 +1,144 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+
+	Copyright (c) 2015 Jean-Marc VIGLINO,
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: Globe control</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+
+	<link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	<!-- http://openlayers.org/en/v3.2.0/build/ol.js -->
+	<!-- http://openlayers.org/en/v3.2.0/build/ol-debug.js -->
+
+	<link rel="stylesheet" href="../control/layerswitchercontrol.css" />
+	<script type="text/javascript" src="../control/layerswitchercontrol.js"></script>
+
+	<link rel="stylesheet" href="../control/globecontrol.css" />
+	<script type="text/javascript" src="../control/globecontrol.js"></script>
+
+
+	<link rel="stylesheet" href="style.css" />
+
+</head>
+<body>
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: Globe control</h1>
+	</a>
+	<div class="info">
+		The <i>ol.control.Globe</i> add a small globe on the map to display a position marker</i>.
+	</div>
+
+	<!-- the map -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options">
+		Layer: 
+		<select onchange="setOVLayer(this)">
+			<option value="0">OSM</option>
+			<option value="1">Stamen</option>
+			<option value="2" selected>Mapbox</option>
+		</select>
+		<br />
+		<input id="follow" type="checkbox" onchange="ov.set('follow', $(this).prop('checked'));" /><label for="follow"> follow (when panning the map)</label>
+		<br />
+		Go to:
+		<button onclick="ov.setCenter([260516, 6253858]);">Paris</button>
+		<button onclick="ov.setCenter([-8238435, 4970406]);">New-York</button>
+		<button onclick="ov.setCenter([3120267, -3019639]);">Johannesburg</button>
+		<button onclick="ov.setCenter([12946521, 4856111]);">Beijing</button>
+		<button onclick="ov.setCenter([4117313, 7488805]);">Moscow</button>
+		<button onclick="ov.setCenter([15519012, 4245268]);">Tokyo</button>
+		<button onclick="ov.setCenter([16823948, -4007527]);">Sydney</button>
+	</div>
+
+	<script type="text/javascript">
+		// The map
+		var map=new ol.Map
+			({
+				target: 'map',
+				view: new ol.View
+				({	zoom: 5,
+					center: [270148, 6247782]
+				}),
+				layers: [ new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }) ]
+			});
+
+		// Layers for the overview
+		var layers2 =
+		[	new ol.layer.Tile({	source: new ol.source.OSM()	}),
+			new ol.layer.Tile(
+				{	source: new ol.source.Stamen({
+					layer: 'toner'
+				  })
+				}),
+			new ol.layer.Tile(
+			{	source: new ol.source.XYZ({
+					url: 'http://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-2/{z}/{x}/{y}.png'
+    			})
+			}),
+			/*
+			new ol.layer.Tile({
+				name: "Occupy streets",
+    			source: new ol.source.XYZ(
+				{	url: 'http://{a-d}.tiles.mapbox.com/v3/occupy.occupy-streets/{z}/{x}/{y}.png'
+    			})
+			}),
+			new ol.layer.Tile({
+				name: "pirate",
+    			source: new ol.source.XYZ(
+				{	url: 'http://{a-d}.tiles.mapbox.com/v3/aj.Sketchy2/{z}/{x}/{y}.png'
+    			})
+			}),
+			new ol.layer.Tile({
+				name: "Occupy streets",
+    			source: new ol.source.XYZ(
+				{	url: 'http://{a-d}.tiles.mapbox.com/v3/occupy.occupy-streets/{z}/{x}/{y}.png'
+    			})
+			}),
+			*/
+		];
+
+		// New control on the map
+		var ov = new ol.control.Globe(
+			{	layers: layers2,
+				minZoom: $("#minzoom").val(),
+				maxZoom: $("#maxzoom").val(),
+				rotation: $("#rotate").prop("checked"),
+				align: $("#align").val(),
+				panAnimation: "elastic"
+			});
+		map.addControl(ov);
+
+		// Options changes
+		function setOVLayer (e)
+		{	var l = ov.getGlobe().getLayers().getArray()
+			for (var i=0; i<l.length; i++) l[i].setVisible(false);
+			l[$(e).val()].setVisible(true);
+		}
+		$("#rotate").on("change", function ()
+		{	ov.rotation = $("#rotate").prop("checked");
+			ov.setView();
+		});
+		$("#minzoom").on("change", function ()
+		{	ov.minZoom = Number($("#minzoom").val());
+			ov.setView();
+		});
+		$("#maxzoom").on("change", function ()
+		{	ov.maxZoom = Number($("#maxzoom").val());
+			ov.setView();
+		});
+	</script>
+
+</body>
+</html>
