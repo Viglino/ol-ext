@@ -24,6 +24,7 @@
 	
 	<!-- controls -->
 	<script type="text/javascript" src="../interaction/splitinteraction.js"></script>
+	<script type="text/javascript" src="../utils/ol.geom.utils.js"></script>
 
 
 </head>
@@ -34,12 +35,15 @@
 		<h1>OL3-ext: Split interaction</h1>
 	</a>
 	<div class="info">
-		<b>ol.interaction.Split</b> is an interaction to split feature geometry (ol.geom.LineString).
+		<b>ol.interaction.Split</b> is an interaction to split feature geometry by clicking on a point on the feature (ol.geom.LineString).
 		<br/>
 		THe feature is cloned. The interaction fires a beforesplit and aftersplit event.
 		You can listen to the event on the interaction itself or on the source of the splitted feature.
 		<br/>
 		The sources provided to the interaction must have a spatial index to be splitable (configured with useSpatialIndex set to true).
+		<br />
+		<br/>
+		NB: If you look to a split feature agent while editing vector features, look at <a href="map.interaction.splitter.html">ol.interaction.Splitter</a>.
 	</div>
 
 	<!-- Map div -->
@@ -49,9 +53,9 @@
 		<h2>Options:</h2>
 		<ul><li>
 			Operation: 
-			<input type="radio" name="op" value="modify" checked="checked" /><label> Select</label>
+			<input type="radio" name="op" value="modify" /><label> Select</label>
 			<input type="radio" name="op" value="draw" /><label> Draw</label>
-			<input type="radio" name="op" value="split" /><label> Split</label>
+			<input type="radio" name="op" value="split" checked="checked" /><label> Split</label>
 		</li></ul>
 		<div style="background:white; padding:0 0.45em;"><span id="info"></span>&nbsp;</div>
 	</div>
@@ -131,7 +135,7 @@
 		// Listen to split event
 		vector.getSource().on("aftersplit", function(e)
 			{	console.log(e); 
-				$(".options > div").text("1 feature split in "+e.features.length)
+				$(".options > div").text("1 feature split in "+e.features.length);
 			});
 		
 	</script>
