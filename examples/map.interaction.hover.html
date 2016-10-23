@@ -1,0 +1,129 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: Hover interaction</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="OL3 interaction hover" />
+	<meta name="keywords" content="ol3, interaction, hover, cursor" />
+
+	<link rel="stylesheet" href="style.css" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- OL3 -->
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	
+	<!-- Interaction -->
+	<script type="text/javascript" src="../interaction/hoverinteraction.js"></script>
+
+	<style>
+		#info
+		{	background: #fff;
+			border: 1px solid #369;
+			display: block;
+			padding:0 1em;
+			min-height: 1.4em;
+			font-size:0.8em;
+			width: 12em;
+		}
+	</style>
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: Hover interaction</h1>
+	</a>
+	<div class="info">
+
+		<b>ol.interaction.Hover</b> is an interaction to do something when hovering a feature.  
+		<ul><li>
+			The <i>cursor</i> options lets you spécify the cursor when hovering (or use <i>setCursor()</i>)
+		</li><li>
+			The <i>featureFilter</i> and <i>layerFilter</i> lets you specify which features / layers are concerned.
+		</li><li>
+			You can use <i>handleEvent</i> options of the <i>ol.interaction.Interaction</i> to extend the interaction.
+		</li><li>
+			The interaction fires <i>hover</i>, <i>enter</i>, <i>leave</i> events 
+			you can use to get the feature/layer that is hovering and do some stuff (show a popup, display information, change cursor, ...).
+		</li></ul>
+	</div>
+
+	<!-- Map div -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options" >
+		<h2>Options:</h2>
+		<ul><li>
+		</li></ul>
+		<div id="info"></div>
+	</div>
+
+	<script type="text/javascript">
+		// Layers
+		var layers = [
+			new ol.layer.Tile({
+				name: "Natural Earth", 
+				minResolution: 306,
+    			source: new ol.source.XYZ(
+				{	url: 'http://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
+					attributions: [new ol.Attribution({ html: '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' })] 
+    			})
+			})
+		]
+		// The map
+		var map = new ol.Map
+			({	target: 'map',
+				view: new ol.View
+				({	zoom: 5,
+					center: [261720, 5951081]
+				}),
+				controls: ol.control.defaults({ "attribution": false }),
+				layers: layers
+			});
+
+		// New vector layer
+		var vector = new ol.layer.Vector(
+		{	name: 'Vecteur',
+			source: new ol.source.Vector(),
+		})
+		map.addLayer(vector);
+		vector.getSource().addFeature(new ol.Feature(new ol.geom.Polygon([[[34243, 6305749], [-288626, 5757848], [210354, 5576845], [34243, 6305749]]])));
+		vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[406033, 5664901], [689767, 5718712], [699551, 6149206], [425601, 6183449]])));
+		vector.getSource().addFeature(new ol.Feature(new ol.geom.Point(	[269914, 6248592])));
+
+
+		var hover = new ol.interaction.Hover({ cursor: "pointer" });
+		map.addInteraction(hover);
+		hover.on("enter", function(e) 
+			{	switch (e.feature.getGeometry().getType())
+				{	case "LineString":
+						hover.setCursor("copy");
+						break;
+					case "Polygon":
+						hover.setCursor("help");
+						break;
+					default:
+						hover.setCursor("pointer");
+						break;
+				}
+				$("#info").html("Feature is: "+e.feature.getGeometry().getType()); 
+			});
+		hover.on("leave", function(e) 
+			{	$("#info").html(""); 
+			});
+		
+	</script>
+
+</body>
+</html>
