@@ -10,6 +10,7 @@
  *	- source {ol.source.Vector|Array{ol.source.Vector}} a list of source to split (configured with useSpatialIndex set to true)
  *	- features {ol.Collection.<ol.Feature>} collection of feature to split
  *	- snapDistance {integer} distance (in px) to snap to an object, default 25px
+ *	- cursor {string|undefined} cursor name to display when hovering an objet
  *	- filter {function|undefined} a filter that takes a feature and return true if it can be clipped, default always split.
  *	- featureStyle {ol.style.Style | Array<ol.style.Style> | false | undefined} Style for the selected features, choose false if you don't want feature selection. By default the default edit style is used.
  *	- sketchStyle {ol.style.Style | Array<ol.style.Style> | undefined} Style for the sektch features. 
@@ -36,6 +37,8 @@ ol.interaction.Split = function(options)
 	this.snapDistance_ = options.snapDistance || 25;
 	// Split tolerance between the calculated intersection and the geometry
 	this.tolerance_ = options.tolerance || 1e-10;
+	// Cursor
+	this.cursor_ = options.cursor;
 
 	// List of source to split
 	this.sources_ = options.sources ? (options.sources instanceof Array) ? options.sources:[options.sources] : [];
