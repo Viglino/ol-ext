@@ -26,7 +26,7 @@ ol.control.Toggle = function(options)
 		});
 	}
 	this.title = options.title;
-	if (options.toggleFn) options.onToggle = options.toggleFn;
+	if (options.toggleFn) options.onToggle = options.toggleFn; // compat old version
 
 	$("<button>").html(options.html || "")
 				.attr('title', options.title)

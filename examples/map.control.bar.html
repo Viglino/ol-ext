@@ -169,8 +169,9 @@
 						source: vector.getSource()
 					})
 				});
+
 		editbar.addControl ( ledit, 
-			// Options bar ssociated with the control
+			// Options bar associated with the control
 			new ol.control.Bar(
 			{	controls:[ new ol.control.Toggle(
 					{	html: 'undo',//'<i class="fa fa-mail-reply"></i>',
@@ -233,8 +234,42 @@
 					break;
 				default: break;
 			}
-			console.log(vector.getSource().getFeatures().length)
+			//console.log(vector.getSource().getFeatures().length)
 		});
+
+/** add edition in a sub-bar */
+		// Options bar associated with the control
+		var subBar = new ol.control.Bar(
+			{	toggleOne: true,
+				controls: [
+						new ol.control.Toggle(
+						{	html: '<i class="fa fa-map-marker" ></i>',
+							title: 'Point',
+							interaction: new ol.interaction.Draw
+							({	type: 'Point',
+								source: vector.getSource()
+							})
+						}),
+						new ol.control.Toggle(
+						{	html: '<i class="fa fa-share-alt" ></i>',
+							title: 'Line',
+							interaction: new ol.interaction.Draw
+							({	type: 'LineString',
+								source: vector.getSource()
+							})
+						})
+					]
+			});
+		var edit2 = new ol.control.Toggle(
+					{	html: '<i class="fa fa-pencil"></i>',
+						title: "Delete last point",
+					});
+		// Deactivate control in the sub-bar when deactivated
+		edit2.on("change:active", function(e)
+		{	if (!e.active) subBar.deactivateControls();
+		});
+		editbar.addControl ( edit2, subBar );
+/**/
 
 		// Add a custom push button with onToggle function
 		mainbar.addControl ( new ol.control.Toggle(
