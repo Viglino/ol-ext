@@ -502,11 +502,12 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 
 		var li = $("<li>").addClass((layer.getVisible()?"visible ":" ")+(layer.get('baseLayer')?"baselayer":""))
 						.data("layer",layer).appendTo(ul);
-		if (!this.testLayerVisibility(layer)) d.addClass("ol-layer-hidden");
 		
 		var layer_buttons = $("<div>").addClass("ol-layerswitcher-buttons").appendTo(li);
 
 		var d = $("<div>").addClass('li-content').appendTo(li);
+		if (!this.testLayerVisibility(layer)) d.addClass("ol-layer-hidden");
+		
 		// Visibility
 		$("<input>")
 			.attr('type', layer.get('baseLayer') ? 'radio' : 'checkbox')
