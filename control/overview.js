@@ -167,11 +167,10 @@ ol.control.Overview.prototype.setPosition = function(align)
  * @param {ol.Map} map The map instance.
  */
 ol.control.Overview.prototype.setMap = function(map) 
-{   ol.control.Control.prototype.setMap.call(this, map);
-
-	this.map_ = map;
-	map.getView().un('propertychange', this.setView, this);
-	// Get change (new layer added or removed)
+{   if (this.getMap())
+	{	this.getMap().getView().un('propertychange', this.setView, this);
+	}
+	ol.control.Control.prototype.setMap.call(this, map);
 	if (map) 
 	{	map.getView().on('propertychange', this.setView, this);
 		this.setView();
