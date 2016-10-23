@@ -1,24 +1,41 @@
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
 /** Interaction split interaction for splitting feature geometry
  * @constructor
- * @extends {ol.interaction.Pointer}
+ * @extends {ol.interaction.Interaction}
  * @fires  beforesplit, aftersplit
  * @param {olx.interaction.SplitOptions} 
  *	- source {ol.source.Vector|Array{ol.source.Vector}} a list of source to split (configured with useSpatialIndex set to true)
  *	- features {ol.Collection.<ol.Feature>} collection of feature to split
- *	- snapDistance {integer} distance (in px) to snap to an object, default 25
+ *	- snapDistance {integer} distance (in px) to snap to an object, default 25px
  *	- filter {function|undefined} a filter that takes a feature and return true if it can be clipped, default always split.
- *	- featureStyle {ol.style.Style | Array.<ol.style.Style> |false | undefined} Style for the selected features, choose false if you don't want feature selection. By default the default edit style is used.
- *	- sketchStyle {ol.style.Style | Array.<ol.style.Style> | undefined} Style for the sektch features. 
+ *	- featureStyle {ol.style.Style | Array<ol.style.Style> | false | undefined} Style for the selected features, choose false if you don't want feature selection. By default the default edit style is used.
+ *	- sketchStyle {ol.style.Style | Array<ol.style.Style> | undefined} Style for the sektch features. 
+ *	- tolerance {function|undefined} Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split.  Default is 1e-10.
  */
 ol.interaction.Split = function(options) 
 {	if (!options) options = {};
 
-	ol.interaction.Pointer.call(this, 
-	{	handleDownEvent: this.handleDownEvent,
-		handleMoveEvent: this.handleMoveEvent
+	ol.interaction.Interaction.call(this, 
+	{	handleEvent: function(e)
+		{	switch (e.type)
+			{	case "singleclick":
+					return this.handleDownEvent(e);
+				case "pointermove":
+					return this.handleMoveEvent(e);
+				default: 
+					return true;
+			}
+			return true;
+		}
 	});
 
+	// Snap distance (in px)
 	this.snapDistance_ = options.snapDistance || 25;
+	// Split tolerance between the calculated intersection and the geometry
+	this.tolerance_ = options.tolerance || 1e-10;
 
 	// List of source to split
 	this.sources_ = options.sources ? (options.sources instanceof Array) ? options.sources:[options.sources] : [];
@@ -93,7 +110,7 @@ ol.interaction.Split = function(options)
 	});
 
 };
-ol.inherits(ol.interaction.Split, ol.interaction.Pointer);
+ol.inherits(ol.interaction.Split, ol.interaction.Interaction);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
@@ -103,7 +120,7 @@ ol.inherits(ol.interaction.Split, ol.interaction.Pointer);
  */
 ol.interaction.Split.prototype.setMap = function(map) 
 {	if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_);
-	ol.interaction.Pointer.prototype.setMap.call (this, map);
+	ol.interaction.Interaction.prototype.setMap.call (this, map);
 	this.overlayLayer_.setMap(map);
 };
 
@@ -117,7 +134,7 @@ ol.interaction.Split.prototype.getClosestFeature = function(e)
 	for (var i=0; i<this.sources_.length; i++)
 	{	var source = this.sources_[i];
 		f = source.getClosestFeatureToCoordinate(e.coordinate);
-		if (f.getGeometry().splitAt) 
+		if (f.getGeometry().splitAt, this.tolerance_) 
 		{	c = f.getGeometry().getClosestPoint(e.coordinate);
 			g = new ol.geom.LineString([e.coordinate,c]);
 			d = g.getLength() / e.frameState.viewState.resolution;
@@ -127,7 +144,7 @@ ol.interaction.Split.prototype.getClosestFeature = function(e)
 	if (d > this.snapDistance_) return false;
 	else 
 	{	// Snap to node
-		var coord = f.getGeometry().getClosestNode(c);
+		var coord = this.getNearestCoord (c, f.getGeometry().getCoordinates());
 		var p = this.getMap().getPixelFromCoordinate(coord);
 		if (ol.coordinate.dist2d(e.pixel, p) < this.snapDistance_) 
 		{	c = coord;
@@ -137,38 +154,51 @@ ol.interaction.Split.prototype.getClosestFeature = function(e)
 	}
 }
 
+/** Get nearest coordinate in a list 
+* @param {ol.coordinate} pt the point to find nearest
+* @param {Array<ol.coordinate>} coords list of coordinates
+* @return {ol.coordinate} the nearest coordinate in the list
+*/
+ol.interaction.Split.prototype.getNearestCoord = function(pt, coords)
+{	var d, dm=Number.MAX_VALUE, p0;
+	for (var i=0; i < coords.length; i++)
+	{	d = ol.coordinate.dist2d (pt, coords[i]);
+		if (d < dm)
+		{	dm = d;
+			p0 = coords[i];
+		}
+	}
+	return p0;
+};
+
 /**
  * @param {ol.MapBrowserEvent} evt Map browser event.
  * @return {boolean} `true` to start the drag sequence.
  */
 ol.interaction.Split.prototype.handleDownEvent = function(evt) 
 {	// Something to split ?
-	if (this.current_)
+	var current = this.getClosestFeature(evt);
+
+	if (current)
 	{	var self = this;
-		var current = this.current_;
-		this.current = null;
-		this.moving_ = false;
-		$(document).one("mouseup touchend", function()
-		{	if (self.moving_) return;
-			self.overlayLayer_.getSource().clear();
-			var split = current.feature.getGeometry().splitAt(current.coord);
-			if (split.length > 1)
-			{	var tosplit = [];
-				for (var i=0; i<split.length; i++)
-				{	var f = current.feature.clone();
-					f.setGeometry(split[i]);
-					tosplit.push(f);
-				}
-				self.dispatchEvent({ type:'beforesplit', original: current.feature, features: tosplit });
-				current.source.dispatchEvent({ type:'beforesplit', original: current.feature, features: tosplit });
-				current.source.removeFeature(current.feature);
-				for (var i=0; i<tosplit.length; i++)
-				{	current.source.addFeature(tosplit[i]);
-				}
-				self.dispatchEvent({ type:'aftersplit', original: current.feature, features: tosplit });
-				current.source.dispatchEvent({ type:'aftersplit', original: current.feature, features: tosplit });
+		self.overlayLayer_.getSource().clear();
+		var split = current.feature.getGeometry().splitAt(current.coord, this.tolerance_);
+		if (split.length > 1)
+		{	var tosplit = [];
+			for (var i=0; i<split.length; i++)
+			{	var f = current.feature.clone();
+				f.setGeometry(split[i]);
+				tosplit.push(f);
 			}
-		});
+			self.dispatchEvent({ type:'beforesplit', original: current.feature, features: tosplit });
+			current.source.dispatchEvent({ type:'beforesplit', original: current.feature, features: tosplit });
+			current.source.removeFeature(current.feature);
+			for (var i=0; i<tosplit.length; i++)
+			{	current.source.addFeature(tosplit[i]);
+			}
+			self.dispatchEvent({ type:'aftersplit', original: current.feature, features: tosplit });
+			current.source.dispatchEvent({ type:'aftersplit', original: current.feature, features: tosplit });
+		}
 	}
 	return false;
 };
@@ -179,8 +209,7 @@ ol.interaction.Split.prototype.handleDownEvent = function(evt)
 ol.interaction.Split.prototype.handleMoveEvent = function(e) 
 {	var map = e.map;
 	this.overlayLayer_.getSource().clear();
-	var current = this.current_ = this.getClosestFeature(e);
-	this.moving_ = true;
+	var current = this.getClosestFeature(e);
 
 	if (current && this.filterSplit_(current.feature)) 
 	{	var coord, p, l;
@@ -210,77 +239,3 @@ ol.interaction.Split.prototype.handleMoveEvent = function(e)
 	}
 };
 
-
-/** Distance beetween 2 points
-*	Usefull geometric functions
-*/
-ol.coordinate.dist2d = function(p1, p2)
-{	var dx = p1[0]-p2[0];
-	var dy = p1[1]-p2[1];
-	return Math.sqrt(dx*dx+dy*dy);
-}
-/** 2 points are equal
-*	Usefull geometric functions
-*/
-ol.coordinate.equal = function(p1, p2)
-{	return (p1[0]==p2[0] && p1[1]==p2[1]);
-}
-
-/** Split a lineString
-*/
-ol.geom.LineString.prototype.splitAt = function(pt)
-{	// Nothing to do
-	if (ol.coordinate.equal(pt,this.getFirstCoordinate())
-	 || ol.coordinate.equal(pt,this.getLastCoordinate())) 
-	{	return [this];
-	}
-	// Get 
-	var c0 = this.getCoordinates();
-	var c1=[c0[0]], c2=[], p0, p1;
-	var c = c1;
-	for (var i=0; i<c0.length-1; i++)
-	{	// Filter equal points
-		if (ol.coordinate.equal(c0[i],c0[i+1])) continue;
-		// Test end of first part
-		if (c!==c2)
-		{	// Extremity found  
-			if (ol.coordinate.equal(pt,c0[i+1]))
-			{	c.push(c0[i+1]);
-				c = c2;
-			}
-			// Test alignement
-			else
-			{	var d1, d2;
-				if (c0[i][0] == c0[i+1][0])
-				{	d1 = d2 = (c0[i][1]-pt[1]) / (c0[i][1]-c0[i+1][1]);
-				}
-				else if (c0[i][1] == c0[i+1][1])
-				{	d1 = d2 = (c0[i][0]-pt[0]) / (c0[i][0]-c0[i+1][0]);
-				}
-				else
-				{	d1 = (c0[i][0]-pt[0]) / (c0[i][0]-c0[i+1][0]);
-					d2 = (c0[i][1]-pt[1]) / (c0[i][1]-c0[i+1][1]);
-				}
-				if (Math.abs(d1-d2)<1e-10 && 0<=d1 && d1<=1)
-				{	c.push(pt);
-					c = c2;
-					c.push(pt);
-				}
-			}
-		}
-		c.push(c0[i+1]);
-	}
-	return [new ol.geom.LineString(c1), new ol.geom.LineString(c2)];
-}
-
-ol.geom.LineString.prototype.getClosestNode = function(pt)
-{	var d, dm=Number.MAX_VALUE, p0, c = this.getCoordinates();
-	for (var i=0; i < c.length; i++)
-	{	d = ol.coordinate.dist2d (pt, c[i]);
-		if (d < dm)
-		{	dm = d;
-			p0 = c[i];
-		}
-	}
-	return p0;
-};
