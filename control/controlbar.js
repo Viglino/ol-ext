@@ -1,5 +1,4 @@
-/** A simple toggle control with a callback function
- * OpenLayers 3 Layer Switcher Control.
+/** Control bar for OL3
  *
  * @constructor
  * @extends {ol.control.Control}
