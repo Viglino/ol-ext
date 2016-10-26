@@ -45,9 +45,10 @@
 	<div class="options">
 		Layer: 
 		<select onchange="setOVLayer(this)">
-			<option value="0">OSM</option>
-			<option value="1">Stamen</option>
-			<option value="2" selected>Mapbox</option>
+			<option value="0" selected="selected">Vector</option>
+			<option value="1">OSM</option>
+			<option value="2">Stamen</option>
+			<option value="3">Mapbox</option>
 		</select>
 		<br />
 		<input id="follow" type="checkbox" onchange="ov.set('follow', $(this).prop('checked'));" /><label for="follow"> follow (when panning the map)</label>
@@ -74,9 +75,27 @@
 				layers: [ new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }) ]
 			});
 
+
+		// GeoJSON layer
+		var style = function(f)
+		{	return [new ol.style.Style ({
+			  fill: new ol.style.Fill({
+				 color: (f.get('iso')=="US") ? 'red' : '#369'
+			   })                                
+			})];
+		}
+		var vector = new ol.layer.Vector(
+		{	source: new ol.source.Vector(
+				{	url: 'data/worldpt.json',
+					projection: 'EPSG:3857',
+					format: new ol.format.GeoJSON()
+				}),
+			style: style
+		});
 		// Layers for the overview
 		var layers2 =
-		[	new ol.layer.Tile({	source: new ol.source.OSM()	}),
+		[	vector,
+			new ol.layer.Tile({	source: new ol.source.OSM()	}),
 			new ol.layer.Tile(
 				{	source: new ol.source.Stamen({
 					layer: 'toner'
@@ -126,6 +145,7 @@
 			for (var i=0; i<l.length; i++) l[i].setVisible(false);
 			l[$(e).val()].setVisible(true);
 		}
+		setOVLayer(".options > select");
 		$("#rotate").on("change", function ()
 		{	ov.rotation = $("#rotate").prop("checked");
 			ov.setView();

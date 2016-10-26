@@ -13,7 +13,6 @@
 {	opacity: 0.9;
 }
 
-
 .ol-control.ol-globe .panel
 {	display:block;
 	width:170px;
@@ -24,6 +23,10 @@
 	overflow: hidden;
 	box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.5);
 }
+.ol-control.ol-globe .panel .ol-viewport
+{	border-radius: 50%;
+}
+
 .ol-control.ol-globe .ol-pointer
 {	display: block;
 	background-color: #fff;
