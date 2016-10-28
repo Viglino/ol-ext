@@ -1,0 +1,29 @@
+{
+  "name": "ol3-ext",
+  "version": "1.0.0",
+  "description": "Cool extensions for OpenLayers 3 (ol3).",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Viglino/ol3-ext.git"
+  },
+  "keywords": [
+    "ol3",
+    "openlayers",
+    "popup",
+    "LayerSwitcher",
+    "animation"
+  ],
+  "author": "",
+  "license": "SEE LICENSE IN licence.txt",
+  "bugs": {
+    "url": "https://github.com/Viglino/ol3-ext/issues"
+  },
+  "homepage": "https://github.com/Viglino/ol3-ext#readme"
+}
