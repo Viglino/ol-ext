@@ -85,13 +85,38 @@ ol.control.Bar.prototype.addControl = function (c, bar)
 		bar.setTarget(c.element);
 		$(bar.element).addClass("ol-option-bar");
 		c.option_bar = bar;
+		bar.pcontrol = c;
 	}
 	if (this.getMap()) 
 	{	this.getMap().addControl(c);
 		if (c.option_bar) this.getMap().addControl(c.option_bar);
 	}
+	// If defaultActive control,
+	if (c.get('defaultActive') == true) {
+		// if top-level control bar, set control active.
+		if (!this.pcontrol) {
+			c.setActive(true);
+		}
+		// If nested control, set control active if parent control is active.
+		else {
+			if (this.pcontrol.getActive())
+				c.setActive(true);
+		}
+	}
 }
 
+/** Find defaultActive control in containing control bar,
+*   and activate it if present.
+*/
+ol.control.Bar.prototype.activateDefaultControl = function()
+{	
+	var n;
+	for (n=0; n<this.controls_.length; n++) 
+		if (this.controls_[n].get('defaultActive') == true) break;
+	// defaultActive control not found in control bar. Nothing to activate.
+	if (n == this.controls_.length) return;
+	this.controls_[n].setActive(true);
+}
 
 /** Deativate all controls in a bar
 * @param {ol.control} except a control
@@ -105,23 +130,37 @@ ol.control.Bar.prototype.deactivateControls = function (except)
 };
 
 
-/** Activate a control
-*	@param {ol.event} an object with a target {ol.control} and active {bool}
+/** Post-process an activated/deactivated control
+*	@param {ol.event} an object with a target {ol.control} and active flag {bool}
 */
 ol.control.Bar.prototype.onActivateControl_ = function (e)
-{	// Deactivate control on option bar
-/*
-	if (!e.target.get("active") && e.target.option_bar)
-	{	e.target.option_bar.deactivateControls ();
-	}
-*/
-	if (!e.active || !this.get('toggleOne')) return;
+{
+	// Find control in containing control bar.
 	var n;
 	var ctrl = e.target;
 	for (n=0; n<this.controls_.length; n++) 
-	{	if (this.controls_[n]===ctrl) break;
+		if (this.controls_[n] === ctrl) break;
+	// Control not found in control bar. Should not happen. Return!
+	if (n == this.controls_.length) return;
+
+	// If control was activated,
+	if (e.active) {
+		// If containing control bar has toggleOne enabled,
+		if (this.get('toggleOne')) {
+			// deactivate any other controls contained within this same control bar.
+			this.deactivateControls (this.controls_[n]);
+		}
+		// Check if the containing control bar has a sub-control bar containing a control with defaultActive set.
+		// If so, activate it.
+		if (this.controls_[n].option_bar)
+			this.controls_[n].option_bar.activateDefaultControl();
 	}
-	// Not here!
-	if (n==this.controls_.length) return;
-	this.deactivateControls (this.controls_[n]);
+	// If control was deactivated,
+	else {
+		// Check if the containing control bar has a sub-control bar.
+		// If so, deactivate all controls within it.
+		if (this.controls_[n].option_bar)
+			this.controls_[n].option_bar.deactivateControls();		
+	}
 }
+

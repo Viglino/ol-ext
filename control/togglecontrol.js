@@ -13,6 +13,8 @@
  *		html {String} html to insert in the control
  *		interaction {ol.interaction} interaction associated with the control 
  *		active {bool} the control is active
+ *		defaultActive {bool} for top-level control bar, same as 'active' param above; 
+ *                           for nested control bar, sets the control active if parent control is active.
  *		onToggle {function} callback when control is clicked (or use change:active event)
  */
 ol.control.Toggle = function(options) 
@@ -40,6 +42,8 @@ ol.control.Toggle = function(options)
 	ol.control.Control.call(this, 
 	{	element: element.get(0)
 	});
+
+	this.set('defaultActive', options.defaultActive);
 
 	this.setActive (options.active);
 }
