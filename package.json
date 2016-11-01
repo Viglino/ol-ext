@@ -6,9 +6,7 @@
   "directories": {
     "example": "examples"
   },
-  "scripts": {
-    
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Viglino/ol3-ext.git"
@@ -20,10 +18,20 @@
     "LayerSwitcher",
     "animation"
   ],
-  "author": "",
+  "author": "Jean-Marc Viglino",
   "license": "SEE LICENSE IN licence.txt",
   "bugs": {
     "url": "https://github.com/Viglino/ol3-ext/issues"
   },
-  "homepage": "https://github.com/Viglino/ol3-ext#readme"
+  "homepage": "https://github.com/Viglino/ol3-ext#readme",
+  "dependencies": {
+    "ol3-ext": "git+https://github.com/Viglino/ol3-ext.git#gh-pages"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.0",
+    "gulp-cssnext": "^1.0.1",
+    "gulp-minify": "0.0.14",
+    "minimist": "^1.2.0"
+  }
 }
