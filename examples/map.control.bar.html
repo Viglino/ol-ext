@@ -186,7 +186,17 @@
 						title: "finish",
 						className: "noToggle ol-text-button",
 						onToggle: function() 
-						{	ledit.getInteraction().finishDrawing();
+						{	// Prevent null objects on finishDrawing
+							var drawi = ledit.getInteraction();
+							var lkey = drawi.on('drawend', function(e)
+							{	drawi.unByKey(lkey);
+								var c = e.feature.getGeometry().getCoordinates();
+								if (c.length < 2)
+								{	throw "Bad LineString";
+								}
+							});
+							try { drawi.finishDrawing(); } 
+							catch(e) { drawi.unByKey(lkey); }
 						}
 					})
 				]
@@ -216,11 +226,22 @@
 						title: "finish",
 						className: "noToggle ol-text-button",
 						onToggle: function() 
-						{	fedit.getInteraction().finishDrawing();
+						{	// Prevent null objects on finishDrawing
+							var drawi = fedit.getInteraction();
+							var lkey = drawi.on('drawend', function(e)
+							{	drawi.unByKey(lkey);
+								var c = e.feature.getGeometry().getCoordinates();
+								if (c[0].length < 4)
+								{	throw "Bad Polygon";
+								}
+							});
+							try { drawi.finishDrawing(); } 
+							catch(e) { drawi.unByKey(lkey); }
 						}
 					})
 				]
 			}) );
+		/*
 		// Prevent null objects on finishDrawing
 		vector.getSource().on('addfeature', function(e)
 		{	switch (e.feature.getGeometry().getType())
@@ -236,6 +257,7 @@
 			}
 			//console.log(vector.getSource().getFeatures().length)
 		});
+		*/
 
 /** add edition in a sub-bar */
 		// Options bar associated with the control
