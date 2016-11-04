@@ -111,14 +111,14 @@
 
 
 /* Active buttons */
-.ol-control.ol-bar .ol-toggle.ol-active button
+.ol-control.ol-bar .ol-toggle.ol-active > button
 {	background: rgba(60, 136, 0, 0.7)
 }
 .ol-control.ol-bar .ol-toggle.ol-active button:hover
 {	background: rgba(60, 136, 0, 0.7)
 }
 
-/* Option toolbar */
+/* Subbar toolbar */
 .ol-control.ol-bar .ol-control.ol-option-bar 
 {	display: none;
 	position:absolute;
@@ -127,11 +127,8 @@
 	margin: 5px 0;
 	border-radius: 0;
 	background: rgba(255,255,255, 0.8);
-	border: 1px solid rgba(0, 60, 136, 0.5);
-	box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-}
-.ol-control.ol-bar .ol-active .ol-option-bar 
-{	display: block;
+	/* border: 1px solid rgba(0, 60, 136, 0.5); */
+	box-shadow: 0 0 0 1px rgba(0, 60, 136, 0.5), 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .ol-control.ol-bar .ol-option-bar:before
@@ -146,8 +143,15 @@
 .ol-control.ol-bar .ol-option-bar .ol-control
 {	display: table-cell;
 }
-.ol-control.ol-bar .ol-option-bar .ol-control button:hover,
-.ol-control.ol-bar .ol-option-bar .ol-control button
+.ol-control.ol-bar .ol-control .ol-bar
+{	display: none;
+}
+.ol-control.ol-bar .ol-control.ol-active > .ol-option-bar 
+{	display: block;
+}
+
+.ol-control.ol-bar .ol-control.ol-text-button > button:hover,
+.ol-control.ol-bar .ol-control.ol-text-button > button
 {	background: none;
 	color: rgba(0, 60, 136, 0.5);
 	width: auto;
@@ -165,9 +169,11 @@
 }
 .ol-control.ol-bar .ol-control.ol-text-button button
 {	padding:0 0.3em;
-	color: rgba(0, 60, 136, 1);
 	font-weight: normal;
 	height:1.4em;
+}
+.ol-control.ol-bar .ol-control.ol-text-button button:hover
+{	color: rgba(0, 60, 136, 1);
 }
 
 .ol-control.ol-bar.ol-bottom .ol-option-bar
@@ -179,6 +185,7 @@
 	bottom: auto;
 	top: 100%;
 }
+
 .ol-control.ol-bar.ol-left .ol-option-bar
 {	left:100%;
 	top: 0;
@@ -206,3 +213,27 @@
 	top: 0.3em;
 }
 
+.ol-control.ol-bar.ol-left .ol-option-bar .ol-option-bar,
+.ol-control.ol-bar.ol-right .ol-option-bar .ol-option-bar
+{	top: 100%;
+	bottom: auto;
+	left: 0.3em;
+	right: auto;
+	margin: 5px 0;
+}
+.ol-control.ol-bar.ol-right .ol-option-bar .ol-option-bar
+{	right: 0.3em;
+	left: auto;
+}
+.ol-control.ol-bar.ol-left .ol-option-bar .ol-option-bar:before,
+.ol-control.ol-bar.ol-right .ol-option-bar .ol-option-bar:before
+{	border-color: transparent transparent rgba(0, 60, 136, 0.5);
+	bottom: 100%;
+	top: auto;
+	left: 0.3em;
+	right: auto;
+}
+.ol-control.ol-bar.ol-right .ol-option-bar .ol-option-bar:before
+{	right: 0.3em;
+	left: auto;
+}

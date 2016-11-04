@@ -1,4 +1,6 @@
 /** Control bar for OL3
+ * The control bar is a container for other controls. It can be used to create toolbars.
+ * Control bars can be nested (subbar) and combined with ol.control.Toggle to handle activate/deactivate.
  *
  * @constructor
  * @extends {ol.control.Control}
@@ -6,6 +8,7 @@
  *		className {String} class of the control
  *		group {bool} is a group, default false
  *		toggleOne {bool} only one toggle control is active at a time, default false
+ *		autoDeactivate {bool} used with nested (subbar) to deactivate all control when top level control deactivate, default false
  *		controls {Array<ol.control>} a list of control to add to the bar
  */
 ol.control.Bar = function(options) 
@@ -20,6 +23,7 @@ ol.control.Bar = function(options)
 	});
 
 	this.set('toggleOne', options.toggleOne);
+	this.set('autoDeactivate', options.autoDeactivate);
 
 	this.controls_ = [];
 	if (options.controls instanceof Array) 
@@ -27,7 +31,7 @@ ol.control.Bar = function(options)
 		{	this.addControl(options.controls[i]);
 		}
 	}
-}
+};
 ol.inherits(ol.control.Bar, ol.control.Control);
 
 /**
@@ -40,22 +44,22 @@ ol.control.Bar.prototype.setMap = function (map)
 	for (var i=0; i<this.controls_.length; i++)
 	{	var c = this.controls_[i];
 		map.addControl(c);
-		if (c.option_bar) this.getMap().addControl(c.option_bar);
+		if (c.subBar_) this.getMap().addControl(c.subBar_);
 	}
-}
+};
 
 /** Get controls in the panel
 *	@param {Array<ol.control>}
 */
 ol.control.Bar.prototype.getControls = function ()
 {	return this.controls_;
-}
+};
 
 /** Set tool bar position
 *	@param {top|left|bottom|right}
 */
 ol.control.Bar.prototype.setPosition = function (pos)
-{	$(this.element).removeClass('ol-left ol-top ol-bottom ol-right')
+{	$(this.element).removeClass('ol-left ol-top ol-bottom ol-right');
 	pos=pos.split ('-');
 	for (var i=0; i<pos.length; i++)
 	{	
@@ -70,11 +74,11 @@ ol.control.Bar.prototype.setPosition = function (pos)
 			default: break;
 		}
 	}
-}
+};
 
 /** Add a control to the bar
 *	@param {ol.control} c control to add
-*	@param {ol.control.Bar} bar an option bar associated with the control (drawn when active)
+*	@param {ol.control.Bar} bar a subbar associated with the control (drawn when active)
 */
 ol.control.Bar.prototype.addControl = function (c, bar)
 {	this.controls_.push(c);
@@ -84,14 +88,21 @@ ol.control.Bar.prototype.addControl = function (c, bar)
 	{	this.controls_.push(bar);
 		bar.setTarget(c.element);
 		$(bar.element).addClass("ol-option-bar");
-		c.option_bar = bar;
+		c.subBar_ = bar;
 	}
 	if (this.getMap()) 
 	{	this.getMap().addControl(c);
-		if (c.option_bar) this.getMap().addControl(c.option_bar);
+		if (c.subBar_) this.getMap().addControl(c.subBar_);
 	}
-}
+};
 
+/** Get the subbar associated with a control
+*	@param {ol.control} c control to get subbar
+*/
+ol.control.Bar.prototype.getControlSubBar = function (c)
+{	if (c.subBar_) return c.subBar_;
+	else return null;
+};
 
 /** Deativate all controls in a bar
 * @param {ol.control} except a control
@@ -104,17 +115,22 @@ ol.control.Bar.prototype.deactivateControls = function (except)
 	}
 };
 
-
-/** Activate a control
-*	@param {ol.event} an object with a target {ol.control} and active {bool}
+/** Post-process an activated/deactivated control
+*	@param {ol.event} an object with a target {ol.control} and active flag {bool}
 */
 ol.control.Bar.prototype.onActivateControl_ = function (e)
-{	// Deactivate control on option bar
-/*
-	if (!e.target.get("active") && e.target.option_bar)
-	{	e.target.option_bar.deactivateControls ();
+{	// Deactivate control on subbar
+	if (!e.active && e.target.subBar_ && e.target.subBar_.get("autoDeactivate"))
+	{	e.target.subBar_.deactivateControls ();
 	}
-*/
+	// Auto activate control on subbar
+	if (e.active && e.target.subBar_)
+	{	var ctrls = e.target.subBar_.getControls();
+		for (var i=0, sb; sb = ctrls[i]; i++)
+		{	if (sb.get("autoActivate")) sb.setActive(true);
+		}
+	}
+
 	if (!e.active || !this.get('toggleOne')) return;
 	var n;
 	var ctrl = e.target;
@@ -124,4 +140,4 @@ ol.control.Bar.prototype.onActivateControl_ = function (e)
 	// Not here!
 	if (n==this.controls_.length) return;
 	this.deactivateControls (this.controls_[n]);
-}
+};

@@ -118,7 +118,7 @@
 		sbar.addControl (new ol.control.Toggle(
 				{	html: '<i class="fa fa-times"></i>',
 					title: "Delete",
-					className: "noToggle",
+					className: "noToggle ol-text-button",
 					onToggle: function() 
 					{	var features = selectCtrl.getInteraction().getFeatures();
 						if (!features.getLength()) $("#export").text("Select an object first...");
@@ -132,7 +132,7 @@
 		sbar.addControl (new ol.control.Toggle(
 				{	html: '<i class="fa fa-info"></i>',
 					title: "Show informations",
-					className: "noToggle",
+					className: "noToggle ol-text-button",
 					onToggle: function() 
 					{	switch (selectCtrl.getInteraction().getFeatures().getLength())
 						{	case 0: $("#export").text("Select an object first...");
@@ -259,14 +259,16 @@
 		});
 		*/
 
-/** add edition in a sub-bar */
+/** Nested bars: add edition in a sub-bar */
 		// Options bar associated with the control
 		var subBar = new ol.control.Bar(
 			{	toggleOne: true,
+				autoDeactivate: true,	// Deactivate control in the subbar when deactivated
 				controls: [
 						new ol.control.Toggle(
 						{	html: '<i class="fa fa-map-marker" ></i>',
 							title: 'Point',
+							autoActivate: true,
 							interaction: new ol.interaction.Draw
 							({	type: 'Point',
 								source: vector.getSource()
@@ -282,16 +284,25 @@
 						})
 					]
 			});
-		var edit2 = new ol.control.Toggle(
+//		editbar.addControl ( edit2, subBar );
+		var edit1 = new ol.control.Toggle(
 					{	html: '<i class="fa fa-pencil"></i>',
-						title: "Edit subbar",
+						title: "Nested subbar",
 					});
-		// Deactivate control in the sub-bar when deactivated
-		edit2.on("change:active", function(e)
-		{	if (!e.active) subBar.deactivateControls();
-		});
-		editbar.addControl ( edit2, subBar );
-/**/
+		var edit2 = new ol.control.Toggle(
+					{	html: '<i class="fa fa-link"></i>',
+						title: "Nested subbar",
+						autoActivate: true
+					});
+		var subBar1 = new ol.control.Bar({ toggleOne:true, autoDeactivate: true });
+		editbar.addControl ( edit1, subBar1 );
+		subBar1.addControl ( edit2, subBar );
+		subBar1.addControl ( new ol.control.Toggle(
+					{	html: '<i class="fa fa-ban"></i>',
+						title: "Nested subbar",
+					}) );
+
+/* end nested bars */
 
 		// Add a custom push button with onToggle function
 		mainbar.addControl ( new ol.control.Toggle(

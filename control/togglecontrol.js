@@ -3,6 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** A simple toggle control 
+ * The control can be created with an interaction to control its activation.
  *
  * @constructor
  * @extends {ol.control.Control}
@@ -12,7 +13,8 @@
  *		title {String} title of the control
  *		html {String} html to insert in the control
  *		interaction {ol.interaction} interaction associated with the control 
- *		active {bool} the control is active
+ *		active {bool} the control is created active, default false
+ *		autoActive {bool} the control will activate when shown in an ol.control.Bar, default false
  *		onToggle {function} callback when control is clicked (or use change:active event)
  */
 ol.control.Toggle = function(options) 
@@ -42,6 +44,7 @@ ol.control.Toggle = function(options)
 	});
 
 	this.setActive (options.active);
+	this.set ("autoActivate", options.autoActivate);
 }
 ol.inherits(ol.control.Toggle, ol.control.Control);
 
