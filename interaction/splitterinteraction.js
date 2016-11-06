@@ -90,7 +90,7 @@ ol.interaction.Splitter.prototype.intersectSegs = function(s1,s2)
 		if (Math.abs(1-r1)<tol) return s1[1];
 		if (r1<0 || r1>1) return false;
 
-		r2 = ((s1[0][1] - s2[1][1])*x12 - (s1[0][0] - s2[1][0])*y12) / det;
+		var r2 = ((s1[0][1] - s2[1][1])*x12 - (s1[0][0] - s2[1][0])*y12) / det;
 		if (Math.abs(r2)<tol) return s2[1];
 		if (Math.abs(1-r2)<tol) return s2[0];
 		if (r2<0 || r2>1) return false;
@@ -110,7 +110,7 @@ console.log ("s21: "+(ol.coordinate.dist2d(p,s2[1])<tol)) ;
 */
 		return p;
 	}
-}
+};
 
 /** Split the source using a feature
 * @param {ol.Feature} feature The feature to use to split.
@@ -119,6 +119,7 @@ ol.interaction.Splitter.prototype.splitSource = function(feature)
 {	// Allready perform a split
 	if (this.splitting) return;
 	var self = this;
+	var i, k, f2;
 	// Start splitting
 	this.source_.dispatchEvent({ type:'beforesplit', feaure: feature, source: this.source_ });
 
@@ -127,38 +128,38 @@ ol.interaction.Splitter.prototype.splitSource = function(feature)
 	this.removed_ = [];
 
 	var c = feature.getGeometry().getCoordinates();
-	var split = [];
+	var seg, split = [];
+	function intersect (f)
+	{	if (f !== feature)
+		{	var c2 = f.getGeometry().getCoordinates();
+			for (var j=0; j<c2.length-1; j++)
+			{	var p = this.intersectSegs (seg, [c2[j],c2[j+1]]);
+				if (p)
+				{	split.push(p);
+					g = f.getGeometry().splitAt(p, this.tolerance_);
+					if (g && g.length>1)
+					{	found = f;
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
 	// Split existing features
-	for (var i=0; i<c.length-1; i++)
-	{	var seg = [c[i],c[i+1]];
+	for (i=0; i<c.length-1; i++)
+	{	seg = [c[i],c[i+1]];
 		var extent = ol.extent.buffer(ol.extent.boundingExtent(seg), this.tolerance_ /*0.01*/ );
-		var g, current;
+		var g;
 		while (true)
 		{	var found = false;
-			this.source_.forEachFeatureIntersectingExtent(extent,
-				function(f)
-				{	if (f != feature)
-					{	var c2 = f.getGeometry().getCoordinates();
-						for (var j=0; j<c2.length-1; j++)
-						{	var p = this.intersectSegs (seg, [c2[j],c2[j+1]]);
-							if (p)
-							{	split.push(p);
-								g = f.getGeometry().splitAt(p, this.tolerance_);
-								if (g && g.length>1)
-								{	found = f;
-									return true;
-								}
-							}
-						}
-					}
-					return false;
-				}, this);
+			this.source_.forEachFeatureIntersectingExtent(extent, intersect, this);
 			// Split feature
 			if (found)
 			{	var f = found;
 				this.source_.removeFeature(f);
-				for (var k=0; k<g.length; k++)
-				{	var f2 = f.clone();
+				for (k=0; k<g.length; k++)
+				{	f2 = f.clone();
 					f2.setGeometry(g[k]);
 					this.source_.addFeature(f2);
 				}
@@ -167,21 +168,29 @@ ol.interaction.Splitter.prototype.splitSource = function(feature)
 		}
 	}
 
+	// Auto intersect
+	for (i=0; i<c.length-2; i++)
+	{	for (var j=i+1; j<c.length-1; j++)
+		{	var p = this.intersectSegs ([c[i],c[i+1]], [c[j],c[j+1]]);
+			if (p && p!=c[i+1])
+			{	split.push(p);
+			}
+		}
+	}
+
 	// Split original
 	var splitOriginal = false;
 	if (split.length)
 	{	var result = feature.getGeometry().splitAt(split, this.tolerance_);
 		if (result.length>1)
-		{	// this.source_.removeFeature(feature);
-			for (var k=0; k<result.length; k++)
-			{	var f2 = feature.clone();
+		{	for (k=0; k<result.length; k++)
+			{	f2 = feature.clone();
 				f2.setGeometry(result[k]);
 				this.source_.addFeature(f2);
 			}
 			splitOriginal = true;
 		}
 	}
-
 
 	// If the interaction is inserted after modify interaction, the objet is not consistant 
 	// > wait end of other interactions
@@ -225,6 +234,8 @@ ol.interaction.Splitter.prototype.onRemoveFeature = function(e)
 /** Feature source is changing 
 */
 ol.interaction.Splitter.prototype.onChangeFeature = function(e)
-{	if (this.moving_) this.lastEvent_ = e;
+{	if (this.moving_) 
+	{	this.lastEvent_ = e;
+	}
 	else this.splitSource(e.feature);
 };

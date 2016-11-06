@@ -49,40 +49,39 @@ ol.geom.LineString.prototype.splitAt = function(pt, tol)
 	}
 	// Get 
 	var c0 = this.getCoordinates();
-	var c1=[c0[0]], c2=[], p0, p1;
-	var c = c1;
+	var ci=[c0[0]], p0, p1;
+	var c = [];
 	for (var i=0; i<c0.length-1; i++)
 	{	// Filter equal points
 		if (ol.coordinate.equal(c0[i],c0[i+1])) continue;
-		// Test end of first part
-		if (c!==c2)
-		{	// Extremity found  
-			if (ol.coordinate.equal(pt,c0[i+1]))
-			{	c.push(c0[i+1]);
-				c = c2;
+		// Extremity found  
+		if (ol.coordinate.equal(pt,c0[i+1]))
+		{	ci.push(c0[i+1]);
+			c.push(new ol.geom.LineString(ci));
+			ci = [];
+		}
+		// Test alignement
+		else if (!ol.coordinate.equal(pt,c0[i]))
+		{	var d1, d2;
+			if (c0[i][0] == c0[i+1][0])
+			{	d1 = d2 = (c0[i][1]-pt[1]) / (c0[i][1]-c0[i+1][1]);
 			}
-			// Test alignement
+			else if (c0[i][1] == c0[i+1][1])
+			{	d1 = d2 = (c0[i][0]-pt[0]) / (c0[i][0]-c0[i+1][0]);
+			}
 			else
-			{	var d1, d2;
-				if (c0[i][0] == c0[i+1][0])
-				{	d1 = d2 = (c0[i][1]-pt[1]) / (c0[i][1]-c0[i+1][1]);
-				}
-				else if (c0[i][1] == c0[i+1][1])
-				{	d1 = d2 = (c0[i][0]-pt[0]) / (c0[i][0]-c0[i+1][0]);
-				}
-				else
-				{	d1 = (c0[i][0]-pt[0]) / (c0[i][0]-c0[i+1][0]);
-					d2 = (c0[i][1]-pt[1]) / (c0[i][1]-c0[i+1][1]);
-				}
-				if (Math.abs(d1-d2)<tol && 0<=d1 && d1<=1)
-				{	c.push(pt);
-					c = c2;
-					c.push(pt);
-				}
+			{	d1 = (c0[i][0]-pt[0]) / (c0[i][0]-c0[i+1][0]);
+				d2 = (c0[i][1]-pt[1]) / (c0[i][1]-c0[i+1][1]);
+			}
+			if (Math.abs(d1-d2)<tol && 0<=d1 && d1<=1)
+			{	ci.push(pt);
+				c.push (new ol.geom.LineString(ci));
+				ci = [pt];
 			}
 		}
-		c.push(c0[i+1]);
+		ci.push(c0[i+1]);
 	}
-	if (c2.length) return [new ol.geom.LineString(c1), new ol.geom.LineString(c2)];
+	if (ci.length>1) c.push (new ol.geom.LineString(ci));
+	if (c.length) return c;
 	else return [this];
 }
