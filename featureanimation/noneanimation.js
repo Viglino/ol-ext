@@ -9,7 +9,7 @@
 */
 ol.featureAnimation.None = function(options)
 {	ol.featureAnimation.call(this, options);
-}
+};
 ol.inherits(ol.featureAnimation.None, ol.featureAnimation);
 
 /** Animate: do nothing during the laps time
@@ -18,4 +18,4 @@ ol.inherits(ol.featureAnimation.None, ol.featureAnimation);
 ol.featureAnimation.None.prototype.animate = function (e)
 {	
 	return (e.time <= this.duration_);
-}
+};

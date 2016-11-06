@@ -3,7 +3,6 @@
 	released under the CeCILL license (http://www.cecill.info/).
 	
 */
-
 /** 
 
 /** Feature aniomation base class
@@ -21,13 +20,13 @@ ol.featureAnimation = function(options)
 	this.repeat_ = Number(options.repeat);
 
 	var easing = typeof(options.easing) =='function' ? options.easing : ol.easing.linear;
-	if (options.revers) this.easing_ = function(t) { return 1 - easing(t) };
+	if (options.revers) this.easing_ = function(t) { return (1 - easing(t)); };
 	else this.easing_ = easing;
 
 	this.hiddenStyle = options.hiddenStyle;
 
 	ol.Object.call(this);
-}
+};
 ol.inherits(ol.featureAnimation, ol.Object);
 
 /** Draw a geometry 
@@ -42,8 +41,9 @@ ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
 	var style = e.style;
 	for (var i=0; i<style.length; i++)
 	{	var imgs = style[i].getImage();
+		var sc;
 		if (imgs) 
-		{	var sc = imgs.getScale(); 
+		{	sc = imgs.getScale(); 
 			imgs.setScale(e.frameState.pixelRatio*sc);
 		}
 		e.vectorContext.setStyle(style[i]);
@@ -51,7 +51,7 @@ ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
 		else e.vectorContext.drawGeometry(geom);
 		if (imgs) imgs.setScale(sc);
 	}
-}
+};
 
 /** Function to perform manipulations onpostcompose. 
 *	This function is called with an olx.animateFeature argument. 
@@ -62,7 +62,7 @@ ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
 */
 ol.featureAnimation.prototype.animate = function (e)
 {	return false;
-}
+};
 
 /** Animate feature on a map
 *	@fires animationend
@@ -114,7 +114,7 @@ ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 	if (!(fanim instanceof Array)) fanim = [fanim];
 	// Remove null animations
 	for (var i=fanim.length-1; i>=0; i--)
-	{	if (fanim[i].duration_==0) fanim.splice(i,1);
+	{	if (fanim[i].duration_===0) fanim.splice(i,1);
 	}
 
 	var nb=0, step = 0;
@@ -163,7 +163,11 @@ ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 		feature.setStyle(style);
 		// Send event
 		var event = { type:'animationend', feature: feature };
-		if (options) for (var i in options) event[i] = options[i];
+		if (options) 
+		{	for (var i in options) if (options.hasOwnProperty(i))
+			{ 	event[i] = options[i]; 
+			}
+		}
 		fanim[step].dispatchEvent(event);
 		self.dispatchEvent(event);
 	}
@@ -177,7 +181,11 @@ ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 			else self.changed();
 			// Send event
 			var event = { type:'animationstart', feature: feature };
-			if (options) for (var i in options) event[i] = options[i];
+			if (options) 
+			{	for (var i in options) if (options.hasOwnProperty(i))
+				{ 	event[i] = options[i]; 
+				}
+			}
 			fanim[step].dispatchEvent(event);
 			self.dispatchEvent(event);
 		}
@@ -189,5 +197,5 @@ ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 		start: start,
 		stop: stop,
 		isPlaying: function() { return (!!listenerKey); }
-	}
-}
+	};
+};

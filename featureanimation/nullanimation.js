@@ -9,5 +9,5 @@
 */
 ol.featureAnimation.Null = function(options)
 {	ol.featureAnimation.call(this, { duration:0 });
-}
+};
 ol.inherits(ol.featureAnimation.Null, ol.featureAnimation);
