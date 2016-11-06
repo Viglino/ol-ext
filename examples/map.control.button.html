@@ -1,0 +1,111 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: Control button</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="ol.control.Button is a simple control with a button." />
+	<meta name="keywords" content="ol3, control, button" />
+
+	<link rel="stylesheet" href="style.css" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<!-- FontAwesome -->
+	<link rel="stylesheet" href="http://fontawesome.io/assets/font-awesome/css/font-awesome.css" type="text/css" />
+
+	<!-- OL3 -->
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	
+	<!-- controls -->
+	<script type="text/javascript" src="../control/buttoncontrol.js"></script>
+
+	<style>
+		.ol-button i
+		{	color: inherit;
+		}
+		.hello
+		{	right: 50%;
+			top: 0.5em;
+		}
+		.save
+		{	left: 50%;
+			top: 0.5em;
+		}
+	</style>
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: control bar</h1>
+	</a>
+	<div class="info">
+		<i>ol.control.Button</i> is a simple control as a button.
+		<ul>
+			<li>
+				<i>handleClick</i> options set a function to handle an action when the button is clicked.
+			</li>
+			<li>
+				use <i>className</i> to customize 
+			</li>
+		</ul>
+	</div>
+
+	<!-- Map div -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options" >
+		Info:<br/>
+		<textarea id="info" style="width:28em; height:10em"></textarea>
+	</div>
+
+	<script type="text/javascript">
+
+		// The map
+		var map = new ol.Map
+			({	target: 'map',
+				view: new ol.View
+				({	zoom: 14,
+					center: [270701, 6247637]
+				}),
+				layers: 
+					[	new ol.layer.Tile({ source: new ol.source.OSM() }),
+					]
+			});
+
+		console.log("ok")
+		// Add a custom push button with onToggle function
+		var hello = new ol.control.Button (
+				{	html: '<i class="fa fa-smile-o"></i>',
+					className: "hello",
+					title: "Hello world!",
+					handleClick: function()
+						{	alert ("hello World!");
+						}
+				});
+		map.addControl(hello);
+				
+		// Add a save button with on active event
+		var save = new ol.control.Button (
+				{	html: '<i class="fa fa-download"></i>',
+					className: "save",
+					title: "Save",
+					handleClick: function()
+					{	$("#info").text("Center: "+map.getView().getCenter()+" - zoom: "+map.getView().getZoom());
+					}
+				});
+		map.addControl ( save );
+
+	</script>
+
+</body>
+</html>
