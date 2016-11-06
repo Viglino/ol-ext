@@ -6,7 +6,7 @@
  * The control can be created with an interaction to control its activation.
  *
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol.control.Button}
  * @fires change:active
  * @param {Object=} opt_options Control options.
  *		className {String} class of the control
@@ -18,7 +18,7 @@
  *		onToggle {function} callback when control is clicked (or use change:active event)
  */
 ol.control.Toggle = function(options) 
-{	var element = $("<div>").addClass((options.className || options['class'] || "ol-toggle") + ' ol-unselectable ol-control');
+{	options = options || {};
 	var self = this;
 
 	this.interaction_ = options.interaction;
@@ -27,26 +27,19 @@ ol.control.Toggle = function(options)
 		{	self.setActive(!e.oldValue);
 		});
 	}
-	this.title = options.title;
-	if (options.toggleFn) options.onToggle = options.toggleFn; // compat old version
 
-	$("<button>").html(options.html || "")
-				.attr('title', options.title)
-				.on("touchstart click", function(e)
-				{	if (e && e.preventDefault) e.preventDefault();
-					self.toggle();
+	if (options.toggleFn) options.onToggle = options.toggleFn; // compat old version
+	options.handleClick = function()
+				{	self.toggle();
 					if (options.onToggle) options.onToggle.call(self, self.getActive());
-				})
-				.appendTo(element);
-	
-	ol.control.Control.call(this, 
-	{	element: element.get(0)
-	});
+				};
+	options.className = options.className||"" + " ol-toggle";
+	ol.control.Button.call(this, options);
 
 	this.setActive (options.active);
 	this.set ("autoActivate", options.autoActivate);
 }
-ol.inherits(ol.control.Toggle, ol.control.Control);
+ol.inherits(ol.control.Toggle, ol.control.Button);
 
 /**
  * Test if the control is active.
