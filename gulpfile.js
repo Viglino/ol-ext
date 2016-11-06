@@ -1,8 +1,24 @@
-﻿var gulp = require("gulp");
+﻿/** Gulp file to create dist
+*/
+var gulp = require("gulp");
 var concat = require("gulp-concat");
 var cssnext = require("gulp-cssnext");
 var minify = require("gulp-minify")
+var header = require('gulp-header');
+
 var options = require("minimist")(process.argv.slice(2));
+
+// using data from package.json 
+var pkg = require('./package.json');
+var banner = ['/**',
+  ' * <%= pkg.name %> - <%= pkg.description %>',
+  ' * @abstract <%= pkg.keywords %>',
+  ' * @version v<%= pkg.version %>',
+  ' * @author <%= pkg.author %>',
+  ' * @link <%= pkg.homepage %>',
+  ' * @license <%= pkg.license %>',
+  ' */',
+  ''].join('\n');
 
 gulp.task("css", function() {
 	gulp.src([
@@ -36,6 +52,7 @@ gulp.task("js", function() {
 		])
 	.pipe(concat("ol3-ext.js"))
     .pipe(minify({ }))
+	.pipe(header(banner, { pkg : pkg } ))
     .pipe(gulp.dest("./dist/"))
 });
 
