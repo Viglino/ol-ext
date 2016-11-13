@@ -9,7 +9,6 @@
 */
 ol.control.Target = function(options) 
 {	options = options || {};
-	var self = this;
 
 	this.style = options.style || [{ stroke: new ol.style.Stroke({ color:"#000", width:2 }), radius: 10 }];
 	if (!(this.style instanceof Array)) this.style = [this.style];
@@ -21,8 +20,9 @@ ol.control.Target = function(options)
 	{	element: div,
 		target: options.target
 	});
-};
 
+	this.setVisible(options.visible!==false);
+};
 ol.inherits(ol.control.Target, ol.control.Control);
 
 /**
@@ -33,22 +33,38 @@ ol.inherits(ol.control.Target, ol.control.Control);
  * @api stable
  */
 ol.control.Target.prototype.setMap = function (map)
-{	ol.control.Control.prototype.setMap.call(this, map);
-
-	if (this.map_) 
-	{	this.map_.un('postcompose', this.drawTarget_, this);
+{	if (this.getMap()) 
+	{	this.getMap().un('postcompose', this.drawTarget_, this);
+		if (this.getVisible()) this.getMap().renderSync();
 	}
+
+	ol.control.Control.prototype.setMap.call(this, map);
+
 	if (map) 
 	{	map.on('postcompose', this.drawTarget_, this);
 	}
-	this.map_ = map;
+};
+
+/** Set the control visibility
+* @paraam {boolean} b 
+*/
+ol.control.Target.prototype.setVisible = function (b)
+{	this.set("visible",b);
+	if (this.getMap()) this.getMap().renderSync();
+};
+
+/** Get the control visibility
+* @return {boolean} b 
+*/
+ol.control.Target.prototype.getVisible = function ()
+{	return this.get("visible");
 };
 
 /** Draw the target
 * @private
 */
 ol.control.Target.prototype.drawTarget_ = function (event)
-{	if (!this.map_) return;
+{	if (!this.getMap() || !this.getVisible()) return;
 	var ctx = event.context;
 	var ratio = event.frameState.pixelRatio;
 
@@ -67,13 +83,16 @@ ol.control.Target.prototype.drawTarget_ = function (event)
 			{	ctx.lineWidth = style.stroke.getWidth();
 				ctx.strokeStyle = ol.color.asString(style.stroke.getColor());
 				var m = style.radius || 10;
+				
+				var dx = cx + ctx.lineWidth/2;
+				var dy = cy + ctx.lineWidth/2;
 
 				ctx.beginPath();
-				ctx.moveTo (cx-m, cy);
-				ctx.lineTo (cx+m, cy);
-				ctx.moveTo (cx, cy-m);
-				ctx.lineTo( cx, cy+m);
-				ctx.stroke(); 
+				ctx.moveTo (dx-m, dy);
+				ctx.lineTo (dx+m, dy);
+				ctx.moveTo (dx, dy-m);
+				ctx.lineTo( dx, dy+m);
+				ctx.stroke();
 			}
 			else if (style instanceof ol.style.Image)
 			{	var img = style.getImage();
