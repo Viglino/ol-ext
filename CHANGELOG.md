@@ -3,7 +3,7 @@
 
 
 ## 2016-11-12
-see #8 [#8](https://github.com/Viglino/ol3-ext/issues/8) and [#10](https://github.com/Viglino/ol3-ext/issues/10)
+see [#8](https://github.com/Viglino/ol3-ext/issues/8) and [#10](https://github.com/Viglino/ol3-ext/issues/10)
 - Move subbar from ol.control.Bar to ol.control.Toggle
 Instead of:
 ```javascript
