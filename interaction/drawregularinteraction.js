@@ -1,3 +1,7 @@
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
 /** Interaction rotate
  * @constructor
  * @extends {ol.interaction.Pointer}
@@ -69,7 +73,7 @@ ol.interaction.DrawRegular = function(options)
 			}),
 			name:'DrawRegular overlay',
 			displayInLayerSwitcher: false,
-			style: this.style || defaultStyle
+			style: options.style || defaultStyle
 		});
 };
 ol.inherits(ol.interaction.DrawRegular, ol.interaction.Pointer);
