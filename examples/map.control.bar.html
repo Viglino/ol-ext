@@ -46,13 +46,11 @@
 	<div class="info">
 		<i>ol.control.Bar</i> is a panel that contains other controls. Control bar can be nested.
 		<br/>
-		<i>ol.control.Toogle</i> are customized ol3 controls buttons with an active/deactive position. 
-		If created with an interaction it controls its activation.
+		You can choose the position for the control bar.
 		<br/>
-		ol.control.Toogle can be grouped into an ol.control.Bar with a toggleOne propertie to have only one activated at a time. 
-		You can compose toolbars with it.
+		It can group <i>ol.control.Toggle</i> with a toggleOne propertie to have only one activated at a time. You can compose toolbars with it.  
 		<br/>
-		When adding control to a bar, an option bar can be nested to add options visible when the control is active.
+		A sub-bar can be nested to add options/controls visible when the parent <i>ol.control.Toggle</i> is active (see the <a href="map.control.subbar.html">sub-bar example</a>).
 	</div>
 
 	<!-- Map div -->
@@ -74,8 +72,8 @@
 				</select>
 			</li>
 		</ul>
-		Export:<br />
-		<textarea id="export" style="width:25em; height:10em"></textarea>
+		Information:<br />
+		<textarea id="info" style="width:25em; height:10em"></textarea>
 	</div>
 
 	<script type="text/javascript">
@@ -100,232 +98,46 @@
 		var mainbar = new ol.control.Bar();
 		map.addControl(mainbar);
 
-		// Edit control bar 
-		var editbar = new ol.control.Bar(
-			{	toggleOne: true,	// one control active at the same time
-				group:false			// group controls together
-			});
-		mainbar.addControl(editbar);
-
+		/* Nested toobar with one control activated at once */
+		var nested = new ol.control.Bar ({ toggleOne: true, group:true });
+		mainbar.addControl (nested);
 		// Add selection tool (a toggle control with a select interaction)
 		var selectCtrl = new ol.control.Toggle(
 				{	html: '<i class="fa fa-hand-pointer-o"></i>',
+					className: "select",
 					title: "Select",
 					interaction: new ol.interaction.Select (),
-					active:true
+					active:true,
+					onToggle: function(active)
+					{	$("#info").text("Select is "+(active?"activated":"deactivated"));
+					}
 				});
-
-		var sbar = new ol.control.Bar();
-		sbar.addControl (new ol.control.Toggle(
-				{	html: '<i class="fa fa-times"></i>',
-					title: "Delete",
-					className: "noToggle ol-text-button",
-					onToggle: function() 
-					{	var features = selectCtrl.getInteraction().getFeatures();
-						if (!features.getLength()) $("#export").text("Select an object first...");
-						else $("#export").text(features.getLength()+" object(s) deleted.");
-						for (var i=0, f; f=features.item(i); i++) 
-						{	vector.getSource().removeFeature(f);
-						}
-						selectCtrl.getInteraction().getFeatures().clear();
-					}
-				}));
-		sbar.addControl (new ol.control.Toggle(
-				{	html: '<i class="fa fa-info"></i>',
-					title: "Show informations",
-					className: "noToggle ol-text-button",
-					onToggle: function() 
-					{	switch (selectCtrl.getInteraction().getFeatures().getLength())
-						{	case 0: $("#export").text("Select an object first...");
-								break;
-							case 1:
-								var f = selectCtrl.getInteraction().getFeatures().item(0);
-								$("#export").text("Selection is a "+f.getGeometry().getType());
-								break;
-							default:
-								$("#export").text(selectCtrl.getInteraction().getFeatures().getLength()+ " objects seleted.");
-								break;
-						}
-					}
-				}));
-
-		editbar.addControl ( selectCtrl, sbar);
-
+		nested.addControl(selectCtrl);
+		
 		// Add editing tools
 		var pedit = new ol.control.Toggle(
 				{	html: '<i class="fa fa-map-marker" ></i>',
+					className: "edit",
 					title: 'Point',
 					interaction: new ol.interaction.Draw
 					({	type: 'Point',
 						source: vector.getSource()
-					})
-				});
-		editbar.addControl ( pedit );
-
-		var ledit = new ol.control.Toggle(
-				{	html: '<i class="fa fa-share-alt" ></i>',
-					title: 'LineString',
-					interaction: new ol.interaction.Draw
-					({	type: 'LineString',
-						source: vector.getSource()
-					})
-				});
-
-		editbar.addControl ( ledit, 
-			// Options bar associated with the control
-			new ol.control.Bar(
-			{	controls:[ new ol.control.Toggle(
-					{	html: 'undo',//'<i class="fa fa-mail-reply"></i>',
-						title: "Delete last point",
-						className: "noToggle ol-text-button",
-						onToggle: function() 
-						{	ledit.getInteraction().removeLastPoint();
-						}
 					}),
-					new ol.control.Toggle(
-					{	html: 'Finish',
-						title: "finish",
-						className: "noToggle ol-text-button",
-						onToggle: function() 
-						{	// Prevent null objects on finishDrawing
-							var drawi = ledit.getInteraction();
-							var lkey = drawi.on('drawend', function(e)
-							{	drawi.unByKey(lkey);
-								var c = e.feature.getGeometry().getCoordinates();
-								if (c.length < 2)
-								{	throw "Bad LineString";
-								}
-							});
-							try { drawi.finishDrawing(); } 
-							catch(e) { drawi.unByKey(lkey); }
-						}
-					})
-				]
-			}) );
-
-		var fedit = new ol.control.Toggle(
-				{	html: '<i class="fa fa-bookmark-o fa-rotate-270" ></i>',
-					title: 'Polygon',
-					interaction: new ol.interaction.Draw
-					({	type: 'Polygon',
-						source: vector.getSource()
-					})
-				});
-		editbar.addControl ( fedit, 
-			// Options bar ssociated with the control
-			new ol.control.Bar(
-			{	controls:[ new ol.control.Toggle(
-					{	html: 'undo',//'<i class="fa fa-mail-reply"></i>',
-						title: "undo last point",
-						className: "noToggle ol-text-button",
-						onToggle: function() 
-						{	fedit.getInteraction().removeLastPoint();
-						}
-					}),
-					new ol.control.Toggle(
-					{	html: 'finish',
-						title: "finish",
-						className: "noToggle ol-text-button",
-						onToggle: function() 
-						{	// Prevent null objects on finishDrawing
-							var drawi = fedit.getInteraction();
-							var lkey = drawi.on('drawend', function(e)
-							{	drawi.unByKey(lkey);
-								var c = e.feature.getGeometry().getCoordinates();
-								if (c[0].length < 4)
-								{	throw "Bad Polygon";
-								}
-							});
-							try { drawi.finishDrawing(); } 
-							catch(e) { drawi.unByKey(lkey); }
-						}
-					})
-				]
-			}) );
-		/*
-		// Prevent null objects on finishDrawing
-		vector.getSource().on('addfeature', function(e)
-		{	switch (e.feature.getGeometry().getType())
-			{	case 'Polygon': 
-					if (e.feature.getGeometry().getCoordinates()[0].length < 4) 
-						vector.getSource().removeFeature(e.feature);
-					break;
-				case 'LineString': 
-					if (e.feature.getGeometry().getCoordinates().length < 2) 
-						vector.getSource().removeFeature(e.feature);
-					break;
-				default: break;
-			}
-			//console.log(vector.getSource().getFeatures().length)
-		});
-		*/
-
-/** Nested bars: add edition in a sub-bar */
-		// Options bar associated with the control
-		var subBar = new ol.control.Bar(
-			{	toggleOne: true,
-				autoDeactivate: true,	// Deactivate control in the subbar when deactivated
-				controls: [
-						new ol.control.Toggle(
-						{	html: '<i class="fa fa-map-marker" ></i>',
-							title: 'Point',
-							autoActivate: true,
-							interaction: new ol.interaction.Draw
-							({	type: 'Point',
-								source: vector.getSource()
-							})
-						}),
-						new ol.control.Toggle(
-						{	html: '<i class="fa fa-share-alt" ></i>',
-							title: 'Line',
-							interaction: new ol.interaction.Draw
-							({	type: 'LineString',
-								source: vector.getSource()
-							})
-						})
-					]
-			});
-//		editbar.addControl ( edit2, subBar );
-		var edit1 = new ol.control.Toggle(
-					{	html: '<i class="fa fa-pencil"></i>',
-						title: "Nested subbar",
-					});
-		var edit2 = new ol.control.Toggle(
-					{	html: '<i class="fa fa-link"></i>',
-						title: "Nested subbar",
-						autoActivate: true
-					});
-		var subBar1 = new ol.control.Bar({ toggleOne:true, autoDeactivate: true });
-		editbar.addControl ( edit1, subBar1 );
-		subBar1.addControl ( edit2, subBar );
-		subBar1.addControl ( new ol.control.Toggle(
-					{	html: '<i class="fa fa-ban"></i>',
-						title: "Nested subbar",
-					}) );
-
-/* end nested bars */
-
-		// Add a custom push button with onToggle function
-		mainbar.addControl ( new ol.control.Toggle(
-				{	html: '<i class="fa fa-smile-o"></i>',
-					title: "Hello world!",
 					onToggle: function(active)
-						{	if (active) alert("Hello, I'm active"); 
-							else alert("Hello, I'm not active"); 
-						}
-				}));
-				
-		// Add a save button with on active event
-		var save = new ol.control.Toggle(
-				{	html: '<i class="fa fa-download"></i>',
-					title: "Save",
-					className: "noToggle"
+					{	$("#info").text("Edition is "+(active?"activated":"deactivated"));
+					}
 				});
-		mainbar.addControl ( save );
-		save.on("change:active", function(e)
-		{	var json= new ol.format.GeoJSON().writeFeatures(vector.getSource().getFeatures());
-			$("#export").text(json);
-		});
+		nested.addControl ( pedit );
+
+		/* Standard Controls */
+		mainbar.addControl (new ol.control.ZoomToExtent({  extent: [ 265971,6243397 , 273148,6250665 ] }));
+		mainbar.addControl (new ol.control.Rotate());
+		mainbar.addControl (new ol.control.FullScreen());
+
+		// Show info
+		function info(i)
+		{	$("#info").html(i||"");
+		}
 	</script>
 
 </body>

@@ -39,6 +39,10 @@
 		{	left: 50%;
 			top: 0.5em;
 		}
+		.text
+		{	left: 50%;
+			top: 2.5em;
+		}
 	</style>
 
 </head>
@@ -49,7 +53,7 @@
 		<h1>OL3-ext: control bar</h1>
 	</a>
 	<div class="info">
-		<i>ol.control.Button</i> is a simple control as a button.
+		<i>ol.control.Button</i> is a simple push button control.
 		<ul>
 			<li>
 				<i>handleClick</i> options set a function to handle an action when the button is clicked.
@@ -89,7 +93,7 @@
 					className: "hello",
 					title: "Hello world!",
 					handleClick: function()
-						{	alert ("hello World!");
+						{	info ("hello World!");
 						}
 				});
 		map.addControl(hello);
@@ -100,10 +104,15 @@
 					className: "save",
 					title: "Save",
 					handleClick: function()
-					{	$("#info").text("Center: "+map.getView().getCenter()+" - zoom: "+map.getView().getZoom());
+					{	info("Center: "+map.getView().getCenter()+" - zoom: "+map.getView().getZoom());
 					}
 				});
 		map.addControl ( save );
+
+		// Show info
+		function info(i)
+		{	$("#info").html(i||"");
+		}
 
 	</script>
 
