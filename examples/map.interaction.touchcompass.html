@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+<!----------------------------------------------------------
+
+	Copyright (c) 2016 Jean-Marc VIGLINO,
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+
+------------------------------------------------------------>
+	<title>OL3-ext: Touch compass interaction</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="An OL3 layerswitcher image." />
+	<meta name="keywords" content="ol3, interaction, touch, drag, compass" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- OL3 -->
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	
+	<!-- interaction -->
+	<script type="text/javascript" src="../interaction/touchcompassinteraction.js"></script>
+
+	<link rel="stylesheet" href="style.css" />
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: Touch compass interaction</h1>
+	</a>
+	<div class="info">
+		The <i>TouchCompass</i> interaction is intended to be use on touch devices.
+		<br />
+		It lets you handle movement by dragging a touch compass.
+		<br/>
+		This example shows how to move a point on the map by dragging the compass thus the finger don't mask the point it  is moving.
+	</div>
+
+	<!-- Map div -->
+	<div id="map" style="width:600px; height:400px;"></div>
+	
+	<div class="options">
+		Select a point then drag the compass to move it!
+	</div>
+
+	<script type="text/javascript">
+
+	// Two base layers
+	var stamen = new ol.layer.Tile(
+				{	title: "Watercolor",
+					baseLayer: true,
+					source: new ol.source.Stamen({
+						layer: 'watercolor'
+					})
+				});
+
+	// GeoJSON layer with a preview attribute
+	var vectorSource = new ol.source.Vector(
+	{	url: 'data/fond_guerre.geojson',
+		projection: 'EPSG:3857',
+		format: new ol.format.GeoJSON(),
+		attributions: [new ol.Attribution({ html: "&copy; <a href='https://www.data.gouv.fr/fr/datasets/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire/'>data.gouv.fr</a>" })],
+		logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+	});
+
+	var vector = new ol.layer.Vector(
+	{	name: '1914-18',
+		source: vectorSource
+	});
+
+
+	// The map
+	var map = new ol.Map
+		({	target: 'map',
+			view: new ol.View
+			({	zoom: 6,
+				center: [173664, 6166327]
+			}),
+			layers: [stamen, vector]
+		});
+
+	// Select interaction
+	var sel = new ol.interaction.Select()
+	map.addInteraction(sel);
+
+	// Add touch compass interaction
+	var tcompass = new ol.interaction.TouchCompass(
+		{	onDrag: function(delta, e)
+			{	/* Move the map * /
+				var c = map.getView().getCenter();
+				map.getView().setCenter([ c[0] + delta.traction[0]/50, c[1] + delta.traction[1]/50 ]);
+				/* or move a selected feature */
+				var f = sel.getFeatures().item(0);
+				f.getGeometry().translate(delta.traction[0]/50, delta.traction[1]/50);
+				/**/
+			}
+		});
+	map.addInteraction(tcompass);
+	tcompass.setActive(false);
+
+	sel.getFeatures().on(["add","remove"], function()
+	{	tcompass.setActive(this.getFeatures().getLength() > 0);
+	}, sel);
+
+	</script>
+	
+</body>
+</html>
