@@ -2,7 +2,7 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/** A simple button control 
+/** A simple push button control 
  *
  * @constructor
  * @extends {ol.control.Control}
@@ -14,7 +14,7 @@
  */
 ol.control.Button = function(options) 
 {	options = options || {};
-	var element = $("<div>").addClass(options.className + ' ol-button ol-unselectable ol-control');
+	var element = $("<div>").addClass((options.className||"") + ' ol-button ol-unselectable ol-control');
 	var self = this;
 
 	$("<button>").html(options.html || "")
@@ -31,5 +31,14 @@ ol.control.Button = function(options)
 	});
 
 	if (options.title) this.set("title", options.title);
-}
+};
 ol.inherits(ol.control.Button, ol.control.Control);
+
+/** A simple push button control drawn as text
+*/
+ol.control.TextButton = function(options) 
+{	options = options || {};
+	options.className = (options.className||"") + " ol-text-button";
+	ol.control.Button.call(this, options);
+};
+ol.inherits(ol.control.TextButton, ol.control.Button);

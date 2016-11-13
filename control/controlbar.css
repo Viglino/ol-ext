@@ -9,12 +9,21 @@
 	-webkit-transform: translate(-50%,0);
 }
 
+/* Hide subbar when not inserted in a parent bar */
+.ol-control.ol-toggle .ol-option-bar
+{	display: none;
+}
+
 /* Default position for controls */
 .ol-control.ol-bar .ol-bar
 {	position: static;
 }
 .ol-control.ol-bar .ol-control
 {	position: relative;
+	top: auto;
+	left:auto;
+	right:auto;
+	bottom: auto;
 	display: inline-block;
 	vertical-align: middle;
 	background: none;
@@ -109,6 +118,14 @@
 {	border-radius: 0 0 5px 5px;
 }
 
+/* */
+.ol-control.ol-bar .ol-rotate
+{	opacity:1;
+	visibility: visible;
+}
+.ol-control.ol-bar .ol-rotate button
+{	display: block
+}
 
 /* Active buttons */
 .ol-control.ol-bar .ol-toggle.ol-active > button
@@ -148,6 +165,10 @@
 }
 .ol-control.ol-bar .ol-control.ol-active > .ol-option-bar 
 {	display: block;
+}
+
+.ol-control.ol-bar .ol-control.ol-collapsed ul
+{	display: none;
 }
 
 .ol-control.ol-bar .ol-control.ol-text-button > button:hover,
