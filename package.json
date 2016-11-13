@@ -16,7 +16,7 @@
     "openlayers",
     "popup",
     "menu",
-    "symbol renderer",
+    "symbol","renderer",
     "filter",
     "canvas",
     "interaction", "split",
@@ -25,12 +25,12 @@
     "toolbar",
     "animation"
   ],
-  "author": "Jean-Marc Viglino",
-  "license": "CeCILL-B FREE SOFTWARE LICENSE, http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt",
+  "author": "Jean-Marc Viglino (https://github.com/Viglino)",
+  "license": "CECILL-B",
   "bugs": {
     "url": "https://github.com/Viglino/ol3-ext/issues"
   },
-  "homepage": "https://github.com/Viglino/ol3-ext#readme",
+  "homepage": "https://github.com/Viglino/ol3-ext#,",
   "dependencies": {
     "ol3-ext": "git+https://github.com/Viglino/ol3-ext.git#gh-pages"
   },
