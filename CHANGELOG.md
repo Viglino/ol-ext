@@ -2,8 +2,9 @@
 ==============
 
 
-## 2016-11-12
+## v1.0.0 2016-11-12
 see [#8](https://github.com/Viglino/ol3-ext/issues/8) and [#10](https://github.com/Viglino/ol3-ext/issues/10)
+-  `ol.control.Toggle` inherits from `ol.control.Button` (this means you have to add the ol.control.Button.js to your pages).
 - Move subbar from ol.control.Bar to ol.control.Toggle
 Instead of:
 ```javascript
