@@ -129,54 +129,55 @@
 
 			switch ($("#style").val())
 			{	case 'icon': 
-					style = new ol.style.Icon( { img: img, imgSize:[10,10] } );
+					style = new ol.style.Style({ 
+							image: new ol.style.Icon( { img: img, imgSize:[img.width,img.height] } ) 
+						});
 					break;
 				case 'circle': 
-					style =	new ol.style.Circle(
-							{	radius: 10, 
-								stroke: stroke
+					style =	new ol.style.Style({ 
+								image: new ol.style.Circle({ radius: 10, stroke: stroke }),
+								snapToPixel:true
 							});
 					break;
 				case 'regular': 
-					style = new ol.style.RegularShape (
-							{	radius:20,
-								points: 6,
-								stroke: stroke
+					style = new ol.style.Style({
+								image: new ol.style.RegularShape (
+								{	radius:20,
+									points: 6,
+									stroke: stroke
+								}),
+								snapToPixel:true
 							});
 					break;
 				case 'text':
-					style = new ol.style.Text(
-							{	text: 'A',
-								font: '30px sherif',
-								fill: new ol.style.Fill({ color: $("#color").val() })
+					style = new ol.style.Style({
+								text: new ol.style.Text(
+								{	text: 'A',
+									font: '30px sherif',
+									fill: new ol.style.Fill({ color: $("#color").val() })
+								})
 							});
 					break;
 				case 'bullseye':
 				case 'crosshairs':
-					style = new ol.style.Text(
-							{	text: $("#style").val()=="bullseye" ? '\uf140' : '\uf05b',
-								font: '30px Fontawesome',
-								fill: new ol.style.Fill({ color: $("#color").val() })
+					style = new ol.style.Style({
+								text: new ol.style.Text(
+								{	text: $("#style").val()=="bullseye" ? '\uf140' : '\uf05b',
+									font: '30px Fontawesome',
+									fill: new ol.style.Fill({ color: $("#color").val() })
+								})
 							});
 					break;
 				case 'mixt': 
-					style =	[{	stroke: stroke,
-								radius: 15,
-							},
-							new ol.style.Circle(
-							{	radius:10, 
-								stroke: stroke 
-							}),
-							new ol.style.RegularShape (
-							{	radius:20,
-								points: 6,
-								stroke: stroke
-							})];
+					style =	[	new ol.style.Style({ image: new ol.style.RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, stroke: stroke }), snapToPixel:true }),
+								new ol.style.Style({ image: new ol.style.Circle({	radius:10, stroke: stroke }), snapToPixel:true }),
+								new ol.style.Style({ image: new ol.style.RegularShape ({ radius:20,points: 6, stroke: stroke}), snapToPixel:true })
+							];
 					break;
 				default: 
-					style =	[{	stroke: stroke,
-								radius: 15,
-							}];
+					style =	[	new ol.style.Style({ image: new ol.style.RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel:true, stroke: new ol.style.Stroke({ color: "#fff", width:3 }) }) }),
+								new ol.style.Style({ image: new ol.style.RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel:true, stroke: stroke }) })
+							];
 					break;
 			}
 			target =  new ol.control.Target ({	style: style, composite: $("#composite").val() });
