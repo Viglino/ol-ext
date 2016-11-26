@@ -4,13 +4,16 @@
 */
 /** ol.control.Target draw a target at the center of the map. 
 * @param {Object}
-*  - style {ol.style|Array<ol.style>} ol.style.Stroke: draw a cross on the map, ol.style.Image: draw the image on the map
+*  - style {ol.style.Style|Array<ol.style.Style>} ol.style.Stroke: draw a cross on the map, ol.style.Image: draw the image on the map
 *  - composite {string} composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
 */
 ol.control.Target = function(options) 
 {	options = options || {};
 
-	this.style = options.style || [{ stroke: new ol.style.Stroke({ color:"#000", width:2 }), radius: 10 }];
+	this.style = options.style ||
+		[	new ol.style.Style({ image: new ol.style.RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel:true, stroke: new ol.style.Stroke({ color: "#fff", width:3 }) }) }),
+			new ol.style.Style({ image: new ol.style.RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel:true, stroke: new ol.style.Stroke({ color: "#000", width:1 }) }) })
+		];
 	if (!(this.style instanceof Array)) this.style = [this.style];
 	this.composite = options.composite || '';
 
@@ -63,10 +66,10 @@ ol.control.Target.prototype.getVisible = function ()
 /** Draw the target
 * @private
 */
-ol.control.Target.prototype.drawTarget_ = function (event)
+ol.control.Target.prototype.drawTarget_ = function (e)
 {	if (!this.getMap() || !this.getVisible()) return;
-	var ctx = event.context;
-	var ratio = event.frameState.pixelRatio;
+	var ctx = e.context;
+	var ratio = e.frameState.pixelRatio;
 
 	ctx.save();
 	
@@ -74,9 +77,27 @@ ol.control.Target.prototype.drawTarget_ = function (event)
 
 		var cx = ctx.canvas.width/(2*ratio);
 		var cy = ctx.canvas.height/(2*ratio);
+		var geom = new ol.geom.Point (this.getMap().getCoordinateFromPixel([cx,cy]));
 
 		if (this.composite) ctx.globalCompositeOperation = this.composite;
 
+		for (var i=0; i<this.style.length; i++)
+		{	var style = this.style[i];
+
+			if (style instanceof ol.style.Style)
+			{	var imgs = style.getImage();
+				var sc;
+				if (imgs) 
+				{	var sc = imgs.getScale(); 
+					imgs.setScale(ratio*sc);
+				}
+				e.vectorContext.setStyle(style);
+				e.vectorContext.drawGeometry(geom);
+				if (imgs) imgs.setScale(sc);
+			}
+		}
+
+	/*
 		for (var i=0; i<this.style.length; i++)
 		{	var style = this.style[i];
 			if (style.stroke instanceof ol.style.Stroke)
@@ -115,6 +136,7 @@ ol.control.Target.prototype.drawTarget_ = function (event)
 				}
 			}
 		}
+		*/
 
 	ctx.restore();
 };
