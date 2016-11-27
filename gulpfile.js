@@ -35,7 +35,7 @@ gulp.task("css", function() {
       compress: !options.dist,
       sourcemap: options.dist
     }))
-	.pipe(concat("ol3-ext"+(!options.dist?"-min.css":".css")))
+	.pipe(concat("ol3-ext"+(!options.dist?".min.css":".css")))
     .pipe(gulp.dest("./dist/"))
 });
 
@@ -48,10 +48,17 @@ gulp.task("js", function() {
 		"./layer/*.js",
 		"./overlay/*.js",
 		"./style/fontsymbol.js", "./style/*.js",
-		"./utils/*.js"
+		"./utils/*.js",
+		"!./*/*.min.js",
+		"!./*/texturefilterimage.js"
 		])
 	.pipe(concat("ol3-ext.js"))
-    .pipe(minify({ }))
+    .pipe(minify(
+		{	ext: { 
+				src:".js", 
+				min:".min.js" 
+			}
+		}))
 	.pipe(header(banner, { pkg : pkg } ))
     .pipe(gulp.dest("./dist/"))
 });
