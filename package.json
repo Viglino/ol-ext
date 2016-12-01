@@ -32,7 +32,6 @@
   },
   "homepage": "https://github.com/Viglino/ol3-ext#,",
   "dependencies": {
-    "ol3-ext": "git+https://github.com/Viglino/ol3-ext.git#gh-pages"
   },
   "devDependencies": {
     "gulp": "^3.9.1",
