@@ -31,29 +31,56 @@ ol.inherits(ol.interaction.Synchronize, ol.interaction.Interaction);
  * @api stable
  */
 ol.interaction.Synchronize.prototype.setMap = function(map) 
-{	ol.interaction.Interaction.prototype.setMap.call (this, map);
+{	
+	if (this.getMap())
+	{
+		this.getMap().getView().un('change:center', this.syncMaps, this);
+		this.getMap().getView().un('change:rotation', this.syncMaps, this);
+		this.getMap().getView().un('change:resolution', this.syncMaps, this);
+	}
+	
+	ol.interaction.Interaction.prototype.setMap.call (this, map);
 
-	map.getView().on('change:center', this.syncMaps, this);
-    map.getView().on('change:rotation', this.syncMaps, this);
-    map.getView().on('change:resolution', this.syncMaps, this);
-	this.syncMaps();
+	if (map)
+	{	this.getMap().getView().on('change:center', this.syncMaps, this);
+		this.getMap().getView().on('change:rotation', this.syncMaps, this);
+		this.getMap().getView().on('change:resolution', this.syncMaps, this);
+		this.syncMaps();
+	}
 };
 
 /** Synchronize the maps
 */
 ol.interaction.Synchronize.prototype.syncMaps = function(e) 
 {	var map = this.getMap();
+	if (!e) e = { type:'all' };
 	if (map)
 	{	for (var i=0; i<this.maps.length; i++)
-		{	this.maps[i].getView().setRotation(map.getView().getRotation());
-			this.maps[i].getView().setCenter(map.getView().getCenter());
-			if (this.maps[i].getView().getResolution() != map.getView().getResolution())
-			{	this.maps[i].beforeRender ( ol.animation.zoom(
-					{	duration: 250, 
-						resolution: this.maps[i].getView().getResolution() 
-					}));
-				this.maps[i].getView().setResolution(map.getView().getResolution());
-
+		{	switch (e.type)
+			{	case 'change:rotation': 
+					if (this.maps[i].getView().getRotation() != map.getView().getRotation())
+						this.maps[i].getView().setRotation(map.getView().getRotation()); 
+					break;
+				case 'change:center': 
+					if (this.maps[i].getView().getCenter() != map.getView().getCenter())
+						this.maps[i].getView().setCenter(map.getView().getCenter()); 
+					break;
+				case 'change:resolution': 
+					if (this.maps[i].getView().getResolution() != map.getView().getResolution())
+					{	/* old version prior to 1.19.1
+						this.maps[i].beforeRender ( ol.animation.zoom(
+							{	duration: 250, 
+								resolution: this.maps[i].getView().getResolution() 
+							}));
+						*/
+						this.maps[i].getView().setResolution(map.getView().getResolution());
+					}
+					break;
+				default: 
+					this.maps[i].getView().setRotation(map.getView().getRotation());
+					this.maps[i].getView().setCenter(map.getView().getCenter());
+					this.maps[i].getView().setResolution(map.getView().getResolution());
+					break;
 			}
 		}
 	}
