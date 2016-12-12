@@ -184,15 +184,22 @@
 }
 
 .ol-layerswitcher [type="checkbox"]:checked + label:after
-{	border: 0.6em solid #369;
-	border-color: transparent #369;
-	background: transparent;
+{	background: transparent;
+    border-width: 0 3px 3px 0;
+	border-style: solid;
+	border-color: #369;
+    width: 0.7em;
+    height: 1em;
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
+    left: 0.55em;
+    top: -0.05em;
+    box-shadow: 1px 0px 1px 1px #fff;
 }
 
 .ol-layerswitcher .panel li.ol-layer-hidden
 {	opacity: 0.6;
 }
-
 
 .ol-layerswitcher.ol-collapsed .panel
 {	display:none;

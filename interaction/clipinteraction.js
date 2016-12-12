@@ -7,6 +7,8 @@
  */
 ol.interaction.Clip = function(options) {
 
+	this.layers_ = [];
+	
 	ol.interaction.Pointer.call(this, 
 	{	handleDownEvent: this.setPosition,
 		handleMoveEvent: this.setPosition
@@ -17,7 +19,6 @@ ol.interaction.Clip = function(options) {
 
 	this.pos = false;
 	this.radius = (options.radius||100);
-	this.layers_ = [];
 	if (options.layers) this.addLayer(options.layers);
 };
 ol.inherits(ol.interaction.Clip, ol.interaction.Pointer);
@@ -117,3 +118,25 @@ ol.interaction.Clip.prototype.precompose_ = function(e)
 ol.interaction.Clip.prototype.postcompose_ = function(e)
 {	e.context.restore();
 };
+
+/**
+ * Activate or deactivate the interaction.
+ * @param {boolean} active Active.
+ * @observable
+ * @api
+ */
+ol.interaction.Clip.prototype.setActive = function(b) 
+{	ol.interaction.Pointer.prototype.setActive.call (this, b);
+	if(b) {
+		for(var i=0; i<this.layers_.length; i++) {
+			this.layers_[i].on('precompose', this.precompose_, this);
+			this.layers_[i].on('postcompose', this.postcompose_, this);
+		}
+	} else {
+		for(var i=0; i<this.layers_.length; i++) {
+			this.layers_[i].un('precompose', this.precompose_, this);
+			this.layers_[i].un('postcompose', this.postcompose_, this);
+		}
+	}
+	if (this.getMap()) this.getMap().renderSync();
+}

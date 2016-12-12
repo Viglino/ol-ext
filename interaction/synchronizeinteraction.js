@@ -37,6 +37,7 @@ ol.interaction.Synchronize.prototype.setMap = function(map)
 		this.getMap().getView().un('change:center', this.syncMaps, this);
 		this.getMap().getView().un('change:rotation', this.syncMaps, this);
 		this.getMap().getView().un('change:resolution', this.syncMaps, this);
+		ol.events.unlisten(this.getMap().getViewport(), ol.events.EventType.MOUSEOUT, this.handleMouseOut_, this);
 	}
 	
 	ol.interaction.Interaction.prototype.setMap.call (this, map);
@@ -45,6 +46,14 @@ ol.interaction.Synchronize.prototype.setMap = function(map)
 	{	this.getMap().getView().on('change:center', this.syncMaps, this);
 		this.getMap().getView().on('change:rotation', this.syncMaps, this);
 		this.getMap().getView().on('change:resolution', this.syncMaps, this);
+
+		var me = this;
+		$(this.getMap().getTargetElement()).mouseout(function() {
+			for (var i=0; i<me.maps.length; i++)
+			{	me.maps[i].hideTarget();
+			}
+			me.getMap().hideTarget();
+    });
 		this.syncMaps();
 	}
 };
@@ -96,6 +105,17 @@ ol.interaction.Synchronize.prototype.handleMove_ = function(e)
 	this.getMap().showTarget();
 };
 
+
+/** Cursor out of map > tells other maps to hide the cursor
+* @param {event} e "mouseOut" event
+*/
+ol.interaction.Synchronize.prototype.handleMouseOut_ = function(e, scope)
+{	for (var i=0; i<scope.maps.length; i++)
+	{
+		scope.maps[i].targetOverlay_.setPosition(undefined);
+	}
+};
+
 /** Show a target overlay at coord
 * @param {ol.coordinate} coord
 */
@@ -106,6 +126,16 @@ ol.Map.prototype.showTarget = function(coord)
 		this.targetOverlay_.setPositioning('center-center');
 		this.addOverlay(this.targetOverlay_);
 		elt.parent().addClass("ol-target-overlay");
+		// hack to render targetOverlay before positioning it
+		this.targetOverlay_.setPosition([0,0]);
 	}
 	this.targetOverlay_.setPosition(coord);
+};
+
+/** Hide the target overlay
+*/
+ol.Map.prototype.hideTarget = function()
+{
+	this.removeOverlay(this.targetOverlay_);
+	this.targetOverlay_ = undefined;
 };

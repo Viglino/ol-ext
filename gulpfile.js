@@ -6,6 +6,7 @@ var cssnext = require("gulp-cssnext");
 var minify = require("gulp-minify")
 var header = require('gulp-header');
 
+// Retrieve option (--debug for css)
 var options = require("minimist")(process.argv.slice(2));
 
 // using data from package.json 
@@ -20,6 +21,7 @@ var banner = ['/**',
   ' */',
   ''].join('\n');
 
+// Build css. Use --debug to build in debug mode
 gulp.task("css", function() {
 	gulp.src([
 		"./control/*.css",
@@ -27,18 +29,25 @@ gulp.task("css", function() {
 		"./filter/*.css",
 		"./interaction/*.css",
 		"./layer/*.css",
-		"./overlay/*.css",
+		"./overlay/*.css", "!./overlay/popupoverlay.anim.css",
 		"./style/*.css",
 		"./utils/*.css"
 		])
     .pipe(cssnext({
-      compress: !options.dist,
-      sourcemap: options.dist
+      compress: !options.debug,
+      sourcemap: options.debug
     }))
-	.pipe(concat("ol3-ext"+(!options.dist?".min.css":".css")))
+	.pipe(concat("ol3-ext"+(!options.debug?".min.css":".css")))
     .pipe(gulp.dest("./dist/"))
 });
 
+// Build css in debug mode
+gulp.task("cssd", function() {
+	options.debug = true;
+	gulp.start("css");
+});
+
+// Build js
 gulp.task("js", function() {
 	gulp.src([
 		"./control/layerswitchercontrol.js", "./control/*.js",
@@ -63,4 +72,8 @@ gulp.task("js", function() {
     .pipe(gulp.dest("./dist/"))
 });
 
-gulp.task("dist", ["js","css"]);
+// build the dist
+gulp.task("dist", ["js","css","cssd"]);
+
+// The default task that will be run if no task is supplied
+gulp.task("default", ["js","css","cssd"]);

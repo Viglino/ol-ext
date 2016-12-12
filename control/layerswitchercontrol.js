@@ -536,13 +536,19 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 
 		// Show/hide sub layers
 		if (layer.getLayers) 
-		{	$("<div>").addClass(layer.get("openInLayerSwitcher") ? "collapse-layers" : "expend-layers" )
+		{	var nb = 0;
+			layer.getLayers().forEach(function(l)
+			{	if (l.get('displayInLayerSwitcher')!==false) nb++;
+			});
+			if (nb) 
+			{	$("<div>").addClass(layer.get("openInLayerSwitcher") ? "collapse-layers" : "expend-layers" )
 					.click(function()
 					{	var l = $(this).closest('li').data("layer");
 						l.set("openInLayerSwitcher", !l.get("openInLayerSwitcher") )
 					})
 					.attr("title", this.tip.plus)
 					.appendTo(layer_buttons);
+			}
 		}
 
 		// $("<div>").addClass("ol-separator").appendTo(layer_buttons);

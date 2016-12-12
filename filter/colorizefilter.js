@@ -47,6 +47,10 @@ ol.filter.Colorize.prototype.setFilter = function(options)
 			//this.set ('operation', 'luminosity')
 			this.set ('operation', 'hard-light');
 			break;
+		case 'contrast':
+			var v = 255*(options.value || 0);
+			this.set('color', ol.color.asString([v,v,v,255]));
+			this.set('operation', 'soft-light');
 		default: 
 			this.set ('operation', 'color');
 			break;

@@ -10,6 +10,7 @@
  *	- stretch {bool} can stretch the feature
  *	- scale {bool} can scale the feature
  *	- rotate {bool} can rotate the feature
+ *	- keepAspectRatio { ol.events.ConditionType | undefined } A function that takes an ol.MapBrowserEvent and returns a boolean to keep aspect ratio, default ol.events.condition.shiftKeyOnly.
  *	- style {} list of ol.style for handles
  *
  */
@@ -17,6 +18,22 @@ ol.interaction.Transform = function(options)
 {	if (!options) options={};
 	var self = this;
 
+	// Create a new overlay layer for the sketch
+	this.handles_ = new ol.Collection();
+	this.overlayLayer_ = new ol.layer.Vector(
+		{	source: new ol.source.Vector({
+				features: this.handles_,
+				useSpatialIndex: false
+			}),
+			name:'Transform overlay',
+			displayInLayerSwitcher: false,
+			// Return the style according to the handle type
+			style: function (feature)
+				{	return (self.style[(feature.get('handle')||'default')+(feature.get('constraint')||'')+(feature.get('option')||'')]);
+				}
+		});
+
+	// Extend pointer
 	ol.interaction.Pointer.call(this, 
 	{	handleDownEvent: this.handleDownEvent_,
 		handleDragEvent: this.handleDragEvent_,
@@ -39,26 +56,13 @@ ol.interaction.Transform = function(options)
 	this.set('scale', (options.scale!==false));
 	/** Can rotate the feature */
 	this.set('rotate', (options.rotate!==false));
+	/** Keep aspect ratio */
+	this.set('keepAspectRatio', (options.keepAspectRatio || function(e){ return e.originalEvent.shiftKey }));
 
 	// Force redraw when changed
 	this.on ('propertychange', function()
 	{	this.drawSketch_();
 	});
-
-	// Create a new overlay layer for the sketch
-	this.handles_ = new ol.Collection();
-	this.overlayLayer_ = new ol.layer.Vector(
-		{	source: new ol.source.Vector({
-				features: this.handles_,
-				useSpatialIndex: false
-			}),
-			name:'Transform overlay',
-			displayInLayerSwitcher: false,
-			// Return the style according to the handle type
-			style: function (feature)
-				{	return (self.style[(feature.get('handle')||'default')+(feature.get('constraint')||'')+(feature.get('option')||'')]);
-				}
-		});
 
 	// setstyle
 	this.setDefaultStyle();
@@ -190,31 +194,32 @@ ol.interaction.Transform.prototype.setStyle = function(style, olstyle)
  * @private
  */
 ol.interaction.Transform.prototype.getFeatureAtPixel_ = function(pixel) 
-{	return this.getMap().forEachFeatureAtPixel(pixel,
+{	var self = this;
+	return this.getMap().forEachFeatureAtPixel(pixel,
 		function(feature, layer) 
 		{	var found = false;
 			// Overlay ?
 			if (!layer)
-			{	if (feature===this.bbox_) return false;
-				this.handles_.forEach (function(f) { if (f===feature) found=true; });
+			{	if (feature===self.bbox_) return false;
+				self.handles_.forEach (function(f) { if (f===feature) found=true; });
 				if (found) return { feature: feature, handle:feature.get('handle'), constraint:feature.get('constraint'), option:feature.get('option') };
 			}
 			// feature belong to a layer
-			if (this.layers_)
-			{	for (var i=0; i<this.layers_.length; i++)
-				{	if (this.layers_[i]===layer) return { feature: feature };
+			if (self.layers_)
+			{	for (var i=0; i<self.layers_.length; i++)
+				{	if (self.layers_[i]===layer) return { feature: feature };
 				}
 				return null;
 			}
 			// feature in the collection
-			else if (this.features_)
-			{	this.features_.forEach (function(f) { if (f===feature) found=true; });
+			else if (self.features_)
+			{	self.features_.forEach (function(f) { if (f===feature) found=true; });
 				if (found) return { feature: feature };
 				else return null;
 			}
 			// Others
 			else return { feature: feature };
-		}, this) || {};
+		}) || {};
 }
 
 /** Draw transform sketch
@@ -367,7 +372,7 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt)
 				else scy=1;
 			}
 			else
-			{	if (evt.originalEvent.shiftKey)
+			{	if (this.get('keepAspectRatio')(evt)) //evt.originalEvent.shiftKey)
 				{	scx = scy = Math.min(scx,scy);
 				}
 			}

@@ -1,17 +1,17 @@
 ﻿<!DOCTYPE html>
 <!----------------------------------------------------------
  
-	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	Copyright (c) 2017 Jean-Marc VIGLINO, 
 	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 	
 ------------------------------------------------------------>
 <html>
 <head>
-	<title>OL3-ext: DBPedia layer</title>
+	<title>OL3-ext: WikiCommons layer</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="DBPedia layer for OL3" />
-	<meta name="keywords" content="ol3, layer, source, vector, wikipedia, dbpedia" />
+	<meta name="description" content="WikiCommons layer for OL3" />
+	<meta name="keywords" content="ol3, layer, source, vector, wikipedia, wikimedia, commons" />
 
 	<!-- jQuery -->
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
@@ -20,8 +20,8 @@
     <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
 	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
 	
-	<!-- DBPedia source -->
-	<script type="text/javascript" src="../layer/dbpediasource.js"></script>
+	<!-- WikiCommons source -->
+	<script type="text/javascript" src="../layer/wikicommonssource.js"></script>
 
 	<!-- Font symbols styles -->
 	<script type="text/javascript" src="../style/fontsymbol.js"></script>
@@ -40,12 +40,10 @@
 	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
 
 	<a href="../index.html">
-		<h1>OL3-ext: DBPedia layer</h1>
+		<h1>OL3-ext: WikiCommons layer</h1>
 	</a>
 	<p class="info">
-		<i>ol.layer.DBPedia</i> is a tile vector layer that use RDF of the <a href="http://fr.dbpedia.org/">french DBpedia project</a>.
-		<br />
-		Symbolisation use Fontawesome with an <a href="map.style.font.html">ol.style.Font</a>.
+		<i>ol.layer.WikiCommons</i> is a tile vector layer that use <a href="https://commons.wikimedia.org/">Wikimedia Commons</a>.
 	</p>
 
 	<!-- DIV pour la carte -->
@@ -65,8 +63,8 @@
 			layers: [ new ol.layer.Tile({ name:"OSM", source: new ol.source.OSM() })]
 		});
 
-	// DBPedia layer source
-	var vectorSource = new ol.source.DBPedia(
+	// WikiCommons layer source
+	var vectorSource = new ol.source.WikiCommons(
 	{	// Tile strategy load at zoom 14
         strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: 14, maxZoom: 14, tileSize:512  })),
 		// Bbox strategy : reload at each move
@@ -82,33 +80,37 @@
 		else $(".options").first().text("");
 	});
 
+	var iconStyle = [ new ol.style.Style() ];
+	var selectStyle = [ new ol.style.Style() ];
 	var vector = new ol.layer.Vector(
-	{	name: 'DBPedia',
+	{	name: 'WikiCommons',
 		source: vectorSource,
 		// Limit resolution to avoid large area request
 		maxResolution: 10, // > zoom 14
 		// y ordering
 		renderOrder: ol.ordering.yOrdering(),
-		// default dbPedia style function
-		style: ol.style.dbPediaStyleFunction()
+		style: function() { return iconStyle }
 	});
 
 	map.addLayer(vector);
 
 	// Control Select 
 	var select = new ol.interaction.Select(
-		{	// select dbPedia style function
-			style: ol.style.dbPediaStyleFunction({ prefix:"sel", radius:12, fill: new ol.style.Fill({ color:"red"}) })
+		{	style: function(){ return selectStyle; }
         })
 	map.addInteraction(select);
-	// On selected
+	// On select > show information
 	select.getFeatures().on(['add','remove'], function(e)
 	{	var info = $("#select").html("");
 		if (e.type=="add") 
 		{	var el = e.element;
-			$("<h2>").text(el.get("label")).appendTo(info);
-			if (el.get("thumbnail")) $("<img>").attr('src',el.get("thumbnail")).appendTo(info);
-			$("<p>").text(el.get("abstract")).appendTo(info);
+			console.log(el.getProperties())
+			$("<h2>").text(el.get("title")).appendTo(info);
+			if (el.get("thumbnail")) 
+			{	$("<img>").attr('src',el.get("thumbnail")).appendTo(info)
+					.wrap($("<a>").attr({href: el.get('descriptionurl'), target:"new" }));
+			}
+			$("<p>").html("&copy; WikiCommons - "+el.get('user')+" - "+el.get('copy')).appendTo(info);
 		}
 	});
 
@@ -128,7 +130,22 @@
 		classes: false,
 		// Clear the cache and force redraw when fonts are loaded
 		active: function() 
-		{	ol.style.clearDBPediaStyleCache(); 
+		{	iconStyle = [ new ol.style.Style(
+			{	image: new ol.style.FontSymbol (
+				{	fill: new ol.style.Fill({ color: "#369" }),
+					stroke: new ol.style.Stroke({ color: "#fff", width: 2 }),
+					radius: 10,
+					glyph: "fa-camera"
+				})
+			})];
+			selectStyle = [ new ol.style.Style(
+			{	image: new ol.style.FontSymbol (
+				{	fill: new ol.style.Fill({ color:"red" }),
+					stroke: new ol.style.Stroke({ color: "#fff", width: 2 }),
+					radius: 12,
+					glyph: "fa-camera"
+				})
+			})];
 			vector.changed(); 
 			console.log("FontAwesome is loaded!");
 		}

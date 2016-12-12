@@ -151,6 +151,13 @@
 		// Handle propertie changes
 		$("#title").on("change", function () { titleControl.setTitle(this.value); });
 		$("#attribution").on("change", function () { attributionControl.setCanvas($(this).prop("checked")); });
+
+		
+		/** Export PNG / JPEG */
+		$(document).ready(function()
+		{	if (map) $("a[download]").exportMap(map);
+		});
+
 	</script>
 
 </body>

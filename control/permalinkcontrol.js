@@ -136,7 +136,7 @@ ol.control.Permalink.prototype.setPosition = function()
 			for (var i=0; i<layers.length; i++)
 			{	if (layers[i].get('permalink')) 
 				{	layers[i].setVisible(false);
-					console.log("hide "+layers[i].get('permalink'));
+					// console.log("hide "+layers[i].get('permalink'));
 				}
 				if (layers[i].getLayers)
 				{	resetLayers (layers[i].getLayers().getArray());
@@ -182,7 +182,8 @@ ol.control.Permalink.prototype.getLink = function()
 
 	for (var i in this.search_) anchor += "&"+i+"="+this.search_[i];
 
-	return document.location.origin+document.location.pathname+this.hash_+anchor;
+	//return document.location.origin+document.location.pathname+this.hash_+anchor;
+	return document.location.protocol+"//"+document.location.host+document.location.pathname+this.hash_+anchor;
 }
 
 /**
