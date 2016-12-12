@@ -2951,7 +2951,7 @@ ol.control.Swipe.prototype.move = function(e)
 			{	if (self.get('orientation') === "vertical")
 				{	var pageX = e.pageX || e.originalEvent.touches[0].pageX;
 					if (!pageX) break;
-					pageX -= $("#map").position().left;
+					pageX -= $(this.getMap().getTarget()).position().left;
 
 					var l = self.getMap().getSize()[0];
 					l = Math.min(Math.max(0, 1-(l-pageX)/l), 1);
@@ -2960,7 +2960,7 @@ ol.control.Swipe.prototype.move = function(e)
 				else
 				{	var pageY = e.pageY || e.originalEvent.touches[0].pageY;
 					if (!pageY) break;
-					pageY -= $("#map").position().top;
+					pageY -= $(this.getMap().getTarget()).position().top;
 				
 					var l = self.getMap().getSize()[1];
 					l = Math.min(Math.max(0, 1-(l-pageY)/l), 1);
