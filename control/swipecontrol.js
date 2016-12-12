@@ -50,7 +50,7 @@ ol.control.Swipe = function(opt_options)
 	}, this);
 	
 	this.set('position', options.position || 0.5);
-	this.set('orientation', options.position || 'vertical');
+	this.set('orientation', options.orientation || 'vertical');
 };
 ol.inherits(ol.control.Swipe, ol.control.Control);
 
