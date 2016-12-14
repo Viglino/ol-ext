@@ -2951,7 +2951,7 @@ ol.control.Swipe.prototype.move = function(e)
 			{	if (self.get('orientation') === "vertical")
 				{	var pageX = e.pageX || e.originalEvent.touches[0].pageX;
 					if (!pageX) break;
-					pageX -= $(self.getMap().getTarget()).position().left;
+					pageX -= $(self.getMap().getTargetElement()).position().left;
 
 					var l = self.getMap().getSize()[0];
 					l = Math.min(Math.max(0, 1-(l-pageX)/l), 1);
@@ -2960,7 +2960,7 @@ ol.control.Swipe.prototype.move = function(e)
 				else
 				{	var pageY = e.pageY || e.originalEvent.touches[0].pageY;
 					if (!pageY) break;
-					pageY -= $(self.getMap().getTarget()).position().top;
+					pageY -= $(self.getMap().getTargetElement()).position().top;
 				
 					var l = self.getMap().getSize()[1];
 					l = Math.min(Math.max(0, 1-(l-pageY)/l), 1);
@@ -3001,6 +3001,7 @@ ol.control.Swipe.prototype.precomposeRight = function(e)
 ol.control.Swipe.prototype.postcompose = function(e) 
 {	ctx = e.context.restore();
 }
+
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -4643,6 +4644,8 @@ ol.interaction.CenterTouch.prototype.drawTarget_ = function (e)
  */
 ol.interaction.Clip = function(options) {
 
+	this.layers_ = [];
+	
 	ol.interaction.Pointer.call(this, 
 	{	handleDownEvent: this.setPosition,
 		handleMoveEvent: this.setPosition
@@ -4653,7 +4656,6 @@ ol.interaction.Clip = function(options) {
 
 	this.pos = false;
 	this.radius = (options.radius||100);
-	this.layers_ = [];
 	if (options.layers) this.addLayer(options.layers);
 };
 ol.inherits(ol.interaction.Clip, ol.interaction.Pointer);
@@ -4753,6 +4755,28 @@ ol.interaction.Clip.prototype.precompose_ = function(e)
 ol.interaction.Clip.prototype.postcompose_ = function(e)
 {	e.context.restore();
 };
+
+/**
+ * Activate or deactivate the interaction.
+ * @param {boolean} active Active.
+ * @observable
+ * @api
+ */
+ol.interaction.Clip.prototype.setActive = function(b) 
+{	ol.interaction.Pointer.prototype.setActive.call (this, b);
+	if(b) {
+		for(var i=0; i<this.layers_.length; i++) {
+			this.layers_[i].on('precompose', this.precompose_, this);
+			this.layers_[i].on('postcompose', this.postcompose_, this);
+		}
+	} else {
+		for(var i=0; i<this.layers_.length; i++) {
+			this.layers_[i].un('precompose', this.precompose_, this);
+			this.layers_[i].un('postcompose', this.postcompose_, this);
+		}
+	}
+	if (this.getMap()) this.getMap().renderSync();
+}
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -6333,6 +6357,7 @@ ol.interaction.Synchronize.prototype.setMap = function(map)
 		this.getMap().getView().un('change:center', this.syncMaps, this);
 		this.getMap().getView().un('change:rotation', this.syncMaps, this);
 		this.getMap().getView().un('change:resolution', this.syncMaps, this);
+		ol.events.unlisten(this.getMap().getViewport(), ol.events.EventType.MOUSEOUT, this.handleMouseOut_, this);
 	}
 	
 	ol.interaction.Interaction.prototype.setMap.call (this, map);
@@ -6341,6 +6366,14 @@ ol.interaction.Synchronize.prototype.setMap = function(map)
 	{	this.getMap().getView().on('change:center', this.syncMaps, this);
 		this.getMap().getView().on('change:rotation', this.syncMaps, this);
 		this.getMap().getView().on('change:resolution', this.syncMaps, this);
+
+		var me = this;
+		$(this.getMap().getTargetElement()).mouseout(function() {
+			for (var i=0; i<me.maps.length; i++)
+			{	me.maps[i].hideTarget();
+			}
+			me.getMap().hideTarget();
+    });
 		this.syncMaps();
 	}
 };
@@ -6392,6 +6425,17 @@ ol.interaction.Synchronize.prototype.handleMove_ = function(e)
 	this.getMap().showTarget();
 };
 
+
+/** Cursor out of map > tells other maps to hide the cursor
+* @param {event} e "mouseOut" event
+*/
+ol.interaction.Synchronize.prototype.handleMouseOut_ = function(e, scope)
+{	for (var i=0; i<scope.maps.length; i++)
+	{
+		scope.maps[i].targetOverlay_.setPosition(undefined);
+	}
+};
+
 /** Show a target overlay at coord
 * @param {ol.coordinate} coord
 */
@@ -6402,8 +6446,18 @@ ol.Map.prototype.showTarget = function(coord)
 		this.targetOverlay_.setPositioning('center-center');
 		this.addOverlay(this.targetOverlay_);
 		elt.parent().addClass("ol-target-overlay");
+		// hack to render targetOverlay before positioning it
+		this.targetOverlay_.setPosition([0,0]);
 	}
 	this.targetOverlay_.setPosition(coord);
+};
+
+/** Hide the target overlay
+*/
+ol.Map.prototype.hideTarget = function()
+{
+	this.removeOverlay(this.targetOverlay_);
+	this.targetOverlay_ = undefined;
 };
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
