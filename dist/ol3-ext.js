@@ -2951,7 +2951,7 @@ ol.control.Swipe.prototype.move = function(e)
 			{	if (self.get('orientation') === "vertical")
 				{	var pageX = e.pageX || e.originalEvent.touches[0].pageX;
 					if (!pageX) break;
-					pageX -= $(self.getMap().getTargetElement()).position().left;
+					pageX -= $(self.getMap().getTargetElement()).offset().left;
 
 					var l = self.getMap().getSize()[0];
 					l = Math.min(Math.max(0, 1-(l-pageX)/l), 1);
@@ -2960,7 +2960,7 @@ ol.control.Swipe.prototype.move = function(e)
 				else
 				{	var pageY = e.pageY || e.originalEvent.touches[0].pageY;
 					if (!pageY) break;
-					pageY -= $(self.getMap().getTargetElement()).position().top;
+					pageY -= $(self.getMap().getTargetElement()).offset().top;
 				
 					var l = self.getMap().getSize()[1];
 					l = Math.min(Math.max(0, 1-(l-pageY)/l), 1);
@@ -3001,7 +3001,6 @@ ol.control.Swipe.prototype.precomposeRight = function(e)
 ol.control.Swipe.prototype.postcompose = function(e) 
 {	ctx = e.context.restore();
 }
-
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -4223,6 +4222,10 @@ ol.filter.Colorize.prototype.setFilter = function(options)
 			//this.set ('operation', 'luminosity')
 			this.set ('operation', 'hard-light');
 			break;
+		case 'contrast':
+			var v = 255*(options.value || 0);
+			this.set('color', ol.color.asString([v,v,v,255]));
+			this.set('operation', 'soft-light');
 		default: 
 			this.set ('operation', 'color');
 			break;
