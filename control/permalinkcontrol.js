@@ -182,7 +182,8 @@ ol.control.Permalink.prototype.getLink = function()
 
 	for (var i in this.search_) anchor += "&"+i+"="+this.search_[i];
 
-	return document.location.origin+document.location.pathname+this.hash_+anchor;
+	//return document.location.origin+document.location.pathname+this.hash_+anchor;
+	return document.location.protocol+"//"+document.location.host+document.location.pathname+this.hash_+anchor;
 }
 
 /**
