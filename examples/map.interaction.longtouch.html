@@ -25,7 +25,6 @@
 	<!-- controls -->
 	<script type="text/javascript" src="../interaction/longtouchinteraction.js"></script>
 
-	<script type="text/javascript" src="../utils/ol.geom.utils.js"></script>
 	<script type="text/javascript" src="../featureanimation/featureanimation.js"></script>
 	<script type="text/javascript" src="../featureanimation/zoomanimation.js"></script>
 
@@ -91,10 +90,27 @@
 		})
 		map.addLayer(vector);
 
+		function pulseFeature(coord)
+		{	var f = new ol.Feature (new ol.geom.Point(coord));
+			f.setStyle (new ol.style.Style(
+						{	image: new ol.style.Circle (
+							{	radius: 30, 
+								stroke: new ol.style.Stroke ({ color:"red", width:2 })
+							})
+						}));
+			map.animateFeature (f, new ol.featureAnimation.Zoom(
+				{	fade: ol.easing.easeOut, 
+					duration:800, 
+					easing: ol.easing[$("#easing").val()] 
+				}));
+		};
+
 		var touchi = new ol.interaction.LongTouch(
 			{	handleLongTouchEvent: function(e)
 				{	var f = new ol.Feature(new ol.geom.Point(e.coordinate));
 					vector.getSource().addFeature(f);
+					pulseFeature(e.coordinate);
+					setTimeout( function(){pulseFeature(e.coordinate);}, 400);
 					$(".options div").text(vector.getSource().getFeatures().length+" features added!");
 				} 
 			});
