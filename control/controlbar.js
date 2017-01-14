@@ -38,6 +38,23 @@ ol.control.Bar = function(options)
 };
 ol.inherits(ol.control.Bar, ol.control.Control);
 
+/** Set the control visibility
+* @paraam {boolean} b 
+*/
+ol.control.Bar.prototype.setVisible = function (val) {
+	if (val) 
+            $(this.element).show();
+	else 
+            $(this.element).hide();
+}
+
+/** Get the control visibility
+* @return {boolean} b 
+*/
+ol.control.Bar.prototype.getVisible = function () 
+{	return ($(this.element).css('display') != 'none');
+}
+
 /**
  * Set the map instance the control is associated with.
  * @param {ol.Map} map The map instance.
