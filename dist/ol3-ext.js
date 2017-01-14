@@ -544,13 +544,19 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 
 		// Show/hide sub layers
 		if (layer.getLayers) 
-		{	$("<div>").addClass(layer.get("openInLayerSwitcher") ? "collapse-layers" : "expend-layers" )
+		{	var nb = 0;
+			layer.getLayers().forEach(function(l)
+			{	if (l.get('displayInLayerSwitcher')) nb++;
+			});
+			if (nb) 
+			{	$("<div>").addClass(layer.get("openInLayerSwitcher") ? "collapse-layers" : "expend-layers" )
 					.click(function()
 					{	var l = $(this).closest('li').data("layer");
 						l.set("openInLayerSwitcher", !l.get("openInLayerSwitcher") )
 					})
 					.attr("title", this.tip.plus)
 					.appendTo(layer_buttons);
+			}
 		}
 
 		// $("<div>").addClass("ol-separator").appendTo(layer_buttons);
@@ -1626,25 +1632,32 @@ ol.control.Globe.prototype.setCenter = function (center, show)
 	this.pointer_.addClass("hidden");
 	if (center)
 	{	var map = this.ovmap_;
-		// var extent = ov.oview_.getProjection().getExtent();
-		var pan = ol.animation.pan(
+		var p = map.getPixelFromCoordinate(center);
+		var h = $(this.element).height();
+		if (map.getView().animate)
+		{	setTimeout(function()
+			{	self.pointer_.css({ 'top': Math.min(Math.max(p[1],0),h) , 'left': "50%" } )
+					.removeClass("hidden");
+			}, 800);
+			map.getView().animate({ center: [center[0],0] });
+		}
+		// Old version (<3.20)
+		else
+		{	var pan = ol.animation.pan(
 			{	duration: 800,
 				source: map.getView().getCenter()
 			});
-		var p = map.getPixelFromCoordinate(center);
-		var h = $(this.element).height();
-		//this.pointer_.css('top', Math.min(Math.max(p[1],0),h));
-		// this.pointer_.css({ 'top': Math.min(Math.max(p[1],0),h) , 'left': p[0] } );
-		map.beforeRender(function(map, frameState)
-		{	var b = pan(map, frameState);
-			if (!b && show!==false) 
-			{	self.pointer_
-					.css({ 'top': Math.min(Math.max(p[1],0),h) , 'left': "50%" } )
-					.removeClass("hidden");
-			}
-			return b;
-		});
-		map.getView().setCenter([center[0],0]);
+			map.beforeRender(function(map, frameState)
+			{	var b = pan(map, frameState);
+				if (!b && show!==false) 
+				{	self.pointer_
+						.css({ 'top': Math.min(Math.max(p[1],0),h) , 'left': "50%" } )
+						.removeClass("hidden");
+				}
+				return b;
+			});
+			map.getView().setCenter([center[0],0]);
+		}
 	}
 };
 
@@ -1883,19 +1896,19 @@ ol.control.Overview = function(opt_options)
 				{	pan = ol.animation.pan(
 					{	duration: 1000,
 						easing: ol.easing.elasticFn(2,0.3),
-						source: self.map_.getView().getCenter()
+						source: self.getMap().getView().getCenter()
 					});
 				}
 				else
 				{	pan = ol.animation.pan(
 					{	duration: 300,
-						source: self.map_.getView().getCenter()
+						source: self.getMap().getView().getCenter()
 					});
 				}
 				
 			}
-			self.map_.beforeRender(pan);
-			self.map_.getView().setCenter(evt.coordinate);
+			self.getMap().beforeRender(pan);
+			self.getMap().getView().setCenter(evt.coordinate);
 			return false;
 		}
 	}));
@@ -1945,7 +1958,7 @@ ol.control.Overview.prototype.setMap = function(map)
 /** Calculate the extent of the map and draw it on the overview
 */
 ol.control.Overview.prototype.calcExtent_ = function(extent)
-{	var map = this.map_;
+{	var map = this.getMap();
 	if (!map) return;
 	
 	var source = this.extentLayer.getSource();
@@ -1994,20 +2007,20 @@ ol.control.Overview.prototype.setView = function(e)
 	// Set the view params
 	switch (e.key)
 	{	case 'rotation':
-			if (this.rotation) this.oview_.setRotation(this.map_.getView().getRotation());
+			if (this.rotation) this.oview_.setRotation(this.getMap().getView().getRotation());
 			else if (this.oview_.getRotation()) this.oview_.setRotation(0);
 			break;
 		case 'center': 
-		{	var mapExtent = this.map_.getView().calculateExtent(this.map_.getSize());
+		{	var mapExtent = this.getMap().getView().calculateExtent(this.getMap().getSize());
 			var extent = this.oview_.calculateExtent(this.ovmap_.getSize());
 			if (mapExtent[0]<extent[0] || mapExtent[1]<extent[1] 
 				|| mapExtent[2]>extent[2] || mapExtent[3]>extent[3])
-			{	this.oview_.setCenter(this.map_.getView().getCenter()); 
+			{	this.oview_.setCenter(this.getMap().getView().getCenter()); 
 			}
 			break;
 		}	
 		case 'resolution':
-		{	var z = Math.round(this.map_.getView().getZoom()/2)*2-4;
+		{	var z = Math.round(this.getMap().getView().getZoom()/2)*2-4;
 			z = Math.min ( this.maxZoom, Math.max(this.minZoom, z) );
 			this.oview_.setZoom(z);
 			break;
@@ -2201,7 +2214,8 @@ ol.control.Permalink.prototype.getLink = function()
 
 	for (var i in this.search_) anchor += "&"+i+"="+this.search_[i];
 
-	return document.location.origin+document.location.pathname+this.hash_+anchor;
+	//return document.location.origin+document.location.pathname+this.hash_+anchor;
+	return document.location.protocol+"//"+document.location.host+document.location.pathname+this.hash_+anchor;
 }
 
 /**
@@ -5573,9 +5587,11 @@ ol.interaction.Hover.prototype.handleMove_ = function(e)
 	if (map)
 	{	//var b = map.hasFeatureAtPixel(e.pixel);
 		var feature, layer;
+		var self = this;
 		var b = map.forEachFeatureAtPixel(e.pixel, 
 					function(f, l)
-					{	if (this.featureFilter_.call(null,f,l))
+					{	if (self.layerFilter_.call(null, l) 
+						 && self.featureFilter_.call(null,f,l))
 						{	feature = f;
 							layer = l;
 							return true;
@@ -5584,7 +5600,7 @@ ol.interaction.Hover.prototype.handleMove_ = function(e)
 						{	feature = layer = null;
 							return false;
 						}
-					}, this, this.layerFilter_)
+					});
 
 		if (b) this.dispatchEvent({ type:"hover", feature:feature, layer:layer, coordinate:e.coordinate, pixel: e.pixel, map: e.map, dragging:e.dragging });
 
@@ -5613,6 +5629,60 @@ ol.interaction.Hover.prototype.handleMove_ = function(e)
 		}
 	}
 };
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Interaction to handle longtouch events
+ * @constructor
+ * @extends {ol.interaction.Interaction}
+ * @fires  
+ * @param {olx.interaction.LongTouchOptions} 
+ *	- handleLongTouchEvent {function | undefined} Function handling "longtouch" events, it will receive a mapBrowserEvent.
+ *	- delay {interger | undefined} The delay for a long touch in ms, default is 1000
+ */
+ol.interaction.LongTouch = function(options) 
+{	if (!options) options = {};
+
+	this.delay_ = options.delay || 1000;
+	var ltouch = options.handleLongTouchEvent || function(){};
+	
+	var _timeout = null;
+	ol.interaction.Interaction.call(this, 
+	{	handleEvent: function(e)
+		{	if (this.getActive())
+			{	switch (e.type)
+				{	case 'pointerdown': 
+						if (_timeout) clearTimeout(_timeout);
+						_timeout = setTimeout (function()
+							{	e.type = "longtouch";
+								ltouch(e) 
+							}, this.delay_);
+						break;
+					case 'pointerup':
+					case 'pointermove':
+					case 'pointerdrag':
+						if (_timeout) 
+						{	clearTimeout(_timeout);
+							_timeout = null;
+						}
+						break;
+					default: break;;
+				}
+			}
+			else
+			{	if (_timeout) 
+				{	clearTimeout(_timeout);
+					_timeout = null;
+				}
+			}
+			return true;
+		}
+	});
+
+};
+ol.inherits(ol.interaction.LongTouch, ol.interaction.Interaction);
+
 /*	
 	Water ripple effect.
 	Original code (Java) by Neil Wallis 
@@ -5802,6 +5872,226 @@ ol.interaction.Ripple.prototype.postcompose_ = function(e)
 	
 	// tell OL3 to continue postcompose animation
 	this.getMap().render(); 
+};
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Interaction to snap to guidelines
+ * @constructor
+ * @extends {ol.interaction.Interaction}
+ * @fires  
+ * @param {olx.interaction.SnapGuidesOptions} 
+ *	- pixelTolerance {number | undefined} distance (in px) to snap to a guideline, default 10 px
+ *	- style {ol.style.Style | Array<ol.style.Style> | undefined} Style for the sektch features. 
+ */
+ol.interaction.SnapGuides = function(options) 
+{	if (!options) options = {};
+
+	// Intersect 2 guides
+	function getIntersectionPoint (d1, d2)
+	{	var d1x = d1[1][0] - d1[0][0];
+		var d1y = d1[1][1] - d1[0][1];
+		var d2x = d2[1][0] - d2[0][0];
+		var d2y = d2[1][1] - d2[0][1];
+		var det = d1x * d2y - d1y * d2x;
+ 
+		if (det != 0)
+		{	var k = (d1x * d1[0][1] - d1x * d2[0][1] - d1y * d1[0][0] + d1y * d2[0][0]) / det;
+			return [d2[0][0] + k*d2x, d2[0][1] + k*d2y];
+		}
+		else return false;
+	}
+	function dist2D (p1,p2)
+	{	var dx = p1[0]-p2[0];
+		var dy = p1[1]-p2[1];
+		return Math.sqrt(dx*dx+dy*dy);
+	}
+
+	// Use snap interaction
+	ol.interaction.Interaction.call(this, 
+	{	handleEvent: function(e)
+		{	if (this.getActive())
+			{	var features = this.overlayLayer_.getSource().getFeatures();
+				var prev = null;
+				var p = null;
+				var res = e.frameState.viewState.resolution;
+				for (var i=0, f; f = features[i]; i++)
+				{	var c = f.getGeometry().getClosestPoint(e.coordinate);
+					if ( dist2D(c, e.coordinate) / res < this.snapDistance_)
+					{	// Intersection on 2 lines
+						if (prev)
+						{	var c2 = getIntersectionPoint(prev.getGeometry().getCoordinates(),  f.getGeometry().getCoordinates());
+							if (c2) 
+							{	if (dist2D(c2, e.coordinate) / res < this.snapDistance_)
+								{	p = c2;
+								}
+							}
+						}
+						else
+						{	p = c;
+						}
+						prev = f;
+					}
+				}
+				if (p) e.coordinate = p;
+			}
+			return true;
+		}
+	});
+
+	// Snap distance (in px)
+	this.snapDistance_ = options.pixelTolerance || 10;
+
+	// Default style
+ 	var sketchStyle = 
+	[	new ol.style.Style({
+			stroke: new ol.style.Stroke(
+			{	color: '#ffcc33',
+				lineDash: [8,5],
+				width: 1.25
+			})
+	   })
+	 ];
+
+	// Custom style
+	if (options.style) sketchStyle = options.style instanceof Array ? options.style : [options.style];
+
+	// Create a new overlay for the sketch
+	this.overlayLayer_ = new ol.layer.Vector(
+	{	source: new ol.source.Vector({
+			features: new ol.Collection(),
+			useSpatialIndex: false
+		}),
+		name:'Snap overlay',
+		displayInLayerSwitcher: false,
+		style: function(f)
+		{	return sketchStyle;
+		}
+	});
+
+};
+ol.inherits(ol.interaction.SnapGuides, ol.interaction.Interaction);
+
+/**
+ * Remove the interaction from its current map, if any,  and attach it to a new
+ * map, if any. Pass `null` to just remove the interaction from the current map.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ol.interaction.SnapGuides.prototype.setMap = function(map) 
+{	if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_);
+	ol.interaction.Interaction.prototype.setMap.call (this, map);
+	this.overlayLayer_.setMap(map);
+};
+
+/** Activate or deactivate the interaction.
+* @param {boolean} active
+*/
+ol.interaction.SnapGuides.prototype.setActive = function(active) 
+{	this.overlayLayer_.setVisible(active);
+	ol.interaction.Interaction.prototype.setActive.call (this, active);
+}
+
+/** Clear previous added guidelines
+* @param {Array<ol.Feature> | undefined} features a list of feature to remove, default remove all feature
+*/
+ol.interaction.SnapGuides.prototype.clearGuides = function(features) 
+{	if (!features) this.overlayLayer_.getSource().clear();
+	else
+	{	for (var i=0, f; f=features[i]; i++)
+		{	this.overlayLayer_.getSource().removeFeature(f);
+		}
+	}
+}
+
+/** Get guidelines
+* @return {ol.Collection} guidelines features
+*/
+ol.interaction.SnapGuides.prototype.getGuides = function(features) 
+{	return this.overlayLayer_.getSource().getFeaturesCollection();
+}
+
+/** Add a new guide to snap to
+* @param {Array<ol.coordinate>} v the direction vector
+* @return {ol.Feature} feature guide
+*/
+ol.interaction.SnapGuides.prototype.addGuide = function(v) 
+{	if (v)
+	{	var dx = v[0][0] - v[1][0];
+		var dy = v[0][1] - v[1][1];
+		var d = 1e8 / Math.sqrt(dx*dx+dy*dy);
+		var p1 = [ v[0][0] + dx*d, v[0][1] + dy*d];
+		var p2 = [ v[0][0] - dx*d, v[0][1] - dy*d];
+		var f = new ol.Feature(new ol.geom.LineString([p1,p2]));
+		this.overlayLayer_.getSource().addFeature(f);
+		return f;
+	}
+};
+
+/** Add a new orthogonal guide to snap to
+* @param {Array<ol.coordinate>} v the direction vector
+* @return {ol.Feature} feature guide
+*/
+ol.interaction.SnapGuides.prototype.addOrthoGuide = function(v) 
+{	if (v)
+	{	var dx = v[0][0] - v[1][0];
+		var dy = v[0][1] - v[1][1];
+		var d = 1e8 / Math.sqrt(dx*dx+dy*dy);
+		var p1 = [ v[0][0] + dy*d, v[0][1] - dx*d];
+		var p2 = [ v[0][0] - dy*d, v[0][1] + dx*d];
+		var f = new ol.Feature(new ol.geom.LineString([p1,p2]));
+		this.overlayLayer_.getSource().addFeature(f);
+		return f;
+	}
+};
+
+/** Listen to draw event to add orthogonal guidelines on the first and last point.
+* @param {ol.interaction.Draw} drawi a draw interaction to listen to
+* @api
+*/
+ol.interaction.SnapGuides.prototype.setDrawInteraction = function(drawi)
+{	// Number of points currently drawing
+	var nb = 0;
+	// Current guidelines
+	var features = [];
+	function setGuides(e)
+	{	var coord = [];
+		var s = 2;
+		switch (e.target.getType())
+		{	case 'LineString':
+				coord = e.target.getCoordinates();
+				s = 2;
+				break;
+			case 'Polygon':
+				coord = e.target.getCoordinates()[0];
+				s = 3;
+				break;
+			default: break;
+		}
+		var l = coord.length;
+		if (l != nb && l > s)
+		{	snapi.clearGuides(features);
+			features = [
+					snapi.addOrthoGuide([coord[l-s],coord[l-s-1]]),
+					snapi.addGuide([coord[0],coord[1]]),
+					snapi.addOrthoGuide([coord[0],coord[1]])
+				];
+			nb = l;
+		}
+	};
+	// New drawing
+	drawi.on ("drawstart", function(e)
+	{	// When geom is changing add a new orthogonal direction 
+		e.feature.getGeometry().on("change", setGuides);
+	});
+	// end drawing, clear directions
+	drawi.on ("drawend", function(e)
+	{	snapi.clearGuides(features);
+		e.feature.getGeometry().un("change", setGuides);
+		nb = 0;
+		features = [];
+	});
 };
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -6581,6 +6871,52 @@ ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
 		e.frameState.animate = true;
 	}
 };
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Interaction TouchDraw: draw on touch device (shortcut).
+ * @constructor
+ * @extends {ol.interaction.Draw}
+ * @param {olx.interaction.DrawOptions} 
+ */
+ol.interaction.TouchDraw = function(options) 
+{	var options = options || {};
+
+	options.freehand = true;
+	//options.condition = ol.events.condition.singleClick;
+	//options.freehandCondition = ol.events.condition.noModifierKeys;
+
+	ol.interaction.Draw.call(this, options);
+
+};
+ol.inherits(ol.interaction.TouchDraw, ol.interaction.Draw);
+
+/** Finish drawing on pointerup
+*/
+ol.interaction.TouchDraw.prototype.stopDrawing_ = function(map) 
+{	if (this.getActive()) this.finishDrawing();
+	return false;
+};
+
+/**
+ * Remove the interaction from its current map, if any,  and attach it to a new
+ * map, if any. Pass `null` to just remove the interaction from the current map.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ol.interaction.TouchDraw.prototype.setMap = function(map) 
+{	if (this.getMap())
+	{	this.getMap().un('pointerup', this.stopDrawing_, this);
+	}
+
+	ol.interaction.Draw.prototype.setMap.call (this, map);
+
+	if (map)
+	{	map.on('pointerup', this.stopDrawing_, this);
+	}
+};
+
 /** Interaction rotate
  * @constructor
  * @extends {ol.interaction.Pointer}
@@ -6773,31 +7109,32 @@ ol.interaction.Transform.prototype.setStyle = function(style, olstyle)
  * @private
  */
 ol.interaction.Transform.prototype.getFeatureAtPixel_ = function(pixel) 
-{	return this.getMap().forEachFeatureAtPixel(pixel,
+{	var self = this;
+	return this.getMap().forEachFeatureAtPixel(pixel,
 		function(feature, layer) 
 		{	var found = false;
 			// Overlay ?
 			if (!layer)
-			{	if (feature===this.bbox_) return false;
-				this.handles_.forEach (function(f) { if (f===feature) found=true; });
+			{	if (feature===self.bbox_) return false;
+				self.handles_.forEach (function(f) { if (f===feature) found=true; });
 				if (found) return { feature: feature, handle:feature.get('handle'), constraint:feature.get('constraint'), option:feature.get('option') };
 			}
 			// feature belong to a layer
-			if (this.layers_)
-			{	for (var i=0; i<this.layers_.length; i++)
-				{	if (this.layers_[i]===layer) return { feature: feature };
+			if (self.layers_)
+			{	for (var i=0; i<self.layers_.length; i++)
+				{	if (self.layers_[i]===layer) return { feature: feature };
 				}
 				return null;
 			}
 			// feature in the collection
-			else if (this.features_)
-			{	this.features_.forEach (function(f) { if (f===feature) found=true; });
+			else if (self.features_)
+			{	self.features_.forEach (function(f) { if (f===feature) found=true; });
 				if (found) return { feature: feature };
 				else return null;
 			}
 			// Others
 			else return { feature: feature };
-		}, this) || {};
+		}) || {};
 }
 
 /** Draw transform sketch
@@ -7558,6 +7895,124 @@ ol.layer.Group.prototype.getPreview = function(lonlat, resolution)
 	return t;
 }
 
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+	
+	@classdesc
+	ol.source.Mapillary is a source that load Wikimedia Commons content in a vector layer.
+	
+	@require jQuery
+	
+	Inherits from:
+	<ol.source.Vector>
+*/
+
+/**
+* @constructor ol.source.Mapillary
+* @extends {ol.source.Vector}
+* @param {olx.source.Mapillary=} options
+* @todo 
+*/
+ol.source.Mapillary = function(opt_options)
+{	var options = opt_options || {};
+	var self = this; 
+
+	options.loader = this._loaderFn;
+	
+	/** Url for DBPedia SPARQL */
+	this._url = options.url || "http://fr.dbpedia.org/sparql";
+
+	/** Max resolution to load features  */
+	this._maxResolution = options.maxResolution || 100;
+	
+	/** Result language */
+	this._lang = options.lang || "fr";
+
+	/** Query limit */
+	this._limit = options.limit || 100;
+	
+	/** Default attribution */
+	if (!options.attributions) options.attributions = [ new ol.Attribution({ html:"&copy; <a href='https://www.mapillary.com/'>Mapillary</a>" }) ];
+
+	// Bbox strategy : reload at each move
+    if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
+
+	ol.source.Vector.call (this, options);	
+};
+ol.inherits (ol.source.Mapillary, ol.source.Vector);
+
+
+/** Decode wiki attributes and choose to add feature to the layer
+* @param {feature} the feature
+* @param {attributes} wiki attributes
+* @return {boolean} true: add the feature to the layer
+* @API stable
+*/
+ol.source.Mapillary.prototype.readFeature = function (feature, attributes)
+{	
+	return true;
+};
+
+
+/** Loader function used to load features.
+* @private
+*/
+ol.source.Mapillary.prototype._loaderFn = function(extent, resolution, projection) 
+{	if (resolution > this._maxResolution) return;
+	var self = this;
+	var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
+	// Commons API: for more info @see https://commons.wikimedia.org/wiki/Commons:API/MediaWiki
+	var date = Date.now() - 6 * 30 * 24 * 60 * 60 * 1000;
+	var url = "https://a.mapillary.com/v2/search/im?client_id="
+		+ this.get('clientId')
+		+ "&max_lat=" + bbox[3]
+		+ "&max_lon=" + bbox[2]
+		+ "&min_lat=" + bbox[1]
+		+ "&min_lon=" + bbox[0]
+		+ "&limit="+(this._limit-1)
+		+ "&start_time=" + date;
+	// Ajax request to get the tile
+	$.ajax(
+	{	url: url,
+		dataType: 'jsonp', 
+		success: function(data) 
+		{	console.log(data);
+			return;
+			var features = [];
+			var att, pt, feature, lastfeature = null;
+			if (!data.query || !data.query.pages) return;
+			for ( var i in data.query.pages)
+			{	att = data.query.pages[i];
+				if (att.coordinates && att.coordinates.length ) 
+				{	pt = [att.coordinates[0].lon, att.coordinates[0].lat];
+				}
+				else
+				{	var meta = att.imageinfo[0].metadata;
+					if (!meta)
+					{	//console.log(att);
+						continue;
+					}
+					pt = [];
+					for (var k=0; k<meta.length; k++)
+					{	if (meta[k].name=="GPSLongitude") pt[0] = meta[k].value;
+						if (meta[k].name=="GPSLatitude") pt[1] = meta[k].value;
+					}
+					if (!pt.length) 
+					{	//console.log(att);
+						continue;
+					}
+				}
+				feature = new ol.Feature(new ol.geom.Point(ol.proj.transform (pt,"EPSG:4326",projection)));
+				att.imageinfo[0].title = att.title;
+				if (self.readFeature(feature, att.imageinfo[0]))
+				{	features.push(feature);
+				}
+			}
+			self.addFeatures(features);
+    }});
+};
+
 /** ol.layer.Vector.prototype.setRender3D
  * @extends {ol.layer.Vector}
  * @param {ol.render3D} 
@@ -7808,6 +8263,132 @@ ol.render3D.prototype.drawFeature3D_ = function(ctx, build)
 		}
 	}
 }
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+	
+	@classdesc
+	ol.source.WikiCommons is a source that load Wikimedia Commons content in a vector layer.
+	
+	@require jQuery
+	
+	Inherits from:
+	<ol.source.Vector>
+*/
+
+/**
+* @constructor ol.source.WikiCommons
+* @extends {ol.source.Vector}
+* @param {olx.source.WikiCommons=} options
+* @todo 
+*/
+ol.source.WikiCommons = function(opt_options)
+{	var options = opt_options || {};
+	var self = this; 
+
+	options.loader = this._loaderFn;
+	
+	/** Url for DBPedia SPARQL */
+	this._url = options.url || "http://fr.dbpedia.org/sparql";
+
+	/** Max resolution to load features  */
+	this._maxResolution = options.maxResolution || 100;
+	
+	/** Result language */
+	this._lang = options.lang || "fr";
+
+	/** Query limit */
+	this._limit = options.limit || 100;
+	
+	/** Default attribution */
+	if (!options.attributions) options.attributions = [ new ol.Attribution({ html:"&copy; <a href='https://commons.wikimedia.org/'>Wikimedia Commons</a>" }) ];
+
+	// Bbox strategy : reload at each move
+    if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
+
+	ol.source.Vector.call (this, options);	
+};
+ol.inherits (ol.source.WikiCommons, ol.source.Vector);
+
+
+/** Decode wiki attributes and choose to add feature to the layer
+* @param {feature} the feature
+* @param {attributes} wiki attributes
+* @return {boolean} true: add the feature to the layer
+* @API stable
+*/
+ol.source.WikiCommons.prototype.readFeature = function (feature, attributes)
+{	feature.set("descriptionurl", attributes.descriptionurl);
+	feature.set("url", attributes.url);
+	feature.set("title", attributes.title.replace(/^file:|.jpg$/ig,""));
+	feature.set("thumbnail", attributes.url.replace(/^(.+wikipedia\/commons)\/([a-zA-Z0-9]\/[a-zA-Z0-9]{2})\/(.+)$/,"$1/thumb/$2/$3/200px-$3"));
+	feature.set("user", attributes.user);
+	return true;
+};
+
+
+/** Loader function used to load features.
+* @private
+*/
+ol.source.WikiCommons.prototype._loaderFn = function(extent, resolution, projection) 
+{	if (resolution > this._maxResolution) return;
+	var self = this;
+	var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
+	// Commons API: for more info @see https://commons.wikimedia.org/wiki/Commons:API/MediaWiki
+	var url = "https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&prop=coordinates|imageinfo"
+		+ "&generator=geosearch&iiprop=timestamp|user|url|extmetadata|metadata|size&iiextmetadatafilter=LicenseShortName"
+		+ "&ggsbbox=" + bbox[3] + "|" + bbox[0] + "|" + bbox[1] + "|" + bbox[2]
+		+ "&ggslimit="+this._limit
+		+ "&iilimit="+(this._limit-1)
+		+ "&ggsnamespace=6";
+
+	// Ajax request to get the tile
+	$.ajax(
+	{	url: url,
+		dataType: 'jsonp', 
+		success: function(data) 
+		{	//console.log(data);
+			var features = [];
+			var att, pt, feature, lastfeature = null;
+			if (!data.query || !data.query.pages) return;
+			for ( var i in data.query.pages)
+			{	att = data.query.pages[i];
+				if (att.coordinates && att.coordinates.length ) 
+				{	pt = [att.coordinates[0].lon, att.coordinates[0].lat];
+				}
+				else
+				{	var meta = att.imageinfo[0].metadata;
+					if (!meta)
+					{	//console.log(att);
+						continue;
+					}
+					pt = [];
+					var found=0;
+					for (var k=0; k<meta.length; k++)
+					{	if (meta[k].name=="GPSLongitude") 
+						{	pt[0] = meta[k].value;
+							found++;
+						}
+						if (meta[k].name=="GPSLatitude") 
+						{	pt[1] = meta[k].value;
+							found++;
+						}
+					}
+					if (found!=2) 
+					{	//console.log(att);
+						continue;
+					}
+				}
+				feature = new ol.Feature(new ol.geom.Point(ol.proj.transform (pt,"EPSG:4326",projection)));
+				att.imageinfo[0].title = att.title;
+				if (self.readFeature(feature, att.imageinfo[0]))
+				{	features.push(feature);
+				}
+			}
+			self.addFeatures(features);
+    }});
+};
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -10683,14 +11264,14 @@ ol.style.Shadow = function(opt_options)
 	this.blur_ = options.blur===0 ? 0 : options.blur || options.radius/3;
 	this.offset_ = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
 
-	this.render_();
+	this.renderShadow_();
 };
 ol.inherits(ol.style.Shadow, ol.style.RegularShape);
 
 /**
  * @private
  */
-ol.style.Shadow.prototype.render_ = function() 
+ol.style.Shadow.prototype.renderShadow_ = function() 
 {	
 	var radius = this.radius_;
 	

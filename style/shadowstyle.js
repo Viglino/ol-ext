@@ -30,14 +30,14 @@ ol.style.Shadow = function(opt_options)
 	this.blur_ = options.blur===0 ? 0 : options.blur || options.radius/3;
 	this.offset_ = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
 
-	this.render_();
+	this.renderShadow_();
 };
 ol.inherits(ol.style.Shadow, ol.style.RegularShape);
 
 /**
  * @private
  */
-ol.style.Shadow.prototype.render_ = function() 
+ol.style.Shadow.prototype.renderShadow_ = function() 
 {	
 	var radius = this.radius_;
 	
