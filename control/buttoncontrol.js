@@ -35,7 +35,7 @@ ol.control.Button = function(options)
 ol.inherits(ol.control.Button, ol.control.Control);
 
 /** Set the control visibility
-* @paraam {boolean} b 
+* @param {boolean} b 
 */
 ol.control.Button.prototype.setVisible = function (val) {
 	if (val) 

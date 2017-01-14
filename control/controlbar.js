@@ -39,7 +39,7 @@ ol.control.Bar = function(options)
 ol.inherits(ol.control.Bar, ol.control.Control);
 
 /** Set the control visibility
-* @paraam {boolean} b 
+* @param {boolean} b 
 */
 ol.control.Bar.prototype.setVisible = function (val) {
 	if (val) 
