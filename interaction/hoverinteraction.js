@@ -77,9 +77,11 @@ ol.interaction.Hover.prototype.handleMove_ = function(e)
 	if (map)
 	{	//var b = map.hasFeatureAtPixel(e.pixel);
 		var feature, layer;
+		var self = this;
 		var b = map.forEachFeatureAtPixel(e.pixel, 
 					function(f, l)
-					{	if (this.featureFilter_.call(null,f,l))
+					{	if (self.layerFilter_.call(null, l) 
+						 && self.featureFilter_.call(null,f,l))
 						{	feature = f;
 							layer = l;
 							return true;
@@ -88,7 +90,7 @@ ol.interaction.Hover.prototype.handleMove_ = function(e)
 						{	feature = layer = null;
 							return false;
 						}
-					}, this, this.layerFilter_)
+					});
 
 		if (b) this.dispatchEvent({ type:"hover", feature:feature, layer:layer, coordinate:e.coordinate, pixel: e.pixel, map: e.map, dragging:e.dragging });
 

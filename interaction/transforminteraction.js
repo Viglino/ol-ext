@@ -190,31 +190,32 @@ ol.interaction.Transform.prototype.setStyle = function(style, olstyle)
  * @private
  */
 ol.interaction.Transform.prototype.getFeatureAtPixel_ = function(pixel) 
-{	return this.getMap().forEachFeatureAtPixel(pixel,
+{	var self = this;
+	return this.getMap().forEachFeatureAtPixel(pixel,
 		function(feature, layer) 
 		{	var found = false;
 			// Overlay ?
 			if (!layer)
-			{	if (feature===this.bbox_) return false;
-				this.handles_.forEach (function(f) { if (f===feature) found=true; });
+			{	if (feature===self.bbox_) return false;
+				self.handles_.forEach (function(f) { if (f===feature) found=true; });
 				if (found) return { feature: feature, handle:feature.get('handle'), constraint:feature.get('constraint'), option:feature.get('option') };
 			}
 			// feature belong to a layer
-			if (this.layers_)
-			{	for (var i=0; i<this.layers_.length; i++)
-				{	if (this.layers_[i]===layer) return { feature: feature };
+			if (self.layers_)
+			{	for (var i=0; i<self.layers_.length; i++)
+				{	if (self.layers_[i]===layer) return { feature: feature };
 				}
 				return null;
 			}
 			// feature in the collection
-			else if (this.features_)
-			{	this.features_.forEach (function(f) { if (f===feature) found=true; });
+			else if (self.features_)
+			{	self.features_.forEach (function(f) { if (f===feature) found=true; });
 				if (found) return { feature: feature };
 				else return null;
 			}
 			// Others
 			else return { feature: feature };
-		}, this) || {};
+		}) || {};
 }
 
 /** Draw transform sketch

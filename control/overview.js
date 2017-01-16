@@ -119,19 +119,19 @@ ol.control.Overview = function(opt_options)
 				{	pan = ol.animation.pan(
 					{	duration: 1000,
 						easing: ol.easing.elasticFn(2,0.3),
-						source: self.map_.getView().getCenter()
+						source: self.getMap().getView().getCenter()
 					});
 				}
 				else
 				{	pan = ol.animation.pan(
 					{	duration: 300,
-						source: self.map_.getView().getCenter()
+						source: self.getMap().getView().getCenter()
 					});
 				}
 				
 			}
-			self.map_.beforeRender(pan);
-			self.map_.getView().setCenter(evt.coordinate);
+			self.getMap().beforeRender(pan);
+			self.getMap().getView().setCenter(evt.coordinate);
 			return false;
 		}
 	}));
@@ -181,7 +181,7 @@ ol.control.Overview.prototype.setMap = function(map)
 /** Calculate the extent of the map and draw it on the overview
 */
 ol.control.Overview.prototype.calcExtent_ = function(extent)
-{	var map = this.map_;
+{	var map = this.getMap();
 	if (!map) return;
 	
 	var source = this.extentLayer.getSource();
@@ -230,20 +230,20 @@ ol.control.Overview.prototype.setView = function(e)
 	// Set the view params
 	switch (e.key)
 	{	case 'rotation':
-			if (this.rotation) this.oview_.setRotation(this.map_.getView().getRotation());
+			if (this.rotation) this.oview_.setRotation(this.getMap().getView().getRotation());
 			else if (this.oview_.getRotation()) this.oview_.setRotation(0);
 			break;
 		case 'center': 
-		{	var mapExtent = this.map_.getView().calculateExtent(this.map_.getSize());
+		{	var mapExtent = this.getMap().getView().calculateExtent(this.getMap().getSize());
 			var extent = this.oview_.calculateExtent(this.ovmap_.getSize());
 			if (mapExtent[0]<extent[0] || mapExtent[1]<extent[1] 
 				|| mapExtent[2]>extent[2] || mapExtent[3]>extent[3])
-			{	this.oview_.setCenter(this.map_.getView().getCenter()); 
+			{	this.oview_.setCenter(this.getMap().getView().getCenter()); 
 			}
 			break;
 		}	
 		case 'resolution':
-		{	var z = Math.round(this.map_.getView().getZoom()/2)*2-4;
+		{	var z = Math.round(this.getMap().getView().getZoom()/2)*2-4;
 			z = Math.min ( this.maxZoom, Math.max(this.minZoom, z) );
 			this.oview_.setZoom(z);
 			break;
