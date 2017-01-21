@@ -36,7 +36,9 @@ ol.interaction.Transform = function(options)
 	/** Can stretch the feature */
 	this.set('stretch', (options.stretch!==false));
 	/** Can scale the feature */
-	this.set('scale', (options.scale!==false));
+	this.set('scale', (options.scale !== false));
+    /** Maintain aspect ratio */
+	this.set('keepaspectratio', (options.keepaspectratio === true));
 	/** Can rotate the feature */
 	this.set('rotate', (options.rotate!==false));
 
@@ -368,8 +370,9 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt)
 				else scy=1;
 			}
 			else
-			{	if (evt.originalEvent.shiftKey)
-				{	scx = scy = Math.min(scx,scy);
+			{
+			    if (evt.originalEvent.shiftKey || this.get('keepaspectratio')) {
+			        scx = scy = Math.min(scx, scy);
 				}
 			}
 
