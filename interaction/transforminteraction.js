@@ -10,6 +10,7 @@
  *	- stretch {bool} can stretch the feature
  *	- scale {bool} can scale the feature
  *	- rotate {bool} can rotate the feature
+ *	- keepAspectRatio { ol.events.ConditionType | undefined } A function that takes an ol.MapBrowserEvent and returns a boolean to keep aspect ratio, default ol.events.condition.shiftKeyOnly.
  *	- style {} list of ol.style for handles
  *
  */
@@ -39,6 +40,8 @@ ol.interaction.Transform = function(options)
 	this.set('scale', (options.scale!==false));
 	/** Can rotate the feature */
 	this.set('rotate', (options.rotate!==false));
+	/** Keep aspect ratio */
+	this.set('keepAspectRatio', (options.keepAspectRatio || function(e){ return e.originalEvent.shiftKey }));
 
 	// Force redraw when changed
 	this.on ('propertychange', function()
@@ -368,7 +371,7 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt)
 				else scy=1;
 			}
 			else
-			{	if (evt.originalEvent.shiftKey)
+			{	if (this.get('keepAspectRatio')(evt)) //evt.originalEvent.shiftKey)
 				{	scx = scy = Math.min(scx,scy);
 				}
 			}
