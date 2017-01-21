@@ -51,13 +51,24 @@ ol.control.Toggle = function(options)
 ol.inherits(ol.control.Toggle, ol.control.Button);
 
 /**
-*/
+ * Set the map instance the control is associated with 
+ * and add interaction attached to it to this map.
+ * @param {ol.Map} map The map instance.
+ */
 ol.control.Toggle.prototype.setMap = function(map)
-{	
+{	if (!map && this.getMap())
+	{	if (this.interaction_) 
+		{	this.getMap().removeInteraction (this.interaction_);
+		}
+		if (this.subbar_) this.getMap().removeControl (this.subbar_);
+	}
+
 	ol.control.Control.prototype.setMap.call(this, map);
 
-	if (this.interaction_) map.addInteraction (this.interaction_);
-	if (this.subbar_) map.addControl (this.subbar_);
+	if (map)
+	{	if (this.interaction_) map.addInteraction (this.interaction_);
+		if (this.subbar_) map.addControl (this.subbar_);
+	}
 };
 
 /** Get the subbar associated with a control
