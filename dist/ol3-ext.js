@@ -546,7 +546,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 		if (layer.getLayers) 
 		{	var nb = 0;
 			layer.getLayers().forEach(function(l)
-			{	if (l.get('displayInLayerSwitcher')) nb++;
+			{	if (l.get('displayInLayerSwitcher')!==false) nb++;
 			});
 			if (nb) 
 			{	$("<div>").addClass(layer.get("openInLayerSwitcher") ? "collapse-layers" : "expend-layers" )
@@ -688,6 +688,21 @@ ol.control.Button = function(options)
 	if (options.title) this.set("title", options.title);
 };
 ol.inherits(ol.control.Button, ol.control.Control);
+
+/** Set the control visibility
+* @param {boolean} b 
+*/
+ol.control.Button.prototype.setVisible = function (val) {
+	if (val) $(this.element).show();
+	else $(this.element).hide();
+}
+
+/** Get the control visibility
+* @return {boolean} b 
+*/
+ol.control.Button.prototype.getVisible = function ()
+{	return ($(this.element).css('display') != 'none');
+}
 
 /** A simple push button control drawn as text
 */
@@ -1345,8 +1360,24 @@ ol.control.Bar = function(options)
 };
 ol.inherits(ol.control.Bar, ol.control.Control);
 
+/** Set the control visibility
+* @param {boolean} b 
+*/
+ol.control.Bar.prototype.setVisible = function (val) {
+	if (val) $(this.element).show();
+	else $(this.element).hide();
+}
+
+/** Get the control visibility
+* @return {boolean} b 
+*/
+ol.control.Bar.prototype.getVisible = function () 
+{	return ($(this.element).css('display') != 'none');
+}
+
 /**
- * Set the map instance the control is associated with.
+ * Set the map instance the control is associated with
+ * and add its controls associated to this map.
  * @param {ol.Map} map The map instance.
  */
 ol.control.Bar.prototype.setMap = function (map)
@@ -1354,7 +1385,8 @@ ol.control.Bar.prototype.setMap = function (map)
 
 	for (var i=0; i<this.controls_.length; i++)
 	{	var c = this.controls_[i];
-		map.addControl(c);
+		// map.addControl(c);
+		c.setMap(map);
 	}
 };
 
@@ -2168,7 +2200,7 @@ ol.control.Permalink.prototype.setPosition = function()
 			for (var i=0; i<layers.length; i++)
 			{	if (layers[i].get('permalink')) 
 				{	layers[i].setVisible(false);
-					console.log("hide "+layers[i].get('permalink'));
+					// console.log("hide "+layers[i].get('permalink'));
 				}
 				if (layers[i].getLayers)
 				{	resetLayers (layers[i].getLayers().getArray());
@@ -2513,6 +2545,7 @@ ol.control.PirateMap.prototype.drawPirate_ = function (event)
  *
  * @constructor
  * @extends {ol.control.Control}
+ * @fires  over, out, show
  * @param {Object=} Control options.
  *
  */
@@ -2529,8 +2562,8 @@ ol.control.Profil = function(opt_options)
 	{	element = $("<div>").addClass((options.className || 'ol-profil') +' ol-unselectable ol-control ol-collapsed');
 		this.button = $("<button>")
 					.on("click touchstart", function(e)
-					{	element.toggleClass("ol-collapsed"); 
-						e.preventDefault(); 
+					{	self.toggle();
+						e.preventDefault();
 					})
 					.appendTo(element);
     }
@@ -2580,7 +2613,7 @@ ol.control.Profil = function(opt_options)
 
 	// Show feature
 	if (options.feature)
-	{	this.setFeature (options.feature);
+	{	this.setGeometry (options.feature);
 	}
 };
 ol.inherits(ol.control.Profil, ol.control.Control);
@@ -2642,21 +2675,28 @@ ol.control.Profil.prototype.onMove = function(e)
 	}
 }
 
-
 /** Show panel
 */
 ol.control.Profil.prototype.show = function()
 {	$(this.element).removeClass("ol-collapsed"); 
+	this.dispatchEvent({ type:'show', show: true });
 }
 /** Hide panel
 */
 ol.control.Profil.prototype.hide = function()
 {	$(this.element).addClass("ol-collapsed"); 
+	this.dispatchEvent({ type:'show', show: false });
 }
 /** Toggle panel
 */
 ol.control.Profil.prototype.toggle = function()
-{	$(this.element).toggleClass("ol-collapsed"); 
+{	var b = $(this.element).toggleClass("ol-collapsed").hasClass("ol-collapsed"); 
+	this.dispatchEvent({ type:'show', show: !b });
+}
+/** Is panel visible
+*/
+ol.control.Profil.prototype.isShown = function()
+{	return (!$(this.element).hasClass("ol-collapsed"));
 }
 
 /**
@@ -2679,11 +2719,15 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	var ctx = canvas.getContext('2d');
 	var w = canvas.width;
 	var h = canvas.height;
+	ctx.setTransform(1, 0, 0, 1, 0, 0);
 	ctx.clearRect(0,0, w, h);
 
 	// No Z
 	if (!/Z/.test(g.getLayout())) return;
-	
+	// No time
+	if(/M/.test(g.getLayout())) $(".time", this.element).parent().show();
+	else $(".time", this.element).parent().hide();
+
 	// Coords
 	var c = g.getCoordinates();
 	switch (g.getType())
@@ -2740,12 +2784,19 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	$(".track-info .dist", this.element).text((d/1000).toFixed(1)+"km");
 	$(".track-info .time", this.element).text(ti);
 
-	//
+	// Set graduation
 	var grad = options.graduation || 100;
-	zmax = Math.ceil(zmax/grad)*grad;
-	zmin = Math.floor(zmin/grad)*grad;
+	while (true) 
+	{	zmax = Math.ceil(zmax/grad)*grad;
+		zmin = Math.floor(zmin/grad)*grad;
+		var nbgrad = (zmax-zmin)/grad;
+		if (h/nbgrad < 15)
+		{	grad *= 2;
+		}
+		else break;
+	} 
 
-	//
+	// Set amplitude
 	if (typeof(options.zmin)=='number' && zmin > options.zmin) zmin = options.zmin;
 	if (typeof(options.zmax)=='number' && zmax < options.zmax) zmax = options.zmax;
 	var amplitude = options.amplitude;
@@ -2753,7 +2804,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	{	zmax = Math.max (zmin + amplitude, zmax);
 	}
 
-	// Scales
+	// Scales lines
 	var scx = w/d;
 	var scy = -h/(zmax-zmin);
 	var dy = this.dy_ = -zmin*scy;
@@ -2763,6 +2814,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	ctx.textAlign = "right";
 	ctx.textBaseline = "middle";
 	ctx.fillStyle="#000";
+	// Scale Z
 	ctx.beginPath();
 	for (var i=zmin; i<=zmax; i+=grad)
 	{	if (options.zunit!="km") ctx.fillText(i, -4, i*scy+dy);
@@ -2771,6 +2823,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 		if (i!=0) ctx.lineTo (d*scx, i*scy+dy);
 		else ctx.lineTo (0, i*scy+dy);
 	}
+	// Scale X
 	ctx.textAlign = "center";
 	ctx.textBaseline = "top";
 	ctx.setLineDash([1,3]);
@@ -2791,7 +2844,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	
 	ctx.stroke();
 
-	//
+	// 
 	ctx.strokeStyle = "#369";
 	ctx.lineWidth = 1;
 	ctx.setLineDash([]);
@@ -2804,12 +2857,13 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 };
 
 /** Get profil image
-*	@param {string|undefined} type image format, default image/png.
+*	@param {string|undefined} type image format or 'canvas' to get the canvas image, default image/png.
 *	@param {Number|undefined} encoderOptions between 0 and 1 indicating image quality image/jpeg or image/webp, default 0.92.
 *	@return {string} requested data uri
 */
 ol.control.Profil.prototype.getImage = function(type, encoderOptions)
-{	return this.canvas_.toDataURL(type, encoderOptions);
+{	if (type==="canvas") return this.canvas_;
+	return this.canvas_.toDataURL(type, encoderOptions);
 }
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
@@ -3212,13 +3266,24 @@ ol.control.Toggle = function(options)
 ol.inherits(ol.control.Toggle, ol.control.Button);
 
 /**
-*/
+ * Set the map instance the control is associated with 
+ * and add interaction attached to it to this map.
+ * @param {ol.Map} map The map instance.
+ */
 ol.control.Toggle.prototype.setMap = function(map)
-{	
+{	if (!map && this.getMap())
+	{	if (this.interaction_) 
+		{	this.getMap().removeInteraction (this.interaction_);
+		}
+		if (this.subbar_) this.getMap().removeControl (this.subbar_);
+	}
+
 	ol.control.Control.prototype.setMap.call(this, map);
 
-	if (this.interaction_) map.addInteraction (this.interaction_);
-	if (this.subbar_) map.addControl (this.subbar_);
+	if (map)
+	{	if (this.interaction_) map.addInteraction (this.interaction_);
+		if (this.subbar_) map.addControl (this.subbar_);
+	}
 };
 
 /** Get the subbar associated with a control
@@ -3913,7 +3978,7 @@ ol.filter.Base.prototype.setActive = function (b)
 *	@return {bool}
 */
 ol.filter.Base.prototype.getActive = function (b)
-{	return this.set('active');
+{	return this.get('active');
 };
 
 (function(){
@@ -4356,6 +4421,270 @@ ol.filter.Crop.prototype.precompose = function(e)
 
 ol.filter.Crop.prototype.postcompose = function(e)
 {	if (this.feature_) e.context.restore();
+}
+
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Make a map or layer look like made of a set of Lego bricks.
+*	@requires ol.filter
+*	@extends {ol.filter.Base}
+*	@param {ol.filter.LegoOptions}
+*		- brickSize {Number} size of te brick, default 30
+*		- crossOrigin {null | string | undefined} crossOrigin attribute for loaded images.
+*/
+ol.filter.Lego = function(options)
+{	if (!options) options = {};
+	ol.filter.Base.call(this, options);
+
+	var img = new Image();
+	// Default image
+	img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAfCAYAAAAfrhY5AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABZ0RVh0Q3JlYXRpb24gVGltZQAxMi8xOS8xNvX4BJkAAAAcdEVYdFNvZnR3YXJlAEFkb2JlIEZpcmV3b3JrcyBDUzbovLKMAAADB0lEQVRIieWXTU8TQRjHfw8t5b2AUFuDB6PSxEhiop75FNz5Dhz4EHwkEu7UcvFIiDFZQ0rrQikUS6m742Gekd3SpVtI5OA/2exs5pn5P+8zK8A8T4QsgDFmBgiAUN9ubPRhwPhRbxGZz0YUqT/KjAdg7F8TDiIP/jtyF/NwhDUl4AUwp99doA20gCZwNSp5GsvzwAdsaTaAb0rW1fkMkANmgU6aPdOSPwc+ATdABfg5QCbQeQAZRhwlN/fIzAOfgQvgS4TgPhgRGQemdF180pgYeQwi4oQE6+proCIivRTEDj1gERsKf5CAy/Yky0vYWH8dkdihAbwGJu8jT8IKUBeR0wcQO9SAd4MmhsV8GjgyxowBrwBfRC70ewVboh3gGfADmMG62iXclSr+FlgAzkchB1u/+UajIcViURyx53lBtVrNr66uzvZ6vdze3t7S9vb25P7+/szOzs7J+vr6dLlcXtb1RhVsRbmGub2rz8Lu7m4Xm+krvu9Pe55XyOfzEgRBpl6vs7a2tnR8fDxeq9V6xWKRzc1N0+l0rtQLgs38WIIPS7hLIO/7/kSpVCo0m82S53lBoVCoHRwctMIwzFWr1fbh4aGfy+WyR0dHU3Nzc5NbW1vLlUrlZmNj41QJDbYJxcgFmDfGXHPbqaKl9hJoiEgWGI8oeq1emNVNLwdYFqrcElDGdsPvwJUxJnaeJ1neVNKkft2OjJNkCtiad11UHN+9MReR1IdEAhawfaKrCsQwLOYAHe10oyKLLTEXpjuHzUDLXe8FEJFQRFzCpEUOeI/tbJfAb1Ugeg9MrvOoAqrErMoP63aLwBtgAttUQlXghttLaYw8DVrYXv8R2zJb2DiGSrQALGMvGQFwpuvOlfiGPren6XBRnGCzuow9MMa4zd4Qm1gXEaVaSviL22v5X7g6b/dP9MPVviKjVuaJe89gLexg4+xiHahCBmxI09R5EgLscXmGTaoM8eR1ZGFkfAejxLwfRjftRcglMmeUONGw1Jb3Z38f3C/WSHjSPxbhCf9S/wDtsjUwAVrtqgAAAABJRU5ErkJggg==";
+	img.crossOrigin = options.crossOrigin || null;
+	
+	// and pattern 
+	this.pattern = 
+	{	canvas: document.createElement('canvas')
+	};
+	this.setBrick (options.brickSize, img);
+	this.internal_ = document.createElement('canvas');
+}
+ol.inherits(ol.filter.Lego, ol.filter.Base);
+
+/** Overwrite to handle brickSize
+* @param {string} key
+* @param {} val
+*/
+ol.filter.Lego.prototype.set = function (key, val)
+{	ol.filter.Base.prototype.set.call(this, key, val);
+	if (key=="brickSize" && this.pattern.canvas.width!=val)
+	{	this.setBrick(val);
+	}
+}
+
+/** Set the current brick
+*	@param {Number} width the pattern width, default 30
+*	@param {Image|undefined} img a square image to use as pattern
+*/
+ol.filter.Lego.prototype.setBrick = function (width, img)
+{	width = Number(width) || 30;
+	if (img) this.pattern.img = img;
+	if (!this.pattern.img.width)
+	{	var self = this;
+		this.pattern.img.onload = function()
+		{	self.setBrick(width,img);
+		}
+		return;
+	}
+	this.pattern.canvas.width = this.pattern.canvas.height = width;
+	this.pattern.ctx = this.pattern.canvas.getContext("2d");
+	this.pattern.ctx.fillStyle = this.pattern.ctx.createPattern (this.pattern.img, 'repeat');
+	this.set("brickSize", width);
+};
+
+/** Get translated pattern
+*	@param {number} offsetX x offset
+*	@param {number} offsetY y offset
+*/
+ol.filter.Lego.prototype.getPattern = function (offsetX, offsetY)
+{	
+	if (!this.pattern.ctx) return "transparent";
+	//return this.pattern.ctx.fillStyle
+
+	var c = this.pattern.canvas;
+	var ctx = this.pattern.ctx;
+	var sc = c.width / this.pattern.img.width;
+	
+	ctx.save();
+		ctx.clearRect(0,0,c.width,c.height);
+
+		ctx.scale(sc,sc);
+		offsetX /= sc;
+		offsetY /= sc;
+
+		ctx.translate(offsetX, offsetY);
+		ctx.beginPath();
+		ctx.clearRect(-2*c.width, -2*c.height, 4*c.width, 4*c.height);
+		ctx.rect(-offsetX, -offsetY, 2*c.width/sc, 2*c.height/sc);
+		ctx.fill(); 
+	ctx.restore();
+	return ctx.createPattern(c, 'repeat');
+};
+
+/** Postcompose operation
+*/
+ol.filter.Lego.prototype.postcompose = function(e)
+{	// Set back color hue
+	var ctx = e.context;
+	var canvas = ctx.canvas;
+	var ratio = e.frameState.pixelRatio;
+
+	ctx.save();
+
+		// resize 
+		var step = this.pattern.canvas.width*ratio, step2 = step/2;
+		var p = e.frameState.extent;
+		var res = e.frameState.viewState.resolution/ratio;
+		var offset = [ -Math.round((p[0]/res)%step), Math.round((p[1]/res)%step) ];
+		var ctx2 = this.internal_.getContext("2d");
+		var w = this.internal_.width = canvas.width;
+		var h = this.internal_.height = canvas.height;
+
+		// No smoothing please
+		ctx2.webkitImageSmoothingEnabled = false;
+		ctx2.mozImageSmoothingEnabled = false;
+		ctx2.imageSmoothingEnabled = false;
+/**/
+		var w2 = Math.floor((w-offset[0])/step);
+		var h2 = Math.floor((h-offset[1])/step);
+		ctx2.drawImage (canvas, offset[0], offset[1], w2*step, h2*step, 0, 0, w2, h2);
+		ctx.webkitImageSmoothingEnabled = false;
+		ctx.mozImageSmoothingEnabled = false;
+		ctx.imageSmoothingEnabled = false; //future
+		ctx.clearRect (0, 0, w,h);
+		ctx.drawImage (this.internal_, 0,0, w2,h2, offset[0],offset[1], w2*step, h2*step);
+/* /
+		for (var x=offset[0]; x<w; x+=step) for (var y=offset[1]; y<h; y+=step)
+		{	if (x>=0 && y<h) ctx2.drawImage (canvas, x, y, 1, 1, x, y, step, step);
+		}
+		ctx.clearRect (0, 0, w,h);
+		ctx.drawImage (c, 0, 0);
+/**/
+		// Draw brick stud
+		ctx.scale(ratio,ratio);
+		ctx.fillStyle = this.getPattern (offset[0]/ratio, offset[1]/ratio);
+		ctx.rect(0,0, w, h);
+		ctx.fill(); 
+
+	ctx.restore();
+};
+
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Make a map or layer look like made of a set of Lego bricks.
+*	@requires ol.filter
+*	@extends {ol.filter.Base}
+*	@param {ol.filter.compositeOptions}
+*
+*/
+ol.filter.Lego = function(options)
+{	if (!options) options = {};
+	ol.filter.Base.call(this, options);
+
+	var img = new Image();
+	img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAfCAYAAAAfrhY5AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABZ0RVh0Q3JlYXRpb24gVGltZQAxMi8xOS8xNvX4BJkAAAAcdEVYdFNvZnR3YXJlAEFkb2JlIEZpcmV3b3JrcyBDUzbovLKMAAADB0lEQVRIieWXTU8TQRjHfw8t5b2AUFuDB6PSxEhiop75FNz5Dhz4EHwkEu7UcvFIiDFZQ0rrQikUS6m742Gekd3SpVtI5OA/2exs5pn5P+8zK8A8T4QsgDFmBgiAUN9ubPRhwPhRbxGZz0YUqT/KjAdg7F8TDiIP/jtyF/NwhDUl4AUwp99doA20gCZwNSp5GsvzwAdsaTaAb0rW1fkMkANmgU6aPdOSPwc+ATdABfg5QCbQeQAZRhwlN/fIzAOfgQvgS4TgPhgRGQemdF180pgYeQwi4oQE6+proCIivRTEDj1gERsKf5CAy/Yky0vYWH8dkdihAbwGJu8jT8IKUBeR0wcQO9SAd4MmhsV8GjgyxowBrwBfRC70ewVboh3gGfADmMG62iXclSr+FlgAzkchB1u/+UajIcViURyx53lBtVrNr66uzvZ6vdze3t7S9vb25P7+/szOzs7J+vr6dLlcXtb1RhVsRbmGub2rz8Lu7m4Xm+krvu9Pe55XyOfzEgRBpl6vs7a2tnR8fDxeq9V6xWKRzc1N0+l0rtQLgs38WIIPS7hLIO/7/kSpVCo0m82S53lBoVCoHRwctMIwzFWr1fbh4aGfy+WyR0dHU3Nzc5NbW1vLlUrlZmNj41QJDbYJxcgFmDfGXHPbqaKl9hJoiEgWGI8oeq1emNVNLwdYFqrcElDGdsPvwJUxJnaeJ1neVNKkft2OjJNkCtiad11UHN+9MReR1IdEAhawfaKrCsQwLOYAHe10oyKLLTEXpjuHzUDLXe8FEJFQRFzCpEUOeI/tbJfAb1Ugeg9MrvOoAqrErMoP63aLwBtgAttUQlXghttLaYw8DVrYXv8R2zJb2DiGSrQALGMvGQFwpuvOlfiGPren6XBRnGCzuow9MMa4zd4Qm1gXEaVaSviL22v5X7g6b/dP9MPVviKjVuaJe89gLexg4+xiHahCBmxI09R5EgLscXmGTaoM8eR1ZGFkfAejxLwfRjftRcglMmeUONGw1Jb3Z38f3C/WSHjSPxbhCf9S/wDtsjUwAVrtqgAAAABJRU5ErkJggg==";
+	img.crossOrigin = "anonymous";
+
+	var self = this;
+	if (img.width) 
+	{	self.setPattern(null, img);
+	}
+	else
+	{	img.onload = function()
+		{	self.setPattern(null, img);
+		}
+	}
+}
+ol.inherits(ol.filter.Lego, ol.filter.Base);
+
+
+ol.filter.Lego.prototype.setPattern = function (width, img)
+{	console.log("setPattern "+this.pattern)
+	if (!this.pattern)
+	{	this.pattern = {};
+		this.pattern.canvas = document.createElement('canvas');
+		$(this.pattern.canvas).appendTo("body");
+
+	}
+	if (img) this.pattern.img = img;
+	this.pattern.canvas.width = width || 30;
+	this.pattern.canvas.height = width || 30;
+	this.pattern.ctx = this.pattern.canvas.getContext("2d");
+	this.pattern.ctx.fillStyle = this.pattern.ctx.createPattern (this.pattern.img, 'repeat');
+}
+
+/** Get translated pattern
+*	@param {number} x offset
+*	@param {number} y offset
+*/
+ol.filter.Lego.prototype.getPattern = function (offsetX, offsetY)
+{	
+	if (!this.pattern) return "transparent";
+	//return this.pattern.ctx.fillStyle
+	console.log("getPattern")
+
+	var c = this.pattern.canvas;
+	var ctx = this.pattern.ctx;
+	var sc = c.width/30;
+
+	ctx.save();
+		ctx.clearRect(0,0,c.width,c.height);
+
+		ctx.scale(sc,sc);
+		offsetX /= sc;
+		offsetY /= sc;
+
+		ctx.translate(offsetX, offsetY);
+		ctx.beginPath();
+		ctx.clearRect(-2*c.width, -2*c.height, 4*c.width, 4*c.height);
+		ctx.rect(-offsetX, -offsetY, 2*c.width, 2*c.height);
+		ctx.fill(); 
+	ctx.restore();
+	return ctx.createPattern(c, 'repeat');
+}
+/**
+*/
+ol.filter.Lego.prototype.postcompose = function(e)
+{	// Set back color hue
+	var ctx = e.context;
+	var canvas = ctx.canvas;
+
+	ctx.save();
+
+		var w = canvas.width;
+		var h = canvas.height;
+
+		// resize %10
+		var step=this.brickWidth, step2=step/2;
+		var p = e.frameState.extent;
+		var res = e.frameState.viewState.resolution;
+		var offset = [ -Math.round((p[0]/res)%step), Math.round((p[1]/res)%step) ];
+		var w2 = Math.floor(w/step);
+		var h2 = Math.floor(h/step);
+		var c = document.createElement('canvas');
+		var ctx2 = c.getContext("2d");
+		c.width = w;
+		c.height = h;
+/*
+		for (var i=0; i<w2; i++) for (var j=0; j<h2; j++)
+		{	var x = i*step +offset[0];
+			var y = j*step +offset[1];
+*/
+		ctx2.webkitImageSmoothingEnabled = false;
+		ctx2.mozImageSmoothingEnabled = false;
+		ctx2.imageSmoothingEnabled = false; //future
+
+		for (var x=offset[0]; x<w; x+=step) for (var y=offset[1]; y<h; y+=step)
+		{	if (x>=0 && y<h) ctx2.drawImage (canvas, x, y, 1, 1, x, y, step, step);
+		}
+
+		// enhance colors
+		ctx.globalCompositeOperation = 'color-burn';
+		ctx.globalAlpha = 0.8;
+		ctx.clearRect(0,0,w,h);
+		ctx.drawImage (c, 0, 0, w,h);
+		ctx.drawImage (canvas, 0, 0, w, h);
+
+		// Translate pattern
+		ctx.fillStyle = this.getPattern (offset[0], offset[1]);
+		ctx.rect(0,0, w, h);
+		ctx.fill(); 
+
+	ctx.restore();
+
 }
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -6929,6 +7258,7 @@ ol.interaction.TouchDraw.prototype.setMap = function(map)
  *	- stretch {bool} can stretch the feature
  *	- scale {bool} can scale the feature
  *	- rotate {bool} can rotate the feature
+ *	- keepAspectRatio { ol.events.ConditionType | undefined } A function that takes an ol.MapBrowserEvent and returns a boolean to keep aspect ratio, default ol.events.condition.shiftKeyOnly.
  *	- style {} list of ol.style for handles
  *
  */
@@ -6958,6 +7288,8 @@ ol.interaction.Transform = function(options)
 	this.set('scale', (options.scale!==false));
 	/** Can rotate the feature */
 	this.set('rotate', (options.rotate!==false));
+	/** Keep aspect ratio */
+	this.set('keepAspectRatio', (options.keepAspectRatio || function(e){ return e.originalEvent.shiftKey }));
 
 	// Force redraw when changed
 	this.on ('propertychange', function()
@@ -7287,7 +7619,7 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt)
 				else scy=1;
 			}
 			else
-			{	if (evt.originalEvent.shiftKey)
+			{	if (this.get('keepAspectRatio')(evt)) //evt.originalEvent.shiftKey)
 				{	scx = scy = Math.min(scx,scy);
 				}
 			}
@@ -7895,124 +8227,6 @@ ol.layer.Group.prototype.getPreview = function(lonlat, resolution)
 	return t;
 }
 
-/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-	
-	@classdesc
-	ol.source.Mapillary is a source that load Wikimedia Commons content in a vector layer.
-	
-	@require jQuery
-	
-	Inherits from:
-	<ol.source.Vector>
-*/
-
-/**
-* @constructor ol.source.Mapillary
-* @extends {ol.source.Vector}
-* @param {olx.source.Mapillary=} options
-* @todo 
-*/
-ol.source.Mapillary = function(opt_options)
-{	var options = opt_options || {};
-	var self = this; 
-
-	options.loader = this._loaderFn;
-	
-	/** Url for DBPedia SPARQL */
-	this._url = options.url || "http://fr.dbpedia.org/sparql";
-
-	/** Max resolution to load features  */
-	this._maxResolution = options.maxResolution || 100;
-	
-	/** Result language */
-	this._lang = options.lang || "fr";
-
-	/** Query limit */
-	this._limit = options.limit || 100;
-	
-	/** Default attribution */
-	if (!options.attributions) options.attributions = [ new ol.Attribution({ html:"&copy; <a href='https://www.mapillary.com/'>Mapillary</a>" }) ];
-
-	// Bbox strategy : reload at each move
-    if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
-
-	ol.source.Vector.call (this, options);	
-};
-ol.inherits (ol.source.Mapillary, ol.source.Vector);
-
-
-/** Decode wiki attributes and choose to add feature to the layer
-* @param {feature} the feature
-* @param {attributes} wiki attributes
-* @return {boolean} true: add the feature to the layer
-* @API stable
-*/
-ol.source.Mapillary.prototype.readFeature = function (feature, attributes)
-{	
-	return true;
-};
-
-
-/** Loader function used to load features.
-* @private
-*/
-ol.source.Mapillary.prototype._loaderFn = function(extent, resolution, projection) 
-{	if (resolution > this._maxResolution) return;
-	var self = this;
-	var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
-	// Commons API: for more info @see https://commons.wikimedia.org/wiki/Commons:API/MediaWiki
-	var date = Date.now() - 6 * 30 * 24 * 60 * 60 * 1000;
-	var url = "https://a.mapillary.com/v2/search/im?client_id="
-		+ this.get('clientId')
-		+ "&max_lat=" + bbox[3]
-		+ "&max_lon=" + bbox[2]
-		+ "&min_lat=" + bbox[1]
-		+ "&min_lon=" + bbox[0]
-		+ "&limit="+(this._limit-1)
-		+ "&start_time=" + date;
-	// Ajax request to get the tile
-	$.ajax(
-	{	url: url,
-		dataType: 'jsonp', 
-		success: function(data) 
-		{	console.log(data);
-			return;
-			var features = [];
-			var att, pt, feature, lastfeature = null;
-			if (!data.query || !data.query.pages) return;
-			for ( var i in data.query.pages)
-			{	att = data.query.pages[i];
-				if (att.coordinates && att.coordinates.length ) 
-				{	pt = [att.coordinates[0].lon, att.coordinates[0].lat];
-				}
-				else
-				{	var meta = att.imageinfo[0].metadata;
-					if (!meta)
-					{	//console.log(att);
-						continue;
-					}
-					pt = [];
-					for (var k=0; k<meta.length; k++)
-					{	if (meta[k].name=="GPSLongitude") pt[0] = meta[k].value;
-						if (meta[k].name=="GPSLatitude") pt[1] = meta[k].value;
-					}
-					if (!pt.length) 
-					{	//console.log(att);
-						continue;
-					}
-				}
-				feature = new ol.Feature(new ol.geom.Point(ol.proj.transform (pt,"EPSG:4326",projection)));
-				att.imageinfo[0].title = att.title;
-				if (self.readFeature(feature, att.imageinfo[0]))
-				{	features.push(feature);
-				}
-			}
-			self.addFeatures(features);
-    }});
-};
-
 /** ol.layer.Vector.prototype.setRender3D
  * @extends {ol.layer.Vector}
  * @param {ol.render3D} 
@@ -8324,6 +8538,7 @@ ol.source.WikiCommons.prototype.readFeature = function (feature, attributes)
 	feature.set("title", attributes.title.replace(/^file:|.jpg$/ig,""));
 	feature.set("thumbnail", attributes.url.replace(/^(.+wikipedia\/commons)\/([a-zA-Z0-9]\/[a-zA-Z0-9]{2})\/(.+)$/,"$1/thumb/$2/$3/200px-$3"));
 	feature.set("user", attributes.user);
+	if (attributes.extmetadata && attributes.extmetadata.LicenseShortName) feature.set("copy", attributes.extmetadata.LicenseShortName.value);
 	return true;
 };
 
@@ -11559,11 +11774,6 @@ $.fn.exportMap = function(map, options)
 		}
 	});
 }
-
-/** Export PNG / JPEG */
-$(document).ready(function()
-{	$("a[download]").exportMap(map);
-});
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
