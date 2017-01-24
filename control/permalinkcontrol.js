@@ -136,7 +136,7 @@ ol.control.Permalink.prototype.setPosition = function()
 			for (var i=0; i<layers.length; i++)
 			{	if (layers[i].get('permalink')) 
 				{	layers[i].setVisible(false);
-					console.log("hide "+layers[i].get('permalink'));
+					// console.log("hide "+layers[i].get('permalink'));
 				}
 				if (layers[i].getLayers)
 				{	resetLayers (layers[i].getLayers().getArray());

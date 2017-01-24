@@ -1,4 +1,4 @@
-/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+﻿/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
@@ -8,6 +8,7 @@
  *
  * @constructor
  * @extends {ol.control.Control}
+ * @fires  over, out, show
  * @param {Object=} Control options.
  *
  */
@@ -24,8 +25,8 @@ ol.control.Profil = function(opt_options)
 	{	element = $("<div>").addClass((options.className || 'ol-profil') +' ol-unselectable ol-control ol-collapsed');
 		this.button = $("<button>")
 					.on("click touchstart", function(e)
-					{	element.toggleClass("ol-collapsed"); 
-						e.preventDefault(); 
+					{	self.toggle();
+						e.preventDefault();
 					})
 					.appendTo(element);
     }
@@ -75,7 +76,7 @@ ol.control.Profil = function(opt_options)
 
 	// Show feature
 	if (options.feature)
-	{	this.setFeature (options.feature);
+	{	this.setGeometry (options.feature);
 	}
 };
 ol.inherits(ol.control.Profil, ol.control.Control);
@@ -137,21 +138,28 @@ ol.control.Profil.prototype.onMove = function(e)
 	}
 }
 
-
 /** Show panel
 */
 ol.control.Profil.prototype.show = function()
 {	$(this.element).removeClass("ol-collapsed"); 
+	this.dispatchEvent({ type:'show', show: true });
 }
 /** Hide panel
 */
 ol.control.Profil.prototype.hide = function()
 {	$(this.element).addClass("ol-collapsed"); 
+	this.dispatchEvent({ type:'show', show: false });
 }
 /** Toggle panel
 */
 ol.control.Profil.prototype.toggle = function()
-{	$(this.element).toggleClass("ol-collapsed"); 
+{	var b = $(this.element).toggleClass("ol-collapsed").hasClass("ol-collapsed"); 
+	this.dispatchEvent({ type:'show', show: !b });
+}
+/** Is panel visible
+*/
+ol.control.Profil.prototype.isShown = function()
+{	return (!$(this.element).hasClass("ol-collapsed"));
 }
 
 /**
@@ -174,11 +182,15 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	var ctx = canvas.getContext('2d');
 	var w = canvas.width;
 	var h = canvas.height;
+	ctx.setTransform(1, 0, 0, 1, 0, 0);
 	ctx.clearRect(0,0, w, h);
 
 	// No Z
 	if (!/Z/.test(g.getLayout())) return;
-	
+	// No time
+	if(/M/.test(g.getLayout())) $(".time", this.element).parent().show();
+	else $(".time", this.element).parent().hide();
+
 	// Coords
 	var c = g.getCoordinates();
 	switch (g.getType())
@@ -235,12 +247,19 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	$(".track-info .dist", this.element).text((d/1000).toFixed(1)+"km");
 	$(".track-info .time", this.element).text(ti);
 
-	//
+	// Set graduation
 	var grad = options.graduation || 100;
-	zmax = Math.ceil(zmax/grad)*grad;
-	zmin = Math.floor(zmin/grad)*grad;
+	while (true) 
+	{	zmax = Math.ceil(zmax/grad)*grad;
+		zmin = Math.floor(zmin/grad)*grad;
+		var nbgrad = (zmax-zmin)/grad;
+		if (h/nbgrad < 15)
+		{	grad *= 2;
+		}
+		else break;
+	} 
 
-	//
+	// Set amplitude
 	if (typeof(options.zmin)=='number' && zmin > options.zmin) zmin = options.zmin;
 	if (typeof(options.zmax)=='number' && zmax < options.zmax) zmax = options.zmax;
 	var amplitude = options.amplitude;
@@ -248,7 +267,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	{	zmax = Math.max (zmin + amplitude, zmax);
 	}
 
-	// Scales
+	// Scales lines
 	var scx = w/d;
 	var scy = -h/(zmax-zmin);
 	var dy = this.dy_ = -zmin*scy;
@@ -258,6 +277,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	ctx.textAlign = "right";
 	ctx.textBaseline = "middle";
 	ctx.fillStyle="#000";
+	// Scale Z
 	ctx.beginPath();
 	for (var i=zmin; i<=zmax; i+=grad)
 	{	if (options.zunit!="km") ctx.fillText(i, -4, i*scy+dy);
@@ -266,6 +286,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 		if (i!=0) ctx.lineTo (d*scx, i*scy+dy);
 		else ctx.lineTo (0, i*scy+dy);
 	}
+	// Scale X
 	ctx.textAlign = "center";
 	ctx.textBaseline = "top";
 	ctx.setLineDash([1,3]);
@@ -286,7 +307,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	
 	ctx.stroke();
 
-	//
+	// 
 	ctx.strokeStyle = "#369";
 	ctx.lineWidth = 1;
 	ctx.setLineDash([]);
@@ -299,10 +320,11 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 };
 
 /** Get profil image
-*	@param {string|undefined} type image format, default image/png.
+*	@param {string|undefined} type image format or 'canvas' to get the canvas image, default image/png.
 *	@param {Number|undefined} encoderOptions between 0 and 1 indicating image quality image/jpeg or image/webp, default 0.92.
 *	@return {string} requested data uri
 */
 ol.control.Profil.prototype.getImage = function(type, encoderOptions)
-{	return this.canvas_.toDataURL(type, encoderOptions);
+{	if (type==="canvas") return this.canvas_;
+	return this.canvas_.toDataURL(type, encoderOptions);
 }

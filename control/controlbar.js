@@ -42,10 +42,8 @@ ol.inherits(ol.control.Bar, ol.control.Control);
 * @param {boolean} b 
 */
 ol.control.Bar.prototype.setVisible = function (val) {
-	if (val) 
-            $(this.element).show();
-	else 
-            $(this.element).hide();
+	if (val) $(this.element).show();
+	else $(this.element).hide();
 }
 
 /** Get the control visibility
@@ -56,7 +54,8 @@ ol.control.Bar.prototype.getVisible = function ()
 }
 
 /**
- * Set the map instance the control is associated with.
+ * Set the map instance the control is associated with
+ * and add its controls associated to this map.
  * @param {ol.Map} map The map instance.
  */
 ol.control.Bar.prototype.setMap = function (map)
@@ -64,7 +63,8 @@ ol.control.Bar.prototype.setMap = function (map)
 
 	for (var i=0; i<this.controls_.length; i++)
 	{	var c = this.controls_[i];
-		map.addControl(c);
+		// map.addControl(c);
+		c.setMap(map);
 	}
 };
 

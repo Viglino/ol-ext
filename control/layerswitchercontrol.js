@@ -538,7 +538,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 		if (layer.getLayers) 
 		{	var nb = 0;
 			layer.getLayers().forEach(function(l)
-			{	if (l.get('displayInLayerSwitcher')) nb++;
+			{	if (l.get('displayInLayerSwitcher')!==false) nb++;
 			});
 			if (nb) 
 			{	$("<div>").addClass(layer.get("openInLayerSwitcher") ? "collapse-layers" : "expend-layers" )
