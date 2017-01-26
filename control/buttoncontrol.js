@@ -38,10 +38,8 @@ ol.inherits(ol.control.Button, ol.control.Control);
 * @param {boolean} b 
 */
 ol.control.Button.prototype.setVisible = function (val) {
-	if (val) 
-            $(this.element).show();
-	else 
-            $(this.element).hide();
+	if (val) $(this.element).show();
+	else $(this.element).hide();
 }
 
 /** Get the control visibility

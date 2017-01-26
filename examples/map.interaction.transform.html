@@ -72,8 +72,10 @@
 		</li><li>
 			<input id="translateFeature" type="checkbox" onchange="setPropertie(this.id);" /><label for="translateFeature"> translate when click on feature</label>
 		</li><li>
+			<input id="keepAspectRatio" type="checkbox" onchange="setAspectRatio(this.id);" /><label for="keepAspectRatio"> force keepAspectRatio (default use <i>Shift</i>)</label>
+		</li><li>
 			<hr/>
-			Use <i>Shift</i> key to preserve proportions when scaling.
+			Use <i>Shift</i> key to preserve proportions when scaling (see keepAspectRatio).
 			<br />
 			Use <i>Ctrl</i> key to modify the center when scaling.
 		</li></ul>
@@ -212,10 +214,16 @@
 			else $("#stretch").prop('disabled', false);
 		}
 
+		function setAspectRatio (p)
+		{	if ($("#"+p).prop('checked')) interaction.set("keepAspectRatio", ol.events.condition.always);
+			else interaction.set("keepAspectRatio", function(e){ return e.originalEvent.shiftKey });
+		}
+
 		var interaction = new ol.interaction.Transform (
 			{	translateFeature: $("#translateFeature").prop('checked'),
 				scale: $("#scale").prop('checked'),
 				rotate: $("#rotate").prop('checked'),
+				keepAspectRatio: $("#keepAspectRatio").prop('checked') ? ol.events.condition.always : undefined,
 				translate: $("#translate").prop('checked'),
 				stretch: $("#stretch").prop('checked'),
 			});
