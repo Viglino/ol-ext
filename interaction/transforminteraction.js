@@ -18,6 +18,22 @@ ol.interaction.Transform = function(options)
 {	if (!options) options={};
 	var self = this;
 
+	// Create a new overlay layer for the sketch
+	this.handles_ = new ol.Collection();
+	this.overlayLayer_ = new ol.layer.Vector(
+		{	source: new ol.source.Vector({
+				features: this.handles_,
+				useSpatialIndex: false
+			}),
+			name:'Transform overlay',
+			displayInLayerSwitcher: false,
+			// Return the style according to the handle type
+			style: function (feature)
+				{	return (self.style[(feature.get('handle')||'default')+(feature.get('constraint')||'')+(feature.get('option')||'')]);
+				}
+		});
+
+	// Extend pointer
 	ol.interaction.Pointer.call(this, 
 	{	handleDownEvent: this.handleDownEvent_,
 		handleDragEvent: this.handleDragEvent_,
@@ -47,21 +63,6 @@ ol.interaction.Transform = function(options)
 	this.on ('propertychange', function()
 	{	this.drawSketch_();
 	});
-
-	// Create a new overlay layer for the sketch
-	this.handles_ = new ol.Collection();
-	this.overlayLayer_ = new ol.layer.Vector(
-		{	source: new ol.source.Vector({
-				features: this.handles_,
-				useSpatialIndex: false
-			}),
-			name:'Transform overlay',
-			displayInLayerSwitcher: false,
-			// Return the style according to the handle type
-			style: function (feature)
-				{	return (self.style[(feature.get('handle')||'default')+(feature.get('constraint')||'')+(feature.get('option')||'')]);
-				}
-		});
 
 	// setstyle
 	this.setDefaultStyle();
