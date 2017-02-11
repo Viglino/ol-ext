@@ -673,7 +673,7 @@ ol.control.Button = function(options)
 	var self = this;
 
 	$("<button>").html(options.html || "")
-				.attr('title', options.title)
+				.attr('title', options.title || "")
 				.on("touchstart click", function(e)
 				{	if (e && e.preventDefault) e.preventDefault();
 					if (options.handleClick) options.handleClick.call(self, e);
@@ -4440,7 +4440,7 @@ ol.filter.Lego = function(options)
 
 	var img = new Image();
 	// Default image
-	img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAfCAYAAAAfrhY5AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABZ0RVh0Q3JlYXRpb24gVGltZQAxMi8xOS8xNvX4BJkAAAAcdEVYdFNvZnR3YXJlAEFkb2JlIEZpcmV3b3JrcyBDUzbovLKMAAADB0lEQVRIieWXTU8TQRjHfw8t5b2AUFuDB6PSxEhiop75FNz5Dhz4EHwkEu7UcvFIiDFZQ0rrQikUS6m742Gekd3SpVtI5OA/2exs5pn5P+8zK8A8T4QsgDFmBgiAUN9ubPRhwPhRbxGZz0YUqT/KjAdg7F8TDiIP/jtyF/NwhDUl4AUwp99doA20gCZwNSp5GsvzwAdsaTaAb0rW1fkMkANmgU6aPdOSPwc+ATdABfg5QCbQeQAZRhwlN/fIzAOfgQvgS4TgPhgRGQemdF180pgYeQwi4oQE6+proCIivRTEDj1gERsKf5CAy/Yky0vYWH8dkdihAbwGJu8jT8IKUBeR0wcQO9SAd4MmhsV8GjgyxowBrwBfRC70ewVboh3gGfADmMG62iXclSr+FlgAzkchB1u/+UajIcViURyx53lBtVrNr66uzvZ6vdze3t7S9vb25P7+/szOzs7J+vr6dLlcXtb1RhVsRbmGub2rz8Lu7m4Xm+krvu9Pe55XyOfzEgRBpl6vs7a2tnR8fDxeq9V6xWKRzc1N0+l0rtQLgs38WIIPS7hLIO/7/kSpVCo0m82S53lBoVCoHRwctMIwzFWr1fbh4aGfy+WyR0dHU3Nzc5NbW1vLlUrlZmNj41QJDbYJxcgFmDfGXHPbqaKl9hJoiEgWGI8oeq1emNVNLwdYFqrcElDGdsPvwJUxJnaeJ1neVNKkft2OjJNkCtiad11UHN+9MReR1IdEAhawfaKrCsQwLOYAHe10oyKLLTEXpjuHzUDLXe8FEJFQRFzCpEUOeI/tbJfAb1Ugeg9MrvOoAqrErMoP63aLwBtgAttUQlXghttLaYw8DVrYXv8R2zJb2DiGSrQALGMvGQFwpuvOlfiGPren6XBRnGCzuow9MMa4zd4Qm1gXEaVaSviL22v5X7g6b/dP9MPVviKjVuaJe89gLexg4+xiHahCBmxI09R5EgLscXmGTaoM8eR1ZGFkfAejxLwfRjftRcglMmeUONGw1Jb3Z38f3C/WSHjSPxbhCf9S/wDtsjUwAVrtqgAAAABJRU5ErkJggg==";
+	img.src = this.img[options.img] || this.img.ol3;
 	img.crossOrigin = options.crossOrigin || null;
 	
 	// and pattern 
@@ -4451,6 +4451,14 @@ ol.filter.Lego = function(options)
 	this.internal_ = document.createElement('canvas');
 }
 ol.inherits(ol.filter.Lego, ol.filter.Base);
+
+/** Image definition
+*/
+ol.filter.Lego.prototype.img =
+{	brick: "data:image/png;base64,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",
+	ol3: "data:image/png;base64,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",
+	lego: "data:image/png;base64,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"
+};
 
 /** Overwrite to handle brickSize
 * @param {string} key
@@ -4465,10 +4473,17 @@ ol.filter.Lego.prototype.set = function (key, val)
 
 /** Set the current brick
 *	@param {Number} width the pattern width, default 30
-*	@param {Image|undefined} img a square image to use as pattern
+*	@param {brick|ol3|lego|undefined} img the pattern, default ol3
+*	@param {string} crossOrigin
 */
-ol.filter.Lego.prototype.setBrick = function (width, img)
+ol.filter.Lego.prototype.setBrick = function (width, img, crossOrigin)
 {	width = Number(width) || 30;
+	if (typeof(img) === 'string') 
+	{	var i = new Image;
+		i.src = this.img[img] || this.img.ol3;
+		i.crossOrigin = crossOrigin || null;
+		img = i;
+	}
 	if (img) this.pattern.img = img;
 	if (!this.pattern.img.width)
 	{	var self = this;
@@ -4481,6 +4496,7 @@ ol.filter.Lego.prototype.setBrick = function (width, img)
 	this.pattern.ctx = this.pattern.canvas.getContext("2d");
 	this.pattern.ctx.fillStyle = this.pattern.ctx.createPattern (this.pattern.img, 'repeat');
 	this.set("brickSize", width);
+	this.set("img", img.src);
 };
 
 /** Get translated pattern
@@ -4559,133 +4575,6 @@ ol.filter.Lego.prototype.postcompose = function(e)
 
 	ctx.restore();
 };
-
-/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-/** Make a map or layer look like made of a set of Lego bricks.
-*	@requires ol.filter
-*	@extends {ol.filter.Base}
-*	@param {ol.filter.compositeOptions}
-*
-*/
-ol.filter.Lego = function(options)
-{	if (!options) options = {};
-	ol.filter.Base.call(this, options);
-
-	var img = new Image();
-	img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAfCAYAAAAfrhY5AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABZ0RVh0Q3JlYXRpb24gVGltZQAxMi8xOS8xNvX4BJkAAAAcdEVYdFNvZnR3YXJlAEFkb2JlIEZpcmV3b3JrcyBDUzbovLKMAAADB0lEQVRIieWXTU8TQRjHfw8t5b2AUFuDB6PSxEhiop75FNz5Dhz4EHwkEu7UcvFIiDFZQ0rrQikUS6m742Gekd3SpVtI5OA/2exs5pn5P+8zK8A8T4QsgDFmBgiAUN9ubPRhwPhRbxGZz0YUqT/KjAdg7F8TDiIP/jtyF/NwhDUl4AUwp99doA20gCZwNSp5GsvzwAdsaTaAb0rW1fkMkANmgU6aPdOSPwc+ATdABfg5QCbQeQAZRhwlN/fIzAOfgQvgS4TgPhgRGQemdF180pgYeQwi4oQE6+proCIivRTEDj1gERsKf5CAy/Yky0vYWH8dkdihAbwGJu8jT8IKUBeR0wcQO9SAd4MmhsV8GjgyxowBrwBfRC70ewVboh3gGfADmMG62iXclSr+FlgAzkchB1u/+UajIcViURyx53lBtVrNr66uzvZ6vdze3t7S9vb25P7+/szOzs7J+vr6dLlcXtb1RhVsRbmGub2rz8Lu7m4Xm+krvu9Pe55XyOfzEgRBpl6vs7a2tnR8fDxeq9V6xWKRzc1N0+l0rtQLgs38WIIPS7hLIO/7/kSpVCo0m82S53lBoVCoHRwctMIwzFWr1fbh4aGfy+WyR0dHU3Nzc5NbW1vLlUrlZmNj41QJDbYJxcgFmDfGXHPbqaKl9hJoiEgWGI8oeq1emNVNLwdYFqrcElDGdsPvwJUxJnaeJ1neVNKkft2OjJNkCtiad11UHN+9MReR1IdEAhawfaKrCsQwLOYAHe10oyKLLTEXpjuHzUDLXe8FEJFQRFzCpEUOeI/tbJfAb1Ugeg9MrvOoAqrErMoP63aLwBtgAttUQlXghttLaYw8DVrYXv8R2zJb2DiGSrQALGMvGQFwpuvOlfiGPren6XBRnGCzuow9MMa4zd4Qm1gXEaVaSviL22v5X7g6b/dP9MPVviKjVuaJe89gLexg4+xiHahCBmxI09R5EgLscXmGTaoM8eR1ZGFkfAejxLwfRjftRcglMmeUONGw1Jb3Z38f3C/WSHjSPxbhCf9S/wDtsjUwAVrtqgAAAABJRU5ErkJggg==";
-	img.crossOrigin = "anonymous";
-
-	var self = this;
-	if (img.width) 
-	{	self.setPattern(null, img);
-	}
-	else
-	{	img.onload = function()
-		{	self.setPattern(null, img);
-		}
-	}
-}
-ol.inherits(ol.filter.Lego, ol.filter.Base);
-
-
-ol.filter.Lego.prototype.setPattern = function (width, img)
-{	console.log("setPattern "+this.pattern)
-	if (!this.pattern)
-	{	this.pattern = {};
-		this.pattern.canvas = document.createElement('canvas');
-		$(this.pattern.canvas).appendTo("body");
-
-	}
-	if (img) this.pattern.img = img;
-	this.pattern.canvas.width = width || 30;
-	this.pattern.canvas.height = width || 30;
-	this.pattern.ctx = this.pattern.canvas.getContext("2d");
-	this.pattern.ctx.fillStyle = this.pattern.ctx.createPattern (this.pattern.img, 'repeat');
-}
-
-/** Get translated pattern
-*	@param {number} x offset
-*	@param {number} y offset
-*/
-ol.filter.Lego.prototype.getPattern = function (offsetX, offsetY)
-{	
-	if (!this.pattern) return "transparent";
-	//return this.pattern.ctx.fillStyle
-	console.log("getPattern")
-
-	var c = this.pattern.canvas;
-	var ctx = this.pattern.ctx;
-	var sc = c.width/30;
-
-	ctx.save();
-		ctx.clearRect(0,0,c.width,c.height);
-
-		ctx.scale(sc,sc);
-		offsetX /= sc;
-		offsetY /= sc;
-
-		ctx.translate(offsetX, offsetY);
-		ctx.beginPath();
-		ctx.clearRect(-2*c.width, -2*c.height, 4*c.width, 4*c.height);
-		ctx.rect(-offsetX, -offsetY, 2*c.width, 2*c.height);
-		ctx.fill(); 
-	ctx.restore();
-	return ctx.createPattern(c, 'repeat');
-}
-/**
-*/
-ol.filter.Lego.prototype.postcompose = function(e)
-{	// Set back color hue
-	var ctx = e.context;
-	var canvas = ctx.canvas;
-
-	ctx.save();
-
-		var w = canvas.width;
-		var h = canvas.height;
-
-		// resize %10
-		var step=this.brickWidth, step2=step/2;
-		var p = e.frameState.extent;
-		var res = e.frameState.viewState.resolution;
-		var offset = [ -Math.round((p[0]/res)%step), Math.round((p[1]/res)%step) ];
-		var w2 = Math.floor(w/step);
-		var h2 = Math.floor(h/step);
-		var c = document.createElement('canvas');
-		var ctx2 = c.getContext("2d");
-		c.width = w;
-		c.height = h;
-/*
-		for (var i=0; i<w2; i++) for (var j=0; j<h2; j++)
-		{	var x = i*step +offset[0];
-			var y = j*step +offset[1];
-*/
-		ctx2.webkitImageSmoothingEnabled = false;
-		ctx2.mozImageSmoothingEnabled = false;
-		ctx2.imageSmoothingEnabled = false; //future
-
-		for (var x=offset[0]; x<w; x+=step) for (var y=offset[1]; y<h; y+=step)
-		{	if (x>=0 && y<h) ctx2.drawImage (canvas, x, y, 1, 1, x, y, step, step);
-		}
-
-		// enhance colors
-		ctx.globalCompositeOperation = 'color-burn';
-		ctx.globalAlpha = 0.8;
-		ctx.clearRect(0,0,w,h);
-		ctx.drawImage (c, 0, 0, w,h);
-		ctx.drawImage (canvas, 0, 0, w, h);
-
-		// Translate pattern
-		ctx.fillStyle = this.getPattern (offset[0], offset[1]);
-		ctx.rect(0,0, w, h);
-		ctx.fill(); 
-
-	ctx.restore();
-
-}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -7266,6 +7155,22 @@ ol.interaction.Transform = function(options)
 {	if (!options) options={};
 	var self = this;
 
+	// Create a new overlay layer for the sketch
+	this.handles_ = new ol.Collection();
+	this.overlayLayer_ = new ol.layer.Vector(
+		{	source: new ol.source.Vector({
+				features: this.handles_,
+				useSpatialIndex: false
+			}),
+			name:'Transform overlay',
+			displayInLayerSwitcher: false,
+			// Return the style according to the handle type
+			style: function (feature)
+				{	return (self.style[(feature.get('handle')||'default')+(feature.get('constraint')||'')+(feature.get('option')||'')]);
+				}
+		});
+
+	// Extend pointer
 	ol.interaction.Pointer.call(this, 
 	{	handleDownEvent: this.handleDownEvent_,
 		handleDragEvent: this.handleDragEvent_,
@@ -7295,21 +7200,6 @@ ol.interaction.Transform = function(options)
 	this.on ('propertychange', function()
 	{	this.drawSketch_();
 	});
-
-	// Create a new overlay layer for the sketch
-	this.handles_ = new ol.Collection();
-	this.overlayLayer_ = new ol.layer.Vector(
-		{	source: new ol.source.Vector({
-				features: this.handles_,
-				useSpatialIndex: false
-			}),
-			name:'Transform overlay',
-			displayInLayerSwitcher: false,
-			// Return the style according to the handle type
-			style: function (feature)
-				{	return (self.style[(feature.get('handle')||'default')+(feature.get('constraint')||'')+(feature.get('option')||'')]);
-				}
-		});
 
 	// setstyle
 	this.setDefaultStyle();
@@ -8226,6 +8116,124 @@ ol.layer.Group.prototype.getPreview = function(lonlat, resolution)
 	}
 	return t;
 }
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+	
+	@classdesc
+	ol.source.Mapillary is a source that load Wikimedia Commons content in a vector layer.
+	
+	@require jQuery
+	
+	Inherits from:
+	<ol.source.Vector>
+*/
+
+/**
+* @constructor ol.source.Mapillary
+* @extends {ol.source.Vector}
+* @param {olx.source.Mapillary=} options
+* @todo 
+*/
+ol.source.Mapillary = function(opt_options)
+{	var options = opt_options || {};
+	var self = this; 
+
+	options.loader = this._loaderFn;
+	
+	/** Url for DBPedia SPARQL */
+	this._url = options.url || "http://fr.dbpedia.org/sparql";
+
+	/** Max resolution to load features  */
+	this._maxResolution = options.maxResolution || 100;
+	
+	/** Result language */
+	this._lang = options.lang || "fr";
+
+	/** Query limit */
+	this._limit = options.limit || 100;
+	
+	/** Default attribution */
+	if (!options.attributions) options.attributions = [ new ol.Attribution({ html:"&copy; <a href='https://www.mapillary.com/'>Mapillary</a>" }) ];
+
+	// Bbox strategy : reload at each move
+    if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
+
+	ol.source.Vector.call (this, options);	
+};
+ol.inherits (ol.source.Mapillary, ol.source.Vector);
+
+
+/** Decode wiki attributes and choose to add feature to the layer
+* @param {feature} the feature
+* @param {attributes} wiki attributes
+* @return {boolean} true: add the feature to the layer
+* @API stable
+*/
+ol.source.Mapillary.prototype.readFeature = function (feature, attributes)
+{	
+	return true;
+};
+
+
+/** Loader function used to load features.
+* @private
+*/
+ol.source.Mapillary.prototype._loaderFn = function(extent, resolution, projection) 
+{	if (resolution > this._maxResolution) return;
+	var self = this;
+	var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
+	// Commons API: for more info @see https://commons.wikimedia.org/wiki/Commons:API/MediaWiki
+	var date = Date.now() - 6 * 30 * 24 * 60 * 60 * 1000;
+	var url = "https://a.mapillary.com/v2/search/im?client_id="
+		+ this.get('clientId')
+		+ "&max_lat=" + bbox[3]
+		+ "&max_lon=" + bbox[2]
+		+ "&min_lat=" + bbox[1]
+		+ "&min_lon=" + bbox[0]
+		+ "&limit="+(this._limit-1)
+		+ "&start_time=" + date;
+	// Ajax request to get the tile
+	$.ajax(
+	{	url: url,
+		dataType: 'jsonp', 
+		success: function(data) 
+		{	console.log(data);
+			return;
+			var features = [];
+			var att, pt, feature, lastfeature = null;
+			if (!data.query || !data.query.pages) return;
+			for ( var i in data.query.pages)
+			{	att = data.query.pages[i];
+				if (att.coordinates && att.coordinates.length ) 
+				{	pt = [att.coordinates[0].lon, att.coordinates[0].lat];
+				}
+				else
+				{	var meta = att.imageinfo[0].metadata;
+					if (!meta)
+					{	//console.log(att);
+						continue;
+					}
+					pt = [];
+					for (var k=0; k<meta.length; k++)
+					{	if (meta[k].name=="GPSLongitude") pt[0] = meta[k].value;
+						if (meta[k].name=="GPSLatitude") pt[1] = meta[k].value;
+					}
+					if (!pt.length) 
+					{	//console.log(att);
+						continue;
+					}
+				}
+				feature = new ol.Feature(new ol.geom.Point(ol.proj.transform (pt,"EPSG:4326",projection)));
+				att.imageinfo[0].title = att.title;
+				if (self.readFeature(feature, att.imageinfo[0]))
+				{	features.push(feature);
+				}
+			}
+			self.addFeatures(features);
+    }});
+};
 
 /** ol.layer.Vector.prototype.setRender3D
  * @extends {ol.layer.Vector}
