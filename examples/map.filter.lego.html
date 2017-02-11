@@ -10,7 +10,7 @@
 	<title>OL3-ext: Lego map</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="A map made of a set of Lego bricks." />
+	<meta name="description" content="A map mades of a set of Lego bricks." />
 	<meta name="keywords" content="ol3, filter, lego, brick" />
 
 	<link rel="stylesheet" href="style.css" />
@@ -49,7 +49,7 @@
 		<h1>OL3-ext: Lego map</h1>
 	</a>
 	<div class="info">
-		<i>ol.filter.Lego</i> make a map look like made of a set of Lego bricks
+		<i>ol.filter.Lego</i> makes a map look like made of a set of LEGO&reg; bricks.
 	</div>
 
 	<!-- Map div -->
@@ -58,6 +58,14 @@
 	<div class="options" >
 		<h2>Options:</h2>
 		<ul>
+			<li>
+				<label>brick:</label>
+				<select id="brick" onchange="lego.setBrick($('#size').val(), this.value)">
+					<option value="brick">brick</option>
+					<option value="ol3">ol3</option>
+					<option value="lego">LEGO&reg;</option>
+				</select>
+			</li>
 			<li>
 				<label>brickSize:</label>
 				<select id="size" onchange="lego.set('brickSize',this.value)">
@@ -106,7 +114,7 @@
 		setLayer();
 
 		// Enhance filter
-		var lego = new ol.filter.Lego({ brickSize:$("#size").val() });
+		var lego = new ol.filter.Lego({ brickSize:$("#size").val(), img:$("#brick").val() });
 		map.addFilter(lego);
 
 	</script>
