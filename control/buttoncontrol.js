@@ -18,7 +18,7 @@ ol.control.Button = function(options)
 	var self = this;
 
 	$("<button>").html(options.html || "")
-				.attr('title', options.title)
+				.attr('title', options.title || "")
 				.on("touchstart click", function(e)
 				{	if (e && e.preventDefault) e.preventDefault();
 					if (options.handleClick) options.handleClick.call(self, e);
