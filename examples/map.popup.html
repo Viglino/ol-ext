@@ -136,6 +136,7 @@
 			<option value="center-auto">center-auto</option>
 			<option value="center-left">center-left</option>
 			<option value="center-right">center-right</option>
+			<option value="center-center">center-center</option>
 		</select>
 		<br />
 		Form:
@@ -174,6 +175,7 @@
 	var popup = new ol.Overlay.Popup (
 		{	popupClass: "default", //"tooltips", "warning" "black" "default", "tips", "shadow",
 			closeBox: true,
+			onshow: function(){ console.log("You opened the box"); },
 			onclose: function(){ console.log("You close the box"); },
 			positioning: 'auto',
 			autoPan: true,
