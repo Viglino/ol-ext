@@ -544,13 +544,19 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 
 		// Show/hide sub layers
 		if (layer.getLayers) 
-		{	$("<div>").addClass(layer.get("openInLayerSwitcher") ? "collapse-layers" : "expend-layers" )
+		{	var nb = 0;
+			layer.getLayers().forEach(function(l)
+			{	if (l.get('displayInLayerSwitcher')!==false) nb++;
+			});
+			if (nb) 
+			{	$("<div>").addClass(layer.get("openInLayerSwitcher") ? "collapse-layers" : "expend-layers" )
 					.click(function()
 					{	var l = $(this).closest('li').data("layer");
 						l.set("openInLayerSwitcher", !l.get("openInLayerSwitcher") )
 					})
 					.attr("title", this.tip.plus)
 					.appendTo(layer_buttons);
+			}
 		}
 
 		// $("<div>").addClass("ol-separator").appendTo(layer_buttons);
@@ -667,7 +673,7 @@ ol.control.Button = function(options)
 	var self = this;
 
 	$("<button>").html(options.html || "")
-				.attr('title', options.title)
+				.attr('title', options.title || "")
 				.on("touchstart click", function(e)
 				{	if (e && e.preventDefault) e.preventDefault();
 					if (options.handleClick) options.handleClick.call(self, e);
@@ -682,6 +688,21 @@ ol.control.Button = function(options)
 	if (options.title) this.set("title", options.title);
 };
 ol.inherits(ol.control.Button, ol.control.Control);
+
+/** Set the control visibility
+* @param {boolean} b 
+*/
+ol.control.Button.prototype.setVisible = function (val) {
+	if (val) $(this.element).show();
+	else $(this.element).hide();
+}
+
+/** Get the control visibility
+* @return {boolean} b 
+*/
+ol.control.Button.prototype.getVisible = function ()
+{	return ($(this.element).css('display') != 'none');
+}
 
 /** A simple push button control drawn as text
 */
@@ -1339,8 +1360,24 @@ ol.control.Bar = function(options)
 };
 ol.inherits(ol.control.Bar, ol.control.Control);
 
+/** Set the control visibility
+* @param {boolean} b 
+*/
+ol.control.Bar.prototype.setVisible = function (val) {
+	if (val) $(this.element).show();
+	else $(this.element).hide();
+}
+
+/** Get the control visibility
+* @return {boolean} b 
+*/
+ol.control.Bar.prototype.getVisible = function () 
+{	return ($(this.element).css('display') != 'none');
+}
+
 /**
- * Set the map instance the control is associated with.
+ * Set the map instance the control is associated with
+ * and add its controls associated to this map.
  * @param {ol.Map} map The map instance.
  */
 ol.control.Bar.prototype.setMap = function (map)
@@ -1348,7 +1385,8 @@ ol.control.Bar.prototype.setMap = function (map)
 
 	for (var i=0; i<this.controls_.length; i++)
 	{	var c = this.controls_[i];
-		map.addControl(c);
+		// map.addControl(c);
+		c.setMap(map);
 	}
 };
 
@@ -1626,25 +1664,32 @@ ol.control.Globe.prototype.setCenter = function (center, show)
 	this.pointer_.addClass("hidden");
 	if (center)
 	{	var map = this.ovmap_;
-		// var extent = ov.oview_.getProjection().getExtent();
-		var pan = ol.animation.pan(
+		var p = map.getPixelFromCoordinate(center);
+		var h = $(this.element).height();
+		if (map.getView().animate)
+		{	setTimeout(function()
+			{	self.pointer_.css({ 'top': Math.min(Math.max(p[1],0),h) , 'left': "50%" } )
+					.removeClass("hidden");
+			}, 800);
+			map.getView().animate({ center: [center[0],0] });
+		}
+		// Old version (<3.20)
+		else
+		{	var pan = ol.animation.pan(
 			{	duration: 800,
 				source: map.getView().getCenter()
 			});
-		var p = map.getPixelFromCoordinate(center);
-		var h = $(this.element).height();
-		//this.pointer_.css('top', Math.min(Math.max(p[1],0),h));
-		// this.pointer_.css({ 'top': Math.min(Math.max(p[1],0),h) , 'left': p[0] } );
-		map.beforeRender(function(map, frameState)
-		{	var b = pan(map, frameState);
-			if (!b && show!==false) 
-			{	self.pointer_
-					.css({ 'top': Math.min(Math.max(p[1],0),h) , 'left': "50%" } )
-					.removeClass("hidden");
-			}
-			return b;
-		});
-		map.getView().setCenter([center[0],0]);
+			map.beforeRender(function(map, frameState)
+			{	var b = pan(map, frameState);
+				if (!b && show!==false) 
+				{	self.pointer_
+						.css({ 'top': Math.min(Math.max(p[1],0),h) , 'left': "50%" } )
+						.removeClass("hidden");
+				}
+				return b;
+			});
+			map.getView().setCenter([center[0],0]);
+		}
 	}
 };
 
@@ -1883,19 +1928,19 @@ ol.control.Overview = function(opt_options)
 				{	pan = ol.animation.pan(
 					{	duration: 1000,
 						easing: ol.easing.elasticFn(2,0.3),
-						source: self.map_.getView().getCenter()
+						source: self.getMap().getView().getCenter()
 					});
 				}
 				else
 				{	pan = ol.animation.pan(
 					{	duration: 300,
-						source: self.map_.getView().getCenter()
+						source: self.getMap().getView().getCenter()
 					});
 				}
 				
 			}
-			self.map_.beforeRender(pan);
-			self.map_.getView().setCenter(evt.coordinate);
+			self.getMap().beforeRender(pan);
+			self.getMap().getView().setCenter(evt.coordinate);
 			return false;
 		}
 	}));
@@ -1945,7 +1990,7 @@ ol.control.Overview.prototype.setMap = function(map)
 /** Calculate the extent of the map and draw it on the overview
 */
 ol.control.Overview.prototype.calcExtent_ = function(extent)
-{	var map = this.map_;
+{	var map = this.getMap();
 	if (!map) return;
 	
 	var source = this.extentLayer.getSource();
@@ -1994,20 +2039,20 @@ ol.control.Overview.prototype.setView = function(e)
 	// Set the view params
 	switch (e.key)
 	{	case 'rotation':
-			if (this.rotation) this.oview_.setRotation(this.map_.getView().getRotation());
+			if (this.rotation) this.oview_.setRotation(this.getMap().getView().getRotation());
 			else if (this.oview_.getRotation()) this.oview_.setRotation(0);
 			break;
 		case 'center': 
-		{	var mapExtent = this.map_.getView().calculateExtent(this.map_.getSize());
+		{	var mapExtent = this.getMap().getView().calculateExtent(this.getMap().getSize());
 			var extent = this.oview_.calculateExtent(this.ovmap_.getSize());
 			if (mapExtent[0]<extent[0] || mapExtent[1]<extent[1] 
 				|| mapExtent[2]>extent[2] || mapExtent[3]>extent[3])
-			{	this.oview_.setCenter(this.map_.getView().getCenter()); 
+			{	this.oview_.setCenter(this.getMap().getView().getCenter()); 
 			}
 			break;
 		}	
 		case 'resolution':
-		{	var z = Math.round(this.map_.getView().getZoom()/2)*2-4;
+		{	var z = Math.round(this.getMap().getView().getZoom()/2)*2-4;
 			z = Math.min ( this.maxZoom, Math.max(this.minZoom, z) );
 			this.oview_.setZoom(z);
 			break;
@@ -2155,7 +2200,7 @@ ol.control.Permalink.prototype.setPosition = function()
 			for (var i=0; i<layers.length; i++)
 			{	if (layers[i].get('permalink')) 
 				{	layers[i].setVisible(false);
-					console.log("hide "+layers[i].get('permalink'));
+					// console.log("hide "+layers[i].get('permalink'));
 				}
 				if (layers[i].getLayers)
 				{	resetLayers (layers[i].getLayers().getArray());
@@ -2201,7 +2246,8 @@ ol.control.Permalink.prototype.getLink = function()
 
 	for (var i in this.search_) anchor += "&"+i+"="+this.search_[i];
 
-	return document.location.origin+document.location.pathname+this.hash_+anchor;
+	//return document.location.origin+document.location.pathname+this.hash_+anchor;
+	return document.location.protocol+"//"+document.location.host+document.location.pathname+this.hash_+anchor;
 }
 
 /**
@@ -2499,6 +2545,7 @@ ol.control.PirateMap.prototype.drawPirate_ = function (event)
  *
  * @constructor
  * @extends {ol.control.Control}
+ * @fires  over, out, show
  * @param {Object=} Control options.
  *
  */
@@ -2515,8 +2562,8 @@ ol.control.Profil = function(opt_options)
 	{	element = $("<div>").addClass((options.className || 'ol-profil') +' ol-unselectable ol-control ol-collapsed');
 		this.button = $("<button>")
 					.on("click touchstart", function(e)
-					{	element.toggleClass("ol-collapsed"); 
-						e.preventDefault(); 
+					{	self.toggle();
+						e.preventDefault();
 					})
 					.appendTo(element);
     }
@@ -2566,7 +2613,7 @@ ol.control.Profil = function(opt_options)
 
 	// Show feature
 	if (options.feature)
-	{	this.setFeature (options.feature);
+	{	this.setGeometry (options.feature);
 	}
 };
 ol.inherits(ol.control.Profil, ol.control.Control);
@@ -2628,21 +2675,28 @@ ol.control.Profil.prototype.onMove = function(e)
 	}
 }
 
-
 /** Show panel
 */
 ol.control.Profil.prototype.show = function()
 {	$(this.element).removeClass("ol-collapsed"); 
+	this.dispatchEvent({ type:'show', show: true });
 }
 /** Hide panel
 */
 ol.control.Profil.prototype.hide = function()
 {	$(this.element).addClass("ol-collapsed"); 
+	this.dispatchEvent({ type:'show', show: false });
 }
 /** Toggle panel
 */
 ol.control.Profil.prototype.toggle = function()
-{	$(this.element).toggleClass("ol-collapsed"); 
+{	var b = $(this.element).toggleClass("ol-collapsed").hasClass("ol-collapsed"); 
+	this.dispatchEvent({ type:'show', show: !b });
+}
+/** Is panel visible
+*/
+ol.control.Profil.prototype.isShown = function()
+{	return (!$(this.element).hasClass("ol-collapsed"));
 }
 
 /**
@@ -2665,11 +2719,15 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	var ctx = canvas.getContext('2d');
 	var w = canvas.width;
 	var h = canvas.height;
+	ctx.setTransform(1, 0, 0, 1, 0, 0);
 	ctx.clearRect(0,0, w, h);
 
 	// No Z
 	if (!/Z/.test(g.getLayout())) return;
-	
+	// No time
+	if(/M/.test(g.getLayout())) $(".time", this.element).parent().show();
+	else $(".time", this.element).parent().hide();
+
 	// Coords
 	var c = g.getCoordinates();
 	switch (g.getType())
@@ -2726,12 +2784,19 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	$(".track-info .dist", this.element).text((d/1000).toFixed(1)+"km");
 	$(".track-info .time", this.element).text(ti);
 
-	//
+	// Set graduation
 	var grad = options.graduation || 100;
-	zmax = Math.ceil(zmax/grad)*grad;
-	zmin = Math.floor(zmin/grad)*grad;
+	while (true) 
+	{	zmax = Math.ceil(zmax/grad)*grad;
+		zmin = Math.floor(zmin/grad)*grad;
+		var nbgrad = (zmax-zmin)/grad;
+		if (h/nbgrad < 15)
+		{	grad *= 2;
+		}
+		else break;
+	} 
 
-	//
+	// Set amplitude
 	if (typeof(options.zmin)=='number' && zmin > options.zmin) zmin = options.zmin;
 	if (typeof(options.zmax)=='number' && zmax < options.zmax) zmax = options.zmax;
 	var amplitude = options.amplitude;
@@ -2739,7 +2804,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	{	zmax = Math.max (zmin + amplitude, zmax);
 	}
 
-	// Scales
+	// Scales lines
 	var scx = w/d;
 	var scy = -h/(zmax-zmin);
 	var dy = this.dy_ = -zmin*scy;
@@ -2749,6 +2814,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	ctx.textAlign = "right";
 	ctx.textBaseline = "middle";
 	ctx.fillStyle="#000";
+	// Scale Z
 	ctx.beginPath();
 	for (var i=zmin; i<=zmax; i+=grad)
 	{	if (options.zunit!="km") ctx.fillText(i, -4, i*scy+dy);
@@ -2757,6 +2823,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 		if (i!=0) ctx.lineTo (d*scx, i*scy+dy);
 		else ctx.lineTo (0, i*scy+dy);
 	}
+	// Scale X
 	ctx.textAlign = "center";
 	ctx.textBaseline = "top";
 	ctx.setLineDash([1,3]);
@@ -2777,7 +2844,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	
 	ctx.stroke();
 
-	//
+	// 
 	ctx.strokeStyle = "#369";
 	ctx.lineWidth = 1;
 	ctx.setLineDash([]);
@@ -2790,12 +2857,13 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 };
 
 /** Get profil image
-*	@param {string|undefined} type image format, default image/png.
+*	@param {string|undefined} type image format or 'canvas' to get the canvas image, default image/png.
 *	@param {Number|undefined} encoderOptions between 0 and 1 indicating image quality image/jpeg or image/webp, default 0.92.
 *	@return {string} requested data uri
 */
 ol.control.Profil.prototype.getImage = function(type, encoderOptions)
-{	return this.canvas_.toDataURL(type, encoderOptions);
+{	if (type==="canvas") return this.canvas_;
+	return this.canvas_.toDataURL(type, encoderOptions);
 }
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
@@ -3198,13 +3266,24 @@ ol.control.Toggle = function(options)
 ol.inherits(ol.control.Toggle, ol.control.Button);
 
 /**
-*/
+ * Set the map instance the control is associated with 
+ * and add interaction attached to it to this map.
+ * @param {ol.Map} map The map instance.
+ */
 ol.control.Toggle.prototype.setMap = function(map)
-{	
+{	if (!map && this.getMap())
+	{	if (this.interaction_) 
+		{	this.getMap().removeInteraction (this.interaction_);
+		}
+		if (this.subbar_) this.getMap().removeControl (this.subbar_);
+	}
+
 	ol.control.Control.prototype.setMap.call(this, map);
 
-	if (this.interaction_) map.addInteraction (this.interaction_);
-	if (this.subbar_) map.addControl (this.subbar_);
+	if (map)
+	{	if (this.interaction_) map.addInteraction (this.interaction_);
+		if (this.subbar_) map.addControl (this.subbar_);
+	}
 };
 
 /** Get the subbar associated with a control
@@ -3899,7 +3978,7 @@ ol.filter.Base.prototype.setActive = function (b)
 *	@return {bool}
 */
 ol.filter.Base.prototype.getActive = function (b)
-{	return this.set('active');
+{	return this.get('active');
 };
 
 (function(){
@@ -4343,6 +4422,159 @@ ol.filter.Crop.prototype.precompose = function(e)
 ol.filter.Crop.prototype.postcompose = function(e)
 {	if (this.feature_) e.context.restore();
 }
+
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Make a map or layer look like made of a set of Lego bricks.
+*	@requires ol.filter
+*	@extends {ol.filter.Base}
+*	@param {ol.filter.LegoOptions}
+*		- brickSize {Number} size of te brick, default 30
+*		- crossOrigin {null | string | undefined} crossOrigin attribute for loaded images.
+*/
+ol.filter.Lego = function(options)
+{	if (!options) options = {};
+	ol.filter.Base.call(this, options);
+
+	var img = new Image();
+	// Default image
+	img.src = this.img[options.img] || this.img.ol3;
+	img.crossOrigin = options.crossOrigin || null;
+	
+	// and pattern 
+	this.pattern = 
+	{	canvas: document.createElement('canvas')
+	};
+	this.setBrick (options.brickSize, img);
+	this.internal_ = document.createElement('canvas');
+}
+ol.inherits(ol.filter.Lego, ol.filter.Base);
+
+/** Image definition
+*/
+ol.filter.Lego.prototype.img =
+{	brick: "data:image/png;base64,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",
+	ol3: "data:image/png;base64,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",
+	lego: "data:image/png;base64,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"
+};
+
+/** Overwrite to handle brickSize
+* @param {string} key
+* @param {} val
+*/
+ol.filter.Lego.prototype.set = function (key, val)
+{	ol.filter.Base.prototype.set.call(this, key, val);
+	if (key=="brickSize" && this.pattern.canvas.width!=val)
+	{	this.setBrick(val);
+	}
+}
+
+/** Set the current brick
+*	@param {Number} width the pattern width, default 30
+*	@param {brick|ol3|lego|undefined} img the pattern, default ol3
+*	@param {string} crossOrigin
+*/
+ol.filter.Lego.prototype.setBrick = function (width, img, crossOrigin)
+{	width = Number(width) || 30;
+	if (typeof(img) === 'string') 
+	{	var i = new Image;
+		i.src = this.img[img] || this.img.ol3;
+		i.crossOrigin = crossOrigin || null;
+		img = i;
+	}
+	if (img) this.pattern.img = img;
+	if (!this.pattern.img.width)
+	{	var self = this;
+		this.pattern.img.onload = function()
+		{	self.setBrick(width,img);
+		}
+		return;
+	}
+	this.pattern.canvas.width = this.pattern.canvas.height = width;
+	this.pattern.ctx = this.pattern.canvas.getContext("2d");
+	this.pattern.ctx.fillStyle = this.pattern.ctx.createPattern (this.pattern.img, 'repeat');
+	this.set("brickSize", width);
+	this.set("img", img.src);
+};
+
+/** Get translated pattern
+*	@param {number} offsetX x offset
+*	@param {number} offsetY y offset
+*/
+ol.filter.Lego.prototype.getPattern = function (offsetX, offsetY)
+{	
+	if (!this.pattern.ctx) return "transparent";
+	//return this.pattern.ctx.fillStyle
+
+	var c = this.pattern.canvas;
+	var ctx = this.pattern.ctx;
+	var sc = c.width / this.pattern.img.width;
+	
+	ctx.save();
+		ctx.clearRect(0,0,c.width,c.height);
+
+		ctx.scale(sc,sc);
+		offsetX /= sc;
+		offsetY /= sc;
+
+		ctx.translate(offsetX, offsetY);
+		ctx.beginPath();
+		ctx.clearRect(-2*c.width, -2*c.height, 4*c.width, 4*c.height);
+		ctx.rect(-offsetX, -offsetY, 2*c.width/sc, 2*c.height/sc);
+		ctx.fill(); 
+	ctx.restore();
+	return ctx.createPattern(c, 'repeat');
+};
+
+/** Postcompose operation
+*/
+ol.filter.Lego.prototype.postcompose = function(e)
+{	// Set back color hue
+	var ctx = e.context;
+	var canvas = ctx.canvas;
+	var ratio = e.frameState.pixelRatio;
+
+	ctx.save();
+
+		// resize 
+		var step = this.pattern.canvas.width*ratio, step2 = step/2;
+		var p = e.frameState.extent;
+		var res = e.frameState.viewState.resolution/ratio;
+		var offset = [ -Math.round((p[0]/res)%step), Math.round((p[1]/res)%step) ];
+		var ctx2 = this.internal_.getContext("2d");
+		var w = this.internal_.width = canvas.width;
+		var h = this.internal_.height = canvas.height;
+
+		// No smoothing please
+		ctx2.webkitImageSmoothingEnabled = false;
+		ctx2.mozImageSmoothingEnabled = false;
+		ctx2.imageSmoothingEnabled = false;
+/**/
+		var w2 = Math.floor((w-offset[0])/step);
+		var h2 = Math.floor((h-offset[1])/step);
+		ctx2.drawImage (canvas, offset[0], offset[1], w2*step, h2*step, 0, 0, w2, h2);
+		ctx.webkitImageSmoothingEnabled = false;
+		ctx.mozImageSmoothingEnabled = false;
+		ctx.imageSmoothingEnabled = false; //future
+		ctx.clearRect (0, 0, w,h);
+		ctx.drawImage (this.internal_, 0,0, w2,h2, offset[0],offset[1], w2*step, h2*step);
+/* /
+		for (var x=offset[0]; x<w; x+=step) for (var y=offset[1]; y<h; y+=step)
+		{	if (x>=0 && y<h) ctx2.drawImage (canvas, x, y, 1, 1, x, y, step, step);
+		}
+		ctx.clearRect (0, 0, w,h);
+		ctx.drawImage (c, 0, 0);
+/**/
+		// Draw brick stud
+		ctx.scale(ratio,ratio);
+		ctx.fillStyle = this.getPattern (offset[0]/ratio, offset[1]/ratio);
+		ctx.rect(0,0, w, h);
+		ctx.fill(); 
+
+	ctx.restore();
+};
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -5573,9 +5805,11 @@ ol.interaction.Hover.prototype.handleMove_ = function(e)
 	if (map)
 	{	//var b = map.hasFeatureAtPixel(e.pixel);
 		var feature, layer;
+		var self = this;
 		var b = map.forEachFeatureAtPixel(e.pixel, 
 					function(f, l)
-					{	if (this.featureFilter_.call(null,f,l))
+					{	if (self.layerFilter_.call(null, l) 
+						 && self.featureFilter_.call(null,f,l))
 						{	feature = f;
 							layer = l;
 							return true;
@@ -5584,7 +5818,7 @@ ol.interaction.Hover.prototype.handleMove_ = function(e)
 						{	feature = layer = null;
 							return false;
 						}
-					}, this, this.layerFilter_)
+					});
 
 		if (b) this.dispatchEvent({ type:"hover", feature:feature, layer:layer, coordinate:e.coordinate, pixel: e.pixel, map: e.map, dragging:e.dragging });
 
@@ -5613,6 +5847,60 @@ ol.interaction.Hover.prototype.handleMove_ = function(e)
 		}
 	}
 };
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Interaction to handle longtouch events
+ * @constructor
+ * @extends {ol.interaction.Interaction}
+ * @fires  
+ * @param {olx.interaction.LongTouchOptions} 
+ *	- handleLongTouchEvent {function | undefined} Function handling "longtouch" events, it will receive a mapBrowserEvent.
+ *	- delay {interger | undefined} The delay for a long touch in ms, default is 1000
+ */
+ol.interaction.LongTouch = function(options) 
+{	if (!options) options = {};
+
+	this.delay_ = options.delay || 1000;
+	var ltouch = options.handleLongTouchEvent || function(){};
+	
+	var _timeout = null;
+	ol.interaction.Interaction.call(this, 
+	{	handleEvent: function(e)
+		{	if (this.getActive())
+			{	switch (e.type)
+				{	case 'pointerdown': 
+						if (_timeout) clearTimeout(_timeout);
+						_timeout = setTimeout (function()
+							{	e.type = "longtouch";
+								ltouch(e) 
+							}, this.delay_);
+						break;
+					case 'pointerup':
+					case 'pointermove':
+					case 'pointerdrag':
+						if (_timeout) 
+						{	clearTimeout(_timeout);
+							_timeout = null;
+						}
+						break;
+					default: break;;
+				}
+			}
+			else
+			{	if (_timeout) 
+				{	clearTimeout(_timeout);
+					_timeout = null;
+				}
+			}
+			return true;
+		}
+	});
+
+};
+ol.inherits(ol.interaction.LongTouch, ol.interaction.Interaction);
+
 /*	
 	Water ripple effect.
 	Original code (Java) by Neil Wallis 
@@ -5802,6 +6090,226 @@ ol.interaction.Ripple.prototype.postcompose_ = function(e)
 	
 	// tell OL3 to continue postcompose animation
 	this.getMap().render(); 
+};
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Interaction to snap to guidelines
+ * @constructor
+ * @extends {ol.interaction.Interaction}
+ * @fires  
+ * @param {olx.interaction.SnapGuidesOptions} 
+ *	- pixelTolerance {number | undefined} distance (in px) to snap to a guideline, default 10 px
+ *	- style {ol.style.Style | Array<ol.style.Style> | undefined} Style for the sektch features. 
+ */
+ol.interaction.SnapGuides = function(options) 
+{	if (!options) options = {};
+
+	// Intersect 2 guides
+	function getIntersectionPoint (d1, d2)
+	{	var d1x = d1[1][0] - d1[0][0];
+		var d1y = d1[1][1] - d1[0][1];
+		var d2x = d2[1][0] - d2[0][0];
+		var d2y = d2[1][1] - d2[0][1];
+		var det = d1x * d2y - d1y * d2x;
+ 
+		if (det != 0)
+		{	var k = (d1x * d1[0][1] - d1x * d2[0][1] - d1y * d1[0][0] + d1y * d2[0][0]) / det;
+			return [d2[0][0] + k*d2x, d2[0][1] + k*d2y];
+		}
+		else return false;
+	}
+	function dist2D (p1,p2)
+	{	var dx = p1[0]-p2[0];
+		var dy = p1[1]-p2[1];
+		return Math.sqrt(dx*dx+dy*dy);
+	}
+
+	// Use snap interaction
+	ol.interaction.Interaction.call(this, 
+	{	handleEvent: function(e)
+		{	if (this.getActive())
+			{	var features = this.overlayLayer_.getSource().getFeatures();
+				var prev = null;
+				var p = null;
+				var res = e.frameState.viewState.resolution;
+				for (var i=0, f; f = features[i]; i++)
+				{	var c = f.getGeometry().getClosestPoint(e.coordinate);
+					if ( dist2D(c, e.coordinate) / res < this.snapDistance_)
+					{	// Intersection on 2 lines
+						if (prev)
+						{	var c2 = getIntersectionPoint(prev.getGeometry().getCoordinates(),  f.getGeometry().getCoordinates());
+							if (c2) 
+							{	if (dist2D(c2, e.coordinate) / res < this.snapDistance_)
+								{	p = c2;
+								}
+							}
+						}
+						else
+						{	p = c;
+						}
+						prev = f;
+					}
+				}
+				if (p) e.coordinate = p;
+			}
+			return true;
+		}
+	});
+
+	// Snap distance (in px)
+	this.snapDistance_ = options.pixelTolerance || 10;
+
+	// Default style
+ 	var sketchStyle = 
+	[	new ol.style.Style({
+			stroke: new ol.style.Stroke(
+			{	color: '#ffcc33',
+				lineDash: [8,5],
+				width: 1.25
+			})
+	   })
+	 ];
+
+	// Custom style
+	if (options.style) sketchStyle = options.style instanceof Array ? options.style : [options.style];
+
+	// Create a new overlay for the sketch
+	this.overlayLayer_ = new ol.layer.Vector(
+	{	source: new ol.source.Vector({
+			features: new ol.Collection(),
+			useSpatialIndex: false
+		}),
+		name:'Snap overlay',
+		displayInLayerSwitcher: false,
+		style: function(f)
+		{	return sketchStyle;
+		}
+	});
+
+};
+ol.inherits(ol.interaction.SnapGuides, ol.interaction.Interaction);
+
+/**
+ * Remove the interaction from its current map, if any,  and attach it to a new
+ * map, if any. Pass `null` to just remove the interaction from the current map.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ol.interaction.SnapGuides.prototype.setMap = function(map) 
+{	if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_);
+	ol.interaction.Interaction.prototype.setMap.call (this, map);
+	this.overlayLayer_.setMap(map);
+};
+
+/** Activate or deactivate the interaction.
+* @param {boolean} active
+*/
+ol.interaction.SnapGuides.prototype.setActive = function(active) 
+{	this.overlayLayer_.setVisible(active);
+	ol.interaction.Interaction.prototype.setActive.call (this, active);
+}
+
+/** Clear previous added guidelines
+* @param {Array<ol.Feature> | undefined} features a list of feature to remove, default remove all feature
+*/
+ol.interaction.SnapGuides.prototype.clearGuides = function(features) 
+{	if (!features) this.overlayLayer_.getSource().clear();
+	else
+	{	for (var i=0, f; f=features[i]; i++)
+		{	this.overlayLayer_.getSource().removeFeature(f);
+		}
+	}
+}
+
+/** Get guidelines
+* @return {ol.Collection} guidelines features
+*/
+ol.interaction.SnapGuides.prototype.getGuides = function(features) 
+{	return this.overlayLayer_.getSource().getFeaturesCollection();
+}
+
+/** Add a new guide to snap to
+* @param {Array<ol.coordinate>} v the direction vector
+* @return {ol.Feature} feature guide
+*/
+ol.interaction.SnapGuides.prototype.addGuide = function(v) 
+{	if (v)
+	{	var dx = v[0][0] - v[1][0];
+		var dy = v[0][1] - v[1][1];
+		var d = 1e8 / Math.sqrt(dx*dx+dy*dy);
+		var p1 = [ v[0][0] + dx*d, v[0][1] + dy*d];
+		var p2 = [ v[0][0] - dx*d, v[0][1] - dy*d];
+		var f = new ol.Feature(new ol.geom.LineString([p1,p2]));
+		this.overlayLayer_.getSource().addFeature(f);
+		return f;
+	}
+};
+
+/** Add a new orthogonal guide to snap to
+* @param {Array<ol.coordinate>} v the direction vector
+* @return {ol.Feature} feature guide
+*/
+ol.interaction.SnapGuides.prototype.addOrthoGuide = function(v) 
+{	if (v)
+	{	var dx = v[0][0] - v[1][0];
+		var dy = v[0][1] - v[1][1];
+		var d = 1e8 / Math.sqrt(dx*dx+dy*dy);
+		var p1 = [ v[0][0] + dy*d, v[0][1] - dx*d];
+		var p2 = [ v[0][0] - dy*d, v[0][1] + dx*d];
+		var f = new ol.Feature(new ol.geom.LineString([p1,p2]));
+		this.overlayLayer_.getSource().addFeature(f);
+		return f;
+	}
+};
+
+/** Listen to draw event to add orthogonal guidelines on the first and last point.
+* @param {ol.interaction.Draw} drawi a draw interaction to listen to
+* @api
+*/
+ol.interaction.SnapGuides.prototype.setDrawInteraction = function(drawi)
+{	// Number of points currently drawing
+	var nb = 0;
+	// Current guidelines
+	var features = [];
+	function setGuides(e)
+	{	var coord = [];
+		var s = 2;
+		switch (e.target.getType())
+		{	case 'LineString':
+				coord = e.target.getCoordinates();
+				s = 2;
+				break;
+			case 'Polygon':
+				coord = e.target.getCoordinates()[0];
+				s = 3;
+				break;
+			default: break;
+		}
+		var l = coord.length;
+		if (l != nb && l > s)
+		{	snapi.clearGuides(features);
+			features = [
+					snapi.addOrthoGuide([coord[l-s],coord[l-s-1]]),
+					snapi.addGuide([coord[0],coord[1]]),
+					snapi.addOrthoGuide([coord[0],coord[1]])
+				];
+			nb = l;
+		}
+	};
+	// New drawing
+	drawi.on ("drawstart", function(e)
+	{	// When geom is changing add a new orthogonal direction 
+		e.feature.getGeometry().on("change", setGuides);
+	});
+	// end drawing, clear directions
+	drawi.on ("drawend", function(e)
+	{	snapi.clearGuides(features);
+		e.feature.getGeometry().un("change", setGuides);
+		nb = 0;
+		features = [];
+	});
 };
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -6581,6 +7089,52 @@ ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
 		e.frameState.animate = true;
 	}
 };
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Interaction TouchDraw: draw on touch device (shortcut).
+ * @constructor
+ * @extends {ol.interaction.Draw}
+ * @param {olx.interaction.DrawOptions} 
+ */
+ol.interaction.TouchDraw = function(options) 
+{	var options = options || {};
+
+	options.freehand = true;
+	//options.condition = ol.events.condition.singleClick;
+	//options.freehandCondition = ol.events.condition.noModifierKeys;
+
+	ol.interaction.Draw.call(this, options);
+
+};
+ol.inherits(ol.interaction.TouchDraw, ol.interaction.Draw);
+
+/** Finish drawing on pointerup
+*/
+ol.interaction.TouchDraw.prototype.stopDrawing_ = function(map) 
+{	if (this.getActive()) this.finishDrawing();
+	return false;
+};
+
+/**
+ * Remove the interaction from its current map, if any,  and attach it to a new
+ * map, if any. Pass `null` to just remove the interaction from the current map.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ol.interaction.TouchDraw.prototype.setMap = function(map) 
+{	if (this.getMap())
+	{	this.getMap().un('pointerup', this.stopDrawing_, this);
+	}
+
+	ol.interaction.Draw.prototype.setMap.call (this, map);
+
+	if (map)
+	{	map.on('pointerup', this.stopDrawing_, this);
+	}
+};
+
 /** Interaction rotate
  * @constructor
  * @extends {ol.interaction.Pointer}
@@ -6593,6 +7147,7 @@ ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
  *	- stretch {bool} can stretch the feature
  *	- scale {bool} can scale the feature
  *	- rotate {bool} can rotate the feature
+ *	- keepAspectRatio { ol.events.ConditionType | undefined } A function that takes an ol.MapBrowserEvent and returns a boolean to keep aspect ratio, default ol.events.condition.shiftKeyOnly.
  *	- style {} list of ol.style for handles
  *
  */
@@ -6600,6 +7155,22 @@ ol.interaction.Transform = function(options)
 {	if (!options) options={};
 	var self = this;
 
+	// Create a new overlay layer for the sketch
+	this.handles_ = new ol.Collection();
+	this.overlayLayer_ = new ol.layer.Vector(
+		{	source: new ol.source.Vector({
+				features: this.handles_,
+				useSpatialIndex: false
+			}),
+			name:'Transform overlay',
+			displayInLayerSwitcher: false,
+			// Return the style according to the handle type
+			style: function (feature)
+				{	return (self.style[(feature.get('handle')||'default')+(feature.get('constraint')||'')+(feature.get('option')||'')]);
+				}
+		});
+
+	// Extend pointer
 	ol.interaction.Pointer.call(this, 
 	{	handleDownEvent: this.handleDownEvent_,
 		handleDragEvent: this.handleDragEvent_,
@@ -6622,26 +7193,13 @@ ol.interaction.Transform = function(options)
 	this.set('scale', (options.scale!==false));
 	/** Can rotate the feature */
 	this.set('rotate', (options.rotate!==false));
+	/** Keep aspect ratio */
+	this.set('keepAspectRatio', (options.keepAspectRatio || function(e){ return e.originalEvent.shiftKey }));
 
 	// Force redraw when changed
 	this.on ('propertychange', function()
 	{	this.drawSketch_();
 	});
-
-	// Create a new overlay layer for the sketch
-	this.handles_ = new ol.Collection();
-	this.overlayLayer_ = new ol.layer.Vector(
-		{	source: new ol.source.Vector({
-				features: this.handles_,
-				useSpatialIndex: false
-			}),
-			name:'Transform overlay',
-			displayInLayerSwitcher: false,
-			// Return the style according to the handle type
-			style: function (feature)
-				{	return (self.style[(feature.get('handle')||'default')+(feature.get('constraint')||'')+(feature.get('option')||'')]);
-				}
-		});
 
 	// setstyle
 	this.setDefaultStyle();
@@ -6773,31 +7331,32 @@ ol.interaction.Transform.prototype.setStyle = function(style, olstyle)
  * @private
  */
 ol.interaction.Transform.prototype.getFeatureAtPixel_ = function(pixel) 
-{	return this.getMap().forEachFeatureAtPixel(pixel,
+{	var self = this;
+	return this.getMap().forEachFeatureAtPixel(pixel,
 		function(feature, layer) 
 		{	var found = false;
 			// Overlay ?
 			if (!layer)
-			{	if (feature===this.bbox_) return false;
-				this.handles_.forEach (function(f) { if (f===feature) found=true; });
+			{	if (feature===self.bbox_) return false;
+				self.handles_.forEach (function(f) { if (f===feature) found=true; });
 				if (found) return { feature: feature, handle:feature.get('handle'), constraint:feature.get('constraint'), option:feature.get('option') };
 			}
 			// feature belong to a layer
-			if (this.layers_)
-			{	for (var i=0; i<this.layers_.length; i++)
-				{	if (this.layers_[i]===layer) return { feature: feature };
+			if (self.layers_)
+			{	for (var i=0; i<self.layers_.length; i++)
+				{	if (self.layers_[i]===layer) return { feature: feature };
 				}
 				return null;
 			}
 			// feature in the collection
-			else if (this.features_)
-			{	this.features_.forEach (function(f) { if (f===feature) found=true; });
+			else if (self.features_)
+			{	self.features_.forEach (function(f) { if (f===feature) found=true; });
 				if (found) return { feature: feature };
 				else return null;
 			}
 			// Others
 			else return { feature: feature };
-		}, this) || {};
+		}) || {};
 }
 
 /** Draw transform sketch
@@ -6950,7 +7509,7 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt)
 				else scy=1;
 			}
 			else
-			{	if (evt.originalEvent.shiftKey)
+			{	if (this.get('keepAspectRatio')(evt)) //evt.originalEvent.shiftKey)
 				{	scx = scy = Math.min(scx,scy);
 				}
 			}
@@ -7558,6 +8117,124 @@ ol.layer.Group.prototype.getPreview = function(lonlat, resolution)
 	return t;
 }
 
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+	
+	@classdesc
+	ol.source.Mapillary is a source that load Wikimedia Commons content in a vector layer.
+	
+	@require jQuery
+	
+	Inherits from:
+	<ol.source.Vector>
+*/
+
+/**
+* @constructor ol.source.Mapillary
+* @extends {ol.source.Vector}
+* @param {olx.source.Mapillary=} options
+* @todo 
+*/
+ol.source.Mapillary = function(opt_options)
+{	var options = opt_options || {};
+	var self = this; 
+
+	options.loader = this._loaderFn;
+	
+	/** Url for DBPedia SPARQL */
+	this._url = options.url || "http://fr.dbpedia.org/sparql";
+
+	/** Max resolution to load features  */
+	this._maxResolution = options.maxResolution || 100;
+	
+	/** Result language */
+	this._lang = options.lang || "fr";
+
+	/** Query limit */
+	this._limit = options.limit || 100;
+	
+	/** Default attribution */
+	if (!options.attributions) options.attributions = [ new ol.Attribution({ html:"&copy; <a href='https://www.mapillary.com/'>Mapillary</a>" }) ];
+
+	// Bbox strategy : reload at each move
+    if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
+
+	ol.source.Vector.call (this, options);	
+};
+ol.inherits (ol.source.Mapillary, ol.source.Vector);
+
+
+/** Decode wiki attributes and choose to add feature to the layer
+* @param {feature} the feature
+* @param {attributes} wiki attributes
+* @return {boolean} true: add the feature to the layer
+* @API stable
+*/
+ol.source.Mapillary.prototype.readFeature = function (feature, attributes)
+{	
+	return true;
+};
+
+
+/** Loader function used to load features.
+* @private
+*/
+ol.source.Mapillary.prototype._loaderFn = function(extent, resolution, projection) 
+{	if (resolution > this._maxResolution) return;
+	var self = this;
+	var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
+	// Commons API: for more info @see https://commons.wikimedia.org/wiki/Commons:API/MediaWiki
+	var date = Date.now() - 6 * 30 * 24 * 60 * 60 * 1000;
+	var url = "https://a.mapillary.com/v2/search/im?client_id="
+		+ this.get('clientId')
+		+ "&max_lat=" + bbox[3]
+		+ "&max_lon=" + bbox[2]
+		+ "&min_lat=" + bbox[1]
+		+ "&min_lon=" + bbox[0]
+		+ "&limit="+(this._limit-1)
+		+ "&start_time=" + date;
+	// Ajax request to get the tile
+	$.ajax(
+	{	url: url,
+		dataType: 'jsonp', 
+		success: function(data) 
+		{	console.log(data);
+			return;
+			var features = [];
+			var att, pt, feature, lastfeature = null;
+			if (!data.query || !data.query.pages) return;
+			for ( var i in data.query.pages)
+			{	att = data.query.pages[i];
+				if (att.coordinates && att.coordinates.length ) 
+				{	pt = [att.coordinates[0].lon, att.coordinates[0].lat];
+				}
+				else
+				{	var meta = att.imageinfo[0].metadata;
+					if (!meta)
+					{	//console.log(att);
+						continue;
+					}
+					pt = [];
+					for (var k=0; k<meta.length; k++)
+					{	if (meta[k].name=="GPSLongitude") pt[0] = meta[k].value;
+						if (meta[k].name=="GPSLatitude") pt[1] = meta[k].value;
+					}
+					if (!pt.length) 
+					{	//console.log(att);
+						continue;
+					}
+				}
+				feature = new ol.Feature(new ol.geom.Point(ol.proj.transform (pt,"EPSG:4326",projection)));
+				att.imageinfo[0].title = att.title;
+				if (self.readFeature(feature, att.imageinfo[0]))
+				{	features.push(feature);
+				}
+			}
+			self.addFeatures(features);
+    }});
+};
+
 /** ol.layer.Vector.prototype.setRender3D
  * @extends {ol.layer.Vector}
  * @param {ol.render3D} 
@@ -7808,6 +8485,133 @@ ol.render3D.prototype.drawFeature3D_ = function(ctx, build)
 		}
 	}
 }
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+	
+	@classdesc
+	ol.source.WikiCommons is a source that load Wikimedia Commons content in a vector layer.
+	
+	@require jQuery
+	
+	Inherits from:
+	<ol.source.Vector>
+*/
+
+/**
+* @constructor ol.source.WikiCommons
+* @extends {ol.source.Vector}
+* @param {olx.source.WikiCommons=} options
+* @todo 
+*/
+ol.source.WikiCommons = function(opt_options)
+{	var options = opt_options || {};
+	var self = this; 
+
+	options.loader = this._loaderFn;
+	
+	/** Url for DBPedia SPARQL */
+	this._url = options.url || "http://fr.dbpedia.org/sparql";
+
+	/** Max resolution to load features  */
+	this._maxResolution = options.maxResolution || 100;
+	
+	/** Result language */
+	this._lang = options.lang || "fr";
+
+	/** Query limit */
+	this._limit = options.limit || 100;
+	
+	/** Default attribution */
+	if (!options.attributions) options.attributions = [ new ol.Attribution({ html:"&copy; <a href='https://commons.wikimedia.org/'>Wikimedia Commons</a>" }) ];
+
+	// Bbox strategy : reload at each move
+    if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
+
+	ol.source.Vector.call (this, options);	
+};
+ol.inherits (ol.source.WikiCommons, ol.source.Vector);
+
+
+/** Decode wiki attributes and choose to add feature to the layer
+* @param {feature} the feature
+* @param {attributes} wiki attributes
+* @return {boolean} true: add the feature to the layer
+* @API stable
+*/
+ol.source.WikiCommons.prototype.readFeature = function (feature, attributes)
+{	feature.set("descriptionurl", attributes.descriptionurl);
+	feature.set("url", attributes.url);
+	feature.set("title", attributes.title.replace(/^file:|.jpg$/ig,""));
+	feature.set("thumbnail", attributes.url.replace(/^(.+wikipedia\/commons)\/([a-zA-Z0-9]\/[a-zA-Z0-9]{2})\/(.+)$/,"$1/thumb/$2/$3/200px-$3"));
+	feature.set("user", attributes.user);
+	if (attributes.extmetadata && attributes.extmetadata.LicenseShortName) feature.set("copy", attributes.extmetadata.LicenseShortName.value);
+	return true;
+};
+
+
+/** Loader function used to load features.
+* @private
+*/
+ol.source.WikiCommons.prototype._loaderFn = function(extent, resolution, projection) 
+{	if (resolution > this._maxResolution) return;
+	var self = this;
+	var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
+	// Commons API: for more info @see https://commons.wikimedia.org/wiki/Commons:API/MediaWiki
+	var url = "https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&prop=coordinates|imageinfo"
+		+ "&generator=geosearch&iiprop=timestamp|user|url|extmetadata|metadata|size&iiextmetadatafilter=LicenseShortName"
+		+ "&ggsbbox=" + bbox[3] + "|" + bbox[0] + "|" + bbox[1] + "|" + bbox[2]
+		+ "&ggslimit="+this._limit
+		+ "&iilimit="+(this._limit-1)
+		+ "&ggsnamespace=6";
+
+	// Ajax request to get the tile
+	$.ajax(
+	{	url: url,
+		dataType: 'jsonp', 
+		success: function(data) 
+		{	//console.log(data);
+			var features = [];
+			var att, pt, feature, lastfeature = null;
+			if (!data.query || !data.query.pages) return;
+			for ( var i in data.query.pages)
+			{	att = data.query.pages[i];
+				if (att.coordinates && att.coordinates.length ) 
+				{	pt = [att.coordinates[0].lon, att.coordinates[0].lat];
+				}
+				else
+				{	var meta = att.imageinfo[0].metadata;
+					if (!meta)
+					{	//console.log(att);
+						continue;
+					}
+					pt = [];
+					var found=0;
+					for (var k=0; k<meta.length; k++)
+					{	if (meta[k].name=="GPSLongitude") 
+						{	pt[0] = meta[k].value;
+							found++;
+						}
+						if (meta[k].name=="GPSLatitude") 
+						{	pt[1] = meta[k].value;
+							found++;
+						}
+					}
+					if (found!=2) 
+					{	//console.log(att);
+						continue;
+					}
+				}
+				feature = new ol.Feature(new ol.geom.Point(ol.proj.transform (pt,"EPSG:4326",projection)));
+				att.imageinfo[0].title = att.title;
+				if (self.readFeature(feature, att.imageinfo[0]))
+				{	features.push(feature);
+				}
+			}
+			self.addFeatures(features);
+    }});
+};
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -10683,14 +11487,14 @@ ol.style.Shadow = function(opt_options)
 	this.blur_ = options.blur===0 ? 0 : options.blur || options.radius/3;
 	this.offset_ = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
 
-	this.render_();
+	this.renderShadow_();
 };
 ol.inherits(ol.style.Shadow, ol.style.RegularShape);
 
 /**
  * @private
  */
-ol.style.Shadow.prototype.render_ = function() 
+ol.style.Shadow.prototype.renderShadow_ = function() 
 {	
 	var radius = this.radius_;
 	
@@ -10978,11 +11782,6 @@ $.fn.exportMap = function(map, options)
 		}
 	});
 }
-
-/** Export PNG / JPEG */
-$(document).ready(function()
-{	$("a[download]").exportMap(map);
-});
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)

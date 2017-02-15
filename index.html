@@ -52,7 +52,7 @@
 	#examples
 	{	margin-top:4em;
 	}
-	#examples > div
+	#examples > div > div
 	{	box-sizing: border-box;
 		display: inline-block;
 		float: left;
@@ -138,6 +138,10 @@
 						$(this).parent().show();
 					}
 				});
+				$("h2").each(function()
+				{	if ($(".example:visible", $(this).next()).length) $(this).show();
+					else $(this).hide();
+				});
 				$("#count").text("("+k+")");
 			});
 		});
@@ -163,467 +167,515 @@
 	</div>
 
 	<h2>Styles</h2>
+		<div>
+
+			<div class="example">
+				<a class="mainlink" href="examples/map.style.font.html">
+					<strong>Font style</strong><br>
+				</a>
+				<p class="description">Draw points using an iconic font (font Awesome) gives you scalable vector icons that can instantly be customized (form, size, color, drop shadow) using attributes..</p>
+				<p class="tag">style, vector, font, fontawesome, icon, maki</p>
+			</div>
+
+			<div class="example">
+				<a class="mainlink" href="examples/map.style.photo.html">
+					<strong>Photo style</strong><br>
+				</a>
+				<p class="description">
+					The ol.style.Photo is an image style to show photos or images on a map.
+					The photos are drawn in a box and can be anchored.
+				</p>
+				<p class="tag">style, vector, photo</p>
+			</div>
+
+			<div class="example">
+				<a class="mainlink" href="examples/map.style.chart.html">
+					<strong>Statistic charts style</strong><br>
+				</a>
+				<p class="description">
+					The ol.style.Chart is an image style to draw statistical graphics (bar, donut or pie charts) on a map.
+				</p>
+				<p class="tag">style, vector, statistic, chart, pie, donut, animation</p>
+			</div>
+
+			<div class="example">
+				<a class="mainlink" href="examples/map.style.pattern.html">
+					<strong>Fill pattern style</strong><br>
+				</a>
+				<p class="description">
+					The ol.style.FillPattern is a fill style with a set of cartographic patterns to use in your maps.
+				</p>
+				<p class="tag">style, vector, fill, pattern, hatch</p>
+			</div>
+
+			<div class="example">
+				<a class="mainlink" href="examples/map.style.textpath.html">
+					<strong>Textpath style</strong><br>
+				</a>
+				<p class="description">
+					The ol.vector.setTextPathStyle() is a function to draw text along a linear feature (ol.geom.lineString) on postcompose.
+				</p>
+				<p class="tag">style, vector, textpath, text, along</p>
+			</div>
+		</div>
 	
-		<div class="example">
-			<a class="mainlink" href="examples/map.style.font.html">
-				<strong>Font style</strong><br>
-			</a>
-			<p class="description">Draw points using an iconic font (font Awesome) gives you scalable vector icons that can instantly be customized (form, size, color, drop shadow) using attributes..</p>
-			<p class="tag">style, vector, font, fontawesome, icon, maki</p>
-		</div>
-		
-		<div class="example">
-			<a class="mainlink" href="examples/map.style.photo.html">
-				<strong>Photo style</strong><br>
-			</a>
-			<p class="description">The ol.style.Photo is an image style to show photos or images on a map.
-				The photos are drawn in a box and can be anchored.
-			</p>
-			<p class="tag">style, vector, photo</p>
-		</div>
-		
-		<div class="example">
-			<a class="mainlink" href="examples/map.style.chart.html">
-				<strong>Statistic charts style</strong><br>
-			</a>
-			<p class="description">The ol.style.Chart is an image style to draw statistical graphics (bar, donut or pie charts) on a map.
-			</p>
-			<p class="tag">style, vector, statistic, chart, pie, donut, animation</p>
-		</div>
-		
-		<div class="example">
-			<a class="mainlink" href="examples/map.style.pattern.html">
-				<strong>Fill pattern style</strong><br>
-			</a>
-			<p class="description">The ol.style.FillPattern is a fill style with a set of cartographic patterns to use in your maps.
-			</p>
-			<p class="tag">style, vector, fill, pattern, hatch</p>
-		</div>
-
-		<div class="example">
-			<a class="mainlink" href="examples/map.style.textpath.html">
-				<strong>Textpath style</strong><br>
-			</a>
-			<p class="description">
-				The ol.vector.setTextPathStyle() is a function to draw text along a linear feature (ol.geom.lineString) on postcompose.
-			</p>
-			<p class="tag">style, vector, textpath, text, along</p>
-		</div>
-
 	<h2>Animation</h2>
-	
-		<div class="example">
-			<a class="mainlink" href="examples/map.featureanimation.html">
-				<strong>Feature animation</strong><br>
-			</a>
-			<p class="description"><i>ol.featureAnimation</i> provides animations to animate features on a map.</p>
-			<p class="tag">map, feature, animation, bounce, drop</p>
-		</div>
+		<div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.featureanimation.html">
+					<strong>Feature animation</strong><br>
+				</a>
+				<p class="description"><i>ol.featureAnimation</i> provides animations to animate features on a map.</p>
+				<p class="tag">map, feature, animation, bounce, drop</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.featureanimation.select.html">
-				<strong>Feature animation with select</strong><br>
-			</a>
-			<p class="description">This example show how to use a transparent style to let the features selectable when animated.</p>
-			<p class="tag">map, feature, animation, bounce, drop, select</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.featureanimation.select.html">
+					<strong>Feature animation with select</strong><br>
+				</a>
+				<p class="description">This example show how to use a transparent style to let the features selectable when animated.</p>
+				<p class="tag">map, feature, animation, bounce, drop, select</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.featureanimation.path.html">
-				<strong>Animate features along a path</strong><br>
-			</a>
-			<p class="description">This example animates deatures along a path.</p>
-			<p class="tag">map, feature, animation, path</p>
-		</div>
-	
-		<div class="example">
-			<a class="mainlink" href="examples/map.pulse.html">
-				<strong>Pulse!</strong><br>
-			</a>
-			<p class="description">A pulse function to pulse points on a map.</p>
-			<p class="tag">map, animation, pulse</p>
+			<div class="example">
+				<a class="mainlink" href="examples/map.featureanimation.path.html">
+					<strong>Animate features along a path</strong><br>
+				</a>
+				<p class="description">This example animates deatures along a path.</p>
+				<p class="tag">map, feature, animation, path</p>
+			</div>
+
+			<div class="example">
+				<a class="mainlink" href="examples/map.pulse.html">
+					<strong>Pulse!</strong><br>
+				</a>
+				<p class="description">A pulse function to pulse points on a map.</p>
+				<p class="tag">map, animation, pulse</p>
+			</div>
 		</div>
 	
 	<h2>Filter</h2>
+		<div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.filter.crop.html">
+					<strong>Crop/mask filter</strong><br>
+				</a>
+				<p class="description">Filter to crop or mask a map or a layer using an area (ol.feature).</p>
+				<p class="tag">filter, crop, mask</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.filter.crop.html">
-				<strong>Crop/mask filter</strong><br>
-			</a>
-			<p class="description">Filter to crop or mask a map or a layer using an area (ol.feature).</p>
-			<p class="tag">filter, crop, mask</p>
+			<div class="example">
+				<a class="mainlink" href="examples/map.filter.colorize.html">
+					<strong>Colorize filter</strong><br>
+				</a>
+				<p class="description">Filter to add color effects on maps or layers (hue, color, grayscale, enhance...).</p>
+				<p class="tag">filter, effect, color, hue, saturation, invert, grayscale</p>
+			</div>
+
+			<div class="example">
+				<a class="mainlink" href="examples/map.filter.texture.html">
+					<strong>Texture filter</strong><br>
+				</a>
+				<p class="description">Filter to add texture effects on maps or layers.</p>
+				<p class="tag">filter, effect, texture</p>
+			</div>
+
+			<div class="example">
+				<a class="mainlink" href="examples/map.filter.composite.html">
+					<strong>Composite filter</strong><br>
+				</a>
+				<p class="description">This filter apply a composite operation on layer drawing.</p>
+				<p class="tag">filter, effect, composite, color, canvas</p>
+			</div>
 		</div>
-
-		<div class="example">
-			<a class="mainlink" href="examples/map.filter.colorize.html">
-				<strong>Colorize filter</strong><br>
-			</a>
-			<p class="description">Filter to add color effects on maps or layers (hue, color, grayscale, enhance...).</p>
-			<p class="tag">filter, effect, color, hue, saturation, invert, grayscale</p>
-		</div>
-
-		<div class="example">
-			<a class="mainlink" href="examples/map.filter.texture.html">
-				<strong>Texture filter</strong><br>
-			</a>
-			<p class="description">Filter to add texture effects on maps or layers.</p>
-			<p class="tag">filter, effect, texture</p>
-		</div>
-
-		<div class="example">
-			<a class="mainlink" href="examples/map.filter.composite.html">
-				<strong>Composite filter</strong><br>
-			</a>
-			<p class="description">This filter apply a composite operation on layer drawing.</p>
-			<p class="tag">filter, effect, composite, color, canvas</p>
-		</div>
-
 
 	<h2>Canvas</h2>
+		<div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.canvas.control.html">
+					<strong>Canvas control</strong><br>
+				</a>
+				<p class="description">Example of canvas controls, ie. controls that are drawn on the canvas to use with export (jepg/png) functions.</p>
+				<p class="tag">control, canvas, scale line, attribution, title, export</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.canvas.control.html">
-				<strong>Canvas control</strong><br>
-			</a>
-			<p class="description">Example of canvas controls, ie. controls that are drawn on the canvas to use with export (jepg/png) functions.</p>
-			<p class="tag">control, canvas, scale line, attribution, title, export</p>
-		</div>
-
-		<div class="example">
-			<a class="mainlink" href="examples/map.target.control.html">
-				<strong>Target control.</strong><br>
-			</a>
-			<p class="description">The <i>ol.control.Target </i> draw a target to materialize the center of the map.</p>
-			<p class="tag">control, canvas, target</p>
+			<div class="example">
+				<a class="mainlink" href="examples/map.target.control.html">
+					<strong>Target control.</strong><br>
+				</a>
+				<p class="description">The <i>ol.control.Target </i> draw a target to materialize the center of the map.</p>
+				<p class="tag">control, canvas, target</p>
+			</div>
 		</div>
 
 	<h2>Interactions</h2>
+		<div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.interaction.transform.html">
+					<strong>Transform interaction</strong><br>
+				</a>
+				<p class="description">The <i>ol.interaction.Transform</i> is an interaction to transform features (scale, translate, rotate).</p>
+				<p class="tag">interaction, transform, scale, translate, rotate, vector</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.interaction.transform.html">
-				<strong>Transform interaction</strong><br>
-			</a>
-			<p class="description">The <i>ol.interaction.Transform</i> is an interaction to transform features (scale, translate, rotate).</p>
-			<p class="tag">interaction, transform, scale, translate, rotate, vector</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.interaction.split.html">
+					<strong>Split feature interaction</strong><br>
+				</a>
+				<p class="description"><i>ol.interaction.Split</i> is an interaction to split feature geometry (ol.geom.LineString).</p>
+				<p class="tag">interaction, split, linestring</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.interaction.split.html">
-				<strong>Split feature interaction</strong><br>
-			</a>
-			<p class="description"><i>ol.interaction.Split</i> is an interaction to split feature geometry (ol.geom.LineString).</p>
-			<p class="tag">interaction, split, linestring</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.interaction.splitter.html">
+					<strong>Splitter interaction</strong><br>
+				</a>
+				<p class="description">An interaction that acts as a split feature agent while editing vector features (LineString). </p>
+				<p class="tag">interaction, split, linestring</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.interaction.splitter.html">
-				<strong>Splitter interaction</strong><br>
-			</a>
-			<p class="description">An interaction that acts as a split feature agent while editing vector features (LineString). </p>
-			<p class="tag">interaction, split, linestring</p>
-		</div>
-	
-		<div class="example">
-			<a class="mainlink" href="examples/map.interaction.drawregular.html">
-				<strong>Draw regular interaction</strong><br>
-			</a>
-			<p class="description"><i>ol.interaction.DrawRegular</i> is an interaction to draw regular polygon (circle/ellipse, triangle, square/rectangles, etc).</p>
-			<p class="tag">interaction, regular, interaction, draw, circle, triangle</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.interaction.drawregular.html">
+					<strong>Draw regular interaction</strong><br>
+				</a>
+				<p class="description"><i>ol.interaction.DrawRegular</i> is an interaction to draw regular polygon (circle/ellipse, triangle, square/rectangles, etc).</p>
+				<p class="tag">interaction, regular, interaction, draw, circle, triangle</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.interaction.hover.html">
-				<strong>Hover interaction</strong><br>
-			</a>
-			<p class="description">An interaction to do something when hovering a feature (change cursor, show a popup, display information, etc.)</p>
-			<p class="tag">interaction, hover, cursor</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.interaction.hover.html">
+					<strong>Hover interaction</strong><br>
+				</a>
+				<p class="description">An interaction to do something when hovering a feature (change cursor, show a popup, display information, etc.)</p>
+				<p class="tag">interaction, hover, cursor</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.interaction.clip.html">
-				<strong>Clip interaction</strong><br>
-			</a>
-			<p class="description"><i>ol.interaction.Clip</i> clip layers by a circle on the map.</p>
-			<p class="tag">interaction, clip, circle, canvas</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.interaction.snapguides.html">
+					<strong>Snap guide interaction</strong><br>
+				</a>
+				<p class="description"><i>ol.interaction.SnapGuide</i>  handles snapping of vector features using guides lines while modifying or drawing them.</p>
+				<p class="tag">interaction, sna, guide</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.ddrop.html">
-				<strong>Dropfile interaction</strong><br>
-			</a>
-			<p class="description"><i>ol.interaction.DropFile</i> is a drag and drop interaction. It fires a loadstart and loadend and errors.</p>
-			<p class="tag">interaction, drag, drop</p>
+			<div class="example">
+				<a class="mainlink" href="examples/map.interaction.clip.html">
+					<strong>Clip interaction</strong><br>
+				</a>
+				<p class="description"><i>ol.interaction.Clip</i> clip layers by a circle on the map.</p>
+				<p class="tag">interaction, clip, circle, canvas</p>
+			</div>
+
+			<div class="example">
+				<a class="mainlink" href="examples/map.ddrop.html">
+					<strong>Dropfile interaction</strong><br>
+				</a>
+				<p class="description"><i>ol.interaction.DropFile</i> is a drag and drop interaction. It fires a loadstart and loadend and errors.</p>
+				<p class="tag">interaction, drag, drop</p>
+			</div>
 		</div>
 	
 	<h2>Control bar</h2>
+		<div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.control.button.html">
+					<strong>Control button</strong><br>
+				</a>
+				<p class="description">The <i>ol.control.Button</i> is simple control button.</p>
+				<p class="tag">control, button, toolbar</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.control.button.html">
-				<strong>Control button</strong><br>
-			</a>
-			<p class="description">The <i>ol.control.Button</i> is simple control button.</p>
-			<p class="tag">control, button, toolbar</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.control.toggle.html">
+					<strong>Control Toggle</strong><br>
+				</a>
+				<p class="description"><i>ol.control.Toggle</i> is an <i>ol.control.Button</i> with an active/deactive state. </p>
+				<p class="tag">control, button, toggle, toolbar</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.control.toggle.html">
-				<strong>Control Toggle</strong><br>
-			</a>
-			<p class="description"><i>ol.control.Toggle</i> is an <i>ol.control.Button</i> with an active/deactive state. </p>
-			<p class="tag">control, button, toggle, toolbar</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.control.bar.html">
+					<strong>Control bar</strong><br>
+				</a>
+				<p class="description">The <i>ol.control.Bar</i> is a panel that contains other controls. You can compose toolbars with it.</p>
+				<p class="tag">control, bar, toolbar, button, panel</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.control.bar.html">
-				<strong>Control bar</strong><br>
-			</a>
-			<p class="description">The <i>ol.control.Bar</i> is a panel that contains other controls. You can compose toolbars with it.</p>
-			<p class="tag">control, bar, toolbar, button, panel</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.control.subbar.html">
+					<strong>Control subbar</strong><br>
+				</a>
+				<p class="description"><i>ol.control.Bar</i> an be bested using an ol.control.Toggle to add subbar.</p>
+				<p class="tag">control, bar, subbar, toolbar, button, panel</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.control.subbar.html">
-				<strong>Control subbar</strong><br>
-			</a>
-			<p class="description"><i>ol.control.Bar</i> an be bested using an ol.control.Toggle to add subbar.</p>
-			<p class="tag">control, bar, subbar, toolbar, button, panel</p>
-		</div>
-
-		<div class="example">
-			<a class="mainlink" href="examples/map.control.editbar.html">
-				<strong>Edit bar</strong><br>
-			</a>
-			<p class="description">An example of <i>ol.control.Bar</i> to handle an edit toolbar.</p>
-			<p class="tag">control, edit, bar, toolbar, button, panel</p>
+			<div class="example">
+				<a class="mainlink" href="examples/map.control.editbar.html">
+					<strong>Edit bar</strong><br>
+				</a>
+				<p class="description">An example of <i>ol.control.Bar</i> to handle an edit toolbar.</p>
+				<p class="tag">control, edit, bar, toolbar, button, panel</p>
+			</div>
 		</div>
 
 	<h2>Controls</h2>
+		<div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.switcher.html">
+					<strong>Layer switcher control example</strong><br>
+				</a>
+				<p class="description">Example of a layer switcher control with visibility, opacity and ordering.</p>
+				<p class="tag">layerswitcher, control, jQuery</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.switcher.html">
-				<strong>Layer switcher control example</strong><br>
-			</a>
-			<p class="description">Example of a layer switcher control with visibility, opacity and ordering.</p>
-			<p class="tag">layerswitcher, control, jQuery</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.switcher.image.html">
+					<strong>LayerSwitcher image</strong><br>
+				</a>
+				<p class="description">A simple layer switcher with image buttons.</p>
+				<p class="tag">layerswitcher, control, preview, jQuery</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.switcher.image.html">
-				<strong>LayerSwitcher image</strong><br>
-			</a>
-			<p class="description">A simple layer switcher with image buttons.</p>
-			<p class="tag">layerswitcher, control, preview, jQuery</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.switcher.popup.html">
+					<strong>LayerSwitcher popup</strong><br>
+				</a>
+				<p class="description">A simple layer switcher as a menu.</p>
+				<p class="tag">layerswitcher, control, jQuery</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.switcher.popup.html">
-				<strong>LayerSwitcher popup</strong><br>
-			</a>
-			<p class="description">A simple layer switcher as a menu.</p>
-			<p class="tag">layerswitcher, control, jQuery</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.overview.html">
+					<strong>Overview map</strong><br>
+				</a>
+				<p class="description">An overview map with zoom limit and custom styles. Click on the overview will center the map.</p>
+				<p class="tag">overview, control</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.overview.html">
-				<strong>Overview map</strong><br>
-			</a>
-			<p class="description">An overview map with zoom limit and custom styles. Click on the overview will center the map.</p>
-			<p class="tag">overview, control</p>
-		</div>
-	
-		<div class="example">
-			<a class="mainlink" href="examples/map.control.profil.html">
-				<strong>Profil control</strong><br>
-			</a>
-			<p class="description"><i>ol.control.Profil</i> is a control that draw a profil of a 3D lineString (with a XYZ or XYZM layout)..</p>
-			<p class="tag">control, profil, Z, altitude, GPX, GPS</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.control.profil.html">
+					<strong>Profil control</strong><br>
+				</a>
+				<p class="description"><i>ol.control.Profil</i> is a control that draw a profil of a 3D lineString (with a XYZ or XYZM layout)..</p>
+				<p class="tag">control, profil, Z, altitude, GPX, GPS</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.control.permalink.html">
-				<strong>Permalink control</strong><br>
-			</a>
-			<p class="description">The <i>ol.control.Permalink</i> is hyperlink that will return the user to the current map view.</p>
-			<p class="tag">control, permalink</p>
-		</div>
-	
-		<div class="example">
-			<a class="mainlink" href="examples/map.control.swipe.html">
-				<strong>Swipe control</strong><br>
-			</a>
-			<p class="description">The <i>ol.control.Swipe</i> is a control that add a split screen to compare two map overlays. </p>
-			<p class="tag">control, globe, overview</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.control.permalink.html">
+					<strong>Permalink control</strong><br>
+				</a>
+				<p class="description">The <i>ol.control.Permalink</i> is hyperlink that will return the user to the current map view.</p>
+				<p class="tag">control, permalink</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.control.globe.html">
-				<strong>Globe control</strong><br>
-			</a>
-			<p class="description">The <i>ol.control.Globe</i> add a small globe on the map to display a position marker. </p>
-			<p class="tag">control, swipe, overlay, split</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.control.swipe.html">
+					<strong>Swipe control</strong><br>
+				</a>
+				<p class="description">The <i>ol.control.Swipe</i> is a control that add a split screen to compare two map overlays. </p>
+				<p class="tag">control, globe, overview</p>
+			</div>
 
+			<div class="example">
+				<a class="mainlink" href="examples/map.control.globe.html">
+					<strong>Globe control</strong><br>
+				</a>
+				<p class="description">The <i>ol.control.Globe</i> add a small globe on the map to display a position marker. </p>
+				<p class="tag">control, swipe, overlay, split</p>
+			</div>
+		</div>
 	
 	<h2>Popup</h2>
+		<div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.popup.html">
+					<strong>Popup!</strong><br>
+				</a>
+				<p class="description">Show popup on a map with style.</p>
+				<p class="tag">popup, overlay, jQuery</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.popup.html">
-				<strong>Popup!</strong><br>
-			</a>
-			<p class="description">Show popup on a map with style.</p>
-			<p class="tag">popup, overlay, jQuery</p>
-		</div>
-
-		<div class="example">
-			<a class="mainlink" href="examples/map.popup.anim.html">
-				<strong>Animated popup!</strong><br>
-			</a>
-			<p class="description">This example uses a CSS to add a bounce effect to the popup display.</p>
-			<p class="tag">popup, overlay, animation, jQuery</p>
+			<div class="example">
+				<a class="mainlink" href="examples/map.popup.anim.html">
+					<strong>Animated popup!</strong><br>
+				</a>
+				<p class="description">This example uses a CSS to add a bounce effect to the popup display.</p>
+				<p class="tag">popup, overlay, animation, jQuery</p>
+			</div>
 		</div>
 
 	<h2>Layer / source</h2>
+		<div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.geoimage.html">
+					<strong>Georeference images on a map</strong><br>
+				</a>
+				<p class="description"><i>ol.source.GeoImage</i> georeference images on a map.</p>
+				<p class="tag">layer, georeference, georeferencing, image, photo</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.geoimage.html">
-				<strong>Georeference images on a map</strong><br>
-			</a>
-			<p class="description"><i>ol.source.GeoImage</i> georeference images on a map.</p>
-			<p class="tag">layer, georeference, georeferencing, image, photo</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.preview.html">
+					<strong>Preview of a layer</strong><br>
+				</a>
+				<p class="description">Add a <i>getPreview</i> function to ol.layer that retrieve a preview of the layer.</p>
+				<p class="tag">layer, preview</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.preview.html">
-				<strong>Preview of a layer</strong><br>
-			</a>
-			<p class="description">Add a <i>getPreview</i> function to ol.layer that retrieve a preview of the layer.</p>
-			<p class="tag">layer, preview</p>
-		</div>
-	
-		<div class="example">
-			<a class="mainlink" href="examples/map.dbpedia.html">
-				<strong>BDpedia layer</strong><br>
-			</a>
-			<p class="description">A BDpedia tile vector layer that use RDF of the <a href="http://fr.dbpedia.org/">french DBpedia project</a>.</p>
-			<p class="tag">layer, vector, wikipedia, dbpedia</p>
+			<div class="example">
+				<a class="mainlink" href="examples/map.dbpedia.html">
+					<strong>BDpedia layer</strong><br>
+				</a>
+				<p class="description">A BDpedia tile vector layer that use RDF of the <a href="http://fr.dbpedia.org/">french DBpedia project</a>.</p>
+				<p class="tag">layer, vector, wikipedia, dbpedia</p>
+			</div>
+
+			<div class="example">
+				<a class="mainlink" href="examples/map.wikicommons.html">
+					<strong>Wikimedia Commons layer</strong><br>
+				</a>
+				<p class="description">
+					<i>ol.layer.WikiCommons</i> is a tile vector layer that use <a href="https://commons.wikimedia.org/">Wikimedia Commons</a>.
+				</p>
+				<p class="tag">layer, vector, wikipedia, wikimedia, commons</p>
+			</div>
 		</div>
 
 	<h2>Touch</h2>
+		<div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.interaction.touchcompass.html">
+					<strong>Touch compass interaction</strong><br>
+				</a>
+				<p class="description">
+					The <i>TouchCompass</i> interaction lets you handle movement by dragging a touch compass.
+				</p>
+				<p class="tag">interaction, touch, drag, compass</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.interaction.touchcompass.html">
-				<strong>Touch compass interaction</strong><br>
-			</a>
-			<p class="description">
-				The <i>TouchCompass</i> interaction lets you handle movement by dragging a touch compass.
-			</p>
-			<p class="tag">interaction, touch, drag, compass</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.interaction.drawtouch.html">
+					<strong>Touch draw interaction</strong><br>
+				</a>
+				<p class="description">
+					An interactioon for drawing feature geometry on a touch device.
+				</p>
+				<p class="tag">interaction, touch, draw, vector</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.interaction.drawtouch.html">
-				<strong>Touch draw interaction</strong><br>
-			</a>
-			<p class="description">
-				An interactioon for drawing feature geometry on a touch device.
-			</p>
-			<p class="tag">interaction, touch, draw, vector</p>
+			<div class="example">
+				<a class="mainlink" href="examples/map.interaction.longtouch.html">
+					<strong>Long touch interaction</strong><br>
+				</a>
+				<p class="description">
+					The LongTouch interaction is an interaction to handle a long touch event.
+				</p>
+				<p class="tag">interaction, touch, long</p>
+			</div>
 		</div>
 
 	<h2>Miscancellous</h2>
-	
-		<div class="example">
-			<a class="mainlink" href="examples/map.geom.cspline.html">
-				<strong>Cardinal spline</strong><br>
-			</a>
-			<p class="description">
-				The ol.geom.Geometry.cspline() function smooth lines by using cardinal splines (canonical spline) 
-				to draw smooth curves that goes through the points.
-			</p>
-			<p class="tag">geom, linestring, spline, smooth, curve</p>
-		</div>
+		<div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.geom.cspline.html">
+					<strong>Cardinal spline</strong><br>
+				</a>
+				<p class="description">
+					The ol.geom.Geometry.cspline() function smooth lines by using cardinal splines (canonical spline)
+					to draw smooth curves that goes through the points.
+				</p>
+				<p class="tag">geom, linestring, spline, smooth, curve</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.overlay.magnify.html">
-				<strong>Magnify glass</strong><br>
-			</a>
-			<p class="description">
-				The Magnify overlay add a "magnifying glass" effect to an OL3 map
-				that displays a portion of the map in a different zoom (and actually display different content).
-			</p>
-			<p class="tag">overlay, magnify, glass, zoom</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.overlay.magnify.html">
+					<strong>Magnify glass</strong><br>
+				</a>
+				<p class="description">
+					The Magnify overlay add a "magnifying glass" effect to an OL3 map
+					that displays a portion of the map in a different zoom (and actually display different content).
+				</p>
+				<p class="tag">overlay, magnify, glass, zoom</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.flashlight.html">
-				<strong>Flashlight!</strong><br>
-			</a>
-			<p class="description">The flashlight interaction add a flashlight effect on mouse move.</p>
-			<p class="tag">interaction, effect, light</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.flashlight.html">
+					<strong>Flashlight!</strong><br>
+				</a>
+				<p class="description">The flashlight interaction add a flashlight effect on mouse move.</p>
+				<p class="tag">interaction, effect, light</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.control.cloud.html">
-				<strong>Map in the cloud</strong><br>
-			</a>
-			<p class="description">The ol.control.Cloud adds an animated clouds overlay over the map.</p>
-			<p class="tag">control, effect, clouds, birds, animation</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.control.cloud.html">
+					<strong>Map in the cloud</strong><br>
+				</a>
+				<p class="description">The ol.control.Cloud adds an animated clouds overlay over the map.</p>
+				<p class="tag">control, effect, clouds, birds, animation</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.interaction.ripple.html" data-img='gif'>
-				<strong>Watter ripple</strong><br>
-			</a>
-			<p class="description">The ripple interaction add a watter ripple effect on a map.</p>
-			<p class="tag">interaction, effect, animation, watter, ripple</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.filter.lego.html">
+					<strong>Lego map</strong><br>
+				</a>
+				<p class="description">A map that looks like made of a set of Lego bricks.</p>
+				<p class="tag">filter, effect, lego, brick</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.interaction.synchronize.html">
-				<strong>Synchronize Maps</strong><br>
-			</a>
-			<p class="description">Synchronize maps and add an overlay to show mouse position.</p>
-			<p class="tag">synchronization, map, cursor</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.interaction.ripple.html" data-img='gif'>
+					<strong>Watter ripple</strong><br>
+				</a>
+				<p class="description">The ripple interaction add a watter ripple effect on a map.</p>
+				<p class="tag">interaction, effect, animation, watter, ripple</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.synchro.html">
-				<strong>Synchronize Maps</strong><br>
-			</a>
-			<p class="description">Synchronize maps in different windows.</p>
-			<p class="tag">synchronization, map, window</p>
-		</div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.interaction.synchronize.html">
+					<strong>Synchronize Maps</strong><br>
+				</a>
+				<p class="description">Synchronize maps and add an overlay to show mouse position.</p>
+				<p class="tag">synchronization, map, cursor</p>
+			</div>
 
+			<div class="example">
+				<a class="mainlink" href="examples/map.synchro.html">
+					<strong>Synchronize Maps</strong><br>
+				</a>
+				<p class="description">Synchronize maps in different windows.</p>
+				<p class="tag">synchronization, map, window</p>
+			</div>
+		</div>
 	
 	<h2>Full map</h2>
+		<div>
+			<div class="example">
+				<a class="mainlink" href="examples/map.pirate.html">
+					<strong>Pirate map.</strong><br>
+				</a>
+				<p class="description">
+					The <i>ol.control.PirateMap </i> adds an old map effect on a canvas renderer.
+					It colors the map, adds a parchment texture and compass onto the map.
+				</p>
+				<p class="tag">control, canvas, pirate, compass, effect</p>
+			</div>
 
-		<div class="example">
-			<a class="mainlink" href="examples/map.pirate.html">
-				<strong>Pirate map.</strong><br>
-			</a>
-			<p class="description">
-				The <i>ol.control.PirateMap </i> adds an old map effect on a canvas renderer.
-				It colors the map, adds a parchment texture and compass onto the map.
-			</p>
-			<p class="tag">control, canvas, pirate, compass, effect</p>
+			<div class="example">
+				<a class="mainlink" href="examples/map.layer.3D.html">
+					<strong>Layer 2.5/3D</strong><br>
+				</a>
+				<p class="description">This example is an attempt to represent 2.5/3D informations on an OL3 map.</p>
+				<p class="tag">layer, vector, 3D, buildings, animation</p>
+			</div>
+
+			<div class="example">
+				<a class="mainlink" href="examples/map.dbpedia.photo.html">
+					<strong>BDpedia photo map</strong><br>
+				</a>
+				<p class="description">An example using a BDpedia layer with clusters to show photos on a map.</p>
+				<p class="tag">layer, vector, cluster, photo, style, dbpedia, animation</p>
+			</div>
 		</div>
-
-		<div class="example">
-			<a class="mainlink" href="examples/map.layer.3D.html">
-				<strong>Layer 2.5/3D</strong><br>
-			</a>
-			<p class="description">This example is an attempt to represent 2.5/3D informations on an OL3 map.</p>
-			<p class="tag">layer, vector, 3D, buildings, animation</p>
-		</div>
-
-		<div class="example">
-			<a class="mainlink" href="examples/map.dbpedia.photo.html">
-				<strong>BDpedia photo map</strong><br>
-			</a>
-			<p class="description">An example using a BDpedia layer with clusters to show photos on a map.</p>
-			<p class="tag">layer, vector, cluster, photo, style, dbpedia, animation</p>
-		</div>
-
 
 	</div>
 

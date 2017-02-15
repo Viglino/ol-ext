@@ -30,7 +30,7 @@ ol.filter.Base.prototype.setActive = function (b)
 *	@return {bool}
 */
 ol.filter.Base.prototype.getActive = function (b)
-{	return this.set('active');
+{	return this.get('active');
 };
 
 (function(){
