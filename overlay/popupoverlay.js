@@ -22,7 +22,8 @@
  * @param {olx.OverlayOptions} options Overlay options 
  *		+ popupClass: the a class for the overlay.
  *		+ closeBox: popup has a close box.
- *		+ onclose: callback when close box is clicked.
+ *		+ onclose: callback when popup is closed
+ *		+ onshow: callback when popup is shown
  *		+ positionning: add 'auto' to let the popup choose a good positioning.
  * @api stable
  */
@@ -38,11 +39,12 @@ ol.Overlay.Popup = function (options)
 	this.content = $("<div>").addClass("content").appendTo(d).get(0);
 	// Closebox
 	this.closeBox = options.closeBox;
+        this.onclose = options.onclose;      
+        this.onshow = options.onshow;      
 	$("<button>").addClass("closeBox").addClass(options.closeBox?"hasclosebox":"")
 				.prependTo(d)
 				.click(function()
 				{	self.hide();
-					if (typeof (options.onclose) == 'function') options.onclose();
 				});
 	// Stop event
 	options.stopEvent=false;
@@ -50,8 +52,9 @@ ol.Overlay.Popup = function (options)
 
 	ol.Overlay.call(this, options);
 	
-	this.setPopupClass(options.popupClass);
+        // call setPositioning first in constructor so getClassPositioning is called only once
 	this.setPositioning(options.positioning);
+	this.setPopupClass(options.popupClass);
 }
 ol.inherits(ol.Overlay.Popup, ol.Overlay);
 
@@ -116,7 +119,10 @@ ol.Overlay.Popup.prototype.removePopupClass = function (c)
  * @api stable
  */
 ol.Overlay.Popup.prototype.setPositioning = function (pos)
-{	if (/auto/.test(pos))
+{	
+        if (pos === undefined)
+            return;
+        if (/auto/.test(pos))
 	{	this.autoPositioning = pos.split('-');
 		if (this.autoPositioning.length==1) this.autoPositioning[1]="auto";
 	}
@@ -177,6 +183,7 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
 		this.setPosition(coordinate);
 		// Set visible class (wait to compute the size/position first)
 		$(this.element).parent().show();
+                if (typeof (this.onshow) == 'function') this.onshow();
 		this._tout = setTimeout (function()
 		{	$(self.element).addClass("visible"); 
 		}, 0);
@@ -188,7 +195,9 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
  * @api stable
  */
 ol.Overlay.Popup.prototype.hide = function ()
-{	this.setPosition(undefined);
-	if (this._tout) clearTimeout(this._tout)
+    if (this.getPosition() == undefined) return;
+	if (typeof (this.onclose) == 'function') this.onclose();
+	this.setPosition(undefined);
+	if (this._tout) clearTimeout(this._tout);
 	$(this.element).removeClass("visible");
 }
