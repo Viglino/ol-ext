@@ -195,7 +195,7 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
  * @api stable
  */
 ol.Overlay.Popup.prototype.hide = function ()
-    if (this.getPosition() == undefined) return;
+{	if (this.getPosition() == undefined) return;
 	if (typeof (this.onclose) == 'function') this.onclose();
 	this.setPosition(undefined);
 	if (this._tout) clearTimeout(this._tout);
