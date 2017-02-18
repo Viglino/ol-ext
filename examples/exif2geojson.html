@@ -102,21 +102,24 @@
 			box-sizing:border-box;
 		}
 		.loading
-		{	margin:1em;
+		{	margin:0 0 1em;
 			padding:0.5em;
 			height:1em;
 		}
-		.info > button
+		.info > button 
 		{	float: right;
 			background: #887;
 			color: #fff;
-			border:0;
+			border: 0;
 			margin: 0 2em;
-			font-size:1.3em;
+			font-size: 1.3em;
 			font-weight: bold;
 			padding: 0.25em 1em;
 			display: none;
-			cursor:pointer;
+			cursor: pointer;
+		}
+		.info > button	i
+		{	color:#fff;
 		}
 		#map
 		{	float:none;
@@ -151,7 +154,7 @@
 
 	<div class="info">
 		<p>Options:</p>
-		<ul style="margin:0; list-style:none; margin:1em 0;">
+		<ul style="list-style:none;">
 			<li>
 				<input id="image" type="checkbox" checked="checked" /><label for="image"> get image informations</label>
 			</li>
@@ -163,9 +166,9 @@
 			</li>
 		</ul>
 
-		<p>Result:</p>
+		<p style="margin-bottom:0;">Result:</p>
 		<div id="pbar"><div></div></div>
-		<button onclick="download()">Download</button>
+		<button onclick="download()"><i class="fa fa-download"></i> Download</button>
 		<div class="loading"></div>
 
 		<div id="map"></div>
