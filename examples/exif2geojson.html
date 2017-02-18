@@ -1,0 +1,247 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<title>EXIF 2 geojson</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="transform interaction for OL3" />
+	<meta name="keywords" content="exif, tag, image, geojson" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<!-- FontAwesome -->
+	<link rel="stylesheet" href="http://fontawesome.io/assets/font-awesome/css/font-awesome.css" type="text/css" />
+
+	<!-- ol3 to show the map -->
+	<link rel="stylesheet" href="http://openlayers.org/en/latest/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/latest/build/ol.js"></script>
+
+	<!-- filesaver-js -->
+	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+	<!-- exif-JS -->
+	<script type="text/javascript" src="https://cdn.rawgit.com/exif-js/exif-js/70ced465/exif.js"></script>
+	<script type="text/javascript" src="../utils/exif2geojson.js"></script>
+
+	<link rel="stylesheet" href="style.css" />
+
+	<style>
+		body
+		{	max-width: 800px;
+			margin: 0.5em auto;
+			background: #ddc;
+			font-family: 'Open Sans Condensed',Arial,Helvetica,Verdana,sans-serif;
+			color: #775;
+		}
+		h1
+		{	background: #886;
+		}
+		h1 .fa
+		{
+			color: #fff;
+			font-size:1.8em;
+			vertical-align: middle;
+			-webkit-transform: scale(0.8,1);
+			transform: scale(0.8,1);
+		}
+		.info
+		{	padding:1em 2em;
+			background: #fff;
+			border-radius: 6px;
+			clear: both;
+		}
+		.globe
+		{	text-align:center;
+			float:left;
+			font-size: 5em;
+			width:40%;
+		}
+		.globe .fa
+		{	vertical-align: middle;
+			margin:0 5px;
+			color:#664;
+		}
+		.globe .fa-picture-o
+		{	font-size: 0.75em;
+		}
+		.globe .fa-arrow-circle-right
+		{	font-size: 0.5em;
+		}
+
+		#dropfile
+		{	font-size:1.2em;
+			width:55%; 
+			float: right;
+			border:3px dashed #997; 
+			padding:1em 3.5em;
+			text-align:center;
+			box-sizing: border-box;
+			margin: 0 3em 1em -3em;
+			font-weight: bold;
+		}
+		#dropfile.hover
+		{
+			border-color: #664;
+			background: #e6e6d6;
+		}
+
+		#pbar
+		{	display: block; 
+			width:200px; 
+			border:1px solid #664; 
+			margin: 0.5em;
+			float:left;
+		}
+		#pbar > div
+		{	height: 15px; 
+			width: 0; 
+			background: #664;
+		}
+		textarea
+		{	width:100%; 
+			height:15em; 
+			box-sizing:border-box;
+		}
+		.loading
+		{	margin:1em;
+			padding:0.5em;
+			height:1em;
+		}
+		.info > button
+		{	float: right;
+			background: #887;
+			color: #fff;
+			border:0;
+			margin: 0 2em;
+			font-size:1.3em;
+			font-weight: bold;
+			padding: 0.25em 1em;
+			display: none;
+			cursor:pointer;
+		}
+		#map
+		{	float:none;
+			width: 100%;
+			height: 400px;
+		}
+	</style>
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a class="title" href="../index.html">
+		<h1><i class="fa fa-picture-o"></i> Exif2geojson</h1>
+	</a>
+
+	<div class="info">
+		The <i>exif2</i> is a standealone fuction to read EXIF image metadata in a set of images 
+		and to convert them to <a href="http://geojson.org/">GeoJSON</a>.
+		<br/>
+		It uses the <a href="https://github.com/exif-js/exif-js">exif-js/exif-js</a> library for reading EXIF image metadata.
+		and <a href="https://github.com/eligrey/FileSaver.js">FileSaver.js</a> to save the file.
+	</div>
+	
+	<div class="globe">
+		<i class="fa fa-picture-o"></i><i class="fa fa-arrow-circle-right"></i><i class="fa fa-globe"></i>
+	</div>
+
+	<div id="dropfile">
+		Drag & drop images with a geolocation to create a GeoJSON file with all of the found GPS points!
+	</div>
+
+	<div class="info">
+		<p>Options:</p>
+		<ul style="margin:0; list-style:none; margin:1em 0;">
+			<li>
+				<input id="image" type="checkbox" checked="checked" /><label for="image"> get image informations</label>
+			</li>
+			<li>
+				<input id="date" type="checkbox" checked="checked" /><label for="date"> get date informations</label>
+			</li>
+			<li>
+				<input id="camera" type="checkbox" checked="checked" /><label for="camera"> get camera informations</label>
+			</li>
+		</ul>
+
+		<p>Result:</p>
+		<div id="pbar"><div></div></div>
+		<button onclick="download()">Download</button>
+		<div class="loading"></div>
+
+		<div id="map"></div>
+
+		<textarea id="result"></textarea>
+	</div>
+
+	<script>
+		function download()
+		{	var blob = new Blob([$("#result").val()], {type: "text/plain;charset=utf-8"});
+			console.log(blob)
+			saveAs(blob, "photo.geojson");
+		}
+
+		$(document).on('dragover dragleave', function (e)
+		{	e.preventDefault();
+			e.stopPropagation();
+			if (e.type=='dragover') $("#dropfile").addClass('hover');
+			else $("#dropfile").removeClass('hover');
+			return false;
+		});
+
+		$(document).on('drop', function (e)
+		{	if (e.originalEvent.dataTransfer)
+			{	if (e.originalEvent.dataTransfer.files.length)
+				{   // Stop the propagation of the event
+					e.preventDefault();
+					e.stopPropagation();
+					$("#dropfile").removeClass('hover');
+					$(".loading").html(" loading...");
+					// Main function to upload
+					var files=e.originalEvent.dataTransfer.files;
+					var nb=files.length;
+					exif2geojson(files,
+						{	camera: $("#camera").prop('checked'),
+							image: $("#image").prop('checked'),
+							date: $("#date").prop('checked'),
+							loading: function (n) 
+							{	$("#pbar > div").css('width', ((nb-n)/nb*100)+"%"); 
+							},
+							onLoad: function (json) 
+							{	$("#result").val(JSON.stringify(json, null, " ")); 
+								$(".loading").html(" "+json.features.length+" feature(s) loaded.");
+								$("#pbar > div").width(0);
+								$("button").show();
+								// Read the features
+								var format = new ol.format.GeoJSON();
+								var features = format.readFeatures(json, { featureProjection: map.getView().getProjection() });
+								vector.getSource().addFeatures(features);
+							}
+						});
+				}
+			}
+			else $(this).css('border', '3px dashed #BBBBBB');
+			return false;
+		});
+
+		// The map
+		var map = new ol.Map
+			({	target: 'map',
+				view: new ol.View
+				({	zoom: 1,
+					center: [270055, 3528229.]
+				}),
+				layers: [new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) })]
+			});
+
+		var vector = new ol.layer.Vector(
+		{	source: new ol.source.Vector(),
+			style: new ol.style.Style(
+				{	image: new ol.style.Circle({
+					fill: new ol.style.Fill({ color:"rgba(102, 68, 68, 0.6)" }),
+					radius: 5
+				 })})
+		});
+		map.addLayer(vector);
+	</script>
+</body>
+</html>
