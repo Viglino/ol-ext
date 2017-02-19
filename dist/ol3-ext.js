@@ -2571,10 +2571,20 @@ ol.control.Profil = function(opt_options)
 	var div = $("<div>").addClass("ol-inner").appendTo(element);
 	div = $("<div>").css("position","relative").appendTo(div);
 
+	var ratio = this.ratio = 2;
 	this.canvas_ = document.createElement('canvas');
-	this.canvas_.width = options.width || 300;
-	this.canvas_.height = options.height || 150;
-	$(this.canvas_).appendTo(div)
+	this.canvas_.width = (options.width || 300)*ratio;
+	this.canvas_.height = (options.height || 150)*ratio;
+	$(this.canvas_).css({
+		"transform":"scale(0.5,0.5)", "transform-origin":"0 0",
+		"-ms-transform":"scale(0.5,0.5)", "-ms-transform-origin":"0 0",
+		"-webkit-transform":"scale(0.5,0.5)", "-webkit-transform-origin":"0 0",
+		"transform":"scale(0.5,0.5)", "transform-origin":"0 0"
+	});
+	$("<div>").appendTo(div)
+		.width (this.canvas_.width/ratio)
+		.height (this.canvas_.height/ratio)
+		.append(this.canvas_)
 		.on("click mousemove", function(e){ self.onMove(e); });
 
 	ol.control.Control.call(this, 
@@ -2583,13 +2593,13 @@ ol.control.Profil = function(opt_options)
 	});
 
 	// Offset in px
-	this.margin_ = { top:10, left:40, bottom:30, right:10 };
-	if (!this.info.ytitle) this.margin_.left -= 20;
-	if (!this.info.xtitle) this.margin_.bottom -= 20;
+	this.margin_ = { top:10*ratio, left:40*ratio, bottom:30*ratio, right:10*ratio };
+	if (!this.info.ytitle) this.margin_.left -= 20*ratio;
+	if (!this.info.xtitle) this.margin_.bottom -= 20*ratio;
 	
 	// Cursor
 	this.bar_ = $("<div>").addClass("ol-profilbar")
-			.css({top:this.margin_.top+"px", height:(this.canvas_.height-this.margin_.top-this.margin_.bottom)+"px" })
+			.css({top:(this.margin_.top/ratio)+"px", height:(this.canvas_.height-this.margin_.top-this.margin_.bottom)/ratio+"px" })
 			.appendTo(div);
 	this.cursor_ = $("<div>").addClass("ol-profilcursor")
 			.appendTo(div);
@@ -2597,7 +2607,7 @@ ol.control.Profil = function(opt_options)
 			.appendTo(this.cursor_);
 
 	// Track information
-	var t = $("<table cellpadding='0' cellspacing='0'>").appendTo(div).width(this.canvas_.width);
+	var t = $("<table cellpadding='0' cellspacing='0'>").appendTo(div).width(this.canvas_.width/ratio);
 	var tr = $("<tr>").addClass("track-info").appendTo(t);
 	$("<td>").html((this.info.zmin||"Zmin")+': <span class="zmin">').appendTo(tr);
 	$("<td>").html((this.info.zmax||"Zmax")+': <span class="zmax">').appendTo(tr);
@@ -2632,6 +2642,8 @@ ol.control.Profil.prototype.info =
 };
 
 /** Show popup info
+* @param {string} info to display as a popup
+* @api stable
 */
 ol.control.Profil.prototype.popup = function(info)
 {	this.popup_.html(info);
@@ -2644,10 +2656,11 @@ ol.control.Profil.prototype.onMove = function(e)
 	var pos = $(this.canvas_).offset();
 	var dx = e.pageX -pos.left;
 	var dy = e.pageY -pos.top;
-	if (dx>this.margin_.left && dx<this.canvas_.width-this.margin_.right
-		&& dy>this.margin_.top && dy<this.canvas_.height-this.margin_.bottom) 
+	var ratio = this.ratio;
+	if (dx>this.margin_.left/ratio && dx<(this.canvas_.width-this.margin_.right)/ratio
+		&& dy>this.margin_.top/ratio && dy<(this.canvas_.height-this.margin_.bottom)/ratio) 
 	{	this.bar_.css("left", dx+"px").show();
-		var d = (dx-this.margin_.left)/this.scale_[0];
+		var d = (dx*ratio-this.margin_.left)/this.scale_[0];
 		var p0 = this.tab_[0];
 		for (var i=1, p; p=this.tab_[i]; i++)
 		{	if (p[0]>=d) 
@@ -2655,13 +2668,16 @@ ol.control.Profil.prototype.onMove = function(e)
 				break;
 			}
 		}
-		if (p) this.cursor_.css({ left:dx+"px", top:(this.canvas_.height-this.margin_.bottom+p[1]*this.scale_[1]+this.dy_)+"px"}).show();
+		if (p) this.cursor_.css({ 
+			left:dx+"px", 
+			top:(this.canvas_.height-this.margin_.bottom+p[1]*this.scale_[1]+this.dy_)/ratio+"px"
+		}).show();
 		else this.cursor_.hide();
 		this.bar_.parent().addClass("over");
 		$(".point-info .z", this.element).text(p[1]+"m");
 		$(".point-info .dist", this.element).text((p[0]/1000).toFixed(1)+"km");
 		$(".point-info .time", this.element).text(p[2]);
-		if (dx>this.canvas_.width/2) this.popup_.addClass('ol-left');
+		if (dx>this.canvas_.width/ratio/2) this.popup_.addClass('ol-left');
 		else this.popup_.removeClass('ol-left');
 		this.dispatchEvent({ type:'over', click:e.type=="click", coord: p[3], time: p[2], distance: p[0] });
 	}
@@ -2676,18 +2692,21 @@ ol.control.Profil.prototype.onMove = function(e)
 }
 
 /** Show panel
+* @api stable
 */
 ol.control.Profil.prototype.show = function()
 {	$(this.element).removeClass("ol-collapsed"); 
 	this.dispatchEvent({ type:'show', show: true });
 }
 /** Hide panel
+* @api stable
 */
 ol.control.Profil.prototype.hide = function()
 {	$(this.element).addClass("ol-collapsed"); 
 	this.dispatchEvent({ type:'show', show: false });
 }
 /** Toggle panel
+* @api stable
 */
 ol.control.Profil.prototype.toggle = function()
 {	var b = $(this.element).toggleClass("ol-collapsed").hasClass("ol-collapsed"); 
@@ -2708,8 +2727,8 @@ ol.control.Profil.prototype.isShown = function()
  *		- unit {m|km} default km
  *		- zmin {Number|undefined} default 0
  *		- zmax {Number|undefined} default max Z of the feature
-  *		- graduation {Number|undefined} z graduation default 100
-*		- amplitude {integer|undefined} amplitude of the altitude, default zmax-zmin
+ *		- graduation {Number|undefined} z graduation default 100
+ *		- amplitude {integer|undefined} amplitude of the altitude, default zmax-zmin
  * @api stable
  */
 ol.control.Profil.prototype.setGeometry = function(g, options)
@@ -2755,11 +2774,13 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 
 	// Margin
 	ctx.setTransform(1, 0, 0, 1, this.margin_.left, h-this.margin_.bottom);
+	var ratio = this.ratio;
+
 	w -= this.margin_.right + this.margin_.left;
 	h -= this.margin_.top + this.margin_.bottom;
 	// Draw axes
 	ctx.strokeStyle = "#000";
-	ctx.lineWidth = 0.5;
+	ctx.lineWidth = 0.5*ratio;
 	ctx.beginPath();
 	ctx.moveTo(0,0); ctx.lineTo(0,-h);
 	ctx.moveTo(0,0); ctx.lineTo(w, 0);
@@ -2779,9 +2800,14 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	}
 
 	// Info
-	$(".track-info .zmin", this.element).text(zmin+"m");
-	$(".track-info .zmax", this.element).text(zmax+"m");
-	$(".track-info .dist", this.element).text((d/1000).toFixed(1)+"km");
+	$(".track-info .zmin", this.element).text(zmin.toFixed(2)+"m");
+	$(".track-info .zmax", this.element).text(zmax.toFixed(2)+"m");
+	if (d>1000)
+	{	$(".track-info .dist", this.element).text((d/1000).toFixed(1)+"km");
+	}
+	else
+	{	$(".track-info .dist", this.element).text((d).toFixed(1)+"m");
+	}
 	$(".track-info .time", this.element).text(ti);
 
 	// Set graduation
@@ -2790,7 +2816,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	{	zmax = Math.ceil(zmax/grad)*grad;
 		zmin = Math.floor(zmin/grad)*grad;
 		var nbgrad = (zmax-zmin)/grad;
-		if (h/nbgrad < 15)
+		if (h/nbgrad < 15*ratio)
 		{	grad *= 2;
 		}
 		else break;
@@ -2810,33 +2836,44 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	var dy = this.dy_ = -zmin*scy;
 	this.scale_ = [scx,scy];
 	// Draw
-	ctx.font = "10px arial";
+	ctx.font = (10*ratio)+"px arial";
 	ctx.textAlign = "right";
 	ctx.textBaseline = "middle";
 	ctx.fillStyle="#000";
 	// Scale Z
 	ctx.beginPath();
 	for (var i=zmin; i<=zmax; i+=grad)
-	{	if (options.zunit!="km") ctx.fillText(i, -4, i*scy+dy);
-		else ctx.fillText((i/1000).toFixed(1), -4, i*scy+dy);
-		ctx.moveTo (-2, i*scy+dy);
+	{	if (options.zunit!="km") ctx.fillText(i, -4*ratio, i*scy+dy);
+		else ctx.fillText((i/1000).toFixed(1), -4*ratio, i*scy+dy);
+		ctx.moveTo (-2*ratio, i*scy+dy);
 		if (i!=0) ctx.lineTo (d*scx, i*scy+dy);
 		else ctx.lineTo (0, i*scy+dy);
 	}
 	// Scale X
 	ctx.textAlign = "center";
 	ctx.textBaseline = "top";
-	ctx.setLineDash([1,3]);
-	var step = Math.round(d/1000)*100;
-	if (step > 1000) step = Math.ceil(step/1000)*1000;
-	for (var i=0; i<=d; i+=step)
-	{	var txt = (options.zunit=="m") ? i : (i/1000);
-		if (i+step>d) txt += " "+ (options.zunits || "km");
-		ctx.fillText(txt, i*scx, 4);
-		ctx.moveTo (i*scx, 2); ctx.lineTo (i*scx, 0);
+	ctx.setLineDash([ratio,3*ratio]);
+	var unit = options.unit ||"km";
+	var step;
+	if (d>1000)
+	{	step = Math.round(d/1000)*100;
+		if (step > 1000) step = Math.ceil(step/1000)*1000;
 	}
-	ctx.font = "12px arial";
-	ctx.fillText(this.info.xtitle, w/2, 18);
+	else
+	{	unit = "m";
+		if (d>100) step = Math.round(d/100)*10;
+		else if (d>10) step = Math.round(d/10);
+		else if (d>1) step = Math.round(d)/10;
+		else step = d;
+	}
+	for (var i=0; i<=d; i+=step)
+	{	var txt = (unit=="m") ? i : (i/1000);
+		//if (i+step>d) txt += " "+ (options.zunits || "km");
+		ctx.fillText(Math.round(txt*10)/10, i*scx, 4*ratio);
+		ctx.moveTo (i*scx, 2*ratio); ctx.lineTo (i*scx, 0);
+	}
+	ctx.font = (12*ratio)+"px arial";
+	ctx.fillText(this.info.xtitle.replace("(km)","("+unit+")"), w/2, 18*ratio);
 	ctx.save();
 	ctx.rotate(-Math.PI/2);
 	ctx.fillText(this.info.ytitle, h/2, -this.margin_.left);
@@ -2857,9 +2894,10 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 };
 
 /** Get profil image
-*	@param {string|undefined} type image format or 'canvas' to get the canvas image, default image/png.
-*	@param {Number|undefined} encoderOptions between 0 and 1 indicating image quality image/jpeg or image/webp, default 0.92.
-*	@return {string} requested data uri
+* @param {string|undefined} type image format or 'canvas' to get the canvas image, default image/png.
+* @param {Number|undefined} encoderOptions between 0 and 1 indicating image quality image/jpeg or image/webp, default 0.92.
+* @return {string} requested data uri
+* @api stable
 */
 ol.control.Profil.prototype.getImage = function(type, encoderOptions)
 {	if (type==="canvas") return this.canvas_;
@@ -5591,6 +5629,7 @@ ol.interaction.DropFile.prototype.ondrop = function(e)
 				{	return format.readFeatures(result, options);
 				} catch (e) {}
 			}
+			var theFile = file;
 			reader.onload = function(e)
 			{	var result = e.target.result;
 				
@@ -5601,12 +5640,12 @@ ol.interaction.DropFile.prototype.ondrop = function(e)
 					var format = new formatConstructor();
 					features = tryReadFeatures(format, result, { featureProjection: projection });
 					if (features && features.length > 0) 
-					{	self.dispatchEvent({ type:'addfeatures', features: features, file: file, projection: projection, target: self });
-						self.dispatchEvent({ type:'loadend', features: features, file: file, projection: projection, target: self });
+					{	self.dispatchEvent({ type:'addfeatures', features: features, file: theFile, projection: projection, target: self });
+						self.dispatchEvent({ type:'loadend', features: features, file: theFile, projection: projection, target: self });
 						return;
 					}
 				}
-				self.dispatchEvent({ type:'loadend', file: file, target: self });
+				self.dispatchEvent({ type:'loadend', file: theFile, target: self });
 			};
 			reader.readAsText(file);
 		};
@@ -8764,7 +8803,8 @@ ol.Overlay.Magnify.prototype.setView_ = function(e)
  * @param {olx.OverlayOptions} options Overlay options 
  *		+ popupClass: the a class for the overlay.
  *		+ closeBox: popup has a close box.
- *		+ onclose: callback when close box is clicked.
+ *		+ onclose: callback when popup is closed
+ *		+ onshow: callback when popup is shown
  *		+ positionning: add 'auto' to let the popup choose a good positioning.
  * @api stable
  */
@@ -8780,11 +8820,12 @@ ol.Overlay.Popup = function (options)
 	this.content = $("<div>").addClass("content").appendTo(d).get(0);
 	// Closebox
 	this.closeBox = options.closeBox;
+        this.onclose = options.onclose;      
+        this.onshow = options.onshow;      
 	$("<button>").addClass("closeBox").addClass(options.closeBox?"hasclosebox":"")
 				.prependTo(d)
 				.click(function()
 				{	self.hide();
-					if (typeof (options.onclose) == 'function') options.onclose();
 				});
 	// Stop event
 	options.stopEvent=false;
@@ -8792,8 +8833,9 @@ ol.Overlay.Popup = function (options)
 
 	ol.Overlay.call(this, options);
 	
-	this.setPopupClass(options.popupClass);
+        // call setPositioning first in constructor so getClassPositioning is called only once
 	this.setPositioning(options.positioning);
+	this.setPopupClass(options.popupClass);
 }
 ol.inherits(ol.Overlay.Popup, ol.Overlay);
 
@@ -8858,7 +8900,10 @@ ol.Overlay.Popup.prototype.removePopupClass = function (c)
  * @api stable
  */
 ol.Overlay.Popup.prototype.setPositioning = function (pos)
-{	if (/auto/.test(pos))
+{	
+        if (pos === undefined)
+            return;
+        if (/auto/.test(pos))
 	{	this.autoPositioning = pos.split('-');
 		if (this.autoPositioning.length==1) this.autoPositioning[1]="auto";
 	}
@@ -8919,6 +8964,7 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
 		this.setPosition(coordinate);
 		// Set visible class (wait to compute the size/position first)
 		$(this.element).parent().show();
+                if (typeof (this.onshow) == 'function') this.onshow();
 		this._tout = setTimeout (function()
 		{	$(self.element).addClass("visible"); 
 		}, 0);
@@ -8930,10 +8976,13 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
  * @api stable
  */
 ol.Overlay.Popup.prototype.hide = function ()
-{	this.setPosition(undefined);
-	if (this._tout) clearTimeout(this._tout)
+{	if (this.getPosition() == undefined) return;
+	if (typeof (this.onclose) == 'function') this.onclose();
+	this.setPosition(undefined);
+	if (this._tout) clearTimeout(this._tout);
 	$(this.element).removeClass("visible");
 }
+
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -11695,6 +11744,84 @@ ol.geom.LineString.prototype.calcCSpline_ = function(options)
 
 	return new ol.geom.LineString(res);
 }
+/** Convert a list of image file or a list of image into geojson
+* @param {Array<Image|File>} img the array to process
+* @param {} options
+*	- camera {boolean} true to get camera info
+*	- date {boolean} true to get photo date
+*	- image {boolean} true to get image info
+*	- loading {function} a callback function that take the number of image to process
+*	- onLoad {function} callback function that takes a geojson when loaded
+* @require Exif-JS [https://github.com/exif-js/exif-js] 
+*/
+var exif2geojson;
+
+(function(){
+
+// Get fractionnal number
+function getNumber(n) { return n.numerator / n.denominator; }
+
+// Convert to DMS
+function getDMS(l)
+{	if (l) return getNumber(l[0]) + getNumber(l[1]) /60 + getNumber(l[2]) /3600;
+	else return null;
+}
+
+//
+exif2geojson = function (img, options)
+{	options = options || {};
+	if (typeof(options.loading) != "function") options.loading = function(){};
+	if (typeof(options.onLoad) != "function") options.onLoad = function(json){ console.log(json); };
+	//
+	var json = 
+	{	"type": "FeatureCollection",
+		"features": []
+	};
+
+	var nb = img.length;
+	for (var i=0, f; f=img[i]; i++)
+	{	EXIF.getData(f, function() 
+		{	// console.log(this);
+			if (this.exifdata.GPSLongitudeRef) 
+			{	// json feature
+				fjs = 
+				{	"type": "Feature",
+					"properties": {},
+					"geometry": 
+					{	"type": "Point",
+						"coordinates": []
+					}
+				};
+				json.features.push (fjs)
+				fjs.geometry.coordinates = 
+				[	(this.exifdata.GPSLongitudeRef=='E'? 1: -1) * getDMS(this.exifdata.GPSLongitude),
+					(this.exifdata.GPSLatitudeRef=='N'? 1: -1) * getDMS(this.exifdata.GPSLatitude)
+				];
+				if (this.exifdata.GPSAltitude) fjs.geometry.coordinates.push (getNumber(this.exifdata.GPSAltitude));
+				fjs.properties.url = this.src || this.name;
+				if (this.exifdata.ImageDescription) fjs.properties.description = this.exifdata.ImageDescription;
+				if (options.date && this.exifdata.DateTime) fjs.properties.date = this.exifdata.DateTime;
+				// Camera info
+				if (options.camera)
+				{	if (this.exifdata.Make) fjs.properties.make = this.exifdata.Make;
+					if (this.exifdata.Model) fjs.properties.model = this.exifdata.Model.replace(new RegExp(String.fromCharCode(0),'g'),"");
+				}
+				// Image info
+				if (options.image)
+				{	fjs.properties.size = this.size;
+					fjs.properties.type = this.type;
+					if (this.exifdata.ImageHeight) fjs.properties.height = this.exifdata.ImageHeight;
+					if (this.exifdata.ImageWidth) fjs.properties.width = this.exifdata.ImageWidth;
+				}
+			}
+			nb--;
+			options.loading(nb)
+			if (!nb) options.onLoad(json);
+		});
+	}
+}
+
+})();
 /** jQuery plugin to export the map 
 *
 * Export PDF :
