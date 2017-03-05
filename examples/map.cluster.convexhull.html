@@ -5,8 +5,8 @@
 	<title>OL3-ext: Convex hull</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="A touch interaction with a compass." />
-	<meta name="keywords" content="ol3, interaction, touch, drag, compass" />
+	<meta name="description" content="Calculate the convex hull of the cluster to show its envelope." />
+	<meta name="keywords" content="ol3, ckuster, polygon, convex hull, envelope" />
 
 	<!-- jQuery -->
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
@@ -28,15 +28,17 @@
 		<h1>OL3-ext: Convex hull</h1>
 	</a>
 	<div class="info">
-		The <i>ol.coordinate.convexHull()</i> function calculate a <a href="https://en.wikipedia.org/wiki/Convex_hull">convex hull</a>
-		or convex envelope, ie. the smallest polygon that contains all points of a set.
-		<br/>
-		It can be used to display a polygon around the points of a cluster.
-		<p>
-			Look at <a href="https://github.com/Viglino/OL3-AnimatedCluster">OL3-AnimatedCluster</a> for more example on clusters.
-			<br/>
-			Look at the <a href="map.convexhull.html">convex hull example</a> for more information.
-		</p>
+		This example uses a <i>ol.coordinate.convexHull()</i> function to calculate a <a href="https://en.wikipedia.org/wiki/Convex_hull">convex hull</a>
+		or convex envelope to display a polygon around the points of a cluster.
+		<br /><br />
+		<ul>
+			<li>
+				Look at <a href="https://github.com/Viglino/OL3-AnimatedCluster">OL3-AnimatedCluster</a> for more example on clusters.
+			</li>
+			<li>
+				Look at the <a href="map.convexhull.html">convex hull example</a> for more information on the envelope calculation.
+			</li>
+		</ul>
 	</div>
 
 	<!-- Map div -->
