@@ -1,0 +1,159 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+	<title>OL3-ext: Convex hull</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="A touch interaction with a compass." />
+	<meta name="keywords" content="ol3, interaction, touch, drag, compass" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- OL3 -->
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	
+	<script type="text/javascript" src="http://viglino.github.io/OL3-AnimatedCluster/layer/animatedclusterlayer.js"></script>
+	<script type="text/javascript" src="../interaction/hoverinteraction.js"></script>
+	<script type="text/javascript" src="../utils/ol.geom.convexhull.js"></script>
+
+	<link rel="stylesheet" href="style.css" />
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: Convex hull</h1>
+	</a>
+	<div class="info">
+		The <i>ol.coordinate.convexHull()</i> function calculate a <a href="https://en.wikipedia.org/wiki/Convex_hull">convex hull</a>
+		or convex envelope, ie. the smallest polygon that contains all points of a set.
+		<br/>
+		It can be used to display a polygon around the points of a cluster.
+		<p>
+			Look at <a href="https://github.com/Viglino/OL3-AnimatedCluster">OL3-AnimatedCluster</a> for more example on clusters.
+			<br/>
+			Look at the <a href="map.convexhull.html">convex hull example</a> for more information.
+		</p>
+	</div>
+
+	<!-- Map div -->
+	<div id="map" style="width:600px; height:400px;"></div>
+	
+	<div class="options">
+		Move over the features to see the convex hull of the cluster.
+	</div>
+
+	<script type="text/javascript">
+
+	// Two base layers
+	var stamen = new ol.layer.Tile(
+		{	title: "Watercolor",
+			baseLayer: true,
+			source: new ol.source.Stamen({
+				layer: 'watercolor'
+			})
+		});
+
+	// The map
+	var map = new ol.Map
+		({	target: 'map',
+			view: new ol.View
+			({	zoom: 4,
+				center: [205461, 5867916]
+			}),
+			layers: [stamen]
+		});
+
+	// Style for the clusters
+	var styleCache = {};
+	function getStyle (feature, resolution)
+	{	var size = feature.get('features').length;
+		var style = styleCache[size];
+		if (!style)
+		{	var color = size>25 ? "248, 128, 0" : size>8 ? "248, 192, 0" : "128, 192, 64";
+			var radius = Math.max(8, Math.min(size*0.75, 20));
+			style = styleCache[size] =
+				[ new ol.style.Style(
+					{	image: new ol.style.Circle(
+						{	radius: radius+2,
+							stroke: new ol.style.Stroke(
+							{	color: "rgba("+color+",0.3)", 
+								width: 4
+							})
+						})
+					}),
+					new ol.style.Style(
+					{	image: new ol.style.Circle(
+						{	radius: radius,
+							fill: new ol.style.Fill(
+							{	color:"rgba("+color+",0.6)"
+							})
+						}),
+						text: new ol.style.Text(
+						{	text: size.toString(),
+							fill: new ol.style.Fill(
+							{	color: '#000'
+							})
+						})
+					})
+				];
+		}
+		return style;
+	}
+
+	// Cluster Source
+	var clusterSource=new ol.source.Cluster({
+		distance: 40,
+		source: new ol.source.Vector()
+	});
+	// Animated cluster layer
+	var clusterLayer = new ol.layer.AnimatedCluster(
+	{	name: 'Cluster',
+		source: clusterSource,
+		style: getStyle
+	});
+	map.addLayer(clusterLayer);
+	// Add 2000 features
+	var ext = map.getView().calculateExtent(map.getSize());
+	var features=[];
+	for (var i=0; i<2000; ++i)
+	{	features[i]=new ol.Feature(new ol.geom.Point([ext[0]+(ext[2]-ext[0])*Math.random(), ext[1]+(ext[3]-ext[1])*Math.random()]));
+		features[i].set('id',i);
+	}
+	clusterSource.getSource().clear();
+	clusterSource.getSource().addFeatures(features);
+
+	// Add over interaction that draw hull in a layer
+	var vector = new ol.layer.Vector({ source: new ol.source.Vector() })
+	vector.setMap(map);
+	
+	var hover = new ol.interaction.Hover({ cursor: "pointer", layerFilter: function(l){ return l===clusterLayer; } });
+	map.addInteraction(hover);
+	hover.on("enter", function(e) 
+		{	var h = e.feature.get("convexHull");
+			if (!h)
+			{	var cluster = e.feature.get("features");
+				// calculate convex hull
+				if (cluster && cluster.length)
+				{	var c = [];
+					for (var i=0, f; f = cluster[i]; i++) 
+					{	c.push(f.getGeometry().getCoordinates());
+					}
+					h = ol.coordinate.convexHull(c);
+					e.feature.get("convexHull", h);
+				}
+			}
+			vector.getSource().clear();
+			if (h.length>2) vector.getSource().addFeature ( new ol.Feature( new ol.geom.Polygon([h]) ) );
+		});
+	hover.on("leave", function(e) 
+		{	vector.getSource().clear();
+		});
+
+	</script>
+	
+</body>
+</html>
