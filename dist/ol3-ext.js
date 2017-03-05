@@ -11868,6 +11868,8 @@ $.fn.exportMap = function(map, options)
 		else input.href = canvas.toDataURL('image/'+(options.format||ext), options.quality);
 	}
 
+	if (!this.each) return;
+
 	return this.each(function()
 	{	// Force download on HTML5
 		if ('download' in this)
@@ -11908,7 +11910,7 @@ $.fn.exportMap = function(map, options)
 			$(this).on('click',function(){ alert ("Export functions are not supported by your browser...");});
 		}
 	});
-}
+};
 
 /*
 	Copyright (c) 2017 Jean-Marc VIGLINO, 
