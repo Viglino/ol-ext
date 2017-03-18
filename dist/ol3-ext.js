@@ -673,9 +673,12 @@ ol.control.Button = function(options)
 	var self = this;
 
 	$("<button>").html(options.html || "")
-				.attr('title', options.title || "")
+				.attr('title', options.title)
 				.on("touchstart click", function(e)
-				{	if (e && e.preventDefault) e.preventDefault();
+				{	if (e && e.preventDefault) 
+					{	e.preventDefault();
+						e.stopPropagation();
+					}
 					if (options.handleClick) options.handleClick.call(self, e);
 				})
 				.appendTo(element);
@@ -688,21 +691,6 @@ ol.control.Button = function(options)
 	if (options.title) this.set("title", options.title);
 };
 ol.inherits(ol.control.Button, ol.control.Control);
-
-/** Set the control visibility
-* @param {boolean} b 
-*/
-ol.control.Button.prototype.setVisible = function (val) {
-	if (val) $(this.element).show();
-	else $(this.element).hide();
-}
-
-/** Get the control visibility
-* @return {boolean} b 
-*/
-ol.control.Button.prototype.getVisible = function ()
-{	return ($(this.element).css('display') != 'none');
-}
 
 /** A simple push button control drawn as text
 */
@@ -3462,7 +3450,7 @@ ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 	// Save style
 	var style = feature.getStyle();
 	var flashStyle = style || (this.getStyleFunction ? this.getStyleFunction()(feature) : null);
-	if (!flashStyle) return;
+	if (!flashStyle) flashStyle=[];
 	if (!(flashStyle instanceof Array)) flashStyle = [flashStyle];
 
 	// Hide feature while animating
