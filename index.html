@@ -143,7 +143,15 @@
 					else $(this).hide();
 				});
 				$("#count").text("("+k+")");
+				// Set new url
+				window.history.replaceState (null,null, document.location.origin+document.location.pathname+"?q="+$(this).val());
 			});
+
+			// Decode url
+			var search = window.location.search.replace(/^\?/,"").split("&");
+			for (var i=0; i<search.length; i++) if (/^q=/.test(search[i]))
+			{	$("#keywords").val(search[i].split("=")[1]).trigger("keyup");
+			}
 		});
 	</script>
 </head>
