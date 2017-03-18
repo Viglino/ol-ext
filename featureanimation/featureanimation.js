@@ -87,7 +87,7 @@ ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 	// Save style
 	var style = feature.getStyle();
 	var flashStyle = style || (this.getStyleFunction ? this.getStyleFunction()(feature) : null);
-	if (!flashStyle) return;
+	if (!flashStyle) flashStyle=[];
 	if (!(flashStyle instanceof Array)) flashStyle = [flashStyle];
 
 	// Hide feature while animating
