@@ -3056,7 +3056,7 @@ ol.control.Swipe.prototype.move = function(e)
 					if (!pageY) break;
 					pageY -= $(self.getMap().getTargetElement()).offset().top;
 
-					var l = self.getMap().getSize()[1];
+                                        var l = self.getMap().getSize()[1];
 					l = Math.min(Math.max(0, 1-(l-pageY)/l), 1);
 					self.set('position', l);
 				}
