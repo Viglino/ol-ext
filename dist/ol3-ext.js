@@ -675,7 +675,10 @@ ol.control.Button = function(options)
 	$("<button>").html(options.html || "")
 				.attr('title', options.title)
 				.on("touchstart click", function(e)
-				{	if (e && e.preventDefault) e.preventDefault();
+				{	if (e && e.preventDefault) 
+					{	e.preventDefault();
+						e.stopPropagation();
+					}
 					if (options.handleClick) options.handleClick.call(self, e);
 				})
 				.appendTo(element);
@@ -688,21 +691,6 @@ ol.control.Button = function(options)
 	if (options.title) this.set("title", options.title);
 };
 ol.inherits(ol.control.Button, ol.control.Control);
-
-/** Set the control visibility
-* @param {boolean} b 
-*/
-ol.control.Button.prototype.setVisible = function (val) {
-	if (val) $(this.element).show();
-	else $(this.element).hide();
-}
-
-/** Get the control visibility
-* @return {boolean} b 
-*/
-ol.control.Button.prototype.getVisible = function ()
-{	return ($(this.element).css('display') != 'none');
-}
 
 /** A simple push button control drawn as text
 */
@@ -2571,10 +2559,20 @@ ol.control.Profil = function(opt_options)
 	var div = $("<div>").addClass("ol-inner").appendTo(element);
 	div = $("<div>").css("position","relative").appendTo(div);
 
+	var ratio = this.ratio = 2;
 	this.canvas_ = document.createElement('canvas');
-	this.canvas_.width = options.width || 300;
-	this.canvas_.height = options.height || 150;
-	$(this.canvas_).appendTo(div)
+	this.canvas_.width = (options.width || 300)*ratio;
+	this.canvas_.height = (options.height || 150)*ratio;
+	$(this.canvas_).css({
+		"transform":"scale(0.5,0.5)", "transform-origin":"0 0",
+		"-ms-transform":"scale(0.5,0.5)", "-ms-transform-origin":"0 0",
+		"-webkit-transform":"scale(0.5,0.5)", "-webkit-transform-origin":"0 0",
+		"transform":"scale(0.5,0.5)", "transform-origin":"0 0"
+	});
+	$("<div>").appendTo(div)
+		.width (this.canvas_.width/ratio)
+		.height (this.canvas_.height/ratio)
+		.append(this.canvas_)
 		.on("click mousemove", function(e){ self.onMove(e); });
 
 	ol.control.Control.call(this, 
@@ -2583,13 +2581,13 @@ ol.control.Profil = function(opt_options)
 	});
 
 	// Offset in px
-	this.margin_ = { top:10, left:40, bottom:30, right:10 };
-	if (!this.info.ytitle) this.margin_.left -= 20;
-	if (!this.info.xtitle) this.margin_.bottom -= 20;
+	this.margin_ = { top:10*ratio, left:40*ratio, bottom:30*ratio, right:10*ratio };
+	if (!this.info.ytitle) this.margin_.left -= 20*ratio;
+	if (!this.info.xtitle) this.margin_.bottom -= 20*ratio;
 	
 	// Cursor
 	this.bar_ = $("<div>").addClass("ol-profilbar")
-			.css({top:this.margin_.top+"px", height:(this.canvas_.height-this.margin_.top-this.margin_.bottom)+"px" })
+			.css({top:(this.margin_.top/ratio)+"px", height:(this.canvas_.height-this.margin_.top-this.margin_.bottom)/ratio+"px" })
 			.appendTo(div);
 	this.cursor_ = $("<div>").addClass("ol-profilcursor")
 			.appendTo(div);
@@ -2597,7 +2595,7 @@ ol.control.Profil = function(opt_options)
 			.appendTo(this.cursor_);
 
 	// Track information
-	var t = $("<table cellpadding='0' cellspacing='0'>").appendTo(div).width(this.canvas_.width);
+	var t = $("<table cellpadding='0' cellspacing='0'>").appendTo(div).width(this.canvas_.width/ratio);
 	var tr = $("<tr>").addClass("track-info").appendTo(t);
 	$("<td>").html((this.info.zmin||"Zmin")+': <span class="zmin">').appendTo(tr);
 	$("<td>").html((this.info.zmax||"Zmax")+': <span class="zmax">').appendTo(tr);
@@ -2632,6 +2630,8 @@ ol.control.Profil.prototype.info =
 };
 
 /** Show popup info
+* @param {string} info to display as a popup
+* @api stable
 */
 ol.control.Profil.prototype.popup = function(info)
 {	this.popup_.html(info);
@@ -2644,10 +2644,11 @@ ol.control.Profil.prototype.onMove = function(e)
 	var pos = $(this.canvas_).offset();
 	var dx = e.pageX -pos.left;
 	var dy = e.pageY -pos.top;
-	if (dx>this.margin_.left && dx<this.canvas_.width-this.margin_.right
-		&& dy>this.margin_.top && dy<this.canvas_.height-this.margin_.bottom) 
+	var ratio = this.ratio;
+	if (dx>this.margin_.left/ratio && dx<(this.canvas_.width-this.margin_.right)/ratio
+		&& dy>this.margin_.top/ratio && dy<(this.canvas_.height-this.margin_.bottom)/ratio) 
 	{	this.bar_.css("left", dx+"px").show();
-		var d = (dx-this.margin_.left)/this.scale_[0];
+		var d = (dx*ratio-this.margin_.left)/this.scale_[0];
 		var p0 = this.tab_[0];
 		for (var i=1, p; p=this.tab_[i]; i++)
 		{	if (p[0]>=d) 
@@ -2655,13 +2656,16 @@ ol.control.Profil.prototype.onMove = function(e)
 				break;
 			}
 		}
-		if (p) this.cursor_.css({ left:dx+"px", top:(this.canvas_.height-this.margin_.bottom+p[1]*this.scale_[1]+this.dy_)+"px"}).show();
+		if (p) this.cursor_.css({ 
+			left:dx+"px", 
+			top:(this.canvas_.height-this.margin_.bottom+p[1]*this.scale_[1]+this.dy_)/ratio+"px"
+		}).show();
 		else this.cursor_.hide();
 		this.bar_.parent().addClass("over");
 		$(".point-info .z", this.element).text(p[1]+"m");
 		$(".point-info .dist", this.element).text((p[0]/1000).toFixed(1)+"km");
 		$(".point-info .time", this.element).text(p[2]);
-		if (dx>this.canvas_.width/2) this.popup_.addClass('ol-left');
+		if (dx>this.canvas_.width/ratio/2) this.popup_.addClass('ol-left');
 		else this.popup_.removeClass('ol-left');
 		this.dispatchEvent({ type:'over', click:e.type=="click", coord: p[3], time: p[2], distance: p[0] });
 	}
@@ -2676,18 +2680,21 @@ ol.control.Profil.prototype.onMove = function(e)
 }
 
 /** Show panel
+* @api stable
 */
 ol.control.Profil.prototype.show = function()
 {	$(this.element).removeClass("ol-collapsed"); 
 	this.dispatchEvent({ type:'show', show: true });
 }
 /** Hide panel
+* @api stable
 */
 ol.control.Profil.prototype.hide = function()
 {	$(this.element).addClass("ol-collapsed"); 
 	this.dispatchEvent({ type:'show', show: false });
 }
 /** Toggle panel
+* @api stable
 */
 ol.control.Profil.prototype.toggle = function()
 {	var b = $(this.element).toggleClass("ol-collapsed").hasClass("ol-collapsed"); 
@@ -2708,8 +2715,8 @@ ol.control.Profil.prototype.isShown = function()
  *		- unit {m|km} default km
  *		- zmin {Number|undefined} default 0
  *		- zmax {Number|undefined} default max Z of the feature
-  *		- graduation {Number|undefined} z graduation default 100
-*		- amplitude {integer|undefined} amplitude of the altitude, default zmax-zmin
+ *		- graduation {Number|undefined} z graduation default 100
+ *		- amplitude {integer|undefined} amplitude of the altitude, default zmax-zmin
  * @api stable
  */
 ol.control.Profil.prototype.setGeometry = function(g, options)
@@ -2755,11 +2762,13 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 
 	// Margin
 	ctx.setTransform(1, 0, 0, 1, this.margin_.left, h-this.margin_.bottom);
+	var ratio = this.ratio;
+
 	w -= this.margin_.right + this.margin_.left;
 	h -= this.margin_.top + this.margin_.bottom;
 	// Draw axes
 	ctx.strokeStyle = "#000";
-	ctx.lineWidth = 0.5;
+	ctx.lineWidth = 0.5*ratio;
 	ctx.beginPath();
 	ctx.moveTo(0,0); ctx.lineTo(0,-h);
 	ctx.moveTo(0,0); ctx.lineTo(w, 0);
@@ -2779,9 +2788,14 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	}
 
 	// Info
-	$(".track-info .zmin", this.element).text(zmin+"m");
-	$(".track-info .zmax", this.element).text(zmax+"m");
-	$(".track-info .dist", this.element).text((d/1000).toFixed(1)+"km");
+	$(".track-info .zmin", this.element).text(zmin.toFixed(2)+"m");
+	$(".track-info .zmax", this.element).text(zmax.toFixed(2)+"m");
+	if (d>1000)
+	{	$(".track-info .dist", this.element).text((d/1000).toFixed(1)+"km");
+	}
+	else
+	{	$(".track-info .dist", this.element).text((d).toFixed(1)+"m");
+	}
 	$(".track-info .time", this.element).text(ti);
 
 	// Set graduation
@@ -2790,7 +2804,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	{	zmax = Math.ceil(zmax/grad)*grad;
 		zmin = Math.floor(zmin/grad)*grad;
 		var nbgrad = (zmax-zmin)/grad;
-		if (h/nbgrad < 15)
+		if (h/nbgrad < 15*ratio)
 		{	grad *= 2;
 		}
 		else break;
@@ -2810,33 +2824,44 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	var dy = this.dy_ = -zmin*scy;
 	this.scale_ = [scx,scy];
 	// Draw
-	ctx.font = "10px arial";
+	ctx.font = (10*ratio)+"px arial";
 	ctx.textAlign = "right";
 	ctx.textBaseline = "middle";
 	ctx.fillStyle="#000";
 	// Scale Z
 	ctx.beginPath();
 	for (var i=zmin; i<=zmax; i+=grad)
-	{	if (options.zunit!="km") ctx.fillText(i, -4, i*scy+dy);
-		else ctx.fillText((i/1000).toFixed(1), -4, i*scy+dy);
-		ctx.moveTo (-2, i*scy+dy);
+	{	if (options.zunit!="km") ctx.fillText(i, -4*ratio, i*scy+dy);
+		else ctx.fillText((i/1000).toFixed(1), -4*ratio, i*scy+dy);
+		ctx.moveTo (-2*ratio, i*scy+dy);
 		if (i!=0) ctx.lineTo (d*scx, i*scy+dy);
 		else ctx.lineTo (0, i*scy+dy);
 	}
 	// Scale X
 	ctx.textAlign = "center";
 	ctx.textBaseline = "top";
-	ctx.setLineDash([1,3]);
-	var step = Math.round(d/1000)*100;
-	if (step > 1000) step = Math.ceil(step/1000)*1000;
-	for (var i=0; i<=d; i+=step)
-	{	var txt = (options.zunit=="m") ? i : (i/1000);
-		if (i+step>d) txt += " "+ (options.zunits || "km");
-		ctx.fillText(txt, i*scx, 4);
-		ctx.moveTo (i*scx, 2); ctx.lineTo (i*scx, 0);
+	ctx.setLineDash([ratio,3*ratio]);
+	var unit = options.unit ||"km";
+	var step;
+	if (d>1000)
+	{	step = Math.round(d/1000)*100;
+		if (step > 1000) step = Math.ceil(step/1000)*1000;
 	}
-	ctx.font = "12px arial";
-	ctx.fillText(this.info.xtitle, w/2, 18);
+	else
+	{	unit = "m";
+		if (d>100) step = Math.round(d/100)*10;
+		else if (d>10) step = Math.round(d/10);
+		else if (d>1) step = Math.round(d)/10;
+		else step = d;
+	}
+	for (var i=0; i<=d; i+=step)
+	{	var txt = (unit=="m") ? i : (i/1000);
+		//if (i+step>d) txt += " "+ (options.zunits || "km");
+		ctx.fillText(Math.round(txt*10)/10, i*scx, 4*ratio);
+		ctx.moveTo (i*scx, 2*ratio); ctx.lineTo (i*scx, 0);
+	}
+	ctx.font = (12*ratio)+"px arial";
+	ctx.fillText(this.info.xtitle.replace("(km)","("+unit+")"), w/2, 18*ratio);
 	ctx.save();
 	ctx.rotate(-Math.PI/2);
 	ctx.fillText(this.info.ytitle, h/2, -this.margin_.left);
@@ -2857,9 +2882,10 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 };
 
 /** Get profil image
-*	@param {string|undefined} type image format or 'canvas' to get the canvas image, default image/png.
-*	@param {Number|undefined} encoderOptions between 0 and 1 indicating image quality image/jpeg or image/webp, default 0.92.
-*	@return {string} requested data uri
+* @param {string|undefined} type image format or 'canvas' to get the canvas image, default image/png.
+* @param {Number|undefined} encoderOptions between 0 and 1 indicating image quality image/jpeg or image/webp, default 0.92.
+* @return {string} requested data uri
+* @api stable
 */
 ol.control.Profil.prototype.getImage = function(type, encoderOptions)
 {	if (type==="canvas") return this.canvas_;
@@ -3424,7 +3450,7 @@ ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 	// Save style
 	var style = feature.getStyle();
 	var flashStyle = style || (this.getStyleFunction ? this.getStyleFunction()(feature) : null);
-	if (!flashStyle) return;
+	if (!flashStyle) flashStyle=[];
 	if (!(flashStyle instanceof Array)) flashStyle = [flashStyle];
 
 	// Hide feature while animating
@@ -4444,7 +4470,7 @@ ol.filter.Lego = function(options)
 
 	var img = new Image();
 	// Default image
-	img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAfCAYAAAAfrhY5AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABZ0RVh0Q3JlYXRpb24gVGltZQAxMi8xOS8xNvX4BJkAAAAcdEVYdFNvZnR3YXJlAEFkb2JlIEZpcmV3b3JrcyBDUzbovLKMAAADB0lEQVRIieWXTU8TQRjHfw8t5b2AUFuDB6PSxEhiop75FNz5Dhz4EHwkEu7UcvFIiDFZQ0rrQikUS6m742Gekd3SpVtI5OA/2exs5pn5P+8zK8A8T4QsgDFmBgiAUN9ubPRhwPhRbxGZz0YUqT/KjAdg7F8TDiIP/jtyF/NwhDUl4AUwp99doA20gCZwNSp5GsvzwAdsaTaAb0rW1fkMkANmgU6aPdOSPwc+ATdABfg5QCbQeQAZRhwlN/fIzAOfgQvgS4TgPhgRGQemdF180pgYeQwi4oQE6+proCIivRTEDj1gERsKf5CAy/Yky0vYWH8dkdihAbwGJu8jT8IKUBeR0wcQO9SAd4MmhsV8GjgyxowBrwBfRC70ewVboh3gGfADmMG62iXclSr+FlgAzkchB1u/+UajIcViURyx53lBtVrNr66uzvZ6vdze3t7S9vb25P7+/szOzs7J+vr6dLlcXtb1RhVsRbmGub2rz8Lu7m4Xm+krvu9Pe55XyOfzEgRBpl6vs7a2tnR8fDxeq9V6xWKRzc1N0+l0rtQLgs38WIIPS7hLIO/7/kSpVCo0m82S53lBoVCoHRwctMIwzFWr1fbh4aGfy+WyR0dHU3Nzc5NbW1vLlUrlZmNj41QJDbYJxcgFmDfGXHPbqaKl9hJoiEgWGI8oeq1emNVNLwdYFqrcElDGdsPvwJUxJnaeJ1neVNKkft2OjJNkCtiad11UHN+9MReR1IdEAhawfaKrCsQwLOYAHe10oyKLLTEXpjuHzUDLXe8FEJFQRFzCpEUOeI/tbJfAb1Ugeg9MrvOoAqrErMoP63aLwBtgAttUQlXghttLaYw8DVrYXv8R2zJb2DiGSrQALGMvGQFwpuvOlfiGPren6XBRnGCzuow9MMa4zd4Qm1gXEaVaSviL22v5X7g6b/dP9MPVviKjVuaJe89gLexg4+xiHahCBmxI09R5EgLscXmGTaoM8eR1ZGFkfAejxLwfRjftRcglMmeUONGw1Jb3Z38f3C/WSHjSPxbhCf9S/wDtsjUwAVrtqgAAAABJRU5ErkJggg==";
+	img.src = this.img[options.img] || this.img.ol3;
 	img.crossOrigin = options.crossOrigin || null;
 	
 	// and pattern 
@@ -4455,6 +4481,14 @@ ol.filter.Lego = function(options)
 	this.internal_ = document.createElement('canvas');
 }
 ol.inherits(ol.filter.Lego, ol.filter.Base);
+
+/** Image definition
+*/
+ol.filter.Lego.prototype.img =
+{	brick: "data:image/png;base64,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",
+	ol3: "data:image/png;base64,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",
+	lego: "data:image/png;base64,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"
+};
 
 /** Overwrite to handle brickSize
 * @param {string} key
@@ -4469,10 +4503,17 @@ ol.filter.Lego.prototype.set = function (key, val)
 
 /** Set the current brick
 *	@param {Number} width the pattern width, default 30
-*	@param {Image|undefined} img a square image to use as pattern
+*	@param {brick|ol3|lego|undefined} img the pattern, default ol3
+*	@param {string} crossOrigin
 */
-ol.filter.Lego.prototype.setBrick = function (width, img)
+ol.filter.Lego.prototype.setBrick = function (width, img, crossOrigin)
 {	width = Number(width) || 30;
+	if (typeof(img) === 'string') 
+	{	var i = new Image;
+		i.src = this.img[img] || this.img.ol3;
+		i.crossOrigin = crossOrigin || null;
+		img = i;
+	}
 	if (img) this.pattern.img = img;
 	if (!this.pattern.img.width)
 	{	var self = this;
@@ -4485,6 +4526,7 @@ ol.filter.Lego.prototype.setBrick = function (width, img)
 	this.pattern.ctx = this.pattern.canvas.getContext("2d");
 	this.pattern.ctx.fillStyle = this.pattern.ctx.createPattern (this.pattern.img, 'repeat');
 	this.set("brickSize", width);
+	this.set("img", img.src);
 };
 
 /** Get translated pattern
@@ -5602,6 +5644,7 @@ ol.interaction.DropFile.prototype.ondrop = function(e)
 				{	return format.readFeatures(result, options);
 				} catch (e) {}
 			}
+			var theFile = file;
 			reader.onload = function(e)
 			{	var result = e.target.result;
 				
@@ -5612,12 +5655,12 @@ ol.interaction.DropFile.prototype.ondrop = function(e)
 					var format = new formatConstructor();
 					features = tryReadFeatures(format, result, { featureProjection: projection });
 					if (features && features.length > 0) 
-					{	self.dispatchEvent({ type:'addfeatures', features: features, file: file, projection: projection, target: self });
-						self.dispatchEvent({ type:'loadend', features: features, file: file, projection: projection, target: self });
+					{	self.dispatchEvent({ type:'addfeatures', features: features, file: theFile, projection: projection, target: self });
+						self.dispatchEvent({ type:'loadend', features: features, file: theFile, projection: projection, target: self });
 						return;
 					}
 				}
-				self.dispatchEvent({ type:'loadend', file: file, target: self });
+				self.dispatchEvent({ type:'loadend', file: theFile, target: self });
 			};
 			reader.readAsText(file);
 		};
@@ -7150,6 +7193,22 @@ ol.interaction.Transform = function(options)
 {	if (!options) options={};
 	var self = this;
 
+	// Create a new overlay layer for the sketch
+	this.handles_ = new ol.Collection();
+	this.overlayLayer_ = new ol.layer.Vector(
+		{	source: new ol.source.Vector({
+				features: this.handles_,
+				useSpatialIndex: false
+			}),
+			name:'Transform overlay',
+			displayInLayerSwitcher: false,
+			// Return the style according to the handle type
+			style: function (feature)
+				{	return (self.style[(feature.get('handle')||'default')+(feature.get('constraint')||'')+(feature.get('option')||'')]);
+				}
+		});
+
+	// Extend pointer
 	ol.interaction.Pointer.call(this, 
 	{	handleDownEvent: this.handleDownEvent_,
 		handleDragEvent: this.handleDragEvent_,
@@ -7179,21 +7238,6 @@ ol.interaction.Transform = function(options)
 	this.on ('propertychange', function()
 	{	this.drawSketch_();
 	});
-
-	// Create a new overlay layer for the sketch
-	this.handles_ = new ol.Collection();
-	this.overlayLayer_ = new ol.layer.Vector(
-		{	source: new ol.source.Vector({
-				features: this.handles_,
-				useSpatialIndex: false
-			}),
-			name:'Transform overlay',
-			displayInLayerSwitcher: false,
-			// Return the style according to the handle type
-			style: function (feature)
-				{	return (self.style[(feature.get('handle')||'default')+(feature.get('constraint')||'')+(feature.get('option')||'')]);
-				}
-		});
 
 	// setstyle
 	this.setDefaultStyle();
@@ -8111,6 +8155,124 @@ ol.layer.Group.prototype.getPreview = function(lonlat, resolution)
 	return t;
 }
 
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+	
+	@classdesc
+	ol.source.Mapillary is a source that load Wikimedia Commons content in a vector layer.
+	
+	@require jQuery
+	
+	Inherits from:
+	<ol.source.Vector>
+*/
+
+/**
+* @constructor ol.source.Mapillary
+* @extends {ol.source.Vector}
+* @param {olx.source.Mapillary=} options
+* @todo 
+*/
+ol.source.Mapillary = function(opt_options)
+{	var options = opt_options || {};
+	var self = this; 
+
+	options.loader = this._loaderFn;
+	
+	/** Url for DBPedia SPARQL */
+	this._url = options.url || "http://fr.dbpedia.org/sparql";
+
+	/** Max resolution to load features  */
+	this._maxResolution = options.maxResolution || 100;
+	
+	/** Result language */
+	this._lang = options.lang || "fr";
+
+	/** Query limit */
+	this._limit = options.limit || 100;
+	
+	/** Default attribution */
+	if (!options.attributions) options.attributions = [ new ol.Attribution({ html:"&copy; <a href='https://www.mapillary.com/'>Mapillary</a>" }) ];
+
+	// Bbox strategy : reload at each move
+    if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
+
+	ol.source.Vector.call (this, options);	
+};
+ol.inherits (ol.source.Mapillary, ol.source.Vector);
+
+
+/** Decode wiki attributes and choose to add feature to the layer
+* @param {feature} the feature
+* @param {attributes} wiki attributes
+* @return {boolean} true: add the feature to the layer
+* @API stable
+*/
+ol.source.Mapillary.prototype.readFeature = function (feature, attributes)
+{	
+	return true;
+};
+
+
+/** Loader function used to load features.
+* @private
+*/
+ol.source.Mapillary.prototype._loaderFn = function(extent, resolution, projection) 
+{	if (resolution > this._maxResolution) return;
+	var self = this;
+	var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
+	// Commons API: for more info @see https://commons.wikimedia.org/wiki/Commons:API/MediaWiki
+	var date = Date.now() - 6 * 30 * 24 * 60 * 60 * 1000;
+	var url = "https://a.mapillary.com/v2/search/im?client_id="
+		+ this.get('clientId')
+		+ "&max_lat=" + bbox[3]
+		+ "&max_lon=" + bbox[2]
+		+ "&min_lat=" + bbox[1]
+		+ "&min_lon=" + bbox[0]
+		+ "&limit="+(this._limit-1)
+		+ "&start_time=" + date;
+	// Ajax request to get the tile
+	$.ajax(
+	{	url: url,
+		dataType: 'jsonp', 
+		success: function(data) 
+		{	console.log(data);
+			return;
+			var features = [];
+			var att, pt, feature, lastfeature = null;
+			if (!data.query || !data.query.pages) return;
+			for ( var i in data.query.pages)
+			{	att = data.query.pages[i];
+				if (att.coordinates && att.coordinates.length ) 
+				{	pt = [att.coordinates[0].lon, att.coordinates[0].lat];
+				}
+				else
+				{	var meta = att.imageinfo[0].metadata;
+					if (!meta)
+					{	//console.log(att);
+						continue;
+					}
+					pt = [];
+					for (var k=0; k<meta.length; k++)
+					{	if (meta[k].name=="GPSLongitude") pt[0] = meta[k].value;
+						if (meta[k].name=="GPSLatitude") pt[1] = meta[k].value;
+					}
+					if (!pt.length) 
+					{	//console.log(att);
+						continue;
+					}
+				}
+				feature = new ol.Feature(new ol.geom.Point(ol.proj.transform (pt,"EPSG:4326",projection)));
+				att.imageinfo[0].title = att.title;
+				if (self.readFeature(feature, att.imageinfo[0]))
+				{	features.push(feature);
+				}
+			}
+			self.addFeatures(features);
+    }});
+};
+
 /** ol.layer.Vector.prototype.setRender3D
  * @extends {ol.layer.Vector}
  * @param {ol.render3D} 
@@ -8640,7 +8802,8 @@ ol.Overlay.Magnify.prototype.setView_ = function(e)
  * @param {olx.OverlayOptions} options Overlay options 
  *		+ popupClass: the a class for the overlay.
  *		+ closeBox: popup has a close box.
- *		+ onclose: callback when close box is clicked.
+ *		+ onclose: callback when popup is closed
+ *		+ onshow: callback when popup is shown
  *		+ positionning: add 'auto' to let the popup choose a good positioning.
  * @api stable
  */
@@ -8656,11 +8819,12 @@ ol.Overlay.Popup = function (options)
 	this.content = $("<div>").addClass("content").appendTo(d).get(0);
 	// Closebox
 	this.closeBox = options.closeBox;
+        this.onclose = options.onclose;      
+        this.onshow = options.onshow;      
 	$("<button>").addClass("closeBox").addClass(options.closeBox?"hasclosebox":"")
 				.prependTo(d)
 				.click(function()
 				{	self.hide();
-					if (typeof (options.onclose) == 'function') options.onclose();
 				});
 	// Stop event
 	options.stopEvent=false;
@@ -8668,8 +8832,9 @@ ol.Overlay.Popup = function (options)
 
 	ol.Overlay.call(this, options);
 	
-	this.setPopupClass(options.popupClass);
+        // call setPositioning first in constructor so getClassPositioning is called only once
 	this.setPositioning(options.positioning);
+	this.setPopupClass(options.popupClass);
 }
 ol.inherits(ol.Overlay.Popup, ol.Overlay);
 
@@ -8734,7 +8899,10 @@ ol.Overlay.Popup.prototype.removePopupClass = function (c)
  * @api stable
  */
 ol.Overlay.Popup.prototype.setPositioning = function (pos)
-{	if (/auto/.test(pos))
+{	
+        if (pos === undefined)
+            return;
+        if (/auto/.test(pos))
 	{	this.autoPositioning = pos.split('-');
 		if (this.autoPositioning.length==1) this.autoPositioning[1]="auto";
 	}
@@ -8795,6 +8963,7 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
 		this.setPosition(coordinate);
 		// Set visible class (wait to compute the size/position first)
 		$(this.element).parent().show();
+                if (typeof (this.onshow) == 'function') this.onshow();
 		this._tout = setTimeout (function()
 		{	$(self.element).addClass("visible"); 
 		}, 0);
@@ -8806,10 +8975,13 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
  * @api stable
  */
 ol.Overlay.Popup.prototype.hide = function ()
-{	this.setPosition(undefined);
-	if (this._tout) clearTimeout(this._tout)
+{	if (this.getPosition() == undefined) return;
+	if (typeof (this.onclose) == 'function') this.onclose();
+	this.setPosition(undefined);
+	if (this._tout) clearTimeout(this._tout);
 	$(this.element).removeClass("visible");
 }
+
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -11571,6 +11743,84 @@ ol.geom.LineString.prototype.calcCSpline_ = function(options)
 
 	return new ol.geom.LineString(res);
 }
+/** Convert a list of image file or a list of image into geojson
+* @param {Array<Image|File>} img the array to process
+* @param {} options
+*	- camera {boolean} true to get camera info
+*	- date {boolean} true to get photo date
+*	- image {boolean} true to get image info
+*	- loading {function} a callback function that take the number of image to process
+*	- onLoad {function} callback function that takes a geojson when loaded
+* @require Exif-JS [https://github.com/exif-js/exif-js] 
+*/
+var exif2geojson;
+
+(function(){
+
+// Get fractionnal number
+function getNumber(n) { return n.numerator / n.denominator; }
+
+// Convert to DMS
+function getDMS(l)
+{	if (l) return getNumber(l[0]) + getNumber(l[1]) /60 + getNumber(l[2]) /3600;
+	else return null;
+}
+
+//
+exif2geojson = function (img, options)
+{	options = options || {};
+	if (typeof(options.loading) != "function") options.loading = function(){};
+	if (typeof(options.onLoad) != "function") options.onLoad = function(json){ console.log(json); };
+	//
+	var json = 
+	{	"type": "FeatureCollection",
+		"features": []
+	};
+
+	var nb = img.length;
+	for (var i=0, f; f=img[i]; i++)
+	{	EXIF.getData(f, function() 
+		{	// console.log(this);
+			if (this.exifdata.GPSLongitudeRef) 
+			{	// json feature
+				fjs = 
+				{	"type": "Feature",
+					"properties": {},
+					"geometry": 
+					{	"type": "Point",
+						"coordinates": []
+					}
+				};
+				json.features.push (fjs)
+				fjs.geometry.coordinates = 
+				[	(this.exifdata.GPSLongitudeRef=='E'? 1: -1) * getDMS(this.exifdata.GPSLongitude),
+					(this.exifdata.GPSLatitudeRef=='N'? 1: -1) * getDMS(this.exifdata.GPSLatitude)
+				];
+				if (this.exifdata.GPSAltitude) fjs.geometry.coordinates.push (getNumber(this.exifdata.GPSAltitude));
+				fjs.properties.url = this.src || this.name;
+				if (this.exifdata.ImageDescription) fjs.properties.description = this.exifdata.ImageDescription;
+				if (options.date && this.exifdata.DateTime) fjs.properties.date = this.exifdata.DateTime;
+				// Camera info
+				if (options.camera)
+				{	if (this.exifdata.Make) fjs.properties.make = this.exifdata.Make;
+					if (this.exifdata.Model) fjs.properties.model = this.exifdata.Model.replace(new RegExp(String.fromCharCode(0),'g'),"");
+				}
+				// Image info
+				if (options.image)
+				{	fjs.properties.size = this.size;
+					fjs.properties.type = this.type;
+					if (this.exifdata.ImageHeight) fjs.properties.height = this.exifdata.ImageHeight;
+					if (this.exifdata.ImageWidth) fjs.properties.width = this.exifdata.ImageWidth;
+				}
+			}
+			nb--;
+			options.loading(nb)
+			if (!nb) options.onLoad(json);
+		});
+	}
+}
+
+})();
 /** jQuery plugin to export the map 
 *
 * Export PDF :
@@ -11617,6 +11867,8 @@ $.fn.exportMap = function(map, options)
 		else input.href = canvas.toDataURL('image/'+(options.format||ext), options.quality);
 	}
 
+	if (!this.each) return;
+
 	return this.each(function()
 	{	// Force download on HTML5
 		if ('download' in this)
@@ -11657,8 +11909,103 @@ $.fn.exportMap = function(map, options)
 			$(this).on('click',function(){ alert ("Export functions are not supported by your browser...");});
 		}
 	});
+};
+
+/*
+	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (http://www.cecill.info/).
+	
+	ol.coordinate.convexHull compute a convex hull using Andrew's Monotone Chain Algorithm.
+	
+	@see https://en.wikipedia.org/wiki/Convex_hull_algorithms
+*/
+
+(function(){
+
+/* Tests if a point is left or right of line (a,b).
+* @param {ol.coordinate} a point on the line
+* @param {ol.coordinate} b point on the line
+* @param {ol.coordinate} 0
+* @return {bool} true if (a,b,o) turns clockwise
+*/
+function clockwise (a, b, o) 
+{	return ( (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]) <= 0 )
 }
 
+/** Compute a convex hull using Andrew's Monotone Chain Algorithm
+* @param {Array<ol.geom.Point>} points an array of 2D points 
+* @return {Array<ol.geom.Point>} the convex hull vertices
+*/
+ol.coordinate.convexHull = function (points) 
+{	// Sort by increasing x and then y coordinate
+	points.sort(function(a, b) 
+	{	return a[0] == b[0] ? a[1] - b[1] : a[0] - b[0];
+	});
+
+    // Compute the lower hull 
+	var lower = [];
+	for (var i = 0; i < points.length; i++) 
+	{	while (lower.length >= 2 && clockwise (lower[lower.length - 2], lower[lower.length - 1], points[i]) ) 
+		{	lower.pop();
+		}
+		lower.push(points[i]);
+	}
+
+    // Compute the upper hull 
+	var upper = [];
+	for (var i = points.length - 1; i >= 0; i--) 
+	{	while (upper.length >= 2 && clockwise (upper[upper.length - 2], upper[upper.length - 1], points[i]) ) 
+		{	upper.pop();
+		}
+		upper.push(points[i]);
+	}
+
+	upper.pop();
+	lower.pop();
+	return lower.concat(upper);
+}
+
+/* Get coordinates of a geometry */
+function getCoordinates(geom)
+{	var h = [];
+	switch (geom.getType())
+	{	case "Point":
+			h.push(geom.getCoordinates());
+			break;
+		case "LineString":
+		case "LinearRing":
+		case "MultiPoint":
+			 h = geom.getCoordinates();
+			break;
+		case "MultiLineString":
+			var p = geom.getLineStrings();
+			for (var i=0; i<p.length; i++) h.concat(getCoordinates(p[i]));
+			break;
+		case "Polygon":
+			h = getCoordinates(geom.getLinearRing(0));
+			break;
+		case "MultiPolygon":
+			var p = geom.getPolygons();
+			for (var i=0; i<p.length; i++) h.concat(getCoordinates(p[i]));
+			break;
+		case "GeometryCollection":
+			var p = geom.getGeometries();
+			for (var i=0; i<p.length; i++) h.concat(getCoordinates(p[i]));
+			break;
+		default:break;
+	}
+	return h;
+}
+
+/** Compute a convex hull on a geometry using Andrew's Monotone Chain Algorithm
+* @return {Array<ol.geom.Point>} the convex hull vertices
+*/
+ol.geom.Geometry.prototype.convexHull = function()
+{	return ol.coordinate.convexHull( getCoordinates(this) );
+};
+
+
+})();
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).

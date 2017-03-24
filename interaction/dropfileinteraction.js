@@ -72,6 +72,7 @@ ol.interaction.DropFile.prototype.ondrop = function(e)
 				{	return format.readFeatures(result, options);
 				} catch (e) {}
 			}
+			var theFile = file;
 			reader.onload = function(e)
 			{	var result = e.target.result;
 				
@@ -82,12 +83,12 @@ ol.interaction.DropFile.prototype.ondrop = function(e)
 					var format = new formatConstructor();
 					features = tryReadFeatures(format, result, { featureProjection: projection });
 					if (features && features.length > 0) 
-					{	self.dispatchEvent({ type:'addfeatures', features: features, file: file, projection: projection, target: self });
-						self.dispatchEvent({ type:'loadend', features: features, file: file, projection: projection, target: self });
+					{	self.dispatchEvent({ type:'addfeatures', features: features, file: theFile, projection: projection, target: self });
+						self.dispatchEvent({ type:'loadend', features: features, file: theFile, projection: projection, target: self });
 						return;
 					}
 				}
-				self.dispatchEvent({ type:'loadend', file: file, target: self });
+				self.dispatchEvent({ type:'loadend', file: theFile, target: self });
 			};
 			reader.readAsText(file);
 		};
