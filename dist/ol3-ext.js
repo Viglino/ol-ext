@@ -2866,7 +2866,7 @@ ol.control.Profil.prototype.getImage = function(type, encoderOptions)
 	return this.canvas_.toDataURL(type, encoderOptions);
 }
 
-/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
+/*	Copyright (c) 2015 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
@@ -2882,10 +2882,10 @@ ol.control.Profil.prototype.getImage = function(type, encoderOptions)
  *	- position {number} position propertie of the swipe [0,1], default 0.5
  *	- orientation {vertical|horizontal} orientation propertie, default vertical
  */
-ol.control.Swipe = function(opt_options) 
+ol.control.Swipe = function(opt_options)
 {	var options = opt_options || {};
 	var self = this;
-	
+
 	var button = document.createElement('button');
 
 	var element = document.createElement('div');
@@ -2893,16 +2893,16 @@ ol.control.Swipe = function(opt_options)
     element.appendChild(button);
 
 	$(element).on ("mousedown touchstart", this, this.move );
-    
-	ol.control.Control.call(this, 
+
+	ol.control.Control.call(this,
 	{	element: element
 	});
-	
+
 	this.layers = [];
 	if (options.layers) this.addLayer(options.layers, false);
 	if (options.rightLayers) this.addLayer(options.rightLayers, true);
 
-	this.on('propertychange', function() 
+	this.on('propertychange', function()
 	{	if (this.getMap()) this.getMap().renderSync();
 		if (this.get('orientation') === "horizontal")
 		{	$(this.element).css("top", this.get('position')*100+"%")
@@ -2916,7 +2916,7 @@ ol.control.Swipe = function(opt_options)
 		$(this.element).removeClass("horizontal vertical")
 		$(this.element).addClass(this.get('orientation'))
 	}, this);
-	
+
 	this.set('position', options.position || 0.5);
 	this.set('orientation', options.orientation || 'vertical');
 };
@@ -2926,8 +2926,8 @@ ol.inherits(ol.control.Swipe, ol.control.Control);
  * Set the map instance the control associated with.
  * @param {ol.Map} map The map instance.
  */
-ol.control.Swipe.prototype.setMap = function(map) 
-{   
+ol.control.Swipe.prototype.setMap = function(map)
+{
 	if (this.getMap())
 	{	for (var i=0; i<this.layers.length; i++)
 		{	var l = this.layers[i];
@@ -2953,7 +2953,7 @@ ol.control.Swipe.prototype.setMap = function(map)
 
 /** @private
 */
-ol.control.Swipe.prototype.isLayer_ = function(layer) 
+ol.control.Swipe.prototype.isLayer_ = function(layer)
 {	for (k=0; k<this.layers.length; k++)
 	{	if (this.layers[k].layer === layer)  return k;
 	}
@@ -2964,7 +2964,7 @@ ol.control.Swipe.prototype.isLayer_ = function(layer)
  *	@param {ol.layer|Array<ol.layer>} layer to clip
 *	@param {bool} add layer in the right part of the map, default left.
 */
-ol.control.Swipe.prototype.addLayer = function(layers, right) 
+ol.control.Swipe.prototype.addLayer = function(layers, right)
 {	if (!(layers instanceof Array)) layers = [layers];
 	for (var i=0; i<layers.length; i++)
 	{	l = layers[i];
@@ -2999,27 +2999,27 @@ ol.control.Swipe.prototype.removeLayer = function(layers)
 
 /** @private
 */
-ol.control.Swipe.prototype.move = function(e) 
+ol.control.Swipe.prototype.move = function(e)
 {	var self = e.data;
 	switch (e.type)
-	{	case 'touchcancel': 
-		case 'touchend': 
-		case 'mouseup': 
+	{	case 'touchcancel':
+		case 'touchend':
+		case 'mouseup':
 		{	self.isMoving = false;
 			$(document).off ("mouseup mousemove touchend touchcancel touchmove", self.move );
 			break;
 		}
-		case 'mousedown': 
+		case 'mousedown':
 		case 'touchstart':
 		{	self.isMoving = true;
 			$(document).on ("mouseup mousemove touchend touchcancel touchmove", self, self.move );
 		}
-		default: 
+		default:
 		{	if (self.isMoving)
 			{	if (self.get('orientation') === "vertical")
 				{	var pageX = e.pageX || e.originalEvent.touches[0].pageX;
 					if (!pageX) break;
-					pageX -= $(self.getMap().getTargetElement()).position().left;
+					pageX -= $(self.getMap().getTargetElement()).offset().left;
 
 					var l = self.getMap().getSize()[0];
 					l = Math.min(Math.max(0, 1-(l-pageX)/l), 1);
@@ -3028,8 +3028,8 @@ ol.control.Swipe.prototype.move = function(e)
 				else
 				{	var pageY = e.pageY || e.originalEvent.touches[0].pageY;
 					if (!pageY) break;
-					pageY -= $(self.getMap().getTargetElement()).position().top;
-				
+					pageY -= $(self.getMap().getTargetElement()).offset().top;
+
 					var l = self.getMap().getSize()[1];
 					l = Math.min(Math.max(0, 1-(l-pageY)/l), 1);
 					self.set('position', l);
@@ -3042,7 +3042,7 @@ ol.control.Swipe.prototype.move = function(e)
 
 /** @private
 */
-ol.control.Swipe.prototype.precomposeLeft = function(e) 
+ol.control.Swipe.prototype.precomposeLeft = function(e)
 {	var ctx = e.context;
 	var canvas = ctx.canvas;
 	ctx.save();
@@ -3054,7 +3054,7 @@ ol.control.Swipe.prototype.precomposeLeft = function(e)
 
 /** @private
 */
-ol.control.Swipe.prototype.precomposeRight = function(e) 
+ol.control.Swipe.prototype.precomposeRight = function(e)
 {	var ctx = e.context;
 	var canvas = ctx.canvas;
 	ctx.save();
@@ -3066,7 +3066,7 @@ ol.control.Swipe.prototype.precomposeRight = function(e)
 
 /** @private
 */
-ol.control.Swipe.prototype.postcompose = function(e) 
+ol.control.Swipe.prototype.postcompose = function(e)
 {	ctx = e.context.restore();
 }
 
@@ -4301,6 +4301,10 @@ ol.filter.Colorize.prototype.setFilter = function(options)
 			//this.set ('operation', 'luminosity')
 			this.set ('operation', 'hard-light');
 			break;
+		case 'contrast':
+			var v = 255*(options.value || 0);
+			this.set('color', ol.color.asString([v,v,v,255]));
+			this.set('operation', 'soft-light');
 		default: 
 			this.set ('operation', 'color');
 			break;
@@ -4559,133 +4563,6 @@ ol.filter.Lego.prototype.postcompose = function(e)
 
 	ctx.restore();
 };
-
-/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-/** Make a map or layer look like made of a set of Lego bricks.
-*	@requires ol.filter
-*	@extends {ol.filter.Base}
-*	@param {ol.filter.compositeOptions}
-*
-*/
-ol.filter.Lego = function(options)
-{	if (!options) options = {};
-	ol.filter.Base.call(this, options);
-
-	var img = new Image();
-	img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAfCAYAAAAfrhY5AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABZ0RVh0Q3JlYXRpb24gVGltZQAxMi8xOS8xNvX4BJkAAAAcdEVYdFNvZnR3YXJlAEFkb2JlIEZpcmV3b3JrcyBDUzbovLKMAAADB0lEQVRIieWXTU8TQRjHfw8t5b2AUFuDB6PSxEhiop75FNz5Dhz4EHwkEu7UcvFIiDFZQ0rrQikUS6m742Gekd3SpVtI5OA/2exs5pn5P+8zK8A8T4QsgDFmBgiAUN9ubPRhwPhRbxGZz0YUqT/KjAdg7F8TDiIP/jtyF/NwhDUl4AUwp99doA20gCZwNSp5GsvzwAdsaTaAb0rW1fkMkANmgU6aPdOSPwc+ATdABfg5QCbQeQAZRhwlN/fIzAOfgQvgS4TgPhgRGQemdF180pgYeQwi4oQE6+proCIivRTEDj1gERsKf5CAy/Yky0vYWH8dkdihAbwGJu8jT8IKUBeR0wcQO9SAd4MmhsV8GjgyxowBrwBfRC70ewVboh3gGfADmMG62iXclSr+FlgAzkchB1u/+UajIcViURyx53lBtVrNr66uzvZ6vdze3t7S9vb25P7+/szOzs7J+vr6dLlcXtb1RhVsRbmGub2rz8Lu7m4Xm+krvu9Pe55XyOfzEgRBpl6vs7a2tnR8fDxeq9V6xWKRzc1N0+l0rtQLgs38WIIPS7hLIO/7/kSpVCo0m82S53lBoVCoHRwctMIwzFWr1fbh4aGfy+WyR0dHU3Nzc5NbW1vLlUrlZmNj41QJDbYJxcgFmDfGXHPbqaKl9hJoiEgWGI8oeq1emNVNLwdYFqrcElDGdsPvwJUxJnaeJ1neVNKkft2OjJNkCtiad11UHN+9MReR1IdEAhawfaKrCsQwLOYAHe10oyKLLTEXpjuHzUDLXe8FEJFQRFzCpEUOeI/tbJfAb1Ugeg9MrvOoAqrErMoP63aLwBtgAttUQlXghttLaYw8DVrYXv8R2zJb2DiGSrQALGMvGQFwpuvOlfiGPren6XBRnGCzuow9MMa4zd4Qm1gXEaVaSviL22v5X7g6b/dP9MPVviKjVuaJe89gLexg4+xiHahCBmxI09R5EgLscXmGTaoM8eR1ZGFkfAejxLwfRjftRcglMmeUONGw1Jb3Z38f3C/WSHjSPxbhCf9S/wDtsjUwAVrtqgAAAABJRU5ErkJggg==";
-	img.crossOrigin = "anonymous";
-
-	var self = this;
-	if (img.width) 
-	{	self.setPattern(null, img);
-	}
-	else
-	{	img.onload = function()
-		{	self.setPattern(null, img);
-		}
-	}
-}
-ol.inherits(ol.filter.Lego, ol.filter.Base);
-
-
-ol.filter.Lego.prototype.setPattern = function (width, img)
-{	console.log("setPattern "+this.pattern)
-	if (!this.pattern)
-	{	this.pattern = {};
-		this.pattern.canvas = document.createElement('canvas');
-		$(this.pattern.canvas).appendTo("body");
-
-	}
-	if (img) this.pattern.img = img;
-	this.pattern.canvas.width = width || 30;
-	this.pattern.canvas.height = width || 30;
-	this.pattern.ctx = this.pattern.canvas.getContext("2d");
-	this.pattern.ctx.fillStyle = this.pattern.ctx.createPattern (this.pattern.img, 'repeat');
-}
-
-/** Get translated pattern
-*	@param {number} x offset
-*	@param {number} y offset
-*/
-ol.filter.Lego.prototype.getPattern = function (offsetX, offsetY)
-{	
-	if (!this.pattern) return "transparent";
-	//return this.pattern.ctx.fillStyle
-	console.log("getPattern")
-
-	var c = this.pattern.canvas;
-	var ctx = this.pattern.ctx;
-	var sc = c.width/30;
-
-	ctx.save();
-		ctx.clearRect(0,0,c.width,c.height);
-
-		ctx.scale(sc,sc);
-		offsetX /= sc;
-		offsetY /= sc;
-
-		ctx.translate(offsetX, offsetY);
-		ctx.beginPath();
-		ctx.clearRect(-2*c.width, -2*c.height, 4*c.width, 4*c.height);
-		ctx.rect(-offsetX, -offsetY, 2*c.width, 2*c.height);
-		ctx.fill(); 
-	ctx.restore();
-	return ctx.createPattern(c, 'repeat');
-}
-/**
-*/
-ol.filter.Lego.prototype.postcompose = function(e)
-{	// Set back color hue
-	var ctx = e.context;
-	var canvas = ctx.canvas;
-
-	ctx.save();
-
-		var w = canvas.width;
-		var h = canvas.height;
-
-		// resize %10
-		var step=this.brickWidth, step2=step/2;
-		var p = e.frameState.extent;
-		var res = e.frameState.viewState.resolution;
-		var offset = [ -Math.round((p[0]/res)%step), Math.round((p[1]/res)%step) ];
-		var w2 = Math.floor(w/step);
-		var h2 = Math.floor(h/step);
-		var c = document.createElement('canvas');
-		var ctx2 = c.getContext("2d");
-		c.width = w;
-		c.height = h;
-/*
-		for (var i=0; i<w2; i++) for (var j=0; j<h2; j++)
-		{	var x = i*step +offset[0];
-			var y = j*step +offset[1];
-*/
-		ctx2.webkitImageSmoothingEnabled = false;
-		ctx2.mozImageSmoothingEnabled = false;
-		ctx2.imageSmoothingEnabled = false; //future
-
-		for (var x=offset[0]; x<w; x+=step) for (var y=offset[1]; y<h; y+=step)
-		{	if (x>=0 && y<h) ctx2.drawImage (canvas, x, y, 1, 1, x, y, step, step);
-		}
-
-		// enhance colors
-		ctx.globalCompositeOperation = 'color-burn';
-		ctx.globalAlpha = 0.8;
-		ctx.clearRect(0,0,w,h);
-		ctx.drawImage (c, 0, 0, w,h);
-		ctx.drawImage (canvas, 0, 0, w, h);
-
-		// Translate pattern
-		ctx.fillStyle = this.getPattern (offset[0], offset[1]);
-		ctx.rect(0,0, w, h);
-		ctx.fill(); 
-
-	ctx.restore();
-
-}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -4986,6 +4863,8 @@ ol.interaction.CenterTouch.prototype.drawTarget_ = function (e)
  */
 ol.interaction.Clip = function(options) {
 
+	this.layers_ = [];
+	
 	ol.interaction.Pointer.call(this, 
 	{	handleDownEvent: this.setPosition,
 		handleMoveEvent: this.setPosition
@@ -4996,7 +4875,6 @@ ol.interaction.Clip = function(options) {
 
 	this.pos = false;
 	this.radius = (options.radius||100);
-	this.layers_ = [];
 	if (options.layers) this.addLayer(options.layers);
 };
 ol.inherits(ol.interaction.Clip, ol.interaction.Pointer);
@@ -5096,6 +4974,28 @@ ol.interaction.Clip.prototype.precompose_ = function(e)
 ol.interaction.Clip.prototype.postcompose_ = function(e)
 {	e.context.restore();
 };
+
+/**
+ * Activate or deactivate the interaction.
+ * @param {boolean} active Active.
+ * @observable
+ * @api
+ */
+ol.interaction.Clip.prototype.setActive = function(b) 
+{	ol.interaction.Pointer.prototype.setActive.call (this, b);
+	if(b) {
+		for(var i=0; i<this.layers_.length; i++) {
+			this.layers_[i].on('precompose', this.precompose_, this);
+			this.layers_[i].on('postcompose', this.postcompose_, this);
+		}
+	} else {
+		for(var i=0; i<this.layers_.length; i++) {
+			this.layers_[i].un('precompose', this.precompose_, this);
+			this.layers_[i].un('postcompose', this.postcompose_, this);
+		}
+	}
+	if (this.getMap()) this.getMap().renderSync();
+}
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -6952,6 +6852,7 @@ ol.interaction.Synchronize.prototype.setMap = function(map)
 		this.getMap().getView().un('change:center', this.syncMaps, this);
 		this.getMap().getView().un('change:rotation', this.syncMaps, this);
 		this.getMap().getView().un('change:resolution', this.syncMaps, this);
+		ol.events.unlisten(this.getMap().getViewport(), ol.events.EventType.MOUSEOUT, this.handleMouseOut_, this);
 	}
 	
 	ol.interaction.Interaction.prototype.setMap.call (this, map);
@@ -6960,6 +6861,14 @@ ol.interaction.Synchronize.prototype.setMap = function(map)
 	{	this.getMap().getView().on('change:center', this.syncMaps, this);
 		this.getMap().getView().on('change:rotation', this.syncMaps, this);
 		this.getMap().getView().on('change:resolution', this.syncMaps, this);
+
+		var me = this;
+		$(this.getMap().getTargetElement()).mouseout(function() {
+			for (var i=0; i<me.maps.length; i++)
+			{	me.maps[i].hideTarget();
+			}
+			me.getMap().hideTarget();
+    });
 		this.syncMaps();
 	}
 };
@@ -7011,6 +6920,17 @@ ol.interaction.Synchronize.prototype.handleMove_ = function(e)
 	this.getMap().showTarget();
 };
 
+
+/** Cursor out of map > tells other maps to hide the cursor
+* @param {event} e "mouseOut" event
+*/
+ol.interaction.Synchronize.prototype.handleMouseOut_ = function(e, scope)
+{	for (var i=0; i<scope.maps.length; i++)
+	{
+		scope.maps[i].targetOverlay_.setPosition(undefined);
+	}
+};
+
 /** Show a target overlay at coord
 * @param {ol.coordinate} coord
 */
@@ -7021,8 +6941,18 @@ ol.Map.prototype.showTarget = function(coord)
 		this.targetOverlay_.setPositioning('center-center');
 		this.addOverlay(this.targetOverlay_);
 		elt.parent().addClass("ol-target-overlay");
+		// hack to render targetOverlay before positioning it
+		this.targetOverlay_.setPosition([0,0]);
 	}
 	this.targetOverlay_.setPosition(coord);
+};
+
+/** Hide the target overlay
+*/
+ol.Map.prototype.hideTarget = function()
+{
+	this.removeOverlay(this.targetOverlay_);
+	this.targetOverlay_ = undefined;
 };
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -7200,52 +7130,6 @@ ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
 		e.frameState.animate = true;
 	}
 };
-/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-/** Interaction TouchDraw: draw on touch device (shortcut).
- * @constructor
- * @extends {ol.interaction.Draw}
- * @param {olx.interaction.DrawOptions} 
- */
-ol.interaction.TouchDraw = function(options) 
-{	var options = options || {};
-
-	options.freehand = true;
-	//options.condition = ol.events.condition.singleClick;
-	//options.freehandCondition = ol.events.condition.noModifierKeys;
-
-	ol.interaction.Draw.call(this, options);
-
-};
-ol.inherits(ol.interaction.TouchDraw, ol.interaction.Draw);
-
-/** Finish drawing on pointerup
-*/
-ol.interaction.TouchDraw.prototype.stopDrawing_ = function(map) 
-{	if (this.getActive()) this.finishDrawing();
-	return false;
-};
-
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.interaction.TouchDraw.prototype.setMap = function(map) 
-{	if (this.getMap())
-	{	this.getMap().un('pointerup', this.stopDrawing_, this);
-	}
-
-	ol.interaction.Draw.prototype.setMap.call (this, map);
-
-	if (map)
-	{	map.on('pointerup', this.stopDrawing_, this);
-	}
-};
-
 /** Interaction rotate
  * @constructor
  * @extends {ol.interaction.Pointer}
