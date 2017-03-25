@@ -3045,7 +3045,7 @@ ol.control.Swipe.prototype.move = function(e)
 			{	if (self.get('orientation') === "vertical")
 				{	var pageX = e.pageX || e.originalEvent.touches[0].pageX;
 					if (!pageX) break;
-					pageX -= $(self.getMap().getTargetElement()).position().left;
+					pageX -= $(self.getMap().getTargetElement()).offset().left;
 
 					var l = self.getMap().getSize()[0];
 					l = Math.min(Math.max(0, 1-(l-pageX)/l), 1);
@@ -3054,9 +3054,9 @@ ol.control.Swipe.prototype.move = function(e)
 				else
 				{	var pageY = e.pageY || e.originalEvent.touches[0].pageY;
 					if (!pageY) break;
-					pageY -= $(self.getMap().getTargetElement()).position().top;
-				
-					var l = self.getMap().getSize()[1];
+					pageY -= $(self.getMap().getTargetElement()).offset().top;
+
+                                        var l = self.getMap().getSize()[1];
 					l = Math.min(Math.max(0, 1-(l-pageY)/l), 1);
 					self.set('position', l);
 				}
@@ -4327,6 +4327,10 @@ ol.filter.Colorize.prototype.setFilter = function(options)
 			//this.set ('operation', 'luminosity')
 			this.set ('operation', 'hard-light');
 			break;
+		case 'contrast':
+			var v = 255*(options.value || 0);
+			this.set('color', ol.color.asString([v,v,v,255]));
+			this.set('operation', 'soft-light');
 		default: 
 			this.set ('operation', 'color');
 			break;
@@ -4901,6 +4905,8 @@ ol.interaction.CenterTouch.prototype.drawTarget_ = function (e)
  */
 ol.interaction.Clip = function(options) {
 
+	this.layers_ = [];
+	
 	ol.interaction.Pointer.call(this, 
 	{	handleDownEvent: this.setPosition,
 		handleMoveEvent: this.setPosition
@@ -4911,7 +4917,6 @@ ol.interaction.Clip = function(options) {
 
 	this.pos = false;
 	this.radius = (options.radius||100);
-	this.layers_ = [];
 	if (options.layers) this.addLayer(options.layers);
 };
 ol.inherits(ol.interaction.Clip, ol.interaction.Pointer);
@@ -5011,6 +5016,28 @@ ol.interaction.Clip.prototype.precompose_ = function(e)
 ol.interaction.Clip.prototype.postcompose_ = function(e)
 {	e.context.restore();
 };
+
+/**
+ * Activate or deactivate the interaction.
+ * @param {boolean} active Active.
+ * @observable
+ * @api
+ */
+ol.interaction.Clip.prototype.setActive = function(b) 
+{	ol.interaction.Pointer.prototype.setActive.call (this, b);
+	if(b) {
+		for(var i=0; i<this.layers_.length; i++) {
+			this.layers_[i].on('precompose', this.precompose_, this);
+			this.layers_[i].on('postcompose', this.postcompose_, this);
+		}
+	} else {
+		for(var i=0; i<this.layers_.length; i++) {
+			this.layers_[i].un('precompose', this.precompose_, this);
+			this.layers_[i].un('postcompose', this.postcompose_, this);
+		}
+	}
+	if (this.getMap()) this.getMap().renderSync();
+}
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -6868,6 +6895,7 @@ ol.interaction.Synchronize.prototype.setMap = function(map)
 		this.getMap().getView().un('change:center', this.syncMaps, this);
 		this.getMap().getView().un('change:rotation', this.syncMaps, this);
 		this.getMap().getView().un('change:resolution', this.syncMaps, this);
+		ol.events.unlisten(this.getMap().getViewport(), ol.events.EventType.MOUSEOUT, this.handleMouseOut_, this);
 	}
 	
 	ol.interaction.Interaction.prototype.setMap.call (this, map);
@@ -6876,6 +6904,14 @@ ol.interaction.Synchronize.prototype.setMap = function(map)
 	{	this.getMap().getView().on('change:center', this.syncMaps, this);
 		this.getMap().getView().on('change:rotation', this.syncMaps, this);
 		this.getMap().getView().on('change:resolution', this.syncMaps, this);
+
+		var me = this;
+		$(this.getMap().getTargetElement()).mouseout(function() {
+			for (var i=0; i<me.maps.length; i++)
+			{	me.maps[i].hideTarget();
+			}
+			me.getMap().hideTarget();
+    });
 		this.syncMaps();
 	}
 };
@@ -6927,6 +6963,17 @@ ol.interaction.Synchronize.prototype.handleMove_ = function(e)
 	this.getMap().showTarget();
 };
 
+
+/** Cursor out of map > tells other maps to hide the cursor
+* @param {event} e "mouseOut" event
+*/
+ol.interaction.Synchronize.prototype.handleMouseOut_ = function(e, scope)
+{	for (var i=0; i<scope.maps.length; i++)
+	{
+		scope.maps[i].targetOverlay_.setPosition(undefined);
+	}
+};
+
 /** Show a target overlay at coord
 * @param {ol.coordinate} coord
 */
@@ -6937,8 +6984,18 @@ ol.Map.prototype.showTarget = function(coord)
 		this.targetOverlay_.setPositioning('center-center');
 		this.addOverlay(this.targetOverlay_);
 		elt.parent().addClass("ol-target-overlay");
+		// hack to render targetOverlay before positioning it
+		this.targetOverlay_.setPosition([0,0]);
 	}
 	this.targetOverlay_.setPosition(coord);
+};
+
+/** Hide the target overlay
+*/
+ol.Map.prototype.hideTarget = function()
+{
+	this.removeOverlay(this.targetOverlay_);
+	this.targetOverlay_ = undefined;
 };
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -7116,52 +7173,6 @@ ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
 		e.frameState.animate = true;
 	}
 };
-/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-/** Interaction TouchDraw: draw on touch device (shortcut).
- * @constructor
- * @extends {ol.interaction.Draw}
- * @param {olx.interaction.DrawOptions} 
- */
-ol.interaction.TouchDraw = function(options) 
-{	var options = options || {};
-
-	options.freehand = true;
-	//options.condition = ol.events.condition.singleClick;
-	//options.freehandCondition = ol.events.condition.noModifierKeys;
-
-	ol.interaction.Draw.call(this, options);
-
-};
-ol.inherits(ol.interaction.TouchDraw, ol.interaction.Draw);
-
-/** Finish drawing on pointerup
-*/
-ol.interaction.TouchDraw.prototype.stopDrawing_ = function(map) 
-{	if (this.getActive()) this.finishDrawing();
-	return false;
-};
-
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.interaction.TouchDraw.prototype.setMap = function(map) 
-{	if (this.getMap())
-	{	this.getMap().un('pointerup', this.stopDrawing_, this);
-	}
-
-	ol.interaction.Draw.prototype.setMap.call (this, map);
-
-	if (map)
-	{	map.on('pointerup', this.stopDrawing_, this);
-	}
-};
-
 /** Interaction rotate
  * @constructor
  * @extends {ol.interaction.Pointer}
@@ -8143,124 +8154,6 @@ ol.layer.Group.prototype.getPreview = function(lonlat, resolution)
 	}
 	return t;
 }
-
-/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-	
-	@classdesc
-	ol.source.Mapillary is a source that load Wikimedia Commons content in a vector layer.
-	
-	@require jQuery
-	
-	Inherits from:
-	<ol.source.Vector>
-*/
-
-/**
-* @constructor ol.source.Mapillary
-* @extends {ol.source.Vector}
-* @param {olx.source.Mapillary=} options
-* @todo 
-*/
-ol.source.Mapillary = function(opt_options)
-{	var options = opt_options || {};
-	var self = this; 
-
-	options.loader = this._loaderFn;
-	
-	/** Url for DBPedia SPARQL */
-	this._url = options.url || "http://fr.dbpedia.org/sparql";
-
-	/** Max resolution to load features  */
-	this._maxResolution = options.maxResolution || 100;
-	
-	/** Result language */
-	this._lang = options.lang || "fr";
-
-	/** Query limit */
-	this._limit = options.limit || 100;
-	
-	/** Default attribution */
-	if (!options.attributions) options.attributions = [ new ol.Attribution({ html:"&copy; <a href='https://www.mapillary.com/'>Mapillary</a>" }) ];
-
-	// Bbox strategy : reload at each move
-    if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
-
-	ol.source.Vector.call (this, options);	
-};
-ol.inherits (ol.source.Mapillary, ol.source.Vector);
-
-
-/** Decode wiki attributes and choose to add feature to the layer
-* @param {feature} the feature
-* @param {attributes} wiki attributes
-* @return {boolean} true: add the feature to the layer
-* @API stable
-*/
-ol.source.Mapillary.prototype.readFeature = function (feature, attributes)
-{	
-	return true;
-};
-
-
-/** Loader function used to load features.
-* @private
-*/
-ol.source.Mapillary.prototype._loaderFn = function(extent, resolution, projection) 
-{	if (resolution > this._maxResolution) return;
-	var self = this;
-	var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
-	// Commons API: for more info @see https://commons.wikimedia.org/wiki/Commons:API/MediaWiki
-	var date = Date.now() - 6 * 30 * 24 * 60 * 60 * 1000;
-	var url = "https://a.mapillary.com/v2/search/im?client_id="
-		+ this.get('clientId')
-		+ "&max_lat=" + bbox[3]
-		+ "&max_lon=" + bbox[2]
-		+ "&min_lat=" + bbox[1]
-		+ "&min_lon=" + bbox[0]
-		+ "&limit="+(this._limit-1)
-		+ "&start_time=" + date;
-	// Ajax request to get the tile
-	$.ajax(
-	{	url: url,
-		dataType: 'jsonp', 
-		success: function(data) 
-		{	console.log(data);
-			return;
-			var features = [];
-			var att, pt, feature, lastfeature = null;
-			if (!data.query || !data.query.pages) return;
-			for ( var i in data.query.pages)
-			{	att = data.query.pages[i];
-				if (att.coordinates && att.coordinates.length ) 
-				{	pt = [att.coordinates[0].lon, att.coordinates[0].lat];
-				}
-				else
-				{	var meta = att.imageinfo[0].metadata;
-					if (!meta)
-					{	//console.log(att);
-						continue;
-					}
-					pt = [];
-					for (var k=0; k<meta.length; k++)
-					{	if (meta[k].name=="GPSLongitude") pt[0] = meta[k].value;
-						if (meta[k].name=="GPSLatitude") pt[1] = meta[k].value;
-					}
-					if (!pt.length) 
-					{	//console.log(att);
-						continue;
-					}
-				}
-				feature = new ol.Feature(new ol.geom.Point(ol.proj.transform (pt,"EPSG:4326",projection)));
-				att.imageinfo[0].title = att.title;
-				if (self.readFeature(feature, att.imageinfo[0]))
-				{	features.push(feature);
-				}
-			}
-			self.addFeatures(features);
-    }});
-};
 
 /** ol.layer.Vector.prototype.setRender3D
  * @extends {ol.layer.Vector}
