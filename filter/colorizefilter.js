@@ -5,6 +5,8 @@
 /** Colorize map or layer
 *	@requires ol.filter
 *	@extends {ol.filter.Base}
+*	@author Thomas Tilak https://github.com/thhomas
+*	@author Jean-Marc Viglino https://github.com/viglino
 *	@param {ol.filter.cropOptions}
 *		- feature {ol.Feature} feature to mask with
 *		- color {Array<integer>} style to fill with
@@ -51,6 +53,7 @@ ol.filter.Colorize.prototype.setFilter = function(options)
 			var v = 255*(options.value || 0);
 			this.set('color', ol.color.asString([v,v,v,255]));
 			this.set('operation', 'soft-light');
+			break;
 		default: 
 			this.set ('operation', 'color');
 			break;
