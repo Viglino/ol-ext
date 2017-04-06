@@ -4285,6 +4285,8 @@ ol.filter.Clip.prototype.postcompose = function(e)
 /** Colorize map or layer
 *	@requires ol.filter
 *	@extends {ol.filter.Base}
+*	@author Thomas Tilak https://github.com/thhomas
+*	@author Jean-Marc Viglino https://github.com/viglino
 *	@param {ol.filter.cropOptions}
 *		- feature {ol.Feature} feature to mask with
 *		- color {Array<integer>} style to fill with
@@ -4452,6 +4454,115 @@ ol.filter.Crop.prototype.precompose = function(e)
 
 ol.filter.Crop.prototype.postcompose = function(e)
 {	if (this.feature_) e.context.restore();
+}
+
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Fold filer map 
+*	@requires ol.filter
+*	@extends {ol.filter.Base}
+*	@param {ol.filter.foldOptions}
+*		- fold {Array<int>} number of fold (horizontal and vertical)
+*		- margin {Number} margin in px, default 8
+*		- padding {Number} padding in px, default 8
+*		- fsize {integer|Array<integer>} fold size in px, default 8,10
+*/
+ol.filter.Fold = function(options)
+{	options = options || {};
+	ol.filter.Base.call(this, options);
+	
+	this.set("fold", options.fold || [8,4]);
+	this.set("margin", options.margin || 8);
+	this.set("padding", options.padding || 8);
+	if (typeof options.fsize == "number") options.fsize = [options.fsize,options.fsize];
+	this.set("fsize", options.fsize || [8,10]);
+}
+ol.inherits(ol.filter.Fold, ol.filter.Base);
+
+ol.filter.Fold.prototype.drawLine_ = function(ctx, d, m)
+{	var canvas = ctx.canvas;
+	var fold = this.get("fold");
+	var w = canvas.width;
+	var h = canvas.height;
+
+	ctx.beginPath();
+	ctx.moveTo ( m, m );
+	for (var i=1; i<=fold[0]; i++)
+	{	x = i*w/fold[0] - (i==fold[0] ? m : 0);
+		y =  d[1]*(i%2) +m;
+		ctx.lineTo ( x, y );
+	}
+	for (var i=1; i<=fold[1]; i++)
+	{	x = w - d[0]*(i%2) - m;
+		y = i*h/fold[1] - (i==fold[1] ? d[0]*(fold[0]%2) + m : 0);
+		ctx.lineTo ( x, y );
+	}
+	for (var i=fold[0]; i>0; i--)
+	{	x = i*w/fold[0] - (i==fold[0] ? d[0]*(fold[1]%2) + m : 0);
+		y = h - d[1]*(i%2) -m;
+		ctx.lineTo ( x, y );
+	}
+	for (var i=fold[1]; i>0; i--)
+	{	x = d[0]*(i%2) + m;
+		y = i*h/fold[1] - (i==fold[1] ? m : 0);
+		ctx.lineTo ( x, y );
+	}
+	ctx.closePath();
+}
+
+ol.filter.Fold.prototype.precompose = function(e)
+{	var ctx = e.context;
+	var canvas = ctx.canvas;
+
+	var fold = this.get("fold");
+	var w = canvas.width;
+	var h = canvas.height;
+	
+	ctx.save();
+		ctx.shadowColor = "rgba(0,0,0,0.3";
+		ctx.shadowBlur = 8;
+		ctx.shadowOffsetX = 2;
+		ctx.shadowOffsetY = 3;
+		this.drawLine_(ctx, this.get("fsize"), this.get("margin"));
+		ctx.fillStyle="#fff";
+		ctx.fill();
+		ctx.strokeStyle = "rgba(0,0,0,0.1";
+		ctx.stroke();
+	ctx.restore();
+
+	ctx.save();
+	this.drawLine_(ctx, this.get("fsize"), this.get("margin") + this.get("padding"));
+	ctx.clip();
+
+}
+
+ol.filter.Fold.prototype.postcompose = function(e)
+{	var ctx = e.context;
+	var canvas = ctx.canvas;
+
+	ctx.restore();
+	ctx.save();
+		this.drawLine_(ctx, this.get("fsize"), this.get("margin"));
+		ctx.clip();
+		
+		var fold = this.get("fold");
+		var w = canvas.width/fold[0];
+		var h = canvas.height/fold[1];
+
+		var grd = ctx.createRadialGradient(5*w/8,5*w/8,w/4,w/2,w/2,w);
+		grd.addColorStop(0,"transparent");
+		grd.addColorStop(1,"rgba(0,0,0,0.2");
+		ctx.fillStyle = grd;
+		ctx.scale (1,h/w);
+		for (var i=0; i<fold[0]; i++) for (var j=0; j<fold[1]; j++)
+		{	ctx.save()
+			ctx.translate(i*w, j*w);
+			ctx.fillRect(0,0,w,w);
+			ctx.restore()
+		}
+	ctx.restore();
 }
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
@@ -8202,12 +8313,12 @@ ol.layer.Group.prototype.getPreview = function(lonlat, resolution)
 	return t;
 }
 
-/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 	
 	@classdesc
-	ol.source.Mapillary is a source that load Wikimedia Commons content in a vector layer.
+	ol.source.Mapillary is a source that load Mapillary's geotagged photos in a vector layer.
 	
 	@require jQuery
 	
@@ -8227,15 +8338,9 @@ ol.source.Mapillary = function(opt_options)
 
 	options.loader = this._loaderFn;
 	
-	/** Url for DBPedia SPARQL */
-	this._url = options.url || "http://fr.dbpedia.org/sparql";
-
 	/** Max resolution to load features  */
 	this._maxResolution = options.maxResolution || 100;
 	
-	/** Result language */
-	this._lang = options.lang || "fr";
-
 	/** Query limit */
 	this._limit = options.limit || 100;
 	
@@ -8245,7 +8350,11 @@ ol.source.Mapillary = function(opt_options)
 	// Bbox strategy : reload at each move
     if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
 
+	// Init parent
 	ol.source.Vector.call (this, options);	
+
+	// Client ID
+	// this.set("clientId", options.clientId);
 };
 ol.inherits (ol.source.Mapillary, ol.source.Vector);
 
@@ -8257,7 +8366,7 @@ ol.inherits (ol.source.Mapillary, ol.source.Vector);
 * @API stable
 */
 ol.source.Mapillary.prototype.readFeature = function (feature, attributes)
-{	
+{	// Allways read feature (no filter)
 	return true;
 };
 
@@ -8269,7 +8378,7 @@ ol.source.Mapillary.prototype._loaderFn = function(extent, resolution, projectio
 {	if (resolution > this._maxResolution) return;
 	var self = this;
 	var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
-	// Commons API: for more info @see https://commons.wikimedia.org/wiki/Commons:API/MediaWiki
+	// Commons API: for more info @see https://www.mapillary.com/developer
 	var date = Date.now() - 6 * 30 * 24 * 60 * 60 * 1000;
 	var url = "https://a.mapillary.com/v2/search/im?client_id="
 		+ this.get('clientId')
@@ -8285,10 +8394,10 @@ ol.source.Mapillary.prototype._loaderFn = function(extent, resolution, projectio
 		dataType: 'jsonp', 
 		success: function(data) 
 		{	console.log(data);
-			return;
+			/*
 			var features = [];
 			var att, pt, feature, lastfeature = null;
-			if (!data.query || !data.query.pages) return;
+			if (data.query && data.query.pages) return;
 			for ( var i in data.query.pages)
 			{	att = data.query.pages[i];
 				if (att.coordinates && att.coordinates.length ) 
@@ -8317,6 +8426,7 @@ ol.source.Mapillary.prototype._loaderFn = function(extent, resolution, projectio
 				}
 			}
 			self.addFeatures(features);
+			*/
     }});
 };
 
@@ -11360,7 +11470,7 @@ function drawTextPath (e)
 				var c;
 				switch (g.getType())
 				{	case "LineString": c = g.getCoordinates(); break;
-					case "ol.geom.MultiLineString": c = g.getLineString(0).getCoordinates(); break;
+					case "MultiLineString": c = g.getLineString(0).getCoordinates(); break;
 					default: continue;
 				}
 
