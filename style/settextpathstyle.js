@@ -45,7 +45,7 @@ function drawTextPath (e)
 				var c;
 				switch (g.getType())
 				{	case "LineString": c = g.getCoordinates(); break;
-					case "ol.geom.MultiLineString": c = g.getLineString(0).getCoordinates(); break;
+					case "MultiLineString": c = g.getLineString(0).getCoordinates(); break;
 					default: continue;
 				}
 
