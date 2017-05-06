@@ -170,7 +170,7 @@
 							{	html: 'undo',
 								title: "Delete last point",
 								handleClick: function() 
-								{	ledit.getInteraction().removeLastPoint();
+								{	try { ledit.getInteraction().removeLastPoint(); } catch(e){};
 								}
 							}),
 							new ol.control.TextButton(
@@ -180,14 +180,18 @@
 								{	// Prevent null objects on finishDrawing
 									var drawi = ledit.getInteraction();
 									var lkey = drawi.on('drawend', function(e)
-									{	drawi.unByKey(lkey);
+									{	ol.Observable.unByKey(lkey);
+										//drawi.unByKey(lkey);
 										var c = e.feature.getGeometry().getCoordinates();
 										if (c.length < 2)
 										{	throw "Bad LineString";
 										}
 									});
 									try { drawi.finishDrawing(); } 
-									catch(e) { drawi.unByKey(lkey); }
+									catch(e) 
+									{	ol.Observable.unByKey(lkey);
+										//drawi.unByKey(lkey); 
+									}
 								}
 							})
 						]
@@ -209,7 +213,7 @@
 								{	html: 'undo',//'<i class="fa fa-mail-reply"></i>',
 									title: "undo last point",
 									handleClick: function() 
-									{	fedit.getInteraction().removeLastPoint();
+									{	try { fedit.getInteraction().removeLastPoint(); } catch(e){}
 									}
 								}),
 								new ol.control.TextButton(
@@ -219,14 +223,18 @@
 									{	// Prevent null objects on finishDrawing
 										var drawi = fedit.getInteraction();
 										var lkey = drawi.on('drawend', function(e)
-										{	drawi.unByKey(lkey);
+										{	ol.Observable.unByKey(lkey);
+											//drawi.unByKey(lkey);
 											var c = e.feature.getGeometry().getCoordinates();
 											if (c[0].length < 4)
 											{	throw "Bad Polygon";
 											}
 										});
 										try { drawi.finishDrawing(); } 
-										catch(e) { drawi.unByKey(lkey); }
+										catch(e) 
+										{	ol.Observable.unByKey(lkey);
+											//drawi.unByKey(lkey); 
+										}
 									}
 								})
 							]
