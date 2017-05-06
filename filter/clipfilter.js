@@ -9,7 +9,8 @@
 *		- coords {Array<ol.Coordinate>}
 *		- extent {ol.Extent}
 *		- units {%|px} coords units percent or pixel
-*		- kratio {boolean} keep aspect ratio
+*		- keepAspectRatio {boolean} keep aspect ratio
+*		- color {string} backgroundcolor
 */
 ol.filter.Clip = function(options)
 {	options = options || {};
@@ -17,8 +18,9 @@ ol.filter.Clip = function(options)
 	
 	this.set("coords", options.coords);
 	this.set("units", options.units);
-	this.set("kratio", options.kratio);
+	this.set("keepAspectRatio", options.keepAspectRatio);
 	this.set("extent", options.extent || [0,0,1,1]);
+	this.set("color", options.color);
 	if (!options.extent && options.units!="%" && options.coords)
 	{	var xmin = Infinity;
 		var ymin = Infinity;
@@ -35,23 +37,21 @@ ol.filter.Clip = function(options)
 }
 ol.inherits(ol.filter.Clip, ol.filter.Base);
 
-
-ol.filter.Clip.prototype.precompose = function(e)
+ol.filter.Clip.prototype.clipPath_ = function(e)
 {	var ctx = e.context;
 	var canvas = ctx.canvas;
-	ctx.save();
 	var coords = this.get("coords");
 	if (!coords) return;
+	var ex = this.get('extent');
 	var scx = 1, scy = 1;
 	if (this.get("units")=="%") 
-	{	scx = canvas.width;
-		scy = canvas.height;
+	{	scx = canvas.width/(ex[2]-ex[0]);
+		scy = canvas.height/(ex[3]-ex[1]);
 	}
-	if (this.get("kratio")) 
+	if (this.get("keepAspectRatio")) 
 	{	scx = scy = Math.min (scx, scy);
 	}
 	var pos = this.get('position');
-	var ex = this.get('extent');
 	var dx=0, dy=0;
 	if (/left/.test(pos)) 
 	{	dx = -ex[0]*scx;
@@ -74,16 +74,38 @@ ol.filter.Clip.prototype.precompose = function(e)
 	}
 	var fy = function(y) { return y*scy + dy; };
 	
-	ctx.beginPath();
 	ctx.moveTo ( fx(coords[0][0]), fy(coords[0][1]) );
 	for (var i=1; p=coords[i]; i++) 
 	{	ctx.lineTo ( fx(p[0]), fy(p[1]) );
 	}
 	ctx.lineTo ( fx(coords[0][0]), fy(coords[0][1]) );
-	ctx.clip();
+};
 
+ol.filter.Clip.prototype.precompose = function(e)
+{	if (!this.get("color"))
+	{	e.context.save();
+		e.context.beginPath();
+		this.clipPath_(e);
+		e.context.clip();
+	}
 }
 
 ol.filter.Clip.prototype.postcompose = function(e)
-{	e.context.restore();
+{	if (this.get("color"))
+	{	var ctx = e.context;
+		var canvas = e.context.canvas;
+		ctx.save();
+		ctx.beginPath();
+		ctx.moveTo(0,0);
+		ctx.lineTo(0,canvas.height);
+		ctx.lineTo(canvas.width, canvas.height);
+		ctx.lineTo(canvas.width, canvas.height);
+		ctx.lineTo(canvas.width, 0);
+		ctx.lineTo(0, 0);
+		this.clipPath_(e);
+		ctx.fillStyle = this.get("color");
+		ctx.fill("evenodd");
+	};
+	
+	e.context.restore();
 }
