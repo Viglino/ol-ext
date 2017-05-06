@@ -1795,6 +1795,118 @@ ol.control.LayerSwitcherImage.prototype.drawList = function(ul, layers)
 */
 ol.control.LayerSwitcherImage.prototype.overflow = function(){};
 
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Control overlay for OL3
+ * The overlay control is a control that display an overlay over the map
+ *
+ * @constructor
+ * @extends {ol.control.Control}
+ * @fire change:visible
+ * @param {Object=} opt_options Control options.
+ *	- className {String} class of the control
+ *	- hideOnClick {bool} hide the control on click, default false
+ *	- closeBox {bool} add a closeBox to the control, default false
+ */
+ol.control.Overlay = function(options) 
+{	if (!options) options={};
+	
+	var element = $("<div>").addClass('ol-unselectable ol-overlay');
+	if (options.className) element.addClass(options.className);
+	
+	ol.control.Control.call(this, 
+	{	element: element.get(0),
+		target: options.target
+	});
+	
+	var self = this;
+	if (options.hideOnClick) element.click(function(){self.hide();});
+
+	this.set("closeBox", options.closeBox);
+
+	this._timeout = false;
+	this.setContent (options.content);
+};
+ol.inherits(ol.control.Overlay, ol.control.Control);
+
+/** Set the content of the overlay
+* @param {string} html the html to display in the control (or a jQuery object) 
+*/
+ol.control.Overlay.prototype.setContent = function (html) 
+{	var self = this;
+	if (html) 
+	{	var elt = $(this.element);
+		elt.html(html);
+		if (this.get("closeBox")) 
+		{	var cb = $("<div>").addClass("ol-closebox")
+						.click(function(){self.hide();});
+			elt.prepend(cb);
+		}
+	};
+};
+
+/** Set the control visibility
+* @param {string} html the html to display in the control (or a jQuery object) 
+* @param {ol.coordinate} coord coordinate of the top left corner of the control to start from
+*/
+ol.control.Overlay.prototype.show = function (html, coord) 
+{	var self = this;
+	var elt = $(this.element).show();
+	if (coord)
+	{	this.center_ = this.getMap().getPixelFromCoordinate(coord);
+		elt.css({"top":this.center_[1], "left":this.center_[0] });
+	}
+	else 
+	{	this.center_ = false;
+		elt.css({"top":"", "left":"" });
+	}
+	this.setContent(html);
+	if (this._timeout) clearTimeout(this._timeout);
+	this._timeout = setTimeout(function()
+		{	elt.addClass("ol-visible")
+				.css({ "top":"", "left":"" });
+			self.dispatchEvent({ type:'change:visible', visible:true, element: self.element });
+		}, 10);
+	self.dispatchEvent({ type:'change:visible', visible:false, element: self.element });
+};
+
+/** Set the control visibility hidden
+*/
+ol.control.Overlay.prototype.hide = function () 
+{	var elt = $(this.element).removeClass("ol-visible");
+	if (this.center_)
+	{	elt.css({"top":this.center_[1], "left":this.center_[0] })
+		this.center_ = false;
+	}
+	if (this._timeout) clearTimeout(this._timeout);
+	this._timeout = setTimeout(function(){ elt.hide(); }, 500);
+	this.dispatchEvent({ type:'change:visible', visible:false, element: this.element });
+};
+
+/** Toggle control visibility
+*/
+ol.control.Overlay.prototype.toggle = function () 
+{	if (this.getVisible()) this.hide();
+	else this.show();
+}
+
+/** Get the control visibility
+* @return {boolean} b 
+*/
+ol.control.Overlay.prototype.getVisible = function () 
+{	return ($(this.element).css('display') != 'none');
+};
+
+/** Change class name
+* @param {String} className 
+*/
+ol.control.Overlay.prototype.setClass = function (className) 
+{	var vis = $(this.element).hasClass("ol-visible");
+	$(this.element).removeClass().addClass('ol-unselectable ol-overlay'+(vis?" ol-visible ":" ")+className);
+};
+
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -4199,7 +4311,8 @@ ol.filter.Mask.prototype.postcompose = function(e)
 *		- coords {Array<ol.Coordinate>}
 *		- extent {ol.Extent}
 *		- units {%|px} coords units percent or pixel
-*		- kratio {boolean} keep aspect ratio
+*		- keepAspectRatio {boolean} keep aspect ratio
+*		- color {string} backgroundcolor
 */
 ol.filter.Clip = function(options)
 {	options = options || {};
@@ -4207,8 +4320,9 @@ ol.filter.Clip = function(options)
 	
 	this.set("coords", options.coords);
 	this.set("units", options.units);
-	this.set("kratio", options.kratio);
+	this.set("keepAspectRatio", options.keepAspectRatio);
 	this.set("extent", options.extent || [0,0,1,1]);
+	this.set("color", options.color);
 	if (!options.extent && options.units!="%" && options.coords)
 	{	var xmin = Infinity;
 		var ymin = Infinity;
@@ -4225,23 +4339,21 @@ ol.filter.Clip = function(options)
 }
 ol.inherits(ol.filter.Clip, ol.filter.Base);
 
-
-ol.filter.Clip.prototype.precompose = function(e)
+ol.filter.Clip.prototype.clipPath_ = function(e)
 {	var ctx = e.context;
 	var canvas = ctx.canvas;
-	ctx.save();
 	var coords = this.get("coords");
 	if (!coords) return;
+	var ex = this.get('extent');
 	var scx = 1, scy = 1;
 	if (this.get("units")=="%") 
-	{	scx = canvas.width;
-		scy = canvas.height;
+	{	scx = canvas.width/(ex[2]-ex[0]);
+		scy = canvas.height/(ex[3]-ex[1]);
 	}
-	if (this.get("kratio")) 
+	if (this.get("keepAspectRatio")) 
 	{	scx = scy = Math.min (scx, scy);
 	}
 	var pos = this.get('position');
-	var ex = this.get('extent');
 	var dx=0, dy=0;
 	if (/left/.test(pos)) 
 	{	dx = -ex[0]*scx;
@@ -4264,18 +4376,40 @@ ol.filter.Clip.prototype.precompose = function(e)
 	}
 	var fy = function(y) { return y*scy + dy; };
 	
-	ctx.beginPath();
 	ctx.moveTo ( fx(coords[0][0]), fy(coords[0][1]) );
 	for (var i=1; p=coords[i]; i++) 
 	{	ctx.lineTo ( fx(p[0]), fy(p[1]) );
 	}
 	ctx.lineTo ( fx(coords[0][0]), fy(coords[0][1]) );
-	ctx.clip();
+};
 
+ol.filter.Clip.prototype.precompose = function(e)
+{	if (!this.get("color"))
+	{	e.context.save();
+		e.context.beginPath();
+		this.clipPath_(e);
+		e.context.clip();
+	}
 }
 
 ol.filter.Clip.prototype.postcompose = function(e)
-{	e.context.restore();
+{	if (this.get("color"))
+	{	var ctx = e.context;
+		var canvas = e.context.canvas;
+		ctx.save();
+		ctx.beginPath();
+		ctx.moveTo(0,0);
+		ctx.lineTo(0,canvas.height);
+		ctx.lineTo(canvas.width, canvas.height);
+		ctx.lineTo(canvas.width, canvas.height);
+		ctx.lineTo(canvas.width, 0);
+		ctx.lineTo(0, 0);
+		this.clipPath_(e);
+		ctx.fillStyle = this.get("color");
+		ctx.fill("evenodd");
+	};
+	
+	e.context.restore();
 }
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -7285,52 +7419,6 @@ ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
 		e.frameState.animate = true;
 	}
 };
-/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-/** Interaction TouchDraw: draw on touch device (shortcut).
- * @constructor
- * @extends {ol.interaction.Draw}
- * @param {olx.interaction.DrawOptions} 
- */
-ol.interaction.TouchDraw = function(options) 
-{	var options = options || {};
-
-	options.freehand = true;
-	//options.condition = ol.events.condition.singleClick;
-	//options.freehandCondition = ol.events.condition.noModifierKeys;
-
-	ol.interaction.Draw.call(this, options);
-
-};
-ol.inherits(ol.interaction.TouchDraw, ol.interaction.Draw);
-
-/** Finish drawing on pointerup
-*/
-ol.interaction.TouchDraw.prototype.stopDrawing_ = function(map) 
-{	if (this.getActive()) this.finishDrawing();
-	return false;
-};
-
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.interaction.TouchDraw.prototype.setMap = function(map) 
-{	if (this.getMap())
-	{	this.getMap().un('pointerup', this.stopDrawing_, this);
-	}
-
-	ol.interaction.Draw.prototype.setMap.call (this, map);
-
-	if (map)
-	{	map.on('pointerup', this.stopDrawing_, this);
-	}
-};
-
 /** Interaction rotate
  * @constructor
  * @extends {ol.interaction.Pointer}
