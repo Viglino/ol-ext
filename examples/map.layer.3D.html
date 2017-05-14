@@ -115,7 +115,7 @@
 	vector.setRender3D(r3D);
 	var listenerKey = vectorSource.on('change', function(e) 
 	{	if (vectorSource.getState() == 'ready') 
-		{	vectorSource.unByKey(listenerKey)
+		{	ol.Observable.unByKey(listenerKey)
 			$(".loading").hide();
 			setTimeout (doAnime, 200);
 		}

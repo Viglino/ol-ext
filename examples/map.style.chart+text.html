@@ -32,40 +32,21 @@
 	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
 
 	<a href="../index.html">
-		<h1>OL3-ext: style chart</h1>
+		<h1>OL3-ext: chart style + values</h1>
 	</a>
 	<p class="info">
 		The <i>ol.style.Chart</i> is an image style to draw statistical graphics (bar or pie charts) on a map.
 		<br/>
+		This example show how to display values on a chart using a style function.
 	</p>
 
 	<!-- DIV pour la carte -->
 	<div id="map" style="width:600px; height:400px;"></div>
 	<div class="options">
-		<h2>Options:</h2>
-		Chart type: <select id="graph" onchange="doAnimate();">
-			<option value="pie">pie</option>
-			<option value="pie3D">pie3D</option>
-			<option value="donut">donut</option>
-			<option value="bar">bar</option>
-		</select>
-		<br/>
-		Colors scheme: 
-		<select id="color" onchange="vector.changed()">
-			<option value="classic">Classic</option>
-			<option value="dark">Dark</option>
-			<option value="pale">Pale</option>
-			<option value="pastel">Pastel</option>
-			<option value="neon">Neon</option>
-			<option value="red,green,blue,magenta">Custom</option>
-		</select>
-		<br/>
-		<button onclick="doAnimate();">Animate!</button>
+		Select a feature to show its values.
 	</div>
-	<div id="select" class="info">No selection</div>
-
+	
 	<script type="text/javascript">
-
 	// Layers
 	var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
 		
@@ -79,39 +60,66 @@
 			layers: [layer]
 		});
 
-	// ol.style.Chart
-	var animation=false;
+	// Style function
 	var styleCache={};
-
+	
 	function getFeatureStyle (feature, sel)
 	{	var k = $("#graph").val()+"-"+ $("#color").val()+"-"+(sel?"1-":"")+feature.get("data");
-		var style = styleCache[k];
+  		var style = styleCache[k];
 		if (!style) 
 		{	var radius = 15;
 			// area proportional to data size: s=PI*r^2
-			if ($("#graph").val()!="bar")
-			{	radius = 8* Math.sqrt (feature.get("size") / Math.PI);
-			}
+			radius = 8* Math.sqrt (feature.get("sum") / Math.PI);
+			var data = feature.get("data");
+			radius *= (sel?1.2:1);
 			// Create chart style
-			var c = $("#color").val();
-			styleCache[k] = style = new ol.style.Style(
-			{	image: new ol.style.Chart(
-				{	type: $("#graph").val(), 
-					radius: (sel?1.2:1)*radius, 
-					offsetY: $("#graph").val()=='pie' ? 0 : (sel?-1.2:-1)*feature.get("radius"),
-					data: feature.get("data") || [10,30,20], 
-					colors: /,/.test(c) ? c.split(",") : c,
-					rotateWithView: true,
-					animation: animation,
-					stroke: new ol.style.Stroke(
-					{	color: $("#color").val()!="neon" ? "#fff":"#000",
-						width: 2
-					}),
-				})
-			});
+			style = [ new ol.style.Style(
+				{	image: new ol.style.Chart(
+					{	type: "pie", 
+						radius: radius, 
+						data: data, 
+						rotateWithView: true,
+						stroke: new ol.style.Stroke(
+						{	color: "#fff",
+							width: 2
+						}),
+					})
+				})];
+
+			// Show values on select
+			if (sel)
+			{	/*
+				var sum = 0;
+				for (var i=0; i<data.length; i++)
+				{	sum += data[i];
+				}
+				*/
+				var sum = feature.get("sum");
+      
+				var s = 0;
+				for (var i=0; i<data.length; i++)
+				{	var d = data[i];
+      				var a = (2*s+d)/sum * Math.PI - Math.PI/2; 
+					var v = Math.round(d/sum*1000);
+					if (v>0)
+      				{	style.push(new ol.style.Style(
+						{	text: new ol.style.Text(
+							{	text: (v/10)+"%", /* d.toString() */
+          						offsetX: Math.cos(a)*(radius+3),
+          						offsetY: Math.sin(a)*(radius+3),
+								textAlign: (a < Math.PI/2 ? "left":"right"),
+								textBaseline: "middle",
+								stroke: new ol.style.Stroke({ color:"#fff", width:2.5 }),
+								fill: new ol.style.Fill({color:"#333"})
+							})
+						}));
+					}
+					s += d;
+				}
+			}
 		}
-		style.getImage().setAnimation(animation);
-		return [style];
+		styleCache[k] = style;
+		return style;
 	}
 
 	// 30 random features with data: array of 4 values
@@ -127,7 +135,7 @@
 		features[i] = new ol.Feature(
 			{	geometry: new ol.geom.Point([ext[0]+(ext[2]-ext[0])*Math.random(), ext[1]+(ext[3]-ext[1])*Math.random()]),
 				data: data,
-				size: nb
+				sum: nb
 			});
 	}
 	var vector = new ol.layer.Vector(
@@ -146,38 +154,6 @@
           });
 	map.addInteraction(select);
 
-	select.getFeatures().on(['add','remove'], function(e)
-	{	if (e.type=="add") $("#select").html("Selection data: "+e.element.get("data").toString());
-		else $("#select").html("No selection");
-	})
-
-	// Animate function 
-	var listenerKey;
-	function doAnimate()
-	{	if (listenerKey) return;
-		var start = new Date().getTime();
-		var duration = 1000;
-		animation = 0;
-		listenerKey = vector.on('precompose', function(event)
-		{	var frameState = event.frameState;
-			var elapsed = frameState.time - start;
-			if (elapsed > duration) 
-			{	ol.Observable.unByKey(listenerKey);
-				listenerKey = null;
-				animation = false;
-			}	
-			else
-			{	animation = ol.easing.easeOut (elapsed / duration);
-				frameState.animate = true;
-			}
-			vector.changed();
-		});
-		// Force redraw
-		vector.changed();
-		//map.renderSync();
-	}
-
-	doAnimate();
 	</script>
 	
 </body>
