@@ -1,0 +1,137 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: control compass</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<link rel="stylesheet" href="style.css" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- OL3 -->
+    <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	
+	<!-- controls -->
+	<script type="text/javascript" src="../control/compasscontrol.js"></script>
+
+	<style>
+		/* Define the size and position in the css */
+		.ol-compassctrl.top
+		{	top: 50%;
+			left: 0;
+			width: 100px;
+			height: 100px;
+			-webkit-transform: translate(0,-50%);
+			transform: translate(0,-50%);
+		}
+		.ol-compassctrl.bottom
+		{	top: auto;
+			left: auto;
+			bottom: 0;
+			right: 0;
+			width: 150px;
+			height: 150px;
+			-webkit-transform: none;
+			transform: none;
+		}
+	</style>
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: control compass</h1>
+	</a>
+	<div class="info">
+		The <i>ol.control.Compass</i> draw a compass on a map.
+		<br/>
+		Use the <i>ol-compassctrl</i> CSS class to place the compass on the map.
+	</div>
+
+	<!-- Map div -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options">
+		<h2>Options:</h2>
+		<ul>
+			<li>
+				Color:
+				<select id="color" onchange="setCompass();">
+					<option value="#963">brown</option>
+					<option value="red">red</option>
+					<option value="green">green</option>
+					<option value="blue">blue</option>
+					<option value="gray">gray</option>
+				</select>
+			</li>
+			<li>
+				<input id="default" type="checkbox" onchange="setCompass();" /><label for="default"> default image</label>
+			</li>
+			<li>
+				<input id="line" type="checkbox" onchange="setCompass();" checked="checked" /><label for="line"> showlines</label>
+			</li>
+			<li>
+				<input id="rotate" type="checkbox" onchange="setCompass();" checked="checked" /><label for="rotate"> rotate with view</label>
+			</li>
+			<li>
+				<input id="top" type="checkbox" onchange="setCompass();" checked="checked" /><label for="top"> display 2 controls</label>
+			</li>
+		</ul>
+	</div>
+	
+	<script type="text/javascript">
+
+		// The map
+		var map = new ol.Map
+			({	target: 'map',
+				view: new ol.View
+				({	zoom: 14,
+					center: [270148, 6247782]
+				}),
+				controls: ol.control.defaults({ "attribution": false }),
+				layers: [new ol.layer.Tile(
+					{	name: "OSM",
+						source: new ol.source.OSM(),
+						visible: true
+					})]
+			});
+
+		// Compass control
+		var compass, compassBottom;
+
+		function setCompass()
+		{	if (compass) map.removeControl(compass);
+			if (compassBottom) map.removeControl(compassBottom);
+			if ($("#top").prop("checked"))
+			{	compass = new ol.control.Compass (
+				{	className: "top",
+					src: ($("#default").prop("checked") ? undefined : "../control/piratecontrol.png"),
+					// rotateWithView: $("#rotate").prop("checked"),
+					style: ($("#line").prop("checked") ? new ol.style.Stroke ({ color: $("#color").val(), width: 1 }) : undefined)
+				});
+				map.addControl(compass);
+			}
+			else compass = false;
+			compassBottom = new ol.control.Compass (
+			{	className: "bottom",
+				src: ($("#default").prop("checked") ? undefined : "../control/piratecontrol.png"),
+				rotateWithView: $("#rotate").prop("checked"),
+				style: ($("#line").prop("checked") ? new ol.style.Stroke ({ color: $("#color").val(), width: 1 }) : undefined)
+			});
+			map.addControl(compassBottom);
+		}
+
+		setCompass();
+				
+	</script>
+
+</body>
+</html>
