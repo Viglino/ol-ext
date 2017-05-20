@@ -166,9 +166,7 @@ ol.control.Compass.prototype.drawCompass_ = function(e)
 		}
 		
 		if (compass.width)
-		{	var scx = ratio * w;
-			var scy = ratio * h;
-			ctx.drawImage (compass, -scx/2, -scy/2, scx, scy);
+		{	ctx.drawImage (compass, -w/2, -h/2, w, h);
 		}
 
 	ctx.closePath();
