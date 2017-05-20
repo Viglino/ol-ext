@@ -8,14 +8,15 @@
  * @constructor
  * @extends {ol.control.Control}
  * @param {Object=} Control options. 
- *	- projection {ol.projectionLike} projection to use for the graticule, default EPSG:4326 
+ *	- style {ol.style.Style} Style to use for drawing the grid (stroke and text), default black.
  *	- maxResolution {number} max resolution to display the graticule
- *	- style {ol.style.Style} Style to use for drawing the graticule, default black.
- *	- step {number} step beetween lines (in proj units), default 1
- *	- stepCoord {number} show a coord every stepCoord, default 1
- *	- spacing {number} spacing beetween lines (in px), default 40px 
- *	- borderWidth {number} width of the border (in px), default 5px 
- *	- margin {number} margin of the border (in px), default 0px 
+ *	- extent {ol.extent} extent of the grid
+ *	- size {ol.size} number of lines and cols
+ *	- margin {number} margin to display text (in px), default 0px 
+ *	- source {ol.source.Vector} source to use for the index, default none (use setIndex to reset the index)
+ *	- property {string | function} a property to display in the index or a function tha takes a feature and return the name to display in the index, default 'name'.
+ *	- sortFeatures {function} sort function to sort 2 features in the index
+ *	- filterLabel {string} label to display in the search bar, default filter
  */
 ol.control.GridReference = function(options) 
 {	var self = this;
@@ -30,14 +31,16 @@ ol.control.GridReference = function(options)
 			target: options.target
 		});
 
-	if (typeof (options.getFeatureName)=='function') this.getFeatureName = options.property;
+	if (typeof (options.property)=='function') this.getFeatureName = options.property;
 	if (typeof (options.sortFeatures)=='function') this.sortFeatures = options.sortFeatures;
 	
+	// Set index using the source
 	if (options.source) 
-	{	this.setIndex(options.source.getFeatures());
+	{	this.setIndex(options.source.getFeatures(), options);
+		// reload on ready
 		options.source.once('change',function(e)
 			{	if (options.source.getState() === 'ready') 
-				{   this.setIndex(options.source.getFeatures());
+				{   this.setIndex(options.source.getFeatures(), options);
 				}
 			}, this);
 	};
@@ -52,7 +55,6 @@ ol.control.GridReference = function(options)
 	if (options.style instanceof ol.style.Style) this.style = options.style;
 	else this.style = new ol.style.Style(
 		{	stroke: new ol.style.Stroke({ color:"#000", width:1 }),
-			fill: new ol.style.Fill({ color: "#fff" }),
 			text: new ol.style.Text(
 			{	font: "bold 14px Arial",
 				stroke: new ol.style.Stroke({ color:"#fff", width:2 }),
@@ -62,17 +64,29 @@ ol.control.GridReference = function(options)
 };
 ol.inherits(ol.control.GridReference, ol.control.Control);
 
-
+/** Returns the text to be displayed in the index
+*	@param {ol.Feature} f the feature
+*	@return {string} the text to be displayed in the index
+*	@api
+*/
 ol.control.GridReference.prototype.getFeatureName = function (f)
 {	return f.get(this.get('property')||'name');
 };
 
+/** Sort function
+*	@param {ol.Feature} a first feature
+*	@param {ol.Feature} b second feature
+*	@return {-1|0|1} 0 if a==b, -1 if a<b, 1 if a>b
+*	@api
+*/
 ol.control.GridReference.prototype.sortFeatures = function (a,b)
 {	return (this.getFeatureName(a) == this.getFeatureName(b)) ? 0 : (this.getFeatureName(a) < this.getFeatureName(b)) ? -1 : 1; 
 };
 
 /** Display features in the index
 *	@param { Array <ol.Feature> | ol.Collection <ol.Feature> } features
+*	@param {} options
+*		- filterLabel {string} label to display in the search bar, default filter
 */
 ol.control.GridReference.prototype.setIndex = function (features, options)
 {	var self = this;
@@ -155,14 +169,24 @@ ol.control.GridReference.prototype.setMap = function (map)
 	if (map) map.on('postcompose', this.drawGrid_, this);
 };
 
+/** Set style
+* @param {ol.style.Style} style
+*/
 ol.control.GridReference.prototype.setStyle = function (style)
 {	this.style = style;
 };
 
-ol.control.GridReference.prototype.getStyle = function (style)
+/** Get style
+* @return {ol.style.Style} style
+*/
+ol.control.GridReference.prototype.getStyle = function ()
 {	return style;
 };
 
+/** Draw the grid 
+* @param {ol.event} e postcompose event
+* @private
+*/
 ol.control.GridReference.prototype.drawGrid_ = function (e)
 {	if (this.get('maxResolution')<e.frameState.viewState.resolution) return;
 	
@@ -186,7 +210,6 @@ ol.control.GridReference.prototype.drawGrid_ = function (e)
 	ctx.save();
 		var margin = this.get('margin');
 
-		ctx.fillStyle = this.style.getFill().getColor();
 		ctx.strokeStyle = this.style.getStroke().getColor();
 		ctx.lineWidth = this.style.getStroke().getWidth();
 
