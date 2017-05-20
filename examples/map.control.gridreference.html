@@ -1,0 +1,150 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2017 Jean-Marc VIGLINO,
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: Grid reference control</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="Control to add a grid reference to a map." />
+	<meta name="keywords" content="ol3, control, index, grid, reference" />
+
+	<link rel="stylesheet" href="http://fontawesome.io/assets/font-awesome/css/font-awesome.css" type="text/css" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+    <!-- OL3 -->
+	<link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	<!-- http://openlayers.org/en/v3.2.0/build/ol.js -->
+	<!-- http://openlayers.org/en/v3.2.0/build/ol-debug.js -->
+	
+	<link rel="stylesheet" href="../control/gridreferencecontrol.css" />
+	<script type="text/javascript" src="../control/gridreferencecontrol.js"></script>
+
+	<link rel="stylesheet" href="style.css" />
+	<style>
+		.ol-gridreference
+		{	max-height: 300px;
+			position: relative;
+		}
+		.ol-gridreference ul
+		{	padding: 0;
+		}
+		.ol-gridreference input
+		{	padding-left:2em;
+		}
+		.ol-gridreference:before
+		{	content:"\f002";
+			font-family: FontAwesome;
+			position:absolute;
+			top: 2px;
+			left: 5px;
+			color: #aaa;
+		}
+		
+	</style>
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: Grid reference control</h1>
+	</a>
+
+	<div class="info">
+		Display a grid reference on the map. 
+		<ul>
+		</ul>
+		<i>ol.control.GridReference</i> requires jQuery.
+	</div>
+
+	<!-- DIV pour la carte -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options">
+		<h2>Index:</h2>
+		<div></div>
+		<p>Click on the index to show the objets!</p>
+	</div>
+	
+	<script type="text/javascript">
+	// Layers
+	var layers = [
+		new ol.layer.Tile({
+			name: "Natural Earth", 
+			minResolution: 306,
+    		source: new ol.source.XYZ(
+			{	url: 'http://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
+				attributions: [new ol.Attribution({ html: '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' })] 
+    		})
+		})
+	]
+
+	// The map
+	var map = new ol.Map
+		({	target: 'map',
+			view: new ol.View
+			({	zoom: 5,
+				center: [166326, 5992663]
+			}),
+			interactions: ol.interaction.defaults({ altShiftDragRotate:false, pinchRotate:false }),
+			layers: layers
+		});
+
+	// GeoJSON layer
+	var vectorSource = new ol.source.Vector(
+	{	url: 'data/fond_guerre.geojson',
+		projection: 'EPSG:3857',
+		format: new ol.format.GeoJSON(),
+		attributions: [new ol.Attribution({ html: "&copy; <a href='https://www.data.gouv.fr/fr/datasets/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire/'>data.gouv.fr</a>" })],
+		logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+	});
+
+	map.addLayer(new ol.layer.Vector(
+	{	name: 'Fonds de guerre 14-18',
+		source: vectorSource,
+		style: new ol.style.Style({ image: new ol.style.Icon({ src:"data/camera.png", scale: 0.8 }) })
+	}));
+
+	// Grid
+	var ref = new ol.control.GridReference(
+		{	extent:[ -550000, 5250000, 850000, 6650000 ], 
+			size:[10,10],
+			target: $(".options div").get(0),
+			source: vectorSource,
+			property: "commune"
+		});
+	map.addControl (ref);
+
+	// Control Select 
+	var select = new ol.interaction.Select({});
+	map.addInteraction(select);
+
+	// On selected => show/hide popup
+	select.getFeatures().on(['add'], function(e)
+	{	var feature = e.element;
+	})
+	select.getFeatures().on(['remove'], function(e)
+	{	
+	})
+
+	// Select when click on the reference index
+	ref.on('select', function(e)
+		{	select.getFeatures().clear();
+			select.getFeatures().push (e.feature);
+			var p = e.feature.getGeometry().getFirstCoordinate();
+			var ex = map.getView().calculateExtent(map.getSize());
+			if (!ol.extent.containsCoordinate(ex, p)) map.getView().setCenter(p);
+		})
+
+	</script>
+	
+</body>
+</html>
