@@ -21,9 +21,9 @@ ol.inherits(ol.filter.Texture, ol.filter.Base);
 *	@option {ol.filter.TextureOptions}
 *		- img {Image | undefined} Image object for the texture
 *		- src {string} Image source URI
-*		- rotateWithView {bool} Whether to rotate the texttue with the view. Default is true.
+*		- scale {number} scale to draw the image. Default 1.
+*		- rotateWithView {bool} Whether to rotate the texture with the view (may cause animation lags on mobile or slow devices). Default is true.
 *		- crossOrigin {null | string | undefined} The crossOrigin attribute for loaded images.
-* todo: scale, ...
 */
 ol.filter.Texture.prototype.setFilter = function(options)
 {	var img;
@@ -42,9 +42,12 @@ ol.filter.Texture.prototype.setFilter = function(options)
 	var self = this;
 	function setPattern(img)
 	{	self.pattern = {};
+		self.pattern.scale = options.scale || 1;
 		self.pattern.canvas = document.createElement('canvas');
-		self.pattern.canvas.width = img.width;
-		self.pattern.canvas.height = img.height;
+		self.pattern.canvas.width = img.width * self.pattern.scale;
+		self.pattern.canvas.height = img.height * self.pattern.scale;
+		self.pattern.canvas.width = img.width;// * self.pattern.scale;
+		self.pattern.canvas.height = img.height;// * self.pattern.scale;
 		self.pattern.ctx = self.pattern.canvas.getContext("2d");
 		self.pattern.ctx.fillStyle = self.pattern.ctx.createPattern(img, 'repeat');
 		// Force refresh
@@ -69,10 +72,15 @@ ol.filter.Texture.prototype.getPattern = function (offsetX, offsetY)
 {	var c = this.pattern.canvas;
 	var ctx = this.pattern.ctx;
 	ctx.save();
+	/*
+		offsetX /= this.pattern.scale;
+		offsetY /= this.pattern.scale;
+		ctx.scale(this.pattern.scale,this.pattern.scale);
+	*/
 		ctx.translate(-offsetX, offsetY);
 		ctx.beginPath();
 		ctx.rect(offsetX, -offsetY, c.width, c.height);
-		ctx.fill(); 
+		ctx.fill();
 	ctx.restore();
 	return ctx.createPattern(c, 'repeat');
 }
@@ -108,44 +116,47 @@ ol.filter.Texture.prototype.postcompose = function(e)
 		//ctx.globalCompositeOperation = "overlay";
 		//ctx.globalCompositeOperation = "color";
 		ctx.globalAlpha = this.get('opacity');
-		ctx.scale(ratio,ratio);
-		
+		ctx.scale(ratio*this.pattern.scale,ratio*this.pattern.scale);
+
 		if (this.get('rotateWithView'))
 		{	// Translate pattern
+			res *= this.pattern.scale
 			ctx.fillStyle = this.getPattern ((w*mt[0] + h*mt[1] + mt[4])/res, (w*mt[2] + h*mt[3] + mt[5])/res);
 
 			// Rotate on canvas center and fill
-			ctx.translate(w, h);
+			ctx.translate(w/this.pattern.scale, h/this.pattern.scale);
 			ctx.rotate(e.frameState.viewState.rotation);
 			ctx.beginPath();
 			ctx.rect(-w-m, -h-m, 2*m, 2*m);
 			ctx.fill(); 
 		}
 		else
-		{	var dx = -(w*mt[0] + h*mt[1] + mt[4])/res;
-			var dy = (w*mt[2] + h*mt[3] + mt[5])/res;
+		{
+			/**/
+				var dx = -(w*mt[0] + h*mt[1] + mt[4])/res;
+				var dy = (w*mt[2] + h*mt[3] + mt[5])/res;
 			
-			var cos = Math.cos(e.frameState.viewState.rotation);
-			var sin = Math.sin(e.frameState.viewState.rotation);
-			var offsetX = dx*cos - dy*sin;
-			var offsetY = dx*sin + dy*cos;
+				var cos = Math.cos(e.frameState.viewState.rotation);
+				var sin = Math.sin(e.frameState.viewState.rotation);
+				var offsetX = (dx*cos - dy*sin) / this.pattern.scale;
+				var offsetY = (dx*sin + dy*cos) / this.pattern.scale;
 
-			ctx.translate(offsetX, offsetY);
-			ctx.beginPath();
-			ctx.fillStyle = this.pattern.ctx.fillStyle
-			ctx.rect(-offsetX -m , -offsetY -m, 2*m, 2*m);
-			ctx.fill(); 
+				ctx.translate(offsetX, offsetY);
+				ctx.beginPath();
+				ctx.fillStyle = this.pattern.ctx.fillStyle;
+				ctx.rect(-offsetX -m , -offsetY -m, 2*m, 2*m);
+				ctx.fill(); 
+			/*	//old version without centered rotation
+				var offsetX = -(e.frameState.extent[0]/res) % this.pattern.canvas.width;
+				var offsetY = (e.frameState.extent[1]/res) % this.pattern.canvas.height;
+				ctx.rotate(e.frameState.viewState.rotation);
+				ctx.translate(offsetX, offsetY);
+				ctx.beginPath();
+				ctx.fillStyle = this.pattern.ctx.fillStyle
+				ctx.rect(-offsetX -m , -offsetY -m, 2*m, 2*m);
+				ctx.fill(); 
+			*/
 		}
-	/*	old version without centered rotation
-		var offsetX = -(e.frameState.extent[0]/res) % this.pattern.canvas.width;
-		var offsetY = (e.frameState.extent[1]/res) % this.pattern.canvas.height;
-		ctx.rotate(e.frameState.viewState.rotation);
-		ctx.translate(offsetX, offsetY);
-		ctx.beginPath();
-		ctx.fillStyle = this.pattern.ctx.fillStyle
-		ctx.rect(-offsetX -m , -offsetY -m, 2*m, 2*m);
-		ctx.fill(); 
-	*/
 
 	ctx.restore();
 }
