@@ -10,7 +10,7 @@
 	<title>OL3-ext: Pirates</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="ol.control.PirateMap adds an old map effect on a canvas renderer with a parchment texture and compass." />
+	<meta name="description" content="Add an old map effect on a canvas renderer with a parchment texture and compass." />
 	<meta name="keywords" content="ol3, control, canvas, pirate, compass, effect" />
 
 	<link rel="stylesheet" href="style.css" />
@@ -22,9 +22,19 @@
     <link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
 	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
 	
-	<!-- -->
-	<link rel="stylesheet" href="../control/piratecontrol.css" />
-	<script type="text/javascript" src="../control/piratecontrol.js"></script>
+	<!-- Compass -->
+	<script type="text/javascript" src="../control/compasscontrol.js"></script>
+	<!-- Filters -->
+	<script type="text/javascript" src="../filter/filter.js"></script>
+	<!-- Texture -->
+	<script type="text/javascript" src="../filter/texturefilter.js"></script>
+	<!-- Colors -->
+	<script type="text/javascript" src="../filter/colorizefilter.js"></script>
+	<!-- Clip -->
+	<script type="text/javascript" src="../filter/clipfilter.js"></script>
+	<!-- Graticule -->
+	<script type="text/javascript" src="../control/graticulecontrol.js"></script>
+
 
 	<style>
 		#map
@@ -41,12 +51,32 @@
 			top:6em;
 			right:1em;
 			margin:0;
-			max-width:15%;
-			min-width:200px;
+			width:200px;
+			z-index:10;
 		}
 		.options input[type="number"]
 		{	width: 5em;
 		}
+
+		.ol-compassctrl 
+		{	top: 50%;
+			left: 5%;
+			width: 100px;
+			height: 100px;
+			-webkit-transform: translate(0,-50%);
+			transform: translate(0,-50%);
+		}
+		.ol-compassctrl.right
+		{	top: auto;
+			left: auto;
+			bottom: 5%;
+			right: 5%;
+			width: 150px;
+			height: 150px;
+			-webkit-transform: none;
+			transform: none;
+		}
+
 	</style>
 
 </head>
@@ -61,13 +91,16 @@
 	<div id="map" ></div>
 
 	<div class="options">
-		The <i>ol.control.PirateMap</i> adds an old map effect on a canvas renderer.
-		It colors the map, adds a parchment texture and compass onto the map.
+		This example show how to combine a <a href="map.filter.colorize.html">color filter</a>, 
+		with a <a href="map.filter.texture.html">parchment texture filter</a>,
+		a <a href="map.control.compass.html">compass control</a>
+		and a <a href="map.control.graticule.html">graticule control</a>
+		to create an old map effect. 
 		<h2>Options</h2>
 		<ul>
 			<li>
 				Hue:
-				<select onchange="ctrl.hue= this.value; map.renderSync()">
+				<select onchange="color.setColor(this.value);">
 					<option value="#963">default</option>
 					<option value="#369">blue</option>
 					<option value="#936">red</option>
@@ -76,18 +109,28 @@
 			</li>
 			<li>
 				Saturation:
-				<input type="number" value="0.6" onchange="ctrl.saturation= Number(this.value); map.renderSync()" max="1" min="0" step="0.1" />
+				<input id="sat" type="number" value="0.6" onchange="color.setValue(this.value)" max="1" min="0" step="0.1" />
 			</li>
 			<li>
 				Opacity:
-				<input type="number" value="0.7" onchange="ctrl.opacity= Number(this.value); map.renderSync()" max="1" min="0" step="0.1" />
+				<input id="opacity" type="number" value="0.7" onchange="tex.setFilter({opacity:Number(this.value)})" max="1" min="0" step="0.1" />
+			</li>
+			<li>
+				<input id="rot" type="checkbox" onchange="tex.set('rotateWithView',$(this).prop('checked'));" /><label for="rot"> rotateWithView</label>
+				<small><i>May cause animation lags on mobile or slow devices</i></small>
 			</li>
 		</ul>
 	</div>
 
 
 	<script type="text/javascript">
+		if (/MSIE|Trident/.test(navigator.userAgent))
+		{	alert ("Oops, it seems you use IE!\nsome feature may not work correctly, try to use another navigator!")
+			$('#sat').val(0.2);
+			$('#opacity').val(0.3);
+		}
 
+		var osm = new ol.layer.Tile({ source: new ol.source.OSM()});
 		// The map
 		var map = new ol.Map
 			({	target: 'map',
@@ -95,16 +138,82 @@
 				({	zoom: 14,
 					center: [-302537, 6001071]
 				}),
-				layers: [new ol.layer.Tile(
-					{	name: "OSM",
-						source: new ol.source.OSM(),
-						visible: true
-					})]
+				layers: [osm]
 			});
 		map.getView().fit ([-375917, 5976764, -229158, 6025378], map.getSize());
 
-		var ctrl = new ol.control.PirateMap();
-		map.addControl(ctrl);
+		// Color filter
+		var color = new ol.filter.Colorize(
+			{	operation: 'color',
+				color: "rgba(153,102,51,"+$("#sat").val()+")",
+					/*
+				red: 153,
+				green: 102,
+				blue: 51,
+				*/
+				value: Number($("#sat").val())
+			});
+		map.addFilter(color); 
+
+		// Texture filter
+		var tex = new ol.filter.Texture(
+			{	src: "data/piratecontrol.jpg", 
+				opacity: Number($("#opacity").val()),
+				rotateWithView: $("#rot").prop('checked'),
+				scale: 3
+			});
+		map.addFilter(tex); 
+
+		// Compass
+		map.addControl(new ol.control.Compass(
+			{	src: "../control/piratecontrol.png",
+				style: new ol.style.Stroke ({ color: "#963", width: 1 }) 
+			}));
+		map.addControl(new ol.control.Compass(
+			{	className: 'right',
+				src: "../control/piratecontrol.png",
+				style: new ol.style.Stroke ({ color: "#963", width: 1 })
+			}));
+		
+		// Graticule
+		map.addControl(new ol.control.Graticule(
+			{	step: 0.2, 
+				stepCoord: 2, 
+				projection: 'EPSG:4326', 
+				//step: 1000, stepCoord: 5, projection: 'EPSG:2154',
+				margin:35, 
+				stroke: true,
+				style:	new ol.style.Style(
+					{	stroke: new ol.style.Stroke({ color:"rgba(102, 51, 0, 0.8)", width:1 }),
+						fill: new ol.style.Fill({ color: "rgba(255,255,255,0.3)" }),
+						text: new ol.style.Text(
+						{	stroke: new ol.style.Stroke({ color: "rgba(255,255,255,0.5)", width: 2 }),
+							fill: new ol.style.Fill({ color: "rgba(102, 51, 0, 1)" }),
+						})
+					}),
+				formatCoord:function(c){ return c.toFixed(1)+"°" 
+			} 
+		}));
+		map.addControl(new ol.control.Graticule(
+			{	step: 5000,
+				projection: 'EPSG:3857',
+				margin: 30,
+				stroke: false,
+				style: new ol.style.Style(
+					{	stroke: new ol.style.Stroke({ color: "rgba(102, 51, 0, 0.8)", width: 1 }),
+						fill: new ol.style.Fill({ color: "rgba(255,255,255,0.3)" }),
+					})
+			}));
+
+		// Clip
+		var clip = new ol.filter.Clip(
+			{	operation:'enhance',
+				coords: [[0.023, 0.957], [0, 0.463], [0.007, 0.42], [0.004, 0.397], [0.029, 0.383], [0.013, 0.383], [0.046, 0.367], [0.011, 0.371], [0.004, 0.349], [0.006, 0.297], [0.012, 0.265], [0.007, 0.246], [0.016, 0.191], [0.031, 0.191], [0.019, 0.171], [0.012, 0.1], [0.046, 0.001], [0.071, 0.012], [0.1, 0], [0.186, 0.01], [0.228, 0.008], [0.239, 0.022], [0.25, 0.009], [0.304, 0.002], [0.311, 0.027], [0.313, 0.007], [0.322, 0.064], [0.311, 0.101], [0.329, 0.055], [0.321, 0.018], [0.334, 0.01], [0.496, 0.009], [0.53, 0.019], [0.553, 0.01], [0.615, 0.014], [0.683, 0.03], [0.697, 0.019], [0.728, 0.027], [0.732, 0.066], [0.735, 0.012], [0.752, 0.006], [0.795, 0.014], [0.85, 0.007], [0.929, 0.013], [1, 0.204], [0.994, 0.324], [0.999, 0.393], [0.988, 0.464], [0.947, 0.46], [0.977, 0.47], [0.978, 0.479], [0.99, 0.489], [0.994, 0.572], [0.992, 0.669], [0.982, 0.673], [0.994, 0.689], [1, 0.716], [0.999, 0.81], [0.987, 0.816], [0.996, 0.83], [0.99, 0.894], [0.944, 1], [0.848, 0.993], [0.841, 0.97], [0.837, 0.993], [0.798, 0.981], [0.697, 0.98], [0.653, 0.986], [0.606, 0.981], [0.598, 0.968], [0.598, 0.941], [0.592, 0.982], [0.558, 0.988], [0.507, 0.983], [0.485, 0.988], [0.418, 0.978], [0.4, 0.969], [0.393, 0.98], [0.338, 0.984], [0.304, 0.977], [0.251, 0.984], [0.238, 0.979], [0.252, 0.915], [0.239, 0.969], [0.233, 0.953], [0.23, 0.984], [0.155, 0.971], [0.147, 0.957], [0.142, 0.974], [0.095, 0.976], [0.066, 0.98], [0.023, 0.957]],
+				units: '%',
+				extent: [0,0,1,1]
+			});
+		map.addFilter(clip);
+		
 	</script>
 
 </body>
