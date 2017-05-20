@@ -30,11 +30,14 @@
 	<link rel="stylesheet" href="style.css" />
 	<style>
 		.ol-gridreference
-		{	max-height: 300px;
-			position: relative;
+		{	position: relative;
 		}
 		.ol-gridreference ul
-		{	padding: 0;
+		{	columns: 3;
+			padding: 0;
+		}
+		.ol-gridreference li.ol-title
+		{	break-after: avoid-column;
 		}
 		.ol-gridreference input
 		{	padding-left:2em;
