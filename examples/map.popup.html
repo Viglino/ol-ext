@@ -204,7 +204,8 @@
 
 	map.addLayer(new ol.layer.Vector(
 	{	name: 'Fonds de guerre 14-18',
-		source: vectorSource
+		source: vectorSource,
+		style: new ol.style.Style({ image: new ol.style.Icon({ src:"data/camera.png", scale: 0.8 }) })
 	}));
 
 	// Control Select 
