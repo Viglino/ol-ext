@@ -10,7 +10,12 @@
 *	- opacity {Number} opacity of the overimpose image, default 0.7
 */
 ol.control.PirateMap = function(options) 
-{	options = options || {};
+{	
+	// deprecated
+	console.error("ol.control.PirateMap is deprecated. Use a combination of ol.filter.Texture + ol.controlCompass + ol.control.Clip.\n"
+		+"See http://viglino.github.io/ol3-ext/examples/map.pirate.html")
+	
+	options = options || {};
 	var self = this;
 
 	this.asset = {};
