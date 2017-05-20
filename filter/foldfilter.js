@@ -63,14 +63,14 @@ ol.filter.Fold.prototype.precompose = function(e)
 	var h = canvas.height;
 	
 	ctx.save();
-		ctx.shadowColor = "rgba(0,0,0,0.3";
+		ctx.shadowColor = "rgba(0,0,0,0.3)";
 		ctx.shadowBlur = 8;
 		ctx.shadowOffsetX = 2;
 		ctx.shadowOffsetY = 3;
 		this.drawLine_(ctx, this.get("fsize"), this.get("margin"));
 		ctx.fillStyle="#fff";
 		ctx.fill();
-		ctx.strokeStyle = "rgba(0,0,0,0.1";
+		ctx.strokeStyle = "rgba(0,0,0,0.1)";
 		ctx.stroke();
 	ctx.restore();
 
@@ -95,7 +95,7 @@ ol.filter.Fold.prototype.postcompose = function(e)
 
 		var grd = ctx.createRadialGradient(5*w/8,5*w/8,w/4,w/2,w/2,w);
 		grd.addColorStop(0,"transparent");
-		grd.addColorStop(1,"rgba(0,0,0,0.2");
+		grd.addColorStop(1,"rgba(0,0,0,0.2)");
 		ctx.fillStyle = grd;
 		ctx.scale (1,h/w);
 		for (var i=0; i<fold[0]; i++) for (var j=0; j<fold[1]; j++)
