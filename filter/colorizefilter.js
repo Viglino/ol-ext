@@ -76,14 +76,7 @@ ol.filter.Colorize.prototype.setColor = function(c)
 }
 
 ol.filter.Colorize.prototype.precompose = function(e)
-{	// Colorize using vector features of the layer
-	/*
-	if (e.target.getSource && e.target.getSource().getFeatures)
-	{	ctx.save();
-		ctx.globalCompositeOperation = this.get('operation');
-	}
-	*/
-}
+{}
 
 ol.filter.Colorize.prototype.postcompose = function(e)
 {	// Set back color hue
