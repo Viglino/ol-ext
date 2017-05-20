@@ -40,10 +40,11 @@ ol.control.Graticule = function(options)
 
 	this.set('maxResolution', options.maxResolution || Infinity);
 	this.set('step', options.step || 0.1);
-	this.set('step2', options.step2 || 5);
+	this.set('stepCoord', options.stepCoord || 1);
 	this.set('spacing', options.spacing || 40);
 	this.set('margin', options.margin || 0);
 	this.set('borderWidth', options.borderWidth || 5);
+	this.set('stroke', options.stroke!==false);
 	this.formatCoord = options.formatCoord || function(c){return c;};
 
 	if (options.style instanceof ol.style.Style) this.style = options.style;
@@ -114,7 +115,7 @@ ol.control.Graticule.prototype.drawGraticule_ = function (e)
 
 	var spacing = this.get('spacing');
 	var step = this.get('step');
-	var step2 = this.get('step2');
+	var step2 = this.get('stepCoord');
 	var borderWidth = this.get('borderWidth');
 	var margin = this.get('margin');
 
@@ -139,6 +140,10 @@ ol.control.Graticule.prototype.drawGraticule_ = function (e)
 		if (ymax > extent[3]) ymax = extent[3]+step;
 	}
 
+	var hasLines = this.style.getStroke() && this.get("stroke");
+	var hasText = this.style.getText();
+	var hasBorder = this.style.getFill();
+
 	ctx.save();
 		ctx.scale(ratio,ratio);
 
@@ -153,12 +158,12 @@ ol.control.Graticule.prototype.drawGraticule_ = function (e)
 		for (var x=xmin; x<xmax; x += step)
 		{	var p0 = ol.proj.transform ([x, ymin], proj, map.getView().getProjection());
 			p0 = map.getPixelFromCoordinate(p0);
-			ctx.moveTo(p0[0], p0[1]);
+			if (hasLines) ctx.moveTo(p0[0], p0[1]);
 			var p = p0;
 			for (var y=ymin+step; y<=ymax; y+=step)
 			{	var p1 = ol.proj.transform ([x, y], proj, map.getView().getProjection());
 				p1 = map.getPixelFromCoordinate(p1);
-				ctx.lineTo(p1[0], p1[1]);
+				if (hasLines) ctx.lineTo(p1[0], p1[1]);
 				if (p[1]>0 && p1[1]<0) txt.top.push([x, p]);
 				if (p[1]>h && p1[1]<h) txt.bottom.push([x,p]);
 				p = p1;
@@ -167,26 +172,26 @@ ol.control.Graticule.prototype.drawGraticule_ = function (e)
 		for (var y=ymin; y<ymax; y += step)
 		{	var p0 = ol.proj.transform ([xmin, y], proj, map.getView().getProjection());
 			p0 = map.getPixelFromCoordinate(p0);
-			ctx.moveTo(p0[0], p0[1]);
+			if (hasLines) ctx.moveTo(p0[0], p0[1]);
 			var p = p0;
 			for (var x=xmin+step; x<=xmax; x+=step)
 			{	var p1 = ol.proj.transform ([x, y], proj, map.getView().getProjection());
 				p1 = map.getPixelFromCoordinate(p1);
-				ctx.lineTo(p1[0], p1[1]);
+				if (hasLines) ctx.lineTo(p1[0], p1[1]);
 				if (p[0]<0 && p1[0]>0) txt.left.push([y,p]);
 				if (p[0]<w && p1[0]>w) txt.right.push([y,p]);
 				p = p1;
 			}
 		}
 
-		if (this.style.getStroke())
+		if (hasLines)
 		{	ctx.strokeStyle = this.style.getStroke().getColor();
 			ctx.lineWidth = this.style.getStroke().getWidth();
 			ctx.stroke();
 		}
 
 		// Draw text
-		if (this.style.getText())
+		if (hasText)
 		{
 			ctx.fillStyle = this.style.getText().getFill().getColor();
 			ctx.strokeStyle = this.style.getText().getStroke().getColor();
@@ -194,7 +199,7 @@ ol.control.Graticule.prototype.drawGraticule_ = function (e)
 			ctx.textAlign = 'center';
 			ctx.textBaseline = 'hanging';
 			var tf;
-			var offset = borderWidth + margin +2;
+			var offset = (hasBorder ? borderWidth : 0) + margin + 2;
 			for (var i=0, t; t = txt.top[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
 			{	tf = this.formatCoord(t[0]);
 				ctx.strokeText(tf, t[1][0], offset);
@@ -222,7 +227,7 @@ ol.control.Graticule.prototype.drawGraticule_ = function (e)
 		}
 
 		// Draw border
-		if (this.style.getFill())
+		if (hasBorder)
 		{	var fillColor = this.style.getFill().getColor();
 			var color, stroke;
 			if (stroke = this.style.getStroke())
