@@ -2238,9 +2238,9 @@ ol.control.GridReference.prototype.setIndex = function (features, options)
 
 	var search = $("<input>").attr('type', 'search')
 					.attr('placeholder', options.filterLabel || 'filter')
-					.on('keyup', function()
+					.on('search keyup', function()
 					{	var v = $(this).val().replace(/^\*/,'');
-						console.log(v)
+						// console.log(v)
 						var r = new RegExp (v, 'i');
 						$('li',ul).each(function()
 						{	var self = $(this);
@@ -2350,6 +2350,8 @@ ol.control.GridReference.prototype.drawGrid_ = function (e)
 
 	ctx.save();
 		var margin = this.get('margin');
+		var ratio = e.frameState.pixelRatio;
+		ctx.scale(ratio,ratio);
 
 		ctx.strokeStyle = this.style.getStroke().getColor();
 		ctx.lineWidth = this.style.getStroke().getWidth();
