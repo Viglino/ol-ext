@@ -27,8 +27,11 @@
 	color:#fff;
 	cursor:default;
 }
+.ol-gridreference ul li .ol-ref
+{	margin-left: 0.5em;
+}
 .ol-gridreference ul li .ol-ref:before
-{	content:" (";
+{	content:"(";
 }
 .ol-gridreference ul li .ol-ref:after
 {	content:")";
