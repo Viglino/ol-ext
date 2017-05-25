@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
- * Draw a graticule on the map.
+ * Draw a grid reference on the map and add an index.
  *
  * @constructor
  * @extends {ol.control.Control}
@@ -194,8 +194,8 @@ ol.control.GridReference.prototype.drawGrid_ = function (e)
 	var canvas = ctx.canvas;
 	var ratio = e.frameState.pixelRatio;
 
-	var w = canvas.width;
-	var h = canvas.height;
+	var w = canvas.width/ratio;
+	var h = canvas.height/ratio;
 
 	var extent = this.get('extent');
 	var size = this.get('size');
@@ -209,12 +209,12 @@ ol.control.GridReference.prototype.drawGrid_ = function (e)
 
 	ctx.save();
 		var margin = this.get('margin');
-		var ratio = e.frameState.pixelRatio;
 		ctx.scale(ratio,ratio);
 
 		ctx.strokeStyle = this.style.getStroke().getColor();
 		ctx.lineWidth = this.style.getStroke().getWidth();
 
+		// Draw grid
 		ctx.beginPath();
 		for (var i=0; i<=size[0]; i++)
 		{	ctx.moveTo(p0[0]+i*dx, p0[1]);
@@ -226,7 +226,7 @@ ol.control.GridReference.prototype.drawGrid_ = function (e)
 		}
 		ctx.stroke();
 
-
+		// Draw text
 		ctx.font = this.style.getText().getFont();
 		ctx.fillStyle = this.style.getText().getFill().getColor();
 		ctx.strokeStyle = this.style.getText().getStroke().getColor();
