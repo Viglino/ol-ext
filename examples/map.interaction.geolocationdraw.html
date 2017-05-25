@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+<html>
+<head>
+	<title>OL3-ext: Geolocation draw</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="an OL3 interaction to draw using the GPS of your device." />
+	<meta name="keywords" content="ol3, interaction, draw, GPS, location, geolocation" />
+
+	<link rel="stylesheet" href="style.css" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- OL3 -->
+    <link rel="stylesheet" href="https://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/master/build/ol-debug.js"></script>
+	
+	<!-- controls -->
+	<script type="text/javascript" src="../interaction/geolocationdrawinteraction.js"></script>
+
+	<style>
+		#accuraty
+		{	display: block;
+			background: #f00;
+			height:10px;
+			max-width: 250px;
+		}
+	</style>
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: Geolocation draw</h1>
+	</a>
+	<div class="info">
+		The <i>ol.interaction.GeolocationDraw</i> is a draw interaction that use an <i>ol.Geolocation</i>.
+		<ul>
+			<li>
+				<i>setActive(bool)</i> method will start/stop the GPS and draw a location area.
+			</li>
+			<li>
+				<i>start()</i> method will start drawing (registering poisitions).
+			</li>
+			<li>
+				<i>pause()</i> will pause registering locations.
+			</li>
+			<li>
+				<i>stop()</i> method will stop drawing and save the resulting feature in the provided source.
+			</li>
+		</ul>
+		Options:
+		<ul>
+			<li>
+				You can define a <i>minAccuraty</i> overneath the location will be skipped or a <i>condition</i> function 
+				to decide if the point should be registered.
+			</li>
+			<li>
+				You can define a tolerance to simplify the resulting geometry.
+			</li>
+			<li>
+				When activated the interaction will follow the GPS position at a defined <i>zoom</i>. 
+				You can override this behavior in specifying a <i></i>
+			</li>
+		</ul>
+	</div>
+
+	<!-- Map div -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options" >
+		<h2>Options:</h2>
+		<ul>
+			<li>
+				<input type="radio" name="type" value="Point" /><label> Point</label>
+				<input type="radio" name="type" value="LineString" checked="checked" /><label> LineString</label>
+				<input type="radio" name="type" value="Polygon" /><label> Polygon</label>
+			</li>
+			<li>
+				<input type="checkbox" onchange="draw.set('preventTracking',$(this).prop('checked'));"/><label> preventTracking</label>
+			</li>
+			<li>
+				<button onclick="draw.setActive(true); draw.start();">start</button>
+				<button onclick="draw.pause();">pause</button>
+				<button onclick="draw.stop(); draw.setActive(false);">stop</button>
+			</li>
+			<li>
+				<br/>
+				Accurraty:
+				<div style="border:1px solid #000; width:250px;">
+					<div id="accuraty"></div>
+				</div>
+
+			</li>
+		</ul>
+	</div>
+	
+
+	<script type="text/javascript">
+		$("label").click(function(){ $(this).prev().click(); })
+		$('input[name=type]').on('change', function()
+		{	draw.set("type", $(this).val());
+		});
+
+		// Layers
+		var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
+		
+		// The map
+		var map = new ol.Map
+			({	target: 'map',
+				view: new ol.View
+				({	zoom: 5,
+					center: [261720, 5951081]
+				}),
+				controls: ol.control.defaults({ "attribution": false }),
+				layers: [layer]
+			});
+
+		// New vector layer
+		var vector = new ol.layer.Vector(
+		{	name: 'Vecteur',
+			source: new ol.source.Vector()
+		});
+		map.addLayer(vector);
+
+		// Draw interaction
+		var draw = new ol.interaction.GeolocationDraw(
+			{	source: vector.getSource(),
+				zoom: 18,
+			});
+		map.addInteraction(draw);
+
+		draw.on("drawing", function(e)
+		{	$("#accuraty").width((e.geolocation.getAccuracy()));
+		});
+
+	</script>
+
+</body>
+</html>
