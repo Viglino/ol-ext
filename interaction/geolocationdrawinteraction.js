@@ -2,11 +2,12 @@
  *	It combines a draw with a ol.Geolocation
  * @constructor
  * @extends {ol.interaction.Interaction}
- * @fires drawstart, drawend, drawing
+ * @fires drawstart, drawend, drawing, tracking
  * @param {olx.interaction.GeolocationDrawOption} 
  *	- features { ol.Collection.<ol.Feature> | undefined } Destination collection for the drawn features.
  *	- source { ol.source.Vector | undefined } Destination source for the drawn features.
  *	- type {ol.geom.GeometryType} Drawing type ('Point', 'LineString', 'Polygon'). Required.
+ *	- attributes {Object} a list of attributes to register as Point properties: {accuracy:true,accuracyGeometry:true,heading:true,speed:true}, default none.
  *	- tolerance {Number} tolerance to add a new point (in projection unit), use ol.geom.LineString.simplify() method, default 5
  *	- zoom {Number} zoom for tracking, default 16
  *	- preventTracking {boolean} true if you don't want the interaction to track on the map, default false
@@ -99,6 +100,7 @@ ol.interaction.GeolocationDraw = function(options)
 	});
 
 	this.set("type", options.type||"LineString");
+	this.set("attributes", options.attributes||{});
 	this.set("minAccuracy", options.minAccuracy||20);
 	this.set("tolerance", options.tolerance||5);
 	this.set("zoom", options.zoom||16);
@@ -206,6 +208,11 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(active)
 		{	case "Point":
 				this.path_ = [pos];
 				f.setGeometry(new ol.geom.Point(pos));
+				var attr = this.get('attributes');
+				if (attr.heading) f.set("heading",loc.getHeading());
+				if (attr.accuracy) f.set("accuracy",loc.getAccuracy());
+				if (attr.altitudeAccuracy) f.set("altitudeAccuracy",loc.getAltitudeAccuracy());
+				if (attr.speed) f.set("speed",loc.getSpeed());
 				break;
 			case "LineString":
 				if (this.path_.length>1)
@@ -224,9 +231,10 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(active)
 				else f.setGeometry();
 				break;
 		}
-		this.sketch_[2].setGeometry(new ol.geom.Point(pos));
-		this.sketch_[2].set("heading",loc.getHeading());
+		this.dispatchEvent({ type:'drawing', feature: this.sketch_[1], geolocation: loc });
 	}
+	this.sketch_[2].setGeometry(new ol.geom.Point(pos));
+	this.sketch_[2].set("heading",loc.getHeading());
 	// Drawing
-	this.dispatchEvent({ type:'drawing', feature: this.sketch_[1], geolocation: loc });
+	this.dispatchEvent({ type:'tracking', feature: this.sketch_[1], geolocation: loc });
 };

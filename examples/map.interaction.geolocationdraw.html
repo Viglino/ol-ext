@@ -101,7 +101,10 @@
 
 			</li>
 			<li>
-				<input type="text" id="heading" />
+				Heading: <input type="text" id="heading" />
+			</li>
+			<li>
+				Altitude: <input type="text" id="z" />
 			</li>
 		</ul>
 	</div>
@@ -141,9 +144,10 @@
 			});
 		map.addInteraction(draw);
 
-		draw.on("drawing", function(e)
+		draw.on("tracking", function(e)
 		{	$("#accuraty").width((e.geolocation.getAccuracy()));
 			$("#heading").val(e.geolocation.getHeading()+" "+e.geolocation.getAltitude());
+			$("#z").val(e.geolocation.getAltitude());
 		});
 
 	</script>
