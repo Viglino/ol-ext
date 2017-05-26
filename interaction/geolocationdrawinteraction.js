@@ -226,6 +226,7 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(active)
 		}
 		this.sketch_[2].setGeometry(new ol.geom.Point(pos));
 		this.sketch_[2].set("heading",loc.getHeading());
+		$("#heading").val(loc.getHeading());
 	}
 	// Drawing
 	this.dispatchEvent({ type:'drawing', feature: this.sketch_[1], geolocation: loc });
