@@ -147,17 +147,17 @@ ol.interaction.GeolocationDraw.prototype.start = function()
 	// Start drawing
 	this.dispatchEvent({ type:'drawstart', feature: this.sketch_[1]});
 	// Get a point if got one
-	if (this.get("type")=="Point") this.stop(); 
+	//if (this.get("type")=="Point") this.stop(); 
 };
 
 /** Stop drawing
 */
 ol.interaction.GeolocationDraw.prototype.stop = function()
 {	var f = this.sketch_[1].clone();
-	this.dispatchEvent({ type:'drawend', feature: this.sketch_[1]});
 	if (f.getGeometry())
 	{	if (this.features_) this.features_.push(f);
 		if (this.source_) this.source_.addFeature(f);
+		this.dispatchEvent({ type:'drawend', feature: this.sketch_[1]});
 	}
 	this.reset();
 	this.pause(true);
