@@ -23,9 +23,6 @@ ol.source.WikiCommons = function(opt_options)
 
 	options.loader = this._loaderFn;
 	
-	/** Url for DBPedia SPARQL */
-	this._url = options.url || "http://fr.dbpedia.org/sparql";
-
 	/** Max resolution to load features  */
 	this._maxResolution = options.maxResolution || 100;
 	
