@@ -86,7 +86,7 @@
 
 		var osm = new ol.layer.Tile({source: new ol.source.OSM()});
 		var esri = new ol.layer.Tile ({ source: new ol.source.XYZ(
-		{		url: "http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}.jpg",
+		{		url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}.jpg",
 				attributions: [ new ol.Attribution({ html: '&copy; <a href="http://www.arcgis.com/home/">Esri</a> ' }),
 					new ol.Attribution({ html: '&copy; <a href="http://www.arcgis.com/home/">DigitalGlobe, Earthstar Geographics, CNES/Airbus DS, GeoEye, USDA FSA, USGS, Getmapping, Aerogrid, IGN, IGP, swisstopo</a> ' })
 				]
