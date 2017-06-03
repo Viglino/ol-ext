@@ -1,0 +1,55 @@
+﻿.ol-searchfeature
+{	top: 0.5em;
+	left: 3em;
+}
+.ol-touch .ol-searchfeature
+{	left: 3.5em;
+}
+.ol-searchfeature button 
+{	background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAABPUlEQVQoU41SwXHCQAzUHh58eoUOIBWEDkI6oAToIKkg7iAuwakgpAIowXRACcnrzp6BzchjMx4wE/S6kW5XK60gvQghzJIkmVoqSZI9gJ9+/fINS5Cc1HX9QXIlIr/tpwcRyb33b7cIGnAIYQdg4pxbjcfj0nJ1Xc+Px+PGObdN03Q9RIAQwgpAnqbp7FKmjQGgJLlU1d2V7BjjRkQO3vvXIXarkyxVNbsCm2QR2Q0V7XOMMReRmfd+OQQubN6hYgs22ZtbnRcAtiRfLueqqmpJ8ovko6oeBq0KIWQA3gFkzrlmMafTaUEyI/mpqmbhVTRWWbRdbClPbeobQNES5KPRqOxs7DBn8K1DsAOKMZYApiTXqlrcDe4d0XN7jWeCfzt351tVle2iGalTcBd4gGDvvZ/fDe4RmCOFLe8Pr7mvEP2N9PQAAAAASUVORK5CYII=");
+	background-repeat: no-repeat;
+	background-position: center center;
+	background-size: 1em;
+	top: 2px;
+	left: 2px;
+	float: left;
+}
+.ol-searchfeature input
+{	display: inline;
+	vertical-align: bottom;
+	border: 0;
+	margin: 1px 1px 1px 2px;
+	font-size: 1.14em;
+	padding-left: 0.3em;
+	height: 1.375em;
+	box-sizing: border-box;
+}
+.ol-touch .ol-searchfeature input,
+.ol-touch .ol-searchfeature ul
+{   font-size: 1.5em;
+}
+.ol-searchfeature.ol-collapsed ul,
+.ol-searchfeature.ol-collapsed input
+{	display: none;
+}
+
+.ol-searchfeature ul
+{	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: block;
+	clear: both;
+	cursor: pointer;
+	max-width: 17em;
+	overflow-x: hidden;
+}
+.ol-searchfeature ul li
+{	padding: 0.1em 0.5em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.ol-searchfeature ul li:hover
+{	background-color: rgba(0,60,136,.5);
+	color: #fff;
+}
