@@ -113,25 +113,46 @@ ol.control.Overview = function(opt_options)
 	// Click on the preview center the map
 	this.ovmap_.addInteraction (new ol.interaction.Pointer(
 	{	handleDownEvent: function(evt)
-		{	var pan;
-			if (options.panAnimation !==false)
-			{	if (options.panAnimation=="elastic" || options.elasticPan) 
-				{	pan = ol.animation.pan(
-					{	duration: 1000,
-						easing: ol.easing.elasticFn(2,0.3),
-						source: self.getMap().getView().getCenter()
-					});
-				}
-				else
-				{	pan = ol.animation.pan(
-					{	duration: 300,
-						source: self.getMap().getView().getCenter()
-					});
-				}
+		{	// Old version OL3
+			if (ol.animation) 
+			{	var pan;
+				if (options.panAnimation !==false)
+				{	if (options.panAnimation=="elastic" || options.elasticPan) 
+					{	pan = ol.animation.pan(
+						{	duration: 1000,
+							easing: ol.easing.elasticFn(2,0.3),
+							source: self.getMap().getView().getCenter()
+						});
+					}
+					else
+					{	pan = ol.animation.pan(
+						{	duration: 300,
+							source: self.getMap().getView().getCenter()
+						});
+					}
 				
+				}
+				self.getMap().beforeRender(pan);
+				self.getMap().getView().setCenter(evt.coordinate);
 			}
-			self.getMap().beforeRender(pan);
-			self.getMap().getView().setCenter(evt.coordinate);
+			else
+			{	if (options.panAnimation !==false)
+				{	if (options.panAnimation=="elastic" || options.elasticPan) 
+					{	self.getMap().getView().animate(
+						{	center: evt.coordinate,
+							easing: ol.easing.elasticFn(2,0.3),
+							duration: 1000
+						});
+					}
+					else
+					{	self.getMap().getView().animate(
+						{	center: evt.coordinate,
+							duration: 300
+						});
+					}
+				}
+				else self.getMap().getView().setCenter(evt.coordinate);
+			}
 			return false;
 		}
 	}));
