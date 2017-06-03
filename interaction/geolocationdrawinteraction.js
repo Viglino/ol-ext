@@ -70,7 +70,7 @@ ol.interaction.GeolocationDraw = function(options)
 	ctx.drawImage(c2, 0,0, c.width, c.height, width, 0, c.width-2*width, c.height);
 
 	var defaultStyle = function(f)
-	{	if (false && f.get('heading')===undefined)
+	{	if (f.get('heading')===undefined)
 		{	style[1].setImage(circle);
 		}
 		else 
