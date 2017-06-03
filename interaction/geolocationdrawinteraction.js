@@ -37,6 +37,11 @@ ol.interaction.GeolocationDraw = function(options)
 	var white = [255, 255, 255, 1];
 	var blue = [0, 153, 255, 1];
 	var width = 3;
+	var circle = new ol.style.Circle(
+		{	radius: width * 2,
+			fill: new ol.style.Fill({ color: blue }),
+			stroke: new ol.style.Stroke({ color: white, width: width / 2 })
+		});
 	var style = 
 	[	new ol.style.Style(
 		{	stroke: new ol.style.Stroke({ color: white, width: width + 2 })
@@ -46,19 +51,17 @@ ol.interaction.GeolocationDraw = function(options)
 			fill: new ol.style.Fill({
 				color: [255, 255, 255, 0.5]
 			})
-		}),
-		new ol.style.Style(
-		{	image: new ol.style.RegularShape(
-			{	radius: width * 3.5,
-				points: 3,
-				rotation: 0,
-				fill: new ol.style.Fill({ color: blue }),
-				stroke: new ol.style.Stroke({ color: white, width: width / 2 })
-			})
 		})
 	];
+	var triangle = new ol.style.RegularShape(
+		{	radius: width * 3.5,
+			points: 3,
+			rotation: 0,
+			fill: new ol.style.Fill({ color: blue }),
+			stroke: new ol.style.Stroke({ color: white, width: width / 2 })
+		});
 	// stretch the symbol
-	var c = style[2].getImage().getImage();
+	var c = triangle.getImage();
 	var ctx = c.getContext("2d");
 		var c2 = document.createElement('canvas');
 		c2.width = c2.height = c.width;
@@ -67,7 +70,13 @@ ol.interaction.GeolocationDraw = function(options)
 	ctx.drawImage(c2, 0,0, c.width, c.height, width, 0, c.width-2*width, c.height);
 
 	var defaultStyle = function(f)
-	{	style[2].getImage().setRotation( f.get('heading') || 0);
+	{	if (f.get('heading')===undefined)
+		{	style[1].setImage(circle);
+		}
+		else 
+		{	style[1].setImage(triangle);
+			triangle.setRotation( f.get('heading') || 0);
+		}
 		return style;
 	}
 	// Style for the accuracy geometry
