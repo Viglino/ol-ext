@@ -68,6 +68,9 @@
 {	opacity: 0.5;
 	border-color:#555;
 }
+.ol-layerswitcher-image li.ol-header
+{	display: none;
+}
 
 .ol-layerswitcher-image li img
 {	position:absolute;
