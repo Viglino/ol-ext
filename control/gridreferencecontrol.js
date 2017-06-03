@@ -7,16 +7,18 @@
  *
  * @constructor
  * @extends {ol.control.Control}
+ * @fires select
  * @param {Object=} Control options. 
  *	- style {ol.style.Style} Style to use for drawing the grid (stroke and text), default black.
  *	- maxResolution {number} max resolution to display the graticule
- *	- extent {ol.extent} extent of the grid
- *	- size {ol.size} number of lines and cols
+ *	- extent {ol.extent} extent of the grid, required
+ *	- size {ol.size} number of lines and cols, required 
  *	- margin {number} margin to display text (in px), default 0px 
  *	- source {ol.source.Vector} source to use for the index, default none (use setIndex to reset the index)
- *	- property {string | function} a property to display in the index or a function tha takes a feature and return the name to display in the index, default 'name'.
- *	- sortFeatures {function} sort function to sort 2 features in the index
- *	- filterLabel {string} label to display in the search bar, default filter
+ *	- property {string | function} a property to display in the index or a function that takes a feature and return the name to display in the index, default 'name'.
+ *	- sortFeatures {function|undefined} sort function to sort 2 features in the index, default sort on property option
+ *	- indexTitle {function|undefined} a function that takes a feature and return the title to display in the index, default the first letter of property option
+ *	- filterLabel {string} label to display in the search bar, default 'filter'
  */
 ol.control.GridReference = function(options) 
 {	var self = this;
@@ -33,8 +35,10 @@ ol.control.GridReference = function(options)
 
 	if (typeof (options.property)=='function') this.getFeatureName = options.property;
 	if (typeof (options.sortFeatures)=='function') this.sortFeatures = options.sortFeatures;
+	if (typeof (options.indexTitle)=='function') this.indexTitle = options.indexTitle;
 	
 	// Set index using the source
+	this.source_ = options.source;
 	if (options.source) 
 	{	this.setIndex(options.source.getFeatures(), options);
 		// reload on ready
@@ -51,6 +55,7 @@ ol.control.GridReference = function(options)
 	this.set('size', options.size);
 	this.set('margin', options.margin || 0);
 	this.set('property', options.property || 'name');
+	this.set('filterLabel', options.filterLabel || 'filter');
 
 	if (options.style instanceof ol.style.Style) this.style = options.style;
 	else this.style = new ol.style.Style(
@@ -83,20 +88,27 @@ ol.control.GridReference.prototype.sortFeatures = function (a,b)
 {	return (this.getFeatureName(a) == this.getFeatureName(b)) ? 0 : (this.getFeatureName(a) < this.getFeatureName(b)) ? -1 : 1; 
 };
 
+/** Get the feature title
+*	@param {ol.Feature} f
+*	@return the first letter of the eature name (getFeatureName)
+*	@api
+*/
+ol.control.GridReference.prototype.indexTitle = function (f)
+{	return this.getFeatureName(f).charAt(0); 
+};
+
 /** Display features in the index
 *	@param { Array <ol.Feature> | ol.Collection <ol.Feature> } features
-*	@param {} options
-*		- filterLabel {string} label to display in the search bar, default filter
 */
-ol.control.GridReference.prototype.setIndex = function (features, options)
-{	var self = this;
-	if (!options) options={};
+ol.control.GridReference.prototype.setIndex = function (features)
+{	if (!this.getMap()) return;
+	var self = this;
 	if (features.getArray) features = features.getArray();
 	features.sort ( function(a,b) { return self.sortFeatures(a,b); } );
 	var elt = $(this.element).html("");
 
 	var search = $("<input>").attr('type', 'search')
-					.attr('placeholder', options.filterLabel || 'filter')
+					.attr('placeholder', this.get('filterLabel') || 'filter')
 					.on('search keyup', function()
 					{	var v = $(this).val().replace(/^\*/,'');
 						// console.log(v)
@@ -118,15 +130,16 @@ ol.control.GridReference.prototype.setIndex = function (features, options)
 					.appendTo(elt);
 
 	var ul = $("<ul>").appendTo(elt);
-	var r, c;
+	var r, title;
 	for (var i=0, f; f=features[i]; i++)
 	{	r = this.getReference(f.getGeometry().getFirstCoordinate());
 		if (r) 
 		{	var name = this.getFeatureName(f);
-			if (c != name.charAt(0)) 
-			{	$("<li>").addClass('ol-title').text(name.charAt(0)).appendTo(ul);
+			var c = this.indexTitle(f);
+			if (c != title) 
+			{	$("<li>").addClass('ol-title').text(c).appendTo(ul);
 			}
-			c = name.charAt(0);
+			title = c;
 			$("<li>").append($("<span>").addClass("ol-name").text(name))
 					.append($("<span>").addClass("ol-ref").text(r))
 					.data ('feature', f)
@@ -143,7 +156,8 @@ ol.control.GridReference.prototype.setIndex = function (features, options)
 *	@return {string} the reference
 */
 ol.control.GridReference.prototype.getReference = function (coords)
-{	var extent = this.get('extent');
+{	if (!this.getMap()) return;
+	var extent = this.get('extent');
 	var size = this.get('size');
 
 	var dx = Math.floor ( (coords[0] - extent[0]) / (extent[2]- extent[0]) * size[0] );
@@ -166,7 +180,10 @@ ol.control.GridReference.prototype.setMap = function (map)
 	if (oldmap) oldmap.renderSync();
 
 	// Get change (new layer added or removed)
-	if (map) map.on('postcompose', this.drawGrid_, this);
+	if (map) 
+	{	map.on('postcompose', this.drawGrid_, this);
+		if (this.source_) this.setIndex(this.source_.getFeatures());
+	}
 };
 
 /** Set style

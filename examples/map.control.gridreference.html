@@ -26,7 +26,7 @@
 	<link rel="stylesheet" href="../control/gridreferencecontrol.css" />
 	<script type="text/javascript" src="../control/gridreferencecontrol.js"></script>
 
-	<link rel="stylesheet" href="style.css" />
+	<link rel="stylesheet" href="style.css" id="style"/>
 	<style>
 		.ol-gridreference
 		{	position: relative;
@@ -61,8 +61,21 @@
 	</a>
 
 	<div class="info">
-		Display a grid reference on the map. 
+		Display a grid reference on the map and an index associated with. 
 		<ul>
+			<li>
+				You have to define the <i>extent</i> and the <i>size</i> of the grid.
+			</li>
+			<li>
+				You can define a <i>ol.source.vector</i> or use the <i>setIndex</i> method to display an index.
+			</li>
+			<li>
+				You can define a <i>property</i> (or a function to retrieve it) that will be displayed in the index.
+			</li>
+			<li>
+				You can customize a <i>sortFeature</i> function and the <i>indexTitle</i> 
+				that will be displayed in the index.
+			</li>
 		</ul>
 		<i>ol.control.GridReference</i> requires jQuery.
 	</div>
@@ -71,6 +84,8 @@
 	<div id="map" style="width:600px; height:400px;"></div>
 
 	<div class="options">
+		<h2>Options</h2>
+		<input id="region" type="checkbox" onchange="setControl();" /><label for="region"> sort by region</label>
 		<h2>Index:</h2>
 		<div></div>
 		<p>Click on the index to locate the features!</p>
@@ -115,36 +130,53 @@
 		style: new ol.style.Style({ image: new ol.style.Icon({ src:"data/camera.png", scale: 0.8 }) })
 	}));
 
-	// Grid
-	var ref = new ol.control.GridReference(
-		{	extent:[ -550000, 5250000, 850000, 6650000 ], 
-			size:[10,10],
-			target: $(".options div").get(0),
-			source: vectorSource,
-			property: "commune"
-		});
-	map.addControl (ref);
-
 	// Control Select 
 	var select = new ol.interaction.Select({});
 	map.addInteraction(select);
 
-	// On selected => show/hide popup
-	select.getFeatures().on(['add'], function(e)
-	{	var feature = e.element;
-	})
-	select.getFeatures().on(['remove'], function(e)
-	{	
-	})
+	// Set the control grid reference
+	var ref;
 
-	// Select when click on the reference index
-	ref.on('select', function(e)
-		{	select.getFeatures().clear();
-			select.getFeatures().push (e.feature);
-			var p = e.feature.getGeometry().getFirstCoordinate();
-			var ex = map.getView().calculateExtent(map.getSize());
-			if (!ol.extent.containsCoordinate(ex, p)) map.getView().setCenter(p);
-		})
+	function setControl()
+	{	if (ref) map.removeControl(ref);
+		// Sort by region
+		var sort, title; 
+		if ($("#region").prop('checked'))
+		{	// Sort by region + name
+			sort = function(a,b) 
+				{	var c1 = a.get('region')+" "+this.getFeatureName(a);
+					var c2 = b.get('region')+" "+this.getFeatureName(b); 
+					return (c1==c2) ? 0 : (c1<c2) ? -1 : 1;
+				}
+			// display region as title
+			title = function(f) 
+				{	return f.get('region'); 
+				}
+		}
+
+		// New control
+		ref = new ol.control.GridReference(
+		{	extent: [ -550000, 5250000, 850000, 6650000 ], 
+			size: [10,10],
+			target: $(".options div").get(0),
+			source: vectorSource,
+			property: "commune",
+			sortFeatures: sort,
+			indexTitle: title
+		});
+		map.addControl (ref);
+
+		// Select feature when click on the reference index
+		ref.on('select', function(e)
+			{	select.getFeatures().clear();
+				select.getFeatures().push (e.feature);
+				var p = e.feature.getGeometry().getFirstCoordinate();
+				var ex = map.getView().calculateExtent(map.getSize());
+				if (!ol.extent.containsCoordinate(ex, p)) map.getView().setCenter(p);
+			});
+	};
+	setControl();
+
 
 	</script>
 	
