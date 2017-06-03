@@ -1636,6 +1636,53 @@ ol.control.Bar.prototype.onActivateControl_ = function (e)
 	this.deactivateControls (this.controls_[n]);
 };
 
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * Draw a compass on the map. The position/size of the control is defined in the css.
+ *
+ * @constructor
+ * @extends {ol.control.Control}
+ * @param {Object=} Control options. The style {ol.style.Style} option is usesd to draw the text.
+ *	- className {string} class name for the control
+ *	- image {Image} an image, default use the src option or a default image
+ *	- src {string} image src, default use the image option or a default image
+ *	- rotateVithView {boolean} rotate vith view (false to show watermark), default true
+ *	- style {ol.style.Stroke} style to draw the lines, default draw no lines
+ */
+ol.control.DeviceOrientation = function(options) 
+{	var self = this;
+	if (!options) options = {};
+	
+	// Initialize parent
+	var element = $("<div>").addClass('ol-unselectable ol-control ol-deviceorientation');
+	if (options.className) element.addClass(options.className);
+	this.compass = $("<div>").addClass("ol-compass").appendTo(element);
+
+	ol.control.Control.call(this, 
+	{	element: element.get(0),
+		target: options.target
+	});
+	
+	if(window.DeviceOrientationEvent) 
+		window.addEventListener("deviceorientation", function(e){ self.setOrientation(e.alpha); }, false);
+	else
+		element.addClass('ol-disable');
+};
+ol.inherits(ol.control.DeviceOrientation, ol.control.Control);
+
+/** Set the orientation
+*/
+ol.control.DeviceOrientation.prototype.setOrientation = function(r)
+{	var t = "translate(-50%, -50%) rotate("+r+"deg)";
+	this.compass.css(
+	{	"-webkit-transform": t,
+		"transform": t
+	});
+	console.log(r)
+};
 /** A simple toggle control with a callback function
  * OpenLayers 3 Layer Switcher Control.
  *
@@ -1678,6 +1725,57 @@ ol.control.Disable.prototype.disableMap = function(b)
 	{	$(this.element).removeClass("ol-enable").hide();
 	}
 }
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** A simple gauge control 
+ *
+ * @constructor
+ * @extends {ol.control.Control}
+ * @param {Object=} opt_options Control options.
+ *		className {String} class of the control
+ *		title {String} title of the control
+ *		max {number} maximum value, default 100;
+ *		val {number} the value, default 0
+ */
+ol.control.Gauge = function(options) 
+{	options = options || {};
+	var element = $("<div>").addClass((options.className||"") + ' ol-gauge ol-unselectable ol-control');
+	this.title_ = $("<span>").appendTo(element);
+	this.gauge_ = $("<button>").appendTo($("<div>").appendTo(element)).width(0);
+	
+	ol.control.Control.call(this, 
+	{	element: element.get(0),
+		target: options.target
+	});
+
+	this.setTitle(options.title);
+	this.val(options.val);
+	this.set("max", options.max||100);
+};
+ol.inherits(ol.control.Gauge, ol.control.Control);
+
+/** Set the control title
+* @param {string} title
+*/
+ol.control.Gauge.prototype.setTitle = function(title)
+{	this.title_.html(title||"");
+	if (!title) this.title_.hide();
+	else this.title_.show();
+};
+
+/** Set/get the gauge value
+* @param {number|undefined} v the value or undefined to get it
+* @return {number} the value
+*/
+ol.control.Gauge.prototype.val = function(v)
+{	if (v!==undefined) 
+	{	this.val_ = v;
+		this.gauge_.css("width", (v/this.get('max')*100)+"%");
+	}
+	return this.val_;
+};
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -2144,20 +2242,22 @@ ol.control.Graticule.prototype.drawGraticule_ = function (e)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
- * Draw a graticule on the map.
+ * Draw a grid reference on the map and add an index.
  *
  * @constructor
  * @extends {ol.control.Control}
+ * @fires select
  * @param {Object=} Control options. 
  *	- style {ol.style.Style} Style to use for drawing the grid (stroke and text), default black.
  *	- maxResolution {number} max resolution to display the graticule
- *	- extent {ol.extent} extent of the grid
- *	- size {ol.size} number of lines and cols
+ *	- extent {ol.extent} extent of the grid, required
+ *	- size {ol.size} number of lines and cols, required 
  *	- margin {number} margin to display text (in px), default 0px 
  *	- source {ol.source.Vector} source to use for the index, default none (use setIndex to reset the index)
- *	- property {string | function} a property to display in the index or a function tha takes a feature and return the name to display in the index, default 'name'.
- *	- sortFeatures {function} sort function to sort 2 features in the index
- *	- filterLabel {string} label to display in the search bar, default filter
+ *	- property {string | function} a property to display in the index or a function that takes a feature and return the name to display in the index, default 'name'.
+ *	- sortFeatures {function|undefined} sort function to sort 2 features in the index, default sort on property option
+ *	- indexTitle {function|undefined} a function that takes a feature and return the title to display in the index, default the first letter of property option
+ *	- filterLabel {string} label to display in the search bar, default 'filter'
  */
 ol.control.GridReference = function(options) 
 {	var self = this;
@@ -2174,8 +2274,10 @@ ol.control.GridReference = function(options)
 
 	if (typeof (options.property)=='function') this.getFeatureName = options.property;
 	if (typeof (options.sortFeatures)=='function') this.sortFeatures = options.sortFeatures;
+	if (typeof (options.indexTitle)=='function') this.indexTitle = options.indexTitle;
 	
 	// Set index using the source
+	this.source_ = options.source;
 	if (options.source) 
 	{	this.setIndex(options.source.getFeatures(), options);
 		// reload on ready
@@ -2192,6 +2294,7 @@ ol.control.GridReference = function(options)
 	this.set('size', options.size);
 	this.set('margin', options.margin || 0);
 	this.set('property', options.property || 'name');
+	this.set('filterLabel', options.filterLabel || 'filter');
 
 	if (options.style instanceof ol.style.Style) this.style = options.style;
 	else this.style = new ol.style.Style(
@@ -2224,20 +2327,27 @@ ol.control.GridReference.prototype.sortFeatures = function (a,b)
 {	return (this.getFeatureName(a) == this.getFeatureName(b)) ? 0 : (this.getFeatureName(a) < this.getFeatureName(b)) ? -1 : 1; 
 };
 
+/** Get the feature title
+*	@param {ol.Feature} f
+*	@return the first letter of the eature name (getFeatureName)
+*	@api
+*/
+ol.control.GridReference.prototype.indexTitle = function (f)
+{	return this.getFeatureName(f).charAt(0); 
+};
+
 /** Display features in the index
 *	@param { Array <ol.Feature> | ol.Collection <ol.Feature> } features
-*	@param {} options
-*		- filterLabel {string} label to display in the search bar, default filter
 */
-ol.control.GridReference.prototype.setIndex = function (features, options)
-{	var self = this;
-	if (!options) options={};
+ol.control.GridReference.prototype.setIndex = function (features)
+{	if (!this.getMap()) return;
+	var self = this;
 	if (features.getArray) features = features.getArray();
 	features.sort ( function(a,b) { return self.sortFeatures(a,b); } );
 	var elt = $(this.element).html("");
 
 	var search = $("<input>").attr('type', 'search')
-					.attr('placeholder', options.filterLabel || 'filter')
+					.attr('placeholder', this.get('filterLabel') || 'filter')
 					.on('search keyup', function()
 					{	var v = $(this).val().replace(/^\*/,'');
 						// console.log(v)
@@ -2259,15 +2369,16 @@ ol.control.GridReference.prototype.setIndex = function (features, options)
 					.appendTo(elt);
 
 	var ul = $("<ul>").appendTo(elt);
-	var r, c;
+	var r, title;
 	for (var i=0, f; f=features[i]; i++)
 	{	r = this.getReference(f.getGeometry().getFirstCoordinate());
 		if (r) 
 		{	var name = this.getFeatureName(f);
-			if (c != name.charAt(0)) 
-			{	$("<li>").addClass('ol-title').text(name.charAt(0)).appendTo(ul);
+			var c = this.indexTitle(f);
+			if (c != title) 
+			{	$("<li>").addClass('ol-title').text(c).appendTo(ul);
 			}
-			c = name.charAt(0);
+			title = c;
 			$("<li>").append($("<span>").addClass("ol-name").text(name))
 					.append($("<span>").addClass("ol-ref").text(r))
 					.data ('feature', f)
@@ -2284,7 +2395,8 @@ ol.control.GridReference.prototype.setIndex = function (features, options)
 *	@return {string} the reference
 */
 ol.control.GridReference.prototype.getReference = function (coords)
-{	var extent = this.get('extent');
+{	if (!this.getMap()) return;
+	var extent = this.get('extent');
 	var size = this.get('size');
 
 	var dx = Math.floor ( (coords[0] - extent[0]) / (extent[2]- extent[0]) * size[0] );
@@ -2307,7 +2419,10 @@ ol.control.GridReference.prototype.setMap = function (map)
 	if (oldmap) oldmap.renderSync();
 
 	// Get change (new layer added or removed)
-	if (map) map.on('postcompose', this.drawGrid_, this);
+	if (map) 
+	{	map.on('postcompose', this.drawGrid_, this);
+		if (this.source_) this.setIndex(this.source_.getFeatures());
+	}
 };
 
 /** Set style
@@ -2335,8 +2450,8 @@ ol.control.GridReference.prototype.drawGrid_ = function (e)
 	var canvas = ctx.canvas;
 	var ratio = e.frameState.pixelRatio;
 
-	var w = canvas.width;
-	var h = canvas.height;
+	var w = canvas.width/ratio;
+	var h = canvas.height/ratio;
 
 	var extent = this.get('extent');
 	var size = this.get('size');
@@ -2350,12 +2465,12 @@ ol.control.GridReference.prototype.drawGrid_ = function (e)
 
 	ctx.save();
 		var margin = this.get('margin');
-		var ratio = e.frameState.pixelRatio;
 		ctx.scale(ratio,ratio);
 
 		ctx.strokeStyle = this.style.getStroke().getColor();
 		ctx.lineWidth = this.style.getStroke().getWidth();
 
+		// Draw grid
 		ctx.beginPath();
 		for (var i=0; i<=size[0]; i++)
 		{	ctx.moveTo(p0[0]+i*dx, p0[1]);
@@ -2367,7 +2482,7 @@ ol.control.GridReference.prototype.drawGrid_ = function (e)
 		}
 		ctx.stroke();
 
-
+		// Draw text
 		ctx.font = this.style.getText().getFont();
 		ctx.fillStyle = this.style.getText().getFill().getColor();
 		ctx.strokeStyle = this.style.getText().getStroke().getColor();
@@ -2762,25 +2877,46 @@ ol.control.Overview = function(opt_options)
 	// Click on the preview center the map
 	this.ovmap_.addInteraction (new ol.interaction.Pointer(
 	{	handleDownEvent: function(evt)
-		{	var pan;
-			if (options.panAnimation !==false)
-			{	if (options.panAnimation=="elastic" || options.elasticPan) 
-				{	pan = ol.animation.pan(
-					{	duration: 1000,
-						easing: ol.easing.elasticFn(2,0.3),
-						source: self.getMap().getView().getCenter()
-					});
-				}
-				else
-				{	pan = ol.animation.pan(
-					{	duration: 300,
-						source: self.getMap().getView().getCenter()
-					});
-				}
+		{	// Old version OL3
+			if (ol.animation) 
+			{	var pan;
+				if (options.panAnimation !==false)
+				{	if (options.panAnimation=="elastic" || options.elasticPan) 
+					{	pan = ol.animation.pan(
+						{	duration: 1000,
+							easing: ol.easing.elasticFn(2,0.3),
+							source: self.getMap().getView().getCenter()
+						});
+					}
+					else
+					{	pan = ol.animation.pan(
+						{	duration: 300,
+							source: self.getMap().getView().getCenter()
+						});
+					}
 				
+				}
+				self.getMap().beforeRender(pan);
+				self.getMap().getView().setCenter(evt.coordinate);
 			}
-			self.getMap().beforeRender(pan);
-			self.getMap().getView().setCenter(evt.coordinate);
+			else
+			{	if (options.panAnimation !==false)
+				{	if (options.panAnimation=="elastic" || options.elasticPan) 
+					{	self.getMap().getView().animate(
+						{	center: evt.coordinate,
+							easing: ol.easing.elasticFn(2,0.3),
+							duration: 1000
+						});
+					}
+					else
+					{	self.getMap().getView().animate(
+						{	center: evt.coordinate,
+							duration: 300
+						});
+					}
+				}
+				else self.getMap().getView().setCenter(evt.coordinate);
+			}
 			return false;
 		}
 	}));
@@ -3748,6 +3884,128 @@ ol.control.Profil.prototype.getImage = function(type, encoderOptions)
 {	if (type==="canvas") return this.canvas_;
 	return this.canvas_.toDataURL(type, encoderOptions);
 }
+
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * Search features.
+ *
+ * @constructor
+ * @extends {ol.control.Control}
+ * @fires select
+ * @param {Object=} Control options. 
+ *	- className {string} control class name
+ *	- target {Element | string | undefined} Specify a target if you want the control to be rendered outside of the map's viewport.
+ *	- placeholder {string | undefined} placeholder, default "search..."
+ *	- typing {number | undefined} a delay on each typing to start searching (ms), default 300.
+ *	- source {ol.source.Vector} source to search in
+ *	- property {string | function | undefined} a property to display in the index or a function that takes a feature and return the name to display in the index, default 'name'.
+ *	- getSearchString {function | undefined} a function that take a feature and return a text to be used as search string
+ *	- minLength {integer | undefined} minimum length to start searching, default 1
+ *	- maxItems {integer | undefined} maximum number of items to display in the list, default 10
+ */
+ol.control.SearchFeature = function(options) 
+{	var self = this;
+	if (!options) options = {};
+	
+	var element;
+	if (options.target) 
+	{	element = $("<div>").addClass((options.className||"")+ "ol-searchfeature");
+	}
+	else
+	{	element = $("<div>").addClass((options.className||"") + 'ol-searchfeature ol-unselectable ol-control ol-collapsed');
+		this.button = $("<button>")
+					.click (function()
+					{	element.toggleClass("ol-collapsed"); 
+						if (!element.hasClass("ol-collapsed")) $("input", element).focus();
+					})
+					.appendTo(element);
+	}
+	// Search input
+	var tout, cur="";
+	$("<input>").attr('type','search')
+		.attr('placeholder', options.placeholder||"search...")
+		.on('keyup search', function(e) 
+		{	if (cur != $(this).val())
+			{	cur = $(this).val();
+				// prevent searching on each typing
+				if (tout) clearTimeout(tout);
+				tout = setTimeout(function(){ self.search(cur)}, options.typing || 300);
+			}
+		})
+		.blur(function()
+		{	setTimeout(function(){ element.addClass('ol-collapsed') }, 200);
+		})
+		.focus(function()
+		{	
+		})
+		.appendTo(element);
+	// Autocomplete list
+	$("<ul>").addClass('autocomplete').appendTo(element);
+	
+	ol.control.Control.call(this, 
+		{	element: element.get(0),
+			target: options.target
+		});
+
+	if (typeof (options.property)=='function') this.getFeatureName = options.property;
+	if (typeof (options.getSearchString)=='function') this.getSearchString = options.getSearchString;
+	
+	this.source_ = options.source;
+
+	// Options
+	this.set('property', options.property || 'name');
+	this.set('minLength', options.minLength || 1);
+	this.set('maxItems', options.minLength || 10);
+
+};
+ol.inherits(ol.control.SearchFeature, ol.control.Control);
+
+/** Returns the text to be displayed in the menu
+*	@param {ol.Feature} f the feature
+*	@return {string} the text to be displayed in the index
+*	@api
+*/
+ol.control.SearchFeature.prototype.getFeatureName = function (f)
+{	return f.get(this.get('property')||'name');
+};
+
+/** Returns the text to be used as search string
+*	@param {ol.Feature} f the feature
+*	@return {string} the text to be used
+*	@api
+*/
+ol.control.SearchFeature.prototype.getSearchString = function (f)
+{	return this.getFeatureName(f);
+};
+
+/** Search a string in the features
+*	@param {string} s the search string
+*/
+ol.control.SearchFeature.prototype.search = function (s)
+{	var ul = $("ul", this.element).html("");
+	if (s.length < this.get("minLength")) return;
+	var self = this;
+	var nb = this.get("maxItems");
+	// regexp
+	s = s.replace(/^\*/,'');
+	var rex = new RegExp(s, 'i');
+	// The source
+	var features = this.source_.getFeatures();
+	for (var i=0, f; f=features[i]; i++)
+	{	if (rex.test(this.getSearchString(f)))
+		{	$("<li>").text(this.getFeatureName(f))
+					.data('feature', f)
+					.click(function(e)
+					{	self.dispatchEvent({ type:"select", feature:$(this).data('feature') });
+					})
+					.appendTo(ul);
+			if ((--nb)<=0) break;;
+		}
+	}
+};
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -6775,6 +7033,256 @@ ol.interaction.Flashlight.prototype.postcompose_ = function(e)
 	}
 	ctx.restore();
 };
+/** Interaction to draw on the current geolocation
+ *	It combines a draw with a ol.Geolocation
+ * @constructor
+ * @extends {ol.interaction.Interaction}
+ * @fires drawstart, drawend, drawing, tracking
+ * @param {olx.interaction.GeolocationDrawOption} 
+ *	- features { ol.Collection.<ol.Feature> | undefined } Destination collection for the drawn features.
+ *	- source { ol.source.Vector | undefined } Destination source for the drawn features.
+ *	- type {ol.geom.GeometryType} Drawing type ('Point', 'LineString', 'Polygon'). Required.
+ *	- attributes {Object} a list of attributes to register as Point properties: {accuracy:true,accuracyGeometry:true,heading:true,speed:true}, default none.
+ *	- tolerance {Number} tolerance to add a new point (in projection unit), use ol.geom.LineString.simplify() method, default 5
+ *	- zoom {Number} zoom for tracking, default 16
+ *	- preventTracking {boolean} true if you don't want the interaction to track on the map, default false
+ *	- style { ol.style.Style | Array.<ol.style.Style> | ol.StyleFunction | undefined } Style for sketch features.
+ *	- minAccuracy {Number} minimum accuracy underneath a new point will be register (if no condition), default 20
+ *	- condition {} a function that take a ol.Geolocation object and return a boolean to indicate whether location should be handled or not, default return true if accuraty < minAccuraty
+ */
+ol.interaction.GeolocationDraw = function(options) 
+{	if (!options) options={};
+	var self = this;
+
+	// Geolocation
+	var geoloc = this.geolocation = new ol.Geolocation(/** @type {olx.GeolocationOptions} */ 
+	({	projection: "EPSG:4326",
+		trackingOptions: 
+		{	maximumAge: 10000,
+			enableHighAccuracy: true,
+			timeout: 600000
+		}
+	}));
+	this.geolocation.on('change', this.draw_, this);
+
+	// Current path
+	this.path_ = [];
+
+	// Default style
+	var white = [255, 255, 255, 1];
+	var blue = [0, 153, 255, 1];
+	var width = 3;
+	var circle = new ol.style.Circle(
+		{	radius: width * 2,
+			fill: new ol.style.Fill({ color: blue }),
+			stroke: new ol.style.Stroke({ color: white, width: width / 2 })
+		});
+	var style = 
+	[	new ol.style.Style(
+		{	stroke: new ol.style.Stroke({ color: white, width: width + 2 })
+		}),
+		new ol.style.Style(
+		{	stroke: new ol.style.Stroke({ color: blue, width: width }),
+			fill: new ol.style.Fill({
+				color: [255, 255, 255, 0.5]
+			})
+		})
+	];
+	var triangle = new ol.style.RegularShape(
+		{	radius: width * 3.5,
+			points: 3,
+			rotation: 0,
+			fill: new ol.style.Fill({ color: blue }),
+			stroke: new ol.style.Stroke({ color: white, width: width / 2 })
+		});
+	// stretch the symbol
+	var c = triangle.getImage();
+	var ctx = c.getContext("2d");
+		var c2 = document.createElement('canvas');
+		c2.width = c2.height = c.width;
+		c2.getContext("2d").drawImage(c, 0,0);
+	ctx.clearRect(0,0,c.width,c.height);
+	ctx.drawImage(c2, 0,0, c.width, c.height, width, 0, c.width-2*width, c.height);
+
+	var defaultStyle = function(f)
+	{	if (f.get('heading')===undefined)
+		{	style[1].setImage(circle);
+		}
+		else 
+		{	style[1].setImage(triangle);
+			triangle.setRotation( f.get('heading') || 0);
+		}
+		return style;
+	}
+	// Style for the accuracy geometry
+	this.locStyle = 
+		{	error: new ol.style.Style({ fill: new ol.style.Fill({ color: [255, 0, 0, 0.2] }) }),
+			warn: new ol.style.Style({ fill: new ol.style.Fill({ color: [255, 192, 0, 0.2] }) }),
+			ok: new ol.style.Style({ fill: new ol.style.Fill({ color: [0, 255, 0, 0.2] }) }),
+		};
+
+	// Create a new overlay layer for the sketch
+	this.overlayLayer_ = new ol.layer.Vector(
+	{	source: new ol.source.Vector(),
+		name:'GeolocationDraw overlay',
+		style: options.style || defaultStyle
+	});
+
+	this.sketch_ = [new ol.Feature(), new ol.Feature(), new ol.Feature()];
+	this.overlayLayer_.getSource().addFeatures(this.sketch_);
+
+	this.features_ = options.features;
+	this.source_ = options.source;
+
+	this.condition_ = options.condition || function(loc) { return loc.getAccuracy() < this.get("minAccuracy") };
+
+	// Prevent interaction when tracking
+	ol.interaction.Interaction.call(this, 
+	{	handleEvent: function()
+		{	return (this.get('preventTracking') || !geoloc.getTracking());
+		}
+	});
+
+	this.set("type", options.type||"LineString");
+	this.set("attributes", options.attributes||{});
+	this.set("minAccuracy", options.minAccuracy||20);
+	this.set("tolerance", options.tolerance||5);
+	this.set("zoom", options.zoom||16);
+	this.set("preventTracking", options.preventTracking||false);
+
+};
+ol.inherits(ol.interaction.GeolocationDraw, ol.interaction.Interaction);
+
+/**
+ * Remove the interaction from its current map, if any,  and attach it to a new
+ * map, if any. Pass `null` to just remove the interaction from the current map.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ol.interaction.GeolocationDraw.prototype.setMap = function(map) 
+{	if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_);
+	ol.interaction.Pointer.prototype.setMap.call (this, map);
+	this.overlayLayer_.setMap(map);
+	if (map) this.geolocation.setProjection(map.getView().getProjection());
+};
+
+/** Activate or deactivate the interaction.
+* @param {boolean} active
+*/
+ol.interaction.GeolocationDraw.prototype.setActive = function(active)
+{	ol.interaction.Interaction.prototype.setActive.call(this, active);
+	this.overlayLayer_.setVisible(active);
+	this.reset();
+	if (this.getMap())
+	{	this.geolocation.setTracking(active);
+		this.getMap().renderSync();
+	}
+};
+
+/** Reset drawing
+*/
+ol.interaction.GeolocationDraw.prototype.reset = function()
+{	this.sketch_[1].setGeometry();
+	this.path_ = [];
+};
+
+/** Force drawing
+*/
+ol.interaction.GeolocationDraw.prototype.start = function()
+{	this.pause(false);
+	// Start drawing
+	this.dispatchEvent({ type:'drawstart', feature: this.sketch_[1]});
+	// Get a point if got one
+	//if (this.get("type")=="Point") this.stop(); 
+};
+
+/** Stop drawing
+*/
+ol.interaction.GeolocationDraw.prototype.stop = function()
+{	var f = this.sketch_[1].clone();
+	if (f.getGeometry())
+	{	if (this.features_) this.features_.push(f);
+		if (this.source_) this.source_.addFeature(f);
+		this.dispatchEvent({ type:'drawend', feature: this.sketch_[1]});
+	}
+	this.reset();
+	this.pause(true);
+};
+
+/** Pause drawing
+* @param {boolean} b 
+*/
+ol.interaction.GeolocationDraw.prototype.pause = function(b)
+{	this.pause_ = b;
+};
+
+/** Add a new point to the current path
+* @private
+*/
+ol.interaction.GeolocationDraw.prototype.draw_ = function(active)
+{	var map = this.getMap();
+	if (!map) return;
+	var loc = this.geolocation;
+	var accu = loc.getAccuracy();
+	var pos = loc.getPosition();
+	pos.push(loc.getAltitude());
+	var p = loc.getAccuracyGeometry();
+
+	// Center on point
+	if (!this.get('preventTracking'))
+	{	map.getView().setCenter( pos );
+		map.getView().setZoom( this.get("zoom") || 16 );
+		if (!ol.extent.containsExtent(map.getView().calculateExtent(map.getSize()), p.getExtent()))
+		{	map.getView().fit(p.getExtent());
+		}
+	}
+	
+	// Draw occuracy
+	var f = this.sketch_[0];
+	f.setGeometry(p);
+	if (accu < this.get("minAccuracy")/2) f.setStyle(this.locStyle.ok);
+	else if (accu < this.get("minAccuracy")) f.setStyle(this.locStyle.warn);
+	else f.setStyle(this.locStyle.error);
+
+	var geo;
+	if (!this.pause_ && this.condition_.call(this, loc))
+	{	f = this.sketch_[1];
+		this.path_.push(pos);
+		switch (this.get("type"))
+		{	case "Point":
+				this.path_ = [pos];
+				f.setGeometry(new ol.geom.Point(pos));
+				var attr = this.get('attributes');
+				if (attr.heading) f.set("heading",loc.getHeading());
+				if (attr.accuracy) f.set("accuracy",loc.getAccuracy());
+				if (attr.altitudeAccuracy) f.set("altitudeAccuracy",loc.getAltitudeAccuracy());
+				if (attr.speed) f.set("speed",loc.getSpeed());
+				break;
+			case "LineString":
+				if (this.path_.length>1)
+				{	geo = new ol.geom.LineString(this.path_);
+					geo.simplify (this.get("tolerance"));
+					f.setGeometry(geo);
+				}
+				else f.setGeometry();
+				break;
+			case "Polygon":
+				if (this.path_.length>2)
+				{	geo = new ol.geom.Polygon([this.path_]);
+					geo.simplify (this.get("tolerance"));
+					f.setGeometry(geo);
+				}
+				else f.setGeometry();
+				break;
+		}
+		this.dispatchEvent({ type:'drawing', feature: this.sketch_[1], geolocation: loc });
+	}
+	this.sketch_[2].setGeometry(new ol.geom.Point(pos));
+	this.sketch_[2].set("heading",loc.getHeading());
+	// Drawing
+	this.dispatchEvent({ type:'tracking', feature: this.sketch_[1], geolocation: loc });
+};
+
 /** Interaction hover do to something when hovering a feature
  * @constructor
  * @extends {ol.interaction.Interaction}
@@ -9543,9 +10051,6 @@ ol.source.WikiCommons = function(opt_options)
 
 	options.loader = this._loaderFn;
 	
-	/** Url for DBPedia SPARQL */
-	this._url = options.url || "http://fr.dbpedia.org/sparql";
-
 	/** Max resolution to load features  */
 	this._maxResolution = options.maxResolution || 100;
 	
