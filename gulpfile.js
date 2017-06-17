@@ -56,7 +56,7 @@ gulp.task("js", function() {
 		"./interaction/*.js",
 		"./layer/*.js",
 		"./overlay/*.js",
-		"./style/fontsymbol.js", "./style/*.js",
+		"./style/fontsymbol.js", "./style/*.js", "!./style/*.def.js", 
 		"./utils/*.js",
 		"!./*/*.min.js",
 		"!./*/texturefilterimage.js"
