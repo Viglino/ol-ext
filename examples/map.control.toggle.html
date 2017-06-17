@@ -71,6 +71,8 @@
 	<div class="options" >
 		Info:<br />
 		<textarea id="info" style="width:25em; height:10em"></textarea>
+		<br/>
+		<input id="disable" type="checkbox" onchange="pedit.setDisable($(this).prop('checked'));" /><label for="disable"> disable edit control</label>
 	</div>
 
 	<script type="text/javascript">
@@ -118,6 +120,9 @@
 					}
 				});
 		map.addControl ( pedit );
+		pedit.on("change:disable", function(e)
+		{	$("#info").text("Edition is "+(e.disable?"disabled":"enabled")); 
+		});
 		
 	</script>
 

@@ -7,13 +7,14 @@
  *
  * @constructor
  * @extends {ol.control.Button}
- * @fires change:active
+ * @fires change:active, change:disable
  * @param {Object=} opt_options Control options.
  *		className {String} class of the control
  *		title {String} title of the control
  *		html {String} html to insert in the control
  *		interaction {ol.interaction} interaction associated with the control 
  *		active {bool} the control is created active, default false
+ *		disable {bool} the control is created disabled, default false
  *		bar {ol.control.Bar} a subbar associated with the control (drawn when active if control is nested in a ol.control.Bar)
  *		autoActive {bool} the control will activate when shown in an ol.control.Bar, default false
  *		onToggle {function} callback when control is clicked (or use change:active event)
@@ -31,9 +32,9 @@ ol.control.Toggle = function(options)
 
 	if (options.toggleFn) options.onToggle = options.toggleFn; // compat old version
 	options.handleClick = function()
-				{	self.toggle();
-					if (options.onToggle) options.onToggle.call(self, self.getActive());
-				};
+		{	self.toggle();
+			if (options.onToggle) options.onToggle.call(self, self.getActive());
+		};
 	options.className = (options.className||"") + " ol-toggle";
 	ol.control.Button.call(this, options);
 
@@ -47,6 +48,7 @@ ol.control.Toggle = function(options)
 	}
 
 	this.setActive (options.active);
+	this.setDisable (options.disable);
 };
 ol.inherits(ol.control.Toggle, ol.control.Button);
 
@@ -76,6 +78,26 @@ ol.control.Toggle.prototype.setMap = function(map)
 */
 ol.control.Toggle.prototype.getSubBar = function ()
 {	return this.subbar_;
+};
+
+/**
+ * Test if the control is disabled.
+ * @return {bool}.
+ * @api stable
+ */
+ol.control.Toggle.prototype.getDisable = function()
+{	return $("button", this.element).prop("disabled");
+};
+
+/** Disable the control. If disable, the control will be deactivated too.
+* @param {bool} b disable (or enable) the control, default false (enable)
+*/
+ol.control.Toggle.prototype.setDisable = function(b)
+{	if (this.getDisable()==b) return;
+	$("button", this.element).prop("disabled", b);
+	if (b && this.getActive()) this.setActive(false);
+
+	this.dispatchEvent({ type:'change:disable', key:'disable', oldValue:!b, disable:b });
 };
 
 /**
