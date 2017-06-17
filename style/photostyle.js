@@ -71,9 +71,34 @@ ol.style.Photo = function(opt_options)
 	
 	this.onload_ = options.onload;
 
+	if (typeof(options.opacity)=='number') this.setOpacity(options.opacity);
+	if (typeof(options.rotation)=='number') this.setRotation(options.rotation);
+	console.log(options.rotation)
 	this.render_();
 };
 ol.inherits(ol.style.Photo, ol.style.RegularShape);
+
+
+/**
+ * Clones the style. 
+ * @return {ol.style.Photo} 
+ */
+ol.style.Photo.prototype.clone = function() 
+{	return new ol.style.Photo(
+	{	stroke: this.stroke_,
+		fill: this.fill_,
+		shadow: this.shadow_,
+		crop: this.crop_,
+		crossOrigin: this.crossOrigin_,
+		kind: this.kind_,
+		radius: this.radius_,
+		src: this.src_,
+		offsetX: this.offset_[0],
+		offsetY: this.offset_[1],
+		opacity: this.getOpacity(),
+		rotation: this.getRotation()
+	});
+};
 
 /**
  * Draws a rounded rectangle using the current state of the canvas. 

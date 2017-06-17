@@ -26,7 +26,8 @@ ol.style.FontSymbol = function(opt_options)
 	if (options.stroke) strokeWidth = options.stroke.getWidth();
 	ol.style.RegularShape.call (this,{ radius: options.radius, fill:options.fill, 
 									rotation:options.rotation, rotateWithView: options.rotateWithView });
-
+	
+	if (typeof(options.opacity)=="number") this.setOpacity(options.opacity);
 	this.color_ = options.color;
 	this.fontSize_ = options.fontSize || 1;
 	this.stroke_ = options.stroke;
@@ -81,7 +82,34 @@ ol.style.FontSymbol.prototype.defs = { 'fonts':{}, 'glyphs':{} };
 				search: g.search || ""
 			};
 	}
- }
+ };
+
+
+/**
+ * Clones the style. 
+ * @return {ol.style.FontSymbol} 
+ */
+ol.style.FontSymbol.prototype.clone = function() 
+{	var g = new ol.style.FontSymbol(
+	{	glyph: "",
+		color: this.color_,
+		fontSize: this.fontSize_,
+		stroke: this.stroke_,
+		fill: this.fill_,
+		radius: this.radius_ + (this.stroke_ ? this.stroke_.getWidth():0),
+		form: this.form_,
+		gradient: this.gradient_,
+		offsetX: this.offset_[0],
+		offsetY: this.offset_[1],
+		opacity: this.getOpacity(),
+		rotation: this.getRotation(),
+		rotateWithView: this.getRotateWithView()
+	});
+	g.setScale(this.getScale());
+	g.glyph_ = this.glyph_;
+	g.renderMarker_();
+	return g;
+};
 
 /**
  * Get the fill style for the symbol.
@@ -111,6 +139,17 @@ ol.style.FontSymbol.prototype.getGlyph = function(name)
 	else return this.glyph_;
 };
 
+/**
+ * Get the glyph name.
+ * @return {string} the name
+ * @api
+ */
+ol.style.FontSymbol.prototype.getGlyphName = function() 
+{	for (var i in ol.style.FontSymbol.prototype.defs.glyphs)
+	{	if (ol.style.FontSymbol.prototype.defs.glyphs[i] === this.glyph_) return i;
+	}
+	return "";
+};
 
 /**
  * Get the stroke style for the symbol.

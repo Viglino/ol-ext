@@ -141,6 +141,17 @@ ol.style.FillPattern = function(options)
 };
 ol.inherits(ol.style.FillPattern, ol.style.Fill);
 
+
+/**
+ * Clones the style. 
+ * @return {ol.style.FillPattern} 
+ */
+ol.style.FillPattern.prototype.clone = function() 
+{	var s = ol.style.Fill.prototype.clone.call(this);
+	s.canvas_ = this.canvas_;
+	return s;
+};
+
 /** Get canvas used as pattern
 *	@return {canvas}
 */

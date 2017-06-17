@@ -35,6 +35,23 @@ ol.style.Shadow = function(opt_options)
 ol.inherits(ol.style.Shadow, ol.style.RegularShape);
 
 /**
+ * Clones the style. 
+ * @return {ol.style.Shadow} 
+ */
+ol.style.Shadow.prototype.clone = function() 
+{	var s = new ol.style.Shadow(
+	{	fill: this.fill_,
+		radius: this.radius_,
+		blur: this.blur_,
+		offsetX: this.offset_[0],
+		offsetY: this.offset_[1]
+	});
+	s.setScale(this.getScale());
+	s.setOpacity(this.getOpacity());
+	return s;
+};
+
+/**
  * @private
  */
 ol.style.Shadow.prototype.renderShadow_ = function() 

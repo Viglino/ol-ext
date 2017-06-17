@@ -70,7 +70,30 @@ ol.style.Chart.colors =
 	"pastel":	["#fb4","#79c","#f66","#7d7","#acc","#fdd","#ff9","#b9b"], 
 	"neon":		["#ff0","#0ff","#0f0","#f0f","#f00","#00f"]
 }
-		
+
+/**
+ * Clones the style. 
+ * @return {ol.style.Chart} 
+ */
+ol.style.Chart.prototype.clone = function() 
+{	var s = new ol.style.Chart(
+	{	type: this.type_,
+		radius: this.radius_,
+		rotation: this.getRotation(),
+		scale: this.getScale(),
+		data: this.getData(),
+		snapToPixel: this.getSnapToPixel(),
+		stroke: this.stroke_,
+		colors: this.colors_,
+		offsetX: this.offset_[0],
+		offsetY: this.offset_[1],
+		animation: this.animation_
+	});
+	s.setScale(this.getScale());
+	s.setOpacity(this.getOpacity());
+	return s;
+};
+
 /** Get data associatied with the chart
 */
 ol.style.Chart.prototype.getData = function() 
