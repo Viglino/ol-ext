@@ -30,6 +30,7 @@ ol.control.SearchFeature = function(options)
 	else
 	{	element = $("<div>").addClass((options.className||"") + 'ol-searchfeature ol-unselectable ol-control ol-collapsed');
 		this.button = $("<button>")
+					.attr('type','button')
 					.click (function()
 					{	element.toggleClass("ol-collapsed"); 
 						if (!element.hasClass("ol-collapsed")) $("input", element).focus();

@@ -24,6 +24,7 @@ ol.control.Profil = function(opt_options)
 	else
 	{	element = $("<div>").addClass((options.className || 'ol-profil') +' ol-unselectable ol-control ol-collapsed');
 		this.button = $("<button>")
+					.attr('type','button')
 					.on("click touchstart", function(e)
 					{	self.toggle();
 						e.preventDefault();
