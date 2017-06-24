@@ -39,6 +39,7 @@ ol.control.Overview = function(opt_options)
 		if (/top/.test(options.align)) element.addClass('ol-control-top');
 		if (/right/.test(options.align)) element.addClass('ol-control-right');
 		$("<button>").on("touchstart", function(e){ self.toggleMap(); e.preventDefault(); })
+					.attr('type','button')
 					.click (function(){self.toggleMap()})
 					.appendTo(element);
 		this.panel_ = $("<div>").addClass("panel")

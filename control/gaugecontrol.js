@@ -16,7 +16,7 @@ ol.control.Gauge = function(options)
 {	options = options || {};
 	var element = $("<div>").addClass((options.className||"") + ' ol-gauge ol-unselectable ol-control');
 	this.title_ = $("<span>").appendTo(element);
-	this.gauge_ = $("<button>").appendTo($("<div>").appendTo(element)).width(0);
+	this.gauge_ = $("<button>").attr('type','button').appendTo($("<div>").appendTo(element)).width(0);
 	
 	ol.control.Control.call(this, 
 	{	element: element.get(0),
