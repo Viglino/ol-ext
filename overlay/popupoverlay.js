@@ -42,6 +42,7 @@ ol.Overlay.Popup = function (options)
         this.onclose = options.onclose;      
         this.onshow = options.onshow;      
 	$("<button>").addClass("closeBox").addClass(options.closeBox?"hasclosebox":"")
+				.attr('type', 'button')
 				.prependTo(d)
 				.click(function()
 				{	self.hide();
