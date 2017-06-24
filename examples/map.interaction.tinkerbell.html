@@ -1,0 +1,64 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<title>OL3-ext: Tinkerbell interaction</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="Add some magic to yours ol3 maps" />
+	<meta name="keywords" content="ol3, interaction, Tinker Bell, sparkle, cursor" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<link rel="stylesheet" href="https://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/master/build/ol.js"></script>
+
+	<script type="text/javascript" src="../interaction/tinkerbellinteraction.js"></script>
+
+	<link rel="stylesheet" href="style.css" />
+
+</head>
+<body>
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: Tinkerbell interaction</h1>
+	</a>
+	<div class="info">
+		<i>ol.interaction.TinkerBell</i> adds a Tinker Bell trail effect on the cursor.
+	</div>
+
+	<!-- the map -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options">
+		color:
+		<select onchange="tb.set('color', this.value);">
+			<option value="#fff">white</option>
+			<option value="red">red</option>
+			<option value="yellow">yellow</option>
+			<option value="black">black</option>
+		</select>
+	</div>
+
+	<script type="text/javascript">
+		// The map
+		var map=new ol.Map
+			({	target: 'map',
+				view: new ol.View
+				({	zoom: 3,
+					center: [270148, 6247782]
+				}),
+				layers: [ new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }) ]
+			});
+
+		// interaction
+		var tb = new ol.interaction.TinkerBell();
+		map.addInteraction(tb);
+
+		//map.addInteraction(new ol.interaction.Draw ({ type: 'LineString' }));
+
+	</script>
+
+</body>
+</html>
