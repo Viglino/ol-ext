@@ -1,7 +1,7 @@
 /**
  * ol3-ext - A set of cool extensions for OpenLayers 3 (ol3).
  * @abstract ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v1.0.0
+ * @version v1.0.1
  * @author Jean-Marc Viglino (https://github.com/Viglino)
  * @link https://github.com/Viglino/ol3-ext#,
  * @license CECILL-B
@@ -49,6 +49,7 @@ ol.control.LayerSwitcher = function(opt_options)
 	{	element = $("<div>").addClass((options.switcherClass || 'ol-layerswitcher') +' ol-unselectable ol-control ol-collapsed');
 	
 		this.button = $("<button>")
+					.attr('type','button')
 					.on("touchstart", function(e)
 					{	element.toggleClass("ol-collapsed"); 
 						e.preventDefault(); 
@@ -155,8 +156,8 @@ ol.control.LayerSwitcher.prototype.overflow = function(dir)
 		{	// Bug IE: need to have an height defined
 			$(this.element).css("height", "100%");
 			switch (dir)
-			{	case 1: top += 2*$("li",this.panel_).height(); break;
-				case -1: top -= 2*$("li",this.panel_).height(); break;
+			{	case 1: top += 2*$("li.visible .li-content",this.panel_).height(); break;
+				case -1: top -= 2*$("li.visible .li-content",this.panel_).height(); break;
 				case "+50%": top += Math.round(h/2); break;
 				case "-50%": top -= Math.round(h/2); break;
 				default: break;
@@ -288,14 +289,17 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e)
 		case 'mousedown': 
 		case 'touchstart':
 		{	e.stopPropagation();
-			//e.preventDefault();
+			e.preventDefault();
+			var pageY = e.pageY 
+					|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageY) 
+					|| (e.originalEvent.changedTouches && e.originalEvent.changedTouches.length && e.originalEvent.changedTouches[0].pageY);
 			drag = 
 				{	self: drag.self,
 					elt: $(e.currentTarget).closest("li"), 
 					start: true, 
 					element: drag.self.element, 
 					panel: drag.self.panel_, 
-					pageY: e.pageY || e.originalEvent.touches[0].pageY 
+					pageY: pageY
 				};
 			drag.elt.parent().addClass('drag');
 			$(document).on("mouseup mousemove touchend touchcancel touchmove", drag, drag.self.dragOrdering_);
@@ -341,9 +345,13 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e)
 			break;
 		}
 		// Ordering
-		default: 
+		case 'mousemove':
+		case 'touchmove':
 		{	// First drag (more than 2 px) => show drag element (ghost)
-			if (drag.start && Math.abs(drag.pageY - (e.pageY || e.originalEvent.touches[0].pageY)) > 2)
+			var pageY = e.pageY 
+					|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageY) 
+					|| (e.originalEvent.changedTouches && e.originalEvent.changedTouches.length && e.originalEvent.changedTouches[0].pageY);
+			if (drag.start && Math.abs(drag.pageY - pageY) > 2)
 			{	drag.start = false;
 				drag.elt.addClass("drag");
 				drag.layer = drag.elt.data('layer');
@@ -363,13 +371,14 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e)
 				e.stopPropagation();
 
 				// Ghost div
-				drag.div.css ({ top:(e.pageY || e.originalEvent.touches[0].pageY)-drag.panel.offset().top+5 });
+				drag.div.css ({ top:pageY - drag.panel.offset().top + drag.panel.scrollTop() +5 });
 				
 				var li;
 				if (e.pageX) li = $(e.target);
-				else li = $(document.elementFromPoint(e.originalEvent.touches[0].clientX, e.originalEvent.touches[0].clientY)); 
+				else li = $(document.elementFromPoint(e.originalEvent.touches[0].clientX, e.originalEvent.touches[0].clientY));
 				if (li.hasClass("ol-switcherbottomdiv")) 
 				{	drag.self.overflow(-1);
+					console.log('bottom')
 				}
 				else if (li.hasClass("ol-switchertopdiv")) 
 				{	drag.self.overflow(1);
@@ -399,6 +408,8 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e)
 			}
 			break;
 		}
+		default: break;
+
 	}
 };
 
@@ -415,7 +426,9 @@ ol.control.LayerSwitcher.prototype.dragOpacity_ = function(e)
 		case 'touchstart':
 		{	e.stopPropagation();
 			e.preventDefault();
-			drag.start = e.pageX || e.originalEvent.touches[0].pageX;
+			drag.start = e.pageX 
+					|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageX) 
+					|| (e.originalEvent.changedTouches && e.originalEvent.changedTouches.length && e.originalEvent.changedTouches[0].pageX);
 			drag.elt = $(e.target);
 			drag.layer = drag.elt.closest("li").data('layer')
 			drag.self.dragging_ = true;
@@ -434,7 +447,9 @@ ol.control.LayerSwitcher.prototype.dragOpacity_ = function(e)
 		}
 		// Move opcaity
 		default: 
-		{	var x = e.pageX || e.originalEvent.touches[0].pageX;
+		{	var x = e.pageX 
+				|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageX) 
+				|| (e.originalEvent.changedTouches && e.originalEvent.changedTouches.length && e.originalEvent.changedTouches[0].pageX);
 			var dx = Math.max ( 0, Math.min( 1, (x - drag.elt.parent().offset().left) / drag.elt.parent().width() ));
 			drag.elt.css("left", (dx*100)+"%");
 			drag.opacity = dx;
@@ -600,7 +615,9 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 				.on("click", function(e)
 				{	e.stopPropagation();
 					e.preventDefault();
-					var x = e.pageX || e.originalEvent.touches[0].pageX;
+					var x = e.pageX 
+						|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageX) 
+						|| (e.originalEvent.changedTouches && e.originalEvent.changedTouches.length && e.originalEvent.changedTouches[0].pageX);
 					var dx = Math.max ( 0, Math.min( 1, (x - $(this).offset().left) / $(this).width() ));
 					$(this).closest("li").data('layer').setOpacity(dx);
 				})
@@ -673,6 +690,7 @@ ol.control.Button = function(options)
 	var self = this;
 
 	$("<button>").html(options.html || "")
+				.attr('type','button')
 				.attr('title', options.title)
 				.on("touchstart click", function(e)
 				{	if (e && e.preventDefault) 
@@ -1743,7 +1761,7 @@ ol.control.Gauge = function(options)
 {	options = options || {};
 	var element = $("<div>").addClass((options.className||"") + ' ol-gauge ol-unselectable ol-control');
 	this.title_ = $("<span>").appendTo(element);
-	this.gauge_ = $("<button>").appendTo($("<div>").appendTo(element)).width(0);
+	this.gauge_ = $("<button>").attr('type','button').appendTo($("<div>").appendTo(element)).width(0);
 	
 	ol.control.Control.call(this, 
 	{	element: element.get(0),
@@ -2803,6 +2821,7 @@ ol.control.Overview = function(opt_options)
 		if (/top/.test(options.align)) element.addClass('ol-control-top');
 		if (/right/.test(options.align)) element.addClass('ol-control-right');
 		$("<button>").on("touchstart", function(e){ self.toggleMap(); e.preventDefault(); })
+					.attr('type','button')
 					.click (function(){self.toggleMap()})
 					.appendTo(element);
 		this.panel_ = $("<div>").addClass("panel")
@@ -3542,6 +3561,7 @@ ol.control.Profil = function(opt_options)
 	else
 	{	element = $("<div>").addClass((options.className || 'ol-profil') +' ol-unselectable ol-control ol-collapsed');
 		this.button = $("<button>")
+					.attr('type','button')
 					.on("click touchstart", function(e)
 					{	self.toggle();
 						e.preventDefault();
@@ -3917,6 +3937,7 @@ ol.control.SearchFeature = function(options)
 	else
 	{	element = $("<div>").addClass((options.className||"") + 'ol-searchfeature ol-unselectable ol-control ol-collapsed');
 		this.button = $("<button>")
+					.attr('type','button')
 					.click (function()
 					{	element.toggleClass("ol-collapsed"); 
 						if (!element.hasClass("ol-collapsed")) $("input", element).focus();
@@ -4155,10 +4176,13 @@ ol.control.Swipe.prototype.move = function(e)
 		{	self.isMoving = true;
 			$(document).on ("mouseup mousemove touchend touchcancel touchmove", self, self.move );
 		}
-		default: 
+		case 'mousemove': 
+		case 'touchmove':
 		{	if (self.isMoving)
 			{	if (self.get('orientation') === "vertical")
-				{	var pageX = e.pageX || e.originalEvent.touches[0].pageX;
+				{	var pageX = e.pageX 
+						|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageX) 
+						|| (e.originalEvent.changedTouches && e.originalEvent.changedTouches.length && e.originalEvent.changedTouches[0].pageX);
 					if (!pageX) break;
 					pageX -= $(self.getMap().getTargetElement()).offset().left;
 
@@ -4167,17 +4191,20 @@ ol.control.Swipe.prototype.move = function(e)
 					self.set('position', l);
 				}
 				else
-				{	var pageY = e.pageY || e.originalEvent.touches[0].pageY;
+				{	var pageY = e.pageY 
+						|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageY) 
+						|| (e.originalEvent.changedTouches && e.originalEvent.changedTouches.length && e.originalEvent.changedTouches[0].pageY);
 					if (!pageY) break;
 					pageY -= $(self.getMap().getTargetElement()).offset().top;
 
-                                        var l = self.getMap().getSize()[1];
+					var l = self.getMap().getSize()[1];
 					l = Math.min(Math.max(0, 1-(l-pageY)/l), 1);
 					self.set('position', l);
 				}
 			}
 			break;
 		}
+		default: break;
 	}
 }
 
@@ -8522,6 +8549,96 @@ ol.Map.prototype.hideTarget = function()
 	this.removeOverlay(this.targetOverlay_);
 	this.targetOverlay_ = undefined;
 };
+/*	
+	Tinker Bell effect on maps.
+	
+	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+	@link https://github.com/Viglino
+ */
+ /**
+ * @constructor
+ * @extends {ol.interaction.Pointer}
+ *	@param {ol.interaction.TinkerBell.options} flashlight options param
+ *		- color {ol.Color} color of the sparkles
+ */
+ol.interaction.TinkerBell = function(options) 
+{	options = options || {};
+
+	ol.interaction.Pointer.call(this, 
+	{	handleDownEvent: this.onMove,
+		handleMoveEvent: this.onMove
+	});
+
+	this.set('color', options.color ? ol.color.asString(options.color) : "#fff");
+	this.sparkle = [0,0];
+	this.sparkles = [];
+	this.lastSparkle = this.time = new Date();
+
+	var self = this;
+	this.out_ = function() { self.isout_=true; };
+	this.isout_ = true;
+};
+ol.inherits(ol.interaction.TinkerBell, ol.interaction.Pointer);
+
+/** Set the map > start postcompose
+*/
+ol.interaction.TinkerBell.prototype.setMap = function(map)
+{	if (this.getMap())
+	{	this.getMap().un('postcompose', this.postcompose_, this);
+		map.getViewport().removeEventListener('mouseout', this.out_, false);
+		this.getMap().render();
+	}
+	
+	ol.interaction.Pointer.prototype.setMap.call(this, map);
+
+	if (map)
+	{	map.on('postcompose', this.postcompose_, this);
+		map.on('mouseout', this.onMove, this);
+		map.getViewport().addEventListener('mouseout', this.out_, false);
+	}
+};
+
+ol.interaction.TinkerBell.prototype.onMove = function(e)
+{	this.sparkle = e.pixel;
+	this.isout_ = false;
+	this.getMap().render();
+};
+
+/** Postcompose function
+*/
+ol.interaction.TinkerBell.prototype.postcompose_ = function(e)
+{	var delta = 15;
+	var ctx = e.context;
+	var canvas = ctx.canvas;
+	var dt = e.frameState.time - this.time;
+	this.time = e.frameState.time;
+	if (e.frameState.time-this.lastSparkle > 30 && !this.isout_)
+	{	this.lastSparkle = e.frameState.time;
+		this.sparkles.push({ p:[this.sparkle[0]+Math.random()*delta-delta/2, this.sparkle[1]+Math.random()*delta], o:1 });
+	}
+	ctx.save();
+		ctx.scale(e.frameState.pixelRatio,e.frameState.pixelRatio);
+		ctx.fillStyle = this.get("color");
+		for (var i=this.sparkles.length-1, p; p=this.sparkles[i]; i--)
+		{	if (p.o < 0.2) 
+			{	this.sparkles.splice(0,i+1);
+				break;
+			}
+			ctx.globalAlpha = p.o;
+			ctx.beginPath();
+			ctx.arc (p.p[0], p.p[1], 2.2, 0, 2 * Math.PI, false);
+			ctx.fill();
+			p.o *= 0.98;
+			p.p[0] += (Math.random()-0.5);
+			p.p[1] += dt*(1+Math.random())/30;
+		};
+	ctx.restore();
+
+	// tell OL3 to continue postcompose animation
+	if (this.sparkles.length) this.getMap().render(); 
+};
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -10343,6 +10460,7 @@ ol.Overlay.Popup = function (options)
         this.onclose = options.onclose;      
         this.onshow = options.onshow;      
 	$("<button>").addClass("closeBox").addClass(options.closeBox?"hasclosebox":"")
+				.attr('type', 'button')
 				.prependTo(d)
 				.click(function()
 				{	self.hide();
