@@ -146,10 +146,13 @@ ol.control.Swipe.prototype.move = function(e)
 		{	self.isMoving = true;
 			$(document).on ("mouseup mousemove touchend touchcancel touchmove", self, self.move );
 		}
-		default: 
+		case 'mousemove': 
+		case 'touchmove':
 		{	if (self.isMoving)
 			{	if (self.get('orientation') === "vertical")
-				{	var pageX = e.pageX || e.originalEvent.touches[0].pageX;
+				{	var pageX = e.pageX 
+						|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageX) 
+						|| (e.originalEvent.changedTouches && e.originalEvent.changedTouches.length && e.originalEvent.changedTouches[0].pageX);
 					if (!pageX) break;
 					pageX -= $(self.getMap().getTargetElement()).offset().left;
 
@@ -158,17 +161,20 @@ ol.control.Swipe.prototype.move = function(e)
 					self.set('position', l);
 				}
 				else
-				{	var pageY = e.pageY || e.originalEvent.touches[0].pageY;
+				{	var pageY = e.pageY 
+						|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageY) 
+						|| (e.originalEvent.changedTouches && e.originalEvent.changedTouches.length && e.originalEvent.changedTouches[0].pageY);
 					if (!pageY) break;
 					pageY -= $(self.getMap().getTargetElement()).offset().top;
 
-                                        var l = self.getMap().getSize()[1];
+					var l = self.getMap().getSize()[1];
 					l = Math.min(Math.max(0, 1-(l-pageY)/l), 1);
 					self.set('position', l);
 				}
 			}
 			break;
 		}
+		default: break;
 	}
 }
 
