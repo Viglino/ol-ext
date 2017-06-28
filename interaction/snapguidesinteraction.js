@@ -114,7 +114,7 @@ ol.interaction.SnapGuides.prototype.setMap = function(map)
 * @param {boolean} active
 */
 ol.interaction.SnapGuides.prototype.setActive = function(active) 
-{	this.overlayLayer_.setVisible(active);
+{	if (this.getMap()) this.overlayLayer_.setVisible(active);
 	ol.interaction.Interaction.prototype.setActive.call (this, active);
 }
 
@@ -176,7 +176,8 @@ ol.interaction.SnapGuides.prototype.addOrthoGuide = function(v)
 * @api
 */
 ol.interaction.SnapGuides.prototype.setDrawInteraction = function(drawi)
-{	// Number of points currently drawing
+{	var self = this;
+	// Number of points currently drawing
 	var nb = 0;
 	// Current guidelines
 	var features = [];
@@ -196,11 +197,11 @@ ol.interaction.SnapGuides.prototype.setDrawInteraction = function(drawi)
 		}
 		var l = coord.length;
 		if (l != nb && l > s)
-		{	snapi.clearGuides(features);
+		{	self.clearGuides(features);
 			features = [
-					snapi.addOrthoGuide([coord[l-s],coord[l-s-1]]),
-					snapi.addGuide([coord[0],coord[1]]),
-					snapi.addOrthoGuide([coord[0],coord[1]])
+					self.addOrthoGuide([coord[l-s],coord[l-s-1]]),
+					self.addGuide([coord[0],coord[1]]),
+					self.addOrthoGuide([coord[0],coord[1]])
 				];
 			nb = l;
 		}
