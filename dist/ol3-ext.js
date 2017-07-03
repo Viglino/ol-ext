@@ -7403,7 +7403,7 @@ ol.interaction.Hover.prototype.setLayerFilter = function(filter)
 	else this.layerFilter_ = function(){ return true; };
 };
 
-/** Cursor move > tells other maps to show the cursor
+/** Get features whenmove
 * @param {ol.event} e "move" event
 */
 ol.interaction.Hover.prototype.handleMove_ = function(e) 
@@ -10556,6 +10556,13 @@ ol.Overlay.Popup.prototype.setPositioning_ = function (pos)
 	$(this.element).addClass(this.getClassPositioning());
 }
 
+/** Check if popup is visible
+* @return {boolean}
+*/
+ol.Overlay.Popup.prototype.getVisible = function ()
+{	return $(this.element).hasClass("visible");
+};
+
 /**
  * Set the position and the content of the popup.
  * @param {ol.Coordinate|string} the coordinate of the popup or the HTML content.
@@ -10577,8 +10584,8 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
 		this.prevHTML = html;
 		$(this.content).html("").append(html);
 		// Refresh when loaded (img)
-		$("*", this.content).load(function()
-		{	map.renderSync(); 
+		$("*", this.content).on('load',function()
+		{	map.renderSync();
 		})
 	}
 
