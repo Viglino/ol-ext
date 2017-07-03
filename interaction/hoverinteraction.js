@@ -69,7 +69,7 @@ ol.interaction.Hover.prototype.setLayerFilter = function(filter)
 	else this.layerFilter_ = function(){ return true; };
 };
 
-/** Cursor move > tells other maps to show the cursor
+/** Get features whenmove
 * @param {ol.event} e "move" event
 */
 ol.interaction.Hover.prototype.handleMove_ = function(e) 
