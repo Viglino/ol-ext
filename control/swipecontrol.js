@@ -205,5 +205,5 @@ ol.control.Swipe.prototype.precomposeRight = function(e)
 /** @private
 */
 ol.control.Swipe.prototype.postcompose = function(e) 
-{	ctx = e.context.restore();
+{	e.context.restore();
 };
