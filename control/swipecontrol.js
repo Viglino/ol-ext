@@ -37,16 +37,16 @@ ol.control.Swipe = function(opt_options)
 	this.on('propertychange', function() 
 	{	if (this.getMap()) this.getMap().renderSync();
 		if (this.get('orientation') === "horizontal")
-		{	$(this.element).css("top", this.get('position')*100+"%")
+		{	$(this.element).css("top", this.get('position')*100+"%");
 			$(this.element).css("left", "");
 		}
 		else
 		{	if (this.get('orientation') !== "vertical") this.set('orientation', "vertical");
-			$(this.element).css("left", this.get('position')*100+"%")
+			$(this.element).css("left", this.get('position')*100+"%");
 			$(this.element).css("top", "");
 		}
-		$(this.element).removeClass("horizontal vertical")
-		$(this.element).addClass(this.get('orientation'))
+		$(this.element).removeClass("horizontal vertical");
+		$(this.element).addClass(this.get('orientation'));
 	}, this);
 	
 	this.set('position', options.position || 0.5);
@@ -90,7 +90,7 @@ ol.control.Swipe.prototype.isLayer_ = function(layer)
 	{	if (this.layers[k].layer === layer)  return k;
 	}
 	return -1;
-}
+};
 
 /** Add a layer to clip
  *	@param {ol.layer|Array<ol.layer>} layer to clip
@@ -110,7 +110,7 @@ ol.control.Swipe.prototype.addLayer = function(layers, right)
 			}
 		}
 	}
-}
+};
 
 /** Remove a layer to clip
  *	@param {ol.layer|Array<ol.layer>} layer to clip
@@ -127,7 +127,7 @@ ol.control.Swipe.prototype.removeLayer = function(layers)
 			this.getMap().renderSync();
 		}
 	}
-}
+};
 
 /** @private
 */
@@ -176,7 +176,7 @@ ol.control.Swipe.prototype.move = function(e)
 		}
 		default: break;
 	}
-}
+};
 
 /** @private
 */
@@ -188,7 +188,7 @@ ol.control.Swipe.prototype.precomposeLeft = function(e)
 	if (this.get('orientation') === "vertical") ctx.rect (0,0, canvas.width*this.get('position'), canvas.height);
 	else ctx.rect (0,0, canvas.width, canvas.height*this.get('position'));
 	ctx.clip();
-}
+};
 
 /** @private
 */
@@ -200,10 +200,10 @@ ol.control.Swipe.prototype.precomposeRight = function(e)
 	if (this.get('orientation') === "vertical") ctx.rect (canvas.width*this.get('position'), 0, canvas.width, canvas.height);
 	else ctx.rect (0,canvas.height*this.get('position'), canvas.width, canvas.height);
 	ctx.clip();
-}
+};
 
 /** @private
 */
 ol.control.Swipe.prototype.postcompose = function(e) 
-{	ctx = e.context.restore();
-}
+{	e.context.restore();
+};
