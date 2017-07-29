@@ -24,7 +24,7 @@ var banner = ['/**',
 // Build css. Use --debug to build in debug mode
 gulp.task("css", function() {
 	gulp.src([
-		"./control/*.css",
+		"./control/*.css", "!./control/piratecontrol.css",
 		"./featureanimation/*.css", 
 		"./filter/*.css",
 		"./interaction/*.css",
@@ -50,7 +50,7 @@ gulp.task("cssd", function() {
 // Build js
 gulp.task("js", function() {
 	gulp.src([
-		"./control/layerswitchercontrol.js", "./control/*.js",
+		"./control/layerswitchercontrol.js", "./control/*.js", "!./control/piratecontrol.js",
 		"./featureanimation/featureanimation.js", "./featureanimation/*.js", 
 		"./filter/filter.js", "./filter/maskfilter.js", "./filter/*.js",
 		"./interaction/*.js",
