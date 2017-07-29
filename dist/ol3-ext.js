@@ -5355,7 +5355,7 @@ ol.inherits(ol.filter.Composite, ol.filter.Base);
 *	@param {string} operation composite function
 */
 ol.filter.Composite.prototype.setOperation = function(operation)
-{	this.set(operation || "source-over");
+{	this.set('operation', operation || "source-over");
 }
 
 ol.filter.Composite.prototype.precompose = function(e)
