@@ -73,8 +73,7 @@ ol.style.Photo = function(opt_options)
 
 	if (typeof(options.opacity)=='number') this.setOpacity(options.opacity);
 	if (typeof(options.rotation)=='number') this.setRotation(options.rotation);
-	console.log(options.rotation)
-	this.render_();
+	this.renderPhoto_();
 };
 ol.inherits(ol.style.Photo, ol.style.RegularShape);
 
@@ -184,7 +183,7 @@ ol.style.Photo.prototype.drawBack_ = function(context, color, strokeWidth)
 /**
  * @private
  */
-ol.style.Photo.prototype.render_ = function() 
+ol.style.Photo.prototype.renderPhoto_ = function() 
 {
 	var strokeStyle;
 	var strokeWidth = 0;
