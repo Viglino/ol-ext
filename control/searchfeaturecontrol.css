@@ -49,6 +49,7 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
+.ol-searchfeature ul li.select,
 .ol-searchfeature ul li:hover
 {	background-color: rgba(0,60,136,.5);
 	color: #fff;
