@@ -517,7 +517,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 
 		var li = $("<li>").addClass((layer.getVisible()?"visible ":" ")+(layer.get('baseLayer')?"baselayer":""))
 						.data("layer",layer).appendTo(ul);
-		
+
 		var layer_buttons = $("<div>").addClass("ol-layerswitcher-buttons").appendTo(li);
 
 		var d = $("<div>").addClass('li-content').appendTo(li);
@@ -621,10 +621,16 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 
 		// Layer group
 		if (layer.getLayers)
-		{	if (layer.get("openInLayerSwitcher")===true) 
+		{	li.addClass('ol-layer-group');
+			if (layer.get("openInLayerSwitcher")===true) 
 			{	this.drawList ($("<ul>").appendTo(li), layer.getLayers());
 			}
 		}
+		else if (layer instanceof ol.layer.Vector) li.addClass('ol-layer-vector');
+		else if (layer instanceof ol.layer.VectorTile) li.addClass('ol-layer-vector');
+		else if (layer instanceof ol.layer.Tile) li.addClass('ol-layer-tile');
+		else if (layer instanceof ol.layer.Image) li.addClass('ol-layer-image');
+		else if (layer instanceof ol.layer.Heatmap) li.addClass('ol-layer-heatmap');
 	}
 
 	if (ul==this.panel_) this.overflow();
