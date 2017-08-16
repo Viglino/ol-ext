@@ -1,0 +1,75 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<title>Control GeoBookmark</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+    <!-- OL3 -->
+	<link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/master/build/ol.js"></script>
+	
+	<!-- OL3-ext -->
+	<link rel="stylesheet" href="https://cdn.rawgit.com/Viglino/ol3-ext/gh-pages/dist/ol3-ext.css" type="text/css" />
+	<script type="text/javascript" src="https://cdn.rawgit.com/Viglino/ol3-ext/gh-pages/dist/ol3-ext.js"></script>
+
+	<link rel="stylesheet" href="../control/geobookmarkcontrol.css" type="text/css" />
+	<script type="text/javascript" src="../control/geobookmarkcontrol.js"></script>
+
+	<!-- -->
+	<link rel="stylesheet" href="css/style.css" />
+
+	<style>
+
+	</style>
+
+	</head>
+<body >
+	<a href="../index.html">
+		<h1>GeoBookmark control</h1>
+	</a>
+	<div class="info">
+		<i>ol.control.GeoBookmark</i> add a control to handle bookmark, ie. save places.
+		<ul>
+			<li>
+				The <i>editable</i> option enable modification (add or delate bookmarks)
+			</li>
+			<li>
+				You can define permanet bookmarks that can't be deleted
+			</li>
+		</ul>
+		GeoBookmarks are stored in the localStorage.
+	</div>
+
+	<!-- DIV pour la carte -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options">
+	</div>
+	
+	<script type="text/javascript">
+	// The map
+	var map = new ol.Map
+		({	target: 'map',
+			view: new ol.View ({ zoom: 13, center: [649083, 5408224] }),
+			layers: [new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) })]
+		});
+
+	var bm = new ol.control.GeoBookmark({	marks:
+			{	Paris: {pos:ol.proj.transform([2.351828, 48.856578], 'EPSG:4326', 'EPSG:3857'), zoom:11, permanent: true },
+				London: {pos:ol.proj.transform([-0.1275,51.507222], 'EPSG:4326', 'EPSG:3857'), zoom:11, permanent: true },
+				Geneve: {pos:ol.proj.transform([6.149985,46.200013], 'EPSG:4326', 'EPSG:3857'), zoom:13, permanent: true },
+				Bruxelles: {pos:ol.proj.transform([4.35,50.83], 'EPSG:4326', 'EPSG:3857'), zoom:12, permanent: true },
+				Berlin: {pos:ol.proj.transform([13.383333,52.516667], 'EPSG:4326', 'EPSG:3857'), zoom:12, permanent: true },
+				Madrid: {pos:ol.proj.transform([-3.683333,40.433333], 'EPSG:4326', 'EPSG:3857'), zoom:12 },
+				Roma: {pos:ol.proj.transform([12.48657,41.888732], 'EPSG:4326', 'EPSG:3857'), zoom:12 },
+			}
+		});
+	map.addControl(bm);
+
+	</script>
+
+</body>
+</html>
