@@ -122,14 +122,15 @@ ol.interaction.CenterTouch.prototype.drawTarget_ = function (e)
 
 			if (style instanceof ol.style.Style)
 			{	var imgs = style.getImage();
-				var sc;
-				if (imgs) 
-				{	var sc = imgs.getScale(); 
+				var sc=0;
+				// OL < v4.3 : setImageStyle doesn't check retina
+				if (imgs && !ol.Map.prototype.getFeaturesAtPixel) 
+				{	sc = imgs.getScale(); 
 					imgs.setScale(ratio*sc);
 				}
 				e.vectorContext.setStyle(style);
 				e.vectorContext.drawGeometry(geom);
-				if (imgs) imgs.setScale(sc);
+				if (sc && imgs) imgs.setScale(sc);
 			}
 		}
 
