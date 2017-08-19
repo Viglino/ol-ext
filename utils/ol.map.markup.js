@@ -3,6 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Show a markup a point on postcompose
+*	@deprecated use map.animateFeature instead
 *	@param {ol.coordinates} point to pulse
 *	@param {ol.markup.options} pulse options param
 *		- projection {ol.projection|String|undefined} projection of coords, default none

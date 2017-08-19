@@ -3,6 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Pulse a point on postcompose
+*	@deprecated use map.animateFeature instead
 *	@param {ol.coordinates} point to pulse
 *	@param {ol.pulse.options} pulse options param
 *		- projection {ol.projection||String} projection of coords
@@ -38,7 +39,7 @@ ol.Map.prototype.pulse = function(coords, options)
 	var minRadius = maxRadius - (options.amplitude || maxRadius); //options.minRadius || 0;
 	var width = options.lineWidth || 2;
 	var color = options.color || 'red';
-
+	console.log("pulse")
 	// Animate function
 	function animate(event) 
 	{	var frameState = event.frameState;
@@ -52,6 +53,7 @@ ol.Map.prototype.pulse = function(coords, options)
 			context.beginPath();
 			var e = easing(elapsedRatio)
 			context.globalAlpha = easing(1 - elapsedRatio);
+			console.log("anim")
 			for (var i=0; i<style.length; i++)
 			{	var imgs = style[i].getImage();
 				var sc = imgs.getScale(); 
