@@ -41,15 +41,16 @@ ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
 	var style = e.style;
 	for (var i=0; i<style.length; i++)
 	{	var imgs = style[i].getImage();
-		var sc;
-		if (imgs) 
+		var sc=0;
+		// OL < v4.3 : setImageStyle doesn't check retina
+		if (imgs && !ol.Map.prototype.getFeaturesAtPixel) 
 		{	sc = imgs.getScale(); 
 			imgs.setScale(e.frameState.pixelRatio*sc);
 		}
 		e.vectorContext.setStyle(style[i]);
 		if (style[i].getZIndex()<0) e.vectorContext.drawGeometry(shadow||geom);
 		else e.vectorContext.drawGeometry(geom);
-		if (imgs) imgs.setScale(sc);
+		if (sc && imgs) imgs.setScale(sc);
 	}
 };
 
@@ -130,7 +131,7 @@ ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 		event.time = e.frameState.time - event.start;
 		event.elapsed = event.time / fanim[step].duration_;
 		if (event.elapsed > 1) event.elapsed = 1;
-
+		
 		// Stop animation?
 		if (!fanim[step].animate(event))
 		{	nb++;
