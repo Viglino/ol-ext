@@ -1660,53 +1660,6 @@ ol.control.Bar.prototype.onActivateControl_ = function (e)
 	this.deactivateControls (this.controls_[n]);
 };
 
-/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-/**
- * Draw a compass on the map. The position/size of the control is defined in the css.
- *
- * @constructor
- * @extends {ol.control.Control}
- * @param {Object=} Control options. The style {ol.style.Style} option is usesd to draw the text.
- *	- className {string} class name for the control
- *	- image {Image} an image, default use the src option or a default image
- *	- src {string} image src, default use the image option or a default image
- *	- rotateVithView {boolean} rotate vith view (false to show watermark), default true
- *	- style {ol.style.Stroke} style to draw the lines, default draw no lines
- */
-ol.control.DeviceOrientation = function(options) 
-{	var self = this;
-	if (!options) options = {};
-	
-	// Initialize parent
-	var element = $("<div>").addClass('ol-unselectable ol-control ol-deviceorientation');
-	if (options.className) element.addClass(options.className);
-	this.compass = $("<div>").addClass("ol-compass").appendTo(element);
-
-	ol.control.Control.call(this, 
-	{	element: element.get(0),
-		target: options.target
-	});
-	
-	if(window.DeviceOrientationEvent) 
-		window.addEventListener("deviceorientation", function(e){ self.setOrientation(e.alpha); }, false);
-	else
-		element.addClass('ol-disable');
-};
-ol.inherits(ol.control.DeviceOrientation, ol.control.Control);
-
-/** Set the orientation
-*/
-ol.control.DeviceOrientation.prototype.setOrientation = function(r)
-{	var t = "translate(-50%, -50%) rotate("+r+"deg)";
-	this.compass.css(
-	{	"-webkit-transform": t,
-		"transform": t
-	});
-	console.log(r)
-};
 /** A simple toggle control with a callback function
  * OpenLayers 3 Layer Switcher Control.
  *
@@ -4289,14 +4242,15 @@ ol.control.Target.prototype.drawTarget_ = function (e)
 
 			if (style instanceof ol.style.Style)
 			{	var imgs = style.getImage();
-				var sc;
-				if (imgs) 
-				{	var sc = imgs.getScale(); 
+				var sc=0;
+				// OL < v4.3 : setImageStyle don't check retina
+				if (imgs && !ol.Map.prototype.getFeaturesAtPixel) 
+				{	sc = imgs.getScale(); 
 					imgs.setScale(ratio*sc);
 				}
 				e.vectorContext.setStyle(style);
 				e.vectorContext.drawGeometry(geom);
-				if (imgs) imgs.setScale(sc);
+				if (sc && imgs) imgs.setScale(sc);
 			}
 		}
 
@@ -4531,15 +4485,16 @@ ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
 	var style = e.style;
 	for (var i=0; i<style.length; i++)
 	{	var imgs = style[i].getImage();
-		var sc;
-		if (imgs) 
+		var sc=0;
+		// OL < v4.3 : setImageStyle don't check retina
+		if (imgs && !ol.Map.prototype.getFeaturesAtPixel) 
 		{	sc = imgs.getScale(); 
 			imgs.setScale(e.frameState.pixelRatio*sc);
 		}
 		e.vectorContext.setStyle(style[i]);
 		if (style[i].getZIndex()<0) e.vectorContext.drawGeometry(shadow||geom);
 		else e.vectorContext.drawGeometry(geom);
-		if (imgs) imgs.setScale(sc);
+		if (sc && imgs) imgs.setScale(sc);
 	}
 };
 
@@ -4620,7 +4575,7 @@ ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 		event.time = e.frameState.time - event.start;
 		event.elapsed = event.time / fanim[step].duration_;
 		if (event.elapsed > 1) event.elapsed = 1;
-
+		
 		// Stop animation?
 		if (!fanim[step].animate(event))
 		{	nb++;
@@ -5004,11 +4959,12 @@ ol.featureAnimation.Teleport.prototype.animate = function (e)
 {	var sc = this.easing_(e.elapsed);
 	if (sc)
 	{	e.context.save()
+			var ratio = e.frameState.pixelRatio;
 			e.context.globalAlpha = sc;
 			e.context.scale(sc,1/sc);
 			var m = e.frameState.coordinateToPixelTransform;
-			var dx = (1/sc-1) * (m[0]*e.coord[0] + m[1]*e.coord[1] +m[4]);
-			var dy = (sc-1) * (m[2]*e.coord[0] + m[3]*e.coord[1] +m[5]);
+			var dx = (1/sc-1) * ratio * (m[0]*e.coord[0] + m[1]*e.coord[1] +m[4]);
+			var dy = (sc-1) * ratio * (m[2]*e.coord[0] + m[3]*e.coord[1] +m[5]);
 			e.context.translate(dx,dy);
 			this.drawGeom_(e, e.geom);
 		e.context.restore()
@@ -5069,33 +5025,74 @@ ol.featureAnimation.Throw.prototype.animate = function (e)
 	
 */
 
-/** Zoom animation: feature zoom in
+/** Zoom animation: feature zoom in (for points)
 * @param {ol.featureAnimationZoomOptions} options
 */
 ol.featureAnimation.Zoom = function(options)
-{	ol.featureAnimation.call(this, options);
+{	options = options || {};
+	ol.featureAnimation.call(this, options);
+	this.set('zoomout', options.zoomOut);
 }
 ol.inherits(ol.featureAnimation.Zoom, ol.featureAnimation);
+
+
+/** Zoom animation: feature zoom out (for points)
+* @param {ol.featureAnimationZoomOptions} options
+*/
+ol.featureAnimation.ZoomOut = function(options)
+{	options = options || {};
+	options.zoomOut = true;
+	ol.featureAnimation.Zoom.call(this, options);
+}
+ol.inherits(ol.featureAnimation.ZoomOut, ol.featureAnimation.Zoom);
 
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
 ol.featureAnimation.Zoom.prototype.animate = function (e)
-{	var sc = this.easing_(e.elapsed);
+{	var fac = this.easing_(e.elapsed);
+	if (fac)
+	{	if (this.get('zoomout')) fac  = 1/fac;
+		var style = e.style;
+		var imgs, sc=[]
+		for (var i=0; i<style.length; i++)
+		{	imgs = style[i].getImage();
+			if (imgs) 
+			{	sc[i] = imgs.getScale(); 
+				imgs.setScale(sc[i]*fac);
+			}
+		}
+
+		e.context.save()
+			var ratio = e.frameState.pixelRatio;
+			var m = e.frameState.coordinateToPixelTransform;
+			var dx = (1/fac-1)* ratio * (m[0]*e.coord[0] + m[1]*e.coord[1] +m[4]);
+			var dy = (1/fac-1)* ratio * (m[2]*e.coord[0] + m[3]*e.coord[1] +m[5]);
+			e.context.scale(fac,fac);
+			e.context.translate(dx,dy);
+			this.drawGeom_(e, e.geom);
+		e.context.restore()
+		
+		for (var i=0; i<style.length; i++)
+		{	imgs = style[i].getImage();
+			if (imgs) imgs.setScale(sc[i]);
+		}
+	}
+/*
+	var sc = this.easing_(e.elapsed);
 	if (sc)
 	{	e.context.save()
+		console.log(e)
 			var ratio = e.frameState.pixelRatio;
 			var m = e.frameState.coordinateToPixelTransform;
 			var dx = (1/(sc)-1)* ratio * (m[0]*e.coord[0] + m[1]*e.coord[1] +m[4]);
 			var dy = (1/(sc)-1)*ratio * (m[2]*e.coord[0] + m[3]*e.coord[1] +m[5]);
 			e.context.scale(sc,sc);
 			e.context.translate(dx,dy);
-			e.frameState.pixelRatio = 1;
 			this.drawGeom_(e, e.geom);
-			e.frameState.pixelRatio=ratio
 		e.context.restore()
 	}
-
+*/
 	return (e.time <= this.duration_);
 }
 
@@ -6147,14 +6144,15 @@ ol.interaction.CenterTouch.prototype.drawTarget_ = function (e)
 
 			if (style instanceof ol.style.Style)
 			{	var imgs = style.getImage();
-				var sc;
-				if (imgs) 
-				{	var sc = imgs.getScale(); 
+				var sc=0;
+				// OL < v4.3 : setImageStyle don't check retina
+				if (imgs && !ol.Map.prototype.getFeaturesAtPixel) 
+				{	sc = imgs.getScale(); 
 					imgs.setScale(ratio*sc);
 				}
 				e.vectorContext.setStyle(style);
 				e.vectorContext.drawGeometry(geom);
-				if (imgs) imgs.setScale(sc);
+				if (sc && imgs) imgs.setScale(sc);
 			}
 		}
 
@@ -13055,158 +13053,6 @@ ol.Map.prototype.animExtent = function(extent, options)
 			context.strokeStyle = color;
 			context.rect(p0[0], p0[1], p1[0]-p0[0], p1[1]-p0[1]);
 			context.stroke();
-			context.restore();
-			// tell OL3 to continue postcompose animation
-			frameState.animate = true;
-		}
-	}
-
-	// Launch animation
-	listenerKey = this.on('postcompose', animate, this);
-	this.renderSync();
-}
-
-
-/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-/** Show a markup a point on postcompose
-*	@param {ol.coordinates} point to pulse
-*	@param {ol.markup.options} pulse options param
-*		- projection {ol.projection|String|undefined} projection of coords, default none
-*		- delay {Number} delay before mark fadeout
-*		- maxZoom {Number} zoom when mark fadeout
-*		- style {ol.style.Image|ol.style.Style|Array<ol.style.Style>} Image to draw as markup, default red circle
-*	@return Unique key for the listener with a stop function to stop animation
-*/
-ol.Map.prototype.markup = function(coords, options)
-{	var listenerKey;
-	var self = this;
-	options = options || {};
-
-	// Change to map's projection
-	if (options.projection)
-	{	coords = ol.proj.transform(coords, options.projection, this.getView().getProjection());
-	}
-	
-	// options
-	var start = new Date().getTime();
-	var delay = options.delay || 3000;
-	var duration = 1000;
-	var maxZoom = options.maxZoom || 100;
-	var easing = ol.easing.easeOut;
-	var style = options.style;
-	if (!style) style = new ol.style.Circle({ radius:10, stroke:new ol.style.Stroke({color:'red', width:2 }) });
-	if (style instanceof ol.style.Image) style = new ol.style.Style({ image: style });
-	if (!(style instanceof Array)) style = [style];
-
-	// Animate function
-	function animate(event) 
-	{	var frameState = event.frameState;
-		var elapsed = frameState.time - start;
-		if (elapsed > delay+duration) 
-		{	ol.Observable.unByKey(listenerKey);
-			listenerKey = null;
-		}
-		else 
-		{	if (delay>elapsed && this.getView().getZoom()>maxZoom) delay = elapsed;
-			var ratio = frameState.pixelRatio;
-			var elapsedRatio = 0;
-			if (elapsed > delay) elapsedRatio = (elapsed-delay) / duration;
-			var context = event.context;
-			context.save();
-			context.beginPath();
-			context.globalAlpha = easing(1 - elapsedRatio);
-			for (var i=0; i<style.length; i++)
-			{	var imgs = style[i].getImage();
-				var sc = imgs.getScale(); 
-				imgs.setScale(sc*ratio);
-				event.vectorContext.setStyle(style[i]);
-				event.vectorContext.drawGeometry(new ol.geom.Point(coords));
-				imgs.setScale(sc);
-			}
-			context.restore();
-			// tell OL3 to continue postcompose animation
-			if (elapsed >= delay) frameState.animate = true;
-		}
-	}
-			
-	setTimeout (function()
-		{	if (listenerKey) self.renderSync(); 
-		}, delay);
-
-	// Launch animation
-	listenerKey = this.on('postcompose', animate, this);
-	this.renderSync();
-	listenerKey.stop = function()
-	{	delay = duration = 0;
-		this.target.renderSync();
-	};
-	return listenerKey;
-}
-/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-/** Pulse a point on postcompose
-*	@param {ol.coordinates} point to pulse
-*	@param {ol.pulse.options} pulse options param
-*		- projection {ol.projection||String} projection of coords
-*		- duration {Number} animation duration in ms, default 3000
-*		- amplitude {Number} movement amplitude 0: none - 0.5: start at 0.5*radius of the image - 1: max, default 1
-*		- easing {ol.easing} easing function, default ol.easing.easeOut
-*		- style {ol.style.Image|ol.style.Style|Array<ol.style.Style>} Image to draw as markup, default red circle
-*/
-ol.Map.prototype.pulse = function(coords, options)
-{	var listenerKey;
-	options = options || {};
-
-	// Change to map's projection
-	if (options.projection)
-	{	coords = ol.proj.transform(coords, options.projection, this.getView().getProjection());
-	}
-	
-	// options
-	var start = new Date().getTime();
-	var duration = options.duration || 3000;
-	var easing = options.easing || ol.easing.easeOut;
-	
-	var style = options.style;
-	if (!style) style = new ol.style.Circle({ radius:30, stroke:new ol.style.Stroke({color:'red', width:2 }) });
-	if (style instanceof ol.style.Image) style = new ol.style.Style({ image: style });
-	if (!(style instanceof Array)) style = [style];
-
-	var amplitude = options.amplitude || 1;
-	if (amplitude<0) amplitude=0;
-
-	var maxRadius = options.radius || 15;
-	if (maxRadius<0) maxRadius = 5;
-	var minRadius = maxRadius - (options.amplitude || maxRadius); //options.minRadius || 0;
-	var width = options.lineWidth || 2;
-	var color = options.color || 'red';
-
-	// Animate function
-	function animate(event) 
-	{	var frameState = event.frameState;
-		var ratio = frameState.pixelRatio;
-		var elapsed = frameState.time - start;
-		if (elapsed > duration) ol.Observable.unByKey(listenerKey);
-		else
-		{	var elapsedRatio = elapsed / duration;
-			var context = event.context;
-			context.save();
-			context.beginPath();
-			var e = easing(elapsedRatio)
-			context.globalAlpha = easing(1 - elapsedRatio);
-			for (var i=0; i<style.length; i++)
-			{	var imgs = style[i].getImage();
-				var sc = imgs.getScale(); 
-				imgs.setScale(ratio*sc*(1+amplitude*(e-1)));
-				event.vectorContext.setStyle(style[i]);
-				event.vectorContext.drawGeometry(new ol.geom.Point(coords));
-				imgs.setScale(sc);
-			}
 			context.restore();
 			// tell OL3 to continue postcompose animation
 			frameState.animate = true;

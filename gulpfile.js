@@ -57,7 +57,7 @@ gulp.task("js", function() {
 		"./layer/*.js",
 		"./overlay/*.js",
 		"./style/fontsymbol.js", "./style/*.js", "!./style/*.def.js", 
-		"./utils/*.js",
+		"./utils/*.js", "!./utils/ol.map.pulse.js", "!./utils/ol.map.markup.js",
 		"!./*/*.min.js",
 		"!./*/texturefilterimage.js"
 		])
