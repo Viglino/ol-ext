@@ -1,0 +1,308 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!----------------------------------------------------------
+
+	Copyright (c) 2017 Jean-Marc VIGLINO,
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+
+------------------------------------------------------------>
+	<title>OL3-ext: HexBin source</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="ol.source.HexBin is a source to display hexagonal binning on a map." />
+	<meta name="keywords" content="ol3, hexagon, binning, heatmap" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+    <!-- OL3 -->
+	<link rel="stylesheet" href="http://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="http://openlayers.org/en/latest/build/ol.js"></script>
+	
+	<!-- Hexbin source -->
+	<script type="text/javascript" src="../utils/hexgrid.js"></script>
+	<script type="text/javascript" src="../layer/hexbinsource.js"></script>
+
+	<link rel="stylesheet" href="style.css" />
+
+	<style>
+		input {
+			vertical-align: middle;
+		}
+		#legend{
+			background: #fff;
+			padding: 0.5em 1em;
+		}
+		#legend li
+		{	padding-left: 0.5em;
+		}
+		#legend li:first-child
+		{	padding: 0 0 0.5em;
+		}
+		.legend{
+			display: inline-block;
+			width: 2em;
+			height: 1.5em;
+			vertical-align: middle;
+			background-color: orange;
+		}
+		.legend.mini
+		{	background-color: green;
+		}
+		.legend.maxi
+		{	background-color: #800;
+		}
+		.gradient .legend
+		{	background-color: rgba(0,0,255, 0.25);
+		}
+		.gradient .legend.mini
+		{	background-color: rgba(0,0,255, 0.05);
+		}
+		.gradient .legend.maxi
+		{	background-color: rgba(0,0,255, 0.5);
+		}
+		.point .legend
+		{	position: relative; 
+			height: 1.3em;
+			margin: 0.1em 0;
+			background-color: rgba(0,0,255,0.5);
+			transform: scale(0.4);
+		}
+		.point .legend:before,
+		.point .legend:after
+		{	content:"";
+			display: block;
+			position: absolute;
+			border-color: rgba(0,0,255,0.5) transparent;
+			border-width: 0.5em 1em;
+			border-style: solid;
+		}
+		.point .legend:before 
+		{	top: 100%;
+			border-bottom: 0;
+		}
+		.point .legend:after
+		{	bottom: 100%;
+			border-top: 0;
+		}
+		.point .legend.mini
+		{	transform: scale(0.2);
+		}
+		.point .legend.maxi
+		{	transform: scale(0.7);
+		}
+
+	</style>
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/Geoportail-KISS"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: HexBin source</h1>
+	</a>
+
+	<div class="info">
+		Hexagonal binning is a convenient way for aggregating data into a coarser representation for display.
+		<br/>
+		In an hexbin map (hexagonal heatmap) features are scattered on hexagons.
+		<br/>
+		Hexbins can support a color encoding or point encoding. 
+		You can use the color, density of the hexagon or its size to display 
+		the value of the features aggregated in the hexagon.
+		<ul>
+			<li>
+				<i>ol.source.HexBin</i> is a ol.source.Vector, similar to a ol.source.Cluster
+			</li>
+			<li>
+				<i>ol.source.ImageHexBin</i> is a ol.source.ImageVector, more efficient to use with large datasets.
+			</li>
+			<li>
+				HexBin use a <i>ol.HexGrid</i> to compute hexagonal grid. 
+				<br/>
+				For more information on hexgrid metrics, see
+				<a href="https://viglino.github.io/ol3-games/examples/map.hexmap.html">the Hexmap example</a>.
+			</li>
+		</ul>
+	</div>
+
+	<!-- Map DIV -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options">
+		<h2>Options:</h2>
+		<ul>
+			<li>
+				Hexagon size: <input id="size" type="range" min="10000" max="300000" value="100000" onchange="reset();" />
+			</li>
+			<li>
+				Style:
+				<select id="style" onchange="hexbin.changed(); $('#legend').removeClass().addClass($(this).val())">
+					<option value="color">Color</option>
+					<option value="gradient">Gradient</option>
+					<option value="point">Point</option>
+				</select>
+			</li>
+			<li>
+				<input id="image" type="checkbox" checked="checked" onchange="reset()"/><label for="image"> layer image</label>
+			</li>
+		</ul>
+		<div>
+			<ul id="legend">
+				<li>
+					Legend:
+				</li>
+				<li>
+					<div class="legend mini"></div>
+					<span class="min"></span>-
+				</li>
+				<li>
+					<div class="legend"></div>
+					<span class="min"></span> - <span class="max"></span>
+				</li>
+				<li>
+					<div class="legend maxi"></div>
+					<span class="max"></span>+
+				</li>
+			</ul>
+		</div>
+		<div class="info">Selection: <span>0</span> feature(s)</div>
+	</div>
+
+	<script type="text/javascript">
+		// Layers
+		var layers = [ new ol.layer.Tile(
+			{	source: new ol.source.OSM()
+			})];
+
+		// The map
+		var map = new ol.Map
+			({	target: 'map',
+				view: new ol.View
+				({	zoom: 4,
+					center: [166326, 5992663]
+				}),
+				layers: layers
+			});
+
+		var select  = new ol.interaction.Select();
+		map.addInteraction(select);
+		select.on('select', function(e)
+		{	if (e.selected.length) $(".options .info span").text(e.selected[0].get('features').length)
+			else $(".options .info span").text("0");
+		});
+
+		// Create a set of features on seed points
+		function addFeatures(nb)
+		{	var ssize = 20;		// seed size
+			var ext = map.getView().calculateExtent(map.getSize());
+			var dx = ext[2]-ext[0];
+			var dy = ext[3]-ext[1];
+			var dl = Math.min(dx,dy);
+			var features=[];
+			for (var i=0; i<nb/ssize; ++i)
+			{	var seed = [ext[0]+dx*Math.random(), ext[1]+dy*Math.random()]
+				for (var j=0; j<ssize; j++)
+				{	var f = new ol.Feature(new ol.geom.Point(
+					[	seed[0] + dl/10*Math.random(),
+						seed[1] + dl/10*Math.random()
+					]
+					));
+					f.set('id',i*10+j);
+					features.push(f);
+				}
+			}
+			source.clear();
+			source.addFeatures(features);
+		}
+
+		// Vector source
+		var source = new ol.source.Vector();
+		// add 2000 features
+		addFeatures(2000);
+
+		var hexbin, layer, binSize;
+		var style = $("#style");
+		var min, max, maxi;
+		var styleFn = function(f,res)
+			{	switch (style.val())
+				{	// Display a point with a radius 
+					// depending on the number of objects in the aggregate.
+					case 'point':
+					{	return	[ new ol.style.Style(
+							{	image: new ol.style.RegularShape(
+								{	points: 6,
+									radius: Math.round(binSize/res +0.5) * Math.min(1,f.get('features').length/max),
+									fill: new ol.style.Fill({ color: [0,0,255] }),
+									rotateWithView: true
+								}),
+								geometry: f.get('center')
+							})];
+					}
+					// Display the polygon with a gradient value (opacity) 
+					// depending on the number of objects in the aggregate.
+					case 'gradient':
+						return [ new ol.style.Style({ fill: new ol.style.Fill({color: [0,0,255,Math.min(1,f.get('features').length/max)] }) }) ];
+					// Display the polygon with a color
+					// depending on the number of objects in the aggregate.
+					case 'color':
+					default:
+					{	var color;
+						if (f.get('features').length > max) color = [136, 0, 0, 1];
+						else if (f.get('features').length > min) color = [255, 165, 0, 1];
+						else color = [0, 136, 0, 1];
+						return [ new ol.style.Style({ fill: new ol.style.Fill({  color: color }) }) ];
+					}
+				}
+			};
+		
+		// Create HexBin and calculate min/max
+		function reset()
+		{	var size = Number($('#size').val());
+			if (layer) map.removeLayer(layer);
+			binSize = size;
+			var features;
+			// An image layer
+			if ($("#image").prop('checked'))
+			{	hexbin = new ol.source.ImageHexBin(
+				{	source: source,		// source of the bin
+					size: size,			// hexagon size (in map unit)
+					style: styleFn
+				});
+				layer = new ol.layer.Image({ source: hexbin, opacity:0.5 });
+				features = hexbin.getSource().getFeatures();
+			}
+			// or a vector layer
+			else
+			{	hexbin = new ol.source.HexBin(
+				{	source: source,		// source of the bin
+					size: size			// hexagon size (in map unit)
+				});
+				layer = new ol.layer.Vector({ source: hexbin, opacity:0.5, style: styleFn });
+				features = hexbin.getFeatures();
+			}
+			// Calculate min/ max value
+			min = Infinity;
+			max = 0;
+			for (var i=0, f; f=features[i]; i++)
+			{	var n = f.get('features').length;
+				if (n<min) min = n;
+				if (n>max) max = n;
+			}
+			var dl = (max-min);
+			maxi = max;
+			min = Math.max(1,Math.round(dl/4));
+			max = Math.round(max - dl/3);
+			$(".min").text(min);
+			$(".max").text(max);
+
+			// Add layer
+			map.addLayer(layer);
+		}
+		reset (Number($("#size").val()));
+
+	</script>
+
+</body>
+</html>
