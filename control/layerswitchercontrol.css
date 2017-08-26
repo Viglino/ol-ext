@@ -84,6 +84,7 @@
 	overflow: hidden;
 	font-family: Tahoma,Geneva,sans-serif;
 	font-size:0.9em;
+	-webkit-transition: top 0.3s;
 	transition: top 0.3s;
 	position: relative;
 	top:0;
@@ -104,8 +105,8 @@
 }
 
 .ol-layerswitcher .panel li
-{	transition: transform 0.2s linear;
-	-weblit-transition: -webkit-transform 0.2s linear;
+{	-weblit-transition: -webkit-transform 0.2s linear;
+	transition: transform 0.2s linear;
 	clear: both;
 	display: block;
 	#border:1px solid transparent;
@@ -382,9 +383,11 @@
 	width: 120px;
 	margin:5px 1em 10px 7px;
 	box-sizing: border-box;
-	border-radius: 2px;
+	border-radius: 3px;
 	background: #69c;
-	cursor:pointer;
+	background: -webkit-linear-gradient(left, rgba(0,60,136,0), rgba(0,60,136,0.6));
+	background: linear-gradient(to right, rgba(0,60,136,0), rgba(0,60,136,0.6));
+	cursor: pointer;
 	box-shadow: 1px 1px 1px rgba(0,0,0,0.5);
 }
 
@@ -404,16 +407,12 @@
 .ol-layerswitcher .layerswitcher-opacity .layerswitcher-opacity-cursor:before
 {	content: "";
 	position: absolute;
-	width: 10px;
-	height: 10px;
+	width: 50%;
+	height: 50%;
 }
 .ol-touch .ol-layerswitcher .layerswitcher-opacity .layerswitcher-opacity-cursor
 {	width: 26px;
 	height: 26px;
-}
-.ol-touch .ol-layerswitcher .layerswitcher-opacity .layerswitcher-opacity-cursor:before
-{	width: 13px;
-	height: 13px;
 }
 
 .ol-layerswitcher .layerswitcher-progress
