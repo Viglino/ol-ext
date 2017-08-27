@@ -11,7 +11,7 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 	<meta name="description" content="ol.source.HexBin is a source to display hexagonal binning on a map." />
-	<meta name="keywords" content="ol3, hexagon, binning, heatmap" />
+	<meta name="keywords" content="ol3, layer, hexbin, cluster, hexagon, binning, heatmap" />
 
 	<!-- jQuery -->
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
@@ -116,7 +116,7 @@
 				<i>ol.source.HexBin</i> is a ol.source.Vector, similar to a ol.source.Cluster
 			</li>
 			<li>
-				<i>ol.source.ImageHexBin</i> is a ol.source.ImageVector, more efficient to use with large datasets.
+				<i>ol.source.ImageHexBin</i> is a ol.source.ImageVector, more efficient to use with large data sets.
 			</li>
 			<li>
 				HexBin use a <i>ol.HexGrid</i> to compute hexagonal grid. 
@@ -147,6 +147,9 @@
 			<li>
 				<input id="image" type="checkbox" checked="checked" onchange="reset()"/><label for="image"> layer image</label>
 			</li>
+			<li>
+				<input id="showsource" type="checkbox" onchange="layerSource.setVisible($(this).prop('checked')); modify.setActive($(this).prop('checked'));" /><label for="showsource"> display source features</label>
+			</li>
 		</ul>
 		<div>
 			<ul id="legend">
@@ -171,11 +174,6 @@
 	</div>
 
 	<script type="text/javascript">
-		// Layers
-		var layers = [ new ol.layer.Tile(
-			{	source: new ol.source.OSM()
-			})];
-
 		// The map
 		var map = new ol.Map
 			({	target: 'map',
@@ -183,13 +181,17 @@
 				({	zoom: 4,
 					center: [166326, 5992663]
 				}),
-				layers: layers
+				layers: [ new ol.layer.Tile({ source: new ol.source.OSM() })]
 			});
 
 		var select  = new ol.interaction.Select();
 		map.addInteraction(select);
 		select.on('select', function(e)
-		{	if (e.selected.length) $(".options .info span").text(e.selected[0].get('features').length)
+		{	if (e.selected.length)
+			{	var f = e.selected[0].get('features');
+				if (f) $(".options .info span").text(e.selected[0].get('features').length);
+				else $(".options .info span").text("0");
+			}
 			else $(".options .info span").text("0");
 		});
 
@@ -209,7 +211,7 @@
 						seed[1] + dl/10*Math.random()
 					]
 					));
-					f.set('id',i*10+j);
+					f.set('id',i*ssize+j);
 					features.push(f);
 				}
 			}
@@ -221,6 +223,12 @@
 		var source = new ol.source.Vector();
 		// add 2000 features
 		addFeatures(2000);
+		// Interaction to move the source features
+		var modify = new ol.interaction.Modify({ source: source });
+		modify.setActive(false);
+		map.addInteraction(modify);
+		var layerSource = new ol.layer.Vector({ source: source, visible:false })
+		map.addLayer(layerSource);
 
 		var hexbin, layer, binSize;
 		var style = $("#style");
