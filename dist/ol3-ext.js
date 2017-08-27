@@ -9764,7 +9764,7 @@ ol.layer.Group.prototype.getPreview = function(lonlat, resolution)
 		}
 	}
 	return t;
-}
+};
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)

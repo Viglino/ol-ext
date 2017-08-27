@@ -100,4 +100,4 @@ ol.layer.Group.prototype.getPreview = function(lonlat, resolution)
 		}
 	}
 	return t;
-}
+};
