@@ -20,23 +20,64 @@ function addFeature(f)
 		this._bin[id] = ex;
 		this._source.addFeature(ex);
 	}
+	f.on("change", modifyFeature, this);
 };
 
-function removeFeature(f)
-{	var h = this._hexgrid.coord2hex(f.getGeometry().getFirstCoordinate());
-	var id = h.toString();
-	if (this._bin[id]) 
-	{	var features = this._bin[id].get('features');
-		var index = features.indexOf(f);
-		if (index > -1) { features.splice(index, 1); }
+// Get the hexagon of a feature
+// @return {} the bin id, the index of the feature in the bin and a boolean if the feature has moved to an other bin
+function getBin(f)
+{	// Test if feature exists in the current hex
+	var id = this._hexgrid.coord2hex(f.getGeometry().getFirstCoordinate()).toString();
+	if (this._bin[id])
+	{	var index = this._bin[id].get('features').indexOf(f);
+		if (index > -1) return { id:id, index:index };
+	}
+	// The feature has moved > check all bins
+	for (id in this._bin)
+	{	var index = this._bin[id].get('features').indexOf(f);
+		if (index > -1) return { id:id, index:index, moved:true };
+	}
+	return false;
+};
+
+function removeFeature(f, bin)
+{	var b = bin || getBin.call(this,f);
+	if (b)
+	{	var features = this._bin[b.id].get('features');
+		features.splice(b.index, 1);
 		if (!features.length)
-		{	this._source.removeFeature(this._bin[id])
-			delete this._bin[id];
+		{	this._source.removeFeature(this._bin[b.id]);
+			delete this._bin[b.id];
 		}
 	}
-	else console.error("oops");
+	else 
+	{	console.log("[ERROR:HexBin] remove feature feature doesn't exists anymore.");
+	}
+	f.un("change", modifyFeature, this);
 };
 
+function modifyFeature(e)
+{	var bin = getBin.call(this,e.target);
+	if (bin && bin.moved)
+	{	// remove from the bin
+		removeFeature.call(this,e.target, bin);
+		// insert in the new bin
+		addFeature.call (this, e.target);
+	}	
+	this._source.changed();
+};
+
+// Clear all bins and generate a new one
+function reset()
+{	this._bin = {};
+	this._source.clear();
+	var features = this._origin.getFeatures();
+	for (var i=0, f; f=features[i]; i++)
+	{	addFeature.call (this,f);
+	};
+};
+
+// Init the bin
 function hexbinInit(source, options)
 {	// The HexGrid
 	this._hexgrid = new ol.HexGrid(options);
@@ -45,10 +86,7 @@ function hexbinInit(source, options)
 	this._source = source;
 	this._origin = options.source;
 	// Existing features
-	var features = this._origin.getFeatures();
-	for (var i=0, f; f=features[i]; i++)
-	{	addFeature.call (this,f);
-	};
+	reset.call(this);
 	// Future features
 	this._origin.on("addfeature", function(e){ addFeature.call(this, e.feature); }, this);
 	this._origin.on("removefeature", function(e){ removeFeature.call(this, e.feature); }, this);
