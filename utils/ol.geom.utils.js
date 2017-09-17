@@ -8,6 +8,9 @@
 
 /** Distance beetween 2 points
 *	Usefull geometric functions
+* @param {ol.coordinate} p1 first point
+* @param {ol.coordinate} p2 second point
+* @return {number} distance
 */
 ol.coordinate.dist2d = function(p1, p2)
 {	var dx = p1[0]-p2[0];
@@ -16,10 +19,38 @@ ol.coordinate.dist2d = function(p1, p2)
 }
 /** 2 points are equal
 *	Usefull geometric functions
+* @param {ol.coordinate} p1 first point
+* @param {ol.coordinate} p2 second point
+* @return {boolean}
 */
 ol.coordinate.equal = function(p1, p2)
 {	return (p1[0]==p2[0] && p1[1]==p2[1]);
 }
+
+/** Get center coordinate of a feature
+* @param {ol.Feature} f
+* @return {ol.coordinate} the center
+*/
+ol.coordinate.getFeatureCenter = function(f)
+{	return ol.coordinate.getGeomCenter (f.getGeometry());
+};
+
+/** Get center coordinate of a geometry
+* @param {ol.Feature} geom
+* @return {ol.coordinate} the center
+*/
+ol.coordinate.getGeomCenter = function(geom)
+{	switch (geom.getType())
+	{	case 'Point': 
+			return geom.getCoordinates();
+		case "MultiPolygon":
+			geom = geom.getPolygon(0);
+		case "Polygon":
+			return geom.getInteriorPoint().getCoordinates();
+		default:
+			return geom.getClosestPoint(ol.extent.getCenter(geom.getExtent()));
+	};
+};
 
 /** Split a lineString by a point or a list of points
 *	NB: points must be on the line, use getClosestPoint() to get one

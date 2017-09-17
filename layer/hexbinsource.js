@@ -8,7 +8,7 @@
 
 /* Implementation */
 function addFeature(f)
-{	var h = this._hexgrid.coord2hex(f.getGeometry().getFirstCoordinate());
+{	var h = this._hexgrid.coord2hex(this._geomFn(f));
 	var id = h.toString();
 	if (this._bin[id]) 
 	{	this._bin[id].get('features').push(f);
@@ -27,7 +27,7 @@ function addFeature(f)
 // @return {} the bin id, the index of the feature in the bin and a boolean if the feature has moved to an other bin
 function getBin(f)
 {	// Test if feature exists in the current hex
-	var id = this._hexgrid.coord2hex(f.getGeometry().getFirstCoordinate()).toString();
+	var id = this._hexgrid.coord2hex(this._geomFn(f)).toString();
 	if (this._bin[id])
 	{	var index = this._bin[id].get('features').indexOf(f);
 		if (index > -1) return { id:id, index:index };
@@ -60,7 +60,7 @@ function modifyFeature(e)
 {	var bin = getBin.call(this,e.target);
 	if (bin && bin.moved)
 	{	// remove from the bin
-		removeFeature.call(this,e.target, bin);
+		removeFeature.call(this, e.target, bin);
 		// insert in the new bin
 		addFeature.call (this, e.target);
 	}	
@@ -85,6 +85,8 @@ function hexbinInit(source, options)
 	// Source and origin
 	this._source = source;
 	this._origin = options.source;
+	// Geometry function to get a point
+	this._geomFn = options.geometryFunction || ol.coordinate.getFeatureCenter || function(f) { return f.getGeometry().getFirstCoordinate(); };
 	// Existing features
 	reset.call(this);
 	// Future features
@@ -95,8 +97,12 @@ function hexbinInit(source, options)
 /** A source for hexagonal binning
 * @constructor 
 * @extends {ol.source.Vector}
-* @param {olx.source.VectorOptions=} options extend ol.source.Vector options
-*	@param {ol.source.Vector} options.source the source
+* @param {} options ol.source.VectorOptions + ol.HexGridOptions
+*	@param {ol.source.Vector} options.source Source 
+*	@param {Number} options.size size of the exagon in map units, default 80000
+*	@param {ol.coordinate} options.origin orgin of the grid, default [0,0]
+*	@param {pointy|flat} options.layout grid layout, default pointy
+*	@param {function|undefined} options.geometryFunction Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center. 
 * @todo 
 */
 ol.source.HexBin = function(options)
@@ -117,7 +123,12 @@ ol.source.HexBin.prototype.getSource = function()
 /** An image source for hexagonal binning
 * @constructor 
 * @extends {ol.source.ImageVector}
-* @param {olx.source.ImageVectorOptions=} options
+* @param {} options ol.source.ImageVectorOptions + ol.HexGridOptions
+*	@param {ol.source.Vector} options.source Source 
+*	@param {Number} options.size size of the exagon in map units, default 80000
+*	@param {ol.coordinate} options.origin orgin of the grid, default [0,0]
+*	@param {pointy|flat} options.layout grid layout, default pointy
+*	@param {function|undefined} options.geometryFunction Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center. 
 * @todo 
 */
 ol.source.ImageHexBin = function(options)
