@@ -162,7 +162,14 @@
 					title: 'LineString',
 					interaction: new ol.interaction.Draw
 					({	type: 'LineString',
-						source: vector.getSource()
+						source: vector.getSource(),
+						// Count inserted points
+						geometryFunction: function(coordinates, geometry) 
+						{   if (geometry) geometry.setCoordinates(coordinates);
+							else geometry = new ol.geom.LineString(coordinates);
+							this.nbpts = geometry.getCoordinates().length;
+							return geometry;
+						}
 					}),
 					// Options bar associated with the control
 					bar: new ol.control.Bar(
@@ -170,7 +177,7 @@
 							{	html: 'undo',
 								title: "Delete last point",
 								handleClick: function() 
-								{	try { ledit.getInteraction().removeLastPoint(); } catch(e){};
+								{	if (ledit.getInteraction().nbpts>1) ledit.getInteraction().removeLastPoint();
 								}
 							}),
 							new ol.control.TextButton(
@@ -178,20 +185,7 @@
 								title: "finish",
 								handleClick: function() 
 								{	// Prevent null objects on finishDrawing
-									var drawi = ledit.getInteraction();
-									var lkey = drawi.on('drawend', function(e)
-									{	ol.Observable.unByKey(lkey);
-										//drawi.unByKey(lkey);
-										var c = e.feature.getGeometry().getCoordinates();
-										if (c.length < 2)
-										{	throw "Bad LineString";
-										}
-									});
-									try { drawi.finishDrawing(); } 
-									catch(e) 
-									{	ol.Observable.unByKey(lkey);
-										//drawi.unByKey(lkey); 
-									}
+									if (ledit.getInteraction().nbpts>2) ledit.getInteraction().finishDrawing();
 								}
 							})
 						]
@@ -205,7 +199,14 @@
 					title: 'Polygon',
 					interaction: new ol.interaction.Draw
 					({	type: 'Polygon',
-						source: vector.getSource()
+						source: vector.getSource(),
+						// Count inserted points
+						geometryFunction: function(coordinates, geometry) 
+						{   this.nbpts = coordinates[0].length;
+							if (geometry) geometry.setCoordinates([coordinates[0].concat([coordinates[0][0]])]);
+							else geometry = new ol.geom.Polygon(coordinates);
+							return geometry;
+						}
 					}),
 					// Options bar ssociated with the control
 					bar: new ol.control.Bar(
@@ -213,7 +214,7 @@
 								{	html: 'undo',//'<i class="fa fa-mail-reply"></i>',
 									title: "undo last point",
 									handleClick: function() 
-									{	try { fedit.getInteraction().removeLastPoint(); } catch(e){}
+									{	if (fedit.getInteraction().nbpts>1) fedit.getInteraction().removeLastPoint();
 									}
 								}),
 								new ol.control.TextButton(
@@ -221,20 +222,7 @@
 									title: "finish",
 									handleClick: function() 
 									{	// Prevent null objects on finishDrawing
-										var drawi = fedit.getInteraction();
-										var lkey = drawi.on('drawend', function(e)
-										{	ol.Observable.unByKey(lkey);
-											//drawi.unByKey(lkey);
-											var c = e.feature.getGeometry().getCoordinates();
-											if (c[0].length < 4)
-											{	throw "Bad Polygon";
-											}
-										});
-										try { drawi.finishDrawing(); } 
-										catch(e) 
-										{	ol.Observable.unByKey(lkey);
-											//drawi.unByKey(lkey); 
-										}
+										if (fedit.getInteraction().nbpts>3) fedit.getInteraction().finishDrawing();
 									}
 								})
 							]
