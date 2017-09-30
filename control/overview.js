@@ -11,17 +11,18 @@
  *
  * @constructor
  * @extends {ol.control.Control}
- * @param {Object=} opt_options Control options.
- *	- minZoom {Number} default 0
- *	- maxZoom {Number} default 18
- *	- rotation {boolean} enable rotation, default false
- *	- align {top|bottom-left|right} position
- *	- layers {Array<ol.layer>} list of layers
- *	- style {ol.style.Style | Array.<ol.style.Style> | undefined} style to draw the map extent on the overveiw
- *	- panAnimation {bool|elastic} use animation to center map on click, default true
+ * @param {Object=} options Control options.
+ *	@param {ol.ProjectionLike} options.projection The projection. Default is EPSG:3857 (Spherical Mercator).
+ *	@param {Number} options.minZoom default 0
+ *	@param {Number} options.maxZoom default 18
+ *	@param {boolean} options.rotation enable rotation, default false
+ *	@param {top|bottom-left|right} options.align position
+ *	@param {Array<ol.layer>} options.layers list of layers
+ *	@param {ol.style.Style | Array.<ol.style.Style> | undefined} options.style style to draw the map extent on the overveiw
+ *	@param {bool|elastic} options.panAnimation use animation to center map on click, default true
  */
-ol.control.Overview = function(opt_options) 
-{	var options = opt_options || {};
+ol.control.Overview = function(options) 
+{	options = options || {};
 	var self = this;
 
 	// API 
@@ -58,7 +59,8 @@ ol.control.Overview = function(opt_options)
 		target: this.panel_.get(0),
 		view: new ol.View
 			({	zoom: 14,
-				center: [270148, 6247782]
+				center: [270148, 6247782],
+				projection: options.projection
 			}),
 		layers: options.layers
 	});
