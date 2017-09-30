@@ -106,6 +106,15 @@
 			overflow: auto;
 			max-height: calc(100% - 4em);
 		}
+		.follow
+		{	position:fixed;
+			left:1em;
+			bottom: 1em;
+			background: #369;
+			color: #fff;
+			padding: 0.5em;
+			display: none;
+		}
 	</style>
 
 </head>
@@ -143,13 +152,14 @@
 			</li>
 			<li>
 				When activated the interaction will follow the GPS position at a defined <i>zoom</i>. 
-				You can override this behavior in specifying the <i>preventTracking</i> option.
+				You can override this behavior in specifying the <i>followTrack</i> option (can be true | false | auto | position | visible).
 			</li>
 		</ul>
 	</div>
 
 	<!-- Map div -->
 	<div id="map"></div>
+	<div class="follow" onclick="draw.setFollowTrack('auto');">Re-center</div>
 
 	<div class="options" >
 		<h2>Options:</h2>
@@ -160,19 +170,25 @@
 				<input type="radio" name="type" value="Polygon" /><label> Polygon</label>
 			</li>
 			<li>
-				<input type="checkbox" onchange="draw.set('preventTracking',$(this).prop('checked'));"/><label> preventTracking</label>
+				followTrack:
+				<select onchange="draw.setFollowTrack($(this).val()==='true' ? true : $(this).val());">
+					<option value="true">true (track at zoom)</option>
+					<option value="false">false (don't track)</option>
+					<option value="auto">auto (stop on map move)</option>
+					<option value="position">position (no zoom)</option>
+					<option value="visible">visible (stay on	the map)</option>
+				</select>
 			</li>
 			<li>
-				<button onclick="draw.setActive(true); draw.start();">start</button>
+				<button onclick="draw.start();">start</button>
 				<button onclick="draw.pause();">pause</button>
-				<button onclick="draw.stop(); draw.setActive(false);">stop</button>
+				<button onclick="draw.stop();">stop</button>
 			</li>
 			<li>
 				Accurraty:
 				<div style="border:1px solid #000; width:200px;">
 					<div id="accuraty"></div>
 				</div>
-
 			</li>
 			<li>
 				H: <input type="text" id="heading" style="width:3em;"/>
@@ -208,15 +224,15 @@
 			source: new ol.source.Vector()
 		});
 		map.addLayer(vector);
-
-
+		
 		var gauge = new ol.control.Gauge({ title:'Accurracy:', max:200 });
 		map.addControl(gauge);
 
 		// Draw interaction
 		var draw = new ol.interaction.GeolocationDraw(
 			{	source: vector.getSource(),
-				zoom: 18,
+				zoom: 16,
+				minAccuracy:10000
 			});
 		map.addInteraction(draw);
 
@@ -226,6 +242,19 @@
 			$("#heading").val(e.geolocation.getHeading());
 			$("#z").val(e.geolocation.getAltitude());
 		});
+		//
+		draw.on('follow', function(e)
+		{	if (e.following) $(".follow").hide();
+			else $(".follow").show();
+		});
+		// Handle drawing
+		draw.on("drawstart", function(e)
+		{	
+		});
+		draw.on("drawend", function(e)
+		{	$(".follow").hide();
+		});
+
 
 	</script>
 
