@@ -29,7 +29,7 @@ ol.Overlay.Magnify = function (options)
 	{	controls: new ol.Collection(),
 		interactions: new ol.Collection(),
 		target: options.target || this.element,
-		view: new ol.View(),
+		view: new ol.View({ projection: options.projection }),
 		layers: options.layers
 	});
 	this.mgview_ = this.mgmap_.getView();
