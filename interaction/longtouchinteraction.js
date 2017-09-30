@@ -7,8 +7,8 @@
  * @extends {ol.interaction.Interaction}
  * @fires  
  * @param {olx.interaction.LongTouchOptions} 
- *	- handleLongTouchEvent {function | undefined} Function handling "longtouch" events, it will receive a mapBrowserEvent.
- *	- delay {interger | undefined} The delay for a long touch in ms, default is 1000
+ * 	@param {function | undefined} options.handleLongTouchEvent Function handling "longtouch" events, it will receive a mapBrowserEvent.
+ *	@param {interger | undefined} options.delay The delay for a long touch in ms, default is 1000
  */
 ol.interaction.LongTouch = function(options) 
 {	if (!options) options = {};
@@ -28,9 +28,9 @@ ol.interaction.LongTouch = function(options)
 								ltouch(e) 
 							}, this.delay_);
 						break;
-					case 'pointerup':
-					case 'pointermove':
+					/* case 'pointermove': */
 					case 'pointerdrag':
+					case 'pointerup':
 						if (_timeout) 
 						{	clearTimeout(_timeout);
 							_timeout = null;
