@@ -6,14 +6,16 @@
  * @constructor
  * @extends {ol.interaction.Pointer}
  * @fires drawstart, drawing, drawend
- * @param {olx.interaction.TransformOptions} 
- *  - source {Array<ol.Layer>} Destination source for the drawn features
- *  - features {ol.Collection<ol.Feature>} Destination collection for the drawn features 
- *	- style {ol.style.Style | Array.<ol.style.Style> | ol.style.StyleFunction | undefined} style for the sketch
- *	- sides {integer} nimber of sides, default 0 = circle
- *	- squareCondition { ol.events.ConditionType | undefined } A function that takes an ol.MapBrowserEvent and returns a boolean to draw square features.
- *	- centerCondition { ol.events.ConditionType | undefined } A function that takes an ol.MapBrowserEvent and returns a boolean to draw centered features.
- *	- canRotate { bool } Allow rotation when centered + square, default: true
+ * @param {olx.interaction.TransformOptions} options
+ *  @param {Array<ol.Layer>} source Destination source for the drawn features
+ *  @param {ol.Collection<ol.Feature>} features Destination collection for the drawn features 
+ *	@param {ol.style.Style | Array.<ol.style.Style> | ol.style.StyleFunction | undefined} style style for the sketch
+ *	@param {integer} sides number of sides, default 0 = circle
+ *	@param { ol.events.ConditionType | undefined } squareCondition A function that takes an ol.MapBrowserEvent and returns a boolean to draw square features.
+ *	@param { ol.events.ConditionType | undefined } centerCondition A function that takes an ol.MapBrowserEvent and returns a boolean to draw centered features.
+ *	@param { bool } canRotate Allow rotation when centered + square, default: true
+ *	@param { number } clickTolerance click tolerance, default: 6
+ *	@param { number } maxCircleCoordinates Maximum number of point on a circle, default: 100
  */
 ol.interaction.DrawRegular = function(options) 
 {	if (!options) options={};
@@ -148,53 +150,69 @@ ol.interaction.DrawRegular.prototype.getGeom_ = function ()
 	if (this.coord_)
 	{	var center = this.center_;
 		var coord = this.coord_;
-		var hasrotation = this.canRotate_ && this.centered_ && this.square_;
-		if (this.square_ && !hasrotation) 
-		{	var d = [coord[0] - center[0], coord[1] - center[1]];
-			var dm = Math.max (Math.abs(d[0]), Math.abs(d[1])); 
-			coord[0] = center[0] + (d[0]>0 ? dm:-dm);
-			coord[1] = center[1] + (d[1]>0 ? dm:-dm);
+
+		// Special case: circle
+		if (!this.sides_ && this.square_ && !this.centered_)
+		{	center = [(coord[0] + center[0])/2, (coord[1] + center[1])/2];
+			var d = [coord[0] - center[0], coord[1] - center[1]];
+			var r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
+			var circle = new ol.geom.Circle(center, r, 'XY');
+			// Optimize points on the circle
+			var centerPx = this.getMap().getPixelFromCoordinate(center);
+			var dmax = Math.max (100, Math.abs(centerPx[0]-this.coordPx_[0]), Math.abs(centerPx[1]-this.coordPx_[1]));
+			dmax = Math.min ( this.maxCircleCoordinates_, Math.round(dmax / 3 ));
+			return ol.geom.Polygon.fromCircle (circle, dmax, 0);
 		}
-		var d = [coord[0] - center[0], coord[1] - center[1]];
-		var r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
-		if (r>0)
-		{	var circle = new ol.geom.Circle(center, r, 'XY');
-			var a;
-			if (hasrotation) a = Math.atan2(d[1], d[0]);
-			else a = this.startAngle[this.sides_] || this.startAngle['default'];
-
-			if (this.sides_) g = ol.geom.Polygon.fromCircle (circle, this.sides_, a);
-			else
-			{	// Opimize points on the circle
-				var centerPx = this.getMap().getPixelFromCoordinate(this.center_);
-				var dmax = Math.max (100, Math.abs(centerPx[0]-this.coordPx_[0]), Math.abs(centerPx[1]-this.coordPx_[1]));
-				dmax = Math.min ( this.maxCircleCoordinates_, Math.round(dmax / (this.centered_ ? 3:5) ));
-				g = ol.geom.Polygon.fromCircle (circle, dmax, 0);
+		else
+		{
+			var hasrotation = this.canRotate_ && this.centered_ && this.square_;
+			var d = [coord[0] - center[0], coord[1] - center[1]];
+			if (this.square_ && !hasrotation) 
+			{	//var d = [coord[0] - center[0], coord[1] - center[1]];
+				var dm = Math.max (Math.abs(d[0]), Math.abs(d[1])); 
+				coord[0] = center[0] + (d[0]>0 ? dm:-dm);
+				coord[1] = center[1] + (d[1]>0 ? dm:-dm);
 			}
+			var r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
+			if (r>0)
+			{	var circle = new ol.geom.Circle(center, r, 'XY');
+				var a;
+				if (hasrotation) a = Math.atan2(d[1], d[0]);
+				else a = this.startAngle[this.sides_] || this.startAngle['default'];
 
-			if (hasrotation) return g;
-
-			// Scale polygon to fit extent
-			var ext = g.getExtent();
-			if (!this.centered_) center = this.center_;
-			else center = [ 2*this.center_[0]-this.coord_[0], 2*this.center_[1]-this.coord_[1] ];
-			var scx = (center[0] - coord[0]) / (ext[0] - ext[2]);
-			var scy = (center[1] - coord[1]) / (ext[1] - ext[3]);
-			if (this.square_) 
-			{	var sc = Math.min(Math.abs(scx),Math.abs(scy));
-				scx = Math.sign(scx)*sc;
-				scy = Math.sign(scy)*sc;
-			}
-			var t = [ center[0] - ext[0]*scx, center[1] - ext[1]*scy ];
-
-			g.applyTransform(function(g1, g2, dim)
-			{	for (i=0; i<g1.length; i+=dim)
-				{	g2[i] = g1[i]*scx + t[0];
-					g2[i+1] = g1[i+1]*scy + t[1];
+				if (this.sides_) g = ol.geom.Polygon.fromCircle (circle, this.sides_, a);
+				else
+				{	// Optimize points on the circle
+					var centerPx = this.getMap().getPixelFromCoordinate(this.center_);
+					var dmax = Math.max (100, Math.abs(centerPx[0]-this.coordPx_[0]), Math.abs(centerPx[1]-this.coordPx_[1]));
+					dmax = Math.min ( this.maxCircleCoordinates_, Math.round(dmax / (this.centered_ ? 3:5) ));
+					g = ol.geom.Polygon.fromCircle (circle, dmax, 0);
 				}
-				return g2;
-			});
-			return g;
+
+				if (hasrotation) return g;
+			
+				// Scale polygon to fit extent
+				var ext = g.getExtent();
+				if (!this.centered_) center = this.center_;
+				else center = [ 2*this.center_[0]-this.coord_[0], 2*this.center_[1]-this.coord_[1] ];
+				var scx = (center[0] - coord[0]) / (ext[0] - ext[2]);
+				var scy = (center[1] - coord[1]) / (ext[1] - ext[3]);
+				if (this.square_) 
+				{	var sc = Math.min(Math.abs(scx),Math.abs(scy));
+					scx = Math.sign(scx)*sc;
+					scy = Math.sign(scy)*sc;
+				}
+				var t = [ center[0] - ext[0]*scx, center[1] - ext[1]*scy ];
+			
+				g.applyTransform(function(g1, g2, dim)
+				{	for (i=0; i<g1.length; i+=dim)
+					{	g2[i] = g1[i]*scx + t[0];
+						g2[i+1] = g1[i+1]*scy + t[1];
+					}
+					return g2;
+				});
+				return g;
+			}
 		}
 	}
 	// No geom => return a point
@@ -214,7 +232,7 @@ ol.interaction.DrawRegular.prototype.drawSketch_ = function(evt)
 		{	var f = this.feature_;
 			f.setGeometry (g);
 			this.overlayLayer_.getSource().addFeature(f);
-			if (this.canRotate_ && this.centered_ && this.square_ && this.coord_) 
+			if (this.square_ && ((this.canRotate_ && this.centered_ && this.coord_) || (!this.sides_ && !this.centered_)))
 			{	this.overlayLayer_.getSource().addFeature(new ol.Feature(new ol.geom.LineString([this.center_,this.coord_])));
 			}
 			return f;
@@ -243,7 +261,7 @@ ol.interaction.DrawRegular.prototype.handleDownEvent_ = function(evt)
  * @param {ol.MapBrowserEvent} evt Map browser event.
  */
 ol.interaction.DrawRegular.prototype.handleEvent_ = function(evt) 
-{	ol.interaction.Pointer.handleEvent.call(this, evt) 
+{	ol.interaction.Pointer.handleEvent.call(this, evt);
 	return true;
 }
 
@@ -251,8 +269,7 @@ ol.interaction.DrawRegular.prototype.handleEvent_ = function(evt)
  * @param {ol.MapBrowserEvent} evt Event.
  */
 ol.interaction.DrawRegular.prototype.handleMoveEvent_ = function(evt) 
-{	
-	if (this.started_)
+{	if (this.started_)
 	{	this.coord_ = evt.coordinate;
 		this.coordPx_ = evt.pixel;
 		var f = this.drawSketch_(evt);

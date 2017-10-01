@@ -2893,17 +2893,18 @@ ol.control.Overlay.prototype.setClass = function (className)
  *
  * @constructor
  * @extends {ol.control.Control}
- * @param {Object=} opt_options Control options.
- *	- minZoom {Number} default 0
- *	- maxZoom {Number} default 18
- *	- rotation {boolean} enable rotation, default false
- *	- align {top|bottom-left|right} position
- *	- layers {Array<ol.layer>} list of layers
- *	- style {ol.style.Style | Array.<ol.style.Style> | undefined} style to draw the map extent on the overveiw
- *	- panAnimation {bool|elastic} use animation to center map on click, default true
+ * @param {Object=} options Control options.
+ *	@param {ol.ProjectionLike} options.projection The projection. Default is EPSG:3857 (Spherical Mercator).
+ *	@param {Number} options.minZoom default 0
+ *	@param {Number} options.maxZoom default 18
+ *	@param {boolean} options.rotation enable rotation, default false
+ *	@param {top|bottom-left|right} options.align position
+ *	@param {Array<ol.layer>} options.layers list of layers
+ *	@param {ol.style.Style | Array.<ol.style.Style> | undefined} options.style style to draw the map extent on the overveiw
+ *	@param {bool|elastic} options.panAnimation use animation to center map on click, default true
  */
-ol.control.Overview = function(opt_options) 
-{	var options = opt_options || {};
+ol.control.Overview = function(options) 
+{	options = options || {};
 	var self = this;
 
 	// API 
@@ -2940,7 +2941,8 @@ ol.control.Overview = function(opt_options)
 		target: this.panel_.get(0),
 		view: new ol.View
 			({	zoom: 14,
-				center: [270148, 6247782]
+				center: [270148, 6247782],
+				projection: options.projection
 			}),
 		layers: options.layers
 	});
@@ -4247,16 +4249,16 @@ ol.control.Target.prototype.drawTarget_ = function (e)
 		{	var style = this.style[i];
 
 			if (style instanceof ol.style.Style)
-			{	var imgs = style.getImage();
-				var sc=0;
+			{	var sc=0;
 				// OL < v4.3 : setImageStyle don't check retina
-				if (imgs && !ol.Map.prototype.getFeaturesAtPixel) 
+				var imgs = ol.Map.prototype.getFeaturesAtPixel ? false : style.getImage();
+				if (imgs) 
 				{	sc = imgs.getScale(); 
 					imgs.setScale(ratio*sc);
 				}
 				e.vectorContext.setStyle(style);
 				e.vectorContext.drawGeometry(geom);
-				if (sc && imgs) imgs.setScale(sc);
+				if (imgs) imgs.setScale(sc);
 			}
 		}
 
@@ -4490,17 +4492,17 @@ ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
 	}
 	var style = e.style;
 	for (var i=0; i<style.length; i++)
-	{	var imgs = style[i].getImage();
-		var sc=0;
+	{	var sc=0;
 		// OL < v4.3 : setImageStyle doesn't check retina
-		if (imgs && !ol.Map.prototype.getFeaturesAtPixel) 
+		var imgs = ol.Map.prototype.getFeaturesAtPixel ? false : style[i].getImage();
+		if (imgs) 
 		{	sc = imgs.getScale(); 
 			imgs.setScale(e.frameState.pixelRatio*sc);
 		}
 		e.vectorContext.setStyle(style[i]);
 		if (style[i].getZIndex()<0) e.vectorContext.drawGeometry(shadow||geom);
 		else e.vectorContext.drawGeometry(geom);
-		if (sc && imgs) imgs.setScale(sc);
+		if (imgs) imgs.setScale(sc);
 	}
 };
 
@@ -6149,16 +6151,16 @@ ol.interaction.CenterTouch.prototype.drawTarget_ = function (e)
 		{	var style = this.targetStyle[i];
 
 			if (style instanceof ol.style.Style)
-			{	var imgs = style.getImage();
-				var sc=0;
+			{	var sc=0;
 				// OL < v4.3 : setImageStyle doesn't check retina
-				if (imgs && !ol.Map.prototype.getFeaturesAtPixel) 
+				var imgs = ol.Map.prototype.getFeaturesAtPixel ? false : style.getImage();
+				if (imgs) 
 				{	sc = imgs.getScale(); 
 					imgs.setScale(ratio*sc);
 				}
 				e.vectorContext.setStyle(style);
 				e.vectorContext.drawGeometry(geom);
-				if (sc && imgs) imgs.setScale(sc);
+				if (imgs) imgs.setScale(sc);
 			}
 		}
 
@@ -6315,14 +6317,16 @@ ol.interaction.Clip.prototype.setActive = function(b)
  * @constructor
  * @extends {ol.interaction.Pointer}
  * @fires drawstart, drawing, drawend
- * @param {olx.interaction.TransformOptions} 
- *  - source {Array<ol.Layer>} Destination source for the drawn features
- *  - features {ol.Collection<ol.Feature>} Destination collection for the drawn features 
- *	- style {ol.style.Style | Array.<ol.style.Style> | ol.style.StyleFunction | undefined} style for the sketch
- *	- sides {integer} nimber of sides, default 0 = circle
- *	- squareCondition { ol.events.ConditionType | undefined } A function that takes an ol.MapBrowserEvent and returns a boolean to draw square features.
- *	- centerCondition { ol.events.ConditionType | undefined } A function that takes an ol.MapBrowserEvent and returns a boolean to draw centered features.
- *	- canRotate { bool } Allow rotation when centered + square, default: true
+ * @param {olx.interaction.TransformOptions} options
+ *  @param {Array<ol.Layer>} source Destination source for the drawn features
+ *  @param {ol.Collection<ol.Feature>} features Destination collection for the drawn features 
+ *	@param {ol.style.Style | Array.<ol.style.Style> | ol.style.StyleFunction | undefined} style style for the sketch
+ *	@param {integer} sides number of sides, default 0 = circle
+ *	@param { ol.events.ConditionType | undefined } squareCondition A function that takes an ol.MapBrowserEvent and returns a boolean to draw square features.
+ *	@param { ol.events.ConditionType | undefined } centerCondition A function that takes an ol.MapBrowserEvent and returns a boolean to draw centered features.
+ *	@param { bool } canRotate Allow rotation when centered + square, default: true
+ *	@param { number } clickTolerance click tolerance, default: 6
+ *	@param { number } maxCircleCoordinates Maximum number of point on a circle, default: 100
  */
 ol.interaction.DrawRegular = function(options) 
 {	if (!options) options={};
@@ -6457,53 +6461,69 @@ ol.interaction.DrawRegular.prototype.getGeom_ = function ()
 	if (this.coord_)
 	{	var center = this.center_;
 		var coord = this.coord_;
-		var hasrotation = this.canRotate_ && this.centered_ && this.square_;
-		if (this.square_ && !hasrotation) 
-		{	var d = [coord[0] - center[0], coord[1] - center[1]];
-			var dm = Math.max (Math.abs(d[0]), Math.abs(d[1])); 
-			coord[0] = center[0] + (d[0]>0 ? dm:-dm);
-			coord[1] = center[1] + (d[1]>0 ? dm:-dm);
+
+		// Special case: circle
+		if (!this.sides_ && this.square_ && !this.centered_)
+		{	center = [(coord[0] + center[0])/2, (coord[1] + center[1])/2];
+			var d = [coord[0] - center[0], coord[1] - center[1]];
+			var r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
+			var circle = new ol.geom.Circle(center, r, 'XY');
+			// Optimize points on the circle
+			var centerPx = this.getMap().getPixelFromCoordinate(center);
+			var dmax = Math.max (100, Math.abs(centerPx[0]-this.coordPx_[0]), Math.abs(centerPx[1]-this.coordPx_[1]));
+			dmax = Math.min ( this.maxCircleCoordinates_, Math.round(dmax / 3 ));
+			return ol.geom.Polygon.fromCircle (circle, dmax, 0);
 		}
-		var d = [coord[0] - center[0], coord[1] - center[1]];
-		var r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
-		if (r>0)
-		{	var circle = new ol.geom.Circle(center, r, 'XY');
-			var a;
-			if (hasrotation) a = Math.atan2(d[1], d[0]);
-			else a = this.startAngle[this.sides_] || this.startAngle['default'];
-
-			if (this.sides_) g = ol.geom.Polygon.fromCircle (circle, this.sides_, a);
-			else
-			{	// Opimize points on the circle
-				var centerPx = this.getMap().getPixelFromCoordinate(this.center_);
-				var dmax = Math.max (100, Math.abs(centerPx[0]-this.coordPx_[0]), Math.abs(centerPx[1]-this.coordPx_[1]));
-				dmax = Math.min ( this.maxCircleCoordinates_, Math.round(dmax / (this.centered_ ? 3:5) ));
-				g = ol.geom.Polygon.fromCircle (circle, dmax, 0);
+		else
+		{
+			var hasrotation = this.canRotate_ && this.centered_ && this.square_;
+			var d = [coord[0] - center[0], coord[1] - center[1]];
+			if (this.square_ && !hasrotation) 
+			{	//var d = [coord[0] - center[0], coord[1] - center[1]];
+				var dm = Math.max (Math.abs(d[0]), Math.abs(d[1])); 
+				coord[0] = center[0] + (d[0]>0 ? dm:-dm);
+				coord[1] = center[1] + (d[1]>0 ? dm:-dm);
 			}
+			var r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
+			if (r>0)
+			{	var circle = new ol.geom.Circle(center, r, 'XY');
+				var a;
+				if (hasrotation) a = Math.atan2(d[1], d[0]);
+				else a = this.startAngle[this.sides_] || this.startAngle['default'];
 
-			if (hasrotation) return g;
-
-			// Scale polygon to fit extent
-			var ext = g.getExtent();
-			if (!this.centered_) center = this.center_;
-			else center = [ 2*this.center_[0]-this.coord_[0], 2*this.center_[1]-this.coord_[1] ];
-			var scx = (center[0] - coord[0]) / (ext[0] - ext[2]);
-			var scy = (center[1] - coord[1]) / (ext[1] - ext[3]);
-			if (this.square_) 
-			{	var sc = Math.min(Math.abs(scx),Math.abs(scy));
-				scx = Math.sign(scx)*sc;
-				scy = Math.sign(scy)*sc;
-			}
-			var t = [ center[0] - ext[0]*scx, center[1] - ext[1]*scy ];
-
-			g.applyTransform(function(g1, g2, dim)
-			{	for (i=0; i<g1.length; i+=dim)
-				{	g2[i] = g1[i]*scx + t[0];
-					g2[i+1] = g1[i+1]*scy + t[1];
+				if (this.sides_) g = ol.geom.Polygon.fromCircle (circle, this.sides_, a);
+				else
+				{	// Optimize points on the circle
+					var centerPx = this.getMap().getPixelFromCoordinate(this.center_);
+					var dmax = Math.max (100, Math.abs(centerPx[0]-this.coordPx_[0]), Math.abs(centerPx[1]-this.coordPx_[1]));
+					dmax = Math.min ( this.maxCircleCoordinates_, Math.round(dmax / (this.centered_ ? 3:5) ));
+					g = ol.geom.Polygon.fromCircle (circle, dmax, 0);
 				}
-				return g2;
-			});
-			return g;
+
+				if (hasrotation) return g;
+			
+				// Scale polygon to fit extent
+				var ext = g.getExtent();
+				if (!this.centered_) center = this.center_;
+				else center = [ 2*this.center_[0]-this.coord_[0], 2*this.center_[1]-this.coord_[1] ];
+				var scx = (center[0] - coord[0]) / (ext[0] - ext[2]);
+				var scy = (center[1] - coord[1]) / (ext[1] - ext[3]);
+				if (this.square_) 
+				{	var sc = Math.min(Math.abs(scx),Math.abs(scy));
+					scx = Math.sign(scx)*sc;
+					scy = Math.sign(scy)*sc;
+				}
+				var t = [ center[0] - ext[0]*scx, center[1] - ext[1]*scy ];
+			
+				g.applyTransform(function(g1, g2, dim)
+				{	for (i=0; i<g1.length; i+=dim)
+					{	g2[i] = g1[i]*scx + t[0];
+						g2[i+1] = g1[i+1]*scy + t[1];
+					}
+					return g2;
+				});
+				return g;
+			}
 		}
 	}
 	// No geom => return a point
@@ -6523,7 +6543,7 @@ ol.interaction.DrawRegular.prototype.drawSketch_ = function(evt)
 		{	var f = this.feature_;
 			f.setGeometry (g);
 			this.overlayLayer_.getSource().addFeature(f);
-			if (this.canRotate_ && this.centered_ && this.square_ && this.coord_) 
+			if (this.square_ && ((this.canRotate_ && this.centered_ && this.coord_) || (!this.sides_ && !this.centered_)))
 			{	this.overlayLayer_.getSource().addFeature(new ol.Feature(new ol.geom.LineString([this.center_,this.coord_])));
 			}
 			return f;
@@ -6552,7 +6572,7 @@ ol.interaction.DrawRegular.prototype.handleDownEvent_ = function(evt)
  * @param {ol.MapBrowserEvent} evt Map browser event.
  */
 ol.interaction.DrawRegular.prototype.handleEvent_ = function(evt) 
-{	ol.interaction.Pointer.handleEvent.call(this, evt) 
+{	ol.interaction.Pointer.handleEvent.call(this, evt);
 	return true;
 }
 
@@ -6560,8 +6580,7 @@ ol.interaction.DrawRegular.prototype.handleEvent_ = function(evt)
  * @param {ol.MapBrowserEvent} evt Event.
  */
 ol.interaction.DrawRegular.prototype.handleMoveEvent_ = function(evt) 
-{	
-	if (this.started_)
+{	if (this.started_)
 	{	this.coord_ = evt.coordinate;
 		this.coordPx_ = evt.pixel;
 		var f = this.drawSketch_(evt);
@@ -7053,18 +7072,18 @@ ol.interaction.Flashlight.prototype.postcompose_ = function(e)
  *	It combines a draw with a ol.Geolocation
  * @constructor
  * @extends {ol.interaction.Interaction}
- * @fires drawstart, drawend, drawing, tracking
- * @param {olx.interaction.GeolocationDrawOption} 
- *	- features { ol.Collection.<ol.Feature> | undefined } Destination collection for the drawn features.
- *	- source { ol.source.Vector | undefined } Destination source for the drawn features.
- *	- type {ol.geom.GeometryType} Drawing type ('Point', 'LineString', 'Polygon'). Required.
- *	- attributes {Object} a list of attributes to register as Point properties: {accuracy:true,accuracyGeometry:true,heading:true,speed:true}, default none.
- *	- tolerance {Number} tolerance to add a new point (in projection unit), use ol.geom.LineString.simplify() method, default 5
- *	- zoom {Number} zoom for tracking, default 16
- *	- preventTracking {boolean} true if you don't want the interaction to track on the map, default false
- *	- style { ol.style.Style | Array.<ol.style.Style> | ol.StyleFunction | undefined } Style for sketch features.
- *	- minAccuracy {Number} minimum accuracy underneath a new point will be register (if no condition), default 20
- *	- condition {} a function that take a ol.Geolocation object and return a boolean to indicate whether location should be handled or not, default return true if accuraty < minAccuraty
+ * @fires drawstart, drawend, drawing, tracking, follow
+ * @param {olx.interaction.GeolocationDrawOption} options
+ *	@param { ol.Collection.<ol.Feature> | undefined } option.features Destination collection for the drawn features.
+ *	@param { ol.source.Vector | undefined } options.source Destination source for the drawn features.
+ *	@param {ol.geom.GeometryType} options.type Drawing type ('Point', 'LineString', 'Polygon'). Required.
+ *	@param {Number | undefined} options.minAccuracy minimum accuracy underneath a new point will be register (if no condition), default 20
+ *	@param {function | undefined} options.condition a function that take a ol.Geolocation object and return a boolean to indicate whether location should be handled or not, default return true if accuraty < minAccuraty
+ *	@param {Object} options.attributes a list of attributes to register as Point properties: {accuracy:true,accuracyGeometry:true,heading:true,speed:true}, default none.
+ *	@param {Number} options.tolerance tolerance to add a new point (in projection unit), use ol.geom.LineString.simplify() method, default 5
+ *	@param {Number} options.zoom zoom for tracking, default 16
+ *	@param {boolean|auto|position|visible} options.followTrack true if you want the interaction to follow the track on the map, default true
+ *	@param { ol.style.Style | Array.<ol.style.Style> | ol.StyleFunction | undefined } options.style Style for sketch features.
  */
 ol.interaction.GeolocationDraw = function(options) 
 {	if (!options) options={};
@@ -7083,6 +7102,7 @@ ol.interaction.GeolocationDraw = function(options)
 
 	// Current path
 	this.path_ = [];
+	this.lastPosition_ = false;
 
 	// Default style
 	var white = [255, 255, 255, 1];
@@ -7155,7 +7175,7 @@ ol.interaction.GeolocationDraw = function(options)
 	// Prevent interaction when tracking
 	ol.interaction.Interaction.call(this, 
 	{	handleEvent: function()
-		{	return (this.get('preventTracking') || !geoloc.getTracking());
+		{	return (!this.get('followTrack') || this.get('followTrack')=='auto');//  || !geoloc.getTracking());
 		}
 	});
 
@@ -7163,9 +7183,10 @@ ol.interaction.GeolocationDraw = function(options)
 	this.set("attributes", options.attributes||{});
 	this.set("minAccuracy", options.minAccuracy||20);
 	this.set("tolerance", options.tolerance||5);
-	this.set("zoom", options.zoom||16);
-	this.set("preventTracking", options.preventTracking||false);
+	this.set("zoom", options.zoom);
+	this.setFollowTrack (options.followTrack===undefined ? true : options.followTrack);
 
+	this.setActive(false);
 };
 ol.inherits(ol.interaction.GeolocationDraw, ol.interaction.Interaction);
 
@@ -7193,6 +7214,19 @@ ol.interaction.GeolocationDraw.prototype.setActive = function(active)
 	{	this.geolocation.setTracking(active);
 		this.getMap().renderSync();
 	}
+	this.pause(!active);
+	if (active)
+	{	// Start drawing
+		this.dispatchEvent({ type:'drawstart', feature: this.sketch_[1]});
+	}
+	else
+	{	var f = this.sketch_[1].clone();
+		if (f.getGeometry())
+		{	if (this.features_) this.features_.push(f);
+			if (this.source_) this.source_.addFeature(f);
+			this.dispatchEvent({ type:'drawend', feature: this.sketch_[1]});
+		}
+	}
 };
 
 /** Reset drawing
@@ -7200,36 +7234,40 @@ ol.interaction.GeolocationDraw.prototype.setActive = function(active)
 ol.interaction.GeolocationDraw.prototype.reset = function()
 {	this.sketch_[1].setGeometry();
 	this.path_ = [];
+	this.lastPosition_ = false;
 };
 
-/** Force drawing
+/** Start tracking = setActive(true)
 */
 ol.interaction.GeolocationDraw.prototype.start = function()
-{	this.pause(false);
-	// Start drawing
-	this.dispatchEvent({ type:'drawstart', feature: this.sketch_[1]});
-	// Get a point if got one
-	//if (this.get("type")=="Point") this.stop(); 
+{	this.setActive(true);
 };
 
-/** Stop drawing
+/** Stop tracking = setActive(false)
 */
 ol.interaction.GeolocationDraw.prototype.stop = function()
-{	var f = this.sketch_[1].clone();
-	if (f.getGeometry())
-	{	if (this.features_) this.features_.push(f);
-		if (this.source_) this.source_.addFeature(f);
-		this.dispatchEvent({ type:'drawend', feature: this.sketch_[1]});
-	}
-	this.reset();
-	this.pause(true);
+{	this.setActive(false);
 };
 
 /** Pause drawing
 * @param {boolean} b 
 */
 ol.interaction.GeolocationDraw.prototype.pause = function(b)
-{	this.pause_ = b;
+{	this.pause_ = b!==false;
+};
+
+/** Enable following the track on the map
+* @param {boolean|auto|position|visible} follow, 
+*	false: don't follow, 
+*	true: follow (position+zoom), 
+*	'position': follow only position,
+*	'auto': start following until user move the map,
+*	'visible': center when position gets out of the visible extent
+*/
+ol.interaction.GeolocationDraw.prototype.setFollowTrack = function(follow)
+{	this.set('followTrack', follow);
+	this.lastPosition_ = false;				
+	this.dispatchEvent({ type:'follow', following: follow!==false });
 };
 
 /** Add a new point to the current path
@@ -7238,6 +7276,8 @@ ol.interaction.GeolocationDraw.prototype.pause = function(b)
 ol.interaction.GeolocationDraw.prototype.draw_ = function(active)
 {	var map = this.getMap();
 	if (!map) return;
+
+	// Current location
 	var loc = this.geolocation;
 	var accu = loc.getAccuracy();
 	var pos = loc.getPosition();
@@ -7245,12 +7285,50 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(active)
 	var p = loc.getAccuracyGeometry();
 
 	// Center on point
-	if (!this.get('preventTracking'))
-	{	map.getView().setCenter( pos );
-		map.getView().setZoom( this.get("zoom") || 16 );
-		if (!ol.extent.containsExtent(map.getView().calculateExtent(map.getSize()), p.getExtent()))
-		{	map.getView().fit(p.getExtent());
-		}
+	console.log(this.get('followTrack'))
+	switch (this.get('followTrack'))
+	{	// Follow center + zoom
+		case true:
+			// modify zoom
+			if (this.get('followTrack') == true) 
+			{	map.getView().setZoom( this.get("zoom") || 16 );
+				if (!ol.extent.containsExtent(map.getView().calculateExtent(map.getSize()), p.getExtent()))
+				{	map.getView().fit(p.getExtent());
+				}
+			}
+		// Follow  position 
+		case 'position':
+			// modify center
+			map.getView().setCenter( pos );
+			break;
+		// Keep on following 
+		case 'auto':
+			if (this.lastPosition_)
+			{	var center = map.getView().getCenter();
+				console.log(center,this.lastPosition_)
+				if (center[0]!=this.lastPosition_[0] || center[1]!=this.lastPosition_[1])
+				{	this.dispatchEvent({ type:'follow', following: false });
+					this.setFollowTrack (false);
+				}
+				else 
+				{	map.getView().setCenter( pos );	
+					this.lastPosition_ = pos;
+				}
+			}
+			else 
+			{	map.getView().setCenter( pos );	
+				if (this.get("zoom")) map.getView().setZoom( this.get("zoom") );
+				this.lastPosition_ = pos;
+			}
+			break;
+		// Force to stay on the map
+		case 'visible':
+			if (!ol.extent.containsCoordinate(map.getView().calculateExtent(map.getSize()), pos))
+			{	map.getView().setCenter (pos);
+			}
+			break;
+		// Don't follow
+		default: break;
 	}
 	
 	// Draw occuracy
@@ -7429,8 +7507,8 @@ ol.interaction.Hover.prototype.handleMove_ = function(e)
  * @extends {ol.interaction.Interaction}
  * @fires  
  * @param {olx.interaction.LongTouchOptions} 
- *	- handleLongTouchEvent {function | undefined} Function handling "longtouch" events, it will receive a mapBrowserEvent.
- *	- delay {interger | undefined} The delay for a long touch in ms, default is 1000
+ * 	@param {function | undefined} options.handleLongTouchEvent Function handling "longtouch" events, it will receive a mapBrowserEvent.
+ *	@param {interger | undefined} options.delay The delay for a long touch in ms, default is 1000
  */
 ol.interaction.LongTouch = function(options) 
 {	if (!options) options = {};
@@ -7450,9 +7528,9 @@ ol.interaction.LongTouch = function(options)
 								ltouch(e) 
 							}, this.delay_);
 						break;
-					case 'pointerup':
-					case 'pointermove':
+					/* case 'pointermove': */
 					case 'pointerdrag':
+					case 'pointerup':
 						if (_timeout) 
 						{	clearTimeout(_timeout);
 							_timeout = null;
@@ -9776,7 +9854,7 @@ ol.layer.Group.prototype.getPreview = function(lonlat, resolution)
 
 /* Implementation */
 function addFeature(f)
-{	var h = this._hexgrid.coord2hex(f.getGeometry().getFirstCoordinate());
+{	var h = this._hexgrid.coord2hex(this._geomFn(f));
 	var id = h.toString();
 	if (this._bin[id]) 
 	{	this._bin[id].get('features').push(f);
@@ -9795,7 +9873,7 @@ function addFeature(f)
 // @return {} the bin id, the index of the feature in the bin and a boolean if the feature has moved to an other bin
 function getBin(f)
 {	// Test if feature exists in the current hex
-	var id = this._hexgrid.coord2hex(f.getGeometry().getFirstCoordinate()).toString();
+	var id = this._hexgrid.coord2hex(this._geomFn(f)).toString();
 	if (this._bin[id])
 	{	var index = this._bin[id].get('features').indexOf(f);
 		if (index > -1) return { id:id, index:index };
@@ -9828,7 +9906,7 @@ function modifyFeature(e)
 {	var bin = getBin.call(this,e.target);
 	if (bin && bin.moved)
 	{	// remove from the bin
-		removeFeature.call(this,e.target, bin);
+		removeFeature.call(this, e.target, bin);
 		// insert in the new bin
 		addFeature.call (this, e.target);
 	}	
@@ -9853,6 +9931,8 @@ function hexbinInit(source, options)
 	// Source and origin
 	this._source = source;
 	this._origin = options.source;
+	// Geometry function to get a point
+	this._geomFn = options.geometryFunction || ol.coordinate.getFeatureCenter || function(f) { return f.getGeometry().getFirstCoordinate(); };
 	// Existing features
 	reset.call(this);
 	// Future features
@@ -9863,8 +9943,12 @@ function hexbinInit(source, options)
 /** A source for hexagonal binning
 * @constructor 
 * @extends {ol.source.Vector}
-* @param {olx.source.VectorOptions=} options extend ol.source.Vector options
-*	@param {ol.source.Vector} options.source the source
+* @param {} options ol.source.VectorOptions + ol.HexGridOptions
+*	@param {ol.source.Vector} options.source Source 
+*	@param {Number} options.size size of the exagon in map units, default 80000
+*	@param {ol.coordinate} options.origin orgin of the grid, default [0,0]
+*	@param {pointy|flat} options.layout grid layout, default pointy
+*	@param {function|undefined} options.geometryFunction Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center. 
 * @todo 
 */
 ol.source.HexBin = function(options)
@@ -9885,7 +9969,12 @@ ol.source.HexBin.prototype.getSource = function()
 /** An image source for hexagonal binning
 * @constructor 
 * @extends {ol.source.ImageVector}
-* @param {olx.source.ImageVectorOptions=} options
+* @param {} options ol.source.ImageVectorOptions + ol.HexGridOptions
+*	@param {ol.source.Vector} options.source Source 
+*	@param {Number} options.size size of the exagon in map units, default 80000
+*	@param {ol.coordinate} options.origin orgin of the grid, default [0,0]
+*	@param {pointy|flat} options.layout grid layout, default pointy
+*	@param {function|undefined} options.geometryFunction Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center. 
 * @todo 
 */
 ol.source.ImageHexBin = function(options)
@@ -10430,7 +10519,7 @@ ol.Overlay.Magnify = function (options)
 	{	controls: new ol.Collection(),
 		interactions: new ol.Collection(),
 		target: options.target || this.element,
-		view: new ol.View(),
+		view: new ol.View({ projection: options.projection }),
 		layers: options.layers
 	});
 	this.mgview_ = this.mgmap_.getView();
@@ -13386,6 +13475,9 @@ ol.geom.Geometry.prototype.convexHull = function()
 
 /** Distance beetween 2 points
 *	Usefull geometric functions
+* @param {ol.coordinate} p1 first point
+* @param {ol.coordinate} p2 second point
+* @return {number} distance
 */
 ol.coordinate.dist2d = function(p1, p2)
 {	var dx = p1[0]-p2[0];
@@ -13394,10 +13486,38 @@ ol.coordinate.dist2d = function(p1, p2)
 }
 /** 2 points are equal
 *	Usefull geometric functions
+* @param {ol.coordinate} p1 first point
+* @param {ol.coordinate} p2 second point
+* @return {boolean}
 */
 ol.coordinate.equal = function(p1, p2)
 {	return (p1[0]==p2[0] && p1[1]==p2[1]);
 }
+
+/** Get center coordinate of a feature
+* @param {ol.Feature} f
+* @return {ol.coordinate} the center
+*/
+ol.coordinate.getFeatureCenter = function(f)
+{	return ol.coordinate.getGeomCenter (f.getGeometry());
+};
+
+/** Get center coordinate of a geometry
+* @param {ol.Feature} geom
+* @return {ol.coordinate} the center
+*/
+ol.coordinate.getGeomCenter = function(geom)
+{	switch (geom.getType())
+	{	case 'Point': 
+			return geom.getCoordinates();
+		case "MultiPolygon":
+			geom = geom.getPolygon(0);
+		case "Polygon":
+			return geom.getInteriorPoint().getCoordinates();
+		default:
+			return geom.getClosestPoint(ol.extent.getCenter(geom.getExtent()));
+	};
+};
 
 /** Split a lineString by a point or a list of points
 *	NB: points must be on the line, use getClosestPoint() to get one
