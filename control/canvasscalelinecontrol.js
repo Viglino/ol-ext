@@ -78,7 +78,7 @@ ol.control.CanvasScaleLine.prototype.drawScale_ = function(e)
 	var ctx = e.context;
 
 	// Get size of the scale div
-	var scalewidth = this.olscale.width()/4;
+	var scalewidth = this.olscale.width();
 	if (!scalewidth) return;
 	var text = this.olscale.text();
 	var position = this.$element.position();
@@ -105,18 +105,22 @@ ol.control.CanvasScaleLine.prototype.drawScale_ = function(e)
     ctx.textAlign = "center";
 	ctx.textBaseline ="bottom";
     ctx.font = this.font_;
-	ctx.strokeText(text, position.left+2*scalewidth, position.top);
-    ctx.fillText(text, position.left+2*scalewidth, position.top);
+	ctx.strokeText(text, position.left+scalewidth/2, position.top);
+    ctx.fillText(text, position.left+scalewidth/2, position.top);
 	ctx.closePath();
 
 	// Draw scale bar
 	position.top += 2;
 	ctx.lineWidth = this.strokeWidth_;
-    ctx.strokeStyle = this.strokeStyle_;
-	for (var i=0; i<4; i++)
+	ctx.strokeStyle = this.strokeStyle_;
+	var max = 4;
+	var n = parseInt(text);
+	while (n%10 == 0) n/=10;
+	if (n%5 == 0) max = 5;
+	for (var i=0; i<max; i++)
 	{	ctx.beginPath();
 		ctx.fillStyle = i%2 ? this.fillStyle_ : this.strokeStyle_;
-		ctx.rect(position.left+i*scalewidth, position.top, scalewidth, this.scaleHeight_);
+		ctx.rect(position.left+i*scalewidth/max, position.top, scalewidth/max, this.scaleHeight_);
 		ctx.stroke();
 		ctx.fill();
 		ctx.closePath();
