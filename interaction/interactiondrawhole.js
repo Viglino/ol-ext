@@ -71,7 +71,7 @@ ol.interaction.DrawHole.prototype.setMap = function(map)
 ol.interaction.DrawHole.prototype.setActive = function(b) 
 {	this._select.getFeatures().clear();
 	ol.interaction.Draw.prototype.setActive.call (this, b);
-}
+};
 
 /**
  * Remove last point of the feature currently being drawn 
@@ -81,7 +81,7 @@ ol.interaction.DrawHole.prototype.removeLastPoint = function()
 {	if (this._feature && this._feature.getGeometry().getCoordinates()[0].length>2) 
 	{	ol.interaction.Draw.prototype.removeLastPoint.call(this);
 	}
-}
+};
 
 /** 
  * Get the current polygon to hole
@@ -89,7 +89,7 @@ ol.interaction.DrawHole.prototype.removeLastPoint = function()
  */
 ol.interaction.DrawHole.prototype.getPolygon = function()
 {	return this._select.getFeatures().item(0);
-}
+};
 
 /**
  * Get current feature to add a hole and start drawing
@@ -123,7 +123,7 @@ ol.interaction.DrawHole.prototype._startDrawing = function(e)
 	else
 	{	this._select.getFeatures().push(current);
 	}
-}
+};
 
 /**
  * Stop drawing and add the sketch feature to the target feature. 
@@ -135,7 +135,7 @@ ol.interaction.DrawHole.prototype._finishDrawing = function(e)
 	if (c.length > 3) this.getPolygon().getGeometry().appendLinearRing(new ol.geom.LinearRing(c));
 	this._feature = null;
 	this._select.getFeatures().clear();
-}
+};
 
 /**
  * Function that is called when a geometry's coordinates are updated.
@@ -158,4 +158,4 @@ ol.interaction.DrawHole.prototype._geometryFn = function(coordinates, geometry)
 	{	geometry = new ol.geom.Polygon(coordinates);
 	}
 	return geometry;
-}
+};

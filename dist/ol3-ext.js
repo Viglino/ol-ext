@@ -694,7 +694,7 @@ ol.control.Button = function(options)
 	var element = $("<div>").addClass((options.className||"") + ' ol-button ol-unselectable ol-control');
 	var self = this;
 
-	$("<button>").html(options.html || "")
+	var bt = $("<button>").html(options.html || "")
 				.attr('type','button')
 				.attr('title', options.title)
 				.on("click", function(e)
@@ -705,7 +705,9 @@ ol.control.Button = function(options)
 					if (options.handleClick) options.handleClick.call(self, e);
 				})
 				.appendTo(element);
-	
+	// Try to get a title in the button content
+	if (!options.title) bt.attr("title", bt.children().first().attr('title'));
+
 	ol.control.Control.call(this, 
 	{	element: element.get(0),
 		target: options.target
@@ -928,7 +930,7 @@ ol.control.CanvasScaleLine.prototype.drawScale_ = function(e)
 	var ctx = e.context;
 
 	// Get size of the scale div
-	var scalewidth = this.olscale.width()/4;
+	var scalewidth = this.olscale.width();
 	if (!scalewidth) return;
 	var text = this.olscale.text();
 	var position = this.$element.position();
@@ -955,18 +957,22 @@ ol.control.CanvasScaleLine.prototype.drawScale_ = function(e)
     ctx.textAlign = "center";
 	ctx.textBaseline ="bottom";
     ctx.font = this.font_;
-	ctx.strokeText(text, position.left+2*scalewidth, position.top);
-    ctx.fillText(text, position.left+2*scalewidth, position.top);
+	ctx.strokeText(text, position.left+scalewidth/2, position.top);
+    ctx.fillText(text, position.left+scalewidth/2, position.top);
 	ctx.closePath();
 
 	// Draw scale bar
 	position.top += 2;
 	ctx.lineWidth = this.strokeWidth_;
-    ctx.strokeStyle = this.strokeStyle_;
-	for (var i=0; i<4; i++)
+	ctx.strokeStyle = this.strokeStyle_;
+	var max = 4;
+	var n = parseInt(text);
+	while (n%10 == 0) n/=10;
+	if (n%5 == 0) max = 5;
+	for (var i=0; i<max; i++)
 	{	ctx.beginPath();
 		ctx.fillStyle = i%2 ? this.fillStyle_ : this.strokeStyle_;
-		ctx.rect(position.left+i*scalewidth, position.top, scalewidth, this.scaleHeight_);
+		ctx.rect(position.left+i*scalewidth/max, position.top, scalewidth/max, this.scaleHeight_);
 		ctx.stroke();
 		ctx.fill();
 		ctx.closePath();
@@ -1636,6 +1642,15 @@ ol.control.Bar.prototype.deactivateControls = function (except)
 	}
 };
 
+
+ol.control.Bar.prototype.getActiveControls = function ()
+{	var active = [];
+	for (var i=0, c; c=this.controls_[i]; i++) 
+	{	if (c.getActive && c.getActive()) active.push(c);
+	}
+	return active;
+}
+
 /** Auto activate/deactivate controls in the bar
 * @param {boolean} b activate/deactivate
 */
@@ -1655,15 +1670,29 @@ ol.control.Bar.prototype.setActive = function (b)
 *	@param {ol.event} an object with a target {ol.control} and active flag {bool}
 */
 ol.control.Bar.prototype.onActivateControl_ = function (e)
-{	if (!e.active || !this.get('toggleOne')) return;
-	var n;
-	var ctrl = e.target;
-	for (n=0; n<this.controls_.length; n++) 
-	{	if (this.controls_[n]===ctrl) break;
+{	if (this.get('toggleOne'))
+	{	if (e.active)
+		{	var n;
+			var ctrl = e.target;
+			for (n=0; n<this.controls_.length; n++) 
+			{	if (this.controls_[n]===ctrl) break;
+			}
+			// Not here!
+			if (n==this.controls_.length) return;
+			this.deactivateControls (this.controls_[n]);
+		}
+		else
+		{	// No one active > test auto activate
+			if (!this.getActiveControls().length)
+			{	for (var i=0, c; c=this.controls_[i]; i++) 
+				{	if (c.get("autoActivate")) 
+					{	c.setActive();
+						break;
+					}
+				}
+			}
+		}
 	}
-	// Not here!
-	if (n==this.controls_.length) return;
-	this.deactivateControls (this.controls_[n]);
 };
 
 /** A simple toggle control with a callback function
@@ -6315,8 +6344,8 @@ ol.interaction.Clip.prototype.setActive = function(b)
 */
 /** Interaction rotate
  * @constructor
- * @extends {ol.interaction.Pointer}
- * @fires drawstart, drawing, drawend
+ * @extends {ol.interaction.Interaction}
+ * @fires drawstart, drawing, drawend, drawcancel
  * @param {olx.interaction.TransformOptions} options
  *  @param {Array<ol.Layer>} source Destination source for the drawn features
  *  @param {ol.Collection<ol.Feature>} features Destination collection for the drawn features 
@@ -6325,19 +6354,12 @@ ol.interaction.Clip.prototype.setActive = function(b)
  *	@param { ol.events.ConditionType | undefined } squareCondition A function that takes an ol.MapBrowserEvent and returns a boolean to draw square features.
  *	@param { ol.events.ConditionType | undefined } centerCondition A function that takes an ol.MapBrowserEvent and returns a boolean to draw centered features.
  *	@param { bool } canRotate Allow rotation when centered + square, default: true
- *	@param { number } clickTolerance click tolerance, default: 6
+ *	@param { number } clickTolerance click tolerance on touch devices, default: 6
  *	@param { number } maxCircleCoordinates Maximum number of point on a circle, default: 100
  */
 ol.interaction.DrawRegular = function(options) 
 {	if (!options) options={};
 	var self = this;
-
-	ol.interaction.Pointer.call(this, 
-	{	handleDownEvent: this.handleDownEvent_,
-		handleMoveEvent: this.handleMoveEvent_,
-		handleUpEvent: this.handleUpEvent_,
-		handleEvent: this.handleEvent_
-	});
 
 	this.squaredClickTolerance_ = options.clickTolerance ? options.clickTolerance * options.clickTolerance : 36;
 	this.maxCircleCoordinates_ = options.maxCircleCoordinates || 100;
@@ -6388,8 +6410,18 @@ ol.interaction.DrawRegular = function(options)
 			displayInLayerSwitcher: false,
 			style: options.style || defaultStyle
 		});
+
+	ol.interaction.Interaction.call(this, 
+		{	
+			/*
+			handleDownEvent: this.handleDownEvent_,
+			handleMoveEvent: this.handleMoveEvent_,
+			handleUpEvent: this.handleUpEvent_,
+			*/
+			handleEvent: this.handleEvent_
+		});
 };
-ol.inherits(ol.interaction.DrawRegular, ol.interaction.Pointer);
+ol.inherits(ol.interaction.DrawRegular, ol.interaction.Interaction);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
@@ -6399,7 +6431,7 @@ ol.inherits(ol.interaction.DrawRegular, ol.interaction.Pointer);
  */
 ol.interaction.DrawRegular.prototype.setMap = function(map) 
 {	if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_);
-	ol.interaction.Pointer.prototype.setMap.call (this, map);
+	ol.interaction.Interaction.prototype.setMap.call (this, map);
 	this.overlayLayer_.setMap(map);
 };
 
@@ -6409,8 +6441,17 @@ ol.interaction.DrawRegular.prototype.setMap = function(map)
  * @api stable
  */
 ol.interaction.DrawRegular.prototype.setActive = function(b) 
+{	this.reset();
+	ol.interaction.Interaction.prototype.setActive.call (this, b);
+}
+
+/**
+ * Reset the interaction
+ * @api stable
+ */
+ol.interaction.DrawRegular.prototype.reset = function() 
 {	this.overlayLayer_.getSource().clear();
-	ol.interaction.Pointer.prototype.setActive.call (this, b);
+	this.started_ = false;
 }
 
 /**
@@ -6419,8 +6460,7 @@ ol.interaction.DrawRegular.prototype.setActive = function(b)
  * @api stable
  */
 ol.interaction.DrawRegular.prototype.setSides = function (nb)
-{	
-	nb = parseInt(nb);
+{	nb = parseInt(nb);
 	this.sides_ = nb>2 ? nb : 0;
 }
 
@@ -6430,7 +6470,7 @@ ol.interaction.DrawRegular.prototype.setSides = function (nb)
  * @api stable
  */
 ol.interaction.DrawRegular.prototype.canRotate = function (b)
-{	if (b===true ||b===false) this.canRotate_ = b;
+{	if (b===true || b===false) this.canRotate_ = b;
 	return this.canRotate_;
 }
 
@@ -6457,6 +6497,7 @@ ol.interaction.DrawRegular.prototype.startAngle =
 ol.interaction.DrawRegular.prototype.getGeom_ = function ()
 {	this.overlayLayer_.getSource().clear();
 	if (!this.center_) return false;
+
 	var g;
 	if (this.coord_)
 	{	var center = this.center_;
@@ -6464,7 +6505,9 @@ ol.interaction.DrawRegular.prototype.getGeom_ = function ()
 
 		// Special case: circle
 		if (!this.sides_ && this.square_ && !this.centered_)
-		{	center = [(coord[0] + center[0])/2, (coord[1] + center[1])/2];
+		{	
+			
+			center = [(coord[0] + center[0])/2, (coord[1] + center[1])/2];
 			var d = [coord[0] - center[0], coord[1] - center[1]];
 			var r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
 			var circle = new ol.geom.Circle(center, r, 'XY');
@@ -6526,6 +6569,7 @@ ol.interaction.DrawRegular.prototype.getGeom_ = function ()
 			}
 		}
 	}
+
 	// No geom => return a point
 	return new ol.geom.Point(this.center_);
 };
@@ -6543,7 +6587,7 @@ ol.interaction.DrawRegular.prototype.drawSketch_ = function(evt)
 		{	var f = this.feature_;
 			f.setGeometry (g);
 			this.overlayLayer_.getSource().addFeature(f);
-			if (this.square_ && ((this.canRotate_ && this.centered_ && this.coord_) || (!this.sides_ && !this.centered_)))
+			if (this.coord_ && this.square_ && ((this.canRotate_ && this.centered_ && this.coord_) || (!this.sides_ && !this.centered_)))
 			{	this.overlayLayer_.getSource().addFeature(new ol.Feature(new ol.geom.LineString([this.center_,this.coord_])));
 			}
 			return f;
@@ -6553,18 +6597,9 @@ ol.interaction.DrawRegular.prototype.drawSketch_ = function(evt)
 
 /** Draw sketch (Point)
 */
-ol.interaction.DrawRegular.prototype.drawPoint_ = function(pt)
-{	this.overlayLayer_.getSource().clear();
+ol.interaction.DrawRegular.prototype.drawPoint_ = function(pt, noclear)
+{	if (!noclear) this.overlayLayer_.getSource().clear();
 	this.overlayLayer_.getSource().addFeature(new ol.Feature(new ol.geom.Point(pt)));
-};
-
-/**
- * @param {ol.MapBrowserEvent} evt Map browser event.
- * @return {boolean} `true` to start the drag sequence.
- */
-ol.interaction.DrawRegular.prototype.handleDownEvent_ = function(evt) 
-{	this.downPx_ = evt.pixel;
-	return true;
 };
 
 
@@ -6572,9 +6607,71 @@ ol.interaction.DrawRegular.prototype.handleDownEvent_ = function(evt)
  * @param {ol.MapBrowserEvent} evt Map browser event.
  */
 ol.interaction.DrawRegular.prototype.handleEvent_ = function(evt) 
-{	ol.interaction.Pointer.handleEvent.call(this, evt);
+{	switch (evt.type)
+	{	case "pointerdown":
+			this.downPx_ = evt.pixel;
+			this.start_(evt);
+		break;
+		case "pointerup":
+			// Started and fisrt move
+			if (this.started_ && this.coord_)
+			{	var dx = this.downPx_[0] - evt.pixel[0];
+				var dy = this.downPx_[1] - evt.pixel[1];
+				if (dx*dx + dy*dy <= this.squaredClickTolerance_) 
+				{	// The pointer has moved
+					if ( this.lastEvent == "pointermove" )
+					{	this.end_(evt);
+					}
+					// On touch device there is no move event : terminate = click on the same point
+					else
+					{	dx = this.upPx_[0] - evt.pixel[0];
+						dy = this.upPx_[1] - evt.pixel[1];
+						if ( dx*dx + dy*dy <= this.squaredClickTolerance_)
+						{	this.end_(evt);
+						}
+						else 
+						{	this.handleMoveEvent_(evt);
+							this.drawPoint_(evt.coordinate,true);
+						}
+					}
+				}
+			}
+			this.upPx_ = evt.pixel;	
+		break;
+		case "pointerdrag":
+			if (this.started_)
+			{	var centerPx = this.getMap().getPixelFromCoordinate(this.center_);
+				var dx = centerPx[0] - evt.pixel[0];
+				var dy = centerPx[1] - evt.pixel[1];
+				if (dx*dx + dy*dy <= this.squaredClickTolerance_) 
+				{ 	this.reset();
+				}
+			}
+			break;
+		case "pointermove":
+			if (this.started_)
+			{	var dx = this.downPx_[0] - evt.pixel[0];
+				var dy = this.downPx_[1] - evt.pixel[1];
+				if (dx*dx + dy*dy > this.squaredClickTolerance_) 
+				{	this.handleMoveEvent_(evt);
+					this.lastEvent = evt.type;
+				}
+			}
+			break;
+		default:
+			this.lastEvent = evt.type;
+			break;
+	}
 	return true;
 }
+
+/** Stop drawing.
+ */
+ol.interaction.DrawRegular.prototype.finishDrawing = function() 
+{	if (this.started_ && this.coord_)
+	{	this.end_({ pixel: this.upPx_, coordinate: this.coord_});
+	}
+};
 
 /**
  * @param {ol.MapBrowserEvent} evt Event.
@@ -6586,52 +6683,51 @@ ol.interaction.DrawRegular.prototype.handleMoveEvent_ = function(evt)
 		var f = this.drawSketch_(evt);
 		this.dispatchEvent({ type:'drawing', feature: f, pixel: evt.pixel, coordinate: evt.coordinate, square: this.square_, centered: this.centered_ });
 	}
-	else this.drawPoint_(evt.coordinate);
-	return false;
+	else 
+	{	this.drawPoint_(evt.coordinate);
+	}
 };
 
-
-/**
+/** Start an new draw
  * @param {ol.MapBrowserEvent} evt Map browser event.
  * @return {boolean} `false` to stop the drag sequence.
  */
-ol.interaction.DrawRegular.prototype.handleUpEvent_ = function(evt) 
-{	var downPx = this.downPx_;
-	var clickPx = evt.pixel;
-	var dx = downPx[0] - clickPx[0];
-	var dy = downPx[1] - clickPx[1];
-
-	if (dx*dx + dy*dy <= this.squaredClickTolerance_) 
-	{	if (!this.started_)
-		{	this.started_ = true;
-			this.center_ = evt.coordinate;
-			this.coord_ = null;
-			var f = this.feature_ = new ol.Feature();
-			this.drawSketch_(evt);
-			this.dispatchEvent({ type:'drawstart', feature: f, pixel: evt.pixel, coordinate: evt.coordinate });
-		}
-		else 
-		{	this.started_ = false;
-			// Add new feature
-			if (this.coord_ && this.center_[0]!=this.coord_[0] && this.center_[1]!=this.coord_[1])
-			{	var f = this.feature_;
-				f.setGeometry(this.getGeom_());
-				if (this.source_) this.source_.addFeature(f);
-				else if (this.features_) this.features_.push(f);
-				this.dispatchEvent({ type:'drawend', feature: f, pixel: evt.pixel, coordinate: evt.coordinate, square: this.square_, centered: this.centered_ });
-			}
-			else
-			{	this.dispatchEvent({ type:'drawend', feature: null, pixel: evt.pixel, coordinate: evt.coordinate, square: this.square_, centered: this.centered_ });
-			}
-
-			this.center_ = this.coord_ = null;
-			this.drawSketch_();
-		}
-		return false;
+ol.interaction.DrawRegular.prototype.start_ = function(evt) 
+{	if (!this.started_)
+	{	this.started_ = true;
+		this.center_ = evt.coordinate;
+		this.coord_ = null;
+		var f = this.feature_ = new ol.Feature();
+		this.drawSketch_(evt);
+		this.dispatchEvent({ type:'drawstart', feature: f, pixel: evt.pixel, coordinate: evt.coordinate });
 	}
-	return true;
+	else 
+	{	this.coord_ = evt.coordinate;
+	}
 };
 
+/** End drawing
+ * @param {ol.MapBrowserEvent} evt Map browser event.
+ * @return {boolean} `false` to stop the drag sequence.
+ */
+ol.interaction.DrawRegular.prototype.end_ = function(evt) 
+{	this.coord_ = evt.coordinate;
+	this.started_ = false;
+	// Add new feature
+	if (this.coord_ && this.center_[0]!=this.coord_[0] && this.center_[1]!=this.coord_[1])
+	{	var f = this.feature_;
+		f.setGeometry(this.getGeom_());
+		if (this.source_) this.source_.addFeature(f);
+		else if (this.features_) this.features_.push(f);
+		this.dispatchEvent({ type:'drawend', feature: f, pixel: evt.pixel, coordinate: evt.coordinate, square: this.square_, centered: this.centered_ });
+	}
+	else
+	{	this.dispatchEvent({ type:'drawcancel', feature: null, pixel: evt.pixel, coordinate: evt.coordinate, square: this.square_, centered: this.centered_ });
+	}
+
+	this.center_ = this.coord_ = null;
+	this.drawSketch_();
+};
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -7498,6 +7594,167 @@ ol.interaction.Hover.prototype.handleMove_ = function(e)
 		}
 	}
 };
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Interaction draw hole
+ * @constructor
+ * @extends {ol.interaction.Interaction}
+ * @fires drawstart, drawend
+ * @param {olx.interaction.DrawHoleOptions} options extend olx.interaction.DrawOptions
+ * 	@param {Array<ol.layer.Vector> | undefined} options.layers A list of layers from which polygons should be selected. Alternatively, a filter function can be provided. default: all visible layers
+ */
+ol.interaction.DrawHole = function(options) 
+{	if (!options) options = {};
+	var self = this;
+
+	// Select interaction for the current feature
+	this._select = new ol.interaction.Select();
+	this._select.setActive(false);
+
+	// Geometry function that test points inside the current
+	var geometryFn, geomFn = options.geometryFunction;
+	if (geomFn)
+	{	geometryFn = function(c,g) 
+		{ 	g = self._geometryFn (c, g);
+			return geomFn (c,g);
+		}
+	}
+	else
+	{	geometryFn = function(c,g) { return self._geometryFn (c, g); }
+	}
+
+	// Create draw interaction
+	options.type = "Polygon";
+	options.geometryFunction = geometryFn;
+	ol.interaction.Draw.call(this, options);
+
+	// Layer filter function
+	if (options.layers) 
+	{	if (typeof (options.layers) === 'function') this.layers_ = options.layers;
+		else if (options.layers.indexOf) 
+		{	this.layers_ = function(l) 
+			{ return (options.layers.indexOf(l) >= 0); 
+			};
+		}
+	}
+
+	// Start drawing if inside a feature
+	this.on('drawstart', this._startDrawing, this );
+	// End drawing add the hole to the current Polygon
+	this.on('drawend', this._finishDrawing, this);
+};
+ol.inherits(ol.interaction.DrawHole, ol.interaction.Draw);
+
+/**
+ * Remove the interaction from its current map, if any,  and attach it to a new
+ * map, if any. Pass `null` to just remove the interaction from the current map.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ol.interaction.DrawHole.prototype.setMap = function(map) 
+{	if (this.getMap()) this.getMap().removeInteraction(this._select);
+	if (map) map.addInteraction(this._select);
+	ol.interaction.Draw.prototype.setMap.call (this, map);
+};
+
+/**
+ * Activate/deactivate the interaction
+ * @param {boolean}
+ * @api stable
+ */
+ol.interaction.DrawHole.prototype.setActive = function(b) 
+{	this._select.getFeatures().clear();
+	ol.interaction.Draw.prototype.setActive.call (this, b);
+};
+
+/**
+ * Remove last point of the feature currently being drawn 
+ * (test if points to remove before).
+ */
+ol.interaction.DrawHole.prototype.removeLastPoint = function()
+{	if (this._feature && this._feature.getGeometry().getCoordinates()[0].length>2) 
+	{	ol.interaction.Draw.prototype.removeLastPoint.call(this);
+	}
+};
+
+/** 
+ * Get the current polygon to hole
+ * @return {ol.Feature}
+ */
+ol.interaction.DrawHole.prototype.getPolygon = function()
+{	return this._select.getFeatures().item(0);
+};
+
+/**
+ * Get current feature to add a hole and start drawing
+ * @param {ol.interaction.Draw.Event} e
+ * @private
+ */
+ol.interaction.DrawHole.prototype._startDrawing = function(e)
+{	var map = this.getMap();
+	var layersFilter = this.layers_;
+	this._feature = e.feature;
+	coord = e.feature.getGeometry().getCoordinates()[0][0];
+	// Check object under the pointer
+	var features = map.getFeaturesAtPixel(
+		map.getPixelFromCoordinate(coord),
+		{ 	layerFilter: layersFilter
+		}
+	);
+	var current = null;
+	if (features)
+	{	if (features[0].getGeometry().getType() !== "Polygon") current = null;
+		else if (features[0].getGeometry().intersectsCoordinate(coord)) current = features[0];
+		else current = null;
+	}
+	else current = null;
+	
+	if (!current)
+	{	this.setActive(false);
+		this.setActive(true);
+		this._select.getFeatures().clear();
+	}
+	else
+	{	this._select.getFeatures().push(current);
+	}
+};
+
+/**
+ * Stop drawing and add the sketch feature to the target feature. 
+ * @param {ol.interaction.Draw.Event} e
+ * @private
+ */
+ol.interaction.DrawHole.prototype._finishDrawing = function(e)
+{	var c = e.feature.getGeometry().getCoordinates()[0];
+	if (c.length > 3) this.getPolygon().getGeometry().appendLinearRing(new ol.geom.LinearRing(c));
+	this._feature = null;
+	this._select.getFeatures().clear();
+};
+
+/**
+ * Function that is called when a geometry's coordinates are updated.
+ * @param {Array<ol.coordinate>} coordinates
+ * @param {ol.geom.Polygon} geometry
+ * @return {ol.geom.Polygon}
+ * @private
+ */
+ol.interaction.DrawHole.prototype._geometryFn = function(coordinates, geometry)
+{	var coord = coordinates[0].pop();
+	if (!this.getPolygon() || this.getPolygon().getGeometry().intersectsCoordinate(coord))
+	{	this.lastOKCoord = [coord[0],coord[1]];
+	}
+	coordinates[0].push([this.lastOKCoord[0],this.lastOKCoord[1]]);
+
+	if (geometry) 
+	{	geometry.setCoordinates([coordinates[0].concat([coordinates[0][0]])]);
+	} 
+	else 
+	{	geometry = new ol.geom.Polygon(coordinates);
+	}
+	return geometry;
+};
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -7777,38 +8034,6 @@ ol.interaction.SnapGuides = function(options)
 		return Math.sqrt(dx*dx+dy*dy);
 	}
 
-	// Use snap interaction
-	ol.interaction.Interaction.call(this, 
-	{	handleEvent: function(e)
-		{	if (this.getActive())
-			{	var features = this.overlayLayer_.getSource().getFeatures();
-				var prev = null;
-				var p = null;
-				var res = e.frameState.viewState.resolution;
-				for (var i=0, f; f = features[i]; i++)
-				{	var c = f.getGeometry().getClosestPoint(e.coordinate);
-					if ( dist2D(c, e.coordinate) / res < this.snapDistance_)
-					{	// Intersection on 2 lines
-						if (prev)
-						{	var c2 = getIntersectionPoint(prev.getGeometry().getCoordinates(),  f.getGeometry().getCoordinates());
-							if (c2) 
-							{	if (dist2D(c2, e.coordinate) / res < this.snapDistance_)
-								{	p = c2;
-								}
-							}
-						}
-						else
-						{	p = c;
-						}
-						prev = f;
-					}
-				}
-				if (p) e.coordinate = p;
-			}
-			return true;
-		}
-	});
-
 	// Snap distance (in px)
 	this.snapDistance_ = options.pixelTolerance || 10;
 
@@ -7827,18 +8052,61 @@ ol.interaction.SnapGuides = function(options)
 	if (options.style) sketchStyle = options.style instanceof Array ? options.style : [options.style];
 
 	// Create a new overlay for the sketch
-	this.overlayLayer_ = new ol.layer.Vector(
-	{	source: new ol.source.Vector({
-			features: new ol.Collection(),
+	this.overlaySource_ = new ol.source.Vector(
+		{	features: new ol.Collection(),
 			useSpatialIndex: false
-		}),
-		name:'Snap overlay',
-		displayInLayerSwitcher: false,
-		style: function(f)
-		{	return sketchStyle;
-		}
-	});
-
+		});
+	this.overlayLayer_ = new ol.layer.Image(
+		{	source: new ol.source.ImageVector(
+			{	source: this.overlaySource_,
+				style: function(f)
+				{	return sketchStyle;
+				}
+			}),
+			name:'Snap overlay',
+			displayInLayerSwitcher: false
+		});
+/* Speed up with a ImageVector layer
+	this.overlayLayer_ = new ol.layer.Vector(
+		{	source: this.overlaySource_,
+			style: function(f)
+			{	return sketchStyle;
+			},
+			name:'Snap overlay',
+			displayInLayerSwitcher: false
+		});
+*/
+	// Use snap interaction
+	ol.interaction.Interaction.call(this, 
+		{	handleEvent: function(e)
+			{	if (this.getActive())
+				{	var features = this.overlaySource_.getFeatures();
+					var prev = null;
+					var p = null;
+					var res = e.frameState.viewState.resolution;
+					for (var i=0, f; f = features[i]; i++)
+					{	var c = f.getGeometry().getClosestPoint(e.coordinate);
+						if ( dist2D(c, e.coordinate) / res < this.snapDistance_)
+						{	// Intersection on 2 lines
+							if (prev)
+							{	var c2 = getIntersectionPoint(prev.getGeometry().getCoordinates(),  f.getGeometry().getCoordinates());
+								if (c2) 
+								{	if (dist2D(c2, e.coordinate) / res < this.snapDistance_)
+									{	p = c2;
+									}
+								}
+							}
+							else
+							{	p = c;
+							}
+							prev = f;
+						}
+					}
+					if (p) e.coordinate = p;
+				}
+				return true;
+			}
+		});
 };
 ol.inherits(ol.interaction.SnapGuides, ol.interaction.Interaction);
 
@@ -7852,13 +8120,14 @@ ol.interaction.SnapGuides.prototype.setMap = function(map)
 {	if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_);
 	ol.interaction.Interaction.prototype.setMap.call (this, map);
 	this.overlayLayer_.setMap(map);
+	if (map) this.projExtent_ = map.getView().getProjection().getExtent();
 };
 
 /** Activate or deactivate the interaction.
 * @param {boolean} active
 */
 ol.interaction.SnapGuides.prototype.setActive = function(active) 
-{	if (this.getMap()) this.overlayLayer_.setVisible(active);
+{	this.overlayLayer_.setVisible(active);
 	ol.interaction.Interaction.prototype.setActive.call (this, active);
 }
 
@@ -7866,10 +8135,10 @@ ol.interaction.SnapGuides.prototype.setActive = function(active)
 * @param {Array<ol.Feature> | undefined} features a list of feature to remove, default remove all feature
 */
 ol.interaction.SnapGuides.prototype.clearGuides = function(features) 
-{	if (!features) this.overlayLayer_.getSource().clear();
+{	if (!features) this.overlaySource_.clear();
 	else
 	{	for (var i=0, f; f=features[i]; i++)
-		{	this.overlayLayer_.getSource().removeFeature(f);
+		{	this.overlaySource_.removeFeature(f);
 		}
 	}
 }
@@ -7878,23 +8147,37 @@ ol.interaction.SnapGuides.prototype.clearGuides = function(features)
 * @return {ol.Collection} guidelines features
 */
 ol.interaction.SnapGuides.prototype.getGuides = function(features) 
-{	return this.overlayLayer_.getSource().getFeaturesCollection();
+{	return this.overlaySource_.getFeaturesCollection();
 }
 
 /** Add a new guide to snap to
 * @param {Array<ol.coordinate>} v the direction vector
 * @return {ol.Feature} feature guide
 */
-ol.interaction.SnapGuides.prototype.addGuide = function(v) 
+ol.interaction.SnapGuides.prototype.addGuide = function(v, ortho) 
 {	if (v)
 	{	var dx = v[0][0] - v[1][0];
 		var dy = v[0][1] - v[1][1];
-		var d = 1e8 / Math.sqrt(dx*dx+dy*dy);
-		var p1 = [ v[0][0] + dx*d, v[0][1] + dy*d];
-		var p2 = [ v[0][0] - dx*d, v[0][1] - dy*d];
-		var f = new ol.Feature(new ol.geom.LineString([p1,p2]));
-		this.overlayLayer_.getSource().addFeature(f);
-		return f;
+		var d = 1 / Math.sqrt(dx*dx+dy*dy);
+		var p, g = [];
+		var p0, p1;
+		for (var i= 0; i<1e8; i+=1e5)
+		{	if (ortho) p = [ v[0][0] + dy*d*i, v[0][1] - dx*d*i];
+			else p = [ v[0][0] + dx*d*i, v[0][1] + dy*d*i];
+			if (ol.extent.containsCoordinate(this.projExtent_, p)) g.push(p);
+		}
+		var f0 = new ol.Feature(new ol.geom.LineString(g));
+		var g=[];
+		for (var i= 0; i>-1e8; i-=1e5)
+		{	if (ortho) p = [ v[0][0] + dy*d*i, v[0][1] - dx*d*i];
+			else p = [ v[0][0] + dx*d*i, v[0][1] + dy*d*i];
+			if (ol.extent.containsCoordinate(this.projExtent_, p)) g.push(p);
+		}
+		var f1 = new ol.Feature(new ol.geom.LineString(g));
+		
+		this.overlaySource_.addFeature(f0);
+		this.overlaySource_.addFeature(f1);
+		return [f0, f1];
 	}
 };
 
@@ -7903,16 +8186,7 @@ ol.interaction.SnapGuides.prototype.addGuide = function(v)
 * @return {ol.Feature} feature guide
 */
 ol.interaction.SnapGuides.prototype.addOrthoGuide = function(v) 
-{	if (v)
-	{	var dx = v[0][0] - v[1][0];
-		var dy = v[0][1] - v[1][1];
-		var d = 1e8 / Math.sqrt(dx*dx+dy*dy);
-		var p1 = [ v[0][0] + dy*d, v[0][1] - dx*d];
-		var p2 = [ v[0][0] - dy*d, v[0][1] + dx*d];
-		var f = new ol.Feature(new ol.geom.LineString([p1,p2]));
-		this.overlayLayer_.getSource().addFeature(f);
-		return f;
-	}
+{	return this.addGuide(v, true);
 };
 
 /** Listen to draw event to add orthogonal guidelines on the first and last point.
@@ -7942,11 +8216,9 @@ ol.interaction.SnapGuides.prototype.setDrawInteraction = function(drawi)
 		var l = coord.length;
 		if (l != nb && l > s)
 		{	self.clearGuides(features);
-			features = [
-					self.addOrthoGuide([coord[l-s],coord[l-s-1]]),
-					self.addGuide([coord[0],coord[1]]),
-					self.addOrthoGuide([coord[0],coord[1]])
-				];
+			features = self.addOrthoGuide([coord[l-s],coord[l-s-1]]);
+			features = features.concat(self.addGuide([coord[0],coord[1]]));
+			features = features.concat(self.addOrthoGuide([coord[0],coord[1]]));
 			nb = l;
 		}
 	};
@@ -7957,7 +8229,7 @@ ol.interaction.SnapGuides.prototype.setDrawInteraction = function(drawi)
 	});
 	// end drawing, clear directions
 	drawi.on ("drawend", function(e)
-	{	snapi.clearGuides(features);
+	{	self.clearGuides(features);
 		e.feature.getGeometry().un("change", setGuides);
 		nb = 0;
 		features = [];
@@ -8973,10 +9245,10 @@ ol.interaction.Transform.prototype.setMap = function(map)
  * @api stable
  */
 ol.interaction.Transform.prototype.setActive = function(b) 
-{	ol.interaction.Pointer.prototype.setActive.call (this, b);
-	if (b) this.select(null);
+{	this.select(null);
+	this.overlayLayer_.setVisible(b);
+	ol.interaction.Pointer.prototype.setActive.call (this, b);
 };
-
 
 /** Set efault sketch style
 */
