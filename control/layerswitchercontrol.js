@@ -9,7 +9,7 @@
  * @constructor
  * @extends {ol.control.Control}
  * @param {Object=} Control options.
- *		- show_progress {boolean} show a progress bar on tile layers, default false
+ *	@param {boolean} options.show_progress show a progress bar on tile layers, default false
  *		- mouseover {boolean} show the panel on mouseover, default false
  *		- reordering {boolean} allow layer reordering, default true
  *		- trash {boolean} add a trash button to delete the layer, default false
@@ -433,6 +433,7 @@ ol.control.LayerSwitcher.prototype.dragOpacity_ = function(e)
 		case 'mouseup':	
 		{	$(document).off("mouseup touchend mousemove touchmove touchcancel", drag.self.dragOpacity_);
 			drag.layer.setOpacity(drag.opacity);
+			drag.elt.parent().next().text(Math.round(drag.opacity*100));
 			drag.self.dragging_ = false;
 			drag = false;
 			break;
@@ -444,6 +445,7 @@ ol.control.LayerSwitcher.prototype.dragOpacity_ = function(e)
 				|| (e.originalEvent.changedTouches && e.originalEvent.changedTouches.length && e.originalEvent.changedTouches[0].pageX);
 			var dx = Math.max ( 0, Math.min( 1, (x - drag.elt.parent().offset().left) / drag.elt.parent().width() ));
 			drag.elt.css("left", (dx*100)+"%");
+			drag.elt.parent().next().text(Math.round(drag.opacity*100));
 			drag.opacity = dx;
 			drag.layer.setOpacity(dx);
 			break;
@@ -618,6 +620,10 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 				.on("mousedown touchstart", { self: this }, self.dragOpacity_ )
 				.css ('left', (layer.getOpacity()*100)+"%")
 				.appendTo(opacity);
+		// Percent
+		$("<div>").addClass("layerswitcher-opacity-label")
+			.text(Math.round(layer.getOpacity()*100))
+			.appendTo(d);
 
 		// Layer group
 		if (layer.getLayers)

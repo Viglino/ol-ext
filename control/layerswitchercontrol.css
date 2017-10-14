@@ -237,6 +237,7 @@
 
 .ol-layerswitcher .panel li > div
 {	display: inline-block;
+	position: relative;
 }
 
 /* line break */
@@ -413,6 +414,17 @@
 .ol-touch .ol-layerswitcher .layerswitcher-opacity .layerswitcher-opacity-cursor
 {	width: 26px;
 	height: 26px;
+}
+
+.ol-layerswitcher .layerswitcher-opacity-label { 
+	display:none;
+	position: absolute;
+    right: -2.5em;
+    bottom: 5px;
+    font-size: 0.8em;
+}
+.ol-layerswitcher .layerswitcher-opacity-label::after {
+	content:"%";
 }
 
 .ol-layerswitcher .layerswitcher-progress
