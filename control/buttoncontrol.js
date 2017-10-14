@@ -16,7 +16,7 @@ ol.control.Button = function(options)
 	var element = $("<div>").addClass((options.className||"") + ' ol-button ol-unselectable ol-control');
 	var self = this;
 
-	$("<button>").html(options.html || "")
+	var bt = $("<button>").html(options.html || "")
 				.attr('type','button')
 				.attr('title', options.title)
 				.on("click", function(e)
@@ -27,7 +27,9 @@ ol.control.Button = function(options)
 					if (options.handleClick) options.handleClick.call(self, e);
 				})
 				.appendTo(element);
-	
+	// Try to get a title in the button content
+	if (!options.title) bt.attr("title", bt.children().first().attr('title'));
+
 	ol.control.Control.call(this, 
 	{	element: element.get(0),
 		target: options.target

@@ -121,6 +121,15 @@ ol.control.Bar.prototype.deactivateControls = function (except)
 	}
 };
 
+
+ol.control.Bar.prototype.getActiveControls = function ()
+{	var active = [];
+	for (var i=0, c; c=this.controls_[i]; i++) 
+	{	if (c.getActive && c.getActive()) active.push(c);
+	}
+	return active;
+}
+
 /** Auto activate/deactivate controls in the bar
 * @param {boolean} b activate/deactivate
 */
@@ -140,13 +149,27 @@ ol.control.Bar.prototype.setActive = function (b)
 *	@param {ol.event} an object with a target {ol.control} and active flag {bool}
 */
 ol.control.Bar.prototype.onActivateControl_ = function (e)
-{	if (!e.active || !this.get('toggleOne')) return;
-	var n;
-	var ctrl = e.target;
-	for (n=0; n<this.controls_.length; n++) 
-	{	if (this.controls_[n]===ctrl) break;
+{	if (this.get('toggleOne'))
+	{	if (e.active)
+		{	var n;
+			var ctrl = e.target;
+			for (n=0; n<this.controls_.length; n++) 
+			{	if (this.controls_[n]===ctrl) break;
+			}
+			// Not here!
+			if (n==this.controls_.length) return;
+			this.deactivateControls (this.controls_[n]);
+		}
+		else
+		{	// No one active > test auto activate
+			if (!this.getActiveControls().length)
+			{	for (var i=0, c; c=this.controls_[i]; i++) 
+				{	if (c.get("autoActivate")) 
+					{	c.setActive();
+						break;
+					}
+				}
+			}
+		}
 	}
-	// Not here!
-	if (n==this.controls_.length) return;
-	this.deactivateControls (this.controls_[n]);
 };
