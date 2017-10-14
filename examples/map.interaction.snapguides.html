@@ -1,12 +1,12 @@
 ﻿<!DOCTYPE html>
+<html>
+<head>
 <!----------------------------------------------------------
  
 	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 	
 ------------------------------------------------------------>
-<html>
-<head>
 	<title>OL3-ext: Snap guides interaction</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
@@ -56,28 +56,20 @@
 		<h2>Options:</h2>
 		<ul><li>
 		</li></ul>
-		<button onclick="addGreenwich ()">Add a Greenwich origin guideline</button>
+		<button onclick="addMeridian(0)">Add a Greenwich origin guideline</button>
 	</div>
 	
 
 	<script type="text/javascript">
 		// Layers
-		var layers = [
-			new ol.layer.Tile({
-				name: "Natural Earth", 
-				minResolution: 306,
-    			source: new ol.source.XYZ(
-				{	url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
-					attributions: [new ol.Attribution({ html: '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' })] 
-    			})
-			})
-		]
+		var layers = [ new ol.layer.Tile({ source: new ol.source.OSM() }) ];
+
 		// The map
 		var map = new ol.Map
 			({	target: 'map',
 				view: new ol.View
-				({	zoom: 5,
-					center: [261720, 5951081]
+				({	zoom: 17,
+					center: [269766, 6248649]
 				}),
 				controls: ol.control.defaults({ "attribution": false }),
 				layers: layers
@@ -101,10 +93,10 @@
 		snapi.setDrawInteraction(drawi);
 		map.addInteraction(snapi);
 
-		// New guide on Greenwich meridian
-		function addGreenwich ()
-		{	var p1 = ol.proj.transform([0,51], 'EPSG:4326', map.getView().getProjection());
-			var p2 = ol.proj.transform([0,45], 'EPSG:4326', map.getView().getProjection());
+		// New guide on meridian (default Greenwich)
+		function addMeridian (x)
+		{	var p1 = ol.proj.transform([x||0,1], 'EPSG:4326', map.getView().getProjection());
+			var p2 = ol.proj.transform([x||0,-1], 'EPSG:4326', map.getView().getProjection());
 			snapi.addGuide([ p1, p2 ]);
 		};
 
