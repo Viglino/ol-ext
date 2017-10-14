@@ -171,8 +171,16 @@
 			{	select.getFeatures().clear();
 				select.getFeatures().push (e.feature);
 				var p = e.feature.getGeometry().getFirstCoordinate();
+				/*
 				var ex = map.getView().calculateExtent(map.getSize());
-				if (!ol.extent.containsCoordinate(ex, p)) map.getView().setCenter(p);
+				if (!ol.extent.containsCoordinate(ex, p)) 
+				{	map.getView().setCenter(p);
+				}
+				*/
+				map.getView().animate({
+					center: p,
+					duration: 500
+				});
 			});
 	};
 	setControl();
