@@ -4,8 +4,8 @@
 */
 /** Interaction rotate
  * @constructor
- * @extends {ol.interaction.Pointer}
- * @fires drawstart, drawing, drawend
+ * @extends {ol.interaction.Interaction}
+ * @fires drawstart, drawing, drawend, drawcancel
  * @param {olx.interaction.TransformOptions} options
  *  @param {Array<ol.Layer>} source Destination source for the drawn features
  *  @param {ol.Collection<ol.Feature>} features Destination collection for the drawn features 
@@ -14,19 +14,12 @@
  *	@param { ol.events.ConditionType | undefined } squareCondition A function that takes an ol.MapBrowserEvent and returns a boolean to draw square features.
  *	@param { ol.events.ConditionType | undefined } centerCondition A function that takes an ol.MapBrowserEvent and returns a boolean to draw centered features.
  *	@param { bool } canRotate Allow rotation when centered + square, default: true
- *	@param { number } clickTolerance click tolerance, default: 6
+ *	@param { number } clickTolerance click tolerance on touch devices, default: 6
  *	@param { number } maxCircleCoordinates Maximum number of point on a circle, default: 100
  */
 ol.interaction.DrawRegular = function(options) 
 {	if (!options) options={};
 	var self = this;
-
-	ol.interaction.Pointer.call(this, 
-	{	handleDownEvent: this.handleDownEvent_,
-		handleMoveEvent: this.handleMoveEvent_,
-		handleUpEvent: this.handleUpEvent_,
-		handleEvent: this.handleEvent_
-	});
 
 	this.squaredClickTolerance_ = options.clickTolerance ? options.clickTolerance * options.clickTolerance : 36;
 	this.maxCircleCoordinates_ = options.maxCircleCoordinates || 100;
@@ -77,8 +70,18 @@ ol.interaction.DrawRegular = function(options)
 			displayInLayerSwitcher: false,
 			style: options.style || defaultStyle
 		});
+
+	ol.interaction.Interaction.call(this, 
+		{	
+			/*
+			handleDownEvent: this.handleDownEvent_,
+			handleMoveEvent: this.handleMoveEvent_,
+			handleUpEvent: this.handleUpEvent_,
+			*/
+			handleEvent: this.handleEvent_
+		});
 };
-ol.inherits(ol.interaction.DrawRegular, ol.interaction.Pointer);
+ol.inherits(ol.interaction.DrawRegular, ol.interaction.Interaction);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
@@ -88,7 +91,7 @@ ol.inherits(ol.interaction.DrawRegular, ol.interaction.Pointer);
  */
 ol.interaction.DrawRegular.prototype.setMap = function(map) 
 {	if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_);
-	ol.interaction.Pointer.prototype.setMap.call (this, map);
+	ol.interaction.Interaction.prototype.setMap.call (this, map);
 	this.overlayLayer_.setMap(map);
 };
 
@@ -98,8 +101,17 @@ ol.interaction.DrawRegular.prototype.setMap = function(map)
  * @api stable
  */
 ol.interaction.DrawRegular.prototype.setActive = function(b) 
+{	this.reset();
+	ol.interaction.Interaction.prototype.setActive.call (this, b);
+}
+
+/**
+ * Reset the interaction
+ * @api stable
+ */
+ol.interaction.DrawRegular.prototype.reset = function() 
 {	this.overlayLayer_.getSource().clear();
-	ol.interaction.Pointer.prototype.setActive.call (this, b);
+	this.started_ = false;
 }
 
 /**
@@ -108,8 +120,7 @@ ol.interaction.DrawRegular.prototype.setActive = function(b)
  * @api stable
  */
 ol.interaction.DrawRegular.prototype.setSides = function (nb)
-{	
-	nb = parseInt(nb);
+{	nb = parseInt(nb);
 	this.sides_ = nb>2 ? nb : 0;
 }
 
@@ -119,7 +130,7 @@ ol.interaction.DrawRegular.prototype.setSides = function (nb)
  * @api stable
  */
 ol.interaction.DrawRegular.prototype.canRotate = function (b)
-{	if (b===true ||b===false) this.canRotate_ = b;
+{	if (b===true || b===false) this.canRotate_ = b;
 	return this.canRotate_;
 }
 
@@ -146,6 +157,7 @@ ol.interaction.DrawRegular.prototype.startAngle =
 ol.interaction.DrawRegular.prototype.getGeom_ = function ()
 {	this.overlayLayer_.getSource().clear();
 	if (!this.center_) return false;
+
 	var g;
 	if (this.coord_)
 	{	var center = this.center_;
@@ -153,7 +165,9 @@ ol.interaction.DrawRegular.prototype.getGeom_ = function ()
 
 		// Special case: circle
 		if (!this.sides_ && this.square_ && !this.centered_)
-		{	center = [(coord[0] + center[0])/2, (coord[1] + center[1])/2];
+		{	
+			
+			center = [(coord[0] + center[0])/2, (coord[1] + center[1])/2];
 			var d = [coord[0] - center[0], coord[1] - center[1]];
 			var r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
 			var circle = new ol.geom.Circle(center, r, 'XY');
@@ -215,6 +229,7 @@ ol.interaction.DrawRegular.prototype.getGeom_ = function ()
 			}
 		}
 	}
+
 	// No geom => return a point
 	return new ol.geom.Point(this.center_);
 };
@@ -232,7 +247,7 @@ ol.interaction.DrawRegular.prototype.drawSketch_ = function(evt)
 		{	var f = this.feature_;
 			f.setGeometry (g);
 			this.overlayLayer_.getSource().addFeature(f);
-			if (this.square_ && ((this.canRotate_ && this.centered_ && this.coord_) || (!this.sides_ && !this.centered_)))
+			if (this.coord_ && this.square_ && ((this.canRotate_ && this.centered_ && this.coord_) || (!this.sides_ && !this.centered_)))
 			{	this.overlayLayer_.getSource().addFeature(new ol.Feature(new ol.geom.LineString([this.center_,this.coord_])));
 			}
 			return f;
@@ -242,18 +257,9 @@ ol.interaction.DrawRegular.prototype.drawSketch_ = function(evt)
 
 /** Draw sketch (Point)
 */
-ol.interaction.DrawRegular.prototype.drawPoint_ = function(pt)
-{	this.overlayLayer_.getSource().clear();
+ol.interaction.DrawRegular.prototype.drawPoint_ = function(pt, noclear)
+{	if (!noclear) this.overlayLayer_.getSource().clear();
 	this.overlayLayer_.getSource().addFeature(new ol.Feature(new ol.geom.Point(pt)));
-};
-
-/**
- * @param {ol.MapBrowserEvent} evt Map browser event.
- * @return {boolean} `true` to start the drag sequence.
- */
-ol.interaction.DrawRegular.prototype.handleDownEvent_ = function(evt) 
-{	this.downPx_ = evt.pixel;
-	return true;
 };
 
 
@@ -261,9 +267,71 @@ ol.interaction.DrawRegular.prototype.handleDownEvent_ = function(evt)
  * @param {ol.MapBrowserEvent} evt Map browser event.
  */
 ol.interaction.DrawRegular.prototype.handleEvent_ = function(evt) 
-{	ol.interaction.Pointer.handleEvent.call(this, evt);
+{	switch (evt.type)
+	{	case "pointerdown":
+			this.downPx_ = evt.pixel;
+			this.start_(evt);
+		break;
+		case "pointerup":
+			// Started and fisrt move
+			if (this.started_ && this.coord_)
+			{	var dx = this.downPx_[0] - evt.pixel[0];
+				var dy = this.downPx_[1] - evt.pixel[1];
+				if (dx*dx + dy*dy <= this.squaredClickTolerance_) 
+				{	// The pointer has moved
+					if ( this.lastEvent == "pointermove" )
+					{	this.end_(evt);
+					}
+					// On touch device there is no move event : terminate = click on the same point
+					else
+					{	dx = this.upPx_[0] - evt.pixel[0];
+						dy = this.upPx_[1] - evt.pixel[1];
+						if ( dx*dx + dy*dy <= this.squaredClickTolerance_)
+						{	this.end_(evt);
+						}
+						else 
+						{	this.handleMoveEvent_(evt);
+							this.drawPoint_(evt.coordinate,true);
+						}
+					}
+				}
+			}
+			this.upPx_ = evt.pixel;	
+		break;
+		case "pointerdrag":
+			if (this.started_)
+			{	var centerPx = this.getMap().getPixelFromCoordinate(this.center_);
+				var dx = centerPx[0] - evt.pixel[0];
+				var dy = centerPx[1] - evt.pixel[1];
+				if (dx*dx + dy*dy <= this.squaredClickTolerance_) 
+				{ 	this.reset();
+				}
+			}
+			break;
+		case "pointermove":
+			if (this.started_)
+			{	var dx = this.downPx_[0] - evt.pixel[0];
+				var dy = this.downPx_[1] - evt.pixel[1];
+				if (dx*dx + dy*dy > this.squaredClickTolerance_) 
+				{	this.handleMoveEvent_(evt);
+					this.lastEvent = evt.type;
+				}
+			}
+			break;
+		default:
+			this.lastEvent = evt.type;
+			break;
+	}
 	return true;
 }
+
+/** Stop drawing.
+ */
+ol.interaction.DrawRegular.prototype.finishDrawing = function() 
+{	if (this.started_ && this.coord_)
+	{	this.end_({ pixel: this.upPx_, coordinate: this.coord_});
+	}
+};
 
 /**
  * @param {ol.MapBrowserEvent} evt Event.
@@ -275,48 +343,48 @@ ol.interaction.DrawRegular.prototype.handleMoveEvent_ = function(evt)
 		var f = this.drawSketch_(evt);
 		this.dispatchEvent({ type:'drawing', feature: f, pixel: evt.pixel, coordinate: evt.coordinate, square: this.square_, centered: this.centered_ });
 	}
-	else this.drawPoint_(evt.coordinate);
-	return false;
+	else 
+	{	this.drawPoint_(evt.coordinate);
+	}
 };
 
-
-/**
+/** Start an new draw
  * @param {ol.MapBrowserEvent} evt Map browser event.
  * @return {boolean} `false` to stop the drag sequence.
  */
-ol.interaction.DrawRegular.prototype.handleUpEvent_ = function(evt) 
-{	var downPx = this.downPx_;
-	var clickPx = evt.pixel;
-	var dx = downPx[0] - clickPx[0];
-	var dy = downPx[1] - clickPx[1];
-
-	if (dx*dx + dy*dy <= this.squaredClickTolerance_) 
-	{	if (!this.started_)
-		{	this.started_ = true;
-			this.center_ = evt.coordinate;
-			this.coord_ = null;
-			var f = this.feature_ = new ol.Feature();
-			this.drawSketch_(evt);
-			this.dispatchEvent({ type:'drawstart', feature: f, pixel: evt.pixel, coordinate: evt.coordinate });
-		}
-		else 
-		{	this.started_ = false;
-			// Add new feature
-			if (this.coord_ && this.center_[0]!=this.coord_[0] && this.center_[1]!=this.coord_[1])
-			{	var f = this.feature_;
-				f.setGeometry(this.getGeom_());
-				if (this.source_) this.source_.addFeature(f);
-				else if (this.features_) this.features_.push(f);
-				this.dispatchEvent({ type:'drawend', feature: f, pixel: evt.pixel, coordinate: evt.coordinate, square: this.square_, centered: this.centered_ });
-			}
-			else
-			{	this.dispatchEvent({ type:'drawend', feature: null, pixel: evt.pixel, coordinate: evt.coordinate, square: this.square_, centered: this.centered_ });
-			}
-
-			this.center_ = this.coord_ = null;
-			this.drawSketch_();
-		}
-		return false;
+ol.interaction.DrawRegular.prototype.start_ = function(evt) 
+{	if (!this.started_)
+	{	this.started_ = true;
+		this.center_ = evt.coordinate;
+		this.coord_ = null;
+		var f = this.feature_ = new ol.Feature();
+		this.drawSketch_(evt);
+		this.dispatchEvent({ type:'drawstart', feature: f, pixel: evt.pixel, coordinate: evt.coordinate });
 	}
-	return true;
+	else 
+	{	this.coord_ = evt.coordinate;
+	}
+};
+
+/** End drawing
+ * @param {ol.MapBrowserEvent} evt Map browser event.
+ * @return {boolean} `false` to stop the drag sequence.
+ */
+ol.interaction.DrawRegular.prototype.end_ = function(evt) 
+{	this.coord_ = evt.coordinate;
+	this.started_ = false;
+	// Add new feature
+	if (this.coord_ && this.center_[0]!=this.coord_[0] && this.center_[1]!=this.coord_[1])
+	{	var f = this.feature_;
+		f.setGeometry(this.getGeom_());
+		if (this.source_) this.source_.addFeature(f);
+		else if (this.features_) this.features_.push(f);
+		this.dispatchEvent({ type:'drawend', feature: f, pixel: evt.pixel, coordinate: evt.coordinate, square: this.square_, centered: this.centered_ });
+	}
+	else
+	{	this.dispatchEvent({ type:'drawcancel', feature: null, pixel: evt.pixel, coordinate: evt.coordinate, square: this.square_, centered: this.centered_ });
+	}
+
+	this.center_ = this.coord_ = null;
+	this.drawSketch_();
 };
