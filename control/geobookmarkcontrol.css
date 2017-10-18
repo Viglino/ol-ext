@@ -32,6 +32,7 @@
 {	margin:0;
 	padding: 0;
 	list-style: none;
+	min-width: 10em;
 }
 .ol-control.ol-bookmark li
 {	color: rgba(0,60,136,0.8);
@@ -67,4 +68,12 @@
     transform: translate(-50%, -50%);
 }
 
+.ol-bookmark ul li button,
+.ol-bookmark input
+{	display: none;
+}
+.ol-bookmark.ol-editable ul li button,
+.ol-bookmark.ol-editable input
+{	display: block;
+}
 

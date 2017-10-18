@@ -1850,15 +1850,23 @@ ol.control.GeoBookmark = function(options) {
   input.addEventListener("blur", function() {
     menu.style.display = 'none';
   });
-  if (options.editable !== false) {
-    menu.appendChild(input);
-  };
+  menu.appendChild(input);
 
   // Init
   ol.control.Control.call(this, {
     element: element,
     target: options.target
   });
+
+  this.on("propertychange", function(e) {
+	if (e.key==='editable')
+    {	element.className = element.className.replace(" ol-editable","");
+		if (this.get('editable'))
+		{	element.className += " ol-editable";
+		}
+    }
+    console.log(e);
+  }), this;
 
   this.set("editable", options.editable !== false);
   // Set default bmark
@@ -1868,7 +1876,7 @@ ol.inherits(ol.control.GeoBookmark, ol.control.Control);
 
 /** Set bookmarks
 * @param {} bmark a list of bookmarks, default retreave in the localstorage
-*   : { "Mark 1":{pos:ol.coordinates, zoom: integer}, "Mark 2":{pos:ol.coordinates, zoom: integer} }
+*   example : setBookmarks({ "Mark 1":{pos:ol.coordinates, zoom: integer}, "Mark 2":{pos:ol.coordinates, zoom: integer} })
 */
 ol.control.GeoBookmark.prototype.setBookmarks = function(bmark) {
   if (!bmark) bmark = JSON.parse(localStorage["ol@bookmark"] || "{}");
@@ -1884,14 +1892,8 @@ ol.control.GeoBookmark.prototype.setBookmarks = function(bmark) {
     li.setAttribute('data-bookmark', JSON.stringify(bmark[b]));
     li.addEventListener('click', function() {
       var bm = JSON.parse(this.getAttribute("data-bookmark"));
-      self
-        .getMap()
-        .getView()
-        .setCenter(bm.pos);
-      self
-        .getMap()
-        .getView()
-        .setZoom(bm.zoom);
+      self.getMap().getView().setCenter(bm.pos);
+      self.getMap().getView().setZoom(bm.zoom);
       menu.style.display = 'none';
     });
     ul.appendChild(li);
@@ -1901,7 +1903,7 @@ ol.control.GeoBookmark.prototype.setBookmarks = function(bmark) {
       button.setAttribute("title", "Suppr.");
       button.addEventListener('click', function(e) {
         self.removeBookmark(this.getAttribute("data-name"));
-        self.dispatchEvent({ type: "add", name: this.getAttribute("data-name") });
+        self.dispatchEvent({ type: "remove", name: this.getAttribute("data-name") });
         e.stopPropagation();
       });
       li.appendChild(button);
@@ -1924,7 +1926,7 @@ ol.control.GeoBookmark.prototype.removeBookmark = function(name) {
   if (!name) {
     return;
   };
-  bmark = JSON.parse(localStorage["ol@bookmark"] || "{}");
+  var bmark = this.getBookmarks();
   delete bmark[name];
   this.setBookmarks(bmark);
 };
@@ -1938,22 +1940,15 @@ ol.control.GeoBookmark.prototype.removeBookmark = function(name) {
 ol.control.GeoBookmark.prototype.addBookmark = function(name, position, zoom, permanent) 
 {
   if (!name) return;
-  bmark = JSON.parse(localStorage["ol@bookmark"] || "{}");
+  var bmark = this.getBookmarks();
+  // Don't override permanent bookmark
+  if (bmark[name] && bmark[name].permanent) return;
+  // Create or override
   bmark[name] = {
-    pos:
-      position ||
-      this.getMap()
-        .getView()
-        .getCenter(),
-    zoom:
-      zoom ||
-      this.getMap()
-        .getView()
-        .getZoom()
+    pos: position || this.getMap().getView().getCenter(),
+    zoom: zoom || this.getMap().getView().getZoom(),
+	permanent: !!permanent
   };
-  if (permanent) {
-    bmark[name].permanent = true;
-  }
   this.setBookmarks(bmark);
 };
 
