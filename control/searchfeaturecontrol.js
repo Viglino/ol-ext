@@ -6,7 +6,7 @@
  * Search features.
  *
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol.control.Search}
  * @fires select
  * @param {Object=} Control options. 
  *	@param {string} options.className control class name

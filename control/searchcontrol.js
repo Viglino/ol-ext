@@ -171,7 +171,7 @@ ol.control.Search.prototype.drawList_ = function (auto)
 	var self = this;
 	var max = Math.min (self.get("maxItems"),auto.length);
 	for (var i=0; i<max; i++)
-	{	$("<li>").text(self.getTitle(auto[i]))
+	{	$("<li>").html(self.getTitle(auto[i]))
 			.data('search', auto[i])
 			.click(function(e)
 			{	self.select($(this).data('search'));
