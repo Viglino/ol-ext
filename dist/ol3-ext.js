@@ -3834,39 +3834,38 @@ ol.control.Profil.prototype.getImage = function(type, encoderOptions)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
- * Search features.
+ * Search Control. This is the base class for search controls. You can use it for simple custom search or as base to new class
  *
  * @constructor
  * @extends {ol.control.Control}
- * @fires select
+ * @fires select, change:input
  * @param {Object=} Control options. 
- *	- className {string} control class name
- *	- target {Element | string | undefined} Specify a target if you want the control to be rendered outside of the map's viewport.
- *	- placeholder {string | undefined} placeholder, default "Search..."
- *	- typing {number | undefined} a delay on each typing to start searching (ms), default 300.
- *	- source {ol.source.Vector} source to search in
- *	- minLength {integer | undefined} minimum length to start searching, default 1
- *	- maxItems {integer | undefined} maximum number of items to display in the autocomplete list, default 10
-*
- *	- property {string | function | undefined} a property to display in the index or a function that takes a feature and return the name to display in the index, default 'name'.
- *	- getSearchString {function | undefined} a function that take a feature and return a text to be used as search string, default property is used as seach string
+ *	@param {string} options.className control class name
+ *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *	@param {string | undefined} options.placeholder placeholder, default "Search..."
+ *	@param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
+ *	@param {integer | undefined} options.minLength minimum length to start searching, default 1
+ *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index.
+ *	@param {function} options.autocomplete a function that take a search string and callback function to send an array
  */
-ol.control.SearchFeature = function(options) 
+ol.control.Search = function(options) 
 {	var self = this;
 	if (!options) options = {};
-	
+	if (options.typing == undefined) options.typing = 300;
+
 	var element;
 	if (options.target) 
-	{	element = $("<div>").addClass((options.className||"")+ "ol-searchfeature");
+	{	element = $("<div>").addClass((options.className||"")+ " ol-search");
 	}
 	else
-	{	element = $("<div>").addClass((options.className||"") + 'ol-searchfeature ol-unselectable ol-control ol-collapsed');
+	{	element = $("<div>").addClass((options.className||"") + ' ol-search ol-unselectable ol-control ol-collapsed');
 		this.button = $("<button>")
 					.attr('type','button')
 					.click (function()
 					{	element.toggleClass("ol-collapsed"); 
 						if (!element.hasClass("ol-collapsed")) 
-						{	$("input", element).focus();
+						{	$("input.search", element).focus();
 							$('li', element).removeClass('select');
 						}
 					})
@@ -3875,50 +3874,61 @@ ol.control.SearchFeature = function(options)
 	// Search input
 	var tout, cur="";
 	$("<input>").attr('type','search')
+		.addClass("search")
 		.attr('placeholder', options.placeholder||"Search...")
-		.on('keyup search', function(e) 
-		{	if (e.key=='ArrowDown' || e.key=='ArrowUp')
-			{	var i, li  = $("li", element);
-				for (i=0; i<li.length; i++) if ($(li[i]).hasClass('select')) break;
-				if (i<li.length)
-				{	var l = $(li[i+(e.key=='ArrowDown' ? 1 : -1)]);
-					if (l.length) 
-					{	$(li[i]).removeClass('select');
-						l.addClass('select');
-					}
-				}
-				else $(li[0]).addClass('select');
+		.on('change', function(e) 
+		{ 	self.dispatchEvent({ type:"change:input", input:e, value:$(this).val()  }); 
+		})
+		.on('keyup search cut paste input', function(e) 
+		{	// console.log(e.type+" "+e.key)
+			var li  = $("ul.autocomplete li.select", element);
+			var	val = $(this).val();
+			// move up/down
+			if (e.key=='ArrowDown' || e.key=='ArrowUp' || e.key=='Down' || e.key=='Up')
+			{	li.removeClass('select');
+				li = (/Down/.test(e.key)) ? li.next() : li.prev();
+				if (li.length) li.addClass('select');
+				else $("ul.autocomplete li",element).first().addClass('select');
 			}
-			else if (e.key =='Enter')
-			{	var i, li  = $("li", element);
-				for (i=0; i<li.length; i++) if ($(li[i]).hasClass('select')) break;
-				if (i<li.length) 
-				{	$(this).blur();
-					self.dispatchEvent({ type:"select", feature:$(li[i]).data('feature') });
-				}
-				else 
-				{	self.search($(this).val(), function(f)
-					{	self.dispatchEvent({ type:"select", feature:f });
-					});
-				}
+			// Clear input
+			else if (e.type=='input' && !val)
+			{	self.drawList_();
 			}
-			else if (cur != $(this).val())
+			// Select in the list
+			else if (li.length && (e.type=="search" || e.key =='Enter'))
+			{	if (element.hasClass("ol-control")) $(this).blur();
+				li.removeClass('select');
+				cur = val;
+				self.select(li.data('search'));
+			}
+			// Search / autocomplete
+			else if ( (e.type=="search" || e.key =='Enter')
+					|| (cur!=val && options.typing>=0))
 			{	// current search
-				cur = $(this).val();
-				// prevent searching on each typing
-				if (tout) clearTimeout(tout);
-				tout = setTimeout(function()
-				{	if (cur.length >= self.get("minLength")) self.autocomplete_(cur);
-					else $("ul", this.element).html("");
-				}, options.typing || 300);
+				cur = val;
+				if (cur)
+				{	// prevent searching on each typing
+					if (tout) clearTimeout(tout);
+					tout = setTimeout(function()
+					{	if (cur.length >= self.get("minLength")) 
+						{	var s = self.autocomplete (cur, function(auto) { self.drawList_(auto); });
+							if (s) self.drawList_(s);
+						}
+						else self.drawList_();
+					}, options.typing);
+				}
+				else self.drawList_();
 			}
-			else $("li", element).removeClass('select');
+			// Clear list selection
+			else 
+			{	$("ul.autocomplete li", element).removeClass('select');
+			}
 		})
 		.blur(function()
 		{	setTimeout(function(){ element.addClass('ol-collapsed') }, 200);
 		})
 		.focus(function()
-		{	
+		{	element.removeClass('ol-collapsed')
 		})
 		.appendTo(element);
 	// Autocomplete list
@@ -3929,55 +3939,128 @@ ol.control.SearchFeature = function(options)
 			target: options.target
 		});
 
-	if (typeof (options.property)=='function') this.getFeatureName = options.property;
-	if (typeof (options.getSearchString)=='function') this.getSearchString = options.getSearchString;
+	if (typeof (options.getTitle)=='function') this.getTitle = options.getTitle;
+	if (typeof (options.autocomplete)=='function') this.autocomplete = options.autocomplete;
 	
-	this.source_ = options.source;
-
 	// Options
-	this.set('property', options.property || 'name');
 	this.set('minLength', options.minLength || 1);
-	this.set('maxItems', options.minLength || 10);
+	this.set('maxItems', options.maxItems || 10);
 
 };
-ol.inherits(ol.control.SearchFeature, ol.control.Control);
+ol.inherits(ol.control.Search, ol.control.Control);
+
+/** Returns the text to be displayed in the menu
+*	@param {any} f feature to be displayed
+*	@return {string} the text to be displayed in the index, default f.name
+*	@api
+*/
+ol.control.Search.prototype.getTitle = function (f)
+{	return f.name || "No title";
+};
+
+/** Force search to refresh
+*/
+ol.control.Search.prototype.search = function ()
+{	$("input.search", this.element).trigger('search');
+};
+
+/** Set the input value in the form (for initialisation purpose)
+*	@param {string} value
+*	@param {boolean} search to start a search
+*	@api
+*/
+ol.control.Search.prototype.setInput = function (value, search)
+{	$("input.search",this.element).val(value);
+	if (search) $("input.search",this.element).trigger("keyup");
+};
+
+/** A ligne has been clicked in the menu > dispatch event
+*	@param {any} f the feature, as passed in the autocomplete
+*	@api
+*/
+ol.control.Search.prototype.select = function (f)
+{	this.dispatchEvent({ type:"select", search:f });
+};
+
+/** Autocomplete function
+* @param {string} s search string
+* @param {function} cback a callback function that takes an array to display in the autocomplete field (for asynchronous search)
+* @return {Array|false} an array of search solutions or false if the array is send with the cback argument
+* @api
+*/
+ol.control.Search.prototype.autocomplete = function (s, cback)
+{	cback ([]);
+	return false;
+};
+
+/** Draw the list 
+* @param {Array} auto an array of search result
+*/
+ol.control.Search.prototype.drawList_ = function (auto)
+{	var ul = $("ul.autocomplete", this.element).html("");
+	if (!auto) return;
+	var self = this;
+	var max = Math.min (self.get("maxItems"),auto.length);
+	for (var i=0; i<max; i++)
+	{	$("<li>").html(self.getTitle(auto[i]))
+			.data('search', auto[i])
+			.click(function(e)
+			{	self.select($(this).data('search'));
+			})
+			.appendTo(ul);
+	}
+};
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * Search features.
+ *
+ * @constructor
+ * @extends {ol.control.Search}
+ * @fires select
+ * @param {Object=} Control options. 
+ *	@param {string} options.className control class name
+ *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *	@param {string | undefined} options.placeholder placeholder, default "Search..."
+ *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 300.
+ *	@param {integer | undefined} options.minLength minimum length to start searching, default 1
+ *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *
+ *	@param {string | undefined} options.property a property to display in the index, default 'name'.
+ *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return the property 
+ *	@param {function | undefined} options.getSearchString a function that take a feature and return a text to be used as search string, default geTitle() is used as search string
+ */
+ol.control.SearchFeature = function(options) 
+{	if (!options) options = {};
+		
+	ol.control.Search.call(this, options);
+
+	if (typeof(options.getSearchString)=="function") this.getSearchString = options.getSearchString;
+	this.set('property', options.property||'name');
+
+	this.source_ = options.source;
+};
+ol.inherits(ol.control.SearchFeature, ol.control.Search);
 
 /** Returns the text to be displayed in the menu
 *	@param {ol.Feature} f the feature
 *	@return {string} the text to be displayed in the index
 *	@api
 */
-ol.control.SearchFeature.prototype.getFeatureName = function (f)
+ol.control.SearchFeature.prototype.getTitle = function (f)
 {	return f.get(this.get('property')||'name');
 };
 
-/** Returns the text to be used as search string
+/** Return the string to search in
 *	@param {ol.Feature} f the feature
-*	@return {string} the text to be used
+*	@return {string} the text to be used as search string
 *	@api
 */
 ol.control.SearchFeature.prototype.getSearchString = function (f)
-{	return this.getFeatureName(f);
-};
-
-/** Search a string in the features
-*	@param {string} s the search string
-*	@private
-*/
-ol.control.SearchFeature.prototype.autocomplete_ = function (s)
-{	var ul = $("ul", this.element).html("");
-	var self = this;
-	this.autocomplete (s, this.get("maxItems"), function(auto)
-	{	for (var i=0; i<auto.length; i++)
-		{	$("<li>").text(auto[i].name)
-				.data('feature', auto[i].feature)
-				.click(function(e)
-				{	self.dispatchEvent({ type:"select", feature:$(this).data('feature') });
-				})
-				.appendTo(ul);
-		}
-	});
-};
+{	return this.getTitle(f);
+}
 
 /** Autocomplete function
 * @param {string} s search string
@@ -3985,29 +4068,97 @@ ol.control.SearchFeature.prototype.autocomplete_ = function (s)
 * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete fielad
 * @api
 */
-ol.control.SearchFeature.prototype.autocomplete = function (s, max, cback)
+ol.control.SearchFeature.prototype.autocomplete = function (s, cback)
 {	var result = [];
 	// regexp
 	s = s.replace(/^\*/,'');
 	var rex = new RegExp(s, 'i');
 	// The source
 	var features = this.source_.getFeatures();
+	var max = this.get('maxItems')
 	for (var i=0, f; f=features[i]; i++)
 	{	if (rex.test(this.getSearchString(f)))
-		{	result.push({ name:this.getFeatureName(f), feature:f });
+		{	result.push(f);
 			if ((--max)<=0) break;
 		}
 	}
-	cback (result);
+	return result;
 };
 
-/** Search a feature 
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * Search places using the photon API.
+ *
+ * @constructor
+ * @extends {ol.control.Search}
+ * @fires select
+ * @param {Object=} Control options. 
+ *	@param {string} options.className control class name
+ *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *	@param {string | undefined} options.placeholder placeholder, default "Search..."
+ *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
+ *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
+ *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *
+ *	@param {string|undefined} options.lang Force preferred language, default none
+ *	@param {boolean} options.position Search, with priority to geo position, default false
+ *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return street + name + contry 
+ */
+ol.control.SearchPhoton = function(options) 
+{	options = options || {};
+	delete options.autocomplete;
+	options.minLength = options.minLength || 3;
+	options.typing = options.typing || 1000;
+
+	ol.control.Search.call(this, options);
+	this.set('lang', options.lang);
+	this.set('position', options.position);
+};
+ol.inherits(ol.control.SearchPhoton, ol.control.Search);
+
+/** Returns the text to be displayed in the menu
+*	@param {ol.Feature} f the feature
+*	@return {string} the text to be displayed in the index
+*	@api
+*/
+ol.control.SearchPhoton.prototype.getTitle = function (f)
+{	var p = f.properties;
+	return (p.housenumber||"")
+		+ " "+(p.street || p.name || "")
+		+ "<i>"
+		+ " "+(p.postcode||"")
+		+ " "+(p.city||"")
+		+ " ("+p.country
+		+ ")</i>";
+};
+
+/** Autocomplete function11
 * @param {string} s search string
-* @param {function} cback a callback function that takes a feature
+* @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete fielad
 * @api
 */
-ol.control.SearchFeature.prototype.search = function (s, cback)
-{	
+ol.control.SearchPhoton.prototype.autocomplete = function (s, cback)
+{	var data = 
+	{	q: s,
+		lang: this.get('lang'),
+		limit: this.get('maxItems')
+	}
+	if (this.get('position'))
+	{	var view = this.getMap().getView();
+		var pt = new ol.geom.Point(view.getCenter());
+		pt = (pt.transform (view.getProjection(), "EPSG:4326")).getCoordinates();
+		
+		data.lon = pt[0];
+		data.lat = pt[1];
+	}
+	$.ajax("http://photon.komoot.de/api/",
+		{	dataType: "json",
+			data: data,
+			success: function(r) { cback(r.features); }
+		});
 };
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
