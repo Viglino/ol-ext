@@ -1,0 +1,137 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!----------------------------------------------------------
+
+	Copyright (c) 2017 Jean-Marc VIGLINO,
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+
+------------------------------------------------------------>
+	<title>OL3-ext: Search control</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="Control to add a grid reference to a map." />
+	<meta name="keywords" content="ol3, control, search, bar" />
+
+	<!-- FontAwesome -->
+	<link rel="stylesheet" href="https://rawgit.com/FortAwesome/Font-Awesome/master/css/font-awesome.min.css" type="text/css" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+    <!-- OL3 -->
+	<link rel="stylesheet" href="https://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/master/build/ol.js"></script>
+	
+	<link rel="stylesheet" href="../control/searchcontrol.css" />
+	<script type="text/javascript" src="../control/searchcontrol.js"></script>
+
+	<link rel="stylesheet" href="style.css"/>
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../index.html">
+		<h1>OL3-ext: Search control</h1>
+	</a>
+
+	<div class="info">
+		<i>ol.control.Search</i> is the base class for search controls.
+		You can use it for simple custom search or as base to new class.
+		<ul>
+			<li>
+				the <i>getTitle</i> function return the string that will be display in the autocompletion menu
+			</li>
+			<li>
+				<i>autocomplete</i> is a function called on each tipping to search a string. The result can be returned directly or in a callback for asynchronous puposes.
+			</li>
+		</ul>
+		<br/>
+		Use <a href="map.control.searchfeature.html">ol.control.SearchFeature</a> to search features in a layer.
+		<br />
+		Use <a href="map.control.searchphoton.html">ol.control.SearchPhoton</a> to search places on the map.
+	</div>
+
+	<!-- DIV pour la carte -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options">
+		<i>
+			Type a letter in the search bar to search for a position
+			<br/>
+			(Paris, London, Geneve, Bruxelles, Berlin, Madrid, Roma).
+		</i>
+	</div>
+	
+	<script type="text/javascript">
+	// Layers
+	var layers = [
+		new ol.layer.Tile({
+			name: "Natural Earth", 
+			minResolution: 306,
+    		source: new ol.source.XYZ(
+			{	url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
+				attributions: [new ol.Attribution({ html: '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' })] 
+    		})
+		})
+	]
+
+	// The map
+	var map = new ol.Map
+		({	target: 'map',
+			view: new ol.View
+			({	zoom: 5,
+				center: [166326, 5992663]
+			}),
+			interactions: ol.interaction.defaults({ altShiftDragRotate:false, pinchRotate:false }),
+			layers: layers
+		});
+
+	// A list of positions to search in
+	var positions = 
+		[	{ name:"Paris", pos:ol.proj.transform([2.351828, 48.856578], 'EPSG:4326', 'EPSG:3857'), zoom:11 },
+			{ name:"London", pos:ol.proj.transform([-0.1275,51.507222], 'EPSG:4326', 'EPSG:3857'), zoom:11 },
+			{ name:"Geneve", pos:ol.proj.transform([6.149985,46.200013], 'EPSG:4326', 'EPSG:3857'), zoom:13 },
+			{ name:"Bruxelles", pos:ol.proj.transform([4.35,50.83], 'EPSG:4326', 'EPSG:3857'), zoom:12 },
+			{ name:"Berlin", pos:ol.proj.transform([13.383333,52.516667], 'EPSG:4326', 'EPSG:3857'), zoom:12 },
+			{ name:"Madrid", pos:ol.proj.transform([-3.683333,40.433333], 'EPSG:4326', 'EPSG:3857'), zoom:12 },
+			{ name:"Roma", pos:ol.proj.transform([12.48657,41.888732], 'EPSG:4326', 'EPSG:3857'), zoom:12 }
+		]
+
+	// The search control
+	var search = new ol.control.Search(
+		{	//target: $(".options").get(0),
+			// Title to use in the list
+			getTitle: function(f) { return f.name; },
+			// Search result
+			autocomplete: function (s, cback)
+			{	var result = [];
+				// New search RegExp
+				var	rex = new RegExp(s.replace("*","")||"\.*", "i");
+				for (var i=0; i<positions.length; i++)
+				{	if (rex.test(positions[i].name)) result.push (positions[i]);
+				}
+				/* Return result directly... */
+				return result;
+				/* ...or use the callback function
+				cback(result);
+				return false;
+				*/
+			}
+		});
+	map.addControl (search);
+
+	// Center when click on the reference index
+	search.on('select', function(e)
+		{	map.getView().animate({
+				center: e.search.pos,
+				zoom: 6,
+				easing: ol.easing.easeOut
+			})
+		});
+
+	</script>
+	
+</body>
+</html>
