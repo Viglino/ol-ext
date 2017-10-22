@@ -1,17 +1,17 @@
 ﻿<!DOCTYPE html>
-<!----------------------------------------------------------
- 
-	Copyright (c) 2017 Jean-Marc VIGLINO,
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
------------------------------------------------------------->
 <html>
 <head>
+<!----------------------------------------------------------
+
+	Copyright (c) 2017 Jean-Marc VIGLINO,
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+
+------------------------------------------------------------>
 	<title>OL3-ext: Search feature control</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 	<meta name="description" content="Control to add a grid reference to a map." />
-	<meta name="keywords" content="ol3, control, index, grid, reference" />
+	<meta name="keywords" content="ol3, control, search, vector, feature" />
 
 	<!-- FontAwesome -->
 	<link rel="stylesheet" href="https://rawgit.com/FortAwesome/Font-Awesome/master/css/font-awesome.min.css" type="text/css" />
@@ -23,7 +23,8 @@
 	<link rel="stylesheet" href="https://openlayers.org/en/master/css/ol.css" />
 	<script type="text/javascript" src="https://openlayers.org/en/master/build/ol.js"></script>
 	
-	<link rel="stylesheet" href="../control/searchfeaturecontrol.css" />
+	<link rel="stylesheet" href="../control/searchcontrol.css" />
+	<script type="text/javascript" src="../control/searchcontrol.js"></script>
 	<script type="text/javascript" src="../control/searchfeaturecontrol.js"></script>
 
 	<link rel="stylesheet" href="style.css"/>
@@ -40,18 +41,21 @@
 		<i>ol.control.SearchFeature</i> is a control to search features in a source.
 		<ul>
 			<li>
-				You have to define a <i>ol.source.vector</i> to search in.
+				You have to define a <i>ol.source.Vector</i> to search in.
 			</li>
 			<li>
-				You can define a <i>property</i> to display in the list (or a function to retrieve it).
+				You can define a <i>property</i> that will be used to search in or define a getTitle/getSearchString function.
 			</li>
 			<li>
-				You can define a <i>getSearchString</i> function that will take a feature and 
+				You can define a <i>getTitle</i> to get the string that will be displayed in the menu
+			</li>
+			<li>
+				You can define a <i>getSearchString</i> function that will take a feature and
 				return a string to search in.
 			</li>
 		</ul>
 		<br/>
-		<i>ol.control.SearchFeature</i> requires jQuery.
+		<i>ol.control.SearchFeature</i> use the <a href="map.control.search.html">ol.control.Search</a> control.
 	</div>
 
 	<!-- DIV pour la carte -->
@@ -65,7 +69,7 @@
 			</li>
 			<li>
 				search property:
-				<select onchange="search.search(''); search.set('property', $(this).val());">
+				<select onchange="search.set('property',this.value); search.search();">
 					<option value="commune">commune</option>
 					<option value="region">region</option>
 					<option value="text">text</option>
@@ -120,21 +124,18 @@
 
 	// Set the control grid reference
 	var search = new ol.control.SearchFeature(
-		{	extent: [ -550000, 5250000, 850000, 6650000 ], 
-			size: [10,10],
-			//target: $(".options div").get(0),
+		{	//target: $(".options").get(0),
 			source: vectorSource,
-			property: "commune"
+			property: $(".options select").val()
 		});
 	map.addControl (search);
 
 	// Select feature when click on the reference index
 	search.on('select', function(e)
 		{	select.getFeatures().clear();
-			select.getFeatures().push (e.feature);
-			var p = e.feature.getGeometry().getFirstCoordinate();
-			map.getView().setCenter(p);
-		console.log(e.feature.getProperties())
+			select.getFeatures().push (e.search);
+			var p = e.search.getGeometry().getFirstCoordinate();
+			map.getView().animate({ center:p });
 		});
 
 	</script>
