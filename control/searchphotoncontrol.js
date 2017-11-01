@@ -24,7 +24,7 @@ ol.control.SearchPhoton = function(options)
 {	options = options || {};
 	delete options.autocomplete;
 	options.minLength = options.minLength || 3;
-	options.typing = options.typing || 1000;
+	options.typing = options.typing || 800;
 
 	ol.control.Search.call(this, options);
 	this.set('lang', options.lang);
@@ -72,4 +72,17 @@ ol.control.SearchPhoton.prototype.autocomplete = function (s, cback)
 			data: data,
 			success: function(r) { cback(r.features); }
 		});
+};
+
+/** A ligne has been clicked in the menu > dispatch event
+*	@param {any} f the feature, as passed in the autocomplete
+*	@api
+*/
+ol.control.Search.prototype.select = function (f)
+{	var c = f.geometry.coordinates;
+	// Add coordinate to the event
+	try {
+		c = ol.proj.transform (f.geometry.coordinates, 'EPSG:4326', this.getMap().getView().getProjection());
+	} catch(e) {};
+	this.dispatchEvent({ type:"select", search:f, coordinate: c });
 };

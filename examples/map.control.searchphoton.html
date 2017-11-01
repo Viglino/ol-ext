@@ -100,10 +100,8 @@
 	// Select feature when click on the reference index
 	search.on('select', function(e)
 		{	// console.log(e);
-			var pt = new ol.geom.Point(e.search.geometry.coordinates);
-			pt.transform ("EPSG:4326", map.getView().getProjection());
 			map.getView().animate(
-			{	center: pt.getCoordinates(),
+			{	center:e.coordinate,
 				zoom: Math.max (map.getView().getZoom(),16)
 			});
 		});
