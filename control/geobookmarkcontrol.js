@@ -4,10 +4,11 @@
  * @extends {ol.control.Control}
  * @trigger add|remove when a bookmark us added or deleted
  * @param {Object=} Control options.
- *  - className {string} default ol-bookmark
- *  - placeholder {string} input placeholder, default Add a new geomark...
- *  - editable {bool} enable modification, default true
- *  - marks a list of default bookmarks : { BM1:{pos:ol.coordinates, zoom: integer, permanent: true}, BM2:{pos:ol.coordinates, zoom: integer} }
+ *  @param {string} className default ol-bookmark
+ *  @param {string} placeholder input placeholder, default Add a new geomark...
+ *  @param {bool} editable enable modification, default true
+ *  @param {string} namespace a namespace to save the boolmark (if more than one on a page), default: ol
+ *  @param {Array<any> marks a list of default bookmarks : { BM1:{pos:ol.coordinates, zoom: integer, permanent: true}, BM2:{pos:ol.coordinates, zoom: integer} }
  */
 ol.control.GeoBookmark = function(options) {
   options = options || {};
@@ -72,9 +73,11 @@ ol.control.GeoBookmark = function(options) {
     console.log(e);
   }), this;
 
+  this.set("namespace", options.namespace || 'ol');
   this.set("editable", options.editable !== false);
+  
   // Set default bmark
-  this.setBookmarks(localStorage["ol@bookmark"] ? null:options.marks);
+  this.setBookmarks(localStorage[this.get('namespace')+"@bookmark"] ? null:options.marks);
 };
 ol.inherits(ol.control.GeoBookmark, ol.control.Control);
 
@@ -83,7 +86,7 @@ ol.inherits(ol.control.GeoBookmark, ol.control.Control);
 *   example : setBookmarks({ "Mark 1":{pos:ol.coordinates, zoom: integer}, "Mark 2":{pos:ol.coordinates, zoom: integer} })
 */
 ol.control.GeoBookmark.prototype.setBookmarks = function(bmark) {
-  if (!bmark) bmark = JSON.parse(localStorage["ol@bookmark"] || "{}");
+  if (!bmark) bmark = JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
   var modify = this.get("editable");
   var ul = this.element.querySelector("ul");
   var menu = this.element.querySelector("div");
@@ -113,14 +116,14 @@ ol.control.GeoBookmark.prototype.setBookmarks = function(bmark) {
       li.appendChild(button);
     }
   }
-  localStorage["ol@bookmark"] = JSON.stringify(bmark);
+  localStorage[this.get('namespace')+"@bookmark"] = JSON.stringify(bmark);
 };
 
 /** Get Geo bookmarks
 * @return a list of bookmarks : { BM1:{pos:ol.coordinates, zoom: integer}, BM2:{pos:ol.coordinates, zoom: integer} }
 */
 ol.control.GeoBookmark.prototype.getBookmarks = function() {
-  return JSON.parse(localStorage["ol@bookmark"] || "{}");
+  return JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
 };
 
 /** Remove a Geo bookmark
