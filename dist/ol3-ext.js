@@ -1800,10 +1800,11 @@ ol.control.Gauge.prototype.val = function(v)
  * @extends {ol.control.Control}
  * @trigger add|remove when a bookmark us added or deleted
  * @param {Object=} Control options.
- *  - className {string} default ol-bookmark
- *  - placeholder {string} input placeholder, default Add a new geomark...
- *  - editable {bool} enable modification, default true
- *  - marks a list of default bookmarks : { BM1:{pos:ol.coordinates, zoom: integer, permanent: true}, BM2:{pos:ol.coordinates, zoom: integer} }
+ *  @param {string} className default ol-bookmark
+ *  @param {string} placeholder input placeholder, default Add a new geomark...
+ *  @param {bool} editable enable modification, default true
+ *  @param {string} namespace a namespace to save the boolmark (if more than one on a page), default: ol
+ *  @param {Array<any> marks a list of default bookmarks : { BM1:{pos:ol.coordinates, zoom: integer, permanent: true}, BM2:{pos:ol.coordinates, zoom: integer} }
  */
 ol.control.GeoBookmark = function(options) {
   options = options || {};
@@ -1868,9 +1869,11 @@ ol.control.GeoBookmark = function(options) {
     console.log(e);
   }), this;
 
+  this.set("namespace", options.namespace || 'ol');
   this.set("editable", options.editable !== false);
+  
   // Set default bmark
-  this.setBookmarks(localStorage["ol@bookmark"] ? null:options.marks);
+  this.setBookmarks(localStorage[this.get('namespace')+"@bookmark"] ? null:options.marks);
 };
 ol.inherits(ol.control.GeoBookmark, ol.control.Control);
 
@@ -1879,7 +1882,7 @@ ol.inherits(ol.control.GeoBookmark, ol.control.Control);
 *   example : setBookmarks({ "Mark 1":{pos:ol.coordinates, zoom: integer}, "Mark 2":{pos:ol.coordinates, zoom: integer} })
 */
 ol.control.GeoBookmark.prototype.setBookmarks = function(bmark) {
-  if (!bmark) bmark = JSON.parse(localStorage["ol@bookmark"] || "{}");
+  if (!bmark) bmark = JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
   var modify = this.get("editable");
   var ul = this.element.querySelector("ul");
   var menu = this.element.querySelector("div");
@@ -1909,14 +1912,14 @@ ol.control.GeoBookmark.prototype.setBookmarks = function(bmark) {
       li.appendChild(button);
     }
   }
-  localStorage["ol@bookmark"] = JSON.stringify(bmark);
+  localStorage[this.get('namespace')+"@bookmark"] = JSON.stringify(bmark);
 };
 
 /** Get Geo bookmarks
 * @return a list of bookmarks : { BM1:{pos:ol.coordinates, zoom: integer}, BM2:{pos:ol.coordinates, zoom: integer} }
 */
 ol.control.GeoBookmark.prototype.getBookmarks = function() {
-  return JSON.parse(localStorage["ol@bookmark"] || "{}");
+  return JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
 };
 
 /** Remove a Geo bookmark
@@ -4111,7 +4114,7 @@ ol.control.SearchPhoton = function(options)
 {	options = options || {};
 	delete options.autocomplete;
 	options.minLength = options.minLength || 3;
-	options.typing = options.typing || 1000;
+	options.typing = options.typing || 800;
 
 	ol.control.Search.call(this, options);
 	this.set('lang', options.lang);
@@ -4161,6 +4164,18 @@ ol.control.SearchPhoton.prototype.autocomplete = function (s, cback)
 		});
 };
 
+/** A ligne has been clicked in the menu > dispatch event
+*	@param {any} f the feature, as passed in the autocomplete
+*	@api
+*/
+ol.control.Search.prototype.select = function (f)
+{	var c = f.geometry.coordinates;
+	// Add coordinate to the event
+	try {
+		c = ol.proj.transform (f.geometry.coordinates, 'EPSG:4326', this.getMap().getView().getProjection());
+	} catch(e) {};
+	this.dispatchEvent({ type:"select", search:f, coordinate: c });
+};
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -7485,7 +7500,6 @@ ol.interaction.GeolocationDraw.prototype.setMap = function(map)
 ol.interaction.GeolocationDraw.prototype.setActive = function(active)
 {	ol.interaction.Interaction.prototype.setActive.call(this, active);
 	this.overlayLayer_.setVisible(active);
-	this.reset();
 	if (this.getMap())
 	{	this.geolocation.setTracking(active);
 		this.getMap().renderSync();
@@ -7493,6 +7507,7 @@ ol.interaction.GeolocationDraw.prototype.setActive = function(active)
 	this.pause(!active);
 	if (active)
 	{	// Start drawing
+		this.reset();
 		this.dispatchEvent({ type:'drawstart', feature: this.sketch_[1]});
 	}
 	else
@@ -7500,7 +7515,7 @@ ol.interaction.GeolocationDraw.prototype.setActive = function(active)
 		if (f.getGeometry())
 		{	if (this.features_) this.features_.push(f);
 			if (this.source_) this.source_.addFeature(f);
-			this.dispatchEvent({ type:'drawend', feature: this.sketch_[1]});
+			this.dispatchEvent({ type:'drawend', feature: f});
 		}
 	}
 };
@@ -7542,6 +7557,17 @@ ol.interaction.GeolocationDraw.prototype.pause = function(b)
 */
 ol.interaction.GeolocationDraw.prototype.setFollowTrack = function(follow)
 {	this.set('followTrack', follow);
+	var map = this.getMap();
+	// Center if wanted
+	if (follow !== false && !this.lastPosition_ && map) 
+	{	var pos = this.path_[this.path_.length-1];
+		if (pos)
+		{	map.getView().animate({
+				center: pos,
+				zoom: (follow!="position" ? this.get("zoom") : undefined)
+			})
+		}
+	}
 	this.lastPosition_ = false;				
 	this.dispatchEvent({ type:'follow', following: follow!==false });
 };
@@ -7557,11 +7583,12 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(active)
 	var loc = this.geolocation;
 	var accu = loc.getAccuracy();
 	var pos = loc.getPosition();
-	pos.push(loc.getAltitude());
+	pos.push (Math.round((loc.getAltitude()||0)*100)/100);
+	pos.push (Math.round((new Date()).getTime()/1000));
 	var p = loc.getAccuracyGeometry();
 
 	// Center on point
-	console.log(this.get('followTrack'))
+	// console.log(this.get('followTrack'))
 	switch (this.get('followTrack'))
 	{	// Follow center + zoom
 		case true:
@@ -7576,14 +7603,14 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(active)
 		case 'position':
 			// modify center
 			map.getView().setCenter( pos );
-			break;
+		break;
 		// Keep on following 
 		case 'auto':
 			if (this.lastPosition_)
 			{	var center = map.getView().getCenter();
-				console.log(center,this.lastPosition_)
+				// console.log(center,this.lastPosition_)
 				if (center[0]!=this.lastPosition_[0] || center[1]!=this.lastPosition_[1])
-				{	this.dispatchEvent({ type:'follow', following: false });
+				{	//this.dispatchEvent({ type:'follow', following: false });
 					this.setFollowTrack (false);
 				}
 				else 
@@ -7596,13 +7623,13 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(active)
 				if (this.get("zoom")) map.getView().setZoom( this.get("zoom") );
 				this.lastPosition_ = pos;
 			}
-			break;
+		break;
 		// Force to stay on the map
 		case 'visible':
 			if (!ol.extent.containsCoordinate(map.getView().calculateExtent(map.getSize()), pos))
 			{	map.getView().setCenter (pos);
 			}
-			break;
+		break;
 		// Don't follow
 		default: break;
 	}
@@ -7621,7 +7648,7 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(active)
 		switch (this.get("type"))
 		{	case "Point":
 				this.path_ = [pos];
-				f.setGeometry(new ol.geom.Point(pos));
+				f.setGeometry(new ol.geom.Point(pos, 'XYZM'));
 				var attr = this.get('attributes');
 				if (attr.heading) f.set("heading",loc.getHeading());
 				if (attr.accuracy) f.set("accuracy",loc.getAccuracy());
@@ -7630,7 +7657,7 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(active)
 				break;
 			case "LineString":
 				if (this.path_.length>1)
-				{	geo = new ol.geom.LineString(this.path_);
+				{	geo = new ol.geom.LineString(this.path_, 'XYZM');
 					geo.simplify (this.get("tolerance"));
 					f.setGeometry(geo);
 				}
@@ -7638,7 +7665,7 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(active)
 				break;
 			case "Polygon":
 				if (this.path_.length>2)
-				{	geo = new ol.geom.Polygon([this.path_]);
+				{	geo = new ol.geom.Polygon([this.path_], 'XYZM');
 					geo.simplify (this.get("tolerance"));
 					f.setGeometry(geo);
 				}

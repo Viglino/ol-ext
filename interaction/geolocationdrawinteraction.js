@@ -139,7 +139,6 @@ ol.interaction.GeolocationDraw.prototype.setMap = function(map)
 ol.interaction.GeolocationDraw.prototype.setActive = function(active)
 {	ol.interaction.Interaction.prototype.setActive.call(this, active);
 	this.overlayLayer_.setVisible(active);
-	this.reset();
 	if (this.getMap())
 	{	this.geolocation.setTracking(active);
 		this.getMap().renderSync();
@@ -147,6 +146,7 @@ ol.interaction.GeolocationDraw.prototype.setActive = function(active)
 	this.pause(!active);
 	if (active)
 	{	// Start drawing
+		this.reset();
 		this.dispatchEvent({ type:'drawstart', feature: this.sketch_[1]});
 	}
 	else
@@ -154,7 +154,7 @@ ol.interaction.GeolocationDraw.prototype.setActive = function(active)
 		if (f.getGeometry())
 		{	if (this.features_) this.features_.push(f);
 			if (this.source_) this.source_.addFeature(f);
-			this.dispatchEvent({ type:'drawend', feature: this.sketch_[1]});
+			this.dispatchEvent({ type:'drawend', feature: f});
 		}
 	}
 };
@@ -196,6 +196,17 @@ ol.interaction.GeolocationDraw.prototype.pause = function(b)
 */
 ol.interaction.GeolocationDraw.prototype.setFollowTrack = function(follow)
 {	this.set('followTrack', follow);
+	var map = this.getMap();
+	// Center if wanted
+	if (follow !== false && !this.lastPosition_ && map) 
+	{	var pos = this.path_[this.path_.length-1];
+		if (pos)
+		{	map.getView().animate({
+				center: pos,
+				zoom: (follow!="position" ? this.get("zoom") : undefined)
+			})
+		}
+	}
 	this.lastPosition_ = false;				
 	this.dispatchEvent({ type:'follow', following: follow!==false });
 };
@@ -211,11 +222,12 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(active)
 	var loc = this.geolocation;
 	var accu = loc.getAccuracy();
 	var pos = loc.getPosition();
-	pos.push(loc.getAltitude());
+	pos.push (Math.round((loc.getAltitude()||0)*100)/100);
+	pos.push (Math.round((new Date()).getTime()/1000));
 	var p = loc.getAccuracyGeometry();
 
 	// Center on point
-	console.log(this.get('followTrack'))
+	// console.log(this.get('followTrack'))
 	switch (this.get('followTrack'))
 	{	// Follow center + zoom
 		case true:
@@ -230,14 +242,14 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(active)
 		case 'position':
 			// modify center
 			map.getView().setCenter( pos );
-			break;
+		break;
 		// Keep on following 
 		case 'auto':
 			if (this.lastPosition_)
 			{	var center = map.getView().getCenter();
-				console.log(center,this.lastPosition_)
+				// console.log(center,this.lastPosition_)
 				if (center[0]!=this.lastPosition_[0] || center[1]!=this.lastPosition_[1])
-				{	this.dispatchEvent({ type:'follow', following: false });
+				{	//this.dispatchEvent({ type:'follow', following: false });
 					this.setFollowTrack (false);
 				}
 				else 
@@ -250,13 +262,13 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(active)
 				if (this.get("zoom")) map.getView().setZoom( this.get("zoom") );
 				this.lastPosition_ = pos;
 			}
-			break;
+		break;
 		// Force to stay on the map
 		case 'visible':
 			if (!ol.extent.containsCoordinate(map.getView().calculateExtent(map.getSize()), pos))
 			{	map.getView().setCenter (pos);
 			}
-			break;
+		break;
 		// Don't follow
 		default: break;
 	}
@@ -275,7 +287,7 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(active)
 		switch (this.get("type"))
 		{	case "Point":
 				this.path_ = [pos];
-				f.setGeometry(new ol.geom.Point(pos));
+				f.setGeometry(new ol.geom.Point(pos, 'XYZM'));
 				var attr = this.get('attributes');
 				if (attr.heading) f.set("heading",loc.getHeading());
 				if (attr.accuracy) f.set("accuracy",loc.getAccuracy());
@@ -284,7 +296,7 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(active)
 				break;
 			case "LineString":
 				if (this.path_.length>1)
-				{	geo = new ol.geom.LineString(this.path_);
+				{	geo = new ol.geom.LineString(this.path_, 'XYZM');
 					geo.simplify (this.get("tolerance"));
 					f.setGeometry(geo);
 				}
@@ -292,7 +304,7 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(active)
 				break;
 			case "Polygon":
 				if (this.path_.length>2)
-				{	geo = new ol.geom.Polygon([this.path_]);
+				{	geo = new ol.geom.Polygon([this.path_], 'XYZM');
 					geo.simplify (this.get("tolerance"));
 					f.setGeometry(geo);
 				}
