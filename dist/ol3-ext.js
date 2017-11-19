@@ -515,7 +515,9 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 		var li = $(this).closest("ul").parent();
 		if (li.data("layer")) 
 		{	li.data("layer").getLayers().remove($(this).closest('li').data("layer"));
-			if (li.data("layer").getLayers().getLength()==0) removeLayer.call($(".layerTrash", li), e);
+			if (li.data("layer").getLayers().getLength()==0 && !li.data("layer").get('noSwitcherDelete')) 
+			{	removeLayer.call($(".layerTrash", li), e);
+			}
 		}
 		else self.map_.removeLayer($(this).closest('li').data("layer"));
 	};
@@ -4106,6 +4108,7 @@ ol.control.SearchFeature.prototype.autocomplete = function (s, cback)
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
  *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
  *
+ *	@param {string|undefined} options.url Url to photon api, default "http://photon.komoot.de/api/"
  *	@param {string|undefined} options.lang Force preferred language, default none
  *	@param {boolean} options.position Search, with priority to geo position, default false
  *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return street + name + contry 
@@ -4115,10 +4118,11 @@ ol.control.SearchPhoton = function(options)
 	delete options.autocomplete;
 	options.minLength = options.minLength || 3;
 	options.typing = options.typing || 800;
-
+	options.url = options.url || "http://photon.komoot.de/api/";
 	ol.control.Search.call(this, options);
 	this.set('lang', options.lang);
 	this.set('position', options.position);
+        this.set('url', options.url);
 };
 ol.inherits(ol.control.SearchPhoton, ol.control.Search);
 
@@ -4157,7 +4161,17 @@ ol.control.SearchPhoton.prototype.autocomplete = function (s, cback)
 		data.lon = pt[0];
 		data.lat = pt[1];
 	}
-	$.ajax("http://photon.komoot.de/api/",
+        // Handle Mix Content Warning
+        // If the current connection is an https connection all other connections must be https either
+        var url = this.get('url');
+        if (window.location.protocol === "https:")
+        {
+          var parser = document.createElement('a');
+          parser.href = url;
+          parser.protocol = window.location.protocol;
+          url = parser.href;
+        }
+	$.ajax(url,
 		{	dataType: "json",
 			data: data,
 			success: function(r) { cback(r.features); }
@@ -14012,7 +14026,7 @@ ol.geom.LineString.prototype.splitAt = function(pt, tol)
 		for (var i=0; i<pt.length; i++)
 		{	var r = [];
 			for (var k=0; k<result.length; k++)
-			{	var ri = result[k].splitAt(pt[i]);
+			{	var ri = result[k].splitAt(pt[i], tol);
 				r = r.concat(ri);
 			}
 			result = r;
