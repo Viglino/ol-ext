@@ -66,7 +66,7 @@ ol.geom.LineString.prototype.splitAt = function(pt, tol)
 		for (var i=0; i<pt.length; i++)
 		{	var r = [];
 			for (var k=0; k<result.length; k++)
-			{	var ri = result[k].splitAt(pt[i]);
+			{	var ri = result[k].splitAt(pt[i], tol);
 				r = r.concat(ri);
 			}
 			result = r;
