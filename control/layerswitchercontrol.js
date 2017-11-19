@@ -507,7 +507,9 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 		var li = $(this).closest("ul").parent();
 		if (li.data("layer")) 
 		{	li.data("layer").getLayers().remove($(this).closest('li').data("layer"));
-			if (li.data("layer").getLayers().getLength()==0) removeLayer.call($(".layerTrash", li), e);
+			if (li.data("layer").getLayers().getLength()==0 && !li.data("layer").get('noSwitcherDelete')) 
+			{	removeLayer.call($(".layerTrash", li), e);
+			}
 		}
 		else self.map_.removeLayer($(this).closest('li').data("layer"));
 	};
