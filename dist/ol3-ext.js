@@ -335,7 +335,7 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e)
 				}
 			}
 			
-			$("li",drag.elt.parent()).removeClass("dropover");
+			$("li",drag.elt.parent()).removeClass("dropover dropover-after dropover-before");
 			drag.elt.removeClass("drag");
 			drag.elt.parent().removeClass("drag");
 			$(drag.element).removeClass('drag');
@@ -384,12 +384,13 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e)
 				{	drag.self.overflow(1);
 				}
 				if (!li.is("li")) li = li.closest("li");
-				if (!li.hasClass('dropover')) $("li", drag.elt.parent()).removeClass("dropover");
+				if (!li.hasClass('dropover')) $("li", drag.elt.parent()).removeClass("dropover dropover-after dropover-before");
 				if (li.parent().hasClass('drag') && li.get(0) !== drag.elt.get(0))
 				{	var target = li.data("layer");
 					// Don't mix layer level
 					if (target && !target.get("allwaysOnTop") == !drag.layer.get("allwaysOnTop"))
 					{	li.addClass("dropover");
+						li.addClass((drag.elt.position().top < li.position().top)?"dropover-after":"dropover-before");
 						drag.target = target;
 					}
 					else
@@ -4737,9 +4738,12 @@ ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
 		{	sc = imgs.getScale(); 
 			imgs.setScale(e.frameState.pixelRatio*sc);
 		}
-		e.vectorContext.setStyle(style[i]);
-		if (style[i].getZIndex()<0) e.vectorContext.drawGeometry(shadow||geom);
-		else e.vectorContext.drawGeometry(geom);
+		// Prevent crach if the style is not ready (image not loaded)
+		try{
+			e.vectorContext.setStyle(style[i]);
+			if (style[i].getZIndex()<0) e.vectorContext.drawGeometry(shadow||geom);
+			else e.vectorContext.drawGeometry(geom);
+		} catch(e) {};
 		if (imgs) imgs.setScale(sc);
 	}
 };
@@ -4953,13 +4957,21 @@ ol.inherits(ol.featureAnimation.Drop, ol.featureAnimation);
 ol.featureAnimation.Drop.prototype.animate = function (e)
 {	// First time > calculate duration / speed
 	if (!e.time) 
-	{	if (this.side_=='top') this.dy = e.extent[3]-e.bbox[1];
-		else this.dy = e.extent[1]-e.bbox[3];
-		if (this.speed_) this.duration_ = Math.abs(this.dy)/this.speed_/e.frameState.viewState.resolution;
+	{	var angle = e.frameState.viewState.rotation;
+		var s = e.frameState.size[1] * e.frameState.viewState.resolution;
+		if (this.side_!='top') s *= -1;
+		this.dx = -Math.sin(angle)*s;
+		this.dy = Math.cos(angle)*s;
+		if (this.speed_) 
+		{	this.duration_ = s/this.speed_/e.frameState.viewState.resolution;
+		}
 	}
 	// Animate
 	var flashGeom = e.geom.clone();
-	flashGeom.translate(0,  this.dy*(1-this.easing_(e.elapsed)));
+	flashGeom.translate(
+		this.dx*(1-this.easing_(e.elapsed)),  
+		this.dy*(1-this.easing_(e.elapsed))
+	);
 	this.drawGeom_(e, flashGeom, e.geom);
 	
 	return (e.time <= this.duration_);
