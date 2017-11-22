@@ -47,9 +47,12 @@ ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
 		{	sc = imgs.getScale(); 
 			imgs.setScale(e.frameState.pixelRatio*sc);
 		}
-		e.vectorContext.setStyle(style[i]);
-		if (style[i].getZIndex()<0) e.vectorContext.drawGeometry(shadow||geom);
-		else e.vectorContext.drawGeometry(geom);
+		// Prevent crach if the style is not ready (image not loaded)
+		try{
+			e.vectorContext.setStyle(style[i]);
+			if (style[i].getZIndex()<0) e.vectorContext.drawGeometry(shadow||geom);
+			else e.vectorContext.drawGeometry(geom);
+		} catch(e) {};
 		if (imgs) imgs.setScale(sc);
 	}
 };
