@@ -327,7 +327,7 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e)
 				}
 			}
 			
-			$("li",drag.elt.parent()).removeClass("dropover");
+			$("li",drag.elt.parent()).removeClass("dropover dropover-after dropover-before");
 			drag.elt.removeClass("drag");
 			drag.elt.parent().removeClass("drag");
 			$(drag.element).removeClass('drag');
@@ -376,12 +376,13 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e)
 				{	drag.self.overflow(1);
 				}
 				if (!li.is("li")) li = li.closest("li");
-				if (!li.hasClass('dropover')) $("li", drag.elt.parent()).removeClass("dropover");
+				if (!li.hasClass('dropover')) $("li", drag.elt.parent()).removeClass("dropover dropover-after dropover-before");
 				if (li.parent().hasClass('drag') && li.get(0) !== drag.elt.get(0))
 				{	var target = li.data("layer");
 					// Don't mix layer level
 					if (target && !target.get("allwaysOnTop") == !drag.layer.get("allwaysOnTop"))
 					{	li.addClass("dropover");
+						li.addClass((drag.elt.position().top < li.position().top)?"dropover-after":"dropover-before");
 						drag.target = target;
 					}
 					else
