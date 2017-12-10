@@ -164,9 +164,7 @@ ol.interaction.DrawRegular.prototype.getGeom_ = function ()
 		var coord = this.coord_;
 
 		// Special case: circle
-		if (!this.sides_ && this.square_ && !this.centered_)
-		{	
-			
+		if (!this.sides_ && this.square_ && !this.centered_){
 			center = [(coord[0] + center[0])/2, (coord[1] + center[1])/2];
 			var d = [coord[0] - center[0], coord[1] - center[1]];
 			var r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
@@ -177,8 +175,7 @@ ol.interaction.DrawRegular.prototype.getGeom_ = function ()
 			dmax = Math.min ( this.maxCircleCoordinates_, Math.round(dmax / 3 ));
 			return ol.geom.Polygon.fromCircle (circle, dmax, 0);
 		}
-		else
-		{
+		else {
 			var hasrotation = this.canRotate_ && this.centered_ && this.square_;
 			var d = [coord[0] - center[0], coord[1] - center[1]];
 			if (this.square_ && !hasrotation) 
@@ -268,9 +265,10 @@ ol.interaction.DrawRegular.prototype.drawPoint_ = function(pt, noclear)
  */
 ol.interaction.DrawRegular.prototype.handleEvent_ = function(evt) 
 {	switch (evt.type)
-	{	case "pointerdown":
+	{	case "pointerdown": {
 			this.downPx_ = evt.pixel;
 			this.start_(evt);
+		}
 		break;
 		case "pointerup":
 			// Started and fisrt move
@@ -320,6 +318,11 @@ ol.interaction.DrawRegular.prototype.handleEvent_ = function(evt)
 			break;
 		default:
 			this.lastEvent = evt.type;
+			// Prevent zoom in on dblclick
+			if (this.started_ && evt.type==='dblclick') 
+			{	//evt.stopPropagation();
+				return false;
+			}
 			break;
 	}
 	return true;
