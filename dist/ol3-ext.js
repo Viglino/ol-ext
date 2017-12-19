@@ -4,7 +4,7 @@
  * @version v1.0.1
  * @author Jean-Marc Viglino (https://github.com/Viglino)
  * @link https://github.com/Viglino/ol3-ext#,
- * @license CECILL-B
+ * @license BSD
  */
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -137,7 +137,7 @@ ol.control.LayerSwitcher.prototype.setHeader = function(html)
 };
 
 /** Calculate overflow and add scrolls
-*	@param {-1|0|1|+50%|-50%} dir scroll direction
+*	@param {Number} dir scroll direction -1|0|1|'+50%'|'-50%'
 */
 ol.control.LayerSwitcher.prototype.overflow = function(dir)
 {	
@@ -243,7 +243,7 @@ ol.control.LayerSwitcher.prototype.drawPanel_ = function(e)
 
 /** Change layer visibility according to the baselayer option
  * @param {ol.layer}
- * @param {Array{ol.layer}} related layers
+ * @param {Array<ol.layer>} related layers
  */
 ol.control.LayerSwitcher.prototype.switchLayerVisibility = function(l, layers)
 {
@@ -1140,6 +1140,7 @@ ol.control.CanvasTitle.prototype.drawTitle_ = function(e)
 */
 /** ol.control.Cloud adds an old map effect on a canvas renderer. 
 * It colors the map, adds a parchment texture and compass onto the map. 
+* @constructor
 * @param {Object}
 *	- hue {ol.Color} color to set hue of the map, default #963
 *	- saturation {Number} saturation of the hue color, default 0.6
@@ -1919,7 +1920,7 @@ ol.control.GeoBookmark.prototype.setBookmarks = function(bmark) {
 };
 
 /** Get Geo bookmarks
-* @return a list of bookmarks : { BM1:{pos:ol.coordinates, zoom: integer}, BM2:{pos:ol.coordinates, zoom: integer} }
+* @return {any} a list of bookmarks : { BM1:{pos:ol.coordinates, zoom: integer}, BM2:{pos:ol.coordinates, zoom: integer} }
 */
 ol.control.GeoBookmark.prototype.getBookmarks = function() {
   return JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
@@ -2502,7 +2503,7 @@ ol.control.GridReference.prototype.getFeatureName = function (f)
 /** Sort function
 *	@param {ol.Feature} a first feature
 *	@param {ol.Feature} b second feature
-*	@return {-1|0|1} 0 if a==b, -1 if a<b, 1 if a>b
+*	@return {Number} 0 if a==b, -1 if a<b, 1 if a>b
 *	@api
 */
 ol.control.GridReference.prototype.sortFeatures = function (a,b)
@@ -2519,7 +2520,7 @@ ol.control.GridReference.prototype.indexTitle = function (f)
 };
 
 /** Display features in the index
-*	@param { Array <ol.Feature> | ol.Collection <ol.Feature> } features
+*	@param { Array<ol.Feature> | ol.Collection<ol.Feature> } features
 */
 ol.control.GridReference.prototype.setIndex = function (features)
 {	if (!this.getMap()) return;
@@ -3316,7 +3317,7 @@ ol.control.Permalink.prototype.setMap = function(map)
 
 /** Get layer given a permalink name (permalink propertie in the layer)
 *	@param {string} the permalink to search for
-*	@param {Array{ol.layer}|undefined} an array of layer to search in
+*	@param {Array<ol.layer>|undefined} an array of layer to search in
 *	@return {ol.layer|false}
 */
 ol.control.Permalink.prototype.getLayerByLink =  function (id, layers)
@@ -4183,7 +4184,7 @@ ol.control.SearchPhoton.prototype.autocomplete = function (s, cback)
 *	@param {any} f the feature, as passed in the autocomplete
 *	@api
 */
-ol.control.Search.prototype.select = function (f)
+ol.control.SearchPhoton.prototype.select = function (f)
 {	var c = f.geometry.coordinates;
 	// Add coordinate to the event
 	try {
@@ -4406,10 +4407,11 @@ ol.control.Swipe.prototype.postcompose = function(e)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** ol.control.Target draw a target at the center of the map. 
-* @param {Object}
-*  - style {ol.style.Style|Array<ol.style.Style>} ol.style.Stroke: draw a cross on the map, ol.style.Image: draw the image on the map
-*  - composite {string} composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
-*/
+ * @constructor
+ * @param {Object}
+ *  - style {ol.style.Style|Array<ol.style.Style>} ol.style.Stroke: draw a cross on the map, ol.style.Image: draw the image on the map
+ *  - composite {string} composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
+ */
 ol.control.Target = function(options) 
 {	options = options || {};
 
@@ -4697,7 +4699,8 @@ ol.control.Toggle.prototype.getInteraction = function()
 /** 
 
 /** Feature aniomation base class
-*	@fire animationstart|animationend
+* 	@constructor
+*	@fires animationstart|animationend
 *	@param {ol.featureAnimationOptions} options
 *		- duration {number}
 *		- revers {bool}
@@ -5488,6 +5491,7 @@ ol.layer.Base.prototype.getFilters = function ()
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Mask drawing using an ol.Feature
+* 	@constructor
 *	@requires ol.filter
 *	@extends {ol.filter.Base}
 *	@param {ol.filter.cropOptions}
@@ -5575,6 +5579,7 @@ ol.filter.Mask.prototype.postcompose = function(e)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Clip layer or map 
+* 	@constructor
 *	@requires ol.filter
 *	@extends {ol.filter.Base}
 *	@param {ol.filter.clipOptions}
@@ -5687,6 +5692,7 @@ ol.filter.Clip.prototype.postcompose = function(e)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Colorize map or layer
+* 	@constructor
 *	@requires ol.filter
 *	@extends {ol.filter.Base}
 *	@author Thomas Tilak https://github.com/thhomas
@@ -5793,6 +5799,7 @@ ol.filter.Colorize.prototype.postcompose = function(e)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Colorize map or layer
+* 	@constructor
 *	@requires ol.filter
 *	@extends {ol.filter.Base}
 *	@param {ol.filter.compositeOptions}
@@ -5827,6 +5834,7 @@ ol.filter.Composite.prototype.postcompose = function(e)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Crop drawing using an ol.Feature
+* 	@constructor
 *	@requires ol.filter
 *	@requires ol.filter.Mask
 *	@extends {ol.filter.Mask}
@@ -5858,6 +5866,7 @@ ol.filter.Crop.prototype.postcompose = function(e)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Fold filer map 
+* 	@constructor
 *	@requires ol.filter
 *	@extends {ol.filter.Base}
 *	@param {ol.filter.foldOptions}
@@ -5967,6 +5976,7 @@ ol.filter.Fold.prototype.postcompose = function(e)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Make a map or layer look like made of a set of Lego bricks.
+* 	@constructor
 *	@requires ol.filter
 *	@extends {ol.filter.Base}
 *	@param {ol.filter.LegoOptions}
@@ -6120,6 +6130,7 @@ ol.filter.Lego.prototype.postcompose = function(e)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Add texture effects on maps or layers
+* 	@constructor
 *	@requires ol.filter
 *	@extends {ol.filter.Base}
 *	@param {ol.filter.cropOptions}
@@ -6905,7 +6916,15 @@ ol.interaction.DrawRegular.prototype.handleMoveEvent_ = function(evt)
 	{	this.coord_ = evt.coordinate;
 		this.coordPx_ = evt.pixel;
 		var f = this.drawSketch_(evt);
-		this.dispatchEvent({ type:'drawing', feature: f, pixel: evt.pixel, coordinate: evt.coordinate, square: this.square_, centered: this.centered_ });
+		this.dispatchEvent({ 
+			type:'drawing', 
+			feature: f, 
+			pixel: evt.pixel, 
+			startCoordinate: this.center_,
+			coordinate: evt.coordinate, 
+			square: this.square_, 
+			centered: this.centered_ 
+		});
 	}
 	else 
 	{	this.drawPoint_(evt.coordinate);
@@ -7998,7 +8017,6 @@ ol.interaction.DrawHole.prototype._geometryFn = function(coordinates, geometry)
 /** Interaction to handle longtouch events
  * @constructor
  * @extends {ol.interaction.Interaction}
- * @fires  
  * @param {olx.interaction.LongTouchOptions} 
  * 	@param {function | undefined} options.handleLongTouchEvent Function handling "longtouch" events, it will receive a mapBrowserEvent.
  *	@param {interger | undefined} options.delay The delay for a long touch in ms, default is 1000
@@ -8242,7 +8260,6 @@ ol.interaction.Ripple.prototype.postcompose_ = function(e)
 /** Interaction to snap to guidelines
  * @constructor
  * @extends {ol.interaction.Interaction}
- * @fires  
  * @param {olx.interaction.SnapGuidesOptions} 
  *	- pixelTolerance {number | undefined} distance (in px) to snap to a guideline, default 10 px
  *	- style {ol.style.Style | Array<ol.style.Style> | undefined} Style for the sektch features. 
@@ -9833,7 +9850,6 @@ ol.interaction.Transform.prototype.handleUpEvent_ = function(evt)
 * @constructor ol.source.DBPedia
 * @extends {ol.source.Vector}
 * @param {olx.source.DBPedia=} options
-* @todo 
 */
 ol.source.DBPedia = function(opt_options)
 {	var options = opt_options || {};
@@ -9956,18 +9972,19 @@ ol.source.DBPedia.prototype._loaderFn = function(extent, resolution, projection)
 // Style cache
 var styleCache = {};
 
-/** Reset the cache (when fonts are loaded
+/** Reset the cache (when fonts are loaded)
 */
 ol.style.clearDBPediaStyleCache = function()
 {	styleCache = {};
 }
 
 /** Get a default style function for dbpedia
-* options.glyph {string|function|undefined} a glyph name or a function that takes a feature and return a glyph
-* options.radius {number} radius of the symbol, default 8
-* options.fill {ol.style.Fill} style for fill, default navy
-* options.stroke {ol.style.stroke} style for stroke, default 2px white
-* options.prefix {string} a prefix if many style used for the same type
+* @param {} options
+* @param {string|function|undefined} options.glyph a glyph name or a function that takes a feature and return a glyph
+* @param {number} options.radius radius of the symbol, default 8
+* @param {ol.style.Fill} options.fill style for fill, default navy
+* @param {ol.style.stroke} options.stroke style for stroke, default 2px white
+* @param {string} options.prefix a prefix if many style used for the same type
 *
 * @require ol.style.FontSymbol and FontAwesome defs are required for dbPediaStyleFunction()
 */
@@ -10042,11 +10059,10 @@ ol.style.dbPediaStyleFunction = function(options)
 	}
 */
 
-/**
-* @constructor GeoImage
+/** Layer source with georeferencement to place it on a map
+* @constructor 
 * @extends {ol.source.ImageCanvas}
 * @param {olx.source.GeoImageOptions=} options
-* @todo 
 */
 ol.source.GeoImage = function(opt_options)
 {	var options = { 
@@ -10463,7 +10479,6 @@ function hexbinInit(source, options)
 *	@param {ol.coordinate} options.origin orgin of the grid, default [0,0]
 *	@param {pointy|flat} options.layout grid layout, default pointy
 *	@param {function|undefined} options.geometryFunction Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center. 
-* @todo 
 */
 ol.source.HexBin = function(options)
 {	options = options || {} ;
@@ -10489,7 +10504,6 @@ ol.source.HexBin.prototype.getSource = function()
 *	@param {ol.coordinate} options.origin orgin of the grid, default [0,0]
 *	@param {pointy|flat} options.layout grid layout, default pointy
 *	@param {function|undefined} options.geometryFunction Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center. 
-* @todo 
 */
 ol.source.ImageHexBin = function(options)
 {	options = options || {} ;
@@ -10527,7 +10541,6 @@ ol.source.ImageHexBin.prototype.getOriginSource = function()
 * @constructor ol.source.Mapillary
 * @extends {ol.source.Vector}
 * @param {olx.source.Mapillary=} options
-* @todo 
 */
 ol.source.Mapillary = function(opt_options)
 {	var options = opt_options || {};
@@ -10895,7 +10908,6 @@ ol.render3D.prototype.drawFeature3D_ = function(ctx, build)
 * @constructor ol.source.WikiCommons
 * @extends {ol.source.Vector}
 * @param {olx.source.WikiCommons=} options
-* @todo 
 */
 ol.source.WikiCommons = function(opt_options)
 {	var options = opt_options || {};
@@ -12014,9 +12026,6 @@ ol.style.Chart.prototype.getChecksum = function()
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
- * @requires 
- */
-/**
  * @classdesc
  * Fill style with named pattern
  *
@@ -13016,9 +13025,11 @@ ol.layer.Vector.prototype.setTextPathStyle = function(style, maxResolution)
 
 
 /** Add new properties to ol.style.Text
+* to use with ol.layer.Vector.prototype.setTextPathStyle
+* @constructor
 * @param {} options
-*	- textOverflow {visible|ellipsis|string} 
-*	- minWidth {number} minimum width (px) to draw text, default 0
+*	@param {visible|ellipsis|string} textOverflow
+*	@param {number} minWidth minimum width (px) to draw text, default 0
 */
 ol.style.TextPath = function(options)
 {	if (!options) options={};
@@ -13402,7 +13413,10 @@ ol.geom.LineString.prototype.calcCSpline_ = function(options)
 
 	return new ol.geom.LineString(res);
 }
-/** Convert a list of image file or a list of image into geojson
+
+/** Convert a list of image file or a list of image into geojson 
+* reading location in the EXIF tags
+* @constructor
 * @param {Array<Image|File>} img the array to process
 * @param {} options
 *	- camera {boolean} true to get camera info
@@ -13425,7 +13439,7 @@ function getDMS(l)
 	else return null;
 }
 
-//
+// Constructor
 exif2geojson = function (img, options)
 {	options = options || {};
 	if (typeof(options.loading) != "function") options.loading = function(){};
@@ -13495,7 +13509,6 @@ exif2geojson = function (img, options)
 *	@param {Number} options.size size of the exagon in map units, default 80000
 *	@param {ol.coordinate} options.origin orgin of the grid, default [0,0]
 *	@param {pointy|flat} options.layout grid layout, default pointy
-* @todo 
 */
 ol.HexGrid = function (options)
 {	options = options || {};
@@ -14166,8 +14179,8 @@ ol.Map.prototype.animExtent = function(extent, options)
 */
 /** Ordering function for ol.layer.Vector renderOrder parameter
 *	ol.ordering.fn (options)
-*	@param {object} 
-*	@return ordering function (f0,f1)
+*	It will return an ordering function (f0,f1)
+*	@namespace
 */
 ol.ordering = {}
 
