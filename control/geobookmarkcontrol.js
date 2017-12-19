@@ -120,7 +120,7 @@ ol.control.GeoBookmark.prototype.setBookmarks = function(bmark) {
 };
 
 /** Get Geo bookmarks
-* @return a list of bookmarks : { BM1:{pos:ol.coordinates, zoom: integer}, BM2:{pos:ol.coordinates, zoom: integer} }
+* @return {any} a list of bookmarks : { BM1:{pos:ol.coordinates, zoom: integer}, BM2:{pos:ol.coordinates, zoom: integer} }
 */
 ol.control.GeoBookmark.prototype.getBookmarks = function() {
   return JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");

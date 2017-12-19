@@ -129,7 +129,7 @@ ol.control.LayerSwitcher.prototype.setHeader = function(html)
 };
 
 /** Calculate overflow and add scrolls
-*	@param {-1|0|1|+50%|-50%} dir scroll direction
+*	@param {Number} dir scroll direction -1|0|1|'+50%'|'-50%'
 */
 ol.control.LayerSwitcher.prototype.overflow = function(dir)
 {	
@@ -235,7 +235,7 @@ ol.control.LayerSwitcher.prototype.drawPanel_ = function(e)
 
 /** Change layer visibility according to the baselayer option
  * @param {ol.layer}
- * @param {Array{ol.layer}} related layers
+ * @param {Array<ol.layer>} related layers
  */
 ol.control.LayerSwitcher.prototype.switchLayerVisibility = function(l, layers)
 {

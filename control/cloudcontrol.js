@@ -4,6 +4,7 @@
 */
 /** ol.control.Cloud adds an old map effect on a canvas renderer. 
 * It colors the map, adds a parchment texture and compass onto the map. 
+* @constructor
 * @param {Object}
 *	- hue {ol.Color} color to set hue of the map, default #963
 *	- saturation {Number} saturation of the hue color, default 0.6

@@ -344,7 +344,15 @@ ol.interaction.DrawRegular.prototype.handleMoveEvent_ = function(evt)
 	{	this.coord_ = evt.coordinate;
 		this.coordPx_ = evt.pixel;
 		var f = this.drawSketch_(evt);
-		this.dispatchEvent({ type:'drawing', feature: f, pixel: evt.pixel, coordinate: evt.coordinate, square: this.square_, centered: this.centered_ });
+		this.dispatchEvent({ 
+			type:'drawing', 
+			feature: f, 
+			pixel: evt.pixel, 
+			startCoordinate: this.center_,
+			coordinate: evt.coordinate, 
+			square: this.square_, 
+			centered: this.centered_ 
+		});
 	}
 	else 
 	{	this.drawPoint_(evt.coordinate);

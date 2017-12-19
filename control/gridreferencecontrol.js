@@ -81,7 +81,7 @@ ol.control.GridReference.prototype.getFeatureName = function (f)
 /** Sort function
 *	@param {ol.Feature} a first feature
 *	@param {ol.Feature} b second feature
-*	@return {-1|0|1} 0 if a==b, -1 if a<b, 1 if a>b
+*	@return {Number} 0 if a==b, -1 if a<b, 1 if a>b
 *	@api
 */
 ol.control.GridReference.prototype.sortFeatures = function (a,b)
@@ -98,7 +98,7 @@ ol.control.GridReference.prototype.indexTitle = function (f)
 };
 
 /** Display features in the index
-*	@param { Array <ol.Feature> | ol.Collection <ol.Feature> } features
+*	@param { Array<ol.Feature> | ol.Collection<ol.Feature> } features
 */
 ol.control.GridReference.prototype.setIndex = function (features)
 {	if (!this.getMap()) return;

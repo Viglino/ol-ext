@@ -5,7 +5,6 @@
 /** Interaction to snap to guidelines
  * @constructor
  * @extends {ol.interaction.Interaction}
- * @fires  
  * @param {olx.interaction.SnapGuidesOptions} 
  *	- pixelTolerance {number | undefined} distance (in px) to snap to a guideline, default 10 px
  *	- style {ol.style.Style | Array<ol.style.Style> | undefined} Style for the sektch features. 

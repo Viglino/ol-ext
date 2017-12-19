@@ -15,11 +15,10 @@
 	}
 */
 
-/**
-* @constructor GeoImage
+/** Layer source with georeferencement to place it on a map
+* @constructor 
 * @extends {ol.source.ImageCanvas}
 * @param {olx.source.GeoImageOptions=} options
-* @todo 
 */
 ol.source.GeoImage = function(opt_options)
 {	var options = { 

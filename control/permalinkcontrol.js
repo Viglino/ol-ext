@@ -91,7 +91,7 @@ ol.control.Permalink.prototype.setMap = function(map)
 
 /** Get layer given a permalink name (permalink propertie in the layer)
 *	@param {string} the permalink to search for
-*	@param {Array{ol.layer}|undefined} an array of layer to search in
+*	@param {Array<ol.layer>|undefined} an array of layer to search in
 *	@return {ol.layer|false}
 */
 ol.control.Permalink.prototype.getLayerByLink =  function (id, layers)

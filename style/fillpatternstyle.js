@@ -3,9 +3,6 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
- * @requires 
- */
-/**
  * @classdesc
  * Fill style with named pattern
  *

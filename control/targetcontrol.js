@@ -3,10 +3,11 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** ol.control.Target draw a target at the center of the map. 
-* @param {Object}
-*  - style {ol.style.Style|Array<ol.style.Style>} ol.style.Stroke: draw a cross on the map, ol.style.Image: draw the image on the map
-*  - composite {string} composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
-*/
+ * @constructor
+ * @param {Object}
+ *  - style {ol.style.Style|Array<ol.style.Style>} ol.style.Stroke: draw a cross on the map, ol.style.Image: draw the image on the map
+ *  - composite {string} composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
+ */
 ol.control.Target = function(options) 
 {	options = options || {};
 

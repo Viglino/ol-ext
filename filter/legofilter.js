@@ -3,6 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Make a map or layer look like made of a set of Lego bricks.
+* 	@constructor
 *	@requires ol.filter
 *	@extends {ol.filter.Base}
 *	@param {ol.filter.LegoOptions}

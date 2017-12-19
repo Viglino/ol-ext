@@ -15,7 +15,6 @@
 * @constructor ol.source.WikiCommons
 * @extends {ol.source.Vector}
 * @param {olx.source.WikiCommons=} options
-* @todo 
 */
 ol.source.WikiCommons = function(opt_options)
 {	var options = opt_options || {};

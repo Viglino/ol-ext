@@ -15,7 +15,6 @@
 * @constructor ol.source.Mapillary
 * @extends {ol.source.Vector}
 * @param {olx.source.Mapillary=} options
-* @todo 
 */
 ol.source.Mapillary = function(opt_options)
 {	var options = opt_options || {};
