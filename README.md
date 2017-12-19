@@ -49,7 +49,7 @@ npm install ol3-ext
 ````
  
 #### Building the project:
-Use the gulp command to build the project in the `/dist` directory:
+Use the gulp command to build the project into the `/dist` directory:
 ````
 gulp
 ````
