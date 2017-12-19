@@ -16,11 +16,15 @@
     "openlayers",
     "popup",
     "menu",
-    "symbol","renderer",
+    "symbol",
+    "renderer",
     "filter",
     "canvas",
-    "interaction", "split",
-    "statistic","charts","pie",
+    "interaction",
+    "split",
+    "statistic",
+    "charts",
+    "pie",
     "LayerSwitcher",
     "toolbar",
     "animation"
@@ -31,8 +35,7 @@
     "url": "https://github.com/Viglino/ol3-ext/issues"
   },
   "homepage": "https://github.com/Viglino/ol3-ext#,",
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "gulp": "^3.9.1",
     "gulp-concat": "^2.6.0",

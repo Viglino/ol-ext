@@ -5,6 +5,7 @@ var concat = require("gulp-concat");
 var cssnext = require("gulp-cssnext");
 var minify = require("gulp-minify")
 var header = require('gulp-header');
+var jsdoc = require('gulp-jsdoc3');
 
 // Retrieve option (--debug for css)
 var options = require("minimist")(process.argv.slice(2));
@@ -70,6 +71,26 @@ gulp.task("js", function() {
 		}))
 	.pipe(header(banner, { pkg : pkg } ))
     .pipe(gulp.dest("./dist/"))
+});
+
+
+/** Build the doc */
+gulp.task('doc', function (cb) {
+    var config = require('./doc/jsdoc.json');
+    gulp.src([
+		"doc/doc.md", "doc/namespace.js",
+		"./control/layerswitchercontrol.js", "./control/*.js", "!./control/piratecontrol.js",
+		"./featureanimation/featureanimation.js", "./featureanimation/*.js", 
+		"./filter/filter.js", "./filter/maskfilter.js", "./filter/*.js",
+		"./interaction/*.js",
+		"./layer/*.js",
+		"./overlay/*.js",
+		"./style/fontsymbol.js", "./style/*.js", "!./style/*.def.js", 
+		"./utils/*.js", "!./utils/ol.map.pulse.js", "!./utils/ol.map.markup.js",
+		"!./*/*.min.js",
+		"!./*/texturefilterimage.js"
+		], {read: false})
+        .pipe(jsdoc(config, cb));
 });
 
 // build the dist
