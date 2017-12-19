@@ -10,7 +10,7 @@
 /** The map is the core component of OpenLayers. 
  * For a map to render, a view, one or more layers, and a target container are needed:
  * @class ol.Map 
- * @see (@link http://openlayers.org/en/latest/apidoc/ol.Map.html)
+ * @see {@link http://openlayers.org/en/latest/apidoc/ol.Map.html}
 */
 /** Openlayers Overlay.    
  * An element to be displayed over the map and attached to a single map location. 

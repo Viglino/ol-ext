@@ -1,26 +1,41 @@
-# ol3-ext
+# ![Font style](https://openlayers.org/assets/theme/img/logo70.png) ol3-ext
+*Cool extensions for [OpenLayers](https://github.com/openlayers/openlayers) (ol/ol3/ol4)*.
 
-Cool extensions for [OpenLayers](https://github.com/openlayers/openlayers) (ol3/ol4).  
-[View live examples online](http://viglino.github.io/ol3-ext/).
+[ol3-ext](https://github.com/Viglino/ol3-ext) is a set of extensions, controls, interactions to use with Openlayers.    
+
+### Check out [online examples](http://viglino.github.io/ol3-ext/).
 
 
 ## ol extension
-* [all extensions](./namespace.html)
-* [base](./ol.html)
-* [Map](./ol.map.html)
-* [layer](./ol.layer.html)
-* [source](./ol.source.html)
-* [controls](./ol.control.html)
-* [style](./ol.style.html)
-* [style](./ol.filter.html)
+* [all extensions](./classes.list.html): list of all classes
+* [base](./ol.html): base extensions
+* [Map](./ol.map.html): adds methods to the map
+* [layer](./ol.layer.html): 
+* [source](./ol.source.html): new sources ([DBPedia](./ol.source.DBPedia.html), [hexagonal binning](./ol.source.HexBin.html), [georeferenced images](./ol.source.GeoImage.html), [...](./ol.source.html))
+* [controls](./ol.control.html): adds new controls ([tool bars](./ol.control.Bar.html), [Graticule](./ol.control.Graticule.html), [LayerSwitcher](./ol.control.LayerSwitcher.html), [Search](./ol.control.Search.html), [Profil](./ol.control.Profil.html), [...](./ol.control.html))
+* [style](./ol.style.html): a set of style functions to style features on the maps ([charts symbols](./ol.style.Chart.html), [FillPattern](./ol.style.FillPattern.html), [FontSymbol](./ol.style.FontSymbol.html), [Photo](./ol.style.Photo.html), [TextPath](./ol.style.TextPath.html), [...](./ol.style.html))
+* [filter](./ol.filter.html): filters to apply on layers ([Colorize](./ol.filter.Colorize.html), [Crop](./ol.filter.Crop.html), [Mask](./ol.filter.Mask.html), [...](./ol.filter.html))  
+* [featureAnimation](./ol. featureAnimation.html): animates features on the map.   
+
+### Bugs
+
+Please use the [GitHub issue tracker](https://github.com/Viglino/ol3-ext/issues) for all bugs and feature requests. Before creating a new issue, do a quick search to see if the problem has been reported already.
+
+### Building the documenctation:
+The documentation use [gulp-jsdoc3](https://www.npmjs.com/package/gulp-jsdoc3) to create the doc.
+1. install the gulp-jsdoc3 project at the root directory:
+````
+npm install gulp-jsdoc3
+````
+2. then run the gulp command to create the doc in the [doc/doc-pages](http://viglino.github.io/ol3-ext/doc/doc-pages/) directory:
+````
+gulp doc
+````
 
 ## Licence
 
 OL3-ext is licenced under the French Opensource **BSD** compatible CeCILL-B FREE SOFTWARE LICENSE.  
- (c) 2016 - Jean-Marc Viglino
+(c) 2016-2017 - Jean-Marc Viglino
 
-Some resources (mapping services and API) used in this sofware may have a specific license.  
-You must check before use.
-
-> [Full text license in English](http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt)    
-> [Full text license in French](http://www.cecill.info/licences/Licence_CeCILL-B_V1-fr.txt)
+[Full text license in English](http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt)    
+[Full text license in French](http://www.cecill.info/licences/Licence_CeCILL-B_V1-fr.txt)
