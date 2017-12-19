@@ -93,7 +93,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="Search"><span class="type-signature"></span>new ol.control.Search( [Control])</h4>
+    <h4 class="name" id="Search"><span class="type-signature"></span>new ol.control.Search( [options])</h4>
     
     
 </dt>
@@ -101,7 +101,7 @@
 
     
     <div class="description">
-        <p>Search Control. This is the base class for search controls. You can use it for simple custom search or as base to new class</p>
+        <p>Search Control.<br>This is the base class for search controls. You can use it for simple custom search or as base to new class.</p>
     </div>
     
 
@@ -138,7 +138,7 @@
 
         <tr>
             
-                <td class="name"><code>Control</code></td>
+                <td class="name"><code>options</code></td>
             
 
             <td class="type">
@@ -165,14 +165,33 @@
 
             
 
-            <td class="description last"><p>options.</p></td>
-        </tr>
+            <td class="description last">
+                <h6 class="method-params-label method-subparams-label">Properties</h6>
+                
 
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
     
 
         <tr>
             
-                <td class="name"><code>options.className</code></td>
+                <td class="name"><code>className</code></td>
             
 
             <td class="type">
@@ -186,14 +205,6 @@
             </td>
 
             
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
 
             
 
@@ -204,7 +215,7 @@
 
         <tr>
             
-                <td class="name"><code>options.target</code></td>
+                <td class="name"><code>target</code></td>
             
 
             <td class="type">
@@ -224,14 +235,6 @@
             </td>
 
             
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
 
             
 
@@ -242,7 +245,7 @@
 
         <tr>
             
-                <td class="name"><code>options.placeholder</code></td>
+                <td class="name"><code>placeholder</code></td>
             
 
             <td class="type">
@@ -259,14 +262,6 @@
             </td>
 
             
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
 
             
 
@@ -277,7 +272,7 @@
 
         <tr>
             
-                <td class="name"><code>options.typing</code></td>
+                <td class="name"><code>typing</code></td>
             
 
             <td class="type">
@@ -294,14 +289,6 @@
             </td>
 
             
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
 
             
 
@@ -312,7 +299,7 @@
 
         <tr>
             
-                <td class="name"><code>options.minLength</code></td>
+                <td class="name"><code>minLength</code></td>
             
 
             <td class="type">
@@ -328,14 +315,6 @@
             
             </td>
 
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
             
 
             
@@ -347,7 +326,7 @@
 
         <tr>
             
-                <td class="name"><code>options.maxItems</code></td>
+                <td class="name"><code>maxItems</code></td>
             
 
             <td class="type">
@@ -364,14 +343,6 @@
             </td>
 
             
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
 
             
 
@@ -382,7 +353,7 @@
 
         <tr>
             
-                <td class="name"><code>options.getTitle</code></td>
+                <td class="name"><code>getTitle</code></td>
             
 
             <td class="type">
@@ -395,14 +366,6 @@
             
             </td>
 
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
             
 
             
@@ -414,7 +377,7 @@
 
         <tr>
             
-                <td class="name"><code>options.autocomplete</code></td>
+                <td class="name"><code>autocomplete</code></td>
             
 
             <td class="type">
@@ -428,18 +391,17 @@
             </td>
 
             
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
 
             
 
             <td class="description last"><p>a function that take a search string and callback function to send an array</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -483,6 +445,15 @@
 	
 
 	
+	<dt class="tag-see method-doc-label method-doc-details-label">See:</dt>
+	<dd class="tag-see">
+		<ul>
+			<li><a href="ol.control.SearchFeature.html">ol.control.SearchFeature</a></li>
+			
+			<li><a href="ol.control.SearchPhoton.html">ol.control.SearchPhoton</a></li>
+			</ul>
+	</dd>
+	
 
 	
 </dl>
@@ -493,7 +464,9 @@
     
     <h5>Fires:</h5>
     <ul>
-        <li>select,event: change:input</li>
+        <li>event:select</li>
+    
+        <li>change:input</li>
     </ul>
     
 
@@ -1404,7 +1377,7 @@
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a>
 	
-		on December 19th 2017, 10:21:40 am
+		on December 19th 2017, 11:48:47 am
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>

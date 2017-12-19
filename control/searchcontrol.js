@@ -3,12 +3,16 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
- * Search Control. This is the base class for search controls. You can use it for simple custom search or as base to new class
+ * Search Control.    
+ * This is the base class for search controls. You can use it for simple custom search or as base to new class.
+ * @see ol.control.SearchFeature
+ * @see ol.control.SearchPhoton
  *
  * @constructor
  * @extends {ol.control.Control}
- * @fires select, change:input
- * @param {Object=} Control options. 
+ * @fires select
+ * @fires change:input
+ * @param {Object=} options
  *	@param {string} options.className control class name
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.placeholder placeholder, default "Search..."
