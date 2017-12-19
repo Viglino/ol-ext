@@ -3,6 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Fold filer map 
+* 	@constructor
 *	@requires ol.filter
 *	@extends {ol.filter.Base}
 *	@param {ol.filter.foldOptions}

@@ -3,6 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Crop drawing using an ol.Feature
+* 	@constructor
 *	@requires ol.filter
 *	@requires ol.filter.Mask
 *	@extends {ol.filter.Mask}

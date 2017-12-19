@@ -3,6 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Colorize map or layer
+* 	@constructor
 *	@requires ol.filter
 *	@extends {ol.filter.Base}
 *	@author Thomas Tilak https://github.com/thhomas

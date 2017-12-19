@@ -19,7 +19,6 @@
 * @constructor ol.source.DBPedia
 * @extends {ol.source.Vector}
 * @param {olx.source.DBPedia=} options
-* @todo 
 */
 ol.source.DBPedia = function(opt_options)
 {	var options = opt_options || {};
@@ -142,18 +141,19 @@ ol.source.DBPedia.prototype._loaderFn = function(extent, resolution, projection)
 // Style cache
 var styleCache = {};
 
-/** Reset the cache (when fonts are loaded
+/** Reset the cache (when fonts are loaded)
 */
 ol.style.clearDBPediaStyleCache = function()
 {	styleCache = {};
 }
 
 /** Get a default style function for dbpedia
-* options.glyph {string|function|undefined} a glyph name or a function that takes a feature and return a glyph
-* options.radius {number} radius of the symbol, default 8
-* options.fill {ol.style.Fill} style for fill, default navy
-* options.stroke {ol.style.stroke} style for stroke, default 2px white
-* options.prefix {string} a prefix if many style used for the same type
+* @param {} options
+* @param {string|function|undefined} options.glyph a glyph name or a function that takes a feature and return a glyph
+* @param {number} options.radius radius of the symbol, default 8
+* @param {ol.style.Fill} options.fill style for fill, default navy
+* @param {ol.style.stroke} options.stroke style for stroke, default 2px white
+* @param {string} options.prefix a prefix if many style used for the same type
 *
 * @require ol.style.FontSymbol and FontAwesome defs are required for dbPediaStyleFunction()
 */

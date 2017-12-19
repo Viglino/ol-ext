@@ -4,8 +4,8 @@
 */
 /** Ordering function for ol.layer.Vector renderOrder parameter
 *	ol.ordering.fn (options)
-*	@param {object} 
-*	@return ordering function (f0,f1)
+*	It will return an ordering function (f0,f1)
+*	@namespace
 */
 ol.ordering = {}
 

@@ -103,7 +103,6 @@ function hexbinInit(source, options)
 *	@param {ol.coordinate} options.origin orgin of the grid, default [0,0]
 *	@param {pointy|flat} options.layout grid layout, default pointy
 *	@param {function|undefined} options.geometryFunction Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center. 
-* @todo 
 */
 ol.source.HexBin = function(options)
 {	options = options || {} ;
@@ -129,7 +128,6 @@ ol.source.HexBin.prototype.getSource = function()
 *	@param {ol.coordinate} options.origin orgin of the grid, default [0,0]
 *	@param {pointy|flat} options.layout grid layout, default pointy
 *	@param {function|undefined} options.geometryFunction Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center. 
-* @todo 
 */
 ol.source.ImageHexBin = function(options)
 {	options = options || {} ;

@@ -1,4 +1,7 @@
-﻿/** Convert a list of image file or a list of image into geojson
+﻿
+/** Convert a list of image file or a list of image into geojson 
+* reading location in the EXIF tags
+* @constructor
 * @param {Array<Image|File>} img the array to process
 * @param {} options
 *	- camera {boolean} true to get camera info
@@ -21,7 +24,7 @@ function getDMS(l)
 	else return null;
 }
 
-//
+// Constructor
 exif2geojson = function (img, options)
 {	options = options || {};
 	if (typeof(options.loading) != "function") options.loading = function(){};

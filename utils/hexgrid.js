@@ -13,7 +13,6 @@
 *	@param {Number} options.size size of the exagon in map units, default 80000
 *	@param {ol.coordinate} options.origin orgin of the grid, default [0,0]
 *	@param {pointy|flat} options.layout grid layout, default pointy
-* @todo 
 */
 ol.HexGrid = function (options)
 {	options = options || {};

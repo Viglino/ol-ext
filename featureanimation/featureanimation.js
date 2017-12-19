@@ -6,7 +6,8 @@
 /** 
 
 /** Feature aniomation base class
-*	@fire animationstart|animationend
+* 	@constructor
+*	@fires animationstart|animationend
 *	@param {ol.featureAnimationOptions} options
 *		- duration {number}
 *		- revers {bool}
