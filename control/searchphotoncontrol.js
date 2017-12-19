@@ -90,7 +90,7 @@ ol.control.SearchPhoton.prototype.autocomplete = function (s, cback)
 *	@param {any} f the feature, as passed in the autocomplete
 *	@api
 */
-ol.control.Search.prototype.select = function (f)
+ol.control.SearchPhoton.prototype.select = function (f)
 {	var c = f.geometry.coordinates;
 	// Add coordinate to the event
 	try {
