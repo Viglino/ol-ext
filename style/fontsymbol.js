@@ -1,8 +1,6 @@
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-
-*  Add a marker style to use with font symbols
 */
 /**
  * @requires ol.style.Circle
@@ -12,16 +10,29 @@
 
 /**
  * @classdesc
- * Set fontsymbol style for vector features.
+ * A marker style to use with font symbols.
  *
  * @constructor
- * @param {olx.style.FontSymbolOptions=} opt_options Options.
+ * @param {} options Options.
+ *  @param {number} options.glyph the glyph name or a char to display as symbol. 
+ * 		The name must be added using the {@link ol.style.FontSymbol.addDefs} function.
+ *  @param {string} options.form 
+ * 		none|circle|poi|bubble|marker|coma|shield|blazon|bookmark|hexagon|diamond|triangle|sign|ban|lozenge|square
+ * 		a form that will enclose the glyph, default none
+ *  @param {number} options.radius
+ *  @param {number} options.rotation
+ *  @param {number} options.rotateWithView
+ *  @param {number} options.opacity
+ *  @param {number} options.fontSize, default 1
+ *  @param {boolean} options.gradient true to display a gradient on the symbol
+ *  @param {ol.style.Fill} options.fill
+ *  @param {ol.style.Stroke} options.stroke
  * @extends {ol.style.RegularShape}
  * @implements {ol.structs.IHasChecksum}
  * @api
  */
-ol.style.FontSymbol = function(opt_options) 
-{	options = opt_options || {};
+ol.style.FontSymbol = function(options) 
+{	options = options || {};
 	var strokeWidth = 0;
 	if (options.stroke) strokeWidth = options.stroke.getWidth();
 	ol.style.RegularShape.call (this,{ radius: options.radius, fill:options.fill, 
@@ -59,8 +70,12 @@ ol.style.Image.prototype.getImagePNG = function()
  */
 ol.style.FontSymbol.prototype.defs = { 'fonts':{}, 'glyphs':{} };
 
-/**
- *	Static function : add new font defs 
+/** Static function : add new font defs 
+ * @param {String|Object} font the font desciption
+ * @param {} glyphs a key / value list of glyph definitions. 
+ * 		Each key is the name of the glyph, 
+ * 		the value is an object that code the font, the caracter code, 
+ * 		the name and a search string for the glyph.
  */
  ol.style.FontSymbol.addDefs = function(font, glyphs)
  {	var thefont = font;
@@ -130,7 +145,8 @@ ol.style.FontSymbol.prototype.getStroke = function() {
 };
 
 /**
- * Get the stroke style for the symbol.
+ * Get the glyph definition for the symbol.
+ * @param {string|undefined} name a glyph name to get the definition, default return the glyph definition for the style.
  * @return {ol.style.Stroke} Stroke style.
  * @api
  */
@@ -160,6 +176,8 @@ ol.style.FontSymbol.prototype.getFontInfo = function(glyph)
 {	return ol.style.FontSymbol.prototype.defs.fonts[glyph.font];
 }
 
+/** @private
+ */
 ol.style.FontSymbol.prototype.renderMarker_ = function(atlasManager) 
 {
 	var strokeStyle;

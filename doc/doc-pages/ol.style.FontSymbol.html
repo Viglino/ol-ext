@@ -84,7 +84,7 @@
         FontSymbol
         </h2>
         
-            <div class="class-description"><p>Set fontsymbol style for vector features.</p></div>
+            <div class="class-description"><p>A marker style to use with font symbols.</p></div>
         
     
 </header>
@@ -96,7 +96,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="FontSymbol"><span class="type-signature"></span>new ol.style.FontSymbol( [opt_options])</h4>
+    <h4 class="name" id="FontSymbol"><span class="type-signature"></span>new ol.style.FontSymbol(options)</h4>
     
     
 </dt>
@@ -123,7 +123,42 @@
         <th>Type</th>
 
         
-        <th>Argument</th>
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Options.</p>
+                <h6 class="method-params-label method-subparams-label">Properties</h6>
+                
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
         
 
         
@@ -137,13 +172,13 @@
 
         <tr>
             
-                <td class="name"><code>opt_options</code></td>
+                <td class="name"><code>glyph</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">olx.style.FontSymbolOptions</span>
+<span class="param-type">number</span>
 
 
 
@@ -151,20 +186,235 @@
             </td>
 
             
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
 
-                
+            
 
+            <td class="description last"><p>the glyph name or a char to display as symbol. 
+        The name must be added using the <a href="ol.style.FontSymbol.html#.addDefs">ol.style.FontSymbol.addDefs</a> function.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>form</code></td>
+            
+
+            <td class="type">
+            
                 
-                </td>
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
             
 
             
 
-            <td class="description last"><p>Options.</p></td>
+            <td class="description last"><p>none|circle|poi|bubble|marker|coma|shield|blazon|bookmark|hexagon|diamond|triangle|sign|ban|lozenge|square
+        a form that will enclose the glyph, default none</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>radius</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>rotation</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>rotateWithView</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opacity</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>fontSize,</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>default 1</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>gradient</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>true to display a gradient on the symbol</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>fill</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">ol.style.Fill</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>stroke</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">ol.style.Stroke</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -332,7 +582,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id=".addDefs"><span class="type-signature">&lt;static> </span>addDefs()</h4>
+    <h4 class="name" id=".addDefs"><span class="type-signature">&lt;static> </span>addDefs(font, glyphs)</h4>
     
     
 </dt>
@@ -349,6 +599,80 @@
     
 
     
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>font</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+|
+
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>the font desciption</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>glyphs</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>a key / value list of glyph definitions. 
+        Each key is the name of the glyph, 
+        the value is an object that code the font, the caracter code, 
+        the name and a search string for the glyph.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
     
 
     
@@ -786,7 +1110,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="getGlyph"><span class="type-signature"></span>getGlyph()</h4>
+    <h4 class="name" id="getGlyph"><span class="type-signature"></span>getGlyph(name)</h4>
     
     
 </dt>
@@ -794,7 +1118,7 @@
 
     
     <div class="description">
-        <p>Get the stroke style for the symbol.</p>
+        <p>Get the glyph definition for the symbol.</p>
     </div>
     
 
@@ -803,6 +1127,59 @@
     
 
     
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>name</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+|
+
+<span class="param-type">undefined</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>a glyph name to get the definition, default return the glyph definition for the style.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
     
 
     

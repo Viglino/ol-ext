@@ -76,3 +76,49 @@ h2
 	padding-left: 0.5em;
 }
 
+i[class*="icss-"] {
+    position: relative;
+    display:inline-block;
+    font-style: normal;
+    background-color:currentColor;
+    box-sizing: border-box;
+	vertical-align: middle;
+	font-size: 1.5em;
+}
+i[class*="icss-"]:before, 
+i[class*="icss-"]:after {
+    content: "";
+    border-width: 0; 
+    position: absolute;
+}
+i.icss-book {
+    width:1em;
+    height:.8em;
+    background-color: transparent; 
+    margin: 0 .03em .08em 0;
+}
+i.icss-book:before {
+    height: .8em;
+    width: 0.7em;
+    box-shadow: inset 0 0 0 0.15em, 
+        inset 0 -.48em,
+        .07em .07em;
+    border: 0.07em solid transparent;
+    border-width: 0 0.07em .07em 0;
+    border-radius: .05em .15em .1em .1em / .05em .05em .1em .05em;
+    transform: skewX(-20deg);
+    left: 0.15em;
+}
+i.icss-book:after {
+    width: .2em;
+    height: .2em;
+    background-color: transparent;
+    border: 0.05em solid currentColor;
+    border-color: currentColor transparent transparent currentColor;
+    border-radius: 50%;
+    transform: rotate(-45deg);
+    top: 0.67em;
+    left: .018em;
+    box-shadow: .13em -.15em 0 -.05em,
+        .51em -.33em 0 -.05em;
+}
