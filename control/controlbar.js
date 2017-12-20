@@ -8,12 +8,12 @@
  *
  * @constructor
  * @extends {ol.control.Control}
- * @param {Object=} opt_options Control options.
- *		className {String} class of the control
- *		group {bool} is a group, default false
- *		toggleOne {bool} only one toggle control is active at a time, default false
- *		autoDeactivate {bool} used with subbar to deactivate all control when top level control deactivate, default false
- *		controls {Array<ol.control>} a list of control to add to the bar
+ * @param {Object=} options Control options.
+ *	@param {String} options.className class of the control
+ *	@param {bool} options.group is a group, default false
+ *	@param {bool} options.toggleOne only one toggle control is active at a time, default false
+ *	@param {bool} options.autoDeactivate used with subbar to deactivate all control when top level control deactivate, default false
+ *	@param {Array<ol.control>} options.controls a list of control to add to the bar
  */
 ol.control.Bar = function(options) 
 {	if (!options) options={};

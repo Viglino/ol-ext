@@ -7,12 +7,12 @@
  *
  * @constructor
  * @extends {ol.control.Control}
- * @param {Object=} Control options. The style {ol.style.Style} option is usesd to draw the text.
- *	- className {string} class name for the control
- *	- image {Image} an image, default use the src option or a default image
- *	- src {string} image src, default use the image option or a default image
- *	- rotateVithView {boolean} rotate vith view (false to show watermark), default true
- *	- style {ol.style.Stroke} style to draw the lines, default draw no lines
+ * @param {Object=} options Control options. The style {ol.style.Style} option is usesd to draw the text.
+ *	@param {string} options.className class name for the control
+ *	@param {Image} options.image an image, default use the src option or a default image
+ *	@param {string} options.src image src, default use the image option or a default image
+ *	@param {boolean} options.rotateVithView rotate vith view (false to show watermark), default true
+ *	@param {ol.style.Stroke} options.style style to draw the lines, default draw no lines
  */
 ol.control.Compass = function(options) 
 {	var self = this;

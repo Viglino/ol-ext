@@ -7,7 +7,8 @@
  *
  * @constructor
  * @extends {ol.control.Control}
- * @param {Object=} Control options. The style {ol.style.Style} option is usesd to draw the text.
+ * @param {Object=} options extend the ol.control options. 
+ * 	@param {ol.style.Style} options.style stye usesd to draw the title.
  */
 ol.control.CanvasTitle = function(options) 
 {	if (!options) options={};
