@@ -15,18 +15,12 @@
         "outputSourceFiles": true,
         "useLongnameInNav": true
       },
-      "logo": {
-        "url": "https://openlayers.org/en/latest/examples/resources/logo-70x70.png",
-        "width": "30px",
-        "height": "30px",
-        "link": "https://github.com/Viglino/ol3-ext"
-      },
+      "logoFile": "https://openlayers.org/en/latest/examples/resources/logo-70x70.png",
       "systemName": "ol3-ext",
       "path": "ink-docstrap",
       "theme": "cerulean",
       "navType": "vertical",
       "linenums": true,
-      "includeDate": false,
-      "dateFormat": "MMMM Do YYYY, h:mm:ss a"
+      "includeDate": false
     }
   }
