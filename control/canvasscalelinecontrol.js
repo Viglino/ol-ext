@@ -9,7 +9,8 @@
  *
  * @constructor
  * @extends {ol.control.ScaleLine}
- * @param {Object=} Control options. The style {ol.style.Style} option is usesd to draw the scale line (default is black/white, 10px Arial).
+ * @param {Object=} options extend the ol.control.ScaleLine options. 
+ * 	@param {ol.style.Style} options.style usesd to draw the scale line (default is black/white, 10px Arial).
  */
 ol.control.CanvasScaleLine = function(options) 
 {	ol.control.ScaleLine.call(this, options);

@@ -1,13 +1,12 @@
-/** A simple toggle control with a callback function
- * OpenLayers 3 Layer Switcher Control.
- *
+/** A simple control to disable all actions on the map.
+ * The control will create an invisible div over the map.
  * @constructor
  * @extends {ol.control.Control}
- * @param {Object=} opt_options Control options.
- *		class {String} class of the control
- *		html {String} html code to insert in the control
- *		on {bool} the control is on
- *		toggleFn {function} callback when control is clicked 
+ * @param {Object=} options Control options.
+ *		@param {String} options.class class of the control
+ *		@param {String} options.html html code to insert in the control
+ *		@param {bool} options.on the control is on
+ *		@param {function} options.toggleFn callback when control is clicked 
  */
 ol.control.Disable = function(options) 
 {	var options = options||{};
@@ -20,16 +19,16 @@ ol.control.Disable = function(options)
 }
 ol.inherits(ol.control.Disable, ol.control.Control);
 
-/**
- * @return {bool}.
+/** Test if the control is on
+ * @return {bool}
  * @api stable
  */
 ol.control.Disable.prototype.isOn = function()
 {	return $(this.element).hasClass("ol-disable");
 }
 
-/**
- * @return {bool}.
+/** Disable all action on the map
+ * @param {bool} b, default false
  * @api stable
  */
 ol.control.Disable.prototype.disableMap = function(b)

@@ -26,6 +26,7 @@
       "theme": "cerulean",
       "navType": "vertical",
       "linenums": true,
+      "includeDate": false,
       "dateFormat": "MMMM Do YYYY, h:mm:ss a"
     }
   }

@@ -2,15 +2,15 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/** A simple gauge control 
+/** A simple gauge control to display level information on the map.
  *
  * @constructor
  * @extends {ol.control.Control}
- * @param {Object=} opt_options Control options.
- *		className {String} class of the control
- *		title {String} title of the control
- *		max {number} maximum value, default 100;
- *		val {number} the value, default 0
+ * @param {Object=} options Control options.
+ *		@param {String} options.className class of the control
+ *		@param {String} options.title title of the control
+ *		@param {number} options.max maximum value, default 100;
+ *		@param {number} options.val the value, default 0
  */
 ol.control.Gauge = function(options) 
 {	options = options || {};

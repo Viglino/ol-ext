@@ -9,7 +9,8 @@
  *
  * @constructor
  * @extends {ol.control.Attribution}
- * @param {Object=} Control options. The style {ol.style.Style} option is usesd to draw the text.
+ * @param {Object=} options extend the ol.control.Attribution options. 
+ * 	@param {ol.style.Style} options.style  option is usesd to draw the text.
  */
 ol.control.CanvasAttribution = function(options) 
 {	if (!options) options = {};
