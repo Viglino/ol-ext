@@ -3,10 +3,13 @@
 	released under the CeCILL license (http://www.cecill.info/).
 	
 */
-
 /** Path animation: feature follow a path
-* @param {ol.featureAnimationPathOptions} options
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationPathOptions} options
+ *  @param {Number} options.speed speed of the feature, if 0 the duration parameter will be used instead, default 0
+ *  @param {ol.geom.LineString|ol.Feature} options.path the path to follow
+ */
 ol.featureAnimation.Path = function(options)
 {	options = options || {};
 	ol.featureAnimation.call(this, options);

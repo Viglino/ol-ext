@@ -5,8 +5,10 @@
 */
 
 /** Teleport a feature at a given place
-* @param {ol.featureAnimationTeleportOptions} options
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationOptions} options
+ */
 ol.featureAnimation.Teleport = function(options)
 {	ol.featureAnimation.call(this, options);
 }

@@ -1,6 +1,9 @@
 /** @namespace ol 
  * @see {@link https://openlayers.org/en/master/apidoc/ol.html}
  */
+/** @namespace olx
+ * @see {@link https://openlayers.org/en/master/apidoc/olx.html}
+ */
 /** Layers are lightweight containers that get their data from sources.
  * @namespace ol.layer.Base
  * @see {@link https://openlayers.org/en/latest/apidoc/ol.layer.Base.html}

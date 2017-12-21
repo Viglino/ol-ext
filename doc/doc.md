@@ -15,7 +15,7 @@
 * [controls](./ol.control.html): adds new controls ([tool bars](./ol.control.Bar.html), [Graticule](./ol.control.Graticule.html), [LayerSwitcher](./ol.control.LayerSwitcher.html), [Search](./ol.control.Search.html), [Profil](./ol.control.Profil.html), [...](./ol.control.html))
 * [style](./ol.style.html): a set of style functions to style features on the maps ([charts symbols](./ol.style.Chart.html), [FillPattern](./ol.style.FillPattern.html), [FontSymbol](./ol.style.FontSymbol.html), [Photo](./ol.style.Photo.html), [TextPath](./ol.style.TextPath.html), [...](./ol.style.html))
 * [filter](./ol.filter.html): filters to apply on layers ([Colorize](./ol.filter.Colorize.html), [Crop](./ol.filter.Crop.html), [Mask](./ol.filter.Mask.html), [...](./ol.filter.html))  
-* [featureAnimation](./ol. featureAnimation.html): animates features on the map.   
+* [featureAnimation](./ol.featureAnimation.html): animates features on the map.   
 
 ### Bugs
 

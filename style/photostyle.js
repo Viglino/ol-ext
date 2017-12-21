@@ -8,31 +8,28 @@
  * @requires ol.style.RegularShape
  * @requires ol.structs.IHasChecksum
  */
-
-/** olx.style.PhotoSymbolOptions
-*	kind { default | square | round | anchored | folio } 
-*	crop {boolean} crop within square, default is false
-*	radius {Number} symbol size
-*	shadow {boolean} drop a shadow
-*	stroke {ol.style.Stroke}
-*	src {String} image src
-*	crossOrigin {String} The crossOrigin attribute for loaded images. Note that you must provide a crossOrigin value if you want to access pixel data with the Canvas renderer.
-*	offsetX {Number} Horizontal offset in pixels. Default is 0.
-*	offsetY {Number} Vertical offset in pixels. Default is 0.
-*	onload {function} callback when image is loaded (to redraw the layer)
-*/
 /**
  * @classdesc
  * Set Photo style for vector features.
  *
  * @constructor
- * @param {olx.style.PhotoSymbolOptions=} Options.
+ * @param {} options
+ *  @param { default | square | round | anchored | folio } options.kind
+ *  @param {boolean} options.crop crop within square, default is false
+ *  @param {Number} options.radius symbol size
+ *  @param {boolean} options.shadow drop a shadow
+ *  @param {ol.style.Stroke} options.stroke
+ *  @param {String} options.src image src
+ *  @param {String} options.crossOrigin The crossOrigin attribute for loaded images. Note that you must provide a crossOrigin value if you want to access pixel data with the Canvas renderer.
+ *  @param {Number} options.offsetX Horizontal offset in pixels. Default is 0.
+ *  @param {Number} options.offsetY Vertical offset in pixels. Default is 0.
+ *  @param {function} options.onload callback when image is loaded (to redraw the layer)
  * @extends {ol.style.RegularShape}
  * @implements {ol.structs.IHasChecksum}
  * @api
  */
-ol.style.Photo = function(opt_options) 
-{	options = opt_options || {};
+ol.style.Photo = function(options) 
+{	options = options || {};
 	this.sanchor_ = options.kind=="anchored" ? 8:0;
 	this.shadow_ = Number(options.shadow) || 0;
 	if (!options.stroke) 
@@ -236,8 +233,8 @@ ol.style.Photo.prototype.renderPhoto_ = function()
 }
 
 /**
- * @private
  * Draw an timage when loaded
+ * @private
  */
 ol.style.Photo.prototype.drawImage_ = function(img) 
 {	var canvas = this.getImage();

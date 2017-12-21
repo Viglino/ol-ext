@@ -5,8 +5,10 @@
 */
 
 /** Fade animation: feature fade in
-* @param {ol.featureAnimationFadeOptions} options
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationOptions} options
+ */
 ol.featureAnimation.Fade = function(options)
 {	options = options || {};
 	this.speed_ = options.speed || 0;

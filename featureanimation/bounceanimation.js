@@ -5,12 +5,14 @@
 */
 
 /** Bounce animation: 
-*	@param {ol.featureAnimationBounceOptions} options
-*	- bounce {Integer} default 3
-*	- amplitude {Integer} default 40
-*	- easing {ol.easing} easing used for decaying amplitude, use function(){return 0} for no decay, default ol.easing.linear
-*	- duration {Integer} duration in ms, default 1000
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationBounceOptions} options
+ *	@param {Integer} options.bounce number of bounce, default 3
+ *	@param {Integer} options.amplitude bounce amplitude,default 40
+ *	@param {ol.easing} options.easing easing used for decaying amplitude, use function(){return 0} for no decay, default ol.easing.linear
+ *	@param {Integer} options.duration duration in ms, default 1000
+ */
 ol.featureAnimation.Bounce = function(options)
 {	options = options || {};
 	ol.featureAnimation.call(this, options);

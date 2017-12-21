@@ -3,10 +3,11 @@
 	released under the CeCILL license (http://www.cecill.info/).
 	
 */
-
 /** Do nothing 
-*	@param {ol.featureAnimationShowOptions} options
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationShowOptions} options
+ */
 ol.featureAnimation.Null = function(options)
 {	ol.featureAnimation.call(this, { duration:0 });
 };

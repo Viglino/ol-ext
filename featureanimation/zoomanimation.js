@@ -5,8 +5,11 @@
 */
 
 /** Zoom animation: feature zoom in (for points)
-* @param {ol.featureAnimationZoomOptions} options
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationZoomOptions} options
+ *  @param {bool} options.zoomOut to zoom out
+ */
 ol.featureAnimation.Zoom = function(options)
 {	options = options || {};
 	ol.featureAnimation.call(this, options);
@@ -16,8 +19,10 @@ ol.inherits(ol.featureAnimation.Zoom, ol.featureAnimation);
 
 
 /** Zoom animation: feature zoom out (for points)
-* @param {ol.featureAnimationZoomOptions} options
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationZoomOptions} options
+ */
 ol.featureAnimation.ZoomOut = function(options)
 {	options = options || {};
 	options.zoomOut = true;

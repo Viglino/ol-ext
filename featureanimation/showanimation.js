@@ -5,8 +5,10 @@
 */
 
 /** Show an object for a given duration
-*	@param {ol.featureAnimationShowOptions} options
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationOptions} options
+ */
 ol.featureAnimation.Show = function(options)
 {	ol.featureAnimation.call(this, options);
 }

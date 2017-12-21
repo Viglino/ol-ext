@@ -4,8 +4,11 @@
 	
 */
 /** Slice animation: feature enter from left
-* @param {ol.featureAnimationSlideOptions} options
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationSlideOptions} options
+ *  @param {Number} options.speed speed of the animation, if 0 the duration parameter will be used instead, default 0
+ */
 ol.featureAnimation.Slide = function(options)
 {	options = options || {};
 	this.speed_ = options.speed || 0;

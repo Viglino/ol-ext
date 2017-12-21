@@ -4,9 +4,11 @@
 	
 */
 /** Slice animation: feature enter from left
-* @param {ol.featureAnimationThrowOptions} options
-* @param {event} e
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationThrowOptions} options
+ *  @param {left|right} options.side side of the animation, default left
+ */
 ol.featureAnimation.Throw = function(options)
 {	options = options || {};
 	ol.featureAnimation.call(this, options);

@@ -5,12 +5,13 @@
 */
 
 /** Shakee animation: 
-* @param {ol.featureAnimationShakeOptions} options
-*	- bounce {Integer} default 6
-*	- amplitude {Integer} default 40
-*	- duration {Integer} default 
-*	- horizontal {bool} shake horizontally default false
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationShakeOptions} options
+ *	@param {Integer} options.bounce number o bounds, default 6
+ *	@param {Integer} options.amplitude amplitude of the animation, default 40
+ *	@param {bool} options.horizontal shake horizontally default false (vertical)
+ */
 ol.featureAnimation.Shake = function(options)
 {	options = options || {};
 	ol.featureAnimation.call(this, options);
