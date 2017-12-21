@@ -5,8 +5,12 @@
 */
 
 /** Drop animation: drop a feature on the map
-* @param {ol.featureAnimationDropOptions} options
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationDropOptions} options
+ *  @param {Number} options.speed speed of the feature if 0 the duration parameter will be used instead, default 0
+ *  @param {Number} options.side top or bottom, default top
+ */
 ol.featureAnimation.Drop = function(options)
 {	options = options || {};
 	this.speed_ = options.speed || 0;

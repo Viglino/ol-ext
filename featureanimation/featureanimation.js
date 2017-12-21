@@ -3,15 +3,21 @@
 	released under the CeCILL license (http://www.cecill.info/).
 	
 */
-/** 
-
-/** Feature aniomation base class
-* 	@constructor
-*	@fires animationstart|animationend
-*	@param {ol.featureAnimationOptions} options
-*		- duration {number}
-*		- revers {bool}
-*		- fade {ol.easing}
+/** Feature animation base class
+ * Use the {@link ol.Map#animateFeature} or {@link ol.layer.Vector#animateFeature} to animate a feature 
+ * on postcompose in a map or a layer
+* @constructor
+* @fires animationstart|animationend
+* @param {ol.featureAnimationOptions} options
+*	@param {Number} options.duration duration of the animation in ms, default 1000
+*	@param {bool} options.revers revers the animation direction
+*	@param {Number} options.repeat number of time to repeat the animation, default 0
+*	@param {oo.style.Style} options.hiddenStyle a style to display the feature when playing the animation
+*		to be used to make the feature selectable when playing animation 
+*		(@see {@link ../examples/map.featureanimation.select.html}), default the feature 
+*		will be hidden when playing (and niot selectable)
+*	@param {ol.easingFunction} options.fade an easing function used to fade in the feature, default none
+*	@param {ol.easingFunction} options.easing an easing function for the animation, default ol.easing.linear
 */
 ol.featureAnimation = function(options)
 {	options = options || {};
@@ -31,9 +37,10 @@ ol.featureAnimation = function(options)
 ol.inherits(ol.featureAnimation, ol.Object);
 
 /** Draw a geometry 
-*	@param {olx.animateFeatureEvent} e
-*	@param {ol.geom} geom geometry for shadow
-*	@param {ol.geom} shadow geometry for shadow (ie. style with zIndex = -1)
+* @param {olx.animateFeatureEvent} e
+* @param {ol.geom} geom geometry for shadow
+* @param {ol.geom} shadow geometry for shadow (ie. style with zIndex = -1)
+* @private
 */
 ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
 {	if (this.fade_) 
@@ -59,31 +66,39 @@ ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
 };
 
 /** Function to perform manipulations onpostcompose. 
-*	This function is called with an olx.animateFeature argument. 
-*	Return true to keep this function for the next frame, false to remove it.
-* @param {ol.featureAnimation.event} e
-* @return {bool} true to continue animation.
-* @api 
-*/
+ * This function is called with an ol.featureAnimationEvent argument. 
+ * The function will be overridden by the child implementation.    
+ * Return true to keep this function for the next frame, false to remove it.
+ * @param {ol.featureAnimationEvent} e
+ * @return {bool} true to continue animation.
+ * @api 
+ */
 ol.featureAnimation.prototype.animate = function (e)
 {	return false;
 };
 
+/** An animation controler object an object to control animation with start, stop and isPlaying function.    
+ * To be used with {@link olx.Map#animateFeature} or {@link ol.layer.Vector#animateFeature}
+ * @typedef {Object} ol.animationControler
+ * @property {function} start - start animation.
+ * @property {function} stop - stop animation option arguments can be passed in animationend event.
+ * @property {function} isPlaying - return true if animation is playing.
+ */
+
 /** Animate feature on a map
-*	@fires animationend
-*	@param {ol.Feature} feature Feature to animate
-*	@param {ol.featureAnimation|Array<ol.featureAnimation>} fanim the animation to play
-*/
+ * @function 
+ * @fires animationstart, animationend
+ * @param {ol.Feature} feature Feature to animate
+ * @param {ol.featureAnimation|Array<ol.featureAnimation>} fanim the animation to play
+ * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
+ */
 ol.Map.prototype.animateFeature = 
 
 /** Animate feature on a vector layer 
-*	@fires animationend
-*	@param {ol.Feature} feature Feature to animate
-*	@param {ol.featureAnimation|Array<ol.featureAnimation>} fanim the animation to play
-*	@return {animationControler} an object to control animation with start|stop[isPlaying function
-*		- start {function} start animation
-*		- stop {function} stop animation option arguments can be passed and propagate in animationend event
-*		- isPlaying {function} return true if animation is playing
+ * @fires animationstart, animationend
+ * @param {ol.Feature} feature Feature to animate
+ * @param {ol.featureAnimation|Array<ol.featureAnimation>} fanim the animation to play
+ * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
 */
 ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 {	var self = this;

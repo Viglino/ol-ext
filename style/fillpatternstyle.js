@@ -7,17 +7,17 @@
  * Fill style with named pattern
  *
  * @constructor
- * @param {olx.style.FillPatternOption=}  Options
- *	- image {ol.style.Image|undefined} an image pattern, image must be preloaded to draw on first call
- *	- opacity {number|undefined} opacity with image pattern, default:1
- *	- pattern {olx.style.fillPattern} pattern name (override by image option)
- *	- color {ol.color} pattern color
- *	- fill {ol.style.Fill} fill color (background)
- *	- offset {number} pattern offset for hash/dot/circle/cross pattern
- *	- size {number} line size for hash/dot/circle/cross pattern
- *	- spacing {number} spacing for hash/dot/circle/cross pattern
- *	- angle {number|bool} angle for hash pattern / true for 45deg dot/circle/cross
- *	- scale [number} pattern scale 
+ * @param {olx.style.FillPatternOption=}  options
+ *	@param {ol.style.Image|undefined} options.image an image pattern, image must be preloaded to draw on first call
+ *	@param {number|undefined} options.opacity opacity with image pattern, default:1
+ *	@param {olx.style.fillPattern} options.pattern pattern name (override by image option)
+ *	@param {ol.color} options.color pattern color
+ *	@param {ol.style.Fill} options.fill fill color (background)
+ *	@param {number} options.offset pattern offset for hash/dot/circle/cross pattern
+ *	@param {number} options.size line size for hash/dot/circle/cross pattern
+ *	@param {number} options.spacing spacing for hash/dot/circle/cross pattern
+ *	@param {number|bool} options.angle angle for hash pattern / true for 45deg dot/circle/cross
+ *	@param {number} options.scale pattern scale 
  * @extends {ol.style.Fill}
  * @implements {ol.structs.IHasChecksum}
  * @api
@@ -549,7 +549,6 @@ ol.style.FillPattern.prototype.patterns =
 
 
 /**
- * @inheritDoc
  * /
 ol.style.FillPattern.prototype.getChecksum = function() 
 {
