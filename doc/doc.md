@@ -4,7 +4,7 @@
 [ol3-ext](https://github.com/Viglino/ol3-ext) is a set of extensions, controls, interactions to use with Openlayers.    
 
 ### Check out [online examples](http://viglino.github.io/ol3-ext/).
-
+The [example page](http://viglino.github.io/ol3-ext/) is the best way to have a quick look at all the library.
 
 ## ol extension
 * [all extensions](./classes.list.html): list of all classes

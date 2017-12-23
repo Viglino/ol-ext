@@ -2,7 +2,7 @@
 *Cool extensions for [OpenLayers](https://github.com/openlayers/openlayers) (ol/ol3/ol4)*.
 
 [ol3-ext](https://github.com/Viglino/ol3-ext) is a set of extensions, controls, interactions to use with Openlayers.    
-[View live examples online](http://viglino.github.io/ol3-ext/).
+[View live examples online](http://viglino.github.io/ol3-ext/) or the [API documentation](http://viglino.github.io/ol3-ext/doc/doc-pages/).
 
 **Keywords:** CSS popup, 
 Font Awesome symbol renderer, 

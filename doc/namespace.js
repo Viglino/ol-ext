@@ -1,7 +1,7 @@
 /** @namespace ol 
  * @see {@link https://openlayers.org/en/master/apidoc/ol.html}
  */
-/** @namespace olx
+/* @namespace olx
  * @see {@link https://openlayers.org/en/master/apidoc/olx.html}
  */
 /** Layers are lightweight containers that get their data from sources.
@@ -19,7 +19,8 @@
  * They can involve user input (buttons), or be informational only; 
  * the position is determined using CSS. B
  * y default these are placed in the container with CSS class name ol-overlaycontainer-stopevent, 
- * but can use any outside DOM element.@namespace ol.control 
+ * but can use any outside DOM element.
+ * @namespace ol.control 
  * @see {@link https://openlayers.org/en/master/apidoc/ol.control.html}
  */
 /** User actions that change the state of the map. Some are similar to controls,
