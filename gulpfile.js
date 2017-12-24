@@ -9,6 +9,7 @@ var jsdoc = require('gulp-jsdoc3');
 
 // Retrieve option (--debug for css)
 var options = require("minimist")(process.argv.slice(2));
+var name = "ol-ext";
 
 // using data from package.json 
 var pkg = require('./package.json');
@@ -38,7 +39,7 @@ gulp.task("css", function() {
       compress: !options.debug,
       sourcemap: options.debug
     }))
-	.pipe(concat("ol-ext"+(!options.debug?".min.css":".css")))
+	.pipe(concat(name+(!options.debug?".min.css":".css")))
     .pipe(gulp.dest("./dist/"))
 });
 
@@ -62,7 +63,7 @@ gulp.task("js", function() {
 		"!./*/*.min.js",
 		"!./*/texturefilterimage.js"
 		])
-	.pipe(concat("ol-ext.js"))
+	.pipe(concat(name+".js"))
     .pipe(minify(
 		{	ext: { 
 				src:".js", 
