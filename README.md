@@ -37,7 +37,7 @@ animations
 ## Getting Started
 
 * Just download the [build script](https://github.com/Viglino/ol3-ext/tree/gh-pages/dist) in the dist directory of the project.
-* If you just want to add a <script> tag to test things out, you can link directly to the builds from the github rawgit (not recommended in production):
+* If you just want to add a `<script>` tag to test things out, you can link directly to the builds from the github rawgit (not recommended in production):
 ````
 <!-- OL3-ext -->
 <link rel="stylesheet" href="https://cdn.rawgit.com/Viglino/ol3-ext/gh-pages/dist/ol3-ext.min.css" />
