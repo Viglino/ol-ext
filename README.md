@@ -1,7 +1,7 @@
 # ol-ext
 *Cool extensions for [OpenLayers](https://github.com/openlayers/openlayers) (ol/ol3/ol4)*.
 
-### ol3-ext is now [ol-ext](https://github.com/Viglino/ol-ext) update your bookmark and your code
+### ol3-ext is now [ol-ext](https://github.com/Viglino/ol-ext) and is [now available on npm](https://www.npmjs.com/package/ol-ext): update your bookmark and your code
 
 [ol-ext](https://github.com/Viglino/ol-ext) is a set of extensions, controls, interactions to use with Openlayers.    
 [View live examples online](http://viglino.github.io/ol-ext/) or the [API documentation](http://viglino.github.io/ol-ext/doc/doc-pages/).
