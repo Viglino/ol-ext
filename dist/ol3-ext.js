@@ -753,7 +753,8 @@ ol.inherits(ol.control.TextButton, ol.control.Button);
  *
  * @constructor
  * @extends {ol.control.Attribution}
- * @param {Object=} Control options. The style {ol.style.Style} option is usesd to draw the text.
+ * @param {Object=} options extend the ol.control.Attribution options. 
+ * 	@param {ol.style.Style} options.style  option is usesd to draw the text.
  */
 ol.control.CanvasAttribution = function(options) 
 {	if (!options) options = {};
@@ -870,7 +871,8 @@ ol.control.CanvasAttribution.prototype.drawAttribution_ = function(e)
  *
  * @constructor
  * @extends {ol.control.ScaleLine}
- * @param {Object=} Control options. The style {ol.style.Style} option is usesd to draw the scale line (default is black/white, 10px Arial).
+ * @param {Object=} options extend the ol.control.ScaleLine options. 
+ * 	@param {ol.style.Style} options.style usesd to draw the scale line (default is black/white, 10px Arial).
  */
 ol.control.CanvasScaleLine = function(options) 
 {	ol.control.ScaleLine.call(this, options);
@@ -997,7 +999,8 @@ ol.control.CanvasScaleLine.prototype.drawScale_ = function(e)
  *
  * @constructor
  * @extends {ol.control.Control}
- * @param {Object=} Control options. The style {ol.style.Style} option is usesd to draw the text.
+ * @param {Object=} options extend the ol.control options. 
+ * 	@param {ol.style.Style} options.style stye usesd to draw the title.
  */
 ol.control.CanvasTitle = function(options) 
 {	if (!options) options={};
@@ -1141,10 +1144,10 @@ ol.control.CanvasTitle.prototype.drawTitle_ = function(e)
 /** ol.control.Cloud adds an old map effect on a canvas renderer. 
 * It colors the map, adds a parchment texture and compass onto the map. 
 * @constructor
-* @param {Object}
-*	- hue {ol.Color} color to set hue of the map, default #963
-*	- saturation {Number} saturation of the hue color, default 0.6
-*	- opacity {Number} opacity of the overimpose image, default 0.7
+* @param {Object} options
+*	@param {ol.Color} options.hue color to set hue of the map, default #963
+*	@param {Number} options.saturation saturation of the hue color, default 0.6
+*	@param {Number} options.opacity opacity of the overimpose image, default 0.7
 * @todo add effects on pan / zoom change
 */
 ol.control.Cloud = function(options) 
@@ -1363,12 +1366,12 @@ ol.control.Cloud.prototype.drawCloud_ = function (event)
  *
  * @constructor
  * @extends {ol.control.Control}
- * @param {Object=} Control options. The style {ol.style.Style} option is usesd to draw the text.
- *	- className {string} class name for the control
- *	- image {Image} an image, default use the src option or a default image
- *	- src {string} image src, default use the image option or a default image
- *	- rotateVithView {boolean} rotate vith view (false to show watermark), default true
- *	- style {ol.style.Stroke} style to draw the lines, default draw no lines
+ * @param {Object=} options Control options. The style {ol.style.Style} option is usesd to draw the text.
+ *	@param {string} options.className class name for the control
+ *	@param {Image} options.image an image, default use the src option or a default image
+ *	@param {string} options.src image src, default use the image option or a default image
+ *	@param {boolean} options.rotateVithView rotate vith view (false to show watermark), default true
+ *	@param {ol.style.Stroke} options.style style to draw the lines, default draw no lines
  */
 ol.control.Compass = function(options) 
 {	var self = this;
@@ -1539,12 +1542,12 @@ ol.control.Compass.prototype.drawCompass_ = function(e)
  *
  * @constructor
  * @extends {ol.control.Control}
- * @param {Object=} opt_options Control options.
- *		className {String} class of the control
- *		group {bool} is a group, default false
- *		toggleOne {bool} only one toggle control is active at a time, default false
- *		autoDeactivate {bool} used with subbar to deactivate all control when top level control deactivate, default false
- *		controls {Array<ol.control>} a list of control to add to the bar
+ * @param {Object=} options Control options.
+ *	@param {String} options.className class of the control
+ *	@param {bool} options.group is a group, default false
+ *	@param {bool} options.toggleOne only one toggle control is active at a time, default false
+ *	@param {bool} options.autoDeactivate used with subbar to deactivate all control when top level control deactivate, default false
+ *	@param {Array<ol.control>} options.controls a list of control to add to the bar
  */
 ol.control.Bar = function(options) 
 {	if (!options) options={};
@@ -1705,16 +1708,15 @@ ol.control.Bar.prototype.onActivateControl_ = function (e)
 	}
 };
 
-/** A simple toggle control with a callback function
- * OpenLayers 3 Layer Switcher Control.
- *
+/** A simple control to disable all actions on the map.
+ * The control will create an invisible div over the map.
  * @constructor
  * @extends {ol.control.Control}
- * @param {Object=} opt_options Control options.
- *		class {String} class of the control
- *		html {String} html code to insert in the control
- *		on {bool} the control is on
- *		toggleFn {function} callback when control is clicked 
+ * @param {Object=} options Control options.
+ *		@param {String} options.class class of the control
+ *		@param {String} options.html html code to insert in the control
+ *		@param {bool} options.on the control is on
+ *		@param {function} options.toggleFn callback when control is clicked 
  */
 ol.control.Disable = function(options) 
 {	var options = options||{};
@@ -1727,16 +1729,16 @@ ol.control.Disable = function(options)
 }
 ol.inherits(ol.control.Disable, ol.control.Control);
 
-/**
- * @return {bool}.
+/** Test if the control is on
+ * @return {bool}
  * @api stable
  */
 ol.control.Disable.prototype.isOn = function()
 {	return $(this.element).hasClass("ol-disable");
 }
 
-/**
- * @return {bool}.
+/** Disable all action on the map
+ * @param {bool} b, default false
  * @api stable
  */
 ol.control.Disable.prototype.disableMap = function(b)
@@ -1751,15 +1753,15 @@ ol.control.Disable.prototype.disableMap = function(b)
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/** A simple gauge control 
+/** A simple gauge control to display level information on the map.
  *
  * @constructor
  * @extends {ol.control.Control}
- * @param {Object=} opt_options Control options.
- *		className {String} class of the control
- *		title {String} title of the control
- *		max {number} maximum value, default 100;
- *		val {number} the value, default 0
+ * @param {Object=} options Control options.
+ *		@param {String} options.className class of the control
+ *		@param {String} options.title title of the control
+ *		@param {number} options.max maximum value, default 100;
+ *		@param {number} options.val the value, default 0
  */
 ol.control.Gauge = function(options) 
 {	options = options || {};
@@ -1798,17 +1800,26 @@ ol.control.Gauge.prototype.val = function(v)
 	}
 	return this.val_;
 };
-/** GeoBookmarks
+/** Bookmark positions on ol maps. 
  *
  * @constructor
  * @extends {ol.control.Control}
- * @trigger add|remove when a bookmark us added or deleted
- * @param {Object=} Control options.
- *  @param {string} className default ol-bookmark
- *  @param {string} placeholder input placeholder, default Add a new geomark...
- *  @param {bool} editable enable modification, default true
- *  @param {string} namespace a namespace to save the boolmark (if more than one on a page), default: ol
- *  @param {Array<any> marks a list of default bookmarks : { BM1:{pos:ol.coordinates, zoom: integer, permanent: true}, BM2:{pos:ol.coordinates, zoom: integer} }
+ * @fires add
+ * @fires remove
+ * @param {} options Geobookmark's options
+ *  @param {string} options.className default ol-bookmark
+ *  @param {string} options.placeholder input placeholder, default Add a new geomark...
+ *  @param {bool} options.editable enable modification, default true
+ *  @param {string} options.namespace a namespace to save the boolmark (if more than one on a page), default ol
+ *  @param {Array<any>} options.marks a list of default bookmarks: 
+ * @see [Geobookmark example](../../examples/map.control.geobookmark.html)
+ * @example 
+var bm = new GeoBookmark ({ 
+  marks: {
+    "Paris": {pos:ol.proj.transform([2.351828, 48.856578], 'EPSG:4326', 'EPSG:3857'), zoom:11, permanent: true },
+    "London": {pos:ol.proj.transform([-0.1275,51.507222], 'EPSG:4326', 'EPSG:3857'), zoom:12}
+  }
+});
  */
 ol.control.GeoBookmark = function(options) {
   options = options || {};
@@ -1883,7 +1894,11 @@ ol.inherits(ol.control.GeoBookmark, ol.control.Control);
 
 /** Set bookmarks
 * @param {} bmark a list of bookmarks, default retreave in the localstorage
-*   example : setBookmarks({ "Mark 1":{pos:ol.coordinates, zoom: integer}, "Mark 2":{pos:ol.coordinates, zoom: integer} })
+* @example 
+bm.setBookmarks({ 
+  "Paris": {pos:ol.proj.transform([2.351828, 48.856578], 'EPSG:4326', 'EPSG:3857'), zoom:11, permanent: true },
+  "London": {pos:ol.proj.transform([-0.1275,51.507222], 'EPSG:4326', 'EPSG:3857'), zoom:12}
+});
 */
 ol.control.GeoBookmark.prototype.setBookmarks = function(bmark) {
   if (!bmark) bmark = JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
@@ -1940,9 +1955,9 @@ ol.control.GeoBookmark.prototype.removeBookmark = function(name) {
 
 /** Add a new Geo bookmark (replace existing one if any)
 * @param {string} name name of the bookmark (display in the menu)
-* @param {ol.Coordintes} position, default current position
-* @param {number} zoom, default current map zoom
-* @param {bool} permanent: prevent from deletion, default false
+* @param {ol.Coordintes} position default current position
+* @param {number} zoom default current map zoom
+* @param {bool} permanent prevent from deletion, default false
 */
 ol.control.GeoBookmark.prototype.addBookmark = function(name, position, zoom, permanent) 
 {
@@ -3039,8 +3054,9 @@ ol.control.Overview = function(options)
 	this.ovmap_.addLayer(this.extentLayer);
 
 	/** Elastic bounce
-	*	@param {Int} number of bounce
-	*	@prama {Number} [0,1] amplitude of the bounce
+	*	@param {Int} bounce number of bounce
+	*	@param {Number} amplitude amplitude of the bounce [0,1] 
+	*	@return {Number}
 	*/
 	ol.easing.bounceFn = function (bounce, amplitude)
 	{	var a = (2*bounce+1) * Math.PI/2;
@@ -3051,6 +3067,11 @@ ol.control.Overview = function(options)
 			return 1 + Math.abs( Math.cos(a*t) ) * Math.pow(2, b*t) + c*t;
 		}
 	}
+	/** Elastic bounce
+	*	@param {Int} bounce number of bounce
+	*	@param {Number} amplitude amplitude of the bounce [0,1] 
+	*	@return {Number}
+	*/
 	ol.easing.elasticFn = function (bounce, amplitude)
 	{	var a = 3*bounce * Math.PI/2;
 		var b = amplitude>0 ? -1/amplitude : -100;
@@ -3060,6 +3081,7 @@ ol.control.Overview = function(options)
 			return 1 - Math.cos(a*t) * Math.pow(2, b*t) + c*t;
 		}
 	}
+
 	// Click on the preview center the map
 	this.ovmap_.addInteraction (new ol.interaction.Pointer(
 	{	handleDownEvent: function(evt)
@@ -3841,12 +3863,16 @@ ol.control.Profil.prototype.getImage = function(type, encoderOptions)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
- * Search Control. This is the base class for search controls. You can use it for simple custom search or as base to new class
+ * Search Control.    
+ * This is the base class for search controls. You can use it for simple custom search or as base to new class.
+ * @see ol.control.SearchFeature
+ * @see ol.control.SearchPhoton
  *
  * @constructor
  * @extends {ol.control.Control}
- * @fires select, change:input
- * @param {Object=} Control options. 
+ * @fires select
+ * @fires change:input
+ * @param {Object=} options
  *	@param {string} options.className control class name
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.placeholder placeholder, default "Search..."
@@ -4696,15 +4722,21 @@ ol.control.Toggle.prototype.getInteraction = function()
 	released under the CeCILL license (http://www.cecill.info/).
 	
 */
-/** 
-
-/** Feature aniomation base class
-* 	@constructor
-*	@fires animationstart|animationend
-*	@param {ol.featureAnimationOptions} options
-*		- duration {number}
-*		- revers {bool}
-*		- fade {ol.easing}
+/** Feature animation base class
+ * Use the {@link ol.Map#animateFeature} or {@link ol.layer.Vector#animateFeature} to animate a feature 
+ * on postcompose in a map or a layer
+* @constructor
+* @fires animationstart|animationend
+* @param {ol.featureAnimationOptions} options
+*	@param {Number} options.duration duration of the animation in ms, default 1000
+*	@param {bool} options.revers revers the animation direction
+*	@param {Number} options.repeat number of time to repeat the animation, default 0
+*	@param {oo.style.Style} options.hiddenStyle a style to display the feature when playing the animation
+*		to be used to make the feature selectable when playing animation 
+*		(@see {@link ../examples/map.featureanimation.select.html}), default the feature 
+*		will be hidden when playing (and niot selectable)
+*	@param {ol.easingFunction} options.fade an easing function used to fade in the feature, default none
+*	@param {ol.easingFunction} options.easing an easing function for the animation, default ol.easing.linear
 */
 ol.featureAnimation = function(options)
 {	options = options || {};
@@ -4724,9 +4756,10 @@ ol.featureAnimation = function(options)
 ol.inherits(ol.featureAnimation, ol.Object);
 
 /** Draw a geometry 
-*	@param {olx.animateFeatureEvent} e
-*	@param {ol.geom} geom geometry for shadow
-*	@param {ol.geom} shadow geometry for shadow (ie. style with zIndex = -1)
+* @param {olx.animateFeatureEvent} e
+* @param {ol.geom} geom geometry for shadow
+* @param {ol.geom} shadow geometry for shadow (ie. style with zIndex = -1)
+* @private
 */
 ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
 {	if (this.fade_) 
@@ -4752,31 +4785,39 @@ ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
 };
 
 /** Function to perform manipulations onpostcompose. 
-*	This function is called with an olx.animateFeature argument. 
-*	Return true to keep this function for the next frame, false to remove it.
-* @param {ol.featureAnimation.event} e
-* @return {bool} true to continue animation.
-* @api 
-*/
+ * This function is called with an ol.featureAnimationEvent argument. 
+ * The function will be overridden by the child implementation.    
+ * Return true to keep this function for the next frame, false to remove it.
+ * @param {ol.featureAnimationEvent} e
+ * @return {bool} true to continue animation.
+ * @api 
+ */
 ol.featureAnimation.prototype.animate = function (e)
 {	return false;
 };
 
+/** An animation controler object an object to control animation with start, stop and isPlaying function.    
+ * To be used with {@link olx.Map#animateFeature} or {@link ol.layer.Vector#animateFeature}
+ * @typedef {Object} ol.animationControler
+ * @property {function} start - start animation.
+ * @property {function} stop - stop animation option arguments can be passed in animationend event.
+ * @property {function} isPlaying - return true if animation is playing.
+ */
+
 /** Animate feature on a map
-*	@fires animationend
-*	@param {ol.Feature} feature Feature to animate
-*	@param {ol.featureAnimation|Array<ol.featureAnimation>} fanim the animation to play
-*/
+ * @function 
+ * @fires animationstart, animationend
+ * @param {ol.Feature} feature Feature to animate
+ * @param {ol.featureAnimation|Array<ol.featureAnimation>} fanim the animation to play
+ * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
+ */
 ol.Map.prototype.animateFeature = 
 
 /** Animate feature on a vector layer 
-*	@fires animationend
-*	@param {ol.Feature} feature Feature to animate
-*	@param {ol.featureAnimation|Array<ol.featureAnimation>} fanim the animation to play
-*	@return {animationControler} an object to control animation with start|stop[isPlaying function
-*		- start {function} start animation
-*		- stop {function} stop animation option arguments can be passed and propagate in animationend event
-*		- isPlaying {function} return true if animation is playing
+ * @fires animationstart, animationend
+ * @param {ol.Feature} feature Feature to animate
+ * @param {ol.featureAnimation|Array<ol.featureAnimation>} fanim the animation to play
+ * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
 */
 ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 {	var self = this;
@@ -4905,12 +4946,14 @@ ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 */
 
 /** Bounce animation: 
-*	@param {ol.featureAnimationBounceOptions} options
-*	- bounce {Integer} default 3
-*	- amplitude {Integer} default 40
-*	- easing {ol.easing} easing used for decaying amplitude, use function(){return 0} for no decay, default ol.easing.linear
-*	- duration {Integer} duration in ms, default 1000
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationBounceOptions} options
+ *	@param {Integer} options.bounce number of bounce, default 3
+ *	@param {Integer} options.amplitude bounce amplitude,default 40
+ *	@param {ol.easing} options.easing easing used for decaying amplitude, use function(){return 0} for no decay, default ol.easing.linear
+ *	@param {Integer} options.duration duration in ms, default 1000
+ */
 ol.featureAnimation.Bounce = function(options)
 {	options = options || {};
 	ol.featureAnimation.call(this, options);
@@ -4944,8 +4987,12 @@ ol.featureAnimation.Bounce.prototype.animate = function (e)
 */
 
 /** Drop animation: drop a feature on the map
-* @param {ol.featureAnimationDropOptions} options
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationDropOptions} options
+ *  @param {Number} options.speed speed of the feature if 0 the duration parameter will be used instead, default 0
+ *  @param {Number} options.side top or bottom, default top
+ */
 ol.featureAnimation.Drop = function(options)
 {	options = options || {};
 	this.speed_ = options.speed || 0;
@@ -4987,8 +5034,10 @@ ol.featureAnimation.Drop.prototype.animate = function (e)
 */
 
 /** Fade animation: feature fade in
-* @param {ol.featureAnimationFadeOptions} options
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationOptions} options
+ */
 ol.featureAnimation.Fade = function(options)
 {	options = options || {};
 	this.speed_ = options.speed || 0;
@@ -5011,10 +5060,12 @@ ol.featureAnimation.Fade.prototype.animate = function (e)
 	released under the CeCILL license (http://www.cecill.info/).
 	
 */
-
 /** Do nothing for a given duration
-*	@param {ol.featureAnimationShowOptions} options
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationShowOptions} options
+ * 
+ */
 ol.featureAnimation.None = function(options)
 {	ol.featureAnimation.call(this, options);
 };
@@ -5033,10 +5084,11 @@ ol.featureAnimation.None.prototype.animate = function (e)
 	released under the CeCILL license (http://www.cecill.info/).
 	
 */
-
 /** Do nothing 
-*	@param {ol.featureAnimationShowOptions} options
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationShowOptions} options
+ */
 ol.featureAnimation.Null = function(options)
 {	ol.featureAnimation.call(this, { duration:0 });
 };
@@ -5047,10 +5099,13 @@ ol.inherits(ol.featureAnimation.Null, ol.featureAnimation);
 	released under the CeCILL license (http://www.cecill.info/).
 	
 */
-
 /** Path animation: feature follow a path
-* @param {ol.featureAnimationPathOptions} options
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationPathOptions} options
+ *  @param {Number} options.speed speed of the feature, if 0 the duration parameter will be used instead, default 0
+ *  @param {ol.geom.LineString|ol.Feature} options.path the path to follow
+ */
 ol.featureAnimation.Path = function(options)
 {	options = options || {};
 	ol.featureAnimation.call(this, options);
@@ -5106,12 +5161,13 @@ ol.featureAnimation.Path.prototype.animate = function (e)
 */
 
 /** Shakee animation: 
-* @param {ol.featureAnimationShakeOptions} options
-*	- bounce {Integer} default 6
-*	- amplitude {Integer} default 40
-*	- duration {Integer} default 
-*	- horizontal {bool} shake horizontally default false
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationShakeOptions} options
+ *	@param {Integer} options.bounce number o bounds, default 6
+ *	@param {Integer} options.amplitude amplitude of the animation, default 40
+ *	@param {bool} options.horizontal shake horizontally default false (vertical)
+ */
 ol.featureAnimation.Shake = function(options)
 {	options = options || {};
 	ol.featureAnimation.call(this, options);
@@ -5149,8 +5205,10 @@ ol.featureAnimation.Shake.prototype.animate = function (e)
 */
 
 /** Show an object for a given duration
-*	@param {ol.featureAnimationShowOptions} options
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationOptions} options
+ */
 ol.featureAnimation.Show = function(options)
 {	ol.featureAnimation.call(this, options);
 }
@@ -5171,8 +5229,11 @@ ol.featureAnimation.Show.prototype.animate = function (e)
 	
 */
 /** Slice animation: feature enter from left
-* @param {ol.featureAnimationSlideOptions} options
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationSlideOptions} options
+ *  @param {Number} options.speed speed of the animation, if 0 the duration parameter will be used instead, default 0
+ */
 ol.featureAnimation.Slide = function(options)
 {	options = options || {};
 	this.speed_ = options.speed || 0;
@@ -5206,8 +5267,10 @@ ol.featureAnimation.Slide.prototype.animate = function (e)
 */
 
 /** Teleport a feature at a given place
-* @param {ol.featureAnimationTeleportOptions} options
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationOptions} options
+ */
 ol.featureAnimation.Teleport = function(options)
 {	ol.featureAnimation.call(this, options);
 }
@@ -5240,9 +5303,11 @@ ol.featureAnimation.Teleport.prototype.animate = function (e)
 	
 */
 /** Slice animation: feature enter from left
-* @param {ol.featureAnimationThrowOptions} options
-* @param {event} e
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationThrowOptions} options
+ *  @param {left|right} options.side side of the animation, default left
+ */
 ol.featureAnimation.Throw = function(options)
 {	options = options || {};
 	ol.featureAnimation.call(this, options);
@@ -5287,8 +5352,11 @@ ol.featureAnimation.Throw.prototype.animate = function (e)
 */
 
 /** Zoom animation: feature zoom in (for points)
-* @param {ol.featureAnimationZoomOptions} options
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationZoomOptions} options
+ *  @param {bool} options.zoomOut to zoom out
+ */
 ol.featureAnimation.Zoom = function(options)
 {	options = options || {};
 	ol.featureAnimation.call(this, options);
@@ -5298,8 +5366,10 @@ ol.inherits(ol.featureAnimation.Zoom, ol.featureAnimation);
 
 
 /** Zoom animation: feature zoom out (for points)
-* @param {ol.featureAnimationZoomOptions} options
-*/
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationZoomOptions} options
+ */
 ol.featureAnimation.ZoomOut = function(options)
 {	options = options || {};
 	options.zoomOut = true;
@@ -5364,12 +5434,16 @@ ol.featureAnimation.Zoom.prototype.animate = function (e)
 ol.filter = {};
 /**
  * @classdesc 
- *   Abstract base class; normally only used for creating subclasses and not instantiated in apps. 
- *   Used to create filters
+ * Abstract base class; normally only used for creating subclasses and not instantiated in apps.    
+ * Used to create filters    
+ * Use {@link ol.Map#addFilter}, {@link ol.Map#removeFilter} or {@link ol.Map#getFilters} to handle filters on a map.    
+ * Use {@link ol.layer.Base#addFilter}, {@link ol.layer.Base#removeFilter} or {@link ol.layer.Base#getFilters} 
+ * to handle filters on layers.
  *
  * @constructor
  * @extends {ol.Object}
- * @param {Object=} Control options. The style {ol.style.Style} option is usesd to draw the text.
+ * @param {} options Extend {@link ol.control.Control} options.
+ *  @param {bool} options.active
  */
 ol.filter.Base = function(options) 
 {	ol.Object.call(this);
@@ -11098,7 +11172,8 @@ ol.Overlay.Magnify.prototype.setActive = function(active)
 }
 
 /** Mouse move
-*/
+ * @private
+ */
 ol.Overlay.Magnify.prototype.onMouseMove_ = function(e)
 {	var self = e.data.self;
 	if (!self.get("active"))
@@ -11113,7 +11188,8 @@ ol.Overlay.Magnify.prototype.onMouseMove_ = function(e)
 }
 
 /** View has changed
-*/
+ * @private
+ */
 ol.Overlay.Magnify.prototype.setView_ = function(e)
 {	if (!this.get("active"))
 	{	this.setPosition();
@@ -11148,32 +11224,29 @@ ol.Overlay.Magnify.prototype.setView_ = function(e)
 /**
  * @classdesc
  * A popup element to be displayed over the map and attached to a single map
- * location.  Like {@link ol.control.Control}, Overlays are visible widgets.
- * Unlike Controls, they are not in a fixed position on the screen, but are tied
- * to a geographical coordinate, so panning the map will move an Overlay but not
- * a Control.
+ * location. The popup are customized using CSS.
  *
- * Example:
- *
- *     var popup = new ol.Overlay.Popup();
- *     map.addOverlay(popup);
- *     popup.show(coordinate, "Hello!");
- *     popup.hide();
+ * @example
+var popup = new ol.Overlay.Popup();
+map.addOverlay(popup);
+popup.show(coordinate, "Hello!");
+popup.hide();
  *
  * @constructor
  * @extends {ol.Overlay}
- * @param {olx.OverlayOptions} options Overlay options 
- *		+ popupClass: the a class for the overlay.
- *		+ closeBox: popup has a close box.
- *		+ onclose: callback when popup is closed
- *		+ onshow: callback when popup is shown
- *		+ positionning: add 'auto' to let the popup choose a good positioning.
+ * @param {} options Extend Overlay options 
+ *	@param {String} options.popupClass the a class of the overlay to style the popup.
+ *	@param {bool} options.closeBox popup has a close box, default false.
+ *	@param {function|undefined} options.onclose: callback function when popup is closed
+ *	@param {function|undefined} options.onshow callback function when popup is shown
+ *	@param {ol.OverlayPositioning | string | undefined} options.positionning 
+ *		the 'auto' positionning let the popup choose its positioning to stay on the map.
  * @api stable
  */
 ol.Overlay.Popup = function (options)
 {	var self = this;
 	var elt = $("<div>");
-	this.element = options.element = elt.get(0);
+	options.element = elt.get(0);
 	this.offsetBox = options.offsetBox;
 	// Anchor div
 	$("<div>").addClass("anchor").appendTo(elt);
@@ -11182,8 +11255,8 @@ ol.Overlay.Popup = function (options)
 	this.content = $("<div>").addClass("content").appendTo(d).get(0);
 	// Closebox
 	this.closeBox = options.closeBox;
-        this.onclose = options.onclose;      
-        this.onshow = options.onshow;      
+	this.onclose = options.onclose;      
+	this.onshow = options.onshow;      
 	$("<button>").addClass("closeBox").addClass(options.closeBox?"hasclosebox":"")
 				.attr('type', 'button')
 				.prependTo(d)
@@ -11195,8 +11268,9 @@ ol.Overlay.Popup = function (options)
 	d.on("mousedown touchstart", function(e){ e.stopPropagation(); })
 
 	ol.Overlay.call(this, options);
-	
-        // call setPositioning first in constructor so getClassPositioning is called only once
+	this._elt = elt;
+			
+	// call setPositioning first in constructor so getClassPositioning is called only once
 	this.setPositioning(options.positioning);
 	this.setPopupClass(options.popupClass);
 }
@@ -11219,54 +11293,54 @@ ol.Overlay.Popup.prototype.getClassPositioning = function ()
 }
 
 /**
- * Set CSS class of the popup.
- * @param {string} class name.
+ * Set a close box to the popup.
+ * @param {bool} b
  * @api stable
  */
 ol.Overlay.Popup.prototype.setClosebox = function (b)
 {	this.closeBox = b;
-	if (b) $(this.element).addClass("hasclosebox");
-	else $(this.element).removeClass("hasclosebox");
+	if (b) this._elt.addClass("hasclosebox");
+	else this._elt.removeClass("hasclosebox");
 }
 
 /**
  * Set the CSS class of the popup.
- * @param {string} class name.
+ * @param {string} c class name.
  * @api stable
  */
 ol.Overlay.Popup.prototype.setPopupClass = function (c)
-{	$(this.element).removeClass()
+{	this._elt.removeClass()
 		.addClass("ol-popup "+(c||"default")+" "+this.getClassPositioning()+(this.closeBox?" hasclosebox":""));
 }
 
 /**
  * Add a CSS class to the popup.
- * @param {string} class name.
+ * @param {string} c class name.
  * @api stable
  */
 ol.Overlay.Popup.prototype.addPopupClass = function (c)
-{	$(this.element).addClass(c);
+{	this._elt.addClass(c);
 }
 
 /**
  * Remove a CSS class to the popup.
- * @param {string} class name.
+ * @param {string} c class name.
  * @api stable
  */
 ol.Overlay.Popup.prototype.removePopupClass = function (c)
-{	$(this.element).removeClass(c);
+{	this._elt.removeClass(c);
 }
 
 /**
- * Remove a CSS class to the popup.
- * @param {string} class name.
+ * Set positionning of the popup
+ * @param {ol.OverlayPositioning | string | undefined} pos an ol.OverlayPositioning 
+ * 		or 'auto' to let the popup choose the best position 
  * @api stable
  */
 ol.Overlay.Popup.prototype.setPositioning = function (pos)
-{	
-        if (pos === undefined)
-            return;
-        if (/auto/.test(pos))
+{	if (pos === undefined)
+		return;
+	if (/auto/.test(pos))
 	{	this.autoPositioning = pos.split('-');
 		if (this.autoPositioning.length==1) this.autoPositioning[1]="auto";
 	}
@@ -11275,23 +11349,35 @@ ol.Overlay.Popup.prototype.setPositioning = function (pos)
 	if (pos=="center") pos = "bottom-center";
 	this.setPositioning_(pos);
 }
+
+/** @private
+ * @param {ol.OverlayPositioning | string | undefined} pos  
+ */
 ol.Overlay.Popup.prototype.setPositioning_ = function (pos)
 {	ol.Overlay.prototype.setPositioning.call(this, pos);
-	$(this.element).removeClass("ol-popup-top ol-popup-bottom ol-popup-left ol-popup-right ol-popup-center ol-popup-middle");
-	$(this.element).addClass(this.getClassPositioning());
+	this._elt.removeClass("ol-popup-top ol-popup-bottom ol-popup-left ol-popup-right ol-popup-center ol-popup-middle");
+	this._elt.addClass(this.getClassPositioning());
 }
 
 /** Check if popup is visible
 * @return {boolean}
 */
 ol.Overlay.Popup.prototype.getVisible = function ()
-{	return $(this.element).hasClass("visible");
+{	return this._elt.hasClass("visible");
 };
 
 /**
  * Set the position and the content of the popup.
- * @param {ol.Coordinate|string} the coordinate of the popup or the HTML content.
- * @param {string|undefined} the HTML content (undefined = previous content).
+ * @param {ol.Coordinate|string} coordinate the coordinate of the popup or the HTML content.
+ * @param {string|undefined} html the HTML content (undefined = previous content).
+ * @example
+var popup = new ol.Overlay.Popup();
+// Show popup
+popup.show([166000, 5992000], "Hello world!");
+// Move popup at coord with the same info
+popup.show([167000, 5990000]);
+// set new info
+popup.show("New informations");
  * @api stable
  */
 ol.Overlay.Popup.prototype.show = function (coordinate, html)
@@ -11333,10 +11419,10 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
 		// Show
 		this.setPosition(coordinate);
 		// Set visible class (wait to compute the size/position first)
-		$(this.element).parent().show();
+		this._elt.parent().show();
                 if (typeof (this.onshow) == 'function') this.onshow();
 		this._tout = setTimeout (function()
-		{	$(self.element).addClass("visible"); 
+		{	self._elt.addClass("visible"); 
 		}, 0);
 	}
 }
@@ -11350,14 +11436,12 @@ ol.Overlay.Popup.prototype.hide = function ()
 	if (typeof (this.onclose) == 'function') this.onclose();
 	this.setPosition(undefined);
 	if (this._tout) clearTimeout(this._tout);
-	$(this.element).removeClass("visible");
+	this._elt.removeClass("visible");
 }
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-
-*  Add a marker style to use with font symbols
 */
 /**
  * @requires ol.style.Circle
@@ -11367,16 +11451,29 @@ ol.Overlay.Popup.prototype.hide = function ()
 
 /**
  * @classdesc
- * Set fontsymbol style for vector features.
+ * A marker style to use with font symbols.
  *
  * @constructor
- * @param {olx.style.FontSymbolOptions=} opt_options Options.
+ * @param {} options Options.
+ *  @param {number} options.glyph the glyph name or a char to display as symbol. 
+ * 		The name must be added using the {@link ol.style.FontSymbol.addDefs} function.
+ *  @param {string} options.form 
+ * 		none|circle|poi|bubble|marker|coma|shield|blazon|bookmark|hexagon|diamond|triangle|sign|ban|lozenge|square
+ * 		a form that will enclose the glyph, default none
+ *  @param {number} options.radius
+ *  @param {number} options.rotation
+ *  @param {number} options.rotateWithView
+ *  @param {number} options.opacity
+ *  @param {number} options.fontSize, default 1
+ *  @param {boolean} options.gradient true to display a gradient on the symbol
+ *  @param {ol.style.Fill} options.fill
+ *  @param {ol.style.Stroke} options.stroke
  * @extends {ol.style.RegularShape}
  * @implements {ol.structs.IHasChecksum}
  * @api
  */
-ol.style.FontSymbol = function(opt_options) 
-{	options = opt_options || {};
+ol.style.FontSymbol = function(options) 
+{	options = options || {};
 	var strokeWidth = 0;
 	if (options.stroke) strokeWidth = options.stroke.getWidth();
 	ol.style.RegularShape.call (this,{ radius: options.radius, fill:options.fill, 
@@ -11414,8 +11511,12 @@ ol.style.Image.prototype.getImagePNG = function()
  */
 ol.style.FontSymbol.prototype.defs = { 'fonts':{}, 'glyphs':{} };
 
-/**
- *	Static function : add new font defs 
+/** Static function : add new font defs 
+ * @param {String|Object} font the font desciption
+ * @param {} glyphs a key / value list of glyph definitions. 
+ * 		Each key is the name of the glyph, 
+ * 		the value is an object that code the font, the caracter code, 
+ * 		the name and a search string for the glyph.
  */
  ol.style.FontSymbol.addDefs = function(font, glyphs)
  {	var thefont = font;
@@ -11485,7 +11586,8 @@ ol.style.FontSymbol.prototype.getStroke = function() {
 };
 
 /**
- * Get the stroke style for the symbol.
+ * Get the glyph definition for the symbol.
+ * @param {string|undefined} name a glyph name to get the definition, default return the glyph definition for the style.
  * @return {ol.style.Stroke} Stroke style.
  * @api
  */
@@ -11515,6 +11617,8 @@ ol.style.FontSymbol.prototype.getFontInfo = function(glyph)
 {	return ol.style.FontSymbol.prototype.defs.fonts[glyph.font];
 }
 
+/** @private
+ */
 ol.style.FontSymbol.prototype.renderMarker_ = function(atlasManager) 
 {
 	var strokeStyle;
@@ -11750,23 +11854,22 @@ ol.style.FontSymbol.prototype.getChecksum = function()
  * @requires ol.style.Circle
  * @requires ol.structs.IHasChecksum
  */
-
-
 /**
  * @classdesc
  * Set chart style for vector features.
  *
  * @constructor
- * @param {olx.style.FontSymbolOptions=} Options.
- *	- type {pie|bar}
- *	- radius {number} chart radius
- *	- rotation {number}
- *	- snapToPixel {bool}
- *	- stroke {ol.style.Stroke} stroke style
- *	- colors {String|Array<color>} predefined color set "classic","dark","pale","pastel","neon" / array of color string, default classic
- *	- offsetX {number}
- *	- offsetY {number}
- *	- animation {number} step in an animation sequence [0,1]
+ * @param {} options
+ *	@param {String} options.type Chart type: pie,pie3D, donut or bar
+ *	@param {number} options.radius Chart radius/size, default 20
+ *	@param {number} options.rotation Rotation in radians (positive rotation clockwise). Default is 0.
+ *	@param {bool} options.snapToPixel use integral numbers of pixels, default true
+ *	@param {ol.style.Stroke} options.stroke stroke style
+ *	@param {String|Array<ol.color>} options.colors predefined color set "classic","dark","pale","pastel","neon" / array of color string, default classic
+ *	@param {number} options.offsetX X offset in px
+ *	@param {number} options.offsetY Y offset in px
+ *	@param {number} options.animation step in an animation sequence [0,1]
+ * @see [Statistic charts example](../../examples/map.style.chart.html)
  * @extends {ol.style.RegularShape}
  * @implements {ol.structs.IHasChecksum}
  * @api
@@ -11803,7 +11906,7 @@ ol.style.Chart = function(opt_options)
 };
 ol.inherits(ol.style.Chart, ol.style.RegularShape);
 
-/** Default color thems
+/** Default color set: classic, dark, pale, pastel, neon
 */
 ol.style.Chart.colors = 
 {	"classic":	["#ffa500","blue","red","green","cyan","magenta","yellow","#0f0"],
@@ -12030,17 +12133,17 @@ ol.style.Chart.prototype.getChecksum = function()
  * Fill style with named pattern
  *
  * @constructor
- * @param {olx.style.FillPatternOption=}  Options
- *	- image {ol.style.Image|undefined} an image pattern, image must be preloaded to draw on first call
- *	- opacity {number|undefined} opacity with image pattern, default:1
- *	- pattern {olx.style.fillPattern} pattern name (override by image option)
- *	- color {ol.color} pattern color
- *	- fill {ol.style.Fill} fill color (background)
- *	- offset {number} pattern offset for hash/dot/circle/cross pattern
- *	- size {number} line size for hash/dot/circle/cross pattern
- *	- spacing {number} spacing for hash/dot/circle/cross pattern
- *	- angle {number|bool} angle for hash pattern / true for 45deg dot/circle/cross
- *	- scale [number} pattern scale 
+ * @param {olx.style.FillPatternOption=}  options
+ *	@param {ol.style.Image|undefined} options.image an image pattern, image must be preloaded to draw on first call
+ *	@param {number|undefined} options.opacity opacity with image pattern, default:1
+ *	@param {olx.style.fillPattern} options.pattern pattern name (override by image option)
+ *	@param {ol.color} options.color pattern color
+ *	@param {ol.style.Fill} options.fill fill color (background)
+ *	@param {number} options.offset pattern offset for hash/dot/circle/cross pattern
+ *	@param {number} options.size line size for hash/dot/circle/cross pattern
+ *	@param {number} options.spacing spacing for hash/dot/circle/cross pattern
+ *	@param {number|bool} options.angle angle for hash pattern / true for 45deg dot/circle/cross
+ *	@param {number} options.scale pattern scale 
  * @extends {ol.style.Fill}
  * @implements {ol.structs.IHasChecksum}
  * @api
@@ -12572,7 +12675,6 @@ ol.style.FillPattern.prototype.patterns =
 
 
 /**
- * @inheritDoc
  * /
 ol.style.FillPattern.prototype.getChecksum = function() 
 {
@@ -12607,31 +12709,28 @@ ol.style.FillPattern.prototype.getChecksum = function()
  * @requires ol.style.RegularShape
  * @requires ol.structs.IHasChecksum
  */
-
-/** olx.style.PhotoSymbolOptions
-*	kind { default | square | round | anchored | folio } 
-*	crop {boolean} crop within square, default is false
-*	radius {Number} symbol size
-*	shadow {boolean} drop a shadow
-*	stroke {ol.style.Stroke}
-*	src {String} image src
-*	crossOrigin {String} The crossOrigin attribute for loaded images. Note that you must provide a crossOrigin value if you want to access pixel data with the Canvas renderer.
-*	offsetX {Number} Horizontal offset in pixels. Default is 0.
-*	offsetY {Number} Vertical offset in pixels. Default is 0.
-*	onload {function} callback when image is loaded (to redraw the layer)
-*/
 /**
  * @classdesc
  * Set Photo style for vector features.
  *
  * @constructor
- * @param {olx.style.PhotoSymbolOptions=} Options.
+ * @param {} options
+ *  @param { default | square | round | anchored | folio } options.kind
+ *  @param {boolean} options.crop crop within square, default is false
+ *  @param {Number} options.radius symbol size
+ *  @param {boolean} options.shadow drop a shadow
+ *  @param {ol.style.Stroke} options.stroke
+ *  @param {String} options.src image src
+ *  @param {String} options.crossOrigin The crossOrigin attribute for loaded images. Note that you must provide a crossOrigin value if you want to access pixel data with the Canvas renderer.
+ *  @param {Number} options.offsetX Horizontal offset in pixels. Default is 0.
+ *  @param {Number} options.offsetY Vertical offset in pixels. Default is 0.
+ *  @param {function} options.onload callback when image is loaded (to redraw the layer)
  * @extends {ol.style.RegularShape}
  * @implements {ol.structs.IHasChecksum}
  * @api
  */
-ol.style.Photo = function(opt_options) 
-{	options = opt_options || {};
+ol.style.Photo = function(options) 
+{	options = options || {};
 	this.sanchor_ = options.kind=="anchored" ? 8:0;
 	this.shadow_ = Number(options.shadow) || 0;
 	if (!options.stroke) 
@@ -12835,8 +12934,8 @@ ol.style.Photo.prototype.renderPhoto_ = function()
 }
 
 /**
- * @private
  * Draw an timage when loaded
+ * @private
  */
 ol.style.Photo.prototype.drawImage_ = function(img) 
 {	var canvas = this.getImage();
