@@ -1,7 +1,7 @@
 {
-  "name": "ol3-ext",
-  "version": "1.0.1",
-  "description": "A set of cool extensions for OpenLayers 3 (ol3).",
+  "name": "ol-ext",
+  "version": "1.1.1",
+  "description": "A set of cool extensions for OpenLayers (ol).",
   "main": "index.js",
   "directories": {
     "example": "examples"
