@@ -34,7 +34,7 @@
 			<li class="dropdown">
 				<a href="namespaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Namespaces<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="ol.html">ol</a></li><li><a href="ol.control.html">ol.control</a></li><li><a href="ol.control.Control.html">ol.control.Control</a></li><li><a href="ol.filter.html">ol.filter</a></li><li><a href="ol.interaction.html">ol.interaction</a></li><li><a href="ol.layer.Base.html">ol.layer.Base</a></li><li><a href="ol.layer.Vector.html">ol.layer.Vector</a></li><li><a href="ol.Map.html">ol.Map</a></li><li><a href="ol.ordering.html">ol.ordering</a></li><li><a href="ol.Overlay.html">ol.Overlay</a></li><li><a href="ol.source.html">ol.source</a></li><li><a href="ol.style.html">ol.style</a></li>
+					<li><a href="ol.html">ol</a></li><li><a href="ol.control.html">ol.control</a></li><li><a href="ol.control.Control.html">ol.control.Control</a></li><li><a href="ol.easing.html">ol.easing</a></li><li><a href="ol.filter.html">ol.filter</a></li><li><a href="ol.interaction.html">ol.interaction</a></li><li><a href="ol.layer.Base.html">ol.layer.Base</a></li><li><a href="ol.layer.Vector.html">ol.layer.Vector</a></li><li><a href="ol.Map.html">ol.Map</a></li><li><a href="ol.ordering.html">ol.ordering</a></li><li><a href="ol.Overlay.html">ol.Overlay</a></li><li><a href="ol.source.html">ol.source</a></li><li><a href="ol.style.html">ol.style</a></li>
 				</ul>
 			</li>
 			
@@ -96,7 +96,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="Chart"><span class="type-signature"></span>new ol.style.Chart()</h4>
+    <h4 class="name" id="Chart"><span class="type-signature"></span>new ol.style.Chart(options)</h4>
     
     
 </dt>
@@ -123,7 +123,42 @@
         <th>Type</th>
 
         
-        <th>Argument</th>
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                <h6 class="method-params-label method-subparams-label">Properties</h6>
+                
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
         
 
         
@@ -137,13 +172,13 @@
 
         <tr>
             
-                <td class="name"><code>Options.</code></td>
+                <td class="name"><code>type</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">olx.style.FontSymbolOptions</span>
+<span class="param-type">String</span>
 
 
 
@@ -151,32 +186,212 @@
             </td>
 
             
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
 
-                
+            
 
+            <td class="description last"><p>Chart type: pie,pie3D, donut or bar</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>radius</code></td>
+            
+
+            <td class="type">
+            
                 
-                </td>
+<span class="param-type">number</span>
+
+
+
+            
+            </td>
+
             
 
             
 
-            <td class="description last"><ul>
-<li>type {pie|bar}<ul>
-<li>radius {number} chart radius</li>
-<li>rotation {number}</li>
-<li>snapToPixel {bool}</li>
-<li>stroke {ol.style.Stroke} stroke style</li>
-<li>colors {String|Array<color>} predefined color set &quot;classic&quot;,&quot;dark&quot;,&quot;pale&quot;,&quot;pastel&quot;,&quot;neon&quot; / array of color string, default classic</li>
-<li>offsetX {number}</li>
-<li>offsetY {number}</li>
-<li>animation {number} step in an animation sequence [0,1]</li>
-</ul>
-</li>
-</ul></td>
+            <td class="description last"><p>Chart radius/size, default 20</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>rotation</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Rotation in radians (positive rotation clockwise). Default is 0.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>snapToPixel</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">bool</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>use integral numbers of pixels, default true</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>stroke</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">ol.style.Stroke</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>stroke style</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>colors</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+|
+
+<span class="param-type">Array.&lt;ol.color></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>predefined color set &quot;classic&quot;,&quot;dark&quot;,&quot;pale&quot;,&quot;pastel&quot;,&quot;neon&quot; / array of color string, default classic</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>offsetX</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>X offset in px</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>offsetY</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Y offset in px</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>animation</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>step in an animation sequence [0,1]</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -226,6 +441,13 @@
 
 	
 
+	
+	<dt class="tag-see method-doc-label method-doc-details-label">See:</dt>
+	<dd class="tag-see">
+		<ul>
+			<li><p><a href="../../examples/map.style.chart.html">Statistic charts example</a></p></li>
+			</ul>
+	</dd>
 	
 
 	
@@ -285,7 +507,7 @@
 <dd>
     
     <div class="description">
-        <p>Default color thems</p>
+        <p>Default color set: classic, dark, pale, pastel, neon</p>
     </div>
     
 
