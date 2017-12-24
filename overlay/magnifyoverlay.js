@@ -82,7 +82,8 @@ ol.Overlay.Magnify.prototype.setActive = function(active)
 }
 
 /** Mouse move
-*/
+ * @private
+ */
 ol.Overlay.Magnify.prototype.onMouseMove_ = function(e)
 {	var self = e.data.self;
 	if (!self.get("active"))
@@ -97,7 +98,8 @@ ol.Overlay.Magnify.prototype.onMouseMove_ = function(e)
 }
 
 /** View has changed
-*/
+ * @private
+ */
 ol.Overlay.Magnify.prototype.setView_ = function(e)
 {	if (!this.get("active"))
 	{	this.setPosition();

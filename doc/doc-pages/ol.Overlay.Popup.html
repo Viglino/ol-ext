@@ -85,15 +85,7 @@
         </h2>
         
             <div class="class-description"><p>A popup element to be displayed over the map and attached to a single map
-location.  Like <a href="ol.control.Control.html">ol.control.Control</a>, Overlays are visible widgets.
-Unlike Controls, they are not in a fixed position on the screen, but are tied
-to a geographical coordinate, so panning the map will move an Overlay but not
-a Control.</p>
-<p>Example:</p>
-<pre class="prettyprint source"><code>var popup = new ol.Overlay.Popup();
-map.addOverlay(popup);
-popup.show(coordinate, &quot;Hello!&quot;);
-popup.hide();</code></pre></div>
+location. The popup are customized using CSS.</p></div>
         
     
 </header>
@@ -149,8 +141,45 @@ popup.hide();</code></pre></div>
 
             <td class="type">
             
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Extend Overlay options</p>
+                <h6 class="method-params-label method-subparams-label">Properties</h6>
                 
-<span class="param-type">olx.OverlayOptions</span>
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>popupClass</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
 
 
 
@@ -161,12 +190,122 @@ popup.hide();</code></pre></div>
 
             
 
-            <td class="description last"><p>Overlay options </p>
-<pre class="prettyprint source"><code>    + popupClass: the a class for the overlay.
-    + closeBox: popup has a close box.
-    + onclose: callback when popup is closed
-    + onshow: callback when popup is shown
-    + positionning: add 'auto' to let the popup choose a good positioning.</code></pre></td>
+            <td class="description last"><p>the a class of the overlay to style the popup.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>closeBox</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">bool</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>popup has a close box, default false.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>onclose:</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+|
+
+<span class="param-type">undefined</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>callback function when popup is closed</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>onshow</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+|
+
+<span class="param-type">undefined</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>callback function when popup is shown</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>positionning</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">ol.OverlayPositioning</span>
+|
+
+<span class="param-type">string</span>
+|
+
+<span class="param-type">undefined</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>the 'auto' positionning let the popup choose its positioning to stay on the map.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -228,6 +367,15 @@ popup.hide();</code></pre></div>
     
 
     
+        <h5>Example</h5>
+        
+    <pre class="sunlight-highlight-javascript">var popup = new ol.Overlay.Popup();
+map.addOverlay(popup);
+popup.show(coordinate, &quot;Hello!&quot;);
+popup.hide();</pre>
+
+
+    
 </dd>
 
     
@@ -263,7 +411,7 @@ popup.hide();</code></pre></div>
             
 <hr>
 <dt>
-    <h4 class="name" id="addPopupClass"><span class="type-signature"></span>addPopupClass(class)</h4>
+    <h4 class="name" id="addPopupClass"><span class="type-signature"></span>addPopupClass(c)</h4>
     
     
 </dt>
@@ -306,7 +454,7 @@ popup.hide();</code></pre></div>
 
         <tr>
             
-                <td class="name"><code>class</code></td>
+                <td class="name"><code>c</code></td>
             
 
             <td class="type">
@@ -323,7 +471,7 @@ popup.hide();</code></pre></div>
 
             
 
-            <td class="description last"><p>name.</p></td>
+            <td class="description last"><p>class name.</p></td>
         </tr>
 
     
@@ -567,7 +715,7 @@ popup.hide();</code></pre></div>
             
 <hr>
 <dt>
-    <h4 class="name" id="removePopupClass"><span class="type-signature"></span>removePopupClass(class)</h4>
+    <h4 class="name" id="removePopupClass"><span class="type-signature"></span>removePopupClass(c)</h4>
     
     
 </dt>
@@ -610,7 +758,7 @@ popup.hide();</code></pre></div>
 
         <tr>
             
-                <td class="name"><code>class</code></td>
+                <td class="name"><code>c</code></td>
             
 
             <td class="type">
@@ -627,7 +775,7 @@ popup.hide();</code></pre></div>
 
             
 
-            <td class="description last"><p>name.</p></td>
+            <td class="description last"><p>class name.</p></td>
         </tr>
 
     
@@ -695,7 +843,7 @@ popup.hide();</code></pre></div>
             
 <hr>
 <dt>
-    <h4 class="name" id="setClosebox"><span class="type-signature"></span>setClosebox(class)</h4>
+    <h4 class="name" id="setClosebox"><span class="type-signature"></span>setClosebox(b)</h4>
     
     
 </dt>
@@ -703,7 +851,7 @@ popup.hide();</code></pre></div>
 
     
     <div class="description">
-        <p>Set CSS class of the popup.</p>
+        <p>Set a close box to the popup.</p>
     </div>
     
 
@@ -738,13 +886,13 @@ popup.hide();</code></pre></div>
 
         <tr>
             
-                <td class="name"><code>class</code></td>
+                <td class="name"><code>b</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">string</span>
+<span class="param-type">bool</span>
 
 
 
@@ -755,7 +903,7 @@ popup.hide();</code></pre></div>
 
             
 
-            <td class="description last"><p>name.</p></td>
+            <td class="description last"></td>
         </tr>
 
     
@@ -823,7 +971,7 @@ popup.hide();</code></pre></div>
             
 <hr>
 <dt>
-    <h4 class="name" id="setPopupClass"><span class="type-signature"></span>setPopupClass(class)</h4>
+    <h4 class="name" id="setPopupClass"><span class="type-signature"></span>setPopupClass(c)</h4>
     
     
 </dt>
@@ -866,7 +1014,7 @@ popup.hide();</code></pre></div>
 
         <tr>
             
-                <td class="name"><code>class</code></td>
+                <td class="name"><code>c</code></td>
             
 
             <td class="type">
@@ -883,7 +1031,7 @@ popup.hide();</code></pre></div>
 
             
 
-            <td class="description last"><p>name.</p></td>
+            <td class="description last"><p>class name.</p></td>
         </tr>
 
     
@@ -951,7 +1099,7 @@ popup.hide();</code></pre></div>
             
 <hr>
 <dt>
-    <h4 class="name" id="setPositioning"><span class="type-signature"></span>setPositioning(class)</h4>
+    <h4 class="name" id="setPositioning"><span class="type-signature"></span>setPositioning(pos)</h4>
     
     
 </dt>
@@ -959,7 +1107,7 @@ popup.hide();</code></pre></div>
 
     
     <div class="description">
-        <p>Remove a CSS class to the popup.</p>
+        <p>Set positionning of the popup</p>
     </div>
     
 
@@ -994,13 +1142,19 @@ popup.hide();</code></pre></div>
 
         <tr>
             
-                <td class="name"><code>class</code></td>
+                <td class="name"><code>pos</code></td>
             
 
             <td class="type">
             
                 
+<span class="param-type">ol.OverlayPositioning</span>
+|
+
 <span class="param-type">string</span>
+|
+
+<span class="param-type">undefined</span>
 
 
 
@@ -1011,7 +1165,8 @@ popup.hide();</code></pre></div>
 
             
 
-            <td class="description last"><p>name.</p></td>
+            <td class="description last"><p>an ol.OverlayPositioning 
+        or 'auto' to let the popup choose the best position</p></td>
         </tr>
 
     
@@ -1079,7 +1234,7 @@ popup.hide();</code></pre></div>
             
 <hr>
 <dt>
-    <h4 class="name" id="show"><span class="type-signature"></span>show(the, the)</h4>
+    <h4 class="name" id="show"><span class="type-signature"></span>show(coordinate, html)</h4>
     
     
 </dt>
@@ -1122,7 +1277,7 @@ popup.hide();</code></pre></div>
 
         <tr>
             
-                <td class="name"><code>the</code></td>
+                <td class="name"><code>coordinate</code></td>
             
 
             <td class="type">
@@ -1142,14 +1297,14 @@ popup.hide();</code></pre></div>
 
             
 
-            <td class="description last"><p>coordinate of the popup or the HTML content.</p></td>
+            <td class="description last"><p>the coordinate of the popup or the HTML content.</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>the</code></td>
+                <td class="name"><code>html</code></td>
             
 
             <td class="type">
@@ -1169,7 +1324,7 @@ popup.hide();</code></pre></div>
 
             
 
-            <td class="description last"><p>HTML content (undefined = previous content).</p></td>
+            <td class="description last"><p>the HTML content (undefined = previous content).</p></td>
         </tr>
 
     
@@ -1229,6 +1384,18 @@ popup.hide();</code></pre></div>
     
 
     
+
+    
+        <h5>Example</h5>
+        
+    <pre class="sunlight-highlight-javascript">var popup = new ol.Overlay.Popup();
+// Show popup
+popup.show([166000, 5992000], &quot;Hello world!&quot;);
+// Move popup at coord with the same info
+popup.show([167000, 5990000]);
+// set new info
+popup.show(&quot;New informations&quot;);</pre>
+
 
     
 </dd>
