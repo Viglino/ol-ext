@@ -34,7 +34,7 @@
 			<li class="dropdown">
 				<a href="namespaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Namespaces<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="ol.html">ol</a></li><li><a href="ol.control.html">ol.control</a></li><li><a href="ol.control.Control.html">ol.control.Control</a></li><li><a href="ol.filter.html">ol.filter</a></li><li><a href="ol.interaction.html">ol.interaction</a></li><li><a href="ol.layer.Base.html">ol.layer.Base</a></li><li><a href="ol.layer.Vector.html">ol.layer.Vector</a></li><li><a href="ol.Map.html">ol.Map</a></li><li><a href="ol.ordering.html">ol.ordering</a></li><li><a href="ol.Overlay.html">ol.Overlay</a></li><li><a href="ol.source.html">ol.source</a></li><li><a href="ol.style.html">ol.style</a></li>
+					<li><a href="ol.html">ol</a></li><li><a href="ol.control.html">ol.control</a></li><li><a href="ol.control.Control.html">ol.control.Control</a></li><li><a href="ol.easing.html">ol.easing</a></li><li><a href="ol.filter.html">ol.filter</a></li><li><a href="ol.interaction.html">ol.interaction</a></li><li><a href="ol.layer.Base.html">ol.layer.Base</a></li><li><a href="ol.layer.Vector.html">ol.layer.Vector</a></li><li><a href="ol.Map.html">ol.Map</a></li><li><a href="ol.ordering.html">ol.ordering</a></li><li><a href="ol.Overlay.html">ol.Overlay</a></li><li><a href="ol.source.html">ol.source</a></li><li><a href="ol.style.html">ol.style</a></li>
 				</ul>
 			</li>
 			
@@ -84,8 +84,8 @@
         Base
         </h2>
         
-            <div class="class-description"><p>Abstract base class; normally only used for creating subclasses and not instantiated in apps. 
-  Used to create filters</p></div>
+            <div class="class-description"><p>Abstract base class; normally only used for creating subclasses and not instantiated in apps.<br>Used to create filters<br>Use <a href="ol.Map.html#addFilter">ol.Map#addFilter</a>, <a href="ol.Map.html#removeFilter">ol.Map#removeFilter</a> or <a href="ol.Map.html#getFilters">ol.Map#getFilters</a> to handle filters on a map.<br>Use <a href="ol.layer.Base.html#addFilter">ol.layer.Base#addFilter</a>, <a href="ol.layer.Base.html#removeFilter">ol.layer.Base#removeFilter</a> or <a href="ol.layer.Base.html#getFilters">ol.layer.Base#getFilters</a> 
+to handle filters on layers.</p></div>
         
     
 </header>
@@ -97,7 +97,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="Base"><span class="type-signature"></span>new ol.filter.Base( [Control])</h4>
+    <h4 class="name" id="Base"><span class="type-signature"></span>new ol.filter.Base(options)</h4>
     
     
 </dt>
@@ -124,7 +124,42 @@
         <th>Type</th>
 
         
-        <th>Argument</th>
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Extend <a href="ol.control.Control.html">ol.control.Control</a> options.</p>
+                <h6 class="method-params-label method-subparams-label">Properties</h6>
+                
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
         
 
         
@@ -138,13 +173,13 @@
 
         <tr>
             
-                <td class="name"><code>Control</code></td>
+                <td class="name"><code>active</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Object</span>
+<span class="param-type">bool</span>
 
 
 
@@ -152,20 +187,17 @@
             </td>
 
             
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
 
             
 
-            <td class="description last"><p>options. The style {ol.style.Style} option is usesd to draw the text.</p></td>
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     

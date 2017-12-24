@@ -34,7 +34,7 @@
 			<li class="dropdown">
 				<a href="namespaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Namespaces<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="ol.html">ol</a></li><li><a href="ol.control.html">ol.control</a></li><li><a href="ol.control.Control.html">ol.control.Control</a></li><li><a href="ol.filter.html">ol.filter</a></li><li><a href="ol.interaction.html">ol.interaction</a></li><li><a href="ol.layer.Base.html">ol.layer.Base</a></li><li><a href="ol.layer.Vector.html">ol.layer.Vector</a></li><li><a href="ol.Map.html">ol.Map</a></li><li><a href="ol.ordering.html">ol.ordering</a></li><li><a href="ol.Overlay.html">ol.Overlay</a></li><li><a href="ol.source.html">ol.source</a></li><li><a href="ol.style.html">ol.style</a></li>
+					<li><a href="ol.html">ol</a></li><li><a href="ol.control.html">ol.control</a></li><li><a href="ol.control.Control.html">ol.control.Control</a></li><li><a href="ol.easing.html">ol.easing</a></li><li><a href="ol.filter.html">ol.filter</a></li><li><a href="ol.interaction.html">ol.interaction</a></li><li><a href="ol.layer.Base.html">ol.layer.Base</a></li><li><a href="ol.layer.Vector.html">ol.layer.Vector</a></li><li><a href="ol.Map.html">ol.Map</a></li><li><a href="ol.ordering.html">ol.ordering</a></li><li><a href="ol.Overlay.html">ol.Overlay</a></li><li><a href="ol.source.html">ol.source</a></li><li><a href="ol.style.html">ol.style</a></li>
 				</ul>
 			</li>
 			
@@ -94,7 +94,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="GeoBookmark"><span class="type-signature"></span>new ol.control.GeoBookmark( [Control], className, placeholder, editable, namespace, {Array<any>)</h4>
+    <h4 class="name" id="GeoBookmark"><span class="type-signature"></span>new ol.control.GeoBookmark(options)</h4>
     
     
 </dt>
@@ -102,7 +102,7 @@
 
     
     <div class="description">
-        <p>GeoBookmarks</p>
+        <p>Bookmark positions on ol maps.</p>
     </div>
     
 
@@ -125,8 +125,6 @@
         <th>Type</th>
 
         
-        <th>Argument</th>
-        
 
         
 
@@ -139,36 +137,39 @@
 
         <tr>
             
-                <td class="name"><code>Control</code></td>
+                <td class="name"><code>options</code></td>
             
 
             <td class="type">
             
-                
-<span class="param-type">Object</span>
-
-
-
-            
             </td>
 
             
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
 
             
 
-            <td class="description last"><p>options.</p></td>
-        </tr>
+            <td class="description last"><p>Geobookmark's options</p>
+                <h6 class="method-params-label method-subparams-label">Properties</h6>
+                
 
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
     
 
         <tr>
@@ -186,14 +187,6 @@
             
             </td>
 
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
             
 
             
@@ -219,14 +212,6 @@
             </td>
 
             
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
 
             
 
@@ -250,14 +235,6 @@
             
             </td>
 
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
             
 
             
@@ -283,44 +260,41 @@
             </td>
 
             
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
 
             
 
-            <td class="description last"><p>a namespace to save the boolmark (if more than one on a page), default: ol</p></td>
+            <td class="description last"><p>a namespace to save the boolmark (if more than one on a page), default ol</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>{Array<any></code></td>
+                <td class="name"><code>marks</code></td>
             
 
             <td class="type">
             
+                
+<span class="param-type">Array.&lt;any></span>
+
+
+
+            
             </td>
 
             
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
 
             
 
-            <td class="description last"><p>marks a list of default bookmarks : { BM1:{pos:ol.coordinates, zoom: integer, permanent: true}, BM2:{pos:ol.coordinates, zoom: integer} }</p></td>
+            <td class="description last"><p>a list of default bookmarks:</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -364,6 +338,13 @@
 	
 
 	
+	<dt class="tag-see method-doc-label method-doc-details-label">See:</dt>
+	<dd class="tag-see">
+		<ul>
+			<li><p><a href="../../examples/map.control.geobookmark.html">Geobookmark example</a></p></li>
+			</ul>
+	</dd>
+	
 
 	
 </dl>
@@ -372,7 +353,12 @@
     
 
     
-
+    <h5>Fires:</h5>
+    <ul>
+        <li>event:add</li>
+    
+        <li>event:remove</li>
+    </ul>
     
 
     
@@ -380,6 +366,19 @@
     
 
     
+
+    
+
+    
+        <h5>Example</h5>
+        
+    <pre class="sunlight-highlight-javascript">var bm = new GeoBookmark ({ 
+  marks: {
+    &quot;Paris&quot;: {pos:ol.proj.transform([2.351828, 48.856578], &#x27;EPSG:4326&#x27;, &#x27;EPSG:3857&#x27;), zoom:11, permanent: true },
+    &quot;London&quot;: {pos:ol.proj.transform([-0.1275,51.507222], &#x27;EPSG:4326&#x27;, &#x27;EPSG:3857&#x27;), zoom:12}
+  }
+});</pre>
+
 
     
 </dd>
@@ -417,7 +416,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="addBookmark"><span class="type-signature"></span>addBookmark(name, position,, zoom,, permanent:)</h4>
+    <h4 class="name" id="addBookmark"><span class="type-signature"></span>addBookmark(name, position, zoom, permanent)</h4>
     
     
 </dt>
@@ -484,7 +483,7 @@
 
         <tr>
             
-                <td class="name"><code>position,</code></td>
+                <td class="name"><code>position</code></td>
             
 
             <td class="type">
@@ -508,7 +507,7 @@
 
         <tr>
             
-                <td class="name"><code>zoom,</code></td>
+                <td class="name"><code>zoom</code></td>
             
 
             <td class="type">
@@ -532,7 +531,7 @@
 
         <tr>
             
-                <td class="name"><code>permanent:</code></td>
+                <td class="name"><code>permanent</code></td>
             
 
             <td class="type">
@@ -901,8 +900,7 @@
 
             
 
-            <td class="description last"><p>a list of bookmarks, default retreave in the localstorage
-  example : setBookmarks({ &quot;Mark 1&quot;:{pos:ol.coordinates, zoom: integer}, &quot;Mark 2&quot;:{pos:ol.coordinates, zoom: integer} })</p></td>
+            <td class="description last"><p>a list of bookmarks, default retreave in the localstorage</p></td>
         </tr>
 
     
@@ -962,6 +960,15 @@
     
 
     
+
+    
+        <h5>Example</h5>
+        
+    <pre class="sunlight-highlight-javascript">bm.setBookmarks({ 
+  &quot;Paris&quot;: {pos:ol.proj.transform([2.351828, 48.856578], &#x27;EPSG:4326&#x27;, &#x27;EPSG:3857&#x27;), zoom:11, permanent: true },
+  &quot;London&quot;: {pos:ol.proj.transform([-0.1275,51.507222], &#x27;EPSG:4326&#x27;, &#x27;EPSG:3857&#x27;), zoom:12}
+});</pre>
+
 
     
 </dd>
