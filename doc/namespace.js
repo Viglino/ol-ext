@@ -56,3 +56,9 @@
  * @namespace ol.control.Control
  * @see {@link http://openlayers.org/en/latest/apidoc/ol.control.Control.html}
  */
+
+ /**
+ * Easing functions.
+ * @namespace ol.easing
+ * @see {@link https://openlayers.org/en/latest/apidoc/ol.easing.html}
+ */
