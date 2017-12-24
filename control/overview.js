@@ -92,8 +92,9 @@ ol.control.Overview = function(options)
 	this.ovmap_.addLayer(this.extentLayer);
 
 	/** Elastic bounce
-	*	@param {Int} number of bounce
-	*	@prama {Number} [0,1] amplitude of the bounce
+	*	@param {Int} bounce number of bounce
+	*	@param {Number} amplitude amplitude of the bounce [0,1] 
+	*	@return {Number}
 	*/
 	ol.easing.bounceFn = function (bounce, amplitude)
 	{	var a = (2*bounce+1) * Math.PI/2;
@@ -104,6 +105,11 @@ ol.control.Overview = function(options)
 			return 1 + Math.abs( Math.cos(a*t) ) * Math.pow(2, b*t) + c*t;
 		}
 	}
+	/** Elastic bounce
+	*	@param {Int} bounce number of bounce
+	*	@param {Number} amplitude amplitude of the bounce [0,1] 
+	*	@return {Number}
+	*/
 	ol.easing.elasticFn = function (bounce, amplitude)
 	{	var a = 3*bounce * Math.PI/2;
 		var b = amplitude>0 ? -1/amplitude : -100;
@@ -113,6 +119,7 @@ ol.control.Overview = function(options)
 			return 1 - Math.cos(a*t) * Math.pow(2, b*t) + c*t;
 		}
 	}
+
 	// Click on the preview center the map
 	this.ovmap_.addInteraction (new ol.interaction.Pointer(
 	{	handleDownEvent: function(evt)

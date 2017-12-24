@@ -8,23 +8,22 @@
  * @requires ol.style.Circle
  * @requires ol.structs.IHasChecksum
  */
-
-
 /**
  * @classdesc
  * Set chart style for vector features.
  *
  * @constructor
- * @param {olx.style.FontSymbolOptions=} Options.
- *	- type {pie|bar}
- *	- radius {number} chart radius
- *	- rotation {number}
- *	- snapToPixel {bool}
- *	- stroke {ol.style.Stroke} stroke style
- *	- colors {String|Array<color>} predefined color set "classic","dark","pale","pastel","neon" / array of color string, default classic
- *	- offsetX {number}
- *	- offsetY {number}
- *	- animation {number} step in an animation sequence [0,1]
+ * @param {} options
+ *	@param {String} options.type Chart type: pie,pie3D, donut or bar
+ *	@param {number} options.radius Chart radius/size, default 20
+ *	@param {number} options.rotation Rotation in radians (positive rotation clockwise). Default is 0.
+ *	@param {bool} options.snapToPixel use integral numbers of pixels, default true
+ *	@param {ol.style.Stroke} options.stroke stroke style
+ *	@param {String|Array<ol.color>} options.colors predefined color set "classic","dark","pale","pastel","neon" / array of color string, default classic
+ *	@param {number} options.offsetX X offset in px
+ *	@param {number} options.offsetY Y offset in px
+ *	@param {number} options.animation step in an animation sequence [0,1]
+ * @see [Statistic charts example](../../examples/map.style.chart.html)
  * @extends {ol.style.RegularShape}
  * @implements {ol.structs.IHasChecksum}
  * @api
@@ -61,7 +60,7 @@ ol.style.Chart = function(opt_options)
 };
 ol.inherits(ol.style.Chart, ol.style.RegularShape);
 
-/** Default color thems
+/** Default color set: classic, dark, pale, pastel, neon
 */
 ol.style.Chart.colors = 
 {	"classic":	["#ffa500","blue","red","green","cyan","magenta","yellow","#0f0"],

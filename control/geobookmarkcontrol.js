@@ -1,14 +1,23 @@
-/** GeoBookmarks
+/** Bookmark positions on ol maps. 
  *
  * @constructor
  * @extends {ol.control.Control}
- * @trigger add|remove when a bookmark us added or deleted
- * @param {Object=} Control options.
- *  @param {string} className default ol-bookmark
- *  @param {string} placeholder input placeholder, default Add a new geomark...
- *  @param {bool} editable enable modification, default true
- *  @param {string} namespace a namespace to save the boolmark (if more than one on a page), default: ol
- *  @param {Array<any> marks a list of default bookmarks : { BM1:{pos:ol.coordinates, zoom: integer, permanent: true}, BM2:{pos:ol.coordinates, zoom: integer} }
+ * @fires add
+ * @fires remove
+ * @param {} options Geobookmark's options
+ *  @param {string} options.className default ol-bookmark
+ *  @param {string} options.placeholder input placeholder, default Add a new geomark...
+ *  @param {bool} options.editable enable modification, default true
+ *  @param {string} options.namespace a namespace to save the boolmark (if more than one on a page), default ol
+ *  @param {Array<any>} options.marks a list of default bookmarks: 
+ * @see [Geobookmark example](../../examples/map.control.geobookmark.html)
+ * @example 
+var bm = new GeoBookmark ({ 
+  marks: {
+    "Paris": {pos:ol.proj.transform([2.351828, 48.856578], 'EPSG:4326', 'EPSG:3857'), zoom:11, permanent: true },
+    "London": {pos:ol.proj.transform([-0.1275,51.507222], 'EPSG:4326', 'EPSG:3857'), zoom:12}
+  }
+});
  */
 ol.control.GeoBookmark = function(options) {
   options = options || {};
@@ -83,7 +92,11 @@ ol.inherits(ol.control.GeoBookmark, ol.control.Control);
 
 /** Set bookmarks
 * @param {} bmark a list of bookmarks, default retreave in the localstorage
-*   example : setBookmarks({ "Mark 1":{pos:ol.coordinates, zoom: integer}, "Mark 2":{pos:ol.coordinates, zoom: integer} })
+* @example 
+bm.setBookmarks({ 
+  "Paris": {pos:ol.proj.transform([2.351828, 48.856578], 'EPSG:4326', 'EPSG:3857'), zoom:11, permanent: true },
+  "London": {pos:ol.proj.transform([-0.1275,51.507222], 'EPSG:4326', 'EPSG:3857'), zoom:12}
+});
 */
 ol.control.GeoBookmark.prototype.setBookmarks = function(bmark) {
   if (!bmark) bmark = JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
@@ -140,9 +153,9 @@ ol.control.GeoBookmark.prototype.removeBookmark = function(name) {
 
 /** Add a new Geo bookmark (replace existing one if any)
 * @param {string} name name of the bookmark (display in the menu)
-* @param {ol.Coordintes} position, default current position
-* @param {number} zoom, default current map zoom
-* @param {bool} permanent: prevent from deletion, default false
+* @param {ol.Coordintes} position default current position
+* @param {number} zoom default current map zoom
+* @param {bool} permanent prevent from deletion, default false
 */
 ol.control.GeoBookmark.prototype.addBookmark = function(name, position, zoom, permanent) 
 {

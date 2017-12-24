@@ -5,12 +5,16 @@
 ol.filter = {};
 /**
  * @classdesc 
- *   Abstract base class; normally only used for creating subclasses and not instantiated in apps. 
- *   Used to create filters
+ * Abstract base class; normally only used for creating subclasses and not instantiated in apps.    
+ * Used to create filters    
+ * Use {@link ol.Map#addFilter}, {@link ol.Map#removeFilter} or {@link ol.Map#getFilters} to handle filters on a map.    
+ * Use {@link ol.layer.Base#addFilter}, {@link ol.layer.Base#removeFilter} or {@link ol.layer.Base#getFilters} 
+ * to handle filters on layers.
  *
  * @constructor
  * @extends {ol.Object}
- * @param {Object=} Control options. The style {ol.style.Style} option is usesd to draw the text.
+ * @param {} options Extend {@link ol.control.Control} options.
+ *  @param {bool} options.active
  */
 ol.filter.Base = function(options) 
 {	ol.Object.call(this);
