@@ -5,32 +5,29 @@
 /**
  * @classdesc
  * A popup element to be displayed over the map and attached to a single map
- * location.  Like {@link ol.control.Control}, Overlays are visible widgets.
- * Unlike Controls, they are not in a fixed position on the screen, but are tied
- * to a geographical coordinate, so panning the map will move an Overlay but not
- * a Control.
+ * location. The popup are customized using CSS.
  *
- * Example:
- *
- *     var popup = new ol.Overlay.Popup();
- *     map.addOverlay(popup);
- *     popup.show(coordinate, "Hello!");
- *     popup.hide();
+ * @example
+var popup = new ol.Overlay.Popup();
+map.addOverlay(popup);
+popup.show(coordinate, "Hello!");
+popup.hide();
  *
  * @constructor
  * @extends {ol.Overlay}
- * @param {olx.OverlayOptions} options Overlay options 
- *		+ popupClass: the a class for the overlay.
- *		+ closeBox: popup has a close box.
- *		+ onclose: callback when popup is closed
- *		+ onshow: callback when popup is shown
- *		+ positionning: add 'auto' to let the popup choose a good positioning.
+ * @param {} options Extend Overlay options 
+ *	@param {String} options.popupClass the a class of the overlay to style the popup.
+ *	@param {bool} options.closeBox popup has a close box, default false.
+ *	@param {function|undefined} options.onclose: callback function when popup is closed
+ *	@param {function|undefined} options.onshow callback function when popup is shown
+ *	@param {ol.OverlayPositioning | string | undefined} options.positionning 
+ *		the 'auto' positionning let the popup choose its positioning to stay on the map.
  * @api stable
  */
 ol.Overlay.Popup = function (options)
 {	var self = this;
 	var elt = $("<div>");
-	this.element = options.element = elt.get(0);
+	options.element = elt.get(0);
 	this.offsetBox = options.offsetBox;
 	// Anchor div
 	$("<div>").addClass("anchor").appendTo(elt);
@@ -39,8 +36,8 @@ ol.Overlay.Popup = function (options)
 	this.content = $("<div>").addClass("content").appendTo(d).get(0);
 	// Closebox
 	this.closeBox = options.closeBox;
-        this.onclose = options.onclose;      
-        this.onshow = options.onshow;      
+	this.onclose = options.onclose;      
+	this.onshow = options.onshow;      
 	$("<button>").addClass("closeBox").addClass(options.closeBox?"hasclosebox":"")
 				.attr('type', 'button')
 				.prependTo(d)
@@ -52,8 +49,9 @@ ol.Overlay.Popup = function (options)
 	d.on("mousedown touchstart", function(e){ e.stopPropagation(); })
 
 	ol.Overlay.call(this, options);
-	
-        // call setPositioning first in constructor so getClassPositioning is called only once
+	this._elt = elt;
+			
+	// call setPositioning first in constructor so getClassPositioning is called only once
 	this.setPositioning(options.positioning);
 	this.setPopupClass(options.popupClass);
 }
@@ -76,54 +74,54 @@ ol.Overlay.Popup.prototype.getClassPositioning = function ()
 }
 
 /**
- * Set CSS class of the popup.
- * @param {string} class name.
+ * Set a close box to the popup.
+ * @param {bool} b
  * @api stable
  */
 ol.Overlay.Popup.prototype.setClosebox = function (b)
 {	this.closeBox = b;
-	if (b) $(this.element).addClass("hasclosebox");
-	else $(this.element).removeClass("hasclosebox");
+	if (b) this._elt.addClass("hasclosebox");
+	else this._elt.removeClass("hasclosebox");
 }
 
 /**
  * Set the CSS class of the popup.
- * @param {string} class name.
+ * @param {string} c class name.
  * @api stable
  */
 ol.Overlay.Popup.prototype.setPopupClass = function (c)
-{	$(this.element).removeClass()
+{	this._elt.removeClass()
 		.addClass("ol-popup "+(c||"default")+" "+this.getClassPositioning()+(this.closeBox?" hasclosebox":""));
 }
 
 /**
  * Add a CSS class to the popup.
- * @param {string} class name.
+ * @param {string} c class name.
  * @api stable
  */
 ol.Overlay.Popup.prototype.addPopupClass = function (c)
-{	$(this.element).addClass(c);
+{	this._elt.addClass(c);
 }
 
 /**
  * Remove a CSS class to the popup.
- * @param {string} class name.
+ * @param {string} c class name.
  * @api stable
  */
 ol.Overlay.Popup.prototype.removePopupClass = function (c)
-{	$(this.element).removeClass(c);
+{	this._elt.removeClass(c);
 }
 
 /**
- * Remove a CSS class to the popup.
- * @param {string} class name.
+ * Set positionning of the popup
+ * @param {ol.OverlayPositioning | string | undefined} pos an ol.OverlayPositioning 
+ * 		or 'auto' to let the popup choose the best position 
  * @api stable
  */
 ol.Overlay.Popup.prototype.setPositioning = function (pos)
-{	
-        if (pos === undefined)
-            return;
-        if (/auto/.test(pos))
+{	if (pos === undefined)
+		return;
+	if (/auto/.test(pos))
 	{	this.autoPositioning = pos.split('-');
 		if (this.autoPositioning.length==1) this.autoPositioning[1]="auto";
 	}
@@ -132,23 +130,35 @@ ol.Overlay.Popup.prototype.setPositioning = function (pos)
 	if (pos=="center") pos = "bottom-center";
 	this.setPositioning_(pos);
 }
+
+/** @private
+ * @param {ol.OverlayPositioning | string | undefined} pos  
+ */
 ol.Overlay.Popup.prototype.setPositioning_ = function (pos)
 {	ol.Overlay.prototype.setPositioning.call(this, pos);
-	$(this.element).removeClass("ol-popup-top ol-popup-bottom ol-popup-left ol-popup-right ol-popup-center ol-popup-middle");
-	$(this.element).addClass(this.getClassPositioning());
+	this._elt.removeClass("ol-popup-top ol-popup-bottom ol-popup-left ol-popup-right ol-popup-center ol-popup-middle");
+	this._elt.addClass(this.getClassPositioning());
 }
 
 /** Check if popup is visible
 * @return {boolean}
 */
 ol.Overlay.Popup.prototype.getVisible = function ()
-{	return $(this.element).hasClass("visible");
+{	return this._elt.hasClass("visible");
 };
 
 /**
  * Set the position and the content of the popup.
- * @param {ol.Coordinate|string} the coordinate of the popup or the HTML content.
- * @param {string|undefined} the HTML content (undefined = previous content).
+ * @param {ol.Coordinate|string} coordinate the coordinate of the popup or the HTML content.
+ * @param {string|undefined} html the HTML content (undefined = previous content).
+ * @example
+var popup = new ol.Overlay.Popup();
+// Show popup
+popup.show([166000, 5992000], "Hello world!");
+// Move popup at coord with the same info
+popup.show([167000, 5990000]);
+// set new info
+popup.show("New informations");
  * @api stable
  */
 ol.Overlay.Popup.prototype.show = function (coordinate, html)
@@ -190,10 +200,10 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
 		// Show
 		this.setPosition(coordinate);
 		// Set visible class (wait to compute the size/position first)
-		$(this.element).parent().show();
+		this._elt.parent().show();
                 if (typeof (this.onshow) == 'function') this.onshow();
 		this._tout = setTimeout (function()
-		{	$(self.element).addClass("visible"); 
+		{	self._elt.addClass("visible"); 
 		}, 0);
 	}
 }
@@ -207,5 +217,5 @@ ol.Overlay.Popup.prototype.hide = function ()
 	if (typeof (this.onclose) == 'function') this.onclose();
 	this.setPosition(undefined);
 	if (this._tout) clearTimeout(this._tout);
-	$(this.element).removeClass("visible");
+	this._elt.removeClass("visible");
 }
