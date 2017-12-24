@@ -18,3 +18,8 @@ bar.addControl (c);
 ```
 - add `autoActive` option to `ol.control.Toggle` to auto activate the control when inserted in a subbar
 - add `autoDeactivate` option to `ol.control.Bar` to auto deactivate all controls in a subbar when desactivating it 
+
+## v1.1.2 2017-12
+**change project name ol-ext is now ol-ext**
+- add doc-pages [#53]
+- see [#65] 

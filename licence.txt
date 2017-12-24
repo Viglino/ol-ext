@@ -1,5 +1,4 @@
-﻿OL3-ext is licenced under the French Opensource BSD like CeCILL-B FREE SOFTWARE LICENSE.
- (c) 2016 - Jean-Marc Viglino, IGN-France
+﻿ol-ext (c) 2016 - Jean-Marc Viglino, IGN-France
 
 Some resources (mapping services and API) used in this sofware may have a specific license.
 You must check before use.
