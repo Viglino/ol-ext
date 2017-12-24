@@ -38,7 +38,7 @@ gulp.task("css", function() {
       compress: !options.debug,
       sourcemap: options.debug
     }))
-	.pipe(concat("ol3-ext"+(!options.debug?".min.css":".css")))
+	.pipe(concat("ol-ext"+(!options.debug?".min.css":".css")))
     .pipe(gulp.dest("./dist/"))
 });
 
@@ -62,7 +62,7 @@ gulp.task("js", function() {
 		"!./*/*.min.js",
 		"!./*/texturefilterimage.js"
 		])
-	.pipe(concat("ol3-ext.js"))
+	.pipe(concat("ol-ext.js"))
     .pipe(minify(
 		{	ext: { 
 				src:".js", 

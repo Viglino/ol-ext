@@ -1,6 +1,6 @@
 {
   "name": "ol-ext",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A set of cool extensions for OpenLayers (ol).",
   "main": "index.js",
   "directories": {
@@ -9,7 +9,7 @@
   "scripts": {},
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Viglino/ol3-ext.git"
+    "url": "git+https://github.com/Viglino/ol-ext.git"
   },
   "keywords": [
     "ol3",
@@ -32,9 +32,9 @@
   "author": "Jean-Marc Viglino (https://github.com/Viglino)",
   "license": "BSD",
   "bugs": {
-    "url": "https://github.com/Viglino/ol3-ext/issues"
+    "url": "https://github.com/Viglino/ol-ext/issues"
   },
-  "homepage": "https://github.com/Viglino/ol3-ext#,",
+  "homepage": "https://github.com/Viglino/ol-ext#,",
   "dependencies": {},
   "devDependencies": {
     "gulp": "^3.9.1",

@@ -1,6 +1,6 @@
 {
-    "name": "viglino/ol3-ext",
-    "description": "Cool extensions for OpenLayers 3",
+    "name": "viglino/ol-ext",
+    "description": "Cool extensions for OpenLayers (ol)",
     "license": "CeCILL-B",
     "authors": [
         {
