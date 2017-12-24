@@ -1,10 +1,11 @@
 # ol-ext
 *Cool extensions for [OpenLayers](https://github.com/openlayers/openlayers) (ol/ol3/ol4)*.
 
-### ol3-ext is now [ol-ext](https://github.com/Viglino/ol-ext) and is [now available on npm](https://www.npmjs.com/package/ol-ext): update your bookmark and your code
-
 [ol-ext](https://github.com/Viglino/ol-ext) is a set of extensions, controls, interactions to use with Openlayers.    
 [View live examples online](http://viglino.github.io/ol-ext/) or the [API documentation](http://viglino.github.io/ol-ext/doc/doc-pages/).
+
+### ! ol3-ext is now [ol-ext](https://github.com/Viglino/ol-ext) !
+ol3-ext has been renamed to ol-ext and is [now available on NPM](https://www.npmjs.com/package/ol-ext): **update your bookmark and your code**.
 
 **Keywords:** CSS popup, 
 Font Awesome symbol renderer, 
@@ -83,5 +84,6 @@ ol-ext is licenced under the French Opensource **BSD** compatible CeCILL-B FREE 
 Some resources (mapping services and API) used in this sofware may have a specific license.  
 You must check before use.
 
-> Full text license in English: (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt)  
-> Full text license in French: (http://www.cecill.info/licences/Licence_CeCILL-B_V1-fr.txt)
+> [Full text license in English](http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt)  
+> [Full text license in French](http://www.cecill.info/licences/Licence_CeCILL-B_V1-fr.txt)
+For convenience you can use the BSD licence instead when publish content to webpacks.
