@@ -3875,6 +3875,7 @@ ol.control.Profil.prototype.getImage = function(type, encoderOptions)
  * @param {Object=} options
  *	@param {string} options.className control class name
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *	@param {string | undefined} options.label Text label to use for the search button, default "search"
  *	@param {string | undefined} options.placeholder placeholder, default "Search..."
  *	@param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 1
@@ -3895,6 +3896,7 @@ ol.control.Search = function(options)
 	{	element = $("<div>").addClass((options.className||"") + ' ol-search ol-unselectable ol-control ol-collapsed');
 		this.button = $("<button>")
 					.attr('type','button')
+					.attr('title',options.label||"search")
 					.click (function()
 					{	element.toggleClass("ol-collapsed"); 
 						if (!element.hasClass("ol-collapsed")) 
@@ -4056,6 +4058,7 @@ ol.control.Search.prototype.drawList_ = function (auto)
  * @param {Object=} Control options. 
  *	@param {string} options.className control class name
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *	@param {string | undefined} options.label Text label to use for the search button, default "search"
  *	@param {string | undefined} options.placeholder placeholder, default "Search..."
  *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 300.
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 1
@@ -4131,6 +4134,7 @@ ol.control.SearchFeature.prototype.autocomplete = function (s, cback)
  * @param {Object=} Control options. 
  *	@param {string} options.className control class name
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *	@param {string | undefined} options.label Text label to use for the search button, default "search"
  *	@param {string | undefined} options.placeholder placeholder, default "Search..."
  *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
@@ -4198,11 +4202,18 @@ ol.control.SearchPhoton.prototype.autocomplete = function (s, cback)
           parser.href = url;
           parser.protocol = window.location.protocol;
           url = parser.href;
-        }
+		}
+	$.support.cors = true;
 	$.ajax(url,
 		{	dataType: "json",
+			//crossDomain: true,
 			data: data,
-			success: function(r) { cback(r.features); }
+			success: function(r) { 
+				cback(r.features); 
+			},
+			error: function() {
+				console.log(url, arguments);
+			}
 		});
 };
 
@@ -11264,7 +11275,7 @@ ol.Overlay.Popup = function (options)
 				{	self.hide();
 				});
 	// Stop event
-	options.stopEvent=false;
+	options.stopEvent = true;
 	d.on("mousedown touchstart", function(e){ e.stopPropagation(); })
 
 	ol.Overlay.call(this, options);
@@ -11425,7 +11436,7 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
 		{	self._elt.addClass("visible"); 
 		}, 0);
 	}
-}
+};
 
 /**
  * Hide the popup
@@ -11437,8 +11448,7 @@ ol.Overlay.Popup.prototype.hide = function ()
 	this.setPosition(undefined);
 	if (this._tout) clearTimeout(this._tout);
 	this._elt.removeClass("visible");
-}
-
+};
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
