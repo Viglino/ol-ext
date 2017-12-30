@@ -11,6 +11,7 @@
  * @param {Object=} Control options. 
  *	@param {string} options.className control class name
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *	@param {string | undefined} options.label Text label to use for the search button, default "search"
  *	@param {string | undefined} options.placeholder placeholder, default "Search..."
  *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
