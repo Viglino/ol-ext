@@ -15,6 +15,7 @@
  * @param {Object=} options
  *	@param {string} options.className control class name
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *	@param {string | undefined} options.label Text label to use for the search button, default "search"
  *	@param {string | undefined} options.placeholder placeholder, default "Search..."
  *	@param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 1
@@ -35,6 +36,7 @@ ol.control.Search = function(options)
 	{	element = $("<div>").addClass((options.className||"") + ' ol-search ol-unselectable ol-control ol-collapsed');
 		this.button = $("<button>")
 					.attr('type','button')
+					.attr('title',options.label||"search")
 					.click (function()
 					{	element.toggleClass("ol-collapsed"); 
 						if (!element.hasClass("ol-collapsed")) 

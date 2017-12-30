@@ -206,7 +206,7 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
 		{	self._elt.addClass("visible"); 
 		}, 0);
 	}
-}
+};
 
 /**
  * Hide the popup
@@ -218,4 +218,4 @@ ol.Overlay.Popup.prototype.hide = function ()
 	this.setPosition(undefined);
 	if (this._tout) clearTimeout(this._tout);
 	this._elt.removeClass("visible");
-}
+};
