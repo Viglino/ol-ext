@@ -18,8 +18,13 @@
 
 	<!-- jQuery -->
 	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<!-- IE 9 bug on ajax tranport  -->
+	<!--[if lte IE 9]>
+	<script type='text/javascript' src='//cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.3/jquery.xdomainrequest.min.js'></script>
+	<![endif]-->
 
     <!-- OL3 -->
+	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
 	<link rel="stylesheet" href="https://openlayers.org/en/master/css/ol.css" />
 	<script type="text/javascript" src="https://openlayers.org/en/master/build/ol.js"></script>
 	

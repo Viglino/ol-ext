@@ -79,11 +79,18 @@ ol.control.SearchPhoton.prototype.autocomplete = function (s, cback)
           parser.href = url;
           parser.protocol = window.location.protocol;
           url = parser.href;
-        }
+		}
+	$.support.cors = true;
 	$.ajax(url,
 		{	dataType: "json",
+			//crossDomain: true,
 			data: data,
-			success: function(r) { cback(r.features); }
+			success: function(r) { 
+				cback(r.features); 
+			},
+			error: function() {
+				console.log(url, arguments);
+			}
 		});
 };
 
