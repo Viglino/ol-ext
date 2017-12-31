@@ -172,6 +172,7 @@
 			</ul>
 		</div>
 		<div class="info">Selection: <span>0</span> feature(s)</div>
+		<div class="info">Display source features and move them around <br/> to see what happens to the bin!</div>
 	</div>
 
 	<script type="text/javascript">
@@ -239,20 +240,25 @@
 				{	// Display a point with a radius 
 					// depending on the number of objects in the aggregate.
 					case 'point':
-					{	return	[ new ol.style.Style(
+					{	var radius = Math.round(binSize/res +0.5) * Math.min(1,f.get('features').length/max);
+						return	[ new ol.style.Style(
 							{	image: new ol.style.RegularShape(
 								{	points: 6,
-									radius: Math.round(binSize/res +0.5) * Math.min(1,f.get('features').length/max),
+									radius: radius,
 									fill: new ol.style.Fill({ color: [0,0,255] }),
 									rotateWithView: true
 								}),
 								geometry: f.get('center')
-							})];
+							})
+							//, new ol.style.Style({ fill: new ol.style.Fill({color: [0,0,255,.1] }) })
+						];
 					}
 					// Display the polygon with a gradient value (opacity) 
 					// depending on the number of objects in the aggregate.
-					case 'gradient':
-						return [ new ol.style.Style({ fill: new ol.style.Fill({color: [0,0,255,Math.min(1,f.get('features').length/max)] }) }) ];
+					case 'gradient': {
+						var opacity = Math.min(1,f.get('features').length/max);
+						return [ new ol.style.Style({ fill: new ol.style.Fill({ color: [0,0,255,opacity] }) }) ];
+					}
 					// Display the polygon with a color
 					// depending on the number of objects in the aggregate.
 					case 'color':
