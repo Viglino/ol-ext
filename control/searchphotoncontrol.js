@@ -27,11 +27,19 @@ ol.control.SearchPhoton = function(options)
 	delete options.autocomplete;
 	options.minLength = options.minLength || 3;
 	options.typing = options.typing || 800;
-	options.url = options.url || "http://photon.komoot.de/api/";
 	ol.control.Search.call(this, options);
 	this.set('lang', options.lang);
 	this.set('position', options.position);
-        this.set('url', options.url);
+	// Handle Mix Content Warning
+	// If the current connection is an https connection all other connections must be https either
+	var url = options.url || "http://photon.komoot.de/api/";
+	if (window.location.protocol === "https:") {
+		var parser = document.createElement('a');
+		parser.href = url;
+		parser.protocol = window.location.protocol;
+		url = parser.href;
+	}
+	this.set('url', url);
 };
 ol.inherits(ol.control.SearchPhoton, ol.control.Search);
 
@@ -62,6 +70,7 @@ ol.control.SearchPhoton.prototype.autocomplete = function (s, cback)
 		lang: this.get('lang'),
 		limit: this.get('maxItems')
 	}
+	// Handle position proirity
 	if (this.get('position'))
 	{	var view = this.getMap().getView();
 		var pt = new ol.geom.Point(view.getCenter());
@@ -70,16 +79,8 @@ ol.control.SearchPhoton.prototype.autocomplete = function (s, cback)
 		data.lon = pt[0];
 		data.lat = pt[1];
 	}
-        // Handle Mix Content Warning
-        // If the current connection is an https connection all other connections must be https either
-        var url = this.get('url');
-        if (window.location.protocol === "https:")
-        {
-          var parser = document.createElement('a');
-          parser.href = url;
-          parser.protocol = window.location.protocol;
-          url = parser.href;
-		}
+
+	var url = this.get('url');
 	$.support.cors = true;
 	$.ajax(url,
 		{	dataType: "json",
@@ -92,6 +93,18 @@ ol.control.SearchPhoton.prototype.autocomplete = function (s, cback)
 				console.log(url, arguments);
 			}
 		});
+};
+
+/** Prevent same feature to be drawn twice: test equality
+ * @param {} f1 First feature to compare
+ * @param {} f2 Second feature to compare
+ * @return {boolean}
+ * @api
+ */
+ol.control.SearchPhoton.prototype.equalFeatures = function (f1, f2) {
+	return (this.getTitle(f1) == this.getTitle(f2) 
+		&& f1.geometry.coordinates[0] == f2.geometry.coordinates[0]
+		&& f1.geometry.coordinates[1] == f2.geometry.coordinates[1]);
 };
 
 /** A ligne has been clicked in the menu > dispatch event
