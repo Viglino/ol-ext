@@ -52,6 +52,7 @@ gulp.task("cssd", function() {
 // Build js
 gulp.task("js", function() {
 	gulp.src([
+		"./control/searchcontrol.js","./control/searchphotoncontrol.js",
 		"./control/layerswitchercontrol.js", "./control/*.js", "!./control/piratecontrol.js",
 		"./featureanimation/featureanimation.js", "./featureanimation/*.js", 
 		"./filter/filter.js", "./filter/maskfilter.js", "./filter/*.js",
