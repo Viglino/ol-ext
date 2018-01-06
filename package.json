@@ -35,7 +35,10 @@
     "url": "https://github.com/Viglino/ol-ext/issues"
   },
   "homepage": "https://github.com/Viglino/ol-ext#,",
-  "dependencies": {},
+  "dependencies": {
+    "jquery": ">=1.11.0",
+    "openlayers": "*"
+  },
   "devDependencies": {
     "gulp": "^3.9.1",
     "gulp-concat": "^2.6.0",
