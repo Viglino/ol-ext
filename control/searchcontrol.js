@@ -168,6 +168,16 @@ ol.control.Search.prototype.autocomplete = function (s, cback)
 	return false;
 };
 
+/** Prevent same feature to be drawn twice: test equality
+ * @param {} f1 First feature to compare
+ * @param {} f2 Second feature to compare
+ * @return {boolean}
+ * @api
+ */
+ol.control.Search.prototype.equalFeatures = function (f1, f2) {
+	return (this.getTitle(f1) == this.getTitle(f2));
+}
+
 /** Draw the list 
 * @param {Array} auto an array of search result
 */
@@ -177,11 +187,13 @@ ol.control.Search.prototype.drawList_ = function (auto)
 	var self = this;
 	var max = Math.min (self.get("maxItems"),auto.length);
 	for (var i=0; i<max; i++)
-	{	$("<li>").html(self.getTitle(auto[i]))
+	{	if (!i || !self.equalFeatures(auto[i], auto[i-1])) {
+			$("<li>").html(self.getTitle(auto[i]))
 			.data('search', auto[i])
 			.click(function(e)
 			{	self.select($(this).data('search'));
 			})
 			.appendTo(ul);
+		}
 	}
 };
