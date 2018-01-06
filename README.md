@@ -41,7 +41,14 @@ animations
 
 * Just download the [build script](https://github.com/Viglino/ol-ext/tree/gh-pages/dist) in the dist directory of the project.
 * If you just want to add a `<script>` tag to test things out, you can link directly to the builds from the github rawgit (not recommended in production):
-````
+````html
+<!-- jQuery -->
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+<!-- Openlayers -->
+<link rel="stylesheet" href="https://openlayers.org/en/master/css/ol.css" />
+<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+
 <!-- OL-ext -->
 <link rel="stylesheet" href="https://cdn.rawgit.com/Viglino/ol-ext/gh-pages/dist/ol-ext.min.css" />
 <script type="text/javascript" src="https://cdn.rawgit.com/Viglino/ol-ext/gh-pages/dist/ol-ext.min.js"></script>
@@ -50,7 +57,9 @@ animations
 ````
 npm install ol-ext
 ````
- 
+#### Dependencies
+The project requires Openlayers and jQuery.
+
 #### Building the project:
 Use the gulp command to build the project into the `/dist` directory:
 ````
