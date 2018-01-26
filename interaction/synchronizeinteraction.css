@@ -1,0 +1,27 @@
+.ol-target-overlay .ol-target 
+{	border: 1px solid transparent;
+	box-shadow: 0 0 1px 1px #fff;
+	display: block;
+	height: 20px;
+	width: 0;
+}
+
+.ol-target-overlay .ol-target:after,
+.ol-target-overlay .ol-target:before
+{	content:"";
+	border: 1px solid #369;
+	box-shadow: 0 0 1px 1px #fff;
+	display: block;
+	width: 20px;
+	height: 0;
+	position:absolute;
+	top:10px;
+	left:-10px;
+}
+.ol-target-overlay .ol-target:after
+{	box-shadow: none;
+	height: 20px;
+	width: 0;
+	top:0px;
+	left:0px;
+}

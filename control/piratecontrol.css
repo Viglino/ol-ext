@@ -1,0 +1,10 @@
+.pirate_back 
+{	/** Image Chris Fiedler - CC0 - https://pixabay.com/fr/papier-vieux-texture-parchemin-1074136/ */
+	background-image: url("piratecontrol.jpg");
+}
+.pirate_compass 
+{	background-image: url("piratecontrol.png");
+}
+.ol-pirate 
+{	display:none;
+}
