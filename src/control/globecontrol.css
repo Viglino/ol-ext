@@ -1,0 +1,124 @@
+.ol-control.ol-globe
+{	position: absolute;
+	left: 0.5em;
+	bottom: 0.5em;
+	border-radius: 50%;
+	opacity: 0.7;
+	transform: scale(0.5);
+	transform-origin: 0 100%;
+	-webkit-transform: scale(0.5);
+	-webkit-transform-origin: 0 100%;
+}
+.ol-control.ol-globe:hover
+{	opacity: 0.9;
+}
+
+.ol-control.ol-globe .panel
+{	display:block;
+	width:170px;
+	height:170px;
+	background-color:#fff;
+	cursor: pointer;
+	border-radius: 50%;
+	overflow: hidden;
+	box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.5);
+}
+.ol-control.ol-globe .panel .ol-viewport
+{	border-radius: 50%;
+}
+
+.ol-control.ol-globe .ol-pointer
+{	display: block;
+	background-color: #fff;
+	width:10px;
+	height: 10px;
+	border:10px solid red;
+	position: absolute;
+	top: 50%;
+	left:50%;
+	transform: translate(-15px, -40px);
+	-webkit-transform: translate(-15px, -40px);
+	border-radius: 50%;
+	z-index:1;
+	transition: opacity 0.15s, top 0s, left 0s;
+	-webkit-transition: opacity 0.15s, top 0s, left 0s;
+}
+.ol-control.ol-globe .ol-pointer.hidden
+{	opacity:0;
+	transition: opacity 0.15s, top 3s, left 5s;
+	-webkit-transition: opacity 0.15s, top 3s, left 5s;
+}
+
+.ol-control.ol-globe .ol-pointer::before
+{	border-radius: 50%;
+	box-shadow: 6px 6px 10px 5px #000;
+	content: "";
+	display: block;
+	height: 0;
+	left: 0;
+	position: absolute;
+	top: 23px;
+	width: 0;
+}
+.ol-control.ol-globe .ol-pointer::after
+{	content:"";
+	width:0;
+	height:0;
+	display: block;
+	position: absolute;
+	border-width: 20px 10px 0;
+	border-color: red transparent;
+	border-style: solid;
+	left: -50%;
+	top: 100%;
+}
+
+.ol-control.ol-globe .panel::before {
+  border-radius: 50%;
+  box-shadow: -20px -20px 80px 2px rgba(0, 0, 0, 0.7) inset;
+  content: "";
+  display: block;
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: 1;
+}
+.ol-control.ol-globe .panel::after {
+  border-radius: 50%;
+  box-shadow: 0 0 20px 7px rgba(255, 255, 255, 1);
+  content: "";
+  display: block;
+  height: 0;
+  left: 23%;
+  position: absolute;
+  top: 20%;
+  transform: rotate(-40deg);
+  width: 20%;
+  z-index: 1;
+}
+
+
+.ol-control.ol-globe.ol-collapsed .panel
+{	display:none;
+}
+
+.ol-control-top.ol-globe
+{	bottom: auto;
+	top: 5em;
+	transform-origin: 0 0;
+	-webkit-transform-origin: 0 0;
+}
+.ol-control-right.ol-globe
+{	left: auto;
+	right: 0.5em;
+	transform-origin: 100% 100%;
+	-webkit-transform-origin: 100% 100%;
+}
+.ol-control-right.ol-control-top.ol-globe
+{	left: auto;
+	right: 0.5em;
+	transform-origin: 100% 0;
+	-webkit-transform-origin: 100% 0;
+}
