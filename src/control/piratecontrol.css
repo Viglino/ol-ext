@@ -1,5 +1,6 @@
 .pirate_back 
 {	/** Image Chris Fiedler - CC0 - https://pixabay.com/fr/papier-vieux-texture-parchemin-1074136/ */
+	/*TODO: check if the image relative path is good*/
 	background-image: url("piratecontrol.jpg");
 }
 .pirate_compass 

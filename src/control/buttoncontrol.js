@@ -41,20 +41,5 @@ var ol_control_Button = function(options)
 };
 ol.inherits(ol_control_Button, ol_control_Control);
 
-/** A simple push button control drawn as text
-* @constructor
-* @extends {ol_control_Button}
-* @param {Object=} options Control options.
-*	@param {String} options.className class of the control
-*	@param {String} options.title title of the control
-*	@param {String} options.html html to insert in the control
-*	@param {function} options.handleClick callback when control is clicked (or use change:active event)
-*/
-var ol_control_TextButton = function(options)
-{	options = options || {};
-	options.className = (options.className||"") + " ol-text-button";
-	ol_control_Button.call(this, options);
-};
-ol.inherits(ol_control_TextButton, ol_control_Button);
 
-export {ol_control_Button, ol_control_TextButton}
+export default ol_control_Button
