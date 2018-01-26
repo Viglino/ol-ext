@@ -4,7 +4,7 @@
 */
 
 import ol from 'ol'
-import {ol_control_Button} from './buttoncontrol'
+import ol_control_Button from './buttoncontrol'
 import ol_control_Control from 'ol/control/control'
 
 /** A simple toggle control

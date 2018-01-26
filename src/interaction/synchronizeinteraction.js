@@ -8,6 +8,7 @@ import ol_interaction_Interaction from 'ol/interaction/interaction'
 import ol_Map from 'ol/map'
 import ol_events from 'ol/events'
 import ol_events_EventType from 'ol/events/eventtype'
+import ol_Overlay from 'ol/overlay'
 
 /** Interaction synchronize
  * @constructor
@@ -129,7 +130,7 @@ ol_interaction_Synchronize.prototype.handleMouseOut_ = function(e, scope)
 ol_Map.prototype.showTarget = function(coord)
 {	if (!this.targetOverlay_)
 	{	var elt = $("<div>").addClass("ol-target");
-		this.targetOverlay_ = new ol.Overlay({ element: elt.get(0) });
+		this.targetOverlay_ = new ol_Overlay({ element: elt.get(0) });
 		this.targetOverlay_.setPositioning('center-center');
 		this.addOverlay(this.targetOverlay_);
 		elt.parent().addClass("ol-target-overlay");
