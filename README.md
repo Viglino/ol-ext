@@ -58,6 +58,8 @@ animations
 npm install ol-ext
 ````
 
+Visit [here](https://github.com/darkscript/ol-ol-ext-webpack-example) for a good example of working with ol-ext npm version and bundler(webpack)
+ 
 #### Building the project:
 Use the gulp command to build the project into the `/dist` directory:
 ````
