@@ -1,0 +1,26 @@
+.ol-gauge
+{	top: 0.5em;
+	left: 50%;
+	-webkit-transform: translateX(-50%);
+	transform: translateX(-50%);
+}
+
+.ol-gauge > *
+{	display: inline-block;
+	vertical-align: middle;
+}
+.ol-gauge > span
+{
+	margin: 0 0.5em;
+}
+.ol-gauge > div
+{	width: 200px;
+	border: 1px solid rgba(0,60,136,.5);
+	border-radius: 3px;
+	padding:1px;
+}
+.ol-gauge button
+{	height: 0.8em;
+	margin:0;
+	max-width:100%;
+}

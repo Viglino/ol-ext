@@ -1,0 +1,65 @@
+﻿/** popup animation using visible class
+*/
+.ol-popup
+{	visibility: hidden;
+}
+
+/** No transform when visible 
+*/
+.ol-popup.visible
+{	visibility: visible;
+	transform: none;
+	-webkit-transform: none;
+	animation: ol-popup_bounce 0.4s ease 1;
+}
+
+@keyframes ol-popup_bounce
+{	from { transform: scale(0); }
+	50%  { transform: scale(1.1) }
+	80%  { transform: scale(0.95) }
+	to   { transform: scale(1); }
+}
+
+/* Hide to prevent flickering on animate */
+.ol-popup.visible .anchor
+{	animation: ol-popup_opacity 0.4s ease 1;
+}
+@keyframes ol-popup_opacity
+{	from { visibility:hidden }
+	to   { visibility:hidden }
+}
+
+/** Transform Origin */
+.ol-popup.ol-popup-bottom.ol-popup-left 
+{	transform-origin:0 100%;
+	-webkit-transform-origin:0 100%;
+}
+.ol-popup.ol-popup-bottom.ol-popup-right 
+{	transform-origin:100% 100%;
+	-webkit-transform-origin:100% 100%;
+}
+.ol-popup.ol-popup-bottom.ol-popup-center 
+{	transform-origin:50% 100%;
+	-webkit-transform-origin:50% 100%;
+}
+.ol-popup.ol-popup-top.ol-popup-left 
+{	transform-origin:0 0;
+	-webkit-transform-origin:0 0;
+}
+.ol-popup.ol-popup-top.ol-popup-right 
+{	transform-origin:100% 0;
+	-webkit-transform-origin:100% 0;
+}
+.ol-popup.ol-popup-top.ol-popup-center 
+{	transform-origin:50% 0;
+	-webkit-transform-origin:50% 0;
+}
+.ol-popup.ol-popup-middle.ol-popup-left
+{	transform-origin:0 50%;
+	-webkit-transform-origin:0 50%;
+}
+.ol-popup.ol-popup-middle.ol-popup-right
+{	transform-origin:100% 50%;
+	-webkit-transform-origin:100% 50%;
+}
+

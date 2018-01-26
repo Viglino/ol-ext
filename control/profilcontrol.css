@@ -1,0 +1,102 @@
+.ol-control.ol-profil
+{	position: absolute;
+	top: 0.5em;
+	right: 3em;
+	text-align: right;
+	overflow: hidden;
+}
+.ol-profil .ol-inner 
+{	position: relative;
+	padding: 0.5em;
+	font-size: 0.8em;
+}
+.ol-control.ol-profil .ol-inner
+{	display: block;
+	background-color: rgba(255,255,255,0.7);
+	margin: 2.3em 2px 2px;
+}
+.ol-control.ol-profil.ol-collapsed .ol-inner
+{	display: none;
+}
+
+.ol-profil canvas
+{	display: block;
+}
+.ol-profil button
+{	display: block;
+	position: absolute;
+	right: 2px;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAPCAYAAAALWoRrAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4AgXCR4dn7j9TAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAz0lEQVQ4y7WTMU4CURRFz0xIpLUBEhdAY2tJYW1jaWlsXYVxDWyBhWCFCYugYgnDFPMOhTMJGf3AwHiqn/uTk5v/3gfAH6b0RH7sMiIe1Ts162z+q2lVVbd1XqijLuJk0zzP1/VxCGyApLgsy+HJphGx8DeFOm6L1bn6eVQaEW+m2amTRqx+1fkqKY2Ie0+zUx/U7WGYfNMsy57PmMMN8A1MWsWeUoPyivV8PWtPOzL7D+lYHfUtBXgHGLTCJfBxodD6k9Dsm8BLE17LobQ39nJC61aLVoVsAAAAAElFTkSuQmCC');
+}
+.ol-profil.ol-collapsed button
+{	position: static;
+}
+
+.ol-profil .ol-profilbar,
+.ol-profil .ol-profilcursor
+{	position:absolute;
+	pointer-events: none;
+	width: 1px;
+	display: none;
+}
+.ol-profil .ol-profilcursor
+{	width: 0;
+	height: 0;
+}
+.ol-profil .ol-profilcursor:before
+{	content:"";
+	pointer-events: none;
+	display: block;
+	margin: -2px;
+	width:5px;
+	height:5px;
+}
+.ol-profil .ol-profilbar,
+.ol-profil .ol-profilcursor:before
+{	background: red;
+}
+
+.ol-profil table
+{	text-align: center;
+}
+
+.ol-profil table span
+{	display: block;
+}
+
+.ol-profilpopup
+{	background-color: rgba(255, 255, 255, 0.5);
+	margin: 0.5em;
+	padding: 0 0.5em;
+	position: absolute;
+	top:-1em;
+	white-space: nowrap;
+}
+.ol-profilpopup.ol-left
+{	right:0;
+}
+
+
+.ol-profil table td
+{	padding: 0 2px;
+}
+
+.ol-profil table .track-info
+{	display: table-row;
+}
+.ol-profil table .point-info
+{	display: none;
+}
+.ol-profil .over table .track-info
+{	display: none;
+}
+.ol-profil .over table .point-info
+{	display: table-row;
+}
+
+.ol-profil p
+{	text-align: center;
+	margin:0;
+}
