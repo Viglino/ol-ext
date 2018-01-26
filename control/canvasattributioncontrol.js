@@ -2,35 +2,42 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_control_Attribution from 'ol/control/attribution'
+import ol_style_Style from 'ol/style/style'
+import ol_color from 'ol/color'
+import ol_control_ScaleLine from 'ol/control/scaleline'
+
 /**
  * @classdesc 
  *   OpenLayers 3 Attribution Control integrated in the canvas (for jpeg/png export purposes).
  * @see http://www.kreidefossilien.de/webgis/dokumentation/beispiele/export-map-to-png-with-scale
  *
  * @constructor
- * @extends {ol.control.Attribution}
- * @param {Object=} options extend the ol.control.Attribution options. 
- * 	@param {ol.style.Style} options.style  option is usesd to draw the text.
+ * @extends {ol_control_Attribution}
+ * @param {Object=} options extend the ol_control_Attribution options.
+ * 	@param {ol_style_Style} options.style  option is usesd to draw the text.
  */
-ol.control.CanvasAttribution = function(options) 
+var ol_control_CanvasAttribution = function(options)
 {	if (!options) options = {};
-	ol.control.Attribution.call(this, options);
+	ol_control_Attribution.call(this, options);
 
 	// Draw in canvas
 	this.isCanvas_ = !!options.canvas;
 
 	// Get style options
 	if (!options) options={};
-	if (!options.style) options.style = new ol.style.Style();
+	if (!options.style) options.style = new ol_style_Style();
 	this.setStyle (options.style);
 }
-ol.inherits(ol.control.CanvasAttribution, ol.control.Attribution);
+ol.inherits(ol_control_CanvasAttribution, ol_control_Attribution);
 
 /**
  * Draw attribution on canvas
  * @param {boolean} draw the attribution on canvas.
  */
-ol.control.CanvasAttribution.prototype.setCanvas = function (b)
+ol_control_CanvasAttribution.prototype.setCanvas = function (b)
 {	this.isCanvas_ = b;
 	$(this.element).css("visibility", b ? "hidden":"visible");
 	if (this.map_) this.map_.renderSync();
@@ -38,15 +45,15 @@ ol.control.CanvasAttribution.prototype.setCanvas = function (b)
 
 /**
  * Change the control style
- * @param {ol.style.Style} 
+ * @param {ol_style_Style}
  */
-ol.control.CanvasAttribution.prototype.setStyle = function (style)
+ol_control_CanvasAttribution.prototype.setStyle = function (style)
 {	var text = style.getText();
 	this.font_ = text ? text.getFont() : "10px Arial";
 	var stroke = text ? text.getStroke() : null;
 	var fill = text ? text.getFill() : null;
-	this.fontStrokeStyle_ = stroke ? ol.color.asString(stroke.getColor()) : "#fff";
-	this.fontFillStyle_ = fill ? ol.color.asString(fill.getColor()) : "#000";
+	this.fontStrokeStyle_ = stroke ? ol_color.asString(stroke.getColor()) : "#fff";
+	this.fontFillStyle_ = fill ? ol_color.asString(fill.getColor()) : "#000";
 	this.fontStrokeWidth_ = stroke ? stroke.getWidth() : 3;
 	if (this.getMap()) this.getMap().render();
 }
@@ -58,11 +65,11 @@ ol.control.CanvasAttribution.prototype.setStyle = function (style)
  * @param {ol.Map} map Map.
  * @api stable
  */
-ol.control.CanvasAttribution.prototype.setMap = function (map)
+ol_control_CanvasAttribution.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
 	if (oldmap) oldmap.un('postcompose', this.drawAttribution_, this);
 	
-	ol.control.ScaleLine.prototype.setMap.call(this, map);
+	ol_control_ScaleLine.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 
 	// Get change (new layer added or removed)
@@ -76,7 +83,7 @@ ol.control.CanvasAttribution.prototype.setMap = function (map)
  * Draw attribution in the final canvas
  * @private
  */
-ol.control.CanvasAttribution.prototype.drawAttribution_ = function(e)
+ol_control_CanvasAttribution.prototype.drawAttribution_ = function(e)
 {	var ctx = e.context;
 	if (!this.isCanvas_) return;
 
@@ -115,4 +122,6 @@ ol.control.CanvasAttribution.prototype.drawAttribution_ = function(e)
 	ctx.closePath();
 
 	ctx.restore();
-}
+};
+
+export default ol_control_CanvasAttribution

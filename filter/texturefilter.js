@@ -2,37 +2,41 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_filter_Base from './filter'
+
 /** Add texture effects on maps or layers
 * 	@constructor
 *	@requires ol.filter
-*	@extends {ol.filter.Base}
-*	@param {ol.filter.cropOptions}
-*		- feature {ol.Feature} feature to mask with
-*		- fill {ol.style.Fill} style to fill with
+*	@extends {ol_filter_Base}
+*	@param {ol_filter_TextureOptions} options
+*		- feature {_ol_Feature_} feature to mask with
+*		- fill {_ol_style_Fill_} style to fill with
 *		- inner {bool} mask inner, default false
 */
-ol.filter.Texture = function(options)
-{	ol.filter.Base.call(this, options);
+var ol_filter_Texture = function(options)
+{	ol_filter_Base.call(this, options);
 
 	this.setFilter(options);
 }
-ol.inherits(ol.filter.Texture, ol.filter.Base);
+ol.inherits(ol_filter_Texture, ol_filter_Base);
 
 /** Set texture
-*	@option {ol.filter.TextureOptions}
+*	@option {ol_filter_TextureOptions}
 *		- img {Image | undefined} Image object for the texture
 *		- src {string} Image source URI
 *		- scale {number} scale to draw the image. Default 1.
 *		- rotateWithView {bool} Whether to rotate the texture with the view (may cause animation lags on mobile or slow devices). Default is true.
 *		- crossOrigin {null | string | undefined} The crossOrigin attribute for loaded images.
 */
-ol.filter.Texture.prototype.setFilter = function(options)
+ol_filter_Texture.prototype.setFilter = function(options)
 {	var img;
 	options = options || {};
 	if (options.img) img = option.img;
 	else 
 	{	img = new Image();
-		if (options.src) img.src = ol.filter.Texture[options.src] || options.src;
+		if (options.src) img.src = ol_filter_Texture[options.src] || options.src;
 		img.crossOrigin = options.crossOrigin || null;
 	}
 
@@ -69,7 +73,7 @@ ol.filter.Texture.prototype.setFilter = function(options)
 *	@param {number} x offset
 *	@param {number} y offset
 */
-ol.filter.Texture.prototype.getPattern = function (offsetX, offsetY)
+ol_filter_Texture.prototype.getPattern = function (offsetX, offsetY)
 {	var c = this.pattern.canvas;
 	var ctx = this.pattern.ctx;
 	ctx.save();
@@ -88,7 +92,7 @@ ol.filter.Texture.prototype.getPattern = function (offsetX, offsetY)
 
 /** Draw pattern over the map on postcompose
 */
-ol.filter.Texture.prototype.postcompose = function(e)
+ol_filter_Texture.prototype.postcompose = function(e)
 {	// not ready
 	if (!this.pattern) return;
 	
@@ -161,3 +165,5 @@ ol.filter.Texture.prototype.postcompose = function(e)
 
 	ctx.restore();
 }
+
+export default ol_filter_Texture

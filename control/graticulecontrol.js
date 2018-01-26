@@ -2,22 +2,32 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_control_Control from 'ol/control/control'
+import ol_proj_Projection from 'ol/proj/projection'
+import ol_style_Style from 'ol/style/style'
+import ol_style_Stroke from 'ol/style/stroke'
+import ol_style_Fill from 'ol/style/fill'
+import ol_style_Text from 'ol/style/text'
+import ol_proj from 'ol/proj'
+
 /**
  * Draw a graticule on the map.
  *
  * @constructor
- * @extends {ol.control.Control}
- * @param {Object=} Control options. 
+ * @extends {ol_control_Control}
+ * @param {Object=} _ol_control_ options.
  *	- projection {ol.projectionLike} projection to use for the graticule, default EPSG:4326 
  *	- maxResolution {number} max resolution to display the graticule
- *	- style {ol.style.Style} Style to use for drawing the graticule, default black.
+ *	- style {ol_style_Style} Style to use for drawing the graticule, default black.
  *	- step {number} step beetween lines (in proj units), default 1
  *	- stepCoord {number} show a coord every stepCoord, default 1
  *	- spacing {number} spacing beetween lines (in px), default 40px 
  *	- borderWidth {number} width of the border (in px), default 5px 
  *	- margin {number} margin of the border (in px), default 0px 
  */
-ol.control.Graticule = function(options) 
+var ol_control_Graticule = function(options)
 {	var self = this;
 	if (!options) options = {};
 	
@@ -25,12 +35,12 @@ ol.control.Graticule = function(options)
 	var elt = document.createElement("div");
 	elt.className = "ol-graticule ol-unselectable ol-hidden";
 	
-	ol.control.Control.call(this, { element: elt });
+	ol_control_Control.call(this, { element: elt });
 
 	this.set('projection', options.projection || 'EPSG:4326');
 
 	// Use to limit calculation 
-	var p = new ol.proj.Projection({code:this.get('projection')});
+	var p = new ol_proj_Projection({code:this.get('projection')});
 	var m = p.getMetersPerUnit();
 	this.fac = 1;
 	while (m/this.fac>10)
@@ -47,43 +57,43 @@ ol.control.Graticule = function(options)
 	this.set('stroke', options.stroke!==false);
 	this.formatCoord = options.formatCoord || function(c){return c;};
 
-	if (options.style instanceof ol.style.Style) this.style = options.style;
-	else this.style = new ol.style.Style(
-		{	stroke: new ol.style.Stroke({ color:"#000", width:1 }),
-			fill: new ol.style.Fill({ color: "#fff" }),
-			text: new ol.style.Text(
-			{	stroke: new ol.style.Stroke({ color:"#fff", width:2 }),
-				fill: new ol.style.Fill({ color:"#000" }),
+	if (options.style instanceof ol_style_Style) this.style = options.style;
+	else this.style = new ol_style_Style(
+		{	stroke: new ol_style_Stroke({ color:"#000", width:1 }),
+			fill: new ol_style_Fill({ color: "#fff" }),
+			text: new ol_style_Text(
+			{	stroke: new _ol_style_Stroke({ color:"#fff", width:2 }),
+				fill: new ol_style_Fill({ color:"#000" }),
 			}) 
 		});
 };
-ol.inherits(ol.control.Graticule, ol.control.Control);
+ol.inherits(ol_control_Graticule, ol_control_Control);
 
 /**
  * Remove the control from its current map and attach it to the new map.
- * @param {ol.Map} map Map.
+ * @param {_ol_Map_} map Map.
  * @api stable
  */
-ol.control.Graticule.prototype.setMap = function (map)
+ol_control_Graticule.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
 	if (oldmap) oldmap.un('postcompose', this.drawGraticule_, this);
 	
-	ol.control.Control.prototype.setMap.call(this, map);
+	ol_control_Control.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 
 	// Get change (new layer added or removed)
 	if (map) map.on('postcompose', this.drawGraticule_, this);
 };
 
-ol.control.Graticule.prototype.setStyle = function (style)
+ol_control_Graticule.prototype.setStyle = function (style)
 {	this.style = style;
 };
 
-ol.control.Graticule.prototype.getStyle = function (style)
+ol_control_Graticule.prototype.getStyle = function (style)
 {	return style;
 };
 
-ol.control.Graticule.prototype.drawGraticule_ = function (e)
+ol_control_Graticule.prototype.drawGraticule_ = function (e)
 {	if (this.get('maxResolution')<e.frameState.viewState.resolution) return;
 	
 	var ctx = e.context;
@@ -106,7 +116,7 @@ ol.control.Graticule.prototype.drawGraticule_ = function (e)
 	var ymax = -Infinity;
 	var ymin = Infinity;
 	for (var i=0, c; c=bbox[i]; i++)
-	{	bbox[i] = ol.proj.transform (c, map.getView().getProjection(), proj);
+	{	bbox[i] = ol_proj.transform (c, map.getView().getProjection(), proj);
 		xmax = Math.max (xmax, bbox[i][0]);
 		xmin = Math.min (xmin, bbox[i][0]);
 		ymax = Math.max (ymax, bbox[i][1]);
@@ -156,12 +166,12 @@ ol.control.Graticule.prototype.drawGraticule_ = function (e)
 		var txt = {top:[],left:[],bottom:[], right:[]};
 
 		for (var x=xmin; x<xmax; x += step)
-		{	var p0 = ol.proj.transform ([x, ymin], proj, map.getView().getProjection());
+		{	var p0 = ol_proj.transform ([x, ymin], proj, map.getView().getProjection());
 			p0 = map.getPixelFromCoordinate(p0);
 			if (hasLines) ctx.moveTo(p0[0], p0[1]);
 			var p = p0;
 			for (var y=ymin+step; y<=ymax; y+=step)
-			{	var p1 = ol.proj.transform ([x, y], proj, map.getView().getProjection());
+			{	var p1 = ol_proj.transform ([x, y], proj, map.getView().getProjection());
 				p1 = map.getPixelFromCoordinate(p1);
 				if (hasLines) ctx.lineTo(p1[0], p1[1]);
 				if (p[1]>0 && p1[1]<0) txt.top.push([x, p]);
@@ -170,12 +180,12 @@ ol.control.Graticule.prototype.drawGraticule_ = function (e)
 			}
 		}
 		for (var y=ymin; y<ymax; y += step)
-		{	var p0 = ol.proj.transform ([xmin, y], proj, map.getView().getProjection());
+		{	var p0 = ol_proj.transform ([xmin, y], proj, map.getView().getProjection());
 			p0 = map.getPixelFromCoordinate(p0);
 			if (hasLines) ctx.moveTo(p0[0], p0[1]);
 			var p = p0;
 			for (var x=xmin+step; x<=xmax; x+=step)
-			{	var p1 = ol.proj.transform ([x, y], proj, map.getView().getProjection());
+			{	var p1 = ol_proj.transform ([x, y], proj, map.getView().getProjection());
 				p1 = map.getPixelFromCoordinate(p1);
 				if (hasLines) ctx.lineTo(p1[0], p1[1]);
 				if (p[0]<0 && p1[0]>0) txt.left.push([y,p]);
@@ -280,3 +290,5 @@ ol.control.Graticule.prototype.drawGraticule_ = function (e)
 
 	ctx.restore();
 };
+
+export default ol_control_Graticule

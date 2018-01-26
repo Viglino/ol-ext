@@ -2,40 +2,46 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_control_ScaleLine from 'ol/control/scaleline'
+import ol_style_Style from 'ol/style/style'
+import ol_color from 'ol/color'
+
 /**
  * @classdesc 
  *    OpenLayers 3 Scale Line Control integrated in the canvas (for jpeg/png export purposes).
  * @see http://www.kreidefossilien.de/webgis/dokumentation/beispiele/export-map-to-png-with-scale
  *
  * @constructor
- * @extends {ol.control.ScaleLine}
- * @param {Object=} options extend the ol.control.ScaleLine options. 
- * 	@param {ol.style.Style} options.style usesd to draw the scale line (default is black/white, 10px Arial).
+ * @extends {ol_control_ScaleLine}
+ * @param {Object=} options extend the ol_control_ScaleLine options.
+ * 	@param {ol_style_Style} options.style used to draw the scale line (default is black/white, 10px Arial).
  */
-ol.control.CanvasScaleLine = function(options) 
-{	ol.control.ScaleLine.call(this, options);
+var ol_control_CanvasScaleLine = function(options)
+{	ol_control_ScaleLine.call(this, options);
 	
 	this.scaleHeight_ = 6;
 
 	// Get style options
 	if (!options) options={};
-	if (!options.style) options.style = new ol.style.Style();
+	if (!options.style) options.style = new ol_style_Style();
 	this.setStyle(options.style);
 }
-ol.inherits(ol.control.CanvasScaleLine, ol.control.ScaleLine);
+ol.inherits(ol_control_CanvasScaleLine, ol_control_ScaleLine);
 
 /**
  * Remove the control from its current map and attach it to the new map.
  * Subclasses may set up event handlers to get notified about changes to
  * the map here.
- * @param {ol.Map} map Map.
+ * @param {_ol_Map_} map Map.
  * @api stable
  */
-ol.control.CanvasScaleLine.prototype.setMap = function (map)
+ol_control_CanvasScaleLine.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
 	if (oldmap) oldmap.un('postcompose', this.drawScale_, this);
 	
-	ol.control.ScaleLine.prototype.setMap.call(this, map);
+	ol_control_ScaleLine.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 
 	// Add postcompose on the map
@@ -49,23 +55,23 @@ ol.control.CanvasScaleLine.prototype.setMap = function (map)
 
 /**
  * Change the control style
- * @param {ol.style.Style} 
+ * @param {ol_style_Style}
  */
-ol.control.CanvasScaleLine.prototype.setStyle = function (style)
+ol_control_CanvasScaleLine.prototype.setStyle = function (style)
 {	var stroke = style.getStroke();
-	this.strokeStyle_ = stroke ? ol.color.asString(stroke.getColor()) : "#000";
+	this.strokeStyle_ = stroke ? ol_color.asString(stroke.getColor()) : "#000";
 	this.strokeWidth_ = stroke ? stroke.getWidth() : 2;
 
 	var fill = style.getFill();
-	this.fillStyle_ = fill ? ol.color.asString(fill.getColor()) : "#fff";
+	this.fillStyle_ = fill ? ol_color.asString(fill.getColor()) : "#fff";
 	
 	var text = style.getText();
 	this.font_ = text ? text.getFont() : "10px Arial";
 	stroke = text ? text.getStroke() : null;
 	fill = text ? text.getFill() : null;
-	this.fontStrokeStyle_ = stroke ? ol.color.asString(stroke.getColor()) : this.fillStyle_;
+	this.fontStrokeStyle_ = stroke ? ol_color.asString(stroke.getColor()) : this.fillStyle_;
 	this.fontStrokeWidth_ = stroke ? stroke.getWidth() : 3;
-	this.fontFillStyle_ = fill ? ol.color.asString(fill.getColor()) : this.strokeStyle_;
+	this.fontFillStyle_ = fill ? ol_color.asString(fill.getColor()) : this.strokeStyle_;
 	// refresh
 	if (this.getMap()) this.getMap().render();
 }
@@ -74,7 +80,7 @@ ol.control.CanvasScaleLine.prototype.setStyle = function (style)
  * Draw attribution in the final canvas
  * @private
  */
-ol.control.CanvasScaleLine.prototype.drawScale_ = function(e)
+ol_control_CanvasScaleLine.prototype.drawScale_ = function(e)
 {	if ( this.$element.css("display")=="none" ) return;
 	var ctx = e.context;
 
@@ -128,3 +134,5 @@ ol.control.CanvasScaleLine.prototype.drawScale_ = function(e)
 	}
 	ctx.restore();
 }
+
+export default ol_control_CanvasScaleLine

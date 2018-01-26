@@ -2,6 +2,13 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_style_RegularShape from 'ol/style/regularshape'
+import ol_style_Fill from 'ol/style/fill'
+import ol_style_Image from 'ol/style/image'
+import ol_color from 'ol/color'
+
 /**
  * @requires ol.style.Circle
  * @requires ol.structs.IHasChecksum
@@ -25,17 +32,17 @@
  *  @param {number} options.opacity
  *  @param {number} options.fontSize, default 1
  *  @param {boolean} options.gradient true to display a gradient on the symbol
- *  @param {ol.style.Fill} options.fill
- *  @param {ol.style.Stroke} options.stroke
- * @extends {ol.style.RegularShape}
+ *  @param {_ol_style_Fill_} options.fill
+ *  @param {_ol_style_Stroke_} options.stroke
+ * @extends {ol_style_RegularShape}
  * @implements {ol.structs.IHasChecksum}
  * @api
  */
-ol.style.FontSymbol = function(options) 
+var ol_style_FontSymbol = function(options)
 {	options = options || {};
 	var strokeWidth = 0;
 	if (options.stroke) strokeWidth = options.stroke.getWidth();
-	ol.style.RegularShape.call (this,{ radius: options.radius, fill:options.fill, 
+	ol_style_RegularShape.call (this,{ radius: options.radius, fill:options.fill,
 									rotation:options.rotation, rotateWithView: options.rotateWithView });
 	
 	if (typeof(options.opacity)=="number") this.setOpacity(options.opacity);
@@ -52,11 +59,11 @@ ol.style.FontSymbol = function(options)
 
 	this.renderMarker_();
 };
-ol.inherits(ol.style.FontSymbol, ol.style.RegularShape);
+ol.inherits(ol_style_FontSymbol, ol_style_RegularShape);
 
 /** Cool stuff to get the image symbol for a style
 */
-ol.style.Image.prototype.getImagePNG = function()
+ol_style_Image.prototype.getImagePNG = function()
 {	var canvas = this.getImage();
 	if (canvas) 
 	{	try { return canvas.toDataURL("image/png"); }
@@ -68,7 +75,7 @@ ol.style.Image.prototype.getImagePNG = function()
 /** 
  *	Font defs
  */
-ol.style.FontSymbol.prototype.defs = { 'fonts':{}, 'glyphs':{} };
+ol_style_FontSymbol.prototype.defs = { 'fonts':{}, 'glyphs':{} };
 
 /** Static function : add new font defs 
  * @param {String|Object} font the font desciption
@@ -77,7 +84,7 @@ ol.style.FontSymbol.prototype.defs = { 'fonts':{}, 'glyphs':{} };
  * 		the value is an object that code the font, the caracter code, 
  * 		the name and a search string for the glyph.
  */
- ol.style.FontSymbol.addDefs = function(font, glyphs)
+ ol_style_FontSymbol.addDefs = function(font, glyphs)
  {	var thefont = font;
 	if (typeof(font) == "string") thefont = {"font":font, "name":font, "copyright":"" };
 	if (!thefont.font || typeof(thefont.font) != "string") 
@@ -85,11 +92,11 @@ ol.style.FontSymbol.prototype.defs = { 'fonts':{}, 'glyphs':{} };
 		return;
 	}
 	var fontname = thefont.font;
-	ol.style.FontSymbol.prototype.defs.fonts[fontname] = thefont;
+	ol_style_FontSymbol.prototype.defs.fonts[fontname] = thefont;
 	for (var i in glyphs)
 	{	var g = glyphs[i];
 		if (typeof(g) == "string" && g.length==1) g = { char: g };
-		ol.style.FontSymbol.prototype.defs.glyphs[i] =
+		ol_style_FontSymbol.prototype.defs.glyphs[i] =
 			{	font: thefont.font,
 				char: g.char || ""+String.fromCharCode(g.code) || "",
 				theme: g.theme || thefont.name,
@@ -102,10 +109,10 @@ ol.style.FontSymbol.prototype.defs = { 'fonts':{}, 'glyphs':{} };
 
 /**
  * Clones the style. 
- * @return {ol.style.FontSymbol} 
+ * @return {ol_style_FontSymbol}
  */
-ol.style.FontSymbol.prototype.clone = function() 
-{	var g = new ol.style.FontSymbol(
+ol_style_FontSymbol.prototype.clone = function()
+{	var g = new ol_style_FontSymbol(
 	{	glyph: "",
 		color: this.color_,
 		fontSize: this.fontSize_,
@@ -128,30 +135,30 @@ ol.style.FontSymbol.prototype.clone = function()
 
 /**
  * Get the fill style for the symbol.
- * @return {ol.style.Fill} Fill style.
+ * @return {ol_style_Fill} Fill style.
  * @api
  */
-ol.style.FontSymbol.prototype.getFill = function() {
+ol_style_FontSymbol.prototype.getFill = function() {
   return this.fill_;
 };
 
 /**
  * Get the stroke style for the symbol.
- * @return {ol.style.Stroke} Stroke style.
+ * @return {_ol_style_Stroke_} Stroke style.
  * @api
  */
-ol.style.FontSymbol.prototype.getStroke = function() {
+ol_style_FontSymbol.prototype.getStroke = function() {
   return this.stroke_;
 };
 
 /**
  * Get the glyph definition for the symbol.
  * @param {string|undefined} name a glyph name to get the definition, default return the glyph definition for the style.
- * @return {ol.style.Stroke} Stroke style.
+ * @return {_ol_style_Stroke_} Stroke style.
  * @api
  */
-ol.style.FontSymbol.prototype.getGlyph = function(name) 
-{	if (name) return ol.style.FontSymbol.prototype.defs.glyphs[name] || { "font":"none","char":name.charAt(0),"theme":"none","name":"none", "search":""};
+ol_style_FontSymbol.prototype.getGlyph = function(name)
+{	if (name) return ol_style_FontSymbol.prototype.defs.glyphs[name] || { "font":"none","char":name.charAt(0),"theme":"none","name":"none", "search":""};
 	else return this.glyph_;
 };
 
@@ -160,31 +167,31 @@ ol.style.FontSymbol.prototype.getGlyph = function(name)
  * @return {string} the name
  * @api
  */
-ol.style.FontSymbol.prototype.getGlyphName = function() 
-{	for (var i in ol.style.FontSymbol.prototype.defs.glyphs)
-	{	if (ol.style.FontSymbol.prototype.defs.glyphs[i] === this.glyph_) return i;
+ol_style_FontSymbol.prototype.getGlyphName = function()
+{	for (var i in ol_style_FontSymbol.prototype.defs.glyphs)
+	{	if (ol_style_FontSymbol.prototype.defs.glyphs[i] === this.glyph_) return i;
 	}
 	return "";
 };
 
 /**
  * Get the stroke style for the symbol.
- * @return {ol.style.Stroke} Stroke style.
+ * @return {_ol_style_Stroke_} Stroke style.
  * @api
  */
-ol.style.FontSymbol.prototype.getFontInfo = function(glyph) 
-{	return ol.style.FontSymbol.prototype.defs.fonts[glyph.font];
+ol_style_FontSymbol.prototype.getFontInfo = function(glyph)
+{	return ol_style_FontSymbol.prototype.defs.fonts[glyph.font];
 }
 
 /** @private
  */
-ol.style.FontSymbol.prototype.renderMarker_ = function(atlasManager) 
+ol_style_FontSymbol.prototype.renderMarker_ = function(atlasManager)
 {
 	var strokeStyle;
 	var strokeWidth = 0;
 
 	if (this.stroke_) 
-	{	strokeStyle = ol.color.asString(this.stroke_.getColor());
+	{	strokeStyle = ol_color.asString(this.stroke_.getColor());
 		strokeWidth = this.stroke_.getWidth();
 	}
 
@@ -192,7 +199,7 @@ ol.style.FontSymbol.prototype.renderMarker_ = function(atlasManager)
 	var canvas = this.getImage();
 	//console.log(this.getImage().width+" / "+(2 * (this.radius_ + strokeWidth) + 1));
 
-	/** @type {ol.style.FontSymbol.RenderOptions} */
+	/** @type {ol_style_FontSymbol.RenderOptions} */
 	var renderOptions = {
 		strokeStyle: strokeStyle,
 		strokeWidth: strokeWidth,
@@ -216,10 +223,10 @@ ol.style.FontSymbol.prototype.renderMarker_ = function(atlasManager)
 
 /**
  * @private
- * @param {ol.style.FontSymbol.RenderOptions} renderOptions
+ * @param {ol_style_FontSymbol.RenderOptions} renderOptions
  * @param {CanvasRenderingContext2D} context
  */
-ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context) 
+ol_style_FontSymbol.prototype.drawPath_ = function(renderOptions, context)
 {
 	var s = 2*this.radius_+renderOptions.strokeWidth+1;
 	var w = renderOptions.strokeWidth/2;
@@ -317,12 +324,12 @@ ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context)
 
 /**
  * @private
- * @param {ol.style.FontSymbol.RenderOptions} renderOptions
+ * @param {ol_style_FontSymbol.RenderOptions} renderOptions
  * @param {CanvasRenderingContext2D} context
  * @param {number} x The origin for the symbol (x).
  * @param {number} y The origin for the symbol (y).
  */
-ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, y) 
+ol_style_FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, y)
 {	var fcolor = this.fill_ ? this.fill_.getColor() : "#000";
 	var scolor = this.stroke_ ? this.stroke_.getColor() : "#000";
 	if (this.form_ == "none" && this.stroke_ && this.fill_)
@@ -340,11 +347,11 @@ ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, 
 	if (this.fill_) 
 	{	if (this.gradient_ && this.form_!="none")
 		{	var grd = context.createLinearGradient(0,0,renderOptions.size/2,renderOptions.size);
-			grd.addColorStop (1, ol.color.asString(fcolor));
-			grd.addColorStop (0, ol.color.asString(scolor));
+			grd.addColorStop (1, ol_color.asString(fcolor));
+			grd.addColorStop (0, ol_color.asString(scolor));
 			context.fillStyle = grd;
 		}
-		else context.fillStyle = ol.color.asString(fcolor);
+		else context.fillStyle = ol_color.asString(fcolor);
 		context.fill();
 	}
 	if (this.stroke_ && renderOptions.strokeWidth) {
@@ -358,7 +365,7 @@ ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, 
 	{	context.font = (2*tr.fac*(this.radius_)*this.fontSize_)+"px "+this.glyph_.font;
 		context.strokeStyle = context.fillStyle;
 		context.lineWidth = renderOptions.strokeWidth * (this.form_ == "none" ? 2:1);
-		context.fillStyle = ol.color.asString(this.color_ || scolor);
+		context.fillStyle = ol_color.asString(this.color_ || scolor);
 		context.textAlign = "center";
 		context.textBaseline = "middle";
 		var t = this.glyph_.char;
@@ -380,7 +387,7 @@ ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, 
 /**
  * @inheritDoc
  */
-ol.style.FontSymbol.prototype.getChecksum = function() 
+ol_style_FontSymbol.prototype.getChecksum = function()
 {
 	var strokeChecksum = (this.stroke_!==null) ?
 		this.stroke_.getChecksum() : '-';
@@ -402,3 +409,5 @@ ol.style.FontSymbol.prototype.getChecksum = function()
 
 	return this.checksums_[0];
 };
+
+export default ol_style_FontSymbol

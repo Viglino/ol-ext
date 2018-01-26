@@ -2,6 +2,21 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_control_Control from 'ol/control/control'
+import ol_Map from 'ol/map'
+import ol_Collection from 'ol/collection'
+import ol_View from 'ol/view'
+import ol_layer_Vector from 'ol/layer/vector'
+import ol_style_Style from 'ol/style/style'
+import ol_style_Circle from 'ol/style/circle'
+import ol_style_Fill from 'ol/style/fill'
+import ol_style_Stroke from 'ol/style/stroke'
+import ol_source_Vector from 'ol/source/vector'
+//TODO: replace ol.animation.pan with new {ol_interaction_Interaction.pan}
+//import ol_interaction_Interaction from 'ol/interaction/interaction'
+
 /**
  * OpenLayers 3 Layer Overview Control.
  * The overview can rotate with map. 
@@ -10,14 +25,14 @@
  * Change width/height of the overview trough css.
  *
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol_control_Control}
  * @param {Object=} opt_options Control options.
  *	- rotation {boolean} enable rotation, default false
  *	- align {top|bottom-left|right} position
  *	- layers {Array<ol.layer>} list of layers
  *	- style {ol.style.Style | Array.<ol.style.Style> | undefined} style to draw the map extent on the overveiw
  */
-ol.control.Globe = function(opt_options) 
+var ol_control_Globe = function(opt_options)
 {	var options = opt_options || {};
 	var self = this;
 
@@ -38,7 +53,7 @@ ol.control.Globe = function(opt_options)
 		
 	}
 
-	ol.control.Control.call(this, 
+	ol_control_Control.call(this,
 	{	element: element.get(0),
 		target: options.target
 	});
@@ -48,11 +63,11 @@ ol.control.Globe = function(opt_options)
 // http://openlayers.org/en/latest/examples/sphere-mollweide.html ???
 
 	// Create a globe map
-	this.ovmap_ = new ol.Map(
-	{	controls: new ol.Collection(),
-		interactions: new ol.Collection(),
+	this.ovmap_ = new ol_Map(
+	{	controls: new ol_Collection(),
+		interactions: new ol_Collection(),
 		target: this.panel_.get(0),
-		view: new ol.View
+		view: new ol_View
 			({	zoom: 0,
 				center: [0,0]
 			}),
@@ -66,15 +81,15 @@ ol.control.Globe = function(opt_options)
 	this.set('follow', options.follow || false);
 
 	// Cache extent
-	this.extentLayer = new ol.layer.Vector(
+	this.extentLayer = new ol_layer_Vector(
 	{	name: 'Cache extent',
-		source: new ol.source.Vector(),
-		style: options.style || [new ol.style.Style(
-					{	image: new ol.style.Circle(
-						{	fill: new ol.style.Fill({
+		source: new ol_source_Vector(),
+		style: options.style || [new ol_style_Style(
+					{	image: new ol_style_Circle(
+						{	fill: new ol_style_Fill({
 								color: 'rgba(255,0,0, 1)'
 							}),
-							stroke: new ol.style.Stroke(
+							stroke: new ol_style_Stroke(
 							{	width: 7,
 								color: 'rgba(255,0,0, 0.8)'
 							}),
@@ -85,17 +100,17 @@ ol.control.Globe = function(opt_options)
 	})
 	this.ovmap_.addLayer(this.extentLayer);
 };
-ol.inherits(ol.control.Globe, ol.control.Control);
+ol.inherits(ol_control_Globe, ol_control_Control);
 
 
 /**
  * Set the map instance the control associated with.
  * @param {ol.Map} map The map instance.
  */
-ol.control.Globe.prototype.setMap = function(map) 
+ol_control_Globe.prototype.setMap = function(map)
 {	if (this.getMap()) this.getMap().getView().un('propertychange', this.setView, this);
 
-	ol.control.Control.prototype.setMap.call(this, map);
+	ol_control_Control.prototype.setMap.call(this, map);
 
 	// Get change (new layer added or removed)
 	if (map) 
@@ -106,7 +121,7 @@ ol.control.Globe.prototype.setMap = function(map)
 
 /** Set the globe center with the map center
 */
-ol.control.Globe.prototype.setView = function() 
+ol_control_Globe.prototype.setView = function()
 {	if (this.getMap() && this.get('follow'))
 	{	this.setCenter(this.getMap().getView().getCenter());
 	}
@@ -114,24 +129,24 @@ ol.control.Globe.prototype.setView = function()
 
 
 /** Get globe map
-*	@return {ol.Map}
+*	@return {ol_Map}
 */
-ol.control.Globe.prototype.getGlobe = function() 
+ol_control_Globe.prototype.getGlobe = function()
 {	return this.ovmap_;
 }
 
 /** Show/hide the globe
 */
-ol.control.Globe.prototype.show = function(b) 
+ol_control_Globe.prototype.show = function(b)
 {	if (b!==false) $(this.element).removeClass("ol-collapsed");
 	else $(this.element).addClass("ol-collapsed");
 	this.ovmap_.updateSize();
 }
 
 /** Set position on the map
-*	@param {top|bottom-left|right} 
+*	@param {top|bottom-left|right}  align
 */
-ol.control.Globe.prototype.setPosition = function(align) 
+ol_control_Globe.prototype.setPosition = function(align)
 {	if (/top/.test(align)) $(this.element).addClass("ol-control-top");
 	else $(this.element).removeClass("ol-control-top");
 	if (/right/.test(align)) $(this.element).addClass("ol-control-right");
@@ -139,10 +154,10 @@ ol.control.Globe.prototype.setPosition = function(align)
 }
 
 /** Set the globe center
-* @param {ol.coordinate} center the point to center to
+* @param {_ol_coordinate_} center the point to center to
 * @param {boolean} show true to show a pointer 
 */
-ol.control.Globe.prototype.setCenter = function (center, show) 
+ol_control_Globe.prototype.setCenter = function (center, show)
 {	var self = this;
 	this.pointer_.addClass("hidden");
 	if (center)
@@ -156,7 +171,7 @@ ol.control.Globe.prototype.setCenter = function (center, show)
 			}, 800);
 			map.getView().animate({ center: [center[0],0] });
 		}
-		// Old version (<3.20)
+		//TODO: Old version (<3.20)
 		else
 		{	var pan = ol.animation.pan(
 			{	duration: 800,
@@ -175,3 +190,5 @@ ol.control.Globe.prototype.setCenter = function (center, show)
 		}
 	}
 };
+
+export default ol_control_Globe

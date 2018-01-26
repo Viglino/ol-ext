@@ -79,3 +79,5 @@ exif2geojson = function (img, options)
 }
 
 })();
+
+export default exif2geojson

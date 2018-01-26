@@ -2,32 +2,36 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_control_LayerSwitcher from './layerswitchercontrol'
+
 /**
  * OpenLayers 3 Layer Switcher Control.
  * @require jQuery
  *
  * @constructor
- * @extends {ol.control.LayerSwitcher}
- * @param {Object=} opt_options Control options.
+ * @extends {ol_control_LayerSwitcher}
+ * @param {Object=} options Control options.
  */
-ol.control.LayerPopup = function(options) 
+ol_control_LayerPopup = function(options)
 {	options = options || {};
 	options.switcherClass="ol-layerswitcher-popup";
 	if (options.mouseover!==false) options.mouseover=true;
-	ol.control.LayerSwitcher.call(this, options);
+	ol_control_LayerSwitcher.call(this, options);
 };
-ol.inherits(ol.control.LayerPopup, ol.control.LayerSwitcher);
+ol.inherits(ol_control_LayerPopup, ol_control_LayerSwitcher);
 
 /** Disable overflow
 */
-ol.control.LayerPopup.prototype.overflow = function(){};
+ol_control_LayerPopup.prototype.overflow = function(){};
 
 /** Render a list of layer
  * @param {elt} element to render
  * @layers {Array{ol.layer}} list of layer to show
  * @api stable
  */
-ol.control.LayerPopup.prototype.drawList = function(ul, layers)
+ol_control_LayerPopup.prototype.drawList = function(ul, layers)
 {	var self=this;
 	
 	var setVisibility = function(e) 
@@ -48,3 +52,5 @@ ol.control.LayerPopup.prototype.drawList = function(ul, layers)
 		}
 	});
 };
+
+export default ol_control_LayerPopup

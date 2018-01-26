@@ -2,38 +2,44 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-ol.filter = {};
+
+import ol from 'ol'
+import ol_layer_Base from 'ol/layer/base'
+import ol_Object from 'ol/object'
+import ol_Map from 'ol/map'
+
+var ol_filter = {};
 /**
  * @classdesc 
  * Abstract base class; normally only used for creating subclasses and not instantiated in apps.    
  * Used to create filters    
- * Use {@link ol.Map#addFilter}, {@link ol.Map#removeFilter} or {@link ol.Map#getFilters} to handle filters on a map.    
- * Use {@link ol.layer.Base#addFilter}, {@link ol.layer.Base#removeFilter} or {@link ol.layer.Base#getFilters} 
+ * Use {@link _ol_Map_#addFilter}, {@link _ol_Map_#removeFilter} or {@link _ol_Map_#getFilters} to handle filters on a map.
+ * Use {@link ol_layer_Base#addFilter}, {@link ol_layer_Base#removeFilter} or {@link ol_layer_Base#getFilters}
  * to handle filters on layers.
  *
  * @constructor
  * @extends {ol.Object}
- * @param {} options Extend {@link ol.control.Control} options.
+ * @param {} options Extend {@link _ol_control_Control_} options.
  *  @param {bool} options.active
  */
-ol.filter.Base = function(options) 
-{	ol.Object.call(this);
+var ol_filter_Base = function(options)
+{	ol_Object.call(this);
 	if (options && options.active===false) this.set('active', false);
 	else this.set('active', true);
 };
-ol.inherits(ol.filter.Base, ol.Object);
+ol.inherits(ol_filter_Base, ol_Object);
 
 /** Activate / deactivate filter
-*	@param {bool}
+*	@param {bool} b
 */
-ol.filter.Base.prototype.setActive = function (b)
+ol_filter_Base.prototype.setActive = function (b)
 {	this.set('active', b===true);
 };
 
 /** Get filter active
 *	@return {bool}
 */
-ol.filter.Base.prototype.getActive = function (b)
+ol_filter_Base.prototype.getActive = function (b)
 {	return this.get('active');
 };
 
@@ -93,40 +99,42 @@ function removeFilter_(filter)
 /** Add a filter to an ol.Map
 *	@param {ol.filter}
 */
-ol.Map.prototype.addFilter = function (filter)
+ol_Map.prototype.addFilter = function (filter)
 {	addFilter_.call (this, filter);
 };
 /** Remove a filter to an ol.Map
 *	@param {ol.filter}
 */
-ol.Map.prototype.removeFilter = function (filter)
+ol_Map.prototype.removeFilter = function (filter)
 {	removeFilter_.call (this, filter);
 };
 /** Get filters associated with an ol.Map
 *	@return {Array<ol.filter>}
 */
-ol.Map.prototype.getFilters = function ()
+ol_Map.prototype.getFilters = function ()
 {	return this.filters_;
 };
 
 /** Add a filter to an ol.Layer
 *	@param {ol.filter}
 */
-ol.layer.Base.prototype.addFilter = function (filter)
+ol_layer_Base.prototype.addFilter = function (filter)
 {	addFilter_.call (this, filter);
 };
 /** Remove a filter to an ol.Layer
 *	@param {ol.filter}
 */
-ol.layer.Base.prototype.removeFilter = function (filter)
+ol_layer_Base.prototype.removeFilter = function (filter)
 {	removeFilter_.call (this, filter);
 };
 
 /** Get filters associated with an ol.Map
 *	@return {Array<ol.filter>}
 */
-ol.layer.Base.prototype.getFilters = function ()
+ol_layer_Base.prototype.getFilters = function ()
 {	return this.filters_;
 };
 
 })();
+
+export default ol_filter_Base

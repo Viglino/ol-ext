@@ -2,6 +2,16 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol_Map from 'ol/map'
+import ol_proj from 'ol/proj'
+import ol_Observable from 'ol/observable'
+import ol_easing from 'ol/easing'
+import ol_style_Circle from 'ol/style/circle'
+import ol_style_Stroke from 'ol/style/stroke'
+import ol_style_Image from 'ol/style/image'
+import ol_style_Style from 'ol/style/style'
+
 /** Pulse a point on postcompose
 *	@deprecated use map.animateFeature instead
 *	@param {ol.coordinates} point to pulse
@@ -12,23 +22,23 @@
 *		- easing {ol.easing} easing function, default ol.easing.easeOut
 *		- style {ol.style.Image|ol.style.Style|Array<ol.style.Style>} Image to draw as markup, default red circle
 */
-ol.Map.prototype.pulse = function(coords, options)
+ol_Map.prototype.pulse = function(coords, options)
 {	var listenerKey;
 	options = options || {};
 
 	// Change to map's projection
 	if (options.projection)
-	{	coords = ol.proj.transform(coords, options.projection, this.getView().getProjection());
+	{	coords = ol_proj.transform(coords, options.projection, this.getView().getProjection());
 	}
 	
 	// options
 	var start = new Date().getTime();
 	var duration = options.duration || 3000;
-	var easing = options.easing || ol.easing.easeOut;
+	var easing = options.easing || ol_easing.easeOut;
 	
 	var style = options.style;
-	if (!style) style = new ol.style.Circle({ radius:30, stroke:new ol.style.Stroke({color:'red', width:2 }) });
-	if (style instanceof ol.style.Image) style = new ol.style.Style({ image: style });
+	if (!style) style = new ol_style_Circle({ radius:30, stroke:new ol_style_Stroke({color:'red', width:2 }) });
+	if (style instanceof ol_style_Image) style = new ol_style_Style({ image: style });
 	if (!(style instanceof Array)) style = [style];
 
 	var amplitude = options.amplitude || 1;
@@ -45,7 +55,7 @@ ol.Map.prototype.pulse = function(coords, options)
 	{	var frameState = event.frameState;
 		var ratio = frameState.pixelRatio;
 		var elapsed = frameState.time - start;
-		if (elapsed > duration) ol.Observable.unByKey(listenerKey);
+		if (elapsed > duration) ol_Observable.unByKey(listenerKey);
 		else
 		{	var elapsedRatio = elapsed / duration;
 			var context = event.context;

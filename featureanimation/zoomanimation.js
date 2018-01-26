@@ -4,36 +4,39 @@
 	
 */
 
+import ol from 'ol'
+import ol_featureAnimation from './featureanimation'
+
 /** Zoom animation: feature zoom in (for points)
  * @constructor
- * @extends {ol.featureAnimation}
- * @param {ol.featureAnimationZoomOptions} options
+ * @extends {ol_featureAnimation}
+ * @param {ol_featureAnimationZoomOptions} options
  *  @param {bool} options.zoomOut to zoom out
  */
-ol.featureAnimation.Zoom = function(options)
+var ol_featureAnimation_Zoom = function(options)
 {	options = options || {};
-	ol.featureAnimation.call(this, options);
+	ol_featureAnimation.call(this, options);
 	this.set('zoomout', options.zoomOut);
 }
-ol.inherits(ol.featureAnimation.Zoom, ol.featureAnimation);
+ol.inherits(ol_featureAnimation_Zoom, ol_featureAnimation);
 
 
 /** Zoom animation: feature zoom out (for points)
  * @constructor
- * @extends {ol.featureAnimation}
- * @param {ol.featureAnimationZoomOptions} options
+ * @extends {ol_featureAnimation}
+ * @param {ol_featureAnimationZoomOptions} options
  */
-ol.featureAnimation.ZoomOut = function(options)
+var ol_featureAnimation_ZoomOut = function(options)
 {	options = options || {};
 	options.zoomOut = true;
-	ol.featureAnimation.Zoom.call(this, options);
+	ol_featureAnimation_Zoom.call(this, options);
 }
-ol.inherits(ol.featureAnimation.ZoomOut, ol.featureAnimation.Zoom);
+ol.inherits(ol_featureAnimation_ZoomOut, ol_featureAnimation_Zoom);
 
 /** Animate
-* @param {ol.featureAnimationEvent} e
+* @param {ol_featureAnimationEvent} e
 */
-ol.featureAnimation.Zoom.prototype.animate = function (e)
+ol_featureAnimation_Zoom.prototype.animate = function (e)
 {	var fac = this.easing_(e.elapsed);
 	if (fac)
 	{	if (this.get('zoomout')) fac  = 1/fac;
@@ -79,3 +82,5 @@ ol.featureAnimation.Zoom.prototype.animate = function (e)
 */
 	return (e.time <= this.duration_);
 }
+
+export {ol_featureAnimation_Zoom, ol_featureAnimation_ZoomOut}

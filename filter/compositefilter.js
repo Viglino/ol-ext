@@ -2,33 +2,39 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_filter_Base from './filter'
+
 /** Colorize map or layer
 * 	@constructor
 *	@requires ol.filter
-*	@extends {ol.filter.Base}
-*	@param {ol.filter.compositeOptions}
+*	@extends {ol_filter_Base}
+*	@param {ol_filter_CompositeOptions} options
 *		- operation {string} composite operation
 */
-ol.filter.Composite = function(options)
-{	ol.filter.Base.call(this, options);
+var ol_filter_Composite = function(options)
+{	ol_filter_Base.call(this, options);
 
 	this.set("operation", options.operation || "source-over");
 }
-ol.inherits(ol.filter.Composite, ol.filter.Base);
+ol.inherits(ol_filter_Composite, ol_filter_Base);
 
 /** Change the current operation
 *	@param {string} operation composite function
 */
-ol.filter.Composite.prototype.setOperation = function(operation)
+ol_filter_Composite.prototype.setOperation = function(operation)
 {	this.set('operation', operation || "source-over");
 }
 
-ol.filter.Composite.prototype.precompose = function(e)
+ol_filter_Composite.prototype.precompose = function(e)
 {	var ctx = e.context;
 	ctx.save();
 	ctx.globalCompositeOperation = this.get('operation');
 }
 
-ol.filter.Composite.prototype.postcompose = function(e)
+ol_filter_Composite.prototype.postcompose = function(e)
 {	e.context.restore();
 }
+
+export default ol_filter_Composite

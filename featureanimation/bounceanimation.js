@@ -4,27 +4,30 @@
 	
 */
 
+import ol from 'ol'
+import ol_featureAnimation from './featureanimation'
+
 /** Bounce animation: 
  * @constructor
- * @extends {ol.featureAnimation}
- * @param {ol.featureAnimationBounceOptions} options
+ * @extends {ol_featureAnimation}
+ * @param {ol_featureAnimationBounceOptions} options
  *	@param {Integer} options.bounce number of bounce, default 3
  *	@param {Integer} options.amplitude bounce amplitude,default 40
  *	@param {ol.easing} options.easing easing used for decaying amplitude, use function(){return 0} for no decay, default ol.easing.linear
  *	@param {Integer} options.duration duration in ms, default 1000
  */
-ol.featureAnimation.Bounce = function(options)
+var ol_featureAnimation_Bounce = function(options)
 {	options = options || {};
-	ol.featureAnimation.call(this, options);
+	ol_featureAnimation.call(this, options);
 	this.amplitude_ = options.amplitude || 40;
 	this.bounce_ = -Math.PI*(options.bounce || 3);
 }
-ol.inherits(ol.featureAnimation.Bounce, ol.featureAnimation);
+ol.inherits(ol_featureAnimation_Bounce, ol_featureAnimation);
 
 /** Animate
-* @param {ol.featureAnimationEvent} e
+* @param {ol_featureAnimationEvent} e
 */
-ol.featureAnimation.Bounce.prototype.animate = function (e)
+ol_featureAnimation_Bounce.prototype.animate = function (e)
 {	// Animate
 	var flashGeom = e.geom.clone();
 	
@@ -38,3 +41,5 @@ ol.featureAnimation.Bounce.prototype.animate = function (e)
 	
 	return (e.time <= this.duration_);
 }
+
+export default ol_featureAnimation_Bounce

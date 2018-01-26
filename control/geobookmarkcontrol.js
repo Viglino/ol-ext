@@ -1,7 +1,11 @@
-/** Bookmark positions on ol maps. 
+
+import ol from 'ol'
+import ol_control_Control from 'ol/control/control'
+
+/** Bookmark positions on ol maps.
  *
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol_control_Control}
  * @fires add
  * @fires remove
  * @param {} options Geobookmark's options
@@ -14,12 +18,12 @@
  * @example 
 var bm = new GeoBookmark ({ 
   marks: {
-    "Paris": {pos:ol.proj.transform([2.351828, 48.856578], 'EPSG:4326', 'EPSG:3857'), zoom:11, permanent: true },
-    "London": {pos:ol.proj.transform([-0.1275,51.507222], 'EPSG:4326', 'EPSG:3857'), zoom:12}
+    "Paris": {pos:_ol_proj_.transform([2.351828, 48.856578], 'EPSG:4326', 'EPSG:3857'), zoom:11, permanent: true },
+    "London": {pos:_ol_proj_.transform([-0.1275,51.507222], 'EPSG:4326', 'EPSG:3857'), zoom:12}
   }
 });
  */
-ol.control.GeoBookmark = function(options) {
+var ol_control_GeoBookmark = function(options) {
   options = options || {};
   var self = this;
 
@@ -67,7 +71,7 @@ ol.control.GeoBookmark = function(options) {
   menu.appendChild(input);
 
   // Init
-  ol.control.Control.call(this, {
+  ol_control_Control.call(this, {
     element: element,
     target: options.target
   });
@@ -88,17 +92,17 @@ ol.control.GeoBookmark = function(options) {
   // Set default bmark
   this.setBookmarks(localStorage[this.get('namespace')+"@bookmark"] ? null:options.marks);
 };
-ol.inherits(ol.control.GeoBookmark, ol.control.Control);
+ol.inherits(ol_control_GeoBookmark, ol_control_Control);
 
 /** Set bookmarks
 * @param {} bmark a list of bookmarks, default retreave in the localstorage
 * @example 
 bm.setBookmarks({ 
-  "Paris": {pos:ol.proj.transform([2.351828, 48.856578], 'EPSG:4326', 'EPSG:3857'), zoom:11, permanent: true },
-  "London": {pos:ol.proj.transform([-0.1275,51.507222], 'EPSG:4326', 'EPSG:3857'), zoom:12}
+  "Paris": {pos:_ol_proj_.transform([2.351828, 48.856578], 'EPSG:4326', 'EPSG:3857'), zoom:11, permanent: true },
+  "London": {pos:_ol_proj_.transform([-0.1275,51.507222], 'EPSG:4326', 'EPSG:3857'), zoom:12}
 });
 */
-ol.control.GeoBookmark.prototype.setBookmarks = function(bmark) {
+ol_control_GeoBookmark.prototype.setBookmarks = function(bmark) {
   if (!bmark) bmark = JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
   var modify = this.get("editable");
   var ul = this.element.querySelector("ul");
@@ -135,14 +139,14 @@ ol.control.GeoBookmark.prototype.setBookmarks = function(bmark) {
 /** Get Geo bookmarks
 * @return {any} a list of bookmarks : { BM1:{pos:ol.coordinates, zoom: integer}, BM2:{pos:ol.coordinates, zoom: integer} }
 */
-ol.control.GeoBookmark.prototype.getBookmarks = function() {
+ol_control_GeoBookmark.prototype.getBookmarks = function() {
   return JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
 };
 
 /** Remove a Geo bookmark
 * @param {string} name
 */
-ol.control.GeoBookmark.prototype.removeBookmark = function(name) {
+ol_control_GeoBookmark.prototype.removeBookmark = function(name) {
   if (!name) {
     return;
   };
@@ -153,11 +157,11 @@ ol.control.GeoBookmark.prototype.removeBookmark = function(name) {
 
 /** Add a new Geo bookmark (replace existing one if any)
 * @param {string} name name of the bookmark (display in the menu)
-* @param {ol.Coordintes} position default current position
+* @param {_ol_coordinate_} position default current position
 * @param {number} zoom default current map zoom
 * @param {bool} permanent prevent from deletion, default false
 */
-ol.control.GeoBookmark.prototype.addBookmark = function(name, position, zoom, permanent) 
+ol_control_GeoBookmark.prototype.addBookmark = function(name, position, zoom, permanent)
 {
   if (!name) return;
   var bmark = this.getBookmarks();
@@ -171,3 +175,5 @@ ol.control.GeoBookmark.prototype.addBookmark = function(name, position, zoom, pe
   };
   this.setBookmarks(bmark);
 };
+
+export default ol_control_GeoBookmark

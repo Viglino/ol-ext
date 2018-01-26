@@ -2,19 +2,23 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_filter_Base from './filter'
+
 /** Fold filer map 
 * 	@constructor
-*	@requires ol.filter
-*	@extends {ol.filter.Base}
-*	@param {ol.filter.foldOptions}
+*	@requires ol_filter
+*	@extends {ol_filter_Base}
+*	@param {ol_filter_FoldOptions}
 *		- fold {Array<int>} number of fold (horizontal and vertical)
 *		- margin {Number} margin in px, default 8
 *		- padding {Number} padding in px, default 8
 *		- fsize {integer|Array<integer>} fold size in px, default 8,10
 */
-ol.filter.Fold = function(options)
+var ol_filter_Fold = function(options)
 {	options = options || {};
-	ol.filter.Base.call(this, options);
+	ol_filter_Base.call(this, options);
 	
 	this.set("fold", options.fold || [8,4]);
 	this.set("margin", options.margin || 8);
@@ -22,9 +26,9 @@ ol.filter.Fold = function(options)
 	if (typeof options.fsize == "number") options.fsize = [options.fsize,options.fsize];
 	this.set("fsize", options.fsize || [8,10]);
 }
-ol.inherits(ol.filter.Fold, ol.filter.Base);
+ol.inherits(ol_filter_Fold, ol_filter_Base);
 
-ol.filter.Fold.prototype.drawLine_ = function(ctx, d, m)
+ol_filter_Fold.prototype.drawLine_ = function(ctx, d, m)
 {	var canvas = ctx.canvas;
 	var fold = this.get("fold");
 	var w = canvas.width;
@@ -55,7 +59,7 @@ ol.filter.Fold.prototype.drawLine_ = function(ctx, d, m)
 	ctx.closePath();
 }
 
-ol.filter.Fold.prototype.precompose = function(e)
+ol_filter_Fold.prototype.precompose = function(e)
 {	var ctx = e.context;
 	var canvas = ctx.canvas;
 
@@ -81,7 +85,7 @@ ol.filter.Fold.prototype.precompose = function(e)
 
 }
 
-ol.filter.Fold.prototype.postcompose = function(e)
+ol_filter_Fold.prototype.postcompose = function(e)
 {	var ctx = e.context;
 	var canvas = ctx.canvas;
 
@@ -107,3 +111,5 @@ ol.filter.Fold.prototype.postcompose = function(e)
 		}
 	ctx.restore();
 }
+
+export default ol_filter_Fold

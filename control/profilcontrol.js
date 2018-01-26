@@ -2,19 +2,25 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_control_Control from 'ol/control/control'
+import ol_Sphere from 'ol/sphere'
+import ol_proj from 'ol/proj'
+
 /**
  * @classdesc OpenLayers 3 Profil Control.
  *	Draw a profil of a feature (with a 3D geometry)
  *
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol_control_Control}
  * @fires  over, out, show
- * @param {Object=} Control options.
+ * @param {Object=} _ol_control_ opt_options.
  *
  */
-ol.control.Profil = function(opt_options) 
+var ol_control_Profil = function(opt_options)
 {	var options = opt_options || {};
-	this.info = options.info || ol.control.Profil.prototype.info;
+	this.info = options.info || ol_control_Profil.prototype.info;
 	var self = this;
 	
 	var element;
@@ -51,7 +57,7 @@ ol.control.Profil = function(opt_options)
 		.append(this.canvas_)
 		.on("click mousemove", function(e){ self.onMove(e); });
 
-	ol.control.Control.call(this, 
+	ol_control_Control.call(this,
 	{	element: element.get(0),
 		target: options.target
 	});
@@ -90,12 +96,12 @@ ol.control.Profil = function(opt_options)
 	{	this.setGeometry (options.feature);
 	}
 };
-ol.inherits(ol.control.Profil, ol.control.Control);
+ol.inherits(ol_control_Profil, ol_control_Control);
 
 /** Custom infos list
 * @api stable
 */
-ol.control.Profil.prototype.info =
+ol_control_Profil.prototype.info =
 {	"zmin": "Zmin",
 	"zmax": "Zmax",
 	"ytitle": "Altitude (m)",
@@ -109,13 +115,13 @@ ol.control.Profil.prototype.info =
 * @param {string} info to display as a popup
 * @api stable
 */
-ol.control.Profil.prototype.popup = function(info)
+ol_control_Profil.prototype.popup = function(info)
 {	this.popup_.html(info);
 }
 
 /** Mouse move over canvas
 */
-ol.control.Profil.prototype.onMove = function(e)
+ol_control_Profil.prototype.onMove = function(e)
 {	if (!this.tab_.length) return;
 	var pos = $(this.canvas_).offset();
 	var dx = e.pageX -pos.left;
@@ -158,27 +164,27 @@ ol.control.Profil.prototype.onMove = function(e)
 /** Show panel
 * @api stable
 */
-ol.control.Profil.prototype.show = function()
+ol_control_Profil.prototype.show = function()
 {	$(this.element).removeClass("ol-collapsed"); 
 	this.dispatchEvent({ type:'show', show: true });
 }
 /** Hide panel
 * @api stable
 */
-ol.control.Profil.prototype.hide = function()
+ol_control_Profil.prototype.hide = function()
 {	$(this.element).addClass("ol-collapsed"); 
 	this.dispatchEvent({ type:'show', show: false });
 }
 /** Toggle panel
 * @api stable
 */
-ol.control.Profil.prototype.toggle = function()
+ol_control_Profil.prototype.toggle = function()
 {	var b = $(this.element).toggleClass("ol-collapsed").hasClass("ol-collapsed"); 
 	this.dispatchEvent({ type:'show', show: !b });
 }
 /** Is panel visible
 */
-ol.control.Profil.prototype.isShown = function()
+ol_control_Profil.prototype.isShown = function()
 {	return (!$(this.element).hasClass("ol-collapsed"));
 }
 
@@ -195,7 +201,7 @@ ol.control.Profil.prototype.isShown = function()
  *		- amplitude {integer|undefined} amplitude of the altitude, default zmax-zmin
  * @api stable
  */
-ol.control.Profil.prototype.setGeometry = function(g, options)
+ol_control_Profil.prototype.setGeometry = function(g, options)
 {	if (!options) options = {};
 	if (g instanceof ol.Feature) g = g.getGeometry();
 	var canvas = this.canvas_;
@@ -220,12 +226,12 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	}
 
 	// Distance beetween 2 coords
-	var wgs84Sphere = new ol.Sphere(6378137);
+	var wgs84Sphere = new ol_Sphere(6378137);
 	var proj = options.projection || this.getMap().getView().getProjection();
 	function dist2d(p1,p2)
 	{	return wgs84Sphere.haversineDistance(
-			ol.proj.transform(p1, proj, 'EPSG:4326'),
-			ol.proj.transform(p2, proj, 'EPSG:4326'));
+			ol_proj.transform(p1, proj, 'EPSG:4326'),
+			ol_proj.transform(p2, proj, 'EPSG:4326'));
 	}
 
 	function getTime(t0, t1)
@@ -363,7 +369,9 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 * @return {string} requested data uri
 * @api stable
 */
-ol.control.Profil.prototype.getImage = function(type, encoderOptions)
+ol_control_Profil.prototype.getImage = function(type, encoderOptions)
 {	if (type==="canvas") return this.canvas_;
 	return this.canvas_.toDataURL(type, encoderOptions);
 }
+
+export default ol_control_Profil

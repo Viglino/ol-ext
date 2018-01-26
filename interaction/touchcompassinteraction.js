@@ -2,15 +2,19 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_interaction_Pointer from 'ol/interaction/pointer'
+
 /** Interaction splitter: acts as a split feature agent while editing vector features (LineString).
  * @constructor
- * @extends {ol.interaction.Pointer}
+ * @extends {ol_interaction_Pointer}
  * @param {olx.interaction.TouchCompass} 
  *	- onDrag {function|undefined} Function handling "drag" events. It provides a dpixel and a traction (in projection) vector form the center of the compas
  *	- size {Number} size of the compass in px, default 80
  *	- alpha {Number} opacity of the compass, default 0.5
  */
-ol.interaction.TouchCompass = function(options) 
+var ol_interaction_TouchCompass = function(options)
 {	var options = options||{};
 	var self = this;
 
@@ -37,14 +41,14 @@ ol.interaction.TouchCompass = function(options)
 		return true;
 	};
 
-	ol.interaction.Pointer.call(this, opt);
+	ol_interaction_Pointer.call(this, opt);
 
 	this.ondrag_ = options.onDrag;
 	this.size = options.size || 80;
 	this.alpha = options.alpha || 0.5;
 
-	if (!ol.interaction.TouchCompass.prototype.compass)
-	{	var canvas = ol.interaction.TouchCompass.prototype.compass = document.createElement('canvas');
+	if (!ol_interaction_TouchCompass.prototype.compass)
+	{	var canvas = ol_interaction_TouchCompass.prototype.compass = document.createElement('canvas');
 		var ctx = canvas.getContext("2d");
 		var s = canvas.width = canvas.height = this.size;
 		var w = s/10;
@@ -77,25 +81,25 @@ ol.interaction.TouchCompass = function(options)
 		ctx.fill();
 	}
 };
-ol.inherits(ol.interaction.TouchCompass, ol.interaction.Pointer);
+ol.inherits(ol_interaction_TouchCompass, ol_interaction_Pointer);
 
 /** Compass Image as a JS Image object
 * @api
 */
-ol.interaction.TouchCompass.prototype.compass = null;
+ol_interaction_TouchCompass.prototype.compass = null;
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {ol.Map} map Map.
+ * @param {_ol_Map_} map Map.
  * @api stable
  */
-ol.interaction.TouchCompass.prototype.setMap = function(map) 
+ol_interaction_TouchCompass.prototype.setMap = function(map)
 {	if (this.getMap())
 	{	this.getMap().un('postcompose', this.drawCompass_, this);
 	}
 
-	ol.interaction.Pointer.prototype.setMap.call (this, map);
+	ol_interaction_Pointer.prototype.setMap.call (this, map);
 
 	if (map)
 	{	map.on('postcompose', this.drawCompass_, this);
@@ -108,17 +112,17 @@ ol.interaction.TouchCompass.prototype.setMap = function(map)
  * @observable
  * @api
  */
-ol.interaction.TouchCompass.prototype.setActive = function(b) 
-{	ol.interaction.Pointer.prototype.setActive.call (this, b);
+ol_interaction_TouchCompass.prototype.setActive = function(b)
+{	ol_interaction_Pointer.prototype.setActive.call (this, b);
 	if (this.getMap()) this.getMap().renderSync();
 }
 
 /**
  * Get the center of the compass
- * @param {ol.coordinate} 
+ * @param {_ol_coordinate_}
  * @private
  */
-ol.interaction.TouchCompass.prototype.getCenter_ = function() 
+ol_interaction_TouchCompass.prototype.getCenter_ = function()
 {	var margin = 10;
 	var s = this.size;
 	var c = this.getMap().getSize(); 
@@ -129,7 +133,7 @@ ol.interaction.TouchCompass.prototype.getCenter_ = function()
  * Draw the compass on post compose
  * @private
  */
-ol.interaction.TouchCompass.prototype.drawCompass_ = function(e) 
+ol_interaction_TouchCompass.prototype.drawCompass_ = function(e)
 {	if (!this.getActive()) return;
 
 	var ctx = e.context;
@@ -174,3 +178,5 @@ ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
 		e.frameState.animate = true;
 	}
 };
+
+export default ol_interaction_TouchCompass

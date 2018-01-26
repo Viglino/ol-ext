@@ -4,8 +4,14 @@
 *
 *  Photo style for vector features
 */
+
+import ol from 'ol'
+import ol_style_RegularShape from 'ol/style/regularshape'
+import ol_color from 'ol/color'
+import ol_style_Stroke from 'ol/style/stroke'
+
 /**
- * @requires ol.style.RegularShape
+ * @requires ol_style_RegularShape
  * @requires ol.structs.IHasChecksum
  */
 /**
@@ -18,28 +24,28 @@
  *  @param {boolean} options.crop crop within square, default is false
  *  @param {Number} options.radius symbol size
  *  @param {boolean} options.shadow drop a shadow
- *  @param {ol.style.Stroke} options.stroke
+ *  @param {ol_style_Stroke} options.stroke
  *  @param {String} options.src image src
  *  @param {String} options.crossOrigin The crossOrigin attribute for loaded images. Note that you must provide a crossOrigin value if you want to access pixel data with the Canvas renderer.
  *  @param {Number} options.offsetX Horizontal offset in pixels. Default is 0.
  *  @param {Number} options.offsetY Vertical offset in pixels. Default is 0.
  *  @param {function} options.onload callback when image is loaded (to redraw the layer)
- * @extends {ol.style.RegularShape}
+ * @extends {ol_style_RegularShape}
  * @implements {ol.structs.IHasChecksum}
  * @api
  */
-ol.style.Photo = function(options) 
+var ol_style_Photo = function(options)
 {	options = options || {};
 	this.sanchor_ = options.kind=="anchored" ? 8:0;
 	this.shadow_ = Number(options.shadow) || 0;
 	if (!options.stroke) 
-	{	options.stroke = new ol.style.Stroke({ width: 0, color: "#000"})
+	{	options.stroke = new ol_style_Stroke({ width: 0, color: "#000"})
 	}
 	var strokeWidth = options.stroke.getWidth();
 	if (strokeWidth<0) strokeWidth = 0;
 	if (options.kind=='folio') strokeWidth += 6;
 	options.stroke.setWidth(strokeWidth);
-	ol.style.RegularShape.call (this, 
+	ol_style_RegularShape.call (this,
 	{	radius: options.radius + strokeWidth + this.sanchor_/2 + this.shadow_/2, 
 		points:0
 	//	fill:new ol.style.Fill({color:"red"}) // No fill to create a hit detection Image
@@ -72,15 +78,15 @@ ol.style.Photo = function(options)
 	if (typeof(options.rotation)=='number') this.setRotation(options.rotation);
 	this.renderPhoto_();
 };
-ol.inherits(ol.style.Photo, ol.style.RegularShape);
+ol.inherits(ol_style_Photo, ol_style_RegularShape);
 
 
 /**
  * Clones the style. 
- * @return {ol.style.Photo} 
+ * @return {ol_style_Photo}
  */
-ol.style.Photo.prototype.clone = function() 
-{	return new ol.style.Photo(
+ol_style_Photo.prototype.clone = function()
+{	return new ol_style_Photo(
 	{	stroke: this.stroke_,
 		fill: this.fill_,
 		shadow: this.shadow_,
@@ -126,7 +132,7 @@ CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r)
  * Draw the form without the image
  * @private
  */
-ol.style.Photo.prototype.drawBack_ = function(context, color, strokeWidth) 
+ol_style_Photo.prototype.drawBack_ = function(context, color, strokeWidth)
 {	var canvas = context.canvas;
 	context.beginPath();
     context.fillStyle = color;
@@ -180,12 +186,12 @@ ol.style.Photo.prototype.drawBack_ = function(context, color, strokeWidth)
 /**
  * @private
  */
-ol.style.Photo.prototype.renderPhoto_ = function() 
+ol_style_Photo.prototype.renderPhoto_ = function()
 {
 	var strokeStyle;
 	var strokeWidth = 0;
 	if (this.stroke_) 
-	{	strokeStyle = ol.color.asString(this.stroke_.getColor());
+	{	strokeStyle = ol_color.asString(this.stroke_.getColor());
 		strokeWidth = this.stroke_.getWidth();
 	}
 	var canvas = this.getImage();
@@ -236,7 +242,7 @@ ol.style.Photo.prototype.renderPhoto_ = function()
  * Draw an timage when loaded
  * @private
  */
-ol.style.Photo.prototype.drawImage_ = function(img) 
+ol_style_Photo.prototype.drawImage_ = function(img)
 {	var canvas = this.getImage();
 	// Remove the circle on the canvas
 	var context = (canvas.getContext('2d'));
@@ -283,7 +289,7 @@ ol.style.Photo.prototype.drawImage_ = function(img)
 	// Draw a circle to avoid aliasing on clip
 	if (this.kind_=='circle' && strokeWidth)
 	{	context.beginPath();
-		context.strokeStyle = ol.color.asString(this.stroke_.getColor());
+		context.strokeStyle = ol_color.asString(this.stroke_.getColor());
 		context.lineWidth = strokeWidth/4;
 		context.arc(this.radius_+strokeWidth, this.radius_+strokeWidth, this.radius_, 0, 2 * Math.PI, false);
 		context.stroke();
@@ -294,7 +300,7 @@ ol.style.Photo.prototype.drawImage_ = function(img)
 /**
  * @inheritDoc
  */
-ol.style.Photo.prototype.getChecksum = function() 
+ol_style_Photo.prototype.getChecksum = function()
 {
 	var strokeChecksum = (this.stroke_!==null) ?
 		this.stroke_.getChecksum() : '-';
@@ -314,3 +320,5 @@ ol.style.Photo.prototype.getChecksum = function()
 
 	return this.checksums_[0];
 };
+
+export default ol_style_Photo

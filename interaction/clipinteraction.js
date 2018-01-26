@@ -1,15 +1,19 @@
+
+import ol from 'ol'
+import ol_interaction_Pointer from 'ol/interaction/pointer'
+
 /** Clip interaction to clip layers in a circle
  * @constructor
- * @extends {ol.interaction.Pointer}
- *	@param {ol.interaction.clip.options} flashlight options param
+ * @extends {ol_interaction_Pointer}
+ *	@param {ol_interaction_Clip.options} options flashlight  param
  *		- radius {number} radius of the clip, default 100
  *		- layers {ol.layer|Array<ol.layer>} layers to clip
  */
-ol.interaction.Clip = function(options) {
+var ol_interaction_Clip = function(options) {
 
 	this.layers_ = [];
 	
-	ol.interaction.Pointer.call(this, 
+	ol_interaction_Pointer.call(this,
 	{	handleDownEvent: this.setPosition,
 		handleMoveEvent: this.setPosition
 	});
@@ -21,11 +25,11 @@ ol.interaction.Clip = function(options) {
 	this.radius = (options.radius||100);
 	if (options.layers) this.addLayer(options.layers);
 };
-ol.inherits(ol.interaction.Clip, ol.interaction.Pointer);
+ol.inherits(ol_interaction_Clip, ol_interaction_Pointer);
 
 /** Set the map > start postcompose
 */
-ol.interaction.Clip.prototype.setMap = function(map)
+ol_interaction_Clip.prototype.setMap = function(map)
 {	if (this.getMap()) 
 	{	for (var i=0; i<this.layers_.length; i++)
 		{	this.layers_[i].un('precompose', this.precompose_, this);
@@ -34,7 +38,7 @@ ol.interaction.Clip.prototype.setMap = function(map)
 		this.getMap().renderSync();
 	}
 	
-	ol.interaction.Pointer.prototype.setMap.call(this, map);
+	ol_interaction_Pointer.prototype.setMap.call(this, map);
 
 	if (map)
 	{	for (var i=0; i<this.layers_.length; i++)
@@ -48,7 +52,7 @@ ol.interaction.Clip.prototype.setMap = function(map)
 /** Set clip radius
  *	@param {integer} radius
  */
-ol.interaction.Clip.prototype.setRadius = function(radius)
+ol_interaction_Clip.prototype.setRadius = function(radius)
 {	this.radius = radius;
 	if (this.getMap()) this.getMap().renderSync();
 }
@@ -56,7 +60,7 @@ ol.interaction.Clip.prototype.setRadius = function(radius)
 /** Add a layer to clip
  *	@param {ol.layer|Array<ol.layer>} layer to clip
  */
-ol.interaction.Clip.prototype.addLayer = function(layers)
+ol_interaction_Clip.prototype.addLayer = function(layers)
 {	if (!(layers instanceof Array)) layers = [layers];
 	for (var i=0; i<layers.length; i++)
 	{	if (this.getMap())
@@ -71,7 +75,7 @@ ol.interaction.Clip.prototype.addLayer = function(layers)
 /** Remove a layer to clip
  *	@param {ol.layer|Array<ol.layer>} layer to clip
  */
-ol.interaction.Clip.prototype.removeLayer = function(layers)
+ol_interaction_Clip.prototype.removeLayer = function(layers)
 {	if (!(layers instanceof Array)) layers = [layers];
 	for (var i=0; i<layers.length; i++)
 	{	var k;
@@ -92,7 +96,7 @@ ol.interaction.Clip.prototype.removeLayer = function(layers)
 /** Set position of the clip
 *	@param {ol.Pixel|ol.MapBrowserEvent}
 */
-ol.interaction.Clip.prototype.setPosition = function(e)
+ol_interaction_Clip.prototype.setPosition = function(e)
 {	if (e.pixel) this.pos = e.pixel;
 	else 
 	{	if (e && e instanceof Array) this.pos = e;
@@ -103,7 +107,7 @@ ol.interaction.Clip.prototype.setPosition = function(e)
 
 /* @private
 */
-ol.interaction.Clip.prototype.precompose_ = function(e)
+ol_interaction_Clip.prototype.precompose_ = function(e)
 {	var ctx = e.context;
 	var ratio = e.frameState.pixelRatio;
 
@@ -115,7 +119,7 @@ ol.interaction.Clip.prototype.precompose_ = function(e)
 
 /* @private
 */
-ol.interaction.Clip.prototype.postcompose_ = function(e)
+ol_interaction_Clip.prototype.postcompose_ = function(e)
 {	e.context.restore();
 };
 
@@ -125,8 +129,8 @@ ol.interaction.Clip.prototype.postcompose_ = function(e)
  * @observable
  * @api
  */
-ol.interaction.Clip.prototype.setActive = function(b) 
-{	ol.interaction.Pointer.prototype.setActive.call (this, b);
+ol_interaction_Clip.prototype.setActive = function(b)
+{	ol_interaction_Pointer.prototype.setActive.call (this, b);
 	if(b) {
 		for(var i=0; i<this.layers_.length; i++) {
 			this.layers_[i].on('precompose', this.precompose_, this);
@@ -140,3 +144,5 @@ ol.interaction.Clip.prototype.setActive = function(b)
 	}
 	if (this.getMap()) this.getMap().renderSync();
 }
+
+export default ol_interaction_Clip

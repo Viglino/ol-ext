@@ -1,3 +1,9 @@
+
+import ol from 'ol'
+import ol_layer_Vector from 'ol/layer/vector'
+import ol_style_Style from 'ol/style/style'
+import ol_style_Text from 'ol/style/text'
+
 /** Add a setTextPath style to draw text along linestrings
 @toto letterpadding/spacing, wordpadding/spacing
 */
@@ -79,7 +85,7 @@ function drawTextPath (e)
 *	@param {ol.style.Style|Array.<ol.style.Style>|ol.StyleFunction} style
 *	@param {Number} maxResolution to display text, default: 0
 */
-ol.layer.Vector.prototype.setTextPathStyle = function(style, maxResolution)
+ol_layer_Vector.prototype.setTextPathStyle = function(style, maxResolution)
 {
 	// Remove existing style
 	if (style===null)
@@ -94,7 +100,7 @@ ol.layer.Vector.prototype.setTextPathStyle = function(style, maxResolution)
 	}
 	// Set textPathStyle
 	if (style===undefined)
-	{	style = [ new ol.style.Style({ text: new ol.style.Text()}) ];
+	{	style = [ new ol_style_Style({ text: new ol_style_Text()}) ];
 	}
 	if (typeof(style) == "function") this.textPathStyle_ = style;
 	else this.textPathStyle_ = function() { return style; };
@@ -112,19 +118,19 @@ ol.layer.Vector.prototype.setTextPathStyle = function(style, maxResolution)
 *	@param {visible|ellipsis|string} textOverflow
 *	@param {number} minWidth minimum width (px) to draw text, default 0
 */
-ol.style.TextPath = function(options)
+var ol_style_TextPath = function(options)
 {	if (!options) options={};
-	ol.style.Text.call (this, options);
+	ol_style_Text.call (this, options);
 	this.textOverflow_ = typeof(options.textOverflow)!="undefined" ?  options.textOverflow : "visible";
 	this.minWidth_ = options.minWidth || 0;
 }
-ol.inherits(ol.style.TextPath, ol.style.Text);
+ol.inherits(ol_style_TextPath, ol_style_Text);
 
-ol.style.TextPath.prototype.getTextOverflow = function() 
+ol_style_TextPath.prototype.getTextOverflow = function()
 {	return this.textOverflow_; 
 };
 
-ol.style.TextPath.prototype.getMinWidth = function() 
+ol_style_TextPath.prototype.getMinWidth = function()
 {	return this.minWidth_; 
 };
 
@@ -237,3 +243,7 @@ CanvasRenderingContext2D.prototype.textPath = function (text, path)
 	}
   
 };
+
+//NB: (Not confirmed)To use this module, you just have to :
+
+//   import('ol-ext/layer/getpreview')

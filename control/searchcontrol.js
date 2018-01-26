@@ -1,15 +1,17 @@
-﻿/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+﻿/*	Copyright (c) 2017 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+import ol from 'ol'
+import ol_control_Control from 'ol/control/control'
 /**
- * Search Control.    
+ * Search Control.
  * This is the base class for search controls. You can use it for simple custom search or as base to new class.
- * @see ol.control.SearchFeature
- * @see ol.control.SearchPhoton
+ * @see ol_control_SearchFeature
+ * @see ol_control_SearchPhoton
  *
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol_control_Control}
  * @fires select
  * @fires change:input
  * @param {Object=} options
@@ -23,13 +25,13 @@
  *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index.
  *	@param {function} options.autocomplete a function that take a search string and callback function to send an array
  */
-ol.control.Search = function(options) 
+var ol_control_Search = function(options)
 {	var self = this;
 	if (!options) options = {};
 	if (options.typing == undefined) options.typing = 300;
 
 	var element;
-	if (options.target) 
+	if (options.target)
 	{	element = $("<div>").addClass((options.className||"")+ " ol-search");
 	}
 	else
@@ -38,8 +40,8 @@ ol.control.Search = function(options)
 					.attr('type','button')
 					.attr('title',options.label||"search")
 					.click (function()
-					{	element.toggleClass("ol-collapsed"); 
-						if (!element.hasClass("ol-collapsed")) 
+					{	element.toggleClass("ol-collapsed");
+						if (!element.hasClass("ol-collapsed"))
 						{	$("input.search", element).focus();
 							$('li', element).removeClass('select');
 						}
@@ -51,10 +53,10 @@ ol.control.Search = function(options)
 	$("<input>").attr('type','search')
 		.addClass("search")
 		.attr('placeholder', options.placeholder||"Search...")
-		.on('change', function(e) 
-		{ 	self.dispatchEvent({ type:"change:input", input:e, value:$(this).val()  }); 
+		.on('change', function(e)
+		{ 	self.dispatchEvent({ type:"change:input", input:e, value:$(this).val()  });
 		})
-		.on('keyup search cut paste input', function(e) 
+		.on('keyup search cut paste input', function(e)
 		{	// console.log(e.type+" "+e.key)
 			var li  = $("ul.autocomplete li.select", element);
 			var	val = $(this).val();
@@ -85,7 +87,7 @@ ol.control.Search = function(options)
 				{	// prevent searching on each typing
 					if (tout) clearTimeout(tout);
 					tout = setTimeout(function()
-					{	if (cur.length >= self.get("minLength")) 
+					{	if (cur.length >= self.get("minLength"))
 						{	var s = self.autocomplete (cur, function(auto) { self.drawList_(auto); });
 							if (s) self.drawList_(s);
 						}
@@ -95,7 +97,7 @@ ol.control.Search = function(options)
 				else self.drawList_();
 			}
 			// Clear list selection
-			else 
+			else
 			{	$("ul.autocomplete li", element).removeClass('select');
 			}
 		})
@@ -108,34 +110,34 @@ ol.control.Search = function(options)
 		.appendTo(element);
 	// Autocomplete list
 	$("<ul>").addClass('autocomplete').appendTo(element);
-	
-	ol.control.Control.call(this, 
+
+	ol_control_Control.call(this,
 		{	element: element.get(0),
 			target: options.target
 		});
 
 	if (typeof (options.getTitle)=='function') this.getTitle = options.getTitle;
 	if (typeof (options.autocomplete)=='function') this.autocomplete = options.autocomplete;
-	
+
 	// Options
 	this.set('minLength', options.minLength || 1);
 	this.set('maxItems', options.maxItems || 10);
 
 };
-ol.inherits(ol.control.Search, ol.control.Control);
+ol.inherits(ol_control_Search, ol_control_Control);
 
 /** Returns the text to be displayed in the menu
 *	@param {any} f feature to be displayed
 *	@return {string} the text to be displayed in the index, default f.name
 *	@api
 */
-ol.control.Search.prototype.getTitle = function (f)
+ol_control_Search.prototype.getTitle = function (f)
 {	return f.name || "No title";
 };
 
 /** Force search to refresh
 */
-ol.control.Search.prototype.search = function ()
+ol_control_Search.prototype.search = function ()
 {	$("input.search", this.element).trigger('search');
 };
 
@@ -144,7 +146,7 @@ ol.control.Search.prototype.search = function ()
 *	@param {boolean} search to start a search
 *	@api
 */
-ol.control.Search.prototype.setInput = function (value, search)
+ol_control_Search.prototype.setInput = function (value, search)
 {	$("input.search",this.element).val(value);
 	if (search) $("input.search",this.element).trigger("keyup");
 };
@@ -153,7 +155,7 @@ ol.control.Search.prototype.setInput = function (value, search)
 *	@param {any} f the feature, as passed in the autocomplete
 *	@api
 */
-ol.control.Search.prototype.select = function (f)
+ol_control_Search.prototype.select = function (f)
 {	this.dispatchEvent({ type:"select", search:f });
 };
 
@@ -163,25 +165,15 @@ ol.control.Search.prototype.select = function (f)
 * @return {Array|false} an array of search solutions or false if the array is send with the cback argument
 * @api
 */
-ol.control.Search.prototype.autocomplete = function (s, cback)
+ol_control_Search.prototype.autocomplete = function (s, cback)
 {	cback ([]);
 	return false;
 };
 
-/** Prevent same feature to be drawn twice: test equality
- * @param {} f1 First feature to compare
- * @param {} f2 Second feature to compare
- * @return {boolean}
- * @api
- */
-ol.control.Search.prototype.equalFeatures = function (f1, f2) {
-	return (this.getTitle(f1) == this.getTitle(f2));
-}
-
-/** Draw the list 
+/** Draw the list
 * @param {Array} auto an array of search result
 */
-ol.control.Search.prototype.drawList_ = function (auto)
+ol_control_Search.prototype.drawList_ = function (auto)
 {	var ul = $("ul.autocomplete", this.element).html("");
 	if (!auto) return;
 	var self = this;
@@ -197,3 +189,5 @@ ol.control.Search.prototype.drawList_ = function (auto)
 		}
 	}
 };
+
+export default ol_control_Search

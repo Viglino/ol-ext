@@ -2,12 +2,23 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_control_Control from 'ol/control/control'
+import ol_layer_Tile from 'ol/layer/tile'
+import ol_layer_Vector from 'ol/layer/vector'
+import ol_layer_VectorTile from 'ol/layer/vectortile'
+import ol_layer_Image from 'ol/layer/image'
+import ol_layer_Heatmap from 'ol/layer/heatmap'
+
+
+
 /**
  * @classdesc OpenLayers 3 Layer Switcher Control.
  * @require jQuery
  *
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol_control_Control}
  * @param {Object=} Control options.
  *	@param {boolean} options.show_progress show a progress bar on tile layers, default false
  *		- mouseover {boolean} show the panel on mouseover, default false
@@ -22,7 +33,7 @@
  *	- displayInLayerSwitcher {boolean} display in switcher, default true
  *	- noSwitcherDelete {boolean} to prevent layer deletion (w. trash option), default false
  */
-ol.control.LayerSwitcher = function(opt_options) 
+var ol_control_LayerSwitcher = function(opt_options)
 {	var options = opt_options || {};
 	var self = this;
 	this.dcount = 0;
@@ -73,7 +84,7 @@ ol.control.LayerSwitcher = function(opt_options)
 		});
 	this.header_ = $("<li>").addClass("ol-header").appendTo(this.panel_);
 
-	ol.control.Control.call(this, 
+	ol_control_Control.call(this,
 	{	element: element.get(0),
 		target: options.target
 	});
@@ -83,12 +94,12 @@ ol.control.LayerSwitcher = function(opt_options)
 	this.target = options.target;
 
 };
-ol.inherits(ol.control.LayerSwitcher, ol.control.Control);
+ol.inherits(ol_control_LayerSwitcher, ol_control_Control);
 
 
 /** List of tips
 */
-ol.control.LayerSwitcher.prototype.tip =
+ol_control_LayerSwitcher.prototype.tip =
 {	up: "up/down",
 	down: "down",
 	info: "informations...",
@@ -99,10 +110,10 @@ ol.control.LayerSwitcher.prototype.tip =
 
 /**
  * Set the map instance the control is associated with.
- * @param {ol.Map} map The map instance.
+ * @param {_ol_Map_} map The map instance.
  */
-ol.control.LayerSwitcher.prototype.setMap = function(map) 
-{   ol.control.Control.prototype.setMap.call(this, map);
+ol_control_LayerSwitcher.prototype.setMap = function(map)
+{   ol_control_Control.prototype.setMap.call(this, map);
 	this.drawPanel();
 	
 	if (this.map_)
@@ -124,14 +135,14 @@ ol.control.LayerSwitcher.prototype.setMap = function(map)
 /** Add a custom header
 
 */
-ol.control.LayerSwitcher.prototype.setHeader = function(html)
+ol_control_LayerSwitcher.prototype.setHeader = function(html)
 {	this.header_.html(html);
 };
 
 /** Calculate overflow and add scrolls
 *	@param {Number} dir scroll direction -1|0|1|'+50%'|'-50%'
 */
-ol.control.LayerSwitcher.prototype.overflow = function(dir)
+ol_control_LayerSwitcher.prototype.overflow = function(dir)
 {	
 	if (this.button) 
 	{	// Nothing to show
@@ -189,7 +200,7 @@ ol.control.LayerSwitcher.prototype.overflow = function(dir)
  * @param {ol.event} map The map instance.
  * @private
  */
-ol.control.LayerSwitcher.prototype.viewChange = function(e) 
+ol_control_LayerSwitcher.prototype.viewChange = function(e)
 {
 	var map = this.map_;
 	var res = this.map_.getView().getResolution();
@@ -215,7 +226,7 @@ ol.control.LayerSwitcher.prototype.viewChange = function(e)
 /**
  *	Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
  */
-ol.control.LayerSwitcher.prototype.drawPanel = function(e) 
+ol_control_LayerSwitcher.prototype.drawPanel = function(e)
 {
 	if (!this.getMap()) return;
 	var self = this;
@@ -227,7 +238,7 @@ ol.control.LayerSwitcher.prototype.drawPanel = function(e)
 /** Delayed draw panel control 
  * @private
  */
-ol.control.LayerSwitcher.prototype.drawPanel_ = function(e) 
+ol_control_LayerSwitcher.prototype.drawPanel_ = function(e)
 {	if (--this.dcount || this.dragging_) return;
 	$("li", this.panel_).not(".ol-header").remove();
 	this.drawList (this.panel_, this.getMap().getLayers());
@@ -237,7 +248,7 @@ ol.control.LayerSwitcher.prototype.drawPanel_ = function(e)
  * @param {ol.layer}
  * @param {Array<ol.layer>} related layers
  */
-ol.control.LayerSwitcher.prototype.switchLayerVisibility = function(l, layers)
+ol_control_LayerSwitcher.prototype.switchLayerVisibility = function(l, layers)
 {
 	if (!l.get('baseLayer')) l.setVisible(!l.getVisible());
 	else 
@@ -252,7 +263,7 @@ ol.control.LayerSwitcher.prototype.switchLayerVisibility = function(l, layers)
  * @param {ol.layer}
  * @return {boolean}
  */
-ol.control.LayerSwitcher.prototype.testLayerVisibility = function(layer)
+ol_control_LayerSwitcher.prototype.testLayerVisibility = function(layer)
 {
 	if (this.map_)
 	{	var res = this.map_.getView().getResolution();
@@ -274,7 +285,7 @@ ol.control.LayerSwitcher.prototype.testLayerVisibility = function(layer)
 *	@param {event} e drag event
 *	@private
 */
-ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e)
+ol_control_LayerSwitcher.prototype.dragOrdering_ = function(e)
 {	var drag = e.data;
 	switch (e.type)
 	{	// Start ordering
@@ -411,7 +422,7 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e)
 *	@param {event} e drag event
 *	@private
 */
-ol.control.LayerSwitcher.prototype.dragOpacity_ = function(e)
+ol_control_LayerSwitcher.prototype.dragOpacity_ = function(e)
 {	var drag = e.data;
 	switch (e.type)
 	{	// Start opacity
@@ -460,7 +471,7 @@ ol.control.LayerSwitcher.prototype.dragOpacity_ = function(e)
  * @layers {Array{ol.layer}} list of layer to show
  * @api stable
  */
-ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
+ol_control_LayerSwitcher.prototype.drawList = function(ul, collection)
 {	var self = this;
 	var layers = collection.getArray();
 	var setVisibility = function(e) 
@@ -599,7 +610,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 		}
 
 		// Progress
-		if (this.show_progress && layer instanceof ol.layer.Tile)
+		if (this.show_progress && layer instanceof ol_layer_Tile)
 		{	var p = $("<div>")
 				.addClass("layerswitcher-progress")
 				.appendTo(d);
@@ -635,11 +646,11 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 			{	this.drawList ($("<ul>").appendTo(li), layer.getLayers());
 			}
 		}
-		else if (layer instanceof ol.layer.Vector) li.addClass('ol-layer-vector');
-		else if (layer instanceof ol.layer.VectorTile) li.addClass('ol-layer-vector');
-		else if (layer instanceof ol.layer.Tile) li.addClass('ol-layer-tile');
-		else if (layer instanceof ol.layer.Image) li.addClass('ol-layer-image');
-		else if (layer instanceof ol.layer.Heatmap) li.addClass('ol-layer-heatmap');
+		else if (layer instanceof ol_layer_Vector) li.addClass('ol-layer-vector');
+		else if (layer instanceof ol_layer_VectorTile) li.addClass('ol-layer-vector');
+		else if (layer instanceof ol_layer_Tile) li.addClass('ol-layer-tile');
+		else if (layer instanceof ol_layer_Image) li.addClass('ol-layer-image');
+		else if (layer instanceof ol_layer_Heatmap) li.addClass('ol-layer-heatmap');
 	}
 
 	if (ul==this.panel_) this.overflow();
@@ -648,7 +659,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 /** Handle progress bar for a layer
 *	@private
 */
-ol.control.LayerSwitcher.prototype.setprogress_ = function(layer)
+ol_control_LayerSwitcher.prototype.setprogress_ = function(layer)
 {
 	if (!layer.layerswitcher_progress)
 	{	var loaded = 0;
@@ -676,3 +687,5 @@ ol.control.LayerSwitcher.prototype.setprogress_ = function(layer)
 		});
 	}
 }
+
+export default ol_control_LayerSwitcher

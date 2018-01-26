@@ -2,6 +2,17 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol_Map from 'ol/map'
+import ol_proj from 'ol/proj'
+import ol_Observable from 'ol/observable'
+import ol_easing from 'ol/easing'
+import ol_style_Circle from 'ol/style/circle'
+import ol_style_Stroke from 'ol/style/stroke'
+import ol_style_Image from 'ol/style/image'
+import ol_style_Style from 'ol/style/style'
+import ol_geom_Point from 'ol/geom/point'
+
 /** Show a markup a point on postcompose
 *	@deprecated use map.animateFeature instead
 *	@param {ol.coordinates} point to pulse
@@ -12,14 +23,14 @@
 *		- style {ol.style.Image|ol.style.Style|Array<ol.style.Style>} Image to draw as markup, default red circle
 *	@return Unique key for the listener with a stop function to stop animation
 */
-ol.Map.prototype.markup = function(coords, options)
+ol_Map.prototype.markup = function(coords, options)
 {	var listenerKey;
 	var self = this;
 	options = options || {};
 
 	// Change to map's projection
 	if (options.projection)
-	{	coords = ol.proj.transform(coords, options.projection, this.getView().getProjection());
+	{	coords = ol_proj.transform(coords, options.projection, this.getView().getProjection());
 	}
 	
 	// options
@@ -27,10 +38,10 @@ ol.Map.prototype.markup = function(coords, options)
 	var delay = options.delay || 3000;
 	var duration = 1000;
 	var maxZoom = options.maxZoom || 100;
-	var easing = ol.easing.easeOut;
+	var easing = ol_easing.easeOut;
 	var style = options.style;
-	if (!style) style = new ol.style.Circle({ radius:10, stroke:new ol.style.Stroke({color:'red', width:2 }) });
-	if (style instanceof ol.style.Image) style = new ol.style.Style({ image: style });
+	if (!style) style = new ol_style_Circle({ radius:10, stroke:new ol_style_Stroke({color:'red', width:2 }) });
+	if (style instanceof ol_style_Image) style = new ol_style_Style({ image: style });
 	if (!(style instanceof Array)) style = [style];
 
 	// Animate function
@@ -38,7 +49,7 @@ ol.Map.prototype.markup = function(coords, options)
 	{	var frameState = event.frameState;
 		var elapsed = frameState.time - start;
 		if (elapsed > delay+duration) 
-		{	ol.Observable.unByKey(listenerKey);
+		{	ol_Observable.unByKey(listenerKey);
 			listenerKey = null;
 		}
 		else 
@@ -55,7 +66,7 @@ ol.Map.prototype.markup = function(coords, options)
 				var sc = imgs.getScale(); 
 				imgs.setScale(sc*ratio);
 				event.vectorContext.setStyle(style[i]);
-				event.vectorContext.drawGeometry(new ol.geom.Point(coords));
+				event.vectorContext.drawGeometry(new ol_geom_Point(coords));
 				imgs.setScale(sc);
 			}
 			context.restore();

@@ -2,18 +2,23 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_filter_Base from './filter'
+import ol_color from 'ol/color'
+
 /** Mask drawing using an ol.Feature
 * 	@constructor
-*	@requires ol.filter
-*	@extends {ol.filter.Base}
-*	@param {ol.filter.cropOptions}
+*	@requires ol_filter
+*	@extends {ol_filter_Base}
+*	@param {ol_filter_CropOptions} options
 *		- feature {ol.Feature} feature to mask with
 *		- fill {ol.style.Fill} style to fill with
 *		- inner {bool} mask inner, default false
 */
-ol.filter.Mask = function(options)
+var ol_filter_Mask = function(options)
 {	options = options || {};
-	ol.filter.Base.call(this, options);
+	ol_filter_Base.call(this, options);
 	if (options.feature)
 	{	switch (options.feature.getGeometry().getType())
 		{	case "Polygon":
@@ -24,13 +29,13 @@ ol.filter.Mask = function(options)
 		}
 	}
 	this.set("inner", options.inner);
-	this.fillColor_ = options.fill ? ol.color.asString(options.fill.getColor()) || "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.2)";
+	this.fillColor_ = options.fill ? ol_color.asString(options.fill.getColor()) || "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.2)";
 }
-ol.inherits(ol.filter.Mask, ol.filter.Base);
+ol.inherits(ol_filter_Mask, ol_filter_Base);
 
 /** Draw the feature into canvas
 */
-ol.filter.Mask.prototype.drawFeaturePath_ = function(e, out)
+ol_filter_Mask.prototype.drawFeaturePath_ = function(e, out)
 {	var ctx = e.context;
 	var canvas = ctx.canvas;
 	var ratio = e.frameState.pixelRatio;
@@ -76,7 +81,7 @@ ol.filter.Mask.prototype.drawFeaturePath_ = function(e, out)
 		}
 }
 
-ol.filter.Mask.prototype.postcompose = function(e)
+ol_filter_Mask.prototype.postcompose = function(e)
 {	if (!this.feature_) return;
 	var ctx = e.context;
 	ctx.save();
@@ -85,3 +90,5 @@ ol.filter.Mask.prototype.postcompose = function(e)
 		ctx.fill("evenodd");
 	ctx.restore();
 }
+
+export default ol_filter_Mask

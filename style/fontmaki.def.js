@@ -5,7 +5,9 @@
 * Font definiton to use with fontsymbols
 */
 
-ol.style.FontSymbol.addDefs
+import ol_style_FontSymbol from './fontsymbol'
+
+ol_style_FontSymbol.addDefs
 ({	"font":"fontmaki",
 	"name":"Maki",
 	"copyright":"CC0 - MapBox - https://www.mapbox.com/maki/",
@@ -130,3 +132,5 @@ ol.style.FontSymbol.addDefs
 	"maki-basketball": {"font":"fontmaki","code":59508,"name":"basketball","search":"basketball"},
 	"maki-beer": {"font":"fontmaki","code":59509,"name":"beer","search":"beer"},
 });
+
+export default ol_style_FontSymbol

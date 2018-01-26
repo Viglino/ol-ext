@@ -2,22 +2,26 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_filter_Mask from './maskfilter'
+
 /** Crop drawing using an ol.Feature
 * 	@constructor
 *	@requires ol.filter
-*	@requires ol.filter.Mask
-*	@extends {ol.filter.Mask}
-*	@param {ol.filter.cropOptions}
-*		- feature {ol.Feature} feature to crop with
+*	@requires ol_filter_Mask
+*	@extends {ol_filter_Mask}
+*	@param {ol_filter_CropOptions}
+*		- feature {_ol_Feature_} feature to crop with
 *		- inner {bool} crop inner, default false
 */
-ol.filter.Crop = function(options)
+var ol_filter_Crop = function(options)
 {	options = options || {};
-	ol.filter.Mask.call(this, options);
+	ol_filter_Mask.call(this, options);
 }
-ol.inherits(ol.filter.Crop, ol.filter.Mask);
+ol.inherits(ol_filter_Crop, ol_filter_Mask);
 
-ol.filter.Crop.prototype.precompose = function(e)
+ol_filter_Crop.prototype.precompose = function(e)
 {	if (!this.feature_) return;
 	
 	var ctx = e.context;
@@ -26,6 +30,8 @@ ol.filter.Crop.prototype.precompose = function(e)
 	ctx.clip("evenodd");
 }
 
-ol.filter.Crop.prototype.postcompose = function(e)
+ol_filter_Crop.prototype.postcompose = function(e)
 {	if (this.feature_) e.context.restore();
 }
+
+export default ol_filter_Crop

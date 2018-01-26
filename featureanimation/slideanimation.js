@@ -3,24 +3,28 @@
 	released under the CeCILL license (http://www.cecill.info/).
 	
 */
+
+import ol from 'ol'
+import ol_featureAnimation from './featureanimation'
+
 /** Slice animation: feature enter from left
  * @constructor
- * @extends {ol.featureAnimation}
- * @param {ol.featureAnimationSlideOptions} options
+ * @extends {ol_featureAnimation}
+ * @param {ol_featureAnimationSlideOptions} options
  *  @param {Number} options.speed speed of the animation, if 0 the duration parameter will be used instead, default 0
  */
-ol.featureAnimation.Slide = function(options)
+var ol_featureAnimation_Slide = function(options)
 {	options = options || {};
 	this.speed_ = options.speed || 0;
-	ol.featureAnimation.call(this, options);
+	ol_featureAnimation.call(this, options);
 	this.side_ = options.side || 'left';
 }
-ol.inherits(ol.featureAnimation.Slide, ol.featureAnimation);
+ol.inherits(ol_featureAnimation_Slide, ol_featureAnimation);
 
 /** Animate
-* @param {ol.featureAnimationEvent} e
+* @param {ol_featureAnimationEvent} e
 */
-ol.featureAnimation.Slide.prototype.animate = function (e)
+ol_featureAnimation_Slide.prototype.animate = function (e)
 {	// First time > calculate duration / speed
 	if (!e.time) 
 	{	if (this.side_=='left') this.dx = (e.extent[0]-e.bbox[2])
@@ -34,3 +38,5 @@ ol.featureAnimation.Slide.prototype.animate = function (e)
 	
 	return (e.time <= this.duration_);
 }
+
+export default ol_featureAnimation_Slide

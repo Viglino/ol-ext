@@ -2,21 +2,25 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/** ol.control.Cloud adds an old map effect on a canvas renderer. 
+
+import ol from 'ol'
+import ol_control_Control from 'ol/control/control'
+
+/** ol_control_Cloud adds an old map effect on a canvas renderer.
 * It colors the map, adds a parchment texture and compass onto the map. 
 * @constructor
 * @param {Object} options
-*	@param {ol.Color} options.hue color to set hue of the map, default #963
+*	@param {_ol_color_} options.hue color to set hue of the map, default #963
 *	@param {Number} options.saturation saturation of the hue color, default 0.6
 *	@param {Number} options.opacity opacity of the overimpose image, default 0.7
 * @todo add effects on pan / zoom change
 */
-ol.control.Cloud = function(options) 
+var ol_control_Cloud = function(options)
 {	options = options || {};
 
 	var div = document.createElement('div');
 	div.className = "ol-cloud ol-unselectable ol-control";
-	ol.control.Control.call(this, 
+	ol_control_Control.call(this,
 	{	element: div
 	});
 
@@ -39,21 +43,21 @@ ol.control.Cloud = function(options)
 
 };
 
-ol.inherits(ol.control.Cloud, ol.control.Control);
+ol.inherits(ol_control_Cloud, ol_control_Control);
 
 /**
  * Remove the control from its current map and attach it to the new map.
  * Subclasses may set up event handlers to get notified about changes to
  * the map here.
- * @param {ol.Map} map Map.
+ * @param {_ol_Map_} map Map.
  * @api stable
  */
-ol.control.Cloud.prototype.setMap = function (map)
+ol_control_Cloud.prototype.setMap = function (map)
 {	if (this.getMap()) 
 	{	this.getMap().un('postcompose', this.drawCloud_, this);
 	}
 
-	ol.control.Control.prototype.setMap.call(this, map);
+	ol_control_Control.prototype.setMap.call(this, map);
 
 	if (map) 
 	{	map.on('postcompose', this.drawCloud_, this);
@@ -62,7 +66,7 @@ ol.control.Cloud.prototype.setMap = function (map)
 
 /** Set wind direction / force
 */
-ol.control.Cloud.prototype.setWind= function (options) 
+ol_control_Cloud.prototype.setWind= function (options)
 {	options = options || {};
 	
 	var rnd = Math.random;	
@@ -74,7 +78,7 @@ ol.control.Cloud.prototype.setWind= function (options)
 /**
 *	@private
 */
-ol.control.Cloud.prototype.drawCloud_ = function (event)
+ol_control_Cloud.prototype.drawCloud_ = function (event)
 {	if (!this.getMap()) return;
 	var ctx = event.context;
 	var canvas = ctx.canvas;
@@ -217,3 +221,5 @@ ol.control.Cloud.prototype.drawCloud_ = function (event)
 	// Continue animation
 	this.getMap().render();
 }
+
+export default ol_control_Cloud

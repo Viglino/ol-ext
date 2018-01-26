@@ -2,11 +2,15 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_control_Search from './searchcontrol'
+
 /**
  * Search features.
  *
  * @constructor
- * @extends {ol.control.Search}
+ * @extends {ol_control_Search}
  * @fires select
  * @param {Object=} Control options. 
  *	@param {string} options.className control class name
@@ -21,24 +25,24 @@
  *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return the property 
  *	@param {function | undefined} options.getSearchString a function that take a feature and return a text to be used as search string, default geTitle() is used as search string
  */
-ol.control.SearchFeature = function(options) 
+var ol_control_SearchFeature = function(options)
 {	if (!options) options = {};
 		
-	ol.control.Search.call(this, options);
+	ol_control_Search.call(this, options);
 
 	if (typeof(options.getSearchString)=="function") this.getSearchString = options.getSearchString;
 	this.set('property', options.property||'name');
 
 	this.source_ = options.source;
 };
-ol.inherits(ol.control.SearchFeature, ol.control.Search);
+ol.inherits(ol_control_SearchFeature, ol_control_Search);
 
 /** Returns the text to be displayed in the menu
 *	@param {ol.Feature} f the feature
 *	@return {string} the text to be displayed in the index
 *	@api
 */
-ol.control.SearchFeature.prototype.getTitle = function (f)
+ol_control_SearchFeature.prototype.getTitle = function (f)
 {	return f.get(this.get('property')||'name');
 };
 
@@ -47,7 +51,7 @@ ol.control.SearchFeature.prototype.getTitle = function (f)
 *	@return {string} the text to be used as search string
 *	@api
 */
-ol.control.SearchFeature.prototype.getSearchString = function (f)
+ol_control_SearchFeature.prototype.getSearchString = function (f)
 {	return this.getTitle(f);
 }
 
@@ -57,7 +61,7 @@ ol.control.SearchFeature.prototype.getSearchString = function (f)
 * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete fielad
 * @api
 */
-ol.control.SearchFeature.prototype.autocomplete = function (s, cback)
+ol_control_SearchFeature.prototype.autocomplete = function (s, cback)
 {	var result = [];
 	// regexp
 	s = s.replace(/^\*/,'');
@@ -73,3 +77,5 @@ ol.control.SearchFeature.prototype.autocomplete = function (s, cback)
 	}
 	return result;
 };
+
+export default ol_control_SearchFeature

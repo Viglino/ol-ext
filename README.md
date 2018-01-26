@@ -57,8 +57,6 @@ animations
 ````
 npm install ol-ext
 ````
-#### Dependencies
-The project requires Openlayers and jQuery.
 
 #### Building the project:
 Use the gulp command to build the project into the `/dist` directory:
@@ -96,4 +94,4 @@ You must check before use.
 > [Full text license in English](http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt)  
 > [Full text license in French](http://www.cecill.info/licences/Licence_CeCILL-B_V1-fr.txt)
 
-For convenience you can use the BSD licence instead when publish content to webpacks.
+For convenience you can use the BSD licence instead when publish content to webpack.

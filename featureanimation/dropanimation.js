@@ -4,25 +4,28 @@
 	
 */
 
+import ol from 'ol'
+import ol_featureAnimation from './featureanimation'
+
 /** Drop animation: drop a feature on the map
  * @constructor
- * @extends {ol.featureAnimation}
- * @param {ol.featureAnimationDropOptions} options
+ * @extends {ol_featureAnimation}
+ * @param {ol_featureAnimationDropOptions} options
  *  @param {Number} options.speed speed of the feature if 0 the duration parameter will be used instead, default 0
  *  @param {Number} options.side top or bottom, default top
  */
-ol.featureAnimation.Drop = function(options)
+var ol_featureAnimation_Drop = function(options)
 {	options = options || {};
 	this.speed_ = options.speed || 0;
-	ol.featureAnimation.call(this, options);
+	ol_featureAnimation.call(this, options);
 	this.side_ = options.side || 'top';
 }
-ol.inherits(ol.featureAnimation.Drop, ol.featureAnimation);
+ol.inherits(ol_featureAnimation_Drop, ol_featureAnimation);
 
 /** Animate
-* @param {ol.featureAnimationEvent} e
+* @param {ol_featureAnimationEvent} e
 */
-ol.featureAnimation.Drop.prototype.animate = function (e)
+ol_featureAnimation_Drop.prototype.animate = function (e)
 {	// First time > calculate duration / speed
 	if (!e.time) 
 	{	var angle = e.frameState.viewState.rotation;
@@ -44,3 +47,5 @@ ol.featureAnimation.Drop.prototype.animate = function (e)
 	
 	return (e.time <= this.duration_);
 }
+
+export default ol_featureAnimation_Drop

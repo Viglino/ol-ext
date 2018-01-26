@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 	
 	@classdesc
-	ol.source.DBPedia is a DBPedia layer source that load DBPedia located content in a vector layer.
+	ol_source_DBPedia is a DBPedia layer source that load DBPedia located content in a vector layer.
 	
 	olx.source.DBPedia: olx.source.Vector
 	{	url: {string} Url for DBPedia SPARQL 
@@ -15,12 +15,24 @@
 	<ol.source.Vector>
 */
 
+import ol from 'ol'
+import ol_Attribution from 'ol/attribution'
+import ol_loadingstrategy from 'ol/loadingstrategy'
+import ol_source_Vector from 'ol/source/vector'
+import ol_Feature from 'ol/feature'
+import ol_geom_Point from 'ol/geom/point'
+import ol_proj from 'ol/proj'
+import ol_style_Fill from 'ol/style/fill'
+import ol_style_Stroke from 'ol/style/stroke'
+import ol_style_Style from 'ol/style/style'
+import ol_style_FontSymbol from '../style/fontsymbol'
+
 /**
-* @constructor ol.source.DBPedia
+* @constructor ol_source_DBPedia
 * @extends {ol.source.Vector}
-* @param {olx.source.DBPedia=} options
+* @param {olx.source.DBPedia=} opt_options
 */
-ol.source.DBPedia = function(opt_options)
+var ol_source_DBPedia = function(opt_options)
 {	var options = opt_options || {};
 	var self = this; 
 
@@ -39,14 +51,14 @@ ol.source.DBPedia = function(opt_options)
 	this._limit = options.limit || 1000;
 	
 	/** Default attribution */
-	if (!options.attributions) options.attributions = [ new ol.Attribution({ html:"&copy; <a href='http://dbpedia.org/'>DBpedia</a> CC-by-SA" }) ];
+	if (!options.attributions) options.attributions = [ new ol_Attribution({ html:"&copy; <a href='http://dbpedia.org/'>DBpedia</a> CC-by-SA" }) ];
 
 	// Bbox strategy : reload at each move
-    if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
+    if (!options.strategy) options.strategy = ol_loadingstrategy.bbox;
 
-	ol.source.Vector.call (this, options);	
+	ol_source_Vector.call (this, options);
 };
-ol.inherits (ol.source.DBPedia, ol.source.Vector);
+ol.inherits (ol_source_DBPedia, ol_source_Vector);
 
 
 /** Decode RDF attributes and choose to add feature to the layer
@@ -56,7 +68,7 @@ ol.inherits (ol.source.DBPedia, ol.source.Vector);
 * @return {boolean} true: add the feature to the layer
 * @API stable
 */
-ol.source.DBPedia.prototype.readFeature = function (feature, attributes, lastfeature)
+ol_source_DBPedia.prototype.readFeature = function (feature, attributes, lastfeature)
 {	// Copy RDF attributes values
 	for (var i in attributes) feature.set (i, attributes[i].value);
 
@@ -76,7 +88,7 @@ ol.source.DBPedia.prototype.readFeature = function (feature, attributes, lastfea
 /** Set RDF query subject, default: select label, thumbnail, abstract and type
 * @API stable
 */
-ol.source.DBPedia.prototype.querySubject = function ()
+ol_source_DBPedia.prototype.querySubject = function ()
 {	return "?subject rdfs:label ?label. "
 		+ "OPTIONAL {?subject dbpedia-owl:thumbnail ?thumbnail}."
 		+ "OPTIONAL {?subject dbpedia-owl:abstract ?abstract} . "
@@ -86,7 +98,7 @@ ol.source.DBPedia.prototype.querySubject = function ()
 /** Set RDF query filter, default: select language
 * @API stable
 */
-ol.source.DBPedia.prototype.queryFilter = function ()
+ol_source_DBPedia.prototype.queryFilter = function ()
 {	return	 "lang(?label) = '"+this._lang+"' "
 		+ "&& lang(?abstract) = '"+this._lang+"'"
 	// Filter on type 
@@ -97,10 +109,10 @@ ol.source.DBPedia.prototype.queryFilter = function ()
 /** Loader function used to load features.
 * @private
 */
-ol.source.DBPedia.prototype._loaderFn = function(extent, resolution, projection) 
+ol_source_DBPedia.prototype._loaderFn = function(extent, resolution, projection)
 {	if (resolution > this._maxResolution) return;
 	var self = this;
-	var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
+	var bbox = ol_proj.transformExtent(extent, projection, "EPSG:4326");
 	// SPARQL request: for more info @see http://fr.dbpedia.org/
 	query =	"PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#> "
 				+ "SELECT DISTINCT * WHERE { "
@@ -126,7 +138,7 @@ ol.source.DBPedia.prototype._loaderFn = function(extent, resolution, projection)
 			for ( var i in bindings )
 			{	att = bindings[i];
 				pt = [Number(bindings[i].long.value), Number(bindings[i].lat.value)];
-				feature = new ol.Feature(new ol.geom.Point(ol.proj.transform (pt,"EPSG:4326",projection)));
+				feature = new ol_Feature(new ol_geom_Point(ol_proj.transform (pt,"EPSG:4326",projection)));
 				if (self.readFeature(feature, att, lastfeature))
 				{	features.push(feature);
 					lastfeature = feature;
@@ -143,7 +155,7 @@ var styleCache = {};
 
 /** Reset the cache (when fonts are loaded)
 */
-ol.style.clearDBPediaStyleCache = function()
+var ol_style_clearDBPediaStyleCache = function()
 {	styleCache = {};
 }
 
@@ -157,7 +169,7 @@ ol.style.clearDBPediaStyleCache = function()
 *
 * @require ol.style.FontSymbol and FontAwesome defs are required for dbPediaStyleFunction()
 */
-ol.style.dbPediaStyleFunction = function(options)
+var ol_style_dbPediaStyleFunction = function(options)
 {	if (!options) options={};
 	// Get font function using dbPedia type
 	var getFont;
@@ -187,8 +199,8 @@ ol.style.dbPediaStyleFunction = function(options)
 	}
 	// Default values
 	var radius = options.radius || 8;
-	var fill = options.fill || new ol.style.Fill({ color:"navy"});
-	var stroke = options.stroke || new ol.style.Stroke({ color: "#fff", width: 2 });
+	var fill = options.fill || new ol_style_Fill({ color:"navy"});
+	var stroke = options.stroke || new ol_style_Stroke({ color: "#fff", width: 2 });
 	var prefix = options.prefix ? options.prefix+"_" : "";
 	// Vector style function
 	return function (feature, resolution)
@@ -196,8 +208,8 @@ ol.style.dbPediaStyleFunction = function(options)
 		var k = prefix + glyph;
 		var style = styleCache[k];
 		if (!style)
-		{	styleCache[k] = style = new ol.style.Style
-			({	image: new ol.style.FontSymbol(
+		{	styleCache[k] = style = new ol_style_Style
+			({	image: new ol_style_FontSymbol(
 						{	glyph: glyph, 
 							radius: radius, 
 							fill: fill,
@@ -210,3 +222,5 @@ ol.style.dbPediaStyleFunction = function(options)
 };
 
 })();
+
+export default ol_source_DBPedia

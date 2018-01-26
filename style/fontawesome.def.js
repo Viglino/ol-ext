@@ -1,4 +1,5 @@
-ol.style.FontSymbol.addDefs(
+import ol_style_FontSymbol from './fontsymbol'
+ol_style_FontSymbol.addDefs(
 {	"font":"FontAwesome",
 	"name":"FontAwesome",
 	"copyright":"SIL OFL 1.1",
@@ -679,3 +680,5 @@ ol.style.FontSymbol.addDefs(
 	"fa-black-tie": "\uf27e",
 	"fa-fonticons": "\uf280"
 });
+
+export default ol_style_FontSymbol
