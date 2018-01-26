@@ -1,0 +1,38 @@
+﻿.ol-gridreference
+{	background: #fff;
+	border: 1px solid #000;
+	overflow: auto;
+	max-height: 100%;
+	top:0;
+	right:0;
+}
+.ol-gridreference input
+{	width:100%;
+}
+.ol-gridreference ul
+{	margin:0;
+	padding:0;
+	list-style: none;
+} 
+.ol-gridreference li
+{	padding: 0 0.5em;
+	cursor: pointer;
+}
+.ol-gridreference ul li:hover 
+{	background-color: #ccc;
+}
+.ol-gridreference li.ol-title,
+.ol-gridreference li.ol-title:hover
+{	background:rgba(0,60,136,.5);
+	color:#fff;
+	cursor:default;
+}
+.ol-gridreference ul li .ol-ref
+{	margin-left: 0.5em;
+}
+.ol-gridreference ul li .ol-ref:before
+{	content:"(";
+}
+.ol-gridreference ul li .ol-ref:after
+{	content:")";
+}
