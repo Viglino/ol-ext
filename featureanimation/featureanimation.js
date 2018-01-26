@@ -1,14 +1,22 @@
 /*
 	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL license (http://www.cecill.info/).
-	
 */
+
+import ol from 'ol'
+import ol_Object from 'ol/object'
+import ol_easing from 'ol/easing'
+import ol_Map from 'ol/map'
+import ol_layer_Vector from 'ol/layer/vector'
+import ol_extent from 'ol/extent'
+import ol_Observable from 'ol/observable'
+
 /** Feature animation base class
- * Use the {@link ol.Map#animateFeature} or {@link ol.layer.Vector#animateFeature} to animate a feature 
+ * Use the {@link _ol_Map_#animateFeature} or {@link _ol_layer_Vector_#animateFeature} to animate a feature
  * on postcompose in a map or a layer
 * @constructor
 * @fires animationstart|animationend
-* @param {ol.featureAnimationOptions} options
+* @param {ol_featureAnimationOptions} options
 *	@param {Number} options.duration duration of the animation in ms, default 1000
 *	@param {bool} options.revers revers the animation direction
 *	@param {Number} options.repeat number of time to repeat the animation, default 0
@@ -16,25 +24,25 @@
 *		to be used to make the feature selectable when playing animation 
 *		(@see {@link ../examples/map.featureanimation.select.html}), default the feature 
 *		will be hidden when playing (and niot selectable)
-*	@param {ol.easingFunction} options.fade an easing function used to fade in the feature, default none
-*	@param {ol.easingFunction} options.easing an easing function for the animation, default ol.easing.linear
+*	@param {ol_easing Function} options.fade an easing function used to fade in the feature, default none
+*	@param {ol_easing Function} options.easing an easing function for the animation, default ol_easing.linear
 */
-ol.featureAnimation = function(options)
+var ol_featureAnimation = function(options)
 {	options = options || {};
 	
 	this.duration_ = typeof (options.duration)=='number' ? (options.duration>=0 ? options.duration : 0) : 1000;
 	this.fade_ = typeof(options.fade) == 'function' ? options.fade : null;
 	this.repeat_ = Number(options.repeat);
 
-	var easing = typeof(options.easing) =='function' ? options.easing : ol.easing.linear;
+	var easing = typeof(options.easing) =='function' ? options.easing : ol_easing.linear;
 	if (options.revers) this.easing_ = function(t) { return (1 - easing(t)); };
 	else this.easing_ = easing;
 
 	this.hiddenStyle = options.hiddenStyle;
 
-	ol.Object.call(this);
+	ol_Object.call(this);
 };
-ol.inherits(ol.featureAnimation, ol.Object);
+ol.inherits(ol_featureAnimation, ol_Object);
 
 /** Draw a geometry 
 * @param {olx.animateFeatureEvent} e
@@ -42,7 +50,7 @@ ol.inherits(ol.featureAnimation, ol.Object);
 * @param {ol.geom} shadow geometry for shadow (ie. style with zIndex = -1)
 * @private
 */
-ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
+ol_featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
 {	if (this.fade_) 
 	{	e.context.globalAlpha = this.fade_(1-e.elapsed);
 	}
@@ -50,7 +58,7 @@ ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
 	for (var i=0; i<style.length; i++)
 	{	var sc=0;
 		// OL < v4.3 : setImageStyle doesn't check retina
-		var imgs = ol.Map.prototype.getFeaturesAtPixel ? false : style[i].getImage();
+		var imgs = ol_Map.prototype.getFeaturesAtPixel ? false : style[i].getImage();
 		if (imgs) 
 		{	sc = imgs.getScale(); 
 			imgs.setScale(e.frameState.pixelRatio*sc);
@@ -66,14 +74,14 @@ ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
 };
 
 /** Function to perform manipulations onpostcompose. 
- * This function is called with an ol.featureAnimationEvent argument. 
+ * This function is called with an ol_featureAnimationEvent argument.
  * The function will be overridden by the child implementation.    
  * Return true to keep this function for the next frame, false to remove it.
- * @param {ol.featureAnimationEvent} e
+ * @param {ol_featureAnimationEvent} e
  * @return {bool} true to continue animation.
  * @api 
  */
-ol.featureAnimation.prototype.animate = function (e)
+ol_featureAnimation.prototype.animate = function (e)
 {	return false;
 };
 
@@ -89,18 +97,18 @@ ol.featureAnimation.prototype.animate = function (e)
  * @function 
  * @fires animationstart, animationend
  * @param {ol.Feature} feature Feature to animate
- * @param {ol.featureAnimation|Array<ol.featureAnimation>} fanim the animation to play
+ * @param {ol_featureAnimation|Array<ol_featureAnimation>} fanim the animation to play
  * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
  */
-ol.Map.prototype.animateFeature = 
+ol_Map.prototype.animateFeature =
 
 /** Animate feature on a vector layer 
  * @fires animationstart, animationend
  * @param {ol.Feature} feature Feature to animate
- * @param {ol.featureAnimation|Array<ol.featureAnimation>} fanim the animation to play
+ * @param {ol_featureAnimation|Array<ol_featureAnimation>} fanim the animation to play
  * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
 */
-ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
+ol_layer_Vector.prototype.animateFeature = function(feature, fanim)
 {	var self = this;
 	var listenerKey;
 	
@@ -127,7 +135,7 @@ ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 			geom: feature.getGeometry(),
 			typeGeom: feature.getGeometry().getType(),
 			bbox: feature.getGeometry().getExtent(),
-			coord: ol.extent.getCenter(feature.getGeometry().getExtent()),
+			coord: ol_extent.getCenter(feature.getGeometry().getExtent()),
 			style: flashStyle
 		};
 
@@ -178,7 +186,7 @@ ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 
 	// Stop animation
 	function stop(options)
-	{	ol.Observable.unByKey(listenerKey);
+	{	ol_Observable.unByKey(listenerKey);
 		listenerKey = null;
 		feature.setStyle(style);
 		// Send event
@@ -219,3 +227,5 @@ ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 		isPlaying: function() { return (!!listenerKey); }
 	};
 };
+
+export default ol_featureAnimation

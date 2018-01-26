@@ -2,19 +2,25 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_control_Control from 'ol/control/control'
+import ol_color from 'ol/color'
+import ol_style_Style from 'ol/style/style'
+
 /**
  * OpenLayers 3 Title Control integrated in the canvas (for jpeg/png export purposes).
  *
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol_control_Control}
  * @param {Object=} options extend the ol.control options. 
- * 	@param {ol.style.Style} options.style stye usesd to draw the title.
+ * 	@param {ol_style_Style} options.style style usesd to draw the title.
  */
-ol.control.CanvasTitle = function(options) 
+var ol_control_CanvasTitle = function(options)
 {	if (!options) options={};
 	
 	// Get style options
-	if (!options.style) options.style = new ol.style.Style();
+	if (!options.style) options.style = new ol_style_Style();
 	this.setStyle(options.style);
 
 	// Initialize parent
@@ -28,25 +34,25 @@ ol.control.CanvasTitle = function(options)
 					visibility: 'hidden'
 				});
 
-	ol.control.Control.call(this, 
+	ol_control_Control.call(this,
 	{	element: elt.get(0),
 		target: options.target
 	});
 }
-ol.inherits(ol.control.CanvasTitle, ol.control.Control);
+ol.inherits(ol_control_CanvasTitle, ol_control_Control);
 
 /**
  * Remove the control from its current map and attach it to the new map.
  * Subclasses may set up event handlers to get notified about changes to
  * the map here.
- * @param {ol.Map} map Map.
+ * @param {_ol_Map_} map Map.
  * @api stable
  */
-ol.control.CanvasTitle.prototype.setMap = function (map)
+ol_control_CanvasTitle.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
 	if (oldmap) oldmap.un('postcompose', this.drawTitle_, this);
 	
-	ol.control.Control.prototype.setMap.call(this, map);
+	ol_control_Control.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 
 	// Get change (new layer added or removed)
@@ -56,16 +62,16 @@ ol.control.CanvasTitle.prototype.setMap = function (map)
 
 /**
  * Change the control style
- * @param {ol.style.Style} 
+ * @param {ol_style_Style} style
  */
-ol.control.CanvasTitle.prototype.setStyle = function (style)
+ol_control_CanvasTitle.prototype.setStyle = function (style)
 {	var text = style.getText();
 	this.font_ = text ? text.getFont() || "20px Arial" : "20px Arial";
 	this.text_ = text ? text.getText() : "";
 	var stroke = text ? text.getStroke() : null;
 	var fill = text ? text.getFill() : null;
-	this.strokeStyle_ = stroke ? ol.color.asString(stroke.getColor()) : "#fff";
-	this.fillStyle_ = fill ? ol.color.asString(fill.getColor()) : "#000";
+	this.strokeStyle_ = stroke ? ol_color.asString(stroke.getColor()) : "#fff";
+	this.fillStyle_ = fill ? ol_color.asString(fill.getColor()) : "#000";
 	if (this.element) 
 	{	$(this.element).text(this.text_).css ({font: this.font_});
 	}
@@ -78,7 +84,7 @@ ol.control.CanvasTitle.prototype.setStyle = function (style)
  * @param {string} map title.
  * @api stable
  */
-ol.control.CanvasTitle.prototype.setTitle = function (title)
+ol_control_CanvasTitle.prototype.setTitle = function (title)
 {	this.text_ = title;
 	$(this.element).text(title);
 	if (this.getMap()) this.getMap().renderSync();
@@ -89,17 +95,17 @@ ol.control.CanvasTitle.prototype.setTitle = function (title)
  * @param {string} map title.
  * @api stable
  */
-ol.control.CanvasTitle.prototype.getTitle = function (title)
+ol_control_CanvasTitle.prototype.getTitle = function (title)
 {	return this.text_;
 }
 
 
 /**
  * Set control visibility
- * @param {bool}
+ * @param {bool} b
  * @api stable
  */
-ol.control.CanvasTitle.prototype.setVisible = function (b)
+ol_control_CanvasTitle.prototype.setVisible = function (b)
 {	if (b) $(this.element).show();
 	else $(this.element).hide();
 	if (this.getMap()) this.getMap().renderSync();
@@ -110,13 +116,13 @@ ol.control.CanvasTitle.prototype.setVisible = function (b)
  * @return {bool} 
  * @api stable
  */
-ol.control.CanvasTitle.prototype.getVisible = function (b)
+ol_control_CanvasTitle.prototype.getVisible = function (b)
 {	return ($(this.element).css('display') != 'none');
 }
 
 /** Draw scale line in the final canvas
 */
-ol.control.CanvasTitle.prototype.drawTitle_ = function(e)
+ol_control_CanvasTitle.prototype.drawTitle_ = function(e)
 {	if (!this.getVisible()) return;
 	var ctx = e.context;
 	
@@ -145,3 +151,5 @@ ol.control.CanvasTitle.prototype.drawTitle_ = function(e)
 
 	ctx.restore();
 }
+
+export default ol_control_CanvasTitle

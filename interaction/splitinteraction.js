@@ -2,9 +2,23 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_interaction_Interaction from 'ol/interaction/interaction'
+import ol_style_Style from 'ol/style/style'
+import ol_style_Stroke from 'ol/style/stroke'
+import ol_source_Vector from 'ol/source/vector'
+import ol_style_Fill from 'ol/style/fill'
+import ol_style_Circle from 'ol/style/circle'
+import ol_layer_Vector from 'ol/layer/vector'
+import ol_coordinate from 'ol/coordinate'
+import ol_geom_Point from 'ol/geom/point'
+import ol_Feature from 'ol/feature'
+import ol_geom_LineString from 'ol/geom/linestring'
+
 /** Interaction split interaction for splitting feature geometry
  * @constructor
- * @extends {ol.interaction.Interaction}
+ * @extends {ol_interaction_Interaction}
  * @fires  beforesplit, aftersplit
  * @param {olx.interaction.SplitOptions} 
  *	- source {ol.source.Vector|Array{ol.source.Vector}} a list of source to split (configured with useSpatialIndex set to true)
@@ -12,14 +26,14 @@
  *	- snapDistance {integer} distance (in px) to snap to an object, default 25px
  *	- cursor {string|undefined} cursor name to display when hovering an objet
  *	- filter {function|undefined} a filter that takes a feature and return true if it can be clipped, default always split.
- *	- featureStyle {ol.style.Style | Array<ol.style.Style> | false | undefined} Style for the selected features, choose false if you don't want feature selection. By default the default edit style is used.
- *	- sketchStyle {ol.style.Style | Array<ol.style.Style> | undefined} Style for the sektch features. 
+ *	- featureStyle {ol_style_Style | Array<ol_style_Style> | false | undefined} Style for the selected features, choose false if you don't want feature selection. By default the default edit style is used.
+ *	- sketchStyle {ol_style_Style | Array<ol_style_Style> | undefined} Style for the sektch features.
  *	- tolerance {function|undefined} Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split.  Default is 1e-10.
  */
-ol.interaction.Split = function(options) 
+var ol_interaction_Split = function(options)
 {	if (!options) options = {};
 
-	ol.interaction.Interaction.call(this, 
+	ol_interaction_Interaction.call(this,
 	{	handleEvent: function(e)
 		{	switch (e.type)
 			{	case "singleclick":
@@ -44,7 +58,7 @@ ol.interaction.Split = function(options)
 	this.sources_ = options.sources ? (options.sources instanceof Array) ? options.sources:[options.sources] : [];
 
 	if (options.features)
-	{	this.sources_.push (new ol.source.Vector({ features: features }));
+	{	this.sources_.push (new ol_source_Vector({ features: features }));
 	}
 
 	// Get all features candidate
@@ -54,14 +68,14 @@ ol.interaction.Split = function(options)
 	var white = [255, 255, 255, 1];
 	var blue = [0, 153, 255, 1];
 	var width = 3;
-	var fill = new ol.style.Fill({ color: 'rgba(255,255,255,0.4)' });
-	var stroke = new ol.style.Stroke({
+	var fill = new ol_style_Fill({ color: 'rgba(255,255,255,0.4)' });
+	var stroke = new ol_style_Stroke({
 		color: '#3399CC',
 		width: 1.25
 	});
  	var sketchStyle = 
-	[	new ol.style.Style({
-			image: new ol.style.Circle({
+	[	new ol_style_Style({
+			image: new ol_style_Circle({
 				fill: fill,
 				stroke: stroke,
 				radius: 5
@@ -71,24 +85,24 @@ ol.interaction.Split = function(options)
 	   })
 	 ];
 	var featureStyle =
-	[	new ol.style.Style({
-			stroke: new ol.style.Stroke({
+	[	new ol_style_Style({
+			stroke: new ol_style_Stroke({
 				color: white,
 				width: width + 2
 			})
 		}),
-		new ol.style.Style({
-			image: new ol.style.Circle({
+		new ol_style_Style({
+			image: new ol_style_Circle({
 				radius: 2*width,
-				fill: new ol.style.Fill({
+				fill: new ol_style_Fill({
 					color: blue
 				}),
-				stroke: new ol.style.Stroke({
+				stroke: new ol_style_Stroke({
 					color: white,
 					width: width/2
 				})
 			}),
-			stroke: new ol.style.Stroke({
+			stroke: new ol_style_Stroke({
 					color: blue,
 					width: width
 				})
@@ -100,8 +114,8 @@ ol.interaction.Split = function(options)
 	if (options.featureStyle) featureStyle = options.featureStyle instanceof Array ? options.featureStyle : [options.featureStyle];
 
 	// Create a new overlay for the sketch
-	this.overlayLayer_ = new ol.layer.Vector(
-	{	source: new ol.source.Vector({
+	this.overlayLayer_ = new ol_layer_Vector(
+	{	source: new ol_source_Vector({
 			useSpatialIndex: false
 		}),
 		name:'Split overlay',
@@ -113,7 +127,7 @@ ol.interaction.Split = function(options)
 	});
 
 };
-ol.inherits(ol.interaction.Split, ol.interaction.Interaction);
+ol.inherits(ol_interaction_Split, ol_interaction_Interaction);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
@@ -121,9 +135,9 @@ ol.inherits(ol.interaction.Split, ol.interaction.Interaction);
  * @param {ol.Map} map Map.
  * @api stable
  */
-ol.interaction.Split.prototype.setMap = function(map) 
+ol_interaction_Split.prototype.setMap = function(map)
 {	if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_);
-	ol.interaction.Interaction.prototype.setMap.call (this, map);
+	ol_interaction_Interaction.prototype.setMap.call (this, map);
 	this.overlayLayer_.setMap(map);
 };
 
@@ -132,14 +146,14 @@ ol.interaction.Split.prototype.setMap = function(map)
  * @return {ol.feature} 
  * @private
  */
-ol.interaction.Split.prototype.getClosestFeature = function(e) 
+ol_interaction_Split.prototype.getClosestFeature = function(e)
 {	var f, c, g, d = this.snapDistance_+1;
 	for (var i=0; i<this.sources_.length; i++)
 	{	var source = this.sources_[i];
 		f = source.getClosestFeatureToCoordinate(e.coordinate);
 		if (f.getGeometry().splitAt, this.tolerance_) 
 		{	c = f.getGeometry().getClosestPoint(e.coordinate);
-			g = new ol.geom.LineString([e.coordinate,c]);
+			g = new ol_geom_LineString([e.coordinate,c]);
 			d = g.getLength() / e.frameState.viewState.resolution;
 			break;
 		}
@@ -149,7 +163,7 @@ ol.interaction.Split.prototype.getClosestFeature = function(e)
 	{	// Snap to node
 		var coord = this.getNearestCoord (c, f.getGeometry().getCoordinates());
 		var p = this.getMap().getPixelFromCoordinate(coord);
-		if (ol.coordinate.dist2d(e.pixel, p) < this.snapDistance_) 
+		if (ol_coordinate.dist2d(e.pixel, p) < this.snapDistance_)
 		{	c = coord;
 		}
 		//
@@ -162,10 +176,10 @@ ol.interaction.Split.prototype.getClosestFeature = function(e)
 * @param {Array<ol.coordinate>} coords list of coordinates
 * @return {ol.coordinate} the nearest coordinate in the list
 */
-ol.interaction.Split.prototype.getNearestCoord = function(pt, coords)
+ol_interaction_Split.prototype.getNearestCoord = function(pt, coords)
 {	var d, dm=Number.MAX_VALUE, p0;
 	for (var i=0; i < coords.length; i++)
-	{	d = ol.coordinate.dist2d (pt, coords[i]);
+	{	d = ol_coordinate.dist2d (pt, coords[i]);
 		if (d < dm)
 		{	dm = d;
 			p0 = coords[i];
@@ -178,7 +192,7 @@ ol.interaction.Split.prototype.getNearestCoord = function(pt, coords)
  * @param {ol.MapBrowserEvent} evt Map browser event.
  * @return {boolean} `true` to start the drag sequence.
  */
-ol.interaction.Split.prototype.handleDownEvent = function(evt) 
+ol_interaction_Split.prototype.handleDownEvent = function(evt)
 {	// Something to split ?
 	var current = this.getClosestFeature(evt);
 
@@ -209,7 +223,7 @@ ol.interaction.Split.prototype.handleDownEvent = function(evt)
 /**
  * @param {ol.MapBrowserEvent} evt Event.
  */
-ol.interaction.Split.prototype.handleMoveEvent = function(e) 
+ol_interaction_Split.prototype.handleMoveEvent = function(e)
 {	var map = e.map;
 	this.overlayLayer_.getSource().clear();
 	var current = this.getClosestFeature(e);
@@ -218,11 +232,11 @@ ol.interaction.Split.prototype.handleMoveEvent = function(e)
 	{	var coord, p, l;
 		// Draw sketch
 		this.overlayLayer_.getSource().addFeature(current.feature);
-		p = new ol.Feature(new ol.geom.Point(current.coord));
+		p = new ol_Feature(new ol_geom_Point(current.coord));
 		p._sketch_ = true;
 		this.overlayLayer_.getSource().addFeature(p);
 		//
-		l = new ol.Feature(new ol.geom.LineString([e.coordinate,current.coord]));
+		l = new ol_Feature(new ol_geom_LineString([e.coordinate,current.coord]));
 		l._sketch_ = true;
 		this.overlayLayer_.getSource().addFeature(l);
 	}
@@ -241,4 +255,6 @@ ol.interaction.Split.prototype.handleMoveEvent = function(e)
 		}
 	}
 };
+
+export default ol_interaction_Split
 

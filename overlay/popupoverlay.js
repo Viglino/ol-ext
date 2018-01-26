@@ -2,29 +2,34 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_Overlay from 'ol/overlay'
+
+
 /**
  * @classdesc
  * A popup element to be displayed over the map and attached to a single map
  * location. The popup are customized using CSS.
  *
  * @example
-var popup = new ol.Overlay.Popup();
+var popup = new ol_Overlay_Popup();
 map.addOverlay(popup);
 popup.show(coordinate, "Hello!");
 popup.hide();
  *
  * @constructor
- * @extends {ol.Overlay}
+ * @extends {ol_Overlay}
  * @param {} options Extend Overlay options 
  *	@param {String} options.popupClass the a class of the overlay to style the popup.
  *	@param {bool} options.closeBox popup has a close box, default false.
  *	@param {function|undefined} options.onclose: callback function when popup is closed
  *	@param {function|undefined} options.onshow callback function when popup is shown
  *	@param {ol.OverlayPositioning | string | undefined} options.positionning 
- *		the 'auto' positionning let the popup choose its positioning to stay on the map.
+ *		the 'auto' positioning var the popup choose its positioning to stay on the map.
  * @api stable
  */
-ol.Overlay.Popup = function (options)
+var ol_Overlay_Popup = function (options)
 {	var self = this;
 	var elt = $("<div>");
 	options.element = elt.get(0);
@@ -48,20 +53,20 @@ ol.Overlay.Popup = function (options)
 	options.stopEvent = true;
 	d.on("mousedown touchstart", function(e){ e.stopPropagation(); })
 
-	ol.Overlay.call(this, options);
+	ol_Overlay.call(this, options);
 	this._elt = elt;
 			
 	// call setPositioning first in constructor so getClassPositioning is called only once
 	this.setPositioning(options.positioning);
 	this.setPopupClass(options.popupClass);
 }
-ol.inherits(ol.Overlay.Popup, ol.Overlay);
+ol.inherits(ol_Overlay_Popup, ol_Overlay);
 
 /**
  * Get CSS class of the popup according to its positioning.
  * @private
  */
-ol.Overlay.Popup.prototype.getClassPositioning = function ()
+ol_Overlay_Popup.prototype.getClassPositioning = function ()
 {	var c = "";
 	var pos = this.getPositioning();
 	if (/bottom/.test(pos)) c += "ol-popup-bottom ";
@@ -78,7 +83,7 @@ ol.Overlay.Popup.prototype.getClassPositioning = function ()
  * @param {bool} b
  * @api stable
  */
-ol.Overlay.Popup.prototype.setClosebox = function (b)
+ol_Overlay_Popup.prototype.setClosebox = function (b)
 {	this.closeBox = b;
 	if (b) this._elt.addClass("hasclosebox");
 	else this._elt.removeClass("hasclosebox");
@@ -89,7 +94,7 @@ ol.Overlay.Popup.prototype.setClosebox = function (b)
  * @param {string} c class name.
  * @api stable
  */
-ol.Overlay.Popup.prototype.setPopupClass = function (c)
+ol_Overlay_Popup.prototype.setPopupClass = function (c)
 {	this._elt.removeClass()
 		.addClass("ol-popup "+(c||"default")+" "+this.getClassPositioning()+(this.closeBox?" hasclosebox":""));
 }
@@ -99,7 +104,7 @@ ol.Overlay.Popup.prototype.setPopupClass = function (c)
  * @param {string} c class name.
  * @api stable
  */
-ol.Overlay.Popup.prototype.addPopupClass = function (c)
+ol_Overlay_Popup.prototype.addPopupClass = function (c)
 {	this._elt.addClass(c);
 }
 
@@ -108,17 +113,17 @@ ol.Overlay.Popup.prototype.addPopupClass = function (c)
  * @param {string} c class name.
  * @api stable
  */
-ol.Overlay.Popup.prototype.removePopupClass = function (c)
+ol_Overlay_Popup.prototype.removePopupClass = function (c)
 {	this._elt.removeClass(c);
 }
 
 /**
  * Set positionning of the popup
  * @param {ol.OverlayPositioning | string | undefined} pos an ol.OverlayPositioning 
- * 		or 'auto' to let the popup choose the best position 
+ * 		or 'auto' to var the popup choose the best position
  * @api stable
  */
-ol.Overlay.Popup.prototype.setPositioning = function (pos)
+ol_Overlay_Popup.prototype.setPositioning = function (pos)
 {	if (pos === undefined)
 		return;
 	if (/auto/.test(pos))
@@ -134,8 +139,8 @@ ol.Overlay.Popup.prototype.setPositioning = function (pos)
 /** @private
  * @param {ol.OverlayPositioning | string | undefined} pos  
  */
-ol.Overlay.Popup.prototype.setPositioning_ = function (pos)
-{	ol.Overlay.prototype.setPositioning.call(this, pos);
+ol_Overlay_Popup.prototype.setPositioning_ = function (pos)
+{	ol_Overlay.prototype.setPositioning.call(this, pos);
 	this._elt.removeClass("ol-popup-top ol-popup-bottom ol-popup-left ol-popup-right ol-popup-center ol-popup-middle");
 	this._elt.addClass(this.getClassPositioning());
 }
@@ -143,7 +148,7 @@ ol.Overlay.Popup.prototype.setPositioning_ = function (pos)
 /** Check if popup is visible
 * @return {boolean}
 */
-ol.Overlay.Popup.prototype.getVisible = function ()
+ol_Overlay_Popup.prototype.getVisible = function ()
 {	return this._elt.hasClass("visible");
 };
 
@@ -152,7 +157,7 @@ ol.Overlay.Popup.prototype.getVisible = function ()
  * @param {ol.Coordinate|string} coordinate the coordinate of the popup or the HTML content.
  * @param {string|undefined} html the HTML content (undefined = previous content).
  * @example
-var popup = new ol.Overlay.Popup();
+var popup = new ol_Overlay_Popup();
 // Show popup
 popup.show([166000, 5992000], "Hello world!");
 // Move popup at coord with the same info
@@ -161,7 +166,7 @@ popup.show([167000, 5990000]);
 popup.show("New informations");
  * @api stable
  */
-ol.Overlay.Popup.prototype.show = function (coordinate, html)
+ol_Overlay_Popup.prototype.show = function (coordinate, html)
 {	if (!html && typeof(coordinate)=='string') 
 	{	html = coordinate; 
 		coordinate = null;
@@ -206,16 +211,18 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
 		{	self._elt.addClass("visible"); 
 		}, 0);
 	}
-};
+}
 
 /**
  * Hide the popup
  * @api stable
  */
-ol.Overlay.Popup.prototype.hide = function ()
+ol_Overlay_Popup.prototype.hide = function ()
 {	if (this.getPosition() == undefined) return;
 	if (typeof (this.onclose) == 'function') this.onclose();
 	this.setPosition(undefined);
 	if (this._tout) clearTimeout(this._tout);
 	this._elt.removeClass("visible");
-};
+}
+
+export  default ol_Overlay_Popup

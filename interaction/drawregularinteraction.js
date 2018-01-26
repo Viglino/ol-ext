@@ -2,9 +2,23 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_interaction_Interaction from 'ol/interaction/interaction'
+import ol_style_Style from 'ol/style/style'
+import ol_style_Circle from 'ol/style/circle'
+import ol_style_Stroke from 'ol/style/stroke'
+import ol_style_Fill from 'ol/style/fill'
+import ol_Collection from 'ol/collection'
+import ol_layer_Vector from 'ol/layer/vector'
+import ol_source_Vector from 'ol/source/vector'
+import ol_geom_Circle from 'ol/geom/circle'
+import ol_geom_Polygon from 'ol/geom/polygon'
+import ol_geom_Point from 'ol/geom/point'
+
 /** Interaction rotate
  * @constructor
- * @extends {ol.interaction.Interaction}
+ * @extends {ol_interaction_Interaction}
  * @fires drawstart, drawing, drawend, drawcancel
  * @param {olx.interaction.TransformOptions} options
  *  @param {Array<ol.Layer>} source Destination source for the drawn features
@@ -17,7 +31,7 @@
  *	@param { number } clickTolerance click tolerance on touch devices, default: 6
  *	@param { number } maxCircleCoordinates Maximum number of point on a circle, default: 100
  */
-ol.interaction.DrawRegular = function(options) 
+var ol_interaction_DrawRegular = function(options)
 {	if (!options) options={};
 	var self = this;
 
@@ -43,26 +57,26 @@ ol.interaction.DrawRegular = function(options)
 	var blue = [0, 153, 255, 1];
 	var width = 3;
 	var defaultStyle = [
-		new ol.style.Style({
-			stroke: new ol.style.Stroke({ color: white, width: width + 2 })
+		new ol_style_Style({
+			stroke: new ol_style_Stroke({ color: white, width: width + 2 })
 		}),
 		new ol.style.Style({
-			image: new ol.style.Circle({
+			image: new ol_style_Circle({
 				radius: width * 2,
-				fill: new ol.style.Fill({ color: blue }),
-				stroke: new ol.style.Stroke({ color: white, width: width / 2 })
+				fill: new ol_style_Fill({ color: blue }),
+				stroke: new ol_style_Stroke({ color: white, width: width / 2 })
 			}),
-			stroke: new ol.style.Stroke({ color: blue, width: width }),
-			fill: new ol.style.Fill({
+			stroke: new ol_style_Stroke({ color: blue, width: width }),
+			fill: new ol_style_Fill({
 				color: [255, 255, 255, 0.5]
 			})
 		})
 	];
 
 	// Create a new overlay layer for the sketch
-	this.sketch_ = new ol.Collection();
-	this.overlayLayer_ = new ol.layer.Vector(
-		{	source: new ol.source.Vector({
+	this.sketch_ = new ol_Collection();
+	this.overlayLayer_ = new ol_layer_Vector(
+		{	source: new ol_source_Vector({
 				features: this.sketch_,
 				useSpatialIndex: false
 			}),
@@ -71,7 +85,7 @@ ol.interaction.DrawRegular = function(options)
 			style: options.style || defaultStyle
 		});
 
-	ol.interaction.Interaction.call(this, 
+	ol_interaction_Interaction.call(this,
 		{	
 			/*
 			handleDownEvent: this.handleDownEvent_,
@@ -81,7 +95,7 @@ ol.interaction.DrawRegular = function(options)
 			handleEvent: this.handleEvent_
 		});
 };
-ol.inherits(ol.interaction.DrawRegular, ol.interaction.Interaction);
+ol.inherits(ol_interaction_DrawRegular, ol_interaction_Interaction);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
@@ -89,9 +103,9 @@ ol.inherits(ol.interaction.DrawRegular, ol.interaction.Interaction);
  * @param {ol.Map} map Map.
  * @api stable
  */
-ol.interaction.DrawRegular.prototype.setMap = function(map) 
+ol_interaction_DrawRegular.prototype.setMap = function(map)
 {	if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_);
-	ol.interaction.Interaction.prototype.setMap.call (this, map);
+	ol_interaction_Interaction.prototype.setMap.call (this, map);
 	this.overlayLayer_.setMap(map);
 };
 
@@ -100,16 +114,16 @@ ol.interaction.DrawRegular.prototype.setMap = function(map)
  * @param {boolean}
  * @api stable
  */
-ol.interaction.DrawRegular.prototype.setActive = function(b) 
+ol_interaction_DrawRegular.prototype.setActive = function(b)
 {	this.reset();
-	ol.interaction.Interaction.prototype.setActive.call (this, b);
+	ol_interaction_Interaction.prototype.setActive.call (this, b);
 }
 
 /**
  * Reset the interaction
  * @api stable
  */
-ol.interaction.DrawRegular.prototype.reset = function() 
+ol_interaction_DrawRegular.prototype.reset = function()
 {	this.overlayLayer_.getSource().clear();
 	this.started_ = false;
 }
@@ -119,7 +133,7 @@ ol.interaction.DrawRegular.prototype.reset = function()
  * @param {int} number of sides.
  * @api stable
  */
-ol.interaction.DrawRegular.prototype.setSides = function (nb)
+ol_interaction_DrawRegular.prototype.setSides = function (nb)
 {	nb = parseInt(nb);
 	this.sides_ = nb>2 ? nb : 0;
 }
@@ -129,7 +143,7 @@ ol.interaction.DrawRegular.prototype.setSides = function (nb)
  * @param {bool} 
  * @api stable
  */
-ol.interaction.DrawRegular.prototype.canRotate = function (b)
+ol_interaction_DrawRegular.prototype.canRotate = function (b)
 {	if (b===true || b===false) this.canRotate_ = b;
 	return this.canRotate_;
 }
@@ -139,13 +153,13 @@ ol.interaction.DrawRegular.prototype.canRotate = function (b)
  * @return {int} number of sides.
  * @api stable
  */
-ol.interaction.DrawRegular.prototype.getSides = function ()
+ol_interaction_DrawRegular.prototype.getSides = function ()
 {	return this.sides_;
 }
 
 /** Default start angle array for each sides
 */
-ol.interaction.DrawRegular.prototype.startAngle =
+ol_interaction_DrawRegular.prototype.startAngle =
 {	'default':Math.PI/2,
 	3: -Math.PI/2,
 	4: Math.PI/4
@@ -154,7 +168,7 @@ ol.interaction.DrawRegular.prototype.startAngle =
 /** Get geom of the current drawing
 * @return {ol.geom.Polygon | ol.geom.Point}
 */
-ol.interaction.DrawRegular.prototype.getGeom_ = function ()
+ol_interaction_DrawRegular.prototype.getGeom_ = function ()
 {	this.overlayLayer_.getSource().clear();
 	if (!this.center_) return false;
 
@@ -186,12 +200,12 @@ ol.interaction.DrawRegular.prototype.getGeom_ = function ()
 			}
 			var r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
 			if (r>0)
-			{	var circle = new ol.geom.Circle(center, r, 'XY');
+			{	var circle = new ol_geom_Circle(center, r, 'XY');
 				var a;
 				if (hasrotation) a = Math.atan2(d[1], d[0]);
 				else a = this.startAngle[this.sides_] || this.startAngle['default'];
 
-				if (this.sides_) g = ol.geom.Polygon.fromCircle (circle, this.sides_, a);
+				if (this.sides_) g = ol_geom_Polygon.fromCircle (circle, this.sides_, a);
 				else
 				{	// Optimize points on the circle
 					var centerPx = this.getMap().getPixelFromCoordinate(this.center_);
@@ -228,13 +242,13 @@ ol.interaction.DrawRegular.prototype.getGeom_ = function ()
 	}
 
 	// No geom => return a point
-	return new ol.geom.Point(this.center_);
+	return new ol_geom_Point(this.center_);
 };
 
 /** Draw sketch
 * @return {ol.Feature} The feature being drawn.
 */
-ol.interaction.DrawRegular.prototype.drawSketch_ = function(evt)
+ol_interaction_DrawRegular.prototype.drawSketch_ = function(evt)
 {	this.overlayLayer_.getSource().clear();
 	if (evt)
 	{	this.square_ = this.squareFn_ ? this.squareFn_(evt) : evt.originalEvent.shiftKey;
@@ -254,7 +268,7 @@ ol.interaction.DrawRegular.prototype.drawSketch_ = function(evt)
 
 /** Draw sketch (Point)
 */
-ol.interaction.DrawRegular.prototype.drawPoint_ = function(pt, noclear)
+ol_interaction_DrawRegular.prototype.drawPoint_ = function(pt, noclear)
 {	if (!noclear) this.overlayLayer_.getSource().clear();
 	this.overlayLayer_.getSource().addFeature(new ol.Feature(new ol.geom.Point(pt)));
 };
@@ -263,7 +277,7 @@ ol.interaction.DrawRegular.prototype.drawPoint_ = function(pt, noclear)
 /**
  * @param {ol.MapBrowserEvent} evt Map browser event.
  */
-ol.interaction.DrawRegular.prototype.handleEvent_ = function(evt) 
+ol_interaction_DrawRegular.prototype.handleEvent_ = function(evt)
 {	switch (evt.type)
 	{	case "pointerdown": {
 			this.downPx_ = evt.pixel;
@@ -330,7 +344,7 @@ ol.interaction.DrawRegular.prototype.handleEvent_ = function(evt)
 
 /** Stop drawing.
  */
-ol.interaction.DrawRegular.prototype.finishDrawing = function() 
+ol_interaction_DrawRegular.prototype.finishDrawing = function()
 {	if (this.started_ && this.coord_)
 	{	this.end_({ pixel: this.upPx_, coordinate: this.coord_});
 	}
@@ -339,7 +353,7 @@ ol.interaction.DrawRegular.prototype.finishDrawing = function()
 /**
  * @param {ol.MapBrowserEvent} evt Event.
  */
-ol.interaction.DrawRegular.prototype.handleMoveEvent_ = function(evt) 
+ol_interaction_DrawRegular.prototype.handleMoveEvent_ = function(evt)
 {	if (this.started_)
 	{	this.coord_ = evt.coordinate;
 		this.coordPx_ = evt.pixel;
@@ -363,7 +377,7 @@ ol.interaction.DrawRegular.prototype.handleMoveEvent_ = function(evt)
  * @param {ol.MapBrowserEvent} evt Map browser event.
  * @return {boolean} `false` to stop the drag sequence.
  */
-ol.interaction.DrawRegular.prototype.start_ = function(evt) 
+ol_interaction_DrawRegular.prototype.start_ = function(evt)
 {	if (!this.started_)
 	{	this.started_ = true;
 		this.center_ = evt.coordinate;
@@ -381,7 +395,7 @@ ol.interaction.DrawRegular.prototype.start_ = function(evt)
  * @param {ol.MapBrowserEvent} evt Map browser event.
  * @return {boolean} `false` to stop the drag sequence.
  */
-ol.interaction.DrawRegular.prototype.end_ = function(evt) 
+ol_interaction_DrawRegular.prototype.end_ = function(evt)
 {	this.coord_ = evt.coordinate;
 	this.started_ = false;
 	// Add new feature
@@ -399,3 +413,5 @@ ol.interaction.DrawRegular.prototype.end_ = function(evt)
 	this.center_ = this.coord_ = null;
 	this.drawSketch_();
 };
+
+export default ol_interaction_DrawRegular

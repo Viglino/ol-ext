@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 	
 	@classdesc
-	ol.source.WikiCommons is a source that load Wikimedia Commons content in a vector layer.
+	ol_source_WikiCommons is a source that load Wikimedia Commons content in a vector layer.
 	
 	@require jQuery
 	
@@ -11,12 +11,21 @@
 	<ol.source.Vector>
 */
 
+import ol from 'ol'
+import ol_Attribution from 'ol/attribution'
+import ol_loadingstrategy from 'ol/loadingstrategy'
+import ol_source_Vector from 'ol/source/vector'
+import ol_Feature from 'ol/feature'
+import ol_geom_Point from 'ol/geom/point'
+import ol_proj from 'ol/proj'
+
+
 /**
-* @constructor ol.source.WikiCommons
-* @extends {ol.source.Vector}
+* @constructor ol_source_WikiCommons
+* @extends {ol_source_Vector}
 * @param {olx.source.WikiCommons=} options
 */
-ol.source.WikiCommons = function(opt_options)
+var ol_source_WikiCommons = function(opt_options)
 {	var options = opt_options || {};
 	var self = this; 
 
@@ -32,14 +41,14 @@ ol.source.WikiCommons = function(opt_options)
 	this._limit = options.limit || 100;
 	
 	/** Default attribution */
-	if (!options.attributions) options.attributions = [ new ol.Attribution({ html:"&copy; <a href='https://commons.wikimedia.org/'>Wikimedia Commons</a>" }) ];
+	if (!options.attributions) options.attributions = [ new ol_Attribution({ html:"&copy; <a href='https://commons.wikimedia.org/'>Wikimedia Commons</a>" }) ];
 
 	// Bbox strategy : reload at each move
-    if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
+    if (!options.strategy) options.strategy = ol_loadingstrategy.bbox;
 
-	ol.source.Vector.call (this, options);	
+	ol_source_Vector.call (this, options);
 };
-ol.inherits (ol.source.WikiCommons, ol.source.Vector);
+ol.inherits (ol_source_WikiCommons, ol_source_Vector);
 
 
 /** Decode wiki attributes and choose to add feature to the layer
@@ -48,7 +57,7 @@ ol.inherits (ol.source.WikiCommons, ol.source.Vector);
 * @return {boolean} true: add the feature to the layer
 * @API stable
 */
-ol.source.WikiCommons.prototype.readFeature = function (feature, attributes)
+ol_source_WikiCommons.prototype.readFeature = function (feature, attributes)
 {	feature.set("descriptionurl", attributes.descriptionurl);
 	feature.set("url", attributes.url);
 	feature.set("title", attributes.title.replace(/^file:|.jpg$/ig,""));
@@ -62,10 +71,10 @@ ol.source.WikiCommons.prototype.readFeature = function (feature, attributes)
 /** Loader function used to load features.
 * @private
 */
-ol.source.WikiCommons.prototype._loaderFn = function(extent, resolution, projection) 
+ol_source_WikiCommons.prototype._loaderFn = function(extent, resolution, projection)
 {	if (resolution > this._maxResolution) return;
 	var self = this;
-	var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
+	var bbox = ol_proj.transformExtent(extent, projection, "EPSG:4326");
 	// Commons API: for more info @see https://commons.wikimedia.org/wiki/Commons:API/MediaWiki
 	var url = "https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&prop=coordinates|imageinfo"
 		+ "&generator=geosearch&iiprop=timestamp|user|url|extmetadata|metadata|size&iiextmetadatafilter=LicenseShortName"
@@ -111,7 +120,7 @@ ol.source.WikiCommons.prototype._loaderFn = function(extent, resolution, project
 						continue;
 					}
 				}
-				feature = new ol.Feature(new ol.geom.Point(ol.proj.transform (pt,"EPSG:4326",projection)));
+				feature = new ol_Feature(new ol_geom_Point(ol_proj_transform (pt,"EPSG:4326",projection)));
 				att.imageinfo[0].title = att.title;
 				if (self.readFeature(feature, att.imageinfo[0]))
 				{	features.push(feature);
@@ -120,3 +129,5 @@ ol.source.WikiCommons.prototype._loaderFn = function(extent, resolution, project
 			self.addFeatures(features);
     }});
 };
+
+export default ol_source_WikiCommons

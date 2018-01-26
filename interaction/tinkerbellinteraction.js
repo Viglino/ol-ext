@@ -6,21 +6,26 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 	@link https://github.com/Viglino
  */
+
+import ol from 'ol'
+import ol_interaction_Pointer from 'ol/interaction/pointer'
+import ol_color from 'ol/color'
+
  /**
  * @constructor
- * @extends {ol.interaction.Pointer}
- *	@param {ol.interaction.TinkerBell.options} flashlight options param
- *		- color {ol.Color} color of the sparkles
+ * @extends {ol_interaction_Pointer}
+ *	@param {ol_interaction_TinkerBell.options}  options flashlight param
+ *		- color {ol_color} color of the sparkles
  */
-ol.interaction.TinkerBell = function(options) 
+var ol_interaction_TinkerBell = function(options)
 {	options = options || {};
 
-	ol.interaction.Pointer.call(this, 
+	ol_interaction_Pointer.call(this,
 	{	handleDownEvent: this.onMove,
 		handleMoveEvent: this.onMove
 	});
 
-	this.set('color', options.color ? ol.color.asString(options.color) : "#fff");
+	this.set('color', options.color ? ol_color.asString(options.color) : "#fff");
 	this.sparkle = [0,0];
 	this.sparkles = [];
 	this.lastSparkle = this.time = new Date();
@@ -29,18 +34,18 @@ ol.interaction.TinkerBell = function(options)
 	this.out_ = function() { self.isout_=true; };
 	this.isout_ = true;
 };
-ol.inherits(ol.interaction.TinkerBell, ol.interaction.Pointer);
+ol.inherits(ol_interaction_TinkerBell, ol_interaction_Pointer);
 
 /** Set the map > start postcompose
 */
-ol.interaction.TinkerBell.prototype.setMap = function(map)
+ol_interaction_TinkerBell.prototype.setMap = function(map)
 {	if (this.getMap())
 	{	this.getMap().un('postcompose', this.postcompose_, this);
 		map.getViewport().removeEventListener('mouseout', this.out_, false);
 		this.getMap().render();
 	}
 	
-	ol.interaction.Pointer.prototype.setMap.call(this, map);
+	ol_interaction_Pointer.prototype.setMap.call(this, map);
 
 	if (map)
 	{	map.on('postcompose', this.postcompose_, this);
@@ -49,7 +54,7 @@ ol.interaction.TinkerBell.prototype.setMap = function(map)
 	}
 };
 
-ol.interaction.TinkerBell.prototype.onMove = function(e)
+ol_interaction_TinkerBell.prototype.onMove = function(e)
 {	this.sparkle = e.pixel;
 	this.isout_ = false;
 	this.getMap().render();
@@ -57,7 +62,7 @@ ol.interaction.TinkerBell.prototype.onMove = function(e)
 
 /** Postcompose function
 */
-ol.interaction.TinkerBell.prototype.postcompose_ = function(e)
+ol_interaction_TinkerBell.prototype.postcompose_ = function(e)
 {	var delta = 15;
 	var ctx = e.context;
 	var canvas = ctx.canvas;
@@ -88,3 +93,5 @@ ol.interaction.TinkerBell.prototype.postcompose_ = function(e)
 	// tell OL3 to continue postcompose animation
 	if (this.sparkles.length) this.getMap().render(); 
 };
+
+export default ol_interaction_TinkerBell

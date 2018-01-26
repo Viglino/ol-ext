@@ -2,32 +2,39 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/** ol.control.Target draw a target at the center of the map. 
+
+import ol from 'ol'
+import ol_control_Control from 'ol/control/control'
+import ol_style_RegularShape from 'ol/style/regularshape'
+import ol_geom_Point from 'ol/geom/point'
+import ol_Map from 'ol/map'
+
+/** ol_control_Target draw a target at the center of the map.
  * @constructor
- * @param {Object}
+ * @param {Object} options
  *  - style {ol.style.Style|Array<ol.style.Style>} ol.style.Stroke: draw a cross on the map, ol.style.Image: draw the image on the map
  *  - composite {string} composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
  */
-ol.control.Target = function(options) 
+var ol_control_Target = function(options)
 {	options = options || {};
 
 	this.style = options.style ||
-		[	new ol.style.Style({ image: new ol.style.RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel:true, stroke: new ol.style.Stroke({ color: "#fff", width:3 }) }) }),
-			new ol.style.Style({ image: new ol.style.RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel:true, stroke: new ol.style.Stroke({ color: "#000", width:1 }) }) })
+		[	new ol.style.Style({ image: new ol_style_RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel:true, stroke: new ol.style.Stroke({ color: "#fff", width:3 }) }) }),
+			new ol.style.Style({ image: new ol_style_RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel:true, stroke: new ol.style.Stroke({ color: "#000", width:1 }) }) })
 		];
 	if (!(this.style instanceof Array)) this.style = [this.style];
 	this.composite = options.composite || '';
 
 	var div = document.createElement('div');
 	div.className = "ol-target ol-unselectable ol-control";
-	ol.control.Control.call(this, 
+	ol_control_Control.call(this,
 	{	element: div,
 		target: options.target
 	});
 
 	this.setVisible(options.visible!==false);
 };
-ol.inherits(ol.control.Target, ol.control.Control);
+ol.inherits(ol_control_Target, ol_control_Control);
 
 /**
  * Remove the control from its current map and attach it to the new map.
@@ -36,13 +43,13 @@ ol.inherits(ol.control.Target, ol.control.Control);
  * @param {ol.Map} map Map.
  * @api stable
  */
-ol.control.Target.prototype.setMap = function (map)
+ol_control_Target.prototype.setMap = function (map)
 {	if (this.getMap()) 
 	{	this.getMap().un('postcompose', this.drawTarget_, this);
 		if (this.getVisible()) this.getMap().renderSync();
 	}
 
-	ol.control.Control.prototype.setMap.call(this, map);
+	ol_control_Control.prototype.setMap.call(this, map);
 
 	if (map) 
 	{	map.on('postcompose', this.drawTarget_, this);
@@ -52,7 +59,7 @@ ol.control.Target.prototype.setMap = function (map)
 /** Set the control visibility
 * @paraam {boolean} b 
 */
-ol.control.Target.prototype.setVisible = function (b)
+ol_control_Target.prototype.setVisible = function (b)
 {	this.set("visible",b);
 	if (this.getMap()) this.getMap().renderSync();
 };
@@ -60,14 +67,14 @@ ol.control.Target.prototype.setVisible = function (b)
 /** Get the control visibility
 * @return {boolean} b 
 */
-ol.control.Target.prototype.getVisible = function ()
+ol_control_Target.prototype.getVisible = function ()
 {	return this.get("visible");
 };
 
 /** Draw the target
 * @private
 */
-ol.control.Target.prototype.drawTarget_ = function (e)
+ol_control_Target.prototype.drawTarget_ = function (e)
 {	if (!this.getMap() || !this.getVisible()) return;
 	var ctx = e.context;
 	var ratio = e.frameState.pixelRatio;
@@ -78,7 +85,7 @@ ol.control.Target.prototype.drawTarget_ = function (e)
 
 		var cx = ctx.canvas.width/(2*ratio);
 		var cy = ctx.canvas.height/(2*ratio);
-		var geom = new ol.geom.Point (this.getMap().getCoordinateFromPixel([cx,cy]));
+		var geom = new ol_geom_Point (this.getMap().getCoordinateFromPixel([cx,cy]));
 
 		if (this.composite) ctx.globalCompositeOperation = this.composite;
 
@@ -88,7 +95,7 @@ ol.control.Target.prototype.drawTarget_ = function (e)
 			if (style instanceof ol.style.Style)
 			{	var sc=0;
 				// OL < v4.3 : setImageStyle don't check retina
-				var imgs = ol.Map.prototype.getFeaturesAtPixel ? false : style.getImage();
+				var imgs = ol_Map.prototype.getFeaturesAtPixel ? false : style.getImage();
 				if (imgs) 
 				{	sc = imgs.getScale(); 
 					imgs.setScale(ratio*sc);
@@ -142,3 +149,5 @@ ol.control.Target.prototype.drawTarget_ = function (e)
 
 	ctx.restore();
 };
+
+export default ol_control_Target

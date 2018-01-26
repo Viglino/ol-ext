@@ -4,6 +4,12 @@
 *
 *  Add a chart style to display charts (pies or bars) on a map 
 */
+
+import ol from 'ol'
+import ol_style_RegularShape from 'ol/style/regularshape'
+import ol_style_Fill from 'ol/style/fill'
+import ol_color from 'ol/color'
+
 /**
  * @requires ol.style.Circle
  * @requires ol.structs.IHasChecksum
@@ -18,23 +24,23 @@
  *	@param {number} options.radius Chart radius/size, default 20
  *	@param {number} options.rotation Rotation in radians (positive rotation clockwise). Default is 0.
  *	@param {bool} options.snapToPixel use integral numbers of pixels, default true
- *	@param {ol.style.Stroke} options.stroke stroke style
- *	@param {String|Array<ol.color>} options.colors predefined color set "classic","dark","pale","pastel","neon" / array of color string, default classic
+ *	@param {_ol_style_Stroke_} options.stroke stroke style
+ *	@param {String|Array<ol_color>} options.colors predefined color set "classic","dark","pale","pastel","neon" / array of color string, default classic
  *	@param {number} options.offsetX X offset in px
  *	@param {number} options.offsetY Y offset in px
  *	@param {number} options.animation step in an animation sequence [0,1]
  * @see [Statistic charts example](../../examples/map.style.chart.html)
- * @extends {ol.style.RegularShape}
+ * @extends {ol_style_RegularShape}
  * @implements {ol.structs.IHasChecksum}
  * @api
  */
-ol.style.Chart = function(opt_options) 
+var ol_style_Chart = function(opt_options)
 {	options = opt_options || {};
 	var strokeWidth = 0;
 	if (opt_options.stroke) strokeWidth = opt_options.stroke.getWidth();
-	ol.style.RegularShape.call (this,
+	ol_style_RegularShape.call (this,
 		{	radius: options.radius + strokeWidth, 
-			fill: new ol.style.Fill({color: [0,0,0]}),
+			fill: new ol_style_Fill({color: [0,0,0]}),
 			rotation: options.rotation,
 			snapToPixel: options.snapToPixel
 		});
@@ -52,17 +58,17 @@ ol.style.Chart = function(opt_options)
 	{	this.colors_ = options.colors;
 	}
 	else 
-	{	this.colors_ = ol.style.Chart.colors[options.colors];
-		if(!this.colors_) this.colors_ = ol.style.Chart.colors.classic;
+	{	this.colors_ = ol_style_Chart.colors[options.colors];
+		if(!this.colors_) this.colors_ = ol_style_Chart.colors.classic;
 	}
 
 	this.renderChart_();
 };
-ol.inherits(ol.style.Chart, ol.style.RegularShape);
+ol.inherits(ol_style_Chart, ol_style_RegularShape);
 
 /** Default color set: classic, dark, pale, pastel, neon
 */
-ol.style.Chart.colors = 
+ol_style_Chart.colors =
 {	"classic":	["#ffa500","blue","red","green","cyan","magenta","yellow","#0f0"],
 	"dark":		["#960","#003","#900","#060","#099","#909","#990","#090"],
 	"pale":		["#fd0","#369","#f64","#3b7","#880","#b5d","#666"],
@@ -72,10 +78,10 @@ ol.style.Chart.colors =
 
 /**
  * Clones the style. 
- * @return {ol.style.Chart} 
+ * @return {ol_style_Chart}
  */
-ol.style.Chart.prototype.clone = function() 
-{	var s = new ol.style.Chart(
+ol_style_Chart.prototype.clone = function()
+{	var s = new ol_style_Chart(
 	{	type: this.type_,
 		radius: this.radius_,
 		rotation: this.getRotation(),
@@ -95,27 +101,27 @@ ol.style.Chart.prototype.clone = function()
 
 /** Get data associatied with the chart
 */
-ol.style.Chart.prototype.getData = function() 
+ol_style_Chart.prototype.getData = function()
 {	return this.data_;
 }
 /** Set data associatied with the chart
 *	@param {Array<number>}
 */
-ol.style.Chart.prototype.setData = function(data) 
+ol_style_Chart.prototype.setData = function(data)
 {	this.data_ = data;
 	this.renderChart_();
 }
 
 /** Get symbol radius
 */
-ol.style.Chart.prototype.getRadius = function() 
+ol_style_Chart.prototype.getRadius = function()
 {	return this.radius_;
 }
 /** Set symbol radius
 *	@param {number} symbol radius
 *	@param {number} donut ratio
 */
-ol.style.Chart.prototype.setRadius = function(radius, ratio) 
+ol_style_Chart.prototype.setRadius = function(radius, ratio)
 {	this.radius_ = radius;
 	this.donuratio_ = ratio || this.donuratio_;
 	this.renderChart_();
@@ -124,7 +130,7 @@ ol.style.Chart.prototype.setRadius = function(radius, ratio)
 /** Set animation step 
 *	@param {false|number} false to stop animation or the step of the animation [0,1]
 */
-ol.style.Chart.prototype.setAnimation = function(step) 
+ol_style_Chart.prototype.setAnimation = function(step)
 {	if (step===false) 
 	{	if (this.animation_.animate == false) return;
 		this.animation_.animate = false;
@@ -140,12 +146,12 @@ ol.style.Chart.prototype.setAnimation = function(step)
 
 /** @private
 */
-ol.style.Chart.prototype.renderChart_ = function(atlasManager) 
+ol_style_Chart.prototype.renderChart_ = function(atlasManager)
 {	var strokeStyle;
 	var strokeWidth = 0;
 
 	if (this.stroke_) 
-	{	strokeStyle = ol.color.asString(this.stroke_.getColor());
+	{	strokeStyle = ol_color.asString(this.stroke_.getColor());
 		strokeWidth = this.stroke_.getWidth();
 	}
 
@@ -257,7 +263,7 @@ ol.style.Chart.prototype.renderChart_ = function(atlasManager)
 /**
  * @inheritDoc
  */
-ol.style.Chart.prototype.getChecksum = function() 
+ol_style_Chart.prototype.getChecksum = function()
 {
 	var strokeChecksum = (this.stroke_!==null) ?
 		this.stroke_.getChecksum() : '-';
@@ -277,3 +283,5 @@ ol.style.Chart.prototype.getChecksum = function()
 
 	return this.checksums_[0];
 };
+
+export default ol_style_Chart

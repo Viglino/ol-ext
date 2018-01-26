@@ -2,14 +2,27 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_interaction_Interaction from 'ol/interaction/interaction'
+import ol_style_Style from 'ol/style/style'
+import ol_style_Stroke from 'ol/style/stroke'
+import ol_extent from 'ol/extent'
+import ol_source_Vector from 'ol/source/vector'
+import ol_Collection from 'ol/collection'
+import ol_layer_Image from 'ol/layer/image'
+import ol_source_ImageVector from 'ol/source/imagevector'
+import ol_Feature from 'ol/feature'
+import ol_geom_LineString from 'ol/geom/linestring'
+
 /** Interaction to snap to guidelines
  * @constructor
- * @extends {ol.interaction.Interaction}
+ * @extends {ol_interaction_Interaction}
  * @param {olx.interaction.SnapGuidesOptions} 
  *	- pixelTolerance {number | undefined} distance (in px) to snap to a guideline, default 10 px
- *	- style {ol.style.Style | Array<ol.style.Style> | undefined} Style for the sektch features. 
+ *	- style {ol_style_Style | Array<ol_style_Style> | undefined} Style for the sektch features.
  */
-ol.interaction.SnapGuides = function(options) 
+var ol_interaction_SnapGuides = function(options)
 {	if (!options) options = {};
 
 	// Intersect 2 guides
@@ -37,8 +50,8 @@ ol.interaction.SnapGuides = function(options)
 
 	// Default style
  	var sketchStyle = 
-	[	new ol.style.Style({
-			stroke: new ol.style.Stroke(
+	[	new ol_style_Style({
+			stroke: new ol_style_Stroke(
 			{	color: '#ffcc33',
 				lineDash: [8,5],
 				width: 1.25
@@ -50,12 +63,12 @@ ol.interaction.SnapGuides = function(options)
 	if (options.style) sketchStyle = options.style instanceof Array ? options.style : [options.style];
 
 	// Create a new overlay for the sketch
-	this.overlaySource_ = new ol.source.Vector(
-		{	features: new ol.Collection(),
+	this.overlaySource_ = new ol_source_Vector(
+		{	features: new ol_Collection(),
 			useSpatialIndex: false
 		});
-	this.overlayLayer_ = new ol.layer.Image(
-		{	source: new ol.source.ImageVector(
+	this.overlayLayer_ = new ol_layer_Image(
+		{	source: new ol_source_ImageVector(
 			{	source: this.overlaySource_,
 				style: function(f)
 				{	return sketchStyle;
@@ -75,7 +88,7 @@ ol.interaction.SnapGuides = function(options)
 		});
 */
 	// Use snap interaction
-	ol.interaction.Interaction.call(this, 
+	ol_interaction_Interaction.call(this,
 		{	handleEvent: function(e)
 			{	if (this.getActive())
 				{	var features = this.overlaySource_.getFeatures();
@@ -106,7 +119,7 @@ ol.interaction.SnapGuides = function(options)
 			}
 		});
 };
-ol.inherits(ol.interaction.SnapGuides, ol.interaction.Interaction);
+ol.inherits(ol_interaction_SnapGuides, ol_interaction_Interaction);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
@@ -114,9 +127,9 @@ ol.inherits(ol.interaction.SnapGuides, ol.interaction.Interaction);
  * @param {ol.Map} map Map.
  * @api stable
  */
-ol.interaction.SnapGuides.prototype.setMap = function(map) 
+ol_interaction_SnapGuides.prototype.setMap = function(map)
 {	if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_);
-	ol.interaction.Interaction.prototype.setMap.call (this, map);
+	ol_interaction_Interaction.prototype.setMap.call (this, map);
 	this.overlayLayer_.setMap(map);
 	if (map) this.projExtent_ = map.getView().getProjection().getExtent();
 };
@@ -124,15 +137,15 @@ ol.interaction.SnapGuides.prototype.setMap = function(map)
 /** Activate or deactivate the interaction.
 * @param {boolean} active
 */
-ol.interaction.SnapGuides.prototype.setActive = function(active) 
+ol_interaction_SnapGuides.prototype.setActive = function(active)
 {	this.overlayLayer_.setVisible(active);
-	ol.interaction.Interaction.prototype.setActive.call (this, active);
+	ol_interaction_Interaction.prototype.setActive.call (this, active);
 }
 
 /** Clear previous added guidelines
 * @param {Array<ol.Feature> | undefined} features a list of feature to remove, default remove all feature
 */
-ol.interaction.SnapGuides.prototype.clearGuides = function(features) 
+ol_interaction_SnapGuides.prototype.clearGuides = function(features)
 {	if (!features) this.overlaySource_.clear();
 	else
 	{	for (var i=0, f; f=features[i]; i++)
@@ -144,7 +157,7 @@ ol.interaction.SnapGuides.prototype.clearGuides = function(features)
 /** Get guidelines
 * @return {ol.Collection} guidelines features
 */
-ol.interaction.SnapGuides.prototype.getGuides = function(features) 
+ol_interaction_SnapGuides.prototype.getGuides = function(features)
 {	return this.overlaySource_.getFeaturesCollection();
 }
 
@@ -152,13 +165,13 @@ ol.interaction.SnapGuides.prototype.getGuides = function(features)
 * @param {Array<ol.coordinate>} v the direction vector
 * @return {ol.Feature} feature guide
 */
-ol.interaction.SnapGuides.prototype.addGuide = function(v, ortho) 
+ol_interaction_SnapGuides.prototype.addGuide = function(v, ortho)
 {	if (v)
 	{	var map = this.getMap();
 		// Limit extent
 		var extent = map.getView().calculateExtent(map.getSize());
-		extent = ol.extent.buffer(extent, Math.max (1e5+1, (extent[2]-extent[0])*100));
-		extent = ol.extent.getIntersection(extent, this.projExtent_);
+		extent = ol_extent.buffer(extent, Math.max (1e5+1, (extent[2]-extent[0])*100));
+		extent = ol_extent.getIntersection(extent, this.projExtent_);
 		var dx = v[0][0] - v[1][0];
 		var dy = v[0][1] - v[1][1];
 		var d = 1 / Math.sqrt(dx*dx+dy*dy);
@@ -167,18 +180,18 @@ ol.interaction.SnapGuides.prototype.addGuide = function(v, ortho)
 		for (var i= 0; i<1e8; i+=1e5)
 		{	if (ortho) p = [ v[0][0] + dy*d*i, v[0][1] - dx*d*i];
 			else p = [ v[0][0] + dx*d*i, v[0][1] + dy*d*i];
-			if (ol.extent.containsCoordinate(extent, p)) g.push(p);
+			if (ol_extent.containsCoordinate(extent, p)) g.push(p);
 			else break;
 		}
-		var f0 = new ol.Feature(new ol.geom.LineString(g));
+		var f0 = new ol_Feature(new ol_geom_LineString(g));
 		var g=[];
 		for (var i= 0; i>-1e8; i-=1e5)
 		{	if (ortho) p = [ v[0][0] + dy*d*i, v[0][1] - dx*d*i];
 			else p = [ v[0][0] + dx*d*i, v[0][1] + dy*d*i];
-			if (ol.extent.containsCoordinate(extent, p)) g.push(p);
+			if (ol_extent.containsCoordinate(extent, p)) g.push(p);
 			else break;
 		}
-		var f1 = new ol.Feature(new ol.geom.LineString(g));
+		var f1 = new ol_Feature(new ol_geom_LineString(g));
 		this.overlaySource_.addFeature(f0);
 		this.overlaySource_.addFeature(f1);
 		return [f0, f1];
@@ -189,15 +202,15 @@ ol.interaction.SnapGuides.prototype.addGuide = function(v, ortho)
 * @param {Array<ol.coordinate>} v the direction vector
 * @return {ol.Feature} feature guide
 */
-ol.interaction.SnapGuides.prototype.addOrthoGuide = function(v) 
+ol_interaction_SnapGuides.prototype.addOrthoGuide = function(v)
 {	return this.addGuide(v, true);
 };
 
 /** Listen to draw event to add orthogonal guidelines on the first and last point.
-* @param {ol.interaction.Draw} drawi a draw interaction to listen to
+* @param {_ol_interaction_Draw_} drawi a draw interaction to listen to
 * @api
 */
-ol.interaction.SnapGuides.prototype.setDrawInteraction = function(drawi)
+ol_interaction_SnapGuides.prototype.setDrawInteraction = function(drawi)
 {	var self = this;
 	// Number of points currently drawing
 	var nb = 0;
@@ -239,3 +252,5 @@ ol.interaction.SnapGuides.prototype.setDrawInteraction = function(drawi)
 		features = [];
 	});
 };
+
+export default ol_interaction_SnapGuides

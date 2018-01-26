@@ -1,27 +1,31 @@
-/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+/*	Copyright (c) 2016 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_control_Control from 'ol/control/control'
+
 /** Control bar for OL3
  * The control bar is a container for other controls. It can be used to create toolbars.
  * Control bars can be nested and combined with ol.control.Toggle to handle activate/deactivate.
  *
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol_control_Control}
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
  *	@param {bool} options.group is a group, default false
  *	@param {bool} options.toggleOne only one toggle control is active at a time, default false
  *	@param {bool} options.autoDeactivate used with subbar to deactivate all control when top level control deactivate, default false
- *	@param {Array<ol.control>} options.controls a list of control to add to the bar
+ *	@param {Array<_ol_control_>} options.controls a list of control to add to the bar
  */
-ol.control.Bar = function(options) 
+var ol_control_Bar = function(options)
 {	if (!options) options={};
 	var element = $("<div>").addClass('ol-unselectable ol-control ol-bar');
 	if (options.className) element.addClass(options.className);
 	if (options.group) element.addClass('ol-group');
-	
-	ol.control.Control.call(this, 
+
+	ol_control_Control.call(this,
 	{	element: element.get(0),
 		target: options.target
 	});
@@ -30,36 +34,36 @@ ol.control.Bar = function(options)
 	this.set('autoDeactivate', options.autoDeactivate);
 
 	this.controls_ = [];
-	if (options.controls instanceof Array) 
+	if (options.controls instanceof Array)
 	{	for (var i=0; i<options.controls.length; i++)
 		{	this.addControl(options.controls[i]);
 		}
 	}
 };
-ol.inherits(ol.control.Bar, ol.control.Control);
+ol.inherits(ol_control_Bar, ol_control_Control);
 
 /** Set the control visibility
-* @param {boolean} b 
+* @param {boolean} b
 */
-ol.control.Bar.prototype.setVisible = function (val) {
+ol_control_Bar.prototype.setVisible = function (val) {
 	if (val) $(this.element).show();
 	else $(this.element).hide();
 }
 
 /** Get the control visibility
-* @return {boolean} b 
+* @return {boolean} b
 */
-ol.control.Bar.prototype.getVisible = function () 
+ol_control_Bar.prototype.getVisible = function ()
 {	return ($(this.element).css('display') != 'none');
 }
 
 /**
  * Set the map instance the control is associated with
  * and add its controls associated to this map.
- * @param {ol.Map} map The map instance.
+ * @param {_ol_Map_} map The map instance.
  */
-ol.control.Bar.prototype.setMap = function (map)
-{	ol.control.Control.prototype.setMap.call(this, map);
+ol_control_Bar.prototype.setMap = function (map)
+{	ol_control_Control.prototype.setMap.call(this, map);
 
 	for (var i=0; i<this.controls_.length; i++)
 	{	var c = this.controls_[i];
@@ -69,16 +73,16 @@ ol.control.Bar.prototype.setMap = function (map)
 };
 
 /** Get controls in the panel
-*	@param {Array<ol.control>}
+*	@param {Array<_ol_control_>}
 */
-ol.control.Bar.prototype.getControls = function ()
+ol_control_Bar.prototype.getControls = function ()
 {	return this.controls_;
 };
 
 /** Set tool bar position
-*	@param {top|left|bottom|right}
+*	@param {top|left|bottom|right} pos
 */
-ol.control.Bar.prototype.setPosition = function (pos)
+ol_control_Bar.prototype.setPosition = function (pos)
 {	$(this.element).removeClass('ol-left ol-top ol-bottom ol-right');
 	pos=pos.split ('-');
 	for (var i=0; i<pos.length; i++)
@@ -95,12 +99,12 @@ ol.control.Bar.prototype.setPosition = function (pos)
 };
 
 /** Add a control to the bar
-*	@param {ol.control} c control to add
+*	@param {_ol_control_} c control to add
 */
-ol.control.Bar.prototype.addControl = function (c)
+ol_control_Bar.prototype.addControl = function (c)
 {	this.controls_.push(c);
 	c.setTarget(this.element);
-	if (this.getMap()) 
+	if (this.getMap())
 	{	this.getMap().addControl(c);
 	}
 	// Activate and toogleOne
@@ -111,20 +115,20 @@ ol.control.Bar.prototype.addControl = function (c)
 };
 
 /** Deativate all controls in a bar
-* @param {ol.control} except a control
+* @param {_ol_control_} except a control
 */
-ol.control.Bar.prototype.deactivateControls = function (except)
-{	for (var i=0; i<this.controls_.length; i++) 
-	{	if (this.controls_[i] !== except && this.controls_[i].setActive) 
+ol_control_Bar.prototype.deactivateControls = function (except)
+{	for (var i=0; i<this.controls_.length; i++)
+	{	if (this.controls_[i] !== except && this.controls_[i].setActive)
 		{	this.controls_[i].setActive(false);
 		}
 	}
 };
 
 
-ol.control.Bar.prototype.getActiveControls = function ()
+ol_control_Bar.prototype.getActiveControls = function ()
 {	var active = [];
-	for (var i=0, c; c=this.controls_[i]; i++) 
+	for (var i=0, c; c=this.controls_[i]; i++)
 	{	if (c.getActive && c.getActive()) active.push(c);
 	}
 	return active;
@@ -133,7 +137,7 @@ ol.control.Bar.prototype.getActiveControls = function ()
 /** Auto activate/deactivate controls in the bar
 * @param {boolean} b activate/deactivate
 */
-ol.control.Bar.prototype.setActive = function (b)
+ol_control_Bar.prototype.setActive = function (b)
 {	if (!b && this.get("autoDeactivate"))
 	{	this.deactivateControls();
 	}
@@ -146,14 +150,14 @@ ol.control.Bar.prototype.setActive = function (b)
 }
 
 /** Post-process an activated/deactivated control
-*	@param {ol.event} an object with a target {ol.control} and active flag {bool}
+*	@param {ol.event} e :an object with a target {_ol_control_} and active flag {bool}
 */
-ol.control.Bar.prototype.onActivateControl_ = function (e)
+ol_control_Bar.prototype.onActivateControl_ = function (e)
 {	if (this.get('toggleOne'))
 	{	if (e.active)
 		{	var n;
 			var ctrl = e.target;
-			for (n=0; n<this.controls_.length; n++) 
+			for (n=0; n<this.controls_.length; n++)
 			{	if (this.controls_[n]===ctrl) break;
 			}
 			// Not here!
@@ -163,8 +167,8 @@ ol.control.Bar.prototype.onActivateControl_ = function (e)
 		else
 		{	// No one active > test auto activate
 			if (!this.getActiveControls().length)
-			{	for (var i=0, c; c=this.controls_[i]; i++) 
-				{	if (c.get("autoActivate")) 
+			{	for (var i=0, c; c=this.controls_[i]; i++)
+				{	if (c.get("autoActivate"))
 					{	c.setActive();
 						break;
 					}
@@ -173,3 +177,5 @@ ol.control.Bar.prototype.onActivateControl_ = function (e)
 		}
 	}
 };
+
+export default ol_control_Bar

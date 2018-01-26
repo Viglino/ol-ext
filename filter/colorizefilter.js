@@ -2,25 +2,30 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_filter_Base from './filter'
+import ol_color from 'ol/color'
+
 /** Colorize map or layer
 * 	@constructor
 *	@requires ol.filter
-*	@extends {ol.filter.Base}
+*	@extends {ol_filter_Base}
 *	@author Thomas Tilak https://github.com/thhomas
 *	@author Jean-Marc Viglino https://github.com/viglino
-*	@param {ol.filter.cropOptions}
+*	@param {ol_filter_ColorizeOptions} options
 *		- feature {ol.Feature} feature to mask with
 *		- color {Array<integer>} style to fill with
 *		- inner {bool} mask inner, default false
 */
-ol.filter.Colorize = function(options)
-{	ol.filter.Base.call(this, options);
+var ol_filter_Colorize = function(options)
+{	ol_filter_Base.call(this, options);
 
 	this.setFilter(options);
 }
-ol.inherits(ol.filter.Colorize, ol.filter.Base);
+ol.inherits(ol_filter_Colorize, ol_filter_Base);
 
-ol.filter.Colorize.prototype.setFilter = function(options)
+ol_filter_Colorize.prototype.setFilter = function(options)
 {	options = options || {};
 	switch (options)
 	{	case "grayscale": options = { operation:'hue', red:0, green:0, blue:0, value:1 }; break;
@@ -28,8 +33,8 @@ ol.filter.Colorize.prototype.setFilter = function(options)
 		case "sepia": options = { operation:'color', red:153, green:102, blue:51, value:0.6 }; break;
 		default: break;
 	}
-	var color = options.color ? ol.color.asArray(options.color) : [ options.red, options.green, options.blue, options.value];
-	this.set('color', ol.color.asString(color))
+	var color = options.color ? ol_color.asArray(options.color) : [ options.red, options.green, options.blue, options.value];
+	this.set('color', ol_color.asString(color))
 	this.set ('value', color[3]||1);
 	switch (options.operation)
 	{	case 'color':
@@ -41,18 +46,18 @@ ol.filter.Colorize.prototype.setFilter = function(options)
 			break;
 		case 'saturation':
 			var v = 255*(options.value || 0);
-			this.set('color', ol.color.asString([0,0,v,v||1]));
+			this.set('color', ol_color.asString([0,0,v,v||1]));
 			this.set ('operation', options.operation);
 			break;
 		case 'luminosity':
 			var v = 255*(options.value || 0);
-			this.set('color', ol.color.asString([v,v,v,255]));
+			this.set('color', ol_color.asString([v,v,v,255]));
 			//this.set ('operation', 'luminosity')
 			this.set ('operation', 'hard-light');
 			break;
 		case 'contrast':
 			var v = 255*(options.value || 0);
-			this.set('color', ol.color.asString([v,v,v,255]));
+			this.set('color', ol_color.asString([v,v,v,255]));
 			this.set('operation', 'soft-light');
 			break;
 		default: 
@@ -61,25 +66,25 @@ ol.filter.Colorize.prototype.setFilter = function(options)
 	}
 }
 
-ol.filter.Colorize.prototype.setValue = function(v)
+ol_filter_Colorize.prototype.setValue = function(v)
 {	this.set ('value', v);
-	var c = ol.color.asArray(this.get("color"));
+	var c = ol_color.asArray(this.get("color"));
 	c[3] = v;
-	this.set("color", ol.color.asString(c));
+	this.set("color", ol_color.asString(c));
 }
 
-ol.filter.Colorize.prototype.setColor = function(c)
-{	c = ol.color.asArray(c);
+ol_filter_Colorize.prototype.setColor = function(c)
+{	c = ol_color.asArray(c);
 	if (c)
 	{	c[3] = this.get("value");
-		this.set("color", ol.color.asString(c));
+		this.set("color", ol_color.asString(c));
 	}
 }
 
-ol.filter.Colorize.prototype.precompose = function(e)
+ol_filter_Colorize.prototype.precompose = function(e)
 {}
 
-ol.filter.Colorize.prototype.postcompose = function(e)
+ol_filter_Colorize.prototype.postcompose = function(e)
 {	// Set back color hue
 	var ctx = e.context;
 	var canvas = ctx.canvas;
@@ -104,3 +109,5 @@ ol.filter.Colorize.prototype.postcompose = function(e)
 		}
 	ctx.restore();
 }
+
+export default ol_filter_Colorize

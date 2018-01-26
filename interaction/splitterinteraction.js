@@ -2,23 +2,30 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_interaction_Interaction from 'ol/interaction/interaction'
+import ol_source_Vector from 'ol/source/vector'
+import ol_Collection from 'ol/collection'
+import ol_extent from 'ol/extent'
+
 /** Interaction splitter: acts as a split feature agent while editing vector features (LineString).
  * @constructor
- * @extends {ol.interaction.Interaction}
+ * @extends {ol_interaction_Interaction}
  * @fires  beforesplit, aftersplit
  * @param {olx.interaction.SplitOptions} 
  *	- source {ol.source.Vector|Array{ol.source.Vector}} The target source (or array of source) with features to be split (configured with useSpatialIndex set to true)
  *	- triggerSource {ol.source.Vector} Any newly created or modified features from this source will be used to split features on the target source. If none is provided the target source is used instead.
- *	- features {ol.Collection.<ol.Feature>} A collection of feature to be split (replace source target).
- *	- triggerFeatures {ol.Collection.<ol.Feature>} Any newly created or modified features from this collection will be used to split features on the target source (replace triggerSource).
+ *	- features {ol_Collection.<ol.Feature>} A collection of feature to be split (replace source target).
+ *	- triggerFeatures {ol_Collection.<ol.Feature>} Any newly created or modified features from this collection will be used to split features on the target source (replace triggerSource).
  *	- filter {function|undefined} a filter that takes a feature and return true if the feature is eligible for splitting, default always split.
  *	- tolerance {function|undefined} Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split. Default is 1e-10.
  * @todo verify auto intersection on features that split.
  */
-ol.interaction.Splitter = function(options) 
+var ol_interaction_Splitter = function(options)
 {	if (!options) options = {};
 
-	ol.interaction.Interaction.call(this, 
+	ol_interaction_Interaction.call(this,
 	{	handleEvent: function(e)
 			{	// Hack to get only one changeFeature when draging with ol.interaction.Modify on.
 				if (e.type != "pointermove" && e.type != "pointerdrag")
@@ -39,14 +46,14 @@ ol.interaction.Splitter = function(options)
 
 	// Source to split
 	if (options.features)
-	{	this.source_ = new ol.source.Vector({ features: options.features });
+	{	this.source_ = new ol_source_Vector({ features: options.features });
 	}
 	else 
-	{	this.source_ = options.source ? options.source : new ol.source.Vector({ features: new ol.Collection() });
+	{	this.source_ = options.source ? options.source : new ol_source_Vector({ features: new ol_Collection() });
 	}
 	var trigger = this.triggerSource;
 	if (options.triggerFeatures)
-	{	trigger = new ol.source.Vector({ features: options.triggerFeatures });
+	{	trigger = new ol_source_Vector({ features: options.triggerFeatures });
 	}
 
 	if (trigger)
@@ -66,14 +73,14 @@ ol.interaction.Splitter = function(options)
 	// Get all features candidate
 	this.filterSplit_ = options.filter || function(){ return true; };
 };
-ol.inherits(ol.interaction.Splitter, ol.interaction.Interaction);
+ol.inherits(ol_interaction_Splitter, ol_interaction_Interaction);
 
 /** Calculate intersection on 2 segs
-* @param {Array<ol.coordinate>} s1 first seg to intersect (2 points)
-* @param {Array<ol.coordinate>} s2 second seg to intersect (2 points)
-* @return { boolean | ol.coordiante } intersection point or false no intersection
+* @param {Array<_ol_coordinate_>} s1 first seg to intersect (2 points)
+* @param {Array<_ol_coordinate_>} s2 second seg to intersect (2 points)
+* @return { boolean | ol_coordinate_ } intersection point or false no intersection
 */
-ol.interaction.Splitter.prototype.intersectSegs = function(s1,s2)
+ol_interaction_Splitter.prototype.intersectSegs = function(s1,s2)
 {	var tol = this.tolerance_;
 
 	// Solve
@@ -107,10 +114,10 @@ ol.interaction.Splitter.prototype.intersectSegs = function(s1,s2)
 /*
 console.log("r1: "+r1)
 console.log("r2: "+r2)
-console.log ("s10: "+(ol.coordinate.dist2d(p,s1[0])<tol)) ;
-console.log ("s11: "+(ol.coordinate.dist2d(p,s1[1])<tol)) ;
-console.log ("s20: "+(ol.coordinate.dist2d(p,s2[0])<tol)) ;
-console.log ("s21: "+(ol.coordinate.dist2d(p,s2[1])<tol)) ;
+console.log ("s10: "+(_ol_coordinate_.dist2d(p,s1[0])<tol)) ;
+console.log ("s11: "+(_ol_coordinate_.dist2d(p,s1[1])<tol)) ;
+console.log ("s20: "+(_ol_coordinate_.dist2d(p,s2[0])<tol)) ;
+console.log ("s21: "+(_ol_coordinate_.dist2d(p,s2[1])<tol)) ;
 */
 		return p;
 	}
@@ -119,7 +126,7 @@ console.log ("s21: "+(ol.coordinate.dist2d(p,s2[1])<tol)) ;
 /** Split the source using a feature
 * @param {ol.Feature} feature The feature to use to split.
 */
-ol.interaction.Splitter.prototype.splitSource = function(feature)
+ol_interaction_Splitter.prototype.splitSource = function(feature)
 {	// Allready perform a split
 	if (this.splitting) return;
 	var self = this;
@@ -153,7 +160,7 @@ ol.interaction.Splitter.prototype.splitSource = function(feature)
 	// Split existing features
 	for (i=0; i<c.length-1; i++)
 	{	seg = [c[i],c[i+1]];
-		var extent = ol.extent.buffer(ol.extent.boundingExtent(seg), this.tolerance_ /*0.01*/ );
+		var extent = ol_extent.buffer(ol_extent.boundingExtent(seg), this.tolerance_ /*0.01*/ );
 		var g;
 		while (true)
 		{	var found = false;
@@ -209,7 +216,7 @@ ol.interaction.Splitter.prototype.splitSource = function(feature)
 
 /** New feature source is added 
 */
-ol.interaction.Splitter.prototype.onAddFeature = function(e)
+ol_interaction_Splitter.prototype.onAddFeature = function(e)
 {	this.splitSource(e.feature);
 	if (this.splitting) 
 	{	this.added_.push(e.feature);
@@ -223,7 +230,7 @@ ol.interaction.Splitter.prototype.onAddFeature = function(e)
 
 /** Feature source is removed > count features added/removed
 */
-ol.interaction.Splitter.prototype.onRemoveFeature = function(e)
+ol_interaction_Splitter.prototype.onRemoveFeature = function(e)
 {	if (this.splitting) 
 	{	var n = this.added_.indexOf(e.feature);
 		if (n==-1)
@@ -237,9 +244,11 @@ ol.interaction.Splitter.prototype.onRemoveFeature = function(e)
 
 /** Feature source is changing 
 */
-ol.interaction.Splitter.prototype.onChangeFeature = function(e)
+ol_interaction_Splitter.prototype.onChangeFeature = function(e)
 {	if (this.moving_) 
 	{	this.lastEvent_ = e;
 	}
 	else this.splitSource(e.feature);
 };
+
+export default ol_interaction_Splitter

@@ -4,20 +4,23 @@
 	
 */
 
+import ol from 'ol'
+import ol_featureAnimation from './featureanimation'
+
 /** Teleport a feature at a given place
  * @constructor
- * @extends {ol.featureAnimation}
- * @param {ol.featureAnimationOptions} options
+ * @extends {ol_featureAnimation}
+ * @param {ol_featureAnimationOptions} options
  */
-ol.featureAnimation.Teleport = function(options)
-{	ol.featureAnimation.call(this, options);
+var ol_featureAnimation_Teleport = function(options)
+{	ol_featureAnimation.call(this, options);
 }
-ol.inherits(ol.featureAnimation.Teleport, ol.featureAnimation);
+ol.inherits(ol_featureAnimation_Teleport, ol_featureAnimation);
 
 /** Animate
-* @param {ol.featureAnimationEvent} e
+* @param {ol_featureAnimationEvent} e
 */
-ol.featureAnimation.Teleport.prototype.animate = function (e)
+ol_featureAnimation_Teleport.prototype.animate = function (e)
 {	var sc = this.easing_(e.elapsed);
 	if (sc)
 	{	e.context.save()
@@ -34,3 +37,5 @@ ol.featureAnimation.Teleport.prototype.animate = function (e)
 
 	return (e.time <= this.duration_);
 }
+
+export default ol_featureAnimation_Teleport

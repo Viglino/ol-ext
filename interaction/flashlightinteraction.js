@@ -1,14 +1,19 @@
+
+import ol from 'ol'
+import ol_interaction_Pointer from 'ol/interaction/pointer'
+import ol_color from 'ol/color'
+
 /**
  * @constructor
- * @extends {ol.interaction.Pointer}
+ * @extends {ol_interaction_Pointer}
  *	@param {ol.flashlight.options} flashlight options param
  *		- color {ol.Color} light color, default transparent
  *		- fill {ol.Color} fill color, default rgba(0,0,0,0.8)
  *		- radius {number} radius of the flash
  */
-ol.interaction.Flashlight = function(options) {
+var ol_interaction_Flashlight = function(options) {
 
-	ol.interaction.Pointer.call(this, 
+	ol_interaction_Pointer.call(this,
 	{	handleDownEvent: this.setPosition,
 		handleMoveEvent: this.setPosition
 	});
@@ -23,17 +28,17 @@ ol.interaction.Flashlight = function(options) {
 	this.setColor(options);
 
 };
-ol.inherits(ol.interaction.Flashlight, ol.interaction.Pointer);
+ol.inherits(ol_interaction_Flashlight, ol_interaction_Pointer);
 
 /** Set the map > start postcompose
 */
-ol.interaction.Flashlight.prototype.setMap = function(map)
+ol_interaction_Flashlight.prototype.setMap = function(map)
 {	if (this.getMap()) 
 	{	this.getMap().un('postcompose', this.postcompose_, this);
 		this.getMap().render();
 	}
 	
-	ol.interaction.Pointer.prototype.setMap.call(this, map);
+	ol_interaction_Pointer.prototype.setMap.call(this, map);
 
 	if (map)
 	{	map.on('postcompose', this.postcompose_, this);
@@ -43,7 +48,7 @@ ol.interaction.Flashlight.prototype.setMap = function(map)
 /** Set flashlight radius
  *	@param {integer} radius
  */
-ol.interaction.Flashlight.prototype.setRadius = function(radius)
+ol_interaction_Flashlight.prototype.setRadius = function(radius)
 {	this.radius = radius
 	if (this.getMap()) this.getMap().renderSync();
 }
@@ -53,29 +58,29 @@ ol.interaction.Flashlight.prototype.setRadius = function(radius)
  *		- color {ol.Color} light color, default transparent
  *		- fill {ol.Color} fill color, default rgba(0,0,0,0.8)
  */
-ol.interaction.Flashlight.prototype.setColor = function(options)
+ol_interaction_Flashlight.prototype.setColor = function(options)
 {	// Backcolor
 	var color = (options.fill ? options.fill : [0,0,0,0.8]);
-	var c = ol.color.asArray(color);
-	this.startColor = ol.color.asString(c);
+	var c = ol_color.asArray(color);
+	this.startColor = ol_color.asString(c);
 	// Halo color
 	var endColor;
 	if (options.color)
-	{	c = this.endColor = ol.color.asString(ol.color.asArray(options.color)||options.color);
+	{	c = this.endColor = ol_color.asString(ol_color.asArray(options.color)||options.color);
 	}
 	else 
 	{	c[3] = 0
-		this.endColor = ol.color.asString(c);
+		this.endColor = ol_color.asString(c);
 	}
 	c[3] = 0.1;
-	this.midColor = ol.color.asString(c);
+	this.midColor = ol_color.asString(c);
 	if (this.getMap()) this.getMap().renderSync();
 }
 
 /** Set position of the flashlight
 *	@param {ol.Pixel|ol.MapBrowserEvent}
 */
-ol.interaction.Flashlight.prototype.setPosition = function(e)
+ol_interaction_Flashlight.prototype.setPosition = function(e)
 {	if (e.pixel) this.pos = e.pixel;
 	else this.pos = e;
 	if (this.getMap()) 
@@ -85,7 +90,7 @@ ol.interaction.Flashlight.prototype.setPosition = function(e)
 
 /** Postcompose function
 */
-ol.interaction.Flashlight.prototype.postcompose_ = function(e)
+ol_interaction_Flashlight.prototype.postcompose_ = function(e)
 {	var ctx = e.context;
 	var ratio = e.frameState.pixelRatio;
 	var w = ctx.canvas.width;
@@ -109,3 +114,5 @@ ol.interaction.Flashlight.prototype.postcompose_ = function(e)
 	}
 	ctx.restore();
 };
+
+export default ol_interaction_Flashlight

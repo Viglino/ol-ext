@@ -4,6 +4,16 @@
 	
 */
 
+import ol from 'ol'
+import ol_Feature from 'ol/feature'
+import ol_geom_Polygon from 'ol/geom/polygon'
+import ol_geom_Point from 'ol/geom/point'
+import ol_coordinate from 'ol/coordinate'
+import ol_source_Vector from 'ol/source/vector'
+import ol_source_ImageVector from 'ol/source/imagevector'
+import ol_extent from 'ol/extent'
+import ol_HexGrid from '../utils/hexgrid'
+
 (function() {
 
 /* Implementation */
@@ -14,9 +24,9 @@ function addFeature(f)
 	{	this._bin[id].get('features').push(f);
 	}
 	else 
-	{	var ex = new ol.Feature(new ol.geom.Polygon([this._hexgrid.getHexagon(h)]));
+	{	var ex = new ol_Feature(new ol_geom_Polygon([this._hexgrid.getHexagon(h)]));
 		ex.set('features',[f]);
-		ex.set('center', new ol.geom.Point(ol.extent.getCenter(ex.getGeometry().getExtent())));
+		ex.set('center', new ol_geom_Point(ol_extent.getCenter(ex.getGeometry().getExtent())));
 		this._bin[id] = ex;
 		this._source.addFeature(ex);
 	}
@@ -80,13 +90,13 @@ function reset()
 // Init the bin
 function hexbinInit(source, options)
 {	// The HexGrid
-	this._hexgrid = new ol.HexGrid(options);
+	this._hexgrid = new ol_HexGrid(options);
 	this._bin = {};
 	// Source and origin
 	this._source = source;
 	this._origin = options.source;
 	// Geometry function to get a point
-	this._geomFn = options.geometryFunction || ol.coordinate.getFeatureCenter || function(f) { return f.getGeometry().getFirstCoordinate(); };
+	this._geomFn = options.geometryFunction || ol_coordinate.getFeatureCenter || function(f) { return f.getGeometry().getFirstCoordinate(); };
 	// Existing features
 	reset.call(this);
 	// Future features
@@ -96,55 +106,57 @@ function hexbinInit(source, options)
 
 /** A source for hexagonal binning
 * @constructor 
-* @extends {ol.source.Vector}
-* @param {} options ol.source.VectorOptions + ol.HexGridOptions
-*	@param {ol.source.Vector} options.source Source 
+* @extends {ol_source_Vector}
+* @param {} options ol_source_VectorOptions + ol.HexGridOptions
+*	@param {ol_source_Vector} options.source Source
 *	@param {Number} options.size size of the exagon in map units, default 80000
 *	@param {ol.coordinate} options.origin orgin of the grid, default [0,0]
 *	@param {pointy|flat} options.layout grid layout, default pointy
 *	@param {function|undefined} options.geometryFunction Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center. 
 */
-ol.source.HexBin = function(options)
+var ol_source_HexBin = function(options)
 {	options = options || {} ;
-	ol.source.Vector.call (this, options);	
+	ol_source_Vector.call (this, options);
 	hexbinInit.call(this, this, options);
 };
-ol.inherits (ol.source.HexBin, ol.source.Vector);
+ol.inherits (ol_source_HexBin, ol_source_Vector);
 
 /**
 * Get the orginal source 
-* @return {ol.source.Vector} 
+* @return {ol_source_Vector}
 */
-ol.source.HexBin.prototype.getSource = function()
+ol_source_HexBin.prototype.getSource = function()
 {	return this._origin;
 };
 
 /** An image source for hexagonal binning
 * @constructor 
-* @extends {ol.source.ImageVector}
-* @param {} options ol.source.ImageVectorOptions + ol.HexGridOptions
-*	@param {ol.source.Vector} options.source Source 
+* @extends {ol_source_ImageVector}
+* @param {} options ol_source_ImageVectorOptions + ol.HexGridOptions
+*	@param {ol_source_Vector} options.source Source
 *	@param {Number} options.size size of the exagon in map units, default 80000
 *	@param {ol.coordinate} options.origin orgin of the grid, default [0,0]
 *	@param {pointy|flat} options.layout grid layout, default pointy
 *	@param {function|undefined} options.geometryFunction Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center. 
 */
-ol.source.ImageHexBin = function(options)
+var ol_source_ImageHexBin = function(options)
 {	options = options || {} ;
-	var source = new ol.source.Vector();
+	var source = new ol_source_Vector();
 	hexbinInit.call (this, source, options);
 	options.source = source;
 	// Create source
-	ol.source.ImageVector.call (this, options);	
+	ol_source_ImageVector.call (this, options);
 };
-ol.inherits (ol.source.ImageHexBin, ol.source.ImageVector);
+ol.inherits (ol_source_ImageHexBin, ol_source_ImageVector);
 
 /**
 * Get the orginal source 
-* @return {ol.source.Vector} 
+* @return {ol_source_Vector}
 */
-ol.source.ImageHexBin.prototype.getOriginSource = function()
+ol_source_ImageHexBin.prototype.getOriginSource = function()
 {	return this._origin;
 };
 
 })();
+
+export default {ol_source_HexBin, ol_source_ImageHexBin}

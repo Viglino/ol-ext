@@ -2,20 +2,24 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_filter_Base from './filter'
+
 /** Clip layer or map 
 * 	@constructor
 *	@requires ol.filter
-*	@extends {ol.filter.Base}
-*	@param {ol.filter.clipOptions}
+*	@extends {ol_filter_Base}
+*	@param {ol_filter_ClipOptions} options
 *		- coords {Array<ol.Coordinate>}
 *		- extent {ol.Extent}
 *		- units {%|px} coords units percent or pixel
 *		- keepAspectRatio {boolean} keep aspect ratio
 *		- color {string} backgroundcolor
 */
-ol.filter.Clip = function(options)
+var ol_filter_Clip = function(options)
 {	options = options || {};
-	ol.filter.Base.call(this, options);
+	ol_filter_Base.call(this, options);
 	
 	this.set("coords", options.coords);
 	this.set("units", options.units);
@@ -36,9 +40,9 @@ ol.filter.Clip = function(options)
 		options.extent = [xmin,ymin,xmax,ymax];
 	}
 }
-ol.inherits(ol.filter.Clip, ol.filter.Base);
+ol.inherits(ol_filter_Clip, ol_filter_Base);
 
-ol.filter.Clip.prototype.clipPath_ = function(e)
+ol_filter_Clip.prototype.clipPath_ = function(e)
 {	var ctx = e.context;
 	var canvas = ctx.canvas;
 	var coords = this.get("coords");
@@ -82,7 +86,7 @@ ol.filter.Clip.prototype.clipPath_ = function(e)
 	ctx.lineTo ( fx(coords[0][0]), fy(coords[0][1]) );
 };
 
-ol.filter.Clip.prototype.precompose = function(e)
+ol_filter_Clip.prototype.precompose = function(e)
 {	if (!this.get("color"))
 	{	e.context.save();
 		e.context.beginPath();
@@ -91,7 +95,7 @@ ol.filter.Clip.prototype.precompose = function(e)
 	}
 }
 
-ol.filter.Clip.prototype.postcompose = function(e)
+ol_filter_Clip.prototype.postcompose = function(e)
 {	if (this.get("color"))
 	{	var ctx = e.context;
 		var canvas = e.context.canvas;
@@ -110,3 +114,5 @@ ol.filter.Clip.prototype.postcompose = function(e)
 	
 	e.context.restore();
 }
+
+export default ol_filter_Clip

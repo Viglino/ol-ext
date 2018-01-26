@@ -3,12 +3,16 @@
 	released under the CeCILL license (http://www.cecill.info/).
 	
 */
+
+import ol from 'ol'
+import ol_featureAnimation from './featureanimation'
+
 /** Do nothing 
  * @constructor
- * @extends {ol.featureAnimation}
- * @param {ol.featureAnimationShowOptions} options
+ * @extends {ol_featureAnimation}
+ * @param {ol_featureAnimationShowOptions} options
  */
-ol.featureAnimation.Null = function(options)
-{	ol.featureAnimation.call(this, { duration:0 });
+var ol_featureAnimation_Null = function(options)
+{	ol_featureAnimation.call(this, { duration:0 });
 };
-ol.inherits(ol.featureAnimation.Null, ol.featureAnimation);
+ol.inherits(ol_featureAnimation_Null, ol_featureAnimation);

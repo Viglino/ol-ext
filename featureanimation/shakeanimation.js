@@ -4,28 +4,31 @@
 	
 */
 
+import ol from 'ol'
+import ol_featureAnimation from './featureanimation'
+
 /** Shakee animation: 
  * @constructor
- * @extends {ol.featureAnimation}
- * @param {ol.featureAnimationShakeOptions} options
+ * @extends {ol_featureAnimation}
+ * @param {ol_featureAnimationShakeOptions} options
  *	@param {Integer} options.bounce number o bounds, default 6
  *	@param {Integer} options.amplitude amplitude of the animation, default 40
  *	@param {bool} options.horizontal shake horizontally default false (vertical)
  */
-ol.featureAnimation.Shake = function(options)
+var ol_featureAnimation_Shake = function(options)
 {	options = options || {};
-	ol.featureAnimation.call(this, options);
+	ol_featureAnimation.call(this, options);
 //	this.easing_ = options.easing_ || function(t){return (0.5+t)*t -0.5*t ;};
 	this.amplitude_ = options.amplitude || 40;
 	this.bounce_ = -Math.PI*(options.bounce || 6);
 	this.horizontal_ = options.horizontal;
 }
-ol.inherits(ol.featureAnimation.Shake, ol.featureAnimation);
+ol.inherits(ol_featureAnimation_Shake, ol_featureAnimation);
 
 /** Animate
-* @param {ol.featureAnimationEvent} e
+* @param {ol_featureAnimationEvent} e
 */
-ol.featureAnimation.Shake.prototype.animate = function (e)
+ol_featureAnimation_Shake.prototype.animate = function (e)
 {	// Animate
 	var flashGeom = e.geom.clone();
 	var shadow = e.geom.clone();
@@ -41,3 +44,5 @@ ol.featureAnimation.Shake.prototype.animate = function (e)
 	
 	return (e.time <= this.duration_);
 }
+
+export default ol_featureAnimation_Shake

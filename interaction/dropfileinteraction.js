@@ -1,8 +1,18 @@
+
+import ol from 'ol'
+import ol_interaction_DragAndDrop from 'ol/interaction/draganddrop'
+import ol_interaction_Interaction from 'ol/interaction/interaction'
+import ol_format_GPX from 'ol/format/gpx'
+import ol_format_GeoJSON from 'ol/format/geojson'
+import ol_format_IGC from 'ol/format/igc'
+import ol_format_KML from 'ol/format/kml'
+import ol_format_TopoJSON from 'ol/format/topojson'
+
 /** Extend DragAndDrop choose drop zone + fires loadstart, loadend
  * @require jQuery
  * 
  * @constructor
- * @extends {ol.interaction.DragAndDrop}
+ * @extends {ol_interaction_DragAndDrop}
  *	@fires loadstart, loadend, addfeatures
  *	@param {ol.dropfile.options} flashlight options param
  *		- zone {string} selector for the drop zone, default document
@@ -10,10 +20,10 @@
  *		- formatConstructors {Array<function(new:ol.format.Feature)>|undefined} Format constructors, default [ ol.format.GPX, ol.format.GeoJSON, ol.format.IGC, ol.format.KML, ol.format.TopoJSON ]
  *		- accept {Array<string>|undefined} list of eccepted format, default ["gpx","json","geojson","igc","kml","topojson"]
  */
-ol.interaction.DropFile = function(options) 
+var ol_interaction_DropFile = function(options)
 {	options = options||{};
 
-	ol.interaction.DragAndDrop.call(this, {});
+	ol_interaction_DragAndDrop.call(this, {});
 	
 	var zone = options.zone || document;
 	$(zone).on('dragenter', this.onstop );
@@ -21,24 +31,24 @@ ol.interaction.DropFile = function(options)
 	$(zone).on('dragleave', this.onstop );
 
 	// Options
-	this.formatConstructors_ = options.formatConstructors || [ ol.format.GPX, ol.format.GeoJSON, ol.format.IGC, ol.format.KML, ol.format.TopoJSON ];
+	this.formatConstructors_ = options.formatConstructors || [ ol_format_GPX, ol_format_GeoJSON, ol_format_IGC, ol_format_KML, ol_format_TopoJSON ];
 	this.projection_ = options.projection;
 	this.accept_ = options.accept || ["gpx","json","geojson","igc","kml","topojson"];
 
 	var self = this;
 	$(zone).on('drop', function(e){ return self.ondrop(e.originalEvent); });
 };
-ol.inherits(ol.interaction.DropFile, ol.interaction.DragAndDrop);
+ol.inherits(ol_interaction_DropFile, ol_interaction_DragAndDrop);
 
 /** Set the map 
 */
-ol.interaction.DropFile.prototype.setMap = function(map)
-{	ol.interaction.Interaction.prototype.setMap.call(this, map);
+ol_interaction_DropFile.prototype.setMap = function(map)
+{	ol_interaction_Interaction.prototype.setMap.call(this, map);
 };
 
 /** Do somthing when over
 */
-ol.interaction.DropFile.prototype.onstop = function(e) 
+ol_interaction_DropFile.prototype.onstop = function(e)
 {	e.preventDefault();
 	e.stopPropagation();
 	return false;
@@ -46,7 +56,7 @@ ol.interaction.DropFile.prototype.onstop = function(e)
 
 /** Do somthing when over
 */
-ol.interaction.DropFile.prototype.ondrop = function(e) 
+ol_interaction_DropFile.prototype.ondrop = function(e)
 {	if (e.dataTransfer && e.dataTransfer.files.length)
 	{	var self = this;
 		e.preventDefault();
@@ -96,3 +106,5 @@ ol.interaction.DropFile.prototype.ondrop = function(e)
     else {}
     return false;
 };
+
+export default ol_interaction_DropFile

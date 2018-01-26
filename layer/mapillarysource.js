@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 	
 	@classdesc
-	ol.source.Mapillary is a source that load Mapillary's geotagged photos in a vector layer.
+	ol_source_Mapillary is a source that load Mapillary's geotagged photos in a vector layer.
 	
 	@require jQuery
 	
@@ -11,12 +11,19 @@
 	<ol.source.Vector>
 */
 
+import ol from 'ol'
+import ol_Attribution from 'ol/attribution'
+import ol_loadingstrategy from 'ol/loadingstrategy'
+import ol_source_Vector from 'ol/source/vector'
+import ol_proj from 'ol/proj'
+
+
 /**
-* @constructor ol.source.Mapillary
-* @extends {ol.source.Vector}
+* @constructor ol_source_Mapillary
+* @extends {ol_source_Vector}
 * @param {olx.source.Mapillary=} options
 */
-ol.source.Mapillary = function(opt_options)
+var ol_source_Mapillary = function(opt_options)
 {	var options = opt_options || {};
 	var self = this; 
 
@@ -29,18 +36,18 @@ ol.source.Mapillary = function(opt_options)
 	this._limit = options.limit || 100;
 	
 	/** Default attribution */
-	if (!options.attributions) options.attributions = [ new ol.Attribution({ html:"&copy; <a href='https://www.mapillary.com/'>Mapillary</a>" }) ];
+	if (!options.attributions) options.attributions = [ new ol_Attribution({ html:"&copy; <a href='https://www.mapillary.com/'>Mapillary</a>" }) ];
 
 	// Bbox strategy : reload at each move
-    if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
+    if (!options.strategy) options.strategy = ol_loadingstrategy.bbox;
 
 	// Init parent
-	ol.source.Vector.call (this, options);	
+	ol_source_Vector.call (this, options);
 
 	// Client ID
 	// this.set("clientId", options.clientId);
 };
-ol.inherits (ol.source.Mapillary, ol.source.Vector);
+ol.inherits (ol_source_Mapillary, ol_source_Vector);
 
 
 /** Decode wiki attributes and choose to add feature to the layer
@@ -49,7 +56,7 @@ ol.inherits (ol.source.Mapillary, ol.source.Vector);
 * @return {boolean} true: add the feature to the layer
 * @API stable
 */
-ol.source.Mapillary.prototype.readFeature = function (feature, attributes)
+ol_source_Mapillary.prototype.readFeature = function (feature, attributes)
 {	// Allways read feature (no filter)
 	return true;
 };
@@ -58,10 +65,10 @@ ol.source.Mapillary.prototype.readFeature = function (feature, attributes)
 /** Loader function used to load features.
 * @private
 */
-ol.source.Mapillary.prototype._loaderFn = function(extent, resolution, projection) 
+ol_source_Mapillary.prototype._loaderFn = function(extent, resolution, projection)
 {	if (resolution > this._maxResolution) return;
 	var self = this;
-	var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
+	var bbox = ol_proj.transformExtent(extent, projection, "EPSG:4326");
 	// Commons API: for more info @see https://www.mapillary.com/developer
 	var date = Date.now() - 6 * 30 * 24 * 60 * 60 * 1000;
 	var url = "https://a.mapillary.com/v2/search/im?client_id="
@@ -113,3 +120,5 @@ ol.source.Mapillary.prototype._loaderFn = function(extent, resolution, projectio
 			*/
     }});
 };
+
+export default ol_source_Mapillary

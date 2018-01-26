@@ -2,14 +2,23 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_control_Control from 'ol/control/control'
+import ol_style_Style from 'ol/style/style'
+import ol_style_Stroke from 'ol/style/stroke'
+import ol_style_Fill from 'ol/style/fill'
+import ol_style_Text from 'ol/style/text'
+import ol_extent from 'ol/extent'
+
 /**
  * Draw a grid reference on the map and add an index.
  *
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol_control_Control}
  * @fires select
  * @param {Object=} Control options. 
- *	- style {ol.style.Style} Style to use for drawing the grid (stroke and text), default black.
+ *	- style {ol_style_Style} Style to use for drawing the grid (stroke and text), default black.
  *	- maxResolution {number} max resolution to display the graticule
  *	- extent {ol.extent} extent of the grid, required
  *	- size {ol.size} number of lines and cols, required 
@@ -20,7 +29,7 @@
  *	- indexTitle {function|undefined} a function that takes a feature and return the title to display in the index, default the first letter of property option
  *	- filterLabel {string} label to display in the search bar, default 'filter'
  */
-ol.control.GridReference = function(options) 
+var ol_control_GridReference = function(options)
 {	var self = this;
 	if (!options) options = {};
 	
@@ -28,7 +37,7 @@ ol.control.GridReference = function(options)
 	var elt = document.createElement("div");
 	elt.className = (!options.target ? "ol-control ":"") +"ol-gridreference ol-unselectable "+(options.className||"");
 	
-	ol.control.Control.call(this, 
+	ol_control_Control.call(this,
 		{	element: elt,
 			target: options.target
 		});
@@ -57,24 +66,24 @@ ol.control.GridReference = function(options)
 	this.set('property', options.property || 'name');
 	this.set('filterLabel', options.filterLabel || 'filter');
 
-	if (options.style instanceof ol.style.Style) this.style = options.style;
-	else this.style = new ol.style.Style(
-		{	stroke: new ol.style.Stroke({ color:"#000", width:1 }),
-			text: new ol.style.Text(
+	if (options.style instanceof ol_style_Style) this.style = options.style;
+	else this.style = new ol_style_Style(
+		{	stroke: new ol_style_Stroke({ color:"#000", width:1 }),
+			text: new ol_style_Text(
 			{	font: "bold 14px Arial",
-				stroke: new ol.style.Stroke({ color:"#fff", width:2 }),
-				fill: new ol.style.Fill({ color:"#000" }),
+				stroke: new ol_style_Stroke({ color:"#fff", width:2 }),
+				fill: new ol_style_Fill({ color:"#000" }),
 			}) 
 		});
 };
-ol.inherits(ol.control.GridReference, ol.control.Control);
+ol.inherits(ol_control_GridReference, ol_control_Control);
 
 /** Returns the text to be displayed in the index
 *	@param {ol.Feature} f the feature
 *	@return {string} the text to be displayed in the index
 *	@api
 */
-ol.control.GridReference.prototype.getFeatureName = function (f)
+ol_control_GridReference.prototype.getFeatureName = function (f)
 {	return f.get(this.get('property')||'name');
 };
 
@@ -84,7 +93,7 @@ ol.control.GridReference.prototype.getFeatureName = function (f)
 *	@return {Number} 0 if a==b, -1 if a<b, 1 if a>b
 *	@api
 */
-ol.control.GridReference.prototype.sortFeatures = function (a,b)
+ol_control_GridReference.prototype.sortFeatures = function (a,b)
 {	return (this.getFeatureName(a) == this.getFeatureName(b)) ? 0 : (this.getFeatureName(a) < this.getFeatureName(b)) ? -1 : 1; 
 };
 
@@ -93,14 +102,14 @@ ol.control.GridReference.prototype.sortFeatures = function (a,b)
 *	@return the first letter of the eature name (getFeatureName)
 *	@api
 */
-ol.control.GridReference.prototype.indexTitle = function (f)
+ol_control_GridReference.prototype.indexTitle = function (f)
 {	return this.getFeatureName(f).charAt(0); 
 };
 
 /** Display features in the index
 *	@param { Array<ol.Feature> | ol.Collection<ol.Feature> } features
 */
-ol.control.GridReference.prototype.setIndex = function (features)
+ol_control_GridReference.prototype.setIndex = function (features)
 {	if (!this.getMap()) return;
 	var self = this;
 	if (features.getArray) features = features.getArray();
@@ -155,7 +164,7 @@ ol.control.GridReference.prototype.setIndex = function (features)
 *	@param {ol.coordinate} coords
 *	@return {string} the reference
 */
-ol.control.GridReference.prototype.getReference = function (coords)
+ol_control_GridReference.prototype.getReference = function (coords)
 {	if (!this.getMap()) return;
 	var extent = this.get('extent');
 	var size = this.get('size');
@@ -172,11 +181,11 @@ ol.control.GridReference.prototype.getReference = function (coords)
  * @param {ol.Map} map Map.
  * @api stable
  */
-ol.control.GridReference.prototype.setMap = function (map)
+ol_control_GridReference.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
 	if (oldmap) oldmap.un('postcompose', this.drawGrid_, this);
 	
-	ol.control.Control.prototype.setMap.call(this, map);
+	ol_control_Control.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 
 	// Get change (new layer added or removed)
@@ -187,16 +196,16 @@ ol.control.GridReference.prototype.setMap = function (map)
 };
 
 /** Set style
-* @param {ol.style.Style} style
+* @param {ol_style_Style} style
 */
-ol.control.GridReference.prototype.setStyle = function (style)
+ol_control_GridReference.prototype.setStyle = function (style)
 {	this.style = style;
 };
 
 /** Get style
-* @return {ol.style.Style} style
+* @return {ol_style_Style} style
 */
-ol.control.GridReference.prototype.getStyle = function ()
+ol_control_GridReference.prototype.getStyle = function ()
 {	return style;
 };
 
@@ -204,7 +213,7 @@ ol.control.GridReference.prototype.getStyle = function ()
 * @param {ol.event} e postcompose event
 * @private
 */
-ol.control.GridReference.prototype.drawGrid_ = function (e)
+ol_control_GridReference.prototype.drawGrid_ = function (e)
 {	if (this.get('maxResolution')<e.frameState.viewState.resolution) return;
 	
 	var ctx = e.context;
@@ -218,7 +227,7 @@ ol.control.GridReference.prototype.drawGrid_ = function (e)
 	var size = this.get('size');
 
 	var map = this.getMap();
-	var ex = ol.extent.boundingExtent([map.getPixelFromCoordinate([extent[0],extent[1]]), map.getPixelFromCoordinate([extent[2],extent[3]])]);
+	var ex = ol_extent.boundingExtent([map.getPixelFromCoordinate([extent[0],extent[1]]), map.getPixelFromCoordinate([extent[2],extent[3]])]);
 	var p0 = [ex[0],ex[1]];
 	var p1 = [ex[2],ex[3]];
 	var dx = (p1[0]-p0[0])/size[0];
@@ -296,3 +305,5 @@ ol.control.GridReference.prototype.drawGrid_ = function (e)
 
 	ctx.restore();
 };
+
+export default ol_control_GridReference

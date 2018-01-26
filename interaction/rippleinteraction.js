@@ -12,17 +12,22 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 	@link https://github.com/Viglino
  */
+
+import ol from 'ol'
+import ol_interaction_Pointer from 'ol/interaction/pointer'
+import ol_Observable from 'ol/observable'
+
  /**
  * @constructor
- * @extends {ol.interaction.Pointer}
+ * @extends {ol_interaction_Pointer}
  *	@param {ol.flashlight.options} flashlight options param
  *		- color {ol.Color} light color, default transparent
  *		- fill {ol.Color} fill color, default rgba(0,0,0,0.8)
  *		- radius {number} radius of the flash
  */
-ol.interaction.Ripple = function(options) 
+var ol_interaction_Ripple = function(options)
 {
-	ol.interaction.Pointer.call(this, 
+	ol_interaction_Pointer.call(this,
 	{	handleDownEvent: this.rainDrop,
 		handleMoveEvent: this.rainDrop
 	});
@@ -39,17 +44,17 @@ ol.interaction.Ripple = function(options)
     this.interval = options.interval;
 	this.rains (this.interval);
 };
-ol.inherits(ol.interaction.Ripple, ol.interaction.Pointer);
+ol.inherits(ol_interaction_Ripple, ol_interaction_Pointer);
 
 /** Set the map > start postcompose
 */
-ol.interaction.Ripple.prototype.setMap = function(map)
+ol_interaction_Ripple.prototype.setMap = function(map)
 {	if (this.oncompose)
-	{	ol.Observable.unByKey(oncompose);
+	{	ol_Observable.unByKey(oncompose);
 		if (this.getMap()) this.getMap().render();
 	}
 	
-	ol.interaction.Pointer.prototype.setMap.call(this, map);
+	ol_interaction_Pointer.prototype.setMap.call(this, map);
 
 	if (map)
 	{	this.oncompose = map.on('postcompose', this.postcompose_, this);
@@ -59,7 +64,7 @@ ol.interaction.Ripple.prototype.setMap = function(map)
 /** Generate random rain drop
 *	@param {integer} interval
 */
-ol.interaction.Ripple.prototype.rains = function(interval)
+ol_interaction_Ripple.prototype.rains = function(interval)
 {	if (this.onrain) clearTimeout (this.onrain);
 	var self = this;
 	vdelay = (typeof(interval)=="number" ? interval : 1000)/2;
@@ -76,7 +81,7 @@ ol.interaction.Ripple.prototype.rains = function(interval)
 /** Disturb water at specified point
 *	@param {ol.Pixel|ol.MapBrowserEvent}
 */
-ol.interaction.Ripple.prototype.rainDrop = function(e)
+ol_interaction_Ripple.prototype.rainDrop = function(e)
 {	if (!this.width) return;
 	var dx,dy;
 	if (e.pixel) 
@@ -99,7 +104,7 @@ ol.interaction.Ripple.prototype.rainDrop = function(e)
 
 /** Postcompose function
 */
-ol.interaction.Ripple.prototype.postcompose_ = function(e)
+ol_interaction_Ripple.prototype.postcompose_ = function(e)
 {	var ctx = e.context;
 	var canvas = ctx.canvas;
 	
@@ -188,3 +193,5 @@ ol.interaction.Ripple.prototype.postcompose_ = function(e)
 	// tell OL3 to continue postcompose animation
 	this.getMap().render(); 
 };
+
+export default ol_interaction_Ripple

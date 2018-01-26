@@ -5,6 +5,9 @@
 	Usefull function to handle geometric operations
 */
 
+import ol_geom_LineString from 'ol/geom/linestring'
+import ol_coordinate from 'ol/coordinate'
+import ol_extent from 'ol/extent'
 
 /** Distance beetween 2 points
 *	Usefull geometric functions
@@ -12,7 +15,7 @@
 * @param {ol.coordinate} p2 second point
 * @return {number} distance
 */
-ol.coordinate.dist2d = function(p1, p2)
+var ol_coordinate_dist2d = function(p1, p2)
 {	var dx = p1[0]-p2[0];
 	var dy = p1[1]-p2[1];
 	return Math.sqrt(dx*dx+dy*dy);
@@ -23,7 +26,7 @@ ol.coordinate.dist2d = function(p1, p2)
 * @param {ol.coordinate} p2 second point
 * @return {boolean}
 */
-ol.coordinate.equal = function(p1, p2)
+var ol_coordinate_equal = function(p1, p2)
 {	return (p1[0]==p2[0] && p1[1]==p2[1]);
 }
 
@@ -31,15 +34,15 @@ ol.coordinate.equal = function(p1, p2)
 * @param {ol.Feature} f
 * @return {ol.coordinate} the center
 */
-ol.coordinate.getFeatureCenter = function(f)
-{	return ol.coordinate.getGeomCenter (f.getGeometry());
+var ol_coordinate_getFeatureCenter = function(f)
+{	return ol_coordinate.getGeomCenter (f.getGeometry());
 };
 
 /** Get center coordinate of a geometry
 * @param {ol.Feature} geom
 * @return {ol.coordinate} the center
 */
-ol.coordinate.getGeomCenter = function(geom)
+var ol_coordinate_getGeomCenter = function(geom)
 {	switch (geom.getType())
 	{	case 'Point': 
 			return geom.getCoordinates();
@@ -48,7 +51,7 @@ ol.coordinate.getGeomCenter = function(geom)
 		case "Polygon":
 			return geom.getInteriorPoint().getCoordinates();
 		default:
-			return geom.getClosestPoint(ol.extent.getCenter(geom.getExtent()));
+			return geom.getClosestPoint(ol_extent.getCenter(geom.getExtent()));
 	};
 };
 
@@ -57,7 +60,7 @@ ol.coordinate.getGeomCenter = function(geom)
 * @param {ol.Coordinate | Array<ol.Coordinate>} pt points to split the line
 * @param {Number} tol distance tolerance for 2 points to be equal
 */
-ol.geom.LineString.prototype.splitAt = function(pt, tol)
+ol_geom_LineString.prototype.splitAt = function(pt, tol)
 {	if (!pt) return [this];
 	if (!tol) tol = 1e-10;
 	// Test if list of points
@@ -74,8 +77,8 @@ ol.geom.LineString.prototype.splitAt = function(pt, tol)
 		return result;
 	}
 	// Nothing to do
-	if (ol.coordinate.equal(pt,this.getFirstCoordinate())
-	 || ol.coordinate.equal(pt,this.getLastCoordinate())) 
+	if (ol_coordinate.equal(pt,this.getFirstCoordinate())
+	 || ol_coordinate.equal(pt,this.getLastCoordinate()))
 	{	return [this];
 	}
 	// Get 
@@ -84,15 +87,15 @@ ol.geom.LineString.prototype.splitAt = function(pt, tol)
 	var c = [];
 	for (var i=0; i<c0.length-1; i++)
 	{	// Filter equal points
-		if (ol.coordinate.equal(c0[i],c0[i+1])) continue;
+		if (ol_coordinate.equal(c0[i],c0[i+1])) continue;
 		// Extremity found  
-		if (ol.coordinate.equal(pt,c0[i+1]))
+		if (ol_coordinate.equal(pt,c0[i+1]))
 		{	ci.push(c0[i+1]);
 			c.push(new ol.geom.LineString(ci));
 			ci = [];
 		}
 		// Test alignement
-		else if (!ol.coordinate.equal(pt,c0[i]))
+		else if (!ol_coordinate.equal(pt,c0[i]))
 		{	var d1, d2;
 			if (c0[i][0] == c0[i+1][0])
 			{	d1 = d2 = (c0[i][1]-pt[1]) / (c0[i][1]-c0[i+1][1]);
@@ -112,7 +115,8 @@ ol.geom.LineString.prototype.splitAt = function(pt, tol)
 		}
 		ci.push(c0[i+1]);
 	}
-	if (ci.length>1) c.push (new ol.geom.LineString(ci));
+	if (ci.length>1) c.push (new ol_geom_LineString(ci));
 	if (c.length) return c;
 	else return [this];
 }
+

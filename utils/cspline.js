@@ -1,4 +1,12 @@
-﻿/** Create a cardinal spline version of this geometry. 
+﻿
+import ol_geom_Geometry from 'ol/geom/geometry'
+import ol_geom_GeometryCollection from 'ol/geom/geometrycollection'
+import ol_geom_MultiLineString from 'ol/geom/multilinestring'
+import ol_geom_Polygon from 'ol/geom/polygon'
+import ol_geom_MultiPolygon from 'ol/geom/multipolygon'
+import ol_geom_LineString from 'ol/geom/linestring'
+
+/** Create a cardinal spline version of this geometry.
 *	Original https://github.com/epistemex/cardinal-spline-js
 *	@see https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Cardinal_spline
 *
@@ -10,7 +18,7 @@
 
 /** Cache cspline calculation
 */
-ol.geom.Geometry.prototype.cspline = function(options)
+ol_geom_Geometry.prototype.cspline = function(options)
 {	// Calculate cspline
 	if (this.calcCSpline_)
 	{	if (this.csplineGeometryRevision != this.getRevision() 
@@ -27,41 +35,41 @@ ol.geom.Geometry.prototype.cspline = function(options)
 	}
 }
 
-ol.geom.GeometryCollection.prototype.calcCSpline_ = function(options)
+ol_geom_GeometryCollection.prototype.calcCSpline_ = function(options)
 {	var g=[], g0=this.getGeometries();
 	for (var i=0; i<g0.length; i++)
 	{	g.push(g0[i].cspline());
 	}
-	return new ol.geom.GeometryCollection(g);
+	return new ol_geom_GeometryCollection(g);
 }
 
-ol.geom.MultiLineString.prototype.calcCSpline_ = function(options)
+ol_geom_MultiLineString.prototype.calcCSpline_ = function(options)
 {	var g=[], g0=this.getLineStrings();
 	for (var i=0; i<g0.length; i++)
 	{	g.push(g0[i].cspline().getCoordinates());
 	}
-	return new ol.geom.MultiLineString(g);
+	return new ol_geom_MultiLineString(g);
 }
 
-ol.geom.Polygon.prototype.calcCSpline_ = function(options)
+ol_geom_Polygon.prototype.calcCSpline_ = function(options)
 {	var g=[], g0=this.getCoordinates();
 	for (var i=0; i<g0.length; i++)
-	{	g.push((new ol.geom.LineString(g0[i])).cspline().getCoordinates());
+	{	g.push((new ol_geom_LineString(g0[i])).cspline().getCoordinates());
 	}
-	return new ol.geom.Polygon(g);
+	return new ol_geom_Polygon(g);
 }
 
-ol.geom.MultiPolygon.prototype.calcCSpline_ = function(options)
+ol_geom_MultiPolygon.prototype.calcCSpline_ = function(options)
 {	var g=[], g0=this.getPolygons();
 	for (var i=0; i<g0.length; i++)
 	{	g.push(g0[i].cspline().getCoordinates());
 	}
-	return new ol.geom.MultiPolygon(g);
+	return new ol_geom_MultiPolygon(g);
 }
 
 /**
 */
-ol.geom.LineString.prototype.calcCSpline_ = function(options)
+ol_geom_LineString.prototype.calcCSpline_ = function(options)
  {	if (!options) options={};
 	var line = this.getCoordinates();
 	var tension = typeof options.tension === "number" ? options.tension : 0.5;
@@ -137,5 +145,9 @@ ol.geom.LineString.prototype.calcCSpline_ = function(options)
 		}
 	}
 
-	return new ol.geom.LineString(res);
+	return new ol_geom_LineString(res);
 }
+
+//NB: (Not confirmed)To use this module, you just have to :
+
+//   import('ol-ext/utils/cspline')

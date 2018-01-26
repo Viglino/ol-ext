@@ -4,21 +4,26 @@
 	
 */
 
+import ol from 'ol'
+import ol_featureAnimation from './featureanimation'
+
 /** Show an object for a given duration
  * @constructor
- * @extends {ol.featureAnimation}
- * @param {ol.featureAnimationOptions} options
+ * @extends {ol_featureAnimation}
+ * @param {ol_featureAnimationOptions} options
  */
-ol.featureAnimation.Show = function(options)
-{	ol.featureAnimation.call(this, options);
+var ol_featureAnimation_Show = function(options)
+{	ol_featureAnimation.call(this, options);
 }
-ol.inherits(ol.featureAnimation.Show, ol.featureAnimation);
+ol.inherits(ol_featureAnimation_Show, ol_featureAnimation);
 
 /** Animate: just show the object during the laps time
-* @param {ol.featureAnimationEvent} e
+* @param {ol_featureAnimationEvent} e
 */
-ol.featureAnimation.Show.prototype.animate = function (e)
+ol_featureAnimation_Show.prototype.animate = function (e)
 {	
 	this.drawGeom_(e, e.geom);
 	return (e.time <= this.duration_);
 }
+
+export default ol_featureAnimation_Show

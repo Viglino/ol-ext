@@ -2,6 +2,12 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_has from 'ol/has'
+import ol_style_Fill from 'ol/style/fill'
+import ol_color from 'ol/color'
+
 /**
  * @classdesc
  * Fill style with named pattern
@@ -11,25 +17,25 @@
  *	@param {ol.style.Image|undefined} options.image an image pattern, image must be preloaded to draw on first call
  *	@param {number|undefined} options.opacity opacity with image pattern, default:1
  *	@param {olx.style.fillPattern} options.pattern pattern name (override by image option)
- *	@param {ol.color} options.color pattern color
- *	@param {ol.style.Fill} options.fill fill color (background)
+ *	@param {ol_color} options.color pattern color
+ *	@param {ol_style_Fill} options.fill fill color (background)
  *	@param {number} options.offset pattern offset for hash/dot/circle/cross pattern
  *	@param {number} options.size line size for hash/dot/circle/cross pattern
  *	@param {number} options.spacing spacing for hash/dot/circle/cross pattern
  *	@param {number|bool} options.angle angle for hash pattern / true for 45deg dot/circle/cross
  *	@param {number} options.scale pattern scale 
- * @extends {ol.style.Fill}
+ * @extends {ol_style_Fill}
  * @implements {ol.structs.IHasChecksum}
  * @api
  */
-ol.style.FillPattern = function(options) 
+var ol_style_FillPattern = function(options)
 {	if (!options) options = {};
 
 	var pattern;
 
 	var canvas = this.canvas_ = document.createElement('canvas');
 	var scale = Number(options.scale)>0 ? Number(options.scale) : 1;
-	var ratio = scale*ol.has.DEVICE_PIXEL_RATIO || ol.has.DEVICE_PIXEL_RATIO;
+	var ratio = scale*ol_has.DEVICE_PIXEL_RATIO || ol_has.DEVICE_PIXEL_RATIO;
 
 	var ctx = canvas.getContext('2d');
 
@@ -63,15 +69,15 @@ ol.style.FillPattern = function(options)
 		canvas.height = Math.round(pat.height *ratio);
 		ctx.beginPath();
 		if (options.fill) 
-		{	ctx.fillStyle = ol.color.asString(options.fill.getColor());
+		{	ctx.fillStyle = ol_color.asString(options.fill.getColor());
 			ctx.fillRect(0,0, canvas.width, canvas.height);
 		}
 		ctx.scale(ratio,ratio);
 		ctx.lineCap = "round";
 		ctx.lineWidth = pat.stroke || 1;
 
-		ctx.fillStyle = ol.color.asString(options.color||"#000");
-		ctx.strokeStyle = ol.color.asString(options.color||"#000");
+		ctx.fillStyle = ol_color.asString(options.color||"#000");
+		ctx.strokeStyle = ol_color.asString(options.color||"#000");
 		if (pat.circles) for (var i=0; i<pat.circles.length; i++)
 		{	var ci = pat.circles[i]; 
 			ctx.beginPath();
@@ -133,18 +139,18 @@ ol.style.FillPattern = function(options)
 		}
 	}
 	
-	ol.style.Fill.call (this, { color: pattern });
+	ol_style_Fill.call (this, { color: pattern });
 
 };
-ol.inherits(ol.style.FillPattern, ol.style.Fill);
+ol.inherits(ol_style_FillPattern, ol_style_Fill);
 
 
 /**
  * Clones the style. 
- * @return {ol.style.FillPattern} 
+ * @return {ol_style_FillPattern}
  */
-ol.style.FillPattern.prototype.clone = function() 
-{	var s = ol.style.Fill.prototype.clone.call(this);
+ol_style_FillPattern.prototype.clone = function()
+{	var s = ol_style_Fill.prototype.clone.call(this);
 	s.canvas_ = this.canvas_;
 	return s;
 };
@@ -152,16 +158,16 @@ ol.style.FillPattern.prototype.clone = function()
 /** Get canvas used as pattern
 *	@return {canvas}
 */
-ol.style.FillPattern.prototype.getImage = function()
+ol_style_FillPattern.prototype.getImage = function()
 {	return this.canvas_;
 }
 
 /** Get pattern
 *	@param {olx.style.FillPatternOption}
 */
-ol.style.FillPattern.prototype.getPattern_ = function(options)
-{	var pat = ol.style.FillPattern.prototype.patterns[options.pattern] 
-		|| ol.style.FillPattern.prototype.patterns.dot;
+ol_style_FillPattern.prototype.getPattern_ = function(options)
+{	var pat = ol_style_FillPattern.prototype.patterns[options.pattern]
+		|| ol_style_FillPattern.prototype.patterns.dot;
 	var d = Math.round(options.spacing)||10;
 	var d2 = Math.round(d/2)+0.5;
 	switch (options.pattern)
@@ -274,9 +280,9 @@ ol.style.FillPattern.prototype.getPattern_ = function(options)
 *		- char {char}
 *		- font {string} default "10px Arial"
 */
-ol.style.FillPattern.addPattern = function (title, options)
+ol_style_FillPattern.addPattern = function (title, options)
 {	if (!options) options={};
-	ol.style.FillPattern.prototype.patterns[title || options.char] =
+	ol_style_FillPattern.prototype.patterns[title || options.char] =
 	{	width: options.width || options.size || 10,
 		height: options.height || options.size || 10,
 		font: options.font,
@@ -293,7 +299,7 @@ ol.style.FillPattern.addPattern = function (title, options)
 /** Patterns definitions
 	Examples : http://seig.ensg.ign.fr/fichchap.php?NOFICHE=FP31&NOCHEM=CHEMS009&NOLISTE=1&N=8
 */
-ol.style.FillPattern.prototype.patterns =
+ol_style_FillPattern.prototype.patterns =
 {
 	"hatch":
 	{	width:5,
@@ -550,7 +556,7 @@ ol.style.FillPattern.prototype.patterns =
 
 /**
  * /
-ol.style.FillPattern.prototype.getChecksum = function() 
+ol_style_FillPattern.prototype.getChecksum = function()
 {
 	var strokeChecksum = (this.stroke_!==null) ?
 		this.stroke_.getChecksum() : '-';
@@ -573,3 +579,6 @@ ol.style.FillPattern.prototype.getChecksum = function()
 	return this.checksums_[0];
 };
 /**/
+
+
+export default ol_style_FillPattern

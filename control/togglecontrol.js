@@ -1,25 +1,30 @@
-/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+/*	Copyright (c) 2016 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/** A simple toggle control 
+
+import ol from 'ol'
+import {ol_control_Button} from './buttoncontrol'
+import ol_control_Control from 'ol/control/control'
+
+/** A simple toggle control
  * The control can be created with an interaction to control its activation.
  *
  * @constructor
- * @extends {ol.control.Button}
+ * @extends {ol_control_Control}
  * @fires change:active, change:disable
- * @param {Object=} opt_options Control options.
+ * @param {Object=} options Control options.
  *		className {String} class of the control
  *		title {String} title of the control
  *		html {String} html to insert in the control
- *		interaction {ol.interaction} interaction associated with the control 
+ *		interaction {ol.interaction} interaction associated with the control
  *		active {bool} the control is created active, default false
  *		disable {bool} the control is created disabled, default false
  *		bar {ol.control.Bar} a subbar associated with the control (drawn when active if control is nested in a ol.control.Bar)
  *		autoActive {bool} the control will activate when shown in an ol.control.Bar, default false
  *		onToggle {function} callback when control is clicked (or use change:active event)
  */
-ol.control.Toggle = function(options) 
+var ol_control_Toggle = function(options)
 {	options = options || {};
 	var self = this;
 
@@ -36,12 +41,12 @@ ol.control.Toggle = function(options)
 			if (options.onToggle) options.onToggle.call(self, self.getActive());
 		};
 	options.className = (options.className||"") + " ol-toggle";
-	ol.control.Button.call(this, options);
+	ol_control_Button.call(this, options);
 
 	this.set("title", options.title);
 
 	this.set ("autoActivate", options.autoActivate);
-	if (options.bar) 
+	if (options.bar)
 	{	this.subbar_ = options.bar;
 		this.subbar_.setTarget(this.element);
 		$(this.subbar_.element).addClass("ol-option-bar");
@@ -50,22 +55,22 @@ ol.control.Toggle = function(options)
 	this.setActive (options.active);
 	this.setDisable (options.disable);
 };
-ol.inherits(ol.control.Toggle, ol.control.Button);
+ol.inherits(ol_control_Toggle, ol_control_Button);
 
 /**
- * Set the map instance the control is associated with 
+ * Set the map instance the control is associated with
  * and add interaction attached to it to this map.
- * @param {ol.Map} map The map instance.
+ * @param {_ol_Map_} map The map instance.
  */
-ol.control.Toggle.prototype.setMap = function(map)
+ol_control_Toggle.prototype.setMap = function(map)
 {	if (!map && this.getMap())
-	{	if (this.interaction_) 
+	{	if (this.interaction_)
 		{	this.getMap().removeInteraction (this.interaction_);
 		}
 		if (this.subbar_) this.getMap().removeControl (this.subbar_);
 	}
 
-	ol.control.Control.prototype.setMap.call(this, map);
+	ol_control_Control.prototype.setMap.call(this, map);
 
 	if (map)
 	{	if (this.interaction_) map.addInteraction (this.interaction_);
@@ -74,9 +79,9 @@ ol.control.Toggle.prototype.setMap = function(map)
 };
 
 /** Get the subbar associated with a control
-* @return {ol.control.Bar}
+* @return {ol_control_Bar}
 */
-ol.control.Toggle.prototype.getSubBar = function ()
+ol_control_Toggle.prototype.getSubBar = function ()
 {	return this.subbar_;
 };
 
@@ -85,14 +90,14 @@ ol.control.Toggle.prototype.getSubBar = function ()
  * @return {bool}.
  * @api stable
  */
-ol.control.Toggle.prototype.getDisable = function()
+ol_control_Toggle.prototype.getDisable = function()
 {	return $("button", this.element).prop("disabled");
 };
 
 /** Disable the control. If disable, the control will be deactivated too.
 * @param {bool} b disable (or enable) the control, default false (enable)
 */
-ol.control.Toggle.prototype.setDisable = function(b)
+ol_control_Toggle.prototype.setDisable = function(b)
 {	if (this.getDisable()==b) return;
 	$("button", this.element).prop("disabled", b);
 	if (b && this.getActive()) this.setActive(false);
@@ -105,13 +110,13 @@ ol.control.Toggle.prototype.setDisable = function(b)
  * @return {bool}.
  * @api stable
  */
-ol.control.Toggle.prototype.getActive = function()
+ol_control_Toggle.prototype.getActive = function()
 {	return $(this.element).hasClass("ol-active");
 };
 
 /** Toggle control state active/deactive
 */
-ol.control.Toggle.prototype.toggle = function()
+ol_control_Toggle.prototype.toggle = function()
 {	if (this.getActive()) this.setActive(false);
 	else this.setActive(true);
 };
@@ -119,7 +124,7 @@ ol.control.Toggle.prototype.toggle = function()
 /** Change control state
 * @param {bool} b activate or deactivate the control, default false
 */
-ol.control.Toggle.prototype.setActive = function(b)
+ol_control_Toggle.prototype.setActive = function(b)
 {	if (this.getActive()==b) return;
 	if (b) $(this.element).addClass("ol-active");
 	else $(this.element).removeClass("ol-active");
@@ -130,15 +135,17 @@ ol.control.Toggle.prototype.setActive = function(b)
 };
 
 /** Set the control interaction
-* @param {ol.interaction} i interaction to associate with the control
+* @param {_ol_interaction_} i interaction to associate with the control
 */
-ol.control.Toggle.prototype.setInteraction = function(i)
+ol_control_Toggle.prototype.setInteraction = function(i)
 {	this.interaction_ = i;
 };
 
 /** Get the control interaction
-* @return {ol.interaction} interaction associated with the control
+* @return {_ol_interaction_} interaction associated with the control
 */
-ol.control.Toggle.prototype.getInteraction = function()
+ol_control_Toggle.prototype.getInteraction = function()
 {	return this.interaction_;
 };
+
+export default ol_control_Toggle

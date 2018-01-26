@@ -7,12 +7,12 @@
 *	It will return an ordering function (f0,f1)
 *	@namespace
 */
-ol.ordering = {}
+var ol_ordering = {}
 
 /** y-Ordering
 *	@return ordering function (f0,f1)
 */
-ol.ordering.yOrdering = function(options)
+ol_ordering.yOrdering = function(options)
 {	return function(f0,f1)
 	{	return f0.getGeometry().getExtent()[1] < f1.getGeometry().getExtent()[1] ;
 	};
@@ -24,7 +24,7 @@ ol.ordering.yOrdering = function(options)
 *		equalFn: ordering function for equal values
 *	@return ordering function (f0,f1)
 */
-ol.ordering.zIndex = function(options)
+ol_ordering.zIndex = function(options)
 {	if (!options) options = {};
 	var attr = options.attribute || 'zIndex';
 	if (option.equalFn)
@@ -39,3 +39,5 @@ ol.ordering.zIndex = function(options)
 		};
 	}
 }
+
+export default ol_ordering

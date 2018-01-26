@@ -1,4 +1,7 @@
-/** jQuery plugin to export the map 
+
+import jsPDF from 'jspdf'
+
+/** jQuery plugin to export the map
 *
 * Export PDF :
 * @uses jspdf

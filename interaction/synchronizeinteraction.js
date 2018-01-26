@@ -2,17 +2,24 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_interaction_Interaction from 'ol/interaction/interaction'
+import ol_Map from 'ol/map'
+import ol_events from 'ol/events'
+import ol_events_EventType from 'ol/events/eventtype'
+
 /** Interaction synchronize
  * @constructor
- * @extends {ol.interaction.Interaction}
+ * @extends {ol_interaction_Interaction}
  * @param {olx.interaction.SynchronizeOptions} 
  *  - maps {Array<ol.Map>} An array of maps to synchronize with the map of the interaction
  */
-ol.interaction.Synchronize = function(options) 
+var ol_interaction_Synchronize = function(options)
 {	if (!options) options={};
 	var self = this;
 
-	ol.interaction.Interaction.call(this, 
+	ol_interaction_Interaction.call(this,
 		{	handleEvent: function(e)
 				{	if (e.type=="pointermove") { self.handleMove_(e); }
 					return true; 
@@ -22,25 +29,25 @@ ol.interaction.Synchronize = function(options)
 	this.maps = options.maps;
 
 };
-ol.inherits(ol.interaction.Synchronize, ol.interaction.Interaction);
+ol.inherits(ol_interaction_Synchronize, ol_interaction_Interaction);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {ol.Map} map Map.
+ * @param {ol_Map} map Map.
  * @api stable
  */
-ol.interaction.Synchronize.prototype.setMap = function(map) 
+ol_interaction_Synchronize.prototype.setMap = function(map)
 {	
 	if (this.getMap())
 	{
 		this.getMap().getView().un('change:center', this.syncMaps, this);
 		this.getMap().getView().un('change:rotation', this.syncMaps, this);
 		this.getMap().getView().un('change:resolution', this.syncMaps, this);
-		ol.events.unlisten(this.getMap().getViewport(), ol.events.EventType.MOUSEOUT, this.handleMouseOut_, this);
+		ol_events.unlisten(this.getMap().getViewport(), ol_events_EventType.MOUSEOUT, this.handleMouseOut_, this);
 	}
 	
-	ol.interaction.Interaction.prototype.setMap.call (this, map);
+	ol_interaction_Interaction.prototype.setMap.call (this, map);
 
 	if (map)
 	{	this.getMap().getView().on('change:center', this.syncMaps, this);
@@ -60,7 +67,7 @@ ol.interaction.Synchronize.prototype.setMap = function(map)
 
 /** Synchronize the maps
 */
-ol.interaction.Synchronize.prototype.syncMaps = function(e) 
+ol_interaction_Synchronize.prototype.syncMaps = function(e)
 {	var map = this.getMap();
 	if (!e) e = { type:'all' };
 	if (map)
@@ -98,7 +105,7 @@ ol.interaction.Synchronize.prototype.syncMaps = function(e)
 /** Cursor move > tells other maps to show the cursor
 * @param {ol.event} e "move" event
 */
-ol.interaction.Synchronize.prototype.handleMove_ = function(e) 
+ol_interaction_Synchronize.prototype.handleMove_ = function(e)
 {	for (var i=0; i<this.maps.length; i++)
 	{	this.maps[i].showTarget(e.coordinate);
 	}
@@ -109,7 +116,7 @@ ol.interaction.Synchronize.prototype.handleMove_ = function(e)
 /** Cursor out of map > tells other maps to hide the cursor
 * @param {event} e "mouseOut" event
 */
-ol.interaction.Synchronize.prototype.handleMouseOut_ = function(e, scope)
+ol_interaction_Synchronize.prototype.handleMouseOut_ = function(e, scope)
 {	for (var i=0; i<scope.maps.length; i++)
 	{
 		scope.maps[i].targetOverlay_.setPosition(undefined);
@@ -119,7 +126,7 @@ ol.interaction.Synchronize.prototype.handleMouseOut_ = function(e, scope)
 /** Show a target overlay at coord
 * @param {ol.coordinate} coord
 */
-ol.Map.prototype.showTarget = function(coord)
+ol_Map.prototype.showTarget = function(coord)
 {	if (!this.targetOverlay_)
 	{	var elt = $("<div>").addClass("ol-target");
 		this.targetOverlay_ = new ol.Overlay({ element: elt.get(0) });
@@ -134,8 +141,10 @@ ol.Map.prototype.showTarget = function(coord)
 
 /** Hide the target overlay
 */
-ol.Map.prototype.hideTarget = function()
+ol_Map.prototype.hideTarget = function()
 {
 	this.removeOverlay(this.targetOverlay_);
 	this.targetOverlay_ = undefined;
 };
+
+export default ol_interaction_Synchronize

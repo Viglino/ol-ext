@@ -2,19 +2,23 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_control_Control from 'ol/control/control'
+
 /**
  * @classdesc OpenLayers 3 swipe Control.
  *
  * @constructor
- * @extends {ol.control.Control}
- * @param {Object=} Control options.
+ * @extends {ol_control_Control}
+ * @param {Object=} Control opt_options.
  *	- layers {ol.layer} layer to swipe
  *	- rightLayer {ol.layer} layer to swipe on right side
  *	- className {string} control class name
  *	- position {number} position propertie of the swipe [0,1], default 0.5
  *	- orientation {vertical|horizontal} orientation propertie, default vertical
  */
-ol.control.Swipe = function(opt_options) 
+var ol_control_Swipe = function(opt_options)
 {	var options = opt_options || {};
 	var self = this;
 	
@@ -26,7 +30,7 @@ ol.control.Swipe = function(opt_options)
 
 	$(element).on ("mousedown touchstart", this, this.move );
     
-	ol.control.Control.call(this, 
+	ol_control_Control.call(this,
 	{	element: element
 	});
 	
@@ -52,13 +56,13 @@ ol.control.Swipe = function(opt_options)
 	this.set('position', options.position || 0.5);
 	this.set('orientation', options.orientation || 'vertical');
 };
-ol.inherits(ol.control.Swipe, ol.control.Control);
+ol.inherits(ol_control_Swipe, ol_control_Control);
 
 /**
  * Set the map instance the control associated with.
- * @param {ol.Map} map The map instance.
+ * @param {_ol_Map_} map The map instance.
  */
-ol.control.Swipe.prototype.setMap = function(map) 
+ol_control_Swipe.prototype.setMap = function(map)
 {   
 	if (this.getMap())
 	{	for (var i=0; i<this.layers.length; i++)
@@ -70,7 +74,7 @@ ol.control.Swipe.prototype.setMap = function(map)
 		this.getMap().renderSync();
 	}
 
-	ol.control.Control.prototype.setMap.call(this, map);
+	ol_control_Control.prototype.setMap.call(this, map);
 
 	if (map)
 	{	for (var i=0; i<this.layers.length; i++)
@@ -85,8 +89,8 @@ ol.control.Swipe.prototype.setMap = function(map)
 
 /** @private
 */
-ol.control.Swipe.prototype.isLayer_ = function(layer) 
-{	for (k=0; k<this.layers.length; k++)
+ol_control_Swipe.prototype.isLayer_ = function(layer)
+{	for (var k=0; k<this.layers.length; k++)
 	{	if (this.layers[k].layer === layer)  return k;
 	}
 	return -1;
@@ -96,10 +100,10 @@ ol.control.Swipe.prototype.isLayer_ = function(layer)
  *	@param {ol.layer|Array<ol.layer>} layer to clip
 *	@param {bool} add layer in the right part of the map, default left.
 */
-ol.control.Swipe.prototype.addLayer = function(layers, right) 
+ol_control_Swipe.prototype.addLayer = function(layers, right)
 {	if (!(layers instanceof Array)) layers = [layers];
 	for (var i=0; i<layers.length; i++)
-	{	l = layers[i];
+	{var l = layers[i];
 		if (this.isLayer_(l)<0)
 		{	this.layers.push({ layer:l, right:right });
 			if (this.getMap())
@@ -115,7 +119,7 @@ ol.control.Swipe.prototype.addLayer = function(layers, right)
 /** Remove a layer to clip
  *	@param {ol.layer|Array<ol.layer>} layer to clip
  */
-ol.control.Swipe.prototype.removeLayer = function(layers)
+ol_control_Swipe.prototype.removeLayer = function(layers)
 {	if (!(layers instanceof Array)) layers = [layers];
 	for (var i=0; i<layers.length; i++)
 	{	var k = this.isLayer_(layers[i]);
@@ -131,7 +135,7 @@ ol.control.Swipe.prototype.removeLayer = function(layers)
 
 /** @private
 */
-ol.control.Swipe.prototype.move = function(e) 
+ol_control_Swipe.prototype.move = function(e)
 {	var self = e.data;
 	switch (e.type)
 	{	case 'touchcancel': 
@@ -180,7 +184,7 @@ ol.control.Swipe.prototype.move = function(e)
 
 /** @private
 */
-ol.control.Swipe.prototype.precomposeLeft = function(e) 
+ol_control_Swipe.prototype.precomposeLeft = function(e)
 {	var ctx = e.context;
 	var canvas = ctx.canvas;
 	ctx.save();
@@ -192,7 +196,7 @@ ol.control.Swipe.prototype.precomposeLeft = function(e)
 
 /** @private
 */
-ol.control.Swipe.prototype.precomposeRight = function(e) 
+ol_control_Swipe.prototype.precomposeRight = function(e)
 {	var ctx = e.context;
 	var canvas = ctx.canvas;
 	ctx.save();
@@ -204,6 +208,8 @@ ol.control.Swipe.prototype.precomposeRight = function(e)
 
 /** @private
 */
-ol.control.Swipe.prototype.postcompose = function(e) 
+ol_control_Swipe.prototype.postcompose = function(e)
 {	e.context.restore();
 };
+
+export default ol_control_Swipe

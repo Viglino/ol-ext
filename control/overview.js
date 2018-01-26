@@ -2,6 +2,25 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_control_Control from 'ol/control/control'
+import ol_geom_Polygon from 'ol/geom/polygon'
+import ol_geom_Point from 'ol/geom/point'
+import ol_interaction_Pointer from 'ol/interaction/pointer'
+import ol_easing from 'ol/easing'
+import ol_Map from 'ol/map'
+import ol_Collection from 'ol/collection'
+import ol_View from 'ol/view'
+import ol_source_Vector from 'ol/source/vector'
+import ol_style_Style from 'ol/style/style'
+import ol_style_Circle from 'ol/style/circle'
+import ol_style_Fill from 'ol/style/fill'
+import ol_style_Stroke from 'ol/style/stroke'
+import ol_layer_Vector from 'ol/layer/vector'
+//TODO: replace ol.animation.pan with new {ol_interaction_Interaction.pan}
+//import ol_interaction_Interaction from 'ol/interaction/interaction'
+
 /**
  * OpenLayers 3 Layer Overview Control.
  * The overview can rotate with map. 
@@ -10,7 +29,7 @@
  * Change width/height of the overview trough css.
  *
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol_control_Control}
  * @param {Object=} options Control options.
  *	@param {ol.ProjectionLike} options.projection The projection. Default is EPSG:3857 (Spherical Mercator).
  *	@param {Number} options.minZoom default 0
@@ -21,7 +40,7 @@
  *	@param {ol.style.Style | Array.<ol.style.Style> | undefined} options.style style to draw the map extent on the overveiw
  *	@param {bool|elastic} options.panAnimation use animation to center map on click, default true
  */
-ol.control.Overview = function(options) 
+var ol_control_Overview = function(options)
 {	options = options || {};
 	var self = this;
 
@@ -47,17 +66,17 @@ ol.control.Overview = function(options)
 					.appendTo(element);
 	}
 
-	ol.control.Control.call(this, 
+	ol_control_Control.call(this,
 	{	element: element.get(0),
 		target: options.target
 	});
 
 	// Create a overview map
-	this.ovmap_ = new ol.Map(
-	{	controls: new ol.Collection(),
-		interactions: new ol.Collection(),
+	this.ovmap_ = new ol_Map(
+	{	controls: new ol_Collection(),
+		interactions: new ol_Collection(),
 		target: this.panel_.get(0),
-		view: new ol.View
+		view: new ol_View
 			({	zoom: 14,
 				center: [270148, 6247782],
 				projection: options.projection
@@ -68,21 +87,21 @@ ol.control.Overview = function(options)
 	this.oview_ = this.ovmap_.getView();
 
 	// Cache extent
-	this.extentLayer = new ol.layer.Vector(
+	this.extentLayer = new ol_layer_Vector(
 	{	name: 'Cache extent',
-		source: new ol.source.Vector(),
-		style: options.style || [new ol.style.Style(
-					{	image: new ol.style.Circle(
-						{	fill: new ol.style.Fill({
+		source: new ol_source_Vector(),
+		style: options.style || [new ol_style_Style(
+					{	image: new ol_style_Circle(
+						{	fill: new ol_style_Fill({
 								color: 'rgba(255,0,0, 1)'
 							}),
-							stroke: new ol.style.Stroke(
+							stroke: new ol_style_Stroke(
 							{	width: 7,
 								color: 'rgba(255,0,0, 0.8)'
 							}),
 							radius: 5
 						}),
-						stroke: new ol.style.Stroke(
+						stroke: new ol_style_Stroke(
 						{	width: 5,
 							color: "rgba(255,0,0,0.8)"
 						})
@@ -96,7 +115,7 @@ ol.control.Overview = function(options)
 	*	@param {Number} amplitude amplitude of the bounce [0,1] 
 	*	@return {Number}
 	*/
-	ol.easing.bounceFn = function (bounce, amplitude)
+	ol_easing.bounceFn = function (bounce, amplitude)
 	{	var a = (2*bounce+1) * Math.PI/2;
 		var b = amplitude>0 ? -1/amplitude : -100;
 		var c = - Math.cos(a) * Math.pow(2, b);
@@ -110,7 +129,7 @@ ol.control.Overview = function(options)
 	*	@param {Number} amplitude amplitude of the bounce [0,1] 
 	*	@return {Number}
 	*/
-	ol.easing.elasticFn = function (bounce, amplitude)
+	ol_easing.elasticFn = function (bounce, amplitude)
 	{	var a = 3*bounce * Math.PI/2;
 		var b = amplitude>0 ? -1/amplitude : -100;
 		var c = Math.cos(a) * Math.pow(2, b);
@@ -121,16 +140,16 @@ ol.control.Overview = function(options)
 	}
 
 	// Click on the preview center the map
-	this.ovmap_.addInteraction (new ol.interaction.Pointer(
+	this.ovmap_.addInteraction (new ol_interaction_Pointer(
 	{	handleDownEvent: function(evt)
-		{	// Old version OL3
+		{	//TODO: Old version OL3
 			if (ol.animation) 
 			{	var pan;
 				if (options.panAnimation !==false)
 				{	if (options.panAnimation=="elastic" || options.elasticPan) 
 					{	pan = ol.animation.pan(
 						{	duration: 1000,
-							easing: ol.easing.elasticFn(2,0.3),
+							easing: ol_easing.elasticFn(2,0.3),
 							source: self.getMap().getView().getCenter()
 						});
 					}
@@ -150,7 +169,7 @@ ol.control.Overview = function(options)
 				{	if (options.panAnimation=="elastic" || options.elasticPan) 
 					{	self.getMap().getView().animate(
 						{	center: evt.coordinate,
-							easing: ol.easing.elasticFn(2,0.3),
+							easing: ol_easing.elasticFn(2,0.3),
 							duration: 1000
 						});
 					}
@@ -167,18 +186,18 @@ ol.control.Overview = function(options)
 		}
 	}));
 };
-ol.inherits(ol.control.Overview, ol.control.Control);
+ol.inherits(ol_control_Overview, ol_control_Control);
 
 /** Get overview map
 *	@return {ol.Map}
 */
-ol.control.Overview.prototype.getOverviewMap = function() 
+ol_control_Overview.prototype.getOverviewMap = function()
 {	return this.ovmap_;
 }
 
 /** Toggle overview map
 */
-ol.control.Overview.prototype.toggleMap = function() 
+ol_control_Overview.prototype.toggleMap = function()
 {	$(this.element).toggleClass("ol-collapsed");
 	this.ovmap_.updateSize();
 }
@@ -186,7 +205,7 @@ ol.control.Overview.prototype.toggleMap = function()
 /** Set overview map position
 *	@param {top|bottom-left|right} 
 */
-ol.control.Overview.prototype.setPosition = function(align) 
+ol_control_Overview.prototype.setPosition = function(align)
 {	if (/top/.test(align)) $(this.element).addClass("ol-control-top");
 	else $(this.element).removeClass("ol-control-top");
 	if (/right/.test(align)) $(this.element).addClass("ol-control-right");
@@ -197,11 +216,11 @@ ol.control.Overview.prototype.setPosition = function(align)
  * Set the map instance the control associated with.
  * @param {ol.Map} map The map instance.
  */
-ol.control.Overview.prototype.setMap = function(map) 
+ol_control_Overview.prototype.setMap = function(map)
 {   if (this.getMap())
 	{	this.getMap().getView().un('propertychange', this.setView, this);
 	}
-	ol.control.Control.prototype.setMap.call(this, map);
+	ol_control_Control.prototype.setMap.call(this, map);
 	if (map) 
 	{	map.getView().on('propertychange', this.setView, this);
 		this.setView();
@@ -211,7 +230,7 @@ ol.control.Overview.prototype.setMap = function(map)
 
 /** Calculate the extent of the map and draw it on the overview
 */
-ol.control.Overview.prototype.calcExtent_ = function(extent)
+ol_control_Overview.prototype.calcExtent_ = function(extent)
 {	var map = this.getMap();
 	if (!map) return;
 	
@@ -239,10 +258,10 @@ ol.control.Overview.prototype.calcExtent_ = function(extent)
 			extent[i][0] = center[0] + x * cos - y * sin;
 			extent[i][1] = center[1] + x * sin + y * cos;
 		}
-		f.setGeometry (new ol.geom.Polygon( [ extent ]));
+		f.setGeometry (new ol_geom_Polygon( [ extent ]));
 	}
 	else 
-	{	f.setGeometry (new ol.geom.Point( center ));
+	{	f.setGeometry (new ol_geom_Point( center ));
 	}
 	source.addFeature(f);
 }
@@ -250,7 +269,7 @@ ol.control.Overview.prototype.calcExtent_ = function(extent)
 /**
 *	@private
 */
-ol.control.Overview.prototype.setView = function(e) 
+ol_control_Overview.prototype.setView = function(e)
 {	if (!e) 
 	{	// refresh all
 		this.setView({key:'rotation'});
@@ -283,3 +302,5 @@ ol.control.Overview.prototype.setView = function(e)
 	}
 	this.calcExtent_();
 }
+
+export default ol_control_Overview

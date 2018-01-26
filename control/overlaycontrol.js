@@ -2,24 +2,28 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_control_Control from 'ol/control/control'
+
 /** Control overlay for OL3
  * The overlay control is a control that display an overlay over the map
  *
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol_control_Control}
  * @fire change:visible
- * @param {Object=} opt_options Control options.
+ * @param {Object=} options Control options.
  *	- className {String} class of the control
  *	- hideOnClick {bool} hide the control on click, default false
  *	- closeBox {bool} add a closeBox to the control, default false
  */
-ol.control.Overlay = function(options) 
+var ol_control_Overlay = function(options)
 {	if (!options) options={};
 	
 	var element = $("<div>").addClass('ol-unselectable ol-overlay');
 	if (options.className) element.addClass(options.className);
 	
-	ol.control.Control.call(this, 
+	ol_control_Control.call(this,
 	{	element: element.get(0),
 		target: options.target
 	});
@@ -32,12 +36,12 @@ ol.control.Overlay = function(options)
 	this._timeout = false;
 	this.setContent (options.content);
 };
-ol.inherits(ol.control.Overlay, ol.control.Control);
+ol.inherits(ol_control_Overlay, ol_control_Control);
 
 /** Set the content of the overlay
 * @param {string} html the html to display in the control (or a jQuery object) 
 */
-ol.control.Overlay.prototype.setContent = function (html) 
+ol_control_Overlay.prototype.setContent = function (html)
 {	var self = this;
 	if (html) 
 	{	var elt = $(this.element);
@@ -54,7 +58,7 @@ ol.control.Overlay.prototype.setContent = function (html)
 * @param {string} html the html to display in the control (or a jQuery object) 
 * @param {ol.coordinate} coord coordinate of the top left corner of the control to start from
 */
-ol.control.Overlay.prototype.show = function (html, coord) 
+ol_control_Overlay.prototype.show = function (html, coord)
 {	var self = this;
 	var elt = $(this.element).show();
 	if (coord)
@@ -77,7 +81,7 @@ ol.control.Overlay.prototype.show = function (html, coord)
 
 /** Set the control visibility hidden
 */
-ol.control.Overlay.prototype.hide = function () 
+ol_control_Overlay.prototype.hide = function ()
 {	var elt = $(this.element).removeClass("ol-visible");
 	if (this.center_)
 	{	elt.css({"top":this.center_[1], "left":this.center_[0] })
@@ -90,7 +94,7 @@ ol.control.Overlay.prototype.hide = function ()
 
 /** Toggle control visibility
 */
-ol.control.Overlay.prototype.toggle = function () 
+ol_control_Overlay.prototype.toggle = function ()
 {	if (this.getVisible()) this.hide();
 	else this.show();
 }
@@ -98,14 +102,16 @@ ol.control.Overlay.prototype.toggle = function ()
 /** Get the control visibility
 * @return {boolean} b 
 */
-ol.control.Overlay.prototype.getVisible = function () 
+ol_control_Overlay.prototype.getVisible = function ()
 {	return ($(this.element).css('display') != 'none');
 };
 
 /** Change class name
 * @param {String} className 
 */
-ol.control.Overlay.prototype.setClass = function (className) 
+ol_control_Overlay.prototype.setClass = function (className)
 {	var vis = $(this.element).hasClass("ol-visible");
 	$(this.element).removeClass().addClass('ol-unselectable ol-overlay'+(vis?" ol-visible ":" ")+className);
 };
+
+export default ol_control_Overlay

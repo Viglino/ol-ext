@@ -3,16 +3,20 @@
 	released under the CeCILL license (http://www.cecill.info/).
 	
 */
+
+import ol from 'ol'
+import ol_featureAnimation from './featureanimation'
+
 /** Path animation: feature follow a path
  * @constructor
- * @extends {ol.featureAnimation}
- * @param {ol.featureAnimationPathOptions} options
+ * @extends {ol_featureAnimation}
+ * @param {ol_featureAnimationPathOptions} options
  *  @param {Number} options.speed speed of the feature, if 0 the duration parameter will be used instead, default 0
  *  @param {ol.geom.LineString|ol.Feature} options.path the path to follow
  */
-ol.featureAnimation.Path = function(options)
+var ol_featureAnimation_Path = function(options)
 {	options = options || {};
-	ol.featureAnimation.call(this, options);
+	ol_featureAnimation.call(this, options);
 	this.speed_ = options.speed || 0;
 	this.path_ = options.path;
 	if (this.path_ && this.path_.getGeometry) this.path_ = this.path_.getGeometry();
@@ -24,12 +28,12 @@ ol.featureAnimation.Path = function(options)
 	else this.dist_ = 0;
 	if (this.speed_>0) this.duration_ = this.dist_/this.speed_;
 }
-ol.inherits(ol.featureAnimation.Path, ol.featureAnimation);
+ol.inherits(ol_featureAnimation_Path, ol_featureAnimation);
 
 /** Animate
-* @param {ol.featureAnimationEvent} e
+* @param {ol_featureAnimationEvent} e
 */
-ol.featureAnimation.Path.prototype.animate = function (e)
+ol_featureAnimation_Path.prototype.animate = function (e)
 {	// First time 
 	if (!e.time) 
 	{	if (!this.dist_) return false;
@@ -57,3 +61,5 @@ ol.featureAnimation.Path.prototype.animate = function (e)
 	
 	return (e.time <= this.duration_);
 }
+
+export default ol_featureAnimation_Path

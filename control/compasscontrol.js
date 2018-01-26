@@ -2,19 +2,23 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+import ol from 'ol'
+import ol_control_Control from 'ol/control/control'
+
 /**
  * Draw a compass on the map. The position/size of the control is defined in the css.
  *
  * @constructor
- * @extends {ol.control.Control}
- * @param {Object=} options Control options. The style {ol.style.Style} option is usesd to draw the text.
+ * @extends {ol_control_Control}
+ * @param {Object=} options Control options. The style {_ol_style_Stroke_} option is usesd to draw the text.
  *	@param {string} options.className class name for the control
  *	@param {Image} options.image an image, default use the src option or a default image
  *	@param {string} options.src image src, default use the image option or a default image
  *	@param {boolean} options.rotateVithView rotate vith view (false to show watermark), default true
- *	@param {ol.style.Stroke} options.style style to draw the lines, default draw no lines
+ *	@param {_ol_style_Stroke_} options.style style to draw the lines, default draw no lines
  */
-ol.control.Compass = function(options) 
+var ol_control_Compass = function(options)
 {	var self = this;
 	if (!options) options = {};
 	
@@ -24,7 +28,7 @@ ol.control.Compass = function(options)
 	elt.style.position = "absolute";
 	elt.style.visibility = "hidden";
 	
-	ol.control.Control.call(this, { element: elt });
+	ol_control_Control.call(this, { element: elt });
 
 	this.set('rotateVithView', options.rotateWithView!==false);
 	// Style to draw the lines
@@ -45,18 +49,18 @@ ol.control.Compass = function(options)
 	this.da_ = [];
 	for (var i=0; i<8; i++) this.da_[i] = [ Math.cos(Math.PI*i/8), Math.sin(Math.PI*i/8) ];
 };
-ol.inherits(ol.control.Compass, ol.control.Control);
+ol.inherits(ol_control_Compass, ol_control_Control);
 
 /**
  * Remove the control from its current map and attach it to the new map.
- * @param {ol.Map} map Map.
+ * @param {_ol_Map_} map Map.
  * @api stable
  */
-ol.control.Compass.prototype.setMap = function (map)
+ol_control_Compass.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
 	if (oldmap) oldmap.un('postcompose', this.drawCompass_, this);
 	
-	ol.control.Control.prototype.setMap.call(this, map);
+	ol_control_Control.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 
 	// Get change (new layer added or removed)
@@ -68,7 +72,7 @@ ol.control.Compass.prototype.setMap = function (map)
  * @param {number} s the size of the compass
  * @private
  */
-ol.control.Compass.prototype.defaultCompass_ = function (s, color)
+ol_control_Compass.prototype.defaultCompass_ = function (s, color)
 {	var canvas = document.createElement('canvas');
 	var ctx = canvas.getContext("2d");
 	var s = canvas.width = canvas.height;
@@ -130,7 +134,7 @@ ol.control.Compass.prototype.defaultCompass_ = function (s, color)
 * @param {ol.event} e postcompose event
 * @private
 */
-ol.control.Compass.prototype.drawCompass_ = function(e)
+ol_control_Compass.prototype.drawCompass_ = function(e)
 {	var ctx = e.context;
 	var canvas = ctx.canvas;
 
@@ -173,3 +177,5 @@ ol.control.Compass.prototype.drawCompass_ = function(e)
 
 	ctx.restore();
 };
+
+export default ol_control_Compass

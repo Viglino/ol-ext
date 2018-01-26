@@ -4,6 +4,11 @@
 *
 *  Shadow image style for point vector features
 */
+
+import ol from 'ol'
+import ol_style_Fill from 'ol/style/fill'
+import ol_style_RegularShape from 'ol/style/regularshape'
+
 /**
  * @requires ol.style.Circle
  * @requires ol.structs.IHasChecksum
@@ -16,14 +21,14 @@
  *
  * @constructor
  * @param {olx.style.PhotoSymbolOptions=} opt_options Options.
- * @extends {ol.style.RegularShape}
+ * @extends {ol_style_RegularShape}
  * @implements {ol.structs.IHasChecksum}
  * @api
  */
-ol.style.Shadow = function(opt_options) 
+var ol_style_Shadow = function(opt_options)
 {	options = opt_options || {};
-	if (!options.fill) options.fill = new ol.style.Fill({ color: "rgba(0,0,0,0.5)" });
-	ol.style.RegularShape.call (this,{ radius: options.radius, fill: options.fill });
+	if (!options.fill) options.fill = new ol_style_Fill({ color: "rgba(0,0,0,0.5)" });
+	ol_style_RegularShape.call (this,{ radius: options.radius, fill: options.fill });
 
 	this.fill_ = options.fill;
 	this.radius_ = options.radius;
@@ -32,14 +37,14 @@ ol.style.Shadow = function(opt_options)
 
 	this.renderShadow_();
 };
-ol.inherits(ol.style.Shadow, ol.style.RegularShape);
+ol.inherits(ol_style_Shadow, ol_style_RegularShape);
 
 /**
  * Clones the style. 
- * @return {ol.style.Shadow} 
+ * @return {ol_style_Shadow}
  */
-ol.style.Shadow.prototype.clone = function() 
-{	var s = new ol.style.Shadow(
+ol_style_Shadow.prototype.clone = function()
+{	var s = new ol_style_Shadow(
 	{	fill: this.fill_,
 		radius: this.radius_,
 		blur: this.blur_,
@@ -54,7 +59,7 @@ ol.style.Shadow.prototype.clone = function()
 /**
  * @private
  */
-ol.style.Shadow.prototype.renderShadow_ = function() 
+ol_style_Shadow.prototype.renderShadow_ = function()
 {	
 	var radius = this.radius_;
 	
@@ -91,7 +96,7 @@ ol.style.Shadow.prototype.renderShadow_ = function()
 /**
  * @inheritDoc
  */
-ol.style.Shadow.prototype.getChecksum = function() 
+ol_style_Shadow.prototype.getChecksum = function()
 {
 	var strokeChecksum = (this.stroke_!==null) ?
 		this.stroke_.getChecksum() : '-';
@@ -113,3 +118,5 @@ ol.style.Shadow.prototype.getChecksum = function()
 
 	return this.checksums_[0];
 };
+
+export default ol_style_Shadow

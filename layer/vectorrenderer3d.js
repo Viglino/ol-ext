@@ -1,21 +1,25 @@
-﻿/** ol.layer.Vector.prototype.setRender3D
+﻿
+import ol_layer_Vector from 'ol/layer/vector'
+import ol_easing from 'ol/easing'
+
+/** ol.layer.Vector.prototype.setRender3D
  * @extends {ol.layer.Vector}
- * @param {ol.render3D} 
+ * @param {ol_render3D}
  */
-ol.layer.Vector.prototype.setRender3D = function (r)
+ol_layer_Vector.prototype.setRender3D = function (r)
 {	r.setLayer(this);
 }
 
 /** 
  *	@classdesc
- *	ol.render3D 3D vector layer rendering
+ *	ol_render3D 3D vector layer rendering
  *	@constructor
  *	@param {olx.render3DOption}
  *		- masResolution {number} max resolution to render 3D
  *		- defaultHeight {number} default height if none is return by a propertie
  *		- height {function|string|Number} a height function (return height giving a feature) or a popertie name for the height or a fixed value
  */
-ol.render3D = function (options)
+ol_render3D = function (options)
 {	var options = options || {};
 	
 	this.maxResolution_ = options.maxResolution || 100
@@ -25,7 +29,7 @@ ol.render3D = function (options)
 
 /** Calculate 3D at potcompose
 */
-ol.render3D.prototype.onPostcompose_ = function(e)
+ol_render3D.prototype.onPostcompose_ = function(e)
 {	var res = e.frameState.viewState.resolution;
 	if (res > this.maxResolution_) return;
 	this.res_ = res*400;
@@ -73,7 +77,7 @@ ol.render3D.prototype.onPostcompose_ = function(e)
 
 /** Set layer to render 3D
 */
-ol.render3D.prototype.setLayer = function(l)
+ol_render3D.prototype.setLayer = function(l)
 {	if (this.layer_) this.layer_.un ('postcompose', this.onPostcompose_, this);
 	this.layer_ = l;
 	l.on ('postcompose', this.onPostcompose_, this);
@@ -83,7 +87,7 @@ ol.render3D.prototype.setLayer = function(l)
 *	@param {function|string|number} a height function or a popertie name or a fixed value
 *	@return {function} function(f) return height of the feature f
 */
-ol.render3D.prototype.getHfn= function(h)
+ol_render3D.prototype.getHfn= function(h)
 {	switch (typeof(h))
 	{	case 'function': return h;
 		case 'string': 
@@ -104,12 +108,12 @@ ol.render3D.prototype.getHfn= function(h)
 *		- easing {ol.easing} an ol easing function
 *	@api
 */
-ol.render3D.prototype.animate = function(options)
+ol_render3D.prototype.animate = function(options)
 {	options = options || {};
 	this.toHeight_ = this.getHfn(options.height);
 	this.animate_ = new Date().getTime();
 	this.animateDuration_ = options.duration ||1000;
-	this.easing_ = options.easing || ol.easing.easeOut;
+	this.easing_ = options.easing || ol_easing.easeOut;
 	// Force redraw
 	this.layer_.changed();
 }
@@ -117,7 +121,7 @@ ol.render3D.prototype.animate = function(options)
 /** Check if animation is on
 *	@return {bool}
 */
-ol.render3D.prototype.animating = function()
+ol_render3D.prototype.animating = function()
 {	if (this.animate_ && new Date().getTime() - this.animate_ > this.animateDuration_) 
 	{	this.animate_ = false;
 	}
@@ -126,7 +130,7 @@ ol.render3D.prototype.animating = function()
 
 /** 
 */
-ol.render3D.prototype.getFeatureHeight = function (f)
+ol_render3D.prototype.getFeatureHeight = function (f)
 {	if (this.animate_)
 	{	var h1 = this.height_(f);
 		var h2 = this.toHeight_(f);
@@ -137,7 +141,7 @@ ol.render3D.prototype.getFeatureHeight = function (f)
 
 /**
 */
-ol.render3D.prototype.hvector_ = function (pt, h)
+ol_render3D.prototype.hvector_ = function (pt, h)
 {	p0 = [	pt[0]*this.matrix_[0] + pt[1]*this.matrix_[1] + this.matrix_[4],
 			pt[0]*this.matrix_[2] + pt[1]*this.matrix_[3] + this.matrix_[5]
 		];
@@ -149,7 +153,7 @@ ol.render3D.prototype.hvector_ = function (pt, h)
 
 /**
 */
-ol.render3D.prototype.getFeature3D_ = function (f, h)
+ol_render3D.prototype.getFeature3D_ = function (f, h)
 {	var c = f.getGeometry().getCoordinates();
 	switch (f.getGeometry().getType())
 	{	case "Polygon":
@@ -175,7 +179,7 @@ ol.render3D.prototype.getFeature3D_ = function (f, h)
 
 /**
 */
-ol.render3D.prototype.drawFeature3D_ = function(ctx, build)
+ol_render3D.prototype.drawFeature3D_ = function(ctx, build)
 {	// Construct
 	for (var i=0; i<build.length; i++) 
 	{	
@@ -248,3 +252,5 @@ ol.render3D.prototype.drawFeature3D_ = function(ctx, build)
 		}
 	}
 }
+
+export default ol_render3D

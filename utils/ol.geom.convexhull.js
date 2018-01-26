@@ -7,6 +7,8 @@
 	@see https://en.wikipedia.org/wiki/Convex_hull_algorithms
 */
 
+import ol_geom_Geometry from 'ol/geom/geometry'
+
 (function(){
 
 /* Tests if a point is left or right of line (a,b).
@@ -23,7 +25,7 @@ function clockwise (a, b, o)
 * @param {Array<ol.geom.Point>} points an array of 2D points 
 * @return {Array<ol.geom.Point>} the convex hull vertices
 */
-ol.coordinate.convexHull = function (points) 
+var ol_coordinate_convexHull = function (points)
 {	// Sort by increasing x and then y coordinate
 	points.sort(function(a, b) 
 	{	return a[0] == b[0] ? a[1] - b[1] : a[0] - b[0];
@@ -87,8 +89,8 @@ function getCoordinates(geom)
 /** Compute a convex hull on a geometry using Andrew's Monotone Chain Algorithm
 * @return {Array<ol.geom.Point>} the convex hull vertices
 */
-ol.geom.Geometry.prototype.convexHull = function()
-{	return ol.coordinate.convexHull( getCoordinates(this) );
+ol_geom_Geometry.prototype.convexHull = function()
+{	return ol_coordinate_convexHull( getCoordinates(this) );
 };
 
 

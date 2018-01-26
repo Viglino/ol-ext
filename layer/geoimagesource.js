@@ -2,7 +2,7 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 	
-	ol.source.GeoImage is a layer source with georeferencement to place it on a map.
+	ol_source_GeoImage is a layer source with georeferencement to place it on a map.
 	
 	olx.source.GeoImageOptions:
 	{	url: {string} url of the static image
@@ -15,12 +15,16 @@
 	}
 */
 
+import ol from 'ol'
+import ol_source_ImageCanvas from 'ol/source/imagecanvas'
+import ol_extent from 'ol/extent'
+
 /** Layer source with georeferencement to place it on a map
 * @constructor 
-* @extends {ol.source.ImageCanvas}
+* @extends {ol_source_ImageCanvas}
 * @param {olx.source.GeoImageOptions=} options
 */
-ol.source.GeoImage = function(opt_options)
+var ol_source_GeoImage = function(opt_options)
 {	var options = { 
 		attributions: opt_options.attributions,
 		logo: opt_options.logo,
@@ -90,17 +94,17 @@ ol.source.GeoImage = function(opt_options)
 		return canvas;
 	}
 
-	ol.source.ImageCanvas.call (this, options);	
+	ol_source_ImageCanvas.call (this, options);	
 	this.setCrop (this.crop);
 };
-ol.inherits (ol.source.GeoImage, ol.source.ImageCanvas);
+ol.inherits (ol_source_GeoImage, ol_source_ImageCanvas);
 
 /**
  * Get coordinate of the image center.
  * @return {ol.Coordinate} coordinate of the image center.
  * @api stable
  */
-ol.source.GeoImage.prototype.getCenter = function()
+ol_source_GeoImage.prototype.getCenter = function()
 {	return this.center;
 }
 /**
@@ -108,7 +112,7 @@ ol.source.GeoImage.prototype.getCenter = function()
  * @param {ol.Coordinate} coordinate of the image center.
  * @api stable
  */
-ol.source.GeoImage.prototype.setCenter = function(center)
+ol_source_GeoImage.prototype.setCenter = function(center)
 {	this.center = center;
 	this.changed();
 }
@@ -118,7 +122,7 @@ ol.source.GeoImage.prototype.setCenter = function(center)
  * @return {ol.size} image scale (along x and y axis).
  * @api stable
  */
-ol.source.GeoImage.prototype.getScale = function()
+ol_source_GeoImage.prototype.getScale = function()
 {	return this.scale;
 }
 /**
@@ -126,7 +130,7 @@ ol.source.GeoImage.prototype.getScale = function()
  * @param {ol.size|Number} image scale (along x and y axis or both).
  * @api stable
  */
-ol.source.GeoImage.prototype.setScale = function(scale)
+ol_source_GeoImage.prototype.setScale = function(scale)
 {	switch (typeof(scale))
 	{	case 'number':
 			scale = [scale,scale];
@@ -145,7 +149,7 @@ ol.source.GeoImage.prototype.setScale = function(scale)
  * @return {Number} rotation in degre.
  * @api stable
  */
- ol.source.GeoImage.prototype.getRotation = function()
+ ol_source_GeoImage.prototype.getRotation = function()
 {	return this.rotate;
 }
 /**
@@ -153,7 +157,7 @@ ol.source.GeoImage.prototype.setScale = function(scale)
  * @param {Number} rotation in radian.
  * @api stable
  */
- ol.source.GeoImage.prototype.setRotation = function(angle)
+ ol_source_GeoImage.prototype.setRotation = function(angle)
 {	this.rotate = angle;
 	this.changed();
 }
@@ -162,7 +166,7 @@ ol.source.GeoImage.prototype.setScale = function(scale)
  * Get the image.
  * @api stable
  */
- ol.source.GeoImage.prototype.getImage = function()
+ ol_source_GeoImage.prototype.getImage = function()
 {	return this.image;
 }
 
@@ -171,7 +175,7 @@ ol.source.GeoImage.prototype.setScale = function(scale)
  * @return {ol.extent} image crop extent.
  * @api stable
  */
- ol.source.GeoImage.prototype.getCrop = function()
+ ol_source_GeoImage.prototype.getCrop = function()
 {	return this.crop;
 }
 
@@ -181,7 +185,7 @@ ol.source.GeoImage.prototype.setScale = function(scale)
  * @param {ol.geom.LineString} coords of the mask
  * @api stable
  */
- ol.source.GeoImage.prototype.setMask = function(mask)
+ ol_source_GeoImage.prototype.setMask = function(mask)
 {	this.mask = mask;
 	this.changed();
 }
@@ -191,7 +195,7 @@ ol.source.GeoImage.prototype.setScale = function(scale)
  * @return {ol.geom.LineString} coords of the mask
  * @api stable
  */
- ol.source.GeoImage.prototype.getMask = function()
+ ol_source_GeoImage.prototype.getMask = function()
 {	return this.mask;
 }
 
@@ -200,7 +204,7 @@ ol.source.GeoImage.prototype.setScale = function(scale)
  * @param {ol.extent|Number} image crop extent or a number to crop from original size.
  * @api stable
  */
- ol.source.GeoImage.prototype.setCrop = function(crop)
+ ol_source_GeoImage.prototype.setCrop = function(crop)
 {	// Image not loaded => get it latter
 	if (!this.image.naturalWidth) 
 	{	this.crop = crop;
@@ -216,7 +220,7 @@ ol.source.GeoImage.prototype.setScale = function(scale)
 				break;
 			default: return;
 		}
-		var crop = ol.extent.boundingExtent([ [crop[0],crop[1]], [crop[2],crop[3]] ]);
+		var crop = ol_extent.boundingExtent([ [crop[0],crop[1]], [crop[2],crop[3]] ]);
 		this.crop = [ Math.max(0,crop[0]), Math.max(0,crop[1]), Math.min(this.image.naturalWidth,crop[2]), Math.min(this.image.naturalHeight,crop[3]) ];
 	}
 	else this.crop = [0,0, this.image.naturalWidth,this.image.naturalHeight];
@@ -225,3 +229,5 @@ ol.source.GeoImage.prototype.setScale = function(scale)
 	this.imageSize = [ this.crop[2]-this.crop[0], this.crop[3]-this.crop[1] ];
 	this.changed();
 }
+
+export default ol_source_GeoImage
