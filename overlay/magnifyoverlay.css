@@ -1,0 +1,40 @@
+.ol-overlay-container .ol-magnify 
+{	background: rgba(0,0,0, 0.5);
+	border:3px solid #369;
+	border-radius: 50%;
+	height: 150px;
+	width: 150px;
+	overflow: hidden;
+	box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
+	position:relative;
+	z-index:0;
+}
+
+.ol-overlay-container .ol-magnify:before 
+{	border-radius: 50%;
+	box-shadow: 0 0 40px 2px rgba(0, 0, 0, 0.25) inset;
+	content: "";
+	display: block;
+	height: 100%;
+	left: 0;
+	position: absolute;
+	top: 0;
+	width: 100%;
+	z-index: 1;
+}
+
+.ol-overlay-container .ol-magnify:after 
+{
+	border-radius: 50%;
+	box-shadow: 0 0 20px 7px rgba(255, 255, 255, 1);
+	content: "";
+	display: block;
+	height: 0;
+	left: 23%;
+	position: absolute;
+	top: 20%;
+	width: 20%;
+	z-index: 1;
+	transform: rotate(-40deg);
+	-webkit-transform: rotate(-40deg);
+}
