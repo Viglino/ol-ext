@@ -24,8 +24,8 @@ import ol_Observable from 'ol/observable'
 *		to be used to make the feature selectable when playing animation 
 *		(@see {@link ../examples/map.featureanimation.select.html}), default the feature 
 *		will be hidden when playing (and niot selectable)
-*	@param {ol_easing Function} options.fade an easing function used to fade in the feature, default none
-*	@param {ol_easing Function} options.easing an easing function for the animation, default ol_easing.linear
+*	@param {ol_easing_Function} options.fade an easing function used to fade in the feature, default none
+*	@param {ol_easing_Function} options.easing an easing function for the animation, default ol_easing.linear
 */
 var ol_featureAnimation = function(options)
 {	options = options || {};
