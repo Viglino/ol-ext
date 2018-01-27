@@ -1,11 +1,44 @@
-﻿/** Gulp file to create dist
+﻿/* Gulp file to create dist
 */
 var gulp = require("gulp");
 var concat = require("gulp-concat");
 var cssnext = require("gulp-cssnext");
 var minify = require("gulp-minify")
 var header = require('gulp-header');
-var jsdoc = require('gulp-jsdoc3');
+
+/* Transform ES6 to create the ./dist */
+var PluginError = require('plugin-error');
+var through = require('through2');
+
+function transform() {
+  return through.obj(function(file, encoding, callback) {
+    if (file.isNull()) {
+        // nothing to do
+        return callback(null, file);
+    }
+    if (file.isStream()) {
+        // file.contents is a Stream - https://nodejs.org/api/stream.html
+        this.emit('error', new PluginError("BUILD", 'Streams not supported!'));
+
+    } else if (file.isBuffer()) {
+      // file content
+      content = file.contents.toString();
+      if (content) {
+        // change ol_namespace_Class => ol.namespace.Class
+        content = content.replace(/(\bol_([a-z,A-Z]*)_([a-z,A-Z]*))/g,"ol.$2.$3");
+        // change ol_Class => ol.namespace.Class
+        content = content.replace(/(\bol_([a-z,A-Z]*))/g,"ol.$2");
+        // change var ol.Class => ol.Class
+        content = content.replace(/(\bvar ol\.([a-z,A-Z]*))/g,"ol.$2");
+        // remove import / export
+        content = content.replace(/\bimport (.*)|\bexport (.*)/g,"");
+        // return content
+        file.contents = new Buffer(content);
+      }
+      return callback(null, file);
+    }
+  });
+};
 
 // Retrieve option (--debug for css)
 var options = require("minimist")(process.argv.slice(2));
@@ -15,7 +48,7 @@ var name = "ol-ext";
 var pkg = require('./package.json');
 var banner = ['/**',
   ' * <%= pkg.name %> - <%= pkg.description %>',
-  ' * @abstract <%= pkg.keywords %>',
+  ' * @description <%= pkg.keywords %>',
   ' * @version v<%= pkg.version %>',
   ' * @author <%= pkg.author %>',
   ' * @link <%= pkg.homepage %>',
@@ -26,14 +59,14 @@ var banner = ['/**',
 // Build css. Use --debug to build in debug mode
 gulp.task("css", function() {
 	gulp.src([
-		"./control/*.css", "!./control/piratecontrol.css",
-		"./featureanimation/*.css", 
-		"./filter/*.css",
-		"./interaction/*.css",
-		"./layer/*.css",
-		"./overlay/*.css", "!./overlay/popupoverlay.anim.css",
-		"./style/*.css",
-		"./utils/*.css"
+		"./src/control/*.css", "!./src/control/piratecontrol.css",
+		"./src/featureanimation/*.css", 
+		"./src/filter/*.css",
+		"./src/interaction/*.css",
+		"./src/layer/*.css",
+		"./src/overlay/*.css", "!./src/overlay/popupoverlay.anim.css",
+		"./src/style/*.css",
+		"./src/utils/*.css"
 		])
     .pipe(cssnext({
       compress: !options.debug,
@@ -52,18 +85,19 @@ gulp.task("cssd", function() {
 // Build js
 gulp.task("js", function() {
 	gulp.src([
-		"./control/searchcontrol.js","./control/searchphotoncontrol.js",
-		"./control/layerswitchercontrol.js", "./control/*.js", "!./control/piratecontrol.js",
-		"./featureanimation/featureanimation.js", "./featureanimation/*.js", 
-		"./filter/filter.js", "./filter/maskfilter.js", "./filter/*.js",
-		"./interaction/*.js",
-		"./layer/*.js",
-		"./overlay/*.js",
-		"./style/fontsymbol.js", "./style/*.js", "!./style/*.def.js", 
-		"./utils/*.js", "!./utils/ol.map.pulse.js", "!./utils/ol.map.markup.js",
+		"./src/control/searchcontrol.js","./src/control/searchphotoncontrol.js",
+		"./src/control/layerswitchercontrol.js", "./src/control/*.js", "!./src/control/piratecontrol.js",
+		"./src/featureanimation/featureanimation.js", "./src/featureanimation/*.js", 
+		"./src/filter/filter.js", "./src/filter/maskfilter.js", "./src/filter/*.js",
+		"./src/interaction/*.js",
+		"./src/layer/*.js",
+		"./src/overlay/*.js",
+		"./src/style/fontsymbol.js", "./src/style/*.js", "!./src/style/*.def.js", 
+		"./src/utils/*.js", "!./src/utils/ol.map.pulse.js", "!./src/utils/ol.map.markup.js",
 		"!./*/*.min.js",
 		"!./*/texturefilterimage.js"
 		])
+	.pipe(transform())
 	.pipe(concat(name+".js"))
     .pipe(minify(
 		{	ext: { 
@@ -72,27 +106,18 @@ gulp.task("js", function() {
 			}
 		}))
 	.pipe(header(banner, { pkg : pkg } ))
-    .pipe(gulp.dest("./dist/"))
+  .pipe(gulp.dest("dist"))
 });
-
 
 /** Build the doc */
 gulp.task('doc', function (cb) {
+	var jsdoc = require('gulp-jsdoc3');
     var config = require('./doc/jsdoc.json');
     gulp.src([
 		"doc/doc.md", "doc/namespace.js",
-		"./control/layerswitchercontrol.js", "./control/*.js", "!./control/piratecontrol.js",
-		"./featureanimation/featureanimation.js", "./featureanimation/*.js", 
-		"./filter/filter.js", "./filter/maskfilter.js", "./filter/*.js",
-		"./interaction/*.js",
-		"./layer/*.js",
-		"./overlay/*.js",
-		"./style/fontsymbol.js", "./style/*.js", "!./style/*.def.js", 
-		"./utils/*.js", "!./utils/ol.map.pulse.js", "!./utils/ol.map.markup.js",
-		"!./*/*.min.js",
-		"!./*/texturefilterimage.js"
+		"./dist/ol-ext.js"
 		], {read: false})
-        .pipe(jsdoc(config, cb));
+    .pipe(jsdoc(config, cb));
 });
 
 // build the dist
