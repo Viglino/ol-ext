@@ -94,7 +94,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="GeoBookmark"><span class="type-signature"></span>new ol.control.GeoBookmark(options)</h4>
+    <h4 class="name" id="GeoBookmark"><span class="type-signature"></span>new GeoBookmark(options)</h4>
     
     
 </dt>
@@ -374,8 +374,8 @@
         
     <pre class="sunlight-highlight-javascript">var bm = new GeoBookmark ({ 
   marks: {
-    &quot;Paris&quot;: {pos:ol.proj.transform([2.351828, 48.856578], &#x27;EPSG:4326&#x27;, &#x27;EPSG:3857&#x27;), zoom:11, permanent: true },
-    &quot;London&quot;: {pos:ol.proj.transform([-0.1275,51.507222], &#x27;EPSG:4326&#x27;, &#x27;EPSG:3857&#x27;), zoom:12}
+    &quot;Paris&quot;: {pos:_ol_proj_.transform([2.351828, 48.856578], &#x27;EPSG:4326&#x27;, &#x27;EPSG:3857&#x27;), zoom:11, permanent: true },
+    &quot;London&quot;: {pos:_ol_proj_.transform([-0.1275,51.507222], &#x27;EPSG:4326&#x27;, &#x27;EPSG:3857&#x27;), zoom:12}
   }
 });</pre>
 
@@ -489,7 +489,7 @@
             <td class="type">
             
                 
-<span class="param-type">ol.Coordintes</span>
+<span class="param-type">_ol_coordinate_</span>
 
 
 
@@ -965,8 +965,8 @@
         <h5>Example</h5>
         
     <pre class="sunlight-highlight-javascript">bm.setBookmarks({ 
-  &quot;Paris&quot;: {pos:ol.proj.transform([2.351828, 48.856578], &#x27;EPSG:4326&#x27;, &#x27;EPSG:3857&#x27;), zoom:11, permanent: true },
-  &quot;London&quot;: {pos:ol.proj.transform([-0.1275,51.507222], &#x27;EPSG:4326&#x27;, &#x27;EPSG:3857&#x27;), zoom:12}
+  &quot;Paris&quot;: {pos:_ol_proj_.transform([2.351828, 48.856578], &#x27;EPSG:4326&#x27;, &#x27;EPSG:3857&#x27;), zoom:11, permanent: true },
+  &quot;London&quot;: {pos:_ol_proj_.transform([-0.1275,51.507222], &#x27;EPSG:4326&#x27;, &#x27;EPSG:3857&#x27;), zoom:12}
 });</pre>
 
 
