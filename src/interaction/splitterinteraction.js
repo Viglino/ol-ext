@@ -78,7 +78,7 @@ ol.inherits(ol_interaction_Splitter, ol_interaction_Interaction);
 /** Calculate intersection on 2 segs
 * @param {Array<_ol_coordinate_>} s1 first seg to intersect (2 points)
 * @param {Array<_ol_coordinate_>} s2 second seg to intersect (2 points)
-* @return { boolean | ol_coordinate_ } intersection point or false no intersection
+* @return { boolean | _ol_coordinate_ } intersection point or false no intersection
 */
 ol_interaction_Splitter.prototype.intersectSegs = function(s1,s2)
 {	var tol = this.tolerance_;
