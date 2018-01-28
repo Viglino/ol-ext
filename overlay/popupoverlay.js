@@ -48,8 +48,8 @@ ol.Overlay.Popup = function (options)
 	options.stopEvent = true;
 	d.on("mousedown touchstart", function(e){ e.stopPropagation(); })
 
-	ol.Overlay.call(this, options);
 	this._elt = elt;
+	ol.Overlay.call(this, options);
 			
 	// call setPositioning first in constructor so getClassPositioning is called only once
 	this.setPositioning(options.positioning);
