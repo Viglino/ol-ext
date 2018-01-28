@@ -39,6 +39,8 @@ animations
 
 ## Getting Started
 
+## using ol-ext in a web page
+
 * Just download the [build script](https://github.com/Viglino/ol-ext/tree/gh-pages/dist) in the dist directory of the project.
 * If you just want to add a `<script>` tag to test things out, you can link directly to the builds from the github rawgit (not recommended in production):
 ````html
@@ -53,14 +55,17 @@ animations
 <link rel="stylesheet" href="https://cdn.rawgit.com/Viglino/ol-ext/gh-pages/dist/ol-ext.min.css" />
 <script type="text/javascript" src="https://cdn.rawgit.com/Viglino/ol-ext/gh-pages/dist/ol-ext.min.js"></script>
 ````
-* Use npm [ol-ext package](https://www.npmjs.com/package/ol-ext):
+* Use npm [ol-ext package](https://www.npmjs.com/package/ol-ext) and link to the node_modules directory:
 ````
 npm install ol-ext
 ````
 
-Visit [here](https://github.com/darkscript/ol-ol-ext-webpack-example) for a good example of working with ol-ext npm version and bundler(webpack)
+## using ol-ext in a webpack
+
+Visit the [this repository](https://github.com/darkscript/ol-ol-ext-webpack-example) for a good example of working with ol-ext npm version and bundler (webpack)
  
-#### Building the project:
+## building the project
+
 Use the gulp command to build the project into the `/dist` directory:
 ````
 gulp
