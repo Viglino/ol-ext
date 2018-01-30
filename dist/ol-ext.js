@@ -1104,17 +1104,17 @@ ol.inherits(ol.control.CanvasAttribution, ol.control.Attribution);
 
 /**
  * Draw attribution on canvas
- * @param {boolean} draw the attribution on canvas.
+ * @param {boolean} b draw the attribution on canvas.
  */
 ol.control.CanvasAttribution.prototype.setCanvas = function (b)
 {	this.isCanvas_ = b;
 	$(this.element).css("visibility", b ? "hidden":"visible");
 	if (this.map_) this.map_.renderSync();
-}
+};
 
 /**
  * Change the control style
- * @param {ol.style.Style}
+ * @param {ol.style.Style} style
  */
 ol.control.CanvasAttribution.prototype.setStyle = function (style)
 {	var text = style.getText();
@@ -1125,7 +1125,7 @@ ol.control.CanvasAttribution.prototype.setStyle = function (style)
 	this.fontFillStyle_ = fill ? ol.color.asString(fill.getColor()) : "#000";
 	this.fontStrokeWidth_ = stroke ? stroke.getWidth() : 3;
 	if (this.getMap()) this.getMap().render();
-}
+};
 
 /**
  * Remove the control from its current map and attach it to the new map.
@@ -1251,7 +1251,7 @@ ol.control.CanvasScaleLine.prototype.setMap = function (map)
 
 /**
  * Change the control style
- * @param {ol.style.Style}
+ * @param {_ol_style_Style_} style
  */
 ol.control.CanvasScaleLine.prototype.setStyle = function (style)
 {	var stroke = style.getStroke();
@@ -1277,7 +1277,7 @@ ol.control.CanvasScaleLine.prototype.setStyle = function (style)
  * @private
  */
 ol.control.CanvasScaleLine.prototype.drawScale_ = function(e)
-{	if ( this.$element.css("display")=="none" ) return;
+{	if ( this.$element.css("display")==="none" ) return;
 	var ctx = e.context;
 
 	// Get size of the scale div
@@ -1318,8 +1318,8 @@ ol.control.CanvasScaleLine.prototype.drawScale_ = function(e)
 	ctx.strokeStyle = this.strokeStyle_;
 	var max = 4;
 	var n = parseInt(text);
-	while (n%10 == 0) n/=10;
-	if (n%5 == 0) max = 5;
+	while (n%10 === 0) n/=10;
+	if (n%5 === 0) max = 5;
 	for (var i=0; i<max; i++)
 	{	ctx.beginPath();
 		ctx.fillStyle = i%2 ? this.fillStyle_ : this.strokeStyle_;
@@ -1451,7 +1451,7 @@ ol.control.CanvasTitle.prototype.setVisible = function (b)
  * @api stable
  */
 ol.control.CanvasTitle.prototype.getVisible = function (b)
-{	return ($(this.element).css('display') != 'none');
+{	return ($(this.element).css('display') !== 'none');
 }
 
 /** Draw scale line in the final canvas
@@ -1614,7 +1614,7 @@ ol.control.Cloud.prototype.drawCloud_ = function (event)
 	}
 	// Parameters changed
 	else if (d != p.length)
-	{	if (this.width != canvas.width || this.height != canvas.height)
+	{	if (this.width !== canvas.width || this.height !== canvas.height)
 		{	p = this.particules = [];
 			addClouds(d);
 			this.width = canvas.width;
@@ -12171,6 +12171,227 @@ ol.Overlay.Popup.prototype.hide = function ()
 
 
 
+/*
+	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (http://www.cecill.info/).
+	
+	ol.coordinate.convexHull compute a convex hull using Andrew's Monotone Chain Algorithm.
+	
+	@see https://en.wikipedia.org/wiki/Convex_hull_algorithms
+*/
+
+
+
+(function(){
+
+/* Tests if a point is left or right of line (a,b).
+* @param {ol.coordinate} a point on the line
+* @param {ol.coordinate} b point on the line
+* @param {ol.coordinate} 0
+* @return {bool} true if (a,b,o) turns clockwise
+*/
+function clockwise (a, b, o) 
+{	return ( (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]) <= 0 )
+}
+
+/** Compute a convex hull using Andrew's Monotone Chain Algorithm
+* @param {Array<ol.geom.Point>} points an array of 2D points 
+* @return {Array<ol.geom.Point>} the convex hull vertices
+*/
+ol.coordinate.convexHull = function (points)
+{	// Sort by increasing x and then y coordinate
+	points.sort(function(a, b) 
+	{	return a[0] == b[0] ? a[1] - b[1] : a[0] - b[0];
+	});
+
+    // Compute the lower hull 
+	var lower = [];
+	for (var i = 0; i < points.length; i++) 
+	{	while (lower.length >= 2 && clockwise (lower[lower.length - 2], lower[lower.length - 1], points[i]) ) 
+		{	lower.pop();
+		}
+		lower.push(points[i]);
+	}
+
+    // Compute the upper hull 
+	var upper = [];
+	for (var i = points.length - 1; i >= 0; i--) 
+	{	while (upper.length >= 2 && clockwise (upper[upper.length - 2], upper[upper.length - 1], points[i]) ) 
+		{	upper.pop();
+		}
+		upper.push(points[i]);
+	}
+
+	upper.pop();
+	lower.pop();
+	return lower.concat(upper);
+}
+
+/* Get coordinates of a geometry */
+function getCoordinates(geom)
+{	var h = [];
+	switch (geom.getType())
+	{	case "Point":
+			h.push(geom.getCoordinates());
+			break;
+		case "LineString":
+		case "LinearRing":
+		case "MultiPoint":
+			 h = geom.getCoordinates();
+			break;
+		case "MultiLineString":
+			var p = geom.getLineStrings();
+			for (var i=0; i<p.length; i++) h.concat(getCoordinates(p[i]));
+			break;
+		case "Polygon":
+			h = getCoordinates(geom.getLinearRing(0));
+			break;
+		case "MultiPolygon":
+			var p = geom.getPolygons();
+			for (var i=0; i<p.length; i++) h.concat(getCoordinates(p[i]));
+			break;
+		case "GeometryCollection":
+			var p = geom.getGeometries();
+			for (var i=0; i<p.length; i++) h.concat(getCoordinates(p[i]));
+			break;
+		default:break;
+	}
+	return h;
+}
+
+/** Compute a convex hull on a geometry using Andrew's Monotone Chain Algorithm
+* @return {Array<ol.geom.Point>} the convex hull vertices
+*/
+ol.geom.Geometry.prototype.convexHull = function()
+{	return ol.coordinate.convexHull( getCoordinates(this) );
+};
+
+
+})();
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+
+	Usefull function to handle geometric operations
+*/
+
+
+
+
+
+/** Distance beetween 2 points
+*	Usefull geometric functions
+* @param {ol.coordinate} p1 first point
+* @param {ol.coordinate} p2 second point
+* @return {number} distance
+*/
+ol.coordinate.dist2d = function(p1, p2)
+{	var dx = p1[0]-p2[0];
+	var dy = p1[1]-p2[1];
+	return Math.sqrt(dx*dx+dy*dy);
+}
+/** 2 points are equal
+*	Usefull geometric functions
+* @param {ol.coordinate} p1 first point
+* @param {ol.coordinate} p2 second point
+* @return {boolean}
+*/
+ol.coordinate.equal = function(p1, p2)
+{	return (p1[0]==p2[0] && p1[1]==p2[1]);
+}
+
+/** Get center coordinate of a feature
+* @param {ol.Feature} f
+* @return {ol.coordinate} the center
+*/
+ol.coordinate.getFeatureCenter = function(f)
+{	return ol.coordinate.getGeomCenter (f.getGeometry());
+};
+
+/** Get center coordinate of a geometry
+* @param {ol.Feature} geom
+* @return {ol.coordinate} the center
+*/
+ol.coordinate.getGeomCenter = function(geom)
+{	switch (geom.getType())
+	{	case 'Point': 
+			return geom.getCoordinates();
+		case "MultiPolygon":
+			geom = geom.getPolygon(0);
+		case "Polygon":
+			return geom.getInteriorPoint().getCoordinates();
+		default:
+			return geom.getClosestPoint(ol.extent.getCenter(geom.getExtent()));
+	};
+};
+
+/** Split a lineString by a point or a list of points
+*	NB: points must be on the line, use getClosestPoint() to get one
+* @param {ol.Coordinate | Array<ol.Coordinate>} pt points to split the line
+* @param {Number} tol distance tolerance for 2 points to be equal
+*/
+ol.geom.LineString.prototype.splitAt = function(pt, tol)
+{	if (!pt) return [this];
+	if (!tol) tol = 1e-10;
+	// Test if list of points
+	if (pt.length && pt[0].length)
+	{	var result = [this];
+		for (var i=0; i<pt.length; i++)
+		{	var r = [];
+			for (var k=0; k<result.length; k++)
+			{	var ri = result[k].splitAt(pt[i], tol);
+				r = r.concat(ri);
+			}
+			result = r;
+		}
+		return result;
+	}
+	// Nothing to do
+	if (ol.coordinate.equal(pt,this.getFirstCoordinate())
+	 || ol.coordinate.equal(pt,this.getLastCoordinate()))
+	{	return [this];
+	}
+	// Get 
+	var c0 = this.getCoordinates();
+	var ci=[c0[0]], p0, p1;
+	var c = [];
+	for (var i=0; i<c0.length-1; i++)
+	{	// Filter equal points
+		if (ol.coordinate.equal(c0[i],c0[i+1])) continue;
+		// Extremity found  
+		if (ol.coordinate.equal(pt,c0[i+1]))
+		{	ci.push(c0[i+1]);
+			c.push(new ol.geom.LineString(ci));
+			ci = [];
+		}
+		// Test alignement
+		else if (!ol.coordinate.equal(pt,c0[i]))
+		{	var d1, d2;
+			if (c0[i][0] == c0[i+1][0])
+			{	d1 = d2 = (c0[i][1]-pt[1]) / (c0[i][1]-c0[i+1][1]);
+			}
+			else if (c0[i][1] == c0[i+1][1])
+			{	d1 = d2 = (c0[i][0]-pt[0]) / (c0[i][0]-c0[i+1][0]);
+			}
+			else
+			{	d1 = (c0[i][0]-pt[0]) / (c0[i][0]-c0[i+1][0]);
+				d2 = (c0[i][1]-pt[1]) / (c0[i][1]-c0[i+1][1]);
+			}
+			if (Math.abs(d1-d2)<tol && 0<=d1 && d1<=1)
+			{	ci.push(pt);
+				c.push (new ol.geom.LineString(ci));
+				ci = [pt];
+			}
+		}
+		ci.push(c0[i+1]);
+	}
+	if (ci.length>1) c.push (new ol.geom.LineString(ci));
+	if (c.length) return c;
+	else return [this];
+}
+
+
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -14154,160 +14375,7 @@ ol.style.Shadow.prototype.getChecksum = function()
 
 
 
-
-
-
-
-
-
-
-
-/** Create a cardinal spline version of this geometry.
-*	Original https://github.com/epistemex/cardinal-spline-js
-*	@see https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Cardinal_spline
-*
-* @param {} options
-*	- tension {Number} a [0,1] number / can be interpreted as the "length" of the tangent, default 0.5
-*	- resolution {Number} size of segment to split
-*	- pointsPerSeg {Interger} number of points per segment to add if no resolution is provided, default add 10 points per segment
-*/
-
-/** Cache cspline calculation
-*/
-ol.geom.Geometry.prototype.cspline = function(options)
-{	// Calculate cspline
-	if (this.calcCSpline_)
-	{	if (this.csplineGeometryRevision != this.getRevision() 
-			|| this.csplineOption != JSON.stringify(options))
-		{	this.csplineGeometry_ = this.calcCSpline_(options)
-			this.csplineGeometryRevision = this.getRevision();
-			this.csplineOption = JSON.stringify(options);
-		}
-		return this.csplineGeometry_;
-	}
-	// Default do nothing
-	else
-	{	return this;
-	}
-}
-
-ol.geom.GeometryCollection.prototype.calcCSpline_ = function(options)
-{	var g=[], g0=this.getGeometries();
-	for (var i=0; i<g0.length; i++)
-	{	g.push(g0[i].cspline());
-	}
-	return new ol.geom.GeometryCollection(g);
-}
-
-ol.geom.MultiLineString.prototype.calcCSpline_ = function(options)
-{	var g=[], g0=this.getLineStrings();
-	for (var i=0; i<g0.length; i++)
-	{	g.push(g0[i].cspline().getCoordinates());
-	}
-	return new ol.geom.MultiLineString(g);
-}
-
-ol.geom.Polygon.prototype.calcCSpline_ = function(options)
-{	var g=[], g0=this.getCoordinates();
-	for (var i=0; i<g0.length; i++)
-	{	g.push((new ol.geom.LineString(g0[i])).cspline().getCoordinates());
-	}
-	return new ol.geom.Polygon(g);
-}
-
-ol.geom.MultiPolygon.prototype.calcCSpline_ = function(options)
-{	var g=[], g0=this.getPolygons();
-	for (var i=0; i<g0.length; i++)
-	{	g.push(g0[i].cspline().getCoordinates());
-	}
-	return new ol.geom.MultiPolygon(g);
-}
-
-/**
-*/
-ol.geom.LineString.prototype.calcCSpline_ = function(options)
- {	if (!options) options={};
-	var line = this.getCoordinates();
-	var tension = typeof options.tension === "number" ? options.tension : 0.5;
-	var resolution = options.resolution || (this.getLength() / line.length / (options.pointsPerSeg || 10));
-
-	var pts, res = [],			// clone array
-		x, y,					// our x,y coords
-		t1x, t2x, t1y, t2y,		// tension vectors
-		c1, c2, c3, c4,			// cardinal points
-		st, t, i;				// steps based on num. of segments
-
-	// clone array so we don't change the original
-	//
-	pts = line.slice(0);
-
-	// The algorithm require a previous and next point to the actual point array.
-	// Check if we will draw closed or open curve.
-	// If closed, copy end points to beginning and first points to end
-	// If open, duplicate first points to befinning, end points to end
-	if (line.length>2 && line[0][0]==line[line.length-1][0] && line[0][1]==line[line.length-1][1]) 
-	{	pts.unshift(line[line.length-2]);
-		pts.push(line[1]);
-	}
-	else 
-	{	pts.unshift(line[0]);
-		pts.push(line[line.length-1]);
-	}
-
-	// ok, lets start..
-	function dist2d(x1, y1, x2, y2)
-	{	var dx = x2-x1;
-		var dy = y2-y1;
-		return Math.sqrt(dx*dx+dy*dy);
-	}
-
-	// 1. loop goes through point array
-	// 2. loop goes through each segment between the 2 pts + 1e point before and after
-	for (i=1; i < (pts.length - 2); i++) 
-	{	var d1 = dist2d (pts[i][0], pts[i][1], pts[i+1][0], pts[i+1][1]);
-		var numOfSegments = Math.round(d1/resolution);
-		
-		var d=1;
-		if (options.normalize)
-		{	var d1 = dist2d (pts[i+1][0], pts[i+1][1], pts[i-1][0], pts[i-1][1]);
-			var d2 = dist2d (pts[i+2][0], pts[i+2][1], pts[i][0], pts[i][1]);
-			if (d1<d2) d = d1/d2;
-			else d = d2/d1;
-		}
-
-		// calc tension vectors
-		t1x = (pts[i+1][0] - pts[i-1][0]) * tension *d;
-		t2x = (pts[i+2][0] - pts[i][0]) * tension *d;
-
-		t1y = (pts[i+1][1] - pts[i-1][1]) * tension *d;
-		t2y = (pts[i+2][1] - pts[i][1]) * tension *d;
-
-		for (t=0; t <= numOfSegments; t++) 
-		{	// calc step
-			st = t / numOfSegments;
-
-			// calc cardinals
-			c1 =   2 * Math.pow(st, 3) 	- 3 * Math.pow(st, 2) + 1; 
-			c2 = -(2 * Math.pow(st, 3)) + 3 * Math.pow(st, 2); 
-			c3 = 	   Math.pow(st, 3)	- 2 * Math.pow(st, 2) + st; 
-			c4 = 	   Math.pow(st, 3)	- 	  Math.pow(st, 2);
-
-			// calc x and y cords with common control vectors
-			x = c1 * pts[i][0]	+ c2 * pts[i+1][0] + c3 * t1x + c4 * t2x;
-			y = c1 * pts[i][1]	+ c2 * pts[i+1][1] + c3 * t1y + c4 * t2y;
-
-			//store points in array
-			res.push([x,y]);
-		}
-	}
-
-	return new ol.geom.LineString(res);
-}
-
-//NB: (Not confirmed)To use this module, you just have to :
-
-//   import('ol-ext/utils/cspline')
-
+//TODO: rewrite exif2geojson module and export
 /** Convert a list of image file or a list of image into geojson 
 * reading location in the EXIF tags
 * @constructor
@@ -14390,326 +14458,7 @@ exif2geojson = function (img, options)
 })();
 
 
-/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-
-
-
-
-/**
-* Hexagonal grids
-* @classdesc ol.HexGrid is a class to compute hexagonal grids
-* @see http://www.redblobgames.com/grids/hexagons
-*
-* @constructor ol.HexGrid
-* @extends {ol.Object}
-* @param {olx.HexGrid=} options
-*	@param {Number} options.size size of the exagon in map units, default 80000
-*	@param {_ol_coordinate_} options.origin orgin of the grid, default [0,0]
-*	@param {pointy|flat} options.layout grid layout, default pointy
-*/
-ol.HexGrid = function (options)
-{	options = options || {};
-	
-	ol.Object.call (this, options);
-
-	// Options
-	this.size_ = options.size||80000;
-	this.origin_ = options.origin || [0,0];
-	this.layout_ = this.layout[options.layout] || this.layout.pointy;
-
-};
-ol.inherits (ol.HexGrid, ol.Object);
-
-/** Layout
-*/
-ol.HexGrid.prototype.layout =
-{	pointy: 
-	[	Math.sqrt(3), Math.sqrt(3)/2, 0, 3/2, 
-		Math.sqrt(3)/3, -1/3, 0, 2/3, 
-		// corners
-		Math.cos(Math.PI / 180 * (60 * 0 + 30)), Math.sin(Math.PI / 180 * (60 * 0 + 30)), 
-		Math.cos(Math.PI / 180 * (60 * 1 + 30)), Math.sin(Math.PI / 180 * (60 * 1 + 30)), 
-		Math.cos(Math.PI / 180 * (60 * 2 + 30)), Math.sin(Math.PI / 180 * (60 * 2 + 30)), 
-		Math.cos(Math.PI / 180 * (60 * 3 + 30)), Math.sin(Math.PI / 180 * (60 * 3 + 30)), 
-		Math.cos(Math.PI / 180 * (60 * 4 + 30)), Math.sin(Math.PI / 180 * (60 * 4 + 30)), 
-		Math.cos(Math.PI / 180 * (60 * 5 + 30)), Math.sin(Math.PI / 180 * (60 * 5 + 30))
-	],
-	flat: 
-	[	3/2, 0, Math.sqrt(3)/2, Math.sqrt(3), 2/3, 
-		0, -1/3, Math.sqrt(3) / 3, 
-		// corners
-		Math.cos(Math.PI / 180 * (60 * 0)), Math.sin(Math.PI / 180 * (60 * 0)), 
-		Math.cos(Math.PI / 180 * (60 * 1)), Math.sin(Math.PI / 180 * (60 * 1)), 
-		Math.cos(Math.PI / 180 * (60 * 2)), Math.sin(Math.PI / 180 * (60 * 2)), 
-		Math.cos(Math.PI / 180 * (60 * 3)), Math.sin(Math.PI / 180 * (60 * 3)), 
-		Math.cos(Math.PI / 180 * (60 * 4)), Math.sin(Math.PI / 180 * (60 * 4)), 
-		Math.cos(Math.PI / 180 * (60 * 5)), Math.sin(Math.PI / 180 * (60 * 5))
-	]
-};
-
-/** Set layout
-* @param {pointy | flat | undefined} layout name, default pointy
-*/
-ol.HexGrid.prototype.setLayout = function (layout)
-{	this.layout_ = this.layout[layout] || this.layout.pointy;
-	this.changed();
-}
-
-/** Get layout
-* @return {pointy | flat} layout name
-*/
-ol.HexGrid.prototype.getLayout = function ()
-{	return (this.layout_[9]!=0 ? 'pointy' : 'flat');
-}
-
-/** Set hexagon origin
-* @param {ol.coordinate} coord origin
-*/
-ol.HexGrid.prototype.setOrigin = function (coord)
-{	this.origin_ = coord;
-	this.changed();
-}
-
-/** Get hexagon origin
-* @return {ol.coordinate} coord origin
-*/
-ol.HexGrid.prototype.getOrigin = function (coord)
-{	return this.origin_;
-}
-
-/** Set hexagon size
-* @param {Number} hexagon size
-*/
-ol.HexGrid.prototype.setSize = function (s)
-{	this.size_ = s || 80000;
-	this.changed();
-}
-
-/** Get hexagon size
-* @return {Number} hexagon size
-*/
-ol.HexGrid.prototype.getSize = function (s)
-{	return this.size_;
-}
-
-/** Convert cube to axial coords
-* @param {ol.coordinate} c cube coordinate
-* @return {ol.coordinate} axial coordinate
-*/
-ol.HexGrid.prototype.cube2hex = function (c)
-{	return [c[0], c[2]];
-};
-
-/** Convert axial to cube coords
-* @param {ol.coordinate} h axial coordinate
-* @return {ol.coordinate} cube coordinate
-*/
-ol.HexGrid.prototype.hex2cube = function(h)
-{	return [h[0], -h[0]-h[1], h[1]];
-};
-
-/** Convert offset to axial coords
-* @param {ol.coordinate} h axial coordinate
-* @return {ol.coordinate} offset coordinate
-*/
-ol.HexGrid.prototype.hex2offset = function (h)
-{	if (this.layout_[9]) return [ h[0] + (h[1] - (h[1]&1)) / 2, h[1] ];
-	else return [ h[0], h[1] + (h[0] + (h[0]&1)) / 2 ];
-}
-
-/** Convert axial to offset coords
-* @param {ol.coordinate} o offset coordinate
-* @return {ol.coordinate} axial coordinate
-*/
-ol.HexGrid.prototype.offset2hex = function(o)
-{	if (this.layout_[9]) return [ q = o[0] - (o[1] - (o[1]&1)) / 2,  r = o[1] ];
-	else return [ o[0], o[1] - (o[0] + (o[0]&1)) / 2 ];
-}
-
-/** Convert offset to cube coords
-* @param {ol.coordinate} c cube coordinate
-* @return {ol.coordinate} offset coordinate
-* /
-ol.HexGrid.prototype.cube2offset = function(c)
-{	return hex2offset(cube2hex(c));
-};
-
-/** Convert cube to offset coords
-* @param {ol.coordinate} o offset coordinate
-* @return {ol.coordinate} cube coordinate
-* /
-ol.HexGrid.prototype.offset2cube = function (o)
-{	return hex2cube(offset2Hex(o));
-};
-
-/** Round cube coords
-* @param {ol.coordinate} h cube coordinate
-* @return {ol.coordinate} rounded cube coordinate
-*/
-ol.HexGrid.prototype.cube_round = function(h)
-{	var rx = Math.round(h[0])
-	var ry = Math.round(h[1])
-	var rz = Math.round(h[2])
-
-	var x_diff = Math.abs(rx - h[0])
-	var y_diff = Math.abs(ry - h[1])
-	var z_diff = Math.abs(rz - h[2])
-
-	if (x_diff > y_diff && x_diff > z_diff) rx = -ry-rz
-	else if (y_diff > z_diff) ry = -rx-rz
-	else rz = -rx-ry
-
-	return [rx, ry, rz];
-};
-
-/** Round axial coords
-* @param {ol.coordinate} h axial coordinate
-* @return {ol.coordinate} rounded axial coordinate
-*/
-ol.HexGrid.prototype.hex_round = function(h)
-{	return this.cube2hex( this.cube_round( this.hex2cube(h )) );
-};
-
-/** Get hexagon corners
-*/
-ol.HexGrid.prototype.hex_corner = function(center, size, i)
-{	return [ center[0] + size * this.layout_[8+(2*(i%6))], center[1] + size * this.layout_[9+(2*(i%6))]];
-};
-
-/** Get hexagon coordinates at a coordinate
-* @param {ol.coord} coord
-* @return {Arrary<ol.coord>}
-*/
-ol.HexGrid.prototype.getHexagonAtCoord = function (coord)
-{	returhn (this.getHexagon(this.coord2hex(coord)));
-};
-
-/** Get hexagon coordinates at hex
-* @param {ol.coord} hex
-* @return {Arrary<ol.coord>}
-*/
-ol.HexGrid.prototype.getHexagon = function (hex)
-{	var p = [];
-	var c = this.hex2coord(hex);
-	for (var i=0; i<=7; i++)
-	{	p.push(this.hex_corner(c, this.size_, i, this.layout_[8]));
-	}
-	return p;
-};
-
-/** Convert hex to coord
-* @param {ol.hex} hex 
-* @return {ol.coord} 
-*/
-ol.HexGrid.prototype.hex2coord = function (hex)
-{	return [
-		this.origin_[0] + this.size_ * (this.layout_[0] * hex[0] + this.layout_[1] * hex[1]), 
-		this.origin_[1] + this.size_ * (this.layout_[2] * hex[0] + this.layout_[3] * hex[1])
-	];
-};
-
-/** Convert coord to hex
-* @param {ol.coord} coord 
-* @return {ol.hex} 
-*/
-ol.HexGrid.prototype.coord2hex = function (coord)
-{	var c = [ (coord[0]-this.origin_[0]) / this.size_, (coord[1]-this.origin_[1]) / this.size_ ];
-	var q = this.layout_[4] * c[0] + this.layout_[5] * c[1];
-	var r = this.layout_[6] * c[0] + this.layout_[7] * c[1];
-	return this.hex_round([q, r]);
-};
-
-/** Calculate distance between to hexagon (number of cube)
-* @param {ol.coordinate} a first cube coord
-* @param {ol.coordinate} a second cube coord
-* @return {Number} distance
-*/
-ol.HexGrid.prototype.cube_distance = function (a, b)
-{	//return ( (Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2])) / 2 );
-	return ( Math.max (Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1]), Math.abs(a[2] - b[2])) );
-};
-
-(function(){
-/** Line interpolation
-*/
-function lerp(a, b, t)
-{	// for floats
-    return a + (b - a) * t;
-};
-function cube_lerp(a, b, t)
-{	// for hexes
-    return [ 
-		lerp (a[0]+1e-6, b[0], t), 
-		lerp (a[1]+1e-6, b[1], t),
-		lerp (a[2]+1e-6, b[2], t)
-	];
-};
-
-/** Calculate line between to hexagon 
-* @param {ol.coordinate} a first cube coord
-* @param {ol.coordinate} b second cube coord
-* @return {Array<ol.coordinate>} array of cube coordinates
-*/
-ol.HexGrid.prototype.cube_line = function (a, b)
-{	var d = this.cube_distance(a, b);
-	if (!d) return [a];
-    var results = []
-    for (var i=0; i<=d; i++) 
-	{	results.push ( this.cube_round ( cube_lerp(a, b, i/d) ) );
-	}
-    return results;
-};
-})();
-
-
-ol.HexGrid.prototype.neighbors =
-{	'cube':	[ [+1, -1,  0], [+1,  0, -1], [0, +1, -1], [-1, +1,  0], [-1,  0, +1], [0, -1, +1] ],
-	'hex':	[ [+1, 0], [+1,  -1], [0, -1], [-1, 0], [-1, +1], [0, +1] ]
-};
-
-/** Get the neighbors for an hexagon
-* @param {ol.coordinate} h axial coord
-* @param {Number} direction 
-* @return { ol.coordinate | Array<ol.coordinates> } neighbor || array of neighbors
-*/
-ol.HexGrid.prototype.hex_neighbors = function (h, d)
-{	if (d!==undefined)
-	{	return [ h[0] + this.neighbors.hex[d%6][0], h[1]  + this.neighbors.hex[d%6][1] ];
-	}
-	else
-	{	var n = [];
-		for (d=0; d<6; d++)
-		{	n.push ([ h[0] + this.neighbors.hex[d][0], h[1]  + this.neighbors.hex[d][1] ]);
-		}
-		return n;
-	}
-};
-
-/** Get the neighbors for an hexagon
-* @param {ol.coordinate} c cube coord
-* @param {Number} direction 
-* @return { ol.coordinate | Array<ol.coordinates> } neighbor || array of neighbors
-*/
-ol.HexGrid.prototype.cube_neighbors = function (c, d)
-{	if (d!==undefined)
-	{	return [ c[0] + this.neighbors.cube[d%6][0], c[1]  + this.neighbors.cube[d%6][1], c[2]  + this.neighbors.cube[d%6][2] ];
-	}
-	else
-	{	var n = [];
-		for (d=0; d<6; d++)
-		{	n.push ([ c[0] + this.neighbors.cube[d][0], c[1]  + this.neighbors.cube[d][1], c[2]  + this.neighbors.cube[d][2] ]);
-		}
-		for (d=0; d<6; d++) n[d] = this.cube2hex(n[d])
-		return n;
-	}
-};
-
-
-
-
+//TODO: Rewrite pdf 
 
 
 /** jQuery plugin to 
@@ -14802,339 +14551,7 @@ $.fn.exportMap = function(map, options)
 	});
 };
 
-/*
-	Copyright (c) 2017 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (http://www.cecill.info/).
-	
-	ol.coordinate.convexHull compute a convex hull using Andrew's Monotone Chain Algorithm.
-	
-	@see https://en.wikipedia.org/wiki/Convex_hull_algorithms
-*/
-
-
-
-(function(){
-
-/* Tests if a point is left or right of line (a,b).
-* @param {ol.coordinate} a point on the line
-* @param {ol.coordinate} b point on the line
-* @param {ol.coordinate} 0
-* @return {bool} true if (a,b,o) turns clockwise
-*/
-function clockwise (a, b, o) 
-{	return ( (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]) <= 0 )
-}
-
-/** Compute a convex hull using Andrew's Monotone Chain Algorithm
-* @param {Array<ol.geom.Point>} points an array of 2D points 
-* @return {Array<ol.geom.Point>} the convex hull vertices
-*/
-ol.coordinate.convexHull = function (points)
-{	// Sort by increasing x and then y coordinate
-	points.sort(function(a, b) 
-	{	return a[0] == b[0] ? a[1] - b[1] : a[0] - b[0];
-	});
-
-    // Compute the lower hull 
-	var lower = [];
-	for (var i = 0; i < points.length; i++) 
-	{	while (lower.length >= 2 && clockwise (lower[lower.length - 2], lower[lower.length - 1], points[i]) ) 
-		{	lower.pop();
-		}
-		lower.push(points[i]);
-	}
-
-    // Compute the upper hull 
-	var upper = [];
-	for (var i = points.length - 1; i >= 0; i--) 
-	{	while (upper.length >= 2 && clockwise (upper[upper.length - 2], upper[upper.length - 1], points[i]) ) 
-		{	upper.pop();
-		}
-		upper.push(points[i]);
-	}
-
-	upper.pop();
-	lower.pop();
-	return lower.concat(upper);
-}
-
-/* Get coordinates of a geometry */
-function getCoordinates(geom)
-{	var h = [];
-	switch (geom.getType())
-	{	case "Point":
-			h.push(geom.getCoordinates());
-			break;
-		case "LineString":
-		case "LinearRing":
-		case "MultiPoint":
-			 h = geom.getCoordinates();
-			break;
-		case "MultiLineString":
-			var p = geom.getLineStrings();
-			for (var i=0; i<p.length; i++) h.concat(getCoordinates(p[i]));
-			break;
-		case "Polygon":
-			h = getCoordinates(geom.getLinearRing(0));
-			break;
-		case "MultiPolygon":
-			var p = geom.getPolygons();
-			for (var i=0; i<p.length; i++) h.concat(getCoordinates(p[i]));
-			break;
-		case "GeometryCollection":
-			var p = geom.getGeometries();
-			for (var i=0; i<p.length; i++) h.concat(getCoordinates(p[i]));
-			break;
-		default:break;
-	}
-	return h;
-}
-
-/** Compute a convex hull on a geometry using Andrew's Monotone Chain Algorithm
-* @return {Array<ol.geom.Point>} the convex hull vertices
-*/
-ol.geom.Geometry.prototype.convexHull = function()
-{	return ol.coordinate.convexHull( getCoordinates(this) );
-};
-
-
-})();
-
-/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-
-	Usefull function to handle geometric operations
-*/
-
-
-
-
-
-/** Distance beetween 2 points
-*	Usefull geometric functions
-* @param {ol.coordinate} p1 first point
-* @param {ol.coordinate} p2 second point
-* @return {number} distance
-*/
-ol.coordinate.dist2d = function(p1, p2)
-{	var dx = p1[0]-p2[0];
-	var dy = p1[1]-p2[1];
-	return Math.sqrt(dx*dx+dy*dy);
-}
-/** 2 points are equal
-*	Usefull geometric functions
-* @param {ol.coordinate} p1 first point
-* @param {ol.coordinate} p2 second point
-* @return {boolean}
-*/
-ol.coordinate.equal = function(p1, p2)
-{	return (p1[0]==p2[0] && p1[1]==p2[1]);
-}
-
-/** Get center coordinate of a feature
-* @param {ol.Feature} f
-* @return {ol.coordinate} the center
-*/
-ol.coordinate.getFeatureCenter = function(f)
-{	return ol.coordinate.getGeomCenter (f.getGeometry());
-};
-
-/** Get center coordinate of a geometry
-* @param {ol.Feature} geom
-* @return {ol.coordinate} the center
-*/
-ol.coordinate.getGeomCenter = function(geom)
-{	switch (geom.getType())
-	{	case 'Point': 
-			return geom.getCoordinates();
-		case "MultiPolygon":
-			geom = geom.getPolygon(0);
-		case "Polygon":
-			return geom.getInteriorPoint().getCoordinates();
-		default:
-			return geom.getClosestPoint(ol.extent.getCenter(geom.getExtent()));
-	};
-};
-
-/** Split a lineString by a point or a list of points
-*	NB: points must be on the line, use getClosestPoint() to get one
-* @param {ol.Coordinate | Array<ol.Coordinate>} pt points to split the line
-* @param {Number} tol distance tolerance for 2 points to be equal
-*/
-ol.geom.LineString.prototype.splitAt = function(pt, tol)
-{	if (!pt) return [this];
-	if (!tol) tol = 1e-10;
-	// Test if list of points
-	if (pt.length && pt[0].length)
-	{	var result = [this];
-		for (var i=0; i<pt.length; i++)
-		{	var r = [];
-			for (var k=0; k<result.length; k++)
-			{	var ri = result[k].splitAt(pt[i], tol);
-				r = r.concat(ri);
-			}
-			result = r;
-		}
-		return result;
-	}
-	// Nothing to do
-	if (ol.coordinate.equal(pt,this.getFirstCoordinate())
-	 || ol.coordinate.equal(pt,this.getLastCoordinate()))
-	{	return [this];
-	}
-	// Get 
-	var c0 = this.getCoordinates();
-	var ci=[c0[0]], p0, p1;
-	var c = [];
-	for (var i=0; i<c0.length-1; i++)
-	{	// Filter equal points
-		if (ol.coordinate.equal(c0[i],c0[i+1])) continue;
-		// Extremity found  
-		if (ol.coordinate.equal(pt,c0[i+1]))
-		{	ci.push(c0[i+1]);
-			c.push(new ol.geom.LineString(ci));
-			ci = [];
-		}
-		// Test alignement
-		else if (!ol.coordinate.equal(pt,c0[i]))
-		{	var d1, d2;
-			if (c0[i][0] == c0[i+1][0])
-			{	d1 = d2 = (c0[i][1]-pt[1]) / (c0[i][1]-c0[i+1][1]);
-			}
-			else if (c0[i][1] == c0[i+1][1])
-			{	d1 = d2 = (c0[i][0]-pt[0]) / (c0[i][0]-c0[i+1][0]);
-			}
-			else
-			{	d1 = (c0[i][0]-pt[0]) / (c0[i][0]-c0[i+1][0]);
-				d2 = (c0[i][1]-pt[1]) / (c0[i][1]-c0[i+1][1]);
-			}
-			if (Math.abs(d1-d2)<tol && 0<=d1 && d1<=1)
-			{	ci.push(pt);
-				c.push (new ol.geom.LineString(ci));
-				ci = [pt];
-			}
-		}
-		ci.push(c0[i+1]);
-	}
-	if (ci.length>1) c.push (new ol.geom.LineString(ci));
-	if (c.length) return c;
-	else return [this];
-}
-
-
-/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-
-
-
-
-
-
-/** Pulse a point on postcompose
-*	@param {ol.coordinates} point to pulse
-*	@param {ol.pulse.options} pulse options param
-*		- projection {ol.projection||String} projection of coords
-*		- duration {Number} animation duration in ms, default 2000
-*		- easing {ol.easing} easing function, default ol.easing.upAndDown
-*		- width {Number} line width, default 2
-*		- color {ol.color} line color, default red
-*/
-ol.Map.prototype.animExtent = function(extent, options)
-{	var listenerKey;
-	options = options || {};
-
-	// Change to map's projection
-	if (options.projection)
-	{	extent = ol.proj.transformExtent (extent, options.projection, this.getView().getProjection());
-	}
-	
-	// options
-	var start = new Date().getTime();
-	var duration = options.duration || 1000;
-	var easing = options.easing || ol.easing.upAndDown;
-	var width = options.lineWidth || 2;
-	var color = options.color || 'red';
-
-	// Animate function
-	function animate(event) 
-	{	var frameState = event.frameState;
-		var ratio = frameState.pixelRatio;
-		var elapsed = frameState.time - start;
-		if (elapsed > duration) ol.Observable.unByKey(listenerKey);
-		else
-		{	var elapsedRatio = elapsed / duration;
-			var p0 = this.getPixelFromCoordinate([extent[0],extent[1]]);
-			var p1 = this.getPixelFromCoordinate([extent[2],extent[3]]);
-
-			var context = event.context;
-			context.save();
-			context.scale(ratio,ratio);
-			context.beginPath();
-			var e = easing(elapsedRatio)
-			context.globalAlpha = easing(1 - elapsedRatio);
-			context.lineWidth = width;
-			context.strokeStyle = color;
-			context.rect(p0[0], p0[1], p1[0]-p0[0], p1[1]-p0[1]);
-			context.stroke();
-			context.restore();
-			// tell OL3 to continue postcompose animation
-			frameState.animate = true;
-		}
-	}
-
-	// Launch animation
-	listenerKey = this.on('postcompose', animate, this);
-	this.renderSync();
-}
-
-
-
-/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-/** Ordering function for ol.layer.Vector renderOrder parameter
-*	ol.ordering.fn (options)
-*	It will return an ordering function (f0,f1)
-*	@namespace
-*/
-ol.ordering = {}
-
-/** y-Ordering
-*	@return ordering function (f0,f1)
-*/
-ol.ordering.yOrdering = function(options)
-{	return function(f0,f1)
-	{	return f0.getGeometry().getExtent()[1] < f1.getGeometry().getExtent()[1] ;
-	};
-}
-
-/** Order with a feature attribute
-*	@param option
-*		attribute: ordering attribute, default zIndex
-*		equalFn: ordering function for equal values
-*	@return ordering function (f0,f1)
-*/
-ol.ordering.zIndex = function(options)
-{	if (!options) options = {};
-	var attr = options.attribute || 'zIndex';
-	if (option.equalFn)
-	{	return function(f0,f1)
-		{	if (f0.get(attr) == f1.get(attr)) return option.equalFn(f0,f1);
-			return f0.get(attr) < f1.get(attr);
-		};
-	}
-	else
-	{	return function(f0,f1)
-		{	return f0.get(attr) < f1.get(attr);
-		};
-	}
-}
-
-
+//TODO: rewrite WSynchro module and export
 /** WSynchro object to synchronize windows
 *	- windows: array of windows to synchro (
 *	- source: the window source (undefined if first window)

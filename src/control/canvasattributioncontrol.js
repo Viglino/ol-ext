@@ -35,17 +35,17 @@ ol.inherits(ol_control_CanvasAttribution, ol_control_Attribution);
 
 /**
  * Draw attribution on canvas
- * @param {boolean} draw the attribution on canvas.
+ * @param {boolean} b draw the attribution on canvas.
  */
 ol_control_CanvasAttribution.prototype.setCanvas = function (b)
 {	this.isCanvas_ = b;
 	$(this.element).css("visibility", b ? "hidden":"visible");
 	if (this.map_) this.map_.renderSync();
-}
+};
 
 /**
  * Change the control style
- * @param {ol_style_Style}
+ * @param {ol_style_Style} style
  */
 ol_control_CanvasAttribution.prototype.setStyle = function (style)
 {	var text = style.getText();
@@ -56,7 +56,7 @@ ol_control_CanvasAttribution.prototype.setStyle = function (style)
 	this.fontFillStyle_ = fill ? ol_color.asString(fill.getColor()) : "#000";
 	this.fontStrokeWidth_ = stroke ? stroke.getWidth() : 3;
 	if (this.getMap()) this.getMap().render();
-}
+};
 
 /**
  * Remove the control from its current map and attach it to the new map.

@@ -117,7 +117,7 @@ ol_control_CanvasTitle.prototype.setVisible = function (b)
  * @api stable
  */
 ol_control_CanvasTitle.prototype.getVisible = function (b)
-{	return ($(this.element).css('display') != 'none');
+{	return ($(this.element).css('display') !== 'none');
 }
 
 /** Draw scale line in the final canvas

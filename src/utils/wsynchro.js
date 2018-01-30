@@ -1,4 +1,5 @@
-﻿/** WSynchro object to synchronize windows
+﻿//TODO: rewrite WSynchro module and export
+/** WSynchro object to synchronize windows
 *	- windows: array of windows to synchro (
 *	- source: the window source (undefined if first window)
 */

@@ -12,7 +12,7 @@ import ol_coordinate from 'ol/coordinate'
 import ol_source_Vector from 'ol/source/vector'
 import ol_source_ImageVector from 'ol/source/imagevector'
 import ol_extent from 'ol/extent'
-import ol_HexGrid from '../utils/hexgrid'
+import ol_HexGrid from '../render/hexgrid'
 
 (function() {
 

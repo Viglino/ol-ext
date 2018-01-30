@@ -55,7 +55,7 @@ ol_control_CanvasScaleLine.prototype.setMap = function (map)
 
 /**
  * Change the control style
- * @param {ol_style_Style}
+ * @param {_ol_style_Style_} style
  */
 ol_control_CanvasScaleLine.prototype.setStyle = function (style)
 {	var stroke = style.getStroke();
@@ -81,7 +81,7 @@ ol_control_CanvasScaleLine.prototype.setStyle = function (style)
  * @private
  */
 ol_control_CanvasScaleLine.prototype.drawScale_ = function(e)
-{	if ( this.$element.css("display")=="none" ) return;
+{	if ( this.$element.css("display")==="none" ) return;
 	var ctx = e.context;
 
 	// Get size of the scale div
@@ -122,8 +122,8 @@ ol_control_CanvasScaleLine.prototype.drawScale_ = function(e)
 	ctx.strokeStyle = this.strokeStyle_;
 	var max = 4;
 	var n = parseInt(text);
-	while (n%10 == 0) n/=10;
-	if (n%5 == 0) max = 5;
+	while (n%10 === 0) n/=10;
+	if (n%5 === 0) max = 5;
 	for (var i=0; i<max; i++)
 	{	ctx.beginPath();
 		ctx.fillStyle = i%2 ? this.fillStyle_ : this.strokeStyle_;

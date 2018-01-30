@@ -92,8 +92,10 @@ gulp.task("js", function() {
 		"./src/interaction/*.js",
 		"./src/layer/*.js",
 		"./src/overlay/*.js",
-		"./src/style/fontsymbol.js", "./src/style/*.js", "!./src/style/*.def.js", 
-		"./src/utils/*.js", "!./src/utils/ol.map.pulse.js", "!./src/utils/ol.map.markup.js",
+		"./src/geom/*.js",
+		".src/render/*.js",
+		"./src/style/fontsymbol.js", "./src/style/*.js", "!./src/style/fontmakidef.js", "!./src/style/fontawesomedef.js",
+		"./src/utils/*.js", "!./src/render/pulse.js", "!./src/render/markup.js",
 		"!./*/*.min.js",
 		"!./*/texturefilterimage.js"
 		])

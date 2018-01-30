@@ -1,4 +1,4 @@
-﻿
+﻿//TODO: rewrite exif2geojson module and export
 /** Convert a list of image file or a list of image into geojson 
 * reading location in the EXIF tags
 * @constructor

@@ -1,4 +1,4 @@
-
+//TODO: Rewrite pdf export module and export
 import jsPDF from 'jspdf'
 
 /** jQuery plugin to export the map
