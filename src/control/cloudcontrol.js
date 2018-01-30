@@ -125,7 +125,7 @@ ol_control_Cloud.prototype.drawCloud_ = function (event)
 	}
 	// Parameters changed
 	else if (d != p.length)
-	{	if (this.width != canvas.width || this.height != canvas.height)
+	{	if (this.width !== canvas.width || this.height !== canvas.height)
 		{	p = this.particules = [];
 			addClouds(d);
 			this.width = canvas.width;
