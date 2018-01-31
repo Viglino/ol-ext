@@ -18,19 +18,16 @@ import ol_source_Vector from 'ol/source/vector'
 //import ol_interaction_Interaction from 'ol/interaction/interaction'
 
 /**
- * OpenLayers 3 Layer Overview Control.
- * The overview can rotate with map. 
- * Zoom levels are configurable.
- * Click on the overview will center the map.
- * Change width/height of the overview trough css.
+ * OpenLayers 3 lobe Overview Control.
+ * The globe can rotate with map (follow.) 
  *
  * @constructor
  * @extends {ol_control_Control}
- * @param {Object=} opt_options Control options.
- *	- rotation {boolean} enable rotation, default false
- *	- align {top|bottom-left|right} position
- *	- layers {Array<ol.layer>} list of layers
- *	- style {ol.style.Style | Array.<ol.style.Style> | undefined} style to draw the map extent on the overveiw
+ * @param {Object=} options Control options.
+ * 	@param {boolean} follow follow the map when center change, default false
+ * 	@param {top|bottom-left|right} align position as top-left, etc.
+ * 	@param {Array<ol.layer>} layers list of layers to display on the globe
+ * 	@param {ol.style.Style | Array.<ol.style.Style> | undefined} style style to draw the position on the map , default a marker
  */
 var ol_control_Globe = function(opt_options)
 {	var options = opt_options || {};

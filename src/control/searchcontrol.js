@@ -190,4 +190,8 @@ ol_control_Search.prototype.drawList_ = function (auto)
 	}
 };
 
+ol_control_Search.prototype.equalFeatures = function (f1, f2) {
+	return false;
+};
+
 export default ol_control_Search

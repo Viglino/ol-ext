@@ -3,15 +3,15 @@
 <head>
 <!----------------------------------------------------------
 
-	Copyright (c) 2017 Jean-Marc VIGLINO,
+	Copyright (c) 2017-2018 Jean-Marc VIGLINO,
 	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 
 ------------------------------------------------------------>
-	<title>OL3-ext: Search BAN control</title>
+	<title>ol-ext: Search Photon control</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 	<meta name="description" content="Control to add a grid reference to a map." />
-	<meta name="keywords" content="ol3, control, search, BAN, french, places, autocomplete" />
+	<meta name="keywords" content="ol3, control, search, photon, places, autocomplete" />
 
 	<!-- FontAwesome -->
 	<link rel="stylesheet" href="https://rawgit.com/FortAwesome/Font-Awesome/master/css/font-awesome.min.css" type="text/css" />
@@ -23,20 +23,15 @@
 	<script type='text/javascript' src='//cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.3/jquery.xdomainrequest.min.js'></script>
 	<![endif]-->
 
-    <!-- OL3 -->
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
-	<link rel="stylesheet" href="https://openlayers.org/en/master/css/ol.css" />
+	<!-- Openlayers -->
+    <link rel="stylesheet" href="https://openlayers.org/en/master/css/ol.css" />
 	<script type="text/javascript" src="https://openlayers.org/en/master/build/ol.js"></script>
 	
-	<link rel="stylesheet" href="../control/searchcontrol.css" />
-<!--
-	<script type="text/javascript" src="../control/searchcontrol.js"></script>
-	<script type="text/javascript" src="../control/searchphotoncontrol.js"></script>
-	<script type="text/javascript" src="../control/searchbancontrol.js"></script>
--->
-	<script type="text/javascript" src="../dist/ol-ext.js"></script>
-	
-	<link rel="stylesheet" href="style.css"/>
+	<!-- ol-ext -->
+    <link rel="stylesheet" href="../../dist/ol-ext.css" />
+	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+	<link rel="stylesheet" href="../style.css"/>
 	<style>
 		.ol-search ul {
 			color: #333;
@@ -48,34 +43,32 @@
 			color: #333;
 			font-size:0.85em;
 		}
-		.info a img {
-			display: inline-block;
-			height: 100px;
-			margin: .5em;
-		}
 	</style>
 </head>
 <body >
 	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
 
-	<a href="../index.html">
-		<h1>OL3-ext: Search BAN control</h1>
+	<a href="../../index.html">
+		<h1>ol-ext: Search Photon control</h1>
 	</a>
 
 	<div class="info">
-		<i>ol.control.SearchBAN</i> is a control to search place using the 
-		<a href="https://adresse.data.gouv.fr/">French National Address Base (BAN) API</a>.
-		<div style="text-align: center">
-			<b>In partnership with:</b><br/>
-			<a href="https://portail.dgfip.finances.gouv.fr/portail/accueilIAM.pl"><img src="https://adresse.data.gouv.fr//static/images/logos/dgfip.png" alt="DGFIP"></a>
-			<a href="http://ign.fr"><img src="https://adresse.data.gouv.fr//static/images/logos/IGN.jpg" alt="IGN" class="jsx-3503728609 logo"></a>
-			<a href="http://openstreetmap.fr"><img src="https://adresse.data.gouv.fr//static/images/logos/OSM.png" alt="OpenStreetMap France"></a>
-			<a href="http://www.laposte.fr"><img src="https://adresse.data.gouv.fr//static/images/logos/laposte.jpg" alt="La Poste"></a>
-		</div>	
+		<i>ol.control.SearchPhoton</i> is a control to search place using the <a href="http://photon.komoot.de/">Photon API</a>.
 		<ul>
+			<li>
+				Photon is a service that does auto-complete from three characters at: http://photon.komoot.de/
+			</li>
+			<li>
+				Read the terms of use at the bottom of the page.
+			</li>
+			<li>
+				Photon is openly available so you can set up this service on your own machine if you want.
+			</li>
+			<li>
+				Use the <i>select</i> event to get the photon response when selected y the user.
+			</li>
 		</ul>
-		<br/>
-		<i>ol.control.SearchBAN</i> use the <a href="map.control.search.html">ol.control.Search</a> control.
+		<i>ol.control.SearchPhoton</i> use the <a href="map.control.search.html">ol.control.Search</a> control.
 	</div>
 
 	<!-- DIV pour la carte -->
@@ -101,8 +94,9 @@
 		});
 
 	// Set the control grid reference
-	var search = new ol.control.SearchBAN(
+	var search = new ol.control.SearchPhoton(
 		{	//target: $(".options").get(0),
+			lang:"fr",		// Force preferred language
 			position: true	// Search, with priority to geo position
 		});
 	map.addControl (search);

@@ -198,6 +198,10 @@ ol.control.Search.prototype.drawList_ = function (auto)
 	}
 };
 
+ol.control.Search.prototype.equalFeatures = function (f1, f2) {
+	return false;
+};
+
 
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
@@ -2378,19 +2382,16 @@ ol.control.GeoBookmark.prototype.addBookmark = function(name, position, zoom, pe
 //
 
 /**
- * OpenLayers 3 Layer Overview Control.
- * The overview can rotate with map. 
- * Zoom levels are configurable.
- * Click on the overview will center the map.
- * Change width/height of the overview trough css.
+ * OpenLayers 3 lobe Overview Control.
+ * The globe can rotate with map (follow.) 
  *
  * @constructor
  * @extends {ol.control.Control}
- * @param {Object=} opt_options Control options.
- *	- rotation {boolean} enable rotation, default false
- *	- align {top|bottom-left|right} position
- *	- layers {Array<ol.layer>} list of layers
- *	- style {ol.style.Style | Array.<ol.style.Style> | undefined} style to draw the map extent on the overveiw
+ * @param {Object=} options Control options.
+ * 	@param {boolean} follow follow the map when center change, default false
+ * 	@param {top|bottom-left|right} align position as top-left, etc.
+ * 	@param {Array<ol.layer>} layers list of layers to display on the globe
+ * 	@param {ol.style.Style | Array.<ol.style.Style> | undefined} style style to draw the position on the map , default a marker
  */
 ol.control.Globe = function(opt_options)
 {	var options = opt_options || {};
@@ -11257,7 +11258,8 @@ ol.source.HexBin.prototype.getSource = function()
 {	return this._origin;
 };
 
-/** An image source for hexagonal binning
+/* DEPRECATED: use ol.source.HexBin with renderMode:'image' on layer
+* An image source for hexagonal binning
 * @constructor 
 * @extends {ol.source.ImageVector}
 * @param {} options ol.source.ImageVectorOptions + ol.HexGridOptions
@@ -11266,7 +11268,7 @@ ol.source.HexBin.prototype.getSource = function()
 *	@param {ol.coordinate} options.origin orgin of the grid, default [0,0]
 *	@param {pointy|flat} options.layout grid layout, default pointy
 *	@param {function|undefined} options.geometryFunction Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center. 
-*/
+* /
 ol.source.ImageHexBin = function(options)
 {	options = options || {} ;
 	var source = new ol.source.Vector();
@@ -11280,10 +11282,11 @@ ol.inherits (ol.source.ImageHexBin, ol.source.ImageVector);
 /**
 * Get the orginal source 
 * @return {ol.source.Vector}
-*/
+* /
 ol.source.ImageHexBin.prototype.getOriginSource = function()
 {	return this._origin;
 };
+*/
 
 })();
 
