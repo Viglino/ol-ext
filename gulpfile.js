@@ -86,22 +86,22 @@ gulp.task("cssd", function() {
 gulp.task("js", function() {
 	gulp.src([
 		"./src/control/searchcontrol.js","./src/control/searchphotoncontrol.js",
-		"./src/control/layerswitchercontrol.js", "./src/control/*.js", "!./src/control/piratecontrol.js",
+    "./src/control/layerswitchercontrol.js", "./src/control/*.js", "!./src/control/piratecontrol.js",
 		"./src/featureanimation/featureanimation.js", "./src/featureanimation/*.js", 
 		"./src/filter/filter.js", "./src/filter/maskfilter.js", "./src/filter/*.js",
 		"./src/interaction/*.js",
 		"./src/layer/*.js",
 		"./src/overlay/*.js",
-		"./src/geom/*.js",
-		".src/render/*.js",
+    "./src/geom/*.js",
+    "./src/render/*.js",
 		"./src/style/fontsymbol.js", "./src/style/*.js", "!./src/style/fontmakidef.js", "!./src/style/fontawesomedef.js",
-		"./src/utils/*.js", "!./src/render/pulse.js", "!./src/render/markup.js",
+    "./src/utils/*.js", "!./src/render/pulse.js", "!./src/render/markup.js",
 		"!./*/*.min.js",
 		"!./*/texturefilterimage.js"
 		])
 	.pipe(transform())
 	.pipe(concat(name+".js"))
-    .pipe(minify(
+  .pipe(minify(
 		{	ext: { 
 				src:".js", 
 				min:".min.js" 
@@ -109,6 +109,15 @@ gulp.task("js", function() {
 		}))
 	.pipe(header(banner, { pkg : pkg } ))
   .pipe(gulp.dest("dist"))
+});
+
+// Build extra js files to use individually
+gulp.task("extrajs", function() {
+	gulp.src([
+		"./src/style/fontmakidef.js", "./src/style/fontawesomedef.js"
+		])
+	.pipe(transform())
+  .pipe(gulp.dest("dist/extra"))
 });
 
 /** Build the doc */
@@ -123,7 +132,7 @@ gulp.task('doc', function (cb) {
 });
 
 // build the dist
-gulp.task("dist", ["js","css","cssd"]);
+gulp.task("dist", ["js","extrajs","css","cssd"]);
 
 // The default task that will be run if no task is supplied
-gulp.task("default", ["js","css","cssd"]);
+gulp.task("default", ["js","extrajs","css","cssd"]);

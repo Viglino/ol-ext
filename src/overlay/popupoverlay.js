@@ -59,7 +59,7 @@ var ol_Overlay_Popup = function (options)
 	// call setPositioning first in constructor so getClassPositioning is called only once
 	this.setPositioning(options.positioning);
 	this.setPopupClass(options.popupClass);
-}
+};
 ol.inherits(ol_Overlay_Popup, ol_Overlay);
 
 /**
@@ -76,7 +76,7 @@ ol_Overlay_Popup.prototype.getClassPositioning = function ()
 	if (/^center/.test(pos)) c += "ol-popup-middle ";
 	if (/center$/.test(pos)) c += "ol-popup-center ";
 	return c;
-}
+};
 
 /**
  * Set a close box to the popup.
@@ -87,7 +87,7 @@ ol_Overlay_Popup.prototype.setClosebox = function (b)
 {	this.closeBox = b;
 	if (b) this._elt.addClass("hasclosebox");
 	else this._elt.removeClass("hasclosebox");
-}
+};
 
 /**
  * Set the CSS class of the popup.
@@ -97,7 +97,7 @@ ol_Overlay_Popup.prototype.setClosebox = function (b)
 ol_Overlay_Popup.prototype.setPopupClass = function (c)
 {	this._elt.removeClass()
 		.addClass("ol-popup "+(c||"default")+" "+this.getClassPositioning()+(this.closeBox?" hasclosebox":""));
-}
+};
 
 /**
  * Add a CSS class to the popup.
@@ -106,7 +106,7 @@ ol_Overlay_Popup.prototype.setPopupClass = function (c)
  */
 ol_Overlay_Popup.prototype.addPopupClass = function (c)
 {	this._elt.addClass(c);
-}
+};
 
 /**
  * Remove a CSS class to the popup.
@@ -115,7 +115,7 @@ ol_Overlay_Popup.prototype.addPopupClass = function (c)
  */
 ol_Overlay_Popup.prototype.removePopupClass = function (c)
 {	this._elt.removeClass(c);
-}
+};
 
 /**
  * Set positionning of the popup
@@ -134,7 +134,7 @@ ol_Overlay_Popup.prototype.setPositioning = function (pos)
 	pos = pos.replace(/auto/g,"center");
 	if (pos=="center") pos = "bottom-center";
 	this.setPositioning_(pos);
-}
+};
 
 /** @private
  * @param {ol.OverlayPositioning | string | undefined} pos  
@@ -143,7 +143,7 @@ ol_Overlay_Popup.prototype.setPositioning_ = function (pos)
 {	ol_Overlay.prototype.setPositioning.call(this, pos);
 	this._elt.removeClass("ol-popup-top ol-popup-bottom ol-popup-left ol-popup-right ol-popup-center ol-popup-middle");
 	this._elt.addClass(this.getClassPositioning());
-}
+};
 
 /** Check if popup is visible
 * @return {boolean}
@@ -211,7 +211,7 @@ ol_Overlay_Popup.prototype.show = function (coordinate, html)
 		{	self._elt.addClass("visible"); 
 		}, 0);
 	}
-}
+};
 
 /**
  * Hide the popup
@@ -223,6 +223,6 @@ ol_Overlay_Popup.prototype.hide = function ()
 	this.setPosition(undefined);
 	if (this._tout) clearTimeout(this._tout);
 	this._elt.removeClass("visible");
-}
+};
 
 export  default ol_Overlay_Popup
