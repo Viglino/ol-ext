@@ -95,7 +95,7 @@ gulp.task("js", function() {
     "./src/geom/*.js",
     "./src/render/*.js",
 		"./src/style/fontsymbol.js", "./src/style/*.js", "!./src/style/fontmakidef.js", "!./src/style/fontawesomedef.js",
-    "./src/utils/*.js", "!./src/render/pulse.js", "!./src/render/markup.js",
+    //"./src/utils/*.js", "!./src/render/pulse.js", "!./src/render/markup.js",
 		"!./*/*.min.js",
 		"!./*/texturefilterimage.js"
 		])
@@ -114,7 +114,8 @@ gulp.task("js", function() {
 // Build extra js files to use individually
 gulp.task("extrajs", function() {
 	gulp.src([
-		"./src/style/fontmakidef.js", "./src/style/fontawesomedef.js"
+    "./src/style/fontmakidef.js", "./src/style/fontawesomedef.js",
+    "./src/utils/jqExportMap.js"
 		])
 	.pipe(transform())
   .pipe(gulp.dest("dist/extra"))
