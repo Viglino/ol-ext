@@ -9,9 +9,9 @@ import ol_style_Style from 'ol/style/style'
 import ol_style_Stroke from 'ol/style/stroke'
 import ol_extent from 'ol/extent'
 import ol_source_Vector from 'ol/source/vector'
+import ol_layer_Vector from 'ol/layer/vector'
 import ol_Collection from 'ol/collection'
 import ol_layer_Image from 'ol/layer/image'
-import ol_source_ImageVector from 'ol/source/imagevector'
 import ol_Feature from 'ol/feature'
 import ol_geom_LineString from 'ol/geom/linestring'
 
@@ -67,6 +67,7 @@ var ol_interaction_SnapGuides = function(options)
 		{	features: new ol_Collection(),
 			useSpatialIndex: false
 		});
+/* Speed up with a ImageVector layer (deprecated)
 	this.overlayLayer_ = new ol_layer_Image(
 		{	source: new ol_source_ImageVector(
 			{	source: this.overlaySource_,
@@ -77,8 +78,8 @@ var ol_interaction_SnapGuides = function(options)
 			name:'Snap overlay',
 			displayInLayerSwitcher: false
 		});
-/* Speed up with a ImageVector layer
-	this.overlayLayer_ = new ol.layer.Vector(
+*/
+	this.overlayLayer_ = new ol_layer_Vector(
 		{	source: this.overlaySource_,
 			style: function(f)
 			{	return sketchStyle;
@@ -86,7 +87,6 @@ var ol_interaction_SnapGuides = function(options)
 			name:'Snap overlay',
 			displayInLayerSwitcher: false
 		});
-*/
 	// Use snap interaction
 	ol_interaction_Interaction.call(this,
 		{	handleEvent: function(e)

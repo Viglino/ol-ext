@@ -2616,7 +2616,7 @@ ol.control.Graticule = function(options)
 		{	stroke: new ol.style.Stroke({ color:"#000", width:1 }),
 			fill: new ol.style.Fill({ color: "#fff" }),
 			text: new ol.style.Text(
-			{	stroke: new _ol_style_Stroke({ color:"#fff", width:2 }),
+			{	stroke: new ol.style.Stroke({ color:"#fff", width:2 }),
 				fill: new ol.style.Fill({ color:"#000" }),
 			}) 
 		});
@@ -8962,6 +8962,7 @@ ol.interaction.SnapGuides = function(options)
 		{	features: new ol.Collection(),
 			useSpatialIndex: false
 		});
+/* Speed up with a ImageVector layer (deprecated)
 	this.overlayLayer_ = new ol.layer.Image(
 		{	source: new ol.source.ImageVector(
 			{	source: this.overlaySource_,
@@ -8972,7 +8973,7 @@ ol.interaction.SnapGuides = function(options)
 			name:'Snap overlay',
 			displayInLayerSwitcher: false
 		});
-/* Speed up with a ImageVector layer
+*/
 	this.overlayLayer_ = new ol.layer.Vector(
 		{	source: this.overlaySource_,
 			style: function(f)
@@ -8981,7 +8982,6 @@ ol.interaction.SnapGuides = function(options)
 			name:'Snap overlay',
 			displayInLayerSwitcher: false
 		});
-*/
 	// Use snap interaction
 	ol.interaction.Interaction.call(this,
 		{	handleEvent: function(e)
@@ -12937,6 +12937,96 @@ ol.HexGrid.prototype.cube_neighbors = function (c, d)
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+
+
+
+
+
+
+
+
+
+
+
+/** Show a markup a point on postcompose
+*	@deprecated use map.animateFeature instead
+*	@param {ol.coordinates} point to pulse
+*	@param {ol.markup.options} pulse options param
+*		- projection {ol.projection|String|undefined} projection of coords, default none
+*		- delay {Number} delay before mark fadeout
+*		- maxZoom {Number} zoom when mark fadeout
+*		- style {ol.style.Image|ol.style.Style|Array<ol.style.Style>} Image to draw as markup, default red circle
+*	@return Unique key for the listener with a stop function to stop animation
+*/
+ol.Map.prototype.markup = function(coords, options)
+{	var listenerKey;
+	var self = this;
+	options = options || {};
+
+	// Change to map's projection
+	if (options.projection)
+	{	coords = ol.proj.transform(coords, options.projection, this.getView().getProjection());
+	}
+	
+	// options
+	var start = new Date().getTime();
+	var delay = options.delay || 3000;
+	var duration = 1000;
+	var maxZoom = options.maxZoom || 100;
+	var easing = ol.easing.easeOut;
+	var style = options.style;
+	if (!style) style = new ol.style.Circle({ radius:10, stroke:new ol.style.Stroke({color:'red', width:2 }) });
+	if (style instanceof ol.style.Image) style = new ol.style.Style({ image: style });
+	if (!(style instanceof Array)) style = [style];
+
+	// Animate function
+	function animate(event) 
+	{	var frameState = event.frameState;
+		var elapsed = frameState.time - start;
+		if (elapsed > delay+duration) 
+		{	ol.Observable.unByKey(listenerKey);
+			listenerKey = null;
+		}
+		else 
+		{	if (delay>elapsed && this.getView().getZoom()>maxZoom) delay = elapsed;
+			var ratio = frameState.pixelRatio;
+			var elapsedRatio = 0;
+			if (elapsed > delay) elapsedRatio = (elapsed-delay) / duration;
+			var context = event.context;
+			context.save();
+			context.beginPath();
+			context.globalAlpha = easing(1 - elapsedRatio);
+			for (var i=0; i<style.length; i++)
+			{	var imgs = style[i].getImage();
+				var sc = imgs.getScale(); 
+				imgs.setScale(sc*ratio);
+				event.vectorContext.setStyle(style[i]);
+				event.vectorContext.drawGeometry(new ol.geom.Point(coords));
+				imgs.setScale(sc);
+			}
+			context.restore();
+			// tell OL3 to continue postcompose animation
+			if (elapsed >= delay) frameState.animate = true;
+		}
+	}
+			
+	setTimeout (function()
+		{	if (listenerKey) self.renderSync(); 
+		}, delay);
+
+	// Launch animation
+	listenerKey = this.on('postcompose', animate, this);
+	this.renderSync();
+	listenerKey.stop = function()
+	{	delay = duration = 0;
+		this.target.renderSync();
+	};
+	return listenerKey;
+}
+/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
 /** Ordering function for ol.layer.Vector renderOrder parameter
 *	ol.ordering.fn (options)
 *	It will return an ordering function (f0,f1)
@@ -12974,6 +13064,92 @@ ol.ordering.zIndex = function(options)
 		};
 	}
 };
+
+
+/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+
+
+
+
+
+
+
+
+
+
+/** Pulse a point on postcompose
+*	@deprecated use map.animateFeature instead
+*	@param {ol.coordinates} point to pulse
+*	@param {ol.pulse.options} pulse options param
+*		- projection {ol.projection||String} projection of coords
+*		- duration {Number} animation duration in ms, default 3000
+*		- amplitude {Number} movement amplitude 0: none - 0.5: start at 0.5*radius of the image - 1: max, default 1
+*		- easing {ol.easing} easing function, default ol.easing.easeOut
+*		- style {ol.style.Image|ol.style.Style|Array<ol.style.Style>} Image to draw as markup, default red circle
+*/
+ol.Map.prototype.pulse = function(coords, options)
+{	var listenerKey;
+	options = options || {};
+
+	// Change to map's projection
+	if (options.projection)
+	{	coords = ol.proj.transform(coords, options.projection, this.getView().getProjection());
+	}
+	
+	// options
+	var start = new Date().getTime();
+	var duration = options.duration || 3000;
+	var easing = options.easing || ol.easing.easeOut;
+	
+	var style = options.style;
+	if (!style) style = new ol.style.Circle({ radius:30, stroke:new ol.style.Stroke({color:'red', width:2 }) });
+	if (style instanceof ol.style.Image) style = new ol.style.Style({ image: style });
+	if (!(style instanceof Array)) style = [style];
+
+	var amplitude = options.amplitude || 1;
+	if (amplitude<0) amplitude=0;
+
+	var maxRadius = options.radius || 15;
+	if (maxRadius<0) maxRadius = 5;
+	var minRadius = maxRadius - (options.amplitude || maxRadius); //options.minRadius || 0;
+	var width = options.lineWidth || 2;
+	var color = options.color || 'red';
+	console.log("pulse")
+	// Animate function
+	function animate(event) 
+	{	var frameState = event.frameState;
+		var ratio = frameState.pixelRatio;
+		var elapsed = frameState.time - start;
+		if (elapsed > duration) ol.Observable.unByKey(listenerKey);
+		else
+		{	var elapsedRatio = elapsed / duration;
+			var context = event.context;
+			context.save();
+			context.beginPath();
+			var e = easing(elapsedRatio)
+			context.globalAlpha = easing(1 - elapsedRatio);
+			console.log("anim")
+			for (var i=0; i<style.length; i++)
+			{	var imgs = style[i].getImage();
+				var sc = imgs.getScale(); 
+				imgs.setScale(ratio*sc*(1+amplitude*(e-1)));
+				event.vectorContext.setStyle(style[i]);
+				event.vectorContext.drawGeometry(new ol.geom.Point(coords));
+				imgs.setScale(sc);
+			}
+			context.restore();
+			// tell OL3 to continue postcompose animation
+			frameState.animate = true;
+		}
+	}
+
+	// Launch animation
+	listenerKey = this.on('postcompose', animate, this);
+	this.renderSync();
+}
 
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
@@ -14958,249 +15134,3 @@ ol.style.Shadow.prototype.getChecksum = function()
 };
 
 
-
-//TODO: rewrite exif2geojson module and export
-/** Convert a list of image file or a list of image into geojson 
-* reading location in the EXIF tags
-* @constructor
-* @param {Array<Image|File>} img the array to process
-* @param {} options
-*	- camera {boolean} true to get camera info
-*	- date {boolean} true to get photo date
-*	- image {boolean} true to get image info
-*	- loading {function} a callback function that take the number of image to process
-*	- onLoad {function} callback function that takes a geojson when loaded
-* @require Exif-JS [https://github.com/exif-js/exif-js] 
-*/
-var exif2geojson;
-
-(function(){
-
-// Get fractionnal number
-function getNumber(n) { return n.numerator / n.denominator; }
-
-// Convert to DMS
-function getDMS(l)
-{	if (l) return getNumber(l[0]) + getNumber(l[1]) /60 + getNumber(l[2]) /3600;
-	else return null;
-}
-
-// Constructor
-exif2geojson = function (img, options)
-{	options = options || {};
-	if (typeof(options.loading) != "function") options.loading = function(){};
-	if (typeof(options.onLoad) != "function") options.onLoad = function(json){ console.log(json); };
-	//
-	var json = 
-	{	"type": "FeatureCollection",
-		"features": []
-	};
-
-	var nb = img.length;
-	for (var i=0, f; f=img[i]; i++)
-	{	EXIF.getData(f, function() 
-		{	// console.log(this);
-			if (this.exifdata.GPSLongitudeRef) 
-			{	// json feature
-				fjs = 
-				{	"type": "Feature",
-					"properties": {},
-					"geometry": 
-					{	"type": "Point",
-						"coordinates": []
-					}
-				};
-				json.features.push (fjs)
-				fjs.geometry.coordinates = 
-				[	(this.exifdata.GPSLongitudeRef=='E'? 1: -1) * getDMS(this.exifdata.GPSLongitude),
-					(this.exifdata.GPSLatitudeRef=='N'? 1: -1) * getDMS(this.exifdata.GPSLatitude)
-				];
-				if (this.exifdata.GPSAltitude) fjs.geometry.coordinates.push (getNumber(this.exifdata.GPSAltitude));
-				fjs.properties.url = this.src || this.name;
-				if (this.exifdata.ImageDescription) fjs.properties.description = this.exifdata.ImageDescription;
-				if (options.date && this.exifdata.DateTime) fjs.properties.date = this.exifdata.DateTime;
-				// Camera info
-				if (options.camera)
-				{	if (this.exifdata.Make) fjs.properties.make = this.exifdata.Make;
-					if (this.exifdata.Model) fjs.properties.model = this.exifdata.Model.replace(new RegExp(String.fromCharCode(0),'g'),"");
-				}
-				// Image info
-				if (options.image)
-				{	fjs.properties.size = this.size;
-					fjs.properties.type = this.type;
-					if (this.exifdata.ImageHeight) fjs.properties.height = this.exifdata.ImageHeight;
-					if (this.exifdata.ImageWidth) fjs.properties.width = this.exifdata.ImageWidth;
-				}
-			}
-			nb--;
-			options.loading(nb)
-			if (!nb) options.onLoad(json);
-		});
-	}
-}
-
-})();
-
-
-//TODO: Rewrite pdf 
-
-
-/** jQuery plugin to 
-*
-* Export PDF :
-* @uses jspdf
-* by gingerik
-* https://github.com/gingerik/ol3/blob/gh-pages/examples/export-pdf.html
-* http://gingerik.github.io/ol3/examples/export-pdf.html
-*
-* @param: {ol.Map} map to export
-* @param: {Object=} {format, quality, dpi} 
-*		format {String}: png/jpeg/webp, default find the extension in the download attribut
-*		quality {Number}: between 0 and 1 indicating image quality if the requested type is jpeg or webp
-*		dpi {Number}: resolution of the map
-*/
-$.fn.exportMap = function(map, options)
-{	if (!options) options={};
-
-	function saveCanvas(input, canvas, ext)
-	{	if (ext=='pdf')
-		{	var data = canvas.toDataURL('image/jpeg');
-			var size, w, h, orient, format = 'a4';
-			var margin = Number($(input).data('margin'))||0;
-			// Calculate size
-			if (canvas.width > canvas.height)
-			{	orient = 'landscape';
-				size = [297,210];
-			}
-			else
-			{	orient = 'portrait';
-				size = [210,297];
-			}
-			var sc = Math.min ((size[0]-2*margin)/canvas.width,(size[1]-2*margin)/canvas.height);
-			w = sc * canvas.width;
-			h = sc * canvas.height;
-			// Center
-			var mx = (size[0] - w)/2;
-			var my = (size[1] - h)/2;
-			// Export!
-			var pdf = new jsPDF(orient, "mm", format);
-			pdf.addImage(data, 'JPEG', mx, my, w, h);
-			// pdf.save('map.pdf');
-			input.href = pdf.output('datauristring');
-		}
-		else input.href = canvas.toDataURL('image/'+(options.format||ext), options.quality);
-	}
-
-	if (!this.each) return;
-
-	return this.each(function()
-	{	// Force download on HTML5
-		if ('download' in this)
-		{	var self = this;
-			$(this).on('click',function()
-			{	// Get extension in the download
-				var ext = $(this).attr("download").split('.').pop();
-				if (ext=='jpg') ext = 'jpeg';
-				// Try to change resolution
-				if (options.dpi)
-				{	map.once('precompose', function(event) 
-					{	var canvas = event.context.canvas;
-						var scaleFactor = options.dpi / 96;
-						canvas.width = Math.ceil(canvas.width * scaleFactor);
-						canvas.height = Math.ceil(canvas.height * scaleFactor);
-						event.context.scale(scaleFactor, scaleFactor);
-					});
-				}
-				var label = $(this).text();
-				// Draw a white background before draw (transparent background)
-				if (ext!='png')
-				{	map.once('precompose', function(e)
-					{	e.context.fillStyle = "white";
-						e.context.fillRect(0,0,e.context.canvas.width,e.context.canvas.height);
-					})
-				}
-				// Copy the map
-				map.once('postcompose', function(event) 
-				{	saveCanvas (self, event.context.canvas, ext);
-					// Redraw map (if dpi change)
-					setTimeout(function(){ map.renderSync() }, 500);
-				});
-				map.renderSync();
-			});
-		}
-		else 
-		{	//$(this).hide();
-			$(this).on('click',function(){ alert ("Export functions are not supported by your browser...");});
-		}
-	});
-};
-
-//TODO: rewrite WSynchro module and export
-/** WSynchro object to synchronize windows
-*	- windows: array of windows to synchro (
-*	- source: the window source (undefined if first window)
-*/
-if (!window.WSynchro) WSynchro = { windows: [] };
-
-/** Open a new window to synchronize
-*	@param {url|undefined} url to open, default current window url
-*	@param {specs|undefined|null} specs (as for window.open), undefined to open in a new window, null to open in a new tab, default new window
-*/
-WSynchro.open = function (href, specs)
-{	var w = window.open (href || window.location.href, "_blank", typeof(specs)=="undefined"? "location=1,menubar=1,toolbar=1,scrollbars=1" : specs);
-	if (!w.WSynchro) w.WSynchro = { windows: [ window ], source:window };
-	else
-	{	w.WSynchro.windows = [ window ];
-		w.WSynchro.source = window;
-	}
-	this.windows.push(w);
-}
-
-/**	Trigger function 
-*	@param {synchronize} 
-*	@param {function} synchronize function
-*/
-WSynchro.on = function (e, syncFn)
-{	if (!this.syncFn_) this.syncFn_ = [];
-	if (e==='synchronize') this.syncFn_.push(syncFn);
-}
-
-/**	Synchronize windows
-*	@param {Object|undefined} if undefined stop synchro (when the window is synchronize)
-*/
-WSynchro.synchronize = function(params)
-{	this.synchronize_ (params);
-}
-
-/**	Synchronize windows: 
-*	@param {Array} array of arguments to use with fn
-*	@param {} internal syncrho time to avoid stnchro loops
-*	@private
-*/
-WSynchro.synchronize_ = function(args, sync)
-{	// Stop condition 
-	if (!sync) 
-	{	if (this.synchronizing) sync = this.sync;
-		else this.sync = sync = (new Date()).getTime();
-		this.synchronizing = false;
-	}
-	else 
-	{	// Don't synchronize twice
-		if (sync == this.sync) return;
-		this.sync = sync;
-		this.synchronizing = true;
-		try
-		{	if (WSynchro.syncFn_)
-			{	args.type = "synchronize";
-				for (var i=0; i<WSynchro.syncFn_.length; i++) 
-				{	WSynchro.syncFn_[i].apply (null, [args]);
-				}
-			}
-		} catch(e) {};
-	}
-	if (args) for (var i=0; i<this.windows.length; i++)
-	{	try
-		{	this.windows[i].WSynchro.synchronize_(args, sync); 
-		} catch(e) {};
-	}
-}

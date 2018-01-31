@@ -62,7 +62,7 @@ var ol_control_Graticule = function(options)
 		{	stroke: new ol_style_Stroke({ color:"#000", width:1 }),
 			fill: new ol_style_Fill({ color: "#fff" }),
 			text: new ol_style_Text(
-			{	stroke: new _ol_style_Stroke({ color:"#fff", width:2 }),
+			{	stroke: new ol_style_Stroke({ color:"#fff", width:2 }),
 				fill: new ol_style_Fill({ color:"#000" }),
 			}) 
 		});

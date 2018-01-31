@@ -1,49 +1,36 @@
 ﻿<!DOCTYPE html>
+<html>
+<head>
 <!----------------------------------------------------------
  
-	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
 	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 	
 ------------------------------------------------------------>
-<html>
-<head>
-	<title>OL3-ext: Control Toggle</title>
+	<title>ol-ext: Control bar</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 	<meta name="description" content="ol.control.Bar is a control bar that contains controls." />
 	<meta name="keywords" content="ol3, control, bar, panel, ol3, openlayers, interaction" />
 
-	<link rel="stylesheet" href="style.css" />
+	<link rel="stylesheet" href="../style.css" />
 
 	<!-- jQuery -->
 	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 	<!-- FontAwesome -->
 	<link rel="stylesheet" href="https://rawgit.com/FortAwesome/Font-Awesome/master/css/font-awesome.min.css" type="text/css" />
 
-	<!-- OL3 -->
+	<!-- Openlayers -->
     <link rel="stylesheet" href="https://openlayers.org/en/master/css/ol.css" />
 	<script type="text/javascript" src="https://openlayers.org/en/master/build/ol.js"></script>
 	
-	<!-- controls -->
-	<link rel="stylesheet" href="../control/controlbar.css" type="text/css" />
-	<script type="text/javascript" src="../control/buttoncontrol.js"></script>
-	<script type="text/javascript" src="../control/togglecontrol.js"></script>
+	<!-- ol-ext -->
+    <link rel="stylesheet" href="../../dist/ol-ext.css" />
+	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
 	<style>
 		.ol-button i
 		{	color: inherit;
-		}
-		.ol-button.ol-active button
-		{	background: rgba(60, 136, 0, 0.7)
-			
-		}
-		.select
-		{	top:0.5em;
-			right:50%;
-		}
-		.edit
-		{	top:0.5em;
-			left:50%;
 		}
 	</style>
 
@@ -51,28 +38,40 @@
 <body >
 	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
 
-	<a href="../index.html">
-		<h1>OL3-ext: control Toggle</h1>
+	<a href="../../index.html">
+		<h1>ol-ext: control bar</h1>
 	</a>
 	<div class="info">
-		<i>ol.control.Toggle</i> is an <i>ol.control.Button</i> with an active/deactive state.
+		<i>ol.control.Bar</i> is a panel that contains other controls. Control bar can be nested.
 		<br/>
-		If can be created with an <i>ol.interaction</i> and controls its activation.
+		You can choose the position for the control bar.
 		<br/>
-		It can be grouped into an <a href="map.control.bar.html">ol.control.Bar</a> with a <i>toggleOne</i> propertie to have only one activated at a time. 
-		You can compose toolbars with it (see the <a href="map.control.bar.html">control bar example</a>).
+		It can group <i>ol.control.Toggle</i> with a toggleOne propertie to have only one activated at a time. You can compose toolbars with it.  
 		<br/>
-		When adding Toggle control to a bar, an option bar can be nested to add a subbar visible when the control is active (see the <a href="map.control.subbar.html">sub-bar example</a>).
+		A sub-bar can be nested to add options/controls visible when the parent <i>ol.control.Toggle</i> is active (see the <a href="map.control.subbar.html">sub-bar example</a>).
 	</div>
 
 	<!-- Map div -->
 	<div id="map" style="width:600px; height:400px;"></div>
 
 	<div class="options" >
-		Info:<br />
+		<ul>
+			<li>
+				Position:
+				<select onchange="mainbar.setPosition(this.value)">
+					<option value="top">top</option>
+					<option value="top-left">top-left</option>
+					<option value="left">left</option>
+					<option value="bottom-left">bottom-left</option>
+					<option value="bottom">bottom</option>
+					<option value="bottom-right">bottom-right</option>
+					<option value="right">right</option>
+					<option value="top-right">top-right</option>
+				</select>
+			</li>
+		</ul>
+		Information:<br />
 		<textarea id="info" style="width:25em; height:10em"></textarea>
-		<br/>
-		<input id="disable" type="checkbox" onchange="pedit.setDisable($(this).prop('checked'));" /><label for="disable"> disable edit control</label>
 	</div>
 
 	<script type="text/javascript">
@@ -93,6 +92,13 @@
 					]
 			});
 
+		// Main control bar
+		var mainbar = new ol.control.Bar();
+		map.addControl(mainbar);
+
+		/* Nested toobar with one control activated at once */
+		var nested = new ol.control.Bar ({ toggleOne: true, group:true });
+		mainbar.addControl (nested);
 		// Add selection tool (a toggle control with a select interaction)
 		var selectCtrl = new ol.control.Toggle(
 				{	html: '<i class="fa fa-hand-pointer-o"></i>',
@@ -104,7 +110,7 @@
 					{	$("#info").text("Select is "+(active?"activated":"deactivated"));
 					}
 				});
-		map.addControl(selectCtrl);
+		nested.addControl(selectCtrl);
 		
 		// Add editing tools
 		var pedit = new ol.control.Toggle(
@@ -119,11 +125,17 @@
 					{	$("#info").text("Edition is "+(active?"activated":"deactivated"));
 					}
 				});
-		map.addControl ( pedit );
-		pedit.on("change:disable", function(e)
-		{	$("#info").text("Edition is "+(e.disable?"disabled":"enabled")); 
-		});
-		
+		nested.addControl ( pedit );
+
+		/* Standard Controls */
+		mainbar.addControl (new ol.control.ZoomToExtent({  extent: [ 265971,6243397 , 273148,6250665 ] }));
+		mainbar.addControl (new ol.control.Rotate());
+		mainbar.addControl (new ol.control.FullScreen());
+
+		// Show info
+		function info(i)
+		{	$("#info").html(i||"");
+		}
 	</script>
 
 </body>
