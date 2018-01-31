@@ -97,7 +97,7 @@ gulp.task("js", function() {
 		"./src/style/fontsymbol.js", "./src/style/*.js", "!./src/style/fontmakidef.js", "!./src/style/fontawesomedef.js",
     //"./src/utils/*.js", "!./src/render/pulse.js", "!./src/render/markup.js",
 		"!./*/*.min.js",
-		"!./*/texturefilterimage.js"
+		"!./src/filter/texturefilterimage.js"
 		])
 	.pipe(transform())
 	.pipe(concat(name+".js"))
@@ -115,7 +115,8 @@ gulp.task("js", function() {
 gulp.task("extrajs", function() {
 	gulp.src([
     "./src/style/fontmakidef.js", "./src/style/fontawesomedef.js",
-    "./src/utils/jqExportMap.js"
+    "./src/utils/*.js",
+    "./src/filter/texturefilterimage.js"
 		])
 	.pipe(transform())
   .pipe(gulp.dest("dist/extra"))
