@@ -46,7 +46,7 @@ var ol_Overlay_Magnify = function (options)
 	this.set("zoomOffset", options.zoomOffset||1);
 	this.set("active", true);
 	this.on("propertychange", this.setView_, this);
-}
+};
 ol.inherits(ol_Overlay_Magnify, ol_Overlay);
 
 /**
@@ -65,28 +65,28 @@ ol_Overlay_Magnify.prototype.setMap = function(map)
 	map.getView().on('propertychange', this.setView_, this);
 
 	this.setView_();
-}
+};
 
 /** Get the magnifier map
 *	@return {_ol_Map_}
 */
 ol_Overlay_Magnify.prototype.getMagMap = function()
 {	return this.mgmap_;
-}
+};
 
 /** Magnify is active
 *	@return {boolean}
 */
 ol_Overlay_Magnify.prototype.getActive = function()
 {	return this.get("active");
-}
+};
 
 /** Activate or deactivate 
 *	@param {boolean} active
 */
 ol_Overlay_Magnify.prototype.setActive = function(active)
 {	return this.set("active", active);
-}
+};
 
 /** Mouse move
  * @private
@@ -102,7 +102,7 @@ ol_Overlay_Magnify.prototype.onMouseMove_ = function(e)
 		self.mgview_.setCenter(px);
 		if ($("canvas", self.element).css("display")=="none") self.mgmap_.updateSize();
 	}
-}
+};
 
 /** View has changed
  * @private
@@ -133,6 +133,6 @@ ol_Overlay_Magnify.prototype.setView_ = function(e)
 		}
 		default: break;
 	}
-}
+};
 
 export default ol_Overlay_Magnify

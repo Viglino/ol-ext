@@ -7,7 +7,7 @@
 *	It will return an ordering function (f0,f1)
 *	@namespace
 */
-var ol_ordering = {}
+var ol_ordering = {};
 
 /** y-Ordering
 *	@return ordering function (f0,f1)
@@ -16,7 +16,7 @@ ol_ordering.yOrdering = function(options)
 {	return function(f0,f1)
 	{	return f0.getGeometry().getExtent()[1] < f1.getGeometry().getExtent()[1] ;
 	};
-}
+};
 
 /** Order with a feature attribute
 *	@param options
@@ -38,6 +38,6 @@ ol_ordering.zIndex = function(options)
 		{	return f0.get(attr) < f1.get(attr);
 		};
 	}
-}
+};
 
 export default ol_ordering

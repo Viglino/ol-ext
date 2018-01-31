@@ -1,41 +1,37 @@
 ﻿<!DOCTYPE html>
-<!----------------------------------------------------------
- 
-	Copyright (c) 2013 Jean-Marc VIGLINO, 
-	released under the Beerware license (http://fr.wikipedia.org/wiki/Beerware).
-	
-	Affichage d'une carte Geoportail avec OL3
-	
------------------------------------------------------------->
 <html>
 <head>
-	<title>OL3-ext: font style</title>
+<!-- --------------------------------------------------------
+ 
+	Copyright (c) 2013-2018 Jean-Marc VIGLINO, 
+	released under the Beerware license (http://fr.wikipedia.org/wiki/Beerware).
+	
+---------------------------------------------------------- -->
+	<title>ol-ext: font style</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 	<meta name="description" content="iconic font and scalable vector icons for OL3" />
 	<meta name="keywords" content="ol3, style, vector, font, fontawesome, icon, maki" />
 
-    <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="css/fontmaki.css" />
+    <link rel="stylesheet" href="../style.css" />
+    <link rel="stylesheet" href="../css/fontmaki.css" />
 	<!-- FontAwesome -->
 	<link rel="stylesheet" href="https://rawgit.com/FortAwesome/Font-Awesome/master/css/font-awesome.min.css" type="text/css" />
 		
 	<!-- jQuery -->
 	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-
+	<!-- Openlayers -->
     <link rel="stylesheet" href="https://openlayers.org/en/master/css/ol.css" />
 	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
 
-	<script type="text/javascript" src="../utils/ol.ordering.js"></script>
+	<!-- ol-ext -->
+	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
-	<script type="text/javascript" src="../style/fontsymbol.js"></script>
+	<!-- ol-ext maki and fontawesome defintions used in fontsymbol -->
+	<script type="text/javascript" src="../../dist/extra/fontmakidef.js"></script>
+	<script type="text/javascript" src="../../dist/extra/fontawesomedef.js"></script>
 
-	<script type="text/javascript" src="../style/fontmaki.def.js"></script>
-	<script type="text/javascript" src="../style/fontawesome.def.js"></script>
-
-	<script type="text/javascript" src="../style/shadowstyle.js"></script>
-	
 	<style>
 		.options i.standard,
 		.options .fa
@@ -78,7 +74,7 @@
 <body >
 	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
 
-	<a href="../index.html">
+	<a href="../../index.html">
 		<h1>OL3-ext: Font style</h1>
 	</a>
 	<div class="info">
@@ -97,7 +93,7 @@
 				a glyph that overlap the form
 			</li>
 		</ul>
-		<a href="../doc/doc-pages/ol.style.FontSymbol.html"><i class="icss-book"></i> See the online doc.</a>
+		<a href="../../doc/doc-pages/ol.style.FontSymbol.html"><i class="icss-book"></i> See the online doc.</a>
 
 		<br />
 		<br />
@@ -342,7 +338,7 @@
 
 	// GeoJSON layer
 	var vectorSource = new ol.source.Vector(
-	{	url: 'data/fond_guerre.geojson',
+	{	url: '../data/fond_guerre.geojson',
 		projection: 'EPSG:3857',
 		format: new ol.format.GeoJSON(),
 		attributions: [new ol.Attribution({ html: "&copy; <a href='https://www.data.gouv.fr/fr/datasets/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire/'>data.gouv.fr</a>" })],
