@@ -129,7 +129,8 @@ ol_source_HexBin.prototype.getSource = function()
 {	return this._origin;
 };
 
-/** An image source for hexagonal binning
+/* DEPRECATED: use ol_source_HexBin with renderMode:'image' on layer
+* An image source for hexagonal binning
 * @constructor 
 * @extends {ol_source_ImageVector}
 * @param {} options ol_source_ImageVectorOptions + ol.HexGridOptions
@@ -138,7 +139,7 @@ ol_source_HexBin.prototype.getSource = function()
 *	@param {ol.coordinate} options.origin orgin of the grid, default [0,0]
 *	@param {pointy|flat} options.layout grid layout, default pointy
 *	@param {function|undefined} options.geometryFunction Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center. 
-*/
+* /
 var ol_source_ImageHexBin = function(options)
 {	options = options || {} ;
 	var source = new ol_source_Vector();
@@ -152,11 +153,12 @@ ol.inherits (ol_source_ImageHexBin, ol_source_ImageVector);
 /**
 * Get the orginal source 
 * @return {ol_source_Vector}
-*/
+* /
 ol_source_ImageHexBin.prototype.getOriginSource = function()
 {	return this._origin;
 };
+*/
 
 })();
 
-export default {ol_source_HexBin, ol_source_ImageHexBin}
+export default ol_source_HexBin
