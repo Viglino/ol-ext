@@ -1,11 +1,11 @@
 ﻿<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>Ol3-ext</title>
+	<title>ol-ext</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	
-	<meta name="description" content="Cool extensions to use with OL3." />
-	<meta name="keywords" content="ol3,extension,canvas,3D,animation,layer,selection,control,openlayers,popup" />
+	<meta name="description" content="Cool extensions to use with Openlayers (ol)." />
+	<meta name="keywords" content="ol,ol3,extension,canvas,3D,animation,layer,selection,control,openlayers,popup" />
 	
 <style>
 	body
@@ -168,13 +168,19 @@
 	<div id="examples">
 	<a href="https://github.com/Viglino/ol3-ext"><img style="position: fixed; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
 	
-	<div class="desc">
-		Cool extensions for <a href="https://github.com/openlayers/openlayers">OpenLayers (ol)</a>.
-		<br />
-		<br />
-		For more information see the <a href="http://viglino.github.io/ol-ext/doc/doc-pages/">online API documentation</a>.
-		<br />
-		If you like this, you may like <a href="http://viglino.github.io/OL3-AnimatedCluster/">OL3-AnimatedCluster</a>
+	<div class="desc" style="height: auto;">
+		<p>
+			Cool extensions for <a href="https://github.com/openlayers/openlayers">OpenLayers (ol)</a>.
+		</p>
+		<p>
+			For more information see the <a href="http://viglino.github.io/ol-ext/doc/doc-pages/">online API documentation</a>.
+			<br />
+			If you like this, you may like <a href="http://viglino.github.io/OL3-AnimatedCluster/">OL3-AnimatedCluster</a>
+		</p>
+		<p>
+			<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Webpack.png/214px-Webpack.png" style="height:4em;vertical-align:middle;" />
+			For use in a webpack this <a href="https://github.com/darkscript/ol-ol-ext-webpack-example">example repo</a>.
+		</p>
 	</div>
 
 	<h2>Styles</h2>
@@ -241,10 +247,9 @@
 		</div>
 	
 	<h2>Animation</h2>
-<!--
 		<div>
 			<div class="example">
-				<a class="mainlink" href="examples/map.featureanimation.html">
+				<a class="mainlink" href="examples/animation/map.featureanimation.html">
 					<strong>Feature animation</strong><br>
 				</a>
 				<p class="description"><i>ol.featureAnimation</i> provides animations to animate features on a map.</p>
@@ -252,7 +257,7 @@
 			</div>
 
 			<div class="example">
-				<a class="mainlink" href="examples/map.featureanimation.select.html">
+				<a class="mainlink" href="examples/animation/map.featureanimation.select.html">
 					<strong>Feature animation with select</strong><br>
 				</a>
 				<p class="description">This example show how to use a transparent style to let the features selectable when animated.</p>
@@ -260,7 +265,7 @@
 			</div>
 
 			<div class="example">
-				<a class="mainlink" href="examples/map.featureanimation.path.html">
+				<a class="mainlink" href="examples/animation/map.featureanimation.path.html">
 					<strong>Animate features along a path</strong><br>
 				</a>
 				<p class="description">This example animates deatures along a path.</p>
@@ -268,7 +273,7 @@
 			</div>
 
 			<div class="example">
-				<a class="mainlink" href="examples/map.pulse.html">
+				<a class="mainlink" href="examples/animation/map.pulse.html">
 					<strong>Pulse!</strong><br>
 				</a>
 				<p class="description">A pulse function to pulse points on a map.</p>
@@ -277,6 +282,7 @@
 		</div>
 	
 	<h2>Filter</h2>
+<!--
 		<div>
 			<div class="example">
 				<a class="mainlink" href="examples/map.filter.crop.html">
