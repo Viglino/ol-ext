@@ -59,12 +59,12 @@ var banner = ['/**',
 // Build css. Use --debug to build in debug mode
 gulp.task("css", function() {
 	gulp.src([
-		"./src/control/*.css", "!./src/control/piratecontrol.css",
+		"./src/control/*.css", "!./src/control/PirateMap.css",
 		"./src/featureanimation/*.css", 
 		"./src/filter/*.css",
 		"./src/interaction/*.css",
 		"./src/layer/*.css",
-		"./src/overlay/*.css", "!./src/overlay/popupoverlay.anim.css",
+		"./src/overlay/*.css", "!./src/overlay/Popup.anim.css",
 		"./src/style/*.css",
 		"./src/utils/*.css"
 		])
@@ -85,19 +85,19 @@ gulp.task("cssd", function() {
 // Build js
 gulp.task("js", function() {
 	gulp.src([
-		"./src/control/searchcontrol.js","./src/control/searchphotoncontrol.js",
-    "./src/control/layerswitchercontrol.js", "./src/control/*.js", "!./src/control/piratecontrol.js",
-		"./src/featureanimation/featureanimation.js", "./src/featureanimation/*.js", 
-		"./src/filter/filter.js", "./src/filter/maskfilter.js", "./src/filter/*.js",
+		"./src/control/Search.js","./src/control/SearchPhoton.js",
+    "./src/control/LayerSwitcher.js", "./src/control/*.js", "!./src/control/PirateMap.js",
+		"./src/featureanimation/FeatureAnimation.js", "./src/featureanimation/*.js",
+		"./src/filter/Base.js", "./src/filter/Mask.js", "./src/filter/*.js",
 		"./src/interaction/*.js",
 		"./src/layer/*.js",
 		"./src/overlay/*.js",
     "./src/geom/*.js",
     "./src/render/*.js",
-		"./src/style/fontsymbol.js", "./src/style/*.js", "!./src/style/fontmakidef.js", "!./src/style/fontawesomedef.js",
-    //"./src/utils/*.js", "!./src/render/pulse.js", "!./src/render/markup.js",
+		"./src/style/FontSymbol.js", "./src/style/*.js", "!./src/style/FontMakiDef.js", "!./src/style/FontSymbol.js",
+    //"./src/utils/*.js", "!./src/render/Pulse.js", "!./src/render/Markup.js",
 		"!./*/*.min.js",
-		"!./src/filter/texturefilterimage.js"
+		"!./src/filter/TextureImage.js"
 		])
 	.pipe(transform())
 	.pipe(concat(name+".js"))
@@ -114,9 +114,9 @@ gulp.task("js", function() {
 // Build extra js files to use individually
 gulp.task("extrajs", function() {
 	gulp.src([
-    "./src/style/fontmakidef.js", "./src/style/fontawesomedef.js",
+    "./src/style/FontMakiDef.js", "./src/style/FontSymbol.js",
     "./src/utils/*.js",
-    "./src/filter/texturefilterimage.js"
+    "./src/filter/TextureImage.js"
 		])
 	.pipe(transform())
   .pipe(gulp.dest("dist/extra"))
