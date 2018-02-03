@@ -14,7 +14,7 @@ ol.ordering = {}
 */
 ol.ordering.yOrdering = function(options)
 {	return function(f0,f1)
-	{	return f0.getGeometry().getExtent()[1] < f1.getGeometry().getExtent()[1] ;
+	{	return f1.getGeometry().getExtent()[1] - f0.getGeometry().getExtent()[1] ;
 	};
 }
 
@@ -30,12 +30,13 @@ ol.ordering.zIndex = function(options)
 	if (option.equalFn)
 	{	return function(f0,f1)
 		{	if (f0.get(attr) == f1.get(attr)) return option.equalFn(f0,f1);
-			return f0.get(attr) < f1.get(attr);
+			else return f0.get(attr) < f1.get(attr) ? 1:-1;
 		};
 	}
 	else
 	{	return function(f0,f1)
-		{	return f0.get(attr) < f1.get(attr);
+		{	if (f0.get(attr) == f1.get(attr)) return 0;
+			else return f0.get(attr) < f1.get(attr) ? 1:-1;
 		};
 	}
 }
