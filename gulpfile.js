@@ -66,7 +66,7 @@ gulp.task("css", function() {
 		"./src/filter/*.css",
 		"./src/interaction/*.css",
 		"./src/layer/*.css",
-		"./src/overlay/*.css", "!./src/overlay/Popup.anim.css",
+		"./src/overlay/*.css", 
 		"./src/style/*.css",
 		"./src/utils/*.css"
 		])
