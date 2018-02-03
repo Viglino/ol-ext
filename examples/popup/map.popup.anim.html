@@ -24,9 +24,6 @@
     <link rel="stylesheet" href="../../dist/ol-ext.css" />
 	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
-	<!-- CSS with bounce effect --> 
-	<link rel="stylesheet" href="../../src/overlay/Popup.anim.css" />
-
 	<link rel="stylesheet" href="../style.css" />
 	<style>
 		/* popup style */
@@ -54,7 +51,8 @@
 
 	<div class="info">
 		This example uses the <i>ol.Overlay.Popup</i> to display popup on the map.
-		It uses the CSS properties to add a bounce effect to the popup display
+		It uses CSS properties to add a bounce effect to the popup display. 
+		You just have to add the anim class to the popup.
 		<br/>
 		See <a href="map.popup.html">popup overlay example</a> form more options.
 	</div>
@@ -95,9 +93,9 @@
 		})
 	]
 
-	// Popup overlay
+	// Popup overlay with popupClass=anim
 	var popup = new ol.Overlay.Popup (
-		{	popupClass: "default", //"tooltips", "warning" "black" "default", "tips", "shadow",
+		{	popupClass: "default anim", //"tooltips", "warning" "black" "default", "tips", "shadow",
 			closeBox: true,
 			onclose: function(){ console.log("You close the box"); },
 			positioning: $("#positioning").val(),

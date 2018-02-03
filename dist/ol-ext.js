@@ -11970,7 +11970,7 @@ popup.hide();
  */
 ol.Overlay.Popup = function (options)
 {	var self = this;
-	var elt = $("<div>");
+	var elt = this._elt = $("<div>");
 	options.element = elt.get(0);
 	this.offsetBox = options.offsetBox;
 	// Anchor div
@@ -11993,7 +11993,6 @@ ol.Overlay.Popup = function (options)
 	d.on("mousedown touchstart", function(e){ e.stopPropagation(); })
 
 	ol.Overlay.call(this, options);
-	this._elt = elt;
 			
 	// call setPositioning first in constructor so getClassPositioning is called only once
 	this.setPositioning(options.positioning);
