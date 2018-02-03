@@ -1031,6 +1031,188 @@ ol.control.LayerSwitcher.prototype.setprogress_ = function(layer)
 */
 
 
+
+
+/** Control bar for OL3
+ * The control bar is a container for other controls. It can be used to create toolbars.
+ * Control bars can be nested and combined with ol.control.Toggle to handle activate/deactivate.
+ *
+ * @constructor
+ * @extends {ol.control.Control}
+ * @param {Object=} options Control options.
+ *	@param {String} options.className class of the control
+ *	@param {bool} options.group is a group, default false
+ *	@param {bool} options.toggleOne only one toggle control is active at a time, default false
+ *	@param {bool} options.autoDeactivate used with subbar to deactivate all control when top level control deactivate, default false
+ *	@param {Array<_ol_control_>} options.controls a list of control to add to the bar
+ */
+ol.control.Bar = function(options)
+{	if (!options) options={};
+	var element = $("<div>").addClass('ol-unselectable ol-control ol-bar');
+	if (options.className) element.addClass(options.className);
+	if (options.group) element.addClass('ol-group');
+
+	ol.control.Control.call(this,
+	{	element: element.get(0),
+		target: options.target
+	});
+
+	this.set('toggleOne', options.toggleOne);
+	this.set('autoDeactivate', options.autoDeactivate);
+
+	this.controls_ = [];
+	if (options.controls instanceof Array)
+	{	for (var i=0; i<options.controls.length; i++)
+		{	this.addControl(options.controls[i]);
+		}
+	}
+};
+ol.inherits(ol.control.Bar, ol.control.Control);
+
+/** Set the control visibility
+* @param {boolean} b
+*/
+ol.control.Bar.prototype.setVisible = function (val) {
+	if (val) $(this.element).show();
+	else $(this.element).hide();
+}
+
+/** Get the control visibility
+* @return {boolean} b
+*/
+ol.control.Bar.prototype.getVisible = function ()
+{	return ($(this.element).css('display') != 'none');
+}
+
+/**
+ * Set the map instance the control is associated with
+ * and add its controls associated to this map.
+ * @param {_ol_Map_} map The map instance.
+ */
+ol.control.Bar.prototype.setMap = function (map)
+{	ol.control.Control.prototype.setMap.call(this, map);
+
+	for (var i=0; i<this.controls_.length; i++)
+	{	var c = this.controls_[i];
+		// map.addControl(c);
+		c.setMap(map);
+	}
+};
+
+/** Get controls in the panel
+*	@param {Array<_ol_control_>}
+*/
+ol.control.Bar.prototype.getControls = function ()
+{	return this.controls_;
+};
+
+/** Set tool bar position
+*	@param {top|left|bottom|right} pos
+*/
+ol.control.Bar.prototype.setPosition = function (pos)
+{	$(this.element).removeClass('ol-left ol-top ol-bottom ol-right');
+	pos=pos.split ('-');
+	for (var i=0; i<pos.length; i++)
+	{	switch (pos[i])
+		{	case 'top':
+			case 'left':
+			case 'bottom':
+			case 'right':
+				$(this.element).addClass ("ol-"+pos[i]);
+				break;
+			default: break;
+		}
+	}
+};
+
+/** Add a control to the bar
+*	@param {_ol_control_} c control to add
+*/
+ol.control.Bar.prototype.addControl = function (c)
+{	this.controls_.push(c);
+	c.setTarget(this.element);
+	if (this.getMap())
+	{	this.getMap().addControl(c);
+	}
+	// Activate and toogleOne
+	c.on ('change:active', this.onActivateControl_, this);
+	if (c.getActive && c.getActive())
+	{	c.dispatchEvent({ type:'change:active', key:'active', oldValue:false, active:true });
+	}
+};
+
+/** Deativate all controls in a bar
+* @param {_ol_control_} except a control
+*/
+ol.control.Bar.prototype.deactivateControls = function (except)
+{	for (var i=0; i<this.controls_.length; i++)
+	{	if (this.controls_[i] !== except && this.controls_[i].setActive)
+		{	this.controls_[i].setActive(false);
+		}
+	}
+};
+
+
+ol.control.Bar.prototype.getActiveControls = function ()
+{	var active = [];
+	for (var i=0, c; c=this.controls_[i]; i++)
+	{	if (c.getActive && c.getActive()) active.push(c);
+	}
+	return active;
+}
+
+/** Auto activate/deactivate controls in the bar
+* @param {boolean} b activate/deactivate
+*/
+ol.control.Bar.prototype.setActive = function (b)
+{	if (!b && this.get("autoDeactivate"))
+	{	this.deactivateControls();
+	}
+	if (b)
+	{	var ctrls = this.getControls();
+		for (var i=0, sb; (sb = ctrls[i]); i++)
+		{	if (sb.get("autoActivate")) sb.setActive(true);
+		}
+	}
+}
+
+/** Post-process an activated/deactivated control
+*	@param {ol.event} e :an object with a target {_ol_control_} and active flag {bool}
+*/
+ol.control.Bar.prototype.onActivateControl_ = function (e)
+{	if (this.get('toggleOne'))
+	{	if (e.active)
+		{	var n;
+			var ctrl = e.target;
+			for (n=0; n<this.controls_.length; n++)
+			{	if (this.controls_[n]===ctrl) break;
+			}
+			// Not here!
+			if (n==this.controls_.length) return;
+			this.deactivateControls (this.controls_[n]);
+		}
+		else
+		{	// No one active > test auto activate
+			if (!this.getActiveControls().length)
+			{	for (var i=0, c; c=this.controls_[i]; i++)
+				{	if (c.get("autoActivate"))
+					{	c.setActive();
+						break;
+					}
+				}
+			}
+		}
+	}
+};
+
+
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO,
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+
+
 /** A simple push button control
 * @constructor
 * @extends {ol.control.Control}
@@ -1895,188 +2077,6 @@ ol.control.Compass.prototype.drawCompass_ = function(e)
 
 	ctx.restore();
 };
-
-
-/*	Copyright (c) 2016 Jean-Marc VIGLINO,
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-
-
-
-
-/** Control bar for OL3
- * The control bar is a container for other controls. It can be used to create toolbars.
- * Control bars can be nested and combined with ol.control.Toggle to handle activate/deactivate.
- *
- * @constructor
- * @extends {ol.control.Control}
- * @param {Object=} options Control options.
- *	@param {String} options.className class of the control
- *	@param {bool} options.group is a group, default false
- *	@param {bool} options.toggleOne only one toggle control is active at a time, default false
- *	@param {bool} options.autoDeactivate used with subbar to deactivate all control when top level control deactivate, default false
- *	@param {Array<_ol_control_>} options.controls a list of control to add to the bar
- */
-ol.control.Bar = function(options)
-{	if (!options) options={};
-	var element = $("<div>").addClass('ol-unselectable ol-control ol-bar');
-	if (options.className) element.addClass(options.className);
-	if (options.group) element.addClass('ol-group');
-
-	ol.control.Control.call(this,
-	{	element: element.get(0),
-		target: options.target
-	});
-
-	this.set('toggleOne', options.toggleOne);
-	this.set('autoDeactivate', options.autoDeactivate);
-
-	this.controls_ = [];
-	if (options.controls instanceof Array)
-	{	for (var i=0; i<options.controls.length; i++)
-		{	this.addControl(options.controls[i]);
-		}
-	}
-};
-ol.inherits(ol.control.Bar, ol.control.Control);
-
-/** Set the control visibility
-* @param {boolean} b
-*/
-ol.control.Bar.prototype.setVisible = function (val) {
-	if (val) $(this.element).show();
-	else $(this.element).hide();
-}
-
-/** Get the control visibility
-* @return {boolean} b
-*/
-ol.control.Bar.prototype.getVisible = function ()
-{	return ($(this.element).css('display') != 'none');
-}
-
-/**
- * Set the map instance the control is associated with
- * and add its controls associated to this map.
- * @param {_ol_Map_} map The map instance.
- */
-ol.control.Bar.prototype.setMap = function (map)
-{	ol.control.Control.prototype.setMap.call(this, map);
-
-	for (var i=0; i<this.controls_.length; i++)
-	{	var c = this.controls_[i];
-		// map.addControl(c);
-		c.setMap(map);
-	}
-};
-
-/** Get controls in the panel
-*	@param {Array<_ol_control_>}
-*/
-ol.control.Bar.prototype.getControls = function ()
-{	return this.controls_;
-};
-
-/** Set tool bar position
-*	@param {top|left|bottom|right} pos
-*/
-ol.control.Bar.prototype.setPosition = function (pos)
-{	$(this.element).removeClass('ol-left ol-top ol-bottom ol-right');
-	pos=pos.split ('-');
-	for (var i=0; i<pos.length; i++)
-	{	switch (pos[i])
-		{	case 'top':
-			case 'left':
-			case 'bottom':
-			case 'right':
-				$(this.element).addClass ("ol-"+pos[i]);
-				break;
-			default: break;
-		}
-	}
-};
-
-/** Add a control to the bar
-*	@param {_ol_control_} c control to add
-*/
-ol.control.Bar.prototype.addControl = function (c)
-{	this.controls_.push(c);
-	c.setTarget(this.element);
-	if (this.getMap())
-	{	this.getMap().addControl(c);
-	}
-	// Activate and toogleOne
-	c.on ('change:active', this.onActivateControl_, this);
-	if (c.getActive && c.getActive())
-	{	c.dispatchEvent({ type:'change:active', key:'active', oldValue:false, active:true });
-	}
-};
-
-/** Deativate all controls in a bar
-* @param {_ol_control_} except a control
-*/
-ol.control.Bar.prototype.deactivateControls = function (except)
-{	for (var i=0; i<this.controls_.length; i++)
-	{	if (this.controls_[i] !== except && this.controls_[i].setActive)
-		{	this.controls_[i].setActive(false);
-		}
-	}
-};
-
-
-ol.control.Bar.prototype.getActiveControls = function ()
-{	var active = [];
-	for (var i=0, c; c=this.controls_[i]; i++)
-	{	if (c.getActive && c.getActive()) active.push(c);
-	}
-	return active;
-}
-
-/** Auto activate/deactivate controls in the bar
-* @param {boolean} b activate/deactivate
-*/
-ol.control.Bar.prototype.setActive = function (b)
-{	if (!b && this.get("autoDeactivate"))
-	{	this.deactivateControls();
-	}
-	if (b)
-	{	var ctrls = this.getControls();
-		for (var i=0, sb; (sb = ctrls[i]); i++)
-		{	if (sb.get("autoActivate")) sb.setActive(true);
-		}
-	}
-}
-
-/** Post-process an activated/deactivated control
-*	@param {ol.event} e :an object with a target {_ol_control_} and active flag {bool}
-*/
-ol.control.Bar.prototype.onActivateControl_ = function (e)
-{	if (this.get('toggleOne'))
-	{	if (e.active)
-		{	var n;
-			var ctrl = e.target;
-			for (n=0; n<this.controls_.length; n++)
-			{	if (this.controls_[n]===ctrl) break;
-			}
-			// Not here!
-			if (n==this.controls_.length) return;
-			this.deactivateControls (this.controls_[n]);
-		}
-		else
-		{	// No one active > test auto activate
-			if (!this.getActiveControls().length)
-			{	for (var i=0, c; c=this.controls_[i]; i++)
-				{	if (c.get("autoActivate"))
-					{	c.setActive();
-						break;
-					}
-				}
-			}
-		}
-	}
-};
-
 
 
 
@@ -3350,7 +3350,9 @@ ol.control.Overlay.prototype.show = function (html, coord)
 		elt.css({"top":this.center_[1], "left":this.center_[0] });
 	}
 	else 
-	{	this.center_ = false;
+	{
+		//TODO: Do fix from  hkollmann pull request
+		this.center_ = false;
 		elt.css({"top":"", "left":"" });
 	}
 	this.setContent(html);
@@ -6637,6 +6639,7 @@ ol.filter.Lego.prototype.postcompose = function(e)
 
 
 
+
 /** Add texture effects on maps or layers
 * 	@constructor
 *	@requires ol.filter
@@ -6667,7 +6670,16 @@ ol.filter.Texture.prototype.setFilter = function(options)
 	if (options.img) img = option.img;
 	else 
 	{	img = new Image();
-		if (options.src) img.src = ol.filter.Texture[options.src] || options.src;
+		if (options.src) {
+			// Look for a texture stored in ol.filter.Texture.Image
+			if (ol.filter.Texture.Image && ol.filter.Texture.Image[options.src]) {
+				img.src = ol.filter.Texture.Image[options.src];
+			} 
+			// default source
+			else {
+				if (!img.src) img.src = options.src;
+			}
+		}
 		img.crossOrigin = options.crossOrigin || null;
 	}
 
@@ -7095,6 +7107,177 @@ ol.interaction.Clip.prototype.setActive = function(b)
 	}
 	if (this.getMap()) this.getMap().renderSync();
 }
+
+
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+
+
+
+
+
+
+
+
+/** Interaction draw hole
+ * @constructor
+ * @extends {ol.interaction.Interaction}
+ * @fires drawstart, drawend
+ * @param {olx.interaction.DrawHoleOptions} options extend olx.interaction.DrawOptions
+ * 	@param {Array<ol.layer.Vector> | undefined} options.layers A list of layers from which polygons should be selected. Alternatively, a filter function can be provided. default: all visible layers
+ */
+ol.interaction.DrawHole = function(options)
+{	if (!options) options = {};
+	var self = this;
+
+	// Select interaction for the current feature
+	this._select = new ol.interaction.Select();
+	this._select.setActive(false);
+
+	// Geometry function that test points inside the current
+	var geometryFn, geomFn = options.geometryFunction;
+	if (geomFn)
+	{	geometryFn = function(c,g) 
+		{ 	g = self._geometryFn (c, g);
+			return geomFn (c,g);
+		}
+	}
+	else
+	{	geometryFn = function(c,g) { return self._geometryFn (c, g); }
+	}
+
+	// Create draw interaction
+	options.type = "Polygon";
+	options.geometryFunction = geometryFn;
+	ol.interaction.Draw.call(this, options);
+
+	// Layer filter function
+	if (options.layers) 
+	{	if (typeof (options.layers) === 'function') this.layers_ = options.layers;
+		else if (options.layers.indexOf) 
+		{	this.layers_ = function(l) 
+			{ return (options.layers.indexOf(l) >= 0); 
+			};
+		}
+	}
+
+	// Start drawing if inside a feature
+	this.on('drawstart', this._startDrawing, this );
+	// End drawing add the hole to the current Polygon
+	this.on('drawend', this._finishDrawing, this);
+};
+ol.inherits(ol.interaction.DrawHole, ol.interaction.Draw);
+
+/**
+ * Remove the interaction from its current map, if any,  and attach it to a new
+ * map, if any. Pass `null` to just remove the interaction from the current map.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ol.interaction.DrawHole.prototype.setMap = function(map)
+{	if (this.getMap()) this.getMap().removeInteraction(this._select);
+	if (map) map.addInteraction(this._select);
+	ol.interaction.Draw.prototype.setMap.call (this, map);
+};
+
+/**
+ * Activate/deactivate the interaction
+ * @param {boolean}
+ * @api stable
+ */
+ol.interaction.DrawHole.prototype.setActive = function(b)
+{	this._select.getFeatures().clear();
+	ol.interaction.Draw.prototype.setActive.call (this, b);
+};
+
+/**
+ * Remove last point of the feature currently being drawn 
+ * (test if points to remove before).
+ */
+ol.interaction.DrawHole.prototype.removeLastPoint = function()
+{	if (this._feature && this._feature.getGeometry().getCoordinates()[0].length>2) 
+	{	ol.interaction.Draw.prototype.removeLastPoint.call(this);
+	}
+};
+
+/** 
+ * Get the current polygon to hole
+ * @return {ol.Feature}
+ */
+ol.interaction.DrawHole.prototype.getPolygon = function()
+{	return this._select.getFeatures().item(0);
+};
+
+/**
+ * Get current feature to add a hole and start drawing
+ * @param {ol.interaction.Draw.Event} e
+ * @private
+ */
+ol.interaction.DrawHole.prototype._startDrawing = function(e)
+{	var map = this.getMap();
+	var layersFilter = this.layers_;
+	this._feature = e.feature;
+	coord = e.feature.getGeometry().getCoordinates()[0][0];
+	// Check object under the pointer
+	var features = map.getFeaturesAtPixel(
+		map.getPixelFromCoordinate(coord),
+		{ 	layerFilter: layersFilter
+		}
+	);
+	var current = null;
+	if (features)
+	{	if (features[0].getGeometry().getType() !== "Polygon") current = null;
+		else if (features[0].getGeometry().intersectsCoordinate(coord)) current = features[0];
+		else current = null;
+	}
+	else current = null;
+	
+	if (!current)
+	{	this.setActive(false);
+		this.setActive(true);
+		this._select.getFeatures().clear();
+	}
+	else
+	{	this._select.getFeatures().push(current);
+	}
+};
+
+/**
+ * Stop drawing and add the sketch feature to the target feature. 
+ * @param {ol.interaction.Draw.Event} e
+ * @private
+ */
+ol.interaction.DrawHole.prototype._finishDrawing = function(e)
+{	var c = e.feature.getGeometry().getCoordinates()[0];
+	if (c.length > 3) this.getPolygon().getGeometry().appendLinearRing(new ol.geom.LinearRing(c));
+	this._feature = null;
+	this._select.getFeatures().clear();
+};
+
+/**
+ * Function that is called when a geometry's coordinates are updated.
+ * @param {Array<ol.coordinate>} coordinates
+ * @param {ol.geom.Polygon} geometry
+ * @return {ol.geom.Polygon}
+ * @private
+ */
+ol.interaction.DrawHole.prototype._geometryFn = function(coordinates, geometry)
+{	var coord = coordinates[0].pop();
+	if (!this.getPolygon() || this.getPolygon().getGeometry().intersectsCoordinate(coord))
+	{	this.lastOKCoord = [coord[0],coord[1]];
+	}
+	coordinates[0].push([this.lastOKCoord[0],this.lastOKCoord[1]]);
+
+	if (geometry) 
+	{	geometry.setCoordinates([coordinates[0].concat([coordinates[0][0]])]);
+	} 
+	else 
+	{	geometry = new ol.geom.Polygon(coordinates);
+	}
+	return geometry;
+};
 
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -8446,177 +8629,6 @@ ol.interaction.Hover.prototype.handleMove_ = function(e)
 			}
 		}
 	}
-};
-
-
-/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-
-
-
-
-
-
-
-
-/** Interaction draw hole
- * @constructor
- * @extends {ol.interaction.Interaction}
- * @fires drawstart, drawend
- * @param {olx.interaction.DrawHoleOptions} options extend olx.interaction.DrawOptions
- * 	@param {Array<ol.layer.Vector> | undefined} options.layers A list of layers from which polygons should be selected. Alternatively, a filter function can be provided. default: all visible layers
- */
-ol.interaction.DrawHole = function(options)
-{	if (!options) options = {};
-	var self = this;
-
-	// Select interaction for the current feature
-	this._select = new ol.interaction.Select();
-	this._select.setActive(false);
-
-	// Geometry function that test points inside the current
-	var geometryFn, geomFn = options.geometryFunction;
-	if (geomFn)
-	{	geometryFn = function(c,g) 
-		{ 	g = self._geometryFn (c, g);
-			return geomFn (c,g);
-		}
-	}
-	else
-	{	geometryFn = function(c,g) { return self._geometryFn (c, g); }
-	}
-
-	// Create draw interaction
-	options.type = "Polygon";
-	options.geometryFunction = geometryFn;
-	ol.interaction.Draw.call(this, options);
-
-	// Layer filter function
-	if (options.layers) 
-	{	if (typeof (options.layers) === 'function') this.layers_ = options.layers;
-		else if (options.layers.indexOf) 
-		{	this.layers_ = function(l) 
-			{ return (options.layers.indexOf(l) >= 0); 
-			};
-		}
-	}
-
-	// Start drawing if inside a feature
-	this.on('drawstart', this._startDrawing, this );
-	// End drawing add the hole to the current Polygon
-	this.on('drawend', this._finishDrawing, this);
-};
-ol.inherits(ol.interaction.DrawHole, ol.interaction.Draw);
-
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.interaction.DrawHole.prototype.setMap = function(map)
-{	if (this.getMap()) this.getMap().removeInteraction(this._select);
-	if (map) map.addInteraction(this._select);
-	ol.interaction.Draw.prototype.setMap.call (this, map);
-};
-
-/**
- * Activate/deactivate the interaction
- * @param {boolean}
- * @api stable
- */
-ol.interaction.DrawHole.prototype.setActive = function(b)
-{	this._select.getFeatures().clear();
-	ol.interaction.Draw.prototype.setActive.call (this, b);
-};
-
-/**
- * Remove last point of the feature currently being drawn 
- * (test if points to remove before).
- */
-ol.interaction.DrawHole.prototype.removeLastPoint = function()
-{	if (this._feature && this._feature.getGeometry().getCoordinates()[0].length>2) 
-	{	ol.interaction.Draw.prototype.removeLastPoint.call(this);
-	}
-};
-
-/** 
- * Get the current polygon to hole
- * @return {ol.Feature}
- */
-ol.interaction.DrawHole.prototype.getPolygon = function()
-{	return this._select.getFeatures().item(0);
-};
-
-/**
- * Get current feature to add a hole and start drawing
- * @param {ol.interaction.Draw.Event} e
- * @private
- */
-ol.interaction.DrawHole.prototype._startDrawing = function(e)
-{	var map = this.getMap();
-	var layersFilter = this.layers_;
-	this._feature = e.feature;
-	coord = e.feature.getGeometry().getCoordinates()[0][0];
-	// Check object under the pointer
-	var features = map.getFeaturesAtPixel(
-		map.getPixelFromCoordinate(coord),
-		{ 	layerFilter: layersFilter
-		}
-	);
-	var current = null;
-	if (features)
-	{	if (features[0].getGeometry().getType() !== "Polygon") current = null;
-		else if (features[0].getGeometry().intersectsCoordinate(coord)) current = features[0];
-		else current = null;
-	}
-	else current = null;
-	
-	if (!current)
-	{	this.setActive(false);
-		this.setActive(true);
-		this._select.getFeatures().clear();
-	}
-	else
-	{	this._select.getFeatures().push(current);
-	}
-};
-
-/**
- * Stop drawing and add the sketch feature to the target feature. 
- * @param {ol.interaction.Draw.Event} e
- * @private
- */
-ol.interaction.DrawHole.prototype._finishDrawing = function(e)
-{	var c = e.feature.getGeometry().getCoordinates()[0];
-	if (c.length > 3) this.getPolygon().getGeometry().appendLinearRing(new ol.geom.LinearRing(c));
-	this._feature = null;
-	this._select.getFeatures().clear();
-};
-
-/**
- * Function that is called when a geometry's coordinates are updated.
- * @param {Array<ol.coordinate>} coordinates
- * @param {ol.geom.Polygon} geometry
- * @return {ol.geom.Polygon}
- * @private
- */
-ol.interaction.DrawHole.prototype._geometryFn = function(coordinates, geometry)
-{	var coord = coordinates[0].pop();
-	if (!this.getPolygon() || this.getPolygon().getGeometry().intersectsCoordinate(coord))
-	{	this.lastOKCoord = [coord[0],coord[1]];
-	}
-	coordinates[0].push([this.lastOKCoord[0],this.lastOKCoord[1]]);
-
-	if (geometry) 
-	{	geometry.setCoordinates([coordinates[0].concat([coordinates[0][0]])]);
-	} 
-	else 
-	{	geometry = new ol.geom.Polygon(coordinates);
-	}
-	return geometry;
 };
 
 
@@ -11124,7 +11136,6 @@ ol.layer.Group.prototype.getPreview = function(lonlat, resolution)
 
 
 
-
 (function() {
 
 /* Implementation */
@@ -11814,19 +11825,18 @@ ol.Overlay.Magnify = function (options)
 {	var self = this;
 	
 	var elt = $("<div>").addClass("ol-magnify");
-	this.element = elt.get(0);
+	this._elt = elt.get(0);
 
 	ol.Overlay.call(this,
 		{	positioning: options.positioning || "center-center",
-			element: this.element,
+			element: this._elt,
 			stopEvent: false
 		});
-
 	// Create magnify map
 	this.mgmap_ = new ol.Map(
 	{	controls: new ol.Collection(),
 		interactions: new ol.Collection(),
-		target: options.target || this.element,
+		target: options.target || this._elt,
 		view: new ol.View({ projection: options.projection }),
 		layers: options.layers
 	});
@@ -11891,7 +11901,7 @@ ol.Overlay.Magnify.prototype.onMouseMove_ = function(e)
 	{	var px = self.getMap().getEventCoordinate(e);
 		if (!self.external_) self.setPosition(px);
 		self.mgview_.setCenter(px);
-		if ($("canvas", self.element).css("display")=="none") self.mgmap_.updateSize();
+		if ($("canvas", self._elt).css("display")=="none") self.mgmap_.updateSize();
 	}
 };
 
@@ -13140,420 +13150,6 @@ ol.Map.prototype.pulse = function(coords, options)
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-
-
-
-
-
-
-
-/**
- * @requires ol.style.Circle
- * @requires ol.structs.IHasChecksum
- */
-
-
-/**
- * @classdesc
- * A marker style to use with font symbols.
- *
- * @constructor
- * @param {} options Options.
- *  @param {number} options.glyph the glyph name or a char to display as symbol. 
- * 		The name must be added using the {@link ol.style.FontSymbol.addDefs} function.
- *  @param {string} options.form 
- * 		none|circle|poi|bubble|marker|coma|shield|blazon|bookmark|hexagon|diamond|triangle|sign|ban|lozenge|square
- * 		a form that will enclose the glyph, default none
- *  @param {number} options.radius
- *  @param {number} options.rotation
- *  @param {number} options.rotateWithView
- *  @param {number} options.opacity
- *  @param {number} options.fontSize, default 1
- *  @param {boolean} options.gradient true to display a gradient on the symbol
- *  @param {_ol_style_Fill_} options.fill
- *  @param {_ol_style_Stroke_} options.stroke
- * @extends {ol.style.RegularShape}
- * @implements {ol.structs.IHasChecksum}
- * @api
- */
-ol.style.FontSymbol = function(options)
-{	options = options || {};
-	var strokeWidth = 0;
-	if (options.stroke) strokeWidth = options.stroke.getWidth();
-	ol.style.RegularShape.call (this,{ radius: options.radius, fill:options.fill,
-									rotation:options.rotation, rotateWithView: options.rotateWithView });
-	
-	if (typeof(options.opacity)=="number") this.setOpacity(options.opacity);
-	this.color_ = options.color;
-	this.fontSize_ = options.fontSize || 1;
-	this.stroke_ = options.stroke;
-	this.fill_ = options.fill;
-	this.radius_ = options.radius -strokeWidth;
-	this.form_ = options.form || "none";
-	this.gradient_ = options.gradient;
-	this.offset_ = [options.offsetX ? options.offsetX :0, options.offsetY ? options.offsetY :0];
-
-	this.glyph_ = this.getGlyph(options.glyph) || "";
-
-	this.renderMarker_();
-};
-ol.inherits(ol.style.FontSymbol, ol.style.RegularShape);
-
-/** Cool stuff to get the image symbol for a style
-*/
-ol.style.Image.prototype.getImagePNG = function()
-{	var canvas = this.getImage();
-	if (canvas) 
-	{	try { return canvas.toDataURL("image/png"); }
-		catch(e) { return false; }
-	}
-	else return false;
-}
-
-/** 
- *	Font defs
- */
-ol.style.FontSymbol.prototype.defs = { 'fonts':{}, 'glyphs':{} };
-
-/** Static function : add new font defs 
- * @param {String|Object} font the font desciption
- * @param {} glyphs a key / value list of glyph definitions. 
- * 		Each key is the name of the glyph, 
- * 		the value is an object that code the font, the caracter code, 
- * 		the name and a search string for the glyph.
- */
- ol.style.FontSymbol.addDefs = function(font, glyphs)
- {	var thefont = font;
-	if (typeof(font) == "string") thefont = {"font":font, "name":font, "copyright":"" };
-	if (!thefont.font || typeof(thefont.font) != "string") 
-	{	console.log("bad font def");
-		return;
-	}
-	var fontname = thefont.font;
-	ol.style.FontSymbol.prototype.defs.fonts[fontname] = thefont;
-	for (var i in glyphs)
-	{	var g = glyphs[i];
-		if (typeof(g) == "string" && g.length==1) g = { char: g };
-		ol.style.FontSymbol.prototype.defs.glyphs[i] =
-			{	font: thefont.font,
-				char: g.char || ""+String.fromCharCode(g.code) || "",
-				theme: g.theme || thefont.name,
-				name: g.name || i,
-				search: g.search || ""
-			};
-	}
- };
-
-
-/**
- * Clones the style. 
- * @return {ol.style.FontSymbol}
- */
-ol.style.FontSymbol.prototype.clone = function()
-{	var g = new ol.style.FontSymbol(
-	{	glyph: "",
-		color: this.color_,
-		fontSize: this.fontSize_,
-		stroke: this.stroke_,
-		fill: this.fill_,
-		radius: this.radius_ + (this.stroke_ ? this.stroke_.getWidth():0),
-		form: this.form_,
-		gradient: this.gradient_,
-		offsetX: this.offset_[0],
-		offsetY: this.offset_[1],
-		opacity: this.getOpacity(),
-		rotation: this.getRotation(),
-		rotateWithView: this.getRotateWithView()
-	});
-	g.setScale(this.getScale());
-	g.glyph_ = this.glyph_;
-	g.renderMarker_();
-	return g;
-};
-
-/**
- * Get the fill style for the symbol.
- * @return {ol.style.Fill} Fill style.
- * @api
- */
-ol.style.FontSymbol.prototype.getFill = function() {
-  return this.fill_;
-};
-
-/**
- * Get the stroke style for the symbol.
- * @return {_ol_style_Stroke_} Stroke style.
- * @api
- */
-ol.style.FontSymbol.prototype.getStroke = function() {
-  return this.stroke_;
-};
-
-/**
- * Get the glyph definition for the symbol.
- * @param {string|undefined} name a glyph name to get the definition, default return the glyph definition for the style.
- * @return {_ol_style_Stroke_} Stroke style.
- * @api
- */
-ol.style.FontSymbol.prototype.getGlyph = function(name)
-{	if (name) return ol.style.FontSymbol.prototype.defs.glyphs[name] || { "font":"none","char":name.charAt(0),"theme":"none","name":"none", "search":""};
-	else return this.glyph_;
-};
-
-/**
- * Get the glyph name.
- * @return {string} the name
- * @api
- */
-ol.style.FontSymbol.prototype.getGlyphName = function()
-{	for (var i in ol.style.FontSymbol.prototype.defs.glyphs)
-	{	if (ol.style.FontSymbol.prototype.defs.glyphs[i] === this.glyph_) return i;
-	}
-	return "";
-};
-
-/**
- * Get the stroke style for the symbol.
- * @return {_ol_style_Stroke_} Stroke style.
- * @api
- */
-ol.style.FontSymbol.prototype.getFontInfo = function(glyph)
-{	return ol.style.FontSymbol.prototype.defs.fonts[glyph.font];
-}
-
-/** @private
- */
-ol.style.FontSymbol.prototype.renderMarker_ = function(atlasManager)
-{
-	var strokeStyle;
-	var strokeWidth = 0;
-
-	if (this.stroke_) 
-	{	strokeStyle = ol.color.asString(this.stroke_.getColor());
-		strokeWidth = this.stroke_.getWidth();
-	}
-
-	// no atlas manager is used, create a new canvas
-	var canvas = this.getImage();
-	//console.log(this.getImage().width+" / "+(2 * (this.radius_ + strokeWidth) + 1));
-
-	/** @type {ol.style.FontSymbol.RenderOptions} */
-	var renderOptions = {
-		strokeStyle: strokeStyle,
-		strokeWidth: strokeWidth,
-		size: canvas.width,
-	};
-
-	// draw the circle on the canvas
-	var context = (canvas.getContext('2d'));
-	context.clearRect(0, 0, canvas.width, canvas.height);
-	this.drawMarker_(renderOptions, context, 0, 0);
-
-	// Set Anchor
-	var a = this.getAnchor();
-	a[0] = canvas.width / 2 - this.offset_[0];
-	a[1] = canvas.width / 2 - this.offset_[1];
-
-	//this.createMarkerHitDetectionCanvas_(renderOptions);
-  
-};
-
-
-/**
- * @private
- * @param {ol.style.FontSymbol.RenderOptions} renderOptions
- * @param {CanvasRenderingContext2D} context
- */
-ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context)
-{
-	var s = 2*this.radius_+renderOptions.strokeWidth+1;
-	var w = renderOptions.strokeWidth/2;
-	var c = renderOptions.size / 2;
-	// Transfo to place the glyph at the right place
-	var transfo = { fac:1, posX:renderOptions.size / 2, posY:renderOptions.size / 2 };
-	context.lineJoin = 'round';
-	context.beginPath();
-
-	// Draw the path with the form
-	switch (this.form_)
-	{	case "none": transfo.fac=1;  break;
-		case "circle":
-		case "ban":
-			context.arc ( c, c, s/2, 0, 2 * Math.PI, true);
-			break;
-		case "poi":
-			context.arc ( c, c -0.4*this.radius_, 0.6*this.radius_, 0.15*Math.PI, 0.85*Math.PI, true);
-			context.lineTo ( c-0.89*0.05*s, (0.95+0.45*0.05)*s+w);
-			context.arc ( c, 0.95*s+w, 0.05*s, 0.85*Math.PI, 0.15*Math.PI, true);
-			transfo = { fac:0.45, posX:c, posY:c -0.35*this.radius_ };
-			break;
-		case "bubble":
-			context.arc ( c, c -0.2*this.radius_, 0.8*this.radius_, 0.4*Math.PI, 0.6*Math.PI, true);
-			context.lineTo ( 0.5*s+w, s+w);
-			transfo = { fac:0.7, posX:c, posY:c -0.2*this.radius_ };
-			break;
-		case "marker":
-			context.arc ( c, c -0.2*this.radius_, 0.8*this.radius_, 0.25*Math.PI, 0.75*Math.PI, true);
-			context.lineTo ( 0.5*s+w, s+w);
-			transfo = { fac:0.7, posX: c, posY: c -0.2*this.radius_ };
-			break;
-		case "coma":
-		/*
-			context.arc( renderOptions.size / 2, renderOptions.size / 2 +0.2*this.radius_, 0.8*this.radius_, 0.5*Math.PI, 0, true);
-			context.arc( renderOptions.size / 2, renderOptions.size / 2 -0.2*this.radius_, 0.8*this.radius_, 0, 0.5*Math.PI, true);
-		*/
-			context.moveTo ( c + 0.8*this.radius_, c -0.2*this.radius_);
-			context.quadraticCurveTo ( 0.95*s+w, 0.75*s+w, 0.5*s+w, s+w);
-			context.arc ( c, c -0.2*this.radius_, 0.8*this.radius_, 0.45*Math.PI, 0, false);
-			transfo = { fac:0.7, posX: c, posY: c -0.2*this.radius_ };
-			break;
-		default:
-		{	var pts;
-			switch (this.form_)
-			{	case "shield": 
-					pts = [ 0.05,0, 0.95,0, 0.95,0.8, 0.5,1, 0.05,0.8, 0.05,0 ]; 
-					transfo.posY = 0.45*s+w ;
-					break;
-				case "blazon": 
-					pts = [ 0.1,0, 0.9,0, 0.9,0.8, 0.6,0.8, 0.5,1, 0.4,0.8, 0.1,0.8, 0.1,0 ]; 
-					transfo.fac = 0.8;
-					transfo.posY = 0.4*s+w ;
-					break;
-				case "bookmark": 
-					pts = [ 0.05,0, 0.95,0, 0.95,1, 0.5,0.8, 0.05,1, 0.05,0 ]; 
-					transfo.fac = 0.9;
-					transfo.posY = 0.4*s+w ;
-					break;
-				case "hexagon": 
-					pts = [ 0.05,0.2, 0.5,0, 0.95,0.2, 0.95,0.8, 0.5,1, 0.05,0.8, 0.05,0.2 ]; 
-					transfo.fac = 0.9;
-					transfo.posY = 0.5*s+w ;
-					break;
-				case "diamond": 
-					pts = [ 0.25,0, 0.75,0, 1,0.2, 1,0.4, 0.5,1, 0,0.4, 0,0.2, 0.25,0 ]; 
-					transfo.fac = 0.75 ;
-					transfo.posY = 0.35*s+w ;
-					break;
-				case "triangle": 
-					pts = [ 0,0, 1,0, 0.5,1, 0,0 ]; 
-					transfo.fac = 0.6 ;
-					transfo.posY = 0.3*s+w ;
-					break;
-				case "sign": 
-					pts = [ 0.5,0.05, 1,0.95, 0,0.95, 0.5,0.05 ]; 
-					transfo.fac = 0.7 ;
-					transfo.posY = 0.65*s+w ;
-					break;
-				case "lozenge": 
-					pts = [ 0.5,0, 1,0.5, 0.5,1, 0,0.5, 0.5,0 ]; 
-					transfo.fac = 0.7;
-					break;
-				case "square": 
-				default: 
-					pts = [ 0,0, 1,0, 1,1, 0,1, 0,0 ]; break;
-			}
-			for (var i=0; i<pts.length; i+=2) context.lineTo ( pts[i]*s+w, pts[i+1]*s+w);
-		}
-	}
-
-	context.closePath();
-	return transfo;
-}
-
-/**
- * @private
- * @param {ol.style.FontSymbol.RenderOptions} renderOptions
- * @param {CanvasRenderingContext2D} context
- * @param {number} x The origin for the symbol (x).
- * @param {number} y The origin for the symbol (y).
- */
-ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, y)
-{	var fcolor = this.fill_ ? this.fill_.getColor() : "#000";
-	var scolor = this.stroke_ ? this.stroke_.getColor() : "#000";
-	if (this.form_ == "none" && this.stroke_ && this.fill_)
-	{	scolor = this.fill_.getColor();
-		fcolor = this.stroke_.getColor();
-	}
-	// reset transform
-	context.setTransform(1, 0, 0, 1, 0, 0);
-
-	// then move to (x, y)
-	context.translate(x, y);
-
-	var tr = this.drawPath_(renderOptions, context);
-
-	if (this.fill_) 
-	{	if (this.gradient_ && this.form_!="none")
-		{	var grd = context.createLinearGradient(0,0,renderOptions.size/2,renderOptions.size);
-			grd.addColorStop (1, ol.color.asString(fcolor));
-			grd.addColorStop (0, ol.color.asString(scolor));
-			context.fillStyle = grd;
-		}
-		else context.fillStyle = ol.color.asString(fcolor);
-		context.fill();
-	}
-	if (this.stroke_ && renderOptions.strokeWidth) {
-		context.strokeStyle = renderOptions.strokeStyle;
-		context.lineWidth = renderOptions.strokeWidth;
-		context.stroke();
-	}
-
-	// Draw the symbol
-	if (this.glyph_.char)
-	{	context.font = (2*tr.fac*(this.radius_)*this.fontSize_)+"px "+this.glyph_.font;
-		context.strokeStyle = context.fillStyle;
-		context.lineWidth = renderOptions.strokeWidth * (this.form_ == "none" ? 2:1);
-		context.fillStyle = ol.color.asString(this.color_ || scolor);
-		context.textAlign = "center";
-		context.textBaseline = "middle";
-		var t = this.glyph_.char;
-		if (renderOptions.strokeWidth && scolor!="transparent") context.strokeText(t, tr.posX, tr.posY);
-		context.fillText(t, tr.posX, tr.posY);
-	}
-
-	if (this.form_=="ban" && this.stroke_ && renderOptions.strokeWidth) 
-	{	context.strokeStyle = renderOptions.strokeStyle;
-		context.lineWidth = renderOptions.strokeWidth;
-		var r = this.radius_ + renderOptions.strokeWidth;
-		var d = this.radius_ * Math.cos(Math.PI/4);
-		context.moveTo(r + d, r - d);
-		context.lineTo(r - d, r + d);
-		context.stroke();
-	}
-};
-
-/**
- * @inheritDoc
- */
-ol.style.FontSymbol.prototype.getChecksum = function()
-{
-	var strokeChecksum = (this.stroke_!==null) ?
-		this.stroke_.getChecksum() : '-';
-	var fillChecksum = (this.fill_!==null) ?
-		this.fill_.getChecksum() : '-';
-
-	var recalculate = (this.checksums_===null) ||
-		(strokeChecksum != this.checksums_[1] ||
-		fillChecksum != this.checksums_[2] ||
-		this.radius_ != this.checksums_[3] ||
-		this.form_+"-"+this.glyphs_ != this.checksums_[4]);
-
-	if (recalculate) {
-		var checksum = 'c' + strokeChecksum + fillChecksum 
-			+ ((this.radius_ !== void 0) ? this.radius_.toString() : '-')
-			+ this.form_+"-"+this.glyphs_;
-		this.checksums_ = [checksum, strokeChecksum, fillChecksum, this.radius_, this.form_+"-"+this.glyphs_];
-	}
-
-	return this.checksums_[0];
-};
-
-
-
-/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 *
 *  Add a chart style to display charts (pies or bars) on a map 
 */
@@ -14420,6 +14016,420 @@ ol.style.FillPattern.prototype.getChecksum = function()
 	return this.checksums_[0];
 };
 /**/
+
+
+
+/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+
+
+
+
+
+
+
+/**
+ * @requires ol.style.Circle
+ * @requires ol.structs.IHasChecksum
+ */
+
+
+/**
+ * @classdesc
+ * A marker style to use with font symbols.
+ *
+ * @constructor
+ * @param {} options Options.
+ *  @param {number} options.glyph the glyph name or a char to display as symbol. 
+ * 		The name must be added using the {@link ol.style.FontSymbol.addDefs} function.
+ *  @param {string} options.form 
+ * 		none|circle|poi|bubble|marker|coma|shield|blazon|bookmark|hexagon|diamond|triangle|sign|ban|lozenge|square
+ * 		a form that will enclose the glyph, default none
+ *  @param {number} options.radius
+ *  @param {number} options.rotation
+ *  @param {number} options.rotateWithView
+ *  @param {number} options.opacity
+ *  @param {number} options.fontSize, default 1
+ *  @param {boolean} options.gradient true to display a gradient on the symbol
+ *  @param {_ol_style_Fill_} options.fill
+ *  @param {_ol_style_Stroke_} options.stroke
+ * @extends {ol.style.RegularShape}
+ * @implements {ol.structs.IHasChecksum}
+ * @api
+ */
+ol.style.FontSymbol = function(options)
+{	options = options || {};
+	var strokeWidth = 0;
+	if (options.stroke) strokeWidth = options.stroke.getWidth();
+	ol.style.RegularShape.call (this,{ radius: options.radius, fill:options.fill,
+									rotation:options.rotation, rotateWithView: options.rotateWithView });
+	
+	if (typeof(options.opacity)=="number") this.setOpacity(options.opacity);
+	this.color_ = options.color;
+	this.fontSize_ = options.fontSize || 1;
+	this.stroke_ = options.stroke;
+	this.fill_ = options.fill;
+	this.radius_ = options.radius -strokeWidth;
+	this.form_ = options.form || "none";
+	this.gradient_ = options.gradient;
+	this.offset_ = [options.offsetX ? options.offsetX :0, options.offsetY ? options.offsetY :0];
+
+	this.glyph_ = this.getGlyph(options.glyph) || "";
+
+	this.renderMarker_();
+};
+ol.inherits(ol.style.FontSymbol, ol.style.RegularShape);
+
+/** Cool stuff to get the image symbol for a style
+*/
+ol.style.Image.prototype.getImagePNG = function()
+{	var canvas = this.getImage();
+	if (canvas) 
+	{	try { return canvas.toDataURL("image/png"); }
+		catch(e) { return false; }
+	}
+	else return false;
+}
+
+/** 
+ *	Font defs
+ */
+ol.style.FontSymbol.prototype.defs = { 'fonts':{}, 'glyphs':{} };
+
+/** Static function : add new font defs 
+ * @param {String|Object} font the font desciption
+ * @param {} glyphs a key / value list of glyph definitions. 
+ * 		Each key is the name of the glyph, 
+ * 		the value is an object that code the font, the caracter code, 
+ * 		the name and a search string for the glyph.
+ */
+ ol.style.FontSymbol.addDefs = function(font, glyphs)
+ {	var thefont = font;
+	if (typeof(font) == "string") thefont = {"font":font, "name":font, "copyright":"" };
+	if (!thefont.font || typeof(thefont.font) != "string") 
+	{	console.log("bad font def");
+		return;
+	}
+	var fontname = thefont.font;
+	ol.style.FontSymbol.prototype.defs.fonts[fontname] = thefont;
+	for (var i in glyphs)
+	{	var g = glyphs[i];
+		if (typeof(g) == "string" && g.length==1) g = { char: g };
+		ol.style.FontSymbol.prototype.defs.glyphs[i] =
+			{	font: thefont.font,
+				char: g.char || ""+String.fromCharCode(g.code) || "",
+				theme: g.theme || thefont.name,
+				name: g.name || i,
+				search: g.search || ""
+			};
+	}
+ };
+
+
+/**
+ * Clones the style. 
+ * @return {ol.style.FontSymbol}
+ */
+ol.style.FontSymbol.prototype.clone = function()
+{	var g = new ol.style.FontSymbol(
+	{	glyph: "",
+		color: this.color_,
+		fontSize: this.fontSize_,
+		stroke: this.stroke_,
+		fill: this.fill_,
+		radius: this.radius_ + (this.stroke_ ? this.stroke_.getWidth():0),
+		form: this.form_,
+		gradient: this.gradient_,
+		offsetX: this.offset_[0],
+		offsetY: this.offset_[1],
+		opacity: this.getOpacity(),
+		rotation: this.getRotation(),
+		rotateWithView: this.getRotateWithView()
+	});
+	g.setScale(this.getScale());
+	g.glyph_ = this.glyph_;
+	g.renderMarker_();
+	return g;
+};
+
+/**
+ * Get the fill style for the symbol.
+ * @return {ol.style.Fill} Fill style.
+ * @api
+ */
+ol.style.FontSymbol.prototype.getFill = function() {
+  return this.fill_;
+};
+
+/**
+ * Get the stroke style for the symbol.
+ * @return {_ol_style_Stroke_} Stroke style.
+ * @api
+ */
+ol.style.FontSymbol.prototype.getStroke = function() {
+  return this.stroke_;
+};
+
+/**
+ * Get the glyph definition for the symbol.
+ * @param {string|undefined} name a glyph name to get the definition, default return the glyph definition for the style.
+ * @return {_ol_style_Stroke_} Stroke style.
+ * @api
+ */
+ol.style.FontSymbol.prototype.getGlyph = function(name)
+{	if (name) return ol.style.FontSymbol.prototype.defs.glyphs[name] || { "font":"none","char":name.charAt(0),"theme":"none","name":"none", "search":""};
+	else return this.glyph_;
+};
+
+/**
+ * Get the glyph name.
+ * @return {string} the name
+ * @api
+ */
+ol.style.FontSymbol.prototype.getGlyphName = function()
+{	for (var i in ol.style.FontSymbol.prototype.defs.glyphs)
+	{	if (ol.style.FontSymbol.prototype.defs.glyphs[i] === this.glyph_) return i;
+	}
+	return "";
+};
+
+/**
+ * Get the stroke style for the symbol.
+ * @return {_ol_style_Stroke_} Stroke style.
+ * @api
+ */
+ol.style.FontSymbol.prototype.getFontInfo = function(glyph)
+{	return ol.style.FontSymbol.prototype.defs.fonts[glyph.font];
+}
+
+/** @private
+ */
+ol.style.FontSymbol.prototype.renderMarker_ = function(atlasManager)
+{
+	var strokeStyle;
+	var strokeWidth = 0;
+
+	if (this.stroke_) 
+	{	strokeStyle = ol.color.asString(this.stroke_.getColor());
+		strokeWidth = this.stroke_.getWidth();
+	}
+
+	// no atlas manager is used, create a new canvas
+	var canvas = this.getImage();
+	//console.log(this.getImage().width+" / "+(2 * (this.radius_ + strokeWidth) + 1));
+
+	/** @type {ol.style.FontSymbol.RenderOptions} */
+	var renderOptions = {
+		strokeStyle: strokeStyle,
+		strokeWidth: strokeWidth,
+		size: canvas.width,
+	};
+
+	// draw the circle on the canvas
+	var context = (canvas.getContext('2d'));
+	context.clearRect(0, 0, canvas.width, canvas.height);
+	this.drawMarker_(renderOptions, context, 0, 0);
+
+	// Set Anchor
+	var a = this.getAnchor();
+	a[0] = canvas.width / 2 - this.offset_[0];
+	a[1] = canvas.width / 2 - this.offset_[1];
+
+	//this.createMarkerHitDetectionCanvas_(renderOptions);
+  
+};
+
+
+/**
+ * @private
+ * @param {ol.style.FontSymbol.RenderOptions} renderOptions
+ * @param {CanvasRenderingContext2D} context
+ */
+ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context)
+{
+	var s = 2*this.radius_+renderOptions.strokeWidth+1;
+	var w = renderOptions.strokeWidth/2;
+	var c = renderOptions.size / 2;
+	// Transfo to place the glyph at the right place
+	var transfo = { fac:1, posX:renderOptions.size / 2, posY:renderOptions.size / 2 };
+	context.lineJoin = 'round';
+	context.beginPath();
+
+	// Draw the path with the form
+	switch (this.form_)
+	{	case "none": transfo.fac=1;  break;
+		case "circle":
+		case "ban":
+			context.arc ( c, c, s/2, 0, 2 * Math.PI, true);
+			break;
+		case "poi":
+			context.arc ( c, c -0.4*this.radius_, 0.6*this.radius_, 0.15*Math.PI, 0.85*Math.PI, true);
+			context.lineTo ( c-0.89*0.05*s, (0.95+0.45*0.05)*s+w);
+			context.arc ( c, 0.95*s+w, 0.05*s, 0.85*Math.PI, 0.15*Math.PI, true);
+			transfo = { fac:0.45, posX:c, posY:c -0.35*this.radius_ };
+			break;
+		case "bubble":
+			context.arc ( c, c -0.2*this.radius_, 0.8*this.radius_, 0.4*Math.PI, 0.6*Math.PI, true);
+			context.lineTo ( 0.5*s+w, s+w);
+			transfo = { fac:0.7, posX:c, posY:c -0.2*this.radius_ };
+			break;
+		case "marker":
+			context.arc ( c, c -0.2*this.radius_, 0.8*this.radius_, 0.25*Math.PI, 0.75*Math.PI, true);
+			context.lineTo ( 0.5*s+w, s+w);
+			transfo = { fac:0.7, posX: c, posY: c -0.2*this.radius_ };
+			break;
+		case "coma":
+		/*
+			context.arc( renderOptions.size / 2, renderOptions.size / 2 +0.2*this.radius_, 0.8*this.radius_, 0.5*Math.PI, 0, true);
+			context.arc( renderOptions.size / 2, renderOptions.size / 2 -0.2*this.radius_, 0.8*this.radius_, 0, 0.5*Math.PI, true);
+		*/
+			context.moveTo ( c + 0.8*this.radius_, c -0.2*this.radius_);
+			context.quadraticCurveTo ( 0.95*s+w, 0.75*s+w, 0.5*s+w, s+w);
+			context.arc ( c, c -0.2*this.radius_, 0.8*this.radius_, 0.45*Math.PI, 0, false);
+			transfo = { fac:0.7, posX: c, posY: c -0.2*this.radius_ };
+			break;
+		default:
+		{	var pts;
+			switch (this.form_)
+			{	case "shield": 
+					pts = [ 0.05,0, 0.95,0, 0.95,0.8, 0.5,1, 0.05,0.8, 0.05,0 ]; 
+					transfo.posY = 0.45*s+w ;
+					break;
+				case "blazon": 
+					pts = [ 0.1,0, 0.9,0, 0.9,0.8, 0.6,0.8, 0.5,1, 0.4,0.8, 0.1,0.8, 0.1,0 ]; 
+					transfo.fac = 0.8;
+					transfo.posY = 0.4*s+w ;
+					break;
+				case "bookmark": 
+					pts = [ 0.05,0, 0.95,0, 0.95,1, 0.5,0.8, 0.05,1, 0.05,0 ]; 
+					transfo.fac = 0.9;
+					transfo.posY = 0.4*s+w ;
+					break;
+				case "hexagon": 
+					pts = [ 0.05,0.2, 0.5,0, 0.95,0.2, 0.95,0.8, 0.5,1, 0.05,0.8, 0.05,0.2 ]; 
+					transfo.fac = 0.9;
+					transfo.posY = 0.5*s+w ;
+					break;
+				case "diamond": 
+					pts = [ 0.25,0, 0.75,0, 1,0.2, 1,0.4, 0.5,1, 0,0.4, 0,0.2, 0.25,0 ]; 
+					transfo.fac = 0.75 ;
+					transfo.posY = 0.35*s+w ;
+					break;
+				case "triangle": 
+					pts = [ 0,0, 1,0, 0.5,1, 0,0 ]; 
+					transfo.fac = 0.6 ;
+					transfo.posY = 0.3*s+w ;
+					break;
+				case "sign": 
+					pts = [ 0.5,0.05, 1,0.95, 0,0.95, 0.5,0.05 ]; 
+					transfo.fac = 0.7 ;
+					transfo.posY = 0.65*s+w ;
+					break;
+				case "lozenge": 
+					pts = [ 0.5,0, 1,0.5, 0.5,1, 0,0.5, 0.5,0 ]; 
+					transfo.fac = 0.7;
+					break;
+				case "square": 
+				default: 
+					pts = [ 0,0, 1,0, 1,1, 0,1, 0,0 ]; break;
+			}
+			for (var i=0; i<pts.length; i+=2) context.lineTo ( pts[i]*s+w, pts[i+1]*s+w);
+		}
+	}
+
+	context.closePath();
+	return transfo;
+}
+
+/**
+ * @private
+ * @param {ol.style.FontSymbol.RenderOptions} renderOptions
+ * @param {CanvasRenderingContext2D} context
+ * @param {number} x The origin for the symbol (x).
+ * @param {number} y The origin for the symbol (y).
+ */
+ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, y)
+{	var fcolor = this.fill_ ? this.fill_.getColor() : "#000";
+	var scolor = this.stroke_ ? this.stroke_.getColor() : "#000";
+	if (this.form_ == "none" && this.stroke_ && this.fill_)
+	{	scolor = this.fill_.getColor();
+		fcolor = this.stroke_.getColor();
+	}
+	// reset transform
+	context.setTransform(1, 0, 0, 1, 0, 0);
+
+	// then move to (x, y)
+	context.translate(x, y);
+
+	var tr = this.drawPath_(renderOptions, context);
+
+	if (this.fill_) 
+	{	if (this.gradient_ && this.form_!="none")
+		{	var grd = context.createLinearGradient(0,0,renderOptions.size/2,renderOptions.size);
+			grd.addColorStop (1, ol.color.asString(fcolor));
+			grd.addColorStop (0, ol.color.asString(scolor));
+			context.fillStyle = grd;
+		}
+		else context.fillStyle = ol.color.asString(fcolor);
+		context.fill();
+	}
+	if (this.stroke_ && renderOptions.strokeWidth) {
+		context.strokeStyle = renderOptions.strokeStyle;
+		context.lineWidth = renderOptions.strokeWidth;
+		context.stroke();
+	}
+
+	// Draw the symbol
+	if (this.glyph_.char)
+	{	context.font = (2*tr.fac*(this.radius_)*this.fontSize_)+"px "+this.glyph_.font;
+		context.strokeStyle = context.fillStyle;
+		context.lineWidth = renderOptions.strokeWidth * (this.form_ == "none" ? 2:1);
+		context.fillStyle = ol.color.asString(this.color_ || scolor);
+		context.textAlign = "center";
+		context.textBaseline = "middle";
+		var t = this.glyph_.char;
+		if (renderOptions.strokeWidth && scolor!="transparent") context.strokeText(t, tr.posX, tr.posY);
+		context.fillText(t, tr.posX, tr.posY);
+	}
+
+	if (this.form_=="ban" && this.stroke_ && renderOptions.strokeWidth) 
+	{	context.strokeStyle = renderOptions.strokeStyle;
+		context.lineWidth = renderOptions.strokeWidth;
+		var r = this.radius_ + renderOptions.strokeWidth;
+		var d = this.radius_ * Math.cos(Math.PI/4);
+		context.moveTo(r + d, r - d);
+		context.lineTo(r - d, r + d);
+		context.stroke();
+	}
+};
+
+/**
+ * @inheritDoc
+ */
+ol.style.FontSymbol.prototype.getChecksum = function()
+{
+	var strokeChecksum = (this.stroke_!==null) ?
+		this.stroke_.getChecksum() : '-';
+	var fillChecksum = (this.fill_!==null) ?
+		this.fill_.getChecksum() : '-';
+
+	var recalculate = (this.checksums_===null) ||
+		(strokeChecksum != this.checksums_[1] ||
+		fillChecksum != this.checksums_[2] ||
+		this.radius_ != this.checksums_[3] ||
+		this.form_+"-"+this.glyphs_ != this.checksums_[4]);
+
+	if (recalculate) {
+		var checksum = 'c' + strokeChecksum + fillChecksum 
+			+ ((this.radius_ !== void 0) ? this.radius_.toString() : '-')
+			+ this.form_+"-"+this.glyphs_;
+		this.checksums_ = [checksum, strokeChecksum, fillChecksum, this.radius_, this.form_+"-"+this.glyphs_];
+	}
+
+	return this.checksums_[0];
+};
 
 
 

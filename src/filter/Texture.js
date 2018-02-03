@@ -5,6 +5,7 @@
 
 import ol from 'ol'
 import ol_filter_Base from './Base'
+import ol_filter_Texture_Image from './TextureImage'
 
 /** Add texture effects on maps or layers
 * 	@constructor
@@ -36,7 +37,16 @@ ol_filter_Texture.prototype.setFilter = function(options)
 	if (options.img) img = option.img;
 	else 
 	{	img = new Image();
-		if (options.src) img.src = ol_filter_Texture[options.src] || options.src;
+		if (options.src) {
+			// Look for a texture stored in ol_filter_Texture_Image
+			if (ol_filter_Texture_Image && ol_filter_Texture_Image[options.src]) {
+				img.src = ol_filter_Texture_Image[options.src];
+			} 
+			// default source
+			else {
+				if (!img.src) img.src = options.src;
+			}
+		}
 		img.crossOrigin = options.crossOrigin || null;
 	}
 
