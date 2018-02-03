@@ -18,6 +18,8 @@ import ol_style_Circle from 'ol/style/circle'
 import ol_style_Fill from 'ol/style/fill'
 import ol_style_Stroke from 'ol/style/stroke'
 import ol_layer_Vector from 'ol/layer/vector'
+import ol_Feature from 'ol/feature'
+
 //TODO: replace ol.animation.pan with new {ol_interaction_Interaction.pan}
 //import ol_interaction_Interaction from 'ol/interaction/interaction'
 
@@ -236,7 +238,7 @@ ol_control_Overview.prototype.calcExtent_ = function(extent)
 	
 	var source = this.extentLayer.getSource();
 	source.clear();
-	var f = new ol.Feature();
+	var f = new ol_Feature();
 
 	var size = map.getSize();
 	var resolution = map.getView().getResolution();
