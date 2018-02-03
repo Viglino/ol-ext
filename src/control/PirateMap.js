@@ -18,7 +18,7 @@ var ol_control_PirateMap = function(options)
 {	
 	// deprecated
 	console.error("ol_control_PirateMap is deprecated. Use a combination of ol.filter.Texture + ol.controlCompass + ol.control.Clip.\n"
-		+"See http://viglino.github.io/ol3-ext/examples/map.pirate.html")
+		+"See http://viglino.github.io/ol-ext/examples/map.pirate.html")
 	
 	options = options || {};
 	var self = this;

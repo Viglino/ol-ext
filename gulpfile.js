@@ -24,6 +24,8 @@ function transform() {
       // file content
       content = file.contents.toString();
       if (content) {
+        // change ol_namespace_Class_Att => ol.namespace.Class.Att
+        content = content.replace(/(\bol_([a-z,A-Z]*)_([a-z,A-Z]*)_([a-z,A-Z]*))/g,"ol.$2.$3.$4");
         // change ol_namespace_Class => ol.namespace.Class
         content = content.replace(/(\bol_([a-z,A-Z]*)_([a-z,A-Z]*))/g,"ol.$2.$3");
         // change ol_Class => ol.namespace.Class
@@ -94,7 +96,8 @@ gulp.task("js", function() {
 		"./src/overlay/*.js",
     "./src/geom/*.js",
     "./src/render/*.js",
-		"./src/style/FontSymbol.js", "./src/style/*.js", "!./src/style/FontMakiDef.js", "!./src/style/FontSymbol.js",
+    "./src/style/*.js", "!./src/style/FontMakiDef.js", "!./src/style/FontAwesomeDef.js",
+    // Utils in extrajs
     //"./src/utils/*.js", "!./src/render/Pulse.js", "!./src/render/Markup.js",
 		"!./*/*.min.js",
 		"!./src/filter/TextureImage.js"
@@ -114,7 +117,7 @@ gulp.task("js", function() {
 // Build extra js files to use individually
 gulp.task("extrajs", function() {
 	gulp.src([
-    "./src/style/FontMakiDef.js", "./src/style/FontSymbol.js",
+    "./src/style/FontMakiDef.js", "./src/style/FontAwesomeDef.js",
     "./src/utils/*.js",
     "./src/filter/TextureImage.js"
 		])
