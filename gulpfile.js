@@ -92,6 +92,7 @@ gulp.task("js", function() {
 		"./src/featureanimation/FeatureAnimation.js", "./src/featureanimation/*.js",
 		"./src/filter/Base.js", "./src/filter/Mask.js", "./src/filter/*.js",
 		"./src/interaction/*.js",
+		"./src/source/*.js",
 		"./src/layer/*.js",
 		"./src/overlay/*.js",
     "./src/geom/*.js",
