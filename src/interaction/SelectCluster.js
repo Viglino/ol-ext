@@ -40,7 +40,7 @@ import ol_geom_Point from 'ol/geom/point'
  * @fires ol.interaction.SelectEvent
  * @api stable
  */
-ol_interaction_SelectCluster = function(options) 
+var ol_interaction_SelectCluster = function(options) 
 {	options = options || {};
 
 	this.pointRadius = options.pointRadius || 12;

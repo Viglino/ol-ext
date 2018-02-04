@@ -21,7 +21,7 @@ import ol_Map from 'ol/map'
  * 	@param {Number} options.animationDuration animation duration in ms, default is 700ms 
  * 	@param {ol.easingFunction} animationMethod easing method to use, default ol.easing.easeOut
  */
-ol_layer_AnimatedCluster = function(opt_options)
+var ol_layer_AnimatedCluster = function(opt_options)
 {	var options = opt_options || {};
 
 	ol_layer_Vector.call (this, options);

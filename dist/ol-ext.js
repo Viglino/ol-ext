@@ -10838,220 +10838,6 @@ ol.interaction.Transform.prototype.handleUpEvent_ = function(evt)
 
 
 
-/*
-	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (http://www.cecill.info/).
-	
-	ol.layer.AnimatedCluster is a vector layer that animate cluster 
-	
-*/
-
-
-
-
-
-
-
-
-/**
- *  a vector layer for animated cluster
- * @constructor 
- * @extends {ol.layer.Vector}
- * @param {olx.layer.AnimatedClusterOptions=} options extend olx.layer.Options
- * 	@param {Number} options.animationDuration animation duration in ms, default is 700ms 
- * 	@param {ol.easingFunction} animationMethod easing method to use, default ol.easing.easeOut
- */
-ol.layer.AnimatedCluster = function(opt_options)
-{	var options = opt_options || {};
-
-	ol.layer.Vector.call (this, options);
-	
-	this.oldcluster = new ol.source.Vector();
-	this.clusters = [];
-	this.animation={start:false};
-	this.set('animationDuration', typeof(options.animationDuration)=='number' ? options.animationDuration : 700);
-	this.set('animationMethod', options.animationMethod || ol.easing.easeOut);
-
-	// Save cluster before change
-	this.getSource().on('change', this.saveCluster, this);
-	// Animate the cluster
-	this.on('precompose', this.animate, this);
-	this.on('postcompose', this.postanimate, this);
-};
-ol.inherits (ol.layer.AnimatedCluster, ol.layer.Vector);
-
-/** @private save cluster features before change
-*/
-ol.layer.AnimatedCluster.prototype.saveCluster = function()
-{	this.oldcluster.clear();
-	if (!this.get('animationDuration')) return;
-	var features = this.getSource().getFeatures();
-	if (features.length && features[0].get('features'))
-	{	this.oldcluster.addFeatures (this.clusters);
-		this.clusters = features.slice(0);
-		this.sourceChanged = true;
-	}
-};
-
-/** @private Get the cluster that contains a feature
-*/
-ol.layer.AnimatedCluster.prototype.getClusterForFeature = function(f, cluster)
-{	for (var j=0, c; c=cluster[j]; j++)
-	{	var features = cluster[j].get('features');
-		if (features && features.length) 
-		{	for (var k=0, f2; f2=features[k]; k++)
-			{	if (f===f2) 
-				{	return cluster[j];
-				}
-			}
-		}
-	}
-	return false;
-};
-
-/** @private 
-*/
-ol.layer.AnimatedCluster.prototype.stopAnimation = function()
-{	this.animation.start = false;
-	this.animation.cA = [];
-	this.animation.cB = [];
-};
-
-/** @private animate the cluster
-*/
-ol.layer.AnimatedCluster.prototype.animate = function(e)
-{	var duration = this.get('animationDuration');
-	if (!duration) return;
-	var resolution = e.frameState.viewState.resolution;
-	var a = this.animation;
-	var time = e.frameState.time;
-
-	// Start a new animation, if change resolution and source has changed
-	if (a.resolution != resolution && this.sourceChanged)
-	{	var extent = e.frameState.extent;
-		if (a.resolution < resolution)
-		{	extent = ol.extent.buffer(extent, 100*resolution);
-			a.cA = this.oldcluster.getFeaturesInExtent(extent);
-			a.cB = this.getSource().getFeaturesInExtent(extent);
-			a.revers = false;
-		}
-		else
-		{	extent = ol.extent.buffer(extent, 100*resolution);
-			a.cA = this.getSource().getFeaturesInExtent(extent);
-			a.cB = this.oldcluster.getFeaturesInExtent(extent);
-			a.revers = true;
-		}
-		a.clusters = [];
-		for (var i=0, c0; c0=a.cA[i]; i++)
-		{	var f = c0.get('features');
-			if (f && f.length) 
-			{	var c = this.getClusterForFeature (f[0], a.cB);
-				if (c) a.clusters.push({ f:c0, pt:c.getGeometry().getCoordinates() });
-			}
-		}
-		// Save state
-		a.resolution = resolution;
-		this.sourceChanged = false;
-
-		// No cluster or too much to animate
-		if (!a.clusters.length || a.clusters.length>1000) 
-		{	this.stopAnimation();
-			return;
-		}
-		// Start animation from now
-		time = a.start = (new Date()).getTime();
-	}
-
-	// Run animation
-	if (a.start)
-	{	var vectorContext = e.vectorContext;
-		var d = (time - a.start) / duration;
-		// Animation ends
-		if (d > 1.0) 
-		{	this.stopAnimation();
-			d = 1;
-		}
-		d = this.get('animationMethod')(d);
-		// Animate
-		var style = this.getStyle();
-		var stylefn = (typeof(style) == 'function') ? style : style.length ? function(){ return style; } : function(){ return [style]; } ;
-		// Layer opacity
-		e.context.save();
-		e.context.globalAlpha = this.getOpacity();
-		// Retina device
-		var ratio = e.frameState.pixelRatio;
-		for (var i=0, c; c=a.clusters[i]; i++)
-		{	var pt = c.f.getGeometry().getCoordinates();
-			if (a.revers)
-			{	pt[0] = c.pt[0] + d * (pt[0]-c.pt[0]);
-				pt[1] = c.pt[1] + d * (pt[1]-c.pt[1]);
-			}
-			else
-			{	pt[0] = pt[0] + d * (c.pt[0]-pt[0]);
-				pt[1] = pt[1] + d * (c.pt[1]-pt[1]);
-			}
-			// Draw feature
-			var st = stylefn(c.f, resolution);
-			/* Preserve pixel ration on retina */
-			var geo = new ol.geom.Point(pt);
-			for (var k=0; s=st[k]; k++)
-			{	var sc;
-				// OL < v4.3 : setImageStyle doesn't check retina
-				var imgs = ol.Map.prototype.getFeaturesAtPixel ? false : s.getImage();
-				if (imgs)
-				{	sc = imgs.getScale(); 
-					imgs.setScale(sc*ratio); 
-				}
-				// OL3 > v3.14
-				if (vectorContext.setStyle)
-				{	vectorContext.setStyle(s);
-					vectorContext.drawGeometry(geo);
-				}
-				// older version
-				else
-				{	vectorContext.setImageStyle(imgs);
-					vectorContext.setTextStyle(s.getText());
-					vectorContext.drawPointGeometry(geo);
-				}
-				if (imgs) imgs.setScale(sc);
-			}
-			/*/
-			var f = new ol.Feature(new ol.geom.Point(pt));
-			for (var k=0; s=st[k]; k++)
-			{	var imgs = s.getImage();
-				var sc = imgs.getScale(); 
-				imgs.setScale(sc*ratio); // drawFeature don't check retina
-				vectorContext.drawFeature(f, s);
-				imgs.setScale(sc);
-			}
-			/**/
-		}
-		e.context.restore();
-		// tell OL3 to continue postcompose animation
-		e.frameState.animate = true;
-
-		// Prevent layer drawing (clip with null rect)
-		e.context.save();
-		e.context.beginPath();
-		e.context.rect(0,0,0,0);
-		e.context.clip();
-		this.clip_ = true;
-	}
-
-	return;
-};
-
-/** @private remove clipping after the layer is drawn
-*/
-ol.layer.AnimatedCluster.prototype.postanimate = function(e)
-{	if (this.clip_)
-	{	e.context.restore();
-		this.clip_ = false;
-	}
-};
-
-
-
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -11423,42 +11209,42 @@ ol.source.GeoImage.prototype.setScale = function(scale)
 	}
 	this.scale = scale;
 	this.changed();
-}
+};
 
 /**
  * Get image rotation.
  * @return {Number} rotation in degre.
  * @api stable
  */
- ol.source.GeoImage.prototype.getRotation = function()
+ol.source.GeoImage.prototype.getRotation = function()
 {	return this.rotate;
-}
+};
 /**
  * Set image rotation.
  * @param {Number} rotation in radian.
  * @api stable
  */
- ol.source.GeoImage.prototype.setRotation = function(angle)
+ol.source.GeoImage.prototype.setRotation = function(angle)
 {	this.rotate = angle;
 	this.changed();
-}
+};
 
 /**
  * Get the image.
  * @api stable
  */
- ol.source.GeoImage.prototype.getImage = function()
+ol.source.GeoImage.prototype.getImage = function()
 {	return this.image;
-}
+};
 
 /**
  * Get image crop extent.
  * @return {ol.extent} image crop extent.
  * @api stable
  */
- ol.source.GeoImage.prototype.getCrop = function()
+ol.source.GeoImage.prototype.getCrop = function()
 {	return this.crop;
-}
+};
 
 
 /**
@@ -11466,26 +11252,26 @@ ol.source.GeoImage.prototype.setScale = function(scale)
  * @param {ol.geom.LineString} coords of the mask
  * @api stable
  */
- ol.source.GeoImage.prototype.setMask = function(mask)
+ol.source.GeoImage.prototype.setMask = function(mask)
 {	this.mask = mask;
 	this.changed();
-}
+};
 
 /**
  * Get image mask.
  * @return {ol.geom.LineString} coords of the mask
  * @api stable
  */
- ol.source.GeoImage.prototype.getMask = function()
+ol.source.GeoImage.prototype.getMask = function()
 {	return this.mask;
-}
+};
 
 /**
  * Set image crop extent.
  * @param {ol.extent|Number} image crop extent or a number to crop from original size.
  * @api stable
  */
- ol.source.GeoImage.prototype.setCrop = function(crop)
+ol.source.GeoImage.prototype.setCrop = function(crop)
 {	// Image not loaded => get it latter
 	if (!this.image.naturalWidth) 
 	{	this.crop = crop;
@@ -11509,125 +11295,9 @@ ol.source.GeoImage.prototype.setScale = function(scale)
 	if (this.crop[3]<=this.crop[1]) this.crop[3] = this.crop[1]+1;
 	this.imageSize = [ this.crop[2]-this.crop[0], this.crop[3]-this.crop[1] ];
 	this.changed();
-}
-
-
-
-/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-
-
-
-
-
-
-
-
-/**
- * Return a preview image of the source.
- * @param {ol.Coordinate|undefined} lonlat The center of the preview.
- * @param {number} resolution of the preview.
- * @return {String} the preview url
- * @api
- */
-ol.source.Source.prototype.getPreview = function(lonlat, resolution)
-{	return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAk6QAAJOkBUCTn+AAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAANeSURBVHic7ZpPiE1RHMc/780MBhkik79JSUlIUbOxI+wkI2yRhYSUlJLNpJF/xcpiJBmZGBZsNM1CkmhKITGkGbH0/BuPmXnP4rxbb/TOn3fvOffeec6nfqvb/b7f93fveeec37ng8Xg8Ho/nf6Uu4d+fDswFssCvhHOJhaXAMeApMAQUyyIPPAdOAiuTStAVy4EHjDWsix5gdRLJ2mY34ulWYz6IEeA4kIk9awtkgTOEM/5vdAKT4k0/Ou3YMR/ELcbRm9AKFLBbgCJwNE4TYZkJfMG++SIwDCyLz0o4bI17WdyJz0r1TAZ+oDcxCBwAFgIzEIuhvcBbg3sLwOK4DFXLFvQGniCGSSUagS4DjUPOHESkA3XiOWCORqMR6Nfo9DjI3QqPUSd+ylBnv0Zn0GrWFvmIOvGNhjqrNDp/EAutyFgRKUM2tgO+Gur81FxvAKYZaimxXYBvmuuLDHWWaK4X0RfJCNsF6NdcbzXU2a65PohYFKWOc+jn8PUajbWIXaBKp9NB7lZYh34OzwFbFfd/NtDYYSth27urLGIm0M31AL3APWAAmIooymaDnPIl/Vz4NN1yHrd7gcvxWQnHAuA3bsyPop8hUsE13BSgK04TUViBeFo2zedJ8S6wElexW4D2eNOPTjNi6WvD/DtEr8E6tk6GGoAmxFY2iFHE9NZiQf8gogiB9gTEH23izAZuE77vHyU+ANucO1QwD3hD/MbLowAcdm20EmkwXx4n3NodS9rMB2HabYpEWs0HcRqHp0fNwAvJD+eBTZr7p6BvmQVxUaEzEbiruNfJekH15L8jtrEm7JJolEcOmKXRqQOuKDQuY7HZY8s8iNfzkSLxIuI43FTrkkLnOlBfRW4VsWk+oAX5weknxFAxJQNckGgVgZuIRVoomoGXEmGTMa+iQ6K7M4SW7k24QYgiuDQPYinbhugiF4H3RGtzZYCzyIvQXfpNI1ybLyeLpf5+iTbkRbiP2EcocTHm4+YI8iI8RFHwWjAfsA95Q+YZFU6wasl8wB7kReijtNbIILa0vcg/PRlGfPQwHmlCviDqAzaA+OREtzqr1ejOIDorxlNEjTGUBV4nnUWCvAJxGDlA8q9j3DEArAn2zvXAfOwfl6eVAmJrPpJ0Ih6Px+PxeJLjLwPul3vj5d0eAAAAAElFTkSuQmCC";
-};
-
-/**
- * Return the tile image of the source.
- * @param {ol.Coordinate|undefined} lonlat The center of the preview.
- * @param {number} resolution of the preview.
- * @return {String} the preview url
- * @api
- */
-ol.source.Tile.prototype.getPreview = function(lonlat, resolution)
-{	if (!lonlat) lonlat = [21020, 6355964];
-	if (!resolution) resolution = 150;
-	
-	var coord = this.getTileGrid().getTileCoordForCoordAndResolution(lonlat, resolution);
-	var fn = this.getTileUrlFunction();
-	return fn.call(this, coord, this.getProjection());
 };
 
 
-/**
- * Return the tile image of the source.
- * @param {ol.Coordinate|undefined} lonlat The center of the preview.
- * @param {number} resolution of the preview.
- * @return {String} the preview url
- * @api
- */
-ol.source.TileWMS.prototype.getPreview = function(lonlat, resolution)
-{	if (!lonlat) lonlat = [21020, 6355964];
-	if (!resolution) resolution = 150;
-
-/*	No way to acces tileUrlFunction...
-	var fn = this.getTileUrlFunction();
-	return fn.call(this, lonlat, this.getProjection());
-*/
-	// Use getfeature info instead
-	var url = this.getGetFeatureInfoUrl(lonlat, resolution, this.getProjection() || 'EPSG:3857', {});
-	url = url.replace(/getfeatureinfo/i,"GetMap");
-	return url;
-};
-
-
-/**
- * Return a preview for the layer.
- * @param {ol.Coordinate|undefined} lonlat The center of the preview.
- * @param {number} resolution of the preview.
- * @return {Array<String>} list of preview url
- * @api
- */
-ol.layer.Layer.prototype.getPreview = function(lonlat, resolution)
-{	if (this.get("preview")) return [ this.get("preview") ];
-	if (!resolution) resolution = 150;
-	// Get middle resolution
-	if (resolution < this.getMinResolution() || resolution > this.getMaxResolution()) 
-	{	var rmin = this.getMinResolution(),
-			rmax = this.getMaxResolution();
-		if (rmax>100000) rmax = 156543;	// min zoom : world
-		if (rmin<0.15) rmin = 0.15;	// max zoom 
-		resolution = rmax;
-		while (rmax>rmin) 
-		{	rmin *= 2;
-			rmax /= 2;
-			resolution = rmin;
-		}
-	}
-	var e = this.getExtent();
-	if (!lonlat) lonlat = [21020, 6355964];	// Default lonlat
-	if (e && !ol.extent.containsCoordinate(e,lonlat)) lonlat = [ (e[0]+e[2])/2, (e[1]+e[3])/2 ];
-
-	if (this.getSource) return [ this.getSource().getPreview(lonlat, resolution) ];
-	return [];
-};
-
-/**
- * Return a preview for the layer.
- * @param {_ol_coordinate_|undefined} lonlat The center of the preview.
- * @param {number} resolution of the preview.
- * @return {Array<String>} list of preview url
- * @api
- */
-ol.layer.Group.prototype.getPreview = function(lonlat, resolution)
-{	if (this.get("preview")) return [ this.get("preview") ];
-	var t = [];
-	if (this.getLayers) 
-	{	var l = this.getLayers().getArray();
-		for (var i=0; i<l.length; i++) 
-		{	t = t.concat(l[i].getPreview(lonlat, resolution));
-		}
-	}
-	return t;
-};
-
-//NB: (Not confirmed)To use this module, you just have to :
-
-				//   import('ol-ext/layer/getpreview')
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -11917,6 +11587,470 @@ ol.source.Mapillary.prototype._loaderFn = function(extent, resolution, projectio
 
 
 
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+	
+	@classdesc
+	ol.source.WikiCommons is a source that load Wikimedia Commons content in a vector layer.
+	
+	@require jQuery
+	
+	Inherits from:
+	<ol.source.Vector>
+*/
+
+
+
+
+
+
+
+
+
+
+/**
+* @constructor ol.source.WikiCommons
+* @extends {ol.source.Vector}
+* @param {olx.source.WikiCommons=} options
+*/
+ol.source.WikiCommons = function(opt_options)
+{	var options = opt_options || {};
+	var self = this; 
+
+	options.loader = this._loaderFn;
+	
+	/** Max resolution to load features  */
+	this._maxResolution = options.maxResolution || 100;
+	
+	/** Result language */
+	this._lang = options.lang || "fr";
+
+	/** Query limit */
+	this._limit = options.limit || 100;
+	
+	/** Default attribution */
+	if (!options.attributions) options.attributions = [ new ol.Attribution({ html:"&copy; <a href='https://commons.wikimedia.org/'>Wikimedia Commons</a>" }) ];
+
+	// Bbox strategy : reload at each move
+    if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
+
+	ol.source.Vector.call (this, options);
+};
+ol.inherits (ol.source.WikiCommons, ol.source.Vector);
+
+
+/** Decode wiki attributes and choose to add feature to the layer
+* @param {feature} the feature
+* @param {attributes} wiki attributes
+* @return {boolean} true: add the feature to the layer
+* @API stable
+*/
+ol.source.WikiCommons.prototype.readFeature = function (feature, attributes)
+{	feature.set("descriptionurl", attributes.descriptionurl);
+	feature.set("url", attributes.url);
+	feature.set("title", attributes.title.replace(/^file:|.jpg$/ig,""));
+	feature.set("thumbnail", attributes.url.replace(/^(.+wikipedia\/commons)\/([a-zA-Z0-9]\/[a-zA-Z0-9]{2})\/(.+)$/,"$1/thumb/$2/$3/200px-$3"));
+	feature.set("user", attributes.user);
+	if (attributes.extmetadata && attributes.extmetadata.LicenseShortName) feature.set("copy", attributes.extmetadata.LicenseShortName.value);
+	return true;
+};
+
+
+/** Loader function used to load features.
+* @private
+*/
+ol.source.WikiCommons.prototype._loaderFn = function(extent, resolution, projection)
+{	if (resolution > this._maxResolution) return;
+	var self = this;
+	var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
+	// Commons API: for more info @see https://commons.wikimedia.org/wiki/Commons:API/MediaWiki
+	var url = "https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&prop=coordinates|imageinfo"
+		+ "&generator=geosearch&iiprop=timestamp|user|url|extmetadata|metadata|size&iiextmetadatafilter=LicenseShortName"
+		+ "&ggsbbox=" + bbox[3] + "|" + bbox[0] + "|" + bbox[1] + "|" + bbox[2]
+		+ "&ggslimit="+this._limit
+		+ "&iilimit="+(this._limit-1)
+		+ "&ggsnamespace=6";
+
+	// Ajax request to get the tile
+	$.ajax(
+	{	url: url,
+		dataType: 'jsonp', 
+		success: function(data) 
+		{	//console.log(data);
+			var features = [];
+			var att, pt, feature, lastfeature = null;
+			if (!data.query || !data.query.pages) return;
+			for ( var i in data.query.pages)
+			{	att = data.query.pages[i];
+				if (att.coordinates && att.coordinates.length ) 
+				{	pt = [att.coordinates[0].lon, att.coordinates[0].lat];
+				}
+				else
+				{	var meta = att.imageinfo[0].metadata;
+					if (!meta)
+					{	//console.log(att);
+						continue;
+					}
+					pt = [];
+					var found=0;
+					for (var k=0; k<meta.length; k++)
+					{	if (meta[k].name=="GPSLongitude") 
+						{	pt[0] = meta[k].value;
+							found++;
+						}
+						if (meta[k].name=="GPSLatitude") 
+						{	pt[1] = meta[k].value;
+							found++;
+						}
+					}
+					if (found!=2) 
+					{	//console.log(att);
+						continue;
+					}
+				}
+				feature = new ol.Feature(new ol.geom.Point(ol.proj.transform (pt,"EPSG:4326",projection)));
+				att.imageinfo[0].title = att.title;
+				if (self.readFeature(feature, att.imageinfo[0]))
+				{	features.push(feature);
+				}
+			}
+			self.addFeatures(features);
+    }});
+};
+
+
+
+/*
+	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (http://www.cecill.info/).
+	
+	ol.layer.AnimatedCluster is a vector layer that animate cluster 
+	
+*/
+
+
+
+
+
+
+
+
+/**
+ *  a vector layer for animated cluster
+ * @constructor 
+ * @extends {ol.layer.Vector}
+ * @param {olx.layer.AnimatedClusterOptions=} options extend olx.layer.Options
+ * 	@param {Number} options.animationDuration animation duration in ms, default is 700ms 
+ * 	@param {ol.easingFunction} animationMethod easing method to use, default ol.easing.easeOut
+ */
+ol.layer.AnimatedCluster = function(opt_options)
+{	var options = opt_options || {};
+
+	ol.layer.Vector.call (this, options);
+	
+	this.oldcluster = new ol.source.Vector();
+	this.clusters = [];
+	this.animation={start:false};
+	this.set('animationDuration', typeof(options.animationDuration)=='number' ? options.animationDuration : 700);
+	this.set('animationMethod', options.animationMethod || ol.easing.easeOut);
+
+	// Save cluster before change
+	this.getSource().on('change', this.saveCluster, this);
+	// Animate the cluster
+	this.on('precompose', this.animate, this);
+	this.on('postcompose', this.postanimate, this);
+};
+ol.inherits (ol.layer.AnimatedCluster, ol.layer.Vector);
+
+/** @private save cluster features before change
+*/
+ol.layer.AnimatedCluster.prototype.saveCluster = function()
+{	this.oldcluster.clear();
+	if (!this.get('animationDuration')) return;
+	var features = this.getSource().getFeatures();
+	if (features.length && features[0].get('features'))
+	{	this.oldcluster.addFeatures (this.clusters);
+		this.clusters = features.slice(0);
+		this.sourceChanged = true;
+	}
+};
+
+/** @private Get the cluster that contains a feature
+*/
+ol.layer.AnimatedCluster.prototype.getClusterForFeature = function(f, cluster)
+{	for (var j=0, c; c=cluster[j]; j++)
+	{	var features = cluster[j].get('features');
+		if (features && features.length) 
+		{	for (var k=0, f2; f2=features[k]; k++)
+			{	if (f===f2) 
+				{	return cluster[j];
+				}
+			}
+		}
+	}
+	return false;
+};
+
+/** @private 
+*/
+ol.layer.AnimatedCluster.prototype.stopAnimation = function()
+{	this.animation.start = false;
+	this.animation.cA = [];
+	this.animation.cB = [];
+};
+
+/** @private animate the cluster
+*/
+ol.layer.AnimatedCluster.prototype.animate = function(e)
+{	var duration = this.get('animationDuration');
+	if (!duration) return;
+	var resolution = e.frameState.viewState.resolution;
+	var a = this.animation;
+	var time = e.frameState.time;
+
+	// Start a new animation, if change resolution and source has changed
+	if (a.resolution != resolution && this.sourceChanged)
+	{	var extent = e.frameState.extent;
+		if (a.resolution < resolution)
+		{	extent = ol.extent.buffer(extent, 100*resolution);
+			a.cA = this.oldcluster.getFeaturesInExtent(extent);
+			a.cB = this.getSource().getFeaturesInExtent(extent);
+			a.revers = false;
+		}
+		else
+		{	extent = ol.extent.buffer(extent, 100*resolution);
+			a.cA = this.getSource().getFeaturesInExtent(extent);
+			a.cB = this.oldcluster.getFeaturesInExtent(extent);
+			a.revers = true;
+		}
+		a.clusters = [];
+		for (var i=0, c0; c0=a.cA[i]; i++)
+		{	var f = c0.get('features');
+			if (f && f.length) 
+			{	var c = this.getClusterForFeature (f[0], a.cB);
+				if (c) a.clusters.push({ f:c0, pt:c.getGeometry().getCoordinates() });
+			}
+		}
+		// Save state
+		a.resolution = resolution;
+		this.sourceChanged = false;
+
+		// No cluster or too much to animate
+		if (!a.clusters.length || a.clusters.length>1000) 
+		{	this.stopAnimation();
+			return;
+		}
+		// Start animation from now
+		time = a.start = (new Date()).getTime();
+	}
+
+	// Run animation
+	if (a.start)
+	{	var vectorContext = e.vectorContext;
+		var d = (time - a.start) / duration;
+		// Animation ends
+		if (d > 1.0) 
+		{	this.stopAnimation();
+			d = 1;
+		}
+		d = this.get('animationMethod')(d);
+		// Animate
+		var style = this.getStyle();
+		var stylefn = (typeof(style) == 'function') ? style : style.length ? function(){ return style; } : function(){ return [style]; } ;
+		// Layer opacity
+		e.context.save();
+		e.context.globalAlpha = this.getOpacity();
+		// Retina device
+		var ratio = e.frameState.pixelRatio;
+		for (var i=0, c; c=a.clusters[i]; i++)
+		{	var pt = c.f.getGeometry().getCoordinates();
+			if (a.revers)
+			{	pt[0] = c.pt[0] + d * (pt[0]-c.pt[0]);
+				pt[1] = c.pt[1] + d * (pt[1]-c.pt[1]);
+			}
+			else
+			{	pt[0] = pt[0] + d * (c.pt[0]-pt[0]);
+				pt[1] = pt[1] + d * (c.pt[1]-pt[1]);
+			}
+			// Draw feature
+			var st = stylefn(c.f, resolution);
+			/* Preserve pixel ration on retina */
+			var geo = new ol.geom.Point(pt);
+			for (var k=0; s=st[k]; k++)
+			{	var sc;
+				// OL < v4.3 : setImageStyle doesn't check retina
+				var imgs = ol.Map.prototype.getFeaturesAtPixel ? false : s.getImage();
+				if (imgs)
+				{	sc = imgs.getScale(); 
+					imgs.setScale(sc*ratio); 
+				}
+				// OL3 > v3.14
+				if (vectorContext.setStyle)
+				{	vectorContext.setStyle(s);
+					vectorContext.drawGeometry(geo);
+				}
+				// older version
+				else
+				{	vectorContext.setImageStyle(imgs);
+					vectorContext.setTextStyle(s.getText());
+					vectorContext.drawPointGeometry(geo);
+				}
+				if (imgs) imgs.setScale(sc);
+			}
+			/*/
+			var f = new ol.Feature(new ol.geom.Point(pt));
+			for (var k=0; s=st[k]; k++)
+			{	var imgs = s.getImage();
+				var sc = imgs.getScale(); 
+				imgs.setScale(sc*ratio); // drawFeature don't check retina
+				vectorContext.drawFeature(f, s);
+				imgs.setScale(sc);
+			}
+			/**/
+		}
+		e.context.restore();
+		// tell OL3 to continue postcompose animation
+		e.frameState.animate = true;
+
+		// Prevent layer drawing (clip with null rect)
+		e.context.save();
+		e.context.beginPath();
+		e.context.rect(0,0,0,0);
+		e.context.clip();
+		this.clip_ = true;
+	}
+
+	return;
+};
+
+/** @private remove clipping after the layer is drawn
+*/
+ol.layer.AnimatedCluster.prototype.postanimate = function(e)
+{	if (this.clip_)
+	{	e.context.restore();
+		this.clip_ = false;
+	}
+};
+
+
+
+/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+
+
+
+
+
+
+
+
+/**
+ * Return a preview image of the source.
+ * @param {ol.Coordinate|undefined} lonlat The center of the preview.
+ * @param {number} resolution of the preview.
+ * @return {String} the preview url
+ * @api
+ */
+ol.source.Source.prototype.getPreview = function(lonlat, resolution)
+{	return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAk6QAAJOkBUCTn+AAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAANeSURBVHic7ZpPiE1RHMc/780MBhkik79JSUlIUbOxI+wkI2yRhYSUlJLNpJF/xcpiJBmZGBZsNM1CkmhKITGkGbH0/BuPmXnP4rxbb/TOn3fvOffeec6nfqvb/b7f93fveeec37ng8Xg8Ho/nf6Uu4d+fDswFssCvhHOJhaXAMeApMAQUyyIPPAdOAiuTStAVy4EHjDWsix5gdRLJ2mY34ulWYz6IEeA4kIk9awtkgTOEM/5vdAKT4k0/Ou3YMR/ELcbRm9AKFLBbgCJwNE4TYZkJfMG++SIwDCyLz0o4bI17WdyJz0r1TAZ+oDcxCBwAFgIzEIuhvcBbg3sLwOK4DFXLFvQGniCGSSUagS4DjUPOHESkA3XiOWCORqMR6Nfo9DjI3QqPUSd+ylBnv0Zn0GrWFvmIOvGNhjqrNDp/EAutyFgRKUM2tgO+Gur81FxvAKYZaimxXYBvmuuLDHWWaK4X0RfJCNsF6NdcbzXU2a65PohYFKWOc+jn8PUajbWIXaBKp9NB7lZYh34OzwFbFfd/NtDYYSth27urLGIm0M31AL3APWAAmIooymaDnPIl/Vz4NN1yHrd7gcvxWQnHAuA3bsyPop8hUsE13BSgK04TUViBeFo2zedJ8S6wElexW4D2eNOPTjNi6WvD/DtEr8E6tk6GGoAmxFY2iFHE9NZiQf8gogiB9gTEH23izAZuE77vHyU+ANucO1QwD3hD/MbLowAcdm20EmkwXx4n3NodS9rMB2HabYpEWs0HcRqHp0fNwAvJD+eBTZr7p6BvmQVxUaEzEbiruNfJekH15L8jtrEm7JJolEcOmKXRqQOuKDQuY7HZY8s8iNfzkSLxIuI43FTrkkLnOlBfRW4VsWk+oAX5weknxFAxJQNckGgVgZuIRVoomoGXEmGTMa+iQ6K7M4SW7k24QYgiuDQPYinbhugiF4H3RGtzZYCzyIvQXfpNI1ybLyeLpf5+iTbkRbiP2EcocTHm4+YI8iI8RFHwWjAfsA95Q+YZFU6wasl8wB7kReijtNbIILa0vcg/PRlGfPQwHmlCviDqAzaA+OREtzqr1ejOIDorxlNEjTGUBV4nnUWCvAJxGDlA8q9j3DEArAn2zvXAfOwfl6eVAmJrPpJ0Ih6Px+PxeJLjLwPul3vj5d0eAAAAAElFTkSuQmCC";
+};
+
+/**
+ * Return the tile image of the source.
+ * @param {ol.Coordinate|undefined} lonlat The center of the preview.
+ * @param {number} resolution of the preview.
+ * @return {String} the preview url
+ * @api
+ */
+ol.source.Tile.prototype.getPreview = function(lonlat, resolution)
+{	if (!lonlat) lonlat = [21020, 6355964];
+	if (!resolution) resolution = 150;
+	
+	var coord = this.getTileGrid().getTileCoordForCoordAndResolution(lonlat, resolution);
+	var fn = this.getTileUrlFunction();
+	return fn.call(this, coord, this.getProjection());
+};
+
+
+/**
+ * Return the tile image of the source.
+ * @param {ol.Coordinate|undefined} lonlat The center of the preview.
+ * @param {number} resolution of the preview.
+ * @return {String} the preview url
+ * @api
+ */
+ol.source.TileWMS.prototype.getPreview = function(lonlat, resolution)
+{	if (!lonlat) lonlat = [21020, 6355964];
+	if (!resolution) resolution = 150;
+
+/*	No way to acces tileUrlFunction...
+	var fn = this.getTileUrlFunction();
+	return fn.call(this, lonlat, this.getProjection());
+*/
+	// Use getfeature info instead
+	var url = this.getGetFeatureInfoUrl(lonlat, resolution, this.getProjection() || 'EPSG:3857', {});
+	url = url.replace(/getfeatureinfo/i,"GetMap");
+	return url;
+};
+
+
+/**
+ * Return a preview for the layer.
+ * @param {ol.Coordinate|undefined} lonlat The center of the preview.
+ * @param {number} resolution of the preview.
+ * @return {Array<String>} list of preview url
+ * @api
+ */
+ol.layer.Layer.prototype.getPreview = function(lonlat, resolution)
+{	if (this.get("preview")) return [ this.get("preview") ];
+	if (!resolution) resolution = 150;
+	// Get middle resolution
+	if (resolution < this.getMinResolution() || resolution > this.getMaxResolution()) 
+	{	var rmin = this.getMinResolution(),
+			rmax = this.getMaxResolution();
+		if (rmax>100000) rmax = 156543;	// min zoom : world
+		if (rmin<0.15) rmin = 0.15;	// max zoom 
+		resolution = rmax;
+		while (rmax>rmin) 
+		{	rmin *= 2;
+			rmax /= 2;
+			resolution = rmin;
+		}
+	}
+	var e = this.getExtent();
+	if (!lonlat) lonlat = [21020, 6355964];	// Default lonlat
+	if (e && !ol.extent.containsCoordinate(e,lonlat)) lonlat = [ (e[0]+e[2])/2, (e[1]+e[3])/2 ];
+
+	if (this.getSource) return [ this.getSource().getPreview(lonlat, resolution) ];
+	return [];
+};
+
+/**
+ * Return a preview for the layer.
+ * @param {_ol_coordinate_|undefined} lonlat The center of the preview.
+ * @param {number} resolution of the preview.
+ * @return {Array<String>} list of preview url
+ * @api
+ */
+ol.layer.Group.prototype.getPreview = function(lonlat, resolution)
+{	if (this.get("preview")) return [ this.get("preview") ];
+	var t = [];
+	if (this.getLayers) 
+	{	var l = this.getLayers().getArray();
+		for (var i=0; i<l.length; i++) 
+		{	t = t.concat(l[i].getPreview(lonlat, resolution));
+		}
+	}
+	return t;
+};
+
+//NB: (Not confirmed)To use this module, you just have to :
+
+				//   import('ol-ext/layer/getpreview')
+
 
 
 
@@ -12171,140 +12305,6 @@ ol.render3D.prototype.drawFeature3D_ = function(ctx, build)
 		}
 	}
 }
-
-
-
-/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-	
-	@classdesc
-	ol.source.WikiCommons is a source that load Wikimedia Commons content in a vector layer.
-	
-	@require jQuery
-	
-	Inherits from:
-	<ol.source.Vector>
-*/
-
-
-
-
-
-
-
-
-
-
-/**
-* @constructor ol.source.WikiCommons
-* @extends {ol.source.Vector}
-* @param {olx.source.WikiCommons=} options
-*/
-ol.source.WikiCommons = function(opt_options)
-{	var options = opt_options || {};
-	var self = this; 
-
-	options.loader = this._loaderFn;
-	
-	/** Max resolution to load features  */
-	this._maxResolution = options.maxResolution || 100;
-	
-	/** Result language */
-	this._lang = options.lang || "fr";
-
-	/** Query limit */
-	this._limit = options.limit || 100;
-	
-	/** Default attribution */
-	if (!options.attributions) options.attributions = [ new ol.Attribution({ html:"&copy; <a href='https://commons.wikimedia.org/'>Wikimedia Commons</a>" }) ];
-
-	// Bbox strategy : reload at each move
-    if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
-
-	ol.source.Vector.call (this, options);
-};
-ol.inherits (ol.source.WikiCommons, ol.source.Vector);
-
-
-/** Decode wiki attributes and choose to add feature to the layer
-* @param {feature} the feature
-* @param {attributes} wiki attributes
-* @return {boolean} true: add the feature to the layer
-* @API stable
-*/
-ol.source.WikiCommons.prototype.readFeature = function (feature, attributes)
-{	feature.set("descriptionurl", attributes.descriptionurl);
-	feature.set("url", attributes.url);
-	feature.set("title", attributes.title.replace(/^file:|.jpg$/ig,""));
-	feature.set("thumbnail", attributes.url.replace(/^(.+wikipedia\/commons)\/([a-zA-Z0-9]\/[a-zA-Z0-9]{2})\/(.+)$/,"$1/thumb/$2/$3/200px-$3"));
-	feature.set("user", attributes.user);
-	if (attributes.extmetadata && attributes.extmetadata.LicenseShortName) feature.set("copy", attributes.extmetadata.LicenseShortName.value);
-	return true;
-};
-
-
-/** Loader function used to load features.
-* @private
-*/
-ol.source.WikiCommons.prototype._loaderFn = function(extent, resolution, projection)
-{	if (resolution > this._maxResolution) return;
-	var self = this;
-	var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
-	// Commons API: for more info @see https://commons.wikimedia.org/wiki/Commons:API/MediaWiki
-	var url = "https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&prop=coordinates|imageinfo"
-		+ "&generator=geosearch&iiprop=timestamp|user|url|extmetadata|metadata|size&iiextmetadatafilter=LicenseShortName"
-		+ "&ggsbbox=" + bbox[3] + "|" + bbox[0] + "|" + bbox[1] + "|" + bbox[2]
-		+ "&ggslimit="+this._limit
-		+ "&iilimit="+(this._limit-1)
-		+ "&ggsnamespace=6";
-
-	// Ajax request to get the tile
-	$.ajax(
-	{	url: url,
-		dataType: 'jsonp', 
-		success: function(data) 
-		{	//console.log(data);
-			var features = [];
-			var att, pt, feature, lastfeature = null;
-			if (!data.query || !data.query.pages) return;
-			for ( var i in data.query.pages)
-			{	att = data.query.pages[i];
-				if (att.coordinates && att.coordinates.length ) 
-				{	pt = [att.coordinates[0].lon, att.coordinates[0].lat];
-				}
-				else
-				{	var meta = att.imageinfo[0].metadata;
-					if (!meta)
-					{	//console.log(att);
-						continue;
-					}
-					pt = [];
-					var found=0;
-					for (var k=0; k<meta.length; k++)
-					{	if (meta[k].name=="GPSLongitude") 
-						{	pt[0] = meta[k].value;
-							found++;
-						}
-						if (meta[k].name=="GPSLatitude") 
-						{	pt[1] = meta[k].value;
-							found++;
-						}
-					}
-					if (found!=2) 
-					{	//console.log(att);
-						continue;
-					}
-				}
-				feature = new ol.Feature(new ol.geom.Point(ol.proj.transform (pt,"EPSG:4326",projection)));
-				att.imageinfo[0].title = att.title;
-				if (self.readFeature(feature, att.imageinfo[0]))
-				{	features.push(feature);
-				}
-			}
-			self.addFeatures(features);
-    }});
-};
 
 
 

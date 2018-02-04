@@ -142,42 +142,42 @@ ol_source_GeoImage.prototype.setScale = function(scale)
 	}
 	this.scale = scale;
 	this.changed();
-}
+};
 
 /**
  * Get image rotation.
  * @return {Number} rotation in degre.
  * @api stable
  */
- ol_source_GeoImage.prototype.getRotation = function()
+ol_source_GeoImage.prototype.getRotation = function()
 {	return this.rotate;
-}
+};
 /**
  * Set image rotation.
  * @param {Number} rotation in radian.
  * @api stable
  */
- ol_source_GeoImage.prototype.setRotation = function(angle)
+ol_source_GeoImage.prototype.setRotation = function(angle)
 {	this.rotate = angle;
 	this.changed();
-}
+};
 
 /**
  * Get the image.
  * @api stable
  */
- ol_source_GeoImage.prototype.getImage = function()
+ol_source_GeoImage.prototype.getImage = function()
 {	return this.image;
-}
+};
 
 /**
  * Get image crop extent.
  * @return {ol.extent} image crop extent.
  * @api stable
  */
- ol_source_GeoImage.prototype.getCrop = function()
+ol_source_GeoImage.prototype.getCrop = function()
 {	return this.crop;
-}
+};
 
 
 /**
@@ -185,26 +185,26 @@ ol_source_GeoImage.prototype.setScale = function(scale)
  * @param {ol.geom.LineString} coords of the mask
  * @api stable
  */
- ol_source_GeoImage.prototype.setMask = function(mask)
+ol_source_GeoImage.prototype.setMask = function(mask)
 {	this.mask = mask;
 	this.changed();
-}
+};
 
 /**
  * Get image mask.
  * @return {ol.geom.LineString} coords of the mask
  * @api stable
  */
- ol_source_GeoImage.prototype.getMask = function()
+ol_source_GeoImage.prototype.getMask = function()
 {	return this.mask;
-}
+};
 
 /**
  * Set image crop extent.
  * @param {ol.extent|Number} image crop extent or a number to crop from original size.
  * @api stable
  */
- ol_source_GeoImage.prototype.setCrop = function(crop)
+ol_source_GeoImage.prototype.setCrop = function(crop)
 {	// Image not loaded => get it latter
 	if (!this.image.naturalWidth) 
 	{	this.crop = crop;
@@ -228,6 +228,6 @@ ol_source_GeoImage.prototype.setScale = function(scale)
 	if (this.crop[3]<=this.crop[1]) this.crop[3] = this.crop[1]+1;
 	this.imageSize = [ this.crop[2]-this.crop[0], this.crop[3]-this.crop[1] ];
 	this.changed();
-}
+};
 
 export default ol_source_GeoImage
