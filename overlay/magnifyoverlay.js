@@ -16,11 +16,11 @@ ol.Overlay.Magnify = function (options)
 {	var self = this;
 	
 	var elt = $("<div>").addClass("ol-magnify");
-	this.element = elt.get(0);
+	this._element = elt.get(0);
 
 	ol.Overlay.call(this, 
 		{	positioning: options.positioning || "center-center",
-			element: this.element,
+			element: this._element,
 			stopEvent: false
 		});
 
@@ -28,7 +28,7 @@ ol.Overlay.Magnify = function (options)
 	this.mgmap_ = new ol.Map(
 	{	controls: new ol.Collection(),
 		interactions: new ol.Collection(),
-		target: options.target || this.element,
+		target: options.target || this._element,
 		view: new ol.View({ projection: options.projection }),
 		layers: options.layers
 	});
@@ -93,7 +93,7 @@ ol.Overlay.Magnify.prototype.onMouseMove_ = function(e)
 	{	var px = self.getMap().getEventCoordinate(e);
 		if (!self.external_) self.setPosition(px);
 		self.mgview_.setCenter(px);
-		if ($("canvas", self.element).css("display")=="none") self.mgmap_.updateSize();
+		if ($("canvas", self._element).css("display")=="none") self.mgmap_.updateSize();
 	}
 }
 
