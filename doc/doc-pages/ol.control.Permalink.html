@@ -84,10 +84,10 @@
         Permalink
         </h2>
         
-            <div class="class-description"><p>OpenLayers 3 Permalink Control.
-    Layers with a permalink properties are handled by the control. 
- The permalink propertie is used to name the layer in the url.
-    The control must be added after all layer are inserted in the map.</p></div>
+            <div class="class-description"><p>Permalink Control.
+    Add a <code>permalink</code>property to layers to be handled by the control (and added in the url). 
+ The layer's permalink property is used to name the layer in the url.
+    The control must be added after all layer are inserted in the map to take them into acount.</p></div>
         
     
 </header>
@@ -99,7 +99,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="Permalink"><span class="type-signature"></span>new ol.control.Permalink( [_ol_control_])</h4>
+    <h4 class="name" id="Permalink"><span class="type-signature"></span>new ol.control.Permalink( [options])</h4>
     
     
 </dt>
@@ -140,7 +140,7 @@
 
         <tr>
             
-                <td class="name"><code>_ol_control_</code></td>
+                <td class="name"><code>options</code></td>
             
 
             <td class="type">
@@ -167,12 +167,129 @@
 
             
 
-            <td class="description last"><p>opt_options</p>
-<pre class="prettyprint source"><code>    - urlReplace {bool} replace url or not, default true
-    - fixed {integer} number of digit in coords, default 6
-    - anchor {bool} use &quot;#&quot; instead of &quot;?&quot; in href
-    - onclick {function} a function called when control is clicked</code></pre><p>Layers attributes extension:</p>
-<pre class="prettyprint source"><code>    - permalink {char} a short string to identify layer in the url</code></pre></td>
+            <td class="description last">
+                <h6 class="method-params-label method-subparams-label">Properties</h6>
+                
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>urlReplace</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">bool</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>replace url or not, default true</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>fixed</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">integer</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>number of digit in coords, default 6</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>anchor</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">bool</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>use &quot;#&quot; instead of &quot;?&quot; in href</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>onclick</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>a function called when control is clicked</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     

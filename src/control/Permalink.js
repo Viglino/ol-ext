@@ -8,21 +8,19 @@ import ol_control_Control from 'ol/control/control'
 import ol_proj from 'ol/proj'
 
 /**
- * @classdesc OpenLayers 3 Permalink Control.
- *	Layers with a permalink properties are handled by the control. 
- *  The permalink propertie is used to name the layer in the url.
- *	The control must be added after all layer are inserted in the map.
+ * Permalink Control.    
+ * 
+ *	Add a `permalink`property to layers to be handled by the control (and added in the url). 
+ *  The layer's permalink property is used to name the layer in the url.
+ *	The control must be added after all layer are inserted in the map to take them into acount.
  *
  * @constructor
  * @extends {ol_control_Control}
- * @param {Object=} _ol_control_ opt_options
- *		- urlReplace {bool} replace url or not, default true
- *		- fixed {integer} number of digit in coords, default 6
- *		- anchor {bool} use "#" instead of "?" in href
- *		- onclick {function} a function called when control is clicked
- *
- * Layers attributes extension:
- *		- permalink {char} a short string to identify layer in the url
+ * @param {Object=} options
+ *	@param {bool} options.urlReplace replace url or not, default true
+ *	@param {integer} options.fixed number of digit in coords, default 6
+ *	@param {bool} options.anchor use "#" instead of "?" in href
+ *	@param {function} options.onclick a function called when control is clicked
  */
 var ol_control_Permalink = function(opt_options)
 {	var options = opt_options || {};
