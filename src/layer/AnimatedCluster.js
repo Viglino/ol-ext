@@ -14,7 +14,7 @@ import ol_geom_Point from 'ol/geom/point'
 import ol_Map from 'ol/map'
 
 /**
- *  a vector layer for animated cluster
+ *  A vector layer for animated cluster
  * @constructor 
  * @extends {ol.layer.Vector}
  * @param {olx.layer.AnimatedClusterOptions=} options extend olx.layer.Options
@@ -40,8 +40,9 @@ var ol_layer_AnimatedCluster = function(opt_options)
 };
 ol.inherits (ol_layer_AnimatedCluster, ol_layer_Vector);
 
-/** @private save cluster features before change
-*/
+/** save cluster features before change
+ * @private
+ */
 ol_layer_AnimatedCluster.prototype.saveCluster = function()
 {	this.oldcluster.clear();
 	if (!this.get('animationDuration')) return;
@@ -53,7 +54,9 @@ ol_layer_AnimatedCluster.prototype.saveCluster = function()
 	}
 };
 
-/** @private Get the cluster that contains a feature
+/** 
+ * Get the cluster that contains a feature
+ * @private
 */
 ol_layer_AnimatedCluster.prototype.getClusterForFeature = function(f, cluster)
 {	for (var j=0, c; c=cluster[j]; j++)
@@ -69,16 +72,20 @@ ol_layer_AnimatedCluster.prototype.getClusterForFeature = function(f, cluster)
 	return false;
 };
 
-/** @private 
-*/
+/** 
+ * Stop animation 
+ * @private 
+ */
 ol_layer_AnimatedCluster.prototype.stopAnimation = function()
 {	this.animation.start = false;
 	this.animation.cA = [];
 	this.animation.cB = [];
 };
 
-/** @private animate the cluster
-*/
+/** 
+ * animate the cluster
+ * @private
+ */
 ol_layer_AnimatedCluster.prototype.animate = function(e)
 {	var duration = this.get('animationDuration');
 	if (!duration) return;
@@ -201,8 +208,10 @@ ol_layer_AnimatedCluster.prototype.animate = function(e)
 	return;
 };
 
-/** @private remove clipping after the layer is drawn
-*/
+/**  
+ * remove clipping after the layer is drawn
+ * @private
+ */
 ol_layer_AnimatedCluster.prototype.postanimate = function(e)
 {	if (this.clip_)
 	{	e.context.restore();
