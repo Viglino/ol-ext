@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>ol3-ext Class: FontSymbol</title>
+	<title>ol3-ext Class: SelectCluster</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -73,18 +73,22 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: FontSymbol</h1>
+	<h1 class="page-title">Class: SelectCluster</h1>
 <section>
 
 <header>
     
         <h2>
-            <span class="ancestors"><a href="ol.html">ol</a><a href="ol.style.html">.style</a>.</span>
+            <span class="ancestors"><a href="ol.html">ol</a><a href="ol.interaction.html">.interaction</a>.</span>
         
-        FontSymbol
+        SelectCluster
         </h2>
         
-            <div class="class-description"><p>A marker style to use with font symbols.</p></div>
+            <div class="class-description"><p>Interaction for selecting vector features in a cluster. 
+It can be used as an ol.interaction.Select. 
+When clicking on a cluster, it springs apart to reveal the features in the cluster.
+Revealed features are selectable and you can pick the one you meant.
+Revealed features are themselves a cluster with an attribute features that contain the original feature.</p></div>
         
     
 </header>
@@ -96,7 +100,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="FontSymbol"><span class="type-signature"></span>new ol.style.FontSymbol(options)</h4>
+    <h4 class="name" id="SelectCluster"><span class="type-signature"></span>new ol.interaction.SelectCluster( [options])</h4>
     
     
 </dt>
@@ -123,6 +127,8 @@
         <th>Type</th>
 
         
+        <th>Argument</th>
+        
 
         
 
@@ -140,13 +146,29 @@
 
             <td class="type">
             
+                
+<span class="param-type">olx.interaction.SelectOptions</span>
+
+
+
+            
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
 
             
 
-            <td class="description last"><p>Options.</p>
+            <td class="description last"><p>SelectOptions.</p>
                 <h6 class="method-params-label method-subparams-label">Properties</h6>
                 
 
@@ -172,13 +194,13 @@
 
         <tr>
             
-                <td class="name"><code>glyph</code></td>
+                <td class="name"><code>featureStyle</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">number</span>
+<span class="param-type"><a href="ol.style.html">ol.style</a></span>
 
 
 
@@ -189,160 +211,14 @@
 
             
 
-            <td class="description last"><p>the glyph name or a char to display as symbol. 
-        The name must be added using the <a href="ol.style.FontSymbol.html#.addDefs">ol.style.FontSymbol.addDefs</a> function.</p></td>
+            <td class="description last"><p>used to style the revealed features as options.style is used by the Select interaction.</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>form</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>none|circle|poi|bubble|marker|coma|shield|blazon|bookmark|hexagon|diamond|triangle|sign|ban|lozenge|square
-        a form that will enclose the glyph, default none</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>radius</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>rotation</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>rotateWithView</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>opacity</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>fontSize,</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>default 1</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>gradient</code></td>
+                <td class="name"><code>selectCluster</code></td>
             
 
             <td class="type">
@@ -359,20 +235,20 @@
 
             
 
-            <td class="description last"><p>true to display a gradient on the symbol</p></td>
+            <td class="description last"><p>false if you don't want to get cluster selected</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>fill</code></td>
+                <td class="name"><code>PointRadius</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">_ol_style_Fill_</span>
+<span class="param-type">Number</span>
 
 
 
@@ -383,20 +259,20 @@
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>to calculate distance between the features</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>stroke</code></td>
+                <td class="name"><code>spiral</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">_ol_style_Stroke_</span>
+<span class="param-type">bool</span>
 
 
 
@@ -407,7 +283,103 @@
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>means you want the feature to be placed on a spiral (or a circle)</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>circleMaxObject</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>number of object that can be place on a circle</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>maxObjects</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>number of object that can be drawn, other are hidden</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>animation</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">bool</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>if the cluster will animate when features spread out, default is false</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>animationDuration</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>animation duration in ms, default is 500ms</p></td>
         </tr>
 
     
@@ -438,13 +410,6 @@
     
 
     
-    <dt class="implements">Implements:</dt>
-    <dd class="implements"><ul>
-        
-            <li>ol.structs.IHasChecksum</li>
-        
-    </ul></dd>
-    
 
     
 
@@ -472,6 +437,11 @@
 
     
 
+    
+    <h5>Fires:</h5>
+    <ul>
+        <li>ol.interaction.event:SelectEvent</li>
+    </ul>
     
 
     
@@ -495,7 +465,7 @@
 
 
     <ul>
-        <li>ol.style.RegularShape</li>
+        <li>ol.interaction.Select</li>
     </ul>
 
 
@@ -510,70 +480,6 @@
     
 
     
-        <h3 class="subsection-title">Members</h3>
-
-        <dl>
-            
-<hr>
-<dt class="name" id="defs">
-    <h4 id="defs"><span class="type-signature"></span>defs<span class="type-signature"></span></h4>
-
-    
-</dt>
-<dd>
-    
-    <div class="description">
-        <p>Font defs</p>
-    </div>
-    
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-</dd>
-
-        </dl>
-    
 
     
         <h3 class="subsection-title">Methods</h3>
@@ -582,7 +488,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id=".addDefs"><span class="type-signature">&lt;static> </span>addDefs(font, glyphs)</h4>
+    <h4 class="name" id="animateCluster_"><span class="type-signature"></span>animateCluster_(the)</h4>
     
     
 </dt>
@@ -590,7 +496,7 @@
 
     
     <div class="description">
-        <p>Static function : add new font defs</p>
+        <p>Animate the cluster and spread out the features</p>
     </div>
     
 
@@ -625,16 +531,13 @@
 
         <tr>
             
-                <td class="name"><code>font</code></td>
+                <td class="name"><code>the</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">String</span>
-|
-
-<span class="param-type">Object</span>
+<span class="param-type">ol.Coordinates</span>
 
 
 
@@ -645,28 +548,7 @@
 
             
 
-            <td class="description last"><p>the font desciption</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>glyphs</code></td>
-            
-
-            <td class="type">
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>a key / value list of glyph definitions. 
-        Each key is the name of the glyph, 
-        the value is an object that code the font, the caracter code, 
-        the name and a search string for the glyph.</p></td>
+            <td class="description last"><p>center of the cluster</p></td>
         </tr>
 
     
@@ -734,7 +616,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="clone"><span class="type-signature"></span>clone()</h4>
+    <h4 class="name" id="clear"><span class="type-signature"></span>clear()</h4>
     
     
 </dt>
@@ -742,7 +624,7 @@
 
     
     <div class="description">
-        <p>Clones the style.</p>
+        <p>Clear the selection, close the cluster and remove revealed features</p>
     </div>
     
 
@@ -804,26 +686,6 @@
     
 
     
-    <h5>Returns:</h5>
-    
-            
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="ol.style.FontSymbol.html">ol.style.FontSymbol</a></span>
-
-
-
-    </dd>
-</dl>
-
-
-        
 
     
 </dd>
@@ -832,81 +694,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="getChecksum"><span class="type-signature"></span>getChecksum()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="getFill"><span class="type-signature"></span>getFill()</h4>
+    <h4 class="name" id="getLayer"><span class="type-signature"></span>getLayer()</h4>
     
     
 </dt>
@@ -914,7 +702,7 @@
 
     
     <div class="description">
-        <p>Get the fill style for the symbol.</p>
+        <p>Get the layer for the revealed features</p>
     </div>
     
 
@@ -976,30 +764,6 @@
     
 
     
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    <p>Fill style.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">ol.style.Fill</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
 
     
 </dd>
@@ -1008,7 +772,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="getFontInfo"><span class="type-signature"></span>getFontInfo()</h4>
+    <h4 class="name" id="selectCluster"><span class="type-signature"></span>selectCluster(a)</h4>
     
     
 </dt>
@@ -1016,109 +780,7 @@
 
     
     <div class="description">
-        <p>Get the stroke style for the symbol.</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    <p>Stroke style.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">_ol_style_Stroke_</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="getGlyph"><span class="type-signature"></span>getGlyph(name)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Get the glyph definition for the symbol.</p>
+        <p>Select a cluster</p>
     </div>
     
 
@@ -1153,16 +815,13 @@
 
         <tr>
             
-                <td class="name"><code>name</code></td>
+                <td class="name"><code>a</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">string</span>
-|
-
-<span class="param-type">undefined</span>
+<span class="param-type">ol.Feature</span>
 
 
 
@@ -1173,7 +832,7 @@
 
             
 
-            <td class="description last"><p>a glyph name to get the definition, default return the glyph definition for the style.</p></td>
+            <td class="description last"><p>cluster feature ie. a feature with a 'features' attribute.</p></td>
         </tr>
 
     
@@ -1233,30 +892,6 @@
     
 
     
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    <p>Stroke style.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">_ol_style_Stroke_</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
 
     
 </dd>
@@ -1265,7 +900,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="getGlyphName"><span class="type-signature"></span>getGlyphName()</h4>
+    <h4 class="name" id="setMap"><span class="type-signature"></span>setMap(map)</h4>
     
     
 </dt>
@@ -1273,7 +908,8 @@
 
     
     <div class="description">
-        <p>Get the glyph name.</p>
+        <p>Remove the interaction from its current map, if any,  and attach it to a new
+map, if any. Pass <code>null</code> to just remove the interaction from the current map.</p>
     </div>
     
 
@@ -1282,6 +918,56 @@
     
 
     
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>map</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ol.Map.html">ol.Map</a></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Map.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
     
 
     
@@ -1335,132 +1021,6 @@
     
 
     
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    <p>the name</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">string</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="getStroke"><span class="type-signature"></span>getStroke()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Get the stroke style for the symbol.</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    <p>Stroke style.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">_ol_style_Stroke_</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
 
     
 </dd>

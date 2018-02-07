@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>ol3-ext Class: FontSymbol</title>
+	<title>ol3-ext Class: AnimatedCluster</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -73,18 +73,14 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: FontSymbol</h1>
+	<h1 class="page-title">Class: AnimatedCluster</h1>
 <section>
 
 <header>
     
         <h2>
-            <span class="ancestors"><a href="ol.html">ol</a><a href="ol.style.html">.style</a>.</span>
-        
-        FontSymbol
+        AnimatedCluster
         </h2>
-        
-            <div class="class-description"><p>A marker style to use with font symbols.</p></div>
         
     
 </header>
@@ -96,12 +92,16 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="FontSymbol"><span class="type-signature"></span>new ol.style.FontSymbol(options)</h4>
+    <h4 class="name" id="AnimatedCluster"><span class="type-signature"></span>new ol.layer.AnimatedCluster( [options], animationMethod)</h4>
     
     
 </dt>
 <dd>
 
+    
+    <div class="description">
+        <p>A vector layer for animated cluster</p>
+    </div>
     
 
     
@@ -123,6 +123,8 @@
         <th>Type</th>
 
         
+        <th>Argument</th>
+        
 
         
 
@@ -140,13 +142,29 @@
 
             <td class="type">
             
+                
+<span class="param-type">olx.layer.AnimatedClusterOptions</span>
+
+
+
+            
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
 
             
 
-            <td class="description last"><p>Options.</p>
+            <td class="description last"><p>extend olx.layer.Options</p>
                 <h6 class="method-params-label method-subparams-label">Properties</h6>
                 
 
@@ -172,13 +190,13 @@
 
         <tr>
             
-                <td class="name"><code>glyph</code></td>
+                <td class="name"><code>animationDuration</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">number</span>
+<span class="param-type">Number</span>
 
 
 
@@ -189,225 +207,7 @@
 
             
 
-            <td class="description last"><p>the glyph name or a char to display as symbol. 
-        The name must be added using the <a href="ol.style.FontSymbol.html#.addDefs">ol.style.FontSymbol.addDefs</a> function.</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>form</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>none|circle|poi|bubble|marker|coma|shield|blazon|bookmark|hexagon|diamond|triangle|sign|ban|lozenge|square
-        a form that will enclose the glyph, default none</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>radius</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>rotation</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>rotateWithView</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>opacity</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>fontSize,</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>default 1</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>gradient</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>true to display a gradient on the symbol</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>fill</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">_ol_style_Fill_</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>stroke</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">_ol_style_Stroke_</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
+            <td class="description last"><p>animation duration in ms, default is 700ms</p></td>
         </tr>
 
     
@@ -415,6 +215,38 @@
 </table>
 
             </td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>animationMethod</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">ol.easingFunction</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>easing method to use, default ol.easing.easeOut</p></td>
         </tr>
 
     
@@ -437,13 +269,6 @@
 
     
 
-    
-    <dt class="implements">Implements:</dt>
-    <dd class="implements"><ul>
-        
-            <li>ol.structs.IHasChecksum</li>
-        
-    </ul></dd>
     
 
     
@@ -495,7 +320,7 @@
 
 
     <ul>
-        <li>ol.style.RegularShape</li>
+        <li><a href="ol.layer.Vector.html">ol.layer.Vector</a></li>
     </ul>
 
 
@@ -510,70 +335,6 @@
     
 
     
-        <h3 class="subsection-title">Members</h3>
-
-        <dl>
-            
-<hr>
-<dt class="name" id="defs">
-    <h4 id="defs"><span class="type-signature"></span>defs<span class="type-signature"></span></h4>
-
-    
-</dt>
-<dd>
-    
-    <div class="description">
-        <p>Font defs</p>
-    </div>
-    
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-</dd>
-
-        </dl>
-    
 
     
         <h3 class="subsection-title">Methods</h3>
@@ -582,7 +343,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id=".addDefs"><span class="type-signature">&lt;static> </span>addDefs(font, glyphs)</h4>
+    <h4 class="name" id="animateFeature"><span class="type-signature"></span>animateFeature(feature, fanim)</h4>
     
     
 </dt>
@@ -590,7 +351,7 @@
 
     
     <div class="description">
-        <p>Static function : add new font defs</p>
+        <p>Animate feature on a vector layer</p>
     </div>
     
 
@@ -625,16 +386,13 @@
 
         <tr>
             
-                <td class="name"><code>font</code></td>
+                <td class="name"><code>feature</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">String</span>
-|
-
-<span class="param-type">Object</span>
+<span class="param-type">ol.Feature</span>
 
 
 
@@ -645,17 +403,26 @@
 
             
 
-            <td class="description last"><p>the font desciption</p></td>
+            <td class="description last"><p>Feature to animate</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>glyphs</code></td>
+                <td class="name"><code>fanim</code></td>
             
 
             <td class="type">
+            
+                
+<span class="param-type"><a href="ol.featureAnimation.html">ol.featureAnimation</a></span>
+|
+
+<span class="param-type">Array.&lt;<a href="ol.featureAnimation.html">ol.featureAnimation</a>></span>
+
+
+
             
             </td>
 
@@ -663,10 +430,7 @@
 
             
 
-            <td class="description last"><p>a key / value list of glyph definitions. 
-        Each key is the name of the glyph, 
-        the value is an object that code the font, the caracter code, 
-        the name and a search string for the glyph.</p></td>
+            <td class="description last"><p>the animation to play</p></td>
         </tr>
 
     
@@ -684,83 +448,14 @@
 	
 
 	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="clone"><span class="type-signature"></span>clone()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Clones the style.</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.layer.Vector.html#animateFeature">ol.layer.Vector#animateFeature</a>
+			</li>
+		</ul>
+	</dd>
 	
 
     
@@ -796,177 +491,10 @@
     
 
     
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="ol.style.FontSymbol.html">ol.style.FontSymbol</a></span>
-
-
-
-    </dd>
-</dl>
-
-
-        
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="getChecksum"><span class="type-signature"></span>getChecksum()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="getFill"><span class="type-signature"></span>getFill()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Get the fill style for the symbol.</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
+    <h5>Fires:</h5>
+    <ul>
+        <li>animationstart,event: animationend</li>
+    </ul>
     
 
     
@@ -980,7 +508,7 @@
     
             
 <div class="param-desc">
-    <p>Fill style.</p>
+    <p>an object to control animation with start, stop and isPlaying function</p>
 </div>
 
 
@@ -991,7 +519,7 @@
     </dt>
     <dd>
         
-<span class="param-type">ol.style.Fill</span>
+<span class="param-type">olx.animationControler</span>
 
 
 
@@ -1008,7 +536,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="getFontInfo"><span class="type-signature"></span>getFontInfo()</h4>
+    <h4 class="name" id="setRender3D"><span class="type-signature"></span>setRender3D(r)</h4>
     
     
 </dt>
@@ -1016,109 +544,7 @@
 
     
     <div class="description">
-        <p>Get the stroke style for the symbol.</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    <p>Stroke style.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">_ol_style_Stroke_</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="getGlyph"><span class="type-signature"></span>getGlyph(name)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Get the glyph definition for the symbol.</p>
+        <p>ol.layer.Vector.prototype.setRender3D</p>
     </div>
     
 
@@ -1153,16 +579,13 @@
 
         <tr>
             
-                <td class="name"><code>name</code></td>
+                <td class="name"><code>r</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">string</span>
-|
-
-<span class="param-type">undefined</span>
+<span class="param-type"><a href="ol.render3D.html">ol.render3D</a></span>
 
 
 
@@ -1173,7 +596,7 @@
 
             
 
-            <td class="description last"><p>a glyph name to get the definition, default return the glyph definition for the style.</p></td>
+            <td class="description last"></td>
         </tr>
 
     
@@ -1191,6 +614,15 @@
 	
 
 	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.layer.Vector.html#setRender3D">ol.layer.Vector#setRender3D</a>
+			</li>
+		</ul>
+	</dd>
+	
 
     
 
@@ -1233,30 +665,6 @@
     
 
     
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    <p>Stroke style.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">_ol_style_Stroke_</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
 
     
 </dd>
@@ -1265,7 +673,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="getGlyphName"><span class="type-signature"></span>getGlyphName()</h4>
+    <h4 class="name" id="setTextPathStyle"><span class="type-signature"></span>setTextPathStyle(style, maxResolution)</h4>
     
     
 </dt>
@@ -1273,7 +681,11 @@
 
     
     <div class="description">
-        <p>Get the glyph name.</p>
+        <p>Set the style for features. 
+    This can be a single style object, an array of styles, or a function that takes a feature and resolution and 
+    returns an array of styles. If it is undefined the default style is used. 
+    If it is null the layer has no style (a null style). 
+    See ol.style for information on the default style.</p>
     </div>
     
 
@@ -1282,6 +694,86 @@
     
 
     
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>style</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">ol.style.Style</span>
+|
+
+<span class="param-type">Array.&lt;ol.style.Style></span>
+|
+
+<span class="param-type">ol.StyleFunction</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>maxResolution</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>to display text, default: 0</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
     
 
     
@@ -1293,107 +785,14 @@
 	
 
 	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    <p>the name</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">string</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="getStroke"><span class="type-signature"></span>getStroke()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Get the stroke style for the symbol.</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.layer.Vector.html#setTextPathStyle">ol.layer.Vector#setTextPathStyle</a>
+			</li>
+		</ul>
+	</dd>
 	
 
     
@@ -1437,30 +836,6 @@
     
 
     
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    <p>Stroke style.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">_ol_style_Stroke_</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
 
     
 </dd>
