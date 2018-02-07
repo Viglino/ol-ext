@@ -34,6 +34,8 @@ function transform() {
         content = content.replace(/(\bvar ol\.([a-z,A-Z]*))/g,"ol.$2");
         // remove import / export
         content = content.replace(/\bimport (.*)|\bexport (.*)/g,"");
+        // remove empty lines
+        content = content.replace(/^\s*[\r\n]/gm, '');
         // return content
         file.contents = new Buffer(content);
       }
@@ -52,8 +54,8 @@ var banner = ['/**',
   ' * <%= pkg.name %> - <%= pkg.description %>',
   ' * @description <%= pkg.keywords %>',
   ' * @version v<%= pkg.version %>',
-  ' * @author <%= pkg.author %>',
-  ' * @link <%= pkg.homepage %>',
+  ' * @author <%= pkg.author.name %>',
+  ' * @see <%= pkg.homepage %>',
   ' * @license <%= pkg.license %>',
   ' */',
   ''].join('\n');
@@ -113,6 +115,16 @@ gulp.task("js", function() {
 		}))
 	.pipe(header(banner, { pkg : pkg } ))
   .pipe(gulp.dest("dist"))
+});
+
+/* Watch for modification to recreate the dist */
+gulp.task('watch', function() {
+  var watch = require('gulp-watch');
+
+  // watch many files
+  watch('./src/*/*.js', function() {
+      gulp.start('js');
+  });
 });
 
 // Build extra js files to use individually
