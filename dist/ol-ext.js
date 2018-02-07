@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol).
  * @abstract ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v1.1.2
+ * @version v1.1.3
  * @author Jean-Marc Viglino (https://github.com/Viglino)
  * @link https://github.com/Viglino/ol-ext#,
  * @license BSD
@@ -11196,11 +11196,11 @@ ol.Overlay.Magnify = function (options)
 {	var self = this;
 	
 	var elt = $("<div>").addClass("ol-magnify");
-	this.element = elt.get(0);
+	this._element = elt.get(0);
 
 	ol.Overlay.call(this, 
 		{	positioning: options.positioning || "center-center",
-			element: this.element,
+			element: this._element,
 			stopEvent: false
 		});
 
@@ -11208,7 +11208,7 @@ ol.Overlay.Magnify = function (options)
 	this.mgmap_ = new ol.Map(
 	{	controls: new ol.Collection(),
 		interactions: new ol.Collection(),
-		target: options.target || this.element,
+		target: options.target || this._element,
 		view: new ol.View({ projection: options.projection }),
 		layers: options.layers
 	});
@@ -11273,7 +11273,7 @@ ol.Overlay.Magnify.prototype.onMouseMove_ = function(e)
 	{	var px = self.getMap().getEventCoordinate(e);
 		if (!self.external_) self.setPosition(px);
 		self.mgview_.setCenter(px);
-		if ($("canvas", self.element).css("display")=="none") self.mgmap_.updateSize();
+		if ($("canvas", self._element).css("display")=="none") self.mgmap_.updateSize();
 	}
 }
 
@@ -11357,8 +11357,8 @@ ol.Overlay.Popup = function (options)
 	options.stopEvent = true;
 	d.on("mousedown touchstart", function(e){ e.stopPropagation(); })
 
-	ol.Overlay.call(this, options);
 	this._elt = elt;
+	ol.Overlay.call(this, options);
 			
 	// call setPositioning first in constructor so getClassPositioning is called only once
 	this.setPositioning(options.positioning);
@@ -14377,7 +14377,7 @@ ol.ordering = {}
 */
 ol.ordering.yOrdering = function(options)
 {	return function(f0,f1)
-	{	return f0.getGeometry().getExtent()[1] < f1.getGeometry().getExtent()[1] ;
+	{	return f1.getGeometry().getExtent()[1] - f0.getGeometry().getExtent()[1] ;
 	};
 }
 
@@ -14393,15 +14393,17 @@ ol.ordering.zIndex = function(options)
 	if (option.equalFn)
 	{	return function(f0,f1)
 		{	if (f0.get(attr) == f1.get(attr)) return option.equalFn(f0,f1);
-			return f0.get(attr) < f1.get(attr);
+			else return f0.get(attr) < f1.get(attr) ? 1:-1;
 		};
 	}
 	else
 	{	return function(f0,f1)
-		{	return f0.get(attr) < f1.get(attr);
+		{	if (f0.get(attr) == f1.get(attr)) return 0;
+			else return f0.get(attr) < f1.get(attr) ? 1:-1;
 		};
 	}
 }
+
 /** WSynchro object to synchronize windows
 *	- windows: array of windows to synchro (
 *	- source: the window source (undefined if first window)

@@ -1,11 +1,331 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol).
  * @abstract ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v1.1.2
+ * @version v1.1.3
  * @author Jean-Marc Viglino (https://github.com/Viglino)
  * @link https://github.com/Viglino/ol-ext#,
  * @license BSD
  */
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * Search Control.    
+ * This is the base class for search controls. You can use it for simple custom search or as base to new class.
+ * @see ol.control.SearchFeature
+ * @see ol.control.SearchPhoton
+ *
+ * @constructor
+ * @extends {ol.control.Control}
+ * @fires select
+ * @fires change:input
+ * @param {Object=} options
+ *	@param {string} options.className control class name
+ *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *	@param {string | undefined} options.label Text label to use for the search button, default "search"
+ *	@param {string | undefined} options.placeholder placeholder, default "Search..."
+ *	@param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
+ *	@param {integer | undefined} options.minLength minimum length to start searching, default 1
+ *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index.
+ *	@param {function} options.autocomplete a function that take a search string and callback function to send an array
+ */
+ol.control.Search = function(options) 
+{	var self = this;
+	if (!options) options = {};
+	if (options.typing == undefined) options.typing = 300;
+
+	var element;
+	if (options.target) 
+	{	element = $("<div>").addClass((options.className||"")+ " ol-search");
+	}
+	else
+	{	element = $("<div>").addClass((options.className||"") + ' ol-search ol-unselectable ol-control ol-collapsed');
+		this.button = $("<button>")
+					.attr('type','button')
+					.attr('title',options.label||"search")
+					.click (function()
+					{	element.toggleClass("ol-collapsed"); 
+						if (!element.hasClass("ol-collapsed")) 
+						{	$("input.search", element).focus();
+							$('li', element).removeClass('select');
+						}
+					})
+					.appendTo(element);
+	}
+	// Search input
+	var tout, cur="";
+	$("<input>").attr('type','search')
+		.addClass("search")
+		.attr('placeholder', options.placeholder||"Search...")
+		.on('change', function(e) 
+		{ 	self.dispatchEvent({ type:"change:input", input:e, value:$(this).val()  }); 
+		})
+		.on('keyup search cut paste input', function(e) 
+		{	// console.log(e.type+" "+e.key)
+			var li  = $("ul.autocomplete li.select", element);
+			var	val = $(this).val();
+			// move up/down
+			if (e.key=='ArrowDown' || e.key=='ArrowUp' || e.key=='Down' || e.key=='Up')
+			{	li.removeClass('select');
+				li = (/Down/.test(e.key)) ? li.next() : li.prev();
+				if (li.length) li.addClass('select');
+				else $("ul.autocomplete li",element).first().addClass('select');
+			}
+			// Clear input
+			else if (e.type=='input' && !val)
+			{	self.drawList_();
+			}
+			// Select in the list
+			else if (li.length && (e.type=="search" || e.key =='Enter'))
+			{	if (element.hasClass("ol-control")) $(this).blur();
+				li.removeClass('select');
+				cur = val;
+				self.select(li.data('search'));
+			}
+			// Search / autocomplete
+			else if ( (e.type=="search" || e.key =='Enter')
+					|| (cur!=val && options.typing>=0))
+			{	// current search
+				cur = val;
+				if (cur)
+				{	// prevent searching on each typing
+					if (tout) clearTimeout(tout);
+					tout = setTimeout(function()
+					{	if (cur.length >= self.get("minLength")) 
+						{	var s = self.autocomplete (cur, function(auto) { self.drawList_(auto); });
+							if (s) self.drawList_(s);
+						}
+						else self.drawList_();
+					}, options.typing);
+				}
+				else self.drawList_();
+			}
+			// Clear list selection
+			else 
+			{	$("ul.autocomplete li", element).removeClass('select');
+			}
+		})
+		.blur(function()
+		{	setTimeout(function(){ element.addClass('ol-collapsed') }, 200);
+		})
+		.focus(function()
+		{	element.removeClass('ol-collapsed')
+		})
+		.appendTo(element);
+	// Autocomplete list
+	$("<ul>").addClass('autocomplete').appendTo(element);
+	
+	ol.control.Control.call(this, 
+		{	element: element.get(0),
+			target: options.target
+		});
+
+	if (typeof (options.getTitle)=='function') this.getTitle = options.getTitle;
+	if (typeof (options.autocomplete)=='function') this.autocomplete = options.autocomplete;
+	
+	// Options
+	this.set('minLength', options.minLength || 1);
+	this.set('maxItems', options.maxItems || 10);
+
+};
+ol.inherits(ol.control.Search, ol.control.Control);
+
+/** Returns the text to be displayed in the menu
+*	@param {any} f feature to be displayed
+*	@return {string} the text to be displayed in the index, default f.name
+*	@api
+*/
+ol.control.Search.prototype.getTitle = function (f)
+{	return f.name || "No title";
+};
+
+/** Force search to refresh
+*/
+ol.control.Search.prototype.search = function ()
+{	$("input.search", this.element).trigger('search');
+};
+
+/** Set the input value in the form (for initialisation purpose)
+*	@param {string} value
+*	@param {boolean} search to start a search
+*	@api
+*/
+ol.control.Search.prototype.setInput = function (value, search)
+{	$("input.search",this.element).val(value);
+	if (search) $("input.search",this.element).trigger("keyup");
+};
+
+/** A ligne has been clicked in the menu > dispatch event
+*	@param {any} f the feature, as passed in the autocomplete
+*	@api
+*/
+ol.control.Search.prototype.select = function (f)
+{	this.dispatchEvent({ type:"select", search:f });
+};
+
+/** Autocomplete function
+* @param {string} s search string
+* @param {function} cback a callback function that takes an array to display in the autocomplete field (for asynchronous search)
+* @return {Array|false} an array of search solutions or false if the array is send with the cback argument
+* @api
+*/
+ol.control.Search.prototype.autocomplete = function (s, cback)
+{	cback ([]);
+	return false;
+};
+
+/** Prevent same feature to be drawn twice: test equality
+ * @param {} f1 First feature to compare
+ * @param {} f2 Second feature to compare
+ * @return {boolean}
+ * @api
+ */
+ol.control.Search.prototype.equalFeatures = function (f1, f2) {
+	return (this.getTitle(f1) == this.getTitle(f2));
+}
+
+/** Draw the list 
+* @param {Array} auto an array of search result
+*/
+ol.control.Search.prototype.drawList_ = function (auto)
+{	var ul = $("ul.autocomplete", this.element).html("");
+	if (!auto) return;
+	var self = this;
+	var max = Math.min (self.get("maxItems"),auto.length);
+	for (var i=0; i<max; i++)
+	{	if (!i || !self.equalFeatures(auto[i], auto[i-1])) {
+			$("<li>").html(self.getTitle(auto[i]))
+			.data('search', auto[i])
+			.click(function(e)
+			{	self.select($(this).data('search'));
+			})
+			.appendTo(ul);
+		}
+	}
+};
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * Search places using the photon API.
+ *
+ * @constructor
+ * @extends {ol.control.Search}
+ * @fires select
+ * @param {Object=} Control options. 
+ *	@param {string} options.className control class name
+ *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *	@param {string | undefined} options.label Text label to use for the search button, default "search"
+ *	@param {string | undefined} options.placeholder placeholder, default "Search..."
+ *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
+ *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
+ *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *
+ *	@param {string|undefined} options.url Url to photon api, default "http://photon.komoot.de/api/"
+ *	@param {string|undefined} options.lang Force preferred language, default none
+ *	@param {boolean} options.position Search, with priority to geo position, default false
+ *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return street + name + contry 
+ */
+ol.control.SearchPhoton = function(options) 
+{	options = options || {};
+	delete options.autocomplete;
+	options.minLength = options.minLength || 3;
+	options.typing = options.typing || 800;
+	ol.control.Search.call(this, options);
+	this.set('lang', options.lang);
+	this.set('position', options.position);
+	// Handle Mix Content Warning
+	// If the current connection is an https connection all other connections must be https either
+	var url = options.url || "http://photon.komoot.de/api/";
+	if (window.location.protocol === "https:") {
+		var parser = document.createElement('a');
+		parser.href = url;
+		parser.protocol = window.location.protocol;
+		url = parser.href;
+	}
+	this.set('url', url);
+};
+ol.inherits(ol.control.SearchPhoton, ol.control.Search);
+
+/** Returns the text to be displayed in the menu
+*	@param {ol.Feature} f the feature
+*	@return {string} the text to be displayed in the index
+*	@api
+*/
+ol.control.SearchPhoton.prototype.getTitle = function (f)
+{	var p = f.properties;
+	return (p.housenumber||"")
+		+ " "+(p.street || p.name || "")
+		+ "<i>"
+		+ " "+(p.postcode||"")
+		+ " "+(p.city||"")
+		+ " ("+p.country
+		+ ")</i>";
+};
+
+/** Autocomplete function11
+* @param {string} s search string
+* @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete fielad
+* @api
+*/
+ol.control.SearchPhoton.prototype.autocomplete = function (s, cback)
+{	var data = 
+	{	q: s,
+		lang: this.get('lang'),
+		limit: this.get('maxItems')
+	}
+	// Handle position proirity
+	if (this.get('position'))
+	{	var view = this.getMap().getView();
+		var pt = new ol.geom.Point(view.getCenter());
+		pt = (pt.transform (view.getProjection(), "EPSG:4326")).getCoordinates();
+		
+		data.lon = pt[0];
+		data.lat = pt[1];
+	}
+
+	var url = this.get('url');
+	$.support.cors = true;
+	$.ajax(url,
+		{	dataType: "json",
+			//crossDomain: true,
+			data: data,
+			success: function(r) { 
+				cback(r.features); 
+			},
+			error: function() {
+				console.log(url, arguments);
+			}
+		});
+};
+
+/** Prevent same feature to be drawn twice: test equality
+ * @param {} f1 First feature to compare
+ * @param {} f2 Second feature to compare
+ * @return {boolean}
+ * @api
+ */
+ol.control.SearchPhoton.prototype.equalFeatures = function (f1, f2) {
+	return (this.getTitle(f1) == this.getTitle(f2) 
+		&& f1.geometry.coordinates[0] == f2.geometry.coordinates[0]
+		&& f1.geometry.coordinates[1] == f2.geometry.coordinates[1]);
+};
+
+/** A ligne has been clicked in the menu > dispatch event
+*	@param {any} f the feature, as passed in the autocomplete
+*	@api
+*/
+ol.control.SearchPhoton.prototype.select = function (f)
+{	var c = f.geometry.coordinates;
+	// Add coordinate to the event
+	try {
+		c = ol.proj.transform (f.geometry.coordinates, 'EPSG:4326', this.getMap().getView().getProjection());
+	} catch(e) {};
+	this.dispatchEvent({ type:"select", search:f, coordinate: c });
+};
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -3863,187 +4183,54 @@ ol.control.Profil.prototype.getImage = function(type, encoderOptions)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
- * Search Control.    
- * This is the base class for search controls. You can use it for simple custom search or as base to new class.
- * @see ol.control.SearchFeature
- * @see ol.control.SearchPhoton
+ * Search places using the French National Base Address (BAN) API.
  *
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol.control.Search}
  * @fires select
- * @fires change:input
- * @param {Object=} options
+ * @param {Object=} Control options. 
  *	@param {string} options.className control class name
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
  *	@param {string | undefined} options.placeholder placeholder, default "Search..."
- *	@param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
- *	@param {integer | undefined} options.minLength minimum length to start searching, default 1
+ *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
+ *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
  *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
- *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index.
- *	@param {function} options.autocomplete a function that take a search string and callback function to send an array
+ *
+ *	@param {string|undefined} options.url Url to BAN api, default "https://api-adresse.data.gouv.fr/search/"
+ *	@param {boolean} options.position Search, with priority to geo position, default false
+ *	@param {function} options.getTitle a function that takes a feature and return the text to display in the menu, default return label attribute
+ * @see {@link https://adresse.data.gouv.fr/api/}
  */
-ol.control.Search = function(options) 
-{	var self = this;
-	if (!options) options = {};
-	if (options.typing == undefined) options.typing = 300;
-
-	var element;
-	if (options.target) 
-	{	element = $("<div>").addClass((options.className||"")+ " ol-search");
-	}
-	else
-	{	element = $("<div>").addClass((options.className||"") + ' ol-search ol-unselectable ol-control ol-collapsed');
-		this.button = $("<button>")
-					.attr('type','button')
-					.attr('title',options.label||"search")
-					.click (function()
-					{	element.toggleClass("ol-collapsed"); 
-						if (!element.hasClass("ol-collapsed")) 
-						{	$("input.search", element).focus();
-							$('li', element).removeClass('select');
-						}
-					})
-					.appendTo(element);
-	}
-	// Search input
-	var tout, cur="";
-	$("<input>").attr('type','search')
-		.addClass("search")
-		.attr('placeholder', options.placeholder||"Search...")
-		.on('change', function(e) 
-		{ 	self.dispatchEvent({ type:"change:input", input:e, value:$(this).val()  }); 
-		})
-		.on('keyup search cut paste input', function(e) 
-		{	// console.log(e.type+" "+e.key)
-			var li  = $("ul.autocomplete li.select", element);
-			var	val = $(this).val();
-			// move up/down
-			if (e.key=='ArrowDown' || e.key=='ArrowUp' || e.key=='Down' || e.key=='Up')
-			{	li.removeClass('select');
-				li = (/Down/.test(e.key)) ? li.next() : li.prev();
-				if (li.length) li.addClass('select');
-				else $("ul.autocomplete li",element).first().addClass('select');
-			}
-			// Clear input
-			else if (e.type=='input' && !val)
-			{	self.drawList_();
-			}
-			// Select in the list
-			else if (li.length && (e.type=="search" || e.key =='Enter'))
-			{	if (element.hasClass("ol-control")) $(this).blur();
-				li.removeClass('select');
-				cur = val;
-				self.select(li.data('search'));
-			}
-			// Search / autocomplete
-			else if ( (e.type=="search" || e.key =='Enter')
-					|| (cur!=val && options.typing>=0))
-			{	// current search
-				cur = val;
-				if (cur)
-				{	// prevent searching on each typing
-					if (tout) clearTimeout(tout);
-					tout = setTimeout(function()
-					{	if (cur.length >= self.get("minLength")) 
-						{	var s = self.autocomplete (cur, function(auto) { self.drawList_(auto); });
-							if (s) self.drawList_(s);
-						}
-						else self.drawList_();
-					}, options.typing);
-				}
-				else self.drawList_();
-			}
-			// Clear list selection
-			else 
-			{	$("ul.autocomplete li", element).removeClass('select');
-			}
-		})
-		.blur(function()
-		{	setTimeout(function(){ element.addClass('ol-collapsed') }, 200);
-		})
-		.focus(function()
-		{	element.removeClass('ol-collapsed')
-		})
-		.appendTo(element);
-	// Autocomplete list
-	$("<ul>").addClass('autocomplete').appendTo(element);
-	
-	ol.control.Control.call(this, 
-		{	element: element.get(0),
-			target: options.target
-		});
-
-	if (typeof (options.getTitle)=='function') this.getTitle = options.getTitle;
-	if (typeof (options.autocomplete)=='function') this.autocomplete = options.autocomplete;
-	
-	// Options
-	this.set('minLength', options.minLength || 1);
-	this.set('maxItems', options.maxItems || 10);
-
+ol.control.SearchBAN = function(options) 
+{	options = options || {};
+	options.typing = options.typing || 500;
+	options.url = options.url || "https://api-adresse.data.gouv.fr/search/";
+	ol.control.SearchPhoton.call(this, options);
 };
-ol.inherits(ol.control.Search, ol.control.Control);
+ol.inherits(ol.control.SearchBAN, ol.control.SearchPhoton);
 
 /** Returns the text to be displayed in the menu
-*	@param {any} f feature to be displayed
-*	@return {string} the text to be displayed in the index, default f.name
+*	@param {ol.Feature} f the feature
+*	@return {string} the text to be displayed in the index
 *	@api
 */
-ol.control.Search.prototype.getTitle = function (f)
-{	return f.name || "No title";
-};
-
-/** Force search to refresh
-*/
-ol.control.Search.prototype.search = function ()
-{	$("input.search", this.element).trigger('search');
-};
-
-/** Set the input value in the form (for initialisation purpose)
-*	@param {string} value
-*	@param {boolean} search to start a search
-*	@api
-*/
-ol.control.Search.prototype.setInput = function (value, search)
-{	$("input.search",this.element).val(value);
-	if (search) $("input.search",this.element).trigger("keyup");
+ol.control.SearchBAN.prototype.getTitle = function (f) {	
+	var p = f.properties;
+	return (p.label);
 };
 
 /** A ligne has been clicked in the menu > dispatch event
 *	@param {any} f the feature, as passed in the autocomplete
 *	@api
 */
-ol.control.Search.prototype.select = function (f)
-{	this.dispatchEvent({ type:"select", search:f });
-};
-
-/** Autocomplete function
-* @param {string} s search string
-* @param {function} cback a callback function that takes an array to display in the autocomplete field (for asynchronous search)
-* @return {Array|false} an array of search solutions or false if the array is send with the cback argument
-* @api
-*/
-ol.control.Search.prototype.autocomplete = function (s, cback)
-{	cback ([]);
-	return false;
-};
-
-/** Draw the list 
-* @param {Array} auto an array of search result
-*/
-ol.control.Search.prototype.drawList_ = function (auto)
-{	var ul = $("ul.autocomplete", this.element).html("");
-	if (!auto) return;
-	var self = this;
-	var max = Math.min (self.get("maxItems"),auto.length);
-	for (var i=0; i<max; i++)
-	{	$("<li>").html(self.getTitle(auto[i]))
-			.data('search', auto[i])
-			.click(function(e)
-			{	self.select($(this).data('search'));
-			})
-			.appendTo(ul);
-	}
+ol.control.SearchBAN.prototype.select = function (f){	
+  var c = f.geometry.coordinates;
+	// Add coordinate to the event
+	try {
+		c = ol.proj.transform (f.geometry.coordinates, 'EPSG:4326', this.getMap().getView().getProjection());
+  } catch(e) {};
+	this.dispatchEvent({ type:"select", search:f, coordinate: c });
 };
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -4121,114 +4308,6 @@ ol.control.SearchFeature.prototype.autocomplete = function (s, cback)
 	return result;
 };
 
-/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-/**
- * Search places using the photon API.
- *
- * @constructor
- * @extends {ol.control.Search}
- * @fires select
- * @param {Object=} Control options. 
- *	@param {string} options.className control class name
- *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *	@param {string | undefined} options.label Text label to use for the search button, default "search"
- *	@param {string | undefined} options.placeholder placeholder, default "Search..."
- *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
- *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
- *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
- *
- *	@param {string|undefined} options.url Url to photon api, default "http://photon.komoot.de/api/"
- *	@param {string|undefined} options.lang Force preferred language, default none
- *	@param {boolean} options.position Search, with priority to geo position, default false
- *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return street + name + contry 
- */
-ol.control.SearchPhoton = function(options) 
-{	options = options || {};
-	delete options.autocomplete;
-	options.minLength = options.minLength || 3;
-	options.typing = options.typing || 800;
-	options.url = options.url || "http://photon.komoot.de/api/";
-	ol.control.Search.call(this, options);
-	this.set('lang', options.lang);
-	this.set('position', options.position);
-        this.set('url', options.url);
-};
-ol.inherits(ol.control.SearchPhoton, ol.control.Search);
-
-/** Returns the text to be displayed in the menu
-*	@param {ol.Feature} f the feature
-*	@return {string} the text to be displayed in the index
-*	@api
-*/
-ol.control.SearchPhoton.prototype.getTitle = function (f)
-{	var p = f.properties;
-	return (p.housenumber||"")
-		+ " "+(p.street || p.name || "")
-		+ "<i>"
-		+ " "+(p.postcode||"")
-		+ " "+(p.city||"")
-		+ " ("+p.country
-		+ ")</i>";
-};
-
-/** Autocomplete function11
-* @param {string} s search string
-* @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete fielad
-* @api
-*/
-ol.control.SearchPhoton.prototype.autocomplete = function (s, cback)
-{	var data = 
-	{	q: s,
-		lang: this.get('lang'),
-		limit: this.get('maxItems')
-	}
-	if (this.get('position'))
-	{	var view = this.getMap().getView();
-		var pt = new ol.geom.Point(view.getCenter());
-		pt = (pt.transform (view.getProjection(), "EPSG:4326")).getCoordinates();
-		
-		data.lon = pt[0];
-		data.lat = pt[1];
-	}
-        // Handle Mix Content Warning
-        // If the current connection is an https connection all other connections must be https either
-        var url = this.get('url');
-        if (window.location.protocol === "https:")
-        {
-          var parser = document.createElement('a');
-          parser.href = url;
-          parser.protocol = window.location.protocol;
-          url = parser.href;
-		}
-	$.support.cors = true;
-	$.ajax(url,
-		{	dataType: "json",
-			//crossDomain: true,
-			data: data,
-			success: function(r) { 
-				cback(r.features); 
-			},
-			error: function() {
-				console.log(url, arguments);
-			}
-		});
-};
-
-/** A ligne has been clicked in the menu > dispatch event
-*	@param {any} f the feature, as passed in the autocomplete
-*	@api
-*/
-ol.control.SearchPhoton.prototype.select = function (f)
-{	var c = f.geometry.coordinates;
-	// Add coordinate to the event
-	try {
-		c = ol.proj.transform (f.geometry.coordinates, 'EPSG:4326', this.getMap().getView().getProjection());
-	} catch(e) {};
-	this.dispatchEvent({ type:"select", search:f, coordinate: c });
-};
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -11117,11 +11196,11 @@ ol.Overlay.Magnify = function (options)
 {	var self = this;
 	
 	var elt = $("<div>").addClass("ol-magnify");
-	this.element = elt.get(0);
+	this._element = elt.get(0);
 
 	ol.Overlay.call(this, 
 		{	positioning: options.positioning || "center-center",
-			element: this.element,
+			element: this._element,
 			stopEvent: false
 		});
 
@@ -11129,7 +11208,7 @@ ol.Overlay.Magnify = function (options)
 	this.mgmap_ = new ol.Map(
 	{	controls: new ol.Collection(),
 		interactions: new ol.Collection(),
-		target: options.target || this.element,
+		target: options.target || this._element,
 		view: new ol.View({ projection: options.projection }),
 		layers: options.layers
 	});
@@ -11194,7 +11273,7 @@ ol.Overlay.Magnify.prototype.onMouseMove_ = function(e)
 	{	var px = self.getMap().getEventCoordinate(e);
 		if (!self.external_) self.setPosition(px);
 		self.mgview_.setCenter(px);
-		if ($("canvas", self.element).css("display")=="none") self.mgmap_.updateSize();
+		if ($("canvas", self._element).css("display")=="none") self.mgmap_.updateSize();
 	}
 }
 
@@ -11278,8 +11357,8 @@ ol.Overlay.Popup = function (options)
 	options.stopEvent = true;
 	d.on("mousedown touchstart", function(e){ e.stopPropagation(); })
 
-	ol.Overlay.call(this, options);
 	this._elt = elt;
+	ol.Overlay.call(this, options);
 			
 	// call setPositioning first in constructor so getClassPositioning is called only once
 	this.setPositioning(options.positioning);
@@ -14298,7 +14377,7 @@ ol.ordering = {}
 */
 ol.ordering.yOrdering = function(options)
 {	return function(f0,f1)
-	{	return f0.getGeometry().getExtent()[1] < f1.getGeometry().getExtent()[1] ;
+	{	return f1.getGeometry().getExtent()[1] - f0.getGeometry().getExtent()[1] ;
 	};
 }
 
@@ -14314,15 +14393,17 @@ ol.ordering.zIndex = function(options)
 	if (option.equalFn)
 	{	return function(f0,f1)
 		{	if (f0.get(attr) == f1.get(attr)) return option.equalFn(f0,f1);
-			return f0.get(attr) < f1.get(attr);
+			else return f0.get(attr) < f1.get(attr) ? 1:-1;
 		};
 	}
 	else
 	{	return function(f0,f1)
-		{	return f0.get(attr) < f1.get(attr);
+		{	if (f0.get(attr) == f1.get(attr)) return 0;
+			else return f0.get(attr) < f1.get(attr) ? 1:-1;
 		};
 	}
 }
+
 /** WSynchro object to synchronize windows
 *	- windows: array of windows to synchro (
 *	- source: the window source (undefined if first window)
