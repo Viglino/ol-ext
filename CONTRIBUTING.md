@@ -9,7 +9,7 @@ Before creating a new issue, do a quick search to see if the problem has been re
 
 ## Contributing Code
 
-See [`DEVELOPING.md`](https://github.com/Viglino/ol-ext/DEVELOPING.md) to learn how to get started developing.
+See [`DEVELOPING.md`](DEVELOPING.md) to learn how to get started developing.
 
 Clone the repository and [pull requests](https://help.github.com/articles/using-pull-requests). Make sure
 that your pull request follows our pull request guidelines below before submitting it.
@@ -18,7 +18,7 @@ This page describes what you need to know to contribute code to OpenLayers as a 
 
 ## Contributor License Agreement
 
-Your contribution will be under our [license](https://raw.githubusercontent.com/Viglino/ol-ext/master/LICENCE.md) 
+Your contribution will be under our [license](LICENCE.md) 
 as per [GitHub's terms of service](https://help.github.com/articles/github-terms-of-service/#6-contributions-under-repository-license).
 
 The CeCILL licence is a french BSD licence.
