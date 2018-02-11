@@ -1,5 +1,5 @@
 # ol-ext
-*Cool extensions for [OpenLayers](https://github.com/openlayers/openlayers) (ol/ol3/ol4)*.
+*Cool extensions for [OpenLayers](https://github.com/openlayers/openlayers) (ol)*.
 
 [ol-ext](https://github.com/Viglino/ol-ext) is a set of extensions, controls, interactions to use with Openlayers.    
 [View live examples online](http://viglino.github.io/ol-ext/) or the [API documentation](http://viglino.github.io/ol-ext/doc/doc-pages/).
