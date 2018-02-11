@@ -26,7 +26,7 @@ The CeCILL licence is a french BSD licence.
 ## Pull request guidelines
 
 Your pull request must:
-* Follow the naming convention in the DEVELOPPING.md
+* Follow the naming convention in the [DEVELOPING.md](DEVELOPING.md)
 * Address a single issue or add a single item of functionality.
 * Use clear commit messages.
 * Be possible to merge automatically.
