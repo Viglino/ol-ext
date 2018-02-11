@@ -64,27 +64,13 @@ npm install ol-ext
 
 Visit the [this repository](https://github.com/darkscript/ol-ol-ext-webpack-example) for a good example of working with ol-ext npm version and bundler (webpack)
  
-## building the project
-
-Use the gulp command to build the project into the `/dist` directory:
-````
-gulp
-````
-
 ## Documentation
 
 Check out the [hosted examples](http://viglino.github.io/ol-ext/) or the [API documentation](http://viglino.github.io/ol-ext/doc/doc-pages/).
 
-#### Building the documenctation:
-The documentation use [gulp-jsdoc3](https://www.npmjs.com/package/gulp-jsdoc3) to create the doc.
-1. install the gulp-jsdoc3 project at the root directory:
-````
-npm install gulp-jsdoc3
-````
-2. then run the gulp command to create the doc in the [doc/doc-pages](http://viglino.github.io/ol-ext/doc/doc-pages/) directory:
-````
-gulp doc
-````
+## Contributing
+
+Please see our [contributing guidelines](https://github.com/Viglino/ol-ext/blob/master/CONTRIBUTING.md) if you're interested in getting involved.
 
 ## Bugs
 
