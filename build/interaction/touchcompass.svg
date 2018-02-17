@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="196"
+   height="196"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="Blue_compass_rose.svg"
+   inkscape:export-filename="D:\Programmes\EasyPHP1-8\www\exemples\ol3-ext\interaction\Blue_compass_rose.png"
+   inkscape:export-xdpi="36.73"
+   inkscape:export-ydpi="36.73">
+  <metadata
+     id="metadata20">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs18" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1280"
+     inkscape:window-height="972"
+     id="namedview16"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:zoom="1.5733333"
+     inkscape:cx="113.43288"
+     inkscape:cy="61.113663"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2" />
+  <circle
+     style="clip-rule:evenodd;fill:#999999;fill-opacity:1;fill-rule:evenodd;stroke:#cccccc;stroke-width:16;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;image-rendering:optimizeQuality;shape-rendering:geometricPrecision;text-rendering:geometricPrecision"
+     id="circle10"
+     r="86.039787"
+     cy="97.979568"
+     cx="97.98172"
+     class="fil0 str0" />
+  <path
+     style="fill:#9999ff;fill-opacity:1;stroke:none;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     inkscape:connector-curvature="0"
+     id="path8"
+     d="M 0,97.999997 75.799,120.889 98.000003,196 120.861,120.837 196,97.999997 120.861,75.776 98.000003,0 75.8,75.776 Z" />
+  <path
+     style="fill:#eeeeee;fill-opacity:1"
+     inkscape:connector-curvature="0"
+     id="path12"
+     d="m 0,97.999997 98.000003,0 L 75.799,120.889 Z m 98.000003,0 97.999997,0 L 120.702,75.828 Z m 0,0 0,98.000003 22.701997,-75.111 z m 0,0 L 98.000003,0 75.799,75.828 Z" />
+</svg>

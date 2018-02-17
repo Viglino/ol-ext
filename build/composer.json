@@ -1,0 +1,11 @@
+{
+    "name": "viglino/ol-ext",
+    "description": "Cool extensions for OpenLayers (ol)",
+    "license": "CeCILL-B",
+    "authors": [
+        {
+            "name": "Jean-Marc Viglino",
+            "email": "jean-marc.viglino@ign.fr"
+        }
+    ]
+}
