@@ -18,7 +18,7 @@ This page describes what you need to know to contribute code to OpenLayers as a 
 
 ## Contributor License Agreement
 
-Your contribution will be under our [license](LICENSE.md) 
+Your contribution will be under our [license](LICENCE.md) 
 as per [GitHub's terms of service](https://help.github.com/articles/github-terms-of-service/#6-contributions-under-repository-license).
 
 The CeCILL licence is a french BSD licence.
