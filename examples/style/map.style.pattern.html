@@ -18,7 +18,7 @@
 	<!-- jQuery -->
 	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 	<!-- FontAwesome -->
-	<link rel="stylesheet" href="https://rawgit.com/FortAwesome/Font-Awesome/master/css/font-awesome.min.css" type="text/css" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 	<!-- Openlayers -->
     <link rel="stylesheet" href="https://openlayers.org/en/master/css/ol.css" />
@@ -144,6 +144,7 @@
 	<script type="text/javascript">
 
 	var refreh;
+	var imgFile = '../data/pattern.png';
 	
 	$(window).load (function()
 	{	// AddChar patterns
@@ -165,9 +166,9 @@
 					.click(function(){ pat = $(this).attr("title"); refresh(); })
 					.appendTo(spattern);
 		}
-		var p = new ol.style.FillPattern({ image: new ol.style.Icon({ src : 'data/pattern.png' }) });
+		var p = new ol.style.FillPattern({ image: new ol.style.Icon({ src : imgFile }) });
 		$("<div>").attr('title','Image (PNG)')
-				.css("background-image",'url("data/pattern.png")')
+				.css("background-image",'url("'+imgFile+'")')
 				.click(function(){ pat = $(this).attr("title"); refresh(); })
 				.appendTo(spattern);
 
@@ -191,7 +192,7 @@
 			// Calculate image to be drawn outside the map
 			var p = new ol.style.FillPattern(
 						{	pattern: pat,
-							image: (pat=='Image (PNG)') ? new ol.style.Icon({ src : 'data/pattern.png' }) : undefined,
+							image: (pat=='Image (PNG)') ? new ol.style.Icon({ src : imgFile }) : undefined,
 							ratio: 2,
 							color: "#000",
 							size: Number($("#size").val()),
@@ -233,7 +234,7 @@
 			return [ new ol.style.Style(
 				{	fill: new ol.style.FillPattern(
 						{	pattern: (p!='Image (PNG)') ? p : undefined,
-							image: (p=='Image (PNG)') ? new ol.style.Icon({ src : 'data/pattern.png' }) : undefined,
+							image: (p=='Image (PNG)') ? new ol.style.Icon({ src : imgFile }) : undefined,
 							ratio: 1,
 							icon: p=='Image (PNG)' ? new ol.style.Icon ({src:'data/target.png'}) : undefined,
 							color: $("#color").val(),

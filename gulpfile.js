@@ -35,7 +35,8 @@ function transform() {
         // remove import / export
         content = content.replace(/\bimport (.*)|\bexport (.*)/g,"");
         // remove empty lines
-        content = content.replace(/^\s*[\r\n]/gm, '');
+        content = content.replace(/\r/gm, '');
+        content = content.replace(/^\s*[\n]/gm, '');
         // return content
         file.contents = new Buffer(content);
       }

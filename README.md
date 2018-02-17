@@ -1,5 +1,5 @@
 # ol-ext
-*Cool extensions for [OpenLayers](https://github.com/openlayers/openlayers) (ol/ol3/ol4)*.
+*Cool extensions for [OpenLayers](https://github.com/openlayers/openlayers) (ol)*.
 
 [ol-ext](https://github.com/Viglino/ol-ext) is a set of extensions, controls, interactions to use with Openlayers.    
 [View live examples online](http://viglino.github.io/ol-ext/) or the [API documentation](http://viglino.github.io/ol-ext/doc/doc-pages/).
@@ -41,7 +41,7 @@ animations
 
 ## using ol-ext in a web page
 
-* Just download the [build script](https://github.com/Viglino/ol-ext/tree/gh-pages/dist) in the dist directory of the project.
+* Just download the [build script](dist) in the dist directory of the project.
 * If you just want to add a `<script>` tag to test things out, you can link directly to the builds from the github rawgit (not recommended in production):
 ````html
 <!-- jQuery -->
@@ -52,8 +52,8 @@ animations
 <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
 
 <!-- OL-ext -->
-<link rel="stylesheet" href="https://cdn.rawgit.com/Viglino/ol-ext/gh-pages/dist/ol-ext.min.css" />
-<script type="text/javascript" src="https://cdn.rawgit.com/Viglino/ol-ext/gh-pages/dist/ol-ext.min.js"></script>
+<link rel="stylesheet" href="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.css" />
+<script type="text/javascript" src="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.js"></script>
 ````
 * Use npm [ol-ext package](https://www.npmjs.com/package/ol-ext) and link to the node_modules directory:
 ````
@@ -64,27 +64,13 @@ npm install ol-ext
 
 Visit the [this repository](https://github.com/darkscript/ol-ol-ext-webpack-example) for a good example of working with ol-ext npm version and bundler (webpack)
  
-## building the project
-
-Use the gulp command to build the project into the `/dist` directory:
-````
-gulp
-````
-
 ## Documentation
 
 Check out the [hosted examples](http://viglino.github.io/ol-ext/) or the [API documentation](http://viglino.github.io/ol-ext/doc/doc-pages/).
 
-#### Building the documenctation:
-The documentation use [gulp-jsdoc3](https://www.npmjs.com/package/gulp-jsdoc3) to create the doc.
-1. install the gulp-jsdoc3 project at the root directory:
-````
-npm install gulp-jsdoc3
-````
-2. then run the gulp command to create the doc in the [doc/doc-pages](http://viglino.github.io/ol-ext/doc/doc-pages/) directory:
-````
-gulp doc
-````
+## Contributing
+
+Please see our [contributing guidelines](https://github.com/Viglino/ol-ext/blob/master/CONTRIBUTING.md) if you're interested in getting involved.
 
 ## Bugs
 
