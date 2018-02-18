@@ -63,3 +63,15 @@
 {	background-color: rgba(0,60,136,.5);
 	color: #fff;
 }
+.ol-search ul li img {
+	float: left;
+	max-height: 2em;
+}
+.ol-search li.copy {
+    background: rgba(0,0,0,.5);
+	color: #fff;
+}
+.ol-search li.copy a {
+	color: #fff;
+	text-decoration: none;
+}

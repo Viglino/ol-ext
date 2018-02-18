@@ -149,17 +149,19 @@ ol_layer_AnimatedCluster.prototype.animate = function(e)
 		var ratio = e.frameState.pixelRatio;
 		for (var i=0, c; c=a.clusters[i]; i++)
 		{	var pt = c.f.getGeometry().getCoordinates();
+			var dx = pt[0]-c.pt[0];
+			var dy = pt[1]-c.pt[1];
 			if (a.revers)
-			{	pt[0] = c.pt[0] + d * (pt[0]-c.pt[0]);
-				pt[1] = c.pt[1] + d * (pt[1]-c.pt[1]);
+			{	pt[0] = c.pt[0] + d * dx;
+				pt[1] = c.pt[1] + d * dy;
 			}
 			else
-			{	pt[0] = pt[0] + d * (c.pt[0]-pt[0]);
-				pt[1] = pt[1] + d * (c.pt[1]-pt[1]);
+			{	pt[0] = pt[0] - d * dx;
+				pt[1] = pt[1] - d * dy;
 			}
 			// Draw feature
-			var st = stylefn(c.f, resolution);
-			/* Preserve pixel ration on retina */
+			var st = stylefn(c.f, resolution, true);
+			// Preserve pixel ration on retina
 			var geo = new ol_geom_Point(pt);
 			for (var k=0; s=st[k]; k++)
 			{	var sc;
@@ -171,8 +173,15 @@ ol_layer_AnimatedCluster.prototype.animate = function(e)
 				}
 				// OL3 > v3.14
 				if (vectorContext.setStyle)
-				{	vectorContext.setStyle(s);
-					vectorContext.drawGeometry(geo);
+				{	// If one feature: draw the feature
+					if (c.f.get("features").length===1 && !dx && !dy) {
+						vectorContext.drawFeature(c.f.get("features")[0], s);
+					}
+					// else draw a point
+					else {
+						vectorContext.setStyle(s);
+						vectorContext.drawGeometry(geo);
+					}
 				}
 				// older version
 				else
@@ -182,16 +191,6 @@ ol_layer_AnimatedCluster.prototype.animate = function(e)
 				}
 				if (imgs) imgs.setScale(sc);
 			}
-			/*/
-			var f = new ol.Feature(new ol.geom.Point(pt));
-			for (var k=0; s=st[k]; k++)
-			{	var imgs = s.getImage();
-				var sc = imgs.getScale(); 
-				imgs.setScale(sc*ratio); // drawFeature don't check retina
-				vectorContext.drawFeature(f, s);
-				imgs.setScale(sc);
-			}
-			/**/
 		}
 		e.context.restore();
 		// tell OL3 to continue postcompose animation

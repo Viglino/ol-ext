@@ -31,6 +31,7 @@ var ol_control_SearchBAN = function(options)
     options.typing = options.typing || 500;
     options.url = options.url || "https://api-adresse.data.gouv.fr/search/";
     ol.control.SearchPhoton.call(this, options);
+    this.set("copy","<a href='https://adresse.data.gouv.fr/' target='new'>&copy; BAN-data.gouv.fr</a>");
 };
 ol.inherits(ol_control_SearchBAN, ol_control_SearchPhoton);
 
