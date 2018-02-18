@@ -183,6 +183,11 @@ ol.control.Search.prototype.drawList_ = function (auto)
 			.appendTo(ul);
 		}
 	}
+	if (this.get("copy")) {
+		$("<li>").addClass("copy")
+			.html(this.get("copy"))
+			.appendTo(ul);
+	}
 };
 ol.control.Search.prototype.equalFeatures = function (f1, f2) {
 	return false;
@@ -193,10 +198,88 @@ ol.control.Search.prototype.equalFeatures = function (f1, f2) {
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
- * Search places using the photon API.
+ * This is the base class for search controls that use a json service to search features. 
+ * You can use it for simple custom search or as base to new class.
  *
  * @constructor
  * @extends {ol.control.Search}
+ * @fires select
+ * @param {Object=} Control options.
+ *	@param {string} options.className control class name
+ *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *	@param {string | undefined} options.label Text label to use for the search button, default "search"
+ *	@param {string | undefined} options.placeholder placeholder, default "Search..."
+ *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
+ *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
+ *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *
+ *	@param {string|undefined} options.url Url of the search api
+ */
+ol.control.SearchJSON = function(options)
+{	options = options || {};
+	delete options.autocomplete;
+	options.minLength = options.minLength || 3;
+	options.typing = options.typing || 800;
+	ol.control.Search.call(this, options);
+	// Handle Mix Content Warning
+	// If the current connection is an https connection all other connections must be https either
+	var url = options.url || "";
+	if (window.location.protocol === "https:") {
+		var parser = document.createElement('a');
+		parser.href = url;
+		parser.protocol = window.location.protocol;
+		url = parser.href;
+	}
+	this.set('url', url);
+};
+ol.inherits(ol.control.SearchJSON, ol.control.Search);
+/** Autocomplete function
+* @param {string} s search string
+* @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete fielad
+*/
+ol.control.SearchJSON.prototype.autocomplete = function (s, cback)
+{	var data = this.requestData(s);
+	var self = this;
+	var url = encodeURI(this.get('url'));
+	$.support.cors = true;
+	$.ajax(url,
+		{	dataType: "json",
+			//crossDomain: true,
+			data: data,
+			success: function(r) {
+				cback (self.handleResponse(r));
+			},
+			error: function() {
+				console.log(url, arguments);
+			}
+		});
+};
+/** 
+ * @param {string} s the search string
+ * @return {Object} request data (as key:value)
+ * @api
+ */
+ol.control.SearchJSON.prototype.requestData = function (s){
+	return { q: s };
+};
+/**
+ * Handle server response to pass the features array to the list
+ * @param {any} response server response
+ * @return {Array<any>} an array of feature
+ */
+ol.control.SearchJSON.prototype.handleResponse = function (response, cback) {
+	return response;
+};
+
+/*	Copyright (c) 2017 Jean-Marc VIGLINO,
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * Search places using the photon API.
+ *
+ * @constructor
+ * @extends {ol.control.SearchJSON}
  * @fires select
  * @param {Object=} Control options.
  *	@param {string} options.className control class name
@@ -217,21 +300,13 @@ ol.control.SearchPhoton = function(options)
 	delete options.autocomplete;
 	options.minLength = options.minLength || 3;
 	options.typing = options.typing || 800;
-	ol.control.Search.call(this, options);
+	options.url = options.url || "http://photon.komoot.de/api/";
+	ol.control.SearchJSON.call(this, options);
 	this.set('lang', options.lang);
 	this.set('position', options.position);
-	// Handle Mix Content Warning
-	// If the current connection is an https connection all other connections must be https either
-	var url = options.url || "http://photon.komoot.de/api/";
-	if (window.location.protocol === "https:") {
-		var parser = document.createElement('a');
-		parser.href = url;
-		parser.protocol = window.location.protocol;
-		url = parser.href;
-	}
-	this.set('url', url);
+	this.set("copy","<a href='http://www.openstreetmap.org/copyright' target='new'>&copy; OpenStreetMap contributors</a>");
 };
-ol.inherits(ol.control.SearchPhoton, ol.control.Search);
+ol.inherits(ol.control.SearchPhoton, ol.control.SearchJSON);
 /** Returns the text to be displayed in the menu
 *	@param {ol.Feature} f the feature
 *	@return {string} the text to be displayed in the index
@@ -247,12 +322,12 @@ ol.control.SearchPhoton.prototype.getTitle = function (f)
 		+ " ("+p.country
 		+ ")</i>";
 };
-/** Autocomplete function11
-* @param {string} s search string
-* @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete fielad
-* @api
-*/
-ol.control.SearchPhoton.prototype.autocomplete = function (s, cback)
+/** 
+ * @param {string} s the search string
+ * @return {Object} request data (as key:value)
+ * @api
+ */
+ol.control.SearchPhoton.prototype.requestData = function (s)
 {	var data =
 	{	q: s,
 		lang: this.get('lang'),
@@ -266,19 +341,15 @@ ol.control.SearchPhoton.prototype.autocomplete = function (s, cback)
 		data.lon = pt[0];
 		data.lat = pt[1];
 	}
-	var url = this.get('url');
-	$.support.cors = true;
-	$.ajax(url,
-		{	dataType: "json",
-			//crossDomain: true,
-			data: data,
-			success: function(r) {
-				cback(r.features);
-			},
-			error: function() {
-				console.log(url, arguments);
-			}
-		});
+	return data;
+};
+/**
+ * Handle server response to pass the features array to the list
+ * @param {any} response server response
+ * @return {Array<any>} an array of feature
+ */
+ol.control.SearchPhoton.prototype.handleResponse = function (response, cback) {
+	return response.features;
 };
 /** Prevent same feature to be drawn twice: test equality
  * @param {} f1 First feature to compare
@@ -303,6 +374,7 @@ ol.control.SearchPhoton.prototype.select = function (f)
 	} catch(e) {};
 	this.dispatchEvent({ type:"select", search:f, coordinate: c });
 };
+/** */
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -3823,6 +3895,7 @@ ol.control.SearchBAN = function(options)
     options.typing = options.typing || 500;
     options.url = options.url || "https://api-adresse.data.gouv.fr/search/";
     ol.control.SearchPhoton.call(this, options);
+    this.set("copy","<a href='https://adresse.data.gouv.fr/' target='new'>&copy; BAN-data.gouv.fr</a>");
 };
 ol.inherits(ol.control.SearchBAN, ol.control.SearchPhoton);
 /** Returns the text to be displayed in the menu
@@ -3915,6 +3988,72 @@ ol.control.SearchFeature.prototype.autocomplete = function (s, cback)
 		}
 	}
 	return result;
+};
+
+/*	Copyright (c) 2017 Jean-Marc VIGLINO,
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * Search places using the French National Base Address (BAN) API.
+ *
+ * @constructor
+ * @extends {ol.control.Search}
+ * @fires select
+ * @param {Object=} Control options.
+ *	@param {string} options.className control class name
+ *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *	@param {string | undefined} options.label Text label to use for the search button, default "search"
+ *	@param {string | undefined} options.placeholder placeholder, default "Search..."
+ *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
+ *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
+ *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *
+ *	@param {string|undefined} options.url Url to BAN api, default "https://api-adresse.data.gouv.fr/search/"
+ * @see {@link https://wiki.openstreetmap.org/wiki/Nominatim}
+ */
+ol.control.SearchNominatim = function(options)
+{	options = options || {};
+    options.typing = options.typing || 500;
+    options.url = options.url || "https://nominatim.openstreetmap.org/search";
+    ol.control.SearchJSON.call(this, options);
+    this.set("copy","<a href='http://www.openstreetmap.org/copyright' target='new'>&copy; OpenStreetMap contributors</a>");
+};
+ol.inherits(ol.control.SearchNominatim, ol.control.SearchJSON);
+/** Returns the text to be displayed in the menu
+ *	@param {ol.Feature} f the feature
+ *	@return {string} the text to be displayed in the index
+ *	@api
+ */
+ol.control.SearchNominatim.prototype.getTitle = function (f) {
+    var title = f.display_name+"<i>"+f.class+" - "+f.type+"</i>";
+    if (f.icon) title = "<img src='"+f.icon+"' />" + title;
+    return (title);
+};
+/** 
+ * @param {string} s the search string
+ * @return {Object} request data (as key:value)
+ * @api
+ */
+ol.control.SearchNominatim.prototype.requestData = function (s) {
+	return { 
+        format: "json", 
+        addressdetails: 1, 
+        q: s, 
+        limit: this.get('maxItems')
+    };
+};
+/** A ligne has been clicked in the menu > dispatch event
+ *	@param {any} f the feature, as passed in the autocomplete
+ *	@api
+ */
+ol.control.SearchNominatim.prototype.select = function (f){
+    var c = [Number(f.lon), Number(f.lat)];
+    // Add coordinate to the event
+    try {
+        c = ol.proj.transform (c, 'EPSG:4326', this.getMap().getView().getProjection());
+    } catch(e) {};
+    this.dispatchEvent({ type:"select", search:f, coordinate: c });
 };
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
@@ -10248,17 +10387,19 @@ ol.layer.AnimatedCluster.prototype.animate = function(e)
 		var ratio = e.frameState.pixelRatio;
 		for (var i=0, c; c=a.clusters[i]; i++)
 		{	var pt = c.f.getGeometry().getCoordinates();
+			var dx = pt[0]-c.pt[0];
+			var dy = pt[1]-c.pt[1];
 			if (a.revers)
-			{	pt[0] = c.pt[0] + d * (pt[0]-c.pt[0]);
-				pt[1] = c.pt[1] + d * (pt[1]-c.pt[1]);
+			{	pt[0] = c.pt[0] + d * dx;
+				pt[1] = c.pt[1] + d * dy;
 			}
 			else
-			{	pt[0] = pt[0] + d * (c.pt[0]-pt[0]);
-				pt[1] = pt[1] + d * (c.pt[1]-pt[1]);
+			{	pt[0] = pt[0] - d * dx;
+				pt[1] = pt[1] - d * dy;
 			}
 			// Draw feature
-			var st = stylefn(c.f, resolution);
-			/* Preserve pixel ration on retina */
+			var st = stylefn(c.f, resolution, true);
+			// Preserve pixel ration on retina
 			var geo = new ol.geom.Point(pt);
 			for (var k=0; s=st[k]; k++)
 			{	var sc;
@@ -10270,8 +10411,15 @@ ol.layer.AnimatedCluster.prototype.animate = function(e)
 				}
 				// OL3 > v3.14
 				if (vectorContext.setStyle)
-				{	vectorContext.setStyle(s);
-					vectorContext.drawGeometry(geo);
+				{	// If one feature: draw the feature
+					if (c.f.get("features").length===1 && !dx && !dy) {
+						vectorContext.drawFeature(c.f.get("features")[0], s);
+					}
+					// else draw a point
+					else {
+						vectorContext.setStyle(s);
+						vectorContext.drawGeometry(geo);
+					}
 				}
 				// older version
 				else
@@ -10281,16 +10429,6 @@ ol.layer.AnimatedCluster.prototype.animate = function(e)
 				}
 				if (imgs) imgs.setScale(sc);
 			}
-			/*/
-			var f = new ol.Feature(new ol.geom.Point(pt));
-			for (var k=0; s=st[k]; k++)
-			{	var imgs = s.getImage();
-				var sc = imgs.getScale(); 
-				imgs.setScale(sc*ratio); // drawFeature don't check retina
-				vectorContext.drawFeature(f, s);
-				imgs.setScale(sc);
-			}
-			/**/
 		}
 		e.context.restore();
 		// tell OL3 to continue postcompose animation
