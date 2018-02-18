@@ -6,6 +6,13 @@ var cssnext = require("gulp-cssnext");
 var minify = require("gulp-minify")
 var header = require('gulp-header');
 
+/* Prevent error for reload */
+function swallowError (error) {
+  // Show error in the console
+  console.log(error.toString())
+  this.emit('end')
+}
+
 /* Transform ES6 to create the ./dist */
 var PluginError = require('plugin-error');
 var through = require('through2');
@@ -90,7 +97,7 @@ gulp.task("cssd", function() {
 // Build js
 gulp.task("js", function() {
 	gulp.src([
-		"./src/control/Search.js","./src/control/SearchPhoton.js",
+		"./src/control/Search.js","./src/control/SearchJSON.js","./src/control/SearchPhoton.js",
     "./src/control/LayerSwitcher.js", "./src/control/*.js", "!./src/control/PirateMap.js",
 		"./src/featureanimation/FeatureAnimation.js", "./src/featureanimation/*.js",
 		"./src/filter/Base.js", "./src/filter/Mask.js", "./src/filter/*.js",
@@ -113,22 +120,19 @@ gulp.task("js", function() {
 				src:".js", 
 				min:".min.js" 
 			}
-		}))
+    }))
+  .on('error', swallowError)
 	.pipe(header(banner, { pkg : pkg } ))
   .pipe(gulp.dest("dist"))
+  .on('end', function(){ console.log('\x1b[32m','\n>>> Terminated...','\x1b[0m')});
 });
 
 /* Watch for modification to recreate the dist */
 gulp.task('watch', function() {
-  var watch = require('gulp-watch');
-
-  // watch many files
-  watch('./src/*/*.js', function() {
-      gulp.start('js');
-  });
+  gulp.watch('./src/*/*.js', ['default']);
 });
 
-// Build extra js files to use individually
+// Build extra js files to be used individually
 gulp.task("extrajs", function() {
 	gulp.src([
     "./src/style/FontMakiDef.js", "./src/style/FontAwesomeDef.js",
