@@ -188,6 +188,11 @@ ol_control_Search.prototype.drawList_ = function (auto)
 			.appendTo(ul);
 		}
 	}
+	if (this.get("copy")) {
+		$("<li>").addClass("copy")
+			.html(this.get("copy"))
+			.appendTo(ul);
+	}
 };
 
 ol_control_Search.prototype.equalFeatures = function (f1, f2) {
