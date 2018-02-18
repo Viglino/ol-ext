@@ -3,3 +3,6 @@ examples
 img
 # ignore doc pages
 doc/doc-pages
+# ignore the dist
+dist/extra
+dist/*.js
