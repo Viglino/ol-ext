@@ -44,9 +44,9 @@ var ol_control_SearchJSON = function(options)
 };
 ol.inherits(ol_control_SearchJSON, ol_control_Search);
 
-/** Autocomplete function
+/** Autocomplete function (ajax request to the server)
 * @param {string} s search string
-* @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete fielad
+* @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
 */
 ol_control_SearchJSON.prototype.autocomplete = function (s, cback)
 {	var data = this.requestData(s);
@@ -77,11 +77,12 @@ ol_control_SearchJSON.prototype.requestData = function (s){
 };
 
 /**
- * Handle server response to pass the features array to the list
+ * Handle server response to pass the features array to the display list
  * @param {any} response server response
  * @return {Array<any>} an array of feature
- */
-ol_control_SearchJSON.prototype.handleResponse = function (response, cback) {
+ * @api
+ */	
+ol_control_SearchJSON.prototype.handleResponse = function (response) {
 	return response;
 };
 

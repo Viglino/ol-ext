@@ -58,7 +58,7 @@ ol_control_SearchFeature.prototype.getSearchString = function (f)
 /** Autocomplete function
 * @param {string} s search string
 * @param {int} max max 
-* @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete fielad
+* @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
 * @api
 */
 ol_control_SearchFeature.prototype.autocomplete = function (s, cback)
