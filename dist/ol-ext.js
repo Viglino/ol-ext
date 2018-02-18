@@ -167,6 +167,7 @@ ol.control.Search.prototype.autocomplete = function (s, cback)
 };
 /** Draw the list
 * @param {Array} auto an array of search result
+* @private
 */
 ol.control.Search.prototype.drawList_ = function (auto)
 {	var ul = $("ul.autocomplete", this.element).html("");
@@ -233,9 +234,9 @@ ol.control.SearchJSON = function(options)
 	this.set('url', url);
 };
 ol.inherits(ol.control.SearchJSON, ol.control.Search);
-/** Autocomplete function
+/** Autocomplete function (ajax request to the server)
 * @param {string} s search string
-* @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete fielad
+* @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
 */
 ol.control.SearchJSON.prototype.autocomplete = function (s, cback)
 {	var data = this.requestData(s);
@@ -263,11 +264,12 @@ ol.control.SearchJSON.prototype.requestData = function (s){
 	return { q: s };
 };
 /**
- * Handle server response to pass the features array to the list
+ * Handle server response to pass the features array to the display list
  * @param {any} response server response
  * @return {Array<any>} an array of feature
- */
-ol.control.SearchJSON.prototype.handleResponse = function (response, cback) {
+ * @api
+ */	
+ol.control.SearchJSON.prototype.handleResponse = function (response) {
 	return response;
 };
 
@@ -3970,7 +3972,7 @@ ol.control.SearchFeature.prototype.getSearchString = function (f)
 /** Autocomplete function
 * @param {string} s search string
 * @param {int} max max 
-* @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete fielad
+* @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
 * @api
 */
 ol.control.SearchFeature.prototype.autocomplete = function (s, cback)

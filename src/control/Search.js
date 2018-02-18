@@ -172,6 +172,7 @@ ol_control_Search.prototype.autocomplete = function (s, cback)
 
 /** Draw the list
 * @param {Array} auto an array of search result
+* @private
 */
 ol_control_Search.prototype.drawList_ = function (auto)
 {	var ul = $("ul.autocomplete", this.element).html("");
