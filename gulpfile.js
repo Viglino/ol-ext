@@ -143,6 +143,32 @@ gulp.task("extrajs", function() {
   .pipe(gulp.dest("dist/extra"))
 });
 
+
+gulp.task ("prepublish", function(){
+  gulp.src(["./src/*/*.*"], { base: './src' })
+    .pipe(gulp.dest('./'));
+});
+
+gulp.task ("postpublish", function(){
+  var clean = require('gulp-clean');
+
+  gulp.src([
+      "./control",
+      "./featureanimation",
+      "./filter",
+      "./geom",
+      "./interaction",
+      "./layer",
+      "./overlay",
+      "./render",
+      "./source",
+      "./style",
+      "./utils"
+    ])
+    .pipe(clean());
+});
+
+
 /** Build the doc */
 gulp.task('doc', function (cb) {
 	var jsdoc = require('gulp-jsdoc3');

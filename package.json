@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "gulp": "^3.9.1",
+    "gulp-clean": "^0.4.0",
     "gulp-concat": "^2.6.0",
     "gulp-cssnext": "^1.0.1",
     "gulp-header": "^1.8.8",
@@ -22,7 +23,10 @@
     "through2": "^2.0.3"
   },
   "scripts": {
-    "test": "npm test npmtest.js"
+    "test": "npm test npmtest.js",
+    "prepack": "gulp prepublish",
+    "postpublish": "gulp postpublish",
+    "postpack": "gulp postpublish"
   },
   "author": {
     "name": "Jean-Marc Viglino",
