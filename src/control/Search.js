@@ -30,89 +30,103 @@ var ol_control_Search = function(options)
 	if (!options) options = {};
 	if (options.typing == undefined) options.typing = 300;
 
-	var element;
-	if (options.target)
-	{	element = $("<div>").addClass((options.className||"")+ " ol-search");
+	var element = document.createElement("DIV");
+	var classNames = (options.className||"")+ " ol-search";
+	if (!options.target)
+	{	classNames += " ol-unselectable ol-control ol-collapsed";
+		this.button = document.createElement("BUTTON");
+		this.button.setAttribute("type", "button");
+		this.button.setAttribute("title", options.label||"search");
+		this.button.addEventListener("click", function()
+			{	element.classList.toggle("ol-collapsed");
+				if (!element.classList.contains("ol-collapsed"))
+				{	element.querySelector("input.search").focus();
+					var listElements = element.querySelectorAll("li");
+					for (var i = 0; i < listElements.length; i++) {
+						listElements[i].classList.remove("select");
+					}
+				}
+			});
+		element.appendChild(this.button);
 	}
-	else
-	{	element = $("<div>").addClass((options.className||"") + ' ol-search ol-unselectable ol-control ol-collapsed');
-		this.button = $("<button>")
-					.attr('type','button')
-					.attr('title',options.label||"search")
-					.click (function()
-					{	element.toggleClass("ol-collapsed");
-						if (!element.hasClass("ol-collapsed"))
-						{	$("input.search", element).focus();
-							$('li', element).removeClass('select');
-						}
-					})
-					.appendTo(element);
-	}
+	element.setAttribute('class', classNames);
+
 	// Search input
 	var tout, cur="";
-	$("<input>").attr('type','search')
-		.addClass("search")
-		.attr('placeholder', options.placeholder||"Search...")
-		.on('change', function(e)
-		{ 	self.dispatchEvent({ type:"change:input", input:e, value:$(this).val()  });
-		})
-		.on('keyup search cut paste input', function(e)
-		{	// console.log(e.type+" "+e.key)
-			var li  = $("ul.autocomplete li.select", element);
-			var	val = $(this).val();
-			// move up/down
-			if (e.key=='ArrowDown' || e.key=='ArrowUp' || e.key=='Down' || e.key=='Up')
-			{	li.removeClass('select');
-				li = (/Down/.test(e.key)) ? li.next() : li.prev();
-				if (li.length) li.addClass('select');
-				else $("ul.autocomplete li",element).first().addClass('select');
+	var input = document.createElement("INPUT");
+	input.setAttribute("type", "search");
+	input.setAttribute("class", "search");
+	input.setAttribute("placeholder", options.placeholder||"Search...");
+	input.addEventListener("change", function(e)
+		{ self.dispatchEvent({ type:"change:input", input:e, value:input.value });
+		});
+	var doSearch = function(e)
+	{	// console.log(e.type+" "+e.key)'
+		var li  = element.querySelector("ul.autocomplete li.select");
+		var	val = input.value;
+		// move up/down
+		if (e.key=='ArrowDown' || e.key=='ArrowUp' || e.key=='Down' || e.key=='Up')
+		{	if (li)
+			{ li.classList.remove("select");
+				li = (/Down/.test(e.key)) ? li.nextElementSibling : li.previousElementSibling;
+				if (li) li.classList.add("select");
 			}
-			// Clear input
-			else if (e.type=='input' && !val)
-			{	self.drawList_();
-			}
-			// Select in the list
-			else if (li.length && (e.type=="search" || e.key =='Enter'))
-			{	if (element.hasClass("ol-control")) $(this).blur();
-				li.removeClass('select');
-				cur = val;
-				self.select(li.data('search'));
-			}
-			// Search / autocomplete
-			else if ( (e.type=="search" || e.key =='Enter')
-					|| (cur!=val && options.typing>=0))
-			{	// current search
-				cur = val;
-				if (cur)
-				{	// prevent searching on each typing
-					if (tout) clearTimeout(tout);
-					tout = setTimeout(function()
-					{	if (cur.length >= self.get("minLength"))
-						{	var s = self.autocomplete (cur, function(auto) { self.drawList_(auto); });
-							if (s) self.drawList_(s);
-						}
-						else self.drawList_();
-					}, options.typing);
+			else element.querySelector("ul.autocomplete li").classList.add("select");
+		}
+		// Clear input
+		else if (e.type=='input' && !val)
+		{	self.drawList_();
+		}
+		// Select in the list
+		else if (li && (e.type=="search" || e.key =="Enter"))
+		{	if (element.classList.contains("ol-control")) input.blur();
+			li.classList.remove("select");
+			cur = val;
+			self.select(JSON.parse(li.getAttribute("data-search")));
+		}
+		// Search / autocomplete
+		else if ( (e.type=="search" || e.key =='Enter')
+			|| (cur!=val && options.typing>=0))
+		{	// current search
+			cur = val;
+			if (cur)
+			{	// prevent searching on each typing
+				if (tout) clearTimeout(tout);
+				tout = setTimeout(function()
+				{	if (cur.length >= self.get("minLength"))
+				{	var s = self.autocomplete (cur, function(auto) { self.drawList_(auto); });
+					if (s) self.drawList_(s);
 				}
 				else self.drawList_();
+				}, options.typing);
 			}
-			// Clear list selection
-			else
-			{	$("ul.autocomplete li", element).removeClass('select');
-			}
-		})
-		.blur(function()
-		{	setTimeout(function(){ element.addClass('ol-collapsed') }, 200);
-		})
-		.focus(function()
-		{	element.removeClass('ol-collapsed')
-		})
-		.appendTo(element);
+			else self.drawList_();
+		}
+		// Clear list selection
+		else
+		{	var li = element.querySelector("ul.autocomplete li");
+			if (li) li.classList.remove('select');
+		}
+	};
+	input.addEventListener("keyup", doSearch);
+	input.addEventListener("search", doSearch);
+	input.addEventListener("cut", doSearch);
+	input.addEventListener("paste", doSearch);
+	input.addEventListener("input", doSearch);
+	input.addEventListener('blur', function()
+		{	setTimeout(function(){ element.classList.add('ol-collapsed') }, 200);
+		});
+	input.addEventListener('focus', function()
+		{	element.classList.remove('ol-collapsed');
+		});
+	element.appendChild(input);
 	// Autocomplete list
-	$("<ul>").addClass('autocomplete').appendTo(element);
+	var ul = document.createElement('UL');
+	ul.classList.add('autocomplete');
+	element.appendChild(ul);
 
 	ol_control_Control.call(this,
-		{	element: element.get(0),
+		{	element: element,
 			target: options.target
 		});
 
@@ -136,9 +150,22 @@ ol_control_Search.prototype.getTitle = function (f)
 };
 
 /** Force search to refresh
-*/
+ */
 ol_control_Search.prototype.search = function ()
-{	$("input.search", this.element).trigger('search');
+{	var search = this.element.querySelector("input.search");
+	this._triggerCustomEvent('search', search);
+};
+
+ol_control_Search.prototype._triggerCustomEvent = function (eventName, element)
+{ var event;
+	if (window.CustomEvent)
+	{ event = new CustomEvent(eventName);
+	} else
+	{ event = document.createEvent("CustomEvent");
+		event.initCustomEvent(eventName, true, true, {});
+	}
+
+	element.dispatchEvent(event);
 };
 
 /** Set the input value in the form (for initialisation purpose)
@@ -147,8 +174,9 @@ ol_control_Search.prototype.search = function ()
 *	@api
 */
 ol_control_Search.prototype.setInput = function (value, search)
-{	$("input.search",this.element).val(value);
-	if (search) $("input.search",this.element).trigger("keyup");
+{	var input = this.element.querySelector("input.search");
+	input.value = value;
+	if (search) this._triggerCustomEvent("keyup", input);
 };
 
 /** A ligne has been clicked in the menu > dispatch event
@@ -175,24 +203,27 @@ ol_control_Search.prototype.autocomplete = function (s, cback)
 * @private
 */
 ol_control_Search.prototype.drawList_ = function (auto)
-{	var ul = $("ul.autocomplete", this.element).html("");
+{	var ul = this.element.querySelector("ul.autocomplete");
+	ul.innerHTML = '';
 	if (!auto) return;
 	var self = this;
 	var max = Math.min (self.get("maxItems"),auto.length);
 	for (var i=0; i<max; i++)
 	{	if (!i || !self.equalFeatures(auto[i], auto[i-1])) {
-			$("<li>").html(self.getTitle(auto[i]))
-			.data('search', auto[i])
-			.click(function(e)
-			{	self.select($(this).data('search'));
-			})
-			.appendTo(ul);
-		}
+		var li = document.createElement("LI");
+		li.setAttribute("data-search", JSON.stringify(auto[i]));
+		li.addEventListener("click", function(e)
+			{	self.select(JSON.parse(e.currentTarget.getAttribute("data-search")));
+			});
+		li.innerHTML = self.getTitle(auto[i]);
+		ul.appendChild(li);
+	}
 	}
 	if (this.get("copy")) {
-		$("<li>").addClass("copy")
-			.html(this.get("copy"))
-			.appendTo(ul);
+		var li = document.createElement("LI");
+		li.classList.add("copy");
+		li.innerHTML = this.get("copy");
+		ul.appendChild(li);
 	}
 };
 
