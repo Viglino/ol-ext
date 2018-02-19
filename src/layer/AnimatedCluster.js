@@ -163,7 +163,7 @@ ol_layer_AnimatedCluster.prototype.animate = function(e)
 			var st = stylefn(c.f, resolution, true);
 			// Preserve pixel ration on retina
 			var geo = new ol_geom_Point(pt);
-			for (var k=0; s=st[k]; k++)
+			for (var k=0, s; s=st[k]; k++)
 			{	var sc;
 				// OL < v4.3 : setImageStyle doesn't check retina
 				var imgs = ol_Map.prototype.getFeaturesAtPixel ? false : s.getImage();
