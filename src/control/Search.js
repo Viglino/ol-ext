@@ -82,7 +82,7 @@ var ol_control_Search = function(options)
 		{	if (element.classList.contains("ol-control")) input.blur();
 			li.classList.remove("select");
 			cur = val;
-			self.select(JSON.parse(li.getAttribute("data-search")));
+			self.select(self._list[li.getAttribute("data-search")]);
 		}
 		// Search / autocomplete
 		else if ( (e.type=="search" || e.key =='Enter')
@@ -208,12 +208,14 @@ ol_control_Search.prototype.drawList_ = function (auto)
 	if (!auto) return;
 	var self = this;
 	var max = Math.min (self.get("maxItems"),auto.length);
+	this._list = [];
 	for (var i=0; i<max; i++)
 	{	if (!i || !self.equalFeatures(auto[i], auto[i-1])) {
 		var li = document.createElement("LI");
-		li.setAttribute("data-search", JSON.stringify(auto[i]));
+		li.setAttribute("data-search", i);
+		this._list.push(auto[i]);
 		li.addEventListener("click", function(e)
-			{	self.select(JSON.parse(e.currentTarget.getAttribute("data-search")));
+			{	self.select(self._list[e.currentTarget.getAttribute("data-search")]);
 			});
 		li.innerHTML = self.getTitle(auto[i]);
 		ul.appendChild(li);
