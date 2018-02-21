@@ -57,6 +57,10 @@
 		The <i>ol.control.Compass</i> draw a compass on a map.
 		<br/>
 		Use the <i>ol-compassctrl</i> CSS class to place the compass on the map.
+		<br/>
+		You can change the compass image, so this can be used to draw a compass, an icon or a watermark on the map. 
+		<br/>
+		The image can rotate with the map. Lines can be added.
 	</div>
 
 	<!-- Map div -->
@@ -116,7 +120,7 @@
 			if ($("#top").prop("checked"))
 			{	compass = new ol.control.Compass (
 				{	className: "top",
-					src: ($("#default").prop("checked") ? undefined : "../../src/control/piratecontrol.png"),
+					src: ($("#default").prop("checked") ? undefined : "../data/piratecontrol.png"),
 					// rotateWithView: $("#rotate").prop("checked"),
 					style: ($("#line").prop("checked") ? new ol.style.Stroke ({ color: $("#color").val(), width: 1 }) : undefined)
 				});
@@ -125,7 +129,7 @@
 			else compass = false;
 			compassBottom = new ol.control.Compass (
 			{	className: "bottom",
-				src: ($("#default").prop("checked") ? undefined : "../../src/control/piratecontrol.png"),
+				src: ($("#default").prop("checked") ? undefined : "../data/piratecontrol.png"),
 				rotateWithView: $("#rotate").prop("checked"),
 				style: ($("#line").prop("checked") ? new ol.style.Stroke ({ color: $("#color").val(), width: 1 }) : undefined)
 			});
