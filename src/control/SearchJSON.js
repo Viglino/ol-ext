@@ -8,7 +8,7 @@ import ol_control_Search from './Search'
 import ol_geom_Point from 'ol/geom/point'
 
 /**
- * This is the base class for search controls that use a json service to search features. 
+ * This is the base class for search controls that use a json service to search features.
  * You can use it for simple custom search or as base to new class.
  *
  * @constructor
@@ -53,21 +53,33 @@ ol_control_SearchJSON.prototype.autocomplete = function (s, cback)
 
 	var self = this;
 	var url = encodeURI(this.get('url'));
-	$.support.cors = true;
-	$.ajax(url,
-		{	dataType: "json",
-			//crossDomain: true,
-			data: data,
-			success: function(r) {
-				cback (self.handleResponse(r));
-			},
-			error: function() {
-				console.log(url, arguments);
-			}
-		});
+
+	var parameters = '';
+	for (var index in data) {
+		parameters += (parameters) ? '&' : '?';
+		if (data.hasOwnProperty(index)) parameters += index + '=' + data[index];
+	}
+
+	var ajax = new XMLHttpRequest();
+	ajax.open('GET', url + parameters, true);
+
+	ajax.onload = function () {
+		if (this.status >= 200 && this.status < 400) {
+			var data = JSON.parse(this.response);
+			cback(self.handleResponse(data));
+		} else {
+			console.log(url + parameters, arguments);
+		}
+	};
+
+	ajax.onerror = function () {
+		console.log(url + parameters, arguments);
+	};
+
+	ajax.send();
 };
 
-/** 
+/**
  * @param {string} s the search string
  * @return {Object} request data (as key:value)
  * @api
@@ -81,7 +93,7 @@ ol_control_SearchJSON.prototype.requestData = function (s){
  * @param {any} response server response
  * @return {Array<any>} an array of feature
  * @api
- */	
+ */
 ol_control_SearchJSON.prototype.handleResponse = function (response) {
 	return response;
 };
