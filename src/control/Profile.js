@@ -7,6 +7,7 @@ import ol from 'ol'
 import ol_control_Control from 'ol/control/control'
 import ol_Sphere from 'ol/sphere'
 import ol_proj from 'ol/proj'
+import ol_Feature from 'ol/feature'
 
 /**
  * @classdesc OpenLayers 3 Profil Control.
@@ -203,7 +204,7 @@ ol_control_Profil.prototype.isShown = function()
  */
 ol_control_Profil.prototype.setGeometry = function(g, options)
 {	if (!options) options = {};
-	if (g instanceof ol.Feature) g = g.getGeometry();
+	if (g instanceof ol_Feature) g = g.getGeometry();
 	var canvas = this.canvas_;
 	var ctx = canvas.getContext('2d');
 	var w = canvas.width;
