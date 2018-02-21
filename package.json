@@ -15,7 +15,7 @@
     "gulp-concat": "^2.6.0",
     "gulp-cssnext": "^1.0.1",
     "gulp-header": "^1.8.8",
-    "gulp-minify": "0.0.14",
+    "gulp-minify": "^2.1.0",
     "gulp-watch": "^5.0.0",
     "minimist": "^1.2.0",
     "plugin-error": "^1.0.1",
