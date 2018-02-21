@@ -41,8 +41,9 @@ animations
 
 ## using ol-ext in a web page
 
-* Just download the [build script](dist) in the dist directory of the project.
-* If you just want to add a `<script>` tag to test things out, you can link directly to the builds from the github rawgit (not recommended in production):
+* Just download the [scripts](dist) in the dist directory of the project and insert the .js and .css in your page.
+* If you just want to add a `<script>` tag to test things out, you can link directly to the builds from the github rawgit (not recommended in production).
+
 ````html
 <!-- jQuery -->
 <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
@@ -55,12 +56,14 @@ animations
 <link rel="stylesheet" href="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.css" />
 <script type="text/javascript" src="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.js"></script>
 ````
+
+
+## using ol-ext in a webpack
+
 * Use npm [ol-ext package](https://www.npmjs.com/package/ol-ext) and link to the node_modules directory:
 ````
 npm install ol-ext
 ````
-
-## using ol-ext in a webpack
 
 Visit the [this repository](https://github.com/darkscript/ol-ol-ext-webpack-example) for a good example of working with ol-ext npm version and bundler (webpack)
  
