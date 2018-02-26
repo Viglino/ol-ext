@@ -175,7 +175,7 @@ ol_interaction_SelectCluster.prototype.selectCluster = function (e)
 	// Draw on a circle
 	if (!this.spiral || cluster.length <= this.circleMaxObjects)
 	{	var max = Math.min(cluster.length, this.circleMaxObjects);
-		for (i=0; i<max; i++)
+		for (var i=0; i<max; i++)
 		{	var a = 2*Math.PI*i/max;
 			if (max==2 || max == 4) a += Math.PI/4;
 			var p = [ center[0]+r*Math.sin(a), center[1]+r*Math.cos(a) ];
@@ -196,7 +196,7 @@ ol_interaction_SelectCluster.prototype.selectCluster = function (e)
 		var links = new Array();
 		var max = Math.min (this.maxObjects, cluster.length);
 		// Feature on a spiral
-		for (i=0; i<max; i++)
+		for (var i=0; i<max; i++)
 		{	// New radius => increase d in one turn
 			r = d/2 + d*a/(2*Math.PI);
 			// Angle
