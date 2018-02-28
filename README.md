@@ -79,9 +79,9 @@ Please see our [contributing guidelines](https://github.com/Viglino/ol-ext/blob/
 
 Please use the [GitHub issue tracker](https://github.com/Viglino/ol-ext/issues) for all bugs and feature requests. Before creating a new issue, do a quick search to see if the problem has been reported already.
 
-## Licence
+## License
 
-ol-ext is licenced under the French Opensource **BSD** compatible CeCILL-B FREE SOFTWARE LICENSE.  
+ol-ext is licensed under the French Opensource **BSD** compatible CeCILL-B FREE SOFTWARE LICENSE.  
  (c) 2016-2017 - Jean-Marc Viglino
 
 Some resources (mapping services and API) used in this sofware may have a specific license.  
