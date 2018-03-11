@@ -1,14 +1,14 @@
 /** ol.popup */
 .ol-popup 
-{	overflow:hidden;
-	font-size:0.9em;
+{	font-size:0.9em;
 	-webkit-user-select: none;  
 	-moz-user-select: none;    
 	-ms-user-select: none;      
 	user-select: none;
 }
 .ol-popup .content
-{	cursor: default;
+{	overflow:hidden;
+	cursor: default;
 	padding: 0.25em 0.5em;
 }
 .ol-popup.hasclosebox .content 
@@ -29,6 +29,8 @@
 	height:0px;
 	background:red;
 	position:absolute;
+	margin: -11px 21px;
+    pointer-events: none;
 }
 .ol-popup .anchor:after,
 .ol-popup .anchor:before
@@ -42,8 +44,14 @@
 .ol-popup-bottom .anchor { bottom:0; }
 .ol-popup-right .anchor { right:0; }
 .ol-popup-left .anchor { left:0; }
-.ol-popup-center .anchor { left:50%; }
-.ol-popup-middle .anchor { top:50%; }
+.ol-popup-center .anchor { 
+	left:50%; 
+	margin-left: 0!important;
+}
+.ol-popup-middle .anchor { 
+	top:50%; 
+	margin-top: 0!important;
+}
 .ol-popup-center.ol-popup-middle .anchor { display:none; }
 
 /** Add a shadow to the popup */
@@ -142,12 +150,12 @@
 	bottom:0;
 }
 
-.ol-popup-middle.default .anchor:before
-{	margin: -11px 0;
+.ol-popup-middle.default .anchor:before {
+	margin: -11px -33px;
 	border-color: transparent #69f;
 }
-.ol-popup-middle.default .anchor:after
-{	margin: -9px 2px;
+.ol-popup-middle.default .anchor:after {
+	margin: -9px -30px;
 	border-color: transparent #fff;
 }
 .ol-popup-middle.ol-popup-left.default .anchor:before,
@@ -186,12 +194,14 @@
 {	margin:0 11px;
 }
 
+.ol-popup.black .anchor {
+	margin: -20px 11px;
+} 
 .ol-popup.black .anchor:before 
 {	content:"";
 	border-color: rgba(0,0,0,0.6) transparent;
 	border-style: solid;
 	border-width: 20px 11px;
-	margin: 0 -11px;
 }
 
 .ol-popup-top.black .anchor:before
@@ -205,7 +215,7 @@
 }
 
 .ol-popup-middle.black .anchor:before
-{	margin: -20px 0;
+{	margin: -20px -22px;
 	border-color: transparent rgba(0,0,0,0.6);
 }
 .ol-popup-middle.ol-popup-left.black .anchor:before
@@ -214,6 +224,11 @@
 .ol-popup-middle.ol-popup-right.black .anchor:before
 {	border-right:0;
 }
+
+.ol-popup-center.black .anchor:before {
+	margin: 0 -10px;
+}
+
 
 /** Green tips popup */
 .ol-popup.tips .closeBox 
@@ -244,12 +259,14 @@
 {	margin:0 20px;
 }
 
+.ol-popup.tips .anchor{
+	margin: -25px 16px;
+} 
 .ol-popup.tips .anchor:before 
 {	content:"";
 	border-color: #ad7 transparent;
 	border-style: solid;
 	border-width: 20px 11px;
-	margin: 0 -11px;
 }
 
 .ol-popup-top.tips .anchor:before
@@ -260,7 +277,6 @@
 {	border-bottom:0;
 	bottom:0;
 }
-
 .ol-popup-center.tips .anchor:before 
 {	border-width: 20px 6px;
 	margin: 0 -6px;
@@ -275,7 +291,8 @@
 }
 
 .ol-popup-middle.tips .anchor:before
-{	margin: -6px 0;
+{
+	margin: -6px -41px;
 	border-color: transparent #ad7;
 	border-width:6px 20px;
 }
@@ -317,12 +334,14 @@
 {	margin:0 22px;
 }
 
+.ol-popup.warning .anchor {
+	margin: -33px 7px;
+} 
 .ol-popup.warning .anchor:before 
 {	content:"";
 	border-color: #f00 transparent;
 	border-style: solid;
 	border-width: 30px 11px;
-	margin: 0 -11px;
 }
 
 .ol-popup-top.warning .anchor:before
@@ -330,12 +349,17 @@
 	top:0;
 }
 .ol-popup-bottom.warning .anchor:before
-{	border-bottom:0;
+{
+	border-bottom:0;
 	bottom:0;
 }
 
+.ol-popup-center.warning .anchor:before {
+	margin: 0 -21px;
+}
 .ol-popup-middle.warning .anchor:before
-{	margin: -10px 0;
+{
+	margin: -10px -33px;
 	border-color: transparent #f00;
 	border-width:10px 22px;
 }

@@ -137,7 +137,7 @@ gulp.task("js", function() {
 
 /* Watch for modification to recreate the dist */
 gulp.task('watch', function() {
-  gulp.watch('./src/*/*.js', ['default']);
+  gulp.watch(['./src/*/*.js','./src/*/*.css'], ['default']);
 });
 
 // Build extra js files to be used individually
