@@ -22,7 +22,8 @@ import ol_geom_Point from 'ol/geom/point'
  *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
  *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
- *
+ *  @param {function | undefined} options.handleResponse Handle server response to pass the features array to the list
+ * 
  *	@param {string|undefined} options.url Url to photon api, default "http://photon.komoot.de/api/"
  *	@param {string|undefined} options.lang Force preferred language, default none
  *	@param {boolean} options.position Search, with priority to geo position, default false
@@ -30,9 +31,6 @@ import ol_geom_Point from 'ol/geom/point'
  */
 var ol_control_SearchPhoton = function(options)
 {	options = options || {};
-	delete options.autocomplete;
-	options.minLength = options.minLength || 3;
-	options.typing = options.typing || 800;
 	options.url = options.url || "http://photon.komoot.de/api/";
 	ol_control_SearchJSON.call(this, options);
 	this.set('lang', options.lang);

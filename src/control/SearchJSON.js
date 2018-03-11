@@ -22,6 +22,7 @@ import ol_geom_Point from 'ol/geom/point'
  *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
  *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *  @param {function | undefined} options.handleResponse Handle server response to pass the features array to the list
  *
  *	@param {string|undefined} options.url Url of the search api
  */
@@ -41,6 +42,9 @@ var ol_control_SearchJSON = function(options)
 		url = parser.href;
 	}
 	this.set('url', url);
+
+	// Overwrite handleResponse
+	if (typeof(options.handleResponse)==='function') this.handleResponse = options.handleResponse;
 };
 ol.inherits(ol_control_SearchJSON, ol_control_Search);
 
