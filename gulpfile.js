@@ -2,9 +2,11 @@
 */
 var gulp = require("gulp");
 var concat = require("gulp-concat");
-var cssnext = require("gulp-cssnext");
 var minify = require("gulp-minify")
 var header = require('gulp-header');
+
+var autoprefixer = require('gulp-autoprefixer');
+const cssmin = require('gulp-cssmin');
 
 /* Prevent error for reload */
 function swallowError (error) {
@@ -69,8 +71,8 @@ var banner = ['/**',
   ''].join('\n');
 
 // Build css. Use --debug to build in debug mode
-gulp.task("css", function() {
-	gulp.src([
+gulp.task('css', function () {
+  gulp.src([
 		"./src/control/*.css", "!./src/control/PirateMap.css",
 		"./src/featureanimation/*.css", 
 		"./src/filter/*.css",
@@ -80,18 +82,24 @@ gulp.task("css", function() {
 		"./src/style/*.css",
 		"./src/utils/*.css"
 		])
-    .pipe(cssnext({
-      compress: !options.debug,
-      sourcemap: options.debug
-    }))
-	.pipe(concat(name+(!options.debug?".min.css":".css")))
-    .pipe(gulp.dest("./dist/"))
-});
+  .pipe(autoprefixer('last 2 versions'))
+  .pipe(concat(name+'.css'))
+  .pipe(gulp.dest('./dist'));
 
-// Build css in debug mode
-gulp.task("cssd", function() {
-	options.debug = true;
-	gulp.start("css");
+  gulp.src([
+		"./src/control/*.css", "!./src/control/PirateMap.css",
+		"./src/featureanimation/*.css", 
+		"./src/filter/*.css",
+		"./src/interaction/*.css",
+		"./src/layer/*.css",
+		"./src/overlay/*.css", 
+		"./src/style/*.css",
+		"./src/utils/*.css"
+		])
+  .pipe(autoprefixer('last 2 versions'))
+  .pipe(concat(name+'.min.css'))
+  .pipe(cssmin())
+  .pipe(gulp.dest('./dist'));
 });
 
 // Build js
