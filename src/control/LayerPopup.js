@@ -41,7 +41,7 @@ ol_control_LayerPopup.prototype.drawList = function(ul, layers)
 	};
 
 	layers.forEach(function(layer)
-	{	if (layer.get("displayInLayerSwitcher")!==false) 
+	{	if (this.displayInLayerSwitcher(layer)) 
 		{	var d = $("<li>").text(layer.get("title") || layer.get("name"))
 					.data ('layer', layer)
 					.click (setVisibility)
