@@ -10986,12 +10986,12 @@ popup.hide();
  */
 ol.Overlay.Popup = function (options)
 {	var self = this;
-	var elt = this._elt = $("<div>");
-	options.element = elt.get(0);
 	this.offsetBox = options.offsetBox;
+	// Popup div
+	var d = $("<div>").addClass('ol-overlaycontainer-stopevent');
+	options.element = d.get(0);
 	// Anchor div
-	$("<div>").addClass("anchor").appendTo(elt);
-	var d = $("<div>").addClass('ol-overlaycontainer-stopevent').appendTo(elt);
+	$("<div>").addClass("anchor").appendTo(d);
 	// Content
 	this.content = $("<div>").addClass("content").appendTo(d).get(0);
 	// Closebox
@@ -11008,6 +11008,7 @@ ol.Overlay.Popup = function (options)
 	options.stopEvent = true;
 	d.on("mousedown touchstart", function(e){ e.stopPropagation(); })
 	ol.Overlay.call(this, options);
+	this._elt = $(this.element);
 	// call setPositioning first in constructor so getClassPositioning is called only once
 	this.setPositioning(options.positioning);
 	this.setPopupClass(options.popupClass);
