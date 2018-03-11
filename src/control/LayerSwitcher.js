@@ -11,30 +11,29 @@ import ol_layer_VectorTile from 'ol/layer/vectortile'
 import ol_layer_Image from 'ol/layer/image'
 import ol_layer_Heatmap from 'ol/layer/heatmap'
 
-
-
 /**
  * @classdesc OpenLayers 3 Layer Switcher Control.
  * @require jQuery
  *
  * @constructor
  * @extends {ol_control_Control}
- * @param {Object=} Control options.
+ * @param {Object=} options
+ *	@param {function} displayInLayerSwitcher function that takes a layer and return a boolean if the layer is displayed in the switcher, default test the displayInLayerSwitcher layer attribute
  *	@param {boolean} options.show_progress show a progress bar on tile layers, default false
- *		- mouseover {boolean} show the panel on mouseover, default false
- *		- reordering {boolean} allow layer reordering, default true
- *		- trash {boolean} add a trash button to delete the layer, default false
- *		- oninfo {function} callback on click on info button, if none no info button is shown
- *		- extent {boolean} add an extent button to zoom to the extent of the layer
- *		- onextent {function} callback when click on extent, default fits view to extent
+ *	@param {boolean} mouseover show the panel on mouseover, default false
+ *	@param {boolean} reordering allow layer reordering, default true
+ *	@param {boolean} trash add a trash button to delete the layer, default false
+ *	@param {function} oninfo callback on click on info button, if none no info button is shown
+ *	@param {boolean} extent add an extent button to zoom to the extent of the layer
+ *	@param {function} onextent callback when click on extent, default fits view to extent
  *
  * Layers attributes that control the switcher
  *	- allwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false
  *	- displayInLayerSwitcher {boolean} display in switcher, default true
- *	- noSwitcherDelete {boolean} to prevent layer deletion (w. trash option), default false
+ *	- noSwitcherDelete {boolean} to prevent layer deletion (w. trash option = true), default false
  */
-var ol_control_LayerSwitcher = function(opt_options)
-{	var options = opt_options || {};
+var ol_control_LayerSwitcher = function(options)
+{	options = options || {};
 	var self = this;
 	this.dcount = 0;
 	this.show_progress = options.show_progress;
@@ -43,6 +42,11 @@ var ol_control_LayerSwitcher = function(opt_options)
 	this.hasextent = options.extent || options.onextent;
 	this.hastrash = options.trash;
 	this.reordering = (options.reordering!==false);
+
+	// displayInLayerSwitcher
+	if (typeof(options.displayInLayerSwitcher) === 'function') {
+		this.displayInLayerSwitcher = options.displayInLayerSwitcher;
+	}
 
 	var element;
 	if (options.target) 
@@ -97,7 +101,7 @@ var ol_control_LayerSwitcher = function(opt_options)
 ol.inherits(ol_control_LayerSwitcher, ol_control_Control);
 
 
-/** List of tips
+/** List of tips for internationalization purposes
 */
 ol_control_LayerSwitcher.prototype.tip =
 {	up: "up/down",
@@ -106,7 +110,15 @@ ol_control_LayerSwitcher.prototype.tip =
 	extent: "zoom to extent",
 	trash: "remove layer",
 	plus: "expand/shrink"
-}
+};
+
+/** Test if a layer should be displayed in the switcher
+ * @param {ol.layer} layer
+ * @return {boolean} true if the layer is displayed
+ */
+ol_control_LayerSwitcher.prototype.displayInLayerSwitcher = function(layer) {
+	return (layer.get("displayInLayerSwitcher")!==false);
+};
 
 /**
  * Set the map instance the control is associated with.
@@ -193,7 +205,7 @@ ol_control_LayerSwitcher.prototype.overflow = function(dir)
 		}
 	}
 	else return false;
-}
+};
 
 /**
  * On view change hide layer depending on resolution / extent
@@ -221,7 +233,7 @@ ol_control_LayerSwitcher.prototype.viewChange = function(e)
 			}
 		}
 	});
-}
+};
 
 /**
  *	Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
@@ -233,7 +245,7 @@ ol_control_LayerSwitcher.prototype.drawPanel = function(e)
 	// Multiple event simultaneously / draw once => put drawing in the event queue
 	this.dcount++;
 	setTimeout (function(){ self.drawPanel_(); }, 0);
-}
+};
 
 /** Delayed draw panel control 
  * @private
@@ -242,7 +254,7 @@ ol_control_LayerSwitcher.prototype.drawPanel_ = function(e)
 {	if (--this.dcount || this.dragging_) return;
 	$("li", this.panel_).not(".ol-header").remove();
 	this.drawList (this.panel_, this.getMap().getLayers());
-}
+};
 
 /** Change layer visibility according to the baselayer option
  * @param {ol.layer}
@@ -257,7 +269,7 @@ ol_control_LayerSwitcher.prototype.switchLayerVisibility = function(l, layers)
 		{	if (l!==li && li.get('baseLayer') && li.getVisible()) li.setVisible(false);
 		});
 	}
-}
+};
 
 /** Check if layer is on the map (depending on zoom and extent)
  * @param {ol.layer}
@@ -529,7 +541,7 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection)
 	// Add the layer list
 	for (var i=layers.length-1; i>=0; i--)
 	{	var layer = layers[i];
-		if (layer.get("displayInLayerSwitcher")===false) continue;
+		if (!self.displayInLayerSwitcher(layer)) continue;
 
 		var li = $("<li>").addClass((layer.getVisible()?"visible ":" ")+(layer.get('baseLayer')?"baselayer":""))
 						.data("layer",layer).appendTo(ul);
@@ -569,7 +581,7 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection)
 		if (layer.getLayers) 
 		{	var nb = 0;
 			layer.getLayers().forEach(function(l)
-			{	if (l.get('displayInLayerSwitcher')!==false) nb++;
+			{	if (self.displayInLayerSwitcher(l)) nb++;
 			});
 			if (nb) 
 			{	$("<div>").addClass(layer.get("openInLayerSwitcher") ? "collapse-layers" : "expend-layers" )
@@ -686,6 +698,6 @@ ol_control_LayerSwitcher.prototype.setprogress_ = function(layer)
 			draw();
 		});
 	}
-}
+};
 
 export default ol_control_LayerSwitcher

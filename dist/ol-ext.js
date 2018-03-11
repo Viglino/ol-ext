@@ -425,22 +425,23 @@ ol.control.SearchPhoton.prototype.select = function (f)
  *
  * @constructor
  * @extends {ol.control.Control}
- * @param {Object=} Control options.
+ * @param {Object=} options
+ *	@param {function} displayInLayerSwitcher function that takes a layer and return a boolean if the layer is displayed in the switcher, default test the displayInLayerSwitcher layer attribute
  *	@param {boolean} options.show_progress show a progress bar on tile layers, default false
- *		- mouseover {boolean} show the panel on mouseover, default false
- *		- reordering {boolean} allow layer reordering, default true
- *		- trash {boolean} add a trash button to delete the layer, default false
- *		- oninfo {function} callback on click on info button, if none no info button is shown
- *		- extent {boolean} add an extent button to zoom to the extent of the layer
- *		- onextent {function} callback when click on extent, default fits view to extent
+ *	@param {boolean} mouseover show the panel on mouseover, default false
+ *	@param {boolean} reordering allow layer reordering, default true
+ *	@param {boolean} trash add a trash button to delete the layer, default false
+ *	@param {function} oninfo callback on click on info button, if none no info button is shown
+ *	@param {boolean} extent add an extent button to zoom to the extent of the layer
+ *	@param {function} onextent callback when click on extent, default fits view to extent
  *
  * Layers attributes that control the switcher
  *	- allwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false
  *	- displayInLayerSwitcher {boolean} display in switcher, default true
- *	- noSwitcherDelete {boolean} to prevent layer deletion (w. trash option), default false
+ *	- noSwitcherDelete {boolean} to prevent layer deletion (w. trash option = true), default false
  */
-ol.control.LayerSwitcher = function(opt_options)
-{	var options = opt_options || {};
+ol.control.LayerSwitcher = function(options)
+{	options = options || {};
 	var self = this;
 	this.dcount = 0;
 	this.show_progress = options.show_progress;
@@ -449,6 +450,10 @@ ol.control.LayerSwitcher = function(opt_options)
 	this.hasextent = options.extent || options.onextent;
 	this.hastrash = options.trash;
 	this.reordering = (options.reordering!==false);
+	// displayInLayerSwitcher
+	if (typeof(options.displayInLayerSwitcher) === 'function') {
+		this.displayInLayerSwitcher = options.displayInLayerSwitcher;
+	}
 	var element;
 	if (options.target) 
 	{	element = $("<div>").addClass(options.switcherClass || "ol-layerswitcher");
@@ -496,7 +501,7 @@ ol.control.LayerSwitcher = function(opt_options)
 	this.target = options.target;
 };
 ol.inherits(ol.control.LayerSwitcher, ol.control.Control);
-/** List of tips
+/** List of tips for internationalization purposes
 */
 ol.control.LayerSwitcher.prototype.tip =
 {	up: "up/down",
@@ -505,7 +510,14 @@ ol.control.LayerSwitcher.prototype.tip =
 	extent: "zoom to extent",
 	trash: "remove layer",
 	plus: "expand/shrink"
-}
+};
+/** Test if a layer should be displayed in the switcher
+ * @param {ol.layer} layer
+ * @return {boolean} true if the layer is displayed
+ */
+ol.control.LayerSwitcher.prototype.displayInLayerSwitcher = function(layer) {
+	return (layer.get("displayInLayerSwitcher")!==false);
+};
 /**
  * Set the map instance the control is associated with.
  * @param {_ol_Map_} map The map instance.
@@ -586,7 +598,7 @@ ol.control.LayerSwitcher.prototype.overflow = function(dir)
 		}
 	}
 	else return false;
-}
+};
 /**
  * On view change hide layer depending on resolution / extent
  * @param {ol.event} map The map instance.
@@ -613,7 +625,7 @@ ol.control.LayerSwitcher.prototype.viewChange = function(e)
 			}
 		}
 	});
-}
+};
 /**
  *	Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
  */
@@ -624,7 +636,7 @@ ol.control.LayerSwitcher.prototype.drawPanel = function(e)
 	// Multiple event simultaneously / draw once => put drawing in the event queue
 	this.dcount++;
 	setTimeout (function(){ self.drawPanel_(); }, 0);
-}
+};
 /** Delayed draw panel control 
  * @private
  */
@@ -632,7 +644,7 @@ ol.control.LayerSwitcher.prototype.drawPanel_ = function(e)
 {	if (--this.dcount || this.dragging_) return;
 	$("li", this.panel_).not(".ol-header").remove();
 	this.drawList (this.panel_, this.getMap().getLayers());
-}
+};
 /** Change layer visibility according to the baselayer option
  * @param {ol.layer}
  * @param {Array<ol.layer>} related layers
@@ -646,7 +658,7 @@ ol.control.LayerSwitcher.prototype.switchLayerVisibility = function(l, layers)
 		{	if (l!==li && li.get('baseLayer') && li.getVisible()) li.setVisible(false);
 		});
 	}
-}
+};
 /** Check if layer is on the map (depending on zoom and extent)
  * @param {ol.layer}
  * @return {boolean}
@@ -904,7 +916,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 	// Add the layer list
 	for (var i=layers.length-1; i>=0; i--)
 	{	var layer = layers[i];
-		if (layer.get("displayInLayerSwitcher")===false) continue;
+		if (!self.displayInLayerSwitcher(layer)) continue;
 		var li = $("<li>").addClass((layer.getVisible()?"visible ":" ")+(layer.get('baseLayer')?"baselayer":""))
 						.data("layer",layer).appendTo(ul);
 		var layer_buttons = $("<div>").addClass("ol-layerswitcher-buttons").appendTo(li);
@@ -938,7 +950,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection)
 		if (layer.getLayers) 
 		{	var nb = 0;
 			layer.getLayers().forEach(function(l)
-			{	if (l.get('displayInLayerSwitcher')!==false) nb++;
+			{	if (self.displayInLayerSwitcher(l)) nb++;
 			});
 			if (nb) 
 			{	$("<div>").addClass(layer.get("openInLayerSwitcher") ? "collapse-layers" : "expend-layers" )
@@ -1048,7 +1060,7 @@ ol.control.LayerSwitcher.prototype.setprogress_ = function(layer)
 			draw();
 		});
 	}
-}
+};
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
@@ -2910,7 +2922,7 @@ ol.control.LayerPopup.prototype.drawList = function(ul, layers)
 		self.switchLayerVisibility(l,layers);
 	};
 	layers.forEach(function(layer)
-	{	if (layer.get("displayInLayerSwitcher")!==false) 
+	{	if (this.displayInLayerSwitcher(layer)) 
 		{	var d = $("<li>").text(layer.get("title") || layer.get("name"))
 					.data ('layer', layer)
 					.click (setVisibility)
@@ -2957,7 +2969,7 @@ ol.control.LayerSwitcherImage.prototype.drawList = function(ul, layers)
 	};
 	ul.css("height","auto");
 	layers.forEach(function(layer)
-	{	if (layer.get("displayInLayerSwitcher")!==false)
+	{	if (this.displayInLayerSwitcher(layer))
 		{	var prev = layer.getPreview ? layer.getPreview() : ["none"];
 			var d = $("<li>").addClass("ol-imgcontainer")
 						.data ('layer', layer)
@@ -7996,7 +8008,7 @@ ol.interaction.SelectCluster.prototype.selectCluster = function (e)
 	// Draw on a circle
 	if (!this.spiral || cluster.length <= this.circleMaxObjects)
 	{	var max = Math.min(cluster.length, this.circleMaxObjects);
-		for (i=0; i<max; i++)
+		for (var i=0; i<max; i++)
 		{	var a = 2*Math.PI*i/max;
 			if (max==2 || max == 4) a += Math.PI/4;
 			var p = [ center[0]+r*Math.sin(a), center[1]+r*Math.cos(a) ];
@@ -8017,7 +8029,7 @@ ol.interaction.SelectCluster.prototype.selectCluster = function (e)
 		var links = new Array();
 		var max = Math.min (this.maxObjects, cluster.length);
 		// Feature on a spiral
-		for (i=0; i<max; i++)
+		for (var i=0; i<max; i++)
 		{	// New radius => increase d in one turn
 			r = d/2 + d*a/(2*Math.PI);
 			// Angle
@@ -9504,7 +9516,7 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt)
 			var geometry = this.geom_.clone();
 			geometry.applyTransform(function(g1, g2, dim)
 			{	if (dim<2) return g2;
-				for (i=0; i<g1.length; i+=dim)
+				for (var i=0; i<g1.length; i+=dim)
 				{	if (scx!=1) g2[i] = center[0] + (g1[i]-center[0])*scx;
 					if (scy!=1) g2[i+1] = center[1] + (g1[i+1]-center[1])*scy;
 				}

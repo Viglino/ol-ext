@@ -203,6 +203,7 @@
 	// Add a layer switcher outside the map
 	var switcher = new ol.control.LayerSwitcher(
 		{	target:$(".layerSwitcher").get(0), 
+			// displayInLayerSwitcher: function (l) { return false; },
 			show_progress:true,
 			extent: true,
 			trash: true,

@@ -41,7 +41,7 @@ ol_control_LayerSwitcherImage.prototype.drawList = function(ul, layers)
 	ul.css("height","auto");
 
 	layers.forEach(function(layer)
-	{	if (layer.get("displayInLayerSwitcher")!==false)
+	{	if (this.displayInLayerSwitcher(layer))
 		{	var prev = layer.getPreview ? layer.getPreview() : ["none"];
 			var d = $("<li>").addClass("ol-imgcontainer")
 						.data ('layer', layer)
