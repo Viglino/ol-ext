@@ -220,6 +220,11 @@ ol.control.Search.prototype.drawList_ = function (auto)
 		ul.appendChild(li);
 	}
 };
+/** Test if 2 features are equal
+ * @param {any} f1
+ * @param {any} f2
+ * @return {boolean}
+ */
 ol.control.Search.prototype.equalFeatures = function (f1, f2) {
 	return false;
 };
@@ -243,6 +248,7 @@ ol.control.Search.prototype.equalFeatures = function (f1, f2) {
  *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
  *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *  @param {function | undefined} options.handleResponse Handle server response to pass the features array to the list
  *
  *	@param {string|undefined} options.url Url of the search api
  */
@@ -262,6 +268,8 @@ ol.control.SearchJSON = function(options)
 		url = parser.href;
 	}
 	this.set('url', url);
+	// Overwrite handleResponse
+	if (typeof(options.handleResponse)==='function') this.handleResponse = options.handleResponse;
 };
 ol.inherits(ol.control.SearchJSON, ol.control.Search);
 /** Autocomplete function (ajax request to the server)
@@ -328,7 +336,8 @@ ol.control.SearchJSON.prototype.handleResponse = function (response) {
  *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
  *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
- *
+ *  @param {function | undefined} options.handleResponse Handle server response to pass the features array to the list
+ * 
  *	@param {string|undefined} options.url Url to photon api, default "http://photon.komoot.de/api/"
  *	@param {string|undefined} options.lang Force preferred language, default none
  *	@param {boolean} options.position Search, with priority to geo position, default false
@@ -336,9 +345,6 @@ ol.control.SearchJSON.prototype.handleResponse = function (response) {
  */
 ol.control.SearchPhoton = function(options)
 {	options = options || {};
-	delete options.autocomplete;
-	options.minLength = options.minLength || 3;
-	options.typing = options.typing || 800;
 	options.url = options.url || "http://photon.komoot.de/api/";
 	ol.control.SearchJSON.call(this, options);
 	this.set('lang', options.lang);

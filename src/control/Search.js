@@ -229,6 +229,11 @@ ol_control_Search.prototype.drawList_ = function (auto)
 	}
 };
 
+/** Test if 2 features are equal
+ * @param {any} f1
+ * @param {any} f2
+ * @return {boolean}
+ */
 ol_control_Search.prototype.equalFeatures = function (f1, f2) {
 	return false;
 };
