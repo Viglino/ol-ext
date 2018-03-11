@@ -194,7 +194,7 @@ gulp.task('doc', function (cb) {
 });
 
 // build the dist
-gulp.task("dist", ["js","extrajs","css","cssd"]);
+gulp.task("dist", ["js","extrajs","css"]);
 
 // The default task that will be run if no task is supplied
-gulp.task("default", ["js","extrajs","css","cssd"]);
+gulp.task("default", ["js","extrajs","css"]);
