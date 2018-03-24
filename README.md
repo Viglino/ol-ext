@@ -45,7 +45,7 @@ animations
 ````
 npm install openlayers-ext
 ````
-* Just download the [scripts](dist) in the dist directory of the project and insert the .js and .css in your page.
+* You can downloadand the [scripts](dist) in the dist directory of the repository in your project and insert the .js and .css in your page.
 * If you just want to add a `<script>` tag to test things out, you can link directly to the builds from the github rawgit (not recommended in production).
 
 ````html
