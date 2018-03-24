@@ -23,6 +23,13 @@ To recreate the distribution on `js` file change, use the watch task
 gulp watch
 ````
 
+### Create individual 
+
+If you don't want to use the whole distribution in a web page, you can create individual js compatible with your browser.
+Use the `gulp lib` command to create individual files into the `/lib` directory then link tpo this files:
+````
+gulp lib
+````
 
 ## Adding new extensions
 
