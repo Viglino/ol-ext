@@ -27,6 +27,8 @@
 	</a>
 	<p class="info">
 		This example show how to use <i>ol.featureAnimation.Path</i> to animate a feature along a path.
+		<br/>
+		Use the <i>rotate</i> option to make the symbols rotate along the path.
 	</p>
 
 	<!-- DIV pour la carte -->
@@ -43,7 +45,9 @@
 				<option value="inAndOut">inAndOut</option>
 			</select>
 		</li><li>
-			<input id="revers" type="checkbox" /><label for="revers"> revers</label>
+			<label></label><input id="revers" type="checkbox" /> revers</label>
+		</li><li>
+			<label><input id="rotation" type="checkbox" /> rotate symbol</label>
 		</li><li>
 			speed: <input id="speed" type="range" min="0" max="3" step="0.1" value="1.2" style="vertical-align:middle" />
 		</li><li>
@@ -123,6 +127,7 @@
 		{	var f = new ol.Feature(new ol.geom.Point([0,0]));
 			var anim = new ol.featureAnimation.Path(
 			{	path: path,
+				rotate: $("#rotation").prop('checked'),
 				easing: ol.easing[$("#easing").val()],
 				speed: Number($("#speed").val()),
 				revers: $("#revers").prop('checked')

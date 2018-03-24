@@ -1,5 +1,5 @@
 /*
-	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
 	released under the CeCILL license (http://www.cecill.info/).
 	
 */
@@ -9,9 +9,10 @@ import ol_featureAnimation from './FeatureAnimation'
 
 /** Path animation: feature follow a path
  * @constructor
- * @extends {ol_featureAnimation}
- * @param {ol_featureAnimationPathOptions} options
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationPathOptions} options extend ol.featureAnimation options
  *  @param {Number} options.speed speed of the feature, if 0 the duration parameter will be used instead, default 0
+ *  @param {Number|boolean} options.rotate rotate the symbol when following the path, true or the initial rotation, default false
  *  @param {ol.geom.LineString|ol.Feature} options.path the path to follow
  */
 var ol_featureAnimation_Path = function(options)
@@ -19,6 +20,15 @@ var ol_featureAnimation_Path = function(options)
 	ol_featureAnimation.call(this, options);
 	this.speed_ = options.speed || 0;
 	this.path_ = options.path;
+	switch (options.rotate) {
+		case true: 
+		case 0:
+			this.rotate_ = 0;
+			break;
+		default:
+			this.rotate_ = options.rotate || false;
+			break;
+	}
 	if (this.path_ && this.path_.getGeometry) this.path_ = this.path_.getGeometry();
 	if (this.path_ && this.path_.getLineString) this.path_ = this.path_.getLineString();
 	if (this.path_.getLength)
@@ -54,6 +64,15 @@ ol_featureAnimation_Path.prototype.animate = function (e)
 			break;
 		}
 		d += dl;
+	}
+	// Rotate symbols
+	if (this.rotate_!==false) {
+		var angle = this.rotate_ - Math.atan2(p0[1] - p[1], p0[0] - p[0]);
+		for (var k=0, s; s=e.style[k]; k++) {
+			if (s.getImage()) {
+				s.getImage().setRotation(angle)
+			}
+		}
 	}
 	e.geom.setCoordinates(p);
 	// Animate
