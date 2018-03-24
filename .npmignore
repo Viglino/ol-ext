@@ -1,4 +1,5 @@
 .vscode
+*.npmignore
 # ignore examples
 examples
 img
