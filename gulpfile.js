@@ -151,6 +151,17 @@ gulp.task("extrajs", function() {
   .pipe(gulp.dest("dist/extra"))
 });
 
+// Build js files to be used individually
+gulp.task("lib", function() {
+  var src = ['control','featureanimation','filter','geom','interaction','layer','overlay','render','source','style','utils'];
+  for (var i=0; i<src.length; i++) {
+    gulp.src("./src/"+src[i]+"/*.js")
+      .pipe(transform())
+      .pipe(gulp.dest("lib/"+src[i]+""));
+  }
+});
+
+
 /**
  * Move the files into root
  * for packaging

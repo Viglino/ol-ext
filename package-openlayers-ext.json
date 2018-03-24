@@ -23,7 +23,8 @@
     "through2": "^2.0.3"
   },
   "scripts": {
-    "test": "npm test npmtest.js"
+    "test": "npm test npmtest.js",
+    "prepack": "gulp lib"
   },
   "author": {
     "name": "Jean-Marc Viglino",
