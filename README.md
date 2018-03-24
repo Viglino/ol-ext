@@ -41,6 +41,10 @@ animations
 
 ## using ol-ext in a web page
 
+* For use in a web page install the npm [openlayers-ext package](https://www.npmjs.com/package/openlayers-ext):
+````
+npm install openlayers-ext
+````
 * Just download the [scripts](dist) in the dist directory of the project and insert the .js and .css in your page.
 * If you just want to add a `<script>` tag to test things out, you can link directly to the builds from the github rawgit (not recommended in production).
 
@@ -56,7 +60,6 @@ animations
 <link rel="stylesheet" href="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.css" />
 <script type="text/javascript" src="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.js"></script>
 ````
-
 
 ## using ol-ext in a webpack
 
