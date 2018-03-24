@@ -1,0 +1,8 @@
+.vscode
+# ignore examples
+examples
+img
+# ignore doc pages
+doc/doc-pages
+# ignore the src (copy in the lib)
+src
