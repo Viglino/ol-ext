@@ -69,7 +69,7 @@ The library will be avaliable in the `node_modules/openlayers-ext/dist` director
 npm install ol-ext
 ````
 
-Visit the [this repository](https://github.com/darkscript/ol-ol-ext-webpack-example) for a good example of working with ol-ext npm version and bundler (webpack)
+* Check out the [darkscript/ol-ol-ext-webpack-example repo](https://github.com/darkscript/ol-ol-ext-webpack-example) for a good example of working with ol-ext npm version and bundler (webpack)
  
 ## Documentation
 
