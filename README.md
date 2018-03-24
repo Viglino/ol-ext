@@ -46,7 +46,7 @@ animations
 npm install openlayers-ext
 ````
 The library will be avaliable in the `node_modules/openlayers-ext/dist` directory. You can find individual files in the `node_modules/openlayers-ext/lib` directory.
-* You can downloadand the [scripts](dist) in the dist directory of the repository in your project and insert the .js and .css in your page.
+* You can download the [scripts](dist) of the ./dist directory of the repository in your project and insert the .js and .css in your page.
 * If you just want to add a `<script>` tag to test things out, you can link directly to the builds from the github rawgit (not recommended in production).
 
 ````html
