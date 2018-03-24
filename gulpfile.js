@@ -151,13 +151,16 @@ gulp.task("extrajs", function() {
   .pipe(gulp.dest("dist/extra"))
 });
 
-// Build js files to be used individually
+// Build files to be used individually
 gulp.task("lib", function() {
   var src = ['control','featureanimation','filter','geom','interaction','layer','overlay','render','source','style','utils'];
   for (var i=0; i<src.length; i++) {
     gulp.src("./src/"+src[i]+"/*.js")
       .pipe(transform())
-      .pipe(gulp.dest("lib/"+src[i]+""));
+      .pipe(gulp.dest("lib/"+src[i]));
+    gulp.src("./src/"+src[i]+"/*.css")
+      .pipe(autoprefixer('last 2 versions'))
+      .pipe(gulp.dest("lib/"+src[i]));
   }
 });
 
