@@ -51,7 +51,7 @@
 
 	<div class="options">
 		<h2>
-			<i class="fa maki-building" title="building"></i>Cluster options:
+			Cluster options:
 		</h2>
 		<input id="animatecluster" type="checkbox" checked="checked" onchange="clusterLayer.set('animationDuration',(this.checked ? 700:0));" />
 		<label for="animatecluster">animate cluster</label>
@@ -63,7 +63,13 @@
 		<input id="animatesel" type="checkbox" checked="checked" onchange="selectCluster.animate = this.checked" />
 		<label for="animatesel">animate selection</label>
 	</div>
-	<div class="infos"></div>
+	<div class="infos">
+		<!-- preload icon -->
+		<i class="fa maki-bus" title="building"></i>
+		<i class="fa maki-town_hall" title="building"></i>
+		<i class="fa maki-theatre" title="building"></i>
+		<i class="fa maki-industrial" title="building"></i>
+	</div>
 
 	<script type="text/javascript">
 		// Layers
