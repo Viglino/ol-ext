@@ -1,0 +1,214 @@
+﻿<!DOCTYPE html>
+<html>
+<!----------------------------------------------------------
+
+	Copyright (c) 2018 Jean-Marc VIGLINO,
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+
+------------------------------------------------------------>
+<head>
+	<title>ol-ext: Clustering map</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="description" content="A cluster layer for OpenLayers (ol/ol3) that animates clusters on zoom change." />
+	<meta name="keywords" content="ol3,cluster,charts,animation,layer,selectio,animate,animated clusters,openlayers" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- Openlayers -->
+    <link rel="stylesheet" href="https://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/master/build/ol.js"></script>
+	
+	<!-- ol-ext -->
+	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+	<!-- ol-ext maki and fontawesome defintions used in fontsymbol -->
+	<link rel="stylesheet" href="../css/fontmaki.css" />
+	<script type="text/javascript" src="../../dist/extra/FontMakiDef.js"></script>
+
+	<link rel="stylesheet" href="../style.css" />
+	<style>
+		.infos > i {
+			float: left;
+			font-size: 3em;
+			margin: -.2em 0 -.2em -.2em;
+		}
+	</style>
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../../index.html">
+		<h1>ol-ext: Clustering map</h1>
+	</a>
+	<p class="info">
+		This example show the use of the <i>ol.style.Chart</i> to display the cluster content.
+	</p>
+
+	<!-- DIV pour la carte -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options">
+		<h2>
+			<i class="fa maki-building" title="building"></i>Cluster options:
+		</h2>
+		<input id="animatecluster" type="checkbox" checked="checked" onchange="clusterLayer.set('animationDuration',(this.checked ? 700:0));" />
+		<label for="animatecluster">animate cluster</label>
+		<br />
+		Number of features:
+		<br/>
+		<input type="number" value="2000" onchange="addFeatures(this.value);" />
+		<h2>Select options:</h2>
+		<input id="animatesel" type="checkbox" checked="checked" onchange="selectCluster.animate = this.checked" />
+		<label for="animatesel">animate selection</label>
+	</div>
+	<div class="infos"></div>
+
+	<script type="text/javascript">
+		// Layers
+		var layers = [ new ol.layer.Tile(
+			{	source: new ol.source.OSM()
+			})];
+
+		// The map
+		var map = new ol.Map
+			({	target: 'map',
+				view: new ol.View
+				({	zoom: 4,
+					center: [166326, 5992663]
+				}),
+				layers: layers
+			});
+
+		// Addfeatures to the cluster
+		function addFeatures(nb)
+		{	var ext = map.getView().calculateExtent(map.getSize());
+			var features=[];
+			for (var i=0; i<nb; ++i)
+			{	features[i] = new ol.Feature(new ol.geom.Point([ext[0]+(ext[2]-ext[0])*Math.random(), ext[1]+(ext[3]-ext[1])*Math.random()]));
+				features[i].set('id',i);
+				features[i].set('type', Math.floor(Math.random()*3))
+			}
+			clusterSource.getSource().clear();
+			clusterSource.getSource().addFeatures(features);
+		}
+
+		// Style for the clusters
+		var styleCache = {};
+		function getStyle (feature, resolution)
+		{	var features = feature.get('features');
+			var size = features.length;
+			// Feature style
+			if (size===1) return featureStyle(feature);
+			// ClusterStyle
+			else {
+				var data = [0,0,0];
+				for (var i=0, f; f=features[i]; i++) data[f.get('type')]++;
+				var style = styleCache[data.join(',')];
+				if (!style)
+				{	var radius = Math.max(8, Math.min(size*0.75, 20));
+					style = styleCache[data.join(',')] = new ol.style.Style(
+						{	image: new ol.style.Chart(
+							{	type: 'pie', 
+								radius: radius, 
+								data: data, 
+								rotateWithView: true,
+								stroke: new ol.style.Stroke(
+								{	color: "rgba(0,0,0,0)",
+									width: 0
+								})
+							})
+
+						});
+				}
+				return [style];
+			}
+		}
+
+		// Style for the features
+		var form = ['bus', 'town_hall', 'theatre', 'industrial'];
+		function featureStyle(f)
+		{	var sel = f.get('features')
+			if (sel) {
+				var type = sel[0].get('type');
+				var style = styleCache[type];
+				if (!style) {
+					var color = ol.style.Chart.colors.classic[type];
+					style = styleCache[type] = new ol.style.Style({
+						image:  new ol.style.FontSymbol({
+							glyph: 'maki-'+form[type],
+							radius: 12,
+							color: color,	
+							fill: new ol.style.Fill({
+								color:color
+							}),
+							stroke: new ol.style.Stroke ({
+								color: '#fff',
+								width: 1
+							})
+						})
+					});
+				}
+				return [style];
+			}
+			else return [ new ol.style.Style({
+				// Draw a link beetween points (or not)
+				stroke: new ol.style.Stroke({
+					color:"#fff", 
+					width:1 
+				}) 
+			})];
+		}
+
+		// Cluster Source
+		var clusterSource=new ol.source.Cluster({
+			distance: 40,
+			source: new ol.source.Vector()
+		});
+		// Animated cluster layer
+		var clusterLayer = new ol.layer.AnimatedCluster(
+		{	name: 'Cluster',
+			source: clusterSource,
+			animationDuration: $("#animatecluster").prop('checked') ? 700:0,
+			// Cluster style
+			style: getStyle
+		});
+		map.addLayer(clusterLayer);
+		// add 2000 features
+		addFeatures(2000);
+		
+		// Select interaction to spread cluster out and select features
+		var selectCluster = new ol.interaction.SelectCluster(
+			{	// Point radius: to calculate distance between the features
+				pointRadius:10,
+				animate: $("#animatesel").prop('checked'),
+				// Feature style when it springs apart
+				featureStyle: featureStyle,
+				selectCluster: false,	// disable cluster selection
+			});
+		map.addInteraction(selectCluster);
+
+		// On selected => get feature in cluster and show info
+		selectCluster.getFeatures().on(['add'], function (e)
+		{	var c = e.element.get('features');
+			if (c.length==1)
+			{	var feature = c[0];
+				var color = ol.style.Chart.colors.classic[feature.get('type')];
+				$(".infos").html(
+					"<i class='maki-"+form[feature.get('type')]+"' style='color:"+color+"'></i>"+
+					"One feature selected...<br/>(type="+form[feature.get('type')]+")"
+				);
+			}
+			else
+			{	$(".infos").text("Cluster ("+c.length+" features)");
+			}
+		})
+		selectCluster.getFeatures().on(['remove'], function (e)
+		{	$(".infos").html("");
+		})
+
+	</script>
+
+</body>
+</html>
