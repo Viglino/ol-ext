@@ -88,7 +88,7 @@
 			for (var i=0; i<nb; ++i)
 			{	features[i] = new ol.Feature(new ol.geom.Point([ext[0]+(ext[2]-ext[0])*Math.random(), ext[1]+(ext[3]-ext[1])*Math.random()]));
 				features[i].set('id',i);
-				features[i].set('type', Math.floor(Math.random()*3))
+				features[i].set('type', Math.floor(Math.random()*4))
 			}
 			clusterSource.getSource().clear();
 			clusterSource.getSource().addFeatures(features);
@@ -103,7 +103,7 @@
 			if (size===1) return featureStyle(feature);
 			// ClusterStyle
 			else {
-				var data = [0,0,0];
+				var data = [0,0,0,0];
 				for (var i=0, f; f=features[i]; i++) data[f.get('type')]++;
 				var style = styleCache[data.join(',')];
 				if (!style)
