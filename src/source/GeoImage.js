@@ -45,15 +45,15 @@ var ol_source_GeoImage = function(opt_options)
 	this.mask = opt_options.imageMask;
 
 	// Load Image
-	this.image = (opt_options.image ? opt_options.image : new Image );
-	this.image.crossOrigin = opt_options.crossOrigin; // 'anonymous';
+	this._image = (opt_options.image ? opt_options.image : new Image );
+	this._image.crossOrigin = opt_options.crossOrigin; // 'anonymous';
 	// Show image on load
 	var self = this;
-	this.image.onload = function()
+	this._image.onload = function()
 	{	self.setCrop (self.crop);
 		self.changed();
 	}
-	if (!opt_options.image) this.image.src = opt_options.url;
+	if (!opt_options.image) this._image.src = opt_options.url;
 
 	// Draw image on canvas
 	options.canvasFunction = function(extent, resolution, pixelRatio, size, projection) 
@@ -62,7 +62,7 @@ var ol_source_GeoImage = function(opt_options)
 		canvas.height = size[1];
 		var ctx = canvas.getContext('2d');
 
-		if (!this.imageSize) return canvas;
+		if (!this._imageSize) return canvas;
 		// transform coords to pixel
 		function tr(xy)
 		{	return [(xy[0]-extent[0])/(extent[2]-extent[0]) * size[0],
@@ -83,14 +83,14 @@ var ol_source_GeoImage = function(opt_options)
 		
 		// Draw
 		var pixel = tr(this.center);
-		var dx = (this.image.naturalWidth/2 - this.crop[0]) *this.scale[0] /resolution *pixelRatio;
-		var dy = (this.image.naturalHeight/2 - this.crop[1]) *this.scale[1] /resolution *pixelRatio;
-		var sx = this.imageSize[0]*this.scale[0]/resolution *pixelRatio;
-		var sy = this.imageSize[1]*this.scale[1]/resolution *pixelRatio;
+		var dx = (this._image.naturalWidth/2 - this.crop[0]) *this.scale[0] /resolution *pixelRatio;
+		var dy = (this._image.naturalHeight/2 - this.crop[1]) *this.scale[1] /resolution *pixelRatio;
+		var sx = this._imageSize[0]*this.scale[0]/resolution *pixelRatio;
+		var sy = this._imageSize[1]*this.scale[1]/resolution *pixelRatio;
 
 		ctx.translate(pixel[0],pixel[1]);
 		if (this.rotate) ctx.rotate(this.rotate);
-		ctx.drawImage(this.image, this.crop[0], this.crop[1], this.imageSize[0], this.imageSize[1], -dx, -dy, sx,sy);
+		ctx.drawImage(this._image, this.crop[0], this.crop[1], this._imageSize[0], this._imageSize[1], -dx, -dy, sx,sy);
 		return canvas;
 	}
 
@@ -166,8 +166,8 @@ ol_source_GeoImage.prototype.setRotation = function(angle)
  * Get the image.
  * @api stable
  */
-ol_source_GeoImage.prototype.getImage = function()
-{	return this.image;
+ol_source_GeoImage.prototype.getGeoImage = function()
+{	return this._image;
 };
 
 /**
@@ -206,14 +206,14 @@ ol_source_GeoImage.prototype.getMask = function()
  */
 ol_source_GeoImage.prototype.setCrop = function(crop)
 {	// Image not loaded => get it latter
-	if (!this.image.naturalWidth) 
+	if (!this._image.naturalWidth) 
 	{	this.crop = crop;
 		return;
 	}
 	if (crop) 
 	{	switch (typeof(crop))
 		{	case 'number':
-				crop = [crop,crop,this.image.naturalWidth-crop,this.image.naturalHeight-crop];
+				crop = [crop,crop,this._image.naturalWidth-crop,this._image.naturalHeight-crop];
 				break;
 			case 'object': 
 				if (crop.length != 4) return;
@@ -221,12 +221,12 @@ ol_source_GeoImage.prototype.setCrop = function(crop)
 			default: return;
 		}
 		var crop = ol_extent.boundingExtent([ [crop[0],crop[1]], [crop[2],crop[3]] ]);
-		this.crop = [ Math.max(0,crop[0]), Math.max(0,crop[1]), Math.min(this.image.naturalWidth,crop[2]), Math.min(this.image.naturalHeight,crop[3]) ];
+		this.crop = [ Math.max(0,crop[0]), Math.max(0,crop[1]), Math.min(this._image.naturalWidth,crop[2]), Math.min(this._image.naturalHeight,crop[3]) ];
 	}
-	else this.crop = [0,0, this.image.naturalWidth,this.image.naturalHeight];
+	else this.crop = [0,0, this._image.naturalWidth,this._image.naturalHeight];
 	if (this.crop[2]<=this.crop[0]) this.crop[2] = this.crop[0]+1;
 	if (this.crop[3]<=this.crop[1]) this.crop[3] = this.crop[1]+1;
-	this.imageSize = [ this.crop[2]-this.crop[0], this.crop[3]-this.crop[1] ];
+	this._imageSize = [ this.crop[2]-this.crop[0], this.crop[3]-this.crop[1] ];
 	this.changed();
 };
 
