@@ -14,6 +14,7 @@ import ol_control_SearchJSON from "./SearchJSON";
  * @fires select
  * @param {Object=} Control options.
  *	@param {string} options.className control class name
+ *	@param {boolean | undefined} options.polygon To get output geometry of results (in geojson format), default false.
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
  *	@param {string | undefined} options.placeholder placeholder, default "Search..."
@@ -30,6 +31,7 @@ var ol_control_SearchNominatim = function(options)
     options.url = options.url || "https://nominatim.openstreetmap.org/search";
     ol_control_SearchJSON.call(this, options);
     this.set("copy","<a href='http://www.openstreetmap.org/copyright' target='new'>&copy; OpenStreetMap contributors</a>");
+    this.set("polygon", options.polygon);
 };
 ol.inherits(ol_control_SearchNominatim, ol_control_SearchJSON);
 
@@ -54,6 +56,7 @@ ol_control_SearchNominatim.prototype.requestData = function (s) {
         format: "json", 
         addressdetails: 1, 
         q: s, 
+        polygon_geojson: this.get('polygon') ? 1:0,
         limit: this.get('maxItems')
     };
 };

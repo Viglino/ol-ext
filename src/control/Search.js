@@ -193,8 +193,8 @@ ol_control_Search.prototype.select = function (f)
 * @return {Array|false} an array of search solutions or false if the array is send with the cback argument
 * @api
 */
-ol_control_Search.prototype.autocomplete = function (s, cback)
-{	cback ([]);
+ol_control_Search.prototype.autocomplete = function (s, cback) {
+	cback ([]);
 	return false;
 };
 
@@ -202,24 +202,24 @@ ol_control_Search.prototype.autocomplete = function (s, cback)
 * @param {Array} auto an array of search result
 * @private
 */
-ol_control_Search.prototype.drawList_ = function (auto)
-{	var ul = this.element.querySelector("ul.autocomplete");
+ol_control_Search.prototype.drawList_ = function (auto) {
+	var ul = this.element.querySelector("ul.autocomplete");
 	ul.innerHTML = '';
 	if (!auto) return;
 	var self = this;
 	var max = Math.min (self.get("maxItems"),auto.length);
 	this._list = [];
-	for (var i=0; i<max; i++)
-	{	if (!i || !self.equalFeatures(auto[i], auto[i-1])) {
-		var li = document.createElement("LI");
-		li.setAttribute("data-search", i);
-		this._list.push(auto[i]);
-		li.addEventListener("click", function(e)
-			{	self.select(self._list[e.currentTarget.getAttribute("data-search")]);
-			});
-		li.innerHTML = self.getTitle(auto[i]);
-		ul.appendChild(li);
-	}
+	for (var i=0; i<max; i++) {	
+		if (!i || !self.equalFeatures(auto[i], auto[i-1])) {
+			var li = document.createElement("LI");
+			li.setAttribute("data-search", i);
+			this._list.push(auto[i]);
+			li.addEventListener("click", function(e)
+				{	self.select(self._list[e.currentTarget.getAttribute("data-search")]);
+				});
+			li.innerHTML = self.getTitle(auto[i]);
+			ul.appendChild(li);
+		}
 	}
 	if (this.get("copy")) {
 		var li = document.createElement("LI");

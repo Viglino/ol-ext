@@ -75,3 +75,19 @@
 	color: #fff;
 	text-decoration: none;
 }
+
+.ol-search.searching:before {
+    content: '';
+    position: absolute;
+    height: 3px;
+    left: 0;
+    top: 1.6em;
+    animation: pulse .5s infinite alternate linear;
+    background: red;
+}
+
+@keyframes pulse {
+	0% { left:0; right: 95%; }
+	50% {	left: 30%; right: 30%; }
+	100% {	left: 95%; right: 0; }
+}
