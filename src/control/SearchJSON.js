@@ -64,10 +64,16 @@ ol_control_SearchJSON.prototype.autocomplete = function (s, cback)
 		if (data.hasOwnProperty(index)) parameters += index + '=' + data[index];
 	}
 
-	var ajax = new XMLHttpRequest();
+	if (this._request) {
+		this._request.abort();
+	}
+	var ajax = this._request = new XMLHttpRequest();
 	ajax.open('GET', url + parameters, true);
+	this.element.classList.add('searching');
 
 	ajax.onload = function () {
+		self.element.classList.remove('searching');
+		self._request = null;
 		if (this.status >= 200 && this.status < 400) {
 			var data = JSON.parse(this.response);
 			cback(self.handleResponse(data));
@@ -77,6 +83,8 @@ ol_control_SearchJSON.prototype.autocomplete = function (s, cback)
 	};
 
 	ajax.onerror = function () {
+		self._request = null;
+		self.element.classList.remove('searching');
 		console.log(url + parameters, arguments);
 	};
 

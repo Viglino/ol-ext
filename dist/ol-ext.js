@@ -186,32 +186,32 @@ ol.control.Search.prototype.select = function (f)
 * @return {Array|false} an array of search solutions or false if the array is send with the cback argument
 * @api
 */
-ol.control.Search.prototype.autocomplete = function (s, cback)
-{	cback ([]);
+ol.control.Search.prototype.autocomplete = function (s, cback) {
+	cback ([]);
 	return false;
 };
 /** Draw the list
 * @param {Array} auto an array of search result
 * @private
 */
-ol.control.Search.prototype.drawList_ = function (auto)
-{	var ul = this.element.querySelector("ul.autocomplete");
+ol.control.Search.prototype.drawList_ = function (auto) {
+	var ul = this.element.querySelector("ul.autocomplete");
 	ul.innerHTML = '';
 	if (!auto) return;
 	var self = this;
 	var max = Math.min (self.get("maxItems"),auto.length);
 	this._list = [];
-	for (var i=0; i<max; i++)
-	{	if (!i || !self.equalFeatures(auto[i], auto[i-1])) {
-		var li = document.createElement("LI");
-		li.setAttribute("data-search", i);
-		this._list.push(auto[i]);
-		li.addEventListener("click", function(e)
-			{	self.select(self._list[e.currentTarget.getAttribute("data-search")]);
-			});
-		li.innerHTML = self.getTitle(auto[i]);
-		ul.appendChild(li);
-	}
+	for (var i=0; i<max; i++) {	
+		if (!i || !self.equalFeatures(auto[i], auto[i-1])) {
+			var li = document.createElement("LI");
+			li.setAttribute("data-search", i);
+			this._list.push(auto[i]);
+			li.addEventListener("click", function(e)
+				{	self.select(self._list[e.currentTarget.getAttribute("data-search")]);
+				});
+			li.innerHTML = self.getTitle(auto[i]);
+			ul.appendChild(li);
+		}
 	}
 	if (this.get("copy")) {
 		var li = document.createElement("LI");
@@ -285,9 +285,15 @@ ol.control.SearchJSON.prototype.autocomplete = function (s, cback)
 		parameters += (parameters) ? '&' : '?';
 		if (data.hasOwnProperty(index)) parameters += index + '=' + data[index];
 	}
-	var ajax = new XMLHttpRequest();
+	if (this._request) {
+		this._request.abort();
+	}
+	var ajax = this._request = new XMLHttpRequest();
 	ajax.open('GET', url + parameters, true);
+	this.element.classList.add('searching');
 	ajax.onload = function () {
+		self.element.classList.remove('searching');
+		self._request = null;
 		if (this.status >= 200 && this.status < 400) {
 			var data = JSON.parse(this.response);
 			cback(self.handleResponse(data));
@@ -296,6 +302,8 @@ ol.control.SearchJSON.prototype.autocomplete = function (s, cback)
 		}
 	};
 	ajax.onerror = function () {
+		self._request = null;
+		self.element.classList.remove('searching');
 		console.log(url + parameters, arguments);
 	};
 	ajax.send();
@@ -4059,6 +4067,7 @@ ol.control.SearchFeature.prototype.autocomplete = function (s, cback)
  * @fires select
  * @param {Object=} Control options.
  *	@param {string} options.className control class name
+ *	@param {boolean | undefined} options.polygon To get output geometry of results (in geojson format), default false.
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
  *	@param {string | undefined} options.placeholder placeholder, default "Search..."
@@ -4075,6 +4084,7 @@ ol.control.SearchNominatim = function(options)
     options.url = options.url || "https://nominatim.openstreetmap.org/search";
     ol.control.SearchJSON.call(this, options);
     this.set("copy","<a href='http://www.openstreetmap.org/copyright' target='new'>&copy; OpenStreetMap contributors</a>");
+    this.set("polygon", options.polygon);
 };
 ol.inherits(ol.control.SearchNominatim, ol.control.SearchJSON);
 /** Returns the text to be displayed in the menu
@@ -4097,6 +4107,7 @@ ol.control.SearchNominatim.prototype.requestData = function (s) {
         format: "json", 
         addressdetails: 1, 
         q: s, 
+        polygon_geojson: this.get('polygon') ? 1:0,
         limit: this.get('maxItems')
     };
 };
