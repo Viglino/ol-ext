@@ -13725,13 +13725,18 @@ CanvasRenderingContext2D.prototype.textPath = function (text, path)
  * Set Shadow style for point vector features.
  *
  * @constructor
- * @param {olx.style.PhotoSymbolOptions=} opt_options Options.
+ * @param {} options Options.
+ *   @param {ol.style.Fill | undefined} options.fill fill style, default rgba(0,0,0,0.5)
+ *   @param {number} options.radius point radius
+ * 	 @param {number} options.blur lur radius, default radius/3
+ * 	 @param {number} options.offsetX x offset, default 0
+ * 	 @param {number} options.offsetY y offset, default 0
  * @extends {ol.style.RegularShape}
  * @implements {ol.structs.IHasChecksum}
  * @api
  */
-ol.style.Shadow = function(opt_options)
-{	options = opt_options || {};
+ol.style.Shadow = function(options)
+{	options = options || {};
 	if (!options.fill) options.fill = new ol.style.Fill({ color: "rgba(0,0,0,0.5)" });
 	ol.style.RegularShape.call (this,{ radius: options.radius, fill: options.fill });
 	this.fill_ = options.fill;
