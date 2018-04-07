@@ -2936,7 +2936,7 @@ ol.control.LayerPopup.prototype.drawList = function(ul, layers)
 		self.switchLayerVisibility(l,layers);
 	};
 	layers.forEach(function(layer)
-	{	if (this.displayInLayerSwitcher(layer)) 
+	{	if (self.displayInLayerSwitcher(layer)) 
 		{	var d = $("<li>").text(layer.get("title") || layer.get("name"))
 					.data ('layer', layer)
 					.click (setVisibility)
@@ -2983,7 +2983,7 @@ ol.control.LayerSwitcherImage.prototype.drawList = function(ul, layers)
 	};
 	ul.css("height","auto");
 	layers.forEach(function(layer)
-	{	if (this.displayInLayerSwitcher(layer))
+	{	if (self.displayInLayerSwitcher(layer))
 		{	var prev = layer.getPreview ? layer.getPreview() : ["none"];
 			var d = $("<li>").addClass("ol-imgcontainer")
 						.data ('layer', layer)
