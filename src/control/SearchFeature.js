@@ -58,10 +58,11 @@ ol_control_SearchFeature.prototype.getSearchString = function (f)
 /** Autocomplete function
 * @param {string} s search string
 * @param {int} max max 
-* @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
+* @param {function} cback a callback function that takes an array to display in the autocomplete field (for asynchronous search)
+* @return {Array<any>|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
 * @api
 */
-ol_control_SearchFeature.prototype.autocomplete = function (s, cback)
+ol_control_SearchFeature.prototype.autocomplete = function (s)
 {	var result = [];
 	// regexp
 	s = s.replace(/^\*/,'');

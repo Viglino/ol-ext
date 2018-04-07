@@ -190,12 +190,13 @@ ol_control_Search.prototype.select = function (f)
 /** Autocomplete function
 * @param {string} s search string
 * @param {function} cback a callback function that takes an array to display in the autocomplete field (for asynchronous search)
-* @return {Array|false} an array of search solutions or false if the array is send with the cback argument
+* @return {Array|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
 * @api
 */
 ol_control_Search.prototype.autocomplete = function (s, cback) {
 	cback ([]);
 	return false;
+	// or just return [];
 };
 
 /** Draw the list
