@@ -389,7 +389,7 @@ ol_control_LayerSwitcher.prototype.dragOrdering_ = function(e)
 				drag.div.css ({ top:pageY - drag.panel.offset().top + drag.panel.scrollTop() +5 });
 				
 				var li;
-				if (e.pageX) li = $(e.target);
+				if (!e.originalEvent.touches) li = $(e.target);
 				else li = $(document.elementFromPoint(e.originalEvent.touches[0].clientX, e.originalEvent.touches[0].clientY));
 				if (li.hasClass("ol-switcherbottomdiv")) 
 				{	drag.self.overflow(-1);
