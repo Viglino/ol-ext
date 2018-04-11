@@ -29,7 +29,7 @@ var ol_HexGrid = function (options)
 	this.layout_ = this.layout[options.layout] || this.layout.pointy;
 
 };
-ol.inherits (ol_HexGrid, ol.Object);
+ol.inherits (ol_HexGrid, ol_Object);
 
 /** Layout
 */
