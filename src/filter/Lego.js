@@ -128,16 +128,18 @@ ol_filter_Lego.prototype.postcompose = function(e)
 		var h = this.internal_.height = canvas.height;
 
 		// No smoothing please
-		ctx2.webkitImageSmoothingEnabled = false;
-		ctx2.mozImageSmoothingEnabled = false;
+		ctx2.webkitImageSmoothingEnabled =
+		ctx2.mozImageSmoothingEnabled =
+		ctx.msImageSmoothingEnabled =
 		ctx2.imageSmoothingEnabled = false;
 /**/
 		var w2 = Math.floor((w-offset[0])/step);
 		var h2 = Math.floor((h-offset[1])/step);
 		ctx2.drawImage (canvas, offset[0], offset[1], w2*step, h2*step, 0, 0, w2, h2);
-		ctx.webkitImageSmoothingEnabled = false;
-		ctx.mozImageSmoothingEnabled = false;
-		ctx.imageSmoothingEnabled = false; //future
+		ctx2.webkitImageSmoothingEnabled =
+		ctx2.mozImageSmoothingEnabled =
+		ctx.msImageSmoothingEnabled =
+		ctx2.imageSmoothingEnabled = false;
 		ctx.clearRect (0, 0, w,h);
 		ctx.drawImage (this.internal_, 0,0, w2,h2, offset[0],offset[1], w2*step, h2*step);
 /* /
