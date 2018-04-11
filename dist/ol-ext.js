@@ -786,7 +786,7 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e)
 				// Ghost div
 				drag.div.css ({ top:pageY - drag.panel.offset().top + drag.panel.scrollTop() +5 });
 				var li;
-				if (e.pageX) li = $(e.target);
+				if (!e.originalEvent.touches) li = $(e.target);
 				else li = $(document.elementFromPoint(e.originalEvent.touches[0].clientX, e.originalEvent.touches[0].clientY));
 				if (li.hasClass("ol-switcherbottomdiv")) 
 				{	drag.self.overflow(-1);
@@ -5938,16 +5938,18 @@ ol.filter.Lego.prototype.postcompose = function(e)
 		var w = this.internal_.width = canvas.width;
 		var h = this.internal_.height = canvas.height;
 		// No smoothing please
-		ctx2.webkitImageSmoothingEnabled = false;
-		ctx2.mozImageSmoothingEnabled = false;
+		ctx2.webkitImageSmoothingEnabled =
+		ctx2.mozImageSmoothingEnabled =
+		ctx.msImageSmoothingEnabled =
 		ctx2.imageSmoothingEnabled = false;
 /**/
 		var w2 = Math.floor((w-offset[0])/step);
 		var h2 = Math.floor((h-offset[1])/step);
 		ctx2.drawImage (canvas, offset[0], offset[1], w2*step, h2*step, 0, 0, w2, h2);
-		ctx.webkitImageSmoothingEnabled = false;
-		ctx.mozImageSmoothingEnabled = false;
-		ctx.imageSmoothingEnabled = false; //future
+		ctx2.webkitImageSmoothingEnabled =
+		ctx2.mozImageSmoothingEnabled =
+		ctx.msImageSmoothingEnabled =
+		ctx2.imageSmoothingEnabled = false;
 		ctx.clearRect (0, 0, w,h);
 		ctx.drawImage (this.internal_, 0,0, w2,h2, offset[0],offset[1], w2*step, h2*step);
 /* /
