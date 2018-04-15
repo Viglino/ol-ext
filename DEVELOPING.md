@@ -2,7 +2,7 @@
 
 ## Setting up development environment
 
-You will obviously start by [forking](https://github.com/openlayers/openlayers/fork) the OpenLayers repository.
+You will obviously start by [forking](https://github.com/viglino/ol-ext/fork) the ol-ext repository.
 
 ### Install the dependencies
 
@@ -23,7 +23,7 @@ To recreate the distribution on `js` file change, use the watch task
 gulp watch
 ````
 
-### Create individual 
+### Create individual files
 
 If you don't want to use the whole distribution in a web page, you can create individual js compatible with your browser.
 Use the `gulp lib` command to create individual files into the `/lib` directory then link tpo this files:
@@ -39,7 +39,7 @@ To ensure the correct translation beetween the modules and the distribution on o
 
 ### Naming convention
 
-To ensure the correct translation beetween the modules and the distribution on ol classes, we use the follownig naming convention.
+To ensure the correct translation beetween the modules and the distribution on ol classes, we use the following naming convention.
 
 In Openlayers classes just replace the `point` by a `underscore`.
 - Thus the `ol.layer.Vector` class must be imported as `ol_layer_Vector`.
