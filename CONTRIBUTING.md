@@ -14,7 +14,7 @@ See [`DEVELOPING.md`](DEVELOPING.md) to learn how to get started developing.
 Clone the repository and [pull requests](https://help.github.com/articles/using-pull-requests). Make sure
 that your pull request follows our pull request guidelines below before submitting it.
 
-This page describes what you need to know to contribute code to OpenLayers as a developer.
+This page describes what you need to know to contribute code to ol-ext as a developer.
 
 ## Contributor License Agreement
 
