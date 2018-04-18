@@ -217,7 +217,7 @@
 		var content = "";
 		content += "<img src='"+feature.get("img")+"'/>";
 		content += feature.get("text");
-		popup.show(feature.getGeometry().getCoordinates(), content); 
+		popup.show(feature.getGeometry().getFirstCoordinate(), content); 
 	})
 	select.getFeatures().on(['remove'], function(e)
 	{	popup.hide(); 
