@@ -130,25 +130,25 @@ ol_filter_Lego.prototype.postcompose = function(e)
 		// No smoothing please
 		ctx2.webkitImageSmoothingEnabled =
 		ctx2.mozImageSmoothingEnabled =
-		ctx.msImageSmoothingEnabled =
+		ctx2.msImageSmoothingEnabled =
 		ctx2.imageSmoothingEnabled = false;
-/**/
 		var w2 = Math.floor((w-offset[0])/step);
 		var h2 = Math.floor((h-offset[1])/step);
 		ctx2.drawImage (canvas, offset[0], offset[1], w2*step, h2*step, 0, 0, w2, h2);
-		ctx2.webkitImageSmoothingEnabled =
-		ctx2.mozImageSmoothingEnabled =
+		//
+		ctx.webkitImageSmoothingEnabled =
+		ctx.mozImageSmoothingEnabled =
 		ctx.msImageSmoothingEnabled =
-		ctx2.imageSmoothingEnabled = false;
+		ctx.imageSmoothingEnabled = false;
 		ctx.clearRect (0, 0, w,h);
 		ctx.drawImage (this.internal_, 0,0, w2,h2, offset[0],offset[1], w2*step, h2*step);
-/* /
+/*
 		for (var x=offset[0]; x<w; x+=step) for (var y=offset[1]; y<h; y+=step)
 		{	if (x>=0 && y<h) ctx2.drawImage (canvas, x, y, 1, 1, x, y, step, step);
 		}
 		ctx.clearRect (0, 0, w,h);
 		ctx.drawImage (c, 0, 0);
-/**/
+*/
 		// Draw brick stud
 		ctx.scale(ratio,ratio);
 		ctx.fillStyle = this.getPattern (offset[0]/ratio, offset[1]/ratio);
