@@ -10,6 +10,7 @@ import ol_layer_Vector from 'ol/layer/vector'
 import ol_layer_VectorTile from 'ol/layer/vectortile'
 import ol_layer_Image from 'ol/layer/image'
 import ol_layer_Heatmap from 'ol/layer/heatmap'
+import ol_extent from 'ol/extent'
 
 /**
  * @classdesc OpenLayers 3 Layer Switcher Control.
@@ -224,7 +225,7 @@ ol_control_LayerSwitcher.prototype.viewChange = function(e)
 			{	var ex0 = l.getExtent();
 				if (ex0)
 				{	var ex = map.getView().calculateExtent(map.getSize());
-					if (!ol.extent.intersects(ex, ex0)) 
+					if (!ol_extent.intersects(ex, ex0)) 
 					{	$(this).addClass("ol-layer-hidden");
 					}
 					else $(this).removeClass("ol-layer-hidden");
@@ -284,7 +285,7 @@ ol_control_LayerSwitcher.prototype.testLayerVisibility = function(layer)
 		{	var ex0 = layer.getExtent();
 			if (ex0)
 			{	var ex = this.map_.getView().calculateExtent(this.map_.getSize());
-				return ol.extent.intersects(ex, ex0);
+				return ol_extent.intersects(ex, ex0);
 			}
 			return true;
 		}
