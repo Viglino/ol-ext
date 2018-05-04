@@ -5,6 +5,8 @@ import ol_Geolocation from 'ol/geolocation'
 import ol_style_Circle from 'ol/style/circle'
 import ol_style_Stroke from 'ol/style/stroke'
 import ol_geom_Point from 'ol/geom/point'
+import ol_geom_LineString from 'ol/geom/linestring'
+import ol_geom_Polygon from 'ol/geom/polygon'
 import ol_style_Style from 'ol/style/style'
 import ol_style_RegularShape from 'ol/style/regularshape'
 import ol_style_Fill from 'ol/style/fill'
@@ -312,7 +314,7 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function(active)
 				break;
 			case "LineString":
 				if (this.path_.length>1)
-				{	geo = new ol.geom.LineString(this.path_, 'XYZM');
+				{	geo = new ol_geom_LineString(this.path_, 'XYZM');
 					geo.simplify (this.get("tolerance"));
 					f.setGeometry(geo);
 				}
@@ -320,7 +322,7 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function(active)
 				break;
 			case "Polygon":
 				if (this.path_.length>2)
-				{	geo = new ol.geom.Polygon([this.path_], 'XYZM');
+				{	geo = new ol_geom_Polygon([this.path_], 'XYZM');
 					geo.simplify (this.get("tolerance"));
 					f.setGeometry(geo);
 				}

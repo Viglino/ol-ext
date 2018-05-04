@@ -142,7 +142,7 @@ ol_control_Graticule.prototype.drawGraticule_ = function (e)
 	xmax = (Math.floor(xmax/step))*step +2*step;
 	ymax = (Math.floor(ymax/step))*step +2*step;
 
-	var extent = ol.proj.get(proj).getExtent();
+	var extent = ol_proj.get(proj).getExtent();
 	if (extent)
 	{	if (xmin < extent[0]) xmin = extent[0];
 		if (ymin < extent[1]) ymin = extent[1];
