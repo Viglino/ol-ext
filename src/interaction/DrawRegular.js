@@ -60,7 +60,7 @@ var ol_interaction_DrawRegular = function(options)
 		new ol_style_Style({
 			stroke: new ol_style_Stroke({ color: white, width: width + 2 })
 		}),
-		new ol.style.Style({
+		new ol_style_Style({
 			image: new ol_style_Circle({
 				radius: width * 2,
 				fill: new ol_style_Fill({ color: blue }),
