@@ -15,6 +15,7 @@ import ol_source_Vector from 'ol/source/vector'
 import ol_geom_LineString from 'ol/geom/linestring'
 import ol_geom_Polygon from 'ol/geom/polygon'
 import ol_geom_Point from 'ol/geom/point'
+import ol_Feature from 'ol/feature'
 
 /** Interaction DrawTouch :
  * @constructor
@@ -127,7 +128,7 @@ ol_interaction_DrawTouch.prototype.finishDrawing = function()
 	var f;
 	switch (this.typeGeom_)
 	{	case "LineString":
-			if (this.geom_.length > 1) f = new ol.Feature(new ol_geom_LineString(this.geom_));
+			if (this.geom_.length > 1) f = new ol_Feature(new ol_geom_LineString(this.geom_));
 			break;
 		case "Polygon":
 			// Close polygon
@@ -136,7 +137,7 @@ ol_interaction_DrawTouch.prototype.finishDrawing = function()
 			}
 			// Valid ?
 			if (this.geom_.length > 3) 
-			{	f = new ol.Feature(new ol.geom.Polygon([ this.geom_ ]));
+			{	f = new ol_Feature(new ol_geom_Polygon([ this.geom_ ]));
 			}
 			break;
 		default: break;

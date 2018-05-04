@@ -11,6 +11,7 @@ import ol_style_Circle from 'ol/style/circle'
 import ol_style_Stroke from 'ol/style/stroke'
 import ol_style_Image from 'ol/style/image'
 import ol_style_Style from 'ol/style/style'
+import ol_geom_Point from 'ol/geom/point'
 
 /** Pulse a point on postcompose
 *	@deprecated use map.animateFeature instead
@@ -69,7 +70,7 @@ ol_Map.prototype.pulse = function(coords, options)
 				var sc = imgs.getScale(); 
 				imgs.setScale(ratio*sc*(1+amplitude*(e-1)));
 				event.vectorContext.setStyle(style[i]);
-				event.vectorContext.drawGeometry(new ol.geom.Point(coords));
+				event.vectorContext.drawGeometry(new ol_geom_Point(coords));
 				imgs.setScale(sc);
 			}
 			context.restore();
