@@ -14,8 +14,9 @@ import ol_layer_Vector from 'ol/layer/vector'
 import ol_source_Vector from 'ol/source/vector'
 import ol_geom_Circle from 'ol/geom/circle'
 import ol_geom_Polygon from 'ol/geom/polygon'
+import ol_geom_LineString from 'ol/geom/linestring'
 import ol_geom_Point from 'ol/geom/point'
-
+import ol_Feature from 'ol/feature'
 /** Interaction rotate
  * @constructor
  * @extends {ol_interaction_Interaction}
@@ -182,12 +183,12 @@ ol_interaction_DrawRegular.prototype.getGeom_ = function ()
 			center = [(coord[0] + center[0])/2, (coord[1] + center[1])/2];
 			var d = [coord[0] - center[0], coord[1] - center[1]];
 			var r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
-			var circle = new ol.geom.Circle(center, r, 'XY');
+			var circle = new ol_geom_Circle(center, r, 'XY');
 			// Optimize points on the circle
 			var centerPx = this.getMap().getPixelFromCoordinate(center);
 			var dmax = Math.max (100, Math.abs(centerPx[0]-this.coordPx_[0]), Math.abs(centerPx[1]-this.coordPx_[1]));
 			dmax = Math.min ( this.maxCircleCoordinates_, Math.round(dmax / 3 ));
-			return ol.geom.Polygon.fromCircle (circle, dmax, 0);
+			return ol_geom_Polygon.fromCircle (circle, dmax, 0);
 		}
 		else {
 			var hasrotation = this.canRotate_ && this.centered_ && this.square_;
@@ -211,7 +212,7 @@ ol_interaction_DrawRegular.prototype.getGeom_ = function ()
 					var centerPx = this.getMap().getPixelFromCoordinate(this.center_);
 					var dmax = Math.max (100, Math.abs(centerPx[0]-this.coordPx_[0]), Math.abs(centerPx[1]-this.coordPx_[1]));
 					dmax = Math.min ( this.maxCircleCoordinates_, Math.round(dmax / (this.centered_ ? 3:5) ));
-					g = ol.geom.Polygon.fromCircle (circle, dmax, 0);
+					g = ol_geom_Polygon.fromCircle (circle, dmax, 0);
 				}
 
 				if (hasrotation) return g;
@@ -259,7 +260,7 @@ ol_interaction_DrawRegular.prototype.drawSketch_ = function(evt)
 			f.setGeometry (g);
 			this.overlayLayer_.getSource().addFeature(f);
 			if (this.coord_ && this.square_ && ((this.canRotate_ && this.centered_ && this.coord_) || (!this.sides_ && !this.centered_)))
-			{	this.overlayLayer_.getSource().addFeature(new ol.Feature(new ol.geom.LineString([this.center_,this.coord_])));
+			{	this.overlayLayer_.getSource().addFeature(new ol_Feature(new ol_geom_LineString([this.center_,this.coord_])));
 			}
 			return f;
 		}
@@ -270,7 +271,7 @@ ol_interaction_DrawRegular.prototype.drawSketch_ = function(evt)
 */
 ol_interaction_DrawRegular.prototype.drawPoint_ = function(pt, noclear)
 {	if (!noclear) this.overlayLayer_.getSource().clear();
-	this.overlayLayer_.getSource().addFeature(new ol.Feature(new ol.geom.Point(pt)));
+	this.overlayLayer_.getSource().addFeature(new ol_Feature(new ol_geom_Point(pt)));
 };
 
 
@@ -382,7 +383,7 @@ ol_interaction_DrawRegular.prototype.start_ = function(evt)
 	{	this.started_ = true;
 		this.center_ = evt.coordinate;
 		this.coord_ = null;
-		var f = this.feature_ = new ol.Feature();
+		var f = this.feature_ = new ol_Feature();
 		this.drawSketch_(evt);
 		this.dispatchEvent({ type:'drawstart', feature: f, pixel: evt.pixel, coordinate: evt.coordinate });
 	}
