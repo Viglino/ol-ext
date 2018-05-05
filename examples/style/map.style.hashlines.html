@@ -1,0 +1,175 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+	<title>ol-ext: hash lines example</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	
+	<meta name="description" content="an OL3 stroke style with a set of cartographic patterns to use in your maps." />
+	<meta name="keywords" content="ol3, vector, style, stroke, fill, pattern, hatch, hatching" />
+
+	<link rel="stylesheet" href="../style.css" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<!-- FontAwesome -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+	<!-- Openlayers -->
+    <link rel="stylesheet" href="https://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/master/build/ol.js"></script>
+	
+	<!-- ol-ext -->
+	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../../index.html">
+		<h1>ol-ext: hash lines example</h1>
+	</a>
+	<div class="info">
+		<p>
+			This example use the <i>ol.geom.offsetCoords()</i> function to draw an offset line with a dash symbol.
+		</p>
+		<p>
+			NB: some problem may occur when offsetting lines with acute convex angles... 
+			You should probably look at JSTS to handle this cases.
+		</p>
+	</div>
+
+	<!-- Map div -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options" style="min-width:300px;">
+		<h2>Options:</h2>
+		<ul>
+			<li>
+				Draw:
+				<label>
+					<input type="radio" name="op" value="drawPoly" /> 
+					Polygon
+				</label>
+				<label>
+					<input type="radio" name="op" checked="checked" value="drawLine" /> 
+					LineString
+				</label>
+				<label>
+					<input type="radio" name="op" value="modify" /> 
+					Modify
+				</label>
+			</li>
+			<li>
+				<hr/>
+				Offset: <input id="offset" type="number" value=5 onchange="vector.changed()" />
+			</li>
+		</ul>
+	</div>
+	
+<script type="text/javascript">
+	
+	// Layers
+	var layer = new ol.layer.Tile({
+		name: "Natural Earth", 
+		minResolution: 306,
+		source: new ol.source.XYZ(
+		{	url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
+			attributions: [new ol.Attribution({ html: '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' })] 
+		})
+	});
+
+	// The map
+	var map = new ol.Map({
+		target: 'map',
+		view: new ol.View
+		({	zoom: 5,
+			center: [166326, 5992663]
+		}),
+		layers: [layer]
+	});
+
+	// Offset geometry
+	function offsetGeometry (feature, size) {
+		switch (feature.getGeometry().getType()) {
+			case 'Polygon':
+				var coords = feature.getGeometry().getCoordinates();
+				var sign = feature.getGeometry().getLinearRing(0).getArea()<0 ? -1:1;
+				coords[0] = ol.coordinate.offsetCoords(coords[0], sign*size);
+				return new ol.geom.Polygon(coords);
+			case 'LineString':
+				var coords = feature.getGeometry().getCoordinates();
+				coords = ol.coordinate.offsetCoords(coords, size);
+				return new ol.geom.LineString(coords);
+			default:
+				return feature.getGeometry();
+		}
+	}
+	
+	// Style function with offset hash
+	function getStyle(feature, res){
+		var offset = parseInt($("#offset").val());
+		return [ 
+			new ol.style.Style({
+				stroke: new ol.style.Stroke({	
+					width: 1.5,
+					color: "#8B4513"
+				})
+			}),
+			new ol.style.Style({
+				stroke: new ol.style.Stroke({	
+					color: "#8B4513",					
+					width: offset>0 ? 2*offset : -2*offset,
+					lineDash:[1.5,10],
+					lineCap:'butt',
+					lineJoin:'bevel'
+				}),
+				// Offset geometry
+				geometry: function (feature) { return offsetGeometry(feature, offset*res); }
+			})
+		];
+	}
+
+	// Nouvelle source de donnee
+	var vector = new ol.layer.Vector({
+		source: new ol.source.Vector({ features: new ol.Collection() }),
+		style: getStyle
+	})
+	map.addLayer(vector);
+	vector.getSource().addFeature(new ol.Feature(new ol.geom.Polygon([[[259274, 6398696], [63595, 5958419], [635956, 5772524], [259274, 6398696]]])));
+
+	// global so we can remove it later
+	var interactions = {
+		select: new ol.interaction.Select (),
+		modify: new ol.interaction.Modify ({ features: vector.getSource().getFeaturesCollection() }),
+		drawLine: new ol.interaction.Draw({
+			type: 'LineString',
+			source: vector.getSource()
+		}),
+		drawPoly: new ol.interaction.Draw({
+			type: 'Polygon',
+			source: vector.getSource()
+		})
+	}
+	for (var i in interactions) map.addInteraction(interactions[i]);
+
+	// Activate interaction
+	setInteraction = function ()
+	{	//interactions.select.getFeatures().clear();
+		var name = $('[name="op"]:checked').val();
+		for (var i in interactions) 
+		{	interactions[i].set("active", (i==name));
+		}
+	}
+	setInteraction();
+	$("input:radio").on("change",setInteraction);
+
+</script>
+
+</body>
+</html>
