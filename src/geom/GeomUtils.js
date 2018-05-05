@@ -153,27 +153,30 @@ ol.coordinate.offsetCoords = function (coords, offset) {
 		p2 = coords[(i+2) % N];
 
 		mi = (p1[1] - p0[1])/(p1[0] - p0[0]);
-        mi1 = (p2[1] - p1[1])/(p2[0] - p1[0]);
-        li = Math.sqrt((p1[0] - p0[0])*(p1[0] - p0[0])+(p1[1] - p0[1])*(p1[1] - p0[1]));
-        li1 = Math.sqrt((p2[0] - p1[0])*(p2[0] - p1[0])+(p2[1] - p1[1])*(p2[1] - p1[1]));
-    	ri = p0[0]+offset*(p1[1] - p0[1])/li;
-        ri1 = p1[0]+offset*(p2[1] - p1[1])/li1;
-        si = p0[1]-offset*(p1[0] - p0[0])/li;
-        si1 = p1[1]-offset*(p2[0] - p1[0])/li1;
-        Xi1 = (mi1*ri1-mi*ri+si-si1)/(mi1-mi);
-		Yi1 = (mi*mi1*(ri1-ri)+mi1*si-mi*si1)/(mi1-mi);
-		
-        // Correction for vertical lines
-		if(p1[0] - coords[i % N][0] == 0) {
-            Xi1 = p1[0] + offset*(p1[1] - coords[i % N][1])/Math.abs(p1[1] - coords[i % N][1]);
-            Yi1 = mi1*Xi1 - mi1*ri1 + si1;
-        }
-        if (p2[0] - p1[0] == 0 ) {
-            Xi1 = p2[0] + offset*(p2[1] - p1[1])/Math.abs(p2[1] - p1[1]);
-            Yi1 = mi*Xi1 - mi*ri + si;
-        }
-        
-		path.push([Xi1, Yi1]);
+		mi1 = (p2[1] - p1[1])/(p2[0] - p1[0]);
+		// Prevent alignements
+		if (Math.abs(mi-mi1) > 1e-10) {
+			li = Math.sqrt((p1[0] - p0[0])*(p1[0] - p0[0])+(p1[1] - p0[1])*(p1[1] - p0[1]));
+			li1 = Math.sqrt((p2[0] - p1[0])*(p2[0] - p1[0])+(p2[1] - p1[1])*(p2[1] - p1[1]));
+			ri = p0[0] + offset*(p1[1] - p0[1])/li;
+			ri1 = p1[0] + offset*(p2[1] - p1[1])/li1;
+			si = p0[1] - offset*(p1[0] - p0[0])/li;
+			si1 = p1[1] - offset*(p2[0] - p1[0])/li1;
+			Xi1 = (mi1*ri1-mi*ri+si-si1) / (mi1-mi);
+			Yi1 = (mi*mi1*(ri1-ri)+mi1*si-mi*si1) / (mi1-mi);
+
+			// Correction for vertical lines
+			if(p1[0] - p0[0] == 0) {
+				Xi1 = p1[0] + offset*(p1[1] - p0[1])/Math.abs(p1[1] - p0[1]);
+				Yi1 = mi1*Xi1 - mi1*ri1 + si1;
+			}
+			if (p2[0] - p1[0] == 0 ) {
+				Xi1 = p2[0] + offset*(p2[1] - p1[1])/Math.abs(p2[1] - p1[1]);
+				Yi1 = mi*Xi1 - mi*ri + si;
+			}
+
+			path.push([Xi1, Yi1]);
+		}
 	}
 	if (!isClosed) {
 		coords.pop();
