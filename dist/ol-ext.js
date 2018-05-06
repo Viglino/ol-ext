@@ -7741,6 +7741,178 @@ ol.interaction.LongTouch = function(options)
 };
 ol.inherits(ol.interaction.LongTouch, ol.interaction.Interaction);
 
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Offset interaction for offseting feature geometry
+ * @constructor
+ * @extends {ol.interaction.Pointer}
+ * @fires  
+ * @param {any} options
+ *	@param {ol.source.Vector|Array{ol.source.Vector}} options.source a list of source to split 
+ *	@param {ol.Collection.<ol.Feature>} options.features collection of feature to split
+ *	- snapDistance {integer} distance (in px) to snap to an object, default 25px
+ *	- cursor {string|undefined} cursor name to display when hovering an objet
+ *	- filter {function|undefined} a filter that takes a feature and return true if it can be clipped, default always split.
+ *	- tolerance {function|undefined} Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split.  Default is 1e-10.
+ */
+ol.interaction.Offset = function(options)
+{	if (!options) options = {};
+	// Extend pointer
+	ol.interaction.Pointer.call(this, {
+    handleDownEvent: this.handleDownEvent_,
+    handleDragEvent: this.handleDragEvent_,
+    handleMoveEvent: this.handleMoveEvent_,
+    handleUpEvent: this.handleUpEvent_
+  });
+    // List of source to split
+	this.sources_ = options.sources ? (options.sources instanceof Array) ? options.sources:[options.sources] : [];
+	if (options.features) {
+    this.sources_.push (new ol.source.Vector({ features: features }));
+  }
+  this.previousCursor_ = false;
+};
+ol.inherits(ol.interaction.Offset, ol.interaction.Pointer);
+/**
+ * Remove the interaction from its current map, if any,  and attach it to a new
+ * map, if any. Pass `null` to just remove the interaction from the current map.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ol.interaction.Offset.prototype.setMap = function(map) {
+	ol.interaction.Pointer.prototype.setMap.call (this, map);
+};
+/** Get Feature at pixel
+ * @param {ol.MapBrowserEvent} evt Map browser event.
+ * @return {any} a feature and the hit point
+ * @private
+ */
+ol.interaction.Offset.prototype.getFeatureAtPixel_ = function(e) {
+  var self = this;
+	return this.getMap().forEachFeatureAtPixel(e.pixel,
+		function(feature, layer) {
+      var current;
+			// feature belong to a layer
+			if (self.layers_) {
+        for (var i=0; i<self.layers_.length; i++) {
+          if (self.layers_[i]===layer) {
+            current = feature;
+            break;
+          }
+				}
+			}
+			// feature in the collection
+			else if (self.features_) {
+        self.features_.forEach (function(f) {
+          if (f===feature) {
+            current = feature 
+          }
+        });
+			}
+			// Others
+			else {
+        current = feature;
+      }
+      // Only poygon or linestring
+      var typeGeom = current.getGeometry().getType();
+      if (current && /Polygon|LineString/.test(typeGeom)) {
+        if (typeGeom==='Polygon' && current.getGeometry().getCoordinates().length>1) return false;
+        // test distance
+        var p = current.getGeometry().getClosestPoint(e.coordinate);
+        var dx = p[0]-e.coordinate[0];
+        var dy = p[1]-e.coordinate[1];
+        var d = Math.sqrt(dx*dx+dy*dy) / e.frameState.viewState.resolution;
+        if (d<5) {
+          return { 
+            feature: current, 
+            hit: p, 
+            coordinates: current.getGeometry().getCoordinates(),
+            geom: current.getGeometry().clone(),
+            geomType: typeGeom
+          }
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+		},  { hitTolerance: 5 });
+};
+/**
+ * @param {ol.MapBrowserEvent} e Map browser event.
+ * @return {boolean} `true` to start the drag sequence.
+ * @private
+ */
+ol.interaction.Offset.prototype.handleDownEvent_ = function(e) {	
+  this.current_ = this.getFeatureAtPixel_(e);
+  return this.current_ ? true : false;
+};
+/**
+ * @param {ol.MapBrowserEvent} e Map browser event.
+ * @private
+ */
+ol.interaction.Offset.prototype.handleDragEvent_ = function(e) {
+  var p = this.current_.geom.getClosestPoint(e.coordinate);
+  var d = ol.coordinate.dist2d(p, e.coordinate);
+  switch (this.current_.geomType) {
+    case  'Polygon': {
+      var seg = ol.coordinate.findSegment(p, this.current_.coordinates[0]).segment;
+      if (seg) {
+        var v1 = [ seg[1][0]-seg[0][0], seg[1][1]-seg[0][1] ];
+        var v2 = [ e.coordinate[0]-p[0], e.coordinate[1]-p[1] ];
+        if (v1[0]*v2[1] - v1[1]*v2[0] > 0) {
+          d = -d;
+        }
+        var offset = [];
+        for (var i=0; i<this.current_.coordinates.length; i++) {
+          offset.push( ol.coordinate.offsetCoords(this.current_.coordinates[i], i==0 ? d : -d) );
+        }
+        this.current_.feature.setGeometry(new ol.geom.Polygon(offset));
+      }
+      break;
+    }
+    case 'LineString': {
+      var seg = ol.coordinate.findSegment(p, this.current_.coordinates).segment;
+      if (seg) {
+        var v1 = [ seg[1][0]-seg[0][0], seg[1][1]-seg[0][1] ];
+        var v2 = [ e.coordinate[0]-p[0], e.coordinate[1]-p[1] ];
+        if (v1[0]*v2[1] - v1[1]*v2[0] > 0) {
+          d = -d;
+        }
+        var offset = ol.coordinate.offsetCoords(this.current_.coordinates, d);
+        this.current_.feature.setGeometry(new ol.geom.LineString(offset));
+      }
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+};
+/**
+ * @param {ol.MapBrowserEvent} e Map browser event.
+ * @private
+ */
+ol.interaction.Offset.prototype.handleUpEvent_ = function(e) {
+  this.current_ = false;
+};
+/**
+ * @param {ol.MapBrowserEvent} e Event.
+ */
+ol.interaction.Offset.prototype.handleMoveEvent_ = function(e) {	
+  var f = this.getFeatureAtPixel_(e);
+  if (f) {
+    if (this.previousCursor_ === false) {
+      this.previousCursor_ = e.map.getTargetElement().style.cursor;
+    }
+    e.map.getTargetElement().style.cursor = 'pointer';
+  } else {
+    e.map.getTargetElement().style.cursor = this.previousCursor_;
+    this.previousCursor_ = false;
+  }
+};
+
 /*	
 	Water ripple effect.
 	Original code (Java) by Neil Wallis 
@@ -11596,7 +11768,9 @@ ol.coordinate.offsetCoords = function (coords, offset) {
 			path.push([Xi1, Yi1]);
 		}
 	}
-	if (!isClosed) {
+	if (isClosed) {
+		path.push(path[0]);
+	} else {
 		coords.pop();
 		p0 = coords[coords.length-1];
 		p1 = coords[coords.length-2];
@@ -11607,6 +11781,29 @@ ol.coordinate.offsetCoords = function (coords, offset) {
 		path.push(p2);
 	}
 	return path;
+}
+/** Find the segment a point belongs to
+ * @param {ol.coordinate} pt
+ * @param {Array<ol.coordinate>} coords
+ * @return {} the index (-1 if not found) and the segment 
+ */
+ol.coordinate.findSegment = function (pt, coords) {
+	for (var i=0; i<coords.length-1; i++) {
+		var p0 = coords[i];
+		var p1 = coords[i+1];
+		if (ol.coordinate.equal(pt, p0) || ol.coordinate.equal(pt, p1)) {
+			return { index:1, segment: [p0,p1] };
+		} else {
+			var d0 = ol.coordinate.dist2d(p0,p1);
+			var v0 = [ (p1[0] - p0[0]) / d0, (p1[1] - p0[1]) / d0 ];
+			var d1 = ol.coordinate.dist2d(p0,pt);
+			var v1 = [ (pt[0] - p0[0]) / d1, (pt[1] - p0[1]) / d1 ];
+			if (Math.abs(v0[0]*v1[1] - v0[1]*v1[0]) < 1e-10) {
+				return { index:1, segment: [p0,p1] };
+			}
+		}
+	}
+	return { index: -1 };
 }
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)

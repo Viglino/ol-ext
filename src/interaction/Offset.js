@@ -1,0 +1,200 @@
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+
+import ol from 'ol'
+import ol_interaction_Pointer from 'ol/interaction/pointer'
+import ol_style_Style from 'ol/style/style'
+import ol_style_Stroke from 'ol/style/stroke'
+import ol_source_Vector from 'ol/source/vector'
+import ol_style_Fill from 'ol/style/fill'
+import ol_style_Circle from 'ol/style/circle'
+import ol_layer_Vector from 'ol/layer/vector'
+import ol_coordinate from 'ol/coordinate'
+import ol_geom_Point from 'ol/geom/point'
+import ol_Feature from 'ol/feature'
+import ol_geom_LineString from 'ol/geom/linestring'
+
+/** Offset interaction for offseting feature geometry
+ * @constructor
+ * @extends {ol_interaction_Pointer}
+ * @fires  
+ * @param {any} options
+ *	@param {ol.source.Vector|Array{ol.source.Vector}} options.source a list of source to split 
+ *	@param {ol.Collection.<ol.Feature>} options.features collection of feature to split
+ *	- snapDistance {integer} distance (in px) to snap to an object, default 25px
+ *	- cursor {string|undefined} cursor name to display when hovering an objet
+ *	- filter {function|undefined} a filter that takes a feature and return true if it can be clipped, default always split.
+ *	- tolerance {function|undefined} Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split.  Default is 1e-10.
+ */
+var ol_interaction_Offset = function(options)
+{	if (!options) options = {};
+
+	// Extend pointer
+	ol_interaction_Pointer.call(this, {
+    handleDownEvent: this.handleDownEvent_,
+    handleDragEvent: this.handleDragEvent_,
+    handleMoveEvent: this.handleMoveEvent_,
+    handleUpEvent: this.handleUpEvent_
+  });
+    
+    // List of source to split
+	this.sources_ = options.sources ? (options.sources instanceof Array) ? options.sources:[options.sources] : [];
+
+	if (options.features) {
+    this.sources_.push (new ol_source_Vector({ features: features }));
+  }
+  this.previousCursor_ = false;
+
+};
+ol.inherits(ol_interaction_Offset, ol_interaction_Pointer);
+
+/**
+ * Remove the interaction from its current map, if any,  and attach it to a new
+ * map, if any. Pass `null` to just remove the interaction from the current map.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ol_interaction_Offset.prototype.setMap = function(map) {
+	ol_interaction_Pointer.prototype.setMap.call (this, map);
+};
+
+/** Get Feature at pixel
+ * @param {ol.MapBrowserEvent} evt Map browser event.
+ * @return {any} a feature and the hit point
+ * @private
+ */
+ol_interaction_Offset.prototype.getFeatureAtPixel_ = function(e) {
+  var self = this;
+	return this.getMap().forEachFeatureAtPixel(e.pixel,
+		function(feature, layer) {
+      var current;
+			// feature belong to a layer
+			if (self.layers_) {
+        for (var i=0; i<self.layers_.length; i++) {
+          if (self.layers_[i]===layer) {
+            current = feature;
+            break;
+          }
+				}
+			}
+			// feature in the collection
+			else if (self.features_) {
+        self.features_.forEach (function(f) {
+          if (f===feature) {
+            current = feature 
+          }
+        });
+			}
+			// Others
+			else {
+        current = feature;
+      }
+
+      // Only poygon or linestring
+      var typeGeom = current.getGeometry().getType();
+      if (current && /Polygon|LineString/.test(typeGeom)) {
+        if (typeGeom==='Polygon' && current.getGeometry().getCoordinates().length>1) return false;
+        // test distance
+        var p = current.getGeometry().getClosestPoint(e.coordinate);
+        var dx = p[0]-e.coordinate[0];
+        var dy = p[1]-e.coordinate[1];
+        var d = Math.sqrt(dx*dx+dy*dy) / e.frameState.viewState.resolution;
+      
+        if (d<5) {
+          return { 
+            feature: current, 
+            hit: p, 
+            coordinates: current.getGeometry().getCoordinates(),
+            geom: current.getGeometry().clone(),
+            geomType: typeGeom
+          }
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+		},  { hitTolerance: 5 });
+};
+
+/**
+ * @param {ol.MapBrowserEvent} e Map browser event.
+ * @return {boolean} `true` to start the drag sequence.
+ * @private
+ */
+ol_interaction_Offset.prototype.handleDownEvent_ = function(e) {	
+  this.current_ = this.getFeatureAtPixel_(e);
+  return this.current_ ? true : false;
+};
+
+/**
+ * @param {ol.MapBrowserEvent} e Map browser event.
+ * @private
+ */
+ol_interaction_Offset.prototype.handleDragEvent_ = function(e) {
+  var p = this.current_.geom.getClosestPoint(e.coordinate);
+  var d = ol_coordinate.dist2d(p, e.coordinate);
+  switch (this.current_.geomType) {
+    case  'Polygon': {
+      var seg = ol_coordinate.findSegment(p, this.current_.coordinates[0]).segment;
+      if (seg) {
+        var v1 = [ seg[1][0]-seg[0][0], seg[1][1]-seg[0][1] ];
+        var v2 = [ e.coordinate[0]-p[0], e.coordinate[1]-p[1] ];
+        if (v1[0]*v2[1] - v1[1]*v2[0] > 0) {
+          d = -d;
+        }
+
+        var offset = [];
+        for (var i=0; i<this.current_.coordinates.length; i++) {
+          offset.push( ol_coordinate.offsetCoords(this.current_.coordinates[i], i==0 ? d : -d) );
+        }
+        this.current_.feature.setGeometry(new ol.geom.Polygon(offset));
+      }
+      break;
+    }
+    case 'LineString': {
+      var seg = ol_coordinate.findSegment(p, this.current_.coordinates).segment;
+      if (seg) {
+        var v1 = [ seg[1][0]-seg[0][0], seg[1][1]-seg[0][1] ];
+        var v2 = [ e.coordinate[0]-p[0], e.coordinate[1]-p[1] ];
+        if (v1[0]*v2[1] - v1[1]*v2[0] > 0) {
+          d = -d;
+        }
+        var offset = ol_coordinate.offsetCoords(this.current_.coordinates, d);
+        this.current_.feature.setGeometry(new ol.geom.LineString(offset));
+      }
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+};
+
+/**
+ * @param {ol.MapBrowserEvent} e Map browser event.
+ * @private
+ */
+ol_interaction_Offset.prototype.handleUpEvent_ = function(e) {
+  this.current_ = false;
+};
+
+/**
+ * @param {ol.MapBrowserEvent} e Event.
+ */
+ol_interaction_Offset.prototype.handleMoveEvent_ = function(e) {	
+  var f = this.getFeatureAtPixel_(e);
+  if (f) {
+    if (this.previousCursor_ === false) {
+      this.previousCursor_ = e.map.getTargetElement().style.cursor;
+    }
+    e.map.getTargetElement().style.cursor = 'pointer';
+  } else {
+    e.map.getTargetElement().style.cursor = this.previousCursor_;
+    this.previousCursor_ = false;
+  }
+};
+
+export default ol_interaction_Offset
