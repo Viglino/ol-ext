@@ -128,7 +128,7 @@ ol_geom_LineString.prototype.splitAt = function(pt, tol)
  * @see http://stackoverflow.com/a/11970006/796832
  * @see https://drive.google.com/viewerng/viewer?a=v&pid=sites&srcid=ZGVmYXVsdGRvbWFpbnxqa2dhZGdldHN0b3JlfGd4OjQ4MzI5M2Y0MjNmNzI2MjY
  */
-ol.coordinate.offsetCoords = function (coords, offset) {
+ol_coordinate.offsetCoords = function (coords, offset) {
 	var path = [];
 	var N = coords.length-1;
 	var max = N;
@@ -178,7 +178,9 @@ ol.coordinate.offsetCoords = function (coords, offset) {
 			path.push([Xi1, Yi1]);
 		}
 	}
-	if (!isClosed) {
+	if (isClosed) {
+		path.push(path[0]);
+	} else {
 		coords.pop();
 		p0 = coords[coords.length-1];
 		p1 = coords[coords.length-2];
@@ -187,7 +189,30 @@ ol.coordinate.offsetCoords = function (coords, offset) {
 			p0[1] + (p1[0] - p0[0]) / ol_coordinate.dist2d(p0,p1) *offset
 		];
 		path.push(p2);
-
 	}
 	return path;
+}
+
+/** Find the segment a point belongs to
+ * @param {ol.coordinate} pt
+ * @param {Array<ol.coordinate>} coords
+ * @return {} the index (-1 if not found) and the segment 
+ */
+ol_coordinate.findSegment = function (pt, coords) {
+	for (var i=0; i<coords.length-1; i++) {
+		var p0 = coords[i];
+		var p1 = coords[i+1];
+		if (ol_coordinate.equal(pt, p0) || ol_coordinate.equal(pt, p1)) {
+			return { index:1, segment: [p0,p1] };
+		} else {
+			var d0 = ol_coordinate.dist2d(p0,p1);
+			var v0 = [ (p1[0] - p0[0]) / d0, (p1[1] - p0[1]) / d0 ];
+			var d1 = ol_coordinate.dist2d(p0,pt);
+			var v1 = [ (pt[0] - p0[0]) / d1, (pt[1] - p0[1]) / d1 ];
+			if (Math.abs(v0[0]*v1[1] - v0[1]*v1[0]) < 1e-10) {
+				return { index:1, segment: [p0,p1] };
+			}
+		}
+	}
+	return { index: -1 };
 }
