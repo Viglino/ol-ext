@@ -16,7 +16,7 @@
         "useLongnameInNav": true
       },
       "logoFile": "https://openlayers.org/en/latest/examples/resources/logo-70x70.png",
-      "systemName": "ol3-ext",
+      "systemName": "ol-ext",
       "path": "ink-docstrap",
       "theme": "cerulean",
       "navType": "vertical",

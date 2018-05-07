@@ -1,10 +1,10 @@
-# ![Font style](https://openlayers.org/assets/theme/img/logo70.png) ol3-ext
+# ![Font style](https://openlayers.org/assets/theme/img/logo70.png) ol-ext
 *Cool extensions for [OpenLayers](https://github.com/openlayers/openlayers) (ol/ol3/ol4)*.
 
-[ol3-ext](https://github.com/Viglino/ol3-ext) is a set of extensions, controls, interactions to use with Openlayers.    
+[ol-ext](https://github.com/Viglino/ol-ext) is a set of extensions, controls, interactions to use with Openlayers.    
 
-### Check out [online examples](http://viglino.github.io/ol3-ext/).
-The [example page](http://viglino.github.io/ol3-ext/) is the best way to have a quick look at all the library.
+### Check out [online examples](http://viglino.github.io/ol-ext/).
+The [example page](http://viglino.github.io/ol-ext/) is the best way to have a quick look at all the library.
 
 ## ol extension
 * [all extensions](./classes.list.html): list of all classes
@@ -19,7 +19,7 @@ The [example page](http://viglino.github.io/ol3-ext/) is the best way to have a 
 
 ### Bugs
 
-Please use the [GitHub issue tracker](https://github.com/Viglino/ol3-ext/issues) for all bugs and feature requests. Before creating a new issue, do a quick search to see if the problem has been reported already.
+Please use the [GitHub issue tracker](https://github.com/Viglino/ol-ext/issues) for all bugs and feature requests. Before creating a new issue, do a quick search to see if the problem has been reported already.
 
 ### Building the documenctation:
 The documentation use [gulp-jsdoc3](https://www.npmjs.com/package/gulp-jsdoc3) to create the doc.
@@ -27,14 +27,14 @@ The documentation use [gulp-jsdoc3](https://www.npmjs.com/package/gulp-jsdoc3) t
 ````
 npm install gulp-jsdoc3
 ````
-2. then run the gulp command to create the doc in the [doc/doc-pages](http://viglino.github.io/ol3-ext/doc/doc-pages/) directory:
+2. then run the gulp command to create the doc in the [doc/doc-pages](http://viglino.github.io/ol-ext/doc/doc-pages/) directory:
 ````
 gulp doc
 ````
 
 ## Licence
 
-OL3-ext is licenced under the French Opensource **BSD** compatible CeCILL-B FREE SOFTWARE LICENSE.  
+ol-ext is licenced under the French Opensource **BSD** compatible CeCILL-B FREE SOFTWARE LICENSE.  
 (c) 2016-2017 - Jean-Marc Viglino
 
 [Full text license in English](http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt)    
