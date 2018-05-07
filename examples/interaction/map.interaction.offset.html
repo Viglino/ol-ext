@@ -12,7 +12,7 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 	<meta name="description" content="offset interaction for OL" />
-	<meta name="keywords" content="ol, vector, transform, offset, feature" />
+	<meta name="keywords" content="ol, interaction, vector, transform, offset, feature" />
 
 	<link rel="stylesheet" href="../style.css" />
 
@@ -50,6 +50,12 @@
 
 	<div class="options" >
 		<h2>Options:</h2>
+		<i>
+			Drag features to offset there geometry.
+			<br/>
+			Use Ctrl key to duplicate feature.
+		</i>
+		<p>Offset: <span id="offset"></span></p>
 	</div>
 	
 
@@ -79,9 +85,16 @@
 		vector.getSource().addFeature(new ol.Feature(new ol.geom.Point(	[269914, 6248592])));
 
 		var interaction = new ol.interaction.Offset (
-			{	
+			{	source: vector.getSource()
 			});
 		map.addInteraction(interaction);
+
+		interaction.on('offsetting', function(e) {
+			$('#offset').text(e.offset.toFixed(0));
+		});
+		interaction.on('offsetend', function(e) {
+			$('#offset').text("");
+		});
 
 	</script>
 

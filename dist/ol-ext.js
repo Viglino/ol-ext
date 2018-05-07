@@ -7750,12 +7750,10 @@ ol.inherits(ol.interaction.LongTouch, ol.interaction.Interaction);
  * @extends {ol.interaction.Pointer}
  * @fires  
  * @param {any} options
- *	@param {ol.source.Vector|Array{ol.source.Vector}} options.source a list of source to split 
- *	@param {ol.Collection.<ol.Feature>} options.features collection of feature to split
- *	- snapDistance {integer} distance (in px) to snap to an object, default 25px
- *	- cursor {string|undefined} cursor name to display when hovering an objet
- *	- filter {function|undefined} a filter that takes a feature and return true if it can be clipped, default always split.
- *	- tolerance {function|undefined} Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split.  Default is 1e-10.
+ *	@param {ol.layer.Vector | Array<ol.layer.Vector>} options.layers list of feature to transform 
+ *	@param {ol.Collection.<ol.Feature>} options.features collection of feature to transform
+ *	@param {ol.source.Vector | undefined} options.source source to duplicate feature when ctrl key is down
+ *	@param {boolean} options.duplicate force feature to duplicate (source must be set)
  */
 ol.interaction.Offset = function(options)
 {	if (!options) options = {};
@@ -7766,11 +7764,14 @@ ol.interaction.Offset = function(options)
     handleMoveEvent: this.handleMoveEvent_,
     handleUpEvent: this.handleUpEvent_
   });
-    // List of source to split
-	this.sources_ = options.sources ? (options.sources instanceof Array) ? options.sources:[options.sources] : [];
-	if (options.features) {
-    this.sources_.push (new ol.source.Vector({ features: features }));
-  }
+	// Collection of feature to transform
+	this.features_ = options.features;
+	// List of layers to transform
+  this.layers_ = options.layers ? (options.layers instanceof Array) ? options.layers:[options.layers] : null;
+  // duplicate
+  this.set('duplicate', options.duplicate);
+  this.source_ = options.source;
+  // init
   this.previousCursor_ = false;
 };
 ol.inherits(ol.interaction.Offset, ol.interaction.Pointer);
@@ -7846,7 +7847,16 @@ ol.interaction.Offset.prototype.getFeatureAtPixel_ = function(e) {
  */
 ol.interaction.Offset.prototype.handleDownEvent_ = function(e) {	
   this.current_ = this.getFeatureAtPixel_(e);
-  return this.current_ ? true : false;
+  if (this.source_ && (this.get('duplicate') ||e.originalEvent.ctrlKey)) {
+    this.current_.feature = this.current_.feature.clone();
+    this.source_.addFeature(this.current_.feature);
+  }
+	if (this.current_) {
+    this.dispatchEvent({ type:'offsetstart', feature: this.current_.feature, offset: 0 });
+    return true;
+  } else  {
+    return false;
+  }
 };
 /**
  * @param {ol.MapBrowserEvent} e Map browser event.
@@ -7889,12 +7899,14 @@ ol.interaction.Offset.prototype.handleDragEvent_ = function(e) {
       break;
     }
   }
+  this.dispatchEvent({ type:'offsetting', feature: this.current_.feature, offset: d, segment: [p, e.coordinate], coordinate: e.coordinate });  
 };
 /**
  * @param {ol.MapBrowserEvent} e Map browser event.
  * @private
  */
 ol.interaction.Offset.prototype.handleUpEvent_ = function(e) {
+  this.dispatchEvent({ type:'offsetend', feature: this.current_.feature, coordinate: e.coordinate });  
   this.current_ = false;
 };
 /**
