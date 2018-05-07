@@ -19,7 +19,9 @@ import ol_geom_LineString from 'ol/geom/linestring'
 /** Offset interaction for offseting feature geometry
  * @constructor
  * @extends {ol_interaction_Pointer}
- * @fires  
+ * @fires offsetstart
+ * @fires offsetting
+ * @fires offsetend
  * @param {any} options
  *	@param {ol.layer.Vector | Array<ol.layer.Vector>} options.layers list of feature to transform 
  *	@param {ol.Collection.<ol.Feature>} options.features collection of feature to transform
@@ -194,6 +196,7 @@ ol_interaction_Offset.prototype.handleUpEvent_ = function(e) {
 
 /**
  * @param {ol.MapBrowserEvent} e Event.
+ * @private
  */
 ol_interaction_Offset.prototype.handleMoveEvent_ = function(e) {	
   var f = this.getFeatureAtPixel_(e);

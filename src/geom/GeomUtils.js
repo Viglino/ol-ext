@@ -122,9 +122,9 @@ ol_geom_LineString.prototype.splitAt = function(pt, tol)
 }
 
 /** Offset a polyline 
- * @param {Array<ol.coordinate} coords
+ * @param {Array<ol.coordinate>} coords
  * @param {Number} offset
- * @return {Array<ol.coordinates} resulting coord
+ * @return {Array<ol.coordinates>} resulting coord
  * @see http://stackoverflow.com/a/11970006/796832
  * @see https://drive.google.com/viewerng/viewer?a=v&pid=sites&srcid=ZGVmYXVsdGRvbWFpbnxqa2dhZGdldHN0b3JlfGd4OjQ4MzI5M2Y0MjNmNzI2MjY
  */
