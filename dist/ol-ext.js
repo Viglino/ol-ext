@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v2.0.2
+ * @version v2.0.3
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -10411,6 +10411,103 @@ ol.source.Mapillary.prototype._loaderFn = function(extent, resolution, projectio
     }});
 };
 
+/*	Copyright (c) 2018 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * OSM layer using the Ovepass API
+ * @constructor ol.source.Overpass
+ * @extends {ol.source.Vector}
+ * @param {any} options
+ *  @param {string} options.url service url, default: https://overpass-api.de/api/interpreter
+ *  @param {Array<string>} options.filter an array of tag filters, ie. ["key", "key=value", "key~value", ...]
+ *  @param {boolean} options.node get nodes, default: true
+ *  @param {boolean} options.way get ways, default: true
+ *  @param {boolean} options.rel get relations, default: false
+ *  @param {number} options.maxResolution maximum resolution to load features
+ *  @param {string|ol.Attribution|Array<string>} options.attributions source attribution, default OSM attribution
+ *  @param {ol.loadingstrategy} options.strategy loading strategy, default ol.loadingstrategy.bbox
+ */
+ol.source.Overpass = function(options) {
+	options = options || {};
+	var self = this; 
+	options.loader = this._loaderFn;
+	/** Ovepass API Url */
+	this._url = options.url || 'https://overpass-api.de/api/interpreter';
+	/** Max resolution to load features  */
+	this._maxResolution = options.maxResolution || 100;
+	/** Default attribution */
+	if (!options.attributions) {
+    options.attributions = ol.source.OSM.ATTRIBUTION;
+  }
+	// Bbox strategy : reload at each move
+  if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
+  ol.source.Vector.call (this, options);
+  this._types = {
+    node: options.node!==false,
+    way: options.way!==false,
+    rel: options.rel===true
+  };
+  this._filter = options.filter;
+};
+ol.inherits (ol.source.Overpass, ol.source.Vector);
+/** Loader function used to load features.
+* @private
+*/
+ol.source.Overpass.prototype._loaderFn = function(extent, resolution, projection) {
+  if (resolution > this._maxResolution) return;
+	var self = this;
+  var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
+  bbox = bbox[1] + ',' + bbox[0] + ',' + bbox[3] + ',' + bbox[2];
+  // Overpass QL
+  var query = '[bbox:'+bbox+'][out:xml][timeout:25];';
+  query += '(';
+  // Search attributes
+  for (var t in this._types) {
+    if (this._types[t]) {
+      query += t;
+      for (var n=0, filter; filter = this._filter[n]; n++) {
+        query += '['+filter+']';
+      }
+      query += ';'
+    }
+  }
+  query +=');out;>;out skel qt;'
+  var ajax = new XMLHttpRequest();
+	ajax.open('POST', this._url, true);
+	ajax.onload = function () {
+    var features = new ol.format.OSMXML().readFeatures(this.responseText,{featureProjection: projection});
+    var result = [];
+    // Remove duplicated features
+    for (var i=0, f; f=features[i]; i++) {
+      if (!self.hasFeature(f)) result.push(f);
+    }
+    vectorSource.addFeatures(result);
+	};
+	ajax.onerror = function () {
+		console.log(arguments);
+	};
+  ajax.send('data='+query);
+};
+/**
+ * Search if feature is allready loaded
+ * @param {ol.Feature} feature
+ * @return {boolean} 
+ * @private
+ */
+ol.source.Overpass.prototype.hasFeature = function(feature) {
+	var p = feature.getGeometry().getFirstCoordinate();
+	var id = feature.getId();
+	var existing = this.getFeaturesInExtent([p[0]-0.1, p[1]-0.1, p[0]+0.1, p[1]+0.1]);
+	for (var i=0, f; f=existing[i]; i++) {
+		if (id===f.getId()) {
+      return true;
+    }
+	}
+	return false;
+};
+
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -11371,88 +11468,83 @@ ol.Overlay.Popup.prototype.hide = function ()
 };
 
 /*
-	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	Copyright (c) 2017 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (http://www.cecill.info/).
 	ol.coordinate.convexHull compute a convex hull using Andrew's Monotone Chain Algorithm.
 	@see https://en.wikipedia.org/wiki/Convex_hull_algorithms
 */
-(function(){
-/* Tests if a point is left or right of line (a,b).
+/** Tests if a point is left or right of line (a,b).
 * @param {ol.coordinate} a point on the line
 * @param {ol.coordinate} b point on the line
 * @param {ol.coordinate} 0
 * @return {bool} true if (a,b,o) turns clockwise
 */
-function clockwise (a, b, o) 
-{	return ( (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]) <= 0 )
-}
-/** Compute a convex hull using Andrew's Monotone Chain Algorithm
-* @param {Array<ol.geom.Point>} points an array of 2D points 
-* @return {Array<ol.geom.Point>} the convex hull vertices
-*/
-ol.coordinate.convexHull = function (points)
-{	// Sort by increasing x and then y coordinate
-	points.sort(function(a, b) 
-	{	return a[0] == b[0] ? a[1] - b[1] : a[0] - b[0];
-	});
-    // Compute the lower hull 
-	var lower = [];
-	for (var i = 0; i < points.length; i++) 
-	{	while (lower.length >= 2 && clockwise (lower[lower.length - 2], lower[lower.length - 1], points[i]) ) 
-		{	lower.pop();
-		}
-		lower.push(points[i]);
-	}
-    // Compute the upper hull 
-	var upper = [];
-	for (var i = points.length - 1; i >= 0; i--) 
-	{	while (upper.length >= 2 && clockwise (upper[upper.length - 2], upper[upper.length - 1], points[i]) ) 
-		{	upper.pop();
-		}
-		upper.push(points[i]);
-	}
-	upper.pop();
-	lower.pop();
-	return lower.concat(upper);
-}
-/* Get coordinates of a geometry */
-function getCoordinates(geom)
-{	var h = [];
-	switch (geom.getType())
-	{	case "Point":
-			h.push(geom.getCoordinates());
-			break;
-		case "LineString":
-		case "LinearRing":
-		case "MultiPoint":
-			 h = geom.getCoordinates();
-			break;
-		case "MultiLineString":
-			var p = geom.getLineStrings();
-			for (var i=0; i<p.length; i++) h.concat(getCoordinates(p[i]));
-			break;
-		case "Polygon":
-			h = getCoordinates(geom.getLinearRing(0));
-			break;
-		case "MultiPolygon":
-			var p = geom.getPolygons();
-			for (var i=0; i<p.length; i++) h.concat(getCoordinates(p[i]));
-			break;
-		case "GeometryCollection":
-			var p = geom.getGeometries();
-			for (var i=0; i<p.length; i++) h.concat(getCoordinates(p[i]));
-			break;
-		default:break;
-	}
-	return h;
-}
-/** Compute a convex hull on a geometry using Andrew's Monotone Chain Algorithm
-* @return {Array<ol.geom.Point>} the convex hull vertices
-*/
-ol.geom.Geometry.prototype.convexHull = function()
-{	return ol.coordinate.convexHull( getCoordinates(this) );
+ol.coordinate.clockwise = function (a, b, o) {
+  return ((a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]) <= 0);
 };
-})();
+/** Compute a convex hull using Andrew's Monotone Chain Algorithm
+ * @param {Array<ol.geom.Point>} points an array of 2D points
+ * @return {Array<ol.geom.Point>} the convex hull vertices
+ */
+ol.coordinate.convexHull = function (points) {	// Sort by increasing x and then y coordinate
+  points.sort(function(a, b) {
+    return a[0] == b[0] ? a[1] - b[1] : a[0] - b[0];
+  });
+  // Compute the lower hull
+  var lower = [];
+  for (var i = 0; i < points.length; i++) {
+    while (lower.length >= 2 && ol.coordinate.clockwise(lower[lower.length - 2], lower[lower.length - 1], points[i])) {
+      lower.pop();
+    }
+    lower.push(points[i]);
+  }
+  // Compute the upper hull
+  var upper = [];
+  for (var i = points.length - 1; i >= 0; i--) {
+    while (upper.length >= 2 && ol.coordinate.clockwise(upper[upper.length - 2], upper[upper.length - 1], points[i])) {
+      upper.pop();
+    }
+    upper.push(points[i]);
+  }
+  upper.pop();
+  lower.pop();
+  return lower.concat(upper);
+};
+/* Get coordinates of a geometry */
+var getCoordinates = function (geom) {
+  var h = [];
+  switch (geom.getType()) {
+    case "Point":h.push(geom.getCoordinates());
+      break;
+    case "LineString":
+    case "LinearRing":
+    case "MultiPoint":h = geom.getCoordinates();
+      break;
+    case "MultiLineString":
+      var p = geom.getLineStrings();
+      for (var i = 0; i < p.length; i++) h.concat(getCoordinates(p[i]));
+      break;
+    case "Polygon":
+      h = getCoordinates(geom.getLinearRing(0));
+      break;
+    case "MultiPolygon":
+      var p = geom.getPolygons();
+      for (var i = 0; i < p.length; i++) h.concat(getCoordinates(p[i]));
+      break;
+    case "GeometryCollection":
+      var p = geom.getGeometries();
+      for (var i = 0; i < p.length; i++) h.concat(getCoordinates(p[i]));
+      break;
+    default:break;
+  }
+  return h;
+};
+/** Compute a convex hull on a geometry using Andrew's Monotone Chain Algorithm
+ * @return {Array<ol.geom.Point>} the convex hull vertices
+ */
+ol.geom.Geometry.prototype.convexHull = function() {
+  return ol.coordinate.convexHull(getCoordinates(this));
+};
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
