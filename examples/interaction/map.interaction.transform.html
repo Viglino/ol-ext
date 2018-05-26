@@ -74,6 +74,12 @@
 		</li><li>
 			<input id="keepAspectRatio" type="checkbox" onchange="setAspectRatio(this.id);" /><label for="keepAspectRatio"> force keepAspectRatio (default use <i>Shift</i>)</label>
 		</li><li>
+			SetRotateCenter:
+			<button onclick='interaction.setCenter()'>objects</button>
+			<button onclick='interaction.setCenter(map.getView().getCenter())'>view center</button>
+		</li><li>
+			<hr/>
+			Use <i>Shift</i> to add object to tranform
 			<hr/>
 			Use <i>Shift</i> key to preserve proportions when scaling (see keepAspectRatio).
 			<br />
@@ -220,12 +226,14 @@
 		}
 
 		var interaction = new ol.interaction.Transform (
-			{	translateFeature: $("#translateFeature").prop('checked'),
+			{	addCondition: ol.events.condition.shiftKeyOnly,
+				hitTolerance: 2,
+				translateFeature: $("#translateFeature").prop('checked'),
 				scale: $("#scale").prop('checked'),
 				rotate: $("#rotate").prop('checked'),
 				keepAspectRatio: $("#keepAspectRatio").prop('checked') ? ol.events.condition.always : undefined,
 				translate: $("#translate").prop('checked'),
-				stretch: $("#stretch").prop('checked'),
+				stretch: $("#stretch").prop('checked')
 			});
 		map.addInteraction(interaction);
 		// Style handles
