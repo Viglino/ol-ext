@@ -75,8 +75,9 @@
 			<input id="keepAspectRatio" type="checkbox" onchange="setAspectRatio(this.id);" /><label for="keepAspectRatio"> force keepAspectRatio (default use <i>Shift</i>)</label>
 		</li><li>
 			SetRotateCenter:
-			<button onclick='interaction.setCenter()'>objects</button>
-			<button onclick='interaction.setCenter(map.getView().getCenter())'>view center</button>
+			<button onclick='firstPoint=false; interaction.setCenter()'>objects</button>
+			<button onclick='firstPoint=false; interaction.setCenter(map.getView().getCenter())'>view center</button>
+			<button onclick='firstPoint=true;'>first point</button>
 		</li><li>
 			<hr/>
 			Use <i>Shift</i> to add object to tranform
@@ -241,6 +242,15 @@
 		// Events handlers
 		var startangle = 0;
 		var d=[0,0];
+
+		// Handle rotate on first point
+		var firstPoint = false;
+		interaction.on (['select'], function(e) {
+			if (firstPoint && e.feature.length) {
+				interaction.setCenter(e.feature[0].getGeometry().getFirstCoordinate());
+			}
+		});
+
 		interaction.on (['rotatestart','translatestart'], function(e)
 			{	// Rotation
 				startangle = e.feature.get('angle')||0;
