@@ -85,6 +85,7 @@
 		var vector = new ol.layer.Vector(
 		{	name: 'Vecteur',
 			source: new ol.source.Vector({ features: new ol.Collection() }),
+			updateWhileInteracting: true
 		})
 		map.addLayer(vector);
 
