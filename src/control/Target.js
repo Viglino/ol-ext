@@ -7,6 +7,8 @@ import ol from 'ol'
 import ol_control_Control from 'ol/control/control'
 import ol_style_RegularShape from 'ol/style/regularshape'
 import ol_geom_Point from 'ol/geom/point'
+import ol_style_Style from 'ol/style/Style'
+import ol_style_Stroke from 'ol/style/Stroke'
 import ol_Map from 'ol/map'
 
 /** ol_control_Target draw a target at the center of the map.
@@ -19,8 +21,8 @@ var ol_control_Target = function(options)
 {	options = options || {};
 
 	this.style = options.style ||
-		[	new ol.style.Style({ image: new ol_style_RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel:true, stroke: new ol.style.Stroke({ color: "#fff", width:3 }) }) }),
-			new ol.style.Style({ image: new ol_style_RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel:true, stroke: new ol.style.Stroke({ color: "#000", width:1 }) }) })
+		[	new ol_style_Style({ image: new ol_style_RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel:true, stroke: new ol_style_Stroke({ color: "#fff", width:3 }) }) }),
+			new ol_style_Style({ image: new ol_style_RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel:true, stroke: new ol_style_Stroke({ color: "#000", width:1 }) }) })
 		];
 	if (!(this.style instanceof Array)) this.style = [this.style];
 	this.composite = options.composite || '';
@@ -92,7 +94,7 @@ ol_control_Target.prototype.drawTarget_ = function (e)
 		for (var i=0; i<this.style.length; i++)
 		{	var style = this.style[i];
 
-			if (style instanceof ol.style.Style)
+			if (style instanceof ol_style_Style)
 			{	var sc=0;
 				// OL < v4.3 : setImageStyle don't check retina
 				var imgs = ol_Map.prototype.getFeaturesAtPixel ? false : style.getImage();
