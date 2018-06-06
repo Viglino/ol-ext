@@ -7,6 +7,7 @@
 
 import ol_geom_LineString from 'ol/geom/linestring'
 import ol_coordinate from 'ol/coordinate'
+import ol_geom_LineString from 'ol/geom/LineString'
 import ol_extent from 'ol/extent'
 
 /** Distance beetween 2 points
@@ -92,7 +93,7 @@ ol_geom_LineString.prototype.splitAt = function(pt, tol)
 		// Extremity found  
 		if (ol_coordinate.equal(pt,c0[i+1]))
 		{	ci.push(c0[i+1]);
-			c.push(new ol.geom.LineString(ci));
+			c.push(new ol_geom_LineString(ci));
 			ci = [];
 		}
 		// Test alignement
@@ -110,7 +111,7 @@ ol_geom_LineString.prototype.splitAt = function(pt, tol)
 			}
 			if (Math.abs(d1-d2)<tol && 0<=d1 && d1<=1)
 			{	ci.push(pt);
-				c.push (new ol.geom.LineString(ci));
+				c.push (new ol_geom_LineString(ci));
 				ci = [pt];
 			}
 		}
