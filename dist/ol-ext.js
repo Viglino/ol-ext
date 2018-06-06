@@ -4013,7 +4013,7 @@ ol.control.SearchFeature = function(options)
 {	if (!options) options = {};
 	ol.control.Search.call(this, options);
 	if (typeof(options.getSearchString)=="function") this.getSearchString = options.getSearchString;
-	this.set('property', options.property||'name');
+	this.set('property', options.property || 'name');
 	this.source_ = options.source;
 };
 ol.inherits(ol.control.SearchFeature, ol.control.Search);
@@ -4022,17 +4022,31 @@ ol.inherits(ol.control.SearchFeature, ol.control.Search);
 *	@return {string} the text to be displayed in the index
 *	@api
 */
-ol.control.SearchFeature.prototype.getTitle = function (f)
-{	return f.get(this.get('property')||'name');
+ol.control.SearchFeature.prototype.getTitle = function (f) {
+  return f.get(this.get('property')||'name');
 };
 /** Return the string to search in
 *	@param {ol.Feature} f the feature
 *	@return {string} the text to be used as search string
 *	@api
 */
-ol.control.SearchFeature.prototype.getSearchString = function (f)
-{	return this.getTitle(f);
+ol.control.SearchFeature.prototype.getSearchString = function (f) {
+  return this.getTitle(f);
+};
+/** Get the source
+*	@return {ol.source.Vector}
+*	@api
+*/
+ol.control.SearchFeature.prototype.getSource = function () {
+  return this.source_;
 }
+/** Get the source
+*	@param {ol.source.Vector} source
+*	@api
+*/
+ol.control.SearchFeature.prototype.setSource = function (source) {
+  this.source_ =  source;
+};
 /** Autocomplete function
 * @param {string} s search string
 * @param {int} max max 
@@ -4040,18 +4054,20 @@ ol.control.SearchFeature.prototype.getSearchString = function (f)
 * @return {Array<any>|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
 * @api
 */
-ol.control.SearchFeature.prototype.autocomplete = function (s)
-{	var result = [];
-	// regexp
-	s = s.replace(/^\*/,'');
-	var rex = new RegExp(s, 'i');
-	// The source
-	var features = this.source_.getFeatures();
-	var max = this.get('maxItems')
-	for (var i=0, f; f=features[i]; i++)
-	{	if (rex.test(this.getSearchString(f)))
-		{	result.push(f);
-			if ((--max)<=0) break;
+ol.control.SearchFeature.prototype.autocomplete = function (s) {
+	var result = [];
+	if (this.source_) {
+		// regexp
+		s = s.replace(/^\*/,'');
+		var rex = new RegExp(s, 'i');
+		// The source
+		var features = this.source_.getFeatures();
+		var max = this.get('maxItems')
+		for (var i=0, f; f=features[i]; i++) {
+			if (rex.test(this.getSearchString(f))) {
+				result.push(f);
+				if ((--max)<=0) break;
+			}
 		}
 	}
 	return result;
@@ -9393,8 +9409,8 @@ ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
  * @extends {ol.interaction.Pointer}
  * @fires select | rotatestart | rotating | rotateend | translatestart | translating | translateend | scalestart | scaling | scaleend
  * @param {any} options
- *  @param {Array<ol.Layer>} options.layers array of layers to transform, 
- *  @param {ol.Collection<ol.Feature>} options.features collection of feature to transform, 
+ *  @param {Array<ol.Layer>} options.layers array of layers to transform,
+ *  @param {ol.Collection<ol.Feature>} options.features collection of feature to transform,
  *	@param {ol.EventsConditionType|undefined} options.addCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled. default: ol.events.condition.never.
  *	@param {number | undefined} options.hitTolerance Tolerance to select feature in pixel, default 0
  *	@param {bool} options.translateFeature Translate when click on feature
@@ -9406,12 +9422,12 @@ ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
  *	@param {} options.style list of ol.style for handles
  *
  */
-ol.interaction.Transform = function(options) {	
+ol.interaction.Transform = function(options) {
   if (!options) options = {};
 	var self = this;
 	// Create a new overlay layer for the sketch
 	this.handles_ = new ol.Collection();
-	this.overlayLayer_ = new ol.layer.Vector({	
+	this.overlayLayer_ = new ol.layer.Vector({
     source: new ol.source.Vector({
       features: this.handles_,
       useSpatialIndex: false
@@ -9424,7 +9440,7 @@ ol.interaction.Transform = function(options) {
     }
   });
 	// Extend pointer
-	ol.interaction.Pointer.call(this, {	
+	ol.interaction.Pointer.call(this, {
     handleDownEvent: this.handleDownEvent_,
 		handleDragEvent: this.handleDragEvent_,
 		handleMoveEvent: this.handleMoveEvent_,
@@ -9461,18 +9477,19 @@ ol.inherits(ol.interaction.Transform, ol.interaction.Pointer);
 /** Cursors for transform
 */
 ol.interaction.Transform.prototype.Cursors = {
-  'default':	'auto',
-	'select':	'pointer',
-	'translate':'move',
-	'rotate':	'move',
-	'scale':	'ne-resize', 
-	'scale1':	'nw-resize', 
-	'scale2':	'ne-resize', 
-	'scale3':	'nw-resize',
-	'scalev':	'e-resize', 
-	'scaleh1':	'n-resize', 
-	'scalev2':	'e-resize', 
-	'scaleh3':	'n-resize'
+  'default': 'auto',
+  'select': 'pointer',
+  'translate': 'move',
+  'rotate': 'move',
+  'rotate0': 'move',
+  'scale': 'nesw-resize',
+  'scale1': 'nwse-resize',
+  'scale2': 'nesw-resize',
+  'scale3': 'nwse-resize',
+  'scalev': 'ew-resize',
+  'scaleh1': 'ns-resize',
+  'scalev2': 'ew-resize',
+  'scaleh3': 'ns-resize'
 };
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
@@ -9491,7 +9508,7 @@ ol.interaction.Transform.prototype.setMap = function(map) {
 };
 /**
  * Activate/deactivate interaction
- * @param {bool} 
+ * @param {bool}
  * @api stable
  */
 ol.interaction.Transform.prototype.setActive = function(b) {
@@ -9572,8 +9589,8 @@ ol.interaction.Transform.prototype.setStyle = function(style, olstyle) {
 	this.drawSketch_();
 };
 /** Get Feature at pixel
- * @param {ol.Pixel} 
- * @return {ol.feature} 
+ * @param {ol.Pixel}
+ * @return {ol.feature}
  * @private
  */
 ol.interaction.Transform.prototype.getFeatureAtPixel_ = function(pixel) {
@@ -9670,9 +9687,15 @@ ol.interaction.Transform.prototype.drawSketch_ = function(center) {
 * @param {boolean} add true to add the feature to the selection, default false
 */
 ol.interaction.Transform.prototype.select = function(feature, add) {
+	if (!feature) {
+		this.selection_ = [];
+		return;
+	}
+	if (!feature.getGeometry || !feature.getGeometry()) return;
+	// Add to selection	
 	if (add) this.selection_.push(feature);
 	else this.selection_ = [feature];
-	this.ispt_ = this.selection_.length===1 ? (this.selection_[0].getGeometry().getType() == "Point") : false;
+	this.ispt_ = (this.selection_.length===1 ? (this.selection_[0].getGeometry().getType() == "Point") : false);
 	this.drawSketch_();
 	this.dispatchEvent({ type:'select', feature: feature });
 }
@@ -9683,7 +9706,7 @@ ol.interaction.Transform.prototype.select = function(feature, add) {
 ol.interaction.Transform.prototype.handleDownEvent_ = function(evt) {
 	var sel = this.getFeatureAtPixel_(evt.pixel);
 	var feature = sel.feature;
-	if (this.selection_.length 
+	if (this.selection_.length
 		&& this.selection_.indexOf(feature) >=0
 		&& ((this.ispt_ && this.get('translate')) || this.get('translateFeature'))
 	){
@@ -9705,16 +9728,20 @@ ol.interaction.Transform.prototype.handleDownEvent_ = function(evt) {
 		this.extent_ = (ol.geom.Polygon.fromExtent(extent)).getCoordinates()[0];
 		if (this.mode_==='rotate') {
 			this.center_ = this.getCenter() || ol.extent.getCenter(extent);
+			// we are now rotating (cursor down on rotate mode), so apply the grabbing cursor
+			var element = evt.map.getTargetElement();
+			element.style.cursor = this.Cursors.rotate0;
+			this.previousCursor_ = element.style.cursor;
 		} else {
 			this.center_ = ol.extent.getCenter(extent);
 		}
 		this.angle_ = Math.atan2(this.center_[1]-evt.coordinate[1], this.center_[0]-evt.coordinate[0]);
-		this.dispatchEvent({ 
-			type: this.mode_+'start', 
+		this.dispatchEvent({
+			type: this.mode_+'start',
 			feature: this.selection_[0], // backward compatibility
-			features: this.selection_, 
-			pixel: evt.pixel, 
-			coordinate: evt.coordinate 
+			features: this.selection_,
+			pixel: evt.pixel,
+			coordinate: evt.coordinate
 		});
 		return true;
 	}
@@ -9765,13 +9792,13 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
 				}
 			}
 			this.drawSketch_(true);
-			this.dispatchEvent({ 
-				type:'rotating', 
-				feature: this.selection_[0], 
-				features: this.selection_, 
-				angle: a-this.angle_, 
-				pixel: evt.pixel, 
-				coordinate: evt.coordinate 
+			this.dispatchEvent({
+				type:'rotating',
+				feature: this.selection_[0],
+				features: this.selection_,
+				angle: a-this.angle_,
+				pixel: evt.pixel,
+				coordinate: evt.coordinate
 			});
 			break;
 		}
@@ -9786,13 +9813,13 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
 				f.getGeometry().translate(deltaX, deltaY);
 			});
 			this.coordinate_ = evt.coordinate;
-			this.dispatchEvent({ 
-				type:'translating', 
-				feature: this.selection_[0], 
-				features: this.selection_, 
-				delta:[deltaX,deltaY], 
-				pixel: evt.pixel, 
-				coordinate: evt.coordinate 
+			this.dispatchEvent({
+				type:'translating',
+				feature: this.selection_[0],
+				features: this.selection_,
+				delta:[deltaX,deltaY],
+				pixel: evt.pixel,
+				coordinate: evt.coordinate
 			});
 			break;
 		}
@@ -9824,13 +9851,13 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
         f.setGeometry(geometry);
       }
 			this.drawSketch_();
-			this.dispatchEvent({ 
-				type:'scaling', 
-				feature: this.selection_[0], 
-				features: this.selection_, 
-				scale:[scx,scy], 
-				pixel: evt.pixel, 
-				coordinate: evt.coordinate 
+			this.dispatchEvent({
+				type:'scaling',
+				feature: this.selection_[0],
+				features: this.selection_,
+				scale:[scx,scy],
+				pixel: evt.pixel,
+				coordinate: evt.coordinate
 			});
 		}
 		default: break;
@@ -9841,18 +9868,18 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
  */
 ol.interaction.Transform.prototype.handleMoveEvent_ = function(evt) {
 	// console.log("handleMoveEvent");
-	if (!this.mode_) 
+	if (!this.mode_)
 	{	var map = evt.map;
 		var sel = this.getFeatureAtPixel_(evt.pixel);
 		var element = evt.map.getTargetElement();
-		if (sel.feature) 
+		if (sel.feature)
 		{	var c = sel.handle ? this.Cursors[(sel.handle||'default')+(sel.constraint||'')+(sel.option||'')] : this.Cursors.select;
-			if (this.previousCursor_===undefined) 
+			if (this.previousCursor_===undefined)
 			{	this.previousCursor_ = element.style.cursor;
 			}
 			element.style.cursor = c;
-		} 
-		else  
+		}
+		else
 		{	if (this.previousCursor_!==undefined) element.style.cursor = this.previousCursor_;
 			this.previousCursor_ = undefined;
 		}
@@ -9863,13 +9890,19 @@ ol.interaction.Transform.prototype.handleMoveEvent_ = function(evt) {
  * @return {boolean} `false` to stop the drag sequence.
  */
 ol.interaction.Transform.prototype.handleUpEvent_ = function(evt) {
-  //dispatchEvent 
-	this.dispatchEvent({ 
-		type:this.mode_+'end', 
-		feature: this.selection_[0], 
-		features: this.selection_, 
-		oldgeom: this.geoms_[0], 
-		oldgeoms: this.geoms_ 
+  // remove rotate0 cursor on Up event, otherwise it's stuck on grab/grabbing
+  if (this.mode_ === 'rotate') {
+    var element = evt.map.getTargetElement();
+    element.style.cursor = this.Cursors.default;
+    this.previousCursor_ = undefined;
+  }
+  //dispatchEvent
+	this.dispatchEvent({
+		type:this.mode_+'end',
+		feature: this.selection_[0],
+		features: this.selection_,
+		oldgeom: this.geoms_[0],
+		oldgeoms: this.geoms_
 	});
 	this.drawSketch_();
 	this.mode_ = null;
