@@ -13,8 +13,9 @@ import ol_style_Circle from 'ol/style/circle'
 import ol_layer_Vector from 'ol/layer/vector'
 import ol_coordinate from 'ol/coordinate'
 import ol_geom_Point from 'ol/geom/point'
-import ol_Feature from 'ol/feature'
 import ol_geom_LineString from 'ol/geom/linestring'
+import ol_geom_Polygon from 'ol/geom/Polygon'
+import ol_Feature from 'ol/feature'
 
 /** Offset interaction for offseting feature geometry
  * @constructor
@@ -161,7 +162,7 @@ ol_interaction_Offset.prototype.handleDragEvent_ = function(e) {
         for (var i=0; i<this.current_.coordinates.length; i++) {
           offset.push( ol_coordinate.offsetCoords(this.current_.coordinates[i], i==0 ? d : -d) );
         }
-        this.current_.feature.setGeometry(new ol.geom.Polygon(offset));
+        this.current_.feature.setGeometry(new ol_geom_Polygon(offset));
       }
       break;
     }
@@ -174,7 +175,7 @@ ol_interaction_Offset.prototype.handleDragEvent_ = function(e) {
           d = -d;
         }
         var offset = ol_coordinate.offsetCoords(this.current_.coordinates, d);
-        this.current_.feature.setGeometry(new ol.geom.LineString(offset));
+        this.current_.feature.setGeometry(new ol_geom_LineString(offset));
       }
       break;
     }
