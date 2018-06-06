@@ -31,7 +31,7 @@ var ol_control_SearchFeature = function(options)
 	ol_control_Search.call(this, options);
 
 	if (typeof(options.getSearchString)=="function") this.getSearchString = options.getSearchString;
-	this.set('property', options.property||'name');
+	this.set('property', options.property || 'name');
 
 	this.source_ = options.source;
 };
@@ -42,8 +42,8 @@ ol.inherits(ol_control_SearchFeature, ol_control_Search);
 *	@return {string} the text to be displayed in the index
 *	@api
 */
-ol_control_SearchFeature.prototype.getTitle = function (f)
-{	return f.get(this.get('property')||'name');
+ol_control_SearchFeature.prototype.getTitle = function (f) {
+  return f.get(this.get('property')||'name');
 };
 
 /** Return the string to search in
@@ -51,9 +51,25 @@ ol_control_SearchFeature.prototype.getTitle = function (f)
 *	@return {string} the text to be used as search string
 *	@api
 */
-ol_control_SearchFeature.prototype.getSearchString = function (f)
-{	return this.getTitle(f);
+ol_control_SearchFeature.prototype.getSearchString = function (f) {
+  return this.getTitle(f);
+};
+
+/** Get the source
+*	@return {ol.source.Vector}
+*	@api
+*/
+ol_control_SearchFeature.prototype.getSource = function () {
+  return this.source_;
 }
+
+/** Get the source
+*	@param {ol.source.Vector} source
+*	@api
+*/
+ol_control_SearchFeature.prototype.setSource = function (source) {
+  this.source_ =  source;
+};
 
 /** Autocomplete function
 * @param {string} s search string
@@ -62,18 +78,20 @@ ol_control_SearchFeature.prototype.getSearchString = function (f)
 * @return {Array<any>|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
 * @api
 */
-ol_control_SearchFeature.prototype.autocomplete = function (s)
-{	var result = [];
-	// regexp
-	s = s.replace(/^\*/,'');
-	var rex = new RegExp(s, 'i');
-	// The source
-	var features = this.source_.getFeatures();
-	var max = this.get('maxItems')
-	for (var i=0, f; f=features[i]; i++)
-	{	if (rex.test(this.getSearchString(f)))
-		{	result.push(f);
-			if ((--max)<=0) break;
+ol_control_SearchFeature.prototype.autocomplete = function (s) {
+	var result = [];
+	if (this.source_) {
+		// regexp
+		s = s.replace(/^\*/,'');
+		var rex = new RegExp(s, 'i');
+		// The source
+		var features = this.source_.getFeatures();
+		var max = this.get('maxItems')
+		for (var i=0, f; f=features[i]; i++) {
+			if (rex.test(this.getSearchString(f))) {
+				result.push(f);
+				if ((--max)<=0) break;
+			}
 		}
 	}
 	return result;
