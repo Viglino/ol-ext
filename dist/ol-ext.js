@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v2.0.3
+ * @version v2.0.4
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -7761,6 +7761,122 @@ ol.inherits(ol.interaction.LongTouch, ol.interaction.Interaction);
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+/** Modify interaction with a popup to delet a point on touch device
+ * @constructor
+ * @extends {ol.interaction.Modify}
+ * @param {olx.interaction.ModifyOptions} options
+ */
+ol.interaction.ModifyTouch = function(options) {
+  var self = this;
+  if (!options) options = {};
+  this._popup = new ol.Overlay.Popup ({
+    popupClass: options.calssName || 'modifytouch',
+    popupClass: "tooltips", // "default", "tooltips", "warning" "black" "default", "tips", "shadow",
+    positioning: 'bottom-rigth',
+    offsetBox: 5
+  });
+  this._source = options.source;
+  this._features = options.features;
+  // popup content
+  var a = document.createElement('a');
+  a.appendChild(document.createTextNode("delete vertex"));
+  a.onclick = function() {
+    self.removePoint();
+  };
+  this.setPopupContent(a);
+  var pixelTolerance = options.pixelTolerance || 0;
+  var searchDist = pixelTolerance +5;
+  // Check if there is a feature to select
+  options.condition = function(e) {
+		var features = this.getMap().getFeaturesAtPixel(e.pixel,{
+		  hitTolerance: searchDist
+    });
+    var found = false;
+		if (features) {
+      var search = this._features;
+      if (!search) {
+        var p0 = [e.pixel[0] - searchDist, e.pixel[1] - searchDist]
+        var p1 = [e.pixel[0] + searchDist, e.pixel[1] + searchDist]
+        p0 = this.getMap().getCoordinateFromPixel(p0);
+        p1 = this.getMap().getCoordinateFromPixel(p1);
+        var ext = ol.extent.boundingExtent([p0,p1]);
+        search = this._source.getFeaturesInExtent(ext);
+      } 
+      if (search.getArray) search = search.getArray();
+      for (var i=0, f; f=features[i]; i++) {
+        if (search.indexOf(f) >= 0) break;
+      }
+      if (f) {
+        var p0 = e.pixel;
+        var p1 = f.getGeometry().getClosestPoint(e.coordinate);
+        p1 = this.getMap().getPixelFromCoordinate(p1);
+        var dx = p0[0] - p1[0];
+        var dy = p0[1] - p1[1];
+        found = (Math.sqrt(dx*dx+dy*dy) < searchDist);
+      }
+    }
+    // Show popup if any
+    this.showDelete(found ? e : false);
+		return true;
+  };
+  // Hide popup on insert
+	options.insertVertexCondition = function(e) {
+		this.showDelete(false);
+		return true;
+  }
+  ol.interaction.Modify.call(this, options);
+  this.on(['modifystart','modifyend'], function(){
+		this.showDelete({ modifying: true });
+  });
+};
+ol.inherits(ol.interaction.ModifyTouch, ol.interaction.Modify);
+/**
+ * Remove the interaction from its current map, if any,  and attach it to a new
+ * map, if any. Pass `null` to just remove the interaction from the current map.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ol.interaction.ModifyTouch.prototype.setMap = function(map) {	
+  if (this.getMap()) {
+    this.getMap().removeOverlay(this._popup);
+  }
+	ol.interaction.Modify.prototype.setMap.call (this, map);
+  if (this.getMap()) {
+    this.getMap().addOverlay(this._popup);
+  }
+};
+ol.interaction.ModifyTouch.prototype.removePoint = function(map) {	
+  ol.interaction.Modify.prototype.removePoint.call (this);
+  this.showDelete(false);
+}
+/**
+ * Show the delete menu
+ * @param {Event} e
+ * @api stable
+ */
+ol.interaction.ModifyTouch.prototype.showDelete = function(e) {
+  if (e && e.coordinate) this._popup.show(e.coordinate, this._menu);
+  else this._popup.hide();
+};
+/**
+ * Change the popup content
+ * @param {DOMElement} html 
+ */
+ol.interaction.ModifyTouch.prototype.setPopupContent = function(html) {
+  this._menu = html;
+}
+/**
+ * Get the popup content
+ * @return {DOMElement}
+ */
+ol.interaction.ModifyTouch.prototype.getPopupContent = function() {
+  return this._menu;
+}
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
 /** Offset interaction for offseting feature geometry
  * @constructor
  * @extends {ol.interaction.Pointer}
@@ -11400,13 +11516,15 @@ popup.hide();
  *	@param {bool} options.closeBox popup has a close box, default false.
  *	@param {function|undefined} options.onclose: callback function when popup is closed
  *	@param {function|undefined} options.onshow callback function when popup is shown
+ *	@param {Number|Array<number>} options.offsetBox an offset box
  *	@param {ol.OverlayPositioning | string | undefined} options.positionning 
  *		the 'auto' positioning var the popup choose its positioning to stay on the map.
  * @api stable
  */
 ol.Overlay.Popup = function (options)
 {	var self = this;
-	this.offsetBox = options.offsetBox;
+	if (typeof(options.offsetBox)==='number') this.offsetBox = [options.offsetBox,options.offsetBox,options.offsetBox,options.offsetBox];
+	else this.offsetBox = options.offsetBox;
 	// Popup div
 	var d = $("<div>").addClass('ol-overlaycontainer-stopevent');
 	options.element = d.get(0);
@@ -11561,6 +11679,10 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
 			this.setPositioning_(pos[0]+"-"+pos[1]);
 			if (this.offsetBox)
 			{	this.setOffset([this.offsetBox[pos[1]=="left"?2:0], this.offsetBox[pos[0]=="top"?3:1] ]);
+			}
+		} else {
+			if (this.offsetBox){
+				this.setOffset(this.offsetBox);
 			}
 		}
 		// Show

@@ -25,6 +25,7 @@ popup.hide();
  *	@param {bool} options.closeBox popup has a close box, default false.
  *	@param {function|undefined} options.onclose: callback function when popup is closed
  *	@param {function|undefined} options.onshow callback function when popup is shown
+ *	@param {Number|Array<number>} options.offsetBox an offset box
  *	@param {ol.OverlayPositioning | string | undefined} options.positionning 
  *		the 'auto' positioning var the popup choose its positioning to stay on the map.
  * @api stable
@@ -32,8 +33,9 @@ popup.hide();
 var ol_Overlay_Popup = function (options)
 {	var self = this;
 	
-	this.offsetBox = options.offsetBox;
-	
+	if (typeof(options.offsetBox)==='number') this.offsetBox = [options.offsetBox,options.offsetBox,options.offsetBox,options.offsetBox];
+	else this.offsetBox = options.offsetBox;
+
 	// Popup div
 	var d = $("<div>").addClass('ol-overlaycontainer-stopevent');
 	options.element = d.get(0);
@@ -203,6 +205,10 @@ ol_Overlay_Popup.prototype.show = function (coordinate, html)
 			this.setPositioning_(pos[0]+"-"+pos[1]);
 			if (this.offsetBox)
 			{	this.setOffset([this.offsetBox[pos[1]=="left"?2:0], this.offsetBox[pos[0]=="top"?3:1] ]);
+			}
+		} else {
+			if (this.offsetBox){
+				this.setOffset(this.offsetBox);
 			}
 		}
 		// Show
