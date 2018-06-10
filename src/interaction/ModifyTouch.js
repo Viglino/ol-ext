@@ -67,22 +67,25 @@ var ol_interaction_ModifyTouch = function(options) {
       }
     }
     // Show popup if any
-    this.showDelete(found ? e : false);
+    this.showDeleteBt(found ? { type:'show', feature:f, coordinate: e.coordinate } : { type:'hide' });
 
 		return true;
   };
 
   // Hide popup on insert
 	options.insertVertexCondition = function(e) {
-		this.showDelete(false);
+		this.showDeleteBt({ type:'hide' });
 		return true;
   }
 
   ol_interaction_Modify.call(this, options);
   
   this.on(['modifystart','modifyend'], function(){
-		this.showDelete({ modifying: true });
+		this.showDeleteBt({ type:'hide', modifying: true });
   });
+
+  // Use a popup ?
+  this.set('usePopup', options.usePopup !== false);
 };
 ol.inherits(ol_interaction_ModifyTouch, ol_interaction_Modify);
 
@@ -102,19 +105,26 @@ ol_interaction_ModifyTouch.prototype.setMap = function(map) {
   }
 };
 
-ol_interaction_ModifyTouch.prototype.removePoint = function(map) {	
+/**
+ * Remove the current point
+ */
+ol_interaction_ModifyTouch.prototype.removePoint = function() {	
   ol_interaction_Modify.prototype.removePoint.call (this);
-  this.showDelete(false);
+  this.showDeleteBt({ type:'hide' });
 }
 
 /**
- * Show the delete menu
+ * Show the delete button (menu)
  * @param {Event} e
  * @api stable
  */
-ol_interaction_ModifyTouch.prototype.showDelete = function(e) {
-  if (e && e.coordinate) this._popup.show(e.coordinate, this._menu);
-  else this._popup.hide();
+ol_interaction_ModifyTouch.prototype.showDeleteBt = function(e) {
+  if (this.get('usePopup')) {
+    if (e.type==='show') this._popup.show(e.coordinate, this._menu);
+    else this._popup.hide();
+  }
+  e.type += 'popup';
+  this.dispatchEvent(e);
 };
 
 /**

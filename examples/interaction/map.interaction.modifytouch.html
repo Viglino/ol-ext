@@ -38,11 +38,12 @@
 		<h1>ol-ext: Modify interaction for touch device</h1>
 	</a>
 	<div class="info">
-
-		<!-- force font to load -->
-		<i class="fa fa-rotate-left" style="position:absolute; top:-1000px;"></i>
-
-		<b>ol.interaction.ModifyTouch</b> 
+		<b>ol.interaction.ModifyTouch</b> is a modify interaction for touch devices 
+		that display a poppup to delete a point when click on it.
+		<br/>
+		You can customize the popup using the <i>setPopupContent()</i> function.
+		<br/>
+		You can overide the <i>showDeleteBt()</i> function to do have a different behavior tha a popup (display a button on the map).
 	</div>
 
 	<!-- Map div -->
@@ -96,8 +97,29 @@
 			// source: vector.getSource(),
 			features: select.getFeatures()
     });
-    map.addInteraction(modify);
-		
+	map.addInteraction(modify);
+	
+	//
+	var bar = new ol.control.Bar();
+	map.addControl(bar);
+	var removeBt = new ol.control.Button ({
+		html: '<i class="fa fa-trash"></i>',
+		className: "remove",
+		title: "remove point",
+		handleClick: function()	{
+			modify.removePoint();
+		}
+	});
+	bar.addControl(removeBt);
+
+	// Show popup ?
+	modify.on('showpopup', function(e) {
+		console.log(e)
+	});
+	modify.on('hidepopup', function(e) {
+		console.log(e)
+	});
+	
 	</script>
 
 </body>
