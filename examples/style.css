@@ -6,6 +6,9 @@ a, i, b
 {	color: #337ab7;
 	text-decoration: none;
 }
+.ol-control.ol-bar .ol-control button i {
+    color: #fff;
+}
 a:hover
 {	text-decoration: underline;
 }
