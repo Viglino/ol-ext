@@ -1,0 +1,104 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>	
+	<title>ol-ext: Modify interaction for touch device</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="transform interaction for OL3" />
+	<meta name="keywords" content="ol3, vector, transform, rotate, scale, stretch" />
+
+	<link rel="stylesheet" href="../style.css" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<!-- FontAwesome -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+	<!-- Openlayers -->
+    <link rel="stylesheet" href="https://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/master/build/ol.js"></script>
+	
+	<!-- ol-ext -->
+    <link rel="stylesheet" href="../../dist/ol-ext.css" />
+	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../../index.html">
+		<h1>ol-ext: Modify interaction for touch device</h1>
+	</a>
+	<div class="info">
+
+		<!-- force font to load -->
+		<i class="fa fa-rotate-left" style="position:absolute; top:-1000px;"></i>
+
+		<b>ol.interaction.ModifyTouch</b> 
+	</div>
+
+	<!-- Map div -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options" >
+		<h2>Options:</h2>
+	</div>
+
+	<script type="text/javascript">
+		// Layers
+		var layers = [
+			new ol.layer.Tile({
+				name: "Natural Earth", 
+				minResolution: 306,
+        source: new ol.source.XYZ({
+          url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
+					attributions: [new ol.Attribution({ html: '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' })] 
+        })
+			})
+		]
+		// The map
+		var map = new ol.Map ({
+      target: 'map',
+      view: new ol.View ({
+        zoom: 5,
+        center: [261720, 5951081]
+      }),
+      layers: layers
+    });
+
+		// New vector layer
+		var vector = new ol.layer.Vector({
+      name: 'Vecteur',
+			source: new ol.source.Vector(),
+		})
+		map.addLayer(vector);
+		vector.getSource().addFeature(new ol.Feature(new ol.geom.Polygon([[[34243, 6305749], [-288626, 6000000], [-288626, 5757848], [-200000, 5500000], [210354, 5576845], [210354, 6000000], [34243, 6305749]]])));
+		vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[400000, 5664901], [480000, 5600000], [650000, 5718712], [700000, 6000000], [600000, 6200000], [425601, 6183449]])));
+		vector.getSource().addFeature(new ol.Feature(new ol.geom.Point(	[269914, 6248592])));
+
+
+		var select = new ol.interaction.Select({
+			layers: [ vector ],
+			hitTolerance: 5
+		});
+    map.addInteraction(select);
+		
+    // Interaction
+    var modify = new ol.interaction.ModifyTouch({
+			// source: vector.getSource(),
+			features: select.getFeatures()
+    });
+    map.addInteraction(modify);
+		
+	</script>
+
+</body>
+</html>
