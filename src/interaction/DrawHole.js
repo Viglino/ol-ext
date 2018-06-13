@@ -108,7 +108,7 @@ ol_interaction_DrawHole.prototype._startDrawing = function(e)
 {	var map = this.getMap();
 	var layersFilter = this.layers_;
 	this._feature = e.feature;
-	coord = e.feature.getGeometry().getCoordinates()[0][0];
+	var coord = e.feature.getGeometry().getCoordinates()[0][0];
 	// Check object under the pointer
 	var features = map.getFeaturesAtPixel(
 		map.getPixelFromCoordinate(coord),
