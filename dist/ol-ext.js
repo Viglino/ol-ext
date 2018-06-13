@@ -12028,19 +12028,25 @@ ol.coordinate.findSegment = function (pt, coords) {
  * Split a Polygon geom with horizontal lines
  * @param {Array<ol.coordinate>} geom 
  * @param {Number} y the y to split
+ * @param {Number} n contour index
  * @return {Array<Array<ol.coordinate>>}
  */
-ol.coordinate.splitH = function (geom, y) {
+ol.coordinate.splitH = function (geom, y, n) {
   var x, abs;
   var list = [];
   for (var i=0; i<geom.length-1; i++) {
+    // Hole separator?
+    if (!geom[i].length || !geom[i+1].length) continue;
+    // Intersect
     if (geom[i][1]<=y && geom[i+1][1]>y || geom[i][1]>=y && geom[i+1][1]<y) {
       abs = (y-geom[i][1]) / (geom[i+1][1]-geom[i][1]);
       x = abs * (geom[i+1][0]-geom[i][0]) + geom[i][0];
-      list.push ({ index: i, pt: [x,y], abs: abs });
+      list.push ({ contour: n, index: i, pt: [x,y], abs: abs });
     }
   }
+  // Sort x
   list.sort(function(a,b) { return a.pt[0] - b.pt[0] });
+  // Horizontal segement
   var result = [];
   for (var j=0; j<list.length-1; j += 2) {
     result.push([list[j], list[j+1]])
@@ -12081,20 +12087,30 @@ ol.geom.MultiPolygon.prototype.scribbleFill = function (options) {
  */
 ol.geom.Polygon.prototype.scribbleFill = function (options) {
 	var step = options.interval;
-	var angle = options.angle || Math.PI/2;
+  var angle = options.angle || Math.PI/2;
+  // Geometry + rotate
 	var geom = this.clone();
 	geom.rotate(angle, [0,0]);
+  var coords = geom.getCoordinates();
+  // Merge holes
+  var coord = coords[0];
+  for (var i=1; i<coords.length; i++) {
+    // Add a separator
+    coord.push([]);
+    // Add the hole
+    coord = coord.concat(coords[i]);
+  }
+  // Extent 
 	var ext = geom.getExtent();
-	var coord = geom.getCoordinates();
-	// Split with horizontal lines
+	// Split polygon with horizontal lines
   var lines = [];
 	for (var y = (Math.floor(ext[1]/step)+1)*step; y<ext[3]; y += step) {
-		var l = ol.coordinate.splitH(coord[0], y);
-		lines = lines.concat(l);
+    var l = ol.coordinate.splitH(coord, y, i);
+    lines = lines.concat(l);
   }
   if (!lines.length) return null;
   // Order lines on segment index
-  var mod = coord[0].length-1;
+  var mod = coord.length-1;
 	var first = lines[0][0].index;
 	for (var k=0, l; l=lines[k]; k++) {
 		lines[k][0].index = (lines[k][0].index-first+mod) % mod;
