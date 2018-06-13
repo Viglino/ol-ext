@@ -29,6 +29,13 @@
     <link rel="stylesheet" href="../../dist/ol-ext.css" />
 	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
+	<style>
+		.ol-popup.modifytouch a:before {
+			content: "\274C";
+			margin-right:.2em;
+		}
+	</style>
+
 
 </head>
 <body >
@@ -50,7 +57,10 @@
 	<div id="map" style="width:600px; height:400px;"></div>
 
 	<div class="options" >
-		<h2>Options:</h2>
+    <h2>Options:</h2>
+    <label><input id="menu" type="checkbox" onclick="showmenu();" checked="checked" /> 
+      show popup/show menu
+    </label>
 	</div>
 
 	<script type="text/javascript">
@@ -94,33 +104,49 @@
 		
     // Interaction
     var modify = new ol.interaction.ModifyTouch({
-			// source: vector.getSource(),
-			features: select.getFeatures()
+		// source: vector.getSource(),
+		features: select.getFeatures()
     });
 	map.addInteraction(modify);
 	
 	//
 	var bar = new ol.control.Bar();
 	map.addControl(bar);
-	var removeBt = new ol.control.Button ({
-		html: '<i class="fa fa-trash"></i>',
-		className: "remove",
-		title: "remove point",
-		handleClick: function()	{
-			modify.removePoint();
-		}
+	var removeBt = new ol.control.Toggle({
+    html: '<i class="fa fa-trash"></i>',
+    onToggle: function(b) { 
+      // Prevent openning on click
+      removeBt.setActive(false);
+    },
+		bar: new ol.control.Bar({
+			controls: [
+				new ol.control.TextButton({
+					html:"remove&nbsp;point", 
+					handleClick: function(b) { 
+						modify.removePoint();
+					}
+				})
+			]
+		})
 	});
 	bar.addControl(removeBt);
 
-	// Show popup ?
+	// Handle bar
 	modify.on('showpopup', function(e) {
-		console.log(e)
+		//console.log(e)
+		if (!modify.get('usePopup')) removeBt.setActive(true);
 	});
 	modify.on('hidepopup', function(e) {
-		console.log(e)
-	});
+		//console.log(e)
+		removeBt.setActive(false);
+  });
+
+  function showmenu () {
+    modify.set('usePopup', $("#menu").prop('checked'));
+    modify.setActive(true);
+  }
 	
-	</script>
+</script>
 
 </body>
 </html>

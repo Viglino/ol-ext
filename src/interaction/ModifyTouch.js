@@ -9,8 +9,12 @@ import ol_Overlay_Popup from '../overlay/Popup'
 
 /** Modify interaction with a popup to delet a point on touch device
  * @constructor
+ * @fires showpopup
+ * @fires hidepopup
  * @extends {ol.interaction.Modify}
  * @param {olx.interaction.ModifyOptions} options
+ *  @param {String|undefined} options.title title to display, default "remove point"
+ *  @param {Boolean|undefined} options.usePopup use a popup, default true
  */
 var ol_interaction_ModifyTouch = function(options) {
   var self = this;
@@ -18,9 +22,8 @@ var ol_interaction_ModifyTouch = function(options) {
 
   this._popup = new ol_Overlay_Popup ({
     popupClass: options.calssName || 'modifytouch',
-    popupClass: "tooltips", // "default", "tooltips", "warning" "black" "default", "tips", "shadow",
     positioning: 'bottom-rigth',
-    offsetBox: 5
+    offsetBox: 10
   });
 
   this._source = options.source;
@@ -28,7 +31,7 @@ var ol_interaction_ModifyTouch = function(options) {
 
   // popup content
   var a = document.createElement('a');
-  a.appendChild(document.createTextNode("delete vertex"));
+  a.appendChild(document.createTextNode(options.title || "remove point"));
   a.onclick = function() {
     self.removePoint();
   };
@@ -68,6 +71,9 @@ var ol_interaction_ModifyTouch = function(options) {
     }
     // Show popup if any
     this.showDeleteBt(found ? { type:'show', feature:f, coordinate: e.coordinate } : { type:'hide' });
+    // Prevent click on the popup
+    e.preventDefault();
+    e.stopPropagation();
 
 		return true;
   };
@@ -105,10 +111,21 @@ ol_interaction_ModifyTouch.prototype.setMap = function(map) {
   }
 };
 
+/** Activate the interaction and remove popup
+ * @param {Boolean} b
+ */
+ol_interaction_ModifyTouch.prototype.setActive = function(b) {	
+  ol_interaction_Modify.prototype.setActive.call (this, b);
+  this.showDeleteBt({ type:'hide' });
+};
+
 /**
  * Remove the current point
  */
 ol_interaction_ModifyTouch.prototype.removePoint = function() {	
+  // Prevent touch + click on popup 
+  if (new Date() - this._timeout < 200) return;
+  // Remove point
   ol_interaction_Modify.prototype.removePoint.call (this);
   this.showDeleteBt({ type:'hide' });
 }
@@ -119,12 +136,15 @@ ol_interaction_ModifyTouch.prototype.removePoint = function() {
  * @api stable
  */
 ol_interaction_ModifyTouch.prototype.showDeleteBt = function(e) {
-  if (this.get('usePopup')) {
-    if (e.type==='show') this._popup.show(e.coordinate, this._menu);
-    else this._popup.hide();
+  if (this.get('usePopup') && e.type==='show') {
+    this._popup.show(e.coordinate, this._menu);
+  } else {
+    this._popup.hide();
   }
   e.type += 'popup';
   this.dispatchEvent(e);
+  // Date if popup start a timeout to prevent touch + click on the popup
+  this._timeout = new Date();
 };
 
 /**
