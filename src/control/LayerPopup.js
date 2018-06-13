@@ -14,7 +14,7 @@ import ol_control_LayerSwitcher from './LayerSwitcher'
  * @extends {ol_control_LayerSwitcher}
  * @param {Object=} options Control options.
  */
-ol_control_LayerPopup = function(options)
+var ol_control_LayerPopup = function(options)
 {	options = options || {};
 	options.switcherClass="ol-layerswitcher-popup";
 	if (options.mouseover!==false) options.mouseover=true;
