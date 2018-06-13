@@ -6479,7 +6479,7 @@ ol.interaction.DrawHole.prototype._startDrawing = function(e)
 {	var map = this.getMap();
 	var layersFilter = this.layers_;
 	this._feature = e.feature;
-	coord = e.feature.getGeometry().getCoordinates()[0][0];
+	var coord = e.feature.getGeometry().getCoordinates()[0][0];
 	// Check object under the pointer
 	var features = map.getFeaturesAtPixel(
 		map.getPixelFromCoordinate(coord),
@@ -7763,23 +7763,26 @@ ol.inherits(ol.interaction.LongTouch, ol.interaction.Interaction);
 */
 /** Modify interaction with a popup to delet a point on touch device
  * @constructor
+ * @fires showpopup
+ * @fires hidepopup
  * @extends {ol.interaction.Modify}
  * @param {olx.interaction.ModifyOptions} options
+ *  @param {String|undefined} options.title title to display, default "remove point"
+ *  @param {Boolean|undefined} options.usePopup use a popup, default true
  */
 ol.interaction.ModifyTouch = function(options) {
   var self = this;
   if (!options) options = {};
   this._popup = new ol.Overlay.Popup ({
     popupClass: options.calssName || 'modifytouch',
-    popupClass: "tooltips", // "default", "tooltips", "warning" "black" "default", "tips", "shadow",
     positioning: 'bottom-rigth',
-    offsetBox: 5
+    offsetBox: 10
   });
   this._source = options.source;
   this._features = options.features;
   // popup content
   var a = document.createElement('a');
-  a.appendChild(document.createTextNode("delete vertex"));
+  a.appendChild(document.createTextNode(options.title || "remove point"));
   a.onclick = function() {
     self.removePoint();
   };
@@ -7817,6 +7820,9 @@ ol.interaction.ModifyTouch = function(options) {
     }
     // Show popup if any
     this.showDeleteBt(found ? { type:'show', feature:f, coordinate: e.coordinate } : { type:'hide' });
+    // Prevent click on the popup
+    e.preventDefault();
+    e.stopPropagation();
 		return true;
   };
   // Hide popup on insert
@@ -7847,10 +7853,20 @@ ol.interaction.ModifyTouch.prototype.setMap = function(map) {
     this.getMap().addOverlay(this._popup);
   }
 };
+/** Activate the interaction and remove popup
+ * @param {Boolean} b
+ */
+ol.interaction.ModifyTouch.prototype.setActive = function(b) {	
+  ol.interaction.Modify.prototype.setActive.call (this, b);
+  this.showDeleteBt({ type:'hide' });
+};
 /**
  * Remove the current point
  */
 ol.interaction.ModifyTouch.prototype.removePoint = function() {	
+  // Prevent touch + click on popup 
+  if (new Date() - this._timeout < 200) return;
+  // Remove point
   ol.interaction.Modify.prototype.removePoint.call (this);
   this.showDeleteBt({ type:'hide' });
 }
@@ -7860,12 +7876,15 @@ ol.interaction.ModifyTouch.prototype.removePoint = function() {
  * @api stable
  */
 ol.interaction.ModifyTouch.prototype.showDeleteBt = function(e) {
-  if (this.get('usePopup')) {
-    if (e.type==='show') this._popup.show(e.coordinate, this._menu);
-    else this._popup.hide();
+  if (this.get('usePopup') && e.type==='show') {
+    this._popup.show(e.coordinate, this._menu);
+  } else {
+    this._popup.hide();
   }
   e.type += 'popup';
   this.dispatchEvent(e);
+  // Date if popup start a timeout to prevent touch + click on the popup
+  this._timeout = new Date();
 };
 /**
  * Change the popup content
@@ -12171,7 +12190,7 @@ ol.geom.LineString.prototype.calcCSpline_ = function(options)
 			x = c1 * pts[i][0]	+ c2 * pts[i+1][0] + c3 * t1x + c4 * t2x;
 			y = c1 * pts[i][1]	+ c2 * pts[i+1][1] + c3 * t1y + c4 * t2y;
 			//store points in array
-			res.push([x,y]);
+			if (x && y) res.push([x,y]);
 		}
 	}
 	return new ol.geom.LineString(res);

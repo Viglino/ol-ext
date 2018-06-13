@@ -1,21 +1,21 @@
 /** ol.popup */
-.ol-popup 
-{	font-size:0.9em;
+.ol-popup {
+  font-size:0.9em;
 	-webkit-user-select: none;  
 	-moz-user-select: none;    
 	-ms-user-select: none;      
 	user-select: none;
 }
-.ol-popup .content
-{	overflow:hidden;
+.ol-popup .content {
+  overflow:hidden;
 	cursor: default;
 	padding: 0.25em 0.5em;
 }
-.ol-popup.hasclosebox .content 
-{	margin-right: 1.7em;
+.ol-popup.hasclosebox .content {
+  margin-right: 1.7em;
 }
-.ol-popup .content:after
-{	clear: both;
+.ol-popup .content:after {
+  clear: both;
 	content: "";
 	display: block;
 	font-size: 0;
@@ -23,8 +23,8 @@
 }
 
 /** Anchor position */
-.ol-popup .anchor 
-{	display:block;
+.ol-popup .anchor {
+  display:block;
 	width:0px;
 	height:0px;
 	background:red;
@@ -33,12 +33,12 @@
     pointer-events: none;
 }
 .ol-popup .anchor:after,
-.ol-popup .anchor:before
-{	position:absolute;
+.ol-popup .anchor:before {
+  position:absolute;
 }
 .ol-popup-right .anchor:after,
-.ol-popup-right .anchor:before
-{	right:0;
+.ol-popup-right .anchor:before {
+  right:0;
 }
 .ol-popup-top .anchor { top:0; }
 .ol-popup-bottom .anchor { bottom:0; }
@@ -52,16 +52,18 @@
 	top:50%; 
 	margin-top: 0!important;
 }
-.ol-popup-center.ol-popup-middle .anchor { display:none; }
+.ol-popup-center.ol-popup-middle .anchor { 
+  display:none; 
+}
 
 /** Add a shadow to the popup */
-.ol-popup.shadow 
-{	box-shadow: 2px 2px 2px 2px rgba(0,0,0,0.5);
+.ol-popup.shadow {
+  box-shadow: 2px 2px 2px 2px rgba(0,0,0,0.5);
 }
 
 /** Close box */
-.ol-popup .closeBox 
-{	background-color: rgba(0, 60, 136, 0.5);
+.ol-popup .closeBox {
+  background-color: rgba(0, 60, 136, 0.5);
 	color: #fff;
 	border: 0;
 	border-radius: 2px;
@@ -76,16 +78,16 @@
 	position: relative;
 	display:none;
 }
-.ol-popup.hasclosebox .closeBox 
-{	display:block;
+.ol-popup.hasclosebox .closeBox {
+  display:block;
 }
 
-.ol-popup .closeBox:hover
-{	background-color: rgba(0, 60, 136, 0.7);
+.ol-popup .closeBox:hover {
+  background-color: rgba(0, 60, 136, 0.7);
 }
 /* the X */
-.ol-popup .closeBox:after
-{	content: "\00d7";
+.ol-popup .closeBox:after {
+  content: "\00d7";
 	font-size:1.5em;
 	top: 50%;
 	left: 0;
@@ -95,6 +97,19 @@
 	line-height: 1em;
 	margin: -0.5em 0;
 	position: absolute;
+}
+
+/** Modify touch poup */
+.ol-popup.modifytouch {
+	background-color: #eee;
+}
+.ol-popup.modifytouch .content {	
+	padding: 0 0.25em;
+	font-size: 0.85em;
+	white-space: nowrap;
+}
+.ol-popup.modifytouch .content a {
+  text-decoration: none;
 }
 
 /** Tool tips popup*/
