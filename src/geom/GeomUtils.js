@@ -5,7 +5,6 @@
 	Usefull function to handle geometric operations
 */
 
-import ol_geom_LineString from 'ol/geom/linestring'
 import ol_coordinate from 'ol/coordinate'
 import ol_geom_LineString from 'ol/geom/LineString'
 import ol_extent from 'ol/extent'
@@ -216,4 +215,10 @@ ol_coordinate.findSegment = function (pt, coords) {
 		}
 	}
 	return { index: -1 };
-}
+};
+
+/* Use 
+
+import 'ol-ext/geom/GeomUtils' 
+
+*/

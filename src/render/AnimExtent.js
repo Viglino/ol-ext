@@ -8,14 +8,13 @@ import ol_proj from 'ol/proj'
 import ol_Observable from 'ol/observable'
 import ol_easing from 'ol/easing'
 
-/** Pulse a point on postcompose
+/** Pulse an extent on postcompose
 *	@param {ol.coordinates} point to pulse
-*	@param {ol.pulse.options} pulse options param
-*		- projection {ol.projection||String} projection of coords
-*		- duration {Number} animation duration in ms, default 2000
-*		- easing {ol.easing} easing function, default ol.easing.upAndDown
-*		- width {Number} line width, default 2
-*		- color {ol.color} line color, default red
+*	@param {ol.pulse.options} options pulse options param
+*	  @param {ol.projectionLike|undefined} options.projection projection of coords, default no transform
+*	  @param {Number} options.duration animation duration in ms, default 2000
+*	  @param {ol.easing} options.easing easing function, default ol.easing.upAndDown
+*	  @param {ol.style.Stroke} options.style stroke style, default 2px red
 */
 ol_Map.prototype.animExtent = function(extent, options)
 {	var listenerKey;
@@ -30,8 +29,8 @@ ol_Map.prototype.animExtent = function(extent, options)
 	var start = new Date().getTime();
 	var duration = options.duration || 1000;
 	var easing = options.easing || ol_easing.upAndDown;
-	var width = options.lineWidth || 2;
-	var color = options.color || 'red';
+	var width = options.style ? options.style.getWidth() || 2 : 2;
+	var color = options.style ? options.style.getColr() || 'red' : 'red';
 
 	// Animate function
 	function animate(event) 
