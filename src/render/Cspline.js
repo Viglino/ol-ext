@@ -11,9 +11,9 @@ import ol_geom_LineString from 'ol/geom/linestring'
 *	@see https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Cardinal_spline
 *
 * @param {} options
-*	- tension {Number} a [0,1] number / can be interpreted as the "length" of the tangent, default 0.5
-*	- resolution {Number} size of segment to split
-*	- pointsPerSeg {Interger} number of points per segment to add if no resolution is provided, default add 10 points per segment
+*	@param {Number} options.tension a [0,1] number / can be interpreted as the "length" of the tangent, default 0.5
+*	@param {Number} options.resolution size of segment to split
+*	@param {Interger} options.pointsPerSeg number of points per segment to add if no resolution is provided, default add 10 points per segment
 */
 
 /** Cache cspline calculation
@@ -38,15 +38,15 @@ ol_geom_Geometry.prototype.cspline = function(options)
 ol_geom_GeometryCollection.prototype.calcCSpline_ = function(options)
 {	var g=[], g0=this.getGeometries();
 	for (var i=0; i<g0.length; i++)
-	{	g.push(g0[i].cspline());
+	{	g.push(g0[i].cspline(options));
 	}
 	return new ol_geom_GeometryCollection(g);
 }
 
 ol_geom_MultiLineString.prototype.calcCSpline_ = function(options)
-{	var g=[], g0=this.getLineStrings();
-	for (var i=0; i<g0.length; i++)
-	{	g.push(g0[i].cspline().getCoordinates());
+{	var g=[], lines = this.getLineStrings();
+	for (var i=0; i<lines.length; i++)
+	{	g.push(lines[i].cspline(options).getCoordinates());
 	}
 	return new ol_geom_MultiLineString(g);
 }
@@ -54,7 +54,7 @@ ol_geom_MultiLineString.prototype.calcCSpline_ = function(options)
 ol_geom_Polygon.prototype.calcCSpline_ = function(options)
 {	var g=[], g0=this.getCoordinates();
 	for (var i=0; i<g0.length; i++)
-	{	g.push((new ol_geom_LineString(g0[i])).cspline().getCoordinates());
+	{	g.push((new ol_geom_LineString(g0[i])).cspline(options).getCoordinates());
 	}
 	return new ol_geom_Polygon(g);
 }
@@ -62,7 +62,7 @@ ol_geom_Polygon.prototype.calcCSpline_ = function(options)
 ol_geom_MultiPolygon.prototype.calcCSpline_ = function(options)
 {	var g=[], g0=this.getPolygons();
 	for (var i=0; i<g0.length; i++)
-	{	g.push(g0[i].cspline().getCoordinates());
+	{	g.push(g0[i].cspline(options).getCoordinates());
 	}
 	return new ol_geom_MultiPolygon(g);
 }
@@ -141,7 +141,7 @@ ol_geom_LineString.prototype.calcCSpline_ = function(options)
 			y = c1 * pts[i][1]	+ c2 * pts[i+1][1] + c3 * t1y + c4 * t2y;
 
 			//store points in array
-			res.push([x,y]);
+			if (x && y) res.push([x,y]);
 		}
 	}
 

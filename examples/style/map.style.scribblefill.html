@@ -1,0 +1,176 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+	<title>ol-ext: scribble style</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	
+	<meta name="description" content="Openlayers scribble map style" />
+	<meta name="keywords" content="ol, vector, style, stroke, fill, scribble, hatch, hatching" />
+
+	<link rel="stylesheet" href="../style.css" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<!-- FontAwesome -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+	<!-- Openlayers -->
+    <link rel="stylesheet" href="https://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/master/build/ol.js"></script>
+	
+	<!-- ol-ext -->
+	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <style>
+    #map {  background: #f0f0f0; }
+  </style>
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+	<a href="../../index.html">
+		<h1>ol-ext: Scribble style</h1>
+	</a>
+	<div class="info">
+		<p>
+      The <i>scribbleFill</i> function calculates a MultiPolyline to fill a Polygon 
+      with a scribble effect.
+      <br/>
+      You can use it as geometry in a style function to make a map that appear hand-made.
+		</p>
+		<p>
+			Credit: <a href="https://bl.ocks.org/veltman/b2358aaa4716d6fe103f1f8456241ec2">Noah Veltman’s original idea</a>.
+		</p>
+	</div>
+
+	<!-- Map div -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options" style="min-width:300px;">
+		<h2>Options:</h2>
+		<ul>
+			<li>
+				<label>
+					<input type="radio" name="op" value="move" checked="checked" /> 
+					move
+				</label>
+				<label>
+					<input type="radio" name="op" value="drawPoly" /> 
+					draw Polygon
+				</label>
+				<label>
+					<input type="radio" name="op" value="modify" /> 
+					modify
+				</label>
+			</li>
+		</ul>
+		<button onclick="layer.setVisible(!layer.getVisible());">Show/Hide base map</button>
+	</div>
+	
+<script type="text/javascript">
+	
+// Layers
+var layer = new ol.layer.Tile({
+  name: "Natural Earth", 
+  minResolution: 306,
+  opacity: .7,
+  source: new ol.source.XYZ(
+  {	url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
+    attributions: [new ol.Attribution({ html: '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' })] 
+  })
+});
+
+// The map
+var map = new ol.Map({
+  target: 'map',
+  view: new ol.View
+  ({	zoom: 3,
+    center: [166326, 5992663]
+  }),
+  layers: [layer]
+});
+
+// Vector layer
+var vector = new ol.layer.Vector({
+  renderMode: 'image',
+  source: new ol.source.Vector({
+        url: 'https://openlayers.org/en/v4.6.5/examples/data/geojson/countries.geojson',
+        format: new ol.format.GeoJSON()
+      }),
+  style: scribbleStyle
+})
+map.addLayer(vector);
+//	vector.getSource().addFeature(new ol.Feature(new ol.geom.Polygon([[[259274, 6398696], [63595, 5958419], [635956, 5700000], [259274, 6398696]]])));
+
+function scribbleStyle(feature, resolution) {
+  var colors = ['red','green','blue','cyan','magenta','yellow', 'orange', 'purple', 'GreenYellow'];
+
+  var a = feature.get('angle') || Math.random() * Math.PI;
+  feature.set('angle', a)
+  var color = feature.get('color') || colors[Math.round(Math.random()*(colors.length-1))];
+  feature.set('color',color)
+  // Calculate step according to resolution
+  var maxres = 10000;
+  var step =  Math.max (8*maxres, 8*resolution);
+  var width = Math.max (2, 2*maxres/resolution);
+
+  // cache scribble geom in the feature to prevent calculating
+  var scribble = feature._scribble;
+  if (!scribble || scribble.step !== step) {
+    scribble = {
+      step: step,
+      geom: feature.getGeometry().scribbleFill({ interval: step, angle: a })
+    };
+    feature._scribble = scribble;
+    // console.log('calculating')
+  }
+
+  return [
+  new ol.style.Style({
+      stroke: new ol.style.Stroke({ 
+        width: .5, 
+        color: color//'rgba(255,0,0,.5)' 
+      })
+    }),
+    new ol.style.Style({
+      stroke: new ol.style.Stroke({ 
+        width: width, 
+        color: color 
+      }),
+      geometry: scribble.geom
+    })
+  ];
+};
+
+// interactions
+var interactions = {
+  select: new ol.interaction.Select ({hitTolerance : 5}),
+  modify: new ol.interaction.Modify ({ source: vector.getSource() }),
+  drawPoly: new ol.interaction.Draw({
+    type: 'Polygon',
+    source: vector.getSource()
+  })
+}
+for (var i in interactions) map.addInteraction(interactions[i]);
+
+// Activate interaction
+setInteraction = function (n)
+{	//interactions.select.getFeatures().clear();
+  var name = typeof(n)==='string' ? n : $('[name="op"]:checked').val();
+  for (var i in interactions) 
+  {	interactions[i].set("active", (i==name));
+  }
+}
+setInteraction();
+$("input:radio").on("change",setInteraction);
+
+</script>
+
+</body>
+</html>
