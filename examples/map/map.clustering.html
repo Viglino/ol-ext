@@ -33,6 +33,9 @@
 			font-size: 3em;
 			margin: -.2em 0 -.2em -.2em;
 		}
+		[class^="maki-"]:before, [class*=" maki-"]:before {
+			width: initial;
+		}
 	</style>
 
 </head>
@@ -213,6 +216,16 @@
 		selectCluster.getFeatures().on(['remove'], function (e)
 		{	$(".infos").html("");
 		})
+
+		function testFontLoaded () {
+			console.log('TEST', $(".maki-bus").width())
+			if ($(".maki-bus").width() > 60) {
+				styleCache = {};
+			} else {
+				setTimeout(testFontLoaded,100);
+			}
+		}
+		testFontLoaded ();
 
 	</script>
 
