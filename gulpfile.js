@@ -105,7 +105,7 @@ gulp.task('css', function () {
 // Build js
 gulp.task("js", function() {
 	gulp.src([
-		"./src/control/Search.js","./src/control/SearchJSON.js","./src/control/SearchPhoton.js",
+		"./src/control/Search.js","./src/control/SearchJSON.js","./src/control/SearchPhoton.js","./src/control/SearchGeoportail.js",
     "./src/control/LayerSwitcher.js", "./src/control/*.js", "!./src/control/PirateMap.js",
 		"./src/featureanimation/FeatureAnimation.js", "./src/featureanimation/*.js",
 		"./src/filter/Base.js", "./src/filter/Mask.js", "./src/filter/*.js",
