@@ -14,8 +14,6 @@ import ol_style_Circle from 'ol/style/circle'
 import ol_style_Fill from 'ol/style/fill'
 import ol_style_Stroke from 'ol/style/stroke'
 import ol_source_Vector from 'ol/source/vector'
-//TODO: replace ol.animation.pan with new {ol_interaction_Interaction.pan}
-//import ol_interaction_Interaction from 'ol/interaction/interaction'
 
 /**
  * OpenLayers 3 lobe Overview Control.
@@ -161,30 +159,11 @@ ol_control_Globe.prototype.setCenter = function (center, show)
 	{	var map = this.ovmap_;
 		var p = map.getPixelFromCoordinate(center);
 		var h = $(this.element).height();
-		if (map.getView().animate)
-		{	setTimeout(function()
-			{	self.pointer_.css({ 'top': Math.min(Math.max(p[1],0),h) , 'left': "50%" } )
-					.removeClass("hidden");
-			}, 800);
-			map.getView().animate({ center: [center[0],0] });
-		}
-		//TODO: Old version (<3.20)
-		else
-		{	var pan = ol.animation.pan(
-			{	duration: 800,
-				source: map.getView().getCenter()
-			});
-			map.beforeRender(function(map, frameState)
-			{	var b = pan(map, frameState);
-				if (!b && show!==false) 
-				{	self.pointer_
-						.css({ 'top': Math.min(Math.max(p[1],0),h) , 'left': "50%" } )
-						.removeClass("hidden");
-				}
-				return b;
-			});
-			map.getView().setCenter([center[0],0]);
-		}
+		setTimeout(function() {
+			self.pointer_.css({ 'top': Math.min(Math.max(p[1],0),h) , 'left': "50%" } )
+				.removeClass("hidden");
+		}, 800);
+		map.getView().animate({ center: [center[0],0] });
 	}
 };
 
