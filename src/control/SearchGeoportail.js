@@ -1,0 +1,141 @@
+/*	Copyright (c) 2017 Jean-Marc VIGLINO,
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+import ol from 'ol'
+import ol_proj from 'ol/proj'
+import ol_control_SearchJSON from "./SearchJSON";
+
+/**
+ * Search places using the French National Base Address (BAN) API.
+ *
+ * @constructor
+ * @extends {ol.control.SearchJSON}
+ * @fires select
+ * @param {any} options extend ol.control.SearchJSON options
+ *	@param {string} options.className control class name
+ *	@param {boolean | undefined} options.apiKey the service api key.
+ *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
+ *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *	@param {string | undefined} options.label Text label to use for the search button, default "search"
+ *	@param {string | undefined} options.placeholder placeholder, default "Search..."
+ *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
+ *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
+ *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *
+ *	@param {StreetAddress|PositionOfInterest|CadastralParcel|Commune} options.type type of search. Using Commune will return the INSEE code, default StreetAddress,PositionOfInterest
+ * @see {@link https://geoservices.ign.fr/documentation/geoservices/geocodage.html}
+ */
+var ol_control_SearchGeoportail = function(options) {
+  options = options || {};
+  options.className = options.className || 'IGNF';
+  options.typing = options.typing || 500;
+  options.url = "http://wxs.ign.fr/"+options.apiKey+"/ols/apis/completion";
+  ol_control_SearchJSON.call(this, options);
+	this.set("copy","<a href='https://www.geoportail.gouv.fr/' target='new'>&copy; IGN-Géoportail</a>");
+  this.set('type', options.type || 'StreetAddress,PositionOfInterest');
+};
+ol.inherits(ol_control_SearchGeoportail, ol_control_SearchJSON);
+
+/** Returns the text to be displayed in the menu
+ *	@param {ol.Feature} f the feature
+ *	@return {string} the text to be displayed in the index
+ *	@api
+ */
+ol_control_SearchGeoportail.prototype.getTitle = function (f) {
+    var title = f.fulltext;
+    return (title);
+};
+
+/** 
+ * @param {string} s the search string
+ * @return {Object} request data (as key:value)
+ * @api
+ */
+ol_control_SearchGeoportail.prototype.requestData = function (s) {
+	return { 
+        text: s, 
+        type: this.get('type')==='Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress,PositionOfInterest', 
+        maximumResponses: this.get('maxItems')
+    };
+};
+
+/**
+ * Handle server response to pass the features array to the display list
+ * @param {any} response server response
+ * @return {Array<any>} an array of feature
+ * @api
+ */
+ol_control_SearchGeoportail.prototype.handleResponse = function (response) {
+  var response = response.results;
+  if (this.get('type') === 'Commune') {
+    for (var i=response.length-1; i>=0; i--) {
+      if ( response[i].kind 
+        && (response[i].classification>5 || response[i].kind=="Département") ) {
+        response.splice(i,1);
+      }
+    }
+	}
+	return response;
+};
+
+/** A ligne has been clicked in the menu > dispatch event
+ *	@param {any} f the feature, as passed in the autocomplete
+ *	@api
+ */
+ol_control_SearchGeoportail.prototype.select = function (f){
+  if (f.x || f.y) {
+    var c = [Number(f.x), Number(f.y)];
+    // Add coordinate to the event
+    try {
+        c = ol_proj.transform (c, 'EPSG:4326', this.getMap().getView().getProjection());
+    } catch(e) {};
+    // Get insee commune ?
+    if (this.get('type')==='Commune') {
+      this.searchCommune(f, function () {
+        this.dispatchEvent({ type:"select", search:f, coordinate: c });
+      });
+    } else {
+      this.dispatchEvent({ type:"select", search:f, coordinate: c });
+    }
+  } else {
+    this.searchCommune(f);
+  }
+};
+
+/** Search if no position and get the INSEE code
+ * @param {string} s le nom de la commune
+ */
+ol_control_SearchGeoportail.prototype.searchCommune = function (f, cback) {
+  var request = '<?xml version="1.0" encoding="UTF-8"?>'
+	+'<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
+		+'<RequestHeader/>'
+		+'<Request requestID="1" version="1.2" methodName="LocationUtilityService">'
+			+'<GeocodeRequest returnFreeForm="false">'
+				+'<Address countryCode="PositionOfInterest">'
+				+'<freeFormAddress>'+f.fulltext+'+</freeFormAddress>'
+				+'</Address>'
+			+'</GeocodeRequest>'
+		+'</Request>'
+	+'</XLS>'
+
+  var url = this.get('url').replace('ols/apis/completion','geoportail/ols')+"?xls="+encodeURIComponent(request);
+  
+  this.ajax (url, function(resp) {
+    var xml = resp.response;
+    if (xml) {
+      xml = xml.replace(/\n|\r/g,'');
+      var p = (xml.replace(/.*<gml:pos\>(.*)<\/gml:pos>.*/, "$1")).split(' ');
+      f.x = Number(p[1]);
+      f.y = Number(p[0]);
+      f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));
+      f.insee = (xml.replace(/.*<Place type="INSEE">([^<]*)<\/Place>.*/, "$1"));
+      if (f.x || f.y) {
+        if (cback) cback.call(this, [f]);
+        else this._handleSelect(f);
+      }
+    }
+  });
+};
+
+export default ol_control_SearchGeoportail

@@ -4357,12 +4357,13 @@ ol.control.SearchGeoportailParcelle = function(options) {
 	var self = this;
 	options.type = "Commune";
 	options.className = options.className ? options.className+" IGNF-parcelle" : "IGNF-parcelle";
-	options.inputLabel = "Commune:";
+	options.inputLabel = "Commune";
 	options.noCollapse = true;
+	options.placeholder = options.placeholder || "Choisissez une commune...";
 	ol.control.SearchGeoportail.call(this, options);
 	this.set('copy', null);
 	var element = this.element;
-	// Add 
+	// Add parcel form
 	var div = document.createElement("DIV");
 	element.appendChild(div);
 	var label = document.createElement("LABEL");
@@ -4383,7 +4384,7 @@ ol.control.SearchGeoportailParcelle = function(options) {
   };
   this._inputParcelle.prefix.setAttribute('maxlength',3);
   this._inputParcelle.section.setAttribute('maxlength',2);
-  this._inputParcelle.numero.setAttribute('maxlength',4);
+	this._inputParcelle.numero.setAttribute('maxlength',4);
   // Delay search
   var tout;
 	var doSearch = function(e) {
@@ -4391,62 +4392,82 @@ ol.control.SearchGeoportailParcelle = function(options) {
     tout = setTimeout(function() {
         self.autocompleteParcelle();
     }, options.typing || 0);
-  }
-  // Read only
+	}
+	// Add inputs
 	for (var i in this._inputParcelle) {
 		div.appendChild(this._inputParcelle[i]);
-		this._inputParcelle[i].readOnly = true;
 		this._inputParcelle[i].addEventListener("keyup", doSearch);
 	}
+	this.activateParcelle(false);
   // Autocomplete list
 	var ul = document.createElement('UL');
 	ul.classList.add('autocomplete-parcelle');
 	element.appendChild(ul);
-	// Show/hide list
+	// Show/hide list on fcus/blur	
 	this._input.addEventListener('blur', function() {
 		setTimeout(function(){ element.classList.add('ol-collapsed-list') }, 200);
 	});
 	this._input.addEventListener('focus', function() {
     element.classList.remove('ol-collapsed-list');
     self._listParcelle([]);
-    console.log(self._commune)
     if (self._commune) {
       self._commune = null;
       self._input.value = '';
       self.drawList_();
-    }
-    for (var i in self._inputParcelle) {
-      self._inputParcelle[i].readOnly = true;
-    }  
+		}
+		self.activateParcelle(false);
 	});
 	this.on('select', this.selectCommune, this);
 };
 ol.inherits(ol.control.SearchGeoportailParcelle, ol.control.SearchGeoportail);
+/** Select a commune => start searching parcelle  
+ * @param {any} e 
+ * @private
+ */
 ol.control.SearchGeoportailParcelle.prototype.selectCommune = function(e) {
 	this._commune = e.search.insee;
 	this._input.value = e.search.insee + ' - ' + e.search.fulltext;
-	for (var i in this._inputParcelle) {
-		this._inputParcelle[i].readOnly = false;
-	}
+	this.activateParcelle(true);
   this._inputParcelle.numero.focus();
   this.autocompleteParcelle();
 };
+/** Activate parcelle inputs
+ * @param {bolean} b
+ */
+ol.control.SearchGeoportailParcelle.prototype.activateParcelle = function(b) {
+	for (var i in this._inputParcelle) {
+		this._inputParcelle[i].readOnly = !b;
+	}
+	if (b) {
+		this._inputParcelle.section.parentElement.classList.add('ol-active');
+	} else {
+		this._inputParcelle.section.parentElement.classList.remove('ol-active');		
+	}
+};
+/** Send search request for the parcelle  
+ * @param {any} e 
+ * @private
+ */
 ol.control.SearchGeoportailParcelle.prototype.autocompleteParcelle = function(e) {
   var self = this;
+	// Add 0 to fit the format
 	function complete (s, n, c)
 	{	if (!s) return s;
 		c = c || "0";
 		while (s.length < n) s = c+s;
-		return s;
+		return s.replace(/\*/g,'_');
 	}
+	// The selected commune
 	var commune = this._commune;
 	var prefix = complete (this._inputParcelle.prefix.value, 3);
 	if (prefix === '000') {
 		prefix = '___';
 	}
+	// Get parcelle number
 	var section = complete (this._inputParcelle.section.value, 2);
 	var numero = complete (this._inputParcelle.numero.value, 4, "0");
 	var search = commune + (prefix||'___') + (section||"__") + (numero ?  numero : section ? "____":"0001");
+	// Request
 	var request = '<?xml version="1.0" encoding="UTF-8"?>'
 	+'<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
 		+'<RequestHeader/>'
@@ -4459,13 +4480,16 @@ ol.control.SearchGeoportailParcelle.prototype.autocompleteParcelle = function(e)
 		+'</Request>'
   +'</XLS>'
 	var url = this.get('url').replace('ols/apis/completion','geoportail/ols?xls=')+encodeURIComponent(request);
+	// Geocode
 	this.ajax(url, function(resp) {
+		// XML to JSON
     var parser = new DOMParser();
     var xmlDoc = parser.parseFromString(resp.response,"text/xml");
     var parcelles = xmlDoc.getElementsByTagName('GeocodedAddress');
     var jsonResp = []
     for (var i=0, parc; parc= parcelles[i]; i++) {
-      var p = parc.getElementsByTagName('gml:pos')[0].childNodes[0].nodeValue.split(' ');
+			var node = parc.getElementsByTagName('gml:pos')[0] || parc.getElementsByTagName('pos')[0];
+      var p = node.childNodes[0].nodeValue.split(' ');
       var att = parc.getElementsByTagName('Place');
       var json = { 
         lon: Number(p[1]), 
@@ -4481,14 +4505,26 @@ ol.control.SearchGeoportailParcelle.prototype.autocompleteParcelle = function(e)
 		console.log('oops')
 	});
 };
+/**
+ * Draw the autocomplete list
+ * @param {*} resp 
+ * @private
+ */
 ol.control.SearchGeoportailParcelle.prototype._listParcelle = function(resp) {
   var self = this;
   var ul = this.element.querySelector("ul.autocomplete-parcelle");
   ul.innerHTML='';
-  this._listParc = [];
+	this._listParc = [];
+	// Sort table
+	resp.sort(function(a,b) {
+		var na = a.INSEE+a.CommuneAbsorbee+a.Section+a.Numero;
+		var nb = b.INSEE+b.CommuneAbsorbee+b.Section+b.Numero;
+		return na===nb ? 0 : na<nb ? -1 : 1;
+	});
   for (var i=0, r; r = resp[i]; i++) {
     var li = document.createElement("LI");
     li.setAttribute("data-search", i);
+    li.classList.add("ol-list-"+Math.floor(i/5));
     this._listParc.push(r);
     li.addEventListener("click", function(e) {
       self._handleParcelle(self._listParc[e.currentTarget.getAttribute("data-search")]);
@@ -4497,6 +4533,11 @@ ol.control.SearchGeoportailParcelle.prototype._listParcelle = function(resp) {
     ul.appendChild(li);
   }
 };
+/**
+ * Handle parcelle section
+ * @param {*} parc 
+ * @private
+ */
 ol.control.SearchGeoportailParcelle.prototype._handleParcelle = function(parc) {
   this.dispatchEvent({ 
     type:"parcelle", 
