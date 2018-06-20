@@ -74,7 +74,7 @@
         see <a href="https://geoservices.ign.fr/documentation/services-acces.html">documentation page</a>).
       </li>
       <li>Start cherching a french commune (Paris, Nice, Dijon...)</li>
-      <li>Use a wildcard symbol (<b>*</b>) to specify any part of the parcelle number, ie. <b>section=*b</b> to search for AB, BB, BC, etc. sections.</li>
+      <li>Use a wildcard symbol (<b>*</b>) to specify any part of the parcelle number, ie. <b>section=a*/b> to search for AB, AC, AD, etc. sections.</li>
 		</ul>
 		<br/>
 		<i>ol.control.SearchGeoportailParcelle</i> use the <a href="map.control.searchgeoportail.html">ol.control.SearchGeoportail</a> control.
@@ -88,29 +88,29 @@
 	</div>
 	
 	<script type="text/javascript">
-	// Layers
-	var layers = [ new ol.layer.Tile({ source: new ol.source.OSM() }) ];
+  // Layers
+  var layers = [ new ol.layer.Tile({ source: new ol.source.OSM() }) ];
 
-	// The map
-	var map = new ol.Map ({
+  // The map
+  var map = new ol.Map ({
     target: 'map',
-    view: new ol.View
-    ({	zoom: 5,
+    view: new ol.View ({
+      zoom: 5,
       center: [166326, 5992663]
     }),
     interactions: ol.interaction.defaults({ altShiftDragRotate:false, pinchRotate:false }),
     layers: layers
   });
 
-	// Set the control grid reference
-	var search = new ol.control.SearchGeoportailParcelle ({
+  // Set the control grid reference
+  var search = new ol.control.SearchGeoportailParcelle ({
     apiKey: apiKey,
     position: true	// Search, with priority to geo position
   });
-	map.addControl (search);
+  map.addControl (search);
 
-	// Select feature when click on the reference index
-	search.on('parcelle', function(e) {
+  // Select feature when click on the reference index
+  search.on('parcelle', function(e) {
     console.log(e);
     map.getView().animate({
       center:e.coordinate,
