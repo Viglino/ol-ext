@@ -20,9 +20,6 @@ import ol_style_Stroke from 'ol/style/stroke'
 import ol_layer_Vector from 'ol/layer/vector'
 import ol_Feature from 'ol/feature'
 
-//TODO: replace ol.animation.pan with new {ol_interaction_Interaction.pan}
-//import ol_interaction_Interaction from 'ol/interaction/interaction'
-
 /**
  * OpenLayers 3 Layer Overview Control.
  * The overview can rotate with map. 
@@ -142,48 +139,23 @@ var ol_control_Overview = function(options)
 	}
 
 	// Click on the preview center the map
-	this.ovmap_.addInteraction (new ol_interaction_Pointer(
-	{	handleDownEvent: function(evt)
-		{	//TODO: Old version OL3
-			if (ol.animation) 
-			{	var pan;
-				if (options.panAnimation !==false)
-				{	if (options.panAnimation=="elastic" || options.elasticPan) 
-					{	pan = ol.animation.pan(
-						{	duration: 1000,
-							easing: ol_easing.elasticFn(2,0.3),
-							source: self.getMap().getView().getCenter()
-						});
-					}
-					else
-					{	pan = ol.animation.pan(
-						{	duration: 300,
-							source: self.getMap().getView().getCenter()
-						});
-					}
-				
+	this.ovmap_.addInteraction (new ol_interaction_Pointer({
+		handleDownEvent: function(evt) {
+			if (options.panAnimation !==false) {
+				if (options.panAnimation=="elastic" || options.elasticPan) {
+					self.getMap().getView().animate({
+						center: evt.coordinate,
+						easing: ol_easing.elasticFn(2,0.3),
+						duration: 1000
+					});
+				} else {
+					self.getMap().getView().animate({
+						center: evt.coordinate,
+						duration: 300
+					});
 				}
-				self.getMap().beforeRender(pan);
-				self.getMap().getView().setCenter(evt.coordinate);
 			}
-			else
-			{	if (options.panAnimation !==false)
-				{	if (options.panAnimation=="elastic" || options.elasticPan) 
-					{	self.getMap().getView().animate(
-						{	center: evt.coordinate,
-							easing: ol_easing.elasticFn(2,0.3),
-							duration: 1000
-						});
-					}
-					else
-					{	self.getMap().getView().animate(
-						{	center: evt.coordinate,
-							duration: 300
-						});
-					}
-				}
-				else self.getMap().getView().setCenter(evt.coordinate);
-			}
+			else self.getMap().getView().setCenter(evt.coordinate);
 			return false;
 		}
 	}));
@@ -195,14 +167,14 @@ ol.inherits(ol_control_Overview, ol_control_Control);
 */
 ol_control_Overview.prototype.getOverviewMap = function()
 {	return this.ovmap_;
-}
+};
 
 /** Toggle overview map
 */
 ol_control_Overview.prototype.toggleMap = function()
 {	$(this.element).toggleClass("ol-collapsed");
 	this.ovmap_.updateSize();
-}
+};
 
 /** Set overview map position
 *	@param {top|bottom-left|right} 
@@ -212,7 +184,7 @@ ol_control_Overview.prototype.setPosition = function(align)
 	else $(this.element).removeClass("ol-control-top");
 	if (/right/.test(align)) $(this.element).addClass("ol-control-right");
 	else $(this.element).removeClass("ol-control-right");
-}
+};
 
 /**
  * Set the map instance the control associated with.
@@ -266,7 +238,7 @@ ol_control_Overview.prototype.calcExtent_ = function(extent)
 	{	f.setGeometry (new ol_geom_Point( center ));
 	}
 	source.addFeature(f);
-}
+};
 
 /**
 *	@private
@@ -303,6 +275,6 @@ ol_control_Overview.prototype.setView = function(e)
 		default: break;
 	}
 	this.calcExtent_();
-}
+};
 
 export default ol_control_Overview

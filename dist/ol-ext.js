@@ -2481,8 +2481,6 @@ ol.control.GeoBookmark.prototype.addBookmark = function(name, position, zoom, pe
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-//TODO: replace ol.animation.pan with new {ol.interaction.Interaction.pan}
-//
 /**
  * OpenLayers 3 lobe Overview Control.
  * The globe can rotate with map (follow.) 
@@ -2607,30 +2605,11 @@ ol.control.Globe.prototype.setCenter = function (center, show)
 	{	var map = this.ovmap_;
 		var p = map.getPixelFromCoordinate(center);
 		var h = $(this.element).height();
-		if (map.getView().animate)
-		{	setTimeout(function()
-			{	self.pointer_.css({ 'top': Math.min(Math.max(p[1],0),h) , 'left': "50%" } )
-					.removeClass("hidden");
-			}, 800);
-			map.getView().animate({ center: [center[0],0] });
-		}
-		//TODO: Old version (<3.20)
-		else
-		{	var pan = ol.animation.pan(
-			{	duration: 800,
-				source: map.getView().getCenter()
-			});
-			map.beforeRender(function(map, frameState)
-			{	var b = pan(map, frameState);
-				if (!b && show!==false) 
-				{	self.pointer_
-						.css({ 'top': Math.min(Math.max(p[1],0),h) , 'left': "50%" } )
-						.removeClass("hidden");
-				}
-				return b;
-			});
-			map.getView().setCenter([center[0],0]);
-		}
+		setTimeout(function() {
+			self.pointer_.css({ 'top': Math.min(Math.max(p[1],0),h) , 'left': "50%" } )
+				.removeClass("hidden");
+		}, 800);
+		map.getView().animate({ center: [center[0],0] });
 	}
 };
 
@@ -3366,8 +3345,6 @@ ol.control.Overlay.prototype.setClass = function (className)
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-//TODO: replace ol.animation.pan with new {ol.interaction.Interaction.pan}
-//
 /**
  * OpenLayers 3 Layer Overview Control.
  * The overview can rotate with map. 
@@ -3479,47 +3456,23 @@ ol.control.Overview = function(options)
 		}
 	}
 	// Click on the preview center the map
-	this.ovmap_.addInteraction (new ol.interaction.Pointer(
-	{	handleDownEvent: function(evt)
-		{	//TODO: Old version OL3
-			if (ol.animation) 
-			{	var pan;
-				if (options.panAnimation !==false)
-				{	if (options.panAnimation=="elastic" || options.elasticPan) 
-					{	pan = ol.animation.pan(
-						{	duration: 1000,
-							easing: ol.easing.elasticFn(2,0.3),
-							source: self.getMap().getView().getCenter()
-						});
-					}
-					else
-					{	pan = ol.animation.pan(
-						{	duration: 300,
-							source: self.getMap().getView().getCenter()
-						});
-					}
+	this.ovmap_.addInteraction (new ol.interaction.Pointer({
+		handleDownEvent: function(evt) {
+			if (options.panAnimation !==false) {
+				if (options.panAnimation=="elastic" || options.elasticPan) {
+					self.getMap().getView().animate({
+						center: evt.coordinate,
+						easing: ol.easing.elasticFn(2,0.3),
+						duration: 1000
+					});
+				} else {
+					self.getMap().getView().animate({
+						center: evt.coordinate,
+						duration: 300
+					});
 				}
-				self.getMap().beforeRender(pan);
-				self.getMap().getView().setCenter(evt.coordinate);
 			}
-			else
-			{	if (options.panAnimation !==false)
-				{	if (options.panAnimation=="elastic" || options.elasticPan) 
-					{	self.getMap().getView().animate(
-						{	center: evt.coordinate,
-							easing: ol.easing.elasticFn(2,0.3),
-							duration: 1000
-						});
-					}
-					else
-					{	self.getMap().getView().animate(
-						{	center: evt.coordinate,
-							duration: 300
-						});
-					}
-				}
-				else self.getMap().getView().setCenter(evt.coordinate);
-			}
+			else self.getMap().getView().setCenter(evt.coordinate);
 			return false;
 		}
 	}));
@@ -3530,13 +3483,13 @@ ol.inherits(ol.control.Overview, ol.control.Control);
 */
 ol.control.Overview.prototype.getOverviewMap = function()
 {	return this.ovmap_;
-}
+};
 /** Toggle overview map
 */
 ol.control.Overview.prototype.toggleMap = function()
 {	$(this.element).toggleClass("ol-collapsed");
 	this.ovmap_.updateSize();
-}
+};
 /** Set overview map position
 *	@param {top|bottom-left|right} 
 */
@@ -3545,7 +3498,7 @@ ol.control.Overview.prototype.setPosition = function(align)
 	else $(this.element).removeClass("ol-control-top");
 	if (/right/.test(align)) $(this.element).addClass("ol-control-right");
 	else $(this.element).removeClass("ol-control-right");
-}
+};
 /**
  * Set the map instance the control associated with.
  * @param {ol.Map} map The map instance.
@@ -3593,7 +3546,7 @@ ol.control.Overview.prototype.calcExtent_ = function(extent)
 	{	f.setGeometry (new ol.geom.Point( center ));
 	}
 	source.addFeature(f);
-}
+};
 /**
 *	@private
 */
@@ -3629,7 +3582,7 @@ ol.control.Overview.prototype.setView = function(e)
 		default: break;
 	}
 	this.calcExtent_();
-}
+};
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
