@@ -157,7 +157,7 @@ var interactions = {
   select: new ol.interaction.Select ({hitTolerance : 5}),
   modify: new ol.interaction.Modify ({ source: vector.getSource() }),
   drawHole: new ol.interaction.DrawHole({
-    source: vector.getSource(),
+    // source: vector.getSource(),
     layers: [vector]
   }),
   drawPoly: new ol.interaction.Draw({
