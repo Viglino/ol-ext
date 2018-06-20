@@ -4350,7 +4350,7 @@ ol.control.SearchFeature.prototype.autocomplete = function (s) {
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
  *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
  *
- *	@param {StreetAddress|PositionOfInterest|CadastralParcel|Commune} options.type type of search. Using Commune will return the INSEE code, default StreetAddress,PositionOfInterest
+ *	@param {Number} options.pageSize item per page for parcelle list paging, use -1 for no paging, default 5
  * @see {@link https://geoservices.ign.fr/documentation/geoservices/geocodage.html}
  */
 ol.control.SearchGeoportailParcelle = function(options) {
@@ -4403,6 +4403,9 @@ ol.control.SearchGeoportailParcelle = function(options) {
 	var ul = document.createElement('UL');
 	ul.classList.add('autocomplete-parcelle');
 	element.appendChild(ul);
+	ul = document.createElement('UL');
+	ul.classList.add('autocomplete-page');
+	element.appendChild(ul);
 	// Show/hide list on fcus/blur	
 	this._input.addEventListener('blur', function() {
 		setTimeout(function(){ element.classList.add('ol-collapsed-list') }, 200);
@@ -4418,6 +4421,7 @@ ol.control.SearchGeoportailParcelle = function(options) {
 		self.activateParcelle(false);
 	});
 	this.on('select', this.selectCommune, this);
+	this.set('pageSize', options.pageSize || 5);
 };
 ol.inherits(ol.control.SearchGeoportailParcelle, ol.control.SearchGeoportail);
 /** Select a commune => start searching parcelle  
@@ -4514,24 +4518,51 @@ ol.control.SearchGeoportailParcelle.prototype._listParcelle = function(resp) {
   var self = this;
   var ul = this.element.querySelector("ul.autocomplete-parcelle");
   ul.innerHTML='';
+  var page = this.element.querySelector("ul.autocomplete-page");
+  page.innerHTML='';
 	this._listParc = [];
+	// Show page i
+	function showPage(i) {
+		var l = ul.children;
+		var visible = "ol-list-"+i;
+		for (k=0; k<l.length; k++) {
+			l[k].style.display = (l[k].className===visible) ? '' : 'none';
+		}
+		l = page.children;
+		for (k=0; k<l.length; k++) {
+			l[k].className = (l[k].innerText==i) ? 'selected' : '';
+		}
+		page.style.display = l.length>1 ? '' : 'none';
+	}
 	// Sort table
 	resp.sort(function(a,b) {
 		var na = a.INSEE+a.CommuneAbsorbee+a.Section+a.Numero;
 		var nb = b.INSEE+b.CommuneAbsorbee+b.Section+b.Numero;
 		return na===nb ? 0 : na<nb ? -1 : 1;
 	});
+	// Show list
+	var n = this.get('pageSize');
   for (var i=0, r; r = resp[i]; i++) {
     var li = document.createElement("LI");
     li.setAttribute("data-search", i);
-    li.classList.add("ol-list-"+Math.floor(i/5));
+		if (n>0) li.classList.add("ol-list-"+Math.floor(i/n));
     this._listParc.push(r);
     li.addEventListener("click", function(e) {
       self._handleParcelle(self._listParc[e.currentTarget.getAttribute("data-search")]);
     });
     li.innerHTML = r.INSEE+r.CommuneAbsorbee+r.Section+r.Numero;
-    ul.appendChild(li);
-  }
+		ul.appendChild(li);
+		//
+		if (n>0 && !(i%n)) {
+			li = document.createElement("LI");
+			li.innerText = Math.floor(i/n);
+			li.addEventListener("click", function(e) {
+				showPage(e.currentTarget.innerText);
+			});
+			page.appendChild(li);
+		}
+	}
+	if (n>0) showPage(0);
 };
 /**
  * Handle parcelle section
