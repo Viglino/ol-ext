@@ -31,6 +31,7 @@ import ol_geom_Point from 'ol/geom/point'
  */
 var ol_control_SearchPhoton = function(options)
 {	options = options || {};
+	options.className = options.className || 'photon';
 	options.url = options.url || "http://photon.komoot.de/api/";
 	ol_control_SearchJSON.call(this, options);
 	this.set('lang', options.lang);

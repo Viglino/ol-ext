@@ -25,90 +25,105 @@
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
  *	@param {string | undefined} options.placeholder placeholder, default "Search..."
+ *	@param {string | undefined} options.inputLabel label for the input, default none
+ *	@param {string | undefined} options.noCollapse prevent collapsing on input blur, default false
  *	@param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 1
  *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *	@param {integer | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
  *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index.
  *	@param {function} options.autocomplete a function that take a search string and callback function to send an array
  */
-ol.control.Search = function(options)
-{	var self = this;
+ol.control.Search = function(options) {
+  var self = this;
 	if (!options) options = {};
 	if (options.typing == undefined) options.typing = 300;
+  // Class name for history
+  this._classname = options.className || 'search';
 	var element = document.createElement("DIV");
 	var classNames = (options.className||"")+ " ol-search";
-	if (!options.target)
-	{	classNames += " ol-unselectable ol-control ol-collapsed";
+	if (!options.target) {
+    classNames += " ol-unselectable ol-control ol-collapsed";
 		this.button = document.createElement("BUTTON");
 		this.button.setAttribute("type", "button");
 		this.button.setAttribute("title", options.label||"search");
-		this.button.addEventListener("click", function()
-			{	element.classList.toggle("ol-collapsed");
-				if (!element.classList.contains("ol-collapsed"))
-				{	element.querySelector("input.search").focus();
-					var listElements = element.querySelectorAll("li");
-					for (var i = 0; i < listElements.length; i++) {
-						listElements[i].classList.remove("select");
-					}
-				}
-			});
+		this.button.addEventListener("click", function() {
+      element.classList.toggle("ol-collapsed");
+      if (!element.classList.contains("ol-collapsed")) {
+        element.querySelector("input.search").focus();
+        var listElements = element.querySelectorAll("li");
+        for (var i = 0; i < listElements.length; i++) {
+          listElements[i].classList.remove("select");
+        }
+        // Display history
+        if (!input.value) {
+          self.drawList_();
+        }
+      }
+    });
 		element.appendChild(this.button);
 	}
 	element.setAttribute('class', classNames);
+	// Input label
+	if (options.inputLabel) {
+		var label = document.createElement("LABEL");
+		label.innerText = options.inputLabel;
+		element.appendChild(label);
+	}
 	// Search input
 	var tout, cur="";
-	var input = document.createElement("INPUT");
+	var input = this._input = document.createElement("INPUT");
 	input.setAttribute("type", "search");
 	input.setAttribute("class", "search");
 	input.setAttribute("placeholder", options.placeholder||"Search...");
-	input.addEventListener("change", function(e)
-		{ self.dispatchEvent({ type:"change:input", input:e, value:input.value });
-		});
-	var doSearch = function(e)
-	{	// console.log(e.type+" "+e.key)'
+	input.addEventListener("change", function(e) {
+    self.dispatchEvent({ type:"change:input", input:e, value:input.value });
+  });
+	var doSearch = function(e) {
+    // console.log(e.type+" "+e.key)'
 		var li  = element.querySelector("ul.autocomplete li.select");
 		var	val = input.value;
 		// move up/down
-		if (e.key=='ArrowDown' || e.key=='ArrowUp' || e.key=='Down' || e.key=='Up')
-		{	if (li)
-			{ li.classList.remove("select");
+		if (e.key=='ArrowDown' || e.key=='ArrowUp' || e.key=='Down' || e.key=='Up') {
+      if (li) {
+        li.classList.remove("select");
 				li = (/Down/.test(e.key)) ? li.nextElementSibling : li.previousElementSibling;
 				if (li) li.classList.add("select");
 			}
 			else element.querySelector("ul.autocomplete li").classList.add("select");
 		}
 		// Clear input
-		else if (e.type=='input' && !val)
-		{	self.drawList_();
+		else if (e.type=='input' && !val) {
+      self.drawList_();
 		}
 		// Select in the list
-		else if (li && (e.type=="search" || e.key =="Enter"))
-		{	if (element.classList.contains("ol-control")) input.blur();
+		else if (li && (e.type=="search" || e.key =="Enter")) {
+      if (element.classList.contains("ol-control")) input.blur();
 			li.classList.remove("select");
 			cur = val;
-			self.select(self._list[li.getAttribute("data-search")]);
+			self._handleSelect(self._list[li.getAttribute("data-search")]);
 		}
 		// Search / autocomplete
 		else if ( (e.type=="search" || e.key =='Enter')
-			|| (cur!=val && options.typing>=0))
-		{	// current search
+			|| (cur!=val && options.typing>=0)) {
+      // current search
 			cur = val;
-			if (cur)
-			{	// prevent searching on each typing
+			if (cur) {
+        // prevent searching on each typing
 				if (tout) clearTimeout(tout);
-				tout = setTimeout(function()
-				{	if (cur.length >= self.get("minLength"))
-				{	var s = self.autocomplete (cur, function(auto) { self.drawList_(auto); });
-					if (s) self.drawList_(s);
-				}
-				else self.drawList_();
+				tout = setTimeout(function() {
+          if (cur.length >= self.get("minLength")) {
+            var s = self.autocomplete (cur, function(auto) { self.drawList_(auto); });
+					  if (s) self.drawList_(s);
+          }
+          else self.drawList_();
 				}, options.typing);
 			}
 			else self.drawList_();
 		}
 		// Clear list selection
-		else
-		{	var li = element.querySelector("ul.autocomplete li");
+		else {
+      var li = element.querySelector("ul.autocomplete li");
 			if (li) li.classList.remove('select');
 		}
 	};
@@ -117,26 +132,32 @@ ol.control.Search = function(options)
 	input.addEventListener("cut", doSearch);
 	input.addEventListener("paste", doSearch);
 	input.addEventListener("input", doSearch);
-	input.addEventListener('blur', function()
-		{	setTimeout(function(){ element.classList.add('ol-collapsed') }, 200);
+	if (!options.noCollapse) {
+		input.addEventListener('blur', function() {
+			setTimeout(function(){ element.classList.add('ol-collapsed') }, 200);
 		});
-	input.addEventListener('focus', function()
-		{	element.classList.remove('ol-collapsed');
+		input.addEventListener('focus', function() {
+			element.classList.remove('ol-collapsed');
 		});
+	}
 	element.appendChild(input);
 	// Autocomplete list
 	var ul = document.createElement('UL');
 	ul.classList.add('autocomplete');
 	element.appendChild(ul);
-	ol.control.Control.call(this,
-		{	element: element,
-			target: options.target
-		});
+	ol.control.Control.call(this, {
+    element: element,
+    target: options.target
+  });
 	if (typeof (options.getTitle)=='function') this.getTitle = options.getTitle;
 	if (typeof (options.autocomplete)=='function') this.autocomplete = options.autocomplete;
 	// Options
 	this.set('minLength', options.minLength || 1);
-	this.set('maxItems', options.maxItems || 10);
+  this.set('maxItems', options.maxItems || 10);
+  this.set('maxHistory', options.maxHistory || options.maxItems || 10);
+  // History
+	this.restoreHistory();
+	this.drawList_();
 };
 ol.inherits(ol.control.Search, ol.control.Control);
 /** Returns the text to be displayed in the menu
@@ -144,21 +165,26 @@ ol.inherits(ol.control.Search, ol.control.Control);
 *	@return {string} the text to be displayed in the index, default f.name
 *	@api
 */
-ol.control.Search.prototype.getTitle = function (f)
-{	return f.name || "No title";
+ol.control.Search.prototype.getTitle = function (f) {
+  return f.name || "No title";
 };
 /** Force search to refresh
  */
-ol.control.Search.prototype.search = function ()
-{	var search = this.element.querySelector("input.search");
+ol.control.Search.prototype.search = function () {
+  var search = this.element.querySelector("input.search");
 	this._triggerCustomEvent('search', search);
 };
-ol.control.Search.prototype._triggerCustomEvent = function (eventName, element)
-{ var event;
-	if (window.CustomEvent)
-	{ event = new CustomEvent(eventName);
-	} else
-	{ event = document.createEvent("CustomEvent");
+/** Trigger custom event on elemebt
+ * @param {*} eventName 
+ * @param {*} element 
+ * @private
+ */
+ol.control.Search.prototype._triggerCustomEvent = function (eventName, element) {
+  var event;
+	if (window.CustomEvent) {
+    event = new CustomEvent(eventName);
+	} else {
+    event = document.createEvent("CustomEvent");
 		event.initCustomEvent(eventName, true, true, {});
 	}
 	element.dispatchEvent(event);
@@ -168,8 +194,8 @@ ol.control.Search.prototype._triggerCustomEvent = function (eventName, element)
 *	@param {boolean} search to start a search
 *	@api
 */
-ol.control.Search.prototype.setInput = function (value, search)
-{	var input = this.element.querySelector("input.search");
+ol.control.Search.prototype.setInput = function (value, search) {
+  var input = this.element.querySelector("input.search");
 	input.value = value;
 	if (search) this._triggerCustomEvent("keyup", input);
 };
@@ -177,8 +203,69 @@ ol.control.Search.prototype.setInput = function (value, search)
 *	@param {any} f the feature, as passed in the autocomplete
 *	@api
 */
-ol.control.Search.prototype.select = function (f)
-{	this.dispatchEvent({ type:"select", search:f });
+ol.control.Search.prototype.select = function (f) {
+  this.dispatchEvent({ type:"select", search:f });
+};
+/**
+ * Save history and select
+ * @param {*} f 
+ * @private
+ */
+ol.control.Search.prototype._handleSelect = function (f) {
+	if (!f) return;
+  // Save input in history
+  var hist = this.get('history');
+  // Prevent error on stringify
+  try {
+    var fstr = JSON.stringify(f);
+    for (var i=hist.length-1; i>=0; i--) {
+      if (!hist[i] || JSON.stringify(hist[i]) === fstr) {
+        hist.splice(i,1);
+      }
+    }
+    hist.unshift(f);
+    while (hist.length > (this.get('maxHistory')||10)) {
+      hist.pop();
+    } 
+    this.saveHistory();
+  } catch (e) {};
+  // Select feature
+	this.select(f);
+	this.drawList_();
+};
+/** Save history (in the localstorage)
+ */
+ol.control.Search.prototype.saveHistory = function () {
+  if (this.get('maxHistory')>=0) {
+    try {
+      localStorage["ol@search-"+this._classname] = JSON.stringify(this.get('history'));
+    } catch (e) {};
+  } else {
+    localStorage.removeItem("ol@search-"+this._classname);
+  }
+};
+/** Restore history (from the localstorage) 
+ */
+ol.control.Search.prototype.restoreHistory = function () {
+  try {
+    this.set('history', JSON.parse(localStorage["ol@search-"+this._classname]) );
+  } catch(e) {
+    this.set('history', []);
+  }
+};
+/**
+ * Remove previous history
+ */
+ol.control.Search.prototype.clearHistory = function () {
+  this.set('history', []);
+	this.saveHistory();
+	this.drawList_();
+};
+/**
+ * Get history table
+ */
+ol.control.Search.prototype.getHistory = function () {
+  return this.get('history');
 };
 /** Autocomplete function
 * @param {string} s search string
@@ -196,25 +283,38 @@ ol.control.Search.prototype.autocomplete = function (s, cback) {
 * @private
 */
 ol.control.Search.prototype.drawList_ = function (auto) {
+	var self = this;
 	var ul = this.element.querySelector("ul.autocomplete");
 	ul.innerHTML = '';
-	if (!auto) return;
-	var self = this;
-	var max = Math.min (self.get("maxItems"),auto.length);
 	this._list = [];
+	if (!auto) {
+    var input = this.element.querySelector("input.search");
+    var value = input.value;
+    if (!value) {
+      auto = this.get('history');
+    } else {
+      return;
+    }
+    ul.setAttribute('class', 'autocomplete history');
+  } else {
+    ul.setAttribute('class', 'autocomplete');
+  }
+	var max = Math.min (self.get("maxItems"),auto.length);
 	for (var i=0; i<max; i++) {	
-		if (!i || !self.equalFeatures(auto[i], auto[i-1])) {
-			var li = document.createElement("LI");
-			li.setAttribute("data-search", i);
-			this._list.push(auto[i]);
-			li.addEventListener("click", function(e)
-				{	self.select(self._list[e.currentTarget.getAttribute("data-search")]);
+		if (auto[i]) {
+			if (!i || !self.equalFeatures(auto[i], auto[i-1])) {
+				var li = document.createElement("LI");
+				li.setAttribute("data-search", i);
+				this._list.push(auto[i]);
+				li.addEventListener("click", function(e) {
+					self._handleSelect(self._list[e.currentTarget.getAttribute("data-search")]);
 				});
-			li.innerHTML = self.getTitle(auto[i]);
-			ul.appendChild(li);
+				li.innerHTML = self.getTitle(auto[i]);
+				ul.appendChild(li);
+			}
 		}
 	}
-	if (this.get("copy")) {
+	if (max && this.get("copy")) {
 		var li = document.createElement("LI");
 		li.classList.add("copy");
 		li.innerHTML = this.get("copy");
@@ -241,7 +341,7 @@ ol.control.Search.prototype.equalFeatures = function (f1, f2) {
  * @constructor
  * @extends {ol.control.Search}
  * @fires select
- * @param {Object=} Control options.
+ * @param {any} options extend ol.control.Search options
  *	@param {string} options.className control class name
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
@@ -252,9 +352,11 @@ ol.control.Search.prototype.equalFeatures = function (f1, f2) {
  *  @param {function | undefined} options.handleResponse Handle server response to pass the features array to the list
  *
  *	@param {string|undefined} options.url Url of the search api
+ *	@param {string | undefined} options.authentication: basic authentication for the search API as btoa("login:pwd")
  */
 ol.control.SearchJSON = function(options)
 {	options = options || {};
+	options.className = options.className || 'JSON';
 	delete options.autocomplete;
 	options.minLength = options.minLength || 3;
 	options.typing = options.typing || 800;
@@ -269,6 +371,7 @@ ol.control.SearchJSON = function(options)
 		url = parser.href;
 	}
 	this.set('url', url);
+	this._auth = options.authentication;
 	// Overwrite handleResponse
 	if (typeof(options.handleResponse)==='function') this.handleResponse = options.handleResponse;
 };
@@ -279,34 +382,55 @@ ol.inherits(ol.control.SearchJSON, ol.control.Search);
 */
 ol.control.SearchJSON.prototype.autocomplete = function (s, cback)
 {	var data = this.requestData(s);
-	var self = this;
 	var url = encodeURI(this.get('url'));
 	var parameters = '';
 	for (var index in data) {
 		parameters += (parameters) ? '&' : '?';
 		if (data.hasOwnProperty(index)) parameters += index + '=' + data[index];
 	}
+	this.ajax(url + parameters, 
+		function (resp) {
+			if (resp.status >= 200 && resp.status < 400) {
+				var data = JSON.parse(resp.response);
+				cback(this.handleResponse(data));
+			} else {
+				console.log(url + parameters, arguments);
+			}
+		}, function(){
+			console.log(url + parameters, arguments);
+		});
+};
+/** Send an ajax request (GET)
+ * @param {string} url
+ * @param {function} onsuccess callback
+ * @param {function} onerror callback
+ */
+ol.control.SearchJSON.prototype.ajax = function (url, onsuccess, onerror){
+	var self = this;
+	// Abort previous request
 	if (this._request) {
 		this._request.abort();
 	}
+	// New request
 	var ajax = this._request = new XMLHttpRequest();
-	ajax.open('GET', url + parameters, true);
+	ajax.open('GET', url, true);
+	if (this._auth) {
+		ajax.setRequestHeader("Authorization", "Basic " + this._auth);
+	}
 	this.element.classList.add('searching');
-	ajax.onload = function () {
-		self.element.classList.remove('searching');
-		self._request = null;
-		if (this.status >= 200 && this.status < 400) {
-			var data = JSON.parse(this.response);
-			cback(self.handleResponse(data));
-		} else {
-			console.log(url + parameters, arguments);
-		}
-	};
-	ajax.onerror = function () {
+	// Load complete
+	ajax.onload = function() {
 		self._request = null;
 		self.element.classList.remove('searching');
-		console.log(url + parameters, arguments);
+		onsuccess.call(self, this);
 	};
+	// Oops, TODO do something ?
+	ajax.onerror = function() {
+		self._request = null;
+		self.element.classList.remove('searching');
+		if (onerror) onerror.call(self);
+	};
+	// GO!
 	ajax.send();
 };
 /**
@@ -354,6 +478,7 @@ ol.control.SearchJSON.prototype.handleResponse = function (response) {
  */
 ol.control.SearchPhoton = function(options)
 {	options = options || {};
+	options.className = options.className || 'photon';
 	options.url = options.url || "http://photon.komoot.de/api/";
 	ol.control.SearchJSON.call(this, options);
 	this.set('lang', options.lang);
@@ -429,6 +554,135 @@ ol.control.SearchPhoton.prototype.select = function (f)
 	this.dispatchEvent({ type:"select", search:f, coordinate: c });
 };
 /** */
+
+/*	Copyright (c) 2017 Jean-Marc VIGLINO,
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * Search places using the French National Base Address (BAN) API.
+ *
+ * @constructor
+ * @extends {ol.control.SearchJSON}
+ * @fires select
+ * @param {any} options extend ol.control.SearchJSON options
+ *	@param {string} options.className control class name
+ *	@param {boolean | undefined} options.apiKey the service api key.
+ *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
+ *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *	@param {string | undefined} options.label Text label to use for the search button, default "search"
+ *	@param {string | undefined} options.placeholder placeholder, default "Search..."
+ *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
+ *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
+ *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *
+ *	@param {StreetAddress|PositionOfInterest|CadastralParcel|Commune} options.type type of search. Using Commune will return the INSEE code, default StreetAddress,PositionOfInterest
+ * @see {@link https://geoservices.ign.fr/documentation/geoservices/geocodage.html}
+ */
+ol.control.SearchGeoportail = function(options) {
+  options = options || {};
+  options.className = options.className || 'IGNF';
+  options.typing = options.typing || 500;
+  options.url = "http://wxs.ign.fr/"+options.apiKey+"/ols/apis/completion";
+  ol.control.SearchJSON.call(this, options);
+	this.set("copy","<a href='https://www.geoportail.gouv.fr/' target='new'>&copy; IGN-Géoportail</a>");
+  this.set('type', options.type || 'StreetAddress,PositionOfInterest');
+};
+ol.inherits(ol.control.SearchGeoportail, ol.control.SearchJSON);
+/** Returns the text to be displayed in the menu
+ *	@param {ol.Feature} f the feature
+ *	@return {string} the text to be displayed in the index
+ *	@api
+ */
+ol.control.SearchGeoportail.prototype.getTitle = function (f) {
+    var title = f.fulltext;
+    return (title);
+};
+/** 
+ * @param {string} s the search string
+ * @return {Object} request data (as key:value)
+ * @api
+ */
+ol.control.SearchGeoportail.prototype.requestData = function (s) {
+	return { 
+        text: s, 
+        type: this.get('type')==='Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress,PositionOfInterest', 
+        maximumResponses: this.get('maxItems')
+    };
+};
+/**
+ * Handle server response to pass the features array to the display list
+ * @param {any} response server response
+ * @return {Array<any>} an array of feature
+ * @api
+ */
+ol.control.SearchGeoportail.prototype.handleResponse = function (response) {
+  var response = response.results;
+  if (this.get('type') === 'Commune') {
+    for (var i=response.length-1; i>=0; i--) {
+      if ( response[i].kind 
+        && (response[i].classification>5 || response[i].kind=="Département") ) {
+        response.splice(i,1);
+      }
+    }
+	}
+	return response;
+};
+/** A ligne has been clicked in the menu > dispatch event
+ *	@param {any} f the feature, as passed in the autocomplete
+ *	@api
+ */
+ol.control.SearchGeoportail.prototype.select = function (f){
+  if (f.x || f.y) {
+    var c = [Number(f.x), Number(f.y)];
+    // Add coordinate to the event
+    try {
+        c = ol.proj.transform (c, 'EPSG:4326', this.getMap().getView().getProjection());
+    } catch(e) {};
+    // Get insee commune ?
+    if (this.get('type')==='Commune') {
+      this.searchCommune(f, function () {
+        this.dispatchEvent({ type:"select", search:f, coordinate: c });
+      });
+    } else {
+      this.dispatchEvent({ type:"select", search:f, coordinate: c });
+    }
+  } else {
+    this.searchCommune(f);
+  }
+};
+/** Search if no position and get the INSEE code
+ * @param {string} s le nom de la commune
+ */
+ol.control.SearchGeoportail.prototype.searchCommune = function (f, cback) {
+  var request = '<?xml version="1.0" encoding="UTF-8"?>'
+	+'<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
+		+'<RequestHeader/>'
+		+'<Request requestID="1" version="1.2" methodName="LocationUtilityService">'
+			+'<GeocodeRequest returnFreeForm="false">'
+				+'<Address countryCode="PositionOfInterest">'
+				+'<freeFormAddress>'+f.fulltext+'+</freeFormAddress>'
+				+'</Address>'
+			+'</GeocodeRequest>'
+		+'</Request>'
+	+'</XLS>'
+  var url = this.get('url').replace('ols/apis/completion','geoportail/ols')+"?xls="+encodeURIComponent(request);
+  this.ajax (url, function(resp) {
+    var xml = resp.response;
+    if (xml) {
+      xml = xml.replace(/\n|\r/g,'');
+      var p = (xml.replace(/.*<gml:pos\>(.*)<\/gml:pos>.*/, "$1")).split(' ');
+      f.x = Number(p[1]);
+      f.y = Number(p[0]);
+      f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));
+      f.insee = (xml.replace(/.*<Place type="INSEE">([^<]*)<\/Place>.*/, "$1"));
+      if (f.x || f.y) {
+        if (cback) cback.call(this, [f]);
+        else this._handleSelect(f);
+      }
+    }
+  });
+};
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -3960,6 +4214,7 @@ ol.control.SearchBAN = function(options)
 {	options = options || {};
     options.typing = options.typing || 500;
     options.url = options.url || "https://api-adresse.data.gouv.fr/search/";
+    options.className = options.className || 'BAN';
     ol.control.SearchPhoton.call(this, options);
     this.set("copy","<a href='https://adresse.data.gouv.fr/' target='new'>&copy; BAN-data.gouv.fr</a>");
 };
@@ -4011,6 +4266,7 @@ ol.control.SearchBAN.prototype.select = function (f){
  */
 ol.control.SearchFeature = function(options)
 {	if (!options) options = {};
+	options.className = options.className || 'feature';
 	ol.control.Search.call(this, options);
 	if (typeof(options.getSearchString)=="function") this.getSearchString = options.getSearchString;
 	this.set('property', options.property || 'name');
@@ -4081,6 +4337,182 @@ ol.control.SearchFeature.prototype.autocomplete = function (s) {
  * Search places using the French National Base Address (BAN) API.
  *
  * @constructor
+ * @extends {ol.control.SearchJSON}
+ * @fires select
+ * @param {any} options extend ol.control.SearchJSON options
+ *	@param {string} options.className control class name
+ *	@param {boolean | undefined} options.apiKey the service api key.
+ *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
+ *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *	@param {string | undefined} options.label Text label to use for the search button, default "search"
+ *	@param {string | undefined} options.placeholder placeholder, default "Search..."
+ *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
+ *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
+ *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *
+ *	@param {StreetAddress|PositionOfInterest|CadastralParcel|Commune} options.type type of search. Using Commune will return the INSEE code, default StreetAddress,PositionOfInterest
+ * @see {@link https://geoservices.ign.fr/documentation/geoservices/geocodage.html}
+ */
+ol.control.SearchGeoportailParcelle = function(options) {
+	var self = this;
+	options.type = "Commune";
+	options.className = options.className ? options.className+" IGNF-parcelle" : "IGNF-parcelle";
+	options.inputLabel = "Commune:";
+	options.noCollapse = true;
+	ol.control.SearchGeoportail.call(this, options);
+	this.set('copy', null);
+	var element = this.element;
+	// Add 
+	var div = document.createElement("DIV");
+	element.appendChild(div);
+	var label = document.createElement("LABEL");
+	label.innerText = 'Préfixe'
+	div.appendChild(label);
+	var label = document.createElement("LABEL");
+	label.innerText = 'Section'
+	div.appendChild(label);
+	var label = document.createElement("LABEL");
+	label.innerText = 'Numéro'
+	div.appendChild(label);
+	div.appendChild(document.createElement("BR"));
+	// Input
+	this._inputParcelle = {
+		prefix: document.createElement("INPUT"),
+		section: document.createElement("INPUT"),
+		numero: document.createElement("INPUT")
+  };
+  this._inputParcelle.prefix.setAttribute('maxlength',3);
+  this._inputParcelle.section.setAttribute('maxlength',2);
+  this._inputParcelle.numero.setAttribute('maxlength',4);
+  // Delay search
+  var tout;
+	var doSearch = function(e) {
+    if (tout) clearTimeout(tout);
+    tout = setTimeout(function() {
+        self.autocompleteParcelle();
+    }, options.typing || 0);
+  }
+  // Read only
+	for (var i in this._inputParcelle) {
+		div.appendChild(this._inputParcelle[i]);
+		this._inputParcelle[i].readOnly = true;
+		this._inputParcelle[i].addEventListener("keyup", doSearch);
+	}
+  // Autocomplete list
+	var ul = document.createElement('UL');
+	ul.classList.add('autocomplete-parcelle');
+	element.appendChild(ul);
+	// Show/hide list
+	this._input.addEventListener('blur', function() {
+		setTimeout(function(){ element.classList.add('ol-collapsed-list') }, 200);
+	});
+	this._input.addEventListener('focus', function() {
+    element.classList.remove('ol-collapsed-list');
+    self._listParcelle([]);
+    console.log(self._commune)
+    if (self._commune) {
+      self._commune = null;
+      self._input.value = '';
+      self.drawList_();
+    }
+    for (var i in self._inputParcelle) {
+      self._inputParcelle[i].readOnly = true;
+    }  
+	});
+	this.on('select', this.selectCommune, this);
+};
+ol.inherits(ol.control.SearchGeoportailParcelle, ol.control.SearchGeoportail);
+ol.control.SearchGeoportailParcelle.prototype.selectCommune = function(e) {
+	this._commune = e.search.insee;
+	this._input.value = e.search.insee + ' - ' + e.search.fulltext;
+	for (var i in this._inputParcelle) {
+		this._inputParcelle[i].readOnly = false;
+	}
+  this._inputParcelle.numero.focus();
+  this.autocompleteParcelle();
+};
+ol.control.SearchGeoportailParcelle.prototype.autocompleteParcelle = function(e) {
+  var self = this;
+	function complete (s, n, c)
+	{	if (!s) return s;
+		c = c || "0";
+		while (s.length < n) s = c+s;
+		return s;
+	}
+	var commune = this._commune;
+	var prefix = complete (this._inputParcelle.prefix.value, 3);
+	if (prefix === '000') {
+		prefix = '___';
+	}
+	var section = complete (this._inputParcelle.section.value, 2);
+	var numero = complete (this._inputParcelle.numero.value, 4, "0");
+	var search = commune + (prefix||'___') + (section||"__") + (numero ?  numero : section ? "____":"0001");
+	var request = '<?xml version="1.0" encoding="UTF-8"?>'
+	+'<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
+		+'<RequestHeader/>'
+		+'<Request requestID="1" version="1.2" methodName="LocationUtilityService">'
+			+'<GeocodeRequest returnFreeForm="false">'
+				+'<Address countryCode="CadastralParcel">'
+				+'<freeFormAddress>'+search+'+</freeFormAddress>'
+				+'</Address>'
+			+'</GeocodeRequest>'
+		+'</Request>'
+  +'</XLS>'
+	var url = this.get('url').replace('ols/apis/completion','geoportail/ols?xls=')+encodeURIComponent(request);
+	this.ajax(url, function(resp) {
+    var parser = new DOMParser();
+    var xmlDoc = parser.parseFromString(resp.response,"text/xml");
+    var parcelles = xmlDoc.getElementsByTagName('GeocodedAddress');
+    var jsonResp = []
+    for (var i=0, parc; parc= parcelles[i]; i++) {
+      var p = parc.getElementsByTagName('gml:pos')[0].childNodes[0].nodeValue.split(' ');
+      var att = parc.getElementsByTagName('Place');
+      var json = { 
+        lon: Number(p[1]), 
+        lat: Number(p[0])
+      };
+      for (var k=0, a; a=att[k]; k++) {
+        json[a.attributes.type.value] = a.childNodes[0].nodeValue;
+      }
+      jsonResp.push(json);
+    }
+    self._listParcelle(jsonResp);
+	}, function() {
+		console.log('oops')
+	});
+};
+ol.control.SearchGeoportailParcelle.prototype._listParcelle = function(resp) {
+  var self = this;
+  var ul = this.element.querySelector("ul.autocomplete-parcelle");
+  ul.innerHTML='';
+  this._listParc = [];
+  for (var i=0, r; r = resp[i]; i++) {
+    var li = document.createElement("LI");
+    li.setAttribute("data-search", i);
+    this._listParc.push(r);
+    li.addEventListener("click", function(e) {
+      self._handleParcelle(self._listParc[e.currentTarget.getAttribute("data-search")]);
+    });
+    li.innerHTML = r.INSEE+r.CommuneAbsorbee+r.Section+r.Numero;
+    ul.appendChild(li);
+  }
+};
+ol.control.SearchGeoportailParcelle.prototype._handleParcelle = function(parc) {
+  this.dispatchEvent({ 
+    type:"parcelle", 
+    search: parc, 
+    coordinate: ol.proj.fromLonLat([parc.lon, parc.lat], this.getMap().getView().getProjection())
+  });
+};
+
+/*	Copyright (c) 2017 Jean-Marc VIGLINO,
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * Search places using the French National Base Address (BAN) API.
+ *
+ * @constructor
  * @extends {ol.control.Search}
  * @fires select
  * @param {Object=} Control options.
@@ -4098,6 +4530,7 @@ ol.control.SearchFeature.prototype.autocomplete = function (s) {
  */
 ol.control.SearchNominatim = function(options)
 {	options = options || {};
+    options.className = options.className || 'nominatim';
     options.typing = options.typing || 500;
     options.url = options.url || "https://nominatim.openstreetmap.org/search";
     ol.control.SearchJSON.call(this, options);
@@ -6468,7 +6901,8 @@ ol.interaction.DrawHole.prototype.removeLastPoint = function()
  * @return {ol.Feature}
  */
 ol.interaction.DrawHole.prototype.getPolygon = function()
-{	return this._select.getFeatures().item(0);
+{	return this._polygon;
+	// return this._select.getFeatures().item(0).getGeometry();
 };
 /**
  * Get current feature to add a hole and start drawing
@@ -6488,15 +6922,31 @@ ol.interaction.DrawHole.prototype._startDrawing = function(e)
 	);
 	var current = null;
 	if (features)
-	{	if (features[0].getGeometry().getType() !== "Polygon") current = null;
-		else if (features[0].getGeometry().intersectsCoordinate(coord)) current = features[0];
+	{	var poly = features[0].getGeometry();
+		if (poly.getType() === "Polygon"
+			&& poly.intersectsCoordinate(coord)) {
+				this._polygonIndex = false;
+				this._polygon = poly;
+				current = features[0];
+			}
+		else if (poly.getType() === "MultiPolygon"
+			&& poly.intersectsCoordinate(coord)) {
+				for (var i=0, p; p=poly.getPolygon(i); i++) {
+					if (p.intersectsCoordinate(coord)) {
+						this._polygonIndex = i;
+						this._polygon = p;
+						current = features[0];
+						break;
+					}
+				}
+			}
 		else current = null;
 	}
-	else current = null;
+	console.log(this._polygonIndex)
+	this._select.getFeatures().clear();
 	if (!current)
 	{	this.setActive(false);
 		this.setActive(true);
-		this._select.getFeatures().clear();
 	}
 	else
 	{	this._select.getFeatures().push(current);
@@ -6508,12 +6958,29 @@ ol.interaction.DrawHole.prototype._startDrawing = function(e)
  * @private
  */
 ol.interaction.DrawHole.prototype._finishDrawing = function(e)
-{	var c = e.feature.getGeometry().getCoordinates()[0];
-	if (c.length > 3) this.getPolygon().getGeometry().appendLinearRing(new ol.geom.LinearRing(c));
-	// The feature is the hole
+{	// The feature is the hole
 	e.hole = e.feature;
 	// Get the current feature
-	e.feature = this.getPolygon();
+	e.feature = this._select.getFeatures().item(0);
+	// Create the hole
+	var c = e.hole.getGeometry().getCoordinates()[0];
+	if (c.length > 3) {
+		if (this._polygonIndex!==false) {
+			var geom = e.feature.getGeometry();
+			var newGeom = new ol.geom.MultiPolygon();
+			for (var i=0, pi; pi=geom.getPolygon(i); i++) {
+				if (i===this._polygonIndex) {
+					pi.appendLinearRing(new ol.geom.LinearRing(c));
+					newGeom.appendPolygon(pi);
+				}
+				else newGeom.appendPolygon(pi);
+			}
+			e.feature.setGeometry(newGeom);
+		} else {
+			this.getPolygon().appendLinearRing(new ol.geom.LinearRing(c));
+		}
+	}
+	// reset
 	this._feature = null;
 	this._select.getFeatures().clear();
 };
@@ -6526,7 +6993,7 @@ ol.interaction.DrawHole.prototype._finishDrawing = function(e)
  */
 ol.interaction.DrawHole.prototype._geometryFn = function(coordinates, geometry)
 {	var coord = coordinates[0].pop();
-	if (!this.getPolygon() || this.getPolygon().getGeometry().intersectsCoordinate(coord))
+	if (!this.getPolygon() || this.getPolygon().intersectsCoordinate(coord))
 	{	this.lastOKCoord = [coord[0],coord[1]];
 	}
 	coordinates[0].push([this.lastOKCoord[0],this.lastOKCoord[1]]);
@@ -9845,7 +10312,7 @@ ol.interaction.Transform.prototype.select = function(feature, add) {
 	else this.selection_ = [feature];
 	this.ispt_ = (this.selection_.length===1 ? (this.selection_[0].getGeometry().getType() == "Point") : false);
 	this.drawSketch_();
-	this.dispatchEvent({ type:'select', feature: feature });
+	this.dispatchEvent({ type:'select', feature: feature, features: this.selection_ });
 }
 /**
  * @param {ol.MapBrowserEvent} evt Map browser event.
@@ -9904,9 +10371,16 @@ ol.interaction.Transform.prototype.handleDownEvent_ = function(evt) {
     }
 		this.ispt_ = this.selection_.length===1 ? (this.selection_[0].getGeometry().getType() == "Point") : false;
 		this.drawSketch_();
-		this.dispatchEvent({ type:'select', feature: this.selection_, pixel: evt.pixel, coordinate: evt.coordinate });
+		this.dispatchEvent({ type:'select', feature: feature, features: this.selection_, pixel: evt.pixel, coordinate: evt.coordinate });
 		return false;
 	}
+};
+/**
+ * Get features to transform
+ * @return {Array<ol.Feature>}
+ */
+ol.interaction.Transform.prototype.getFeatures = function() {
+	return this.selection_;
 };
 /**
  * Get the rotation center
@@ -9914,7 +10388,7 @@ ol.interaction.Transform.prototype.handleDownEvent_ = function(evt) {
  */
 ol.interaction.Transform.prototype.getCenter = function() {
 	return this.get('center');
-}
+};
 /**
  * Set the rotation center
  * @param {ol.coordinates|undefined} c the center point, default center on the objet

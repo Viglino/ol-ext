@@ -27,7 +27,8 @@ import ol_control_Search from './Search'
  */
 var ol_control_SearchFeature = function(options)
 {	if (!options) options = {};
-		
+	options.className = options.className || 'feature';
+
 	ol_control_Search.call(this, options);
 
 	if (typeof(options.getSearchString)=="function") this.getSearchString = options.getSearchString;
