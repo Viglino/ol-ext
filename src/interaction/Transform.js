@@ -322,7 +322,7 @@ ol_interaction_Transform.prototype.select = function(feature, add) {
 	else this.selection_ = [feature];
 	this.ispt_ = (this.selection_.length===1 ? (this.selection_[0].getGeometry().getType() == "Point") : false);
 	this.drawSketch_();
-	this.dispatchEvent({ type:'select', feature: feature });
+	this.dispatchEvent({ type:'select', feature: feature, features: this.selection_ });
 }
 
 /**
@@ -384,9 +384,18 @@ ol_interaction_Transform.prototype.handleDownEvent_ = function(evt) {
     }
 		this.ispt_ = this.selection_.length===1 ? (this.selection_[0].getGeometry().getType() == "Point") : false;
 		this.drawSketch_();
-		this.dispatchEvent({ type:'select', feature: this.selection_, pixel: evt.pixel, coordinate: evt.coordinate });
+		this.dispatchEvent({ type:'select', feature: feature, features: this.selection_, pixel: evt.pixel, coordinate: evt.coordinate });
 		return false;
 	}
+};
+
+
+/**
+ * Get features to transform
+ * @return {Array<ol.Feature>}
+ */
+ol_interaction_Transform.prototype.getFeatures = function() {
+	return this.selection_;
 };
 
 /**
@@ -395,7 +404,7 @@ ol_interaction_Transform.prototype.handleDownEvent_ = function(evt) {
  */
 ol_interaction_Transform.prototype.getCenter = function() {
 	return this.get('center');
-}
+};
 
 /**
  * Set the rotation center
