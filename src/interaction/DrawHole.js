@@ -96,7 +96,8 @@ ol_interaction_DrawHole.prototype.removeLastPoint = function()
  * @return {ol.Feature}
  */
 ol_interaction_DrawHole.prototype.getPolygon = function()
-{	return this._select.getFeatures().item(0);
+{	return this._polygon;
+	// return this._select.getFeatures().item(0).getGeometry();
 };
 
 /**
@@ -117,16 +118,31 @@ ol_interaction_DrawHole.prototype._startDrawing = function(e)
 	);
 	var current = null;
 	if (features)
-	{	if (features[0].getGeometry().getType() !== "Polygon") current = null;
-		else if (features[0].getGeometry().intersectsCoordinate(coord)) current = features[0];
+	{	var poly = features[0].getGeometry();
+		if (poly.getType() === "Polygon"
+			&& poly.intersectsCoordinate(coord)) {
+				this._polygonIndex = false;
+				this._polygon = poly;
+				current = features[0];
+			}
+		else if (poly.getType() === "MultiPolygon"
+			&& poly.intersectsCoordinate(coord)) {
+				for (var i=0, p; p=poly.getPolygon(i); i++) {
+					if (p.intersectsCoordinate(coord)) {
+						this._polygonIndex = i;
+						this._polygon = p;
+						current = features[0];
+						break;
+					}
+				}
+			}
 		else current = null;
 	}
-	else current = null;
-	
+	console.log(this._polygonIndex)
+	this._select.getFeatures().clear();
 	if (!current)
 	{	this.setActive(false);
 		this.setActive(true);
-		this._select.getFeatures().clear();
 	}
 	else
 	{	this._select.getFeatures().push(current);
@@ -139,12 +155,29 @@ ol_interaction_DrawHole.prototype._startDrawing = function(e)
  * @private
  */
 ol_interaction_DrawHole.prototype._finishDrawing = function(e)
-{	var c = e.feature.getGeometry().getCoordinates()[0];
-	if (c.length > 3) this.getPolygon().getGeometry().appendLinearRing(new ol_geom_LinearRing(c));
-	// The feature is the hole
+{	// The feature is the hole
 	e.hole = e.feature;
 	// Get the current feature
-	e.feature = this.getPolygon();
+	e.feature = this._select.getFeatures().item(0);
+	// Create the hole
+	var c = e.hole.getGeometry().getCoordinates()[0];
+	if (c.length > 3) {
+		if (this._polygonIndex!==false) {
+			var geom = e.feature.getGeometry();
+			var newGeom = new ol.geom.MultiPolygon();
+			for (var i=0, pi; pi=geom.getPolygon(i); i++) {
+				if (i===this._polygonIndex) {
+					pi.appendLinearRing(new ol_geom_LinearRing(c));
+					newGeom.appendPolygon(pi);
+				}
+				else newGeom.appendPolygon(pi);
+			}
+			e.feature.setGeometry(newGeom);
+		} else {
+			this.getPolygon().appendLinearRing(new ol_geom_LinearRing(c));
+		}
+	}
+	// reset
 	this._feature = null;
 	this._select.getFeatures().clear();
 };
@@ -158,7 +191,7 @@ ol_interaction_DrawHole.prototype._finishDrawing = function(e)
  */
 ol_interaction_DrawHole.prototype._geometryFn = function(coordinates, geometry)
 {	var coord = coordinates[0].pop();
-	if (!this.getPolygon() || this.getPolygon().getGeometry().intersectsCoordinate(coord))
+	if (!this.getPolygon() || this.getPolygon().intersectsCoordinate(coord))
 	{	this.lastOKCoord = [coord[0],coord[1]];
 	}
 	coordinates[0].push([this.lastOKCoord[0],this.lastOKCoord[1]]);
