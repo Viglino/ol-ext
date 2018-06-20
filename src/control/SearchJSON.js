@@ -12,9 +12,9 @@ import ol_geom_Point from 'ol/geom/point'
  * You can use it for simple custom search or as base to new class.
  *
  * @constructor
- * @extends {ol_control_Search}
+ * @extends {ol.control.Search}
  * @fires select
- * @param {Object=} Control options.
+ * @param {any} options extend ol.control.Search options
  *	@param {string} options.className control class name
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
@@ -25,9 +25,11 @@ import ol_geom_Point from 'ol/geom/point'
  *  @param {function | undefined} options.handleResponse Handle server response to pass the features array to the list
  *
  *	@param {string|undefined} options.url Url of the search api
+ *	@param {string | undefined} options.authentication: basic authentication for the search API as btoa("login:pwd")
  */
 var ol_control_SearchJSON = function(options)
 {	options = options || {};
+	options.className = options.className || 'JSON';
 	delete options.autocomplete;
 	options.minLength = options.minLength || 3;
 	options.typing = options.typing || 800;
@@ -42,6 +44,7 @@ var ol_control_SearchJSON = function(options)
 		url = parser.href;
 	}
 	this.set('url', url);
+	this._auth = options.authentication;
 
 	// Overwrite handleResponse
 	if (typeof(options.handleResponse)==='function') this.handleResponse = options.handleResponse;
@@ -55,7 +58,6 @@ ol.inherits(ol_control_SearchJSON, ol_control_Search);
 ol_control_SearchJSON.prototype.autocomplete = function (s, cback)
 {	var data = this.requestData(s);
 
-	var self = this;
 	var url = encodeURI(this.get('url'));
 
 	var parameters = '';
@@ -64,30 +66,55 @@ ol_control_SearchJSON.prototype.autocomplete = function (s, cback)
 		if (data.hasOwnProperty(index)) parameters += index + '=' + data[index];
 	}
 
+	this.ajax(url + parameters, 
+		function (resp) {
+			if (resp.status >= 200 && resp.status < 400) {
+				var data = JSON.parse(resp.response);
+				cback(this.handleResponse(data));
+			} else {
+				console.log(url + parameters, arguments);
+			}
+		}, function(){
+			console.log(url + parameters, arguments);
+		});
+};
+
+/** Send an ajax request (GET)
+ * @param {string} url
+ * @param {function} onsuccess callback
+ * @param {function} onerror callback
+ */
+ol_control_SearchJSON.prototype.ajax = function (url, onsuccess, onerror){
+	var self = this;
+
+	// Abort previous request
 	if (this._request) {
 		this._request.abort();
 	}
+
+	// New request
 	var ajax = this._request = new XMLHttpRequest();
-	ajax.open('GET', url + parameters, true);
+	ajax.open('GET', url, true);
+	if (this._auth) {
+		ajax.setRequestHeader("Authorization", "Basic " + this._auth);
+	}
 	this.element.classList.add('searching');
 
-	ajax.onload = function () {
-		self.element.classList.remove('searching');
-		self._request = null;
-		if (this.status >= 200 && this.status < 400) {
-			var data = JSON.parse(this.response);
-			cback(self.handleResponse(data));
-		} else {
-			console.log(url + parameters, arguments);
-		}
-	};
-
-	ajax.onerror = function () {
+	// Load complete
+	ajax.onload = function() {
 		self._request = null;
 		self.element.classList.remove('searching');
-		console.log(url + parameters, arguments);
+		onsuccess.call(self, this);
 	};
 
+	// Oops, TODO do something ?
+	ajax.onerror = function() {
+		self._request = null;
+		self.element.classList.remove('searching');
+		if (onerror) onerror.call(self);
+	};
+
+	// GO!
 	ajax.send();
 };
 

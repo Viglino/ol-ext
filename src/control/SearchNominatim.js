@@ -27,6 +27,7 @@ import ol_control_SearchJSON from "./SearchJSON";
  */
 var ol_control_SearchNominatim = function(options)
 {	options = options || {};
+    options.className = options.className || 'nominatim';
     options.typing = options.typing || 500;
     options.url = options.url || "https://nominatim.openstreetmap.org/search";
     ol_control_SearchJSON.call(this, options);
