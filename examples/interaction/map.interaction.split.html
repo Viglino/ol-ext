@@ -34,9 +34,9 @@
 		<h1>ol-ext: Split interaction</h1>
 	</a>
 	<div class="info">
-		<b>ol.interaction.Split</b> is an interaction to split feature geometry by clicking on a point on the feature (ol.geom.LineString).
+		<b>ol.interaction.Split</b> is an interaction to split linestrings by clicking on a point on the feature (ol.geom.LineString only).
 		<br/>
-		THe feature is cloned. The interaction fires a beforesplit and aftersplit event.
+		The feature is cloned. The interaction fires a beforesplit and aftersplit event.
 		You can listen to the event on the interaction itself or on the source of the splitted feature.
 		<br/>
 		The sources provided to the interaction must have a spatial index to be splitable (configured with useSpatialIndex set to true).
@@ -101,7 +101,7 @@
 		})
 		map.addLayer(vector);
 		vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[-288626, 5757848], [210354, 5576845], [34243, 6305749]])));
-		vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[406033, 5664901], [689767, 5718712], [699551, 6149206], [425601, 6183449]])));
+		vector.getSource().addFeature(new ol.Feature(new ol.geom.Polygon([[[406033, 5664901], [689767, 5718712], [699551, 6149206], [425601, 6183449],[406033, 5664901]]])));
 
 
 		var interactions = 

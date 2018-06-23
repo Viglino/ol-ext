@@ -9354,7 +9354,7 @@ ol.interaction.Split.prototype.getClosestFeature = function(e)
 	for (var i=0; i<this.sources_.length; i++)
 	{	var source = this.sources_[i];
 		f = source.getClosestFeatureToCoordinate(e.coordinate);
-		if (f.getGeometry().splitAt, this.tolerance_) 
+		if (f.getGeometry().splitAt) 
 		{	c = f.getGeometry().getClosestPoint(e.coordinate);
 			g = new ol.geom.LineString([e.coordinate,c]);
 			d = g.getLength() / e.frameState.viewState.resolution;
