@@ -54,7 +54,7 @@ The library will be avaliable in the `node_modules/openlayers-ext/dist` director
 <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
 <!-- Openlayers -->
-<link rel="stylesheet" href="https://openlayers.org/en/master/css/ol.css" />
+<link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
 <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
 
 <!-- OL-ext -->
