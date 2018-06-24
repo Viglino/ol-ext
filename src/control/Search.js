@@ -230,15 +230,21 @@ ol_control_Search.prototype._handleSelect = function (f) {
         hist.splice(i,1);
       }
     }
-    hist.unshift(f);
-    while (hist.length > (this.get('maxHistory')||10)) {
-      hist.pop();
-    } 
-    this.saveHistory();
-  } catch (e) {};
+  } catch (e) {
+    for (var i=hist.length-1; i>=0; i--) {
+      if (hist[i] === f) {
+        hist.splice(i,1);
+      }
+    }
+	};
+	hist.unshift(f);
+	while (hist.length > (this.get('maxHistory')||10)) {
+		hist.pop();
+	} 
+	this.saveHistory();
   // Select feature
 	this.select(f);
-	this.drawList_();
+	//this.drawList_();
 };
 
 /** Save history (in the localstorage)
