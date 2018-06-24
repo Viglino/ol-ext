@@ -1,0 +1,75 @@
+.ol-control.ol-bar.ol-geobar .ol-control {
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.ol-control.ol-bar.ol-geobar .ol-bar {
+  display: none;
+}
+.ol-bar.ol-geobar.ol-active .ol-bar {
+  display: inline-block;
+}
+
+.ol-bar.ol-geobar .geolocBt button:before,
+.ol-bar.ol-geobar .geolocBt button:after {
+  content: "";
+  display: block;
+  position: absolute;
+  border: 1px solid transparent;
+  border-width: 0.3em 0.8em 0 0.2em;
+  border-color: #fff transparent transparent;
+  -webkit-transform: rotate(-30deg);
+  transform: rotate(-30deg);
+  top: .45em;
+  left: 0.15em;
+  font-size: 1.2em;
+}
+.ol-bar.ol-geobar .geolocBt button:after {
+  border-width: 0 0.8em .3em 0.2em;
+  border-color: transparent transparent #fff;
+	-webkit-transform: rotate(-61deg);
+	transform: rotate(-61deg);
+}
+
+.ol-bar.ol-geobar .startBt button:before {
+  content: "";
+  display: block;
+  position: absolute;
+  width: 1em;
+  height: 1em;
+  background-color: #800;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%,-50%);
+  transform: translate(-50%,-50%);
+}
+.ol-bar.ol-geobar .pauseBt button:before,
+.ol-bar.ol-geobar .pauseBt button:after {
+  content: "";
+  display: block;
+  position: absolute;
+  width: .25em;
+  height: 1em;
+  background-color: #fff;
+  top: 50%;
+  left: 35%;
+  -webkit-transform: translate(-50%,-50%);
+  transform: translate(-50%,-50%);
+}
+.ol-bar.ol-geobar .pauseBt button:after {
+  left: 65%;
+}
+
+.ol-control.ol-bar.ol-geobar .centerBt,
+.ol-control.ol-bar.ol-geobar .pauseBt,
+.ol-bar.ol-geobar.pauseTrack .startBt,
+.ol-bar.ol-geobar.centerTrack .startBt,
+.ol-bar.ol-geobar.centerTrack.pauseTrack .pauseBt,
+.ol-bar.ol-geobar.centerTrack .pauseBt {
+  display: none;
+}
+.ol-bar.ol-geobar.pauseTrack .pauseBt,
+.ol-bar.ol-geobar.centerTrack .centerBt{
+  display: inline-block;
+}
