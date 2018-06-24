@@ -223,15 +223,21 @@ ol.control.Search.prototype._handleSelect = function (f) {
         hist.splice(i,1);
       }
     }
-    hist.unshift(f);
-    while (hist.length > (this.get('maxHistory')||10)) {
-      hist.pop();
-    } 
-    this.saveHistory();
-  } catch (e) {};
+  } catch (e) {
+    for (var i=hist.length-1; i>=0; i--) {
+      if (hist[i] === f) {
+        hist.splice(i,1);
+      }
+    }
+	};
+	hist.unshift(f);
+	while (hist.length > (this.get('maxHistory')||10)) {
+		hist.pop();
+	} 
+	this.saveHistory();
   // Select feature
 	this.select(f);
-	this.drawList_();
+	//this.drawList_();
 };
 /** Save history (in the localstorage)
  */
@@ -4217,13 +4223,13 @@ ol.control.SearchBAN.prototype.select = function (f){
  *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return the property 
  *	@param {function | undefined} options.getSearchString a function that take a feature and return a text to be used as search string, default geTitle() is used as search string
  */
-ol.control.SearchFeature = function(options)
-{	if (!options) options = {};
-	options.className = options.className || 'feature';
-	ol.control.Search.call(this, options);
-	if (typeof(options.getSearchString)=="function") this.getSearchString = options.getSearchString;
-	this.set('property', options.property || 'name');
-	this.source_ = options.source;
+ol.control.SearchFeature = function(options) {
+  if (!options) options = {};
+  options.className = options.className || 'feature';
+  ol.control.Search.call(this, options);
+  if (typeof(options.getSearchString)=="function") this.getSearchString = options.getSearchString;
+  this.set('property', options.property || 'name');
+  this.source_ = options.source;
 };
 ol.inherits(ol.control.SearchFeature, ol.control.Search);
 /** Returns the text to be displayed in the menu
@@ -4264,22 +4270,23 @@ ol.control.SearchFeature.prototype.setSource = function (source) {
 * @api
 */
 ol.control.SearchFeature.prototype.autocomplete = function (s) {
-	var result = [];
-	if (this.source_) {
-		// regexp
-		s = s.replace(/^\*/,'');
-		var rex = new RegExp(s, 'i');
-		// The source
-		var features = this.source_.getFeatures();
-		var max = this.get('maxItems')
-		for (var i=0, f; f=features[i]; i++) {
-			if (rex.test(this.getSearchString(f))) {
-				result.push(f);
-				if ((--max)<=0) break;
-			}
-		}
-	}
-	return result;
+  var result = [];
+  if (this.source_) {
+    // regexp
+    s = s.replace(/^\*/,'');
+    var rex = new RegExp(s, 'i');
+    // The source
+    var features = this.source_.getFeatures();
+    var max = this.get('maxItems')
+    for (var i=0, f; f=features[i]; i++) {
+      var att = this.getSearchString(f);
+      if (att !== undefined && rex.test(att)) {
+        result.push(f);
+        if ((--max)<=0) break;
+      }
+    }
+  }
+  return result;
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
