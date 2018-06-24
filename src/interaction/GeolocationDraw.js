@@ -21,10 +21,10 @@ import ol_extent from 'ol/extent'
  * @constructor
  * @extends {ol_interaction_Interaction}
  * @fires drawstart, drawend, drawing, tracking, follow
- * @param {olx.interaction.GeolocationDrawOption} options
+ * @param {any} options
  *	@param { ol.Collection.<ol.Feature> | undefined } option.features Destination collection for the drawn features.
  *	@param { ol.source.Vector | undefined } options.source Destination source for the drawn features.
- *	@param {ol.geom.GeometryType} options.type Drawing type ('Point', 'LineString', 'Polygon'). Required.
+ *	@param {ol.geom.GeometryType} options.type Drawing type ('Point', 'LineString', 'Polygon'), default LineString.
  *	@param {Number | undefined} options.minAccuracy minimum accuracy underneath a new point will be register (if no condition), default 20
  *	@param {function | undefined} options.condition a function that take a ol_Geolocation object and return a boolean to indicate whether location should be handled or not, default return true if accuraty < minAccuraty
  *	@param {Object} options.attributes a list of attributes to register as Point properties: {accuracy:true,accuracyGeometry:true,heading:true,speed:true}, default none.
@@ -38,7 +38,7 @@ var ol_interaction_GeolocationDraw = function(options)
 	var self = this;
 
 	// Geolocation
-	var geoloc = this.geolocation = new ol_Geolocation(/** @type {olx.GeolocationOptions} */
+	var geoloc = this.geolocation = new ol_Geolocation(
 	({	projection: "EPSG:4326",
 		trackingOptions: 
 		{	maximumAge: 10000,
@@ -202,6 +202,13 @@ ol_interaction_GeolocationDraw.prototype.stop = function()
 */
 ol_interaction_GeolocationDraw.prototype.pause = function(b)
 {	this.pause_ = b!==false;
+};
+
+/** Is paused
+* @return {boolean} b 
+*/
+ol_interaction_GeolocationDraw.prototype.isPaused = function()
+{	return this.pause_;
 };
 
 /** Enable following the track on the map

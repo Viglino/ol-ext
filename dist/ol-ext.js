@@ -2483,6 +2483,95 @@ ol.control.GeoBookmark.prototype.addBookmark = function(name, position, zoom, pe
   this.setBookmarks(bmark);
 };
 
+/*	Copyright (c) 2016 Jean-Marc VIGLINO,
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Control bar for OL3
+ * The control bar is a container for other controls. It can be used to create toolbars.
+ * Control bars can be nested and combined with ol.control.Toggle to handle activate/deactivate.
+ *
+ * @constructor
+ * @extends {ol.control.Control}
+ * @param {Object=} options Control options.
+ *	@param {String} options.className class of the control
+ *	@param {String} options.centerLabel label for center button, default center
+ */
+ol.control.GeolocationBar = function(options) {
+  if (!options) options = {};
+  options.className = options.className || 'ol-geobar';
+  ol.control.Bar.call(this, options);
+  this.setPosition(options.position || 'bottom-right');
+  var element = $(this.element);
+  // Geolocation draw interaction
+  var interaction = new ol.interaction.GeolocationDraw({	
+    source: options.source,
+    zoom: options.zoom,
+    followTrack: true,
+    minAccuracy: options.minAccuracy || 10000
+  });
+  this._geolocBt = new ol.control.Toggle ({
+    className: 'geolocBt',
+    interaction: interaction,
+    onToggle: function(b) {
+      interaction.pause(true);
+    }
+  });
+  this.addControl(this._geolocBt);
+  this._geolocBt.setActive(false);
+  // Buttons
+  var bar = new ol.control.Bar();
+  this.addControl(bar);
+  var centerBt = new ol.control.TextButton ({
+    className: 'centerBt',
+    html: options.centerLabel ||'center',
+    handleClick: function(b) {
+      interaction.setFollowTrack(true);
+    }
+  });
+  bar.addControl(centerBt);
+  var startBt = new ol.control.Button ({
+    className: 'startBt',
+    handleClick: function(){
+      interaction.pause(false);
+      interaction.setFollowTrack('auto');
+      element.addClass('pauseTrack');
+    }
+  });
+  bar.addControl(startBt);
+  var pauseBt = new ol.control.Button ({
+    className: 'pauseBt',
+    handleClick: function(){
+      interaction.pause(true);      
+      interaction.setFollowTrack('auto');
+      element.removeClass('pauseTrack');
+    }
+  });
+  bar.addControl(pauseBt);
+  interaction.on('follow', function(e) {
+    if (e.following) {
+      element.removeClass('centerTrack');
+    } else {
+      element.addClass('centerTrack');
+    }
+  });
+  // Activate
+  this._geolocBt.on('change:active', function(e) {
+    if (e.active) {
+      element.addClass('ol-active');
+    } else {
+      element.removeClass('ol-active');
+    }
+  });
+};
+ol.inherits(ol.control.GeolocationBar, ol.control.Bar);
+/** Get the ol.interaction.GeolocationDraw associatedwith the bar
+ * 
+ */
+ol.control.GeolocationBar.prototype.getInteraction = function () {
+  return this._geolocBt.getInteraction();
+};
+
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -4955,15 +5044,15 @@ ol.inherits(ol.control.TextButton, ol.control.Button);
  * @extends {ol.control.Control}
  * @fires change:active, change:disable
  * @param {Object=} options Control options.
- *		className {String} class of the control
- *		title {String} title of the control
- *		html {String} html to insert in the control
- *		interaction {ol.interaction} interaction associated with the control
- *		active {bool} the control is created active, default false
- *		disable {bool} the control is created disabled, default false
- *		bar {ol.control.Bar} a subbar associated with the control (drawn when active if control is nested in a ol.control.Bar)
- *		autoActive {bool} the control will activate when shown in an ol.control.Bar, default false
- *		onToggle {function} callback when control is clicked (or use change:active event)
+ *	@param {String} options.className class of the control
+ *	@param {String} options.title title of the control
+ *	@param {String} options.html html to insert in the control
+ *	@param {ol.interaction} options.interaction interaction associated with the control
+ *	@param {bool} options.active the control is created active, default false
+ *	@param {bool} options.disable the control is created disabled, default false
+ *	@param {ol.control.Bar} options.bar a subbar associated with the control (drawn when active if control is nested in a ol.control.Bar)
+ *	@param {bool} options.autoActive the control will activate when shown in an ol.control.Bar, default false
+ *	@param {function} options.onToggle callback when control is clicked (or use change:active event)
  */
 ol.control.Toggle = function(options)
 {	options = options || {};
@@ -7805,10 +7894,10 @@ ol.interaction.Flashlight.prototype.postcompose_ = function(e)
  * @constructor
  * @extends {ol.interaction.Interaction}
  * @fires drawstart, drawend, drawing, tracking, follow
- * @param {olx.interaction.GeolocationDrawOption} options
+ * @param {any} options
  *	@param { ol.Collection.<ol.Feature> | undefined } option.features Destination collection for the drawn features.
  *	@param { ol.source.Vector | undefined } options.source Destination source for the drawn features.
- *	@param {ol.geom.GeometryType} options.type Drawing type ('Point', 'LineString', 'Polygon'). Required.
+ *	@param {ol.geom.GeometryType} options.type Drawing type ('Point', 'LineString', 'Polygon'), default LineString.
  *	@param {Number | undefined} options.minAccuracy minimum accuracy underneath a new point will be register (if no condition), default 20
  *	@param {function | undefined} options.condition a function that take a ol.Geolocation object and return a boolean to indicate whether location should be handled or not, default return true if accuraty < minAccuraty
  *	@param {Object} options.attributes a list of attributes to register as Point properties: {accuracy:true,accuracyGeometry:true,heading:true,speed:true}, default none.
@@ -7821,7 +7910,7 @@ ol.interaction.GeolocationDraw = function(options)
 {	if (!options) options={};
 	var self = this;
 	// Geolocation
-	var geoloc = this.geolocation = new ol.Geolocation(/** @type {olx.GeolocationOptions} */
+	var geoloc = this.geolocation = new ol.Geolocation(
 	({	projection: "EPSG:4326",
 		trackingOptions: 
 		{	maximumAge: 10000,
@@ -7969,6 +8058,12 @@ ol.interaction.GeolocationDraw.prototype.stop = function()
 */
 ol.interaction.GeolocationDraw.prototype.pause = function(b)
 {	this.pause_ = b!==false;
+};
+/** Is paused
+* @return {boolean} b 
+*/
+ol.interaction.GeolocationDraw.prototype.isPaused = function()
+{	return this.pause_;
 };
 /** Enable following the track on the map
 * @param {boolean|auto|position|visible} follow, 
