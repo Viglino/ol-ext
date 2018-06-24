@@ -43,6 +43,7 @@ var ol_control_GeolocationBar = function(options) {
     interaction: interaction,
     onToggle: function(b) {
       interaction.pause(true);
+      interaction.setFollowTrack(true);
     }
   });
   this.addControl(this._geolocBt);
@@ -56,7 +57,7 @@ var ol_control_GeolocationBar = function(options) {
     className: 'centerBt',
     html: options.centerLabel ||'center',
     handleClick: function(b) {
-      interaction.setFollowTrack(true);
+      interaction.setFollowTrack('auto');
     }
   });
   bar.addControl(centerBt);
