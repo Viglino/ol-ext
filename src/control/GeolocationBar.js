@@ -44,6 +44,7 @@ var ol_control_GeolocationBar = function(options) {
     onToggle: function(b) {
       interaction.pause(true);
       interaction.setFollowTrack(true);
+      element.removeClass('pauseTrack');
     }
   });
   this.addControl(this._geolocBt);
