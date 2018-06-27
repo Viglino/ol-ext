@@ -47,7 +47,7 @@ var ol_control_Permalink = function(opt_options)
 		target: options.target
 	});
 
-	this.on ('change', this.viewChange_, this);
+	this.on ('change', this.viewChange_.bind(this));
 
 	// Save search params
 	this.search_ = {};
@@ -76,18 +76,21 @@ ol.inherits(ol_control_Permalink, ol_control_Control);
  * Set the map instance the control associated with.
  * @param {ol.Map} map The map instance.
  */
-ol_control_Permalink.prototype.setMap = function(map)
-{   if (this.getMap())
-	{	this.getMap().getLayerGroup().un('change', this.layerChange_, this);
-		this.getMap().un('moveend', this.viewChange_, this);
+ol_control_Permalink.prototype.setMap = function(map) {
+	if (this._listener) {
+		ol.Observable.unByKey(this._listener.change);
+		ol.Observable.unByKey(this._listener.moveend);
 	}
+	this._listener = null;
 
 	ol_control_Control.prototype.setMap.call(this, map);
 	
 	// Get change 
 	if (map) 
-	{	map.getLayerGroup().on('change', this.layerChange_, this);
-		map.on('moveend', this.viewChange_, this);
+	{	this._listener = {
+			change: map.getLayerGroup().on('change', this.layerChange_.bind(this)),
+			moveend: map.on('moveend', this.viewChange_.bind(this))
+		};
 		this.setPosition();
 	}
 };

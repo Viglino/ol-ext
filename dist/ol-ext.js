@@ -800,18 +800,20 @@ ol.control.LayerSwitcher.prototype.displayInLayerSwitcher = function(layer) {
 ol.control.LayerSwitcher.prototype.setMap = function(map)
 {   ol.control.Control.prototype.setMap.call(this, map);
 	this.drawPanel();
-	if (this.map_)
-	{	this.map_.getLayerGroup().un('change', this.drawPanel, this);
-		this.map_.un('moveend', this.viewChange, this);
-		this.map_.un('change:size', this.overflow, this);
-		// console.log("remove");
+	if (this._listener) {
+		if (this._listener) ol.Observable.unByKey(this._listener.change);
+		if (this._listener) ol.Observable.unByKey(this._listener.moveend);
+		if (this._listener) ol.Observable.unByKey(this._listener.size);
 	}
+	this._listener = null;
 	this.map_ = map;
 	// Get change (new layer added or removed)
 	if (map) 
-	{	map.getLayerGroup().on('change', this.drawPanel, this);
-		map.on('moveend', this.viewChange, this);
-		map.on('change:size', this.overflow, this);
+	{	this._listener = {
+			change: map.getLayerGroup().on('change', this.drawPanel.bind(this)),
+			moveend: map.on('moveend', this.viewChange.bind(this)),
+			size: map.on('change:size', this.overflow.bind(this))
+		}
 	}
 };
 /** Add a custom header
@@ -1593,11 +1595,14 @@ ol.control.CanvasAttribution.prototype.setStyle = function (style)
  */
 ol.control.CanvasAttribution.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
-	if (oldmap) oldmap.un('postcompose', this.drawAttribution_.bind(this));
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
 	ol.control.ScaleLine.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 	// Get change (new layer added or removed)
-	if (map) map.on('postcompose', this.drawAttribution_.bind(this));
+	if (map) {
+		this._listener = map.on('postcompose', this.drawAttribution_.bind(this));
+	}
 	this.map_ = map;
 	this.setCanvas (this.isCanvas_);
 }
@@ -1672,11 +1677,14 @@ ol.inherits(ol.control.CanvasScaleLine, ol.control.ScaleLine);
  */
 ol.control.CanvasScaleLine.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
-	if (oldmap) oldmap.un('postcompose', this.drawScale_.bind(this));
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
 	ol.control.ScaleLine.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 	// Add postcompose on the map
-	if (map) map.on('postcompose', this.drawScale_.bind(this));
+	if (map) {
+		this._listener = map.on('postcompose', this.drawScale_.bind(this));
+	} 
 	// Hide the default DOM element
 	this.$element = $(this.element).css("visibility","hidden");
 	this.olscale = $(".ol-scale-line-inner", this.element);
@@ -1797,11 +1805,14 @@ ol.inherits(ol.control.CanvasTitle, ol.control.Control);
  */
 ol.control.CanvasTitle.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
-	if (oldmap) oldmap.un('postcompose', this.drawTitle_.bind(this));
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
 	ol.control.Control.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 	// Get change (new layer added or removed)
-	if (map) map.on('postcompose', this.drawTitle_.bind(this));
+	if (map) {
+		this._listener = map.on('postcompose', this.drawTitle_.bind(this));
+	}
 }
 /**
  * Change the control style
@@ -1928,13 +1939,12 @@ ol.inherits(ol.control.Cloud, ol.control.Control);
  * @param {_ol_Map_} map Map.
  * @api stable
  */
-ol.control.Cloud.prototype.setMap = function (map)
-{	if (this.getMap()) 
-	{	this.getMap().un('postcompose', this.drawCloud_.bind(this));
-	}
+ol.control.Cloud.prototype.setMap = function (map) {
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
 	ol.control.Control.prototype.setMap.call(this, map);
 	if (map) 
-	{	map.on('postcompose', this.drawCloud_.bind(this));
+	{	this._listener = map.on('postcompose', this.drawCloud_.bind(this));
 	}
 };
 /** Set wind direction / force
@@ -2129,11 +2139,12 @@ ol.inherits(ol.control.Compass, ol.control.Control);
  */
 ol.control.Compass.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
-	if (oldmap) oldmap.un('postcompose', this.drawCompass_, this);
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
 	ol.control.Control.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 	// Get change (new layer added or removed)
-	if (map) map.on('postcompose', this.drawCompass_, this);
+	if (map) this._listener = map.on('postcompose', this.drawCompass_.bind(this));
 };
 /**
  * Create a default image.
@@ -2391,14 +2402,14 @@ ol.control.GeoBookmark = function(options) {
     target: options.target
   });
   this.on("propertychange", function(e) {
-	if (e.key==='editable')
-    {	element.className = element.className.replace(" ol-editable","");
-		if (this.get('editable'))
-		{	element.className += " ol-editable";
-		}
+    if (e.key==='editable') {
+      element.className = element.className.replace(" ol-editable","");
+      if (this.get('editable')) {
+        element.className += " ol-editable";
+      }
     }
-    console.log(e);
-  }), this;
+    // console.log(e);
+  }.bind(this));
   this.set("namespace", options.namespace || 'ol');
   this.set("editable", options.editable !== false);
   // Set default bmark
@@ -2653,12 +2664,13 @@ ol.inherits(ol.control.Globe, ol.control.Control);
  * Set the map instance the control associated with.
  * @param {ol.Map} map The map instance.
  */
-ol.control.Globe.prototype.setMap = function(map)
-{	if (this.getMap()) this.getMap().getView().un('propertychange', this.setView, this);
+ol.control.Globe.prototype.setMap = function(map) {
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
 	ol.control.Control.prototype.setMap.call(this, map);
 	// Get change (new layer added or removed)
 	if (map) 
-	{	map.getView().on('propertychange', this.setView, this);
+	{	this._listener = map.getView().on('propertychange', this.setView.bind(this));
 		this.setView();
 	}
 };
@@ -2769,13 +2781,16 @@ ol.inherits(ol.control.Graticule, ol.control.Control);
  * @param {_ol_Map_} map Map.
  * @api stable
  */
-ol.control.Graticule.prototype.setMap = function (map)
-{	var oldmap = this.getMap();
-	if (oldmap) oldmap.un('postcompose', this.drawGraticule_, this);
+ol.control.Graticule.prototype.setMap = function (map) {
+	var oldmap = this.getMap();
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
 	ol.control.Control.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 	// Get change (new layer added or removed)
-	if (map) map.on('postcompose', this.drawGraticule_, this);
+	if (map) {
+		this._listener = map.on('postcompose', this.drawGraticule_.bind(this));
+	}
 };
 ol.control.Graticule.prototype.setStyle = function (style)
 {	this.style = style;
@@ -3007,7 +3022,7 @@ ol.control.GridReference = function(options)
 			{	if (options.source.getState() === 'ready') 
 				{   this.setIndex(options.source.getFeatures(), options);
 				}
-			}, this);
+			}.bind(this));
 	};
 	// Options
 	this.set('maxResolution', options.maxResolution || Infinity);
@@ -3124,12 +3139,13 @@ ol.control.GridReference.prototype.getReference = function (coords)
  */
 ol.control.GridReference.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
-	if (oldmap) oldmap.un('postcompose', this.drawGrid_, this);
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
 	ol.control.Control.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 	// Get change (new layer added or removed)
 	if (map) 
-	{	map.on('postcompose', this.drawGrid_, this);
+	{	this._listener = map.on('postcompose', this.drawGrid_.bind(this));
 		if (this.source_) this.setIndex(this.source_.getFeatures());
 	}
 };
@@ -3600,13 +3616,12 @@ ol.control.Overview.prototype.setPosition = function(align)
  * Set the map instance the control associated with.
  * @param {ol.Map} map The map instance.
  */
-ol.control.Overview.prototype.setMap = function(map)
-{   if (this.getMap())
-	{	this.getMap().getView().un('propertychange', this.setView, this);
-	}
+ol.control.Overview.prototype.setMap = function(map) {
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
 	ol.control.Control.prototype.setMap.call(this, map);
 	if (map) 
-	{	map.getView().on('propertychange', this.setView, this);
+	{	this._listener = map.getView().on('propertychange', this.setView.bind(this));
 		this.setView();
 	}
 };
@@ -3720,7 +3735,7 @@ ol.control.Permalink = function(opt_options)
 	{	element: element,
 		target: options.target
 	});
-	this.on ('change', this.viewChange_, this);
+	this.on ('change', this.viewChange_.bind(this));
 	// Save search params
 	this.search_ = {};
 	var hash = document.location.hash || document.location.search;
@@ -3746,16 +3761,19 @@ ol.inherits(ol.control.Permalink, ol.control.Control);
  * Set the map instance the control associated with.
  * @param {ol.Map} map The map instance.
  */
-ol.control.Permalink.prototype.setMap = function(map)
-{   if (this.getMap())
-	{	this.getMap().getLayerGroup().un('change', this.layerChange_, this);
-		this.getMap().un('moveend', this.viewChange_, this);
+ol.control.Permalink.prototype.setMap = function(map) {
+	if (this._listener) {
+		ol.Observable.unByKey(this._listener.change);
+		ol.Observable.unByKey(this._listener.moveend);
 	}
+	this._listener = null;
 	ol.control.Control.prototype.setMap.call(this, map);
 	// Get change 
 	if (map) 
-	{	map.getLayerGroup().on('change', this.layerChange_, this);
-		map.on('moveend', this.viewChange_, this);
+	{	this._listener = {
+			change: map.getLayerGroup().on('change', this.layerChange_.bind(this)),
+			moveend: map.on('moveend', this.viewChange_.bind(this))
+		};
 		this.setPosition();
 	}
 };
@@ -10163,6 +10181,7 @@ ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
  *	@param {bool} options.scale can scale the feature
  *	@param {bool} options.rotate can rotate the feature
  *	@param {ol.events.ConditionType | undefined} options.keepAspectRatio A function that takes an ol.MapBrowserEvent and returns a boolean to keep aspect ratio, default ol.events.condition.shiftKeyOnly.
+ *	@param {ol.events.ConditionType | undefined} options.modifyCenter A function that takes an ol.MapBrowserEvent and returns a boolean to apply scale & strech from the center, default ol.events.condition.metaKey or ol.events.condition.ctrlKey.
  *	@param {} options.style list of ol.style for handles
  *
  */
@@ -10207,6 +10226,8 @@ ol.interaction.Transform = function(options) {
 	this.set('rotate', (options.rotate!==false));
 	/* Keep aspect ratio */
 	this.set('keepAspectRatio', (options.keepAspectRatio || function(e){ return e.originalEvent.shiftKey }));
+	/* Modify center */
+	this.set('modifyCenter', (options.modifyCenter || function(e){ return e.originalEvent.metaKey || e.originalEvent.ctrlKey }));
 	/*  */
 	this.set('hitTolerance', (options.hitTolerance || 0));
   this.selection_ = [];
@@ -10436,7 +10457,7 @@ ol.interaction.Transform.prototype.select = function(feature, add) {
 		return;
 	}
 	if (!feature.getGeometry || !feature.getGeometry()) return;
-	// Add to selection	
+	// Add to selection
 	if (add) this.selection_.push(feature);
 	else this.selection_ = [feature];
 	this.ispt_ = (this.selection_.length===1 ? (this.selection_[0].getGeometry().getType() == "Point") : false);
@@ -10576,7 +10597,7 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
 		}
 		case 'scale': {
 			var center = this.center_;
-			if (evt.originalEvent.metaKey || evt.originalEvent.ctrlKey) {
+			if (this.get('modifyCenter')(evt)) {
 				center = this.extent_[(Number(this.opt_)+2)%4];
 			}
 			var scx = (evt.coordinate[0] - center[0]) / (this.coordinate_[0] - center[0]);

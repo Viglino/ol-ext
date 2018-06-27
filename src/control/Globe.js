@@ -102,14 +102,15 @@ ol.inherits(ol_control_Globe, ol_control_Control);
  * Set the map instance the control associated with.
  * @param {ol.Map} map The map instance.
  */
-ol_control_Globe.prototype.setMap = function(map)
-{	if (this.getMap()) this.getMap().getView().un('propertychange', this.setView, this);
+ol_control_Globe.prototype.setMap = function(map) {
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
 
 	ol_control_Control.prototype.setMap.call(this, map);
 
 	// Get change (new layer added or removed)
 	if (map) 
-	{	map.getView().on('propertychange', this.setView, this);
+	{	this._listener = map.getView().on('propertychange', this.setView.bind(this));
 		this.setView();
 	}
 };

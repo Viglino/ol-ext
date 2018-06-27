@@ -77,14 +77,14 @@ var ol_control_GeoBookmark = function(options) {
   });
 
   this.on("propertychange", function(e) {
-	if (e.key==='editable')
-    {	element.className = element.className.replace(" ol-editable","");
-		if (this.get('editable'))
-		{	element.className += " ol-editable";
-		}
+    if (e.key==='editable') {
+      element.className = element.className.replace(" ol-editable","");
+      if (this.get('editable')) {
+        element.className += " ol-editable";
+      }
     }
-    console.log(e);
-  }), this;
+    // console.log(e);
+  }.bind(this));
 
   this.set("namespace", options.namespace || 'ol');
   this.set("editable", options.editable !== false);

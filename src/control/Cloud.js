@@ -52,15 +52,14 @@ ol.inherits(ol_control_Cloud, ol_control_Control);
  * @param {_ol_Map_} map Map.
  * @api stable
  */
-ol_control_Cloud.prototype.setMap = function (map)
-{	if (this.getMap()) 
-	{	this.getMap().un('postcompose', this.drawCloud_.bind(this));
-	}
+ol_control_Cloud.prototype.setMap = function (map) {
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
 
 	ol_control_Control.prototype.setMap.call(this, map);
 
 	if (map) 
-	{	map.on('postcompose', this.drawCloud_.bind(this));
+	{	this._listener = map.on('postcompose', this.drawCloud_.bind(this));
 	}
 };
 

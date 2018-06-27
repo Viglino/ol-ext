@@ -55,7 +55,7 @@ var ol_control_GridReference = function(options)
 			{	if (options.source.getState() === 'ready') 
 				{   this.setIndex(options.source.getFeatures(), options);
 				}
-			}, this);
+			}.bind(this));
 	};
 
 	// Options
@@ -183,14 +183,15 @@ ol_control_GridReference.prototype.getReference = function (coords)
  */
 ol_control_GridReference.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
-	if (oldmap) oldmap.un('postcompose', this.drawGrid_, this);
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
 	
 	ol_control_Control.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 
 	// Get change (new layer added or removed)
 	if (map) 
-	{	map.on('postcompose', this.drawGrid_, this);
+	{	this._listener = map.on('postcompose', this.drawGrid_.bind(this));
 		if (this.source_) this.setIndex(this.source_.getFeatures());
 	}
 };
