@@ -4,6 +4,7 @@
 */
 
 import ol from 'ol'
+import ol_Observable from 'ol/Observable'
 import ol_control_Control from 'ol/control/control'
 import ol_layer_Tile from 'ol/layer/tile'
 import ol_layer_Vector from 'ol/layer/vector'
@@ -130,9 +131,9 @@ ol_control_LayerSwitcher.prototype.setMap = function(map)
 	this.drawPanel();
 	
 	if (this._listener) {
-		if (this._listener) ol.Observable.unByKey(this._listener.change);
-		if (this._listener) ol.Observable.unByKey(this._listener.moveend);
-		if (this._listener) ol.Observable.unByKey(this._listener.size);
+		if (this._listener) ol_Observable.unByKey(this._listener.change);
+		if (this._listener) ol_Observable.unByKey(this._listener.moveend);
+		if (this._listener) ol_Observable.unByKey(this._listener.size);
 	}
 	this._listener = null;
 

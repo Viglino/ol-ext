@@ -4,6 +4,7 @@
 */
 
 import ol from 'ol'
+import ol_Observable from 'ol/Observable'
 import ol_control_Control from 'ol/control/control'
 import ol_Map from 'ol/map'
 import ol_Collection from 'ol/collection'
@@ -103,7 +104,7 @@ ol.inherits(ol_control_Globe, ol_control_Control);
  * @param {ol.Map} map The map instance.
  */
 ol_control_Globe.prototype.setMap = function(map) {
-	if (this._listener) ol.Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable.unByKey(this._listener);
 	this._listener = null;
 
 	ol_control_Control.prototype.setMap.call(this, map);
