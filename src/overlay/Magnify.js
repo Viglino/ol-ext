@@ -4,6 +4,7 @@
 */
 
 import ol from 'ol'
+import ol_Observable from 'ol/Observable'
 import ol_Collection from 'ol/collection'
 import ol_View from 'ol/view'
 import ol_Overlay from 'ol/overlay'

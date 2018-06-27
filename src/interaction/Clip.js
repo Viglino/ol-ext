@@ -1,5 +1,6 @@
 
 import ol from 'ol'
+import ol_Observable from 'ol/Observable'
 import ol_interaction_Pointer from 'ol/interaction/pointer'
 
 /** Clip interaction to clip layers in a circle

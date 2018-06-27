@@ -4,6 +4,7 @@
 */
 
 import ol from 'ol'
+import ol_Observable from 'ol/Observable'
 import ol_layer_Base from 'ol/layer/base'
 import ol_Object from 'ol/object'
 import ol_Map from 'ol/map'
