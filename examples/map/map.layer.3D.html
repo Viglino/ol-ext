@@ -93,7 +93,7 @@
 	{	url: '../data/ignf.json',
 		// projection: 'EPSG:3857',
 		format: new ol.format.GeoJSON(),
-		attributions: [new ol.Attribution({ html: "&copy; <a href='http://professionnels.ign.fr/bdtopo'>ign.fr</a>" })]
+		attributions: [ "&copy; <a href='http://professionnels.ign.fr/bdtopo'>ign.fr</a>" ]
 	});
 	var vector = new ol.layer.Vector(
 		{	source: vectorSource,
@@ -104,7 +104,7 @@
 	var dbpSource = new ol.source.Vector(
 	{	url: '../data/dbpedia.json',
 		format: new ol.format.GeoJSON(),
-		attributions: [ new ol.Attribution({ html: "&copy; DBPedia" }) ]
+		attributions: [ "&copy; DBPedia" ]
 	});
 	var dbp = new ol.layer.Vector(
 	{	source: dbpSource
