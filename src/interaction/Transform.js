@@ -320,7 +320,6 @@ ol_interaction_Transform.prototype.select = function(feature, add) {
 		return;
 	}
 	if (!feature.getGeometry || !feature.getGeometry()) return;
-	// Add to selection	
 	// Add to selection
 	if (add) this.selection_.push(feature);
 	else this.selection_ = [feature];
