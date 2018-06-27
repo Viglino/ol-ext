@@ -33,24 +33,26 @@ var ol_layer_AnimatedCluster = function(opt_options)
 	this.set('animationMethod', options.animationMethod || ol_easing.easeOut);
 
 	// Save cluster before change
-	this.getSource().on('change', this.saveCluster, this);
+	this.getSource().on('change', this.saveCluster.bind(this));
 	// Animate the cluster
-	this.on('precompose', this.animate, this);
-	this.on('postcompose', this.postanimate, this);
+	this.on('precompose', this.animate.bind(this));
+	this.on('postcompose', this.postanimate.bind(this));
 };
 ol.inherits (ol_layer_AnimatedCluster, ol_layer_Vector);
 
 /** save cluster features before change
  * @private
  */
-ol_layer_AnimatedCluster.prototype.saveCluster = function()
-{	this.oldcluster.clear();
-	if (!this.get('animationDuration')) return;
-	var features = this.getSource().getFeatures();
-	if (features.length && features[0].get('features'))
-	{	this.oldcluster.addFeatures (this.clusters);
-		this.clusters = features.slice(0);
-		this.sourceChanged = true;
+ol_layer_AnimatedCluster.prototype.saveCluster = function() {
+	if (this.oldcluster) {
+		this.oldcluster.clear();
+		if (!this.get('animationDuration')) return;
+		var features = this.getSource().getFeatures();
+		if (features.length && features[0].get('features'))
+		{	this.oldcluster.addFeatures (this.clusters);
+			this.clusters = features.slice(0);
+			this.sourceChanged = true;
+		}
 	}
 };
 

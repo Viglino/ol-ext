@@ -44,7 +44,7 @@ var ol_Overlay_Magnify = function (options)
 
 	this.set("zoomOffset", options.zoomOffset||1);
 	this.set("active", true);
-	this.on("propertychange", this.setView_, this);
+	this.on("propertychange", this.setView_.bind(this));
 };
 ol.inherits(ol_Overlay_Magnify, ol_Overlay);
 
@@ -52,16 +52,16 @@ ol.inherits(ol_Overlay_Magnify, ol_Overlay);
  * Set the map instance the overlay is associated with.
  * @param {ol.Map} map The map instance.
  */
-ol_Overlay_Magnify.prototype.setMap = function(map)
-{	if (this.getMap())
-	{	$(this.getMap().getViewport()).off("mousemove", this.onMouseMove_);
-		this.getMap().getView().un('propertychange', this.setView_, this);
+ol_Overlay_Magnify.prototype.setMap = function(map) {
+	if (this.getMap()) {
+		$(this.getMap().getViewport()).off("mousemove", this.onMouseMove_);
 	}
+	if (this._listener) ol_Observable.unByKey(this._listener);
+	this._listener = null;
 
 	ol_Overlay.prototype.setMap.call(this, map);
-	var self = this;
 	$(map.getViewport()).on("mousemove", {self:this}, this.onMouseMove_);
-	map.getView().on('propertychange', this.setView_, this);
+	this._listener = map.getView().on('propertychange', this.setView_.bind(this));
 
 	this.setView_();
 };

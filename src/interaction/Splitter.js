@@ -57,14 +57,14 @@ var ol_interaction_Splitter = function(options)
 	}
 
 	if (trigger)
-	{	trigger.on("addfeature", this.onAddFeature, this);
-		trigger.on("changefeature", this.onChangeFeature, this);
-		trigger.on("removefeature", this.onRemoveFeature, this);
+	{	trigger.on("addfeature", this.onAddFeature.bind(this));
+		trigger.on("changefeature", this.onChangeFeature.bind(this));
+		trigger.on("removefeature", this.onRemoveFeature.bind(this));
 	}
 	else
-	{	this.source_.on("addfeature", this.onAddFeature, this);
-		this.source_.on("changefeature", this.onChangeFeature, this);
-		this.source_.on("removefeature", this.onRemoveFeature, this);
+	{	this.source_.on("addfeature", this.onAddFeature.bind(this));
+		this.source_.on("changefeature", this.onChangeFeature.bind(this));
+		this.source_.on("removefeature", this.onRemoveFeature.bind(this));
 	}
 
 	// Split tolerance between the calculated intersection and the geometry
@@ -164,7 +164,7 @@ ol_interaction_Splitter.prototype.splitSource = function(feature)
 		var g;
 		while (true)
 		{	var found = false;
-			this.source_.forEachFeatureIntersectingExtent(extent, intersect, this);
+			this.source_.forEachFeatureIntersectingExtent(extent, intersect.bind(this));
 			// Split feature
 			if (found)
 			{	var f = found;

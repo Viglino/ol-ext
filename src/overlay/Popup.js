@@ -144,10 +144,12 @@ ol_Overlay_Popup.prototype.setPositioning = function (pos)
 /** @private
  * @param {ol.OverlayPositioning | string | undefined} pos  
  */
-ol_Overlay_Popup.prototype.setPositioning_ = function (pos)
-{	ol_Overlay.prototype.setPositioning.call(this, pos);
-	this._elt.removeClass("ol-popup-top ol-popup-bottom ol-popup-left ol-popup-right ol-popup-center ol-popup-middle");
-	this._elt.addClass(this.getClassPositioning());
+ol_Overlay_Popup.prototype.setPositioning_ = function (pos) {
+	if (this._elt) {
+		ol_Overlay.prototype.setPositioning.call(this, pos);
+		this._elt.removeClass("ol-popup-top ol-popup-bottom ol-popup-left ol-popup-right ol-popup-center ol-popup-middle");
+		this._elt.addClass(this.getClassPositioning());
+	}
 };
 
 /** Check if popup is visible

@@ -94,7 +94,7 @@ var ol_interaction_SelectCluster = function(options)
 	this.filter_ = options.filter;
 
 	ol_interaction_Select.call(this, options);
-	this.on("select", this.selectCluster, this);
+	this.on("select", this.selectCluster.bind(this));
 };
 
 ol.inherits(ol_interaction_SelectCluster, ol_interaction_Select);
@@ -106,20 +106,19 @@ ol.inherits(ol_interaction_SelectCluster, ol_interaction_Select);
  * @param {ol.Map} map Map.
  * @api stable
  */
-ol_interaction_SelectCluster.prototype.setMap = function(map) 
-{	if (this.getMap())
-	{	if (this.getMap().getView()) 
-		{	this.getMap().getView().un('change:resolution', this.clear, this);
-		}
+ol_interaction_SelectCluster.prototype.setMap = function(map) {
+	if (this.getMap()) {
 		this.getMap().removeLayer(this.overlayLayer_);
 	}
+	if (this._listener) ol_Observable.unByKey(this._listener);
+	this._listener = null;
 
 	ol_interaction_Select.prototype.setMap.call (this, map);
 	this.overlayLayer_.setMap(map);
 	// map.addLayer(this.overlayLayer_);
 
-	if (map && map.getView()) 
-	{	map.getView().on('change:resolution', this.clear, this);
+	if (map && map.getView()) {
+		this._listener = map.getView().on('change:resolution', this.clear.bind(this));
 	}
 };
 
@@ -283,7 +282,7 @@ ol_interaction_SelectCluster.prototype.animateCluster_ = function(center)
 	}
 
 	// Start a new postcompose animation
-	this.listenerKey_ = this.getMap().on('postcompose', animate, this);
+	this.listenerKey_ = this.getMap().on('postcompose', animate.bind(this));
 	//select.getMap().renderSync();
 };
 

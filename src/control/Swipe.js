@@ -33,6 +33,9 @@ var ol_control_Swipe = function(opt_options)
 	ol_control_Control.call(this,
 	{	element: element
 	});
+
+	// An array of listener on layer postcompose
+	this._listener = [];
 	
 	this.layers = [];
 	if (options.layers) this.addLayer(options.layers, false);
@@ -51,7 +54,7 @@ var ol_control_Swipe = function(opt_options)
 		}
 		$(this.element).removeClass("horizontal vertical");
 		$(this.element).addClass(this.get('orientation'));
-	}, this);
+	}.bind(this));
 	
 	this.set('position', options.position || 0.5);
 	this.set('orientation', options.orientation || 'vertical');
@@ -64,24 +67,23 @@ ol.inherits(ol_control_Swipe, ol_control_Control);
  */
 ol_control_Swipe.prototype.setMap = function(map)
 {   
-	if (this.getMap())
-	{	for (var i=0; i<this.layers.length; i++)
-		{	var l = this.layers[i];
-			if (l.right) l.layer.un('precompose', this.precomposeRight, this);
-			else l.layer.un('precompose', this.precomposeLeft, this);
-			l.layer.un('postcompose', this.postcompose, this);
-		}
+	for (var i=0; i<this._listener.length; i++) {
+		ol_Observable.unByKey(this._listener[i]);
+	}
+	this._listener = [];
+	if (this.getMap()) {	
 		this.getMap().renderSync();
 	}
 
 	ol_control_Control.prototype.setMap.call(this, map);
 
 	if (map)
-	{	for (var i=0; i<this.layers.length; i++)
+	{	this._listener = [];
+		for (var i=0; i<this.layers.length; i++)
 		{	var l = this.layers[i];
-			if (l.right) l.layer.on('precompose', this.precomposeRight, this);
-			else l.layer.on('precompose', this.precomposeLeft, this);
-			l.layer.on('postcompose', this.postcompose, this);
+			if (l.right) this._listener.push (l.layer.on('precompose', this.precomposeRight.bind(this)));
+			else this._listener.push (l.layer.on('precompose', this.precomposeLeft.bind(this)));
+			this._listener.push(l.layer.on('postcompose', this.postcompose.bind(this)));
 		}
 		map.renderSync();
 	}
@@ -102,14 +104,14 @@ ol_control_Swipe.prototype.isLayer_ = function(layer)
 */
 ol_control_Swipe.prototype.addLayer = function(layers, right)
 {	if (!(layers instanceof Array)) layers = [layers];
-	for (var i=0; i<layers.length; i++)
-	{var l = layers[i];
+	for (var i=0; i<layers.length; i++) { 
+		var l = layers[i];
 		if (this.isLayer_(l)<0)
 		{	this.layers.push({ layer:l, right:right });
 			if (this.getMap())
-			{	if (right) l.on('precompose', this.precomposeRight, this);
-				else l.on('precompose', this.precomposeLeft, this);
-				l.on('postcompose', this.postcompose, this);
+			{	if (right) this._listener.push (l.on('precompose', this.precomposeRight.bind(this)));
+				else this._listener.push (l.on('precompose', this.precomposeLeft.bind(this)));
+				this._listener.push(l.on('postcompose', this.postcompose.bind(this)));
 				this.getMap().renderSync();
 			}
 		}

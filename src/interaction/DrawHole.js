@@ -53,9 +53,9 @@ var ol_interaction_DrawHole = function(options)
 	}
 
 	// Start drawing if inside a feature
-	this.on('drawstart', this._startDrawing, this );
+	this.on('drawstart', this._startDrawing.bind(this));
 	// End drawing add the hole to the current Polygon
-	this.on('drawend', this._finishDrawing, this);
+	this.on('drawend', this._finishDrawing.bind(this));
 };
 ol.inherits(ol_interaction_DrawHole, ol_interaction_Draw);
 

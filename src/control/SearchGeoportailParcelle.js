@@ -102,7 +102,7 @@ var ol_control_SearchGeoportailParcelle = function(options) {
 		self.activateParcelle(false);
 	});
 
-	this.on('select', this.selectCommune, this);
+	this.on('select', this.selectCommune.bind(this));
 	this.set('pageSize', options.pageSize || 5);
 };
 ol.inherits(ol_control_SearchGeoportailParcelle, ol_control_SearchGeoportail);

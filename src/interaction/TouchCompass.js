@@ -94,15 +94,14 @@ ol_interaction_TouchCompass.prototype.compass = null;
  * @param {_ol_Map_} map Map.
  * @api stable
  */
-ol_interaction_TouchCompass.prototype.setMap = function(map)
-{	if (this.getMap())
-	{	this.getMap().un('postcompose', this.drawCompass_, this);
-	}
+ol_interaction_TouchCompass.prototype.setMap = function(map) {
+	if (this._listener) ol_Observable.unByKey(this._listener);
+	this._listener = null;
 
 	ol_interaction_Pointer.prototype.setMap.call (this, map);
 
-	if (map)
-	{	map.on('postcompose', this.drawCompass_, this);
+	if (map) {
+		this._listener = map.on('postcompose', this.drawCompass_.bind(this));
 	}
 };
 

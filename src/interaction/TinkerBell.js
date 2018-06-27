@@ -38,18 +38,18 @@ ol.inherits(ol_interaction_TinkerBell, ol_interaction_Pointer);
 
 /** Set the map > start postcompose
 */
-ol_interaction_TinkerBell.prototype.setMap = function(map)
-{	if (this.getMap())
-	{	this.getMap().un('postcompose', this.postcompose_, this);
+ol_interaction_TinkerBell.prototype.setMap = function(map) {
+	if (this._listener) ol_Observable.unByKey(this._listener);
+	this._listener = null;
+	if (this.getMap()) {
 		map.getViewport().removeEventListener('mouseout', this.out_, false);
 		this.getMap().render();
 	}
-	
+
 	ol_interaction_Pointer.prototype.setMap.call(this, map);
 
-	if (map)
-	{	map.on('postcompose', this.postcompose_, this);
-		map.on('mouseout', this.onMove, this);
+	if (map) {
+		this._listener = map.on('postcompose', this.postcompose_.bind(this));
 		map.getViewport().addEventListener('mouseout', this.out_, false);
 	}
 };

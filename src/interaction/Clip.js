@@ -29,21 +29,22 @@ ol.inherits(ol_interaction_Clip, ol_interaction_Pointer);
 
 /** Set the map > start postcompose
 */
-ol_interaction_Clip.prototype.setMap = function(map)
-{	if (this.getMap()) 
-	{	for (var i=0; i<this.layers_.length; i++)
-		{	this.layers_[i].un('precompose', this.precompose_, this);
-			this.layers_[i].un('postcompose', this.postcompose_, this);
+ol_interaction_Clip.prototype.setMap = function(map) {
+	if (this.getMap()) {
+		for (var i=0; i<this.layers_.length; i++) {
+			if (this.layers_[i].precompose) ol_Observable.unByKey(this.layers_[i].precompose);
+			if (this.layers_[i].postcompose) ol_Observable.unByKey(this.layers_[i].postcompose);
+			this.layers_[i].precompose = this.layers_[i].postcompose = null;
 		}
 		this.getMap().renderSync();
 	}
-	
+
 	ol_interaction_Pointer.prototype.setMap.call(this, map);
 
-	if (map)
-	{	for (var i=0; i<this.layers_.length; i++)
-		{	this.layers_[i].on('precompose', this.precompose_, this);
-			this.layers_[i].on('postcompose', this.postcompose_, this);
+	if (map) {
+		for (var i=0; i<this.layers_.length; i++) {
+			this.layers_[i].precompose = this.layers_[i].layer.on('precompose', this.precompose_.bind(this));
+			this.layers_[i].postcompose = this.layers_[i].layer.on('postcompose', this.postcompose_.bind(this));
 		}
 		map.renderSync();
 	}
@@ -62,13 +63,14 @@ ol_interaction_Clip.prototype.setRadius = function(radius)
  */
 ol_interaction_Clip.prototype.addLayer = function(layers)
 {	if (!(layers instanceof Array)) layers = [layers];
-	for (var i=0; i<layers.length; i++)
-	{	if (this.getMap())
-		{	layers[i].on('precompose', this.precompose_, this);
-			layers[i].on('postcompose', this.postcompose_, this);
+	for (var i=0; i<layers.length; i++) {
+		var l = { layer: layers[i] }
+		if (this.getMap()) {
+			l.precompose = layers[i].on('precompose', this.precompose_.bind(this));
+			l.postcompose = layers[i].on('postcompose', this.postcompose_.bind(this));
 			this.getMap().renderSync();
 		}
-		this.layers_.push(layers[i]);
+		this.layers_.push(l);
 	}
 }
 
@@ -80,14 +82,14 @@ ol_interaction_Clip.prototype.removeLayer = function(layers)
 	for (var i=0; i<layers.length; i++)
 	{	var k;
 		for (k=0; k<this.layers_.length; k++)
-		{	if (this.layers_[k]===layers[i]) 
+		{	if (this.layers_[k].layer===layers[i]) 
 			{	break;
 			}
 		}
 		if (k!=this.layers_.length && this.getMap())
-		{	this.layers_.splice(k,1);
-			layers[i].un('precompose', this.precompose_, this);
-			layers[i].un('postcompose', this.postcompose_, this);
+		{	if (this.layers_[k].precompose) ol_Observable.unByKey(this.layers_[k].precompose);
+			if (this.layers_[k].postcompose) ol_Observable.unByKey(this.layers_[k].postcompose);
+			this.layers_.splice(k,1);
 			this.getMap().renderSync();
 		}
 	}
@@ -133,13 +135,14 @@ ol_interaction_Clip.prototype.setActive = function(b)
 {	ol_interaction_Pointer.prototype.setActive.call (this, b);
 	if(b) {
 		for(var i=0; i<this.layers_.length; i++) {
-			this.layers_[i].on('precompose', this.precompose_, this);
-			this.layers_[i].on('postcompose', this.postcompose_, this);
+			this.layers_[i].precompose = this.layers_[i].layer.on('precompose', this.precompose_.bind(this));
+			this.layers_[i].postcompose = this.layers_[i].layer.on('postcompose', this.postcompose_.bind(this));
 		}
 	} else {
 		for(var i=0; i<this.layers_.length; i++) {
-			this.layers_[i].un('precompose', this.precompose_, this);
-			this.layers_[i].un('postcompose', this.postcompose_, this);
+			if (this.layers_[i].precompose) ol_Observable.unByKey(this.layers_[i].precompose);
+			if (this.layers_[i].postcompose) ol_Observable.unByKey(this.layers_[i].postcompose);
+			this.layers_[i].precompose = this.layers_[i].postcompose = null;
 		}
 	}
 	if (this.getMap()) this.getMap().renderSync();

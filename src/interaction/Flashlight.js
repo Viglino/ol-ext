@@ -32,16 +32,17 @@ ol.inherits(ol_interaction_Flashlight, ol_interaction_Pointer);
 
 /** Set the map > start postcompose
 */
-ol_interaction_Flashlight.prototype.setMap = function(map)
-{	if (this.getMap()) 
-	{	this.getMap().un('postcompose', this.postcompose_, this);
+ol_interaction_Flashlight.prototype.setMap = function(map) {
+	if (this.getMap()) {
 		this.getMap().render();
 	}
+	if (this._listener) ol_Observable.unByKey(this._listener);
+	this._listener = null;
 	
 	ol_interaction_Pointer.prototype.setMap.call(this, map);
 
-	if (map)
-	{	map.on('postcompose', this.postcompose_, this);
+	if (map) {
+		this._listener = map.on('postcompose', this.postcompose_.bind(this));
 	}
 }
 

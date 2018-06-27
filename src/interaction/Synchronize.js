@@ -40,28 +40,23 @@ ol.inherits(ol_interaction_Synchronize, ol_interaction_Interaction);
  */
 ol_interaction_Synchronize.prototype.setMap = function(map)
 {	
-	if (this.getMap())
-	{
-		this.getMap().getView().un('change:center', this.syncMaps, this);
-		this.getMap().getView().un('change:rotation', this.syncMaps, this);
-		this.getMap().getView().un('change:resolution', this.syncMaps, this);
-		ol_events.unlisten(this.getMap().getViewport(), ol_events_EventType.MOUSEOUT, this.handleMouseOut_, this);
+	if (this._listener) {
+		ol_Observable.unByKey(this._listener.center);
+		ol_Observable.unByKey(this._listener.rotation);
+		ol_Observable.unByKey(this._listener.resolution);
+		$(this.getMap().getTargetElement()).off('mouseout', this._listener.mouseout);
 	}
+	this._listener = null;
 	
 	ol_interaction_Interaction.prototype.setMap.call (this, map);
 
-	if (map)
-	{	this.getMap().getView().on('change:center', this.syncMaps, this);
-		this.getMap().getView().on('change:rotation', this.syncMaps, this);
-		this.getMap().getView().on('change:resolution', this.syncMaps, this);
-
-		var me = this;
-		$(this.getMap().getTargetElement()).mouseout(function() {
-			for (var i=0; i<me.maps.length; i++)
-			{	me.maps[i].hideTarget();
-			}
-			me.getMap().hideTarget();
-    });
+	if (map) {
+		this._listener = {};
+		this._listener.center = this.getMap().getView().on('change:center', this.syncMaps.bind(this));
+		this._listener.rotation = this.getMap().getView().on('change:rotation', this.syncMaps.bind(this));
+		this._listener.resolution = this.getMap().getView().on('change:resolution', this.syncMaps.bind(this));
+		this._listener.mouseout = this.handleMouseOut_.bind(this);
+		$(this.getMap().getTargetElement()).on('mouseout', this._listener.mouseout);
 		this.syncMaps();
 	}
 };
@@ -117,10 +112,9 @@ ol_interaction_Synchronize.prototype.handleMove_ = function(e)
 /** Cursor out of map > tells other maps to hide the cursor
 * @param {event} e "mouseOut" event
 */
-ol_interaction_Synchronize.prototype.handleMouseOut_ = function(e, scope)
-{	for (var i=0; i<scope.maps.length; i++)
-	{
-		scope.maps[i].targetOverlay_.setPosition(undefined);
+ol_interaction_Synchronize.prototype.handleMouseOut_ = function(e) {
+	for (var i=0; i<this.maps.length; i++) {
+		this.maps[i].targetOverlay_.setPosition(undefined);
 	}
 };
 

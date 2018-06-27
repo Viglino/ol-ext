@@ -25,7 +25,12 @@ import ol_HexGrid from '../render/HexGrid'
 */
 var ol_source_HexBin = function(options) {
   options = options || {} ;
+	
+	// bind function for callback
+	this._bind = { modify: this._onModifyFeature.bind(this) };
+	
 	ol_source_Vector.call (this, options);
+
 	// The HexGrid
 	this._hexgrid = new ol_HexGrid(options);
 	this._bin = {};
@@ -36,8 +41,8 @@ var ol_source_HexBin = function(options) {
 	// Existing features
 	this.reset();
 	// Future features
-	this._origin.on("addfeature", this._onAddFeature, this);
-	this._origin.on("removefeature", this._onRemoveFeature, this);
+	this._origin.on("addfeature", this._onAddFeature.bind(this));
+	this._origin.on("removefeature", this._onRemoveFeature.bind(this));
 };
 ol.inherits (ol_source_HexBin, ol_source_Vector);
 
@@ -59,7 +64,7 @@ ol_source_HexBin.prototype._onAddFeature = function(e) {
 		this._bin[id] = ex;
 		this.addFeature(ex);
 	}
-	f.on("change", this._onModifyFeature, this);
+	f.on("change", this._bind.modify);
 };
 
 /**
@@ -101,7 +106,7 @@ ol_source_HexBin.prototype._onRemoveFeature = function(e, bin) {
 	} else {
     console.log("[ERROR:HexBin] remove feature feature doesn't exists anymore.");
 	}
-	f.un("change", this._onModifyFeature, this);
+	f.un("change", this._bind.modify);
 };
 
 /**

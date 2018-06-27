@@ -60,7 +60,7 @@ ol_Map.prototype.animExtent = function(extent, options)
 	}
 
 	// Launch animation
-	listenerKey = this.on('postcompose', animate, this);
+	listenerKey = this.on('postcompose', animate.bind(this));
 	this.renderSync();
 }
 
