@@ -94,11 +94,7 @@
 		maxResolution: 10000000 /(72/2.54*100),
 		source: new ol.source.TileWMS(
 		{	url: 'https://geoservices.brgm.fr/geologie',
-			attributions: 
-			[	new ol.Attribution({
-					html: '&copy; BRGM (French USGS equivalent)'
-				})
-			],
+			attributions: [ '&copy; BRGM (French USGS equivalent)' ],
 			projection:"EPSG:3857",
 			params: 
 			{	'LAYERS': 'SCAN_F_GEOL1M', //'SCAN_D_GEOL50', 
@@ -113,7 +109,7 @@
 	{	url: '../data/fond_guerre.geojson',
 		projection: 'EPSG:3857',
 		format: new ol.format.GeoJSON(),
-		attributions: [new ol.Attribution({ html: "&copy; <a href='https://www.data.gouv.fr/fr/datasets/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire/'>data.gouv.fr</a>" })],
+		attributions: [ "&copy; <a href='https://www.data.gouv.fr/fr/datasets/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire/'>data.gouv.fr</a>" ],
 		logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
 	});
 	var vector = new ol.layer.Vector(

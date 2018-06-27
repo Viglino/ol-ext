@@ -107,7 +107,7 @@
 			imageCrop: [xmin,ymin,xmax,ymax],
 			imageRotate: Number($("#rotate").val()*Math.PI/180),
 			projection: 'EPSG:3857',
-			attributions: [ new ol.Attribution({html:"<a href='http://www.geoportail.gouv.fr/actualite/181/telechargez-les-cartes-et-photographies-aeriennes-historiques'>Photo historique &copy; IGN</a>"}) ]
+			attributions: [ "<a href='http://www.geoportail.gouv.fr/actualite/181/telechargez-les-cartes-et-photographies-aeriennes-historiques'>Photo historique &copy; IGN</a>" ]
 		})
     })
 	map.addLayer(geoimg);
