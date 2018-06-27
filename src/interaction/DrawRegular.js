@@ -49,6 +49,8 @@ var ol_interaction_DrawRegular = function(options)
 	this.centeredFn_ = options.centerCondition;
 	// Allow rotation when centered + square
 	this.canRotate_ = (options.canRotate !== false);
+	// Specify custom geometry name
+	this.geometryName_ = options.geometryName
 
 	// Number of sides (default=0: circle)
 	this.setSides(options.sides);
@@ -257,6 +259,8 @@ ol_interaction_DrawRegular.prototype.drawSketch_ = function(evt)
 		var g = this.getGeom_();
 		if (g) 
 		{	var f = this.feature_;
+			if (this.geometryName_) f.setGeometryName(this.geometryName_)
+
 			f.setGeometry (g);
 			this.overlayLayer_.getSource().addFeature(f);
 			if (this.coord_ && this.square_ && ((this.canRotate_ && this.centered_ && this.coord_) || (!this.sides_ && !this.centered_)))
@@ -402,6 +406,8 @@ ol_interaction_DrawRegular.prototype.end_ = function(evt)
 	// Add new feature
 	if (this.coord_ && this.center_[0]!=this.coord_[0] && this.center_[1]!=this.coord_[1])
 	{	var f = this.feature_;
+		if (this.geometryName_) f.setGeometryName(this.geometryName_)
+
 		f.setGeometry(this.getGeom_());
 		if (this.source_) this.source_.addFeature(f);
 		else if (this.features_) this.features_.push(f);
