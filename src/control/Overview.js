@@ -190,13 +190,13 @@ ol_control_Overview.prototype.setPosition = function(align)
  * Set the map instance the control associated with.
  * @param {ol.Map} map The map instance.
  */
-ol_control_Overview.prototype.setMap = function(map)
-{   if (this.getMap())
-	{	this.getMap().getView().un('propertychange', this.setView, this);
-	}
+ol_control_Overview.prototype.setMap = function(map) {
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
+
 	ol_control_Control.prototype.setMap.call(this, map);
 	if (map) 
-	{	map.getView().on('propertychange', this.setView, this);
+	{	this._listener = map.getView().on('propertychange', this.setView.bind(this));
 		this.setView();
 	}
 

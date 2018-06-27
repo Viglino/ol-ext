@@ -122,6 +122,7 @@
 		proj4.defs('ESRI:54009', '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs');
 
 		// Define projection extent
+		if (ol.proj.proj4 && ol.proj.proj4.register) ol.proj.proj4.register(proj4);
 		ol.proj.get('EPSG:2154').setExtent([0, 6000000, 1250000, 7200000]);
 		ol.proj.get('EPSG:27700').setExtent([0, 0, 800000, 1400000]);
 		ol.proj.get('EPSG:5479').setExtent([6825737.53, 4189159.80, 9633741.96, 5782472.71]);

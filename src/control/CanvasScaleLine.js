@@ -39,13 +39,16 @@ ol.inherits(ol_control_CanvasScaleLine, ol_control_ScaleLine);
  */
 ol_control_CanvasScaleLine.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
-	if (oldmap) oldmap.un('postcompose', this.drawScale_.bind(this));
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
 	
 	ol_control_ScaleLine.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 
 	// Add postcompose on the map
-	if (map) map.on('postcompose', this.drawScale_.bind(this));
+	if (map) {
+		this._listener = map.on('postcompose', this.drawScale_.bind(this));
+	} 
 
 	// Hide the default DOM element
 	this.$element = $(this.element).css("visibility","hidden");

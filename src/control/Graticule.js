@@ -74,15 +74,18 @@ ol.inherits(ol_control_Graticule, ol_control_Control);
  * @param {_ol_Map_} map Map.
  * @api stable
  */
-ol_control_Graticule.prototype.setMap = function (map)
-{	var oldmap = this.getMap();
-	if (oldmap) oldmap.un('postcompose', this.drawGraticule_, this);
+ol_control_Graticule.prototype.setMap = function (map) {
+	var oldmap = this.getMap();
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
 	
 	ol_control_Control.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 
 	// Get change (new layer added or removed)
-	if (map) map.on('postcompose', this.drawGraticule_, this);
+	if (map) {
+		this._listener = map.on('postcompose', this.drawGraticule_.bind(this));
+	}
 };
 
 ol_control_Graticule.prototype.setStyle = function (style)

@@ -58,13 +58,14 @@ ol.inherits(ol_control_Compass, ol_control_Control);
  */
 ol_control_Compass.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
-	if (oldmap) oldmap.un('postcompose', this.drawCompass_, this);
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
 	
 	ol_control_Control.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 
 	// Get change (new layer added or removed)
-	if (map) map.on('postcompose', this.drawCompass_, this);
+	if (map) this._listener = map.on('postcompose', this.drawCompass_.bind(this));
 };
 
 /**

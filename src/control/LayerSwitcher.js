@@ -129,19 +129,21 @@ ol_control_LayerSwitcher.prototype.setMap = function(map)
 {   ol_control_Control.prototype.setMap.call(this, map);
 	this.drawPanel();
 	
-	if (this.map_)
-	{	this.map_.getLayerGroup().un('change', this.drawPanel, this);
-		this.map_.un('moveend', this.viewChange, this);
-		this.map_.un('change:size', this.overflow, this);
-		// console.log("remove");
+	if (this._listener) {
+		if (this._listener) ol.Observable.unByKey(this._listener.change);
+		if (this._listener) ol.Observable.unByKey(this._listener.moveend);
+		if (this._listener) ol.Observable.unByKey(this._listener.size);
 	}
+	this._listener = null;
 
 	this.map_ = map;
 	// Get change (new layer added or removed)
 	if (map) 
-	{	map.getLayerGroup().on('change', this.drawPanel, this);
-		map.on('moveend', this.viewChange, this);
-		map.on('change:size', this.overflow, this);
+	{	this._listener = {
+			change: map.getLayerGroup().on('change', this.drawPanel.bind(this)),
+			moveend: map.on('moveend', this.viewChange.bind(this)),
+			size: map.on('change:size', this.overflow.bind(this))
+		}
 	}
 };
 
