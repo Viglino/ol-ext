@@ -50,13 +50,13 @@ ol.inherits(ol_control_CanvasTitle, ol_control_Control);
  */
 ol_control_CanvasTitle.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
-	if (oldmap) oldmap.un('postcompose', this.drawTitle_, this);
+	if (oldmap) oldmap.un('postcompose', this.drawTitle_.bind(this));
 	
 	ol_control_Control.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 
 	// Get change (new layer added or removed)
-	if (map) map.on('postcompose', this.drawTitle_, this);
+	if (map) map.on('postcompose', this.drawTitle_.bind(this));
 }
 
 
