@@ -46,7 +46,7 @@ var ol_interaction_GeolocationDraw = function(options)
 			timeout: 600000
 		}
 	}));
-	this.geolocation.on('change', this.draw_, this);
+	this.geolocation.on('change', this.draw_.bind(this));
 
 	// Current path
 	this.path_ = [];
