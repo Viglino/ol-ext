@@ -28,6 +28,7 @@ import ol_extent from 'ol/extent'
  *	@param {bool} options.scale can scale the feature
  *	@param {bool} options.rotate can rotate the feature
  *	@param {ol.events.ConditionType | undefined} options.keepAspectRatio A function that takes an ol.MapBrowserEvent and returns a boolean to keep aspect ratio, default ol.events.condition.shiftKeyOnly.
+ *	@param {ol.events.ConditionType | undefined} options.modifyCenter A function that takes an ol.MapBrowserEvent and returns a boolean to apply scale & strech from the center, default ol.events.condition.metaKey or ol.events.condition.ctrlKey.
  *	@param {} options.style list of ol.style for handles
  *
  */
@@ -76,6 +77,8 @@ var ol_interaction_Transform = function(options) {
 	this.set('rotate', (options.rotate!==false));
 	/* Keep aspect ratio */
 	this.set('keepAspectRatio', (options.keepAspectRatio || function(e){ return e.originalEvent.shiftKey }));
+	/* Modify center */
+	this.set('modifyCenter', (options.modifyCenter || function(e){ return e.originalEvent.metaKey || e.originalEvent.ctrlKey }));
 	/*  */
 	this.set('hitTolerance', (options.hitTolerance || 0));
 
@@ -317,7 +320,7 @@ ol_interaction_Transform.prototype.select = function(feature, add) {
 		return;
 	}
 	if (!feature.getGeometry || !feature.getGeometry()) return;
-	// Add to selection	
+	// Add to selection
 	if (add) this.selection_.push(feature);
 	else this.selection_ = [feature];
 	this.ispt_ = (this.selection_.length===1 ? (this.selection_[0].getGeometry().getType() == "Point") : false);
@@ -467,7 +470,7 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
 		}
 		case 'scale': {
 			var center = this.center_;
-			if (evt.originalEvent.metaKey || evt.originalEvent.ctrlKey) {
+			if (this.get('modifyCenter')(evt)) {
 				center = this.extent_[(Number(this.opt_)+2)%4];
 			}
 
