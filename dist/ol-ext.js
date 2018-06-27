@@ -4117,10 +4117,9 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 		default: return;
 	}
 	// Distance beetween 2 coords
-	var wgs84Sphere = new ol.Sphere(6378137);
 	var proj = options.projection || this.getMap().getView().getProjection();
 	function dist2d(p1,p2)
-	{	return wgs84Sphere.haversineDistance(
+	{	return ol.sphere.getDistance(
 			ol.proj.transform(p1, proj, 'EPSG:4326'),
 			ol.proj.transform(p2, proj, 'EPSG:4326'));
 	}

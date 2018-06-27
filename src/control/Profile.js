@@ -3,10 +3,10 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_control_Control from 'ol/control/control'
-import ol_Sphere from 'ol/sphere'
-import ol_proj from 'ol/proj'
+import {inherits as ol_inherits} from 'ol'
+import {getDistance as ol_sphere_getDistance} from 'ol/sphere'
+import {transform as ol_proj_transform} from 'ol/proj'
+import ol_control_Control from 'ol/control/Control'
 import ol_Feature from 'ol/Feature'
 
 /**
@@ -97,7 +97,7 @@ var ol_control_Profil = function(opt_options)
 	{	this.setGeometry (options.feature);
 	}
 };
-ol.inherits(ol_control_Profil, ol_control_Control);
+ol_inherits(ol_control_Profil, ol_control_Control);
 
 /** Custom infos list
 * @api stable
@@ -227,12 +227,11 @@ ol_control_Profil.prototype.setGeometry = function(g, options)
 	}
 
 	// Distance beetween 2 coords
-	var wgs84Sphere = new ol_Sphere(6378137);
 	var proj = options.projection || this.getMap().getView().getProjection();
 	function dist2d(p1,p2)
-	{	return wgs84Sphere.haversineDistance(
-			ol_proj.transform(p1, proj, 'EPSG:4326'),
-			ol_proj.transform(p2, proj, 'EPSG:4326'));
+	{	return ol_sphere_getDistance(
+			ol_proj_transform(p1, proj, 'EPSG:4326'),
+			ol_proj_transform(p2, proj, 'EPSG:4326'));
 	}
 
 	function getTime(t0, t1)
