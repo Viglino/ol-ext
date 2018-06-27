@@ -21,7 +21,7 @@ The [example page](http://viglino.github.io/ol-ext/) is the best way to have a q
 
 Please use the [GitHub issue tracker](https://github.com/Viglino/ol-ext/issues) for all bugs and feature requests. Before creating a new issue, do a quick search to see if the problem has been reported already.
 
-### Building the documenctation:
+### Building the documentation:
 The documentation use [gulp-jsdoc3](https://www.npmjs.com/package/gulp-jsdoc3) to create the doc.
 1. install the gulp-jsdoc3 project at the root directory:
 ````
