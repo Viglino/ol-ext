@@ -203,7 +203,7 @@ ol_layer_Vector.prototype.animateFeature = function(feature, fanim)
 	// Launch animation
 	function start(options)
 	{	if (fanim.length && !listenerKey)
-		{	listenerKey = self.on('postcompose', animate, self);
+		{	listenerKey = self.on('postcompose', animate.bind(self));
 			// map or layer?
 			if (self.renderSync) self.renderSync();
 			else self.changed();

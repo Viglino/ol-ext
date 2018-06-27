@@ -1435,7 +1435,7 @@ ol.control.Bar.prototype.addControl = function (c)
 	{	this.getMap().addControl(c);
 	}
 	// Activate and toogleOne
-	c.on ('change:active', this.onActivateControl_, this);
+	c.on ('change:active', this.onActivateControl_.bind(this));
 	if (c.getActive && c.getActive())
 	{	c.dispatchEvent({ type:'change:active', key:'active', oldValue:false, active:true });
 	}
@@ -1474,8 +1474,8 @@ ol.control.Bar.prototype.setActive = function (b)
 /** Post-process an activated/deactivated control
 *	@param {ol.event} e :an object with a target {_ol_control_} and active flag {bool}
 */
-ol.control.Bar.prototype.onActivateControl_ = function (e)
-{	if (this.get('toggleOne'))
+ol.control.Bar.prototype.onActivateControl_ = function (e) {
+	if (this.get('toggleOne'))
 	{	if (e.active)
 		{	var n;
 			var ctrl = e.target;
@@ -4489,7 +4489,7 @@ ol.control.SearchGeoportailParcelle = function(options) {
 		}
 		self.activateParcelle(false);
 	});
-	this.on('select', this.selectCommune, this);
+	this.on('select', this.selectCommune.bind(this));
 	this.set('pageSize', options.pageSize || 5);
 };
 ol.inherits(ol.control.SearchGeoportailParcelle, ol.control.SearchGeoportail);
@@ -4743,6 +4743,8 @@ ol.control.Swipe = function(opt_options)
 	ol.control.Control.call(this,
 	{	element: element
 	});
+	// An array of listener on layer postcompose
+	this._listener = [];
 	this.layers = [];
 	if (options.layers) this.addLayer(options.layers, false);
 	if (options.rightLayers) this.addLayer(options.rightLayers, true);
@@ -4759,7 +4761,7 @@ ol.control.Swipe = function(opt_options)
 		}
 		$(this.element).removeClass("horizontal vertical");
 		$(this.element).addClass(this.get('orientation'));
-	}, this);
+	}.bind(this));
 	this.set('position', options.position || 0.5);
 	this.set('orientation', options.orientation || 'vertical');
 };
@@ -4770,22 +4772,21 @@ ol.inherits(ol.control.Swipe, ol.control.Control);
  */
 ol.control.Swipe.prototype.setMap = function(map)
 {   
-	if (this.getMap())
-	{	for (var i=0; i<this.layers.length; i++)
-		{	var l = this.layers[i];
-			if (l.right) l.layer.un('precompose', this.precomposeRight, this);
-			else l.layer.un('precompose', this.precomposeLeft, this);
-			l.layer.un('postcompose', this.postcompose, this);
-		}
+	for (var i=0; i<this._listener.length; i++) {
+		ol.Observable.unByKey(this._listener[i]);
+	}
+	this._listener = [];
+	if (this.getMap()) {	
 		this.getMap().renderSync();
 	}
 	ol.control.Control.prototype.setMap.call(this, map);
 	if (map)
-	{	for (var i=0; i<this.layers.length; i++)
+	{	this._listener = [];
+		for (var i=0; i<this.layers.length; i++)
 		{	var l = this.layers[i];
-			if (l.right) l.layer.on('precompose', this.precomposeRight, this);
-			else l.layer.on('precompose', this.precomposeLeft, this);
-			l.layer.on('postcompose', this.postcompose, this);
+			if (l.right) this._listener.push (l.layer.on('precompose', this.precomposeRight.bind(this)));
+			else this._listener.push (l.layer.on('precompose', this.precomposeLeft.bind(this)));
+			this._listener.push(l.layer.on('postcompose', this.postcompose.bind(this)));
 		}
 		map.renderSync();
 	}
@@ -4804,14 +4805,14 @@ ol.control.Swipe.prototype.isLayer_ = function(layer)
 */
 ol.control.Swipe.prototype.addLayer = function(layers, right)
 {	if (!(layers instanceof Array)) layers = [layers];
-	for (var i=0; i<layers.length; i++)
-	{var l = layers[i];
+	for (var i=0; i<layers.length; i++) { 
+		var l = layers[i];
 		if (this.isLayer_(l)<0)
 		{	this.layers.push({ layer:l, right:right });
 			if (this.getMap())
-			{	if (right) l.on('precompose', this.precomposeRight, this);
-				else l.on('precompose', this.precomposeLeft, this);
-				l.on('postcompose', this.postcompose, this);
+			{	if (right) this._listener.push (l.on('precompose', this.precomposeRight.bind(this)));
+				else this._listener.push (l.on('precompose', this.precomposeLeft.bind(this)));
+				this._listener.push(l.on('postcompose', this.postcompose.bind(this)));
 				this.getMap().renderSync();
 			}
 		}
@@ -4943,12 +4944,13 @@ ol.inherits(ol.control.Target, ol.control.Control);
  */
 ol.control.Target.prototype.setMap = function (map)
 {	if (this.getMap()) 
-	{	this.getMap().un('postcompose', this.drawTarget_, this);
-		if (this.getVisible()) this.getMap().renderSync();
+	{	if (this.getVisible()) this.getMap().renderSync();
 	}
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
 	ol.control.Control.prototype.setMap.call(this, map);
 	if (map) 
-	{	map.on('postcompose', this.drawTarget_, this);
+	{	this._listener = map.on('postcompose', this.drawTarget_.bind(this));
 	}
 };
 /** Set the control visibility
@@ -5356,7 +5358,7 @@ ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 	// Launch animation
 	function start(options)
 	{	if (fanim.length && !listenerKey)
-		{	listenerKey = self.on('postcompose', animate, self);
+		{	listenerKey = self.on('postcompose', animate.bind(self));
 			// map or layer?
 			if (self.renderSync) self.renderSync();
 			else self.changed();
@@ -5860,8 +5862,10 @@ ol.filter = {};
  * @param {} options Extend {@link _ol_control_Control_} options.
  *  @param {bool} options.active
  */
-ol.filter.Base = function(options)
-{	ol.Object.call(this);
+ol.filter.Base = function(options) {
+  ol.Object.call(this);
+	// Array of postcompose listener
+	this._listener = [];
 	if (options && options.active===false) this.set('active', false);
 	else this.set('active', true);
 };
@@ -5869,14 +5873,14 @@ ol.inherits(ol.filter.Base, ol.Object);
 /** Activate / deactivate filter
 *	@param {bool} b
 */
-ol.filter.Base.prototype.setActive = function (b)
-{	this.set('active', b===true);
+ol.filter.Base.prototype.setActive = function (b) {
+  this.set('active', b===true);
 };
 /** Get filter active
 *	@return {bool}
 */
-ol.filter.Base.prototype.getActive = function (b)
-{	return this.get('active');
+ol.filter.Base.prototype.getActive = function (b) {
+  return this.get('active');
 };
 (function(){
 /** Internal function  
@@ -5890,48 +5894,52 @@ function precompose_(e)
 * @scoop {ol.filter} this the filter
 * @private
 */
-function postcompose_(e)
-{	if (this.get('active')) this.postcompose(e);
+function postcompose_(e) {
+	if (this.get('active')) this.postcompose(e);
 }
 /** Force filter redraw / Internal function  
 * @scoop {ol.map||ol.layer} this: the map or layer the filter is added to
 * @private
 */
-function filterRedraw_(e)
-{	if (this.renderSync) this.renderSync();
+function filterRedraw_(e) {
+	if (this.renderSync) this.renderSync();
 	else this.changed(); 
 }
 /** Add a filter to an ol object
 * @scoop {ol.map||ol.layer} this: the map or layer the filter is added to
 * @private
 */
-function addFilter_(filter)
-{	if (!this.filters_) this.filters_ = [];
+function addFilter_(filter) {
+	if (!this.filters_) this.filters_ = [];
 	this.filters_.push(filter);
-	if (filter.precompose) this.on('precompose', precompose_, filter);
-	if (filter.postcompose) this.on('postcompose', postcompose_, filter);
-	filter.on('propertychange', filterRedraw_, this);
+	if (filter.precompose) filter._listener.push ( { listener: this.on('precompose', precompose_.bind(filter)), target: this });
+	if (filter.postcompose) filter._listener.push ( { listener: this.on('postcompose', postcompose_.bind(filter)), target: this });
+	filter._listener.push ( { listener: filter.on('propertychange', filterRedraw_.bind(this)), target: this });
 	filterRedraw_.call (this);
 };
 /** Remove a filter to an ol object
 * @scoop {ol.map||ol.layer} this: the map or layer the filter is added to
 * @private
 */
-function removeFilter_(filter)
-{	if (!this.filters_) this.filters_ = [];
-	for (var i=this.filters_.length-1; i>=0; i--)
-	{	if (this.filters_[i]===filter) this.filters_.splice(i,1);
+function removeFilter_(filter) {
+  if (!this.filters_) this.filters_ = [];
+	for (var i=this.filters_.length-1; i>=0; i--) {
+    if (this.filters_[i]===filter) this.filters_.splice(i,1);
 	}
-	if (filter.precompose) this.un('precompose', precompose_, filter);
-	if (filter.postcompose) this.un('postcompose', postcompose_, filter);
-	filter.un('propertychange', filterRedraw_, this);
+	for (var i=filter._listener.length-1; i>=0; i--) {
+    // Remove listener on this object
+		if (filter._listener[i].target === this) {
+			ol.Observable.unByKey(filter._listener[i].listener);
+			filter._listener.splice(i,1);
+		}
+	}
 	filterRedraw_.call (this);
 };
 /** Add a filter to an ol.Map
 *	@param {ol.filter}
 */
-ol.Map.prototype.addFilter = function (filter)
-{	addFilter_.call (this, filter);
+ol.Map.prototype.addFilter = function (filter) {
+  addFilter_.call (this, filter);
 };
 /** Remove a filter to an ol.Map
 *	@param {ol.filter}
@@ -6730,6 +6738,8 @@ ol.filter.Texture.prototype.postcompose = function(e)
  */
 ol.interaction.CenterTouch = function(options)
 {	options = options || {};
+	// LIst of listerner on the object
+	this._listener = {};
 	// Filter event
 	var rex = /^pointermove$|^pointerup$/;
 	// Default style = cross
@@ -6769,12 +6779,13 @@ ol.inherits(ol.interaction.CenterTouch, ol.interaction.Interaction);
 ol.interaction.CenterTouch.prototype.setMap = function(map)
 {	if (this.getMap())
 	{	this.getMap().removeInteraction(this.ctouch);
-		this.getMap().un('postcompose', this.drawTarget_, this);
 	}
+	if (this._listener.drawtarget) ol.Observable.unByKey(this._listener.drawtarget);
+	this._listener.drawtarget = null;
 	ol.interaction.Interaction.prototype.setMap.call (this, map);
 	if (this.getMap())
 	{	if (this.getActive()) this.getMap().addInteraction(this.ctouch);
-		this.getMap().on('postcompose', this.drawTarget_, this);
+		this._listener.drawtarget = this.getMap().on('postcompose', this.drawTarget_.bind(this));
 	}
 };
 /**
@@ -6855,19 +6866,20 @@ ol.interaction.Clip = function(options) {
 ol.inherits(ol.interaction.Clip, ol.interaction.Pointer);
 /** Set the map > start postcompose
 */
-ol.interaction.Clip.prototype.setMap = function(map)
-{	if (this.getMap()) 
-	{	for (var i=0; i<this.layers_.length; i++)
-		{	this.layers_[i].un('precompose', this.precompose_, this);
-			this.layers_[i].un('postcompose', this.postcompose_, this);
+ol.interaction.Clip.prototype.setMap = function(map) {
+	if (this.getMap()) {
+		for (var i=0; i<this.layers_.length; i++) {
+			if (this.layers_[i].precompose) ol.Observable.unByKey(this.layers_[i].precompose);
+			if (this.layers_[i].postcompose) ol.Observable.unByKey(this.layers_[i].postcompose);
+			this.layers_[i].precompose = this.layers_[i].postcompose = null;
 		}
 		this.getMap().renderSync();
 	}
 	ol.interaction.Pointer.prototype.setMap.call(this, map);
-	if (map)
-	{	for (var i=0; i<this.layers_.length; i++)
-		{	this.layers_[i].on('precompose', this.precompose_, this);
-			this.layers_[i].on('postcompose', this.postcompose_, this);
+	if (map) {
+		for (var i=0; i<this.layers_.length; i++) {
+			this.layers_[i].precompose = this.layers_[i].layer.on('precompose', this.precompose_.bind(this));
+			this.layers_[i].postcompose = this.layers_[i].layer.on('postcompose', this.postcompose_.bind(this));
 		}
 		map.renderSync();
 	}
@@ -6884,13 +6896,14 @@ ol.interaction.Clip.prototype.setRadius = function(radius)
  */
 ol.interaction.Clip.prototype.addLayer = function(layers)
 {	if (!(layers instanceof Array)) layers = [layers];
-	for (var i=0; i<layers.length; i++)
-	{	if (this.getMap())
-		{	layers[i].on('precompose', this.precompose_, this);
-			layers[i].on('postcompose', this.postcompose_, this);
+	for (var i=0; i<layers.length; i++) {
+		var l = { layer: layers[i] }
+		if (this.getMap()) {
+			l.precompose = layers[i].on('precompose', this.precompose_.bind(this));
+			l.postcompose = layers[i].on('postcompose', this.postcompose_.bind(this));
 			this.getMap().renderSync();
 		}
-		this.layers_.push(layers[i]);
+		this.layers_.push(l);
 	}
 }
 /** Remove a layer to clip
@@ -6901,14 +6914,14 @@ ol.interaction.Clip.prototype.removeLayer = function(layers)
 	for (var i=0; i<layers.length; i++)
 	{	var k;
 		for (k=0; k<this.layers_.length; k++)
-		{	if (this.layers_[k]===layers[i]) 
+		{	if (this.layers_[k].layer===layers[i]) 
 			{	break;
 			}
 		}
 		if (k!=this.layers_.length && this.getMap())
-		{	this.layers_.splice(k,1);
-			layers[i].un('precompose', this.precompose_, this);
-			layers[i].un('postcompose', this.postcompose_, this);
+		{	if (this.layers_[k].precompose) ol.Observable.unByKey(this.layers_[k].precompose);
+			if (this.layers_[k].postcompose) ol.Observable.unByKey(this.layers_[k].postcompose);
+			this.layers_.splice(k,1);
 			this.getMap().renderSync();
 		}
 	}
@@ -6949,13 +6962,14 @@ ol.interaction.Clip.prototype.setActive = function(b)
 {	ol.interaction.Pointer.prototype.setActive.call (this, b);
 	if(b) {
 		for(var i=0; i<this.layers_.length; i++) {
-			this.layers_[i].on('precompose', this.precompose_, this);
-			this.layers_[i].on('postcompose', this.postcompose_, this);
+			this.layers_[i].precompose = this.layers_[i].layer.on('precompose', this.precompose_.bind(this));
+			this.layers_[i].postcompose = this.layers_[i].layer.on('postcompose', this.postcompose_.bind(this));
 		}
 	} else {
 		for(var i=0; i<this.layers_.length; i++) {
-			this.layers_[i].un('precompose', this.precompose_, this);
-			this.layers_[i].un('postcompose', this.postcompose_, this);
+			if (this.layers_[i].precompose) ol.Observable.unByKey(this.layers_[i].precompose);
+			if (this.layers_[i].postcompose) ol.Observable.unByKey(this.layers_[i].postcompose);
+			this.layers_[i].precompose = this.layers_[i].postcompose = null;
 		}
 	}
 	if (this.getMap()) this.getMap().renderSync();
@@ -7003,9 +7017,9 @@ ol.interaction.DrawHole = function(options)
 		}
 	}
 	// Start drawing if inside a feature
-	this.on('drawstart', this._startDrawing, this );
+	this.on('drawstart', this._startDrawing.bind(this));
 	// End drawing add the hole to the current Polygon
-	this.on('drawend', this._finishDrawing, this);
+	this.on('drawend', this._finishDrawing.bind(this));
 };
 ol.inherits(ol.interaction.DrawHole, ol.interaction.Draw);
 /**
@@ -7594,14 +7608,13 @@ ol.inherits(ol.interaction.DrawTouch, ol.interaction.CenterTouch);
  * @param {ol.Map} map Map.
  * @api stable
  */
-ol.interaction.DrawTouch.prototype.setMap = function(map)
-{	if (this.getMap())
-	{	this.getMap().un("postcompose", this.drawSketchLink_, this);
-	}
+ol.interaction.DrawTouch.prototype.setMap = function(map) {
+	if (this._listener.drawSketch) ol.Observable.unByKey(this._listener.drawSketch);
+	this._listener.drawSketch = null;
 	ol.interaction.CenterTouch.prototype.setMap.call (this, map);
 	this.overlay_.setMap(map);
 	if (this.getMap())
-	{	this.getMap().on("postcompose", this.drawSketchLink_, this);
+	{	this._listener.drawSketch = this.getMap().on("postcompose", this.drawSketchLink_.bind(this));
 	}
 };
 /** Start drawing and add the sketch feature to the target layer. 
@@ -7672,7 +7685,8 @@ ol.interaction.DrawTouch.prototype.removeLastPoint = function()
 * @private
 */
 ol.interaction.DrawTouch.prototype.drawSketch_ = function()
-{	this.overlay_.getSource().clear();
+{	if (!this.overlay_) return;
+	this.overlay_.getSource().clear();
 	if (this.geom_.length)
 	{	var f;
 		if (this.typeGeom_ == "Polygon") 
@@ -7837,14 +7851,15 @@ ol.interaction.Flashlight = function(options) {
 ol.inherits(ol.interaction.Flashlight, ol.interaction.Pointer);
 /** Set the map > start postcompose
 */
-ol.interaction.Flashlight.prototype.setMap = function(map)
-{	if (this.getMap()) 
-	{	this.getMap().un('postcompose', this.postcompose_, this);
+ol.interaction.Flashlight.prototype.setMap = function(map) {
+	if (this.getMap()) {
 		this.getMap().render();
 	}
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
 	ol.interaction.Pointer.prototype.setMap.call(this, map);
-	if (map)
-	{	map.on('postcompose', this.postcompose_, this);
+	if (map) {
+		this._listener = map.on('postcompose', this.postcompose_.bind(this));
 	}
 }
 /** Set flashlight radius
@@ -8755,7 +8770,7 @@ ol.interaction.Ripple.prototype.setMap = function(map)
 	}
 	ol.interaction.Pointer.prototype.setMap.call(this, map);
 	if (map)
-	{	this.oncompose = map.on('postcompose', this.postcompose_, this);
+	{	this.oncompose = map.on('postcompose', this.postcompose_.bind(this));
 	}
 }
 /** Generate random rain drop
@@ -8949,7 +8964,7 @@ ol.interaction.SelectCluster = function(options)
 	};
 	this.filter_ = options.filter;
 	ol.interaction.Select.call(this, options);
-	this.on("select", this.selectCluster, this);
+	this.on("select", this.selectCluster.bind(this));
 };
 ol.inherits(ol.interaction.SelectCluster, ol.interaction.Select);
 /**
@@ -8958,18 +8973,17 @@ ol.inherits(ol.interaction.SelectCluster, ol.interaction.Select);
  * @param {ol.Map} map Map.
  * @api stable
  */
-ol.interaction.SelectCluster.prototype.setMap = function(map) 
-{	if (this.getMap())
-	{	if (this.getMap().getView()) 
-		{	this.getMap().getView().un('change:resolution', this.clear, this);
-		}
+ol.interaction.SelectCluster.prototype.setMap = function(map) {
+	if (this.getMap()) {
 		this.getMap().removeLayer(this.overlayLayer_);
 	}
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
 	ol.interaction.Select.prototype.setMap.call (this, map);
 	this.overlayLayer_.setMap(map);
 	// map.addLayer(this.overlayLayer_);
-	if (map && map.getView()) 
-	{	map.getView().on('change:resolution', this.clear, this);
+	if (map && map.getView()) {
+		this._listener = map.getView().on('change:resolution', this.clear.bind(this));
 	}
 };
 /**
@@ -9119,7 +9133,7 @@ ol.interaction.SelectCluster.prototype.animateCluster_ = function(center)
 		event.frameState.animate = true;
 	}
 	// Start a new postcompose animation
-	this.listenerKey_ = this.getMap().on('postcompose', animate, this);
+	this.listenerKey_ = this.getMap().on('postcompose', animate.bind(this));
 	//select.getMap().renderSync();
 };
 
@@ -9627,14 +9641,14 @@ ol.interaction.Splitter = function(options)
 	{	trigger = new ol.source.Vector({ features: options.triggerFeatures });
 	}
 	if (trigger)
-	{	trigger.on("addfeature", this.onAddFeature, this);
-		trigger.on("changefeature", this.onChangeFeature, this);
-		trigger.on("removefeature", this.onRemoveFeature, this);
+	{	trigger.on("addfeature", this.onAddFeature.bind(this));
+		trigger.on("changefeature", this.onChangeFeature.bind(this));
+		trigger.on("removefeature", this.onRemoveFeature.bind(this));
 	}
 	else
-	{	this.source_.on("addfeature", this.onAddFeature, this);
-		this.source_.on("changefeature", this.onChangeFeature, this);
-		this.source_.on("removefeature", this.onRemoveFeature, this);
+	{	this.source_.on("addfeature", this.onAddFeature.bind(this));
+		this.source_.on("changefeature", this.onChangeFeature.bind(this));
+		this.source_.on("removefeature", this.onRemoveFeature.bind(this));
 	}
 	// Split tolerance between the calculated intersection and the geometry
 	this.tolerance_ = options.tolerance || 1e-10;
@@ -9724,7 +9738,7 @@ ol.interaction.Splitter.prototype.splitSource = function(feature)
 		var g;
 		while (true)
 		{	var found = false;
-			this.source_.forEachFeatureIntersectingExtent(extent, intersect, this);
+			this.source_.forEachFeatureIntersectingExtent(extent, intersect.bind(this));
 			// Split feature
 			if (found)
 			{	var f = found;
@@ -9834,25 +9848,21 @@ ol.inherits(ol.interaction.Synchronize, ol.interaction.Interaction);
  */
 ol.interaction.Synchronize.prototype.setMap = function(map)
 {	
-	if (this.getMap())
-	{
-		this.getMap().getView().un('change:center', this.syncMaps, this);
-		this.getMap().getView().un('change:rotation', this.syncMaps, this);
-		this.getMap().getView().un('change:resolution', this.syncMaps, this);
-		ol.events.unlisten(this.getMap().getViewport(), ol.events.EventType.MOUSEOUT, this.handleMouseOut_, this);
+	if (this._listener) {
+		ol.Observable.unByKey(this._listener.center);
+		ol.Observable.unByKey(this._listener.rotation);
+		ol.Observable.unByKey(this._listener.resolution);
+		$(this.getMap().getTargetElement()).off('mouseout', this._listener.mouseout);
 	}
+	this._listener = null;
 	ol.interaction.Interaction.prototype.setMap.call (this, map);
-	if (map)
-	{	this.getMap().getView().on('change:center', this.syncMaps, this);
-		this.getMap().getView().on('change:rotation', this.syncMaps, this);
-		this.getMap().getView().on('change:resolution', this.syncMaps, this);
-		var me = this;
-		$(this.getMap().getTargetElement()).mouseout(function() {
-			for (var i=0; i<me.maps.length; i++)
-			{	me.maps[i].hideTarget();
-			}
-			me.getMap().hideTarget();
-    });
+	if (map) {
+		this._listener = {};
+		this._listener.center = this.getMap().getView().on('change:center', this.syncMaps.bind(this));
+		this._listener.rotation = this.getMap().getView().on('change:rotation', this.syncMaps.bind(this));
+		this._listener.resolution = this.getMap().getView().on('change:resolution', this.syncMaps.bind(this));
+		this._listener.mouseout = this.handleMouseOut_.bind(this);
+		$(this.getMap().getTargetElement()).on('mouseout', this._listener.mouseout);
 		this.syncMaps();
 	}
 };
@@ -9904,10 +9914,9 @@ ol.interaction.Synchronize.prototype.handleMove_ = function(e)
 /** Cursor out of map > tells other maps to hide the cursor
 * @param {event} e "mouseOut" event
 */
-ol.interaction.Synchronize.prototype.handleMouseOut_ = function(e, scope)
-{	for (var i=0; i<scope.maps.length; i++)
-	{
-		scope.maps[i].targetOverlay_.setPosition(undefined);
+ol.interaction.Synchronize.prototype.handleMouseOut_ = function(e) {
+	for (var i=0; i<this.maps.length; i++) {
+		this.maps[i].targetOverlay_.setPosition(undefined);
 	}
 };
 /** Show a target overlay at coord
@@ -9963,16 +9972,16 @@ ol.interaction.TinkerBell = function(options)
 ol.inherits(ol.interaction.TinkerBell, ol.interaction.Pointer);
 /** Set the map > start postcompose
 */
-ol.interaction.TinkerBell.prototype.setMap = function(map)
-{	if (this.getMap())
-	{	this.getMap().un('postcompose', this.postcompose_, this);
+ol.interaction.TinkerBell.prototype.setMap = function(map) {
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
+	if (this.getMap()) {
 		map.getViewport().removeEventListener('mouseout', this.out_, false);
 		this.getMap().render();
 	}
 	ol.interaction.Pointer.prototype.setMap.call(this, map);
-	if (map)
-	{	map.on('postcompose', this.postcompose_, this);
-		map.on('mouseout', this.onMove, this);
+	if (map) {
+		this._listener = map.on('postcompose', this.postcompose_.bind(this));
 		map.getViewport().addEventListener('mouseout', this.out_, false);
 	}
 };
@@ -10099,13 +10108,12 @@ ol.interaction.TouchCompass.prototype.compass = null;
  * @param {_ol_Map_} map Map.
  * @api stable
  */
-ol.interaction.TouchCompass.prototype.setMap = function(map)
-{	if (this.getMap())
-	{	this.getMap().un('postcompose', this.drawCompass_, this);
-	}
+ol.interaction.TouchCompass.prototype.setMap = function(map) {
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
 	ol.interaction.Pointer.prototype.setMap.call (this, map);
-	if (map)
-	{	map.on('postcompose', this.drawCompass_, this);
+	if (map) {
+		this._listener = map.on('postcompose', this.drawCompass_.bind(this));
 	}
 };
 /**
@@ -11096,6 +11104,8 @@ ol.source.GeoImage.prototype.setCrop = function(crop)
 */
 ol.source.HexBin = function(options) {
   options = options || {} ;
+	// bind function for callback
+	this._bind = { modify: this._onModifyFeature.bind(this) };
 	ol.source.Vector.call (this, options);
 	// The HexGrid
 	this._hexgrid = new ol.HexGrid(options);
@@ -11107,8 +11117,8 @@ ol.source.HexBin = function(options) {
 	// Existing features
 	this.reset();
 	// Future features
-	this._origin.on("addfeature", this._onAddFeature, this);
-	this._origin.on("removefeature", this._onRemoveFeature, this);
+	this._origin.on("addfeature", this._onAddFeature.bind(this));
+	this._origin.on("removefeature", this._onRemoveFeature.bind(this));
 };
 ol.inherits (ol.source.HexBin, ol.source.Vector);
 /**
@@ -11129,7 +11139,7 @@ ol.source.HexBin.prototype._onAddFeature = function(e) {
 		this._bin[id] = ex;
 		this.addFeature(ex);
 	}
-	f.on("change", this._onModifyFeature, this);
+	f.on("change", this._bind.modify);
 };
 /**
  * Get the hexagon of a feature
@@ -11169,7 +11179,7 @@ ol.source.HexBin.prototype._onRemoveFeature = function(e, bin) {
 	} else {
     console.log("[ERROR:HexBin] remove feature feature doesn't exists anymore.");
 	}
-	f.un("change", this._onModifyFeature, this);
+	f.un("change", this._bind.modify);
 };
 /**
  * A feature has been modified
@@ -11531,23 +11541,25 @@ ol.layer.AnimatedCluster = function(opt_options)
 	this.set('animationDuration', typeof(options.animationDuration)=='number' ? options.animationDuration : 700);
 	this.set('animationMethod', options.animationMethod || ol.easing.easeOut);
 	// Save cluster before change
-	this.getSource().on('change', this.saveCluster, this);
+	this.getSource().on('change', this.saveCluster.bind(this));
 	// Animate the cluster
-	this.on('precompose', this.animate, this);
-	this.on('postcompose', this.postanimate, this);
+	this.on('precompose', this.animate.bind(this));
+	this.on('postcompose', this.postanimate.bind(this));
 };
 ol.inherits (ol.layer.AnimatedCluster, ol.layer.Vector);
 /** save cluster features before change
  * @private
  */
-ol.layer.AnimatedCluster.prototype.saveCluster = function()
-{	this.oldcluster.clear();
-	if (!this.get('animationDuration')) return;
-	var features = this.getSource().getFeatures();
-	if (features.length && features[0].get('features'))
-	{	this.oldcluster.addFeatures (this.clusters);
-		this.clusters = features.slice(0);
-		this.sourceChanged = true;
+ol.layer.AnimatedCluster.prototype.saveCluster = function() {
+	if (this.oldcluster) {
+		this.oldcluster.clear();
+		if (!this.get('animationDuration')) return;
+		var features = this.getSource().getFeatures();
+		if (features.length && features[0].get('features'))
+		{	this.oldcluster.addFeatures (this.clusters);
+			this.clusters = features.slice(0);
+			this.sourceChanged = true;
+		}
 	}
 };
 /** 
@@ -12074,22 +12086,22 @@ ol.Overlay.Magnify = function (options)
 	this.external_ = options.target?true:false;
 	this.set("zoomOffset", options.zoomOffset||1);
 	this.set("active", true);
-	this.on("propertychange", this.setView_, this);
+	this.on("propertychange", this.setView_.bind(this));
 };
 ol.inherits(ol.Overlay.Magnify, ol.Overlay);
 /**
  * Set the map instance the overlay is associated with.
  * @param {ol.Map} map The map instance.
  */
-ol.Overlay.Magnify.prototype.setMap = function(map)
-{	if (this.getMap())
-	{	$(this.getMap().getViewport()).off("mousemove", this.onMouseMove_);
-		this.getMap().getView().un('propertychange', this.setView_, this);
+ol.Overlay.Magnify.prototype.setMap = function(map) {
+	if (this.getMap()) {
+		$(this.getMap().getViewport()).off("mousemove", this.onMouseMove_);
 	}
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
 	ol.Overlay.prototype.setMap.call(this, map);
-	var self = this;
 	$(map.getViewport()).on("mousemove", {self:this}, this.onMouseMove_);
-	map.getView().on('propertychange', this.setView_, this);
+	this._listener = map.getView().on('propertychange', this.setView_.bind(this));
 	this.setView_();
 };
 /** Get the magnifier map
@@ -12283,10 +12295,12 @@ ol.Overlay.Popup.prototype.setPositioning = function (pos)
 /** @private
  * @param {ol.OverlayPositioning | string | undefined} pos  
  */
-ol.Overlay.Popup.prototype.setPositioning_ = function (pos)
-{	ol.Overlay.prototype.setPositioning.call(this, pos);
-	this._elt.removeClass("ol-popup-top ol-popup-bottom ol-popup-left ol-popup-right ol-popup-center ol-popup-middle");
-	this._elt.addClass(this.getClassPositioning());
+ol.Overlay.Popup.prototype.setPositioning_ = function (pos) {
+	if (this._elt) {
+		ol.Overlay.prototype.setPositioning.call(this, pos);
+		this._elt.removeClass("ol-popup-top ol-popup-bottom ol-popup-left ol-popup-right ol-popup-center ol-popup-middle");
+		this._elt.addClass(this.getClassPositioning());
+	}
 };
 /** Check if popup is visible
 * @return {boolean}
@@ -12845,7 +12859,7 @@ ol.Map.prototype.animExtent = function(extent, options)
 		}
 	}
 	// Launch animation
-	listenerKey = this.on('postcompose', animate, this);
+	listenerKey = this.on('postcompose', animate.bind(this));
 	this.renderSync();
 }
 
@@ -13319,7 +13333,7 @@ ol.Map.prototype.markup = function(coords, options)
 		{	if (listenerKey) self.renderSync(); 
 		}, delay);
 	// Launch animation
-	listenerKey = this.on('postcompose', animate, this);
+	listenerKey = this.on('postcompose', animate.bind(this));
 	this.renderSync();
 	listenerKey.stop = function()
 	{	delay = duration = 0;
@@ -13433,7 +13447,7 @@ ol.Map.prototype.pulse = function(coords, options)
 		}
 	}
 	// Launch animation
-	listenerKey = this.on('postcompose', animate, this);
+	listenerKey = this.on('postcompose', animate.bind(this));
 	this.renderSync();
 }
 
@@ -14982,7 +14996,7 @@ ol.layer.Vector.prototype.setTextPathStyle = function(style, maxResolution)
 	}
 	// New postcompose
 	if (!this.textPath_)
-	{	this.textPath_ = this.on('postcompose', drawTextPath, this);
+	{	this.textPath_ = this.on('postcompose', drawTextPath.bind(this));
 	}
 	// Set textPathStyle
 	if (style===undefined)

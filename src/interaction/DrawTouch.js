@@ -91,16 +91,15 @@ ol.inherits(ol_interaction_DrawTouch, ol_interaction_CenterTouch);
  * @param {ol.Map} map Map.
  * @api stable
  */
-ol_interaction_DrawTouch.prototype.setMap = function(map)
-{	if (this.getMap())
-	{	this.getMap().un("postcompose", this.drawSketchLink_, this);
-	}
+ol_interaction_DrawTouch.prototype.setMap = function(map) {
+	if (this._listener.drawSketch) ol_Observable.unByKey(this._listener.drawSketch);
+	this._listener.drawSketch = null;
 
 	ol_interaction_CenterTouch.prototype.setMap.call (this, map);
 	this.overlay_.setMap(map);
 
 	if (this.getMap())
-	{	this.getMap().on("postcompose", this.drawSketchLink_, this);
+	{	this._listener.drawSketch = this.getMap().on("postcompose", this.drawSketchLink_.bind(this));
 	}
 };
 
@@ -181,7 +180,8 @@ ol_interaction_DrawTouch.prototype.removeLastPoint = function()
 * @private
 */
 ol_interaction_DrawTouch.prototype.drawSketch_ = function()
-{	this.overlay_.getSource().clear();
+{	if (!this.overlay_) return;
+	this.overlay_.getSource().clear();
 	if (this.geom_.length)
 	{	var f;
 		if (this.typeGeom_ == "Polygon") 

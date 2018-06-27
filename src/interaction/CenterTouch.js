@@ -23,6 +23,9 @@ import ol_style_Stroke from 'ol/style/stroke'
  */
 var ol_interaction_CenterTouch = function(options)
 {	options = options || {};
+
+	// LIst of listerner on the object
+	this._listener = {};
 	// Filter event
 	var rex = /^pointermove$|^pointerup$/;
 
@@ -66,14 +69,15 @@ ol.inherits(ol_interaction_CenterTouch, ol_interaction_Interaction);
 ol_interaction_CenterTouch.prototype.setMap = function(map)
 {	if (this.getMap())
 	{	this.getMap().removeInteraction(this.ctouch);
-		this.getMap().un('postcompose', this.drawTarget_, this);
 	}
+	if (this._listener.drawtarget) ol_Observable.unByKey(this._listener.drawtarget);
+	this._listener.drawtarget = null;
 
 	ol_interaction_Interaction.prototype.setMap.call (this, map);
 
 	if (this.getMap())
 	{	if (this.getActive()) this.getMap().addInteraction(this.ctouch);
-		this.getMap().on('postcompose', this.drawTarget_, this);
+		this._listener.drawtarget = this.getMap().on('postcompose', this.drawTarget_.bind(this));
 	}
 };
 

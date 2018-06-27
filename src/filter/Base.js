@@ -22,8 +22,10 @@ var ol_filter = {};
  * @param {} options Extend {@link _ol_control_Control_} options.
  *  @param {bool} options.active
  */
-var ol_filter_Base = function(options)
-{	ol_Object.call(this);
+var ol_filter_Base = function(options) {
+  ol_Object.call(this);
+	// Array of postcompose listener
+	this._listener = [];
 	if (options && options.active===false) this.set('active', false);
 	else this.set('active', true);
 };
@@ -32,15 +34,15 @@ ol.inherits(ol_filter_Base, ol_Object);
 /** Activate / deactivate filter
 *	@param {bool} b
 */
-ol_filter_Base.prototype.setActive = function (b)
-{	this.set('active', b===true);
+ol_filter_Base.prototype.setActive = function (b) {
+  this.set('active', b===true);
 };
 
 /** Get filter active
 *	@return {bool}
 */
-ol_filter_Base.prototype.getActive = function (b)
-{	return this.get('active');
+ol_filter_Base.prototype.getActive = function (b) {
+  return this.get('active');
 };
 
 (function(){
@@ -56,15 +58,15 @@ function precompose_(e)
 * @scoop {ol.filter} this the filter
 * @private
 */
-function postcompose_(e)
-{	if (this.get('active')) this.postcompose(e);
+function postcompose_(e) {
+	if (this.get('active')) this.postcompose(e);
 }
 /** Force filter redraw / Internal function  
 * @scoop {ol.map||ol.layer} this: the map or layer the filter is added to
 * @private
 */
-function filterRedraw_(e)
-{	if (this.renderSync) this.renderSync();
+function filterRedraw_(e) {
+	if (this.renderSync) this.renderSync();
 	else this.changed(); 
 }
 
@@ -72,12 +74,12 @@ function filterRedraw_(e)
 * @scoop {ol.map||ol.layer} this: the map or layer the filter is added to
 * @private
 */
-function addFilter_(filter)
-{	if (!this.filters_) this.filters_ = [];
+function addFilter_(filter) {
+	if (!this.filters_) this.filters_ = [];
 	this.filters_.push(filter);
-	if (filter.precompose) this.on('precompose', precompose_, filter);
-	if (filter.postcompose) this.on('postcompose', postcompose_, filter);
-	filter.on('propertychange', filterRedraw_, this);
+	if (filter.precompose) filter._listener.push ( { listener: this.on('precompose', precompose_.bind(filter)), target: this });
+	if (filter.postcompose) filter._listener.push ( { listener: this.on('postcompose', postcompose_.bind(filter)), target: this });
+	filter._listener.push ( { listener: filter.on('propertychange', filterRedraw_.bind(this)), target: this });
 	filterRedraw_.call (this);
 };
 
@@ -85,22 +87,26 @@ function addFilter_(filter)
 * @scoop {ol.map||ol.layer} this: the map or layer the filter is added to
 * @private
 */
-function removeFilter_(filter)
-{	if (!this.filters_) this.filters_ = [];
-	for (var i=this.filters_.length-1; i>=0; i--)
-	{	if (this.filters_[i]===filter) this.filters_.splice(i,1);
+function removeFilter_(filter) {
+  if (!this.filters_) this.filters_ = [];
+	for (var i=this.filters_.length-1; i>=0; i--) {
+    if (this.filters_[i]===filter) this.filters_.splice(i,1);
 	}
-	if (filter.precompose) this.un('precompose', precompose_, filter);
-	if (filter.postcompose) this.un('postcompose', postcompose_, filter);
-	filter.un('propertychange', filterRedraw_, this);
+	for (var i=filter._listener.length-1; i>=0; i--) {
+    // Remove listener on this object
+		if (filter._listener[i].target === this) {
+			ol_Observable.unByKey(filter._listener[i].listener);
+			filter._listener.splice(i,1);
+		}
+	}
 	filterRedraw_.call (this);
 };
 
 /** Add a filter to an ol.Map
 *	@param {ol.filter}
 */
-ol_Map.prototype.addFilter = function (filter)
-{	addFilter_.call (this, filter);
+ol_Map.prototype.addFilter = function (filter) {
+  addFilter_.call (this, filter);
 };
 /** Remove a filter to an ol.Map
 *	@param {ol.filter}

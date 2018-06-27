@@ -47,14 +47,15 @@ ol.inherits(ol_control_Target, ol_control_Control);
  */
 ol_control_Target.prototype.setMap = function (map)
 {	if (this.getMap()) 
-	{	this.getMap().un('postcompose', this.drawTarget_, this);
-		if (this.getVisible()) this.getMap().renderSync();
+	{	if (this.getVisible()) this.getMap().renderSync();
 	}
+	if (this._listener) ol_Observable.unByKey(this._listener);
+	this._listener = null;
 
 	ol_control_Control.prototype.setMap.call(this, map);
 
 	if (map) 
-	{	map.on('postcompose', this.drawTarget_, this);
+	{	this._listener = map.on('postcompose', this.drawTarget_.bind(this));
 	}
 };
 

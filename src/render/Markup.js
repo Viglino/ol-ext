@@ -80,7 +80,7 @@ ol_Map.prototype.markup = function(coords, options)
 		}, delay);
 
 	// Launch animation
-	listenerKey = this.on('postcompose', animate, this);
+	listenerKey = this.on('postcompose', animate.bind(this));
 	this.renderSync();
 	listenerKey.stop = function()
 	{	delay = duration = 0;

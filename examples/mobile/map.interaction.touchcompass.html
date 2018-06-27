@@ -104,8 +104,8 @@
 	tcompass.setActive(false);
 
 	sel.getFeatures().on(["add","remove"], function()
-	{	tcompass.setActive(this.getFeatures().getLength() > 0);
-	}, sel);
+	{	tcompass.setActive(sel.getFeatures().getLength() > 0);
+	});
 
 	</script>
 	

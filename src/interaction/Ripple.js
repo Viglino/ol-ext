@@ -57,7 +57,7 @@ ol_interaction_Ripple.prototype.setMap = function(map)
 	ol_interaction_Pointer.prototype.setMap.call(this, map);
 
 	if (map)
-	{	this.oncompose = map.on('postcompose', this.postcompose_, this);
+	{	this.oncompose = map.on('postcompose', this.postcompose_.bind(this));
 	}
 }
 
