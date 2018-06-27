@@ -233,7 +233,7 @@ ol_interaction_DrawRegular.prototype.getGeom_ = function ()
 				var t = [ center[0] - ext[0]*scx, center[1] - ext[1]*scy ];
 			
 				g.applyTransform(function(g1, g2, dim)
-				{	for (i=0; i<g1.length; i+=dim)
+				{	for (var i=0; i<g1.length; i+=dim)
 					{	g2[i] = g1[i]*scx + t[0];
 						g2[i+1] = g1[i+1]*scy + t[1];
 					}
