@@ -54,13 +54,13 @@ ol.inherits(ol_control_Cloud, ol_control_Control);
  */
 ol_control_Cloud.prototype.setMap = function (map)
 {	if (this.getMap()) 
-	{	this.getMap().un('postcompose', this.drawCloud_, this);
+	{	this.getMap().un('postcompose', this.drawCloud_.bind(this));
 	}
 
 	ol_control_Control.prototype.setMap.call(this, map);
 
 	if (map) 
-	{	map.on('postcompose', this.drawCloud_, this);
+	{	map.on('postcompose', this.drawCloud_.bind(this));
 	}
 };
 

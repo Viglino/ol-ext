@@ -1593,11 +1593,11 @@ ol.control.CanvasAttribution.prototype.setStyle = function (style)
  */
 ol.control.CanvasAttribution.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
-	if (oldmap) oldmap.un('postcompose', this.drawAttribution_, this);
+	if (oldmap) oldmap.un('postcompose', this.drawAttribution_.bind(this));
 	ol.control.ScaleLine.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 	// Get change (new layer added or removed)
-	if (map) map.on('postcompose', this.drawAttribution_, this);
+	if (map) map.on('postcompose', this.drawAttribution_.bind(this));
 	this.map_ = map;
 	this.setCanvas (this.isCanvas_);
 }
@@ -1672,11 +1672,11 @@ ol.inherits(ol.control.CanvasScaleLine, ol.control.ScaleLine);
  */
 ol.control.CanvasScaleLine.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
-	if (oldmap) oldmap.un('postcompose', this.drawScale_, this);
+	if (oldmap) oldmap.un('postcompose', this.drawScale_.bind(this));
 	ol.control.ScaleLine.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 	// Add postcompose on the map
-	if (map) map.on('postcompose', this.drawScale_, this);
+	if (map) map.on('postcompose', this.drawScale_.bind(this));
 	// Hide the default DOM element
 	this.$element = $(this.element).css("visibility","hidden");
 	this.olscale = $(".ol-scale-line-inner", this.element);
@@ -1797,11 +1797,11 @@ ol.inherits(ol.control.CanvasTitle, ol.control.Control);
  */
 ol.control.CanvasTitle.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
-	if (oldmap) oldmap.un('postcompose', this.drawTitle_, this);
+	if (oldmap) oldmap.un('postcompose', this.drawTitle_.bind(this));
 	ol.control.Control.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 	// Get change (new layer added or removed)
-	if (map) map.on('postcompose', this.drawTitle_, this);
+	if (map) map.on('postcompose', this.drawTitle_.bind(this));
 }
 /**
  * Change the control style
@@ -1930,11 +1930,11 @@ ol.inherits(ol.control.Cloud, ol.control.Control);
  */
 ol.control.Cloud.prototype.setMap = function (map)
 {	if (this.getMap()) 
-	{	this.getMap().un('postcompose', this.drawCloud_, this);
+	{	this.getMap().un('postcompose', this.drawCloud_.bind(this));
 	}
 	ol.control.Control.prototype.setMap.call(this, map);
 	if (map) 
-	{	map.on('postcompose', this.drawCloud_, this);
+	{	map.on('postcompose', this.drawCloud_.bind(this));
 	}
 };
 /** Set wind direction / force
