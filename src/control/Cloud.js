@@ -4,6 +4,7 @@
 */
 
 import ol from 'ol'
+import ol_Observable from 'ol/Observable'
 import ol_control_Control from 'ol/control/control'
 
 /** ol_control_Cloud adds an old map effect on a canvas renderer.
@@ -53,7 +54,7 @@ ol.inherits(ol_control_Cloud, ol_control_Control);
  * @api stable
  */
 ol_control_Cloud.prototype.setMap = function (map) {
-	if (this._listener) ol.Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable.unByKey(this._listener);
 	this._listener = null;
 
 	ol_control_Control.prototype.setMap.call(this, map);

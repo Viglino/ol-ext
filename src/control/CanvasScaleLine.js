@@ -4,6 +4,7 @@
 */
 
 import ol from 'ol'
+import ol_Observable from 'ol/Observable'
 import ol_control_ScaleLine from 'ol/control/scaleline'
 import ol_style_Style from 'ol/style/style'
 import ol_color from 'ol/color'
@@ -39,7 +40,7 @@ ol.inherits(ol_control_CanvasScaleLine, ol_control_ScaleLine);
  */
 ol_control_CanvasScaleLine.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
-	if (this._listener) ol.Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable.unByKey(this._listener);
 	this._listener = null;
 	
 	ol_control_ScaleLine.prototype.setMap.call(this, map);

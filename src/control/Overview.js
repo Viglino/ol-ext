@@ -4,6 +4,7 @@
 */
 
 import ol from 'ol'
+import ol_Observable from 'ol/Observable'
 import ol_control_Control from 'ol/control/control'
 import ol_geom_Polygon from 'ol/geom/polygon'
 import ol_geom_Point from 'ol/geom/point'
@@ -191,7 +192,7 @@ ol_control_Overview.prototype.setPosition = function(align)
  * @param {ol.Map} map The map instance.
  */
 ol_control_Overview.prototype.setMap = function(map) {
-	if (this._listener) ol.Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable.unByKey(this._listener);
 	this._listener = null;
 
 	ol_control_Control.prototype.setMap.call(this, map);

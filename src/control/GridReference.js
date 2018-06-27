@@ -4,6 +4,7 @@
 */
 
 import ol from 'ol'
+import ol_Observable from 'ol/Observable'
 import ol_control_Control from 'ol/control/control'
 import ol_style_Style from 'ol/style/style'
 import ol_style_Stroke from 'ol/style/stroke'
@@ -183,7 +184,7 @@ ol_control_GridReference.prototype.getReference = function (coords)
  */
 ol_control_GridReference.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
-	if (this._listener) ol.Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable.unByKey(this._listener);
 	this._listener = null;
 	
 	ol_control_Control.prototype.setMap.call(this, map);

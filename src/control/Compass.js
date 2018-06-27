@@ -4,6 +4,7 @@
 */
 
 import ol from 'ol'
+import ol_Observable from 'ol/Observable'
 import ol_control_Control from 'ol/control/control'
 
 /**
@@ -58,7 +59,7 @@ ol.inherits(ol_control_Compass, ol_control_Control);
  */
 ol_control_Compass.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
-	if (this._listener) ol.Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable.unByKey(this._listener);
 	this._listener = null;
 	
 	ol_control_Control.prototype.setMap.call(this, map);
