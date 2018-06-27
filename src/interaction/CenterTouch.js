@@ -4,6 +4,7 @@
 */
 
 import ol from 'ol'
+import ol_Observable from 'ol/Observable'
 import ol_style_RegularShape from 'ol/style/regularshape'
 import ol_style_Style from 'ol/style/style'
 import ol_interaction_Interaction from 'ol/interaction/interaction'

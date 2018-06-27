@@ -4,10 +4,9 @@
 */
 
 import ol from 'ol'
+import ol_Observable from 'ol/Observable'
 import ol_interaction_Interaction from 'ol/interaction/interaction'
 import ol_Map from 'ol/map'
-import ol_events from 'ol/events'
-import ol_events_EventType from 'ol/events/eventtype'
 import ol_Overlay from 'ol/overlay'
 
 /** Interaction synchronize

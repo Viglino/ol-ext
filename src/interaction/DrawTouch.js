@@ -4,6 +4,7 @@
 */
 
 import ol from 'ol'
+import ol_Observable from 'ol/Observable'
 import ol_interaction_CenterTouch from './CenterTouch'
 import ol_style_Style from 'ol/style/style'
 import ol_style_Circle from 'ol/style/circle'

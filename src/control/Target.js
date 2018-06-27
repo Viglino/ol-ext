@@ -4,6 +4,7 @@
 */
 
 import ol from 'ol'
+import ol_Observable from 'ol/Observable'
 import ol_control_Control from 'ol/control/control'
 import ol_style_RegularShape from 'ol/style/regularshape'
 import ol_geom_Point from 'ol/geom/point'

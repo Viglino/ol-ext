@@ -8,6 +8,7 @@
  */
 
 import ol from 'ol'
+import ol_Observable from 'ol/Observable'
 import ol_interaction_Pointer from 'ol/interaction/pointer'
 import ol_color from 'ol/color'
 
