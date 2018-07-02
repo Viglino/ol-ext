@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_Observable from 'ol/Observable'
 import ol_interaction_Pointer from 'ol/interaction/pointer'
 
@@ -82,7 +82,7 @@ var ol_interaction_TouchCompass = function(options)
 		ctx.fill();
 	}
 };
-ol.inherits(ol_interaction_TouchCompass, ol_interaction_Pointer);
+ol_inherits(ol_interaction_TouchCompass, ol_interaction_Pointer);
 
 /** Compass Image as a JS Image object
 * @api

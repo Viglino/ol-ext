@@ -3,12 +3,12 @@
 	released under the CeCILL license (http://www.cecill.info/).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_Object from 'ol/object'
-import ol_easing from 'ol/easing'
+import {linear as ol_easing_linear} from 'ol/easing'
 import ol_Map from 'ol/map'
 import ol_layer_Vector from 'ol/layer/vector'
-import ol_extent from 'ol/extent'
+import {getCenter as ol_extent_getCenter} from 'ol/extent'
 import ol_Observable from 'ol/observable'
 
 /** Feature animation base class
@@ -25,7 +25,7 @@ import ol_Observable from 'ol/observable'
 *		(@see {@link ../examples/map.featureanimation.select.html}), default the feature 
 *		will be hidden when playing (and niot selectable)
 *	@param {ol_easing_Function} options.fade an easing function used to fade in the feature, default none
-*	@param {ol_easing_Function} options.easing an easing function for the animation, default ol_easing.linear
+*	@param {ol_easing_Function} options.easing an easing function for the animation, default ol_easing_linear
 */
 var ol_featureAnimation = function(options)
 {	options = options || {};
@@ -34,7 +34,7 @@ var ol_featureAnimation = function(options)
 	this.fade_ = typeof(options.fade) == 'function' ? options.fade : null;
 	this.repeat_ = Number(options.repeat);
 
-	var easing = typeof(options.easing) =='function' ? options.easing : ol_easing.linear;
+	var easing = typeof(options.easing) =='function' ? options.easing : ol_easing_linear;
 	if (options.revers) this.easing_ = function(t) { return (1 - easing(t)); };
 	else this.easing_ = easing;
 
@@ -42,7 +42,7 @@ var ol_featureAnimation = function(options)
 
 	ol_Object.call(this);
 };
-ol.inherits(ol_featureAnimation, ol_Object);
+ol_inherits(ol_featureAnimation, ol_Object);
 
 /** Draw a geometry 
 * @param {olx.animateFeatureEvent} e
@@ -135,7 +135,7 @@ ol_layer_Vector.prototype.animateFeature = function(feature, fanim)
 			geom: feature.getGeometry(),
 			typeGeom: feature.getGeometry().getType(),
 			bbox: feature.getGeometry().getExtent(),
-			coord: ol_extent.getCenter(feature.getGeometry().getExtent()),
+			coord: ol_extent_getCenter(feature.getGeometry().getExtent()),
 			style: flashStyle
 		};
 

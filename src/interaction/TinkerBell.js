@@ -7,12 +7,12 @@
 	@link https://github.com/Viglino
  */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_Observable from 'ol/Observable'
 import ol_interaction_Pointer from 'ol/interaction/pointer'
-import ol_color from 'ol/color'
+import {asString as ol_color_asString} from 'ol/color'
 
- /**
+/**
  * @constructor
  * @extends {ol_interaction_Pointer}
  *	@param {ol_interaction_TinkerBell.options}  options flashlight param
@@ -26,7 +26,7 @@ var ol_interaction_TinkerBell = function(options)
 		handleMoveEvent: this.onMove
 	});
 
-	this.set('color', options.color ? ol_color.asString(options.color) : "#fff");
+	this.set('color', options.color ? ol_color_asString(options.color) : "#fff");
 	this.sparkle = [0,0];
 	this.sparkles = [];
 	this.lastSparkle = this.time = new Date();
@@ -35,7 +35,7 @@ var ol_interaction_TinkerBell = function(options)
 	this.out_ = function() { self.isout_=true; };
 	this.isout_ = true;
 };
-ol.inherits(ol_interaction_TinkerBell, ol_interaction_Pointer);
+ol_inherits(ol_interaction_TinkerBell, ol_interaction_Pointer);
 
 /** Set the map > start postcompose
 */

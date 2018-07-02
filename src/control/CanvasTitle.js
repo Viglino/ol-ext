@@ -3,10 +3,10 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_Observable from 'ol/Observable'
 import ol_control_Control from 'ol/control/control'
-import ol_color from 'ol/color'
+import {asString as ol_color_asString} from 'ol/color'
 import ol_style_Style from 'ol/style/style'
 
 /**
@@ -40,7 +40,7 @@ var ol_control_CanvasTitle = function(options)
 		target: options.target
 	});
 }
-ol.inherits(ol_control_CanvasTitle, ol_control_Control);
+ol_inherits(ol_control_CanvasTitle, ol_control_Control);
 
 /**
  * Remove the control from its current map and attach it to the new map.
@@ -74,8 +74,8 @@ ol_control_CanvasTitle.prototype.setStyle = function (style)
 	this.text_ = text ? text.getText() : "";
 	var stroke = text ? text.getStroke() : null;
 	var fill = text ? text.getFill() : null;
-	this.strokeStyle_ = stroke ? ol_color.asString(stroke.getColor()) : "#fff";
-	this.fillStyle_ = fill ? ol_color.asString(fill.getColor()) : "#000";
+	this.strokeStyle_ = stroke ? ol_color_asString(stroke.getColor()) : "#fff";
+	this.fillStyle_ = fill ? ol_color_asString(fill.getColor()) : "#000";
 	if (this.element) 
 	{	$(this.element).text(this.text_).css ({font: this.font_});
 	}

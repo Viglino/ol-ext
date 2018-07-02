@@ -13,11 +13,11 @@
 	@link https://github.com/Viglino
  */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_interaction_Pointer from 'ol/interaction/pointer'
 import ol_Observable from 'ol/observable'
 
- /**
+/**
  * @constructor
  * @extends {ol_interaction_Pointer}
  *	@param {ol.flashlight.options} flashlight options param
@@ -44,7 +44,7 @@ var ol_interaction_Ripple = function(options)
     this.interval = options.interval;
 	this.rains (this.interval);
 };
-ol.inherits(ol_interaction_Ripple, ol_interaction_Pointer);
+ol_inherits(ol_interaction_Ripple, ol_interaction_Pointer);
 
 /** Set the map > start postcompose
 */

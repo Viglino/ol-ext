@@ -3,11 +3,11 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_Observable from 'ol/Observable'
 import ol_control_ScaleLine from 'ol/control/scaleline'
 import ol_style_Style from 'ol/style/style'
-import ol_color from 'ol/color'
+import {asString as ol_color_asString} from 'ol/color'
 
 /**
  * @classdesc 
@@ -29,7 +29,7 @@ var ol_control_CanvasScaleLine = function(options)
 	if (!options.style) options.style = new ol_style_Style();
 	this.setStyle(options.style);
 }
-ol.inherits(ol_control_CanvasScaleLine, ol_control_ScaleLine);
+ol_inherits(ol_control_CanvasScaleLine, ol_control_ScaleLine);
 
 /**
  * Remove the control from its current map and attach it to the new map.
@@ -63,19 +63,19 @@ ol_control_CanvasScaleLine.prototype.setMap = function (map)
  */
 ol_control_CanvasScaleLine.prototype.setStyle = function (style)
 {	var stroke = style.getStroke();
-	this.strokeStyle_ = stroke ? ol_color.asString(stroke.getColor()) : "#000";
+	this.strokeStyle_ = stroke ? ol_color_asString(stroke.getColor()) : "#000";
 	this.strokeWidth_ = stroke ? stroke.getWidth() : 2;
 
 	var fill = style.getFill();
-	this.fillStyle_ = fill ? ol_color.asString(fill.getColor()) : "#fff";
+	this.fillStyle_ = fill ? ol_color_asString(fill.getColor()) : "#fff";
 	
 	var text = style.getText();
 	this.font_ = text ? text.getFont() : "10px Arial";
 	stroke = text ? text.getStroke() : null;
 	fill = text ? text.getFill() : null;
-	this.fontStrokeStyle_ = stroke ? ol_color.asString(stroke.getColor()) : this.fillStyle_;
+	this.fontStrokeStyle_ = stroke ? ol_color_asString(stroke.getColor()) : this.fillStyle_;
 	this.fontStrokeWidth_ = stroke ? stroke.getWidth() : 3;
-	this.fontFillStyle_ = fill ? ol_color.asString(fill.getColor()) : this.strokeStyle_;
+	this.fontFillStyle_ = fill ? ol_color_asString(fill.getColor()) : this.strokeStyle_;
 	// refresh
 	if (this.getMap()) this.getMap().render();
 }

@@ -4,9 +4,9 @@
 */
 
 import ol_Map from 'ol/map'
-import ol_proj from 'ol/proj'
+import {transform as ol_proj_transform} from 'ol/proj'
 import ol_Observable from 'ol/observable'
-import ol_easing from 'ol/easing'
+import {easeOut as ol_easing_easeOut} from 'ol/easing'
 import ol_style_Circle from 'ol/style/circle'
 import ol_style_Stroke from 'ol/style/stroke'
 import ol_style_Image from 'ol/style/image'
@@ -30,7 +30,7 @@ ol_Map.prototype.markup = function(coords, options)
 
 	// Change to map's projection
 	if (options.projection)
-	{	coords = ol_proj.transform(coords, options.projection, this.getView().getProjection());
+	{	coords = ol_proj_transform(coords, options.projection, this.getView().getProjection());
 	}
 	
 	// options
@@ -38,7 +38,7 @@ ol_Map.prototype.markup = function(coords, options)
 	var delay = options.delay || 3000;
 	var duration = 1000;
 	var maxZoom = options.maxZoom || 100;
-	var easing = ol_easing.easeOut;
+	var easing = ol_easing_easeOut;
 	var style = options.style;
 	if (!style) style = new ol_style_Circle({ radius:10, stroke:new ol_style_Stroke({color:'red', width:2 }) });
 	if (style instanceof ol_style_Image) style = new ol_style_Style({ image: style });

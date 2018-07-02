@@ -3,15 +3,18 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_interaction_Interaction from 'ol/interaction/interaction'
 import ol_style_Style from 'ol/style/style'
 import ol_style_Stroke from 'ol/style/stroke'
-import ol_extent from 'ol/extent'
+import {
+    boundingExtent as ol_extent_boundingExtent,
+    buffer as ol_extent_buffer,
+    containsCoordinate as ol_extent_containsCoordinate
+} from 'ol/extent'
 import ol_source_Vector from 'ol/source/vector'
 import ol_layer_Vector from 'ol/layer/vector'
 import ol_Collection from 'ol/collection'
-import ol_layer_Image from 'ol/layer/image'
 import ol_Feature from 'ol/feature'
 import ol_geom_LineString from 'ol/geom/linestring'
 
@@ -119,7 +122,7 @@ var ol_interaction_SnapGuides = function(options)
 			}
 		});
 };
-ol.inherits(ol_interaction_SnapGuides, ol_interaction_Interaction);
+ol_inherits(ol_interaction_SnapGuides, ol_interaction_Interaction);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
@@ -170,8 +173,8 @@ ol_interaction_SnapGuides.prototype.addGuide = function(v, ortho)
 	{	var map = this.getMap();
 		// Limit extent
 		var extent = map.getView().calculateExtent(map.getSize());
-		extent = ol_extent.buffer(extent, Math.max (1e5+1, (extent[2]-extent[0])*100));
-		extent = ol_extent.getIntersection(extent, this.projExtent_);
+		extent = ol_extent_buffer(extent, Math.max (1e5+1, (extent[2]-extent[0])*100));
+		extent = ol_extent_boundingExtent(extent, this.projExtent_);
 		var dx = v[0][0] - v[1][0];
 		var dy = v[0][1] - v[1][1];
 		var d = 1 / Math.sqrt(dx*dx+dy*dy);
@@ -180,7 +183,7 @@ ol_interaction_SnapGuides.prototype.addGuide = function(v, ortho)
 		for (var i= 0; i<1e8; i+=1e5)
 		{	if (ortho) p = [ v[0][0] + dy*d*i, v[0][1] - dx*d*i];
 			else p = [ v[0][0] + dx*d*i, v[0][1] + dy*d*i];
-			if (ol_extent.containsCoordinate(extent, p)) g.push(p);
+			if (ol_extent_containsCoordinate(extent, p)) g.push(p);
 			else break;
 		}
 		var f0 = new ol_Feature(new ol_geom_LineString(g));
@@ -188,7 +191,7 @@ ol_interaction_SnapGuides.prototype.addGuide = function(v, ortho)
 		for (var i= 0; i>-1e8; i-=1e5)
 		{	if (ortho) p = [ v[0][0] + dy*d*i, v[0][1] - dx*d*i];
 			else p = [ v[0][0] + dx*d*i, v[0][1] + dy*d*i];
-			if (ol_extent.containsCoordinate(extent, p)) g.push(p);
+			if (ol_extent_containsCoordinate(extent, p)) g.push(p);
 			else break;
 		}
 		var f1 = new ol_Feature(new ol_geom_LineString(g));

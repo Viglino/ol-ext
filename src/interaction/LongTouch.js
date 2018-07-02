@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_interaction_Interaction from 'ol/interaction/interaction'
 
 /** Interaction to handle longtouch events
@@ -53,6 +53,6 @@ var ol_interaction_LongTouch = function(options)
 	});
 
 };
-ol.inherits(ol_interaction_LongTouch, ol_interaction_Interaction);
+ol_inherits(ol_interaction_LongTouch, ol_interaction_Interaction);
 
 export default ol_interaction_LongTouch

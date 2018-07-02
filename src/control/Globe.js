@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_Observable from 'ol/Observable'
 import ol_control_Control from 'ol/control/control'
 import ol_Map from 'ol/map'
@@ -96,7 +96,7 @@ var ol_control_Globe = function(opt_options)
 	})
 	this.ovmap_.addLayer(this.extentLayer);
 };
-ol.inherits(ol_control_Globe, ol_control_Control);
+ol_inherits(ol_control_Globe, ol_control_Control);
 
 
 /**

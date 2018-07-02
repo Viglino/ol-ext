@@ -3,10 +3,10 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_Observable from 'ol/Observable'
 import ol_control_Control from 'ol/control/control'
-import ol_proj from 'ol/proj'
+import {transform as ol_proj_transform} from 'ol/proj'
 
 /**
  * Permalink Control.    
@@ -71,7 +71,7 @@ var ol_control_Permalink = function(opt_options)
 	// Decode permalink
 	this.setPosition();
 };
-ol.inherits(ol_control_Permalink, ol_control_Control);
+ol_inherits(ol_control_Permalink, ol_control_Control);
 
 /**
  * Set the map instance the control associated with.
@@ -129,7 +129,7 @@ ol_control_Permalink.prototype.setPosition = function()
 	{	var t = hash[i].split("=");
 		param[t[0]] = t[1];
 	}
-	var c = ol_proj.transform([Number(param.lon),Number(param.lat)], 'EPSG:4326', map.getView().getProjection());
+	var c = ol_proj_transform([Number(param.lon),Number(param.lat)], 'EPSG:4326', map.getView().getProjection());
 	if (c[0] && c[1]) map.getView().setCenter(c);
 	if (param.z) map.getView().setZoom(Number(param.z));
 	if (param.r) map.getView().setRotation(Number(param.r));
@@ -180,7 +180,7 @@ ol_control_Permalink.prototype.getUrlParams = function()
  */
 ol_control_Permalink.prototype.getLink = function()
 {	var map = this.getMap();
-	var c = ol_proj.transform(map.getView().getCenter(), map.getView().getProjection(), 'EPSG:4326');
+	var c = ol_proj_transform(map.getView().getCenter(), map.getView().getProjection(), 'EPSG:4326');
 	var z = map.getView().getZoom();
 	var r = map.getView().getRotation();
 	var l = this.layerStr_;

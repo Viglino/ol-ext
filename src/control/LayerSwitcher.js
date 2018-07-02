@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_Observable from 'ol/Observable'
 import ol_control_Control from 'ol/control/control'
 import ol_layer_Tile from 'ol/layer/tile'
@@ -11,7 +11,7 @@ import ol_layer_Vector from 'ol/layer/vector'
 import ol_layer_VectorTile from 'ol/layer/vectortile'
 import ol_layer_Image from 'ol/layer/image'
 import ol_layer_Heatmap from 'ol/layer/heatmap'
-import ol_extent from 'ol/extent'
+import {intersects as ol_extent_intersects} from 'ol/extent'
 
 /**
  * @classdesc OpenLayers 3 Layer Switcher Control.
@@ -100,7 +100,7 @@ var ol_control_LayerSwitcher = function(options)
 	this.target = options.target;
 
 };
-ol.inherits(ol_control_LayerSwitcher, ol_control_Control);
+ol_inherits(ol_control_LayerSwitcher, ol_control_Control);
 
 
 /** List of tips for internationalization purposes
@@ -228,7 +228,7 @@ ol_control_LayerSwitcher.prototype.viewChange = function(e)
 			{	var ex0 = l.getExtent();
 				if (ex0)
 				{	var ex = map.getView().calculateExtent(map.getSize());
-					if (!ol_extent.intersects(ex, ex0)) 
+					if (!ol_extent_intersects(ex, ex0))
 					{	$(this).addClass("ol-layer-hidden");
 					}
 					else $(this).removeClass("ol-layer-hidden");
@@ -288,7 +288,7 @@ ol_control_LayerSwitcher.prototype.testLayerVisibility = function(layer)
 		{	var ex0 = layer.getExtent();
 			if (ex0)
 			{	var ex = this.map_.getView().calculateExtent(this.map_.getSize());
-				return ol_extent.intersects(ex, ex0);
+				return ol_extent_intersects(ex, ex0);
 			}
 			return true;
 		}

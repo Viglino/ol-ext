@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_filter_Base from './Base'
 
 /** Clip layer or map 
@@ -40,7 +40,7 @@ var ol_filter_Clip = function(options)
 		options.extent = [xmin,ymin,xmax,ymax];
 	}
 }
-ol.inherits(ol_filter_Clip, ol_filter_Base);
+ol_inherits(ol_filter_Clip, ol_filter_Base);
 
 ol_filter_Clip.prototype.clipPath_ = function(e)
 {	var ctx = e.context;

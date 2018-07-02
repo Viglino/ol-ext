@@ -1,8 +1,7 @@
-
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_Observable from 'ol/Observable'
 import ol_interaction_Pointer from 'ol/interaction/pointer'
-import ol_color from 'ol/color'
+import {asString as ol_color_asString} from 'ol/color'
 
 /**
  * @constructor
@@ -29,7 +28,7 @@ var ol_interaction_Flashlight = function(options) {
 	this.setColor(options);
 
 };
-ol.inherits(ol_interaction_Flashlight, ol_interaction_Pointer);
+ol_inherits(ol_interaction_Flashlight, ol_interaction_Pointer);
 
 /** Set the map > start postcompose
 */
@@ -64,18 +63,18 @@ ol_interaction_Flashlight.prototype.setColor = function(options)
 {	// Backcolor
 	var color = (options.fill ? options.fill : [0,0,0,0.8]);
 	var c = ol_color.asArray(color);
-	this.startColor = ol_color.asString(c);
+	this.startColor = ol_color_asString(c);
 	// Halo color
 	var endColor;
 	if (options.color)
-	{	c = this.endColor = ol_color.asString(ol_color.asArray(options.color)||options.color);
+	{	c = this.endColor = ol_color_asString(ol_color.asArray(options.color)||options.color);
 	}
 	else 
 	{	c[3] = 0
-		this.endColor = ol_color.asString(c);
+		this.endColor = ol_color_asString(c);
 	}
 	c[3] = 0.1;
-	this.midColor = ol_color.asString(c);
+	this.midColor = ol_color_asString(c);
 	if (this.getMap()) this.getMap().renderSync();
 }
 

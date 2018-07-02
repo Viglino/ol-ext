@@ -3,19 +3,11 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_interaction_Pointer from 'ol/interaction/pointer'
-import ol_style_Style from 'ol/style/style'
-import ol_style_Stroke from 'ol/style/stroke'
-import ol_source_Vector from 'ol/source/vector'
-import ol_style_Fill from 'ol/style/fill'
-import ol_style_Circle from 'ol/style/circle'
-import ol_layer_Vector from 'ol/layer/vector'
 import ol_coordinate from 'ol/coordinate'
-import ol_geom_Point from 'ol/geom/point'
 import ol_geom_LineString from 'ol/geom/linestring'
 import ol_geom_Polygon from 'ol/geom/Polygon'
-import ol_Feature from 'ol/feature'
 
 /** Offset interaction for offseting feature geometry
  * @constructor
@@ -51,7 +43,7 @@ var ol_interaction_Offset = function(options)
   // init
   this.previousCursor_ = false;
 };
-ol.inherits(ol_interaction_Offset, ol_interaction_Pointer);
+ol_inherits(ol_interaction_Offset, ol_interaction_Pointer);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new

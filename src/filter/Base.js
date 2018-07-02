@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_Observable from 'ol/Observable'
 import ol_layer_Base from 'ol/layer/base'
 import ol_Object from 'ol/object'
@@ -30,7 +30,7 @@ var ol_filter_Base = function(options) {
 	if (options && options.active===false) this.set('active', false);
 	else this.set('active', true);
 };
-ol.inherits(ol_filter_Base, ol_Object);
+ol_inherits(ol_filter_Base, ol_Object);
 
 /** Activate / deactivate filter
 *	@param {bool} b

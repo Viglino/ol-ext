@@ -3,9 +3,9 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_filter_Base from './Base'
-import ol_color from 'ol/color'
+import {asString as ol_color_asString} from 'ol/color'
 
 /** Colorize map or layer
 * 	@constructor
@@ -23,7 +23,7 @@ var ol_filter_Colorize = function(options)
 
 	this.setFilter(options);
 }
-ol.inherits(ol_filter_Colorize, ol_filter_Base);
+ol_inherits(ol_filter_Colorize, ol_filter_Base);
 
 ol_filter_Colorize.prototype.setFilter = function(options)
 {	options = options || {};
@@ -34,7 +34,7 @@ ol_filter_Colorize.prototype.setFilter = function(options)
 		default: break;
 	}
 	var color = options.color ? ol_color.asArray(options.color) : [ options.red, options.green, options.blue, options.value];
-	this.set('color', ol_color.asString(color))
+	this.set('color', ol_color_asString(color))
 	this.set ('value', color[3]||1);
 	switch (options.operation)
 	{	case 'color':
@@ -46,18 +46,18 @@ ol_filter_Colorize.prototype.setFilter = function(options)
 			break;
 		case 'saturation':
 			var v = 255*(options.value || 0);
-			this.set('color', ol_color.asString([0,0,v,v||1]));
+			this.set('color', ol_color_asString([0,0,v,v||1]));
 			this.set ('operation', options.operation);
 			break;
 		case 'luminosity':
 			var v = 255*(options.value || 0);
-			this.set('color', ol_color.asString([v,v,v,255]));
+			this.set('color', ol_color_asString([v,v,v,255]));
 			//this.set ('operation', 'luminosity')
 			this.set ('operation', 'hard-light');
 			break;
 		case 'contrast':
 			var v = 255*(options.value || 0);
-			this.set('color', ol_color.asString([v,v,v,255]));
+			this.set('color', ol_color_asString([v,v,v,255]));
 			this.set('operation', 'soft-light');
 			break;
 		default: 
@@ -70,14 +70,14 @@ ol_filter_Colorize.prototype.setValue = function(v)
 {	this.set ('value', v);
 	var c = ol_color.asArray(this.get("color"));
 	c[3] = v;
-	this.set("color", ol_color.asString(c));
+	this.set("color", ol_color_asString(c));
 }
 
 ol_filter_Colorize.prototype.setColor = function(c)
 {	c = ol_color.asArray(c);
 	if (c)
 	{	c[3] = this.get("value");
-		this.set("color", ol_color.asString(c));
+		this.set("color", ol_color_asString(c));
 	}
 }
 

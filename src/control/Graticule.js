@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_Observable from 'ol/Observable'
 import ol_control_Control from 'ol/control/control'
 import ol_proj_Projection from 'ol/proj/projection'
@@ -11,7 +11,7 @@ import ol_style_Style from 'ol/style/style'
 import ol_style_Stroke from 'ol/style/stroke'
 import ol_style_Fill from 'ol/style/fill'
 import ol_style_Text from 'ol/style/text'
-import ol_proj from 'ol/proj'
+import {transform as ol_proj_transform} from 'ol/proj'
 
 /**
  * Draw a graticule on the map.
@@ -68,7 +68,7 @@ var ol_control_Graticule = function(options)
 			}) 
 		});
 };
-ol.inherits(ol_control_Graticule, ol_control_Control);
+ol_inherits(ol_control_Graticule, ol_control_Control);
 
 /**
  * Remove the control from its current map and attach it to the new map.
@@ -120,7 +120,7 @@ ol_control_Graticule.prototype.drawGraticule_ = function (e)
 	var ymax = -Infinity;
 	var ymin = Infinity;
 	for (var i=0, c; c=bbox[i]; i++)
-	{	bbox[i] = ol_proj.transform (c, map.getView().getProjection(), proj);
+	{	bbox[i] = ol_proj_transform (c, map.getView().getProjection(), proj);
 		xmax = Math.max (xmax, bbox[i][0]);
 		xmin = Math.min (xmin, bbox[i][0]);
 		ymax = Math.max (ymax, bbox[i][1]);
@@ -170,12 +170,12 @@ ol_control_Graticule.prototype.drawGraticule_ = function (e)
 		var txt = {top:[],left:[],bottom:[], right:[]};
 
 		for (var x=xmin; x<xmax; x += step)
-		{	var p0 = ol_proj.transform ([x, ymin], proj, map.getView().getProjection());
+		{	var p0 = ol_proj_transform ([x, ymin], proj, map.getView().getProjection());
 			p0 = map.getPixelFromCoordinate(p0);
 			if (hasLines) ctx.moveTo(p0[0], p0[1]);
 			var p = p0;
 			for (var y=ymin+step; y<=ymax; y+=step)
-			{	var p1 = ol_proj.transform ([x, y], proj, map.getView().getProjection());
+			{	var p1 = ol_proj_transform ([x, y], proj, map.getView().getProjection());
 				p1 = map.getPixelFromCoordinate(p1);
 				if (hasLines) ctx.lineTo(p1[0], p1[1]);
 				if (p[1]>0 && p1[1]<0) txt.top.push([x, p]);
@@ -184,12 +184,12 @@ ol_control_Graticule.prototype.drawGraticule_ = function (e)
 			}
 		}
 		for (var y=ymin; y<ymax; y += step)
-		{	var p0 = ol_proj.transform ([xmin, y], proj, map.getView().getProjection());
+		{	var p0 = ol_proj_transform ([xmin, y], proj, map.getView().getProjection());
 			p0 = map.getPixelFromCoordinate(p0);
 			if (hasLines) ctx.moveTo(p0[0], p0[1]);
 			var p = p0;
 			for (var x=xmin+step; x<=xmax; x+=step)
-			{	var p1 = ol_proj.transform ([x, y], proj, map.getView().getProjection());
+			{	var p1 = ol_proj_transform ([x, y], proj, map.getView().getProjection());
 				p1 = map.getPixelFromCoordinate(p1);
 				if (hasLines) ctx.lineTo(p1[0], p1[1]);
 				if (p[0]<0 && p1[0]>0) txt.left.push([y,p]);

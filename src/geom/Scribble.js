@@ -6,12 +6,9 @@
 */
 
 import ol_coordinate from 'ol/coordinate'
-import ol_geom_Geometry from 'ol/geom/geometry'
-import ol_geom_LineString from 'ol/geom/LineString'
 import ol_geom_MultiLineString from 'ol/geom/MultiLineString'
 import ol_geom_Polygon from 'ol/geom/polygon'
 import ol_geom_MultiPolygon from 'ol/geom/multipolygon'
-import ol_geom_GeometryCollection from 'ol/geom/geometrycollection'
 import '../render/Cspline'
 
 /**

@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_control_Button from './Button'
 import ol_control_Control from 'ol/control/control'
 
@@ -55,7 +55,7 @@ var ol_control_Toggle = function(options)
 	this.setActive (options.active);
 	this.setDisable (options.disable);
 };
-ol.inherits(ol_control_Toggle, ol_control_Button);
+ol_inherits(ol_control_Toggle, ol_control_Button);
 
 /**
  * Set the map instance the control is associated with

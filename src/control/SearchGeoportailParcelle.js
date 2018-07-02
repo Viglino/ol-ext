@@ -2,8 +2,7 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol from 'ol'
-import ol_proj from 'ol/proj'
+import {inherits as ol_inherits} from 'ol'
 import ol_control_SearchGeoportail from "./SearchGeoportail";
 
 /**
@@ -105,7 +104,7 @@ var ol_control_SearchGeoportailParcelle = function(options) {
 	this.on('select', this.selectCommune.bind(this));
 	this.set('pageSize', options.pageSize || 5);
 };
-ol.inherits(ol_control_SearchGeoportailParcelle, ol_control_SearchGeoportail);
+ol_inherits(ol_control_SearchGeoportailParcelle, ol_control_SearchGeoportail);
 
 /** Select a commune => start searching parcelle  
  * @param {any} e 

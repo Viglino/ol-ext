@@ -15,9 +15,9 @@
 	}
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_source_ImageCanvas from 'ol/source/imagecanvas'
-import ol_extent from 'ol/extent'
+import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent'
 
 /** Layer source with georeferencement to place it on a map
 * @constructor 
@@ -97,7 +97,7 @@ var ol_source_GeoImage = function(opt_options)
 	ol_source_ImageCanvas.call (this, options);	
 	this.setCrop (this.crop);
 };
-ol.inherits (ol_source_GeoImage, ol_source_ImageCanvas);
+ol_inherits (ol_source_GeoImage, ol_source_ImageCanvas);
 
 /**
  * Get coordinate of the image center.
@@ -220,7 +220,7 @@ ol_source_GeoImage.prototype.setCrop = function(crop)
 				break;
 			default: return;
 		}
-		var crop = ol_extent.boundingExtent([ [crop[0],crop[1]], [crop[2],crop[3]] ]);
+		var crop = ol_extent_boundingExtent([ [crop[0],crop[1]], [crop[2],crop[3]] ]);
 		this.crop = [ Math.max(0,crop[0]), Math.max(0,crop[1]), Math.min(this._image.naturalWidth,crop[2]), Math.min(this._image.naturalHeight,crop[3]) ];
 	}
 	else this.crop = [0,0, this._image.naturalWidth,this._image.naturalHeight];

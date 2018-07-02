@@ -4,13 +4,13 @@
 	
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_Feature from 'ol/feature'
 import ol_geom_Polygon from 'ol/geom/polygon'
 import ol_geom_Point from 'ol/geom/point'
 import ol_coordinate from 'ol/coordinate'
 import ol_source_Vector from 'ol/source/vector'
-import ol_extent from 'ol/extent'
+import {getCenter as ol_extent_getCenter} from 'ol/extent'
 import ol_HexGrid from '../render/HexGrid'
 
 /** A source for hexagonal binning
@@ -44,7 +44,7 @@ var ol_source_HexBin = function(options) {
 	this._origin.on("addfeature", this._onAddFeature.bind(this));
 	this._origin.on("removefeature", this._onRemoveFeature.bind(this));
 };
-ol.inherits (ol_source_HexBin, ol_source_Vector);
+ol_inherits (ol_source_HexBin, ol_source_Vector);
 
 /**
  * On add feature
@@ -60,7 +60,7 @@ ol_source_HexBin.prototype._onAddFeature = function(e) {
 	} else { 
     var ex = new ol_Feature(new ol_geom_Polygon([this._hexgrid.getHexagon(h)]));
 		ex.set('features',[f]);
-		ex.set('center', new ol_geom_Point(ol_extent.getCenter(ex.getGeometry().getExtent())));
+		ex.set('center', new ol_geom_Point(ol_extent_getCenter(ex.getGeometry().getExtent())));
 		this._bin[id] = ex;
 		this.addFeature(ex);
 	}

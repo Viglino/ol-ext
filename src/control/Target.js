@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_Observable from 'ol/Observable'
 import ol_control_Control from 'ol/control/control'
 import ol_style_RegularShape from 'ol/style/regularshape'
@@ -37,7 +37,7 @@ var ol_control_Target = function(options)
 
 	this.setVisible(options.visible!==false);
 };
-ol.inherits(ol_control_Target, ol_control_Control);
+ol_inherits(ol_control_Target, ol_control_Control);
 
 /**
  * Remove the control from its current map and attach it to the new map.

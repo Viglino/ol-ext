@@ -5,7 +5,7 @@
 *  Shadow image style for point vector features
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_style_Fill from 'ol/style/fill'
 import ol_style_RegularShape from 'ol/style/regularshape'
 
@@ -42,7 +42,7 @@ var ol_style_Shadow = function(options)
 
 	this.renderShadow_();
 };
-ol.inherits(ol_style_Shadow, ol_style_RegularShape);
+ol_inherits(ol_style_Shadow, ol_style_RegularShape);
 
 /**
  * Clones the style. 

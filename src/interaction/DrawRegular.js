@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_interaction_Interaction from 'ol/interaction/interaction'
 import ol_style_Style from 'ol/style/style'
 import ol_style_Circle from 'ol/style/circle'
@@ -17,6 +17,7 @@ import ol_geom_Polygon from 'ol/geom/polygon'
 import ol_geom_LineString from 'ol/geom/linestring'
 import ol_geom_Point from 'ol/geom/point'
 import ol_Feature from 'ol/feature'
+
 /** Interaction rotate
  * @constructor
  * @extends {ol_interaction_Interaction}
@@ -98,7 +99,7 @@ var ol_interaction_DrawRegular = function(options)
 			handleEvent: this.handleEvent_
 		});
 };
-ol.inherits(ol_interaction_DrawRegular, ol_interaction_Interaction);
+ol_inherits(ol_interaction_DrawRegular, ol_interaction_Interaction);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new

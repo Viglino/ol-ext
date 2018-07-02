@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_filter_Base from './Base'
 
 /** Fold filer map 
@@ -26,7 +26,7 @@ var ol_filter_Fold = function(options)
 	if (typeof options.fsize == "number") options.fsize = [options.fsize,options.fsize];
 	this.set("fsize", options.fsize || [8,10]);
 }
-ol.inherits(ol_filter_Fold, ol_filter_Base);
+ol_inherits(ol_filter_Fold, ol_filter_Base);
 
 ol_filter_Fold.prototype.drawLine_ = function(ctx, d, m)
 {	var canvas = ctx.canvas;

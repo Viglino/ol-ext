@@ -3,13 +3,12 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_Observable from 'ol/Observable'
 import ol_control_Control from 'ol/control/control'
 import ol_geom_Polygon from 'ol/geom/polygon'
 import ol_geom_Point from 'ol/geom/point'
 import ol_interaction_Pointer from 'ol/interaction/pointer'
-import ol_easing from 'ol/easing'
 import ol_Map from 'ol/map'
 import ol_Collection from 'ol/collection'
 import ol_View from 'ol/view'
@@ -115,7 +114,7 @@ var ol_control_Overview = function(options)
 	*	@param {Number} amplitude amplitude of the bounce [0,1] 
 	*	@return {Number}
 	*/
-	ol_easing.bounceFn = function (bounce, amplitude)
+	let bounceFn = function (bounce, amplitude)
 	{	var a = (2*bounce+1) * Math.PI/2;
 		var b = amplitude>0 ? -1/amplitude : -100;
 		var c = - Math.cos(a) * Math.pow(2, b);
@@ -129,7 +128,7 @@ var ol_control_Overview = function(options)
 	*	@param {Number} amplitude amplitude of the bounce [0,1] 
 	*	@return {Number}
 	*/
-	ol_easing.elasticFn = function (bounce, amplitude)
+	let elasticFn = function (bounce, amplitude)
 	{	var a = 3*bounce * Math.PI/2;
 		var b = amplitude>0 ? -1/amplitude : -100;
 		var c = Math.cos(a) * Math.pow(2, b);
@@ -146,7 +145,7 @@ var ol_control_Overview = function(options)
 				if (options.panAnimation=="elastic" || options.elasticPan) {
 					self.getMap().getView().animate({
 						center: evt.coordinate,
-						easing: ol_easing.elasticFn(2,0.3),
+						easing: elasticFn(2,0.3),
 						duration: 1000
 					});
 				} else {
@@ -161,7 +160,7 @@ var ol_control_Overview = function(options)
 		}
 	}));
 };
-ol.inherits(ol_control_Overview, ol_control_Control);
+ol_inherits(ol_control_Overview, ol_control_Control);
 
 /** Get overview map
 *	@return {ol.Map}

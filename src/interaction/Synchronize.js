@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_Observable from 'ol/Observable'
 import ol_interaction_Interaction from 'ol/interaction/interaction'
 import ol_Map from 'ol/map'
@@ -29,7 +29,7 @@ var ol_interaction_Synchronize = function(options)
 	this.maps = options.maps;
 
 };
-ol.inherits(ol_interaction_Synchronize, ol_interaction_Interaction);
+ol_inherits(ol_interaction_Synchronize, ol_interaction_Interaction);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new

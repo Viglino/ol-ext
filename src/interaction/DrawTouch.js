@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_Observable from 'ol/Observable'
 import ol_interaction_CenterTouch from './CenterTouch'
 import ol_style_Style from 'ol/style/style'
@@ -16,7 +16,6 @@ import ol_source_Vector from 'ol/source/vector'
 import ol_geom_LineString from 'ol/geom/linestring'
 import ol_geom_Polygon from 'ol/geom/polygon'
 import ol_geom_Point from 'ol/geom/point'
-import ol_Feature from 'ol/feature'
 
 /** Interaction DrawTouch :
  * @constructor
@@ -84,7 +83,7 @@ var ol_interaction_DrawTouch = function(options)
 	this.geom_ = [];
 	
 };
-ol.inherits(ol_interaction_DrawTouch, ol_interaction_CenterTouch);
+ol_inherits(ol_interaction_DrawTouch, ol_interaction_CenterTouch);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new

@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_control_LayerSwitcher from './LayerSwitcher'
 
 /**
@@ -20,7 +20,7 @@ var ol_control_LayerPopup = function(options)
 	if (options.mouseover!==false) options.mouseover=true;
 	ol_control_LayerSwitcher.call(this, options);
 };
-ol.inherits(ol_control_LayerPopup, ol_control_LayerSwitcher);
+ol_inherits(ol_control_LayerPopup, ol_control_LayerSwitcher);
 
 /** Disable overflow
 */

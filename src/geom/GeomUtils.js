@@ -7,7 +7,7 @@
 
 import ol_coordinate from 'ol/coordinate'
 import ol_geom_LineString from 'ol/geom/LineString'
-import ol_extent from 'ol/extent'
+import {getCenter as ol_extent_getCenter} from 'ol/extent'
 
 /** Distance beetween 2 points
 *	Usefull geometric functions
@@ -52,7 +52,7 @@ ol_coordinate.getGeomCenter = function(geom)
 		case "Polygon":
 			return geom.getInteriorPoint().getCoordinates();
 		default:
-			return geom.getClosestPoint(ol_extent.getCenter(geom.getExtent()));
+			return geom.getClosestPoint(ol_extent_getCenter(geom.getExtent()));
 	};
 };
 

@@ -1,5 +1,4 @@
-﻿
-import ol_geom_Geometry from 'ol/geom/geometry'
+﻿import ol_geom_Geometry from 'ol/geom/geometry'
 import ol_geom_GeometryCollection from 'ol/geom/geometrycollection'
 import ol_geom_MultiLineString from 'ol/geom/multilinestring'
 import ol_geom_Polygon from 'ol/geom/polygon'

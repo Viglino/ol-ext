@@ -6,7 +6,7 @@
 	
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_Map from 'ol/map'
 import ol_Collection from 'ol/collection'
 import ol_layer_Vector from 'ol/layer/vector'
@@ -15,7 +15,7 @@ import ol_interaction_Select from 'ol/interaction/select'
 import ol_Feature from 'ol/feature'
 import ol_geom_LineString from 'ol/geom/linestring'
 import ol_Observable from 'ol/observable'
-import ol_easing from 'ol/easing'
+import {easeOut as ol_easing_easeOut} from 'ol/easing'
 import ol_geom_Point from 'ol/geom/point'
 
 /**
@@ -97,7 +97,7 @@ var ol_interaction_SelectCluster = function(options)
 	this.on("select", this.selectCluster.bind(this));
 };
 
-ol.inherits(ol_interaction_SelectCluster, ol_interaction_Select);
+ol_inherits(ol_interaction_SelectCluster, ol_interaction_Select);
 
 
 /**
@@ -241,7 +241,7 @@ ol_interaction_SelectCluster.prototype.animateCluster_ = function(center)
 		// Retina device
 		var ratio = event.frameState.pixelRatio;
 		var res = event.target.getView().getResolution();
-		var e = ol_easing.easeOut((event.frameState.time - start) / duration);
+		var e = ol_easing_easeOut((event.frameState.time - start) / duration);
 		for (var i=0, feature; feature = features[i]; i++) if (feature.get('features'))
 		{	var pt = feature.getGeometry().getCoordinates();
 			pt[0] = center[0] + e * (pt[0]-center[0]);

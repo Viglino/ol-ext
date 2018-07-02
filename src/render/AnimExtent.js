@@ -4,9 +4,9 @@
 */
 
 import ol_Map from 'ol/map'
-import ol_proj from 'ol/proj'
+import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
 import ol_Observable from 'ol/observable'
-import ol_easing from 'ol/easing'
+import {upAndDown as ol_easing_upAndDown} from 'ol/easing'
 
 /** Pulse an extent on postcompose
 *	@param {ol.coordinates} point to pulse
@@ -22,13 +22,13 @@ ol_Map.prototype.animExtent = function(extent, options)
 
 	// Change to map's projection
 	if (options.projection)
-	{	extent = ol_proj.transformExtent (extent, options.projection, this.getView().getProjection());
+	{	extent = ol_proj_transformExtent (extent, options.projection, this.getView().getProjection());
 	}
 	
 	// options
 	var start = new Date().getTime();
 	var duration = options.duration || 1000;
-	var easing = options.easing || ol_easing.upAndDown;
+	var easing = options.easing || ol_easing_upAndDown;
 	var width = options.style ? options.style.getWidth() || 2 : 2;
 	var color = options.style ? options.style.getColr() || 'red' : 'red';
 

@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_control_Control from 'ol/control/control'
 
 /** Control overlay for OL3
@@ -36,7 +36,7 @@ var ol_control_Overlay = function(options)
 	this._timeout = false;
 	this.setContent (options.content);
 };
-ol.inherits(ol_control_Overlay, ol_control_Control);
+ol_inherits(ol_control_Overlay, ol_control_Control);
 
 /** Set the content of the overlay
 * @param {string} html the html to display in the control (or a jQuery object) 

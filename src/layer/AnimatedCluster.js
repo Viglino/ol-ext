@@ -1,15 +1,15 @@
 /*
-	Copyright (c) 2015 Jean-Marc VIGLINO, 
+	Copyright (c) 2015 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (http://www.cecill.info/).
-	
-	ol_layer_AnimatedCluster is a vector layer that animate cluster 
-	
+
+	ol_layer_AnimatedCluster is a vector layer that animate cluster
+
 */
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_layer_Vector from 'ol/layer/vector'
 import ol_source_Vector from 'ol/source/vector'
-import ol_easing from 'ol/easing'
-import ol_extent from 'ol/extent'
+import {easeOut as ol_easing_easeOut} from 'ol/easing'
+import {buffer as ol_extent_buffer} from 'ol/extent'
 import ol_geom_Point from 'ol/geom/point'
 import ol_Map from 'ol/map'
 
@@ -30,7 +30,7 @@ var ol_layer_AnimatedCluster = function(opt_options)
 	this.clusters = [];
 	this.animation={start:false};
 	this.set('animationDuration', typeof(options.animationDuration)=='number' ? options.animationDuration : 700);
-	this.set('animationMethod', options.animationMethod || ol_easing.easeOut);
+	this.set('animationMethod', options.animationMethod || ol_easing_easeOut);
 
 	// Save cluster before change
 	this.getSource().on('change', this.saveCluster.bind(this));
@@ -38,7 +38,7 @@ var ol_layer_AnimatedCluster = function(opt_options)
 	this.on('precompose', this.animate.bind(this));
 	this.on('postcompose', this.postanimate.bind(this));
 };
-ol.inherits (ol_layer_AnimatedCluster, ol_layer_Vector);
+ol_inherits (ol_layer_AnimatedCluster, ol_layer_Vector);
 
 /** save cluster features before change
  * @private
@@ -99,13 +99,13 @@ ol_layer_AnimatedCluster.prototype.animate = function(e)
 	if (a.resolution != resolution && this.sourceChanged)
 	{	var extent = e.frameState.extent;
 		if (a.resolution < resolution)
-		{	extent = ol_extent.buffer(extent, 100*resolution);
+		{	extent = ol_extent_buffer(extent, 100*resolution);
 			a.cA = this.oldcluster.getFeaturesInExtent(extent);
 			a.cB = this.getSource().getFeaturesInExtent(extent);
 			a.revers = false;
 		}
 		else
-		{	extent = ol_extent.buffer(extent, 100*resolution);
+		{	extent = ol_extent_buffer(extent, 100*resolution);
 			a.cA = this.getSource().getFeaturesInExtent(extent);
 			a.cB = this.oldcluster.getFeaturesInExtent(extent);
 			a.revers = true;

@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_Observable from 'ol/Observable'
 import ol_style_RegularShape from 'ol/style/regularshape'
 import ol_style_Style from 'ol/style/style'
@@ -59,7 +59,7 @@ var ol_interaction_CenterTouch = function(options)
 			}
 		});
 };
-ol.inherits(ol_interaction_CenterTouch, ol_interaction_Interaction);
+ol_inherits(ol_interaction_CenterTouch, ol_interaction_Interaction);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new

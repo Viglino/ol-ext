@@ -1,5 +1,4 @@
-
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_Observable from 'ol/Observable'
 import ol_interaction_Pointer from 'ol/interaction/pointer'
 
@@ -26,7 +25,7 @@ var ol_interaction_Clip = function(options) {
 	this.radius = (options.radius||100);
 	if (options.layers) this.addLayer(options.layers);
 };
-ol.inherits(ol_interaction_Clip, ol_interaction_Pointer);
+ol_inherits(ol_interaction_Clip, ol_interaction_Pointer);
 
 /** Set the map > start postcompose
 */
