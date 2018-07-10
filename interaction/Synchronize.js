@@ -4,7 +4,7 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_Observable from 'ol/Observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/observable'
 import ol_interaction_Interaction from 'ol/interaction/interaction'
 import ol_Map from 'ol/map'
 import ol_Overlay from 'ol/overlay'
@@ -40,9 +40,9 @@ ol_inherits(ol_interaction_Synchronize, ol_interaction_Interaction);
 ol_interaction_Synchronize.prototype.setMap = function(map)
 {	
 	if (this._listener) {
-		ol_Observable.unByKey(this._listener.center);
-		ol_Observable.unByKey(this._listener.rotation);
-		ol_Observable.unByKey(this._listener.resolution);
+		ol_Observable_unByKey(this._listener.center);
+		ol_Observable_unByKey(this._listener.rotation);
+		ol_Observable_unByKey(this._listener.resolution);
 		$(this.getMap().getTargetElement()).off('mouseout', this._listener.mouseout);
 	}
 	this._listener = null;

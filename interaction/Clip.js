@@ -1,5 +1,5 @@
 import {inherits as ol_inherits} from 'ol'
-import ol_Observable from 'ol/Observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/observable'
 import ol_interaction_Pointer from 'ol/interaction/pointer'
 
 /** Clip interaction to clip layers in a circle
@@ -32,8 +32,8 @@ ol_inherits(ol_interaction_Clip, ol_interaction_Pointer);
 ol_interaction_Clip.prototype.setMap = function(map) {
 	if (this.getMap()) {
 		for (var i=0; i<this.layers_.length; i++) {
-			if (this.layers_[i].precompose) ol_Observable.unByKey(this.layers_[i].precompose);
-			if (this.layers_[i].postcompose) ol_Observable.unByKey(this.layers_[i].postcompose);
+			if (this.layers_[i].precompose) ol_Observable_unByKey(this.layers_[i].precompose);
+			if (this.layers_[i].postcompose) ol_Observable_unByKey(this.layers_[i].postcompose);
 			this.layers_[i].precompose = this.layers_[i].postcompose = null;
 		}
 		this.getMap().renderSync();
@@ -87,8 +87,8 @@ ol_interaction_Clip.prototype.removeLayer = function(layers)
 			}
 		}
 		if (k!=this.layers_.length && this.getMap())
-		{	if (this.layers_[k].precompose) ol_Observable.unByKey(this.layers_[k].precompose);
-			if (this.layers_[k].postcompose) ol_Observable.unByKey(this.layers_[k].postcompose);
+		{	if (this.layers_[k].precompose) ol_Observable_unByKey(this.layers_[k].precompose);
+			if (this.layers_[k].postcompose) ol_Observable_unByKey(this.layers_[k].postcompose);
 			this.layers_.splice(k,1);
 			this.getMap().renderSync();
 		}
@@ -140,8 +140,8 @@ ol_interaction_Clip.prototype.setActive = function(b)
 		}
 	} else {
 		for(var i=0; i<this.layers_.length; i++) {
-			if (this.layers_[i].precompose) ol_Observable.unByKey(this.layers_[i].precompose);
-			if (this.layers_[i].postcompose) ol_Observable.unByKey(this.layers_[i].postcompose);
+			if (this.layers_[i].precompose) ol_Observable_unByKey(this.layers_[i].precompose);
+			if (this.layers_[i].postcompose) ol_Observable_unByKey(this.layers_[i].postcompose);
 			this.layers_[i].precompose = this.layers_[i].postcompose = null;
 		}
 	}

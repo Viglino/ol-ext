@@ -1,5 +1,5 @@
 import {inherits as ol_inherits} from 'ol'
-import ol_Observable from 'ol/Observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/observable'
 import ol_interaction_Pointer from 'ol/interaction/pointer'
 import {asString as ol_color_asString} from 'ol/color'
 
@@ -36,7 +36,7 @@ ol_interaction_Flashlight.prototype.setMap = function(map) {
 	if (this.getMap()) {
 		this.getMap().render();
 	}
-	if (this._listener) ol_Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 	
 	ol_interaction_Pointer.prototype.setMap.call(this, map);

@@ -9,7 +9,7 @@ import {linear as ol_easing_linear} from 'ol/easing'
 import ol_Map from 'ol/map'
 import ol_layer_Vector from 'ol/layer/vector'
 import {getCenter as ol_extent_getCenter} from 'ol/extent'
-import ol_Observable from 'ol/observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/observable'
 
 /** Feature animation base class
  * Use the {@link _ol_Map_#animateFeature} or {@link _ol_layer_Vector_#animateFeature} to animate a feature
@@ -186,7 +186,7 @@ ol_layer_Vector.prototype.animateFeature = function(feature, fanim)
 
 	// Stop animation
 	function stop(options)
-	{	ol_Observable.unByKey(listenerKey);
+	{	ol_Observable_unByKey(listenerKey);
 		listenerKey = null;
 		feature.setStyle(style);
 		// Send event

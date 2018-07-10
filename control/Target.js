@@ -4,7 +4,7 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_Observable from 'ol/Observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/observable'
 import ol_control_Control from 'ol/control/control'
 import ol_style_RegularShape from 'ol/style/regularshape'
 import ol_geom_Point from 'ol/geom/point'
@@ -50,7 +50,7 @@ ol_control_Target.prototype.setMap = function (map)
 {	if (this.getMap()) 
 	{	if (this.getVisible()) this.getMap().renderSync();
 	}
-	if (this._listener) ol_Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 
 	ol_control_Control.prototype.setMap.call(this, map);

@@ -4,7 +4,7 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_Observable from 'ol/Observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/observable'
 import ol_Collection from 'ol/collection'
 import ol_View from 'ol/view'
 import ol_Overlay from 'ol/overlay'
@@ -57,7 +57,7 @@ ol_Overlay_Magnify.prototype.setMap = function(map) {
 	if (this.getMap()) {
 		$(this.getMap().getViewport()).off("mousemove", this.onMouseMove_);
 	}
-	if (this._listener) ol_Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 
 	ol_Overlay.prototype.setMap.call(this, map);

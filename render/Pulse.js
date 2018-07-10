@@ -5,7 +5,7 @@
 
 import ol_Map from 'ol/map'
 import {transform as ol_proj_transform} from 'ol/proj'
-import ol_Observable from 'ol/observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/observable'
 import {easeOut as ol_easing_easeOut} from 'ol/easing'
 import ol_style_Circle from 'ol/style/circle'
 import ol_style_Stroke from 'ol/style/stroke'
@@ -56,7 +56,7 @@ ol_Map.prototype.pulse = function(coords, options)
 	{	var frameState = event.frameState;
 		var ratio = frameState.pixelRatio;
 		var elapsed = frameState.time - start;
-		if (elapsed > duration) ol_Observable.unByKey(listenerKey);
+		if (elapsed > duration) ol_Observable_unByKey(listenerKey);
 		else
 		{	var elapsedRatio = elapsed / duration;
 			var context = event.context;

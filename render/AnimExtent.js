@@ -5,7 +5,7 @@
 
 import ol_Map from 'ol/map'
 import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
-import ol_Observable from 'ol/observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/observable'
 import {upAndDown as ol_easing_upAndDown} from 'ol/easing'
 
 /** Pulse an extent on postcompose
@@ -37,7 +37,7 @@ ol_Map.prototype.animExtent = function(extent, options)
 	{	var frameState = event.frameState;
 		var ratio = frameState.pixelRatio;
 		var elapsed = frameState.time - start;
-		if (elapsed > duration) ol_Observable.unByKey(listenerKey);
+		if (elapsed > duration) ol_Observable_unByKey(listenerKey);
 		else
 		{	var elapsedRatio = elapsed / duration;
 			var p0 = this.getPixelFromCoordinate([extent[0],extent[1]]);

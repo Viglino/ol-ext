@@ -14,7 +14,7 @@ import ol_source_Vector from 'ol/source/vector'
 import ol_interaction_Select from 'ol/interaction/select'
 import ol_Feature from 'ol/feature'
 import ol_geom_LineString from 'ol/geom/linestring'
-import ol_Observable from 'ol/observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/observable'
 import {easeOut as ol_easing_easeOut} from 'ol/easing'
 import ol_geom_Point from 'ol/geom/point'
 
@@ -110,7 +110,7 @@ ol_interaction_SelectCluster.prototype.setMap = function(map) {
 	if (this.getMap()) {
 		this.getMap().removeLayer(this.overlayLayer_);
 	}
-	if (this._listener) ol_Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 
 	ol_interaction_Select.prototype.setMap.call (this, map);
@@ -222,7 +222,7 @@ ol_interaction_SelectCluster.prototype.animateCluster_ = function(center)
 {	// Stop animation (if one is running)
 	if (this.listenerKey_)
 	{	this.overlayLayer_.setVisible(true);
-		ol_Observable.unByKey(this.listenerKey_);
+		ol_Observable_unByKey(this.listenerKey_);
 	}
 	
 	// Features to animate
@@ -272,7 +272,7 @@ ol_interaction_SelectCluster.prototype.animateCluster_ = function(center)
 		}
 		// Stop animation and restore cluster visibility
 		if (e > 1.0) 
-		{	ol_Observable.unByKey(this.listenerKey_);
+		{	ol_Observable_unByKey(this.listenerKey_);
 			this.overlayLayer_.setVisible(true);
 			this.overlayLayer_.changed();
 			return;

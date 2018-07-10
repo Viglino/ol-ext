@@ -4,7 +4,7 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_Observable from 'ol/Observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/observable'
 import ol_layer_Base from 'ol/layer/base'
 import ol_Object from 'ol/object'
 import ol_Map from 'ol/map'
@@ -96,7 +96,7 @@ function removeFilter_(filter) {
 	for (var i=filter._listener.length-1; i>=0; i--) {
     // Remove listener on this object
 		if (filter._listener[i].target === this) {
-			ol_Observable.unByKey(filter._listener[i].listener);
+			ol_Observable_unByKey(filter._listener[i].listener);
 			filter._listener.splice(i,1);
 		}
 	}

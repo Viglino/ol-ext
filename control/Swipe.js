@@ -4,7 +4,7 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_Observable from 'ol/Observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/observable'
 import ol_control_Control from 'ol/control/control'
 
 /**
@@ -69,7 +69,7 @@ ol_inherits(ol_control_Swipe, ol_control_Control);
 ol_control_Swipe.prototype.setMap = function(map)
 {   
 	for (var i=0; i<this._listener.length; i++) {
-		ol_Observable.unByKey(this._listener[i]);
+		ol_Observable_unByKey(this._listener[i]);
 	}
 	this._listener = [];
 	if (this.getMap()) {	

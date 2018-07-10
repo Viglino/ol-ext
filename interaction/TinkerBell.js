@@ -8,7 +8,7 @@
  */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_Observable from 'ol/Observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/observable'
 import ol_interaction_Pointer from 'ol/interaction/pointer'
 import {asString as ol_color_asString} from 'ol/color'
 
@@ -40,7 +40,7 @@ ol_inherits(ol_interaction_TinkerBell, ol_interaction_Pointer);
 /** Set the map > start postcompose
 */
 ol_interaction_TinkerBell.prototype.setMap = function(map) {
-	if (this._listener) ol_Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 	if (this.getMap()) {
 		map.getViewport().removeEventListener('mouseout', this.out_, false);

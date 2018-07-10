@@ -4,7 +4,7 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_Observable from 'ol/Observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/observable'
 import ol_interaction_Pointer from 'ol/interaction/pointer'
 
 /** Interaction splitter: acts as a split feature agent while editing vector features (LineString).
@@ -96,7 +96,7 @@ ol_interaction_TouchCompass.prototype.compass = null;
  * @api stable
  */
 ol_interaction_TouchCompass.prototype.setMap = function(map) {
-	if (this._listener) ol_Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 
 	ol_interaction_Pointer.prototype.setMap.call (this, map);

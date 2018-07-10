@@ -4,7 +4,7 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_Observable from 'ol/Observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/observable'
 import ol_interaction_CenterTouch from './CenterTouch'
 import ol_style_Style from 'ol/style/style'
 import ol_style_Circle from 'ol/style/circle'
@@ -92,7 +92,7 @@ ol_inherits(ol_interaction_DrawTouch, ol_interaction_CenterTouch);
  * @api stable
  */
 ol_interaction_DrawTouch.prototype.setMap = function(map) {
-	if (this._listener.drawSketch) ol_Observable.unByKey(this._listener.drawSketch);
+	if (this._listener.drawSketch) ol_Observable_unByKey(this._listener.drawSketch);
 	this._listener.drawSketch = null;
 
 	ol_interaction_CenterTouch.prototype.setMap.call (this, map);

@@ -15,7 +15,7 @@
 
 import {inherits as ol_inherits} from 'ol'
 import ol_interaction_Pointer from 'ol/interaction/pointer'
-import ol_Observable from 'ol/observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/observable'
 
 /**
  * @constructor
@@ -50,7 +50,7 @@ ol_inherits(ol_interaction_Ripple, ol_interaction_Pointer);
 */
 ol_interaction_Ripple.prototype.setMap = function(map)
 {	if (this.oncompose)
-	{	ol_Observable.unByKey(oncompose);
+	{	ol_Observable_unByKey(oncompose);
 		if (this.getMap()) this.getMap().render();
 	}
 	

@@ -4,7 +4,7 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_Observable from 'ol/Observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/observable'
 import ol_control_ScaleLine from 'ol/control/scaleline'
 import ol_style_Style from 'ol/style/style'
 import {asString as ol_color_asString} from 'ol/color'
@@ -40,7 +40,7 @@ ol_inherits(ol_control_CanvasScaleLine, ol_control_ScaleLine);
  */
 ol_control_CanvasScaleLine.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
-	if (this._listener) ol_Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 	
 	ol_control_ScaleLine.prototype.setMap.call(this, map);

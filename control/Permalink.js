@@ -4,7 +4,7 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_Observable from 'ol/Observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/observable'
 import ol_control_Control from 'ol/control/control'
 import {transform as ol_proj_transform} from 'ol/proj'
 
@@ -79,8 +79,8 @@ ol_inherits(ol_control_Permalink, ol_control_Control);
  */
 ol_control_Permalink.prototype.setMap = function(map) {
 	if (this._listener) {
-		ol_Observable.unByKey(this._listener.change);
-		ol_Observable.unByKey(this._listener.moveend);
+		ol_Observable_unByKey(this._listener.change);
+		ol_Observable_unByKey(this._listener.moveend);
 	}
 	this._listener = null;
 
