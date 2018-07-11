@@ -4,8 +4,8 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import {unByKey as ol_Observable_unByKey} from 'ol/observable'
-import ol_control_Control from 'ol/control/control'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_control_Control from 'ol/control/Control'
 import {transform as ol_proj_transform} from 'ol/proj'
 
 /**

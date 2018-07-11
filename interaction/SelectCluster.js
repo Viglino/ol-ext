@@ -14,7 +14,7 @@ import ol_source_Vector from 'ol/source/vector'
 import ol_interaction_Select from 'ol/interaction/select'
 import ol_Feature from 'ol/feature'
 import ol_geom_LineString from 'ol/geom/linestring'
-import {unByKey as ol_Observable_unByKey} from 'ol/observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import {easeOut as ol_easing_easeOut} from 'ol/easing'
 import ol_geom_Point from 'ol/geom/point'
 

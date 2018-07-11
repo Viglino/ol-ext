@@ -55,7 +55,7 @@ Example:
 ````javascript
 // Import ol classes
 import {inherits as ol_inherits} from 'ol'
-import ol_control_Control from 'ol/control/control'
+import ol_control_Control from 'ol/control/Control'
 
 // Create my control
 var ol_control_MyControl = function(options) {

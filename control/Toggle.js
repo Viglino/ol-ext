@@ -5,7 +5,7 @@
 
 import {inherits as ol_inherits} from 'ol'
 import ol_control_Button from './Button'
-import ol_control_Control from 'ol/control/control'
+import ol_control_Control from 'ol/control/Control'
 
 /** A simple toggle control
  * The control can be created with an interaction to control its activation.

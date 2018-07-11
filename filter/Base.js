@@ -4,7 +4,7 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import {unByKey as ol_Observable_unByKey} from 'ol/observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_layer_Base from 'ol/layer/base'
 import ol_Object from 'ol/object'
 import ol_Map from 'ol/map'

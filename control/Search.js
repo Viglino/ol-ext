@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 import {inherits as ol_inherits} from 'ol'
-import ol_control_Control from 'ol/control/control'
+import ol_control_Control from 'ol/control/Control'
 
 /**
  * Search Control.

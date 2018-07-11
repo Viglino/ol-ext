@@ -4,9 +4,9 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import {unByKey as ol_Observable_unByKey} from 'ol/observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_interaction_CenterTouch from './CenterTouch'
-import ol_style_Style from 'ol/style/style'
+import ol_style_Style from 'ol/style/Style'
 import ol_style_Circle from 'ol/style/circle'
 import ol_style_Stroke from 'ol/style/stroke'
 import ol_style_Fill from 'ol/style/fill'

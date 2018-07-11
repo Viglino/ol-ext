@@ -4,7 +4,7 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_control_Control from 'ol/control/control'
+import ol_control_Control from 'ol/control/Control'
 
 /** A simple gauge control to display level information on the map.
  *

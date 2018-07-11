@@ -4,7 +4,7 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_control_Control from 'ol/control/control'
+import ol_control_Control from 'ol/control/Control'
 
 /** Control overlay for OL3
  * The overlay control is a control that display an overlay over the map

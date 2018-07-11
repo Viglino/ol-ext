@@ -4,10 +4,10 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import {unByKey as ol_Observable_unByKey} from 'ol/observable'
-import ol_control_Control from 'ol/control/control'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_control_Control from 'ol/control/Control'
 import {asString as ol_color_asString} from 'ol/color'
-import ol_style_Style from 'ol/style/style'
+import ol_style_Style from 'ol/style/Style'
 
 /**
  * OpenLayers 3 Title Control integrated in the canvas (for jpeg/png export purposes).

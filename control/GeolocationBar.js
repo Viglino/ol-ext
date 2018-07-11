@@ -4,7 +4,7 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_control_Control from 'ol/control/control'
+import ol_control_Control from 'ol/control/Control'
 import ol_control_Bar from './Bar'
 import ol_control_Toggle from './Toggle'
 import ol_control_Button from './Button'

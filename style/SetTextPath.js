@@ -1,6 +1,6 @@
 import {inherits as ol_inherits} from 'ol'
 import ol_layer_Vector from 'ol/layer/vector'
-import ol_style_Style from 'ol/style/style'
+import ol_style_Style from 'ol/style/Style'
 import ol_style_Text from 'ol/style/text'
 
 /** Add a setTextPath style to draw text along linestrings

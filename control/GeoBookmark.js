@@ -1,5 +1,5 @@
 import {inherits as ol_inherits} from 'ol'
-import ol_control_Control from 'ol/control/control'
+import ol_control_Control from 'ol/control/Control'
 
 /** Bookmark positions on ol maps.
  *

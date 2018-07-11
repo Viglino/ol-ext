@@ -4,11 +4,11 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import {unByKey as ol_Observable_unByKey} from 'ol/observable'
-import ol_control_Attribution from 'ol/control/attribution'
-import ol_style_Style from 'ol/style/style'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_control_Attribution from 'ol/control/Attribution'
+import ol_style_Style from 'ol/style/Style'
 import {asString as ol_color_asString} from 'ol/color'
-import ol_control_ScaleLine from 'ol/control/scaleline'
+import ol_control_ScaleLine from 'ol/control/Scaleline'
 
 /**
  * @classdesc 

@@ -24,7 +24,7 @@ import ol_geom_Point from 'ol/geom/point'
 import {transform as ol_proj_transform, transformExtent as ol_proj_transformExtent} from 'ol/proj'
 import ol_style_Fill from 'ol/style/fill'
 import ol_style_Stroke from 'ol/style/stroke'
-import ol_style_Style from 'ol/style/style'
+import ol_style_Style from 'ol/style/Style'
 import ol_style_FontSymbol from '../style/FontSymbol'
 
 /**

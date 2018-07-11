@@ -4,10 +4,10 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import {unByKey as ol_Observable_unByKey} from 'ol/observable'
-import ol_control_Control from 'ol/control/control'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_control_Control from 'ol/control/Control'
 import ol_proj_Projection from 'ol/proj/projection'
-import ol_style_Style from 'ol/style/style'
+import ol_style_Style from 'ol/style/Style'
 import ol_style_Stroke from 'ol/style/stroke'
 import ol_style_Fill from 'ol/style/fill'
 import ol_style_Text from 'ol/style/text'

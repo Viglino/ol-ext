@@ -9,7 +9,7 @@ import {linear as ol_easing_linear} from 'ol/easing'
 import ol_Map from 'ol/map'
 import ol_layer_Vector from 'ol/layer/vector'
 import {getCenter as ol_extent_getCenter} from 'ol/extent'
-import {unByKey as ol_Observable_unByKey} from 'ol/observable'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 
 /** Feature animation base class
  * Use the {@link _ol_Map_#animateFeature} or {@link _ol_layer_Vector_#animateFeature} to animate a feature

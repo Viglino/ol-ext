@@ -5,7 +5,7 @@
 
 import {inherits as ol_inherits} from 'ol'
 import ol_interaction_Interaction from 'ol/interaction/interaction'
-import ol_style_Style from 'ol/style/style'
+import ol_style_Style from 'ol/style/Style'
 import ol_style_Stroke from 'ol/style/stroke'
 import {
     boundingExtent as ol_extent_boundingExtent,

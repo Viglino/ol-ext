@@ -4,8 +4,8 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import {unByKey as ol_Observable_unByKey} from 'ol/observable'
-import ol_control_Control from 'ol/control/control'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_control_Control from 'ol/control/Control'
 import ol_layer_Tile from 'ol/layer/tile'
 import ol_layer_Vector from 'ol/layer/vector'
 import ol_layer_VectorTile from 'ol/layer/vectortile'

@@ -4,8 +4,8 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import {unByKey as ol_Observable_unByKey} from 'ol/observable'
-import ol_control_Control from 'ol/control/control'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_control_Control from 'ol/control/Control'
 
 /** ol_control_Cloud adds an old map effect on a canvas renderer.
 * It colors the map, adds a parchment texture and compass onto the map. 
