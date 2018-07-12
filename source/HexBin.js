@@ -4,6 +4,8 @@
 	
 */
 
+// TODO : migrate ol_coordinate
+
 import {inherits as ol_inherits} from 'ol'
 import ol_Feature from 'ol/Feature'
 import ol_geom_Polygon from 'ol/geom/Polygon'

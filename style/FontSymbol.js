@@ -6,7 +6,7 @@
 import {inherits as ol_inherits} from 'ol'
 import ol_style_RegularShape from 'ol/style/RegularShape'
 import ol_style_Fill from 'ol/style/Fill'
-import ol_style_Image from 'ol/style/image'
+import ol_style_Image from 'ol/style/Image'
 import {asString as ol_color_asString} from 'ol/color'
 
 /**

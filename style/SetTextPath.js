@@ -1,7 +1,7 @@
 import {inherits as ol_inherits} from 'ol'
 import ol_layer_Vector from 'ol/layer/Vector'
 import ol_style_Style from 'ol/style/Style'
-import ol_style_Text from 'ol/style/text'
+import ol_style_Text from 'ol/style/Text'
 
 /** Add a setTextPath style to draw text along linestrings
 @toto letterpadding/spacing, wordpadding/spacing

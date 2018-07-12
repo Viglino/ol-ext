@@ -1,8 +1,8 @@
-﻿import ol_geom_Geometry from 'ol/geom/geometry'
-import ol_geom_GeometryCollection from 'ol/geom/geometrycollection'
-import ol_geom_MultiLineString from 'ol/geom/multilinestring'
+﻿import ol_geom_Geometry from 'ol/geom/Geometry'
+import ol_geom_GeometryCollection from 'ol/geom/GeometryCollection'
+import ol_geom_MultiLineString from 'ol/geom/MultiLineString'
 import ol_geom_Polygon from 'ol/geom/Polygon'
-import ol_geom_MultiPolygon from 'ol/geom/multipolygon'
+import ol_geom_MultiPolygon from 'ol/geom/MultiPolygon'
 import ol_geom_LineString from 'ol/geom/LineString'
 
 /** Create a cardinal spline version of this geometry.

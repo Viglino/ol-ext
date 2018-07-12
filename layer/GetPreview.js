@@ -3,12 +3,12 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_source_Source from 'ol/source/source'
-import ol_source_Tile from 'ol/source/tile'
-import ol_source_TileWMS from 'ol/source/tilewms'
-import ol_layer_Layer from 'ol/layer/layer'
+import ol_source_Source from 'ol/source/Source'
+import ol_source_Tile from 'ol/source/Tile'
+import ol_source_TileWMS from 'ol/source/TileWMS'
+import ol_layer_Layer from 'ol/layer/Layer'
 import {containsCoordinate as ol_extent_containsCoordinate} from 'ol/extent'
-import ol_layer_Group from 'ol/layer/group'
+import ol_layer_Group from 'ol/layer/Group'
 
 /**
  * Return a preview image of the source.

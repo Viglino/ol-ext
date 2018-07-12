@@ -16,7 +16,7 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_source_ImageCanvas from 'ol/source/imagecanvas'
+import ol_source_ImageCanvas from 'ol/source/ImageCanvas'
 import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent'
 
 /** Layer source with georeferencement to place it on a map
