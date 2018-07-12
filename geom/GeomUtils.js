@@ -4,6 +4,7 @@
 
 	Usefull function to handle geometric operations
 */
+// TODO : migrate ol_coordinate
 
 import ol_coordinate from 'ol/coordinate'
 import ol_geom_LineString from 'ol/geom/LineString'

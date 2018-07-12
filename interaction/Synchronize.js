@@ -5,9 +5,9 @@
 
 import {inherits as ol_inherits} from 'ol'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_interaction_Interaction from 'ol/interaction/interaction'
-import ol_Map from 'ol/map'
-import ol_Overlay from 'ol/overlay'
+import ol_interaction_Interaction from 'ol/interaction/Interaction'
+import ol_Map from 'ol/Map'
+import ol_Overlay from 'ol/Overlay'
 
 /** Interaction synchronize
  * @constructor

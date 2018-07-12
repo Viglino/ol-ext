@@ -3,10 +3,12 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
+// TODO : migrate ol_coordinate
+
 import {inherits as ol_inherits} from 'ol'
-import ol_interaction_Pointer from 'ol/interaction/pointer'
+import ol_interaction_Pointer from 'ol/interaction/Pointer'
 import ol_coordinate from 'ol/coordinate'
-import ol_geom_LineString from 'ol/geom/linestring'
+import ol_geom_LineString from 'ol/geom/LineString'
 import ol_geom_Polygon from 'ol/geom/Polygon'
 
 /** Offset interaction for offseting feature geometry

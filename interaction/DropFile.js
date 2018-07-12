@@ -1,11 +1,11 @@
 import {inherits as ol_inherits} from 'ol'
-import ol_interaction_DragAndDrop from 'ol/interaction/draganddrop'
-import ol_interaction_Interaction from 'ol/interaction/interaction'
-import ol_format_GPX from 'ol/format/gpx'
-import ol_format_GeoJSON from 'ol/format/geojson'
-import ol_format_IGC from 'ol/format/igc'
-import ol_format_KML from 'ol/format/kml'
-import ol_format_TopoJSON from 'ol/format/topojson'
+import ol_interaction_DragAndDrop from 'ol/interaction/DragAndDrop'
+import ol_interaction_Interaction from 'ol/interaction/Interaction'
+import ol_format_GPX from 'ol/format/GPX'
+import ol_format_GeoJSON from 'ol/format/GeoJSON'
+import ol_format_IGC from 'ol/format/IGC'
+import ol_format_KML from 'ol/format/KML'
+import ol_format_TopoJSON from 'ol/format/TopoJSON'
 
 /** Extend DragAndDrop choose drop zone + fires loadstart, loadend
  * @require jQuery

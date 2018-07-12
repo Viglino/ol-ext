@@ -4,11 +4,11 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_interaction_Interaction from 'ol/interaction/interaction'
-import ol_geom_Polygon from 'ol/geom/polygon'
-import ol_geom_LinearRing from 'ol/geom/linearring'
-import ol_interaction_Draw from 'ol/interaction/draw'
-import ol_interaction_Select from 'ol/interaction/select'
+import ol_interaction_Interaction from 'ol/interaction/Interaction'
+import ol_geom_Polygon from 'ol/geom/Polygon'
+import ol_geom_LinearRing from 'ol/geom/LinearRing'
+import ol_interaction_Draw from 'ol/interaction/Draw'
+import ol_interaction_Select from 'ol/interaction/Select'
 
 /** Interaction draw hole
  * @constructor

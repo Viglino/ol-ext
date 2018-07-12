@@ -14,7 +14,7 @@
 import {inherits as ol_inherits} from 'ol'
 import ol_Attribution from 'ol/control/Attribution'
 import {bbox as ol_loadingstrategy_bbox} from 'ol/loadingstrategy'
-import ol_source_Vector from 'ol/source/vector'
+import ol_source_Vector from 'ol/source/Vector'
 import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
 
 

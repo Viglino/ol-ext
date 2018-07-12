@@ -2,19 +2,20 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+// TODO : migrate ol_coordinate
 
 import {inherits as ol_inherits} from 'ol'
-import ol_interaction_Interaction from 'ol/interaction/interaction'
+import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import ol_style_Style from 'ol/style/Style'
-import ol_style_Stroke from 'ol/style/stroke'
-import ol_source_Vector from 'ol/source/vector'
-import ol_style_Fill from 'ol/style/fill'
-import ol_style_Circle from 'ol/style/circle'
+import ol_style_Stroke from 'ol/style/Stroke'
+import ol_source_Vector from 'ol/source/Vector'
+import ol_style_Fill from 'ol/style/Fill'
+import ol_style_Circle from 'ol/style/Circle'
 import ol_layer_Vector from 'ol/layer/Vector'
 import ol_coordinate from 'ol/coordinate'
-import ol_geom_Point from 'ol/geom/point'
-import ol_Feature from 'ol/feature'
-import ol_geom_LineString from 'ol/geom/linestring'
+import ol_geom_Point from 'ol/geom/Point'
+import ol_Feature from 'ol/Feature'
+import ol_geom_LineString from 'ol/geom/LineString'
 
 /** Interaction split interaction for splitting feature geometry
  * @constructor

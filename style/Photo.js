@@ -6,9 +6,9 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_style_RegularShape from 'ol/style/regularshape'
+import ol_style_RegularShape from 'ol/style/RegularShape'
 import {asString as ol_color_asString} from 'ol/color'
-import ol_style_Stroke from 'ol/style/stroke'
+import ol_style_Stroke from 'ol/style/Stroke'
 
 /**
  * @requires ol_style_RegularShape

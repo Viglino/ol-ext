@@ -4,7 +4,7 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_Overlay from 'ol/overlay'
+import ol_Overlay from 'ol/Overlay'
 
 
 /**

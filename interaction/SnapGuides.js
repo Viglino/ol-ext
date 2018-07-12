@@ -4,19 +4,19 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_interaction_Interaction from 'ol/interaction/interaction'
+import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import ol_style_Style from 'ol/style/Style'
-import ol_style_Stroke from 'ol/style/stroke'
+import ol_style_Stroke from 'ol/style/Stroke'
 import {
     boundingExtent as ol_extent_boundingExtent,
     buffer as ol_extent_buffer,
     containsCoordinate as ol_extent_containsCoordinate
 } from 'ol/extent'
-import ol_source_Vector from 'ol/source/vector'
+import ol_source_Vector from 'ol/source/Vector'
 import ol_layer_Vector from 'ol/layer/Vector'
-import ol_Collection from 'ol/collection'
-import ol_Feature from 'ol/feature'
-import ol_geom_LineString from 'ol/geom/linestring'
+import ol_Collection from 'ol/Collection'
+import ol_Feature from 'ol/Feature'
+import ol_geom_LineString from 'ol/geom/LineString'
 
 /** Interaction to snap to guidelines
  * @constructor

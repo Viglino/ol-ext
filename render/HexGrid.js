@@ -4,7 +4,7 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_Object from 'ol/object'
+import ol_Object from 'ol/Object'
 
 /**
 * Hexagonal grids

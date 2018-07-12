@@ -5,7 +5,7 @@
 
 import {inherits as ol_inherits} from 'ol'
 import {bbox as ol_loadingstrategy_bbox} from 'ol/loadingstrategy'
-import ol_source_Vector from 'ol/source/vector'
+import ol_source_Vector from 'ol/source/Vector'
 import ol_source_OSM from 'ol/source/OSM'
 import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
 import ol_format_OSMXML from 'ol/format/OSMXML'

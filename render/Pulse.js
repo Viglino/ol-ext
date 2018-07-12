@@ -3,15 +3,15 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_Map from 'ol/map'
+import ol_Map from 'ol/Map'
 import {transform as ol_proj_transform} from 'ol/proj'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import {easeOut as ol_easing_easeOut} from 'ol/easing'
-import ol_style_Circle from 'ol/style/circle'
-import ol_style_Stroke from 'ol/style/stroke'
+import ol_style_Circle from 'ol/style/Circle'
+import ol_style_Stroke from 'ol/style/Stroke'
 import ol_style_Image from 'ol/style/image'
 import ol_style_Style from 'ol/style/Style'
-import ol_geom_Point from 'ol/geom/point'
+import ol_geom_Point from 'ol/geom/Point'
 
 /** Pulse a point on postcompose
 *	@deprecated use map.animateFeature instead

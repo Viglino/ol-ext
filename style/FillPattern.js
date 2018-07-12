@@ -5,7 +5,7 @@
 
 import {inherits as ol_inherits} from 'ol'
 import {DEVICE_PIXEL_RATIO} from 'ol/has'
-import ol_style_Fill from 'ol/style/fill'
+import ol_style_Fill from 'ol/style/Fill'
 import {asString as ol_color_asString} from 'ol/color'
 
 /**

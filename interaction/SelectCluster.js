@@ -7,16 +7,16 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_Map from 'ol/map'
-import ol_Collection from 'ol/collection'
+import ol_Map from 'ol/Map'
+import ol_Collection from 'ol/Collection'
 import ol_layer_Vector from 'ol/layer/Vector'
-import ol_source_Vector from 'ol/source/vector'
-import ol_interaction_Select from 'ol/interaction/select'
-import ol_Feature from 'ol/feature'
-import ol_geom_LineString from 'ol/geom/linestring'
+import ol_source_Vector from 'ol/source/Vector'
+import ol_interaction_Select from 'ol/interaction/Select'
+import ol_Feature from 'ol/Feature'
+import ol_geom_LineString from 'ol/geom/LineString'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import {easeOut as ol_easing_easeOut} from 'ol/easing'
-import ol_geom_Point from 'ol/geom/point'
+import ol_geom_Point from 'ol/geom/Point'
 
 /**
  * @classdesc

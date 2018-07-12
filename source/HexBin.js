@@ -5,11 +5,11 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_Feature from 'ol/feature'
-import ol_geom_Polygon from 'ol/geom/polygon'
-import ol_geom_Point from 'ol/geom/point'
+import ol_Feature from 'ol/Feature'
+import ol_geom_Polygon from 'ol/geom/Polygon'
+import ol_geom_Point from 'ol/geom/Point'
 import ol_coordinate from 'ol/coordinate'
-import ol_source_Vector from 'ol/source/vector'
+import ol_source_Vector from 'ol/source/Vector'
 import {getCenter as ol_extent_getCenter} from 'ol/extent'
 import ol_HexGrid from '../render/HexGrid'
 

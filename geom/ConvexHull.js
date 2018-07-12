@@ -7,7 +7,7 @@
 	@see https://en.wikipedia.org/wiki/Convex_hull_algorithms
 */
 
-import ol_geom_Geometry from 'ol/geom/geometry';
+import ol_geom_Geometry from 'ol/geom/Geometry';
 
 /** Tests if a point is left or right of line (a,b).
 * @param {ol.coordinate} a point on the line

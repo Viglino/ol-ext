@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_Map from 'ol/map'
+import ol_Map from 'ol/Map'
 import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import {upAndDown as ol_easing_upAndDown} from 'ol/easing'

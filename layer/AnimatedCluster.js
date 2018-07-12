@@ -7,11 +7,11 @@
 */
 import {inherits as ol_inherits} from 'ol'
 import ol_layer_Vector from 'ol/layer/Vector'
-import ol_source_Vector from 'ol/source/vector'
+import ol_source_Vector from 'ol/source/Vector'
 import {easeOut as ol_easing_easeOut} from 'ol/easing'
 import {buffer as ol_extent_buffer} from 'ol/extent'
-import ol_geom_Point from 'ol/geom/point'
-import ol_Map from 'ol/map'
+import ol_geom_Point from 'ol/geom/Point'
+import ol_Map from 'ol/Map'
 
 /**
  *  A vector layer for animated cluster

@@ -5,9 +5,11 @@
 	Usefull function to handle geometric operations
 */
 
+// TODO : migrate ol_coordinate
+
 import ol_coordinate from 'ol/coordinate'
 import ol_geom_MultiLineString from 'ol/geom/MultiLineString'
-import ol_geom_Polygon from 'ol/geom/polygon'
+import ol_geom_Polygon from 'ol/geom/Polygon'
 import ol_geom_MultiPolygon from 'ol/geom/multipolygon'
 import '../render/Cspline'
 

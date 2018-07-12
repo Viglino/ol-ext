@@ -14,9 +14,9 @@
 import {inherits as ol_inherits} from 'ol'
 import ol_Attribution from 'ol/control/Attribution'
 import {bbox as ol_loadingstrategy_bbox} from 'ol/loadingstrategy'
-import ol_source_Vector from 'ol/source/vector'
-import ol_Feature from 'ol/feature'
-import ol_geom_Point from 'ol/geom/point'
+import ol_source_Vector from 'ol/source/Vector'
+import ol_Feature from 'ol/Feature'
+import ol_geom_Point from 'ol/geom/Point'
 import {transform as ol_proj_transform, transformExtent as ol_proj_transformExtent} from 'ol/proj'
 
 

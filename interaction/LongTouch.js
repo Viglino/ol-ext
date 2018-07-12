@@ -4,7 +4,7 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_interaction_Interaction from 'ol/interaction/interaction'
+import ol_interaction_Interaction from 'ol/interaction/Interaction'
 
 /** Interaction to handle longtouch events
  * @constructor

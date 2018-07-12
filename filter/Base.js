@@ -5,9 +5,9 @@
 
 import {inherits as ol_inherits} from 'ol'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_layer_Base from 'ol/layer/base'
-import ol_Object from 'ol/object'
-import ol_Map from 'ol/map'
+import ol_layer_Base from 'ol/layer/Base'
+import ol_Object from 'ol/Object'
+import ol_Map from 'ol/Map'
 
 var ol_filter = {};
 /**

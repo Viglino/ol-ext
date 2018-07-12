@@ -1,6 +1,6 @@
 import {inherits as ol_inherits} from 'ol'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_interaction_Pointer from 'ol/interaction/pointer'
+import ol_interaction_Pointer from 'ol/interaction/Pointer'
 
 /** Clip interaction to clip layers in a circle
  * @constructor

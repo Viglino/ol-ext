@@ -6,8 +6,8 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_style_Fill from 'ol/style/fill'
-import ol_style_RegularShape from 'ol/style/regularshape'
+import ol_style_Fill from 'ol/style/Fill'
+import ol_style_RegularShape from 'ol/style/RegularShape'
 
 /**
  * @requires ol.style.Circle
