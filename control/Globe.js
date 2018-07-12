@@ -6,15 +6,15 @@
 import {inherits as ol_inherits} from 'ol'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_control_Control from 'ol/control/Control'
-import ol_Map from 'ol/map'
-import ol_Collection from 'ol/collection'
-import ol_View from 'ol/view'
-import ol_layer_Vector from 'ol/layer/vector'
+import ol_Map from 'ol/Map'
+import ol_Collection from 'ol/Collection'
+import ol_View from 'ol/View'
+import ol_layer_Vector from 'ol/layer/Vector'
 import ol_style_Style from 'ol/style/Style'
-import ol_style_Circle from 'ol/style/circle'
-import ol_style_Fill from 'ol/style/fill'
-import ol_style_Stroke from 'ol/style/stroke'
-import ol_source_Vector from 'ol/source/vector'
+import ol_style_Circle from 'ol/style/Circle'
+import ol_style_Fill from 'ol/style/Fill'
+import ol_style_Stroke from 'ol/style/Stroke'
+import ol_source_Vector from 'ol/source/Vector'
 
 /**
  * OpenLayers 3 lobe Overview Control.

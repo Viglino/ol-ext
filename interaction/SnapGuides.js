@@ -13,7 +13,7 @@ import {
     containsCoordinate as ol_extent_containsCoordinate
 } from 'ol/extent'
 import ol_source_Vector from 'ol/source/vector'
-import ol_layer_Vector from 'ol/layer/vector'
+import ol_layer_Vector from 'ol/layer/Vector'
 import ol_Collection from 'ol/collection'
 import ol_Feature from 'ol/feature'
 import ol_geom_LineString from 'ol/geom/linestring'

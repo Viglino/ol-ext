@@ -5,7 +5,7 @@
 import {inherits as ol_inherits} from 'ol'
 import {transform as ol_proj_transform} from 'ol/proj'
 import ol_control_SearchJSON from "./SearchJSON";
-import ol_geom_Point from 'ol/geom/point'
+import ol_geom_Point from 'ol/geom/Point'
 
 /**
  * Search places using the photon API.

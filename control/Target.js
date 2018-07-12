@@ -6,11 +6,11 @@
 import {inherits as ol_inherits} from 'ol'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_control_Control from 'ol/control/Control'
-import ol_style_RegularShape from 'ol/style/regularshape'
-import ol_geom_Point from 'ol/geom/point'
+import ol_style_RegularShape from 'ol/style/RegularShape'
+import ol_geom_Point from 'ol/geom/Point'
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Stroke from 'ol/style/Stroke'
-import ol_Map from 'ol/map'
+import ol_Map from 'ol/Map'
 
 /** ol_control_Target draw a target at the center of the map.
  * @constructor

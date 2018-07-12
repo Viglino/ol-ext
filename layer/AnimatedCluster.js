@@ -6,7 +6,7 @@
 
 */
 import {inherits as ol_inherits} from 'ol'
-import ol_layer_Vector from 'ol/layer/vector'
+import ol_layer_Vector from 'ol/layer/Vector'
 import ol_source_Vector from 'ol/source/vector'
 import {easeOut as ol_easing_easeOut} from 'ol/easing'
 import {buffer as ol_extent_buffer} from 'ol/extent'

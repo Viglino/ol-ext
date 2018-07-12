@@ -1,4 +1,4 @@
-﻿import ol_layer_Vector from 'ol/layer/vector'
+﻿import ol_layer_Vector from 'ol/layer/Vector'
 import {easeOut as ol_easing_easeOut} from 'ol/easing'
 
 /** ol.layer.Vector.prototype.setRender3D

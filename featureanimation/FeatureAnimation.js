@@ -7,7 +7,7 @@ import {inherits as ol_inherits} from 'ol'
 import ol_Object from 'ol/object'
 import {linear as ol_easing_linear} from 'ol/easing'
 import ol_Map from 'ol/map'
-import ol_layer_Vector from 'ol/layer/vector'
+import ol_layer_Vector from 'ol/layer/Vector'
 import {getCenter as ol_extent_getCenter} from 'ol/extent'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 

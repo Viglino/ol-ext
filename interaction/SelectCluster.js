@@ -9,7 +9,7 @@
 import {inherits as ol_inherits} from 'ol'
 import ol_Map from 'ol/map'
 import ol_Collection from 'ol/collection'
-import ol_layer_Vector from 'ol/layer/vector'
+import ol_layer_Vector from 'ol/layer/Vector'
 import ol_source_Vector from 'ol/source/vector'
 import ol_interaction_Select from 'ol/interaction/select'
 import ol_Feature from 'ol/feature'

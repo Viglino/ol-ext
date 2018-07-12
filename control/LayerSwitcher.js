@@ -6,11 +6,11 @@
 import {inherits as ol_inherits} from 'ol'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_control_Control from 'ol/control/Control'
-import ol_layer_Tile from 'ol/layer/tile'
-import ol_layer_Vector from 'ol/layer/vector'
-import ol_layer_VectorTile from 'ol/layer/vectortile'
-import ol_layer_Image from 'ol/layer/image'
-import ol_layer_Heatmap from 'ol/layer/heatmap'
+import ol_layer_Tile from 'ol/layer/Tile'
+import ol_layer_Vector from 'ol/layer/Vector'
+import ol_layer_VectorTile from 'ol/layer/VectorTile'
+import ol_layer_Image from 'ol/layer/Image'
+import ol_layer_Heatmap from 'ol/layer/Heatmap'
 import {intersects as ol_extent_intersects} from 'ol/extent'
 
 /**
