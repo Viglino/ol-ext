@@ -5,43 +5,11 @@
 	Usefull function to handle geometric operations
 */
 
-// TODO : migrate ol_coordinate
-
-import ol_coordinate from 'ol/coordinate'
 import ol_geom_MultiLineString from 'ol/geom/MultiLineString'
 import ol_geom_Polygon from 'ol/geom/Polygon'
 import ol_geom_MultiPolygon from 'ol/geom/multipolygon'
 import '../render/Cspline'
-
-/**
- * Split a Polygon geom with horizontal lines
- * @param {Array<ol.coordinate>} geom 
- * @param {Number} y the y to split
- * @param {Number} n contour index
- * @return {Array<Array<ol.coordinate>>}
- */
-ol_coordinate.splitH = function (geom, y, n) {
-  var x, abs;
-  var list = [];
-  for (var i=0; i<geom.length-1; i++) {
-    // Hole separator?
-    if (!geom[i].length || !geom[i+1].length) continue;
-    // Intersect
-    if (geom[i][1]<=y && geom[i+1][1]>y || geom[i][1]>=y && geom[i+1][1]<y) {
-      abs = (y-geom[i][1]) / (geom[i+1][1]-geom[i][1]);
-      x = abs * (geom[i+1][0]-geom[i][0]) + geom[i][0];
-      list.push ({ contour: n, index: i, pt: [x,y], abs: abs });
-    }
-  }
-  // Sort x
-  list.sort(function(a,b) { return a.pt[0] - b.pt[0] });
-  // Horizontal segement
-  var result = [];
-  for (var j=0; j<list.length-1; j += 2) {
-    result.push([list[j], list[j+1]])
-  }
-  return result;
-};
+import {splitH} from "./GeomUtils";
 
 /**
  * Calculate a MultiPolyline to fill a Polygon with a scribble effect that appears hand-made
@@ -60,12 +28,13 @@ ol_geom_MultiPolygon.prototype.scribbleFill = function (options) {
   if (!scribbles.length) return null;
   // Merge scribbles
   var scribble = scribbles[0];
-  for (var i=0, s; s=scribbles[i]; i++) {
-    ls = s.getLineStrings();
-    for (k=0; k<ls.length; k++) {
-      scribble.appendLineString(ls[k]);
+    var ls;
+    for (var i = 0, s; s = scribbles[i]; i++) {
+        ls = s.getLineStrings();
+        for (var k = 0; k < ls.length; k++) {
+            scribble.appendLineString(ls[k]);
+        }
     }
-  }
   return scribble;
 };
 
@@ -98,7 +67,7 @@ ol_geom_Polygon.prototype.scribbleFill = function (options) {
 	// Split polygon with horizontal lines
   var lines = [];
 	for (var y = (Math.floor(ext[1]/step)+1)*step; y<ext[3]; y += step) {
-    var l = ol_coordinate.splitH(coord, y, i);
+    var l = splitH(coord, y, i);
     lines = lines.concat(l);
   }
   

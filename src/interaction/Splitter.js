@@ -8,6 +8,7 @@ import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import ol_source_Vector from 'ol/source/Vector'
 import ol_Collection from 'ol/Collection'
 import {boundingExtent as ol_extent_boundingExtent, buffer as ol_extent_buffer} from 'ol/extent'
+import '../geom/LineStringSplitAt'
 
 /** Interaction splitter: acts as a split feature agent while editing vector features (LineString).
  * @constructor

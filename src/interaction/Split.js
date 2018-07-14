@@ -2,7 +2,6 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-// TODO : migrate ol_coordinate
 
 import {inherits as ol_inherits} from 'ol'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
@@ -12,10 +11,11 @@ import ol_source_Vector from 'ol/source/Vector'
 import ol_style_Fill from 'ol/style/Fill'
 import ol_style_Circle from 'ol/style/Circle'
 import ol_layer_Vector from 'ol/layer/Vector'
-import ol_coordinate from 'ol/coordinate'
 import ol_geom_Point from 'ol/geom/Point'
 import ol_Feature from 'ol/Feature'
 import ol_geom_LineString from 'ol/geom/LineString'
+import {dist2d} from "../geom/GeomUtils";
+import '../geom/LineStringSplitAt'
 
 /** Interaction split interaction for splitting feature geometry
  * @constructor
@@ -164,7 +164,7 @@ ol_interaction_Split.prototype.getClosestFeature = function(e)
 	{	// Snap to node
 		var coord = this.getNearestCoord (c, f.getGeometry().getCoordinates());
 		var p = this.getMap().getPixelFromCoordinate(coord);
-		if (ol_coordinate.dist2d(e.pixel, p) < this.snapDistance_)
+		if (dist2d(e.pixel, p) < this.snapDistance_)
 		{	c = coord;
 		}
 		//
@@ -180,7 +180,7 @@ ol_interaction_Split.prototype.getClosestFeature = function(e)
 ol_interaction_Split.prototype.getNearestCoord = function(pt, coords)
 {	var d, dm=Number.MAX_VALUE, p0;
 	for (var i=0; i < coords.length; i++)
-	{	d = ol_coordinate.dist2d (pt, coords[i]);
+	{	d = dist2d (pt, coords[i]);
 		if (d < dm)
 		{	dm = d;
 			p0 = coords[i];
