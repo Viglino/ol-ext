@@ -1,6 +1,6 @@
 {
   "name": "openlayers-ext",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "description": "A set of cool extensions for OpenLayers (ol).",
   "main": "index.js",
   "dependencies": {
