@@ -7,7 +7,7 @@ import {inherits as ol_inherits} from 'ol'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Stroke from 'ol/style/Stroke'
-import { boundingExtent as ol_extent_boundingExtent, buffer as ol_extent_buffer, containsCoordinate as ol_extent_containsCoordinate} from 'ol/extent'
+import {buffer as ol_extent_buffer, containsCoordinate as ol_extent_containsCoordinate} from 'ol/extent'
 import ol_source_Vector from 'ol/source/Vector'
 import ol_layer_Vector from 'ol/layer/Vector'
 import ol_Collection from 'ol/Collection'
@@ -21,8 +21,8 @@ import ol_geom_LineString from 'ol/geom/LineString'
  *	- pixelTolerance {number | undefined} distance (in px) to snap to a guideline, default 10 px
  *	- style {ol_style_Style | Array<ol_style_Style> | undefined} Style for the sektch features.
  */
-var ol_interaction_SnapGuides = function(options)
-{	if (!options) options = {};
+var ol_interaction_SnapGuides = function(options) {
+	if (!options) options = {};
 
 	// Intersect 2 guides
 	function getIntersectionPoint (d1, d2)
@@ -78,45 +78,45 @@ var ol_interaction_SnapGuides = function(options)
 			displayInLayerSwitcher: false
 		});
 */
-	this.overlayLayer_ = new ol_layer_Vector(
-		{	source: this.overlaySource_,
-			style: function(f)
-			{	return sketchStyle;
+console.log('CREATE OVERLAY')
+	this.overlayLayer_ = new ol_layer_Vector({
+		source: this.overlaySource_,
+			style: function(f) {
+				return sketchStyle;
 			},
 			name:'Snap overlay',
 			displayInLayerSwitcher: false
 		});
 	// Use snap interaction
-	ol_interaction_Interaction.call(this,
-		{	handleEvent: function(e)
-			{	if (this.getActive())
-				{	var features = this.overlaySource_.getFeatures();
-					var prev = null;
-					var p = null;
-					var res = e.frameState.viewState.resolution;
-					for (var i=0, f; f = features[i]; i++)
-					{	var c = f.getGeometry().getClosestPoint(e.coordinate);
-						if ( dist2D(c, e.coordinate) / res < this.snapDistance_)
-						{	// Intersection on 2 lines
-							if (prev)
-							{	var c2 = getIntersectionPoint(prev.getGeometry().getCoordinates(),  f.getGeometry().getCoordinates());
-								if (c2) 
-								{	if (dist2D(c2, e.coordinate) / res < this.snapDistance_)
-									{	p = c2;
-									}
+	ol_interaction_Interaction.call(this, {
+		handleEvent: function(e) {
+			if (this.getActive()) {
+				var features = this.overlaySource_.getFeatures();
+				var prev = null;
+				var p = null;
+				var res = e.frameState.viewState.resolution;
+				for (var i=0, f; f = features[i]; i++) {
+					var c = f.getGeometry().getClosestPoint(e.coordinate);
+					if ( dist2D(c, e.coordinate) / res < this.snapDistance_) {
+						// Intersection on 2 lines
+						if (prev) {
+							var c2 = getIntersectionPoint(prev.getGeometry().getCoordinates(),  f.getGeometry().getCoordinates());
+							if (c2) {
+								if (dist2D(c2, e.coordinate) / res < this.snapDistance_) {
+									p = c2;
 								}
 							}
-							else
-							{	p = c;
-							}
-							prev = f;
+						} else {
+							p = c;
 						}
+						prev = f;
 					}
-					if (p) e.coordinate = p;
 				}
-				return true;
+				if (p) e.coordinate = p;
 			}
-		});
+			return true;
+		}
+	});
 };
 ol_inherits(ol_interaction_SnapGuides, ol_interaction_Interaction);
 
@@ -126,8 +126,8 @@ ol_inherits(ol_interaction_SnapGuides, ol_interaction_Interaction);
  * @param {ol.Map} map Map.
  * @api stable
  */
-ol_interaction_SnapGuides.prototype.setMap = function(map)
-{	if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_);
+ol_interaction_SnapGuides.prototype.setMap = function(map) {
+	if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_);
 	ol_interaction_Interaction.prototype.setMap.call (this, map);
 	this.overlayLayer_.setMap(map);
 	if (map) this.projExtent_ = map.getView().getProjection().getExtent();
@@ -164,13 +164,18 @@ ol_interaction_SnapGuides.prototype.getGuides = function(features)
 * @param {Array<ol.coordinate>} v the direction vector
 * @return {ol.Feature} feature guide
 */
-ol_interaction_SnapGuides.prototype.addGuide = function(v, ortho)
-{	if (v)
+ol_interaction_SnapGuides.prototype.addGuide = function(v, ortho) {
+	if (v)
 	{	var map = this.getMap();
 		// Limit extent
 		var extent = map.getView().calculateExtent(map.getSize());
 		extent = ol_extent_buffer(extent, Math.max (1e5+1, (extent[2]-extent[0])*100));
-		extent = ol_extent_boundingExtent(extent, this.projExtent_);
+		//extent = ol_extent_boundingExtent(extent, this.projExtent_);
+		if (extent[0]<this.projExtent_[0]) extent[0]=this.projExtent_[0];
+		if (extent[1]<this.projExtent_[1]) extent[1]=this.projExtent_[1];
+		if (extent[2]>this.projExtent_[2]) extent[2]=this.projExtent_[2];
+		if (extent[3]>this.projExtent_[3]) extent[3]=this.projExtent_[3];
+		// 
 		var dx = v[0][0] - v[1][0];
 		var dy = v[0][1] - v[1][1];
 		var d = 1 / Math.sqrt(dx*dx+dy*dy);
@@ -209,17 +214,17 @@ ol_interaction_SnapGuides.prototype.addOrthoGuide = function(v)
 * @param {_ol_interaction_Draw_} drawi a draw interaction to listen to
 * @api
 */
-ol_interaction_SnapGuides.prototype.setDrawInteraction = function(drawi)
-{	var self = this;
+ol_interaction_SnapGuides.prototype.setDrawInteraction = function(drawi) {
+	var self = this;
 	// Number of points currently drawing
 	var nb = 0;
 	// Current guidelines
 	var features = [];
-	function setGuides(e)
-	{	var coord = [];
+	function setGuides(e) {
+		var coord = [];
 		var s = 2;
-		switch (e.target.getType())
-		{	case 'LineString':
+		switch (e.target.getType()) {
+			case 'LineString':
 				coord = e.target.getCoordinates();
 				s = 2;
 				break;
@@ -230,8 +235,8 @@ ol_interaction_SnapGuides.prototype.setDrawInteraction = function(drawi)
 			default: break;
 		}
 		var l = coord.length;
-		if (l != nb && l > s)
-		{	self.clearGuides(features);
+		if (l != nb && l > s) {
+			self.clearGuides(features);
 			features = self.addOrthoGuide([coord[l-s],coord[l-s-1]]);
 			features = features.concat(self.addGuide([coord[0],coord[1]]));
 			features = features.concat(self.addOrthoGuide([coord[0],coord[1]]));
@@ -239,13 +244,13 @@ ol_interaction_SnapGuides.prototype.setDrawInteraction = function(drawi)
 		}
 	};
 	// New drawing
-	drawi.on ("drawstart", function(e)
-	{	// When geom is changing add a new orthogonal direction 
+	drawi.on ("drawstart", function(e) {
+		// When geom is changing add a new orthogonal direction 
 		e.feature.getGeometry().on("change", setGuides);
 	});
 	// end drawing, clear directions
-	drawi.on ("drawend", function(e)
-	{	self.clearGuides(features);
+	drawi.on ("drawend", function(e) {
+		self.clearGuides(features);
 		e.feature.getGeometry().un("change", setGuides);
 		nb = 0;
 		features = [];
