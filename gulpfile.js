@@ -33,8 +33,10 @@ function transform() {
       // file content
       content = file.contents.toString();
       if (content) {
+        // Prevent ol_has_DEVICE_PIXEL_RATIO
+        //content = content.replace(/ol_has_DEVICE_PIXEL_RATIO/g,"ol.has.DEVICE_PIXEL_RATIO");
         // change ol_namespace_Class_Att => ol.namespace.Class.Att
-        content = content.replace(/(\bol_([a-z,A-Z]*)_([a-z,A-Z]*)_([a-z,A-Z]*))/g,"ol.$2.$3.$4");
+        content = content.replace(/(\bol_([a-z,A-Z]*)_([a-z,A-Z]*)_([a-z,A-Z]*)\b)/g,"ol.$2.$3.$4");
         // change ol_namespace_Class => ol.namespace.Class
         content = content.replace(/(\bol_([a-z,A-Z]*)_([a-z,A-Z]*))/g,"ol.$2.$3");
         // change ol_Class => ol.namespace.Class
@@ -109,8 +111,8 @@ gulp.task("js", function() {
     "./src/control/LayerSwitcher.js", "./src/control/*.js", "!./src/control/PirateMap.js",
 		"./src/featureanimation/FeatureAnimation.js", "./src/featureanimation/*.js",
 		"./src/filter/Base.js", "./src/filter/Mask.js", "./src/filter/*.js",
-		"./src/interaction/*.js",
-		"./src/source/*.js",
+    "./src/interaction/*.js",
+    "./src/source/*.js",
 		"./src/layer/*.js",
 		"./src/overlay/*.js",
     "./src/geom/*.js",

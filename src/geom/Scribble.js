@@ -9,7 +9,7 @@ import ol_geom_MultiLineString from 'ol/geom/MultiLineString'
 import ol_geom_Polygon from 'ol/geom/Polygon'
 import ol_geom_MultiPolygon from 'ol/geom/multipolygon'
 import '../render/Cspline'
-import {splitH} from "./GeomUtils";
+import {ol_coordinate_splitH} from "./GeomUtils";
 
 /**
  * Calculate a MultiPolyline to fill a Polygon with a scribble effect that appears hand-made
@@ -67,7 +67,7 @@ ol_geom_Polygon.prototype.scribbleFill = function (options) {
 	// Split polygon with horizontal lines
   var lines = [];
 	for (var y = (Math.floor(ext[1]/step)+1)*step; y<ext[3]; y += step) {
-    var l = splitH(coord, y, i);
+    var l = ol_coordinate_splitH(coord, y, i);
     lines = lines.concat(l);
   }
   

@@ -8,7 +8,7 @@ import {inherits as ol_inherits} from 'ol'
 import ol_interaction_Pointer from 'ol/interaction/Pointer'
 import ol_geom_LineString from 'ol/geom/LineString'
 import ol_geom_Polygon from 'ol/geom/Polygon'
-import {dist2d, findSegment, offsetCoords} from "../geom/GeomUtils";
+import {ol_coordinate_dist2d, ol_coordinate_findSegment, ol_coordinate_offsetCoords} from "../geom/GeomUtils";
 
 /** Offset interaction for offseting feature geometry
  * @constructor
@@ -140,10 +140,10 @@ ol_interaction_Offset.prototype.handleDownEvent_ = function(e) {
  */
 ol_interaction_Offset.prototype.handleDragEvent_ = function(e) {
   var p = this.current_.geom.getClosestPoint(e.coordinate);
-  var d = dist2d(p, e.coordinate);
+  var d = ol_coordinate_dist2d(p, e.coordinate);
   switch (this.current_.geomType) {
     case  'Polygon': {
-      var seg = findSegment(p, this.current_.coordinates[0]).segment;
+      var seg = ol_coordinate_findSegment(p, this.current_.coordinates[0]).segment;
       if (seg) {
         var v1 = [ seg[1][0]-seg[0][0], seg[1][1]-seg[0][1] ];
         var v2 = [ e.coordinate[0]-p[0], e.coordinate[1]-p[1] ];
@@ -153,21 +153,21 @@ ol_interaction_Offset.prototype.handleDragEvent_ = function(e) {
 
         var offset = [];
         for (var i=0; i<this.current_.coordinates.length; i++) {
-          offset.push( offsetCoords(this.current_.coordinates[i], i==0 ? d : -d) );
+          offset.push( ol_coordinate_offsetCoords(this.current_.coordinates[i], i==0 ? d : -d) );
         }
         this.current_.feature.setGeometry(new ol_geom_Polygon(offset));
       }
       break;
     }
     case 'LineString': {
-      var seg = findSegment(p, this.current_.coordinates).segment;
+      var seg = ol_coordinate_findSegment(p, this.current_.coordinates).segment;
       if (seg) {
         var v1 = [ seg[1][0]-seg[0][0], seg[1][1]-seg[0][1] ];
         var v2 = [ e.coordinate[0]-p[0], e.coordinate[1]-p[1] ];
         if (v1[0]*v2[1] - v1[1]*v2[0] > 0) {
           d = -d;
         }
-        var offset = offsetCoords(this.current_.coordinates, d);
+        var offset = ol_coordinate_offsetCoords(this.current_.coordinates, d);
         this.current_.feature.setGeometry(new ol_geom_LineString(offset));
       }
       break;

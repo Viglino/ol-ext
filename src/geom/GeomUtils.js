@@ -13,7 +13,7 @@ import {getCenter as ol_extent_getCenter} from 'ol/extent'
 * @param {ol.coordinate} p2 second point
 * @return {number} distance
 */
-var dist2d = function(p1, p2)
+var ol_coordinate_dist2d = function(p1, p2)
 {	var dx = p1[0]-p2[0];
 	var dy = p1[1]-p2[1];
 	return Math.sqrt(dx*dx+dy*dy);
@@ -25,7 +25,7 @@ var dist2d = function(p1, p2)
 * @param {ol.coordinate} p2 second point
 * @return {boolean}
 */
-var equal = function(p1, p2)
+var ol_coordinate_equal = function(p1, p2)
 {	return (p1[0]==p2[0] && p1[1]==p2[1]);
 }
 
@@ -33,15 +33,15 @@ var equal = function(p1, p2)
 * @param {ol.Feature} f
 * @return {ol.coordinate} the center
 */
-var getFeatureCenter = function(f)
-{	return getGeomCenter (f.getGeometry());
+var ol_coordinate_getFeatureCenter = function(f)
+{	return ol_coordinate_getGeomCenter (f.getGeometry());
 };
 
 /** Get center coordinate of a geometry
 * @param {ol.Feature} geom
 * @return {ol.coordinate} the center
 */
-var getGeomCenter = function(geom)
+var ol_coordinate_getGeomCenter = function(geom)
 {	switch (geom.getType())
 	{	case 'Point': 
 			return geom.getCoordinates();
@@ -61,19 +61,19 @@ var getGeomCenter = function(geom)
  * @see http://stackoverflow.com/a/11970006/796832
  * @see https://drive.google.com/viewerng/viewer?a=v&pid=sites&srcid=ZGVmYXVsdGRvbWFpbnxqa2dhZGdldHN0b3JlfGd4OjQ4MzI5M2Y0MjNmNzI2MjY
  */
-var offsetCoords = function (coords, offset) {
+var ol_coordinate_offsetCoords = function (coords, offset) {
     var path = [];
     var N = coords.length-1;
     var max = N;
     var mi, mi1, li, li1, ri, ri1, si, si1, Xi1, Yi1;
     var p0, p1, p2;
-    var isClosed = equal(coords[0],coords[N]);
+    var isClosed = ol_coordinate_equal(coords[0],coords[N]);
     if (!isClosed) {
         p0 = coords[0];
         p1 = coords[1];
         p2 = [
-            p0[0] + (p1[1] - p0[1]) / dist2d(p0,p1) *offset,
-            p0[1] - (p1[0] - p0[0]) / dist2d(p0,p1) *offset
+            p0[0] + (p1[1] - p0[1]) / ol_coordinate_dist2d(p0,p1) *offset,
+            p0[1] - (p1[0] - p0[0]) / ol_coordinate_dist2d(p0,p1) *offset
         ];
         path.push(p2);
         coords.push(coords[N])
@@ -118,8 +118,8 @@ var offsetCoords = function (coords, offset) {
         p0 = coords[coords.length-1];
         p1 = coords[coords.length-2];
         p2 = [
-            p0[0] - (p1[1] - p0[1]) / dist2d(p0,p1) *offset,
-            p0[1] + (p1[0] - p0[0]) / dist2d(p0,p1) *offset
+            p0[0] - (p1[1] - p0[1]) / ol_coordinate_dist2d(p0,p1) *offset,
+            p0[1] + (p1[0] - p0[0]) / ol_coordinate_dist2d(p0,p1) *offset
         ];
         path.push(p2);
     }
@@ -131,16 +131,16 @@ var offsetCoords = function (coords, offset) {
  * @param {Array<ol.coordinate>} coords
  * @return {} the index (-1 if not found) and the segment
  */
-var findSegment = function (pt, coords) {
+var ol_coordinate_findSegment = function (pt, coords) {
     for (var i=0; i<coords.length-1; i++) {
         var p0 = coords[i];
         var p1 = coords[i+1];
-        if (equal(pt, p0) || equal(pt, p1)) {
+        if (ol_coordinate_equal(pt, p0) || ol_coordinate_equal(pt, p1)) {
             return { index:1, segment: [p0,p1] };
         } else {
-            var d0 = dist2d(p0,p1);
+            var d0 = ol_coordinate_dist2d(p0,p1);
             var v0 = [ (p1[0] - p0[0]) / d0, (p1[1] - p0[1]) / d0 ];
-            var d1 = dist2d(p0,pt);
+            var d1 = ol_coordinate_dist2d(p0,pt);
             var v1 = [ (pt[0] - p0[0]) / d1, (pt[1] - p0[1]) / d1 ];
             if (Math.abs(v0[0]*v1[1] - v0[1]*v1[0]) < 1e-10) {
                 return { index:1, segment: [p0,p1] };
@@ -157,7 +157,7 @@ var findSegment = function (pt, coords) {
  * @param {Number} n contour index
  * @return {Array<Array<ol.coordinate>>}
  */
-var splitH = function (geom, y, n) {
+var ol_coordinate_splitH = function (geom, y, n) {
     var x, abs;
     var list = [];
     for (var i=0; i<geom.length-1; i++) {
@@ -180,4 +180,4 @@ var splitH = function (geom, y, n) {
     return result;
 };
 
-export {dist2d, equal, findSegment, getFeatureCenter, getGeomCenter, offsetCoords, splitH}
+export {ol_coordinate_dist2d, ol_coordinate_equal, ol_coordinate_findSegment, ol_coordinate_getFeatureCenter, ol_coordinate_getGeomCenter, ol_coordinate_offsetCoords, ol_coordinate_splitH}

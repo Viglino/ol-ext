@@ -4,7 +4,7 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import {DEVICE_PIXEL_RATIO} from 'ol/has'
+import {DEVICE_PIXEL_RATIO as ol_has_DEVICE_PIXEL_RATIO} from 'ol/has'
 import ol_style_Fill from 'ol/style/Fill'
 import {asString as ol_color_asString} from 'ol/color'
 
@@ -35,7 +35,7 @@ var ol_style_FillPattern = function(options)
 
 	var canvas = this.canvas_ = document.createElement('canvas');
 	var scale = Number(options.scale)>0 ? Number(options.scale) : 1;
-	var ratio = scale*DEVICE_PIXEL_RATIO || DEVICE_PIXEL_RATIO;
+	var ratio = scale*ol_has_DEVICE_PIXEL_RATIO || ol_has_DEVICE_PIXEL_RATIO;
 
 	var ctx = canvas.getContext('2d');
 

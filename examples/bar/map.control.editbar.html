@@ -103,7 +103,7 @@
 		//  1- a toggle control with a select interaction
 		//  2- an option bar to delete / get information on the selected feature
 		var sbar = new ol.control.Bar();
-		sbar.addControl (new ol.control.TextButton(
+		sbar.addControl (new ol.control.Button(
 				{	html: '<i class="fa fa-times"></i>',
 					title: "Delete",
 					handleClick: function() 
@@ -116,7 +116,7 @@
 						selectCtrl.getInteraction().getFeatures().clear();
 					}
 				}));
-		sbar.addControl (new ol.control.TextButton(
+		sbar.addControl (new ol.control.Button(
 				{	html: '<i class="fa fa-info"></i>',
 					title: "Show informations",
 					handleClick: function() 

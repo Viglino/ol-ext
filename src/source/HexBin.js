@@ -12,7 +12,7 @@ import ol_geom_Point from 'ol/geom/Point'
 import ol_source_Vector from 'ol/source/Vector'
 import {getCenter as ol_extent_getCenter} from 'ol/extent'
 import ol_HexGrid from '../render/HexGrid'
-import {getFeatureCenter} from "../geom/GeomUtils";
+import {ol_coordinate_getFeatureCenter} from "../geom/GeomUtils";
 
 /** A source for hexagonal binning
 * @constructor 
@@ -38,7 +38,7 @@ var ol_source_HexBin = function(options) {
 	// Source and origin
 	this._origin = options.source;
 	// Geometry function to get a point
-	this._geomFn = options.geometryFunction || getFeatureCenter || function(f) { return f.getGeometry().getFirstCoordinate(); };
+	this._geomFn = options.geometryFunction || ol_coordinate_getFeatureCenter || function(f) { return f.getGeometry().getFirstCoordinate(); };
 	// Existing features
 	this.reset();
 	// Future features

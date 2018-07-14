@@ -12,7 +12,6 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_Attribution from 'ol/control/Attribution'
 import {bbox as ol_loadingstrategy_bbox} from 'ol/loadingstrategy'
 import ol_source_Vector from 'ol/source/Vector'
 import ol_Feature from 'ol/Feature'
@@ -41,7 +40,7 @@ var ol_source_WikiCommons = function(opt_options)
 	this._limit = options.limit || 100;
 	
 	/** Default attribution */
-	if (!options.attributions) options.attributions = [ new ol_Attribution({ html:"&copy; <a href='https://commons.wikimedia.org/'>Wikimedia Commons</a>" }) ];
+	if (!options.attributions) options.attributions = [ "&copy; <a href='https://commons.wikimedia.org/'>Wikimedia Commons</a>" ];
 
 	// Bbox strategy : reload at each move
     if (!options.strategy) options.strategy = ol_loadingstrategy_bbox;

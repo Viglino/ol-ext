@@ -1,4 +1,5 @@
 ﻿import ol_layer_Vector from 'ol/layer/Vector'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import {easeOut as ol_easing_easeOut} from 'ol/easing'
 
 /** ol.layer.Vector.prototype.setRender3D
@@ -76,10 +77,10 @@ ol_render3D.prototype.onPostcompose_ = function(e)
 
 /** Set layer to render 3D
 */
-ol_render3D.prototype.setLayer = function(l)
-{	if (this.layer_) this.layer_.un ('postcompose', this.onPostcompose_, this);
+ol_render3D.prototype.setLayer = function(l) {
+	if (this._listener) ol_Observable_unByKey(this._listener);
 	this.layer_ = l;
-	l.on ('postcompose', this.onPostcompose_, this);
+	this._listener = l.on ('postcompose', this.onPostcompose_.bind(this));
 }
 
 /** Create a function that return height of a feature

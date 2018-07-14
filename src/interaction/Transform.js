@@ -9,14 +9,8 @@ import ol_Feature from 'ol/Feature'
 import ol_Collection from 'ol/Collection'
 import ol_interaction_Pointer from 'ol/interaction/Pointer'
 import ol_style_RegularShape from 'ol/style/RegularShape'
-import {fromExtent} from 'ol/geom/Polygon'
-import {
-    boundingExtent as ol_extent_boundingExtent,
-    buffer as ol_extent_buffer,
-    createEmpty as ol_extent_createEmpty,
-    extend as ol_extent_extend,
-    getCenter as ol_extent_getCenter
-} from 'ol/extent'
+import {fromExtent as ol_geom_Polygon_fromExtent} from 'ol/geom/Polygon'
+import {boundingExtent as ol_extent_boundingExtent, buffer as ol_extent_buffer, createEmpty as ol_extent_createEmpty, extend as ol_extent_extend, getCenter as ol_extent_getCenter} from 'ol/extent'
 
 /** Interaction rotate
  * @constructor
@@ -269,7 +263,7 @@ ol_interaction_Transform.prototype.drawSketch_ = function(center) {
   if (center===true) {
     if (!this.ispt_) {
       this.overlayLayer_.getSource().addFeature(new ol_Feature( { geometry: new ol_geom_Point(this.center_), handle:'rotate0' }) );
-			var geom = fromExtent(ext);
+			var geom = ol_geom_Polygon_fromExtent(ext);
 			var f = this.bbox_ = new ol_Feature(geom);
 			this.overlayLayer_.getSource().addFeature (f);
 		}
@@ -282,7 +276,7 @@ ol_interaction_Transform.prototype.drawSketch_ = function(center) {
         this.getMap().getCoordinateFromPixel([p[0]+10, p[1]+10])
       ]);
 		}
-		var geom = fromExtent(ext);
+		var geom = ol_geom_Polygon_fromExtent(ext);
 		var f = this.bbox_ = new ol_Feature(geom);
 		var features = [];
 		var g = geom.getCoordinates()[0];
@@ -359,7 +353,7 @@ ol_interaction_Transform.prototype.handleDownEvent_ = function(evt) {
 			this.geoms_.push(f.getGeometry().clone());
 			extent = ol_extent_extend(extent, f.getGeometry().getExtent());
     }
-		this.extent_ = (fromExtent(extent)).getCoordinates()[0];
+		this.extent_ = (ol_geom_Polygon_fromExtent(extent)).getCoordinates()[0];
 		if (this.mode_==='rotate') {
 			this.center_ = this.getCenter() || ol_extent_getCenter(extent);
 

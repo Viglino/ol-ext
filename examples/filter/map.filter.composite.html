@@ -98,23 +98,13 @@
 
 		var coords = dep.geometry.coordinates;
 		var f = new ol.Feature(new ol.geom.Polygon(coords));
-		/*
-		var vector = new ol.layer.Vector(
-			{	source: new ol.source.Vector({ features:[f] }),
-				style: new ol.style.Style(
-					{	stroke: new ol.style.Stroke({ width:5, color:'blue' }),
-						fill: new ol.style.Fill({ color:'red' })
-					})
-			});
-		*/
-		var vector = new ol.layer.Image( { source: new ol.source.ImageVector (
-			{	source: new ol.source.Vector(),
-				style: new ol.style.Style(
-					{	stroke: new ol.style.Stroke({ width:20, color:[51,102,153] }),
-						fill: new ol.style.Fill({ color:[51,102,153,0.8] })
-					})
-			})});
-		vector.getSource().getSource().addFeature(f);
+		var vector = new ol.layer.Vector({
+			source: new ol.source.Vector({ features:[f] }),
+			style: new ol.style.Style(
+				{	stroke: new ol.style.Stroke({ width:5, color:'blue' }),
+					fill: new ol.style.Fill({ color:'red' })
+				})
+		});
 		map.addLayer(vector);
 
 		var comp = new ol.filter.Composite({ operation:$("#operation").val() });

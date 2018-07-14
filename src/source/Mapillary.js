@@ -12,7 +12,6 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_Attribution from 'ol/control/Attribution'
 import {bbox as ol_loadingstrategy_bbox} from 'ol/loadingstrategy'
 import ol_source_Vector from 'ol/source/Vector'
 import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
@@ -36,7 +35,7 @@ var ol_source_Mapillary = function(opt_options)
 	this._limit = options.limit || 100;
 	
 	/** Default attribution */
-	if (!options.attributions) options.attributions = [ new ol_Attribution({ html:"&copy; <a href='https://www.mapillary.com/'>Mapillary</a>" }) ];
+	if (!options.attributions) options.attributions = [ "&copy; <a href='https://www.mapillary.com/'>Mapillary</a>" ];
 
 	// Bbox strategy : reload at each move
     if (!options.strategy) options.strategy = ol_loadingstrategy_bbox;

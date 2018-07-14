@@ -1,4 +1,4 @@
-import {equal} from "./GeomUtils";
+import {ol_coordinate_equal} from "./GeomUtils";
 import ol_geom_LineString from "ol/geom/LineString";
 
 /** Split a lineString by a point or a list of points
@@ -23,8 +23,8 @@ ol_geom_LineString.prototype.splitAt = function(pt, tol)
         return result;
     }
     // Nothing to do
-    if (equal(pt,this.getFirstCoordinate())
-        || equal(pt,this.getLastCoordinate()))
+    if (ol_coordinate_equal(pt,this.getFirstCoordinate())
+        || ol_coordinate_equal(pt,this.getLastCoordinate()))
     {	return [this];
     }
     // Get
@@ -33,15 +33,15 @@ ol_geom_LineString.prototype.splitAt = function(pt, tol)
     var c = [];
     for (var i=0; i<c0.length-1; i++)
     {	// Filter equal points
-        if (equal(c0[i],c0[i+1])) continue;
+        if (ol_coordinate_equal(c0[i],c0[i+1])) continue;
         // Extremity found
-        if (equal(pt,c0[i+1]))
+        if (ol_coordinate_equal(pt,c0[i+1]))
         {	ci.push(c0[i+1]);
             c.push(new ol_geom_LineString(ci));
             ci = [];
         }
         // Test alignement
-        else if (!equal(pt,c0[i]))
+        else if (!ol_coordinate_equal(pt,c0[i]))
         {	var d1, d2;
             if (c0[i][0] == c0[i+1][0])
             {	d1 = d2 = (c0[i][1]-pt[1]) / (c0[i][1]-c0[i+1][1]);
