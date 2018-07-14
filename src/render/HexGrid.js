@@ -3,8 +3,8 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_Object from 'ol/object'
+import {inherits as ol_inherits} from 'ol'
+import ol_Object from 'ol/Object'
 
 /**
 * Hexagonal grids
@@ -29,7 +29,7 @@ var ol_HexGrid = function (options)
 	this.layout_ = this.layout[options.layout] || this.layout.pointy;
 
 };
-ol.inherits (ol_HexGrid, ol_Object);
+ol_inherits (ol_HexGrid, ol_Object);
 
 /** Layout
 */

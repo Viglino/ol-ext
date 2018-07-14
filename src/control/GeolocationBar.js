@@ -3,8 +3,8 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_control_Control from 'ol/control/control'
+import {inherits as ol_inherits} from 'ol'
+import ol_control_Control from 'ol/control/Control'
 import ol_control_Bar from './Bar'
 import ol_control_Toggle from './Toggle'
 import ol_control_Button from './Button'
@@ -98,7 +98,7 @@ var ol_control_GeolocationBar = function(options) {
     }
   });
 };
-ol.inherits(ol_control_GeolocationBar, ol_control_Bar);
+ol_inherits(ol_control_GeolocationBar, ol_control_Bar);
 
 /** Get the ol.interaction.GeolocationDraw associatedwith the bar
  * 

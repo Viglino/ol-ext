@@ -1,17 +1,22 @@
-
-import ol from 'ol'
-import ol_style_Style from 'ol/style/style'
-import ol_style_Stroke from 'ol/style/stroke'
-import ol_source_Vector from 'ol/source/vector'
-import ol_style_Fill from 'ol/style/fill'
-import ol_layer_Vector from 'ol/layer/vector'
-import ol_geom_Point from 'ol/geom/point'
-import ol_Feature from 'ol/feature'
-import ol_Collection from 'ol/collection'
-import ol_interaction_Pointer from 'ol/interaction/pointer'
-import ol_style_RegularShape from 'ol/style/regularshape'
-import ol_geom_Polygon from 'ol/geom/polygon'
-import ol_extent from 'ol/extent'
+import {inherits as ol_inherits} from 'ol'
+import ol_style_Style from 'ol/style/Style'
+import ol_style_Stroke from 'ol/style/Stroke'
+import ol_source_Vector from 'ol/source/Vector'
+import ol_style_Fill from 'ol/style/Fill'
+import ol_layer_Vector from 'ol/layer/Vector'
+import ol_geom_Point from 'ol/geom/Point'
+import ol_Feature from 'ol/Feature'
+import ol_Collection from 'ol/Collection'
+import ol_interaction_Pointer from 'ol/interaction/Pointer'
+import ol_style_RegularShape from 'ol/style/RegularShape'
+import {fromExtent} from 'ol/geom/Polygon'
+import {
+    boundingExtent as ol_extent_boundingExtent,
+    buffer as ol_extent_buffer,
+    createEmpty as ol_extent_createEmpty,
+    extend as ol_extent_extend,
+    getCenter as ol_extent_getCenter
+} from 'ol/extent'
 
 /** Interaction rotate
  * @constructor
@@ -92,7 +97,7 @@ var ol_interaction_Transform = function(options) {
 	// setstyle
   this.setDefaultStyle();
 };
-ol.inherits(ol_interaction_Transform, ol_interaction_Pointer);
+ol_inherits(ol_interaction_Transform, ol_interaction_Pointer);
 
 /** Cursors for transform
 */
@@ -257,14 +262,14 @@ ol_interaction_Transform.prototype.drawSketch_ = function(center) {
 	if (!this.selection_.length) return;
   var ext = this.selection_[0].getGeometry().getExtent();
   // Clone and extend
-  ext = ol_extent.buffer(ext, 0);
+  ext = ol_extent_buffer(ext, 0);
   for (var i=1, f; f = this.selection_[i]; i++) {
-    ol_extent.extend(ext, f.getGeometry().getExtent());
+    ol_extent_extend(ext, f.getGeometry().getExtent());
   }
   if (center===true) {
     if (!this.ispt_) {
       this.overlayLayer_.getSource().addFeature(new ol_Feature( { geometry: new ol_geom_Point(this.center_), handle:'rotate0' }) );
-			var geom = ol_geom_Polygon.fromExtent(ext);
+			var geom = fromExtent(ext);
 			var f = this.bbox_ = new ol_Feature(geom);
 			this.overlayLayer_.getSource().addFeature (f);
 		}
@@ -272,12 +277,12 @@ ol_interaction_Transform.prototype.drawSketch_ = function(center) {
 	else {
 		if (this.ispt_) {
       var p = this.getMap().getPixelFromCoordinate([ext[0], ext[1]]);
-			ext = ol_extent.boundingExtent([
+			ext = ol_extent_boundingExtent([
         this.getMap().getCoordinateFromPixel([p[0]-10, p[1]-10]),
         this.getMap().getCoordinateFromPixel([p[0]+10, p[1]+10])
       ]);
 		}
-		var geom = ol_geom_Polygon.fromExtent(ext);
+		var geom = fromExtent(ext);
 		var f = this.bbox_ = new ol_Feature(geom);
 		var features = [];
 		var g = geom.getCoordinates()[0];
@@ -349,21 +354,21 @@ ol_interaction_Transform.prototype.handleDownEvent_ = function(evt) {
 		this.coordinate_ = evt.coordinate;
 		this.pixel_ = evt.pixel;
 		this.geoms_ = [];
-		var extent = ol_extent.createEmpty();
+		var extent = ol_extent_createEmpty();
     for (var i=0, f; f=this.selection_[i]; i++) {
 			this.geoms_.push(f.getGeometry().clone());
-			extent = ol_extent.extend(extent, f.getGeometry().getExtent());
+			extent = ol_extent_extend(extent, f.getGeometry().getExtent());
     }
-		this.extent_ = (ol_geom_Polygon.fromExtent(extent)).getCoordinates()[0];
+		this.extent_ = (fromExtent(extent)).getCoordinates()[0];
 		if (this.mode_==='rotate') {
-			this.center_ = this.getCenter() || ol_extent.getCenter(extent);
+			this.center_ = this.getCenter() || ol_extent_getCenter(extent);
 
 			// we are now rotating (cursor down on rotate mode), so apply the grabbing cursor
 			var element = evt.map.getTargetElement();
 			element.style.cursor = this.Cursors.rotate0;
 			this.previousCursor_ = element.style.cursor;
 		} else {
-			this.center_ = ol_extent.getCenter(extent);
+			this.center_ = ol_extent_getCenter(extent);
 		}
 		this.angle_ = Math.atan2(this.center_[1]-evt.coordinate[1], this.center_[0]-evt.coordinate[0]);
 

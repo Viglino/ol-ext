@@ -7,7 +7,7 @@
     "ajax": "0.0.4",
     "jquery": "^3.2.1",
     "jspdf": "^1.3.5",
-    "openlayers": "^4.6.4"
+    "openlayers": "^5.0.0"
   },
   "devDependencies": {
     "gulp": "^3.9.1",

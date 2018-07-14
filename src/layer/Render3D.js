@@ -1,6 +1,5 @@
-﻿
-import ol_layer_Vector from 'ol/layer/vector'
-import ol_easing from 'ol/easing'
+﻿import ol_layer_Vector from 'ol/layer/Vector'
+import {easeOut as ol_easing_easeOut} from 'ol/easing'
 
 /** ol.layer.Vector.prototype.setRender3D
  * @extends {ol.layer.Vector}
@@ -113,7 +112,7 @@ ol_render3D.prototype.animate = function(options)
 	this.toHeight_ = this.getHfn(options.height);
 	this.animate_ = new Date().getTime();
 	this.animateDuration_ = options.duration ||1000;
-	this.easing_ = options.easing || ol_easing.easeOut;
+	this.easing_ = options.easing || ol_easing_easeOut;
 	// Force redraw
 	this.layer_.changed();
 }

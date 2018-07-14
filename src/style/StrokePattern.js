@@ -3,10 +3,10 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_has from 'ol/has'
-import ol_style_Stroke from 'ol/style/stroke'
-import ol_color from 'ol/color'
+import {inherits as ol_inherits} from 'ol'
+import {DEVICE_PIXEL_RATIO} from 'ol/has'
+import ol_style_Stroke from 'ol/style/Stroke'
+import {asString as ol_color_asString} from 'ol/color'
 import ol_style_FillPattern from './FillPattern'
 
 /**
@@ -36,7 +36,7 @@ var ol_style_StrokePattern = function(options)
 
 	var canvas = this.canvas_ = document.createElement('canvas');
 	var scale = Number(options.scale)>0 ? Number(options.scale) : 1;
-	var ratio = scale*ol_has.DEVICE_PIXEL_RATIO || ol_has.DEVICE_PIXEL_RATIO;
+	var ratio = scale*DEVICE_PIXEL_RATIO || DEVICE_PIXEL_RATIO;
 
 	var ctx = canvas.getContext('2d');
 
@@ -70,15 +70,15 @@ var ol_style_StrokePattern = function(options)
 		canvas.height = Math.round(pat.height *ratio);
 		ctx.beginPath();
 		if (options.fill) 
-		{	ctx.fillStyle = ol_color.asString(options.fill.getColor());
+		{	ctx.fillStyle = ol_color_asString(options.fill.getColor());
 			ctx.fillRect(0,0, canvas.width, canvas.height);
 		}
 		ctx.scale(ratio,ratio);
 		ctx.lineCap = "round";
 		ctx.lineWidth = pat.stroke || 1;
 
-		ctx.fillStyle = ol_color.asString(options.color||"#000");
-		ctx.strokeStyle = ol_color.asString(options.color||"#000");
+		ctx.fillStyle = ol_color_asString(options.color||"#000");
+		ctx.strokeStyle = ol_color_asString(options.color||"#000");
 		if (pat.circles) for (var i=0; i<pat.circles.length; i++)
 		{	var ci = pat.circles[i]; 
 			ctx.beginPath();
@@ -144,7 +144,7 @@ var ol_style_StrokePattern = function(options)
 	ol_style_Stroke.call (this, options);
 
 };
-ol.inherits(ol_style_StrokePattern, ol_style_Stroke);
+ol_inherits(ol_style_StrokePattern, ol_style_Stroke);
 
 
 /**

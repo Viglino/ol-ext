@@ -3,14 +3,14 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_Observable from 'ol/Observable'
-import ol_control_Control from 'ol/control/control'
-import ol_style_RegularShape from 'ol/style/regularshape'
-import ol_geom_Point from 'ol/geom/point'
+import {inherits as ol_inherits} from 'ol'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_control_Control from 'ol/control/Control'
+import ol_style_RegularShape from 'ol/style/RegularShape'
+import ol_geom_Point from 'ol/geom/Point'
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Stroke from 'ol/style/Stroke'
-import ol_Map from 'ol/map'
+import ol_Map from 'ol/Map'
 
 /** ol_control_Target draw a target at the center of the map.
  * @constructor
@@ -37,7 +37,7 @@ var ol_control_Target = function(options)
 
 	this.setVisible(options.visible!==false);
 };
-ol.inherits(ol_control_Target, ol_control_Control);
+ol_inherits(ol_control_Target, ol_control_Control);
 
 /**
  * Remove the control from its current map and attach it to the new map.
@@ -50,7 +50,7 @@ ol_control_Target.prototype.setMap = function (map)
 {	if (this.getMap()) 
 	{	if (this.getVisible()) this.getMap().renderSync();
 	}
-	if (this._listener) ol_Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 
 	ol_control_Control.prototype.setMap.call(this, map);

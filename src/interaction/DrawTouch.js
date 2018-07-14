@@ -3,20 +3,19 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_Observable from 'ol/Observable'
+import {inherits as ol_inherits} from 'ol'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_interaction_CenterTouch from './CenterTouch'
-import ol_style_Style from 'ol/style/style'
-import ol_style_Circle from 'ol/style/circle'
-import ol_style_Stroke from 'ol/style/stroke'
-import ol_style_Fill from 'ol/style/fill'
-import ol_Feature from 'ol/feature'
-import ol_layer_Vector from 'ol/layer/vector'
-import ol_source_Vector from 'ol/source/vector'
-import ol_geom_LineString from 'ol/geom/linestring'
-import ol_geom_Polygon from 'ol/geom/polygon'
-import ol_geom_Point from 'ol/geom/point'
-import ol_Feature from 'ol/feature'
+import ol_style_Style from 'ol/style/Style'
+import ol_style_Circle from 'ol/style/Circle'
+import ol_style_Stroke from 'ol/style/Stroke'
+import ol_style_Fill from 'ol/style/Fill'
+import ol_Feature from 'ol/Feature'
+import ol_layer_Vector from 'ol/layer/Vector'
+import ol_source_Vector from 'ol/source/Vector'
+import ol_geom_LineString from 'ol/geom/LineString'
+import ol_geom_Polygon from 'ol/geom/Polygon'
+import ol_geom_Point from 'ol/geom/Point'
 
 /** Interaction DrawTouch :
  * @constructor
@@ -84,7 +83,7 @@ var ol_interaction_DrawTouch = function(options)
 	this.geom_ = [];
 	
 };
-ol.inherits(ol_interaction_DrawTouch, ol_interaction_CenterTouch);
+ol_inherits(ol_interaction_DrawTouch, ol_interaction_CenterTouch);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
@@ -93,7 +92,7 @@ ol.inherits(ol_interaction_DrawTouch, ol_interaction_CenterTouch);
  * @api stable
  */
 ol_interaction_DrawTouch.prototype.setMap = function(map) {
-	if (this._listener.drawSketch) ol_Observable.unByKey(this._listener.drawSketch);
+	if (this._listener.drawSketch) ol_Observable_unByKey(this._listener.drawSketch);
 	this._listener.drawSketch = null;
 
 	ol_interaction_CenterTouch.prototype.setMap.call (this, map);

@@ -2,8 +2,9 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol from 'ol'
-import ol_control_Control from 'ol/control/control'
+import {inherits as ol_inherits} from 'ol'
+import ol_control_Control from 'ol/control/Control'
+
 /** A simple push button control
 * @constructor
 * @extends {ol_control_Control}
@@ -39,7 +40,7 @@ var ol_control_Button = function(options)
 
 	if (options.title) this.set("title", options.title);
 };
-ol.inherits(ol_control_Button, ol_control_Control);
+ol_inherits(ol_control_Button, ol_control_Control);
 
 
 export default ol_control_Button

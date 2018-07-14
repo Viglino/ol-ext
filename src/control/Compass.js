@@ -3,9 +3,9 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_Observable from 'ol/Observable'
-import ol_control_Control from 'ol/control/control'
+import {inherits as ol_inherits} from 'ol'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_control_Control from 'ol/control/Control'
 
 /**
  * Draw a compass on the map. The position/size of the control is defined in the css.
@@ -50,7 +50,7 @@ var ol_control_Compass = function(options)
 	this.da_ = [];
 	for (var i=0; i<8; i++) this.da_[i] = [ Math.cos(Math.PI*i/8), Math.sin(Math.PI*i/8) ];
 };
-ol.inherits(ol_control_Compass, ol_control_Control);
+ol_inherits(ol_control_Compass, ol_control_Control);
 
 /**
  * Remove the control from its current map and attach it to the new map.
@@ -59,7 +59,7 @@ ol.inherits(ol_control_Compass, ol_control_Control);
  */
 ol_control_Compass.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
-	if (this._listener) ol_Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 	
 	ol_control_Control.prototype.setMap.call(this, map);

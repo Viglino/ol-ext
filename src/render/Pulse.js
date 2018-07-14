@@ -3,15 +3,15 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_Map from 'ol/map'
-import ol_proj from 'ol/proj'
-import ol_Observable from 'ol/observable'
-import ol_easing from 'ol/easing'
-import ol_style_Circle from 'ol/style/circle'
-import ol_style_Stroke from 'ol/style/stroke'
-import ol_style_Image from 'ol/style/image'
-import ol_style_Style from 'ol/style/style'
-import ol_geom_Point from 'ol/geom/point'
+import ol_Map from 'ol/Map'
+import {transform as ol_proj_transform} from 'ol/proj'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import {easeOut as ol_easing_easeOut} from 'ol/easing'
+import ol_style_Circle from 'ol/style/Circle'
+import ol_style_Stroke from 'ol/style/Stroke'
+import ol_style_Image from 'ol/style/Image'
+import ol_style_Style from 'ol/style/Style'
+import ol_geom_Point from 'ol/geom/Point'
 
 /** Pulse a point on postcompose
 *	@deprecated use map.animateFeature instead
@@ -29,13 +29,13 @@ ol_Map.prototype.pulse = function(coords, options)
 
 	// Change to map's projection
 	if (options.projection)
-	{	coords = ol_proj.transform(coords, options.projection, this.getView().getProjection());
+	{	coords = ol_proj_transform(coords, options.projection, this.getView().getProjection());
 	}
 	
 	// options
 	var start = new Date().getTime();
 	var duration = options.duration || 3000;
-	var easing = options.easing || ol_easing.easeOut;
+	var easing = options.easing || ol_easing_easeOut;
 	
 	var style = options.style;
 	if (!style) style = new ol_style_Circle({ radius:30, stroke:new ol_style_Stroke({color:'red', width:2 }) });
@@ -56,7 +56,7 @@ ol_Map.prototype.pulse = function(coords, options)
 	{	var frameState = event.frameState;
 		var ratio = frameState.pixelRatio;
 		var elapsed = frameState.time - start;
-		if (elapsed > duration) ol_Observable.unByKey(listenerKey);
+		if (elapsed > duration) ol_Observable_unByKey(listenerKey);
 		else
 		{	var elapsedRatio = elapsed / duration;
 			var context = event.context;

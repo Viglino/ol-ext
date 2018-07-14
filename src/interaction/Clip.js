@@ -1,7 +1,6 @@
-
-import ol from 'ol'
-import ol_Observable from 'ol/Observable'
-import ol_interaction_Pointer from 'ol/interaction/pointer'
+import {inherits as ol_inherits} from 'ol'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_interaction_Pointer from 'ol/interaction/Pointer'
 
 /** Clip interaction to clip layers in a circle
  * @constructor
@@ -26,15 +25,15 @@ var ol_interaction_Clip = function(options) {
 	this.radius = (options.radius||100);
 	if (options.layers) this.addLayer(options.layers);
 };
-ol.inherits(ol_interaction_Clip, ol_interaction_Pointer);
+ol_inherits(ol_interaction_Clip, ol_interaction_Pointer);
 
 /** Set the map > start postcompose
 */
 ol_interaction_Clip.prototype.setMap = function(map) {
 	if (this.getMap()) {
 		for (var i=0; i<this.layers_.length; i++) {
-			if (this.layers_[i].precompose) ol_Observable.unByKey(this.layers_[i].precompose);
-			if (this.layers_[i].postcompose) ol_Observable.unByKey(this.layers_[i].postcompose);
+			if (this.layers_[i].precompose) ol_Observable_unByKey(this.layers_[i].precompose);
+			if (this.layers_[i].postcompose) ol_Observable_unByKey(this.layers_[i].postcompose);
 			this.layers_[i].precompose = this.layers_[i].postcompose = null;
 		}
 		this.getMap().renderSync();
@@ -88,8 +87,8 @@ ol_interaction_Clip.prototype.removeLayer = function(layers)
 			}
 		}
 		if (k!=this.layers_.length && this.getMap())
-		{	if (this.layers_[k].precompose) ol_Observable.unByKey(this.layers_[k].precompose);
-			if (this.layers_[k].postcompose) ol_Observable.unByKey(this.layers_[k].postcompose);
+		{	if (this.layers_[k].precompose) ol_Observable_unByKey(this.layers_[k].precompose);
+			if (this.layers_[k].postcompose) ol_Observable_unByKey(this.layers_[k].postcompose);
 			this.layers_.splice(k,1);
 			this.getMap().renderSync();
 		}
@@ -141,8 +140,8 @@ ol_interaction_Clip.prototype.setActive = function(b)
 		}
 	} else {
 		for(var i=0; i<this.layers_.length; i++) {
-			if (this.layers_[i].precompose) ol_Observable.unByKey(this.layers_[i].precompose);
-			if (this.layers_[i].postcompose) ol_Observable.unByKey(this.layers_[i].postcompose);
+			if (this.layers_[i].precompose) ol_Observable_unByKey(this.layers_[i].precompose);
+			if (this.layers_[i].postcompose) ol_Observable_unByKey(this.layers_[i].postcompose);
 			this.layers_[i].precompose = this.layers_[i].postcompose = null;
 		}
 	}

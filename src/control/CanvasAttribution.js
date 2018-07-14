@@ -3,12 +3,12 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_Observable from 'ol/Observable'
-import ol_control_Attribution from 'ol/control/attribution'
-import ol_style_Style from 'ol/style/style'
-import ol_color from 'ol/color'
-import ol_control_ScaleLine from 'ol/control/scaleline'
+import {inherits as ol_inherits} from 'ol'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_control_Attribution from 'ol/control/Attribution'
+import ol_style_Style from 'ol/style/Style'
+import {asString as ol_color_asString} from 'ol/color'
+import ol_control_ScaleLine from 'ol/control/Scaleline'
 
 /**
  * @classdesc 
@@ -32,7 +32,7 @@ var ol_control_CanvasAttribution = function(options)
 	if (!options.style) options.style = new ol_style_Style();
 	this.setStyle (options.style);
 }
-ol.inherits(ol_control_CanvasAttribution, ol_control_Attribution);
+ol_inherits(ol_control_CanvasAttribution, ol_control_Attribution);
 
 /**
  * Draw attribution on canvas
@@ -53,8 +53,8 @@ ol_control_CanvasAttribution.prototype.setStyle = function (style)
 	this.font_ = text ? text.getFont() : "10px Arial";
 	var stroke = text ? text.getStroke() : null;
 	var fill = text ? text.getFill() : null;
-	this.fontStrokeStyle_ = stroke ? ol_color.asString(stroke.getColor()) : "#fff";
-	this.fontFillStyle_ = fill ? ol_color.asString(fill.getColor()) : "#000";
+	this.fontStrokeStyle_ = stroke ? ol_color_asString(stroke.getColor()) : "#fff";
+	this.fontFillStyle_ = fill ? ol_color_asString(fill.getColor()) : "#000";
 	this.fontStrokeWidth_ = stroke ? stroke.getWidth() : 3;
 	if (this.getMap()) this.getMap().render();
 };
@@ -68,7 +68,7 @@ ol_control_CanvasAttribution.prototype.setStyle = function (style)
  */
 ol_control_CanvasAttribution.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
-	if (this._listener) ol_Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 	
 	ol_control_ScaleLine.prototype.setMap.call(this, map);

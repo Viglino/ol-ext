@@ -1,8 +1,7 @@
-
-import ol from 'ol'
-import ol_layer_Vector from 'ol/layer/vector'
-import ol_style_Style from 'ol/style/style'
-import ol_style_Text from 'ol/style/text'
+import {inherits as ol_inherits} from 'ol'
+import ol_layer_Vector from 'ol/layer/Vector'
+import ol_style_Style from 'ol/style/Style'
+import ol_style_Text from 'ol/style/Text'
 
 /** Add a setTextPath style to draw text along linestrings
 @toto letterpadding/spacing, wordpadding/spacing
@@ -124,7 +123,7 @@ var ol_style_TextPath = function(options)
 	this.textOverflow_ = typeof(options.textOverflow)!="undefined" ?  options.textOverflow : "visible";
 	this.minWidth_ = options.minWidth || 0;
 }
-ol.inherits(ol_style_TextPath, ol_style_Text);
+ol_inherits(ol_style_TextPath, ol_style_Text);
 
 ol_style_TextPath.prototype.getTextOverflow = function()
 {	return this.textOverflow_; 

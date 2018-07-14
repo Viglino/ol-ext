@@ -7,8 +7,7 @@
 	@see https://en.wikipedia.org/wiki/Convex_hull_algorithms
 */
 
-import ol_geom_Geometry from 'ol/geom/geometry';
-import ol_coordinate from 'ol/coordinate'
+import ol_geom_Geometry from 'ol/geom/Geometry';
 
 /** Tests if a point is left or right of line (a,b).
 * @param {ol.coordinate} a point on the line
@@ -16,7 +15,7 @@ import ol_coordinate from 'ol/coordinate'
 * @param {ol.coordinate} 0
 * @return {bool} true if (a,b,o) turns clockwise
 */
-ol_coordinate.clockwise = function (a, b, o) {
+let clockwise = function (a, b, o) {
   return ((a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]) <= 0);
 };
 
@@ -32,7 +31,7 @@ var ol_coordinate_convexHull = function (points) {	// Sort by increasing x and t
   // Compute the lower hull
   var lower = [];
   for (var i = 0; i < points.length; i++) {
-    while (lower.length >= 2 && ol_coordinate.clockwise(lower[lower.length - 2], lower[lower.length - 1], points[i])) {
+    while (lower.length >= 2 && clockwise(lower[lower.length - 2], lower[lower.length - 1], points[i])) {
       lower.pop();
     }
     lower.push(points[i]);
@@ -41,7 +40,7 @@ var ol_coordinate_convexHull = function (points) {	// Sort by increasing x and t
   // Compute the upper hull
   var upper = [];
   for (var i = points.length - 1; i >= 0; i--) {
-    while (upper.length >= 2 && ol_coordinate.clockwise(upper[upper.length - 2], upper[upper.length - 1], points[i])) {
+    while (upper.length >= 2 && clockwise(upper[upper.length - 2], upper[upper.length - 1], points[i])) {
       upper.pop();
     }
     upper.push(points[i]);

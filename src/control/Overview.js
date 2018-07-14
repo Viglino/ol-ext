@@ -3,23 +3,22 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_Observable from 'ol/Observable'
-import ol_control_Control from 'ol/control/control'
-import ol_geom_Polygon from 'ol/geom/polygon'
-import ol_geom_Point from 'ol/geom/point'
-import ol_interaction_Pointer from 'ol/interaction/pointer'
-import ol_easing from 'ol/easing'
-import ol_Map from 'ol/map'
-import ol_Collection from 'ol/collection'
-import ol_View from 'ol/view'
-import ol_source_Vector from 'ol/source/vector'
-import ol_style_Style from 'ol/style/style'
-import ol_style_Circle from 'ol/style/circle'
-import ol_style_Fill from 'ol/style/fill'
-import ol_style_Stroke from 'ol/style/stroke'
-import ol_layer_Vector from 'ol/layer/vector'
-import ol_Feature from 'ol/feature'
+import {inherits as ol_inherits} from 'ol'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_control_Control from 'ol/control/Control'
+import ol_geom_Polygon from 'ol/geom/Polygon'
+import ol_geom_Point from 'ol/geom/Point'
+import ol_interaction_Pointer from 'ol/interaction/Pointer'
+import ol_Map from 'ol/Map'
+import ol_Collection from 'ol/Collection'
+import ol_View from 'ol/View'
+import ol_source_Vector from 'ol/source/Vector'
+import ol_style_Style from 'ol/style/Style'
+import ol_style_Circle from 'ol/style/Circle'
+import ol_style_Fill from 'ol/style/Fill'
+import ol_style_Stroke from 'ol/style/Stroke'
+import ol_layer_Vector from 'ol/layer/Vector'
+import ol_Feature from 'ol/Feature'
 
 /**
  * OpenLayers 3 Layer Overview Control.
@@ -115,7 +114,7 @@ var ol_control_Overview = function(options)
 	*	@param {Number} amplitude amplitude of the bounce [0,1] 
 	*	@return {Number}
 	*/
-	ol_easing.bounceFn = function (bounce, amplitude)
+	let bounceFn = function (bounce, amplitude)
 	{	var a = (2*bounce+1) * Math.PI/2;
 		var b = amplitude>0 ? -1/amplitude : -100;
 		var c = - Math.cos(a) * Math.pow(2, b);
@@ -129,7 +128,7 @@ var ol_control_Overview = function(options)
 	*	@param {Number} amplitude amplitude of the bounce [0,1] 
 	*	@return {Number}
 	*/
-	ol_easing.elasticFn = function (bounce, amplitude)
+	let elasticFn = function (bounce, amplitude)
 	{	var a = 3*bounce * Math.PI/2;
 		var b = amplitude>0 ? -1/amplitude : -100;
 		var c = Math.cos(a) * Math.pow(2, b);
@@ -146,7 +145,7 @@ var ol_control_Overview = function(options)
 				if (options.panAnimation=="elastic" || options.elasticPan) {
 					self.getMap().getView().animate({
 						center: evt.coordinate,
-						easing: ol_easing.elasticFn(2,0.3),
+						easing: elasticFn(2,0.3),
 						duration: 1000
 					});
 				} else {
@@ -161,7 +160,7 @@ var ol_control_Overview = function(options)
 		}
 	}));
 };
-ol.inherits(ol_control_Overview, ol_control_Control);
+ol_inherits(ol_control_Overview, ol_control_Control);
 
 /** Get overview map
 *	@return {ol.Map}
@@ -192,7 +191,7 @@ ol_control_Overview.prototype.setPosition = function(align)
  * @param {ol.Map} map The map instance.
  */
 ol_control_Overview.prototype.setMap = function(map) {
-	if (this._listener) ol_Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 
 	ol_control_Control.prototype.setMap.call(this, map);

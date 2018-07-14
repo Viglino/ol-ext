@@ -2,8 +2,8 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol from 'ol'
-import ol_proj from 'ol/proj'
+import {inherits as ol_inherits} from 'ol'
+import {transform as ol_proj_transform} from 'ol/proj'
 import ol_control_SearchJSON from "./SearchJSON";
 
 /**
@@ -34,7 +34,7 @@ var ol_control_SearchNominatim = function(options)
     this.set("copy","<a href='http://www.openstreetmap.org/copyright' target='new'>&copy; OpenStreetMap contributors</a>");
     this.set("polygon", options.polygon);
 };
-ol.inherits(ol_control_SearchNominatim, ol_control_SearchJSON);
+ol_inherits(ol_control_SearchNominatim, ol_control_SearchJSON);
 
 /** Returns the text to be displayed in the menu
  *	@param {ol.Feature} f the feature
@@ -70,7 +70,7 @@ ol_control_SearchNominatim.prototype.select = function (f){
     var c = [Number(f.lon), Number(f.lat)];
     // Add coordinate to the event
     try {
-        c = ol_proj.transform (c, 'EPSG:4326', this.getMap().getView().getProjection());
+        c = ol_proj_transform (c, 'EPSG:4326', this.getMap().getView().getProjection());
     } catch(e) {};
     this.dispatchEvent({ type:"select", search:f, coordinate: c });
 };

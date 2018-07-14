@@ -4,7 +4,7 @@
 	
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_featureAnimation from './FeatureAnimation'
 
 /** Path animation: feature follow a path
@@ -38,7 +38,7 @@ var ol_featureAnimation_Path = function(options)
 	else this.dist_ = 0;
 	if (this.speed_>0) this.duration_ = this.dist_/this.speed_;
 }
-ol.inherits(ol_featureAnimation_Path, ol_featureAnimation);
+ol_inherits(ol_featureAnimation_Path, ol_featureAnimation);
 
 /** Animate
 * @param {ol_featureAnimationEvent} e

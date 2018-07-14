@@ -159,7 +159,7 @@ ol.control.Search = function(options) {
 	this.restoreHistory();
 	this.drawList_();
 };
-ol.inherits(ol.control.Search, ol.control.Control);
+ol_inherits(ol.control.Search, ol.control.Control);
 /** Returns the text to be displayed in the menu
 *	@param {any} f feature to be displayed
 *	@return {string} the text to be displayed in the index, default f.name
@@ -381,7 +381,7 @@ ol.control.SearchJSON = function(options)
 	// Overwrite handleResponse
 	if (typeof(options.handleResponse)==='function') this.handleResponse = options.handleResponse;
 };
-ol.inherits(ol.control.SearchJSON, ol.control.Search);
+ol_inherits(ol.control.SearchJSON, ol.control.Search);
 /** Autocomplete function (ajax request to the server)
 * @param {string} s search string
 * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
@@ -491,7 +491,7 @@ ol.control.SearchPhoton = function(options)
 	this.set('position', options.position);
 	this.set("copy","<a href='http://www.openstreetmap.org/copyright' target='new'>&copy; OpenStreetMap contributors</a>");
 };
-ol.inherits(ol.control.SearchPhoton, ol.control.SearchJSON);
+ol_inherits(ol.control.SearchPhoton, ol.control.SearchJSON);
 /** Returns the text to be displayed in the menu
 *	@param {ol.Feature} f the feature
 *	@return {string} the text to be displayed in the index
@@ -594,7 +594,7 @@ ol.control.SearchGeoportail = function(options) {
 	this.set("copy","<a href='https://www.geoportail.gouv.fr/' target='new'>&copy; IGN-Géoportail</a>");
   this.set('type', options.type || 'StreetAddress,PositionOfInterest');
 };
-ol.inherits(ol.control.SearchGeoportail, ol.control.SearchJSON);
+ol_inherits(ol.control.SearchGeoportail, ol.control.SearchJSON);
 /** Returns the text to be displayed in the menu
  *	@param {ol.Feature} f the feature
  *	@return {string} the text to be displayed in the index
@@ -775,7 +775,7 @@ ol.control.LayerSwitcher = function(options)
 	// $.event.props.push('dataTransfer');
 	this.target = options.target;
 };
-ol.inherits(ol.control.LayerSwitcher, ol.control.Control);
+ol_inherits(ol.control.LayerSwitcher, ol.control.Control);
 /** List of tips for internationalization purposes
 */
 ol.control.LayerSwitcher.prototype.tip =
@@ -1374,7 +1374,7 @@ ol.control.Bar = function(options)
 		}
 	}
 };
-ol.inherits(ol.control.Bar, ol.control.Control);
+ol_inherits(ol.control.Bar, ol.control.Control);
 /** Set the control visibility
 * @param {boolean} b
 */
@@ -1536,7 +1536,7 @@ ol.control.Button = function(options)
 	});
 	if (options.title) this.set("title", options.title);
 };
-ol.inherits(ol.control.Button, ol.control.Control);
+ol_inherits(ol.control.Button, ol.control.Control);
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -1562,7 +1562,7 @@ ol.control.CanvasAttribution = function(options)
 	if (!options.style) options.style = new ol.style.Style();
 	this.setStyle (options.style);
 }
-ol.inherits(ol.control.CanvasAttribution, ol.control.Attribution);
+ol_inherits(ol.control.CanvasAttribution, ol.control.Attribution);
 /**
  * Draw attribution on canvas
  * @param {boolean} b draw the attribution on canvas.
@@ -1667,7 +1667,7 @@ ol.control.CanvasScaleLine = function(options)
 	if (!options.style) options.style = new ol.style.Style();
 	this.setStyle(options.style);
 }
-ol.inherits(ol.control.CanvasScaleLine, ol.control.ScaleLine);
+ol_inherits(ol.control.CanvasScaleLine, ol.control.ScaleLine);
 /**
  * Remove the control from its current map and attach it to the new map.
  * Subclasses may set up event handlers to get notified about changes to
@@ -1795,7 +1795,7 @@ ol.control.CanvasTitle = function(options)
 		target: options.target
 	});
 }
-ol.inherits(ol.control.CanvasTitle, ol.control.Control);
+ol_inherits(ol.control.CanvasTitle, ol.control.Control);
 /**
  * Remove the control from its current map and attach it to the new map.
  * Subclasses may set up event handlers to get notified about changes to
@@ -1931,7 +1931,7 @@ ol.control.Cloud = function(options)
 	this.set('density', options.density||0.5);
 	this.setWind(options);
 };
-ol.inherits(ol.control.Cloud, ol.control.Control);
+ol_inherits(ol.control.Cloud, ol.control.Control);
 /**
  * Remove the control from its current map and attach it to the new map.
  * Subclasses may set up event handlers to get notified about changes to
@@ -2131,7 +2131,7 @@ ol.control.Compass = function(options)
 	this.da_ = [];
 	for (var i=0; i<8; i++) this.da_[i] = [ Math.cos(Math.PI*i/8), Math.sin(Math.PI*i/8) ];
 };
-ol.inherits(ol.control.Compass, ol.control.Control);
+ol_inherits(ol.control.Compass, ol.control.Control);
 /**
  * Remove the control from its current map and attach it to the new map.
  * @param {_ol_Map_} map Map.
@@ -2261,7 +2261,7 @@ ol.control.Disable = function(options)
 	{	element: element.get(0)
 	});
 }
-ol.inherits(ol.control.Disable, ol.control.Control);
+ol_inherits(ol.control.Disable, ol.control.Control);
 /** Test if the control is on
  * @return {bool}
  * @api stable
@@ -2309,7 +2309,7 @@ ol.control.Gauge = function(options)
 	this.val(options.val);
 	this.set("max", options.max||100);
 };
-ol.inherits(ol.control.Gauge, ol.control.Control);
+ol_inherits(ol.control.Gauge, ol.control.Control);
 /** Set the control title
 * @param {string} title
 */
@@ -2415,7 +2415,7 @@ ol.control.GeoBookmark = function(options) {
   // Set default bmark
   this.setBookmarks(localStorage[this.get('namespace')+"@bookmark"] ? null:options.marks);
 };
-ol.inherits(ol.control.GeoBookmark, ol.control.Control);
+ol_inherits(ol.control.GeoBookmark, ol.control.Control);
 /** Set bookmarks
 * @param {} bmark a list of bookmarks, default retreave in the localstorage
 * @example 
@@ -2577,7 +2577,7 @@ ol.control.GeolocationBar = function(options) {
     }
   });
 };
-ol.inherits(ol.control.GeolocationBar, ol.control.Bar);
+ol_inherits(ol.control.GeolocationBar, ol.control.Bar);
 /** Get the ol.interaction.GeolocationDraw associatedwith the bar
  * 
  */
@@ -2659,7 +2659,7 @@ ol.control.Globe = function(opt_options)
 	})
 	this.ovmap_.addLayer(this.extentLayer);
 };
-ol.inherits(ol.control.Globe, ol.control.Control);
+ol_inherits(ol.control.Globe, ol.control.Control);
 /**
  * Set the map instance the control associated with.
  * @param {ol.Map} map The map instance.
@@ -2775,7 +2775,7 @@ ol.control.Graticule = function(options)
 			}) 
 		});
 };
-ol.inherits(ol.control.Graticule, ol.control.Control);
+ol_inherits(ol.control.Graticule, ol.control.Control);
 /**
  * Remove the control from its current map and attach it to the new map.
  * @param {_ol_Map_} map Map.
@@ -3041,7 +3041,7 @@ ol.control.GridReference = function(options)
 			}) 
 		});
 };
-ol.inherits(ol.control.GridReference, ol.control.Control);
+ol_inherits(ol.control.GridReference, ol.control.Control);
 /** Returns the text to be displayed in the index
 *	@param {ol.Feature} f the feature
 *	@return {string} the text to be displayed in the index
@@ -3266,7 +3266,7 @@ ol.control.LayerPopup = function(options)
 	if (options.mouseover!==false) options.mouseover=true;
 	ol.control.LayerSwitcher.call(this, options);
 };
-ol.inherits(ol.control.LayerPopup, ol.control.LayerSwitcher);
+ol_inherits(ol.control.LayerPopup, ol.control.LayerSwitcher);
 /** Disable overflow
 */
 ol.control.LayerPopup.prototype.overflow = function(){};
@@ -3314,7 +3314,7 @@ ol.control.LayerSwitcherImage = function(options)
 	if (options.mouseover!==false) options.mouseover=true;
 	ol.control.LayerSwitcher.call(this, options);
 };
-ol.inherits(ol.control.LayerSwitcherImage, ol.control.LayerSwitcher);
+ol_inherits(ol.control.LayerSwitcherImage, ol.control.LayerSwitcher);
 /** Render a list of layer
  * @param {elt} element to render
  * @layers {Array{ol.layer}} list of layer to show
@@ -3380,7 +3380,7 @@ ol.control.Overlay = function(options)
 	this._timeout = false;
 	this.setContent (options.content);
 };
-ol.inherits(ol.control.Overlay, ol.control.Control);
+ol_inherits(ol.control.Overlay, ol.control.Control);
 /** Set the content of the overlay
 * @param {string} html the html to display in the control (or a jQuery object) 
 */
@@ -3590,7 +3590,7 @@ ol.control.Overview = function(options)
 		}
 	}));
 };
-ol.inherits(ol.control.Overview, ol.control.Control);
+ol_inherits(ol.control.Overview, ol.control.Control);
 /** Get overview map
 *	@return {ol.Map}
 */
@@ -3756,7 +3756,7 @@ ol.control.Permalink = function(opt_options)
 	// Decode permalink
 	this.setPosition();
 };
-ol.inherits(ol.control.Permalink, ol.control.Control);
+ol_inherits(ol.control.Permalink, ol.control.Control);
 /**
  * Set the map instance the control associated with.
  * @param {ol.Map} map The map instance.
@@ -3995,7 +3995,7 @@ ol.control.Profil = function(opt_options)
 	{	this.setGeometry (options.feature);
 	}
 };
-ol.inherits(ol.control.Profil, ol.control.Control);
+ol_inherits(ol.control.Profil, ol.control.Control);
 /** Custom infos list
 * @api stable
 */
@@ -4117,10 +4117,9 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 		default: return;
 	}
 	// Distance beetween 2 coords
-	var wgs84Sphere = new ol.Sphere(6378137);
 	var proj = options.projection || this.getMap().getView().getProjection();
 	function dist2d(p1,p2)
-	{	return wgs84Sphere.haversineDistance(
+	{	return ol.sphere.getDistance(
 			ol.proj.transform(p1, proj, 'EPSG:4326'),
 			ol.proj.transform(p2, proj, 'EPSG:4326'));
 	}
@@ -4286,7 +4285,7 @@ ol.control.SearchBAN = function(options)
     ol.control.SearchPhoton.call(this, options);
     this.set("copy","<a href='https://adresse.data.gouv.fr/' target='new'>&copy; BAN-data.gouv.fr</a>");
 };
-ol.inherits(ol.control.SearchBAN, ol.control.SearchPhoton);
+ol_inherits(ol.control.SearchBAN, ol.control.SearchPhoton);
 /** Returns the text to be displayed in the menu
  *	@param {ol.Feature} f the feature
  *	@return {string} the text to be displayed in the index
@@ -4340,7 +4339,7 @@ ol.control.SearchFeature = function(options) {
   this.set('property', options.property || 'name');
   this.source_ = options.source;
 };
-ol.inherits(ol.control.SearchFeature, ol.control.Search);
+ol_inherits(ol.control.SearchFeature, ol.control.Search);
 /** Returns the text to be displayed in the menu
 *	@param {ol.Feature} f the feature
 *	@return {string} the text to be displayed in the index
@@ -4492,7 +4491,7 @@ ol.control.SearchGeoportailParcelle = function(options) {
 	this.on('select', this.selectCommune.bind(this));
 	this.set('pageSize', options.pageSize || 5);
 };
-ol.inherits(ol.control.SearchGeoportailParcelle, ol.control.SearchGeoportail);
+ol_inherits(ol.control.SearchGeoportailParcelle, ol.control.SearchGeoportail);
 /** Select a commune => start searching parcelle  
  * @param {any} e 
  * @private
@@ -4678,7 +4677,7 @@ ol.control.SearchNominatim = function(options)
     this.set("copy","<a href='http://www.openstreetmap.org/copyright' target='new'>&copy; OpenStreetMap contributors</a>");
     this.set("polygon", options.polygon);
 };
-ol.inherits(ol.control.SearchNominatim, ol.control.SearchJSON);
+ol_inherits(ol.control.SearchNominatim, ol.control.SearchJSON);
 /** Returns the text to be displayed in the menu
  *	@param {ol.Feature} f the feature
  *	@return {string} the text to be displayed in the index
@@ -4765,7 +4764,7 @@ ol.control.Swipe = function(opt_options)
 	this.set('position', options.position || 0.5);
 	this.set('orientation', options.orientation || 'vertical');
 };
-ol.inherits(ol.control.Swipe, ol.control.Control);
+ol_inherits(ol.control.Swipe, ol.control.Control);
 /**
  * Set the map instance the control associated with.
  * @param {_ol_Map_} map The map instance.
@@ -4934,7 +4933,7 @@ ol.control.Target = function(options)
 	});
 	this.setVisible(options.visible!==false);
 };
-ol.inherits(ol.control.Target, ol.control.Control);
+ol_inherits(ol.control.Target, ol.control.Control);
 /**
  * Remove the control from its current map and attach it to the new map.
  * Subclasses may set up event handlers to get notified about changes to
@@ -5053,7 +5052,7 @@ ol.control.TextButton = function(options)
     options.className = (options.className||"") + " ol-text-button";
     ol.control.Button.call(this, options);
 };
-ol.inherits(ol.control.TextButton, ol.control.Button);
+ol_inherits(ol.control.TextButton, ol.control.Button);
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
@@ -5102,7 +5101,7 @@ ol.control.Toggle = function(options)
 	this.setActive (options.active);
 	this.setDisable (options.disable);
 };
-ol.inherits(ol.control.Toggle, ol.control.Button);
+ol_inherits(ol.control.Toggle, ol.control.Button);
 /**
  * Set the map instance the control is associated with
  * and add interaction attached to it to this map.
@@ -5213,7 +5212,7 @@ ol.featureAnimation = function(options)
 	this.hiddenStyle = options.hiddenStyle;
 	ol.Object.call(this);
 };
-ol.inherits(ol.featureAnimation, ol.Object);
+ol_inherits(ol.featureAnimation, ol.Object);
 /** Draw a geometry 
 * @param {olx.animateFeatureEvent} e
 * @param {ol.geom} geom geometry for shadow
@@ -5401,7 +5400,7 @@ ol.featureAnimation.Bounce = function(options)
 	this.amplitude_ = options.amplitude || 40;
 	this.bounce_ = -Math.PI*(options.bounce || 3);
 }
-ol.inherits(ol.featureAnimation.Bounce, ol.featureAnimation);
+ol_inherits(ol.featureAnimation.Bounce, ol.featureAnimation);
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
@@ -5435,7 +5434,7 @@ ol.featureAnimation.Drop = function(options)
 	ol.featureAnimation.call(this, options);
 	this.side_ = options.side || 'top';
 }
-ol.inherits(ol.featureAnimation.Drop, ol.featureAnimation);
+ol_inherits(ol.featureAnimation.Drop, ol.featureAnimation);
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
@@ -5475,7 +5474,7 @@ ol.featureAnimation.Fade = function(options)
 	this.speed_ = options.speed || 0;
 	ol.featureAnimation.call(this, options);
 }
-ol.inherits(ol.featureAnimation.Fade, ol.featureAnimation);
+ol_inherits(ol.featureAnimation.Fade, ol.featureAnimation);
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
@@ -5498,7 +5497,7 @@ ol.featureAnimation.Fade.prototype.animate = function (e)
 ol.featureAnimation.None = function(options)
 {	ol.featureAnimation.call(this, options);
 };
-ol.inherits(ol.featureAnimation.None, ol.featureAnimation);
+ol_inherits(ol.featureAnimation.None, ol.featureAnimation);
 /** Animate: do nothing during the laps time
 * @param {ol.featureAnimationEvent} e
 */
@@ -5519,7 +5518,7 @@ ol.featureAnimation.None.prototype.animate = function (e)
 ol.featureAnimation.Null = function(options)
 {	ol.featureAnimation.call(this, { duration:0 });
 };
-ol.inherits(ol.featureAnimation.Null, ol.featureAnimation);
+ol_inherits(ol.featureAnimation.Null, ol.featureAnimation);
 
 /*
 	Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
@@ -5556,7 +5555,7 @@ ol.featureAnimation.Path = function(options)
 	else this.dist_ = 0;
 	if (this.speed_>0) this.duration_ = this.dist_/this.speed_;
 }
-ol.inherits(ol.featureAnimation.Path, ol.featureAnimation);
+ol_inherits(ol.featureAnimation.Path, ol.featureAnimation);
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
@@ -5617,7 +5616,7 @@ ol.featureAnimation.Shake = function(options)
 	this.bounce_ = -Math.PI*(options.bounce || 6);
 	this.horizontal_ = options.horizontal;
 }
-ol.inherits(ol.featureAnimation.Shake, ol.featureAnimation);
+ol_inherits(ol.featureAnimation.Shake, ol.featureAnimation);
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
@@ -5648,7 +5647,7 @@ ol.featureAnimation.Shake.prototype.animate = function (e)
 ol.featureAnimation.Show = function(options)
 {	ol.featureAnimation.call(this, options);
 }
-ol.inherits(ol.featureAnimation.Show, ol.featureAnimation);
+ol_inherits(ol.featureAnimation.Show, ol.featureAnimation);
 /** Animate: just show the object during the laps time
 * @param {ol.featureAnimationEvent} e
 */
@@ -5674,7 +5673,7 @@ ol.featureAnimation.Slide = function(options)
 	ol.featureAnimation.call(this, options);
 	this.side_ = options.side || 'left';
 }
-ol.inherits(ol.featureAnimation.Slide, ol.featureAnimation);
+ol_inherits(ol.featureAnimation.Slide, ol.featureAnimation);
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
@@ -5704,7 +5703,7 @@ ol.featureAnimation.Slide.prototype.animate = function (e)
 ol.featureAnimation.Teleport = function(options)
 {	ol.featureAnimation.call(this, options);
 }
-ol.inherits(ol.featureAnimation.Teleport, ol.featureAnimation);
+ol_inherits(ol.featureAnimation.Teleport, ol.featureAnimation);
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
@@ -5741,7 +5740,7 @@ ol.featureAnimation.Throw = function(options)
 	this.speed_ = options.speed || 0;
 	this.side_ = options.side || 'left';
 }
-ol.inherits(ol.featureAnimation.Throw, ol.featureAnimation);
+ol_inherits(ol.featureAnimation.Throw, ol.featureAnimation);
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
@@ -5784,7 +5783,7 @@ ol.featureAnimation.Zoom = function(options)
 	ol.featureAnimation.call(this, options);
 	this.set('zoomout', options.zoomOut);
 }
-ol.inherits(ol.featureAnimation.Zoom, ol.featureAnimation);
+ol_inherits(ol.featureAnimation.Zoom, ol.featureAnimation);
 /** Zoom animation: feature zoom out (for points)
  * @constructor
  * @extends {ol.featureAnimation}
@@ -5795,7 +5794,7 @@ ol.featureAnimation.ZoomOut = function(options)
 	options.zoomOut = true;
 	ol.featureAnimation.Zoom.call(this, options);
 }
-ol.inherits(ol.featureAnimation.ZoomOut, ol.featureAnimation.Zoom);
+ol_inherits(ol.featureAnimation.ZoomOut, ol.featureAnimation.Zoom);
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
@@ -5869,7 +5868,7 @@ ol.filter.Base = function(options) {
 	if (options && options.active===false) this.set('active', false);
 	else this.set('active', true);
 };
-ol.inherits(ol.filter.Base, ol.Object);
+ol_inherits(ol.filter.Base, ol.Object);
 /** Activate / deactivate filter
 *	@param {bool} b
 */
@@ -6001,7 +6000,7 @@ ol.filter.Mask = function(options)
 	this.set("inner", options.inner);
 	this.fillColor_ = options.fill ? ol.color.asString(options.fill.getColor()) || "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.2)";
 }
-ol.inherits(ol.filter.Mask, ol.filter.Base);
+ol_inherits(ol.filter.Mask, ol.filter.Base);
 /** Draw the feature into canvas
 */
 ol.filter.Mask.prototype.drawFeaturePath_ = function(e, out)
@@ -6096,7 +6095,7 @@ ol.filter.Clip = function(options)
 		options.extent = [xmin,ymin,xmax,ymax];
 	}
 }
-ol.inherits(ol.filter.Clip, ol.filter.Base);
+ol_inherits(ol.filter.Clip, ol.filter.Base);
 ol.filter.Clip.prototype.clipPath_ = function(e)
 {	var ctx = e.context;
 	var canvas = ctx.canvas;
@@ -6185,7 +6184,7 @@ ol.filter.Colorize = function(options)
 {	ol.filter.Base.call(this, options);
 	this.setFilter(options);
 }
-ol.inherits(ol.filter.Colorize, ol.filter.Base);
+ol_inherits(ol.filter.Colorize, ol.filter.Base);
 ol.filter.Colorize.prototype.setFilter = function(options)
 {	options = options || {};
 	switch (options)
@@ -6281,7 +6280,7 @@ ol.filter.Composite = function(options)
 {	ol.filter.Base.call(this, options);
 	this.set("operation", options.operation || "source-over");
 }
-ol.inherits(ol.filter.Composite, ol.filter.Base);
+ol_inherits(ol.filter.Composite, ol.filter.Base);
 /** Change the current operation
 *	@param {string} operation composite function
 */
@@ -6314,7 +6313,7 @@ ol.filter.Crop = function(options)
 {	options = options || {};
 	ol.filter.Mask.call(this, options);
 }
-ol.inherits(ol.filter.Crop, ol.filter.Mask);
+ol_inherits(ol.filter.Crop, ol.filter.Mask);
 ol.filter.Crop.prototype.precompose = function(e)
 {	if (!this.feature_) return;
 	var ctx = e.context;
@@ -6349,7 +6348,7 @@ ol.filter.Fold = function(options)
 	if (typeof options.fsize == "number") options.fsize = [options.fsize,options.fsize];
 	this.set("fsize", options.fsize || [8,10]);
 }
-ol.inherits(ol.filter.Fold, ol.filter.Base);
+ol_inherits(ol.filter.Fold, ol.filter.Base);
 ol.filter.Fold.prototype.drawLine_ = function(ctx, d, m)
 {	var canvas = ctx.canvas;
 	var fold = this.get("fold");
@@ -6450,7 +6449,7 @@ ol.filter.Lego = function(options)
 	this.setBrick (options.brickSize, img);
 	this.internal_ = document.createElement('canvas');
 }
-ol.inherits(ol.filter.Lego, ol.filter.Base);
+ol_inherits(ol.filter.Lego, ol.filter.Base);
 /** Image definition
 */
 ol.filter.Lego.prototype.img =
@@ -6582,7 +6581,7 @@ ol.filter.Texture = function(options)
 {	ol.filter.Base.call(this, options);
 	this.setFilter(options);
 }
-ol.inherits(ol.filter.Texture, ol.filter.Base);
+ol_inherits(ol.filter.Texture, ol.filter.Base);
 /** Set texture
 *	@option {ol.filter.TextureOptions}
 *		- img {Image | undefined} Image object for the texture
@@ -6769,7 +6768,7 @@ ol.interaction.CenterTouch = function(options)
 			}
 		});
 };
-ol.inherits(ol.interaction.CenterTouch, ol.interaction.Interaction);
+ol_inherits(ol.interaction.CenterTouch, ol.interaction.Interaction);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -6863,7 +6862,7 @@ ol.interaction.Clip = function(options) {
 	this.radius = (options.radius||100);
 	if (options.layers) this.addLayer(options.layers);
 };
-ol.inherits(ol.interaction.Clip, ol.interaction.Pointer);
+ol_inherits(ol.interaction.Clip, ol.interaction.Pointer);
 /** Set the map > start postcompose
 */
 ol.interaction.Clip.prototype.setMap = function(map) {
@@ -7021,7 +7020,7 @@ ol.interaction.DrawHole = function(options)
 	// End drawing add the hole to the current Polygon
 	this.on('drawend', this._finishDrawing.bind(this));
 };
-ol.inherits(ol.interaction.DrawHole, ol.interaction.Draw);
+ol_inherits(ol.interaction.DrawHole, ol.interaction.Draw);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -7240,7 +7239,7 @@ ol.interaction.DrawRegular = function(options)
 			handleEvent: this.handleEvent_
 		});
 };
-ol.inherits(ol.interaction.DrawRegular, ol.interaction.Interaction);
+ol_inherits(ol.interaction.DrawRegular, ol.interaction.Interaction);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -7601,7 +7600,7 @@ ol.interaction.DrawTouch = function(options)
 		});
 	this.geom_ = [];
 };
-ol.inherits(ol.interaction.DrawTouch, ol.interaction.CenterTouch);
+ol_inherits(ol.interaction.DrawTouch, ol.interaction.CenterTouch);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -7766,7 +7765,7 @@ ol.interaction.DropFile = function(options)
 	var self = this;
 	$(zone).on('drop', function(e){ return self.ondrop(e.originalEvent); });
 };
-ol.inherits(ol.interaction.DropFile, ol.interaction.DragAndDrop);
+ol_inherits(ol.interaction.DropFile, ol.interaction.DragAndDrop);
 /** Set the map 
 */
 ol.interaction.DropFile.prototype.setMap = function(map)
@@ -7848,7 +7847,7 @@ ol.interaction.Flashlight = function(options) {
 	this.radius = (options.radius||100);
 	this.setColor(options);
 };
-ol.inherits(ol.interaction.Flashlight, ol.interaction.Pointer);
+ol_inherits(ol.interaction.Flashlight, ol.interaction.Pointer);
 /** Set the map > start postcompose
 */
 ol.interaction.Flashlight.prototype.setMap = function(map) {
@@ -8037,7 +8036,7 @@ ol.interaction.GeolocationDraw = function(options)
 	this.setFollowTrack (options.followTrack===undefined ? true : options.followTrack);
 	this.setActive(false);
 };
-ol.inherits(ol.interaction.GeolocationDraw, ol.interaction.Interaction);
+ol_inherits(ol.interaction.GeolocationDraw, ol.interaction.Interaction);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -8256,7 +8255,7 @@ ol.interaction.Hover = function(options)
 	this.setLayerFilter (options.layerFilter);
 	this.setCursor (options.cursor);
 };
-ol.inherits(ol.interaction.Hover, ol.interaction.Interaction);
+ol_inherits(ol.interaction.Hover, ol.interaction.Interaction);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -8392,7 +8391,7 @@ ol.interaction.LongTouch = function(options)
 		}
 	});
 };
-ol.inherits(ol.interaction.LongTouch, ol.interaction.Interaction);
+ol_inherits(ol.interaction.LongTouch, ol.interaction.Interaction);
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -8474,7 +8473,7 @@ ol.interaction.ModifyTouch = function(options) {
   // Use a popup ?
   this.set('usePopup', options.usePopup !== false);
 };
-ol.inherits(ol.interaction.ModifyTouch, ol.interaction.Modify);
+ol_inherits(ol.interaction.ModifyTouch, ol.interaction.Modify);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -8573,7 +8572,7 @@ ol.interaction.Offset = function(options)
   // init
   this.previousCursor_ = false;
 };
-ol.inherits(ol.interaction.Offset, ol.interaction.Pointer);
+ol_inherits(ol.interaction.Offset, ol.interaction.Pointer);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -8760,7 +8759,7 @@ ol.interaction.Ripple = function(options)
     this.interval = options.interval;
 	this.rains (this.interval);
 };
-ol.inherits(ol.interaction.Ripple, ol.interaction.Pointer);
+ol_inherits(ol.interaction.Ripple, ol.interaction.Pointer);
 /** Set the map > start postcompose
 */
 ol.interaction.Ripple.prototype.setMap = function(map)
@@ -8966,7 +8965,7 @@ ol.interaction.SelectCluster = function(options)
 	ol.interaction.Select.call(this, options);
 	this.on("select", this.selectCluster.bind(this));
 };
-ol.inherits(ol.interaction.SelectCluster, ol.interaction.Select);
+ol_inherits(ol.interaction.SelectCluster, ol.interaction.Select);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -9239,7 +9238,7 @@ ol.interaction.SnapGuides = function(options)
 			}
 		});
 };
-ol.inherits(ol.interaction.SnapGuides, ol.interaction.Interaction);
+ol_inherits(ol.interaction.SnapGuides, ol.interaction.Interaction);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -9472,7 +9471,7 @@ ol.interaction.Split = function(options)
 		}
 	});
 };
-ol.inherits(ol.interaction.Split, ol.interaction.Interaction);
+ol_inherits(ol.interaction.Split, ol.interaction.Interaction);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -9655,7 +9654,7 @@ ol.interaction.Splitter = function(options)
 	// Get all features candidate
 	this.filterSplit_ = options.filter || function(){ return true; };
 };
-ol.inherits(ol.interaction.Splitter, ol.interaction.Interaction);
+ol_inherits(ol.interaction.Splitter, ol.interaction.Interaction);
 /** Calculate intersection on 2 segs
 * @param {Array<_ol_coordinate_>} s1 first seg to intersect (2 points)
 * @param {Array<_ol_coordinate_>} s2 second seg to intersect (2 points)
@@ -9839,7 +9838,7 @@ ol.interaction.Synchronize = function(options)
 		});
 	this.maps = options.maps;
 };
-ol.inherits(ol.interaction.Synchronize, ol.interaction.Interaction);
+ol_inherits(ol.interaction.Synchronize, ol.interaction.Interaction);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -9969,7 +9968,7 @@ ol.interaction.TinkerBell = function(options)
 	this.out_ = function() { self.isout_=true; };
 	this.isout_ = true;
 };
-ol.inherits(ol.interaction.TinkerBell, ol.interaction.Pointer);
+ol_inherits(ol.interaction.TinkerBell, ol.interaction.Pointer);
 /** Set the map > start postcompose
 */
 ol.interaction.TinkerBell.prototype.setMap = function(map) {
@@ -10097,7 +10096,7 @@ ol.interaction.TouchCompass = function(options)
 		ctx.fill();
 	}
 };
-ol.inherits(ol.interaction.TouchCompass, ol.interaction.Pointer);
+ol_inherits(ol.interaction.TouchCompass, ol.interaction.Pointer);
 /** Compass Image as a JS Image object
 * @api
 */
@@ -10250,7 +10249,7 @@ ol.interaction.Transform = function(options) {
 	// setstyle
   this.setDefaultStyle();
 };
-ol.inherits(ol.interaction.Transform, ol.interaction.Pointer);
+ol_inherits(ol.interaction.Transform, ol.interaction.Pointer);
 /** Cursors for transform
 */
 ol.interaction.Transform.prototype.Cursors = {
@@ -10728,7 +10727,7 @@ ol.source.DBPedia = function(opt_options)
     if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
 	ol.source.Vector.call (this, options);
 };
-ol.inherits (ol.source.DBPedia, ol.source.Vector);
+ol_inherits (ol.source.DBPedia, ol.source.Vector);
 /** Decode RDF attributes and choose to add feature to the layer
 * @param {feature} the feature
 * @param {attributes} RDF attributes
@@ -10964,7 +10963,7 @@ ol.source.GeoImage = function(opt_options)
 	ol.source.ImageCanvas.call (this, options);	
 	this.setCrop (this.crop);
 };
-ol.inherits (ol.source.GeoImage, ol.source.ImageCanvas);
+ol_inherits (ol.source.GeoImage, ol.source.ImageCanvas);
 /**
  * Get coordinate of the image center.
  * @return {ol.Coordinate} coordinate of the image center.
@@ -11120,7 +11119,7 @@ ol.source.HexBin = function(options) {
 	this._origin.on("addfeature", this._onAddFeature.bind(this));
 	this._origin.on("removefeature", this._onRemoveFeature.bind(this));
 };
-ol.inherits (ol.source.HexBin, ol.source.Vector);
+ol_inherits (ol.source.HexBin, ol.source.Vector);
 /**
  * On add feature
  * @param {ol.Event} e 
@@ -11245,7 +11244,7 @@ ol.source.Mapillary = function(opt_options)
 	// Client ID
 	// this.set("clientId", options.clientId);
 };
-ol.inherits (ol.source.Mapillary, ol.source.Vector);
+ol_inherits (ol.source.Mapillary, ol.source.Vector);
 /** Decode wiki attributes and choose to add feature to the layer
 * @param {feature} the feature
 * @param {attributes} wiki attributes
@@ -11355,7 +11354,7 @@ ol.source.Overpass = function(options) {
   };
   this._filter = options.filter;
 };
-ol.inherits (ol.source.Overpass, ol.source.Vector);
+ol_inherits (ol.source.Overpass, ol.source.Vector);
 /** Loader function used to load features.
 * @private
 */
@@ -11442,7 +11441,7 @@ ol.source.WikiCommons = function(opt_options)
     if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
 	ol.source.Vector.call (this, options);
 };
-ol.inherits (ol.source.WikiCommons, ol.source.Vector);
+ol_inherits (ol.source.WikiCommons, ol.source.Vector);
 /** Decode wiki attributes and choose to add feature to the layer
 * @param {feature} the feature
 * @param {attributes} wiki attributes
@@ -11546,7 +11545,7 @@ ol.layer.AnimatedCluster = function(opt_options)
 	this.on('precompose', this.animate.bind(this));
 	this.on('postcompose', this.postanimate.bind(this));
 };
-ol.inherits (ol.layer.AnimatedCluster, ol.layer.Vector);
+ol_inherits (ol.layer.AnimatedCluster, ol.layer.Vector);
 /** save cluster features before change
  * @private
  */
@@ -12088,7 +12087,7 @@ ol.Overlay.Magnify = function (options)
 	this.set("active", true);
 	this.on("propertychange", this.setView_.bind(this));
 };
-ol.inherits(ol.Overlay.Magnify, ol.Overlay);
+ol_inherits(ol.Overlay.Magnify, ol.Overlay);
 /**
  * Set the map instance the overlay is associated with.
  * @param {ol.Map} map The map instance.
@@ -12223,7 +12222,7 @@ ol.Overlay.Popup = function (options)
 	this.setPositioning(options.positioning);
 	this.setPopupClass(options.popupClass);
 };
-ol.inherits(ol.Overlay.Popup, ol.Overlay);
+ol_inherits(ol.Overlay.Popup, ol.Overlay);
 /**
  * Get CSS class of the popup according to its positioning.
  * @private
@@ -13011,7 +13010,7 @@ ol.HexGrid = function (options)
 	this.origin_ = options.origin || [0,0];
 	this.layout_ = this.layout[options.layout] || this.layout.pointy;
 };
-ol.inherits (ol.HexGrid, ol.Object);
+ol_inherits (ol.HexGrid, ol.Object);
 /** Layout
 */
 ol.HexGrid.prototype.layout =
@@ -13508,7 +13507,7 @@ ol.style.Chart = function(opt_options)
 	}
 	this.renderChart_();
 };
-ol.inherits(ol.style.Chart, ol.style.RegularShape);
+ol_inherits(ol.style.Chart, ol.style.RegularShape);
 /** Default color set: classic, dark, pale, pastel, neon
 */
 ol.style.Chart.colors =
@@ -13831,7 +13830,7 @@ ol.style.FillPattern = function(options)
 	}
 	ol.style.Fill.call (this, { color: pattern });
 };
-ol.inherits(ol.style.FillPattern, ol.style.Fill);
+ol_inherits(ol.style.FillPattern, ol.style.Fill);
 /**
  * Clones the style. 
  * @return {ol.style.FillPattern}
@@ -14306,7 +14305,7 @@ ol.style.FontSymbol = function(options)
 	this.glyph_ = this.getGlyph(options.glyph) || "";
 	this.renderMarker_();
 };
-ol.inherits(ol.style.FontSymbol, ol.style.RegularShape);
+ol_inherits(ol.style.FontSymbol, ol.style.RegularShape);
 /** Cool stuff to get the image symbol for a style
 */
 ol.style.Image.prototype.getImagePNG = function()
@@ -14694,7 +14693,7 @@ ol.style.Photo = function(options)
 	if (typeof(options.rotation)=='number') this.setRotation(options.rotation);
 	this.renderPhoto_();
 };
-ol.inherits(ol.style.Photo, ol.style.RegularShape);
+ol_inherits(ol.style.Photo, ol.style.RegularShape);
 /**
  * Clones the style. 
  * @return {ol.style.Photo}
@@ -15021,7 +15020,7 @@ ol.style.TextPath = function(options)
 	this.textOverflow_ = typeof(options.textOverflow)!="undefined" ?  options.textOverflow : "visible";
 	this.minWidth_ = options.minWidth || 0;
 }
-ol.inherits(ol.style.TextPath, ol.style.Text);
+ol_inherits(ol.style.TextPath, ol.style.Text);
 ol.style.TextPath.prototype.getTextOverflow = function()
 {	return this.textOverflow_; 
 };
@@ -15158,7 +15157,7 @@ ol.style.Shadow = function(options)
 	this.offset_ = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
 	this.renderShadow_();
 };
-ol.inherits(ol.style.Shadow, ol.style.RegularShape);
+ol_inherits(ol.style.Shadow, ol.style.RegularShape);
 /**
  * Clones the style. 
  * @return {ol.style.Shadow}
@@ -15353,7 +15352,7 @@ ol.style.StrokePattern = function(options)
 	options.color = pattern;
 	ol.style.Stroke.call (this, options);
 };
-ol.inherits(ol.style.StrokePattern, ol.style.Stroke);
+ol_inherits(ol.style.StrokePattern, ol.style.Stroke);
 /**
  * Clones the style. 
  * @return {ol.style.StrokePattern}

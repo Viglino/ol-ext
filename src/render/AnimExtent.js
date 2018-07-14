@@ -3,10 +3,10 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_Map from 'ol/map'
-import ol_proj from 'ol/proj'
-import ol_Observable from 'ol/observable'
-import ol_easing from 'ol/easing'
+import ol_Map from 'ol/Map'
+import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import {upAndDown as ol_easing_upAndDown} from 'ol/easing'
 
 /** Pulse an extent on postcompose
 *	@param {ol.coordinates} point to pulse
@@ -22,13 +22,13 @@ ol_Map.prototype.animExtent = function(extent, options)
 
 	// Change to map's projection
 	if (options.projection)
-	{	extent = ol_proj.transformExtent (extent, options.projection, this.getView().getProjection());
+	{	extent = ol_proj_transformExtent (extent, options.projection, this.getView().getProjection());
 	}
 	
 	// options
 	var start = new Date().getTime();
 	var duration = options.duration || 1000;
-	var easing = options.easing || ol_easing.upAndDown;
+	var easing = options.easing || ol_easing_upAndDown;
 	var width = options.style ? options.style.getWidth() || 2 : 2;
 	var color = options.style ? options.style.getColr() || 'red' : 'red';
 
@@ -37,7 +37,7 @@ ol_Map.prototype.animExtent = function(extent, options)
 	{	var frameState = event.frameState;
 		var ratio = frameState.pixelRatio;
 		var elapsed = frameState.time - start;
-		if (elapsed > duration) ol_Observable.unByKey(listenerKey);
+		if (elapsed > duration) ol_Observable_unByKey(listenerKey);
 		else
 		{	var elapsedRatio = elapsed / duration;
 			var p0 = this.getPixelFromCoordinate([extent[0],extent[1]]);

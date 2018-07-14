@@ -4,7 +4,7 @@
 	
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_featureAnimation from './FeatureAnimation'
 
 /** Do nothing 
@@ -15,4 +15,4 @@ import ol_featureAnimation from './FeatureAnimation'
 var ol_featureAnimation_Null = function(options)
 {	ol_featureAnimation.call(this, { duration:0 });
 };
-ol.inherits(ol_featureAnimation_Null, ol_featureAnimation);
+ol_inherits(ol_featureAnimation_Null, ol_featureAnimation);
