@@ -81,7 +81,7 @@ ol_control_CanvasAttribution.prototype.setMap = function (map)
 	this.map_ = map;
 	
 	this.setCanvas (this.isCanvas_);
-}
+};
 
 /** 
  * Draw attribution in the final canvas
