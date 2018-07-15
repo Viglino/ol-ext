@@ -108,7 +108,8 @@ gulp.task('css', function () {
 gulp.task("js", function() {
 	gulp.src([
 		"./src/control/Search.js","./src/control/SearchJSON.js","./src/control/SearchPhoton.js","./src/control/SearchGeoportail.js",
-    "./src/control/LayerSwitcher.js", "./src/control/*.js", "!./src/control/PirateMap.js",
+    "./src/control/LayerSwitcher.js", "./src/control/*.js", 
+    "!./src/control/PirateMap.js", "!./src/control/Cloud.js",
 		"./src/featureanimation/FeatureAnimation.js", "./src/featureanimation/*.js",
 		"./src/filter/Base.js", "./src/filter/Mask.js", "./src/filter/*.js",
     "./src/interaction/*.js",
@@ -145,6 +146,7 @@ gulp.task('watch', function() {
 // Build extra js files to be used individually
 gulp.task("extrajs", function() {
 	gulp.src([
+    "./src/control/Cloud.js",
     "./src/style/FontMakiDef.js", "./src/style/FontAwesomeDef.js",
     "./src/utils/*.js",
     "./src/filter/TextureImage.js"
