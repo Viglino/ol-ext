@@ -9993,6 +9993,7 @@ ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
  * @extends {ol.interaction.Pointer}
  * @fires select | rotatestart | rotating | rotateend | translatestart | translating | translateend | scalestart | scaling | scaleend
  * @param {any} options
+ *  @param {function} options.filter A function that takes a Feature and a Layer and returns true if the feature may be transformed or false otherwise. 
  *  @param {Array<ol.Layer>} options.layers array of layers to transform,
  *  @param {ol.Collection<ol.Feature>} options.features collection of feature to transform,
  *	@param {ol.EventsConditionType|undefined} options.addCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled. default: ol.events.condition.never.
@@ -10031,9 +10032,10 @@ ol.interaction.Transform = function(options) {
 		handleMoveEvent: this.handleMoveEvent_,
 		handleUpEvent: this.handleUpEvent_
 	});
-	/** Collection of feature to transform */
+	// Collection of feature to transform
 	this.features_ = options.features;
-	/** List of layers to transform */
+	// Filter or list of layers to transform 
+	if (typeof(options.filter)==='function') this._filter = options.filter;
 	this.layers_ = options.layers ? (options.layers instanceof Array) ? options.layers:[options.layers] : null;
 	this.addFn_ = options.addCondition || function() { return false; };
 	/* Translate when click on feature */
@@ -10191,8 +10193,13 @@ ol.interaction.Transform.prototype.getFeatureAtPixel_ = function(pixel) {
 				self.handles_.forEach (function(f) { if (f===feature) found=true; });
 				if (found) return { feature: feature, handle:feature.get('handle'), constraint:feature.get('constraint'), option:feature.get('option') };
 			}
+			// filter condition
+			if (self._filter) {
+				if (self._filter(feature,layer)) return { feature: feature };
+				else return null;
+			}
 			// feature belong to a layer
-			if (self.layers_) {
+			else if (self.layers_) {
         for (var i=0; i<self.layers_.length; i++) {
           if (self.layers_[i]===layer) return { feature: feature };
 				}

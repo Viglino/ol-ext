@@ -232,6 +232,8 @@
 
 		var interaction = new ol.interaction.Transform (
 			{	addCondition: ol.events.condition.shiftKeyOnly,
+				// filter: function(f,l) { return f.getGeometry().getType()==='Polygon'; },
+				// layers: [vector],
 				hitTolerance: 2,
 				translateFeature: $("#translateFeature").prop('checked'),
 				scale: $("#scale").prop('checked'),
