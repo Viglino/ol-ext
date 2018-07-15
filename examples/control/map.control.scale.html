@@ -36,8 +36,17 @@
 	<div class="info">
     <p>
   		<i>ol.control.Scale</i> display the scale of the map in a control. 
-    <br/>
-      NB: The control needs to know the <b>screen ppi</b> (or dpi) to calculate the right scale. The default value is 96.
+		<br/>
+			<b>NB:</b> Some projections and specialy the default Mercator projection preserve angles but not the distance. 
+			This means that the scale is not the same on the whole map :(
+			<br/>
+			The control display the projection on the center on the map and it may change when moving on the earth.
+			Just move from equator to the pole and see the ScaleLine length growing. 
+			<br/>
+			<b>NB:</b> The control needs to know the <a href="https://en.wikipedia.org/wiki/Pixel_density">screen PPI</a> (or DPI) to calculate the right scale.
+			Be aware the PPI depends on the device (screen, printer) your are using and may be quite different form one to another depending on the resolution of the device.
+			<br/>
+			The default value is 96.
     </p>
 		<ul><li>
 			<i>ol/control/Scale.setScale()</i> function can change the current map scale
