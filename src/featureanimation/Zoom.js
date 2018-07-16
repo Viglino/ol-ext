@@ -4,7 +4,7 @@
 	
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_featureAnimation from './FeatureAnimation'
 
 /** Zoom animation: feature zoom in (for points)
@@ -18,7 +18,7 @@ var ol_featureAnimation_Zoom = function(options)
 	ol_featureAnimation.call(this, options);
 	this.set('zoomout', options.zoomOut);
 }
-ol.inherits(ol_featureAnimation_Zoom, ol_featureAnimation);
+ol_inherits(ol_featureAnimation_Zoom, ol_featureAnimation);
 
 
 /** Zoom animation: feature zoom out (for points)
@@ -31,7 +31,7 @@ var ol_featureAnimation_ZoomOut = function(options)
 	options.zoomOut = true;
 	ol_featureAnimation_Zoom.call(this, options);
 }
-ol.inherits(ol_featureAnimation_ZoomOut, ol_featureAnimation_Zoom);
+ol_inherits(ol_featureAnimation_ZoomOut, ol_featureAnimation_Zoom);
 
 /** Animate
 * @param {ol_featureAnimationEvent} e

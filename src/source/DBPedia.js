@@ -15,16 +15,15 @@
 	<ol.source.Vector>
 */
 
-import ol from 'ol'
-import ol_Attribution from 'ol/attribution'
-import ol_loadingstrategy from 'ol/loadingstrategy'
-import ol_source_Vector from 'ol/source/vector'
-import ol_Feature from 'ol/feature'
-import ol_geom_Point from 'ol/geom/point'
-import ol_proj from 'ol/proj'
-import ol_style_Fill from 'ol/style/fill'
-import ol_style_Stroke from 'ol/style/stroke'
-import ol_style_Style from 'ol/style/style'
+import {inherits as ol_inherits} from 'ol'
+import {bbox as ol_loadingstrategy_bbox} from 'ol/loadingstrategy'
+import ol_source_Vector from 'ol/source/Vector'
+import ol_Feature from 'ol/Feature'
+import ol_geom_Point from 'ol/geom/Point'
+import {transform as ol_proj_transform, transformExtent as ol_proj_transformExtent} from 'ol/proj'
+import ol_style_Fill from 'ol/style/Fill'
+import ol_style_Stroke from 'ol/style/Stroke'
+import ol_style_Style from 'ol/style/Style'
 import ol_style_FontSymbol from '../style/FontSymbol'
 
 /**
@@ -51,14 +50,14 @@ var ol_source_DBPedia = function(opt_options)
 	this._limit = options.limit || 1000;
 	
 	/** Default attribution */
-	if (!options.attributions) options.attributions = [ new ol_Attribution({ html:"&copy; <a href='http://dbpedia.org/'>DBpedia</a> CC-by-SA" }) ];
+	if (!options.attributions) options.attributions = [ "&copy; <a href='http://dbpedia.org/'>DBpedia</a> CC-by-SA" ];
 
 	// Bbox strategy : reload at each move
-    if (!options.strategy) options.strategy = ol_loadingstrategy.bbox;
+    if (!options.strategy) options.strategy = ol_loadingstrategy_bbox;
 
 	ol_source_Vector.call (this, options);
 };
-ol.inherits (ol_source_DBPedia, ol_source_Vector);
+ol_inherits (ol_source_DBPedia, ol_source_Vector);
 
 
 /** Decode RDF attributes and choose to add feature to the layer
@@ -112,7 +111,7 @@ ol_source_DBPedia.prototype.queryFilter = function ()
 ol_source_DBPedia.prototype._loaderFn = function(extent, resolution, projection)
 {	if (resolution > this._maxResolution) return;
 	var self = this;
-	var bbox = ol_proj.transformExtent(extent, projection, "EPSG:4326");
+	var bbox = ol_proj_transformExtent(extent, projection, "EPSG:4326");
 	// SPARQL request: for more info @see http://fr.dbpedia.org/
 	query =	"PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#> "
 				+ "SELECT DISTINCT * WHERE { "
@@ -138,7 +137,7 @@ ol_source_DBPedia.prototype._loaderFn = function(extent, resolution, projection)
 			for ( var i in bindings )
 			{	att = bindings[i];
 				pt = [Number(bindings[i].long.value), Number(bindings[i].lat.value)];
-				feature = new ol_Feature(new ol_geom_Point(ol_proj.transform (pt,"EPSG:4326",projection)));
+				feature = new ol_Feature(new ol_geom_Point(ol_proj_transform (pt,"EPSG:4326",projection)));
 				if (self.readFeature(feature, att, lastfeature))
 				{	features.push(feature);
 					lastfeature = feature;

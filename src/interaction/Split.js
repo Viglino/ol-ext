@@ -3,18 +3,19 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_interaction_Interaction from 'ol/interaction/interaction'
-import ol_style_Style from 'ol/style/style'
-import ol_style_Stroke from 'ol/style/stroke'
-import ol_source_Vector from 'ol/source/vector'
-import ol_style_Fill from 'ol/style/fill'
-import ol_style_Circle from 'ol/style/circle'
-import ol_layer_Vector from 'ol/layer/vector'
-import ol_coordinate from 'ol/coordinate'
-import ol_geom_Point from 'ol/geom/point'
-import ol_Feature from 'ol/feature'
-import ol_geom_LineString from 'ol/geom/linestring'
+import {inherits as ol_inherits} from 'ol'
+import ol_interaction_Interaction from 'ol/interaction/Interaction'
+import ol_style_Style from 'ol/style/Style'
+import ol_style_Stroke from 'ol/style/Stroke'
+import ol_source_Vector from 'ol/source/Vector'
+import ol_style_Fill from 'ol/style/Fill'
+import ol_style_Circle from 'ol/style/Circle'
+import ol_layer_Vector from 'ol/layer/Vector'
+import ol_geom_Point from 'ol/geom/Point'
+import ol_Feature from 'ol/Feature'
+import ol_geom_LineString from 'ol/geom/LineString'
+import {ol_coordinate_dist2d} from "../geom/GeomUtils";
+import '../geom/LineStringSplitAt'
 
 /** Interaction split interaction for splitting feature geometry
  * @constructor
@@ -127,7 +128,7 @@ var ol_interaction_Split = function(options)
 	});
 
 };
-ol.inherits(ol_interaction_Split, ol_interaction_Interaction);
+ol_inherits(ol_interaction_Split, ol_interaction_Interaction);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
@@ -163,7 +164,7 @@ ol_interaction_Split.prototype.getClosestFeature = function(e)
 	{	// Snap to node
 		var coord = this.getNearestCoord (c, f.getGeometry().getCoordinates());
 		var p = this.getMap().getPixelFromCoordinate(coord);
-		if (ol_coordinate.dist2d(e.pixel, p) < this.snapDistance_)
+		if (ol_coordinate_dist2d(e.pixel, p) < this.snapDistance_)
 		{	c = coord;
 		}
 		//
@@ -179,7 +180,7 @@ ol_interaction_Split.prototype.getClosestFeature = function(e)
 ol_interaction_Split.prototype.getNearestCoord = function(pt, coords)
 {	var d, dm=Number.MAX_VALUE, p0;
 	for (var i=0; i < coords.length; i++)
-	{	d = ol_coordinate.dist2d (pt, coords[i]);
+	{	d = ol_coordinate_dist2d (pt, coords[i]);
 		if (d < dm)
 		{	dm = d;
 			p0 = coords[i];

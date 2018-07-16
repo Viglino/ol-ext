@@ -3,9 +3,9 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_Observable from 'ol/Observable'
-import ol_interaction_Pointer from 'ol/interaction/pointer'
+import {inherits as ol_inherits} from 'ol'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_interaction_Pointer from 'ol/interaction/Pointer'
 
 /** Interaction splitter: acts as a split feature agent while editing vector features (LineString).
  * @constructor
@@ -82,7 +82,7 @@ var ol_interaction_TouchCompass = function(options)
 		ctx.fill();
 	}
 };
-ol.inherits(ol_interaction_TouchCompass, ol_interaction_Pointer);
+ol_inherits(ol_interaction_TouchCompass, ol_interaction_Pointer);
 
 /** Compass Image as a JS Image object
 * @api
@@ -96,7 +96,7 @@ ol_interaction_TouchCompass.prototype.compass = null;
  * @api stable
  */
 ol_interaction_TouchCompass.prototype.setMap = function(map) {
-	if (this._listener) ol_Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 
 	ol_interaction_Pointer.prototype.setMap.call (this, map);

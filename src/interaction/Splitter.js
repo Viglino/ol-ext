@@ -3,11 +3,12 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_interaction_Interaction from 'ol/interaction/interaction'
-import ol_source_Vector from 'ol/source/vector'
-import ol_Collection from 'ol/collection'
-import ol_extent from 'ol/extent'
+import {inherits as ol_inherits} from 'ol'
+import ol_interaction_Interaction from 'ol/interaction/Interaction'
+import ol_source_Vector from 'ol/source/Vector'
+import ol_Collection from 'ol/Collection'
+import {boundingExtent as ol_extent_boundingExtent, buffer as ol_extent_buffer} from 'ol/extent'
+import '../geom/LineStringSplitAt'
 
 /** Interaction splitter: acts as a split feature agent while editing vector features (LineString).
  * @constructor
@@ -73,7 +74,7 @@ var ol_interaction_Splitter = function(options)
 	// Get all features candidate
 	this.filterSplit_ = options.filter || function(){ return true; };
 };
-ol.inherits(ol_interaction_Splitter, ol_interaction_Interaction);
+ol_inherits(ol_interaction_Splitter, ol_interaction_Interaction);
 
 /** Calculate intersection on 2 segs
 * @param {Array<_ol_coordinate_>} s1 first seg to intersect (2 points)
@@ -160,7 +161,7 @@ ol_interaction_Splitter.prototype.splitSource = function(feature)
 	// Split existing features
 	for (i=0; i<c.length-1; i++)
 	{	seg = [c[i],c[i+1]];
-		var extent = ol_extent.buffer(ol_extent.boundingExtent(seg), this.tolerance_ /*0.01*/ );
+		var extent = ol_extent_buffer(ol_extent_boundingExtent(seg), this.tolerance_ /*0.01*/ );
 		var g;
 		while (true)
 		{	var found = false;

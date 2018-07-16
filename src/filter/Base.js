@@ -3,11 +3,11 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_Observable from 'ol/Observable'
-import ol_layer_Base from 'ol/layer/base'
-import ol_Object from 'ol/object'
-import ol_Map from 'ol/map'
+import {inherits as ol_inherits} from 'ol'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_layer_Base from 'ol/layer/Base'
+import ol_Object from 'ol/Object'
+import ol_Map from 'ol/Map'
 
 var ol_filter = {};
 /**
@@ -30,7 +30,7 @@ var ol_filter_Base = function(options) {
 	if (options && options.active===false) this.set('active', false);
 	else this.set('active', true);
 };
-ol.inherits(ol_filter_Base, ol_Object);
+ol_inherits(ol_filter_Base, ol_Object);
 
 /** Activate / deactivate filter
 *	@param {bool} b
@@ -96,7 +96,7 @@ function removeFilter_(filter) {
 	for (var i=filter._listener.length-1; i>=0; i--) {
     // Remove listener on this object
 		if (filter._listener[i].target === this) {
-			ol_Observable.unByKey(filter._listener[i].listener);
+			ol_Observable_unByKey(filter._listener[i].listener);
 			filter._listener.splice(i,1);
 		}
 	}

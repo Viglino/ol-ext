@@ -11,13 +11,12 @@
 	<ol.source.Vector>
 */
 
-import ol from 'ol'
-import ol_Attribution from 'ol/attribution'
-import ol_loadingstrategy from 'ol/loadingstrategy'
-import ol_source_Vector from 'ol/source/vector'
-import ol_Feature from 'ol/feature'
-import ol_geom_Point from 'ol/geom/point'
-import ol_proj from 'ol/proj'
+import {inherits as ol_inherits} from 'ol'
+import {bbox as ol_loadingstrategy_bbox} from 'ol/loadingstrategy'
+import ol_source_Vector from 'ol/source/Vector'
+import ol_Feature from 'ol/Feature'
+import ol_geom_Point from 'ol/geom/Point'
+import {transform as ol_proj_transform, transformExtent as ol_proj_transformExtent} from 'ol/proj'
 
 
 /**
@@ -41,14 +40,14 @@ var ol_source_WikiCommons = function(opt_options)
 	this._limit = options.limit || 100;
 	
 	/** Default attribution */
-	if (!options.attributions) options.attributions = [ new ol_Attribution({ html:"&copy; <a href='https://commons.wikimedia.org/'>Wikimedia Commons</a>" }) ];
+	if (!options.attributions) options.attributions = [ "&copy; <a href='https://commons.wikimedia.org/'>Wikimedia Commons</a>" ];
 
 	// Bbox strategy : reload at each move
-    if (!options.strategy) options.strategy = ol_loadingstrategy.bbox;
+    if (!options.strategy) options.strategy = ol_loadingstrategy_bbox;
 
 	ol_source_Vector.call (this, options);
 };
-ol.inherits (ol_source_WikiCommons, ol_source_Vector);
+ol_inherits (ol_source_WikiCommons, ol_source_Vector);
 
 
 /** Decode wiki attributes and choose to add feature to the layer
@@ -74,7 +73,7 @@ ol_source_WikiCommons.prototype.readFeature = function (feature, attributes)
 ol_source_WikiCommons.prototype._loaderFn = function(extent, resolution, projection)
 {	if (resolution > this._maxResolution) return;
 	var self = this;
-	var bbox = ol_proj.transformExtent(extent, projection, "EPSG:4326");
+	var bbox = ol_proj_transformExtent(extent, projection, "EPSG:4326");
 	// Commons API: for more info @see https://commons.wikimedia.org/wiki/Commons:API/MediaWiki
 	var url = "https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&prop=coordinates|imageinfo"
 		+ "&generator=geosearch&iiprop=timestamp|user|url|extmetadata|metadata|size&iiextmetadatafilter=LicenseShortName"

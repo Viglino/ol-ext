@@ -1,20 +1,19 @@
-
-import ol from 'ol'
-import ol_interaction_Interaction from 'ol/interaction/interaction'
-import ol_Geolocation from 'ol/geolocation'
-import ol_style_Circle from 'ol/style/circle'
-import ol_style_Stroke from 'ol/style/stroke'
-import ol_geom_Point from 'ol/geom/point'
-import ol_geom_LineString from 'ol/geom/linestring'
-import ol_geom_Polygon from 'ol/geom/polygon'
-import ol_style_Style from 'ol/style/style'
-import ol_style_RegularShape from 'ol/style/regularshape'
-import ol_style_Fill from 'ol/style/fill'
-import ol_layer_Vector from 'ol/layer/vector'
-import ol_source_Vector from 'ol/source/vector'
-import ol_Feature from 'ol/feature'
-import ol_interaction_Pointer from 'ol/interaction/pointer'
-import ol_extent from 'ol/extent'
+import {inherits as ol_inherits} from 'ol'
+import ol_interaction_Interaction from 'ol/interaction/Interaction'
+import ol_Geolocation from 'ol/Geolocation'
+import ol_style_Circle from 'ol/style/Circle'
+import ol_style_Stroke from 'ol/style/Stroke'
+import ol_geom_Point from 'ol/geom/Point'
+import ol_geom_LineString from 'ol/geom/LineString'
+import ol_geom_Polygon from 'ol/geom/Polygon'
+import ol_style_Style from 'ol/style/Style'
+import ol_style_RegularShape from 'ol/style/RegularShape'
+import ol_style_Fill from 'ol/style/Fill'
+import ol_layer_Vector from 'ol/layer/Vector'
+import ol_source_Vector from 'ol/source/Vector'
+import ol_Feature from 'ol/Feature'
+import ol_interaction_Pointer from 'ol/interaction/Pointer'
+import {containsCoordinate as ol_extent_containsCoordinate, containsExtent as ol_extent_containsExtent} from 'ol/extent'
 
 /** Interaction to draw on the current geolocation
  *	It combines a draw with a ol_Geolocation
@@ -136,7 +135,7 @@ var ol_interaction_GeolocationDraw = function(options)
 
 	this.setActive(false);
 };
-ol.inherits(ol_interaction_GeolocationDraw, ol_interaction_Interaction);
+ol_inherits(ol_interaction_GeolocationDraw, ol_interaction_Interaction);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
@@ -259,7 +258,7 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function(active)
 			// modify zoom
 			if (this.get('followTrack') == true) 
 			{	map.getView().setZoom( this.get("zoom") || 16 );
-				if (!ol_extent.containsExtent(map.getView().calculateExtent(map.getSize()), p.getExtent()))
+				if (!ol_extent_containsExtent(map.getView().calculateExtent(map.getSize()), p.getExtent()))
 				{	map.getView().fit(p.getExtent());
 				}
 			}
@@ -290,7 +289,7 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function(active)
 		break;
 		// Force to stay on the map
 		case 'visible':
-			if (!ol_extent.containsCoordinate(map.getView().calculateExtent(map.getSize()), pos))
+			if (!ol_extent_containsCoordinate(map.getView().calculateExtent(map.getSize()), pos))
 			{	map.getView().setCenter (pos);
 			}
 		break;

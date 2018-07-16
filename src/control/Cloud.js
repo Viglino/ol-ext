@@ -3,9 +3,9 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_Observable from 'ol/Observable'
-import ol_control_Control from 'ol/control/control'
+import {inherits as ol_inherits} from 'ol'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_control_Control from 'ol/control/Control'
 
 /** ol_control_Cloud adds an old map effect on a canvas renderer.
 * It colors the map, adds a parchment texture and compass onto the map. 
@@ -44,7 +44,7 @@ var ol_control_Cloud = function(options)
 
 };
 
-ol.inherits(ol_control_Cloud, ol_control_Control);
+ol_inherits(ol_control_Cloud, ol_control_Control);
 
 /**
  * Remove the control from its current map and attach it to the new map.
@@ -54,7 +54,7 @@ ol.inherits(ol_control_Cloud, ol_control_Control);
  * @api stable
  */
 ol_control_Cloud.prototype.setMap = function (map) {
-	if (this._listener) ol_Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 
 	ol_control_Control.prototype.setMap.call(this, map);

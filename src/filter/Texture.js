@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_filter_Base from './Base'
 import ol_filter_Texture_Image from './TextureImage'
 
@@ -21,7 +21,7 @@ var ol_filter_Texture = function(options)
 
 	this.setFilter(options);
 }
-ol.inherits(ol_filter_Texture, ol_filter_Base);
+ol_inherits(ol_filter_Texture, ol_filter_Base);
 
 /** Set texture
 *	@option {ol_filter_TextureOptions}

@@ -5,10 +5,10 @@
 *  Add a chart style to display charts (pies or bars) on a map 
 */
 
-import ol from 'ol'
-import ol_style_RegularShape from 'ol/style/regularshape'
-import ol_style_Fill from 'ol/style/fill'
-import ol_color from 'ol/color'
+import {inherits as ol_inherits} from 'ol'
+import ol_style_RegularShape from 'ol/style/RegularShape'
+import ol_style_Fill from 'ol/style/Fill'
+import {asString as ol_color_asString} from 'ol/color'
 
 /**
  * @requires ol.style.Circle
@@ -64,7 +64,7 @@ var ol_style_Chart = function(opt_options)
 
 	this.renderChart_();
 };
-ol.inherits(ol_style_Chart, ol_style_RegularShape);
+ol_inherits(ol_style_Chart, ol_style_RegularShape);
 
 /** Default color set: classic, dark, pale, pastel, neon
 */
@@ -151,7 +151,7 @@ ol_style_Chart.prototype.renderChart_ = function(atlasManager)
 	var strokeWidth = 0;
 
 	if (this.stroke_) 
-	{	strokeStyle = ol_color.asString(this.stroke_.getColor());
+	{	strokeStyle = ol_color_asString(this.stroke_.getColor());
 		strokeWidth = this.stroke_.getWidth();
 	}
 

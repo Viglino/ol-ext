@@ -4,7 +4,7 @@
 	
 */
 
-import ol from 'ol'
+import {inherits as ol_inherits} from 'ol'
 import ol_featureAnimation from './FeatureAnimation'
 
 /** Show an object for a given duration
@@ -15,7 +15,7 @@ import ol_featureAnimation from './FeatureAnimation'
 var ol_featureAnimation_Show = function(options)
 {	ol_featureAnimation.call(this, options);
 }
-ol.inherits(ol_featureAnimation_Show, ol_featureAnimation);
+ol_inherits(ol_featureAnimation_Show, ol_featureAnimation);
 
 /** Animate: just show the object during the laps time
 * @param {ol_featureAnimationEvent} e

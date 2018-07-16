@@ -1,6 +1,6 @@
-﻿
-import ol_layer_Vector from 'ol/layer/vector'
-import ol_easing from 'ol/easing'
+﻿import ol_layer_Vector from 'ol/layer/Vector'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import {easeOut as ol_easing_easeOut} from 'ol/easing'
 
 /** ol.layer.Vector.prototype.setRender3D
  * @extends {ol.layer.Vector}
@@ -77,10 +77,10 @@ ol_render3D.prototype.onPostcompose_ = function(e)
 
 /** Set layer to render 3D
 */
-ol_render3D.prototype.setLayer = function(l)
-{	if (this.layer_) this.layer_.un ('postcompose', this.onPostcompose_, this);
+ol_render3D.prototype.setLayer = function(l) {
+	if (this._listener) ol_Observable_unByKey(this._listener);
 	this.layer_ = l;
-	l.on ('postcompose', this.onPostcompose_, this);
+	this._listener = l.on ('postcompose', this.onPostcompose_.bind(this));
 }
 
 /** Create a function that return height of a feature
@@ -113,7 +113,7 @@ ol_render3D.prototype.animate = function(options)
 	this.toHeight_ = this.getHfn(options.height);
 	this.animate_ = new Date().getTime();
 	this.animateDuration_ = options.duration ||1000;
-	this.easing_ = options.easing || ol_easing.easeOut;
+	this.easing_ = options.easing || ol_easing_easeOut;
 	// Force redraw
 	this.layer_.changed();
 }

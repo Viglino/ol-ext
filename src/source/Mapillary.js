@@ -11,11 +11,10 @@
 	<ol.source.Vector>
 */
 
-import ol from 'ol'
-import ol_Attribution from 'ol/attribution'
-import ol_loadingstrategy from 'ol/loadingstrategy'
-import ol_source_Vector from 'ol/source/vector'
-import ol_proj from 'ol/proj'
+import {inherits as ol_inherits} from 'ol'
+import {bbox as ol_loadingstrategy_bbox} from 'ol/loadingstrategy'
+import ol_source_Vector from 'ol/source/Vector'
+import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
 
 
 /**
@@ -36,10 +35,10 @@ var ol_source_Mapillary = function(opt_options)
 	this._limit = options.limit || 100;
 	
 	/** Default attribution */
-	if (!options.attributions) options.attributions = [ new ol_Attribution({ html:"&copy; <a href='https://www.mapillary.com/'>Mapillary</a>" }) ];
+	if (!options.attributions) options.attributions = [ "&copy; <a href='https://www.mapillary.com/'>Mapillary</a>" ];
 
 	// Bbox strategy : reload at each move
-    if (!options.strategy) options.strategy = ol_loadingstrategy.bbox;
+    if (!options.strategy) options.strategy = ol_loadingstrategy_bbox;
 
 	// Init parent
 	ol_source_Vector.call (this, options);
@@ -47,7 +46,7 @@ var ol_source_Mapillary = function(opt_options)
 	// Client ID
 	// this.set("clientId", options.clientId);
 };
-ol.inherits (ol_source_Mapillary, ol_source_Vector);
+ol_inherits (ol_source_Mapillary, ol_source_Vector);
 
 
 /** Decode wiki attributes and choose to add feature to the layer
@@ -68,7 +67,7 @@ ol_source_Mapillary.prototype.readFeature = function (feature, attributes)
 ol_source_Mapillary.prototype._loaderFn = function(extent, resolution, projection)
 {	if (resolution > this._maxResolution) return;
 	var self = this;
-	var bbox = ol_proj.transformExtent(extent, projection, "EPSG:4326");
+	var bbox = ol_proj_transformExtent(extent, projection, "EPSG:4326");
 	// Commons API: for more info @see https://www.mapillary.com/developer
 	var date = Date.now() - 6 * 30 * 24 * 60 * 60 * 1000;
 	var url = "https://a.mapillary.com/v2/search/im?client_id="

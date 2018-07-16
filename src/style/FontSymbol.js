@@ -3,11 +3,11 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_style_RegularShape from 'ol/style/regularshape'
-import ol_style_Fill from 'ol/style/fill'
-import ol_style_Image from 'ol/style/image'
-import ol_color from 'ol/color'
+import {inherits as ol_inherits} from 'ol'
+import ol_style_RegularShape from 'ol/style/RegularShape'
+import ol_style_Fill from 'ol/style/Fill'
+import ol_style_Image from 'ol/style/Image'
+import {asString as ol_color_asString} from 'ol/color'
 
 /**
  * @requires ol.style.Circle
@@ -59,7 +59,7 @@ var ol_style_FontSymbol = function(options)
 
 	this.renderMarker_();
 };
-ol.inherits(ol_style_FontSymbol, ol_style_RegularShape);
+ol_inherits(ol_style_FontSymbol, ol_style_RegularShape);
 
 /** Cool stuff to get the image symbol for a style
 */
@@ -191,7 +191,7 @@ ol_style_FontSymbol.prototype.renderMarker_ = function(atlasManager)
 	var strokeWidth = 0;
 
 	if (this.stroke_) 
-	{	strokeStyle = ol_color.asString(this.stroke_.getColor());
+	{	strokeStyle = ol_color_asString(this.stroke_.getColor());
 		strokeWidth = this.stroke_.getWidth();
 	}
 
@@ -347,11 +347,11 @@ ol_style_FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, 
 	if (this.fill_) 
 	{	if (this.gradient_ && this.form_!="none")
 		{	var grd = context.createLinearGradient(0,0,renderOptions.size/2,renderOptions.size);
-			grd.addColorStop (1, ol_color.asString(fcolor));
-			grd.addColorStop (0, ol_color.asString(scolor));
+			grd.addColorStop (1, ol_color_asString(fcolor));
+			grd.addColorStop (0, ol_color_asString(scolor));
 			context.fillStyle = grd;
 		}
-		else context.fillStyle = ol_color.asString(fcolor);
+		else context.fillStyle = ol_color_asString(fcolor);
 		context.fill();
 	}
 	if (this.stroke_ && renderOptions.strokeWidth) {
@@ -365,7 +365,7 @@ ol_style_FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, 
 	{	context.font = (2*tr.fac*(this.radius_)*this.fontSize_)+"px "+this.glyph_.font;
 		context.strokeStyle = context.fillStyle;
 		context.lineWidth = renderOptions.strokeWidth * (this.form_ == "none" ? 2:1);
-		context.fillStyle = ol_color.asString(this.color_ || scolor);
+		context.fillStyle = ol_color_asString(this.color_ || scolor);
 		context.textAlign = "center";
 		context.textBaseline = "middle";
 		var t = this.glyph_.char;

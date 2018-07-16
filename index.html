@@ -6,8 +6,24 @@
 	
 	<meta name="description" content="Cool extensions to use with Openlayers (ol)." />
 	<meta name="keywords" content="ol,ol3,extension,canvas,3D,animation,layer,selection,control,openlayers,popup" />
+
+	<link rel="stylesheet" href="examples/githubcorner.css" />
 	
 <style>
+	div.icss-github-corner {
+		position: fixed;
+		right: 0;
+		top: 0;
+		background-color: #fff;
+		display: block;
+		width: 5.8em;
+		height: 6.5em;
+		box-shadow: 0 5px 10px rgba(0,0,0,.5);
+		transform: rotate(-7deg) skewX(7deg);
+		background-image: linear-gradient(55deg, rgba(0,0,0,.15), rgba(0,0,0,0) 30%, rgba(0,0,0,.15) 35%, rgba(0,0,0,0.5) 45%);
+		transform-origin: 0 0;
+		z-index:10;
+	}
 	body
 	{	font-family: 'Lucida Grande',Verdana,Geneva,Lucida,Arial,Helvetica,sans-serif;
 		font-size: 16px;
@@ -159,6 +175,10 @@
 </head>
 
 <body>
+
+	<div class='icss-github-corner'></div>
+	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+		
 	<header role="navigation" class="navbar navbar-fixed-top">
 		<div class="container">
 			<h1><img src="http://openlayers.org/en/master/examples/resources/logo-70x70.png">&nbsp;ol-ext: Extensions for OpenLayers (ol)</h1>
@@ -167,8 +187,7 @@
 		</div>
 	</header>
 	<div id="examples">
-	<a href="https://github.com/Viglino/ol3-ext"><img style="position: fixed; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
-	
+
 	<div class="desc" style="height: auto;">
 		<p>
 			Cool extensions for <a href="https://github.com/openlayers/openlayers">OpenLayers (ol)</a>.

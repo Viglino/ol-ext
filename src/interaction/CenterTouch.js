@@ -3,14 +3,14 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_Observable from 'ol/Observable'
-import ol_style_RegularShape from 'ol/style/regularshape'
-import ol_style_Style from 'ol/style/style'
-import ol_interaction_Interaction from 'ol/interaction/interaction'
-import ol_geom_Point from 'ol/geom/point'
-import ol_Map from 'ol/map'
-import ol_style_Stroke from 'ol/style/stroke'
+import {inherits as ol_inherits} from 'ol'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_style_RegularShape from 'ol/style/RegularShape'
+import ol_style_Style from 'ol/style/Style'
+import ol_interaction_Interaction from 'ol/interaction/Interaction'
+import ol_geom_Point from 'ol/geom/Point'
+import ol_Map from 'ol/Map'
+import ol_style_Stroke from 'ol/style/Stroke'
 
 /** Handles coordinates on the center of the viewport.
  * It can be used as abstract base class used for creating subclasses. 
@@ -59,7 +59,7 @@ var ol_interaction_CenterTouch = function(options)
 			}
 		});
 };
-ol.inherits(ol_interaction_CenterTouch, ol_interaction_Interaction);
+ol_inherits(ol_interaction_CenterTouch, ol_interaction_Interaction);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
@@ -71,7 +71,7 @@ ol_interaction_CenterTouch.prototype.setMap = function(map)
 {	if (this.getMap())
 	{	this.getMap().removeInteraction(this.ctouch);
 	}
-	if (this._listener.drawtarget) ol_Observable.unByKey(this._listener.drawtarget);
+	if (this._listener.drawtarget) ol_Observable_unByKey(this._listener.drawtarget);
 	this._listener.drawtarget = null;
 
 	ol_interaction_Interaction.prototype.setMap.call (this, map);

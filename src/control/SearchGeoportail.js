@@ -2,8 +2,8 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol from 'ol'
-import ol_proj from 'ol/proj'
+import {inherits as ol_inherits} from 'ol'
+import {transform as ol_proj_transform} from 'ol/proj'
 import ol_control_SearchJSON from "./SearchJSON";
 
 /**
@@ -35,7 +35,7 @@ var ol_control_SearchGeoportail = function(options) {
 	this.set("copy","<a href='https://www.geoportail.gouv.fr/' target='new'>&copy; IGN-Géoportail</a>");
   this.set('type', options.type || 'StreetAddress,PositionOfInterest');
 };
-ol.inherits(ol_control_SearchGeoportail, ol_control_SearchJSON);
+ol_inherits(ol_control_SearchGeoportail, ol_control_SearchJSON);
 
 /** Returns the text to be displayed in the menu
  *	@param {ol.Feature} f the feature
@@ -88,7 +88,7 @@ ol_control_SearchGeoportail.prototype.select = function (f){
     var c = [Number(f.x), Number(f.y)];
     // Add coordinate to the event
     try {
-        c = ol_proj.transform (c, 'EPSG:4326', this.getMap().getView().getProjection());
+        c = ol_proj_transform (c, 'EPSG:4326', this.getMap().getView().getProjection());
     } catch(e) {};
     // Get insee commune ?
     if (this.get('type')==='Commune') {

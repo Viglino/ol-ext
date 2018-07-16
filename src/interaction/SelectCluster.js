@@ -6,17 +6,17 @@
 	
 */
 
-import ol from 'ol'
-import ol_Map from 'ol/map'
-import ol_Collection from 'ol/collection'
-import ol_layer_Vector from 'ol/layer/vector'
-import ol_source_Vector from 'ol/source/vector'
-import ol_interaction_Select from 'ol/interaction/select'
-import ol_Feature from 'ol/feature'
-import ol_geom_LineString from 'ol/geom/linestring'
-import ol_Observable from 'ol/observable'
-import ol_easing from 'ol/easing'
-import ol_geom_Point from 'ol/geom/point'
+import {inherits as ol_inherits} from 'ol'
+import ol_Map from 'ol/Map'
+import ol_Collection from 'ol/Collection'
+import ol_layer_Vector from 'ol/layer/Vector'
+import ol_source_Vector from 'ol/source/Vector'
+import ol_interaction_Select from 'ol/interaction/Select'
+import ol_Feature from 'ol/Feature'
+import ol_geom_LineString from 'ol/geom/LineString'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import {easeOut as ol_easing_easeOut} from 'ol/easing'
+import ol_geom_Point from 'ol/geom/Point'
 
 /**
  * @classdesc
@@ -97,7 +97,7 @@ var ol_interaction_SelectCluster = function(options)
 	this.on("select", this.selectCluster.bind(this));
 };
 
-ol.inherits(ol_interaction_SelectCluster, ol_interaction_Select);
+ol_inherits(ol_interaction_SelectCluster, ol_interaction_Select);
 
 
 /**
@@ -110,7 +110,7 @@ ol_interaction_SelectCluster.prototype.setMap = function(map) {
 	if (this.getMap()) {
 		this.getMap().removeLayer(this.overlayLayer_);
 	}
-	if (this._listener) ol_Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 
 	ol_interaction_Select.prototype.setMap.call (this, map);
@@ -222,7 +222,7 @@ ol_interaction_SelectCluster.prototype.animateCluster_ = function(center)
 {	// Stop animation (if one is running)
 	if (this.listenerKey_)
 	{	this.overlayLayer_.setVisible(true);
-		ol_Observable.unByKey(this.listenerKey_);
+		ol_Observable_unByKey(this.listenerKey_);
 	}
 	
 	// Features to animate
@@ -241,7 +241,7 @@ ol_interaction_SelectCluster.prototype.animateCluster_ = function(center)
 		// Retina device
 		var ratio = event.frameState.pixelRatio;
 		var res = event.target.getView().getResolution();
-		var e = ol_easing.easeOut((event.frameState.time - start) / duration);
+		var e = ol_easing_easeOut((event.frameState.time - start) / duration);
 		for (var i=0, feature; feature = features[i]; i++) if (feature.get('features'))
 		{	var pt = feature.getGeometry().getCoordinates();
 			pt[0] = center[0] + e * (pt[0]-center[0]);
@@ -272,7 +272,7 @@ ol_interaction_SelectCluster.prototype.animateCluster_ = function(center)
 		}
 		// Stop animation and restore cluster visibility
 		if (e > 1.0) 
-		{	ol_Observable.unByKey(this.listenerKey_);
+		{	ol_Observable_unByKey(this.listenerKey_);
 			this.overlayLayer_.setVisible(true);
 			this.overlayLayer_.changed();
 			return;

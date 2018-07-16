@@ -3,14 +3,14 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_Observable from 'ol/Observable'
-import ol_control_Control from 'ol/control/control'
-import ol_style_Style from 'ol/style/style'
-import ol_style_Stroke from 'ol/style/stroke'
-import ol_style_Fill from 'ol/style/fill'
-import ol_style_Text from 'ol/style/text'
-import ol_extent from 'ol/extent'
+import {inherits as ol_inherits} from 'ol'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_control_Control from 'ol/control/Control'
+import ol_style_Style from 'ol/style/Style'
+import ol_style_Stroke from 'ol/style/Stroke'
+import ol_style_Fill from 'ol/style/Fill'
+import ol_style_Text from 'ol/style/Text'
+import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent'
 
 /**
  * Draw a grid reference on the map and add an index.
@@ -77,7 +77,7 @@ var ol_control_GridReference = function(options)
 			}) 
 		});
 };
-ol.inherits(ol_control_GridReference, ol_control_Control);
+ol_inherits(ol_control_GridReference, ol_control_Control);
 
 /** Returns the text to be displayed in the index
 *	@param {ol.Feature} f the feature
@@ -184,7 +184,7 @@ ol_control_GridReference.prototype.getReference = function (coords)
  */
 ol_control_GridReference.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
-	if (this._listener) ol_Observable.unByKey(this._listener);
+	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 	
 	ol_control_Control.prototype.setMap.call(this, map);
@@ -229,7 +229,7 @@ ol_control_GridReference.prototype.drawGrid_ = function (e)
 	var size = this.get('size');
 
 	var map = this.getMap();
-	var ex = ol_extent.boundingExtent([map.getPixelFromCoordinate([extent[0],extent[1]]), map.getPixelFromCoordinate([extent[2],extent[3]])]);
+	var ex = ol_extent_boundingExtent([map.getPixelFromCoordinate([extent[0],extent[1]]), map.getPixelFromCoordinate([extent[2],extent[3]])]);
 	var p0 = [ex[0],ex[1]];
 	var p1 = [ex[2],ex[3]];
 	var dx = (p1[0]-p0[0])/size[0];

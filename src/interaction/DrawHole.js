@@ -3,12 +3,12 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_interaction_Interaction from 'ol/interaction/interaction'
-import ol_geom_Polygon from 'ol/geom/polygon'
-import ol_geom_LinearRing from 'ol/geom/linearring'
-import ol_interaction_Draw from 'ol/interaction/draw'
-import ol_interaction_Select from 'ol/interaction/select'
+import {inherits as ol_inherits} from 'ol'
+import ol_interaction_Interaction from 'ol/interaction/Interaction'
+import ol_geom_Polygon from 'ol/geom/Polygon'
+import ol_geom_LinearRing from 'ol/geom/LinearRing'
+import ol_interaction_Draw from 'ol/interaction/Draw'
+import ol_interaction_Select from 'ol/interaction/Select'
 
 /** Interaction draw hole
  * @constructor
@@ -57,7 +57,7 @@ var ol_interaction_DrawHole = function(options)
 	// End drawing add the hole to the current Polygon
 	this.on('drawend', this._finishDrawing.bind(this));
 };
-ol.inherits(ol_interaction_DrawHole, ol_interaction_Draw);
+ol_inherits(ol_interaction_DrawHole, ol_interaction_Draw);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new

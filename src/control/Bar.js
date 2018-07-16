@@ -3,8 +3,8 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_control_Control from 'ol/control/control'
+import {inherits as ol_inherits} from 'ol'
+import ol_control_Control from 'ol/control/Control'
 
 /** Control bar for OL3
  * The control bar is a container for other controls. It can be used to create toolbars.
@@ -40,7 +40,7 @@ var ol_control_Bar = function(options)
 		}
 	}
 };
-ol.inherits(ol_control_Bar, ol_control_Control);
+ol_inherits(ol_control_Bar, ol_control_Control);
 
 /** Set the control visibility
 * @param {boolean} b

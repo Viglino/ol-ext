@@ -1,4 +1,5 @@
 import ol_style_FontSymbol from './FontSymbol'
+
 ol_style_FontSymbol.addDefs(
 {	"font":"FontAwesome",
 	"name":"FontAwesome",

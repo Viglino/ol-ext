@@ -5,10 +5,10 @@
 *  Photo style for vector features
 */
 
-import ol from 'ol'
-import ol_style_RegularShape from 'ol/style/regularshape'
-import ol_color from 'ol/color'
-import ol_style_Stroke from 'ol/style/stroke'
+import {inherits as ol_inherits} from 'ol'
+import ol_style_RegularShape from 'ol/style/RegularShape'
+import {asString as ol_color_asString} from 'ol/color'
+import ol_style_Stroke from 'ol/style/Stroke'
 
 /**
  * @requires ol_style_RegularShape
@@ -78,7 +78,7 @@ var ol_style_Photo = function(options)
 	if (typeof(options.rotation)=='number') this.setRotation(options.rotation);
 	this.renderPhoto_();
 };
-ol.inherits(ol_style_Photo, ol_style_RegularShape);
+ol_inherits(ol_style_Photo, ol_style_RegularShape);
 
 
 /**
@@ -191,7 +191,7 @@ ol_style_Photo.prototype.renderPhoto_ = function()
 	var strokeStyle;
 	var strokeWidth = 0;
 	if (this.stroke_) 
-	{	strokeStyle = ol_color.asString(this.stroke_.getColor());
+	{	strokeStyle = ol_color_asString(this.stroke_.getColor());
 		strokeWidth = this.stroke_.getWidth();
 	}
 	var canvas = this.getImage();
@@ -289,7 +289,7 @@ ol_style_Photo.prototype.drawImage_ = function(img)
 	// Draw a circle to avoid aliasing on clip
 	if (this.kind_=='circle' && strokeWidth)
 	{	context.beginPath();
-		context.strokeStyle = ol_color.asString(this.stroke_.getColor());
+		context.strokeStyle = ol_color_asString(this.stroke_.getColor());
 		context.lineWidth = strokeWidth/4;
 		context.arc(this.radius_+strokeWidth, this.radius_+strokeWidth, this.radius_, 0, 2 * Math.PI, false);
 		context.stroke();

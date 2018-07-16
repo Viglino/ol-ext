@@ -3,14 +3,11 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_Attribution from 'ol/attribution'
-import ol_loadingstrategy from 'ol/loadingstrategy'
-import ol_source_Vector from 'ol/source/vector'
+import {inherits as ol_inherits} from 'ol'
+import {bbox as ol_loadingstrategy_bbox} from 'ol/loadingstrategy'
+import ol_source_Vector from 'ol/source/Vector'
 import ol_source_OSM from 'ol/source/OSM'
-import ol_Feature from 'ol/feature'
-import ol_geom_Point from 'ol/geom/point'
-import ol_proj from 'ol/proj'
+import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
 import ol_format_OSMXML from 'ol/format/OSMXML'
 
 /**
@@ -44,7 +41,7 @@ var ol_source_Overpass = function(options) {
     options.attributions = ol_source_OSM.ATTRIBUTION;
   }
 	// Bbox strategy : reload at each move
-  if (!options.strategy) options.strategy = ol_loadingstrategy.bbox;
+  if (!options.strategy) options.strategy = ol_loadingstrategy_bbox;
 
   ol_source_Vector.call (this, options);
   
@@ -55,7 +52,7 @@ var ol_source_Overpass = function(options) {
   };
   this._filter = options.filter;
 };
-ol.inherits (ol_source_Overpass, ol_source_Vector);
+ol_inherits (ol_source_Overpass, ol_source_Vector);
 
 /** Loader function used to load features.
 * @private
@@ -63,7 +60,7 @@ ol.inherits (ol_source_Overpass, ol_source_Vector);
 ol_source_Overpass.prototype._loaderFn = function(extent, resolution, projection) {
   if (resolution > this._maxResolution) return;
 	var self = this;
-  var bbox = ol_proj.transformExtent(extent, projection, "EPSG:4326");
+  var bbox = ol_proj_transformExtent(extent, projection, "EPSG:4326");
   bbox = bbox[1] + ',' + bbox[0] + ',' + bbox[3] + ',' + bbox[2];
 
   // Overpass QL

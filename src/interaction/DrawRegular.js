@@ -3,20 +3,21 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol from 'ol'
-import ol_interaction_Interaction from 'ol/interaction/interaction'
-import ol_style_Style from 'ol/style/style'
-import ol_style_Circle from 'ol/style/circle'
-import ol_style_Stroke from 'ol/style/stroke'
-import ol_style_Fill from 'ol/style/fill'
-import ol_Collection from 'ol/collection'
-import ol_layer_Vector from 'ol/layer/vector'
-import ol_source_Vector from 'ol/source/vector'
-import ol_geom_Circle from 'ol/geom/circle'
-import ol_geom_Polygon from 'ol/geom/polygon'
-import ol_geom_LineString from 'ol/geom/linestring'
-import ol_geom_Point from 'ol/geom/point'
-import ol_Feature from 'ol/feature'
+import {inherits as ol_inherits} from 'ol'
+import ol_interaction_Interaction from 'ol/interaction/Interaction'
+import ol_style_Style from 'ol/style/Style'
+import ol_style_Circle from 'ol/style/Circle'
+import ol_style_Stroke from 'ol/style/Stroke'
+import ol_style_Fill from 'ol/style/Fill'
+import ol_Collection from 'ol/Collection'
+import ol_layer_Vector from 'ol/layer/Vector'
+import ol_source_Vector from 'ol/source/Vector'
+import ol_geom_Circle from 'ol/geom/Circle'
+import {fromCircle as ol_geom_Polygon_fromCircle} from 'ol/geom/Polygon'
+import ol_geom_LineString from 'ol/geom/LineString'
+import ol_geom_Point from 'ol/geom/Point'
+import ol_Feature from 'ol/Feature'
+
 /** Interaction rotate
  * @constructor
  * @extends {ol_interaction_Interaction}
@@ -98,7 +99,7 @@ var ol_interaction_DrawRegular = function(options)
 			handleEvent: this.handleEvent_
 		});
 };
-ol.inherits(ol_interaction_DrawRegular, ol_interaction_Interaction);
+ol_inherits(ol_interaction_DrawRegular, ol_interaction_Interaction);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
@@ -190,7 +191,7 @@ ol_interaction_DrawRegular.prototype.getGeom_ = function ()
 			var centerPx = this.getMap().getPixelFromCoordinate(center);
 			var dmax = Math.max (100, Math.abs(centerPx[0]-this.coordPx_[0]), Math.abs(centerPx[1]-this.coordPx_[1]));
 			dmax = Math.min ( this.maxCircleCoordinates_, Math.round(dmax / 3 ));
-			return ol_geom_Polygon.fromCircle (circle, dmax, 0);
+			return ol_geom_Polygon_fromCircle (circle, dmax, 0);
 		}
 		else {
 			var hasrotation = this.canRotate_ && this.centered_ && this.square_;
@@ -208,13 +209,13 @@ ol_interaction_DrawRegular.prototype.getGeom_ = function ()
 				if (hasrotation) a = Math.atan2(d[1], d[0]);
 				else a = this.startAngle[this.sides_] || this.startAngle['default'];
 
-				if (this.sides_) g = ol_geom_Polygon.fromCircle (circle, this.sides_, a);
+				if (this.sides_) g = ol_geom_Polygon_fromCircle (circle, this.sides_, a);
 				else
 				{	// Optimize points on the circle
 					var centerPx = this.getMap().getPixelFromCoordinate(this.center_);
 					var dmax = Math.max (100, Math.abs(centerPx[0]-this.coordPx_[0]), Math.abs(centerPx[1]-this.coordPx_[1]));
 					dmax = Math.min ( this.maxCircleCoordinates_, Math.round(dmax / (this.centered_ ? 3:5) ));
-					g = ol_geom_Polygon.fromCircle (circle, dmax, 0);
+					g = ol_geom_Polygon_fromCircle (circle, dmax, 0);
 				}
 
 				if (hasrotation) return g;
