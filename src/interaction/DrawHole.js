@@ -6,6 +6,7 @@
 import {inherits as ol_inherits} from 'ol'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import ol_geom_Polygon from 'ol/geom/Polygon'
+import ol_geom_MultiPolygon from 'ol/geom/MultiPolygon'
 import ol_geom_LinearRing from 'ol/geom/LinearRing'
 import ol_interaction_Draw from 'ol/interaction/Draw'
 import ol_interaction_Select from 'ol/interaction/Select'
@@ -164,7 +165,7 @@ ol_interaction_DrawHole.prototype._finishDrawing = function(e)
 	if (c.length > 3) {
 		if (this._polygonIndex!==false) {
 			var geom = e.feature.getGeometry();
-			var newGeom = new ol.geom.MultiPolygon();
+			var newGeom = new ol_geom_MultiPolygon();
 			for (var i=0, pi; pi=geom.getPolygon(i); i++) {
 				if (i===this._polygonIndex) {
 					pi.appendLinearRing(new ol_geom_LinearRing(c));
