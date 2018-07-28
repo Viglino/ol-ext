@@ -944,6 +944,11 @@
 	height:1em;
 	width:1em;
 	margin:2px;
+	line-height: 1em;
+    text-align: center;
+    background: #369;
+    vertical-align: middle;
+    color: #fff;
 }
 
 .ol-layerswitcher .panel li > div
@@ -1049,6 +1054,7 @@
 .ol-layerswitcher .expend-layers,
 .ol-layerswitcher .collapse-layers
 {	margin: 0 2px;
+	background-color: transparent;
 }
 .ol-layerswitcher .expend-layers:before,
 .ol-layerswitcher .collapse-layers:before
