@@ -16,7 +16,8 @@ import {intersects as ol_extent_intersects} from 'ol/extent'
 /**
  * @classdesc OpenLayers 3 Layer Switcher Control.
  * @require jQuery
- *
+ * @fires drawlist
+ * 
  * @constructor
  * @extends {ol_control_Control}
  * @param {Object=} options
@@ -25,7 +26,7 @@ import {intersects as ol_extent_intersects} from 'ol/extent'
  *	@param {boolean} mouseover show the panel on mouseover, default false
  *	@param {boolean} reordering allow layer reordering, default true
  *	@param {boolean} trash add a trash button to delete the layer, default false
- *	@param {function} oninfo callback on click on info button, if none no info button is shown
+ *	@param {function} oninfo callback on click on info button, if none no info button is shown DEPRECATED: use on(info) instead
  *	@param {boolean} extent add an extent button to zoom to the extent of the layer
  *	@param {function} onextent callback when click on extent, default fits view to extent
  *
@@ -521,13 +522,17 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection)
 	function onInfo(e) 
 	{	e.stopPropagation();
 		e.preventDefault(); 
-		self.oninfo($(this).closest('li').data("layer")); 
+		var l = $(this).closest('li').data("layer");
+		self.oninfo(l); 
+		self.dispatchEvent({ type: "info", layer: l });
 	};
 	function zoomExtent(e) 
 	{	e.stopPropagation();
 		e.preventDefault(); 
-		if (self.onextent) self.onextent($(this).closest('li').data("layer")); 
-		else self.map_.getView().fit ($(this).closest('li').data("layer").getExtent(), self.map_.getSize()); 
+		var l = $(this).closest('li').data("layer");
+		if (self.onextent) self.onextent(l); 
+		else self.map_.getView().fit (l.getExtent(), self.map_.getSize()); 
+		self.dispatchEvent({ type: "extent", layer: l });
 	};
 	function removeLayer(e) 
 	{	e.stopPropagation();
@@ -667,6 +672,9 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection)
 		else if (layer instanceof ol_layer_Tile) li.addClass('ol-layer-tile');
 		else if (layer instanceof ol_layer_Image) li.addClass('ol-layer-image');
 		else if (layer instanceof ol_layer_Heatmap) li.addClass('ol-layer-heatmap');
+
+		// Dispatch a dralist event to allow customisation
+		this.dispatchEvent({ type:'drawlist', layer:layer, li:li.get(0) });
 	}
 
 	if (ul==this.panel_) this.overflow();

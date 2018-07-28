@@ -72,27 +72,33 @@
 	<div class="info">
 		Add a layer switcher inside or outside the map.
 		<ul>
-		<li>
-		The <i>title</i> or <i>name</i> layer's property is used to named the ol.layer in the switcher.
-		</li>
-		<li>
-		It shows use of the <i>displayInLayerSwitcher</i> layer's property to cause it to not display in the LayerSwitcher
-		</li>
-		<li>
-		The <i>baseLayer</i> layer's property manage exclusive visibility on layers (only one base layer is shown at a time).
-		</li>
-		<li>
-		The <i>allwaysOnTop</i> layer's property make a layer to stay on top of others.
-		</li>
-		<li>
-		Layers in an ol.layer.Group are grouped together and can be managed all together (visibility/opacity/ordering).
-		</li>
-		<li>
-		The <i>openInLayerSwitcher</i> property of an ol.layer.Group is used to code the visibility of the sublayers.
-		</li>
-		<li>
-		The <i>show_progress</i> option display a progress bar on tiled layers (only once per map).
-		</li>
+			<li>
+			The <i>title</i> or <i>name</i> layer's property is used to named the ol.layer in the switcher.
+			</li>
+			<li>
+			It shows use of the <i>displayInLayerSwitcher</i> layer's property to cause it to not display in the LayerSwitcher
+			</li>
+			<li>
+			The <i>baseLayer</i> layer's property manage exclusive visibility on layers (only one base layer is shown at a time).
+			</li>
+			<li>
+			The <i>allwaysOnTop</i> layer's property make a layer to stay on top of others.
+			</li>
+			<li>
+			Layers in an ol.layer.Group are grouped together and can be managed all together (visibility/opacity/ordering).
+			</li>
+			<li>
+			The <i>openInLayerSwitcher</i> property of an ol.layer.Group is used to code the visibility of the sublayers.
+			</li>
+			<li>
+				The <i>show_progress</i> option display a progress bar on tiled layers (only once per map).
+			</li>
+			<li>
+				You can use the <i>setHeader()</i> function to add a header to the layer list.
+			</li>
+			<li>
+				You can use the <i>drawlist</i> event handle the current line display (add button, change list style, etc.)
+			</li>
 		</ul>
 	</div>
 
@@ -209,6 +215,15 @@
 			trash: true,
 			oninfo: function (l) { alert(l.get("title")); }
 		});
+	// Add a new button to the list 
+	switcher.on('drawlist', function(e){
+		var layer = e.layer;
+		$('<div>').text('?')// addClass('layerInfo')
+			.click(function(){
+				alert(layer.get('title'));
+			})
+			.appendTo($('> .ol-layerswitcher-buttons', e.li));
+	});
 	// Add a button to show/hide the layers
 	var button = $('<div class="toggleVisibility" title="show/hide">')
 		.text("Show/hide all")
