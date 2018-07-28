@@ -20,7 +20,7 @@ import '../geom/LineStringSplitAt'
 /** Interaction split interaction for splitting feature geometry
  * @constructor
  * @extends {ol_interaction_Interaction}
- * @fires  beforesplit, aftersplit
+ * @fires  beforesplit, aftersplit, pointermove
  * @param {olx.interaction.SplitOptions} 
  *	- source {ol.source.Vector|Array{ol.source.Vector}} a list of source to split (configured with useSpatialIndex set to true)
  *	- features {ol.Collection.<ol.Feature>} collection of feature to split
@@ -229,17 +229,30 @@ ol_interaction_Split.prototype.handleMoveEvent = function(e)
 	this.overlayLayer_.getSource().clear();
 	var current = this.getClosestFeature(e);
 
-	if (current && this.filterSplit_(current.feature)) 
-	{	var coord, p, l;
+	if (current && this.filterSplit_(current.feature)) {
+		var p, l;
 		// Draw sketch
 		this.overlayLayer_.getSource().addFeature(current.feature);
 		p = new ol_Feature(new ol_geom_Point(current.coord));
 		p._sketch_ = true;
 		this.overlayLayer_.getSource().addFeature(p);
 		//
-		l = new ol_Feature(new ol_geom_LineString([e.coordinate,current.coord]));
+		l = new ol_Feature(current.link);
 		l._sketch_ = true;
 		this.overlayLayer_.getSource().addFeature(l);
+		// move event
+		this.dispatchEvent({
+			type: 'pointermove',
+			coordinate: e.coordinate,
+			frameState: e.frameState,
+			originalEvent: e.originalEvent,
+			map: e.map,
+			pixel: e.pixel,
+			feature: current.feature,
+			linkGeometry: current.link
+		});
+	} else {
+		this.dispatchEvent(e);
 	}
 
 	var element = map.getTargetElement();
