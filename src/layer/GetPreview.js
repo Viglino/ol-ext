@@ -6,7 +6,7 @@
 import ol_source_Source from 'ol/source/Source'
 import ol_source_Tile from 'ol/source/Tile'
 import ol_source_TileWMS from 'ol/source/TileWMS'
-import ol_layer_Layer from 'ol/layer/Layer'
+import ol_layer_Base from 'ol/layer/Layer'
 import {containsCoordinate as ol_extent_containsCoordinate} from 'ol/extent'
 import ol_layer_Group from 'ol/layer/Group'
 
@@ -67,7 +67,7 @@ ol_source_TileWMS.prototype.getPreview = function(lonlat, resolution)
  * @return {Array<String>} list of preview url
  * @api
  */
-ol_layer_Layer.prototype.getPreview = function(lonlat, resolution)
+ol_layer_Base.prototype.getPreview = function(lonlat, resolution)
 {	if (this.get("preview")) return [ this.get("preview") ];
 	if (!resolution) resolution = 150;
 	// Get middle resolution
