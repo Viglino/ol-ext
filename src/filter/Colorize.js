@@ -6,6 +6,7 @@
 import {inherits as ol_inherits} from 'ol'
 import ol_filter_Base from './Base'
 import {asString as ol_color_asString} from 'ol/color'
+import {asArray as ol_color_asArray} from 'ol/color'
 
 /** Colorize map or layer
 * 	@constructor
@@ -33,7 +34,7 @@ ol_filter_Colorize.prototype.setFilter = function(options)
 		case "sepia": options = { operation:'color', red:153, green:102, blue:51, value:0.6 }; break;
 		default: break;
 	}
-	var color = options.color ? ol_color.asArray(options.color) : [ options.red, options.green, options.blue, options.value];
+	var color = options.color ? ol_color_asArray(options.color) : [ options.red, options.green, options.blue, options.value];
 	this.set('color', ol_color_asString(color))
 	this.set ('value', color[3]||1);
 	switch (options.operation)
@@ -68,13 +69,13 @@ ol_filter_Colorize.prototype.setFilter = function(options)
 
 ol_filter_Colorize.prototype.setValue = function(v)
 {	this.set ('value', v);
-	var c = ol_color.asArray(this.get("color"));
+	var c = ol_color_asArray(this.get("color"));
 	c[3] = v;
 	this.set("color", ol_color_asString(c));
 }
 
 ol_filter_Colorize.prototype.setColor = function(c)
-{	c = ol_color.asArray(c);
+{	c = ol_color_asArray(c);
 	if (c)
 	{	c[3] = this.get("value");
 		this.set("color", ol_color_asString(c));
