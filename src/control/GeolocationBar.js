@@ -35,7 +35,7 @@ var ol_control_GeolocationBar = function(options) {
   var interaction = new ol_interaction_GeolocationDraw({	
     source: options.source,
     zoom: options.zoom,
-    followTrack: true,
+    followTrack: options.followTrack,
     minAccuracy: options.minAccuracy || 10000
   });
   this._geolocBt = new ol_control_Toggle ({
@@ -43,7 +43,7 @@ var ol_control_GeolocationBar = function(options) {
     interaction: interaction,
     onToggle: function(b) {
       interaction.pause(true);
-      interaction.setFollowTrack(true);
+      interaction.setFollowTrack(options.followTrack);
       element.removeClass('pauseTrack');
     }
   });
