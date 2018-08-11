@@ -132,7 +132,7 @@
 		// New vector layer
 		var vector = new ol.layer.Vector(
 		{	name: 'Vecteur',
-			source: new ol.source.Vector(),
+			source: new ol.source.Vector({ wrapX: false }),
 			style: getStyle
 		})
 		map.addLayer(vector);
