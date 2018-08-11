@@ -113,7 +113,7 @@ ol_source_DBPedia.prototype._loaderFn = function(extent, resolution, projection)
 	var self = this;
 	var bbox = ol_proj_transformExtent(extent, projection, "EPSG:4326");
 	// SPARQL request: for more info @see http://fr.dbpedia.org/
-	query =	"PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#> "
+	var query =	"PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#> "
 				+ "SELECT DISTINCT * WHERE { "
 				+ "?subject geo:lat ?lat . "
 				+ "?subject geo:long ?long . "
