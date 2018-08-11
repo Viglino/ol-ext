@@ -2,6 +2,7 @@ import {inherits as ol_inherits} from 'ol'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_interaction_Pointer from 'ol/interaction/Pointer'
 import {asString as ol_color_asString} from 'ol/color'
+import {asArray as ol_color_asArray} from 'ol/color'
 
 /**
  * @constructor
@@ -62,12 +63,12 @@ ol_interaction_Flashlight.prototype.setRadius = function(radius)
 ol_interaction_Flashlight.prototype.setColor = function(options)
 {	// Backcolor
 	var color = (options.fill ? options.fill : [0,0,0,0.8]);
-	var c = ol_color.asArray(color);
+	var c = ol_color_asArray(color);
 	this.startColor = ol_color_asString(c);
 	// Halo color
 	var endColor;
 	if (options.color)
-	{	c = this.endColor = ol_color_asString(ol_color.asArray(options.color)||options.color);
+	{	c = this.endColor = ol_color_asString(ol_color_asArray(options.color)||options.color);
 	}
 	else 
 	{	c[3] = 0
