@@ -6910,13 +6910,14 @@ ol.interaction.Clip.prototype.setActive = function(b)
  * @extends {ol.interaction.Interaction}
  * @fires drawstart, drawend
  * @param {olx.interaction.DrawHoleOptions} options extend olx.interaction.DrawOptions
- * 	@param {Array<ol.layer.Vector> | undefined} options.layers A list of layers from which polygons should be selected. Alternatively, a filter function can be provided. default: all visible layers
+ * 	@param {Array<ol.layer.Vector> | function | undefined} options.layers A list of layers from which polygons should be selected. Alternatively, a filter function can be provided. default: all visible layers
+ * 	@param { ol.style.Style | Array<ol.style.Style> | StyleFunction | undefined }	Style for the selected features, default: default edit style
  */
 ol.interaction.DrawHole = function(options)
 {	if (!options) options = {};
 	var self = this;
 	// Select interaction for the current feature
-	this._select = new ol.interaction.Select();
+	this._select = new ol.interaction.Select({ style: options.style });
 	this._select.setActive(false);
 	// Geometry function that test points inside the current
 	var geometryFn, geomFn = options.geometryFunction;
