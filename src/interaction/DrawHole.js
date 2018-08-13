@@ -4,7 +4,6 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import ol_geom_Polygon from 'ol/geom/Polygon'
 import ol_geom_MultiPolygon from 'ol/geom/MultiPolygon'
 import ol_geom_LinearRing from 'ol/geom/LinearRing'
@@ -16,14 +15,15 @@ import ol_interaction_Select from 'ol/interaction/Select'
  * @extends {ol_interaction_Interaction}
  * @fires drawstart, drawend
  * @param {olx.interaction.DrawHoleOptions} options extend olx.interaction.DrawOptions
- * 	@param {Array<ol.layer.Vector> | undefined} options.layers A list of layers from which polygons should be selected. Alternatively, a filter function can be provided. default: all visible layers
+ * 	@param {Array<ol.layer.Vector> | function | undefined} options.layers A list of layers from which polygons should be selected. Alternatively, a filter function can be provided. default: all visible layers
+ * 	@param { ol.style.Style | Array<ol.style.Style> | StyleFunction | undefined }	Style for the selected features, default: default edit style
  */
 var ol_interaction_DrawHole = function(options)
 {	if (!options) options = {};
 	var self = this;
 
 	// Select interaction for the current feature
-	this._select = new ol_interaction_Select();
+	this._select = new ol_interaction_Select({ style: options.style });
 	this._select.setActive(false);
 
 	// Geometry function that test points inside the current

@@ -673,9 +673,12 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection)
 		else if (layer instanceof ol_layer_Image) li.addClass('ol-layer-image');
 		else if (layer instanceof ol_layer_Heatmap) li.addClass('ol-layer-heatmap');
 
+
 		// Dispatch a dralist event to allow customisation
 		this.dispatchEvent({ type:'drawlist', layer:layer, li:li.get(0) });
 	}
+
+	this.viewChange();
 
 	if (ul==this.panel_) this.overflow();
 };
