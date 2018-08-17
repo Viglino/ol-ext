@@ -6,7 +6,6 @@
   "dependencies": {
     "ajax": "0.0.4",
     "jquery": "^3.2.1",
-    "live-server": "^1.2.0",
     "ol": "^5.1.3"
   },
   "devDependencies": {
@@ -18,6 +17,7 @@
     "gulp-header": "^2.0.5",
     "gulp-minify": "^3.1.0",
     "gulp-watch": "^5.0.1",
+    "live-server": "^1.2.0",
     "minimist": "^1.2.0",
     "plugin-error": "^1.0.1",
     "through2": "^2.0.3"
