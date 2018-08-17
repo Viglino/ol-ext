@@ -7,7 +7,7 @@
     "ajax": "0.0.4",
     "jquery": "^3.2.1",
     "live-server": "^1.2.0",
-    "ol": "^5.0.3"
+    "ol": "^5.1.3"
   },
   "devDependencies": {
     "gulp": "^3.9.1",
