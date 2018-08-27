@@ -18,11 +18,6 @@ Use the gulp command to create a distribution of the project into the `/dist` di
 gulp
 ````
 
-To recreate the distribution on `js` file change, use the watch task
-````
-gulp watch
-````
-
 ### Create individual files
 
 If you don't want to use the whole distribution in a web page, you can create individual js compatible with your browser.
@@ -30,6 +25,22 @@ Use the `gulp lib` command to create individual files into the `/lib` directory 
 ````
 gulp lib
 ````
+
+## Watch files and live reload
+
+To help creating and testing the examples when developping you can use the `watch` or `serve` task. 
+
+To recreate the distribution on the fly when `js` files change, use the `watch` task:
+````
+gulp watch
+````
+
+You can use the `serve` task to start a live server:
+````
+gulp serve
+````
+See the result in your browser at `http://localhost:8181`.
+The `dist` will be recreated on each changes and the page will reload on the browser. 
 
 ## Adding new extensions
 
