@@ -44,7 +44,9 @@
 		</li><li>
 		 	By default, clicking the control will enable/disable the url replacement. Use the <i>onclick</i> option to change this behavior (mail to a friend...).
 		</li><li>
-		 	The <i>getUrlParams</i> method enable you to add user parameters to the url to handle new functionnalities (layers ordering, etc.)
+			Use <i>getUrlParam</i>, <i>setUrlParam</i> or <i>hasUrlParam</i> methods 
+			to get, add or test user parameters in the url and handle new functionnalities 
+			(layers opacity, visibility, ordering, etc.)
 		</li></ul>
 	</div>
 
@@ -55,7 +57,7 @@
 		<ul><li>
 			<input id="url" type="checkbox" checked="checked" onchange="ctrl.setUrlReplace($(this).prop('checked'))" /><label for="url"> urlReplace (replace url in the browser bar).</label>
 		</li><li>
-		 	OSM opacity: <input type="range" min="0" max="1" step="0.1" value="1" onchange="osm.setOpacity(Number(this.value))" style="vertical-align:middle;"/>
+		 	OSM opacity: <input id="opacity" type="range" min="0" max="1" step="0.1" value="1" onchange="osm.setOpacity(Number(this.value))" style="vertical-align:middle;"/>
 		</li><li>
 			User parameter: <input id="user" type="text" />
 		</li></ul>
@@ -91,13 +93,11 @@
 		map.addControl(ctrl);
 
 		// Handle user parameter
-		var userParam = ctrl.getUrlParams();
-		$("#user").val(decodeURIComponent (userParam['user'] || ""))
-				.on ('change', function()
-				{	userParam['user'] = encodeURIComponent (this.value);
-					// Refresh url
-					ctrl.changed();
+		$("#user").val(ctrl.getUrlParam('user'))
+				.on ('change', function() {
+					ctrl.setUrlParam('user', this.value);
 				});
+		$('#opacity').val(osm.getOpacity());
 
 	</script>
 
