@@ -4103,6 +4103,285 @@ ol.control.Profil.prototype.getImage = function(type, encoderOptions)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
+ * Search Control.
+ * This is the base class for search controls. You can use it for simple custom search or as base to new class.
+ * @see ol.control.SearchFeature
+ * @see ol.control.SearchPhoton
+ *
+ * @constructor
+ * @extends {ol.control.Control}
+ * @fires select
+ * @fires change:input
+ * @param {Object=} options
+ *	@param {string} options.className control class name
+ *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *	@param {string | undefined} options.label Text label to use for the search button, default "search"
+ *	@param {string | undefined} options.placeholder placeholder, default "Search..."
+ *	@param {string | undefined} options.inputLabel label for the input, default none
+ *	@param {string | undefined} options.noCollapse prevent collapsing on input blur, default false
+ *	@param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
+ *	@param {integer | undefined} options.minLength minimum length to start searching, default 1
+ *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *	@param {integer | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
+ *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index.
+ *	@param {function} options.autocomplete a function that take a search string and callback function to send an array
+ */
+ol.control.RoutingGeoportail = function(options) {
+  var self = this;
+	if (!options) options = {};
+	if (options.typing == undefined) options.typing = 300;
+  // Class name for history
+  this._classname = options.className || 'search';
+	var element = document.createElement("DIV");
+	var classNames = (options.className||"")+ " ol-routing";
+	if (!options.target) {
+    classNames += " ol-unselectable ol-control";
+	}
+	element.setAttribute('class', classNames);
+	ol.control.Control.call(this, {
+    element: element,
+    target: options.target
+	});
+	this.set('url', 'http://wxs.ign.fr/'+options.apiKey+'/itineraire/rest/route.json');
+	this._search = [];
+	var listElt = document.createElement("DIV");
+	this.addSearch(element, options);
+	this.addSearch(element, options);
+	element.appendChild(listElt);
+	this.addButton('ol-car', options.carlabel||"by car")
+		.addEventListener("click", function() {
+			self.setMode('car');
+		});
+	this.addButton('ol-pedestrian', options.pedlabel||"pedestrian")
+		.addEventListener("click", function() {
+			self.setMode('pedestrian');
+		});
+	this.addButton('ol-ok', options.runlabel||"search", 'OK')
+		.addEventListener("click", function() {
+			self.calculate();
+		});
+	this.resultElement = document.createElement("DIV");
+	this.resultElement.setAttribute('class', 'ol-result');
+	element.appendChild(this.resultElement);
+	this.setMode(options.mode || 'car');
+};
+ol.inherits(ol.control.RoutingGeoportail, ol.control.Control);
+ol.control.RoutingGeoportail.prototype.setMode = function (mode) {
+	this.set('mode', mode);
+	this.element.querySelector(".ol-car").classList.remove("selected");
+	this.element.querySelector(".ol-pedestrian").classList.remove("selected");
+	this.element.querySelector(".ol-"+mode).classList.add("selected");
+	this.calculate();
+};
+ol.control.RoutingGeoportail.prototype.addButton = function (className, title, info) {
+	var bt = document.createElement("I");
+	bt.setAttribute("class", className);
+	bt.setAttribute("type", "button");
+	bt.setAttribute("title", title);
+	bt.innerHTML = info||'';
+	this.element.appendChild(bt);
+	return bt;
+};
+/** Add a new search input
+ * @private
+ */
+ol.control.RoutingGeoportail.prototype.addSearch = function (element, options) {
+	var self = this;
+	var div = document.createElement("DIV");
+	element.appendChild(div);
+	var bt = document.createElement("BUTTON");
+	bt.setAttribute("type", "button");
+	bt.setAttribute("title", options.startlabel||"search");
+	div.appendChild(bt);
+	bt.addEventListener('click', function() {
+		self.resultElement.innerHTML = '';
+	});
+	var search = new ol.control.SearchGeoportail({
+		apiKey: options.apiKey,
+		target: div
+	});
+	this._search.push(search);
+	search.on('select', function(e){
+		search.setInput(e.search.fulltext);
+		search.set('selection', e.search);
+	});
+	var self = this;
+	search.element.querySelector('input').addEventListener('change', function(){
+		search.set('selection', null);
+		self.resultElement.innerHTML = '';
+	});
+};
+/**
+ * Set the map instance the control is associated with
+ * and add its controls associated to this map.
+ * @param {_ol_Map_} map The map instance.
+ */
+ol.control.RoutingGeoportail.prototype.setMap = function (map) {
+	ol.control.Control.prototype.setMap.call(this, map);
+	for (var i=0; i<this._search.length; i++) {
+		var c = this._search[i];
+		c.setMap(map);
+	}
+};
+ol.control.RoutingGeoportail.prototype.requestData = function (start, end) {
+	return {
+		'gp-access-lib': '1.1.0', 
+		origin: start.x+','+start.y,
+		destination: end.x+','+end.y,
+		method: 'time', // 'distance'
+		graphName: this.get('mode')==='pedestrian' ? 'Pieton' : 'Voiture',
+		waypoints:'', 
+		format: 'STANDARDEXT'
+	};
+};
+ol.control.RoutingGeoportail.prototype.listRouting = function (routing) {
+	var time = routing.duration/60;
+	$(this.resultElement).html('');
+	var t = '';
+	if (time<60) {
+		t += time.toFixed(0)+' min';
+	} else {
+		t+= (time/60).toFixed(0)+' h '+(time%60).toFixed(0)+' min';
+	}
+	var dist = routing.distance;
+	if (dist<1000) {
+		t += ' ('+dist.toFixed(0)+' m)';
+	} else {
+		t += ' ('+(dist/1000).toFixed(2)+' km)';
+	}
+	$('<i>').text(t).appendTo(this.resultElement);
+	var ul = $('<ul>').appendTo(this.resultElement);
+	var info = {
+		'none': 'Prendre sur ',
+		'R': 'Tourner à droite sur ',
+		'FR': 'Tourner légèrement à droite sur ',
+		'L': 'Tourner à gauche sur ',
+		'FL': 'Tourner légèrement à gauche sur ',
+		'F': 'Continuer tout droit sur ',
+	}
+	for (var i=0, f; f=routing.features[i]; i++) {
+		var d = f.get('distance');
+		d = (d<1000) ? d.toFixed(0)+' m' : (d/1000).toFixed(2)+' km';
+		var t = f.get('durationT')/60;
+		console.log(f.get('duration'),t)
+		t = (f.get('duration')<40) ? '' : (t<60) ? t.toFixed(0)+' min' : (t/60).toFixed(0)+' h '+(t%60).toFixed(0)+' min';
+		$('<li>').addClass(f.get('instruction'))
+		.html(
+			(info[f.get('instruction')||'none']||'#')
+			+ ' ' + f.get('name') 
+			+ '<i>' + d + (t ? ' - ' + t : '') +'</i>'
+		).appendTo(ul);
+	}
+};
+ol.control.RoutingGeoportail.prototype.handleResponse = function (data) {
+	var routing = { type:'routing' };
+/*
+	var format = new ol.format.WKT();
+	routing.features = [ format.readFeature(data.geometryWkt, {
+		dataProjection: 'EPSG:4326',
+		featureProjection: this.getMap().getView().getProjection()
+	}) ];
+*/
+	routing.features = [];
+	var distance = 0;
+	var duration = 0;
+	for (var i=0, l; l=data.legs[i]; i++) {
+		for (var j=0, s; s=l.steps[j]; j++) {
+			var geom = [];
+			for (var k=0, p; p=s.points[k]; k++){
+				p = p.split(',');
+				geom.push([parseFloat(p[0]),parseFloat(p[1])]);
+			}
+			geom = new ol.geom.LineString(geom);
+			options = {
+				geometry: geom.transform('EPSG:4326',this.getMap().getView().getProjection()),
+				name: s.name,
+				instruction: s.navInstruction,
+				distance: parseFloat(s.distanceMeters),
+				duration: parseFloat(s.durationSeconds)
+			}
+			console.log(duration, options.duration, s)
+			distance += options.distance;
+			duration += options.duration;
+			options.distanceT = distance;
+			options.durationT = duration;
+			var f = new ol.Feature(options);
+			routing.features.push(f);
+		}
+	}
+	routing.distance = parseFloat(data.distanceMeters);
+	routing.duration = parseFloat(data.durationSeconds);
+	console.log(data, routing);
+	this.dispatchEvent(routing);
+	this.path = routing;
+	return routing;
+};
+ol.control.RoutingGeoportail.prototype.calculate = function () {
+	$(this.resultElement).html('');
+	for (var i=0; i<this._search.length; i++) {
+		if (!this._search[i].get('selection')) return;
+	}
+	var start = this._search[0].get('selection');
+	var end = this._search[1].get('selection');
+	var data = this.requestData(start,end);
+	var url = encodeURI(this.get('url'));
+	var parameters = '';
+	for (var index in data) {
+		parameters += (parameters) ? '&' : '?';
+		if (data.hasOwnProperty(index)) parameters += index + '=' + data[index];
+	}
+	var self = this;
+	this.ajax(url + parameters, 
+		function (resp) {
+			console.log(resp)
+			if (resp.status >= 200 && resp.status < 400) {
+				self.listRouting(self.handleResponse (JSON.parse(resp.response)));
+			} else {
+				console.log(url + parameters, arguments);
+			}
+		}, function(){
+			console.log(url + parameters, arguments);
+		});
+};	
+/** Send an ajax request (GET)
+ * @param {string} url
+ * @param {function} onsuccess callback
+ * @param {function} onerror callback
+ */
+ol.control.RoutingGeoportail.prototype.ajax = function (url, onsuccess, onerror){
+	var self = this;
+	// Abort previous request
+	if (this._request) {
+		this._request.abort();
+	}
+	// New request
+	var ajax = this._request = new XMLHttpRequest();
+	ajax.open('GET', url, true);
+	if (this._auth) {
+		ajax.setRequestHeader("Authorization", "Basic " + this._auth);
+	}
+	this.element.classList.add('searching');
+	// Load complete
+	ajax.onload = function() {
+		self._request = null;
+		self.element.classList.remove('searching');
+		onsuccess.call(self, this);
+	};
+	// Oops, TODO do something ?
+	ajax.onerror = function() {
+		self._request = null;
+		self.element.classList.remove('searching');
+		if (onerror) onerror.call(self);
+	};
+	// GO!
+	ajax.send();
+};
+
+/*	Copyright (c) 2017 Jean-Marc VIGLINO,
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
  * Scale Control.
  * A control to display the scale of the center on the map
  *
@@ -10864,6 +11143,407 @@ ol.style.dbPediaStyleFunction = function(options)
 };
 })();
 
+// doc: https://mapbox.github.io/delaunator/
+/** Delaunay source
+ * Calculate a delaunay triangulation from points in a source
+ * @param {*} options extend ol.source.Vector options
+ *  @param {ol.source.Vector} options.source the source that contains the points
+ */
+ol.source.Delaunay = function(options) {
+  options = options || {};
+  this._nodes = options.source;
+  delete options.source;
+  ol.source.Vector.call (this, options);
+  // Convex hull
+  this.hull = [];
+  // A new node is added to the source node: calculate the new triangulation
+  this._nodes.on('addfeature', this._onAddNode.bind(this));
+  // A new node is removed from the source node: calculate the new triangulation
+  this._nodes.on('removefeature', this._onRemoveNode.bind(this));
+  this.set ('epsilon', options.epsilon || .0001)
+};
+ol.inherits (ol.source.Delaunay, ol.source.Vector);
+/** Add a new triangle in the source
+ * @param {Array<ol.coordinates>} pts
+ */
+ol.source.Delaunay.prototype._addTriangle = function(pts) {
+  var triangle = new ol.Feature(new ol.geom.Polygon([pts]));
+  this.addFeature(triangle);
+  this.flip.push(triangle);
+  return triangle;
+};
+/** Get nodes 
+ */
+ol.source.Delaunay.prototype.getNodes = function () {
+  return this._nodes.getFeatures();
+};
+/** Get nodes source
+ */
+ol.source.Delaunay.prototype.getNodeSource = function () {
+  return this._nodes;
+};
+/**
+ * A point has been removed
+ * @param {ol.source.Vector.Event} e 
+ */
+ol.source.Delaunay.prototype._onRemoveNode = function(e) {
+  console.log(e)
+  var pt = e.feature.getGeometry().getCoordinates();
+  if (!pt) return;
+  // Get associated triangles
+  var triangles = this.getTrianglesAt(pt);
+  this.flip=[];
+  // Get hole
+  var edges = [];
+  while (triangles.length) {
+    var tr = triangles.pop()
+    this.removeFeature(tr);
+    tr = tr.getGeometry().getCoordinates()[0];
+    var pts = [];
+    for (var i=0, p; p = tr[i]; i++) {
+      if (!ol.coordinate.equal(p,pt)) {
+        pts.push(p);
+      }
+    }
+    edges.push(pts);
+  }
+  pts = edges.pop();
+var se = '';
+for (var i=0,e; e=edges[i]; i++) {
+  se += ' - '+this.listpt(e);
+}
+console.log('EDGES', se)
+  var i = 0;
+  function testEdge(p0, p1, index) {
+    if (ol.coordinate.equal(p0, pts[index])) {
+      if (index) pts.push(p1);
+      else pts.unshift(p1);
+      return true
+    }
+    return false;
+  }
+  while (true) {
+    var e = edges[i];
+    if ( testEdge(e[0], e[1], 0) 
+      || testEdge(e[1], e[0], 0)
+      || testEdge(e[0], e[1], pts.length-1)
+      || testEdge(e[1], e[0], pts.length-1)
+    ) {
+      edges.splice(i,1);
+      i = 0;
+    } else {
+      i++
+    }
+    if (!edges.length) break;
+    if (i>=edges.length) {
+      console.log(this.listpt(pts), this.listpt(edges));
+      throw '[DELAUNAY:removePoint] No edge found';
+    }
+  }
+  // Closed = interior
+console.log('PTS', this.listpt(pts))
+  var closed = ol.coordinate.equal(pts[0], pts[pts.length-1]);
+  if (closed) pts.pop();
+  // Update convex hull: remove pt + add new ones
+  for (var i, p; p=this.hull[i]; i++) {
+    if (ol.coordinate.equal(pt,p)) {
+      this.hull.splice(i,1);
+      break;
+    }
+  }
+  this.hull = ol.coordinate.convexHull(this.hull.concat(pts));
+select.getFeatures().clear();
+  // 
+  var clockwise = function (t) {
+    var i1, s = 0;
+    for (var i=0; i<t.length; i++) {
+      i1 = (i+1) % t.length;
+      s += (t[i1][0] - t[i][0]) * (t[i1][1] + t[i][1]);
+    }
+    console.log(s)
+    return (s>=0 ? 1:-1)
+  };
+  // Add ears
+  // a l'interieur : Si surface ear et surface de l'objet ont meme signe
+  // extrieur ? ajoute le point et idem ? + ferme la 
+  var clock;
+var enveloppe = pts.slice();
+  if (closed) {
+    clock = clockwise(pts);
+  } else {
+    console.log('ouvert', pts, pts.slice().push(pt))
+enveloppe.push(pt);
+    clock = clockwise(enveloppe);
+  }
+console.log('S=',clock,'CLOSED',closed)
+console.log('E=',this.listpt(enveloppe))
+  for (var i=0; i<=pts.length+1; i++) {
+    if (pts.length<3) break;
+    var t = [
+      pts[i % pts.length],
+      pts[(i+1) % pts.length],
+      pts[(i+2) % pts.length] 
+    ];
+    if (clockwise(t)===clock) {
+      var ok = true;
+      for (var k=i+3; k<i+pts.length; k++) {
+        console.log('test '+k, this.listpt([pts[k % pts.length]]))
+        if (this.inCircle(pts[k % pts.length], t)) {
+          ok = false;
+          break;
+        }
+      }
+      if (ok) {
+console.log(this.listpt(t),'ok');
+        this._addTriangle(t);
+        // remove
+        pts.splice((i+1) % pts.length, 1);
+        // and restart
+        i = -1;
+      }
+    }
+else console.log(this.listpt(t),'nok');
+  }
+if (pts.length>3) console.log('oops');
+console.log('LEAV',this.listpt(pts));
+var ul = $('ul.triangles').html('');
+$('<li>')
+.text('E:'+this.listpt(enveloppe)+' - '+clock+' - '+closed)
+.data('triangle', new ol.Feature(new ol.geom.Polygon([enveloppe])))
+.click(function(){
+  var t = $(this).data('triangle');
+  select.getFeatures().clear();
+  select.getFeatures().push(t);
+})
+.appendTo(ul);
+for (var i=0; i<this.flip.length; i++) {
+  $('<li>')
+    .text(this.listpt(this.flip[i].getGeometry().getCoordinates()[0])
+        +' - ' + clockwise(this.flip[i].getGeometry().getCoordinates()[0]))
+    .data('triangle', this.flip[i])
+    .click(function(){
+      var t = $(this).data('triangle');
+      select.getFeatures().clear();
+      select.getFeatures().push(t);
+    })
+    .appendTo(ul);
+}
+  // Flip?
+  this.flipTriangles();
+};
+/**
+ * A new point has been added
+ * @param {ol.source.Vector.Event} e 
+ */
+ol.source.Delaunay.prototype._onAddNode = function(e) {
+  var finserted = e.feature;
+  // Not a point!
+  if (finserted.getGeometry().getType() !== 'Point') {
+    this._nodes.removeFeature(finserted);
+    return;
+  }
+  // Reset flip table
+  this.flip = [];
+  var nodes = this.getNodes();
+  // The point
+  var pt = finserted.getGeometry().getCoordinates();
+  // Test existing point
+  var extent = ol.extent.buffer (ol.extent.boundingExtent([pt]), this.get('epsilon'));
+  if (this._nodes.getFeaturesInExtent(extent).length > 1) {
+    this._nodes.removeFeature(finserted);
+    return;
+  }
+  // Triangle needs at least 3 points
+  if (nodes.length <= 3) {
+    if (nodes.length===3) {
+      var pts = [];
+      for (var i=0; i<3; i++) pts.push(nodes[i].getGeometry().getCoordinates());
+      this._addTriangle(pts);
+      this.hull = ol.coordinate.convexHull(pts);
+    }
+    return;
+  }
+  // Get the triangle
+  var t = this.getFeaturesAtCoordinate(pt)[0];
+  if (t) {
+    this.removeFeature(t);
+    t.set('del', true);
+    var c = t.getGeometry().getCoordinates()[0];
+    for (var i=0; i<3; i++) {
+      this._addTriangle([ pt, c[i], c[(i+1)%3]]);
+    }
+  } else {
+    // Calculate new convex hull
+    var hull2 = this.hull.slice();
+    hull2.push(pt);
+    hull2 = ol.coordinate.convexHull(hull2);
+    // Search for points
+    for (var i=0,p; p=hull2[i]; i++) {
+      if (ol.coordinate.equal(p,pt)) break;
+    }
+    i = (i!==0 ? i-1 : hull2.length-1);
+    var p0 = hull2[i];
+    var stop = hull2[(i+2) % hull2.length];
+    for (var i=0,p; p=this.hull[i]; i++) {
+      if (ol.coordinate.equal(p,p0)) break;
+    }
+    // Connect to the hull
+    while (true) {
+      // DEBUG: prevent infinit loop
+      if (i>1000) {
+        console.error('[DELAUNAY:addPoint] Too many iterations')
+        break;
+      }
+      i++;
+      p = this.hull[i % this.hull.length];
+      this._addTriangle([pt, p, p0]);
+      p0 = p;
+      if (p[0] === stop[0] && p[1] === stop[1]) break;
+    }
+    this.hull = hull2;
+  }
+  this.flipTriangles();
+};
+/** Flipping algorithme: test new inserted triangle and flip
+ */
+ol.source.Delaunay.prototype.flipTriangles = function ()	{
+  var count = 1000; // Count to prevent too many iterations
+  while (this.flip.length) {
+    // DEBUG: prevent infinite loop
+    if (count--<0) {
+      console.error('[DELAUNAY:flipTriangles] Too many iterations')
+      break;
+    }
+    var tri = this.flip.pop();
+    if (tri.get('del')) continue;
+    var ti = tri.getGeometry().getCoordinates()[0];
+    for (var k=0; k<3; k++) {
+      // Get facing triangles
+      var mid = [(ti[(k+1)%3][0]+ti[k][0])/2, (ti[(k+1)%3][1]+ti[k][1])/2];
+      var triangles = this.getTrianglesAt(mid);
+      var pt1 = null;
+      // Get opposite point
+      if (triangles.length>1) {
+        var t0 = triangles[0].getGeometry().getCoordinates()[0];
+        var t1 = triangles[1].getGeometry().getCoordinates()[0];
+        for (var pi=0; pi<t1.length; pi++) {
+          if (!this._ptInTriangle(t1[pi], t0)) {
+            pt1 = t1[pi];
+            break;
+          }
+        }
+      }
+      if (pt1) {
+        // Is in circle ?
+        if (this.inCircle(pt1, t0)) {
+          var pt2;
+          // Get opposite point
+          for (var pi=0; pi<t0.length; pi++) {
+            if (!this._ptInTriangle(t0[pi], t1)) {
+              pt2 = t0.splice(pi,1)[0];
+              break;
+            }
+          }
+          // Flip triangles
+          if (this.intersectSegs([pt1, pt2], t0)) {
+            while (triangles.length) {
+              var tmp = triangles.pop();
+              tmp.set('del', true);
+              this.removeFeature(tmp);
+            }
+            this._addTriangle([pt1, pt2, t0[0]]);
+            this._addTriangle([pt1, pt2, t0[1]]);
+          }
+        }
+      }
+    }
+  }
+};
+/** Test intersection beetween 2 segs
+ * @param {Array<ol.coordinates>} d1
+ * @param {Array<ol.coordinates>} d2
+ * @return {bbolean}
+ */
+ol.source.Delaunay.prototype.intersectSegs = function (d1, d2)	{
+  var d1x = d1[1][0] - d1[0][0];
+  var d1y = d1[1][1] - d1[0][1];
+  var d2x = d2[1][0] - d2[0][0];
+  var d2y = d2[1][1] - d2[0][1];
+  var det = d1x * d2y - d1y * d2x;
+  if (det != 0) {
+    var k = (d1x * d1[0][1] - d1x * d2[0][1] - d1y * d1[0][0] + d1y * d2[0][0]) / det;
+    // Intersection: return [d2[0][0] + k*d2x, d2[0][1] + k*d2y];
+    return (0<k && k<1);
+  }
+  else return false;
+};
+/** Test pt is a triangle's node
+ * @param {ol.coordinate} pt
+ * @param {Array<ol.coordinate>} triangle
+ * @return {boolean}
+ */
+ol.source.Delaunay.prototype._ptInTriangle = function(pt, triangle) {
+  for (var i=0, p; p=triangle[i]; i++) {
+    if (ol.coordinate.equal(pt,p)) return true;
+  }
+  return false;
+};
+/** List points in a triangle (assume points get an id) for debug purposes
+ * @param {Array<ol.coordinate>} pts
+ * @return {String} ids list
+ */
+ol.source.Delaunay.prototype.listpt = function (pts) {
+  var s = '';
+  for (var i=0, p; p = pts[i]; i++) {
+    var c = this._nodes.getClosestFeatureToCoordinate(p);
+    if (!ol.coordinate.equal(c.getGeometry().getCoordinates(), p)) c=null;
+    s += (s?', ':'') + (c ? c.get('id') : '?');
+  }
+  return s;
+};
+/** Test if coord is within triangle's circumcircle 
+ * @param {ol.coordinate} coord
+ * @param {Array<ol.coordinate>} triangle
+ * @return {boolean}
+ */
+ol.source.Delaunay.prototype.inCircle = function (coord, triangle) {
+  var c = this.getCircumCircle(triangle);
+  return ol.coordinate.dist2d(coord, c.center) < c.radius;
+}
+/** Calculate the circumcircle of a triangle
+ * @param {Array<ol.coordinate>} triangle
+ * @return {*}
+ */
+ol.source.Delaunay.prototype.getCircumCircle = function (triangle) {
+  var x1 = triangle[0][0];
+  var y1 = triangle[0][1];
+  var x2 = triangle[1][0];
+  var y2 = triangle[1][1];
+  var x3 = triangle[2][0];
+  var y3 = triangle[2][1];
+  var m1 = (x1-x2)/(y2-y1);
+  var m2 = (x1-x3)/(y3-y1);
+  var b1 = ((y1+y2)/2) - m1*(x1+x2)/2;
+  var b2 = ((y1+y3)/2) - m2*(x1+x3)/2;
+  var cx = (b2-b1)/(m1-m2);
+  var cy = m1*cx + b1;
+  var center = [cx, cy];
+  return  { 
+    center: center, 
+    radius: ol.coordinate.dist2d(center,triangle[0])
+  };
+};
+/** Get triangles at a point
+ */
+ol.source.Delaunay.prototype.getTrianglesAt = function(coord) {
+  var extent = ol.extent.buffer (ol.extent.boundingExtent([coord]), this.get('epsilon'));
+  var result = [];
+  this.forEachFeatureIntersectingExtent(extent, function(f){
+    result.push(f);
+  });
+  return result;
+};
+
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -12371,13 +13051,14 @@ ol.Overlay.Popup.prototype.hide = function ()
 	ol.coordinate.convexHull compute a convex hull using Andrew's Monotone Chain Algorithm.
 	@see https://en.wikipedia.org/wiki/Convex_hull_algorithms
 */
+(function(){
 /** Tests if a point is left or right of line (a,b).
 * @param {ol.coordinate} a point on the line
 * @param {ol.coordinate} b point on the line
-* @param {ol.coordinate} 0
+* @param {ol.coordinate} o
 * @return {bool} true if (a,b,o) turns clockwise
 */
-let clockwise = function (a, b, o) {
+var clockwise = function (a, b, o) {
   return ((a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]) <= 0);
 };
 /** Compute a convex hull using Andrew's Monotone Chain Algorithm
@@ -12443,6 +13124,7 @@ var getCoordinates = function (geom) {
 ol.geom.Geometry.prototype.convexHull = function() {
   return ol.coordinate.convexHull(getCoordinates(this));
 };
+})();
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
