@@ -9,13 +9,15 @@
 
 import ol_geom_Geometry from 'ol/geom/Geometry';
 
+(function(){
+
 /** Tests if a point is left or right of line (a,b).
 * @param {ol.coordinate} a point on the line
 * @param {ol.coordinate} b point on the line
-* @param {ol.coordinate} 0
+* @param {ol.coordinate} o
 * @return {bool} true if (a,b,o) turns clockwise
 */
-let clockwise = function (a, b, o) {
+var clockwise = function (a, b, o) {
   return ((a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]) <= 0);
 };
 
@@ -87,5 +89,7 @@ var getCoordinates = function (geom) {
 ol_geom_Geometry.prototype.convexHull = function() {
   return ol_coordinate_convexHull(getCoordinates(this));
 };
+
+})();
 
 export default ol_coordinate_convexHull;
