@@ -1,0 +1,91 @@
+﻿.ol-routing {
+  top: 0.5em;
+  left: 3em;
+  max-height: 90%;
+  overflow-y: auto;
+}
+.ol-touch .ol-routing {
+  left: 3.5em;
+}
+
+.ol-routing > button {
+  width: auto;
+  padding: .5em;
+}
+.ol-routing .ol-search.ol-collapsed ul {
+	display: none;
+}
+.ol-routing .ol-search ul .copy {
+  display: none;
+}
+.ol-routing .ol-search ul.history {
+  display: none;
+}
+.ol-routing > div > * {
+  display: inline-block;
+  vertical-align: top;
+}
+.ol-routing .ol-result ul {
+  list-style: none;
+  display: block;
+}
+.ol-routing .ol-result li {
+  position: relative;
+  min-height: 1.65em;
+}
+.ol-routing .ol-result li i {
+  display: block;
+  font-size: .8em;
+  font-weight: bold;
+}
+
+.ol-routing .ol-result li:before {
+  content: "";
+  border: 5px solid transparent;
+  position: absolute;
+  left: -1.75em;
+  border-bottom-color: #369;
+  border-width: .6em .4em .6em;
+  transform-origin: 50% 125%;
+  box-shadow: 0 0.65em 0 -0.25em #369;
+  top: -.8em;
+}
+.ol-routing .ol-result li:after {
+  content: "";
+  position: absolute;
+  width: 0.3em;
+  height: .6em;
+  left: -1.5em;
+  background: #369;
+  top: .6em;
+}
+.ol-routing .ol-result li.R:before {
+  transform: rotate(90deg);
+}
+.ol-routing .ol-result li.FR:before {
+  transform: rotate(45deg);
+}
+.ol-routing .ol-result li.L:before {
+  transform: rotate(-90deg);
+}
+.ol-routing .ol-result li.FL:before {
+  transform: rotate(-45deg);
+}
+
+.ol-routing > i {
+  vertical-align: middle;
+}
+.ol-routing .ol-pedestrian,
+.ol-routing .ol-car {
+  position: relative;
+  display: inline-block;
+  width: 1.5em;
+  height: 1.5em;
+  background: #369;
+  border-radius: 50%;
+  margin: 0 .1em;
+  opacity: .5;
+}
+.ol-routing > i.selected {
+  opacity: 1;
+}
