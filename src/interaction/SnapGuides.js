@@ -66,20 +66,10 @@ var ol_interaction_SnapGuides = function(options) {
 		{	features: new ol_Collection(),
 			useSpatialIndex: false
 		});
-/* Speed up with a ImageVector layer (deprecated)
-	this.overlayLayer_ = new ol_layer_Image(
-		{	source: new ol_source_ImageVector(
-			{	source: this.overlaySource_,
-				style: function(f)
-				{	return sketchStyle;
-				}
-			}),
-			name:'Snap overlay',
-			displayInLayerSwitcher: false
-		});
-*/
-console.log('CREATE OVERLAY')
+
 	this.overlayLayer_ = new ol_layer_Vector({
+		// render the snap guides as an image to improve performance on rerenders
+		renderMode: 'image',
 		source: this.overlaySource_,
 			style: function(f) {
 				return sketchStyle;
