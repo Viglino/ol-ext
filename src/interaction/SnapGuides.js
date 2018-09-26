@@ -66,20 +66,10 @@ var ol_interaction_SnapGuides = function(options) {
 		{	features: new ol_Collection(),
 			useSpatialIndex: false
 		});
-/* Speed up with a ImageVector layer (deprecated)
-	this.overlayLayer_ = new ol_layer_Image(
-		{	source: new ol_source_ImageVector(
-			{	source: this.overlaySource_,
-				style: function(f)
-				{	return sketchStyle;
-				}
-			}),
-			name:'Snap overlay',
-			displayInLayerSwitcher: false
-		});
-*/
-console.log('CREATE OVERLAY')
+
 	this.overlayLayer_ = new ol_layer_Vector({
+		// render the snap guides as an image to improve performance on rerenders
+		renderMode: 'image',
 		source: this.overlaySource_,
 			style: function(f) {
 				return sketchStyle;
@@ -221,28 +211,31 @@ ol_interaction_SnapGuides.prototype.setDrawInteraction = function(drawi) {
 	// Current guidelines
 	var features = [];
 	function setGuides(e) {
-		var coord = [];
+		var coord = e.target.getCoordinates();
 		var s = 2;
 		switch (e.target.getType()) {
-			case 'LineString':
-				coord = e.target.getCoordinates();
-				s = 2;
-				break;
 			case 'Polygon':
-				coord = e.target.getCoordinates()[0];
-				s = 3;
+				coord = coord[0].slice(0, -1);
 				break;
 			default: break;
 		}
+
 		var l = coord.length;
-		if (l != nb && l > s) {
+		if (l === s) {
+			let [x, y] = coord[0];
+			coord = [[x, y], [x, y - 1]];
+		}
+
+		if (l != nb && l >= s) {
 			self.clearGuides(features);
-			features = self.addOrthoGuide([coord[l-s],coord[l-s-1]]);
-			features = features.concat(self.addGuide([coord[0],coord[1]]));
-			features = features.concat(self.addOrthoGuide([coord[0],coord[1]]));
+			if (l > s) {
+				features = self.addOrthoGuide([coord[l - s], coord[l - s - 1]]);
+			}
+			features = features.concat(self.addGuide([coord[0], coord[1]]));
+			features = features.concat(self.addOrthoGuide([coord[0], coord[1]]));
 			nb = l;
 		}
-	};
+	}
 	// New drawing
 	drawi.on ("drawstart", function(e) {
 		// When geom is changing add a new orthogonal direction 
