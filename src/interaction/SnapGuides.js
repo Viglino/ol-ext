@@ -161,33 +161,37 @@ ol_interaction_SnapGuides.prototype.addGuide = function(v, ortho) {
 	{	var map = this.getMap();
 		// Limit extent
 		var extent = map.getView().calculateExtent(map.getSize());
-		extent = ol_extent_buffer(extent, Math.max (1e5+1, (extent[2]-extent[0])*100));
+
+		var guideLength = Math.max(
+			this.projExtent_[2] - this.projExtent_[0],
+			this.projExtent_[3] - this.projExtent_[1]
+		);
+
+		extent = ol_extent_buffer(extent, guideLength * 1.5);
 		//extent = ol_extent_boundingExtent(extent, this.projExtent_);
 		if (extent[0]<this.projExtent_[0]) extent[0]=this.projExtent_[0];
 		if (extent[1]<this.projExtent_[1]) extent[1]=this.projExtent_[1];
 		if (extent[2]>this.projExtent_[2]) extent[2]=this.projExtent_[2];
 		if (extent[3]>this.projExtent_[3]) extent[3]=this.projExtent_[3];
-		// 
+
 		var dx = v[0][0] - v[1][0];
 		var dy = v[0][1] - v[1][1];
 		var d = 1 / Math.sqrt(dx*dx+dy*dy);
-		var p, g = [];
-		var p0, p1;
-		for (var i= 0; i<1e8; i+=1e5)
-		{	if (ortho) p = [ v[0][0] + dy*d*i, v[0][1] - dx*d*i];
-			else p = [ v[0][0] + dx*d*i, v[0][1] + dy*d*i];
-			if (ol_extent_containsCoordinate(extent, p)) g.push(p);
-			else break;
+
+		function generateLine(loopDir) {
+			var p, g = [];
+			var loopCond = guideLength*loopDir*2;
+			for (var i=0; loopDir > 0 ? i < loopCond : i > loopCond; i+=(guideLength * loopDir) / 100) {
+				if (ortho) p = [ v[0][0] + dy*d*i, v[0][1] - dx*d*i];
+				else p = [ v[0][0] + dx*d*i, v[0][1] + dy*d*i];
+				if (ol_extent_containsCoordinate(extent, p)) g.push(p);
+				else break;
+			}
+			return new ol_Feature(new ol_geom_LineString([g[0], g[g.length-1]]));
 		}
-		var f0 = new ol_Feature(new ol_geom_LineString(g));
-		var g=[];
-		for (var i= 0; i>-1e8; i-=1e5)
-		{	if (ortho) p = [ v[0][0] + dy*d*i, v[0][1] - dx*d*i];
-			else p = [ v[0][0] + dx*d*i, v[0][1] + dy*d*i];
-			if (ol_extent_containsCoordinate(extent, p)) g.push(p);
-			else break;
-		}
-		var f1 = new ol_Feature(new ol_geom_LineString(g));
+
+		var f0 = generateLine(1);
+		var f1 = generateLine(-1);
 		this.overlaySource_.addFeature(f0);
 		this.overlaySource_.addFeature(f1);
 		return [f0, f1];
@@ -286,6 +290,7 @@ ol_interaction_SnapGuides.prototype.setModifyInteraction = function (modifyi) {
 
 		self.clearGuides(features);
 		features = self.addOrthoGuide([coord[mod(idx - 1, l)], coord[mod(idx - 2, l)]]);
+		features = features.concat(self.addGuide([coord[mod(idx - 1, l)], coord[mod(idx - 2, l)]]));
 		features = features.concat(self.addGuide([coord[mod(idx + 1, l)], coord[mod(idx + 2, l)]]));
 		features = features.concat(self.addOrthoGuide([coord[mod(idx + 1, l)], coord[mod(idx + 2, l)]]));
 	}
