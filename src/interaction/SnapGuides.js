@@ -19,6 +19,7 @@ import ol_geom_LineString from 'ol/geom/LineString'
  * @extends {ol_interaction_Interaction}
  * @param {olx.interaction.SnapGuidesOptions} 
  *	- pixelTolerance {number | undefined} distance (in px) to snap to a guideline, default 10 px
+ *  - enableInitialGuides {bool | undefined} whether to draw initial guidelines based on the maps orientation, default false.
  *	- style {ol_style_Style | Array<ol_style_Style> | undefined} Style for the sektch features.
  */
 var ol_interaction_SnapGuides = function(options) {
@@ -46,6 +47,7 @@ var ol_interaction_SnapGuides = function(options) {
 
 	// Snap distance (in px)
 	this.snapDistance_ = options.pixelTolerance || 10;
+	this.enableInitialGuides_ = options.enableInitialGuides || false;
 
 	// Default style
  	var sketchStyle = 
@@ -221,12 +223,12 @@ ol_interaction_SnapGuides.prototype.setDrawInteraction = function(drawi) {
 		}
 
 		var l = coord.length;
-		if (l === s) {
+		if (l === s && self.enableInitialGuides_) {
 			let [x, y] = coord[0];
 			coord = [[x, y], [x, y - 1]];
 		}
 
-		if (l != nb && l >= s) {
+		if (l != nb && (self.enableInitialGuides_ ? l >= s : l > s)) {
 			self.clearGuides(features);
 			if (l > s) {
 				features = self.addOrthoGuide([coord[l - s], coord[l - s - 1]]);
