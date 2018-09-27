@@ -286,6 +286,7 @@ ol_interaction_SnapGuides.prototype.setModifyInteraction = function (modifyi) {
 
 		self.clearGuides(features);
 		features = self.addOrthoGuide([coord[mod(idx - 1, l)], coord[mod(idx - 2, l)]]);
+		features = features.concat(self.addGuide([coord[mod(idx - 1, l)], coord[mod(idx - 2, l)]]));
 		features = features.concat(self.addGuide([coord[mod(idx + 1, l)], coord[mod(idx + 2, l)]]));
 		features = features.concat(self.addOrthoGuide([coord[mod(idx + 1, l)], coord[mod(idx + 2, l)]]));
 	}
