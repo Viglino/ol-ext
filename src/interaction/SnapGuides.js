@@ -19,6 +19,7 @@ import ol_geom_LineString from 'ol/geom/LineString'
  * @extends {ol_interaction_Interaction}
  * @param {olx.interaction.SnapGuidesOptions} 
  *	- pixelTolerance {number | undefined} distance (in px) to snap to a guideline, default 10 px
+ *  - enableInitialGuides {bool | undefined} whether to draw initial guidelines based on the maps orientation, default false.
  *	- style {ol_style_Style | Array<ol_style_Style> | undefined} Style for the sektch features.
  */
 var ol_interaction_SnapGuides = function(options) {
@@ -46,6 +47,7 @@ var ol_interaction_SnapGuides = function(options) {
 
 	// Snap distance (in px)
 	this.snapDistance_ = options.pixelTolerance || 10;
+	this.enableInitialGuides_ = options.enableInitialGuides || false;
 
 	// Default style
  	var sketchStyle = 
@@ -221,12 +223,12 @@ ol_interaction_SnapGuides.prototype.setDrawInteraction = function(drawi) {
 		}
 
 		var l = coord.length;
-		if (l === s) {
+		if (l === s && self.enableInitialGuides_) {
 			let [x, y] = coord[0];
 			coord = [[x, y], [x, y - 1]];
 		}
 
-		if (l != nb && l >= s) {
+		if (l != nb && (self.enableInitialGuides_ ? l >= s : l > s)) {
 			self.clearGuides(features);
 			if (l > s) {
 				features = self.addOrthoGuide([coord[l - s], coord[l - s - 1]]);
@@ -248,6 +250,62 @@ ol_interaction_SnapGuides.prototype.setDrawInteraction = function(drawi) {
 		nb = 0;
 		features = [];
 	});
+};
+
+/** Listen to modify event to add orthogonal guidelines relative to the currently dragged point
+* @param {_ol_interaction_Modify_} modifyi a modify interaction to listen to
+* @api
+*/
+ol_interaction_SnapGuides.prototype.setModifyInteraction = function (modifyi) {
+	function mod(d, n) {
+		return ((d % n) + n) % n;
+	}
+
+	var self = this;
+	// Current guidelines
+	var features = [];
+
+	function computeGuides(e) {
+		const selectedVertex = e.target.vertexFeature_
+		if (!selectedVertex) return;
+		var f = e.features.getArray()[0];
+		var geom = f.getGeometry();
+
+		var coord = geom.getCoordinates();
+		switch (geom.getType()) {
+			case 'Polygon':
+				coord = coord[0].slice(0, -1);
+				break;
+			default: break;
+		}
+
+		var modifyVertex = selectedVertex.getGeometry().getCoordinates();
+		var idx = coord.findIndex((c) => c[0] === modifyVertex[0] && c[1] === modifyVertex[1]);
+
+		var l = coord.length;
+
+		self.clearGuides(features);
+		features = self.addOrthoGuide([coord[mod(idx - 1, l)], coord[mod(idx - 2, l)]]);
+		features = features.concat(self.addGuide([coord[mod(idx + 1, l)], coord[mod(idx + 2, l)]]));
+		features = features.concat(self.addOrthoGuide([coord[mod(idx + 1, l)], coord[mod(idx + 2, l)]]));
+	}
+
+	function setGuides(e) {
+		// This callback is called before ol adds the vertex to the feature, so
+		// defer a moment for openlayers to add the new vertex
+		setTimeout(computeGuides, 0, e);
+	}
+
+
+	function drawEnd(e) {
+		self.clearGuides(features);
+		features = [];
+	}
+
+	// New drawing
+	modifyi.on("modifystart", setGuides);
+	// end drawing, clear directions
+	modifyi.on("modifyend", drawEnd);
 };
 
 export default ol_interaction_SnapGuides
