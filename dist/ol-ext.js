@@ -9383,6 +9383,7 @@ ol.interaction.SelectCluster.prototype.animateCluster_ = function(center)
  * @extends {ol.interaction.Interaction}
  * @param {olx.interaction.SnapGuidesOptions} 
  *	- pixelTolerance {number | undefined} distance (in px) to snap to a guideline, default 10 px
+ *  - enableInitialGuides {bool | undefined} whether to draw initial guidelines based on the maps orientation, default false.
  *	- style {ol.style.Style | Array<ol.style.Style> | undefined} Style for the sektch features.
  */
 ol.interaction.SnapGuides = function(options) {
@@ -9407,6 +9408,7 @@ ol.interaction.SnapGuides = function(options) {
 	}
 	// Snap distance (in px)
 	this.snapDistance_ = options.pixelTolerance || 10;
+	this.enableInitialGuides_ = options.enableInitialGuides || false;
 	// Default style
  	var sketchStyle = 
 	[	new ol.style.Style({
@@ -9424,20 +9426,9 @@ ol.interaction.SnapGuides = function(options) {
 		{	features: new ol.Collection(),
 			useSpatialIndex: false
 		});
-/* Speed up with a ImageVector layer (deprecated)
-	this.overlayLayer_ = new ol.layer.Image(
-		{	source: new ol.source.ImageVector(
-			{	source: this.overlaySource_,
-				style: function(f)
-				{	return sketchStyle;
-				}
-			}),
-			name:'Snap overlay',
-			displayInLayerSwitcher: false
-		});
-*/
-console.log('CREATE OVERLAY')
 	this.overlayLayer_ = new ol.layer.Vector({
+		// render the snap guides as an image to improve performance on rerenders
+		renderMode: 'image',
 		source: this.overlaySource_,
 			style: function(f) {
 				return sketchStyle;
@@ -9522,33 +9513,32 @@ ol.interaction.SnapGuides.prototype.addGuide = function(v, ortho) {
 	{	var map = this.getMap();
 		// Limit extent
 		var extent = map.getView().calculateExtent(map.getSize());
-		extent = ol.extent.buffer(extent, Math.max (1e5+1, (extent[2]-extent[0])*100));
+		var guideLength = Math.max(
+			this.projExtent_[2] - this.projExtent_[0],
+			this.projExtent_[3] - this.projExtent_[1]
+		);
+		extent = ol.extent.buffer(extent, guideLength * 1.5);
 		//extent = ol.extent.boundingExtent(extent, this.projExtent_);
 		if (extent[0]<this.projExtent_[0]) extent[0]=this.projExtent_[0];
 		if (extent[1]<this.projExtent_[1]) extent[1]=this.projExtent_[1];
 		if (extent[2]>this.projExtent_[2]) extent[2]=this.projExtent_[2];
 		if (extent[3]>this.projExtent_[3]) extent[3]=this.projExtent_[3];
-		// 
 		var dx = v[0][0] - v[1][0];
 		var dy = v[0][1] - v[1][1];
 		var d = 1 / Math.sqrt(dx*dx+dy*dy);
-		var p, g = [];
-		var p0, p1;
-		for (var i= 0; i<1e8; i+=1e5)
-		{	if (ortho) p = [ v[0][0] + dy*d*i, v[0][1] - dx*d*i];
-			else p = [ v[0][0] + dx*d*i, v[0][1] + dy*d*i];
-			if (ol.extent.containsCoordinate(extent, p)) g.push(p);
-			else break;
+		function generateLine(loopDir) {
+			var p, g = [];
+			var loopCond = guideLength*loopDir*2;
+			for (var i=0; loopDir > 0 ? i < loopCond : i > loopCond; i+=(guideLength * loopDir) / 100) {
+				if (ortho) p = [ v[0][0] + dy*d*i, v[0][1] - dx*d*i];
+				else p = [ v[0][0] + dx*d*i, v[0][1] + dy*d*i];
+				if (ol.extent.containsCoordinate(extent, p)) g.push(p);
+				else break;
+			}
+			return new ol.Feature(new ol.geom.LineString([g[0], g[g.length-1]]));
 		}
-		var f0 = new ol.Feature(new ol.geom.LineString(g));
-		var g=[];
-		for (var i= 0; i>-1e8; i-=1e5)
-		{	if (ortho) p = [ v[0][0] + dy*d*i, v[0][1] - dx*d*i];
-			else p = [ v[0][0] + dx*d*i, v[0][1] + dy*d*i];
-			if (ol.extent.containsCoordinate(extent, p)) g.push(p);
-			else break;
-		}
-		var f1 = new ol.Feature(new ol.geom.LineString(g));
+		var f0 = generateLine(1);
+		var f1 = generateLine(-1);
 		this.overlaySource_.addFeature(f0);
 		this.overlaySource_.addFeature(f1);
 		return [f0, f1];
@@ -9572,28 +9562,29 @@ ol.interaction.SnapGuides.prototype.setDrawInteraction = function(drawi) {
 	// Current guidelines
 	var features = [];
 	function setGuides(e) {
-		var coord = [];
+		var coord = e.target.getCoordinates();
 		var s = 2;
 		switch (e.target.getType()) {
-			case 'LineString':
-				coord = e.target.getCoordinates();
-				s = 2;
-				break;
 			case 'Polygon':
-				coord = e.target.getCoordinates()[0];
-				s = 3;
+				coord = coord[0].slice(0, -1);
 				break;
 			default: break;
 		}
 		var l = coord.length;
-		if (l != nb && l > s) {
+		if (l === s && self.enableInitialGuides_) {
+			let [x, y] = coord[0];
+			coord = [[x, y], [x, y - 1]];
+		}
+		if (l != nb && (self.enableInitialGuides_ ? l >= s : l > s)) {
 			self.clearGuides(features);
-			features = self.addOrthoGuide([coord[l-s],coord[l-s-1]]);
-			features = features.concat(self.addGuide([coord[0],coord[1]]));
-			features = features.concat(self.addOrthoGuide([coord[0],coord[1]]));
+			if (l > s) {
+				features = self.addOrthoGuide([coord[l - s], coord[l - s - 1]]);
+			}
+			features = features.concat(self.addGuide([coord[0], coord[1]]));
+			features = features.concat(self.addOrthoGuide([coord[0], coord[1]]));
 			nb = l;
 		}
-	};
+	}
 	// New drawing
 	drawi.on ("drawstart", function(e) {
 		// When geom is changing add a new orthogonal direction 
@@ -9606,6 +9597,52 @@ ol.interaction.SnapGuides.prototype.setDrawInteraction = function(drawi) {
 		nb = 0;
 		features = [];
 	});
+};
+/** Listen to modify event to add orthogonal guidelines relative to the currently dragged point
+* @param {_ol_interaction_Modify_} modifyi a modify interaction to listen to
+* @api
+*/
+ol.interaction.SnapGuides.prototype.setModifyInteraction = function (modifyi) {
+	function mod(d, n) {
+		return ((d % n) + n) % n;
+	}
+	var self = this;
+	// Current guidelines
+	var features = [];
+	function computeGuides(e) {
+		const selectedVertex = e.target.vertexFeature_
+		if (!selectedVertex) return;
+		var f = e.features.getArray()[0];
+		var geom = f.getGeometry();
+		var coord = geom.getCoordinates();
+		switch (geom.getType()) {
+			case 'Polygon':
+				coord = coord[0].slice(0, -1);
+				break;
+			default: break;
+		}
+		var modifyVertex = selectedVertex.getGeometry().getCoordinates();
+		var idx = coord.findIndex((c) => c[0] === modifyVertex[0] && c[1] === modifyVertex[1]);
+		var l = coord.length;
+		self.clearGuides(features);
+		features = self.addOrthoGuide([coord[mod(idx - 1, l)], coord[mod(idx - 2, l)]]);
+		features = features.concat(self.addGuide([coord[mod(idx - 1, l)], coord[mod(idx - 2, l)]]));
+		features = features.concat(self.addGuide([coord[mod(idx + 1, l)], coord[mod(idx + 2, l)]]));
+		features = features.concat(self.addOrthoGuide([coord[mod(idx + 1, l)], coord[mod(idx + 2, l)]]));
+	}
+	function setGuides(e) {
+		// This callback is called before ol adds the vertex to the feature, so
+		// defer a moment for openlayers to add the new vertex
+		setTimeout(computeGuides, 0, e);
+	}
+	function drawEnd(e) {
+		self.clearGuides(features);
+		features = [];
+	}
+	// New drawing
+	modifyi.on("modifystart", setGuides);
+	// end drawing, clear directions
+	modifyi.on("modifyend", drawEnd);
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
