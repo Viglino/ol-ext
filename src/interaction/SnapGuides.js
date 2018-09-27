@@ -252,4 +252,60 @@ ol_interaction_SnapGuides.prototype.setDrawInteraction = function(drawi) {
 	});
 };
 
+/** Listen to modify event to add orthogonal guidelines relative to the currently dragged point
+* @param {_ol_interaction_Modify_} modifyi a modify interaction to listen to
+* @api
+*/
+ol_interaction_SnapGuides.prototype.setModifyInteraction = function (modifyi) {
+	function mod(d, n) {
+		return ((d % n) + n) % n;
+	}
+
+	var self = this;
+	// Current guidelines
+	var features = [];
+
+	function computeGuides(e) {
+		const selectedVertex = e.target.vertexFeature_
+		if (!selectedVertex) return;
+		var f = e.features.getArray()[0];
+		var geom = f.getGeometry();
+
+		var coord = geom.getCoordinates();
+		switch (geom.getType()) {
+			case 'Polygon':
+				coord = coord[0].slice(0, -1);
+				break;
+			default: break;
+		}
+
+		var modifyVertex = selectedVertex.getGeometry().getCoordinates();
+		var idx = coord.findIndex((c) => c[0] === modifyVertex[0] && c[1] === modifyVertex[1]);
+
+		var l = coord.length;
+
+		self.clearGuides(features);
+		features = self.addOrthoGuide([coord[mod(idx - 1, l)], coord[mod(idx - 2, l)]]);
+		features = features.concat(self.addGuide([coord[mod(idx + 1, l)], coord[mod(idx + 2, l)]]));
+		features = features.concat(self.addOrthoGuide([coord[mod(idx + 1, l)], coord[mod(idx + 2, l)]]));
+	}
+
+	function setGuides(e) {
+		// This callback is called before ol adds the vertex to the feature, so
+		// defer a moment for openlayers to add the new vertex
+		setTimeout(computeGuides, 0, e);
+	}
+
+
+	function drawEnd(e) {
+		self.clearGuides(features);
+		features = [];
+	}
+
+	// New drawing
+	modifyi.on("modifystart", setGuides);
+	// end drawing, clear directions
+	modifyi.on("modifyend", drawEnd);
+};
+
 export default ol_interaction_SnapGuides
