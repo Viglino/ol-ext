@@ -50,7 +50,7 @@ var ol_control_RoutingGeoportail = function(options) {
     target: options.target
 	});
 	
-	this.set('url', 'http://wxs.ign.fr/'+options.apiKey+'/itineraire/rest/route.json');
+	this.set('url', 'https://wxs.ign.fr/'+options.apiKey+'/itineraire/rest/route.json');
 
 	this._search = [];
 
