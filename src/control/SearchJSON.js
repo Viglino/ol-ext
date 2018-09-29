@@ -61,7 +61,7 @@ ol_control_SearchJSON.prototype.autocomplete = function (s, cback)
 	var parameters = '';
 	for (var index in data) {
 		parameters += (parameters) ? '&' : '?';
-		if (data.hasOwnProperty(index)) parameters += index + '=' + data[index];
+		if (data.hasOwnProperty(index)) parameters += index + '=' + encodeURIComponent(data[index]);
 	}
 
 	this.ajax(url + parameters, 
