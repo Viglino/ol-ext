@@ -22,7 +22,7 @@
 
 /* Hide to prevent flickering on animate */
 .ol-popup.anim.visible .anchor
-{	animation: ol-popup_opacity 0.4s ease 1;
+{	/* animation: ol-popup_opacity 0.4s ease 1; */
 }
 @keyframes ol-popup_opacity
 {	from { visibility:hidden }
