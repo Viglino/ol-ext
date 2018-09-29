@@ -12,6 +12,7 @@ import ol_style_Stroke from 'ol/style/Stroke'
 import ol_style_Fill from 'ol/style/Fill'
 import ol_style_Text from 'ol/style/Text'
 import {transform as ol_proj_transform} from 'ol/proj'
+import {get as ol_proj_get} from 'ol/proj'
 
 /**
  * Draw a graticule on the map.
@@ -146,7 +147,7 @@ ol_control_Graticule.prototype.drawGraticule_ = function (e)
 	xmax = (Math.floor(xmax/step))*step +2*step;
 	ymax = (Math.floor(ymax/step))*step +2*step;
 
-	var extent = ol_proj.get(proj).getExtent();
+	var extent = ol_proj_get(proj).getExtent();
 	if (extent)
 	{	if (xmin < extent[0]) xmin = extent[0];
 		if (ymin < extent[1]) ymin = extent[1];
