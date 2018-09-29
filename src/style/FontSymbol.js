@@ -31,6 +31,7 @@ import {asString as ol_color_asString} from 'ol/color'
  *  @param {number} options.rotateWithView
  *  @param {number} options.opacity
  *  @param {number} options.fontSize, default 1
+ *  @param {string} options.fontStyle the font style (bold, italic, bold italic, etc), default none
  *  @param {boolean} options.gradient true to display a gradient on the symbol
  *  @param {_ol_style_Fill_} options.fill
  *  @param {_ol_style_Stroke_} options.stroke
@@ -48,6 +49,7 @@ var ol_style_FontSymbol = function(options)
 	if (typeof(options.opacity)=="number") this.setOpacity(options.opacity);
 	this.color_ = options.color;
 	this.fontSize_ = options.fontSize || 1;
+	this.fontStyle_ = options.fontStyle || '';
 	this.stroke_ = options.stroke;
 	this.fill_ = options.fill;
 	this.radius_ = options.radius -strokeWidth;
@@ -116,6 +118,7 @@ ol_style_FontSymbol.prototype.clone = function()
 	{	glyph: "",
 		color: this.color_,
 		fontSize: this.fontSize_,
+		fontStyle: this.fontStyle_,
 		stroke: this.stroke_,
 		fill: this.fill_,
 		radius: this.radius_ + (this.stroke_ ? this.stroke_.getWidth():0),
@@ -362,7 +365,9 @@ ol_style_FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, 
 
 	// Draw the symbol
 	if (this.glyph_.char)
-	{	context.font = (2*tr.fac*(this.radius_)*this.fontSize_)+"px "+this.glyph_.font;
+	{	context.font = this.fontStyle_ +' '
+				+ (2*tr.fac*(this.radius_)*this.fontSize_)+"px "
+				+ this.glyph_.font;
 		context.strokeStyle = context.fillStyle;
 		context.lineWidth = renderOptions.strokeWidth * (this.form_ == "none" ? 2:1);
 		context.fillStyle = ol_color_asString(this.color_ || scolor);

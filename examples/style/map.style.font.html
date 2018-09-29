@@ -177,6 +177,15 @@
 				</select>
 			</li>
 			<li>
+				style: 
+				<select id="style" onchange="vector.changed();" >
+					<option value="">unset</option>
+					<option value="bold" >bold</option>
+					<option value="italic" >italic</option>
+					<option value="bold italic" >bold italic</option>
+				</select>
+			</li>
+			<li>
 				stroke color: 
 				<select id="stroke" onchange="vector.changed();" >
 					<option value="transparent">transparent</option>
@@ -303,6 +312,7 @@
 							gradient: $("#gradient").prop('checked'),
 							glyph: theGlyph,//car[Math.floor(Math.random()*car.length)], 
 							fontSize: Number($("#fontsize").val()),
+							fontStyle: $("#style").val(),
 							radius: Number($("#radius").val()), 
 							//offsetX: -15,
 							rotation: Number($("#rotation").val())*Math.PI/180,
@@ -360,6 +370,7 @@
 	//
 	function setOptions(glyph, form, color, scolor, fcolor, border, radius, fsize, offset, gradient, shadow)
 	{	theGlyph = glyph;
+		$("#style").val('');
 		$("#color").val(color);
 		$("#form").val(form);
 		$("#fill").val(fcolor);
