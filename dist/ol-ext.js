@@ -392,7 +392,7 @@ ol.control.SearchJSON.prototype.autocomplete = function (s, cback)
 	var parameters = '';
 	for (var index in data) {
 		parameters += (parameters) ? '&' : '?';
-		if (data.hasOwnProperty(index)) parameters += index + '=' + data[index];
+		if (data.hasOwnProperty(index)) parameters += index + '=' + encodeURIComponent(data[index]);
 	}
 	this.ajax(url + parameters, 
 		function (resp) {
@@ -589,7 +589,7 @@ ol.control.SearchGeoportail = function(options) {
   options = options || {};
   options.className = options.className || 'IGNF';
   options.typing = options.typing || 500;
-  options.url = "http://wxs.ign.fr/"+options.apiKey+"/ols/apis/completion";
+  options.url = "https://wxs.ign.fr/"+options.apiKey+"/ols/apis/completion";
   ol.control.SearchJSON.call(this, options);
 	this.set("copy","<a href='https://www.geoportail.gouv.fr/' target='new'>&copy; IGN-Géoportail</a>");
   this.set('type', options.type || 'StreetAddress,PositionOfInterest');
@@ -1364,21 +1364,21 @@ ol.control.LayerSwitcher.prototype.setprogress_ = function(layer)
  *	@param {bool} options.autoDeactivate used with subbar to deactivate all control when top level control deactivate, default false
  *	@param {Array<_ol_control_>} options.controls a list of control to add to the bar
  */
-ol.control.Bar = function(options)
-{	if (!options) options={};
+ol.control.Bar = function(options) {
+  if (!options) options={};
 	var element = $("<div>").addClass('ol-unselectable ol-control ol-bar');
 	if (options.className) element.addClass(options.className);
 	if (options.group) element.addClass('ol-group');
-	ol.control.Control.call(this,
-	{	element: element.get(0),
+	ol.control.Control.call(this, {
+    element: element.get(0),
 		target: options.target
 	});
 	this.set('toggleOne', options.toggleOne);
 	this.set('autoDeactivate', options.autoDeactivate);
 	this.controls_ = [];
-	if (options.controls instanceof Array)
-	{	for (var i=0; i<options.controls.length; i++)
-		{	this.addControl(options.controls[i]);
+	if (options.controls instanceof Array) {
+    for (var i=0; i<options.controls.length; i++) {
+      this.addControl(options.controls[i]);
 		}
 	}
 };
@@ -1393,18 +1393,18 @@ ol.control.Bar.prototype.setVisible = function (val) {
 /** Get the control visibility
 * @return {boolean} b
 */
-ol.control.Bar.prototype.getVisible = function ()
-{	return ($(this.element).css('display') != 'none');
+ol.control.Bar.prototype.getVisible = function () {
+  return ($(this.element).css('display') != 'none');
 }
 /**
  * Set the map instance the control is associated with
  * and add its controls associated to this map.
  * @param {_ol_Map_} map The map instance.
  */
-ol.control.Bar.prototype.setMap = function (map)
-{	ol.control.Control.prototype.setMap.call(this, map);
-	for (var i=0; i<this.controls_.length; i++)
-	{	var c = this.controls_[i];
+ol.control.Bar.prototype.setMap = function (map) {
+  ol.control.Control.prototype.setMap.call(this, map);
+	for (var i=0; i<this.controls_.length; i++) {
+    var c = this.controls_[i];
 		// map.addControl(c);
 		c.setMap(map);
 	}
@@ -1412,18 +1412,18 @@ ol.control.Bar.prototype.setMap = function (map)
 /** Get controls in the panel
 *	@param {Array<_ol_control_>}
 */
-ol.control.Bar.prototype.getControls = function ()
-{	return this.controls_;
+ol.control.Bar.prototype.getControls = function () {
+  return this.controls_;
 };
 /** Set tool bar position
 *	@param {top|left|bottom|right} pos
 */
-ol.control.Bar.prototype.setPosition = function (pos)
-{	$(this.element).removeClass('ol-left ol-top ol-bottom ol-right');
+ol.control.Bar.prototype.setPosition = function (pos) {
+  $(this.element).removeClass('ol-left ol-top ol-bottom ol-right');
 	pos=pos.split ('-');
-	for (var i=0; i<pos.length; i++)
-	{	switch (pos[i])
-		{	case 'top':
+	for (var i=0; i<pos.length; i++) {
+    switch (pos[i]) {
+      case 'top':
 			case 'left':
 			case 'bottom':
 			case 'right':
@@ -1436,46 +1436,46 @@ ol.control.Bar.prototype.setPosition = function (pos)
 /** Add a control to the bar
 *	@param {_ol_control_} c control to add
 */
-ol.control.Bar.prototype.addControl = function (c)
-{	this.controls_.push(c);
+ol.control.Bar.prototype.addControl = function (c) {
+  this.controls_.push(c);
 	c.setTarget(this.element);
-	if (this.getMap())
-	{	this.getMap().addControl(c);
+	if (this.getMap()) {
+    this.getMap().addControl(c);
 	}
 	// Activate and toogleOne
 	c.on ('change:active', this.onActivateControl_.bind(this));
-	if (c.getActive && c.getActive())
-	{	c.dispatchEvent({ type:'change:active', key:'active', oldValue:false, active:true });
+	if (c.getActive && c.getActive()) {
+    c.dispatchEvent({ type:'change:active', key:'active', oldValue:false, active:true });
 	}
 };
 /** Deativate all controls in a bar
 * @param {_ol_control_} except a control
 */
-ol.control.Bar.prototype.deactivateControls = function (except)
-{	for (var i=0; i<this.controls_.length; i++)
-	{	if (this.controls_[i] !== except && this.controls_[i].setActive)
-		{	this.controls_[i].setActive(false);
+ol.control.Bar.prototype.deactivateControls = function (except) {
+  for (var i=0; i<this.controls_.length; i++) {
+  if (this.controls_[i] !== except && this.controls_[i].setActive) {
+    this.controls_[i].setActive(false);
 		}
 	}
 };
-ol.control.Bar.prototype.getActiveControls = function ()
-{	var active = [];
-	for (var i=0, c; c=this.controls_[i]; i++)
-	{	if (c.getActive && c.getActive()) active.push(c);
+ol.control.Bar.prototype.getActiveControls = function () {
+  var active = [];
+	for (var i=0, c; c=this.controls_[i]; i++) {
+    if (c.getActive && c.getActive()) active.push(c);
 	}
 	return active;
 }
 /** Auto activate/deactivate controls in the bar
 * @param {boolean} b activate/deactivate
 */
-ol.control.Bar.prototype.setActive = function (b)
-{	if (!b && this.get("autoDeactivate"))
-	{	this.deactivateControls();
+ol.control.Bar.prototype.setActive = function (b) {
+  if (!b && this.get("autoDeactivate")) {
+    this.deactivateControls();
 	}
-	if (b)
-	{	var ctrls = this.getControls();
-		for (var i=0, sb; (sb = ctrls[i]); i++)
-		{	if (sb.get("autoActivate")) sb.setActive(true);
+	if (b) {
+    var ctrls = this.getControls();
+		for (var i=0, sb; (sb = ctrls[i]); i++) {
+      if (sb.get("autoActivate")) sb.setActive(true);
 		}
 	}
 }
@@ -1483,23 +1483,22 @@ ol.control.Bar.prototype.setActive = function (b)
 *	@param {ol.event} e :an object with a target {_ol_control_} and active flag {bool}
 */
 ol.control.Bar.prototype.onActivateControl_ = function (e) {
-	if (this.get('toggleOne'))
-	{	if (e.active)
-		{	var n;
+	if (this.get('toggleOne')) {
+    if (e.active) {
+      var n;
 			var ctrl = e.target;
-			for (n=0; n<this.controls_.length; n++)
-			{	if (this.controls_[n]===ctrl) break;
+			for (n=0; n<this.controls_.length; n++) {
+        if (this.controls_[n]===ctrl) break;
 			}
 			// Not here!
 			if (n==this.controls_.length) return;
 			this.deactivateControls (this.controls_[n]);
-		}
-		else
-		{	// No one active > test auto activate
-			if (!this.getActiveControls().length)
-			{	for (var i=0, c; c=this.controls_[i]; i++)
-				{	if (c.get("autoActivate"))
-					{	c.setActive();
+		} else {
+      // No one active > test auto activate
+			if (!this.getActiveControls().length) {
+        for (var i=0, c; c=this.controls_[i]; i++) {
+          if (c.get("autoActivate")) {
+            c.setActive(true);
 						break;
 					}
 				}
@@ -4142,7 +4141,7 @@ ol.control.RoutingGeoportail = function(options) {
     element: element,
     target: options.target
 	});
-	this.set('url', 'http://wxs.ign.fr/'+options.apiKey+'/itineraire/rest/route.json');
+	this.set('url', 'https://wxs.ign.fr/'+options.apiKey+'/itineraire/rest/route.json');
 	this._search = [];
 	var listElt = document.createElement("DIV");
 	this.addSearch(element, options);
@@ -14985,6 +14984,7 @@ ol.style.FillPattern.prototype.getChecksum = function()
  *  @param {number} options.rotateWithView
  *  @param {number} options.opacity
  *  @param {number} options.fontSize, default 1
+ *  @param {string} options.fontStyle the font style (bold, italic, bold italic, etc), default none
  *  @param {boolean} options.gradient true to display a gradient on the symbol
  *  @param {_ol_style_Fill_} options.fill
  *  @param {_ol_style_Stroke_} options.stroke
@@ -15001,6 +15001,7 @@ ol.style.FontSymbol = function(options)
 	if (typeof(options.opacity)=="number") this.setOpacity(options.opacity);
 	this.color_ = options.color;
 	this.fontSize_ = options.fontSize || 1;
+	this.fontStyle_ = options.fontStyle || '';
 	this.stroke_ = options.stroke;
 	this.fill_ = options.fill;
 	this.radius_ = options.radius -strokeWidth;
@@ -15062,6 +15063,7 @@ ol.style.FontSymbol.prototype.clone = function()
 	{	glyph: "",
 		color: this.color_,
 		fontSize: this.fontSize_,
+		fontStyle: this.fontStyle_,
 		stroke: this.stroke_,
 		fill: this.fill_,
 		radius: this.radius_ + (this.stroke_ ? this.stroke_.getWidth():0),
@@ -15286,7 +15288,9 @@ ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, 
 	}
 	// Draw the symbol
 	if (this.glyph_.char)
-	{	context.font = (2*tr.fac*(this.radius_)*this.fontSize_)+"px "+this.glyph_.font;
+	{	context.font = this.fontStyle_ +' '
+				+ (2*tr.fac*(this.radius_)*this.fontSize_)+"px "
+				+ this.glyph_.font;
 		context.strokeStyle = context.fillStyle;
 		context.lineWidth = renderOptions.strokeWidth * (this.form_ == "none" ? 2:1);
 		context.fillStyle = ol.color.asString(this.color_ || scolor);

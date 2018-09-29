@@ -118,7 +118,7 @@ gulp.task("js", function() {
 		"./src/overlay/*.js",
     "./src/geom/*.js",
     "./src/render/*.js",
-    "./src/style/*.js", "!./src/style/FontMakiDef.js", "!./src/style/FontAwesomeDef.js",
+    "./src/style/*.js", "!./src/style/FontMakiDef.js", "!./src/style/FontMaki2Def.js", "!./src/style/FontAwesomeDef.js",
     // Utils in extrajs
     //"./src/utils/*.js", "!./src/render/Pulse.js", "!./src/render/Markup.js",
 		"!./*/*.min.js",
@@ -167,7 +167,7 @@ gulp.task('serve', function() {
 gulp.task("extrajs", function() {
 	gulp.src([
     "./src/control/Cloud.js",
-    "./src/style/FontMakiDef.js", "./src/style/FontAwesomeDef.js",
+    "./src/style/FontMakiDef.js", "./src/style/FontMaki2Def.js", "./src/style/FontAwesomeDef.js",
     "./src/utils/*.js",
     "./src/filter/TextureImage.js"
 		])
