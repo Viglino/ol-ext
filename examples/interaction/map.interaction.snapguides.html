@@ -17,7 +17,9 @@
 
 	<!-- jQuery -->
 	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-
+	<!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  
 	<!-- Openlayers -->
     <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
 	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
@@ -45,6 +47,9 @@
 			<li>
 				You can set an <i>ol.interaction.Draw</i> to control orthogonal drawing (similar to <a href="https://github.com/geops/ole">OLE snapping</a> with OL2).
 			</li>
+			<li>
+				You can also set an <i>ol.interaction.Modify</i> to control orthogonal drawing while modifying.
+			</li>
 		</ul>
 	</div>
 
@@ -54,6 +59,7 @@
 	<div class="options" >
 		<h2>Options:</h2>
 		<ul><li>
+      <label><input type="checkbox" onchange="setInitial(this.checked)" /> use initial guides</label>
 		</li></ul>
 		<button onclick="addMeridian(0)">Add a Greenwich origin guideline</button>
 	</div>
@@ -64,39 +70,47 @@
 		var layers = [ new ol.layer.Tile({ source: new ol.source.OSM() }) ];
 
 		// The map
-		var map = new ol.Map
-			({	target: 'map',
-				view: new ol.View
-				({	zoom: 17,
-					center: [269766, 6248649]
-				}),
-				controls: ol.control.defaults({ "attribution": false }),
-				layers: layers
-			});
+		var map = new ol.Map ({
+      target: 'map',
+      view: new ol.View ({
+        zoom: 17,
+        center: [269766, 6248649]
+      }),
+      controls: ol.control.defaults({ "attribution": false }),
+      layers: layers
+    });
 
 		// New vector layer
-		var vector = new ol.layer.Vector(
-		{	name: 'Vecteur',
+		var vector = new ol.layer.Vector({
+      name: 'Vecteur',
 			source: new ol.source.Vector({ features: new ol.Collection() }),
 		})
 		map.addLayer(vector);
 
-		var drawi = new ol.interaction.Draw(
-				{	source: vector.getSource(),
-					//type: "LineString"
-					type: "Polygon"
-				});
-		map.addInteraction(drawi);
+		var drawi = new ol.interaction.Draw({
+      source: vector.getSource(),
+      //type: "LineString"
+      type: "Polygon"
+    });
+    map.addInteraction(drawi);
+
+    var modi = new ol.interaction.Modify({ source: vector.getSource() });
+    map.addInteraction(modi);
 
 		var snapi = new ol.interaction.SnapGuides();
 		snapi.setDrawInteraction(drawi);
+		snapi.setModifyInteraction(modi);
 		map.addInteraction(snapi);
 
 		// New guide on meridian (default Greenwich)
-		function addMeridian (x)
-		{	var p1 = ol.proj.transform([x||0,1], 'EPSG:4326', map.getView().getProjection());
-			var p2 = ol.proj.transform([x||0,-1], 'EPSG:4326', map.getView().getProjection());
+		function addMeridian (x) {
+      var p1 = ol.proj.transform([x||0,1], 'EPSG:4326', map.getView().getProjection());
+      var p2 = ol.proj.transform([x||0,-1], 'EPSG:4326', map.getView().getProjection());
 			snapi.addGuide([ p1, p2 ]);
+		};
+		// Switch initial condition
+		function setInitial (b) {
+      snapi.enableInitialGuides_ = b;
 		};
 
 	</script>
