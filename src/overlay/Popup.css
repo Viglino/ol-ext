@@ -183,7 +183,8 @@
 }
 
 /** Placemark popup */
-.ol-popup.placemark {	
+.ol-popup.placemark {
+	font-size: 15px;	
     color: #c00;
     background-color: #fff;
     border: .45em solid currentColor;
@@ -207,14 +208,6 @@
 	margin: -.4em;
 }
 
-.ol-popup.placemark .anchor:after {
-    content: "";
-    border-color: currentColor transparent;
-    border-style: solid;
-    border-width: 1em .7em 0;
-    margin: -.75em -.7em;
-	bottom:0;
-}
 .ol-popup.placemark .anchor:before {
     content: "";
     margin: -.5em -.5em;
@@ -224,7 +217,36 @@
     border-radius: 50%;
     box-shadow: 0 1em 0.5em rgba(0,0,0,.5);
 }
+.ol-popup.placemark .anchor:after {
+    content: "";
+    border-color: currentColor transparent;
+    border-style: solid;
+    border-width: 1em .7em 0;
+    margin: -.75em -.7em;
+	bottom:0;
+}
 
+/** Shield */
+.ol-popup.placemark.shield {
+	border-radius: .3em;
+}
+
+/** Needle */
+.ol-popup.placemark.needle {	
+	margin: 1.5em 0;
+}
+.ol-popup.placemark.needle .anchor {
+	margin: -1.5em;
+}
+.ol-popup.placemark.needle .anchor:after {
+    border-color: currentColor;
+    border-style: solid;
+    border-width: 2em .15em 0;
+    margin: -.55em -.15em;
+}
+.ol-popup.placemark.needle .anchor:before {
+    margin: -.75em -.5em;
+}
 
 /** Black popup */
 .ol-popup.black .closeBox 

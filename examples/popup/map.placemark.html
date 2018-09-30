@@ -35,11 +35,15 @@
 	</a>
 
 	<div class="info">
-		ol/Overlay/Placemark displays a placemark on the map. 
+    <p>
+      ol/Overlay/Placemark displays a placemark on the map. 
+      <br/>
+      A placemark is an <a href="map.popup.anim.html">ol/Overlay/Popup</a> with a bounce animation.
+    </p>
 		<ul>
 			<li>
         you can change the color and backgroundcolor of the placemarck with the <i>color</i> and <i>backgroundcolor</i>
-			</li>
+      </li>
 		</ul>
 		<i>ol.Overlay.Popup</i> necessite jQuery.
 	</div>
@@ -48,6 +52,41 @@
 	<div id="map" style="width:600px; height:400px;"></div>
 
 	<div class="options">
+    <ul>
+      <li>
+        Name:
+        <select onchange="placemark.setClassName(this.value);">
+          <option value=''>default</option>
+          <option value='needle'>needle</option>
+          <option value='shield'>shield</option>
+        </select>
+      </li>
+      <li>
+        Size:
+        <select onchange="placemark.setRadius(Number(this.value)); placemark.show(placemark.getPosition())">
+          <option value='15'>default</option>
+          <option value='20'>big</option>
+          <option value='10'>small</option>
+        </select>
+      </li>
+      <li>
+        Color:
+        <select onchange="placemark.setColor(this.value);">
+          <option value='#c00'>red</option>
+          <option value='#080'>green</option>
+          <option value='#00c'>blue</option>
+        </select>
+      </li>
+      <li>
+          Background color:
+          <select onchange="placemark.setBackgroundColor(this.value);">
+            <option value='#fff'>white</option>
+            <option value='#f00'>red</option>
+            <option value='#0f0'>green</option>
+            <option value='#00f'>blue</option>
+          </select>
+        </li>
+      </ul>
 	</div>
 	<p>Click on the map to show a popup !</p>
 	
