@@ -229,7 +229,17 @@
 
 /** Shield */
 .ol-popup.placemark.shield {
-	border-radius: .3em;
+	border-radius: .2em;
+}
+
+.ol-popup.placemark.shield .anchor:after {
+    border-width: .8em 1em 0;
+    margin: -.7em -1em;
+}
+
+/** Blazon */
+.ol-popup.placemark.blazon {
+	border-radius: .2em;
 }
 
 /** Needle */
