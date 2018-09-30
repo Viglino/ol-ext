@@ -7,11 +7,11 @@
 	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 	
 ------------------------------------------------------------>
-	<title>ol-ext: Popup overlay</title>
+	<title>ol-ext: Placemark overlay</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 	<meta name="description" content="styled popup for OL3" />
-	<meta name="keywords" content="ol3, popup, overlay, jQuery, style" />
+	<meta name="keywords" content="ol3, popup, overlay, placemark, jQuery, style" />
 
 	<!-- jQuery -->
 	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
@@ -25,92 +25,20 @@
 	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
 	<link rel="stylesheet" href="../style.css" />
-	<style>
-		/* popup style */
-		.ol-popup
-		{	max-width:300px;
-			min-width:100px;
-			min-height:1em;
-		}
-		/* Image on popup */
-		.ol-popup img 
-		{	float: left;
-			margin: 0 0.5em 0 0;
-			max-width: 100px;
-			max-height: 100px;
-		}
-		/* no image content tooltips */
-		.ol-popup.tooltips img
-		{	display:none;
-		}
-
-		/* Custom orange style (tips) */
-		.ol-popup.tips.orange
-		{	border-color:#da7;
-			background-color:#eca;
-		}
-		.ol-popup.tips.orange .anchor::before
-		{	border-color: #da7 transparent;
-		}
-		.ol-popup-middle.tips.orange .anchor::before
-		{	border-color: transparent #da7;
-		}
-
-		/* orange style (default) */
-		.ol-popup.default.orange
-		{	border:4px solid #f96;
-		}
-		.ol-popup.default.orange .anchor {
-			margin: -15px 18px;
-		}
-		.ol-popup.default.orange .anchor::after
-		{	margin: 6px /*border:4 +2 px */ -9px; 
-		}
-		.ol-popup-middle.default.orange .anchor::after
-		{	margin: -9px 6px /*border:4 +2 px */; 
-		}
-		.ol-popup.default.orange .anchor::before
-		{	border-color: #f96 transparent;
-		}
-		.ol-popup-middle.default.orange .anchor::before
-		{	border-color: transparent #da7;
-		}
-		.ol-popup.default.orange .closeBox
-		{	background-color: rgba(255, 153, 102, 0.7);
-		}
-		.ol-popup.default.orange .closeBox:hover
-		{	background-color: rgba(255, 153, 102, 1);
-		}
-	</style>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol3-ext"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
-
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  
 	<a href="../../index.html">
-		<h1>ol-ext: Popup overlay</h1>
+		<h1>ol-ext: Placemark overlay</h1>
 	</a>
 
 	<div class="info">
-		Display popup on the map. 
+		ol/Overlay/Placemark displays a placemark on the map. 
 		<ul>
 			<li>
-				You can use classes to style the popup with a css (or choose an existing one).
-			</li>
-			<li>
-				You can control the position of the popup <i>top|center|bottom|auto</i> - <i>left|center|right|auto</i>.
-			</li>
-			<li>
-				The <i>auto</i> position lets the popup choose a good positioning according to the position on the map.
-			</li>
-			<li>
-				The <i>closeBox</i> option adds a close button to hide the popup.
-			</li>
-			<li>
-				The <i>onclose</i> option is a callback function when the close button is clicked.
-			</li>
-			<li>
-				You can add a bounce animation effect when popup appear just by adding the popupoverlay.anim.css (see <a href="map.popup.anim.html">example</a>)
+        you can change the color and backgroundcolor of the placemarck with the <i>color</i> and <i>backgroundcolor</i>
 			</li>
 		</ul>
 		<i>ol.Overlay.Popup</i> necessite jQuery.
@@ -120,104 +48,46 @@
 	<div id="map" style="width:600px; height:400px;"></div>
 
 	<div class="options">
-		<h2>Options:</h2>
-		Positioning:
-		<select onchange="popup.setPositioning(this.value); map.renderSync();">
-			<option value="auto">auto</option>
-			<option value="bottom-auto">bottom-auto</option>
-			<option value="bottom-left">bottom-left</option>
-			<option value="bottom-center">bottom-center</option>
-			<option value="bottom-right">bottom-right</option>
-			<option value="top-auto">top-auto</option>
-			<option value="top-left">top-left</option>
-			<option value="top-center">top-center</option>
-			<option value="top-right">top-right</option>
-			<option value="center-auto">center-auto</option>
-			<option value="center-left">center-left</option>
-			<option value="center-right">center-right</option>
-			<option value="center-center">center-center</option>
-		</select>
-		<br />
-		Form:
-		<select onchange="popup.setPopupClass(this.value); if($('#ck').prop('checked')) popup.addPopupClass('shadow'); ">
-			<option value="default">default</option>
-			<option value="default orange">orange</option>
-			<option value="black">black</option>
-			<option value="tips">green tips</option>
-			<option value="tips orange">orange tips</option>
-			<option value="warning">warning</option>
-			<option value="tooltips">tooltips</option>
-		</select>
-		<br />
-		<input id="ck" type="checkbox" onchange="if (this.checked) popup.addPopupClass('shadow'); else popup.removePopupClass('shadow');" />
-		<label for="ck">shadow</label>
-		<br />
-		<input id="cb" type="checkbox" checked onchange="popup.setClosebox(this.checked);" />
-		<label for="cb">hasclosebox</label>
 	</div>
-	<p>Click on the points to show a popup !</p>
+	<p>Click on the map to show a popup !</p>
 	
 	<script type="text/javascript">
-	// Layers
-	var layers = [
-		new ol.layer.Tile({
-			name: "Natural Earth", 
-			minResolution: 306,
-    		source: new ol.source.XYZ(
-			{	url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
-				attributions: [ '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' ] 
-    		})
-		})
-	]
+  // Layers
+  var layers = [
+    new ol.layer.Tile({
+      name: "Natural Earth", 
+      minResolution: 306,
+      source: new ol.source.XYZ({
+        url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
+        attributions: [ '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' ] 
+      })
+    })
+  ];
 
 	// Popup overlay
-	var popup = new ol.Overlay.Popup (
-		{	popupClass: "placemark anim",
-			onshow: function(){ console.log("You opened the box"); },
-			onclose: function(){ console.log("You close the box"); },
-			positioning: 'bottom-center',
-			autoPan: true,
-			autoPanAnimation: { duration: 250 }
-		});
+	var placemark = new ol.Overlay.Placemark ({
+    // color: '#369',
+    // backgroundColor : 'yellow',
+    onshow: function(){ console.log("You opened a placemark"); },
+    autoPan: true,
+    autoPanAnimation: { duration: 250 }
+  });
 		
 	// The map
-	var map = new ol.Map
-		({	target: 'map',
-			view: new ol.View
-			({	zoom: 5,
-				center: [166326, 5992663]
-			}),
-			layers: layers,
-			overlays: [popup]
-		});
+	var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 5,
+      center: [166326, 5992663]
+    }),
+    layers: layers,
+    overlays: [placemark]
+  });
 
-	// GeoJSON layer
-	var vectorSource = new ol.source.Vector(
-	{	url: '../data/fond_guerre.geojson',
-		projection: 'EPSG:3857',
-		format: new ol.format.GeoJSON(),
-		attributions: [ "&copy; <a href='https://www.data.gouv.fr/fr/datasets/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire/'>data.gouv.fr</a>" ],
-		logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+	// On click => show popup
+	map.on('click', function(e) {
+		placemark.show(e.coordinate); 
 	});
-
-	map.addLayer(new ol.layer.Vector(
-	{	name: 'Fonds de guerre 14-18',
-		source: vectorSource,
-		style: new ol.style.Style({ image: new ol.style.Icon({ src:"../data/camera.png", scale: 0.8 }) })
-	}));
-
-	// Control Select 
-	var select = new ol.interaction.Select({});
-	map.addInteraction(select);
-
-	// On selected => show/hide popup
-	select.getFeatures().on(['add'], function(e)
-	{	var feature = e.element;
-		popup.show(feature.getGeometry().getFirstCoordinate()); 
-	})
-	select.getFeatures().on(['remove'], function(e)
-	{	popup.hide(); 
-	})
 
 	</script>
 	

@@ -12757,121 +12757,6 @@ ol.render3D.prototype.drawFeature3D_ = function(ctx, build)
 */
 /**
  * @classdesc
- *	The Magnify overlay add a "magnifying glass" effect to an OL3 map that displays 
- *	a portion of the map in a different zoom (and actually display different content).
- *
- * @constructor
- * @extends {ol.Overlay}
- * @param {olx.OverlayOptions} options Overlay options 
- * @api stable
- */
-ol.Overlay.Magnify = function (options)
-{	var self = this;
-	var elt = $("<div>").addClass("ol-magnify");
-	this._elt = elt.get(0);
-	ol.Overlay.call(this,
-		{	positioning: options.positioning || "center-center",
-			element: this._elt,
-			stopEvent: false
-		});
-	// Create magnify map
-	this.mgmap_ = new ol.Map(
-	{	controls: new ol.Collection(),
-		interactions: new ol.Collection(),
-		target: options.target || this._elt,
-		view: new ol.View({ projection: options.projection }),
-		layers: options.layers
-	});
-	this.mgview_ = this.mgmap_.getView();
-	this.external_ = options.target?true:false;
-	this.set("zoomOffset", options.zoomOffset||1);
-	this.set("active", true);
-	this.on("propertychange", this.setView_.bind(this));
-};
-ol.inherits(ol.Overlay.Magnify, ol.Overlay);
-/**
- * Set the map instance the overlay is associated with.
- * @param {ol.Map} map The map instance.
- */
-ol.Overlay.Magnify.prototype.setMap = function(map) {
-	if (this.getMap()) {
-		$(this.getMap().getViewport()).off("mousemove", this.onMouseMove_);
-	}
-	if (this._listener) ol.Observable.unByKey(this._listener);
-	this._listener = null;
-	ol.Overlay.prototype.setMap.call(this, map);
-	$(map.getViewport()).on("mousemove", {self:this}, this.onMouseMove_);
-	this._listener = map.getView().on('propertychange', this.setView_.bind(this));
-	this.setView_();
-};
-/** Get the magnifier map
-*	@return {_ol_Map_}
-*/
-ol.Overlay.Magnify.prototype.getMagMap = function()
-{	return this.mgmap_;
-};
-/** Magnify is active
-*	@return {boolean}
-*/
-ol.Overlay.Magnify.prototype.getActive = function()
-{	return this.get("active");
-};
-/** Activate or deactivate 
-*	@param {boolean} active
-*/
-ol.Overlay.Magnify.prototype.setActive = function(active)
-{	return this.set("active", active);
-};
-/** Mouse move
- * @private
- */
-ol.Overlay.Magnify.prototype.onMouseMove_ = function(e)
-{	var self = e.data.self;
-	if (!self.get("active"))
-	{	self.setPosition();
-	}
-	else
-	{	var px = self.getMap().getEventCoordinate(e);
-		if (!self.external_) self.setPosition(px);
-		self.mgview_.setCenter(px);
-		if ($("canvas", self._elt).css("display")=="none") self.mgmap_.updateSize();
-	}
-};
-/** View has changed
- * @private
- */
-ol.Overlay.Magnify.prototype.setView_ = function(e)
-{	if (!this.get("active"))
-	{	this.setPosition();
-		return;
-	}
-	if (!e) 
-	{	// refresh all
-		this.setView_({key:'rotation'});
-		this.setView_({key:'resolution'});
-		return;
-	}
-	// Set the view params
-	switch (e.key)
-	{	case 'rotation':
-			this.mgview_.setRotation(this.getMap().getView().getRotation());
-			break;
-		case 'zoomOffset':
-		case 'resolution':
-		{	var z = Math.max(0,this.getMap().getView().getZoom()+Number(this.get("zoomOffset")));
-			this.mgview_.setZoom(z);
-			break;
-		}
-		default: break;
-	}
-};
-
-/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-/**
- * @classdesc
  * A popup element to be displayed over the map and attached to a single map
  * location. The popup are customized using CSS.
  *
@@ -13079,6 +12964,160 @@ ol.Overlay.Popup.prototype.hide = function ()
 	this.setPosition(undefined);
 	if (this._tout) clearTimeout(this._tout);
 	this._elt.removeClass("visible");
+};
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * @classdesc
+ *	The Magnify overlay add a "magnifying glass" effect to an OL3 map that displays 
+ *	a portion of the map in a different zoom (and actually display different content).
+ *
+ * @constructor
+ * @extends {ol.Overlay}
+ * @param {olx.OverlayOptions} options Overlay options 
+ * @api stable
+ */
+ol.Overlay.Magnify = function (options)
+{	var self = this;
+	var elt = $("<div>").addClass("ol-magnify");
+	this._elt = elt.get(0);
+	ol.Overlay.call(this,
+		{	positioning: options.positioning || "center-center",
+			element: this._elt,
+			stopEvent: false
+		});
+	// Create magnify map
+	this.mgmap_ = new ol.Map(
+	{	controls: new ol.Collection(),
+		interactions: new ol.Collection(),
+		target: options.target || this._elt,
+		view: new ol.View({ projection: options.projection }),
+		layers: options.layers
+	});
+	this.mgview_ = this.mgmap_.getView();
+	this.external_ = options.target?true:false;
+	this.set("zoomOffset", options.zoomOffset||1);
+	this.set("active", true);
+	this.on("propertychange", this.setView_.bind(this));
+};
+ol.inherits(ol.Overlay.Magnify, ol.Overlay);
+/**
+ * Set the map instance the overlay is associated with.
+ * @param {ol.Map} map The map instance.
+ */
+ol.Overlay.Magnify.prototype.setMap = function(map) {
+	if (this.getMap()) {
+		$(this.getMap().getViewport()).off("mousemove", this.onMouseMove_);
+	}
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
+	ol.Overlay.prototype.setMap.call(this, map);
+	$(map.getViewport()).on("mousemove", {self:this}, this.onMouseMove_);
+	this._listener = map.getView().on('propertychange', this.setView_.bind(this));
+	this.setView_();
+};
+/** Get the magnifier map
+*	@return {_ol_Map_}
+*/
+ol.Overlay.Magnify.prototype.getMagMap = function()
+{	return this.mgmap_;
+};
+/** Magnify is active
+*	@return {boolean}
+*/
+ol.Overlay.Magnify.prototype.getActive = function()
+{	return this.get("active");
+};
+/** Activate or deactivate 
+*	@param {boolean} active
+*/
+ol.Overlay.Magnify.prototype.setActive = function(active)
+{	return this.set("active", active);
+};
+/** Mouse move
+ * @private
+ */
+ol.Overlay.Magnify.prototype.onMouseMove_ = function(e)
+{	var self = e.data.self;
+	if (!self.get("active"))
+	{	self.setPosition();
+	}
+	else
+	{	var px = self.getMap().getEventCoordinate(e);
+		if (!self.external_) self.setPosition(px);
+		self.mgview_.setCenter(px);
+		if ($("canvas", self._elt).css("display")=="none") self.mgmap_.updateSize();
+	}
+};
+/** View has changed
+ * @private
+ */
+ol.Overlay.Magnify.prototype.setView_ = function(e)
+{	if (!this.get("active"))
+	{	this.setPosition();
+		return;
+	}
+	if (!e) 
+	{	// refresh all
+		this.setView_({key:'rotation'});
+		this.setView_({key:'resolution'});
+		return;
+	}
+	// Set the view params
+	switch (e.key)
+	{	case 'rotation':
+			this.mgview_.setRotation(this.getMap().getView().getRotation());
+			break;
+		case 'zoomOffset':
+		case 'resolution':
+		{	var z = Math.max(0,this.getMap().getView().getZoom()+Number(this.get("zoomOffset")));
+			this.mgview_.setZoom(z);
+			break;
+		}
+		default: break;
+	}
+};
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * @classdesc
+ * A placemark element to be displayed over the map and attached to a single map
+ * location. The placemarks are customized using CSS.
+ *
+ * @example
+var popup = new ol.Overlay.Placemark();
+map.addOverlay(popup);
+popup.show(coordinate);
+popup.hide();
+ *
+ * @constructor
+ * @extends {ol.Overlay}
+ * @param {} options Extend ol/Overlay/Popup options 
+ *	@param {String} options.color placemark color
+ *	@param {String} options.popupClass the a class of the overlay to style the popup.
+ *	@param {function|undefined} options.onclose: callback function when popup is closed
+ *	@param {function|undefined} options.onshow callback function when popup is shown
+ * @api stable
+ */
+ol.Overlay.Placemark = function (options) {
+	options = options || {};
+	options.popupClass = (options.popupClass || '') + ' placemark anim'
+	options.positioning = 'bottom-center',
+	ol.Overlay.Popup.call(this, options);
+	this.setPositioning = function(){};
+	if (options.color) this.element.style.color = options.color;
+	if (options.backgroundColor ) this.element.style.backgroundColor  = options.backgroundColor ;
+};
+ol.inherits(ol.Overlay.Placemark, ol.Overlay.Popup);
+ol.Overlay.Placemark.prototype.show = function() {
+	this.hide();
+	ol.Overlay.Popup.prototype.show.apply(this, arguments);
 };
 
 /*

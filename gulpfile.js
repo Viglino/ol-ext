@@ -115,7 +115,7 @@ gulp.task("js", function() {
     "./src/interaction/*.js",
     "./src/source/*.js",
 		"./src/layer/*.js",
-		"./src/overlay/*.js",
+		"./src/overlay/Popup.js", "./src/overlay/*.js",
     "./src/geom/*.js",
     "./src/render/*.js",
     "./src/style/*.js", "!./src/style/FontMakiDef.js", "!./src/style/FontMaki2Def.js", "!./src/style/FontAwesomeDef.js",
