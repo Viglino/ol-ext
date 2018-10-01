@@ -165,7 +165,7 @@ ol_interaction_DrawHole.prototype._finishDrawing = function(e)
 	if (c.length > 3) {
 		if (this._polygonIndex!==false) {
 			var geom = e.feature.getGeometry();
-			var newGeom = new ol_geom_MultiPolygon();
+			var newGeom = new ol_geom_MultiPolygon([]);
 			for (var i=0, pi; pi=geom.getPolygon(i); i++) {
 				if (i===this._polygonIndex) {
 					pi.appendLinearRing(new ol_geom_LinearRing(c));
