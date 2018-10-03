@@ -7358,7 +7358,7 @@ ol.interaction.DrawHole.prototype._finishDrawing = function(e)
 	if (c.length > 3) {
 		if (this._polygonIndex!==false) {
 			var geom = e.feature.getGeometry();
-			var newGeom = new ol.geom.MultiPolygon();
+			var newGeom = new ol.geom.MultiPolygon([]);
 			for (var i=0, pi; pi=geom.getPolygon(i); i++) {
 				if (i===this._polygonIndex) {
 					pi.appendLinearRing(new ol.geom.LinearRing(c));
@@ -13101,6 +13101,7 @@ popup.hide();
  * @param {} options Extend ol/Overlay/Popup options 
  *	@param {String} options.color placemark color
  *	@param {String} options.backgroundColor placemark color
+ *	@param {String} options.contentColor placemark color
  *	@param {Number} options.radius placemark radius in pixel
  *	@param {String} options.popupClass the a class of the overlay to style the popup.
  *	@param {function|undefined} options.onclose: callback function when popup is closed
@@ -13115,6 +13116,7 @@ ol.Overlay.Placemark = function (options) {
 	this.setPositioning = function(){};
 	if (options.color) this.element.style.color = options.color;
 	if (options.backgroundColor ) this.element.style.backgroundColor  = options.backgroundColor ;
+	if (options.contentColor ) this.setContentColor(options.contentColor);
 	if (options.size) this.setRadius(options.size);
 };
 ol.inherits(ol.Overlay.Placemark, ol.Overlay.Popup);
@@ -13140,6 +13142,13 @@ ol.Overlay.Placemark.prototype.setColor = function(color) {
  */
 ol.Overlay.Placemark.prototype.setBackgroundColor = function(color) {
 	this.element.style.backgroundColor = color;
+};
+/**
+ * Set the placemark content color.
+ * @param {string} color
+ */
+ol.Overlay.Placemark.prototype.setContentColor = function(color) {
+	this.element.getElementsByClassName('content')[0].style.color = color;
 };
 /**
  * Set the placemark class.

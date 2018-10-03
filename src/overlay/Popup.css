@@ -195,7 +195,7 @@
     min-width: unset;
     -webkit-box-sizing: border-box;
 	box-sizing: border-box;
-	transform-origin: 50% 150%;
+	transform-origin: 50% 150%!important;
 }
 
 .ol-popup.placemark .content {
@@ -227,7 +227,7 @@
 	bottom:0;
 }
 
-/** Shield */
+/** Placemark Shield */
 .ol-popup.placemark.shield {
 	border-radius: .2em;
 }
@@ -237,26 +237,83 @@
     margin: -.7em -1em;
 }
 
-/** Blazon */
+/** Placemark Blazon */
 .ol-popup.placemark.blazon {
 	border-radius: .2em;
 }
 
-/** Needle */
+/** Placemark Needle/Pushpin */
+.ol-popup.placemark.pushpin {	
+	margin: 1.5em 0;
+	border-radius: 0;
+	border-color: currentColor transparent;
+	background: transparent!important;
+	box-shadow: inset 2em 0 currentColor;
+	border-width: .3em .5em .5em;
+}
 .ol-popup.placemark.needle {	
 	margin: 1.5em 0;
 }
+.ol-popup.placemark.pushpin .anchor,
 .ol-popup.placemark.needle .anchor {
 	margin: -1.5em;
 }
+.ol-popup.placemark.pushpin .anchor:after,
 .ol-popup.placemark.needle .anchor:after {
 	border-style: solid;
     border-width: 2em .15em 0;
     margin: -.55em -0.2em;
     width: .1em;
 }
+.ol-popup.placemark.pushpin .anchor:before,
 .ol-popup.placemark.needle .anchor:before {
     margin: -.75em -.5em;
+}
+
+/** Placemark Flag */
+.ol-popup.placemark.flagv {
+	border-radius: 0;
+	margin: 0 0 1.5em 1em;
+	border-color: transparent transparent transparent currentColor;
+	border-width: 1em 0 1em 2em;
+	width: 0;
+	height: 0;
+	background-color: transparent;
+	transform-origin: 0% 150%!important;
+}
+.ol-popup.placemark.flagv .anchor {
+	margin: -2em;
+	margin-left: -1em !important;
+}
+
+.ol-popup.placemark.flag {	
+	margin: 0 0 1.5em 1em;
+	border-radius: 0;
+	transform-origin: 0% 150%!important;
+}
+.ol-popup.placemark.flag .anchor {
+	margin: -1.5em;
+}
+.ol-popup.placemark.flagv .anchor:after, 
+.ol-popup.placemark.flag .anchor:after {
+	border-style: solid;
+	border-width: 2em .15em 0;
+	margin: -.55em -1em;
+	width: .1em;
+}
+.ol-popup.placemark.flagv .anchor:before,
+.ol-popup.placemark.flag .anchor:before {
+	margin: -.75em -1.25em;
+}
+
+.ol-popup.placemark.flag.finish {
+	background-image: 
+		linear-gradient(45deg, currentColor 25%, transparent 25%, transparent 75%, currentColor 75%, currentColor), 
+		linear-gradient(45deg, currentColor 25%, transparent 25%, transparent 75%, currentColor 75%, currentColor);
+	background-size: 1em 1em;
+	background-position: .5em 0, 0 .5em;
+	border-width: .25em;
+	margin: 0 0 1.7em .8em;
 }
 
 /** Black popup */

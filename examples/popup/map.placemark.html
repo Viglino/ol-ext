@@ -15,16 +15,24 @@
 
 	<!-- jQuery -->
 	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  
 	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
 	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
 	
 	<!-- ol-ext -->
     <link rel="stylesheet" href="../../dist/ol-ext.css" />
 	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    .placemark .content * {
+      color: inherit!important;
+    }
+  </style>
 
 </head>
 <body >
@@ -36,16 +44,24 @@
 
 	<div class="info">
     <p>
-      ol/Overlay/Placemark displays a placemark on the map. 
+      <i>ol/Overlay/Placemark</i> is an easy way to display a placemark on the map. 
       <br/>
-      A placemark is an <a href="map.popup.anim.html">ol/Overlay/Popup</a> with a bounce animation.
+      A placemark is an <a href="map.popup.anim.html">ol/Overlay/Popup</a> with custom CSS.
     </p>
 		<ul>
 			<li>
-        you can change the color and backgroundcolor of the placemarck with the <i>color</i> and <i>backgroundcolor</i>
+        choose the placemark class and use the anim class to add a bounce animation
       </li>
-		</ul>
-		<i>ol.Overlay.Popup</i> necessite jQuery.
+      <li>
+        set the placemark <i>size</i> in your CSS or as a parameter
+      </li>
+			<li>
+        you can change the <i>color</i> and <i>backgroundcolor</i> of the placemarck.
+      </li>
+    </ul>
+		<p>
+      <i>ol.Overlay.Popup</i> necessite jQuery.
+    </p>
 	</div>
 
 	<!-- DIV pour la carte -->
@@ -54,12 +70,16 @@
 	<div class="options">
     <ul>
       <li>
-        Name:
+        <label>Class:</label>
         <select onchange="placemark.setClassName(this.value);">
           <option value=''>default</option>
+          <option value='pushpin'>pushpin</option>
           <option value='needle'>needle</option>
           <option value='shield'>shield</option>
           <option value='blazon'>blazon</option>
+          <option value='flag'>flag</option>
+          <option value='flagv'>flagv</option>
+          <option value='flag finish'>finish</option>
         </select>
       </li>
       <li>
@@ -79,15 +99,34 @@
         </select>
       </li>
       <li>
-          Background color:
-          <select onchange="placemark.setBackgroundColor(this.value);">
+        Background color:
+        <select onchange="placemark.setBackgroundColor(this.value);">
+          <option value='#fff'>white</option>
+          <option value='#f00'>red</option>
+          <option value='#0f0'>green</option>
+          <option value='#00f'>blue</option>
+        </select>
+      </li>
+      <li>
+        Content:
+        <button onclick='placemark.show(placemark.getPosition()," ");'>none</button>
+        <button onclick='placemark.show(placemark.getPosition(),"1");'>1</button>
+        <button onclick='placemark.show(placemark.getPosition(),"2");'>2</button>
+        <button onclick='placemark.show(placemark.getPosition(),"<i class=\"fa fa-user\"></i>");'><i class="fa fa-user"></i></button>
+        <button onclick='placemark.show(placemark.getPosition(),"<i class=\"fa fa-bus\"></i>");'><i class="fa fa-bus"></i></button>
+        <button onclick='placemark.show(placemark.getPosition(),"<i class=\"fa fa-cutlery\"></i>");'><i class="fa fa-cutlery"></i></button>
+        <button onclick='placemark.show(placemark.getPosition(),"<i class=\"fa fa-github-alt\"></i>");'><i class="fa fa-github-alt"></i></button>
+        <button onclick='placemark.show(placemark.getPosition(),"<i class=\"fa fa-home\"></i>");'><i class="fa fa-home"></i></button>
+        <button onclick='placemark.show(placemark.getPosition(),"<i class=\"fa fa-h-square\"></i>");'><i class="fa fa-h-square"></i></button>
+      </li>
+      <li>
+        Content color:
+        <select onchange="placemark.setContentColor(this.value);">
+            <option value='#000'>black</option>
             <option value='#fff'>white</option>
-            <option value='#f00'>red</option>
-            <option value='#0f0'>green</option>
-            <option value='#00f'>blue</option>
-          </select>
-        </li>
-      </ul>
+        </select>
+      </li>
+    </ul>
 	</div>
 	<p>Click on the map to show a popup !</p>
 	
@@ -108,6 +147,7 @@
 	var placemark = new ol.Overlay.Placemark ({
     // color: '#369',
     // backgroundColor : 'yellow',
+    contentColor: '#000',
     onshow: function(){ console.log("You opened a placemark"); },
     autoPan: true,
     autoPanAnimation: { duration: 250 }
@@ -127,7 +167,7 @@
 	// On click => show popup
 	map.on('click', function(e) {
 		placemark.show(e.coordinate); 
-	});
+  });
 
 	</script>
 	
