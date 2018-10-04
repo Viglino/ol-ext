@@ -27,6 +27,7 @@ import {boundingExtent as ol_extent_boundingExtent, buffer as ol_extent_buffer, 
  *	@param {bool} options.stretch can stretch the feature
  *	@param {bool} options.scale can scale the feature
  *	@param {bool} options.rotate can rotate the feature
+ *	@param {bool} options.canDeselect whether the user can deselect features by clicking away
  *	@param {ol.events.ConditionType | undefined} options.keepAspectRatio A function that takes an ol.MapBrowserEvent and returns a boolean to keep aspect ratio, default ol.events.condition.shiftKeyOnly.
  *	@param {ol.events.ConditionType | undefined} options.modifyCenter A function that takes an ol.MapBrowserEvent and returns a boolean to apply scale & strech from the center, default ol.events.condition.metaKey or ol.events.condition.ctrlKey.
  *	@param {} options.style list of ol.style for handles
@@ -83,6 +84,8 @@ var ol_interaction_Transform = function(options) {
   this.set('modifyCenter', (options.modifyCenter || function(e){ return e.originalEvent.metaKey || e.originalEvent.ctrlKey }));
   /*  */
   this.set('hitTolerance', (options.hitTolerance || 0));
+  /*  */
+  this.set('canDeselect', options.canDeselect !== false);
 
   this.selection_ = [];
 
@@ -230,6 +233,10 @@ ol_interaction_Transform.prototype.getFeatureAtPixel_ = function(pixel) {
         if (feature===self.bbox_) return false;
         self.handles_.forEach (function(f) { if (f===feature) found=true; });
         if (found) return { feature: feature, handle:feature.get('handle'), constraint:feature.get('constraint'), option:feature.get('option') };
+      }
+
+      if (!self.get('canDeselect')) {
+        return { feature: self.selection_[0] };
       }
       // filter condition
       if (self._filter) {
@@ -383,7 +390,7 @@ ol_interaction_Transform.prototype.handleDownEvent_ = function(evt) {
     });
     return true;
   }
-  else {
+  else if (this.get('canDeselect')) {
     if (feature){
       if (!this.addFn_(evt)) this.selection_ = [];
       var index = this.selection_.indexOf(feature);
