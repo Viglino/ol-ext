@@ -35,7 +35,7 @@ import {asString as ol_color_asString} from 'ol/color'
  * @api
  */
 var ol_style_Chart = function(opt_options)
-{	options = opt_options || {};
+{	var options = opt_options || {};
 	var strokeWidth = 0;
 	if (opt_options.stroke) strokeWidth = opt_options.stroke.getWidth();
 	ol_style_RegularShape.call (this,
