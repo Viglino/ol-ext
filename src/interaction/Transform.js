@@ -27,6 +27,8 @@ import {boundingExtent as ol_extent_boundingExtent, buffer as ol_extent_buffer, 
  *	@param {bool} options.stretch can stretch the feature
  *	@param {bool} options.scale can scale the feature
  *	@param {bool} options.rotate can rotate the feature
+ *	@param {bool} options.noFlip prevent the feature geometry to flip, default false
+ *	@param {bool} options.selection the intraction handle selection/deselection, if not use the select prototype to add features to transform, default true
  *	@param {ol.events.ConditionType | undefined} options.keepAspectRatio A function that takes an ol.MapBrowserEvent and returns a boolean to keep aspect ratio, default ol.events.condition.shiftKeyOnly.
  *	@param {ol.events.ConditionType | undefined} options.modifyCenter A function that takes an ol.MapBrowserEvent and returns a boolean to apply scale & strech from the center, default ol.events.condition.metaKey or ol.events.condition.ctrlKey.
  *	@param {} options.style list of ol.style for handles
@@ -81,6 +83,10 @@ var ol_interaction_Transform = function(options) {
   this.set('keepAspectRatio', (options.keepAspectRatio || function(e){ return e.originalEvent.shiftKey }));
   /* Modify center */
   this.set('modifyCenter', (options.modifyCenter || function(e){ return e.originalEvent.metaKey || e.originalEvent.ctrlKey }));
+  /* Prevent flip */
+  this.set('noFlip', (options.noFlip || false));
+  /* Handle selection */
+  this.set('selection', (options.selection !== false));
   /*  */
   this.set('hitTolerance', (options.hitTolerance || 0));
 
@@ -231,6 +237,8 @@ ol_interaction_Transform.prototype.getFeatureAtPixel_ = function(pixel) {
         self.handles_.forEach (function(f) { if (f===feature) found=true; });
         if (found) return { feature: feature, handle:feature.get('handle'), constraint:feature.get('constraint'), option:feature.get('option') };
       }
+      // No seletion
+      if (!self.get('selection')) return null;
       // filter condition
       if (self._filter) {
         if (self._filter(feature,layer)) return { feature: feature };
@@ -324,6 +332,7 @@ ol_interaction_Transform.prototype.drawSketch_ = function(center) {
 ol_interaction_Transform.prototype.select = function(feature, add) {
   if (!feature) {
     this.selection_ = [];
+    this.drawSketch_();
     return;
   }
   if (!feature.getGeometry || !feature.getGeometry()) return;
@@ -383,7 +392,7 @@ ol_interaction_Transform.prototype.handleDownEvent_ = function(evt) {
     });
     return true;
   }
-  else {
+  else if (this.get('selection')) {
     if (feature){
       if (!this.addFn_(evt)) this.selection_ = [];
       var index = this.selection_.indexOf(feature);
@@ -483,6 +492,11 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
 
       var scx = (evt.coordinate[0] - center[0]) / (this.coordinate_[0] - center[0]);
       var scy = (evt.coordinate[1] - center[1]) / (this.coordinate_[1] - center[1]);
+
+      if (this.get('noFlip')) {
+        if (scx<0) scx=-scx;
+        if (scy<0) scy=-scy;
+      }
 
       if (this.constraint_) {
         if (this.constraint_=="h") scx=1;
