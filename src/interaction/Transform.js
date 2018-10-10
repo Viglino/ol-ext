@@ -238,7 +238,13 @@ ol_interaction_Transform.prototype.getFeatureAtPixel_ = function(pixel) {
         if (found) return { feature: feature, handle:feature.get('handle'), constraint:feature.get('constraint'), option:feature.get('option') };
       }
       // No seletion
-      if (!self.get('selection')) return null;
+      if (!self.get('selection')) {
+        // Return the currently selected feature the user is interacting with.
+        if (self.selection_.some(function(f) { return feature === f; })) {
+          return { feature: feature };
+        }
+        return null;
+      }
       // filter condition
       if (self._filter) {
         if (self._filter(feature,layer)) return { feature: feature };
