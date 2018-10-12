@@ -29,6 +29,7 @@ import {asString as ol_color_asString} from 'ol/color'
  *	@param {number} options.offsetX X offset in px
  *	@param {number} options.offsetY Y offset in px
  *	@param {number} options.animation step in an animation sequence [0,1]
+ *	@param {number} options.max maximum value for bar chart
  * @see [Statistic charts example](../../examples/map.style.chart.html)
  * @extends {ol_style_RegularShape}
  * @implements {ol.structs.IHasChecksum}
@@ -52,6 +53,7 @@ var ol_style_Chart = function(opt_options)
 	this.type_ = options.type;
 	this.offset_ = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
 	this.animation_ = (typeof(options.animation) == 'number') ? { animate:true, step:options.animation } : this.animation_ = { animate:false, step:1 };
+	this.max_ = options.max;
 
 	this.data_ = options.data;
 	if (options.colors instanceof Array)
@@ -227,8 +229,13 @@ ol_style_Chart.prototype.renderChart_ = function(atlasManager)
 		case "bar":
 		default:
 		{	var max=0;
-			for (var i=0; i<this.data_.length; i++)
-			{	if (max < this.data_[i]) max = this.data_[i];
+			if (this.max_){
+				max = this.max_;
+			}
+			else{
+				for (var i=0; i<this.data_.length; i++)
+				{	if (max < this.data_[i]) max = this.data_[i];
+				}
 			}
 			var s = Math.min(5,2*this.radius_/this.data_.length);
 			var c = canvas.width/2;
