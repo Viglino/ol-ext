@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.0.1
+ * @version v3.0.2
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -4542,6 +4542,75 @@ ol.control.SearchBAN.prototype.select = function (f){
         c = ol.proj.transform (f.geometry.coordinates, 'EPSG:4326', this.getMap().getView().getProjection());
     } catch(e) {};
     this.dispatchEvent({ type:"select", search:f, coordinate: c });
+};
+
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * Search on DFCI grid.
+ *
+ * @constructor
+ * @extends {ol.control.Search}
+ * @fires select
+ * @param {Object=} Control options. 
+ *	@param {string} options.className control class name
+ *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *	@param {string | undefined} options.label Text label to use for the search button, default "search"
+ *	@param {string | undefined} options.placeholder placeholder, default "Search..."
+ *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 300.
+ *	@param {integer | undefined} options.minLength minimum length to start searching, default 1
+ *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *
+ *	@param {string | undefined} options.property a property to display in the index, default 'name'.
+ *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return the property 
+ *	@param {function | undefined} options.getSearchString a function that take a feature and return a text to be used as search string, default geTitle() is used as search string
+ */
+ol.control.SearchDFCI = function(options) {
+  if (!options) options = {};
+  options.className = options.className || 'dfci';
+  options.placeholder = options.placeholder || 'Code DFCI';
+  ol.control.Search.call(this, options);
+};
+ol.inherits(ol.control.SearchDFCI, ol.control.Search);
+/** Autocomplete function
+* @param {string} s search string
+* @return {Array<any>|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
+* @api
+*/
+ol.control.SearchDFCI.prototype.autocomplete = function (s) {
+  s = s.toUpperCase();
+  s = s.replace(/[^0-9,^A-H,^K-N]/g,'');
+  if (s.length<2) {
+    this.setInput(s);
+    return [];
+  }
+  var proj = this.getMap().getView().getProjection();
+  var result = [];
+  var c = ol.coordinate.fromDFCI(s, proj);
+  var level = Math.floor(s.length/2)-1;
+  var dfci = ol.coordinate.toDFCI(c, level, proj);
+  dfci = dfci.replace(/[^0-9,^A-H,^K-N]/g,'');
+  // Valid DFCI ?
+  if (!/NaN/.test(dfci) && dfci) {
+    console.log('ok', dfci)
+    this.setInput(dfci + s.substring(dfci.length, s.length));
+    result.push({ coordinate: ol.coordinate.fromDFCI(dfci, proj), name: dfci });
+    if (s.length===5) {
+      c = ol.coordinate.fromDFCI(s+0, proj);
+      dfci = (ol.coordinate.toDFCI(c, level+1, proj)).substring(0,5);
+      for (var i=0; i<10; i++) {
+        result.push({ coordinate: ol.coordinate.fromDFCI(dfci+i, proj), name: dfci+i });
+      }
+    }
+    if (level === 2) {
+      for (var i=0; i<6; i++) {
+        result.push({ coordinate: ol.coordinate.fromDFCI(dfci+'.'+i, proj), name: dfci+'.'+i });
+      }
+    }
+  }
+  return result;
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
@@ -10682,7 +10751,13 @@ ol.interaction.Transform.prototype.getFeatureAtPixel_ = function(pixel) {
         if (found) return { feature: feature, handle:feature.get('handle'), constraint:feature.get('constraint'), option:feature.get('option') };
       }
       // No seletion
-      if (!self.get('selection')) return null;
+      if (!self.get('selection')) {
+        // Return the currently selected feature the user is interacting with.
+        if (self.selection_.some(function(f) { return feature === f; })) {
+          return { feature: feature };
+        }
+        return null;
+      }
       // filter condition
       if (self._filter) {
         if (self._filter(feature,layer)) return { feature: feature };
@@ -11192,6 +11267,134 @@ ol.style.dbPediaStyleFunction = function(options)
 };
 })();
 
+/*	Copyright (c) 2018 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** DFCI source: a source to display the French DFCI grid on a map
+ * @see http://ccffpeynier.free.fr/Files/dfci.pdf
+ * @constructor ol.source.DFCI
+ * @extends {ol/source/Vector}
+ * @param {any} options Vector source options
+ *  @param {Array<Number>} resolutions a list of resolution to change the drawing level, default [1000,100,20]
+ */
+ol.source.DFCI = function(options) {
+	options = options || {};
+	options.loader = this._calcGrid;
+  options.strategy =  function(extent, resolution) {
+    if (this.resolution && this.resolution != resolution){
+      this.clear();
+    }
+    return [extent];
+  }
+  this._bbox = [[0,1600000],[11*100000, 1600000+10*100000]];
+  ol.source.Vector.call (this, options);
+  this.set('resolutions', options.resolutions || [1000,100,20]);
+  // Add Lambert IIe proj 
+  if (!proj4.defs["EPSG:27572"]) proj4.defs("EPSG:27572","+proj=lcc +lat_1=46.8 +lat_0=46.8 +lon_0=0 +k_0=0.99987742 +x_0=600000 +y_0=2200000 +a=6378249.2 +b=6356515 +towgs84=-168,-60,320,0,0,0,0 +pm=paris +units=m +no_defs");
+  ol.proj.proj4.register(proj4);
+};
+ol.inherits (ol.source.DFCI, ol.source.Vector);
+/** Cacluate grid according extent/resolution
+ */
+ol.source.DFCI.prototype._calcGrid = function (extent, resolution, projection) {
+  // Show step 0
+  var res = this.get('resolutions');
+  if (resolution > (res[0] || 1000)) {
+    if (this.resolution != resolution) {
+      if (!this._features0) {
+        var ext = [this._bbox[0][0], this._bbox[0][1],this._bbox[1][0], this._bbox[1][1]];
+        this._features0 = this._getFeatures(0, ext, projection);
+      }
+      this.addFeatures(this._features0);
+    }
+  }
+  else if (resolution > (res[1] || 100)) {
+    this.clear();
+    var ext = ol.proj.transformExtent(extent, projection, 'EPSG:27572');
+    var f = this._getFeatures(1, ext, projection)
+    this.addFeatures(f);
+  }
+  else if (resolution > (res[2] || 0)) {
+    this.clear();
+    var ext = ol.proj.transformExtent(extent, projection, 'EPSG:27572');
+    var f = this._getFeatures(2, ext, projection)
+    this.addFeatures(f);
+  }
+  else {
+    this.clear();
+    var ext = ol.proj.transformExtent(extent, projection, 'EPSG:27572');
+    var f = this._getFeatures(3, ext, projection)
+    this.addFeatures(f);
+  }
+  // reset load
+  this.resolution = resolution;
+};
+/**
+ * Get middle point
+ * @private
+ */
+ol.source.DFCI.prototype._midPt = function(p1,p2) {
+  return [(p1[0]+p2[0])/2, (p1[1]+p2[1])/2];
+};
+/**
+ * Get feature with geom
+ * @private
+ */
+ol.source.DFCI.prototype._trFeature = function(geom, id, level, projection) {
+  var g  = new ol.geom.Polygon([geom]);
+  var f = new ol.Feature(g.transform('EPSG:27572', projection));
+  f.set('id', id);
+  f.set('level', level);
+  return f;
+};
+/** Get features
+ * 
+ */
+ol.source.DFCI.prototype._getFeatures = function (level, extent, projection) {
+  var features = [];
+  var step = 100000;
+  if (level>0) step /= 5;
+  if (level>1) step /= 10;
+  var p0 = [
+    Math.max(this._bbox[0][0], Math.floor(extent[0]/step)*step), 
+    Math.max(this._bbox[0][1], Math.floor(extent[1]/step)*step)
+  ];
+  var p1 = [
+    Math.min(this._bbox[1][0]+99999, Math.floor(extent[2]/step)*step), 
+    Math.min(this._bbox[1][1]+99999, Math.floor(extent[3]/step)*step)
+  ];
+  for (var x=p0[0]; x<=p1[0]; x += step) {
+    for (var y=p0[1]; y<=p1[1]; y += step) {
+      var p, geom = [ [x,y], [x+step, y], [x+step, y+step], [x , y+step], [x,y]];
+      if (level>2) {
+        var m = this._midPt(geom[0],geom[2]);
+        // .5
+        var g = [];
+        for (var i=0; i<geom.length; i++) {
+          g.push(this._midPt(geom[i],m))
+        }
+        features.push(this._trFeature(g, ol.coordinate.toDFCI([x,y], 2)+'.5', level, projection));
+        // .1 > .4
+        for (var i=0; i<4; i++) {
+          g = [];
+          g.push(geom[i]);
+          g.push(this._midPt(geom[i],geom[(i+1)%4]));
+          g.push(this._midPt(m,g[1]));
+          g.push(this._midPt(m,geom[i]));
+          p = this._midPt(geom[i],geom[(i+3)%4]);
+          g.push(this._midPt(m,p));
+          g.push(p);
+          g.push(geom[i]);
+          features.push(this._trFeature(g, ol.coordinate.toDFCI([x,y], 2)+'.'+(4-i), level, projection));
+        }
+      } else {
+        features.push(this._trFeature(geom, ol.coordinate.toDFCI([x,y], level), level, projection));
+      }
+    }
+  }
+  return features
+};
 // doc: https://mapbox.github.io/delaunator/
 /** Delaunay source
  * Calculate a delaunay triangulation from points in a source
@@ -13263,6 +13466,473 @@ ol.geom.Geometry.prototype.convexHull = function() {
 };
 })();
 
+/*
+	Copyright (c) 2018 Jean-Marc VIGLINO,
+	released under the CeCILL-B license (http://www.cecill.info/).
+*/
+/** Convert coordinate to French DFCI grid
+ * @param {ol/coordinate} coord
+ * @param {number} level [0-3]
+ * @param {ol/proj/Projection} projection of the coord, default EPSG:27572
+ * @return {String} the DFCI index
+ */
+ol.coordinate.toDFCI = function (coord, level, projection) {
+  if (!level && level !==0) level = 3;
+  if (projection) {
+    if (!ol.proj.get('EPSG:27572')) {
+      // Add Lambert IIe proj 
+      if (!proj4.defs["EPSG:27572"]) proj4.defs("EPSG:27572","+proj=lcc +lat_1=46.8 +lat_0=46.8 +lon_0=0 +k_0=0.99987742 +x_0=600000 +y_0=2200000 +a=6378249.2 +b=6356515 +towgs84=-168,-60,320,0,0,0,0 +pm=paris +units=m +no_defs");
+      ol.proj.proj4.register(proj4);
+    };
+    coord = ol.proj.transform(coord, projection, 'EPSG:27572');
+  }
+  var x = coord[0];
+  var y = coord[1];
+  var s = '';
+  // Level 0
+  var step = 100000;
+  s += String.fromCharCode(65 + Math.floor((x<800000?x:x+200000)/step))
+    + String.fromCharCode(65 + Math.floor((y<2300000?y:y+200000)/step) - 1500000/step);
+  if (level === 0) return s;
+  // Level 1
+  var step1 = 100000/5;
+  s += 2*Math.floor((x%step)/step1);
+  s += 2*Math.floor((y%step)/step1);
+  if (level === 1) return s;
+  // Level 2
+  var step2 = step1 / 10;
+  var x0 = Math.floor((x%step1)/step2);
+  s += String.fromCharCode(65 + (x0<8 ? x0 : x0+2));
+  s += Math.floor((y%step1)/step2);
+  if (level === 2) return s;
+  // Level 3
+  var x3 = Math.floor((x%step2)/500);
+  var y3 = Math.floor((y%step2)/500);
+  if (x3<1) {
+    if (y3>1) s += '.1';
+    else s += '.4';
+  } else if (x3>2) {
+    if (y3>1) s += '.2';
+    else s += '.3';
+  } else if (y3>2) {
+    if (x3<2) s += '.1';
+    else s += '.2';
+  } else if (y3<1) {
+    if (x3<2) s += '.4';
+    else s += '.3';
+  } else {
+    s += '.5';
+  }
+  return s;
+};
+/** Get coordinate from French DFCI index
+ * @param {String} index the DFCI index
+ * @param {ol/proj/Projection} projection result projection, default EPSG:27572
+ * @return {ol/coordinate} coord
+ */
+ol.coordinate.fromDFCI = function (index, projection) {
+  var coord;
+  // Level 0
+  var step = 100000;
+  var x = index.charCodeAt(0) - 65;
+  x = (x<8 ? x : x-2)*step;
+  var y = index.charCodeAt(1) - 65;
+  y = (y<8 ? y : y-2)*step + 1500000;
+  if (index.length===2) {
+    coord = [x+step/2, y+step/2];
+  } else {
+    // Level 1
+    step /= 5;
+    x += Number(index.charAt(2))/2*step;
+    y += Number(index.charAt(3))/2*step;
+    if (index.length===4) {
+      coord = [x+step/2, y+step/2];
+    } else {
+      // Level 2
+      step /= 10;
+      var x0 = index.charCodeAt(4) - 65;
+      x += (x0<8 ? x0 : x0-2)*step;
+      y += Number(index.charAt(5))*step;
+      if (index.length === 6) {
+        coord = [x+step/2, y+step/2];
+      } else {
+        // Level 3
+        switch (index.charAt(7)) {
+          case '1':
+            coord = [x+step/4, y+3*step/4];
+            break;
+          case '2':
+            coord = [x+3*step/4, y+3*step/4];
+            break;
+          case '3':
+            coord = [x+3*step/4, y+step/4];
+            break;
+          case '4':
+            coord = [x+step/4, y+step/4];
+            break;
+          default:
+            coord = [x+step/2, y+step/2];
+            break;
+        }
+      }
+    }
+  }
+  // Convert ?
+  if (projection) {
+    if (!ol.proj.get('EPSG:27572')) {
+      // Add Lambert IIe proj 
+      if (!proj4.defs["EPSG:27572"]) proj4.defs("EPSG:27572","+proj=lcc +lat_1=46.8 +lat_0=46.8 +lon_0=0 +k_0=0.99987742 +x_0=600000 +y_0=2200000 +a=6378249.2 +b=6356515 +towgs84=-168,-60,320,0,0,0,0 +pm=paris +units=m +no_defs");
+      ol.proj.proj4.register(proj4);
+    };
+    coord = ol.proj.transform(coord, 'EPSG:27572', projection);
+  }
+  return coord;
+};
+/** The string is a valid DFCI index
+ * @param {string} index DFCI index
+ * @return {boolean}
+ */
+ol.coordinate.validDFCI = function (index) {
+  if (index.length<2 || index.length>8) return false;
+  if (/[^A-H|^K-N]/.test(index.substr(0,1))) return false;
+  if (/[^B-H|^K-N]/.test(index.substr(1,1))) return false;
+  if (index.length>2) {
+    if (index.length<4) return false;
+    if (/[^0,^2,^4,^6,^8]/.test(index.substr(2,1))) return false;
+    if (/[^0,^2,^4,^6,^8]/.test(index.substr(3,1))) return false;
+  }
+  if (index.length>4) {
+    if (index.length<6) return false;
+    if (/[^A-H|^K-L]/.test(index.substr(4,1))) return false;
+    if (/[^0-9]/.test(index.substr(5,1))) return false;
+  }
+  if (index.length>6) {
+    if (index.length<8) return false;
+    if (index.substr(6,1)!=='.') return false;
+    if (/[^1-5]/.test(index.substr(7,1))) return false;
+  }
+  return true;
+}
+/** Coordinate is valid for DFCI 
+ * @param {ol/coordinate} coord
+ * @param {ol/proj/Projection} projection result projection, default EPSG:27572
+ * @return {boolean}
+ */
+ol.coordinate.validDFCICoord = function (coord, projection) {
+  if (projection) {
+    if (!ol.proj.get('EPSG:27572')) {
+      // Add Lambert IIe proj 
+      if (!proj4.defs["EPSG:27572"]) proj4.defs("EPSG:27572","+proj=lcc +lat_1=46.8 +lat_0=46.8 +lon_0=0 +k_0=0.99987742 +x_0=600000 +y_0=2200000 +a=6378249.2 +b=6356515 +towgs84=-168,-60,320,0,0,0,0 +pm=paris +units=m +no_defs");
+      ol.proj.proj4.register(proj4);
+    };
+    coord = ol.proj.transform(coord, projection, 'EPSG:27572');
+  }
+  // Test extent
+  if (0 > coord[0] || coord[0] > 1200000 ) return false;
+  if (1600000 > coord[1] || coord[1] > 2700000 ) return false;
+  return true;
+};
+
+/*
+	Copyright (c) 2018 Jean-Marc VIGLINO,
+	released under the CeCILL-B license (http://www.cecill.info/).
+*/
+/** Define namespace
+ */
+ol.graph = {};
+/** Compute the shortest paths between nodes in a graph source
+ * The source must only contains LinesString.
+ * @see https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
+ * @fires calculating, start, finish, pause
+ * @param {any} options
+ *  @param {ol/source/Vector} source the source for the edges 
+ *  @param {integer} maxIteration maximum iterations before a pause event is fired, default 20000
+ *  @param {integer} stepIteration number of iterations before a calculating event is fired, default 2000
+ *  @param {number} epsilon geometric precision (min distance beetween 2 points), default 1E-6
+ */
+ol.graph.Dijskra = function (options) {
+  options = options || {};
+  this.source = options.source;
+  this.nodes = new ol.source.Vector();
+  // Maximum iterations
+  this.maxIteration = options.maxIteration || 20000;
+  this.stepIteration = options.stepIteration || 2000;
+  // A* optimisation
+  this.astar = true;
+  this.candidat = [];
+  ol.Object.call (this);
+  this.set ('epsilon', options.epsilon || 1E-6);
+};
+ol.inherits(ol.graph.Dijskra, ol.Object);
+/** Get the weighting of the edge, ie. a speed factor
+ * The function returns a value beetween ]0,1]
+ * - 1   = no weighting
+ * - 0.5 = goes twice more faster on this road
+ * If no feature is provided you must return the lower weighting you're using
+ * @param {ol/Feature} feature
+ * @return {number} a number beetween 0-1 
+ * @api
+ */
+ol.graph.Dijskra.prototype.weight = function(feature) {
+  return 1;
+};
+/** Get the edge direction
+ * -  0 : the road is blocked
+ * -  1 : direct way
+ * - -1 : revers way
+ * -  2 : both way
+ * @param {ol/Feature} feature
+ * @return {0|1|-1|2} 
+ * @api
+ */
+ol.graph.Dijskra.prototype.direction = function(feature) {
+  return 2;
+};
+/** Calculate the length of an edge
+ * @param {ol/Feature|ol/geom/LineString} geom
+ * @return {number}
+ * @api
+ */
+ol.graph.Dijskra.prototype.getLength = function(geom) {
+  if (geom.getGeometry) geom = geom.getGeometry();
+  return geom.getLength();
+};
+/** Get the nodes source concerned in the calculation
+ * @return {ol/source/Vector}
+ */
+ol.graph.Dijskra.prototype.getNodeSource = function() {
+  return this.nodes;
+};
+/** Get all features at a coordinate
+ * @param {ol/coordinate} coord
+ * @return {Array<ol/Feature>}
+ */
+ol.graph.Dijskra.prototype.getEdges = function(coord) {
+  var extent = ol.extent.buffer (ol.extent.boundingExtent([coord]), this.get('epsilon'));
+  var result = [];
+  this.source.forEachFeatureIntersectingExtent(extent, function(f){
+    result.push(f);
+  });
+  return result;
+};
+/** Get a node at a coordinate
+ * @param {ol/coordinate} coord
+ * @return {ol/Feature} the node
+ */
+ol.graph.Dijskra.prototype.getNode = function(coord) {
+  var extent = ol.extent.buffer (ol.extent.boundingExtent([coord]), this.get('epsilon'));
+  var result = [];
+  this.nodes.forEachFeatureIntersectingExtent(extent, function(f){
+    result.push(f);
+  });
+  return result[0];
+};
+/** Add a node
+ * @param {ol/coorindate} p
+ * @param {number} wdist the distance to reach this node
+ * @param {ol/Feature} from the feature used to come to this node
+ * @param {ol/Feature} prev the previous node
+ * @return {ol/Feature} the node
+ */
+ol.graph.Dijskra.prototype.addNode = function(p, wdist, dist, from, prev) {
+  // Final condition
+  if (this.wdist && wdist > this.wdist) return false;
+  // Look for existing point
+  var node = this.getNode(p);
+  // Optimisation ?
+  var dtotal = wdist + this.getLength(new ol.geom.LineString([this.end, p])) * this.weight();
+  if (this.astar && this.wdist && dtotal > this.wdist) return false;
+  if (node) {
+    // Allready there
+    if (node!==this.arrival && node.get('wdist') <= wdist) return node;
+    // New candidat
+    node.set('dist', dist);
+    node.set('wdist', wdist);
+    node.set('dtotal', dtotal);
+    node.set('from', from);
+    node.set('prev', prev);
+    if (node===this.arrival) {
+      this.wdist = wdist;
+    }
+    this.candidat.push (node);
+  } else {
+    // New candidat
+    node =  new ol.Feature({
+      geometry: new ol.geom.Point(p),
+      from: from, 
+      prev: prev, 
+      dist: dist || 0, 
+      wdist: wdist, 
+      dtotal: dtotal, 
+    });
+    if (wdist<0) {
+      node.set('wdist', false);
+    }
+    else this.candidat.push (node);
+    // Add it in the node source
+    this.nodes.addFeature(node);
+  }
+  return node;
+};
+/** Get the closest coordinate of a node in the graph source (an edge extremity)
+ * @param {ol/coordinate} p
+ * @return {ol/coordinate} 
+ */
+ol.graph.Dijskra.prototype.closestCoordinate = function(p) {
+  var e = this.source.getClosestFeatureToCoordinate(p);
+  var p0 = e.getGeometry().getFirstCoordinate();
+  var p1 = e.getGeometry().getLastCoordinate();
+  if (ol.coordinate.dist2d(p, p0) < ol.coordinate.dist2d(p, p1)) return p0;
+  else return p1;
+};
+/** Calculate a path beetween 2 points
+ * @param {ol/coordinate} start
+ * @param {ol/coordinate} end
+ * @return {boolean|Array<ol/coordinate>} false if don't start (still running) or start and end nodes
+ */
+ol.graph.Dijskra.prototype.path = function(start, end) {
+  if (this.running) return false;
+  // Initialize
+  var self = this;
+  this.nodes.clear();
+  this.candidat = [];
+  this.wdist = 0;
+  this.running = true;
+  // Starting nodes
+  var start = this.closestCoordinate(start);
+  this.end = this.closestCoordinate(end);
+  if (start[0]===this.end[0] 
+    && start[1]===this.end[1]) {
+      this.dispatchEvent({
+        type: 'finish',
+        route: [],
+        distance: this.wdist
+      });
+      return false;
+    }
+  // Starting point
+  this.addNode(start, 0);
+  // Arrival
+  this.arrival = this.addNode(this.end, -1);
+  // Start
+  this.nb = 0;
+  this.dispatchEvent({
+    type: 'start'
+  });
+  setTimeout(function() { self._resume(); });
+  return [start, this.end];
+};
+/** Restart after pause
+ */
+ol.graph.Dijskra.prototype.resume = function() {
+  if (this.running) return;
+  if (this.candidat.length) {
+    this.running = true;
+    this.nb = 0;
+    this._resume();
+  }
+};
+/** Pause 
+ */
+ol.graph.Dijskra.prototype.pause = function() {
+  if (!this.running) return;
+  this.nb = -1;
+};
+/** Get the current 'best way'.
+ * This may be used to animate while calculating.
+ * @return {Array<ol/Feature>}
+ */
+ol.graph.Dijskra.prototype.getBestWay = function() {
+  var node, max = -1;
+  for (var i=0, n; n = this.candidat[i]; i++) {
+    if (n.get('wdist') > max) {
+      node = n;
+      max = n.get('wdist');
+    }
+  }
+  // Calculate route to this node
+  return this.getRoute(node);
+};
+/** Go on searching new candidats
+ * @private
+ */
+ol.graph.Dijskra.prototype._resume = function() {
+  if (!this.running) return;
+  while (this.candidat.length) {
+    // Sort by wdist
+    this.candidat.sort (function(a,b) {
+      return (a.get('dtotal') < b.get('dtotal') ? 1 : a.get('dtotal')===b.get('dtotal') ? 0 : -1);
+    });
+    // First candidate
+    var node = this.candidat.pop();
+    var p = node.getGeometry().getCoordinates();
+    // Find connected edges
+    var edges = this.getEdges(p);
+    for (var i=0, e; e=edges[i]; i++) {
+      if (node.get('from')!==e) {
+        var dist = this.getLength (e);
+        if (dist < 0) {
+          console.log ('distance < 0!');
+          // continue;
+        }
+        wdist = node.get('wdist') + dist * this.weight(e);
+        dist = node.get('dist') + dist;
+        pt1 = e.getGeometry().getFirstCoordinate();
+        pt2 = e.getGeometry().getLastCoordinate();
+        sens = this.direction(e);
+        if (sens!==0) {
+          if (p[0]===pt1[0] && p[1]===pt1[1] && sens!==-1) {
+            this.addNode(pt2, wdist, dist, e, node);
+          }
+          if (p[0]===pt2[0] && p[0]===pt2[0] && sens!==1) {
+            this.addNode(pt1, wdist, dist, e, node);
+          }
+        }
+      }
+      // Test overflow or pause
+      if (this.nb === -1 || this.nb++ > this.maxIteration) {
+        this.running = false;
+        this.dispatchEvent({
+          type: 'pause',
+          overflow: (this.nb !== -1)
+        });
+        return;
+      }
+      // Take time to do something
+      if (!(this.nb % this.stepIteration)){
+        var self = this;
+        window.setTimeout(function() { self._resume() }, 5);
+        this.dispatchEvent({
+          type: 'calculating'
+        });
+        return;
+      }
+    }
+  }
+  // Finish!
+  this.nodes.clear();
+  this.dispatchEvent({
+    type: 'finish',
+    route: this.getRoute(this.arrival),
+    wDistance: this.wdist,
+    distance: this.arrival.get('dist')
+  });
+  this.running = false;
+};
+/** Get the route to a node
+ * @param {ol/Feature} node
+ * @return {Array<ol/Feature>}
+ */
+ol.graph.Dijskra.prototype.getRoute = function(node) {
+  var route = [];
+  while (node) {
+    route.unshift(node.get('from'));
+    node = node.get('prev');
+  }
+  route.shift();
+  return route;
+};
+
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -14280,6 +14950,7 @@ ol.Map.prototype.pulse = function(coords, options)
  *	@param {number} options.offsetX X offset in px
  *	@param {number} options.offsetY Y offset in px
  *	@param {number} options.animation step in an animation sequence [0,1]
+ *	@param {number} options.max maximum value for bar chart
  * @see [Statistic charts example](../../examples/map.style.chart.html)
  * @extends {ol.style.RegularShape}
  * @implements {ol.structs.IHasChecksum}
@@ -14302,6 +14973,7 @@ ol.style.Chart = function(opt_options)
 	this.type_ = options.type;
 	this.offset_ = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
 	this.animation_ = (typeof(options.animation) == 'number') ? { animate:true, step:options.animation } : this.animation_ = { animate:false, step:1 };
+	this.max_ = options.max;
 	this.data_ = options.data;
 	if (options.colors instanceof Array)
 	{	this.colors_ = options.colors;
@@ -14460,8 +15132,13 @@ ol.style.Chart.prototype.renderChart_ = function(atlasManager)
 		case "bar":
 		default:
 		{	var max=0;
-			for (var i=0; i<this.data_.length; i++)
-			{	if (max < this.data_[i]) max = this.data_[i];
+			if (this.max_){
+				max = this.max_;
+			}
+			else{
+				for (var i=0; i<this.data_.length; i++)
+				{	if (max < this.data_[i]) max = this.data_[i];
+				}
 			}
 			var s = Math.min(5,2*this.radius_/this.data_.length);
 			var c = canvas.width/2;
