@@ -1,0 +1,177 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+	<title>ol-ext: DFCI layer</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="DBPedia layer for OL3" />
+	<meta name="keywords" content="ol3, layer, source, vector, wikipedia, dbpedia" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- Openlayers -->
+    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+	
+	<!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+	<!-- Proj4 -->
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.3.14/proj4.js"></script>
+
+	<link rel="stylesheet" href="../style.css" />
+	<style>
+    #map {
+      position: fixed;
+      top: 4.5em;
+      bottom: 0;
+      left: 0;
+      right: 20em;
+      z-index:-1;
+    }
+    .info {
+      position: fixed;
+      margin: 0;
+      top: 4.5em;
+      bottom: 0;
+      right: 0;
+      width: 20em;
+      z-index:-1;
+    }
+	</style>
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: DFCI layer</h1>
+  </a>
+  <div class="info">
+    <p>
+      The <i>ol/source/DFCI</i> display the 
+      <a href="http://www.entente-valabre.com/blog/224/51/retour-sur-le-carroyage-dfci">French DFCI grid</a>.
+      <br/>
+      It can display the 100 x 100 km, the 20 x 20 km, the 2 x 2 km grids and the 5 subdivisions of the 2km.
+    </p>
+    <p>
+      The data can be loaded on <a href="https://www.data.gouv.fr/fr/datasets/carroyage-dfci-2-km/">data.gouv.fr</a> (7.3Mo zip),
+      but why loading data you can calculate on the fly?
+    </p>
+    <p>
+      The <i>ol/control/SearchDFCI</i> is a search tool to find the position of a DFCI grid index.
+    </p>
+    <p>
+      Conevenient function can be used to handle DFCI indexes:
+      <ul>
+        <li>
+          <i>ol/coordinate/fromDFCI</i> convert a DFCI index to coordinate
+        </li>
+        <li>
+          <i>ol/coordinate/toDFCI</i> calculate the DFCI index giving a coordinate
+        </li>
+        <li>
+          <i>ol/coordinate/validDFCI</i> and <i>validDFCICoord</i> allow you to test if an index or a coordinate 
+          is valid in the grid system.
+        </li>
+      </ul>
+    </p>
+  </div>
+
+  <!-- DIV pour la carte -->
+  <div id="map"></div>
+
+<script type="text/javascript">
+	// The map
+	var map = new ol.Map ({	
+    target: 'map',
+    view: new ol.View ({
+      zoom: 6,
+      center: [273434, 5765953]
+    }),
+    interactions: ol.interaction.defaults(),
+    layers: [ new ol.layer.Tile({ name:"OSM", source: new ol.source.OSM() })]
+  });
+
+	// DFCI source
+	var vectorSource = new ol.source.DFCI({ });
+
+	map.addLayer(new ol.layer.Vector({
+    source: vectorSource,
+    renderMode:'image',
+		style: function(f, resolution) {
+			return [ 
+        new ol.style.Style({
+          text: new ol.style.Text({
+            text: f.get('id'),
+            font: 'bold 9px sans-serif',
+            backgroundFill: new ol.style.Fill ({ color:"rgba(255,255,255,.6)"}),
+            overflow: true,
+            placement: 'point'
+          }),
+          fill: new ol.style.Fill({
+            color: [0,0,0,0]
+          }),
+          stroke: new ol.style.Stroke({
+            width: .75,
+            color: '#f00'
+          })
+        })
+      ]
+		}
+  }));
+  
+  // Serach control
+  var search = new ol.control.SearchDFCI();
+  map.addControl(search);
+  var zoom = [7,10,12,14,15];
+  search.on('select', function(e) {
+    map.getView().animate({
+      center : e.search.coordinate,
+      zoom: zoom[Math.floor(e.search.name.length/2)]
+    });
+  });
+
+	// Show info
+	var popup = new ol.Overlay.Popup({ popupClass:'tooltips', offsetBox:15 });
+	map.addOverlay(popup);
+	var select = new ol.interaction.Select({
+    condition: ol.events.condition.click,
+    toggleCondition: ol.events.condition.always
+  });
+  // One at a time
+  select.on('select', function(e) {
+    if (e.selected.length) {
+      this.getFeatures().clear();
+      this.getFeatures().push(e.selected[0]);
+    }
+  });
+	map.addInteraction(select);
+	var hover = new ol.interaction.Hover();
+	map.addInteraction(hover);
+	hover.on('hover', function(e){ 
+    popup.show(
+      e.coordinate, 
+      e.feature.get('id')
+      +'<br/>'
+      +ol.coordinate.toDFCI(e.coordinate, 3, map.getView().getProjection())
+    ); 
+  });
+	hover.on('leave', function(e){ popup.hide() });
+
+/* test if coords are valid * /
+  map.on('click', function(e) {
+    console.log(e.coordinate, ol.coordinate.validDFCICoord(e.coordinate, map.getView().getProjection()));
+  })
+/* */
+</script>
+
+</body>
+</html>
