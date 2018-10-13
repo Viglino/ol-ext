@@ -35,6 +35,23 @@
 	
 	<link rel="stylesheet" href="../style.css"/>
 	<style>
+    .loading {
+      position: fixed;
+      color: #666;
+      top: 30%;
+      left: 50%;
+      background: #fff;
+      font-size: 2em;
+      padding: 1em;
+      z-index: 10;
+      box-shadow: 1px 1px 10px 2px rgba(0,0,0,.5);
+      border-radius: 3px;
+      transform: translateX(-50%);
+    }
+    .loading .fa {
+      vertical-align: middle;
+      font-size: 1.5em;
+    }
     .options ul {
       margin: 0;
       padding: 0;
@@ -54,7 +71,10 @@
 
 	<a href="../../index.html">
 		<h1>ol-ext: Dijkstra short path</h1>
-	</a>
+  </a>
+  <div class=loading>
+    <i class="fa fa fa-spinner fa-pulse"></i> Loading graph...
+  </div>
 
 	<div class="info">
     <p>
@@ -71,7 +91,7 @@
           <i>getLength()</i> method enable you to specify an other distance calculation.
         </li>
         <li>
-            <i>weight()</i> method enable weighting on the graph, ie. calculate a speed factor on the edges.
+            <i>weight()</i> method enable weighting on the graph, for example calculate a speed factor on the edges.
           </li>
         <li>
           <i>direction()</i> method can defined the direction of the edges (-1, 0, 1 or 2).
@@ -162,6 +182,12 @@
   var graph = new ol.source.Vector({
     url: '../data/ROUTE120.geojson',
     format: new ol.format.GeoJSON()
+  });
+  listenerKey = graph.on('change', function() {
+    if (graph.getState() == 'ready') {
+      $('.loading').hide();
+      ol.Observable.unByKey(listenerKey);
+    }
   });
 	var vector = new ol.layer.Vector({
     title: 'Graph',
