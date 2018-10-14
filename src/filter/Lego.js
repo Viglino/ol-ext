@@ -7,12 +7,12 @@ import {inherits as ol_inherits} from 'ol'
 import ol_filter_Base from './Base'
 
 /** Make a map or layer look like made of a set of Lego bricks.
-* 	@constructor
-*	@requires ol_filter
-*	@extends {ol_filter_Base}
-*	@param {ol_filter_LegoOptions}
-*		- brickSize {Number} size of te brick, default 30
-*		- crossOrigin {null | string | undefined} crossOrigin attribute for loaded images.
+*  @constructor
+* @requires ol_filter
+* @extends {ol_filter_Base}
+* @param {*} options
+*  @param {Number} options.brickSize size of te brick, default 30
+*  @param {null | string | undefined} options.crossOrigin crossOrigin attribute for loaded images.
 */
 var ol_filter_Lego = function(options)
 {	if (!options) options = {};

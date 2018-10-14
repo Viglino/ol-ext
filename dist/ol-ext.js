@@ -6282,13 +6282,13 @@ ol.layer.Base.prototype.getFilters = function ()
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Mask drawing using an ol.Feature
-* 	@constructor
-*	@requires ol.filter
-*	@extends {ol.filter.Base}
-*	@param {ol.filter.CropOptions} options
-*		- feature {ol.Feature} feature to mask with
-*		- fill {ol.style.Fill} style to fill with
-*		- inner {bool} mask inner, default false
+* @constructor
+* @requires ol.filter
+* @extends {ol.filter.Base}
+* @param {*} options
+*  @param {ol.Feature} options.feature feature to mask with
+*  @param {ol.style.Fill} options.fill style to fill with
+*  @param {bool} options.inner mask inner, default false
 */
 ol.filter.Mask = function(options)
 {	options = options || {};
@@ -6368,15 +6368,15 @@ ol.filter.Mask.prototype.postcompose = function(e)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Clip layer or map 
-* 	@constructor
-*	@requires ol.filter
-*	@extends {ol.filter.Base}
-*	@param {ol.filter.ClipOptions} options
-*		- coords {Array<ol.Coordinate>}
-*		- extent {ol.Extent}
-*		- units {%|px} coords units percent or pixel
-*		- keepAspectRatio {boolean} keep aspect ratio
-*		- color {string} backgroundcolor
+*  @constructor
+* @requires ol.filter
+* @extends {ol.filter.Base}
+* @param {*} options
+*  @param {Array<ol.Coordinate>} options.coords
+*  @param {ol.Extent} options.extent
+*  @param {string} options.units coords units percent (%) or pixel (px)
+*  @param {boolean} options.keepAspectRatio keep aspect ratio
+*  @param {string} options.color backgroundcolor
 */
 ol.filter.Clip = function(options)
 {	options = options || {};
@@ -6475,21 +6475,28 @@ ol.filter.Clip.prototype.postcompose = function(e)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Colorize map or layer
-* 	@constructor
-*	@requires ol.filter
-*	@extends {ol.filter.Base}
-*	@author Thomas Tilak https://github.com/thhomas
-*	@author Jean-Marc Viglino https://github.com/viglino
-*	@param {ol.filter.ColorizeOptions} options
-*		- feature {ol.Feature} feature to mask with
-*		- color {Array<integer>} style to fill with
-*		- inner {bool} mask inner, default false
-*/
+ * @constructor
+ * @requires ol.filter
+ * @extends {ol.filter.Base}
+ * @author Thomas Tilak https://github.com/thhomas
+ * @author Jean-Marc Viglino https://github.com/viglino
+ * @param {ol.filter.ColorizeOptions} options
+ *  @param {ol.Feature} options.feature feature to mask with
+ *  @param {Array<integer>} options.color style to fill with
+ *  @param {bool} options.inner mask inner, default false
+ */
 ol.filter.Colorize = function(options)
 {	ol.filter.Base.call(this, options);
 	this.setFilter(options);
 }
 ol.inherits(ol.filter.Colorize, ol.filter.Base);
+/** Set options to the filter
+ * @param {*} options
+ *  @param {ol.color} options.color style to fill with
+ *  @param {string} options.operation 'enhance' or a CanvasRenderingContext2D.globalCompositeOperation
+ *  @param {number} options.value a [0-1] value to modify the effect value
+ *  @param {bool} options.inner mask inner, default false
+ */
 ol.filter.Colorize.prototype.setFilter = function(options)
 {	options = options || {};
 	switch (options)
@@ -6530,12 +6537,18 @@ ol.filter.Colorize.prototype.setFilter = function(options)
 			break;
 	}
 }
+/** Set the filter value
+ *  @param {ol.color} options.color style to fill with
+ */
 ol.filter.Colorize.prototype.setValue = function(v)
 {	this.set ('value', v);
 	var c = ol.color.asArray(this.get("color"));
 	c[3] = v;
 	this.set("color", ol.color.asString(c));
 }
+/** Set the color value
+ *  @param {number} options.value a [0-1] value to modify the effect value
+ */
 ol.filter.Colorize.prototype.setColor = function(c)
 {	c = ol.color.asArray(c);
 	if (c)
@@ -6543,8 +6556,12 @@ ol.filter.Colorize.prototype.setColor = function(c)
 		this.set("color", ol.color.asString(c));
 	}
 }
+/** @private 
+ */
 ol.filter.Colorize.prototype.precompose = function(e)
 {}
+/** @private 
+ */
 ol.filter.Colorize.prototype.postcompose = function(e)
 {	// Set back color hue
 	var ctx = e.context;
@@ -6575,11 +6592,11 @@ ol.filter.Colorize.prototype.postcompose = function(e)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Colorize map or layer
-* 	@constructor
-*	@requires ol.filter
-*	@extends {ol.filter.Base}
-*	@param {ol.filter.CompositeOptions} options
-*		- operation {string} composite operation
+* @constructor
+* @requires ol.filter
+* @extends {ol.filter.Base}
+* @param {*} options
+*   @param {string} options.operation composite operation
 */
 ol.filter.Composite = function(options)
 {	ol.filter.Base.call(this, options);
@@ -6606,13 +6623,13 @@ ol.filter.Composite.prototype.postcompose = function(e)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Crop drawing using an ol.Feature
-* 	@constructor
-*	@requires ol.filter
-*	@requires ol.filter.Mask
-*	@extends {ol.filter.Mask}
-*	@param {ol.filter.CropOptions}
-*		- feature {_ol_Feature_} feature to crop with
-*		- inner {bool} crop inner, default false
+* @constructor
+* @requires ol.filter
+* @requires ol.filter.Mask
+* @extends {ol.filter.Mask}
+* @param {*} options
+*  @param {ol/Feature} options. feature to crop with
+*  @param {bool} [options.inner=false] crop inner, default false
 */
 ol.filter.Crop = function(options)
 {	options = options || {};
@@ -6635,14 +6652,14 @@ ol.filter.Crop.prototype.postcompose = function(e)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Fold filer map 
-* 	@constructor
-*	@requires ol.filter
-*	@extends {ol.filter.Base}
-*	@param {ol.filter.FoldOptions}
-*		- fold {Array<int>} number of fold (horizontal and vertical)
-*		- margin {Number} margin in px, default 8
-*		- padding {Number} padding in px, default 8
-*		- fsize {integer|Array<integer>} fold size in px, default 8,10
+* @constructor
+* @requires ol.filter
+* @extends {ol.filter.Base}
+* @param {*} options
+*  @param {Array<int>} options.fold number of fold (horizontal and vertical)
+*  @param {Number} options.margin margin in px, default 8
+*  @param {Number} options.padding padding in px, default 8
+*  @param {integer|Array<integer>} options.fsize fold size in px, default 8,10
 */
 ol.filter.Fold = function(options)
 {	options = options || {};
@@ -6733,12 +6750,12 @@ ol.filter.Fold.prototype.postcompose = function(e)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Make a map or layer look like made of a set of Lego bricks.
-* 	@constructor
-*	@requires ol.filter
-*	@extends {ol.filter.Base}
-*	@param {ol.filter.LegoOptions}
-*		- brickSize {Number} size of te brick, default 30
-*		- crossOrigin {null | string | undefined} crossOrigin attribute for loaded images.
+*  @constructor
+* @requires ol.filter
+* @extends {ol.filter.Base}
+* @param {*} options
+*  @param {Number} options.brickSize size of te brick, default 30
+*  @param {null | string | undefined} options.crossOrigin crossOrigin attribute for loaded images.
 */
 ol.filter.Lego = function(options)
 {	if (!options) options = {};
@@ -6874,13 +6891,15 @@ ol.filter.Lego.prototype.postcompose = function(e)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Add texture effects on maps or layers
-* 	@constructor
-*	@requires ol.filter
-*	@extends {ol.filter.Base}
-*	@param {ol.filter.TextureOptions} options
-*		- feature {_ol_Feature_} feature to mask with
-*		- fill {_ol_style_Fill_} style to fill with
-*		- inner {bool} mask inner, default false
+* @constructor
+* @requires ol.filter
+* @extends {ol.filter.Base}
+* @param {*} options
+*  @param {Image | undefined} options.img Image object for the texture
+*  @param {string} options.src Image source URI
+*  @param {number} options.scale scale to draw the image. Default 1.
+*  @param {bool} options.rotate Whether to rotate the texture with the view (may cause animation lags on mobile or slow devices). Default is true.
+*  @param {null | string | undefined} options.crossOrigin The crossOrigin attribute for loaded images.
 */
 ol.filter.Texture = function(options)
 {	ol.filter.Base.call(this, options);
@@ -6888,12 +6907,12 @@ ol.filter.Texture = function(options)
 }
 ol.inherits(ol.filter.Texture, ol.filter.Base);
 /** Set texture
-*	@option {ol.filter.TextureOptions}
-*		- img {Image | undefined} Image object for the texture
-*		- src {string} Image source URI
-*		- scale {number} scale to draw the image. Default 1.
-*		- rotateWithView {bool} Whether to rotate the texture with the view (may cause animation lags on mobile or slow devices). Default is true.
-*		- crossOrigin {null | string | undefined} The crossOrigin attribute for loaded images.
+* @param {*} options
+*  @param {Image | undefined} options.img Image object for the texture
+*  @param {string} options.src Image source URI
+*  @param {number} options.scale scale to draw the image. Default 1.
+*  @param {bool} options.rotate Whether to rotate the texture with the view (may cause animation lags on mobile or slow devices). Default is true.
+*  @param {null | string | undefined} options.crossOrigin The crossOrigin attribute for loaded images.
 */
 ol.filter.Texture.prototype.setFilter = function(options)
 {	var img;
@@ -13637,18 +13656,27 @@ ol.coordinate.validDFCICoord = function (coord, projection) {
 	Copyright (c) 2018 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (http://www.cecill.info/).
 */
-/** Define namespace
+/* Define namespace
  */
 ol.graph = {};
-/** Compute the shortest paths between nodes in a graph source
+/** 
+ * @classdesc 
+ * Compute the shortest paths between nodes in a graph source
  * The source must only contains LinesString.
+ * 
+ * It uses a A* optimisation.
+ * You can overwrite methods to customize the result.
  * @see https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
- * @fires calculating, start, finish, pause
+ * @constructor
+ * @fires calculating 
+ * @fires start
+ * @fires finish
+ * @fires pause
  * @param {any} options
- *  @param {ol/source/Vector} source the source for the edges 
- *  @param {integer} maxIteration maximum iterations before a pause event is fired, default 20000
- *  @param {integer} stepIteration number of iterations before a calculating event is fired, default 2000
- *  @param {number} epsilon geometric precision (min distance beetween 2 points), default 1E-6
+ *  @param {ol/source/Vector} options.source the source for the edges 
+ *  @param {integer} [options.maxIteration=20000] maximum iterations before a pause event is fired, default 20000
+ *  @param {integer} [options.stepIteration=2000] number of iterations before a calculating event is fired, default 2000
+ *  @param {number} [options.epsilon=1E-6] geometric precision (min distance beetween 2 points), default 1E-6
  */
 ol.graph.Dijskra = function (options) {
   options = options || {};
@@ -13664,10 +13692,11 @@ ol.graph.Dijskra = function (options) {
   this.set ('epsilon', options.epsilon || 1E-6);
 };
 ol.inherits(ol.graph.Dijskra, ol.Object);
-/** Get the weighting of the edge, ie. a speed factor
+/** Get the weighting of the edge, for example a speed factor
  * The function returns a value beetween ]0,1]
  * - 1   = no weighting
  * - 0.5 = goes twice more faster on this road
+ * 
  * If no feature is provided you must return the lower weighting you're using
  * @param {ol/Feature} feature
  * @return {number} a number beetween 0-1 
@@ -13682,7 +13711,7 @@ ol.graph.Dijskra.prototype.weight = function(feature) {
  * - -1 : revers way
  * -  2 : both way
  * @param {ol/Feature} feature
- * @return {0|1|-1|2} 
+ * @return {Number} 0: blocked, 1: direct way, -1: revers way, 2:both way 
  * @api
  */
 ol.graph.Dijskra.prototype.direction = function(feature) {
@@ -13733,6 +13762,7 @@ ol.graph.Dijskra.prototype.getNode = function(coord) {
  * @param {ol/Feature} from the feature used to come to this node
  * @param {ol/Feature} prev the previous node
  * @return {ol/Feature} the node
+ * @private
  */
 ol.graph.Dijskra.prototype.addNode = function(p, wdist, dist, from, prev) {
   // Final condition
@@ -13777,6 +13807,7 @@ ol.graph.Dijskra.prototype.addNode = function(p, wdist, dist, from, prev) {
 /** Get the closest coordinate of a node in the graph source (an edge extremity)
  * @param {ol/coordinate} p
  * @return {ol/coordinate} 
+ * @private
  */
 ol.graph.Dijskra.prototype.closestCoordinate = function(p) {
   var e = this.source.getClosestFeatureToCoordinate(p);
@@ -13922,6 +13953,7 @@ ol.graph.Dijskra.prototype._resume = function() {
 /** Get the route to a node
  * @param {ol/Feature} node
  * @return {Array<ol/Feature>}
+ * @private
  */
 ol.graph.Dijskra.prototype.getRoute = function(node) {
   var route = [];

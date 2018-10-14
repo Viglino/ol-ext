@@ -13,19 +13,28 @@ import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent'
 import {buffer as ol_extent_buffer} from 'ol/extent'
 import {ol_coordinate_dist2d} from "../geom/GeomUtils";
 
-/** Define namespace
+/* Define namespace
  */
 var ol_graph = {};
 
-/** Compute the shortest paths between nodes in a graph source
+/** 
+ * @classdesc 
+ * Compute the shortest paths between nodes in a graph source
  * The source must only contains LinesString.
+ * 
+ * It uses a A* optimisation.
+ * You can overwrite methods to customize the result.
  * @see https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
- * @fires calculating, start, finish, pause
+ * @constructor
+ * @fires calculating 
+ * @fires start
+ * @fires finish
+ * @fires pause
  * @param {any} options
- *  @param {ol/source/Vector} source the source for the edges 
- *  @param {integer} maxIteration maximum iterations before a pause event is fired, default 20000
- *  @param {integer} stepIteration number of iterations before a calculating event is fired, default 2000
- *  @param {number} epsilon geometric precision (min distance beetween 2 points), default 1E-6
+ *  @param {ol/source/Vector} options.source the source for the edges 
+ *  @param {integer} [options.maxIteration=20000] maximum iterations before a pause event is fired, default 20000
+ *  @param {integer} [options.stepIteration=2000] number of iterations before a calculating event is fired, default 2000
+ *  @param {number} [options.epsilon=1E-6] geometric precision (min distance beetween 2 points), default 1E-6
  */
 var ol_graph_Dijskra = function (options) {
   options = options || {};
@@ -46,10 +55,11 @@ var ol_graph_Dijskra = function (options) {
 };
 ol_inherits(ol_graph_Dijskra, ol_Object);
 
-/** Get the weighting of the edge, ie. a speed factor
+/** Get the weighting of the edge, for example a speed factor
  * The function returns a value beetween ]0,1]
  * - 1   = no weighting
  * - 0.5 = goes twice more faster on this road
+ * 
  * If no feature is provided you must return the lower weighting you're using
  * @param {ol/Feature} feature
  * @return {number} a number beetween 0-1 
@@ -65,7 +75,7 @@ ol_graph_Dijskra.prototype.weight = function(feature) {
  * - -1 : revers way
  * -  2 : both way
  * @param {ol/Feature} feature
- * @return {0|1|-1|2} 
+ * @return {Number} 0: blocked, 1: direct way, -1: revers way, 2:both way 
  * @api
  */
 ol_graph_Dijskra.prototype.direction = function(feature) {
@@ -121,6 +131,7 @@ ol_graph_Dijskra.prototype.getNode = function(coord) {
  * @param {ol/Feature} from the feature used to come to this node
  * @param {ol/Feature} prev the previous node
  * @return {ol/Feature} the node
+ * @private
  */
 ol_graph_Dijskra.prototype.addNode = function(p, wdist, dist, from, prev) {
   // Final condition
@@ -167,6 +178,7 @@ ol_graph_Dijskra.prototype.addNode = function(p, wdist, dist, from, prev) {
 /** Get the closest coordinate of a node in the graph source (an edge extremity)
  * @param {ol/coordinate} p
  * @return {ol/coordinate} 
+ * @private
  */
 ol_graph_Dijskra.prototype.closestCoordinate = function(p) {
   var e = this.source.getClosestFeatureToCoordinate(p);
@@ -326,6 +338,7 @@ ol_graph_Dijskra.prototype._resume = function() {
 /** Get the route to a node
  * @param {ol/Feature} node
  * @return {Array<ol/Feature>}
+ * @private
  */
 ol_graph_Dijskra.prototype.getRoute = function(node) {
   var route = [];

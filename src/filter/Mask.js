@@ -8,13 +8,13 @@ import ol_filter_Base from './Base'
 import {asString as ol_color_asString} from 'ol/color'
 
 /** Mask drawing using an ol.Feature
-* 	@constructor
-*	@requires ol_filter
-*	@extends {ol_filter_Base}
-*	@param {ol_filter_CropOptions} options
-*		- feature {ol.Feature} feature to mask with
-*		- fill {ol.style.Fill} style to fill with
-*		- inner {bool} mask inner, default false
+* @constructor
+* @requires ol_filter
+* @extends {ol_filter_Base}
+* @param {*} options
+*  @param {ol.Feature} options.feature feature to mask with
+*  @param {ol.style.Fill} options.fill style to fill with
+*  @param {bool} options.inner mask inner, default false
 */
 var ol_filter_Mask = function(options)
 {	options = options || {};
