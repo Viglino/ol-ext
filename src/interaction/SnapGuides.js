@@ -134,15 +134,9 @@ ol_interaction_SnapGuides.prototype.setActive = function(active)
 }
 
 /** Clear previous added guidelines
-* @param {Array<ol.Feature> | undefined} features a list of feature to remove, default remove all feature
 */
-ol_interaction_SnapGuides.prototype.clearGuides = function(features)
-{	if (!features) this.overlaySource_.clear();
-	else
-	{	for (var i=0, f; f=features[i]; i++)
-		{	this.overlaySource_.removeFeature(f);
-		}
-	}
+ol_interaction_SnapGuides.prototype.clearGuides = function()
+{ this.overlaySource_.clear();
 }
 
 /** Get guidelines
@@ -233,7 +227,7 @@ ol_interaction_SnapGuides.prototype.setDrawInteraction = function(drawi) {
 		}
 
 		if (l != nb && (self.enableInitialGuides_ ? l >= s : l > s)) {
-			self.clearGuides(features);
+			self.clearGuides();
 			if (l > s) {
 				features = self.addOrthoGuide([coord[l - s], coord[l - s - 1]]);
 			}
@@ -249,7 +243,7 @@ ol_interaction_SnapGuides.prototype.setDrawInteraction = function(drawi) {
 	});
 	// end drawing, clear directions
 	drawi.on ("drawend", function(e) {
-		self.clearGuides(features);
+		self.clearGuides();
 		e.feature.getGeometry().un("change", setGuides);
 		nb = 0;
 		features = [];
@@ -288,7 +282,7 @@ ol_interaction_SnapGuides.prototype.setModifyInteraction = function (modifyi) {
 
 		var l = coord.length;
 
-		self.clearGuides(features);
+		self.clearGuides();
 		features = self.addOrthoGuide([coord[mod(idx - 1, l)], coord[mod(idx - 2, l)]]);
 		features = features.concat(self.addGuide([coord[mod(idx - 1, l)], coord[mod(idx - 2, l)]]));
 		features = features.concat(self.addGuide([coord[mod(idx + 1, l)], coord[mod(idx + 2, l)]]));
@@ -303,7 +297,7 @@ ol_interaction_SnapGuides.prototype.setModifyInteraction = function (modifyi) {
 
 
 	function drawEnd(e) {
-		self.clearGuides(features);
+		self.clearGuides();
 		features = [];
 	}
 
