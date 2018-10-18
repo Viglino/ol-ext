@@ -1,0 +1,2554 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>ol-ext Class: SearchGeoportail</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.cerulean.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top ">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html"><img class="branding-logo" src="https://openlayers.org/en/latest/examples/resources/logo-70x70.png"
+		alt="logo"/>ol-ext</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="namespaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Namespaces<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="ol.html">ol</a></li><li><a href="ol.control.html">ol.control</a></li><li><a href="ol.control.Control.html">ol.control.Control</a></li><li><a href="ol.coordinate.html">ol.coordinate</a></li><li><a href="ol.easing.html">ol.easing</a></li><li><a href="ol.filter.html">ol.filter</a></li><li><a href="ol.geom.Geometry.html">ol.geom.Geometry</a></li><li><a href="ol.geom.LineString.html">ol.geom.LineString</a></li><li><a href="ol.geom.MultiPolygon.html">ol.geom.MultiPolygon</a></li><li><a href="ol.geom.Point.html">ol.geom.Point</a></li><li><a href="ol.geom.Polygon.html">ol.geom.Polygon</a></li><li><a href="ol.graph.html">ol.graph</a></li><li><a href="ol.interaction.html">ol.interaction</a></li><li><a href="ol.layer.Base.html">ol.layer.Base</a></li><li><a href="ol.layer.Vector.html">ol.layer.Vector</a></li><li><a href="ol.Map.html">ol.Map</a></li><li><a href="ol.ordering.html">ol.ordering</a></li><li><a href="ol.Overlay.html">ol.Overlay</a></li><li><a href="ol.source.html">ol.source</a></li><li><a href="ol.style.html">ol.style</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="ol.control.Bar.html">ol.control.Bar</a></li><li><a href="ol.control.Button.html">ol.control.Button</a></li><li><a href="ol.control.CanvasAttribution.html">ol.control.CanvasAttribution</a></li><li><a href="ol.control.CanvasScaleLine.html">ol.control.CanvasScaleLine</a></li><li><a href="ol.control.CanvasTitle.html">ol.control.CanvasTitle</a></li><li><a href="ol.control.Compass.html">ol.control.Compass</a></li><li><a href="ol.control.Disable.html">ol.control.Disable</a></li><li><a href="ol.control.Gauge.html">ol.control.Gauge</a></li><li><a href="ol.control.GeoBookmark.html">ol.control.GeoBookmark</a></li><li><a href="ol.control.GeolocationBar.html">ol.control.GeolocationBar</a></li><li><a href="ol.control.Globe.html">ol.control.Globe</a></li><li><a href="ol.control.Graticule.html">ol.control.Graticule</a></li><li><a href="ol.control.GridReference.html">ol.control.GridReference</a></li><li><a href="ol.control.LayerPopup.html">ol.control.LayerPopup</a></li><li><a href="ol.control.LayerSwitcher.html">ol.control.LayerSwitcher</a></li><li><a href="ol.control.LayerSwitcherImage.html">ol.control.LayerSwitcherImage</a></li><li><a href="ol.control.Overlay.html">ol.control.Overlay</a></li><li><a href="ol.control.Overview.html">ol.control.Overview</a></li><li><a href="ol.control.Permalink.html">ol.control.Permalink</a></li><li><a href="ol.control.Profil.html">ol.control.Profil</a></li><li><a href="ol.control.RoutingGeoportail.html">ol.control.RoutingGeoportail</a></li><li><a href="ol.control.Scale.html">ol.control.Scale</a></li><li><a href="ol.control.Search.html">ol.control.Search</a></li><li><a href="ol.control.SearchBAN.html">ol.control.SearchBAN</a></li><li><a href="ol.control.SearchDFCI.html">ol.control.SearchDFCI</a></li><li><a href="ol.control.SearchFeature.html">ol.control.SearchFeature</a></li><li><a href="ol.control.SearchGeoportail.html">ol.control.SearchGeoportail</a></li><li><a href="ol.control.SearchGeoportailParcelle.html">ol.control.SearchGeoportailParcelle</a></li><li><a href="ol.control.SearchJSON.html">ol.control.SearchJSON</a></li><li><a href="ol.control.SearchNominatim.html">ol.control.SearchNominatim</a></li><li><a href="ol.control.SearchPhoton.html">ol.control.SearchPhoton</a></li><li><a href="ol.control.Swipe.html">ol.control.Swipe</a></li><li><a href="ol.control.Target.html">ol.control.Target</a></li><li><a href="ol.control.TextButton.html">ol.control.TextButton</a></li><li><a href="ol.control.Toggle.html">ol.control.Toggle</a></li><li><a href="ol.featureAnimation.html">ol.featureAnimation</a></li><li><a href="ol.featureAnimation.Bounce.html">ol.featureAnimation.Bounce</a></li><li><a href="ol.featureAnimation.Drop.html">ol.featureAnimation.Drop</a></li><li><a href="ol.featureAnimation.Fade.html">ol.featureAnimation.Fade</a></li><li><a href="ol.featureAnimation.None.html">ol.featureAnimation.None</a></li><li><a href="ol.featureAnimation.Null.html">ol.featureAnimation.Null</a></li><li><a href="ol.featureAnimation.Path.html">ol.featureAnimation.Path</a></li><li><a href="ol.featureAnimation.Shake.html">ol.featureAnimation.Shake</a></li><li><a href="ol.featureAnimation.Show.html">ol.featureAnimation.Show</a></li><li><a href="ol.featureAnimation.Slide.html">ol.featureAnimation.Slide</a></li><li><a href="ol.featureAnimation.Teleport.html">ol.featureAnimation.Teleport</a></li><li><a href="ol.featureAnimation.Throw.html">ol.featureAnimation.Throw</a></li><li><a href="ol.featureAnimation.Zoom.html">ol.featureAnimation.Zoom</a></li><li><a href="ol.featureAnimation.ZoomOut.html">ol.featureAnimation.ZoomOut</a></li><li><a href="ol.filter.Base.html">ol.filter.Base</a></li><li><a href="ol.filter.Clip.html">ol.filter.Clip</a></li><li><a href="ol.filter.Colorize.html">ol.filter.Colorize</a></li><li><a href="ol.filter.Composite.html">ol.filter.Composite</a></li><li><a href="ol.filter.Crop.html">ol.filter.Crop</a></li><li><a href="ol.filter.Fold.html">ol.filter.Fold</a></li><li><a href="ol.filter.Lego.html">ol.filter.Lego</a></li><li><a href="ol.filter.Mask.html">ol.filter.Mask</a></li><li><a href="ol.filter.Texture.html">ol.filter.Texture</a></li><li><a href="ol.graph.Dijskra.html">ol.graph.Dijskra</a></li><li><a href="ol.HexGrid.html">ol.HexGrid</a></li><li><a href="ol.interaction.CenterTouch.html">ol.interaction.CenterTouch</a></li><li><a href="ol.interaction.Clip.html">ol.interaction.Clip</a></li><li><a href="ol.interaction.DrawHole.html">ol.interaction.DrawHole</a></li><li><a href="ol.interaction.DrawRegular.html">ol.interaction.DrawRegular</a></li><li><a href="ol.interaction.DrawTouch.html">ol.interaction.DrawTouch</a></li><li><a href="ol.interaction.DropFile.html">ol.interaction.DropFile</a></li><li><a href="ol.interaction.Flashlight.html">ol.interaction.Flashlight</a></li><li><a href="ol.interaction.GeolocationDraw.html">ol.interaction.GeolocationDraw</a></li><li><a href="ol.interaction.Hover.html">ol.interaction.Hover</a></li><li><a href="ol.interaction.LongTouch.html">ol.interaction.LongTouch</a></li><li><a href="ol.interaction.ModifyTouch.html">ol.interaction.ModifyTouch</a></li><li><a href="ol.interaction.Offset.html">ol.interaction.Offset</a></li><li><a href="ol.interaction.Ripple.html">ol.interaction.Ripple</a></li><li><a href="ol.interaction.SelectCluster.html">ol.interaction.SelectCluster</a></li><li><a href="ol.interaction.SnapGuides.html">ol.interaction.SnapGuides</a></li><li><a href="ol.interaction.Split.html">ol.interaction.Split</a></li><li><a href="ol.interaction.Splitter.html">ol.interaction.Splitter</a></li><li><a href="ol.interaction.Synchronize.html">ol.interaction.Synchronize</a></li><li><a href="ol.interaction.TinkerBell.html">ol.interaction.TinkerBell</a></li><li><a href="ol.interaction.TouchCompass.html">ol.interaction.TouchCompass</a></li><li><a href="ol.interaction.Transform.html">ol.interaction.Transform</a></li><li><a href="ol.layer.AnimatedCluster.html">ol.layer.AnimatedCluster</a></li><li><a href="ol.Overlay.Magnify.html">ol.Overlay.Magnify</a></li><li><a href="ol.Overlay.Placemark.html">ol.Overlay.Placemark</a></li><li><a href="ol.Overlay.Popup.html">ol.Overlay.Popup</a></li><li><a href="ol.render3D.html">ol.render3D</a></li><li><a href="ol.source.DBPedia.html">ol.source.DBPedia</a></li><li><a href="ol.source.DFCI.html">ol.source.DFCI</a></li><li><a href="ol.source.GeoImage.html">ol.source.GeoImage</a></li><li><a href="ol.source.HexBin.html">ol.source.HexBin</a></li><li><a href="ol.source.Mapillary.html">ol.source.Mapillary</a></li><li><a href="ol.source.Overpass.html">ol.source.Overpass</a></li><li><a href="ol.source.WikiCommons.html">ol.source.WikiCommons</a></li><li><a href="ol.style.Chart.html">ol.style.Chart</a></li><li><a href="ol.style.FillPattern.html">ol.style.FillPattern</a></li><li><a href="ol.style.FontSymbol.html">ol.style.FontSymbol</a></li><li><a href="ol.style.Photo.html">ol.style.Photo</a></li><li><a href="ol.style.Shadow.html">ol.style.Shadow</a></li><li><a href="ol.style.StrokePattern.html">ol.style.StrokePattern</a></li><li><a href="ol.style.TextPath.html">ol.style.TextPath</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+        
+            <div class="col-sm-3 col-md-3">
+                <form class="navbar-form" role="search">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        
+	</div>
+
+</div>
+</div>
+
+
+<div class="container" id="toc-content">
+<div class="row">
+
+	
+	<div class="col-md-8">
+	
+		<div id="main">
+			
+
+	<h1 class="page-title">Class: SearchGeoportail</h1>
+<section>
+
+<header>
+    
+        <h2>
+            <span class="ancestors"><a href="ol.html">ol</a><a href="ol.control.html">.control</a>.</span>
+        
+        SearchGeoportail
+        </h2>
+        
+    
+</header>
+
+
+<article>
+    <div class="container-overview">
+    
+        
+<hr>
+<dt>
+    <h4 class="name" id="SearchGeoportail"><span class="type-signature"></span>new SearchGeoportail(options)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Search places using the French National Base Address (BAN) API.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>extend ol.control.SearchJSON options</p>
+                <h6 class="method-params-label method-subparams-label">Properties</h6>
+                
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>className</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>control class name</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>apiKey</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+|
+
+<span class="param-type">undefined</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>the service api key.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>authentication:</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+|
+
+<span class="param-type">undefined</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>basic authentication for the service API as btoa(&quot;login:pwd&quot;)</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>target</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Element</span>
+|
+
+<span class="param-type">string</span>
+|
+
+<span class="param-type">undefined</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Specify a target if you want the control to be rendered outside of the map's viewport.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>label</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+|
+
+<span class="param-type">undefined</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Text label to use for the search button, default &quot;search&quot;</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>placeholder</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+|
+
+<span class="param-type">undefined</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>placeholder, default &quot;Search...&quot;</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>typing</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+|
+
+<span class="param-type">undefined</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>a delay on each typing to start searching (ms), default 500.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>minLength</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">integer</span>
+|
+
+<span class="param-type">undefined</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>minimum length to start searching, default 3</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>maxItems</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">integer</span>
+|
+
+<span class="param-type">undefined</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>maximum number of items to display in the autocomplete list, default 10</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>type</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">StreetAddress</span>
+|
+
+<span class="param-type">PositionOfInterest</span>
+|
+
+<span class="param-type">CadastralParcel</span>
+|
+
+<span class="param-type">Commune</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>type of search. Using Commune will return the INSEE code, default StreetAddress,PositionOfInterest</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+	<dt class="tag-see method-doc-label method-doc-details-label">See:</dt>
+	<dd class="tag-see">
+		<ul>
+			<li><a href="https://geoservices.ign.fr/documentation/geoservices/geocodage.html">https://geoservices.ign.fr/documentation/geoservices/geocodage.html</a></li>
+			</ul>
+	</dd>
+	
+
+	
+</dl>
+
+
+    
+
+    
+    <h5>Fires:</h5>
+    <ul>
+        <li>event:select</li>
+    </ul>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+    
+    </div>
+
+    
+        <h3 class="subsection-title">Extends</h3>
+
+        
+
+
+    <ul>
+        <li><a href="ol.control.SearchJSON.html">ol.control.SearchJSON</a></li>
+    </ul>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        <dl>
+            
+<hr>
+<dt>
+    <h4 class="name" id="ajax"><span class="type-signature"></span>ajax(url, onsuccess, onerror)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Send an ajax request (GET)</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>url</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>onsuccess</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>callback</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>onerror</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>callback</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.SearchJSON.html#ajax">ol.control.SearchJSON#ajax</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="autocomplete"><span class="type-signature"></span>autocomplete(s, cback)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Autocomplete function (ajax request to the server)</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>s</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>search string</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>cback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>a callback function that takes an array of {name, feature} to display in the autocomplete field</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.SearchJSON.html#autocomplete">ol.control.SearchJSON#autocomplete</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="clearHistory"><span class="type-signature"></span>clearHistory()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Remove previous history</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#clearHistory">ol.control.Search#clearHistory</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="equalFeatures"><span class="type-signature"></span>equalFeatures(f1, f2)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Test if 2 features are equal</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>f1</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>f2</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#equalFeatures">ol.control.Search#equalFeatures</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="getHistory"><span class="type-signature"></span>getHistory()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Get history table</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#getHistory">ol.control.Search#getHistory</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="getTitle"><span class="type-signature"></span>getTitle(f)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Returns the text to be displayed in the menu</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>f</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">ol.Feature</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>the feature</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.SearchJSON.html#getTitle">ol.control.SearchJSON#getTitle</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    <p>the text to be displayed in the index</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">string</span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="handleResponse"><span class="type-signature"></span>handleResponse(response)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Handle server response to pass the features array to the display list</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>response</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>server response</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.SearchJSON.html#handleResponse">ol.control.SearchJSON#handleResponse</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    <p>an array of feature</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;any></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="requestData"><span class="type-signature"></span>requestData(s)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>s</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>the search string</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.SearchJSON.html#requestData">ol.control.SearchJSON#requestData</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    <p>request data (as key:value)</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="restoreHistory"><span class="type-signature"></span>restoreHistory()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Restore history (from the localstorage)</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#restoreHistory">ol.control.Search#restoreHistory</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="saveHistory"><span class="type-signature"></span>saveHistory()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Save history (in the localstorage)</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#saveHistory">ol.control.Search#saveHistory</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="search"><span class="type-signature"></span>search()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Force search to refresh</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#search">ol.control.Search#search</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="searchCommune"><span class="type-signature"></span>searchCommune(s)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Search if no position and get the INSEE code</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>s</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>le nom de la commune</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="select"><span class="type-signature"></span>select(f)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>A ligne has been clicked in the menu &gt; dispatch event</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>f</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>the feature, as passed in the autocomplete</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.SearchJSON.html#select">ol.control.SearchJSON#select</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="setInput"><span class="type-signature"></span>setInput(value, search)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Set the input value in the form (for initialisation purpose)</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>value</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>search</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>to start a search</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#setInput">ol.control.Search#setInput</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        </dl>
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+		<div class="col-md-3">
+			<div id="toc" class="col-md-3 hidden-xs hidden-sm hidden-md"></div>
+		</div>
+	
+
+</div>
+</div>
+
+
+    <div class="modal fade" id="searchResults">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Search results</h4>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div>
+
+
+<footer>
+
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a>
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+
+    <script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre, pre.prettyprint.source" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : true,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			return $( heading ).attr( "id" ) || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            SearcherDisplay.init();
+        });
+    </script>
+
+
+</body>
+</html>

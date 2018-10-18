@@ -7,13 +7,13 @@ import {inherits as ol_inherits} from 'ol'
 import ol_filter_Mask from './Mask'
 
 /** Crop drawing using an ol.Feature
-* 	@constructor
-*	@requires ol.filter
-*	@requires ol_filter_Mask
-*	@extends {ol_filter_Mask}
-*	@param {ol_filter_CropOptions}
-*		- feature {_ol_Feature_} feature to crop with
-*		- inner {bool} crop inner, default false
+* @constructor
+* @requires ol.filter
+* @requires ol_filter_Mask
+* @extends {ol_filter_Mask}
+* @param {*} options
+*  @param {ol/Feature} options. feature to crop with
+*  @param {bool} [options.inner=false] crop inner, default false
 */
 var ol_filter_Crop = function(options)
 {	options = options || {};

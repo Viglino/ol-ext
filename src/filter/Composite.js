@@ -7,11 +7,11 @@ import {inherits as ol_inherits} from 'ol'
 import ol_filter_Base from './Base'
 
 /** Colorize map or layer
-* 	@constructor
-*	@requires ol.filter
-*	@extends {ol_filter_Base}
-*	@param {ol_filter_CompositeOptions} options
-*		- operation {string} composite operation
+* @constructor
+* @requires ol.filter
+* @extends {ol_filter_Base}
+* @param {*} options
+*   @param {string} options.operation composite operation
 */
 var ol_filter_Composite = function(options)
 {	ol_filter_Base.call(this, options);

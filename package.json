@@ -1,6 +1,6 @@
 {
   "name": "ol-ext",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "A set of cool extensions for OpenLayers (ol) in node modules structure",
   "main": "index.js",
   "dependencies": {

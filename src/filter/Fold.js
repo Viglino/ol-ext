@@ -7,14 +7,14 @@ import {inherits as ol_inherits} from 'ol'
 import ol_filter_Base from './Base'
 
 /** Fold filer map 
-* 	@constructor
-*	@requires ol_filter
-*	@extends {ol_filter_Base}
-*	@param {ol_filter_FoldOptions}
-*		- fold {Array<int>} number of fold (horizontal and vertical)
-*		- margin {Number} margin in px, default 8
-*		- padding {Number} padding in px, default 8
-*		- fsize {integer|Array<integer>} fold size in px, default 8,10
+* @constructor
+* @requires ol_filter
+* @extends {ol_filter_Base}
+* @param {*} options
+*  @param {Array<int>} options.fold number of fold (horizontal and vertical)
+*  @param {Number} options.margin margin in px, default 8
+*  @param {Number} options.padding padding in px, default 8
+*  @param {integer|Array<integer>} options.fsize fold size in px, default 8,10
 */
 var ol_filter_Fold = function(options)
 {	options = options || {};

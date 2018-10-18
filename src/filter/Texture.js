@@ -8,13 +8,15 @@ import ol_filter_Base from './Base'
 import ol_filter_Texture_Image from './TextureImage'
 
 /** Add texture effects on maps or layers
-* 	@constructor
-*	@requires ol.filter
-*	@extends {ol_filter_Base}
-*	@param {ol_filter_TextureOptions} options
-*		- feature {_ol_Feature_} feature to mask with
-*		- fill {_ol_style_Fill_} style to fill with
-*		- inner {bool} mask inner, default false
+* @constructor
+* @requires ol.filter
+* @extends {ol_filter_Base}
+* @param {*} options
+*  @param {Image | undefined} options.img Image object for the texture
+*  @param {string} options.src Image source URI
+*  @param {number} options.scale scale to draw the image. Default 1.
+*  @param {bool} options.rotate Whether to rotate the texture with the view (may cause animation lags on mobile or slow devices). Default is true.
+*  @param {null | string | undefined} options.crossOrigin The crossOrigin attribute for loaded images.
 */
 var ol_filter_Texture = function(options)
 {	ol_filter_Base.call(this, options);
@@ -24,12 +26,12 @@ var ol_filter_Texture = function(options)
 ol_inherits(ol_filter_Texture, ol_filter_Base);
 
 /** Set texture
-*	@option {ol_filter_TextureOptions}
-*		- img {Image | undefined} Image object for the texture
-*		- src {string} Image source URI
-*		- scale {number} scale to draw the image. Default 1.
-*		- rotateWithView {bool} Whether to rotate the texture with the view (may cause animation lags on mobile or slow devices). Default is true.
-*		- crossOrigin {null | string | undefined} The crossOrigin attribute for loaded images.
+* @param {*} options
+*  @param {Image | undefined} options.img Image object for the texture
+*  @param {string} options.src Image source URI
+*  @param {number} options.scale scale to draw the image. Default 1.
+*  @param {bool} options.rotate Whether to rotate the texture with the view (may cause animation lags on mobile or slow devices). Default is true.
+*  @param {null | string | undefined} options.crossOrigin The crossOrigin attribute for loaded images.
 */
 ol_filter_Texture.prototype.setFilter = function(options)
 {	var img;
