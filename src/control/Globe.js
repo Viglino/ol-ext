@@ -160,12 +160,14 @@ ol_control_Globe.prototype.setCenter = function (center, show)
 	if (center)
 	{	var map = this.ovmap_;
 		var p = map.getPixelFromCoordinate(center);
-		var h = $(this.element).height();
-		setTimeout(function() {
-			self.pointer_.css({ 'top': Math.min(Math.max(p[1],0),h) , 'left': "50%" } )
-				.removeClass("hidden");
-		}, 800);
-		map.getView().animate({ center: [center[0],0] });
+	 	if (p) {
+			var h = $(this.element).height();
+			setTimeout(function() {
+				self.pointer_.css({ 'top': Math.min(Math.max(p[1],0),h) , 'left': "50%" } )
+					.removeClass("hidden");
+			}, 800);
+			map.getView().animate({ center: [center[0],0] });
+		}
 	}
 };
 
