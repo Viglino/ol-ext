@@ -4,7 +4,7 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_geom_Point from 'ol/geom/Point';
+import ol_Object from 'ol/Object';
 import ol_geom_LineString from 'ol/geom/LineString';
 import ol_geom_Point from 'ol/geom/Point';
 import ol_Feature from 'ol/Feature';
@@ -289,11 +289,11 @@ ol_graph_Dijskra.prototype._resume = function() {
           console.log ('distance < 0!');
           // continue;
         }
-        wdist = node.get('wdist') + dist * this.weight(e);
+        var wdist = node.get('wdist') + dist * this.weight(e);
         dist = node.get('dist') + dist;
-        pt1 = e.getGeometry().getFirstCoordinate();
-        pt2 = e.getGeometry().getLastCoordinate();
-        sens = this.direction(e);
+        var pt1 = e.getGeometry().getFirstCoordinate();
+        var pt2 = e.getGeometry().getLastCoordinate();
+        var sens = this.direction(e);
         if (sens!==0) {
           if (p[0]===pt1[0] && p[1]===pt1[1] && sens!==-1) {
             this.addNode(pt2, wdist, dist, e, node);
@@ -326,13 +326,13 @@ ol_graph_Dijskra.prototype._resume = function() {
 
   // Finish!
   this.nodes.clear();
+  this.running = false;
   this.dispatchEvent({
     type: 'finish',
     route: this.getRoute(this.arrival),
     wDistance: this.wdist,
     distance: this.arrival.get('dist')
   });
-  this.running = false;
 };
 
 /** Get the route to a node
