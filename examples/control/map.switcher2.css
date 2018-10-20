@@ -1,0 +1,350 @@
+.ol-layerswitcher.ol-forceopen {
+  min-width: 20em;
+}
+/*
+.ol-layerswitcher ul.panel {
+  font-size: 1.3em;
+}
+.ol-layerswitcher .panel li label {
+  max-width: 10em;
+}
+.ol-layerswitcher [type=checkbox]+label:before, 
+.ol-layerswitcher [type=radio]+label:before {
+  content: '';
+  border: 2px solid #ccc;
+  background-color: transparent;
+}
+.ol-layerswitcher [type=checkbox]:checked+label:after, 
+.ol-layerswitcher [type=radio]:checked+label:after {
+  content: "\2713";
+  color: #fff;
+  position: absolute;
+  top: -.15em;
+  left: 0.25em;
+  cursor: pointer;
+  font-weight: 900;
+  text-shadow: 1px 1px #fff;
+  font-size: 1.2em;
+  transform: none;
+  border: 0;
+  box-shadow: unset;
+}
+.ol-layerswitcher .layerup {
+  display: none;
+}
+.ol-layerswitcher .layerup:after {
+  content:none;
+}
+.ol-layerswitcher .layerup:before {
+  content: "\F0C9";
+  font-family: FontAwesome;
+  border: 0;
+  top: 50%;
+  color: #fff;
+  transform: translateY(-50%);
+  height: 1em;
+  left: .5em;
+}
+
+.layerswitcher button i.badge {
+  position: absolute;
+  background: #00af88;
+  margin: 0;
+  padding: 0;
+  border-radius: 100%;
+  font-style: initial;
+  top: -8px;
+  right: 2px;
+  width: 22px;
+  height: 22px;
+  font-weight: 700;
+  line-height: 22px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.layerswitcherControl .ol-layerswitcher {
+  height: 100%;
+  position: relative;
+  box-sizing: border-box;
+  color: #444;
+}
+.layerswitcherControl .ol-layerswitcher .panel {
+  height: 100%;
+  box-sizing: border-box;
+  position: relative;
+  overflow-y: auto;
+  padding: 0;
+}
+.ol-layerswitcher .panel li .li-content {
+  width: calc(100% - 2em);
+  white-space: nowrap;
+  font-family: 'Open Sans', arial, sans-serif;
+}
+.ol-layerswitcher .panel li {
+  overflow: hidden;
+  position:relative;
+  padding: 0.5em;
+  transition: padding 0.2s; 
+}
+.ol-layerswitcher .panel li.ol-header {
+  padding: 0;
+}
+
+.ol-layerswitcher .panel li label {
+  line-height: 1.2em;
+  min-height: 1.4em;
+  width: 50%;
+  max-width: 50%;
+  overflow: initial;
+  white-space: normal;
+  display: inline-block;
+  box-sizing: border-box;
+  height: auto;
+  vertical-align: middle;
+  font-size: 0.8em;
+}
+
+
+
+.ol-layerswitcher .panel li.drag:before {
+  content: "";
+  background: #296755;
+  width:100%;
+  height: 5px;
+  display: block;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.ol-layerswitcher .ol-dragover {
+  background: #fff!important;
+  opacity: 0.8!important;
+  color: #444!important;
+  left: 0!important;
+}
+.ol-layerswitcher .panel li.forbidden,
+.forbidden .ol-layerswitcher-buttons div,
+.forbidden .layerswitcher-opacity div {
+  color: #444!important;
+  background-color: transparent;
+}
+.ol-layerswitcher .panel li.dropover {
+  background: transparent;
+}
+.ol-layerswitcher li.dropover-after {
+  padding-bottom: 3em;
+}
+.ol-layerswitcher li.dropover-before {
+  padding-top: 3em;  
+}
+.ol-layerswitcher .ol-layerswitcher-buttons {
+  position: absolute !important;
+  right: 10px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+.ol-layerswitcher [type="radio"]:checked + label::after,
+.ol-layerswitcher [type="checkbox"]:checked + label::after {
+  content: '\2713';
+  color: #fff;
+  position: absolute;
+  top: calc(50% - 14px);
+  left: 0px;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  padding: 2px;
+  font-weight: 900;
+  text-shadow: 1px 1px #fff;
+  font-size: 1.2em;
+}
+
+.ol-layerswitcher [type="radio"] + label::before,
+.ol-layerswitcher [type="checkbox"] + label::before {
+  content: '';
+  position: absolute;
+  top: calc(50% - 12px);
+  left: 0px;
+  background: transparent;
+  border: 3px solid #999;
+  cursor: pointer;
+}
+.ol-layerswitcher [type="radio"]:checked + label::before, 
+.ol-layerswitcher [type="checkbox"]:checked + label::before {
+  background-color: #19f;
+  border-color: #19f;
+}
+*/
+
+.ol-layerswitcher li .li-content {
+  width: calc(100% - 3em);
+}
+
+.ol-layerswitcher li .li-content label {
+  width: 60%;
+  box-sizing: border-box;
+  vertical-align: middle;
+  margin: .6em 0;
+}
+
+.ol-layerswitcher .panel li .layerswitcher-opacity {
+  width: 40%;
+  display: inline-block;
+  vertical-align: middle;
+  box-sizing: border-box;
+  vertical-align: middle;
+  margin: 0;
+}
+.ol-layerswitcher .layerswitcher-opacity {
+  border:0;
+  background: none;
+  height: 1em;
+  box-shadow: none;
+}
+.ol-layerswitcher .layerswitcher-opacity:before {
+  content: "";
+  width: 100%;
+  height: 3px;
+  background: #017eff;
+  position: absolute;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  transform: translateY(-50%);
+  border: 1px solid #017eff;
+  box-sizing: border-box;
+}
+.ol-layerswitcher .layerswitcher-opacity .layerswitcher-opacity-cursor {
+  width: auto;
+  transform: translateY(-50%);
+  height: 3px;
+  right: 0;
+  background: #666;
+  border-radius: 0;
+}
+.ol-layerswitcher .layerswitcher-opacity .layerswitcher-opacity-cursor:before {
+  position: absolute;
+  transform: translate(-50%,-50%);
+  width: 6px;
+  height: 16px;
+  left: -1px;
+  border-radius: 0;
+  background: #017eff;
+}
+.ol-layerswitcher .layerswitcher-opacity-label {
+  display: block;
+  right: 20%;
+  bottom: 70%;
+  font-size: 0.6em;
+  user-select: none;
+  -webkit-transform: translateX(50%);
+  transform: translateX(50%);
+}
+
+.ol-layerswitcher .layerup {
+  width: 2em;
+  background: none;
+  position: absolute;
+  right: 0;
+}
+.ol-layerswitcher .layerup:after {
+  content:none;
+}
+.ol-layerswitcher .layerup:before {
+  color: #017eff;
+  content: "\F0C9";
+  font-family: FontAwesome;
+  border: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 1em;
+  left: .5em;
+}
+
+.ol-layerswitcher [type=checkbox]+label:before, 
+.ol-layerswitcher [type=radio]+label:before {
+  content: '';
+  border: 2px solid #ccc;
+  background-color: transparent;
+}
+.ol-layerswitcher [type=checkbox]:checked+label:before, 
+.ol-layerswitcher [type=radio]:checked+label:before {
+  background: #017eff;
+  border-color: #017eff;
+} 
+.ol-layerswitcher [type=checkbox]:checked+label:after{
+  content: "\2713";
+  color: #fff;
+  position: absolute;
+  top: -.15em;
+  left: 0.25em;
+  cursor: pointer;
+  font-weight: 900;
+  text-shadow: 1px 1px #fff;
+  font-size: 1.2em;
+  transform: none;
+  border: 0;
+  box-shadow: unset;
+}
+
+.ol-layerswitcher [type="radio"]:checked+label:after {
+  content: none;
+}
+
+.ol-control.ol-layerswitcher {
+  background: #017eff;
+  right: 0;
+  border-radius: 0;
+}
+.ol-layerswitcher button,
+.ol-layerswitcher button:focus,
+.ol-layerswitcher button:hover {
+  background: #017eff;
+  border: 0;
+  user-select: none;
+  outline: none;
+}
+.ol-layerswitcher button:before {
+  background: #017eff;
+  -webkit-box-shadow: 0.1em 0.1em #fff;
+  box-shadow: 0.1em 0.1em #fff;
+}
+.ol-layerswitcher button:after {
+  background: #fff;
+  background-image: none;
+}
+
+.ol-layerswitcher .ol-layer-group {
+  margin-top: 1em;
+}
+.ol-layerswitcher .ol-layer-group > .ol-layerswitcher-buttons .layerInfo {
+  display: none;
+}
+.ol-layerswitcher .expend-layers:before, .ol-layerswitcher .collapse-layers:before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  margin-top: -2px;
+  height: 4px;
+  width: 100%;
+  background: #369;
+}
+.ol-layerswitcher .expend-layers, 
+.ol-layerswitcher .collapse-layers {
+  top: -1em;
+}
+.ol-layerswitcher .expend-layers:before, 
+.ol-layerswitcher .expend-layers:after, 
+.ol-layerswitcher .collapse-layers:before, 
+.ol-layerswitcher .collapse-layers:after {
+  background: #017eff;
+}
+.ol-layerswitcher .panel ul {
+  overflow: visible;
+}
+.ol-layerswitcher .layerInfo {
+  right: -.5em;
+  background: #017eff;
+}
