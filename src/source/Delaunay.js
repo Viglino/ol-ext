@@ -2,14 +2,16 @@ import {inherits as ol_inherits} from 'ol'
 import ol_source_Vector from 'ol/source/Vector'
 import ol_Feature from 'ol/Feature'
 import ol_geom_Polygon from 'ol/geom/Polygon'
-
+import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent'
+import {buffer as ol_extent_buffer} from 'ol/extent'
+import {ol_coordinate_equal, ol_coordinate_dist2d} from '../geom/GeomUtils'
 
 // doc: https://mapbox.github.io/delaunator/
 
 /** Delaunay source
  * Calculate a delaunay triangulation from points in a source
- * @param {*} options extend ol.source.Vector options
- *  @param {ol.source.Vector} options.source the source that contains the points
+ * @param {*} options extend ol/source/Vector options
+ *  @param {ol/source/Vector} options.source the source that contains the points
  */
 var ol_source_Delaunay = function(options) {
   options = options || {};
@@ -32,7 +34,7 @@ var ol_source_Delaunay = function(options) {
 ol_inherits (ol_source_Delaunay, ol_source_Vector);
 
 /** Add a new triangle in the source
- * @param {Array<ol.coordinates>} pts
+ * @param {Array<ol/coordinates>} pts
  */
 ol_source_Delaunay.prototype._addTriangle = function(pts) {
   var triangle = new ol_Feature(new ol_geom_Polygon([pts]));
@@ -55,12 +57,14 @@ ol_source_Delaunay.prototype.getNodeSource = function () {
 
 /**
  * A point has been removed
- * @param {ol.source.Vector.Event} e 
+ * @param {ol/source/Vector.Event} e 
  */
 ol_source_Delaunay.prototype._onRemoveNode = function(e) {
-  console.log(e)
+  // console.log(e)
   var pt = e.feature.getGeometry().getCoordinates();
   if (!pt) return;
+  // Still there (when removing duplicated points)
+  if (this.getNodesAt(pt).length) return;
   // Get associated triangles
   var triangles = this.getTrianglesAt(pt);
 
@@ -182,14 +186,14 @@ console.log(this.listpt(t),'ok');
 else console.log(this.listpt(t),'nok');
   }
 
+/* DEBUG * /
 if (pts.length>3) console.log('oops');
 console.log('LEAV',this.listpt(pts));
-
 
 var ul = $('ul.triangles').html('');
 $('<li>')
 .text('E:'+this.listpt(enveloppe)+' - '+clock+' - '+closed)
-.data('triangle', new ol.Feature(new ol.geom.Polygon([enveloppe])))
+.data('triangle', new ol_Feature(new ol_geom_Polygon([enveloppe])))
 .click(function(){
   var t = $(this).data('triangle');
   select.getFeatures().clear();
@@ -208,6 +212,7 @@ for (var i=0; i<this.flip.length; i++) {
     })
     .appendTo(ul);
 }
+/**/
 
   // Flip?
   this.flipTriangles();
@@ -215,7 +220,7 @@ for (var i=0; i<this.flip.length; i++) {
 
 /**
  * A new point has been added
- * @param {ol.source.Vector.Event} e 
+ * @param {ol/source/VectorEvent} e 
  */
 ol_source_Delaunay.prototype._onAddNode = function(e) {
   var finserted = e.feature;
@@ -233,8 +238,8 @@ ol_source_Delaunay.prototype._onAddNode = function(e) {
   // The point
   var pt = finserted.getGeometry().getCoordinates();
   // Test existing point
-  var extent = ol_extent_buffer (ol_extent_boundingExtent([pt]), this.get('epsilon'));
-  if (this._nodes.getFeaturesInExtent(extent).length > 1) {
+  if (this.getNodesAt(pt).length > 1) {
+    console.log('remove duplicated points')
     this._nodes.removeFeature(finserted);
     return;
   }
@@ -428,19 +433,26 @@ ol_source_Delaunay.prototype.getCircumCircle = function (triangle) {
   var center = [cx, cy];
   return  { 
     center: center, 
-    radius: ol_coordinate.dist2d(center,triangle[0])
+    radius: ol_coordinate_dist2d(center,triangle[0])
   };
 };
 
 /** Get triangles at a point
  */
 ol_source_Delaunay.prototype.getTrianglesAt = function(coord) {
-  var extent = ol.extent.buffer (ol.extent.boundingExtent([coord]), this.get('epsilon'));
+  var extent = ol_extent_buffer (ol_extent_boundingExtent([coord]), this.get('epsilon'));
   var result = [];
   this.forEachFeatureIntersectingExtent(extent, function(f){
     result.push(f);
   });
   return result;
+};
+
+/** Get nodes at a point
+ */
+ol_source_Delaunay.prototype.getNodesAt = function(coord) {
+  var extent = ol_extent_buffer (ol_extent_boundingExtent([coord]), this.get('epsilon'));
+  return this._nodes.getFeaturesInExtent(extent);
 };
 
 export default ol_source_Delaunay

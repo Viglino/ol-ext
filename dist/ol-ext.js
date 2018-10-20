@@ -2526,12 +2526,14 @@ ol.control.Globe.prototype.setCenter = function (center, show)
 	if (center)
 	{	var map = this.ovmap_;
 		var p = map.getPixelFromCoordinate(center);
-		var h = $(this.element).height();
-		setTimeout(function() {
-			self.pointer_.css({ 'top': Math.min(Math.max(p[1],0),h) , 'left': "50%" } )
-				.removeClass("hidden");
-		}, 800);
-		map.getView().animate({ center: [center[0],0] });
+	 	if (p) {
+			var h = $(this.element).height();
+			setTimeout(function() {
+				self.pointer_.css({ 'top': Math.min(Math.max(p[1],0),h) , 'left': "50%" } )
+					.removeClass("hidden");
+			}, 800);
+			map.getView().animate({ center: [center[0],0] });
+		}
 	}
 };
 
@@ -11417,8 +11419,8 @@ ol.source.DFCI.prototype._getFeatures = function (level, extent, projection) {
 // doc: https://mapbox.github.io/delaunator/
 /** Delaunay source
  * Calculate a delaunay triangulation from points in a source
- * @param {*} options extend ol.source.Vector options
- *  @param {ol.source.Vector} options.source the source that contains the points
+ * @param {*} options extend ol/source/Vector options
+ *  @param {ol/source/Vector} options.source the source that contains the points
  */
 ol.source.Delaunay = function(options) {
   options = options || {};
@@ -11435,7 +11437,7 @@ ol.source.Delaunay = function(options) {
 };
 ol.inherits (ol.source.Delaunay, ol.source.Vector);
 /** Add a new triangle in the source
- * @param {Array<ol.coordinates>} pts
+ * @param {Array<ol/coordinates>} pts
  */
 ol.source.Delaunay.prototype._addTriangle = function(pts) {
   var triangle = new ol.Feature(new ol.geom.Polygon([pts]));
@@ -11455,12 +11457,14 @@ ol.source.Delaunay.prototype.getNodeSource = function () {
 };
 /**
  * A point has been removed
- * @param {ol.source.Vector.Event} e 
+ * @param {ol/source/Vector.Event} e 
  */
 ol.source.Delaunay.prototype._onRemoveNode = function(e) {
-  console.log(e)
+  // console.log(e)
   var pt = e.feature.getGeometry().getCoordinates();
   if (!pt) return;
+  // Still there (when removing duplicated points)
+  if (this.getNodesAt(pt).length) return;
   // Get associated triangles
   var triangles = this.getTrianglesAt(pt);
   this.flip=[];
@@ -11575,6 +11579,7 @@ console.log(this.listpt(t),'ok');
     }
 else console.log(this.listpt(t),'nok');
   }
+/* DEBUG * /
 if (pts.length>3) console.log('oops');
 console.log('LEAV',this.listpt(pts));
 var ul = $('ul.triangles').html('');
@@ -11599,12 +11604,13 @@ for (var i=0; i<this.flip.length; i++) {
     })
     .appendTo(ul);
 }
+/**/
   // Flip?
   this.flipTriangles();
 };
 /**
  * A new point has been added
- * @param {ol.source.Vector.Event} e 
+ * @param {ol/source/VectorEvent} e 
  */
 ol.source.Delaunay.prototype._onAddNode = function(e) {
   var finserted = e.feature;
@@ -11619,8 +11625,8 @@ ol.source.Delaunay.prototype._onAddNode = function(e) {
   // The point
   var pt = finserted.getGeometry().getCoordinates();
   // Test existing point
-  var extent = ol.extent.buffer (ol.extent.boundingExtent([pt]), this.get('epsilon'));
-  if (this._nodes.getFeaturesInExtent(extent).length > 1) {
+  if (this.getNodesAt(pt).length > 1) {
+    console.log('remove duplicated points')
     this._nodes.removeFeature(finserted);
     return;
   }
@@ -11813,6 +11819,12 @@ ol.source.Delaunay.prototype.getTrianglesAt = function(coord) {
     result.push(f);
   });
   return result;
+};
+/** Get nodes at a point
+ */
+ol.source.Delaunay.prototype.getNodesAt = function(coord) {
+  var extent = ol.extent.buffer (ol.extent.boundingExtent([coord]), this.get('epsilon'));
+  return this._nodes.getFeaturesInExtent(extent);
 };
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
@@ -13906,11 +13918,11 @@ ol.graph.Dijskra.prototype._resume = function() {
           console.log ('distance < 0!');
           // continue;
         }
-        wdist = node.get('wdist') + dist * this.weight(e);
+        var wdist = node.get('wdist') + dist * this.weight(e);
         dist = node.get('dist') + dist;
-        pt1 = e.getGeometry().getFirstCoordinate();
-        pt2 = e.getGeometry().getLastCoordinate();
-        sens = this.direction(e);
+        var pt1 = e.getGeometry().getFirstCoordinate();
+        var pt2 = e.getGeometry().getLastCoordinate();
+        var sens = this.direction(e);
         if (sens!==0) {
           if (p[0]===pt1[0] && p[1]===pt1[1] && sens!==-1) {
             this.addNode(pt2, wdist, dist, e, node);
@@ -13942,13 +13954,13 @@ ol.graph.Dijskra.prototype._resume = function() {
   }
   // Finish!
   this.nodes.clear();
+  this.running = false;
   this.dispatchEvent({
     type: 'finish',
     route: this.getRoute(this.arrival),
     wDistance: this.wdist,
     distance: this.arrival.get('dist')
   });
-  this.running = false;
 };
 /** Get the route to a node
  * @param {ol/Feature} node
