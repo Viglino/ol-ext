@@ -5058,18 +5058,18 @@ ol.control.Select = function(options) {
 	var div = $('<div>').appendTo(element);
 	// List of selection
 	this._ul = $('<ul>').appendTo(div);
+	// Add button
+	$('<button>').text('+')
+		.click(function(){ 
+			self.addCondition(); 
+		})
+		.appendTo(div);
 	// Select button
 	$('<button>')
 		.attr('type','button')
 		.text('Select')
 		.click(function() { 
 			self.doSelect(); 
-		})
-		.appendTo(div);
-	// Add button
-	$('<button>').text('+')
-		.click(function(){ 
-			self.addCondition(); 
 		})
 		.appendTo(div);
 	// All conditions
@@ -5225,11 +5225,13 @@ ol.control.Select.prototype.doSelect = function () {
 		for (var j=0,f; f=sfeatures[j]; j++) {
 			var isok = all;
 			for (var k=0, c; c=this._conditions[k]; k++) {
-				if (all) {
-					isok = isok && this._checkCondition(f,c,usecase);
-				}
-				else {
-					isok = isok || this._checkCondition(f,c,usecase);
+				if (c.attr) {
+					if (all) {
+						isok = isok && this._checkCondition(f,c,usecase);
+					}
+					else {
+						isok = isok || this._checkCondition(f,c,usecase);
+					}
 				}
 			}
 			if (isok) {

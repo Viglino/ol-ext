@@ -1868,6 +1868,7 @@
 	height: auto;
 	line-height: normal;
 	padding: 0 .5em;
+	clear: both;
 }
 .ol-control.ol-select > div button.ol-delete {
 	margin: 0;
