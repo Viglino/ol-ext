@@ -52,8 +52,8 @@ ol_control_CanvasScaleLine.prototype.setMap = function (map)
 	} 
 
 	// Hide the default DOM element
-	this.$element = $(this.element).css("visibility","hidden");
-	this.olscale = $(".ol-scale-line-inner", this.element);
+	this.element.style.visibility = 'hidden';
+	this.olscale = this.element.querySelector(".ol-scale-line-inner");
 }
 
 
@@ -85,28 +85,28 @@ ol_control_CanvasScaleLine.prototype.setStyle = function (style)
  * @private
  */
 ol_control_CanvasScaleLine.prototype.drawScale_ = function(e)
-{	if ( this.$element.css("display")==="none" ) return;
+{	if ( this.element.style.visibility!=="hidden" ) return;
 	var ctx = e.context;
 
 	// Get size of the scale div
-	var scalewidth = this.olscale.width();
+	var scalewidth = parseInt(this.olscale.style.width);
 	if (!scalewidth) return;
-	var text = this.olscale.text();
-	var position = this.$element.position();
+	var text = this.olscale.textContent;
+	var position = {left: this.element.offsetLeft, top: this.element.offsetTop};
 	// Retina device
 	var ratio = e.frameState.pixelRatio;
 	ctx.save();
 	ctx.scale(ratio,ratio);
 
 	// Position if transform:scale()
-	var container = $(this.getMap().getViewport()).parent();
-	var scx = container.outerWidth() / container.get(0).getBoundingClientRect().width;
-	var scy = container.outerHeight() / container.get(0).getBoundingClientRect().height;
+	var container = this.getMap().getTargetElement();
+	var scx = container.offsetWidth / container.getBoundingClientRect().width;
+	var scy = container.offsetHeight / container.getBoundingClientRect().height;
 	position.left *= scx;
 	position.top *= scy;
 
 	// On top
-	position.top += this.$element.height() - this.scaleHeight_;
+	position.top += this.element.clientHeight - this.scaleHeight_;
 
 	// Draw scale text
 	ctx.beginPath();
