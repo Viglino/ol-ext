@@ -1522,25 +1522,36 @@ ol.control.Bar.prototype.onActivateControl_ = function (e) {
 */
 ol.control.Button = function(options)
 {	options = options || {};
-	var element = $("<div>").addClass((options.className||"") + ' ol-button ol-unselectable ol-control');
+	var element = document.createElement("div");
+	element.className = (options.className || '') + " ol-button ol-unselectable ol-control";
 	var self = this;
-	var bt = $("<button>").html(options.html || "")
-				.attr('type','button')
-				.attr('title', options.title)
-				.on("touchstart click", function(e)
-				{	if (e && e.preventDefault)
-					{	e.preventDefault();
-						e.stopPropagation();
-					}
-					if (options.handleClick) options.handleClick.call(self, e);
-				})
-				.appendTo(element);
+	var bt = document.createElement("button");
+	bt.type = "button";
+	bt.title = options.title;
+	bt.innerHTML = options.html || "";
+	var evtFunction = function(e) {
+		if (e && e.preventDefault) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
+		if (options.handleClick) {
+			options.handleClick.call(self, e);
+		};
+	};
+	bt.addEventListener("click", evtFunction);
+	bt.addEventListener("touchstart", evtFunction);
+	element.appendChild(bt);
 	// Try to get a title in the button content
-	if (!options.title) bt.attr("title", bt.children().first().attr('title'));
+	if (!options.title) {
+		bt.title = bt.firstElementChild.title;
+	};
 	ol.control.Control.call(this,
-	{	element: element.get(0),
+	{	element: element,
 		target: options.target
 	});
+	if (options.title) {
+		this.set("title", options.title);
+	}
 	if (options.title) this.set("title", options.title);
 };
 ol.inherits(ol.control.Button, ol.control.Control);
