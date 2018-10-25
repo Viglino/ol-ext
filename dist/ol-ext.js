@@ -1788,17 +1788,23 @@ ol.control.CanvasTitle = function(options)
 	if (!options.style) options.style = new ol.style.Style();
 	this.setStyle(options.style);
 	// Initialize parent
-	var elt = $("<div>").text(this.text_)
-				.addClass("ol-title ol-unselectable")
-				.css(
-				{	font: this.font_,
-					position: 'absolute',
-					top:0, left:0, right:0,
-					display: 'block',
-					visibility: 'hidden'
-				});
+	var elt = document.createElement('div');
+	elt.textContent = this.text_;
+	elt.className = 'ol-title ol-unselectable';
+	var css = {
+		font: this.font_,
+		position: 'absolute',
+		top:0,
+		left:0,
+		right:0,
+		display: 'block',
+		visibility: 'hidden'
+	};
+	Object.keys(css).forEach(function(key) {
+		elt.style[key] = css[key];
+	});
 	ol.control.Control.call(this,
-	{	element: elt.get(0),
+	{	element: elt,
 		target: options.target
 	});
 }
@@ -1834,7 +1840,8 @@ ol.control.CanvasTitle.prototype.setStyle = function (style)
 	this.strokeStyle_ = stroke ? ol.color.asString(stroke.getColor()) : "#fff";
 	this.fillStyle_ = fill ? ol.color.asString(fill.getColor()) : "#000";
 	if (this.element) 
-	{	$(this.element).text(this.text_).css ({font: this.font_});
+	{	this.element.textContent = this.text_;
+		this.element.style.font = this.font_;
 	}
 	// refresh
 	if (this.getMap()) this.getMap().render();
@@ -1846,7 +1853,7 @@ ol.control.CanvasTitle.prototype.setStyle = function (style)
  */
 ol.control.CanvasTitle.prototype.setTitle = function (title)
 {	this.text_ = title;
-	$(this.element).text(title);
+	this.element.textContent = this.text_;
 	if (this.getMap()) this.getMap().renderSync();
 }
 /**
@@ -1863,8 +1870,8 @@ ol.control.CanvasTitle.prototype.getTitle = function (title)
  * @api stable
  */
 ol.control.CanvasTitle.prototype.setVisible = function (b)
-{	if (b) $(this.element).show();
-	else $(this.element).hide();
+{	if (b) el.style.display = '';
+	else el.style.display = 'none';
 	if (this.getMap()) this.getMap().renderSync();
 }
 /**
@@ -1873,7 +1880,7 @@ ol.control.CanvasTitle.prototype.setVisible = function (b)
  * @api stable
  */
 ol.control.CanvasTitle.prototype.getVisible = function (b)
-{	return ($(this.element).css('display') !== 'none');
+{	return this.element.style.display !== 'none';
 }
 /** Draw scale line in the final canvas
 */
@@ -1885,19 +1892,19 @@ ol.control.CanvasTitle.prototype.drawTitle_ = function(e)
 	ctx.save();
 	ctx.scale(ratio,ratio);
 	var w = ctx.canvas.width/ratio;
-	var h = $(this.element).height();
+	var h = this.element.clientHeight;
 	var position = { top:0, left:w/2 };
 	ctx.beginPath();
-    ctx.fillStyle = this.strokeStyle_;
+	ctx.fillStyle = this.strokeStyle_;
 	ctx.rect(0,0, w, h);
 	ctx.fill();
 	ctx.closePath();
 	ctx.beginPath();
-    ctx.fillStyle = this.fillStyle_;
-    ctx.textAlign = "center";
+	ctx.fillStyle = this.fillStyle_;
+	ctx.textAlign = "center";
 	ctx.textBaseline = "middle";
 	ctx.font = this.font_;
-    ctx.fillText(this.text_, position.left, position.top +h/2);
+	ctx.fillText(this.text_, position.left, position.top +h/2);
 	ctx.closePath();
 	ctx.restore();
 }
