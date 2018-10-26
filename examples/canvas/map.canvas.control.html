@@ -151,7 +151,7 @@
 		
 		/** Export PNG / JPEG */
 		$(document).ready(function()
-		{	if (map) $("a[download]").exportMap(map);
+		{	if (map) exportMap(Array.prototype.slice.call(document.querySelectorAll("a[download]")), map);
 		});
 
 	</script>

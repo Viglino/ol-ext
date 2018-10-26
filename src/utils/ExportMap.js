@@ -9,20 +9,21 @@ import jsPDF from 'jspdf'
 * https://github.com/gingerik/ol3/blob/gh-pages/examples/export-pdf.html
 * http://gingerik.github.io/ol3/examples/export-pdf.html
 *
+* @param: {Array<HTMLElement>} map to export
 * @param: {ol.Map} map to export
-* @param: {Object=} {format, quality, dpi} 
+* @param: {Object=} {format, quality, dpi}
 *		format {String}: png/jpeg/webp, default find the extension in the download attribut
 *		quality {Number}: between 0 and 1 indicating image quality if the requested type is jpeg or webp
 *		dpi {Number}: resolution of the map
 */
-$.fn.exportMap = function(map, options)
+exportMap = function(elements, map, options)
 {	if (!options) options={};
 
 	function saveCanvas(input, canvas, ext)
 	{	if (ext=='pdf')
 		{	var data = canvas.toDataURL('image/jpeg');
 			var size, w, h, orient, format = 'a4';
-			var margin = Number($(input).data('margin'))||0;
+			var margin = input.getAttribute('data-margin') ? Number(input.getAttribute('data-margin')) : 0;
 			// Calculate size
 			if (canvas.width > canvas.height)
 			{	orient = 'landscape';
@@ -47,19 +48,19 @@ $.fn.exportMap = function(map, options)
 		else input.href = canvas.toDataURL('image/'+(options.format||ext), options.quality);
 	}
 
-	if (!this.each) return;
+	if (elements.length == 0) return;
 
-	return this.each(function()
+	return elements.forEach(function(element)
 	{	// Force download on HTML5
-		if ('download' in this)
-		{	var self = this;
-			$(this).on('click',function()
+		if ('download' in element && element.download.length > 0)
+		{	var self = element;
+			element.addEventListener('click',function()
 			{	// Get extension in the download
-				var ext = $(this).attr("download").split('.').pop();
+				var ext = element.download.split('.').pop();
 				if (ext=='jpg') ext = 'jpeg';
 				// Try to change resolution
 				if (options.dpi)
-				{	map.once('precompose', function(event) 
+				{	map.once('precompose', function(event)
 					{	var canvas = event.context.canvas;
 						var scaleFactor = options.dpi / 96;
 						canvas.width = Math.ceil(canvas.width * scaleFactor);
@@ -67,7 +68,7 @@ $.fn.exportMap = function(map, options)
 						event.context.scale(scaleFactor, scaleFactor);
 					});
 				}
-				var label = $(this).text();
+				var label = element.innerText;
 				// Draw a white background before draw (transparent background)
 				if (ext!='png')
 				{	map.once('precompose', function(e)
@@ -76,7 +77,7 @@ $.fn.exportMap = function(map, options)
 					})
 				}
 				// Copy the map
-				map.once('postcompose', function(event) 
+				map.once('postcompose', function(event)
 				{	saveCanvas (self, event.context.canvas, ext);
 					// Redraw map (if dpi change)
 					setTimeout(function(){ map.renderSync() }, 500);
@@ -84,9 +85,9 @@ $.fn.exportMap = function(map, options)
 				map.renderSync();
 			});
 		}
-		else 
-		{	//$(this).hide();
-			$(this).on('click',function(){ alert ("Export functions are not supported by your browser...");});
+		else
+		{
+			element.addEventListener('click',function(){ alert ("Export functions are not supported by your browser...");});
 		}
 	});
 };
