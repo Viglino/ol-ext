@@ -42,9 +42,9 @@ var ol_control_Compass = function(options)
 	else if (options.src)
 	{	this.img_ = new Image();
 		this.img_.onload = function(){ if (self.getMap()) self.getMap().renderSync(); }
-		this.img_.src =  options.src;
+		this.img_.src = options.src;
 	}
-	else this.img_ = this.defaultCompass_($(this.element).width(), this.style ? this.style.getColor():"");
+	else this.img_ = this.defaultCompass_(this.element.clientWidth, this.style ? this.style.getColor():"");
 
 	// 8 angles
 	this.da_ = [];
@@ -145,9 +145,9 @@ ol_control_Compass.prototype.drawCompass_ = function(e)
 	ctx.save();
 	ctx.scale(ratio,ratio);
 
-	var w = $(this.element).width();
-	var h = $(this.element).height();
-	var pos = $(this.element).position();
+	var w = this.element.clientWidth;
+	var h = this.element.clientHeight;
+	var pos = {left: this.element.offsetLeft, top: this.element.offsetTop};
 	
 	var compass = this.img_;
 	var rot = e.frameState.viewState.rotation;
