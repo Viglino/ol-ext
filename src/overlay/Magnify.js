@@ -22,9 +22,10 @@ import ol_Map from 'ol/Map'
  */
 var ol_Overlay_Magnify = function (options)
 {	var self = this;
-	
-	var elt = $("<div>").addClass("ol-magnify");
-	this._elt = elt.get(0);
+
+	var elt = document.createElement("div");
+			elt.className = "ol-magnify";
+	this._elt = elt;
 
 	ol_Overlay.call(this,
 		{	positioning: options.positioning || "center-center",
@@ -40,7 +41,7 @@ var ol_Overlay_Magnify = function (options)
 		layers: options.layers
 	});
 	this.mgview_ = this.mgmap_.getView();
-	
+
 	this.external_ = options.target?true:false;
 
 	this.set("zoomOffset", options.zoomOffset||1);
@@ -55,13 +56,13 @@ ol_inherits(ol_Overlay_Magnify, ol_Overlay);
  */
 ol_Overlay_Magnify.prototype.setMap = function(map) {
 	if (this.getMap()) {
-		$(this.getMap().getViewport()).off("mousemove", this.onMouseMove_);
+		this.getMap().getViewport().removeEventListener("mousemove", this.onMouseMove_);
 	}
 	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 
 	ol_Overlay.prototype.setMap.call(this, map);
-	$(map.getViewport()).on("mousemove", {self:this}, this.onMouseMove_);
+	map.getViewport().addEventListener("mousemove", this.onMouseMove_.bind(this));
 	this._listener = map.getView().on('propertychange', this.setView_.bind(this));
 
 	this.setView_();
@@ -81,7 +82,7 @@ ol_Overlay_Magnify.prototype.getActive = function()
 {	return this.get("active");
 };
 
-/** Activate or deactivate 
+/** Activate or deactivate
 *	@param {boolean} active
 */
 ol_Overlay_Magnify.prototype.setActive = function(active)
@@ -92,7 +93,7 @@ ol_Overlay_Magnify.prototype.setActive = function(active)
  * @private
  */
 ol_Overlay_Magnify.prototype.onMouseMove_ = function(e)
-{	var self = e.data.self;
+{	var self = this;
 	if (!self.get("active"))
 	{	self.setPosition();
 	}
@@ -100,7 +101,7 @@ ol_Overlay_Magnify.prototype.onMouseMove_ = function(e)
 	{	var px = self.getMap().getEventCoordinate(e);
 		if (!self.external_) self.setPosition(px);
 		self.mgview_.setCenter(px);
-		if ($("canvas", self._elt).css("display")=="none") self.mgmap_.updateSize();
+		if (self._elt.querySelector('canvas').style.display =="none") self.mgmap_.updateSize();
 	}
 };
 
@@ -112,8 +113,8 @@ ol_Overlay_Magnify.prototype.setView_ = function(e)
 	{	this.setPosition();
 		return;
 	}
-	
-	if (!e) 
+
+	if (!e)
 	{	// refresh all
 		this.setView_({key:'rotation'});
 		this.setView_({key:'resolution'});
