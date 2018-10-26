@@ -21,12 +21,13 @@ import ol_control_Control from 'ol/control/Control'
  */
 var ol_control_Bar = function(options) {
   if (!options) options={};
-	var element = $("<div>").addClass('ol-unselectable ol-control ol-bar');
-	if (options.className) element.addClass(options.className);
-	if (options.group) element.addClass('ol-group');
+	var element = document.createElement("div");
+      element.classList.add('ol-unselectable', 'ol-control', 'ol-bar');
+	if (options.className) element.classList.add(options.className);
+	if (options.group) element.classList.add('ol-group');
 
 	ol_control_Control.call(this, {
-    element: element.get(0),
+    element: element,
 		target: options.target
 	});
 
@@ -46,15 +47,15 @@ ol_inherits(ol_control_Bar, ol_control_Control);
 * @param {boolean} b
 */
 ol_control_Bar.prototype.setVisible = function (val) {
-	if (val) $(this.element).show();
-	else $(this.element).hide();
+	if (val) this.element.style.display = '';
+	else this.element.style.display = 'none';
 }
 
 /** Get the control visibility
 * @return {boolean} b
 */
 ol_control_Bar.prototype.getVisible = function () {
-  return ($(this.element).css('display') != 'none');
+  return this.element.style.display != 'none';
 }
 
 /**
@@ -83,7 +84,7 @@ ol_control_Bar.prototype.getControls = function () {
 *	@param {top|left|bottom|right} pos
 */
 ol_control_Bar.prototype.setPosition = function (pos) {
-  $(this.element).removeClass('ol-left ol-top ol-bottom ol-right');
+  this.element.classList.remove('ol-left', 'ol-top', 'ol-bottom', 'ol-right');
 	pos=pos.split ('-');
 	for (var i=0; i<pos.length; i++) {
     switch (pos[i]) {
@@ -91,7 +92,7 @@ ol_control_Bar.prototype.setPosition = function (pos) {
 			case 'left':
 			case 'bottom':
 			case 'right':
-				$(this.element).addClass ("ol-"+pos[i]);
+				this.element.classList.add("ol-"+pos[i]);
 				break;
 			default: break;
 		}
