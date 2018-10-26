@@ -22,15 +22,16 @@ import ol_control_Control from 'ol/control/Control'
 var ol_control_Swipe = function(opt_options)
 {	var options = opt_options || {};
 	var self = this;
-	
+
 	var button = document.createElement('button');
 
 	var element = document.createElement('div');
-    element.className = (options.className || "ol-swipe") + " ol-unselectable ol-control";
-    element.appendChild(button);
+			element.className = (options.className || "ol-swipe") + " ol-unselectable ol-control";
+			element.appendChild(button);
 
-	$(element).on ("mousedown touchstart", this, this.move );
-    
+	element.addEventListener("mousedown", this.move.bind(this));
+	element.addEventListener("touchstart", this.move.bind(this));
+
 	ol_control_Control.call(this,
 	{	element: element
 	});
@@ -45,16 +46,16 @@ var ol_control_Swipe = function(opt_options)
 	this.on('propertychange', function() 
 	{	if (this.getMap()) this.getMap().renderSync();
 		if (this.get('orientation') === "horizontal")
-		{	$(this.element).css("top", this.get('position')*100+"%");
-			$(this.element).css("left", "");
+		{	this.element.style.top = this.get('position')*100+"%";
+			this.element.style.left = "";
 		}
 		else
 		{	if (this.get('orientation') !== "vertical") this.set('orientation', "vertical");
-			$(this.element).css("left", this.get('position')*100+"%");
-			$(this.element).css("top", "");
+			this.element.style.left = this.get('position')*100+"%";
+			this.element.style.top = "";
 		}
-		$(this.element).removeClass("horizontal vertical");
-		$(this.element).addClass(this.get('orientation'));
+		this.element.classList.remove("horizontal", "vertical");
+		this.element.classList.add(this.get('orientation'));
 	}.bind(this));
 	
 	this.set('position', options.position || 0.5);
@@ -67,12 +68,12 @@ ol_inherits(ol_control_Swipe, ol_control_Control);
  * @param {_ol_Map_} map The map instance.
  */
 ol_control_Swipe.prototype.setMap = function(map)
-{   
+{
 	for (var i=0; i<this._listener.length; i++) {
 		ol_Observable_unByKey(this._listener[i]);
 	}
 	this._listener = [];
-	if (this.getMap()) {	
+	if (this.getMap()) {
 		this.getMap().renderSync();
 	}
 
@@ -94,7 +95,7 @@ ol_control_Swipe.prototype.setMap = function(map)
 */
 ol_control_Swipe.prototype.isLayer_ = function(layer)
 {	for (var k=0; k<this.layers.length; k++)
-	{	if (this.layers[k].layer === layer)  return k;
+	{	if (this.layers[k].layer === layer) return k;
 	}
 	return -1;
 };
@@ -105,7 +106,7 @@ ol_control_Swipe.prototype.isLayer_ = function(layer)
 */
 ol_control_Swipe.prototype.addLayer = function(layers, right)
 {	if (!(layers instanceof Array)) layers = [layers];
-	for (var i=0; i<layers.length; i++) { 
+	for (var i=0; i<layers.length; i++) {
 		var l = layers[i];
 		if (this.isLayer_(l)<0)
 		{	this.layers.push({ layer:l, right:right });
@@ -139,40 +140,48 @@ ol_control_Swipe.prototype.removeLayer = function(layers)
 /** @private
 */
 ol_control_Swipe.prototype.move = function(e)
-{	var self = e.data;
+{	var self = this;
 	switch (e.type)
-	{	case 'touchcancel': 
-		case 'touchend': 
-		case 'mouseup': 
+	{	case 'touchcancel':
+		case 'touchend':
+		case 'mouseup':
 		{	self.isMoving = false;
-			$(document).off ("mouseup mousemove touchend touchcancel touchmove", self.move );
+			["mouseup", "mousemove", "touchend", "touchcancel", "touchmove"]
+				.forEach(function(eventName) {
+					document.removeEventListener(eventName, self.move);
+				});
 			break;
 		}
-		case 'mousedown': 
+		case 'mousedown':
 		case 'touchstart':
 		{	self.isMoving = true;
-			$(document).on ("mouseup mousemove touchend touchcancel touchmove", self, self.move );
+			["mouseup", "mousemove", "touchend", "touchcancel", "touchmove"]
+				.forEach(function(eventName) {
+					document.addEventListener(eventName, self.move.bind(self));
+				});
 		}
-		case 'mousemove': 
+		case 'mousemove':
 		case 'touchmove':
 		{	if (self.isMoving)
 			{	if (self.get('orientation') === "vertical")
-				{	var pageX = e.pageX 
-						|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageX) 
+				{	var pageX = e.pageX
+						|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageX)
 						|| (e.originalEvent.changedTouches && e.originalEvent.changedTouches.length && e.originalEvent.changedTouches[0].pageX);
 					if (!pageX) break;
-					pageX -= $(self.getMap().getTargetElement()).offset().left;
+					pageX -= self.getMap().getTargetElement().getBoundingClientRect().left +
+						window.pageXOffset - document.documentElement.clientLeft;
 
 					var l = self.getMap().getSize()[0];
 					l = Math.min(Math.max(0, 1-(l-pageX)/l), 1);
 					self.set('position', l);
 				}
 				else
-				{	var pageY = e.pageY 
-						|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageY) 
+				{	var pageY = e.pageY
+						|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageY)
 						|| (e.originalEvent.changedTouches && e.originalEvent.changedTouches.length && e.originalEvent.changedTouches[0].pageY);
 					if (!pageY) break;
-					pageY -= $(self.getMap().getTargetElement()).offset().top;
+					pageY -= self.getMap().getTargetElement().getBoundingClientRect().top +
+						window.pageYOffset - document.documentElement.clientTop;
 
 					var l = self.getMap().getSize()[1];
 					l = Math.min(Math.max(0, 1-(l-pageY)/l), 1);
