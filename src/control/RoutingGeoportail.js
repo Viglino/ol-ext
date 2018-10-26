@@ -137,7 +137,7 @@ ol_control_RoutingGeoportail.prototype.addSearch = function (element, options) {
  * @param {_ol_Map_} map The map instance.
  */
 ol_control_RoutingGeoportail.prototype.setMap = function (map) {
-	
+
 	ol_control_Control.prototype.setMap.call(this, map);
 
 	for (var i=0; i<this._search.length; i++) {
@@ -148,19 +148,19 @@ ol_control_RoutingGeoportail.prototype.setMap = function (map) {
 
 ol_control_RoutingGeoportail.prototype.requestData = function (start, end) {
 	return {
-		'gp-access-lib': '1.1.0', 
+		'gp-access-lib': '1.1.0',
 		origin: start.x+','+start.y,
 		destination: end.x+','+end.y,
 		method: 'time', // 'distance'
 		graphName: this.get('mode')==='pedestrian' ? 'Pieton' : 'Voiture',
-		waypoints:'', 
+		waypoints:'',
 		format: 'STANDARDEXT'
 	};
 };
 
 ol_control_RoutingGeoportail.prototype.listRouting = function (routing) {
 	var time = routing.duration/60;
-	$(this.resultElement).html('');
+	this.resultElement.innerHTML = '';
 	var t = '';
 	if (time<60) {
 		t += time.toFixed(0)+' min';
@@ -173,8 +173,13 @@ ol_control_RoutingGeoportail.prototype.listRouting = function (routing) {
 	} else {
 		t += ' ('+(dist/1000).toFixed(2)+' km)';
 	}
-	$('<i>').text(t).appendTo(this.resultElement);
-	var ul = $('<ul>').appendTo(this.resultElement);
+	var iElement = document.createElement('i');
+			iElement.textContent = t;
+	this.resultElement.appendChild(iElement)
+
+	var ul = document.createElement('ul');
+	this.resultElement.appendChild(ul);
+
 	var info = {
 		'none': 'Prendre sur ',
 		'R': 'Tourner à droite sur ',
@@ -190,12 +195,12 @@ ol_control_RoutingGeoportail.prototype.listRouting = function (routing) {
 		var t = f.get('durationT')/60;
 		console.log(f.get('duration'),t)
 		t = (f.get('duration')<40) ? '' : (t<60) ? t.toFixed(0)+' min' : (t/60).toFixed(0)+' h '+(t%60).toFixed(0)+' min';
-		$('<li>').addClass(f.get('instruction'))
-		.html(
-			(info[f.get('instruction')||'none']||'#')
-			+ ' ' + f.get('name') 
+		var li = document.createElement('li');
+				li.classList.add(f.get('instruction'));
+				li.innerHTML = (info[f.get('instruction')||'none']||'#')
+			+ ' ' + f.get('name')
 			+ '<i>' + d + (t ? ' - ' + t : '') +'</i>'
-		).appendTo(ul);
+     ul.appendChild(li);
 	}
 };
 
@@ -245,7 +250,7 @@ ol_control_RoutingGeoportail.prototype.handleResponse = function (data) {
 };
 
 ol_control_RoutingGeoportail.prototype.calculate = function () {
-	$(this.resultElement).html('');
+	this.resultElement.innerHTML = '';
 	for (var i=0; i<this._search.length; i++) {
 		if (!this._search[i].get('selection')) return;
 	}
