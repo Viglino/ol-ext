@@ -1,0 +1,36 @@
+.ol-notification {
+  width: 150%;
+  bottom: 0;
+  border: 0;
+  background: none;
+  margin: 0;
+  padding: 0;
+}
+.ol-notification > div,
+.ol-notification > div:hover {
+  position: absolute;
+  background-color: rgba(0,0,0,.8);
+  color: #fff;
+  bottom: 0;
+  left: 33.33%;
+  max-width: calc(66% - 4em);
+  min-width: 5em;
+  max-height: 5em;
+  min-height: 1em;
+  border-radius: 4px 4px 0 0;
+  padding: .2em .5em;
+  text-align: center;
+  box-sizing: border-box;
+  transform: translateX(-50%);
+  transition: .3s;
+  opacity: 1;
+}
+.ol-notification.ol-collapsed > div {
+  bottom: -5em;
+  opacity: 0;
+}
+
+.ol-notification a {
+  color: #9cf;
+  cursor: pointer;
+}
