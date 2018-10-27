@@ -7,6 +7,7 @@
 * https://github.com/gingerik/ol3/blob/gh-pages/examples/export-pdf.html
 * http://gingerik.github.io/ol3/examples/export-pdf.html
 *
+* @param: {Array<HTMLElement>} map to export
 * @param: {ol.Map} map to export
 * @param: {Object=} {format, quality, dpi}
 *		format {String}: png/jpeg/webp, default find the extension in the download attribut

@@ -1366,11 +1366,12 @@ ol.control.LayerSwitcher.prototype.setprogress_ = function(layer)
  */
 ol.control.Bar = function(options) {
   if (!options) options={};
-	var element = $("<div>").addClass('ol-unselectable ol-control ol-bar');
-	if (options.className) element.addClass(options.className);
-	if (options.group) element.addClass('ol-group');
+	var element = document.createElement("div");
+      element.classList.add('ol-unselectable', 'ol-control', 'ol-bar');
+	if (options.className) element.classList.add(options.className);
+	if (options.group) element.classList.add('ol-group');
 	ol.control.Control.call(this, {
-    element: element.get(0),
+    element: element,
 		target: options.target
 	});
 	this.set('toggleOne', options.toggleOne);
@@ -1387,14 +1388,14 @@ ol.inherits(ol.control.Bar, ol.control.Control);
 * @param {boolean} b
 */
 ol.control.Bar.prototype.setVisible = function (val) {
-	if (val) $(this.element).show();
-	else $(this.element).hide();
+	if (val) this.element.style.display = '';
+	else this.element.style.display = 'none';
 }
 /** Get the control visibility
 * @return {boolean} b
 */
 ol.control.Bar.prototype.getVisible = function () {
-  return ($(this.element).css('display') != 'none');
+  return this.element.style.display != 'none';
 }
 /**
  * Set the map instance the control is associated with
@@ -1419,7 +1420,7 @@ ol.control.Bar.prototype.getControls = function () {
 *	@param {top|left|bottom|right} pos
 */
 ol.control.Bar.prototype.setPosition = function (pos) {
-  $(this.element).removeClass('ol-left ol-top ol-bottom ol-right');
+  this.element.classList.remove('ol-left', 'ol-top', 'ol-bottom', 'ol-right');
 	pos=pos.split ('-');
 	for (var i=0; i<pos.length; i++) {
     switch (pos[i]) {
@@ -1427,7 +1428,7 @@ ol.control.Bar.prototype.setPosition = function (pos) {
 			case 'left':
 			case 'bottom':
 			case 'right':
-				$(this.element).addClass ("ol-"+pos[i]);
+				this.element.classList.add("ol-"+pos[i]);
 				break;
 			default: break;
 		}
@@ -1542,7 +1543,7 @@ ol.control.Button = function(options)
 	bt.addEventListener("touchstart", evtFunction);
 	element.appendChild(bt);
 	// Try to get a title in the button content
-	if (!options.title) {
+	if (!options.title && bt.firstElementChild) {
 		bt.title = bt.firstElementChild.title;
 	};
 	ol.control.Control.call(this,
@@ -1959,9 +1960,9 @@ ol.control.Compass = function(options)
 	else if (options.src)
 	{	this.img_ = new Image();
 		this.img_.onload = function(){ if (self.getMap()) self.getMap().renderSync(); }
-		this.img_.src =  options.src;
+		this.img_.src = options.src;
 	}
-	else this.img_ = this.defaultCompass_($(this.element).width(), this.style ? this.style.getColor():"");
+	else this.img_ = this.defaultCompass_(this.element.clientWidth, this.style ? this.style.getColor():"");
 	// 8 angles
 	this.da_ = [];
 	for (var i=0; i<8; i++) this.da_[i] = [ Math.cos(Math.PI*i/8), Math.sin(Math.PI*i/8) ];
@@ -2048,9 +2049,9 @@ ol.control.Compass.prototype.drawCompass_ = function(e)
 	var ratio = e.frameState.pixelRatio;
 	ctx.save();
 	ctx.scale(ratio,ratio);
-	var w = $(this.element).width();
-	var h = $(this.element).height();
-	var pos = $(this.element).position();
+	var w = this.element.clientWidth;
+	var h = this.element.clientHeight;
+	var pos = {left: this.element.offsetLeft, top: this.element.offsetTop};
 	var compass = this.img_;
 	var rot = e.frameState.viewState.rotation;
 	ctx.beginPath();
@@ -3203,6 +3204,90 @@ ol.control.LayerSwitcherImage.prototype.overflow = function(){};
  *	- hideOnClick {bool} hide the control on click, default false
  *	- closeBox {bool} add a closeBox to the control, default false
  */
+ol.control.Notification = function(options) {
+	var element = document.createElement("DIV");
+  this.contentElement = document.createElement("DIV");
+  element.appendChild(this.contentElement);
+  var classNames = (options.className||"")+ " ol-notification";
+	if (!options.target) {
+    classNames += " ol-unselectable ol-control ol-collapsed";
+  }
+	element.setAttribute('class', classNames);
+	ol.control.Control.call(this, {
+    element: element,
+    target: options.target
+  });
+};
+ol.inherits(ol.control.Notification, ol.control.Control);
+/**
+ * Display a notification on the map
+ * @param {string|node|undefined} what the notification to show, default get the last one
+ * @param {number} [duration=3000] duration in ms, if -1 never hide
+ */
+ol.control.Notification.prototype.show = function(what, duration) {
+  var self = this;
+  var elt = this.element;
+  if (what) {
+    if (what instanceof Node) {
+      this.contentElement.innerHTML = '';
+      this.contentElement.appendChild(what);
+    } else {
+      this.contentElement.innerHTML = what;
+    }
+  }
+  if (this._listener) {
+    clearTimeout(this._listener);
+    this._listener = null;
+  }
+  elt.classList.add('ol-collapsed');
+  this._listener = setTimeout(function() {
+    elt.classList.remove('ol-collapsed');
+    if (!duration || duration >= 0) {
+      self._listener = setTimeout(function() {
+        elt.classList.add('ol-collapsed');
+        self._listener = null;
+      }, duration || 3000);
+    } else {
+      self._listener = null;
+    }
+  }, 100);
+};
+/**
+ * Remove a notification on the map
+ */
+ol.control.Notification.prototype.hide = function() {
+  if (this._listener) {
+    clearTimeout(this._listener);
+    this._listener = null;
+  }
+  this.element.classList.add('ol-collapsed');
+};
+/**
+ * Toggle a notification on the map
+ * @param {number} [duration=3000] duration in ms
+ */
+ol.control.Notification.prototype.toggle = function(duration) {
+  if (this.element.classList.contains('ol-collapsed')) {
+    this.show(null, duration);
+  } else {
+    this.hide();
+  }
+};
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Control overlay for OL3
+ * The overlay control is a control that display an overlay over the map
+ *
+ * @constructor
+ * @extends {ol.control.Control}
+ * @fire change:visible
+ * @param {Object=} options Control options.
+ *	- className {String} class of the control
+ *	- hideOnClick {bool} hide the control on click, default false
+ *	- closeBox {bool} add a closeBox to the control, default false
+ */
 ol.control.Overlay = function(options)
 {	if (!options) options={};
 	var element = $("<div>").addClass('ol-unselectable ol-overlay');
@@ -4248,18 +4333,18 @@ ol.control.RoutingGeoportail.prototype.setMap = function (map) {
 };
 ol.control.RoutingGeoportail.prototype.requestData = function (start, end) {
 	return {
-		'gp-access-lib': '1.1.0', 
+		'gp-access-lib': '1.1.0',
 		origin: start.x+','+start.y,
 		destination: end.x+','+end.y,
 		method: 'time', // 'distance'
 		graphName: this.get('mode')==='pedestrian' ? 'Pieton' : 'Voiture',
-		waypoints:'', 
+		waypoints:'',
 		format: 'STANDARDEXT'
 	};
 };
 ol.control.RoutingGeoportail.prototype.listRouting = function (routing) {
 	var time = routing.duration/60;
-	$(this.resultElement).html('');
+	this.resultElement.innerHTML = '';
 	var t = '';
 	if (time<60) {
 		t += time.toFixed(0)+' min';
@@ -4272,8 +4357,11 @@ ol.control.RoutingGeoportail.prototype.listRouting = function (routing) {
 	} else {
 		t += ' ('+(dist/1000).toFixed(2)+' km)';
 	}
-	$('<i>').text(t).appendTo(this.resultElement);
-	var ul = $('<ul>').appendTo(this.resultElement);
+	var iElement = document.createElement('i');
+			iElement.textContent = t;
+	this.resultElement.appendChild(iElement)
+	var ul = document.createElement('ul');
+	this.resultElement.appendChild(ul);
 	var info = {
 		'none': 'Prendre sur ',
 		'R': 'Tourner à droite sur ',
@@ -4288,12 +4376,12 @@ ol.control.RoutingGeoportail.prototype.listRouting = function (routing) {
 		var t = f.get('durationT')/60;
 		console.log(f.get('duration'),t)
 		t = (f.get('duration')<40) ? '' : (t<60) ? t.toFixed(0)+' min' : (t/60).toFixed(0)+' h '+(t%60).toFixed(0)+' min';
-		$('<li>').addClass(f.get('instruction'))
-		.html(
-			(info[f.get('instruction')||'none']||'#')
-			+ ' ' + f.get('name') 
+		var li = document.createElement('li');
+				li.classList.add(f.get('instruction'));
+				li.innerHTML = (info[f.get('instruction')||'none']||'#')
+			+ ' ' + f.get('name')
 			+ '<i>' + d + (t ? ' - ' + t : '') +'</i>'
-		).appendTo(ul);
+     ul.appendChild(li);
 	}
 };
 ol.control.RoutingGeoportail.prototype.handleResponse = function (data) {
@@ -4340,7 +4428,7 @@ ol.control.RoutingGeoportail.prototype.handleResponse = function (data) {
 	return routing;
 };
 ol.control.RoutingGeoportail.prototype.calculate = function () {
-	$(this.resultElement).html('');
+	this.resultElement.innerHTML = '';
 	for (var i=0; i<this._search.length; i++) {
 		if (!this._search[i].get('selection')) return;
 	}
@@ -5059,55 +5147,65 @@ ol.control.SearchNominatim.prototype.select = function (f){
  *	@param {string} options.className control class name
  *	@param {Element | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {ol/source/Vector | Array<ol/source/Vector>} options.source the source to search in
+ *	@param {string} [options.selectLabel=select] select button label
+ *	@param {string} [options.addLabel=add] add button label
+ *	@param {string} [options.caseLabel=case sensitive] case checkbox label
+ *	@param {string} [options.allLabel=match all] match all checkbox label
+ *	@param {string} [options.attrPlaceHolder=attribute]
+ *	@param {string} [options.valuePlaceHolder=value]
  */
 ol.control.Select = function(options) {
   var self = this;
-	if (!options) options = {};
-	var element;
-	if (options.target) {
-		element = $("<div>").addClass(options.className || "ol-select");
-	} else {
-		element = $("<div>").addClass((options.className || 'ol-select') +' ol-unselectable ol-control ol-collapsed');
-		$("<button>")
-			.attr('type','button')
-			.on("click touchstart", function(e) {
-				element.toggleClass('ol-collapsed');
-				e.preventDefault();
-			})
-			.appendTo(element);
-	}
-	// Containre
-	var div = $('<div>').appendTo(element);
-	// List of selection
-	this._ul = $('<ul>').appendTo(div);
-	// Add button
-	$('<button>').text('+')
-		.click(function(){ 
-			self.addCondition(); 
-		})
-		.appendTo(div);
-	// Select button
-	$('<button>')
-		.attr('type','button')
-		.text('Select')
-		.click(function() { 
-			self.doSelect(); 
-		})
-		.appendTo(div);
-	// All conditions
-	this._all = $('<input>').attr('type', 'checkbox').val('all')
-		.prop('checked', true)
-		.prependTo($('<label>').text('match all').appendTo(div));
-	// Use case 
-	this._useCase = $('<input>').attr('type', 'checkbox')
-		.prependTo($('<label>').text('case sensitive').appendTo(div));
-	this._conditions = [];
-	this.addCondition();
-	ol.control.Control.call(this, {
+  if (!options) options = {};
+  var element;
+  if (options.target) {
+    element = $("<div>").addClass(options.className || "ol-select");
+  } else {
+    element = $("<div>").addClass((options.className || 'ol-select') +' ol-unselectable ol-control ol-collapsed');
+    $("<button>")
+      .attr('type','button')
+      .on("click touchstart", function(e) {
+        element.toggleClass('ol-collapsed');
+        e.preventDefault();
+      })
+      .appendTo(element);
+  }
+  // Containre
+  var div = $('<div>').appendTo(element);
+  // List of selection
+  this._ul = $('<ul>').appendTo(div);
+  // All conditions
+  this._all = $('<input>').attr('type', 'checkbox').val('all')
+    .prop('checked', true)
+    .prependTo($('<label>').text(options.allLabel || 'match all').appendTo(div));
+  // Use case 
+  this._useCase = $('<input>').attr('type', 'checkbox')
+    .prependTo($('<label>').text(options.caseLabel || 'case sensitive').appendTo(div));
+  // Select button
+  $('<button>')
+    .attr('type','button')
+    .addClass('ol-submit')
+    .text(options.selectLabel || 'Select')
+    .click(function() { 
+      self.doSelect(); 
+    })
+    .appendTo(div);
+  // Add button
+  $('<button>').addClass('ol-append')
+    .text(options.addLabel  || 'add rule')
+    .click(function(){ 
+      self.addCondition(); 
+    })
+    .appendTo(div);
+  this._conditions = [];
+  ol.control.Control.call(this, {
     element: element.get(0),
     target: options.target
-	});
-	this.set('source', (options.source instanceof Array) ? options.source : [options.source]);
+  });
+  this.set('source', (options.source instanceof Array) ? options.source : [options.source]);
+  this.set('attrPlaceHolder', options.attrPlaceHolder || 'attribute');
+  this.set('valuePlaceHolder', options.valuePlaceHolder || 'value');
+  this.addCondition();
 };
 ol.inherits(ol.control.Select, ol.control.Control);
 /** Add a new condition
@@ -5124,6 +5222,37 @@ ol.control.Select.prototype.addCondition = function (options) {
 		val: options.val || ''
 	});
 	this._drawlist();
+};
+/** Get the condition list
+ */
+ol.control.Select.prototype.getConditions = function () {
+	return {
+		usecase: this._useCase.prop('checked'),
+		all: this._all.prop('checked'),
+ 		conditions: this._conditions
+	}
+};
+/** Set the condition list
+ */
+ol.control.Select.prototype.setConditions = function (cond) {
+  this._useCase.prop('checked', cond.usecase);
+  this._all.prop('checked', cond.all);
+ 	this._conditions = cond.conditions;
+	this._drawlist();
+};
+/** Get the conditions as string
+ */
+ol.control.Select.prototype.getConditionsString = function (cond) {
+  var st = '';
+  for (var i=0,c; c=cond.conditions[i]; i++) {
+    if (c.attr) {
+      st += (st ? (cond.all ? ' AND ' : ' OR ') : '') 
+        + c.attr 
+        + ol.control.Select.operationsList[c.op]
+        + c.val;
+    }
+  }
+  return st
 };
 /** List of operations / for translation 
  * @api
@@ -5152,36 +5281,89 @@ ol.control.Select.prototype._drawlist = function () {
  * @return {*}
  * @private
  */
+ol.control.Select.prototype._autocomplete = function (val, ul) {
+	ul.removeClass('ol-hidden').html('');
+	var attributes = {};
+	var sources = this.get('source');
+	for (var i=0, s; s=sources[i]; i++) {
+		var features = s.getFeatures();
+		for (var j=0, f; f=features[j]; j++) {
+			$.extend(attributes, f.getProperties());
+			if (j>100) break;
+		}
+	}
+	var rex = new RegExp(val, 'i');
+	for (var a in attributes) {
+		if (a==='geometry') continue;
+		if (rex.test(a)) {
+			$('<li>').text(a)
+				.click(function() {
+					ul.prev().val($(this).text()).change();
+					ul.addClass('ol-hidden')
+				})
+				.appendTo(ul);
+		}
+	}
+};
+/** Get a line
+ * @return {*}
+ * @private
+ */
 ol.control.Select.prototype._getLiCondition = function (i) {
 	var self = this;
-	var li = $('<li>');
-	$('<input>').attr({ type: 'text' })
+  var li = $('<li>');
+  // Attribut
+	var autocomplete = $('<div>').addClass('ol-autocomplete')
+		.mouseleave(function() { 
+			$('ul', this).addClass('ol-hidden'); 
+		})
+		.appendTo(li);
+  $('<input>').addClass('ol-attr')
+    .attr({ 
+      type: 'text',
+      placeholder: this.get('attrPlaceHolder')
+    })
+    .on('keyup', function () {
+      self._autocomplete( $(this).val(), $(this).next() );
+		})
+		.click(function(){
+			self._autocomplete( $(this).val(), $(this).next() );
+			$(this).next().removeClass('ol-hidden')
+		})
 		.on('change', function() {
 			self._conditions[i].attr = $(this).val();
 		})
 		.val(self._conditions[i].attr)
-		.appendTo(li);
+		.appendTo(autocomplete);
+	// Autocomplete list
+	$('<ul>').addClass('ol-hidden').appendTo(autocomplete);
+  // Operation
 	var select = $('<select>').appendTo(li);
 	for (var k in ol.control.Select.operationsList) {
 		$('<option>').val(k)
 			.text(ol.control.Select.operationsList[k])
 			.appendTo(select)
 	}
-	select.on('change', function() {
+  select.val(self._conditions[i].op)
+    .on('change', function() {
 			self._conditions[i].op = $(this).val();
-		})
-		.val(self._conditions[i].op);
-	$('<input>').attr({ type: 'text' })
+		});
+  // Value
+	$('<input>').attr({ 
+      type: 'text',
+      placeholder: this.get('valuePlaceHolder')
+    })
 		.on('change', function() {
 			self._conditions[i].val = $(this).val();
 		})
 		.val(self._conditions[i].val)
 		.appendTo(li);
 	if (this._conditions.length > 1) {
-		$('<button>').addClass('ol-delete').text('-')
+		$('<div>').addClass('ol-delete')
 			.click(function(){ self.removeCondition(i); })
 			.appendTo(li);
-	}
+  }
+  //
 	return li;
 };
 /** Remove the ith condition
@@ -5235,18 +5417,25 @@ ol.control.Select.prototype._checkCondition = function (f, c, usecase) {
 	}
 }
 /** Select features by attributes
+ * @param {*} options
+ *  @param {Array<ol/source/Vector|undefined} options.sources source to apply rules, default the select sources
+ *  @param {bool} options.useCase case sensitive, default checkbox state
+ *  @param {bool} options.matchAll match all conditions, , default checkbox state
+ *  @param {Array<conditions>} options.conditions array of conditions
  * @fires select
  */
-ol.control.Select.prototype.doSelect = function () {
-	var sources = this.get('source');
+ol.control.Select.prototype.doSelect = function (options) {
+	options = options || {};
+	var sources = options.sources || this.get('source');
 	var features = [];
-	var usecase = this._useCase.prop('checked');
-	var all = this._all.prop('checked');
+	var usecase = options.useCase || this._useCase.prop('checked');
+	var all = options.matchAll || this._all.prop('checked');
+	var conditions = options.conditions || this._conditions
 	for (var i=0,s; s=sources[i]; i++) {
 		var sfeatures = s.getFeatures();
 		for (var j=0,f; f=sfeatures[j]; j++) {
 			var isok = all;
-			for (var k=0, c; c=this._conditions[k]; k++) {
+			for (var k=0, c; c=conditions[k]; k++) {
 				if (c.attr) {
 					if (all) {
 						isok = isok && this._checkCondition(f,c,usecase);
@@ -5262,6 +5451,7 @@ ol.control.Select.prototype.doSelect = function () {
 		}
 	}
 	this.dispatchEvent({ type:"select", features: features });
+	return features;
 };
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
@@ -5285,9 +5475,10 @@ ol.control.Swipe = function(opt_options)
 	var self = this;
 	var button = document.createElement('button');
 	var element = document.createElement('div');
-    element.className = (options.className || "ol-swipe") + " ol-unselectable ol-control";
-    element.appendChild(button);
-	$(element).on ("mousedown touchstart", this, this.move );
+			element.className = (options.className || "ol-swipe") + " ol-unselectable ol-control";
+			element.appendChild(button);
+	element.addEventListener("mousedown", this.move.bind(this));
+	element.addEventListener("touchstart", this.move.bind(this));
 	ol.control.Control.call(this,
 	{	element: element
 	});
@@ -5299,16 +5490,16 @@ ol.control.Swipe = function(opt_options)
 	this.on('propertychange', function() 
 	{	if (this.getMap()) this.getMap().renderSync();
 		if (this.get('orientation') === "horizontal")
-		{	$(this.element).css("top", this.get('position')*100+"%");
-			$(this.element).css("left", "");
+		{	this.element.style.top = this.get('position')*100+"%";
+			this.element.style.left = "";
 		}
 		else
 		{	if (this.get('orientation') !== "vertical") this.set('orientation', "vertical");
-			$(this.element).css("left", this.get('position')*100+"%");
-			$(this.element).css("top", "");
+			this.element.style.left = this.get('position')*100+"%";
+			this.element.style.top = "";
 		}
-		$(this.element).removeClass("horizontal vertical");
-		$(this.element).addClass(this.get('orientation'));
+		this.element.classList.remove("horizontal", "vertical");
+		this.element.classList.add(this.get('orientation'));
 	}.bind(this));
 	this.set('position', options.position || 0.5);
 	this.set('orientation', options.orientation || 'vertical');
@@ -5319,12 +5510,12 @@ ol.inherits(ol.control.Swipe, ol.control.Control);
  * @param {_ol_Map_} map The map instance.
  */
 ol.control.Swipe.prototype.setMap = function(map)
-{   
+{
 	for (var i=0; i<this._listener.length; i++) {
 		ol.Observable.unByKey(this._listener[i]);
 	}
 	this._listener = [];
-	if (this.getMap()) {	
+	if (this.getMap()) {
 		this.getMap().renderSync();
 	}
 	ol.control.Control.prototype.setMap.call(this, map);
@@ -5343,7 +5534,7 @@ ol.control.Swipe.prototype.setMap = function(map)
 */
 ol.control.Swipe.prototype.isLayer_ = function(layer)
 {	for (var k=0; k<this.layers.length; k++)
-	{	if (this.layers[k].layer === layer)  return k;
+	{	if (this.layers[k].layer === layer) return k;
 	}
 	return -1;
 };
@@ -5353,7 +5544,7 @@ ol.control.Swipe.prototype.isLayer_ = function(layer)
 */
 ol.control.Swipe.prototype.addLayer = function(layers, right)
 {	if (!(layers instanceof Array)) layers = [layers];
-	for (var i=0; i<layers.length; i++) { 
+	for (var i=0; i<layers.length; i++) {
 		var l = layers[i];
 		if (this.isLayer_(l)<0)
 		{	this.layers.push({ layer:l, right:right });
@@ -5385,39 +5576,47 @@ ol.control.Swipe.prototype.removeLayer = function(layers)
 /** @private
 */
 ol.control.Swipe.prototype.move = function(e)
-{	var self = e.data;
+{	var self = this;
 	switch (e.type)
-	{	case 'touchcancel': 
-		case 'touchend': 
-		case 'mouseup': 
+	{	case 'touchcancel':
+		case 'touchend':
+		case 'mouseup':
 		{	self.isMoving = false;
-			$(document).off ("mouseup mousemove touchend touchcancel touchmove", self.move );
+			["mouseup", "mousemove", "touchend", "touchcancel", "touchmove"]
+				.forEach(function(eventName) {
+					document.removeEventListener(eventName, self.move);
+				});
 			break;
 		}
-		case 'mousedown': 
+		case 'mousedown':
 		case 'touchstart':
 		{	self.isMoving = true;
-			$(document).on ("mouseup mousemove touchend touchcancel touchmove", self, self.move );
+			["mouseup", "mousemove", "touchend", "touchcancel", "touchmove"]
+				.forEach(function(eventName) {
+					document.addEventListener(eventName, self.move.bind(self));
+				});
 		}
-		case 'mousemove': 
+		case 'mousemove':
 		case 'touchmove':
 		{	if (self.isMoving)
 			{	if (self.get('orientation') === "vertical")
-				{	var pageX = e.pageX 
-						|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageX) 
+				{	var pageX = e.pageX
+						|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageX)
 						|| (e.originalEvent.changedTouches && e.originalEvent.changedTouches.length && e.originalEvent.changedTouches[0].pageX);
 					if (!pageX) break;
-					pageX -= $(self.getMap().getTargetElement()).offset().left;
+					pageX -= self.getMap().getTargetElement().getBoundingClientRect().left +
+						window.pageXOffset - document.documentElement.clientLeft;
 					var l = self.getMap().getSize()[0];
 					l = Math.min(Math.max(0, 1-(l-pageX)/l), 1);
 					self.set('position', l);
 				}
 				else
-				{	var pageY = e.pageY 
-						|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageY) 
+				{	var pageY = e.pageY
+						|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageY)
 						|| (e.originalEvent.changedTouches && e.originalEvent.changedTouches.length && e.originalEvent.changedTouches[0].pageY);
 					if (!pageY) break;
-					pageY -= $(self.getMap().getTargetElement()).offset().top;
+					pageY -= self.getMap().getTargetElement().getBoundingClientRect().top +
+						window.pageYOffset - document.documentElement.clientTop;
 					var l = self.getMap().getSize()[1];
 					l = Math.min(Math.max(0, 1-(l-pageY)/l), 1);
 					self.set('position', l);
@@ -13272,27 +13471,35 @@ ol.Overlay.Popup = function (options)
 	if (typeof(options.offsetBox)==='number') this.offsetBox = [options.offsetBox,options.offsetBox,options.offsetBox,options.offsetBox];
 	else this.offsetBox = options.offsetBox;
 	// Popup div
-	var d = $("<div>").addClass('ol-overlaycontainer-stopevent');
-	options.element = d.get(0);
+	var element = document.createElement("div");
+			element.classList.add('ol-overlaycontainer-stopevent');
+	options.element = element;
 	// Anchor div
-	$("<div>").addClass("anchor").appendTo(d);
+	var anchorElement = document.createElement("div");
+			anchorElement.classList.add("anchor");
+	element.appendChild(anchorElement);
 	// Content
-	this.content = $("<div>").addClass("content").appendTo(d).get(0);
+	var contentDiv = document.createElement("div");
+			contentDiv.classList.add("content");
+	element.appendChild(contentDiv);
+	this.content = contentDiv;
 	// Closebox
 	this.closeBox = options.closeBox;
-	this.onclose = options.onclose;      
-	this.onshow = options.onshow;      
-	$("<button>").addClass("closeBox").addClass(options.closeBox?"hasclosebox":"")
-				.attr('type', 'button')
-				.prependTo(d)
-				.click(function()
+	this.onclose = options.onclose;
+	this.onshow = options.onshow;
+	var button = document.createElement("button");
+			button.classList.add("closeBox", options.closeBox?"hasclosebox":"")
+			button.setAttribute('type', 'button');
+			element.insertBefore(button, anchorElement);
+			button.addEventListener("click", function()
 				{	self.hide();
 				});
 	// Stop event
 	options.stopEvent = true;
-	d.on("mousedown touchstart", function(e){ e.stopPropagation(); })
+	element.addEventListener("mousedown", function(e){ e.stopPropagation(); });
+	element.addEventListener("touchstart", function(e){ e.stopPropagation(); });
 	ol.Overlay.call(this, options);
-	this._elt = $(this.element);
+	this._elt = this.element;
 	// call setPositioning first in constructor so getClassPositioning is called only once
 	this.setPositioning(options.positioning);
 	this.setPopupClass(options.popupClass);
@@ -13320,8 +13527,8 @@ ol.Overlay.Popup.prototype.getClassPositioning = function ()
  */
 ol.Overlay.Popup.prototype.setClosebox = function (b)
 {	this.closeBox = b;
-	if (b) this._elt.addClass("hasclosebox");
-	else this._elt.removeClass("hasclosebox");
+	if (b) this._elt.classList.add("hasclosebox");
+	else this._elt.classList.remove("hasclosebox");
 };
 /**
  * Set the CSS class of the popup.
@@ -13329,8 +13536,29 @@ ol.Overlay.Popup.prototype.setClosebox = function (b)
  * @api stable
  */
 ol.Overlay.Popup.prototype.setPopupClass = function (c)
-{	this._elt.removeClass()
-		.addClass("ol-popup "+(c||"default")+" "+this.getClassPositioning()+(this.closeBox?" hasclosebox":""));
+{	this._elt.className = "";
+		var classesPositioning = this.getClassPositioning().split(' ')
+			.filter(function(className) {
+				return className.length > 0;
+			});
+		var classes = ["ol-popup"];
+		if (c) {
+			c.split(' ').filter(function(className) {
+				return className.length > 0;
+			})
+			.forEach(function(className) {
+				classes.push(className);
+			});
+		} else {
+			classes.push("default");
+		}
+			classesPositioning.forEach(function(className) {
+				classes.push(className);
+			});
+		if (this.closeBox) {
+			classes.push("hasclosebox");
+		}
+		this._elt.classList.add.apply(this._elt.classList, classes);
 };
 /**
  * Add a CSS class to the popup.
@@ -13338,7 +13566,7 @@ ol.Overlay.Popup.prototype.setPopupClass = function (c)
  * @api stable
  */
 ol.Overlay.Popup.prototype.addPopupClass = function (c)
-{	this._elt.addClass(c);
+{	this._elt.classList.add(c);
 };
 /**
  * Remove a CSS class to the popup.
@@ -13346,7 +13574,7 @@ ol.Overlay.Popup.prototype.addPopupClass = function (c)
  * @api stable
  */
 ol.Overlay.Popup.prototype.removePopupClass = function (c)
-{	this._elt.removeClass(c);
+{	this._elt.classList.remove(c);
 };
 /**
  * Set positionning of the popup
@@ -13367,20 +13595,24 @@ ol.Overlay.Popup.prototype.setPositioning = function (pos)
 	this.setPositioning_(pos);
 };
 /** @private
- * @param {ol.OverlayPositioning | string | undefined} pos  
+ * @param {ol.OverlayPositioning | string | undefined} pos
  */
 ol.Overlay.Popup.prototype.setPositioning_ = function (pos) {
 	if (this._elt) {
 		ol.Overlay.prototype.setPositioning.call(this, pos);
-		this._elt.removeClass("ol-popup-top ol-popup-bottom ol-popup-left ol-popup-right ol-popup-center ol-popup-middle");
-		this._elt.addClass(this.getClassPositioning());
+		this._elt.classList.remove("ol-popup-top", "ol-popup-bottom", "ol-popup-left", "ol-popup-right", "ol-popup-center", "ol-popup-middle");
+		var classes = this.getClassPositioning().split(' ')
+			.filter(function(className) {
+				return className.length > 0;
+			});
+		this._elt.classList.add.apply(this._elt.classList, classes);
 	}
 };
 /** Check if popup is visible
 * @return {boolean}
 */
 ol.Overlay.Popup.prototype.getVisible = function ()
-{	return this._elt.hasClass("visible");
+{	return this._elt.classList.contains("visible");
 };
 /**
  * Set the position and the content of the popup.
@@ -13407,11 +13639,15 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
 	if (html && html !== this.prevHTML) 
 	{	// Prevent flickering effect
 		this.prevHTML = html;
-		$(this.content).html("").append(html);
+		this.content.innerHTML = "";
+		this.content.insertAdjacentHTML('beforeend', html);
 		// Refresh when loaded (img)
-		$("*", this.content).on('load',function()
-		{	map.renderSync();
-		})
+		Array.prototype.slice.call(this.content.querySelectorAll('img'))
+			.forEach(function(image) {
+				image.addEventListener("load", function()
+				{	map.renderSync();
+				});
+			});
 	}
 	if (coordinate) 
 	{	// Auto positionning
@@ -13436,10 +13672,10 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
 		// Show
 		this.setPosition(coordinate);
 		// Set visible class (wait to compute the size/position first)
-		this._elt.parent().show();
+		this._elt.parentElement.style.display = '';
                 if (typeof (this.onshow) == 'function') this.onshow();
 		this._tout = setTimeout (function()
-		{	self._elt.addClass("visible"); 
+		{	self._elt.classList.add("visible"); 
 		}, 0);
 	}
 };
@@ -13452,7 +13688,7 @@ ol.Overlay.Popup.prototype.hide = function ()
 	if (typeof (this.onclose) == 'function') this.onclose();
 	this.setPosition(undefined);
 	if (this._tout) clearTimeout(this._tout);
-	this._elt.removeClass("visible");
+	this._elt.classList.remove("visible");
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -13471,8 +13707,9 @@ ol.Overlay.Popup.prototype.hide = function ()
  */
 ol.Overlay.Magnify = function (options)
 {	var self = this;
-	var elt = $("<div>").addClass("ol-magnify");
-	this._elt = elt.get(0);
+	var elt = document.createElement("div");
+			elt.className = "ol-magnify";
+	this._elt = elt;
 	ol.Overlay.call(this,
 		{	positioning: options.positioning || "center-center",
 			element: this._elt,
@@ -13499,12 +13736,12 @@ ol.inherits(ol.Overlay.Magnify, ol.Overlay);
  */
 ol.Overlay.Magnify.prototype.setMap = function(map) {
 	if (this.getMap()) {
-		$(this.getMap().getViewport()).off("mousemove", this.onMouseMove_);
+		this.getMap().getViewport().removeEventListener("mousemove", this.onMouseMove_);
 	}
 	if (this._listener) ol.Observable.unByKey(this._listener);
 	this._listener = null;
 	ol.Overlay.prototype.setMap.call(this, map);
-	$(map.getViewport()).on("mousemove", {self:this}, this.onMouseMove_);
+	map.getViewport().addEventListener("mousemove", this.onMouseMove_.bind(this));
 	this._listener = map.getView().on('propertychange', this.setView_.bind(this));
 	this.setView_();
 };
@@ -13520,7 +13757,7 @@ ol.Overlay.Magnify.prototype.getMagMap = function()
 ol.Overlay.Magnify.prototype.getActive = function()
 {	return this.get("active");
 };
-/** Activate or deactivate 
+/** Activate or deactivate
 *	@param {boolean} active
 */
 ol.Overlay.Magnify.prototype.setActive = function(active)
@@ -13530,7 +13767,7 @@ ol.Overlay.Magnify.prototype.setActive = function(active)
  * @private
  */
 ol.Overlay.Magnify.prototype.onMouseMove_ = function(e)
-{	var self = e.data.self;
+{	var self = this;
 	if (!self.get("active"))
 	{	self.setPosition();
 	}
@@ -13538,7 +13775,7 @@ ol.Overlay.Magnify.prototype.onMouseMove_ = function(e)
 	{	var px = self.getMap().getEventCoordinate(e);
 		if (!self.external_) self.setPosition(px);
 		self.mgview_.setCenter(px);
-		if ($("canvas", self._elt).css("display")=="none") self.mgmap_.updateSize();
+		if (self._elt.querySelector('canvas').style.display =="none") self.mgmap_.updateSize();
 	}
 };
 /** View has changed
@@ -13549,7 +13786,7 @@ ol.Overlay.Magnify.prototype.setView_ = function(e)
 	{	this.setPosition();
 		return;
 	}
-	if (!e) 
+	if (!e)
 	{	// refresh all
 		this.setView_({key:'rotation'});
 		this.setView_({key:'resolution'});
