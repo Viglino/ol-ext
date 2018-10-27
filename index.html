@@ -24,17 +24,17 @@
 		transform-origin: 0 0;
 		z-index:10;
 	}
-	body
-	{	font-family: 'Lucida Grande',Verdana,Geneva,Lucida,Arial,Helvetica,sans-serif;
+	body {
+    font-family: 'Lucida Grande',Verdana,Geneva,Lucida,Arial,Helvetica,sans-serif;
 		font-size: 16px;
 		margin: 0.5em;
 	}
-	a 
-	{	color: #337ab7;
+	a {
+    color: #337ab7;
 		text-decoration: none;
 	}
-	.navbar 
-	{	top:0; left: 0;
+	.navbar {
+    top:0; left: 0;
 		right: 0;
 		width:100%;
 		position: fixed;
@@ -42,80 +42,79 @@
 		background-color: #1f6b75;
 		color: white;
 	}
-	.navbar img
-	{	height:1.5em;
+	.navbar img {
+    height:1.5em;
 		vertical-align: middle;
 	}
-	.navbar h1
-	{	display: inline-block;
+	.navbar h1 {
+    display: inline-block;
 		font-size:1.5em;
 		margin: 0.5em;
 	}
-	h2
-	{	clear:both;
+	h2 {
+    clear:both;
 		margin:1em 0 0;
 	}
-	.container
-	{	width:1170px;
+	.container {
+    width:1170px;
 		max-width: 100%;
 		margin:auto;
 	}
 
-	.small, small 
-	{	font-size: 0.85em;
+	.small, small {
+    font-size: 0.85em;
 	}
 
-	#examples
-	{	margin-top:4em;
+	#examples {
+    margin-top:4em;
 	}
-	#examples > div > div
-	{	box-sizing: border-box;
-		display: inline-block;
+	#examples > div > div {
+    box-sizing: border-box;
 		float: left;
 		padding: 0.5em;
 		width: 33.3333%;
 	}
-	@media (max-width: 1500px) 
-	{	#examples > div > div
-		{	width: 50%;
+	@media (max-width: 1500px) {
+    #examples > div > div {
+      width: 50%;
 		}
 	}
-	@media (max-width: 900px) 
-	{	#examples > div > div
-		{	width: 100%;
+	@media (max-width: 900px) {
+    #examples > div > div {
+      width: 100%;
 		}
 	}
 
 	.example,
-	.desc 
-	{	background-color: #f5f5f5;
+	.desc {
+    background-color: #f5f5f5;
 		margin: 0;
 		overflow: auto;
 		padding: 10px;
 		height: 9em;
 		overflow: hidden;
 	}
-	#examples > div.desc
-	{	margin:-0.5em 0 1em;
+	#examples > div.desc {
+    margin:-0.5em 0 1em;
 		padding:1em;
 		width:100%;
 		box-sizing: content-box;
 	}
 	
-	.example:hover
-	{	background-color: #ddd;
+	.example:hover {
+    background-color: #ddd;
 	}
-	.example p.description 
-	{	font-size: 0.9em;
+	.example p.description {
+    font-size: 0.9em;
 		margin: 5px 0;
 	}
-	.example p.tag
-	{	font-size: 0.8em;
+	.example p.tag {
+    font-size: 0.8em;
 		color:#693;
 		margin: 0;
 	}
-	.example img
-	{	display:none;
+	.example img {
+    display:none;
 		margin:auto;
 		float:right;
 		width:180px;
@@ -128,36 +127,35 @@
 	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
 	<script type="text/javascript">
-		$(document).ready(function()
-		{	$(".example").wrap($("<div>"));
+		$(document).ready(function() {
+      $(".example").wrap($("<div>"));
 
-			$(".example a.mainlink").each(function()
-			{	var href = /[^\/]*$/.exec( $(this).attr('href') ).pop();
+			$(".example a.mainlink").each(function() {
+        var href = /[^\/]*$/.exec( $(this).attr('href') ).pop();
 				$("<small>").text("("+href+")")
 						.appendTo($(this));
 				$("<img>").attr('src',"img/"+href.replace('html',$(this).data('img')||'jpg'))
 					.appendTo($(this))
-					.load(function(e)
-					{	$(this).show();
+					.load(function(e) {
+            $(this).show();
 					})
 			})
 
-			$('#keywords').on('keyup', function()
-			{	var s = new RegExp ( $(this).val() , "i");
+			$('#keywords').on('keyup', function() {
+        var s = new RegExp ( $(this).val() , "i");
 				var k = 0;
-				$(".example").each(function()
-				{	var text = $(this).text();
+				$(".example").each(function() {
+          var text = $(this).text();
 					var t = s.test(text);
-					if (!t) 
-					{	$(this).parent().hide();
-					}
-					else 
-					{	k++;
+					if (!t) {
+            $(this).parent().hide();
+					} else {
+            k++;
 						$(this).parent().show();
 					}
 				});
-				$("h2").each(function()
-				{	if ($(".example:visible", $(this).next()).length) $(this).show();
+				$("h2").each(function() {
+          if ($(".example:visible", $(this).next()).length) $(this).show();
 					else $(this).hide();
 				});
 				$("#count").text("("+k+")");
@@ -167,8 +165,8 @@
 
 			// Decode url
 			var search = window.location.search.replace(/^\?/,"").split("&");
-			for (var i=0; i<search.length; i++) if (/^q=/.test(search[i]))
-			{	$("#keywords").val(search[i].split("=")[1]).trigger("keyup");
+			for (var i=0; i<search.length; i++) if (/^q=/.test(search[i])) {
+        $("#keywords").val(search[i].split("=")[1]).trigger("keyup");
 			}
 		});
 	</script>
@@ -636,6 +634,14 @@
 			</div>
 
 			<div class="example">
+				<a class="mainlink" href="examples/control/map.control.notification.html" data-img="gif">
+					<strong>Notification control</strong><br>
+				</a>
+				<p class="description">The <i>ol.control.Swipe</i> is a control that add a split screen to compare two map overlays. </p>
+				<p class="tag">control, globe, overview</p>
+			</div>
+
+			<div class="example">
 				<a class="mainlink" href="examples/control/map.control.globe.html">
 					<strong>Globe control</strong><br>
 				</a>
@@ -646,6 +652,14 @@
 
 	<h2>Search</h2>
 		<div>
+
+			<div class="example">
+				<a class="mainlink" href="examples/control/map.control.Select.html">
+					<strong>Select control</strong><br>
+				</a>
+				<p class="description"><i>ol.control.Select</i> is a control to select features by attributes in a source.</p>
+				<p class="tag">search, select, features, control</p>
+			</div>
 
 			<div class="example">
 				<a class="mainlink" href="examples/search/map.control.search.html">
@@ -991,7 +1005,7 @@
 			</div>
 
 			<div class="example">
-				<a class="mainlink" href="examples/misc/map.interaction.ripple.html" data-img='gif'>
+				<a class="mainlink" href="examples/misc/map.interaction.ripple.html" data-img="gif">
 					<strong>Watter ripple</strong><br>
 				</a>
 				<p class="description">The ripple interaction add a watter ripple effect on a map.</p>
