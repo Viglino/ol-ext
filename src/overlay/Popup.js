@@ -37,29 +37,37 @@ var ol_Overlay_Popup = function (options)
 	else this.offsetBox = options.offsetBox;
 
 	// Popup div
-	var d = $("<div>").addClass('ol-overlaycontainer-stopevent');
-	options.element = d.get(0);
+	var element = document.createElement("div");
+			element.classList.add('ol-overlaycontainer-stopevent');
+	options.element = element;
 	// Anchor div
-	$("<div>").addClass("anchor").appendTo(d);
+	var anchorElement = document.createElement("div");
+			anchorElement.classList.add("anchor");
+	element.appendChild(anchorElement);
 
 	// Content
-	this.content = $("<div>").addClass("content").appendTo(d).get(0);
+	var contentDiv = document.createElement("div");
+			contentDiv.classList.add("content");
+	element.appendChild(contentDiv);
+	this.content = contentDiv;
 	// Closebox
 	this.closeBox = options.closeBox;
-	this.onclose = options.onclose;      
-	this.onshow = options.onshow;      
-	$("<button>").addClass("closeBox").addClass(options.closeBox?"hasclosebox":"")
-				.attr('type', 'button')
-				.prependTo(d)
-				.click(function()
+	this.onclose = options.onclose;
+	this.onshow = options.onshow;
+	var button = document.createElement("button");
+			button.classList.add("closeBox", options.closeBox?"hasclosebox":"")
+			button.setAttribute('type', 'button');
+			element.insertBefore(button, anchorElement);
+			button.addEventListener("click", function()
 				{	self.hide();
 				});
 	// Stop event
 	options.stopEvent = true;
-	d.on("mousedown touchstart", function(e){ e.stopPropagation(); })
+	element.addEventListener("mousedown", function(e){ e.stopPropagation(); });
+	element.addEventListener("touchstart", function(e){ e.stopPropagation(); });
 
 	ol_Overlay.call(this, options);
-	this._elt = $(this.element);
+	this._elt = this.element;
 
 	// call setPositioning first in constructor so getClassPositioning is called only once
 	this.setPositioning(options.positioning);
@@ -90,8 +98,8 @@ ol_Overlay_Popup.prototype.getClassPositioning = function ()
  */
 ol_Overlay_Popup.prototype.setClosebox = function (b)
 {	this.closeBox = b;
-	if (b) this._elt.addClass("hasclosebox");
-	else this._elt.removeClass("hasclosebox");
+	if (b) this._elt.classList.add("hasclosebox");
+	else this._elt.classList.remove("hasclosebox");
 };
 
 /**
@@ -100,8 +108,29 @@ ol_Overlay_Popup.prototype.setClosebox = function (b)
  * @api stable
  */
 ol_Overlay_Popup.prototype.setPopupClass = function (c)
-{	this._elt.removeClass()
-		.addClass("ol-popup "+(c||"default")+" "+this.getClassPositioning()+(this.closeBox?" hasclosebox":""));
+{	this._elt.className = "";
+		var classesPositioning = this.getClassPositioning().split(' ')
+			.filter(function(className) {
+				return className.length > 0;
+			});
+		var classes = ["ol-popup"];
+		if (c) {
+			c.split(' ').filter(function(className) {
+				return className.length > 0;
+			})
+			.forEach(function(className) {
+				classes.push(className);
+			});
+		} else {
+			classes.push("default");
+		}
+			classesPositioning.forEach(function(className) {
+				classes.push(className);
+			});
+		if (this.closeBox) {
+			classes.push("hasclosebox");
+		}
+		this._elt.classList.add.apply(this._elt.classList, classes);
 };
 
 /**
@@ -110,7 +139,7 @@ ol_Overlay_Popup.prototype.setPopupClass = function (c)
  * @api stable
  */
 ol_Overlay_Popup.prototype.addPopupClass = function (c)
-{	this._elt.addClass(c);
+{	this._elt.classList.add(c);
 };
 
 /**
@@ -119,7 +148,7 @@ ol_Overlay_Popup.prototype.addPopupClass = function (c)
  * @api stable
  */
 ol_Overlay_Popup.prototype.removePopupClass = function (c)
-{	this._elt.removeClass(c);
+{	this._elt.classList.remove(c);
 };
 
 /**
@@ -142,13 +171,17 @@ ol_Overlay_Popup.prototype.setPositioning = function (pos)
 };
 
 /** @private
- * @param {ol.OverlayPositioning | string | undefined} pos  
+ * @param {ol.OverlayPositioning | string | undefined} pos
  */
 ol_Overlay_Popup.prototype.setPositioning_ = function (pos) {
 	if (this._elt) {
 		ol_Overlay.prototype.setPositioning.call(this, pos);
-		this._elt.removeClass("ol-popup-top ol-popup-bottom ol-popup-left ol-popup-right ol-popup-center ol-popup-middle");
-		this._elt.addClass(this.getClassPositioning());
+		this._elt.classList.remove("ol-popup-top", "ol-popup-bottom", "ol-popup-left", "ol-popup-right", "ol-popup-center", "ol-popup-middle");
+		var classes = this.getClassPositioning().split(' ')
+			.filter(function(className) {
+				return className.length > 0;
+			});
+		this._elt.classList.add.apply(this._elt.classList, classes);
 	}
 };
 
@@ -156,7 +189,7 @@ ol_Overlay_Popup.prototype.setPositioning_ = function (pos) {
 * @return {boolean}
 */
 ol_Overlay_Popup.prototype.getVisible = function ()
-{	return this._elt.hasClass("visible");
+{	return this._elt.classList.contains("visible");
 };
 
 /**
@@ -186,11 +219,15 @@ ol_Overlay_Popup.prototype.show = function (coordinate, html)
 	if (html && html !== this.prevHTML) 
 	{	// Prevent flickering effect
 		this.prevHTML = html;
-		$(this.content).html("").append(html);
+		this.content.innerHTML = "";
+		this.content.insertAdjacentHTML('beforeend', html);
 		// Refresh when loaded (img)
-		$("*", this.content).on('load',function()
-		{	map.renderSync();
-		})
+		Array.prototype.slice.call(this.content.querySelectorAll('img'))
+			.forEach(function(image) {
+				image.addEventListener("load", function()
+				{	map.renderSync();
+				});
+			});
 	}
 
 	if (coordinate) 
@@ -216,10 +253,10 @@ ol_Overlay_Popup.prototype.show = function (coordinate, html)
 		// Show
 		this.setPosition(coordinate);
 		// Set visible class (wait to compute the size/position first)
-		this._elt.parent().show();
+		this._elt.parentElement.style.display = '';
                 if (typeof (this.onshow) == 'function') this.onshow();
 		this._tout = setTimeout (function()
-		{	self._elt.addClass("visible"); 
+		{	self._elt.classList.add("visible"); 
 		}, 0);
 	}
 };
@@ -233,7 +270,7 @@ ol_Overlay_Popup.prototype.hide = function ()
 	if (typeof (this.onclose) == 'function') this.onclose();
 	this.setPosition(undefined);
 	if (this._tout) clearTimeout(this._tout);
-	this._elt.removeClass("visible");
+	this._elt.classList.remove("visible");
 };
 
 export  default ol_Overlay_Popup
