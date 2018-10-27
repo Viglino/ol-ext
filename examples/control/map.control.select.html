@@ -93,11 +93,41 @@
   map.addLayer(new ol.layer.Vector({
     name: 'Fonds de guerre 14-18',
     source: vectorSource,
-    style: new ol.style.Style({ image: new ol.style.Icon({ src:"../data/camera.png", scale: 0.8 }) })
+    style: function(f) {
+      return new ol.style.Style({ 
+        image: new ol.style.RegularShape({
+          radius: 5,
+          radius2: 0,
+          points: 4,
+          stroke: new ol.style.Stroke({ color: "#000", width:1 })  
+        }),
+        text: new ol.style.Text ({
+          text: f.get('random').toString(),
+          font: 'bold 11px sans-serif',
+          textAlign: 'left',
+          textBaseline: 'bottom',
+          offsetX: 3
+        })
+      })
+    }
   }));
+  var listenerKey = vectorSource.on('change', function(e) {
+    if (vectorSource.getState() == 'ready') {
+      ol.Observable.unByKey(listenerKey);
+      var features = vectorSource.getFeatures();
+      // Set numeric values to test
+      for (var i=0, f; f=features[i]; i++) {
+        f.set('id', i);
+        f.set('random', Math.round(Math.random()*100));
+      }
+    }
+  });
 
   // Select  interaction
-  var selecti = new ol.interaction.Select({});
+  var selecti = new ol.interaction.Select({
+    hitTolerance: 5,
+    condition: ol.events.condition.singleClick
+  });
   map.addInteraction(selecti);
   // Select feature when click on the reference index
   selecti.on('select', function(e) {
@@ -113,7 +143,7 @@
 
   // Select control
   var selectc = new ol.control.Select({
-    //target: $(".options").get(0),
+    // target: $(".options").get(0),
     source: vectorSource,
     property: $(".options select").val()
   });

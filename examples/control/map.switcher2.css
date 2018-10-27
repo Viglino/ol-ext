@@ -1,182 +1,15 @@
+.ol-layerswitcher.ol-collapsed {
+  min-width: unset;
+}
+.ol-layerswitcher,
 .ol-layerswitcher.ol-forceopen {
   min-width: 20em;
 }
-/*
-.ol-layerswitcher ul.panel {
-  font-size: 1.3em;
-}
-.ol-layerswitcher .panel li label {
-  max-width: 10em;
-}
-.ol-layerswitcher [type=checkbox]+label:before, 
-.ol-layerswitcher [type=radio]+label:before {
-  content: '';
-  border: 2px solid #ccc;
-  background-color: transparent;
-}
-.ol-layerswitcher [type=checkbox]:checked+label:after, 
-.ol-layerswitcher [type=radio]:checked+label:after {
-  content: "\2713";
-  color: #fff;
-  position: absolute;
-  top: -.15em;
-  left: 0.25em;
-  cursor: pointer;
-  font-weight: 900;
-  text-shadow: 1px 1px #fff;
-  font-size: 1.2em;
-  transform: none;
-  border: 0;
-  box-shadow: unset;
-}
-.ol-layerswitcher .layerup {
-  display: none;
-}
-.ol-layerswitcher .layerup:after {
-  content:none;
-}
-.ol-layerswitcher .layerup:before {
-  content: "\F0C9";
-  font-family: FontAwesome;
-  border: 0;
-  top: 50%;
-  color: #fff;
-  transform: translateY(-50%);
-  height: 1em;
-  left: .5em;
-}
 
-.layerswitcher button i.badge {
-  position: absolute;
-  background: #00af88;
-  margin: 0;
-  padding: 0;
-  border-radius: 100%;
-  font-style: initial;
-  top: -8px;
-  right: 2px;
-  width: 22px;
-  height: 22px;
-  font-weight: 700;
-  line-height: 22px;
-  font-size: 14px;
-  text-align: center;
-}
-
-.layerswitcherControl .ol-layerswitcher {
-  height: 100%;
-  position: relative;
-  box-sizing: border-box;
-  color: #444;
-}
-.layerswitcherControl .ol-layerswitcher .panel {
-  height: 100%;
-  box-sizing: border-box;
-  position: relative;
+.ol-layerswitcher > ul.panel {
   overflow-y: auto;
-  padding: 0;
-}
-.ol-layerswitcher .panel li .li-content {
-  width: calc(100% - 2em);
-  white-space: nowrap;
-  font-family: 'Open Sans', arial, sans-serif;
-}
-.ol-layerswitcher .panel li {
-  overflow: hidden;
-  position:relative;
-  padding: 0.5em;
-  transition: padding 0.2s; 
-}
-.ol-layerswitcher .panel li.ol-header {
-  padding: 0;
-}
-
-.ol-layerswitcher .panel li label {
-  line-height: 1.2em;
-  min-height: 1.4em;
-  width: 50%;
-  max-width: 50%;
-  overflow: initial;
-  white-space: normal;
-  display: inline-block;
   box-sizing: border-box;
-  height: auto;
-  vertical-align: middle;
-  font-size: 0.8em;
 }
-
-
-
-.ol-layerswitcher .panel li.drag:before {
-  content: "";
-  background: #296755;
-  width:100%;
-  height: 5px;
-  display: block;
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-}
-.ol-layerswitcher .ol-dragover {
-  background: #fff!important;
-  opacity: 0.8!important;
-  color: #444!important;
-  left: 0!important;
-}
-.ol-layerswitcher .panel li.forbidden,
-.forbidden .ol-layerswitcher-buttons div,
-.forbidden .layerswitcher-opacity div {
-  color: #444!important;
-  background-color: transparent;
-}
-.ol-layerswitcher .panel li.dropover {
-  background: transparent;
-}
-.ol-layerswitcher li.dropover-after {
-  padding-bottom: 3em;
-}
-.ol-layerswitcher li.dropover-before {
-  padding-top: 3em;  
-}
-.ol-layerswitcher .ol-layerswitcher-buttons {
-  position: absolute !important;
-  right: 10px !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-}
-
-.ol-layerswitcher [type="radio"]:checked + label::after,
-.ol-layerswitcher [type="checkbox"]:checked + label::after {
-  content: '\2713';
-  color: #fff;
-  position: absolute;
-  top: calc(50% - 14px);
-  left: 0px;
-  width: 14px;
-  height: 14px;
-  cursor: pointer;
-  padding: 2px;
-  font-weight: 900;
-  text-shadow: 1px 1px #fff;
-  font-size: 1.2em;
-}
-
-.ol-layerswitcher [type="radio"] + label::before,
-.ol-layerswitcher [type="checkbox"] + label::before {
-  content: '';
-  position: absolute;
-  top: calc(50% - 12px);
-  left: 0px;
-  background: transparent;
-  border: 3px solid #999;
-  cursor: pointer;
-}
-.ol-layerswitcher [type="radio"]:checked + label::before, 
-.ol-layerswitcher [type="checkbox"]:checked + label::before {
-  background-color: #19f;
-  border-color: #19f;
-}
-*/
 
 .ol-layerswitcher li .li-content {
   width: calc(100% - 3em);
@@ -223,6 +56,7 @@
   background: #666;
   border-radius: 0;
 }
+.ol-touch .ol-layerswitcher .layerswitcher-opacity .layerswitcher-opacity-cursor,
 .ol-layerswitcher .layerswitcher-opacity .layerswitcher-opacity-cursor:before {
   position: absolute;
   transform: translate(-50%,-50%);
@@ -347,4 +181,9 @@
 .ol-layerswitcher .layerInfo {
   right: -.5em;
   background: #017eff;
+}
+
+.ol-control.ol-layerswitcher .ol-switchertopdiv, 
+.ol-control.ol-layerswitcher .ol-switcherbottomdiv {
+  display: none!important;
 }

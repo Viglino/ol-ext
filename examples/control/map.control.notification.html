@@ -1,0 +1,99 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!----------------------------------------------------------
+ 
+	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	
+------------------------------------------------------------>
+	<title>ol-ext: Notification control</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="ol.control.Permalink add a premalink control to the map." />
+	<meta name="keywords" content="ol3, control, permalink, anchor" />
+
+	<link rel="stylesheet" href="../style.css" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- Openlayers -->
+    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+	
+	<!-- ol-ext -->
+    <link rel="stylesheet" href="../../dist/ol-ext.css" />
+	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+	<a href="../../index.html">
+		<h1>ol-ext: Notification control</h1>
+	</a>
+	<div class="info">
+    <i>ol/control/notification</i> is a control to display a notification on the map.
+    <br/>
+    In this example the notation is used to display a message to cancel an operation.
+	</div>
+
+	<!-- Map div -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options" >
+    <input type="text" value="Hello world!" />
+    <button onclick="notification.show($(this).prev().val())">Show message</button>
+    <p>
+      <i>Click on the map to add a point / click on the notification to cancel</i>
+    </p>
+	</div>
+
+	<script type="text/javascript">
+		// Layers
+		var stamen = new ol.layer.Tile({
+      source: new ol.source.Stamen({ layer: 'watercolor' }) 
+    });
+
+		// The map
+		var map = new ol.Map({
+      target: 'map',
+      view: new ol.View({
+        zoom: 5,
+        center: [270701, 6247637]
+      }),
+      layers: [ stamen, ]
+    });
+
+
+    var vector = new ol.layer.Vector({
+      source: new ol.source.Vector()
+    });
+    map.addLayer(vector);
+
+    var draw = new ol.interaction.Draw({ 
+      type: 'Point',
+      source: vector.getSource()
+    });
+    map.addInteraction(draw);
+    draw.on('drawend', function(e){
+      var div = $('<div>').text('One feature added to the map - ');
+      $('<a>').text('cancel')
+        .click(function() {
+          vector.getSource().removeFeature(e.feature);
+          notification.hide();
+        })
+        .appendTo(div);
+        notification.show(div.get(0));
+    });
+
+		// Control
+		var notification = new ol.control.Notification({
+    });
+		map.addControl(notification);
+
+	</script>
+
+</body>
+</html>
