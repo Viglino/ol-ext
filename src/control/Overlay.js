@@ -19,17 +19,18 @@ import ol_control_Control from 'ol/control/Control'
  */
 var ol_control_Overlay = function(options)
 {	if (!options) options={};
-	
-	var element = $("<div>").addClass('ol-unselectable ol-overlay');
-	if (options.className) element.addClass(options.className);
-	
+
+	var element = document.createElement("div");
+			element.classList.add('ol-unselectable', 'ol-overlay');
+	if (options.className) element.classList.add(options.className);
+
 	ol_control_Control.call(this,
-	{	element: element.get(0),
+	{	element: element,
 		target: options.target
 	});
-	
+
 	var self = this;
-	if (options.hideOnClick) element.click(function(){self.hide();});
+	if (options.hideOnClick) element.addEventListener("click", function(){self.hide();});
 
 	this.set("closeBox", options.closeBox);
 
@@ -43,13 +44,14 @@ ol_inherits(ol_control_Overlay, ol_control_Control);
 */
 ol_control_Overlay.prototype.setContent = function (html)
 {	var self = this;
-	if (html) 
-	{	var elt = $(this.element);
-		elt.html(html);
-		if (this.get("closeBox")) 
-		{	var cb = $("<div>").addClass("ol-closebox")
-						.click(function(){self.hide();});
-			elt.prepend(cb);
+	if (html)
+	{	var elt = this.element;
+		elt.innerHTML = html;
+		if (this.get("closeBox"))
+		{	var cb = document.createElement("div");
+					cb.classList.add("ol-closebox");
+					cb.addEventListener("click", function(){self.hide();});
+			elt.insertBefore(cb, elt.firstChild);
 		}
 	};
 };
@@ -60,22 +62,26 @@ ol_control_Overlay.prototype.setContent = function (html)
 */
 ol_control_Overlay.prototype.show = function (html, coord)
 {	var self = this;
-	var elt = $(this.element).show();
+	var elt = this.element;
+			elt.style.display = 'block';
 	if (coord)
 	{	this.center_ = this.getMap().getPixelFromCoordinate(coord);
-		elt.css({"top":this.center_[1], "left":this.center_[0] });
+		elt.style.top = this.center_[1];
+		elt.style.left = this.center_[0];
 	}
-	else 
+	else
 	{
 		//TODO: Do fix from  hkollmann pull request
 		this.center_ = false;
-		elt.css({"top":"", "left":"" });
+		elt.style.top = "";
+		elt.style.left = "";
 	}
 	this.setContent(html);
 	if (this._timeout) clearTimeout(this._timeout);
 	this._timeout = setTimeout(function()
-		{	elt.addClass("ol-visible")
-				.css({ "top":"", "left":"" });
+		{	elt.classList.add("ol-visible")
+			elt.style.top = "";
+			elt.style.left = "";
 			self.dispatchEvent({ type:'change:visible', visible:true, element: self.element });
 		}, 10);
 	self.dispatchEvent({ type:'change:visible', visible:false, element: self.element });
@@ -84,36 +90,42 @@ ol_control_Overlay.prototype.show = function (html, coord)
 /** Set the control visibility hidden
 */
 ol_control_Overlay.prototype.hide = function ()
-{	var elt = $(this.element).removeClass("ol-visible");
+{	var elt = this.element;
+			this.element.classList.remove("ol-visible");
 	if (this.center_)
-	{	elt.css({"top":this.center_[1], "left":this.center_[0] })
+	{	elt.style.top = this.center_[1];
+		elt.style.left = this.center_[0];
 		this.center_ = false;
 	}
 	if (this._timeout) clearTimeout(this._timeout);
-	this._timeout = setTimeout(function(){ elt.hide(); }, 500);
+	this._timeout = setTimeout(function(){ elt.style.display = 'none'; }, 500);
 	this.dispatchEvent({ type:'change:visible', visible:false, element: this.element });
 };
 
 /** Toggle control visibility
 */
 ol_control_Overlay.prototype.toggle = function ()
-{	if (this.getVisible()) this.hide();
-	else this.show();
+{	if (this.getVisible()) this.style.display = 'none';
+	else this.style.display = 'block';
 }
 
 /** Get the control visibility
-* @return {boolean} b 
+* @return {boolean} b
 */
 ol_control_Overlay.prototype.getVisible = function ()
-{	return ($(this.element).css('display') != 'none');
+{	return this.element.style.display != 'none';
 };
 
 /** Change class name
-* @param {String} className 
+* @param {String} className
 */
 ol_control_Overlay.prototype.setClass = function (className)
-{	var vis = $(this.element).hasClass("ol-visible");
-	$(this.element).removeClass().addClass('ol-unselectable ol-overlay'+(vis?" ol-visible ":" ")+className);
+{	var vis = this.element.classList.contains("ol-visible");
+	this.element.className = "";
+	var classes = ['ol-unselectable', 'ol-overlay'];
+	if (vis) classes.push('ol-visible');
+	classes.push(className);
+	this.element.classList.add.apply(this.element.classList, classes);
 };
 
 export default ol_control_Overlay

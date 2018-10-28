@@ -177,10 +177,10 @@
 		var content = $("<div>")
 				.append( img )
 				.append(info);
-		popup.show(content, /frompoint/.test($("#anim").val()) ? feature.getGeometry().getCoordinates():null);
+		popup.show(content.get(0).outerHTML, /frompoint/.test($("#anim").val()) ? feature.getGeometry().getCoordinates():null);
 	});
 
 	</script>
-	
+
 </body>
 </html>
