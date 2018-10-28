@@ -45,9 +45,10 @@ animations
 ````
 npm install openlayers-ext
 ````
-The library will be avaliable in the `node_modules/openlayers-ext/dist` directory. You can find individual files in the `node_modules/openlayers-ext/lib` directory.
+The library will be available in the `node_modules/openlayers-ext/dist` directory. You can find individual files in the `node_modules/openlayers-ext/lib` directory.
 * You can download the [scripts](dist) of the ./dist directory of the repository in your project and insert the .js and .css in your page.
 * If you just want to add a `<script>` tag to test things out, you can link directly to the builds from the github rawgit (not recommended in production).
+* For compatibility with older browsers and platforms (like Internet Explorer down to version 9 and Android 4.x), the Openalerys needs to be transpiled (e.g. using Babel) and bundled with polyfills for `requestAnimationFrame`, `Element.prototype.classList` and `URL`.
 
 ````html
 <!-- jQuery -->
@@ -56,8 +57,9 @@ The library will be avaliable in the `node_modules/openlayers-ext/dist` director
 <!-- Openlayers -->
 <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
 <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
 
-<!-- OL-ext -->
+<!-- ol-ext -->
 <link rel="stylesheet" href="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.css" />
 <script type="text/javascript" src="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.js"></script>
 ````
