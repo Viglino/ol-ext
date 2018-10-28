@@ -43,30 +43,33 @@ var ol_control_Overview = function(options)
 {	options = options || {};
 	var self = this;
 
-	// API 
+	// API
 	this.minZoom = options.minZoom || 0;
 	this.maxZoom = options.maxZoom || 18;
 	this.rotation = options.rotation;
 
 	var element;
-	if (options.target) 
-	{	element = $("<div>");
-		this.panel_ = $(options.target);
+	if (options.target)
+	{	element = document.createElement("div");
+		this.panel_ = options.target;
 	}
 	else
-	{	element = $("<div>").addClass('ol-overview ol-unselectable ol-control ol-collapsed');
-		if (/top/.test(options.align)) element.addClass('ol-control-top');
-		if (/right/.test(options.align)) element.addClass('ol-control-right');
-		$("<button>").on("touchstart", function(e){ self.toggleMap(); e.preventDefault(); })
-					.attr('type','button')
-					.click (function(){self.toggleMap()})
-					.appendTo(element);
-		this.panel_ = $("<div>").addClass("panel")
-					.appendTo(element);
+	{	element = document.createElement("div");
+		element.classList.add('ol-overview', 'ol-unselectable', 'ol-control', 'ol-collapsed');
+		if (/top/.test(options.align)) element.classList.add('ol-control-top');
+		if (/right/.test(options.align)) element.classList.add('ol-control-right');
+		var button = document.createElement("button");
+				button.setAttribute('type','button');
+				button.addEventListener("touchstart", function(e){ self.toggleMap(); e.preventDefault(); });
+				button.addEventListener("click", function(){self.toggleMap()});
+				element.appendChild(button);
+		this.panel_ = document.createElement("div");
+		this.panel_.classList.add("panel");
+		element.appendChild(this.panel_);
 	}
 
 	ol_control_Control.call(this,
-	{	element: element.get(0),
+	{	element: element,
 		target: options.target
 	});
 
@@ -74,7 +77,7 @@ var ol_control_Overview = function(options)
 	this.ovmap_ = new ol_Map(
 	{	controls: new ol_Collection(),
 		interactions: new ol_Collection(),
-		target: this.panel_.get(0),
+		target: this.panel_,
 		view: new ol_View
 			({	zoom: 14,
 				center: [270148, 6247782],
@@ -172,18 +175,18 @@ ol_control_Overview.prototype.getOverviewMap = function()
 /** Toggle overview map
 */
 ol_control_Overview.prototype.toggleMap = function()
-{	$(this.element).toggleClass("ol-collapsed");
+{	this.element.classList.toggle("ol-collapsed");
 	this.ovmap_.updateSize();
 };
 
 /** Set overview map position
-*	@param {top|bottom-left|right} 
+*	@param {top|bottom-left|right}
 */
 ol_control_Overview.prototype.setPosition = function(align)
-{	if (/top/.test(align)) $(this.element).addClass("ol-control-top");
-	else $(this.element).removeClass("ol-control-top");
-	if (/right/.test(align)) $(this.element).addClass("ol-control-right");
-	else $(this.element).removeClass("ol-control-right");
+{	if (/top/.test(align)) this.element.classList.add("ol-control-top");
+	else this.element.classList.remove("ol-control-top");
+	if (/right/.test(align)) this.element.classList.add("ol-control-right");
+	else this.element.classList.remove("ol-control-right");
 };
 
 /**
