@@ -29,10 +29,10 @@ var ol_control_GeolocationBar = function(options) {
   ol_control_Bar.call(this, options);
   this.setPosition(options.position || 'bottom-right');
 
-  var element = $(this.element);
+  var element = this.element;
 
   // Geolocation draw interaction
-  var interaction = new ol_interaction_GeolocationDraw({	
+  var interaction = new ol_interaction_GeolocationDraw({
     source: options.source,
     zoom: options.zoom,
     followTrack: options.followTrack,
@@ -44,7 +44,7 @@ var ol_control_GeolocationBar = function(options) {
     onToggle: function(b) {
       interaction.pause(true);
       interaction.setFollowTrack(options.followTrack);
-      element.removeClass('pauseTrack');
+      element.classList.remove('pauseTrack');
     }
   });
   this.addControl(this._geolocBt);
@@ -67,34 +67,34 @@ var ol_control_GeolocationBar = function(options) {
     handleClick: function(){
       interaction.pause(false);
       interaction.setFollowTrack('auto');
-      element.addClass('pauseTrack');
+      element.classList.add('pauseTrack');
     }
   });
   bar.addControl(startBt);
   var pauseBt = new ol_control_Button ({
     className: 'pauseBt',
     handleClick: function(){
-      interaction.pause(true);      
+      interaction.pause(true);
       interaction.setFollowTrack('auto');
-      element.removeClass('pauseTrack');
+      element.classList.remove('pauseTrack');
     }
   });
   bar.addControl(pauseBt);
 
   interaction.on('follow', function(e) {
     if (e.following) {
-      element.removeClass('centerTrack');
+      element.classList.remove('centerTrack');
     } else {
-      element.addClass('centerTrack');
+      element.classList.add('centerTrack');
     }
   });
 
   // Activate
   this._geolocBt.on('change:active', function(e) {
     if (e.active) {
-      element.addClass('ol-active');
+      element.classList.add('ol-active');
     } else {
-      element.removeClass('ol-active');
+      element.classList.remove('ol-active');
     }
   });
 };
