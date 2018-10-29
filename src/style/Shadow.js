@@ -76,7 +76,7 @@ ol_style_Shadow.prototype.renderShadow_ = function()
 
 	context.beginPath();
 	context.clearRect(0, 0, canvas.width, canvas.height);
-	
+
 	context.scale(1,0.5);
 	context.arc(radius, -radius, radius-this.blur_, 0, 2 * Math.PI, false);
     context.fillStyle = '#000';
@@ -84,7 +84,7 @@ ol_style_Shadow.prototype.renderShadow_ = function()
 	context.shadowColor = this.fill_.getColor();
 	context.shadowBlur = 0.7*this.blur_;
 	context.shadowOffsetX = 0;
-	context.shadowOffsetY = radius;
+	context.shadowOffsetY = 1.5*radius;
 
 	context.closePath();
     context.fill();
@@ -94,7 +94,7 @@ ol_style_Shadow.prototype.renderShadow_ = function()
 	// Set anchor
 	var a = this.getAnchor();
 	a[0] = canvas.width /2 -this.offset_[0];
-	a[1] = canvas.height/5 -this.offset_[1];
+	a[1] = canvas.height/2 -this.offset_[1];
 }
 
 
