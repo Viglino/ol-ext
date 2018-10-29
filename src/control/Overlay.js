@@ -1,3 +1,4 @@
+
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -64,13 +65,11 @@ ol_control_Overlay.prototype.show = function (html, coord)
 {	var self = this;
 	var elt = this.element;
 			elt.style.display = 'block';
-	if (coord)
-	{	this.center_ = this.getMap().getPixelFromCoordinate(coord);
-		elt.style.top = this.center_[1];
-		elt.style.left = this.center_[0];
-	}
-	else
-	{
+	if (coord) {
+		this.center_ = this.getMap().getPixelFromCoordinate(coord);
+		elt.style.top = this.center_[1]+'px';
+		elt.style.left = this.center_[0]+'px';
+	} else {
 		//TODO: Do fix from  hkollmann pull request
 		this.center_ = false;
 		elt.style.top = "";
@@ -93,8 +92,8 @@ ol_control_Overlay.prototype.hide = function ()
 {	var elt = this.element;
 			this.element.classList.remove("ol-visible");
 	if (this.center_)
-	{	elt.style.top = this.center_[1];
-		elt.style.left = this.center_[0];
+	{	elt.style.top = this.center_[1]+'px';
+		elt.style.left = this.center_[0]+'px';
 		this.center_ = false;
 	}
 	if (this._timeout) clearTimeout(this._timeout);
@@ -117,14 +116,14 @@ ol_control_Overlay.prototype.getVisible = function ()
 };
 
 /** Change class name
-* @param {String} className
+* @param {String} className a class name or a list of class names separated by a space
 */
 ol_control_Overlay.prototype.setClass = function (className)
 {	var vis = this.element.classList.contains("ol-visible");
 	this.element.className = "";
 	var classes = ['ol-unselectable', 'ol-overlay'];
 	if (vis) classes.push('ol-visible');
-	classes.push(className);
+	classes = classes.concat(className.split(' '));
 	this.element.classList.add.apply(this.element.classList, classes);
 };
 
