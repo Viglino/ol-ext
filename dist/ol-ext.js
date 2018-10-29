@@ -3315,10 +3315,11 @@ ol.control.Legend.prototype.refresh = function() {
     addRow(this.get('title'), true, {}, -1);
   }
   var canvas = document.createElement('canvas');
-  canvas.width = 200;
-  canvas.height = (this._rows.length+1)*height;
+  canvas.width = 5*width;
+  canvas.height = (this._rows.length+1) * height * ol.has.DEVICE_PIXEL_RATIO;
   this._imgElement.innerHTML = '';
   this._imgElement.append(canvas);
+  this._imgElement.style.height = (this._rows.length+1)*height + 'px';
   for (var i=0, r; r = this._rows[i]; i++) {
     addRow(r.title, false, r, i);
     canvas = this.getStyleImage(r, canvas, i+(this.get('title')?1:0));
@@ -3355,14 +3356,14 @@ ol.control.Legend.prototype.getStyleImage = function(options, theCanvas, row) {
   var width = size[0] + 2*this.get('margin');
   var height = size[1] + 2*this.get('margin');
   var canvas = theCanvas;
+  var ratio = ol.has.DEVICE_PIXEL_RATIO;
   if (!canvas) {
     canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
+    canvas.width = width * ratio;
+    canvas.height = height * ratio;
   }
   var ctx = canvas.getContext('2d');
   ctx.save();
-  if (theCanvas) ctx.translate(0, row*height)
   var vectorContext = ol.render.toContext(ctx);
   var typeGeom = options.typeGeom;
   var style;
@@ -3404,6 +3405,7 @@ ol.control.Legend.prototype.getStyleImage = function(options, theCanvas, row) {
     }
   }
   // Draw image
+  cy += (theCanvas ? row*height : 0);
   for (i=0; s= style[i]; i++) {
     vectorContext.setStyle(s);
     switch (typeGeom) {
@@ -3414,7 +3416,7 @@ ol.control.Legend.prototype.getStyleImage = function(options, theCanvas, row) {
       case ol.geom.LineString:
       case 'LineString':
         ctx.save();
-          ctx.rect(this.get('margin'), 0, size[0], height);
+          ctx.rect(this.get('margin') * ratio, 0, size[0] *  ratio, canvas.height);
           ctx.clip();
           vectorContext.drawGeometry(new ol.geom.LineString([[cx-sx, cy], [cx+sx, cy]]));
         ctx.restore();

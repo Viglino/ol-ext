@@ -1303,6 +1303,9 @@
 .ol-control.ol-legend.ol-collapsed .ol-legendImg {
   display: none;
 }
+.ol-control.ol-legend .ol-legendImg canvas {
+  height: 100%;;
+}
 
 .ol-control.ol-legend > button:first-child:before,
 .ol-control.ol-legend > button:first-child:after {
