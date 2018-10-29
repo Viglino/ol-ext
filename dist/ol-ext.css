@@ -1259,6 +1259,93 @@
 	font-family:Verdana, Geneva, sans-serif;
 	font-size:0.8em;
 }
+.ol-control.ol-legend {
+  bottom: .5em;
+  left: .5em;
+  z-index: 1;
+  max-height: 90%;
+  max-width: 90%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.ol-control.ol-legend button {
+  position: relative;
+  display: none;
+}
+.ol-control.ol-legend.ol-collapsed button {
+  display: block;
+}
+.ol-control.ol-legend button.ol-closebox {
+  display: block;
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: none;
+  cursor: pointer;
+  z-index: 1;
+}
+.ol-control.ol-legend.ol-collapsed button.ol-closebox {
+  display: none;
+}
+.ol-control.ol-legend button.ol-closebox:before {
+  content: "\D7";
+  background: none;
+  color: rgba(0,60,136,.5);
+  font-size: 1.3em;
+}
+.ol-control.ol-legend button.ol-closebox:hover:before {
+  color: rgba(0,60,136,1);
+}
+.ol-control.ol-legend .ol-legendImg {
+  position: absolute;
+  z-index: -1;
+}
+.ol-control.ol-legend.ol-collapsed .ol-legendImg {
+  display: none;
+}
+
+.ol-control.ol-legend > button:first-child:before,
+.ol-control.ol-legend > button:first-child:after {
+  content: "";
+  position: absolute;
+  top: .25em;
+  left: .2em;
+  width: .2em;
+  height: .2em;
+  background-color: currentColor;
+  -webkit-box-shadow: 0 0.35em, 0 0.7em;
+          box-shadow: 0 0.35em, 0 0.7em;
+}
+.ol-control.ol-legend button:first-child:after {
+  top: .27em;
+  left: .55em;
+  height: .15em;
+  width: .6em;
+}
+
+.ol-legend ul {
+  min-width: 1.5em;
+  min-height: 1.5em;
+  margin: 0 0 2px;
+  padding: 0;
+  list-style: none;
+}
+.ol-control.ol-legend.ol-collapsed ul {
+  display: none;
+}
+.ol-legend ul li.ol-title {
+  text-align: center;
+  font-weight: bold;
+}
+.ol-legend ul li {
+  overflow: hidden;
+  padding: 0 .5em;
+}
+.ol-legend ul li div {
+    display: inline-block;
+  vertical-align: middle;
+}
+
 .ol-notification {
   width: 150%;
   bottom: 0;
