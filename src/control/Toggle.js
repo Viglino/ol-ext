@@ -49,7 +49,7 @@ var ol_control_Toggle = function(options)
 	if (options.bar)
 	{	this.subbar_ = options.bar;
 		this.subbar_.setTarget(this.element);
-		$(this.subbar_.element).addClass("ol-option-bar");
+		this.subbar_.element.classList.add("ol-option-bar");
 	}
 
 	this.setActive (options.active);
@@ -91,7 +91,7 @@ ol_control_Toggle.prototype.getSubBar = function ()
  * @api stable
  */
 ol_control_Toggle.prototype.getDisable = function()
-{	return $("button", this.element).prop("disabled");
+{	return this.element.querySelector("button").disabled = true;
 };
 
 /** Disable the control. If disable, the control will be deactivated too.
@@ -99,7 +99,7 @@ ol_control_Toggle.prototype.getDisable = function()
 */
 ol_control_Toggle.prototype.setDisable = function(b)
 {	if (this.getDisable()==b) return;
-	$("button", this.element).prop("disabled", b);
+	this.element.querySelector("button").disabled = b;
 	if (b && this.getActive()) this.setActive(false);
 
 	this.dispatchEvent({ type:'change:disable', key:'disable', oldValue:!b, disable:b });
@@ -111,7 +111,7 @@ ol_control_Toggle.prototype.setDisable = function(b)
  * @api stable
  */
 ol_control_Toggle.prototype.getActive = function()
-{	return $(this.element).hasClass("ol-active");
+{	return this.element.classList.contains("ol-active");
 };
 
 /** Toggle control state active/deactive
@@ -126,8 +126,8 @@ ol_control_Toggle.prototype.toggle = function()
 */
 ol_control_Toggle.prototype.setActive = function(b)
 {	if (this.getActive()==b) return;
-	if (b) $(this.element).addClass("ol-active");
-	else $(this.element).removeClass("ol-active");
+	if (b) this.element.classList.add("ol-active");
+	else this.element.classList.remove("ol-active");
 	if (this.interaction_) this.interaction_.setActive (b);
 	if (this.subbar_) this.subbar_.setActive(b);
 
