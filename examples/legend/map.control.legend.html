@@ -138,11 +138,14 @@
   map.addLayer(vector);
 
   // Add features
-  vector.getSource().addFeature(new ol.Feature(new ol.geom.Polygon([[[30000, 6300000], [-200000, 6000000], [300000, 6000000], [34000, 6300000]]])));
-  vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[400000, 6000000], [680000, 5900000], [690000, 6100000], [420000, 6200000]])));
-  vector.getSource().addFeature(new ol.Feature(new ol.geom.Point(	[269914, 6248592])));
+  var f = new ol.Feature(new ol.geom.Polygon([[[30000, 6300000], [-200000, 6000000], [300000, 6000000], [34000, 6300000]]]));
+  vector.getSource().addFeature(f);
+  f = new ol.Feature(new ol.geom.LineString([[400000, 6000000], [680000, 5900000], [690000, 6100000], [420000, 6200000]]));
+  vector.getSource().addFeature(f);
+  f0 = new ol.Feature(new ol.geom.Point(	[269914, 6248592]));
+  vector.getSource().addFeature(f0);
   // Add features with style
-  var f = new ol.Feature(new ol.geom.Point(	[500000, 6300000]));
+  f = new ol.Feature(new ol.geom.Point(	[500000, 6300000]));
   f.setStyle (new ol.style.Style({
     image: new ol.style.RegularShape({
       radius: 18,
@@ -189,6 +192,7 @@
     if (e.index >= 0) console.log('You click on row: '+e.title+' ('+e.index+')');
     else console.log('You click on the title: '+e.title);
   });
+  legend.addRow({ title: 'Car placemark', feature: f0 });
 
   // Dsiplay the style on select
   var select = new ol.interaction.Select({ hitTolerance: 3 });
