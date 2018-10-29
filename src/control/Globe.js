@@ -32,29 +32,30 @@ var ol_control_Globe = function(opt_options)
 {	var options = opt_options || {};
 	var self = this;
 
-	// API 
+	// API
 	var element;
-	if (options.target) 
-	{	element = $("<div>");
-		this.panel_ = $(options.target);
+	if (options.target)
+	{	element = document.createElement("div");
+		this.panel_ = options.target;
 	}
 	else
-	{	element = $("<div>").addClass('ol-globe ol-unselectable ol-control');
-		if (/top/.test(options.align)) element.addClass('ol-control-top');
-		if (/right/.test(options.align)) element.addClass('ol-control-right');
-		this.panel_ = $("<div>").addClass("panel")
-					.appendTo(element);
-		this.pointer_ = $("<div>").addClass("ol-pointer")
-					.appendTo(element);
-		
+	{	element = document.createElement("div");
+		element.classList.add('ol-globe', 'ol-unselectable', 'ol-control');
+		if (/top/.test(options.align)) element.classList.add('ol-control-top');
+		if (/right/.test(options.align)) element.classList.add('ol-control-right');
+		this.panel_ = document.createElement("div");
+		this.panel_.classList.add("panel")
+		element.appendChild(this.panel_);
+		this.pointer_ = document.createElement("div");
+		this.pointer_.classList.add("ol-pointer");
+		element.appendChild(this.pointer_);
 	}
 
 	ol_control_Control.call(this,
-	{	element: element.get(0),
+	{	element: element,
 		target: options.target
 	});
 
-	
 
 // http://openlayers.org/en/latest/examples/sphere-mollweide.html ???
 
@@ -62,14 +63,14 @@ var ol_control_Globe = function(opt_options)
 	this.ovmap_ = new ol_Map(
 	{	controls: new ol_Collection(),
 		interactions: new ol_Collection(),
-		target: this.panel_.get(0),
+		target: this.panel_,
 		view: new ol_View
 			({	zoom: 0,
 				center: [0,0]
 			}),
 		layers: options.layers
 	});
-	
+
 	setTimeout (function()
 	{	self.ovmap_.updateSize(); 
 	}, 0);
@@ -135,8 +136,8 @@ ol_control_Globe.prototype.getGlobe = function()
 /** Show/hide the globe
 */
 ol_control_Globe.prototype.show = function(b)
-{	if (b!==false) $(this.element).removeClass("ol-collapsed");
-	else $(this.element).addClass("ol-collapsed");
+{	if (b!==false) this.element.classList.remove("ol-collapsed");
+	else this.element.classList.add("ol-collapsed");
 	this.ovmap_.updateSize();
 }
 
@@ -144,10 +145,10 @@ ol_control_Globe.prototype.show = function(b)
 *	@param {top|bottom-left|right}  align
 */
 ol_control_Globe.prototype.setPosition = function(align)
-{	if (/top/.test(align)) $(this.element).addClass("ol-control-top");
-	else $(this.element).removeClass("ol-control-top");
-	if (/right/.test(align)) $(this.element).addClass("ol-control-right");
-	else $(this.element).removeClass("ol-control-right");
+{	if (/top/.test(align)) this.element.classList.add("ol-control-top");
+	else this.element.classList.remove("ol-control-top");
+	if (/right/.test(align)) this.element.classList.add("ol-control-right");
+	else this.element.classList.remove("ol-control-right");
 }
 
 /** Set the globe center
@@ -156,15 +157,16 @@ ol_control_Globe.prototype.setPosition = function(align)
 */
 ol_control_Globe.prototype.setCenter = function (center, show)
 {	var self = this;
-	this.pointer_.addClass("hidden");
+	this.pointer_.classList.add("hidden");
 	if (center)
 	{	var map = this.ovmap_;
 		var p = map.getPixelFromCoordinate(center);
-	 	if (p) {
-			var h = $(this.element).height();
+		if (p) {
+			var h = this.element.clientHeight;
 			setTimeout(function() {
-				self.pointer_.css({ 'top': Math.min(Math.max(p[1],0),h) , 'left': "50%" } )
-					.removeClass("hidden");
+				self.pointer_.style.top = String(Math.min(Math.max(p[1],0),h)) + 'px';
+				self.pointer_.style.left = "50%";
+				self.pointer_.classList.remove("hidden");
 			}, 800);
 			map.getView().animate({ center: [center[0],0] });
 		}
