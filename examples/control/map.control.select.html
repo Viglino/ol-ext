@@ -1,12 +1,12 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
+<!-- --------------------------------------------------------
 
   Copyright (c) 2017-2018 Jean-Marc VIGLINO,
   released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 
------------------------------------------------------------->
+---------------------------------------------------------- -->
   <title>ol-ext: Select control</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
@@ -64,10 +64,10 @@
     new ol.layer.Tile({
       name: "Natural Earth", 
       minResolution: 306,
-        source: new ol.source.XYZ(
-      {	url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
+      source: new ol.source.XYZ ({
+        url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
         attributions: [ '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' ] 
-        })
+      })
     })
   ]
 
@@ -84,15 +84,13 @@
 
   // GeoJSON layer
   var vectorSource = new ol.source.Vector({
-    url: '../data/fond_guerre.geojson',
-    projection: 'EPSG:3857',
+    url: '../data/departements.geoson',
     format: new ol.format.GeoJSON(),
-    attributions: [ "&copy; <a href='https://www.data.gouv.fr/fr/datasets/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire/'>data.gouv.fr</a>" ],
-    logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+    attributions: [ "&copy; <a href='https://www.insee.fr'>INSEE</a>", "&copy; <a href='https://www.data.gouv.fr/fr/datasets/geofla-r/'>IGN</a>" ],
   });
 
   map.addLayer(new ol.layer.Vector({
-    name: 'Fonds de guerre 14-18',
+    name: 'Departements',
     source: vectorSource,
     style: function(f) {
       return new ol.style.Style({ 
@@ -103,26 +101,19 @@
           stroke: new ol.style.Stroke({ color: "#000", width:1 })  
         }),
         text: new ol.style.Text ({
-          text: f.get('random').toString(),
+          text: f.get('id').toString(),
           font: 'bold 11px sans-serif',
-          textAlign: 'left',
-          textBaseline: 'bottom',
-          offsetX: 3
+        }),
+        stroke: new ol.style.Stroke({
+          width: 1,
+          color: [255,128,0]
+        }),
+        fill: new ol.style.Fill({
+          color: [255,128,0,.2]
         })
       })
     }
   }));
-  var listenerKey = vectorSource.on('change', function(e) {
-    if (vectorSource.getState() == 'ready') {
-      ol.Observable.unByKey(listenerKey);
-      var features = vectorSource.getFeatures();
-      // Set numeric values to test
-      for (var i=0, f; f=features[i]; i++) {
-        f.set('id', i);
-        f.set('random', Math.round(Math.random()*100));
-      }
-    }
-  });
 
   // Select  interaction
   var selecti = new ol.interaction.Select({
@@ -143,13 +134,13 @@
   });
 
   // Select control
-  var selectc = new ol.control.Select({
+  var selectCtrl = new ol.control.Select({
     // target: $(".options").get(0),
     source: vectorSource,
     property: $(".options select").val()
   });
-  map.addControl (selectc);
-  selectc.on('select', function(e) {
+  map.addControl (selectCtrl);
+  selectCtrl.on('select', function(e) {
     console.log(e);
     selecti.getFeatures().clear();
     for (var i=0, f; f=e.features[i]; i++) {
