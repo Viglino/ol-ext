@@ -23,10 +23,12 @@ var ol_control_Bar = function(options) {
   if (!options) options={};
 	var element = document.createElement("div");
       element.classList.add('ol-unselectable', 'ol-control', 'ol-bar');
-  var classes = options.className.split(' ').filter(function(className) {
-    return className.length > 0;
-  });
-	if (options.className) element.classList.add.apply(element.classList, classes);
+	if (options.className) {
+		var classes = options.className.split(' ').filter(function(className) {
+			return className.length > 0;
+		});
+		element.classList.add.apply(element.classList, classes)
+	};
 	if (options.group) element.classList.add('ol-group');
 
 	ol_control_Control.call(this, {
