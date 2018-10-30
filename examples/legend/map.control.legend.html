@@ -187,9 +187,9 @@
   // Define a new legend
   var legend = new ol.control.Legend({ 
     title: 'Legend',
-    style: getFeatureStyle
+    style: getFeatureStyle,
+    collapsed: false
   });
-  legend.show();
   map.addControl(legend);
   legend.on('select', function(e) {
     if (e.index >= 0) console.log('You click on row: '+e.title+' ('+e.index+')');
@@ -234,6 +234,8 @@
       });
     }
   }
+
+	$(window).on("load", function(){ legend.refresh(); vector.changed(); });
 
 </script>
   
