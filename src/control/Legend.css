@@ -12,8 +12,12 @@
   display: none;
 }
 .ol-control.ol-legend.ol-collapsed button {
-  display: block;
+    display: block;
 }
+.ol-control.ol-legend.ol-uncollapsible button {
+  display: none;
+}
+
 .ol-control.ol-legend button.ol-closebox {
   display: block;
   position: absolute;
@@ -23,6 +27,7 @@
   cursor: pointer;
   z-index: 1;
 }
+.ol-control.ol-legend.ol-uncollapsible button.ol-closebox,
 .ol-control.ol-legend.ol-collapsed button.ol-closebox {
   display: none;
 }
@@ -35,6 +40,7 @@
 .ol-control.ol-legend button.ol-closebox:hover:before {
   color: rgba(0,60,136,1);
 }
+.ol-control.ol-legend.ol-uncollapsible .ol-legendImg,
 .ol-control.ol-legend .ol-legendImg {
   position: absolute;
   z-index: -1;
@@ -42,6 +48,10 @@
 .ol-control.ol-legend.ol-collapsed .ol-legendImg {
   display: none;
 }
+.ol-control.ol-legend.ol-uncollapsible .ol-legendImg {
+  display: block  ;
+}
+
 .ol-control.ol-legend .ol-legendImg canvas {
   height: 100%;;
 }
@@ -73,6 +83,9 @@
 }
 .ol-control.ol-legend.ol-collapsed ul {
   display: none;
+}
+.ol-control.ol-legend.ol-uncollapsible ul {
+  display: block;
 }
 .ol-legend ul li.ol-title {
   text-align: center;

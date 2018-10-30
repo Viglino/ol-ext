@@ -9,6 +9,11 @@ import ol_geom_Polygon from 'ol/geom/Polygon'
  * @fires select
  * @param {*} options
  *  @param {String} options.className class of the control
+ *  @param {String} options.title Legend title
+ *  @param {ol.size | undefined} options.size Size of the symboles in the legend, default [40, 25]
+ *  @param {int | undefined} options.margin Size of the symbole's margin, default 10
+ *  @param {boolean | undefined} options.collapsed Specify if attributions should be collapsed at startup. Default is true.
+ *  @param {boolean | undefined} options.collapsible Specify if attributions can be collapsed, default true.
  *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *  @param { ol.style.Style | Array<ol.style.Style> | ol.StyleFunction | undefined	} options.style a style or a style function to use with features
  * @extends {ol_control_Control}
@@ -21,7 +26,9 @@ var ol_control_Legend = function(options) {
     element.className = options.className || "ol-legend";
   } else {
     element.className = (options.className || "ol-legend")
-      +" ol-unselectable ol-control ol-collapsed";
+      +" ol-unselectable ol-control ol-collapsed"
+      +(options.collapsible===false ? ' ol-uncollapsible': '');
+      console.log(element.className)
     // Show on click
     var button = document.createElement('button');
     button.setAttribute('type', 'button');
@@ -52,11 +59,13 @@ var ol_control_Legend = function(options) {
 
   this._rows = [];
 
-  this.set('size', [40, 25]);
-  this.set('margin', 10);
-  this.set('title', options.title);
+  this.set('size', options.size || [40, 25]);
+  this.set('margin', options.margin===0 ? 0 : options.margin || 10);
+  this.set('title', options.title || '');
   // Set the style
   this._style = options.style;
+
+  if (options.collapsed===false) this.show();
 
   this.refresh();
 };
@@ -72,13 +81,19 @@ ol_control_Legend.prototype.setStyle = function(style) {
 };
 
 /** Add a new row to the legend
+ *  * You can provide in options:
+ * - a feature width a style 
+ * - or a feature that will use the legend style function
+ * - or properties ans a geometry type that will use the legend style function
+ * - or a style and a geometry type
  * @param {*} options a list of parameters 
- *  @param {ol.Feature} option.feature a feature to draw
- *  @param {ol.style.Style} option.style the style to use if no feature is provided
- *  @param {ol.geom.GeometryType|string} options.typeGeom type geom to draw with the style
+ *  @param {ol.Feature} options.feature a feature to draw
+ *  @param {ol.style.Style} options.style the style to use if no feature is provided
+ *  @param {*} options.properties properties to use with a style function
+ *  @param {string} options.typeGeom type geom to draw with the style or the properties
  */
 ol_control_Legend.prototype.addRow = function(row) {
-  this._rows.push(row);
+  this._rows.push(row||{});
   this.refresh();
 };
 
@@ -133,7 +148,7 @@ ol_control_Legend.prototype.refresh = function() {
     } else {
       col.style.paddingLeft = width + 'px';
     }
-    col.innerHTML = str;
+    col.innerHTML = str || '';
     row.appendChild(col);
     table.appendChild(row);
   }
@@ -169,11 +184,16 @@ ol_control_Legend.prototype.toggle = function() {
 };
 
 /** Get the image for a style 
- * You can provide a feature or a style and a geometry type
+ * You can provide in options:
+ * - a feature width a style 
+ * - or a feature that will use the legend style function
+ * - or properties ans a geometry type that will use the legend style function
+ * - or a style and a geometry type
  * @param {*} options
- *  @param {ol.Feature} option.feature a feature to draw
- *  @param {ol.style.Style} option.style the style to use if no feature is provided
- *  @param {ol.geom.GeometryType|string} options.typeGeom type geom to draw with the style
+ *  @param {ol.Feature} options.feature a feature to draw
+ *  @param {ol.style.Style} options.style the style to use if no feature is provided
+ *  @param {*} options.properties properties to use with a style function
+ *  @param {string} options.typeGeom type geom to draw with the style or the properties
  * @param {Canvas|undefined} canvas a canvas to draw in
  * @param {int|undefined} row row number to draw in canvas
  * @return {CanvasElement}
@@ -197,12 +217,18 @@ ol_control_Legend.prototype.getStyleImage = function(options, theCanvas, row) {
 
   var typeGeom = options.typeGeom;
   var style;
-  if (options.feature) {
-    style = options.feature.getStyle();
+  var feature = options.feature;
+  if (!feature && options.properties && typeGeom) {
+    console.log(typeGeom)
+    feature = new ol.Feature(new ol.geom[typeGeom]([0,0]));
+    feature.setProperties(options.properties);
+  }
+  if (feature) {
+    style = feature.getStyle();
     if (!style) {
-      style = typeof(this._style) === 'function' ? this._style(options.feature) : this._style || [];
+      style = typeof(this._style) === 'function' ? this._style(feature) : this._style || [];
     }
-    typeGeom = options.feature.getGeometry().getType();
+    typeGeom = feature.getGeometry().getType();
   } else {
     style = options.style;
   }
