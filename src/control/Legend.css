@@ -80,6 +80,7 @@
   margin: 0 0 2px;
   padding: 0;
   list-style: none;
+  display: inline-block;
 }
 .ol-control.ol-legend.ol-collapsed ul {
   display: none;
@@ -98,4 +99,11 @@
 .ol-legend ul li div {
     display: inline-block;
   vertical-align: middle;
+}
+
+.ol-control.ol-legend .ol-legend {
+  display: inline-block;
+}
+.ol-control.ol-legend.ol-collapsed .ol-legend {
+  display: none;
 }

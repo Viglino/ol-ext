@@ -1342,6 +1342,7 @@
   margin: 0 0 2px;
   padding: 0;
   list-style: none;
+  display: inline-block;
 }
 .ol-control.ol-legend.ol-collapsed ul {
   display: none;
@@ -1362,6 +1363,12 @@
   vertical-align: middle;
 }
 
+.ol-control.ol-legend .ol-legend {
+  display: inline-block;
+}
+.ol-control.ol-legend.ol-collapsed .ol-legend {
+  display: none;
+}
 .ol-notification {
   width: 150%;
   bottom: 0;

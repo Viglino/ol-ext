@@ -28,7 +28,6 @@ var ol_control_Legend = function(options) {
     element.className = (options.className || "ol-legend")
       +" ol-unselectable ol-control ol-collapsed"
       +(options.collapsible===false ? ' ol-uncollapsible': '');
-      console.log(element.className)
     // Show on click
     var button = document.createElement('button');
     button.setAttribute('type', 'button');
@@ -219,7 +218,6 @@ ol_control_Legend.prototype.getStyleImage = function(options, theCanvas, row) {
   var style;
   var feature = options.feature;
   if (!feature && options.properties && typeGeom) {
-    console.log(typeGeom)
     feature = new ol.Feature(new ol.geom[typeGeom]([0,0]));
     feature.setProperties(options.properties);
   }
