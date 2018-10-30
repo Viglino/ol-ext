@@ -32,6 +32,7 @@ popup.hide();
  */
 var ol_Overlay_Popup = function (options)
 {	var self = this;
+	options = options || {};
 	
 	if (typeof(options.offsetBox)==='number') this.offsetBox = [options.offsetBox,options.offsetBox,options.offsetBox,options.offsetBox];
 	else this.offsetBox = options.offsetBox;
@@ -55,7 +56,8 @@ var ol_Overlay_Popup = function (options)
 	this.onclose = options.onclose;
 	this.onshow = options.onshow;
 	var button = document.createElement("button");
-			button.classList.add("closeBox", options.closeBox?"hasclosebox":"")
+			button.classList.add("closeBox");
+			if (options.closeBox) button.classList.add('hasclosebox');
 			button.setAttribute('type', 'button');
 			element.insertBefore(button, anchorElement);
 			button.addEventListener("click", function()
