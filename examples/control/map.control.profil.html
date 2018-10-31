@@ -2,19 +2,19 @@
 <html>
 <head>
 <!----------------------------------------------------------
- 
-	Copyright (c) 2013 Jean-Marc VIGLINO, 
+
+	Copyright (c) 2013 Jean-Marc VIGLINO,
 	released under the Beerware license (http://fr.wikipedia.org/wiki/Beerware).
-	
+
 	Affichage d'une carte Geoportail avec OL3
-	
+
 ------------------------------------------------------------>
 	<title>ol-ext: ol control profil</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	
+
 	<meta name="description" content="A profil control for OL3 that draw a profil of a 3D lineString." />
 	<meta name="keywords" content="ol3, profil, control, 3D, Z, altitude, GPX, GPS" />
-	
+
 	<!-- jQuery -->
 	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
 	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
 	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
-	
+
 	<!-- ol-ext -->
     <link rel="stylesheet" href="../../dist/ol-ext.css" />
 	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
@@ -77,10 +77,10 @@
 
 	<div class="options">
 		<h2>Options:</h2>
-		<a target="_new" download="profil.png" class="btn" onclick="$(this).attr('href',profil2.getImage());">Export PNG</a>
+		<a target="_new" download="profil.png" class="btn" onclick="this.setAttribute('href',profil2.getImage());">Export PNG</a>
 		<a target="_new" download="profil.png" class="btn" onclick="profil.toggle();">Toggle profile (programatically)</a>
 	</div>
-	
+
 	<script type="text/javascript">
 	// Layers
 	var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
@@ -100,13 +100,13 @@
 	map.addControl(profil);
 	// New profil outside the map
 	var profil2 = new ol.control.Profil(
-		{	target: $(".options").get(0), 
+		{	target: document.querySelector(".options"),
 			width:400, height:200
 		});
 	map.addControl(profil2);
 
 	// Vector style
-	var style = 
+	var style =
 	[	new ol.style.Style(
 			{	image: new ol.style.RegularShape(
 				{	radius: 10,
@@ -136,10 +136,10 @@
 	});
 	map.addLayer(vector);
 
-	// Show freature profile when loaded
+	// Show feature profile when loaded
 	var pt;
 	source.once('change',function(e)
-	{	if (source.getState() === 'ready') 
+	{	if (source.getState() === 'ready')
 		{	profil.setGeometry(source.getFeatures()[0]);
 			profil2.setGeometry(source.getFeatures()[0], 
 				{	graduation:250,
@@ -155,12 +155,12 @@
 	// Draw a point on the map when mouse fly over profil
 	function drawPoint(e)
 	{	if (!pt) return;
-		if (e.type=="over") 
+		if (e.type=="over")
 		{	// Show point at coord
 			pt.setGeometry(new ol.geom.Point(e.coord));
 			pt.setStyle(null);
 		}
-		else 
+		else
 		{	// hide point
 			pt.setStyle([]);
 		}
