@@ -1368,10 +1368,12 @@ ol.control.Bar = function(options) {
   if (!options) options={};
 	var element = document.createElement("div");
       element.classList.add('ol-unselectable', 'ol-control', 'ol-bar');
-  var classes = options.className.split(' ').filter(function(className) {
-    return className.length > 0;
-  });
-	if (options.className) element.classList.add.apply(element.classList, classes);
+	if (options.className) {
+		var classes = options.className.split(' ').filter(function(className) {
+			return className.length > 0;
+		});
+		element.classList.add.apply(element.classList, classes)
+	};
 	if (options.group) element.classList.add('ol-group');
 	ol.control.Control.call(this, {
     element: element,
@@ -2094,10 +2096,14 @@ ol.control.Compass.prototype.drawCompass_ = function(e)
  */
 ol.control.Disable = function(options)
 {	var options = options||{};
-	var element = $("<div>").addClass((options.calssName||"")+' ol-disable ol-unselectable ol-control');
-	element.css({ top:0, left:0, right:0, bottom:0, "z-index":10000, background:"none", display:"none" });
+	var element = document.createElement("div");
+			element.className = (options.className||""+' ol-disable ol-unselectable ol-control').trim();
+	var stylesOptions = { top:"0px", left:"0px", right:"0px", bottom:"0px", "zIndex":10000, background:"none", display:"none" };
+	Object.keys(stylesOptions).forEach(function(styleKey) {
+		element.style[styleKey] = stylesOptions[styleKey];
+	});
 	ol.control.Control.call(this,
-	{	element: element.get(0)
+	{	element: element
 	});
 }
 ol.inherits(ol.control.Disable, ol.control.Control);
@@ -2106,7 +2112,7 @@ ol.inherits(ol.control.Disable, ol.control.Control);
  * @api stable
  */
 ol.control.Disable.prototype.isOn = function()
-{	return $(this.element).hasClass("ol-disable");
+{	return this.element.classList.contains("ol-disable");
 }
 /** Disable all action on the map
  * @param {bool} b, default false
@@ -2114,10 +2120,10 @@ ol.control.Disable.prototype.isOn = function()
  */
 ol.control.Disable.prototype.disableMap = function(b)
 {	if (b) 
-	{	$(this.element).addClass("ol-enable").show();
+	{	this.element.classList.add("ol-enable").show();
 	}
 	else 
-	{	$(this.element).removeClass("ol-enable").hide();
+	{	this.element.classList.remove("ol-enable").hide();
 	}
 }
 
@@ -2137,11 +2143,16 @@ ol.control.Disable.prototype.disableMap = function(b)
  */
 ol.control.Gauge = function(options)
 {	options = options || {};
-	var element = $("<div>").addClass((options.className||"") + ' ol-gauge ol-unselectable ol-control');
-	this.title_ = $("<span>").appendTo(element);
-	this.gauge_ = $("<button>").attr('type','button').appendTo($("<div>").appendTo(element)).width(0);
+	var element = document.createElement("div");
+			element.className = ((options.className||"") + ' ol-gauge ol-unselectable ol-control').trim();
+	this.title_ = document.createElement("span");
+	element.appendChild(this.title_);
+	this.gauge_ = document.createElement("button");
+	this.gauge_.setAttribute('type','button');
+	element.appendChild(document.createElement("div").appendChild(this.gauge_))
+	this.gauge_.style.width = '0px';
 	ol.control.Control.call(this,
-	{	element: element.get(0),
+	{	element: element,
 		target: options.target
 	});
 	this.setTitle(options.title);
@@ -2153,18 +2164,18 @@ ol.inherits(ol.control.Gauge, ol.control.Control);
 * @param {string} title
 */
 ol.control.Gauge.prototype.setTitle = function(title)
-{	this.title_.html(title||"");
-	if (!title) this.title_.hide();
-	else this.title_.show();
+{	this.title_.innerHTML = title||"";
+	if (!title) this.title_.display = 'none';
+	else this.title_.display = '';
 };
 /** Set/get the gauge value
 * @param {number|undefined} v the value or undefined to get it
 * @return {number} the value
 */
 ol.control.Gauge.prototype.val = function(v)
-{	if (v!==undefined) 
+{	if (v!==undefined)
 	{	this.val_ = v;
-		this.gauge_.css("width", (v/this.get('max')*100)+"%");
+		this.gauge_.style.width = (v/this.get('max')*100)+"%";
 	}
 	return this.val_;
 };
@@ -2833,12 +2844,12 @@ ol.control.Graticule.prototype.drawGraticule_ = function (e)
  * @constructor
  * @extends {ol.control.Control}
  * @fires select
- * @param {Object=} Control options. 
+ * @param {Object=} Control options.
  *	- style {ol.style.Style} Style to use for drawing the grid (stroke and text), default black.
  *	- maxResolution {number} max resolution to display the graticule
  *	- extent {ol.extent} extent of the grid, required
- *	- size {ol.size} number of lines and cols, required 
- *	- margin {number} margin to display text (in px), default 0px 
+ *	- size {ol.size} number of lines and cols, required
+ *	- margin {number} margin to display text (in px), default 0px
  *	- source {ol.source.Vector} source to use for the index, default none (use setIndex to reset the index)
  *	- property {string | function} a property to display in the index or a function that takes a feature and return the name to display in the index, default 'name'.
  *	- sortFeatures {function|undefined} sort function to sort 2 features in the index, default sort on property option
@@ -2860,11 +2871,11 @@ ol.control.GridReference = function(options)
 	if (typeof (options.indexTitle)=='function') this.indexTitle = options.indexTitle;
 	// Set index using the source
 	this.source_ = options.source;
-	if (options.source) 
+	if (options.source)
 	{	this.setIndex(options.source.getFeatures(), options);
 		// reload on ready
 		options.source.once('change',function(e)
-			{	if (options.source.getState() === 'ready') 
+			{	if (options.source.getState() === 'ready')
 				{   this.setIndex(options.source.getFeatures(), options);
 				}
 			}.bind(this));
@@ -2883,7 +2894,7 @@ ol.control.GridReference = function(options)
 			{	font: "bold 14px Arial",
 				stroke: new ol.style.Stroke({ color:"#fff", width:2 }),
 				fill: new ol.style.Fill({ color:"#000" }),
-			}) 
+			})
 		});
 };
 ol.inherits(ol.control.GridReference, ol.control.Control);
@@ -2910,7 +2921,7 @@ ol.control.GridReference.prototype.sortFeatures = function (a,b)
 *	@api
 */
 ol.control.GridReference.prototype.indexTitle = function (f)
-{	return this.getFeatureName(f).charAt(0); 
+{	return this.getFeatureName(f).charAt(0);
 };
 /** Display features in the index
 *	@param { Array<ol.Feature> | ol.Collection<ol.Feature> } features
@@ -2920,47 +2931,71 @@ ol.control.GridReference.prototype.setIndex = function (features)
 	var self = this;
 	if (features.getArray) features = features.getArray();
 	features.sort ( function(a,b) { return self.sortFeatures(a,b); } );
-	var elt = $(this.element).html("");
-	var search = $("<input>").attr('type', 'search')
-					.attr('placeholder', this.get('filterLabel') || 'filter')
-					.on('search keyup', function()
-					{	var v = $(this).val().replace(/^\*/,'');
-						// console.log(v)
-						var r = new RegExp (v, 'i');
-						$('li',ul).each(function()
-						{	var self = $(this);
-							if (self.hasClass('ol-title')) self.show();
-							else
-							{	if (r.test($('.ol-name',self).text())) self.show();
-								else self.hide();
-							}
-						});
-						$("li.ol-title", ul).each(function()
-						{	var nextVisible = $(this).nextAll("li:visible").first()
-							if (nextVisible.length && !nextVisible.hasClass('ol-title')) $(this).show();
-							else $(this).hide();
-						});
-					})
-					.appendTo(elt);
-	var ul = $("<ul>").appendTo(elt);
+	this.element.innerHTML = "";
+	var elt = this.element;
+	var search = document.createElement("input");
+			search.setAttribute('type', 'search');
+			search.setAttribute('placeholder', this.get('filterLabel') || 'filter');
+			var searchKeyupFunction = function()
+			{	var v = this.value.replace(/^\*/,'');
+				// console.log(v)
+				var r = new RegExp (v, 'i');
+				ul.querySelectorAll('li').forEach(function(li)
+				{	var self = li;
+					if (li.classList.contains('ol-title')) li.style.display = '';
+					else
+					{	if (r.test(li.querySelector('.ol-name').textContent)) li.style.display = '';
+						else li.style.display = 'none';
+					}
+				});
+				ul.querySelectorAll("li.ol-title").forEach(function(li)
+				{
+					var nextAll = false;
+					nextAll = [].filter.call(li.parentNode.children, function (htmlElement) {
+					    return (htmlElement.previousElementSibling === li) ? nextAll = true : nextAll;
+					});
+					console.log(nextAll);
+					var nextVisible = nextAll[0];
+					if (nextVisible.length && !nextVisible.classList.contains('ol-title')) li.style.display = '';
+					else li.style.display = 'none';
+				});
+			};
+			search.addEventListener('search', searchKeyupFunction);
+			search.addEventListener('keyup', searchKeyupFunction);
+			elt.appendChild(search);
+	var ul = document.createElement("ul");
+	elt.appendChild(ul);
 	var r, title;
 	for (var i=0, f; f=features[i]; i++)
-	{	r = this.getReference(f.getGeometry().getFirstCoordinate());
-		if (r) 
-		{	var name = this.getFeatureName(f);
-			var c = this.indexTitle(f);
-			if (c != title) 
-			{	$("<li>").addClass('ol-title').text(c).appendTo(ul);
+	{
+		(function(feat) {
+			r = self.getReference(feat.getGeometry().getFirstCoordinate());
+			if (r)
+			{	var name = self.getFeatureName(feat);
+				var c = self.indexTitle(feat);
+				if (c != title)
+				{	li_title = document.createElement("li");
+					li_title.classList.add('ol-title');
+					li_title.textContent = c;
+					ul.appendChild(li_title);
+				}
+				title = c;
+				var li_ref_name = document.createElement("li");
+				var span_name = document.createElement("span");
+						span_name.classList.add("ol-name");
+						span_name.textContent = name;
+				li_ref_name.appendChild(span_name);
+				var span_ref = document.createElement("span");
+						span_ref.classList.add("ol-ref");
+						span_ref.textContent = r;
+				li_ref_name.appendChild(span_ref);
+				var feature = feat;
+				li_ref_name.addEventListener("click", function()
+							{	self.dispatchEvent({ type:"select", feature: feature });
+							})
+				ul.appendChild(li_ref_name);
 			}
-			title = c;
-			$("<li>").append($("<span>").addClass("ol-name").text(name))
-					.append($("<span>").addClass("ol-ref").text(r))
-					.data ('feature', f)
-					.click(function()
-						{	self.dispatchEvent({ type:"select", feature:$(this).data('feature') });
-						})
-					.appendTo(ul);
-		}
+		})(f);
 	}
 };
 /** Get reference for a coord
@@ -2989,7 +3024,7 @@ ol.control.GridReference.prototype.setMap = function (map)
 	ol.control.Control.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 	// Get change (new layer added or removed)
-	if (map) 
+	if (map)
 	{	this._listener = map.on('postcompose', this.drawGrid_.bind(this));
 		if (this.source_) this.setIndex(this.source_.getFeatures());
 	}
@@ -3006,7 +3041,7 @@ ol.control.GridReference.prototype.setStyle = function (style)
 ol.control.GridReference.prototype.getStyle = function ()
 {	return style;
 };
-/** Draw the grid 
+/** Draw the grid
 * @param {ol.event} e postcompose event
 * @private
 */
@@ -3053,7 +3088,7 @@ ol.control.GridReference.prototype.drawGrid_ = function (e)
 		{	letter = String.fromCharCode(65+i);
 			x = p0[0]+i*dx+dx/2;
 			y = p0[1]-spacing;
-			if (y<0) 
+			if (y<0)
 			{	y = spacing;
 				ctx.textBaseline = 'hanging';
 			}
@@ -3061,7 +3096,7 @@ ol.control.GridReference.prototype.drawGrid_ = function (e)
 			ctx.strokeText(letter, x, y);
 			ctx.fillText(letter, x, y);
 			y = p1[1]+spacing;
-			if (y>h) 
+			if (y>h)
 			{	y = h-spacing;
 				ctx.textBaseline = 'alphabetic';
 			}
@@ -3074,7 +3109,7 @@ ol.control.GridReference.prototype.drawGrid_ = function (e)
 		{	y = p0[1]+i*dy+dy/2;
 			ctx.textAlign = 'right';
 			x = p0[0] - spacing;
-			if (x<0) 
+			if (x<0)
 			{	x = spacing;
 				ctx.textAlign = 'left';
 			}
@@ -3082,7 +3117,7 @@ ol.control.GridReference.prototype.drawGrid_ = function (e)
 			ctx.strokeText(i, x, y);
 			ctx.fillText(i, x, y);
 			x = p1[0] + spacing;
-			if (x>w) 
+			if (x>w)
 			{	x = w-spacing;
 				ctx.textAlign = 'right';
 			}
@@ -11821,6 +11856,128 @@ ol.interaction.Transform.prototype.handleUpEvent_ = function(evt) {
   this.drawSketch_();
   this.mode_ = null;
   return false;
+};
+
+/** Interaction rotate
+ * @constructor
+ * @extends {ol.interaction.Interaction}
+ * @fires 
+ * @param {olx.interaction.TransformOptions} options
+ */
+ol.interaction.UndoRedo = function(options) {
+  if (!options) options = {};
+	ol.interaction.Interaction.call(this, {	
+    handleEvent: function(e) { 
+      if (e.type==='pointerdown') this._start = true;
+      return true; 
+    }
+  });
+  this._undoStack = [];
+  this._redoStack = [];
+  this._listener = [];
+  this._record = true;
+};
+ol.inherits(ol.interaction.UndoRedo, ol.interaction.Interaction);
+/** Watch for changes in the map sources
+ * @private
+ */
+ol.interaction.UndoRedo.prototype._watchSources = function() {
+  var map = this.getMap();
+  // Clear listeners
+  this._listener.forEach(function(l) { ol.Observable.unByKey(l); })
+  this._listener = [];
+  // Ges vector layers 
+  function getVectorLayers(layers, init) {
+    if (!init) init = [];
+    layers.forEach(function(l) {
+      if (l instanceof ol.layer.Vector) {
+        init.push(l);
+      } else if (l.getLayers) {
+        getVectorLayers(l.getLayers(), init);
+      }
+    });
+    return init;
+  };
+  // Watch the vector sources in the map 
+  var vectors = getVectorLayers(map.getLayers());
+  vectors.forEach((function(l) {
+    var s = l.getSource();
+    this._listener.push( s.on(['addfeature', 'removefeature'], this._onAddRemove.bind(this)) );
+    this._listener.push( s.on('clear', this._onClear.bind(this)) );
+    this._listener.push( s.on('changefeature', this._onChange.bind(this)) );
+  }).bind(this));
+  // Watch new inserted/removed
+  this._listener.push( map.getLayers().on(['add', 'remove'], this._watchSources.bind(this) ) );
+};
+/**
+ * Remove the interaction from its current map, if any, and attach it to a new
+ * map, if any. Pass `null` to just remove the interaction from the current map.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ol.interaction.UndoRedo.prototype.setMap = function(map) {
+  ol.interaction.Interaction.prototype.setMap.call (this, map);
+  // Watch sources
+  this._watchSources();
+};
+/** A feature is added / removed
+ */
+ol.interaction.UndoRedo.prototype._onAddRemove = function(e) {
+  if (this._record) {
+    this._undoStack.push({type: e.type, source: e.target, feature: e.feature });
+    this._redoStack = [];
+  }
+};
+/** A source is cleared
+ */
+ol.interaction.UndoRedo.prototype._onClear = function(e) {
+  if (this._record) {
+    // ???
+  }
+};
+/** A feature is changed
+ */
+ol.interaction.UndoRedo.prototype._onChange = function(e) {
+  if (this._record && this._start) {
+    this._undoStack.push({type: e.type, source: e.target, feature: e.feature, oldFeature: e.feature.clone()  });
+    this._redoStack = [];
+    this._start = false;
+  }
+};
+ol.interaction.UndoRedo.prototype._handleDo = function(e, undo) {
+  this._record = false;
+  switch (e.type) {
+    case 'addfeature':
+      if (undo) e.source.removeFeature(e.feature);
+      else e.source.addFeature(e.feature);
+      break;
+    case 'removefeature':
+      if (undo) e.source.addFeature(e.feature);
+      else e.source.removeFeature(e.feature);
+      break;
+    case 'changefeature':
+      var geom = e.feature.getGeometry();
+      e.feature.setGeometry(e.oldFeature.getGeometry());
+      e.oldFeature.setGeometry(geom);
+      break;
+  }
+  this._record = true;
+};
+/** Undo last operation
+ */
+ol.interaction.UndoRedo.prototype.undo = function() {
+  var e = this._undoStack.pop();
+  if (!e) return;
+  this._redoStack.push(e);
+  this._handleDo(e, true);
+};
+/** Redo last operation
+ */
+ol.interaction.UndoRedo.prototype.redo = function() {
+  var e = this._redoStack.pop();
+  if (!e) return;
+  this._undoStack.push(e);
+  this._handleDo(e, false);
 };
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
