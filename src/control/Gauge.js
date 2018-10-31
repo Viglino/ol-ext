@@ -18,12 +18,17 @@ import ol_control_Control from 'ol/control/Control'
  */
 var ol_control_Gauge = function(options)
 {	options = options || {};
-	var element = $("<div>").addClass((options.className||"") + ' ol-gauge ol-unselectable ol-control');
-	this.title_ = $("<span>").appendTo(element);
-	this.gauge_ = $("<button>").attr('type','button').appendTo($("<div>").appendTo(element)).width(0);
-	
+	var element = document.createElement("div");
+			element.className = ((options.className||"") + ' ol-gauge ol-unselectable ol-control').trim();
+	this.title_ = document.createElement("span");
+	element.appendChild(this.title_);
+	this.gauge_ = document.createElement("button");
+	this.gauge_.setAttribute('type','button');
+	element.appendChild(document.createElement("div").appendChild(this.gauge_))
+	this.gauge_.style.width = '0px';
+
 	ol_control_Control.call(this,
-	{	element: element.get(0),
+	{	element: element,
 		target: options.target
 	});
 
@@ -37,9 +42,9 @@ ol_inherits(ol_control_Gauge, ol_control_Control);
 * @param {string} title
 */
 ol_control_Gauge.prototype.setTitle = function(title)
-{	this.title_.html(title||"");
-	if (!title) this.title_.hide();
-	else this.title_.show();
+{	this.title_.innerHTML = title||"";
+	if (!title) this.title_.display = 'none';
+	else this.title_.display = '';
 };
 
 /** Set/get the gauge value
@@ -47,9 +52,9 @@ ol_control_Gauge.prototype.setTitle = function(title)
 * @return {number} the value
 */
 ol_control_Gauge.prototype.val = function(v)
-{	if (v!==undefined) 
+{	if (v!==undefined)
 	{	this.val_ = v;
-		this.gauge_.css("width", (v/this.get('max')*100)+"%");
+		this.gauge_.style.width = (v/this.get('max')*100)+"%";
 	}
 	return this.val_;
 };
