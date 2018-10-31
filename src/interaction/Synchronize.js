@@ -22,7 +22,7 @@ var ol_interaction_Synchronize = function(options)
 	ol_interaction_Interaction.call(this,
 		{	handleEvent: function(e)
 				{	if (e.type=="pointermove") { self.handleMove_(e); }
-					return true; 
+					return true;
 				}
 		});
 
@@ -38,15 +38,15 @@ ol_inherits(ol_interaction_Synchronize, ol_interaction_Interaction);
  * @api stable
  */
 ol_interaction_Synchronize.prototype.setMap = function(map)
-{	
+{
 	if (this._listener) {
 		ol_Observable_unByKey(this._listener.center);
 		ol_Observable_unByKey(this._listener.rotation);
 		ol_Observable_unByKey(this._listener.resolution);
-		$(this.getMap().getTargetElement()).off('mouseout', this._listener.mouseout);
+		this.getMap().getTargetElement().removeEventListener('mouseout', this._listener.mouseout);
 	}
 	this._listener = null;
-	
+
 	ol_interaction_Interaction.prototype.setMap.call (this, map);
 
 	if (map) {
@@ -55,7 +55,7 @@ ol_interaction_Synchronize.prototype.setMap = function(map)
 		this._listener.rotation = this.getMap().getView().on('change:rotation', this.syncMaps.bind(this));
 		this._listener.resolution = this.getMap().getView().on('change:resolution', this.syncMaps.bind(this));
 		this._listener.mouseout = this.handleMouseOut_.bind(this);
-		$(this.getMap().getTargetElement()).on('mouseout', this._listener.mouseout);
+		this.getMap().getTargetElement().addEventListener('mouseout', this._listener.mouseout);
 		this.syncMaps();
 	}
 };
@@ -68,26 +68,26 @@ ol_interaction_Synchronize.prototype.syncMaps = function(e)
 	if (map)
 	{	for (var i=0; i<this.maps.length; i++)
 		{	switch (e.type)
-			{	case 'change:rotation': 
+			{	case 'change:rotation':
 					if (this.maps[i].getView().getRotation() != map.getView().getRotation())
 						this.maps[i].getView().setRotation(map.getView().getRotation()); 
 					break;
-				case 'change:center': 
+				case 'change:center':
 					if (this.maps[i].getView().getCenter() != map.getView().getCenter())
 						this.maps[i].getView().setCenter(map.getView().getCenter()); 
 					break;
-				case 'change:resolution': 
+				case 'change:resolution':
 					if (this.maps[i].getView().getResolution() != map.getView().getResolution())
 					{	/* old version prior to 1.19.1
 						this.maps[i].beforeRender ( ol.animation.zoom(
-							{	duration: 250, 
-								resolution: this.maps[i].getView().getResolution() 
+							{	duration: 250,
+								resolution: this.maps[i].getView().getResolution()
 							}));
 						*/
 						this.maps[i].getView().setResolution(map.getView().getResolution());
 					}
 					break;
-				default: 
+				default:
 					this.maps[i].getView().setRotation(map.getView().getRotation());
 					this.maps[i].getView().setCenter(map.getView().getCenter());
 					this.maps[i].getView().setResolution(map.getView().getResolution());
@@ -122,11 +122,12 @@ ol_interaction_Synchronize.prototype.handleMouseOut_ = function(e) {
 */
 ol_Map.prototype.showTarget = function(coord)
 {	if (!this.targetOverlay_)
-	{	var elt = $("<div>").addClass("ol-target");
-		this.targetOverlay_ = new ol_Overlay({ element: elt.get(0) });
+	{	var elt = document.createElement("div");
+				elt.classList.add("ol-target");
+		this.targetOverlay_ = new ol_Overlay({ element: elt });
 		this.targetOverlay_.setPositioning('center-center');
 		this.addOverlay(this.targetOverlay_);
-		elt.parent().addClass("ol-target-overlay");
+		elt.parentElement.classList.add("ol-target-overlay");
 		// hack to render targetOverlay before positioning it
 		this.targetOverlay_.setPosition([0,0]);
 	}
