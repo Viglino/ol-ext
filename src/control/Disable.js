@@ -13,11 +13,15 @@ import ol_control_Control from 'ol/control/Control'
  */
 var ol_control_Disable = function(options)
 {	var options = options||{};
-	var element = $("<div>").addClass((options.calssName||"")+' ol-disable ol-unselectable ol-control');
-	element.css({ top:0, left:0, right:0, bottom:0, "z-index":10000, background:"none", display:"none" });
+	var element = document.createElement("div");
+			element.className = (options.className||""+' ol-disable ol-unselectable ol-control').trim();
+	var stylesOptions = { top:"0px", left:"0px", right:"0px", bottom:"0px", "zIndex":10000, background:"none", display:"none" };
+	Object.keys(stylesOptions).forEach(function(styleKey) {
+		element.style[styleKey] = stylesOptions[styleKey];
+	});
 
 	ol_control_Control.call(this,
-	{	element: element.get(0)
+	{	element: element
 	});
 }
 ol_inherits(ol_control_Disable, ol_control_Control);
@@ -27,7 +31,7 @@ ol_inherits(ol_control_Disable, ol_control_Control);
  * @api stable
  */
 ol_control_Disable.prototype.isOn = function()
-{	return $(this.element).hasClass("ol-disable");
+{	return this.element.classList.contains("ol-disable");
 }
 
 /** Disable all action on the map
@@ -36,10 +40,10 @@ ol_control_Disable.prototype.isOn = function()
  */
 ol_control_Disable.prototype.disableMap = function(b)
 {	if (b) 
-	{	$(this.element).addClass("ol-enable").show();
+	{	this.element.classList.add("ol-enable").show();
 	}
 	else 
-	{	$(this.element).removeClass("ol-enable").hide();
+	{	this.element.classList.remove("ol-enable").hide();
 	}
 }
 
