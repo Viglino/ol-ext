@@ -1,102 +1,102 @@
 ﻿/* github corner */
 a.icss-github-corner,
 a.icss-github-corner-left {
-    font-size: 2.5em;
-    position: fixed;
-    top:0;
-    right: 0;
-    z-index: 1000;
-    color: #fff;
-    background-color: #333;
-    padding: .5em 2em 0;
-    text-align: center;
-    -webkit-transform: rotate(45deg);
-        -ms-transform: rotate(45deg);
-            transform: rotate(45deg);
-    -webkit-transform-origin: 3.9em 3em;
-        -ms-transform-origin: 3.9em 3em;
-            transform-origin: 3.9em 3em;
-    overflow: hidden;
+  font-size: 2.5em;
+  position: fixed;
+  top:0;
+  right: 0;
+  z-index: 1000;
+  color: #fff;
+  background-color: #333;
+  padding: .5em 2em 0;
+  text-align: center;
+  -webkit-transform: rotate(45deg);
+      -ms-transform: rotate(45deg);
+          transform: rotate(45deg);
+  -webkit-transform-origin: 3.9em 3em;
+      -ms-transform-origin: 3.9em 3em;
+          transform-origin: 3.9em 3em;
+  overflow: hidden;
 }
 a.icss-github-corner-left {
-    left: 0;
-    right: auto;
-    -webkit-transform: rotate(-45deg);
-        -ms-transform: rotate(-45deg);
-            transform: rotate(-45deg);
-    -webkit-transform-origin: 1em 3.1em;
-        -ms-transform-origin: 1em 3.1em;
-            transform-origin: 1em 3.1em;
+  left: 0;
+  right: auto;
+  -webkit-transform: rotate(-45deg);
+      -ms-transform: rotate(-45deg);
+          transform: rotate(-45deg);
+  -webkit-transform-origin: 1em 3.1em;
+      -ms-transform-origin: 1em 3.1em;
+          transform-origin: 1em 3.1em;
 }
 a.icss-github-corner:hover i,
 a.icss-github-corner-left:hover i{
-    -webkit-animation: vertical 2s ease;
-            animation: vertical 2s ease;
+  -webkit-animation: vertical 2s ease;
+          animation: vertical 2s ease;
 }
 
 a.icss-github-corner i,
 a.icss-github-corner-left i,
 i.icss-github-corner {
-    color: #fff;
-    position: relative;
-    display:inline-block;
-    font-style: normal;
-    background-color:currentColor;
-    -webkit-box-sizing: border-box;
-            box-sizing: border-box;
-    vertical-align: middle;
-    width: .8em;
-    height: .6em;
-    -webkit-border-radius: 45% 45% 45% 45% / 50%;
-            border-radius: 45% 45% 45% 45% / 50%;
-    background-color: currentColor;
-    -webkit-box-shadow: 0 .35em 0 -.2em, 
-        0 .38em 0 -.2em,
-        0 .41em 0 -.2em,
-        0 .44em 0 -.2em,
-        0 .47em 0 -.2em;
-            box-shadow: 0 .35em 0 -.2em, 
-        0 .38em 0 -.2em,
-        0 .41em 0 -.2em,
-        0 .44em 0 -.2em,
-        0 .47em 0 -.2em;
-    margin: .12em .1em .23em;
+  color: #fff;
+  position: relative;
+  display:inline-block;
+  font-style: normal;
+  background-color:currentColor;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  vertical-align: middle;
+  width: .8em;
+  height: .6em;
+  -webkit-border-radius: 45% 45% 45% 45% / 50%;
+          border-radius: 45% 45% 45% 45% / 50%;
+  background-color: currentColor;
+  -webkit-box-shadow: 0 .35em 0 -.2em, 
+      0 .38em 0 -.2em,
+      0 .41em 0 -.2em,
+      0 .44em 0 -.2em,
+      0 .47em 0 -.2em;
+          box-shadow: 0 .35em 0 -.2em, 
+      0 .38em 0 -.2em,
+      0 .41em 0 -.2em,
+      0 .44em 0 -.2em,
+      0 .47em 0 -.2em;
+  margin: .12em .1em .23em;
 }
 a.icss-github-corner i:before,
 a.icss-github-corner-left i:before,
 i.icss-github-corner:before {
-    content: "";
-    border-width: 0; 
-    position: absolute;
-    -webkit-box-sizing: border-box;
-            box-sizing: border-box;
-    border-width: .15em .15em;
-    border-style: solid;
-    -webkit-border-radius: 0.02em 60% 100% 80%;
-            border-radius: 0.02em 60% 100% 80%;
-    left: 0;
-    top: -.07em;
-    -webkit-transform: rotate(20deg);
-        -ms-transform: rotate(20deg);
-            transform: rotate(20deg);
+  content: "";
+  border-width: 0; 
+  position: absolute;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  border-width: .15em .15em;
+  border-style: solid;
+  -webkit-border-radius: 0.02em 60% 100% 80%;
+          border-radius: 0.02em 60% 100% 80%;
+  left: 0;
+  top: -.07em;
+  -webkit-transform: rotate(20deg);
+      -ms-transform: rotate(20deg);
+          transform: rotate(20deg);
 }
 a.icss-github-corner i:after,
 a.icss-github-corner-left i:after,
 i.icss-github-corner:after {
-    content: "";
-    border-width: 0; 
-    position: absolute;
-    -webkit-box-sizing: border-box;
-            box-sizing: border-box;
-    border-width: .15em .15em;
-    border-style: solid;
-    -webkit-border-radius: 0.02em 80% 100% 60%;
-            border-radius: 0.02em 80% 100% 60%;
-    left: .5em;
-    top: -.07em;
-    -webkit-transform: rotate(65deg);
-        -ms-transform: rotate(65deg);
-            transform: rotate(65deg);
+  content: "";
+  border-width: 0; 
+  position: absolute;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  border-width: .15em .15em;
+  border-style: solid;
+  -webkit-border-radius: 0.02em 80% 100% 60%;
+          border-radius: 0.02em 80% 100% 60%;
+  left: .5em;
+  top: -.07em;
+  -webkit-transform: rotate(65deg);
+      -ms-transform: rotate(65deg);
+          transform: rotate(65deg);
 }
 @-webkit-keyframes vertical {
 	0%{-webkit-transform:translate(0,-3px);transform:translate(0,-3px)}
@@ -117,62 +117,62 @@ i.icss-github-corner:after {
 	22%,100%{-webkit-transform:translate(0,0);transform:translate(0,0)}
 }
 /**/
-body 
-{	font-family: 'Lucida Grande',Verdana,Geneva,Lucida,Arial,Helvetica,sans-serif;
+body {
+  font-family: 'Lucida Grande',Verdana,Geneva,Lucida,Arial,Helvetica,sans-serif;
 	font-size: 16px;
 }
-a, i, b
-{	color: #337ab7;
+a, i, b {
+  color: #337ab7;
 	text-decoration: none;
 }
 .ol-control.ol-bar .ol-control button i {
-    color: #fff;
+  color: #fff;
 }
-a:hover
-{	text-decoration: underline;
+a:hover {
+  text-decoration: underline;
 }
-a.title
-{	text-decoration: none;
+a.title {
+  text-decoration: none;
 }
-h1 
-{	background: #1f6b75 url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAACE1BMVEX///8A//8AgICA//8AVVVAQID///8rVVVJtttgv98nTmJ2xNgkW1ttyNsmWWZmzNZYxM4gWGgeU2JmzNNr0N1Rwc0eU2VXxdEhV2JqytQeVmMhVmNoydUfVGUgVGQfVGQfVmVqy9hqy9dWw9AfVWRpydVry9YhVmMgVGNUw9BrytchVWRexdGw294gVWQgVmUhVWPd4N6HoaZsy9cfVmQgVGRrytZsy9cgVWQgVWMgVWRsy9YfVWNsy9YgVWVty9YgVWVry9UgVWRsy9Zsy9UfVWRsy9YgVWVty9YgVWRty9Vsy9aM09sgVWRTws/AzM0gVWRtzNYgVWRuy9Zsy9cgVWRGcHxty9bb5ORbxdEgVWRty9bn6OZTws9mydRfxtLX3Nva5eRix9NFcXxOd4JPeINQeIMiVmVUws9Vws9Vw9BXw9BYxNBaxNBbxNBcxdJexdElWWgmWmhjyNRlx9IqXGtoipNpytVqytVryNNrytZsjZUuX210k5t1y9R2zNR3y9V4lp57zth9zdaAnKOGoaeK0NiNpquV09mesrag1tuitbmj1tuj19uktrqr2d2svcCu2d2xwMO63N+7x8nA3uDC3uDFz9DK4eHL4eLN4eIyYnDX5OM5Z3Tb397e4uDf4uHf5uXi5ePi5+Xj5+Xk5+Xm5+Xm6OY6aHXQ19fT4+NfhI1Ww89gx9Nhx9Nsy9ZWw9Dpj2abAAAAWnRSTlMAAQICAwQEBgcIDQ0ODhQZGiAiIyYpKywvNTs+QklPUlNUWWJjaGt0dnd+hIWFh4mNjZCSm6CpsbW2t7nDzNDT1dje5efr7PHy9PT29/j4+Pn5+vr8/f39/f6DPtKwAAABTklEQVR4Xr3QVWPbMBSAUTVFZmZmhhSXMjNvkhwqMzMzMzPDeD+xASvObKePPa+ffHVl8PlsnE0+qPpBuQjVJjno6pZpSKXYl7/bZyFaQxhf98hHDKEppwdWIW1frFnrxSOWHFfWesSEWC6R/P4zOFrix3TzDFLlXRTR8c0fEEJ1/itpo7SVO9Jdr1DVxZ0USyjZsEY5vZfiiAC0UoTGOrm9PZLuRl8X+Dq1HQtoFbJZbv61i+Poblh/97TC7n0neCcK0ETNUrz1/xPHf+DNAW9Ac6t8O8WH3Vp98f5lCaYKAOFZMLyHL4Y0fe319idMNgMMp+zWVSybUed/+/h7I4wRAG1W6XDy4XmjR9HnzvDRZXUAYDFOhC1S/Hh+fIXxen+eO+AKqbs+wAo30zDTDvDxKoJN88sjUzDFAvBzEUGFsnADoIvAJzoh2BZ8sner+Ke/vwECuQAAAABJRU5ErkJggg==") no-repeat scroll 10px center;
+h1 {
+  background: #1f6b75 url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAACE1BMVEX///8A//8AgICA//8AVVVAQID///8rVVVJtttgv98nTmJ2xNgkW1ttyNsmWWZmzNZYxM4gWGgeU2JmzNNr0N1Rwc0eU2VXxdEhV2JqytQeVmMhVmNoydUfVGUgVGQfVGQfVmVqy9hqy9dWw9AfVWRpydVry9YhVmMgVGNUw9BrytchVWRexdGw294gVWQgVmUhVWPd4N6HoaZsy9cfVmQgVGRrytZsy9cgVWQgVWMgVWRsy9YfVWNsy9YgVWVty9YgVWVry9UgVWRsy9Zsy9UfVWRsy9YgVWVty9YgVWRty9Vsy9aM09sgVWRTws/AzM0gVWRtzNYgVWRuy9Zsy9cgVWRGcHxty9bb5ORbxdEgVWRty9bn6OZTws9mydRfxtLX3Nva5eRix9NFcXxOd4JPeINQeIMiVmVUws9Vws9Vw9BXw9BYxNBaxNBbxNBcxdJexdElWWgmWmhjyNRlx9IqXGtoipNpytVqytVryNNrytZsjZUuX210k5t1y9R2zNR3y9V4lp57zth9zdaAnKOGoaeK0NiNpquV09mesrag1tuitbmj1tuj19uktrqr2d2svcCu2d2xwMO63N+7x8nA3uDC3uDFz9DK4eHL4eLN4eIyYnDX5OM5Z3Tb397e4uDf4uHf5uXi5ePi5+Xj5+Xk5+Xm5+Xm6OY6aHXQ19fT4+NfhI1Ww89gx9Nhx9Nsy9ZWw9Dpj2abAAAAWnRSTlMAAQICAwQEBgcIDQ0ODhQZGiAiIyYpKywvNTs+QklPUlNUWWJjaGt0dnd+hIWFh4mNjZCSm6CpsbW2t7nDzNDT1dje5efr7PHy9PT29/j4+Pn5+vr8/f39/f6DPtKwAAABTklEQVR4Xr3QVWPbMBSAUTVFZmZmhhSXMjNvkhwqMzMzMzPDeD+xASvObKePPa+ffHVl8PlsnE0+qPpBuQjVJjno6pZpSKXYl7/bZyFaQxhf98hHDKEppwdWIW1frFnrxSOWHFfWesSEWC6R/P4zOFrix3TzDFLlXRTR8c0fEEJ1/itpo7SVO9Jdr1DVxZ0USyjZsEY5vZfiiAC0UoTGOrm9PZLuRl8X+Dq1HQtoFbJZbv61i+Poblh/97TC7n0neCcK0ETNUrz1/xPHf+DNAW9Ac6t8O8WH3Vp98f5lCaYKAOFZMLyHL4Y0fe319idMNgMMp+zWVSybUed/+/h7I4wRAG1W6XDy4XmjR9HnzvDRZXUAYDFOhC1S/Hh+fIXxen+eO+AKqbs+wAo30zDTDvDxKoJN88sjUzDFAvBzEUGFsnADoIvAJzoh2BZ8sner+Ke/vwECuQAAAABJRU5ErkJggg==") no-repeat scroll 10px center;
 	color: #fff;
 	font-size: 1.5em;
 	padding: 0.5em 50px;
 	margin:0;
 }
-h2
-{	color: #337ab7;
+h2 {
+  color: #337ab7;
 	font-size:1.1em;
 	margin: 0.5em 0;
 }
 
-.info
-{	background:#f5f5f5;
+.info {
+  background:#f5f5f5;
 	padding:0.5em;
 	margin: 1em 0;
 }
-.info ul
-{	margin:0;
+.info ul {
+  margin:0;
 }
 
-#map
-{	float:left;
+#map {
+  float:left;
 	margin-right:1em;
 	background:#ddd;
 }
 
-.ol-attribution img
-{	vertical-align:middle;
+.ol-attribution img {
+  vertical-align:middle;
 }
 
-.layerSwitcher
-{	display:inline-block;
+.layerSwitcher {
+  display:inline-block;
 	background:#cdf;
 	padding:0.5em;
 }
-.btn
-{	color:#fff;
+.btn {
+  color:#fff;
 	background:#369;
 	padding:0.5em;
 	text-decoration:none;
@@ -182,65 +182,74 @@ h2
 }
 
 .block,
-.options 
-{	display: table;
+.options {
+  display: table;
 	margin: 0.5em;
 	position: relative;
 	z-index: 1;
 	margin:1em;
 }
-.options 
-{	background: #def;
+.options {
+  background: #def;
 	padding: 0.5em;
 }
-.options ul
-{	list-style: none;
+.options ul {
+  list-style: none;
 	padding-left: 0.5em;
 }
 
 i[class*="icss-"] {
-    position: relative;
-    display:inline-block;
-    font-style: normal;
-    background-color:currentColor;
-    box-sizing: border-box;
-	vertical-align: middle;
-	font-size: 1.5em;
+  position: relative;
+  display:inline-block;
+  font-style: normal;
+  background-color:currentColor;
+  box-sizing: border-box;
+  vertical-align: middle;
+  font-size: 1.5em;
 }
 i[class*="icss-"]:before, 
 i[class*="icss-"]:after {
-    content: "";
-    border-width: 0; 
-    position: absolute;
+  content: "";
+  border-width: 0; 
+  position: absolute;
 }
 i.icss-book {
-    width:1em;
-    height:.8em;
-    background-color: transparent; 
-    margin: 0 .03em .08em 0;
+  width:1em;
+  height:.8em;
+  background-color: transparent; 
+  margin: 0 .03em .08em 0;
 }
 i.icss-book:before {
-    height: .8em;
-    width: 0.7em;
-    box-shadow: inset 0 0 0 0.15em, 
-        inset 0 -.48em,
-        .07em .07em;
-    border: 0.07em solid transparent;
-    border-width: 0 0.07em .07em 0;
-    border-radius: .05em .15em .1em .1em / .05em .05em .1em .05em;
-    transform: skewX(-20deg);
-    left: 0.15em;
+  height: .8em;
+  width: 0.7em;
+  box-shadow: inset 0 0 0 0.15em, 
+      inset 0 -.48em,
+      .07em .07em;
+  border: 0.07em solid transparent;
+  border-width: 0 0.07em .07em 0;
+  border-radius: .05em .15em .1em .1em / .05em .05em .1em .05em;
+  transform: skewX(-20deg);
+  left: 0.15em;
 }
 i.icss-book:after {
-    width: .2em;
-    height: .2em;
-    background-color: transparent;
-    border: 0.05em solid currentColor;
-    border-color: currentColor transparent transparent currentColor;
-    border-radius: 50%;
-    transform: rotate(-45deg);
-    top: 0.67em;
-    left: .018em;
-    box-shadow: .13em -.15em 0 -.05em,
-        .51em -.33em 0 -.05em;
+  width: .2em;
+  height: .2em;
+  background-color: transparent;
+  border: 0.05em solid currentColor;
+  border-color: currentColor transparent transparent currentColor;
+  border-radius: 50%;
+  transform: rotate(-45deg);
+  top: 0.67em;
+  left: .018em;
+  box-shadow: .13em -.15em 0 -.05em,
+      .51em -.33em 0 -.05em;
+}
+.experimental {
+  color:#fff; 
+  background: #f91; 
+  padding:.2em .5em;
+  display: inline-block;
+  -webkit-transform: rotate(-5deg);
+  transform: rotate(-5deg);
+  margin: -1em 0;
 }
