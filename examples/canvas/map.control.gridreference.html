@@ -2,10 +2,10 @@
 <html>
 <head>
 <!----------------------------------------------------------
- 
+
 	Copyright (c) 2017-2018 Jean-Marc VIGLINO,
 	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
+
 ------------------------------------------------------------>
 	<title>ol-ext: Grid reference control</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
 	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
 	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
-	
+
 	<!-- ol-ext -->
     <link rel="stylesheet" href="../../dist/ol-ext.css" />
 	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
@@ -51,7 +51,7 @@
 			left: 5px;
 			color: #aaa;
 		}
-		
+
 	</style>
 
 </head>
@@ -63,7 +63,7 @@
 	</a>
 
 	<div class="info">
-		Display a grid reference on the map and an index associated with. 
+		Display a grid reference on the map and an index associated with.
 		<ul>
 			<li>
 				You have to define the <i>extent</i> and the <i>size</i> of the grid.
@@ -75,11 +75,10 @@
 				You can define a <i>property</i> (or a function to retrieve it) that will be displayed in the index.
 			</li>
 			<li>
-				You can customize a <i>sortFeature</i> function and the <i>indexTitle</i> 
+				You can customize a <i>sortFeature</i> function and the <i>indexTitle</i>
 				that will be displayed in the index.
 			</li>
 		</ul>
-		<i>ol.control.GridReference</i> requires jQuery.
 	</div>
 
 	<!-- DIV pour la carte -->
@@ -92,16 +91,16 @@
 		<div></div>
 		<p>Click on the index to locate the features!</p>
 	</div>
-	
+
 	<script type="text/javascript">
 	// Layers
 	var layers = [
 		new ol.layer.Tile({
-			name: "Natural Earth", 
+			name: "Natural Earth",
 			minResolution: 306,
     		source: new ol.source.XYZ(
 			{	url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
-				attributions: [ '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' ] 
+				attributions: [ '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' ]
     		})
 		})
 	]
@@ -123,7 +122,7 @@
 		projection: 'EPSG:3857',
 		format: new ol.format.GeoJSON(),
 		attributions: [ "&copy; <a href='https://www.data.gouv.fr/fr/datasets/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire/'>data.gouv.fr</a>" ],
-		logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+		logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg"
 	});
 
 	map.addLayer(new ol.layer.Vector(
@@ -132,7 +131,7 @@
 		style: new ol.style.Style({ image: new ol.style.Icon({ src:"../data/camera.png", scale: 0.8 }) })
 	}));
 
-	// Control Select 
+	// Control Select
 	var select = new ol.interaction.Select({});
 	map.addInteraction(select);
 
@@ -142,25 +141,25 @@
 	function setControl()
 	{	if (ref) map.removeControl(ref);
 		// Sort by region
-		var sort, title; 
-		if ($("#region").prop('checked'))
+		var sort, title;
+		if (document.querySelector("#region").checked)
 		{	// Sort by region + name
-			sort = function(a,b) 
+			sort = function(a,b)
 				{	var c1 = a.get('region')+" "+this.getFeatureName(a);
-					var c2 = b.get('region')+" "+this.getFeatureName(b); 
+					var c2 = b.get('region')+" "+this.getFeatureName(b);
 					return (c1==c2) ? 0 : (c1<c2) ? -1 : 1;
 				}
 			// display region as title
-			title = function(f) 
-				{	return f.get('region'); 
+			title = function(f)
+				{	return f.get('region');
 				}
 		}
 
 		// New control
 		ref = new ol.control.GridReference(
-		{	extent: [ -550000, 5250000, 850000, 6650000 ], 
+		{	extent: [ -550000, 5250000, 850000, 6650000 ],
 			size: [10,10],
-			target: $(".options div").get(0),
+			target: document.querySelector(".options div"),
 			source: vectorSource,
 			property: "commune",
 			sortFeatures: sort,
@@ -175,7 +174,7 @@
 				var p = e.feature.getGeometry().getFirstCoordinate();
 				/*
 				var ex = map.getView().calculateExtent(map.getSize());
-				if (!ol.extent.containsCoordinate(ex, p)) 
+				if (!ol.extent.containsCoordinate(ex, p))
 				{	map.getView().setCenter(p);
 				}
 				*/
@@ -189,6 +188,6 @@
 
 
 	</script>
-	
+
 </body>
 </html>
