@@ -23,11 +23,11 @@ var ol_interaction_DropFile = function(options)
 {	options = options||{};
 
 	ol_interaction_DragAndDrop.call(this, {});
-	
+
 	var zone = options.zone || document;
-	$(zone).on('dragenter', this.onstop );
-	$(zone).on('dragover', this.onstop );
-	$(zone).on('dragleave', this.onstop );
+	zone.addEventListener('dragenter', this.onstop );
+	zone.addEventListener('dragover', this.onstop );
+	zone.addEventListener('dragleave', this.onstop );
 
 	// Options
 	this.formatConstructors_ = options.formatConstructors || [ ol_format_GPX, ol_format_GeoJSON, ol_format_IGC, ol_format_KML, ol_format_TopoJSON ];
@@ -35,11 +35,11 @@ var ol_interaction_DropFile = function(options)
 	this.accept_ = options.accept || ["gpx","json","geojson","igc","kml","topojson"];
 
 	var self = this;
-	$(zone).on('drop', function(e){ return self.ondrop(e.originalEvent); });
+	zone.addEventListener('drop', function(e){ return self.ondrop(e);});
 };
 ol_inherits(ol_interaction_DropFile, ol_interaction_DragAndDrop);
 
-/** Set the map 
+/** Set the map
 */
 ol_interaction_DropFile.prototype.setMap = function(map)
 {	ol_interaction_Interaction.prototype.setMap.call(this, map);
@@ -53,22 +53,21 @@ ol_interaction_DropFile.prototype.onstop = function(e)
 	return false;
 }
 
-/** Do somthing when over
+/** Do something when over
 */
 ol_interaction_DropFile.prototype.ondrop = function(e)
-{	if (e.dataTransfer && e.dataTransfer.files.length)
+{	e.preventDefault();
+	if (e.dataTransfer && e.dataTransfer.files.length)
 	{	var self = this;
-		e.preventDefault();
-		e.stopPropagation();
 		// fetch FileList object
 		var files = e.dataTransfer.files; // e.originalEvent.target.files ?
 		// process all File objects
 		var file;
 		var pat = /\.([0-9a-z]+)(?=[?#])|(\.)(?:[\w]+)$/;
-		for (var i=0; file=files[i]; i++) 
+		for (var i=0; file=files[i]; i++)
 		{	var ex = file.name.match(pat)[0];
 			self.dispatchEvent({ type:'loadstart', file: file, filesize: file.size, filetype: file.type, fileextension: ex, projection: projection, target: self });
-						
+
 			// Load file
 			features = [];
 			var reader = new FileReader();
@@ -77,21 +76,21 @@ ol_interaction_DropFile.prototype.ondrop = function(e)
 
 			if (!projection) return;
 			function tryReadFeatures (format, result, options)
-			{	try 
+			{	try
 				{	return format.readFeatures(result, options);
 				} catch (e) {}
 			}
 			var theFile = file;
 			reader.onload = function(e)
 			{	var result = e.target.result;
-				
+
 				var features = [];
 				var i, ii;
-				for (i = 0, ii = formatConstructors.length; i < ii; ++i) 
+				for (i = 0, ii = formatConstructors.length; i < ii; ++i)
 				{	var formatConstructor = formatConstructors[i];
 					var format = new formatConstructor();
 					features = tryReadFeatures(format, result, { featureProjection: projection });
-					if (features && features.length > 0) 
+					if (features && features.length > 0)
 					{	self.dispatchEvent({ type:'addfeatures', features: features, file: theFile, projection: projection, target: self });
 						self.dispatchEvent({ type:'loadend', features: features, file: theFile, projection: projection, target: self });
 						return;
