@@ -12134,13 +12134,6 @@ ol.interaction.Modify.prototype.getModifiedFeatures = function() {
   for (var i in featuresById) features.push(featuresById[i]);
   return features;
 };
-(function() {
-  var cou = ol.interaction.Modify.prototype.createOrUpdateVertexFeature_
-  ol.interaction.Modify.prototype.createOrUpdateVertexFeature_ = function(coordinates) {
-    console.log('START',this.modified_)
-    cou.call(this, coordinates);
-  }
-})();
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)

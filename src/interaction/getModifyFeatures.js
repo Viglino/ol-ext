@@ -14,11 +14,3 @@ ol_interaction_Modify.prototype.getModifiedFeatures = function() {
   for (var i in featuresById) features.push(featuresById[i]);
   return features;
 };
-
-(function() {
-  var cou = ol_interaction_Modify.prototype.createOrUpdateVertexFeature_
-  ol_interaction_Modify.prototype.createOrUpdateVertexFeature_ = function(coordinates) {
-    console.log('START',this.modified_)
-    cou.call(this, coordinates);
-  }
-})();
