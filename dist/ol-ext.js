@@ -4200,38 +4200,53 @@ ol.control.Profil = function(opt_options)
 	this.info = options.info || ol.control.Profil.prototype.info;
 	var self = this;
 	var element;
-	if (options.target) 
-	{	element = $("<div>").addClass(options.className || "ol-profil");
+	if (options.target)
+	{	element = document.createElement("div");
+		element.classList.add(options.className || "ol-profil");
 	}
 	else
-	{	element = $("<div>").addClass((options.className || 'ol-profil') +' ol-unselectable ol-control ol-collapsed');
-		this.button = $("<button>")
-					.attr('type','button')
-					.on("click touchstart", function(e)
-					{	self.toggle();
-						e.preventDefault();
-					})
-					.appendTo(element);
-    }
-	var div = $("<div>").addClass("ol-inner").appendTo(element);
-	div = $("<div>").css("position","relative").appendTo(div);
+	{	element = document.createElement("div");
+		element.className = ((options.className || 'ol-profil') +' ol-unselectable ol-control ol-collapsed').trim();
+		this.button = document.createElement("button");
+		this.button.setAttribute('type','button');
+		var click_touchstart_function = function(e)
+		{	self.toggle();
+			e.preventDefault();
+		};
+		this.button.addEventListener("click", click_touchstart_function);
+		this.button.addEventListener("touchstart", click_touchstart_function);
+		element.appendChild(this.button);
+	}
+	var div_inner = document.createElement("div");
+			div_inner.classList.add("ol-inner");
+			element.appendChild(div_inner);
+	var div = document.createElement("div");
+			div.style.position = "relative";
+			div_inner.appendChild(div);
 	var ratio = this.ratio = 2;
 	this.canvas_ = document.createElement('canvas');
 	this.canvas_.width = (options.width || 300)*ratio;
 	this.canvas_.height = (options.height || 150)*ratio;
-	$(this.canvas_).css({
-		"transform":"scale(0.5,0.5)", "transform-origin":"0 0",
-		"-ms-transform":"scale(0.5,0.5)", "-ms-transform-origin":"0 0",
-		"-webkit-transform":"scale(0.5,0.5)", "-webkit-transform-origin":"0 0",
-		"transform":"scale(0.5,0.5)", "transform-origin":"0 0"
+	var styles = {
+		"msTransform":"scale(0.5,0.5)", "msTransformOrigin":"0 0",
+		"webkitTransform":"scale(0.5,0.5)", "webkitTransformOrigin":"0 0",
+		"mozTransform":"scale(0.5,0.5)", "mozTransformOrigin":"0 0",
+		"transform":"scale(0.5,0.5)", "transformOrigin":"0 0"
+	};
+	Object.keys(styles).forEach(function(style) {
+		if (style in self.canvas_.style) {
+			self.canvas_.style[style] = styles[style];
+		}
 	});
-	$("<div>").appendTo(div)
-		.width (this.canvas_.width/ratio)
-		.height (this.canvas_.height/ratio)
-		.append(this.canvas_)
-		.on("click mousemove", function(e){ self.onMove(e); });
+	var div_to_canvas = document.createElement("div");
+	div.appendChild(div_to_canvas);
+	div_to_canvas.style.width = this.canvas_.width/ratio + "px";
+	div_to_canvas.style.height = this.canvas_.height/ratio + "px";
+	div_to_canvas.appendChild(this.canvas_);
+	div_to_canvas.addEventListener("click", function(e){ self.onMove(e); });
+	div_to_canvas.addEventListener("mousemove", function(e){ self.onMove(e); });
 	ol.control.Control.call(this,
-	{	element: element.get(0),
+	{	element: element,
 		target: options.target
 	});
 	// Offset in px
@@ -4239,24 +4254,50 @@ ol.control.Profil = function(opt_options)
 	if (!this.info.ytitle) this.margin_.left -= 20*ratio;
 	if (!this.info.xtitle) this.margin_.bottom -= 20*ratio;
 	// Cursor
-	this.bar_ = $("<div>").addClass("ol-profilbar")
-			.css({top:(this.margin_.top/ratio)+"px", height:(this.canvas_.height-this.margin_.top-this.margin_.bottom)/ratio+"px" })
-			.appendTo(div);
-	this.cursor_ = $("<div>").addClass("ol-profilcursor")
-			.appendTo(div);
-	this.popup_ = $("<div>").addClass("ol-profilpopup")
-			.appendTo(this.cursor_);
+	this.bar_ = document.createElement("div");
+	this.bar_.classList.add("ol-profilbar");
+	this.bar_.style.top = (this.margin_.top/ratio)+"px";
+	this.bar_.style.height = (this.canvas_.height-this.margin_.top-this.margin_.bottom)/ratio+"px";
+	div.appendChild(this.bar_);
+	this.cursor_ = document.createElement("div");
+	this.cursor_.classList.add("ol-profilcursor");
+	div.appendChild(this.cursor_);
+	this.popup_ = document.createElement("div");
+	this.popup_.classList.add("ol-profilpopup");
+	this.cursor_.appendChild(this.popup_);
 	// Track information
-	var t = $("<table cellpadding='0' cellspacing='0'>").appendTo(div).width(this.canvas_.width/ratio);
-	var tr = $("<tr>").addClass("track-info").appendTo(t);
-	$("<td>").html((this.info.zmin||"Zmin")+': <span class="zmin">').appendTo(tr);
-	$("<td>").html((this.info.zmax||"Zmax")+': <span class="zmax">').appendTo(tr);
-	$("<td>").html((this.info.distance||"Distance")+': <span class="dist">').appendTo(tr);
-	$("<td>").html((this.info.time||"Time")+': <span class="time">').appendTo(tr);
-	tr = $("<tr>").addClass("point-info").appendTo(t);
-	$("<td>").html((this.info.altitude||"Altitude")+': <span class="z">').appendTo(tr);
-	$("<td>").html((this.info.distance||"Distance")+': <span class="dist">').appendTo(tr);
-	$("<td>").html((this.info.time||"Time")+': <span class="time">').appendTo(tr);
+	var t = document.createElement("table");
+			t.cellPadding = '0';
+			t.cellSpacing = '0';
+			t.style.clientWidth = this.canvas_.width/ratio + "px";
+		div.appendChild(t);
+	var firstTr = document.createElement("tr");
+			firstTr.classList.add("track-info");
+			t.appendChild(firstTr);
+	var div_zmin = document.createElement("td");
+	div_zmin.innerHTML = (this.info.zmin||"Zmin")+': <span class="zmin">';
+	firstTr.appendChild(div_zmin);
+	var div_zmax = document.createElement("td");
+	div_zmax.innerHTML = (this.info.zmax||"Zmax")+': <span class="zmax">';
+	firstTr.appendChild(div_zmax);
+	var div_distance = document.createElement("td");
+	div_distance.innerHTML = (this.info.distance||"Distance")+': <span class="dist">';
+	firstTr.appendChild(div_distance);
+	var div_time = document.createElement("td");
+	div_time.innerHTML = (this.info.time||"Time")+': <span class="time">';
+	firstTr.appendChild(div_time);
+	var secondTr = document.createElement("tr");
+			secondTr.classList.add("point-info")
+			t.appendChild(secondTr);
+	var div_altitude = document.createElement("td");
+	div_altitude.innerHTML = (this.info.altitude||"Altitude")+': <span class="z">';
+	secondTr.appendChild(div_altitude);
+	var div_distance2 = document.createElement("td");
+	div_distance2.innerHTML = (this.info.distance||"Distance")+': <span class="dist">';
+	secondTr.appendChild(div_distance2);
+	var div_time2 = document.createElement("td");
+	div_time2.innerHTML = (this.info.time||"Time")+': <span class="time">';
+	secondTr.appendChild(div_time2);
 	// Array of data
 	this.tab_ = [];
 	// Show feature
@@ -4282,45 +4323,53 @@ ol.control.Profil.prototype.info =
 * @api stable
 */
 ol.control.Profil.prototype.popup = function(info)
-{	this.popup_.html(info);
+{	this.popup_.innerHTML = info;
 }
 /** Mouse move over canvas
 */
 ol.control.Profil.prototype.onMove = function(e)
 {	if (!this.tab_.length) return;
-	var pos = $(this.canvas_).offset();
+	var box_canvas = this.canvas_.getBoundingClientRect();
+	var pos = {
+    top: box_canvas.top + window.pageYOffset - document.documentElement.clientTop,
+    left: box_canvas.left + window.pageXOffset - document.documentElement.clientLeft
+  };
 	var dx = e.pageX -pos.left;
 	var dy = e.pageY -pos.top;
 	var ratio = this.ratio;
 	if (dx>this.margin_.left/ratio && dx<(this.canvas_.width-this.margin_.right)/ratio
-		&& dy>this.margin_.top/ratio && dy<(this.canvas_.height-this.margin_.bottom)/ratio) 
-	{	this.bar_.css("left", dx+"px").show();
+		&& dy>this.margin_.top/ratio && dy<(this.canvas_.height-this.margin_.bottom)/ratio)
+	{	this.bar_.style.left = dx+"px";
+		this.bar_.style.display = "block";
 		var d = (dx*ratio-this.margin_.left)/this.scale_[0];
 		var p0 = this.tab_[0];
 		for (var i=1, p; p=this.tab_[i]; i++)
-		{	if (p[0]>=d) 
+		{	if (p[0]>=d)
 			{	if (d < (p[0]+p0[0])/2) p = p0;
 				break;
 			}
 		}
-		if (p) this.cursor_.css({ 
-			left:dx+"px", 
-			top:(this.canvas_.height-this.margin_.bottom+p[1]*this.scale_[1]+this.dy_)/ratio+"px"
-		}).show();
-		else this.cursor_.hide();
-		this.bar_.parent().addClass("over");
-		$(".point-info .z", this.element).text(p[1]+"m");
-		$(".point-info .dist", this.element).text((p[0]/1000).toFixed(1)+"km");
-		$(".point-info .time", this.element).text(p[2]);
-		if (dx>this.canvas_.width/ratio/2) this.popup_.addClass('ol-left');
-		else this.popup_.removeClass('ol-left');
+		if (p) {
+			this.cursor_.style.left = dx+"px";
+			this.cursor_.style.top = (this.canvas_.height-this.margin_.bottom+p[1]*this.scale_[1]+this.dy_)/ratio+"px";
+			this.cursor_.style.display = "block";
+		}
+		else {
+			this.cursor_.style.display = "none";
+		}
+		this.bar_.parentElement.classList.add("over");
+		this.element.querySelector(".point-info .z").textContent = p[1]+"m";
+		this.element.querySelector(".point-info .dist").textContent = (p[0]/1000).toFixed(1)+"km";
+		this.element.querySelector(".point-info .time").textContent = p[2];
+		if (dx>this.canvas_.width/ratio/2) this.popup_.classList.add('ol-left');
+		else this.popup_.classList.remove('ol-left');
 		this.dispatchEvent({ type:'over', click:e.type=="click", coord: p[3], time: p[2], distance: p[0] });
 	}
 	else
-	{	if (this.bar_.parent().hasClass("over"))
-		{	this.bar_.hide();
-			this.cursor_.hide();
-			this.bar_.parent().removeClass("over");
+	{	if (this.bar_.parentElement.classList.contains("over"))
+		{	this.bar_.style.display = 'none';
+			this.cursor_.style.display = 'none';
+			this.bar_.parentElement.classList.remove("over");
 			this.dispatchEvent({ type:'out' });
 		}
 	}
@@ -4329,27 +4378,28 @@ ol.control.Profil.prototype.onMove = function(e)
 * @api stable
 */
 ol.control.Profil.prototype.show = function()
-{	$(this.element).removeClass("ol-collapsed"); 
+{	this.element.classList.remove("ol-collapsed");
 	this.dispatchEvent({ type:'show', show: true });
 }
 /** Hide panel
 * @api stable
 */
 ol.control.Profil.prototype.hide = function()
-{	$(this.element).addClass("ol-collapsed"); 
+{	this.element.classList.add("ol-collapsed");
 	this.dispatchEvent({ type:'show', show: false });
 }
 /** Toggle panel
 * @api stable
 */
 ol.control.Profil.prototype.toggle = function()
-{	var b = $(this.element).toggleClass("ol-collapsed").hasClass("ol-collapsed"); 
+{	this.element.classList.toggle("ol-collapsed");
+	var b = this.element.classList.contains("ol-collapsed");
 	this.dispatchEvent({ type:'show', show: !b });
 }
 /** Is panel visible
 */
 ol.control.Profil.prototype.isShown = function()
-{	return (!$(this.element).hasClass("ol-collapsed"));
+{	return (!this.element.classList.contains("ol-collapsed"));
 }
 /**
  * Set the geometry to draw the profil.
@@ -4376,8 +4426,8 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 	// No Z
 	if (!/Z/.test(g.getLayout())) return;
 	// No time
-	if(/M/.test(g.getLayout())) $(".time", this.element).parent().show();
-	else $(".time", this.element).parent().hide();
+	if(/M/.test(g.getLayout())) this.element.querySelector(".time").parentElement.style.display = 'block';
+	else this.element.querySelector(".time").parentElement.style.display = 'none';
 	// Coords
 	var c = g.getCoordinates();
 	switch (g.getType())
@@ -4424,18 +4474,18 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 		t.push ([d, z, ti, p]);
 	}
 	// Info
-	$(".track-info .zmin", this.element).text(zmin.toFixed(2)+"m");
-	$(".track-info .zmax", this.element).text(zmax.toFixed(2)+"m");
+	this.element.querySelector(".track-info .zmin").textContent = zmin.toFixed(2)+"m";
+	this.element.querySelector(".track-info .zmax").textContent = zmax.toFixed(2)+"m";
 	if (d>1000)
-	{	$(".track-info .dist", this.element).text((d/1000).toFixed(1)+"km");
+	{	this.element.querySelector(".track-info .dist").textContent = (d/1000).toFixed(1)+"km";
 	}
 	else
-	{	$(".track-info .dist", this.element).text((d).toFixed(1)+"m");
+	{	this.element.querySelector(".track-info .dist").textContent= (d).toFixed(1)+"m";
 	}
-	$(".track-info .time", this.element).text(ti);
+	this.element.querySelector(".track-info .time").textContent = ti;
 	// Set graduation
 	var grad = options.graduation || 100;
-	while (true) 
+	while (true)
 	{	zmax = Math.ceil(zmax/grad)*grad;
 		zmin = Math.floor(zmin/grad)*grad;
 		var nbgrad = (zmax-zmin)/grad;
@@ -4443,7 +4493,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options)
 		{	grad *= 2;
 		}
 		else break;
-	} 
+	}
 	// Set amplitude
 	if (typeof(options.zmin)=='number' && zmin > options.zmin) zmin = options.zmin;
 	if (typeof(options.zmax)=='number' && zmax < options.zmax) zmax = options.zmax;
@@ -5471,63 +5521,81 @@ ol.control.SearchNominatim.prototype.select = function (f){
  *	@param {string} [options.valuePlaceHolder=value]
  */
 ol.control.Select = function(options) {
-  var self = this;
-  if (!options) options = {};
-  var element;
-  if (options.target) {
-    element = $("<div>").addClass(options.className || "ol-select");
-  } else {
-    element = $("<div>").addClass((options.className || 'ol-select') +' ol-unselectable ol-control ol-collapsed');
-    $("<button>")
-      .attr('type','button')
-      .on("click touchstart", function(e) {
-        element.toggleClass('ol-collapsed');
-        e.preventDefault();
-      })
-      .appendTo(element);
-  }
-  // Containre
-  var div = $('<div>').appendTo(element);
-  // List of selection
-  this._ul = $('<ul>').appendTo(div);
-  // All conditions
-  this._all = $('<input>').attr('type', 'checkbox').val('all')
-    .prop('checked', true)
-    .prependTo($('<label>').text(options.allLabel || 'match all').appendTo(div));
-  // Use case 
-  this._useCase = $('<input>').attr('type', 'checkbox')
-    .prependTo($('<label>').text(options.caseLabel || 'case sensitive').appendTo(div));
-  // Select button
-  $('<button>')
-    .attr('type','button')
-    .addClass('ol-submit')
-    .text(options.selectLabel || 'Select')
-    .click(function() { 
-      self.doSelect(); 
-    })
-    .appendTo(div);
-  // Add button
-  $('<button>').addClass('ol-append')
-    .text(options.addLabel  || 'add rule')
-    .click(function(){ 
-      self.addCondition(); 
-    })
-    .appendTo(div);
-  this._conditions = [];
-  ol.control.Control.call(this, {
-    element: element.get(0),
-    target: options.target
-  });
-  this.set('source', (options.source instanceof Array) ? options.source : [options.source]);
-  this.set('attrPlaceHolder', options.attrPlaceHolder || 'attribute');
-  this.set('valuePlaceHolder', options.valuePlaceHolder || 'value');
-  this.addCondition();
+	var self = this;
+	if (!options) options = {};
+	var element;
+	if (options.target) {
+		element = document.createElement("div");
+		element.className = options.className || "ol-select";
+	} else {
+		element = document.createElement("div");
+		element.className = ((options.className || 'ol-select') +' ol-unselectable ol-control ol-collapsed').trim();
+		var button = document.createElement("button")
+				button.setAttribute('type','button');
+				var click_touchstart_function = function(e) {
+					element.classList.toggle('ol-collapsed');
+					e.preventDefault();
+				}
+				button.addEventListener("click", click_touchstart_function);
+				button.addEventListener("touchstart", click_touchstart_function);
+		element.appendChild(button);
+	}
+	// Containre
+	var div = document.createElement("div");
+			element.appendChild(div);
+	// List of selection
+	this._ul = document.createElement('ul');
+			div.appendChild(this._ul);
+	// All conditions
+	this._all = document.createElement('input');
+		this._all.setAttribute('type', 'checkbox')
+		this._all.value = 'all';
+		this._all.checked = true;
+    var label_match_all = document.createElement('label');
+        label_match_all.textContent = options.allLabel || 'match all'
+        div.appendChild(label_match_all);
+    label_match_all.insertBefore(this._all, label_match_all.firstChild);
+    div.appendChild(label_match_all);
+	// Use case
+	this._useCase = document.createElement('input');
+  this._useCase.setAttribute('type', 'checkbox');
+  var label_case_sensitive = document.createElement('label');
+      label_case_sensitive.textContent = options.caseLabel || 'case sensitive';
+      div.appendChild(label_case_sensitive);
+	label_case_sensitive.insertBefore(this._useCase, label_case_sensitive.firstChild);
+  div.appendChild(label_case_sensitive);
+	// Select button
+	var select_button = document.createElement('button');
+			select_button.setAttribute('type','button');
+			select_button.classList.add('ol-submit')
+			select_button.textContent = options.selectLabel || 'Select';
+			select_button.addEventListener("click", function() {
+				self.doSelect();
+			});
+		div.appendChild(select_button);
+	// Add button
+	var create_button = document.createElement('button');
+		create_button.classList.add('ol-append');
+		create_button.textContent = options.addLabel	|| 'add rule';
+		create_button.addEventListener("click", function(){
+			self.addCondition();
+		});
+		div.appendChild(create_button);
+	this._conditions = [];
+	ol.control.Control.call(this, {
+		element: element,
+		target: options.target
+	});
+	this.set('source', (options.source instanceof Array) ? options.source : [options.source]);
+	this.set('attrPlaceHolder', options.attrPlaceHolder || 'attribute');
+	this.set('valuePlaceHolder', options.valuePlaceHolder || 'value');
+	this.addCondition();
 };
 ol.inherits(ol.control.Select, ol.control.Control);
 /** Add a new condition
  * @param {*} options
  * 	@param {string} options.attr attribute name
- * 	@param {string} options.op  operator
+ * 	@param {string} options.op	operator
  * 	@param {string} options.val attribute value
  */
 ol.control.Select.prototype.addCondition = function (options) {
@@ -5543,34 +5611,34 @@ ol.control.Select.prototype.addCondition = function (options) {
  */
 ol.control.Select.prototype.getConditions = function () {
 	return {
-		usecase: this._useCase.prop('checked'),
-		all: this._all.prop('checked'),
+		usecase: this._useCase.checked,
+		all: this._all.checked,
  		conditions: this._conditions
 	}
 };
 /** Set the condition list
  */
 ol.control.Select.prototype.setConditions = function (cond) {
-  this._useCase.prop('checked', cond.usecase);
-  this._all.prop('checked', cond.all);
+	this._useCase.checked = cond.usecase;
+	this._all.checked = cond.all;
  	this._conditions = cond.conditions;
 	this._drawlist();
 };
 /** Get the conditions as string
  */
 ol.control.Select.prototype.getConditionsString = function (cond) {
-  var st = '';
-  for (var i=0,c; c=cond.conditions[i]; i++) {
-    if (c.attr) {
-      st += (st ? (cond.all ? ' AND ' : ' OR ') : '') 
-        + c.attr 
-        + ol.control.Select.operationsList[c.op]
-        + c.val;
-    }
-  }
-  return st
+	var st = '';
+	for (var i=0,c; c=cond.conditions[i]; i++) {
+		if (c.attr) {
+			st += (st ? (cond.all ? ' AND ' : ' OR ') : '')
+				+ c.attr
+				+ ol.control.Select.operationsList[c.op]
+				+ c.val;
+		}
+	}
+	return st
 };
-/** List of operations / for translation 
+/** List of operations / for translation
  * @api
  */
 ol.control.Select.operationsList = {
@@ -5588,9 +5656,9 @@ ol.control.Select.operationsList = {
  * @private
  */
 ol.control.Select.prototype._drawlist = function () {
-	this._ul.html('');
+	this._ul.innerHTML = '';
 	for (var i=0, c; c=this._conditions[i]; i++) {
-		this._getLiCondition(i).appendTo(this._ul);
+		this._ul.appendChild(this._getLiCondition(i));
 	}
 };
 /** Get a line
@@ -5598,7 +5666,8 @@ ol.control.Select.prototype._drawlist = function () {
  * @private
  */
 ol.control.Select.prototype._autocomplete = function (val, ul) {
-	ul.removeClass('ol-hidden').html('');
+	ul.classList.remove('ol-hidden');
+	ul.innerHTML = '';
 	var attributes = {};
 	var sources = this.get('source');
 	for (var i=0, s; s=sources[i]; i++) {
@@ -5612,12 +5681,16 @@ ol.control.Select.prototype._autocomplete = function (val, ul) {
 	for (var a in attributes) {
 		if (a==='geometry') continue;
 		if (rex.test(a)) {
-			$('<li>').text(a)
-				.click(function() {
-					ul.prev().val($(this).text()).change();
-					ul.addClass('ol-hidden')
-				})
-				.appendTo(ul);
+			var li = document.createElement('li');
+          li.textContent = a;
+          li.addEventListener("click", function() {
+  					ul.previousElementSibling.value = this.textContent;
+            var event = document.createEvent('HTMLEvents');
+            event.initEvent('change', true, false);
+            ul.previousElementSibling.dispatchEvent(event);
+  					ul.classList.add('ol-hidden');
+  				});
+				  ul.appendChild(li);
 		}
 	}
 };
@@ -5627,59 +5700,63 @@ ol.control.Select.prototype._autocomplete = function (val, ul) {
  */
 ol.control.Select.prototype._getLiCondition = function (i) {
 	var self = this;
-  var li = $('<li>');
-  // Attribut
-	var autocomplete = $('<div>').addClass('ol-autocomplete')
-		.mouseleave(function() { 
-			$('ul', this).addClass('ol-hidden'); 
-		})
-		.appendTo(li);
-  $('<input>').addClass('ol-attr')
-    .attr({ 
-      type: 'text',
-      placeholder: this.get('attrPlaceHolder')
-    })
-    .on('keyup', function () {
-      self._autocomplete( $(this).val(), $(this).next() );
-		})
-		.click(function(){
-			self._autocomplete( $(this).val(), $(this).next() );
-			$(this).next().removeClass('ol-hidden')
-		})
-		.on('change', function() {
-			self._conditions[i].attr = $(this).val();
-		})
-		.val(self._conditions[i].attr)
-		.appendTo(autocomplete);
+	var li = document.createElement('li');
+	// Attribut
+	var autocomplete = document.createElement('div');
+			autocomplete.classList.add('ol-autocomplete');
+			autocomplete.addEventListener("mouseleave", function() {
+				this.querySelector('ul'). classList.add('ol-hidden');
+			});
+			li.appendChild(autocomplete);
+	var input_attr = document.createElement('input');
+			input_attr.classList.add('ol-attr');
+			input_attr.setAttribute('type', 'text');
+			input_attr.setAttribute('placeholder', this.get('attrPlaceHolder'));
+			input_attr.addEventListener('keyup', function () {
+				self._autocomplete( this.value, this.nextElementSibling );
+			})
+			input_attr.addEventListener('click', function(){
+				self._autocomplete( this.value, this.nextElementSibling );
+				this.nextElementSibling.classList.remove('ol-hidden')
+			})
+			input_attr.addEventListener('change', function() {
+				self._conditions[i].attr = this.value;
+			})
+			input_attr.value = self._conditions[i].attr;
+			autocomplete.appendChild(input_attr);
 	// Autocomplete list
-	$('<ul>').addClass('ol-hidden').appendTo(autocomplete);
-  // Operation
-	var select = $('<select>').appendTo(li);
+	var ul_autocomplete = document.createElement('ul');
+			ul_autocomplete.classList.add('ol-hidden')
+			autocomplete.appendChild(ul_autocomplete);
+	// Operation
+	var select = document.createElement('select');
+	li.appendChild(select);
 	for (var k in ol.control.Select.operationsList) {
-		$('<option>').val(k)
-			.text(ol.control.Select.operationsList[k])
-			.appendTo(select)
+		var option = document.createElement('option');
+				option.value = k;
+				option.textContent = ol.control.Select.operationsList[k];
+				select.appendChild(option);
 	}
-  select.val(self._conditions[i].op)
-    .on('change', function() {
-			self._conditions[i].op = $(this).val();
-		});
-  // Value
-	$('<input>').attr({ 
-      type: 'text',
-      placeholder: this.get('valuePlaceHolder')
-    })
-		.on('change', function() {
-			self._conditions[i].val = $(this).val();
-		})
-		.val(self._conditions[i].val)
-		.appendTo(li);
+	select.value = self._conditions[i].op;
+	select.addEventListener('change', function() {
+		self._conditions[i].op = this.value;
+	});
+	// Value
+	var input_value = document.createElement('input');
+      input_value.setAttribute('type', 'text');
+			input_value.setAttribute('placeholder', this.get('valuePlaceHolder'));
+		  input_value.addEventListener('change', function() {
+  			self._conditions[i].val = this.value;
+  		})
+		  input_value.value = self._conditions[i].val;
+		li.appendChild(input_value);
 	if (this._conditions.length > 1) {
-		$('<div>').addClass('ol-delete')
-			.click(function(){ self.removeCondition(i); })
-			.appendTo(li);
-  }
-  //
+		var div_delete = document.createElement('div');
+        div_delete.classList.add('ol-delete');
+			  div_delete.addEventListener("click", function(){ self.removeCondition(i); })
+			  li.appendChild(div_delete);
+	}
+	//
 	return li;
 };
 /** Remove the ith condition
@@ -5697,38 +5774,38 @@ ol.control.Select.prototype._escape = function (s) {
 	return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
 /**
- * 
- * @param {*} f 
+ *
+ * @param {*} f
  * @private
  */
 ol.control.Select.prototype._checkCondition = function (f, c, usecase) {
 	if (!c.attr) return true;
 	var val = f.get(c.attr);
 	switch (c.op) {
-		case '=': 
+		case '=':
 			var rex = new RegExp('^'+this._escape(c.val)+'$', usecase ? '' : 'i');
 			return rex.test(val);
 		case '!=':
 			var rex = new RegExp('^'+this._escape(c.val)+'$', usecase ? '' : 'i');
 			return !rex.test(val);
-		case '<': 
+		case '<':
 			return val < c.val;
 		case '<=':
 			return val <= c.val;
-		case '>': 
+		case '>':
 			return val > c.val;
 			case '>=':
 			return val >= c.val;
-		case 'contain': 
+		case 'contain':
 			var rex = new RegExp(this._escape(c.val), usecase ? '' : 'i');
 			return rex.test(val);
-		case '!contain': 
+		case '!contain':
 			var rex = new RegExp(this._escape(c.val), usecase ? '' : 'i');
 			return !rex.test(val);
-		case 'regexp': 
+		case 'regexp':
 			var rex = new RegExp(c.val, usecase ? '' : 'i');
 			return rex.test(val);
-		default: 
+		default:
 			return false;
 	}
 }
@@ -5744,8 +5821,8 @@ ol.control.Select.prototype.doSelect = function (options) {
 	options = options || {};
 	var sources = options.sources || this.get('source');
 	var features = [];
-	var usecase = options.useCase || this._useCase.prop('checked');
-	var all = options.matchAll || this._all.prop('checked');
+	var usecase = options.useCase || this._useCase.checked;
+	var all = options.matchAll || this._all.checked;
 	var conditions = options.conditions || this._conditions
 	for (var i=0,s; s=sources[i]; i++) {
 		var sfeatures = s.getFeatures();
@@ -8839,18 +8916,18 @@ ol.interaction.DropFile = function(options)
 {	options = options||{};
 	ol.interaction.DragAndDrop.call(this, {});
 	var zone = options.zone || document;
-	$(zone).on('dragenter', this.onstop );
-	$(zone).on('dragover', this.onstop );
-	$(zone).on('dragleave', this.onstop );
+	zone.addEventListener('dragenter', this.onstop );
+	zone.addEventListener('dragover', this.onstop );
+	zone.addEventListener('dragleave', this.onstop );
 	// Options
 	this.formatConstructors_ = options.formatConstructors || [ ol.format.GPX, ol.format.GeoJSON, ol.format.IGC, ol.format.KML, ol.format.TopoJSON ];
 	this.projection_ = options.projection;
 	this.accept_ = options.accept || ["gpx","json","geojson","igc","kml","topojson"];
 	var self = this;
-	$(zone).on('drop', function(e){ return self.ondrop(e.originalEvent); });
+	zone.addEventListener('drop', function(e){ return self.ondrop(e);});
 };
 ol.inherits(ol.interaction.DropFile, ol.interaction.DragAndDrop);
-/** Set the map 
+/** Set the map
 */
 ol.interaction.DropFile.prototype.setMap = function(map)
 {	ol.interaction.Interaction.prototype.setMap.call(this, map);
@@ -8862,19 +8939,18 @@ ol.interaction.DropFile.prototype.onstop = function(e)
 	e.stopPropagation();
 	return false;
 }
-/** Do somthing when over
+/** Do something when over
 */
 ol.interaction.DropFile.prototype.ondrop = function(e)
-{	if (e.dataTransfer && e.dataTransfer.files.length)
+{	e.preventDefault();
+	if (e.dataTransfer && e.dataTransfer.files.length)
 	{	var self = this;
-		e.preventDefault();
-		e.stopPropagation();
 		// fetch FileList object
 		var files = e.dataTransfer.files; // e.originalEvent.target.files ?
 		// process all File objects
 		var file;
 		var pat = /\.([0-9a-z]+)(?=[?#])|(\.)(?:[\w]+)$/;
-		for (var i=0; file=files[i]; i++) 
+		for (var i=0; file=files[i]; i++)
 		{	var ex = file.name.match(pat)[0];
 			self.dispatchEvent({ type:'loadstart', file: file, filesize: file.size, filetype: file.type, fileextension: ex, projection: projection, target: self });
 			// Load file
@@ -8884,7 +8960,7 @@ ol.interaction.DropFile.prototype.ondrop = function(e)
 			var formatConstructors = this.formatConstructors_
 			if (!projection) return;
 			function tryReadFeatures (format, result, options)
-			{	try 
+			{	try
 				{	return format.readFeatures(result, options);
 				} catch (e) {}
 			}
@@ -8893,11 +8969,11 @@ ol.interaction.DropFile.prototype.ondrop = function(e)
 			{	var result = e.target.result;
 				var features = [];
 				var i, ii;
-				for (i = 0, ii = formatConstructors.length; i < ii; ++i) 
+				for (i = 0, ii = formatConstructors.length; i < ii; ++i)
 				{	var formatConstructor = formatConstructors[i];
 					var format = new formatConstructor();
 					features = tryReadFeatures(format, result, { featureProjection: projection });
-					if (features && features.length > 0) 
+					if (features && features.length > 0)
 					{	self.dispatchEvent({ type:'addfeatures', features: features, file: theFile, projection: projection, target: self });
 						self.dispatchEvent({ type:'loadend', features: features, file: theFile, projection: projection, target: self });
 						return;
@@ -10458,7 +10534,7 @@ ol.interaction.SnapGuides.prototype.setModifyInteraction = function (modifyi) {
 	function computeGuides(e) {
 		const selectedVertex = e.target.vertexFeature_
 		if (!selectedVertex) return;
-		var f = e.features.getArray()[0];
+		var f = e.target.getModifiedFeatures()[0];
 		var geom = f.getGeometry();
 		var coord = geom.getCoordinates();
 		switch (geom.getType()) {
@@ -10972,7 +11048,7 @@ ol.interaction.Synchronize = function(options)
 	ol.interaction.Interaction.call(this,
 		{	handleEvent: function(e)
 				{	if (e.type=="pointermove") { self.handleMove_(e); }
-					return true; 
+					return true;
 				}
 		});
 	this.maps = options.maps;
@@ -10985,12 +11061,12 @@ ol.inherits(ol.interaction.Synchronize, ol.interaction.Interaction);
  * @api stable
  */
 ol.interaction.Synchronize.prototype.setMap = function(map)
-{	
+{
 	if (this._listener) {
 		ol.Observable.unByKey(this._listener.center);
 		ol.Observable.unByKey(this._listener.rotation);
 		ol.Observable.unByKey(this._listener.resolution);
-		$(this.getMap().getTargetElement()).off('mouseout', this._listener.mouseout);
+		this.getMap().getTargetElement().removeEventListener('mouseout', this._listener.mouseout);
 	}
 	this._listener = null;
 	ol.interaction.Interaction.prototype.setMap.call (this, map);
@@ -11000,7 +11076,7 @@ ol.interaction.Synchronize.prototype.setMap = function(map)
 		this._listener.rotation = this.getMap().getView().on('change:rotation', this.syncMaps.bind(this));
 		this._listener.resolution = this.getMap().getView().on('change:resolution', this.syncMaps.bind(this));
 		this._listener.mouseout = this.handleMouseOut_.bind(this);
-		$(this.getMap().getTargetElement()).on('mouseout', this._listener.mouseout);
+		this.getMap().getTargetElement().addEventListener('mouseout', this._listener.mouseout);
 		this.syncMaps();
 	}
 };
@@ -11012,26 +11088,26 @@ ol.interaction.Synchronize.prototype.syncMaps = function(e)
 	if (map)
 	{	for (var i=0; i<this.maps.length; i++)
 		{	switch (e.type)
-			{	case 'change:rotation': 
+			{	case 'change:rotation':
 					if (this.maps[i].getView().getRotation() != map.getView().getRotation())
 						this.maps[i].getView().setRotation(map.getView().getRotation()); 
 					break;
-				case 'change:center': 
+				case 'change:center':
 					if (this.maps[i].getView().getCenter() != map.getView().getCenter())
 						this.maps[i].getView().setCenter(map.getView().getCenter()); 
 					break;
-				case 'change:resolution': 
+				case 'change:resolution':
 					if (this.maps[i].getView().getResolution() != map.getView().getResolution())
 					{	/* old version prior to 1.19.1
 						this.maps[i].beforeRender ( ol.animation.zoom(
-							{	duration: 250, 
-								resolution: this.maps[i].getView().getResolution() 
+							{	duration: 250,
+								resolution: this.maps[i].getView().getResolution()
 							}));
 						*/
 						this.maps[i].getView().setResolution(map.getView().getResolution());
 					}
 					break;
-				default: 
+				default:
 					this.maps[i].getView().setRotation(map.getView().getRotation());
 					this.maps[i].getView().setCenter(map.getView().getCenter());
 					this.maps[i].getView().setResolution(map.getView().getResolution());
@@ -11062,11 +11138,12 @@ ol.interaction.Synchronize.prototype.handleMouseOut_ = function(e) {
 */
 ol.Map.prototype.showTarget = function(coord)
 {	if (!this.targetOverlay_)
-	{	var elt = $("<div>").addClass("ol-target");
-		this.targetOverlay_ = new ol.Overlay({ element: elt.get(0) });
+	{	var elt = document.createElement("div");
+				elt.classList.add("ol-target");
+		this.targetOverlay_ = new ol.Overlay({ element: elt });
 		this.targetOverlay_.setPositioning('center-center');
 		this.addOverlay(this.targetOverlay_);
-		elt.parent().addClass("ol-target-overlay");
+		elt.parentElement.classList.add("ol-target-overlay");
 		// hack to render targetOverlay before positioning it
 		this.targetOverlay_.setPosition([0,0]);
 	}
@@ -11874,7 +11951,7 @@ ol.interaction.UndoRedo = function(options) {
   });
   this._undoStack = [];
   this._redoStack = [];
-  this._listener = [];
+  this._block = 0;
   this._record = true;
 };
 ol.inherits(ol.interaction.UndoRedo, ol.interaction.Interaction);
@@ -11884,8 +11961,10 @@ ol.inherits(ol.interaction.UndoRedo, ol.interaction.Interaction);
 ol.interaction.UndoRedo.prototype._watchSources = function() {
   var map = this.getMap();
   // Clear listeners
-  this._listener.forEach(function(l) { ol.Observable.unByKey(l); })
-  this._listener = [];
+  if (this._sourceListener) {
+    this._sourceListener.forEach(function(l) { ol.Observable.unByKey(l); })
+  }
+  this._sourceListener = [];
   // Ges vector layers 
   function getVectorLayers(layers, init) {
     if (!init) init = [];
@@ -11902,12 +11981,36 @@ ol.interaction.UndoRedo.prototype._watchSources = function() {
   var vectors = getVectorLayers(map.getLayers());
   vectors.forEach((function(l) {
     var s = l.getSource();
-    this._listener.push( s.on(['addfeature', 'removefeature'], this._onAddRemove.bind(this)) );
-    this._listener.push( s.on('clear', this._onClear.bind(this)) );
-    this._listener.push( s.on('changefeature', this._onChange.bind(this)) );
+    this._sourceListener.push( s.on(['addfeature', 'removefeature'], this._onAddRemove.bind(this)) );
+//    this._sourceListener.push( s.on('clear', this._onClear.bind(this)) );
+//    this._sourceListener.push( s.on('changefeature', this._onChange.bind(this)) );
   }).bind(this));
   // Watch new inserted/removed
-  this._listener.push( map.getLayers().on(['add', 'remove'], this._watchSources.bind(this) ) );
+  this._sourceListener.push( map.getLayers().on(['add', 'remove'], this._watchSources.bind(this) ) );
+};
+/** Watch for interactions
+ * @private
+ */
+ol.interaction.UndoRedo.prototype._watchInteractions = function() {
+  var map = this.getMap();
+  // Clear listeners
+  if (this._interactionListener) {
+    this._interactionListener.forEach(function(l) { ol.Observable.unByKey(l); })
+  }
+  this._interactionListener = [];
+  // Watch the interactions in the map 
+  map.getInteractions().forEach((function(i) {
+    console.log('add')
+    this._interactionListener.push(i.on(
+      ['modifystart', 'modifyend'], 
+      this._onInteraction.bind(this)
+    ));
+  }).bind(this));
+  // Watch new inserted / unwatch removed
+  this._interactionListener.push( map.getInteractions().on(
+    ['add', 'remove'], 
+    this._watchInteractions.bind(this)
+  ));
 };
 /**
  * Remove the interaction from its current map, if any, and attach it to a new
@@ -11919,6 +12022,7 @@ ol.interaction.UndoRedo.prototype.setMap = function(map) {
   ol.interaction.Interaction.prototype.setMap.call (this, map);
   // Watch sources
   this._watchSources();
+  this._watchInteractions();
 };
 /** A feature is added / removed
  */
@@ -11927,6 +12031,31 @@ ol.interaction.UndoRedo.prototype._onAddRemove = function(e) {
     this._undoStack.push({type: e.type, source: e.target, feature: e.feature });
     this._redoStack = [];
   }
+};
+ol.interaction.UndoRedo.prototype._onInteraction = function(e) {
+  var fn = this._onInteraction[e.type];
+  if (fn) fn.call(this,e);
+}
+ol.interaction.UndoRedo.prototype._onInteraction.modifystart = function (e,delayed) {
+  var mod = e.target.getModifiedFeatures();
+  if (mod.length) {
+    this.blockStart();
+    mod.forEach(function(m) {
+      this._undoStack.push({type: 'changefeature', feature: m, oldFeature: m.clone()  });
+    }.bind(this));
+    this.blockEnd();
+  } else if (!delayed) {
+    // Try to get infromation after interaction begins
+    setTimeout(function() { 
+      this._onInteraction.modifystart.call(this,e,true) 
+    }.bind(this), 0);
+  }
+};
+ol.interaction.UndoRedo.prototype.blockStart = function () {
+  this._undoStack.push({ type: 'blockstart' });
+};
+ol.interaction.UndoRedo.prototype.blockEnd = function () {
+  this._undoStack.push({ type: 'blockend' });
 };
 /** A source is cleared
  */
@@ -11960,6 +12089,18 @@ ol.interaction.UndoRedo.prototype._handleDo = function(e, undo) {
       e.feature.setGeometry(e.oldFeature.getGeometry());
       e.oldFeature.setGeometry(geom);
       break;
+    case 'blockstart':
+      this._block += undo ? -1 : 1;
+      break;
+    case 'blockend':
+      this._block += undo ? 1 : -1;
+      break;
+  }
+  // Handle block
+  if (this._block<0) this._block = 0;
+  if (this._block) {
+    if (undo) this.undo();
+    else this.redo();
   }
   this._record = true;
 };
@@ -11979,6 +12120,27 @@ ol.interaction.UndoRedo.prototype.redo = function() {
   this._undoStack.push(e);
   this._handleDo(e, false);
 };
+
+/* Extent the ol/interaction/Modify with a getModifyFeatures to get the features modified by the interaction
+ * @return {Array<ol.Feature>} the modified features
+ */
+ol.interaction.Modify.prototype.getModifiedFeatures = function() {
+  var featuresById = {};
+  this.dragSegments_.forEach( function(s) {
+    var feature = s[0].feature;
+    featuresById[ol.util.getUid(feature)] = feature;
+  });
+  var features = [];
+  for (var i in featuresById) features.push(featuresById[i]);
+  return features;
+};
+(function() {
+  var cou = ol.interaction.Modify.prototype.createOrUpdateVertexFeature_
+  ol.interaction.Modify.prototype.createOrUpdateVertexFeature_ = function(coordinates) {
+    console.log('START',this.modified_)
+    cou.call(this, coordinates);
+  }
+})();
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)

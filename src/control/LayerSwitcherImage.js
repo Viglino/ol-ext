@@ -5,6 +5,7 @@
 
 import {inherits as ol_inherits} from 'ol'
 import ol_control_LayerSwitcher from './LayerSwitcher'
+import './layer/GetPreview'
 
 /**
  * @classdesc OpenLayers 3 Layer Switcher Control.
