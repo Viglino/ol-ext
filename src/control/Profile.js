@@ -23,43 +23,61 @@ var ol_control_Profil = function(opt_options)
 {	var options = opt_options || {};
 	this.info = options.info || ol_control_Profil.prototype.info;
 	var self = this;
-	
+
 	var element;
-	if (options.target) 
-	{	element = $("<div>").addClass(options.className || "ol-profil");
+	if (options.target)
+	{	element = document.createElement("div");
+		element.classList.add(options.className || "ol-profil");
 	}
 	else
-	{	element = $("<div>").addClass((options.className || 'ol-profil') +' ol-unselectable ol-control ol-collapsed');
-		this.button = $("<button>")
-					.attr('type','button')
-					.on("click touchstart", function(e)
-					{	self.toggle();
-						e.preventDefault();
-					})
-					.appendTo(element);
-    }
+	{	element = document.createElement("div");
+		element.className = ((options.className || 'ol-profil') +' ol-unselectable ol-control ol-collapsed').trim();
+		this.button = document.createElement("button");
+		this.button.setAttribute('type','button');
+		var click_touchstart_function = function(e)
+		{	self.toggle();
+			e.preventDefault();
+		};
+		this.button.addEventListener("click", click_touchstart_function);
+		this.button.addEventListener("touchstart", click_touchstart_function);
+		element.appendChild(this.button);
+	}
 
-	var div = $("<div>").addClass("ol-inner").appendTo(element);
-	div = $("<div>").css("position","relative").appendTo(div);
+	var div_inner = document.createElement("div");
+			div_inner.classList.add("ol-inner");
+			element.appendChild(div_inner);
+	var div = document.createElement("div");
+			div.style.position = "relative";
+			div_inner.appendChild(div);
 
 	var ratio = this.ratio = 2;
 	this.canvas_ = document.createElement('canvas');
 	this.canvas_.width = (options.width || 300)*ratio;
 	this.canvas_.height = (options.height || 150)*ratio;
-	$(this.canvas_).css({
-		"transform":"scale(0.5,0.5)", "transform-origin":"0 0",
-		"-ms-transform":"scale(0.5,0.5)", "-ms-transform-origin":"0 0",
-		"-webkit-transform":"scale(0.5,0.5)", "-webkit-transform-origin":"0 0",
-		"transform":"scale(0.5,0.5)", "transform-origin":"0 0"
+
+	var styles = {
+		"msTransform":"scale(0.5,0.5)", "msTransformOrigin":"0 0",
+		"webkitTransform":"scale(0.5,0.5)", "webkitTransformOrigin":"0 0",
+		"mozTransform":"scale(0.5,0.5)", "mozTransformOrigin":"0 0",
+		"transform":"scale(0.5,0.5)", "transformOrigin":"0 0"
+	};
+
+	Object.keys(styles).forEach(function(style) {
+		if (style in self.canvas_.style) {
+			self.canvas_.style[style] = styles[style];
+		}
 	});
-	$("<div>").appendTo(div)
-		.width (this.canvas_.width/ratio)
-		.height (this.canvas_.height/ratio)
-		.append(this.canvas_)
-		.on("click mousemove", function(e){ self.onMove(e); });
+
+	var div_to_canvas = document.createElement("div");
+	div.appendChild(div_to_canvas);
+	div_to_canvas.style.width = this.canvas_.width/ratio + "px";
+	div_to_canvas.style.height = this.canvas_.height/ratio + "px";
+	div_to_canvas.appendChild(this.canvas_);
+	div_to_canvas.addEventListener("click", function(e){ self.onMove(e); });
+	div_to_canvas.addEventListener("mousemove", function(e){ self.onMove(e); });
 
 	ol_control_Control.call(this,
-	{	element: element.get(0),
+	{	element: element,
 		target: options.target
 	});
 
@@ -67,27 +85,56 @@ var ol_control_Profil = function(opt_options)
 	this.margin_ = { top:10*ratio, left:40*ratio, bottom:30*ratio, right:10*ratio };
 	if (!this.info.ytitle) this.margin_.left -= 20*ratio;
 	if (!this.info.xtitle) this.margin_.bottom -= 20*ratio;
-	
+
 	// Cursor
-	this.bar_ = $("<div>").addClass("ol-profilbar")
-			.css({top:(this.margin_.top/ratio)+"px", height:(this.canvas_.height-this.margin_.top-this.margin_.bottom)/ratio+"px" })
-			.appendTo(div);
-	this.cursor_ = $("<div>").addClass("ol-profilcursor")
-			.appendTo(div);
-	this.popup_ = $("<div>").addClass("ol-profilpopup")
-			.appendTo(this.cursor_);
+	this.bar_ = document.createElement("div");
+	this.bar_.classList.add("ol-profilbar");
+	this.bar_.style.top = (this.margin_.top/ratio)+"px";
+	this.bar_.style.height = (this.canvas_.height-this.margin_.top-this.margin_.bottom)/ratio+"px";
+	div.appendChild(this.bar_);
+
+	this.cursor_ = document.createElement("div");
+	this.cursor_.classList.add("ol-profilcursor");
+	div.appendChild(this.cursor_);
+
+	this.popup_ = document.createElement("div");
+	this.popup_.classList.add("ol-profilpopup");
+	this.cursor_.appendChild(this.popup_);
 
 	// Track information
-	var t = $("<table cellpadding='0' cellspacing='0'>").appendTo(div).width(this.canvas_.width/ratio);
-	var tr = $("<tr>").addClass("track-info").appendTo(t);
-	$("<td>").html((this.info.zmin||"Zmin")+': <span class="zmin">').appendTo(tr);
-	$("<td>").html((this.info.zmax||"Zmax")+': <span class="zmax">').appendTo(tr);
-	$("<td>").html((this.info.distance||"Distance")+': <span class="dist">').appendTo(tr);
-	$("<td>").html((this.info.time||"Time")+': <span class="time">').appendTo(tr);
-	tr = $("<tr>").addClass("point-info").appendTo(t);
-	$("<td>").html((this.info.altitude||"Altitude")+': <span class="z">').appendTo(tr);
-	$("<td>").html((this.info.distance||"Distance")+': <span class="dist">').appendTo(tr);
-	$("<td>").html((this.info.time||"Time")+': <span class="time">').appendTo(tr);
+	var t = document.createElement("table");
+			t.cellPadding = '0';
+			t.cellSpacing = '0';
+			t.style.clientWidth = this.canvas_.width/ratio + "px";
+		div.appendChild(t);
+
+	var firstTr = document.createElement("tr");
+			firstTr.classList.add("track-info");
+			t.appendChild(firstTr);
+	var div_zmin = document.createElement("td");
+	div_zmin.innerHTML = (this.info.zmin||"Zmin")+': <span class="zmin">';
+	firstTr.appendChild(div_zmin);
+	var div_zmax = document.createElement("td");
+	div_zmax.innerHTML = (this.info.zmax||"Zmax")+': <span class="zmax">';
+	firstTr.appendChild(div_zmax);
+	var div_distance = document.createElement("td");
+	div_distance.innerHTML = (this.info.distance||"Distance")+': <span class="dist">';
+	firstTr.appendChild(div_distance);
+	var div_time = document.createElement("td");
+	div_time.innerHTML = (this.info.time||"Time")+': <span class="time">';
+	firstTr.appendChild(div_time);
+	var secondTr = document.createElement("tr");
+			secondTr.classList.add("point-info")
+			t.appendChild(secondTr);
+	var div_altitude = document.createElement("td");
+	div_altitude.innerHTML = (this.info.altitude||"Altitude")+': <span class="z">';
+	secondTr.appendChild(div_altitude);
+	var div_distance2 = document.createElement("td");
+	div_distance2.innerHTML = (this.info.distance||"Distance")+': <span class="dist">';
+	secondTr.appendChild(div_distance2);
+	var div_time2 = document.createElement("td");
+	div_time2.innerHTML = (this.info.time||"Time")+': <span class="time">';
+	secondTr.appendChild(div_time2);
 
 	// Array of data
 	this.tab_ = [];
@@ -117,46 +164,55 @@ ol_control_Profil.prototype.info =
 * @api stable
 */
 ol_control_Profil.prototype.popup = function(info)
-{	this.popup_.html(info);
+{	this.popup_.innerHTML = info;
 }
 
 /** Mouse move over canvas
 */
 ol_control_Profil.prototype.onMove = function(e)
 {	if (!this.tab_.length) return;
-	var pos = $(this.canvas_).offset();
+	var box_canvas = this.canvas_.getBoundingClientRect();
+	var pos = {
+    top: box_canvas.top + window.pageYOffset - document.documentElement.clientTop,
+    left: box_canvas.left + window.pageXOffset - document.documentElement.clientLeft
+  };
+
 	var dx = e.pageX -pos.left;
 	var dy = e.pageY -pos.top;
 	var ratio = this.ratio;
 	if (dx>this.margin_.left/ratio && dx<(this.canvas_.width-this.margin_.right)/ratio
-		&& dy>this.margin_.top/ratio && dy<(this.canvas_.height-this.margin_.bottom)/ratio) 
-	{	this.bar_.css("left", dx+"px").show();
+		&& dy>this.margin_.top/ratio && dy<(this.canvas_.height-this.margin_.bottom)/ratio)
+	{	this.bar_.style.left = dx+"px";
+		this.bar_.style.display = "block";
 		var d = (dx*ratio-this.margin_.left)/this.scale_[0];
 		var p0 = this.tab_[0];
 		for (var i=1, p; p=this.tab_[i]; i++)
-		{	if (p[0]>=d) 
+		{	if (p[0]>=d)
 			{	if (d < (p[0]+p0[0])/2) p = p0;
 				break;
 			}
 		}
-		if (p) this.cursor_.css({ 
-			left:dx+"px", 
-			top:(this.canvas_.height-this.margin_.bottom+p[1]*this.scale_[1]+this.dy_)/ratio+"px"
-		}).show();
-		else this.cursor_.hide();
-		this.bar_.parent().addClass("over");
-		$(".point-info .z", this.element).text(p[1]+"m");
-		$(".point-info .dist", this.element).text((p[0]/1000).toFixed(1)+"km");
-		$(".point-info .time", this.element).text(p[2]);
-		if (dx>this.canvas_.width/ratio/2) this.popup_.addClass('ol-left');
-		else this.popup_.removeClass('ol-left');
+		if (p) {
+			this.cursor_.style.left = dx+"px";
+			this.cursor_.style.top = (this.canvas_.height-this.margin_.bottom+p[1]*this.scale_[1]+this.dy_)/ratio+"px";
+			this.cursor_.style.display = "block";
+		}
+		else {
+			this.cursor_.style.display = "none";
+		}
+		this.bar_.parentElement.classList.add("over");
+		this.element.querySelector(".point-info .z").textContent = p[1]+"m";
+		this.element.querySelector(".point-info .dist").textContent = (p[0]/1000).toFixed(1)+"km";
+		this.element.querySelector(".point-info .time").textContent = p[2];
+		if (dx>this.canvas_.width/ratio/2) this.popup_.classList.add('ol-left');
+		else this.popup_.classList.remove('ol-left');
 		this.dispatchEvent({ type:'over', click:e.type=="click", coord: p[3], time: p[2], distance: p[0] });
 	}
 	else
-	{	if (this.bar_.parent().hasClass("over"))
-		{	this.bar_.hide();
-			this.cursor_.hide();
-			this.bar_.parent().removeClass("over");
+	{	if (this.bar_.parentElement.classList.contains("over"))
+		{	this.bar_.style.display = 'none';
+			this.cursor_.style.display = 'none';
+			this.bar_.parentElement.classList.remove("over");
 			this.dispatchEvent({ type:'out' });
 		}
 	}
@@ -166,27 +222,28 @@ ol_control_Profil.prototype.onMove = function(e)
 * @api stable
 */
 ol_control_Profil.prototype.show = function()
-{	$(this.element).removeClass("ol-collapsed"); 
+{	this.element.classList.remove("ol-collapsed");
 	this.dispatchEvent({ type:'show', show: true });
 }
 /** Hide panel
 * @api stable
 */
 ol_control_Profil.prototype.hide = function()
-{	$(this.element).addClass("ol-collapsed"); 
+{	this.element.classList.add("ol-collapsed");
 	this.dispatchEvent({ type:'show', show: false });
 }
 /** Toggle panel
 * @api stable
 */
 ol_control_Profil.prototype.toggle = function()
-{	var b = $(this.element).toggleClass("ol-collapsed").hasClass("ol-collapsed"); 
+{	this.element.classList.toggle("ol-collapsed");
+	var b = this.element.classList.contains("ol-collapsed");
 	this.dispatchEvent({ type:'show', show: !b });
 }
 /** Is panel visible
 */
 ol_control_Profil.prototype.isShown = function()
-{	return (!$(this.element).hasClass("ol-collapsed"));
+{	return (!this.element.classList.contains("ol-collapsed"));
 }
 
 /**
@@ -215,8 +272,8 @@ ol_control_Profil.prototype.setGeometry = function(g, options)
 	// No Z
 	if (!/Z/.test(g.getLayout())) return;
 	// No time
-	if(/M/.test(g.getLayout())) $(".time", this.element).parent().show();
-	else $(".time", this.element).parent().hide();
+	if(/M/.test(g.getLayout())) this.element.querySelector(".time").parentElement.style.display = 'block';
+	else this.element.querySelector(".time").parentElement.style.display = 'none';
 
 	// Coords
 	var c = g.getCoordinates();
@@ -255,7 +312,7 @@ ol_control_Profil.prototype.setGeometry = function(g, options)
 	ctx.moveTo(0,0); ctx.lineTo(0,-h);
 	ctx.moveTo(0,0); ctx.lineTo(w, 0);
 	ctx.stroke();
-	
+
 	//
 	var zmin=Infinity, zmax=-Infinity;
 	var d, z, ti, t = this.tab_ = [];
@@ -270,19 +327,19 @@ ol_control_Profil.prototype.setGeometry = function(g, options)
 	}
 
 	// Info
-	$(".track-info .zmin", this.element).text(zmin.toFixed(2)+"m");
-	$(".track-info .zmax", this.element).text(zmax.toFixed(2)+"m");
+	this.element.querySelector(".track-info .zmin").textContent = zmin.toFixed(2)+"m";
+	this.element.querySelector(".track-info .zmax").textContent = zmax.toFixed(2)+"m";
 	if (d>1000)
-	{	$(".track-info .dist", this.element).text((d/1000).toFixed(1)+"km");
+	{	this.element.querySelector(".track-info .dist").textContent = (d/1000).toFixed(1)+"km";
 	}
 	else
-	{	$(".track-info .dist", this.element).text((d).toFixed(1)+"m");
+	{	this.element.querySelector(".track-info .dist").textContent= (d).toFixed(1)+"m";
 	}
-	$(".track-info .time", this.element).text(ti);
+	this.element.querySelector(".track-info .time").textContent = ti;
 
 	// Set graduation
 	var grad = options.graduation || 100;
-	while (true) 
+	while (true)
 	{	zmax = Math.ceil(zmax/grad)*grad;
 		zmin = Math.floor(zmin/grad)*grad;
 		var nbgrad = (zmax-zmin)/grad;
@@ -290,7 +347,7 @@ ol_control_Profil.prototype.setGeometry = function(g, options)
 		{	grad *= 2;
 		}
 		else break;
-	} 
+	}
 
 	// Set amplitude
 	if (typeof(options.zmin)=='number' && zmin > options.zmin) zmin = options.zmin;
