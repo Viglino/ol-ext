@@ -185,7 +185,7 @@ ol_control_Select.prototype._autocomplete = function (val, ul) {
 	for (var i=0, s; s=sources[i]; i++) {
 		var features = s.getFeatures();
 		for (var j=0, f; f=features[j]; j++) {
-			$.extend(attributes, f.getProperties());
+			Object.assign(attributes, f.getProperties());
 			if (j>100) break;
 		}
 	}
