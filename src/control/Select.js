@@ -24,66 +24,84 @@ import ol_control_Control from 'ol/control/Control'
  *	@param {string} [options.valuePlaceHolder=value]
  */
 var ol_control_Select = function(options) {
-  var self = this;
-  if (!options) options = {};
+	var self = this;
+	if (!options) options = {};
 
-  var element;
-  if (options.target) {
-    element = $("<div>").addClass(options.className || "ol-select");
-  } else {
-    element = $("<div>").addClass((options.className || 'ol-select') +' ol-unselectable ol-control ol-collapsed');
-    $("<button>")
-      .attr('type','button')
-      .on("click touchstart", function(e) {
-        element.toggleClass('ol-collapsed');
-        e.preventDefault();
-      })
-      .appendTo(element);
-  }
-  // Containre
-  var div = $('<div>').appendTo(element);
-  // List of selection
-  this._ul = $('<ul>').appendTo(div);
-  // All conditions
-  this._all = $('<input>').attr('type', 'checkbox').val('all')
-    .prop('checked', true)
-    .prependTo($('<label>').text(options.allLabel || 'match all').appendTo(div));
-  // Use case 
-  this._useCase = $('<input>').attr('type', 'checkbox')
-    .prependTo($('<label>').text(options.caseLabel || 'case sensitive').appendTo(div));
-  // Select button
-  $('<button>')
-    .attr('type','button')
-    .addClass('ol-submit')
-    .text(options.selectLabel || 'Select')
-    .click(function() { 
-      self.doSelect(); 
-    })
-    .appendTo(div);
-  // Add button
-  $('<button>').addClass('ol-append')
-    .text(options.addLabel  || 'add rule')
-    .click(function(){ 
-      self.addCondition(); 
-    })
-    .appendTo(div);
+	var element;
+	if (options.target) {
+		element = document.createElement("div");
+		element.className = options.className || "ol-select";
+	} else {
+		element = document.createElement("div");
+		element.className = ((options.className || 'ol-select') +' ol-unselectable ol-control ol-collapsed').trim();
+		var button = document.createElement("button")
+				button.setAttribute('type','button');
+				var click_touchstart_function = function(e) {
+					element.classList.toggle('ol-collapsed');
+					e.preventDefault();
+				}
+				button.addEventListener("click", click_touchstart_function);
+				button.addEventListener("touchstart", click_touchstart_function);
+		element.appendChild(button);
+	}
+	// Containre
+	var div = document.createElement("div");
+			element.appendChild(div);
+	// List of selection
+	this._ul = document.createElement('ul');
+			div.appendChild(this._ul);
+	// All conditions
+	this._all = document.createElement('input');
+		this._all.setAttribute('type', 'checkbox')
+		this._all.value = 'all';
+		this._all.checked = true;
+    var label_match_all = document.createElement('label');
+        label_match_all.textContent = options.allLabel || 'match all'
+        div.appendChild(label_match_all);
+    label_match_all.insertBefore(this._all, label_match_all.firstChild);
+    div.appendChild(label_match_all);
+	// Use case
+	this._useCase = document.createElement('input');
+  this._useCase.setAttribute('type', 'checkbox');
+  var label_case_sensitive = document.createElement('label');
+      label_case_sensitive.textContent = options.caseLabel || 'case sensitive';
+      div.appendChild(label_case_sensitive);
+	label_case_sensitive.insertBefore(this._useCase, label_case_sensitive.firstChild);
+  div.appendChild(label_case_sensitive);
+	// Select button
+	var select_button = document.createElement('button');
+			select_button.setAttribute('type','button');
+			select_button.classList.add('ol-submit')
+			select_button.textContent = options.selectLabel || 'Select';
+			select_button.addEventListener("click", function() {
+				self.doSelect();
+			});
+		div.appendChild(select_button);
+	// Add button
+	var create_button = document.createElement('button');
+		create_button.classList.add('ol-append');
+		create_button.textContent = options.addLabel	|| 'add rule';
+		create_button.addEventListener("click", function(){
+			self.addCondition();
+		});
+		div.appendChild(create_button);
 
-  this._conditions = [];
-  ol_control_Control.call(this, {
-    element: element.get(0),
-    target: options.target
-  });
-  this.set('source', (options.source instanceof Array) ? options.source : [options.source]);
-  this.set('attrPlaceHolder', options.attrPlaceHolder || 'attribute');
-  this.set('valuePlaceHolder', options.valuePlaceHolder || 'value');
-  this.addCondition();
+	this._conditions = [];
+	ol_control_Control.call(this, {
+		element: element,
+		target: options.target
+	});
+	this.set('source', (options.source instanceof Array) ? options.source : [options.source]);
+	this.set('attrPlaceHolder', options.attrPlaceHolder || 'attribute');
+	this.set('valuePlaceHolder', options.valuePlaceHolder || 'value');
+	this.addCondition();
 };
 ol_inherits(ol_control_Select, ol_control_Control);
 
 /** Add a new condition
  * @param {*} options
  * 	@param {string} options.attr attribute name
- * 	@param {string} options.op  operator
+ * 	@param {string} options.op	operator
  * 	@param {string} options.val attribute value
  */
 ol_control_Select.prototype.addCondition = function (options) {
@@ -100,8 +118,8 @@ ol_control_Select.prototype.addCondition = function (options) {
  */
 ol.control.Select.prototype.getConditions = function () {
 	return {
-		usecase: this._useCase.prop('checked'),
-		all: this._all.prop('checked'),
+		usecase: this._useCase.checked,
+		all: this._all.checked,
  		conditions: this._conditions
 	}
 };
@@ -109,28 +127,28 @@ ol.control.Select.prototype.getConditions = function () {
 /** Set the condition list
  */
 ol.control.Select.prototype.setConditions = function (cond) {
-  this._useCase.prop('checked', cond.usecase);
-  this._all.prop('checked', cond.all);
+	this._useCase.checked = cond.usecase;
+	this._all.checked = cond.all;
  	this._conditions = cond.conditions;
 	this._drawlist();
 };
-	
+
 /** Get the conditions as string
  */
 ol.control.Select.prototype.getConditionsString = function (cond) {
-  var st = '';
-  for (var i=0,c; c=cond.conditions[i]; i++) {
-    if (c.attr) {
-      st += (st ? (cond.all ? ' AND ' : ' OR ') : '') 
-        + c.attr 
-        + ol.control.Select.operationsList[c.op]
-        + c.val;
-    }
-  }
-  return st
+	var st = '';
+	for (var i=0,c; c=cond.conditions[i]; i++) {
+		if (c.attr) {
+			st += (st ? (cond.all ? ' AND ' : ' OR ') : '')
+				+ c.attr
+				+ ol.control.Select.operationsList[c.op]
+				+ c.val;
+		}
+	}
+	return st
 };
 
-/** List of operations / for translation 
+/** List of operations / for translation
  * @api
  */
 ol_control_Select.operationsList = {
@@ -149,9 +167,9 @@ ol_control_Select.operationsList = {
  * @private
  */
 ol_control_Select.prototype._drawlist = function () {
-	this._ul.html('');
+	this._ul.innerHTML = '';
 	for (var i=0, c; c=this._conditions[i]; i++) {
-		this._getLiCondition(i).appendTo(this._ul);
+		this._ul.appendChild(this._getLiCondition(i));
 	}
 };
 
@@ -160,7 +178,8 @@ ol_control_Select.prototype._drawlist = function () {
  * @private
  */
 ol_control_Select.prototype._autocomplete = function (val, ul) {
-	ul.removeClass('ol-hidden').html('');
+	ul.classList.remove('ol-hidden');
+	ul.innerHTML = '';
 	var attributes = {};
 	var sources = this.get('source');
 	for (var i=0, s; s=sources[i]; i++) {
@@ -174,12 +193,16 @@ ol_control_Select.prototype._autocomplete = function (val, ul) {
 	for (var a in attributes) {
 		if (a==='geometry') continue;
 		if (rex.test(a)) {
-			$('<li>').text(a)
-				.click(function() {
-					ul.prev().val($(this).text()).change();
-					ul.addClass('ol-hidden')
-				})
-				.appendTo(ul);
+			var li = document.createElement('li');
+          li.textContent = a;
+          li.addEventListener("click", function() {
+  					ul.previousElementSibling.value = this.textContent;
+            var event = document.createEvent('HTMLEvents');
+            event.initEvent('change', true, false);
+            ul.previousElementSibling.dispatchEvent(event);
+  					ul.classList.add('ol-hidden');
+  				});
+				  ul.appendChild(li);
 		}
 	}
 };
@@ -190,62 +213,66 @@ ol_control_Select.prototype._autocomplete = function (val, ul) {
  */
 ol_control_Select.prototype._getLiCondition = function (i) {
 	var self = this;
-  var li = $('<li>');
-  // Attribut
-	var autocomplete = $('<div>').addClass('ol-autocomplete')
-		.mouseleave(function() { 
-			$('ul', this).addClass('ol-hidden'); 
-		})
-		.appendTo(li);
-  $('<input>').addClass('ol-attr')
-    .attr({ 
-      type: 'text',
-      placeholder: this.get('attrPlaceHolder')
-    })
-    .on('keyup', function () {
-      self._autocomplete( $(this).val(), $(this).next() );
-		})
-		.click(function(){
-			self._autocomplete( $(this).val(), $(this).next() );
-			$(this).next().removeClass('ol-hidden')
-		})
-		.on('change', function() {
-			self._conditions[i].attr = $(this).val();
-		})
-		.val(self._conditions[i].attr)
-		.appendTo(autocomplete);
+	var li = document.createElement('li');
+	// Attribut
+	var autocomplete = document.createElement('div');
+			autocomplete.classList.add('ol-autocomplete');
+			autocomplete.addEventListener("mouseleave", function() {
+				this.querySelector('ul'). classList.add('ol-hidden');
+			});
+			li.appendChild(autocomplete);
+	var input_attr = document.createElement('input');
+			input_attr.classList.add('ol-attr');
+			input_attr.setAttribute('type', 'text');
+			input_attr.setAttribute('placeholder', this.get('attrPlaceHolder'));
+			input_attr.addEventListener('keyup', function () {
+				self._autocomplete( this.value, this.nextElementSibling );
+			})
+			input_attr.addEventListener('click', function(){
+				self._autocomplete( this.value, this.nextElementSibling );
+				this.nextElementSibling.classList.remove('ol-hidden')
+			})
+			input_attr.addEventListener('change', function() {
+				self._conditions[i].attr = this.value;
+			})
+			input_attr.value = self._conditions[i].attr;
+			autocomplete.appendChild(input_attr);
 	// Autocomplete list
-	$('<ul>').addClass('ol-hidden').appendTo(autocomplete);
-  
-  // Operation
-	var select = $('<select>').appendTo(li);
+	var ul_autocomplete = document.createElement('ul');
+			ul_autocomplete.classList.add('ol-hidden')
+			autocomplete.appendChild(ul_autocomplete);
+
+	// Operation
+	var select = document.createElement('select');
+	li.appendChild(select);
 	for (var k in ol_control_Select.operationsList) {
-		$('<option>').val(k)
-			.text(ol_control_Select.operationsList[k])
-			.appendTo(select)
+		var option = document.createElement('option');
+				option.value = k;
+				option.textContent = ol_control_Select.operationsList[k];
+				select.appendChild(option);
 	}
-  select.val(self._conditions[i].op)
-    .on('change', function() {
-			self._conditions[i].op = $(this).val();
-		});
-    
-  // Value
-	$('<input>').attr({ 
-      type: 'text',
-      placeholder: this.get('valuePlaceHolder')
-    })
-		.on('change', function() {
-			self._conditions[i].val = $(this).val();
-		})
-		.val(self._conditions[i].val)
-		.appendTo(li);
+	select.value = self._conditions[i].op;
+	select.addEventListener('change', function() {
+		self._conditions[i].op = this.value;
+	});
+
+	// Value
+	var input_value = document.createElement('input');
+      input_value.setAttribute('type', 'text');
+			input_value.setAttribute('placeholder', this.get('valuePlaceHolder'));
+		  input_value.addEventListener('change', function() {
+  			self._conditions[i].val = this.value;
+  		})
+		  input_value.value = self._conditions[i].val;
+		li.appendChild(input_value);
 	if (this._conditions.length > 1) {
-		$('<div>').addClass('ol-delete')
-			.click(function(){ self.removeCondition(i); })
-			.appendTo(li);
-  }
-  
-  //
+		var div_delete = document.createElement('div');
+        div_delete.classList.add('ol-delete');
+			  div_delete.addEventListener("click", function(){ self.removeCondition(i); })
+			  li.appendChild(div_delete);
+	}
+
+	//
 	return li;
 };
 
@@ -265,38 +292,38 @@ ol_control_Select.prototype._escape = function (s) {
 	return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
 /**
- * 
- * @param {*} f 
+ *
+ * @param {*} f
  * @private
  */
 ol_control_Select.prototype._checkCondition = function (f, c, usecase) {
 	if (!c.attr) return true;
 	var val = f.get(c.attr);
 	switch (c.op) {
-		case '=': 
+		case '=':
 			var rex = new RegExp('^'+this._escape(c.val)+'$', usecase ? '' : 'i');
 			return rex.test(val);
 		case '!=':
 			var rex = new RegExp('^'+this._escape(c.val)+'$', usecase ? '' : 'i');
 			return !rex.test(val);
-		case '<': 
+		case '<':
 			return val < c.val;
 		case '<=':
 			return val <= c.val;
-		case '>': 
+		case '>':
 			return val > c.val;
 			case '>=':
 			return val >= c.val;
-		case 'contain': 
+		case 'contain':
 			var rex = new RegExp(this._escape(c.val), usecase ? '' : 'i');
 			return rex.test(val);
-		case '!contain': 
+		case '!contain':
 			var rex = new RegExp(this._escape(c.val), usecase ? '' : 'i');
 			return !rex.test(val);
-		case 'regexp': 
+		case 'regexp':
 			var rex = new RegExp(c.val, usecase ? '' : 'i');
 			return rex.test(val);
-		default: 
+		default:
 			return false;
 	}
 }
@@ -312,8 +339,8 @@ ol_control_Select.prototype.doSelect = function (options) {
 	options = options || {};
 	var sources = options.sources || this.get('source');
 	var features = [];
-	var usecase = options.useCase || this._useCase.prop('checked');
-	var all = options.matchAll || this._all.prop('checked');
+	var usecase = options.useCase || this._useCase.checked;
+	var all = options.matchAll || this._all.checked;
 	var conditions = options.conditions || this._conditions
 	for (var i=0,s; s=sources[i]; i++) {
 		var sfeatures = s.getFeatures();
