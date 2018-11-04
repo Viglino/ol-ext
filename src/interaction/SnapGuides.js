@@ -13,7 +13,7 @@ import ol_layer_Vector from 'ol/layer/Vector'
 import ol_Collection from 'ol/Collection'
 import ol_Feature from 'ol/Feature'
 import ol_geom_LineString from 'ol/geom/LineString'
-import './getModifyFeatures'
+import './Modify'
 
 /** Interaction to snap to guidelines
  * @constructor

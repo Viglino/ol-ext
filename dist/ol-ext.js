@@ -9553,6 +9553,277 @@ ol.interaction.LongTouch = function(options)
 };
 ol.inherits(ol.interaction.LongTouch, ol.interaction.Interaction);
 
+/* Extent the ol/interaction/Modify with a getModifyFeatures
+ * Get the features modified by the interaction
+ * @return {Array<ol.Feature>} the modified features
+ */
+ol.interaction.Modify.prototype.getModifiedFeatures = function() {
+  var featuresById = {};
+  this.dragSegments_.forEach( function(s) {
+    var feature = s[0].feature;
+    featuresById[ol.util.getUid(feature)] = feature;
+  });
+  var features = [];
+  for (var i in featuresById) features.push(featuresById[i]);
+  return features;
+};
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Interaction split interaction for splitting feature geometry
+ * @constructor
+ * @extends {ol.interaction.Pointer}
+ * @fires  beforesplit, aftersplit, pointermove
+ * @param {olx.interaction.SplitOptions} 
+ *	- source {ol.source.Vector|Array{ol.source.Vector}} a list of source to split (configured with useSpatialIndex set to true)
+ *	- features {ol.Collection.<ol.Feature>} collection of feature to split
+ *	- snapDistance {integer} distance (in px) to snap to an object, default 25px
+ *	- filter {function|undefined} a filter that takes a feature and return true if it can be clipped, default always split.
+ *	- featureStyle {ol.style.Style | Array<ol.style.Style> | false | undefined} Style for the selected features, choose false if you don't want feature selection. By default the default edit style is used.
+ *	- sketchStyle {ol.style.Style | Array<ol.style.Style> | undefined} Style for the sektch features.
+ *	- tolerance {function|undefined} Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split.  Default is 1e-10.
+ */
+ol.interaction.ModifyFeature = function(options){
+  if (!options) options = {};
+	ol.interaction.Pointer.call(this,{
+    handleDownEvent: this.handleDownEvent,
+    //handleDragEvent: this.handleDragEvent,
+    handleMoveEvent: this.handleMoveEvent,
+    //handleUpEvent: this.handleUpEvent
+    /*
+    handleEvent: function(e){
+      switch (e.type){
+        case "singleclick":
+					return this.handleDownEvent(e);
+				case "pointermove":
+					return this.handleMoveEvent(e);
+				default: 
+					return true;
+			}
+			return true;
+    }
+    */
+	});
+	// Snap distance (in px)
+	this.snapDistance_ = options.snapDistance || 25;
+	// Split tolerance between the calculated intersection and the geometry
+	this.tolerance_ = options.tolerance || 1e-10;
+	// Cursor
+	this.cursor_ = options.cursor;
+	// List of source to split
+	this.sources_ = options.sources ? (options.sources instanceof Array) ? options.sources:[options.sources] : [];
+	if (options.features) {
+    this.sources_.push (new ol.source.Vector({ features: features }));
+	}
+	// Get all features candidate
+	this.filterSplit_ = options.filter || function(){ return true; };
+	// Default style
+	var white = [255, 255, 255, 1];
+	var blue = [0, 153, 255, 1];
+	var width = 3;
+	var fill = new ol.style.Fill({ color: [0, 153, 255, 1] });
+	var stroke = new ol.style.Stroke({
+		color: '#FFF',
+		width: 1.25
+	});
+ 	var sketchStyle = [
+    new ol.style.Style({
+    image: new ol.style.Circle({
+      fill: fill,
+      stroke: stroke,
+      radius: 6
+    }),
+    fill: fill,
+    stroke: stroke
+    })
+  ];
+	var featureStyle = [
+    new ol.style.Style({
+			stroke: new ol.style.Stroke({
+				color: white,
+				width: width + 2
+			})
+		}),
+		new ol.style.Style({
+			image: new ol.style.Circle({
+				radius: 2*width,
+				fill: new ol.style.Fill({
+					color: blue
+				}),
+				stroke: new ol.style.Stroke({
+					color: white,
+					width: width/2
+				})
+			}),
+			stroke: new ol.style.Stroke({
+					color: blue,
+					width: width
+				})
+		}),
+	];
+	// Custom style
+	if (options.sketchStyle) sketchStyle = options.sketchStyle instanceof Array ? options.sketchStyle : [options.sketchStyle];
+	if (options.featureStyle) featureStyle = options.featureStyle instanceof Array ? options.featureStyle : [options.featureStyle];
+	// Create a new overlay for the sketch
+	this.overlayLayer_ = new ol.layer.Vector({
+		source: new ol.source.Vector({
+			useSpatialIndex: false
+		}),
+		name:'Modify overlay',
+		displayInLayerSwitcher: false,
+		style: function(f){
+			if (f._sketch_) return sketchStyle;
+			else return featureStyle;
+		}
+	});
+};
+ol.inherits(ol.interaction.ModifyFeature, ol.interaction.Pointer);
+/**
+ * Remove the interaction from its current map, if any,  and attach it to a new
+ * map, if any. Pass `null` to just remove the interaction from the current map.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ol.interaction.ModifyFeature.prototype.setMap = function(map) {
+  if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_);
+	ol.interaction.Interaction.prototype.setMap.call (this, map);
+	this.overlayLayer_.setMap(map);
+};
+/** Get closest feature at pixel
+ * @param {ol.Pixel} 
+ * @return {ol.feature} 
+ * @private
+ */
+ol.interaction.ModifyFeature.prototype.getClosestFeature = function(e) {
+  var f, c, g, d = this.snapDistance_+1;
+	for (var i=0; i<this.sources_.length; i++) {
+    var source = this.sources_[i];
+		f = source.getClosestFeatureToCoordinate(e.coordinate);
+		if (this.filterSplit_(f)) {
+      c = f.getGeometry().getClosestPoint(e.coordinate);
+			g = new ol.geom.LineString([e.coordinate,c]);
+			d = g.getLength() / e.frameState.viewState.resolution;
+			break;
+		}
+	}
+	if (d > this.snapDistance_) {
+    return false;
+  } else {
+    // Snap to node
+    var coord = this.getNearestCoord (c, f.getGeometry());
+    if (coord) {
+      coord = coord.coord;
+      var p = this.getMap().getPixelFromCoordinate(coord);
+      if (ol.coordinate.dist2d(e.pixel, p) < this.snapDistance_) {
+        c = coord;
+      }
+      //
+      return { source:source, feature:f, coord: c, link: g };
+    }
+	}
+}
+/** Get nearest coordinate in a list 
+* @param {ol.coordinate} pt the point to find nearest
+* @param {ol.geom} coords list of coordinates
+* @return {ol.coordinate} the nearest coordinate in the list
+*/
+ol.interaction.ModifyFeature.prototype.getNearestCoord = function(pt, geom) {
+   switch (geom.getType()) {
+    case 'Point': {
+      return { coord:geom.getCoordinates(), dist: dm };
+    }
+    case 'LineString':
+    case 'LinearRing': {
+      var d, dm=Number.MAX_VALUE, p0;
+      var coords = geom.getCoordinates();
+      for (var i=0; i < coords.length; i++) {
+        d = ol.coordinate.dist2d (pt, coords[i]);
+        if (d < dm) {
+          dm = d;
+          p0 = coords[i];
+        }
+      }
+      return { coord:p0, dist: dm };
+    }
+    case 'Polygon': {
+      var lring = geom.getLinearRings();
+      var p0=false, dm=Number.MAX_VALUE;
+      for (var i=0, l; l=lring[i]; i++) {
+        var p = this.getNearestCoord(pt, l);
+        if (p && p.dist<dm) {
+          p0 = p;
+          dm = p.dist;
+          p0.ring = i;
+        }
+      }
+      return p0;
+    }
+    case 'Multipolygon': {
+    }
+    default: return false;
+  }
+  return false;
+};
+/**
+ * @param {ol.MapBrowserEvent} evt Map browser event.
+ * @return {boolean} `true` to start the drag sequence.
+ */
+ol.interaction.ModifyFeature.prototype.handleDownEvent = function(evt) {
+  // Something to split ?
+	var current = this.getClosestFeature(evt);
+	if (current) {
+    var self = this;
+		self.overlayLayer_.getSource().clear();
+		var split = current.feature.getGeometry().splitAt(current.coord, this.tolerance_);
+		if (split.length > 1) {
+      var tosplit = [];
+			for (var i=0; i<split.length; i++) {
+        var f = current.feature.clone();
+				f.setGeometry(split[i]);
+				tosplit.push(f);
+			}
+			self.dispatchEvent({ type:'beforesplit', original: current.feature, features: tosplit });
+			current.source.dispatchEvent({ type:'beforesplit', original: current.feature, features: tosplit });
+			current.source.removeFeature(current.feature);
+			for (var i=0; i<tosplit.length; i++) {
+        current.source.addFeature(tosplit[i]);
+			}
+			self.dispatchEvent({ type:'aftersplit', original: current.feature, features: tosplit });
+			current.source.dispatchEvent({ type:'aftersplit', original: current.feature, features: tosplit });
+		}
+	}
+	return true;
+};
+/**
+ * @param {ol.MapBrowserEvent} evt Event.
+ */
+ol.interaction.ModifyFeature.prototype.handleMoveEvent = function(e) {
+  var map = e.map;
+	this.overlayLayer_.getSource().clear();
+	var current = this.getClosestFeature(e);
+	if (current && this.filterSplit_(current.feature)) {
+		var p, l;
+		// Draw sketch
+		p = new ol.Feature(new ol.geom.Point(current.coord));
+		p._sketch_ = true;
+		this.overlayLayer_.getSource().addFeature(p);
+	}
+	var element = map.getTargetElement();
+	if (this.cursor_) {
+    if (current) {
+      if (element.style.cursor != this.cursor_) {
+        this.previousCursor_ = element.style.cursor;
+				element.style.cursor = this.cursor_;
+			}
+		} else if (this.previousCursor_ !== undefined) {
+      element.style.cursor = this.previousCursor_;
+			this.previousCursor_ = undefined;
+		}
+	}
+};
+
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -11935,18 +12206,190 @@ ol.interaction.Transform.prototype.handleUpEvent_ = function(evt) {
   return false;
 };
 
-/* Extent the ol/interaction/Modify with a getModifyFeatures to get the features modified by the interaction
- * @return {Array<ol.Feature>} the modified features
+/** Interaction rotate
+ * @constructor
+ * @extends {ol.interaction.Interaction}
+ * @fires 
+ * @param {olx.interaction.TransformOptions} options
  */
-ol.interaction.Modify.prototype.getModifiedFeatures = function() {
-  var featuresById = {};
-  this.dragSegments_.forEach( function(s) {
-    var feature = s[0].feature;
-    featuresById[ol.util.getUid(feature)] = feature;
+ol.interaction.UndoRedo = function(options) {
+  if (!options) options = {};
+	ol.interaction.Interaction.call(this, {	
+    handleEvent: function(e) { 
+      if (e.type==='pointerdown') this._start = true;
+      return true; 
+    }
   });
-  var features = [];
-  for (var i in featuresById) features.push(featuresById[i]);
-  return features;
+  this._undoStack = [];
+  this._redoStack = [];
+  this._block = 0;
+  this._record = true;
+};
+ol.inherits(ol.interaction.UndoRedo, ol.interaction.Interaction);
+/** Watch for changes in the map sources
+ * @private
+ */
+ol.interaction.UndoRedo.prototype._watchSources = function() {
+  var map = this.getMap();
+  // Clear listeners
+  if (this._sourceListener) {
+    this._sourceListener.forEach(function(l) { ol.Observable.unByKey(l); })
+  }
+  this._sourceListener = [];
+  // Ges vector layers 
+  function getVectorLayers(layers, init) {
+    if (!init) init = [];
+    layers.forEach(function(l) {
+      if (l instanceof ol.layer.Vector) {
+        init.push(l);
+      } else if (l.getLayers) {
+        getVectorLayers(l.getLayers(), init);
+      }
+    });
+    return init;
+  };
+  // Watch the vector sources in the map 
+  var vectors = getVectorLayers(map.getLayers());
+  vectors.forEach((function(l) {
+    var s = l.getSource();
+    this._sourceListener.push( s.on(['addfeature', 'removefeature'], this._onAddRemove.bind(this)) );
+//    this._sourceListener.push( s.on('clear', this._onClear.bind(this)) );
+//    this._sourceListener.push( s.on('changefeature', this._onChange.bind(this)) );
+  }).bind(this));
+  // Watch new inserted/removed
+  this._sourceListener.push( map.getLayers().on(['add', 'remove'], this._watchSources.bind(this) ) );
+};
+/** Watch for interactions
+ * @private
+ */
+ol.interaction.UndoRedo.prototype._watchInteractions = function() {
+  var map = this.getMap();
+  // Clear listeners
+  if (this._interactionListener) {
+    this._interactionListener.forEach(function(l) { ol.Observable.unByKey(l); })
+  }
+  this._interactionListener = [];
+  // Watch the interactions in the map 
+  map.getInteractions().forEach((function(i) {
+    console.log('add')
+    this._interactionListener.push(i.on(
+      ['modifystart', 'modifyend'], 
+      this._onInteraction.bind(this)
+    ));
+  }).bind(this));
+  // Watch new inserted / unwatch removed
+  this._interactionListener.push( map.getInteractions().on(
+    ['add', 'remove'], 
+    this._watchInteractions.bind(this)
+  ));
+};
+/**
+ * Remove the interaction from its current map, if any, and attach it to a new
+ * map, if any. Pass `null` to just remove the interaction from the current map.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ol.interaction.UndoRedo.prototype.setMap = function(map) {
+  ol.interaction.Interaction.prototype.setMap.call (this, map);
+  // Watch sources
+  this._watchSources();
+  this._watchInteractions();
+};
+/** A feature is added / removed
+ */
+ol.interaction.UndoRedo.prototype._onAddRemove = function(e) {
+  if (this._record) {
+    this._undoStack.push({type: e.type, source: e.target, feature: e.feature });
+    this._redoStack = [];
+  }
+};
+ol.interaction.UndoRedo.prototype._onInteraction = function(e) {
+  var fn = this._onInteraction[e.type];
+  if (fn) fn.call(this,e);
+}
+ol.interaction.UndoRedo.prototype._onInteraction.modifystart = function (e,delayed) {
+  var mod = e.target.getModifiedFeatures();
+  if (mod.length) {
+    this.blockStart();
+    mod.forEach(function(m) {
+      this._undoStack.push({type: 'changefeature', feature: m, oldFeature: m.clone()  });
+    }.bind(this));
+    this.blockEnd();
+  } else if (!delayed) {
+    // Try to get infromation after interaction begins
+    setTimeout(function() { 
+      this._onInteraction.modifystart.call(this,e,true) 
+    }.bind(this), 0);
+  }
+};
+ol.interaction.UndoRedo.prototype.blockStart = function () {
+  this._undoStack.push({ type: 'blockstart' });
+};
+ol.interaction.UndoRedo.prototype.blockEnd = function () {
+  this._undoStack.push({ type: 'blockend' });
+};
+/** A source is cleared
+ */
+ol.interaction.UndoRedo.prototype._onClear = function(e) {
+  if (this._record) {
+    // ???
+  }
+};
+/** A feature is changed
+ */
+ol.interaction.UndoRedo.prototype._onChange = function(e) {
+  if (this._record && this._start) {
+    this._undoStack.push({type: e.type, source: e.target, feature: e.feature, oldFeature: e.feature.clone()  });
+    this._redoStack = [];
+    this._start = false;
+  }
+};
+ol.interaction.UndoRedo.prototype._handleDo = function(e, undo) {
+  this._record = false;
+  switch (e.type) {
+    case 'addfeature':
+      if (undo) e.source.removeFeature(e.feature);
+      else e.source.addFeature(e.feature);
+      break;
+    case 'removefeature':
+      if (undo) e.source.addFeature(e.feature);
+      else e.source.removeFeature(e.feature);
+      break;
+    case 'changefeature':
+      var geom = e.feature.getGeometry();
+      e.feature.setGeometry(e.oldFeature.getGeometry());
+      e.oldFeature.setGeometry(geom);
+      break;
+    case 'blockstart':
+      this._block += undo ? -1 : 1;
+      break;
+    case 'blockend':
+      this._block += undo ? 1 : -1;
+      break;
+  }
+  // Handle block
+  if (this._block<0) this._block = 0;
+  if (this._block) {
+    if (undo) this.undo();
+    else this.redo();
+  }
+  this._record = true;
+};
+/** Undo last operation
+ */
+ol.interaction.UndoRedo.prototype.undo = function() {
+  var e = this._undoStack.pop();
+  if (!e) return;
+  this._redoStack.push(e);
+  this._handleDo(e, true);
+};
+/** Redo last operation
+ */
+ol.interaction.UndoRedo.prototype.redo = function() {
+  var e = this._redoStack.pop();
+  if (!e) return;
+  this._undoStack.push(e);
+  this._handleDo(e, false);
 };
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
