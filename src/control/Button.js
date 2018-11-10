@@ -21,10 +21,11 @@ var ol_control_Button = function(options)
 	element.className = (options.className || '') + " ol-button ol-unselectable ol-control";
 	var self = this;
 
-	var bt = document.createElement("button");
+	var bt = document.createElement(/ol-text-button/.test(options.className) ? "div": "button");
 	bt.type = "button";
 	bt.title = options.title;
-	bt.innerHTML = options.html || "";
+	if (options.html instanceof Element) bt.appendChild(options.html)
+	else bt.innerHTML = options.html || "";
 	var evtFunction = function(e) {
 		if (e && e.preventDefault) {
 			e.preventDefault();
