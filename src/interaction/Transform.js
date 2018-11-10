@@ -347,8 +347,30 @@ ol_interaction_Transform.prototype.select = function(feature, add) {
   else this.selection_ = [feature];
   this.ispt_ = (this.selection_.length===1 ? (this.selection_[0].getGeometry().getType() == "Point") : false);
   this.drawSketch_();
+  this.watchFeatures_();
+  // select event
   this.dispatchEvent({ type:'select', feature: feature, features: this.selection_ });
-}
+};
+
+/** Watch selected features
+ * @private
+ */
+ol_interaction_Transform.prototype.watchFeatures_ = function() {
+  // Listen to feature modification
+  if (this._featureListeners) {
+    this._featureListeners.forEach(function (l) {
+      ol.Observable.unByKey(l)
+    });
+  }
+  this._featureListeners = [];
+  this.selection_.forEach(function(f) {
+    this._featureListeners.push(
+      f.on('change', function() {
+        this.drawSketch_();
+      }.bind(this))
+    );
+  }.bind(this));
+};
 
 /**
  * @param {ol.MapBrowserEvent} evt Map browser event.
@@ -409,6 +431,7 @@ ol_interaction_Transform.prototype.handleDownEvent_ = function(evt) {
     }
     this.ispt_ = this.selection_.length===1 ? (this.selection_[0].getGeometry().getType() == "Point") : false;
     this.drawSketch_();
+    this.watchFeatures_();
     this.dispatchEvent({ type:'select', feature: feature, features: this.selection_, pixel: evt.pixel, coordinate: evt.coordinate });
     return false;
   }
