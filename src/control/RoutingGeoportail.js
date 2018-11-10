@@ -1,4 +1,4 @@
-﻿/*	Copyright (c) 2017 Jean-Marc VIGLINO,
+﻿/*	Copyright (c) 2018 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
@@ -7,11 +7,7 @@ import ol_control_Control from 'ol/control/Control'
 import ol_control_Search from './Search';
 
 /**
- * Search Control.
- * This is the base class for search controls. You can use it for simple custom search or as base to new class.
- * @see ol_control_SearchFeature
- * @see ol_control_SearchPhoton
- *
+ * Geoportail routing Control.
  * @constructor
  * @extends {ol_control_Control}
  * @fires select
@@ -272,7 +268,6 @@ ol_control_RoutingGeoportail.prototype.calculate = function () {
 
 	this.ajax(url + parameters, 
 		function (resp) {
-			console.log(resp)
 			if (resp.status >= 200 && resp.status < 400) {
 				self.listRouting(self.handleResponse (JSON.parse(resp.response)));
 			} else {
