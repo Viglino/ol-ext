@@ -2,8 +2,6 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-
-
 import {inherits as ol_inherits} from 'ol'
 import ol_interaction_Pointer from 'ol/interaction/Pointer'
 import ol_geom_LineString from 'ol/geom/LineString'
@@ -22,8 +20,8 @@ import {ol_coordinate_dist2d, ol_coordinate_findSegment, ol_coordinate_offsetCoo
  *	@param {ol.source.Vector | undefined} options.source source to duplicate feature when ctrl key is down
  *	@param {boolean} options.duplicate force feature to duplicate (source must be set)
  */
-var ol_interaction_Offset = function(options)
-{	if (!options) options = {};
+var ol_interaction_Offset = function(options) {
+  if (!options) options = {};
 
 	// Extend pointer
 	ol_interaction_Pointer.call(this, {
@@ -122,9 +120,14 @@ ol_interaction_Offset.prototype.getFeatureAtPixel_ = function(e) {
  */
 ol_interaction_Offset.prototype.handleDownEvent_ = function(e) {	
   this.current_ = this.getFeatureAtPixel_(e);
-  if (this.source_ && (this.get('duplicate') ||e.originalEvent.ctrlKey)) {
+  if (this.source_ && (this.get('duplicate') || e.originalEvent.ctrlKey)) {
     this.current_.feature = this.current_.feature.clone();
     this.source_.addFeature(this.current_.feature);
+  } else {
+    // Modify the current feature
+    if (this.current_) {
+      this.dispatchEvent({ type:'modifystart', features: [ this.current_.feature ] });
+    }
   }
 	if (this.current_) {
     this.dispatchEvent({ type:'offsetstart', feature: this.current_.feature, offset: 0 });

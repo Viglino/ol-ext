@@ -10,10 +10,15 @@ import ol_geom_LinearRing from 'ol/geom/LinearRing'
 import ol_interaction_Draw from 'ol/interaction/Draw'
 import ol_interaction_Select from 'ol/interaction/Select'
 
-/** Interaction draw hole
+/** Interaction to draw holes in a polygon.
+ * It fires a drawstart, drawend event when drawing the hole
+ * and a modifystart, modifyend event before and after inserting the hole in the feature geometry.
  * @constructor
  * @extends {ol_interaction_Interaction}
- * @fires drawstart, drawend
+ * @fires drawstart
+ * @fires drawend
+ * @fires modifystart
+ * @fires modifyend
  * @param {olx.interaction.DrawHoleOptions} options extend olx.interaction.DrawOptions
  * 	@param {Array<ol.layer.Vector> | function | undefined} options.layers A list of layers from which polygons should be selected. Alternatively, a filter function can be provided. default: all visible layers
  * 	@param { ol.style.Style | Array<ol.style.Style> | StyleFunction | undefined }	Style for the selected features, default: default edit style
@@ -117,36 +122,37 @@ ol_interaction_DrawHole.prototype._startDrawing = function(e)
 		{ 	layerFilter: layersFilter
 		}
 	);
-	var current = null;
-	if (features)
-	{	var poly = features[0].getGeometry();
-		if (poly.getType() === "Polygon"
-			&& poly.intersectsCoordinate(coord)) {
+	this._current = null;
+	if (features) {
+		for (var k=0; k<features.length; k++) {
+			var poly = features[k].getGeometry();
+			if (poly.getType() === "Polygon"
+				&& poly.intersectsCoordinate(coord)) {
 				this._polygonIndex = false;
 				this._polygon = poly;
-				current = features[0];
+				this._current = features[k];
 			}
-		else if (poly.getType() === "MultiPolygon"
-			&& poly.intersectsCoordinate(coord)) {
+			else if (poly.getType() === "MultiPolygon"
+				&& poly.intersectsCoordinate(coord)) {
 				for (var i=0, p; p=poly.getPolygon(i); i++) {
 					if (p.intersectsCoordinate(coord)) {
 						this._polygonIndex = i;
 						this._polygon = p;
-						current = features[0];
+						this._current = features[k];
 						break;
 					}
 				}
 			}
-		else current = null;
+			if (this._current) break;
+		}
 	}
-	console.log(this._polygonIndex)
 	this._select.getFeatures().clear();
-	if (!current)
+	if (!this._current)
 	{	this.setActive(false);
 		this.setActive(true);
 	}
 	else
-	{	this._select.getFeatures().push(current);
+	{	this._select.getFeatures().push(this._current);
 	}
 };
 
@@ -160,6 +166,7 @@ ol_interaction_DrawHole.prototype._finishDrawing = function(e)
 	e.hole = e.feature;
 	// Get the current feature
 	e.feature = this._select.getFeatures().item(0);
+	this.dispatchEvent({ type: 'modifystart', features: [ this._current ] });
 	// Create the hole
 	var c = e.hole.getGeometry().getCoordinates()[0];
 	if (c.length > 3) {
@@ -178,6 +185,7 @@ ol_interaction_DrawHole.prototype._finishDrawing = function(e)
 			this.getPolygon().appendLinearRing(new ol_geom_LinearRing(c));
 		}
 	}
+	this.dispatchEvent({ type: 'modifyend', features: [ this._current ] });
 	// reset
 	this._feature = null;
 	this._select.getFeatures().clear();
