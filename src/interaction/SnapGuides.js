@@ -229,7 +229,8 @@ ol_interaction_SnapGuides.prototype.setDrawInteraction = function(drawi) {
 
 		var l = coord.length;
 		if (l === s && self.enableInitialGuides_) {
-			let [x, y] = coord[0];
+			var x = coord[0];
+			var y = coord[1];
 			coord = [[x, y], [x, y - 1]];
 		}
 
@@ -285,7 +286,9 @@ ol_interaction_SnapGuides.prototype.setModifyInteraction = function (modifyi) {
 		}
 
 		var modifyVertex = selectedVertex.getGeometry().getCoordinates();
-		var idx = coord.findIndex((c) => c[0] === modifyVertex[0] && c[1] === modifyVertex[1]);
+		var idx = coord.findIndex(function(c) {
+			return c[0] === modifyVertex[0] && c[1] === modifyVertex[1]
+		});
 
 		var l = coord.length;
 
