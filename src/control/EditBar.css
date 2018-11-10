@@ -1,0 +1,212 @@
+.ol-editbar .ol-button button {
+  position: relative;
+  display: inline-block;
+  font-style: normal;
+  box-sizing: border-box;
+  vertical-align: middle;
+}
+.ol-editbar .ol-button button:before, 
+.ol-editbar .ol-button button:after {
+  content: "";
+  border-width: 0;
+  position: absolute;
+  box-sizing: border-box;
+  background-color: currentColor;
+}
+.ol-editbar .ol-button button:focus {
+  outline: none;
+}
+
+.ol-editbar .ol-selection > button:before {
+  width: .6em;
+  height: 1em;
+  background-color: transparent;
+  border: .5em solid currentColor;
+  border-width: 0 .25em .65em;
+  border-color: currentColor transparent;
+  box-shadow:0 0.6em 0 -0.23em;
+  top: .35em;
+  left: .5em;
+  transform: translate(-50%, -50%) rotate(-30deg);
+}
+.ol-editbar .ol-selection0 > button:after {
+  width: .28em;
+  height: .6em;
+  background-color: transparent;
+  border: .5em solid currentColor;
+  border-width: 0 .05em .7em;
+  border-color: currentColor transparent;
+  top: .5em;
+  left: .7em;
+  transform: rotate(-45deg);
+}
+
+.ol-editbar .ol-delete button:after,
+.ol-editbar .ol-delete button:before {
+  width: 1em;
+  height: .2em;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.ol-editbar .ol-delete button:after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.ol-editbar .ol-info button:before {
+  width: .25em;
+  height: .6em;
+  border-radius: .03em;
+  top: .47em;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.ol-editbar .ol-info button:after {
+  width: .25em;
+  height: .2em;
+  border-radius: .03em;
+  box-shadow: -0.1em 0.35em, -0.1em 0.82em, 0.1em 0.82em;
+  top: .12em;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.ol-editbar .ol-drawpoint button:before {
+  width: .7em;
+  height: .7em;
+  border-radius: 50%;
+  border: .15em solid currentColor;
+  background-color: transparent;
+  top: .2em;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.ol-editbar .ol-drawpoint button:after {
+  width: .4em;
+  height: .4em;
+  border: .15em solid currentColor;
+  border-color: currentColor transparent;
+  border-width: .4em .2em 0;
+  background-color: transparent;
+  top: .8em;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.ol-editbar .ol-drawline > button:before,
+.ol-editbar .ol-drawpolygon > button:before,
+.ol-editbar .ol-drawhole > button:before {
+  width: .8em;
+  height: .8em;
+  border: .13em solid currentColor;
+  background-color: transparent;
+  border-width: .2em .13em .09em;
+  top: .2em;
+  left: .25em;
+  transform: rotate(10deg) perspective(1em) rotateX(40deg);
+}
+.ol-editbar .ol-drawline > button:before {
+  border-bottom: 0;
+}
+.ol-editbar .ol-drawline > button:after,
+.ol-editbar .ol-drawhole > button:after,
+.ol-editbar .ol-drawpolygon > button:after {
+  width: .3em;
+  height: .3em;
+  top: 0.2em;
+  left: .25em;
+  box-shadow: -0.2em 0.55em, 0.6em 0.1em, 0.65em 0.7em;
+}
+.ol-editbar .ol-drawhole > button:after {
+  box-shadow: -0.2em 0.55em, 0.6em 0.1em, 0.65em 0.7em, 0.25em 0.35em;
+}
+
+
+.ol-editbar .ol-offset > button i,
+.ol-editbar .ol-transform > button i {
+  position: absolute;
+  width: .9em;
+  height: .9em;
+  overflow: hidden;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.ol-editbar .ol-offset > button i{
+  width: .8em;
+  height: .8em;
+}
+
+.ol-editbar .ol-offset > button i:before,
+.ol-editbar .ol-transform > button i:before,
+.ol-editbar .ol-transform > button i:after {
+  content: "";
+  height: 1em;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  box-shadow: 0.5em 0 0 0.1em, -0.5em 0 0 0.1em;
+  width: .1em;
+  position: absolute;
+  background-color: currentColor;
+}
+.ol-editbar .ol-offset > button i:before{
+  box-shadow: 0.45em 0 0 0.1em, -0.45em 0 0 0.1em;
+}
+.ol-editbar .ol-transform > button i:after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.ol-editbar .ol-split > button:before {
+  width: .3em;
+  height: .3em;
+  top: .81em;
+  left: .75em;
+  border-radius: 50%;
+  box-shadow: 0.1em -0.4em, -0.15em -0.25em;
+}
+.ol-editbar .ol-split > button:after {
+  width: .8em;
+  height: .8em;
+  top: .15em;
+  left: -.1em;
+  border: .1em solid currentColor;
+  border-width: 0 .2em .2em 0;
+  background-color: transparent;
+  border-radius: .1em;
+  transform: rotate(20deg) scaleY(.6) rotate(-45deg);
+}
+
+.ol-editbar .ol-drawregular > button:before {
+  width: .9em;
+  height: .9em;
+  top: 50%;
+  left: 50%;
+  border: .1em solid currentColor;
+  background-color: transparent;
+  transform: translate(-50%, -50%);
+}
+.ol-editbar .ol-drawregular .ol-bar .ol-text-button > div > div > div {
+  border: .5em solid currentColor;
+  border-color: transparent currentColor;
+  display: inline-block;
+  cursor: pointer;
+  vertical-align: text-bottom;
+}
+.ol-editbar .ol-drawregular .ol-bar:before,
+.ol-control.ol-bar.ol-editbar .ol-drawregular .ol-bar {
+  left: 50%;
+  transform: translateX(-50%);
+}
+.ol-editbar .ol-drawregular .ol-bar .ol-text-button {
+  min-width: 6em;
+  text-align: center;
+}
+.ol-editbar .ol-drawregular .ol-bar .ol-text-button > div > div > div:first-child {
+  border-width: .5em .5em .5em 0;
+  margin: 0 .5em 0 0;
+}
+.ol-editbar .ol-drawregular .ol-bar .ol-text-button > div > div > div:last-child {
+  border-width: .5em 0 .5em .5em;
+  margin: 0 0 0 .5em;
+}
