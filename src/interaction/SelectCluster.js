@@ -55,6 +55,7 @@ var ol_interaction_SelectCluster = function(options)
 	var overlay = this.overlayLayer_ = new ol_layer_Vector(
 		{	source: new ol_source_Vector({
 				features: new ol_Collection(),
+				wrapX: options.wrapX,
 				useSpatialIndex: true
 			}),
 			name:'Cluster overlay',
