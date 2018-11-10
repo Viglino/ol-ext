@@ -137,8 +137,8 @@ ol_interaction_DrawRegular.prototype.reset = function()
  * @param {int} number of sides.
  * @api stable
  */
-ol_interaction_DrawRegular.prototype.setSides = function (nb)
-{	nb = parseInt(nb);
+ol_interaction_DrawRegular.prototype.setSides = function (nb) {
+	nb = parseInt(nb);
 	this.sides_ = nb>2 ? nb : 0;
 }
 
@@ -283,8 +283,8 @@ ol_interaction_DrawRegular.prototype.drawPoint_ = function(pt, noclear)
 /**
  * @param {ol.MapBrowserEvent} evt Map browser event.
  */
-ol_interaction_DrawRegular.prototype.handleEvent_ = function(evt)
-{	switch (evt.type)
+ol_interaction_DrawRegular.prototype.handleEvent_ = function(evt) {
+	switch (evt.type)
 	{	case "pointerdown": {
 			this.downPx_ = evt.pixel;
 			this.start_(evt);
@@ -297,7 +297,7 @@ ol_interaction_DrawRegular.prototype.handleEvent_ = function(evt)
 				var dy = this.downPx_[1] - evt.pixel[1];
 				if (dx*dx + dy*dy <= this.squaredClickTolerance_) 
 				{	// The pointer has moved
-					if ( this.lastEvent == "pointermove" )
+					if ( this.lastEvent == "pointermove" || this.lastEvent == "keydown" )
 					{	this.end_(evt);
 					}
 					// On touch device there is no move event : terminate = click on the same point
