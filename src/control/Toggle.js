@@ -91,7 +91,8 @@ ol_control_Toggle.prototype.getSubBar = function ()
  * @api stable
  */
 ol_control_Toggle.prototype.getDisable = function()
-{	return this.element.querySelector("button").disabled = true;
+{	var button = this.element.querySelector("button");
+	return button && button.disabled;
 };
 
 /** Disable the control. If disable, the control will be deactivated too.

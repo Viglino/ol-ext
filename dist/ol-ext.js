@@ -1703,7 +1703,7 @@ ol.control.Button = function(options)
 	var self = this;
 	var bt = document.createElement(/ol-text-button/.test(options.className) ? "div": "button");
 	bt.type = "button";
-	bt.title = options.title;
+	if (options.title) bt.title = options.title;
 	if (options.html instanceof Element) bt.appendChild(options.html)
 	else bt.innerHTML = options.html || "";
 	var evtFunction = function(e) {
@@ -7033,7 +7033,8 @@ ol.control.Toggle.prototype.getSubBar = function ()
  * @api stable
  */
 ol.control.Toggle.prototype.getDisable = function()
-{	return this.element.querySelector("button").disabled = true;
+{	var button = this.element.querySelector("button");
+	return button && button.disabled;
 };
 /** Disable the control. If disable, the control will be deactivated too.
 * @param {bool} b disable (or enable) the control, default false (enable)
