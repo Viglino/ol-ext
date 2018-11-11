@@ -1,17 +1,70 @@
-﻿.ol-routing {
+﻿.ol-control.ol-routing {
   top: 0.5em;
   left: 3em;
   max-height: 90%;
   overflow-y: auto;
 }
-.ol-touch .ol-routing {
+.ol-touch .ol-control.ol-routing {
   left: 3.5em;
 }
-
-.ol-routing > button {
-  width: auto;
-  padding: .5em;
+.ol-control.ol-routing.ol-searching {
+  opacity: .5;
 }
+
+.ol-control.ol-routing .ol-car,
+.ol-control.ol-routing > button {
+  position: relative;
+}
+.ol-control.ol-routing .ol-car:after,
+.ol-control.ol-routing > button:after {
+  content: "";
+  position: absolute;
+  width: .78em;
+  height: 0.6em;
+  border-radius: 40% 50% 0 0 / 50% 70% 0 0;
+  box-shadow: inset 0 0 0 0.065em, -0.35em 0.14em 0 -0.09em, inset 0 -0.37em, inset -0.14em 0.005em;
+  clip: rect(0 1em .5em -1em);
+  top: .35em;
+  left: .4em;
+}
+.ol-control.ol-routing .ol-car:before,
+.ol-control.ol-routing > button:before {
+  content: "";
+  position: absolute;
+  width: .28em;
+  height: .28em;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1em, 0.65em 0;
+  top: 0.73em;
+  left: .20em;
+}
+.ol-control.ol-routing .ol-pedestrian:after {
+  content: "";
+  position: absolute;
+  width: .3em;
+  height: .4em;
+  top: .25em;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: inset 0.3em 0, 0.1em 0.5em 0 -0.1em, -0.1em 0.5em 0 -0.1em, 0.25em 0.1em 0 -0.1em, -0.25em 0.1em 0 -0.1em;
+  border-top: .2em solid transparent;
+}
+.ol-control.ol-routing .ol-pedestrian:before {
+  content: "";
+  position: absolute;
+  width: .3em;
+  height: .3em;
+  top: .1em;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.ol-control.ol-routing.ol-collapsed .content {
+  display: none;
+}
+
 .ol-routing .ol-search.ol-collapsed ul {
 	display: none;
 }
@@ -21,7 +74,7 @@
 .ol-routing .ol-search ul.history {
   display: none;
 }
-.ol-routing > div > * {
+.ol-routing .content > div > * {
   display: inline-block;
   vertical-align: top;
 }
@@ -72,20 +125,29 @@
   transform: rotate(-45deg);
 }
 
-.ol-routing > i {
+.ol-routing .content > i {
   vertical-align: middle;
 }
+.ol-routing .ol-button,
+.ol-routing .ol-button:focus,
 .ol-routing .ol-pedestrian,
 .ol-routing .ol-car {
+  font-size: 1.1em;
   position: relative;
   display: inline-block;
-  width: 1.5em;
-  height: 1.5em;
-  background: #369;
-  border-radius: 50%;
+  width: 1.4em;
+  height: 1.4em;
+  color: rgba(0,60,136,1);
+  background-color: transparent;
   margin: 0 .1em;
   opacity: .5;
+  vertical-align: middle;
+  outline: none;
+  cursor: pointer;
 }
-.ol-routing > i.selected {
+.ol-routing .ol-button:hover,
+.ol-routing .ol-button.selected,
+.ol-routing i.selected {
   opacity: 1;
+  background: transparent;
 }

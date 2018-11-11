@@ -6,10 +6,11 @@ import ol_interaction_Interaction from 'ol/interaction/Interaction'
  * @extends {ol_interaction_Interaction}
  * @fires hover, enter, leave
  * @param {olx.interaction.HoverOptions} 
- *	- cursor { string | undefined } css cursor propertie or a function that gets a feature, default: none
- *	- featureFilter {function | undefined} filter a function with two arguments, the feature and the layer of the feature. Return true to select the feature 
- *	- layerFilter {function | undefined} filter a function with one argument, the layer to test. Return true to test the layer
- *	- handleEvent { function | undefined } Method called by the map to notify the interaction that a browser event was dispatched to the map. The function may return false to prevent the propagation of the event to other interactions in the map's interactions chain.
+ *	@param { string | undefined } options.cursor css cursor propertie or a function that gets a feature, default: none
+ *	@param {function | undefined} optionsfeatureFilter filter a function with two arguments, the feature and the layer of the feature. Return true to select the feature 
+ *	@param {function | undefined} options.layerFilter filter a function with one argument, the layer to test. Return true to test the layer
+ *	@param {number | undefined} options.hitTolerance Hit-detection tolerance in pixels.
+ *	@param { function | undefined } options.handleEvent Method called by the map to notify the interaction that a browser event was dispatched to the map. The function may return false to prevent the propagation of the event to other interactions in the map's interactions chain.
 */
 var ol_interaction_Hover = function(options)
 {	if (!options) options={};
@@ -25,6 +26,7 @@ var ol_interaction_Hover = function(options)
 
 	this.setFeatureFilter (options.featureFilter);
 	this.setLayerFilter (options.layerFilter);
+	this.set('hitTolerance', options.hitTolerance)
 	this.setCursor (options.cursor);
 };
 ol_inherits(ol_interaction_Hover, ol_interaction_Interaction);
@@ -93,7 +95,7 @@ ol_interaction_Hover.prototype.handleMove_ = function(e)
 						{	feature = layer = null;
 							return false;
 						}
-					});
+					},{ hitTolerance: this.get('hitTolerance') });
 
 		if (b) this.dispatchEvent({ type:"hover", feature:feature, layer:layer, coordinate:e.coordinate, pixel: e.pixel, map: e.map, dragging:e.dragging });
 
