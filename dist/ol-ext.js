@@ -49,9 +49,11 @@ ol.ext.Ajax.prototype.send = function (url, data){
 	if (this._auth) {
 		ajax.setRequestHeader("Authorization", "Basic " + this._auth);
 	}
-	// Load complete
+  // Load complete
+  this.dispatchEvent ({ type: 'loadstart' });
 	ajax.onload = function() {
 		self._request = null;
+    self.dispatchEvent ({ type: 'loadend' });
     if (this.status >= 200 && this.status < 400) {
       // Decode response
       try {
@@ -95,7 +97,8 @@ ol.ext.Ajax.prototype.send = function (url, data){
 	};
 	// Oops
 	ajax.onerror = function() {
-		self._request = null;
+    self._request = null;
+    self.dispatchEvent ({ type: 'loadend' });
     self.dispatchEvent ({ 
       type: 'error',
       status: this.status,
@@ -107,31 +110,72 @@ ol.ext.Ajax.prototype.send = function (url, data){
 	ajax.send();
 };
 
+/** Vanilla JS helper to manipulate DOM without jQuery
+ * @see https://github.com/nefe/You-Dont-Need-jQuery
+ * @see https://plainjs.com/javascript/
+ */
 ol.ext.element = {};
 /**
  * Create an element
- * @param {string} className 
- * @param {string} value 
- * @param {string} title 
+ * @param {string} tagName The element tag, use 'TEXT' to create a text node
+ * @param {*} options
  */
-ol.ext.element.element = function (type, className, value, title) {
-	var el = document.createElement(type);
-	el.setAttribute('class', className);
-	el.setAttribute('title', title || value || '');
-	if (value) el.innerHTML = value || '';
-	return el;
+ol.ext.element.create = function (tagName, options) {
+  options = options || {};
+  // Text noe
+  if (tagName === 'TEXT') {
+    var elt = document.createTextNode(options.html||'');
+    if (options.parent) options.parent.appendChild(elt);
+  } else {
+    // Other element
+    var elt = document.createElement(tagName);
+    if (/button/i.test(tagName)) elt.setAttribute('type', 'button');
+    for (var attr in options) {
+      switch (attr) {
+        case 'className': {
+          elt.setAttribute('class', options.className.trim());
+          break;
+        }
+        case 'html': {
+          if (options.html instanceof Element) elt.appendChild(options.html)
+          else elt.innerHTML = options.html;
+          break;
+        }
+        case 'parent': {
+          options.parent.appendChild(elt);
+          break;
+        }
+        default: {
+          elt.setAttribute(attr, options[attr]);
+          break;
+        }
+      }
+    }
+  }
+  return elt;
 };
 /**
- * Create a button element
- * @param {string} className 
- * @param {string} value 
- * @param {string} title 
+ * Show an element
+ * @param {Element} element
  */
-ol.ext.element.button = function (className, value, title) {
-	var bt = ol.ext.element.element('BUTTON', className, value, title);
-	bt.setAttribute('type', 'button');
-	return bt;
+ol.ext.element.show = function (element) {
+  element.style.display = '';
 };
+/**
+ * Hide an element
+ * @param {Element} element
+ */
+ol.ext.element.hide = function (element) {
+  element.style.display = 'none';
+};
+/**
+ * Toggle an element
+ * @param {Element} element
+ */
+ol.ext.element.toggle = function (element) {
+  element.style.display = (element.style.display==='none' ? '' : 'none');
+};
+
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -3602,31 +3646,91 @@ ol.control.GridReference.prototype.drawGrid_ = function (e)
  *  @param {string} options.exclusions Exclusion list separate with a comma 'Toll,Tunnel,Bridge'
  */
 ol.control.IsochroneGeoportail = function(options) {
+  var self = this;
 	if (!options) options = {};
 	if (options.typing == undefined) options.typing = 300;
-  // Class name for history
-  this._classname = options.className || 'search';
-	var element = document.createElement("DIV");
-	var classNames = (options.className ? options.className+' ' : '')+ 'ol-isochrone ol-routing';
+	var classNames = (options.className ? options.className : '')+ ' ol-isochrone ol-routing';
+	if (!options.target) classNames += ' ol-unselectable ol-control';
+	var element = ol.ext.element.create('DIV', { className: classNames })
 	if (!options.target) {
-    classNames += ' ol-unselectable ol-control';
-	}
-	element.setAttribute('class', classNames);
+    var bt = ol.ext.element.create('BUTTON', { parent: element })
+    bt.addEventListener('click', function(){
+      element.classList.toggle('ol-collapsed');
+    });
+  }
+  // Inherits
   ol.control.Control.call(this, {
     element: element,
     target: options.target
   });
-  this.addSearch(element, options);
-  // Search
-  var okbt = ol.ext.element.element('I', 'ol-ok', 'ok')
-  this.element.appendChild(okbt);
-  okbt.addEventListener('click', function() {
-    var sel = this._search.get('selection');
-    if (sel) {
-      console.log(sel)
-      this.search(ol.proj.fromLonLat([sel.x, sel.y], this.getMap().getView().getProjection()), 500);
-    }
-  }.bind(this));
+  var content = ol.ext.element.create('DIV', { className: 'content', parent: element } )
+  // Search control
+  this._addSearchCtrl(content, options);
+  // Method buttons
+  ol.ext.element.create('BUTTON', { className: 'ol-button ol-method-time selected', title:'isochrone', parent: content })
+    .addEventListener('click', function(){
+      this.setMethod('time');
+    }.bind(this));
+  ol.ext.element.create('I', { className: 'ol-button ol-method-distance', title:'isodistance', parent: content })
+    .addEventListener('click', function(){
+      this.setMethod('distance');
+    }.bind(this));
+  // Mode buttons
+  ol.ext.element.create('I', { className: 'ol-button ol-car selected', title:'by car', parent: content })
+    .addEventListener('click', function(){
+      this.setMode('car');
+    }.bind(this));
+  ol.ext.element.create('I', { className: 'ol-button ol-pedestrian', title:'by foot', parent: content })
+    .addEventListener('click', function(){
+      this.setMode('pedestrian');
+    }.bind(this));
+  // Direction buttons
+  ol.ext.element.create('I', { className: 'ol-button ol-direction-direct selected', title:'direct', parent: content })
+    .addEventListener('click', function(){
+      this.setDirection('direct');
+    }.bind(this));
+  ol.ext.element.create('I', { className: 'ol-button ol-direction-reverse', title:'reverse', parent: content })
+    .addEventListener('click', function(){
+      this.setDirection('reverse');
+    }.bind(this));
+  // Input 
+  var div = ol.ext.element.create('DIV', { className: 'ol-time', parent: content })
+  ol.ext.element.create('DIV', { html:'isochrone:', parent: div });
+  ol.ext.element.create('INPUT', { type: 'number', parent: div, min: 0 })
+    .addEventListener('change', function(){
+      self.set('hour', Number(this.value));
+    });
+  ol.ext.element.create('TEXT', { parent: div, html: 'h' });
+  ol.ext.element.create('INPUT', { type: 'number', parent: div, min: 0 })
+    .addEventListener('change', function(){
+      self.set('minute', Number(this.value));
+    });
+  ol.ext.element.create('TEXT', { parent: div, html: 'mn' });
+  div = ol.ext.element.create('DIV', { className: 'ol-distance', parent: content });
+  ol.ext.element.create('DIV', { html:'isodistance:', parent: div });
+  ol.ext.element.create('INPUT', { type: 'number', parent: div, min: 0 })
+    .addEventListener('change', function(){
+      self.set('distance', Number(this.value));
+    });
+  ol.ext.element.create('TEXT', { parent: div, html: 'km' });
+  // OK button
+  ol.ext.element.create('I', { className:'ol-ok', html:'ok', parent: content })
+    .addEventListener('click', function() {
+      var val = 0;
+      switch (this.get('method')) {
+        case 'distance':  {
+          val = this.get('distance')*1000;
+          break;
+        }
+        default: {
+          val = (this.get('hour')||0)*3600 + (this.get('minute')||0)*60;
+          break;
+        }
+      }
+      if (val && this.get('coordinate')) {
+        this.search(this.get('coordinate'), val);
+      }
+    }.bind(this));
   this.set('url', 'https://wxs.ign.fr/'+options.apiKey+'/isochrone/isochrone.json');
   this._ajax = new ol.ext.Ajax({ 
     dataType: 'JSON',
@@ -3636,11 +3740,12 @@ ol.control.IsochroneGeoportail = function(options) {
   this._ajax.on('error', this._error.bind(this));
   // searching
   this._ajax.on('loadstart', function() {
-    this.element.classList.add('searching');
+    this.element.classList.add('ol-searching');
   }.bind(this));
   this._ajax.on('loadend', function() {
-    this.element.classList.remove('searching');
+    this.element.classList.remove('ol-searching');
   }.bind(this));
+  this.setMethod(options.method);
 };
 ol.inherits(ol.control.IsochroneGeoportail, ol.control.Control);
 /**
@@ -3655,18 +3760,50 @@ ol.control.IsochroneGeoportail.prototype.setMap = function (map) {
 /** Add a new search input
  * @private
  */
-ol.control.IsochroneGeoportail.prototype.addSearch = function (element, options) {
-	var self = this;
-	var div = document.createElement("DIV");
-	element.appendChild(div);
+ol.control.IsochroneGeoportail.prototype._addSearchCtrl = function (element, options) {
+	var div = ol.ext.element.create("DIV", { parent: element });
   var search = this._search = new ol.control.SearchGeoportail({
 		apiKey: options.apiKey,
 		target: div
 	});
 	search.on('select', function(e){
-		search.setInput(e.search.fulltext);
-		search.set('selection', e.search);
-	});
+    search.setInput(e.search.fulltext);
+    this.set('coordinate', e.coordinate);
+  }.bind(this));
+  search.on('change:input', function(){
+    this.set('coordinate', false);
+  }.bind(this));
+};
+/** Set the travel method
+ * @param [string] method The method (time or distance)
+ */
+ol.control.IsochroneGeoportail.prototype.setMethod = function(method) {7
+  method = (/distance/.test(method) ? 'distance' : 'time');
+  this.element.querySelector(".ol-method-time").classList.remove("selected");
+  this.element.querySelector(".ol-method-distance").classList.remove("selected");
+  this.element.querySelector(".ol-method-"+method).classList.add("selected");
+  this.element.querySelector("div.ol-time").classList.remove("selected");
+  this.element.querySelector("div.ol-distance").classList.remove("selected");
+  this.element.querySelector("div.ol-"+method).classList.add("selected");
+  this.set('method', method);
+};
+/** Set mode
+ * @param {string} mode The mode: 'car' or 'pedestrian', default 'car'
+ */
+ol.control.IsochroneGeoportail.prototype.setMode = function (mode) {
+  this.set('mode', mode);
+  this.element.querySelector(".ol-car").classList.remove("selected");
+  this.element.querySelector(".ol-pedestrian").classList.remove("selected");
+  this.element.querySelector(".ol-"+mode).classList.add("selected");
+};
+/** Set direction
+ * @param {string} direction The direction: 'direct' or 'reverse', default direct
+ */
+ol.control.IsochroneGeoportail.prototype.setDirection = function (direction) {
+  this.set('direction', direction);
+  this.element.querySelector(".ol-direction-direct").classList.remove("selected");
+  this.element.querySelector(".ol-direction-reverse").classList.remove("selected");
+  this.element.querySelector(".ol-direction-"+direction).classList.add("selected");
 };
 /** Calculate an isochrone
  * @param {ol.coordinate} coord
@@ -3701,20 +3838,22 @@ ol.control.IsochroneGeoportail.prototype.search = function(coord, option) {
       }
     }
   }
-  // Send data
-  var data = {
-    'gp-access-lib': '2.1.0',
-    location: ol.proj.toLonLat(coord, proj),
-    graphName: this.get('graphName') || 'Voiture',
-    exclusions: this.get('exclusions') || undefined,
-    method: method,
-    time: method==='time' ? option : undefined,
-    distance: method==='distance' ? option : undefined,
-    reverse: this.get('reverse') || undefined,
-    smoothing: this.get('smoothing') || true,
-    holes: this.get('holes') || false
-  };
-  this._ajax.send(this.get('url'), data);
+  if (typeof option === 'number') {
+    // Send data
+    var data = {
+      'gp-access-lib': '2.1.0',
+      location: ol.proj.toLonLat(coord, proj),
+      graphName: (this.get('mode')==='pedestrian' ?  'Pieton' : 'Voiture'),
+      exclusions: this.get('exclusions') || undefined,
+      method: method,
+      time: method==='time' ? option : undefined,
+      distance: method==='distance' ? option : undefined,
+      reverse: (this.get('direction') === 'reverse'),
+      smoothing: this.get('smoothing') || true,
+      holes: this.get('holes') || false
+    };
+    this._ajax.send(this.get('url'), data);
+  }
 };
 /** Trigger result
  * @private
@@ -5184,8 +5323,8 @@ ol.control.Profil.prototype.getImage = function(type, encoderOptions)
 }
 
 /*	Copyright (c) 2018 Jean-Marc VIGLINO,
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
  * Geoportail routing Control.
@@ -5195,102 +5334,105 @@ ol.control.Profil.prototype.getImage = function(type, encoderOptions)
  * @fires change:input
  * @param {Object=} options
  *	@param {string} options.className control class name
- *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *	@param {string | undefined} options.label Text label to use for the search button, default "search"
- *	@param {string | undefined} options.placeholder placeholder, default "Search..."
- *	@param {string | undefined} options.inputLabel label for the input, default none
- *	@param {string | undefined} options.noCollapse prevent collapsing on input blur, default false
- *	@param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
- *	@param {integer | undefined} options.minLength minimum length to start searching, default 1
- *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
- *	@param {integer | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
- *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index.
- *	@param {function} options.autocomplete a function that take a search string and callback function to send an array
- */
+*	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+*	@param {string | undefined} options.label Text label to use for the search button, default "search"
+*	@param {string | undefined} options.placeholder placeholder, default "Search..."
+*	@param {string | undefined} options.inputLabel label for the input, default none
+*	@param {string | undefined} options.noCollapse prevent collapsing on input blur, default false
+*	@param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
+*	@param {integer | undefined} options.minLength minimum length to start searching, default 1
+*	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+*	@param {integer | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
+*	@param {function} options.getTitle a function that takes a feature and return the name to display in the index.
+*	@param {function} options.autocomplete a function that take a search string and callback function to send an array
+*/
 ol.control.RoutingGeoportail = function(options) {
   var self = this;
-	if (!options) options = {};
-	if (options.typing == undefined) options.typing = 300;
+  if (!options) options = {};
+  if (options.typing == undefined) options.typing = 300;
   // Class name for history
   this._classname = options.className || 'search';
-	var element = document.createElement("DIV");
-	var classNames = (options.className||"")+ " ol-routing";
-	if (!options.target) {
+  var element = document.createElement("DIV");
+  var classNames = (options.className||"")+ " ol-routing";
+  if (!options.target) {
     classNames += " ol-unselectable ol-control";
-	}
-	element.setAttribute('class', classNames);
-	ol.control.Control.call(this, {
+  }
+  element.setAttribute('class', classNames);
+	if (!options.target) {
+    var bt = ol.ext.element.create('BUTTON', { parent: element })
+    bt.addEventListener('click', function(){
+      element.classList.toggle('ol-collapsed');
+    });
+  }
+  ol.control.Control.call(this, {
     element: element,
     target: options.target
-	});
-	this.set('url', 'https://wxs.ign.fr/'+options.apiKey+'/itineraire/rest/route.json');
-	this._search = [];
-	var listElt = document.createElement("DIV");
-	this.addSearch(element, options);
-	this.addSearch(element, options);
-	element.appendChild(listElt);
-	this.addButton('ol-car', options.carlabel||"by car")
-		.addEventListener("click", function() {
-			self.setMode('car');
-		});
-	this.addButton('ol-pedestrian', options.pedlabel||"pedestrian")
-		.addEventListener("click", function() {
-			self.setMode('pedestrian');
-		});
-	this.addButton('ol-ok', options.runlabel||"search", 'OK')
-		.addEventListener("click", function() {
-			self.calculate();
-		});
-	this.resultElement = document.createElement("DIV");
-	this.resultElement.setAttribute('class', 'ol-result');
-	element.appendChild(this.resultElement);
-	this.setMode(options.mode || 'car');
+  });
+  this.set('url', 'https://wxs.ign.fr/'+options.apiKey+'/itineraire/rest/route.json');
+  this._search = [];
+  var content = ol.ext.element.create('DIV', { className: 'content', parent: element } )
+  var listElt = document.createElement("DIV");
+  this.addSearch(content, options);
+  this.addSearch(content, options);
+  content.appendChild(listElt);
+  ol.ext.element.create('I', { className: 'ol-car', title: options.carlabel||'by car', parent: content })
+    .addEventListener("click", function() {
+      self.setMode('car');
+    });
+  ol.ext.element.create('I', { className: 'ol-pedestrian', title: options.pedlabel||'pedestrian', parent: content })
+    .addEventListener("click", function() {
+      self.setMode('pedestrian');
+    });
+  ol.ext.element.create('I', { className: 'ol-ok', title: options.runlabel||'search', html:'OK', parent: content })
+    .addEventListener("click", function() {
+      self.calculate();
+    });
+  this.resultElement = document.createElement("DIV");
+  this.resultElement.setAttribute('class', 'ol-result');
+  element.appendChild(this.resultElement);
+  this.setMode(options.mode || 'car');
 };
 ol.inherits(ol.control.RoutingGeoportail, ol.control.Control);
 ol.control.RoutingGeoportail.prototype.setMode = function (mode) {
-	this.set('mode', mode);
-	this.element.querySelector(".ol-car").classList.remove("selected");
-	this.element.querySelector(".ol-pedestrian").classList.remove("selected");
-	this.element.querySelector(".ol-"+mode).classList.add("selected");
-	this.calculate();
+  this.set('mode', mode);
+  this.element.querySelector(".ol-car").classList.remove("selected");
+  this.element.querySelector(".ol-pedestrian").classList.remove("selected");
+  this.element.querySelector(".ol-"+mode).classList.add("selected");
+  this.calculate();
 };
 ol.control.RoutingGeoportail.prototype.addButton = function (className, title, info) {
-	var bt = document.createElement("I");
-	bt.setAttribute("class", className);
-	bt.setAttribute("type", "button");
-	bt.setAttribute("title", title);
-	bt.innerHTML = info||'';
-	this.element.appendChild(bt);
-	return bt;
+  var bt = document.createElement("I");
+  bt.setAttribute("class", className);
+  bt.setAttribute("type", "button");
+  bt.setAttribute("title", title);
+  bt.innerHTML = info||'';
+  this.element.appendChild(bt);
+  return bt;
 };
 /** Add a new search input
  * @private
  */
 ol.control.RoutingGeoportail.prototype.addSearch = function (element, options) {
-	var self = this;
-	var div = document.createElement("DIV");
-	element.appendChild(div);
-	var bt = document.createElement("BUTTON");
-	bt.setAttribute("type", "button");
-	bt.setAttribute("title", options.startlabel||"search");
-	div.appendChild(bt);
-	bt.addEventListener('click', function() {
-		self.resultElement.innerHTML = '';
-	});
-	var search = new ol.control.SearchGeoportail({
-		apiKey: options.apiKey,
-		target: div
-	});
-	this._search.push(search);
-	search.on('select', function(e){
-		search.setInput(e.search.fulltext);
-		search.set('selection', e.search);
-	});
-	var self = this;
-	search.element.querySelector('input').addEventListener('change', function(){
-		search.set('selection', null);
-		self.resultElement.innerHTML = '';
-	});
+  var self = this;
+  var div = ol.ext.element.create("DIV", { parent:element });
+  ol.ext.element.create ('BUTTON', { title: options.startlabel||"search", parent: div})
+    .addEventListener('click', function() {
+      self.resultElement.innerHTML = '';
+    });
+  var search = new ol.control.SearchGeoportail({
+    apiKey: options.apiKey,
+    target: div
+  });
+  this._search.push(search);
+  search.on('select', function(e){
+    search.setInput(e.search.fulltext);
+    search.set('selection', e.search);
+  });
+  var self = this;
+  search.element.querySelector('input').addEventListener('change', function(){
+    search.set('selection', null);
+    self.resultElement.innerHTML = '';
+  });
 };
 /**
  * Set the map instance the control is associated with
@@ -5298,133 +5440,145 @@ ol.control.RoutingGeoportail.prototype.addSearch = function (element, options) {
  * @param {_ol_Map_} map The map instance.
  */
 ol.control.RoutingGeoportail.prototype.setMap = function (map) {
-	ol.control.Control.prototype.setMap.call(this, map);
-	for (var i=0; i<this._search.length; i++) {
-		var c = this._search[i];
-		c.setMap(map);
-	}
+  ol.control.Control.prototype.setMap.call(this, map);
+  for (var i=0; i<this._search.length; i++) {
+    var c = this._search[i];
+    c.setMap(map);
+  }
 };
+/** Get request data
+ * @private
+ */
 ol.control.RoutingGeoportail.prototype.requestData = function (start, end) {
-	return {
-		'gp-access-lib': '1.1.0',
-		origin: start.x+','+start.y,
-		destination: end.x+','+end.y,
-		method: 'time', // 'distance'
-		graphName: this.get('mode')==='pedestrian' ? 'Pieton' : 'Voiture',
-		waypoints:'',
-		format: 'STANDARDEXT'
-	};
+  return {
+    'gp-access-lib': '1.1.0',
+    origin: start.x+','+start.y,
+    destination: end.x+','+end.y,
+    method: 'time', // 'distance'
+    graphName: this.get('mode')==='pedestrian' ? 'Pieton' : 'Voiture',
+    waypoints:'',
+    format: 'STANDARDEXT'
+  };
 };
+/** Show routing as a list
+ * @private
+ */
 ol.control.RoutingGeoportail.prototype.listRouting = function (routing) {
-	var time = routing.duration/60;
-	this.resultElement.innerHTML = '';
-	var t = '';
-	if (time<60) {
-		t += time.toFixed(0)+' min';
-	} else {
-		t+= (time/60).toFixed(0)+' h '+(time%60).toFixed(0)+' min';
-	}
-	var dist = routing.distance;
-	if (dist<1000) {
-		t += ' ('+dist.toFixed(0)+' m)';
-	} else {
-		t += ' ('+(dist/1000).toFixed(2)+' km)';
-	}
-	var iElement = document.createElement('i');
-			iElement.textContent = t;
-	this.resultElement.appendChild(iElement)
-	var ul = document.createElement('ul');
-	this.resultElement.appendChild(ul);
-	var info = {
-		'none': 'Prendre sur ',
-		'R': 'Tourner à droite sur ',
-		'FR': 'Tourner légèrement à droite sur ',
-		'L': 'Tourner à gauche sur ',
-		'FL': 'Tourner légèrement à gauche sur ',
-		'F': 'Continuer tout droit sur ',
-	}
-	for (var i=0, f; f=routing.features[i]; i++) {
-		var d = f.get('distance');
-		d = (d<1000) ? d.toFixed(0)+' m' : (d/1000).toFixed(2)+' km';
-		var t = f.get('durationT')/60;
-		console.log(f.get('duration'),t)
-		t = (f.get('duration')<40) ? '' : (t<60) ? t.toFixed(0)+' min' : (t/60).toFixed(0)+' h '+(t%60).toFixed(0)+' min';
-		var li = document.createElement('li');
-				li.classList.add(f.get('instruction'));
-				li.innerHTML = (info[f.get('instruction')||'none']||'#')
-			+ ' ' + f.get('name')
-			+ '<i>' + d + (t ? ' - ' + t : '') +'</i>'
-     ul.appendChild(li);
-	}
+  var time = routing.duration/60;
+  this.resultElement.innerHTML = '';
+  var t = '';
+  if (time<60) {
+    t += time.toFixed(0)+' min';
+  } else {
+    t+= (time/60).toFixed(0)+' h '+(time%60).toFixed(0)+' min';
+  }
+  var dist = routing.distance;
+  if (dist<1000) {
+    t += ' ('+dist.toFixed(0)+' m)';
+  } else {
+    t += ' ('+(dist/1000).toFixed(2)+' km)';
+  }
+  var iElement = document.createElement('i');
+      iElement.textContent = t;
+  this.resultElement.appendChild(iElement)
+  var ul = document.createElement('ul');
+  this.resultElement.appendChild(ul);
+  var info = {
+    'none': 'Prendre sur ',
+    'R': 'Tourner à droite sur ',
+    'FR': 'Tourner légèrement à droite sur ',
+    'L': 'Tourner à gauche sur ',
+    'FL': 'Tourner légèrement à gauche sur ',
+    'F': 'Continuer tout droit sur ',
+  }
+  for (var i=0, f; f=routing.features[i]; i++) {
+    var d = f.get('distance');
+    d = (d<1000) ? d.toFixed(0)+' m' : (d/1000).toFixed(2)+' km';
+    var t = f.get('durationT')/60;
+    console.log(f.get('duration'),t)
+    t = (f.get('duration')<40) ? '' : (t<60) ? t.toFixed(0)+' min' : (t/60).toFixed(0)+' h '+(t%60).toFixed(0)+' min';
+    var li = document.createElement('li');
+        li.classList.add(f.get('instruction'));
+        li.innerHTML = (info[f.get('instruction')||'none']||'#')
+      + ' ' + f.get('name')
+      + '<i>' + d + (t ? ' - ' + t : '') +'</i>'
+    ul.appendChild(li);
+  }
 };
+/** Handle routing response
+ * @private
+ */
 ol.control.RoutingGeoportail.prototype.handleResponse = function (data) {
-	var routing = { type:'routing' };
+  var routing = { type:'routing' };
 /*
-	var format = new ol.format.WKT();
-	routing.features = [ format.readFeature(data.geometryWkt, {
-		dataProjection: 'EPSG:4326',
-		featureProjection: this.getMap().getView().getProjection()
-	}) ];
+  var format = new ol.format.WKT();
+  routing.features = [ format.readFeature(data.geometryWkt, {
+    dataProjection: 'EPSG:4326',
+    featureProjection: this.getMap().getView().getProjection()
+  }) ];
 */
-	routing.features = [];
-	var distance = 0;
-	var duration = 0;
-	for (var i=0, l; l=data.legs[i]; i++) {
-		for (var j=0, s; s=l.steps[j]; j++) {
-			var geom = [];
-			for (var k=0, p; p=s.points[k]; k++){
-				p = p.split(',');
-				geom.push([parseFloat(p[0]),parseFloat(p[1])]);
-			}
-			geom = new ol.geom.LineString(geom);
-			options = {
-				geometry: geom.transform('EPSG:4326',this.getMap().getView().getProjection()),
-				name: s.name,
-				instruction: s.navInstruction,
-				distance: parseFloat(s.distanceMeters),
-				duration: parseFloat(s.durationSeconds)
-			}
-			console.log(duration, options.duration, s)
-			distance += options.distance;
-			duration += options.duration;
-			options.distanceT = distance;
-			options.durationT = duration;
-			var f = new ol.Feature(options);
-			routing.features.push(f);
-		}
-	}
-	routing.distance = parseFloat(data.distanceMeters);
-	routing.duration = parseFloat(data.durationSeconds);
-	console.log(data, routing);
-	this.dispatchEvent(routing);
-	this.path = routing;
-	return routing;
+  routing.features = [];
+  var distance = 0;
+  var duration = 0;
+  for (var i=0, l; l=data.legs[i]; i++) {
+    for (var j=0, s; s=l.steps[j]; j++) {
+      var geom = [];
+      for (var k=0, p; p=s.points[k]; k++){
+        p = p.split(',');
+        geom.push([parseFloat(p[0]),parseFloat(p[1])]);
+      }
+      geom = new ol.geom.LineString(geom);
+      options = {
+        geometry: geom.transform('EPSG:4326',this.getMap().getView().getProjection()),
+        name: s.name,
+        instruction: s.navInstruction,
+        distance: parseFloat(s.distanceMeters),
+        duration: parseFloat(s.durationSeconds)
+      }
+      console.log(duration, options.duration, s)
+      distance += options.distance;
+      duration += options.duration;
+      options.distanceT = distance;
+      options.durationT = duration;
+      var f = new ol.Feature(options);
+      routing.features.push(f);
+    }
+  }
+  routing.distance = parseFloat(data.distanceMeters);
+  routing.duration = parseFloat(data.durationSeconds);
+  console.log(data, routing);
+  this.dispatchEvent(routing);
+  this.path = routing;
+  return routing;
 };
+/** Calculate route
+ * 
+ */
 ol.control.RoutingGeoportail.prototype.calculate = function () {
-	this.resultElement.innerHTML = '';
-	for (var i=0; i<this._search.length; i++) {
-		if (!this._search[i].get('selection')) return;
-	}
-	var start = this._search[0].get('selection');
-	var end = this._search[1].get('selection');
-	var data = this.requestData(start,end);
-	var url = encodeURI(this.get('url'));
-	var parameters = '';
-	for (var index in data) {
-		parameters += (parameters) ? '&' : '?';
-		if (data.hasOwnProperty(index)) parameters += index + '=' + data[index];
-	}
-	var self = this;
-	this.ajax(url + parameters, 
-		function (resp) {
-			if (resp.status >= 200 && resp.status < 400) {
-				self.listRouting(self.handleResponse (JSON.parse(resp.response)));
-			} else {
-				console.log(url + parameters, arguments);
-			}
-		}, function(){
-			console.log(url + parameters, arguments);
-		});
+  this.resultElement.innerHTML = '';
+  for (var i=0; i<this._search.length; i++) {
+    if (!this._search[i].get('selection')) return;
+  }
+  var start = this._search[0].get('selection');
+  var end = this._search[1].get('selection');
+  var data = this.requestData(start,end);
+  var url = encodeURI(this.get('url'));
+  var parameters = '';
+  for (var index in data) {
+    parameters += (parameters) ? '&' : '?';
+    if (data.hasOwnProperty(index)) parameters += index + '=' + data[index];
+  }
+  var self = this;
+  this.ajax(url + parameters, 
+    function (resp) {
+      if (resp.status >= 200 && resp.status < 400) {
+        self.listRouting(self.handleResponse (JSON.parse(resp.response)));
+      } else {
+        console.log(url + parameters, arguments);
+      }
+    }, function(){
+      console.log(url + parameters, arguments);
+    });
 };	
 /** Send an ajax request (GET)
  * @param {string} url
@@ -5432,32 +5586,32 @@ ol.control.RoutingGeoportail.prototype.calculate = function () {
  * @param {function} onerror callback
  */
 ol.control.RoutingGeoportail.prototype.ajax = function (url, onsuccess, onerror){
-	var self = this;
-	// Abort previous request
-	if (this._request) {
-		this._request.abort();
-	}
-	// New request
-	var ajax = this._request = new XMLHttpRequest();
-	ajax.open('GET', url, true);
-	if (this._auth) {
-		ajax.setRequestHeader("Authorization", "Basic " + this._auth);
-	}
-	this.element.classList.add('searching');
-	// Load complete
-	ajax.onload = function() {
-		self._request = null;
-		self.element.classList.remove('searching');
-		onsuccess.call(self, this);
-	};
-	// Oops, TODO do something ?
-	ajax.onerror = function() {
-		self._request = null;
-		self.element.classList.remove('searching');
-		if (onerror) onerror.call(self);
-	};
-	// GO!
-	ajax.send();
+  var self = this;
+  // Abort previous request
+  if (this._request) {
+    this._request.abort();
+  }
+  // New request
+  var ajax = this._request = new XMLHttpRequest();
+  ajax.open('GET', url, true);
+  if (this._auth) {
+    ajax.setRequestHeader("Authorization", "Basic " + this._auth);
+  }
+  this.element.classList.add('ol-searching');
+  // Load complete
+  ajax.onload = function() {
+    self._request = null;
+    self.element.classList.remove('ol-searching');
+    onsuccess.call(self, this);
+  };
+  // Oops, TODO do something ?
+  ajax.onerror = function() {
+    self._request = null;
+    self.element.classList.remove('ol-searching');
+    if (onerror) onerror.call(self);
+  };
+  // GO!
+  ajax.send();
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
@@ -10125,10 +10279,11 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(active)
  * @extends {ol.interaction.Interaction}
  * @fires hover, enter, leave
  * @param {olx.interaction.HoverOptions} 
- *	- cursor { string | undefined } css cursor propertie or a function that gets a feature, default: none
- *	- featureFilter {function | undefined} filter a function with two arguments, the feature and the layer of the feature. Return true to select the feature 
- *	- layerFilter {function | undefined} filter a function with one argument, the layer to test. Return true to test the layer
- *	- handleEvent { function | undefined } Method called by the map to notify the interaction that a browser event was dispatched to the map. The function may return false to prevent the propagation of the event to other interactions in the map's interactions chain.
+ *	@param { string | undefined } options.cursor css cursor propertie or a function that gets a feature, default: none
+ *	@param {function | undefined} optionsfeatureFilter filter a function with two arguments, the feature and the layer of the feature. Return true to select the feature 
+ *	@param {function | undefined} options.layerFilter filter a function with one argument, the layer to test. Return true to test the layer
+ *	@param {number | undefined} options.hitTolerance Hit-detection tolerance in pixels.
+ *	@param { function | undefined } options.handleEvent Method called by the map to notify the interaction that a browser event was dispatched to the map. The function may return false to prevent the propagation of the event to other interactions in the map's interactions chain.
 */
 ol.interaction.Hover = function(options)
 {	if (!options) options={};
@@ -10142,6 +10297,7 @@ ol.interaction.Hover = function(options)
 	});
 	this.setFeatureFilter (options.featureFilter);
 	this.setLayerFilter (options.layerFilter);
+	this.set('hitTolerance', options.hitTolerance)
 	this.setCursor (options.cursor);
 };
 ol.inherits(ol.interaction.Hover, ol.interaction.Interaction);
@@ -10205,7 +10361,7 @@ ol.interaction.Hover.prototype.handleMove_ = function(e)
 						{	feature = layer = null;
 							return false;
 						}
-					});
+					},{ hitTolerance: this.get('hitTolerance') });
 		if (b) this.dispatchEvent({ type:"hover", feature:feature, layer:layer, coordinate:e.coordinate, pixel: e.pixel, map: e.map, dragging:e.dragging });
 		if (this.feature_===feature && this.layer_===layer)
 		{	

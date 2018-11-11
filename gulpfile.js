@@ -75,29 +75,29 @@ var banner = ['/**',
 // Build css. Use --debug to build in debug mode
 gulp.task('css', function () {
   gulp.src([
-		"./src/control/*.css", "!./src/control/PirateMap.css",
-		"./src/featureanimation/*.css", 
-		"./src/filter/*.css",
-		"./src/interaction/*.css",
-		"./src/layer/*.css",
-		"./src/overlay/*.css", 
-		"./src/style/*.css",
-		"./src/utils/*.css"
-		])
+    "./src/control/*.css", "!./src/control/PirateMap.css",
+    "./src/featureanimation/*.css", 
+    "./src/filter/*.css",
+    "./src/interaction/*.css",
+    "./src/layer/*.css",
+    "./src/overlay/*.css", 
+    "./src/style/*.css",
+    "./src/utils/*.css"
+    ])
   .pipe(autoprefixer('last 2 versions'))
   .pipe(concat(name+'.css'))
   .pipe(gulp.dest('./dist'));
 
   gulp.src([
-		"./src/control/*.css", "!./src/control/PirateMap.css",
-		"./src/featureanimation/*.css", 
-		"./src/filter/*.css",
-		"./src/interaction/*.css",
-		"./src/layer/*.css",
-		"./src/overlay/*.css", 
-		"./src/style/*.css",
-		"./src/utils/*.css"
-		])
+    "./src/control/*.css", "!./src/control/PirateMap.css",
+    "./src/featureanimation/*.css", 
+    "./src/filter/*.css",
+    "./src/interaction/*.css",
+    "./src/layer/*.css",
+    "./src/overlay/*.css", 
+    "./src/style/*.css",
+    "./src/utils/*.css"
+    ])
   .pipe(autoprefixer('last 2 versions'))
   .pipe(concat(name+'.min.css'))
   .pipe(cssmin())
@@ -106,34 +106,35 @@ gulp.task('css', function () {
 
 // Build js
 gulp.task("js", function() {
-	gulp.src([
-		"./src/control/Search.js","./src/control/SearchJSON.js","./src/control/SearchPhoton.js","./src/control/SearchGeoportail.js",
+  gulp.src([
+    "./src/util/ext.js", "./src/util/*.js",
+    "./src/control/Search.js","./src/control/SearchJSON.js","./src/control/SearchPhoton.js","./src/control/SearchGeoportail.js",
     "./src/control/LayerSwitcher.js", "./src/control/*.js", 
     "!./src/control/PirateMap.js", "!./src/control/Cloud.js",
-		"./src/featureanimation/FeatureAnimation.js", "./src/featureanimation/*.js",
-		"./src/filter/Base.js", "./src/filter/Mask.js", "./src/filter/*.js",
+    "./src/featureanimation/FeatureAnimation.js", "./src/featureanimation/*.js",
+    "./src/filter/Base.js", "./src/filter/Mask.js", "./src/filter/*.js",
     "./src/interaction/*.js",
     "./src/source/*.js",
-		"./src/layer/*.js",
-		"./src/overlay/Popup.js", "./src/overlay/*.js",
+    "./src/layer/*.js",
+    "./src/overlay/Popup.js", "./src/overlay/*.js",
     "./src/geom/*.js",
     "./src/render/*.js",
     "./src/style/*.js", "!./src/style/FontMakiDef.js", "!./src/style/FontMaki2Def.js", "!./src/style/FontAwesomeDef.js",
-    // Utils in extrajs
+    // Export utils in extrajs
     //"./src/utils/*.js", "!./src/render/Pulse.js", "!./src/render/Markup.js",
-		"!./*/*.min.js",
-		"!./src/filter/TextureImage.js"
-		])
-	.pipe(transform())
-	.pipe(concat(name+".js"))
+    "!./*/*.min.js",
+    "!./src/filter/TextureImage.js"
+    ])
+  .pipe(transform())
+  .pipe(concat(name+".js"))
   .pipe(minify(
-		{	ext: { 
-				src:".js", 
-				min:".min.js" 
-			}
+    {	ext: { 
+        src:".js", 
+        min:".min.js" 
+      }
     }))
   .on('error', swallowError)
-	.pipe(header(banner, { pkg : pkg } ))
+  .pipe(header(banner, { pkg : pkg } ))
   .pipe(gulp.dest("dist"))
   .on('end', function(){ console.log('\x1b[32m','\n>>> Terminated...','\x1b[0m')});
 });
@@ -165,13 +166,13 @@ gulp.task('serve', function() {
 
 // Build extra js files to be used individually
 gulp.task("extrajs", function() {
-	gulp.src([
+  gulp.src([
     "./src/control/Cloud.js",
     "./src/style/FontMakiDef.js", "./src/style/FontMaki2Def.js", "./src/style/FontAwesomeDef.js",
     "./src/utils/*.js",
     "./src/filter/TextureImage.js"
-		])
-	.pipe(transform())
+    ])
+  .pipe(transform())
   .pipe(gulp.dest("dist/extra"))
 });
 
@@ -222,12 +223,12 @@ gulp.task ("postpublish", function(){
 
 /** Build the doc */
 gulp.task('doc', function (cb) {
-	var jsdoc = require('gulp-jsdoc3');
+  var jsdoc = require('gulp-jsdoc3');
     var config = require('./doc/jsdoc.json');
     gulp.src([
-		"doc/doc.md", "doc/namespace.js",
-		"./dist/ol-ext.js"
-		], {read: false})
+    "doc/doc.md", "doc/namespace.js",
+    "./dist/ol-ext.js"
+    ], {read: false})
     .pipe(jsdoc(config, cb));
 });
 
