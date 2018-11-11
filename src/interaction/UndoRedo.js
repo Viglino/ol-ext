@@ -177,6 +177,7 @@ ol_interaction_UndoRedo.prototype._onInteraction.modifystart = function (e) {
  */
 ol_interaction_UndoRedo.prototype.blockStart = function () {
   this._undoStack.push({ type: 'blockstart' });
+  this._redoStack = [];
 };
 
 /** @private

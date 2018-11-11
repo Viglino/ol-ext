@@ -13643,6 +13643,7 @@ ol.interaction.UndoRedo.prototype._onInteraction.modifystart = function (e) {
  */
 ol.interaction.UndoRedo.prototype.blockStart = function () {
   this._undoStack.push({ type: 'blockstart' });
+  this._redoStack = [];
 };
 /** @private
  */
