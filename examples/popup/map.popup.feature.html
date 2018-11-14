@@ -1,0 +1,145 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2017-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Popup feature</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="Control to select features by attributes	." />
+  <meta name="keywords" content="ol3, control, select, vector, feature, attribute" />
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <link rel="stylesheet" href="../style.css"/>
+  <style>
+    .ol-popup h1 {
+      font-size: 1em;
+      background-size: 2em;
+      padding-left: 3em;
+    }
+  </style>
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="../../index.html">
+    <h1>ol-ext: Popup feature</h1>
+  </a>
+
+  <div class="info">
+    <i>ol/Overlay/PopupFeature</i> is a popup to show the content of features on the map.
+    <ul>
+      <li>
+        You can pass a <i>ol.interaction.Select</i> in the <i>select</i> option to show popup on select.
+      </li>
+      <li>
+        You can use the <i>show()</i> to show the popup associated to a feature.
+      </li>
+    </ul>
+  </div>
+
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options" style="max-width:20em;">
+    <h2>Options:</h2>
+    <i>Click on the map to select features.</i>
+    <ul style="list-style:initial; padding: 0 1em;"></ul>
+  </div>
+  
+  <script type="text/javascript">
+  // Layers
+  var layers = [
+    new ol.layer.Tile({
+      name: "Natural Earth", 
+      minResolution: 306,
+      source: new ol.source.XYZ ({
+        url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
+        attributions: [ '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' ] 
+      })
+    })
+  ]
+
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 5,
+      center: [166326, 5992663]
+    }),
+    interactions: ol.interaction.defaults({ altShiftDragRotate:false, pinchRotate:false }),
+    layers: layers
+  });
+
+  // GeoJSON layer
+  var vectorSource = new ol.source.Vector({
+    url: '../data/departements.geojson',
+    format: new ol.format.GeoJSON(),
+    attributions: [ "&copy; <a href='https://www.insee.fr'>INSEE</a>", "&copy; <a href='https://www.data.gouv.fr/fr/datasets/geofla-r/'>IGN</a>" ],
+  });
+
+  map.addLayer(new ol.layer.Vector({
+    name: 'Departements',
+    source: vectorSource,
+    style: function(f) {
+      return new ol.style.Style({ 
+        image: new ol.style.RegularShape({
+          radius: 5,
+          radius2: 0,
+          points: 4,
+          stroke: new ol.style.Stroke({ color: "#000", width:1 })  
+        }),
+        text: new ol.style.Text ({
+          text: f.get('id').toString(),
+          font: 'bold 11px sans-serif',
+        }),
+        stroke: new ol.style.Stroke({
+          width: 1,
+          color: [255,128,0]
+        }),
+        fill: new ol.style.Fill({
+          color: [255,128,0,.2]
+        })
+      })
+    }
+  }));
+
+  // Select  interaction
+  var select = new ol.interaction.Select({
+    hitTolerance: 5,
+    multi: true,
+    condition: ol.events.condition.singleClick
+  });
+  map.addInteraction(select);
+
+  // Select control
+  var popup = new ol.Overlay.PopupFeature({
+    popupClass: 'default anim',
+    select: select,
+    template: {
+        title: 'nom',
+        attributes: [ 'region', 'arrond', 'cantons', 'communes', 'pop' ]
+    }
+  });
+  map.addOverlay (popup);
+
+
+  </script>
+  
+</body>
+</html>

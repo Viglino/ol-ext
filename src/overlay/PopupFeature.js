@@ -11,7 +11,7 @@ import ol_ext_element from '../util/element'
 *
 * @constructor
 * @extends {ol_Overlay_Popup}
-* @param {} options Extend Overlay options 
+* @param {} options Extend Popup options 
 *	@param {String} options.popupClass the a class of the overlay to style the popup.
 *	@param {bool} options.closeBox popup has a close box, default false.
 *	@param {function|undefined} options.onclose: callback function when popup is closed
@@ -19,6 +19,7 @@ import ol_ext_element from '../util/element'
 *	@param {Number|Array<number>} options.offsetBox an offset box
 *	@param {ol.OverlayPositioning | string | undefined} options.positionning 
 *		the 'auto' positioning var the popup choose its positioning to stay on the map.
+* @param {*} options.template A template with a list of properties to use in the popup
 * @api stable
 */
 var ol_Overlay_PopupFeature = function (options) {
@@ -28,21 +29,28 @@ var ol_Overlay_PopupFeature = function (options) {
 
   this._template = options.template || {};
 
+  // Bind with a select interaction
   if (options.select && (typeof options.select.on ==='function')) {
     this._select = options.select;
     options.select.on('select', function(e){
-      console.log('select',this._noselect)
-      if (!this._noselect) this.show(options.select.getFeatures().getArray(), e.mapBrowserEvent.coordinate);
+      if (!this._noselect) this.show(e.mapBrowserEvent.coordinate, options.select.getFeatures().getArray());
     }.bind(this));
   }
 };
 ol_inherits(ol_Overlay_PopupFeature, ol_Overlay_Popup);
 
-/** Show the popup on the map
- * @param {ol.Feature|Array<ol.Feature>} features The features on the popup
- * @param {ol.coordinate|undefined} coordinate Position of the popup
+/** Set the template
+ * @param {*} template A template with a list of properties to use in the popup
  */
-ol_Overlay_PopupFeature.prototype.show = function(features, coordinate) {
+ol_Overlay_PopupFeature.prototype.setTemplate = function(template) {
+  this._template = template || {};
+};
+
+/** Show the popup on the map
+ * @param {ol.coordinate|undefined} coordinate Position of the popup
+ * @param {ol.Feature|Array<ol.Feature>} features The features on the popup
+ */
+ol_Overlay_PopupFeature.prototype.show = function(coordinate, features) {
   if (!(features instanceof Array)) features = [features];
   this._features = features.slice();
   if (!this._count) this._count = 1;
