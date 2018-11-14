@@ -56,6 +56,7 @@ ol_Overlay_PopupFeature.prototype.show = function(coordinate, features) {
   if (!this._count) this._count = 1;
 
   // Calculate html upon feaures attributes
+  this._count = 1;
   var html = this._getHtml(features[0]);
   this.hide();
   if (html) {
