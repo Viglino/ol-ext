@@ -72,8 +72,8 @@ var ol_Overlay_Popup = function (options)
 	this._elt = this.element;
 
 	// call setPositioning first in constructor so getClassPositioning is called only once
-	this.setPositioning(options.positioning);
-	this.setPopupClass(options.popupClass);
+	this.setPositioning(options.positioning || 'auto');
+	this.setPopupClass(options.popupClass || options.className || 'default');
 };
 ol_inherits(ol_Overlay_Popup, ol_Overlay);
 
@@ -222,7 +222,11 @@ ol_Overlay_Popup.prototype.show = function (coordinate, html)
 	{	// Prevent flickering effect
 		this.prevHTML = html;
 		this.content.innerHTML = "";
-		this.content.insertAdjacentHTML('beforeend', html);
+		if (html instanceof Element) {
+			this.content.appendChild(html);
+		} else {
+			this.content.insertAdjacentHTML('beforeend', html);
+		}
 		// Refresh when loaded (img)
 		Array.prototype.slice.call(this.content.querySelectorAll('img'))
 			.forEach(function(image) {
