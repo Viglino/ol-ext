@@ -119,6 +119,10 @@ ol.ext.element = {};
  * Create an element
  * @param {string} tagName The element tag, use 'TEXT' to create a text node
  * @param {*} options
+ *  @param {string} className The element class name 
+ *  @param {Element} parent Parent to append the element as child
+ *  @param {Element|string} html Content of the element
+ *  @param {string} * Any other attribut to add to the element
  */
 ol.ext.element.create = function (tagName, options) {
   options = options || {};
@@ -153,6 +157,18 @@ ol.ext.element.create = function (tagName, options) {
     }
   }
   return elt;
+};
+/**
+ * Add a set of event listener to an element
+ * @param {Element} element
+ * @param {string|Array<string>} eventType
+ * @param {function} fn
+ */
+ol.ext.element.addListener = function (element, eventType, fn) {
+  if (typeof eventType === 'string') eventType = [eventType];
+  eventType.forEach(function(e) {
+    element.addEventListener(e, fn);
+  });
 };
 /**
  * Show an element
@@ -2370,10 +2386,18 @@ ol.control.EditBar.prototype._setSelectInteraction = function (options) {
     sbar.addControl (new ol.control.Button({
       className: 'ol-delete',
       title: this._getTitle(options.interactions.Delete) || "Delete",
-      handleClick: function() {
+      handleClick: function(e) {
         // Delete selection
         del.delete(selectCtrl.getInteraction().getFeatures());
+        console.log('del')
+        var evt = {
+          type: 'select',
+          selected: [],
+          deselected: selectCtrl.getInteraction().getFeatures().getArray().slice(),
+          mapBrowserEvent: e.mapBrowserEvent
+        };
         selectCtrl.getInteraction().getFeatures().clear();
+        selectCtrl.getInteraction().dispatchEvent(evt);
       }
     }));
   }
@@ -2484,6 +2508,7 @@ ol.control.EditBar.prototype._setEditInteraction = function (options) {
       options
     );
   }
+  // Draw hole
   if (options.interactions.DrawHole !== false) {
     this._interactions.DrawHole = new ol.interaction.DrawHole ();
     this._setDrawPolygon(
@@ -2493,30 +2518,28 @@ ol.control.EditBar.prototype._setEditInteraction = function (options) {
       options
     );
   }
+  // Draw regular
   if (options.interactions.DrawRegular !== false) {
     var regular = this._interactions.DrawRegular = new ol.interaction.DrawRegular ({
       source: this._source,
       sides: 4
     });
     var div = document.createElement('DIV');
-    var text = document.createTextNode('4 pts');
-    var up = document.createElement('DIV');
-    up.addEventListener('click', function() {
-      var sides = regular.getSides() +1;
-      if (sides<3) sides=3;
-      regular.setSides(sides);
-      text.textContent = sides+' pts';
-    }.bind(this));
-    var down = document.createElement('DIV');
-    down.addEventListener('click', function() {
+    var down = ol.ext.element.create('DIV', { parent: div });
+    ol.ext.element.addListener(down, ['click', 'touchstart'], function() {
       var sides = regular.getSides() -1;
       if (sides < 2) sides = 2;
       regular.setSides (sides);
       text.textContent = sides>2 ? sides+' pts' : 'circle';
     }.bind(this));
-    div.appendChild(down);
-    div.appendChild(text);
-    div.appendChild(up);
+    var text = ol.ext.element.create('TEXT', { html:'4 pts', parent: div });
+    var up = ol.ext.element.create('DIV', { parent: div });
+    ol.ext.element.addListener(up, ['click', 'touchstart'], function() {
+      var sides = regular.getSides() +1;
+      if (sides<3) sides=3;
+      regular.setSides(sides);
+      text.textContent = sides+' pts';
+    }.bind(this));
     var ctrl = new ol.control.Toggle({
       className: 'ol-drawregular',
       title: this._getTitle(options.interactions.DrawRegular) || 'Regular',
@@ -4258,6 +4281,7 @@ ol.control.Legend.prototype.getStyleImage = function(options, theCanvas, row) {
  *	- closeBox {bool} add a closeBox to the control, default false
  */
 ol.control.Notification = function(options) {
+  options = options || {};
 	var element = document.createElement("DIV");
   this.contentElement = document.createElement("DIV");
   element.appendChild(this.contentElement);
@@ -4533,7 +4557,7 @@ ol.control.Overview = function(options)
 	*	@param {Number} amplitude amplitude of the bounce [0,1] 
 	*	@return {Number}
 	*/
-	let bounceFn = function (bounce, amplitude)
+	var bounceFn = function (bounce, amplitude)
 	{	var a = (2*bounce+1) * Math.PI/2;
 		var b = amplitude>0 ? -1/amplitude : -100;
 		var c = - Math.cos(a) * Math.pow(2, b);
@@ -4547,7 +4571,7 @@ ol.control.Overview = function(options)
 	*	@param {Number} amplitude amplitude of the bounce [0,1] 
 	*	@return {Number}
 	*/
-	let elasticFn = function (bounce, amplitude)
+	var elasticFn = function (bounce, amplitude)
 	{	var a = 3*bounce * Math.PI/2;
 		var b = amplitude>0 ? -1/amplitude : -100;
 		var c = Math.cos(a) * Math.pow(2, b);
@@ -9313,8 +9337,10 @@ ol.interaction.DrawRegular.prototype.getGeom_ = function ()
 			if (this.square_ && !hasrotation) 
 			{	//var d = [coord[0] - center[0], coord[1] - center[1]];
 				var dm = Math.max (Math.abs(d[0]), Math.abs(d[1])); 
-				coord[0] = center[0] + (d[0]>0 ? dm:-dm);
-				coord[1] = center[1] + (d[1]>0 ? dm:-dm);
+				coord = [ 
+					center[0] + (d[0]>0 ? dm:-dm),
+					center[1] + (d[1]>0 ? dm:-dm)
+				];
 			}
 			var r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
 			if (r>0)
@@ -9369,7 +9395,8 @@ ol.interaction.DrawRegular.prototype.drawSketch_ = function(evt)
 		if (g) 
 		{	var f = this.feature_;
 			if (this.geometryName_) f.setGeometryName(this.geometryName_)
-			f.setGeometry (g);
+			//f.setGeometry (g);
+			if (g.getType()==='Polygon') f.getGeometry().setCoordinates(g.getCoordinates());
 			this.overlayLayer_.getSource().addFeature(f);
 			if (this.coord_ && this.square_ && ((this.canRotate_ && this.centered_ && this.coord_) || (!this.sides_ && !this.centered_)))
 			{	this.overlayLayer_.getSource().addFeature(new ol.Feature(new ol.geom.LineString([this.center_,this.coord_])));
@@ -9489,7 +9516,8 @@ ol.interaction.DrawRegular.prototype.start_ = function(evt)
 	{	this.started_ = true;
 		this.center_ = evt.coordinate;
 		this.coord_ = null;
-		var f = this.feature_ = new ol.Feature();
+		var geom = new ol.geom.Polygon([[evt.coordinate,evt.coordinate,evt.coordinate]]);
+		var f = this.feature_ = new ol.Feature(geom);
 		this.drawSketch_(evt);
 		this.dispatchEvent({ type:'drawstart', feature: f, pixel: evt.pixel, coordinate: evt.coordinate });
 	}
@@ -12062,7 +12090,7 @@ ol.interaction.SnapGuides.prototype.setModifyInteraction = function (modifyi) {
 	// Current guidelines
 	var features = [];
 	function computeGuides(e) {
-		const selectedVertex = e.target.vertexFeature_
+		var selectedVertex = e.target.vertexFeature_
 		if (!selectedVertex) return;
 		var f = e.target.getModifiedFeatures()[0];
 		var geom = f.getGeometry();
@@ -15721,8 +15749,8 @@ ol.Overlay.Popup = function (options)
 	ol.Overlay.call(this, options);
 	this._elt = this.element;
 	// call setPositioning first in constructor so getClassPositioning is called only once
-	this.setPositioning(options.positioning);
-	this.setPopupClass(options.popupClass);
+	this.setPositioning(options.positioning || 'auto');
+	this.setPopupClass(options.popupClass || options.className || 'default');
 };
 ol.inherits(ol.Overlay.Popup, ol.Overlay);
 /**
@@ -15860,7 +15888,11 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html)
 	{	// Prevent flickering effect
 		this.prevHTML = html;
 		this.content.innerHTML = "";
-		this.content.insertAdjacentHTML('beforeend', html);
+		if (html instanceof Element) {
+			this.content.appendChild(html);
+		} else {
+			this.content.insertAdjacentHTML('beforeend', html);
+		}
 		// Refresh when loaded (img)
 		Array.prototype.slice.call(this.content.querySelectorAll('img'))
 			.forEach(function(image) {
@@ -16113,6 +16145,219 @@ ol.Overlay.Placemark.prototype.setClassName = function(name) {
  */
 ol.Overlay.Placemark.prototype.setRadius = function(size) {
 	this.element.style.fontSize = size + 'px';
+};
+
+/*	Copyright (c) 2018 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+* A popup element to be displayed on a feature.
+*
+* @constructor
+* @extends {ol.Overlay.Popup}
+* @param {} options Extend Overlay options 
+*	@param {String} options.popupClass the a class of the overlay to style the popup.
+*	@param {bool} options.closeBox popup has a close box, default false.
+*	@param {function|undefined} options.onclose: callback function when popup is closed
+*	@param {function|undefined} options.onshow callback function when popup is shown
+*	@param {Number|Array<number>} options.offsetBox an offset box
+*	@param {ol.OverlayPositioning | string | undefined} options.positionning 
+*		the 'auto' positioning var the popup choose its positioning to stay on the map.
+* @api stable
+*/
+ol.Overlay.PopupFeature = function (options) {
+  options = options || {};
+  ol.Overlay.Popup.call(this, options);
+  this._template = options.template || {};
+  if (options.select && (typeof options.select.on ==='function')) {
+    this._select = options.select;
+    options.select.on('select', function(e){
+      console.log('select',this._noselect)
+      if (!this._noselect) this.show(options.select.getFeatures().getArray(), e.mapBrowserEvent.coordinate);
+    }.bind(this));
+  }
+};
+ol.inherits(ol.Overlay.PopupFeature, ol.Overlay.Popup);
+/** Show the popup on the map
+ * @param {ol.Feature|Array<ol.Feature>} features The features on the popup
+ * @param {ol.coordinate|undefined} coordinate Position of the popup
+ */
+ol.Overlay.PopupFeature.prototype.show = function(features, coordinate) {
+  if (!(features instanceof Array)) features = [features];
+  this._features = features.slice();
+  if (!this._count) this._count = 1;
+  // Calculate html upon feaures attributes
+  var html = this._getHtml(features[0]);
+  this.hide();
+  if (html) {
+    if (!coordinate) {
+      coordinate = features[0].getGeometry().getFirstCoordinate();
+    }
+    ol.Overlay.Popup.prototype.show.call(this, coordinate, html);
+  }
+};
+/**
+ * @private
+ */
+ol.Overlay.PopupFeature.prototype._getHtml = function(feature) {
+  if (!feature) return '';
+  var html = ol.ext.element.create('DIV', { className: 'ol-popupfeature' });
+  if (this._template.title) {
+    ol.ext.element.create('H1', { html:feature.get(this._template.title), parent: html });
+  }
+  if (this._template.attributes) {
+    var tr, table = ol.ext.element.create('TABLE', { parent: html });
+    this._template.attributes.forEach( function(att) {
+      tr = ol.ext.element.create('TR', { parent: table });
+      ol.ext.element.create('TD', { html: att, parent: tr });
+      ol.ext.element.create('TD', { html: feature.get(att), parent: tr });
+    });
+  }
+  // Zoom button
+  ol.ext.element.create('BUTTON', { className: 'ol-zoombt', parent: html })
+    .addEventListener('click', function(e) {
+      this.getMap().getView().fit(feature.getGeometry().getExtent(), { duration:1000 });
+    }.bind(this));
+  // Counter
+  if (this._features.length > 1) {
+    var div = ol.ext.element.create('DIV', { className: 'ol-count', parent: html });
+    ol.ext.element.create('DIV', { className: 'ol-prev', parent: div })
+      .addEventListener('click', function() {
+        this._count--;
+        if (this._count<1) this._count = this._features.length;
+        html = this._getHtml(this._features[this._count-1]);
+        ol.Overlay.Popup.prototype.show.call(this, this.getPosition(), html);
+      }.bind(this));
+    ol.ext.element.create('TEXT', { html:this._count+'/'+this._features.length, parent: div });
+    ol.ext.element.create('DIV', { className: 'ol-next', parent: div })
+      .addEventListener('click', function() {
+        this._count++;
+        if (this._count>this._features.length) this._count = 1;
+        html = this._getHtml(this._features[this._count-1]);
+        ol.Overlay.Popup.prototype.show.call(this, this.getPosition(), html);
+      }.bind(this));
+  }
+  this._noselect = true;
+  this._select.getFeatures().clear();
+  this._select.getFeatures().push(feature);
+  this._noselect = false;
+  return html;
+};
+
+/*	Copyright (c) 2018 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** A tooltip element to be displayed over the map and attached on the cursor position.
+ * @constructor
+ * @extends {ol.Overlay.Popup}
+ * @param {} options Extend Popup options 
+ *	@param {String} options.popupClass the a class of the overlay to style the popup.
+ *	@param {Number|Array<number>} options.offsetBox an offset box
+ *	@param {ol.OverlayPositioning | string | undefined} options.positionning 
+ *		the 'auto' positioning var the popup choose its positioning to stay on the map.
+ * @api stable
+ */
+ol.Overlay.Tooltip = function (options) {
+  options = options || {};
+  options.popupClass = options.popupClass || options.className || 'tooltips black';
+  options.positioning = options.positioning || 'center-left';
+	ol.Overlay.Popup.call(this, options);
+  this._interaction = new ol.interaction.Interaction({
+    handleEvent: function(e){
+      if (e.type==='pointermove' || e.type==='click') {
+        if (this.get('info')) {
+          this.show(e.coordinate, this.get('info'));
+        }
+        else this.hide();
+        this._coord = e.coordinate;
+      }
+      return true;
+    }.bind(this)
+  });
+};
+ol.inherits(ol.Overlay.Tooltip, ol.Overlay.Popup);
+/**
+ * Set the map instance the control is associated with
+ * and add its controls associated to this map.
+ * @param {_ol_Map_} map The map instance.
+ */
+ol.Overlay.Tooltip.prototype.setMap = function (map) {
+  if (this.getMap()) this.getMap().removeInteraction(this._interaction);
+  ol.Overlay.Popup.prototype.setMap.call(this, map);
+  if (this.getMap()) this.getMap().addInteraction(this._interaction);
+};
+/** Show the popup. If a feature has been passed to the 
+ * Tooltip the area/length will be added to the Tooltip
+ * @param {ol.Coordinate|string} coordinate the coordinate of the popup or the HTML content.
+ * @param {string|undefined} html the HTML content (undefined = previous content).
+ */
+ol.Overlay.Tooltip.prototype.show = function(coord, html) {
+  // Add measure
+  if (this.get('measure')) html = this.get('measure') +'<br/>'+ html;
+  // Show popup
+  ol.Overlay.Popup.prototype.show.call(this, coord, html);
+};
+/** Set the Tooltip info
+ * If information is not null it will be set with a delay,
+ * thus watever the information is inserted, the significant information will be set.
+ * ie. ttip.setInformation('ok'); ttip.setInformation(null); will set 'ok' 
+ * ttip.set('info,'ok'); ttip.set('info', null); will set null
+ * @param {string} what The information to display in the tooltip, default remove information
+ */
+ol.Overlay.Tooltip.prototype.setInfo = function(what) {
+  if (!what) {
+    this.set('info','');
+    this.hide();
+  }
+  else setTimeout(function() { 
+    this.set('info', what); 
+    this.show(this._coord, this.get('info'));
+  }.bind(this));
+};
+/** Set a feature associated with the tooltips
+ * @param {ol.Feature} feature
+ */
+ol.Overlay.Tooltip.prototype.setFeature = function(feature) {
+  this._feature = feature;
+  if (this._listener) {
+    this._listener.forEach(function(l) {
+      ol.Observable.unByKey(l);
+    });
+  }
+  this._listener = [];
+  this.set('measure', '');
+  if (feature) {
+    this._listener.push(feature.getGeometry().on('change', function(e){ 
+      var geom = e.target;
+      var measure;
+      if (geom.getArea) {
+        var area = ol.sphere.getArea(geom, { projection: this.getMap().getView().getProjection() });
+        area = Math.round(area*100) / 100;
+        if (area) {
+          if (area>10000) {
+            area = (area/1000000).toLocaleString(undefined, {maximumFractionDigits:2}) + ' km²';
+          } else {
+            area = area.toLocaleString(undefined, {maximumFractionDigits:2}) + ' m²';
+          }
+        }
+        measure = area;
+      } else if (geom.getLength) {
+        var length = ol.sphere.getLength(geom, { projection: this.getMap().getView().getProjection() });
+        length = Math.round(length*100) / 100;
+        if (length) {
+          if (length>100) {
+            length = (length/1000).toLocaleString(undefined, {maximumFractionDigits:2}) + ' km';
+          } else {
+            length = length.toLocaleString(undefined, {maximumFractionDigits:2}) + ' m';
+          }
+        }
+        measure = length;
+      }
+      this.set('measure', measure);
+    }.bind(this)));
+  }
 };
 
 /*
