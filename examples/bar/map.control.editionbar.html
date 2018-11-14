@@ -1,0 +1,255 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!----------------------------------------------------------
+
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+  
+------------------------------------------------------------>
+  <title>ol-ext: Control bar (editing example)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="ol.control.Bar is a control bar that contains controls." />
+  <meta name="keywords" content="ol3, control, bar, panel, ol3, openlayers, interaction" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <style>
+    .ol-button i
+    {	color: inherit;
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Control bar (editing example)</h1>
+  </a>
+  <div class="info">
+    <i>ol.control.Bar</i> is a panel that contains other controls. You can compose toolbars with it.
+    <br/>
+    This example shows an editing toolbar with select, delete, draw (point, linestring and polygon) and an export button.
+    <p>
+      If you're looking for a more integrated control see 
+      <a href='map.control.editbar.html'>ol/control/EditBar</a>.
+    </p>
+  </div>
+
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options" >
+    <ul>
+      <li>
+        Position:
+        <select onchange="mainbar.setPosition(this.value)">
+          <option value="top">top</option>
+          <option value="top-left">top-left</option>
+          <option value="left">left</option>
+          <option value="bottom-left">bottom-left</option>
+          <option value="bottom">bottom</option>
+          <option value="bottom-right">bottom-right</option>
+          <option value="right">right</option>
+          <option value="top-right">top-right</option>
+        </select>
+      </li>
+    </ul>
+    Export:<br />
+    <textarea id="info" style="width:25em; height:10em"></textarea>
+  </div>
+
+  <script type="text/javascript">
+
+    //  Vector layer
+    var vector = new ol.layer.Vector( { source: new ol.source.Vector() })
+
+    // The map
+    var map = new ol.Map
+      ({	target: 'map',
+        view: new ol.View
+        ({	zoom: 14,
+          center: [270701, 6247637]
+        }),
+        layers: 
+          [	new ol.layer.Tile({ source: new ol.source.OSM() }),
+            vector
+          ]
+      });
+
+    // Main control bar
+    var mainbar = new ol.control.Bar();
+    map.addControl(mainbar);
+
+    // Edit control bar 
+    var editbar = new ol.control.Bar(
+      {	toggleOne: true,	// one control active at the same time
+        group:false			// group controls together
+      });
+    mainbar.addControl(editbar);
+
+    // Add selection tool:
+    //  1- a toggle control with a select interaction
+    //  2- an option bar to delete / get information on the selected feature
+    var sbar = new ol.control.Bar();
+    sbar.addControl (new ol.control.Button(
+        {	html: '<i class="fa fa-times"></i>',
+          title: "Delete",
+          handleClick: function() 
+          {	var features = selectCtrl.getInteraction().getFeatures();
+            if (!features.getLength()) info("Select an object first...");
+            else info(features.getLength()+" object(s) deleted.");
+            for (var i=0, f; f=features.item(i); i++) 
+            {	vector.getSource().removeFeature(f);
+            }
+            selectCtrl.getInteraction().getFeatures().clear();
+          }
+        }));
+    sbar.addControl (new ol.control.Button(
+        {	html: '<i class="fa fa-info"></i>',
+          title: "Show informations",
+          handleClick: function() 
+          {	switch (selectCtrl.getInteraction().getFeatures().getLength())
+            {	case 0: info("Select an object first...");
+                break;
+              case 1:
+                var f = selectCtrl.getInteraction().getFeatures().item(0);
+                info("Selection is a "+f.getGeometry().getType());
+                break;
+              default:
+                info(selectCtrl.getInteraction().getFeatures().getLength()+ " objects seleted.");
+                break;
+            }
+          }
+        }));
+
+    var selectCtrl = new ol.control.Toggle(
+        {	html: '<i class="fa fa-hand-pointer-o"></i>',
+          title: "Select",
+          interaction: new ol.interaction.Select (),
+          bar: sbar,
+          autoActivate:true,
+          active:true
+        });
+
+    editbar.addControl ( selectCtrl);
+
+    // Add editing tools
+    var pedit = new ol.control.Toggle(
+        {	html: '<i class="fa fa-map-marker" ></i>',
+          title: 'Point',
+          interaction: new ol.interaction.Draw
+          ({	type: 'Point',
+            source: vector.getSource()
+          })
+        });
+    editbar.addControl ( pedit );
+
+    var ledit = new ol.control.Toggle(
+        {	html: '<i class="fa fa-share-alt" ></i>',
+          title: 'LineString',
+          interaction: new ol.interaction.Draw
+          ({	type: 'LineString',
+            source: vector.getSource(),
+            // Count inserted points
+            geometryFunction: function(coordinates, geometry) 
+            {   if (geometry) geometry.setCoordinates(coordinates);
+              else geometry = new ol.geom.LineString(coordinates);
+              this.nbpts = geometry.getCoordinates().length;
+              return geometry;
+            }
+          }),
+          // Options bar associated with the control
+          bar: new ol.control.Bar(
+          {	controls:[ new ol.control.TextButton(
+              {	html: 'undo',
+                title: "Delete last point",
+                handleClick: function() 
+                {	if (ledit.getInteraction().nbpts>1) ledit.getInteraction().removeLastPoint();
+                }
+              }),
+              new ol.control.TextButton(
+              {	html: 'Finish',
+                title: "finish",
+                handleClick: function() 
+                {	// Prevent null objects on finishDrawing
+                  if (ledit.getInteraction().nbpts>2) ledit.getInteraction().finishDrawing();
+                }
+              })
+            ]
+          }) 
+        });
+
+    editbar.addControl ( ledit );
+
+    var fedit = new ol.control.Toggle(
+        {	html: '<i class="fa fa-bookmark-o fa-rotate-270" ></i>',
+          title: 'Polygon',
+          interaction: new ol.interaction.Draw
+          ({	type: 'Polygon',
+            source: vector.getSource(),
+            // Count inserted points
+            geometryFunction: function(coordinates, geometry) 
+            {   this.nbpts = coordinates[0].length;
+              if (geometry) geometry.setCoordinates([coordinates[0].concat([coordinates[0][0]])]);
+              else geometry = new ol.geom.Polygon(coordinates);
+              return geometry;
+            }
+          }),
+          // Options bar ssociated with the control
+          bar: new ol.control.Bar(
+            {	controls:[ new ol.control.TextButton(
+                {	html: 'undo',//'<i class="fa fa-mail-reply"></i>',
+                  title: "undo last point",
+                  handleClick: function() 
+                  {	if (fedit.getInteraction().nbpts>1) fedit.getInteraction().removeLastPoint();
+                  }
+                }),
+                new ol.control.TextButton(
+                {	html: 'finish',
+                  title: "finish",
+                  handleClick: function() 
+                  {	// Prevent null objects on finishDrawing
+                    if (fedit.getInteraction().nbpts>3) fedit.getInteraction().finishDrawing();
+                  }
+                })
+              ]
+            }) 
+        });
+    editbar.addControl ( fedit );
+
+    // Add a simple push button to save features
+    var save = new ol.control.Button(
+        {	html: '<i class="fa fa-download"></i>',
+          title: "Save",
+          handleClick: function(e)
+          {	var json= new ol.format.GeoJSON().writeFeatures(vector.getSource().getFeatures());
+            info(json);
+          }
+        });
+    mainbar.addControl ( save );
+
+    // Show info
+    function info(i)
+    {	$("#info").html(i||"");
+    }
+  </script>
+
+</body>
+</html>

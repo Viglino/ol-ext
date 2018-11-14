@@ -1,6 +1,7 @@
 import {inherits as ol_inherits} from 'ol'
 import {shiftKeyOnly as ol_events_condition_shiftKeyOnly} from 'ol/events/condition'
 import ol_control_Bar from './Bar'
+import ol_ext_element from '../util/element'
 
 /** Control bar for editing in a layer
  * @constructor
@@ -49,7 +50,6 @@ ol_control_EditBar.prototype.setMap = function (map) {
   if (this.getMap()) {
     if (this._interactions.Delete) this.getMap().addInteraction(this._interactions.Delete);
     if (this._interactions.ModifySelect) this.getMap().addInteraction(this._interactions.ModifySelect);
-
   }
 };
 
@@ -85,10 +85,18 @@ ol_control_EditBar.prototype._setSelectInteraction = function (options) {
     sbar.addControl (new ol.control.Button({
       className: 'ol-delete',
       title: this._getTitle(options.interactions.Delete) || "Delete",
-      handleClick: function() {
+      handleClick: function(e) {
         // Delete selection
         del.delete(selectCtrl.getInteraction().getFeatures());
+        console.log('del')
+        var evt = {
+          type: 'select',
+          selected: [],
+          deselected: selectCtrl.getInteraction().getFeatures().getArray().slice(),
+          mapBrowserEvent: e.mapBrowserEvent
+        };
         selectCtrl.getInteraction().getFeatures().clear();
+        selectCtrl.getInteraction().dispatchEvent(evt);
       }
     }));
   }
@@ -208,6 +216,7 @@ ol_control_EditBar.prototype._setEditInteraction = function (options) {
     );
   }
 
+  // Draw hole
   if (options.interactions.DrawHole !== false) {
     this._interactions.DrawHole = new ol.interaction.DrawHole ();
     this._setDrawPolygon(
@@ -218,6 +227,7 @@ ol_control_EditBar.prototype._setEditInteraction = function (options) {
     );
   }
 
+  // Draw regular
   if (options.interactions.DrawRegular !== false) {
     var regular = this._interactions.DrawRegular = new ol.interaction.DrawRegular ({
       source: this._source,
@@ -225,25 +235,24 @@ ol_control_EditBar.prototype._setEditInteraction = function (options) {
     });
 
     var div = document.createElement('DIV');
-    var text = document.createTextNode('4 pts');
-    var up = document.createElement('DIV');
-    up.addEventListener('click', function() {
-      var sides = regular.getSides() +1;
-      if (sides<3) sides=3;
-      regular.setSides(sides);
-      text.textContent = sides+' pts';
-    }.bind(this));
-    var down = document.createElement('DIV');
-    down.addEventListener('click', function() {
+
+    var down = ol_ext_element.create('DIV', { parent: div });
+    ol_ext_element.addListener(down, ['click', 'touchstart'], function() {
       var sides = regular.getSides() -1;
       if (sides < 2) sides = 2;
       regular.setSides (sides);
       text.textContent = sides>2 ? sides+' pts' : 'circle';
     }.bind(this));
 
-    div.appendChild(down);
-    div.appendChild(text);
-    div.appendChild(up);
+    var text = ol_ext_element.create('TEXT', { html:'4 pts', parent: div });
+    
+    var up = ol_ext_element.create('DIV', { parent: div });
+    ol_ext_element.addListener(up, ['click', 'touchstart'], function() {
+      var sides = regular.getSides() +1;
+      if (sides<3) sides=3;
+      regular.setSides(sides);
+      text.textContent = sides+' pts';
+    }.bind(this));
 
     var ctrl = new ol.control.Toggle({
       className: 'ol-drawregular',
