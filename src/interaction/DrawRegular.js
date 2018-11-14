@@ -199,8 +199,10 @@ ol_interaction_DrawRegular.prototype.getGeom_ = function ()
 			if (this.square_ && !hasrotation) 
 			{	//var d = [coord[0] - center[0], coord[1] - center[1]];
 				var dm = Math.max (Math.abs(d[0]), Math.abs(d[1])); 
-				coord[0] = center[0] + (d[0]>0 ? dm:-dm);
-				coord[1] = center[1] + (d[1]>0 ? dm:-dm);
+				coord = [ 
+					center[0] + (d[0]>0 ? dm:-dm),
+					center[1] + (d[1]>0 ? dm:-dm)
+				];
 			}
 			var r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
 			if (r>0)
@@ -262,7 +264,8 @@ ol_interaction_DrawRegular.prototype.drawSketch_ = function(evt)
 		{	var f = this.feature_;
 			if (this.geometryName_) f.setGeometryName(this.geometryName_)
 
-			f.setGeometry (g);
+			//f.setGeometry (g);
+			if (g.getType()==='Polygon') f.getGeometry().setCoordinates(g.getCoordinates());
 			this.overlayLayer_.getSource().addFeature(f);
 			if (this.coord_ && this.square_ && ((this.canRotate_ && this.centered_ && this.coord_) || (!this.sides_ && !this.centered_)))
 			{	this.overlayLayer_.getSource().addFeature(new ol_Feature(new ol_geom_LineString([this.center_,this.coord_])));
@@ -388,7 +391,8 @@ ol_interaction_DrawRegular.prototype.start_ = function(evt)
 	{	this.started_ = true;
 		this.center_ = evt.coordinate;
 		this.coord_ = null;
-		var f = this.feature_ = new ol_Feature();
+		var geom = new ol.geom.Polygon([[evt.coordinate,evt.coordinate,evt.coordinate]]);
+		var f = this.feature_ = new ol_Feature(geom);
 		this.drawSketch_(evt);
 		this.dispatchEvent({ type:'drawstart', feature: f, pixel: evt.pixel, coordinate: evt.coordinate });
 	}
