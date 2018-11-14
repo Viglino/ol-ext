@@ -18,6 +18,7 @@ import ol_control_Control from 'ol/control/Control'
  *	- closeBox {bool} add a closeBox to the control, default false
  */
 var ol_control_Notification = function(options) {
+  options = options || {};
 	var element = document.createElement("DIV");
   this.contentElement = document.createElement("DIV");
   element.appendChild(this.contentElement);
