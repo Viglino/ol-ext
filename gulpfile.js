@@ -48,6 +48,9 @@ function transform() {
         // remove empty lines
         content = content.replace(/\r/gm, '');
         content = content.replace(/^\s*[\n]/gm, '');
+        // let and const => var (for IE)
+        content = content.replace(/\blet\b/g, 'var');
+        content = content.replace(/\bconst\b/g, 'var');
         // return content
         file.contents = new Buffer(content);
       }
