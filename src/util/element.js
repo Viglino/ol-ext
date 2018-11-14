@@ -8,6 +8,10 @@ var ol_ext_element = {};
  * Create an element
  * @param {string} tagName The element tag, use 'TEXT' to create a text node
  * @param {*} options
+ *  @param {string} className The element class name 
+ *  @param {Element} parent Parent to append the element as child
+ *  @param {Element|string} html Content of the element
+ *  @param {string} * Any other attribut to add to the element
  */
 ol_ext_element.create = function (tagName, options) {
   options = options || {};
@@ -43,6 +47,19 @@ ol_ext_element.create = function (tagName, options) {
   }
 
   return elt;
+};
+
+/**
+ * Add a set of event listener to an element
+ * @param {Element} element
+ * @param {string|Array<string>} eventType
+ * @param {function} fn
+ */
+ol_ext_element.addListener = function (element, eventType, fn) {
+  if (typeof eventType === 'string') eventType = [eventType];
+  eventType.forEach(function(e) {
+    element.addEventListener(e, fn);
+  });
 };
 
 /**
