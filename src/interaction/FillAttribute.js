@@ -6,7 +6,8 @@ import {click as ol_events_condition_click} from 'ol/events/condition'
  * @extends {ol_interaction_Interaction}
  * @fires setattributestart
  * @fires setattributeend
- * @param {*} options ol.interaction.Select options
+ * @param {*} options extentol.interaction.Select options
+ *  @param {boolean} options.cursor use a paint bucket cursor, default true
  * @param {*} properties The properties as key/value
  */
 var ol_interaction_FillAttribute = function(options, properties) {
@@ -20,8 +21,60 @@ var ol_interaction_FillAttribute = function(options, properties) {
     this.getFeatures().clear();
     this.fill(e.selected, this._attributes);
   }.bind(this));
+
+  if (options.cursor!==false) {
+    var canvas = document.createElement('CANVAS');
+    canvas.width = canvas.height = 32;
+    var ctx = canvas.getContext("2d");
+    ctx.beginPath();
+      ctx.moveTo(9,3);
+      ctx.lineTo(2,9);
+      ctx.lineTo(10,17);
+      ctx.lineTo(17,11);
+    ctx.closePath();
+    ctx.fillStyle = "#fff";
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.beginPath();
+      ctx.moveTo(6,4);
+      ctx.lineTo(0,8);
+      ctx.lineTo(0,13);
+      ctx.lineTo(3,17);
+      ctx.lineTo(3,8);
+    ctx.closePath();
+    ctx.fillStyle = "#000";
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.moveTo(8,8);
+    ctx.lineTo(10,0);
+    ctx.lineTo(11,0);
+    ctx.lineTo(13,3);
+    ctx.lineTo(13,7);
+    ctx.stroke();
+
+    this._cursor = 'url('+canvas.toDataURL()+') 0 13, auto';
+  }
 };
 ol_inherits(ol_interaction_FillAttribute, ol_interaction_Select);
+
+/** Activate the interaction
+ * @param {boolean} active
+ */
+ol_interaction_FillAttribute.prototype.setActive = function(active) {
+  ol_interaction_Select.prototype.setActive.call(this, active);
+  if (this.getMap() && this._cursor) {
+    if (active) {
+      this._previousCursor = this.getMap().getTargetElement().style.cursor;
+      this.getMap().getTargetElement().style.cursor = this._cursor;
+      console.log('setCursor',this._cursor)
+    } else {
+      this.getMap().getTargetElement().style.cursor = this._previousCursor;
+      this._previousCursor = undefined;
+    }
+  }
+};
 
 /** Set attributes
  * @param {*} properties The properties as key/value
