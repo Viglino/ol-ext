@@ -236,7 +236,8 @@ ol_interaction_SnapGuides.prototype.setDrawInteraction = function(drawi) {
 
 		if (l != nb && (self.enableInitialGuides_ ? l >= s : l > s)) {
 			self.clearGuides(features);
-			if (l > s) {
+			var p1 = coord[l - s], p2 = coord[l - s - 1];
+			if (l > s && !(p1[0] === p2[0] && p1[1] === p2[1])) {
 				features = self.addOrthoGuide([coord[l - s], coord[l - s - 1]]);
 			}
 			features = features.concat(self.addGuide([coord[0], coord[1]]));
