@@ -192,6 +192,18 @@ ol.ext.element.toggle = function (element) {
   element.style.display = (element.style.display==='none' ? '' : 'none');
 };
 
+/* Create ol.sphere for backward compatibility with ol < 5.0
+ * To use with Openlayers package
+ */
+if (window.ol && !ol.sphere) {
+  ol.sphere = {};
+  ol.sphere.getDistance = function (c1, c2, radius) {
+    var sphere = new ol.Sphere(radius || 6371008.8);
+    return sphere.haversineDistance(c1, c2);
+  }
+  ol.sphere.getArea = ol.Sphere.getArea;
+  ol.sphere.getLength = ol.Sphere.getLength;
+}
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -12105,7 +12117,8 @@ ol.interaction.SnapGuides.prototype.setDrawInteraction = function(drawi) {
 		}
 		if (l != nb && (self.enableInitialGuides_ ? l >= s : l > s)) {
 			self.clearGuides(features);
-			if (l > s) {
+			var p1 = coord[l - s], p2 = coord[l - s - 1];
+			if (l > s && !(p1[0] === p2[0] && p1[1] === p2[1])) {
 				features = self.addOrthoGuide([coord[l - s], coord[l - s - 1]]);
 			}
 			features = features.concat(self.addGuide([coord[0], coord[1]]));
