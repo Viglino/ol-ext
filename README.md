@@ -1,18 +1,19 @@
 # ol-ext
 *Cool extensions for [OpenLayers](https://github.com/openlayers/openlayers) (ol)*.
 
-[ol-ext](https://github.com/Viglino/ol-ext) is a set of extensions, controls, interactions to use with Openlayers.    
+[ol-ext](https://github.com/Viglino/ol-ext) is a set of extensions, controls, interactions, popup to use with Openlayers.    
 [View live examples online](http://viglino.github.io/ol-ext/) or the [API documentation](http://viglino.github.io/ol-ext/doc/doc-pages/).
-
-### ! ol3-ext is now [ol-ext](https://github.com/Viglino/ol-ext) !
-ol3-ext has been renamed to ol-ext and is [now available on NPM](https://www.npmjs.com/package/ol-ext): **update your bookmark and your code**.
 
 **Keywords:** CSS popup, 
 Font Awesome symbol renderer, 
 charts for statistical map (pie/bar), 
 layer switcher,
+control bar,
 wikipedia layer, 
-animations
+legend control,
+search,
+animations,
+undo/redo mechanisms
 
 > [
 ![Font style](img/map.style.font.jpg?raw=true)
@@ -39,6 +40,22 @@ animations
 
 ## Getting Started
 
+## NPM packages
+
+ol-ext exist as ES6 modules ([ol-ext](https://www.npmjs.com/package/openlayers-ext)) and as pure js ([openlayers-ext](https://www.npmjs.com/package/openlayers-ext)).
+
+## using ol-ext in a webpack
+
+* For use with webpack, Rollup, Browserify, or other module bundlers, install the npm [ol-ext package](https://www.npmjs.com/package/ol-ext) and link to the node_modules directory:
+````
+npm install ol-ext
+````
+
+See the following examples for more detail on bundling OpenLayers with your application:
+
+* Using [webpack](https://github.com/darkscript/ol-ol-ext-webpack-example)
+* Using [parcel](https://github.com/Viglino/ol-ext-parcel-bundler)
+ 
 ## using ol-ext in a web page
 
 * For use in a web page install the npm [openlayers-ext package](https://www.npmjs.com/package/openlayers-ext):
@@ -48,7 +65,7 @@ npm install openlayers-ext
 The library will be available in the `node_modules/openlayers-ext/dist` directory. You can find individual files in the `node_modules/openlayers-ext/lib` directory.
 * You can download the [scripts](dist) of the ./dist directory of the repository in your project and insert the .js and .css in your page.
 * If you just want to add a `<script>` tag to test things out, you can link directly to the builds from the github rawgit (not recommended in production).
-* For compatibility with older browsers and platforms (like Internet Explorer down to version 9 and Android 4.x), the Openalerys needs to be transpiled (e.g. using Babel) and bundled with polyfills for `requestAnimationFrame`, `Element.prototype.classList` and `URL`.
+* For compatibility with older browsers and platforms (like Internet Explorer down to version 9 and Android 4.x), the Openalerys needs to be transpiled (e.g. using Babel) and bundled with polyfills for `requestAnimationFrame`, `Element.prototype.classList`, `Object.assign`and `URL`.
 
 ````html
 <!-- jQuery -->
@@ -63,16 +80,11 @@ The library will be available in the `node_modules/openlayers-ext/dist` director
 <link rel="stylesheet" href="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.css" />
 <script type="text/javascript" src="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.js"></script>
 ````
+## Suppoted Browsers
 
-## using ol-ext in a webpack
+ol-ext runs on all modern browsers that support HTML5 and ECMAScript 5. This includes Chrome, Firefox, Safari and Edge. For older browsers and platforms like Internet Explorer (down to version 9) and Android 4.x, polyfills for for `requestAnimationFrame`, `Element.prototype.classList`, `Object.assign`and `URL`.
 
-* For use with webpack, Rollup, Browserify, or other module bundlers, install the npm [ol-ext package](https://www.npmjs.com/package/ol-ext) and link to the node_modules directory:
-````
-npm install ol-ext
-````
 
-* Check out the [darkscript/ol-ol-ext-webpack-example repo](https://github.com/darkscript/ol-ol-ext-webpack-example) for a good example of working with ol-ext npm version and bundler (webpack)
- 
 ## Documentation
 
 Check out the [hosted examples](http://viglino.github.io/ol-ext/) or the [API documentation](http://viglino.github.io/ol-ext/doc/doc-pages/).
@@ -88,7 +100,7 @@ Please use the [GitHub issue tracker](https://github.com/Viglino/ol-ext/issues) 
 ## License
 
 ol-ext is licensed under the French Opensource **BSD** compatible CeCILL-B FREE SOFTWARE LICENSE.  
- (c) 2016-2017 - Jean-Marc Viglino
+ (c) 2016-2018 - Jean-Marc Viglino
 
 Some resources (mapping services and API) used in this sofware may have a specific license.  
 You must check before use.
