@@ -40,11 +40,11 @@ undo/redo mechanisms
 
 ## Getting Started
 
-## NPM packages
+### NPM packages
 
 ol-ext exist as ES6 modules ([ol-ext](https://www.npmjs.com/package/openlayers-ext)) and as pure js ([openlayers-ext](https://www.npmjs.com/package/openlayers-ext)).
 
-## using ol-ext in a webpack
+### using ol-ext in a webpack
 
 * For use with webpack, Rollup, Browserify, or other module bundlers, install the npm [ol-ext package](https://www.npmjs.com/package/ol-ext) and link to the node_modules directory:
 ````
@@ -56,7 +56,7 @@ See the following examples for more detail on bundling OpenLayers with your appl
 * Using [webpack](https://github.com/darkscript/ol-ol-ext-webpack-example)
 * Using [parcel](https://github.com/Viglino/ol-ext-parcel-bundler)
  
-## using ol-ext in a web page
+### using ol-ext in a web page
 
 * For use in a web page install the npm [openlayers-ext package](https://www.npmjs.com/package/openlayers-ext):
 ````
@@ -80,7 +80,12 @@ The library will be available in the `node_modules/openlayers-ext/dist` director
 <link rel="stylesheet" href="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.css" />
 <script type="text/javascript" src="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.js"></script>
 ````
-## Suppoted Browsers
+
+### dependencies
+
+Some control are still jQuery dependent.
+
+### suppoted Browsers
 
 ol-ext runs on all modern browsers that support HTML5 and ECMAScript 5. This includes Chrome, Firefox, Safari and Edge. For older browsers and platforms like Internet Explorer (down to version 9) and Android 4.x, polyfills for for `requestAnimationFrame`, `Element.prototype.classList`, `Object.assign`and `URL`.
 
