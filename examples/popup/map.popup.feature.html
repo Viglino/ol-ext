@@ -131,13 +131,34 @@
   var popup = new ol.Overlay.PopupFeature({
     popupClass: 'default anim',
     select: select,
+    canFix: true,
     template: {
-        title: 'nom',
-        attributes: [ 'region', 'arrond', 'cantons', 'communes', 'pop' ]
+        title: // 'nom',
+          function(f) {
+            return f.get('nom')+' ('+f.get('id')+')';
+          },
+        attributes: // [ 'region', 'arrond', 'cantons', 'communes', 'pop' ]
+        {
+          'region': { title: 'Région' },
+          'arrond': { title: 'Arrondissement' },
+          'cantons': { title: 'Cantons' },
+          'communes': { title: 'Communes' },
+          'pop': { 
+            title: 'Population',  // attribute's title
+            before: '', // something to add before
+            format: ol.Overlay.PopupFeature.localString(),  // format as local string
+            after: ' hab.'  // something to add after
+          },
+          /* Using localString with a date * /
+          'date': { 
+            title: 'Date', 
+            format: ol.Overlay.PopupFeature.localString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) 
+          }
+          /**/
+        }
     }
   });
   map.addOverlay (popup);
-
 
   </script>
   

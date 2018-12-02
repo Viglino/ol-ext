@@ -56,6 +56,43 @@
   display:none; 
 }
 
+/** Fixed popup */
+.ol-popup.ol-fixed {
+  margin: 0!important;
+  top: .5em!important;
+  right: .5em!important;
+  left: auto!important;
+  bottom: auto!important;
+}
+.ol-popup.ol-fixed .anchor {
+  display: none;
+}
+.ol-popup.ol-fixed.anim {
+  -webkit-animation: none;
+  animation: none;
+}
+
+.ol-popup .ol-fix {
+  width: 1em;
+  height: .9em;
+  background: #fff;
+  position: relative;
+  float: right;
+  margin: .2em;
+  cursor: pointer;
+}
+.ol-popup .ol-fix:before {
+  content: "";
+  width: .8em;
+  height: .7em;
+  display: block;
+  border: .1em solid #666;
+      border-right-width: 0.1em;
+  border-right-width: .3em;
+  box-sizing: border-box;
+  margin: .1em;
+}
+
 /** Add a shadow to the popup */
 .ol-popup.shadow {
   box-shadow: 2px 2px 2px 2px rgba(0,0,0,0.5);

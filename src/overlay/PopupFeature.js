@@ -20,6 +20,7 @@ import ol_ext_element from '../util/element'
 *	@param {ol.OverlayPositioning | string | undefined} options.positionning 
 *		the 'auto' positioning var the popup choose its positioning to stay on the map.
 * @param {*} options.template A template with a list of properties to use in the popup
+* @param boolean} options.canFix Enable popup to be fixed 
 * @api stable
 */
 var ol_Overlay_PopupFeature = function (options) {
@@ -27,7 +28,8 @@ var ol_Overlay_PopupFeature = function (options) {
 
   ol_Overlay_Popup.call(this, options);
 
-  this._template = options.template || {};
+  this.setTemplate(options.template);
+  this.set('canFix', options.canFix)
 
   // Bind with a select interaction
   if (options.select && (typeof options.select.on ==='function')) {
@@ -44,6 +46,13 @@ ol_inherits(ol_Overlay_PopupFeature, ol_Overlay_Popup);
  */
 ol_Overlay_PopupFeature.prototype.setTemplate = function(template) {
   this._template = template || {};
+  if (this._template.attributes instanceof Array) {
+    var att = {};
+    this._template.attributes.forEach(function (a) {
+      att[a] = true;
+    });
+    this._template.attributes = att;
+  }
 };
 
 /** Show the popup on the map
@@ -73,16 +82,34 @@ ol_Overlay_PopupFeature.prototype.show = function(coordinate, features) {
 ol_Overlay_PopupFeature.prototype._getHtml = function(feature) {
   if (!feature) return '';
   var html = ol_ext_element.create('DIV', { className: 'ol-popupfeature' });
+  if (this.get('canFix')) {
+    ol_ext_element.create('I', { className:'ol-fix', parent: html })
+      .addEventListener('click', function(){
+        this.element.classList.toggle('ol-fixed');
+      }.bind(this));
+  }
   if (this._template.title) {
-    ol_ext_element.create('H1', { html:feature.get(this._template.title), parent: html });
+    var title;
+    if (typeof this._template.title === 'function') {
+      title = this._template.title(feature);
+    } else {
+      title = feature.get(this._template.title);
+    }
+    ol_ext_element.create('H1', { html:title, parent: html });
   }
   if (this._template.attributes) {
     var tr, table = ol_ext_element.create('TABLE', { parent: html });
-    this._template.attributes.forEach( function(att) {
+    var atts = this._template.attributes;
+    for (var att in atts) {
+      var a = atts[att];
       tr = ol_ext_element.create('TR', { parent: table });
-      ol_ext_element.create('TD', { html: att, parent: tr });
-      ol_ext_element.create('TD', { html: feature.get(att), parent: tr });
-    });
+      ol_ext_element.create('TD', { html: a.title || att, parent: tr });
+      var val = feature.get(att);
+      ol_ext_element.create('TD', { 
+        html: (a.before||'') + (a.format ? a.format(val) : val) + (a.after||''), 
+        parent: tr 
+      });
+    };
   }
   // Zoom button
   ol_ext_element.create('BUTTON', { className: 'ol-zoombt', parent: html })
@@ -116,4 +143,26 @@ ol_Overlay_PopupFeature.prototype._getHtml = function(feature) {
   return html;
 };
 
+/** Get a function to use as format to get local string for an attribute
+ * if the attribute is a number: Number.toLocaleString()
+ * if the attribute is a date: Date.toLocaleString()
+ * otherwise the attibute itself
+ * @param {string} locales string with a BCP 47 language tag, or an array of such strings
+ * @param {*} options Number or Date toLocaleString options
+ * @return {function} a function that takes an attribute and return the formated attribute
+ */
+var ol_Overlay_PopupFeature_localString = function (locales , options) {
+  return function (a) {
+    if (a && a.toLocaleString) {
+      return a.toLocaleString(locales , options);
+    } else {
+      // Try to get a date from a string
+      var date = new Date(a);
+      if (isNaN(date)) return a;
+      else return date.toLocaleString(locales , options);
+    }
+  };
+};
+
+export {ol_Overlay_PopupFeature_localString}
 export default ol_Overlay_PopupFeature
