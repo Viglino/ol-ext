@@ -149,6 +149,10 @@ ol.ext.element.create = function (tagName, options) {
           options.parent.appendChild(elt);
           break;
         }
+        case 'style': {
+          this.setStyle(elt, options.style);
+          break;
+        }
         default: {
           elt.setAttribute(attr, options[attr]);
           break;
@@ -190,6 +194,70 @@ ol.ext.element.hide = function (element) {
  */
 ol.ext.element.toggle = function (element) {
   element.style.display = (element.style.display==='none' ? '' : 'none');
+};
+/** Set style of an element
+ * @param {DOMElement} el the element
+ * @param {*} st list of style
+ */
+ol.ext.element.setStyle = function(el, st) {
+  for (var s in st) {
+    switch (s) {
+      case 'top':
+      case 'left':
+      case 'bottom':
+      case 'right':
+      case 'minWidth':
+      case 'maxWidth':
+      case 'width':
+      case 'height': {
+        if (typeof(st[s] === 'number')) {
+          el.style[s] = st[s]+'px';
+        } else {
+          el.style[s] = st[s];
+        }
+        break;
+      }
+      default: {
+        el.style[s] = st[s];
+      }
+    }
+  }
+};
+/**
+ * Get style propertie of an element
+ * @param {DOMElement} el the element
+ * @param {string} styleProp Propertie name
+ * @return {*} style value
+ */
+ol.ext.element.getStyle = function(el, styleProp) {
+  var value, defaultView = (el.ownerDocument || document).defaultView;
+  // W3C standard way:
+  if (defaultView && defaultView.getComputedStyle) {
+    // sanitize property name to css notation
+    // (hypen separated words eg. font-Size)
+    styleProp = styleProp.replace(/([A-Z])/g, "-$1").toLowerCase();
+    value = defaultView.getComputedStyle(el, null).getPropertyValue(styleProp);
+  } else if (el.currentStyle) { // IE
+    // sanitize property name to camelCase
+    styleProp = styleProp.replace(/\-(\w)/g, function(str, letter) {
+      return letter.toUpperCase();
+    });
+    value = el.currentStyle[styleProp];
+    // convert other units to pixels on IE
+    if (/^\d+(em|pt|%|ex)?$/i.test(value)) { 
+      return (function(value) {
+        var oldLeft = el.style.left, oldRsLeft = el.runtimeStyle.left;
+        el.runtimeStyle.left = el.currentStyle.left;
+        el.style.left = value || 0;
+        value = el.style.pixelLeft + "px";
+        el.style.left = oldLeft;
+        el.runtimeStyle.left = oldRsLeft;
+        return value;
+      })(value);
+    }
+  }
+  if (/px$/.test(value)) return parseInt(value);
+  return value;
 };
 
 /* Create ol.sphere for backward compatibility with ol < 5.0
@@ -6237,6 +6305,7 @@ ol.control.SearchGeoportailParcelle.prototype._handleParcelle = function(parc) {
  * @param {Object=} Control options.
  *	@param {string} options.className control class name
  *	@param {boolean | undefined} options.polygon To get output geometry of results (in geojson format), default false.
+ *	@param {viewbox | undefined} options.viewbox The preferred area to find search results. Any two corner points of the box are accepted in any order as long as they span a real box, default none.
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
  *	@param {string | undefined} options.placeholder placeholder, default "Search..."
@@ -6251,10 +6320,11 @@ ol.control.SearchNominatim = function(options)
 {	options = options || {};
     options.className = options.className || 'nominatim';
     options.typing = options.typing || 500;
-    options.url = options.url || "https://nominatim.openstreetmap.org/search";
+    options.url = options.url || 'https://nominatim.openstreetmap.org/search';
     ol.control.SearchJSON.call(this, options);
-    this.set("copy","<a href='http://www.openstreetmap.org/copyright' target='new'>&copy; OpenStreetMap contributors</a>");
-    this.set("polygon", options.polygon);
+    this.set('copy','<a href="http://www.openstreetmap.org/copyright" target="new">&copy; OpenStreetMap contributors</a>');
+    this.set('polygon', options.polygon);
+    this.set('viewbox', options.viewbox);
 };
 ol.inherits(ol.control.SearchNominatim, ol.control.SearchJSON);
 /** Returns the text to be displayed in the menu
@@ -6273,13 +6343,15 @@ ol.control.SearchNominatim.prototype.getTitle = function (f) {
  * @api
  */
 ol.control.SearchNominatim.prototype.requestData = function (s) {
-	return { 
+	var data = { 
         format: "json", 
         addressdetails: 1, 
         q: s, 
         polygon_geojson: this.get('polygon') ? 1:0,
         limit: this.get('maxItems')
     };
+    if (this.get('viewbox')) data.viewbox = this.get('viewbox');
+    return data;
 };
 /** A ligne has been clicked in the menu > dispatch event
  *	@param {any} f the feature, as passed in the autocomplete
@@ -6990,6 +7062,249 @@ ol.control.TextButton = function(options)
     ol.control.Button.call(this, options);
 };
 ol.inherits(ol.control.TextButton, ol.control.Button);
+
+/** Timeline control
+ *
+ * @constructor
+ * @extends {ol.control.Control}
+ * @fires 
+ * @param {Object=} options Control options.
+ *	@param {String} options.className class of the control
+ */
+ol.control.Timeline = function(options) {
+  var element = ol.ext.element.create('DIV', {
+    className: (options.className || '') + ' ol-timeline'
+      + (options.target ? '': ' ol-unselectable ol-control')
+      + (ol.has.TOUCH ? ' ol-touch' : '')
+  });
+  // Source 
+  this._source = options.source;
+  // Initialize
+  ol.control.Control.call(this, {
+    element: element,
+    target: options.target
+  });
+  // Remove selection
+  this.element.addEventListener('mouseover', function(){
+    if (this._select) this._select.elt.classList.remove('select');
+  }.bind(this));
+  // Scroll timeline
+  var pos = false;
+  ol.ext.element.addListener(this.element, ['mousedown'], function(e) {
+    pos = e.pageX;
+    this.element.classList.add('ol-move');
+  }.bind(this));
+  ol.ext.element.addListener(window, ['mousemove'], function(e) {
+    if (pos !== false) {
+      var delta = pos - e.pageX;
+      this.element.scrollLeft += delta;
+      pos = e.pageX;
+      if (delta) this._moving = true;
+    } else {
+      this._moving = false;
+    }
+  }.bind(this));
+  ol.ext.element.addListener(window, ['mouseup'], function(e) {
+    pos = false;
+    this.element.classList.remove('ol-move');
+  }.bind(this));
+  // Parameters
+  this.set('maxWidth', options.maxWidth || 2000);
+  this.set('minDate', options.minDate || Infinity);
+  this.set('maxDate', options.maxDate || -Infinity);
+  this.getHTML = options.getHTML || function(f){ return f.get('name') || ''; };
+  if (options.getFeatureDate) this._getFeatureDate =  options.getFeatureDate;
+  if (options.endFeatureDate) this._endFeatureDate =  options.endFeatureDate;
+  this.refresh();
+};
+ol.inherits(ol.control.Timeline, ol.control.Control);
+/** Get the date of a feature
+ * @param {ol.Fature} feature
+ * @return {Data|string}
+ */
+ol.control.Timeline.prototype._getFeatureDate = function(feature) {
+  return f.get('date');
+};
+/** Get the end date of a feature, default return undefined
+ * @param {ol.Fature} feature
+ * @return {Data|string}
+ */
+ol.control.Timeline.prototype._endFeatureDate = function(feature) {
+  return undefined;
+};
+/**
+ * Get features
+ * @return {Array<ol.Feature>}
+ */
+ol.control.Timeline.prototype.getFeatures = function() {
+  return this._source.getFeatures();
+}
+/**
+ * Refresh the timeline with new data
+ * @param {Number} zoom Zoom from 0.5 to 3, default 1
+ */
+ol.control.Timeline.prototype.refresh = function(zoom) {
+  zoom = Math.min(3, Math.max(.5, zoom || 1));
+  this.element.innerHTML = '';
+  var features = this.getFeatures();
+  var d, d2;
+  // Get features sorted by date
+  var tline = this._tline = [];
+  features.forEach(function(f) {
+    if (d = this._getFeatureDate(f)) {
+      if (!(d instanceof Date)) {
+        d = new Date(d)
+      }
+      if (this._endFeatureDate) {
+        d2 = this._endFeatureDate(f);
+        if (!(d2 instanceof Date)) {
+          d2 = new Date(d2)
+        }
+      }
+      if (!isNaN(d)) {
+        tline.push({
+          date: d,
+          end: isNaN(d2) ? null : d2,
+          feature: f
+        });
+      }
+    }
+  }.bind(this));
+  if (!tline.length) return;
+  tline.sort(function(a,b) { 
+    return (a.date < b.date ? -1 : (a.date===b.date ? 0: 1))
+  });
+  // Draw
+  var div = ol.ext.element.create('DIV', {
+    parent: this.element
+  });
+  // Calculate width
+  var min = this._minDate = Math.min(this.get('minDate'), tline[0].date);
+  var max = this._maxDate = Math.max(this.get('maxDate'), tline[tline.length-1].date);
+  var delta = (max-min);
+  var maxWidth = ol.ext.element.getStyle(div, 'maxWidth');
+  var scale = this._scale = (delta > maxWidth ? maxWidth/delta : 1) * zoom;
+  // Leave 10px on right
+  min = this._minDate = this._minDate - 10/scale;
+  delta = (max-min) * scale;
+  ol.ext.element.setStyle(div, {
+    width: delta,
+    maxWidth: 'unset'
+  });
+  // Draw time's bar
+  this._drawTime(div, min, max, scale);
+  // Draw features
+  var line = [];
+  var lineHeight = ol.ext.element.getStyle(this.element, 'lineHeight');
+  // Wrapper
+  var fdiv = ol.ext.element.create('DIV', {
+      className: 'ol-features',
+      parent: div
+  });
+  // Add features on the line
+  tline.forEach(function(f) {
+    var d = f.date;
+    var t = f.elt = ol.ext.element.create('DIV', {
+      className: 'ol-feature',
+      style: {
+        left: Math.round((d-min)*scale),
+      },
+      html: this.getHTML(f.feature),
+      parent: fdiv
+    });
+    // Prevent image dragging
+    var img = t.querySelectorAll('img');
+    for (var i=0; i<img.length; i++) {
+      img[i].draggable = false;
+    };
+    // Calculate image width
+    if (f.end) {
+      ol.ext.element.setStyle(t, { 
+        minWidth: (f.end-d) * scale, 
+        maxWidth: 'unset'
+      });
+    }
+    var left = ol.ext.element.getStyle(t, 'left');
+    // Select on click
+    t.addEventListener('click', function(){
+      if (!this._moving) {
+        this.dispatchEvent({type: 'select', feature: f.feature });
+        this.element.scrollLeft = left - ol.ext.element.getStyle(this.element, 'width')/2;
+      }
+    }.bind(this));
+    // Find first free Y position
+    var pos, l;
+    for (pos=0; l=line[pos]; pos++) {
+      if (left > l) {
+        break;
+      };
+    }
+    line[pos] = left + ol.ext.element.getStyle(t, 'width');
+    ol.ext.element.setStyle(t, { top: pos*lineHeight });
+  }.bind(this));
+};
+/**
+ * Draw date time line
+ * @private
+ */
+ol.control.Timeline.prototype._drawTime = function(div, min, max, scale) {
+  var year = (new Date(this._minDate)).getFullYear();
+  var tdiv = ol.ext.element.create('DIV', {
+    className: 'ol-times',
+    parent: div
+  });
+  var dx = ol.ext.element.getStyle(tdiv, 'left');
+  while(true) {
+    var d = new Date(String(year));
+    if (d > this._maxDate) break;
+    ol.ext.element.create('DIV', {
+      className: 'ol-time',
+      style: {
+        left: Math.round((d-this._minDate)*scale) - dx
+      },
+      html: year,
+      parent: tdiv
+    });
+    year++;
+  }
+};
+/** Center timeline on a date
+ * @param {Date|String|ol.feature} feature a date or a feature with a date
+ */
+ol.control.Timeline.prototype.setDate = function(feature) {
+  var date;
+  // Get date from Feature
+  if (feature instanceof ol.Feature) {
+    date = this._getFeatureDate(feature);
+    if (!(date instanceof Date)) {
+      date = new Date(date);
+    }
+  } else if (feature instanceof Date) {
+    date = feature;
+  } else {
+    date = new Date(String(feature));
+  }
+  if (!isNaN(date)) {
+    this.element.scrollLeft = (date-this._minDate)*this._scale - ol.ext.element.getStyle(this.element, 'width')/2;
+    if (feature) {
+      for (var i=0, f; f = this._tline[i]; i++) {
+        if (f.feature === feature) {
+          f.elt.classList.add('select');
+          this._select = f;
+        } else {
+          f.elt.classList.remove('select');
+        }
+      }
+    }
+  }
+};
+/** Get the date of the center
+ * @return {Date}
+ */
+ol.control.Timeline.prototype.getDate = function() {
+  var d = (this.element.scrollLeft + ol.ext.element.getStyle(this.element, 'width')/2)/this._scale + this._minDate;
+  return new Date(d);
+};
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
@@ -12111,8 +12426,8 @@ ol.interaction.SnapGuides.prototype.setDrawInteraction = function(drawi) {
 		}
 		var l = coord.length;
 		if (l === s && self.enableInitialGuides_) {
-			var x = coord[0];
-			var y = coord[1];
+			var x = coord[0][0];
+			var y = coord[0][1];
 			coord = [[x, y], [x, y - 1]];
 		}
 		if (l != nb && (self.enableInitialGuides_ ? l >= s : l > s)) {
@@ -12131,10 +12446,10 @@ ol.interaction.SnapGuides.prototype.setDrawInteraction = function(drawi) {
 		// When geom is changing add a new orthogonal direction 
 		e.feature.getGeometry().on("change", setGuides);
 	});
-	// end drawing, clear directions
-	drawi.on ("drawend", function(e) {
+	// end drawing / deactivate => clear directions
+	drawi.on (["drawend", "change:active"], function(e) {
 		self.clearGuides(features);
-		e.feature.getGeometry().un("change", setGuides);
+		if (e.feature) e.feature.getGeometry().un("change", setGuides);
 		nb = 0;
 		features = [];
 	});
@@ -16232,12 +16547,14 @@ ol.Overlay.Placemark.prototype.setRadius = function(size) {
 *	@param {ol.OverlayPositioning | string | undefined} options.positionning 
 *		the 'auto' positioning var the popup choose its positioning to stay on the map.
 * @param {*} options.template A template with a list of properties to use in the popup
+* @param boolean} options.canFix Enable popup to be fixed 
 * @api stable
 */
 ol.Overlay.PopupFeature = function (options) {
   options = options || {};
   ol.Overlay.Popup.call(this, options);
-  this._template = options.template || {};
+  this.setTemplate(options.template);
+  this.set('canFix', options.canFix)
   // Bind with a select interaction
   if (options.select && (typeof options.select.on ==='function')) {
     this._select = options.select;
@@ -16252,6 +16569,13 @@ ol.inherits(ol.Overlay.PopupFeature, ol.Overlay.Popup);
  */
 ol.Overlay.PopupFeature.prototype.setTemplate = function(template) {
   this._template = template || {};
+  if (this._template.attributes instanceof Array) {
+    var att = {};
+    this._template.attributes.forEach(function (a) {
+      att[a] = true;
+    });
+    this._template.attributes = att;
+  }
 };
 /** Show the popup on the map
  * @param {ol.coordinate|undefined} coordinate Position of the popup
@@ -16278,16 +16602,34 @@ ol.Overlay.PopupFeature.prototype.show = function(coordinate, features) {
 ol.Overlay.PopupFeature.prototype._getHtml = function(feature) {
   if (!feature) return '';
   var html = ol.ext.element.create('DIV', { className: 'ol-popupfeature' });
+  if (this.get('canFix')) {
+    ol.ext.element.create('I', { className:'ol-fix', parent: html })
+      .addEventListener('click', function(){
+        this.element.classList.toggle('ol-fixed');
+      }.bind(this));
+  }
   if (this._template.title) {
-    ol.ext.element.create('H1', { html:feature.get(this._template.title), parent: html });
+    var title;
+    if (typeof this._template.title === 'function') {
+      title = this._template.title(feature);
+    } else {
+      title = feature.get(this._template.title);
+    }
+    ol.ext.element.create('H1', { html:title, parent: html });
   }
   if (this._template.attributes) {
     var tr, table = ol.ext.element.create('TABLE', { parent: html });
-    this._template.attributes.forEach( function(att) {
+    var atts = this._template.attributes;
+    for (var att in atts) {
+      var a = atts[att];
       tr = ol.ext.element.create('TR', { parent: table });
-      ol.ext.element.create('TD', { html: att, parent: tr });
-      ol.ext.element.create('TD', { html: feature.get(att), parent: tr });
-    });
+      ol.ext.element.create('TD', { html: a.title || att, parent: tr });
+      var val = feature.get(att);
+      ol.ext.element.create('TD', { 
+        html: (a.before||'') + (a.format ? a.format(val) : val) + (a.after||''), 
+        parent: tr 
+      });
+    };
   }
   // Zoom button
   ol.ext.element.create('BUTTON', { className: 'ol-zoombt', parent: html })
@@ -16318,6 +16660,26 @@ ol.Overlay.PopupFeature.prototype._getHtml = function(feature) {
   this._select.getFeatures().push(feature);
   this._noselect = false;
   return html;
+};
+/** Get a function to use as format to get local string for an attribute
+ * if the attribute is a number: Number.toLocaleString()
+ * if the attribute is a date: Date.toLocaleString()
+ * otherwise the attibute itself
+ * @param {string} locales string with a BCP 47 language tag, or an array of such strings
+ * @param {*} options Number or Date toLocaleString options
+ * @return {function} a function that takes an attribute and return the formated attribute
+ */
+ol.Overlay.PopupFeature.localString = function (locales , options) {
+  return function (a) {
+    if (a && a.toLocaleString) {
+      return a.toLocaleString(locales , options);
+    } else {
+      // Try to get a date from a string
+      var date = new Date(a);
+      if (isNaN(date)) return a;
+      else return date.toLocaleString(locales , options);
+    }
+  };
 };
 
 /*	Copyright (c) 2018 Jean-Marc VIGLINO, 
