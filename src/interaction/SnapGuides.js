@@ -229,11 +229,10 @@ ol_interaction_SnapGuides.prototype.setDrawInteraction = function(drawi) {
 
 		var l = coord.length;
 		if (l === s && self.enableInitialGuides_) {
-			var x = coord[0];
-			var y = coord[1];
+			var x = coord[0][0];
+			var y = coord[0][1];
 			coord = [[x, y], [x, y - 1]];
 		}
-
 		if (l != nb && (self.enableInitialGuides_ ? l >= s : l > s)) {
 			self.clearGuides(features);
 			var p1 = coord[l - s], p2 = coord[l - s - 1];
@@ -250,10 +249,10 @@ ol_interaction_SnapGuides.prototype.setDrawInteraction = function(drawi) {
 		// When geom is changing add a new orthogonal direction 
 		e.feature.getGeometry().on("change", setGuides);
 	});
-	// end drawing, clear directions
-	drawi.on ("drawend", function(e) {
+	// end drawing / deactivate => clear directions
+	drawi.on (["drawend", "change:active"], function(e) {
 		self.clearGuides(features);
-		e.feature.getGeometry().un("change", setGuides);
+		if (e.feature) e.feature.getGeometry().un("change", setGuides);
 		nb = 0;
 		features = [];
 	});
