@@ -79,8 +79,8 @@ var ol_control_Overview = function(options)
 		interactions: new ol_Collection(),
 		target: this.panel_,
 		view: new ol_View
-			({	zoom: 14,
-				center: [270148, 6247782],
+			({	zoom: 2,
+				center: [0,0],
 				projection: options.projection
 			}),
 		layers: options.layers
@@ -177,6 +177,7 @@ ol_control_Overview.prototype.getOverviewMap = function()
 ol_control_Overview.prototype.toggleMap = function()
 {	this.element.classList.toggle("ol-collapsed");
 	this.ovmap_.updateSize();
+	this.setView();
 };
 
 /** Set overview map position
