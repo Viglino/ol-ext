@@ -1,0 +1,89 @@
+.ol-viewport .ol-timeline {
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.ol-timeline {
+  overflow: hidden;
+  padding: 0;
+  scroll-behavior: smooth;
+  line-height: 1em;
+}
+.ol-timeline.ol-move {
+  scroll-behavior: unset;
+}
+.ol-timeline.ol-touch {
+  overflow-x: auto;
+}
+
+.ol-timeline > div {
+  height: 6em;
+  max-width: 2000px;
+  position: relative;
+}
+
+.ol-timeline > div .ol-times {
+  background: rgba(255,255,255,.5);
+  height: 1em;
+  bottom: 0;
+  position: absolute;
+  left: -200px;
+  right: -200px;
+  z-index: 1;
+}
+.ol-timeline > div .ol-time {
+  position: absolute;
+  font-size: .7em;
+  color: #999;
+  bottom: 0;
+  transform: translateX(-50%);
+}
+.ol-timeline > div .ol-time:before {
+  content: "";
+  position: absolute;
+  bottom: 1.2em;
+  left: 50%;
+  height: 500px;
+  border-left: 1px solid #999;
+}
+
+.ol-timeline > div .ol-features {
+  position: absolute;
+  top: 0;
+  overflow: hidden;
+  height: 5em;
+  left: -200px;
+  right: -400px;
+  margin: 0 200px;
+}
+
+.ol-timeline > div .ol-feature {
+  position: absolute;
+  font-size: .7em;
+  color: #999;
+  top: 0;
+  background: #fff;
+  max-width: 3em;
+  max-height: 2.4em;
+  min-height: 1em;
+  line-height: 1.2em;
+  border: 1px solid #ccc;
+  overflow: hidden;
+  padding: 0 .5em 0 0;
+  transition: all .3s;
+  cursor: pointer;
+}
+.ol-timeline > div .ol-feature:hover,
+.ol-timeline > div .ol-feature.select {
+  z-index: 1;
+  transform: scale(1.2);
+  background: #eee;
+  max-width: 14em!important;
+}
+
+.ol-timeline > div .ol-feature img {
+  max-height: 2.2em;
+  float: left;
+  margin: .1em .5em .1em .1em
+};
