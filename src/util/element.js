@@ -38,6 +38,10 @@ ol_ext_element.create = function (tagName, options) {
           options.parent.appendChild(elt);
           break;
         }
+        case 'style': {
+          this.setStyle(elt, options.style);
+          break;
+        }
         default: {
           elt.setAttribute(attr, options[attr]);
           break;
@@ -86,5 +90,70 @@ ol_ext_element.toggle = function (element) {
   element.style.display = (element.style.display==='none' ? '' : 'none');
 };
 
+/** Set style of an element
+ * @param {DOMElement} el the element
+ * @param {*} st list of style
+ */
+ol_ext_element.setStyle = function(el, st) {
+  for (var s in st) {
+    switch (s) {
+      case 'top':
+      case 'left':
+      case 'bottom':
+      case 'right':
+      case 'minWidth':
+      case 'maxWidth':
+      case 'width':
+      case 'height': {
+        if (typeof(st[s] === 'number')) {
+          el.style[s] = st[s]+'px';
+        } else {
+          el.style[s] = st[s];
+        }
+        break;
+      }
+      default: {
+        el.style[s] = st[s];
+      }
+    }
+  }
+};
+
+/**
+ * Get style propertie of an element
+ * @param {DOMElement} el the element
+ * @param {string} styleProp Propertie name
+ * @return {*} style value
+ */
+ol_ext_element.getStyle = function(el, styleProp) {
+  var value, defaultView = (el.ownerDocument || document).defaultView;
+  // W3C standard way:
+  if (defaultView && defaultView.getComputedStyle) {
+    // sanitize property name to css notation
+    // (hypen separated words eg. font-Size)
+    styleProp = styleProp.replace(/([A-Z])/g, "-$1").toLowerCase();
+    value = defaultView.getComputedStyle(el, null).getPropertyValue(styleProp);
+  } else if (el.currentStyle) { // IE
+    // sanitize property name to camelCase
+    styleProp = styleProp.replace(/\-(\w)/g, function(str, letter) {
+      return letter.toUpperCase();
+    });
+    value = el.currentStyle[styleProp];
+    // convert other units to pixels on IE
+    if (/^\d+(em|pt|%|ex)?$/i.test(value)) { 
+      return (function(value) {
+        var oldLeft = el.style.left, oldRsLeft = el.runtimeStyle.left;
+        el.runtimeStyle.left = el.currentStyle.left;
+        el.style.left = value || 0;
+        value = el.style.pixelLeft + "px";
+        el.style.left = oldLeft;
+        el.runtimeStyle.left = oldRsLeft;
+        return value;
+      })(value);
+    }
+  }
+  if (/px$/.test(value)) return parseInt(value);
+  return value;
+};
 
 export default ol_ext_element
