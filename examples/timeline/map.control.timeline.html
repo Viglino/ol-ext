@@ -1,0 +1,142 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Timeline control</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="An OL3 layerswitcher image." />
+  <meta name="keywords" content="ol3, layer, timeline, control, date" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    .ol-attribution {
+      bottom: 6.5em;
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Timeline control</h1>
+  </a>
+  <div class="info">
+  </div>
+
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
+  
+  <script type="text/javascript">
+
+  // Two base layers
+  var stamen = new ol.layer.Tile({
+    title: "Watercolor",
+    baseLayer: true,
+    source: new ol.source.Stamen({
+      layer: 'watercolor'
+    })
+  });
+  var osm = new ol.layer.Tile({
+    title: "OSM",
+    baseLayer: true,
+    source: new ol.source.OSM(),
+    visible: false
+  });
+
+  // GeoJSON layer with a preview attribute
+  var vectorSource = new ol.source.Vector({
+    url: '../data/fond_guerre.geojson',
+    projection: 'EPSG:3857',
+    format: new ol.format.GeoJSON(),
+    attributions: [ "&copy; <a href='https://www.data.gouv.fr/fr/datasets/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire/'>data.gouv.fr</a>" ],
+    logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+  });
+  var listenerKey = vectorSource.on('change', function(e) {
+    if (vectorSource.getState() == 'ready') {
+      ol.Observable.unByKey(listenerKey);
+      tline.refresh();
+    }
+  });
+  var vector = new ol.layer.Vector({
+    name: '1914-18',
+    preview: "http://www.culture.gouv.fr/Wave/image/memoire/2445/sap40_z0004141_v.jpg",
+    source: vectorSource
+  });
+
+
+  // The map
+  var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 6,
+      center: [173664, 6166327]
+    }),
+    layers: [stamen, osm, vector]
+  });
+
+  // Create Timeline control when features are loaded
+  var tline = new ol.control.Timeline({
+    source: vectorSource,
+    getHTML: function(f){
+      return '<img src="'+f.get('img')+'"/> '+(f.get('text')||'');
+    },
+    getFeatureDate: function(f) {
+      return f.get('date');
+    },
+    endFeatureDate: function(f) {
+      var d = f.get('endDate');
+      // Create end date
+      if (!d) {
+        d = new Date (f.get('date')); 
+        d = new Date( d.getTime() + (5 + 10*Math.random())*10*24*60*60*1000);
+        f.set('endDate', d);
+      }
+      return d;
+    }
+  });
+  map.addControl (tline);
+  tline.on('select', function(e){
+    map.getView().animate({
+      center: e.feature.getGeometry().getCoordinates(),
+      zoom: 10
+    });
+    select.getFeatures().clear();
+    select.getFeatures().push(e.feature);
+  })
+
+  var select = new ol.interaction.Select({ hitTolerance: 5 });
+  map.addInteraction(select);
+  select.on('select', function(e){
+    var f = e.selected[0];
+    if (f) {
+      tline.setDate(f);
+    }
+  });
+
+  // Redraw layer when fonts are loaded
+  $(window).on("load", function(){ 
+    console.log("loaded"); vector.changed(); 
+  });
+
+  </script>
+  
+</body>
+</html>
