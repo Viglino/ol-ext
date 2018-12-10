@@ -259,6 +259,53 @@ ol.ext.element.getStyle = function(el, styleProp) {
   if (/px$/.test(value)) return parseInt(value);
   return value;
 };
+/** Make a div scrollable withiout scrollbar.
+ * On touch devices the default behavior is preserved
+ * @param {DOMElement} elt
+ * @param {function} onmove a function that takes a boolean indicating that the div is scrolling
+ */
+ol.ext.element.scrollDiv = function(elt, options) {
+  var pos = false;
+  var speed = 0;
+  var dt = 0;
+  var onmove = (typeof(options.onmove) === 'function' ? options.onmove : function(){});
+  // Start scrolling
+  ol.ext.element.addListener(elt, ['mousedown'], function(e) {
+    pos = e.pageX;
+    dt = new Date();
+    elt.classList.add('ol-move');
+  });
+  // Register scroll
+  ol.ext.element.addListener(window, ['mousemove'], function(e) {
+    if (pos !== false) {
+      var delta = pos - e.pageX;
+      elt.scrollLeft += delta;
+      speed = (speed + delta / (new Date() - dt))/2;
+      pos = e.pageX;
+      dt = new Date();
+      // Tell we are moving
+      if (delta) onmove(true);
+    } else {
+      // Not moving yet
+      onmove(false);
+    }
+  });
+  // Stop scrolling
+  ol.ext.element.addListener(window, ['mouseup'], function(e) {
+    elt.classList.remove('ol-move');
+    dt = new Date() - dt;
+    if (dt>100) {
+      // User stop: no speed
+      speed = 0;
+    } else if (dt>0) {
+      // Calculate new speed
+      speed = (speed + (pos - e.pageX) / dt) / 2;
+    } 
+    elt.scrollLeft += speed*100;
+    pos = false;
+    speed = 0;
+  });
+};
 
 /* Create ol.sphere for backward compatibility with ol < 5.0
  * To use with Openlayers package
@@ -3748,15 +3795,6 @@ ol.control.Imageline = function(options) {
     element: element,
     target: options.target
   });
-  /*
-  // Remove selection
-  this.element.addEventListener('mouseover', function(){
-    if (this._select) {
-      this._select.elt.classList.remove('select');
-      this._select = false;
-    }
-  }.bind(this));
-  */
   // Scroll imageline
   this._setScrolling();
   this._scrolldiv.addEventListener("scroll", function(e) {
@@ -3817,48 +3855,15 @@ ol.control.Imageline.prototype.getFeatures = function(useExtent) {
  * @private
  */
 ol.control.Imageline.prototype._setScrolling = function() {
-  var pos = false;
-  var speed = 0;
-  var dt = 0;
   var elt = this._scrolldiv = ol.ext.element.create('DIV', {
     parent: this.element
   });
-  // Start scrolling
-  ol.ext.element.addListener(elt, ['mousedown'], function(e) {
-    pos = e.pageX;
-    dt = new Date();
-    elt.classList.add('ol-move');
-  }.bind(this));
-  // Register scroll
-  ol.ext.element.addListener(window, ['mousemove'], function(e) {
-    if (pos !== false) {
-      var delta = pos - e.pageX;
-      elt.scrollLeft += delta;
-      speed = (speed + delta / (new Date() - dt))/2;
-      pos = e.pageX;
-      dt = new Date();
-      // Prevent selection when moving
-      if (delta) this._moving = true;
-    } else {
-      // Restoe selection
-      this._moving = false;
-    }
-  }.bind(this));
-  // Stop scrolling
-  ol.ext.element.addListener(window, ['mouseup'], function(e) {
-    elt.classList.remove('ol-move');
-    dt = new Date() - dt;
-    if (dt>100) {
-      // User stop: no speed
-      speed = 0;
-    } else if (dt>0) {
-      // Calculate new speed
-      speed = (speed + (pos - e.pageX) / dt) / 2;
-    } 
-    elt.scrollLeft += speed*100;
-    pos = false;
-    speed = 0;
-  }.bind(this));
+  ol.ext.element.scrollDiv(elt, {
+    // Prevent selection when moving
+    onmove: function(b) {
+      this._moving=b; 
+    }.bind(this)
+  });
 };
 /**
  * Refresh the imageline with new data
@@ -6975,6 +6980,46 @@ ol.control.Select.prototype.doSelect = function (options) {
 	return features;
 };
 
+/** A control with scroll-driven navigation to create narrative maps
+ *
+ * @constructor
+ * @extends {ol.control.Control}
+ * @fires 
+ * @param {Object=} options Control options.
+ *	@param {String} options.className class of the control
+ */
+ol.control.Storymap = function(options) {
+  var element = ol.ext.element.create('DIV', {
+    className: (options.className || '') + ' ol-storymap'
+      + (options.target ? '': ' ol-unselectable ol-control')
+      + (ol.has.TOUCH ? ' ol-touch' : ''),
+    html: options.html || ''
+  });
+  // Initialize
+  ol.control.Control.call(this, {
+    element: element,
+    target: options.target
+  });
+  var currentDiv = this.element.querySelectorAll('.step')[0];
+  setTimeout (function (){
+    this.dispatchEvent({ type: 'current', element: currentDiv, name: currentDiv.getAttribute('name') });
+  }.bind(this));
+  this.element.addEventListener("scroll", function(e) {
+    var current, step = this.element.querySelectorAll('.step');
+    var height = ol.ext.element.getStyle(this.element, 'height');
+    for (var i=0, s; s=step[i]; i++) {
+      var p = s.offsetTop - this.element.scrollTop;
+      if (p > height/3) break;
+      current = s;
+    }
+    if (current && current!==currentDiv) {
+      currentDiv = current;
+      this.dispatchEvent({ type: 'current', element: currentDiv, name: currentDiv.getAttribute('name') });
+    }
+  }.bind(this));
+};
+ol.inherits(ol.control.Storymap, ol.control.Control);
+
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -7349,7 +7394,12 @@ ol.control.Timeline = function(options) {
     if (this._select) this._select.elt.classList.remove('select');
   }.bind(this));
   // Scroll timeline
-  this._setScrolling();
+  ol.ext.element.scrollDiv(this.element, {
+    onmove: function(b) {
+      // Prevent selection on moving
+      this._moving = b; 
+    }.bind(this)
+  });
   // Parameters
   this.set('maxWidth', options.maxWidth || 2000);
   this.set('minDate', options.minDate || Infinity);
@@ -7360,50 +7410,6 @@ ol.control.Timeline = function(options) {
   this.refresh();
 };
 ol.inherits(ol.control.Timeline, ol.control.Control);
-/** Set element scrolling with a acceleration effect on desktop
- * (on mobile it uses the scroll of the browser)
- */
-ol.control.Timeline.prototype._setScrolling = function() {
-  var pos = false;
-  var speed = 0;
-  var dt = 0;
-  // Start scrolling
-  ol.ext.element.addListener(this.element, ['mousedown'], function(e) {
-    pos = e.pageX;
-    dt = new Date();
-    this.element.classList.add('ol-move');
-  }.bind(this));
-  // Register scroll
-  ol.ext.element.addListener(window, ['mousemove'], function(e) {
-    if (pos !== false) {
-      var delta = pos - e.pageX;
-      this.element.scrollLeft += delta;
-      speed = (speed + delta / (new Date() - dt))/2;
-      pos = e.pageX;
-      dt = new Date();
-      // Prevent selection when moving
-      if (delta) this._moving = true;
-    } else {
-      // Restoe selection
-      this._moving = false;
-    }
-  }.bind(this));
-  // Stop scrolling
-  ol.ext.element.addListener(window, ['mouseup'], function(e) {
-    this.element.classList.remove('ol-move');
-    dt = new Date() - dt;
-    if (dt>100) {
-      // User stop: no speed
-      speed = 0;
-    } else if (dt>0) {
-      // Calculate new speed
-      speed = (speed + (pos - e.pageX) / dt) / 2;
-    } 
-    this.element.scrollLeft += speed*100;
-    pos = false;
-    speed = 0;
-  }.bind(this));
-};
 /** Get html to show in the line
  * @param {ol.Feature} feature
  * @return {DOMElement|string}
