@@ -38,7 +38,7 @@
     right: 0;
     width:100%;
     position: fixed;
-    z-index: 0;
+    z-index: 1;
     background-color: #1f6b75;
     color: white;
   }
@@ -98,9 +98,50 @@
     margin:-0.5em 0 1em;
     padding:1em;
     width:100%;
-    box-sizing: content-box;
+    box-sizing: border-box;
+  }
+
+  .example {
+    position: relative;
   }
   
+  .news,
+  .new:after {
+    position: absolute;
+    content: "NEW!";
+    background: yellow;
+    color: red;
+    right: -0.2em;
+    top: 0.2em;
+    padding: .5em;
+    font-family: sans-serif;
+    font-size: 1em;
+    font-weight: bold;
+    transform: rotate(10deg) scaleX(.7);
+    border-radius: 50%;
+    width: 2.8em;
+    height: 1.7em;
+    line-height: 1.8em;
+    text-align: center;
+    box-shadow: 0.1em 0.2em 0.5em 0.1em rgba(0,0,0,.5);
+  }
+
+  .news {
+    position: relative;
+    display: inline-block;
+    white-space: nowrap;
+    transform: rotate(10deg) scaleX(.5);
+    font-size: 1.5em;
+    height: 2.3em;
+    width: 4.5em;
+    line-height: 2.3em;
+    cursor: pointer;
+    right: 0;
+    z-index: 5;
+    text-align: center;
+    padding: 0;
+  }
+
   .example:hover {
     background-color: #ddd;
   }
@@ -119,6 +160,7 @@
     float:right;
     width:180px;
   }
+
 </style>
 
   <!-- jQuery -->
@@ -137,9 +179,28 @@
           .load(function(e) {
             $(this).show();
           })
-      })
+      });
 
-      $('#keywords').on('keyup', function() {
+      // last 2 month
+      var d = new Date((new Date()).getTime()-2*31*24*60*60*1000);
+      var nb = 0;
+      $(".example[data-date]").each(function() {
+        if (new Date($(this).data('date')) > d) {
+          nb++;
+          $(this).addClass('new');
+          $(".tag", this).text($(".tag", this).text()+', new');
+        }
+      });
+      if (nb) {
+        $('<span>').addClass('news')
+          .text(nb+' NEWS')
+          .click(function(){
+            $('#keywords').val('new').change();
+          })
+          .appendTo($('.container'));
+      }
+
+      $('#keywords').on('keyup change search', function() {
         var s = new RegExp ( $(this).val() , "i");
         var k = 0;
         $(".example").each(function() {
@@ -512,11 +573,19 @@
         <p class="description"><i>ol.interaction.DropFile</i> is a drag and drop interaction. It fires a loadstart and loadend and errors.</p>
         <p class="tag">interaction, drag, drop</p>
       </div>
+
+      <div class="example">
+        <a class="mainlink" href="examples/interaction/map.interaction.dragoverlay.html">
+          <strong>Drag overlays interaction</strong><br>
+        </a>
+        <p class="description"><i>ol.interaction.DraOverlay</i> is an interaction to drag overlays on the map.</p>
+        <p class="tag">interaction, drag, overlay</p>
+      </div>
     </div>
 
   <h2>Undo/redo interaction</h2>
     <div>
-      <div class="example">
+      <div class="example" data-date="2018-12">
         <a class="mainlink" href="examples/interaction/map.interaction.undoredo.html">
           <strong>Undo/redo interaction</strong><br>
         </a>
@@ -765,7 +834,7 @@
 
   <h2>Routing</h2>
   <div>
-    <div class="example">
+    <div class="example" data-date="2018-11">
       <a class="mainlink" href="examples/routing/map.source.dijkstra.html">
         <strong>Dijkstra short path</strong><br>
       </a>
@@ -800,7 +869,7 @@
         <p class="tag">popup, overlay, feature, attribute, select</p>
       </div>
 
-      <div class="example">
+      <div class="example" data-date="2018-12">
         <a class="mainlink" href="examples/popup/map.placemark.html">
           <strong>Placemark</strong><br>
         </a>
@@ -882,7 +951,7 @@
         <p class="tag">layer, vector, wikipedia, wikimedia, commons</p>
       </div>
 
-      <div class="example">
+      <div class="example" data-date="2018-11">
         <a class="mainlink" href="examples/layer/map.source.delaunay.html">
           <strong>Delaunay triangulation</strong><br>
         </a>
