@@ -34,16 +34,6 @@ var ol_control_Imageline = function(options) {
     target: options.target
   });
 
-  /*
-  // Remove selection
-  this.element.addEventListener('mouseover', function(){
-    if (this._select) {
-      this._select.elt.classList.remove('select');
-      this._select = false;
-    }
-  }.bind(this));
-  */
-
   // Scroll imageline
   this._setScrolling();
   this._scrolldiv.addEventListener("scroll", function(e) {
@@ -114,51 +104,16 @@ ol_control_Imageline.prototype.getFeatures = function(useExtent) {
  * @private
  */
 ol_control_Imageline.prototype._setScrolling = function() {
-  var pos = false;
-  var speed = 0;
-  var dt = 0;
-
   var elt = this._scrolldiv = ol_ext_element.create('DIV', {
     parent: this.element
   });
-  
-  // Start scrolling
-  ol_ext_element.addListener(elt, ['mousedown'], function(e) {
-    pos = e.pageX;
-    dt = new Date();
-    elt.classList.add('ol-move');
-  }.bind(this));
-  
-  // Register scroll
-  ol_ext_element.addListener(window, ['mousemove'], function(e) {
-    if (pos !== false) {
-      var delta = pos - e.pageX;
-      elt.scrollLeft += delta;
-      speed = (speed + delta / (new Date() - dt))/2;
-      pos = e.pageX;
-      dt = new Date();
-      // Prevent selection when moving
-      if (delta) this._moving = true;
-    } else {
-      // Restoe selection
-      this._moving = false;
-    }
-  }.bind(this));
-  // Stop scrolling
-  ol_ext_element.addListener(window, ['mouseup'], function(e) {
-    elt.classList.remove('ol-move');
-    dt = new Date() - dt;
-    if (dt>100) {
-      // User stop: no speed
-      speed = 0;
-    } else if (dt>0) {
-      // Calculate new speed
-      speed = (speed + (pos - e.pageX) / dt) / 2;
-    } 
-    elt.scrollLeft += speed*100;
-    pos = false;
-    speed = 0;
-  }.bind(this));
+
+  ol_ext_element.scrollDiv(elt, {
+    // Prevent selection when moving
+    onmove: function(b) {
+      this._moving=b; 
+    }.bind(this)
+  });
 };
 
 /**

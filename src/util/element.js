@@ -156,4 +156,56 @@ ol_ext_element.getStyle = function(el, styleProp) {
   return value;
 };
 
+/** Make a div scrollable withiout scrollbar.
+ * On touch devices the default behavior is preserved
+ * @param {DOMElement} elt
+ * @param {function} onmove a function that takes a boolean indicating that the div is scrolling
+ */
+ol_ext_element.scrollDiv = function(elt, options) {
+  var pos = false;
+  var speed = 0;
+  var dt = 0;
+
+  var onmove = (typeof(options.onmove) === 'function' ? options.onmove : function(){});
+
+  // Start scrolling
+  ol_ext_element.addListener(elt, ['mousedown'], function(e) {
+    pos = e.pageX;
+    dt = new Date();
+    elt.classList.add('ol-move');
+  });
+  
+  // Register scroll
+  ol_ext_element.addListener(window, ['mousemove'], function(e) {
+    if (pos !== false) {
+      var delta = pos - e.pageX;
+      elt.scrollLeft += delta;
+      speed = (speed + delta / (new Date() - dt))/2;
+      pos = e.pageX;
+      dt = new Date();
+      // Tell we are moving
+      if (delta) onmove(true);
+    } else {
+      // Not moving yet
+      onmove(false);
+    }
+  });
+  
+  // Stop scrolling
+  ol_ext_element.addListener(window, ['mouseup'], function(e) {
+    elt.classList.remove('ol-move');
+    dt = new Date() - dt;
+    if (dt>100) {
+      // User stop: no speed
+      speed = 0;
+    } else if (dt>0) {
+      // Calculate new speed
+      speed = (speed + (pos - e.pageX) / dt) / 2;
+    } 
+    elt.scrollLeft += speed*100;
+    pos = false;
+    speed = 0;
+  });
+};
+
 export default ol_ext_element

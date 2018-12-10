@@ -35,7 +35,12 @@ var ol_control_Timeline = function(options) {
   }.bind(this));
 
   // Scroll timeline
-  this._setScrolling();
+  ol_ext_element.scrollDiv(this.element, {
+    onmove: function(b) {
+      // Prevent selection on moving
+      this._moving = b; 
+    }.bind(this)
+  });
 
   // Parameters
   this.set('maxWidth', options.maxWidth || 2000);
@@ -48,54 +53,6 @@ var ol_control_Timeline = function(options) {
   this.refresh();
 };
 ol_inherits(ol_control_Timeline, ol_control_Control);
-
-/** Set element scrolling with a acceleration effect on desktop
- * (on mobile it uses the scroll of the browser)
- */
-ol_control_Timeline.prototype._setScrolling = function() {
-  var pos = false;
-  var speed = 0;
-  var dt = 0;
-  
-  // Start scrolling
-  ol_ext_element.addListener(this.element, ['mousedown'], function(e) {
-    pos = e.pageX;
-    dt = new Date();
-    this.element.classList.add('ol-move');
-  }.bind(this));
-  
-  // Register scroll
-  ol_ext_element.addListener(window, ['mousemove'], function(e) {
-    if (pos !== false) {
-      var delta = pos - e.pageX;
-      this.element.scrollLeft += delta;
-      speed = (speed + delta / (new Date() - dt))/2;
-      pos = e.pageX;
-      dt = new Date();
-      // Prevent selection when moving
-      if (delta) this._moving = true;
-    } else {
-      // Restoe selection
-      this._moving = false;
-    }
-  }.bind(this));
-
-  // Stop scrolling
-  ol_ext_element.addListener(window, ['mouseup'], function(e) {
-    this.element.classList.remove('ol-move');
-    dt = new Date() - dt;
-    if (dt>100) {
-      // User stop: no speed
-      speed = 0;
-    } else if (dt>0) {
-      // Calculate new speed
-      speed = (speed + (pos - e.pageX) / dt) / 2;
-    } 
-    this.element.scrollLeft += speed*100;
-    pos = false;
-    speed = 0;
-  }.bind(this));
-};
 
 /** Get html to show in the line
  * @param {ol.Feature} feature
