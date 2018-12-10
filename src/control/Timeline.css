@@ -19,7 +19,6 @@
 
 .ol-timeline > div {
   height: 6em;
-  max-width: 2000px;
   position: relative;
 }
 
@@ -51,11 +50,11 @@
 .ol-timeline > div .ol-features {
   position: absolute;
   top: 0;
-  overflow: hidden;
-  height: 5em;
+  bottom: 1em;
   left: -200px;
   right: -400px;
   margin: 0 200px;
+  overflow: hidden;
 }
 
 .ol-timeline > div .ol-feature {

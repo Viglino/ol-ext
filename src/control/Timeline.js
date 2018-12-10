@@ -35,41 +35,78 @@ var ol_control_Timeline = function(options) {
   }.bind(this));
 
   // Scroll timeline
-  var pos = false;
-  ol_ext_element.addListener(this.element, ['mousedown'], function(e) {
-    pos = e.pageX;
-    this.element.classList.add('ol-move');
-  }.bind(this));
-  ol_ext_element.addListener(window, ['mousemove'], function(e) {
-    if (pos !== false) {
-      var delta = pos - e.pageX;
-      this.element.scrollLeft += delta;
-      pos = e.pageX;
-      if (delta) this._moving = true;
-    } else {
-      this._moving = false;
-    }
-  }.bind(this));
-  ol_ext_element.addListener(window, ['mouseup'], function(e) {
-    pos = false;
-    this.element.classList.remove('ol-move');
-  }.bind(this));
+  this._setScrolling();
 
   // Parameters
   this.set('maxWidth', options.maxWidth || 2000);
   this.set('minDate', options.minDate || Infinity);
   this.set('maxDate', options.maxDate || -Infinity);
-  this.getHTML = options.getHTML || function(f){ return f.get('name') || ''; };
+  if (options.getHTML) this._getHTML =  options.getHTML;
   if (options.getFeatureDate) this._getFeatureDate =  options.getFeatureDate;
   if (options.endFeatureDate) this._endFeatureDate =  options.endFeatureDate;
 
   this.refresh();
-
 };
 ol_inherits(ol_control_Timeline, ol_control_Control);
 
+/** Set element scrolling with a acceleration effect on desktop
+ * (on mobile it uses the scroll of the browser)
+ */
+ol_control_Timeline.prototype._setScrolling = function() {
+  var pos = false;
+  var speed = 0;
+  var dt = 0;
+  
+  // Start scrolling
+  ol_ext_element.addListener(this.element, ['mousedown'], function(e) {
+    pos = e.pageX;
+    dt = new Date();
+    this.element.classList.add('ol-move');
+  }.bind(this));
+  
+  // Register scroll
+  ol_ext_element.addListener(window, ['mousemove'], function(e) {
+    if (pos !== false) {
+      var delta = pos - e.pageX;
+      this.element.scrollLeft += delta;
+      speed = (speed + delta / (new Date() - dt))/2;
+      pos = e.pageX;
+      dt = new Date();
+      // Prevent selection when moving
+      if (delta) this._moving = true;
+    } else {
+      // Restoe selection
+      this._moving = false;
+    }
+  }.bind(this));
+
+  // Stop scrolling
+  ol_ext_element.addListener(window, ['mouseup'], function(e) {
+    this.element.classList.remove('ol-move');
+    dt = new Date() - dt;
+    if (dt>100) {
+      // User stop: no speed
+      speed = 0;
+    } else if (dt>0) {
+      // Calculate new speed
+      speed = (speed + (pos - e.pageX) / dt) / 2;
+    } 
+    this.element.scrollLeft += speed*100;
+    pos = false;
+    speed = 0;
+  }.bind(this));
+};
+
+/** Get html to show in the line
+ * @param {ol.Feature} feature
+ * @return {DOMElement|string}
+ */
+ol_control_Timeline.prototype._getHTML = function(feature) {
+  return feature.get('name') || '';
+};
+
 /** Get the date of a feature
- * @param {ol.Fature} feature
+ * @param {ol.Feature} feature
  * @return {Data|string}
  */
 ol_control_Timeline.prototype._getFeatureDate = function(feature) {
@@ -77,7 +114,7 @@ ol_control_Timeline.prototype._getFeatureDate = function(feature) {
 };
 
 /** Get the end date of a feature, default return undefined
- * @param {ol.Fature} feature
+ * @param {ol.Feature} feature
  * @return {Data|string}
  */
 ol_control_Timeline.prototype._endFeatureDate = function(feature) {
@@ -95,13 +132,14 @@ ol_control_Timeline.prototype.getFeatures = function() {
 
 /**
  * Refresh the timeline with new data
- * @param {Number} zoom Zoom from 0.5 to 3, default 1
+ * @param {Number} zoom Zoom factor from 0.5 to 3, default 1
  */
 ol_control_Timeline.prototype.refresh = function(zoom) {
   zoom = Math.min(3, Math.max(.5, zoom || 1));
   this.element.innerHTML = '';
   var features = this.getFeatures();
   var d, d2;
+
   // Get features sorted by date
   var tline = this._tline = [];
   features.forEach(function(f) {
@@ -139,7 +177,7 @@ ol_control_Timeline.prototype.refresh = function(zoom) {
   var min = this._minDate = Math.min(this.get('minDate'), tline[0].date);
   var max = this._maxDate = Math.max(this.get('maxDate'), tline[tline.length-1].date);
   var delta = (max-min);
-  var maxWidth = ol_ext_element.getStyle(div, 'maxWidth');
+  var maxWidth = this.get('maxWidth');
   var scale = this._scale = (delta > maxWidth ? maxWidth/delta : 1) * zoom;
   // Leave 10px on right
   min = this._minDate = this._minDate - 10/scale;
@@ -170,13 +208,13 @@ ol_control_Timeline.prototype.refresh = function(zoom) {
       style: {
         left: Math.round((d-min)*scale),
       },
-      html: this.getHTML(f.feature),
+      html: this._getHTML(f.feature),
       parent: fdiv
     });
     // Prevent image dragging
     var img = t.querySelectorAll('img');
     for (var i=0; i<img.length; i++) {
-      img[i].draggable = false;
+      img[i].ondragstart = function(){ return false; };
     };
 
     // Calculate image width
@@ -205,6 +243,7 @@ ol_control_Timeline.prototype.refresh = function(zoom) {
     line[pos] = left + ol_ext_element.getStyle(t, 'width');
     ol_ext_element.setStyle(t, { top: pos*lineHeight });
   }.bind(this));
+  this._nbline = line.length;
 };
 
 /**

@@ -8,8 +8,8 @@
   <title>ol-ext: Timeline control</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-  <meta name="description" content="An OL3 layerswitcher image." />
-  <meta name="keywords" content="ol3, layer, timeline, control, date" />
+  <meta name="description" content="A control to add timeline on a map." />
+  <meta name="keywords" content="ol, timeline, control, date" />
 
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
@@ -39,6 +39,7 @@
     <h1>ol-ext: Timeline control</h1>
   </a>
   <div class="info">
+      The <i>ol/control/Timeline</i> display a timeline to navigate on the map.
   </div>
 
   <!-- Map div -->
@@ -61,6 +62,23 @@
     visible: false
   });
 
+  // Style function
+  function style(select){
+    return function(f) {
+      return new ol.style.Style({
+        image: new ol.style.Photo({
+          src: f.get('img'),
+          radius: select ? 20:15,
+          shadow: true,
+          stroke: new ol.style.Stroke({
+            width: 4,
+            color: select ? '#fff':'#fafafa'
+          })
+        })
+      })
+    }
+  };
+  
   // GeoJSON layer with a preview attribute
   var vectorSource = new ol.source.Vector({
     url: '../data/fond_guerre.geojson',
@@ -78,7 +96,8 @@
   var vector = new ol.layer.Vector({
     name: '1914-18',
     preview: "http://www.culture.gouv.fr/Wave/image/memoire/2445/sap40_z0004141_v.jpg",
-    source: vectorSource
+    source: vectorSource,
+    style: style()
   });
 
 
@@ -122,7 +141,7 @@
     select.getFeatures().push(e.feature);
   })
 
-  var select = new ol.interaction.Select({ hitTolerance: 5 });
+  var select = new ol.interaction.Select({ hitTolerance: 5, style: style(true) });
   map.addInteraction(select);
   select.on('select', function(e){
     var f = e.selected[0];
