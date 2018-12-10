@@ -1,0 +1,98 @@
+import {inherits as ol_inherits} from 'ol'
+import ol_interaction_Pointer from 'ol/interaction/Pointer'
+
+/** Drag an overlay on the map
+ * @constructor
+ * @extends {ol_interaction_Pointer}
+ * @fires dragstart
+ * @fires dragging
+ * @fires dragend
+ * @param {any} options
+ *  @param {ol.Overlay|Array<ol.Overlay} options.overlays the overlays to drag
+ */
+var ol_interaction_DragOverlay = function(options) {
+  if (!options) options = {};
+
+  // Extend pointer
+  ol_interaction_Pointer.call(this, {
+    // start draging on an overlay
+    handleDownEvent: function(evt) {
+      if (this._dragging) {
+        this._dragging.setPosition(evt.coordinate);
+        this.dispatchEvent({ 
+          type: 'dragstart',
+          overlay: this._dragging,
+          coordinate: evt.coordinate
+        });
+        return true;
+      }
+      return false;
+    },
+    // Drag
+    handleDragEvent: function(evt) {
+      if (this._dragging) {
+        this._dragging.setPosition(evt.coordinate);
+        this.dispatchEvent({ 
+          type: 'dragging',
+          overlay: this._dragging,
+          coordinate: evt.coordinate
+        });
+      }
+    },
+    // Stop dragging
+    handleUpEvent: function(evt) {
+      if (this._dragging) {
+        this.dispatchEvent({ 
+          type: 'dragend',
+          overlay: this._dragging,
+          coordinate: evt.coordinate
+        });
+      }
+      return (this._dragging = false);
+    }
+  });
+
+  // List of overlays / listeners
+  this._overlays = [];
+  if (!(options.overlays instanceof Array)) options.overlays = [options.overlays];
+  options.overlays.forEach(this.addOverlay.bind(this));
+};
+ol_inherits(ol_interaction_DragOverlay, ol_interaction_Pointer);
+
+/** Add an overlay to the interacton
+ * @param {ol.Overlay} ov
+ */
+ol_interaction_DragOverlay.prototype.addOverlay = function (ov) {
+  for (var i=0, o; o=this._overlays[i]; i++) {
+    if (o===ov) return;
+  }
+  // Stop event overlay
+  if (ov.element.parentElement && ov.element.parentElement.classList.contains('ol-overlaycontainer-stopevent')) {
+    console.warn('[DragOverlay.addOverlay] overlay must be created with stopEvent set to false!');
+    return;
+  }
+  // Add listener on overlay of the same map
+  var handler = function() {
+    if (this.getMap()===ov.getMap()) this._dragging = ov;
+  }.bind(this);
+  this._overlays.push({
+    overlay: ov,
+    listener: handler
+  });
+  ov.element.addEventListener('pointerdown', handler);
+};
+
+/** Remove an overlay from the interacton
+ * @param {ol.Overlay} ov
+ */
+ol_interaction_DragOverlay.prototype.removeOverlay = function (ov) {
+  for (var i=0, o; o=this._overlays[i]; i++) {
+    if (o.overlay===ov) {
+      var l = this._overlays.splice(i,1)[0];
+      ov.element.removeEventListener('pointerdown', l.listener);
+      break;
+    }
+  }
+};
+
+export default ol_interaction_DragOverlay

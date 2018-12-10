@@ -1,0 +1,151 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+	Copyright (c) 2015-2018 Jean-Marc VIGLINO,
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+	-->
+	<title>ol-ext: Drag overlay</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="Drag ol overlays on a map" />
+	<meta name="keywords" content="openlayers, ol, drag, overlay, placemark" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  
+	<!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+	
+	<!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    .placemark .content * {
+      color: inherit!important;
+    }
+    .ol-overlay-container {
+      width: 20px;
+      height: 20px;
+      border: 1px solid #08F;
+      border-radius: 10px;
+      background-color: rgba(0,128,255,.5);
+      cursor: move;
+      position: relative;
+      font-family: Arial, Helvetica, sans-serif;
+      text-align: center;
+    }
+    .ol-popup {
+      text-align: center;
+      cursor: move;
+    }
+  </style>
+
+</head>
+<body >
+    <div id="marker" title="Marker"></div>
+
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  
+	<a href="../../index.html">
+		<h1>ol-ext: Drag overlay</h1>
+	</a>
+
+	<div class="info">
+    <p>
+      <i>ol/interaction/Drag</i> is an interaction to drag an Overlay over the map.
+    </p>
+		<p>
+      <b>NB</b>: the Overlay must be created with a <i>stopEvent</i> parameter set to 
+      <b>false</b> to propagate the events to the map.
+		  <br/>
+      <b>NB2</b>: <i>ol/Overlay</i> are not intended to be used on large data sets.
+    </p>
+    <p>
+      It can be applied to an ol.Overlay, an <a href="../popup/map.popup.html">ol.Overlay.Popup</a>
+      or an <a href="../popup/map.placemark.html">ol.Overlay.Placemark</a>.
+    </p>
+    </div>
+
+	<!-- DIV pour la carte -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div class="options">
+    Move the overlays on the map...
+	</div>
+	
+	<script type="text/javascript">
+  // Layers
+  var layers = [
+    new ol.layer.Tile({
+      name: "Natural Earth", 
+      minResolution: 306,
+      source: new ol.source.XYZ({
+        url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
+        attributions: [ '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' ] 
+      })
+    })
+  ];
+
+	// The map
+	var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 5,
+      center: [166326, 5992663]
+    }),
+    layers: layers,
+  });
+
+  // Overlays
+	var placemark = [
+    new ol.Overlay.Popup ({
+      position: [0, 6000000],
+      positioning: 'bottom-center',
+      html: "Move<br/>me!",
+      stopEvent: false
+    }),
+    new ol.Overlay.Placemark ({
+      position: [0, 5600000],
+      stopEvent: false
+    }),
+    new ol.Overlay({
+      position: [300000, 6000000],
+      positioning: 'center-center',
+      element: ol.ext.element.create('DIV', {html:'1'}),
+      stopEvent: false,
+    }),
+    new ol.Overlay({
+      position: [300000, 5600000],
+      positioning: 'center-center',
+      element: ol.ext.element.create('DIV', {html:'2'}),
+      stopEvent: false,
+    })
+  ];
+  placemark.forEach(function(p) {
+    map.addOverlay(p);
+  });
+
+  // Drag interaction
+  var drag = new ol.interaction.DragOverlay({
+    overlays: placemark
+  });
+  map.addInteraction(drag);
+  drag.on('dragend', function(e){
+    if (e.overlay===placemark[1]) {
+      // Animate placemark
+      placemark[1].show(true);
+    }
+  });
+
+	</script>
+	
+</body>
+</html>
