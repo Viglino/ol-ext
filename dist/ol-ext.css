@@ -862,6 +862,97 @@
 {	content:")";
 }
 
+.ol-control.ol-imageline {
+  bottom:0;
+  left: 0;
+  right: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.ol-imageline > div {
+  height: 4em;
+  position: relative;
+  white-space: nowrap;
+  scroll-behavior: smooth;
+  overflow: hidden;
+}
+.ol-imageline.ol-touch > div {
+  overflow-x: auto;
+}
+.ol-imageline > div.ol-move {
+  scroll-behavior: unset;
+}
+
+.ol-imageline,
+.ol-imageline:hover {
+  background-color: rgba(0,0,0,.75);
+}
+
+.ol-imageline.ol-arrow:after,
+.ol-imageline.ol-arrow:before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: .2em;
+  border-color: #fff #000;
+  border-width: 1em .6em 1em 0;
+  border-style: solid;
+  -webkit-transform: translateY(-50%);
+          transform: translateY(-50%);
+  z-index: 1;
+  opacity: .8;
+  pointer-events: none;
+  -webkit-box-shadow: -0.6em 0 0 1em #fff;
+          box-shadow: -0.6em 0 0 1em #fff;
+}
+.ol-imageline.ol-arrow:after {
+  border-width: 1em 0 1em .6em;
+  left: auto;
+  right: .2em;
+  -webkit-box-shadow: 0.6em 0 0 1em #fff;
+          box-shadow: 0.6em 0 0 1em #fff;
+}
+
+.ol-imageline .ol-image {
+  position: relative;
+  height: 100%;
+  display: inline-block;
+  cursor: pointer;
+}
+.ol-imageline img {
+  max-height: 100%;
+  border: .25em solid transparent;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+}
+
+.ol-imageline .ol-image.select {
+  background-color: #fff;
+}
+.ol-imageline .ol-image span {
+  position: absolute;
+  width: 125%;
+  max-height: 2.4em;
+  left: 50%;
+  bottom: 0;
+  display: none;
+  color: #fff;
+  background-color: rgba(0,0,0,.5);
+  font-size: .8em;
+  overflow: hidden;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2em;
+  -webkit-transform: translateX(-50%) scaleX(.8);
+          transform: translateX(-50%) scaleX(.8);
+}
+/*
+.ol-imageline .ol-image.select span,
+*/
+.ol-imageline .ol-image:hover span {
+  display: block;
+}
+
 .ol-control.ol-routing.ol-isochrone .ol-method-time,
 .ol-control.ol-routing.ol-isochrone .ol-method-distance,
 .ol-control.ol-routing.ol-isochrone > button {
@@ -2591,7 +2682,6 @@
 
 .ol-timeline > div {
   height: 6em;
-  max-width: 2000px;
   position: relative;
 }
 
@@ -2624,11 +2714,11 @@
 .ol-timeline > div .ol-features {
   position: absolute;
   top: 0;
-  overflow: hidden;
-  height: 5em;
+  bottom: 1em;
   left: -200px;
   right: -400px;
   margin: 0 200px;
+  overflow: hidden;
 }
 
 .ol-timeline > div .ol-feature {

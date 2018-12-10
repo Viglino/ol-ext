@@ -3721,6 +3721,265 @@ ol.control.GridReference.prototype.drawGrid_ = function (e)
 	ctx.restore();
 };
 
+/** Image line control
+ *
+ * @constructor
+ * @extends {ol.control.Control}
+ * @fires 
+ * @param {Object=} options Control options.
+ *	@param {String} options.className class of the control
+ *	@param {ol.source.Vector} options.source a vector source that contains the images
+ *	@param {function} options.getImage a function that gets a feature and return the image url, default return the img propertie
+ *	@param {function} options.getTitle a function that gets a feature and return the title, default return an empty string
+ *	@param {number} options.maxFeatures the maximum image element in the line, default 100
+ *	@param {boolean} options.hover select image on hover, default false
+ *	@param {string|boolean} options.linkColor link color or false if no link, default false
+ */
+ol.control.Imageline = function(options) {
+  var element = ol.ext.element.create('DIV', {
+    className: (options.className || '') + ' ol-imageline'
+      + (options.target ? '': ' ol-unselectable ol-control')
+      + (ol.has.TOUCH ? ' ol-touch' : '')
+  });
+  // Source 
+  this._source = options.source;
+  // Initialize
+  ol.control.Control.call(this, {
+    element: element,
+    target: options.target
+  });
+  /*
+  // Remove selection
+  this.element.addEventListener('mouseover', function(){
+    if (this._select) {
+      this._select.elt.classList.remove('select');
+      this._select = false;
+    }
+  }.bind(this));
+  */
+  // Scroll imageline
+  this._setScrolling();
+  this._scrolldiv.addEventListener("scroll", function(e) {
+    if (this.getMap()) this.getMap().render();
+  }.bind(this));
+  // Parameters
+  if (typeof(options.getImage)==='function') this._getImage =  options.getImage;
+  if (typeof(options.getTitle)==='function') this._getTitle =  options.getTitle;
+  this.set('maxFeatures', options.maxFeatures || 100);
+  this.set('linkColor', options.linkColor || false);
+  this.set('hover', options.hover || false);
+  this.refresh();
+};
+ol.inherits(ol.control.Imageline, ol.control.Control);
+/**
+ * Remove the control from its current map and attach it to the new map.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ol.control.Imageline.prototype.setMap = function (map) {
+	if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
+	ol.control.Control.prototype.setMap.call(this, map);
+	if (map) {	
+    this._listener = map.on('postcompose', this._drawLink.bind(this));
+	}
+};
+/** Default function to get an image of a feature
+ * @param {ol.Feature} f
+ * @private
+ */
+ol.control.Imageline.prototype._getImage = function(f) {
+  return f.get('img');
+};
+/** Default function to get an image title
+ * @param {ol.Feature} f
+ * @private
+ */
+ol.control.Imageline.prototype._getTitle = function(f) {
+  return '';
+};
+/**
+ * Get features
+ * @return {Array<ol.Feature>}
+ */
+ol.control.Imageline.prototype.getFeatures = function(useExtent) {
+  var map = this.getMap();
+  if (!useExtent || !map) {
+    return this._source.getFeatures();
+  }
+  else {
+    var extent = map.getView().calculateExtent(map.getSize());
+    return this._source.getFeaturesInExtent(extent);
+  }
+};
+/** Set element scrolling with a acceleration effect on desktop
+ * (on mobile it uses the scroll of the browser)
+ * @private
+ */
+ol.control.Imageline.prototype._setScrolling = function() {
+  var pos = false;
+  var speed = 0;
+  var dt = 0;
+  var elt = this._scrolldiv = ol.ext.element.create('DIV', {
+    parent: this.element
+  });
+  // Start scrolling
+  ol.ext.element.addListener(elt, ['mousedown'], function(e) {
+    pos = e.pageX;
+    dt = new Date();
+    elt.classList.add('ol-move');
+  }.bind(this));
+  // Register scroll
+  ol.ext.element.addListener(window, ['mousemove'], function(e) {
+    if (pos !== false) {
+      var delta = pos - e.pageX;
+      elt.scrollLeft += delta;
+      speed = (speed + delta / (new Date() - dt))/2;
+      pos = e.pageX;
+      dt = new Date();
+      // Prevent selection when moving
+      if (delta) this._moving = true;
+    } else {
+      // Restoe selection
+      this._moving = false;
+    }
+  }.bind(this));
+  // Stop scrolling
+  ol.ext.element.addListener(window, ['mouseup'], function(e) {
+    elt.classList.remove('ol-move');
+    dt = new Date() - dt;
+    if (dt>100) {
+      // User stop: no speed
+      speed = 0;
+    } else if (dt>0) {
+      // Calculate new speed
+      speed = (speed + (pos - e.pageX) / dt) / 2;
+    } 
+    elt.scrollLeft += speed*100;
+    pos = false;
+    speed = 0;
+  }.bind(this));
+};
+/**
+ * Refresh the imageline with new data
+ */
+ol.control.Imageline.prototype.refresh = function(useExtent) {
+  this._scrolldiv.innerHTML = '';
+  var features = this.getFeatures(useExtent);
+  this._select = false;
+  this._iline = [];
+  if (this.getMap()) this.getMap().render();
+  // Add a new image
+  var addImage = function(f) {
+    if (this._getImage(f)) {
+      var img = ol.ext.element.create('DIV', {
+        className: 'ol-image',
+        parent: this._scrolldiv
+      });
+      ol.ext.element.create('IMG', {
+        src: this._getImage(f),
+        parent: img
+      });
+      ol.ext.element.create('SPAN', {
+        html: this._getTitle(f),
+        parent: img
+      });
+      var sel = { elt: img, feature: f };
+      img.addEventListener('click', function(){
+        if (!this._moving) {
+          this.dispatchEvent({type: 'select', feature: f });
+          this._scrolldiv.scrollLeft = img.offsetLeft 
+            + ol.ext.element.getStyle(img, 'width')/2
+            - ol.ext.element.getStyle(this.element, 'width')/2;
+            if (this._select) this._select.elt.classList.remove('select');
+            this._select = sel;
+            this._select.elt.classList.add('select');
+          }
+      }.bind(this));
+      img.addEventListener('mouseover', function(e) {
+        if (this.get('hover')) {
+          if (this._select) this._select.elt.classList.remove('select');
+          this._select = sel;
+          this._select.elt.classList.add('select');
+          this.getMap().render();
+          e.stopPropagation();
+        }
+      }.bind(this));
+      img.addEventListener('mouseout', function(e) {
+        if (this.get('hover')) {
+          if (this._select) this._select.elt.classList.remove('select');
+          this._select = false;
+          this.getMap().render();
+          e.stopPropagation();
+        }
+      }.bind(this));
+      // Prevent image dragging
+      img.ondragstart = function(){ return false; };
+      this._iline.push(sel);
+    }
+  }.bind(this);
+  var nb = this.get('maxFeatures');
+  for (var i=0, f; f=features[i]; i++) {
+    if (nb--<0) break;
+    addImage(f);
+  };
+};
+/** Center image line on a feature
+ * @param {ol.feature} feature
+ * @param {boolean} scroll scroll the line to center on the image, default true
+ * @api
+ */
+ol.control.Imageline.prototype.showImage = function(feature, scroll) {
+  this._select = false;
+  if (feature) {
+    for (var i=0, f; f = this._iline[i]; i++) {
+      if (f.feature === feature) {
+        f.elt.classList.add('select');
+        this._select = f;
+        if (scroll!==false) {
+          this._scrolldiv.scrollLeft = f.elt.offsetLeft 
+            + ol.ext.element.getStyle(f.elt, 'width')/2
+            - ol.ext.element.getStyle(this.element, 'width')/2;
+        }
+      } else {
+        f.elt.classList.remove('select');
+      }
+    }
+  }
+};
+/** Draw link on the map
+ * @private
+ */
+ol.control.Imageline.prototype._drawLink = function(e) {
+  if (!this.get('linkColor')) return;
+  var map = this.getMap()
+  if (map && this._select) {
+    var ctx = e.context;
+    var ratio = e.frameState.pixelRatio;
+    var pt = [ 
+      this._select.elt.offsetLeft 
+      - this._scrolldiv.scrollLeft
+      + ol.ext.element.getStyle(this._select.elt, 'width')/2, 
+      ol.ext.element.getStyle(this.element, 'top')
+    ];
+    var geom = this._select.feature.getGeometry().getFirstCoordinate();
+    geom = this.getMap().getPixelFromCoordinate(geom);
+    ctx.save();
+    ctx.fillStyle = this.get('linkColor');
+    ctx.beginPath();
+      if (geom[0]>pt[0]) {
+        ctx.moveTo((pt[0]-5)*ratio, pt[1]*ratio);
+        ctx.lineTo((pt[0]+5)*ratio, (pt[1]+5)*ratio);
+      } else {
+        ctx.moveTo((pt[0]-5)*ratio, (pt[1]+5)*ratio);
+        ctx.lineTo((pt[0]+5)*ratio, pt[1]*ratio);
+      }
+      ctx.lineTo(geom[0]*ratio, geom[1]*ratio);
+    ctx.fill();
+    ctx.restore();
+  }
+};
+
 /*	Copyright (c) 2018 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -7090,44 +7349,77 @@ ol.control.Timeline = function(options) {
     if (this._select) this._select.elt.classList.remove('select');
   }.bind(this));
   // Scroll timeline
-  var pos = false;
-  ol.ext.element.addListener(this.element, ['mousedown'], function(e) {
-    pos = e.pageX;
-    this.element.classList.add('ol-move');
-  }.bind(this));
-  ol.ext.element.addListener(window, ['mousemove'], function(e) {
-    if (pos !== false) {
-      var delta = pos - e.pageX;
-      this.element.scrollLeft += delta;
-      pos = e.pageX;
-      if (delta) this._moving = true;
-    } else {
-      this._moving = false;
-    }
-  }.bind(this));
-  ol.ext.element.addListener(window, ['mouseup'], function(e) {
-    pos = false;
-    this.element.classList.remove('ol-move');
-  }.bind(this));
+  this._setScrolling();
   // Parameters
   this.set('maxWidth', options.maxWidth || 2000);
   this.set('minDate', options.minDate || Infinity);
   this.set('maxDate', options.maxDate || -Infinity);
-  this.getHTML = options.getHTML || function(f){ return f.get('name') || ''; };
+  if (options.getHTML) this._getHTML =  options.getHTML;
   if (options.getFeatureDate) this._getFeatureDate =  options.getFeatureDate;
   if (options.endFeatureDate) this._endFeatureDate =  options.endFeatureDate;
   this.refresh();
 };
 ol.inherits(ol.control.Timeline, ol.control.Control);
+/** Set element scrolling with a acceleration effect on desktop
+ * (on mobile it uses the scroll of the browser)
+ */
+ol.control.Timeline.prototype._setScrolling = function() {
+  var pos = false;
+  var speed = 0;
+  var dt = 0;
+  // Start scrolling
+  ol.ext.element.addListener(this.element, ['mousedown'], function(e) {
+    pos = e.pageX;
+    dt = new Date();
+    this.element.classList.add('ol-move');
+  }.bind(this));
+  // Register scroll
+  ol.ext.element.addListener(window, ['mousemove'], function(e) {
+    if (pos !== false) {
+      var delta = pos - e.pageX;
+      this.element.scrollLeft += delta;
+      speed = (speed + delta / (new Date() - dt))/2;
+      pos = e.pageX;
+      dt = new Date();
+      // Prevent selection when moving
+      if (delta) this._moving = true;
+    } else {
+      // Restoe selection
+      this._moving = false;
+    }
+  }.bind(this));
+  // Stop scrolling
+  ol.ext.element.addListener(window, ['mouseup'], function(e) {
+    this.element.classList.remove('ol-move');
+    dt = new Date() - dt;
+    if (dt>100) {
+      // User stop: no speed
+      speed = 0;
+    } else if (dt>0) {
+      // Calculate new speed
+      speed = (speed + (pos - e.pageX) / dt) / 2;
+    } 
+    this.element.scrollLeft += speed*100;
+    pos = false;
+    speed = 0;
+  }.bind(this));
+};
+/** Get html to show in the line
+ * @param {ol.Feature} feature
+ * @return {DOMElement|string}
+ */
+ol.control.Timeline.prototype._getHTML = function(feature) {
+  return feature.get('name') || '';
+};
 /** Get the date of a feature
- * @param {ol.Fature} feature
+ * @param {ol.Feature} feature
  * @return {Data|string}
  */
 ol.control.Timeline.prototype._getFeatureDate = function(feature) {
   return f.get('date');
 };
 /** Get the end date of a feature, default return undefined
- * @param {ol.Fature} feature
+ * @param {ol.Feature} feature
  * @return {Data|string}
  */
 ol.control.Timeline.prototype._endFeatureDate = function(feature) {
@@ -7142,7 +7434,7 @@ ol.control.Timeline.prototype.getFeatures = function() {
 }
 /**
  * Refresh the timeline with new data
- * @param {Number} zoom Zoom from 0.5 to 3, default 1
+ * @param {Number} zoom Zoom factor from 0.5 to 3, default 1
  */
 ol.control.Timeline.prototype.refresh = function(zoom) {
   zoom = Math.min(3, Math.max(.5, zoom || 1));
@@ -7183,7 +7475,7 @@ ol.control.Timeline.prototype.refresh = function(zoom) {
   var min = this._minDate = Math.min(this.get('minDate'), tline[0].date);
   var max = this._maxDate = Math.max(this.get('maxDate'), tline[tline.length-1].date);
   var delta = (max-min);
-  var maxWidth = ol.ext.element.getStyle(div, 'maxWidth');
+  var maxWidth = this.get('maxWidth');
   var scale = this._scale = (delta > maxWidth ? maxWidth/delta : 1) * zoom;
   // Leave 10px on right
   min = this._minDate = this._minDate - 10/scale;
@@ -7210,13 +7502,13 @@ ol.control.Timeline.prototype.refresh = function(zoom) {
       style: {
         left: Math.round((d-min)*scale),
       },
-      html: this.getHTML(f.feature),
+      html: this._getHTML(f.feature),
       parent: fdiv
     });
     // Prevent image dragging
     var img = t.querySelectorAll('img');
     for (var i=0; i<img.length; i++) {
-      img[i].draggable = false;
+      img[i].ondragstart = function(){ return false; };
     };
     // Calculate image width
     if (f.end) {
@@ -7243,6 +7535,7 @@ ol.control.Timeline.prototype.refresh = function(zoom) {
     line[pos] = left + ol.ext.element.getStyle(t, 'width');
     ol.ext.element.setStyle(t, { top: pos*lineHeight });
   }.bind(this));
+  this._nbline = line.length;
 };
 /**
  * Draw date time line
@@ -9298,6 +9591,96 @@ ol.interaction.Delete.prototype.delete = function(features) {
       } catch(e) {}
     })
     this.dispatchEvent({ type: 'deleteend', features: delFeatures });
+  }
+};
+
+/** Drag an overlay on the map
+ * @constructor
+ * @extends {ol.interaction.Pointer}
+ * @fires dragstart
+ * @fires dragging
+ * @fires dragend
+ * @param {any} options
+ *  @param {ol.Overlay|Array<ol.Overlay} options.overlays the overlays to drag
+ */
+ol.interaction.DragOverlay = function(options) {
+  if (!options) options = {};
+  // Extend pointer
+  ol.interaction.Pointer.call(this, {
+    // start draging on an overlay
+    handleDownEvent: function(evt) {
+      if (this._dragging) {
+        this._dragging.setPosition(evt.coordinate);
+        this.dispatchEvent({ 
+          type: 'dragstart',
+          overlay: this._dragging,
+          coordinate: evt.coordinate
+        });
+        return true;
+      }
+      return false;
+    },
+    // Drag
+    handleDragEvent: function(evt) {
+      if (this._dragging) {
+        this._dragging.setPosition(evt.coordinate);
+        this.dispatchEvent({ 
+          type: 'dragging',
+          overlay: this._dragging,
+          coordinate: evt.coordinate
+        });
+      }
+    },
+    // Stop dragging
+    handleUpEvent: function(evt) {
+      if (this._dragging) {
+        this.dispatchEvent({ 
+          type: 'dragend',
+          overlay: this._dragging,
+          coordinate: evt.coordinate
+        });
+      }
+      return (this._dragging = false);
+    }
+  });
+  // List of overlays / listeners
+  this._overlays = [];
+  if (!(options.overlays instanceof Array)) options.overlays = [options.overlays];
+  options.overlays.forEach(this.addOverlay.bind(this));
+};
+ol.inherits(ol.interaction.DragOverlay, ol.interaction.Pointer);
+/** Add an overlay to the interacton
+ * @param {ol.Overlay} ov
+ */
+ol.interaction.DragOverlay.prototype.addOverlay = function (ov) {
+  for (var i=0, o; o=this._overlays[i]; i++) {
+    if (o===ov) return;
+  }
+  // Stop event overlay
+  if (ov.element.parentElement && ov.element.parentElement.classList.contains('ol-overlaycontainer-stopevent')) {
+    console.warn('[DragOverlay.addOverlay] overlay must be created with stopEvent set to false!');
+    return;
+  }
+  // Add listener on overlay of the same map
+  var handler = function() {
+    if (this.getMap()===ov.getMap()) this._dragging = ov;
+  }.bind(this);
+  this._overlays.push({
+    overlay: ov,
+    listener: handler
+  });
+  ov.element.addEventListener('pointerdown', handler);
+};
+/** Remove an overlay from the interacton
+ * @param {ol.Overlay} ov
+ */
+ol.interaction.DragOverlay.prototype.removeOverlay = function (ov) {
+  for (var i=0, o; o=this._overlays[i]; i++) {
+    if (o.overlay===ov) {
+      var l = this._overlays.splice(i,1)[0];
+      ov.element.removeEventListener('pointerdown', l.listener);
+      break;
+    }
   }
 };
 
@@ -16069,8 +16452,8 @@ ol.render3D.prototype.drawFeature3D_ = function(ctx, build)
 }
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
  * @classdesc
@@ -16082,130 +16465,136 @@ var popup = new ol.Overlay.Popup();
 map.addOverlay(popup);
 popup.show(coordinate, "Hello!");
 popup.hide();
- *
- * @constructor
- * @extends {ol.Overlay}
- * @param {} options Extend Overlay options 
- *	@param {String} options.popupClass the a class of the overlay to style the popup.
- *	@param {bool} options.closeBox popup has a close box, default false.
- *	@param {function|undefined} options.onclose: callback function when popup is closed
- *	@param {function|undefined} options.onshow callback function when popup is shown
- *	@param {Number|Array<number>} options.offsetBox an offset box
- *	@param {ol.OverlayPositioning | string | undefined} options.positionning 
- *		the 'auto' positioning var the popup choose its positioning to stay on the map.
- * @api stable
- */
-ol.Overlay.Popup = function (options)
-{	var self = this;
-	options = options || {};
-	if (typeof(options.offsetBox)==='number') this.offsetBox = [options.offsetBox,options.offsetBox,options.offsetBox,options.offsetBox];
-	else this.offsetBox = options.offsetBox;
-	// Popup div
-	var element = document.createElement("div");
-			element.classList.add('ol-overlaycontainer-stopevent');
-	options.element = element;
-	// Anchor div
-	var anchorElement = document.createElement("div");
-			anchorElement.classList.add("anchor");
-	element.appendChild(anchorElement);
-	// Content
-	var contentDiv = document.createElement("div");
-			contentDiv.classList.add("content");
-	element.appendChild(contentDiv);
-	this.content = contentDiv;
-	// Closebox
-	this.closeBox = options.closeBox;
-	this.onclose = options.onclose;
-	this.onshow = options.onshow;
-	var button = document.createElement("button");
-			button.classList.add("closeBox");
-			if (options.closeBox) button.classList.add('hasclosebox');
-			button.setAttribute('type', 'button');
-			element.insertBefore(button, anchorElement);
-			button.addEventListener("click", function()
-				{	self.hide();
-				});
-	// Stop event
-	options.stopEvent = true;
-	element.addEventListener("mousedown", function(e){ e.stopPropagation(); });
-	element.addEventListener("touchstart", function(e){ e.stopPropagation(); });
-	ol.Overlay.call(this, options);
-	this._elt = this.element;
-	// call setPositioning first in constructor so getClassPositioning is called only once
-	this.setPositioning(options.positioning || 'auto');
-	this.setPopupClass(options.popupClass || options.className || 'default');
+*
+* @constructor
+* @extends {ol.Overlay}
+* @param {} options Extend Overlay options 
+*	@param {String} options.popupClass the a class of the overlay to style the popup.
+*	@param {bool} options.closeBox popup has a close box, default false.
+*	@param {function|undefined} options.onclose: callback function when popup is closed
+*	@param {function|undefined} options.onshow callback function when popup is shown
+*	@param {Number|Array<number>} options.offsetBox an offset box
+*	@param {ol.OverlayPositioning | string | undefined} options.positionning 
+*		the 'auto' positioning var the popup choose its positioning to stay on the map.
+* @api stable
+*/
+ol.Overlay.Popup = function (options) {
+  var self = this;
+  options = options || {};
+  if (typeof(options.offsetBox)==='number') this.offsetBox = [options.offsetBox,options.offsetBox,options.offsetBox,options.offsetBox];
+  else this.offsetBox = options.offsetBox;
+  // Popup div
+  var element = document.createElement("div");
+  //element.classList.add('ol-overlaycontainer-stopevent');
+  options.element = element;
+  // Anchor div
+  var anchorElement = document.createElement("div");
+  anchorElement.classList.add("anchor");
+  element.appendChild(anchorElement);
+  // Content
+  this.content = ol.ext.element.create("div", { 
+    html: options.html || '',
+    className: "content",
+    parent: element
+  });
+  // Closebox
+  this.closeBox = options.closeBox;
+  this.onclose = options.onclose;
+  this.onshow = options.onshow;
+  var button = document.createElement("button");
+  button.classList.add("closeBox");
+  if (options.closeBox) button.classList.add('hasclosebox');
+  button.setAttribute('type', 'button');
+  element.insertBefore(button, anchorElement);
+  button.addEventListener("click", function() {
+    self.hide();
+  });
+  // Stop event
+  if (options.stopEvent) {
+    element.addEventListener("mousedown", function(e){ e.stopPropagation(); });
+    element.addEventListener("touchstart", function(e){ e.stopPropagation(); });
+  };
+  ol.Overlay.call(this, options);
+  this._elt = this.element;
+  // call setPositioning first in constructor so getClassPositioning is called only once
+  this.setPositioning(options.positioning || 'auto');
+  this.setPopupClass(options.popupClass || options.className || 'default');
+  // Show popup on timeout (for animation purposes)
+  if (options.position) {
+    setTimeout(function(){ this.show(options.position); }.bind(this));
+  }
 };
 ol.inherits(ol.Overlay.Popup, ol.Overlay);
 /**
  * Get CSS class of the popup according to its positioning.
  * @private
  */
-ol.Overlay.Popup.prototype.getClassPositioning = function ()
-{	var c = "";
-	var pos = this.getPositioning();
-	if (/bottom/.test(pos)) c += "ol-popup-bottom ";
-	if (/top/.test(pos)) c += "ol-popup-top ";
-	if (/left/.test(pos)) c += "ol-popup-left ";
-	if (/right/.test(pos)) c += "ol-popup-right ";
-	if (/^center/.test(pos)) c += "ol-popup-middle ";
-	if (/center$/.test(pos)) c += "ol-popup-center ";
-	return c;
+ol.Overlay.Popup.prototype.getClassPositioning = function () {
+  var c = "";
+  var pos = this.getPositioning();
+  if (/bottom/.test(pos)) c += "ol-popup-bottom ";
+  if (/top/.test(pos)) c += "ol-popup-top ";
+  if (/left/.test(pos)) c += "ol-popup-left ";
+  if (/right/.test(pos)) c += "ol-popup-right ";
+  if (/^center/.test(pos)) c += "ol-popup-middle ";
+  if (/center$/.test(pos)) c += "ol-popup-center ";
+  return c;
 };
 /**
  * Set a close box to the popup.
  * @param {bool} b
  * @api stable
  */
-ol.Overlay.Popup.prototype.setClosebox = function (b)
-{	this.closeBox = b;
-	if (b) this._elt.classList.add("hasclosebox");
-	else this._elt.classList.remove("hasclosebox");
+ol.Overlay.Popup.prototype.setClosebox = function (b) {
+  this.closeBox = b;
+  if (b) this._elt.classList.add("hasclosebox");
+  else this._elt.classList.remove("hasclosebox");
 };
 /**
  * Set the CSS class of the popup.
  * @param {string} c class name.
  * @api stable
  */
-ol.Overlay.Popup.prototype.setPopupClass = function (c)
-{	this._elt.className = "";
-		var classesPositioning = this.getClassPositioning().split(' ')
-			.filter(function(className) {
-				return className.length > 0;
-			});
-		var classes = ["ol-popup"];
-		if (c) {
-			c.split(' ').filter(function(className) {
-				return className.length > 0;
-			})
-			.forEach(function(className) {
-				classes.push(className);
-			});
-		} else {
-			classes.push("default");
-		}
-			classesPositioning.forEach(function(className) {
-				classes.push(className);
-			});
-		if (this.closeBox) {
-			classes.push("hasclosebox");
-		}
-		this._elt.classList.add.apply(this._elt.classList, classes);
+ol.Overlay.Popup.prototype.setPopupClass = function (c) {
+  this._elt.className = "";
+    var classesPositioning = this.getClassPositioning().split(' ')
+      .filter(function(className) {
+        return className.length > 0;
+      });
+    var classes = ["ol-popup"];
+    if (c) {
+      c.split(' ').filter(function(className) {
+        return className.length > 0;
+      })
+      .forEach(function(className) {
+        classes.push(className);
+      });
+    } else {
+      classes.push("default");
+    }
+      classesPositioning.forEach(function(className) {
+        classes.push(className);
+      });
+    if (this.closeBox) {
+      classes.push("hasclosebox");
+    }
+    this._elt.classList.add.apply(this._elt.classList, classes);
 };
 /**
  * Add a CSS class to the popup.
  * @param {string} c class name.
  * @api stable
  */
-ol.Overlay.Popup.prototype.addPopupClass = function (c)
-{	this._elt.classList.add(c);
+ol.Overlay.Popup.prototype.addPopupClass = function (c) {
+  this._elt.classList.add(c);
 };
 /**
  * Remove a CSS class to the popup.
  * @param {string} c class name.
  * @api stable
  */
-ol.Overlay.Popup.prototype.removePopupClass = function (c)
-{	this._elt.classList.remove(c);
+ol.Overlay.Popup.prototype.removePopupClass = function (c) {
+  this._elt.classList.remove(c);
 };
 /**
  * Set positionning of the popup
@@ -16213,37 +16602,37 @@ ol.Overlay.Popup.prototype.removePopupClass = function (c)
  * 		or 'auto' to var the popup choose the best position
  * @api stable
  */
-ol.Overlay.Popup.prototype.setPositioning = function (pos)
-{	if (pos === undefined)
-		return;
-	if (/auto/.test(pos))
-	{	this.autoPositioning = pos.split('-');
-		if (this.autoPositioning.length==1) this.autoPositioning[1]="auto";
-	}
-	else this.autoPositioning = false;
-	pos = pos.replace(/auto/g,"center");
-	if (pos=="center") pos = "bottom-center";
-	this.setPositioning_(pos);
+ol.Overlay.Popup.prototype.setPositioning = function (pos) {
+  if (pos === undefined)
+    return;
+  if (/auto/.test(pos)) {
+    this.autoPositioning = pos.split('-');
+    if (this.autoPositioning.length==1) this.autoPositioning[1]="auto";
+  }
+  else this.autoPositioning = false;
+  pos = pos.replace(/auto/g,"center");
+  if (pos=="center") pos = "bottom-center";
+  this.setPositioning_(pos);
 };
 /** @private
  * @param {ol.OverlayPositioning | string | undefined} pos
  */
 ol.Overlay.Popup.prototype.setPositioning_ = function (pos) {
-	if (this._elt) {
-		ol.Overlay.prototype.setPositioning.call(this, pos);
-		this._elt.classList.remove("ol-popup-top", "ol-popup-bottom", "ol-popup-left", "ol-popup-right", "ol-popup-center", "ol-popup-middle");
-		var classes = this.getClassPositioning().split(' ')
-			.filter(function(className) {
-				return className.length > 0;
-			});
-		this._elt.classList.add.apply(this._elt.classList, classes);
-	}
+  if (this._elt) {
+    ol.Overlay.prototype.setPositioning.call(this, pos);
+    this._elt.classList.remove("ol-popup-top", "ol-popup-bottom", "ol-popup-left", "ol-popup-right", "ol-popup-center", "ol-popup-middle");
+    var classes = this.getClassPositioning().split(' ')
+      .filter(function(className) {
+        return className.length > 0;
+      });
+    this._elt.classList.add.apply(this._elt.classList, classes);
+  }
 };
 /** Check if popup is visible
 * @return {boolean}
 */
-ol.Overlay.Popup.prototype.getVisible = function ()
-{	return this._elt.classList.contains("visible");
+ol.Overlay.Popup.prototype.getVisible = function () {
+  return this._elt.classList.contains("visible");
 };
 /**
  * Set the position and the content of the popup.
@@ -16257,73 +16646,76 @@ popup.show([166000, 5992000], "Hello world!");
 popup.show([167000, 5990000]);
 // set new info
 popup.show("New informations");
- * @api stable
- */
-ol.Overlay.Popup.prototype.show = function (coordinate, html)
-{	if (!html && typeof(coordinate)=='string') 
-	{	html = coordinate; 
-		coordinate = null;
-	}
-	var self = this;
-	var map = this.getMap();
-	if (!map) return;
-	if (html && html !== this.prevHTML) 
-	{	// Prevent flickering effect
-		this.prevHTML = html;
-		this.content.innerHTML = "";
-		if (html instanceof Element) {
-			this.content.appendChild(html);
-		} else {
-			this.content.insertAdjacentHTML('beforeend', html);
-		}
-		// Refresh when loaded (img)
-		Array.prototype.slice.call(this.content.querySelectorAll('img'))
-			.forEach(function(image) {
-				image.addEventListener("load", function()
-				{	map.renderSync();
-				});
-			});
-	}
-	if (coordinate) 
-	{	// Auto positionning
-		if (this.autoPositioning)
-		{	var p = map.getPixelFromCoordinate(coordinate);
-			var s = map.getSize();
-			var pos=[];
-			if (this.autoPositioning[0]=='auto')
-			{	pos[0] = (p[1]<s[1]/3) ? "top" : "bottom";
-			}
-			else pos[0] = this.autoPositioning[0];
-			pos[1] = (p[0]<2*s[0]/3) ? "left" : "right";
-			this.setPositioning_(pos[0]+"-"+pos[1]);
-			if (this.offsetBox)
-			{	this.setOffset([this.offsetBox[pos[1]=="left"?2:0], this.offsetBox[pos[0]=="top"?3:1] ]);
-			}
-		} else {
-			if (this.offsetBox){
-				this.setOffset(this.offsetBox);
-			}
-		}
-		// Show
-		this.setPosition(coordinate);
-		// Set visible class (wait to compute the size/position first)
-		this._elt.parentElement.style.display = '';
-                if (typeof (this.onshow) == 'function') this.onshow();
-		this._tout = setTimeout (function()
-		{	self._elt.classList.add("visible"); 
-		}, 0);
-	}
+* @api stable
+*/
+ol.Overlay.Popup.prototype.show = function (coordinate, html) {
+  if (!html && typeof(coordinate)=='string') {
+    html = coordinate; 
+    coordinate = null;
+  }
+  if (coordinate===true) {
+    coordinate = this.getPosition();
+  }
+  var self = this;
+  var map = this.getMap();
+  if (!map) return;
+  if (html && html !== this.prevHTML) {
+    // Prevent flickering effect
+    this.prevHTML = html;
+    this.content.innerHTML = "";
+    if (html instanceof Element) {
+      this.content.appendChild(html);
+    } else {
+      this.content.insertAdjacentHTML('beforeend', html);
+    }
+    // Refresh when loaded (img)
+    Array.prototype.slice.call(this.content.querySelectorAll('img'))
+      .forEach(function(image) {
+        image.addEventListener("load", function() {
+          map.renderSync();
+        });
+      });
+  }
+  if (coordinate) {
+    // Auto positionning
+    if (this.autoPositioning) {
+      var p = map.getPixelFromCoordinate(coordinate);
+      var s = map.getSize();
+      var pos=[];
+      if (this.autoPositioning[0]=='auto') {
+        pos[0] = (p[1]<s[1]/3) ? "top" : "bottom";
+      }
+      else pos[0] = this.autoPositioning[0];
+      pos[1] = (p[0]<2*s[0]/3) ? "left" : "right";
+      this.setPositioning_(pos[0]+"-"+pos[1]);
+      if (this.offsetBox) {
+        this.setOffset([this.offsetBox[pos[1]=="left"?2:0], this.offsetBox[pos[0]=="top"?3:1] ]);
+      }
+    } else {
+      if (this.offsetBox){
+        this.setOffset(this.offsetBox);
+      }
+    }
+    // Show
+    this.setPosition(coordinate);
+    // Set visible class (wait to compute the size/position first)
+    this._elt.parentElement.style.display = '';
+    if (typeof (this.onshow) == 'function') this.onshow();
+    this._tout = setTimeout (function() {
+      self._elt.classList.add("visible"); 
+    }, 0);
+  }
 };
 /**
  * Hide the popup
  * @api stable
  */
-ol.Overlay.Popup.prototype.hide = function ()
-{	if (this.getPosition() == undefined) return;
-	if (typeof (this.onclose) == 'function') this.onclose();
-	this.setPosition(undefined);
-	if (this._tout) clearTimeout(this._tout);
-	this._elt.classList.remove("visible");
+ol.Overlay.Popup.prototype.hide = function () {
+  if (this.getPosition() == undefined) return;
+  if (typeof (this.onclose) == 'function') this.onclose();
+  this.setPosition(undefined);
+  if (this._tout) clearTimeout(this._tout);
+  this._elt.classList.remove("visible");
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -16442,9 +16834,9 @@ ol.Overlay.Magnify.prototype.setView_ = function(e)
 	}
 };
 
-/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+/*	Copyright (c) 2018 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
  * @classdesc
@@ -16456,29 +16848,29 @@ var popup = new ol.Overlay.Placemark();
 map.addOverlay(popup);
 popup.show(coordinate);
 popup.hide();
- *
- * @constructor
- * @extends {ol.Overlay}
- * @param {} options Extend ol/Overlay/Popup options 
- *	@param {String} options.color placemark color
- *	@param {String} options.backgroundColor placemark color
- *	@param {String} options.contentColor placemark color
- *	@param {Number} options.radius placemark radius in pixel
- *	@param {String} options.popupClass the a class of the overlay to style the popup.
- *	@param {function|undefined} options.onclose: callback function when popup is closed
- *	@param {function|undefined} options.onshow callback function when popup is shown
- * @api stable
- */
+*
+* @constructor
+* @extends {ol.Overlay}
+* @param {} options Extend ol/Overlay/Popup options 
+*	@param {String} options.color placemark color
+*	@param {String} options.backgroundColor placemark color
+*	@param {String} options.contentColor placemark color
+*	@param {Number} options.radius placemark radius in pixel
+*	@param {String} options.popupClass the a class of the overlay to style the popup.
+*	@param {function|undefined} options.onclose: callback function when popup is closed
+*	@param {function|undefined} options.onshow callback function when popup is shown
+* @api stable
+*/
 ol.Overlay.Placemark = function (options) {
-	options = options || {};
-	options.popupClass = (options.popupClass || '') + ' placemark anim'
-	options.positioning = 'bottom-center',
-	ol.Overlay.Popup.call(this, options);
-	this.setPositioning = function(){};
-	if (options.color) this.element.style.color = options.color;
-	if (options.backgroundColor ) this.element.style.backgroundColor  = options.backgroundColor ;
-	if (options.contentColor ) this.setContentColor(options.contentColor);
-	if (options.size) this.setRadius(options.size);
+  options = options || {};
+  options.popupClass = (options.popupClass || '') + ' placemark anim'
+  options.positioning = 'bottom-center',
+  ol.Overlay.Popup.call(this, options);
+  this.setPositioning = function(){};
+  if (options.color) this.element.style.color = options.color;
+  if (options.backgroundColor ) this.element.style.backgroundColor  = options.backgroundColor ;
+  if (options.contentColor ) this.setContentColor(options.contentColor);
+  if (options.size) this.setRadius(options.size);
 };
 ol.inherits(ol.Overlay.Placemark, ol.Overlay.Popup);
 /**
@@ -16486,48 +16878,51 @@ ol.inherits(ol.Overlay.Placemark, ol.Overlay.Popup);
  * @param {ol.Coordinate|string} coordinate the coordinate of the popup or the HTML content.
  * @param {string|undefined} html the HTML content (undefined = previous content).
  */
-ol.Overlay.Placemark.prototype.show = function() {
-	this.hide();
-	ol.Overlay.Popup.prototype.show.apply(this, arguments);
+ol.Overlay.Placemark.prototype.show = function(coordinate, html) {
+  if (coordinate===true) {
+    coordinate = this.getPosition();
+  }
+  this.hide();
+  ol.Overlay.Popup.prototype.show.apply(this, arguments);
 };
 /**
  * Set the placemark color.
  * @param {string} color
  */
 ol.Overlay.Placemark.prototype.setColor = function(color) {
-	this.element.style.color = color;
+  this.element.style.color = color;
 };
 /**
  * Set the placemark background color.
  * @param {string} color
  */
 ol.Overlay.Placemark.prototype.setBackgroundColor = function(color) {
-	this.element.style.backgroundColor = color;
+  this.element.style.backgroundColor = color;
 };
 /**
  * Set the placemark content color.
  * @param {string} color
  */
 ol.Overlay.Placemark.prototype.setContentColor = function(color) {
-	this.element.getElementsByClassName('content')[0].style.color = color;
+  this.element.getElementsByClassName('content')[0].style.color = color;
 };
 /**
  * Set the placemark class.
  * @param {string} name
  */
 ol.Overlay.Placemark.prototype.setClassName = function(name) {
-	var oldclass = this.element.className;
-	this.element.className = 'ol-popup placemark ol-popup-bottom ol-popup-center ' 
-		+ (/visible/.test(oldclass) ? 'visible ' : '')
-		+ (/anim/.test(oldclass) ? 'anim ' : '')
-		+ name;
+  var oldclass = this.element.className;
+  this.element.className = 'ol-popup placemark ol-popup-bottom ol-popup-center ' 
+    + (/visible/.test(oldclass) ? 'visible ' : '')
+    + (/anim/.test(oldclass) ? 'anim ' : '')
+    + name;
 };
 /**
  * Set the placemark radius.
  * @param {number} size size in pixel
  */
 ol.Overlay.Placemark.prototype.setRadius = function(size) {
-	this.element.style.fontSize = size + 'px';
+  this.element.style.fontSize = size + 'px';
 };
 
 /*	Copyright (c) 2018 Jean-Marc VIGLINO, 
