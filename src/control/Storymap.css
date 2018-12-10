@@ -1,0 +1,8 @@
+.ol-control.ol-storymap {
+  top:0;
+  left: 0;
+  bottom: 0;
+  max-width: 30%;
+  overflow: auto;
+  padding: 0;
+}
