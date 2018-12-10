@@ -1,0 +1,85 @@
+.ol-control.ol-imageline {
+  bottom:0;
+  left: 0;
+  right: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.ol-imageline > div {
+  height: 4em;
+  position: relative;
+  white-space: nowrap;
+  scroll-behavior: smooth;
+  overflow: hidden;
+}
+.ol-imageline.ol-touch > div {
+  overflow-x: auto;
+}
+.ol-imageline > div.ol-move {
+  scroll-behavior: unset;
+}
+
+.ol-imageline,
+.ol-imageline:hover {
+  background-color: rgba(0,0,0,.75);
+}
+
+.ol-imageline.ol-arrow:after,
+.ol-imageline.ol-arrow:before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: .2em;
+  border-color: #fff #000;
+  border-width: 1em .6em 1em 0;
+  border-style: solid;
+  transform: translateY(-50%);
+  z-index: 1;
+  opacity: .8;
+  pointer-events: none;
+  box-shadow: -0.6em 0 0 1em #fff;
+}
+.ol-imageline.ol-arrow:after {
+  border-width: 1em 0 1em .6em;
+  left: auto;
+  right: .2em;
+  box-shadow: 0.6em 0 0 1em #fff;
+}
+
+.ol-imageline .ol-image {
+  position: relative;
+  height: 100%;
+  display: inline-block;
+  cursor: pointer;
+}
+.ol-imageline img {
+  max-height: 100%;
+  border: .25em solid transparent;
+  box-sizing: border-box;
+}
+
+.ol-imageline .ol-image.select {
+  background-color: #fff;
+}
+.ol-imageline .ol-image span {
+  position: absolute;
+  width: 125%;
+  max-height: 2.4em;
+  left: 50%;
+  bottom: 0;
+  display: none;
+  color: #fff;
+  background-color: rgba(0,0,0,.5);
+  font-size: .8em;
+  overflow: hidden;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2em;
+  transform: translateX(-50%) scaleX(.8);
+}
+/*
+.ol-imageline .ol-image.select span,
+*/
+.ol-imageline .ol-image:hover span {
+  display: block;
+}

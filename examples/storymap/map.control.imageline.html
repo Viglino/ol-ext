@@ -1,0 +1,197 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Image line control</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="A control to show image on a map." />
+  <meta name="keywords" content="ol, image, control, line" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    .ol-attribution {
+      bottom: 4.5em;
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Image line control</h1>
+  </a>
+  <div class="info">
+    The <i>ol/control/Imageline</i> display a line of images on map.
+  </div>
+
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options">
+    <ul>
+      <li>
+        <label>
+          <input id="extent" type="checkbox" onclick="iline.refresh($(this).prop('checked'));" />
+          Show only visible images
+        </label>
+      </li>
+      <li>
+        <label>
+          <input 
+            id="link" 
+            type="checkbox" 
+            onclick="iline.set('linkColor', $(this).prop('checked') ? 'rgba(255,255,255,.7)':false);" 
+          />
+          Draw links
+        </label>
+      </li>
+      <li>
+        <label>
+          <input id="arrow" type="checkbox" onclick="$(iline.element).toggleClass('ol-arrow');" 
+          />
+          Show arrows
+        </label>
+      </li>
+      <li>
+        <label>
+          <input id="hover" type="checkbox" onclick="iline.set('hover',$(this).prop('checked'));" 
+          />
+          Select on hover
+        </label>
+      </li>
+    </ul>
+  </div>
+  
+  <script type="text/javascript">
+
+  // Two base layers
+  var stamen = new ol.layer.Tile({
+    title: "Watercolor",
+    baseLayer: true,
+    source: new ol.source.Stamen({
+      layer: 'watercolor'
+    })
+  });
+  var osm = new ol.layer.Tile({
+    title: "OSM",
+    baseLayer: true,
+    source: new ol.source.OSM(),
+    visible: false
+  });
+
+  // Style function
+  var cache = {};
+  function style(select){
+    return function(f) {
+      var id = f.get('img') + (select?'-s':'');
+      var style = cache[id];
+      if (!style) {
+        style = cache[id] = new ol.style.Style({
+          image: new ol.style.Photo({
+            src: f.get('img'),
+            radius: select ? 20:15,
+            shadow: true,
+            stroke: new ol.style.Stroke({
+              width: 4,
+              color: select ? '#fff':'#fafafa'
+            })
+          })
+        });
+      }
+      return style;
+    }
+  };
+  
+  // GeoJSON layer with a preview attribute
+  var vectorSource = new ol.source.Vector({
+    url: '../data/fond_guerre.geojson',
+    projection: 'EPSG:3857',
+    format: new ol.format.GeoJSON(),
+    attributions: [ "&copy; <a href='https://www.data.gouv.fr/fr/datasets/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire/'>data.gouv.fr</a>" ],
+    logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+  });
+  var listenerKey = vectorSource.on('change', function(e) {
+    if (vectorSource.getState() == 'ready') {
+      ol.Observable.unByKey(listenerKey);
+      iline.refresh();
+    }
+  });
+  var vector = new ol.layer.Vector({
+    name: '1914-18',
+    preview: "http://www.culture.gouv.fr/Wave/image/memoire/2445/sap40_z0004141_v.jpg",
+    source: vectorSource,
+    style: style()
+  });
+
+
+  // The map
+  var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 6,
+      center: [173664, 6166327]
+    }),
+    layers: [stamen, osm, vector]
+  });
+
+  // Create Imageline control when features are loaded
+  var iline = new ol.control.Imageline({
+    source: vectorSource,
+    getImage: function(f) {
+      return f.get('img');
+    },
+    getTitle: function(f) {
+      return f.get('text');
+    }
+  });
+  map.addControl (iline);
+  iline.on('select', function(e){
+    map.getView().animate({
+      center: e.feature.getGeometry().getCoordinates(),
+      zoom: Math.round(8 + Math.random())
+    });
+    select.getFeatures().clear();
+    select.getFeatures().push(e.feature);
+  });
+
+  // Show images in extent on move end
+  map.on('moveend', function(){
+    if ($('#extent').prop('checked')) iline.refresh(true);
+  });
+
+  var select = new ol.interaction.Select({ hitTolerance: 5, style: style(true) });
+  map.addInteraction(select);
+  select.on('select', function(e){
+    var f = e.selected[0];
+    if (f) {
+      iline.showImage(f);
+    }
+  });
+
+  // Redraw layer when fonts are loaded
+  $(window).on("load", function(){ 
+    console.log("loaded"); vector.changed(); 
+  });
+
+  </script>
+  
+</body>
+</html>
