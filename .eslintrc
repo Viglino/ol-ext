@@ -1,0 +1,21 @@
+{
+  "parserOptions": {
+    "sourceType": "module"
+  },
+  "env": {
+    "browser": true,
+    "es6": true
+  },
+  "extends": "eslint:recommended",
+  "rules": {
+    "no-cond-assign": "off",
+    "no-console": "off",
+    "no-empty": "warn",
+    "no-extra-semi": "warn",
+    "no-mixed-spaces-and-tabs": "warn",
+    "no-redeclare": "warn",
+    "no-unexpected-multiline": "off",
+    "no-unused-vars": "warn",
+    "no-useless-escape": "warn"
+  }
+}
