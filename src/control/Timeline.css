@@ -6,23 +6,65 @@
 
 .ol-timeline {
   overflow: hidden;
+  padding: 2px 0 0;
+}
+.ol-timeline .ol-scroll {
+  overflow: hidden;
   padding: 0;
   scroll-behavior: smooth;
   line-height: 1em;
 }
-.ol-timeline.ol-move {
+.ol-timeline .ol-scroll.ol-move {
   scroll-behavior: unset;
 }
-.ol-timeline.ol-touch {
+.ol-timeline.ol-touch .ol-scroll{
   overflow-x: auto;
 }
 
-.ol-timeline > div {
+.ol-timeline .ol-scroll {
   height: 6em;
+}
+.ol-timeline.ol-zoombt .ol-scroll {
+  margin-left: 1.5em;
+}
+.ol-timeline .ol-zoom {
+  position: absolute;
+  top: 0;
+  background: rgba(255,255,255,.5);
+  width: 1.5em;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+}
+.ol-timeline .ol-zoom .ol-zoom-in, 
+.ol-timeline .ol-zoom .ol-zoom-out {
+  font-size: 1em;
+  margin: 0 0 1px;
+  position: relative;
+}
+.ol-timeline .ol-zoom .ol-zoom-in:before,
+.ol-timeline .ol-zoom .ol-zoom-in:after,
+.ol-timeline .ol-zoom .ol-zoom-out:before {
+  content: "";
+  position: absolute;
+  width: .7em;
+  height: .15em;
+  background-color: currentColor;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.ol-timeline .ol-zoom .ol-zoom-in:after{
+  height: .7em;
+  width: .15em;
+}
+
+.ol-timeline .ol-scroll > div {
+  height: 100%;
   position: relative;
 }
 
-.ol-timeline > div .ol-times {
+.ol-timeline .ol-scroll .ol-times {
   background: rgba(255,255,255,.5);
   height: 1em;
   bottom: 0;
@@ -31,14 +73,14 @@
   right: -200px;
   z-index: 1;
 }
-.ol-timeline > div .ol-time {
+.ol-timeline .ol-scroll .ol-time {
   position: absolute;
   font-size: .7em;
   color: #999;
   bottom: 0;
   transform: translateX(-50%);
 }
-.ol-timeline > div .ol-time:before {
+.ol-timeline .ol-scroll .ol-time:before {
   content: "";
   position: absolute;
   bottom: 1.2em;
@@ -47,17 +89,17 @@
   border-left: 1px solid #999;
 }
 
-.ol-timeline > div .ol-features {
+.ol-timeline .ol-scroll .ol-features {
   position: absolute;
   top: 0;
   bottom: 1em;
   left: -200px;
   right: -400px;
-  margin: 0 200px;
+  margin: 0 0 0 200px;
   overflow: hidden;
 }
 
-.ol-timeline > div .ol-feature {
+.ol-timeline .ol-scroll .ol-feature {
   position: absolute;
   font-size: .7em;
   color: #999;
@@ -73,16 +115,35 @@
   transition: all .3s;
   cursor: pointer;
 }
-.ol-timeline > div .ol-feature:hover,
-.ol-timeline > div .ol-feature.select {
+
+.ol-timeline.ol-zoomhover .ol-scroll .ol-feature:hover,
+.ol-timeline.ol-zoomhover .ol-scroll .ol-feature.ol-select {
   z-index: 1;
   transform: scale(1.2);
   background: #eee;
   max-width: 14em!important;
 }
 
-.ol-timeline > div .ol-feature img {
-  max-height: 2.2em;
-  float: left;
-  margin: .1em .5em .1em .1em
-};
+.ol-timeline .ol-center-date {
+  display: none;
+  position: absolute;
+  left: 50%;
+  height: 100%;
+  width: 2px;
+  bottom: 0;
+  z-index: 2;
+  pointer-events: none;
+  transform: translateX(-50%);
+  background-color: rgba(255,0,0,.3);
+}
+.ol-timeline.ol-zoombt .ol-center-date {
+  left: calc(50% + .75em);
+}
+
+.ol-timeline.ol-interval .ol-center-date {
+  display: block;
+  background-color: transparent;
+  border: 0 solid rgba(0,0,0,.3);
+  border-width: 0 10000px;
+  box-sizing: content-box;
+}
