@@ -26,20 +26,42 @@
   <link rel="stylesheet" href="../style.css" />
 
   <style>
+    .ol-zoom {
+      left: auto;
+      right: .5em;
+    }
+    .ol-scroll-top,
+    .ol-scroll-down {
+      height: 2.5em;
+      text-align: center;
+      cursor: pointer;
+    }
+    .ol-scroll-top {
+      padding-top: 1.3em;
+    }
+
+    #story {
+      /*
+      height: 400px;
+      */
+    }
     #story img {
       display: block;
       margin: auto;
       max-width: 100%;
     }
-    #story > div {
+    #story .chapter {
       opacity: .4;
       transition: .3s;
       background-color: transparent;
-      padding: .5em 0;
+      padding: .5em;
     }
-    #story > div.select {
+    #story .chapter.select {
       opacity: 1;
       background-color: rgba(255,255,255,.8);
+    }
+    .options a {
+      cursor: pointer;
     }
   </style>
 
@@ -51,31 +73,83 @@
     <h1>ol-ext: Storymap control</h1>
   </a>
   <div class="info">
+    <p>
       The <i>ol/control/Storymap</i> is a control with scroll-driven navigation to create narrative maps.
+    </p>
+    <ul>
+      <li>
+        You can specify the story content using a <i>html</i> options as a string or a DOM Element.
+      </li>
+      <li>
+        You can also specify a <i>target</i> to use as story
+      </li>
+      <li>
+        Use an element with a <i>chapter</i> class and a <i>name</i> to specify a new chapter in the story. 
+      </li>
+      <li>
+        Listen to the <i>scrollto</i> event to get the current chapter.
+      </li>
+      <li>
+        The <i>setChapter</i> method lets you move to a chapter.
+      </li>
+    </ul>
+    <p>
+      <a href="map.control.storymap2.html">See example with a story outside the map.</a>
+    </p>
   </div>
 
   <!-- Map div -->
   <div id="map" style="width:600px; height:400px;"></div>
+  
+  <div class="options">
+    Set chapters:
+    <ol>
+      <li>
+        <a onclick="story.setChapter('Paris')">Paris</a>
+      </li>
+      <li>
+        <a onclick="story.setChapter('London')">London</a>
+      </li>
+      <li>
+        <a onclick="story.setChapter('Berlin')">Berlin</a>
+      </li>
+    </ol>
+  </div>
+
   <div id="story">
-    <div class="step" name="Paris">
+    <div class="chapter" name="start">
+      <h2>Capitals</h2>
+      <p>
+        A story map with Openlayers.
+        <br/>
+        <span style="font-size: .8em;">
+          &copy; Wikipedia
+        </span>
+      </p>
+      <div class="ol-scroll-down">Start</div>
+    </div>
+    <div class="chapter" name="Paris">
       <h2>Paris</h2>
       <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Seine_and_Eiffel_Tower_from_Tour_Saint_Jacques_2013-08.JPG/275px-Seine_and_Eiffel_Tower_from_Tour_Saint_Jacques_2013-08.JPG">
       <p>
         Paris is the capital and most populous city of France, with an area of 105 square kilometres (41 square miles) and a population of 2,206,488. Since the 17th century, Paris has been one of Europe's major centres of finance, commerce, fashion, science, and the arts.
       </p>
     </div>
-    <div class="step" name="London">
+    <div class="chapter" name="London">
       <h2>London</h2>
       <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/London_Montage_L.jpg/275px-London_Montage_L.jpg">
       <p>
         London is the capital and largest city of both the United Kingdom and England. Standing on the River Thames in southeastern England, 50 miles (80 km) upstream from its estuary with the North Sea, London has been a major settlement for two millennia. Londinium was founded by the Romans. The City of London, London's ancient core − an area of just 1.12 square miles (2.9 km2) and colloquially known as the Square Mile − retains its medieval boundaries.
+      </p>
     </div>
-    <div class="step" name="Berlin">
+    <div class="chapter" name="Berlin">
       <h2>Berlin</h2>
       <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Berlin_Skyline_Fernsehturm_02.jpg/280px-Berlin_Skyline_Fernsehturm_02.jpg">
       <p>
         Berlin is the capital and largest city of Germany by both area and population. Its 3,711,930 (2017) inhabitants make it the second most populous city proper of the European Union after London. The city is one of Germany's 16 federal states. It is surrounded by the state of Brandenburg and forms the center of the Berlin/Brandenburg Metropolitan Region, which is, with 6,004,857 (2015) inhabitants and area of 30,370 square km, Germany's third-largest metropolitan region after the Rhine-Ruhr and Rhine-Main regions.
-      </div>
+      </p>
+      <div class="ol-scroll-top">Top</div>
+    </div>
   </div>
   
   <script type="text/javascript">
@@ -100,35 +174,48 @@
     layers: [stamen]
   });
 
+  // Add placemark
+  var placemark = new ol.Overlay.Placemark();
+  map.addOverlay (placemark);
+
   // Create Timeline control when features are loaded
   var story = new ol.control.Storymap({
-    html: $('#story').get(0)
+    html: $('#story').get(0),
+    //target: $('#story').get(0)
   });
-  story.on('current', function(e){
-    $('#story > div').removeClass('select');
+
+  var positions = {
+    start: { xy: [173664, 6166327], z: 6 },
+    Paris: { xy: ol.proj.fromLonLat([2.351828, 48.856578]), z: 9 },
+    London: { xy: ol.proj.fromLonLat([-0.1275,51.507222]), z: 8 },
+    Berlin: { xy: ol.proj.fromLonLat([13.383333,52.516667]), z: 7 },
+  }
+  story.on('scrollto', function(e){
+    $('#story .chapter').removeClass('select');
     $(e.element).addClass('select');
-    switch(e.name) {
-      case 'Paris': {
-        map.getView().animate ({
-          center: ol.proj.fromLonLat([2.351828, 48.856578]),
-          zoom: 9
-        });
-        break;
-      }
-      case 'London': {
-        map.getView().animate ({
-          center: ol.proj.fromLonLat([-0.1275,51.507222]),
-          zoom: 8
-        });
-        break;
-      }
-      case 'Berlin': {
-        map.getView().animate ({
-          center: ol.proj.fromLonLat([13.383333,52.516667]),
-          zoom: 7
-        });
-        break;
-      }
+    map.getView().cancelAnimations();
+    if (e.name==='start') {
+      placemark.hide();
+      map.getView().animate ({
+        center: positions[e.name].xy,
+        zoom: positions[e.name].z
+      })
+    } else {
+      placemark.show(positions[e.name].xy);
+      // Fly to destination
+      var duration = 2000;
+      map.getView().animate ({
+        center: positions[e.name].xy,
+        duration: duration
+      });
+      map.getView().animate ({
+        zoom: Math.min(map.getView().getZoom(), positions[e.name].z)-1,
+        duration: duration/2
+      },
+      {
+        zoom: positions[e.name].z,
+        duration: duration/2
+      });
     }
   });
   map.addControl (story);

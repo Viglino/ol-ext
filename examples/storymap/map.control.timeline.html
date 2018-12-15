@@ -29,6 +29,12 @@
     .ol-attribution {
       bottom: 6.5em;
     }
+    
+    .ol-timeline img {
+      max-height: 2.2em;
+      float: left;
+      margin: .1em .5em .1em .1em
+    };
   </style>
 
 </head>
@@ -55,27 +61,28 @@
       layer: 'watercolor'
     })
   });
-  var osm = new ol.layer.Tile({
-    title: "OSM",
-    baseLayer: true,
-    source: new ol.source.OSM(),
-    visible: false
-  });
 
   // Style function
+  var cache = {};
   function style(select){
     return function(f) {
-      return new ol.style.Style({
-        image: new ol.style.Photo({
+      var style = cache[f.get('img')+'-'+select];
+      if (!style) {
+        var img = new ol.style.Photo({
           src: f.get('img'),
           radius: select ? 20:15,
           shadow: true,
           stroke: new ol.style.Stroke({
             width: 4,
             color: select ? '#fff':'#fafafa'
-          })
+          }),
+          onload: function() { f.changed(); }
         })
-      })
+        style = cache[f.get('img')+'-'+select] = new ol.style.Style({
+          image: img
+        })
+      }
+      return style;
     }
   };
   
@@ -108,12 +115,15 @@
       zoom: 6,
       center: [173664, 6166327]
     }),
-    layers: [stamen, osm, vector]
+    layers: [stamen, vector]
   });
 
   // Create Timeline control when features are loaded
   var tline = new ol.control.Timeline({
+    className: 'ol-zoomhover',
     source: vectorSource,
+    graduation: 'day', // 'month'
+    zoomButton: true,
     getHTML: function(f){
       return '<img src="'+f.get('img')+'"/> '+(f.get('text')||'');
     },
@@ -133,10 +143,14 @@
   });
   map.addControl (tline);
   tline.on('select', function(e){
+    // Center map on feature
     map.getView().animate({
       center: e.feature.getGeometry().getCoordinates(),
       zoom: 10
     });
+    // Center time line on feature
+    tline.setDate(e.feature);
+    // Select feature on the map
     select.getFeatures().clear();
     select.getFeatures().push(e.feature);
   })
