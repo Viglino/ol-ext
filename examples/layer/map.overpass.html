@@ -129,7 +129,10 @@
 	map.addLayer(vector);
 
 	// Control Select 
-	var select = new ol.interaction.Select();
+	var select = new ol.interaction.Select({
+		hitTolerance: 3,
+		condition: ol.events.condition.click
+	});
 	map.addInteraction(select);
 	// On selected
 	select.getFeatures().on(['add','remove'], function(e) {
