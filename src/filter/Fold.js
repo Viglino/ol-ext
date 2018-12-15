@@ -1,4 +1,4 @@
-/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+/*	Copyright (c) 2017 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
@@ -6,7 +6,7 @@
 import {inherits as ol_inherits} from 'ol'
 import ol_filter_Base from './Base'
 
-/** Fold filer map 
+/** Fold filer map
 * @constructor
 * @requires ol_filter
 * @extends {ol_filter_Base}
@@ -19,7 +19,7 @@ import ol_filter_Base from './Base'
 var ol_filter_Fold = function(options)
 {	options = options || {};
 	ol_filter_Base.call(this, options);
-	
+
 	this.set("fold", options.fold || [8,4]);
 	this.set("margin", options.margin || 8);
 	this.set("padding", options.padding || 8);
@@ -33,25 +33,26 @@ ol_filter_Fold.prototype.drawLine_ = function(ctx, d, m)
 	var fold = this.get("fold");
 	var w = canvas.width;
 	var h = canvas.height;
+	var x, y, i;
 
 	ctx.beginPath();
 	ctx.moveTo ( m, m );
-	for (var i=1; i<=fold[0]; i++)
+	for (i=1; i<=fold[0]; i++)
 	{	x = i*w/fold[0] - (i==fold[0] ? m : 0);
 		y =  d[1]*(i%2) +m;
 		ctx.lineTo ( x, y );
 	}
-	for (var i=1; i<=fold[1]; i++)
+	for (i=1; i<=fold[1]; i++)
 	{	x = w - d[0]*(i%2) - m;
 		y = i*h/fold[1] - (i==fold[1] ? d[0]*(fold[0]%2) + m : 0);
 		ctx.lineTo ( x, y );
 	}
-	for (var i=fold[0]; i>0; i--)
+	for (i=fold[0]; i>0; i--)
 	{	x = i*w/fold[0] - (i==fold[0] ? d[0]*(fold[1]%2) + m : 0);
 		y = h - d[1]*(i%2) -m;
 		ctx.lineTo ( x, y );
 	}
-	for (var i=fold[1]; i>0; i--)
+	for (i=fold[1]; i>0; i--)
 	{	x = d[0]*(i%2) + m;
 		y = i*h/fold[1] - (i==fold[1] ? m : 0);
 		ctx.lineTo ( x, y );
@@ -61,12 +62,7 @@ ol_filter_Fold.prototype.drawLine_ = function(ctx, d, m)
 
 ol_filter_Fold.prototype.precompose = function(e)
 {	var ctx = e.context;
-	var canvas = ctx.canvas;
 
-	var fold = this.get("fold");
-	var w = canvas.width;
-	var h = canvas.height;
-	
 	ctx.save();
 		ctx.shadowColor = "rgba(0,0,0,0.3)";
 		ctx.shadowBlur = 8;
@@ -93,7 +89,7 @@ ol_filter_Fold.prototype.postcompose = function(e)
 	ctx.save();
 		this.drawLine_(ctx, this.get("fsize"), this.get("margin"));
 		ctx.clip();
-		
+
 		var fold = this.get("fold");
 		var w = canvas.width/fold[0];
 		var h = canvas.height/fold[1];

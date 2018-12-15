@@ -10,6 +10,7 @@
     "ol": "^5.1.3"
   },
   "devDependencies": {
+    "eslint": "^5.10.0",
     "gulp": "^3.9.1",
     "gulp-autoprefixer": "^5.0.0",
     "gulp-clean": "^0.4.0",
@@ -25,6 +26,7 @@
   },
   "scripts": {
     "test": "npm test npmtest.js",
+    "lint": "eslint src/",
     "prepack": "gulp prepublish",
     "postpack": "gulp postpublish"
   },
