@@ -1,8 +1,58 @@
 .ol-control.ol-storymap {
-  top:0;
-  left: 0;
-  bottom: 0;
-  max-width: 30%;
-  overflow: auto;
+  top: .5em;
+  left: .5em;
+  bottom: .5em;
+  max-width: 35%;
+  border-radius: .5em;
+  position: absolute;
+  height: auto;
+}
+.ol-storymap {
+  overflow: hidden;
   padding: 0;
+  height: 100%;
+  position: relative;
+  scroll-behavior: smooth;
+  user-select: none;
+}
+.ol-storymap.ol-move {
+  scroll-behavior: unset;
+}
+.ol-storymap.ol-touch {
+  overflow-y: auto;
+}
+
+.ol-storymap .ol-scroll-top,
+.ol-storymap .ol-scroll-down {
+  position: relative;
+  min-height: 1em;
+  color: rgba(0,60,136,.5);
+}
+.ol-storymap .ol-scroll-top:before,
+.ol-storymap .ol-scroll-down:before {
+  content: "";
+  border: .3em solid currentColor;
+  border-radius: .3em;
+  border-color: transparent currentColor currentColor transparent;
+  width: .8em;
+  height: .8em;
+  display: block;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  animation: ol-bounce-bottom 0.35s linear infinite alternate;
+  pointer-events: none;
+}
+.ol-storymap .ol-scroll-top:before {
+  border-color: currentColor transparent transparent currentColor;
+  animation: ol-bounce-top 0.35s linear infinite alternate;
+}
+
+@keyframes ol-bounce-top{
+  from {top: -.2em;}
+  to   {top: .5em;}
+}
+@keyframes ol-bounce-bottom{
+  from {bottom: -.2em;}
+  to   {bottom: .5em;}
 }

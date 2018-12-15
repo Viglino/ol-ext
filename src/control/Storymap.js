@@ -10,16 +10,26 @@ import ol_ext_element from '../util/element'
  * @fires 
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
+ *	@param {Element | string | undefined} options.html The storymap content
+ *	@param {Element | string | undefined} options.target The target element to place the story. If no html is provided the content of the target will be used.
  */
 var ol_control_Storymap = function(options) {
+  // Remove or get target content 
+  if (options.target) {
+    if (!options.html) {
+      options.html = options.target.innerHTML;
+    } else if (options.html instanceof Element) {
+      options.html = options.html.innerHTML;
+    }
+    options.target.innerHTML = '';
+  }
 
   var element = ol_ext_element.create('DIV', {
     className: (options.className || '') + ' ol-storymap'
       + (options.target ? '': ' ol-unselectable ol-control')
       + (ol_has_TOUCH ? ' ol-touch' : ''),
-    html: options.html || ''
+    html: options.html
   });
-
 
   // Initialize
   ol_control_Control.call(this, {
@@ -27,27 +37,70 @@ var ol_control_Storymap = function(options) {
     target: options.target
   });
 
-  var currentDiv = this.element.querySelectorAll('.step')[0];
-  setTimeout (function (){
-    this.dispatchEvent({ type: 'current', element: currentDiv, name: currentDiv.getAttribute('name') });
+  // Make a scroll div
+  ol_ext_element.scrollDiv (this.element, {
+    vertical: true,
+    mousewheel: true
+  });
+
+  // Prevent image dragging
+  var img = this.element.querySelectorAll('img');
+  img.forEach(function(i) {
+    i.ondragstart = function(){ return false; };
+  });
+  
+  // Scroll down
+  var sc = this.element.querySelectorAll('.ol-scroll-down');
+  sc.forEach(function(i) {
+    i.addEventListener('click', function(){ 
+      this.element.scrollTop = i.offsetTop;
+    }.bind(this));
+  }.bind(this));
+  // Scroll top 
+  var sc = this.element.querySelectorAll('.ol-scroll-top');
+  sc.forEach(function(i) {
+    i.addEventListener('click', function(){ 
+      this.element.scrollTop = 0;
+    }.bind(this));
   }.bind(this));
 
+  // Handle scrolling
+  var currentDiv = this.element.querySelectorAll('.chapter')[0];
+  setTimeout (function (){
+    this.dispatchEvent({ type: 'scrollto', start: true, element: currentDiv, name: currentDiv.getAttribute('name') });
+  }.bind(this));
+
+  // Trigger change event on scroll
   this.element.addEventListener("scroll", function(e) {
-    var current, step = this.element.querySelectorAll('.step');
+    var current, chapter = this.element.querySelectorAll('.chapter');
     var height = ol_ext_element.getStyle(this.element, 'height');
-    for (var i=0, s; s=step[i]; i++) {
-      var p = s.offsetTop - this.element.scrollTop;
-      if (p > height/3) break;
-      current = s;
+    if (!this.element.scrollTop) {
+      current = chapter[0];
+    } else {
+      for (var i=0, s; s=chapter[i]; i++) {
+        var p = s.offsetTop - this.element.scrollTop;
+        if (p > height/3) break;
+        current = s;
+      }
     }
     if (current && current!==currentDiv) {
       currentDiv = current;
-      this.dispatchEvent({ type: 'current', element: currentDiv, name: currentDiv.getAttribute('name') });
+      this.dispatchEvent({ type: 'scrollto', element: currentDiv, name: currentDiv.getAttribute('name') });
     }
   }.bind(this));
 
   
 };
 ol_inherits(ol_control_Storymap, ol_control_Control);
+
+
+ol_control_Storymap.prototype.setChapter = function (name) {
+  var chapter = this.element.querySelectorAll('.chapter');
+  for (var i=0, s; s=chapter[i]; i++) {
+    if (s.getAttribute('name')===name) {
+      this.element.scrollTop = s.offsetTop;
+    }
+  };
+};
 
 export default ol_control_Storymap
