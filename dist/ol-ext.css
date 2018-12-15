@@ -2602,12 +2602,77 @@
   display: none;
 }
 .ol-control.ol-storymap {
-  top:0;
-  left: 0;
-  bottom: 0;
-  max-width: 30%;
-  overflow: auto;
+  top: .5em;
+  left: .5em;
+  bottom: .5em;
+  max-width: 35%;
+  border-radius: .5em;
+  position: absolute;
+  height: auto;
+}
+.ol-storymap {
+  overflow: hidden;
   padding: 0;
+  height: 100%;
+  position: relative;
+  scroll-behavior: smooth;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+}
+.ol-storymap.ol-move {
+  scroll-behavior: unset;
+}
+.ol-storymap.ol-touch {
+  overflow-y: auto;
+}
+
+.ol-storymap .ol-scroll-top,
+.ol-storymap .ol-scroll-down {
+  position: relative;
+  min-height: 1em;
+  color: rgba(0,60,136,.5);
+}
+.ol-storymap .ol-scroll-top:before,
+.ol-storymap .ol-scroll-down:before {
+  content: "";
+  border: .3em solid currentColor;
+  border-radius: .3em;
+  border-color: transparent currentColor currentColor transparent;
+  width: .8em;
+  height: .8em;
+  display: block;
+  position: absolute;
+  left: 50%;
+  -webkit-transform: translateX(-50%) rotate(45deg);
+          transform: translateX(-50%) rotate(45deg);
+  -webkit-animation: ol-bounce-bottom 0.35s linear infinite alternate;
+          animation: ol-bounce-bottom 0.35s linear infinite alternate;
+  pointer-events: none;
+}
+.ol-storymap .ol-scroll-top:before {
+  border-color: currentColor transparent transparent currentColor;
+  -webkit-animation: ol-bounce-top 0.35s linear infinite alternate;
+          animation: ol-bounce-top 0.35s linear infinite alternate;
+}
+
+@-webkit-keyframes ol-bounce-top{
+  from {top: -.2em;}
+  to   {top: .5em;}
+}
+
+@keyframes ol-bounce-top{
+  from {top: -.2em;}
+  to   {top: .5em;}
+}
+@-webkit-keyframes ol-bounce-bottom{
+  from {bottom: -.2em;}
+  to   {bottom: .5em;}
+}
+@keyframes ol-bounce-bottom{
+  from {bottom: -.2em;}
+  to   {bottom: .5em;}
 }
 .ol-swipe
 {	position: absolute;
@@ -2677,23 +2742,66 @@
 
 .ol-timeline {
   overflow: hidden;
+  padding: 2px 0 0;
+}
+.ol-timeline .ol-scroll {
+  overflow: hidden;
   padding: 0;
   scroll-behavior: smooth;
   line-height: 1em;
 }
-.ol-timeline.ol-move {
+.ol-timeline .ol-scroll.ol-move {
   scroll-behavior: unset;
 }
-.ol-timeline.ol-touch {
+.ol-timeline.ol-touch .ol-scroll{
   overflow-x: auto;
 }
 
-.ol-timeline > div {
+.ol-timeline .ol-scroll {
   height: 6em;
+}
+.ol-timeline.ol-zoombt .ol-scroll {
+  margin-left: 1.5em;
+}
+.ol-timeline .ol-zoom {
+  position: absolute;
+  top: 0;
+  background: rgba(255,255,255,.5);
+  width: 1.5em;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+}
+.ol-timeline .ol-zoom .ol-zoom-in, 
+.ol-timeline .ol-zoom .ol-zoom-out {
+  font-size: 1em;
+  margin: 0 0 1px;
+  position: relative;
+}
+.ol-timeline .ol-zoom .ol-zoom-in:before,
+.ol-timeline .ol-zoom .ol-zoom-in:after,
+.ol-timeline .ol-zoom .ol-zoom-out:before {
+  content: "";
+  position: absolute;
+  width: .7em;
+  height: .15em;
+  background-color: currentColor;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+}
+.ol-timeline .ol-zoom .ol-zoom-in:after{
+  height: .7em;
+  width: .15em;
+}
+
+.ol-timeline .ol-scroll > div {
+  height: 100%;
   position: relative;
 }
 
-.ol-timeline > div .ol-times {
+.ol-timeline .ol-scroll .ol-times {
   background: rgba(255,255,255,.5);
   height: 1em;
   bottom: 0;
@@ -2702,7 +2810,7 @@
   right: -200px;
   z-index: 1;
 }
-.ol-timeline > div .ol-time {
+.ol-timeline .ol-scroll .ol-time {
   position: absolute;
   font-size: .7em;
   color: #999;
@@ -2710,7 +2818,7 @@
   -webkit-transform: translateX(-50%);
           transform: translateX(-50%);
 }
-.ol-timeline > div .ol-time:before {
+.ol-timeline .ol-scroll .ol-time:before {
   content: "";
   position: absolute;
   bottom: 1.2em;
@@ -2719,17 +2827,17 @@
   border-left: 1px solid #999;
 }
 
-.ol-timeline > div .ol-features {
+.ol-timeline .ol-scroll .ol-features {
   position: absolute;
   top: 0;
   bottom: 1em;
   left: -200px;
   right: -400px;
-  margin: 0 200px;
+  margin: 0 0 0 200px;
   overflow: hidden;
 }
 
-.ol-timeline > div .ol-feature {
+.ol-timeline .ol-scroll .ol-feature {
   position: absolute;
   font-size: .7em;
   color: #999;
@@ -2746,8 +2854,9 @@
   transition: all .3s;
   cursor: pointer;
 }
-.ol-timeline > div .ol-feature:hover,
-.ol-timeline > div .ol-feature.select {
+
+.ol-timeline.ol-zoomhover .ol-scroll .ol-feature:hover,
+.ol-timeline.ol-zoomhover .ol-scroll .ol-feature.ol-select {
   z-index: 1;
   -webkit-transform: scale(1.2);
           transform: scale(1.2);
@@ -2755,12 +2864,31 @@
   max-width: 14em!important;
 }
 
-.ol-timeline > div .ol-feature img {
-  max-height: 2.2em;
-  float: left;
-  margin: .1em .5em .1em .1em
-};
+.ol-timeline .ol-center-date {
+  display: none;
+  position: absolute;
+  left: 50%;
+  height: 100%;
+  width: 2px;
+  bottom: 0;
+  z-index: 2;
+  pointer-events: none;
+  -webkit-transform: translateX(-50%);
+          transform: translateX(-50%);
+  background-color: rgba(255,0,0,.3);
+}
+.ol-timeline.ol-zoombt .ol-center-date {
+  left: calc(50% + .75em);
+}
 
+.ol-timeline.ol-interval .ol-center-date {
+  display: block;
+  background-color: transparent;
+  border: 0 solid rgba(0,0,0,.3);
+  border-width: 0 10000px;
+  -webkit-box-sizing: content-box;
+          box-sizing: content-box;
+}
 .ol-target-overlay .ol-target 
 {	border: 1px solid transparent;
 	-webkit-box-shadow: 0 0 1px 1px #fff;

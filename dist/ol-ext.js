@@ -114,7 +114,7 @@ ol.ext.Ajax.prototype.send = function (url, data){
  * @see https://github.com/nefe/You-Dont-Need-jQuery
  * @see https://plainjs.com/javascript/
  */
-ol.ext.element = {};
+ ol.ext.element = {};
 /**
  * Create an element
  * @param {string} tagName The element tag, use 'TEXT' to create a text node
@@ -142,7 +142,7 @@ ol.ext.element.create = function (tagName, options) {
         }
         case 'html': {
           if (options.html instanceof Element) elt.appendChild(options.html)
-          else elt.innerHTML = options.html;
+          else if (options.html!==undefined) elt.innerHTML = options.html;
           break;
         }
         case 'parent': {
@@ -259,7 +259,7 @@ ol.ext.element.getStyle = function(el, styleProp) {
   if (/px$/.test(value)) return parseInt(value);
   return value;
 };
-/** Make a div scrollable withiout scrollbar.
+/** Make a div scrollable without scrollbar.
  * On touch devices the default behavior is preserved
  * @param {DOMElement} elt
  * @param {function} onmove a function that takes a boolean indicating that the div is scrolling
@@ -267,22 +267,27 @@ ol.ext.element.getStyle = function(el, styleProp) {
 ol.ext.element.scrollDiv = function(elt, options) {
   var pos = false;
   var speed = 0;
-  var dt = 0;
+  var d, dt = 0;
   var onmove = (typeof(options.onmove) === 'function' ? options.onmove : function(){});
+  var page = options.vertical ? 'pageY' : 'pageX';
+  var scroll = options.vertical ? 'scrollTop' : 'scrollLeft';
   // Start scrolling
   ol.ext.element.addListener(elt, ['mousedown'], function(e) {
-    pos = e.pageX;
+    pos = e[page];
     dt = new Date();
     elt.classList.add('ol-move');
   });
   // Register scroll
   ol.ext.element.addListener(window, ['mousemove'], function(e) {
     if (pos !== false) {
-      var delta = pos - e.pageX;
-      elt.scrollLeft += delta;
-      speed = (speed + delta / (new Date() - dt))/2;
-      pos = e.pageX;
-      dt = new Date();
+      var delta = pos - e[page];
+      elt[scroll] += delta;
+      d = new Date();
+      if (d-dt) {
+        speed = (speed + delta / (d - dt))/2;
+      }
+      pos = e[page];
+      dt = d;
       // Tell we are moving
       if (delta) onmove(true);
     } else {
@@ -299,12 +304,25 @@ ol.ext.element.scrollDiv = function(elt, options) {
       speed = 0;
     } else if (dt>0) {
       // Calculate new speed
-      speed = (speed + (pos - e.pageX) / dt) / 2;
-    } 
-    elt.scrollLeft += speed*100;
+      speed = ((speed||0) + (pos - e[page]) / dt) / 2;
+    }
+    elt[scroll] += speed*100;
     pos = false;
     speed = 0;
+    dt = 0;
   });
+  // Handke mousewheel
+  if (options.mousewheel && !elt.classList.contains('ol-touch')) {
+    ol.ext.element.addListener(elt, 
+      ['mousewheel', 'DOMMouseScroll', 'onmousewheel'], 
+      function(e) {
+        var delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
+        elt.classList.add('ol-move');
+        elt[scroll] -= delta*30;
+        return false;
+      }
+    );
+  }
 };
 
 /* Create ol.sphere for backward compatibility with ol < 5.0
@@ -6987,38 +7005,87 @@ ol.control.Select.prototype.doSelect = function (options) {
  * @fires 
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
+ *	@param {Element | string | undefined} options.html The storymap content
+ *	@param {Element | string | undefined} options.target The target element to place the story. If no html is provided the content of the target will be used.
  */
 ol.control.Storymap = function(options) {
+  // Remove or get target content 
+  if (options.target) {
+    if (!options.html) {
+      options.html = options.target.innerHTML;
+    } else if (options.html instanceof Element) {
+      options.html = options.html.innerHTML;
+    }
+    options.target.innerHTML = '';
+  }
   var element = ol.ext.element.create('DIV', {
     className: (options.className || '') + ' ol-storymap'
       + (options.target ? '': ' ol-unselectable ol-control')
       + (ol.has.TOUCH ? ' ol-touch' : ''),
-    html: options.html || ''
+    html: options.html
   });
   // Initialize
   ol.control.Control.call(this, {
     element: element,
     target: options.target
   });
-  var currentDiv = this.element.querySelectorAll('.step')[0];
-  setTimeout (function (){
-    this.dispatchEvent({ type: 'current', element: currentDiv, name: currentDiv.getAttribute('name') });
+  // Make a scroll div
+  ol.ext.element.scrollDiv (this.element, {
+    vertical: true,
+    mousewheel: true
+  });
+  // Prevent image dragging
+  var img = this.element.querySelectorAll('img');
+  img.forEach(function(i) {
+    i.ondragstart = function(){ return false; };
+  });
+  // Scroll down
+  var sc = this.element.querySelectorAll('.ol-scroll-down');
+  sc.forEach(function(i) {
+    i.addEventListener('click', function(){ 
+      this.element.scrollTop = i.offsetTop;
+    }.bind(this));
   }.bind(this));
+  // Scroll top 
+  var sc = this.element.querySelectorAll('.ol-scroll-top');
+  sc.forEach(function(i) {
+    i.addEventListener('click', function(){ 
+      this.element.scrollTop = 0;
+    }.bind(this));
+  }.bind(this));
+  // Handle scrolling
+  var currentDiv = this.element.querySelectorAll('.chapter')[0];
+  setTimeout (function (){
+    this.dispatchEvent({ type: 'scrollto', start: true, element: currentDiv, name: currentDiv.getAttribute('name') });
+  }.bind(this));
+  // Trigger change event on scroll
   this.element.addEventListener("scroll", function(e) {
-    var current, step = this.element.querySelectorAll('.step');
+    var current, chapter = this.element.querySelectorAll('.chapter');
     var height = ol.ext.element.getStyle(this.element, 'height');
-    for (var i=0, s; s=step[i]; i++) {
-      var p = s.offsetTop - this.element.scrollTop;
-      if (p > height/3) break;
-      current = s;
+    if (!this.element.scrollTop) {
+      current = chapter[0];
+    } else {
+      for (var i=0, s; s=chapter[i]; i++) {
+        var p = s.offsetTop - this.element.scrollTop;
+        if (p > height/3) break;
+        current = s;
+      }
     }
     if (current && current!==currentDiv) {
       currentDiv = current;
-      this.dispatchEvent({ type: 'current', element: currentDiv, name: currentDiv.getAttribute('name') });
+      this.dispatchEvent({ type: 'scrollto', element: currentDiv, name: currentDiv.getAttribute('name') });
     }
   }.bind(this));
 };
 ol.inherits(ol.control.Storymap, ol.control.Control);
+ol.control.Storymap.prototype.setChapter = function (name) {
+  var chapter = this.element.querySelectorAll('.chapter');
+  for (var i=0, s; s=chapter[i]; i++) {
+    if (s.getAttribute('name')===name) {
+      this.element.scrollTop = s.offsetTop;
+    }
+  };
+};
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -7375,26 +7442,100 @@ ol.inherits(ol.control.TextButton, ol.control.Button);
  * @fires 
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
+ *	@param {Array<ol.Feature>} options.features Features to show in the timeline
+ *	@param {ol.SourceImageOptions.vector} options.source class of the control
+ *	@param {String} options.maxWidth width of the time line in px, default 2000px
+ *	@param {String} options.minDate minimum date 
+ *	@param {String} options.maxDate maximum date 
+ *	@param {Number} options.minZoom Minimum zoom for the line, default .2
+ *	@param {Number} options.maxZoom Maximum zoom for the line, default 4
+ *	@param {boolean} options.zoomButton Are zoom buttons avaliable, default false
+ *	@param {function} options.getHTML a function that takes a feature and returns the html to display
+ *	@param {function} options.getFeatureDate a function that takes a feature and returns its date, default the date propertie
+ *	@param {function} options.endFeatureDate a function that takes a feature and returns its end date, default no end date
+ *	@param {String} options.graduation day or month to show month or day graduation
+ *	@param {Number} options.spacing Space factor between graduation, default 2
+ *	@param {String} options.scrollTimeout Time in milliseconds to get a scroll event, default 15ms
  */
 ol.control.Timeline = function(options) {
   var element = ol.ext.element.create('DIV', {
     className: (options.className || '') + ' ol-timeline'
       + (options.target ? '': ' ol-unselectable ol-control')
+      + (options.zoomButton ? ' ol-zoombt':'')
       + (ol.has.TOUCH ? ' ol-touch' : '')
   });
   // Source 
   this._source = options.source;
+  this._features = options.features;
   // Initialize
   ol.control.Control.call(this, {
     element: element,
     target: options.target
   });
+  // Scroll div
+  this._scrollDiv = ol.ext.element.create('DIV', {
+    className: 'ol-scroll',
+    parent: this.element
+  });
+  if (options.zoomButton) {
+    var zbt = ol.ext.element.create('DIV', {
+      className: 'ol-zoom',
+      parent: this.element
+    });
+    ol.ext.element.create('BUTTON', {
+      className: 'ol-zoom-in',
+      parent: zbt
+    }).addEventListener('click', function(){
+      var zoom = this.get('zoom');
+      if (zoom>=1) {
+        zoom++;
+      }
+      else {
+        zoom = Math.min(1, zoom + 0.1);
+      }
+      this.refresh(zoom);
+    }.bind(this));
+    ol.ext.element.create('BUTTON', {
+      className: 'ol-zoom-out',
+      parent: zbt
+    }).addEventListener('click', function(){
+      var zoom = this.get('zoom');
+      if (zoom>1) {
+        zoom--;
+      }
+      else {
+        zoom -= 0.1;
+      }
+      this.refresh(zoom);
+    }.bind(this));
+  }
+  // Draw center date
+  ol.ext.element.create('DIV', {
+    className: 'ol-center-date',
+    parent: this.element
+  });
   // Remove selection
   this.element.addEventListener('mouseover', function(){
-    if (this._select) this._select.elt.classList.remove('select');
+    if (this._select) this._select.elt.classList.remove('ol-select');
+  }.bind(this));
+  // Trigger scroll event
+  var scrollListener = null;
+  this._scrollDiv.addEventListener('scroll', function() {
+    if (scrollListener) {
+      clearTimeout(scrollListener);
+      scrollListener = null;
+    }
+    scrollListener = setTimeout(function() {
+      this.dispatchEvent({ 
+        type: 'scroll', 
+        date: this.getDate(), 
+        dateStart: this.getDate('start'), 
+        dateEnd: this.getDate('end')
+      });
+    }.bind(this), options.scrollTimeout || 15);
   }.bind(this));
   // Scroll timeline
-  ol.ext.element.scrollDiv(this.element, {
+  ol.ext.element.scrollDiv(this._scrollDiv, {
     onmove: function(b) {
       // Prevent selection on moving
       this._moving = b; 
@@ -7404,10 +7545,13 @@ ol.control.Timeline = function(options) {
   this.set('maxWidth', options.maxWidth || 2000);
   this.set('minDate', options.minDate || Infinity);
   this.set('maxDate', options.maxDate || -Infinity);
+  this.set('graduation', options.graduation);
+  this.set('minZoom', options.minZoom || .2);
+  this.set('maxZoom', options.maxZoom || 4);
   if (options.getHTML) this._getHTML =  options.getHTML;
   if (options.getFeatureDate) this._getFeatureDate =  options.getFeatureDate;
   if (options.endFeatureDate) this._endFeatureDate =  options.endFeatureDate;
-  this.refresh();
+  setTimeout(function (){ this.refresh(); }.bind(this));
 };
 ol.inherits(ol.control.Timeline, ol.control.Control);
 /** Get html to show in the line
@@ -7436,15 +7580,17 @@ ol.control.Timeline.prototype._endFeatureDate = function(feature) {
  * @return {Array<ol.Feature>}
  */
 ol.control.Timeline.prototype.getFeatures = function() {
-  return this._source.getFeatures();
+  return this._features || this._source.getFeatures();
 }
 /**
  * Refresh the timeline with new data
- * @param {Number} zoom Zoom factor from 0.5 to 3, default 1
+ * @param {Number} zoom Zoom factor from 0.25 to 10, default 1
  */
 ol.control.Timeline.prototype.refresh = function(zoom) {
-  zoom = Math.min(3, Math.max(.5, zoom || 1));
-  this.element.innerHTML = '';
+  zoom = Math.min(this.get('maxZoom'), Math.max(this.get('minZoom'), zoom || 1));
+  this.set('zoom', zoom);
+  console.log(zoom)
+  this._scrollDiv.innerHTML = '';
   var features = this.getFeatures();
   var d, d2;
   // Get features sorted by date
@@ -7475,7 +7621,7 @@ ol.control.Timeline.prototype.refresh = function(zoom) {
   });
   // Draw
   var div = ol.ext.element.create('DIV', {
-    parent: this.element
+    parent: this._scrollDiv
   });
   // Calculate width
   var min = this._minDate = Math.min(this.get('minDate'), tline[0].date);
@@ -7494,7 +7640,7 @@ ol.control.Timeline.prototype.refresh = function(zoom) {
   this._drawTime(div, min, max, scale);
   // Draw features
   var line = [];
-  var lineHeight = ol.ext.element.getStyle(this.element, 'lineHeight');
+  var lineHeight = ol.ext.element.getStyle(this._scrollDiv, 'lineHeight');
   // Wrapper
   var fdiv = ol.ext.element.create('DIV', {
       className: 'ol-features',
@@ -7528,7 +7674,6 @@ ol.control.Timeline.prototype.refresh = function(zoom) {
     t.addEventListener('click', function(){
       if (!this._moving) {
         this.dispatchEvent({type: 'select', feature: f.feature });
-        this.element.scrollLeft = left - ol.ext.element.getStyle(this.element, 'width')/2;
       }
     }.bind(this));
     // Find first free Y position
@@ -7542,23 +7687,33 @@ ol.control.Timeline.prototype.refresh = function(zoom) {
     ol.ext.element.setStyle(t, { top: pos*lineHeight });
   }.bind(this));
   this._nbline = line.length;
+  // Dispatch scroll event
+  this.dispatchEvent({ 
+    type: 'scroll', 
+    date: this.getDate(), 
+    dateStart: this.getDate('start'), 
+    dateEnd: this.getDate('end')
+  });
 };
 /**
- * Draw date time line
+ * Draw dates on line
  * @private
  */
 ol.control.Timeline.prototype._drawTime = function(div, min, max, scale) {
-  var year = (new Date(this._minDate)).getFullYear();
+  // Times div
   var tdiv = ol.ext.element.create('DIV', {
     className: 'ol-times',
     parent: div
   });
   var dx = ol.ext.element.getStyle(tdiv, 'left');
+  var heigth = ol.ext.element.getStyle(tdiv, 'height');
+  // Year
+  var year = (new Date(this._minDate)).getFullYear();
   while(true) {
     var d = new Date(String(year));
     if (d > this._maxDate) break;
     ol.ext.element.create('DIV', {
-      className: 'ol-time',
+      className: 'ol-time ol-year',
       style: {
         left: Math.round((d-this._minDate)*scale) - dx
       },
@@ -7566,6 +7721,65 @@ ol.control.Timeline.prototype._drawTime = function(div, min, max, scale) {
       parent: tdiv
     });
     year++;
+  }
+  // Month
+  if (/day|month/.test(this.get('graduation'))) {
+    var dt = (new Date(String(year)) - new Date(String(year-1))) * scale;
+    var dmonth = Math.max(1, Math.round(12 / Math.round(dt/heigth/2)));
+    if (dmonth < 12) {
+      year = (new Date(this._minDate)).getFullYear();
+      var month = dmonth+1;
+      while(true) {
+        var d = new Date(year+'/'+month+'/01');
+        if (d > this._maxDate) break;
+        ol.ext.element.create('DIV', {
+          className: 'ol-time ol-month',
+          style: {
+            left: Math.round((d-this._minDate)*scale) - dx
+          },
+          html: d.toLocaleDateString(undefined, { month: 'short'}),
+          parent: tdiv
+        });
+        month += dmonth;
+        if (month > 12) {
+          year++;
+          month = dmonth+1;
+        }
+      }
+    }
+  }
+  // Day
+  if (this.get('graduation')==='day') {
+    var dt = (new Date(year+'/02/01') - new Date(year+'/01/01')) * scale;
+    var dday = Math.max(1, Math.round(31 / Math.round(dt/heigth/2)));
+    if (dday < 31) {
+      year = (new Date(this._minDate)).getFullYear();
+      var month = 1;
+      var day = dday;
+      while(true) {
+        var d = new Date(year+'/'+month+'/'+day);
+        if (isNaN(d)) {
+          month++;
+          if (month>12) {
+            month = 1;
+            year++;
+          }
+          day=dday;
+        } else {
+          if (d > this._maxDate) break;
+          ol.ext.element.create('DIV', {
+            className: 'ol-time ol-day',
+            style: {
+              left: Math.round((d-this._minDate)*scale) - dx
+            },
+            html: day,
+            parent: tdiv
+          });
+          day += dday;
+          if (day+dday/2>31) day=32;
+        }
+      }
+    }
   }
 };
 /** Center timeline on a date
@@ -7585,24 +7799,40 @@ ol.control.Timeline.prototype.setDate = function(feature) {
     date = new Date(String(feature));
   }
   if (!isNaN(date)) {
-    this.element.scrollLeft = (date-this._minDate)*this._scale - ol.ext.element.getStyle(this.element, 'width')/2;
+    this._scrollDiv.scrollLeft = (date-this._minDate)*this._scale - ol.ext.element.getStyle(this.element, 'width')/2;
     if (feature) {
       for (var i=0, f; f = this._tline[i]; i++) {
         if (f.feature === feature) {
-          f.elt.classList.add('select');
+          f.elt.classList.add('ol-select');
           this._select = f;
         } else {
-          f.elt.classList.remove('select');
+          f.elt.classList.remove('ol-select');
         }
       }
     }
   }
 };
 /** Get the date of the center
+ * @param {string} position start, end or middle, default middle
  * @return {Date}
  */
-ol.control.Timeline.prototype.getDate = function() {
-  var d = (this.element.scrollLeft + ol.ext.element.getStyle(this.element, 'width')/2)/this._scale + this._minDate;
+ol.control.Timeline.prototype.getDate = function(position) {
+  var pos;
+  switch (position) {
+    case 'start': {
+      pos = 0;
+      break;
+    }
+    case 'end': {
+      pos = ol.ext.element.getStyle(this.element, 'width');
+      break;
+    }
+    default: {
+      pos = ol.ext.element.getStyle(this.element, 'width')/2;
+      break;
+    }
+  }
+  var d = (this._scrollDiv.scrollLeft + pos)/this._scale + this._minDate;
   return new Date(d);
 };
 
