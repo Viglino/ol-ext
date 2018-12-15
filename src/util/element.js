@@ -2,7 +2,7 @@
  * @see https://github.com/nefe/You-Dont-Need-jQuery
  * @see https://plainjs.com/javascript/
  */
-var ol_ext_element = {};
+ var ol_ext_element = {};
 
 /**
  * Create an element
@@ -31,7 +31,7 @@ ol_ext_element.create = function (tagName, options) {
         }
         case 'html': {
           if (options.html instanceof Element) elt.appendChild(options.html)
-          else elt.innerHTML = options.html;
+          else if (options.html!==undefined) elt.innerHTML = options.html;
           break;
         }
         case 'parent': {
@@ -156,7 +156,7 @@ ol_ext_element.getStyle = function(el, styleProp) {
   return value;
 };
 
-/** Make a div scrollable withiout scrollbar.
+/** Make a div scrollable without scrollbar.
  * On touch devices the default behavior is preserved
  * @param {DOMElement} elt
  * @param {function} onmove a function that takes a boolean indicating that the div is scrolling
@@ -164,13 +164,15 @@ ol_ext_element.getStyle = function(el, styleProp) {
 ol_ext_element.scrollDiv = function(elt, options) {
   var pos = false;
   var speed = 0;
-  var dt = 0;
+  var d, dt = 0;
 
   var onmove = (typeof(options.onmove) === 'function' ? options.onmove : function(){});
+  var page = options.vertical ? 'pageY' : 'pageX';
+  var scroll = options.vertical ? 'scrollTop' : 'scrollLeft';
 
   // Start scrolling
   ol_ext_element.addListener(elt, ['mousedown'], function(e) {
-    pos = e.pageX;
+    pos = e[page];
     dt = new Date();
     elt.classList.add('ol-move');
   });
@@ -178,11 +180,14 @@ ol_ext_element.scrollDiv = function(elt, options) {
   // Register scroll
   ol_ext_element.addListener(window, ['mousemove'], function(e) {
     if (pos !== false) {
-      var delta = pos - e.pageX;
-      elt.scrollLeft += delta;
-      speed = (speed + delta / (new Date() - dt))/2;
-      pos = e.pageX;
-      dt = new Date();
+      var delta = pos - e[page];
+      elt[scroll] += delta;
+      d = new Date();
+      if (d-dt) {
+        speed = (speed + delta / (d - dt))/2;
+      }
+      pos = e[page];
+      dt = d;
       // Tell we are moving
       if (delta) onmove(true);
     } else {
@@ -200,12 +205,26 @@ ol_ext_element.scrollDiv = function(elt, options) {
       speed = 0;
     } else if (dt>0) {
       // Calculate new speed
-      speed = (speed + (pos - e.pageX) / dt) / 2;
-    } 
-    elt.scrollLeft += speed*100;
+      speed = ((speed||0) + (pos - e[page]) / dt) / 2;
+    }
+    elt[scroll] += speed*100;
     pos = false;
     speed = 0;
+    dt = 0;
   });
+
+  // Handke mousewheel
+  if (options.mousewheel && !elt.classList.contains('ol-touch')) {
+    ol_ext_element.addListener(elt, 
+      ['mousewheel', 'DOMMouseScroll', 'onmousewheel'], 
+      function(e) {
+        var delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
+        elt.classList.add('ol-move');
+        elt[scroll] -= delta*30;
+        return false;
+      }
+    );
+  }
 };
 
 export default ol_ext_element
