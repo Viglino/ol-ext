@@ -61,7 +61,6 @@ ol_source_Delaunay.prototype.getNodeSource = function () {
  */
 ol_source_Delaunay.prototype._onRemoveNode = function(evt) {
   // console.log(evt)
-  var i, p;
   var pt = evt.feature.getGeometry().getCoordinates();
   if (!pt) return;
   // Still there (when removing duplicated points)
@@ -72,6 +71,7 @@ ol_source_Delaunay.prototype._onRemoveNode = function(evt) {
   this.flip=[];
 
   // Get hole
+  var i;
   var edges = [];
   while (triangles.length) {
     var tr = triangles.pop()
@@ -86,12 +86,13 @@ ol_source_Delaunay.prototype._onRemoveNode = function(evt) {
     edges.push(pts);
   }
   pts = edges.pop();
+
 var se = '';
-var edge;
-for (i=0,edge; edge=edges[i]; i++) {
-  se += ' - '+this.listpt(edge);
-}
-console.log('EDGES', se)
+edges.forEach(function(e){
+  se += ' - '+this.listpt(e);
+}.bind(this));
+console.log('EDGES', se);
+
   i = 0;
   function testEdge(p0, p1, index) {
     if (ol_coordinate_equal(p0, pts[index])) {
@@ -102,11 +103,11 @@ console.log('EDGES', se)
     return false;
   }
   while (true) {
-    edge = edges[i];
-    if ( testEdge(edge[0], edge[1], 0) 
-      || testEdge(edge[1], edge[0], 0)
-      || testEdge(edge[0], edge[1], pts.length-1)
-      || testEdge(edge[1], edge[0], pts.length-1)
+    var e = edges[i];
+    if ( testEdge(e[0], e[1], 0) 
+      || testEdge(e[1], e[0], 0)
+      || testEdge(e[0], e[1], pts.length-1)
+      || testEdge(e[1], e[0], pts.length-1)
     ) {
       edges.splice(i,1);
       i = 0;
@@ -125,7 +126,8 @@ console.log('PTS', this.listpt(pts))
   if (closed) pts.pop();
 
   // Update convex hull: remove pt + add new ones
-  for (i, p; p=this.hull[i]; i++) {
+  var p;
+  for (i; p=this.hull[i]; i++) {
     if (ol_coordinate_equal(pt,p)) {
       this.hull.splice(i,1);
       break;
@@ -137,7 +139,7 @@ console.log('PTS', this.listpt(pts))
   // 
   var clockwise = function (t) {
     var i1, s = 0;
-    for (i=0; i<t.length; i++) {
+    for (var i=0; i<t.length; i++) {
       i1 = (i+1) % t.length;
       s += (t[i1][0] - t[i][0]) * (t[i1][1] + t[i][1]);
     }
@@ -222,10 +224,10 @@ for (var i=0; i<this.flip.length; i++) {
 
 /**
  * A new point has been added
- * @param {ol/source/VectorEvent} evt 
+ * @param {ol/source/VectorEvent} e 
  */
-ol_source_Delaunay.prototype._onAddNode = function(evt) {
-  var finserted = evt.feature;
+ol_source_Delaunay.prototype._onAddNode = function(e) {
+  var finserted = e.feature;
   var i, p;
 
   // Not a point!
@@ -273,13 +275,13 @@ ol_source_Delaunay.prototype._onAddNode = function(evt) {
     hull2.push(pt);
     hull2 = ol_coordinate_convexHull(hull2);
     // Search for points
-    for (i=0,p; p=hull2[i]; i++) {
+    for (i=0; p=hull2[i]; i++) {
       if (ol_coordinate_equal(p,pt)) break;
     }
     i = (i!==0 ? i-1 : hull2.length-1);
     var p0 = hull2[i];
     var stop = hull2[(i+2) % hull2.length];
-    for (i=0,p; p=this.hull[i]; i++) {
+    for (i=0; p=this.hull[i]; i++) {
       if (ol_coordinate_equal(p,p0)) break;
     }
     // Connect to the hull
