@@ -144,8 +144,8 @@
   var tline = new ol.control.Timeline({
     features: features,
     graduation: 'day', // 'month'
-    minDate: new Date('2014/01/01'),
-    maxDate: new Date('2016/01/01'),
+    minDate: new Date('2014/06/01'),
+    maxDate: new Date('2017/06/01'),
     getHTML: function(f){
       return f.text;
     },
@@ -157,6 +157,8 @@
     }
   });
   map.addControl (tline);
+  // Set the date when ready
+  setTimeout(function(){ tline.setDate('2015'); });
 
   // Show features on scroll
   tline.on('scroll', function(e){

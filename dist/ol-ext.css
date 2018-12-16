@@ -2853,6 +2853,8 @@
   -webkit-transition: all .3s;
   transition: all .3s;
   cursor: pointer;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
 }
 
 .ol-timeline.ol-zoomhover .ol-scroll .ol-feature:hover,
@@ -2861,7 +2863,7 @@
   -webkit-transform: scale(1.2);
           transform: scale(1.2);
   background: #eee;
-  max-width: 14em!important;
+  /* max-width: 14em!important; */
 }
 
 .ol-timeline .ol-center-date {
