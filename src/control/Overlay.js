@@ -126,7 +126,7 @@ ol_control_Overlay.prototype.toggle = function ()
 * @return {boolean} b
 */
 ol_control_Overlay.prototype.getVisible = function ()
-{	return ol.ext.element.getStyle(this.element, 'display') !== 'none';
+{	return ol_ext_element.getStyle(this.element, 'display') !== 'none';
 };
 
 /** Change class name
