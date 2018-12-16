@@ -47,7 +47,7 @@ ol_Map.prototype.animExtent = function(extent, options)
 			context.save();
 			context.scale(ratio,ratio);
 			context.beginPath();
-			var e = easing(elapsedRatio)
+			// var e = easing(elapsedRatio)
 			context.globalAlpha = easing(1 - elapsedRatio);
 			context.lineWidth = width;
 			context.strokeStyle = color;

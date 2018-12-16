@@ -15,9 +15,8 @@ import ol_interaction_Pointer from 'ol/interaction/Pointer'
  *	- size {Number} size of the compass in px, default 80
  *	- alpha {Number} opacity of the compass, default 0.5
  */
-var ol_interaction_TouchCompass = function(options)
-{	var options = options||{};
-	var self = this;
+var ol_interaction_TouchCompass = function(options) {
+	options = options||{};
 
 	var opt = {};
 	// Click on the compass
@@ -37,7 +36,7 @@ var ol_interaction_TouchCompass = function(options)
 		this.pos = e;
 	};
 	// Stop drag
-	opt.handleUpEvent = function(e)
+	opt.handleUpEvent = function()
 	{	this.pos = false;
 		return true;
 	};

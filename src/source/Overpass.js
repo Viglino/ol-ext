@@ -26,7 +26,6 @@ import ol_format_OSMXML from 'ol/format/OSMXML'
  */
 var ol_source_Overpass = function(options) {
 	options = options || {};
-	var self = this; 
 
 	options.loader = this._loaderFn;
 	
@@ -87,7 +86,7 @@ ol_source_Overpass.prototype._loaderFn = function(extent, resolution, projection
     for (var i=0, f; f=features[i]; i++) {
       if (!self.hasFeature(f)) result.push(f);
     }
-    vectorSource.addFeatures(result);
+    self.addFeatures(result);
 	};
 	ajax.onerror = function () {
 		console.log(arguments);

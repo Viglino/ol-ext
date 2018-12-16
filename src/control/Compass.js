@@ -77,7 +77,7 @@ ol_control_Compass.prototype.setMap = function (map)
 ol_control_Compass.prototype.defaultCompass_ = function (s, color)
 {	var canvas = document.createElement('canvas');
 	var ctx = canvas.getContext("2d");
-	var s = canvas.width = canvas.height;
+	s = canvas.width = canvas.height = s || 150;
 	var r = s/2;
 	var r2 = 0.22*r;
 
@@ -91,7 +91,7 @@ ol_control_Compass.prototype.defaultCompass_ = function (s, color)
 		ctx.lineTo (0,-r); ctx.lineTo (r2,-r2); ctx.moveTo (0,0);
 		ctx.fill();
 		ctx.stroke();
-	};
+	}
 		
 	function draw2 (r, r2)
 	{	ctx.globalCompositeOperation = "destination-out";
@@ -111,7 +111,7 @@ ol_control_Compass.prototype.defaultCompass_ = function (s, color)
 		ctx.lineTo (0,r); ctx.lineTo (r2,r2); ctx.moveTo (0,0);
 		ctx.lineTo (0,-r); ctx.lineTo (-r2,-r2); ctx.moveTo (0,0);
 		ctx.stroke();
-	};
+	}
 
 	ctx.translate(r,r);
 	ctx.strokeStyle = color || "#963";

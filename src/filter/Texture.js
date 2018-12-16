@@ -36,7 +36,7 @@ ol_inherits(ol_filter_Texture, ol_filter_Base);
 ol_filter_Texture.prototype.setFilter = function(options)
 {	var img;
 	options = options || {};
-	if (options.img) img = option.img;
+	if (options.img) img = options.img;
 	else 
 	{	img = new Image();
 		if (options.src) {
@@ -69,7 +69,7 @@ ol_filter_Texture.prototype.setFilter = function(options)
 		self.pattern.ctx.fillStyle = self.pattern.ctx.createPattern(img, 'repeat');
 		// Force refresh
 		self.set('ready', true);
-	};
+	}
 
 	if (img.width) 
 	{	setPattern(img);

@@ -49,6 +49,7 @@ ol_control_SearchDFCI.prototype.autocomplete = function (s) {
     return [];
   }
 
+  var i;
   var proj = this.getMap().getView().getProjection();
   var result = [];
   var c = ol_coordinate_fromDFCI(s, proj);
@@ -63,12 +64,12 @@ ol_control_SearchDFCI.prototype.autocomplete = function (s) {
     if (s.length===5) {
       c = ol_coordinate_fromDFCI(s+0, proj);
       dfci = (ol_coordinate_toDFCI(c, level+1, proj)).substring(0,5);
-      for (var i=0; i<10; i++) {
+      for (i=0; i<10; i++) {
         result.push({ coordinate: ol_coordinate_fromDFCI(dfci+i, proj), name: dfci+i });
       }
     }
     if (level === 2) {
-      for (var i=0; i<6; i++) {
+      for (i=0; i<6; i++) {
         result.push({ coordinate: ol_coordinate_fromDFCI(dfci+'.'+i, proj), name: dfci+'.'+i });
       }
     }

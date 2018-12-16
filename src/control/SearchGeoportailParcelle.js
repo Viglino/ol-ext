@@ -4,6 +4,7 @@
 */
 import {inherits as ol_inherits} from 'ol'
 import ol_control_SearchGeoportail from "./SearchGeoportail";
+import {fromLonLat as ol_proj_fromLonLat} from 'ol/proj'
 
 /**
  * Search places using the French National Base Address (BAN) API.
@@ -45,10 +46,10 @@ var ol_control_SearchGeoportailParcelle = function(options) {
 	var label = document.createElement("LABEL");
 	label.innerText = 'Préfixe'
 	div.appendChild(label);
-	var label = document.createElement("LABEL");
+	label = document.createElement("LABEL");
 	label.innerText = 'Section'
 	div.appendChild(label);
-	var label = document.createElement("LABEL");
+	label = document.createElement("LABEL");
 	label.innerText = 'Numéro'
 	div.appendChild(label);
 	div.appendChild(document.createElement("BR"));
@@ -64,7 +65,7 @@ var ol_control_SearchGeoportailParcelle = function(options) {
 
   // Delay search
   var tout;
-	var doSearch = function(e) {
+	var doSearch = function() {
     if (tout) clearTimeout(tout);
     tout = setTimeout(function() {
         self.autocompleteParcelle();
@@ -133,10 +134,9 @@ ol_control_SearchGeoportailParcelle.prototype.activateParcelle = function(b) {
 };
 
 /** Send search request for the parcelle  
- * @param {any} e 
  * @private
  */
-ol_control_SearchGeoportailParcelle.prototype.autocompleteParcelle = function(e) {
+ol_control_SearchGeoportailParcelle.prototype.autocompleteParcelle = function() {
   var self = this;
 
 	// Add 0 to fit the format
@@ -214,6 +214,7 @@ ol_control_SearchGeoportailParcelle.prototype._listParcelle = function(resp) {
 	function showPage(i) {
 		var l = ul.children;
 		var visible = "ol-list-"+i;
+		var k;
 		for (k=0; k<l.length; k++) {
 			l[k].style.display = (l[k].className===visible) ? '' : 'none';
 		}
@@ -264,7 +265,7 @@ ol_control_SearchGeoportailParcelle.prototype._handleParcelle = function(parc) {
   this.dispatchEvent({ 
     type:"parcelle", 
     search: parc, 
-    coordinate: ol_proj.fromLonLat([parc.lon, parc.lat], this.getMap().getView().getProjection())
+    coordinate: ol_proj_fromLonLat([parc.lon, parc.lat], this.getMap().getView().getProjection())
   });
 };
 

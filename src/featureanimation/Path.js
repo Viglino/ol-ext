@@ -49,7 +49,7 @@ ol_featureAnimation_Path.prototype.animate = function (e)
 	{	if (!this.dist_) return false;
 	}
 	var dmax = this.dist_*this.easing_(e.elapsed);
-	var p0, p, dx,dy, dl, d = 0;
+	var p0, p, s, dx,dy, dl, d = 0;
 	p = this.path_[0];
 	// Linear interpol
 	for (var i = 1; i<this.path_.length; i++)
@@ -59,7 +59,7 @@ ol_featureAnimation_Path.prototype.animate = function (e)
 		dy = p[1]-p0[1];
 		dl = Math.sqrt(dx*dx+dy*dy);
 		if (dl && d+dl>=dmax) 
-		{	var s = (dmax-d)/dl;
+		{	s = (dmax-d)/dl;
 			p = [ p0[0] + (p[0]-p0[0])*s, p0[1] + (p[1]-p0[1])*s];
 			break;
 		}
@@ -68,7 +68,7 @@ ol_featureAnimation_Path.prototype.animate = function (e)
 	// Rotate symbols
 	if (this.rotate_!==false) {
 		var angle = this.rotate_ - Math.atan2(p0[1] - p[1], p0[0] - p[0]);
-		for (var k=0, s; s=e.style[k]; k++) {
+		for (var k=0; s=e.style[k]; k++) {
 			if (s.getImage()) {
 				s.getImage().setRotation(angle)
 			}

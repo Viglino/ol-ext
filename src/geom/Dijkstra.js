@@ -16,6 +16,7 @@ import {ol_coordinate_dist2d} from "../geom/GeomUtils";
 /* Define namespace
  */
 var ol_graph = {};
+export {ol_graph};
 
 /** 
  * @classdesc 
@@ -65,7 +66,7 @@ ol_inherits(ol_graph_Dijskra, ol_Object);
  * @return {number} a number beetween 0-1 
  * @api
  */
-ol_graph_Dijskra.prototype.weight = function(feature) {
+ol_graph_Dijskra.prototype.weight = function(/* feature */) {
   return 1;
 };
 
@@ -78,7 +79,7 @@ ol_graph_Dijskra.prototype.weight = function(feature) {
  * @return {Number} 0: blocked, 1: direct way, -1: revers way, 2:both way 
  * @api
  */
-ol_graph_Dijskra.prototype.direction = function(feature) {
+ol_graph_Dijskra.prototype.direction = function(/* feature */) {
   return 2;
 };
 
@@ -204,7 +205,7 @@ ol_graph_Dijskra.prototype.path = function(start, end) {
   this.running = true;
 
   // Starting nodes
-  var start = this.closestCoordinate(start);
+  start = this.closestCoordinate(start);
   this.end = this.closestCoordinate(end);
   if (start[0]===this.end[0] 
     && start[1]===this.end[1]) {

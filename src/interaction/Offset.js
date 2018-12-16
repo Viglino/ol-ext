@@ -144,17 +144,18 @@ ol_interaction_Offset.prototype.handleDownEvent_ = function(e) {
 ol_interaction_Offset.prototype.handleDragEvent_ = function(e) {
   var p = this.current_.geom.getClosestPoint(e.coordinate);
   var d = ol_coordinate_dist2d(p, e.coordinate);
+  var seg, v1, v2, offset;
   switch (this.current_.geomType) {
     case  'Polygon': {
-      var seg = ol_coordinate_findSegment(p, this.current_.coordinates[0]).segment;
+      seg = ol_coordinate_findSegment(p, this.current_.coordinates[0]).segment;
       if (seg) {
-        var v1 = [ seg[1][0]-seg[0][0], seg[1][1]-seg[0][1] ];
-        var v2 = [ e.coordinate[0]-p[0], e.coordinate[1]-p[1] ];
+        v1 = [ seg[1][0]-seg[0][0], seg[1][1]-seg[0][1] ];
+        v2 = [ e.coordinate[0]-p[0], e.coordinate[1]-p[1] ];
         if (v1[0]*v2[1] - v1[1]*v2[0] > 0) {
           d = -d;
         }
 
-        var offset = [];
+        offset = [];
         for (var i=0; i<this.current_.coordinates.length; i++) {
           offset.push( ol_coordinate_offsetCoords(this.current_.coordinates[i], i==0 ? d : -d) );
         }
@@ -163,14 +164,14 @@ ol_interaction_Offset.prototype.handleDragEvent_ = function(e) {
       break;
     }
     case 'LineString': {
-      var seg = ol_coordinate_findSegment(p, this.current_.coordinates).segment;
+      seg = ol_coordinate_findSegment(p, this.current_.coordinates).segment;
       if (seg) {
-        var v1 = [ seg[1][0]-seg[0][0], seg[1][1]-seg[0][1] ];
-        var v2 = [ e.coordinate[0]-p[0], e.coordinate[1]-p[1] ];
+        v1 = [ seg[1][0]-seg[0][0], seg[1][1]-seg[0][1] ];
+        v2 = [ e.coordinate[0]-p[0], e.coordinate[1]-p[1] ];
         if (v1[0]*v2[1] - v1[1]*v2[0] > 0) {
           d = -d;
         }
-        var offset = ol_coordinate_offsetCoords(this.current_.coordinates, d);
+        offset = ol_coordinate_offsetCoords(this.current_.coordinates, d);
         this.current_.feature.setGeometry(new ol_geom_LineString(offset));
       }
       break;

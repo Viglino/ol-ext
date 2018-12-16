@@ -4,7 +4,6 @@
 */
 
 import {inherits as ol_inherits} from 'ol'
-import ol_control_Control from 'ol/control/Control'
 import ol_control_Bar from './Bar'
 import ol_control_Toggle from './Toggle'
 import ol_control_Button from './Button'
@@ -17,7 +16,7 @@ import ol_interaction_GeolocationDraw from '../interaction/GeolocationDraw'
  * Control bars can be nested and combined with ol.control.Toggle to handle activate/deactivate.
  *
  * @constructor
- * @extends {ol_control_Control}
+ * @extends {ol_control_Bar}
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
  *	@param {String} options.centerLabel label for center button, default center
@@ -41,7 +40,7 @@ var ol_control_GeolocationBar = function(options) {
   this._geolocBt = new ol_control_Toggle ({
     className: 'geolocBt',
     interaction: interaction,
-    onToggle: function(b) {
+    onToggle: function() {
       interaction.pause(true);
       interaction.setFollowTrack(options.followTrack);
       element.classList.remove('pauseTrack');
@@ -57,7 +56,7 @@ var ol_control_GeolocationBar = function(options) {
   var centerBt = new ol_control_TextButton ({
     className: 'centerBt',
     html: options.centerLabel ||'center',
-    handleClick: function(b) {
+    handleClick: function() {
       interaction.setFollowTrack('auto');
     }
   });

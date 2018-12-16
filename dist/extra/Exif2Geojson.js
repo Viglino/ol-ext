@@ -11,6 +11,7 @@
 *	- onLoad {function} callback function that takes a geojson when loaded
 * @require Exif-JS [https://github.com/exif-js/exif-js] 
 */
+/* global EXIF */
 var exif2geojson;
 (function(){
 // Get fractionnal number
@@ -36,7 +37,7 @@ exif2geojson = function (img, options)
 		{	// console.log(this);
 			if (this.exifdata.GPSLongitudeRef) 
 			{	// json feature
-				fjs = 
+				var fjs = 
 				{	"type": "Feature",
 					"properties": {},
 					"geometry": 

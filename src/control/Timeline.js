@@ -1,3 +1,4 @@
+/*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
 import {inherits as ol_inherits} from 'ol'
 import { ol_Feature } from 'ol/Feature';
 import ol_control_Control from 'ol/control/Control'
@@ -143,19 +144,19 @@ ol_control_Timeline.prototype._getHTML = function(feature) {
   return feature.get('name') || '';
 };
 
-/** Get the date of a feature
+/** Default function: get the date of a feature
  * @param {ol.Feature} feature
  * @return {Data|string}
  */
 ol_control_Timeline.prototype._getFeatureDate = function(feature) {
-  return f.get('date');
+  return feature.get('date');
 };
 
 /** Get the end date of a feature, default return undefined
  * @param {ol.Feature} feature
  * @return {Data|string}
  */
-ol_control_Timeline.prototype._endFeatureDate = function(feature) {
+ol_control_Timeline.prototype._endFeatureDate = function(/* feature */) {
   return undefined;
 };
 
@@ -254,7 +255,7 @@ ol_control_Timeline.prototype.refresh = function(zoom) {
     var img = t.querySelectorAll('img');
     for (var i=0; i<img.length; i++) {
       img[i].ondragstart = function(){ return false; };
-    };
+    }
 
     // Calculate image width
     if (f.end) {
@@ -276,7 +277,7 @@ ol_control_Timeline.prototype.refresh = function(zoom) {
     for (pos=0; l=line[pos]; pos++) {
       if (left > l) {
         break;
-      };
+      }
     }
     line[pos] = left + ol_ext_element.getStyle(t, 'width');
     ol_ext_element.setStyle(t, { top: pos*lineHeight });
@@ -302,12 +303,13 @@ ol_control_Timeline.prototype._drawTime = function(div, min, max, scale) {
     className: 'ol-times',
     parent: div
   });
+  var d, dt, month, dmonth;
   var dx = ol_ext_element.getStyle(tdiv, 'left');
   var heigth = ol_ext_element.getStyle(tdiv, 'height');
   // Year
   var year = (new Date(this._minDate)).getFullYear();
   while(true) {
-    var d = new Date(String(year));
+    d = new Date(String(year));
     if (d > this._maxDate) break;
     ol_ext_element.create('DIV', {
       className: 'ol-time ol-year',
@@ -321,13 +323,13 @@ ol_control_Timeline.prototype._drawTime = function(div, min, max, scale) {
   }
   // Month
   if (/day|month/.test(this.get('graduation'))) {
-    var dt = (new Date(String(year)) - new Date(String(year-1))) * scale;
-    var dmonth = Math.max(1, Math.round(12 / Math.round(dt/heigth/2)));
+    dt = (new Date(String(year)) - new Date(String(year-1))) * scale;
+    dmonth = Math.max(1, Math.round(12 / Math.round(dt/heigth/2)));
     if (dmonth < 12) {
       year = (new Date(this._minDate)).getFullYear();
-      var month = dmonth+1;
+      month = dmonth+1;
       while(true) {
-        var d = new Date(year+'/'+month+'/01');
+        d = new Date(year+'/'+month+'/01');
         if (d > this._maxDate) break;
         ol_ext_element.create('DIV', {
           className: 'ol-time ol-month',
@@ -347,14 +349,14 @@ ol_control_Timeline.prototype._drawTime = function(div, min, max, scale) {
   }
   // Day
   if (this.get('graduation')==='day') {
-    var dt = (new Date(year+'/02/01') - new Date(year+'/01/01')) * scale;
+    dt = (new Date(year+'/02/01') - new Date(year+'/01/01')) * scale;
     var dday = Math.max(1, Math.round(31 / Math.round(dt/heigth/2)));
     if (dday < 31) {
       year = (new Date(this._minDate)).getFullYear();
-      var month = 1;
+      month = 1;
       var day = dday;
       while(true) {
-        var d = new Date(year+'/'+month+'/'+day);
+        d = new Date(year+'/'+month+'/'+day);
         if (isNaN(d)) {
           month++;
           if (month>12) {

@@ -7,12 +7,13 @@ import ol_geom_LineString from "ol/geom/LineString";
 * @param {Number} tol distance tolerance for 2 points to be equal
 */
 ol_geom_LineString.prototype.splitAt = function(pt, tol) {
+  var i;
   if (!pt) return [this];
     if (!tol) tol = 1e-10;
     // Test if list of points
     if (pt.length && pt[0].length) {
       var result = [this];
-      for (var i=0; i<pt.length; i++) {
+      for (i=0; i<pt.length; i++) {
         var r = [];
         for (var k=0; k<result.length; k++) {
           var ri = result[k].splitAt(pt[i], tol);
@@ -29,9 +30,9 @@ ol_geom_LineString.prototype.splitAt = function(pt, tol) {
     }
     // Get
     var c0 = this.getCoordinates();
-    var ci=[c0[0]], p0, p1;
+    var ci=[c0[0]];
     var c = [];
-    for (var i=0; i<c0.length-1; i++) {
+    for (i=0; i<c0.length-1; i++) {
       // Filter equal points
       if (ol_coordinate_equal(c0[i],c0[i+1])) continue;
       // Extremity found

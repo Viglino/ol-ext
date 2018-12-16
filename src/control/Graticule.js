@@ -29,8 +29,7 @@ import {get as ol_proj_get} from 'ol/proj'
  *	- borderWidth {number} width of the border (in px), default 5px 
  *	- margin {number} margin of the border (in px), default 0px 
  */
-var ol_control_Graticule = function(options)
-{	var self = this;
+var ol_control_Graticule = function(options) {
 	if (!options) options = {};
 	
 	// Initialize parent
@@ -169,14 +168,14 @@ ol_control_Graticule.prototype.drawGraticule_ = function (e)
 		ctx.beginPath();
 
 		var txt = {top:[],left:[],bottom:[], right:[]};
-
-		for (var x=xmin; x<xmax; x += step)
-		{	var p0 = ol_proj_transform ([x, ymin], proj, map.getView().getProjection());
+		var x, y, p, p0, p1;
+		for (x=xmin; x<xmax; x += step)
+		{	p0 = ol_proj_transform ([x, ymin], proj, map.getView().getProjection());
 			p0 = map.getPixelFromCoordinate(p0);
 			if (hasLines) ctx.moveTo(p0[0], p0[1]);
-			var p = p0;
-			for (var y=ymin+step; y<=ymax; y+=step)
-			{	var p1 = ol_proj_transform ([x, y], proj, map.getView().getProjection());
+			p = p0;
+			for (y=ymin+step; y<=ymax; y+=step)
+			{	p1 = ol_proj_transform ([x, y], proj, map.getView().getProjection());
 				p1 = map.getPixelFromCoordinate(p1);
 				if (hasLines) ctx.lineTo(p1[0], p1[1]);
 				if (p[1]>0 && p1[1]<0) txt.top.push([x, p]);
@@ -184,13 +183,13 @@ ol_control_Graticule.prototype.drawGraticule_ = function (e)
 				p = p1;
 			}
 		}
-		for (var y=ymin; y<ymax; y += step)
-		{	var p0 = ol_proj_transform ([xmin, y], proj, map.getView().getProjection());
+		for (y=ymin; y<ymax; y += step)
+		{	p0 = ol_proj_transform ([xmin, y], proj, map.getView().getProjection());
 			p0 = map.getPixelFromCoordinate(p0);
 			if (hasLines) ctx.moveTo(p0[0], p0[1]);
-			var p = p0;
-			for (var x=xmin+step; x<=xmax; x+=step)
-			{	var p1 = ol_proj_transform ([x, y], proj, map.getView().getProjection());
+			p = p0;
+			for (x=xmin+step; x<=xmax; x+=step)
+			{	p1 = ol_proj_transform ([x, y], proj, map.getView().getProjection());
 				p1 = map.getPixelFromCoordinate(p1);
 				if (hasLines) ctx.lineTo(p1[0], p1[1]);
 				if (p[0]<0 && p1[0]>0) txt.left.push([y,p]);
@@ -213,28 +212,28 @@ ol_control_Graticule.prototype.drawGraticule_ = function (e)
 			ctx.lineWidth = this.style.getText().getStroke().getWidth();
 			ctx.textAlign = 'center';
 			ctx.textBaseline = 'hanging';
-			var tf;
+			var t, tf;
 			var offset = (hasBorder ? borderWidth : 0) + margin + 2;
-			for (var i=0, t; t = txt.top[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
+			for (i=0; t = txt.top[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
 			{	tf = this.formatCoord(t[0]);
 				ctx.strokeText(tf, t[1][0], offset);
 				ctx.fillText(tf, t[1][0], offset);
 			}
 			ctx.textBaseline = 'alphabetic';
-			for (var i=0, t; t = txt.bottom[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
+			for (i=0; t = txt.bottom[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
 			{	tf = this.formatCoord(t[0]);
 				ctx.strokeText(tf, t[1][0], h-offset);
 				ctx.fillText(tf, t[1][0], h-offset);
 			}
 			ctx.textBaseline = 'middle';
 			ctx.textAlign = 'left';
-			for (var i=0, t; t = txt.left[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
+			for (i=0; t = txt.left[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
 			{	tf = this.formatCoord(t[0]);
 				ctx.strokeText(tf, offset, t[1][1]);
 				ctx.fillText(tf, offset, t[1][1]);
 			}
 			ctx.textAlign = 'right';
-			for (var i=0, t; t = txt.right[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
+			for (i=0; t = txt.right[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
 			{	tf = this.formatCoord(t[0]);
 				ctx.strokeText(tf, w-offset, t[1][1]);
 				ctx.fillText(tf, w-offset, t[1][1]);
@@ -256,28 +255,28 @@ ol_control_Graticule.prototype.drawGraticule_ = function (e)
 			ctx.strokeStyle = color;
 			ctx.lineWidth = stroke ? stroke.getWidth() : 1;
 			// 
-			for (var i=1; i<txt.top.length; i++)
+			for (i=1; i<txt.top.length; i++)
 			{	ctx.beginPath();
 				ctx.rect(txt.top[i-1][1][0], margin, txt.top[i][1][0]-txt.top[i-1][1][0], borderWidth);
 				ctx.fillStyle = Math.round(txt.top[i][0]/step)%2 ? color: fillColor;
 				ctx.fill(); 
 				ctx.stroke(); 
 			}
-			for (var i=1; i<txt.bottom.length; i++)
+			for (i=1; i<txt.bottom.length; i++)
 			{	ctx.beginPath();
 				ctx.rect(txt.bottom[i-1][1][0], h-borderWidth-margin, txt.bottom[i][1][0]-txt.bottom[i-1][1][0], borderWidth);
 				ctx.fillStyle = Math.round(txt.bottom[i][0]/step)%2 ? color: fillColor;
 				ctx.fill(); 
 				ctx.stroke(); 
 			}
-			for (var i=1; i<txt.left.length; i++)
+			for (i=1; i<txt.left.length; i++)
 			{	ctx.beginPath();
 				ctx.rect(margin, txt.left[i-1][1][1], borderWidth, txt.left[i][1][1]-txt.left[i-1][1][1]);
 				ctx.fillStyle = Math.round(txt.left[i][0]/step)%2 ? color: fillColor;
 				ctx.fill(); 
 				ctx.stroke(); 
 			}
-			for (var i=1; i<txt.right.length; i++)
+			for (i=1; i<txt.right.length; i++)
 			{	ctx.beginPath();
 				ctx.rect(w-borderWidth-margin, txt.right[i-1][1][1], borderWidth, txt.right[i][1][1]-txt.right[i-1][1][1]);
 				ctx.fillStyle = Math.round(txt.right[i][0]/step)%2 ? color: fillColor;

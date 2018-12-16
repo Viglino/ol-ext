@@ -42,6 +42,7 @@ var ol_style_FillPattern = function(options)
 	if (options.image)
 	{	options.image.load();
 		
+		var i;
 		var img = options.image.getImage();
 		if (img.width)
 		{	canvas.width = Math.round(img.width *ratio);
@@ -78,7 +79,7 @@ var ol_style_FillPattern = function(options)
 
 		ctx.fillStyle = ol_color_asString(options.color||"#000");
 		ctx.strokeStyle = ol_color_asString(options.color||"#000");
-		if (pat.circles) for (var i=0; i<pat.circles.length; i++)
+		if (pat.circles) for (i=0; i<pat.circles.length; i++)
 		{	var ci = pat.circles[i]; 
 			ctx.beginPath();
 			ctx.arc(ci[0], ci[1], ci[2], 0,2*Math.PI);
@@ -106,7 +107,7 @@ var ol_style_FillPattern = function(options)
 			else ctx.fillText(pat.char, pat.width/2, pat.height/2);
 		}
 
-		if (pat.lines) for (var i=0; i<pat.lines.length; i++) for (var r=0; r<pat.repeat.length; r++)
+		if (pat.lines) for (i=0; i<pat.lines.length; i++) for (var r=0; r<pat.repeat.length; r++)
 		{	var li = pat.lines[i];
 			ctx.beginPath();
 			ctx.moveTo(li[0]+pat.repeat[r][0],li[1]+pat.repeat[r][1]);
@@ -169,11 +170,11 @@ ol_style_FillPattern.prototype.getPattern_ = function(options)
 {	var pat = ol_style_FillPattern.prototype.patterns[options.pattern]
 		|| ol_style_FillPattern.prototype.patterns.dot;
 	var d = Math.round(options.spacing)||10;
-	var d2 = Math.round(d/2)+0.5;
+	var size;
 	switch (options.pattern)
 	{	case 'dot':
 		case 'circle':
-		{	var size = options.size===0 ? 0 : options.size/2 || 2;
+		{	size = options.size===0 ? 0 : options.size/2 || 2;
 			if (!options.angle)
 			{	pat.width = pat.height = d;
 				pat.circles = [[ d/2, d/2, size ]]
@@ -187,7 +188,7 @@ ol_style_FillPattern.prototype.getPattern_ = function(options)
 						[ d/2+d, d/2-d, size ],
 						[ d/2-d, d/2+d, size ],
 						[ d/2-d, d/2-d, size ] ])
-				};
+				}
 			}
 			else
 			{	d = pat.width = pat.height = Math.round(d*1.4);
@@ -206,7 +207,7 @@ ol_style_FillPattern.prototype.getPattern_ = function(options)
 		}
 		case 'tile':
 		case 'square':
-		{	var size = options.size===0 ? 0 : options.size/2 || 2;
+		{	size = options.size===0 ? 0 : options.size/2 || 2;
 			if (!options.angle)
 			{	pat.width = pat.height = d;
 				pat.lines = [[ d/2-size, d/2-size, d/2+size, d/2-size, d/2+size, d/2+size, d/2-size,d/2+size, d/2-size, d/2-size ]]
@@ -223,6 +224,7 @@ ol_style_FillPattern.prototype.getPattern_ = function(options)
 		{	// Limit angle to 0 | 45
 			if (options.angle) options.angle = 45;
 		}
+		// fallsthrough
 		case 'hatch':
 		{	var a = Math.round(((options.angle||0)-90)%360);
 			if (a>180) a -= 360;
@@ -261,6 +263,7 @@ ol_style_FillPattern.prototype.getPattern_ = function(options)
 				
 			}
 			pat.stroke = options.size===0 ? 0 : options.size||4;
+			break;
 		}
 		default: break;
 	}

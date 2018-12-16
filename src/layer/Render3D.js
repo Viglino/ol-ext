@@ -19,8 +19,8 @@ ol_layer_Vector.prototype.setRender3D = function (r)
  *		- defaultHeight {number} default height if none is return by a propertie
  *		- height {function|string|Number} a height function (return height giving a feature) or a popertie name for the height or a fixed value
  */
-ol_render3D = function (options)
-{	var options = options || {};
+var ol_render3D = function (options) {
+	options = options || {};
 	
 	this.maxResolution_ = options.maxResolution || 100
 	this.defaultHeight_ = options.defaultHeight || 0;
@@ -84,7 +84,7 @@ ol_render3D.prototype.setLayer = function(l) {
 }
 
 /** Create a function that return height of a feature
-*	@param {function|string|number} a height function or a popertie name or a fixed value
+*	@param {function|string|number} h a height function or a popertie name or a fixed value
 *	@return {function} function(f) return height of the feature f
 */
 ol_render3D.prototype.getHfn= function(h)
@@ -96,8 +96,8 @@ ol_render3D.prototype.getHfn= function(h)
 				{	return (Number(f.get(h)) || dh); 
 				});
 			}
-		case 'number': return (function(f) { return h; });
-		default: return (function(f) { return 10; });
+		case 'number': return (function(/*f*/) { return h; });
+		default: return (function(/*f*/) { return 10; });
 	}
 }
 
@@ -142,10 +142,10 @@ ol_render3D.prototype.getFeatureHeight = function (f)
 /**
 */
 ol_render3D.prototype.hvector_ = function (pt, h)
-{	p0 = [	pt[0]*this.matrix_[0] + pt[1]*this.matrix_[1] + this.matrix_[4],
+{	var p0 = [	pt[0]*this.matrix_[0] + pt[1]*this.matrix_[1] + this.matrix_[4],
 			pt[0]*this.matrix_[2] + pt[1]*this.matrix_[3] + this.matrix_[5]
 		];
-	p1 = [	p0[0] + h/this.res_*(p0[0]-this.center_[0]),
+	var p1 = [	p0[0] + h/this.res_*(p0[0]-this.center_[0]),
 			p0[1] + h/this.res_*(p0[1]-this.center_[1])
 		];
 	return {p0:p0, p1:p1};
@@ -158,11 +158,11 @@ ol_render3D.prototype.getFeature3D_ = function (f, h)
 	switch (f.getGeometry().getType())
 	{	case "Polygon":
 			c = [c];
+		// fallthrough
 		case "MultiPolygon":
 			var build = [];
 			for (var i=0; i<c.length; i++) 
-			{	var p0, p1;
-				for (var j=0; j<c[i].length; j++)
+			{	for (var j=0; j<c[i].length; j++)
 				{	var b = [];
 					for (var k=0; k<c[i][j].length; k++)
 					{	b.push( this.hvector_(c[i][j][k], h) );
@@ -179,15 +179,16 @@ ol_render3D.prototype.getFeature3D_ = function (f, h)
 
 /**
 */
-ol_render3D.prototype.drawFeature3D_ = function(ctx, build)
-{	// Construct
-	for (var i=0; i<build.length; i++) 
+ol_render3D.prototype.drawFeature3D_ = function(ctx, build) {
+	var i,j, b, k;
+	// Construct
+	for (i=0; i<build.length; i++) 
 	{	
 		switch (build[i].type)
 		{	case "MultiPolygon":
-				for (var j=0; j<build[i].geom.length; j++)
-				{	var b = build[i].geom[j];
-					for (var k=0; k < b.length; k++)
+				for (j=0; j<build[i].geom.length; j++)
+				{	b = build[i].geom[j];
+					for (k=0; k < b.length; k++)
 					{	ctx.beginPath();
 						ctx.moveTo(b[k].p0[0], b[k].p0[1]);
 						ctx.lineTo(b[k].p1[0], b[k].p1[1]);
@@ -207,21 +208,21 @@ ol_render3D.prototype.drawFeature3D_ = function(ctx, build)
 		}
 	}
 	// Roof
-	for (var i=0; i<build.length; i++) 
+	for (i=0; i<build.length; i++) 
 	{	switch (build[i].type)
 		{	case "MultiPolygon":
 			{	ctx.beginPath();
-				for (var j=0; j<build[i].geom.length; j++)
-				{	var b = build[i].geom[j];
+				for (j=0; j<build[i].geom.length; j++)
+				{	b = build[i].geom[j];
 					if (j==0)
 					{	ctx.moveTo(b[0].p1[0], b[0].p1[1]);
-						for (var k=1; k < b.length; k++)
+						for (k=1; k < b.length; k++)
 						{	ctx.lineTo(b[k].p1[0], b[k].p1[1]);
 						}
 					}
 					else
 					{	ctx.moveTo(b[0].p1[0], b[0].p1[1]);
-						for (var k=b.length-2; k>=0; k--)
+						for (k=b.length-2; k>=0; k--)
 						{	ctx.lineTo(b[k].p1[0], b[k].p1[1]);
 						}
 					}
@@ -232,7 +233,7 @@ ol_render3D.prototype.drawFeature3D_ = function(ctx, build)
 				break;
 			}
 			case "Point":
-			{	var b = build[i];
+			{	b = build[i];
 				var t = b.feature.get('label');
 				var p = b.geom.p1;
 				var f = ctx.fillStyle;
@@ -247,6 +248,7 @@ ol_render3D.prototype.drawFeature3D_ = function(ctx, build)
 				ctx.strokeRect (p[0]-m.width/2 -5, p[1]-h -5, m.width +10, h +10)
 				ctx.fillStyle = f;
 				//console.log(build[i].feature.getProperties())
+				break;
 			}
 			default: break;
 		}

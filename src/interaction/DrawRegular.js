@@ -14,8 +14,9 @@ import ol_layer_Vector from 'ol/layer/Vector'
 import ol_source_Vector from 'ol/source/Vector'
 import ol_geom_Circle from 'ol/geom/Circle'
 import {fromCircle as ol_geom_Polygon_fromCircle} from 'ol/geom/Polygon'
-import ol_geom_LineString from 'ol/geom/LineString'
 import ol_geom_Point from 'ol/geom/Point'
+import ol_geom_LineString from 'ol/geom/LineString'
+import ol_geom_Polygon from 'ol/geom/Polygon'
 import ol_Feature from 'ol/Feature'
 
 /** Interaction rotate
@@ -33,9 +34,8 @@ import ol_Feature from 'ol/Feature'
  *	@param { number } clickTolerance click tolerance on touch devices, default: 6
  *	@param { number } maxCircleCoordinates Maximum number of point on a circle, default: 100
  */
-var ol_interaction_DrawRegular = function(options)
-{	if (!options) options={};
-	var self = this;
+var ol_interaction_DrawRegular = function(options) {
+	if (!options) options={};
 
 	this.squaredClickTolerance_ = options.clickTolerance ? options.clickTolerance * options.clickTolerance : 36;
 	this.maxCircleCoordinates_ = options.maxCircleCoordinates || 100;
@@ -182,20 +182,21 @@ ol_interaction_DrawRegular.prototype.getGeom_ = function ()
 		var coord = this.coord_;
 
 		// Special case: circle
+		var d, dmax, r, circle, centerPx;
 		if (!this.sides_ && this.square_ && !this.centered_){
 			center = [(coord[0] + center[0])/2, (coord[1] + center[1])/2];
-			var d = [coord[0] - center[0], coord[1] - center[1]];
-			var r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
-			var circle = new ol_geom_Circle(center, r, 'XY');
+			d = [coord[0] - center[0], coord[1] - center[1]];
+			r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
+			circle = new ol_geom_Circle(center, r, 'XY');
 			// Optimize points on the circle
-			var centerPx = this.getMap().getPixelFromCoordinate(center);
-			var dmax = Math.max (100, Math.abs(centerPx[0]-this.coordPx_[0]), Math.abs(centerPx[1]-this.coordPx_[1]));
+			centerPx = this.getMap().getPixelFromCoordinate(center);
+			dmax = Math.max (100, Math.abs(centerPx[0]-this.coordPx_[0]), Math.abs(centerPx[1]-this.coordPx_[1]));
 			dmax = Math.min ( this.maxCircleCoordinates_, Math.round(dmax / 3 ));
 			return ol_geom_Polygon_fromCircle (circle, dmax, 0);
 		}
 		else {
 			var hasrotation = this.canRotate_ && this.centered_ && this.square_;
-			var d = [coord[0] - center[0], coord[1] - center[1]];
+			d = [coord[0] - center[0], coord[1] - center[1]];
 			if (this.square_ && !hasrotation) 
 			{	//var d = [coord[0] - center[0], coord[1] - center[1]];
 				var dm = Math.max (Math.abs(d[0]), Math.abs(d[1])); 
@@ -204,9 +205,9 @@ ol_interaction_DrawRegular.prototype.getGeom_ = function ()
 					center[1] + (d[1]>0 ? dm:-dm)
 				];
 			}
-			var r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
+			r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
 			if (r>0)
-			{	var circle = new ol_geom_Circle(center, r, 'XY');
+			{	circle = new ol_geom_Circle(center, r, 'XY');
 				var a;
 				if (hasrotation) a = Math.atan2(d[1], d[0]);
 				else a = this.startAngle[this.sides_] || this.startAngle['default'];
@@ -214,8 +215,8 @@ ol_interaction_DrawRegular.prototype.getGeom_ = function ()
 				if (this.sides_) g = ol_geom_Polygon_fromCircle (circle, this.sides_, a);
 				else
 				{	// Optimize points on the circle
-					var centerPx = this.getMap().getPixelFromCoordinate(this.center_);
-					var dmax = Math.max (100, Math.abs(centerPx[0]-this.coordPx_[0]), Math.abs(centerPx[1]-this.coordPx_[1]));
+					centerPx = this.getMap().getPixelFromCoordinate(this.center_);
+					dmax = Math.max (100, Math.abs(centerPx[0]-this.coordPx_[0]), Math.abs(centerPx[1]-this.coordPx_[1]));
 					dmax = Math.min ( this.maxCircleCoordinates_, Math.round(dmax / (this.centered_ ? 3:5) ));
 					g = ol_geom_Polygon_fromCircle (circle, dmax, 0);
 				}
@@ -287,6 +288,7 @@ ol_interaction_DrawRegular.prototype.drawPoint_ = function(pt, noclear)
  * @param {ol.MapBrowserEvent} evt Map browser event.
  */
 ol_interaction_DrawRegular.prototype.handleEvent_ = function(evt) {
+	var dx, dy;
 	switch (evt.type)
 	{	case "pointerdown": {
 			this.downPx_ = evt.pixel;
@@ -296,8 +298,8 @@ ol_interaction_DrawRegular.prototype.handleEvent_ = function(evt) {
 		case "pointerup":
 			// Started and fisrt move
 			if (this.started_ && this.coord_)
-			{	var dx = this.downPx_[0] - evt.pixel[0];
-				var dy = this.downPx_[1] - evt.pixel[1];
+			{	dx = this.downPx_[0] - evt.pixel[0];
+				dy = this.downPx_[1] - evt.pixel[1];
 				if (dx*dx + dy*dy <= this.squaredClickTolerance_) 
 				{	// The pointer has moved
 					if ( this.lastEvent == "pointermove" || this.lastEvent == "keydown" )
@@ -322,8 +324,8 @@ ol_interaction_DrawRegular.prototype.handleEvent_ = function(evt) {
 		case "pointerdrag":
 			if (this.started_)
 			{	var centerPx = this.getMap().getPixelFromCoordinate(this.center_);
-				var dx = centerPx[0] - evt.pixel[0];
-				var dy = centerPx[1] - evt.pixel[1];
+				dx = centerPx[0] - evt.pixel[0];
+				dy = centerPx[1] - evt.pixel[1];
 				if (dx*dx + dy*dy <= this.squaredClickTolerance_) 
 				{ 	this.reset();
 				}
@@ -331,8 +333,8 @@ ol_interaction_DrawRegular.prototype.handleEvent_ = function(evt) {
 			break;
 		case "pointermove":
 			if (this.started_)
-			{	var dx = this.downPx_[0] - evt.pixel[0];
-				var dy = this.downPx_[1] - evt.pixel[1];
+			{	dx = this.downPx_[0] - evt.pixel[0];
+				dy = this.downPx_[1] - evt.pixel[1];
 				if (dx*dx + dy*dy > this.squaredClickTolerance_) 
 				{	this.handleMoveEvent_(evt);
 					this.lastEvent = evt.type;
@@ -391,7 +393,7 @@ ol_interaction_DrawRegular.prototype.start_ = function(evt)
 	{	this.started_ = true;
 		this.center_ = evt.coordinate;
 		this.coord_ = null;
-		var geom = new ol.geom.Polygon([[evt.coordinate,evt.coordinate,evt.coordinate]]);
+		var geom = new ol_geom_Polygon([[evt.coordinate,evt.coordinate,evt.coordinate]]);
 		var f = this.feature_ = new ol_Feature(geom);
 		this.drawSketch_(evt);
 		this.dispatchEvent({ type:'drawstart', feature: f, pixel: evt.pixel, coordinate: evt.coordinate });

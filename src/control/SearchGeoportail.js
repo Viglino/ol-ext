@@ -67,16 +67,16 @@ ol_control_SearchGeoportail.prototype.requestData = function (s) {
  * @api
  */
 ol_control_SearchGeoportail.prototype.handleResponse = function (response) {
-  var response = response.results;
+  var features = response.results;
   if (this.get('type') === 'Commune') {
-    for (var i=response.length-1; i>=0; i--) {
-      if ( response[i].kind 
-        && (response[i].classification>5 || response[i].kind=="Département") ) {
-        response.splice(i,1);
+    for (var i=features.length-1; i>=0; i--) {
+      if ( features[i].kind 
+        && (features[i].classification>5 || features[i].kind=="Département") ) {
+          features.splice(i,1);
       }
     }
 	}
-	return response;
+	return features;
 };
 
 /** A ligne has been clicked in the menu > dispatch event
@@ -89,7 +89,7 @@ ol_control_SearchGeoportail.prototype.select = function (f){
     // Add coordinate to the event
     try {
         c = ol_proj_transform (c, 'EPSG:4326', this.getMap().getView().getProjection());
-    } catch(e) {};
+    } catch(e) { /* ok */}
     // Get insee commune ?
     if (this.get('type')==='Commune') {
       this.searchCommune(f, function () {
@@ -125,7 +125,7 @@ ol_control_SearchGeoportail.prototype.searchCommune = function (f, cback) {
     var xml = resp.response;
     if (xml) {
       xml = xml.replace(/\n|\r/g,'');
-      var p = (xml.replace(/.*<gml:pos\>(.*)<\/gml:pos>.*/, "$1")).split(' ');
+      var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
       f.x = Number(p[1]);
       f.y = Number(p[0]);
       f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));

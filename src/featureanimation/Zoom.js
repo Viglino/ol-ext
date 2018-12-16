@@ -41,8 +41,8 @@ ol_featureAnimation_Zoom.prototype.animate = function (e)
 	if (fac)
 	{	if (this.get('zoomout')) fac  = 1/fac;
 		var style = e.style;
-		var imgs, sc=[]
-		for (var i=0; i<style.length; i++)
+		var i, imgs, sc=[]
+		for (i=0; i<style.length; i++)
 		{	imgs = style[i].getImage();
 			if (imgs) 
 			{	sc[i] = imgs.getScale(); 
@@ -60,7 +60,7 @@ ol_featureAnimation_Zoom.prototype.animate = function (e)
 			this.drawGeom_(e, e.geom);
 		e.context.restore()
 		
-		for (var i=0; i<style.length; i++)
+		for (i=0; i<style.length; i++)
 		{	imgs = style[i].getImage();
 			if (imgs) imgs.setScale(sc[i]);
 		}

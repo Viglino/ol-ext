@@ -42,6 +42,7 @@ import ol_geom_Point from 'ol/geom/Point'
  */
 var ol_interaction_SelectCluster = function(options) 
 {	options = options || {};
+	var fn; 
 
 	this.pointRadius = options.pointRadius || 12;
 	this.circleMaxObjects = options.circleMaxObjects || 10;
@@ -68,7 +69,7 @@ var ol_interaction_SelectCluster = function(options)
 	// Add the overlay to selection
 	if (options.layers)
 	{	if (typeof(options.layers) == "function")
-		{	var fn = options.layers;
+		{	fn = options.layers;
 			options.layers = function(layer)
 			{	return (layer===overlay || fn(layer));
 			};
@@ -80,7 +81,7 @@ var ol_interaction_SelectCluster = function(options)
 
 	// Don't select links
 	if (options.filter)
-	{	var fn = options.filter;
+	{	fn = options.filter;
 		options.filter = function(f,l)
 		{	//if (l===overlay && f.get("selectclusterlink")) return false;
 			if (!l && f.get("selectclusterlink")) return false;
@@ -172,42 +173,43 @@ ol_interaction_SelectCluster.prototype.selectCluster = function (e)
 	// Pixel size in map unit
 	var pix = this.getMap().getView().getResolution();
 	var r = pix * this.pointRadius * (0.5 + cluster.length / 4);
+	var a, i, max;
+	var p, cf, lk;
+
 	// Draw on a circle
 	if (!this.spiral || cluster.length <= this.circleMaxObjects)
-	{	var max = Math.min(cluster.length, this.circleMaxObjects);
-		for (var i=0; i<max; i++)
-		{	var a = 2*Math.PI*i/max;
+	{	max = Math.min(cluster.length, this.circleMaxObjects);
+		for (i=0; i<max; i++)
+		{	a = 2*Math.PI*i/max;
 			if (max==2 || max == 4) a += Math.PI/4;
-			var p = [ center[0]+r*Math.sin(a), center[1]+r*Math.cos(a) ];
-			var cf = new ol_Feature({ 'selectclusterfeature':true, 'features':[cluster[i]], geometry: new ol_geom_Point(p) });
+			p = [ center[0]+r*Math.sin(a), center[1]+r*Math.cos(a) ];
+			cf = new ol_Feature({ 'selectclusterfeature':true, 'features':[cluster[i]], geometry: new ol_geom_Point(p) });
 			cf.setStyle(cluster[i].getStyle());
 			source.addFeature(cf);
-			var lk = new ol_Feature({ 'selectclusterlink':true, geometry: new ol_geom_LineString([center,p]) });
+			lk = new ol_Feature({ 'selectclusterlink':true, geometry: new ol_geom_LineString([center,p]) });
 			source.addFeature(lk);
-		};
+		}
 	}
 	// Draw on a spiral
 	else
 	{	// Start angle
-		var a = 0;
-		var r;
+		a = 0;
+		r;
 		var d = 2*this.pointRadius;
-		var features = new Array();
-		var links = new Array();
-		var max = Math.min (this.maxObjects, cluster.length);
+		max = Math.min (this.maxObjects, cluster.length);
 		// Feature on a spiral
-		for (var i=0; i<max; i++)
+		for (i=0; i<max; i++)
 		{	// New radius => increase d in one turn
 			r = d/2 + d*a/(2*Math.PI);
 			// Angle
 			a = a + (d+0.1)/r;
 			var dx = pix*r*Math.sin(a)
 			var dy = pix*r*Math.cos(a)
-			var p = [ center[0]+dx, center[1]+dy ];
-			var cf = new ol_Feature({ 'selectclusterfeature':true, 'features':[cluster[i]], geometry: new ol_geom_Point(p) });
+			p = [ center[0]+dx, center[1]+dy ];
+			cf = new ol_Feature({ 'selectclusterfeature':true, 'features':[cluster[i]], geometry: new ol_geom_Point(p) });
 			cf.setStyle(cluster[i].getStyle()); 
 			source.addFeature(cf);
-			var lk = new ol_Feature({ 'selectclusterlink':true, geometry: new ol_geom_LineString([center,p]) });
+			lk = new ol_Feature({ 'selectclusterlink':true, geometry: new ol_geom_LineString([center,p]) });
 			source.addFeature(lk);
 		}
 	}

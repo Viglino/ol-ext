@@ -1,3 +1,4 @@
+import {inherits as ol_inherits} from 'ol'
 import ol_interaction_Select from 'ol/interaction/Select'
 import {click as ol_events_condition_click} from 'ol/events/condition'
 
@@ -94,7 +95,7 @@ ol_interaction_FillAttribute.prototype.setAttribute = function(key, val) {
 /** get attributes
  * @return {*} The properties as key/value
  */
-ol_interaction_FillAttribute.prototype.getAttributes = function(properties) {
+ol_interaction_FillAttribute.prototype.getAttributes = function() {
   return this._attributes;
 };
 

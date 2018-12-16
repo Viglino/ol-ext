@@ -33,7 +33,6 @@ import ol_style_FontSymbol from '../style/FontSymbol'
 */
 var ol_source_DBPedia = function(opt_options)
 {	var options = opt_options || {};
-	var self = this; 
 
 	options.loader = this._loaderFn;
 	
@@ -147,6 +146,10 @@ ol_source_DBPedia.prototype._loaderFn = function(extent, resolution, projection)
     }});
 };
 
+
+var ol_style_clearDBPediaStyleCache;
+var ol_style_dbPediaStyleFunction; 
+
 (function(){
 
 // Style cache
@@ -154,7 +157,7 @@ var styleCache = {};
 
 /** Reset the cache (when fonts are loaded)
 */
-var ol_style_clearDBPediaStyleCache = function()
+ol_style_clearDBPediaStyleCache = function()
 {	styleCache = {};
 }
 
@@ -168,7 +171,7 @@ var ol_style_clearDBPediaStyleCache = function()
 *
 * @require ol.style.FontSymbol and FontAwesome defs are required for dbPediaStyleFunction()
 */
-var ol_style_dbPediaStyleFunction = function(options)
+ol_style_dbPediaStyleFunction = function(options)
 {	if (!options) options={};
 	// Get font function using dbPedia type
 	var getFont;
@@ -202,7 +205,7 @@ var ol_style_dbPediaStyleFunction = function(options)
 	var stroke = options.stroke || new ol_style_Stroke({ color: "#fff", width: 2 });
 	var prefix = options.prefix ? options.prefix+"_" : "";
 	// Vector style function
-	return function (feature, resolution)
+	return function (feature)
 	{	var glyph = getFont(feature);
 		var k = prefix + glyph;
 		var style = styleCache[k];
@@ -222,4 +225,6 @@ var ol_style_dbPediaStyleFunction = function(options)
 
 })();
 
+export {ol_style_clearDBPediaStyleCache}
+export {ol_style_dbPediaStyleFunction}
 export default ol_source_DBPedia

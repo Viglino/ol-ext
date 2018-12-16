@@ -66,7 +66,6 @@ ol_interaction_TinkerBell.prototype.onMove = function(e)
 ol_interaction_TinkerBell.prototype.postcompose_ = function(e)
 {	var delta = 15;
 	var ctx = e.context;
-	var canvas = ctx.canvas;
 	var dt = e.frameState.time - this.time;
 	this.time = e.frameState.time;
 	if (e.frameState.time-this.lastSparkle > 30 && !this.isout_)
@@ -88,7 +87,7 @@ ol_interaction_TinkerBell.prototype.postcompose_ = function(e)
 			p.o *= 0.98;
 			p.p[0] += (Math.random()-0.5);
 			p.p[1] += dt*(1+Math.random())/30;
-		};
+		}
 	ctx.restore();
 
 	// tell OL3 to continue postcompose animation

@@ -18,7 +18,7 @@ var ol_interaction_Hover = function(options)
 
 	ol_interaction_Interaction.call(this,
 	{	handleEvent: function(e)
-		{	if (e.type=="pointermove") { self.handleMove_(e); }; 
+		{	if (e.type=="pointermove") { self.handleMove_(e); } 
 			if (options.handleEvent) return options.handleEvent(e);
 			return true; 
 		}
@@ -86,7 +86,7 @@ ol_interaction_Hover.prototype.handleMove_ = function(e)
 		var b = map.forEachFeatureAtPixel(e.pixel, 
 					function(f, l)
 					{	if (self.layerFilter_.call(null, l) 
-						 && self.featureFilter_.call(null,f,l))
+						&& self.featureFilter_.call(null,f,l))
 						{	feature = f;
 							layer = l;
 							return true;
@@ -100,7 +100,7 @@ ol_interaction_Hover.prototype.handleMove_ = function(e)
 		if (b) this.dispatchEvent({ type:"hover", feature:feature, layer:layer, coordinate:e.coordinate, pixel: e.pixel, map: e.map, dragging:e.dragging });
 
 		if (this.feature_===feature && this.layer_===layer)
-		{	
+		{	/* ok */
 		}
 		else
 		{	this.feature_ = feature;

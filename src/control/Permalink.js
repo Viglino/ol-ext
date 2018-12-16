@@ -123,10 +123,10 @@ ol_control_Permalink.prototype.setPosition = function() {
 	var hash = document.location.hash || document.location.search;
 	if (!hash) return;
 	
-	var param = {};
+	var i, t, param = {};
 	hash = hash.replace(/(^#|^\?)/,"").split("&");
-	for (var i=0; i<hash.length;  i++) {
-    var t = hash[i].split("=");
+	for (i=0; i<hash.length;  i++) {
+    t = hash[i].split("=");
 		param[t[0]] = t[1];
 	}
 	var c = ol_proj_transform([Number(param.lon),Number(param.lat)], 'EPSG:4326', map.getView().getProjection());
@@ -152,8 +152,8 @@ ol_control_Permalink.prototype.setPosition = function() {
 		resetLayers();
 
 		var l = param.l.split("|");
-    for (var i=0; i<l.length; i++) {
-      var t = l[i].split(":");
+    for (i=0; i<l.length; i++) {
+      t = l[i].split(":");
 			var li = this.getLayerByLink(t[0]);
 			var op = Number(t[1]);
 			if (li) {
@@ -241,7 +241,7 @@ ol_control_Permalink.prototype.setUrlReplace = function(replace) {
 			window.history.replaceState (null,null, document.location.origin+document.location.pathname+s);
 		}
 		else window.history.replaceState (null,null, this.getLink());
-	} catch(e) {}
+	} catch(e) {/* ok */}
 }
 
 /**
@@ -252,20 +252,19 @@ ol_control_Permalink.prototype.setUrlReplace = function(replace) {
 ol_control_Permalink.prototype.viewChange_ = function() {
   try {
 		if (this.replaceState_) window.history.replaceState (null,null, this.getLink());
-	} catch(e) {}
+	} catch(e) {/* ok */}
 }
 
 /**
  * Layer change refresh link
- * @param {ol.event} The map instance.
  * @private
  */
-ol_control_Permalink.prototype.layerChange_ = function(e) {
+ol_control_Permalink.prototype.layerChange_ = function() {
   // Get layers
 	var l = "";
   function getLayers(layers) {
-  	for (var i=0; i<layers.length; i++) {
-      if (layers[i].getVisible() && layers[i].get("permalink")) {
+		for (var i=0; i<layers.length; i++) {
+			if (layers[i].getVisible() && layers[i].get("permalink")) {
         if (l) l += "|";
 				l += layers[i].get("permalink")+":"+layers[i].get("opacity");
 			}

@@ -1,3 +1,4 @@
+/*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
 import {inherits as ol_inherits} from 'ol'
 import ol_source_Vector from 'ol/source/Vector'
 import ol_Feature from 'ol/Feature'
@@ -5,8 +6,7 @@ import ol_geom_Polygon from 'ol/geom/Polygon'
 import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent'
 import {buffer as ol_extent_buffer} from 'ol/extent'
 import {ol_coordinate_equal, ol_coordinate_dist2d} from '../geom/GeomUtils'
-
-// doc: https://mapbox.github.io/delaunator/
+import ol_coordinate_convexHull from '../geom/ConvexHull'
 
 /** Delaunay source
  * Calculate a delaunay triangulation from points in a source
@@ -57,11 +57,12 @@ ol_source_Delaunay.prototype.getNodeSource = function () {
 
 /**
  * A point has been removed
- * @param {ol/source/Vector.Event} e 
+ * @param {ol/source/Vector.Event} evt 
  */
-ol_source_Delaunay.prototype._onRemoveNode = function(e) {
-  // console.log(e)
-  var pt = e.feature.getGeometry().getCoordinates();
+ol_source_Delaunay.prototype._onRemoveNode = function(evt) {
+  // console.log(evt)
+  var i, p;
+  var pt = evt.feature.getGeometry().getCoordinates();
   if (!pt) return;
   // Still there (when removing duplicated points)
   if (this.getNodesAt(pt).length) return;
@@ -77,7 +78,7 @@ ol_source_Delaunay.prototype._onRemoveNode = function(e) {
     this.removeFeature(tr);
     tr = tr.getGeometry().getCoordinates()[0];
     var pts = [];
-    for (var i=0, p; p = tr[i]; i++) {
+    for (i=0, p; p = tr[i]; i++) {
       if (!ol_coordinate_equal(p,pt)) {
         pts.push(p);
       }
@@ -86,11 +87,12 @@ ol_source_Delaunay.prototype._onRemoveNode = function(e) {
   }
   pts = edges.pop();
 var se = '';
-for (var i=0,e; e=edges[i]; i++) {
-  se += ' - '+this.listpt(e);
+var edge;
+for (i=0,edge; edge=edges[i]; i++) {
+  se += ' - '+this.listpt(edge);
 }
 console.log('EDGES', se)
-  var i = 0;
+  i = 0;
   function testEdge(p0, p1, index) {
     if (ol_coordinate_equal(p0, pts[index])) {
       if (index) pts.push(p1);
@@ -100,11 +102,11 @@ console.log('EDGES', se)
     return false;
   }
   while (true) {
-    var e = edges[i];
-    if ( testEdge(e[0], e[1], 0) 
-      || testEdge(e[1], e[0], 0)
-      || testEdge(e[0], e[1], pts.length-1)
-      || testEdge(e[1], e[0], pts.length-1)
+    edge = edges[i];
+    if ( testEdge(edge[0], edge[1], 0) 
+      || testEdge(edge[1], edge[0], 0)
+      || testEdge(edge[0], edge[1], pts.length-1)
+      || testEdge(edge[1], edge[0], pts.length-1)
     ) {
       edges.splice(i,1);
       i = 0;
@@ -123,19 +125,19 @@ console.log('PTS', this.listpt(pts))
   if (closed) pts.pop();
 
   // Update convex hull: remove pt + add new ones
-  for (var i, p; p=this.hull[i]; i++) {
+  for (i, p; p=this.hull[i]; i++) {
     if (ol_coordinate_equal(pt,p)) {
       this.hull.splice(i,1);
       break;
     }
   }
   this.hull = ol_coordinate_convexHull(this.hull.concat(pts));
-select.getFeatures().clear();
+// select.getFeatures().clear();
 
   // 
   var clockwise = function (t) {
     var i1, s = 0;
-    for (var i=0; i<t.length; i++) {
+    for (i=0; i<t.length; i++) {
       i1 = (i+1) % t.length;
       s += (t[i1][0] - t[i][0]) * (t[i1][1] + t[i][1]);
     }
@@ -158,7 +160,7 @@ enveloppe.push(pt);
 console.log('S=',clock,'CLOSED',closed)
 console.log('E=',this.listpt(enveloppe))
 
-  for (var i=0; i<=pts.length+1; i++) {
+  for (i=0; i<=pts.length+1; i++) {
     if (pts.length<3) break;
     var t = [
       pts[i % pts.length],
@@ -220,10 +222,11 @@ for (var i=0; i<this.flip.length; i++) {
 
 /**
  * A new point has been added
- * @param {ol/source/VectorEvent} e 
+ * @param {ol/source/VectorEvent} evt 
  */
-ol_source_Delaunay.prototype._onAddNode = function(e) {
-  var finserted = e.feature;
+ol_source_Delaunay.prototype._onAddNode = function(evt) {
+  var finserted = evt.feature;
+  var i, p;
 
   // Not a point!
   if (finserted.getGeometry().getType() !== 'Point') {
@@ -248,7 +251,7 @@ ol_source_Delaunay.prototype._onAddNode = function(e) {
   if (nodes.length <= 3) {
     if (nodes.length===3) {
       var pts = [];
-      for (var i=0; i<3; i++) pts.push(nodes[i].getGeometry().getCoordinates());
+      for (i=0; i<3; i++) pts.push(nodes[i].getGeometry().getCoordinates());
       this._addTriangle(pts);
       this.hull = ol_coordinate_convexHull(pts);
     }
@@ -261,7 +264,7 @@ ol_source_Delaunay.prototype._onAddNode = function(e) {
     this.removeFeature(t);
     t.set('del', true);
     var c = t.getGeometry().getCoordinates()[0];
-    for (var i=0; i<3; i++) {
+    for (i=0; i<3; i++) {
       this._addTriangle([ pt, c[i], c[(i+1)%3]]);
     }
   } else {
@@ -270,13 +273,13 @@ ol_source_Delaunay.prototype._onAddNode = function(e) {
     hull2.push(pt);
     hull2 = ol_coordinate_convexHull(hull2);
     // Search for points
-    for (var i=0,p; p=hull2[i]; i++) {
+    for (i=0,p; p=hull2[i]; i++) {
       if (ol_coordinate_equal(p,pt)) break;
     }
     i = (i!==0 ? i-1 : hull2.length-1);
     var p0 = hull2[i];
     var stop = hull2[(i+2) % hull2.length];
-    for (var i=0,p; p=this.hull[i]; i++) {
+    for (i=0,p; p=this.hull[i]; i++) {
       if (ol_coordinate_equal(p,p0)) break;
     }
     // Connect to the hull
@@ -302,6 +305,7 @@ ol_source_Delaunay.prototype._onAddNode = function(e) {
  */
 ol_source_Delaunay.prototype.flipTriangles = function ()	{
   var count = 1000; // Count to prevent too many iterations
+  var pi;
   while (this.flip.length) {
     // DEBUG: prevent infinite loop
     if (count--<0) {
@@ -320,7 +324,7 @@ ol_source_Delaunay.prototype.flipTriangles = function ()	{
       if (triangles.length>1) {
         var t0 = triangles[0].getGeometry().getCoordinates()[0];
         var t1 = triangles[1].getGeometry().getCoordinates()[0];
-        for (var pi=0; pi<t1.length; pi++) {
+        for (pi=0; pi<t1.length; pi++) {
           if (!this._ptInTriangle(t1[pi], t0)) {
             pt1 = t1[pi];
             break;
@@ -332,7 +336,7 @@ ol_source_Delaunay.prototype.flipTriangles = function ()	{
         if (this.inCircle(pt1, t0)) {
           var pt2;
           // Get opposite point
-          for (var pi=0; pi<t0.length; pi++) {
+          for (pi=0; pi<t0.length; pi++) {
             if (!this._ptInTriangle(t0[pi], t1)) {
               pt2 = t0.splice(pi,1)[0];
               break;

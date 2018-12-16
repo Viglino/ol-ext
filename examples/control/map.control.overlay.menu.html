@@ -146,7 +146,11 @@
 		});
 
 	// Overlay
-	var menu = new ol.control.Overlay ({ closeBox : true, className: "slide-left menu", content: $("#menu") });
+	var menu = new ol.control.Overlay ({ 
+		closeBox : true, 
+		className: "slide-left menu", 
+		content: $("#menu").get(0)
+	});
 	map.addControl(menu);
 
 	// A toggle control to show/hide the menu

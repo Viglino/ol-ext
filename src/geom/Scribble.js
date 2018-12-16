@@ -4,6 +4,7 @@
 
 	Usefull function to handle geometric operations
 */
+/*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
 
 import ol_geom_MultiLineString from 'ol/geom/MultiLineString'
 import ol_geom_Polygon from 'ol/geom/Polygon'
@@ -21,7 +22,8 @@ import {ol_coordinate_splitH} from "./GeomUtils";
 ol_geom_MultiPolygon.prototype.scribbleFill = function (options) {
   var scribbles = [];
   var poly = this.getPolygons();
-  for (var i=0, p; p=poly[i]; i++) {
+  var i, p, s;
+  for (i=0; p=poly[i]; i++) {
     var mls = p.scribbleFill(options);
     if (mls) scribbles.push(mls);
   } 
@@ -29,7 +31,7 @@ ol_geom_MultiPolygon.prototype.scribbleFill = function (options) {
   // Merge scribbles
   var scribble = scribbles[0];
     var ls;
-    for (var i = 0, s; s = scribbles[i]; i++) {
+    for (i = 0; s = scribbles[i]; i++) {
         ls = s.getLineStrings();
         for (var k = 0; k < ls.length; k++) {
             scribble.appendLineString(ls[k]);
@@ -48,6 +50,7 @@ ol_geom_MultiPolygon.prototype.scribbleFill = function (options) {
 ol_geom_Polygon.prototype.scribbleFill = function (options) {
 	var step = options.interval;
   var angle = options.angle || Math.PI/2;
+  var i, k,l;
   
   // Geometry + rotate
 	var geom = this.clone();
@@ -55,7 +58,7 @@ ol_geom_Polygon.prototype.scribbleFill = function (options) {
   var coords = geom.getCoordinates();
   // Merge holes
   var coord = coords[0];
-  for (var i=1; i<coords.length; i++) {
+  for (i=1; i<coords.length; i++) {
     // Add a separator
     coord.push([]);
     // Add the hole
@@ -67,7 +70,7 @@ ol_geom_Polygon.prototype.scribbleFill = function (options) {
 	// Split polygon with horizontal lines
   var lines = [];
 	for (var y = (Math.floor(ext[1]/step)+1)*step; y<ext[3]; y += step) {
-    var l = ol_coordinate_splitH(coord, y, i);
+    l = ol_coordinate_splitH(coord, y, i);
     lines = lines.concat(l);
   }
   
@@ -75,15 +78,15 @@ ol_geom_Polygon.prototype.scribbleFill = function (options) {
   // Order lines on segment index
   var mod = coord.length-1;
 	var first = lines[0][0].index;
-	for (var k=0, l; l=lines[k]; k++) {
+	for (k=0; l=lines[k]; k++) {
 		lines[k][0].index = (lines[k][0].index-first+mod) % mod;
 		lines[k][1].index = (lines[k][1].index-first+mod) % mod;
 	}
 
   var scribble = [];
 
-  while(true) {
-    for (var k=0, l; l=lines[k]; k++) {
+  while (true) {
+    for (k=0; l=lines[k]; k++) {
       if (!l[0].done) break;
     }
     if (!l) break;

@@ -80,7 +80,7 @@ ol_filter_Clip.prototype.clipPath_ = function(e)
 	var fy = function(y) { return y*scy + dy; };
 	
 	ctx.moveTo ( fx(coords[0][0]), fy(coords[0][1]) );
-	for (var i=1; p=coords[i]; i++) 
+	for (var i=1, p; p=coords[i]; i++) 
 	{	ctx.lineTo ( fx(p[0]), fy(p[1]) );
 	}
 	ctx.lineTo ( fx(coords[0][0]), fy(coords[0][1]) );
@@ -110,7 +110,7 @@ ol_filter_Clip.prototype.postcompose = function(e)
 		this.clipPath_(e);
 		ctx.fillStyle = this.get("color");
 		ctx.fill("evenodd");
-	};
+	}
 	
 	e.context.restore();
 }

@@ -145,7 +145,7 @@ ol_style_Photo.prototype.drawBack_ = function(context, color, strokeWidth)
 			context.arc(this.radius_+strokeWidth, this.radius_+strokeWidth, this.radius_+strokeWidth, 0, 2 * Math.PI, false);
 			break;
 		case 'folio':
-			offset = 6;
+			var offset = 6;
 			strokeWidth -= offset;
 			context.strokeStyle = 'rgba(0,0,0,0.5)';
 			var w = canvas.width-this.shadow_-2*offset;
@@ -202,7 +202,7 @@ ol_style_Photo.prototype.renderPhoto_ = function()
     context.fill();
 
 	// Draw the image
-	var context = (canvas.getContext('2d'));
+	context = canvas.getContext('2d');
 	this.drawBack_(context,strokeStyle,strokeWidth);
 	
 	// Draw a shadow

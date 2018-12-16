@@ -1,8 +1,8 @@
 import {inherits as ol_inherits} from 'ol'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import ol_source_Vector from 'ol/source/Vector'
+import ol_layer_Vector from 'ol/layer/Vector'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-
 
 (function () {
   var clear = ol_source_Vector.prototype.clear;
@@ -27,7 +27,7 @@ var ol_interaction_UndoRedo = function(options) {
   if (!options) options = {};
 
 	ol_interaction_Interaction.call(this, {	
-    handleEvent: function(e) { 
+    handleEvent: function() { 
       return true; 
     }
   });
@@ -78,14 +78,14 @@ ol_interaction_UndoRedo.prototype._watchSources = function() {
   function getVectorLayers(layers, init) {
     if (!init) init = [];
     layers.forEach(function(l) {
-      if (l instanceof ol.layer.Vector) {
+      if (l instanceof ol_layer_Vector) {
         init.push(l);
       } else if (l.getLayers) {
         getVectorLayers(l.getLayers(), init);
       }
     });
     return init;
-  };
+  }
 
   // Watch the vector sources in the map 
   var vectors = getVectorLayers(map.getLayers());

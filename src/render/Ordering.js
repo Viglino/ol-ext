@@ -12,24 +12,24 @@ var ol_ordering = {};
 /** y-Ordering
 *	@return ordering function (f0,f1)
 */
-ol_ordering.yOrdering = function(options)
+ol_ordering.yOrdering = function()
 {	return function(f0,f1)
 	{	return f1.getGeometry().getExtent()[1] - f0.getGeometry().getExtent()[1] ;
 	};
 };
 
 /** Order with a feature attribute
-*	@param options
-*		attribute: ordering attribute, default zIndex
-*		equalFn: ordering function for equal values
-*	@return ordering function (f0,f1)
-*/
+ * @param options
+ *  @param {string} options.attribute ordering attribute, default zIndex
+ *  @param {function} options.equalFn ordering function for equal values
+ * @return ordering function (f0,f1)
+ */
 ol_ordering.zIndex = function(options)
 {	if (!options) options = {};
 	var attr = options.attribute || 'zIndex';
-	if (option.equalFn)
+	if (options.equalFn)
 	{	return function(f0,f1)
-		{	if (f0.get(attr) == f1.get(attr)) return option.equalFn(f0,f1);
+		{	if (f0.get(attr) == f1.get(attr)) return options.equalFn(f0,f1);
 			else return f0.get(attr) < f1.get(attr) ? 1:-1;
 		};
 	}

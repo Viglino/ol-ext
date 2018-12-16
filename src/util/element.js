@@ -15,13 +15,14 @@
  */
 ol_ext_element.create = function (tagName, options) {
   options = options || {};
+  var elt;
   // Text noe
   if (tagName === 'TEXT') {
-    var elt = document.createTextNode(options.html||'');
+    elt = document.createTextNode(options.html||'');
     if (options.parent) options.parent.appendChild(elt);
   } else {
     // Other element
-    var elt = document.createElement(tagName);
+    elt = document.createElement(tagName);
     if (/button/i.test(tagName)) elt.setAttribute('type', 'button');
     for (var attr in options) {
       switch (attr) {
@@ -105,7 +106,7 @@ ol_ext_element.setStyle = function(el, st) {
       case 'maxWidth':
       case 'width':
       case 'height': {
-        if (typeof(st[s] === 'number')) {
+        if (typeof(st[s]) === 'number') {
           el.style[s] = st[s]+'px';
         } else {
           el.style[s] = st[s];
@@ -135,7 +136,7 @@ ol_ext_element.getStyle = function(el, styleProp) {
     value = defaultView.getComputedStyle(el, null).getPropertyValue(styleProp);
   } else if (el.currentStyle) { // IE
     // sanitize property name to camelCase
-    styleProp = styleProp.replace(/\-(\w)/g, function(str, letter) {
+    styleProp = styleProp.replace(/-(\w)/g, function(str, letter) {
       return letter.toUpperCase();
     });
     value = el.currentStyle[styleProp];

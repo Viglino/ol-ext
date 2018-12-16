@@ -16,7 +16,7 @@ import jsPDF from 'jspdf'
 *		quality {Number}: between 0 and 1 indicating image quality if the requested type is jpeg or webp
 *		dpi {Number}: resolution of the map
 */
-exportMap = function(elements, map, options)
+var exportMap = function(elements, map, options)
 {	if (!options) options={};
 
 	function saveCanvas(input, canvas, ext)
@@ -68,7 +68,6 @@ exportMap = function(elements, map, options)
 						event.context.scale(scaleFactor, scaleFactor);
 					});
 				}
-				var label = element.innerText;
 				// Draw a white background before draw (transparent background)
 				if (ext!='png')
 				{	map.once('precompose', function(e)
@@ -91,3 +90,5 @@ exportMap = function(elements, map, options)
 		}
 	});
 };
+
+export default exportMap

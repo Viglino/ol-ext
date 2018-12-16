@@ -41,13 +41,13 @@ ol_filter_Mask.prototype.drawFeaturePath_ = function(e, out)
 	var ratio = e.frameState.pixelRatio;
 	// Transform
 	var m = e.frameState.coordinateToPixelTransform;
-	function tr(pt)
+	var tr = function(pt)
 	{	return [
 			(pt[0]*m[0]+pt[1]*m[1]+m[4])*ratio,
 			(pt[0]*m[2]+pt[1]*m[3]+m[5])*ratio
 		];
 	}
-	// Old version
+	// Old ol version
 	if (!m)
 	{	m = e.frameState.coordinateToPixelMatrix;
 		tr = function(pt)

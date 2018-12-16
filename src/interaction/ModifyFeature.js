@@ -14,6 +14,7 @@ import ol_layer_Vector from 'ol/layer/Vector'
 import ol_geom_Point from 'ol/geom/Point'
 import ol_Feature from 'ol/Feature'
 import ol_geom_LineString from 'ol/geom/LineString'
+import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import {ol_coordinate_dist2d, ol_coordinate_equal} from "../geom/GeomUtils";
 import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent'
 import {buffer as ol_extent_buffer} from 'ol/extent'
@@ -43,7 +44,7 @@ import '../geom/LineStringSplitAt'
  *  @param {ol.EventsConditionType | undefined} options.condition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event will be considered to add or move a vertex to the sketch. Default is ol.events.condition.primaryAction.
  *  @param {ol.EventsConditionType | undefined} options.deleteCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled. By default, ol.events.condition.singleClick with ol.events.condition.altKeyOnly results in a vertex deletion.
  *  @param {ol.EventsConditionType | undefined} options.insertVertexCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether a new vertex can be added to the sketch features. Default is ol.events.condition.always
-*/
+ */
 var ol_interaction_ModifyFeature = function(options){
   if (!options) options = {};
 
@@ -167,7 +168,7 @@ ol_interaction_ModifyFeature.prototype.setActive = function(active) {
  * @private
  */
 ol_interaction_ModifyFeature.prototype.getClosestFeature = function(e) {
-  var f, c, g, d = this.snapDistance_+1;
+  var f, c, d = this.snapDistance_+1;
   for (var i=0; i<this.sources_.length; i++) {
     var source = this.sources_[i];
     f = source.getClosestFeatureToCoordinate(e.coordinate);
@@ -204,6 +205,7 @@ ol_interaction_ModifyFeature.prototype.getClosestFeature = function(e) {
 * @return {*} the nearest point with a coord (projected point), dist (distance to the geom), ring (if Polygon)
 */
 ol_interaction_ModifyFeature.prototype.getNearestCoord = function(pt, geom) {
+  var i, l, p, p0, dm;
   switch (geom.getType()) {
     case 'Point': {
       return { coord: geom.getCoordinates(), dist: ol_coordinate_dist2d(geom.getCoordinates(), pt) };
@@ -213,9 +215,10 @@ ol_interaction_ModifyFeature.prototype.getNearestCoord = function(pt, geom) {
     }
     case 'LineString':
     case 'LinearRing': {
-      var d, dm=Number.MAX_VALUE, p0;
+      var d;
+      dm = Number.MAX_VALUE;
       var coords = geom.getCoordinates();
-      for (var i=0; i < coords.length; i++) {
+      for (i=0; i < coords.length; i++) {
         d = ol_coordinate_dist2d (pt, coords[i]);
         if (d < dm) {
           dm = d;
@@ -226,9 +229,9 @@ ol_interaction_ModifyFeature.prototype.getNearestCoord = function(pt, geom) {
     }
     case 'MultiLineString': {
       var lstring = geom.getLineStrings();
-      var p0 = false, dm = Number.MAX_VALUE;
-      for (var i=0, l; l=lstring[i]; i++) {
-        var p = this.getNearestCoord(pt, l);
+      p0 = false, dm = Number.MAX_VALUE;
+      for (i=0; l=lstring[i]; i++) {
+        p = this.getNearestCoord(pt, l);
         if (p && p.dist<dm) {
           p0 = p;
           dm = p.dist;
@@ -239,9 +242,10 @@ ol_interaction_ModifyFeature.prototype.getNearestCoord = function(pt, geom) {
     }
     case 'Polygon': {
       var lring = geom.getLinearRings();
-      var p0 = false, dm = Number.MAX_VALUE;
-      for (var i=0, l; l=lring[i]; i++) {
-        var p = this.getNearestCoord(pt, l);
+      p0 = false;
+      dm = Number.MAX_VALUE;
+      for (i=0; l=lring[i]; i++) {
+        p = this.getNearestCoord(pt, l);
         if (p && p.dist<dm) {
           p0 = p;
           dm = p.dist;
@@ -252,9 +256,10 @@ ol_interaction_ModifyFeature.prototype.getNearestCoord = function(pt, geom) {
     }
     case 'MultiPolygon': {
       var poly = geom.getPolygons();
-      var p0 = false, dm = Number.MAX_VALUE;
-      for (var i=0, l; l=poly[i]; i++) {
-        var p = this.getNearestCoord(pt, l);
+      p0 = false;
+      dm = Number.MAX_VALUE;
+      for (i=0; l=poly[i]; i++) {
+        p = this.getNearestCoord(pt, l);
         if (p && p.dist<dm) {
           p0 = p;
           dm = p.dist;
@@ -273,6 +278,7 @@ ol_interaction_ModifyFeature.prototype.getNearestCoord = function(pt, geom) {
  */
 ol_interaction_ModifyFeature.prototype.getArcs = function(geom, coord) {
   var arcs = false;
+  var coords, i, s, l;
   switch(geom.getType()) {
     case 'Point': {
       arcs = { 
@@ -285,8 +291,8 @@ ol_interaction_ModifyFeature.prototype.getArcs = function(geom, coord) {
       break;
     }
     case 'MultiPoint': {
-      var coords = geom.getCoordinates();
-      for (var i=0; i < coords.length; i++) {
+      coords = geom.getCoordinates();
+      for (i=0; i < coords.length; i++) {
         if (ol_coordinate_equal(coord, coords[i])) {
           arcs = { 
             geom: geom, 
@@ -315,8 +321,8 @@ ol_interaction_ModifyFeature.prototype.getArcs = function(geom, coord) {
         }
         // If more than 2
         if (split.length>2) {
-          var coords = split[1].getCoordinates();
-          for (var i=2, s; s=split[i]; i++) {
+          coords = split[1].getCoordinates();
+          for (i=2; s=split[i]; i++) {
             var c = s.getCoordinates();
             c.shift();
             coords = coords.concat(c);
@@ -339,7 +345,7 @@ ol_interaction_ModifyFeature.prototype.getArcs = function(geom, coord) {
             closed: false
           }
         } else if (split.length === 1) {
-          var s = split[0].getCoordinates();
+          s = split[0].getCoordinates();
           var start = ol_coordinate_equal(s[0], coord);
           var end = ol_coordinate_equal(s[s.length-1], coord);
           // Move first point
@@ -372,8 +378,8 @@ ol_interaction_ModifyFeature.prototype.getArcs = function(geom, coord) {
     }
     case 'MultiLineString': {
       var lstring = geom.getLineStrings();
-      for (var i=0, l; l=lstring[i]; i++) {
-        var arcs = this.getArcs(l, coord);
+      for (i=0; l=lstring[i]; i++) {
+        arcs = this.getArcs(l, coord);
         if (arcs) {
           arcs.geom = geom;
           arcs.type = geom.getType();
@@ -385,8 +391,8 @@ ol_interaction_ModifyFeature.prototype.getArcs = function(geom, coord) {
     }
     case 'Polygon': {
       var lring = geom.getLinearRings();
-      for (var i=0, l; l=lring[i]; i++) {
-        var arcs = this.getArcs(l, coord);
+      for (i=0; l=lring[i]; i++) {
+        arcs = this.getArcs(l, coord);
         if (arcs) {
           arcs.geom = geom;
           arcs.type = geom.getType();
@@ -398,8 +404,8 @@ ol_interaction_ModifyFeature.prototype.getArcs = function(geom, coord) {
     }
     case 'MultiPolygon': {
       var poly = geom.getPolygons();
-      for (var i=0, l; l=poly[i]; i++) {
-        var arcs = this.getArcs(l, coord);
+      for (i=0; l=poly[i]; i++) {
+        arcs = this.getArcs(l, coord);
         if (arcs) {
           arcs.geom = geom;
           arcs.type = geom.getType();
@@ -522,7 +528,7 @@ ol_interaction_ModifyFeature.prototype._removePoint = function(current, evt) {
       case 'Polygon': {
         if (a.closed) coords.push(coords[0]);
         if (coords.length>3) {
-          var c = a.geom.getCoordinates();
+          c = a.geom.getCoordinates();
           if (c[a.index].length != coords.length) {
             c[a.index] = coords;
             a.coords = c;
@@ -534,7 +540,7 @@ ol_interaction_ModifyFeature.prototype._removePoint = function(current, evt) {
       case 'MultiPolygon': {
         if (a.closed) coords.push(coords[0]);
         if (coords.length>3) {
-          var c = a.geom.getCoordinates();
+          c = a.geom.getCoordinates();
           if (c[a.poly][a.index].length != coords.length) {
             c[a.poly][a.index] = coords;
             a.coords = c;
@@ -604,7 +610,7 @@ ol_interaction_ModifyFeature.prototype.handleDragEvent = function(e) {
 
   // Move arcs
   this.arcs.forEach(function(a) {
-    var coords = a.coord1.concat([e.coordinate], a.coord2);
+    var c, coords = a.coord1.concat([e.coordinate], a.coord2);
     if (a.closed) coords.push(e.coordinate);
     switch (a.type) {
       case 'Point': {
@@ -612,7 +618,7 @@ ol_interaction_ModifyFeature.prototype.handleDragEvent = function(e) {
         break;
       }
       case 'MultiPoint': {
-        var c = a.geom.getCoordinates();
+        c = a.geom.getCoordinates();
         c[a.index] = e.coordinate;
         a.geom.setCoordinates(c);
         break;
@@ -622,19 +628,19 @@ ol_interaction_ModifyFeature.prototype.handleDragEvent = function(e) {
         break;
       }
       case 'MultiLineString': {
-        var c = a.geom.getCoordinates();
+        c = a.geom.getCoordinates();
         c[a.lstring] = coords;
         a.geom.setCoordinates(c);
         break;
       }
       case 'Polygon': {
-        var c = a.geom.getCoordinates();
+        c = a.geom.getCoordinates();
         c[a.index] = coords;
         a.geom.setCoordinates(c);
         break;
       }
       case 'MultiPolygon': {
-        var c = a.geom.getCoordinates();
+        c = a.geom.getCoordinates();
         c[a.poly][a.index] = coords;
         a.geom.setCoordinates(c);
         break;

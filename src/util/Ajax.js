@@ -26,7 +26,7 @@ ol_inherits(ol_ext_Ajax, ol_Object);
 ol_ext_Ajax.prototype.send = function (url, data){
 	var self = this;
   // Url
-  var url = encodeURI(url);
+  url = encodeURI(url);
 
   // Parameters
   var parameters = '';
@@ -54,6 +54,7 @@ ol_ext_Ajax.prototype.send = function (url, data){
 		self._request = null;
     self.dispatchEvent ({ type: 'loadend' });
     if (this.status >= 200 && this.status < 400) {
+      var response;
       // Decode response
       try {
         switch (self.get('dataType')) {

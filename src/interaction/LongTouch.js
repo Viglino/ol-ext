@@ -39,7 +39,7 @@ var ol_interaction_LongTouch = function(options)
 							_timeout = null;
 						}
 						break;
-					default: break;;
+					default: break;
 				}
 			}
 			else

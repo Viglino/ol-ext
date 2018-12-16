@@ -32,12 +32,11 @@ import {containsCoordinate as ol_extent_containsCoordinate, containsExtent as ol
  *	@param {boolean|auto|position|visible} options.followTrack true if you want the interaction to follow the track on the map, default true
  *	@param { ol.style.Style | Array.<ol.style.Style> | ol.StyleFunction | undefined } options.style Style for sketch features.
  */
-var ol_interaction_GeolocationDraw = function(options)
-{	if (!options) options={};
-	var self = this;
+var ol_interaction_GeolocationDraw = function(options) {
+	if (!options) options={};
 
 	// Geolocation
-	var geoloc = this.geolocation = new ol_Geolocation(
+	this.geolocation = new ol_Geolocation(
 	({	projection: "EPSG:4326",
 		trackingOptions: 
 		{	maximumAge: 10000,
@@ -238,8 +237,8 @@ ol_interaction_GeolocationDraw.prototype.setFollowTrack = function(follow)
 /** Add a new point to the current path
 * @private
 */
-ol_interaction_GeolocationDraw.prototype.draw_ = function(active)
-{	var map = this.getMap();
+ol_interaction_GeolocationDraw.prototype.draw_ = function() {
+	var map = this.getMap();
 	if (!map) return;
 
 	// Current location
@@ -254,7 +253,7 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function(active)
 	// console.log(this.get('followTrack'))
 	switch (this.get('followTrack'))
 	{	// Follow center + zoom
-		case true:
+		case true: {
 			// modify zoom
 			if (this.get('followTrack') == true) 
 			{	map.getView().setZoom( this.get("zoom") || 16 );
@@ -262,13 +261,17 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function(active)
 				{	map.getView().fit(p.getExtent());
 				}
 			}
+			map.getView().setCenter( pos );
+			break;
+		}
 		// Follow  position 
-		case 'position':
+		case 'position': {
 			// modify center
 			map.getView().setCenter( pos );
-		break;
+			break;
+		}
 		// Keep on following 
-		case 'auto':
+		case 'auto': {
 			if (this.lastPosition_)
 			{	var center = map.getView().getCenter();
 				// console.log(center,this.lastPosition_)
@@ -286,13 +289,15 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function(active)
 				if (this.get("zoom")) map.getView().setZoom( this.get("zoom") );
 				this.lastPosition_ = pos;
 			}
-		break;
+			break;
+		}
 		// Force to stay on the map
-		case 'visible':
+		case 'visible': {
 			if (!ol_extent_containsCoordinate(map.getView().calculateExtent(map.getSize()), pos))
 			{	map.getView().setCenter (pos);
 			}
-		break;
+			break;
+		}
 		// Don't follow
 		default: break;
 	}

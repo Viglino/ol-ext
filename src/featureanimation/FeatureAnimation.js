@@ -68,7 +68,7 @@ ol_featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
 			e.vectorContext.setStyle(style[i]);
 			if (style[i].getZIndex()<0) e.vectorContext.drawGeometry(shadow||geom);
 			else e.vectorContext.drawGeometry(geom);
-		} catch(e) {};
+		} catch(e) { /* ok */ }
 		if (imgs) imgs.setScale(sc);
 	}
 };
@@ -81,7 +81,7 @@ ol_featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
  * @return {bool} true to continue animation.
  * @api 
  */
-ol_featureAnimation.prototype.animate = function (e)
+ol_featureAnimation.prototype.animate = function (/* e */)
 {	return false;
 };
 

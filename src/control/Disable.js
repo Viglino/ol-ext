@@ -12,7 +12,7 @@ import ol_control_Control from 'ol/control/Control'
  *		@param {function} options.toggleFn callback when control is clicked 
  */
 var ol_control_Disable = function(options)
-{	var options = options||{};
+{	options = options||{};
 	var element = document.createElement("div");
 			element.className = (options.className||""+' ol-disable ol-unselectable ol-control').trim();
 	var stylesOptions = { top:"0px", left:"0px", right:"0px", bottom:"0px", "zIndex":10000, background:"none", display:"none" };

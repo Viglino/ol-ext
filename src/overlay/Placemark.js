@@ -54,7 +54,7 @@ ol_Overlay_Placemark.prototype.show = function(coordinate, html) {
     coordinate = this.getPosition();
   }
   this.hide();
-  ol_Overlay_Popup.prototype.show.apply(this, arguments);
+  ol_Overlay_Popup.prototype.show.apply(this, [coordinate, html]);
 };
 
 /**

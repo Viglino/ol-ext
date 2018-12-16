@@ -83,7 +83,7 @@ ol_control_SearchPhoton.prototype.requestData = function (s)
  * @param {any} response server response
  * @return {Array<any>} an array of feature
  */
-ol_control_SearchPhoton.prototype.handleResponse = function (response, cback) {
+ol_control_SearchPhoton.prototype.handleResponse = function (response) {
 	return response.features;
 };
 
@@ -108,7 +108,7 @@ ol_control_SearchPhoton.prototype.select = function (f)
 	// Add coordinate to the event
 	try {
 		c = ol_proj_transform (f.geometry.coordinates, 'EPSG:4326', this.getMap().getView().getProjection());
-	} catch(e) {};
+	} catch(e) { /* ok */ }
 	this.dispatchEvent({ type:"select", search:f, coordinate: c });
 };
 

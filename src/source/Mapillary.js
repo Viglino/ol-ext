@@ -24,7 +24,6 @@ import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
 */
 var ol_source_Mapillary = function(opt_options)
 {	var options = opt_options || {};
-	var self = this; 
 
 	options.loader = this._loaderFn;
 	
@@ -55,7 +54,7 @@ ol_inherits (ol_source_Mapillary, ol_source_Vector);
 * @return {boolean} true: add the feature to the layer
 * @API stable
 */
-ol_source_Mapillary.prototype.readFeature = function (feature, attributes)
+ol_source_Mapillary.prototype.readFeature = function (/*feature, attributes*/)
 {	// Allways read feature (no filter)
 	return true;
 };
@@ -66,7 +65,6 @@ ol_source_Mapillary.prototype.readFeature = function (feature, attributes)
 */
 ol_source_Mapillary.prototype._loaderFn = function(extent, resolution, projection)
 {	if (resolution > this._maxResolution) return;
-	var self = this;
 	var bbox = ol_proj_transformExtent(extent, projection, "EPSG:4326");
 	// Commons API: for more info @see https://www.mapillary.com/developer
 	var date = Date.now() - 6 * 30 * 24 * 60 * 60 * 1000;

@@ -44,6 +44,7 @@ ol_filter_Colorize.prototype.setFilter = function(options)
 	var color = options.color ? ol_color_asArray(options.color) : [ options.red, options.green, options.blue, options.value];
 	this.set('color', ol_color_asString(color))
 	this.set ('value', color[3]||1);
+	var v;
 	switch (options.operation)
 	{	case 'color':
 		case 'hue':
@@ -53,18 +54,18 @@ ol_filter_Colorize.prototype.setFilter = function(options)
 			this.set ('operation', options.operation);
 			break;
 		case 'saturation':
-			var v = 255*(options.value || 0);
+			v = 255*(options.value || 0);
 			this.set('color', ol_color_asString([0,0,v,v||1]));
 			this.set ('operation', options.operation);
 			break;
 		case 'luminosity':
-			var v = 255*(options.value || 0);
+			v = 255*(options.value || 0);
 			this.set('color', ol_color_asString([v,v,v,255]));
 			//this.set ('operation', 'luminosity')
 			this.set ('operation', 'hard-light');
 			break;
 		case 'contrast':
-			var v = 255*(options.value || 0);
+			v = 255*(options.value || 0);
 			this.set('color', ol_color_asString([v,v,v,255]));
 			this.set('operation', 'soft-light');
 			break;
@@ -97,13 +98,13 @@ ol_filter_Colorize.prototype.setColor = function(c)
 
 /** @private 
  */
-ol_filter_Colorize.prototype.precompose = function(e)
-{}
+ol_filter_Colorize.prototype.precompose = function(/* e */) {
+}
 
 /** @private 
  */
-ol_filter_Colorize.prototype.postcompose = function(e)
-{	// Set back color hue
+ol_filter_Colorize.prototype.postcompose = function(e) {
+	// Set back color hue
 	var ctx = e.context;
 	var canvas = ctx.canvas;
 	

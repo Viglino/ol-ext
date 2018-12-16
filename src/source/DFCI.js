@@ -46,11 +46,11 @@ ol_inherits (ol_source_DFCI, ol_source_Vector);
  */
 ol_source_DFCI.prototype._calcGrid = function (extent, resolution, projection) {
   // Show step 0
-  var res = this.get('resolutions');
+  var f, ext, res = this.get('resolutions');
   if (resolution > (res[0] || 1000)) {
     if (this.resolution != resolution) {
       if (!this._features0) {
-        var ext = [this._bbox[0][0], this._bbox[0][1],this._bbox[1][0], this._bbox[1][1]];
+        ext = [this._bbox[0][0], this._bbox[0][1],this._bbox[1][0], this._bbox[1][1]];
         this._features0 = this._getFeatures(0, ext, projection);
       }
       this.addFeatures(this._features0);
@@ -58,20 +58,20 @@ ol_source_DFCI.prototype._calcGrid = function (extent, resolution, projection) {
   }
   else if (resolution > (res[1] || 100)) {
     this.clear();
-    var ext = ol_proj_transformExtent(extent, projection, 'EPSG:27572');
-    var f = this._getFeatures(1, ext, projection)
+    ext = ol_proj_transformExtent(extent, projection, 'EPSG:27572');
+    f = this._getFeatures(1, ext, projection)
     this.addFeatures(f);
   }
   else if (resolution > (res[2] || 0)) {
     this.clear();
-    var ext = ol_proj_transformExtent(extent, projection, 'EPSG:27572');
-    var f = this._getFeatures(2, ext, projection)
+    ext = ol_proj_transformExtent(extent, projection, 'EPSG:27572');
+    f = this._getFeatures(2, ext, projection)
     this.addFeatures(f);
   }
   else {
     this.clear();
-    var ext = ol_proj_transformExtent(extent, projection, 'EPSG:27572');
-    var f = this._getFeatures(3, ext, projection)
+    ext = ol_proj_transformExtent(extent, projection, 'EPSG:27572');
+    f = this._getFeatures(3, ext, projection)
     this.addFeatures(f);
   }
 
@@ -104,6 +104,7 @@ ol_source_DFCI.prototype._trFeature = function(geom, id, level, projection) {
  */
 ol_source_DFCI.prototype._getFeatures = function (level, extent, projection) {
   var features = [];
+  var i;
   var step = 100000;
   if (level>0) step /= 5;
   if (level>1) step /= 10;
@@ -122,12 +123,12 @@ ol_source_DFCI.prototype._getFeatures = function (level, extent, projection) {
         var m = this._midPt(geom[0],geom[2]);
         // .5
         var g = [];
-        for (var i=0; i<geom.length; i++) {
+        for (i=0; i<geom.length; i++) {
           g.push(this._midPt(geom[i],m))
         }
         features.push(this._trFeature(g, ol_coordinate_toDFCI([x,y], 2)+'.5', level, projection));
         // .1 > .4
-        for (var i=0; i<4; i++) {
+        for (i=0; i<4; i++) {
           g = [];
           g.push(geom[i]);
           g.push(this._midPt(geom[i],geom[(i+1)%4]));

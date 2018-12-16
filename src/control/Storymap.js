@@ -56,8 +56,9 @@ var ol_control_Storymap = function(options) {
       this.element.scrollTop = i.offsetTop;
     }.bind(this));
   }.bind(this));
+
   // Scroll top 
-  var sc = this.element.querySelectorAll('.ol-scroll-top');
+  sc = this.element.querySelectorAll('.ol-scroll-top');
   sc.forEach(function(i) {
     i.addEventListener('click', function(){ 
       this.element.scrollTop = 0;
@@ -71,7 +72,7 @@ var ol_control_Storymap = function(options) {
   }.bind(this));
 
   // Trigger change event on scroll
-  this.element.addEventListener("scroll", function(e) {
+  this.element.addEventListener("scroll", function() {
     var current, chapter = this.element.querySelectorAll('.chapter');
     var height = ol_ext_element.getStyle(this.element, 'height');
     if (!this.element.scrollTop) {
@@ -100,7 +101,7 @@ ol_control_Storymap.prototype.setChapter = function (name) {
     if (s.getAttribute('name')===name) {
       this.element.scrollTop = s.offsetTop;
     }
-  };
+  }
 };
 
 export default ol_control_Storymap

@@ -2,6 +2,7 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+/*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
 
 import {inherits as ol_inherits} from 'ol'
 import {getDistance as ol_sphere_getDistance} from 'ol/sphere'
@@ -315,8 +316,8 @@ ol_control_Profil.prototype.setGeometry = function(g, options)
 
 	//
 	var zmin=Infinity, zmax=-Infinity;
-	var d, z, ti, t = this.tab_ = [];
-	for (var i=0, p; p=c[i]; i++)
+	var i, p, d, z, ti, t = this.tab_ = [];
+	for (i=0, p; p=c[i]; i++)
 	{	z = p[2];
 		if (z<zmin) zmin=z;
 		if (z>zmax) zmax=z;
@@ -369,7 +370,7 @@ ol_control_Profil.prototype.setGeometry = function(g, options)
 	ctx.fillStyle="#000";
 	// Scale Z
 	ctx.beginPath();
-	for (var i=zmin; i<=zmax; i+=grad)
+	for (i=zmin; i<=zmax; i+=grad)
 	{	if (options.zunit!="km") ctx.fillText(i, -4*ratio, i*scy+dy);
 		else ctx.fillText((i/1000).toFixed(1), -4*ratio, i*scy+dy);
 		ctx.moveTo (-2*ratio, i*scy+dy);
@@ -393,7 +394,7 @@ ol_control_Profil.prototype.setGeometry = function(g, options)
 		else if (d>1) step = Math.round(d)/10;
 		else step = d;
 	}
-	for (var i=0; i<=d; i+=step)
+	for (i=0; i<=d; i+=step)
 	{	var txt = (unit=="m") ? i : (i/1000);
 		//if (i+step>d) txt += " "+ (options.zunits || "km");
 		ctx.fillText(Math.round(txt*10)/10, i*scx, 4*ratio);
@@ -413,7 +414,7 @@ ol_control_Profil.prototype.setGeometry = function(g, options)
 	ctx.lineWidth = 1;
 	ctx.setLineDash([]);
 	ctx.beginPath();
-	for (var i=0, p; p=t[i]; i++)
+	for (i=0; p=t[i]; i++)
 	{	if (i==0) ctx.moveTo(p[0]*scx,p[1]*scy+dy);
 		else ctx.lineTo(p[0]*scx,p[1]*scy+dy);
 	}

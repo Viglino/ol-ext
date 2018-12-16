@@ -66,9 +66,8 @@ ol_interaction_Flashlight.prototype.setColor = function(options)
 	var c = ol_color_asArray(color);
 	this.startColor = ol_color_asString(c);
 	// Halo color
-	var endColor;
-	if (options.color)
-	{	c = this.endColor = ol_color_asString(ol_color_asArray(options.color)||options.color);
+	if (options.color) {
+		c = this.endColor = ol_color_asString(ol_color_asArray(options.color)||options.color);
 	}
 	else 
 	{	c[3] = 0

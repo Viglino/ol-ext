@@ -119,7 +119,7 @@ ol_filter_Lego.prototype.postcompose = function(e)
 	ctx.save();
 
 		// resize 
-		var step = this.pattern.canvas.width*ratio, step2 = step/2;
+		var step = this.pattern.canvas.width*ratio;
 		var p = e.frameState.extent;
 		var res = e.frameState.viewState.resolution/ratio;
 		var offset = [ -Math.round((p[0]/res)%step), Math.round((p[1]/res)%step) ];

@@ -2,7 +2,7 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-
+/* global $ */
 import {inherits as ol_inherits} from 'ol'
 import ol_control_LayerSwitcher from './LayerSwitcher'
 

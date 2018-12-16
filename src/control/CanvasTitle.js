@@ -106,7 +106,7 @@ ol_control_CanvasTitle.prototype.setTitle = function (title)
  * @param {string} map title.
  * @api stable
  */
-ol_control_CanvasTitle.prototype.getTitle = function (title)
+ol_control_CanvasTitle.prototype.getTitle = function ()
 {	return this.text_;
 }
 
@@ -117,8 +117,8 @@ ol_control_CanvasTitle.prototype.getTitle = function (title)
  * @api stable
  */
 ol_control_CanvasTitle.prototype.setVisible = function (b)
-{	if (b) el.style.display = '';
-	else el.style.display = 'none';
+{	if (b) this.element.style.display = '';
+	else this.element.style.display = 'none';
 	if (this.getMap()) this.getMap().renderSync();
 }
 
@@ -127,7 +127,7 @@ ol_control_CanvasTitle.prototype.setVisible = function (b)
  * @return {bool} 
  * @api stable
  */
-ol_control_CanvasTitle.prototype.getVisible = function (b)
+ol_control_CanvasTitle.prototype.getVisible = function ()
 {	return this.element.style.display !== 'none';
 }
 

@@ -26,7 +26,7 @@
   },
   "scripts": {
     "test": "npm test npmtest.js",
-    "lint": "eslint src/",
+    "lint": "eslint --fix src/ || exit 0",
     "prepack": "gulp prepublish",
     "postpack": "gulp postpublish"
   },

@@ -62,11 +62,11 @@ ol_layer_AnimatedCluster.prototype.saveCluster = function() {
 */
 ol_layer_AnimatedCluster.prototype.getClusterForFeature = function(f, cluster)
 {	for (var j=0, c; c=cluster[j]; j++)
-	{	var features = cluster[j].get('features');
+	{	var features = c.get('features');
 		if (features && features.length) 
 		{	for (var k=0, f2; f2=features[k]; k++)
 			{	if (f===f2) 
-				{	return cluster[j];
+				{	return c;
 				}
 			}
 		}
@@ -92,7 +92,7 @@ ol_layer_AnimatedCluster.prototype.animate = function(e)
 {	var duration = this.get('animationDuration');
 	if (!duration) return;
 	var resolution = e.frameState.viewState.resolution;
-	var a = this.animation;
+	var i, c0, a = this.animation;
 	var time = e.frameState.time;
 
 	// Start a new animation, if change resolution and source has changed
@@ -111,7 +111,7 @@ ol_layer_AnimatedCluster.prototype.animate = function(e)
 			a.revers = true;
 		}
 		a.clusters = [];
-		for (var i=0, c0; c0=a.cA[i]; i++)
+		for (i=0, c0; c0=a.cA[i]; i++)
 		{	var f = c0.get('features');
 			if (f && f.length) 
 			{	var c = this.getClusterForFeature (f[0], a.cB);
@@ -149,7 +149,7 @@ ol_layer_AnimatedCluster.prototype.animate = function(e)
 		e.context.globalAlpha = this.getOpacity();
 		// Retina device
 		var ratio = e.frameState.pixelRatio;
-		for (var i=0, c; c=a.clusters[i]; i++)
+		for (i=0, c; c=a.clusters[i]; i++)
 		{	var pt = c.f.getGeometry().getCoordinates();
 			var dx = pt[0]-c.pt[0];
 			var dy = pt[1]-c.pt[1];

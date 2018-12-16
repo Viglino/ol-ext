@@ -11,6 +11,7 @@ import ol_interaction_Pointer from 'ol/interaction/Pointer'
 import ol_style_RegularShape from 'ol/style/RegularShape'
 import {fromExtent as ol_geom_Polygon_fromExtent} from 'ol/geom/Polygon'
 import {boundingExtent as ol_extent_boundingExtent, buffer as ol_extent_buffer, createEmpty as ol_extent_createEmpty, extend as ol_extent_extend, getCenter as ol_extent_getCenter} from 'ol/extent'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 
 /** Interaction rotate
  * @constructor
@@ -280,19 +281,20 @@ ol_interaction_Transform.prototype.getFeatureAtPixel_ = function(pixel) {
 * @param {boolean} draw only the center
 */
 ol_interaction_Transform.prototype.drawSketch_ = function(center) {
+  var i, f, geom;
   this.overlayLayer_.getSource().clear();
   if (!this.selection_.length) return;
   var ext = this.selection_[0].getGeometry().getExtent();
   // Clone and extend
   ext = ol_extent_buffer(ext, 0);
-  for (var i=1, f; f = this.selection_[i]; i++) {
+  for (i=1, f; f = this.selection_[i]; i++) {
     ol_extent_extend(ext, f.getGeometry().getExtent());
   }
   if (center===true) {
     if (!this.ispt_) {
       this.overlayLayer_.getSource().addFeature(new ol_Feature( { geometry: new ol_geom_Point(this.center_), handle:'rotate0' }) );
-      var geom = ol_geom_Polygon_fromExtent(ext);
-      var f = this.bbox_ = new ol_Feature(geom);
+      geom = ol_geom_Polygon_fromExtent(ext);
+      f = this.bbox_ = new ol_Feature(geom);
       this.overlayLayer_.getSource().addFeature (f);
     }
   }
@@ -304,19 +306,19 @@ ol_interaction_Transform.prototype.drawSketch_ = function(center) {
         this.getMap().getCoordinateFromPixel([p[0]+10, p[1]+10])
       ]);
     }
-    var geom = ol_geom_Polygon_fromExtent(ext);
-    var f = this.bbox_ = new ol_Feature(geom);
+    geom = ol_geom_Polygon_fromExtent(ext);
+    f = this.bbox_ = new ol_Feature(geom);
     var features = [];
     var g = geom.getCoordinates()[0];
     if (!this.ispt_) {
       features.push(f);
       // Middle
-      if (this.get('stretch') && this.get('scale')) for (var i=0; i<g.length-1; i++) {
+      if (this.get('stretch') && this.get('scale')) for (i=0; i<g.length-1; i++) {
         f = new ol_Feature( { geometry: new ol_geom_Point([(g[i][0]+g[i+1][0])/2,(g[i][1]+g[i+1][1])/2]), handle:'scale', constraint:i%2?"h":"v", option:i });
         features.push(f);
       }
       // Handles
-      if (this.get('scale')) for (var i=0; i<g.length-1; i++) {
+      if (this.get('scale')) for (i=0; i<g.length-1; i++) {
         f = new ol_Feature( { geometry: new ol_geom_Point(g[i]), handle:'scale', option:i });
         features.push(f);
       }
@@ -365,7 +367,7 @@ ol_interaction_Transform.prototype.watchFeatures_ = function() {
   // Listen to feature modification
   if (this._featureListeners) {
     this._featureListeners.forEach(function (l) {
-      ol.Observable.unByKey(l)
+      ol_Observable_unByKey(l)
     });
   }
   this._featureListeners = [];
@@ -472,6 +474,7 @@ ol_interaction_Transform.prototype.setCenter = function(c) {
  * @param {ol.MapBrowserEvent} evt Map browser event.
  */
 ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
+  var i, f, geometry;
   switch (this.mode_) {
     case 'rotate': {
       var a = Math.atan2(this.center_[1]-evt.coordinate[1], this.center_[0]-evt.coordinate[0]);
@@ -479,8 +482,8 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
         // var geometry = this.geom_.clone();
         // geometry.rotate(a-this.angle_, this.center_);
         // this.feature_.setGeometry(geometry);
-        for (var i=0, f; f=this.selection_[i]; i++) {
-          var geometry = this.geoms_[i].clone();
+        for (i=0, f; f=this.selection_[i]; i++) {
+          geometry = this.geoms_[i].clone();
           geometry.rotate(a - this.angle_, this.center_);
           f.setGeometry(geometry);
         }
@@ -501,7 +504,7 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
       var deltaY = evt.coordinate[1] - this.coordinate_[1];
 
       //this.feature_.getGeometry().translate(deltaX, deltaY);
-      for (var i=0, f; f=this.selection_[i]; i++) {
+      for (i=0, f; f=this.selection_[i]; i++) {
         f.getGeometry().translate(deltaX, deltaY);
       }
       this.handles_.forEach(function(f) {
@@ -542,12 +545,12 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
         }
       }
 
-      for (var i=0, f; f=this.selection_[i]; i++) {
-        var geometry = this.geoms_[i].clone();
+      for (i=0, f; f=this.selection_[i]; i++) {
+        geometry = this.geoms_[i].clone();
         geometry.applyTransform(function(g1, g2, dim) {
           if (dim<2) return g2;
 
-          for (var i=0; i<g1.length; i+=dim) {
+          for (i=0; i<g1.length; i+=dim) {
             if (scx!=1) g2[i] = center[0] + (g1[i]-center[0])*scx;
             if (scy!=1) g2[i+1] = center[1] + (g1[i+1]-center[1])*scy;
           }
@@ -564,6 +567,7 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
         pixel: evt.pixel,
         coordinate: evt.coordinate
       });
+      break;
     }
     default: break;
   }
@@ -574,8 +578,7 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
  */
 ol_interaction_Transform.prototype.handleMoveEvent_ = function(evt) {
   // console.log("handleMoveEvent");
-  if (!this.mode_)
-  {	var map = evt.map;
+  if (!this.mode_) {
     var sel = this.getFeatureAtPixel_(evt.pixel);
     var element = evt.map.getTargetElement();
     if (sel.feature)

@@ -46,12 +46,13 @@ var ol_coordinate_getGeomCenter = function(geom)
 	{	case 'Point': 
 			return geom.getCoordinates();
 		case "MultiPolygon":
-			geom = geom.getPolygon(0);
+            geom = geom.getPolygon(0);
+            // fallthrough
 		case "Polygon":
 			return geom.getInteriorPoint().getCoordinates();
 		default:
 			return geom.getClosestPoint(ol_extent_getCenter(geom.getExtent()));
-	};
+	}
 };
 
 /** Offset a polyline

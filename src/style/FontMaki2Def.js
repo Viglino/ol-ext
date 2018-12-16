@@ -2,7 +2,9 @@
  *
  * Font definiton to use with fontsymbols
  */
-ol.style.FontSymbol.addDefs
+import ol_style_FontSymbol from './FontSymbol'
+
+ol_style_FontSymbol.addDefs
 ({
 	"font": "fontmaki2",
 	"name": "Maki2",

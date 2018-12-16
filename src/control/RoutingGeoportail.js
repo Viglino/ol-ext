@@ -4,7 +4,10 @@
 */
 import {inherits as ol_inherits} from 'ol'
 import ol_control_Control from 'ol/control/Control'
+import ol_geom_LineString from 'ol/geom/LineString';
+import ol_Feature from 'ol/Feature'
 import ol_ext_element from '../util/element';
+import ol_control_SearchGeoportail from './SearchGeoportail'
 
 /**
  * Geoportail routing Control.
@@ -14,18 +17,18 @@ import ol_ext_element from '../util/element';
  * @fires change:input
  * @param {Object=} options
  *	@param {string} options.className control class name
-*	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
-*	@param {string | undefined} options.label Text label to use for the search button, default "search"
-*	@param {string | undefined} options.placeholder placeholder, default "Search..."
-*	@param {string | undefined} options.inputLabel label for the input, default none
-*	@param {string | undefined} options.noCollapse prevent collapsing on input blur, default false
-*	@param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
-*	@param {integer | undefined} options.minLength minimum length to start searching, default 1
-*	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
-*	@param {integer | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
-*	@param {function} options.getTitle a function that takes a feature and return the name to display in the index.
-*	@param {function} options.autocomplete a function that take a search string and callback function to send an array
-*/
+ *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *	@param {string | undefined} options.label Text label to use for the search button, default "search"
+ *	@param {string | undefined} options.placeholder placeholder, default "Search..."
+ *	@param {string | undefined} options.inputLabel label for the input, default none
+ *	@param {string | undefined} options.noCollapse prevent collapsing on input blur, default false
+ *	@param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
+ *	@param {integer | undefined} options.minLength minimum length to start searching, default 1
+ *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *	@param {integer | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
+ *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index.
+ *	@param {function} options.autocomplete a function that take a search string and callback function to send an array
+ */
 var ol_control_RoutingGeoportail = function(options) {
   var self = this;
   if (!options) options = {};
@@ -123,7 +126,6 @@ ol_control_RoutingGeoportail.prototype.addSearch = function (element, options) {
     search.setInput(e.search.fulltext);
     search.set('selection', e.search);
   });
-  var self = this;
   search.element.querySelector('input').addEventListener('change', function(){
     search.set('selection', null);
     self.resultElement.innerHTML = '';
@@ -179,7 +181,7 @@ ol_control_RoutingGeoportail.prototype.listRouting = function (routing) {
     t += ' ('+(dist/1000).toFixed(2)+' km)';
   }
   var iElement = document.createElement('i');
-      iElement.textContent = t;
+  iElement.textContent = t;
   this.resultElement.appendChild(iElement)
 
   var ul = document.createElement('ul');
@@ -197,7 +199,7 @@ ol_control_RoutingGeoportail.prototype.listRouting = function (routing) {
   for (var i=0, f; f=routing.features[i]; i++) {
     var d = f.get('distance');
     d = (d<1000) ? d.toFixed(0)+' m' : (d/1000).toFixed(2)+' km';
-    var t = f.get('durationT')/60;
+    t = f.get('durationT')/60;
     console.log(f.get('duration'),t)
     t = (f.get('duration')<40) ? '' : (t<60) ? t.toFixed(0)+' min' : (t/60).toFixed(0)+' h '+(t%60).toFixed(0)+' min';
     var li = document.createElement('li');
@@ -231,8 +233,8 @@ ol_control_RoutingGeoportail.prototype.handleResponse = function (data) {
         p = p.split(',');
         geom.push([parseFloat(p[0]),parseFloat(p[1])]);
       }
-      geom = new ol.geom.LineString(geom);
-      options = {
+      geom = new ol_geom_LineString(geom);
+      var options = {
         geometry: geom.transform('EPSG:4326',this.getMap().getView().getProjection()),
         name: s.name,
         instruction: s.navInstruction,
@@ -244,7 +246,7 @@ ol_control_RoutingGeoportail.prototype.handleResponse = function (data) {
       duration += options.duration;
       options.distanceT = distance;
       options.durationT = duration;
-      var f = new ol.Feature(options);
+      var f = new ol_Feature(options);
       routing.features.push(f);
     }
   }

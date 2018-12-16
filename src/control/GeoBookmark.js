@@ -35,12 +35,12 @@ var ol_control_GeoBookmark = function(options) {
     element.addEventListener("mouseleave", function() {
       if (input !== document.activeElement) {
         menu.style.display = 'none';
-      };
+      }
     });
     // Show bookmarks on click
     this.button = document.createElement('button');
     this.button.setAttribute('type', 'button');
-    this.button.addEventListener('click', function(e) {
+    this.button.addEventListener('click', function() {
       menu.style.display = (menu.style.display === '' || menu.style.display === 'none' ? 'block': 'none');
     });
     element.appendChild(this.button);
@@ -52,7 +52,7 @@ var ol_control_GeoBookmark = function(options) {
   menu.appendChild(ul);
   var input = document.createElement('input');
   input.setAttribute("placeholder", options.placeholder || "Add a new geomark...")
-  input.addEventListener("change", function(e) {
+  input.addEventListener("change", function() {
     var title = this.value;
     if (title) {
       self.addBookmark(title);
@@ -148,7 +148,7 @@ ol_control_GeoBookmark.prototype.getBookmarks = function() {
 ol_control_GeoBookmark.prototype.removeBookmark = function(name) {
   if (!name) {
     return;
-  };
+  }
   var bmark = this.getBookmarks();
   delete bmark[name];
   this.setBookmarks(bmark);

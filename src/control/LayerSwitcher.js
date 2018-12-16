@@ -2,7 +2,7 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-
+/* global $ */
 import {inherits as ol_inherits} from 'ol'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_control_Control from 'ol/control/Control'
@@ -214,10 +214,9 @@ ol_control_LayerSwitcher.prototype.overflow = function(dir)
 
 /**
  * On view change hide layer depending on resolution / extent
- * @param {ol.event} map The map instance.
  * @private
  */
-ol_control_LayerSwitcher.prototype.viewChange = function(e)
+ol_control_LayerSwitcher.prototype.viewChange = function()
 {
 	var map = this.map_;
 	var res = this.map_.getView().getResolution();
@@ -243,8 +242,7 @@ ol_control_LayerSwitcher.prototype.viewChange = function(e)
 /**
  *	Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
  */
-ol_control_LayerSwitcher.prototype.drawPanel = function(e)
-{
+ol_control_LayerSwitcher.prototype.drawPanel = function() {
 	if (!this.getMap()) return;
 	var self = this;
 	// Multiple event simultaneously / draw once => put drawing in the event queue
@@ -255,7 +253,7 @@ ol_control_LayerSwitcher.prototype.drawPanel = function(e)
 /** Delayed draw panel control 
  * @private
  */
-ol_control_LayerSwitcher.prototype.drawPanel_ = function(e)
+ol_control_LayerSwitcher.prototype.drawPanel_ = function()
 {	if (--this.dcount || this.dragging_) return;
 	$("li", this.panel_).not(".ol-header").remove();
 	this.drawList (this.panel_, this.getMap().getLayers());
@@ -304,13 +302,14 @@ ol_control_LayerSwitcher.prototype.testLayerVisibility = function(layer)
 */
 ol_control_LayerSwitcher.prototype.dragOrdering_ = function(e)
 {	var drag = e.data;
+	var pageY, target
 	switch (e.type)
 	{	// Start ordering
 		case 'mousedown': 
 		case 'touchstart':
 		{	e.stopPropagation();
 			e.preventDefault();
-			var pageY = e.pageY 
+			pageY = e.pageY 
 					|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageY) 
 					|| (e.originalEvent.changedTouches && e.originalEvent.changedTouches.length && e.originalEvent.changedTouches[0].pageY);
 			drag = 
@@ -332,7 +331,7 @@ ol_control_LayerSwitcher.prototype.dragOrdering_ = function(e)
 		{	if (drag.target) 
 			{	// Get drag on parent
 				var drop = drag.layer;
-				var target = drag.target;
+				target = drag.target;
 				if (drop && target) 
 				{	var collection ;
 					if (drag.group) collection = drag.group.getLayers();
@@ -368,7 +367,7 @@ ol_control_LayerSwitcher.prototype.dragOrdering_ = function(e)
 		case 'mousemove':
 		case 'touchmove':
 		{	// First drag (more than 2 px) => show drag element (ghost)
-			var pageY = e.pageY 
+			pageY = e.pageY 
 					|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageY) 
 					|| (e.originalEvent.changedTouches && e.originalEvent.changedTouches.length && e.originalEvent.changedTouches[0].pageY);
 			if (drag.start && Math.abs(drag.pageY - pageY) > 2)
@@ -406,7 +405,7 @@ ol_control_LayerSwitcher.prototype.dragOrdering_ = function(e)
 				if (!li.is("li")) li = li.closest("li");
 				if (!li.hasClass('dropover')) $("li", drag.elt.parent()).removeClass("dropover dropover-after dropover-before");
 				if (li.parent().hasClass('drag') && li.get(0) !== drag.elt.get(0))
-				{	var target = li.data("layer");
+				{	target = li.data("layer");
 					// Don't mix layer level
 					if (target && !target.get("allwaysOnTop") == !drag.layer.get("allwaysOnTop"))
 					{	li.addClass("dropover");
@@ -497,6 +496,7 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection)
 		var l = $(this).parent().parent().data("layer");
 		self.switchLayerVisibility(l,collection);
 	};
+	/*
 	function moveLayer (l, layers, inc)
 	{	
 		for (var i=0; i<layers.getLength(); i++)
@@ -508,24 +508,25 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection)
 			if (layers.item(i).getLayers && moveLayer (l, layers.item(i).getLayers(), inc)) return true;
 		}
 		return false;
-	};
+	}
 	function moveLayerUp(e) 
 	{	e.stopPropagation();
 		e.preventDefault(); 
 		moveLayer($(this).closest('li').data("layer"), self.map_.getLayers(), +1); 
-	};
+	}
 	function moveLayerDown(e) 
 	{	e.stopPropagation();
 		e.preventDefault(); 
 		moveLayer($(this).closest('li').data("layer"), self.map_.getLayers(), -1); 
-	};
+	}
+	*/
 	function onInfo(e) 
 	{	e.stopPropagation();
 		e.preventDefault(); 
 		var l = $(this).closest('li').data("layer");
 		self.oninfo(l); 
 		self.dispatchEvent({ type: "info", layer: l });
-	};
+	}
 	function zoomExtent(e) 
 	{	e.stopPropagation();
 		e.preventDefault(); 
@@ -533,7 +534,7 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection)
 		if (self.onextent) self.onextent(l); 
 		else self.map_.getView().fit (l.getExtent(), self.map_.getSize()); 
 		self.dispatchEvent({ type: "extent", layer: l });
-	};
+	}
 	function removeLayer(e) 
 	{	e.stopPropagation();
 		e.preventDefault();
@@ -545,7 +546,7 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection)
 			}
 		}
 		else self.map_.removeLayer($(this).closest('li').data("layer"));
-	};
+	}
 	
 	// Add the layer list
 	for (var i=layers.length-1; i>=0; i--)
@@ -691,7 +692,7 @@ ol_control_LayerSwitcher.prototype.setprogress_ = function(layer)
 	if (!layer.layerswitcher_progress)
 	{	var loaded = 0;
 		var loading = 0;
-		function draw()
+		var draw = function()
 		{	if (loading === loaded) 
 			{	loading = loaded = 0;
 				layer.layerswitcher_progress.width(0);

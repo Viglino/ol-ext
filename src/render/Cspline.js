@@ -112,7 +112,7 @@ ol_geom_LineString.prototype.calcCSpline_ = function(options)
 		
 		var d=1;
 		if (options.normalize)
-		{	var d1 = dist2d (pts[i+1][0], pts[i+1][1], pts[i-1][0], pts[i-1][1]);
+		{	d1 = dist2d (pts[i+1][0], pts[i+1][1], pts[i-1][0], pts[i-1][1]);
 			var d2 = dist2d (pts[i+2][0], pts[i+2][1], pts[i][0], pts[i][1]);
 			if (d1<d2) d = d1/d2;
 			else d = d2/d1;

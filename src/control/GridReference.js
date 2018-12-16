@@ -30,8 +30,7 @@ import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent'
  *	- indexTitle {function|undefined} a function that takes a feature and return the title to display in the index, default the first letter of property option
  *	- filterLabel {string} label to display in the search bar, default 'filter'
  */
-var ol_control_GridReference = function(options)
-{	var self = this;
+var ol_control_GridReference = function(options) {
 	if (!options) options = {};
 
 	// Initialize parent
@@ -52,12 +51,12 @@ var ol_control_GridReference = function(options)
 	if (options.source)
 	{	this.setIndex(options.source.getFeatures(), options);
 		// reload on ready
-		options.source.once('change',function(e)
+		options.source.once('change',function()
 			{	if (options.source.getState() === 'ready')
 				{   this.setIndex(options.source.getFeatures(), options);
 				}
 			}.bind(this));
-	};
+	}
 
 	// Options
 	this.set('maxResolution', options.maxResolution || Infinity);
@@ -125,8 +124,7 @@ ol_control_GridReference.prototype.setIndex = function (features)
 			{	var v = this.value.replace(/^\*/,'');
 				// console.log(v)
 				var r = new RegExp (v, 'i');
-				ul.querySelectorAll('li').forEach(function(li)
-				{	var self = li;
+				ul.querySelectorAll('li').forEach(function(li) {
 					if (li.classList.contains('ol-title')) li.style.display = '';
 					else
 					{	if (r.test(li.querySelector('.ol-name').textContent)) li.style.display = '';
@@ -137,7 +135,7 @@ ol_control_GridReference.prototype.setIndex = function (features)
 				{
 					var nextAll = false;
 					nextAll = [].filter.call(li.parentNode.children, function (htmlElement) {
-					    return (htmlElement.previousElementSibling === li) ? nextAll = true : nextAll;
+						return (htmlElement.previousElementSibling === li) ? nextAll = true : nextAll;
 					});
 					console.log(nextAll);
 					var nextVisible = nextAll[0];
@@ -160,7 +158,7 @@ ol_control_GridReference.prototype.setIndex = function (features)
 			{	var name = self.getFeatureName(feat);
 				var c = self.indexTitle(feat);
 				if (c != title)
-				{	li_title = document.createElement("li");
+				{	var li_title = document.createElement("li");
 					li_title.classList.add('ol-title');
 					li_title.textContent = c;
 					ul.appendChild(li_title);
@@ -233,7 +231,7 @@ ol_control_GridReference.prototype.setStyle = function (style)
 * @return {ol_style_Style} style
 */
 ol_control_GridReference.prototype.getStyle = function ()
-{	return style;
+{	return this.style;
 };
 
 /** Draw the grid
@@ -269,11 +267,12 @@ ol_control_GridReference.prototype.drawGrid_ = function (e)
 
 		// Draw grid
 		ctx.beginPath();
-		for (var i=0; i<=size[0]; i++)
+		var i;
+		for (i=0; i<=size[0]; i++)
 		{	ctx.moveTo(p0[0]+i*dx, p0[1]);
 			ctx.lineTo(p0[0]+i*dx, p1[1]);
 		}
-		for (var i=0; i<=size[1]; i++)
+		for (i=0; i<=size[1]; i++)
 		{	ctx.moveTo(p0[0], p0[1]+i*dy);
 			ctx.lineTo(p1[0], p0[1]+i*dy);
 		}
@@ -287,7 +286,7 @@ ol_control_GridReference.prototype.drawGrid_ = function (e)
 		var spacing = margin +lw;
 		ctx.textAlign = 'center';
 		var letter, x, y;
-		for (var i=0; i<size[0]; i++)
+		for (i=0; i<size[0]; i++)
 		{	letter = String.fromCharCode(65+i);
 			x = p0[0]+i*dx+dx/2;
 			y = p0[1]-spacing;
@@ -308,7 +307,7 @@ ol_control_GridReference.prototype.drawGrid_ = function (e)
 			ctx.fillText(letter, x, y);
 		}
 		ctx.textBaseline = 'middle';
-		for (var i=0; i<size[0]; i++)
+		for (i=0; i<size[0]; i++)
 		{	y = p0[1]+i*dy+dy/2;
 			ctx.textAlign = 'right';
 			x = p0[0] - spacing;

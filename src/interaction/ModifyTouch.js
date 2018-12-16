@@ -6,6 +6,7 @@
 import {inherits as ol_inherits} from 'ol'
 import ol_interaction_Modify from 'ol/interaction/Modify'
 import ol_Overlay_Popup from '../overlay/Popup'
+import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent'
 
 /** Modify interaction with a popup to delet a point on touch device
  * @constructor
@@ -43,17 +44,17 @@ var ol_interaction_ModifyTouch = function(options) {
   // Check if there is a feature to select
   options.condition = function(e) {
 		var features = this.getMap().getFeaturesAtPixel(e.pixel,{
-		  hitTolerance: searchDist
+      hitTolerance: searchDist
     });
-    var found = false;
+    var p0, p1, found = false;
 		if (features) {
       var search = this._features;
       if (!search) {
-        var p0 = [e.pixel[0] - searchDist, e.pixel[1] - searchDist]
-        var p1 = [e.pixel[0] + searchDist, e.pixel[1] + searchDist]
+        p0 = [e.pixel[0] - searchDist, e.pixel[1] - searchDist]
+        p1 = [e.pixel[0] + searchDist, e.pixel[1] + searchDist]
         p0 = this.getMap().getCoordinateFromPixel(p0);
         p1 = this.getMap().getCoordinateFromPixel(p1);
-        var ext = ol.extent.boundingExtent([p0,p1]);
+        var ext = ol_extent_boundingExtent([p0,p1]);
         search = this._source.getFeaturesInExtent(ext);
       } 
       if (search.getArray) search = search.getArray();
@@ -61,8 +62,8 @@ var ol_interaction_ModifyTouch = function(options) {
         if (search.indexOf(f) >= 0) break;
       }
       if (f) {
-        var p0 = e.pixel;
-        var p1 = f.getGeometry().getClosestPoint(e.coordinate);
+        p0 = e.pixel;
+        p1 = f.getGeometry().getClosestPoint(e.coordinate);
         p1 = this.getMap().getPixelFromCoordinate(p1);
         var dx = p0[0] - p1[0];
         var dy = p0[1] - p1[1];
@@ -79,7 +80,7 @@ var ol_interaction_ModifyTouch = function(options) {
   };
 
   // Hide popup on insert
-	options.insertVertexCondition = function(e) {
+	options.insertVertexCondition = function() {
 		this.showDeleteBt({ type:'hide' });
 		return true;
   }

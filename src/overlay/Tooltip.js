@@ -5,6 +5,9 @@
 
 import {inherits as ol_inherits} from 'ol'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_interaction_Interaction from 'ol/interaction/Interaction'
+import {getArea as ol_sphere_getArea} from 'ol/sphere.js';
+import {getLength as ol_sphere_getLength} from 'ol/sphere.js';
 import ol_Overlay_Popup from 'Popup'
 
 /** A tooltip element to be displayed over the map and attached on the cursor position.
@@ -24,7 +27,7 @@ var ol_Overlay_Tooltip = function (options) {
   options.positioning = options.positioning || 'center-left';
 	ol_Overlay_Popup.call(this, options);
 
-  this._interaction = new ol.interaction.Interaction({
+  this._interaction = new ol_interaction_Interaction({
     handleEvent: function(e){
       if (e.type==='pointermove' || e.type==='click') {
         if (this.get('info')) {
@@ -97,7 +100,7 @@ ol_Overlay_Tooltip.prototype.setFeature = function(feature) {
       var geom = e.target;
       var measure;
       if (geom.getArea) {
-        var area = ol.sphere.getArea(geom, { projection: this.getMap().getView().getProjection() });
+        var area = ol_sphere_getArea(geom, { projection: this.getMap().getView().getProjection() });
         area = Math.round(area*100) / 100;
         if (area) {
           if (area>10000) {
@@ -108,7 +111,7 @@ ol_Overlay_Tooltip.prototype.setFeature = function(feature) {
         }
         measure = area;
       } else if (geom.getLength) {
-        var length = ol.sphere.getLength(geom, { projection: this.getMap().getView().getProjection() });
+        var length = ol_sphere_getLength(geom, { projection: this.getMap().getView().getProjection() });
         length = Math.round(length*100) / 100;
         if (length) {
           if (length>100) {

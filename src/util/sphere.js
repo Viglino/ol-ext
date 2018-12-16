@@ -1,3 +1,5 @@
+/* global ol */
+
 /* Create ol.sphere for backward compatibility with ol < 5.0
  * To use with Openlayers package
  */

@@ -112,7 +112,7 @@ var ol_control_Search = function(options) {
 				tout = setTimeout(function() {
           if (cur.length >= self.get("minLength")) {
             var s = self.autocomplete (cur, function(auto) { self.drawList_(auto); });
-					  if (s) self.drawList_(s);
+						if (s) self.drawList_(s);
           }
           else self.drawList_();
 				}, options.typing);
@@ -121,7 +121,7 @@ var ol_control_Search = function(options) {
 		}
 		// Clear list selection
 		else {
-      var li = element.querySelector("ul.autocomplete li");
+      li = element.querySelector("ul.autocomplete li");
 			if (li) li.classList.remove('select');
 		}
 	};
@@ -222,21 +222,22 @@ ol_control_Search.prototype._handleSelect = function (f) {
 	if (!f) return;
   // Save input in history
   var hist = this.get('history');
-  // Prevent error on stringify
+	// Prevent error on stringify
+	var i;
   try {
     var fstr = JSON.stringify(f);
-    for (var i=hist.length-1; i>=0; i--) {
+    for (i=hist.length-1; i>=0; i--) {
       if (!hist[i] || JSON.stringify(hist[i]) === fstr) {
         hist.splice(i,1);
       }
     }
   } catch (e) {
-    for (var i=hist.length-1; i>=0; i--) {
+    for (i=hist.length-1; i>=0; i--) {
       if (hist[i] === f) {
         hist.splice(i,1);
       }
     }
-	};
+	}
 	hist.unshift(f);
 	while (hist.length > (this.get('maxHistory')||10)) {
 		hist.pop();
@@ -253,7 +254,7 @@ ol_control_Search.prototype.saveHistory = function () {
   if (this.get('maxHistory')>=0) {
     try {
       localStorage["ol@search-"+this._classname] = JSON.stringify(this.get('history'));
-    } catch (e) {};
+    } catch (e) { /* ok */ }
   } else {
     localStorage.removeItem("ol@search-"+this._classname);
   }
@@ -318,11 +319,11 @@ ol_control_Search.prototype.drawList_ = function (auto) {
   } else {
     ul.setAttribute('class', 'autocomplete');
   }
-	var max = Math.min (self.get("maxItems"),auto.length);
+	var li, max = Math.min (self.get("maxItems"),auto.length);
 	for (var i=0; i<max; i++) {	
 		if (auto[i]) {
 			if (!i || !self.equalFeatures(auto[i], auto[i-1])) {
-				var li = document.createElement("LI");
+				li = document.createElement("LI");
 				li.setAttribute("data-search", i);
 				this._list.push(auto[i]);
 				li.addEventListener("click", function(e) {
@@ -334,7 +335,7 @@ ol_control_Search.prototype.drawList_ = function (auto) {
 		}
 	}
 	if (max && this.get("copy")) {
-		var li = document.createElement("LI");
+		li = document.createElement("LI");
 		li.classList.add("copy");
 		li.innerHTML = this.get("copy");
 		ul.appendChild(li);
@@ -346,7 +347,7 @@ ol_control_Search.prototype.drawList_ = function (auto) {
  * @param {any} f2
  * @return {boolean}
  */
-ol_control_Search.prototype.equalFeatures = function (f1, f2) {
+ol_control_Search.prototype.equalFeatures = function (/* f1, f2 */) {
 	return false;
 };
 

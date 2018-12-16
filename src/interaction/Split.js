@@ -44,7 +44,7 @@ var ol_interaction_Split = function(options)
 				default: 
 					return true;
 			}
-			return true;
+			//return true;
 		}
 	});
 
@@ -59,7 +59,7 @@ var ol_interaction_Split = function(options)
 	this.sources_ = options.sources ? (options.sources instanceof Array) ? options.sources:[options.sources] : [];
 
 	if (options.features)
-	{	this.sources_.push (new ol_source_Vector({ features: features }));
+	{	this.sources_.push (new ol_source_Vector({ features: options.features }));
 	}
 
 	// Get all features candidate
@@ -74,7 +74,7 @@ var ol_interaction_Split = function(options)
 		color: '#3399CC',
 		width: 1.25
 	});
- 	var sketchStyle = 
+	var sketchStyle =
 	[	new ol_style_Style({
 			image: new ol_style_Circle({
 				fill: fill,
@@ -83,8 +83,8 @@ var ol_interaction_Split = function(options)
 			}),
 			fill: fill,
 			stroke: stroke
-	   })
-	 ];
+		})
+	];
 	var featureStyle =
 	[	new ol_style_Style({
 			stroke: new ol_style_Stroke({
@@ -201,9 +201,10 @@ ol_interaction_Split.prototype.handleDownEvent = function(evt)
 	{	var self = this;
 		self.overlayLayer_.getSource().clear();
 		var split = current.feature.getGeometry().splitAt(current.coord, this.tolerance_);
+		var i;
 		if (split.length > 1)
 		{	var tosplit = [];
-			for (var i=0; i<split.length; i++)
+			for (i=0; i<split.length; i++)
 			{	var f = current.feature.clone();
 				f.setGeometry(split[i]);
 				tosplit.push(f);
@@ -211,7 +212,7 @@ ol_interaction_Split.prototype.handleDownEvent = function(evt)
 			self.dispatchEvent({ type:'beforesplit', original: current.feature, features: tosplit });
 			current.source.dispatchEvent({ type:'beforesplit', original: current.feature, features: tosplit });
 			current.source.removeFeature(current.feature);
-			for (var i=0; i<tosplit.length; i++)
+			for (i=0; i<tosplit.length; i++)
 			{	current.source.addFeature(tosplit[i]);
 			}
 			self.dispatchEvent({ type:'aftersplit', original: current.feature, features: tosplit });

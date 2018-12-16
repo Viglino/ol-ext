@@ -19,9 +19,8 @@ import ol_control_Control from 'ol/control/Control'
  *	- position {number} position propertie of the swipe [0,1], default 0.5
  *	- orientation {vertical|horizontal} orientation propertie, default vertical
  */
-var ol_control_Swipe = function(opt_options)
-{	var options = opt_options || {};
-	var self = this;
+var ol_control_Swipe = function(opt_options) {
+	var options = opt_options || {};
 
 	var button = document.createElement('button');
 
@@ -67,9 +66,10 @@ ol_inherits(ol_control_Swipe, ol_control_Control);
  * Set the map instance the control associated with.
  * @param {_ol_Map_} map The map instance.
  */
-ol_control_Swipe.prototype.setMap = function(map)
-{
-	for (var i=0; i<this._listener.length; i++) {
+ol_control_Swipe.prototype.setMap = function(map) {
+	var i;
+
+	for (i=0; i<this._listener.length; i++) {
 		ol_Observable_unByKey(this._listener[i]);
 	}
 	this._listener = [];
@@ -81,7 +81,7 @@ ol_control_Swipe.prototype.setMap = function(map)
 
 	if (map)
 	{	this._listener = [];
-		for (var i=0; i<this.layers.length; i++)
+		for (i=0; i<this.layers.length; i++)
 		{	var l = this.layers[i];
 			if (l.right) this._listener.push (l.layer.on('precompose', this.precomposeRight.bind(this)));
 			else this._listener.push (l.layer.on('precompose', this.precomposeLeft.bind(this)));
@@ -139,8 +139,9 @@ ol_control_Swipe.prototype.removeLayer = function(layers)
 
 /** @private
 */
-ol_control_Swipe.prototype.move = function(e)
-{	var self = this;
+ol_control_Swipe.prototype.move = function(e) {
+	var self = this;
+	var l;
 	switch (e.type)
 	{	case 'touchcancel':
 		case 'touchend':
@@ -153,13 +154,14 @@ ol_control_Swipe.prototype.move = function(e)
 			break;
 		}
 		case 'mousedown':
-		case 'touchstart':
-		{	self.isMoving = true;
+		case 'touchstart': {
+			self.isMoving = true;
 			["mouseup", "mousemove", "touchend", "touchcancel", "touchmove"]
 				.forEach(function(eventName) {
 					document.addEventListener(eventName, self.move.bind(self));
 				});
 		}
+		// fallthrough
 		case 'mousemove':
 		case 'touchmove':
 		{	if (self.isMoving)
@@ -171,7 +173,7 @@ ol_control_Swipe.prototype.move = function(e)
 					pageX -= self.getMap().getTargetElement().getBoundingClientRect().left +
 						window.pageXOffset - document.documentElement.clientLeft;
 
-					var l = self.getMap().getSize()[0];
+					l = self.getMap().getSize()[0];
 					l = Math.min(Math.max(0, 1-(l-pageX)/l), 1);
 					self.set('position', l);
 				}
@@ -183,7 +185,7 @@ ol_control_Swipe.prototype.move = function(e)
 					pageY -= self.getMap().getTargetElement().getBoundingClientRect().top +
 						window.pageYOffset - document.documentElement.clientTop;
 
-					var l = self.getMap().getSize()[1];
+					l = self.getMap().getSize()[1];
 					l = Math.min(Math.max(0, 1-(l-pageY)/l), 1);
 					self.set('position', l);
 				}

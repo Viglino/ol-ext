@@ -75,7 +75,7 @@ ol_control_SearchNominatim.prototype.select = function (f){
     // Add coordinate to the event
     try {
         c = ol_proj_transform (c, 'EPSG:4326', this.getMap().getView().getProjection());
-    } catch(e) {};
+    } catch(e) { /* ok */}
     this.dispatchEvent({ type:"select", search:f, coordinate: c });
 };
 

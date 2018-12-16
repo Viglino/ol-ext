@@ -69,7 +69,7 @@ var ol_Overlay_Popup = function (options) {
   if (options.stopEvent) {
     element.addEventListener("mousedown", function(e){ e.stopPropagation(); });
     element.addEventListener("touchstart", function(e){ e.stopPropagation(); });
-  };
+  }
 
   ol_Overlay.call(this, options);
   this._elt = this.element;

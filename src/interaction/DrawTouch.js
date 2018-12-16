@@ -28,21 +28,22 @@ import ol_geom_Point from 'ol/geom/Point'
  *  - targetStyle {ol_style_Style|Array<ol_style_Style>} a style to draw the target point, default cross style
  *  - composite {string} composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
  */
-var ol_interaction_DrawTouch = function(options)
-{	var options = options||{};
-	var self = this;
+var ol_interaction_DrawTouch = function(options) {
+	options = options||{};
 
-	options.handleEvent = function(e)
-	{	if (this.get("tap"))
-		{	switch (e.type)
-			{	case "singleclick":
+	options.handleEvent = function(e) {
+		if (this.get("tap")) {
+			switch (e.type) {
+				case "singleclick": {
 					this.addPoint();
 					break;
-				case "dblclick":
+				}
+				case "dblclick": {
 					this.addPoint();
 					this.finishDrawing();
 					return false;
-					break;
+					//break;
+				}
 				default: break;
 			}
 		}

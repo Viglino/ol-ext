@@ -109,11 +109,11 @@ ol_Overlay_PopupFeature.prototype._getHtml = function(feature) {
         html: (a.before||'') + (a.format ? a.format(val) : val) + (a.after||''), 
         parent: tr 
       });
-    };
+    }
   }
   // Zoom button
   ol_ext_element.create('BUTTON', { className: 'ol-zoombt', parent: html })
-    .addEventListener('click', function(e) {
+    .addEventListener('click', function() {
       this.getMap().getView().fit(feature.getGeometry().getExtent(), { duration:1000 });
     }.bind(this));
 

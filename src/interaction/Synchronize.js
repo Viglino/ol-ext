@@ -111,7 +111,7 @@ ol_interaction_Synchronize.prototype.handleMove_ = function(e)
 /** Cursor out of map > tells other maps to hide the cursor
 * @param {event} e "mouseOut" event
 */
-ol_interaction_Synchronize.prototype.handleMouseOut_ = function(e) {
+ol_interaction_Synchronize.prototype.handleMouseOut_ = function(/*e*/) {
 	for (var i=0; i<this.maps.length; i++) {
 		this.maps[i].targetOverlay_.setPosition(undefined);
 	}

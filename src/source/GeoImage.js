@@ -56,7 +56,7 @@ var ol_source_GeoImage = function(opt_options)
 	if (!opt_options.image) this._image.src = opt_options.url;
 
 	// Draw image on canvas
-	options.canvasFunction = function(extent, resolution, pixelRatio, size, projection) 
+	options.canvasFunction = function(extent, resolution, pixelRatio, size /*, projection*/ ) 
 	{	var canvas = document.createElement('canvas');
 		canvas.width = size[0];
 		canvas.height = size[1];
@@ -220,7 +220,7 @@ ol_source_GeoImage.prototype.setCrop = function(crop)
 				break;
 			default: return;
 		}
-		var crop = ol_extent_boundingExtent([ [crop[0],crop[1]], [crop[2],crop[3]] ]);
+		crop = ol_extent_boundingExtent([ [crop[0],crop[1]], [crop[2],crop[3]] ]);
 		this.crop = [ Math.max(0,crop[0]), Math.max(0,crop[1]), Math.min(this._image.naturalWidth,crop[2]), Math.min(this._image.naturalHeight,crop[3]) ];
 	}
 	else this.crop = [0,0, this._image.naturalWidth,this._image.naturalHeight];

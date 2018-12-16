@@ -33,7 +33,7 @@ var ol_control_Button = function(options)
 		}
 		if (options.handleClick) {
 			options.handleClick.call(self, e);
-		};
+		}
 	};
 	bt.addEventListener("click", evtFunction);
 	bt.addEventListener("touchstart", evtFunction);
@@ -42,7 +42,7 @@ var ol_control_Button = function(options)
 	// Try to get a title in the button content
 	if (!options.title && bt.firstElementChild) {
 		bt.title = bt.firstElementChild.title;
-	};
+	}
 
 	ol_control_Control.call(this,
 	{	element: element,

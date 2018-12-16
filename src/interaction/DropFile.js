@@ -69,16 +69,15 @@ ol_interaction_DropFile.prototype.ondrop = function(e)
 			self.dispatchEvent({ type:'loadstart', file: file, filesize: file.size, filetype: file.type, fileextension: ex, projection: projection, target: self });
 
 			// Load file
-			features = [];
 			var reader = new FileReader();
 			var projection = this.projection_ || this.getMap().getView().getProjection();
 			var formatConstructors = this.formatConstructors_
 
 			if (!projection) return;
-			function tryReadFeatures (format, result, options)
+			var tryReadFeatures = function (format, result, options)
 			{	try
 				{	return format.readFeatures(result, options);
-				} catch (e) {}
+				} catch (e) { /* ok */ }
 			}
 			var theFile = file;
 			reader.onload = function(e)
@@ -99,9 +98,8 @@ ol_interaction_DropFile.prototype.ondrop = function(e)
 				self.dispatchEvent({ type:'loadend', file: theFile, target: self });
 			};
 			reader.readAsText(file);
-		};
+		}
 	}
-    else {}
     return false;
 };
 

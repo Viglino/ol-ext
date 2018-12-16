@@ -148,7 +148,7 @@ ol_style_Chart.prototype.setAnimation = function(step)
 
 /** @private
 */
-ol_style_Chart.prototype.renderChart_ = function(atlasManager)
+ol_style_Chart.prototype.renderChart_ = function()
 {	var strokeStyle;
 	var strokeWidth = 0;
 
@@ -166,7 +166,8 @@ ol_style_Chart.prototype.renderChart_ = function(atlasManager)
 	context.lineJoin = 'round';
 
 	var sum=0;
-	for (var i=0; i<this.data_.length; i++)
+	var i, c;
+	for (i=0; i<this.data_.length; i++)
 		sum += this.data_[i];
 
 	// reset transform
@@ -184,7 +185,7 @@ ol_style_Chart.prototype.renderChart_ = function(atlasManager)
 		case "pie3D":
 		case "pie":
 		{	var a, a0 = Math.PI * (step-1.5);
-			var c = canvas.width/2;
+			c = canvas.width/2;
 			context.strokeStyle = strokeStyle;
 			context.lineWidth = strokeWidth;
 			context.save();
@@ -204,7 +205,7 @@ ol_style_Chart.prototype.renderChart_ = function(atlasManager)
 				context.arc ( c, c, this.radius_ *step *this.donutratio_, 0, 2*Math.PI);
 				context.clip("evenodd");
 			}
-			for (var i=0; i<this.data_.length; i++)
+			for (i=0; i<this.data_.length; i++)
 			{	context.beginPath();
 				context.moveTo(c,c);
 				context.fillStyle = this.colors_[i%this.colors_.length];
@@ -233,17 +234,17 @@ ol_style_Chart.prototype.renderChart_ = function(atlasManager)
 				max = this.max_;
 			}
 			else{
-				for (var i=0; i<this.data_.length; i++)
+				for (i=0; i<this.data_.length; i++)
 				{	if (max < this.data_[i]) max = this.data_[i];
 				}
 			}
 			var s = Math.min(5,2*this.radius_/this.data_.length);
-			var c = canvas.width/2;
+			c = canvas.width/2;
 			var b = canvas.width - strokeWidth;
 			var x, x0 = c - this.data_.length*s/2
 			context.strokeStyle = strokeStyle;
 			context.lineWidth = strokeWidth;
-			for (var i=0; i<this.data_.length; i++)
+			for (i=0; i<this.data_.length; i++)
 			{	context.beginPath();
 				context.fillStyle = this.colors_[i%this.colors_.length];
 				x = x0 + s;
@@ -260,10 +261,9 @@ ol_style_Chart.prototype.renderChart_ = function(atlasManager)
 	}
 
 	// Set Anchor
-	var a = this.getAnchor();
-	a[0] = c - this.offset_[0];
-	a[1] = c - this.offset_[1];
-
+	var anchor = this.getAnchor();
+	anchor[0] = c - this.offset_[0];
+	anchor[1] = c - this.offset_[1];
 };
 
 
@@ -275,6 +275,7 @@ ol_style_Chart.prototype.getChecksum = function()
 	var strokeChecksum = (this.stroke_!==null) ?
 		this.stroke_.getChecksum() : '-';
 
+	var fillChecksum;
 	var recalculate = (this.checksums_===null) ||
 		(strokeChecksum != this.checksums_[1] ||
 		fillChecksum != this.checksums_[2] ||

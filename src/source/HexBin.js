@@ -75,14 +75,14 @@ ol_source_HexBin.prototype._onAddFeature = function(e) {
  */
 ol_source_HexBin.prototype.getBin = function(f) {
   // Test if feature exists in the current hex
-	var id = this._hexgrid.coord2hex(this._geomFn(f)).toString();
+	var index, id = this._hexgrid.coord2hex(this._geomFn(f)).toString();
 	if (this._bin[id]) {
-    var index = this._bin[id].get('features').indexOf(f);
+    index = this._bin[id].get('features').indexOf(f);
 		if (index > -1) return { id:id, index:index };
 	}
 	// The feature has moved > check all bins
 	for (id in this._bin) {
-    var index = this._bin[id].get('features').indexOf(f);
+    index = this._bin[id].get('features').indexOf(f);
 		if (index > -1) return { id:id, index:index, moved:true };
 	}
 	return false;
@@ -134,7 +134,7 @@ ol_source_HexBin.prototype.reset = function() {
 	var features = this._origin.getFeatures();
 	for (var i=0, f; f=features[i]; i++) {
     this._onAddFeature({ feature:f });
-	};
+	}
 };
 
 /**

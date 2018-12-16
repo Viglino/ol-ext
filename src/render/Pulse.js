@@ -47,10 +47,12 @@ ol_Map.prototype.pulse = function(coords, options)
 
 	var maxRadius = options.radius || 15;
 	if (maxRadius<0) maxRadius = 5;
+	/*
 	var minRadius = maxRadius - (options.amplitude || maxRadius); //options.minRadius || 0;
 	var width = options.lineWidth || 2;
 	var color = options.color || 'red';
 	console.log("pulse")
+	*/
 	// Animate function
 	function animate(event) 
 	{	var frameState = event.frameState;

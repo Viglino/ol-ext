@@ -28,7 +28,7 @@ var ol_control_Bar = function(options) {
 			return className.length > 0;
 		});
 		element.classList.add.apply(element.classList, classes)
-	};
+	}
 	if (options.group) element.classList.add('ol-group');
 
 	ol_control_Control.call(this, {

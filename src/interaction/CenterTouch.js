@@ -103,8 +103,9 @@ ol_interaction_CenterTouch.prototype.setActive = function(b)
 };
 
 /** Get the position of the target
-*/
-ol_interaction_CenterTouch.prototype.getPosition = function (e)
+ * @return {ol.coordinate}
+ */
+ol_interaction_CenterTouch.prototype.getPosition = function ()
 {	if (!this.pos_) 
 	{	var px =this.getMap().getSize();
 		px = [ px[0]/2, px[1]/2 ];

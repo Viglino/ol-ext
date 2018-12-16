@@ -20,9 +20,7 @@ import ol_Map from 'ol/Map'
  * @param {olx.OverlayOptions} options Overlay options 
  * @api stable
  */
-var ol_Overlay_Magnify = function (options)
-{	var self = this;
-
+var ol_Overlay_Magnify = function (options) {
 	var elt = document.createElement("div");
 			elt.className = "ol-magnify";
 	this._elt = elt;

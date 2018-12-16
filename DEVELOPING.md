@@ -79,6 +79,12 @@ export default ol_control_MyControl
 
 ````
 
+## Linting 
+The project use eslint to lint the code, just type in a console:
+
+````
+npm run lint
+````
 
 ## Building the documentation:
 

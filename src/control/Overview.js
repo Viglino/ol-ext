@@ -116,8 +116,8 @@ var ol_control_Overview = function(options)
 	*	@param {Int} bounce number of bounce
 	*	@param {Number} amplitude amplitude of the bounce [0,1] 
 	*	@return {Number}
-	*/
-	let bounceFn = function (bounce, amplitude)
+	* /
+	var bounceFn = function (bounce, amplitude)
 	{	var a = (2*bounce+1) * Math.PI/2;
 		var b = amplitude>0 ? -1/amplitude : -100;
 		var c = - Math.cos(a) * Math.pow(2, b);
@@ -131,7 +131,7 @@ var ol_control_Overview = function(options)
 	*	@param {Number} amplitude amplitude of the bounce [0,1] 
 	*	@return {Number}
 	*/
-	let elasticFn = function (bounce, amplitude)
+	var elasticFn = function (bounce, amplitude)
 	{	var a = 3*bounce * Math.PI/2;
 		var b = amplitude>0 ? -1/amplitude : -100;
 		var c = Math.cos(a) * Math.pow(2, b);

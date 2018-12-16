@@ -1,4 +1,5 @@
 import {inherits as ol_inherits} from 'ol'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_control_Control from 'ol/control/Control'
 import ol_has_TOUCH from 'ol/has'
 import ol_ext_element from '../util/element'
@@ -36,7 +37,7 @@ var ol_control_Imageline = function(options) {
 
   // Scroll imageline
   this._setScrolling();
-  this._scrolldiv.addEventListener("scroll", function(e) {
+  this._scrolldiv.addEventListener("scroll", function() {
     if (this.getMap()) this.getMap().render();
   }.bind(this));
 
@@ -80,7 +81,7 @@ ol_control_Imageline.prototype._getImage = function(f) {
  * @param {ol.Feature} f
  * @private
  */
-ol_control_Imageline.prototype._getTitle = function(f) {
+ol_control_Imageline.prototype._getTitle = function(/* f */) {
   return '';
 };
 
@@ -181,7 +182,7 @@ ol_control_Imageline.prototype.refresh = function(useExtent) {
   for (var i=0, f; f=features[i]; i++) {
     if (nb--<0) break;
     addImage(f);
-  };
+  }
 };
 
 /** Center image line on a feature

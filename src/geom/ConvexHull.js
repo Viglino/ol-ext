@@ -9,6 +9,8 @@
 
 import ol_geom_Geometry from 'ol/geom/Geometry';
 
+var ol_coordinate_convexHull;
+
 (function(){
 
 /** Tests if a point is left or right of line (a,b).
@@ -25,14 +27,15 @@ var clockwise = function (a, b, o) {
  * @param {Array<ol.geom.Point>} points an array of 2D points
  * @return {Array<ol.geom.Point>} the convex hull vertices
  */
-var ol_coordinate_convexHull = function (points) {	// Sort by increasing x and then y coordinate
+ol_coordinate_convexHull = function (points) {	// Sort by increasing x and then y coordinate
+  var i;
   points.sort(function(a, b) {
     return a[0] == b[0] ? a[1] - b[1] : a[0] - b[0];
   });
 
   // Compute the lower hull
   var lower = [];
-  for (var i = 0; i < points.length; i++) {
+  for (i = 0; i < points.length; i++) {
     while (lower.length >= 2 && clockwise(lower[lower.length - 2], lower[lower.length - 1], points[i])) {
       lower.pop();
     }
@@ -41,7 +44,7 @@ var ol_coordinate_convexHull = function (points) {	// Sort by increasing x and t
 
   // Compute the upper hull
   var upper = [];
-  for (var i = points.length - 1; i >= 0; i--) {
+  for (i = points.length - 1; i >= 0; i--) {
     while (upper.length >= 2 && clockwise(upper[upper.length - 2], upper[upper.length - 1], points[i])) {
       upper.pop();
     }
@@ -55,6 +58,7 @@ var ol_coordinate_convexHull = function (points) {	// Sort by increasing x and t
 
 /* Get coordinates of a geometry */
 var getCoordinates = function (geom) {
+  var i, p
   var h = [];
   switch (geom.getType()) {
     case "Point":h.push(geom.getCoordinates());
@@ -64,19 +68,19 @@ var getCoordinates = function (geom) {
     case "MultiPoint":h = geom.getCoordinates();
       break;
     case "MultiLineString":
-      var p = geom.getLineStrings();
-      for (var i = 0; i < p.length; i++) h.concat(getCoordinates(p[i]));
+      p = geom.getLineStrings();
+      for (i = 0; i < p.length; i++) h.concat(getCoordinates(p[i]));
       break;
     case "Polygon":
       h = getCoordinates(geom.getLinearRing(0));
       break;
     case "MultiPolygon":
-      var p = geom.getPolygons();
-      for (var i = 0; i < p.length; i++) h.concat(getCoordinates(p[i]));
+      p = geom.getPolygons();
+      for (i = 0; i < p.length; i++) h.concat(getCoordinates(p[i]));
       break;
     case "GeometryCollection":
-      var p = geom.getGeometries();
-      for (var i = 0; i < p.length; i++) h.concat(getCoordinates(p[i]));
+      p = geom.getGeometries();
+      for (i = 0; i < p.length; i++) h.concat(getCoordinates(p[i]));
       break;
     default:break;
   }

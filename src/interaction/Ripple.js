@@ -50,7 +50,7 @@ ol_inherits(ol_interaction_Ripple, ol_interaction_Pointer);
 */
 ol_interaction_Ripple.prototype.setMap = function(map)
 {	if (this.oncompose)
-	{	ol_Observable_unByKey(oncompose);
+	{	ol_Observable_unByKey(this.oncompose);
 		if (this.getMap()) this.getMap().render();
 	}
 	
@@ -67,13 +67,13 @@ ol_interaction_Ripple.prototype.setMap = function(map)
 ol_interaction_Ripple.prototype.rains = function(interval)
 {	if (this.onrain) clearTimeout (this.onrain);
 	var self = this;
-	vdelay = (typeof(interval)=="number" ? interval : 1000)/2;
-	delay = 3*vdelay/2;
+	var vdelay = (typeof(interval)=="number" ? interval : 1000)/2;
+	var delay = 3*vdelay/2;
 	var rnd = Math.random;
 	function rain() 
 	{	if (self.width) self.rainDrop([rnd() * self.width, rnd() * self.height]);
 		self.onrain = setTimeout (rain, rnd()*vdelay + delay);
-	};
+	}
 	// Start raining
 	if (delay) rain();
 }
@@ -129,7 +129,7 @@ ol_interaction_Ripple.prototype.postcompose_ = function(e)
 	var a, b, data, cur_pixel, new_pixel;
     
     var t = this.oldind; this.oldind = this.newind; this.newind = t;
-    var i = 0;
+    i = 0;
     var _rd = this.ripple.data,
         _td = this.texture.data;
     

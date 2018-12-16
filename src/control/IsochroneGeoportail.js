@@ -4,10 +4,11 @@
 */
 import {inherits as ol_inherits} from 'ol'
 import ol_control_Control from 'ol/control/Control'
+import ol_format_WKT from 'ol/format/WKT'
 import {toLonLat as ol_proj_toLonLat} from 'ol/proj'
-import {fromLonLat as ol_proj_fromLonLat} from 'ol/proj'
 import ol_ext_Ajax from '../util/Ajax';
 import ol_ext_element from '../util/element';
+import ol_control_SearchGeoportail from './SearchGeoportail'
 
 /**
  * Geoportail isochrone Control.
@@ -285,7 +286,7 @@ ol_control_IsochroneGeoportail.prototype._success = function(e) {
 /** Trigger error
  * @private
  */
-ol_control_IsochroneGeoportail.prototype._error = function(e) {
+ol_control_IsochroneGeoportail.prototype._error = function() {
   this.dispatchEvent ({ type:'error' });
 };
 

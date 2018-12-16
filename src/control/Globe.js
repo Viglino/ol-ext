@@ -153,7 +153,7 @@ ol_control_Globe.prototype.setPosition = function(align)
 
 /** Set the globe center
 * @param {_ol_coordinate_} center the point to center to
-* @param {boolean} show true to show a pointer 
+* @param {boolean} show show a pointer on the map, defaylt true
 */
 ol_control_Globe.prototype.setCenter = function (center, show)
 {	var self = this;
@@ -162,12 +162,14 @@ ol_control_Globe.prototype.setCenter = function (center, show)
 	{	var map = this.ovmap_;
 		var p = map.getPixelFromCoordinate(center);
 		if (p) {
-			var h = this.element.clientHeight;
-			setTimeout(function() {
-				self.pointer_.style.top = String(Math.min(Math.max(p[1],0),h)) + 'px';
-				self.pointer_.style.left = "50%";
-				self.pointer_.classList.remove("hidden");
-			}, 800);
+			if (show!==false) {
+				var h = this.element.clientHeight;
+				setTimeout(function() {
+					self.pointer_.style.top = String(Math.min(Math.max(p[1],0),h)) + 'px';
+					self.pointer_.style.left = "50%";
+					self.pointer_.classList.remove("hidden");
+				}, 800);
+			}
 			map.getView().animate({ center: [center[0],0] });
 		}
 	}

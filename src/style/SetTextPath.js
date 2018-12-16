@@ -19,16 +19,17 @@ function drawTextPath (e)
 	var c2p = e.frameState.coordinateToPixelTransform;
 
 	// Get pixel path with coordinates
+	var k;
 	function getPath(c, readable)
 	{	var path1 = [];
-		for (var k=0; k<c.length; k++) 
+		for (k=0; k<c.length; k++) 
 		{	path1.push(c2p[0]*c[k][0]+c2p[1]*c[k][1]+c2p[4]);
 			path1.push(c2p[2]*c[k][0]+c2p[3]*c[k][1]+c2p[5]);
 		}
 		// Revert line ?
 		if (readable && path1[0]>path1[path1.length-2])
 		{	var path2 = [];
-			for (var k=path1.length-2; k>=0; k-=2)
+			for (k=path1.length-2; k>=0; k-=2)
 			{	path2.push(path1[k]);
 				path2.push(path1[k+1]);
 			}

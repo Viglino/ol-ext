@@ -3,7 +3,9 @@
 *	- windows: array of windows to synchro (
 *	- source: the window source (undefined if first window)
 */
-if (!window.WSynchro) WSynchro = { windows: [] };
+if (!window.WSynchro) {
+	var WSynchro = { windows: [] };
+}
 /** Open a new window to synchronize
 *	@param {url|undefined} url to open, default current window url
 *	@param {specs|undefined|null} specs (as for window.open), undefined to open in a new window, null to open in a new tab, default new window
@@ -36,8 +38,9 @@ WSynchro.synchronize = function(params)
 *	@param {} internal syncrho time to avoid stnchro loops
 *	@private
 */
-WSynchro.synchronize_ = function(args, sync)
-{	// Stop condition 
+WSynchro.synchronize_ = function(args, sync) {
+	var i;
+	// Stop condition 
 	if (!sync) 
 	{	if (this.synchronizing) sync = this.sync;
 		else this.sync = sync = (new Date()).getTime();
@@ -51,15 +54,15 @@ WSynchro.synchronize_ = function(args, sync)
 		try
 		{	if (WSynchro.syncFn_)
 			{	args.type = "synchronize";
-				for (var i=0; i<WSynchro.syncFn_.length; i++) 
+				for (i=0; i<WSynchro.syncFn_.length; i++) 
 				{	WSynchro.syncFn_[i].apply (null, [args]);
 				}
 			}
-		} catch(e) {};
+		} catch(e) { /* */ }
 	}
-	if (args) for (var i=0; i<this.windows.length; i++)
+	if (args) for (i=0; i<this.windows.length; i++)
 	{	try
 		{	this.windows[i].WSynchro.synchronize_(args, sync); 
-		} catch(e) {};
+		} catch(e) { /* */ }
 	}
 }

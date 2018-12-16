@@ -1,3 +1,9 @@
+/*	Copyright (c) 2018 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+
+import {inherits as ol_inherits} from 'ol'
 import ol_interaction_Select from 'ol/interaction/Select'
 import ol_source_Vector from 'ol/source/Vector'
 
@@ -51,7 +57,7 @@ ol_interaction_Delete.prototype.delete = function(features) {
           source.removeFeature(f);
           delFeatures.push(f);
         });
-      } catch(e) {}
+      } catch(e) { /* ok */ }
     })
     this.dispatchEvent({ type: 'deleteend', features: delFeatures });
   }

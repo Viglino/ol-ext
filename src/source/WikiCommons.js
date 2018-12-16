@@ -24,9 +24,8 @@ import {transform as ol_proj_transform, transformExtent as ol_proj_transformExte
 * @extends {ol_source_Vector}
 * @param {olx.source.WikiCommons=} options
 */
-var ol_source_WikiCommons = function(opt_options)
-{	var options = opt_options || {};
-	var self = this; 
+var ol_source_WikiCommons = function(opt_options) {
+	var options = opt_options || {};
 
 	options.loader = this._loaderFn;
 	
@@ -89,7 +88,7 @@ ol_source_WikiCommons.prototype._loaderFn = function(extent, resolution, project
 		success: function(data) 
 		{	//console.log(data);
 			var features = [];
-			var att, pt, feature, lastfeature = null;
+			var att, pt, feature;
 			if (!data.query || !data.query.pages) return;
 			for ( var i in data.query.pages)
 			{	att = data.query.pages[i];

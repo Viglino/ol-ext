@@ -51,15 +51,15 @@ var ol_interaction_SnapGuides = function(options) {
 	this.enableInitialGuides_ = options.enableInitialGuides || false;
 
 	// Default style
- 	var sketchStyle = 
+	var sketchStyle =
 	[	new ol_style_Style({
 			stroke: new ol_style_Stroke(
 			{	color: '#ffcc33',
 				lineDash: [8,5],
 				width: 1.25
 			})
-	   })
-	 ];
+		})
+	];
 
 	// Custom style
 	if (options.style) sketchStyle = options.style instanceof Array ? options.style : [options.style];
@@ -74,7 +74,7 @@ var ol_interaction_SnapGuides = function(options) {
 		// render the snap guides as an image to improve performance on rerenders
 		renderMode: 'image',
 		source: this.overlaySource_,
-			style: function(f) {
+			style: function() {
 				return sketchStyle;
 			},
 			name:'Snap overlay',
@@ -149,7 +149,7 @@ ol_interaction_SnapGuides.prototype.clearGuides = function(features)
 /** Get guidelines
 * @return {ol.Collection} guidelines features
 */
-ol_interaction_SnapGuides.prototype.getGuides = function(features)
+ol_interaction_SnapGuides.prototype.getGuides = function()
 {	return this.overlaySource_.getFeaturesCollection();
 }
 
@@ -179,7 +179,7 @@ ol_interaction_SnapGuides.prototype.addGuide = function(v, ortho) {
 		var dy = v[0][1] - v[1][1];
 		var d = 1 / Math.sqrt(dx*dx+dy*dy);
 
-		function generateLine(loopDir) {
+		var generateLine = function(loopDir) {
 			var p, g = [];
 			var loopCond = guideLength*loopDir*2;
 			for (var i=0; loopDir > 0 ? i < loopCond : i > loopCond; i+=(guideLength * loopDir) / 100) {
@@ -306,7 +306,7 @@ ol_interaction_SnapGuides.prototype.setModifyInteraction = function (modifyi) {
 	}
 
 
-	function drawEnd(e) {
+	function drawEnd() {
 		self.clearGuides(features);
 		features = [];
 	}

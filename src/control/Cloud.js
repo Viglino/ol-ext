@@ -82,7 +82,7 @@ ol_control_Cloud.prototype.drawCloud_ = function (event)
 {	if (!this.getMap()) return;
 	var ctx = event.context;
 	var canvas = ctx.canvas;
-	var ratio = event.frameState.pixelRatio;
+//	var ratio = event.frameState.pixelRatio;
 
 //	var m = Math.max(canvas.width, canvas.height);
 //	var res = view.getResolution()/ratio;
@@ -99,9 +99,10 @@ ol_control_Cloud.prototype.drawCloud_ = function (event)
 	var w2 = this.cloud.width/2;
 	var h2 = this.cloud.height/2;
 	var d = (this.get('density')*10*canvas.width*canvas.height/w/h) << 0;
+	var i;
 
-	function addClouds (nb, reset)
-	{	for (var i=0; i<nb; i++)
+	function addClouds (nb)
+	{	for (i=0; i<nb; i++)
 		{	p.push({ x: rnd()*canvas.width-w2, y: rnd()*canvas.height-h2 });
 		}
 	}
@@ -111,12 +112,11 @@ ol_control_Cloud.prototype.drawCloud_ = function (event)
 	{	p = this.particules = [];
 		addClouds(d);
 		// Wind
-		var a = rnd()*Math.PI;
 		this.width = canvas.width;
 		this.height = canvas.height;
 		// Birds
 		this.birds = [];
-		for (var i=0; i<5; i++)
+		for (i=0; i<5; i++)
 		{	var b = { angle: rnd()*2*Math.PI, x: rnd()*canvas.width, y: rnd()*canvas.height, rot:0, fly:0 };
 			b.cos = Math.cos(b.angle);
 			b.sin = Math.cos(b.angle);
@@ -142,7 +142,7 @@ ol_control_Cloud.prototype.drawCloud_ = function (event)
 	// Draw clouds
 	var dx = this.wind.cos * this.wind.speed;
 	var dy = this.wind.sin * this.wind.speed;
-	for (var i=0; i<p.length; i++)
+	for (i=0; i<p.length; i++)
 	{	p[i].x += dx + rnd()*2-1;
 		p[i].y += dy + rnd()*2-1;
 		// out!
@@ -166,19 +166,19 @@ ol_control_Cloud.prototype.drawCloud_ = function (event)
 
 	// Draw clouds
 	ctx.globalAlpha = this.get('opacity');
-	for (var i=0; i<p.length; i++)
+	for (i=0; i<p.length; i++)
 	{	ctx.drawImage(this.cloud, p[i].x,p[i].y);
 	}
 	ctx.globalAlpha = 1;
 
 	// Draw birds
-	var w = this.bird.width/2;
-	var h = this.bird.height/2;
+	w = this.bird.width/2;
+	h = this.bird.height/2;
 	var sc = 0.5;
 	var dw = canvas.width+w;
 	var dh = canvas.height+h;
 
-	for (var i=0; i<this.birds.length; i++)
+	for (i=0; i<this.birds.length; i++)
 	{	var bi = this.birds[i];
 		
 		// Animate birds

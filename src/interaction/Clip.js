@@ -30,8 +30,10 @@ ol_inherits(ol_interaction_Clip, ol_interaction_Pointer);
 /** Set the map > start postcompose
 */
 ol_interaction_Clip.prototype.setMap = function(map) {
+	var i;
+
 	if (this.getMap()) {
-		for (var i=0; i<this.layers_.length; i++) {
+		for (i=0; i<this.layers_.length; i++) {
 			if (this.layers_[i].precompose) ol_Observable_unByKey(this.layers_[i].precompose);
 			if (this.layers_[i].postcompose) ol_Observable_unByKey(this.layers_[i].postcompose);
 			this.layers_[i].precompose = this.layers_[i].postcompose = null;
@@ -42,7 +44,7 @@ ol_interaction_Clip.prototype.setMap = function(map) {
 	ol_interaction_Pointer.prototype.setMap.call(this, map);
 
 	if (map) {
-		for (var i=0; i<this.layers_.length; i++) {
+		for (i=0; i<this.layers_.length; i++) {
 			this.layers_[i].precompose = this.layers_[i].layer.on('precompose', this.precompose_.bind(this));
 			this.layers_[i].postcompose = this.layers_[i].layer.on('postcompose', this.postcompose_.bind(this));
 		}
@@ -131,15 +133,16 @@ ol_interaction_Clip.prototype.postcompose_ = function(e)
  * @observable
  * @api
  */
-ol_interaction_Clip.prototype.setActive = function(b)
-{	ol_interaction_Pointer.prototype.setActive.call (this, b);
+ol_interaction_Clip.prototype.setActive = function(b) {
+	var i;
+	ol_interaction_Pointer.prototype.setActive.call (this, b);
 	if(b) {
-		for(var i=0; i<this.layers_.length; i++) {
+		for(i=0; i<this.layers_.length; i++) {
 			this.layers_[i].precompose = this.layers_[i].layer.on('precompose', this.precompose_.bind(this));
 			this.layers_[i].postcompose = this.layers_[i].layer.on('postcompose', this.postcompose_.bind(this));
 		}
 	} else {
-		for(var i=0; i<this.layers_.length; i++) {
+		for(i=0; i<this.layers_.length; i++) {
 			if (this.layers_[i].precompose) ol_Observable_unByKey(this.layers_[i].precompose);
 			if (this.layers_[i].postcompose) ol_Observable_unByKey(this.layers_[i].postcompose);
 			this.layers_[i].precompose = this.layers_[i].postcompose = null;

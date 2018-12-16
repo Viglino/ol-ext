@@ -1,8 +1,12 @@
+import {inherits as ol_inherits} from 'ol'
+import {DEVICE_PIXEL_RATIO as ol_has_DEVICE_PIXEL_RATIO} from 'ol/has'
 import ol_control_Control from 'ol/control/Control'
 import {toContext as ol_render_toContext} from 'ol/render'
+import ol_Feature from 'ol/Feature'
 import ol_geom_Point from 'ol/geom/Point'
 import ol_geom_LineString from 'ol/geom/LineString';
 import ol_geom_Polygon from 'ol/geom/Polygon'
+import {extend as ol_extent_extend} from 'ol/extent'
 
 /** Create a legend for styles
  * @constructor
@@ -31,15 +35,15 @@ var ol_control_Legend = function(options) {
     // Show on click
     var button = document.createElement('button');
     button.setAttribute('type', 'button');
-    button.addEventListener('click', function(e) {
+    button.addEventListener('click', function() {
       element.classList.toggle('ol-collapsed');
     });
     element.appendChild(button);
     // Hide on click
-    var button = document.createElement('button');
+    button = document.createElement('button');
     button.setAttribute('type', 'button');
     button.className = 'ol-closebox';
-    button.addEventListener('click', function(e) {
+    button.addEventListener('click', function() {
       element.classList.toggle('ol-collapsed');
     });
     element.appendChild(button);
@@ -156,14 +160,14 @@ ol_control_Legend.prototype.refresh = function() {
   }
   var canvas = document.createElement('canvas');
   canvas.width = 5*width;
-  canvas.height = (this._rows.length+1) * height * ol.has.DEVICE_PIXEL_RATIO;
+  canvas.height = (this._rows.length+1) * height * ol_has_DEVICE_PIXEL_RATIO;
   this._imgElement.innerHTML = '';
   this._imgElement.append(canvas);
   this._imgElement.style.height = (this._rows.length+1)*height + 'px';
   for (var i=0, r; r = this._rows[i]; i++) {
     addRow(r.title, false, r, i);
     canvas = this.getStyleImage(r, canvas, i+(this.get('title')?1:0));
-  };
+  }
 };
 
 /** Show control
@@ -186,7 +190,7 @@ ol_control_Legend.prototype.toggle = function() {
  * You can provide in options:
  * - a feature width a style 
  * - or a feature that will use the legend style function
- * - or properties ans a geometry type that will use the legend style function
+ * - or properties and a geometry type that will use the legend style function
  * - or a style and a geometry type
  * @param {*} options
  *  @param {ol.Feature} options.feature a feature to draw
@@ -203,7 +207,7 @@ ol_control_Legend.prototype.getStyleImage = function(options, theCanvas, row) {
   var width = size[0] + 2*this.get('margin');
   var height = size[1] + 2*this.get('margin');
   var canvas = theCanvas;
-  var ratio = ol.has.DEVICE_PIXEL_RATIO;
+  var ratio = ol_has_DEVICE_PIXEL_RATIO;
   if (!canvas) {
     canvas = document.createElement('canvas');
     canvas.width = width * ratio;
@@ -218,7 +222,9 @@ ol_control_Legend.prototype.getStyleImage = function(options, theCanvas, row) {
   var style;
   var feature = options.feature;
   if (!feature && options.properties && typeGeom) {
-    feature = new ol.Feature(new ol.geom[typeGeom]([0,0]));
+    if (/Point/.test(typeGeom)) feature = new ol_Feature(new ol_geom_Point([0,0]));
+    else if (/LineString/.test(typeGeom)) feature = new ol_Feature(new ol_geom_LineString([0,0]));
+    else feature = new ol_Feature(new ol_geom_Polygon([0,0]));
     feature.setProperties(options.properties);
   }
   if (feature) {
@@ -244,13 +250,13 @@ ol_control_Legend.prototype.getStyleImage = function(options, theCanvas, row) {
       var img = s.getImage();
       if (img && img.getAnchor) {
         var anchor = img.getAnchor();
-        var size = img.getSize();
-        var dx = anchor[0] - size[0];
-        var dy = anchor[1] - size[1];
+        var si = img.getSize();
+        var dx = anchor[0] - si[0];
+        var dy = anchor[1] - si[1];
         if (!extent) {
-          extent = [dx, dy, dx+size[0], dy+size[1]];
+          extent = [dx, dy, dx+si[0], dy+si[1]];
         } else {
-          ol.extent.extend(extent, [dx, dy, dx+size[0], dy+size[1]]);
+          ol_extent_extend(extent, [dx, dy, dx+si[0], dy+si[1]]);
         }
       }
     }
