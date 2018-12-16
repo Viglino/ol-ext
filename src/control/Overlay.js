@@ -6,6 +6,7 @@
 
 import {inherits as ol_inherits} from 'ol'
 import ol_control_Control from 'ol/control/Control'
+import ol_ext_element from '../util/element'
 
 /** Control overlay for OL3
  * The overlay control is a control that display an overlay over the map
@@ -14,17 +15,23 @@ import ol_control_Control from 'ol/control/Control'
  * @extends {ol_control_Control}
  * @fire change:visible
  * @param {Object=} options Control options.
- *	- className {String} class of the control
- *	- hideOnClick {bool} hide the control on click, default false
- *	- closeBox {bool} add a closeBox to the control, default false
+ *	@param {String} options.className class of the control
+ *	@param {String|Element} options.content
+ *	@param {bool} options.hideOnClick hide the control on click, default false
+ *	@param {bool} options.closeBox add a closeBox to the control, default false
  */
 var ol_control_Overlay = function(options)
 {	if (!options) options={};
 
+/*
 	var element = document.createElement("div");
-			element.classList.add('ol-unselectable', 'ol-overlay');
-	if (options.className) element.classList.add(options.className);
-
+	element.classList.add('ol-unselectable', 'ol-overlay');
+	//if (options.className) element.classList.add(options.className);
+*/
+	var element = ol_ext_element.create('DIV', {
+		className: 'ol-unselectable ol-overlay '+(options.className||''),
+		html: options.content
+	});
 	ol_control_Control.call(this,
 	{	element: element,
 		target: options.target
@@ -47,14 +54,15 @@ ol_control_Overlay.prototype.setContent = function (html)
 {	var self = this;
 	if (html)
 	{	var elt = this.element;
-		elt.innerHTML = html;
+		if (html instanceof Element) elt.appendChild(html)
+		else if (html!==undefined) elt.innerHTML = html;
 		if (this.get("closeBox"))
 		{	var cb = document.createElement("div");
 					cb.classList.add("ol-closebox");
 					cb.addEventListener("click", function(){self.hide();});
 			elt.insertBefore(cb, elt.firstChild);
 		}
-	};
+	}
 };
 
 /** Set the control visibility
@@ -64,7 +72,7 @@ ol_control_Overlay.prototype.setContent = function (html)
 ol_control_Overlay.prototype.show = function (html, coord)
 {	var self = this;
 	var elt = this.element;
-			elt.style.display = 'block';
+	elt.style.display = 'block';
 	if (coord) {
 		this.center_ = this.getMap().getPixelFromCoordinate(coord);
 		elt.style.top = this.center_[1]+'px';
@@ -75,7 +83,7 @@ ol_control_Overlay.prototype.show = function (html, coord)
 		elt.style.top = "";
 		elt.style.left = "";
 	}
-	this.setContent(html);
+	if (html) this.setContent(html);
 	if (this._timeout) clearTimeout(this._timeout);
 	this._timeout = setTimeout(function()
 		{	elt.classList.add("ol-visible")
@@ -90,7 +98,7 @@ ol_control_Overlay.prototype.show = function (html, coord)
 */
 ol_control_Overlay.prototype.hide = function ()
 {	var elt = this.element;
-			this.element.classList.remove("ol-visible");
+	this.element.classList.remove("ol-visible");
 	if (this.center_)
 	{	elt.style.top = this.center_[1]+'px';
 		elt.style.left = this.center_[0]+'px';
@@ -104,15 +112,21 @@ ol_control_Overlay.prototype.hide = function ()
 /** Toggle control visibility
 */
 ol_control_Overlay.prototype.toggle = function ()
-{	if (this.getVisible()) this.style.display = 'none';
-	else this.style.display = 'block';
+{	
+	/*
+	if (this.getVisible()) this.element.style.display = 'none';
+	else this.element.style.display = 'block';
+	this.element.classList.toggle('ol-visible');
+	*/
+	if (this.getVisible()) this.hide();
+	else this.show();
 }
 
 /** Get the control visibility
 * @return {boolean} b
 */
 ol_control_Overlay.prototype.getVisible = function ()
-{	return this.element.style.display != 'none';
+{	return ol.ext.element.getStyle(this.element, 'display') !== 'none';
 };
 
 /** Change class name
