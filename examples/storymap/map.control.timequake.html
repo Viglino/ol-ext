@@ -1,0 +1,192 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Timeline control</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="A control to add timeline on a map." />
+  <meta name="keywords" content="ol, timeline, control, date" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    .ol-attribution {
+      bottom: 4.5em;
+    }
+    .ol-timeline {
+      font-size: 2em;
+    }
+    .ol-timeline .ol-scroll {
+      height: 2em;
+    }
+    .ol-timeline .ol-features {
+      text-align: center;
+    }
+    #select {
+      font-size: .85em;
+      margin: 1em 0;
+    }
+    #select p {
+      margin: 0;
+    }
+    #select .copy {
+      font-size: .9em;
+      color: #396;
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Timeline control</h1>
+  </a>
+  <div class="info">
+      The <i>ol/control/Timeline</i> display a timeline to navigate on the map.
+  </div>
+
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class='options'>
+    <span class='dateStart'></span>
+    <div id="select"></div>
+  </div>
+  
+  <script type="text/javascript">
+
+  // Two base layers
+  var stamen = new ol.layer.Tile({
+    title: "Watercolor",
+    baseLayer: true,
+    source: new ol.source.Stamen({
+      layer: 'watercolor'
+    })
+  });
+
+  // Style function
+  var cache = {};
+  function style(select){
+    return function(f) {
+      var style = cache[f.get('mag')+'-'+select];
+      if (!style) {
+        var img = new ol.style.Circle({
+          radius: f.get('mag')*f.get('mag')/2,
+          fill: new ol.style.Fill({
+            color: select ? 'rgba(255,0,0,.5)':'rgba(255,128,0,.5)'
+          })
+        })
+        style = cache[f.get('mag')+'-'+select] = new ol.style.Style({
+          image: img
+        })
+      }
+      return style;
+    }
+  };
+  
+  // GeoJSON layer with a preview attribute
+  var vectorSource = new ol.source.Vector({
+    url: '../data/USGS-Earthquake-2015-mag5.json',
+    projection: 'EPSG:3857',
+    format: new ol.format.GeoJSON(),
+		attributions: [ "&copy; <a href='https://earthquake.usgs.gov/earthquakes/'>USGS</a>" ]
+  });
+  var listenerKey = vectorSource.on('change', function(e) {
+    if (vectorSource.getState() == 'ready') {
+      ol.Observable.unByKey(listenerKey);
+      tline.refresh();
+    }
+  });
+
+  var vector = new ol.layer.Vector({
+    name: 'Earthquake',
+    source: vectorSource,
+    style: style()
+  });
+
+  // The map
+  var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 1,
+      center: [0,0]
+    }),
+    layers: [stamen, vector]
+  });
+
+  // Create Timeline control 
+  var features = [];
+  for (var i=2015; i<2016; i++) {
+    features.push({
+      text: i,
+      date: new Date(i+'/01/01'),
+      endDate: new Date(i+'/12/31')
+    })
+  }
+
+  var tline = new ol.control.Timeline({
+    features: features,
+    graduation: 'day', // 'month'
+    minDate: new Date('2014/01/01'),
+    maxDate: new Date('2016/01/01'),
+    getHTML: function(f){
+      return f.text;
+    },
+    getFeatureDate: function(f){
+      return f.date;
+    },
+    endFeatureDate: function(f) {
+      return f.endDate
+    }
+  });
+  map.addControl (tline);
+
+  // Show features on scroll
+  tline.on('scroll', function(e){
+    $('.dateStart').text(e.date.toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric'}));
+    // Filter features visibility
+    vectorSource.getFeatures().forEach(function(f) {
+      var dt = f.get('time') - e.date;
+      if (Math.abs(dt) > 1000*3600*12) {
+        f.setStyle([]);
+      } else {
+        f.setStyle();
+      }
+    });
+  });
+
+  var select = new ol.interaction.Select({ hitTolerance: 5, style: style(true) });
+  map.addInteraction(select);
+  select.on('select', function(e){
+    var f = e.selected[0];
+    if (f) {
+      // Show info
+			var info = $("#select").html("");
+      $("<p>").text((new Date(f.get("time"))).toLocaleString()).appendTo(info);
+			$("<p>").text(f.get("mag")+' - '+f.get("place")).appendTo(info);
+		} else {
+      $("#select").html('');
+    }
+  });
+
+  </script>
+  
+</body>
+</html>

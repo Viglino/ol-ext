@@ -41,9 +41,7 @@
     }
 
     #story {
-      /*
       height: 400px;
-      */
     }
     #story img {
       display: block;
@@ -94,28 +92,13 @@
       </li>
     </ul>
     <p>
-      <a href="map.control.storymap.2.html">See example with a story outside the map.</a>
+      <a href="map.control.storymap.html">See example with a story inside the map.</a>
     </p>
   </div>
 
   <!-- Map div -->
   <div id="map" style="width:600px; height:400px;"></div>
   
-  <div class="options">
-    Set chapters:
-    <ol>
-      <li>
-        <a onclick="story.setChapter('Paris')">Paris</a>
-      </li>
-      <li>
-        <a onclick="story.setChapter('London')">London</a>
-      </li>
-      <li>
-        <a onclick="story.setChapter('Berlin')">Berlin</a>
-      </li>
-    </ol>
-  </div>
-
   <div id="story">
     <div class="chapter" name="start">
       <h2>Capitals</h2>
@@ -180,8 +163,7 @@
 
   // Create Timeline control when features are loaded
   var story = new ol.control.Storymap({
-    html: $('#story').get(0),
-    //target: $('#story').get(0)
+    target: $('#story').get(0)
   });
 
   var positions = {

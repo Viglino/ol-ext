@@ -1,0 +1,205 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Timeline control</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="A control to add timeline on a map." />
+  <meta name="keywords" content="ol, timeline, control, date" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    .ol-attribution {
+      bottom: 4.5em;
+    }
+    .ol-timeline {
+      font-size: 2em;
+    }
+    .ol-timeline .ol-scroll {
+      height: 2em;
+    }
+    .ol-timeline .ol-features {
+      text-align: center;
+    }
+    #select {
+      font-size: .85em;
+      margin: 1em 0;
+    }
+    #select p {
+      margin: 0;
+    }
+    #select .copy {
+      font-size: .9em;
+      color: #396;
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Timeline control</h1>
+  </a>
+  <div class="info">
+      The <i>ol/control/Timeline</i> display a timeline to navigate on the map.
+  </div>
+
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class='options'>
+    All events between:
+    <span class='dateStart'></span> and <span class='dateEnd'></span>.
+    <div id="select"></div>
+  </div>
+  
+  <script type="text/javascript">
+
+  // Two base layers
+  var stamen = new ol.layer.Tile({
+    title: "Watercolor",
+    baseLayer: true,
+    source: new ol.source.Stamen({
+      layer: 'watercolor'
+    })
+  });
+
+  // Style function
+  var cache = {};
+  function style(select){
+    return function(f) {
+      var style = cache[f.get('img')+'-'+select];
+      if (!style) {
+        var img = new ol.style.Photo({
+          src: f.get('img'),
+          radius: select ? 20:15,
+          shadow: true,
+          stroke: new ol.style.Stroke({
+            width: 4,
+            color: select ? '#fff':'#fafafa'
+          }),
+          onload: function() { f.changed(); }
+        })
+        style = cache[f.get('img')+'-'+select] = new ol.style.Style({
+          image: img
+        })
+      }
+      return style;
+    }
+  };
+  
+  // GeoJSON layer with a preview attribute
+  var vectorSource = new ol.source.Vector({
+    url: '../data/fond_guerre.geojson',
+    projection: 'EPSG:3857',
+    format: new ol.format.GeoJSON(),
+		attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
+    logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+  });
+  var listenerKey = vectorSource.on('change', function(e) {
+    if (vectorSource.getState() == 'ready') {
+      ol.Observable.unByKey(listenerKey);
+      tline.refresh();
+    }
+  });
+
+  var vector = new ol.layer.Vector({
+    name: '1914-18',
+    preview: "http://www.culture.gouv.fr/Wave/image/memoire/2445/sap40_z0004141_v.jpg",
+    source: vectorSource,
+    style: style()
+  });
+
+
+  // The map
+  var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 6,
+      center: [173664, 6166327]
+    }),
+    layers: [stamen, vector]
+  });
+
+  // Create Timeline control 
+  var features = [];
+  for (var i=1915; i<1920; i++) {
+    features.push({
+      text: i,
+      date: new Date(i+'/01/01'),
+      endDate: new Date(i+'/12/31')
+    })
+  }
+
+  var tline = new ol.control.Timeline({
+    features: features,
+    graduation: 'day', // 'month'
+    getHTML: function(f){
+      return f.text;
+    },
+    getFeatureDate: function(f){
+      return f.date;
+    },
+    endFeatureDate: function(f) {
+      return f.endDate
+    }
+  });
+  map.addControl (tline);
+
+  // Show features on scroll
+  tline.on('scroll', function(e){
+    $('.dateStart').text(e.dateStart.toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric'}));
+    $('.dateEnd').text(e.dateEnd.toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric'}));
+    // Filter features visibility
+    vectorSource.getFeatures().forEach(function(f) {
+      var date = new Date(f.get('date'));
+      if (date<e.dateStart || date>e.dateEnd) {
+        f.setStyle([]);
+      } else {
+        f.setStyle();
+      }
+    });
+  });
+
+  var select = new ol.interaction.Select({ hitTolerance: 5, style: style(true) });
+  map.addInteraction(select);
+  select.on('select', function(e){
+    var f = e.selected[0];
+    if (f) {
+      // Center
+      tline.setDate(f.get('date'));
+      // Show info
+			var info = $("#select").html("");
+			$("<img>").attr('src',f.get("img")).appendTo(info);
+			$("<p>").text(f.get("text")).appendTo(info);
+      $("<p>").text(f.get("commune")+" ("+f.get("region")+" - "
+        + (new Date(f.get("date"))).toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric'})
+        + ")").appendTo(info);
+			$("<p>").addClass('copy').html("&copy; "+f.get("copy")+" - "+f.get("author")).appendTo(info);
+		} else {
+      $("#select").html("<p>Select an image.</p>");
+    }
+  });
+
+  </script>
+  
+</body>
+</html>
