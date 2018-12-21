@@ -218,6 +218,7 @@ gulp.task ("postpublish", function(){
       "./render",
       "./source",
       "./style",
+      "./util",
       "./utils"
     ])
     .pipe(clean());
