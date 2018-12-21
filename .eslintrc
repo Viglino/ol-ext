@@ -14,7 +14,7 @@
     "no-extra-semi": "warn",
     "no-mixed-spaces-and-tabs": "warn",
     "no-redeclare": "warn",
-    "no-unexpected-multiline": "off",
+    "no-unexpected-multiline": "warn",
     "no-unused-vars": "warn",
     "no-useless-escape": "warn"
   }
