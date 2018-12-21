@@ -261,6 +261,7 @@ ol_control_Timeline.prototype.refresh = function(zoom) {
     if (f.end) {
       ol_ext_element.setStyle(t, { 
         minWidth: (f.end-d) * scale, 
+        width: (f.end-d) * scale, 
         maxWidth: 'unset'
       });
     }
