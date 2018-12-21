@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.0.2
+ * @version v3.0.3
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -17,18 +17,35 @@ ol.ext = {};
  *  @param {string} options.dataType The type of data that you're expecting back from the server, default JSON
  */
 ol.ext.Ajax = function(options) {
+  options = options || {};
 	ol.Object.call(this);
   this._auth = options.auth;
   this.set('dataType', 'JSON');
 };
 ol.inherits(ol.ext.Ajax, ol.Object);
+/** Helper for get
+ * @param {*} options
+ *  @param {string} options.url
+ *  @param {string} options.auth Authorisation as btoa("username:password");
+ *  @param {string} options.dataType The type of data that you're expecting back from the server, default JSON
+ *  @param {string} options.success
+ *  @param {string} options.error
+ */
+ol.ext.Ajax.get = function(options) {
+  var ajax = new ol.ext.Ajax(options);
+  if (options.success) ajax.on('success', function(e) { options.success(e.response, e); } );
+  if (options.error) ajax.on('error', function(e) { options.error(e); } );
+  ajax.send(options.url, options.data);
+};
 /** Send an ajax request (GET)
  * @fires success
  * @fires error
  * @param {string} url
  * @param {*} data Data to send to the server as key / value
+ * @param {*} options a set of options that are returned in the 
+ *  @param {boolean} options.abort false to prevent aborting the current request, default true
  */
-ol.ext.Ajax.prototype.send = function (url, data){
+ol.ext.Ajax.prototype.send = function (url, data, options){
 	var self = this;
   // Url
   url = encodeURI(url);
@@ -36,11 +53,11 @@ ol.ext.Ajax.prototype.send = function (url, data){
   var parameters = '';
 	for (var index in data) {
 		if (data.hasOwnProperty(index) && data[index]!==undefined) {
-      parameters += (parameters ? '&' : '?') + index + '=' + data[index];
+      parameters += (parameters ? '&' : '?') + index + '=' + encodeURIComponent(data[index]);
     }
 	}
 	// Abort previous request
-	if (this._request) {
+	if (this._request && options.abort!==false) {
 		this._request.abort();
 	}
 	// New request
@@ -74,17 +91,19 @@ ol.ext.Ajax.prototype.send = function (url, data){
           status: 0,
           statusText: 'parsererror',
           error: e,
+          options: options,
           jqXHR: this
         });
         return;
       }
       // Success
-      console.log('response',response)
+      //console.log('response',response)
       self.dispatchEvent ({ 
         type: 'success',
         response: response,
         status: this.status,
         statusText: this.statusText,
+        options: options,
         jqXHR: this
       });
     } else {
@@ -92,6 +111,7 @@ ol.ext.Ajax.prototype.send = function (url, data){
         type: 'error',
         status: this.status,
         statusText: this.statusText,
+        options: options,
         jqXHR: this
       });
     }
@@ -104,6 +124,7 @@ ol.ext.Ajax.prototype.send = function (url, data){
       type: 'error',
       status: this.status,
       statusText: this.statusText,
+      options: options,
       jqXHR: this
     });
   };
@@ -7692,6 +7713,7 @@ ol.control.Timeline.prototype.refresh = function(zoom) {
     if (f.end) {
       ol.ext.element.setStyle(t, { 
         minWidth: (f.end-d) * scale, 
+        width: (f.end-d) * scale, 
         maxWidth: 'unset'
       });
     }
@@ -14837,38 +14859,38 @@ ol.interaction.UndoRedo.prototype.hasRedo = function() {
 };
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-	@classdesc
-	ol.source.DBPedia is a DBPedia layer source that load DBPedia located content in a vector layer.
-	olx.source.DBPedia: olx.source.Vector
-	{	url: {string} Url for DBPedia SPARQL 
-	}
-	@require jQuery
-	Inherits from:
-	<ol.source.Vector>
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  @classdesc
+  ol.source.DBPedia is a DBPedia layer source that load DBPedia located content in a vector layer.
+  olx.source.DBPedia: olx.source.Vector
+  {	url: {string} Url for DBPedia SPARQL 
+  }
+  @require jQuery
+  Inherits from:
+  <ol.source.Vector>
 */
 /**
 * @constructor ol.source.DBPedia
 * @extends {ol.source.Vector}
 * @param {olx.source.DBPedia=} opt_options
 */
-ol.source.DBPedia = function(opt_options)
-{	var options = opt_options || {};
-	options.loader = this._loaderFn;
-	/** Url for DBPedia SPARQL */
-	this._url = options.url || "http://fr.dbpedia.org/sparql";
-	/** Max resolution to load features  */
-	this._maxResolution = options.maxResolution || 100;
-	/** Result language */
-	this._lang = options.lang || "fr";
-	/** Query limit */
-	this._limit = options.limit || 1000;
-	/** Default attribution */
-	if (!options.attributions) options.attributions = [ "&copy; <a href='http://dbpedia.org/'>DBpedia</a> CC-by-SA" ];
-	// Bbox strategy : reload at each move
+ol.source.DBPedia = function(opt_options) {
+  var options = opt_options || {};
+  options.loader = this._loaderFn;
+  /** Url for DBPedia SPARQL */
+  this._url = options.url || "http://fr.dbpedia.org/sparql";
+  /** Max resolution to load features  */
+  this._maxResolution = options.maxResolution || 100;
+  /** Result language */
+  this._lang = options.lang || "fr";
+  /** Query limit */
+  this._limit = options.limit || 1000;
+  /** Default attribution */
+  if (!options.attributions) options.attributions = [ "&copy; <a href='http://dbpedia.org/'>DBpedia</a> CC-by-SA" ];
+  // Bbox strategy : reload at each move
     if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
-	ol.source.Vector.call (this, options);
+  ol.source.Vector.call (this, options);
 };
 ol.inherits (ol.source.DBPedia, ol.source.Vector);
 /** Decode RDF attributes and choose to add feature to the layer
@@ -14878,77 +14900,75 @@ ol.inherits (ol.source.DBPedia, ol.source.Vector);
 * @return {boolean} true: add the feature to the layer
 * @API stable
 */
-ol.source.DBPedia.prototype.readFeature = function (feature, attributes, lastfeature)
-{	// Copy RDF attributes values
-	for (var i in attributes) feature.set (i, attributes[i].value);
-	// Prevent same feature with different type duplication
-	if (lastfeature && lastfeature.get("subject") == attributes.subject.value)
-	{	// Kepp dbpedia.org type ?
-		// if (bindings[i].type.match ("dbpedia.org") lastfeature.get("type") = bindings[i].type.value;
-		// Concat types
-		lastfeature.set("type", lastfeature.get("type") +"\n"+ attributes.type.value);
-		return false;
-	}
-	else 
-	{	return true;
-	}
+ol.source.DBPedia.prototype.readFeature = function (feature, attributes, lastfeature) {
+  // Copy RDF attributes values
+  for (var i in attributes) feature.set (i, attributes[i].value);
+  // Prevent same feature with different type duplication
+  if (lastfeature && lastfeature.get("subject") == attributes.subject.value) {
+    // Kepp dbpedia.org type ?
+    // if (bindings[i].type.match ("dbpedia.org") lastfeature.get("type") = bindings[i].type.value;
+    // Concat types
+    lastfeature.set("type", lastfeature.get("type") +"\n"+ attributes.type.value);
+    return false;
+  } else {
+    return true;
+  }
 };
 /** Set RDF query subject, default: select label, thumbnail, abstract and type
 * @API stable
 */
-ol.source.DBPedia.prototype.querySubject = function ()
-{	return "?subject rdfs:label ?label. "
-		+ "OPTIONAL {?subject dbpedia-owl:thumbnail ?thumbnail}."
-		+ "OPTIONAL {?subject dbpedia-owl:abstract ?abstract} . "
-		+ "OPTIONAL {?subject rdf:type ?type}";
+ol.source.DBPedia.prototype.querySubject = function () {
+  return "?subject rdfs:label ?label. "
+    + "OPTIONAL {?subject dbpedia-owl:thumbnail ?thumbnail}."
+    + "OPTIONAL {?subject dbpedia-owl:abstract ?abstract} . "
+    + "OPTIONAL {?subject rdf:type ?type}";
 }
 /** Set RDF query filter, default: select language
 * @API stable
 */
-ol.source.DBPedia.prototype.queryFilter = function ()
-{	return	 "lang(?label) = '"+this._lang+"' "
-		+ "&& lang(?abstract) = '"+this._lang+"'"
-	// Filter on type 
-	//+ "&& regex (?type, 'Monument|Sculpture|Museum', 'i')"
+ol.source.DBPedia.prototype.queryFilter = function () {
+  return	 "lang(?label) = '"+this._lang+"' "
+    + "&& lang(?abstract) = '"+this._lang+"'"
+  // Filter on type 
+  //+ "&& regex (?type, 'Monument|Sculpture|Museum', 'i')"
 }
 /** Loader function used to load features.
 * @private
 */
-ol.source.DBPedia.prototype._loaderFn = function(extent, resolution, projection)
-{	if (resolution > this._maxResolution) return;
-	var self = this;
-	var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
-	// SPARQL request: for more info @see http://fr.dbpedia.org/
-	var query =	"PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#> "
-				+ "SELECT DISTINCT * WHERE { "
-				+ "?subject geo:lat ?lat . "
-				+ "?subject geo:long ?long . "
-				+ this.querySubject()+" . "
-				+ "FILTER("+this.queryFilter()+") . "
-				// Filter bbox
-				+ "FILTER(xsd:float(?lat) <= " + bbox[3] + " && " + bbox[1] + " <= xsd:float(?lat) "
-				+ "&& xsd:float(?long) <= " + bbox[2] + " && " + bbox[0] + " <= xsd:float(?long) "
-				+ ") . "
-				+ "} LIMIT "+this._limit;
-	// Ajax request to get the tile
-	$.ajax(
-	{	url: this._url,
-		dataType: 'jsonp', 
-		data: { query: query, format:"json" },
-		success: function(data) 
-		{	var bindings = data.results.bindings;
-			var features = [];
-			var att, pt, feature, lastfeature = null;
-			for ( var i in bindings )
-			{	att = bindings[i];
-				pt = [Number(bindings[i].long.value), Number(bindings[i].lat.value)];
-				feature = new ol.Feature(new ol.geom.Point(ol.proj.transform (pt,"EPSG:4326",projection)));
-				if (self.readFeature(feature, att, lastfeature))
-				{	features.push(feature);
-					lastfeature = feature;
-				}
-			}
-			self.addFeatures(features);
+ol.source.DBPedia.prototype._loaderFn = function(extent, resolution, projection) {
+  if (resolution > this._maxResolution) return;
+  var self = this;
+  var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
+  // SPARQL request: for more info @see http://fr.dbpedia.org/
+  var query =	"PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#> "
+        + "SELECT DISTINCT * WHERE { "
+        + "?subject geo:lat ?lat . "
+        + "?subject geo:long ?long . "
+        + this.querySubject()+" . "
+        + "FILTER("+this.queryFilter()+") . "
+        // Filter bbox
+        + "FILTER(xsd:float(?lat) <= " + bbox[3] + " && " + bbox[1] + " <= xsd:float(?lat) "
+        + "&& xsd:float(?long) <= " + bbox[2] + " && " + bbox[0] + " <= xsd:float(?long) "
+        + ") . "
+        + "} LIMIT "+this._limit;
+  // Ajax request to get the tile
+  ol.ext.Ajax.get({
+    url: this._url,
+    data: { query: query, format:"json" },
+    success: function(data) {
+      var bindings = data.results.bindings;
+      var features = [];
+      var att, pt, feature, lastfeature = null;
+      for ( var i in bindings ) {
+        att = bindings[i];
+        pt = [Number(bindings[i].long.value), Number(bindings[i].lat.value)];
+        feature = new ol.Feature(new ol.geom.Point(ol.proj.transform (pt,"EPSG:4326",projection)));
+        if (self.readFeature(feature, att, lastfeature)) {
+          features.push(feature);
+          lastfeature = feature;
+        }
+      }
+      self.addFeatures(features);
     }});
 };
 ol.style.clearDBPediaStyleCache;
@@ -14958,8 +14978,8 @@ ol.style.dbPediaStyleFunction;
 var styleCache = {};
 /** Reset the cache (when fonts are loaded)
 */
-ol.style.clearDBPediaStyleCache = function()
-{	styleCache = {};
+ol.style.clearDBPediaStyleCache = function() {
+  styleCache = {};
 }
 /** Get a default style function for dbpedia
 * @param {} options
@@ -14971,56 +14991,56 @@ ol.style.clearDBPediaStyleCache = function()
 *
 * @require ol.style.FontSymbol and FontAwesome defs are required for dbPediaStyleFunction()
 */
-ol.style.dbPediaStyleFunction = function(options)
-{	if (!options) options={};
-	// Get font function using dbPedia type
-	var getFont;
-	switch (typeof(options.glyph))
-	{	case "function": getFont = options.glyph; break;
-		case "string": getFont = function(){ return options.glyph; }; break;
-		default:
-		{	getFont = function (f)
-			{	var type = f.get("type");
-				if (type)
-				{	if (type.match("/Museum")) return "fa-camera";
-					else if (type.match("/Monument")) return "fa-building";
-					else if (type.match("/Sculpture")) return "fa-android";
-					else if (type.match("/Religious")) return "fa-institution";
-					else if (type.match("/Castle")) return "fa-key";
-					else if (type.match("Water")) return "fa-tint";
-					else if (type.match("Island")) return "fa-leaf";
-					else if (type.match("/Event")) return "fa-heart";
-					else if (type.match("/Artwork")) return "fa-asterisk";
-					else if (type.match("/Stadium")) return "fa-futbol-o";
-					else if (type.match("/Place")) return "fa-street-view";
-				}
-				return "fa-star";
-			}
-			break;
-		}
-	}
-	// Default values
-	var radius = options.radius || 8;
-	var fill = options.fill || new ol.style.Fill({ color:"navy"});
-	var stroke = options.stroke || new ol.style.Stroke({ color: "#fff", width: 2 });
-	var prefix = options.prefix ? options.prefix+"_" : "";
-	// Vector style function
-	return function (feature)
-	{	var glyph = getFont(feature);
-		var k = prefix + glyph;
-		var style = styleCache[k];
-		if (!style)
-		{	styleCache[k] = style = new ol.style.Style
-			({	image: new ol.style.FontSymbol(
-						{	glyph: glyph, 
-							radius: radius, 
-							fill: fill,
-							stroke: stroke
-						})
-			});
-		}
-		return [style];
-	}
+ol.style.dbPediaStyleFunction = function(options) {
+  if (!options) options={};
+  // Get font function using dbPedia type
+  var getFont;
+  switch (typeof(options.glyph)) {
+    case "function": getFont = options.glyph; break;
+    case "string": getFont = function(){ return options.glyph; }; break;
+    default: {
+      getFont = function (f) {
+        var type = f.get("type");
+        if (type) {
+          if (type.match("/Museum")) return "fa-camera";
+          else if (type.match("/Monument")) return "fa-building";
+          else if (type.match("/Sculpture")) return "fa-android";
+          else if (type.match("/Religious")) return "fa-institution";
+          else if (type.match("/Castle")) return "fa-key";
+          else if (type.match("Water")) return "fa-tint";
+          else if (type.match("Island")) return "fa-leaf";
+          else if (type.match("/Event")) return "fa-heart";
+          else if (type.match("/Artwork")) return "fa-asterisk";
+          else if (type.match("/Stadium")) return "fa-futbol-o";
+          else if (type.match("/Place")) return "fa-street-view";
+        }
+        return "fa-star";
+      }
+      break;
+    }
+  }
+  // Default values
+  var radius = options.radius || 8;
+  var fill = options.fill || new ol.style.Fill({ color:"navy"});
+  var stroke = options.stroke || new ol.style.Stroke({ color: "#fff", width: 2 });
+  var prefix = options.prefix ? options.prefix+"_" : "";
+  // Vector style function
+  return function (feature) {
+    var glyph = getFont(feature);
+    var k = prefix + glyph;
+    var style = styleCache[k];
+    if (!style) {
+      styleCache[k] = style = new ol.style.Style ({
+        image: new ol.style.FontSymbol({
+          glyph: glyph, 
+          radius: radius, 
+          fill: fill,
+          stroke: stroke
+        })
+      });
+    }
+    return [style];
+  }
 };
 })();
 
@@ -15907,7 +15927,6 @@ ol.source.HexBin.prototype.getSource = function() {
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 	@classdesc
 	ol.source.Mapillary is a source that load Mapillary's geotagged photos in a vector layer.
-	@require jQuery
 	Inherits from:
 	<ol.source.Vector>
 */
@@ -15960,7 +15979,7 @@ ol.source.Mapillary.prototype._loaderFn = function(extent, resolution, projectio
 		+ "&limit="+(this._limit-1)
 		+ "&start_time=" + date;
 	// Ajax request to get the tile
-	$.ajax(
+	ol.ext.Ajax.get(
 	{	url: url,
 		dataType: 'jsonp', 
 		success: function(data) 
@@ -16098,13 +16117,12 @@ ol.source.Overpass.prototype.hasFeature = function(feature) {
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-	@classdesc
-	ol.source.WikiCommons is a source that load Wikimedia Commons content in a vector layer.
-	@require jQuery
-	Inherits from:
-	<ol.source.Vector>
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  @classdesc
+  ol.source.WikiCommons is a source that load Wikimedia Commons content in a vector layer.
+  Inherits from:
+  <ol.source.Vector>
 */
 /**
 * @constructor ol.source.WikiCommons
@@ -16112,19 +16130,19 @@ ol.source.Overpass.prototype.hasFeature = function(feature) {
 * @param {olx.source.WikiCommons=} options
 */
 ol.source.WikiCommons = function(opt_options) {
-	var options = opt_options || {};
-	options.loader = this._loaderFn;
-	/** Max resolution to load features  */
-	this._maxResolution = options.maxResolution || 100;
-	/** Result language */
-	this._lang = options.lang || "fr";
-	/** Query limit */
-	this._limit = options.limit || 100;
-	/** Default attribution */
-	if (!options.attributions) options.attributions = [ "&copy; <a href='https://commons.wikimedia.org/'>Wikimedia Commons</a>" ];
-	// Bbox strategy : reload at each move
+  var options = opt_options || {};
+  options.loader = this._loaderFn;
+  /** Max resolution to load features  */
+  this._maxResolution = options.maxResolution || 100;
+  /** Result language */
+  this._lang = options.lang || "fr";
+  /** Query limit */
+  this._limit = options.limit || 100;
+  /** Default attribution */
+  if (!options.attributions) options.attributions = [ "&copy; <a href='https://commons.wikimedia.org/'>Wikimedia Commons</a>" ];
+  // Bbox strategy : reload at each move
     if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
-	ol.source.Vector.call (this, options);
+  ol.source.Vector.call (this, options);
 };
 ol.inherits (ol.source.WikiCommons, ol.source.Vector);
 /** Decode wiki attributes and choose to add feature to the layer
@@ -16133,74 +16151,72 @@ ol.inherits (ol.source.WikiCommons, ol.source.Vector);
 * @return {boolean} true: add the feature to the layer
 * @API stable
 */
-ol.source.WikiCommons.prototype.readFeature = function (feature, attributes)
-{	feature.set("descriptionurl", attributes.descriptionurl);
-	feature.set("url", attributes.url);
-	feature.set("title", attributes.title.replace(/^file:|.jpg$/ig,""));
-	feature.set("thumbnail", attributes.url.replace(/^(.+wikipedia\/commons)\/([a-zA-Z0-9]\/[a-zA-Z0-9]{2})\/(.+)$/,"$1/thumb/$2/$3/200px-$3"));
-	feature.set("user", attributes.user);
-	if (attributes.extmetadata && attributes.extmetadata.LicenseShortName) feature.set("copy", attributes.extmetadata.LicenseShortName.value);
-	return true;
+ol.source.WikiCommons.prototype.readFeature = function (feature, attributes){
+  feature.set("descriptionurl", attributes.descriptionurl);
+  feature.set("url", attributes.url);
+  feature.set("title", attributes.title.replace(/^file:|.jpg$/ig,""));
+  feature.set("thumbnail", attributes.url.replace(/^(.+wikipedia\/commons)\/([a-zA-Z0-9]\/[a-zA-Z0-9]{2})\/(.+)$/,"$1/thumb/$2/$3/200px-$3"));
+  feature.set("user", attributes.user);
+  if (attributes.extmetadata && attributes.extmetadata.LicenseShortName) feature.set("copy", attributes.extmetadata.LicenseShortName.value);
+  return true;
 };
 /** Loader function used to load features.
 * @private
 */
-ol.source.WikiCommons.prototype._loaderFn = function(extent, resolution, projection)
-{	if (resolution > this._maxResolution) return;
-	var self = this;
-	var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
-	// Commons API: for more info @see https://commons.wikimedia.org/wiki/Commons:API/MediaWiki
-	var url = "https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&prop=coordinates|imageinfo"
-		+ "&generator=geosearch&iiprop=timestamp|user|url|extmetadata|metadata|size&iiextmetadatafilter=LicenseShortName"
-		+ "&ggsbbox=" + bbox[3] + "|" + bbox[0] + "|" + bbox[1] + "|" + bbox[2]
-		+ "&ggslimit="+this._limit
-		+ "&iilimit="+(this._limit-1)
-		+ "&ggsnamespace=6";
-	// Ajax request to get the tile
-	$.ajax(
-	{	url: url,
-		dataType: 'jsonp', 
-		success: function(data) 
-		{	//console.log(data);
-			var features = [];
-			var att, pt, feature;
-			if (!data.query || !data.query.pages) return;
-			for ( var i in data.query.pages)
-			{	att = data.query.pages[i];
-				if (att.coordinates && att.coordinates.length ) 
-				{	pt = [att.coordinates[0].lon, att.coordinates[0].lat];
-				}
-				else
-				{	var meta = att.imageinfo[0].metadata;
-					if (!meta)
-					{	//console.log(att);
-						continue;
-					}
-					pt = [];
-					var found=0;
-					for (var k=0; k<meta.length; k++)
-					{	if (meta[k].name=="GPSLongitude") 
-						{	pt[0] = meta[k].value;
-							found++;
-						}
-						if (meta[k].name=="GPSLatitude") 
-						{	pt[1] = meta[k].value;
-							found++;
-						}
-					}
-					if (found!=2) 
-					{	//console.log(att);
-						continue;
-					}
-				}
-				feature = new ol.Feature(new ol.geom.Point(ol.proj.transform (pt,"EPSG:4326",projection)));
-				att.imageinfo[0].title = att.title;
-				if (self.readFeature(feature, att.imageinfo[0]))
-				{	features.push(feature);
-				}
-			}
-			self.addFeatures(features);
-    }});
+ol.source.WikiCommons.prototype._loaderFn = function(extent, resolution, projection){
+  if (resolution > this._maxResolution) return;
+  var self = this;
+  var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
+  // Commons API: for more info @see https://commons.wikimedia.org/wiki/Commons:API/MediaWiki
+  var url = "https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&prop=coordinates|imageinfo"
+    + "&generator=geosearch&iiprop=timestamp|user|url|extmetadata|metadata|size&iiextmetadatafilter=LicenseShortName"
+    + "&ggsbbox=" + bbox[3] + "|" + bbox[0] + "|" + bbox[1] + "|" + bbox[2]
+    + "&ggslimit="+this._limit
+    + "&iilimit="+(this._limit-1)
+    + "&ggsnamespace=6";
+  // Ajax request to get the tile
+  ol.ext.Ajax.get({
+    url: url,
+    success: function(data) {
+      //console.log(data);
+      var features = [];
+      var att, pt, feature;
+      if (!data.query || !data.query.pages) return;
+      for ( var i in data.query.pages){
+        att = data.query.pages[i];
+        if (att.coordinates && att.coordinates.length ) {
+          pt = [att.coordinates[0].lon, att.coordinates[0].lat];
+        } else {
+          var meta = att.imageinfo[0].metadata;
+          if (!meta) {
+            //console.log(att);
+            continue;
+          }
+          pt = [];
+          var found=0;
+          for (var k=0; k<meta.length; k++) {
+            if (meta[k].name=="GPSLongitude") {
+              pt[0] = meta[k].value;
+              found++;
+            }
+            if (meta[k].name=="GPSLatitude") {
+              pt[1] = meta[k].value;
+              found++;
+            }
+          }
+          if (found!=2) {
+            //console.log(att);
+            continue;
+          }
+        }
+        feature = new ol.Feature(new ol.geom.Point(ol.proj.transform (pt,"EPSG:4326",projection)));
+        att.imageinfo[0].title = att.title;
+        if (self.readFeature(feature, att.imageinfo[0])) {
+          features.push(feature);
+        }
+      }
+      self.addFeatures(features);
+  }});
 };
 
 /*
@@ -19865,10 +19881,6 @@ ol.style.FillPattern.prototype.getChecksum = function()
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/**
- * @requires ol.style.Circle
- * @requires ol.structs.IHasChecksum
- */
 /**
  * @classdesc
  * A marker style to use with font symbols.
