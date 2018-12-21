@@ -9,6 +9,8 @@ import ol_Object from 'ol/Object'
  *  @param {string} options.dataType The type of data that you're expecting back from the server, default JSON
  */
 var ol_ext_Ajax = function(options) {
+  options = options || {};
+
 	ol_Object.call(this);
 
   this._auth = options.auth;
@@ -16,14 +18,30 @@ var ol_ext_Ajax = function(options) {
 };
 ol_inherits(ol_ext_Ajax, ol_Object);
 
+/** Helper for get
+ * @param {*} options
+ *  @param {string} options.url
+ *  @param {string} options.auth Authorisation as btoa("username:password");
+ *  @param {string} options.dataType The type of data that you're expecting back from the server, default JSON
+ *  @param {string} options.success
+ *  @param {string} options.error
+ */
+ol_ext_Ajax.get = function(options) {
+  var ajax = new ol_ext_Ajax(options);
+  if (options.success) ajax.on('success', function(e) { options.success(e.response, e); } );
+  if (options.error) ajax.on('error', function(e) { options.error(e); } );
+  ajax.send(options.url, options.data);
+};
 
 /** Send an ajax request (GET)
  * @fires success
  * @fires error
  * @param {string} url
  * @param {*} data Data to send to the server as key / value
+ * @param {*} options a set of options that are returned in the 
+ *  @param {boolean} options.abort false to prevent aborting the current request, default true
  */
-ol_ext_Ajax.prototype.send = function (url, data){
+ol_ext_Ajax.prototype.send = function (url, data, options){
 	var self = this;
   // Url
   url = encodeURI(url);
@@ -32,12 +50,12 @@ ol_ext_Ajax.prototype.send = function (url, data){
   var parameters = '';
 	for (var index in data) {
 		if (data.hasOwnProperty(index) && data[index]!==undefined) {
-      parameters += (parameters ? '&' : '?') + index + '=' + data[index];
+      parameters += (parameters ? '&' : '?') + index + '=' + encodeURIComponent(data[index]);
     }
 	}
 
 	// Abort previous request
-	if (this._request) {
+	if (this._request && options.abort!==false) {
 		this._request.abort();
 	}
 
@@ -73,17 +91,19 @@ ol_ext_Ajax.prototype.send = function (url, data){
           status: 0,
           statusText: 'parsererror',
           error: e,
+          options: options,
           jqXHR: this
         });
         return;
       }
       // Success
-      console.log('response',response)
+      //console.log('response',response)
       self.dispatchEvent ({ 
         type: 'success',
         response: response,
         status: this.status,
         statusText: this.statusText,
+        options: options,
         jqXHR: this
       });
     } else {
@@ -91,6 +111,7 @@ ol_ext_Ajax.prototype.send = function (url, data){
         type: 'error',
         status: this.status,
         statusText: this.statusText,
+        options: options,
         jqXHR: this
       });
     }
@@ -104,6 +125,7 @@ ol_ext_Ajax.prototype.send = function (url, data){
       type: 'error',
       status: this.status,
       statusText: this.statusText,
+      options: options,
       jqXHR: this
     });
   };

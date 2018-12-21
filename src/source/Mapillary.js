@@ -5,8 +5,6 @@
 	@classdesc
 	ol_source_Mapillary is a source that load Mapillary's geotagged photos in a vector layer.
 	
-	@require jQuery
-	
 	Inherits from:
 	<ol.source.Vector>
 */
@@ -15,7 +13,7 @@ import {inherits as ol_inherits} from 'ol'
 import {bbox as ol_loadingstrategy_bbox} from 'ol/loadingstrategy'
 import ol_source_Vector from 'ol/source/Vector'
 import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
-
+import ol_ext_Ajax from '../util/Ajax';
 
 /**
 * @constructor ol_source_Mapillary
@@ -77,7 +75,7 @@ ol_source_Mapillary.prototype._loaderFn = function(extent, resolution, projectio
 		+ "&limit="+(this._limit-1)
 		+ "&start_time=" + date;
 	// Ajax request to get the tile
-	$.ajax(
+	ol_ext_Ajax.get(
 	{	url: url,
 		dataType: 'jsonp', 
 		success: function(data) 
