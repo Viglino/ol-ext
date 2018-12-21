@@ -9,12 +9,6 @@ import ol_style_Image from 'ol/style/Image'
 import {asString as ol_color_asString} from 'ol/color'
 
 /**
- * @requires ol.style.Circle
- * @requires ol.structs.IHasChecksum
- */
-
-
-/**
  * @classdesc
  * A marker style to use with font symbols.
  *
