@@ -2,20 +2,19 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/* global $ */
 import {inherits as ol_inherits} from 'ol'
 import ol_control_LayerSwitcher from './LayerSwitcher'
+import ol_ext_element from '../util/element';
 
 /**
- * OpenLayers 3 Layer Switcher Control.
- * @require jQuery
+ * OpenLayers Layer Switcher Control.
  *
  * @constructor
  * @extends {ol_control_LayerSwitcher}
  * @param {Object=} options Control options.
  */
-var ol_control_LayerPopup = function(options)
-{	options = options || {};
+var ol_control_LayerPopup = function(options) {
+  options = options || {};
 	options.switcherClass="ol-layerswitcher-popup";
 	if (options.mouseover!==false) options.mouseover=true;
 	ol_control_LayerSwitcher.call(this, options);
@@ -31,24 +30,27 @@ ol_control_LayerPopup.prototype.overflow = function(){};
  * @layers {Array{ol.layer}} list of layer to show
  * @api stable
  */
-ol_control_LayerPopup.prototype.drawList = function(ul, layers)
-{	var self=this;
+ol_control_LayerPopup.prototype.drawList = function(ul, layers) {	
+  var self=this;
 	
-	var setVisibility = function(e) 
-	{	e.preventDefault(); 
-		var l = $(this).data("layer");
+	var setVisibility = function(e) {
+    e.preventDefault(); 
+		var l = self._getLayerForLI(this);
 		self.switchLayerVisibility(l,layers);
+		if (e.type=="touchstart") self.element.classList.add("ol-collapsed");
 	};
 
-	layers.forEach(function(layer)
-	{	if (self.displayInLayerSwitcher(layer)) 
-		{	var d = $("<li>").text(layer.get("title") || layer.get("name"))
-					.data ('layer', layer)
-					.click (setVisibility)
-					.on ("touchstart", setVisibility)
-					.appendTo(ul);
-			if (self.testLayerVisibility(layer)) d.addClass("ol-layer-hidden");
-			if (layer.getVisible()) d.addClass("select");
+	layers.forEach(function(layer) {
+    if (self.displayInLayerSwitcher(layer)) {
+      var d = ol_ext_element.create('LI', {
+        html: layer.get("title") || layer.get("name"),
+        on: { 'click touchstart': setVisibility },
+        parent: ul
+      });
+      self._setLayerForLI(d, layer);
+
+			if (self.testLayerVisibility(layer)) d.classList.add("ol-layer-hidden");
+			if (layer.getVisible()) d.classList.add("select");
 		}
 	});
 };

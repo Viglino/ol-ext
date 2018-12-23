@@ -1,6 +1,7 @@
 /** Vanilla JS helper to manipulate DOM without jQuery
  * @see https://github.com/nefe/You-Dont-Need-jQuery
  * @see https://plainjs.com/javascript/
+ * @see http://youmightnotneedjquery.com/
  */
  var ol_ext_element = {};
 
@@ -16,10 +17,9 @@
 ol_ext_element.create = function (tagName, options) {
   options = options || {};
   var elt;
-  // Text noe
+  // Create text node
   if (tagName === 'TEXT') {
     elt = document.createTextNode(options.html||'');
-    if (options.parent) options.parent.appendChild(elt);
   } else {
     // Other element
     elt = document.createElement(tagName);
@@ -43,6 +43,20 @@ ol_ext_element.create = function (tagName, options) {
           this.setStyle(elt, options.style);
           break;
         }
+        case 'click': {
+          ol_ext_element.addListener(elt, attr, options[attr]);
+          break;
+        }
+        case 'on': {
+          for (var e in options.on) {
+            ol_ext_element.addListener(elt, e, options.on[e]);
+          }
+          break;
+        }
+        case 'checked': {
+          elt.checked = !!options.checked;
+          break;
+        }
         default: {
           elt.setAttribute(attr, options[attr]);
           break;
@@ -50,8 +64,16 @@ ol_ext_element.create = function (tagName, options) {
       }
     }
   }
-
   return elt;
+};
+
+/** Set inner html or append a child element to an element
+ * @param {Element} element
+ * @param {Element|string} html Content of the element
+ */
+ol_ext_element.setHTML = function(element, html) {
+  if (html instanceof Element) element.appendChild(html)
+  else if (html!==undefined) element.innerHTML = html;
 };
 
 /**
@@ -61,9 +83,22 @@ ol_ext_element.create = function (tagName, options) {
  * @param {function} fn
  */
 ol_ext_element.addListener = function (element, eventType, fn) {
-  if (typeof eventType === 'string') eventType = [eventType];
+  if (typeof eventType === 'string') eventType = eventType.split(' ');
   eventType.forEach(function(e) {
     element.addEventListener(e, fn);
+  });
+};
+
+/**
+ * Add a set of event listener to an element
+ * @param {Element} element
+ * @param {string|Array<string>} eventType
+ * @param {function} fn
+ */
+ol_ext_element.removeListener = function (element, eventType, fn) {
+  if (typeof eventType === 'string') eventType = eventType.split(' ');
+  eventType.forEach(function(e) {
+    element.removeEventListener(e, fn);
   });
 };
 
@@ -81,6 +116,15 @@ ol_ext_element.show = function (element) {
  */
 ol_ext_element.hide = function (element) {
   element.style.display = 'none';
+};
+
+/**
+ * Test if an element is hihdden
+ * @param {Element} element
+ * @return {boolean}
+ */
+ol_ext_element.hidden = function (element) {
+  return ol_ext_element.getStyle(element, 'display') === 'none';
 };
 
 /**
@@ -155,6 +199,36 @@ ol_ext_element.getStyle = function(el, styleProp) {
   }
   if (/px$/.test(value)) return parseInt(value);
   return value;
+};
+
+/** Get outerHeight of an elemen
+ * @param {DOMElement} elt
+ * @return {number}
+ */
+ol_ext_element.outerHeight = function(elt) {
+  return elt.offsetHeight + ol_ext_element.getStyle(elt, 'marginBottom')
+};
+
+/** Get outerWidth of an elemen
+ * @param {DOMElement} elt
+ * @return {number}
+ */
+ol_ext_element.outerWidth = function(elt) {
+  return elt.offsetWidth + ol_ext_element.getStyle(elt, 'marginLeft')
+};
+
+/** Get element offset rect
+ * @param {DOMElement} elt
+ * @return {*} 
+ */
+ol_ext_element.offsetRect = function(elt) {
+  var rect = elt.getBoundingClientRect();
+  return {
+    top: rect.top + (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0),
+    left: rect.left + (window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft || 0),
+    height: rect.height || (rect.bottom - rect.top),
+    width: rect.widtth || (rect.right - rect.left)
+  }
 };
 
 /** Make a div scrollable without scrollbar.
