@@ -1364,7 +1364,6 @@ ol.control.LayerSwitcher.prototype.viewChange = function() {
  *	Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
 */
 ol.control.LayerSwitcher.prototype.drawPanel = function() {
-  this._layers = [];
   if (!this.getMap()) return;
   var self = this;
   // Multiple event simultaneously / draw once => put drawing in the event queue
@@ -1376,9 +1375,12 @@ ol.control.LayerSwitcher.prototype.drawPanel = function() {
  */
 ol.control.LayerSwitcher.prototype.drawPanel_ = function() {
   if (--this.dcount || this.dragging_) return;
+  // Remove existing layers
+  this._layers = [];
   this.panel_.querySelectorAll('li').forEach (function(li) {
     if (!li.classList.contains('ol-header')) li.remove();
   }.bind(this));
+  // Draw list
   this.drawList (this.panel_, this.getMap().getLayers());
 };
 /** Change layer visibility according to the baselayer option
@@ -1561,6 +1563,7 @@ ol.control.LayerSwitcher.prototype.dragOpacity_ = function(e) {
   // Register start params
   var elt = e.target;
   var layer = this._getLayerForLI(elt.parentNode.parentNode.parentNode);
+  if (!layer) return;
   var x = e.pageX 
     || (e.touches && e.touches.length && e.touches[0].pageX) 
     || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageX);
@@ -4902,7 +4905,7 @@ ol.control.Overlay = function(options)
 };
 ol.inherits(ol.control.Overlay, ol.control.Control);
 /** Set the content of the overlay
-* @param {string} html the html to display in the control (or a jQuery object) 
+* @param {string|Element} html the html to display in the control
 */
 ol.control.Overlay.prototype.setContent = function (html)
 {	var self = this;
@@ -4919,7 +4922,7 @@ ol.control.Overlay.prototype.setContent = function (html)
 	}
 };
 /** Set the control visibility
-* @param {string} html the html to display in the control (or a jQuery object) 
+* @param {string|Element} html the html to display in the control
 * @param {ol.coordinate} coord coordinate of the top left corner of the control to start from
 */
 ol.control.Overlay.prototype.show = function (html, coord)
@@ -10875,8 +10878,6 @@ ol.interaction.DrawTouch.prototype.setActive = function(b)
 }
 
 /** Extend DragAndDrop choose drop zone + fires loadstart, loadend
- * @require jQuery
- * 
  * @constructor
  * @extends {ol.interaction.DragAndDrop}
  *	@fires loadstart, loadend, addfeatures
@@ -14985,7 +14986,6 @@ ol.interaction.UndoRedo.prototype.hasRedo = function() {
   olx.source.DBPedia: olx.source.Vector
   {	url: {string} Url for DBPedia SPARQL 
   }
-  @require jQuery
   Inherits from:
   <ol.source.Vector>
 */
