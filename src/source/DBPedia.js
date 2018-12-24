@@ -9,8 +9,6 @@
   {	url: {string} Url for DBPedia SPARQL 
   }
 
-  @require jQuery
-  
   Inherits from:
   <ol.source.Vector>
 */

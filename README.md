@@ -68,9 +68,6 @@ The library will be available in the `node_modules/openlayers-ext/dist` director
 * For compatibility with older browsers and platforms (like Internet Explorer down to version 9 and Android 4.x), the Openalerys needs to be transpiled (e.g. using Babel) and bundled with polyfills for `requestAnimationFrame`, `Element.prototype.classList`, `Object.assign`and `URL`.
 
 ````html
-<!-- jQuery -->
-<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-
 <!-- Openlayers -->
 <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
 <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
@@ -83,7 +80,7 @@ The library will be available in the `node_modules/openlayers-ext/dist` director
 
 ### dependencies
 
-Some control are still jQuery dependent.
+Using ol-ext prior to v3.1 some controls still depend on jQuery.
 
 ### suppoted Browsers
 

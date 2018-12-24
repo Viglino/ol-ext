@@ -280,7 +280,6 @@ ol_control_LayerSwitcher.prototype.viewChange = function() {
  *	Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
 */
 ol_control_LayerSwitcher.prototype.drawPanel = function() {
-  this._layers = [];
   if (!this.getMap()) return;
   var self = this;
   // Multiple event simultaneously / draw once => put drawing in the event queue
@@ -293,9 +292,12 @@ ol_control_LayerSwitcher.prototype.drawPanel = function() {
  */
 ol_control_LayerSwitcher.prototype.drawPanel_ = function() {
   if (--this.dcount || this.dragging_) return;
+  // Remove existing layers
+  this._layers = [];
   this.panel_.querySelectorAll('li').forEach (function(li) {
     if (!li.classList.contains('ol-header')) li.remove();
   }.bind(this));
+  // Draw list
   this.drawList (this.panel_, this.getMap().getLayers());
 };
 
@@ -492,6 +494,7 @@ ol_control_LayerSwitcher.prototype.dragOpacity_ = function(e) {
   // Register start params
   var elt = e.target;
   var layer = this._getLayerForLI(elt.parentNode.parentNode.parentNode);
+  if (!layer) return;
   var x = e.pageX 
     || (e.touches && e.touches.length && e.touches[0].pageX) 
     || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageX);

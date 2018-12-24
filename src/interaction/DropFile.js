@@ -8,8 +8,6 @@ import ol_format_KML from 'ol/format/KML'
 import ol_format_TopoJSON from 'ol/format/TopoJSON'
 
 /** Extend DragAndDrop choose drop zone + fires loadstart, loadend
- * @require jQuery
- * 
  * @constructor
  * @extends {ol_interaction_DragAndDrop}
  *	@fires loadstart, loadend, addfeatures

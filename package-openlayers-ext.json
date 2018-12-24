@@ -1,12 +1,11 @@
 {
   "name": "openlayers-ext",
-  "version": "3.0.2",
+  "version": "3.1.0",
   "description": "A set of cool extensions for OpenLayers (ol).",
   "main": "index.js",
   "dependencies": {
     "ajax": "0.0.4",
-    "jquery": "^3.2.1",
-    "openlayers": "^5.0.3"
+    "openlayers": "^4.6.5"
   },
   "devDependencies": {
     "gulp": "^3.9.1",

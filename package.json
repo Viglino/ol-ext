@@ -1,13 +1,12 @@
 {
   "name": "ol-ext",
-  "version": "3.0.3",
+  "version": "3.1.0",
   "description": "A set of cool extensions for OpenLayers (ol) in node modules structure",
   "main": "dist/ol-ext.js",
   "style": "dist/ol-ext.css",
   "dependencies": {
     "ajax": "0.0.4",
-    "jquery": "^3.2.1",
-    "ol": "^5.1.3"
+    "ol": "^5.3.0"
   },
   "devDependencies": {
     "eslint": "^5.10.0",

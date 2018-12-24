@@ -48,7 +48,7 @@ var ol_control_Overlay = function(options)
 ol_inherits(ol_control_Overlay, ol_control_Control);
 
 /** Set the content of the overlay
-* @param {string} html the html to display in the control (or a jQuery object) 
+* @param {string|Element} html the html to display in the control
 */
 ol_control_Overlay.prototype.setContent = function (html)
 {	var self = this;
@@ -66,7 +66,7 @@ ol_control_Overlay.prototype.setContent = function (html)
 };
 
 /** Set the control visibility
-* @param {string} html the html to display in the control (or a jQuery object) 
+* @param {string|Element} html the html to display in the control
 * @param {ol.coordinate} coord coordinate of the top left corner of the control to start from
 */
 ol_control_Overlay.prototype.show = function (html, coord)
