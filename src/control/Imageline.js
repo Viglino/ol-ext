@@ -8,12 +8,15 @@ import ol_ext_element from '../util/element'
  *
  * @constructor
  * @extends {ol.control.Control}
- * @fires 
+ * @fires select
+ * @fires collapse
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
  *	@param {ol.source.Vector} options.source a vector source that contains the images
  *	@param {function} options.getImage a function that gets a feature and return the image url, default return the img propertie
  *	@param {function} options.getTitle a function that gets a feature and return the title, default return an empty string
+ *	@param {boolean} options.collapsed the line is collapse, default false
+ *	@param {boolean} options.collapsible the line is collapsible, default false
  *	@param {number} options.maxFeatures the maximum image element in the line, default 100
  *	@param {boolean} options.hover select image on hover, default false
  *	@param {string|boolean} options.linkColor link color or false if no link, default false
@@ -23,8 +26,19 @@ var ol_control_Imageline = function(options) {
   var element = ol_ext_element.create('DIV', {
     className: (options.className || '') + ' ol-imageline'
       + (options.target ? '': ' ol-unselectable ol-control')
+      + (options.collapsed && options.collapsible ? 'ol-collapsed' : '')
       + (ol_has_TOUCH ? ' ol-touch' : '')
   });
+
+  if (!options.target && options.collapsible) {
+    ol_ext_element.create('BUTTON', {
+      type: 'button',
+      click: function() {
+        this.toggle();
+      }.bind(this),
+      parent: element
+    });
+  }
 
   // Source 
   this._source = options.source;
@@ -48,6 +62,7 @@ var ol_control_Imageline = function(options) {
   this.set('maxFeatures', options.maxFeatures || 100);
   this.set('linkColor', options.linkColor || false);
   this.set('hover', options.hover || false);
+  this.set('useExtent', options.useExtent || false);
 
   this.refresh();
 };
@@ -59,14 +74,64 @@ ol_inherits(ol_control_Imageline, ol_control_Control);
  * @api stable
  */
 ol_control_Imageline.prototype.setMap = function (map) {
-	if (this._listener) ol_Observable_unByKey(this._listener);
+	if (this._listener) {
+    this._listener.forEach(function(l) {
+      ol_Observable_unByKey(l);
+    }.bind(this));
+  }
 	this._listener = null;
 
 	ol_control_Control.prototype.setMap.call(this, map);
 
 	if (map) {	
-    this._listener = map.on('postcompose', this._drawLink.bind(this));
+    this._listener = [
+      map.on('postcompose', this._drawLink.bind(this)),
+      map.on('moveend', function(e) { 
+        if (this.get('useExtent')) this.refresh();
+      }.bind(this))
+    ]
 	}
+};
+
+/** Set useExtent param and refresh the line
+ * @param {boolean} b
+ */
+ol_control_Imageline.prototype.useExtent = function(b) {
+  this.set('useExtent', b);
+  this.refresh();
+};
+
+/** Is the line collapsed
+ * @return {boolean}
+ */
+ol_control_Imageline.prototype.isCollapsed = function() {
+  return this.element.classList.contains('ol-collapsed');
+};
+
+/** Collapse the line
+ * @param {boolean} b
+ */
+ol_control_Imageline.prototype.collapse = function(b) {
+  if (b) this.element.classList.add('ol-collapsed');
+  else this.element.classList.remove('ol-collapsed');
+  if (this.getMap()) {
+    setTimeout ( function() {
+      this.getMap().render();
+    }.bind(this), this.isCollapsed() ? 0 : 250);
+  }
+  this.dispatchEvent({ type: 'collapse', collapsed: this.isCollapsed() });
+};
+
+/** Collapse the line
+ */
+ol_control_Imageline.prototype.toggle = function() {
+  this.element.classList.toggle('ol-collapsed');
+  if (this.getMap()) {
+    setTimeout ( function() {
+      this.getMap().render();
+    }.bind(this), this.isCollapsed() ? 0 : 250);
+  }
+  this.dispatchEvent({ type: 'collapse', collapsed: this.isCollapsed() });
 };
 
 /** Default function to get an image of a feature
@@ -89,12 +154,11 @@ ol_control_Imageline.prototype._getTitle = function(/* f */) {
  * Get features
  * @return {Array<ol.Feature>}
  */
-ol_control_Imageline.prototype.getFeatures = function(useExtent) {
+ol_control_Imageline.prototype.getFeatures = function() {
   var map = this.getMap();
-  if (!useExtent || !map) {
+  if (!this.get('useExtent') || !map) {
     return this._source.getFeatures();
-  }
-  else {
+  } else {
     var extent = map.getView().calculateExtent(map.getSize());
     return this._source.getFeaturesInExtent(extent);
   }
@@ -120,11 +184,12 @@ ol_control_Imageline.prototype._setScrolling = function() {
 /**
  * Refresh the imageline with new data
  */
-ol_control_Imageline.prototype.refresh = function(useExtent) {
+ol_control_Imageline.prototype.refresh = function() {
   this._scrolldiv.innerHTML = '';
-  var features = this.getFeatures(useExtent);
-
-  this._select = false;
+  var features = this.getFeatures();
+  var current = this._select ? this._select.feature : null;
+  
+  if (this._select) this._select.elt = null;
   this._iline = [];
   if (this.getMap()) this.getMap().render();
 
@@ -138,12 +203,16 @@ ol_control_Imageline.prototype.refresh = function(useExtent) {
       ol_ext_element.create('IMG', {
         src: this._getImage(f),
         parent: img
+      }).addEventListener('load', function(e){
+        this.classList.add('ol-loaded');
       });
       ol_ext_element.create('SPAN', {
         html: this._getTitle(f),
         parent: img
       });
+      // Current image
       var sel = { elt: img, feature: f };
+      // On click > dispatch event
       img.addEventListener('click', function(){
         if (!this._moving) {
           this.dispatchEvent({type: 'select', feature: f });
@@ -155,6 +224,7 @@ ol_control_Imageline.prototype.refresh = function(useExtent) {
             this._select.elt.classList.add('select');
           }
       }.bind(this));
+      // Show link
       img.addEventListener('mouseover', function(e) {
         if (this.get('hover')) {
           if (this._select) this._select.elt.classList.remove('select');
@@ -164,6 +234,7 @@ ol_control_Imageline.prototype.refresh = function(useExtent) {
           e.stopPropagation();
         }
       }.bind(this));
+      // Remove link
       img.addEventListener('mouseout', function(e) {
         if (this.get('hover')) {
           if (this._select) this._select.elt.classList.remove('select');
@@ -174,14 +245,24 @@ ol_control_Imageline.prototype.refresh = function(useExtent) {
       }.bind(this));
       // Prevent image dragging
       img.ondragstart = function(){ return false; };
+      // Add image
       this._iline.push(sel);
+      if (current===f) {
+        this._select = sel;
+        sel.elt.classList.add('select');
+      }
     }
   }.bind(this);
   
+  // Add images 
   var nb = this.get('maxFeatures');
   for (var i=0, f; f=features[i]; i++) {
     if (nb--<0) break;
     addImage(f);
+  }
+  // Add the selected one
+  if (this._select && this._select.feature && !this._select.elt) {
+    addImage(this._select.feature);
   }
 };
 
@@ -190,32 +271,31 @@ ol_control_Imageline.prototype.refresh = function(useExtent) {
  * @param {boolean} scroll scroll the line to center on the image, default true
  * @api
  */
-ol_control_Imageline.prototype.showImage = function(feature, scroll) {
+ol_control_Imageline.prototype.select = function(feature, scroll) {
   this._select = false;
-  if (feature) {
-    for (var i=0, f; f = this._iline[i]; i++) {
-      if (f.feature === feature) {
-        f.elt.classList.add('select');
-        this._select = f;
-        if (scroll!==false) {
-          this._scrolldiv.scrollLeft = f.elt.offsetLeft 
-            + ol_ext_element.getStyle(f.elt, 'width')/2
-            - ol_ext_element.getStyle(this.element, 'width')/2;
-        }
-      } else {
-        f.elt.classList.remove('select');
+  // Find the image
+  this._iline.forEach(function (f) {
+    if (f.feature === feature) {
+      f.elt.classList.add('select');
+      this._select = f;
+      if (scroll!==false) {
+        this._scrolldiv.scrollLeft = f.elt.offsetLeft 
+          + ol_ext_element.getStyle(f.elt, 'width')/2
+          - ol_ext_element.getStyle(this.element, 'width')/2;
       }
+    } else {
+      f.elt.classList.remove('select');
     }
-  }
+  }.bind(this));
 };
 
 /** Draw link on the map
  * @private
  */
 ol_control_Imageline.prototype._drawLink = function(e) {
-  if (!this.get('linkColor')) return;
-  var map = this.getMap()
-  if (map && this._select) {
+  if (!this.get('linkColor') | this.isCollapsed()) return;
+  var map = this.getMap();
+  if (map && this._select && this._select.elt) {
     var ctx = e.context;
     var ratio = e.frameState.pixelRatio;
  
@@ -223,7 +303,7 @@ ol_control_Imageline.prototype._drawLink = function(e) {
       this._select.elt.offsetLeft 
       - this._scrolldiv.scrollLeft
       + ol_ext_element.getStyle(this._select.elt, 'width')/2, 
-      ol_ext_element.getStyle(this.element, 'top')
+      parseFloat(ol_ext_element.getStyle(this.element, 'top')) || this.getMap().getSize()[1]
     ];
     var geom = this._select.feature.getGeometry().getFirstCoordinate();
     geom = this.getMap().getPixelFromCoordinate(geom);

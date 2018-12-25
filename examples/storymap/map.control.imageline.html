@@ -28,6 +28,17 @@
   <style>
     .ol-attribution {
       bottom: 4.5em;
+      transition: .3s;
+    }
+    .noimg .ol-attribution {
+      bottom: 0.5em;
+    }
+
+    .options {
+      display: inline-block;
+      max-width: 600px;
+      margin:0;
+      padding: 0;
     }
   </style>
 
@@ -39,7 +50,30 @@
     <h1>ol-ext: Image line control</h1>
   </a>
   <div class="info">
-    The <i>ol/control/Imageline</i> display a line of images on map.
+    The <i>ol/control/Imageline</i> displays images on map as a line. You can navigation no the line.
+    <ul>
+      <li>
+        You have to define a <i>ol/vector/source</i> that contains the features with the image.
+      </li>
+      <li>
+        The <i>getImage</i> option is a function that takes a feature and returns an image to display in the line.
+      </li>
+      <li>
+        You can specify a title for the image using the <i>getTitle</i> option.
+      </li>
+      <li>
+        Clicking on an image will trigger a <i>select</i> event you can catch to do something (center on the feature).
+      </li>
+      <li>
+        You can display all images on a layer or only those visible in the current map extent.
+      </li>
+      <li>
+        <i>lineColor</i> option let you display a link when a photo is selected, use false to remove the link.
+      </li>
+      <li>
+        <i>hover</i> option will select the photo on hover
+      </li>
+    </ul> 
   </div>
 
   <!-- Map div -->
@@ -49,7 +83,7 @@
     <ul>
       <li>
         <label>
-          <input id="extent" type="checkbox" onclick="iline.refresh($(this).prop('checked'));" />
+          <input id="extent" type="checkbox" onclick="iline.useExtent($(this).prop('checked'));" />
           Show only visible images
         </label>
       </li>
@@ -65,16 +99,16 @@
       </li>
       <li>
         <label>
-          <input id="arrow" type="checkbox" onclick="$(iline.element).toggleClass('ol-arrow');" 
+          <input id="hover" type="checkbox" onclick="iline.set('hover',$(this).prop('checked'));" 
           />
-          Show arrows
+          Select on hover
         </label>
       </li>
       <li>
         <label>
-          <input id="hover" type="checkbox" onclick="iline.set('hover',$(this).prop('checked'));" 
+          <input id="arrow" type="checkbox" onclick="$(iline.element).toggleClass('ol-arrow');" 
           />
-          Select on hover
+          Show arrows
         </label>
       </li>
     </ul>
@@ -125,8 +159,7 @@
     url: '../data/fond_guerre.geojson',
     projection: 'EPSG:3857',
     format: new ol.format.GeoJSON(),
-		attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
-    logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+		attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ]
   });
   var listenerKey = vectorSource.on('change', function(e) {
     if (vectorSource.getState() == 'ready') {
@@ -155,6 +188,8 @@
   // Create Imageline control when features are loaded
   var iline = new ol.control.Imageline({
     source: vectorSource,
+    // target: $('.options').get(0),
+    collapsible: true,
     getImage: function(f) {
       return f.get('img');
     },
@@ -163,6 +198,8 @@
     }
   });
   map.addControl (iline);
+
+  // Click on an image
   iline.on('select', function(e){
     map.getView().animate({
       center: e.feature.getGeometry().getCoordinates(),
@@ -171,19 +208,17 @@
     select.getFeatures().clear();
     select.getFeatures().push(e.feature);
   });
-
-  // Show images in extent on move end
-  map.on('moveend', function(){
-    if ($('#extent').prop('checked')) iline.refresh(true);
+  // Collapse the line
+  iline.on('collapse', function(e) {
+    if (e.collapsed) $('#map').addClass('noimg')
+    else $('#map').removeClass('noimg')
   });
 
   var select = new ol.interaction.Select({ hitTolerance: 5, style: style(true) });
   map.addInteraction(select);
   select.on('select', function(e){
     var f = e.selected[0];
-    if (f) {
-      iline.showImage(f);
-    }
+    iline.select(f);
   });
 
   // Redraw layer when fonts are loaded

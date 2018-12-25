@@ -3,7 +3,11 @@
   left: 0;
   right: 0;
   padding: 0;
-  overflow: hidden;
+  overflow: visible;
+  transition: bottom .3s;
+}
+.ol-control.ol-imageline.ol-collapsed {
+  bottom: -4em;
 }
 .ol-imageline > div {
   height: 4em;
@@ -11,12 +15,36 @@
   white-space: nowrap;
   scroll-behavior: smooth;
   overflow: hidden;
+  width: 100%;
 }
 .ol-imageline.ol-touch > div {
   overflow-x: auto;
 }
 .ol-imageline > div.ol-move {
   scroll-behavior: unset;
+}
+
+.ol-control.ol-imageline button {
+  position: absolute;
+  top: -1em;
+  transform: translateY(-100%);
+  margin: .65em;
+  box-shadow: 0 0 0 0.15em rgba(255,255,255,.4);
+}
+.ol-control.ol-imageline button:before {
+  content: '';
+  position: absolute;
+  transform: translate(-50%, -50%) rotate(135deg);
+  top: 40%;
+  left: 50%;
+  width: .4em;
+  height: .4em;
+  border: .1em solid currentColor;
+  border-width: .15em .15em 0 0;
+}
+.ol-control.ol-imageline.ol-collapsed button:before {
+  top: 60%;
+  transform: translate(-50%, -50%) rotate(-45deg);
 }
 
 .ol-imageline,
@@ -56,6 +84,11 @@
   max-height: 100%;
   border: .25em solid transparent;
   box-sizing: border-box;
+  opacity: 0;
+  transition: 1s;
+}
+.ol-imageline img.ol-loaded {
+  opacity:1;
 }
 
 .ol-imageline .ol-image.select {
