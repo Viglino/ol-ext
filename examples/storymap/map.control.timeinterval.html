@@ -26,17 +26,20 @@
   <link rel="stylesheet" href="../style.css" />
 
   <style>
+    .options {
+      min-width: 18em;
+    }
     .ol-attribution {
       bottom: 4.5em;
     }
     .ol-timeline {
       font-size: 2em;
     }
+    .ol-timeline .ol-feature {
+      text-align: center;
+    }
     .ol-timeline .ol-scroll {
       height: 2em;
-    }
-    .ol-timeline .ol-features {
-      text-align: center;
     }
     #select {
       font-size: .85em;
@@ -59,15 +62,39 @@
     <h1>ol-ext: Timeline control</h1>
   </a>
   <div class="info">
-      The <i>ol/control/Timeline</i> display a timeline to navigate on the map.
+    <p>
+      The <i>ol/control/Timeline</i> can be used to filter features in a time interval.
+    </p>
+    <ul>
+      <li>
+        Use the <i>interval</i> option or the <i>setInterval()</i> method to set the interval displayed on the timeline.
+      </li>
+      <li>
+        Listen to the <i>scroll</i> event to check the start and end date of the interval.
+      </li>
+    </ul>
+    <p>
+      <a href="./map.control.timeline.html">More info and parameters</a>
+    </p>
   </div>
 
   <!-- Map div -->
   <div id="map" style="width:600px; height:400px;"></div>
 
   <div class='options'>
-    All events between:
-    <span class='dateStart'></span> and <span class='dateEnd'></span>.
+    <p>
+      All events between:
+      <br/>
+      <span class='dateStart'></span> and <span class='dateEnd'></span>.
+    </p>
+    Interval: <select onchange="tline.setInterval($(this).val());">
+      <option value=''>none</option>
+      <option value='30d'>1 month</option>
+      <option value='60d'>2 month</option>
+      <option value='90d' selected='selected'>3 month</option>
+      <option value='.5y'>6 month</option>
+      <option value='1y'>1 year</option>
+    </select>
     <div id="select"></div>
   </div>
   
@@ -111,23 +138,14 @@
     url: '../data/fond_guerre.geojson',
     projection: 'EPSG:3857',
     format: new ol.format.GeoJSON(),
-		attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
-    logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
-  });
-  var listenerKey = vectorSource.on('change', function(e) {
-    if (vectorSource.getState() == 'ready') {
-      ol.Observable.unByKey(listenerKey);
-      tline.refresh();
-    }
+		attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ]
   });
 
   var vector = new ol.layer.Vector({
     name: '1914-18',
-    preview: "http://www.culture.gouv.fr/Wave/image/memoire/2445/sap40_z0004141_v.jpg",
     source: vectorSource,
     style: style()
   });
-
 
   // The map
   var map = new ol.Map ({
@@ -139,7 +157,7 @@
     layers: [stamen, vector]
   });
 
-  // Create Timeline control 
+  // One feature per year
   var features = [];
   for (var i=1915; i<1920; i++) {
     features.push({
@@ -149,23 +167,23 @@
     })
   }
 
+  // Create Timeline control 
   var tline = new ol.control.Timeline({
     features: features,
+    interval: '90d',  // 90 days = 3 month interval
     graduation: 'day', // 'month'
-    getHTML: function(f){
-      return f.text;
-    },
-    getFeatureDate: function(f){
-      return f.date;
-    },
-    endFeatureDate: function(f) {
-      return f.endDate
-    }
+    minDate: new Date('1914-01-01'),
+    maxDate: new Date('1920-01-01'),
+    getHTML: function(f){ return f.text; },
+    getFeatureDate: function(f){ return f.date; },
+    endFeatureDate: function(f) { return f.endDate }
   });
   map.addControl (tline);
+  tline.setDate('1915-06-01');
 
   // Show features on scroll
   tline.on('scroll', function(e){
+    // Start and end date
     $('.dateStart').text(e.dateStart.toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric'}));
     $('.dateEnd').text(e.dateEnd.toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric'}));
     // Filter features visibility
@@ -179,6 +197,7 @@
     });
   });
 
+  // Show feature on select
   var select = new ol.interaction.Select({ hitTolerance: 5, style: style(true) });
   map.addInteraction(select);
   select.on('select', function(e){

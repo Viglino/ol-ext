@@ -17,6 +17,7 @@ import ol_ext_element from '../util/element'
  *	@param {String} options.className class of the control
  *	@param {Array<ol.Feature>} options.features Features to show in the timeline
  *	@param {ol.SourceImageOptions.vector} options.source class of the control
+ *	@param {Number} options.interval time interval length in ms or a text with a format d, h, mn, s (31 days = '31d'), default none
  *	@param {String} options.maxWidth width of the time line in px, default 2000px
  *	@param {String} options.minDate minimum date 
  *	@param {String} options.maxDate maximum date 
@@ -88,7 +89,7 @@ var ol_control_Timeline = function(options) {
   }
 
   // Draw center date
-  ol_ext_element.create('DIV', {
+  this._intervalDiv = ol_ext_element.create('DIV', {
     className: 'ol-center-date',
     parent: this.element
   });
@@ -132,6 +133,7 @@ var ol_control_Timeline = function(options) {
   this.set('graduation', options.graduation);
   this.set('minZoom', options.minZoom || .2);
   this.set('maxZoom', options.maxZoom || 4);
+  this.setInterval(options.interval);
   if (options.getHTML) this._getHTML =  options.getHTML;
   if (options.getFeatureDate) this._getFeatureDate =  options.getFeatureDate;
   if (options.endFeatureDate) this._endFeatureDate =  options.endFeatureDate;
@@ -151,6 +153,13 @@ ol_control_Timeline.prototype.setMap = function(map) {
   this.refresh();
 };
 
+/** Add a button on the timeline
+ * @param {*} button
+ *  @param {string} button.className
+ *  @param {title} button.className
+ *  @param {Element|string} button.html Content of the element
+ *  @param {function} button.click a function called when the button is clicked
+ */
 ol_control_Timeline.prototype.addButton = function(button) {
   this.element.classList.add('ol-hasbutton');
   ol_ext_element.create('BUTTON', {
@@ -161,6 +170,31 @@ ol_control_Timeline.prototype.addButton = function(button) {
     parent: this._buttons
   })
 };
+
+/** Set an interval
+ * @param {number|string} length the interval length in ms or a farmatted text ie. end with y, 1d, h, mn, s (31 days = '31d'), default none
+ */
+ol_control_Timeline.prototype.setInterval = function(length) {
+  if (typeof(length)==='string') {
+    if (/s$/.test(length)) {
+      length = parseFloat(length) * 1000;
+    } else if (/mn$/.test(length)) {
+      length = parseFloat(length) * 1000 * 60;
+    } else if (/h$/.test(length)) {
+      length = parseFloat(length) * 1000 * 3600;
+    } else if (/d$/.test(length)) {
+      length = parseFloat(length) * 1000 * 3600 * 24;
+    } else if (/y$/.test(length)) {
+      length = parseFloat(length) * 1000 * 3600 * 24 * 365;
+    } else {
+      length = 0;
+    }
+  }
+  this.set('interval', length || 0);
+  if (length) this.element.classList.add('ol-interval');
+  else this.element.classList.remove('ol-interval');
+  this.refresh(this.get('zoom'));
+}
 
 /** Default html to show in the line
  * @param {ol.Feature} feature
@@ -282,7 +316,6 @@ ol_control_Timeline.prototype.refresh = function(zoom) {
   var max = this._maxDate = Math.max(this.get('maxDate'), tline.length ? tline[tline.length-1].date : -Infinity);
   if (!isFinite(min)) this._minDate = min = new Date();
   if (!isFinite(max)) this._maxDate = max = new Date();
-
   var delta = (max-min);
   var maxWidth = this.get('maxWidth');
   var scale = this._scale = (delta > maxWidth ? maxWidth/delta : 1) * zoom;
@@ -296,6 +329,13 @@ ol_control_Timeline.prototype.refresh = function(zoom) {
 
   // Draw time's bar
   this._drawTime(div, min, max, scale);
+
+  // Set interval
+  if (this.get('interval')) {
+    ol_ext_element.setStyle (this._intervalDiv, { width: this.get('interval') * scale });
+  } else {
+    ol_ext_element.setStyle (this._intervalDiv, { width: '' });
+  }
 
   // Draw features
   var line = [];
@@ -492,11 +532,19 @@ ol_control_Timeline.prototype.getDate = function(position) {
   var pos;
   switch (position) {
     case 'start': {
-      pos = 0;
+      if (this.get('interval')) {
+        pos = ol_ext_element.getStyle(this._scrollDiv, 'width')/2 - ol_ext_element.getStyle(this._intervalDiv, 'width')/2;
+      } else {
+        pos = 0;
+      }
       break;
     }
     case 'end': {
-      pos = ol_ext_element.getStyle(this._scrollDiv, 'width');
+      if (this.get('interval')) {
+        pos = ol_ext_element.getStyle(this._scrollDiv, 'width')/2 + ol_ext_element.getStyle(this._intervalDiv, 'width')/2;
+      } else {
+        pos = ol_ext_element.getStyle(this._scrollDiv, 'width');
+      }
       break;
     }
     default: {

@@ -176,4 +176,5 @@
   border: 0 solid #000;
   border-width: 0 10000px;
   box-sizing: content-box;
+  opacity: .2;
 }
