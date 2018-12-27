@@ -86,7 +86,7 @@ ol_control_Imageline.prototype.setMap = function (map) {
 	if (map) {	
     this._listener = [
       map.on('postcompose', this._drawLink.bind(this)),
-      map.on('moveend', function(e) { 
+      map.on('moveend', function() { 
         if (this.get('useExtent')) this.refresh();
       }.bind(this))
     ]
@@ -203,7 +203,7 @@ ol_control_Imageline.prototype.refresh = function() {
       ol_ext_element.create('IMG', {
         src: this._getImage(f),
         parent: img
-      }).addEventListener('load', function(e){
+      }).addEventListener('load', function(){
         this.classList.add('ol-loaded');
       });
       ol_ext_element.create('SPAN', {
