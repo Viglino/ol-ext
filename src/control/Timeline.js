@@ -9,7 +9,9 @@ import ol_ext_element from '../util/element'
  *
  * @constructor
  * @extends {ol.control.Control}
- * @fires 
+ * @fires select
+ * @fires scroll
+ * @fires collapse
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
  *	@param {Array<ol.Feature>} options.features Features to show in the timeline
@@ -23,8 +25,7 @@ import ol_ext_element from '../util/element'
  *	@param {function} options.getHTML a function that takes a feature and returns the html to display
  *	@param {function} options.getFeatureDate a function that takes a feature and returns its date, default the date propertie
  *	@param {function} options.endFeatureDate a function that takes a feature and returns its end date, default no end date
- *	@param {String} options.graduation day or month to show month or day graduation
- *	@param {Number} options.spacing Space factor between graduation, default 2
+ *	@param {String} options.graduation day|month to show month or day graduation, default show only years
  *	@param {String} options.scrollTimeout Time in milliseconds to get a scroll event, default 15ms
  */
 var ol_control_Timeline = function(options) {
@@ -32,13 +33,9 @@ var ol_control_Timeline = function(options) {
   var element = ol_ext_element.create('DIV', {
     className: (options.className || '') + ' ol-timeline'
       + (options.target ? '': ' ol-unselectable ol-control')
-      + (options.zoomButton ? ' ol-zoombt':'')
+      + (options.zoomButton ? ' ol-hasbutton':'')
       + (ol_has_TOUCH ? ' ol-touch' : '')
   });
-
-  // Source 
-  this._source = options.source;
-  this._features = options.features;
 
   // Initialize
   ol_control_Control.call(this, {
@@ -52,37 +49,41 @@ var ol_control_Timeline = function(options) {
     parent: this.element
   });
 
+  // Add a button bar
+  this._buttons = ol_ext_element.create('DIV', {
+    className: 'ol-buttons',
+    parent: this.element
+  });
+  // Zoom buttons
   if (options.zoomButton) {
-    var zbt = ol_ext_element.create('DIV', {
-      className: 'ol-zoom',
-      parent: this.element
-    });
-    ol_ext_element.create('BUTTON', {
+    // Zoom in
+    this.addButton({
       className: 'ol-zoom-in',
-      parent: zbt
-    }).addEventListener('click', function(){
-      var zoom = this.get('zoom');
-      if (zoom>=1) {
-        zoom++;
-      }
-      else {
-        zoom = Math.min(1, zoom + 0.1);
-      }
-      this.refresh(zoom);
-    }.bind(this));
-    ol_ext_element.create('BUTTON', {
+      handleClick: function(){
+        var zoom = this.get('zoom');
+        if (zoom>=1) {
+          zoom++;
+        } else {
+          zoom = Math.min(1, zoom + 0.1);
+        }
+        zoom = Math.round(zoom*100)/100;
+        this.refresh(zoom);
+      }.bind(this)
+    });
+    // Zoom out
+    this.addButton({
       className: 'ol-zoom-out',
-      parent: zbt
-    }).addEventListener('click', function(){
-      var zoom = this.get('zoom');
-      if (zoom>1) {
-        zoom--;
-      }
-      else {
-        zoom -= 0.1;
-      }
-      this.refresh(zoom);
-    }.bind(this));
+      handleClick: function(){
+        var zoom = this.get('zoom');
+        if (zoom>1) {
+          zoom--;
+        } else {
+          zoom -= 0.1;
+        }
+        zoom = Math.round(zoom*100)/100;
+        this.refresh(zoom);
+      }.bind(this)
+    });
   }
 
   // Draw center date
@@ -121,6 +122,8 @@ var ol_control_Timeline = function(options) {
     }.bind(this)
   });
 
+  this._tline = [];
+
   // Parameters
   this.set('maxWidth', options.maxWidth || 2000);
   this.set('minDate', options.minDate || Infinity);
@@ -132,32 +135,92 @@ var ol_control_Timeline = function(options) {
   if (options.getFeatureDate) this._getFeatureDate =  options.getFeatureDate;
   if (options.endFeatureDate) this._endFeatureDate =  options.endFeatureDate;
 
-  setTimeout(function (){ this.refresh(); }.bind(this));
+  // Feature source 
+  this.setFeatures(options.features || options.source, options.zoom);
 };
 ol_inherits(ol_control_Timeline, ol_control_Control);
 
-/** Get html to show in the line
+/**
+ * Set the map instance the control is associated with
+ * and add interaction attached to it to this map.
+ * @param {_ol_Map_} map The map instance.
+ */
+ol_control_Timeline.prototype.setMap = function(map) {
+  ol_control_Control.prototype.setMap.call(this, map);
+  this.refresh();
+};
+
+ol_control_Timeline.prototype.addButton = function(button) {
+  this.element.classList.add('ol-hasbutton');
+  ol_ext_element.create('BUTTON', {
+    className: button.className || undefined,
+    title: button.title,
+    html : button.html,
+    click: button.handleClick,
+    parent: this._buttons
+  })
+};
+
+/** Default html to show in the line
  * @param {ol.Feature} feature
  * @return {DOMElement|string}
+ * @private
  */
 ol_control_Timeline.prototype._getHTML = function(feature) {
   return feature.get('name') || '';
 };
 
-/** Default function: get the date of a feature
+/** Default function to get the date of a feature, returns the date attribute
  * @param {ol.Feature} feature
  * @return {Data|string}
+ * @private
  */
 ol_control_Timeline.prototype._getFeatureDate = function(feature) {
   return feature.get('date');
 };
 
-/** Get the end date of a feature, default return undefined
+/** Default function to get the end date of a feature, return undefined
  * @param {ol.Feature} feature
  * @return {Data|string}
+ * @private
  */
 ol_control_Timeline.prototype._endFeatureDate = function(/* feature */) {
   return undefined;
+};
+
+/** Is the line collapsed
+ * @return {boolean}
+ */
+ol_control_Timeline.prototype.isCollapsed = function() {
+  return this.element.classList.contains('ol-collapsed');
+};
+
+/** Collapse the line
+ * @param {boolean} b
+ */
+ol_control_Timeline.prototype.collapse = function(b) {
+  if (b) this.element.classList.add('ol-collapsed');
+  else this.element.classList.remove('ol-collapsed');
+  this.dispatchEvent({ type: 'collapse', collapsed: this.isCollapsed() });
+};
+
+/** Collapse the line
+ */
+ol_control_Timeline.prototype.toggle = function() {
+  this.element.classList.toggle('ol-collapsed');
+  this.dispatchEvent({ type: 'collapse', collapsed: this.isCollapsed() });
+};
+
+/** Set the features to display in the timeline
+ * @param {Array<ol.Features>|ol.source.Vector} features An array of features or a vector source
+ * @param {number} zoom zoom to draw the line default 1
+ */
+ol_control_Timeline.prototype.setFeatures = function(features, zoom) {
+  this._features = this._source = null;
+  if (features instanceof ol_source_Vector) this._source = features;
+  else if (features instanceof Array) this._features = features;
+  else this._features = [];
+  this.refresh(zoom);
 };
 
 /**
@@ -173,9 +236,10 @@ ol_control_Timeline.prototype.getFeatures = function() {
  * @param {Number} zoom Zoom factor from 0.25 to 10, default 1
  */
 ol_control_Timeline.prototype.refresh = function(zoom) {
+  if (!this.getMap()) return;
+  if (!zoom) zoom = this.get('zoom');
   zoom = Math.min(this.get('maxZoom'), Math.max(this.get('minZoom'), zoom || 1));
   this.set('zoom', zoom);
-  console.log(zoom)
   this._scrollDiv.innerHTML = '';
   var features = this.getFeatures();
   var d, d2;
@@ -202,7 +266,6 @@ ol_control_Timeline.prototype.refresh = function(zoom) {
       }
     }
   }.bind(this));
-  if (!tline.length) return;
 
   tline.sort(function(a,b) { 
     return (a.date < b.date ? -1 : (a.date===b.date ? 0: 1))
@@ -214,8 +277,11 @@ ol_control_Timeline.prototype.refresh = function(zoom) {
   });
 
   // Calculate width
-  var min = this._minDate = Math.min(this.get('minDate'), tline[0].date);
-  var max = this._maxDate = Math.max(this.get('maxDate'), tline[tline.length-1].date);
+  var min = this._minDate = Math.min(this.get('minDate'), tline.length ? tline[0].date : Infinity);
+  var max = this._maxDate = Math.max(this.get('maxDate'), tline.length ? tline[tline.length-1].date : -Infinity);
+  if (!isFinite(min)) this._minDate = min = new Date();
+  if (!isFinite(max)) this._maxDate = max = new Date();
+
   var delta = (max-min);
   var maxWidth = this.get('maxWidth');
   var scale = this._scale = (delta > maxWidth ? maxWidth/delta : 1) * zoom;

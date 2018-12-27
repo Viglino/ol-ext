@@ -49,6 +49,26 @@
       font-size: .9em;
       color: #396;
     }
+    button.go:before {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: .8em;
+      background: transparent;
+      border: 0.4em solid transparent;
+      border-right: 0;
+      border-left: .6em solid #fff;
+      left: 50%;
+      right: 50%;
+      transform: translate(-50%, -50%);
+      box-sizing: border-box;
+    }
+    .running button.go:before {
+      background: transparent;
+      width: .2em;
+      border: 0;
+      box-shadow: .2em 0, -.2em 0;
+    }
   </style>
 
 </head>
@@ -59,14 +79,25 @@
     <h1>ol-ext: Timeline control</h1>
   </a>
   <div class="info">
-      The <i>ol/control/Timeline</i> display a timeline to navigate on the map.
+    This example use a <i>ol/control/Timeline</i> as a time slider to display the 2015 earthquakes day by day.
+    <ul>
+      <li>
+        Use the <i>addButton()</i>  method to add a button on the Timeline.
+      </li>
+      <li>
+        Add the <i>ol-pointer</i> className to the Timeline to show a pointer on the center date.
+      </li>
+    </ul>
+    <p>
+      <a href="./map.control.timeline.html">More info and parameters</a>
+    </p>
   </div>
 
   <!-- Map div -->
   <div id="map" style="width:600px; height:400px;"></div>
 
   <div class='options'>
-    <span class='dateStart'></span>
+    Earthquake on: <span class='dateStart'></span>
     <div id="select"></div>
   </div>
   
@@ -90,29 +121,30 @@
         var img = new ol.style.Circle({
           radius: f.get('mag')*f.get('mag')/2,
           fill: new ol.style.Fill({
-            color: select ? 'rgba(255,0,0,.5)':'rgba(255,128,0,.5)'
+            color: select ? 'rgba(255,0,0,.5)':'rgba(255,128,0,.3)'
           })
-        })
-        style = cache[f.get('mag')+'-'+select] = new ol.style.Style({
-          image: img
-        })
+        });
+        var img2 = new ol.style.Circle({
+          radius: f.get('mag')*f.get('mag')/4,
+          fill: new ol.style.Fill({
+            color: select ? 'rgba(255,0,0,.5)':'rgba(255,128,0,.3)'
+          })
+        });
+        style = cache[f.get('mag')+'-'+select] = [
+          new ol.style.Style({ image: img }),
+          new ol.style.Style({ image: img2 })
+        ];
       }
       return style;
     }
   };
   
-  // GeoJSON layer with a preview attribute
+  // Earthquake layer
   var vectorSource = new ol.source.Vector({
     url: '../data/USGS-Earthquake-2015-mag5.json',
     projection: 'EPSG:3857',
     format: new ol.format.GeoJSON(),
 		attributions: [ "&copy; <a href='https://earthquake.usgs.gov/earthquakes/'>USGS</a>" ]
-  });
-  var listenerKey = vectorSource.on('change', function(e) {
-    if (vectorSource.getState() == 'ready') {
-      ol.Observable.unByKey(listenerKey);
-      tline.refresh();
-    }
   });
 
   var vector = new ol.layer.Vector({
@@ -132,33 +164,31 @@
   });
 
   // Create Timeline control 
-  var features = [];
-  for (var i=2015; i<2016; i++) {
-    features.push({
-      text: i,
-      date: new Date(i+'/01/01'),
-      endDate: new Date(i+'/12/31')
-    })
-  }
-
   var tline = new ol.control.Timeline({
-    features: features,
+    className: 'ol-pointer',
+    features: [{
+      text: 2015,
+      date: new Date('2015/01/01'),
+      endDate: new Date('2015/12/31')
+    }],
     graduation: 'day', // 'month'
     minDate: new Date('2014/06/01'),
-    maxDate: new Date('2017/06/01'),
-    getHTML: function(f){
-      return f.text;
-    },
-    getFeatureDate: function(f){
-      return f.date;
-    },
-    endFeatureDate: function(f) {
-      return f.endDate
-    }
+    maxDate: new Date('2016/02/01'),
+    getHTML: function(f){ return 2015; },
+    getFeatureDate: function(f){ return f.date; },
+    endFeatureDate: function(f) { return f.endDate }
   });
   map.addControl (tline);
   // Set the date when ready
   setTimeout(function(){ tline.setDate('2015'); });
+
+  tline.addButton ({
+    className: "go",
+    title: "GO!",
+    handleClick: function() {
+    	go();
+    }
+  });
 
   // Show features on scroll
   tline.on('scroll', function(e){
@@ -182,11 +212,47 @@
       // Show info
 			var info = $("#select").html("");
       $("<p>").text((new Date(f.get("time"))).toLocaleString()).appendTo(info);
-			$("<p>").text(f.get("mag")+' - '+f.get("place")).appendTo(info);
+			$("<p>").text('MAG.: '+f.get("mag")+' - '+f.get("place")).appendTo(info);
 		} else {
       $("#select").html('');
     }
   });
+
+  // Run on the timeline
+  var running = false; 
+  var start = new Date('2015');
+  var end = new Date('2016');
+  function go(next) {
+    var date = tline.getDate();
+    var delay = 100;
+    if (running) clearTimeout(running);
+    if (!next) {
+      // stop
+      if (date>start && date<end && running) {
+        running = false;
+        tline.element.classList.remove('running');
+        return;
+      }
+      if (date > end) {
+        date = start;
+        delay = 500;
+      }
+    }
+    if (date > end) {
+      tline.element.classList.remove('running');
+      return;
+    }
+    if (date < start) {
+      date = start;
+      delay = 500;
+    }
+    // 1 day
+    date = new Date(date.getTime() + 24*60*60*1000);
+    tline.setDate(date);
+    // next
+    tline.element.classList.add('running');
+    running = setTimeout(function() { go(true); }, delay);
+  }
 
   </script>
   

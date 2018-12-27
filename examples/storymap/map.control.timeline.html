@@ -28,6 +28,10 @@
   <style>
     .ol-attribution {
       bottom: 6.5em;
+      transition: .3s;
+    }
+    .noimg .ol-attribution {
+      bottom: 0.5em;
     }
     
     .ol-timeline img {
@@ -46,11 +50,45 @@
   </a>
   <div class="info">
       The <i>ol/control/Timeline</i> display a timeline to navigate on the map.
+      <ul>
+        <li>
+          Use the <i>getFeatureDate</i> and <i>endFeatureDate</i> option to define the start and end date of the features.
+        </li>
+        <li>
+          Use the <i>getHTMl</i> option to format the contents in the timeline.
+        </li>
+        <li>
+          Use the <i>ol-zoomhover</i> class name to add a zoom effect on hover.
+        </li>
+        <li>
+          When a feature is clicked on the timeline a <i>select</i> event is fired on the control.
+        </li>
+        <li>
+          You can center a date on the line using the <i>setDate()</i> method.
+        </li>
+        <li>
+          Use the <i>getDate()</i> method to get the current date.
+        </li>
+        <li>
+          Listen to the <i>scroll</i> event to know when the line scrolls
+        </li>
+      </ul>
+      <p>
+        You can use the Timeline <a href="./map.control.timeline.2.html"> to filter features on the map</a>
+        <br/>
+        or <a href="./map.control.timequake.html">as a time slider to display chronological sequences on a map.</a>
+      </p>
   </div>
 
   <!-- Map div -->
   <div id="map" style="width:600px; height:400px;"></div>
-  
+
+  <div class="options">
+    <h2>Options:</h2>
+    <button onclick="tline.toggle()">Toggle</button>
+    <p>Cureent date: <span class='date'></span></p>
+  </div>
+
   <script type="text/javascript">
 
   // Two base layers
@@ -142,6 +180,8 @@
     }
   });
   map.addControl (tline);
+
+  // Select a feature
   tline.on('select', function(e){
     // Center map on feature
     map.getView().animate({
@@ -153,7 +193,16 @@
     // Select feature on the map
     select.getFeatures().clear();
     select.getFeatures().push(e.feature);
-  })
+  });
+  // Collapse the line
+  tline.on('collapse', function(e) {
+    if (e.collapsed) $('#map').addClass('noimg')
+    else $('#map').removeClass('noimg')
+  });
+  // >croll the line
+  tline.on('scroll', function(e){
+    $('.options .date').text(e.date.toLocaleDateString());
+  });
 
   var select = new ol.interaction.Select({ hitTolerance: 5, style: style(true) });
   map.addInteraction(select);
@@ -162,11 +211,6 @@
     if (f) {
       tline.setDate(f);
     }
-  });
-
-  // Redraw layer when fonts are loaded
-  $(window).on("load", function(){ 
-    console.log("loaded"); vector.changed(); 
   });
 
   </script>

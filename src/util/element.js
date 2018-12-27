@@ -27,7 +27,7 @@ ol_ext_element.create = function (tagName, options) {
     for (var attr in options) {
       switch (attr) {
         case 'className': {
-          elt.setAttribute('class', options.className.trim());
+          if (options.className && options.className.trim) elt.setAttribute('class', options.className.trim());
           break;
         }
         case 'html': {
