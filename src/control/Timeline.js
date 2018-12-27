@@ -1,5 +1,6 @@
 /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
 import {inherits as ol_inherits} from 'ol'
+import ol_source_Vector from 'ol/source/Vector'
 import { ol_Feature } from 'ol/Feature';
 import ol_control_Control from 'ol/control/Control'
 import ol_has_TOUCH from 'ol/has'
@@ -451,8 +452,9 @@ ol_control_Timeline.prototype._drawTime = function(div, min, max, scale) {
 
 /** Center timeline on a date
  * @param {Date|String|ol.feature} feature a date or a feature with a date
+ * @param {boolean} anim animate scroll
  */
-ol_control_Timeline.prototype.setDate = function(feature) {
+ol_control_Timeline.prototype.setDate = function(feature, anim) {
   var date;
   // Get date from Feature
   if (feature instanceof ol_Feature) {
@@ -466,7 +468,9 @@ ol_control_Timeline.prototype.setDate = function(feature) {
     date = new Date(String(feature));
   }
   if (!isNaN(date)) {
-    this._scrollDiv.scrollLeft = (date-this._minDate)*this._scale - ol_ext_element.getStyle(this.element, 'width')/2;
+    if (anim === false) this._scrollDiv.classList.add('ol-move');
+    this._scrollDiv.scrollLeft = (date-this._minDate)*this._scale - ol_ext_element.getStyle(this._scrollDiv, 'width')/2;
+    if (anim === false) this._scrollDiv.classList.remove('ol-move');
     if (feature) {
       for (var i=0, f; f = this._tline[i]; i++) {
         if (f.feature === feature) {
@@ -492,11 +496,11 @@ ol_control_Timeline.prototype.getDate = function(position) {
       break;
     }
     case 'end': {
-      pos = ol_ext_element.getStyle(this.element, 'width');
+      pos = ol_ext_element.getStyle(this._scrollDiv, 'width');
       break;
     }
     default: {
-      pos = ol_ext_element.getStyle(this.element, 'width')/2;
+      pos = ol_ext_element.getStyle(this._scrollDiv, 'width')/2;
       break;
     }
   }

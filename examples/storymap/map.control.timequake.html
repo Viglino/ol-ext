@@ -224,7 +224,6 @@
   var end = new Date('2016');
   function go(next) {
     var date = tline.getDate();
-    var delay = 100;
     if (running) clearTimeout(running);
     if (!next) {
       // stop
@@ -235,7 +234,6 @@
       }
       if (date > end) {
         date = start;
-        delay = 500;
       }
     }
     if (date > end) {
@@ -244,14 +242,13 @@
     }
     if (date < start) {
       date = start;
-      delay = 500;
     }
     // 1 day
     date = new Date(date.getTime() + 24*60*60*1000);
-    tline.setDate(date);
+    tline.setDate(date, false);
     // next
     tline.element.classList.add('running');
-    running = setTimeout(function() { go(true); }, delay);
+    running = setTimeout(function() { go(true); }, 100);
   }
 
   </script>
