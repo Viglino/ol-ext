@@ -2962,6 +2962,7 @@
   border-width: 0 10000px;
   -webkit-box-sizing: content-box;
           box-sizing: content-box;
+  opacity: .2;
 }
 .ol-target-overlay .ol-target 
 {	border: 1px solid transparent;

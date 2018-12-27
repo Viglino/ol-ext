@@ -142,10 +142,10 @@ ol.ext.Ajax.prototype.send = function (url, data, options){
  * Create an element
  * @param {string} tagName The element tag, use 'TEXT' to create a text node
  * @param {*} options
- *  @param {string} className The element class name 
- *  @param {Element} parent Parent to append the element as child
- *  @param {Element|string} html Content of the element
- *  @param {string} * Any other attribut to add to the element
+ *  @param {string} options.className className The element class name 
+ *  @param {Element} options.parent Parent to append the element as child
+ *  @param {Element|string} options.html Content of the element
+ *  @param {string} options.* Any other attribut to add to the element
  */
 ol.ext.element.create = function (tagName, options) {
   options = options || {};
@@ -7690,6 +7690,7 @@ ol.inherits(ol.control.TextButton, ol.control.Button);
  *	@param {String} options.className class of the control
  *	@param {Array<ol.Feature>} options.features Features to show in the timeline
  *	@param {ol.SourceImageOptions.vector} options.source class of the control
+ *	@param {Number} options.interval time interval length in ms or a text with a format d, h, mn, s (31 days = '31d'), default none
  *	@param {String} options.maxWidth width of the time line in px, default 2000px
  *	@param {String} options.minDate minimum date 
  *	@param {String} options.maxDate maximum date 
@@ -7756,7 +7757,7 @@ ol.control.Timeline = function(options) {
     });
   }
   // Draw center date
-  ol.ext.element.create('DIV', {
+  this._intervalDiv = ol.ext.element.create('DIV', {
     className: 'ol-center-date',
     parent: this.element
   });
@@ -7795,6 +7796,7 @@ ol.control.Timeline = function(options) {
   this.set('graduation', options.graduation);
   this.set('minZoom', options.minZoom || .2);
   this.set('maxZoom', options.maxZoom || 4);
+  this.setInterval(options.interval);
   if (options.getHTML) this._getHTML =  options.getHTML;
   if (options.getFeatureDate) this._getFeatureDate =  options.getFeatureDate;
   if (options.endFeatureDate) this._endFeatureDate =  options.endFeatureDate;
@@ -7811,6 +7813,13 @@ ol.control.Timeline.prototype.setMap = function(map) {
   ol.control.Control.prototype.setMap.call(this, map);
   this.refresh();
 };
+/** Add a button on the timeline
+ * @param {*} button
+ *  @param {string} button.className
+ *  @param {title} button.className
+ *  @param {Element|string} button.html Content of the element
+ *  @param {function} button.click a function called when the button is clicked
+ */
 ol.control.Timeline.prototype.addButton = function(button) {
   this.element.classList.add('ol-hasbutton');
   ol.ext.element.create('BUTTON', {
@@ -7821,6 +7830,30 @@ ol.control.Timeline.prototype.addButton = function(button) {
     parent: this._buttons
   })
 };
+/** Set an interval
+ * @param {number|string} length the interval length in ms or a farmatted text ie. end with y, 1d, h, mn, s (31 days = '31d'), default none
+ */
+ol.control.Timeline.prototype.setInterval = function(length) {
+  if (typeof(length)==='string') {
+    if (/s$/.test(length)) {
+      length = parseFloat(length) * 1000;
+    } else if (/mn$/.test(length)) {
+      length = parseFloat(length) * 1000 * 60;
+    } else if (/h$/.test(length)) {
+      length = parseFloat(length) * 1000 * 3600;
+    } else if (/d$/.test(length)) {
+      length = parseFloat(length) * 1000 * 3600 * 24;
+    } else if (/y$/.test(length)) {
+      length = parseFloat(length) * 1000 * 3600 * 24 * 365;
+    } else {
+      length = 0;
+    }
+  }
+  this.set('interval', length || 0);
+  if (length) this.element.classList.add('ol-interval');
+  else this.element.classList.remove('ol-interval');
+  this.refresh(this.get('zoom'));
+}
 /** Default html to show in the line
  * @param {ol.Feature} feature
  * @return {DOMElement|string}
@@ -7941,6 +7974,12 @@ ol.control.Timeline.prototype.refresh = function(zoom) {
   });
   // Draw time's bar
   this._drawTime(div, min, max, scale);
+  // Set interval
+  if (this.get('interval')) {
+    ol.ext.element.setStyle (this._intervalDiv, { width: this.get('interval') * scale });
+  } else {
+    ol.ext.element.setStyle (this._intervalDiv, { width: '' });
+  }
   // Draw features
   var line = [];
   var lineHeight = ol.ext.element.getStyle(this._scrollDiv, 'lineHeight');
@@ -8128,11 +8167,19 @@ ol.control.Timeline.prototype.getDate = function(position) {
   var pos;
   switch (position) {
     case 'start': {
-      pos = 0;
+      if (this.get('interval')) {
+        pos = ol.ext.element.getStyle(this._scrollDiv, 'width')/2 - ol.ext.element.getStyle(this._intervalDiv, 'width')/2;
+      } else {
+        pos = 0;
+      }
       break;
     }
     case 'end': {
-      pos = ol.ext.element.getStyle(this._scrollDiv, 'width');
+      if (this.get('interval')) {
+        pos = ol.ext.element.getStyle(this._scrollDiv, 'width')/2 + ol.ext.element.getStyle(this._intervalDiv, 'width')/2;
+      } else {
+        pos = ol.ext.element.getStyle(this._scrollDiv, 'width');
+      }
       break;
     }
     default: {
