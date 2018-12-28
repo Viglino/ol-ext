@@ -35,7 +35,7 @@ gulp doc
 ## Licence
 
 ol-ext is licenced under the French Opensource **BSD** compatible CeCILL-B FREE SOFTWARE LICENSE.  
-(c) 2016-2017 - Jean-Marc Viglino
+(c) 2016-2019 - Jean-Marc Viglino
 
 [Full text license in English](http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt)    
 [Full text license in French](http://www.cecill.info/licences/Licence_CeCILL-B_V1-fr.txt)

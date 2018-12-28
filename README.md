@@ -4,8 +4,11 @@
 [ol-ext](https://github.com/Viglino/ol-ext) is a set of extensions, controls, interactions, popup to use with Openlayers.    
 [View live examples online](http://viglino.github.io/ol-ext/) or the [API documentation](http://viglino.github.io/ol-ext/doc/doc-pages/).
 
-**Keywords:** CSS popup, 
-Font Awesome symbol renderer, 
+**Keywords:** 
+Storymap,
+Timeline control,
+CSS popup, 
+Font Awesome symbols, 
 charts for statistical map (pie/bar), 
 layer switcher,
 control bar,
@@ -102,7 +105,7 @@ Please use the [GitHub issue tracker](https://github.com/Viglino/ol-ext/issues) 
 ## License
 
 ol-ext is licensed under the French Opensource **BSD** compatible CeCILL-B FREE SOFTWARE LICENSE.  
- (c) 2016-2018 - Jean-Marc Viglino
+ (c) 2016-2019 - Jean-Marc Viglino
 
 Some resources (mapping services and API) used in this sofware may have a specific license.  
 You must check before use.

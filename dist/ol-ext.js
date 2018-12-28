@@ -363,6 +363,10 @@ ol.ext.element.scrollDiv = function(elt, options) {
   var onmove = (typeof(options.onmove) === 'function' ? options.onmove : function(){});
   var page = options.vertical ? 'pageY' : 'pageX';
   var scroll = options.vertical ? 'scrollTop' : 'scrollLeft';
+  // Prevent image dragging
+  elt.querySelectorAll('img').forEach(function(i) {
+    i.ondragstart = function(){ return false; };
+  });
   // Start scrolling
   ol.ext.element.addListener(elt, ['mousedown'], function(e) {
     pos = e[page];
@@ -403,7 +407,7 @@ ol.ext.element.scrollDiv = function(elt, options) {
     speed = 0;
     dt = 0;
   });
-  // Handke mousewheel
+  // Handle mousewheel
   if (options.mousewheel && !elt.classList.contains('ol-touch')) {
     ol.ext.element.addListener(elt, 
       ['mousewheel', 'DOMMouseScroll', 'onmousewheel'], 
@@ -7276,16 +7280,19 @@ ol.control.Storymap = function(options) {
     vertical: true,
     mousewheel: true
   });
-  // Prevent image dragging
-  var img = this.element.querySelectorAll('img');
-  img.forEach(function(i) {
-    i.ondragstart = function(){ return false; };
-  });
-  // Scroll down
-  var sc = this.element.querySelectorAll('.ol-scroll-down');
-  sc.forEach(function(i) {
-    i.addEventListener('click', function(){ 
-      this.element.scrollTop = i.offsetTop;
+  // Scroll to the next chapter
+  var sc = this.element.querySelectorAll('.ol-scroll-next');
+  sc.forEach(function(s) {
+    s.addEventListener('click', function(){ 
+      var chapter = this.element.querySelectorAll('.chapter');
+      var scrollto = s.offsetTop;
+      for (var i=0, c; c=chapter[i]; i++) {
+        if (c.offsetTop > scrollto) {
+          scrollto = c.offsetTop;
+          break;
+        }
+      }
+      this.element.scrollTop = scrollto;
     }.bind(this));
   }.bind(this));
   // Scroll top 
@@ -7320,6 +7327,9 @@ ol.control.Storymap = function(options) {
   }.bind(this));
 };
 ol.inherits(ol.control.Storymap, ol.control.Control);
+/** Scroll to a chapter
+ * @param {string} name Name of the chapter to scroll to
+ */
 ol.control.Storymap.prototype.setChapter = function (name) {
   var chapter = this.element.querySelectorAll('.chapter');
   for (var i=0, s; s=chapter[i]; i++) {
