@@ -245,6 +245,11 @@ ol_ext_element.scrollDiv = function(elt, options) {
   var page = options.vertical ? 'pageY' : 'pageX';
   var scroll = options.vertical ? 'scrollTop' : 'scrollLeft';
 
+  // Prevent image dragging
+  elt.querySelectorAll('img').forEach(function(i) {
+    i.ondragstart = function(){ return false; };
+  });
+  
   // Start scrolling
   ol_ext_element.addListener(elt, ['mousedown'], function(e) {
     pos = e[page];
@@ -288,7 +293,7 @@ ol_ext_element.scrollDiv = function(elt, options) {
     dt = 0;
   });
 
-  // Handke mousewheel
+  // Handle mousewheel
   if (options.mousewheel && !elt.classList.contains('ol-touch')) {
     ol_ext_element.addListener(elt, 
       ['mousewheel', 'DOMMouseScroll', 'onmousewheel'], 

@@ -23,13 +23,13 @@
 }
 
 .ol-storymap .ol-scroll-top,
-.ol-storymap .ol-scroll-down {
+.ol-storymap .ol-scroll-next {
   position: relative;
   min-height: 1em;
   color: rgba(0,60,136,.5);
 }
 .ol-storymap .ol-scroll-top:before,
-.ol-storymap .ol-scroll-down:before {
+.ol-storymap .ol-scroll-next:before {
   content: "";
   border: .3em solid currentColor;
   border-radius: .3em;

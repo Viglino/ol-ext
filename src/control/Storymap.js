@@ -43,17 +43,19 @@ var ol_control_Storymap = function(options) {
     mousewheel: true
   });
 
-  // Prevent image dragging
-  var img = this.element.querySelectorAll('img');
-  img.forEach(function(i) {
-    i.ondragstart = function(){ return false; };
-  });
-  
-  // Scroll down
-  var sc = this.element.querySelectorAll('.ol-scroll-down');
-  sc.forEach(function(i) {
-    i.addEventListener('click', function(){ 
-      this.element.scrollTop = i.offsetTop;
+  // Scroll to the next chapter
+  var sc = this.element.querySelectorAll('.ol-scroll-next');
+  sc.forEach(function(s) {
+    s.addEventListener('click', function(){ 
+      var chapter = this.element.querySelectorAll('.chapter');
+      var scrollto = s.offsetTop;
+      for (var i=0, c; c=chapter[i]; i++) {
+        if (c.offsetTop > scrollto) {
+          scrollto = c.offsetTop;
+          break;
+        }
+      }
+      this.element.scrollTop = scrollto;
     }.bind(this));
   }.bind(this));
 
@@ -94,7 +96,9 @@ var ol_control_Storymap = function(options) {
 };
 ol_inherits(ol_control_Storymap, ol_control_Control);
 
-
+/** Scroll to a chapter
+ * @param {string} name Name of the chapter to scroll to
+ */
 ol_control_Storymap.prototype.setChapter = function (name) {
   var chapter = this.element.querySelectorAll('.chapter');
   for (var i=0, s; s=chapter[i]; i++) {

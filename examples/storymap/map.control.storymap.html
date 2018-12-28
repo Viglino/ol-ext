@@ -31,7 +31,7 @@
       right: .5em;
     }
     .ol-scroll-top,
-    .ol-scroll-down {
+    .ol-scroll-next {
       height: 2.5em;
       text-align: center;
       cursor: pointer;
@@ -78,19 +78,25 @@
     </p>
     <ul>
       <li>
-        You can specify the story content using a <i>html</i> options as a string or a DOM Element.
+        You can specify the story content using the <i>html</i> options as a string or a DOM Element.
       </li>
       <li>
-        You can also specify a <i>target</i> to use as story
+        You can also specify a <i>target</i> to use as story content
       </li>
       <li>
         Use an element with a <i>chapter</i> class and a <i>name</i> to specify a new chapter in the story. 
       </li>
       <li>
+        The <i>setChapter()</i> method lets you move to a chapter given its name.
+      </li>
+      <li>
         Listen to the <i>scrollto</i> event to get the current chapter.
       </li>
       <li>
-        The <i>setChapter</i> method lets you move to a chapter.
+        Use an element with a <i>ol-scroll-next</i> class in your story to scroll to the next chapter on click.
+      </li>
+      <li>
+        Use an element with a <i>ol-scroll-top</i> class in your story to scroll to the top of the story.
       </li>
     </ul>
     <p>
@@ -126,9 +132,10 @@
           text & images &copy; Wikipedia
         </span>
       </p>
-      <div class="ol-scroll-down">Start</div>
+      <div class="ol-scroll-next">Start</div>
     </div>
     <div class="chapter" name="Paris">
+
       <h2>Paris</h2>
       <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Seine_and_Eiffel_Tower_from_Tour_Saint_Jacques_2013-08.JPG/275px-Seine_and_Eiffel_Tower_from_Tour_Saint_Jacques_2013-08.JPG">
       <p>
@@ -178,10 +185,10 @@
   var placemark = new ol.Overlay.Placemark();
   map.addOverlay (placemark);
 
-  // Create Timeline control when features are loaded
+  // The storymap
   var story = new ol.control.Storymap({
-    html: $('#story').get(0),
-    //target: $('#story').get(0)
+    html: document.getElementById('story')
+    //target: document.getElementById('story')
   });
 
   var positions = {
@@ -190,6 +197,7 @@
     London: { xy: ol.proj.fromLonLat([-0.1275,51.507222]), z: 8 },
     Berlin: { xy: ol.proj.fromLonLat([13.383333,52.516667]), z: 7 },
   }
+  // ly to the chapter on the map
   story.on('scrollto', function(e){
     $('#story .chapter').removeClass('select');
     $(e.element).addClass('select');
@@ -211,8 +219,7 @@
       map.getView().animate ({
         zoom: Math.min(map.getView().getZoom(), positions[e.name].z)-1,
         duration: duration/2
-      },
-      {
+      },{
         zoom: positions[e.name].z,
         duration: duration/2
       });
