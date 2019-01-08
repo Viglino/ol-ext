@@ -8,16 +8,20 @@ import ol_filter_Base from './Base'
 import {asString as ol_color_asString} from 'ol/color'
 import {asArray as ol_color_asArray} from 'ol/color'
 
+/** @typedef {Object} FilterColorizeOptions
+ *  @property {ol.Color} color style to fill with
+ *  @property {string} operation 'enhance' or a CanvasRenderingContext2D.globalCompositeOperation
+ *  @property {number} value a [0-1] value to modify the effect value
+ *  @property {boolean} inner mask inner, default false
+ */
+
 /** Colorize map or layer
  * @constructor
  * @requires ol.filter
  * @extends {ol_filter_Base}
  * @author Thomas Tilak https://github.com/thhomas
  * @author Jean-Marc Viglino https://github.com/viglino
- * @param {ol_filter_ColorizeOptions} options
- *  @param {ol.Feature} options.feature feature to mask with
- *  @param {Array<integer>} options.color style to fill with
- *  @param {bool} options.inner mask inner, default false
+ * @param {FilterColorizeOptions} options
  */
 var ol_filter_Colorize = function(options)
 {	ol_filter_Base.call(this, options);
@@ -27,11 +31,7 @@ var ol_filter_Colorize = function(options)
 ol_inherits(ol_filter_Colorize, ol_filter_Base);
 
 /** Set options to the filter
- * @param {*} options
- *  @param {ol.color} options.color style to fill with
- *  @param {string} options.operation 'enhance' or a CanvasRenderingContext2D.globalCompositeOperation
- *  @param {number} options.value a [0-1] value to modify the effect value
- *  @param {bool} options.inner mask inner, default false
+ * @param {FilterColorizeOptions} [options]
  */
 ol_filter_Colorize.prototype.setFilter = function(options)
 {	options = options || {};
@@ -76,7 +76,7 @@ ol_filter_Colorize.prototype.setFilter = function(options)
 }
 
 /** Set the filter value
- *  @param {ol.color} options.color style to fill with
+ *  @param {ol.Color} options.color style to fill with
  */
 ol_filter_Colorize.prototype.setValue = function(v)
 {	this.set ('value', v);

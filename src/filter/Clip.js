@@ -6,16 +6,16 @@
 import {inherits as ol_inherits} from 'ol'
 import ol_filter_Base from './Base'
 
-/** Clip layer or map 
+/** Clip layer or map
 *  @constructor
 * @requires ol.filter
 * @extends {ol_filter_Base}
-* @param {*} options
-*  @param {Array<ol.Coordinate>} options.coords
-*  @param {ol.Extent} options.extent
-*  @param {string} options.units coords units percent (%) or pixel (px)
-*  @param {boolean} options.keepAspectRatio keep aspect ratio
-*  @param {string} options.color backgroundcolor
+* @param {Object} [options]
+*  @param {Array<ol.Coordinate>} [options.coords]
+*  @param {ol.Extent} [options.extent]
+*  @param {string} [options.units] coords units percent (%) or pixel (px)
+*  @param {boolean} [options.keepAspectRatio] keep aspect ratio
+*  @param {string} [options.color] backgroundcolor
 */
 var ol_filter_Clip = function(options)
 {	options = options || {};

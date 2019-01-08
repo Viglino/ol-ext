@@ -7,13 +7,14 @@ import {inherits as ol_inherits} from 'ol'
 import ol_filter_Base from './Base'
 
 /** Make a map or layer look like made of a set of Lego bricks.
-*  @constructor
-* @requires ol_filter
-* @extends {ol_filter_Base}
-* @param {*} options
-*  @param {Number} options.brickSize size of te brick, default 30
-*  @param {null | string | undefined} options.crossOrigin crossOrigin attribute for loaded images.
-*/
+ *  @constructor
+ * @requires ol_filter
+ * @extends {ol_filter_Base}
+ * @param {Object} [options]
+ *  @param {string} [options.img]
+ *  @param {number} [options.brickSize] size of te brick, default 30
+ *  @param {null | string | undefined} [options.crossOrigin] crossOrigin attribute for loaded images.
+ */
 var ol_filter_Lego = function(options)
 {	if (!options) options = {};
 	ol_filter_Base.call(this, options);
@@ -42,7 +43,7 @@ ol_filter_Lego.prototype.img =
 
 /** Overwrite to handle brickSize
 * @param {string} key
-* @param {} val
+* @param {any} val
 */
 ol_filter_Lego.prototype.set = function (key, val)
 {	ol_filter_Base.prototype.set.call(this, key, val);
@@ -52,13 +53,13 @@ ol_filter_Lego.prototype.set = function (key, val)
 }
 
 /** Set the current brick
-*	@param {Number} width the pattern width, default 30
-*	@param {brick|ol3|lego|undefined} img the pattern, default ol3
+*	@param {number} width the pattern width, default 30
+*	@param {'brick'|'ol3'|'lego'|undefined} img the pattern, default ol3
 *	@param {string} crossOrigin
 */
 ol_filter_Lego.prototype.setBrick = function (width, img, crossOrigin)
 {	width = Number(width) || 30;
-	if (typeof(img) === 'string') 
+	if (typeof(img) === 'string')
 	{	var i = new Image;
 		i.src = this.img[img] || this.img.ol3;
 		i.crossOrigin = crossOrigin || null;

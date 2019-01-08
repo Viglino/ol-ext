@@ -23,8 +23,8 @@ export {ol_filter};
  *
  * @constructor
  * @extends {ol.Object}
- * @param {} options Extend {@link _ol_control_Control_} options.
- *  @param {bool} options.active
+ * @param {Object} options Extend {@link _ol_control_Control_} options.
+ *  @param {boolean} [options.active]
  */
 var ol_filter_Base = function(options) {
   ol_Object.call(this);
@@ -36,14 +36,14 @@ var ol_filter_Base = function(options) {
 ol_inherits(ol_filter_Base, ol_Object);
 
 /** Activate / deactivate filter
-*	@param {bool} b
+*	@param {boolean} b
 */
 ol_filter_Base.prototype.setActive = function (b) {
   this.set('active', b===true);
 };
 
 /** Get filter active
-*	@return {bool}
+*	@return {boolean}
 */
 ol_filter_Base.prototype.getActive = function () {
   return this.get('active');
@@ -51,23 +51,23 @@ ol_filter_Base.prototype.getActive = function () {
 
 (function(){
 
-/** Internal function  
-* @scoop {ol.filter} this the filter
+/** Internal function
+* @this {ol.filter} this the filter
 * @private
 */
 function precompose_(e) {
   if (this.get('active')) this.precompose(e);
 }
-/** Internal function  
-* @scoop {ol.filter} this the filter
+/** Internal function
+* @this {ol.filter} this the filter
 * @private
 */
 function postcompose_(e) {
   if (this.get('active')) this.postcompose(e);
 }
 
-/** Force filter redraw / Internal function  
-* @scoop {ol.map||ol.layer} this: the map or layer the filter is added to
+/** Force filter redraw / Internal function
+* @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
 * @private
 */
 function filterRedraw_() {
@@ -76,7 +76,7 @@ function filterRedraw_() {
 }
 
 /** Add a filter to an ol object
-* @scoop {ol.map||ol.layer} this: the map or layer the filter is added to
+* @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
 * @private
 */
 function addFilter_(filter) {
@@ -89,7 +89,7 @@ function addFilter_(filter) {
 }
 
 /** Remove a filter to an ol object
-* @scoop {ol.map||ol.layer} this: the map or layer the filter is added to
+* @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
 * @private
 */
 function removeFilter_(filter) {
