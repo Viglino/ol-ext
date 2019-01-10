@@ -7,17 +7,21 @@ import {inherits as ol_inherits} from 'ol'
 import ol_filter_Base from './Base'
 import ol_filter_Texture_Image from './TextureImage'
 
+/** @typedef {Object} FilterTextureOptions
+ *  @property {Image | undefined} img Image object for the texture
+ *  @property {string} src Image source URI
+ *  @property {number} scale scale to draw the image. Default 1.
+ *  @property {number} [opacity]
+ *  @property {boolean} rotate Whether to rotate the texture with the view (may cause animation lags on mobile or slow devices). Default is true.
+ *  @property {null | string | undefined} crossOrigin The crossOrigin attribute for loaded images.
+ */
+
 /** Add texture effects on maps or layers
-* @constructor
-* @requires ol.filter
-* @extends {ol_filter_Base}
-* @param {*} options
-*  @param {Image | undefined} options.img Image object for the texture
-*  @param {string} options.src Image source URI
-*  @param {number} options.scale scale to draw the image. Default 1.
-*  @param {bool} options.rotate Whether to rotate the texture with the view (may cause animation lags on mobile or slow devices). Default is true.
-*  @param {null | string | undefined} options.crossOrigin The crossOrigin attribute for loaded images.
-*/
+ * @constructor
+ * @requires ol.filter
+ * @extends {ol_filter_Base}
+ * @param {FilterTextureOptions} options
+ */
 var ol_filter_Texture = function(options)
 {	ol_filter_Base.call(this, options);
 
@@ -26,13 +30,8 @@ var ol_filter_Texture = function(options)
 ol_inherits(ol_filter_Texture, ol_filter_Base);
 
 /** Set texture
-* @param {*} options
-*  @param {Image | undefined} options.img Image object for the texture
-*  @param {string} options.src Image source URI
-*  @param {number} options.scale scale to draw the image. Default 1.
-*  @param {bool} options.rotate Whether to rotate the texture with the view (may cause animation lags on mobile or slow devices). Default is true.
-*  @param {null | string | undefined} options.crossOrigin The crossOrigin attribute for loaded images.
-*/
+ * @param {FilterTextureOptions} [options]
+ */
 ol_filter_Texture.prototype.setFilter = function(options)
 {	var img;
 	options = options || {};
@@ -82,9 +81,9 @@ ol_filter_Texture.prototype.setFilter = function(options)
 }
 
 /** Get translated pattern
-*	@param {number} x offset
-*	@param {number} y offset
-*/
+ *	@param {number} offsetX x offset
+ *	@param {number} offsetY y offset
+ */
 ol_filter_Texture.prototype.getPattern = function (offsetX, offsetY)
 {	var c = this.pattern.canvas;
 	var ctx = this.pattern.ctx;
@@ -102,8 +101,7 @@ ol_filter_Texture.prototype.getPattern = function (offsetX, offsetY)
 	return ctx.createPattern(c, 'repeat');
 }
 
-/** Draw pattern over the map on postcompose
-*/
+/** Draw pattern over the map on postcompose */
 ol_filter_Texture.prototype.postcompose = function(e)
 {	// not ready
 	if (!this.pattern) return;

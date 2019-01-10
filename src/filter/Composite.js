@@ -10,7 +10,7 @@ import ol_filter_Base from './Base'
 * @constructor
 * @requires ol.filter
 * @extends {ol_filter_Base}
-* @param {*} options
+* @param {Object} options
 *   @param {string} options.operation composite operation
 */
 var ol_filter_Composite = function(options)

@@ -8,14 +8,14 @@ import ol_filter_Base from './Base'
 import {asString as ol_color_asString} from 'ol/color'
 
 /** Mask drawing using an ol.Feature
-* @constructor
-* @requires ol_filter
-* @extends {ol_filter_Base}
-* @param {*} options
-*  @param {ol.Feature} options.feature feature to mask with
-*  @param {ol.style.Fill} options.fill style to fill with
-*  @param {bool} options.inner mask inner, default false
-*/
+ * @constructor
+ * @requires ol_filter
+ * @extends {ol_filter_Base}
+ * @param {Object} [options]
+ *  @param {ol.Feature} [options.feature] feature to mask with
+ *  @param {ol.style.Fill} [options.fill] style to fill with
+ *  @param {boolean} [options.inner] mask inner, default false
+ */
 var ol_filter_Mask = function(options)
 {	options = options || {};
 	ol_filter_Base.call(this, options);
@@ -33,8 +33,7 @@ var ol_filter_Mask = function(options)
 }
 ol_inherits(ol_filter_Mask, ol_filter_Base);
 
-/** Draw the feature into canvas
-*/
+/** Draw the feature into canvas */
 ol_filter_Mask.prototype.drawFeaturePath_ = function(e, out)
 {	var ctx = e.context;
 	var canvas = ctx.canvas;

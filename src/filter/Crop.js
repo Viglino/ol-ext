@@ -11,9 +11,9 @@ import ol_filter_Mask from './Mask'
 * @requires ol.filter
 * @requires ol_filter_Mask
 * @extends {ol_filter_Mask}
-* @param {*} options
-*  @param {ol/Feature} options. feature to crop with
-*  @param {bool} [options.inner=false] crop inner, default false
+* @param {Object} [options]
+*  @param {ol.Feature} [options.feature] feature to crop with
+*  @param {boolean} [options.inner=false] mask inner, default false
 */
 var ol_filter_Crop = function(options)
 {	options = options || {};
