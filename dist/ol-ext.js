@@ -5073,8 +5073,8 @@ ol.control.Overlay.prototype.setClass = function (className)
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
  * OpenLayers 3 Layer Overview Control.
@@ -5086,236 +5086,236 @@ ol.control.Overlay.prototype.setClass = function (className)
  * @constructor
  * @extends {ol.control.Control}
  * @param {Object=} options Control options.
- *	@param {ol.ProjectionLike} options.projection The projection. Default is EPSG:3857 (Spherical Mercator).
- *	@param {Number} options.minZoom default 0
- *	@param {Number} options.maxZoom default 18
- *	@param {boolean} options.rotation enable rotation, default false
- *	@param {top|bottom-left|right} options.align position
- *	@param {Array<ol.layer>} options.layers list of layers
- *	@param {ol.style.Style | Array.<ol.style.Style> | undefined} options.style style to draw the map extent on the overveiw
- *	@param {bool|elastic} options.panAnimation use animation to center map on click, default true
+ *  @param {ol.ProjectionLike} options.projection The projection. Default is EPSG:3857 (Spherical Mercator).
+ *  @param {Number} options.minZoom default 0
+ *  @param {Number} options.maxZoom default 18
+ *  @param {boolean} options.rotation enable rotation, default false
+ *  @param {top|bottom-left|right} options.align position
+ *  @param {Array<ol.layer>} options.layers list of layers
+ *  @param {ol.style.Style | Array.<ol.style.Style> | undefined} options.style style to draw the map extent on the overveiw
+ *  @param {bool|elastic} options.panAnimation use animation to center map on click, default true
  */
 ol.control.Overview = function(options)
 {	options = options || {};
-	var self = this;
-	// API
-	this.minZoom = options.minZoom || 0;
-	this.maxZoom = options.maxZoom || 18;
-	this.rotation = options.rotation;
-	var element;
-	if (options.target)
-	{	element = document.createElement("div");
-		this.panel_ = options.target;
-	}
-	else
-	{	element = document.createElement("div");
-		element.classList.add('ol-overview', 'ol-unselectable', 'ol-control', 'ol-collapsed');
-		if (/top/.test(options.align)) element.classList.add('ol-control-top');
-		if (/right/.test(options.align)) element.classList.add('ol-control-right');
-		var button = document.createElement("button");
-				button.setAttribute('type','button');
-				button.addEventListener("touchstart", function(e){ self.toggleMap(); e.preventDefault(); });
-				button.addEventListener("click", function(){self.toggleMap()});
-				element.appendChild(button);
-		this.panel_ = document.createElement("div");
-		this.panel_.classList.add("panel");
-		element.appendChild(this.panel_);
-	}
-	ol.control.Control.call(this,
-	{	element: element,
-		target: options.target
-	});
-	// Create a overview map
-	this.ovmap_ = new ol.Map(
-	{	controls: new ol.Collection(),
-		interactions: new ol.Collection(),
-		target: this.panel_,
-		view: new ol.View
-			({	zoom: 2,
-				center: [0,0],
-				projection: options.projection
-			}),
-		layers: options.layers
-	});
-	this.oview_ = this.ovmap_.getView();
-	// Cache extent
-	this.extentLayer = new ol.layer.Vector(
-	{	name: 'Cache extent',
-		source: new ol.source.Vector(),
-		style: options.style || [new ol.style.Style(
-					{	image: new ol.style.Circle(
-						{	fill: new ol.style.Fill({
-								color: 'rgba(255,0,0, 1)'
-							}),
-							stroke: new ol.style.Stroke(
-							{	width: 7,
-								color: 'rgba(255,0,0, 0.8)'
-							}),
-							radius: 5
-						}),
-						stroke: new ol.style.Stroke(
-						{	width: 5,
-							color: "rgba(255,0,0,0.8)"
-						})
-					}
-				)]
-	})
-	this.ovmap_.addLayer(this.extentLayer);
-	/** Elastic bounce
-	*	@param {Int} bounce number of bounce
-	*	@param {Number} amplitude amplitude of the bounce [0,1] 
-	*	@return {Number}
-	* /
-	var bounceFn = function (bounce, amplitude)
-	{	var a = (2*bounce+1) * Math.PI/2;
-		var b = amplitude>0 ? -1/amplitude : -100;
-		var c = - Math.cos(a) * Math.pow(2, b);
-		return function(t)
-		{	t = 1-Math.cos(t*Math.PI/2);
-			return 1 + Math.abs( Math.cos(a*t) ) * Math.pow(2, b*t) + c*t;
-		}
-	}
-	/** Elastic bounce
-	*	@param {Int} bounce number of bounce
-	*	@param {Number} amplitude amplitude of the bounce [0,1] 
-	*	@return {Number}
-	*/
-	var elasticFn = function (bounce, amplitude)
-	{	var a = 3*bounce * Math.PI/2;
-		var b = amplitude>0 ? -1/amplitude : -100;
-		var c = Math.cos(a) * Math.pow(2, b);
-		return function(t)
-		{	t = 1-Math.cos(t*Math.PI/2);
-			return 1 - Math.cos(a*t) * Math.pow(2, b*t) + c*t;
-		}
-	}
-	// Click on the preview center the map
-	this.ovmap_.addInteraction (new ol.interaction.Pointer({
-		handleDownEvent: function(evt) {
-			if (options.panAnimation !==false) {
-				if (options.panAnimation=="elastic" || options.elasticPan) {
-					self.getMap().getView().animate({
-						center: evt.coordinate,
-						easing: elasticFn(2,0.3),
-						duration: 1000
-					});
-				} else {
-					self.getMap().getView().animate({
-						center: evt.coordinate,
-						duration: 300
-					});
-				}
-			}
-			else self.getMap().getView().setCenter(evt.coordinate);
-			return false;
-		}
-	}));
+  var self = this;
+  // API
+  this.minZoom = options.minZoom || 0;
+  this.maxZoom = options.maxZoom || 18;
+  this.rotation = options.rotation;
+  var element;
+  if (options.target) {
+    element = document.createElement("div");
+    this.panel_ = options.target;
+  } else {
+    element = document.createElement("div");
+    element.classList.add('ol-overview', 'ol-unselectable', 'ol-control', 'ol-collapsed');
+    if (/top/.test(options.align)) element.classList.add('ol-control-top');
+    if (/right/.test(options.align)) element.classList.add('ol-control-right');
+    var button = document.createElement("button");
+        button.setAttribute('type','button');
+        button.addEventListener("touchstart", function(e){ self.toggleMap(); e.preventDefault(); });
+        button.addEventListener("click", function(){self.toggleMap()});
+        element.appendChild(button);
+    this.panel_ = document.createElement("div");
+    this.panel_.classList.add("panel");
+    element.appendChild(this.panel_);
+  }
+  ol.control.Control.call(this, {
+    element: element,
+    target: options.target
+  });
+  // Create a overview map
+  this.ovmap_ = new ol.Map({
+    controls: new ol.Collection(),
+    interactions: new ol.Collection(),
+    target: this.panel_,
+    view: new ol.View ({
+      zoom: 2,
+      center: [0,0],
+      projection: options.projection
+    }),
+    layers: options.layers
+  });
+  this.oview_ = this.ovmap_.getView();
+  // Cache extent
+  this.extentLayer = new ol.layer.Vector({
+    name: 'Cache extent',
+    source: new ol.source.Vector(),
+    style: options.style || [new ol.style.Style({
+      image: new ol.style.Circle({
+        fill: new ol.style.Fill({
+          color: 'rgba(255,0,0, 1)'
+        }),
+        stroke: new ol.style.Stroke({
+          width: 7,
+            color: 'rgba(255,0,0, 0.8)'
+          }),
+          radius: 5
+        }),
+        stroke: new ol.style.Stroke({
+          width: 5,
+          color: "rgba(255,0,0,0.8)"
+        })
+      }
+    )]
+  })
+  this.ovmap_.addLayer(this.extentLayer);
+  /** Elastic bounce
+  *	@param {Int} bounce number of bounce
+  *	@param {Number} amplitude amplitude of the bounce [0,1] 
+  *	@return {Number}
+  * /
+  var bounceFn = function (bounce, amplitude){
+    var a = (2*bounce+1) * Math.PI/2;
+    var b = amplitude>0 ? -1/amplitude : -100;
+    var c = - Math.cos(a) * Math.pow(2, b);
+    return function(t) {
+      t = 1-Math.cos(t*Math.PI/2);
+      return 1 + Math.abs( Math.cos(a*t) ) * Math.pow(2, b*t) + c*t;
+    }
+  }
+  /** Elastic bounce
+  *	@param {Int} bounce number of bounce
+  *	@param {Number} amplitude amplitude of the bounce [0,1] 
+  *	@return {Number}
+  */
+  var elasticFn = function (bounce, amplitude) {
+    var a = 3*bounce * Math.PI/2;
+    var b = amplitude>0 ? -1/amplitude : -100;
+    var c = Math.cos(a) * Math.pow(2, b);
+    return function(t){
+      t = 1-Math.cos(t*Math.PI/2);
+      return 1 - Math.cos(a*t) * Math.pow(2, b*t) + c*t;
+    }
+  }
+  // Click on the preview center the map
+  this.ovmap_.addInteraction (new ol.interaction.Pointer({
+    handleDownEvent: function(evt) {
+      if (options.panAnimation !==false) {
+        if (options.panAnimation=="elastic" || options.elasticPan) {
+          self.getMap().getView().animate({
+            center: evt.coordinate,
+            easing: elasticFn(2,0.3),
+            duration: 1000
+          });
+        } else {
+          self.getMap().getView().animate({
+            center: evt.coordinate,
+            duration: 300
+          });
+        }
+      }
+      else self.getMap().getView().setCenter(evt.coordinate);
+      return false;
+    }
+  }));
 };
 ol.inherits(ol.control.Overview, ol.control.Control);
 /** Get overview map
 *	@return {ol.Map}
 */
-ol.control.Overview.prototype.getOverviewMap = function()
-{	return this.ovmap_;
+ol.control.Overview.prototype.getOverviewMap = function(){
+  return this.ovmap_;
 };
 /** Toggle overview map
 */
-ol.control.Overview.prototype.toggleMap = function()
-{	this.element.classList.toggle("ol-collapsed");
-	this.ovmap_.updateSize();
-	this.setView();
+ol.control.Overview.prototype.toggleMap = function(){
+  this.element.classList.toggle("ol-collapsed");
+  this.ovmap_.updateSize();
+  this.setView();
 };
 /** Set overview map position
 *	@param {top|bottom-left|right}
 */
-ol.control.Overview.prototype.setPosition = function(align)
-{	if (/top/.test(align)) this.element.classList.add("ol-control-top");
-	else this.element.classList.remove("ol-control-top");
-	if (/right/.test(align)) this.element.classList.add("ol-control-right");
-	else this.element.classList.remove("ol-control-right");
+ol.control.Overview.prototype.setPosition = function(align){
+  if (/top/.test(align)) this.element.classList.add("ol-control-top");
+  else this.element.classList.remove("ol-control-top");
+  if (/right/.test(align)) this.element.classList.add("ol-control-right");
+  else this.element.classList.remove("ol-control-right");
 };
 /**
  * Set the map instance the control associated with.
  * @param {ol.Map} map The map instance.
  */
 ol.control.Overview.prototype.setMap = function(map) {
-	if (this._listener) ol.Observable.unByKey(this._listener);
-	this._listener = null;
-	ol.control.Control.prototype.setMap.call(this, map);
-	if (map) 
-	{	this._listener = map.getView().on('propertychange', this.setView.bind(this));
-		this.setView();
-	}
+  if (this._listener) ol.Observable.unByKey(this._listener);
+  this._listener = null;
+  ol.control.Control.prototype.setMap.call(this, map);
+  if (map) {
+    this._listener = map.getView().on('propertychange', this.setView.bind(this));
+    this.setView();
+  }
 };
 /** Calculate the extent of the map and draw it on the overview
 */
-ol.control.Overview.prototype.calcExtent_ = function(extent)
-{	var map = this.getMap();
-	if (!map) return;
-	var source = this.extentLayer.getSource();
-	source.clear();
-	var f = new ol.Feature();
-	var size = map.getSize();
-	var resolution = map.getView().getResolution();
-	var rotation = map.getView().getRotation();
-	var center = map.getView().getCenter();
-	if (!resolution) return;
-	var dx = resolution * size[0] / 2;
-	var dy = resolution * size[1] / 2;
-	var res2 = this.oview_.getResolution();
-	if (dx/res2>5 || dy/res2>5)
-	{	var cos = Math.cos(rotation);
-		var sin = Math.sin(rotation);
-		var i, x, y;
-		extent=[[-dx,-dy],[-dx,dy],[dx,dy],[dx,-dy]];
-		for (i = 0; i < 4; ++i) 
-		{	x = extent[i][0];
-			y = extent[i][1];
-			extent[i][0] = center[0] + x * cos - y * sin;
-			extent[i][1] = center[1] + x * sin + y * cos;
-		}
-		f.setGeometry (new ol.geom.Polygon( [ extent ]));
-	}
-	else 
-	{	f.setGeometry (new ol.geom.Point( center ));
-	}
-	source.addFeature(f);
+ol.control.Overview.prototype.calcExtent_ = function(extent){
+  var map = this.getMap();
+  if (!map) return;
+  var source = this.extentLayer.getSource();
+  source.clear();
+  var f = new ol.Feature();
+  var size = map.getSize();
+  var resolution = map.getView().getResolution();
+  var rotation = map.getView().getRotation();
+  var center = map.getView().getCenter();
+  if (!resolution) return;
+  var dx = resolution * size[0] / 2;
+  var dy = resolution * size[1] / 2;
+  var res2 = this.oview_.getResolution();
+  if (dx/res2>5 || dy/res2>5) {
+    var cos = Math.cos(rotation);
+    var sin = Math.sin(rotation);
+    var i, x, y;
+    extent=[[-dx,-dy],[-dx,dy],[dx,dy],[dx,-dy]];
+    for (i = 0; i < 4; ++i) {
+      x = extent[i][0];
+      y = extent[i][1];
+      extent[i][0] = center[0] + x * cos - y * sin;
+      extent[i][1] = center[1] + x * sin + y * cos;
+    }
+    f.setGeometry (new ol.geom.Polygon( [ extent ]));
+  } else {
+    f.setGeometry (new ol.geom.Point( center ));
+  }
+  source.addFeature(f);
 };
 /**
 *	@private
 */
-ol.control.Overview.prototype.setView = function(e)
-{	if (!e) 
-	{	// refresh all
-		this.setView({key:'rotation'});
-		this.setView({key:'resolution'});
-		this.setView({key:'center'});
-		return;
-	}
-	// Set the view params
-	switch (e.key)
-	{	case 'rotation':
-			if (this.rotation) this.oview_.setRotation(this.getMap().getView().getRotation());
-			else if (this.oview_.getRotation()) this.oview_.setRotation(0);
-			break;
-		case 'center': 
-		{	var mapExtent = this.getMap().getView().calculateExtent(this.getMap().getSize());
-			var extent = this.oview_.calculateExtent(this.ovmap_.getSize());
-			if (mapExtent[0]<extent[0] || mapExtent[1]<extent[1] 
-				|| mapExtent[2]>extent[2] || mapExtent[3]>extent[3])
-			{	this.oview_.setCenter(this.getMap().getView().getCenter()); 
-			}
-			break;
-		}	
-		case 'resolution':
-		{	var z = Math.round(this.getMap().getView().getZoom()/2)*2-4;
-			z = Math.min ( this.maxZoom, Math.max(this.minZoom, z) );
-			this.oview_.setZoom(z);
-			break;
-		}
-		default: break;
-	}
-	this.calcExtent_();
+ol.control.Overview.prototype.setView = function(e){
+  if (!e) {
+    // refresh all
+    this.setView({key:'rotation'});
+    this.setView({key:'resolution'});
+    this.setView({key:'center'});
+    return;
+  }
+  // Set the view params
+  switch (e.key){
+    case 'rotation': {
+      if (this.rotation) this.oview_.setRotation(this.getMap().getView().getRotation());
+      else if (this.oview_.getRotation()) this.oview_.setRotation(0);
+      break;
+    }
+    case 'center': {
+      var mapExtent = this.getMap().getView().calculateExtent(this.getMap().getSize());
+      var extent = this.oview_.calculateExtent(this.ovmap_.getSize());
+      if (mapExtent[0]<extent[0] || mapExtent[1]<extent[1] 
+      || mapExtent[2]>extent[2] || mapExtent[3]>extent[3]){
+        this.oview_.setCenter(this.getMap().getView().getCenter()); 
+      }
+      break;
+    }	
+    case 'resolution': {
+      //var z = Math.round(this.getMap().getView().getZoom()/2)*2-4;
+      var z = Math.round(this.oview_.getZoomForResolution(this.getMap().getView().getResolution())/2)*2-4;
+      z = Math.min ( this.maxZoom, Math.max(this.minZoom, z) );
+      this.oview_.setZoom(z);
+      break;
+    }
+    default: break;
+  }
+  this.calcExtent_();
 };
 
 /*	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
@@ -9006,8 +9006,8 @@ ol.filter = {};
  *
  * @constructor
  * @extends {ol.Object}
- * @param {} options Extend {@link _ol_control_Control_} options.
- *  @param {bool} options.active
+ * @param {Object} options Extend {@link _ol_control_Control_} options.
+ *  @param {boolean} [options.active]
  */
 ol.filter.Base = function(options) {
   ol.Object.call(this);
@@ -9018,34 +9018,34 @@ ol.filter.Base = function(options) {
 };
 ol.inherits(ol.filter.Base, ol.Object);
 /** Activate / deactivate filter
-*	@param {bool} b
+*	@param {boolean} b
 */
 ol.filter.Base.prototype.setActive = function (b) {
   this.set('active', b===true);
 };
 /** Get filter active
-*	@return {bool}
+*	@return {boolean}
 */
 ol.filter.Base.prototype.getActive = function () {
   return this.get('active');
 };
 (function(){
-/** Internal function  
-* @scoop {ol.filter} this the filter
+/** Internal function
+* @this {ol.filter} this the filter
 * @private
 */
 function precompose_(e) {
   if (this.get('active')) this.precompose(e);
 }
-/** Internal function  
-* @scoop {ol.filter} this the filter
+/** Internal function
+* @this {ol.filter} this the filter
 * @private
 */
 function postcompose_(e) {
   if (this.get('active')) this.postcompose(e);
 }
-/** Force filter redraw / Internal function  
-* @scoop {ol.map||ol.layer} this: the map or layer the filter is added to
+/** Force filter redraw / Internal function
+* @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
 * @private
 */
 function filterRedraw_() {
@@ -9053,7 +9053,7 @@ function filterRedraw_() {
   else this.changed(); 
 }
 /** Add a filter to an ol object
-* @scoop {ol.map||ol.layer} this: the map or layer the filter is added to
+* @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
 * @private
 */
 function addFilter_(filter) {
@@ -9065,7 +9065,7 @@ function addFilter_(filter) {
   filterRedraw_.call (this);
 }
 /** Remove a filter to an ol object
-* @scoop {ol.map||ol.layer} this: the map or layer the filter is added to
+* @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
 * @private
 */
 function removeFilter_(filter) {
@@ -9126,14 +9126,14 @@ ol.layer.Base.prototype.getFilters = function () {
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Mask drawing using an ol.Feature
-* @constructor
-* @requires ol.filter
-* @extends {ol.filter.Base}
-* @param {*} options
-*  @param {ol.Feature} options.feature feature to mask with
-*  @param {ol.style.Fill} options.fill style to fill with
-*  @param {bool} options.inner mask inner, default false
-*/
+ * @constructor
+ * @requires ol.filter
+ * @extends {ol.filter.Base}
+ * @param {Object} [options]
+ *  @param {ol.Feature} [options.feature] feature to mask with
+ *  @param {ol.style.Fill} [options.fill] style to fill with
+ *  @param {boolean} [options.inner] mask inner, default false
+ */
 ol.filter.Mask = function(options)
 {	options = options || {};
 	ol.filter.Base.call(this, options);
@@ -9150,8 +9150,7 @@ ol.filter.Mask = function(options)
 	this.fillColor_ = options.fill ? ol.color.asString(options.fill.getColor()) || "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.2)";
 }
 ol.inherits(ol.filter.Mask, ol.filter.Base);
-/** Draw the feature into canvas
-*/
+/** Draw the feature into canvas */
 ol.filter.Mask.prototype.drawFeaturePath_ = function(e, out)
 {	var ctx = e.context;
 	var canvas = ctx.canvas;
@@ -9211,16 +9210,16 @@ ol.filter.Mask.prototype.postcompose = function(e)
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/** Clip layer or map 
+/** Clip layer or map
 *  @constructor
 * @requires ol.filter
 * @extends {ol.filter.Base}
-* @param {*} options
-*  @param {Array<ol.Coordinate>} options.coords
-*  @param {ol.Extent} options.extent
-*  @param {string} options.units coords units percent (%) or pixel (px)
-*  @param {boolean} options.keepAspectRatio keep aspect ratio
-*  @param {string} options.color backgroundcolor
+* @param {Object} [options]
+*  @param {Array<ol.Coordinate>} [options.coords]
+*  @param {ol.Extent} [options.extent]
+*  @param {string} [options.units] coords units percent (%) or pixel (px)
+*  @param {boolean} [options.keepAspectRatio] keep aspect ratio
+*  @param {string} [options.color] backgroundcolor
 */
 ol.filter.Clip = function(options)
 {	options = options || {};
@@ -9318,16 +9317,19 @@ ol.filter.Clip.prototype.postcompose = function(e)
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+/** @typedef {Object} FilterColorizeOptions
+ *  @property {ol.Color} color style to fill with
+ *  @property {string} operation 'enhance' or a CanvasRenderingContext2D.globalCompositeOperation
+ *  @property {number} value a [0-1] value to modify the effect value
+ *  @property {boolean} inner mask inner, default false
+ */
 /** Colorize map or layer
  * @constructor
  * @requires ol.filter
  * @extends {ol.filter.Base}
  * @author Thomas Tilak https://github.com/thhomas
  * @author Jean-Marc Viglino https://github.com/viglino
- * @param {ol.filter.ColorizeOptions} options
- *  @param {ol.Feature} options.feature feature to mask with
- *  @param {Array<integer>} options.color style to fill with
- *  @param {bool} options.inner mask inner, default false
+ * @param {FilterColorizeOptions} options
  */
 ol.filter.Colorize = function(options)
 {	ol.filter.Base.call(this, options);
@@ -9335,11 +9337,7 @@ ol.filter.Colorize = function(options)
 }
 ol.inherits(ol.filter.Colorize, ol.filter.Base);
 /** Set options to the filter
- * @param {*} options
- *  @param {ol.color} options.color style to fill with
- *  @param {string} options.operation 'enhance' or a CanvasRenderingContext2D.globalCompositeOperation
- *  @param {number} options.value a [0-1] value to modify the effect value
- *  @param {bool} options.inner mask inner, default false
+ * @param {FilterColorizeOptions} [options]
  */
 ol.filter.Colorize.prototype.setFilter = function(options)
 {	options = options || {};
@@ -9383,7 +9381,7 @@ ol.filter.Colorize.prototype.setFilter = function(options)
 	}
 }
 /** Set the filter value
- *  @param {ol.color} options.color style to fill with
+ *  @param {ol.Color} options.color style to fill with
  */
 ol.filter.Colorize.prototype.setValue = function(v)
 {	this.set ('value', v);
@@ -9440,7 +9438,7 @@ ol.filter.Colorize.prototype.postcompose = function(e) {
 * @constructor
 * @requires ol.filter
 * @extends {ol.filter.Base}
-* @param {*} options
+* @param {Object} options
 *   @param {string} options.operation composite operation
 */
 ol.filter.Composite = function(options)
@@ -9472,9 +9470,9 @@ ol.filter.Composite.prototype.postcompose = function(e)
 * @requires ol.filter
 * @requires ol.filter.Mask
 * @extends {ol.filter.Mask}
-* @param {*} options
-*  @param {ol/Feature} options. feature to crop with
-*  @param {bool} [options.inner=false] crop inner, default false
+* @param {Object} [options]
+*  @param {ol.Feature} [options.feature] feature to crop with
+*  @param {boolean} [options.inner=false] mask inner, default false
 */
 ol.filter.Crop = function(options)
 {	options = options || {};
@@ -9500,11 +9498,11 @@ ol.filter.Crop.prototype.postcompose = function(e)
 * @constructor
 * @requires ol.filter
 * @extends {ol.filter.Base}
-* @param {*} options
-*  @param {Array<int>} options.fold number of fold (horizontal and vertical)
-*  @param {Number} options.margin margin in px, default 8
-*  @param {Number} options.padding padding in px, default 8
-*  @param {integer|Array<integer>} options.fsize fold size in px, default 8,10
+* @param {Object} [options]
+*  @param {[number, number]} [options.fold] number of fold (horizontal and vertical)
+*  @param {number} [options.margin] margin in px, default 8
+*  @param {number} [options.padding] padding in px, default 8
+*  @param {number|number[]} [options.fsize] fold size in px, default 8,10
 */
 ol.filter.Fold = function(options)
 {	options = options || {};
@@ -9592,13 +9590,14 @@ ol.filter.Fold.prototype.postcompose = function(e)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Make a map or layer look like made of a set of Lego bricks.
-*  @constructor
-* @requires ol.filter
-* @extends {ol.filter.Base}
-* @param {*} options
-*  @param {Number} options.brickSize size of te brick, default 30
-*  @param {null | string | undefined} options.crossOrigin crossOrigin attribute for loaded images.
-*/
+ *  @constructor
+ * @requires ol.filter
+ * @extends {ol.filter.Base}
+ * @param {Object} [options]
+ *  @param {string} [options.img]
+ *  @param {number} [options.brickSize] size of te brick, default 30
+ *  @param {null | string | undefined} [options.crossOrigin] crossOrigin attribute for loaded images.
+ */
 ol.filter.Lego = function(options)
 {	if (!options) options = {};
 	ol.filter.Base.call(this, options);
@@ -9623,7 +9622,7 @@ ol.filter.Lego.prototype.img =
 };
 /** Overwrite to handle brickSize
 * @param {string} key
-* @param {} val
+* @param {any} val
 */
 ol.filter.Lego.prototype.set = function (key, val)
 {	ol.filter.Base.prototype.set.call(this, key, val);
@@ -9632,13 +9631,13 @@ ol.filter.Lego.prototype.set = function (key, val)
 	}
 }
 /** Set the current brick
-*	@param {Number} width the pattern width, default 30
-*	@param {brick|ol3|lego|undefined} img the pattern, default ol3
+*	@param {number} width the pattern width, default 30
+*	@param {'brick'|'ol3'|'lego'|undefined} img the pattern, default ol3
 *	@param {string} crossOrigin
 */
 ol.filter.Lego.prototype.setBrick = function (width, img, crossOrigin)
 {	width = Number(width) || 30;
-	if (typeof(img) === 'string') 
+	if (typeof(img) === 'string')
 	{	var i = new Image;
 		i.src = this.img[img] || this.img.ol3;
 		i.crossOrigin = crossOrigin || null;
@@ -9732,30 +9731,28 @@ ol.filter.Lego.prototype.postcompose = function(e)
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+/** @typedef {Object} FilterTextureOptions
+ *  @property {Image | undefined} img Image object for the texture
+ *  @property {string} src Image source URI
+ *  @property {number} scale scale to draw the image. Default 1.
+ *  @property {number} [opacity]
+ *  @property {boolean} rotate Whether to rotate the texture with the view (may cause animation lags on mobile or slow devices). Default is true.
+ *  @property {null | string | undefined} crossOrigin The crossOrigin attribute for loaded images.
+ */
 /** Add texture effects on maps or layers
-* @constructor
-* @requires ol.filter
-* @extends {ol.filter.Base}
-* @param {*} options
-*  @param {Image | undefined} options.img Image object for the texture
-*  @param {string} options.src Image source URI
-*  @param {number} options.scale scale to draw the image. Default 1.
-*  @param {bool} options.rotate Whether to rotate the texture with the view (may cause animation lags on mobile or slow devices). Default is true.
-*  @param {null | string | undefined} options.crossOrigin The crossOrigin attribute for loaded images.
-*/
+ * @constructor
+ * @requires ol.filter
+ * @extends {ol.filter.Base}
+ * @param {FilterTextureOptions} options
+ */
 ol.filter.Texture = function(options)
 {	ol.filter.Base.call(this, options);
 	this.setFilter(options);
 }
 ol.inherits(ol.filter.Texture, ol.filter.Base);
 /** Set texture
-* @param {*} options
-*  @param {Image | undefined} options.img Image object for the texture
-*  @param {string} options.src Image source URI
-*  @param {number} options.scale scale to draw the image. Default 1.
-*  @param {bool} options.rotate Whether to rotate the texture with the view (may cause animation lags on mobile or slow devices). Default is true.
-*  @param {null | string | undefined} options.crossOrigin The crossOrigin attribute for loaded images.
-*/
+ * @param {FilterTextureOptions} [options]
+ */
 ol.filter.Texture.prototype.setFilter = function(options)
 {	var img;
 	options = options || {};
@@ -9801,9 +9798,9 @@ ol.filter.Texture.prototype.setFilter = function(options)
 	}
 }
 /** Get translated pattern
-*	@param {number} x offset
-*	@param {number} y offset
-*/
+ *	@param {number} offsetX x offset
+ *	@param {number} offsetY y offset
+ */
 ol.filter.Texture.prototype.getPattern = function (offsetX, offsetY)
 {	var c = this.pattern.canvas;
 	var ctx = this.pattern.ctx;
@@ -9820,8 +9817,7 @@ ol.filter.Texture.prototype.getPattern = function (offsetX, offsetY)
 	ctx.restore();
 	return ctx.createPattern(c, 'repeat');
 }
-/** Draw pattern over the map on postcompose
-*/
+/** Draw pattern over the map on postcompose */
 ol.filter.Texture.prototype.postcompose = function(e)
 {	// not ready
 	if (!this.pattern) return;
