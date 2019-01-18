@@ -20,6 +20,7 @@ ol_ext_element.create = function (tagName, options) {
   // Create text node
   if (tagName === 'TEXT') {
     elt = document.createTextNode(options.html||'');
+    if (options.parent) options.parent.appendChild(elt);
   } else {
     // Other element
     elt = document.createElement(tagName);
