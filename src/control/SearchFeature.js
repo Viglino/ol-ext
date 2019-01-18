@@ -38,6 +38,18 @@ var ol_control_SearchFeature = function(options) {
 };
 ol_inherits(ol_control_SearchFeature, ol_control_Search);
 
+/** No history avaliable on features
+ */
+ol_control_SearchFeature.prototype.restoreHistory = function () {
+  this.set('history', []);
+};
+
+/** No history avaliable on features
+ */
+ol_control_SearchFeature.prototype.saveHistory = function () {
+  localStorage.removeItem("ol@search-"+this._classname);
+}
+
 /** Returns the text to be displayed in the menu
 *	@param {ol.Feature} f the feature
 *	@return {string} the text to be displayed in the index

@@ -1,81 +1,81 @@
-﻿.ol-search
-{	top: 0.5em;
-	left: 3em;
+﻿.ol-search{
+  top: 0.5em;
+  left: 3em;
 }
-.ol-touch .ol-search
-{	left: 3.5em;
+.ol-touch .ol-search {
+  left: 3.5em;
 }
-.ol-search button
-{	background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAABPUlEQVQoU41SwXHCQAzUHh58eoUOIBWEDkI6oAToIKkg7iAuwakgpAIowXRACcnrzp6BzchjMx4wE/S6kW5XK60gvQghzJIkmVoqSZI9gJ9+/fINS5Cc1HX9QXIlIr/tpwcRyb33b7cIGnAIYQdg4pxbjcfj0nJ1Xc+Px+PGObdN03Q9RIAQwgpAnqbp7FKmjQGgJLlU1d2V7BjjRkQO3vvXIXarkyxVNbsCm2QR2Q0V7XOMMReRmfd+OQQubN6hYgs22ZtbnRcAtiRfLueqqmpJ8ovko6oeBq0KIWQA3gFkzrlmMafTaUEyI/mpqmbhVTRWWbRdbClPbeobQNES5KPRqOxs7DBn8K1DsAOKMZYApiTXqlrcDe4d0XN7jWeCfzt351tVle2iGalTcBd4gGDvvZ/fDe4RmCOFLe8Pr7mvEP2N9PQAAAAASUVORK5CYII=");
-	background-repeat: no-repeat;
-	background-position: center center;
-	background-size: 1em;
-	top: 2px;
-	left: 2px;
-	float: left;
+.ol-search button {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAABPUlEQVQoU41SwXHCQAzUHh58eoUOIBWEDkI6oAToIKkg7iAuwakgpAIowXRACcnrzp6BzchjMx4wE/S6kW5XK60gvQghzJIkmVoqSZI9gJ9+/fINS5Cc1HX9QXIlIr/tpwcRyb33b7cIGnAIYQdg4pxbjcfj0nJ1Xc+Px+PGObdN03Q9RIAQwgpAnqbp7FKmjQGgJLlU1d2V7BjjRkQO3vvXIXarkyxVNbsCm2QR2Q0V7XOMMReRmfd+OQQubN6hYgs22ZtbnRcAtiRfLueqqmpJ8ovko6oeBq0KIWQA3gFkzrlmMafTaUEyI/mpqmbhVTRWWbRdbClPbeobQNES5KPRqOxs7DBn8K1DsAOKMZYApiTXqlrcDe4d0XN7jWeCfzt351tVle2iGalTcBd4gGDvvZ/fDe4RmCOFLe8Pr7mvEP2N9PQAAAAASUVORK5CYII=");
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: 1em;
+  top: 2px;
+  left: 2px;
+  float: left;
 }
-.ol-search input
-{	display: inline-block;
-	border: 0;
-	margin: 1px 1px 1px 2px;
-	font-size: 1.14em;
-	padding-left: 0.3em;
-	height: 1.375em;
-	box-sizing: border-box;
-	transition: all 0.1s;
+.ol-search input {
+  display: inline-block;
+  border: 0;
+  margin: 1px 1px 1px 2px;
+  font-size: 1.14em;
+  padding-left: 0.3em;
+  height: 1.375em;
+  box-sizing: border-box;
+  transition: all 0.1s;
 }
 .ol-touch .ol-search input,
-.ol-touch .ol-search ul
-{   font-size: 1.5em;
+.ol-touch .ol-search ul {
+  font-size: 1.5em;
 }
-.ol-control.ol-search.ol-collapsed > *
-{	display: none;
+.ol-control.ol-search.ol-collapsed > * {
+  display: none;
 }
 .ol-control.ol-search.ol-collapsed > button {
-	display: block;
+  display: block;
 }
 
-.ol-search ul
-{	list-style: none;
-	padding: 0;
-	margin: 0;
-	display: block;
-	clear: both;
-	cursor: pointer;
-	max-width: 17em;
-	overflow-x: hidden;
+.ol-search ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: block;
+  clear: both;
+  cursor: pointer;
+  max-width: 17em;
+  overflow-x: hidden;
 }
 /*
-.ol-control.ol-search ul
-{	position: absolute;
-	background: #fff;
-	box-shadow: 5px 5px 5px rgba(0,0,0,0.5);
+.ol-control.ol-search ul {
+  position: absolute;
+  background: #fff;
+  box-shadow: 5px 5px 5px rgba(0,0,0,0.5);
 }
 */
-.ol-control.ol-search ul li
-{	padding: 0.1em 0.5em;
+.ol-control.ol-search ul li {
+  padding: 0.1em 0.5em;
 }
-.ol-search ul li
-{	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+.ol-search ul li {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .ol-search ul li.select,
-.ol-search ul li:hover
-{	background-color: rgba(0,60,136,.5);
-	color: #fff;
+.ol-search ul li:hover {
+  background-color: rgba(0,60,136,.5);
+  color: #fff;
 }
 .ol-search ul li img {
-	float: left;
-	max-height: 2em;
+  float: left;
+  max-height: 2em;
 }
 .ol-search li.copy {
     background: rgba(0,0,0,.5);
-	color: #fff;
+  color: #fff;
 }
 .ol-search li.copy a {
-	color: #fff;
-	text-decoration: none;
+  color: #fff;
+  text-decoration: none;
 }
 
 .ol-search.searching:before {
@@ -89,21 +89,21 @@
 }
 
 @keyframes pulse {
-	0% { left:0; right: 95%; }
-	50% {	left: 30%; right: 30%; }
-	100% {	left: 95%; right: 0; }
+  0% { left:0; right: 95%; }
+  50% {	left: 30%; right: 30%; }
+  100% {	left: 95%; right: 0; }
 }
 
 
 .ol-search.IGNF-parcelle input {
-	width: 13.5em;
+  width: 13.5em;
 }
 .ol-search.IGNF-parcelle input:read-only {
-	background: #ccc;
-	opacity: .8;
+  background: #ccc;
+  opacity: .8;
 }
 .ol-search.IGNF-parcelle.ol-collapsed-list > ul.autocomplete {
-	display: none;
+  display: none;
 }
 
 .ol-search.IGNF-parcelle label {
@@ -133,7 +133,7 @@
   display: none;
 }
 .ol-search.IGNF-parcelle ul.autocomplete-page li {
-	display: inline-block;
+  display: inline-block;
   color: #fff;
   background: rgba(0,60,136,.5);
   border-radius: 50%;
@@ -144,4 +144,131 @@
 }
 .ol-search.IGNF-parcelle ul.autocomplete-page li.selected {
   background: rgba(0,60,136,1);
+}
+
+/* GPS */
+.ol-searchgps input.search {
+  display: none;
+}
+.ol-control.ol-searchgps > button:first-child {
+  background-image: none;
+}
+.ol-control.ol-searchgps > button:first-child:before {
+  content: "x/y";
+  display: block;
+  transform: scaleX(.8);
+}
+.ol-control.ol-searchgps .ol-latitude,
+.ol-control.ol-searchgps .ol-longitude {
+  clear: both;
+}
+.ol-control.ol-searchgps .ol-latitude label,
+.ol-control.ol-searchgps .ol-longitude label {
+  width: 5.5em;
+  display: inline-block;
+  text-align: right;
+  transform: scaleX(.8);
+  margin: 0 -.8em 0 0;
+  transform-origin: 0 0;
+}
+.ol-control.ol-searchgps .ol-latitude input,
+.ol-control.ol-searchgps .ol-longitude input {
+  max-width: 10em;
+}
+
+.ol-control.ol-searchgps .ol-switch {
+  cursor: pointer;
+  float: right;
+  margin: .5em;
+  font-size: .9em;
+}
+.ol-control.ol-searchgps .ol-switch input {
+  display: none;
+}
+.ol-control.ol-searchgps .ol-switch span {
+  color: rgba(0,60,136,.5);
+  position: relative;
+  cursor: pointer;
+  background-color: #ccc;
+  transition: .4s;
+  width: 1.6em;
+  height: 1em;
+  display: inline-block;
+  border-radius: 1em;
+  font-size: 1.3em;
+  vertical-align: middle;
+  margin: 0 .2em;
+}
+.ol-control.ol-searchgps .ol-switch span:before {
+  position: absolute;
+  content: "";
+  height: 1em;
+  width: 1em;
+  left: 0;
+  top: 50%;
+  background-color: #fff;
+  transition: .4s;
+  border-radius: 1em;
+  display: block;
+  transform: translateY(-50%);
+  border: 2px solid #ccc;
+  box-sizing: border-box;
+}
+.ol-control.ol-searchgps .ol-switch input:checked + span {
+  background-color: currentColor;
+}
+.ol-control.ol-searchgps .ol-switch input:checked + span:before {
+  transform: translate(.6em,-50%);
+  border-color: currentColor;
+}
+
+.ol-searchgps .ol-decimal{
+  display: inline-block;
+}
+.ol-searchgps .ol-dms,
+.ol-searchgps.ol-dms .ol-decimal {
+  display: none;
+  width: 3em;
+  text-align: right;
+}
+.ol-searchgps.ol-dms .ol-dms {
+  display: inline-block;
+}
+
+.ol-searchgps span.ol-dms {
+  width: auto;
+}
+.ol-searchgps.ol-control.ol-collapsed button.ol-geoloc {
+  display: none;
+}
+.ol-searchgps button.ol-geoloc {
+  top: 0;
+  float: right;
+  margin-right: 3px;
+  background-image: none;
+  position: relative;
+}
+.ol-searchgps button.ol-geoloc:before {
+  content:"";
+  position: absolute;
+  left: 50%;
+  right: 50%;
+  width: .6em;
+  height: .6em;
+  border: .1em solid currentColor;
+  border-radius: 50%;
+  transform: translate(-50%,-50%);
+}
+.ol-searchgps button.ol-geoloc:after {
+  content:"";
+  position: absolute;
+  left: 50%;
+  right: 50%;
+  width: .2em;
+  height: .2em;
+  background-color: transparent;
+  transform: translate(-50%,-50%);
+  box-shadow: 
+    .45em 0 currentColor, -.45em 0 currentColor, 0 -.45em currentColor, 0 .45em currentColor,
+    .25em 0 currentColor, -.25em 0 currentColor, 0 -.25em currentColor, 0 .25em currentColor;
 }
