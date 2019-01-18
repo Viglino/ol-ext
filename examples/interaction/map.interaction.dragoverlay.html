@@ -79,6 +79,10 @@
 
 	<div class="options">
     Move the overlays on the map...
+    <br/>
+    <button onclick="placemark[0].show(map.getView().getCenter())">
+      Show Popup
+    </button>
 	</div>
 	
 	<script type="text/javascript">
@@ -108,8 +112,9 @@
 	var placemark = [
     new ol.Overlay.Popup ({
       position: [0, 6000000],
+      closeBox: true,
       positioning: 'bottom-center',
-      html: "Move<br/>me!",
+      html: 'Move<br/>me!',
       stopEvent: false
     }),
     new ol.Overlay.Placemark ({
