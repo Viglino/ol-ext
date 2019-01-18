@@ -153,6 +153,7 @@ ol.ext.element.create = function (tagName, options) {
   // Create text node
   if (tagName === 'TEXT') {
     elt = document.createTextNode(options.html||'');
+    if (options.parent) options.parent.appendChild(elt);
   } else {
     // Other element
     elt = document.createElement(tagName);
@@ -435,8 +436,8 @@ if (window.ol && !ol.sphere) {
   ol.sphere.getLength = ol.Sphere.getLength;
 }
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
  * Search Control.
@@ -449,33 +450,35 @@ if (window.ol && !ol.sphere) {
  * @fires select
  * @fires change:input
  * @param {Object=} options
- *	@param {string} options.className control class name
- *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *	@param {string | undefined} options.label Text label to use for the search button, default "search"
- *	@param {string | undefined} options.placeholder placeholder, default "Search..."
- *	@param {string | undefined} options.inputLabel label for the input, default none
- *	@param {string | undefined} options.noCollapse prevent collapsing on input blur, default false
- *	@param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
- *	@param {integer | undefined} options.minLength minimum length to start searching, default 1
- *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
- *	@param {integer | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
- *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index.
- *	@param {function} options.autocomplete a function that take a search string and callback function to send an array
+ *  @param {string} options.className control class name
+ *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *  @param {string | undefined} options.label Text label to use for the search button, default "search"
+ *  @param {string | undefined} options.placeholder placeholder, default "Search..."
+ *  @param {string | undefined} options.inputLabel label for the input, default none
+ *  @param {string | undefined} options.noCollapse prevent collapsing on input blur, default false
+ *  @param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
+ *  @param {integer | undefined} options.minLength minimum length to start searching, default 1
+ *  @param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *  @param {integer | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
+ *  @param {function} options.getTitle a function that takes a feature and return the name to display in the index.
+ *  @param {function} options.autocomplete a function that take a search string and callback function to send an array
  */
 ol.control.Search = function(options) {
   var self = this;
-	if (!options) options = {};
-	if (options.typing == undefined) options.typing = 300;
+  if (!options) options = {};
+  if (options.typing == undefined) options.typing = 300;
   // Class name for history
   this._classname = options.className || 'search';
-	var element = document.createElement("DIV");
-	var classNames = (options.className||"")+ " ol-search";
-	if (!options.target) {
-    classNames += " ol-unselectable ol-control ol-collapsed";
-		this.button = document.createElement("BUTTON");
-		this.button.setAttribute("type", "button");
-		this.button.setAttribute("title", options.label||"search");
-		this.button.addEventListener("click", function() {
+  var classNames = (options.className||'')+ ' ol-search'
+    + (options.target ? '' : ' ol-unselectable ol-control ol-collapsed');
+  var element = ol.ext.element.create('DIV',{
+    className: classNames
+  })
+  if (!options.target) {
+    this.button = document.createElement("BUTTON");
+    this.button.setAttribute("type", "button");
+    this.button.setAttribute("title", options.label||"search");
+    this.button.addEventListener("click", function() {
       element.classList.toggle("ol-collapsed");
       if (!element.classList.contains("ol-collapsed")) {
         element.querySelector("input.search").focus();
@@ -489,105 +492,111 @@ ol.control.Search = function(options) {
         }
       }
     });
-		element.appendChild(this.button);
-	}
-	element.setAttribute('class', classNames);
-	// Input label
-	if (options.inputLabel) {
-		var label = document.createElement("LABEL");
-		label.innerText = options.inputLabel;
-		element.appendChild(label);
-	}
-	// Search input
-	var tout, cur="";
-	var input = this._input = document.createElement("INPUT");
-	input.setAttribute("type", "search");
-	input.setAttribute("class", "search");
-	input.setAttribute("placeholder", options.placeholder||"Search...");
-	input.addEventListener("change", function(e) {
+    element.appendChild(this.button);
+  }
+  // Input label
+  if (options.inputLabel) {
+    var label = document.createElement("LABEL");
+    label.innerText = options.inputLabel;
+    element.appendChild(label);
+  }
+  // Search input
+  var tout, cur="";
+  var input = this._input = document.createElement("INPUT");
+  input.setAttribute("type", "search");
+  input.setAttribute("class", "search");
+  input.setAttribute("placeholder", options.placeholder||"Search...");
+  input.addEventListener("change", function(e) {
     self.dispatchEvent({ type:"change:input", input:e, value:input.value });
   });
-	var doSearch = function(e) {
+  var doSearch = function(e) {
     // console.log(e.type+" "+e.key)'
-		var li  = element.querySelector("ul.autocomplete li.select");
-		var	val = input.value;
-		// move up/down
-		if (e.key=='ArrowDown' || e.key=='ArrowUp' || e.key=='Down' || e.key=='Up') {
+    var li  = element.querySelector("ul.autocomplete li.select");
+    var	val = input.value;
+    // move up/down
+    if (e.key=='ArrowDown' || e.key=='ArrowUp' || e.key=='Down' || e.key=='Up') {
       if (li) {
         li.classList.remove("select");
-				li = (/Down/.test(e.key)) ? li.nextElementSibling : li.previousElementSibling;
-				if (li) li.classList.add("select");
-			}
-			else element.querySelector("ul.autocomplete li").classList.add("select");
-		}
-		// Clear input
-		else if (e.type=='input' && !val) {
+        li = (/Down/.test(e.key)) ? li.nextElementSibling : li.previousElementSibling;
+        if (li) li.classList.add("select");
+      }
+      else element.querySelector("ul.autocomplete li").classList.add("select");
+    }
+    // Clear input
+    else if (e.type=='input' && !val) {
       self.drawList_();
-		}
-		// Select in the list
-		else if (li && (e.type=="search" || e.key =="Enter")) {
+    }
+    // Select in the list
+    else if (li && (e.type=="search" || e.key =="Enter")) {
       if (element.classList.contains("ol-control")) input.blur();
-			li.classList.remove("select");
-			cur = val;
-			self._handleSelect(self._list[li.getAttribute("data-search")]);
-		}
-		// Search / autocomplete
-		else if ( (e.type=="search" || e.key =='Enter')
-			|| (cur!=val && options.typing>=0)) {
+      li.classList.remove("select");
+      cur = val;
+      self._handleSelect(self._list[li.getAttribute("data-search")]);
+    }
+    // Search / autocomplete
+    else if ( (e.type=="search" || e.key =='Enter')
+      || (cur!=val && options.typing>=0)) {
       // current search
-			cur = val;
-			if (cur) {
+      cur = val;
+      if (cur) {
         // prevent searching on each typing
-				if (tout) clearTimeout(tout);
-				tout = setTimeout(function() {
+        if (tout) clearTimeout(tout);
+        tout = setTimeout(function() {
           if (cur.length >= self.get("minLength")) {
             var s = self.autocomplete (cur, function(auto) { self.drawList_(auto); });
-						if (s) self.drawList_(s);
+            if (s) self.drawList_(s);
           }
           else self.drawList_();
-				}, options.typing);
-			}
-			else self.drawList_();
-		}
-		// Clear list selection
-		else {
+        }, options.typing);
+      }
+      else self.drawList_();
+    }
+    // Clear list selection
+    else {
       li = element.querySelector("ul.autocomplete li");
-			if (li) li.classList.remove('select');
-		}
-	};
-	input.addEventListener("keyup", doSearch);
-	input.addEventListener("search", doSearch);
-	input.addEventListener("cut", doSearch);
-	input.addEventListener("paste", doSearch);
-	input.addEventListener("input", doSearch);
-	if (!options.noCollapse) {
-		input.addEventListener('blur', function() {
-			setTimeout(function(){ element.classList.add('ol-collapsed') }, 200);
-		});
-		input.addEventListener('focus', function() {
-			element.classList.remove('ol-collapsed');
-		});
-	}
-	element.appendChild(input);
-	// Autocomplete list
-	var ul = document.createElement('UL');
-	ul.classList.add('autocomplete');
-	element.appendChild(ul);
-	ol.control.Control.call(this, {
+      if (li) li.classList.remove('select');
+    }
+  };
+  input.addEventListener("keyup", doSearch);
+  input.addEventListener("search", doSearch);
+  input.addEventListener("cut", doSearch);
+  input.addEventListener("paste", doSearch);
+  input.addEventListener("input", doSearch);
+  if (!options.noCollapse) {
+    input.addEventListener('blur', function() {
+      setTimeout(function(){ element.classList.add('ol-collapsed') }, 200);
+    });
+    input.addEventListener('focus', function() {
+      element.classList.remove('ol-collapsed');
+    });
+  }
+  element.appendChild(input);
+  // Autocomplete list
+  var ul = document.createElement('UL');
+  ul.classList.add('autocomplete');
+  element.appendChild(ul);
+  ol.control.Control.call(this, {
     element: element,
     target: options.target
   });
-	if (typeof (options.getTitle)=='function') this.getTitle = options.getTitle;
-	if (typeof (options.autocomplete)=='function') this.autocomplete = options.autocomplete;
-	// Options
-	this.set('minLength', options.minLength || 1);
+  if (typeof (options.getTitle)=='function') this.getTitle = options.getTitle;
+  if (typeof (options.autocomplete)=='function') this.autocomplete = options.autocomplete;
+  // Options
+  this.set('minLength', options.minLength || 1);
   this.set('maxItems', options.maxItems || 10);
   this.set('maxHistory', options.maxHistory || options.maxItems || 10);
   // History
-	this.restoreHistory();
-	this.drawList_();
+  this.restoreHistory();
+  this.drawList_();
 };
 ol.inherits(ol.control.Search, ol.control.Control);
+/** Get the input field
+*	@return {Element} 
+*	@api
+*/
+ol.control.Search.prototype.getInputField = function () {
+  return this._input;
+};
 /** Returns the text to be displayed in the menu
 *	@param {any} f feature to be displayed
 *	@return {string} the text to be displayed in the index, default f.name
@@ -600,7 +609,7 @@ ol.control.Search.prototype.getTitle = function (f) {
  */
 ol.control.Search.prototype.search = function () {
   var search = this.element.querySelector("input.search");
-	this._triggerCustomEvent('search', search);
+  this._triggerCustomEvent('search', search);
 };
 /** Trigger custom event on elemebt
  * @param {*} eventName 
@@ -609,13 +618,13 @@ ol.control.Search.prototype.search = function () {
  */
 ol.control.Search.prototype._triggerCustomEvent = function (eventName, element) {
   var event;
-	if (window.CustomEvent) {
+  if (window.CustomEvent) {
     event = new CustomEvent(eventName);
-	} else {
+  } else {
     event = document.createEvent("CustomEvent");
-		event.initCustomEvent(eventName, true, true, {});
-	}
-	element.dispatchEvent(event);
+    event.initCustomEvent(eventName, true, true, {});
+  }
+  element.dispatchEvent(event);
 };
 /** Set the input value in the form (for initialisation purpose)
 *	@param {string} value
@@ -624,8 +633,8 @@ ol.control.Search.prototype._triggerCustomEvent = function (eventName, element) 
 */
 ol.control.Search.prototype.setInput = function (value, search) {
   var input = this.element.querySelector("input.search");
-	input.value = value;
-	if (search) this._triggerCustomEvent("keyup", input);
+  input.value = value;
+  if (search) this._triggerCustomEvent("keyup", input);
 };
 /** A ligne has been clicked in the menu > dispatch event
 *	@param {any} f the feature, as passed in the autocomplete
@@ -640,11 +649,11 @@ ol.control.Search.prototype.select = function (f) {
  * @private
  */
 ol.control.Search.prototype._handleSelect = function (f) {
-	if (!f) return;
+  if (!f) return;
   // Save input in history
   var hist = this.get('history');
-	// Prevent error on stringify
-	var i;
+  // Prevent error on stringify
+  var i;
   try {
     var fstr = JSON.stringify(f);
     for (i=hist.length-1; i>=0; i--) {
@@ -658,15 +667,15 @@ ol.control.Search.prototype._handleSelect = function (f) {
         hist.splice(i,1);
       }
     }
-	}
-	hist.unshift(f);
-	while (hist.length > (this.get('maxHistory')||10)) {
-		hist.pop();
-	} 
-	this.saveHistory();
+  }
+  hist.unshift(f);
+  while (hist.length > (this.get('maxHistory')||10)) {
+    hist.pop();
+  } 
+  this.saveHistory();
   // Select feature
-	this.select(f);
-	//this.drawList_();
+  this.select(f);
+  //this.drawList_();
 };
 /** Save history (in the localstorage)
  */
@@ -693,8 +702,8 @@ ol.control.Search.prototype.restoreHistory = function () {
  */
 ol.control.Search.prototype.clearHistory = function () {
   this.set('history', []);
-	this.saveHistory();
-	this.drawList_();
+  this.saveHistory();
+  this.drawList_();
 };
 /**
  * Get history table
@@ -709,20 +718,20 @@ ol.control.Search.prototype.getHistory = function () {
 * @api
 */
 ol.control.Search.prototype.autocomplete = function (s, cback) {
-	cback ([]);
-	return false;
-	// or just return [];
+  cback ([]);
+  return false;
+  // or just return [];
 };
 /** Draw the list
 * @param {Array} auto an array of search result
 * @private
 */
 ol.control.Search.prototype.drawList_ = function (auto) {
-	var self = this;
-	var ul = this.element.querySelector("ul.autocomplete");
-	ul.innerHTML = '';
-	this._list = [];
-	if (!auto) {
+  var self = this;
+  var ul = this.element.querySelector("ul.autocomplete");
+  ul.innerHTML = '';
+  this._list = [];
+  if (!auto) {
     var input = this.element.querySelector("input.search");
     var value = input.value;
     if (!value) {
@@ -734,27 +743,27 @@ ol.control.Search.prototype.drawList_ = function (auto) {
   } else {
     ul.setAttribute('class', 'autocomplete');
   }
-	var li, max = Math.min (self.get("maxItems"),auto.length);
-	for (var i=0; i<max; i++) {	
-		if (auto[i]) {
-			if (!i || !self.equalFeatures(auto[i], auto[i-1])) {
-				li = document.createElement("LI");
-				li.setAttribute("data-search", i);
-				this._list.push(auto[i]);
-				li.addEventListener("click", function(e) {
-					self._handleSelect(self._list[e.currentTarget.getAttribute("data-search")]);
-				});
-				li.innerHTML = self.getTitle(auto[i]);
-				ul.appendChild(li);
-			}
-		}
-	}
-	if (max && this.get("copy")) {
-		li = document.createElement("LI");
-		li.classList.add("copy");
-		li.innerHTML = this.get("copy");
-		ul.appendChild(li);
-	}
+  var li, max = Math.min (self.get("maxItems"),auto.length);
+  for (var i=0; i<max; i++) {	
+    if (auto[i]) {
+      if (!i || !self.equalFeatures(auto[i], auto[i-1])) {
+        li = document.createElement("LI");
+        li.setAttribute("data-search", this._list.length);
+        this._list.push(auto[i]);
+        li.addEventListener("click", function(e) {
+          self._handleSelect(self._list[e.currentTarget.getAttribute("data-search")]);
+        });
+        li.innerHTML = self.getTitle(auto[i]);
+        ul.appendChild(li);
+      }
+    }
+  }
+  if (max && this.get("copy")) {
+    li = document.createElement("LI");
+    li.classList.add("copy");
+    li.innerHTML = this.get("copy");
+    ul.appendChild(li);
+  }
 };
 /** Test if 2 features are equal
  * @param {any} f1
@@ -762,7 +771,7 @@ ol.control.Search.prototype.drawList_ = function (auto) {
  * @return {boolean}
  */
 ol.control.Search.prototype.equalFeatures = function (/* f1, f2 */) {
-	return false;
+  return false;
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
@@ -6515,6 +6524,16 @@ ol.control.SearchFeature = function(options) {
   this.source_ = options.source;
 };
 ol.inherits(ol.control.SearchFeature, ol.control.Search);
+/** No history avaliable on features
+ */
+ol.control.SearchFeature.prototype.restoreHistory = function () {
+  this.set('history', []);
+};
+/** No history avaliable on features
+ */
+ol.control.SearchFeature.prototype.saveHistory = function () {
+  localStorage.removeItem("ol@search-"+this._classname);
+}
 /** Returns the text to be displayed in the menu
 *	@param {ol.Feature} f the feature
 *	@return {string} the text to be displayed in the index
@@ -6569,6 +6588,192 @@ ol.control.SearchFeature.prototype.autocomplete = function (s) {
       }
     }
   }
+  return result;
+};
+
+/*	Copyright (c) 2019 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * Search on GPS coordinate.
+ *
+ * @constructor
+ * @extends {ol.control.Search}
+ * @fires select
+ * @param {Object=} Control options. 
+ *  @param {string} options.className control class name
+ *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *  @param {string | undefined} options.label Text label to use for the search button, default "search"
+ *  @param {string | undefined} options.placeholder placeholder, default "Search..."
+ *  @param {number | undefined} options.typing a delay on each typing to start searching (ms), default 300.
+ *  @param {integer | undefined} options.minLength minimum length to start searching, default 1
+ *  @param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ */
+ol.control.SearchGPS = function(options) {
+  if (!options) options = {};
+  options.className = (options.className || '') + ' ol-searchgps';
+  options.placeholder = options.placeholder || 'lon,lat';
+  ol.control.Search.call(this, options);
+  // Geolocation
+  this.geolocation = new ol.Geolocation({
+    projection: "EPSG:4326",
+    trackingOptions: {
+      maximumAge: 10000,
+      enableHighAccuracy: true,
+      timeout: 600000
+    }
+  });
+  ol.ext.element.create ('BUTTON', {
+    className: 'ol-geoloc',
+    title: 'Locate with GPS',
+    parent: this.element,
+    click: function(){
+      this.geolocation.setTracking(true);
+    }.bind(this)
+  })
+  // DMS switcher
+  var dms = ol.ext.element.create('LABEL', {
+    className: 'ol-switch',
+    parent: this.element
+  });
+  ol.ext.element.create('TEXT', {
+    html: 'decimal',
+    parent: dms
+  });
+  ol.ext.element.create('INPUT', {
+    type: 'checkbox',
+    parent: dms,
+    on: {
+      'change': function(e) {
+        if (e.target.checked) this.element.classList.add('ol-dms');
+        else this.element.classList.remove('ol-dms');
+      }.bind(this)
+    }
+  });
+  ol.ext.element.create ('SPAN', {
+    parent: dms
+  });
+  ol.ext.element.create('TEXT', {
+    html: 'DMS',
+    parent: dms
+  });
+  this._createForm();
+  // Move list to the end
+  var ul = this.element.querySelector("ul.autocomplete");
+  this.element.appendChild(ul);
+};
+ol.inherits(ol.control.SearchGPS, ol.control.Search);
+/** Create input form
+ * @private
+ */
+ol.control.SearchGPS.prototype._createForm = function () {
+  // Value has change
+  var onchange = function(e) {
+    if (e.target.classList.contains('ol-dms')) {
+      lon.value = (lond.value<0 ? -1:1) * Number(lond.value) + Number(lonm.value)/60 + Number(lons.value)/3600;
+      lon.value = (lond.value<0 ? -1:1) * Math.round(lon.value*10000000)/10000000;
+      lat.value = (latd.value<0 ? -1:1) * Number(latd.value) + Number(latm.value)/60 + Number(lats.value)/3600;
+      lat.value = (latd.value<0 ? -1:1) * Math.round(lat.value*10000000)/10000000;
+    }
+    if (lon.value||lat.value) {
+      this._input.value = lon.value+','+lat.value;
+    } else {
+      this._input.value = '';
+    }
+    if (!e.target.classList.contains('ol-dms')) {
+      var s = ol.coordinate.toStringHDMS([Number(lon.value), Number(lat.value)]);
+      var c = s.replace(/(N|S|E|W)/g,'').split('″');
+      c[1] = c[1].trim().split(' ');
+      lond.value = (/W/.test(s) ? -1 : 1) * parseInt(c[1][0]);
+      lonm.value = parseInt(c[1][1]);
+      lons.value = parseInt(c[1][2]);
+      c[0] = c[0].trim().split(' ');
+      latd.value = (/W/.test(s) ? -1 : 1) * parseInt(c[0][0]);
+      latm.value = parseInt(c[0][1]);
+      lats.value = parseInt(c[0][2]);
+    }
+    this._input.dispatchEvent(new Event('search'));
+  }.bind(this);
+  function createInput(className, unit) {
+    var input = ol.ext.element.create('INPUT', {
+      className: className,
+      type:'number',
+      parent: div,
+      on: {
+        'change keyup': onchange
+      }
+    });
+    if (unit) {
+      ol.ext.element.create('SPAN', {
+        className: 'ol-dms',
+        html: unit,
+        parent: div,
+      });
+    }
+    return input;
+  }
+  // Longitude
+  var div = ol.ext.element.create('DIV', {
+    className: 'ol-longitude',
+    parent: this.element
+  });
+  ol.ext.element.create('LABEL', {
+    html: 'Longitude',
+    parent: div
+  });
+  var lon = createInput('ol-decimal');
+  var lond = createInput('ol-dms','°');
+  var lonm = createInput('ol-dms','\'');
+  var lons = createInput('ol-dms','"');
+  // Latitude
+  div = ol.ext.element.create('DIV', {
+    className: 'ol-latitude',
+    parent: this.element
+  })
+  ol.ext.element.create('LABEL', {
+    html: 'Latitude',
+    parent: div
+  });
+  var lat = createInput('ol-decimal');
+  var latd = createInput('ol-dms','°');
+  var latm = createInput('ol-dms','\'');
+  var lats = createInput('ol-dms','"');
+  // Focus
+  this._input.disabled = true;
+  this.button.addEventListener("click", function() {
+    lon.focus();
+  });
+  // Change value on click
+  this.on('select', function(e){
+    lon.value = e.search.gps[0];
+    lat.value = e.search.gps[1];
+  }.bind(this));
+  // Change value on geolocation
+  this.geolocation.on('change', function(){
+    this.geolocation.setTracking(false);
+    var coord = this.geolocation.getPosition();
+    lon.value = coord[0];
+    lat.value = coord[1];
+    lon.dispatchEvent(new Event('keyup'));
+  }.bind(this));
+};
+/** Autocomplete function
+* @param {string} s search string
+* @return {Array<any>|false} an array of search solutions
+* @api
+*/
+ol.control.SearchGPS.prototype.autocomplete = function (s) {
+  var result = [];
+  var c = s.split(',');
+  c[0] = Number(c[0]);
+  c[1] = Number(c[1]);
+  // Name
+  s = ol.coordinate.toStringHDMS(c)
+  if (s) s= s.replace(/(°|′|″) /g,'$1');
+  // 
+  var coord = ol.proj.transform ([c[0], c[1]], 'EPSG:4326', this.getMap().getView().getProjection());
+  result.push({ gps: c, coordinate: coord, name: s });
   return result;
 };
 
@@ -10212,6 +10417,12 @@ ol.interaction.DragOverlay = function(options) {
   ol.interaction.Pointer.call(this, {
     // start draging on an overlay
     handleDownEvent: function(evt) {
+      // Click on a button (closeBox) or on a link: don't drag!
+      if (/^(BUTTON|A)$/.test(evt.originalEvent.target.tagName)) {
+        this._dragging = false;
+        return true;
+      }
+      // Start dragging
       if (this._dragging) {
         this._dragging.setPosition(evt.coordinate);
         this.dispatchEvent({ 
@@ -10483,8 +10694,8 @@ ol.interaction.DrawHole.prototype._geometryFn = function(coordinates, geometry)
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Interaction rotate
  * @constructor
@@ -10493,72 +10704,71 @@ ol.interaction.DrawHole.prototype._geometryFn = function(coordinates, geometry)
  * @param {olx.interaction.TransformOptions} options
  *  @param {Array<ol.Layer>} source Destination source for the drawn features
  *  @param {ol.Collection<ol.Feature>} features Destination collection for the drawn features 
- *	@param {ol.style.Style | Array.<ol.style.Style> | ol.style.StyleFunction | undefined} style style for the sketch
- *	@param {integer} sides number of sides, default 0 = circle
- *	@param { ol.events.ConditionType | undefined } squareCondition A function that takes an ol.MapBrowserEvent and returns a boolean to draw square features.
- *	@param { ol.events.ConditionType | undefined } centerCondition A function that takes an ol.MapBrowserEvent and returns a boolean to draw centered features.
- *	@param { bool } canRotate Allow rotation when centered + square, default: true
- *	@param { number } clickTolerance click tolerance on touch devices, default: 6
- *	@param { number } maxCircleCoordinates Maximum number of point on a circle, default: 100
+ *  @param {ol.style.Style | Array.<ol.style.Style> | ol.style.StyleFunction | undefined} style style for the sketch
+ *  @param {integer} sides number of sides, default 0 = circle
+ *  @param { ol.events.ConditionType | undefined } squareCondition A function that takes an ol.MapBrowserEvent and returns a boolean to draw square features.
+ *  @param { ol.events.ConditionType | undefined } centerCondition A function that takes an ol.MapBrowserEvent and returns a boolean to draw centered features.
+ *  @param { bool } canRotate Allow rotation when centered + square, default: true
+ *  @param { number } clickTolerance click tolerance on touch devices, default: 6
+ *  @param { number } maxCircleCoordinates Maximum number of point on a circle, default: 100
  */
 ol.interaction.DrawRegular = function(options) {
-	if (!options) options={};
-	this.squaredClickTolerance_ = options.clickTolerance ? options.clickTolerance * options.clickTolerance : 36;
-	this.maxCircleCoordinates_ = options.maxCircleCoordinates || 100;
-	// Collection of feature to transform 
-	this.features_ = options.features;
-	// List of layers to transform 
-	this.source_ = options.source;
-	// Square condition
-	this.squareFn_ = options.squareCondition;
-	// Centered condition
-	this.centeredFn_ = options.centerCondition;
-	// Allow rotation when centered + square
-	this.canRotate_ = (options.canRotate !== false);
-	// Specify custom geometry name
-	this.geometryName_ = options.geometryName
-	// Number of sides (default=0: circle)
-	this.setSides(options.sides);
-	// Style
-	var white = [255, 255, 255, 1];
-	var blue = [0, 153, 255, 1];
-	var width = 3;
-	var defaultStyle = [
-		new ol.style.Style({
-			stroke: new ol.style.Stroke({ color: white, width: width + 2 })
-		}),
-		new ol.style.Style({
-			image: new ol.style.Circle({
-				radius: width * 2,
-				fill: new ol.style.Fill({ color: blue }),
-				stroke: new ol.style.Stroke({ color: white, width: width / 2 })
-			}),
-			stroke: new ol.style.Stroke({ color: blue, width: width }),
-			fill: new ol.style.Fill({
-				color: [255, 255, 255, 0.5]
-			})
-		})
-	];
-	// Create a new overlay layer for the sketch
-	this.sketch_ = new ol.Collection();
-	this.overlayLayer_ = new ol.layer.Vector(
-		{	source: new ol.source.Vector({
-				features: this.sketch_,
-				useSpatialIndex: false
-			}),
-			name:'DrawRegular overlay',
-			displayInLayerSwitcher: false,
-			style: options.style || defaultStyle
-		});
-	ol.interaction.Interaction.call(this,
-		{	
-			/*
-			handleDownEvent: this.handleDownEvent_,
-			handleMoveEvent: this.handleMoveEvent_,
-			handleUpEvent: this.handleUpEvent_,
-			*/
-			handleEvent: this.handleEvent_
-		});
+  if (!options) options={};
+  this.squaredClickTolerance_ = options.clickTolerance ? options.clickTolerance * options.clickTolerance : 36;
+  this.maxCircleCoordinates_ = options.maxCircleCoordinates || 100;
+  // Collection of feature to transform 
+  this.features_ = options.features;
+  // List of layers to transform 
+  this.source_ = options.source;
+  // Square condition
+  this.squareFn_ = options.squareCondition;
+  // Centered condition
+  this.centeredFn_ = options.centerCondition;
+  // Allow rotation when centered + square
+  this.canRotate_ = (options.canRotate !== false);
+  // Specify custom geometry name
+  this.geometryName_ = options.geometryName
+  // Number of sides (default=0: circle)
+  this.setSides(options.sides);
+  // Style
+  var white = [255, 255, 255, 1];
+  var blue = [0, 153, 255, 1];
+  var width = 3;
+  var defaultStyle = [
+    new ol.style.Style({
+      stroke: new ol.style.Stroke({ color: white, width: width + 2 })
+    }),
+    new ol.style.Style({
+      image: new ol.style.Circle({
+        radius: width * 2,
+        fill: new ol.style.Fill({ color: blue }),
+        stroke: new ol.style.Stroke({ color: white, width: width / 2 })
+      }),
+      stroke: new ol.style.Stroke({ color: blue, width: width }),
+      fill: new ol.style.Fill({
+        color: [255, 255, 255, 0.5]
+      })
+    })
+  ];
+  // Create a new overlay layer for the sketch
+  this.sketch_ = new ol.Collection();
+  this.overlayLayer_ = new ol.layer.Vector({
+    source: new ol.source.Vector({
+      features: this.sketch_,
+      useSpatialIndex: false
+    }),
+    name:'DrawRegular overlay',
+    displayInLayerSwitcher: false,
+    style: options.style || defaultStyle
+  });
+  ol.interaction.Interaction.call(this, {	
+      /*
+      handleDownEvent: this.handleDownEvent_,
+      handleMoveEvent: this.handleMoveEvent_,
+      handleUpEvent: this.handleUpEvent_,
+      */
+      handleEvent: this.handleEvent_
+    });
 };
 ol.inherits(ol.interaction.DrawRegular, ol.interaction.Interaction);
 /**
@@ -10567,27 +10777,27 @@ ol.inherits(ol.interaction.DrawRegular, ol.interaction.Interaction);
  * @param {ol.Map} map Map.
  * @api stable
  */
-ol.interaction.DrawRegular.prototype.setMap = function(map)
-{	if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_);
-	ol.interaction.Interaction.prototype.setMap.call (this, map);
-	this.overlayLayer_.setMap(map);
+ol.interaction.DrawRegular.prototype.setMap = function(map) {
+  if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_);
+  ol.interaction.Interaction.prototype.setMap.call (this, map);
+  this.overlayLayer_.setMap(map);
 };
 /**
  * Activate/deactivate the interaction
  * @param {boolean}
  * @api stable
  */
-ol.interaction.DrawRegular.prototype.setActive = function(b)
-{	this.reset();
-	ol.interaction.Interaction.prototype.setActive.call (this, b);
+ol.interaction.DrawRegular.prototype.setActive = function(b) {
+  this.reset();
+  ol.interaction.Interaction.prototype.setActive.call (this, b);
 }
 /**
  * Reset the interaction
  * @api stable
  */
-ol.interaction.DrawRegular.prototype.reset = function()
-{	this.overlayLayer_.getSource().clear();
-	this.started_ = false;
+ol.interaction.DrawRegular.prototype.reset = function() {
+  this.overlayLayer_.getSource().clear();
+  this.started_ = false;
 }
 /**
  * Set the number of sides.
@@ -10595,272 +10805,284 @@ ol.interaction.DrawRegular.prototype.reset = function()
  * @api stable
  */
 ol.interaction.DrawRegular.prototype.setSides = function (nb) {
-	nb = parseInt(nb);
-	this.sides_ = nb>2 ? nb : 0;
+  nb = parseInt(nb);
+  this.sides_ = nb>2 ? nb : 0;
 }
 /**
  * Allow rotation when centered + square
  * @param {bool} 
  * @api stable
  */
-ol.interaction.DrawRegular.prototype.canRotate = function (b)
-{	if (b===true || b===false) this.canRotate_ = b;
-	return this.canRotate_;
+ol.interaction.DrawRegular.prototype.canRotate = function (b) {
+  if (b===true || b===false) this.canRotate_ = b;
+  return this.canRotate_;
 }
 /**
  * Get the number of sides.
  * @return {int} number of sides.
  * @api stable
  */
-ol.interaction.DrawRegular.prototype.getSides = function ()
-{	return this.sides_;
+ol.interaction.DrawRegular.prototype.getSides = function () {
+  return this.sides_;
 }
 /** Default start angle array for each sides
 */
-ol.interaction.DrawRegular.prototype.startAngle =
-{	'default':Math.PI/2,
-	3: -Math.PI/2,
-	4: Math.PI/4
+ol.interaction.DrawRegular.prototype.startAngle = {
+  'default':Math.PI/2,
+  3: -Math.PI/2,
+  4: Math.PI/4
 };
 /** Get geom of the current drawing
 * @return {ol.geom.Polygon | ol.geom.Point}
 */
-ol.interaction.DrawRegular.prototype.getGeom_ = function ()
-{	this.overlayLayer_.getSource().clear();
-	if (!this.center_) return false;
-	var g;
-	if (this.coord_)
-	{	var center = this.center_;
-		var coord = this.coord_;
-		// Special case: circle
-		var d, dmax, r, circle, centerPx;
-		if (!this.sides_ && this.square_ && !this.centered_){
-			center = [(coord[0] + center[0])/2, (coord[1] + center[1])/2];
-			d = [coord[0] - center[0], coord[1] - center[1]];
-			r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
-			circle = new ol.geom.Circle(center, r, 'XY');
-			// Optimize points on the circle
-			centerPx = this.getMap().getPixelFromCoordinate(center);
-			dmax = Math.max (100, Math.abs(centerPx[0]-this.coordPx_[0]), Math.abs(centerPx[1]-this.coordPx_[1]));
-			dmax = Math.min ( this.maxCircleCoordinates_, Math.round(dmax / 3 ));
-			return ol.geom.Polygon.fromCircle (circle, dmax, 0);
-		}
-		else {
-			var hasrotation = this.canRotate_ && this.centered_ && this.square_;
-			d = [coord[0] - center[0], coord[1] - center[1]];
-			if (this.square_ && !hasrotation) 
-			{	//var d = [coord[0] - center[0], coord[1] - center[1]];
-				var dm = Math.max (Math.abs(d[0]), Math.abs(d[1])); 
-				coord = [ 
-					center[0] + (d[0]>0 ? dm:-dm),
-					center[1] + (d[1]>0 ? dm:-dm)
-				];
-			}
-			r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
-			if (r>0)
-			{	circle = new ol.geom.Circle(center, r, 'XY');
-				var a;
-				if (hasrotation) a = Math.atan2(d[1], d[0]);
-				else a = this.startAngle[this.sides_] || this.startAngle['default'];
-				if (this.sides_) g = ol.geom.Polygon.fromCircle (circle, this.sides_, a);
-				else
-				{	// Optimize points on the circle
-					centerPx = this.getMap().getPixelFromCoordinate(this.center_);
-					dmax = Math.max (100, Math.abs(centerPx[0]-this.coordPx_[0]), Math.abs(centerPx[1]-this.coordPx_[1]));
-					dmax = Math.min ( this.maxCircleCoordinates_, Math.round(dmax / (this.centered_ ? 3:5) ));
-					g = ol.geom.Polygon.fromCircle (circle, dmax, 0);
-				}
-				if (hasrotation) return g;
-				// Scale polygon to fit extent
-				var ext = g.getExtent();
-				if (!this.centered_) center = this.center_;
-				else center = [ 2*this.center_[0]-this.coord_[0], 2*this.center_[1]-this.coord_[1] ];
-				var scx = (center[0] - coord[0]) / (ext[0] - ext[2]);
-				var scy = (center[1] - coord[1]) / (ext[1] - ext[3]);
-				if (this.square_) 
-				{	var sc = Math.min(Math.abs(scx),Math.abs(scy));
-					scx = Math.sign(scx)*sc;
-					scy = Math.sign(scy)*sc;
-				}
-				var t = [ center[0] - ext[0]*scx, center[1] - ext[1]*scy ];
-				g.applyTransform(function(g1, g2, dim)
-				{	for (var i=0; i<g1.length; i+=dim)
-					{	g2[i] = g1[i]*scx + t[0];
-						g2[i+1] = g1[i+1]*scy + t[1];
-					}
-					return g2;
-				});
-				return g;
-			}
-		}
-	}
-	// No geom => return a point
-	return new ol.geom.Point(this.center_);
+ol.interaction.DrawRegular.prototype.getGeom_ = function () {
+  this.overlayLayer_.getSource().clear();
+  if (!this.center_) return false;
+  var g;
+  if (this.coord_) {
+    var center = this.center_;
+    var coord = this.coord_;
+    // Specific case: circle
+    var d, dmax, r, circle, centerPx;
+    if (!this.sides_ && this.square_ && !this.centered_) {
+      center = [(coord[0] + center[0])/2, (coord[1] + center[1])/2];
+      d = [coord[0] - center[0], coord[1] - center[1]];
+      r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
+      circle = new ol.geom.Circle(center, r, 'XY');
+      // Optimize points on the circle
+      centerPx = this.getMap().getPixelFromCoordinate(center);
+      dmax = Math.max (100, Math.abs(centerPx[0]-this.coordPx_[0]), Math.abs(centerPx[1]-this.coordPx_[1]));
+      dmax = Math.min ( this.maxCircleCoordinates_, Math.round(dmax / 3 ));
+      return ol.geom.Polygon.fromCircle (circle, dmax, 0);
+    } else {
+      var hasrotation = this.canRotate_ && this.centered_ && this.square_;
+      d = [coord[0] - center[0], coord[1] - center[1]];
+      if (this.square_ && !hasrotation) {
+        //var d = [coord[0] - center[0], coord[1] - center[1]];
+        var dm = Math.max (Math.abs(d[0]), Math.abs(d[1])); 
+        coord = [ 
+          center[0] + (d[0]>0 ? dm:-dm),
+          center[1] + (d[1]>0 ? dm:-dm)
+        ];
+      }
+      r = Math.sqrt(d[0]*d[0]+d[1]*d[1]);
+      if (r>0) {
+        circle = new ol.geom.Circle(center, r, 'XY');
+        var a;
+        if (hasrotation) a = Math.atan2(d[1], d[0]);
+        else a = this.startAngle[this.sides_] || this.startAngle['default'];
+        if (this.sides_) {
+          g = ol.geom.Polygon.fromCircle (circle, this.sides_, a);
+        } else {
+          // Optimize points on the circle
+          centerPx = this.getMap().getPixelFromCoordinate(this.center_);
+          dmax = Math.max (100, Math.abs(centerPx[0]-this.coordPx_[0]), Math.abs(centerPx[1]-this.coordPx_[1]));
+          dmax = Math.min ( this.maxCircleCoordinates_, Math.round(dmax / (this.centered_ ? 3:5) ));
+          g = ol.geom.Polygon.fromCircle (circle, dmax, 0);
+        }
+        if (hasrotation) return g;
+        // Scale polygon to fit extent
+        var ext = g.getExtent();
+        if (!this.centered_) center = this.center_;
+        else center = [ 2*this.center_[0]-this.coord_[0], 2*this.center_[1]-this.coord_[1] ];
+        var scx = (center[0] - coord[0]) / (ext[0] - ext[2]);
+        var scy = (center[1] - coord[1]) / (ext[1] - ext[3]);
+        if (this.square_) {
+          var sc = Math.min(Math.abs(scx),Math.abs(scy));
+          scx = Math.sign(scx)*sc;
+          scy = Math.sign(scy)*sc;
+        }
+        var t = [ center[0] - ext[0]*scx, center[1] - ext[1]*scy ];
+        g.applyTransform(function(g1, g2, dim) {
+          for (var i=0; i<g1.length; i+=dim) {
+            g2[i] = g1[i]*scx + t[0];
+            g2[i+1] = g1[i+1]*scy + t[1];
+          }
+          return g2;
+        });
+        return g;
+      }
+    }
+  }
+  // No geom => return a point
+  return new ol.geom.Point(this.center_);
 };
 /** Draw sketch
 * @return {ol.Feature} The feature being drawn.
 */
-ol.interaction.DrawRegular.prototype.drawSketch_ = function(evt)
-{	this.overlayLayer_.getSource().clear();
-	if (evt)
-	{	this.square_ = this.squareFn_ ? this.squareFn_(evt) : evt.originalEvent.shiftKey;
-		this.centered_ = this.centeredFn_ ? this.centeredFn_(evt) : evt.originalEvent.metaKey || evt.originalEvent.ctrlKey;
-		var g = this.getGeom_();
-		if (g) 
-		{	var f = this.feature_;
-			if (this.geometryName_) f.setGeometryName(this.geometryName_)
-			//f.setGeometry (g);
-			if (g.getType()==='Polygon') f.getGeometry().setCoordinates(g.getCoordinates());
-			this.overlayLayer_.getSource().addFeature(f);
-			if (this.coord_ && this.square_ && ((this.canRotate_ && this.centered_ && this.coord_) || (!this.sides_ && !this.centered_)))
-			{	this.overlayLayer_.getSource().addFeature(new ol.Feature(new ol.geom.LineString([this.center_,this.coord_])));
-			}
-			return f;
-		}
-	}
+ol.interaction.DrawRegular.prototype.drawSketch_ = function(evt) {
+  this.overlayLayer_.getSource().clear();
+  if (evt) {
+    this.square_ = this.squareFn_ ? this.squareFn_(evt) : evt.originalEvent.shiftKey;
+    this.centered_ = this.centeredFn_ ? this.centeredFn_(evt) : evt.originalEvent.metaKey || evt.originalEvent.ctrlKey;
+    var g = this.getGeom_();
+    if (g) {
+      var f = this.feature_;
+      if (this.geometryName_) f.setGeometryName(this.geometryName_)
+      //f.setGeometry (g);
+      if (g.getType()==='Polygon') f.getGeometry().setCoordinates(g.getCoordinates());
+      this.overlayLayer_.getSource().addFeature(f);
+      if (this.coord_ 
+        && this.square_ 
+        && ((this.canRotate_ && this.centered_ && this.coord_) || (!this.sides_ && !this.centered_))) {
+        this.overlayLayer_.getSource().addFeature(new ol.Feature(new ol.geom.LineString([this.center_,this.coord_])));
+      }
+      return f;
+    }
+  }
 };
 /** Draw sketch (Point)
 */
-ol.interaction.DrawRegular.prototype.drawPoint_ = function(pt, noclear)
-{	if (!noclear) this.overlayLayer_.getSource().clear();
-	this.overlayLayer_.getSource().addFeature(new ol.Feature(new ol.geom.Point(pt)));
+ol.interaction.DrawRegular.prototype.drawPoint_ = function(pt, noclear) {
+  if (!noclear) this.overlayLayer_.getSource().clear();
+  this.overlayLayer_.getSource().addFeature(new ol.Feature(new ol.geom.Point(pt)));
 };
 /**
  * @param {ol.MapBrowserEvent} evt Map browser event.
  */
 ol.interaction.DrawRegular.prototype.handleEvent_ = function(evt) {
-	var dx, dy;
-	switch (evt.type)
-	{	case "pointerdown": {
-			this.downPx_ = evt.pixel;
-			this.start_(evt);
-		}
-		break;
-		case "pointerup":
-			// Started and fisrt move
-			if (this.started_ && this.coord_)
-			{	dx = this.downPx_[0] - evt.pixel[0];
-				dy = this.downPx_[1] - evt.pixel[1];
-				if (dx*dx + dy*dy <= this.squaredClickTolerance_) 
-				{	// The pointer has moved
-					if ( this.lastEvent == "pointermove" || this.lastEvent == "keydown" )
-					{	this.end_(evt);
-					}
-					// On touch device there is no move event : terminate = click on the same point
-					else
-					{	dx = this.upPx_[0] - evt.pixel[0];
-						dy = this.upPx_[1] - evt.pixel[1];
-						if ( dx*dx + dy*dy <= this.squaredClickTolerance_)
-						{	this.end_(evt);
-						}
-						else 
-						{	this.handleMoveEvent_(evt);
-							this.drawPoint_(evt.coordinate,true);
-						}
-					}
-				}
-			}
-			this.upPx_ = evt.pixel;	
-		break;
-		case "pointerdrag":
-			if (this.started_)
-			{	var centerPx = this.getMap().getPixelFromCoordinate(this.center_);
-				dx = centerPx[0] - evt.pixel[0];
-				dy = centerPx[1] - evt.pixel[1];
-				if (dx*dx + dy*dy <= this.squaredClickTolerance_) 
-				{ 	this.reset();
-				}
-			}
-			break;
-		case "pointermove":
-			if (this.started_)
-			{	dx = this.downPx_[0] - evt.pixel[0];
-				dy = this.downPx_[1] - evt.pixel[1];
-				if (dx*dx + dy*dy > this.squaredClickTolerance_) 
-				{	this.handleMoveEvent_(evt);
-					this.lastEvent = evt.type;
-				}
-			}
-			break;
-		default:
-			this.lastEvent = evt.type;
-			// Prevent zoom in on dblclick
-			if (this.started_ && evt.type==='dblclick') 
-			{	//evt.stopPropagation();
-				return false;
-			}
-			break;
-	}
-	return true;
+  var dx, dy;
+  // Event date time
+  this._eventTime = new Date();
+  switch (evt.type) {
+    case "pointerdown": {
+      this.downPx_ = evt.pixel;
+      this.start_(evt);
+      // Test long touch
+      var dt = 500;
+      this._longTouch = false;
+      setTimeout(function() {
+        this._longTouch = (new Date() - this._eventTime > .9*dt);
+        if (this._longTouch) this.handleMoveEvent_(evt);
+      }.bind(this), dt);
+      break;
+    }
+    case "pointerup": {
+      // Started and fisrt move
+      if (this.started_ && this.coord_) {
+        dx = this.downPx_[0] - evt.pixel[0];
+        dy = this.downPx_[1] - evt.pixel[1];
+        if (dx*dx + dy*dy <= this.squaredClickTolerance_) {
+          // The pointer has moved
+          if ( this.lastEvent == "pointermove" || this.lastEvent == "keydown" ) {
+            this.end_(evt);
+          }
+          // On touch device there is no move event : terminate = click on the same point
+          else {
+            dx = this.upPx_[0] - evt.pixel[0];
+            dy = this.upPx_[1] - evt.pixel[1];
+            if ( dx*dx + dy*dy <= this.squaredClickTolerance_) {
+              this.end_(evt);
+            } else  {
+              this.handleMoveEvent_(evt);
+              this.drawPoint_(evt.coordinate,true);
+            }
+          }
+        }
+      }
+      this.upPx_ = evt.pixel;	
+      break;
+    }
+    case "pointerdrag": {
+      if (this.started_) {
+        var centerPx = this.getMap().getPixelFromCoordinate(this.center_);
+        dx = centerPx[0] - evt.pixel[0];
+        dy = centerPx[1] - evt.pixel[1];
+        if (dx*dx + dy*dy <= this.squaredClickTolerance_) {
+          this.reset();
+        }
+      }
+      return !this._longTouch;
+      // break;
+    }
+    case "pointermove": {
+      if (this.started_) {
+        dx = this.downPx_[0] - evt.pixel[0];
+        dy = this.downPx_[1] - evt.pixel[1];
+        if (dx*dx + dy*dy > this.squaredClickTolerance_) {
+          this.handleMoveEvent_(evt);
+          this.lastEvent = evt.type;
+        }
+      }
+      break;
+    }
+    default: {
+      this.lastEvent = evt.type;
+      // Prevent zoom in on dblclick
+      if (this.started_ && evt.type==='dblclick') {
+        //evt.stopPropagation();
+        return false;
+      }
+      break;
+    }
+  }
+  return true;
 }
 /** Stop drawing.
  */
-ol.interaction.DrawRegular.prototype.finishDrawing = function()
-{	if (this.started_ && this.coord_)
-	{	this.end_({ pixel: this.upPx_, coordinate: this.coord_});
-	}
+ol.interaction.DrawRegular.prototype.finishDrawing = function() {
+  if (this.started_ && this.coord_) {
+    this.end_({ pixel: this.upPx_, coordinate: this.coord_});
+  }
 };
 /**
  * @param {ol.MapBrowserEvent} evt Event.
  */
-ol.interaction.DrawRegular.prototype.handleMoveEvent_ = function(evt)
-{	if (this.started_)
-	{	this.coord_ = evt.coordinate;
-		this.coordPx_ = evt.pixel;
-		var f = this.drawSketch_(evt);
-		this.dispatchEvent({ 
-			type:'drawing', 
-			feature: f, 
-			pixel: evt.pixel, 
-			startCoordinate: this.center_,
-			coordinate: evt.coordinate, 
-			square: this.square_, 
-			centered: this.centered_ 
-		});
-	}
-	else 
-	{	this.drawPoint_(evt.coordinate);
-	}
+ol.interaction.DrawRegular.prototype.handleMoveEvent_ = function(evt) {
+  if (this.started_) {
+    this.coord_ = evt.coordinate;
+    this.coordPx_ = evt.pixel;
+    var f = this.drawSketch_(evt);
+    this.dispatchEvent({ 
+      type:'drawing', 
+      feature: f, 
+      pixel: evt.pixel, 
+      startCoordinate: this.center_,
+      coordinate: evt.coordinate, 
+      square: this.square_, 
+      centered: this.centered_ 
+    });
+  } else  {
+    this.drawPoint_(evt.coordinate);
+  }
 };
 /** Start an new draw
  * @param {ol.MapBrowserEvent} evt Map browser event.
  * @return {boolean} `false` to stop the drag sequence.
  */
-ol.interaction.DrawRegular.prototype.start_ = function(evt)
-{	if (!this.started_)
-	{	this.started_ = true;
-		this.center_ = evt.coordinate;
-		this.coord_ = null;
-		var geom = new ol.geom.Polygon([[evt.coordinate,evt.coordinate,evt.coordinate]]);
-		var f = this.feature_ = new ol.Feature(geom);
-		this.drawSketch_(evt);
-		this.dispatchEvent({ type:'drawstart', feature: f, pixel: evt.pixel, coordinate: evt.coordinate });
-	}
-	else 
-	{	this.coord_ = evt.coordinate;
-	}
+ol.interaction.DrawRegular.prototype.start_ = function(evt) {
+  if (!this.started_) {
+    this.started_ = true;
+    this.center_ = evt.coordinate;
+    this.coord_ = null;
+    var geom = new ol.geom.Polygon([[evt.coordinate,evt.coordinate,evt.coordinate]]);
+    var f = this.feature_ = new ol.Feature(geom);
+    this.drawSketch_(evt);
+    this.dispatchEvent({ type:'drawstart', feature: f, pixel: evt.pixel, coordinate: evt.coordinate });
+  } else {
+    this.coord_ = evt.coordinate;
+  }
 };
 /** End drawing
  * @param {ol.MapBrowserEvent} evt Map browser event.
  * @return {boolean} `false` to stop the drag sequence.
  */
-ol.interaction.DrawRegular.prototype.end_ = function(evt)
-{	this.coord_ = evt.coordinate;
-	this.started_ = false;
-	// Add new feature
-	if (this.coord_ && this.center_[0]!=this.coord_[0] && this.center_[1]!=this.coord_[1])
-	{	var f = this.feature_;
-		if (this.geometryName_) f.setGeometryName(this.geometryName_)
-		f.setGeometry(this.getGeom_());
-		if (this.source_) this.source_.addFeature(f);
-		else if (this.features_) this.features_.push(f);
-		this.dispatchEvent({ type:'drawend', feature: f, pixel: evt.pixel, coordinate: evt.coordinate, square: this.square_, centered: this.centered_ });
-	}
-	else
-	{	this.dispatchEvent({ type:'drawcancel', feature: null, pixel: evt.pixel, coordinate: evt.coordinate, square: this.square_, centered: this.centered_ });
-	}
-	this.center_ = this.coord_ = null;
-	this.drawSketch_();
+ol.interaction.DrawRegular.prototype.end_ = function(evt) {
+  this.coord_ = evt.coordinate;
+  this.started_ = false;
+  // Add new feature
+  if (this.coord_ && this.center_[0]!=this.coord_[0] && this.center_[1]!=this.coord_[1]) {
+    var f = this.feature_;
+    if (this.geometryName_) f.setGeometryName(this.geometryName_)
+    f.setGeometry(this.getGeom_());
+    if (this.source_) this.source_.addFeature(f);
+    else if (this.features_) this.features_.push(f);
+    this.dispatchEvent({ type:'drawend', feature: f, pixel: evt.pixel, coordinate: evt.coordinate, square: this.square_, centered: this.centered_ });
+  } else {
+    this.dispatchEvent({ type:'drawcancel', feature: null, pixel: evt.pixel, coordinate: evt.coordinate, square: this.square_, centered: this.centered_ });
+  }
+  this.center_ = this.coord_ = null;
+  this.drawSketch_();
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
