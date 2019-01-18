@@ -17,6 +17,12 @@ var ol_interaction_DragOverlay = function(options) {
   ol_interaction_Pointer.call(this, {
     // start draging on an overlay
     handleDownEvent: function(evt) {
+      // Click on a button (closeBox) or on a link: don't drag!
+      if (/^(BUTTON|A)$/.test(evt.originalEvent.target.tagName)) {
+        this._dragging = false;
+        return true;
+      }
+      // Start dragging
       if (this._dragging) {
         this._dragging.setPosition(evt.coordinate);
         this.dispatchEvent({ 
