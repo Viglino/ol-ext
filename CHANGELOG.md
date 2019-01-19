@@ -1,6 +1,8 @@
 # Change log
 
-## Next version (v3.1.0)
+## Next version 
+
+## v3.1.0 2019-01-19
 Remove Jquery dependencies: the library has now removed jQuery from its dependencies.
 If you use jQuery in your project you may have to pass options using the `$obj.get(0)` function instead of passing the jQuery object.
 - Add new story map controls

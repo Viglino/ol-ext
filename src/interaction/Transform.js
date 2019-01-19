@@ -206,7 +206,8 @@ ol_interaction_Transform.prototype.setDefaultStyle = function() {
 
 /**
  * Set sketch style.
- * @param {ol.Map} map Map.
+ * @param {style} style Style name: 'default','translate','rotate','rotate0','scale','scale1','scale2','scale3','scalev','scaleh1','scalev2','scaleh3'
+ * @param {ol.style.Style|Array<ol.style.Style>} olstyle
  * @api stable
  */
 ol_interaction_Transform.prototype.setStyle = function(style, olstyle) {
