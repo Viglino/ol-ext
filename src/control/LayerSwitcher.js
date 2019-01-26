@@ -166,6 +166,34 @@ ol_control_LayerSwitcher.prototype.setMap = function(map) {
   }
 };
 
+/** Show control
+ */
+ol_control_LayerSwitcher.prototype.show = function() {
+  this.element.classList.add("ol-forceopen");
+  this.overflow();
+};
+
+/** Hide control
+ */
+ol_control_LayerSwitcher.prototype.hide = function() {
+  this.element.classList.remove("ol-forceopen");
+  this.overflow();
+};
+
+/** Toggle control
+ */
+ol_control_LayerSwitcher.prototype.toggle = function() {
+  this.element.classList.toggle("ol-forceopen");
+  this.overflow();
+};
+
+/** Is control open
+ * @return {boolean}
+ */
+ol_control_LayerSwitcher.prototype.isOpen = function() {
+  return this.element.classList.contains("ol-forceopen");
+};
+
 /** Add a custom header
  * @param {Element|string} html content html
  */
