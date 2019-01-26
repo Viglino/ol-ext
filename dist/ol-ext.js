@@ -1269,6 +1269,30 @@ ol.control.LayerSwitcher.prototype.setMap = function(map) {
     }
   }
 };
+/** Show control
+ */
+ol.control.LayerSwitcher.prototype.show = function() {
+  this.element.classList.add("ol-forceopen");
+  this.overflow();
+};
+/** Hide control
+ */
+ol.control.LayerSwitcher.prototype.hide = function() {
+  this.element.classList.remove("ol-forceopen");
+  this.overflow();
+};
+/** Toggle control
+ */
+ol.control.LayerSwitcher.prototype.toggle = function() {
+  this.element.classList.toggle("ol-forceopen");
+  this.overflow();
+};
+/** Is control open
+ * @return {boolean}
+ */
+ol.control.LayerSwitcher.prototype.isOpen = function() {
+  return this.element.classList.contains("ol-forceopen");
+};
 /** Add a custom header
  * @param {Element|string} html content html
  */
@@ -2625,8 +2649,10 @@ ol.control.Disable.prototype.disableMap = function(b)
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
  *	@param {String} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *	@param {Array<string>} options.interactions Interactions to add to the bar 
+ *	@param {boolean} options.edition false to remove the edition tools, default true
+ *	@param {Object} options.interactions List of interactions to add to the bar 
  *    ie. Select, Delete, Info, DrawPoint, DrawLine, DrawPolygon
+ *    Each interaction can be an interaction or true (to get the default one) or false to remove it from bar
  *	@param {ol.source.Vector} options.source Source for the drawn features. 
  */
 ol.control.EditBar = function(options) {
@@ -2642,7 +2668,7 @@ ol.control.EditBar = function(options) {
   // Add buttons / interaction
   this._interactions = {};
   this._setSelectInteraction(options);
-  this._setEditInteraction(options);
+  if (options.edition!==false) this._setEditInteraction(options);
   this._setModifyInteraction(options);
 };
 ol.inherits(ol.control.EditBar, ol.control.Bar);
@@ -2684,7 +2710,12 @@ ol.control.EditBar.prototype._setSelectInteraction = function (options) {
   var selectCtrl;
   // Delete button
   if (options.interactions.Delete !== false) {
-    var del = this._interactions.Delete = new ol.interaction.Delete();
+    if (options.interactions.Delete instanceof ol.interaction.Delete) {
+      this._interactions.Delete = options.interactions.Delete; 
+    } else {
+      this._interactions.Delete = new ol.interaction.Delete();
+    }
+    var del = this._interactions.Delete;
     del.setActive(false);
     if (this.getMap()) this.getMap().addInteraction(del);
     sbar.addControl (new ol.control.Button({
@@ -2720,9 +2751,14 @@ ol.control.EditBar.prototype._setSelectInteraction = function (options) {
   }
   // Select button
   if (options.interactions.Select !== false) {
-    var sel = new ol.interaction.Select({
-      condition: ol.events.condition.click
-    });
+    if (options.interactions.Select instanceof ol.interaction.Select) {
+      this._interactions.Select = options.interactions.Select
+    } else {
+      this._interactions.Select = new ol.interaction.Select({
+        condition: ol.events.condition.click
+      });
+    }
+    var sel = this._interactions.Select;
     selectCtrl = new ol.control.Toggle({
       className: 'ol-selection',
       title: this._getTitle(options.interactions.Select) || "Select",
@@ -2732,7 +2768,6 @@ ol.control.EditBar.prototype._setSelectInteraction = function (options) {
       active:true
     });
     this.addControl(selectCtrl);
-    this._interactions.Select = sel;
     sel.on('change:active', function() {
       sel.getFeatures().clear();
     });
@@ -2743,10 +2778,14 @@ ol.control.EditBar.prototype._setSelectInteraction = function (options) {
  */ 
 ol.control.EditBar.prototype._setEditInteraction = function (options) {
   if (options.interactions.DrawPoint !== false) {
-    this._interactions.DrawPoint = new ol.interaction.Draw({
-      type: 'Point',
-      source: this._source
-    });
+    if (options.interactions.DrawPoint instanceof ol.interaction.Draw) {
+      this._interactions.DrawPoint = options.interactions.DrawPoint;
+    } else {
+      this._interactions.DrawPoint = new ol.interaction.Draw({
+        type: 'Point',
+        source: this._source
+      });
+    }
     var pedit = new ol.control.Toggle({
       className: 'ol-drawpoint',
       title: this._getTitle(options.interactions.DrawPoint) || 'Point',
@@ -2755,17 +2794,21 @@ ol.control.EditBar.prototype._setEditInteraction = function (options) {
     this.addControl ( pedit );
   }
   if (options.interactions.DrawLine !== false) {
-    this._interactions.DrawLine = new ol.interaction.Draw ({
-      type: 'LineString',
-      source: this._source,
-      // Count inserted points
-      geometryFunction: function(coordinates, geometry) {
-        if (geometry) geometry.setCoordinates(coordinates);
-        else geometry = new ol.geom.LineString(coordinates);
-        this.nbpts = geometry.getCoordinates().length;
-        return geometry;
-      }
-    });
+    if (options.interactions.DrawLine instanceof ol.interaction.Draw) {
+      this._interactions.DrawLine = options.interactions.DrawLine
+    } else {
+      this._interactions.DrawLine = new ol.interaction.Draw ({
+        type: 'LineString',
+        source: this._source,
+        // Count inserted points
+        geometryFunction: function(coordinates, geometry) {
+          if (geometry) geometry.setCoordinates(coordinates);
+          else geometry = new ol.geom.LineString(coordinates);
+          this.nbpts = geometry.getCoordinates().length;
+          return geometry;
+        }
+      });
+    }
     var ledit = new ol.control.Toggle({
       className: 'ol-drawline',
       title: this._getTitle(options.interactions.DrawLine) || 'LineString',
@@ -2794,17 +2837,21 @@ ol.control.EditBar.prototype._setEditInteraction = function (options) {
     this.addControl ( ledit );
   }
   if (options.interactions.DrawPolygon !== false) {
-    this._interactions.DrawPolygon = new ol.interaction.Draw ({
-      type: 'Polygon',
-      source: this._source,
-      // Count inserted points
-      geometryFunction: function(coordinates, geometry) {
-        this.nbpts = coordinates[0].length;
-        if (geometry) geometry.setCoordinates([coordinates[0].concat([coordinates[0][0]])]);
-        else geometry = new ol.geom.Polygon(coordinates);
-        return geometry;
-      }
-    });
+    if (options.interactions.DrawPolygon instanceof ol.interaction.Draw){
+      this._interactions.DrawPolygon = options.interactions.DrawPolygon
+    } else {
+      this._interactions.DrawPolygon = new ol.interaction.Draw ({
+        type: 'Polygon',
+        source: this._source,
+        // Count inserted points
+        geometryFunction: function(coordinates, geometry) {
+          this.nbpts = coordinates[0].length;
+          if (geometry) geometry.setCoordinates([coordinates[0].concat([coordinates[0][0]])]);
+          else geometry = new ol.geom.Polygon(coordinates);
+          return geometry;
+        }
+      });
+    }
     this._setDrawPolygon(
       'ol-drawpolygon', 
       this._interactions.DrawPolygon, 
@@ -2814,7 +2861,11 @@ ol.control.EditBar.prototype._setEditInteraction = function (options) {
   }
   // Draw hole
   if (options.interactions.DrawHole !== false) {
-    this._interactions.DrawHole = new ol.interaction.DrawHole ();
+    if (options.interactions.DrawHole instanceof ol.interaction.DrawHole){
+      this._interactions.DrawHole = options.interactions.DrawHole;
+    } else {
+      this._interactions.DrawHole = new ol.interaction.DrawHole ();
+    }
     this._setDrawPolygon(
       'ol-drawhole', 
       this._interactions.DrawHole, 
@@ -2824,10 +2875,15 @@ ol.control.EditBar.prototype._setEditInteraction = function (options) {
   }
   // Draw regular
   if (options.interactions.DrawRegular !== false) {
-    var regular = this._interactions.DrawRegular = new ol.interaction.DrawRegular ({
-      source: this._source,
-      sides: 4
-    });
+    if (options.interactions.DrawRegular instanceof ol.interaction.DrawRegular) {
+      this._interactions.DrawRegular = options.interactions.DrawRegular
+    } else {
+      this._interactions.DrawRegular = new ol.interaction.DrawRegular ({
+        source: this._source,
+        sides: 4
+      });
+    }
+    var regular = this._interactions.DrawRegular;
     var div = document.createElement('DIV');
     var down = ol.ext.element.create('DIV', { parent: div });
     ol.ext.element.addListener(down, ['click', 'touchstart'], function() {
@@ -2897,9 +2953,13 @@ ol.control.EditBar.prototype._setDrawPolygon = function (className, interaction,
 ol.control.EditBar.prototype._setModifyInteraction = function (options) {
   // Modify on selected features
   if (options.interactions.ModifySelect !== false && options.interactions.Select !== false) {
-    this._interactions.ModifySelect = new ol.interaction.ModifyFeature({
-      features: this.getInteraction('Select').getFeatures()
-    })
+    if (options.interactions.ModifySelect instanceof ol.interaction.ModifyFeature) {
+      this._interactions.ModifySelect = options.interactions.ModifySelect;
+    } else {
+      this._interactions.ModifySelect = new ol.interaction.ModifyFeature({
+        features: this.getInteraction('Select').getFeatures()
+      });
+    }
     if (this.getMap()) this.getMap().addInteraction(this._interactions.ModifySelect);
     // Activate with select
     this._interactions.ModifySelect.setActive(this._interactions.Select.getActive());
@@ -2908,9 +2968,13 @@ ol.control.EditBar.prototype._setModifyInteraction = function (options) {
     }.bind(this));
   }
   if (options.interactions.Transform !== false) {
-    this._interactions.Transform = new ol.interaction.Transform ({
-      addCondition: ol.events.condition.shiftKeyOnly
-    });
+    if (options.interactions.Transform instanceof ol.interaction.Transform) {
+      this._interactions.Transform = options.interactions.Transform;
+    } else {
+      this._interactions.Transform = new ol.interaction.Transform ({
+        addCondition: ol.events.condition.shiftKeyOnly
+      });
+    }
     var transform = new ol.control.Toggle ({
       html: '<i></i>',
       className: 'ol-transform',
@@ -2920,9 +2984,13 @@ ol.control.EditBar.prototype._setModifyInteraction = function (options) {
     this.addControl (transform);
   }
   if (options.interactions.Split !== false) {
-    this._interactions.Split = new ol.interaction.Split ({
-        sources: this._source
-    });
+    if (options.interactions.Split instanceof ol.interaction.Split) {
+      this._interactions.Split = options.interactions.Split;
+    } else {
+      this._interactions.Split = new ol.interaction.Split ({
+          sources: this._source
+      });
+    }
     var split = new ol.control.Toggle ({
       className: 'ol-split',
       title: this._getTitle(options.interactions.Split) || 'Split',
@@ -2931,9 +2999,13 @@ ol.control.EditBar.prototype._setModifyInteraction = function (options) {
     this.addControl (split);
   }
   if (options.interactions.Offset !== false) {
-    this._interactions.Offset = new ol.interaction.Offset ({
-        source: this._source
-    });
+    if (options.interactions.Offset instanceof ol.interaction.Offset) {
+      this._interactions.Offset = options.interactions.Offset;
+    } else {
+      this._interactions.Offset = new ol.interaction.Offset ({
+          source: this._source
+      });
+    }
     var offset = new ol.control.Toggle ({
       html: '<i></i>',
       className: 'ol-offset',
@@ -11379,6 +11451,7 @@ ol.interaction.DropFile.prototype.ondrop = function(e)
  * @fires setattributestart
  * @fires setattributeend
  * @param {*} options extentol.interaction.Select options
+ *  @param {boolean} options.active activate the interaction on start, default true
  *  @param {boolean} options.cursor use a paint bucket cursor, default true
  * @param {*} properties The properties as key/value
  */
@@ -11386,6 +11459,7 @@ ol.interaction.FillAttribute = function(options, properties) {
   options = options || {};
   if (!options.condition) options.condition = ol.events.condition.click;
   ol.interaction.Select.call(this, options);
+  this.setActive(options.active!==false)
   this._attributes = properties;
   this.on('select', function(e) {
     this.getFeatures().clear();
