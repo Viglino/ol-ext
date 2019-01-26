@@ -198,12 +198,12 @@
       zoom: 11,
       center: [260497, 6249720]
     }),
-    controls: ol.control.defaults().extend([
-      // Add a new Layerswitcher to the map
-      new ol.control.LayerSwitcher()
-    ]),
     layers: [ baseLayers, mapbox, brgm, labels ]
   });
+  // Add control inside the map
+  var ctrl = new ol.control.LayerSwitcher();
+  map.addControl(ctrl);
+
   // Add a layer switcher outside the map
   var switcher = new ol.control.LayerSwitcher({
     target:$(".layerSwitcher").get(0), 

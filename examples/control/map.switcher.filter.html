@@ -1,0 +1,137 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2015 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Layerswitcher</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="An OL3 layerswitcher." />
+  <meta name="keywords" content="ol3, layer, layerswitcher, control,jQuery" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+
+
+  </style>
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: LayerSwitcher control</h1>
+  </a>
+  <div class="info">
+    <p>
+      The filter option can be used to add a filter on layer names.
+      <br/>
+      It adds an input in the header of the layer switcher 
+      and listen to the <i>drawlist</i> event to show/hide the list items.
+    </p>
+    <p>
+      For more info see <a href='map.switcher.html'>ol/control/LayerSwitcher example</a>.
+    </p>
+  </div>
+
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
+  <div class="external layerSwitcher"><b>Layer switcher + filter</b></div>
+
+  <script type="text/javascript">
+
+  // list of layers
+  var layers = [	
+    new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }), title:'watercolor' }),
+    new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'toner-background' }), title:'toner-background' }),
+    new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'terrain-background' }), title:'terrain-background' }),
+    new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'toner-lines' }), title:'toner-lines' }),
+    new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'terrain-lines' }), title:'terrain-lines' }),
+    new ol.layer.Group({ title: 'labels', openInLayerSwitcher: true, layers: [
+      new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'toner-labels' }), title:'toner-labels' }),
+      new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'terrain-labels' }), title:'terrain-labels' }),
+    ]})
+  ];
+  // The Map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({ zoom: 5, center: [166326, 5992663] }),
+    layers: layers
+  });
+
+  // Add a layer switcher outside the map
+  var lswitcher = new ol.control.LayerSwitcher({
+    target:$(".layerSwitcher").get(0), 
+  });
+  map.addControl(lswitcher);
+
+  // The serach input
+  var search = $('<input>').attr('placeholder','filter');
+  function filterLayers(rex, layers) {
+    var found = false;
+    layers.forEach(function(l){
+      // Layer Group
+      if (l.getLayers) {
+        if (filterLayers(rex, l.getLayers().getArray())) {
+          l.set('noLayer', false);
+          found = true;
+        } else {
+          l.set('noLayer', true);
+        }
+      } else {
+        if (rex.test(l.get('title'))) {
+          l.setVisible(true);
+          found = true;
+        } else {
+          l.setVisible(false);
+        }
+      }
+    });
+    return found;
+  }
+  search.on('keyup change', function(){
+    var rex = new RegExp(search.val());
+    filterLayers(rex, layers);
+    // Force layer switcher redraw
+    // layers[0].changed();
+  });
+
+  // Add search input in the switcher header
+  lswitcher.setHeader(search.get(0));
+
+  // When switcher is drawn hide/show the list item according to its visility
+  lswitcher.on('drawlist', function(e) {
+    // Hide Layer Group with no layers visible
+    if (e.layer.getLayers) {
+      if (e.layer.get('noLayer')) {
+        $(e.li).hide();
+      } else {
+        $(e.li).show();
+      }
+    } else {
+      var rex = new RegExp(search.val());
+      if (rex.test(e.layer.get('title'))) {
+        $(e.li).show();
+      } else {
+        $(e.li).hide();
+      }
+    }
+  });
+
+  </script>
+  
+</body>
+</html>
