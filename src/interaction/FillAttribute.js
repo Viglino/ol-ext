@@ -8,6 +8,7 @@ import {click as ol_events_condition_click} from 'ol/events/condition'
  * @fires setattributestart
  * @fires setattributeend
  * @param {*} options extentol.interaction.Select options
+ *  @param {boolean} options.active activate the interaction on start, default true
  *  @param {boolean} options.cursor use a paint bucket cursor, default true
  * @param {*} properties The properties as key/value
  */
@@ -16,6 +17,7 @@ var ol_interaction_FillAttribute = function(options, properties) {
 
   if (!options.condition) options.condition = ol_events_condition_click;
   ol_interaction_Select.call(this, options);
+  this.setActive(options.active!==false)
 
   this._attributes = properties;
   this.on('select', function(e) {
