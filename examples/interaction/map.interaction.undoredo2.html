@@ -1,0 +1,219 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+  
+-->
+  <title>ol-ext: Undo/redo</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="ol.interaction.UndoRedo is an interaction to handle undo on a map." />
+  <meta name="keywords" content="ol, openlayers, undo, interaction" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <style>
+    .options label {
+      width: 8em;
+      display: inline-block;
+      text-align: right;
+      margin-right: .5em;
+    }
+    .options button {
+      float: right;
+      margin: 1em 0;
+
+
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Undo/redo attributes</h1>
+  </a>
+  <div class="info">
+    <p>
+      <i>ol/interaction/UndoRedo</i> is an interaction to handle undo/redo on a map.
+      <br/>
+      This example shows how to use an <i>ol/interaction/FillAttribute</i> to handle undo/redo when editing features attributes.
+    </p>
+    <p>
+      <span class="experimental">Experimental</span>
+      this feature is still in progress and may be buggy.
+    </p>
+
+  </div>
+
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options" >
+    <i>Select an object to modify...</i>
+  </div>
+
+  <script type="text/javascript">
+
+    // GeoJSON layer
+    var vectorSource = new ol.source.Vector({
+      url: '../data/departements.geojson',
+      format: new ol.format.GeoJSON(),
+      attributions: [ "&copy; <a href='https://www.insee.fr'>INSEE</a>", "&copy; <a href='https://www.data.gouv.fr/fr/datasets/geofla-r/'>IGN</a>" ],
+    });
+    var listenerKey = vectorSource.on('change',function(e){
+      if (vectorSource.getState() === 'ready') {
+        ol.Observable.unByKey(listenerKey);
+        // Clear undo/redo on load
+        undoInteraction.clear();
+      }
+    });
+    var vector = new ol.layer.Vector( { 
+      source: vectorSource,
+      style: function (f) {
+        return new ol.style.Style({
+          text: new ol.style.Text({
+            text: f.get('id'),
+            font: 'bold 11px sans-serif',
+            stroke: new ol.style.Stroke({ width: 1.5, color: [255,255,255] }),
+          }),
+          stroke: new ol.style.Stroke({ width: 2.5, color: f.get('color') || [255,128,0] }),
+          fill: new ol.style.Fill({ color: (f.get('color') || [255,128,0]).concat([.3]) })
+        })
+      }
+    });
+
+    // The map
+    var map = new ol.Map ({
+      target: 'map',
+      view: new ol.View ({
+        zoom: 6,
+        center: [180000, 6060000]
+      }),
+      layers: [
+        new ol.layer.Tile({ source: new ol.source.OSM() }),
+        vector
+      ]
+    });
+
+    // Main control bar
+    var mainbar = new ol.control.Bar();
+    map.addControl(mainbar);
+
+    // Editbar
+    var editbar = new ol.control.EditBar ({
+      source: vector.getSource(),
+      edition: false,
+      interactions: { 
+        Select: new ol.interaction.Select({
+          condition: ol.events.condition.click,
+          style: function(f) {
+            return new ol.style.Style({
+              fill: new ol.style.Fill({
+                color: [255,0,0, .5]
+              }),
+              text: new ol.style.Text({
+                text: f.get('id'),
+                font: 'bold 11px sans-serif',
+                stroke: new ol.style.Stroke({ width: 1.5, color: [255,255,255] }),
+              })
+            })
+          }
+        }),
+        Info: false, Split: false, Offset: false 
+      }
+    });
+    mainbar.addControl(editbar);
+
+    // Undo redo interaction
+    var undoInteraction = new ol.interaction.UndoRedo();
+    map.addInteraction(undoInteraction);
+
+    // Add buttons to the bar
+    var bar = new ol.control.Bar({ 
+      group: true,
+      controls: [
+        new ol.control.Button({
+          html: '<i class="fa fa-undo" ></i>',
+          title: 'undo...',
+          handleClick: function() {
+            undoInteraction.undo();
+          }
+        }),
+        new ol.control.Button({
+          html: '<i class="fa fa-repeat" ></i>',
+          title: 'redo...',
+          handleClick: function() {
+            undoInteraction.redo();
+          }
+        })
+      ]
+    });
+    mainbar.addControl(bar);
+
+    // undo/redo attributes
+    var fillAttr = new ol.interaction.FillAttribute({active:false});
+    map.addInteraction(fillAttr);
+
+    // Refresh attribute
+    function refresh(e) {
+      var options = $('.options').html('');
+      var selection = editbar.getInteraction('Select').getFeatures();
+      if (selection.getLength()===1) {
+        var f = selection.item(0);
+        var attributes = f.getProperties();
+        for (var i in attributes) {
+          if (i!=='geometry') {
+            $('<label>').html(i).appendTo(options);
+            $('<input>').data('attr', i)
+              .val(attributes[i])
+              .attr('type', typeof attributes[i])
+              .appendTo(options);
+            $('<br>').appendTo(options);
+          }
+        }
+        $('<button>').text('Modify')
+          .click(function(){
+            var attr = {};
+            var nb = 0;
+            $('input', options).each(function(){
+              var val = $(this).val();
+              if ($(this).attr('type')==='number') val = Number(val);
+              if (f.get($(this).data('attr')) !== val) {
+                attr[$(this).data('attr')] = val;
+                nb++;
+              }
+            });
+            if (nb) fillAttr.fill([f], attr);
+          })
+          .appendTo(options)
+      }
+    }
+
+    // Edit attributes on select
+    editbar.getInteraction('Select').on('select', refresh);
+    // Refresh on undo
+    undoInteraction.on(['undo','redo'], refresh);
+
+  </script>
+
+</body>
+</html>
