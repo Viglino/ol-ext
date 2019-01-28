@@ -4,7 +4,7 @@
 */
 import {inherits as ol_inherits} from 'ol'
 import ol_control_LayerSwitcher from './LayerSwitcher'
-import './layer/GetPreview'
+import '../layer/GetPreview'
 import ol_ext_element from '../util/element';
 
 /**
