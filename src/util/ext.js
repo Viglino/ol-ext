@@ -1,4 +1,4 @@
-/** ol_ext namespace */
-var ol_ext = {};
-
-export default ol_ext
+/** @namespace  ol.ext
+ */
+/*global ol*/
+if (window.ol && !ol.ext)  ol.ext = {};
