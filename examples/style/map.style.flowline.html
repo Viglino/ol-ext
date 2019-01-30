@@ -49,6 +49,23 @@
       <br/>
       This can be used to display flows or <a href="https://en.wikipedia.org/wiki/Sankey_diagram">Sankey diagram</a> on a map.
     </p>
+    <ul>
+      <li>
+        The <i>widh</i> and <i>width2</i> options can be used to pass the initial and the final width of the lines.
+      </li>
+      <li>
+        The <i>widh</i> options can be a function that returns the current width giving a feature and a step (beetween [0,1]).
+      </li>
+      <li>
+        The <i>color</i> and <i>color2</i> options can be used to pass the initial and the final color of the lines.
+      </li>
+      <li>
+        The <i>color</i> options can be a function that returns the current color giving a feature and a step (beetween [0,1]).
+      </li>
+    </ul>
+    <p>
+      Look at <a href='map.style.flowline2.html'>this example</a> to see how to set a width and color function to control the line drawing.
+    </p>
   </div>
 
   <!-- Map div -->
@@ -132,26 +149,12 @@
     })
   });
   // Flow style
+  var done = false;
   var flowStyle = new ol.style.FlowLine({
-    /**/
     color: $('.color').val(),
     color2: $('.color2').val(),
     width: Number($('.width').val()),
     width2: Number($('.width2').val())
-    /*/
-    color: function(f,step){
-      if (step<.5) return 'red';
-      else return 'yellow';
-    },
-    color2: function(f,step){
-      if (step<.5) return 'yellow';
-      else return 'green';
-    },
-    width: function(f) { 
-      return Number($('.width').val()); 
-    },
-    width2: Number($('.width2').val())
-    /**/
   });
   function getStyle(feature, res) {
     return [ defaultStyle, flowStyle ];
@@ -178,7 +181,6 @@
 
   // Activate interaction
   setInteraction = function () {
-    //interactions.select.getFeatures().clear();
     var name = $('[name="op"]:checked').val();
     for (var i in interactions) {
       interactions[i].set("active", (i==name));
