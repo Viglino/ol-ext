@@ -20495,19 +20495,27 @@ ol.style.FillPattern.prototype.getChecksum = function()
  * @extends {ol.style.Style}
  * @constructor
  * @param {Object}  options
- *  @param {number|function} options.width Stroke width or a function that gets a feature and returns the initial stroke width
+ *  @param {number|function} options.width Stroke width or a function that gets a feature and the position (beetween [0,1]) and returns current width
  *  @param {number} options.width2 Final stroke width
- *  @param {ol.colorLike} options.color Stroke color
- *  @param {ol.colorLike} options.color2 FInal sroke color
+ *  @param {ol.colorLike|function} options.color Stroke color or a function that gets a feature and the position (beetween [0,1]) and returns current color
+ *  @param {ol.colorLike} options.color2 Final sroke color
  */
 ol.style.FlowLine = function(options) {
   if (!options) options = {};
   ol.style.Style.call (this, { 
     renderer: this._render.bind(this)
   });
-  this.setWidth(options.width);
+  if (typeof options.width === 'function') {
+    this._widthFn = options.width;
+  } else {
+    this.setWidth(options.width);
+  }
   this.setWidth2(options.width2);
-  this.setColor(options.color);
+  if (typeof options.color === 'function') {
+    this._colorFn = options.color;
+  } else {
+    this.setColor(options.color);
+  }
   this.setColor2(options.color2);
 };
 ol.inherits(ol.style.FlowLine, ol.style.Style);
@@ -20517,23 +20525,21 @@ ol.inherits(ol.style.FlowLine, ol.style.Style);
 ol.style.FlowLine.prototype.setWidth = function(width) {
   this._width = width || 0;
 };
-/** Get the initial width
- * @return {number} 
- */
-ol.style.FlowLine.prototype.getWidth = function() {
-  return this._width;
-};
 /** Set the final width
  * @param {number} width, default 0
  */
 ol.style.FlowLine.prototype.setWidth2 = function(width) {
   this._width2 = width;
 };
-/** Get the final width
+/** Get the current width at step
+ * @param {ol.feature} feature
+ * @param {number} step current drawing step beetween [0,1] 
  * @return {number} 
  */
-ol.style.FlowLine.prototype.getWidth2 = function() {
-  return (typeof(this._width2) === 'number') ? this._width2 : this._width;
+ol.style.FlowLine.prototype.getWidth = function(feature, step) {
+  if (this._widthFn) return this._widthFn(feature, step);
+  var w2 = (typeof(this._width2) === 'number') ? this._width2 : this._width;
+  return this._width + (w2-this._width) * step;
 };
 /** Set the initial color
  * @param {ol.colorLike} color
@@ -20545,12 +20551,6 @@ ol.style.FlowLine.prototype.setColor = function(color) {
     this._color = [0,0,0,1];
   }
 };
-/** Get the initial color
- * @return {Array<number>} 
- */
-ol.style.FlowLine.prototype.getColor = function() {
-  return this._color;
-};
 /** Set the final color
  * @param {ol.colorLike} color
  */
@@ -20561,11 +20561,21 @@ ol.style.FlowLine.prototype.setColor2 = function(color) {
     this._color2 = null;    
   }
 };
-/** Get the final color
+/** Get the current color at step
+ * @param {ol.feature} feature
+ * @param {number} step current drawing step beetween [0,1] 
  * @return {Array<number>} 
  */
-ol.style.FlowLine.prototype.getColor2 = function(color) {
-  return (this._color2.length ? this._color2 : this._color);
+ol.style.FlowLine.prototype.getColor = function(feature, step) {
+  if (this._colorFn) return ol.color.asString(this._colorFn(feature, step));
+  var color = this._color;
+  var color2 = this._color2 || this._color
+  return 'rgba('+
+          + Math.round(color[0] + (color2[0]-color[0]) * step) +','
+          + Math.round(color[1] + (color2[1]-color[1]) * step) +','
+          + Math.round(color[2] + (color2[2]-color[2]) * step) +','
+          + Math.round(color[3] + (color2[3]-color[3]) * step)
+          +')';
 };
 /** Renderer function
  */
@@ -20573,10 +20583,6 @@ ol.style.FlowLine.prototype._render = function(geom, e) {
   if (e.geometry.getType()==='LineString') {
     var i, p, ctx = e.context;
     var geoms = this._splitInto(geom);
-    var width = this.getWidth();
-    var dw = this.getWidth2() - width;
-    var color = this.getColor();
-    var color2 = this.getColor2();
     var k = 0;
     var nb = geoms.length;
     ctx.save();
@@ -20584,13 +20590,8 @@ ol.style.FlowLine.prototype._render = function(geom, e) {
       ctx.lineJoin = 'round';
       geoms.forEach((g) => {
         var step = k++/nb;
-        ctx.lineWidth = width + dw * step;
-        ctx.strokeStyle = 'rgba('+
-          + Math.round(color[0] + (color2[0]-color[0]) * step) +','
-          + Math.round(color[1] + (color2[1]-color[1]) * step) +','
-          + Math.round(color[2] + (color2[2]-color[2]) * step) +','
-          + Math.round(color[3] + (color2[3]-color[3]) * step)
-          +')';
+        ctx.lineWidth = this.getWidth(e.feature, step);
+        ctx.strokeStyle = this.getColor(e.feature, step);
         ctx.beginPath();
         ctx.moveTo(g[0][0],g[0][1]);
         for (i=1; p=g[i]; i++) {
@@ -20612,7 +20613,7 @@ ol.style.FlowLine.prototype._splitInto = function(geom, nb, min) {
   for (i=1; p=geom[i]; i++) {
     l += ol.coordinate.dist2d(geom[i-1], p);
   }
-  var length = Math.min (min||10, l / (nb||20));
+  var length = Math.min (min || 5, l / (nb||20));
   var p0 = geom[0];
   l = 0;
   var g = [p0];
