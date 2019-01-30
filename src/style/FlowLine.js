@@ -31,6 +31,7 @@ var ol_style_FlowLine = function(options) {
     this.setWidth(options.width);
   }
   this.setWidth2(options.width2);
+
   if (typeof options.color === 'function') {
     this._colorFn = options.color;
   } else {
@@ -100,7 +101,7 @@ ol_style_FlowLine.prototype.getColor = function(feature, step) {
           + Math.round(color[0] + (color2[0]-color[0]) * step) +','
           + Math.round(color[1] + (color2[1]-color[1]) * step) +','
           + Math.round(color[2] + (color2[2]-color[2]) * step) +','
-          + Math.round(color[3] + (color2[3]-color[3]) * step)
+          + (color[3] + (color2[3]-color[3]) * step)
           +')';
 };
 
