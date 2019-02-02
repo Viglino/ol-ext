@@ -8,7 +8,7 @@
   <title>ol-ext: Flow style</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   
-  <meta name="description" content="an OL3 stroke style with a set of cartographic patterns to use in your maps." />
+  <meta name="description" content="Draw flow maps or Sankey maps with Openlayers." />
   <meta name="keywords" content="ol, openlayers, vector, style, stroke, width, color, variable, sankey, flow" />
 
   <link rel="stylesheet" href="../style.css" />
@@ -47,7 +47,8 @@
     <p>
       The <i>ol.style.FlowLine</i> is a line style to draw LineString with variable colors and widths.
       <br/>
-      This can be used to display flows or <a href="https://en.wikipedia.org/wiki/Sankey_diagram">Sankey diagram</a> on a map.
+      This can be used to display <a href="https://en.wikipedia.org/wiki/Flow_map">flows</a> maps
+      or <a href="https://en.wikipedia.org/wiki/Sankey_diagram">Sankey diagram</a> on a map.
     </p>
     <ul>
       <li>
@@ -94,6 +95,7 @@
           <option value='#00f'>blue</option>
           <option value='#fff'>white</option>
           <option value='#000'>black</option>
+          <option value='rgba(128,128,128,0)'>transparent</option>
         </select>
 			</li>
 			<li>
@@ -105,6 +107,7 @@
           <option value='#00f'>blue</option>
           <option value='#fff'>white</option>
           <option value='#000'>black</option>
+          <option value='rgba(128,128,128,0)'>transparent</option>
         </select>
       </li>
       <li>
@@ -114,6 +117,11 @@
       <li>
         <label>width2:</label>
         <input class="width2" type="number" value="25" onchange="flowStyle.setWidth2(Number(this.value)); vector.changed();" />
+      </li>
+      <li>
+        LineCap:
+        <label><input type="radio" name="cap" value="round" onchange="flowStyle.setLineCap($(this).val()); vector.changed();">round</label>
+        <label><input type="radio" name="cap" value="miter" onchange="flowStyle.setLineCap($(this).val()); vector.changed();" checked="checked">miter</label>
       </li>
 		</ul>
   </div>

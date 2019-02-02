@@ -108,6 +108,7 @@
   });
   // Flow style
   var flowStyle = new ol.style.FlowLine({
+    lineCap: 'round',
     color: function(f,step){
       if (step<.5) return [255,255*step*2,0];
       else return [255,255-255*(step-.5)*2,0];
@@ -127,10 +128,6 @@
   })
   map.addLayer(vector);
   vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[259274, 6398696], [63595, 5958419], [635956, 5772524]])));
-
-  // Main control bar
-  var mainbar = new ol.control.Bar();
-  map.addControl(mainbar);
 
   // modify and draw interaction
   var interactions = {

@@ -5,7 +5,10 @@
 
 import {inherits as ol_inherits} from 'ol'
 import ol_style_Style from 'ol/style/Style'
+import {asString as ol_color_asString} from 'ol/color'
 import {asArray as ol_color_asArray} from 'ol/color'
+import {ol_coordinate_dist2d} from '../geom/GeomUtils'
+import { get } from 'http';
 
 /** Flow line style
  * Draw LineString with a variable color / width
@@ -25,34 +28,44 @@ var ol_style_FlowLine = function(options) {
     renderer: this._render.bind(this)
   });
 
+  // Width
   if (typeof options.width === 'function') {
     this._widthFn = options.width;
   } else {
     this.setWidth(options.width);
   }
   this.setWidth2(options.width2);
-
+  // Color
   if (typeof options.color === 'function') {
     this._colorFn = options.color;
   } else {
     this.setColor(options.color);
   }
   this.setColor2(options.color2);
+  // LineCap
+  this.setLineCap(options.lineCap);
 };
 ol_inherits(ol_style_FlowLine, ol_style_Style);
 
 /** Set the initial width
- * @param {number} width, default 0
+ * @param {number} width width, default 0
  */
 ol_style_FlowLine.prototype.setWidth = function(width) {
   this._width = width || 0;
 };
 
 /** Set the final width
- * @param {number} width, default 0
+ * @param {number} width width, default 0
  */
 ol_style_FlowLine.prototype.setWidth2 = function(width) {
   this._width2 = width;
+};
+
+/** Set the LineCap
+ * @param {steing} cap LineCap (round or mitter), default mitter
+ */
+ol_style_FlowLine.prototype.setLineCap = function(cap) {
+  this._lineCap = (cap==='round' ? 'round' : 'mitter');
 };
 
 /** Get the current width at step
@@ -91,7 +104,7 @@ ol_style_FlowLine.prototype.setColor2 = function(color) {
 /** Get the current color at step
  * @param {ol.feature} feature
  * @param {number} step current drawing step beetween [0,1] 
- * @return {Array<number>} 
+ * @return {string} 
  */
 ol_style_FlowLine.prototype.getColor = function(feature, step) {
   if (this._colorFn) return ol_color_asString(this._colorFn(feature, step));
@@ -105,18 +118,18 @@ ol_style_FlowLine.prototype.getColor = function(feature, step) {
           +')';
 };
 
-
 /** Renderer function
  */
 ol_style_FlowLine.prototype._render = function(geom, e) {
   if (e.geometry.getType()==='LineString') {
     var i, p, ctx = e.context;
-    var geoms = this._splitInto(geom);
+    var dw = Math.abs(this.getWidth(e.feature, 0) - this.getWidth(e.feature, 1));
+    var geoms = this._splitInto(geom, Math.max(30,dw/2));
     var k = 0;
     var nb = geoms.length;
     ctx.save();
-      ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
+      ctx.lineCap = this._lineCap || 'mitter';
       geoms.forEach((g) => {
         var step = k++/nb;
         ctx.lineWidth = this.getWidth(e.feature, step);
@@ -134,6 +147,8 @@ ol_style_FlowLine.prototype._render = function(geom, e) {
 
 /** Split line geometry into equal length geometries
  * @param {Array<ol.coordinate>} geom
+ * @param {number} nb number of resulting geometries
+ * @param {number} nim minimum length of the resulting geometries
  */
 ol_style_FlowLine.prototype._splitInto = function(geom, nb, min) {
   var i, p;
@@ -141,24 +156,29 @@ ol_style_FlowLine.prototype._splitInto = function(geom, nb, min) {
   var geoms = [];
   var dl, l = 0;
   for (i=1; p=geom[i]; i++) {
-    l += ol.coordinate.dist2d(geom[i-1], p);
+    l += ol_coordinate_dist2d(geom[i-1], p);
   }
-  var length = Math.min (min || 5, l / (nb||20));
+  var length = Math.min (min || 5, l / (nb||30));
   var p0 = geom[0];
   l = 0;
   var g = [p0];
   i = 1;
   p = geom[1];
   while (i < geom.length) {
-    dl = ol.coordinate.dist2d(p,p0);
+    var dx = p[0]-p0[0];
+    var dy = p[1]-p0[1];
+    dl = Math.sqrt(dx*dx + dy*dy);
     if (l+dl > length) {
       var d = (length-l) / dl;
-      p0 = [ 
-        p0[0] + (p[0]-p0[0]) * d,  
-        p0[1] + (p[1]-p0[1]) * d 
-      ];
-      g.push(p0);
+      g.push([ 
+        p0[0] + dx * d,  
+        p0[1] + dy * d 
+      ]);
       geoms.push(g);
+      p0 =[ 
+        p0[0] + dx * d*.9,  
+        p0[1] + dy * d*.9
+      ];
       g = [p0];
       l = 0;
     } else {
