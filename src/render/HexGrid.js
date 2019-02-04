@@ -6,6 +6,10 @@
 import {inherits as ol_inherits} from 'ol'
 import ol_Object from 'ol/Object'
 
+/** @typedef {'pointy' | 'flat'} HexagonLayout
+ *  Layout of a Hexagon. Flat means the bottom part of the hexagon is flat.
+ */
+
 /**
 * Hexagonal grids
 * @classdesc ol_HexGrid is a class to compute hexagonal grids
@@ -13,10 +17,10 @@ import ol_Object from 'ol/Object'
 *
 * @constructor ol_HexGrid
 * @extends {ol_Object}
-* @param {olx.HexGrid=} options
-*	@param {Number} options.size size of the exagon in map units, default 80000
-*	@param {_ol_coordinate_} options.origin orgin of the grid, default [0,0]
-*	@param {pointy|flat} options.layout grid layout, default pointy
+* @param {Object} [options]
+*	@param {number} [options.size] size of the exagon in map units, default 80000
+*	@param {ol.Coordinate} [options.origin] orgin of the grid, default [0,0]
+*	@param {HexagonLayout} [options.layout] grid layout, default pointy
 */
 var ol_HexGrid = function (options)
 {	options = options || {};
@@ -59,7 +63,7 @@ ol_HexGrid.prototype.layout =
 };
 
 /** Set layout
-* @param {pointy | flat | undefined} layout name, default pointy
+* @param {HexagonLayout | undefined} layout name, default pointy
 */
 ol_HexGrid.prototype.setLayout = function (layout)
 {	this.layout_ = this.layout[layout] || this.layout.pointy;
@@ -67,14 +71,14 @@ ol_HexGrid.prototype.setLayout = function (layout)
 }
 
 /** Get layout
-* @return {pointy | flat} layout name
+* @return {HexagonLayout} layout name
 */
 ol_HexGrid.prototype.getLayout = function ()
 {	return (this.layout_[9]!=0 ? 'pointy' : 'flat');
 }
 
 /** Set hexagon origin
-* @param {ol.coordinate} coord origin
+* @param {ol.Coordinate} coord origin
 */
 ol_HexGrid.prototype.setOrigin = function (coord)
 {	this.origin_ = coord;
@@ -82,14 +86,14 @@ ol_HexGrid.prototype.setOrigin = function (coord)
 }
 
 /** Get hexagon origin
-* @return {ol.coordinate} coord origin
+* @return {ol.Coordinate} coord origin
 */
 ol_HexGrid.prototype.getOrigin = function ()
 {	return this.origin_;
 }
 
 /** Set hexagon size
-* @param {Number} hexagon size
+* @param {number} hexagon size
 */
 ol_HexGrid.prototype.setSize = function (s) {
 	this.size_ = s || 80000;
@@ -97,31 +101,31 @@ ol_HexGrid.prototype.setSize = function (s) {
 }
 
 /** Get hexagon size
-* @return {Number} hexagon size
+* @return {number} hexagon size
 */
 ol_HexGrid.prototype.getSize = function () {
 	return this.size_;
 }
 
 /** Convert cube to axial coords
-* @param {ol.coordinate} c cube coordinate
-* @return {ol.coordinate} axial coordinate
+* @param {ol.Coordinate} c cube coordinate
+* @return {ol.Coordinate} axial coordinate
 */
 ol_HexGrid.prototype.cube2hex = function (c)
 {	return [c[0], c[2]];
 };
 
 /** Convert axial to cube coords
-* @param {ol.coordinate} h axial coordinate
-* @return {ol.coordinate} cube coordinate
+* @param {ol.Coordinate} h axial coordinate
+* @return {ol.Coordinate} cube coordinate
 */
 ol_HexGrid.prototype.hex2cube = function(h)
 {	return [h[0], -h[0]-h[1], h[1]];
 };
 
 /** Convert offset to axial coords
-* @param {ol.coordinate} h axial coordinate
-* @return {ol.coordinate} offset coordinate
+* @param {ol.Coordinate} h axial coordinate
+* @return {ol.Coordinate} offset coordinate
 */
 ol_HexGrid.prototype.hex2offset = function (h)
 {	if (this.layout_[9]) return [ h[0] + (h[1] - (h[1]&1)) / 2, h[1] ];
@@ -129,8 +133,8 @@ ol_HexGrid.prototype.hex2offset = function (h)
 }
 
 /** Convert axial to offset coords
-* @param {ol.coordinate} o offset coordinate
-* @return {ol.coordinate} axial coordinate
+* @param {ol.Coordinate} o offset coordinate
+* @return {ol.Coordinate} axial coordinate
 */
 ol_HexGrid.prototype.offset2hex = function(o)
 {	if (this.layout_[9]) return [ o[0] - (o[1] - (o[1]&1)) / 2,  o[1] ];
@@ -138,24 +142,24 @@ ol_HexGrid.prototype.offset2hex = function(o)
 }
 
 /** Convert offset to cube coords
-* @param {ol.coordinate} c cube coordinate
-* @return {ol.coordinate} offset coordinate
+* @param {ol.Coordinate} c cube coordinate
+* @return {ol.Coordinate} offset coordinate
 * /
 ol_HexGrid.prototype.cube2offset = function(c)
 {	return hex2offset(cube2hex(c));
 };
 
 /** Convert cube to offset coords
-* @param {ol.coordinate} o offset coordinate
-* @return {ol.coordinate} cube coordinate
+* @param {ol.Coordinate} o offset coordinate
+* @return {ol.Coordinate} cube coordinate
 * /
 ol_HexGrid.prototype.offset2cube = function (o)
 {	return hex2cube(offset2Hex(o));
 };
 
 /** Round cube coords
-* @param {ol.coordinate} h cube coordinate
-* @return {ol.coordinate} rounded cube coordinate
+* @param {ol.Coordinate} h cube coordinate
+* @return {ol.Coordinate} rounded cube coordinate
 */
 ol_HexGrid.prototype.cube_round = function(h)
 {	var rx = Math.round(h[0])
@@ -174,8 +178,8 @@ ol_HexGrid.prototype.cube_round = function(h)
 };
 
 /** Round axial coords
-* @param {ol.coordinate} h axial coordinate
-* @return {ol.coordinate} rounded axial coordinate
+* @param {ol.Coordinate} h axial coordinate
+* @return {ol.Coordinate} rounded axial coordinate
 */
 ol_HexGrid.prototype.hex_round = function(h)
 {	return this.cube2hex( this.cube_round( this.hex2cube(h )) );
@@ -188,16 +192,16 @@ ol_HexGrid.prototype.hex_corner = function(center, size, i)
 };
 
 /** Get hexagon coordinates at a coordinate
-* @param {ol.coord} coord
-* @return {Arrary<ol.coord>}
+* @param {ol.Coordinate} coord
+* @return {Arrary<ol.Coordinate>}
 */
 ol_HexGrid.prototype.getHexagonAtCoord = function (coord)
 {	return (this.getHexagon(this.coord2hex(coord)));
 };
 
 /** Get hexagon coordinates at hex
-* @param {ol.coord} hex
-* @return {Arrary<ol.coord>}
+* @param {ol.Coordinate} hex
+* @return {Arrary<ol.Coordinate>}
 */
 ol_HexGrid.prototype.getHexagon = function (hex)
 {	var p = [];
@@ -209,8 +213,8 @@ ol_HexGrid.prototype.getHexagon = function (hex)
 };
 
 /** Convert hex to coord
-* @param {ol.hex} hex 
-* @return {ol.coord} 
+* @param {ol.hex} hex
+* @return {ol.Coordinate}
 */
 ol_HexGrid.prototype.hex2coord = function (hex)
 {	return [
@@ -220,8 +224,8 @@ ol_HexGrid.prototype.hex2coord = function (hex)
 };
 
 /** Convert coord to hex
-* @param {ol.coord} coord 
-* @return {ol.hex} 
+* @param {ol.Coordinate} coord
+* @return {ol.hex}
 */
 ol_HexGrid.prototype.coord2hex = function (coord)
 {	var c = [ (coord[0]-this.origin_[0]) / this.size_, (coord[1]-this.origin_[1]) / this.size_ ];
@@ -231,9 +235,9 @@ ol_HexGrid.prototype.coord2hex = function (coord)
 };
 
 /** Calculate distance between to hexagon (number of cube)
-* @param {ol.coordinate} a first cube coord
-* @param {ol.coordinate} a second cube coord
-* @return {Number} distance
+* @param {ol.Coordinate} a first cube coord
+* @param {ol.Coordinate} a second cube coord
+* @return {number} distance
 */
 ol_HexGrid.prototype.cube_distance = function (a, b)
 {	//return ( (Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2])) / 2 );
@@ -256,10 +260,10 @@ function cube_lerp(a, b, t)
 	];
 }
 
-/** Calculate line between to hexagon 
-* @param {ol.coordinate} a first cube coord
-* @param {ol.coordinate} b second cube coord
-* @return {Array<ol.coordinate>} array of cube coordinates
+/** Calculate line between to hexagon
+* @param {ol.Coordinate} a first cube coord
+* @param {ol.Coordinate} b second cube coord
+* @return {Array<ol.Coordinate>} array of cube coordinates
 */
 ol_HexGrid.prototype.cube_line = function (a, b)
 {	var d = this.cube_distance(a, b);
@@ -279,9 +283,9 @@ ol_HexGrid.prototype.neighbors =
 };
 
 /** Get the neighbors for an hexagon
-* @param {ol.coordinate} h axial coord
-* @param {Number} direction 
-* @return { ol.coordinate | Array<ol.coordinates> } neighbor || array of neighbors
+* @param {ol.Coordinate} h axial coord
+* @param {number} direction
+* @return { ol.Coordinate | Array<ol.Coordinate> } neighbor || array of neighbors
 */
 ol_HexGrid.prototype.hex_neighbors = function (h, d)
 {	if (d!==undefined)
@@ -297,9 +301,9 @@ ol_HexGrid.prototype.hex_neighbors = function (h, d)
 };
 
 /** Get the neighbors for an hexagon
-* @param {ol.coordinate} c cube coord
-* @param {Number} direction 
-* @return { ol.coordinate | Array<ol.coordinates> } neighbor || array of neighbors
+* @param {ol.Coordinate} c cube coord
+* @param {number} direction
+* @return { ol.Coordinate | Array<ol.Coordinate> } neighbor || array of neighbors
 */
 ol_HexGrid.prototype.cube_neighbors = function (c, d)
 {	if (d!==undefined)
