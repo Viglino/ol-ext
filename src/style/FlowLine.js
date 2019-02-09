@@ -8,14 +8,14 @@ import ol_style_Style from 'ol/style/Style'
 import {asString as ol_color_asString} from 'ol/color'
 import {asArray as ol_color_asArray} from 'ol/color'
 import {ol_coordinate_dist2d} from '../geom/GeomUtils'
-import { get } from 'http';
 
 /** Flow line style
  * Draw LineString with a variable color / width
  *
  * @extends {ol_style_Style}
  * @constructor
- * @param {Object}  options
+ * @param {Object} options
+ *  @param {boolean} options.visible draw only the visible part of the line, default true
  *  @param {number|function} options.width Stroke width or a function that gets a feature and the position (beetween [0,1]) and returns current width
  *  @param {number} options.width2 Final stroke width
  *  @param {ol.colorLike|function} options.color Stroke color or a function that gets a feature and the position (beetween [0,1]) and returns current color
@@ -25,8 +25,12 @@ var ol_style_FlowLine = function(options) {
   if (!options) options = {};
   
   ol_style_Style.call (this, { 
-    renderer: this._render.bind(this)
+    renderer: this._render.bind(this),
+    geometry: options.geometry
   });
+
+  // Draw only visible
+  this._visible = (options.visible !== false);
 
   // Width
   if (typeof options.width === 'function') {
@@ -119,20 +123,34 @@ ol_style_FlowLine.prototype.getColor = function(feature, step) {
 };
 
 /** Renderer function
+ * @param {Array<ol.coordinate>} geom The pixel coordinates of the geometry in GeoJSON notation
+ * @param {ol.render.State} e The olx.render.State of the layer renderer
  */
 ol_style_FlowLine.prototype._render = function(geom, e) {
   if (e.geometry.getType()==='LineString') {
     var i, p, ctx = e.context;
-    var dw = Math.abs(this.getWidth(e.feature, 0) - this.getWidth(e.feature, 1));
-    var geoms = this._splitInto(geom, Math.max(30,dw/2));
+    // Get geometry used at drawing
+    if (!this._visible) {
+      var a = e.pixelRatio / e.resolution;
+      var g = e.geometry.getCoordinates();
+      var dx = geom[0][0] - g[0][0] * a;
+      var dy = geom[0][1] + g[0][1] * a;
+      geom = [];
+      for (i=0; p=g[i]; i++) {
+        geom[i] = [ dx + p[0] * a, dy - p[1] * a];
+      }
+    }
+    // Split into
+    var geoms = this._splitInto(geom, 255, 2);
     var k = 0;
     var nb = geoms.length;
+    // Draw
     ctx.save();
       ctx.lineJoin = 'round';
       ctx.lineCap = this._lineCap || 'mitter';
       geoms.forEach((g) => {
         var step = k++/nb;
-        ctx.lineWidth = this.getWidth(e.feature, step);
+        ctx.lineWidth = this.getWidth(e.feature, step) * e.pixelRatio;
         ctx.strokeStyle = this.getColor(e.feature, step);
         ctx.beginPath();
         ctx.moveTo(g[0][0],g[0][1]);
@@ -147,8 +165,8 @@ ol_style_FlowLine.prototype._render = function(geom, e) {
 
 /** Split line geometry into equal length geometries
  * @param {Array<ol.coordinate>} geom
- * @param {number} nb number of resulting geometries
- * @param {number} nim minimum length of the resulting geometries
+ * @param {number} nb number of resulting geometries, default 255
+ * @param {number} nim minimum length of the resulting geometries, default 1
  */
 ol_style_FlowLine.prototype._splitInto = function(geom, nb, min) {
   var i, p;
@@ -158,7 +176,7 @@ ol_style_FlowLine.prototype._splitInto = function(geom, nb, min) {
   for (i=1; p=geom[i]; i++) {
     l += ol_coordinate_dist2d(geom[i-1], p);
   }
-  var length = Math.min (min || 5, l / (nb||30));
+  var length = Math.max (min||2, l/(nb||255));
   var p0 = geom[0];
   l = 0;
   var g = [p0];
