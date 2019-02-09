@@ -118,6 +118,7 @@ ol_control_RoutingGeoportail.prototype.addSearch = function (element, options) {
     });
 
   var search = new ol_control_SearchGeoportail({
+    className: 'IGNF ol-collapsed',
     apiKey: options.apiKey,
     target: div
   });
@@ -214,7 +215,7 @@ ol_control_RoutingGeoportail.prototype.listRouting = function (routing) {
 /** Handle routing response
  * @private
  */
-ol_control_RoutingGeoportail.prototype.handleResponse = function (data) {
+ol_control_RoutingGeoportail.prototype.handleResponse = function (data, start, end) {
   var routing = { type:'routing' };
 /*
   var format = new ol_format_WKT();
@@ -226,12 +227,14 @@ ol_control_RoutingGeoportail.prototype.handleResponse = function (data) {
   routing.features = [];
   var distance = 0;
   var duration = 0;
+  var f, route = [];
   for (var i=0, l; l=data.legs[i]; i++) {
     for (var j=0, s; s=l.steps[j]; j++) {
       var geom = [];
       for (var k=0, p; p=s.points[k]; k++){
         p = p.split(',');
         geom.push([parseFloat(p[0]),parseFloat(p[1])]);
+        if (i===0 || k!==0) route.push(geom[k]);
       }
       geom = new ol_geom_LineString(geom);
       var options = {
@@ -241,19 +244,29 @@ ol_control_RoutingGeoportail.prototype.handleResponse = function (data) {
         distance: parseFloat(s.distanceMeters),
         duration: parseFloat(s.durationSeconds)
       }
-      console.log(duration, options.duration, s)
+      //console.log(duration, options.duration, s)
       distance += options.distance;
       duration += options.duration;
       options.distanceT = distance;
       options.durationT = duration;
-      var f = new ol_Feature(options);
+      f = new ol_Feature(options);
       routing.features.push(f);
     }
   }
   routing.distance = parseFloat(data.distanceMeters);
   routing.duration = parseFloat(data.durationSeconds);
 
-  console.log(data, routing);
+  // Full route
+  route = new ol_geom_LineString(route);
+  routing.feature = new ol_Feature ({
+    geometry: route.transform('EPSG:4326',this.getMap().getView().getProjection()),
+    start: this._search[0].getTitle(start),
+    end: this._search[0].getTitle(end), 
+    distance: routing.distance,
+    duration: routing.duration
+  });
+
+  // console.log(data, routing);
   this.dispatchEvent(routing);
   this.path = routing;
   return routing;
@@ -282,11 +295,10 @@ ol_control_RoutingGeoportail.prototype.calculate = function () {
   }
 
   var self = this;
-
   this.ajax(url + parameters, 
     function (resp) {
       if (resp.status >= 200 && resp.status < 400) {
-        self.listRouting(self.handleResponse (JSON.parse(resp.response)));
+        self.listRouting(self.handleResponse (JSON.parse(resp.response), start, end));
       } else {
         console.log(url + parameters, arguments);
       }

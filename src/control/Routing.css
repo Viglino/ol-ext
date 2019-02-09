@@ -72,7 +72,7 @@
   display: none;
 }
 .ol-routing .ol-search ul.history {
-  display: none;
+  /* display: none; */
 }
 .ol-routing .content > div > * {
   display: inline-block;
