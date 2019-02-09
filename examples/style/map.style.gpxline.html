@@ -66,7 +66,12 @@
 <script type="text/javascript">
   
 	// Layers
-	var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
+	var layer = new ol.layer.Tile({
+    source: new ol.source.XYZ({
+      url: 'https://wxs.ign.fr/pratique/geoportail/wmts?layer=ORTHOIMAGERY.ORTHOPHOTOS&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fjpeg&TileMatrix={z}&TileCol={x}}&TileRow={y}',
+      attributions: '<a href="https://www.geoportail.gouv.fr/">&copy; IGN-Geoportail</a>'
+		})
+  });
 
 	// The map
 	var map = new ol.Map({
@@ -94,6 +99,29 @@
     if (dh<128) return [2*dh,160-dh,0];
     else return [ 255, (dh-128)*4, (dh-128)*1.5 ];
   }
+  // The style function
+  function styleFn(f) {
+    return new ol.style.FlowLine({
+      visible: false,
+      lineCap: 'round',
+      color: function(f, step){
+        var seg = [];
+        var line = f.getGeometry().getLineString(0);
+        line.getCoordinateAtSeg(step*line.getLength(), seg);
+        var h = (seg[0][2]+seg[0][2])/2;
+        var dh = 255*(h-min)/(max-min);
+        return getColor(dh);
+      },
+      width: 5,
+      geometry: function (f) {
+        if (f.getGeometry().getType() === 'MultiLineString') {
+          return f.getGeometry().getLineString(0);
+        } else {
+          return f.getGeometry();
+        }
+      }
+    })
+  }
   // GPX vetor layer
 	var source = new ol.source.Vector({
     //url: '../data/192553.gpx',
@@ -103,28 +131,7 @@
 	var vector = new ol.layer.Vector({
     renderMode: 'image',
     source: source,
-    style: function (f) {
-      return new ol.style.FlowLine({
-        visible: false,
-        lineCap: 'round',
-        color: function(f, step){
-          var seg = [];
-          var line = f.getGeometry().getLineString(0);
-          line.getCoordinateAtSeg(step*line.getLength(), seg);
-          var h = (seg[0][2]+seg[0][2])/2;
-          var dh = 255*(h-min)/(max-min);
-          return getColor(dh);
-        },
-        width: 3,
-        geometry: function (f) {
-          if (f.getGeometry().getType() === 'MultiLineString') {
-            return f.getGeometry().getLineString(0);
-          } else {
-            return f.getGeometry();
-          }
-        }
-      })
-    }
+    style: styleFn
 	});
   map.addLayer(vector);
   
