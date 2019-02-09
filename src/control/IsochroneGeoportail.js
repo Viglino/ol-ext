@@ -54,6 +54,8 @@ var ol_control_IsochroneGeoportail = function(options) {
     target: options.target
   });
   
+  this.set('iter', 1);
+
   var content = ol_ext_element.create('DIV', { className: 'content', parent: element } )
   // Search control
   this._addSearchCtrl(content, options);
@@ -108,6 +110,13 @@ var ol_control_IsochroneGeoportail = function(options) {
       self.set('distance', Number(this.value));
     });
   ol_ext_element.create('TEXT', { parent: div, html: 'km' });
+
+  div = ol_ext_element.create('DIV', { className: 'ol-iter', parent: content })
+  ol_ext_element.create('DIV', { html:'Iteration:', parent: div });
+  ol_ext_element.create('INPUT', { type: 'number', parent: div, value: 1, min: 1 })
+    .addEventListener('change', function(){
+      self.set('iter', Number(this.value));
+    });
 
   // OK button
   ol_ext_element.create('I', { className:'ol-ok', html:'ok', parent: content })
@@ -168,6 +177,7 @@ ol_control_IsochroneGeoportail.prototype._addSearchCtrl = function (element, opt
 	var div = ol_ext_element.create("DIV", { parent: element });
 
   var search = this._search = new ol_control_SearchGeoportail({
+    className: 'IGNF ol-collapsed',
 		apiKey: options.apiKey,
 		target: div
 	});
@@ -220,7 +230,7 @@ ol_control_IsochroneGeoportail.prototype.setDirection = function (direction) {
  * @param {number|string} option A number as time (in second) or distance (in meter), depend on method propertie
  * or a string with a unit (s, mn, h for time or km, m)
  */
-ol_control_IsochroneGeoportail.prototype.search = function(coord, option) {
+ol_control_IsochroneGeoportail.prototype.search = function(coord, option, iter) {
   var proj = this.getMap() ? this.getMap().getView().getProjection() : 'EPSG:3857';
   var method = /distance/.test(this.get('method')) ? 'distance' : 'time';
   if (typeof(option)==='string') {
@@ -248,6 +258,7 @@ ol_control_IsochroneGeoportail.prototype.search = function(coord, option) {
       }
     }
   }
+  var dt = Math.round(option * (this.get('iter')-(iter||0)) / this.get('iter'));
   if (typeof option === 'number') {
     // Send data
     var data = {
@@ -256,13 +267,17 @@ ol_control_IsochroneGeoportail.prototype.search = function(coord, option) {
       graphName: (this.get('mode')==='pedestrian' ?  'Pieton' : 'Voiture'),
       exclusions: this.get('exclusions') || undefined,
       method: method,
-      time: method==='time' ? option : undefined,
-      distance: method==='distance' ? option : undefined,
+      time: method==='time' ? dt : undefined,
+      distance: method==='distance' ? dt : undefined,
       reverse: (this.get('direction') === 'reverse'),
       smoothing: this.get('smoothing') || true,
       holes: this.get('holes') || false
     };
-    this._ajax.send(this.get('url'), data);
+    this._ajax.send(this.get('url'), data, { 
+      coord: coord, 
+      option: option,
+      iteration: (iter||0)+1 
+    });
   }
 };
 
@@ -280,7 +295,11 @@ ol_control_IsochroneGeoportail.prototype._success = function(e) {
   });
   delete evt.wktGeometry;
   evt.type = 'isochrone';
+  evt.iteration = e.options.iteration-1;
   this.dispatchEvent (evt);
+  if (e.options.iteration < this.get('iter')) {
+    this.search(e.options.coord, e.options.option, e.options.iteration);
+  }
 };
 
 /** Trigger error
