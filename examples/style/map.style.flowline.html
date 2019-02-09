@@ -95,7 +95,7 @@
           <option value='#00f'>blue</option>
           <option value='#fff'>white</option>
           <option value='#000'>black</option>
-          <option value='rgba(128,128,128,0)'>transparent</option>
+          <option value='rgba(255,255,255,0)'>transparent</option>
         </select>
 			</li>
 			<li>
@@ -107,7 +107,7 @@
           <option value='#00f'>blue</option>
           <option value='#fff'>white</option>
           <option value='#000'>black</option>
-          <option value='rgba(128,128,128,0)'>transparent</option>
+          <option value='rgba(255,255,255,0)'>transparent</option>
         </select>
       </li>
       <li>
@@ -170,6 +170,7 @@
 
   // Nouvelle source de donnee
   var vector = new ol.layer.Vector({
+    renderMode: 'image',
     source: new ol.source.Vector({ features: new ol.Collection() }),
     style: getStyle
   })

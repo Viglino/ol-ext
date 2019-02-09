@@ -123,6 +123,7 @@
 
   // Nouvelle source de donnee
   var vector = new ol.layer.Vector({
+    renderMode: 'image',
     source: new ol.source.Vector({ features: new ol.Collection() }),
     style: getStyle
   })

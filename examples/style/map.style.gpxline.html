@@ -1,0 +1,247 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2015-2019 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: GPX flow style</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <meta name="description" content="Draw flow maps or Sankey maps with Openlayers." />
+  <meta name="keywords" content="ol, openlayers, vector, style, stroke, width, color, variable, gpx, flow" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <style>
+    .ol-legend {
+      background: #fff;
+      padding: 2px 1em;
+    }
+    .ol-legend ul {
+      margin-bottom: 12px;
+    }
+    .ol-legend ul li {
+      overflow: visible;
+    }
+  </style>
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: GPX flow line style</h1>
+  </a>
+  <div class="info">
+    <p>
+      This example show how to use a <i>ol.style.FlowLine</i> to display elevation color along a GPX track.
+      <br/>
+      You have to set the <i>visible</i> option to false to calculate the values on the whole line and not only on the visible part of it.
+    </p>
+    <p>
+      Look at <a href='map.style.flowline.html'>this example</a> for more information.
+    </p>
+  </div>
+
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options" style="min-width:300px;">
+  </div>
+  
+<script type="text/javascript">
+  
+	// Layers
+	var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
+
+	// The map
+	var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 13,
+      //center: [740741, 5776642]
+      center: [646752, 5407059]
+    }),
+    layers: [layer]
+  });
+
+  // Calculate the min/max elevation on the line
+  var min, max;
+  function getMinMax (feature) {
+    feature.getGeometry().getCoordinates()[0].forEach( function(p){
+      max = Math.max(max||-Infinity, p[2]);
+      min = Math.min(min||Infinity, p[2]);
+    });
+    max = Math.round(max/10+.4)*10;
+    min = Math.round(min/10-.4)*10;
+  }
+  // Get the line color at dh
+  function getColor(dh) {
+    if (dh<128) return [2*dh,160-dh,0];
+    else return [ 255, (dh-128)*4, (dh-128)*1.5 ];
+  }
+  // GPX vetor layer
+	var source = new ol.source.Vector({
+    //url: '../data/192553.gpx',
+    url: '../data/2009-09-04_rando.gpx',
+    format: new ol.format.GPX()
+  });
+	var vector = new ol.layer.Vector({
+    renderMode: 'image',
+    source: source,
+    style: function (f) {
+      return new ol.style.FlowLine({
+        visible: false,
+        lineCap: 'round',
+        color: function(f, step){
+          var seg = [];
+          var line = f.getGeometry().getLineString(0);
+          line.getCoordinateAtSeg(step*line.getLength(), seg);
+          var h = (seg[0][2]+seg[0][2])/2;
+          var dh = 255*(h-min)/(max-min);
+          return getColor(dh);
+        },
+        width: 3,
+        geometry: function (f) {
+          if (f.getGeometry().getType() === 'MultiLineString') {
+            return f.getGeometry().getLineString(0);
+          } else {
+            return f.getGeometry();
+          }
+        }
+      })
+    }
+	});
+  map.addLayer(vector);
+  
+  // Profil control
+  var profil = new ol.control.Profil({
+    target: $('.options').get(0)
+  });
+  map.addControl(profil);
+  
+	// Show feature profile when loaded
+  var pt = new ol.Feature(new ol.geom.Point([0,0]));
+  var style = new ol.style.Style({
+    zIndex:1,
+    image: new ol.style.RegularShape({
+      radius: 10,
+      radius2: 5,
+      points: 5,
+      fill: new ol.style.Fill({ color: 'blue' })
+    })
+  });
+
+	source.once('change',function(e) {
+    if (source.getState() === 'ready'){
+      getMinMax (source.getFeatures()[0]);
+      createLegend ();
+      profil.setGeometry(source.getFeatures()[0]);
+			source.addFeature(pt);
+		}
+  });
+  // Show a popup on over
+	profil.on(["over","out"], function(e){
+    if (!pt) return;
+		if (e.type=="over"){
+      // Show point at coord
+			pt.setGeometry(new ol.geom.Point(e.coord));
+			pt.setStyle(style);
+		} else {
+      // hide point
+			pt.setStyle([]);
+		}
+  });
+
+  /** Get the coordinate at a distance from the start
+   * @param {number} r distance from the start
+   * @param {Array<Array<coordinate>>} seg if provided fill the segment concerned
+   * @return {ol.coordinate}
+   */
+  ol.geom.LineString.prototype.getCoordinateAtSeg = function (r, seg) {
+    var c, d;
+    if (r < 1e-10) {
+      if (seg)  {
+        c = this.getCoordinates();
+        seg[0] = c[0];
+        seg[1] = c[1];
+      }
+      return this.getFirstCoordinate();
+    }
+    if (this.getLength()-r < 1e-10) {
+      if (seg) {
+        c = this.getCoordinates();
+        seg[0] = c[c.length-2];
+        seg[1] = c[c.length-1];
+      }
+      return this.getLastCoordinate();
+    }
+    if (!seg) seg=[];
+    var s = 0;
+    var coord = this.getCoordinates();
+    for (var i=1; i<coord.length; i++) {
+      d = ol.coordinate.dist2d(coord[i-1], coord[i]);
+      if (s+d >= r) {
+        var p0 = seg[0] = coord[i-1];
+        var p1 = seg[1] = coord[i];
+        d = ol.coordinate.dist2d(p0,p1)
+        return [
+          p0[0] + (r-s) * (p1[0]-p0[0]) /d,
+          p0[1] + (r-s) * (p1[1]-p0[1]) /d
+        ];
+      }
+      s += d;
+    }
+  };
+
+  // Define a new legend
+  function createLegend () {
+    var legend = new ol.control.Legend({ 
+      title: 'Altitude',
+      style: function(f) {
+        var dh = f.get('dh');
+        return [ new ol.style.Style({
+          fill: new ol.style.Fill({
+            color: getColor(dh)
+          })
+        })];
+      },
+      collapsible: false,
+      margin: 0,
+      size: [10, 5]
+    });
+    map.addControl(legend);
+
+    legend.addRow();
+    legend.addRow();
+    legend.addRow();
+    legend.addRow();
+    legend.addRow({ title:max+'m' });
+    legend.addRow({ title:'', properties: { dh: 255 }, typeGeom: 'Polygon'});
+    legend.addRow({ title:'', properties: { dh: 224 }, typeGeom: 'Polygon'});
+    legend.addRow({ title:'', properties: { dh: 192 }, typeGeom: 'Polygon'});
+    legend.addRow({ title:'', properties: { dh: 160 }, typeGeom: 'Polygon'});
+    legend.addRow({ title:'', properties: { dh: 128 }, typeGeom: 'Polygon'});
+    legend.addRow({ title:min+'m', properties: { dh: 96 }, typeGeom: 'Polygon'});
+    legend.addRow({ title:'', properties: { dh: 64 }, typeGeom: 'Polygon'});
+    legend.addRow({ title:'', properties: { dh: 32 }, typeGeom: 'Polygon'});
+    legend.addRow({ title:'', properties: { dh: 0 }, typeGeom: 'Polygon'});
+  }
+</script>
+
+</body>
+</html>
