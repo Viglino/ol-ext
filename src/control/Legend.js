@@ -224,7 +224,7 @@ ol_control_Legend.prototype.getStyleImage = function(options, theCanvas, row) {
   if (!feature && options.properties && typeGeom) {
     if (/Point/.test(typeGeom)) feature = new ol_Feature(new ol_geom_Point([0,0]));
     else if (/LineString/.test(typeGeom)) feature = new ol_Feature(new ol_geom_LineString([0,0]));
-    else feature = new ol_Feature(new ol_geom_Polygon([0,0]));
+    else feature = new ol_Feature(new ol_geom_Polygon([[0,0]]));
     feature.setProperties(options.properties);
   }
   if (feature) {
