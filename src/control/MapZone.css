@@ -1,0 +1,78 @@
+.ol-control.ol-mapzone {
+  position: absolute;
+  right: 0.5em;
+  text-align: left;
+  top: .5em;
+  max-height: calc(100% - 6em);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.ol-control.ol-mapzone.ol-collapsed {
+  top: 3em;
+}
+
+.ol-control.ol-mapzone button {
+  position: relative;
+  float: right;
+  margin-top: 2.2em;
+}
+.ol-touch .ol-control.ol-mapzone button {
+  margin-top: 1.67em;
+}
+.ol-control.ol-mapzone.ol-collapsed button {
+  margin-top: 0;
+}
+
+.ol-control.ol-mapzone button i {
+  border: .1em solid currentColor;
+  border-radius: 50%;
+  width: .9em;
+  height: .9em; 
+  overflow: hidden;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.ol-control.ol-mapzone button i:before {
+  content: "";
+  background-color: currentColor;
+  width: 0.4em;
+  height: .4em;
+  position: absolute;
+  left: .5em;
+  top: 0.3em;
+  border-radius: 50%;
+  box-shadow: .05em .3em 0 -.051em currentColor,
+  	-.05em -.35em 0 -.1em currentColor,
+  	-.5em -.35em 0 0em currentColor,
+  	-.65em .1em 0 -.03em currentColor,
+  	-.65em -.05em 0 -.05em currentColor
+}
+
+.ol-mapzone > div {
+  position: relative;
+  display: inline-block;
+  width: 5em;
+  height: 5em;
+  margin: 0 .2em 0 0;
+}
+.ol-control.ol-mapzone.ol-collapsed > div {
+  display: none;
+}
+.ol-mapzone > div p {
+  margin: 0;
+  position: absolute;
+  bottom: 0;
+  /* background: rgba(255,255,255,.5); */
+  color: #fff;
+  font-weight: bold;
+  text-align: center;
+  width: 160%;
+  overflow: hidden;
+  font-family: 'Lucida Grande',Verdana,Geneva,Lucida,Arial,Helvetica,sans-serif;
+  transform: scaleX(.625);
+  transform-origin: 0 0;
+  cursor: default;
+}
