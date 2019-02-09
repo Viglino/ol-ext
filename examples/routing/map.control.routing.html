@@ -28,6 +28,9 @@
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
+  <!-- filesaver-js -->
+	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+
   <script type="text/javascript" src="https://cdn.rawgit.com/Viglino/Geoportail-KISS/gh-pages/apikey.js"></script>
   
   <link rel="stylesheet" href="../style.css"/>
@@ -76,10 +79,21 @@
   </div>
 
   <!-- DIV pour la carte -->
-  <div id="map" style="width:600px; height:400px;"></div>
+  <div id="map" style="width:100%; height:400px;"></div>
 
   <div class="options">
     <i>Use the search control to start a new search.</i>
+    <ul>
+      <li>
+        <label><input type="checkbox" class="merge">merge</label>
+      </li>
+      <li>
+        <label><input type="checkbox" class="remove">remove previous search</label>
+      </li>
+      <li>
+        <button onclick="save()">export</button>
+      </li>
+    </ul>
   </div>
   
   <script type="text/javascript">
@@ -112,14 +126,17 @@
   });
   map.addLayer(vector);
 
+  // Preocess result
   search.on('routing', function(routing) {
-    vector.getSource().clear();
-    vector.getSource().addFeatures(routing.features);
+    if ($('.remove').prop('checked')) vector.getSource().clear();
+    if ($('.merge').prop('checked')) vector.getSource().addFeatures([routing.feature]);
+    else vector.getSource().addFeatures(routing.features);
     setTimeout(function() {
       map.getView().fit(vector.getSource().getExtent(), { duration:1000 });
     }, 500);
   });
 
+  // Dispkay information on hover
   var select = new ol.interaction.Select({
     style: [
       new ol.style.Style({ stroke: new ol.style.Stroke({ color:[255,255,255,.5], width: 10 })}),
@@ -132,12 +149,24 @@
     select.getFeatures().clear();
     select.getFeatures().push(e.feature);
     var t = e.feature.get('durationT');
-    var content = e.feature.get('name')+'<br/>'
-      +(e.feature.get('distanceT')>1000 ? (e.feature.get('distanceT')/1000).toFixed(2)+'km' : e.feature.get('distanceT')+'m')
-      +' - '
-      + ( t>3600 ? Math.floor(t/3600)+'h '+((t%36000)/60).toFixed()+'mn' 
-      : Math.floor(t/60)+'mn '+Math.floor(t%60)+'s')
-      ;
+    var content;
+    if (t) {
+      content = e.feature.get('name')+'<br/>'
+        +(e.feature.get('distanceT')>1000 ? (e.feature.get('distanceT')/1000).toFixed(2)+'km' : e.feature.get('distanceT')+'m')
+        +' - '
+        + ( t>3600 ? Math.floor(t/3600)+'h '+((t%36000)/60).toFixed()+'mn' 
+        : Math.floor(t/60)+'mn '+Math.floor(t%60)+'s')
+        ;
+    } else {
+      t = e.feature.get('duration');
+      content = e.feature.get('start')+'<br/>'
+        + e.feature.get('end')+'<br/>'
+        +(e.feature.get('distance')>1000 ? (e.feature.get('distance')/1000).toFixed(2)+'km' : e.feature.get('distance')+'m')
+        +' - '
+        + ( t>3600 ? Math.floor(t/3600)+'h '+((t%36000)/60).toFixed()+'mn' 
+        : Math.floor(t/60)+'mn '+Math.floor(t%60)+'s')
+        ;
+    }
     popup.show(e.coordinate, content);
   });
   hover.on('hover', function(e) {
@@ -153,6 +182,16 @@
     positioning:'bottom-center'
   });
   map.addOverlay(popup);
+
+	function save () {
+		var format = new ol.format.GeoJSON();
+		var data = format.writeFeatures(vector.getSource().getFeatures(), {
+			dataProjection: 'EPSG:4326',
+			featureProjection: map.getView().getProjection()
+		})
+		var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
+		saveAs(blob, "isochrone.geojson");
+	}
 
   </script>
   

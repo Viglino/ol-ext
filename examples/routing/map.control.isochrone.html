@@ -69,11 +69,18 @@
 	</div>
 
 	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
+	<div id="map" style="width:100%; height:400px;"></div>
 
 	<div class="options">
 		<i>Use the search control to start a new search.</i>
-		<button onclick="save()">export</button>
+		<ul>
+			<li>
+				Simplify: <input type="number" class="simplify" value=0 />
+			</li>
+			<li>
+				<button onclick="save()">export</button>
+			</li>
+		</ul>
 	</div>
 	
 	<script type="text/javascript">
@@ -103,7 +110,10 @@
   map.addLayer(vector);
 
   search.on('isochrone', function(iso) {
-    vector.getSource().clear();
+		if (iso.iteration === 0) vector.getSource().clear();
+		if (Number($('.simplify').val())) {
+			iso.feature.setGeometry (iso.feature.getGeometry().simplify(Number($('.simplify').val())));
+		}
     vector.getSource().addFeature(iso.feature);
     setTimeout(function() {
       map.getView().fit(vector.getSource().getExtent(), { duration:1000 });
