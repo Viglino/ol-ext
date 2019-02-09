@@ -10,6 +10,18 @@
  */
 /*global ol*/
 if (window.ol && !ol.ext)  ol.ext = {};
+/** Inherit the prototype methods from one constructor into another.
+ * replace deprecated ol method
+ *
+ * @param {!Function} childCtor Child constructor.
+ * @param {!Function} parentCtor Parent constructor.
+ * @function module:ol.inherits
+ * @api
+ */
+ol.ext.inherits = function(child,parent) {
+    child.prototype = Object.create(parent.prototype);
+    child.prototype.constructor = child;
+};
 
 /** Ajax request
  * @fires success
@@ -4357,6 +4369,7 @@ ol.control.IsochroneGeoportail = function(options) {
     element: element,
     target: options.target
   });
+  this.set('iter', 1);
   var content = ol.ext.element.create('DIV', { className: 'content', parent: element } )
   // Search control
   this._addSearchCtrl(content, options);
@@ -4407,6 +4420,12 @@ ol.control.IsochroneGeoportail = function(options) {
       self.set('distance', Number(this.value));
     });
   ol.ext.element.create('TEXT', { parent: div, html: 'km' });
+  div = ol.ext.element.create('DIV', { className: 'ol-iter', parent: content })
+  ol.ext.element.create('DIV', { html:'Iteration:', parent: div });
+  ol.ext.element.create('INPUT', { type: 'number', parent: div, value: 1, min: 1 })
+    .addEventListener('change', function(){
+      self.set('iter', Number(this.value));
+    });
   // OK button
   ol.ext.element.create('I', { className:'ol-ok', html:'ok', parent: content })
     .addEventListener('click', function() {
@@ -4457,6 +4476,7 @@ ol.control.IsochroneGeoportail.prototype.setMap = function (map) {
 ol.control.IsochroneGeoportail.prototype._addSearchCtrl = function (element, options) {
 	var div = ol.ext.element.create("DIV", { parent: element });
   var search = this._search = new ol.control.SearchGeoportail({
+    className: 'IGNF ol-collapsed',
 		apiKey: options.apiKey,
 		target: div
 	});
@@ -4504,7 +4524,7 @@ ol.control.IsochroneGeoportail.prototype.setDirection = function (direction) {
  * @param {number|string} option A number as time (in second) or distance (in meter), depend on method propertie
  * or a string with a unit (s, mn, h for time or km, m)
  */
-ol.control.IsochroneGeoportail.prototype.search = function(coord, option) {
+ol.control.IsochroneGeoportail.prototype.search = function(coord, option, iter) {
   var proj = this.getMap() ? this.getMap().getView().getProjection() : 'EPSG:3857';
   var method = /distance/.test(this.get('method')) ? 'distance' : 'time';
   if (typeof(option)==='string') {
@@ -4532,6 +4552,7 @@ ol.control.IsochroneGeoportail.prototype.search = function(coord, option) {
       }
     }
   }
+  var dt = Math.round(option * (this.get('iter')-(iter||0)) / this.get('iter'));
   if (typeof option === 'number') {
     // Send data
     var data = {
@@ -4540,13 +4561,17 @@ ol.control.IsochroneGeoportail.prototype.search = function(coord, option) {
       graphName: (this.get('mode')==='pedestrian' ?  'Pieton' : 'Voiture'),
       exclusions: this.get('exclusions') || undefined,
       method: method,
-      time: method==='time' ? option : undefined,
-      distance: method==='distance' ? option : undefined,
+      time: method==='time' ? dt : undefined,
+      distance: method==='distance' ? dt : undefined,
       reverse: (this.get('direction') === 'reverse'),
       smoothing: this.get('smoothing') || true,
       holes: this.get('holes') || false
     };
-    this._ajax.send(this.get('url'), data);
+    this._ajax.send(this.get('url'), data, { 
+      coord: coord, 
+      option: option,
+      iteration: (iter||0)+1 
+    });
   }
 };
 /** Trigger result
@@ -4563,7 +4588,11 @@ ol.control.IsochroneGeoportail.prototype._success = function(e) {
   });
   delete evt.wktGeometry;
   evt.type = 'isochrone';
+  evt.iteration = e.options.iteration-1;
   this.dispatchEvent (evt);
+  if (e.options.iteration < this.get('iter')) {
+    this.search(e.options.coord, e.options.option, e.options.iteration);
+  }
 };
 /** Trigger error
  * @private
@@ -4876,7 +4905,7 @@ ol.control.Legend.prototype.getStyleImage = function(options, theCanvas, row) {
   if (!feature && options.properties && typeGeom) {
     if (/Point/.test(typeGeom)) feature = new ol.Feature(new ol.geom.Point([0,0]));
     else if (/LineString/.test(typeGeom)) feature = new ol.Feature(new ol.geom.LineString([0,0]));
-    else feature = new ol.Feature(new ol.geom.Polygon([0,0]));
+    else feature = new ol.Feature(new ol.geom.Polygon([[0,0]]));
     feature.setProperties(options.properties);
   }
   if (feature) {
@@ -4941,6 +4970,141 @@ ol.control.Legend.prototype.getStyleImage = function(options, theCanvas, row) {
   }
   ctx.restore();
   return canvas;
+};
+
+/*	Copyright (c) 2019 Jean-Marc VIGLINO,
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+//
+/** A control to jump from one zone to another.
+ *
+ * @constructor
+ * @fires select
+ * @extends {ol.control.Control}
+ * @param {Object=} options Control options.
+ *	@param {string} options.className class name
+ *	@param {ol.layer.Layer} options.layer layer to display in the control
+ *	@param {ol.ProjectionLike} options.prokjection projection of the control, Default is EPSG:3857 (Spherical Mercator).
+ *  @param {Array<any>} options.zone a list of zone: { name, extent }
+ *  @param {bolean} options.centerOnClick center on click when click on zones, default true
+ */
+ol.control.MapZone = function(options) {
+	if (!options) options={};
+	var element = document.createElement("div");
+  if (options.target) {
+    element = ol.ext.element.create('DIV', {
+      className: options.className || "ol-mapzone"
+    });
+  } else {
+    element = ol.ext.element.create('DIV', {
+      className: (options.className || "ol-mapzone") +' ol-unselectable ol-control ol-collapsed'
+		});
+		var bt = ol.ext.element.create('BUTTON', {
+			type: 'button',
+			on: {
+				'click': function() {
+					element.classList.toggle("ol-collapsed");
+					maps.forEach(function (m) {
+						m.updateSize();
+					});
+				}.bind(this)
+			},
+      parent: element
+		});
+		ol.ext.element.create('I', {
+			parent: bt
+		});
+	}
+	// Parent control
+	ol.control.Control.call(this, {
+		element: element,
+		target: options.target
+	});
+	// Create maps
+	var maps = [];
+	options.zones.forEach(function(z) {
+		var div = ol.ext.element.create('DIV', {
+			className: 'ol-mapzonezone',
+			parent: element,
+			click : function() {
+				this.dispatchEvent({
+					type: 'select',
+					coordinate: ol.extent.getCenter(z.extent),
+					extent: z.extent
+				});
+				if (options.centerOnClick !== false) {
+					this.getMap().getView().fit(z.extent);
+				};
+				this.setVisible(false);
+			}.bind(this)
+		});
+		var layer = new options.layer.constructor({
+			source: options.layer.getSource()
+		});
+		var view = new ol.View({ zoom: 6, center: [0,0], projection: options.projection });
+		var map = new ol.Map({
+			target: div,
+			view: view,
+			controls: [],
+			interactions:[],
+			layers: [layer]
+		});
+		maps.push(map);
+		view.fit(z.extent);
+		// Nmae
+		ol.ext.element.create('P', {
+			html: z.title,
+			parent: div
+		});
+	}.bind(this));
+	// Refresh the maps
+	setTimeout(function() {
+		maps.forEach(function (m) {
+			m.updateSize();
+		});
+	});
+};
+ol.ext.inherits(ol.control.MapZone, ol.control.Control);
+/** Set the control visibility
+* @param {boolean} b
+*/
+ol.control.MapZone.prototype.setVisible = function (b) {
+	if (b) this.element.classList.remove('ol-collapsed');
+	else this.element.classList.add('ol-collapsed');
+};
+/** Pre-defined zones
+ * - French Terrritory
+ */
+ol.control.MapZone.zones = {
+	'DOMTOM': [{
+			title: 'Métropole',
+			extent: [-592044, 5036092, 1083455, 6660226]
+		}, {
+			title: 'Guadeloupe',
+			extent: [-6890520, 1776510, -6785801, 1871445]
+		},{
+			title: 'Martinique',
+			extent: [-6819160, 1618712, -6764813, 1677110]
+		},{
+			title: 'Guyane',
+			extent: [-6091988, 240549, -5736097, 646583]
+		},{
+			title: 'La réunion',
+			extent: [6141562, -2440557, 6220751, -2374669]
+		},{
+			title: 'Mayotte',
+			extent: [5004907, -1461645, 5048705, -1420369]
+		},{
+			title: 'Polynésie Française',
+			extent:  [22958158, -2534237, 24697254, -1213405]
+		},{
+			title: 'Nouvelle Calédonie',
+			extent:  [18230148, -2581503, 18664922, -2251295]
+		},{
+			title: 'St-Pierre et Miquelon',
+			extent:  [-6284397, 5900469, -6244803, 5966052]
+		}]
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
@@ -6137,6 +6301,7 @@ ol.control.RoutingGeoportail.prototype.addSearch = function (element, options) {
       self.resultElement.innerHTML = '';
     });
   var search = new ol.control.SearchGeoportail({
+    className: 'IGNF ol-collapsed',
     apiKey: options.apiKey,
     target: div
   });
@@ -6224,7 +6389,7 @@ ol.control.RoutingGeoportail.prototype.listRouting = function (routing) {
 /** Handle routing response
  * @private
  */
-ol.control.RoutingGeoportail.prototype.handleResponse = function (data) {
+ol.control.RoutingGeoportail.prototype.handleResponse = function (data, start, end) {
   var routing = { type:'routing' };
 /*
   var format = new ol.format.WKT();
@@ -6236,12 +6401,14 @@ ol.control.RoutingGeoportail.prototype.handleResponse = function (data) {
   routing.features = [];
   var distance = 0;
   var duration = 0;
+  var f, route = [];
   for (var i=0, l; l=data.legs[i]; i++) {
     for (var j=0, s; s=l.steps[j]; j++) {
       var geom = [];
       for (var k=0, p; p=s.points[k]; k++){
         p = p.split(',');
         geom.push([parseFloat(p[0]),parseFloat(p[1])]);
+        if (i===0 || k!==0) route.push(geom[k]);
       }
       geom = new ol.geom.LineString(geom);
       var options = {
@@ -6251,18 +6418,27 @@ ol.control.RoutingGeoportail.prototype.handleResponse = function (data) {
         distance: parseFloat(s.distanceMeters),
         duration: parseFloat(s.durationSeconds)
       }
-      console.log(duration, options.duration, s)
+      //console.log(duration, options.duration, s)
       distance += options.distance;
       duration += options.duration;
       options.distanceT = distance;
       options.durationT = duration;
-      var f = new ol.Feature(options);
+      f = new ol.Feature(options);
       routing.features.push(f);
     }
   }
   routing.distance = parseFloat(data.distanceMeters);
   routing.duration = parseFloat(data.durationSeconds);
-  console.log(data, routing);
+  // Full route
+  route = new ol.geom.LineString(route);
+  routing.feature = new ol.Feature ({
+    geometry: route.transform('EPSG:4326',this.getMap().getView().getProjection()),
+    start: this._search[0].getTitle(start),
+    end: this._search[0].getTitle(end), 
+    distance: routing.distance,
+    duration: routing.duration
+  });
+  // console.log(data, routing);
   this.dispatchEvent(routing);
   this.path = routing;
   return routing;
@@ -6288,7 +6464,7 @@ ol.control.RoutingGeoportail.prototype.calculate = function () {
   this.ajax(url + parameters, 
     function (resp) {
       if (resp.status >= 200 && resp.status < 400) {
-        self.listRouting(self.handleResponse (JSON.parse(resp.response)));
+        self.listRouting(self.handleResponse (JSON.parse(resp.response), start, end));
       } else {
         console.log(url + parameters, arguments);
       }
@@ -16404,130 +16580,191 @@ ol.source.GeoImage.prototype.setCrop = function(crop)
 	this.changed();
 };
 
-/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+/*	Copyright (c) 2017 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** A source for hexagonal binning
-* @constructor 
-* @extends {ol.source.Vector}
-* @param {} options ol.source.VectorOptions + ol.HexGridOptions
-*	 @param {ol.source.Vector} options.source Source
-*	 @param {Number} options.size size of the exagon in map units, default 80000
-*	 @param {ol.coordinate} options.origin orgin of the grid, default [0,0]
-*	 @param {pointy|flat} options.layout grid layout, default pointy
-*	 @param {function|undefined} options.geometryFunction Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center. 
-*/
-ol.source.HexBin = function(options) {
-  options = options || {} ;
-	// bind function for callback
+ * @constructor
+ * @extends {ol.source.Vector}
+ * @param {Object} options ol.source.VectorOptions + ol.HexGridOptions
+ *	 @param {ol.source.Vector} options.source Source
+ *	 @param {number} [options.size] size of the hexagon in map units, default 80000
+ *	 @param {ol.coordinate} [options.origin] origin of the grid, default [0,0]
+ *	 @param {import('../render/HexGrid').HexagonLayout} [options.layout] grid layout, default pointy
+ *	 @param {(f: ol.Feature) => ol.geom.Point} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
+ */
+ol.source.HexBin = function (options) {
+	options = options || {};
+	/** Bind function for callback
+	 * 	@type {{modify: (e: ol.events.Event) => void}}
+	 */
 	this._bind = { modify: this._onModifyFeature.bind(this) };
-	ol.source.Vector.call (this, options);
-	// The HexGrid
+	ol.source.Vector.call(this, options);
+	/** The HexGrid
+	 * 	@type {ol.HexGrid}
+	 */
 	this._hexgrid = new ol.HexGrid(options);
+	/** @type {{[key: string]: ol.Feature}} */
 	this._bin = {};
-	// Source and origin
+	/** Source and origin
+	 * 	@type {ol.source.Vector}
+	 */
 	this._origin = options.source;
-	// Geometry function to get a point
-	this._geomFn = options.geometryFunction || ol.coordinate.getFeatureCenter || function(f) { return f.getGeometry().getFirstCoordinate(); };
+	/** Geometry function to get a point
+	 * 	@type {ol.Coordinate | ((f: ol.Feature) => ol.geom.Point)}
+	 */
+	this._geomFn = options.geometryFunction || ol.coordinate.getFeatureCenter || function (f) { return f.getGeometry().getFirstCoordinate(); };
 	// Existing features
 	this.reset();
 	// Future features
 	this._origin.on("addfeature", this._onAddFeature.bind(this));
 	this._origin.on("removefeature", this._onRemoveFeature.bind(this));
 };
-ol.inherits (ol.source.HexBin, ol.source.Vector);
+ol.inherits(ol.source.HexBin, ol.source.Vector);
 /**
  * On add feature
- * @param {ol.Event} e 
+ * @param {ol.events.Event} e
  * @private
  */
-ol.source.HexBin.prototype._onAddFeature = function(e) {
-  var f = e.feature || e.target;
-  var h = this._hexgrid.coord2hex(this._geomFn(f));
+ol.source.HexBin.prototype._onAddFeature = function (e) {
+	var f = e.feature || e.target;
+	var h = this._hexgrid.coord2hex(this._geomFn(f));
 	var id = h.toString();
 	if (this._bin[id]) {
-    this._bin[id].get('features').push(f);
-	} else { 
-    var ex = new ol.Feature(new ol.geom.Polygon([this._hexgrid.getHexagon(h)]));
-		ex.set('features',[f]);
+		this._bin[id].get('features').push(f);
+	} else {
+		var ex = new ol.Feature(new ol.geom.Polygon([this._hexgrid.getHexagon(h)]));
+		ex.set('features', [f]);
 		ex.set('center', new ol.geom.Point(ol.extent.getCenter(ex.getGeometry().getExtent())));
 		this._bin[id] = ex;
 		this.addFeature(ex);
 	}
 	f.on("change", this._bind.modify);
 };
-/**
- * Get the hexagon of a feature
- * @param {ol.Feature} f 
- * @return {} the bin id, the index of the feature in the bin and a boolean if the feature has moved to an other bin
+/** @typedef {Object} Bin ???
+ * 	@property {string} id
+ * 	@property {number} index
+ * 	@property {boolean} [moved]
  */
-ol.source.HexBin.prototype.getBin = function(f) {
-  // Test if feature exists in the current hex
+/**
+ *  Get the hexagon of a feature
+ *  @param {ol.Feature} f
+ *  @return {Bin} the bin id, the index of the feature in the bin and a boolean if the feature has moved to an other bin
+ */
+ol.source.HexBin.prototype.getBin = function (f) {
+	// Test if feature exists in the current hex
 	var index, id = this._hexgrid.coord2hex(this._geomFn(f)).toString();
 	if (this._bin[id]) {
-    index = this._bin[id].get('features').indexOf(f);
-		if (index > -1) return { id:id, index:index };
+		index = this._bin[id].get('features').indexOf(f);
+		if (index > -1) return { id: id, index: index };
 	}
 	// The feature has moved > check all bins
 	for (id in this._bin) {
-    index = this._bin[id].get('features').indexOf(f);
-		if (index > -1) return { id:id, index:index, moved:true };
+		index = this._bin[id].get('features').indexOf(f);
+		if (index > -1) return { id: id, index: index, moved: true };
 	}
 	return false;
 };
 /**
- * On remove feature
- * @param {ol.Event} e 
- * @param {*} bin 
- * @private
+ *  On remove feature
+ *  @param {ol.events.Event} e
+ *  @param {Bin} bin
+ *  @private
  */
-ol.source.HexBin.prototype._onRemoveFeature = function(e, bin) {
-  var f = e.feature || e.target;
-  var b = bin || this.getBin(f);
+ol.source.HexBin.prototype._onRemoveFeature = function (e, bin) {
+	var f = e.feature || e.target;
+	var b = bin || this.getBin(f);
 	if (b) {
-    var features = this._bin[b.id].get('features');
+		var features = this._bin[b.id].get('features');
 		features.splice(b.index, 1);
 		if (!features.length) {
-      this.removeFeature(this._bin[b.id]);
+			this.removeFeature(this._bin[b.id]);
 			delete this._bin[b.id];
 		}
 	} else {
-    console.log("[ERROR:HexBin] remove feature feature doesn't exists anymore.");
+		console.log("[ERROR:HexBin] remove feature feature doesn't exists anymore.");
 	}
 	f.un("change", this._bind.modify);
 };
 /**
- * A feature has been modified
- * @param {ol.Event} e 
- * @private
+ *  A feature has been modified
+ *  @param {ol.events.Event} e
+ *  @private
  */
-ol.source.HexBin.prototype._onModifyFeature = function(e) {
-  var bin = this.getBin(e.target);
+ol.source.HexBin.prototype._onModifyFeature = function (e) {
+	var bin = this.getBin(e.target);
 	if (bin && bin.moved) {
-    // remove from the bin
+		// remove from the bin
 		this._onRemoveFeature(e, bin);
 		// insert in the new bin
 		this._onAddFeature(e);
-	}	
+	}
 	this.changed();
 };
-/** Clear all bins and generate a new one
- */
-ol.source.HexBin.prototype.reset = function() {
-  this._bin = {};
+/** Clear all bins and generate a new one. */
+ol.source.HexBin.prototype.reset = function () {
+	this._bin = {};
 	this.clear();
 	var features = this._origin.getFeatures();
-	for (var i=0, f; f=features[i]; i++) {
-    this._onAddFeature({ feature:f });
+	for (var i = 0, f; f = features[i]; i++) {
+		this._onAddFeature({ feature: f });
 	}
 };
+/**	Set the inner HexGrid size.
+ * 	@param {number} newSize
+ * 	@param {boolean} noreset If true, reset will not be called (It need to be called through)
+ */
+ol.source.HexBin.prototype.setSize = function setSize(newSize, noreset) {
+	this._hexgrid.setSize(newSize);
+	if (!noreset) {
+		this.reset();
+	}
+}
+/**	Get the inner HexGrid size.
+ * 	@return {number}
+ */
+ol.source.HexBin.prototype.getSize = function getSize() {
+	return this._hexgrid.getSize();
+}
+/**	Set the inner HexGrid layout.
+ * 	@param {import('../render/HexGrid').HexagonLayout} newLayout
+ * 	@param {boolean} noreset If true, reset will not be called (It need to be called through)
+ */
+ol.source.HexBin.prototype.setLayout = function setLayout(newLayout, noreset) {
+	this._hexgrid.setLayout(newLayout);
+	if (!noreset) {
+		this.reset();
+	}
+}
+/**	Get the inner HexGrid layout.
+ * 	@return {import('../render/HexGrid').HexagonLayout}
+ */
+ol.source.HexBin.prototype.getLayout = function getLayout() {
+	return this._hexgrid.getLayout();
+}
+/**	Set the inner HexGrid origin.
+ * 	@param {ol.Coordinate} newLayout
+ * 	@param {boolean} noreset If true, reset will not be called (It need to be called through)
+ */
+ol.source.HexBin.prototype.setOrigin = function setOrigin(newLayout, noreset) {
+	this._hexgrid.setOrigin(newLayout);
+	if (!noreset) {
+		this.reset();
+	}
+}
+/**	Get the inner HexGrid origin.
+ * 	@return {ol.Coordinate}
+ */
+ol.source.HexBin.prototype.getOrigin = function getOrigin() {
+	return this._hexgrid.getOrigin();
+}
 /**
-* Get the orginal source 
-* @return {ol.source.Vector}
-*/
-ol.source.HexBin.prototype.getSource = function() {
-  return this._origin;
+ * Get the orginal source
+ * @return {ol.source.Vector}
+ */
+ol.source.HexBin.prototype.getSource = function getSource() {
+	return this._origin;
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
@@ -18673,8 +18910,8 @@ ol.graph.Dijskra.prototype.getRoute = function(node) {
 */
 /** Distance beetween 2 points
 *	Usefull geometric functions
-* @param {ol.coordinate} p1 first point
-* @param {ol.coordinate} p2 second point
+* @param {ol.Coordinate} p1 first point
+* @param {ol.Coordinate} p2 second point
 * @return {number} distance
 */
 ol.coordinate.dist2d = function(p1, p2)
@@ -18684,8 +18921,8 @@ ol.coordinate.dist2d = function(p1, p2)
 }
 /** 2 points are equal
 *	Usefull geometric functions
-* @param {ol.coordinate} p1 first point
-* @param {ol.coordinate} p2 second point
+* @param {ol.Coordinate} p1 first point
+* @param {ol.Coordinate} p2 second point
 * @return {boolean}
 */
 ol.coordinate.equal = function(p1, p2)
@@ -18700,7 +18937,7 @@ ol.coordinate.getFeatureCenter = function(f)
 };
 /** Get center coordinate of a geometry
 * @param {ol.Feature} geom
-* @return {ol.coordinate} the center
+* @return {ol.Coordinate} the center
 */
 ol.coordinate.getGeomCenter = function(geom)
 {	switch (geom.getType())
@@ -18716,9 +18953,9 @@ ol.coordinate.getGeomCenter = function(geom)
 	}
 };
 /** Offset a polyline
- * @param {Array<ol.coordinate>} coords
- * @param {Number} offset
- * @return {Array<ol.coordinates>} resulting coord
+ * @param {Array<ol.Coordinate>} coords
+ * @param {number} offset
+ * @return {Array<ol.Coordinate>} resulting coord
  * @see http://stackoverflow.com/a/11970006/796832
  * @see https://drive.google.com/viewerng/viewer?a=v&pid=sites&srcid=ZGVmYXVsdGRvbWFpbnxqa2dhZGdldHN0b3JlfGd4OjQ4MzI5M2Y0MjNmNzI2MjY
  */
@@ -18784,8 +19021,8 @@ ol.coordinate.offsetCoords = function (coords, offset) {
     return path;
 }
 /** Find the segment a point belongs to
- * @param {ol.coordinate} pt
- * @param {Array<ol.coordinate>} coords
+ * @param {ol.Coordinate} pt
+ * @param {Array<ol.Coordinate>} coords
  * @return {} the index (-1 if not found) and the segment
  */
 ol.coordinate.findSegment = function (pt, coords) {
@@ -18808,10 +19045,10 @@ ol.coordinate.findSegment = function (pt, coords) {
 };
 /**
  * Split a Polygon geom with horizontal lines
- * @param {Array<ol.coordinate>} geom
- * @param {Number} y the y to split
- * @param {Number} n contour index
- * @return {Array<Array<ol.coordinate>>}
+ * @param {Array<ol.Coordinate>} geom
+ * @param {number} y the y to split
+ * @param {number} n contour index
+ * @return {Array<Array<ol.Coordinate>>}
  */
 ol.coordinate.splitH = function (geom, y, n) {
     var x, abs;
@@ -19205,6 +19442,9 @@ ol.geom.LineString.prototype.calcCSpline_ = function(options)
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+/** @typedef {'pointy' | 'flat'} HexagonLayout
+ *  Layout of a Hexagon. Flat means the bottom part of the hexagon is flat.
+ */
 /**
 * Hexagonal grids
 * @classdesc ol.HexGrid is a class to compute hexagonal grids
@@ -19212,10 +19452,10 @@ ol.geom.LineString.prototype.calcCSpline_ = function(options)
 *
 * @constructor ol.HexGrid
 * @extends {ol.Object}
-* @param {olx.HexGrid=} options
-*	@param {Number} options.size size of the exagon in map units, default 80000
-*	@param {_ol_coordinate_} options.origin orgin of the grid, default [0,0]
-*	@param {pointy|flat} options.layout grid layout, default pointy
+* @param {Object} [options]
+*	@param {number} [options.size] size of the exagon in map units, default 80000
+*	@param {ol.Coordinate} [options.origin] orgin of the grid, default [0,0]
+*	@param {HexagonLayout} [options.layout] grid layout, default pointy
 */
 ol.HexGrid = function (options)
 {	options = options || {};
@@ -19253,91 +19493,91 @@ ol.HexGrid.prototype.layout =
 	]
 };
 /** Set layout
-* @param {pointy | flat | undefined} layout name, default pointy
+* @param {HexagonLayout | undefined} layout name, default pointy
 */
 ol.HexGrid.prototype.setLayout = function (layout)
 {	this.layout_ = this.layout[layout] || this.layout.pointy;
 	this.changed();
 }
 /** Get layout
-* @return {pointy | flat} layout name
+* @return {HexagonLayout} layout name
 */
 ol.HexGrid.prototype.getLayout = function ()
 {	return (this.layout_[9]!=0 ? 'pointy' : 'flat');
 }
 /** Set hexagon origin
-* @param {ol.coordinate} coord origin
+* @param {ol.Coordinate} coord origin
 */
 ol.HexGrid.prototype.setOrigin = function (coord)
 {	this.origin_ = coord;
 	this.changed();
 }
 /** Get hexagon origin
-* @return {ol.coordinate} coord origin
+* @return {ol.Coordinate} coord origin
 */
 ol.HexGrid.prototype.getOrigin = function ()
 {	return this.origin_;
 }
 /** Set hexagon size
-* @param {Number} hexagon size
+* @param {number} hexagon size
 */
 ol.HexGrid.prototype.setSize = function (s) {
 	this.size_ = s || 80000;
 	this.changed();
 }
 /** Get hexagon size
-* @return {Number} hexagon size
+* @return {number} hexagon size
 */
 ol.HexGrid.prototype.getSize = function () {
 	return this.size_;
 }
 /** Convert cube to axial coords
-* @param {ol.coordinate} c cube coordinate
-* @return {ol.coordinate} axial coordinate
+* @param {ol.Coordinate} c cube coordinate
+* @return {ol.Coordinate} axial coordinate
 */
 ol.HexGrid.prototype.cube2hex = function (c)
 {	return [c[0], c[2]];
 };
 /** Convert axial to cube coords
-* @param {ol.coordinate} h axial coordinate
-* @return {ol.coordinate} cube coordinate
+* @param {ol.Coordinate} h axial coordinate
+* @return {ol.Coordinate} cube coordinate
 */
 ol.HexGrid.prototype.hex2cube = function(h)
 {	return [h[0], -h[0]-h[1], h[1]];
 };
 /** Convert offset to axial coords
-* @param {ol.coordinate} h axial coordinate
-* @return {ol.coordinate} offset coordinate
+* @param {ol.Coordinate} h axial coordinate
+* @return {ol.Coordinate} offset coordinate
 */
 ol.HexGrid.prototype.hex2offset = function (h)
 {	if (this.layout_[9]) return [ h[0] + (h[1] - (h[1]&1)) / 2, h[1] ];
 	else return [ h[0], h[1] + (h[0] + (h[0]&1)) / 2 ];
 }
 /** Convert axial to offset coords
-* @param {ol.coordinate} o offset coordinate
-* @return {ol.coordinate} axial coordinate
+* @param {ol.Coordinate} o offset coordinate
+* @return {ol.Coordinate} axial coordinate
 */
 ol.HexGrid.prototype.offset2hex = function(o)
 {	if (this.layout_[9]) return [ o[0] - (o[1] - (o[1]&1)) / 2,  o[1] ];
 	else return [ o[0], o[1] - (o[0] + (o[0]&1)) / 2 ];
 }
 /** Convert offset to cube coords
-* @param {ol.coordinate} c cube coordinate
-* @return {ol.coordinate} offset coordinate
+* @param {ol.Coordinate} c cube coordinate
+* @return {ol.Coordinate} offset coordinate
 * /
 ol.HexGrid.prototype.cube2offset = function(c)
 {	return hex2offset(cube2hex(c));
 };
 /** Convert cube to offset coords
-* @param {ol.coordinate} o offset coordinate
-* @return {ol.coordinate} cube coordinate
+* @param {ol.Coordinate} o offset coordinate
+* @return {ol.Coordinate} cube coordinate
 * /
 ol.HexGrid.prototype.offset2cube = function (o)
 {	return hex2cube(offset2Hex(o));
 };
 /** Round cube coords
-* @param {ol.coordinate} h cube coordinate
-* @return {ol.coordinate} rounded cube coordinate
+* @param {ol.Coordinate} h cube coordinate
+* @return {ol.Coordinate} rounded cube coordinate
 */
 ol.HexGrid.prototype.cube_round = function(h)
 {	var rx = Math.round(h[0])
@@ -19352,8 +19592,8 @@ ol.HexGrid.prototype.cube_round = function(h)
 	return [rx, ry, rz];
 };
 /** Round axial coords
-* @param {ol.coordinate} h axial coordinate
-* @return {ol.coordinate} rounded axial coordinate
+* @param {ol.Coordinate} h axial coordinate
+* @return {ol.Coordinate} rounded axial coordinate
 */
 ol.HexGrid.prototype.hex_round = function(h)
 {	return this.cube2hex( this.cube_round( this.hex2cube(h )) );
@@ -19364,15 +19604,15 @@ ol.HexGrid.prototype.hex_corner = function(center, size, i)
 {	return [ center[0] + size * this.layout_[8+(2*(i%6))], center[1] + size * this.layout_[9+(2*(i%6))]];
 };
 /** Get hexagon coordinates at a coordinate
-* @param {ol.coord} coord
-* @return {Arrary<ol.coord>}
+* @param {ol.Coordinate} coord
+* @return {Arrary<ol.Coordinate>}
 */
 ol.HexGrid.prototype.getHexagonAtCoord = function (coord)
 {	return (this.getHexagon(this.coord2hex(coord)));
 };
 /** Get hexagon coordinates at hex
-* @param {ol.coord} hex
-* @return {Arrary<ol.coord>}
+* @param {ol.Coordinate} hex
+* @return {Arrary<ol.Coordinate>}
 */
 ol.HexGrid.prototype.getHexagon = function (hex)
 {	var p = [];
@@ -19383,8 +19623,8 @@ ol.HexGrid.prototype.getHexagon = function (hex)
 	return p;
 };
 /** Convert hex to coord
-* @param {ol.hex} hex 
-* @return {ol.coord} 
+* @param {ol.hex} hex
+* @return {ol.Coordinate}
 */
 ol.HexGrid.prototype.hex2coord = function (hex)
 {	return [
@@ -19393,8 +19633,8 @@ ol.HexGrid.prototype.hex2coord = function (hex)
 	];
 };
 /** Convert coord to hex
-* @param {ol.coord} coord 
-* @return {ol.hex} 
+* @param {ol.Coordinate} coord
+* @return {ol.hex}
 */
 ol.HexGrid.prototype.coord2hex = function (coord)
 {	var c = [ (coord[0]-this.origin_[0]) / this.size_, (coord[1]-this.origin_[1]) / this.size_ ];
@@ -19403,9 +19643,9 @@ ol.HexGrid.prototype.coord2hex = function (coord)
 	return this.hex_round([q, r]);
 };
 /** Calculate distance between to hexagon (number of cube)
-* @param {ol.coordinate} a first cube coord
-* @param {ol.coordinate} a second cube coord
-* @return {Number} distance
+* @param {ol.Coordinate} a first cube coord
+* @param {ol.Coordinate} a second cube coord
+* @return {number} distance
 */
 ol.HexGrid.prototype.cube_distance = function (a, b)
 {	//return ( (Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2])) / 2 );
@@ -19426,10 +19666,10 @@ function cube_lerp(a, b, t)
 		lerp (a[2]+1e-6, b[2], t)
 	];
 }
-/** Calculate line between to hexagon 
-* @param {ol.coordinate} a first cube coord
-* @param {ol.coordinate} b second cube coord
-* @return {Array<ol.coordinate>} array of cube coordinates
+/** Calculate line between to hexagon
+* @param {ol.Coordinate} a first cube coord
+* @param {ol.Coordinate} b second cube coord
+* @return {Array<ol.Coordinate>} array of cube coordinates
 */
 ol.HexGrid.prototype.cube_line = function (a, b)
 {	var d = this.cube_distance(a, b);
@@ -19446,9 +19686,9 @@ ol.HexGrid.prototype.neighbors =
 	'hex':	[ [+1, 0], [+1,  -1], [0, -1], [-1, 0], [-1, +1], [0, +1] ]
 };
 /** Get the neighbors for an hexagon
-* @param {ol.coordinate} h axial coord
-* @param {Number} direction 
-* @return { ol.coordinate | Array<ol.coordinates> } neighbor || array of neighbors
+* @param {ol.Coordinate} h axial coord
+* @param {number} direction
+* @return { ol.Coordinate | Array<ol.Coordinate> } neighbor || array of neighbors
 */
 ol.HexGrid.prototype.hex_neighbors = function (h, d)
 {	if (d!==undefined)
@@ -19463,9 +19703,9 @@ ol.HexGrid.prototype.hex_neighbors = function (h, d)
 	}
 };
 /** Get the neighbors for an hexagon
-* @param {ol.coordinate} c cube coord
-* @param {Number} direction 
-* @return { ol.coordinate | Array<ol.coordinates> } neighbor || array of neighbors
+* @param {ol.Coordinate} c cube coord
+* @param {number} direction
+* @return { ol.Coordinate | Array<ol.Coordinate> } neighbor || array of neighbors
 */
 ol.HexGrid.prototype.cube_neighbors = function (c, d)
 {	if (d!==undefined)
@@ -20494,7 +20734,8 @@ ol.style.FillPattern.prototype.getChecksum = function()
  *
  * @extends {ol.style.Style}
  * @constructor
- * @param {Object}  options
+ * @param {Object} options
+ *  @param {boolean} options.visible draw only the visible part of the line, default true
  *  @param {number|function} options.width Stroke width or a function that gets a feature and the position (beetween [0,1]) and returns current width
  *  @param {number} options.width2 Final stroke width
  *  @param {ol.colorLike|function} options.color Stroke color or a function that gets a feature and the position (beetween [0,1]) and returns current color
@@ -20503,8 +20744,11 @@ ol.style.FillPattern.prototype.getChecksum = function()
 ol.style.FlowLine = function(options) {
   if (!options) options = {};
   ol.style.Style.call (this, { 
-    renderer: this._render.bind(this)
+    renderer: this._render.bind(this),
+    geometry: options.geometry
   });
+  // Draw only visible
+  this._visible = (options.visible !== false);
   // Width
   if (typeof options.width === 'function') {
     this._widthFn = options.width;
@@ -20588,20 +20832,34 @@ ol.style.FlowLine.prototype.getColor = function(feature, step) {
           +')';
 };
 /** Renderer function
+ * @param {Array<ol.coordinate>} geom The pixel coordinates of the geometry in GeoJSON notation
+ * @param {ol.render.State} e The olx.render.State of the layer renderer
  */
 ol.style.FlowLine.prototype._render = function(geom, e) {
   if (e.geometry.getType()==='LineString') {
     var i, p, ctx = e.context;
-    var dw = Math.abs(this.getWidth(e.feature, 0) - this.getWidth(e.feature, 1));
-    var geoms = this._splitInto(geom, Math.max(30,dw/2));
+    // Get geometry used at drawing
+    if (!this._visible) {
+      var a = e.pixelRatio / e.resolution;
+      var g = e.geometry.getCoordinates();
+      var dx = geom[0][0] - g[0][0] * a;
+      var dy = geom[0][1] + g[0][1] * a;
+      geom = [];
+      for (i=0; p=g[i]; i++) {
+        geom[i] = [ dx + p[0] * a, dy - p[1] * a];
+      }
+    }
+    // Split into
+    var geoms = this._splitInto(geom, 255, 2);
     var k = 0;
     var nb = geoms.length;
+    // Draw
     ctx.save();
       ctx.lineJoin = 'round';
       ctx.lineCap = this._lineCap || 'mitter';
       geoms.forEach((g) => {
         var step = k++/nb;
-        ctx.lineWidth = this.getWidth(e.feature, step);
+        ctx.lineWidth = this.getWidth(e.feature, step) * e.pixelRatio;
         ctx.strokeStyle = this.getColor(e.feature, step);
         ctx.beginPath();
         ctx.moveTo(g[0][0],g[0][1]);
@@ -20615,8 +20873,8 @@ ol.style.FlowLine.prototype._render = function(geom, e) {
 };
 /** Split line geometry into equal length geometries
  * @param {Array<ol.coordinate>} geom
- * @param {number} nb number of resulting geometries
- * @param {number} nim minimum length of the resulting geometries
+ * @param {number} nb number of resulting geometries, default 255
+ * @param {number} nim minimum length of the resulting geometries, default 1
  */
 ol.style.FlowLine.prototype._splitInto = function(geom, nb, min) {
   var i, p;
@@ -20626,7 +20884,7 @@ ol.style.FlowLine.prototype._splitInto = function(geom, nb, min) {
   for (i=1; p=geom[i]; i++) {
     l += ol.coordinate.dist2d(geom[i-1], p);
   }
-  var length = Math.min (min || 5, l / (nb||30));
+  var length = Math.max (min||2, l/(nb||255));
   var p0 = geom[0];
   l = 0;
   var g = [p0];
