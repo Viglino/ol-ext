@@ -247,7 +247,7 @@
     }
     // 1 day
     date = new Date(date.getTime() + 24*60*60*1000);
-    tline.setDate(date, false);
+    tline.setDate(date, { anim:false });
     // next
     tline.element.classList.add('running');
     running = setTimeout(function() { go(true); }, 100);

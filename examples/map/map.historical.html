@@ -105,7 +105,6 @@
   var tline = new ol.control.Timeline({
     className: 'ol-pointer',
     features: histo,
-    minDate: new Date('1850'),
     maxDate: new Date('2019'),
     getFeatureDate: function(l) { return l.get('name'); },
     getHTML: function(l) { return l.get('name'); }
@@ -113,7 +112,6 @@
 
   tline.on('scroll', function(e){
     var layer, dmin = Infinity;
-    console.log(e.date)
     histo.forEach(function(l) {
       var d = new Date(l.get('name'));
       var dt = Math.abs(e.date-d);
