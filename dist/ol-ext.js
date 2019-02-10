@@ -8286,7 +8286,7 @@ ol.inherits(ol.control.Timeline, ol.control.Control);
  */
 ol.control.Timeline.prototype.setMap = function(map) {
   ol.control.Control.prototype.setMap.call(this, map);
-  this.refresh();
+  this.refresh(this.get('zoom')||1, true);
 };
 /** Add a button on the timeline
  * @param {*} button
@@ -8395,7 +8395,7 @@ ol.control.Timeline.prototype.getFeatures = function() {
  * Refresh the timeline with new data
  * @param {Number} zoom Zoom factor from 0.25 to 10, default 1
  */
-ol.control.Timeline.prototype.refresh = function(zoom) {
+ol.control.Timeline.prototype.refresh = function(zoom, first) {
   if (!this.getMap()) return;
   if (!zoom) zoom = this.get('zoom');
   zoom = Math.min(this.get('maxZoom'), Math.max(this.get('minZoom'), zoom || 1));
@@ -8505,6 +8505,7 @@ ol.control.Timeline.prototype.refresh = function(zoom) {
     ol.ext.element.setStyle(t, { top: pos*lineHeight });
   }.bind(this));
   this._nbline = line.length;
+  if (first) this.setDate(this._minDate, { anim: false, position: 'start' });
   // Dispatch scroll event
   this.dispatchEvent({ 
     type: 'scroll', 
@@ -8530,7 +8531,6 @@ ol.control.Timeline.prototype._drawTime = function(div, min, max, scale) {
   var year = (new Date(this._minDate)).getFullYear();
   dt = (new Date(String(year)) - new Date(String(year-1))) * scale;
   var dyear = Math.round(2*heigth/dt)+1;
-  console.log(dt, dyear, heigth)
   while(true) {
     d = new Date(String(year));
     if (d > this._maxDate) break;
@@ -8606,10 +8606,13 @@ ol.control.Timeline.prototype._drawTime = function(div, min, max, scale) {
 };
 /** Center timeline on a date
  * @param {Date|String|ol.feature} feature a date or a feature with a date
- * @param {boolean} anim animate scroll
+ * @param {Object} options
+ *  @param {boolean} options.anim animate scroll
+ *  @param {string} options.position start, end or middle, default middle
  */
-ol.control.Timeline.prototype.setDate = function(feature, anim) {
+ol.control.Timeline.prototype.setDate = function(feature, options) {
   var date;
+  options = options || {};
   // Get date from Feature
   if (feature instanceof ol.Feature) {
     date = this._getFeatureDate(feature);
@@ -8622,9 +8625,15 @@ ol.control.Timeline.prototype.setDate = function(feature, anim) {
     date = new Date(String(feature));
   }
   if (!isNaN(date)) {
-    if (anim === false) this._scrollDiv.classList.add('ol-move');
-    this._scrollDiv.scrollLeft = (date-this._minDate)*this._scale - ol.ext.element.getStyle(this._scrollDiv, 'width')/2;
-    if (anim === false) this._scrollDiv.classList.remove('ol-move');
+    if (options.anim === false) this._scrollDiv.classList.add('ol-move');
+    var scrollLeft = (date-this._minDate)*this._scale;
+    if (options.position==='start') {
+      scrollLeft += ol.ext.element.outerWidth(this._scrollDiv)/2 - ol.ext.element.getStyle(this._scrollDiv, 'marginLeft')/2;
+    } else if (options.position==='end') {
+      scrollLeft -= ol.ext.element.outerWidth(this._scrollDiv)/2 - ol.ext.element.getStyle(this._scrollDiv, 'marginLeft')/2;
+    }
+    this._scrollDiv.scrollLeft = scrollLeft;
+    if (options.anim === false) this._scrollDiv.classList.remove('ol-move');
     if (feature) {
       for (var i=0, f; f = this._tline[i]; i++) {
         if (f.feature === feature) {
@@ -8646,22 +8655,22 @@ ol.control.Timeline.prototype.getDate = function(position) {
   switch (position) {
     case 'start': {
       if (this.get('interval')) {
-        pos = ol.ext.element.getStyle(this._scrollDiv, 'width')/2 - ol.ext.element.getStyle(this._intervalDiv, 'width')/2;
+        pos = - ol.ext.element.getStyle(this._intervalDiv, 'width')/2 + ol.ext.element.getStyle(this._scrollDiv, 'marginLeft')/2;
       } else {
-        pos = 0;
+        pos = - ol.ext.element.outerWidth(this._scrollDiv)/2 + ol.ext.element.getStyle(this._scrollDiv, 'marginLeft')/2;
       }
       break;
     }
     case 'end': {
       if (this.get('interval')) {
-        pos = ol.ext.element.getStyle(this._scrollDiv, 'width')/2 + ol.ext.element.getStyle(this._intervalDiv, 'width')/2;
+        pos = ol.ext.element.getStyle(this._intervalDiv, 'width')/2 - ol.ext.element.getStyle(this._scrollDiv, 'marginLeft')/2;
       } else {
-        pos = ol.ext.element.getStyle(this._scrollDiv, 'width');
+        pos = ol.ext.element.outerWidth(this._scrollDiv)/2 - ol.ext.element.getStyle(this._scrollDiv, 'marginLeft')/2;
       }
       break;
     }
     default: {
-      pos = ol.ext.element.getStyle(this._scrollDiv, 'width')/2;
+      pos = 0;
       break;
     }
   }

@@ -3022,6 +3022,8 @@
   padding: 0;
   scroll-behavior: smooth;
   line-height: 1em;
+  height: 6em;
+  padding: 0 50%;
 }
 .ol-timeline .ol-scroll.ol-move {
   scroll-behavior: unset;
@@ -3030,11 +3032,9 @@
   overflow-x: auto;
 }
 
-.ol-timeline .ol-scroll {
-  height: 6em;
-}
 .ol-timeline.ol-hasbutton .ol-scroll {
   margin-left: 1.5em;
+  padding: 0 calc(50% - .75em);
 }
 .ol-timeline .ol-buttons {
   display: none;
