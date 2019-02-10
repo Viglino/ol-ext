@@ -1,0 +1,115 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2019 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: MapZone</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="Simply jump from a mapzone to another." />
+  <meta name="keywords" content="ol, openlayers, map, zone, jump" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    #map, .zones {
+      width: 980px;
+    }
+    .zones {
+      clear:both; 
+      text-align: center; 
+      background: #ccc; 
+      padding: .2em 0 1em; 
+      box-sizing: border-box;
+    }
+    .zones .ol-mapzonezone {
+      margin: 4px;
+    }
+    .zones .ol-mapzonezone:hover {
+      box-shadow: 0 0 0 .5em #fff;  
+    }
+  </style>
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: MapZone control</h1>
+  </a>
+  <div class="info">
+    A control to jump from a map zone to another.
+    <ul>
+      <li>
+        The <i>zones</i> options lets you pass an array of zones objects with a name and an extent.
+      </li>
+      <li>
+        The <i>centerOnClick</i> options will center the map on the clicked zone.
+      </li>
+    </ul> 
+  </div>
+
+  <!-- DIV pour la carte -->
+  <div id="map" style="height:600px;"></div>
+  <div class="zones">
+    <h2>French overseas departments and territories</h2>
+  </div>
+  
+  <script type="text/javascript">
+
+  // Two base layers
+  var ign = new ol.layer.Tile({
+    source: new ol.source.XYZ({
+      url: 'https://wxs.ign.fr/pratique/geoportail/wmts?layer=GEOGRAPHICALGRIDSYSTEMS.MAPS&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fjpeg&TileMatrix={z}&TileCol={x}}&TileRow={y}',
+      attributions: '<a href="https://www.geoportail.gouv.fr/">&copy; IGN-Geoportail</a>'
+		})
+  });
+
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 6,
+      center: [173664, 6166327]
+    }),
+    layers: [ign]
+  });
+
+  var zone = new ol.control.MapZone({
+    layer: new ol.layer.Tile({
+      source: new ol.source.XYZ({
+        url: 'https://wxs.ign.fr/pratique/geoportail/wmts?layer=ORTHOIMAGERY.ORTHOPHOTOS&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fjpeg&TileMatrix={z}&TileCol={x}}&TileRow={y}'
+      })
+    }),
+    zones: ol.control.MapZone.zones.DOMTOM
+  });
+  map.addControl(zone);
+
+  map.addControl( new ol.control.MapZone({
+    layer: new ol.layer.Tile({
+      source: new ol.source.XYZ({
+        url: 'https://wxs.ign.fr/pratique/geoportail/wmts?layer=ORTHOIMAGERY.ORTHOPHOTOS&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fjpeg&TileMatrix={z}&TileCol={x}}&TileRow={y}'
+      })
+    }),
+    zones: ol.control.MapZone.zones.DOMTOM,
+    target: $('.zones').get(0)
+  }));
+
+
+  </script>
+  
+</body>
+</html>

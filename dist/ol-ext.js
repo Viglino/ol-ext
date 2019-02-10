@@ -8528,6 +8528,9 @@ ol.control.Timeline.prototype._drawTime = function(div, min, max, scale) {
   var heigth = ol.ext.element.getStyle(tdiv, 'height');
   // Year
   var year = (new Date(this._minDate)).getFullYear();
+  dt = (new Date(String(year)) - new Date(String(year-1))) * scale;
+  var dyear = Math.round(2*heigth/dt)+1;
+  console.log(dt, dyear, heigth)
   while(true) {
     d = new Date(String(year));
     if (d > this._maxDate) break;
@@ -8539,7 +8542,7 @@ ol.control.Timeline.prototype._drawTime = function(div, min, max, scale) {
       html: year,
       parent: tdiv
     });
-    year++;
+    year += dyear;
   }
   // Month
   if (/day|month/.test(this.get('graduation'))) {
