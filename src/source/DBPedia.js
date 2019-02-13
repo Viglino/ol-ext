@@ -67,7 +67,10 @@ ol_inherits (ol_source_DBPedia, ol_source_Vector);
 */
 ol_source_DBPedia.prototype.readFeature = function (feature, attributes, lastfeature) {
   // Copy RDF attributes values
-  for (var i in attributes) feature.set (i, attributes[i].value);
+  for (var i in attributes) {
+    if (attributes[i].type==='uri') attributes[i].value = encodeURI(attributes[i].value);
+    feature.set (i, attributes[i].value);
+  }
 
   // Prevent same feature with different type duplication
   if (lastfeature && lastfeature.get("subject") == attributes.subject.value) {

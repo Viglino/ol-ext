@@ -27,12 +27,35 @@
 
 	<!-- ol-ext maki and fontawesome defintions used in fontsymbol -->
 	<script type="text/javascript" src="../../dist/extra/FontAwesomeDef.js"></script>
+	<!-- filesaver-js -->
+	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
 
 	<link rel="stylesheet" href="../style.css" />
 	<style>
 		#select img
 		{	max-height: 300px;
 		}
+		#map {
+			width: 600px;
+			height: 400px;
+		}
+		.fullscreen #map {
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			width: 100%;
+			height: 100%;
+			z-index: 10;
+		}
+		.fullscreen .options.top {
+			position: fixed;
+			top: 0;
+			right: 0;
+			z-index:10000;
+		}
+
 	</style>
 </head>
 <body >
@@ -46,8 +69,10 @@
 	</p>
 
 	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
-	<div class="options"></div>
+	<div id="map"></div>
+	<div class="options top">
+		<button onclick="$('body').toggleClass('fullscreen'); map.updateSize();">fullscreen</button>
+	</div>
 	<div id ="select" class="options" >Select an item.</div>
 	
 	<script type="text/javascript">
@@ -149,6 +174,17 @@
 			console.log("FontAwesome is loaded!");
 		}
 	});
+
+	function save() {
+		var format = new ol.format.GeoJSON();
+		var data = format.writeFeatures(vectorSource.getFeatures(), {
+			dataProjection: 'EPSG:4326',
+			featureProjection: map.getView().getProjection()
+		});
+		var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
+		saveAs(blob, "commons.geojson");
+	}
+
 	</script>
 	<!-- -->
 </body>
