@@ -2040,6 +2040,18 @@ ol.control.Bar.prototype.onActivateControl_ = function (e) {
 		}
 	}
 };
+/**
+ * @param {string} name of the control to search
+ * @return {ol.control.Control}
+ */
+ol.control.Bar.prototype.getControlsByName = function(name) {
+	var controls = this.getControls();
+	return controls.filter(
+		function(control) {
+			return (control.get('name') === name);
+		}
+	);
+};
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
@@ -2051,6 +2063,7 @@ ol.control.Bar.prototype.onActivateControl_ = function (e) {
 * @param {Object=} options Control options.
 *	@param {String} options.className class of the control
 *	@param {String} options.title title of the control
+*	@param {String} options.name an optional name, default none
 *	@param {String} options.html html to insert in the control
 *	@param {function} options.handleClick callback when control is clicked (or use change:active event)
 */
@@ -2059,7 +2072,7 @@ ol.control.Button = function(options)
 	var element = document.createElement("div");
 	element.className = (options.className || '') + " ol-button ol-unselectable ol-control";
 	var self = this;
-	var bt = document.createElement(/ol-text-button/.test(options.className) ? "div": "button");
+	var bt = this.button_ = document.createElement(/ol-text-button/.test(options.className) ? "div": "button");
 	bt.type = "button";
 	if (options.title) bt.title = options.title;
 	if (options.html instanceof Element) bt.appendChild(options.html)
@@ -2088,8 +2101,32 @@ ol.control.Button = function(options)
 		this.set("title", options.title);
 	}
 	if (options.title) this.set("title", options.title);
+	if (options.name) this.set("name", options.name);
 };
 ol.inherits(ol.control.Button, ol.control.Control);
+/** Set the control visibility
+* @param {boolean} b 
+*/
+ol.control.Button.prototype.setVisible = function (val) {
+	if (val) ol.ext.element.show(this.element);
+	else ol.ext.element.hide(this.element);
+}
+/**
+ * Set the button title
+ * @param {string} title
+ * @returns {undefined}
+ */
+ol.control.Button.prototype.setTitle = function(title) {
+    this.button_.setAttribute('title', title);
+};
+/**
+ * Set the button html
+ * @param {string} html
+ * @returns {undefined}
+ */
+ol.control.Button.prototype.setHtml = function(html) {
+	ol.ext.element.setHTML (this.button_, html);
+};
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -7306,7 +7343,7 @@ ol.control.SearchGeoportailParcelle.prototype._handleParcelle = function(parc) {
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
  *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
  *
- *	@param {string|undefined} options.url Url to BAN api, default "https://api-adresse.data.gouv.fr/search/"
+ *	@param {string|undefined} options.url Url to Nominatim api, default "https://nominatim.openstreetmap.org/search"
  * @see {@link https://wiki.openstreetmap.org/wiki/Nominatim}
  */
 ol.control.SearchNominatim = function(options)
@@ -8256,6 +8293,8 @@ ol.control.Timeline = function(options) {
       });
     }.bind(this), options.scrollTimeout || 15);
   }.bind(this));
+  // Magic to give "live" scroll events on touch devices
+  this._scrollDiv.addEventListener('gesturechange', function() {});
   // Scroll timeline
   ol.ext.element.scrollDiv(this._scrollDiv, {
     onmove: function(b) {
@@ -8343,7 +8382,7 @@ ol.control.Timeline.prototype._getHTML = function(feature) {
  * @private
  */
 ol.control.Timeline.prototype._getFeatureDate = function(feature) {
-  return feature.get('date');
+  return (feature && feature.get) ? feature.get('date') : null;
 };
 /** Default function to get the end date of a feature, return undefined
  * @param {ol.Feature} feature
@@ -8613,16 +8652,20 @@ ol.control.Timeline.prototype._drawTime = function(div, min, max, scale) {
 ol.control.Timeline.prototype.setDate = function(feature, options) {
   var date;
   options = options || {};
-  // Get date from Feature
-  if (feature instanceof ol.Feature) {
-    date = this._getFeatureDate(feature);
-    if (!(date instanceof Date)) {
-      date = new Date(date);
-    }
-  } else if (feature instanceof Date) {
+  // It's a date
+  if (feature instanceof Date) {
     date = feature;
   } else {
-    date = new Date(String(feature));
+    // Get date from Feature
+    if (this.getFeatures().indexOf(feature) >= 0) {
+      date = this._getFeatureDate(feature);
+    }
+    if (date && !(date instanceof Date)) {
+      date = new Date(date);
+    }
+    if (!date || isNaN(date)) {
+      date = new Date(String(feature));
+    }
   }
   if (!isNaN(date)) {
     if (options.anim === false) this._scrollDiv.classList.add('ol-move');
@@ -15468,16 +15511,18 @@ ol.interaction.UndoRedo.prototype._watchSources = function() {
     });
     return init;
   }
-  // Watch the vector sources in the map 
-  var vectors = getVectorLayers(map.getLayers());
-  vectors.forEach((function(l) {
-    var s = l.getSource();
-    this._sourceListener.push( s.on(['addfeature', 'removefeature'], this._onAddRemove.bind(this)) );
-    this._sourceListener.push( s.on('clearstart', this.blockStart.bind(this)) );
-    this._sourceListener.push( s.on('clearend', this.blockEnd.bind(this)) );
-  }).bind(this));
-  // Watch new inserted/removed
-  this._sourceListener.push( map.getLayers().on(['add', 'remove'], this._watchSources.bind(this) ) );
+  if (map) {
+    // Watch the vector sources in the map 
+    var vectors = getVectorLayers(map.getLayers());
+    vectors.forEach((function(l) {
+      var s = l.getSource();
+      this._sourceListener.push( s.on(['addfeature', 'removefeature'], this._onAddRemove.bind(this)) );
+      this._sourceListener.push( s.on('clearstart', this.blockStart.bind(this)) );
+      this._sourceListener.push( s.on('clearend', this.blockEnd.bind(this)) );
+    }).bind(this));
+    // Watch new inserted/removed
+    this._sourceListener.push( map.getLayers().on(['add', 'remove'], this._watchSources.bind(this) ) );
+  }
 };
 /** Watch for interactions
  * @private
@@ -15489,18 +15534,20 @@ ol.interaction.UndoRedo.prototype._watchInteractions = function() {
     this._interactionListener.forEach(function(l) { ol.Observable.unByKey(l); })
   }
   this._interactionListener = [];
-  // Watch the interactions in the map 
-  map.getInteractions().forEach((function(i) {
-    this._interactionListener.push(i.on(
-      ['setattributestart', 'modifystart', 'rotatestart', 'translatestart', 'scalestart', 'deletestart', 'deleteend', 'beforesplit', 'aftersplit'], 
-      this._onInteraction.bind(this)
+  if (map) {
+    // Watch the interactions in the map 
+    map.getInteractions().forEach((function(i) {
+      this._interactionListener.push(i.on(
+        ['setattributestart', 'modifystart', 'rotatestart', 'translatestart', 'scalestart', 'deletestart', 'deleteend', 'beforesplit', 'aftersplit'], 
+        this._onInteraction.bind(this)
+      ));
+    }).bind(this));
+    // Watch new inserted / unwatch removed
+    this._interactionListener.push( map.getInteractions().on(
+      ['add', 'remove'], 
+      this._watchInteractions.bind(this)
     ));
-  }).bind(this));
-  // Watch new inserted / unwatch removed
-  this._interactionListener.push( map.getInteractions().on(
-    ['add', 'remove'], 
-    this._watchInteractions.bind(this)
-  ));
+  }
 };
 /** A feature is added / removed
  */
@@ -16803,6 +16850,143 @@ ol.source.HexBin.prototype.getHexFeatures = function () {
     features.push(f2);
   });
   return features;
+};
+
+/*	Copyright (c) 2019 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** A source for INSEE grid
+ * @constructor
+ * @extends {ol.source.Vector}
+ * @param {Object} options ol.source.VectorOptions + ol.HexGridOptions
+ *  @param {ol.source.Vector} options.source Source
+ *  @param {number} [options.size] size of the hexagon in map units, default 80000
+ *  @param {ol.coordinate} [options.origin] origin of the grid, default [0,0]
+ *  @param {import('../render/HexGrid').HexagonLayout} [options.layout] grid layout, default pointy
+ *  @param {(f: ol.Feature) => ol.geom.Point} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
+ */
+ol.source.InseeGrid = function (options) {
+  options = options || {};
+  this._bindModify = this._onModifyFeature.bind(this);
+  ol.source.Vector.call(this, options);
+  this._origin = options.source;
+  console.log(options.source.getFeatures())
+  this._grid = new ol.InseeGrid({ size: options.size });
+  // Geometry function
+  this._geomFn = options.geometryFunction || ol.coordinate.getFeatureCenter || function (f) { return f.getGeometry().getFirstCoordinate(); };
+  // Existing features
+  this.reset();
+  // Future features
+  this._origin.on("addfeature", this._onAddFeature.bind(this));
+  this._origin.on("removefeature", this._onRemoveFeature.bind(this));
+};
+ol.ext.inherits(ol.source.InseeGrid, ol.source.Vector);
+ol.source.InseeGrid.prototype.setSize = function (size) {
+  this._grid.set('size', size);
+  this.reset();
+};
+/**
+ * On add feature
+ * @param {ol.events.Event} e
+ * @param {ol.Feature} bin
+ * @private
+ */
+ol.source.InseeGrid.prototype._onAddFeature = function (e, bin) {
+  var f = e.feature || e.target;
+  bin = bin || this.getBinAt(this._geomFn(f), true);
+  bin.get('features').push(f);
+  f.on("change", this._bindModify);
+};
+/**
+ *  On remove feature
+ *  @param {ol.events.Event} e
+ *  @param {ol.Feature} bin
+ *  @private
+ */
+ol.source.InseeGrid.prototype._onRemoveFeature = function (e, bin) {
+  var f = e.feature || e.target;
+  bin = bin || this.getBinAt(this._geomFn(f));
+  if (bin) {
+    // Remove feature from bin
+    var features = bin.get('features');
+    for (var i=0, fi; fi=features[i]; i++) {
+      if (fi===f) {
+        features.splice(i, 1);
+        break;
+      }
+    }
+    // Remove bin if no features
+    if (!features.length) {
+      this.removeFeature(bin);
+    }
+  } else {
+    console.log("[ERROR:Bin] remove feature: feature doesn't exists anymore.");
+  }
+  f.un("change", this._bindModify);
+};
+/**
+ * Get the bin that contains a feature
+ * @param {ol.Feature} f the feature
+ * @return {ol.Feature|boolean} the bin or false it doesn't exit
+ */
+ol.source.InseeGrid.prototype.getBin = function (feature) {
+  var bins = this.getFeatures();
+  for (var i=0, b; b = bins[i]; i++) {
+    var features = b.get('features');
+    for (var j=0, f; f=features[j]; j++) {
+      if (f===feature) return b;
+    }
+  }
+  return false;
+}
+/** Get the bean at a coord
+ * @param {ol.Coordinate} coord
+ * @param {boolean} create true to create if doesn't exit
+ * @return {ol.Feature|boolean} the bin or false it doesn't exit
+ */
+ol.source.InseeGrid.prototype.getBinAt = function (coord, create) {
+  var g = this._grid.getGridAtCoordinate(coord, this.getProjection());
+  var center = ol.extent.getCenter(g.getExtent());
+  var features = this.getFeaturesAtCoordinate( center );
+  var bin = features[0];
+  if (!bin && create) {
+    bin = new ol.Feature({ geometry: g, features: [], center: center });
+    this.addFeature(bin);
+  }
+  return bin;
+};
+/**
+ *  A feature has been modified
+ *  @param {ol.events.Event} e
+ *  @private
+ */
+ol.source.InseeGrid.prototype._onModifyFeature = function (e) {
+  var bin = this.getBin(e.target);
+  var bin2 = this.getBinAt(this._geomFn(e.target), 'create');
+  if (bin && bin !== bin2) {
+    // remove from the bin
+    this._onRemoveFeature(e, bin);
+    // insert in the new bin
+    this._onAddFeature(e, bin2);
+  }
+  this.changed();
+};
+/** Clear all bins and generate a new one. 
+ */
+ol.source.InseeGrid.prototype.reset = function () {
+  this.clear();
+  var features = this._origin.getFeatures();
+  for (var i = 0, f; f = features[i]; i++) {
+    this._onAddFeature({ feature: f });
+  }
+};
+/** Get grid extent 
+ * @param {ol.ProjectionLike} proj
+ * @return {ol.Extent}
+ */
+ol.source.InseeGrid.prototype.getGridExtent = function (proj) {
+  return this._grid.getExtent(proj);
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
@@ -19757,6 +19941,58 @@ ol.HexGrid.prototype.cube_neighbors = function (c, d)
 		for (d=0; d<6; d++) n[d] = this.cube2hex(n[d])
 		return n;
 	}
+};
+
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * French INSEE grids
+ * @classdesc a class to compute French INSEE grids, ie. fix area (200x200m) square grid, based appon EPSG:3035
+ * @see https://www.capadresse.com/en/solutions/rental-data-grid
+ *
+ * @requires proj4
+ * @constructor 
+ * @extends {ol.Object}
+ * @param {Object} [options]
+ *  @param {number} [options.size] size grid size in meter, default 200 (200x200m)
+ */
+ol.InseeGrid = function (options) {
+  options = options || {};
+  // Define EPSG:3035 if none
+  if (!proj4.defs["EPSG:3035"]) {
+    proj4.defs("EPSG:3035","+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs");
+    ol.proj.proj4.register(proj4);
+  }
+  ol.Object.call (this, options);
+  // Options
+  var size = Math.max(200, Math.round((options.size||0)/200) * 200);
+  this.set('size', size);
+};
+ol.ext.inherits (ol.InseeGrid, ol.Object);
+/** Grid extent (in EPSG:3035)
+ */
+ol.InseeGrid.extent = [3200000,2000000,4300000,3140000];
+/** Get the grid extent
+ * @param {ol.proj.ProjLike} [proj='EPSG:3857']
+ */
+ol.InseeGrid.prototype.getExtent = function (proj) {
+  return ol.proj.transformExtent(ol.InseeGrid.extent, proj||'EPSG:3035', 'EPSG:3857')
+};
+/** Get grid geom at coord
+ * @param {ol.Coordinate} coord
+ * @param {ol.proj.ProjLike} [proj='EPSG:3857']
+ */
+ol.InseeGrid.prototype.getGridAtCoordinate = function (coord, proj) {
+  var c = ol.proj.transform(coord, proj||'EPSG:3857', 'EPSG:3035')
+  var s = this.get('size');
+  console.log(s)
+  var x = Math.floor(c[0]/s) * s;
+  var y = Math.floor(c[1]/s) * s;
+  var geom = new ol.geom.Polygon([[[x,y],[x+s,y],[x+s,y+s],[x,y+s],[x,y]]]);
+  geom.transform('EPSG:3035', proj||'EPSG:3857');
+  return geom;
 };
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
