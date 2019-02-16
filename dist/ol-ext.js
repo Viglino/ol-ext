@@ -15736,7 +15736,7 @@ ol.source.BinBase = function (options) {
   // Future features
   this._origin.on("addfeature", this._onAddFeature.bind(this));
   this._origin.on("removefeature", this._onRemoveFeature.bind(this));
-  if (typeof (options.flatAttributes) === 'function') options.flatAttributes;
+  if (typeof (options.flatAttributes) === 'function') this._flatAttributes = options.flatAttributes;
 };
 ol.ext.inherits(ol.source.BinBase, ol.source.Vector);
 /**
@@ -15860,6 +15860,12 @@ ol.source.BinBase.prototype.getGridFeatures = function () {
     features.push(bin);
   }.bind(this));
   return features;
+};
+/** Create bin attributes using the features it contains when exporting 
+ * @param {ol.Feature} bin the bin to export
+ * @param {Array<ol.Features>} features the features it contains
+ */
+ol.source.BinBase.prototype._flatAttributes = function(/*bin, features*/) {
 };
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
