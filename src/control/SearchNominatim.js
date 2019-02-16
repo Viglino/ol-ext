@@ -23,7 +23,7 @@ import ol_control_SearchJSON from "./SearchJSON";
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
  *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
  *
- *	@param {string|undefined} options.url Url to BAN api, default "https://api-adresse.data.gouv.fr/search/"
+ *	@param {string|undefined} options.url Url to Nominatim api, default "https://nominatim.openstreetmap.org/search"
  * @see {@link https://wiki.openstreetmap.org/wiki/Nominatim}
  */
 var ol_control_SearchNominatim = function(options)
