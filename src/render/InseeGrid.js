@@ -56,7 +56,6 @@ ol_InseeGrid.prototype.getExtent = function (proj) {
 ol_InseeGrid.prototype.getGridAtCoordinate = function (coord, proj) {
   var c = ol_proj_transform(coord, proj||'EPSG:3857', 'EPSG:3035')
   var s = this.get('size');
-  console.log(s)
   var x = Math.floor(c[0]/s) * s;
   var y = Math.floor(c[1]/s) * s;
   var geom = new ol_geom_Polygon([[[x,y],[x+s,y],[x+s,y+s],[x,y+s],[x,y]]]);

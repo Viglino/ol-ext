@@ -1,4 +1,4 @@
-/*	Copyright (c) 2019 Jean-Marc VIGLINO,
+  /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
@@ -15,12 +15,11 @@ import {ol_ext_inherits} from '../util/ext'
 /** A source for INSEE grid
  * @constructor
  * @extends {ol.source.Vector}
- * @param {Object} options ol_source_VectorOptions + ol.HexGridOptions
+ * @param {Object} options ol_source_VectorOptions + grid option
  *  @param {ol.source.Vector} options.source Source
- *  @param {number} [options.size] size of the hexagon in map units, default 80000
- *  @param {ol.coordinate} [options.origin] origin of the grid, default [0,0]
- *  @param {import('../render/HexGrid').HexagonLayout} [options.layout] grid layout, default pointy
+ *  @param {number} [options.size] size of the grid in meter, default 200m
  *  @param {(f: ol.Feature) => ol.geom.Point} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
+ *  @param {(bin: ol.Feature, features: Array<ol.Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
  */
 var ol_source_InseeGrid = function (options) {
   options = options || {};
@@ -29,7 +28,6 @@ var ol_source_InseeGrid = function (options) {
   ol_source_Vector.call(this, options);
 
   this._origin = options.source;
-  console.log(options.source.getFeatures())
 
   this._grid = new ol_InseeGrid({ size: options.size });
 
@@ -42,6 +40,7 @@ var ol_source_InseeGrid = function (options) {
   // Future features
   this._origin.on("addfeature", this._onAddFeature.bind(this));
   this._origin.on("removefeature", this._onRemoveFeature.bind(this));
+  if (typeof (options.flatAttributes) === 'function') options.flatAttributes;
 
 };
 ol_ext_inherits(ol_source_InseeGrid, ol_source_Vector);
@@ -158,6 +157,33 @@ ol_source_InseeGrid.prototype.reset = function () {
  */
 ol_source_InseeGrid.prototype.getGridExtent = function (proj) {
   return this._grid.getExtent(proj);
+};
+
+/** Flatten a list of features associated with a bin
+ * @param {ol.Feature} bin the bin feature
+ * @param {<Array<ol.Feature>} features features associated with the bin
+ */
+ol_source_InseeGrid.prototype._flatAttributes = function (bin, features) {
+};
+
+/**
+ * Get features withour circular dependencies (vs. getFeatures)
+ * @return {Array<ol.Feature>}
+ */
+ol_source_InseeGrid.prototype.getGridFeatures = function () {
+  var features = [];
+  this.getFeatures().forEach(function (f) {
+    var bin = new ol_Feature(f.getGeometry().clone());
+    for (var i in f.getProperties()) {
+      if (i!=='features' && i!=='geometry') {
+        bin.set(i, f.get(i));
+      }
+    };
+    bin.set('nb', f.get('features').length);
+    this._flatAttributes(bin, f.get('features'));
+    features.push(bin);
+  }.bind(this));
+  return features;
 };
 
 export default ol_source_InseeGrid

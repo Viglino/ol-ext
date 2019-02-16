@@ -54,6 +54,21 @@
     .fullscreen #legend {
       display: none;
     }
+    .waiting {
+      opacity: .5;
+    }
+    .waiting:before {
+      content: "Calculating...";
+      background: #fff;
+      padding: 1em;
+      font-size: 2em;
+      top: 30%;
+      left: 50%;
+      position: fixed;
+      transform: translate(-50%,-30%);
+      z-index: 999;
+      box-shadow: 1px 1px 2px 2px;
+    }
   </style>
 
 </head>
@@ -131,12 +146,12 @@
           seed[0] + dl/10*Math.random(),
           seed[1] + dl/10*Math.random()
         ]));
-        f.set('id',i*ssize+j);
         features.push(f);
       }
     }
     source.clear();
     source.addFeatures(features);
+    reset();
   }
 
   // Vector source
@@ -148,8 +163,18 @@
   var layerSource = new ol.layer.Vector({ source: source, visible:false })
   map.addLayer(layerSource);
 
-  //
+  // Style function 
+  var min, max;
+  var styleFn = function(f,res){
+    var color;
+    if (f.get('features').length > min+2*(max-min)/3) color = [136, 0, 0, .5];
+    else if (f.get('features').length > min + (max-min)/3) color = [255, 165, 0, .5];
+    else color = [0, 136, 0, .5];
+    return [ new ol.style.Style({ fill: new ol.style.Fill({  color: color }) }) ];
+  };
+  // The rid layer
   var grid = new ol.layer.Vector({ 
+    style: styleFn, 
     source: new ol.source.InseeGrid({ 
       source: source,
       size: 100000
@@ -157,14 +182,10 @@
   })
   map.addLayer(grid);
 
-  // add 1000 features
-  addFeatures(1000);
-
   // Add feature on drop
   var dd = new ol.interaction.DropFile();
 	map.addInteraction (dd);
 	dd.on ('addfeatures', function(event) {
-    //console.log(event)
     var f = event.features;
     source.clear();
     source.addFeatures(f);
@@ -173,39 +194,56 @@
   // Create Bin
   function reset() {
     grid.getSource().setSize(Number($('#size').val())*1000);
+    max = 0;
+    min = Infinity;
+    grid.getSource().getFeatures().forEach(function (f) {
+      var nb = f.get('features').length;
+      if (nb>max) max = nb;
+      if (nb<min) min = nb;
+    });
   };
+  // add 1000 features
+  addFeatures(1000);
 
   // Save
   function save () {
     var format = new ol.format.GeoJSON();
-    var hexa = layer.getSource().getHexFeatures();
-    if (style.val()==='point'){
-      var size = hexa[0].getGeometry().getExtent();
-      size = map.getView().getResolution() / (size[2]-size[0]) ;
-      var minVal = minRadius * size;
-      console.log(minVal)
-      hexa.forEach(function(f){
-        var radius = Math.min(1,f.get('nb')/max);
-        if (radius < minVal) {
-          console.log(radius, minVal)
-          radius = minVal;
-        }
-        var geom = f.getGeometry().getCoordinates()[0];
-        var center = ol.extent.getCenter(f.getGeometry().getExtent());
-        geom.forEach(function(p) {
-          p[0] = center[0] + (p[0]-center[0])*radius;
-          p[1] = center[1] + (p[1]-center[1])*radius;
-        });
-        f.setGeometry(new ol.geom.Polygon([geom]));
-      });
-    }
-		var data = format.writeFeatures(hexa, {
+    var features = grid.getSource().getGridFeatures();
+		var data = format.writeFeatures(features, {
 			dataProjection: 'EPSG:4326',
 			featureProjection: map.getView().getProjection()
     });
 		var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
-		saveAs(blob, "hexmap.geojson");
-	}
+		saveAs(blob, "grid.geojson");
+  }
+  
+  // Add population to the grid
+  function addPop1km() {
+    $('body').addClass('waiting');
+    $.ajax('../data/insee_1km.csv', {
+      success: function(res){
+        res = res.split('\n');
+        res.shift();
+        grid.getSource().getFeatures().forEach(function(b) { b.set('pop',0); });
+        res.forEach(function(data){
+          var source = grid.getSource();
+          data = data.split(',');
+          var coord = [ Number(data[0]*1000)+500, Number(data[1]*1000)+500];
+          coord = ol.proj.transform(coord, 'EPSG:3035', map.getView().getProjection());
+          var bin = source.getBinAt(coord);
+          if (bin) {
+            bin.set('pop', (bin.get('pop')||0) + Number(data[2]));
+          }
+        });
+        $('body').removeClass('waiting');
+      }
+    })
+  }
+  map.on('click', function(e){
+    var bin = grid.getSource().getBinAt(e.coordinate);
+    var coord = ol.proj.transform(e.coordinate, map.getView().getProjection(), 'EPSG:3035');
+    console.log(coord)
+  });
 
 </script>
 
