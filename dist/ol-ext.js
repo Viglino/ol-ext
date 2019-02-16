@@ -16852,26 +16852,24 @@ ol.source.HexBin.prototype.getHexFeatures = function () {
   return features;
 };
 
-/*	Copyright (c) 2019 Jean-Marc VIGLINO,
+  /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** A source for INSEE grid
  * @constructor
  * @extends {ol.source.Vector}
- * @param {Object} options ol.source.VectorOptions + ol.HexGridOptions
+ * @param {Object} options ol.source.VectorOptions + grid option
  *  @param {ol.source.Vector} options.source Source
- *  @param {number} [options.size] size of the hexagon in map units, default 80000
- *  @param {ol.coordinate} [options.origin] origin of the grid, default [0,0]
- *  @param {import('../render/HexGrid').HexagonLayout} [options.layout] grid layout, default pointy
+ *  @param {number} [options.size] size of the grid in meter, default 200m
  *  @param {(f: ol.Feature) => ol.geom.Point} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
+ *  @param {(bin: ol.Feature, features: Array<ol.Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
  */
 ol.source.InseeGrid = function (options) {
   options = options || {};
   this._bindModify = this._onModifyFeature.bind(this);
   ol.source.Vector.call(this, options);
   this._origin = options.source;
-  console.log(options.source.getFeatures())
   this._grid = new ol.InseeGrid({ size: options.size });
   // Geometry function
   this._geomFn = options.geometryFunction || ol.coordinate.getFeatureCenter || function (f) { return f.getGeometry().getFirstCoordinate(); };
@@ -16880,6 +16878,7 @@ ol.source.InseeGrid = function (options) {
   // Future features
   this._origin.on("addfeature", this._onAddFeature.bind(this));
   this._origin.on("removefeature", this._onRemoveFeature.bind(this));
+  if (typeof (options.flatAttributes) === 'function') options.flatAttributes;
 };
 ol.ext.inherits(ol.source.InseeGrid, ol.source.Vector);
 ol.source.InseeGrid.prototype.setSize = function (size) {
@@ -16987,6 +16986,31 @@ ol.source.InseeGrid.prototype.reset = function () {
  */
 ol.source.InseeGrid.prototype.getGridExtent = function (proj) {
   return this._grid.getExtent(proj);
+};
+/** Flatten a list of features associated with a bin
+ * @param {ol.Feature} bin the bin feature
+ * @param {<Array<ol.Feature>} features features associated with the bin
+ */
+ol.source.InseeGrid.prototype._flatAttributes = function (bin, features) {
+};
+/**
+ * Get features withour circular dependencies (vs. getFeatures)
+ * @return {Array<ol.Feature>}
+ */
+ol.source.InseeGrid.prototype.getGridFeatures = function () {
+  var features = [];
+  this.getFeatures().forEach(function (f) {
+    var bin = new ol.Feature(f.getGeometry().clone());
+    for (var i in f.getProperties()) {
+      if (i!=='features' && i!=='geometry') {
+        bin.set(i, f.get(i));
+      }
+    };
+    bin.set('nb', f.get('features').length);
+    this._flatAttributes(bin, f.get('features'));
+    features.push(bin);
+  }.bind(this));
+  return features;
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
@@ -19987,7 +20011,6 @@ ol.InseeGrid.prototype.getExtent = function (proj) {
 ol.InseeGrid.prototype.getGridAtCoordinate = function (coord, proj) {
   var c = ol.proj.transform(coord, proj||'EPSG:3857', 'EPSG:3035')
   var s = this.get('size');
-  console.log(s)
   var x = Math.floor(c[0]/s) * s;
   var y = Math.floor(c[1]/s) * s;
   var geom = new ol.geom.Polygon([[[x,y],[x+s,y],[x+s,y+s],[x,y+s],[x,y]]]);
