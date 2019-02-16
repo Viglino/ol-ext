@@ -87,17 +87,19 @@ ol_interaction_UndoRedo.prototype._watchSources = function() {
     return init;
   }
 
-  // Watch the vector sources in the map 
-  var vectors = getVectorLayers(map.getLayers());
-  vectors.forEach((function(l) {
-    var s = l.getSource();
-    this._sourceListener.push( s.on(['addfeature', 'removefeature'], this._onAddRemove.bind(this)) );
-    this._sourceListener.push( s.on('clearstart', this.blockStart.bind(this)) );
-    this._sourceListener.push( s.on('clearend', this.blockEnd.bind(this)) );
-  }).bind(this));
+  if (map) {
+    // Watch the vector sources in the map 
+    var vectors = getVectorLayers(map.getLayers());
+    vectors.forEach((function(l) {
+      var s = l.getSource();
+      this._sourceListener.push( s.on(['addfeature', 'removefeature'], this._onAddRemove.bind(this)) );
+      this._sourceListener.push( s.on('clearstart', this.blockStart.bind(this)) );
+      this._sourceListener.push( s.on('clearend', this.blockEnd.bind(this)) );
+    }).bind(this));
 
-  // Watch new inserted/removed
-  this._sourceListener.push( map.getLayers().on(['add', 'remove'], this._watchSources.bind(this) ) );
+    // Watch new inserted/removed
+    this._sourceListener.push( map.getLayers().on(['add', 'remove'], this._watchSources.bind(this) ) );
+  }
 };
 
 /** Watch for interactions
@@ -111,19 +113,21 @@ ol_interaction_UndoRedo.prototype._watchInteractions = function() {
   }
   this._interactionListener = [];
 
-  // Watch the interactions in the map 
-  map.getInteractions().forEach((function(i) {
-    this._interactionListener.push(i.on(
-      ['setattributestart', 'modifystart', 'rotatestart', 'translatestart', 'scalestart', 'deletestart', 'deleteend', 'beforesplit', 'aftersplit'], 
-      this._onInteraction.bind(this)
-    ));
-  }).bind(this));
+  if (map) {
+    // Watch the interactions in the map 
+    map.getInteractions().forEach((function(i) {
+      this._interactionListener.push(i.on(
+        ['setattributestart', 'modifystart', 'rotatestart', 'translatestart', 'scalestart', 'deletestart', 'deleteend', 'beforesplit', 'aftersplit'], 
+        this._onInteraction.bind(this)
+      ));
+    }).bind(this));
 
-  // Watch new inserted / unwatch removed
-  this._interactionListener.push( map.getInteractions().on(
-    ['add', 'remove'], 
-    this._watchInteractions.bind(this)
-  ));
+    // Watch new inserted / unwatch removed
+    this._interactionListener.push( map.getInteractions().on(
+      ['add', 'remove'], 
+      this._watchInteractions.bind(this)
+    ));
+  }
 };
 
 /** A feature is added / removed
