@@ -1,7 +1,6 @@
 /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
 import {inherits as ol_inherits} from 'ol'
 import ol_source_Vector from 'ol/source/Vector'
-import { ol_Feature } from 'ol/Feature';
 import ol_control_Control from 'ol/control/Control'
 import ol_has_TOUCH from 'ol/has'
 import ol_ext_element from '../util/element'

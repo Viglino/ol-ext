@@ -8,6 +8,7 @@ import ol_Object from 'ol/Object'
 import {ol_ext_inherits} from '../util/ext'
 import {register as ol_proj_proj4_register} from 'ol/proj/proj4.js';
 import {transform as ol_proj_transform} from 'ol/proj'
+import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
 import ol_geom_Polygon from 'ol/geom/Polygon'
 
 /**
@@ -46,7 +47,7 @@ ol_InseeGrid.extent = [3200000,2000000,4300000,3140000];
  * @param {ol.proj.ProjLike} [proj='EPSG:3857']
  */
 ol_InseeGrid.prototype.getExtent = function (proj) {
-  return ol_proj_transformExtent(ol.InseeGrid.extent, proj||'EPSG:3035', 'EPSG:3857')
+  return ol_proj_transformExtent(ol_InseeGrid.extent, proj||'EPSG:3035', 'EPSG:3857')
 };
 
 /** Get grid geom at coord

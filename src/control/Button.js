@@ -63,7 +63,7 @@ ol_inherits(ol_control_Button, ol_control_Control);
 /** Set the control visibility
 * @param {boolean} b 
 */
-ol.control.Button.prototype.setVisible = function (val) {
+ol_control_Button.prototype.setVisible = function (val) {
 	if (val) ol_ext_element.show(this.element);
 	else ol_ext_element.hide(this.element);
 }
@@ -73,7 +73,7 @@ ol.control.Button.prototype.setVisible = function (val) {
  * @param {string} title
  * @returns {undefined}
  */
-ol.control.Button.prototype.setTitle = function(title) {
+ol_control_Button.prototype.setTitle = function(title) {
     this.button_.setAttribute('title', title);
 };
 
@@ -82,7 +82,7 @@ ol.control.Button.prototype.setTitle = function(title) {
  * @param {string} html
  * @returns {undefined}
  */
-ol.control.Button.prototype.setHtml = function(html) {
+ol_control_Button.prototype.setHtml = function(html) {
 	ol_ext_element.setHTML (this.button_, html);
 };
 

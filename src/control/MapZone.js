@@ -8,7 +8,7 @@ import ol_control_Control from 'ol/control/Control'
 import {getCenter as ol_extent_getCenter} from 'ol/extent'
 import ol_Map from 'ol/Map'
 import ol_View from 'ol/View'
-
+import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
 import {ol_ext_inherits} from '../util/ext'
 import ol_ext_element from 'ol-ext/util/element'
 
@@ -63,7 +63,7 @@ var ol_control_MapZone = function(options) {
   var maps = [];
   options.zones.forEach(function(z) {
     var view = new ol_View({ zoom: 6, center: [0,0], projection: options.projection });
-    var extent = ol_proj.transformExtent(z.extent, 'EPSG:4326', view.getProjection());
+    var extent = ol_proj_transformExtent(z.extent, 'EPSG:4326', view.getProjection());
     console.log(extent, z.extent)
     var div = ol_ext_element.create('DIV', {
       className: 'ol-mapzonezone',
