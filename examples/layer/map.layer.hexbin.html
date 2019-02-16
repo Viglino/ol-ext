@@ -346,9 +346,10 @@
   var dd = new ol.interaction.DropFile();
 	map.addInteraction (dd);
 	dd.on ('addfeatures', function(event) {
-    console.log(event)
+    //console.log(event)
+    var f = event.features;
     source.clear();
-    source.addFeatures(event.features);
+    source.addFeatures(f);
   });
 
   // Save

@@ -1,0 +1,213 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2017-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: HexBin source</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="ol.source.HexBin is a source to display hexagonal binning on a map." />
+  <meta name="keywords" content="ol3, layer, hexbin, cluster, hexagon, binning, heatmap" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <!-- filesaver-js -->
+	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+
+  <!-- Proj4 -->
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.3.14/proj4.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    #map {
+      width: 600px;
+      height: 400px;
+    }
+    .fullscreen #map {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .fullscreen .options {
+      position: fixed;
+      top: 0;
+      right: 0;
+    }
+    .fullscreen .info:last-child, 
+    .fullscreen #legend {
+      display: none;
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: HexBin source</h1>
+  </a>
+
+  <div class="info">
+  </div>
+
+  <!-- Map DIV -->
+  <div id="map"></div>
+
+  <div class="options">
+    <h2>Options:</h2>
+    <ul>
+      <li>
+        Size: <input id="size" type="number" min=".2" max="100" value="100" set=".2" onchange="reset();" /> km
+      </li>
+    
+      <li>
+        <input id="showsource" type="checkbox" onchange="layerSource.setVisible($(this).prop('checked')); modify.setActive($(this).prop('checked'));" /><label for="showsource"> display source features</label>
+      </li>
+    
+      <li>
+        <br/>
+        Drag'n'Drop a file on the map...
+        <button onclick='save()'>download result</button>
+      </li>
+      <li>
+        <button onclick="$('body').toggleClass('fullscreen'); map.updateSize();">fullscreen</button>
+      </li>
+    </ul>
+    <div class="info">Selection: <span>0</span> feature(s)</div>
+    <div class="info">Display source features and move them around <br/> to see what happens to the bin!</div>
+  </div>
+
+<script type="text/javascript">
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 4,
+      center: [166326, 5992663]
+    }),
+    layers: [ new ol.layer.Tile({ source: new ol.source.OSM() })]
+  });
+
+  var select  = new ol.interaction.Select();
+  map.addInteraction(select);
+  select.on('select', function(e){
+    if (e.selected.length){
+      var f = e.selected[0].get('features');
+      if (f) $(".options .info span").text(e.selected[0].get('features').length);
+      else $(".options .info span").text("0");
+    }
+    else $(".options .info span").text("0");
+  });
+
+  // Create a set of features on seed points
+  function addFeatures(nb){
+    var ssize = 20;		// seed size
+    var ext = grid.getSource().getGridExtent();
+    var dx = ext[2]-ext[0];
+    var dy = ext[3]-ext[1];
+    var dl = Math.min(dx,dy);
+    var features=[];
+    for (var i=0; i<nb/ssize; ++i){
+      var seed = [ext[0]+dx*Math.random(), ext[1]+dy*Math.random()]
+      for (var j=0; j<ssize; j++){
+        var f = new ol.Feature(new ol.geom.Point([
+          seed[0] + dl/10*Math.random(),
+          seed[1] + dl/10*Math.random()
+        ]));
+        f.set('id',i*ssize+j);
+        features.push(f);
+      }
+    }
+    source.clear();
+    source.addFeatures(features);
+  }
+
+  // Vector source
+  var source = new ol.source.Vector();
+  // Interaction to move the source features
+  var modify = new ol.interaction.Modify({ source: source });
+  modify.setActive(false);
+  map.addInteraction(modify);
+  var layerSource = new ol.layer.Vector({ source: source, visible:false })
+  map.addLayer(layerSource);
+
+  //
+  var grid = new ol.layer.Vector({ 
+    source: new ol.source.InseeGrid({ 
+      source: source,
+      size: 100000
+    })
+  })
+  map.addLayer(grid);
+
+  // add 1000 features
+  addFeatures(1000);
+
+  // Add feature on drop
+  var dd = new ol.interaction.DropFile();
+	map.addInteraction (dd);
+	dd.on ('addfeatures', function(event) {
+    //console.log(event)
+    var f = event.features;
+    source.clear();
+    source.addFeatures(f);
+  });
+
+  // Create Bin
+  function reset() {
+    grid.getSource().setSize(Number($('#size').val())*1000);
+  };
+
+  // Save
+  function save () {
+    var format = new ol.format.GeoJSON();
+    var hexa = layer.getSource().getHexFeatures();
+    if (style.val()==='point'){
+      var size = hexa[0].getGeometry().getExtent();
+      size = map.getView().getResolution() / (size[2]-size[0]) ;
+      var minVal = minRadius * size;
+      console.log(minVal)
+      hexa.forEach(function(f){
+        var radius = Math.min(1,f.get('nb')/max);
+        if (radius < minVal) {
+          console.log(radius, minVal)
+          radius = minVal;
+        }
+        var geom = f.getGeometry().getCoordinates()[0];
+        var center = ol.extent.getCenter(f.getGeometry().getExtent());
+        geom.forEach(function(p) {
+          p[0] = center[0] + (p[0]-center[0])*radius;
+          p[1] = center[1] + (p[1]-center[1])*radius;
+        });
+        f.setGeometry(new ol.geom.Polygon([geom]));
+      });
+    }
+		var data = format.writeFeatures(hexa, {
+			dataProjection: 'EPSG:4326',
+			featureProjection: map.getView().getProjection()
+    });
+		var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
+		saveAs(blob, "hexmap.geojson");
+	}
+
+</script>
+
+</body>
+</html>
