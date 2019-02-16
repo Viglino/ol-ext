@@ -15712,6 +15712,156 @@ ol.interaction.UndoRedo.prototype.hasRedo = function() {
   return (this._redoStack.length > 0);
 };
 
+/*	Copyright (c) 2019 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Abstract base class; normally only used for creating subclasses. Bin collector for data
+ * @constructor
+ * @extends {ol.source.Vector}
+ * @param {Object} options ol.source.VectorOptions + grid option
+ *  @param {ol.source.Vector} options.source Source
+ *  @param {(f: ol.Feature) => ol.geom.Point} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
+ *  @param {(bin: ol.Feature, features: Array<ol.Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
+ */
+ol.source.BinBase = function (options) {
+  options = options || {};
+  this._bindModify = this._onModifyFeature.bind(this);
+  ol.source.Vector.call(this, options);
+  this._origin = options.source;
+  // Geometry function
+  this._geomFn = options.geometryFunction || ol.coordinate.getFeatureCenter || function (f) { return f.getGeometry().getFirstCoordinate(); };
+  // Existing features
+  this.reset();
+  // Future features
+  this._origin.on("addfeature", this._onAddFeature.bind(this));
+  this._origin.on("removefeature", this._onRemoveFeature.bind(this));
+  if (typeof (options.flatAttributes) === 'function') options.flatAttributes;
+};
+ol.ext.inherits(ol.source.BinBase, ol.source.Vector);
+/**
+ * On add feature
+ * @param {ol.events.Event} e
+ * @param {ol.Feature} bin
+ * @private
+ */
+ol.source.BinBase.prototype._onAddFeature = function (e, bin) {
+  var f = e.feature || e.target;
+  bin = bin || this.getBinAt(this._geomFn(f), true);
+  bin.get('features').push(f);
+  f.on("change", this._bindModify);
+};
+/**
+ *  On remove feature
+ *  @param {ol.events.Event} e
+ *  @param {ol.Feature} bin
+ *  @private
+ */
+ol.source.BinBase.prototype._onRemoveFeature = function (e, bin) {
+  var f = e.feature || e.target;
+  bin = bin || this.getBinAt(this._geomFn(f));
+  if (bin) {
+    // Remove feature from bin
+    var features = bin.get('features');
+    for (var i=0, fi; fi=features[i]; i++) {
+      if (fi===f) {
+        features.splice(i, 1);
+        break;
+      }
+    }
+    // Remove bin if no features
+    if (!features.length) {
+      this.removeFeature(bin);
+    }
+  } else {
+    console.log("[ERROR:Bin] remove feature: feature doesn't exists anymore.");
+  }
+  f.un("change", this._bindModify);
+};
+/**
+ * Get the bin that contains a feature
+ * @param {ol.Feature} f the feature
+ * @return {ol.Feature} the bin or null it doesn't exit
+ */
+ol.source.BinBase.prototype.getBin = function (feature) {
+  var bins = this.getFeatures();
+  for (var i=0, b; b = bins[i]; i++) {
+    var features = b.get('features');
+    for (var j=0, f; f=features[j]; j++) {
+      if (f===feature) return b;
+    }
+  }
+  return null;
+}
+/** Get the grid geometry at the coord 
+ * @param {ol.Coordinate} coord
+ * @returns {ol.geom.Polygon} 
+ * @api
+ */
+ol.source.BinBase.prototype.getGridGeomAt = function (coord) {
+  return new ol.geom.Polygon([coord]);
+};
+/** Get the bean at a coord
+ * @param {ol.Coordinate} coord
+ * @param {boolean} create true to create if doesn't exit
+ * @return {ol.Feature} the bin or null it doesn't exit
+ */
+ol.source.BinBase.prototype.getBinAt = function (coord, create) {
+  var g = this.getGridGeomAt(coord);
+  var center = ol.extent.getCenter(g.getExtent());
+  var features = this.getFeaturesAtCoordinate( center );
+  var bin = features[0];
+  if (!bin && create) {
+    bin = new ol.Feature({ geometry: g, features: [], center: center });
+    this.addFeature(bin);
+  }
+  return bin || null;
+};
+/**
+ *  A feature has been modified
+ *  @param {ol.events.Event} e
+ *  @private
+ */
+ol.source.BinBase.prototype._onModifyFeature = function (e) {
+  var bin = this.getBin(e.target);
+  var bin2 = this.getBinAt(this._geomFn(e.target), 'create');
+  if (bin && bin !== bin2) {
+    // remove from the bin
+    this._onRemoveFeature(e, bin);
+    // insert in the new bin
+    this._onAddFeature(e, bin2);
+  }
+  this.changed();
+};
+/** Clear all bins and generate a new one. 
+ */
+ol.source.BinBase.prototype.reset = function () {
+  this.clear();
+  var features = this._origin.getFeatures();
+  for (var i = 0, f; f = features[i]; i++) {
+    this._onAddFeature({ feature: f });
+  }
+};
+/**
+ * Get features withour circular dependencies (vs. getFeatures)
+ * @return {Array<ol.Feature>}
+ */
+ol.source.BinBase.prototype.getGridFeatures = function () {
+  var features = [];
+  this.getFeatures().forEach(function (f) {
+    var bin = new ol.Feature(f.getGeometry().clone());
+    for (var i in f.getProperties()) {
+      if (i!=='features' && i!=='geometry') {
+        bin.set(i, f.get(i));
+      }
+    }
+    bin.set('nb', f.get('features').length);
+    this._flatAttributes(bin, f.get('features'));
+    features.push(bin);
+  }.bind(this));
+  return features;
+};
+
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -16865,152 +17015,33 @@ ol.source.HexBin.prototype.getHexFeatures = function () {
  *  @param {(f: ol.Feature) => ol.geom.Point} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
  *  @param {(bin: ol.Feature, features: Array<ol.Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
  */
-ol.source.InseeGrid = function (options) {
+ol.source.InseeBin = function (options) {
   options = options || {};
-  this._bindModify = this._onModifyFeature.bind(this);
-  ol.source.Vector.call(this, options);
-  this._origin = options.source;
   this._grid = new ol.InseeGrid({ size: options.size });
-  // Geometry function
-  this._geomFn = options.geometryFunction || ol.coordinate.getFeatureCenter || function (f) { return f.getGeometry().getFirstCoordinate(); };
-  // Existing features
-  this.reset();
-  // Future features
-  this._origin.on("addfeature", this._onAddFeature.bind(this));
-  this._origin.on("removefeature", this._onRemoveFeature.bind(this));
-  if (typeof (options.flatAttributes) === 'function') options.flatAttributes;
+  ol.source.BinBase.call(this, options);
 };
-ol.ext.inherits(ol.source.InseeGrid, ol.source.Vector);
-ol.source.InseeGrid.prototype.setSize = function (size) {
+ol.ext.inherits(ol.source.InseeBin, ol.source.BinBase);
+/** Set grid size
+ * @param {number} size
+ */
+ol.source.InseeBin.prototype.setSize = function (size) {
   this._grid.set('size', size);
   this.reset();
 };
-/**
- * On add feature
- * @param {ol.events.Event} e
- * @param {ol.Feature} bin
- * @private
- */
-ol.source.InseeGrid.prototype._onAddFeature = function (e, bin) {
-  var f = e.feature || e.target;
-  bin = bin || this.getBinAt(this._geomFn(f), true);
-  bin.get('features').push(f);
-  f.on("change", this._bindModify);
-};
-/**
- *  On remove feature
- *  @param {ol.events.Event} e
- *  @param {ol.Feature} bin
- *  @private
- */
-ol.source.InseeGrid.prototype._onRemoveFeature = function (e, bin) {
-  var f = e.feature || e.target;
-  bin = bin || this.getBinAt(this._geomFn(f));
-  if (bin) {
-    // Remove feature from bin
-    var features = bin.get('features');
-    for (var i=0, fi; fi=features[i]; i++) {
-      if (fi===f) {
-        features.splice(i, 1);
-        break;
-      }
-    }
-    // Remove bin if no features
-    if (!features.length) {
-      this.removeFeature(bin);
-    }
-  } else {
-    console.log("[ERROR:Bin] remove feature: feature doesn't exists anymore.");
-  }
-  f.un("change", this._bindModify);
-};
-/**
- * Get the bin that contains a feature
- * @param {ol.Feature} f the feature
- * @return {ol.Feature|boolean} the bin or false it doesn't exit
- */
-ol.source.InseeGrid.prototype.getBin = function (feature) {
-  var bins = this.getFeatures();
-  for (var i=0, b; b = bins[i]; i++) {
-    var features = b.get('features');
-    for (var j=0, f; f=features[j]; j++) {
-      if (f===feature) return b;
-    }
-  }
-  return false;
-}
-/** Get the bean at a coord
+/** Get the grid geometry at the coord 
  * @param {ol.Coordinate} coord
- * @param {boolean} create true to create if doesn't exit
- * @return {ol.Feature|boolean} the bin or false it doesn't exit
+ * @returns {ol.geom.Polygon} 
+ * @api
  */
-ol.source.InseeGrid.prototype.getBinAt = function (coord, create) {
-  var g = this._grid.getGridAtCoordinate(coord, this.getProjection());
-  var center = ol.extent.getCenter(g.getExtent());
-  var features = this.getFeaturesAtCoordinate( center );
-  var bin = features[0];
-  if (!bin && create) {
-    bin = new ol.Feature({ geometry: g, features: [], center: center });
-    this.addFeature(bin);
-  }
-  return bin;
-};
-/**
- *  A feature has been modified
- *  @param {ol.events.Event} e
- *  @private
- */
-ol.source.InseeGrid.prototype._onModifyFeature = function (e) {
-  var bin = this.getBin(e.target);
-  var bin2 = this.getBinAt(this._geomFn(e.target), 'create');
-  if (bin && bin !== bin2) {
-    // remove from the bin
-    this._onRemoveFeature(e, bin);
-    // insert in the new bin
-    this._onAddFeature(e, bin2);
-  }
-  this.changed();
-};
-/** Clear all bins and generate a new one. 
- */
-ol.source.InseeGrid.prototype.reset = function () {
-  this.clear();
-  var features = this._origin.getFeatures();
-  for (var i = 0, f; f = features[i]; i++) {
-    this._onAddFeature({ feature: f });
-  }
+ol.source.InseeBin.prototype.getGridGeomAt = function (coord) {
+  return this._grid.getGridAtCoordinate(coord, this.getProjection());
 };
 /** Get grid extent 
  * @param {ol.ProjectionLike} proj
  * @return {ol.Extent}
  */
-ol.source.InseeGrid.prototype.getGridExtent = function (proj) {
+ol.source.InseeBin.prototype.getGridExtent = function (proj) {
   return this._grid.getExtent(proj);
-};
-/** Flatten a list of features associated with a bin
- * @param {ol.Feature} bin the bin feature
- * @param {<Array<ol.Feature>} features features associated with the bin
- */
-ol.source.InseeGrid.prototype._flatAttributes = function (bin, features) {
-};
-/**
- * Get features withour circular dependencies (vs. getFeatures)
- * @return {Array<ol.Feature>}
- */
-ol.source.InseeGrid.prototype.getGridFeatures = function () {
-  var features = [];
-  this.getFeatures().forEach(function (f) {
-    var bin = new ol.Feature(f.getGeometry().clone());
-    for (var i in f.getProperties()) {
-      if (i!=='features' && i!=='geometry') {
-        bin.set(i, f.get(i));
-      }
-    };
-    bin.set('nb', f.get('features').length);
-    this._flatAttributes(bin, f.get('features'));
-    features.push(bin);
-  }.bind(this));
-  return features;
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
