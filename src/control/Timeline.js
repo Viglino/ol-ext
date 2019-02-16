@@ -115,6 +115,8 @@ var ol_control_Timeline = function(options) {
       });
     }.bind(this), options.scrollTimeout || 15);
   }.bind(this));
+  // Magic to give "live" scroll events on touch devices
+  this._scrollDiv.addEventListener('gesturechange', function() {});
 
   // Scroll timeline
   ol_ext_element.scrollDiv(this._scrollDiv, {
@@ -211,7 +213,7 @@ ol_control_Timeline.prototype._getHTML = function(feature) {
  * @private
  */
 ol_control_Timeline.prototype._getFeatureDate = function(feature) {
-  return feature.get('date');
+  return (feature && feature.get) ? feature.get('date') : null;
 };
 
 /** Default function to get the end date of a feature, return undefined
@@ -502,16 +504,20 @@ ol_control_Timeline.prototype._drawTime = function(div, min, max, scale) {
 ol_control_Timeline.prototype.setDate = function(feature, options) {
   var date;
   options = options || {};
-  // Get date from Feature
-  if (feature instanceof ol_Feature) {
-    date = this._getFeatureDate(feature);
-    if (!(date instanceof Date)) {
-      date = new Date(date);
-    }
-  } else if (feature instanceof Date) {
+  // It's a date
+  if (feature instanceof Date) {
     date = feature;
   } else {
-    date = new Date(String(feature));
+    // Get date from Feature
+    if (this.getFeatures().indexOf(feature) >= 0) {
+      date = this._getFeatureDate(feature);
+    }
+    if (date && !(date instanceof Date)) {
+      date = new Date(date);
+    }
+    if (!date || isNaN(date)) {
+      date = new Date(String(feature));
+    }
   }
   if (!isNaN(date)) {
     if (options.anim === false) this._scrollDiv.classList.add('ol-move');

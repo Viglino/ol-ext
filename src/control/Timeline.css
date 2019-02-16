@@ -70,8 +70,8 @@
   height: 1em;
   bottom: 0;
   position: absolute;
-  left: -200px;
-  right: -200px;
+  left: -1000px;
+  right: -1000px;
 }
 .ol-timeline .ol-scroll .ol-time {
   position: absolute;
@@ -98,7 +98,7 @@
   top: 0;
   bottom: 1em;
   left: -200px;
-  right: -400px;
+  right: -1000px;
   margin: 0 0 0 200px;
   overflow: hidden;
 }
