@@ -40,6 +40,25 @@
       width: 300px;
       z-index: 1;
     }
+    .ol-timeline .ol-scroll {
+      height: 3em;
+    }
+    .ol-timeline .ol-feature {
+      transform: translateX(-50%);
+    }
+    .ol-timeline.ol-zoomhover .ol-scroll .ol-feature:hover, 
+    .ol-timeline.ol-zoomhover .ol-scroll .ol-feature.ol-select {
+      transform: translateX(-50%) scale(2);
+    }
+    .date {
+      position: fixed;
+      left: 50%;
+      bottom: 1.5em;
+      background: rgba(255,255,255,.5);
+      transform: translateX(-50%);
+      font-size: 2rem;
+      margin-bottom: .05em;
+    }
   </style>
 </head>
 <body >
@@ -52,6 +71,7 @@
 
   <!-- DIV pour la carte -->
   <div id="map"></div>
+  <div class='date'></div>
   
 <script type="text/javascript">
   // The map
@@ -59,7 +79,7 @@
     target: 'map',
     view: new ol.View({
       zoom: 18,
-      center: [269836, 6248518]
+      center: [269889, 6248507]
     }),
     layers: [ new ol.layer.Tile({
       source: new ol.source.XYZ({
@@ -96,6 +116,33 @@
         "imageRotate": -3.136726258048235,
         "imageScale": [0.6375976820489188,0.6375976820489188]
       })
+    }),
+    new ol.layer.Image({
+      name: "1936",
+      source: new ol.source.GeoImage({
+        "url": "../data/INGF/IGNF_PVA_1-0__1936-07-17__C2314-1501_1936_NP2_3010.jpg?raw=true",
+        "imageCenter": [269937.2514666198,6248523.183442762],
+        "imageRotate": -2.778805073301242,
+        "imageScale": [0.47915761377123306,0.47915761377123306]
+      })
+    }),
+    new ol.layer.Image({
+      name: "1944",
+      source: new ol.source.GeoImage({
+        "url": "../data/INGF/IGNF_PVA_1-0__1944-08-11__C2214-1091_1944_106G2130_3199.jpg?raw=true",
+        "imageCenter": [269998.3656072118,6248506.391443234],
+        "imageRotate": 2.362938966984174,
+        "imageScale": [0.473608899531087,0.4768894853951739]
+      })
+    }),
+    new ol.layer.Image({
+      name: "1950",
+      source: new ol.source.GeoImage({
+        "url": "../data/INGF/IGNF_PVA_1-0__1950-05-30__C2314-1851_1950_CDP3505_0242.jpg?raw=true",
+        "imageCenter": [269869.74402191263,6248527.808891151],
+        "imageRotate": -0.028335836913955807,
+        "imageScale": [0.3267839610026342,0.326366151015898]
+      })
     })
   ];
 
@@ -103,8 +150,9 @@
 
 
   var tline = new ol.control.Timeline({
-    className: 'ol-pointer',
+    className: 'ol-pointer ol-zoomhover',
     features: histo,
+    minDate: new Date('1923'),
     maxDate: new Date('2019'),
     getFeatureDate: function(l) { return l.get('name'); },
     getHTML: function(l) { return l.get('name'); }
@@ -122,6 +170,10 @@
       l.setVisible(false);
     });
     layer.setVisible(true);
+    $('.date').text(layer.get('name'));
+  });
+  tline.on('select', function(e) {
+    tline.setDate(e.feature);
   });
 
   map.addControl (tline);
