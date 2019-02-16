@@ -183,4 +183,17 @@ ol_control_Bar.prototype.onActivateControl_ = function (e) {
 	}
 };
 
+/**
+ * @param {string} name of the control to search
+ * @return {ol.control.Control}
+ */
+ol_control_Bar.prototype.getControlsByName = function(name) {
+	var controls = this.getControls();
+	return controls.filter(
+		function(control) {
+			return (control.get('name') === name);
+		}
+	);
+};
+
 export default ol_control_Bar

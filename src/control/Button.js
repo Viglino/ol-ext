@@ -5,12 +5,15 @@
 import {inherits as ol_inherits} from 'ol'
 import ol_control_Control from 'ol/control/Control'
 
+import ol_ext_element from '../util/element'
+
 /** A simple push button control
 * @constructor
 * @extends {ol_control_Control}
 * @param {Object=} options Control options.
 *	@param {String} options.className class of the control
 *	@param {String} options.title title of the control
+*	@param {String} options.name an optional name, default none
 *	@param {String} options.html html to insert in the control
 *	@param {function} options.handleClick callback when control is clicked (or use change:active event)
 */
@@ -21,7 +24,7 @@ var ol_control_Button = function(options)
 	element.className = (options.className || '') + " ol-button ol-unselectable ol-control";
 	var self = this;
 
-	var bt = document.createElement(/ol-text-button/.test(options.className) ? "div": "button");
+	var bt = this.button_ = document.createElement(/ol-text-button/.test(options.className) ? "div": "button");
 	bt.type = "button";
 	if (options.title) bt.title = options.title;
 	if (options.html instanceof Element) bt.appendChild(options.html)
@@ -53,8 +56,34 @@ var ol_control_Button = function(options)
 		this.set("title", options.title);
 	}
 	if (options.title) this.set("title", options.title);
+	if (options.name) this.set("name", options.name);
 };
 ol_inherits(ol_control_Button, ol_control_Control);
 
+/** Set the control visibility
+* @param {boolean} b 
+*/
+ol.control.Button.prototype.setVisible = function (val) {
+	if (val) ol_ext_element.show(this.element);
+	else ol_ext_element.hide(this.element);
+}
+
+/**
+ * Set the button title
+ * @param {string} title
+ * @returns {undefined}
+ */
+ol.control.Button.prototype.setTitle = function(title) {
+    this.button_.setAttribute('title', title);
+};
+
+/**
+ * Set the button html
+ * @param {string} html
+ * @returns {undefined}
+ */
+ol.control.Button.prototype.setHtml = function(html) {
+	ol_ext_element.setHTML (this.button_, html);
+};
 
 export default ol_control_Button
