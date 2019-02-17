@@ -237,7 +237,12 @@
         });
         $('body').removeClass('waiting');
       }
-    })
+    });
+  }
+  grid.getSource()._flatAttributes = function (bin, features) {
+    if (bin.get('pop')) {
+      bin.set('nb_pop',bin.get('nb')/bin.get('pop'));
+    }
   }
   map.on('click', function(e){
     var bin = grid.getSource().getBinAt(e.coordinate);
