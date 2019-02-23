@@ -17,6 +17,9 @@ import ol_geom_LineString from 'ol/geom/LineString'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import {easeOut as ol_easing_easeOut} from 'ol/easing'
 import ol_geom_Point from 'ol/geom/Point'
+import ol_style_Style from 'ol/style/Style'
+import ol_style_Circle from 'ol/style/Circle'
+//import {getVectorContext as ol_render_getVectorContext} from 'ol/render';
 
 /**
  * @classdesc
@@ -246,7 +249,7 @@ ol_interaction_SelectCluster.prototype.animateCluster_ = function(center, featur
 	
 	// Animate function
 	function animate(event) {
-		var vectorContext = event.vectorContext || ol_render_getVectorContext(event);
+		var vectorContext = event.vectorContext;// || ol_render_getVectorContext(event);
 		// Retina device
 		var ratio = event.frameState.pixelRatio;
 		var res = this.getMap().getView().getResolution();
@@ -294,8 +297,8 @@ ol_interaction_SelectCluster.prototype.animateCluster_ = function(center, featur
 	// Start a new postcompose animation
 	this.listenerKey_ = this.overlayLayer_.on(['postcompose','postrender'], animate.bind(this));
 	// Start animation with a ghost feature
-	var feature = new ol.Feature(new ol.geom.Point(this.getMap().getView().getCenter()));
-	feature.setStyle(new ol.style.Style({ image: new ol.style.Circle({}) }));
+	var feature = new ol_Feature(new ol_geom_Point(this.getMap().getView().getCenter()));
+	feature.setStyle(new ol_style_Style({ image: new ol_style_Circle({}) }));
 	this.overlayLayer_.getSource().addFeature(feature);
 };
 

@@ -12,7 +12,7 @@ import {easeOut as ol_easing_easeOut} from 'ol/easing'
 import {buffer as ol_extent_buffer} from 'ol/extent'
 import ol_geom_Point from 'ol/geom/Point'
 import ol_Map from 'ol/Map'
-import {ol_render_getVectorContext} from 'ol/render';
+//import {getVectorContext as ol_render_getVectorContext} from 'ol/render';
 
 /**
  *  A vector layer for animated cluster
@@ -134,7 +134,7 @@ ol_layer_AnimatedCluster.prototype.animate = function(e)
 
 	// Run animation
 	if (a.start) {
-		var vectorContext = e.vectorContext || ol_render_getVectorContext(e);
+		var vectorContext = e.vectorContext; // || ol_render_getVectorContext(e);
 		console.log(vectorContext)
 		var d = (time - a.start) / duration;
 		// Animation ends

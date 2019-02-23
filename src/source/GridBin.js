@@ -4,6 +4,8 @@
 */
 import ol_source_BinBase from './BinBase'
 import {ol_ext_inherits} from '../util/ext'
+import {transform as ol_proj_transform} from 'ol/proj'
+import ol_geom_Polygon from 'ol/geom/Polygon'
 
 /** A source for grid binning
  * @constructor
@@ -50,7 +52,7 @@ ol_source_GridBin.prototype.getGridGeomAt = function (coord) {
   var size = this.get('size');
   var x = size * Math.floor(coord[0] / size);
   var y = size * Math.floor(coord[1] / size);
-  var geom = new ol.geom.Polygon([[[x,y], [x+size,y], [x+size,y+size], [x,y+size], [x,y]]]);
+  var geom = new ol_geom_Polygon([[[x,y], [x+size,y], [x+size,y+size], [x,y+size], [x,y]]]);
   return geom.transform(this.get('gridProjection'), this.getProjection() || 'EPSG:3857');
 };
 
