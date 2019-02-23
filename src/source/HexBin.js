@@ -8,6 +8,8 @@ import ol_geom_Polygon from 'ol/geom/Polygon'
 import ol_geom_Point from 'ol/geom/Point'
 import ol_source_Vector from 'ol/source/Vector'
 import { getCenter as ol_extent_getCenter } from 'ol/extent'
+
+import ol_source_BinBase from './BinBase'
 import ol_HexGrid from '../render/HexGrid'
 import { ol_coordinate_getFeatureCenter } from "../geom/GeomUtils";
 
@@ -20,133 +22,29 @@ import { ol_coordinate_getFeatureCenter } from "../geom/GeomUtils";
  *  @param {ol.coordinate} [options.origin] origin of the grid, default [0,0]
  *  @param {import('../render/HexGrid').HexagonLayout} [options.layout] grid layout, default pointy
  *  @param {(f: ol.Feature) => ol.geom.Point} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
+ *  @param {(bin: ol.Feature, features: Array<ol.Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
  */
 var ol_source_HexBin = function (options) {
   options = options || {};
-
-  /** Bind function for callback
-   * 	@type {{modify: (e: ol.events.Event) => void}}
-   */
-  this._bind = { modify: this._onModifyFeature.bind(this) };
-
-  ol_source_Vector.call(this, options);
 
   /** The HexGrid
    * 	@type {ol_HexGrid}
    */
   this._hexgrid = new ol_HexGrid(options);
-  /** @type {{[key: string]: ol.Feature}} */
-  this._bin = {};
 
-  /** Source and origin
-   * 	@type {ol.source.Vector}
-   */
-  this._origin = options.source;
-  /** Geometry function to get a point
-   * 	@type {ol.Coordinate | ((f: ol.Feature) => ol.geom.Point)}
-   */
-  this._geomFn = options.geometryFunction || ol_coordinate_getFeatureCenter || function (f) { return f.getGeometry().getFirstCoordinate(); };
-  // Existing features
-  this.reset();
-  // Future features
-  this._origin.on("addfeature", this._onAddFeature.bind(this));
-  this._origin.on("removefeature", this._onRemoveFeature.bind(this));
+  ol_source_BinBase.call(this, options);
+
 };
-ol_inherits(ol_source_HexBin, ol_source_Vector);
+ol_inherits(ol_source_HexBin, ol_source_BinBase);
 
-/**
- * On add feature
- * @param {ol.events.Event} e
- * @private
+/** Get the hexagon geometry at the coord 
+ * @param {ol.Coordinate} coord
+ * @returns {ol.geom.Polygon} 
+ * @api
  */
-ol_source_HexBin.prototype._onAddFeature = function (e) {
-  var f = e.feature || e.target;
-  var h = this._hexgrid.coord2hex(this._geomFn(f));
-  var id = h.toString();
-  if (this._bin[id]) {
-    this._bin[id].get('features').push(f);
-  } else {
-    var ex = new ol_Feature(new ol_geom_Polygon([this._hexgrid.getHexagon(h)]));
-    ex.set('features', [f]);
-    ex.set('center', new ol_geom_Point(ol_extent_getCenter(ex.getGeometry().getExtent())));
-    this._bin[id] = ex;
-    this.addFeature(ex);
-  }
-  f.on("change", this._bind.modify);
-};
-
-/** @typedef {Object} Bin ???
- * 	@property {string} id
- * 	@property {number} index
- * 	@property {boolean} [moved]
- */
-
-/**
- *  Get the hexagon of a feature
- *  @param {ol.Feature} f
- *  @return {Bin} the bin id, the index of the feature in the bin and a boolean if the feature has moved to an other bin
- */
-ol_source_HexBin.prototype.getBin = function (f) {
-  // Test if feature exists in the current hex
-  var index, id = this._hexgrid.coord2hex(this._geomFn(f)).toString();
-  if (this._bin[id]) {
-    index = this._bin[id].get('features').indexOf(f);
-    if (index > -1) return { id: id, index: index };
-  }
-  // The feature has moved > check all bins
-  for (id in this._bin) {
-    index = this._bin[id].get('features').indexOf(f);
-    if (index > -1) return { id: id, index: index, moved: true };
-  }
-  return false;
-};
-
-/**
- *  On remove feature
- *  @param {ol.events.Event} e
- *  @param {Bin} bin
- *  @private
- */
-ol_source_HexBin.prototype._onRemoveFeature = function (e, bin) {
-  var f = e.feature || e.target;
-  var b = bin || this.getBin(f);
-  if (b) {
-    var features = this._bin[b.id].get('features');
-    features.splice(b.index, 1);
-    if (!features.length) {
-      this.removeFeature(this._bin[b.id]);
-      delete this._bin[b.id];
-    }
-  } else {
-    console.log("[ERROR:HexBin] remove feature feature doesn't exists anymore.");
-  }
-  f.un("change", this._bind.modify);
-};
-
-/**
- *  A feature has been modified
- *  @param {ol.events.Event} e
- *  @private
- */
-ol_source_HexBin.prototype._onModifyFeature = function (e) {
-  var bin = this.getBin(e.target);
-  if (bin && bin.moved) {
-    // remove from the bin
-    this._onRemoveFeature(e, bin);
-    // insert in the new bin
-    this._onAddFeature(e);
-  }
-  this.changed();
-};
-
-/** Clear all bins and generate a new one. */
-ol_source_HexBin.prototype.reset = function () {
-  this._bin = {};
-  this.clear();
-  var features = this._origin.getFeatures();
-  for (var i = 0, f; f = features[i]; i++) {
-    this._onAddFeature({ feature: f });
-  }
+ol_source_HexBin.prototype.getGridGeomAt = function (coord) {
+  var h = this._hexgrid.coord2hex(coord);
+  return new ol_geom_Polygon([this._hexgrid.getHexagon(h)])
 };
 
 /**	Set the inner HexGrid size.
@@ -204,25 +102,11 @@ ol_source_HexBin.prototype.getOrigin = function () {
 }
 
 /**
- * Get the orginal source
- * @return {ol_source_Vector}
- */
-ol_source_HexBin.prototype.getSource = function () {
-  return this._origin;
-};
-
-/**
- * Get hexagons withour circular dependencies (vs. getFeatures)
+ * Get hexagons without circular dependencies (vs. getFeatures)
  * @return {Array<ol.Feature>}
  */
 ol_source_HexBin.prototype.getHexFeatures = function () {
-  var features = [];
-  this.getFeatures().forEach(function (f) {
-    var f2 = new ol_Feature(f.getGeometry().clone());
-    f2.set('nb', f.get('features').length);
-    features.push(f2);
-  });
-  return features;
+  return ol_source_BinBase.prototype.getGridFeatures.call(this);
 };
 
 export default ol_source_HexBin

@@ -178,7 +178,7 @@ ol_source_BinBase.prototype.reset = function () {
 };
 
 /**
- * Get features withour circular dependencies (vs. getFeatures)
+ * Get features without circular dependencies (vs. getFeatures)
  * @return {Array<ol.Feature>}
  */
 ol_source_BinBase.prototype.getGridFeatures = function () {
@@ -202,6 +202,14 @@ ol_source_BinBase.prototype.getGridFeatures = function () {
  * @param {Array<ol.Features>} features the features it contains
  */
 ol_source_BinBase.prototype._flatAttributes = function(/*bin, features*/) {
+};
+
+/**
+ * Get the orginal source
+ * @return {ol_source_Vector}
+ */
+ol_source_BinBase.prototype.getSource = function () {
+  return this._origin;
 };
 
 export default ol_source_BinBase

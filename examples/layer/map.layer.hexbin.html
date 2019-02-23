@@ -120,6 +120,21 @@
     .fullscreen #legend {
       display: none;
     }
+    .waiting {
+      opacity: .5;
+    }
+    .waiting:before {
+      content: "Calculating...";
+      background: #fff;
+      padding: 1em;
+      font-size: 2em;
+      top: 30%;
+      left: 50%;
+      position: fixed;
+      transform: translate(-50%,-30%);
+      z-index: 999;
+      box-shadow: 1px 1px 2px 2px;
+    }
     .fa-arrows-alt {
       float: right;
       cursor: pointer;
@@ -367,11 +382,14 @@
 
   // Add feature on drop
   var dd = new ol.interaction.DropFile();
-	map.addInteraction (dd);
+  map.addInteraction (dd);
+  dd.on('loadstart', function () { $('body').addClass('waiting'); });
+  dd.on('loadend', function () { $('body').removeClass('waiting'); });
 	dd.on ('addfeatures', function(event) {
-    //console.log(event)
     var f = event.features;
-    if (!$("#add").prop('checked')) source.clear(true);
+    if (!$("#add").prop('checked')) {
+      source.clear(true);
+    }
     source.addFeatures(f);
   });
 
