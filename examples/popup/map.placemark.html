@@ -33,6 +33,9 @@
     .placemark .content * {
       color: inherit!important;
     }
+    button i {
+      color: #000;
+    }
   </style>
 
 </head>
@@ -102,6 +105,7 @@
       <li>
         Background color:
         <select onchange="placemark.setBackgroundColor(this.value);">
+          <option value='transparent'>tranparent</option>
           <option value='#fff'>white</option>
           <option value='#f00'>red</option>
           <option value='#0f0'>green</option>
