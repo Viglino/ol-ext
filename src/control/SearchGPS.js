@@ -125,6 +125,8 @@ ol_control_SearchGPS.prototype._createForm = function () {
     var input = ol_ext_element.create('INPUT', {
       className: className,
       type:'number',
+      step:'any',
+      lang: 'en',
       parent: div,
       on: {
         'change keyup': onchange
@@ -169,7 +171,6 @@ ol_control_SearchGPS.prototype._createForm = function () {
   var lats = createInput('ol-dms','"');
 
   // Focus
-  this._input.disabled = true;
   this.button.addEventListener("click", function() {
     lon.focus();
   });
