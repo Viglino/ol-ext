@@ -18,7 +18,7 @@ var ol_ext_inherits = function(child,parent) {
   child.prototype.constructor = child;
 };
 
-// Compatibilty with ol > 5
+// Compatibilty with ol > 5 to be removed when v6 is out
 if (window.ol) {
   if (!ol.inherits) ol.inherits = ol_ext_inherits;
 }

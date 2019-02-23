@@ -24,7 +24,7 @@ ol.ext.inherits = function(child,parent) {
   child.prototype = Object.create(parent.prototype);
   child.prototype.constructor = child;
 };
-// Compatibilty with ol > 5
+// Compatibilty with ol > 5 to be removed when v6 is out
 if (window.ol) {
   if (!ol.inherits) ol.inherits = ol.ext.inherits;
 }
@@ -13529,6 +13529,7 @@ ol.interaction.Ripple.prototype.postcompose_ = function(e)
 	released under the CeCILL-B license (http://www.cecill.info/).
 	ol.interaction.SelectCluster is an interaction for selecting vector features in a cluster.
 */
+//
 /**
  * @classdesc
  * Interaction for selecting vector features in a cluster. 
@@ -13732,7 +13733,7 @@ ol.interaction.SelectCluster.prototype.animateCluster_ = function(center, featur
 	var start = new Date().getTime();
 	// Animate function
 	function animate(event) {
-		var vectorContext = event.vectorContext || ol.render.getVectorContext(event);
+		var vectorContext = event.vectorContext;// || ol.render.getVectorContext(event);
 		// Retina device
 		var ratio = event.frameState.pixelRatio;
 		var res = this.getMap().getView().getResolution();
@@ -15923,7 +15924,7 @@ ol.source.BinBase.prototype.reset = function () {
   }
 };
 /**
- * Get features withour circular dependencies (vs. getFeatures)
+ * Get features without circular dependencies (vs. getFeatures)
  * @return {Array<ol.Feature>}
  */
 ol.source.BinBase.prototype.getGridFeatures = function () {
@@ -15946,6 +15947,13 @@ ol.source.BinBase.prototype.getGridFeatures = function () {
  * @param {Array<ol.Features>} features the features it contains
  */
 ol.source.BinBase.prototype._flatAttributes = function(/*bin, features*/) {
+};
+/**
+ * Get the orginal source
+ * @return {ol.source.Vector}
+ */
+ol.source.BinBase.prototype.getSource = function () {
+  return this._origin;
 };
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
@@ -16991,123 +16999,25 @@ ol.source.GridBin.prototype.getGridGeomAt = function (coord) {
  *  @param {ol.coordinate} [options.origin] origin of the grid, default [0,0]
  *  @param {import('../render/HexGrid').HexagonLayout} [options.layout] grid layout, default pointy
  *  @param {(f: ol.Feature) => ol.geom.Point} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
+ *  @param {(bin: ol.Feature, features: Array<ol.Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
  */
 ol.source.HexBin = function (options) {
   options = options || {};
-  /** Bind function for callback
-   * 	@type {{modify: (e: ol.events.Event) => void}}
-   */
-  this._bind = { modify: this._onModifyFeature.bind(this) };
-  ol.source.Vector.call(this, options);
   /** The HexGrid
    * 	@type {ol.HexGrid}
    */
   this._hexgrid = new ol.HexGrid(options);
-  /** @type {{[key: string]: ol.Feature}} */
-  this._bin = {};
-  /** Source and origin
-   * 	@type {ol.source.Vector}
-   */
-  this._origin = options.source;
-  /** Geometry function to get a point
-   * 	@type {ol.Coordinate | ((f: ol.Feature) => ol.geom.Point)}
-   */
-  this._geomFn = options.geometryFunction || ol.coordinate.getFeatureCenter || function (f) { return f.getGeometry().getFirstCoordinate(); };
-  // Existing features
-  this.reset();
-  // Future features
-  this._origin.on("addfeature", this._onAddFeature.bind(this));
-  this._origin.on("removefeature", this._onRemoveFeature.bind(this));
+  ol.source.BinBase.call(this, options);
 };
-ol.inherits(ol.source.HexBin, ol.source.Vector);
-/**
- * On add feature
- * @param {ol.events.Event} e
- * @private
+ol.inherits(ol.source.HexBin, ol.source.BinBase);
+/** Get the hexagon geometry at the coord 
+ * @param {ol.Coordinate} coord
+ * @returns {ol.geom.Polygon} 
+ * @api
  */
-ol.source.HexBin.prototype._onAddFeature = function (e) {
-  var f = e.feature || e.target;
-  var h = this._hexgrid.coord2hex(this._geomFn(f));
-  var id = h.toString();
-  if (this._bin[id]) {
-    this._bin[id].get('features').push(f);
-  } else {
-    var ex = new ol.Feature(new ol.geom.Polygon([this._hexgrid.getHexagon(h)]));
-    ex.set('features', [f]);
-    ex.set('center', new ol.geom.Point(ol.extent.getCenter(ex.getGeometry().getExtent())));
-    this._bin[id] = ex;
-    this.addFeature(ex);
-  }
-  f.on("change", this._bind.modify);
-};
-/** @typedef {Object} Bin ???
- * 	@property {string} id
- * 	@property {number} index
- * 	@property {boolean} [moved]
- */
-/**
- *  Get the hexagon of a feature
- *  @param {ol.Feature} f
- *  @return {Bin} the bin id, the index of the feature in the bin and a boolean if the feature has moved to an other bin
- */
-ol.source.HexBin.prototype.getBin = function (f) {
-  // Test if feature exists in the current hex
-  var index, id = this._hexgrid.coord2hex(this._geomFn(f)).toString();
-  if (this._bin[id]) {
-    index = this._bin[id].get('features').indexOf(f);
-    if (index > -1) return { id: id, index: index };
-  }
-  // The feature has moved > check all bins
-  for (id in this._bin) {
-    index = this._bin[id].get('features').indexOf(f);
-    if (index > -1) return { id: id, index: index, moved: true };
-  }
-  return false;
-};
-/**
- *  On remove feature
- *  @param {ol.events.Event} e
- *  @param {Bin} bin
- *  @private
- */
-ol.source.HexBin.prototype._onRemoveFeature = function (e, bin) {
-  var f = e.feature || e.target;
-  var b = bin || this.getBin(f);
-  if (b) {
-    var features = this._bin[b.id].get('features');
-    features.splice(b.index, 1);
-    if (!features.length) {
-      this.removeFeature(this._bin[b.id]);
-      delete this._bin[b.id];
-    }
-  } else {
-    console.log("[ERROR:HexBin] remove feature feature doesn't exists anymore.");
-  }
-  f.un("change", this._bind.modify);
-};
-/**
- *  A feature has been modified
- *  @param {ol.events.Event} e
- *  @private
- */
-ol.source.HexBin.prototype._onModifyFeature = function (e) {
-  var bin = this.getBin(e.target);
-  if (bin && bin.moved) {
-    // remove from the bin
-    this._onRemoveFeature(e, bin);
-    // insert in the new bin
-    this._onAddFeature(e);
-  }
-  this.changed();
-};
-/** Clear all bins and generate a new one. */
-ol.source.HexBin.prototype.reset = function () {
-  this._bin = {};
-  this.clear();
-  var features = this._origin.getFeatures();
-  for (var i = 0, f; f = features[i]; i++) {
-    this._onAddFeature({ feature: f });
-  }
+ol.source.HexBin.prototype.getGridGeomAt = function (coord) {
+  var h = this._hexgrid.coord2hex(coord);
+  return new ol.geom.Polygon([this._hexgrid.getHexagon(h)])
 };
 /**	Set the inner HexGrid size.
  * 	@param {number} newSize
@@ -17158,24 +17068,11 @@ ol.source.HexBin.prototype.getOrigin = function () {
   return this._hexgrid.getOrigin();
 }
 /**
- * Get the orginal source
- * @return {ol.source.Vector}
- */
-ol.source.HexBin.prototype.getSource = function () {
-  return this._origin;
-};
-/**
- * Get hexagons withour circular dependencies (vs. getFeatures)
+ * Get hexagons without circular dependencies (vs. getFeatures)
  * @return {Array<ol.Feature>}
  */
 ol.source.HexBin.prototype.getHexFeatures = function () {
-  var features = [];
-  this.getFeatures().forEach(function (f) {
-    var f2 = new ol.Feature(f.getGeometry().clone());
-    f2.set('nb', f.get('features').length);
-    features.push(f2);
-  });
-  return features;
+  return ol.source.BinBase.prototype.getGridFeatures.call(this);
 };
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
@@ -17522,6 +17419,7 @@ ol.source.WikiCommons.prototype._loaderFn = function(extent, resolution, project
 	released under the CeCILL-B license (http://www.cecill.info/).
 	ol.layer.AnimatedCluster is a vector layer that animate cluster
 */
+//
 /**
  *  A vector layer for animated cluster
  * @constructor 
@@ -17632,7 +17530,7 @@ ol.layer.AnimatedCluster.prototype.animate = function(e)
 	}
 	// Run animation
 	if (a.start) {
-		var vectorContext = e.vectorContext || ol.render.getVectorContext(e);
+		var vectorContext = e.vectorContext; // || ol.render.getVectorContext(e);
 		console.log(vectorContext)
 		var d = (time - a.start) / duration;
 		// Animation ends
