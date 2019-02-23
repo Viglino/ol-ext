@@ -5,7 +5,7 @@
   Copyright (c) 2017-2018 Jean-Marc VIGLINO,
   released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 -->
-  <title>ol-ext: INSEEBin source</title>
+  <title>ol-ext: FeatureBin source</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
   <meta name="description" content="ol.source.HexBin is a source to display hexagonal binning on a map." />
@@ -13,7 +13,7 @@
 
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-  
+
   <!-- FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   
@@ -90,45 +90,35 @@
   <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
   <a href="../../index.html">
-    <h1>ol-ext: INSEEBin source</h1>
+    <h1>ol-ext: FeatureBin source</h1>
   </a>
 
   <div class="info">
-    Used in the field of geomarketing, gridding is a method for sub-dividing the country 
-    into regular grids, square in shape and of equal area.
-    <br/>
-    It can be used for binning data to obtain sociodemographic information that is 
-    much more granular and representative of the population.
-    <br/>
-    The <a href="https://www.insee.fr/fr/accueil"> French INSEE</a> grid is a 2.3 million squares grid (200m x 200m) that cover the France 
-    based on lambert azimutha equal area projection (EPSG:3035).
+    The <i>ol.source.FeatureBin</i> is a source that use a set of features subdivision 
+    to bin data on it.
   </div>
 
   <!-- Map DIV -->
   <div id="map"></div>
 
   <div class="options">
-        <i class="fa fa-arrows-alt"  title="fullscreen" onclick="$('body').toggleClass('fullscreen'); map.updateSize();"></i>
-        <h2>Options:</h2>
+    <i class="fa fa-arrows-alt"  title="fullscreen" onclick="$('body').toggleClass('fullscreen'); map.updateSize();"></i>
+    <h2>Options:</h2>
     <ul>
       <li>
-        Size: <input id="size" type="number" min=".2" max="100" value="100" set=".2" onchange="reset();" /> km
-      </li>
-    
-      <li>
-          <div class="info">
-              <input id="showsource" type="checkbox" onchange="layerSource.setVisible($(this).prop('checked')); modify.setActive($(this).prop('checked'));" /><label for="showsource">
-                  Display source features and move them around to see what happens to the bin!
-              </label>
-          </div>
+        <div class="info">
+            <input id="showsource" type="checkbox" onchange="layerSource.setVisible($(this).prop('checked')); modify.setActive($(this).prop('checked'));" /><label for="showsource">
+                Display source features and move them around to see what happens to the bin!
+            </label>
+        </div>
       </li>
     
       <li>
         <button onclick='save()'><i class="fa fa-download"></i> download result</button>
-        <button onclick='saveWithPop()'><i class="fa fa-download"></i> download (pop/1km)</button>
+        / <input id="percent" type="number" value="100" onchange="reset();" style="width:5em;" /> hab.
       </li>
     </ul>
-    <div class="info">Selection: <span>0</span> feature(s)</div>
+    <div class="info">Selection: <span>0</span></div>
     <div class="info">
       <i class="fa fa-upload"></i> Drag'n'drop .geojson to calculate on your data!
       <br/>
@@ -155,7 +145,7 @@
   select.on('select', function(e){
     if (e.selected.length){
       var f = e.selected[0].get('features');
-      if (f) $(".options .info span").text(e.selected[0].get('features').length);
+      if (f) $(".options .info span").text(e.selected[0].get('features').length+' / '+e.selected[0].get('pop')+' hab.');
       else $(".options .info span").text("0");
     }
     else $(".options .info span").text("0");
@@ -164,7 +154,7 @@
   // Create a set of features on seed points
   function addFeatures(nb){
     var ssize = 20;		// seed size
-    var ext = grid.getSource().getGridExtent();
+    var ext = map.getView().calculateExtent();
     var dx = ext[2]-ext[0];
     var dy = ext[3]-ext[1];
     var dl = Math.min(dx,dy);
@@ -179,7 +169,7 @@
         features.push(f);
       }
     }
-    source.clear(true);
+    source.clear();
     source.addFeatures(features);
     reset();
   }
@@ -205,12 +195,24 @@
   // The rid layer
   var grid = new ol.layer.Vector({ 
     style: styleFn, 
-    source: new ol.source.InseeBin({ 
-      source: source,
-      size: 100000
+    source: new ol.source.FeatureBin({ 
+      source: source
     })
   })
   map.addLayer(grid);
+  $.ajax('../data/departements.geojson', {
+    success: function (result) {
+      var format = new ol.format.GeoJSON();
+      var features = format.readFeatures(result, {
+        dataProjection: 'EPSG:4326',
+        featureProjection: map.getView().getProjection()
+      });
+      grid.getSource().setFeatures(features);
+      reset();
+    }
+  });
+  // add 1000 features
+  addFeatures(1000);
 
   // Add feature on drop
   var dd = new ol.interaction.DropFile();
@@ -221,11 +223,11 @@
     var f = event.features;
     if (!$("#add").prop('checked')) source.clear(true);
     source.addFeatures(f);
+    reset();
   });
 
   // Create Bin
   function reset() {
-    grid.getSource().setSize(Number($('#size').val())*1000);
     max = 0;
     min = Infinity;
     grid.getSource().getFeatures().forEach(function (f) {
@@ -233,9 +235,8 @@
       if (nb>max) max = nb;
       if (nb<min) min = nb;
     });
+    grid.changed();
   };
-  // add 1000 features
-  addFeatures(1000);
 
   // Save
   function save (point) {
@@ -256,7 +257,7 @@
   }
   
   // Add population to the grid
-  function saveWithPop() {
+  function addPop1km() {
     $('body').addClass('waiting');
     $.ajax('../data/insee_1km.csv', {
       success: function(res){
@@ -273,14 +274,14 @@
             bin.set('pop', (bin.get('pop')||0) + Number(data[2]));
           }
         });
-        save();
         $('body').removeClass('waiting');
       }
     });
   }
   grid.getSource()._flatAttributes = function (bin, features) {
+    var pc = Number($('#percent').val());
     if (bin.get('pop')) {
-      bin.set('nb_pop',100*bin.get('nb')/bin.get('pop'));
+      bin.set('nb_pop',pc*bin.get('nb')/bin.get('pop'));
     }
   }
 

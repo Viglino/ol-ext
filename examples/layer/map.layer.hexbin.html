@@ -220,7 +220,14 @@
       </ul>
     </div>
     <div class="info">Selection: <span>0</span> feature(s)</div>
-    <div class="info">Drag'n'drop .geojson to calculate on your data!</div>
+    <div class="info">
+      <i class="fa fa-upload"></i> Drag'n'drop .geojson to calculate on your data!
+      <br/>
+      <label>
+        <input id="add" type="checkbox" />
+        add features when dropped
+      </label>
+    </div>
   </div>
 
 <script type="text/javascript">
@@ -264,7 +271,7 @@
         features.push(f);
       }
     }
-    source.clear();
+    source.clear(true);
     source.addFeatures(features);
   }
 
@@ -364,7 +371,7 @@
 	dd.on ('addfeatures', function(event) {
     //console.log(event)
     var f = event.features;
-    source.clear();
+    if (!$("#add").prop('checked')) source.clear(true);
     source.addFeatures(f);
   });
 
