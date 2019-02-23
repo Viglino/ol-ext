@@ -1,0 +1,215 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Undo/redo</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="ol.interaction.UndoRedo is an interaction to handle undo on a map." />
+  <meta name="keywords" content="ol, openlayers, undo, interaction" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <style>
+    .options label {
+      width: 3em;
+      display: inline-block;
+      text-align: right;
+      margin-right: .5em;
+    }
+    .options button {
+      float: right;
+      margin: 1em 0;
+
+
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Undo/redo custom</h1>
+  </a>
+  <div class="info">
+    <p>
+      <i>ol/interaction/UndoRedo</i> is an interaction to handle undo/redo on a map.
+    </p>
+    This example shows how to use the <i>define()</i> method to define a custom action.
+    <ul>
+      <li>
+        The <i>push()</i> method lets you push a custom action in the undo list.
+      </li>
+      <li>
+        You can use the <i>blockStart() / blockEnd()</i> methods to stack many actions in one undo.
+      </li>
+    </ul>
+    <p>
+      For undoing features properties, look at the 
+      <a href="map.interaction.undoredo2.html">undo/redo attributes exmaple</a>.
+      <br/>
+      For more information on UndoRedo interaction look <a href="http://localhost.ign.fr:8181/examples/interaction/map.interaction.undoredo.html">at this example</a>.
+    </p>
+  </div>
+
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options" >
+    <b>Set style:</b>
+    <ul>
+      <li>
+        <label>color:</label>
+        <select id="color">
+          <option value="rgba(255,0,0,.5)">red</option>
+          <option value="rgba(0,255,0,.5)">green</option>
+          <option value="rgba(0,0,255,.5)">blue</option>
+        </select>
+      </li>
+      <li>
+        <label>width: </label>
+        <input id="width" type="number" min="0" step="1" style="width:5em;" value="2" />
+      </li>
+      <li>
+        <button onclick="setStyle()">OK</button>
+      </li>
+    </ul>
+  </div>
+
+  <script type="text/javascript">
+
+    // GeoJSON layer
+    var vectorSource = new ol.source.Vector({
+      url: '../data/departements.geojson',
+      format: new ol.format.GeoJSON(),
+      attributions: [ "&copy; <a href='https://www.insee.fr'>INSEE</a>", "&copy; <a href='https://www.data.gouv.fr/fr/datasets/geofla-r/'>IGN</a>" ],
+    });
+    var listenerKey = vectorSource.on('change',function(e){
+      if (vectorSource.getState() === 'ready') {
+        ol.Observable.unByKey(listenerKey);
+        // Clear undo/redo on load
+        undoInteraction.clear();
+      }
+    });
+    var vector = new ol.layer.Vector( { 
+      source: vectorSource,
+      style: function (f) {
+        return [
+          style, 
+          new ol.style.Style({
+            text: new ol.style.Text({
+              text: f.get('id'),
+              font: 'bold 11px sans-serif',
+              stroke: new ol.style.Stroke({ width: 1.5, color: [255,255,255] }),
+            })
+          })
+        ]
+      }
+    });
+
+    // The map
+    var map = new ol.Map ({
+      target: 'map',
+      view: new ol.View ({
+        zoom: 6,
+        center: [180000, 6060000]
+      }),
+      layers: [
+        new ol.layer.Tile({ source: new ol.source.OSM() }),
+        vector
+      ]
+    });
+
+    // Main control bar
+    var mainbar = new ol.control.Bar();
+    map.addControl(mainbar);
+
+    // Editbar
+    var editbar = new ol.control.EditBar ({
+      source: vector.getSource(),
+      edition: false,
+      interactions: { Select: true, Info: false, Split: false, Offset: false }
+    });
+    mainbar.addControl(editbar);
+
+    // Undo redo interaction
+    var undoInteraction = new ol.interaction.UndoRedo();
+    map.addInteraction(undoInteraction);
+
+    // Add buttons to the bar
+    var bar = new ol.control.Bar({ 
+      group: true,
+      controls: [
+        new ol.control.Button({
+          html: '<i class="fa fa-undo" ></i>',
+          title: 'undo...',
+          handleClick: function() {
+            undoInteraction.undo();
+          }
+        }),
+        new ol.control.Button({
+          html: '<i class="fa fa-repeat" ></i>',
+          title: 'redo...',
+          handleClick: function() {
+            undoInteraction.redo();
+          }
+        })
+      ]
+    });
+    mainbar.addControl(bar);
+
+    /* undo/redo custom */
+    var style;
+    // Define undo redo for the style
+    undoInteraction.define(
+      'style', 
+      // undo function: set previous style
+      function (s) {
+        style = s.before;
+        vector.changed();
+      },
+      // redo function: set next style
+      function(s){
+        style = s.after;
+        vector.changed();
+      }
+    );
+    // undo/redo custom
+    function setStyle() {
+      var before;
+      if (style) before = style.clone();
+      style = new ol.style.Style({
+        stroke: new ol.style.Stroke({ width: Number($("#width").val()), color: "#f00" }),
+        fill: new ol.style.Fill({ color: $("#color").val() })
+      });
+      vector.changed();
+      // use blockStart / blockEnd to stack many undo in a same action
+      // undoInteraction.blockStart();
+      // Add undo style action
+      undoInteraction.push("style", { before: before, after: style });
+      // undoInteraction.blockEnd();
+    }
+    setStyle();
+
+  </script>
+
+</body>
+</html>

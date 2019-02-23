@@ -38,8 +38,34 @@ var ol_interaction_UndoRedo = function(options) {
   this._block = 0;
   // Start recording
   this._record = true;
+  // Custom definitions
+  this._defs = {};
 };
 ol_inherits(ol_interaction_UndoRedo, ol_interaction_Interaction);
+
+/** Add a custom undo/redo
+ * @param {string} action the action key name
+ * @param {function} undoFn function called when undoing
+ * @param {function} redoFn function called when redoing
+ * @api
+ */
+ol_interaction_UndoRedo.prototype.define = function(action, undoFn, redoFn) {
+  this._defs['_'+action] = { undo: undoFn, redo: redoFn };
+};
+
+/** Set a custom undo/redo
+ * @param {string} action the action key name
+ * @param {any} prop an object that will be passed in the undo/redo fucntions of the action
+ * @return {boolean} true if the action is defined
+ */
+ol_interaction_UndoRedo.prototype.push = function(action, prop) {
+  if (this._defs['_'+action]) {
+    this._undoStack.push({type: '_'+action, prop: prop });
+    return true;
+  } else {
+    return false;
+  }
+};
 
 /** Activate or deactivate the interaction, ie. records or not events on the map.
  * @param {boolean} active
@@ -248,6 +274,14 @@ ol_interaction_UndoRedo.prototype._handleDo = function(e, undo) {
       this._block += undo ? 1 : -1;
       break;
     }
+    default: {
+      if (this._defs[e.type]) {
+        if (undo) this._defs[e.type].undo(e.prop);
+        else this._defs[e.type].redo(e.prop);
+      } else {
+        console.warn('[UndoRedoInteraction]: "'+e.type.substr(1)+'" is not defined.');
+      }
+    }
   }
 
   // Handle block
@@ -294,19 +328,19 @@ ol_interaction_UndoRedo.prototype.clear = function() {
 };
 
 /** Check if undo is avaliable
- * @return {boolean}
+ * @return {number} the number of undo 
  * @api
  */
 ol_interaction_UndoRedo.prototype.hasUndo = function() {
-  return (this._undoStack.length > 0);
+  return this._undoStack.length;
 };
 
 /** Check if redo is avaliable
- * @return {boolean}
+ * @return {number} the number of redo
  * @api
  */
 ol_interaction_UndoRedo.prototype.hasRedo = function() {
-  return (this._redoStack.length > 0);
+  return this._redoStack.length;
 };
 
 export default ol_interaction_UndoRedo
