@@ -13,8 +13,8 @@ import ol_geom_Polygon from 'ol/geom/Polygon'
 
 /**
  * French INSEE grids
- * @classdesc a class to compute French INSEE grids, ie. fix area (200x200m) square grid, based appon EPSG:3035
- * @see https://www.capadresse.com/en/solutions/rental-data-grid
+ * @classdesc a class to compute French INSEE grids, ie. fix area (200x200m) square grid, 
+ * based appon EPSG:3035
  *
  * @requires proj4
  * @constructor 
