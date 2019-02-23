@@ -30,6 +30,9 @@
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
 	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
+	<!-- jsts for buffer -->
+	<script src="https://unpkg.com/jsts@2.0.2/dist/jsts.min.js"></script>
+
 	<!-- filesaver-js -->
 	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
 
@@ -112,7 +115,15 @@
   search.on('isochrone', function(iso) {
 		if (iso.iteration === 0) vector.getSource().clear();
 		if (Number($('.simplify').val())) {
-			iso.feature.setGeometry (iso.feature.getGeometry().simplify(Number($('.simplify').val())));
+			// Simplify using closing operation with jsts
+			var simpli = Number($('.simplify').val());
+			var parser = new jsts.io.OL3Parser();
+			var geom = iso.feature.getGeometry();
+			var jstsGeom = parser.read(geom);
+			var buffered = jstsGeom.buffer(simpli);
+			buffered = buffered.buffer(-1*simpli);
+			buffered = jsts.simplify.DouglasPeuckerSimplifier.simplify(buffered, Math.min(10, simpli/10))
+			iso.feature.setGeometry(parser.write(buffered));
 		}
     vector.getSource().addFeature(iso.feature);
     setTimeout(function() {
