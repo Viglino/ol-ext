@@ -951,17 +951,54 @@
 
     </div>
 
-  <h2>Layer / source</h2>
+  <h2>Bin map</h2>
     <div>
       <div class="example">
         <a class="mainlink" href="examples/layer/map.layer.hexbin.html">
           <strong>Hexbin maps</strong><br>
         </a>
-        <p class="description"><i>ol.source.HexBin</i> aggregates features on hexagonal grid. 
-        Hexagonal binning (heatmaps) provide a convenient way to visualize density.</p>
+        <p class="description">
+          <i>ol.source.HexBin</i> aggregates features on hexagonal grid. 
+          Hexagonal binning (heatmaps) provide a convenient way to visualize density.
+        </p>
         <p class="tag">layer, hexbin, cluster, hexagon, binning, heatmap</p>
       </div>
 
+      <div class="example" data-date="2019-02-16">
+        <a class="mainlink" href="examples/layer/map.layer.gridbin.html">
+          <strong>Grid bin maps</strong><br>
+        </a>
+        <p class="description">
+            <i>ol.source.GridBin</i> is a convenient way for aggregating data into a coarser 
+            representation for display.
+        </p>
+        <p class="tag">layer, binning, cluster, square, grid</p>
+      </div>
+      
+      <div class="example" data-date="2019-02-16">
+        <a class="mainlink" href="examples/layer/map.layer.insee.html">
+          <strong>INSEE bin maps</strong><br>
+        </a>
+        <p class="description">
+            The <a href="https://www.insee.fr/fr/accueil"> French INSEE</a> grid is a 2.3 million squares grid (200m x 200m) that cover the France 
+            based on lambert azimutha equal area projection (EPSG:3035).  
+        </p>
+        <p class="tag">layer, binning, cluster, square, insee</p>
+      </div>
+      
+      <div class="example" data-date="2019-02-16">
+        <a class="mainlink" href="examples/layer/map.layer.featurebin.html">
+          <strong>Feature bin maps</strong><br>
+        </a>
+        <p class="description">
+          The <i>ol.source.FeatureBin</i> is a source that use a set of features subdivision to bin data on it.
+        </p>
+        <p class="tag">layer, cluster, binning, feature, aggregate</p>
+      </div>
+    </div>
+
+  <h2>Layer / source</h2>
+    <div>
       <div class="example">
         <a class="mainlink" href="examples/layer/map.geoimage.html">
           <strong>Georeference images on a map</strong><br>

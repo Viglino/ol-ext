@@ -5,7 +5,7 @@
   Copyright (c) 2017-2018 Jean-Marc VIGLINO,
   released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 -->
-  <title>ol-ext: HexBin source</title>
+  <title>ol-ext: INSEEBin source</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
   <meta name="description" content="ol.source.HexBin is a source to display hexagonal binning on a map." />
@@ -13,7 +13,10 @@
 
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-
+  
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
   <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
@@ -69,6 +72,17 @@
       z-index: 999;
       box-shadow: 1px 1px 2px 2px;
     }
+    .fa-arrows-alt {
+      float: right;
+      cursor: pointer;
+    }
+    button {
+      font-size: 1em;
+      color: #fff;
+      background: #369;
+      border: 0;
+      padding: .2em 1em;
+    }
   </style>
 
 </head>
@@ -76,37 +90,46 @@
   <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
   <a href="../../index.html">
-    <h1>ol-ext: HexBin source</h1>
+    <h1>ol-ext: INSEEBin source</h1>
   </a>
 
   <div class="info">
+    Used in the field of geomarketing, gridding is a method for sub-dividing the country 
+    into regular grids, square in shape and of equal area.
+    <br/>
+    It can be used for binning data to obtain sociodemographic information that is 
+    much more granular and representative of the population.
+    <br/>
+    The <a href="https://www.insee.fr/fr/accueil"> French INSEE</a> grid is a 2.3 million squares grid (200m x 200m) that cover the France 
+    based on lambert azimutha equal area projection (EPSG:3035).
   </div>
 
   <!-- Map DIV -->
   <div id="map"></div>
 
   <div class="options">
-    <h2>Options:</h2>
+        <i class="fa fa-arrows-alt"  title="fullscreen" onclick="$('body').toggleClass('fullscreen'); map.updateSize();"></i>
+        <h2>Options:</h2>
     <ul>
       <li>
         Size: <input id="size" type="number" min=".2" max="100" value="100" set=".2" onchange="reset();" /> km
       </li>
     
       <li>
-        <input id="showsource" type="checkbox" onchange="layerSource.setVisible($(this).prop('checked')); modify.setActive($(this).prop('checked'));" /><label for="showsource"> display source features</label>
+          <div class="info">
+              <input id="showsource" type="checkbox" onchange="layerSource.setVisible($(this).prop('checked')); modify.setActive($(this).prop('checked'));" /><label for="showsource">
+                  Display source features and move them around to see what happens to the bin!
+              </label>
+          </div>
       </li>
     
       <li>
-        <br/>
-        Drag'n'Drop a file on the map...
-        <button onclick='save()'>download result</button>
-      </li>
-      <li>
-        <button onclick="$('body').toggleClass('fullscreen'); map.updateSize();">fullscreen</button>
+        <button onclick='save()'><i class="fa fa-download"></i> download result</button>
+        <button onclick='saveWithPop()'><i class="fa fa-download"></i> download (pop/1km)</button>
       </li>
     </ul>
     <div class="info">Selection: <span>0</span> feature(s)</div>
-    <div class="info">Display source features and move them around <br/> to see what happens to the bin!</div>
+    <div class="info">Drag'n'drop .geojson to calculate on your data!</div>
   </div>
 
 <script type="text/javascript">
@@ -149,7 +172,7 @@
         features.push(f);
       }
     }
-    source.clear();
+    source.clear(true);
     source.addFeatures(features);
     reset();
   }
@@ -184,10 +207,12 @@
 
   // Add feature on drop
   var dd = new ol.interaction.DropFile();
-	map.addInteraction (dd);
+  map.addInteraction (dd);
+  dd.on('loadstart', function () { $('body').addClass('waiting'); });
+  dd.on('loadend', function () { $('body').removeClass('waiting'); });
 	dd.on ('addfeatures', function(event) {
     var f = event.features;
-    source.clear();
+    source.clear(true);
     source.addFeatures(f);
   });
 
@@ -206,9 +231,15 @@
   addFeatures(1000);
 
   // Save
-  function save () {
+  function save (point) {
     var format = new ol.format.GeoJSON();
     var features = grid.getSource().getGridFeatures();
+    if (point) {
+      features.forEach(function (f) {
+        var g = f.getGeometry().getInteriorPoint();
+        f.setGeometry(g);
+      });
+    }
 		var data = format.writeFeatures(features, {
 			dataProjection: 'EPSG:4326',
 			featureProjection: map.getView().getProjection()
@@ -218,7 +249,7 @@
   }
   
   // Add population to the grid
-  function addPop1km() {
+  function saveWithPop() {
     $('body').addClass('waiting');
     $.ajax('../data/insee_1km.csv', {
       success: function(res){
@@ -235,6 +266,7 @@
             bin.set('pop', (bin.get('pop')||0) + Number(data[2]));
           }
         });
+        save();
         $('body').removeClass('waiting');
       }
     });
@@ -244,11 +276,6 @@
       bin.set('nb_pop',100*bin.get('nb')/bin.get('pop'));
     }
   }
-  map.on('click', function(e){
-    var bin = grid.getSource().getBinAt(e.coordinate);
-    var coord = ol.proj.transform(e.coordinate, map.getView().getProjection(), 'EPSG:3035');
-    console.log(coord)
-  });
 
 </script>
 

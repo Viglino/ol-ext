@@ -1,9 +1,9 @@
-/*	Copyright (c) 2019 Jean-Marc VIGLINO,
+  /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+import ol_source_Vector from 'ol/source/Vector'
 import ol_source_BinBase from './BinBase'
-import ol_InseeGrid from '../render/InseeGrid';
 import {ol_ext_inherits} from '../util/ext'
 
 /** A source for INSEE grid
@@ -15,20 +15,21 @@ import {ol_ext_inherits} from '../util/ext'
  *  @param {(f: ol.Feature) => ol.geom.Point} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
  *  @param {(bin: ol.Feature, features: Array<ol.Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
  */
-var ol_source_InseeBin = function (options) {
+var ol_source_FeatureBin = function (options) {
   options = options || {};
 
-  this._grid = new ol_InseeGrid({ size: options.size });
+  this._sourceFeature = new ol_source_Vector ({ features: options.features || [] });
 
   ol_source_BinBase.call(this, options);
 };
-ol_ext_inherits(ol_source_InseeBin, ol_source_BinBase);
+ol_ext_inherits(ol_source_FeatureBin, ol_source_BinBase);
 
 /** Set grid size
- * @param {number} size
+ * @param {ol.Feature} features
  */
-ol_source_InseeBin.prototype.setSize = function (size) {
-  this._grid.set('size', size);
+ol_source_FeatureBin.prototype.setFeatures = function (features) {
+  this._sourceFeature.clear();
+  this._sourceFeature.addFeatures(features || []);
   this.reset();
 };
 
@@ -37,16 +38,14 @@ ol_source_InseeBin.prototype.setSize = function (size) {
  * @returns {ol.geom.Polygon} 
  * @api
  */
-ol_source_InseeBin.prototype.getGridGeomAt = function (coord) {
-  return this._grid.getGridAtCoordinate(coord, this.getProjection());
+ol_source_FeatureBin.prototype.getGridGeomAt = function (coord, attributes) {
+  var f = this._sourceFeature.getFeaturesAtCoordinate(coord)[0];
+  if (!f) return null;
+  var a = f.getProperties();
+  for (var i in a) {
+    if (i!=='geometry') attributes[i] = a[i];
+  }
+  return f.getGeometry();
 };
 
-/** Get grid extent 
- * @param {ol.ProjectionLike} proj
- * @return {ol.Extent}
- */
-ol_source_InseeBin.prototype.getGridExtent = function (proj) {
-  return this._grid.getExtent(proj);
-};
-
-export default ol_source_InseeBin
+export default ol_source_FeatureBin

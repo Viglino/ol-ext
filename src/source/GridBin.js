@@ -3,10 +3,9 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 import ol_source_BinBase from './BinBase'
-import ol_InseeGrid from '../render/InseeGrid';
 import {ol_ext_inherits} from '../util/ext'
 
-/** A source for INSEE grid
+/** A source for grid binning
  * @constructor
  * @extends {ol.source.Vector}
  * @param {Object} options ol_source_VectorOptions + grid option
@@ -15,20 +14,29 @@ import {ol_ext_inherits} from '../util/ext'
  *  @param {(f: ol.Feature) => ol.geom.Point} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
  *  @param {(bin: ol.Feature, features: Array<ol.Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
  */
-var ol_source_InseeBin = function (options) {
+var ol_source_GridBin = function (options) {
   options = options || {};
 
-  this._grid = new ol_InseeGrid({ size: options.size });
-
   ol_source_BinBase.call(this, options);
+  
+  this.set('gridProjection', options.gridProjection || 'EPSG:4326');
+  this.set('size', options.size || 1);
 };
-ol_ext_inherits(ol_source_InseeBin, ol_source_BinBase);
+ol_ext_inherits(ol_source_GridBin, ol_source_BinBase);
+
+/** Set grid projection
+ * @param {ol.ProjectionLike} proj
+ */
+ol_source_GridBin.prototype.setGridProjection = function (proj) {
+  this.set('gridProjection', proj);
+  this.reset();
+};
 
 /** Set grid size
  * @param {number} size
  */
-ol_source_InseeBin.prototype.setSize = function (size) {
-  this._grid.set('size', size);
+ol_source_GridBin.prototype.setSize = function (size) {
+  this.set('size', size);
   this.reset();
 };
 
@@ -37,16 +45,13 @@ ol_source_InseeBin.prototype.setSize = function (size) {
  * @returns {ol.geom.Polygon} 
  * @api
  */
-ol_source_InseeBin.prototype.getGridGeomAt = function (coord) {
-  return this._grid.getGridAtCoordinate(coord, this.getProjection());
+ol_source_GridBin.prototype.getGridGeomAt = function (coord) {
+  coord = ol_proj_transform (coord, this.getProjection() || 'EPSG:3857', this.get('gridProjection'));
+  var size = this.get('size');
+  var x = size * Math.floor(coord[0] / size);
+  var y = size * Math.floor(coord[1] / size);
+  var geom = new ol.geom.Polygon([[[x,y], [x+size,y], [x+size,y+size], [x,y+size], [x,y]]]);
+  return geom.transform(this.get('gridProjection'), this.getProjection() || 'EPSG:3857');
 };
 
-/** Get grid extent 
- * @param {ol.ProjectionLike} proj
- * @return {ol.Extent}
- */
-ol_source_InseeBin.prototype.getGridExtent = function (proj) {
-  return this._grid.getExtent(proj);
-};
-
-export default ol_source_InseeBin
+export default ol_source_GridBin

@@ -14,6 +14,9 @@
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
   <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
@@ -117,6 +120,17 @@
     .fullscreen #legend {
       display: none;
     }
+    .fa-arrows-alt {
+      float: right;
+      cursor: pointer;
+    }
+    button {
+      font-size: 1em;
+      color: #fff;
+      background: #369;
+      border: 0;
+      padding: .2em 1em;
+    }
   </style>
 
 </head>
@@ -155,11 +169,14 @@
   <div id="map"></div>
 
   <div class="options">
+    <i class="fa fa-arrows-alt"  title="fullscreen" onclick="$('body').toggleClass('fullscreen'); map.updateSize();"></i>
     <h2>Options:</h2>
     <ul>
       <li>
         Hexagon size: <input id="size" type="range" min="1000" max="300000" value="100000" onchange="reset();" step="1000" />
-        <button onclick="$('#size').attr('type')==='range' ? $('#size').attr('type','number') : $('#size').attr('type','range');">slide/number</button>
+        <button onclick="$('#size').attr('type')==='range' ? $('#size').attr('type','number') : $('#size').attr('type','range');">
+          <i class="fa fa-keyboard-o"></i> slide/number
+        </button>
       </li>
       <li>
         Style:
@@ -173,15 +190,14 @@
         <input id="image" type="checkbox" checked="checked" onchange="reset()"/><label for="image"> layer image</label>
       </li>
       <li>
-        <input id="showsource" type="checkbox" onchange="layerSource.setVisible($(this).prop('checked')); modify.setActive($(this).prop('checked'));" /><label for="showsource"> display source features</label>
+          <div class="info">
+              <input id="showsource" type="checkbox" onchange="layerSource.setVisible($(this).prop('checked')); modify.setActive($(this).prop('checked'));" /><label for="showsource">
+                  Display source features and move them around to see what happens to the bin!
+              </label>
+          </div>
       </li>
       <li>
-        <br/>
-        Drag'n'Drop a file on the map...
-        <button onclick='save()'>download result</button>
-      </li>
-      <li>
-        <button onclick="$('body').toggleClass('fullscreen'); map.updateSize();">fullscreen</button>
+        <button onclick='save()'><i class="fa fa-download"></i> download result</button>
       </li>
     </ul>
     <div>
@@ -204,7 +220,7 @@
       </ul>
     </div>
     <div class="info">Selection: <span>0</span> feature(s)</div>
-    <div class="info">Display source features and move them around <br/> to see what happens to the bin!</div>
+    <div class="info">Drag'n'drop .geojson to calculate on your data!</div>
   </div>
 
 <script type="text/javascript">
