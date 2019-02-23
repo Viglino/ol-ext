@@ -105,7 +105,7 @@ var ol_control_IsochroneGeoportail = function(options) {
   ol_ext_element.create('TEXT', { parent: div, html: 'mn' });
   div = ol_ext_element.create('DIV', { className: 'ol-distance', parent: content });
   ol_ext_element.create('DIV', { html:'isodistance:', parent: div });
-  ol_ext_element.create('INPUT', { type: 'number', parent: div, min: 0 })
+  ol_ext_element.create('INPUT', { type: 'number', step: 'any', parent: div, min: 0 })
     .addEventListener('change', function(){
       self.set('distance', Number(this.value));
     });
