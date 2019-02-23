@@ -97,14 +97,14 @@ ol_control_CanvasScaleLine.prototype.drawScale_ = function(e)
 	var ratio = e.frameState.pixelRatio;
 	ctx.save();
 	ctx.scale(ratio,ratio);
-
+/*
 	// Position if transform:scale()
 	var container = this.getMap().getTargetElement();
 	var scx = container.offsetWidth / container.getBoundingClientRect().width;
 	var scy = container.offsetHeight / container.getBoundingClientRect().height;
 	position.left *= scx;
 	position.top *= scy;
-
+*/
 	// On top
 	position.top += this.element.clientHeight - this.scaleHeight_;
 
