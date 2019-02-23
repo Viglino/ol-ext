@@ -13,9 +13,9 @@ import ol_control_Control from 'ol/control/Control'
  * @extends {ol_control_Control}
  * @fire change:visible
  * @param {Object=} options Control options.
- *	- className {String} class of the control
- *	- hideOnClick {bool} hide the control on click, default false
- *	- closeBox {bool} add a closeBox to the control, default false
+ *  @param {string} className class of the control
+ *  @param {boolean} hideOnClick hide the control on click, default false
+ *  @param {boolean} closeBox add a closeBox to the control, default false
  */
 var ol_control_Notification = function(options) {
   options = options || {};
@@ -93,3 +93,5 @@ ol_control_Notification.prototype.toggle = function(duration) {
     this.hide();
   }
 };
+
+export default ol_control_Notification
