@@ -176,6 +176,9 @@ ol_interaction_SelectCluster.prototype.selectCluster = function (e)
 	var a, i, max;
 	var p, cf, lk;
 
+	// The features
+	var features = [];
+
 	// Draw on a circle
 	if (!this.spiral || cluster.length <= this.circleMaxObjects)
 	{	max = Math.min(cluster.length, this.circleMaxObjects);
@@ -185,9 +188,9 @@ ol_interaction_SelectCluster.prototype.selectCluster = function (e)
 			p = [ center[0]+r*Math.sin(a), center[1]+r*Math.cos(a) ];
 			cf = new ol_Feature({ 'selectclusterfeature':true, 'features':[cluster[i]], geometry: new ol_geom_Point(p) });
 			cf.setStyle(cluster[i].getStyle());
-			source.addFeature(cf);
+			features.push(cf);
 			lk = new ol_Feature({ 'selectclusterlink':true, geometry: new ol_geom_LineString([center,p]) });
-			source.addFeature(lk);
+			features.push(lk);
 		}
 	}
 	// Draw on a spiral
@@ -208,42 +211,45 @@ ol_interaction_SelectCluster.prototype.selectCluster = function (e)
 			p = [ center[0]+dx, center[1]+dy ];
 			cf = new ol_Feature({ 'selectclusterfeature':true, 'features':[cluster[i]], geometry: new ol_geom_Point(p) });
 			cf.setStyle(cluster[i].getStyle()); 
-			source.addFeature(cf);
+			features.push(cf);
 			lk = new ol_Feature({ 'selectclusterlink':true, geometry: new ol_geom_LineString([center,p]) });
-			source.addFeature(lk);
+			features.push(lk);
 		}
 	}
 
-	if (this.animate) this.animateCluster_(center);
+	source.clear();
+	if (this.animate) {
+		this.animateCluster_(center, features);
+	} else {
+		source.addFeatures(features);
+	}
 };
 
 /**
  * Animate the cluster and spread out the features
  * @param {ol.Coordinates} the center of the cluster
  */
-ol_interaction_SelectCluster.prototype.animateCluster_ = function(center)
+ol_interaction_SelectCluster.prototype.animateCluster_ = function(center, features)
 {	// Stop animation (if one is running)
-	if (this.listenerKey_)
-	{	this.overlayLayer_.setVisible(true);
+	if (this.listenerKey_) {
 		ol_Observable_unByKey(this.listenerKey_);
 	}
 	
 	// Features to animate
-	var features = this.overlayLayer_.getSource().getFeatures();
+	// var features = this.overlayLayer_.getSource().getFeatures();
 	if (!features.length) return;
 	
-	this.overlayLayer_.setVisible(false);
 	var style = this.overlayLayer_.getStyle();
 	var stylefn = (typeof(style) == 'function') ? style : style.length ? function(){ return style; } : function(){ return [style]; } ;
 	var duration = this.animationDuration || 500;
 	var start = new Date().getTime();
 	
 	// Animate function
-	function animate(event) 
-	{	var vectorContext = event.vectorContext;
+	function animate(event) {
+		var vectorContext = event.vectorContext || ol_render_getVectorContext(event);
 		// Retina device
 		var ratio = event.frameState.pixelRatio;
-		var res = event.target.getView().getResolution();
+		var res = this.getMap().getView().getResolution();
 		var e = ol_easing_easeOut((event.frameState.time - start) / duration);
 		for (var i=0, feature; feature = features[i]; i++) if (feature.get('features'))
 		{	var pt = feature.getGeometry().getCoordinates();
@@ -274,20 +280,23 @@ ol_interaction_SelectCluster.prototype.animateCluster_ = function(center)
 			}
 		}
 		// Stop animation and restore cluster visibility
-		if (e > 1.0) 
-		{	ol_Observable_unByKey(this.listenerKey_);
-			this.overlayLayer_.setVisible(true);
+		if (e > 1.0) {
+			ol_Observable_unByKey(this.listenerKey_);
+			this.overlayLayer_.getSource().addFeatures(features);
 			this.overlayLayer_.changed();
 			return;
 		}
+
 		// tell OL3 to continue postcompose animation
 		event.frameState.animate = true;
 	}
 
 	// Start a new postcompose animation
-	this.listenerKey_ = this.getMap().on('postcompose', animate.bind(this));
-	//select.getMap().renderSync();
+	this.listenerKey_ = this.overlayLayer_.on(['postcompose','postrender'], animate.bind(this));
+	// Start animation with a ghost feature
+	var feature = new ol.Feature(new ol.geom.Point(this.getMap().getView().getCenter()));
+	feature.setStyle(new ol.style.Style({ image: new ol.style.Circle({}) }));
+	this.overlayLayer_.getSource().addFeature(feature);
 };
-
 
 export default ol_interaction_SelectCluster

@@ -96,7 +96,7 @@ ol_layer_Vector.prototype.setTextPathStyle = function(style, maxResolution)
 	}
 	// New postcompose
 	if (!this.textPath_)
-	{	this.textPath_ = this.on('postcompose', drawTextPath.bind(this));
+	{	this.textPath_ = this.on(['postcompose','postrender'], drawTextPath.bind(this));
 	}
 	// Set textPathStyle
 	if (style===undefined)
