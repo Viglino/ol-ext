@@ -31,11 +31,13 @@ ol_interaction_Delete.prototype._getSources = function(layers) {
   if (!layers) layers = this.getMap().getLayers();
   var sources = [];
   layers.forEach(function (l) {
-    if (l.getSource() instanceof ol_source_Vector) {
-      sources.push(l.getSource());
-    }
+    // LayerGroup
     if (l.getLayers) {
       sources = sources.concat(this._getSources(l.getLayers()));
+    } else {
+      if (l.getSource && l.getSource() instanceof ol_source_Vector) {
+        sources.push(l.getSource());
+      }
     }
   }.bind(this));
   return sources;
