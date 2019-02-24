@@ -4,3 +4,5 @@
 
 Prepare v6
 https://github.com/openlayers/openlayers/blob/master/changelog/upgrade-notes.md
+* move to ol/ext/inherits
+* use ol/render/getVectorContext

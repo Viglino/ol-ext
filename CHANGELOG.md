@@ -1,6 +1,10 @@
 # Change log
 
 ## Next version 
+Move to ol v6
+
+## v3.1.1 2019-02-24
+Bug correction, ES6 fix
 
 ## v3.1.0 2019-01-19
 Remove Jquery dependencies: the library has now removed jQuery from its dependencies.
