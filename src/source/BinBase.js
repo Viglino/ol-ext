@@ -6,6 +6,7 @@ import ol_Feature from 'ol/Feature'
 import ol_geom_Polygon from 'ol/geom/Polygon'
 import ol_source_Vector from 'ol/source/Vector'
 import { ol_coordinate_getFeatureCenter } from "../geom/GeomUtils";
+import './Vector' 
 
 import {ol_ext_inherits} from '../util/ext'
 
@@ -14,6 +15,7 @@ import {ol_ext_inherits} from '../util/ext'
  * @extends {ol.source.Vector}
  * @param {Object} options ol_source_VectorOptions + grid option
  *  @param {ol.source.Vector} options.source Source
+ *  @param {boolean} options.listenChange listen changes (move) on source features to recalculate the bin, default true
  *  @param {(f: ol.Feature) => ol.geom.Point} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
  *  @param {(bin: ol.Feature, features: Array<ol.Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
  */
@@ -25,6 +27,7 @@ var ol_source_BinBase = function (options) {
   ol_source_Vector.call(this, options);
 
   this._origin = options.source;
+  this._listen = (options.listenChange !== false);
 
   // Geometry function
   this._geomFn = options.geometryFunction || ol_coordinate_getFeatureCenter || function (f) { return f.getGeometry().getFirstCoordinate(); };
@@ -33,10 +36,10 @@ var ol_source_BinBase = function (options) {
   this.reset();
 
   // Future features
-  this._origin.on("addfeature", this._onAddFeature.bind(this));
-  this._origin.on("removefeature", this._onRemoveFeature.bind(this));
-  this._origin.on("clearstart", this._onClearFeature.bind(this));
-  this._origin.on("clearend", this._onClearFeature.bind(this));
+  this._origin.on('addfeature', this._onAddFeature.bind(this));
+  this._origin.on('removefeature', this._onRemoveFeature.bind(this));
+  this._origin.on('clearstart', this._onClearFeature.bind(this));
+  this._origin.on('clearend', this._onClearFeature.bind(this));
   if (typeof (options.flatAttributes) === 'function') this._flatAttributes = options.flatAttributes;
 };
 ol_ext_inherits(ol_source_BinBase, ol_source_Vector);
@@ -51,7 +54,7 @@ ol_source_BinBase.prototype._onAddFeature = function (e, bin, listen) {
   var f = e.feature || e.target;
   bin = bin || this.getBinAt(this._geomFn(f), true);
   if (bin) bin.get('features').push(f);
-  if (listen!==false) f.on("change", this._bindModify);
+  if (this._listen && listen!==false) f.on('change', this._bindModify);
 };
 
 /**
@@ -80,7 +83,7 @@ ol_source_BinBase.prototype._onRemoveFeature = function (e, bin, listen) {
   } else {
     // console.log("[ERROR:Bin] remove feature: feature doesn't exists anymore.");
   }
-  if (listen!==false) f.un("change", this._bindModify);
+  if (this._listen && listen!==false) f.un('change', this._bindModify);
 };
 
 /** When clearing features remove the listener
@@ -88,9 +91,11 @@ ol_source_BinBase.prototype._onRemoveFeature = function (e, bin, listen) {
  */
 ol_source_BinBase.prototype._onClearFeature = function (e) {
   if (e.type==='clearstart') {
-    this._origin.getFeatures().forEach(function (f) {
-      f.un("change", this._bindModify);
-    });
+    if (this._listen) {
+      this._origin.getFeatures().forEach(function (f) {
+        f.un('change', this._bindModify);
+      }.bind(this));
+    }
     this.clear();
     this._watch = false;
   } else {
