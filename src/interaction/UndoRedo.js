@@ -1,20 +1,8 @@
 import {inherits as ol_inherits} from 'ol'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
-import ol_source_Vector from 'ol/source/Vector'
 import ol_layer_Vector from 'ol/layer/Vector'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-
-(function () {
-  var clear = ol_source_Vector.prototype.clear;
-
-  /** Overwrite ol/source/Vector clear to fire clearstart / clearend event
-   */
-  ol_source_Vector.prototype.clear = function(opt_fast) {
-    this.dispatchEvent({ type: 'clearstart' });
-    clear.call(this, opt_fast)
-    this.dispatchEvent({ type: 'clearend' });
-  };
-})();
+import '../source/Vector' 
 
 /** Undo/redo interaction
  * @constructor
