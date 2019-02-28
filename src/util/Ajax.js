@@ -14,7 +14,7 @@ var ol_ext_Ajax = function(options) {
 	ol_Object.call(this);
 
   this._auth = options.auth;
-  this.set('dataType', 'JSON');
+  this.set('dataType', options.dataType || 'JSON');
 };
 ol_inherits(ol_ext_Ajax, ol_Object);
 
