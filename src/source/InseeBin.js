@@ -28,8 +28,17 @@ ol_ext_inherits(ol_source_InseeBin, ol_source_BinBase);
  * @param {number} size
  */
 ol_source_InseeBin.prototype.setSize = function (size) {
-  this._grid.set('size', size);
-  this.reset();
+  if (this.getSize() !== size) {
+    this._grid.set('size', size);
+    this.reset();
+  }
+};
+
+/** Get grid size
+ * @return {number} size
+ */
+ol_source_InseeBin.prototype.getSize = function () {
+  return this._grid.get('size');
 };
 
 /** Get the grid geometry at the coord 
