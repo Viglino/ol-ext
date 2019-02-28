@@ -23,4 +23,5 @@ if (window.ol) {
   if (!ol.inherits) ol.inherits = ol_ext_inherits;
 }
 
+export {ol_ext_inherits}
 export default ol_ext_inherits
