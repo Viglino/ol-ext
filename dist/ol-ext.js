@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.1.1
+ * @version v3.1.2
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -40,7 +40,7 @@ ol.ext.Ajax = function(options) {
   options = options || {};
 	ol.Object.call(this);
   this._auth = options.auth;
-  this.set('dataType', 'JSON');
+  this.set('dataType', options.dataType || 'JSON');
 };
 ol.inherits(ol.ext.Ajax, ol.Object);
 /** Helper for get
@@ -15458,16 +15458,6 @@ ol.interaction.Transform.prototype.handleUpEvent_ = function(evt) {
   return false;
 };
 
-(function () {
-  var clear = ol.source.Vector.prototype.clear;
-  /** Overwrite ol/source/Vector clear to fire clearstart / clearend event
-   */
-  ol.source.Vector.prototype.clear = function(opt_fast) {
-    this.dispatchEvent({ type: 'clearstart' });
-    clear.call(this, opt_fast)
-    this.dispatchEvent({ type: 'clearend' });
-  };
-})();
 /** Undo/redo interaction
  * @constructor
  * @extends {ol.interaction.Interaction}
@@ -15845,7 +15835,7 @@ ol.source.BinBase.prototype._onClearFeature = function (e) {
     if (this._listen) {
       this._origin.getFeatures().forEach(function (f) {
         f.un('change', this._bindModify);
-      });
+      }.bind(this));
     }
     this.clear();
     this._watch = false;
@@ -17322,6 +17312,17 @@ ol.source.Overpass.prototype.hasFeature = function(feature) {
 	}
 	return false;
 };
+
+(function () {
+  var clear = ol.source.Vector.prototype.clear;
+  /** Overwrite ol/source/Vector clear to fire clearstart / clearend event
+   */
+  ol.source.Vector.prototype.clear = function(opt_fast) {
+    this.dispatchEvent({ type: 'clearstart' });
+    clear.call(this, opt_fast)
+    this.dispatchEvent({ type: 'clearend' });
+  };
+})();
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)

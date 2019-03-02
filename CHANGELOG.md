@@ -3,12 +3,15 @@
 ## Next version 
 Move to ol v6
 
+## v3.1.1 2019-03-22
+* bug ol/ext/inherits
+
 ## v3.1.1 2019-02-24
 Bug correction, ES6 fix
 
 ## v3.1.0 2019-01-19
-Remove Jquery dependencies: the library has now removed jQuery from its dependencies.
-If you use jQuery in your project you may have to pass options using the `$obj.get(0)` function instead of passing the jQuery object.
+Remove Jquery dependencies: the library has now removed jQuery from its dependencies.    
+If you use jQuery in your project you may have to pass options using the `$obj.get(0)` function instead of passing the jQuery object.    
 - Add new story map controls
 
 ## v3.0.3 2018-12
@@ -18,7 +21,7 @@ Start removing jQuery dependencies.
 Migrate to ol5 modules [#123](https://github.com/Viglino/ol-ext/issues/123)
 
 ## v2.0.6 2018-07-14
-Last version using ol<5
+Last version using ol<5    
 Remove deprecated methods
 
 ## v2.0.5 2018-06-27
