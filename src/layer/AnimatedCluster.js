@@ -135,7 +135,6 @@ ol_layer_AnimatedCluster.prototype.animate = function(e)
 	// Run animation
 	if (a.start) {
 		var vectorContext = e.vectorContext; // || ol_render_getVectorContext(e);
-		console.log(vectorContext)
 		var d = (time - a.start) / duration;
 		// Animation ends
 		if (d > 1.0) 
