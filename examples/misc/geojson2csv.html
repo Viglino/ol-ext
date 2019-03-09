@@ -1,0 +1,287 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<title>GeoJSON2CSV</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="Convert Geojson file to CSV." />
+	<meta name="keywords" content="csv, geojson, online" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<!-- FontAwesome -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+	<!-- ol3 to show the map -->
+	<link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
+	<!-- filesaver-js -->
+	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+	<!-- Papaparse -->
+	<script type="text/javascript" src="https://unpkg.com/papaparse@4.6.3/papaparse.min.js"></script>
+	<!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+	<!-- exif2geojson -->
+	<link rel="stylesheet" href="../style.css" />
+
+	<style>
+		body {	
+      max-width: 800px;
+			margin: 0.5em auto;
+			background: #ddc;
+			font-family: 'Open Sans Condensed',Arial,Helvetica,Verdana,sans-serif;
+			color: #775;
+		}
+		h1 {
+      background: #886;
+		}
+		h1 .fa {
+			color: #fff;
+			font-size:1.8em;
+			vertical-align: middle;
+		}
+		.info {
+      padding:1em 2em;
+			background: #fff;
+			border-radius: 6px;
+			clear: both;
+		}
+		.globe {
+      text-align:center;
+			float:left;
+			font-size: 5em;
+			width:40%;
+		}
+		.globe .fa {
+      vertical-align: middle;
+			margin:0 5px;
+			color:#664;
+		}
+		.globe .fa-file-excel-o	{
+      font-size: 0.75em;
+		}
+		.globe .fa-arrow-circle-right	{
+      font-size: 0.5em;
+		}
+
+		#dropfile	{
+      font-size:1.2em;
+			width:55%; 
+			float: right;
+			border:3px dashed #997; 
+			padding:1em 3.5em;
+			text-align:center;
+			box-sizing: border-box;
+			margin: 0 3em 1em -3em;
+			font-weight: bold;
+		}
+		#dropfile.hover{
+			border-color: #664;
+			background: #e6e6d6;
+		}
+
+		#pbar {	
+      display: none; 
+			width:200px; 
+			border:1px solid #664; 
+			margin: 0.5em;
+			float:left;
+		}
+		#pbar > div {	
+      height: 15px; 
+			width: 0; 
+			background: #664;
+		}
+		textarea {
+      width:100%; 
+			height:15em; 
+			box-sizing:border-box;
+      white-space: nowrap;
+		}
+		.loading {
+      margin:0 0 1em;
+			padding:0.5em;
+			height:1em;
+		}
+		.info > button {
+      float: right;
+			background: #887;
+			color: #fff;
+			border: 0;
+			margin: 0 2em;
+			font-size: 1.3em;
+			font-weight: bold;
+			padding: 0.25em 1em;
+			display: none;
+			cursor: pointer;
+		}
+		.info > button	i {
+      color:#fff;
+		}
+		#map {
+      display: none;
+      float:none;
+			width: 100%;
+			height: 400px;
+		}
+    .warn {
+      background: #fe0;
+      color: #800;
+      padding: 0 1em;
+    }
+	</style>
+
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+	<a class="title" href="../../index.html">
+		<h1><i class="fa fa-file-excel-o"></i> GeoJSON2CSV</h1>
+	</a>
+
+	<div class="info">
+    Convert GeoJSON file into CSV (Comma Separated Values).
+    <br/>
+    If the file only contains points features a lon and lat column is added. 
+    Otherwise a type column is added with a coord column that contains all the coordinates filed as JSON array.
+  </div>
+	
+	<div class="globe">
+		<i class="fa fa-globe"></i><i class="fa fa-arrow-circle-right"></i><i class="fa fa-file-excel-o"></i>
+	</div>
+
+	<div id="dropfile">
+    Drag & drop GeoJSON file to convert.
+	</div>
+
+	<div class="info">
+    <p>Options:</p>
+    <ul style="list-style:none;">
+      <li>
+        Encoding: <input id="encode" value="UTF-8" style="width:5em; padding: .1em .5em;" />
+      </li>
+    </ul>
+  
+		<p style="margin-bottom:0;">Result:</p>
+		<div id="pbar"><div></div></div>
+		<button onclick="download()"><i class="fa fa-download"></i> Download</button>
+		<div class="loading"></div>
+
+		<div id="map"></div>
+
+		<textarea id="result"></textarea>
+	</div>
+
+	<script>
+    var name, result;
+		function download() {
+      var blob = new Blob([result], {type: "text/plain;charset=utf-8"});
+			saveAs(blob, name+".csv");
+		}
+
+		$(document).on('dragover dragleave', function (e) {
+      e.preventDefault();
+			e.stopPropagation();
+			if (e.type=='dragover') $("#dropfile").addClass('hover');
+			else $("#dropfile").removeClass('hover');
+			return false;
+		});
+
+		$(document).on('drop', function (e) {
+			if (e.originalEvent.dataTransfer) {
+				if (e.originalEvent.dataTransfer.files.length) {
+					// Stop the propagation of the event
+					e.preventDefault();
+					e.stopPropagation();
+					$("#dropfile").removeClass('hover');
+					$(".loading").html(" loading...");
+					// Main function to upload
+          var file = e.originalEvent.dataTransfer.files[0];
+          name = file.name;
+          var reader = new FileReader();
+          reader.onload = function(event) { 
+            console.log(reader)
+            var features;
+            try {
+              features = JSON.parse(reader.result).features;
+            } catch (e) {
+              $('.loading').html('<span class="warn">No valid file...</span>');
+              return;
+            }
+            var csv = [];
+            var header = {};
+            var n = 0;
+            var isPt = true;
+            features.forEach(function(f) {
+              for (var p in f.properties) {
+                if (header[p]===undefined) {
+                  header[p] = n++;
+                }
+              }
+              if (f.geometry.type!=='Point') isPt = false;
+            });
+            features.forEach(function(f) {
+              var row = [];
+              for (var p in header) {
+                row[header[p]] = f.properties[p];
+              }
+              if (isPt) {
+                row.push(f.geometry.coordinates[0]);
+                row.push(f.geometry.coordinates[1]);
+              } else {
+                row.push(f.geometry.type);
+                row.push(JSON.stringify(f.geometry.coordinates));
+              }
+              csv.push(row);
+            });
+            var cols = []
+            for (var p in header) {
+              cols.push(p);
+            }
+            if (isPt) {
+              cols.push('lon');
+              cols.push('lat');
+            } else {
+              cols.push('type');
+              cols.push('coord');
+            }
+            csv.unshift(cols);
+            result = Papa.unparse(csv);
+            $("#result").val(result.substr(0,50000)+(result.length>50000? '\n...':''));
+            $(".loading").html(" "+features.length+" feature(s) loaded.");
+            $("#pbar > div").width(0);
+            $("button").show();
+          };
+          reader.readAsText(file, $('#encode').val());
+				}
+			}
+			else $(this).css('border', '3px dashed #BBBBBB');
+			return false;
+		});
+
+		// The map
+		var map = new ol.Map
+			({	target: 'map',
+				view: new ol.View
+				({	zoom: 1,
+					center: [270055, 3528229.]
+				}),
+				layers: [new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) })]
+			});
+
+		var vector = new ol.layer.Vector(
+		{	source: new ol.source.Vector(),
+			style: new ol.style.Style(
+				{	image: new ol.style.Circle({
+					fill: new ol.style.Fill({ color:"rgba(102, 68, 68, 0.6)" }),
+					radius: 5
+				 })})
+		});
+		map.addLayer(vector);
+	</script>
+</body>
+</html>
