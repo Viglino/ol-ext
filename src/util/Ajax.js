@@ -30,7 +30,7 @@ ol_ext_Ajax.get = function(options) {
   var ajax = new ol_ext_Ajax(options);
   if (options.success) ajax.on('success', function(e) { options.success(e.response, e); } );
   if (options.error) ajax.on('error', function(e) { options.error(e); } );
-  ajax.send(options.url, options.data);
+  ajax.send(options.url, options.data, options.options);
 };
 
 /** Send an ajax request (GET)
@@ -42,17 +42,19 @@ ol_ext_Ajax.get = function(options) {
  *  @param {boolean} options.abort false to prevent aborting the current request, default true
  */
 ol_ext_Ajax.prototype.send = function (url, data, options){
+  options = options || {};
 	var self = this;
   // Url
-  url = encodeURI(url);
+  var encode = (options.encode !== false) 
+  if (encode) url = encodeURI(url);
 
   // Parameters
   var parameters = '';
 	for (var index in data) {
 		if (data.hasOwnProperty(index) && data[index]!==undefined) {
-      parameters += (parameters ? '&' : '?') + index + '=' + encodeURIComponent(data[index]);
+      parameters += (parameters ? '&' : '?') + index + '=' + (encode ? encodeURIComponent(data[index]) : data[index]);
     }
-	}
+  }
 
 	// Abort previous request
 	if (this._request && options.abort!==false) {

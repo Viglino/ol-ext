@@ -55,7 +55,7 @@ ol.ext.Ajax.get = function(options) {
   var ajax = new ol.ext.Ajax(options);
   if (options.success) ajax.on('success', function(e) { options.success(e.response, e); } );
   if (options.error) ajax.on('error', function(e) { options.error(e); } );
-  ajax.send(options.url, options.data);
+  ajax.send(options.url, options.data, options.options);
 };
 /** Send an ajax request (GET)
  * @fires success
@@ -66,16 +66,18 @@ ol.ext.Ajax.get = function(options) {
  *  @param {boolean} options.abort false to prevent aborting the current request, default true
  */
 ol.ext.Ajax.prototype.send = function (url, data, options){
+  options = options || {};
 	var self = this;
   // Url
-  url = encodeURI(url);
+  var encode = (options.encode !== false) 
+  if (encode) url = encodeURI(url);
   // Parameters
   var parameters = '';
 	for (var index in data) {
 		if (data.hasOwnProperty(index) && data[index]!==undefined) {
-      parameters += (parameters ? '&' : '?') + index + '=' + encodeURIComponent(data[index]);
+      parameters += (parameters ? '&' : '?') + index + '=' + (encode ? encodeURIComponent(data[index]) : data[index]);
     }
-	}
+  }
 	// Abort previous request
 	if (this._request && options.abort!==false) {
 		this._request.abort();
@@ -7405,6 +7407,123 @@ ol.control.SearchNominatim.prototype.select = function (f){
     } catch(e) { /* ok */}
     this.dispatchEvent({ type:"select", search:f, coordinate: c });
 };
+
+/*	Copyright (c) 2017 Jean-Marc VIGLINO,
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * Search places using the photon API.
+ *
+ * @constructor
+ * @extends {ol.control.SearchJSON}
+ * @fires select
+ * @param {Object=} Control options.
+ *	@param {string} options.className control class name
+ *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *	@param {string | undefined} options.label Text label to use for the search button, default "search"
+ *	@param {string | undefined} options.placeholder placeholder, default "Search..."
+ *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
+ *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
+ *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *  @param {function | undefined} options.handleResponse Handle server response to pass the features array to the list
+ * 
+ *	@param {string|undefined} options.url Url to photon api, default "http://photon.komoot.de/api/"
+ *	@param {string|undefined} options.lang Force preferred language, default none
+ *	@param {boolean} options.position Search, with priority to geo position, default false
+ *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return street + name + contry
+ */
+ol.control.SearchWikipedia = function(options){
+  options = options || {};
+  options.lang = options.lang||'en';
+	options.className = options.className || 'wikipedia';
+	options.url = 'https://'+options.lang+'.wikipedia.org/w/api.php';
+	ol.control.SearchJSON.call(this, options);
+	this.set('lang', options.lang);
+	this.set('copy','<a href="https://'+options.lang+'.wikipedia.org/" target="new">Wikipedia&reg; -CC-By-SA</a>');
+};
+ol.inherits(ol.control.SearchWikipedia, ol.control.SearchJSON);
+/** Returns the text to be displayed in the menu
+*	@param {ol.Feature} f the feature
+*	@return {string} the text to be displayed in the index
+*	@api
+*/
+ol.control.SearchWikipedia.prototype.getTitle = function (f){
+	return f.desc;
+};
+/** 
+ * @param {string} s the search string
+ * @return {Object} request data (as key:value)
+ * @api
+ */
+ol.control.SearchWikipedia.prototype.requestData = function (s) {
+  var data = {
+    action: 'opensearch',
+    search: s,
+    lang: this.get('lang'),
+    format: 'json',
+    origin: '*',
+		limit: this.get('maxItems')
+	}
+	return data;
+};
+/**
+ * Handle server response to pass the features array to the list
+ * @param {any} response server response
+ * @return {Array<any>} an array of feature
+ */
+ol.control.SearchWikipedia.prototype.handleResponse = function (response) {
+  var features = [];
+  for (var i=0; i<response[1].length; i++) {
+    features.push({
+      title: response[1][i],
+      desc: response[2][i],
+      uri: response[3][i]
+    })
+  }
+	return features;
+};
+/** A ligne has been clicked in the menu > dispatch event
+*	@param {any} f the feature, as passed in the autocomplete
+*	@api
+*/
+ol.control.SearchWikipedia.prototype.select = function (f){
+  var title = decodeURIComponent(f.uri.split('/').pop()).replace(/\'/,'%27');
+  // Search for coords
+  ol.ext.Ajax.get({
+    url: f.uri.split('wiki/')[0]+'w/api.php',
+    data: {
+      action: 'query',
+      prop: 'pageimages|coordinates',
+      piprop: 'original',
+      origin: '*',
+      format: 'json',
+      titles: title
+    },
+    options: {
+      encode: false
+    },
+    success: function (e) {
+      var page = e.query.pages[Object.keys(e.query.pages).pop()];
+      var feature = {
+        title: f.title,
+        desc: f.desc,
+        url: f.uri,
+        img: page.original.source,
+        pageid: page.pageid
+      }
+      var c;
+      if (page.coordinates) {
+        feature.lon = page.coordinates[0].lon;
+        feature.lat = page.coordinates[0].lat;
+        c = [feature.lon, feature.lat];
+        c = ol.proj.transform (c, 'EPSG:4326', this.getMap().getView().getProjection());
+      }
+      this.dispatchEvent({ type:"select", search:feature, coordinate: c });
+    }.bind(this)
+  })
+};
+/** */
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -17544,7 +17663,6 @@ ol.layer.AnimatedCluster.prototype.animate = function(e)
 	// Run animation
 	if (a.start) {
 		var vectorContext = e.vectorContext; // || ol.render.getVectorContext(e);
-		console.log(vectorContext)
 		var d = (time - a.start) / duration;
 		// Animation ends
 		if (d > 1.0) 
