@@ -1,15 +1,16 @@
-﻿/*	Copyright (c) 2017 Jean-Marc VIGLINO,
+﻿/*	Copyright (c) 2019 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 import {inherits as ol_inherits} from 'ol'
 import {transform as ol_proj_transform} from 'ol/proj'
 import ol_control_SearchJSON from "./SearchJSON";
-import ol_geom_Point from 'ol/geom/Point'
 import ol_ext_Ajax from '../util/Ajax'
+import ol_ext_element from '../util/element';
 
 /**
- * Search places using the photon API.
+ * Search places using the MediaWiki API.
+ * @see https://www.mediawiki.org/wiki/API:Main_page
  *
  * @constructor
  * @extends {ol_control_SearchJSON}
@@ -24,10 +25,7 @@ import ol_ext_Ajax from '../util/Ajax'
  *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
  *  @param {function | undefined} options.handleResponse Handle server response to pass the features array to the list
  * 
- *	@param {string|undefined} options.url Url to photon api, default "http://photon.komoot.de/api/"
- *	@param {string|undefined} options.lang Force preferred language, default none
- *	@param {boolean} options.position Search, with priority to geo position, default false
- *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return street + name + contry
+ *	@param {string|undefined} options.lang API language, default none
  */
 var ol_control_SearchWikipedia = function(options){
   options = options || {};
@@ -36,7 +34,7 @@ var ol_control_SearchWikipedia = function(options){
 	options.url = 'https://'+options.lang+'.wikipedia.org/w/api.php';
 	ol_control_SearchJSON.call(this, options);
 	this.set('lang', options.lang);
-	this.set('copy','<a href="https://'+options.lang+'.wikipedia.org/" target="new">Wikipedia&reg; -CC-By-SA</a>');
+	this.set('copy','<a href="https://'+options.lang+'.wikipedia.org/" target="new">Wikipedia&reg; - CC-By-SA</a>');
 };
 ol_inherits(ol_control_SearchWikipedia, ol_control_SearchJSON);
 
@@ -46,7 +44,19 @@ ol_inherits(ol_control_SearchWikipedia, ol_control_SearchJSON);
 *	@api
 */
 ol_control_SearchWikipedia.prototype.getTitle = function (f){
-	return f.desc;
+  return ol_ext_element.create('DIV', {
+    html: f.title,
+    title: f.desc
+  });
+  //return f.desc;
+};
+
+/** Set the current language
+ * @param {string} lang the current language as ISO string (en, fr, de, es, it, ja, ...)
+ */
+ol_control_SearchWikipedia.prototype.setLang = function (lang){
+  this.set('lang', lang)
+  this.set('url', 'https://'+lang+'.wikipedia.org/w/api.php');
 };
 
 /** 
@@ -83,21 +93,24 @@ ol_control_SearchWikipedia.prototype.handleResponse = function (response) {
 	return features;
 };
 
-/** A ligne has been clicked in the menu > dispatch event
+/** A ligne has been clicked in the menu query for more info and disatch event
 *	@param {any} f the feature, as passed in the autocomplete
 *	@api
 */
 ol_control_SearchWikipedia.prototype.select = function (f){
-  var title = decodeURIComponent(f.uri.split('/').pop()).replace(/\'/,'%27');
+  var title = decodeURIComponent(f.uri.split('/').pop()).replace(/'/,'%27');
   // Search for coords
   ol_ext_Ajax.get({
     url: f.uri.split('wiki/')[0]+'w/api.php',
     data: {
       action: 'query',
-      prop: 'pageimages|coordinates',
+      prop: 'pageimages|coordinates|extracts',
+      exintro: 1,
+      explaintext: 1,
       piprop: 'original',
       origin: '*',
       format: 'json',
+      redirects: 1,
       titles: title
     },
     options: {
@@ -105,11 +118,12 @@ ol_control_SearchWikipedia.prototype.select = function (f){
     },
     success: function (e) {
       var page = e.query.pages[Object.keys(e.query.pages).pop()];
+      console.log(page);
       var feature = {
         title: f.title,
-        desc: f.desc,
+        desc: page.extract || f.desc,
         url: f.uri,
-        img: page.original.source,
+        img: page.original ? page.original.source : undefined,
         pageid: page.pageid
       }
       var c;
