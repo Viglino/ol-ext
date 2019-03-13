@@ -3,7 +3,8 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 import {inherits as ol_inherits} from 'ol'
-import ol_control_Control from 'ol/control/Control'
+import ol_control_SelectBase from './SelectBase'
+import ol_ext_element from '../util/element'
 
 /**
  * Select Control.
@@ -27,76 +28,53 @@ var ol_control_Select = function(options) {
   var self = this;
   if (!options) options = {};
 
-  var element;
-  if (options.target) {
-    element = document.createElement("div");
-    element.className = options.className || "ol-select";
-  } else {
-    element = document.createElement("div");
-    element.className = ((options.className || 'ol-select') +' ol-unselectable ol-control ol-collapsed').trim();
-    var button = document.createElement("button")
-        button.setAttribute('type','button');
-        var click_touchstart_function = function(e) {
-          element.classList.toggle('ol-collapsed');
-          e.preventDefault();
-        }
-        button.addEventListener("click", click_touchstart_function);
-        button.addEventListener("touchstart", click_touchstart_function);
-    element.appendChild(button);
-  }
-  // Containre
-  var div = document.createElement("div");
-      element.appendChild(div);
-  // List of selection
-  this._ul = document.createElement('ul');
-      div.appendChild(this._ul);
+  // Container
+  var div = options.content = document.createElement("div");
+  
+  // Autocompletion list
+  this._ul = ol_ext_element.create('UL', {
+    parent: div
+  });
+
   // All conditions
-  this._all = document.createElement('input');
-    this._all.setAttribute('type', 'checkbox')
-    this._all.value = 'all';
-    this._all.checked = true;
-  var label_match_all = document.createElement('label');
-    label_match_all.textContent = options.allLabel || 'match all'
-    div.appendChild(label_match_all);
-  label_match_all.insertBefore(this._all, label_match_all.firstChild);
-  div.appendChild(label_match_all);
+  this._all = ol_ext_element.create('INPUT', {
+    type: 'checkbox',
+    checked: true
+  });
+  var label_match_all = ol_ext_element.create('LABEL',{
+    html: this._all,
+    parent: div
+  });
+  ol_ext_element.appendText(label_match_all, options.allLabel || 'match all');
+  
   // Use case
-  this._useCase = document.createElement('input');
-  this._useCase.setAttribute('type', 'checkbox');
-  var label_case_sensitive = document.createElement('label');
-  label_case_sensitive.textContent = options.caseLabel || 'case sensitive';
-  div.appendChild(label_case_sensitive);
-  label_case_sensitive.insertBefore(this._useCase, label_case_sensitive.firstChild);
-  div.appendChild(label_case_sensitive);
-  // Select button
-  var select_button = document.createElement('button');
-      select_button.setAttribute('type','button');
-      select_button.classList.add('ol-submit')
-      select_button.textContent = options.selectLabel || 'Select';
-      select_button.addEventListener("click", function() {
-        self.doSelect();
-      });
-    div.appendChild(select_button);
+  this._useCase = ol_ext_element.create('INPUT', {
+    type: 'checkbox'
+  });
+  var label_case_sensitive = ol_ext_element.create('LABEL',{
+    html: this._useCase,
+    parent: div
+  });
+  ol_ext_element.appendText(label_case_sensitive, options.caseLabel || 'case sensitive');
+
+  ol_control_SelectBase.call(this, options);
+
   // Add button
-  var create_button = document.createElement('button');
-    create_button.classList.add('ol-append');
-    create_button.textContent = options.addLabel	|| 'add rule';
-    create_button.addEventListener("click", function(){
+  ol_ext_element.create('BUTTON', {
+    className: 'ol-append',
+    html: options.addLabel	|| 'add rule',
+    click: function(){
       self.addCondition();
-    });
-    div.appendChild(create_button);
+    },
+    parent: div
+  });
 
   this._conditions = [];
-  ol_control_Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  this.set('source', (options.source instanceof Array) ? options.source : [options.source]);
   this.set('attrPlaceHolder', options.attrPlaceHolder || 'attribute');
   this.set('valuePlaceHolder', options.valuePlaceHolder || 'value');
   this.addCondition();
 };
-ol_inherits(ol_control_Select, ol_control_Control);
+ol_inherits(ol_control_Select, ol_control_SelectBase);
 
 /** Add a new condition
  * @param {*} options
@@ -141,26 +119,11 @@ ol_control_Select.prototype.getConditionsString = function (cond) {
     if (c.attr) {
       st += (st ? (cond.all ? ' AND ' : ' OR ') : '')
         + c.attr
-        + ol_control_Select.operationsList[c.op]
+        + this.operationsList[c.op]
         + c.val;
     }
   }
   return st
-};
-
-/** List of operations / for translation
- * @api
- */
-ol_control_Select.operationsList = {
-  '=': '=',
-  '!=': '≠',
-  '<': '<',
-  '<=': '≤',
-  '>=': '≥',
-  '>': '>',
-  'contain': '⊂', // ∈
-  '!contain': '⊄',	// ∉
-  'regexp': '≈'
 };
 
 /** Draw the liste
@@ -245,10 +208,10 @@ ol_control_Select.prototype._getLiCondition = function (i) {
   // Operation
   var select = document.createElement('select');
   li.appendChild(select);
-  for (var k in ol_control_Select.operationsList) {
+  for (var k in this.operationsList) {
     var option = document.createElement('option');
         option.value = k;
-        option.textContent = ol_control_Select.operationsList[k];
+        option.textContent = this.operationsList[k];
         select.appendChild(option);
   }
   select.value = self._conditions[i].op;
@@ -284,50 +247,6 @@ ol_control_Select.prototype.removeCondition = function (i) {
   this._drawlist();
 };
 
-/** Escape string for regexp
- * @param {string} search
- * @return {string}
- */
-ol_control_Select.prototype._escape = function (s) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
-}
-/**
- *
- * @param {*} f
- * @private
- */
-ol_control_Select.prototype._checkCondition = function (f, c, usecase) {
-  if (!c.attr) return true;
-  var val = f.get(c.attr);
-  var rex;
-  switch (c.op) {
-    case '=':
-      rex = new RegExp('^'+this._escape(c.val)+'$', usecase ? '' : 'i');
-      return rex.test(val);
-    case '!=':
-      rex = new RegExp('^'+this._escape(c.val)+'$', usecase ? '' : 'i');
-      return !rex.test(val);
-    case '<':
-      return val < c.val;
-    case '<=':
-      return val <= c.val;
-    case '>':
-      return val > c.val;
-      case '>=':
-      return val >= c.val;
-    case 'contain':
-      rex = new RegExp(this._escape(c.val), usecase ? '' : 'i');
-      return rex.test(val);
-    case '!contain':
-      rex = new RegExp(this._escape(c.val), usecase ? '' : 'i');
-      return !rex.test(val);
-    case 'regexp':
-      rex = new RegExp(c.val, usecase ? '' : 'i');
-      return rex.test(val);
-    default:
-      return false;
-  }
-}
 /** Select features by attributes
  * @param {*} options
  *  @param {Array<ol/source/Vector|undefined} options.sources source to apply rules, default the select sources
@@ -338,32 +257,10 @@ ol_control_Select.prototype._checkCondition = function (f, c, usecase) {
  */
 ol_control_Select.prototype.doSelect = function (options) {
   options = options || {};
-  var sources = options.sources || this.get('source');
-  var features = [];
-  var usecase = options.useCase || this._useCase.checked;
-  var all = options.matchAll || this._all.checked;
-  var conditions = options.conditions || this._conditions
-  for (var i=0,s; s=sources[i]; i++) {
-    var sfeatures = s.getFeatures();
-    for (var j=0,f; f=sfeatures[j]; j++) {
-      var isok = all;
-      for (var k=0, c; c=conditions[k]; k++) {
-        if (c.attr) {
-          if (all) {
-            isok = isok && this._checkCondition(f,c,usecase);
-          }
-          else {
-            isok = isok || this._checkCondition(f,c,usecase);
-          }
-        }
-      }
-      if (isok) {
-        features.push(f);
-      }
-    }
-  }
-  this.dispatchEvent({ type:"select", features: features });
-  return features;
+  options.useCase = options.useCase || this._useCase.checked;
+  options.matchAll = options.matchAll || this._all.checked;
+  options.conditions = options.conditions || this._conditions
+  return ol_control_SelectBase.prototype.doSelect.call(this, options);
 };
 
 export default ol_control_Select
