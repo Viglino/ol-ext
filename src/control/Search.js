@@ -340,7 +340,9 @@ ol_control_Search.prototype.drawList_ = function (auto) {
         li.addEventListener("click", function(e) {
           self._handleSelect(self._list[e.currentTarget.getAttribute("data-search")]);
         });
-        li.innerHTML = self.getTitle(auto[i]);
+        var title = self.getTitle(auto[i]);
+        if (title instanceof Element) li.appendChild(title);
+        else li.innerHTML = title;
         ul.appendChild(li);
       }
     }
