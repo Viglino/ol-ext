@@ -7,6 +7,7 @@ import {inherits as ol_inherits} from 'ol'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_control_Control from 'ol/control/Control'
 import {transform as ol_proj_transform} from 'ol/proj'
+import ol_ext_element from '../util/element'
 
 /**
  * Permalink Control.    
@@ -21,6 +22,7 @@ import {transform as ol_proj_transform} from 'ol/proj'
  *	@param {bool} options.urlReplace replace url or not, default true
  *	@param {integer} options.fixed number of digit in coords, default 6
  *	@param {bool} options.anchor use "#" instead of "?" in href
+ *	@param {bool} options.hidden hide the button on the map, default false
  *	@param {function} options.onclick a function called when control is clicked
  */
 var ol_control_Permalink = function(opt_options) {
@@ -41,7 +43,8 @@ var ol_control_Permalink = function(opt_options) {
 
 	var element = document.createElement('div');
   element.className = (options.className || "ol-permalink") + " ol-unselectable ol-control";
-  element.appendChild(button);
+	element.appendChild(button);
+	if (options.hidden) ol_ext_element.hide(element);
   
 	ol_control_Control.call(this, {
     element: element,
