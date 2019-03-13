@@ -34,9 +34,31 @@
   
   <!-- filesaver-js -->
 	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+	<!-- exif-JS -->
+	<script type="text/javascript" src="https://cdn.rawgit.com/exif-js/exif-js/70ced465/exif.js"></script>
+	<!-- exif2geojson -->
+	<script type="text/javascript" src="../../dist/extra/Exif2Geojson.js"></script>
 
 	<link rel="stylesheet" href="../style.css"/>
 	<style>
+    #map {
+      position: fixed;
+      top: 4em;
+      left: 0;
+      right: 20em;
+      bottom: 0;
+      margin: 0;
+    }
+    #control {
+      position: relative;
+      clear: both;
+    }
+    .ol-popup h1 {
+      margin: 0;
+      background-image: url(https://en.wikipedia.org/static/images/project-logos/enwiki.png);
+      background-position: -40px -30px;
+      padding: 6px 0 6px 90px;
+    }
 		.ol-search ul {
 			color: #333;
 			font-size:0.85em;
@@ -51,15 +73,37 @@
       display: table;
       width: 100%;
       box-sizing: border-box;
+      margin: 1em 0 0;
     }
-		.info a img {
+    .content {
+      position: absolute;
+      bottom: 0;
+      top: 10em;
+      overflow-y: auto;
+    }
+    .options {
+      display: block;
+      position: fixed;
+      top: 4em;
+      right: 0;
+      bottom: 0;
+      width: 20em;
+      margin: 0;
+      box-sizing: border-box;
+    }
+		.options a img {
 			display: inline-block;
 			height: 100px;
-			margin: .5em;
+			margin: -.5em 1em 0 0;
 		}
     .options img {
-      max-width: 300px;
+      max-width: 100%;
       max-height: 200px;
+      display: block;
+      margin: auto;
+    }
+    .options ul {
+      margin: 0 0 1em;
     }
     .options button {
       float: right;
@@ -70,7 +114,24 @@
       padding: .2em 1em;
       margin: .2em 0;
     }
-	</style>
+    .ol-search-wikipedia input {
+      width: 100%;
+    }
+    .ol-search li  {
+      padding: 0 1em;
+    }
+    .ol-search ul {
+      position: absolute;
+      box-shadow: 2px 2px 2px 2px rgba(0,0,0,.3);
+      padding: 0;
+    }
+    .ol-search.ol-collapsed ul {
+      display: none;
+    }
+    button .fa {
+      margin-right: .5em;
+    }
+    </style>
 </head>
 <body >
 	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
@@ -79,22 +140,55 @@
 		<h1>ol-ext: Search WikiPedia control</h1>
 	</a>
 
-	<div class="info">
-    <a href="https://en.wikipedia.org/"><img src="https://en.wikipedia.org/static/images/project-logos/enwiki.png" style="float:left;margin:0;"></a>
-		<i>ol.control.SearchWikipedia</i> is a control to search place with <a href="https://en.wikipedia.org/">Wikipedia</a>.
-		<ul>
-    </ul>
-	</div>
-
 	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
+	<div id="map"></div>
 
 	<div class="options">
+    <a href="https://en.wikipedia.org/"><img src="https://en.wikipedia.org/static/images/project-logos/enwiki.png" style="float:left;"></a>
     <i>Use the search control to start a new search.</i>
-    <div id="result"></div>
-    <button id="add" onclick="addFeature()" style="display:none;">Add feacture</button>
-    <br style="clear:both;" />
-    <button onclick="save()"><i class="fa fa-download"></i> download result</button>
+    <ul>
+      <li>
+        lang: <input id="lang" style="width:3em" value="en"/>
+      </li>
+      <li>
+        content: <select id="text">
+          <option value="">full</option>
+          <option value="2">medium</option>
+          <option value="1">small</option>
+        </select>
+      </li>
+      <li>
+        image: <select id="imgsize">
+          <option value="">full size</option>
+          <option value="160px">160 px</option>
+          <option value="320px">320 px</option>
+          <option value="640px">640 px</option>
+        </select>
+      </li>
+    </ul>
+    <div id="control"></div>
+    <div class="content" style="clear:both;">
+      <button onclick="save()"><i class="fa fa-download"></i> download</button>
+      <button id="add" onclick="addFeature()" style="display:none; margin-right: .5em;"><i class="fa fa-map-marker"></i> add feature</button>
+      <div id="result" style="clear: both;"></div>
+      <div class="info">
+        <i>ol.control.SearchWikipedia</i> is a control to search places within 
+        <a href="https://en.wikipedia.org/">Wikipedia</a> database.
+        <br/>
+        You can also search for files using the <i>File:</i> namespace. The localation will be retrieved in the 
+        EXIF data of the file, if any.
+        <p>
+          NB: the search result may have no coordinates and thus may not be added on the map...
+          <br/>
+          The WikiPedia is released under the CC-By-SA licence.
+        </p>
+        <p>
+          If you're looking for WPedia features on a map you may look at 
+          the <a href="map.dbpedia.html">BDpedia layer</a>
+          or <a href="map.wikicommons.html">Wikimedia Commons layer</a> example.
+        </p>
+      </div>
+    </div>
 	</div>
 	
 	<script type="text/javascript">
@@ -112,49 +206,127 @@
     layers: layers
   });
 
-	// Set the control grid reference
-	var search = new ol.control.SearchWikipedia({
-		lang:'fr'
-	});
-	map.addControl (search);
+  var perma = new ol.control.Permalink({ 
+    hidden: true
+  });
+  map.addControl(perma);
+  
+  var lang = perma.getUrlParam('lang') || (navigator.language || navigator.userLanguage).split('-')[0] || 'en';
 
+  $("#lang").val(lang)
+    .on('change', function(){
+      perma.setUrlParam('lang', this.value);
+      search.setLang(this.value);
+    });
+
+	// Set the control search
+	var search = new ol.control.SearchWikipedia({
+    target: $('#control').get(0),
+		lang: lang
+	});
+  map.addControl (search);
+
+  var select = new ol.interaction.Select();
+  map.addInteraction(select);
+
+  var popup = new ol.Overlay.PopupFeature({
+    popupClass: 'default anim',
+    showImage: true,
+    template: { title: function() { return 'WikiPedia'; } },
+    select: select
+  });
+  map.addOverlay (popup);
+
+  
   var vector = new ol.layer.Vector ({
-    source: new ol.source.Vector()
+    source: new ol.source.Vector(),
+    style: new ol.style.Style ({
+      image: new ol.style.FontSymbol({
+        form: 'marker',
+        radius: 20,
+        color: '#fff',
+        glyph: 'W',
+        fontSize: .7,
+        fontStyle: 'bold',
+        offsetY: -20,
+        stroke: new ol.style.Stroke({ color: '#fff', width:2 }),
+        fill: new ol.style.Fill({ color: '#369' })
+      })
+    })
   });
   map.addLayer(vector);
 
   var feature;
   function addFeature() {
-    if (feature) vector.getSource().addFeature(feature);
+    if (feature) {
+      var f = feature.clone();
+      // Get thumb ?
+      if ($('#imgsize').val()) {
+        var img = f.get('img');
+        if (img) {
+          img = img.split(/\/commons\//);
+          img = img[0]+'/commons/thumb/'+img[1]+'/'+$('#imgsize').val()+'-'+img[1].split('/').slice(2).join('/')
+          f.set('img', img);
+        }
+      }
+      vector.getSource().addFeature(f);
+    }
   }
-	// Select feature when click on the reference index
+
+  // Select feature when click on the reference index
+  var img;
 	search.on('select', function(e) {
-    console.log(e)
+    if (img) img.off();
     $('#result').html('');
-    $('<h3>').text(e.search.title).appendTo($('#result'));
-    if (e.search.img) $('<img>').attr('src', e.search.img).appendTo($('#result'));
-    $('<p>').html(e.search.desc).appendTo($('#result'));
-    if (e.coordinate) {
+    var a = $('<a>').attr('target', 'new').attr('href',e.search.url).appendTo($('#result'));
+    $('<h3>').text(e.search.title).appendTo(a);
+    if (e.search.img) {
+      img = $('<img>').attr('src', e.search.img).appendTo($('#result'));
+    }
+    var desc = e.search.desc || '';
+    if ($("#text").val()) {
+      desc = desc.split('\n').splice(0,parseInt($('#text').val())).join('\n');
+    }
+    $('<p>').html(desc.replace('\n','<br/>')).appendTo($('#result'));
+    function showFeature(coord) {
       map.getView().animate({
-        center: e.coordinate,
-        zoom: Math.max (map.getView().getZoom(),16)
+        center: coord,
+        zoom: Math.max (map.getView().getZoom(), 13)
       });
       $('#add').show();
       feature = new ol.Feature({
-        geometry: new ol.geom.Point(e.coordinate),
+        geometry: new ol.geom.Point(coord),
         title: e.search.title,
-        desc: e.search.desc,
+        desc: desc,
         img: e.search.img,
         pageid: e.search.pageid,
         url: e.search.url
       })
+    }
+    if (e.coordinate) {
+      showFeature(e.coordinate);
     } else {
+      // Try to get info in image exif
+      if (img) {
+        img.on ('load', function(){
+          exif2geojson([img.get(0)],{
+            onLoad: function(json){
+              if (json.features.length) {
+                var coord = json.features[0].geometry.coordinates;
+                coord = ol.proj.transform(coord, 'EPSG:4326', map.getView().getProjection());
+                showFeature(coord);
+              }
+            }
+          })
+        })
+      }
       $('#add').hide();
       feature = null;
     }
   });
 
-  function save (point) {
+  // Save
+  function save () {
     var format = new ol.format.GeoJSON();
     var features = vector.getSource().getFeatures();
 		var data = format.writeFeatures(features, {
