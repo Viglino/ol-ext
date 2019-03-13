@@ -31,8 +31,8 @@ var ol_control_SearchNominatim = function(options)
     options.className = options.className || 'nominatim';
     options.typing = options.typing || 500;
     options.url = options.url || 'https://nominatim.openstreetmap.org/search';
+    options.copy = '<a href="http://www.openstreetmap.org/copyright" target="new">&copy; OpenStreetMap contributors</a>';
     ol_control_SearchJSON.call(this, options);
-    this.set('copy','<a href="http://www.openstreetmap.org/copyright" target="new">&copy; OpenStreetMap contributors</a>');
     this.set('polygon', options.polygon);
     this.set('viewbox', options.viewbox);
 };

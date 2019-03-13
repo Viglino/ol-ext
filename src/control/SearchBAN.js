@@ -29,10 +29,10 @@ import ol_control_SearchPhoton from "./SearchPhoton";
 var ol_control_SearchBAN = function(options)
 {	options = options || {};
     options.typing = options.typing || 500;
-    options.url = options.url || "https://api-adresse.data.gouv.fr/search/";
+    options.url = options.url || 'https://api-adresse.data.gouv.fr/search/';
     options.className = options.className || 'BAN';
+    options.copy = '<a href="https://adresse.data.gouv.fr/" target="new">&copy; BAN-data.gouv.fr</a>';
     ol_control_SearchPhoton.call(this, options);
-    this.set("copy","<a href='https://adresse.data.gouv.fr/' target='new'>&copy; BAN-data.gouv.fr</a>");
 };
 ol_inherits(ol_control_SearchBAN, ol_control_SearchPhoton);
 

@@ -1,6 +1,6 @@
 ﻿/*	Copyright (c) 2019 Jean-Marc VIGLINO,
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 import {inherits as ol_inherits} from 'ol'
 import {transform as ol_proj_transform} from 'ol/proj'
@@ -16,25 +16,26 @@ import ol_ext_element from '../util/element';
  * @extends {ol_control_SearchJSON}
  * @fires select
  * @param {Object=} Control options.
- *	@param {string} options.className control class name
- *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *	@param {string | undefined} options.label Text label to use for the search button, default "search"
- *	@param {string | undefined} options.placeholder placeholder, default "Search..."
- *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
- *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
- *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *  @param {string} options.className control class name
+ *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *  @param {string | undefined} options.label Text label to use for the search button, default "search"
+ *  @param {string | undefined} options.placeholder placeholder, default "Search..."
+ *  @param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
+ *  @param {integer | undefined} options.minLength minimum length to start searching, default 3
+ *  @param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
  *  @param {function | undefined} options.handleResponse Handle server response to pass the features array to the list
  * 
- *	@param {string|undefined} options.lang API language, default none
+ *  @param {string|undefined} options.lang API language, default none
  */
 var ol_control_SearchWikipedia = function(options){
   options = options || {};
   options.lang = options.lang||'en';
-	options.className = options.className || 'wikipedia';
-	options.url = 'https://'+options.lang+'.wikipedia.org/w/api.php';
-	ol_control_SearchJSON.call(this, options);
-	this.set('lang', options.lang);
-	this.set('copy','<a href="https://'+options.lang+'.wikipedia.org/" target="new">Wikipedia&reg; - CC-By-SA</a>');
+  options.className = options.className || 'ol-search-wikipedia';
+  options.url = 'https://'+options.lang+'.wikipedia.org/w/api.php';
+  options.placeholder = options.placeholder || 'search string, File:filename';
+  options.copy = '<a href="https://'+options.lang+'.wikipedia.org/" target="new">Wikipedia&reg; - CC-By-SA</a>';
+  ol_control_SearchJSON.call(this, options);
+  this.set('lang', options.lang);
 };
 ol_inherits(ol_control_SearchWikipedia, ol_control_SearchJSON);
 
@@ -71,9 +72,9 @@ ol_control_SearchWikipedia.prototype.requestData = function (s) {
     lang: this.get('lang'),
     format: 'json',
     origin: '*',
-		limit: this.get('maxItems')
-	}
-	return data;
+    limit: this.get('maxItems')
+  }
+  return data;
 };
 
 /**
@@ -90,7 +91,7 @@ ol_control_SearchWikipedia.prototype.handleResponse = function (response) {
       uri: response[3][i]
     })
   }
-	return features;
+  return features;
 };
 
 /** A ligne has been clicked in the menu query for more info and disatch event

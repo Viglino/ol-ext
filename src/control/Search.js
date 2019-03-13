@@ -42,7 +42,7 @@ var ol_control_Search = function(options) {
   var classNames = (options.className||'')+ ' ol-search'
     + (options.target ? '' : ' ol-unselectable ol-control ol-collapsed');
   var element = ol_ext_element.create('DIV',{
-    className: classNames
+    className: classNames + ' ol-collapsed'
   })
   if (!options.target) {
     this.button = document.createElement("BUTTON");
@@ -156,6 +156,7 @@ var ol_control_Search = function(options) {
   if (typeof (options.autocomplete)=='function') this.autocomplete = options.autocomplete;
 
   // Options
+  this.set('copy', options.copy);
   this.set('minLength', options.minLength || 1);
   this.set('maxItems', options.maxItems || 10);
   this.set('maxHistory', options.maxHistory || options.maxItems || 10);

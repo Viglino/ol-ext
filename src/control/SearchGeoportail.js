@@ -31,8 +31,8 @@ var ol_control_SearchGeoportail = function(options) {
   options.className = options.className || 'IGNF';
   options.typing = options.typing || 500;
   options.url = "https://wxs.ign.fr/"+options.apiKey+"/ols/apis/completion";
+	options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
   ol_control_SearchJSON.call(this, options);
-	this.set("copy","<a href='https://www.geoportail.gouv.fr/' target='new'>&copy; IGN-Géoportail</a>");
   this.set('type', options.type || 'StreetAddress,PositionOfInterest');
 };
 ol_inherits(ol_control_SearchGeoportail, ol_control_SearchJSON);

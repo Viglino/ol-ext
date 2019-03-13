@@ -44,18 +44,17 @@
   cursor: pointer;
   max-width: 17em;
   overflow-x: hidden;
+  z-index: 1;
+  background: #fff;
 }
 /*
 .ol-control.ol-search ul {
   position: absolute;
-  background: #fff;
   box-shadow: 5px 5px 5px rgba(0,0,0,0.5);
 }
 */
-.ol-control.ol-search ul li {
-  padding: 0.1em 0.5em;
-}
 .ol-search ul li {
+  padding: 0.1em 0.5em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -79,13 +78,14 @@
 }
 
 .ol-search.searching:before {
-    content: '';
-    position: absolute;
-    height: 3px;
-    left: 0;
-    top: 1.6em;
-    animation: pulse .5s infinite alternate linear;
-    background: red;
+  content: '';
+  position: absolute;
+  height: 3px;
+  left: 0;
+  top: 1.6em;
+  animation: pulse .5s infinite alternate linear;
+  background: red;
+  z-index: 2;
 }
 
 @keyframes pulse {

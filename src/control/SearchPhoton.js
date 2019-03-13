@@ -31,11 +31,11 @@ import ol_geom_Point from 'ol/geom/Point'
 var ol_control_SearchPhoton = function(options)
 {	options = options || {};
 	options.className = options.className || 'photon';
-	options.url = options.url || "http://photon.komoot.de/api/";
+	options.url = options.url || 'http://photon.komoot.de/api/';
+	options.copy = '<a href="http://www.openstreetmap.org/copyright" target="new">&copy; OpenStreetMap contributors</a>';
 	ol_control_SearchJSON.call(this, options);
 	this.set('lang', options.lang);
 	this.set('position', options.position);
-	this.set("copy","<a href='http://www.openstreetmap.org/copyright' target='new'>&copy; OpenStreetMap contributors</a>");
 };
 ol_inherits(ol_control_SearchPhoton, ol_control_SearchJSON);
 
