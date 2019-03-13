@@ -3,15 +3,10 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 import { inherits as ol_inherits } from 'ol'
-import ol_Feature from 'ol/Feature'
 import ol_geom_Polygon from 'ol/geom/Polygon'
-import ol_geom_Point from 'ol/geom/Point'
-import ol_source_Vector from 'ol/source/Vector'
-import { getCenter as ol_extent_getCenter } from 'ol/extent'
 
 import ol_source_BinBase from './BinBase'
 import ol_HexGrid from '../render/HexGrid'
-import { ol_coordinate_getFeatureCenter } from "../geom/GeomUtils";
 
 /** A source for hexagonal binning
  * @constructor
