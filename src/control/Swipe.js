@@ -8,31 +8,31 @@ import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_control_Control from 'ol/control/Control'
 
 /**
- * @classdesc OpenLayers 3 swipe Control.
+ * @classdesc Swipe Control.
  *
  * @constructor
  * @extends {ol_control_Control}
- * @param {Object=} Control opt_options.
- *	- layers {ol.layer} layer to swipe
- *	- rightLayer {ol.layer} layer to swipe on right side
- *	- className {string} control class name
- *	- position {number} position propertie of the swipe [0,1], default 0.5
- *	- orientation {vertical|horizontal} orientation propertie, default vertical
+ * @param {Object=} Control options.
+ *	@param {ol.layer} options.layers layer to swipe
+ *	@param {ol.layer} options.rightLayer layer to swipe on right side
+ *	@param {string} options.className control class name
+ *	@param {number} options.position position propertie of the swipe [0,1], default 0.5
+ *	@param {string} options.orientation orientation propertie (vertical|horizontal), default vertical
  */
-var ol_control_Swipe = function(opt_options) {
-	var options = opt_options || {};
+var ol_control_Swipe = function(options) {
+	options = options || {};
 
 	var button = document.createElement('button');
 
 	var element = document.createElement('div');
-			element.className = (options.className || "ol-swipe") + " ol-unselectable ol-control";
-			element.appendChild(button);
+  element.className = (options.className || "ol-swipe") + " ol-unselectable ol-control";
+  element.appendChild(button);
 
 	element.addEventListener("mousedown", this.move.bind(this));
 	element.addEventListener("touchstart", this.move.bind(this));
 
-	ol_control_Control.call(this,
-	{	element: element
+	ol_control_Control.call(this, {
+    element: element
 	});
 
 	// An array of listener on layer postcompose
@@ -42,14 +42,13 @@ var ol_control_Swipe = function(opt_options) {
 	if (options.layers) this.addLayer(options.layers, false);
 	if (options.rightLayers) this.addLayer(options.rightLayers, true);
 
-	this.on('propertychange', function() 
-	{	if (this.getMap()) this.getMap().renderSync();
-		if (this.get('orientation') === "horizontal")
-		{	this.element.style.top = this.get('position')*100+"%";
+	this.on('propertychange', function() {
+    if (this.getMap()) this.getMap().renderSync();
+		if (this.get('orientation') === "horizontal") {
+      this.element.style.top = this.get('position')*100+"%";
 			this.element.style.left = "";
-		}
-		else
-		{	if (this.get('orientation') !== "vertical") this.set('orientation', "vertical");
+		} else {
+      if (this.get('orientation') !== "vertical") this.set('orientation', "vertical");
 			this.element.style.left = this.get('position')*100+"%";
 			this.element.style.top = "";
 		}
@@ -79,10 +78,10 @@ ol_control_Swipe.prototype.setMap = function(map) {
 
 	ol_control_Control.prototype.setMap.call(this, map);
 
-	if (map)
-	{	this._listener = [];
-		for (i=0; i<this.layers.length; i++)
-		{	var l = this.layers[i];
+	if (map) {
+    this._listener = [];
+		for (i=0; i<this.layers.length; i++) {
+      var l = this.layers[i];
 			if (l.right) this._listener.push (l.layer.on('precompose', this.precomposeRight.bind(this)));
 			else this._listener.push (l.layer.on('precompose', this.precomposeLeft.bind(this)));
 			this._listener.push(l.layer.on('postcompose', this.postcompose.bind(this)));
@@ -93,9 +92,9 @@ ol_control_Swipe.prototype.setMap = function(map) {
 
 /** @private
 */
-ol_control_Swipe.prototype.isLayer_ = function(layer)
-{	for (var k=0; k<this.layers.length; k++)
-	{	if (this.layers[k].layer === layer) return k;
+ol_control_Swipe.prototype.isLayer_ = function(layer){
+  for (var k=0; k<this.layers.length; k++) {
+    if (this.layers[k].layer === layer) return k;
 	}
 	return -1;
 };
@@ -104,14 +103,14 @@ ol_control_Swipe.prototype.isLayer_ = function(layer)
  *	@param {ol.layer|Array<ol.layer>} layer to clip
 *	@param {bool} add layer in the right part of the map, default left.
 */
-ol_control_Swipe.prototype.addLayer = function(layers, right)
-{	if (!(layers instanceof Array)) layers = [layers];
+ol_control_Swipe.prototype.addLayer = function(layers, right) {
+  if (!(layers instanceof Array)) layers = [layers];
 	for (var i=0; i<layers.length; i++) {
 		var l = layers[i];
-		if (this.isLayer_(l)<0)
-		{	this.layers.push({ layer:l, right:right });
-			if (this.getMap())
-			{	if (right) this._listener.push (l.on('precompose', this.precomposeRight.bind(this)));
+		if (this.isLayer_(l) < 0) {
+      this.layers.push({ layer:l, right:right });
+			if (this.getMap()) {
+        if (right) this._listener.push (l.on('precompose', this.precomposeRight.bind(this)));
 				else this._listener.push (l.on('precompose', this.precomposeLeft.bind(this)));
 				this._listener.push(l.on('postcompose', this.postcompose.bind(this)));
 				this.getMap().renderSync();
@@ -123,12 +122,12 @@ ol_control_Swipe.prototype.addLayer = function(layers, right)
 /** Remove a layer to clip
  *	@param {ol.layer|Array<ol.layer>} layer to clip
  */
-ol_control_Swipe.prototype.removeLayer = function(layers)
-{	if (!(layers instanceof Array)) layers = [layers];
-	for (var i=0; i<layers.length; i++)
-	{	var k = this.isLayer_(layers[i]);
-		if (k >=0 && this.getMap())
-		{	if (this.layers[k].right) layers[i].un('precompose', this.precomposeRight, this);
+ol_control_Swipe.prototype.removeLayer = function(layers) {
+  if (!(layers instanceof Array)) layers = [layers];
+	for (var i=0; i<layers.length; i++) {
+    var k = this.isLayer_(layers[i]);
+		if (k >=0 && this.getMap()) {
+      if (this.layers[k].right) layers[i].un('precompose', this.precomposeRight, this);
 			else layers[i].un('precompose', this.precomposeLeft, this);
 			layers[i].un('postcompose', this.postcompose, this);
 			this.layers.splice(k,1);
@@ -142,11 +141,11 @@ ol_control_Swipe.prototype.removeLayer = function(layers)
 ol_control_Swipe.prototype.move = function(e) {
 	var self = this;
 	var l;
-	switch (e.type)
-	{	case 'touchcancel':
+	switch (e.type) {
+    case 'touchcancel':
 		case 'touchend':
-		case 'mouseup':
-		{	self.isMoving = false;
+		case 'mouseup': {
+      self.isMoving = false;
 			["mouseup", "mousemove", "touchend", "touchcancel", "touchmove"]
 				.forEach(function(eventName) {
 					document.removeEventListener(eventName, self.move);
@@ -163,24 +162,23 @@ ol_control_Swipe.prototype.move = function(e) {
 		}
 		// fallthrough
 		case 'mousemove':
-		case 'touchmove':
-		{	if (self.isMoving)
-			{	if (self.get('orientation') === "vertical")
-				{	var pageX = e.pageX
-						|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageX)
-						|| (e.originalEvent.changedTouches && e.originalEvent.changedTouches.length && e.originalEvent.changedTouches[0].pageX);
-					if (!pageX) break;
-					pageX -= self.getMap().getTargetElement().getBoundingClientRect().left +
-						window.pageXOffset - document.documentElement.clientLeft;
+		case 'touchmove': {
+      if (self.isMoving) {
+        if (self.get('orientation') === "vertical") {
+          var pageX = e.pageX
+						|| (e.touches && e.touches.length && e.touches[0].pageX)
+						|| (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageX);
+          if (!pageX) break;
+          pageX -= self.getMap().getTargetElement().getBoundingClientRect().left +
+            window.pageXOffset - document.documentElement.clientLeft;
 
 					l = self.getMap().getSize()[0];
 					l = Math.min(Math.max(0, 1-(l-pageX)/l), 1);
 					self.set('position', l);
-				}
-				else
-				{	var pageY = e.pageY
-						|| (e.originalEvent.touches && e.originalEvent.touches.length && e.originalEvent.touches[0].pageY)
-						|| (e.originalEvent.changedTouches && e.originalEvent.changedTouches.length && e.originalEvent.changedTouches[0].pageY);
+				} else {
+          var pageY = e.pageY
+						|| (e.touches && e.touches.length && e.touches[0].pageY)
+						|| (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageY);
 					if (!pageY) break;
 					pageY -= self.getMap().getTargetElement().getBoundingClientRect().top +
 						window.pageYOffset - document.documentElement.clientTop;
@@ -198,8 +196,8 @@ ol_control_Swipe.prototype.move = function(e) {
 
 /** @private
 */
-ol_control_Swipe.prototype.precomposeLeft = function(e)
-{	var ctx = e.context;
+ol_control_Swipe.prototype.precomposeLeft = function(e) {
+  var ctx = e.context;
 	var canvas = ctx.canvas;
 	ctx.save();
 	ctx.beginPath();
@@ -210,8 +208,8 @@ ol_control_Swipe.prototype.precomposeLeft = function(e)
 
 /** @private
 */
-ol_control_Swipe.prototype.precomposeRight = function(e)
-{	var ctx = e.context;
+ol_control_Swipe.prototype.precomposeRight = function(e) {
+  var ctx = e.context;
 	var canvas = ctx.canvas;
 	ctx.save();
 	ctx.beginPath();
@@ -222,8 +220,8 @@ ol_control_Swipe.prototype.precomposeRight = function(e)
 
 /** @private
 */
-ol_control_Swipe.prototype.postcompose = function(e)
-{	e.context.restore();
+ol_control_Swipe.prototype.postcompose = function(e) {
+  e.context.restore();
 };
 
 export default ol_control_Swipe
