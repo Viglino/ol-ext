@@ -2517,18 +2517,17 @@
   cursor: pointer;
   max-width: 17em;
   overflow-x: hidden;
+  z-index: 1;
+  background: #fff;
 }
 /*
 .ol-control.ol-search ul {
   position: absolute;
-  background: #fff;
   box-shadow: 5px 5px 5px rgba(0,0,0,0.5);
 }
 */
-.ol-control.ol-search ul li {
-  padding: 0.1em 0.5em;
-}
 .ol-search ul li {
+  padding: 0.1em 0.5em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2552,14 +2551,15 @@
 }
 
 .ol-search.searching:before {
-    content: '';
-    position: absolute;
-    height: 3px;
-    left: 0;
-    top: 1.6em;
-    -webkit-animation: pulse .5s infinite alternate linear;
-            animation: pulse .5s infinite alternate linear;
-    background: red;
+  content: '';
+  position: absolute;
+  height: 3px;
+  left: 0;
+  top: 1.6em;
+  -webkit-animation: pulse .5s infinite alternate linear;
+          animation: pulse .5s infinite alternate linear;
+  background: red;
+  z-index: 2;
 }
 
 @-webkit-keyframes pulse {
@@ -2827,12 +2827,113 @@
   text-align: center;
   font-weight: bold;
 }
-
+.ol-control.ol-select input {
+  font-size: 1em;
+}
+.ol-control.ol-select select {
+  font-size: 1em;
+  max-width: 10em;
+}
+.ol-control.ol-select select option.ol-default {
+  color: #999;
+  font-style: italic;
+}
 .ol-control.ol-select > div {
   display: block;
 }
 .ol-control.ol-select.ol-collapsed > div {
   display: none;
+}
+.ol-control.ol-select.ol-select-check {
+  max-width: 20em;
+}
+.ol-control.ol-select.ol-select-check label,
+.ol-control.ol-select-check div {
+  position: relative;
+  display: inline-block;
+}
+.ol-control.ol-select.ol-select-condition input,
+.ol-control.ol-select.ol-select-check input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+.ol-control.ol-select.ol-select-condition label div {
+  position: relative;
+  padding: 0 1em 0 2em;
+}
+.ol-control.ol-select.ol-select-condition label div:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  height: 1.1em;
+  width: 1.8em;
+  background-color: rgba(192,192,192,.7);
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  border-radius: 1em;
+}
+.ol-control.ol-select.ol-select-condition label div:after {
+  content: "";
+  position: absolute;
+  left: .1em;
+  top: .1em;
+  height: .9em;
+  width: .9em;
+  background-color: #fff;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  border-radius: 1em;
+  -webkit-transition: .3s;
+  transition: .3s;
+}
+.ol-control.ol-select.ol-select-condition input:checked ~ div:after {
+  left: .7em;
+}
+
+.ol-control.ol-select.ol-select-check label > div {
+  padding: 0 1em 0 1.5em;
+}
+.ol-control.ol-select.ol-select-check label > div:before {
+  content: "";
+  position: absolute;
+  width: 1.1em;
+  height: 1.1em;
+  left: .2em;
+  background-color: rgba(192,192,192,.7);
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+}
+.ol-control.ol-select.ol-select-check label.ol-radio > div:before {
+  border-radius: 50%;
+}
+.ol-control.ol-select.ol-select-condition label > div:hover:before,
+.ol-control.ol-select.ol-select-check label > div:hover:before {
+  background-color: rgba(128,128,128,.7);
+}
+.ol-control.ol-select.ol-select-condition input:checked ~ div:before,
+.ol-control.ol-select.ol-select-check input:checked ~ div:before {
+  background-color: rgba(0,60,136,.7);
+}
+.ol-control.ol-select.ol-select-check label.ol-checkbox input:checked ~ div:after {
+  content: "";
+  position: absolute;
+  width: .5em;
+  height: .8em;
+  top: .05em;
+  left: .5em;
+  border: 2px solid #fff;
+  border-width: 0 3px 3px 0;
+  -webkit-transform: rotate(45deg);
+          transform: rotate(45deg);
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+}
+.ol-control.ol-select.ol-select-check label.ol-radio input:checked ~ div:before {
+  border: .3em solid rgba(0,60,136,.7);
+  background-color: #fff;
 }
 
 .ol-select ul {
@@ -2842,10 +2943,6 @@
 }
 .ol-control.ol-select input[type="text"]  {
   width: 8em;
-}
-
-.ol-control.ol-select label  {
-  display: block;
 }
 
 .ol-select .ol-autocomplete {
@@ -2869,6 +2966,23 @@
 .ol-select ul.ol-hidden {
   display: none;
 }
+
+.ol-select-multi li > div:hover,
+.ol-select-multi li > div.ol-control.ol-select {
+  position: relative;
+  top: unset;
+  left: unset;
+  background: transparent;
+}
+.ol-select-multi li > div  > button,
+.ol-select-multi li > div  .ol-ok {
+  display: none;
+}
+.ol-select-multi li .ol-control.ol-select.ol-collapsed > div,
+.ol-select-multi li > div  > div {
+  display: block;
+}
+
 .ol-control.ol-storymap {
   top: .5em;
   left: .5em;
@@ -3350,15 +3464,15 @@
   -ms-user-select: none;      
   user-select: none;
 }
-.ol-popup .content {
+.ol-popup .ol-popup-content {
   overflow:hidden;
   cursor: default;
   padding: 0.25em 0.5em;
 }
-.ol-popup.hasclosebox .content {
+.ol-popup.hasclosebox .ol-popup-content {
   margin-right: 1.7em;
 }
-.ol-popup .content:after {
+.ol-popup .ol-popup-content:after {
   clear: both;
   content: "";
   display: block;
@@ -3486,12 +3600,12 @@
 .ol-popup.modifytouch {
   background-color: #eee;
 }
-.ol-popup.modifytouch .content {	
+.ol-popup.modifytouch .ol-popup-content {	
   padding: 0 0.25em;
   font-size: 0.85em;
   white-space: nowrap;
 }
-.ol-popup.modifytouch .content a {
+.ol-popup.modifytouch .ol-popup-content a {
   text-decoration: none;
 }
 
@@ -3499,7 +3613,7 @@
 .ol-popup.tooltips {
   background-color: #ffa;
 }
-.ol-popup.tooltips .content{
+.ol-popup.tooltips .ol-popup-content{
   padding: 0 0.25em;
   font-size: 0.85em;
   white-space: nowrap;
@@ -3582,7 +3696,7 @@
           transform-origin: 50% 150%!important;
 }
 
-.ol-popup.placemark .content {
+.ol-popup.placemark .ol-popup-content {
   overflow: hidden;
     cursor: default;
     padding: 0;
@@ -3906,6 +4020,15 @@
 
 .ol-popup .ol-popupfeature table {
   width: 100%;
+}
+.ol-popup .ol-popupfeature table td {
+  max-width: 25em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ol-popup .ol-popupfeature table td img {
+  max-width: 100px;
+  max-height: 100px;
 }
 .ol-popup .ol-popupfeature tr:nth-child(2n+1) {
   background-color: #eee;
