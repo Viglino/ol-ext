@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2017-2019 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Multi select control</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="Control to select features by attributes." />
+  <meta name="keywords" content="openlayers, control, select, vector, feature, attribute, properties" />
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <link rel="stylesheet" href="../style.css"/>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="../../index.html">
+    <h1>ol-ext: Select control</h1>
+  </a>
+
+  <div class="info">
+    <i>ol.control.SelectMutil</i> is a container that manage other control Select.
+    <ul>
+      <li>
+        You can add it Select controls of different type
+      </li>
+      <li>
+        A <i>select</i> event is fired when features are selected. 
+      </li>
+    </ul>
+  </div>
+
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options" style="max-width:20em;">
+    <h2>Options:</h2>
+    <i>Click on the map to select a feature / use the control to look for features by attributes.</i>
+    <br/>
+    <label><input id="select" type="checkbox" onchange="reset()" /> select/filter</label>
+    <ul style="list-style:initial; padding: 0 1em;"></ul>
+  </div>
+  
+  <script type="text/javascript">
+  // Layers
+  var layers = [
+    new ol.layer.Tile({
+      name: "Natural Earth", 
+      minResolution: 306,
+      source: new ol.source.XYZ ({
+        url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
+        attributions: [ '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' ] 
+      })
+    })
+  ]
+
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 5,
+      center: [166326, 5992663]
+    }),
+    interactions: ol.interaction.defaults({ altShiftDragRotate:false, pinchRotate:false }),
+    layers: layers
+  });
+
+  // GeoJSON layer
+  var vectorSource = new ol.source.Vector({
+    url: '../data/fond_guerre.geojson',
+    format: new ol.format.GeoJSON(),
+    attributions: [ "&copy; <a href='https://www.insee.fr'>INSEE</a>", "&copy; <a href='https://www.data.gouv.fr/fr/datasets/geofla-r/'>IGN</a>" ],
+  });
+
+  map.addLayer(new ol.layer.Vector({
+    name: 'Departements',
+    source: vectorSource,
+    style: function(f) {
+      return new ol.style.Style({ 
+        image: new ol.style.RegularShape({
+          radius: 5,
+          points: 4,
+          fill: new ol.style.Fill({ color: [255,128,0,.5] }),
+          stroke: new ol.style.Stroke({ color: [255,128,0], width:1 })  
+        })
+      })
+    }
+  }));
+
+  // Select  interaction
+  var selecti = new ol.interaction.Select({
+    hitTolerance: 5,
+    condition: ol.events.condition.singleClick
+  });
+  map.addInteraction(selecti);
+  // Select feature when click on the reference index
+  selecti.on('select', function(e) {
+    var f = e.selected[0];
+    if (f) {
+      var prop = f.getProperties();
+      var ul = $('.options ul').html('');
+      for (var p in prop) if (p!=='geometry') {
+        if (p==='img') $('<li>').appendTo(ul).append($('<img>').attr('src', prop[p]));
+        else $('<li>').text(p+': '+prop[p]).appendTo(ul);
+      }
+    }
+  });
+
+  // Select control
+  var selectCtrl = new ol.control.SelectMulti({
+    //target: $('.options').get(0),
+    controls: [
+      new ol.control.SelectFulltext({
+        label: 'Text:',
+        property: 'text'
+      }),
+      new ol.control.SelectPopup({
+        defaultLabel: 'all',
+        label: 'Region:',
+        property: 'region'
+      }),
+      new ol.control.SelectCheck({
+        label: 'Author:',
+        property: 'author'
+      }),
+      new ol.control.SelectCondition({
+        label: 'before 1918',
+        condition: { attr: 'date', op:'<', val:'1918' }
+      })
+    ]
+  });
+  // Add control
+  map.addControl (selectCtrl);
+  // Fill control values
+  selectCtrl.getControls()[2].setValues({
+    values: {
+      'Opérateur D ; Brissy, Edouard': 'Brissy, Edouard',
+      'Opérateur D ; Sélince': 'Sélince',
+      'Opérateur Théta (code armée, photographe)': 'Théta'
+    },
+    sort: true 
+  });
+  // Do something on select
+  selectCtrl.on('select', function(e) {
+    selecti.getFeatures().clear();
+    if ($('#select').prop('checked')) {
+      // Select features
+      e.features.forEach(function(f) {
+        selecti.getFeatures().push(f);
+      });
+    } else {
+      // Hide features
+      vectorSource.getFeatures().forEach(function(f) {
+        f.setStyle([]);
+      });
+      // Show current
+      e.features.forEach(function(f) {
+        f.setStyle(null);
+      });
+    }
+  });
+  // Show all features
+  function reset() {
+    selecti.getFeatures().clear();
+    vectorSource.getFeatures().forEach(function(f) {
+      f.setStyle(null);
+    });
+    selectCtrl.doSelect();
+  }
+  // Set values when loaded
+  var listenerKey = vectorSource.on('change',function(e){
+    if (vectorSource.getState() === 'ready') {
+      ol.Observable.unByKey(listenerKey);
+      // Fill the popup with the features values
+      selectCtrl.getControls()[1].setValues({ sort: true });
+    }
+  });
+
+  </script>
+  
+</body>
+</html>
