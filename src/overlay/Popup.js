@@ -50,7 +50,7 @@ var ol_Overlay_Popup = function (options) {
   // Content
   this.content = ol_ext_element.create("div", { 
     html: options.html || '',
-    className: "content",
+    className: "ol-popup-content",
     parent: element
   });
   // Closebox
