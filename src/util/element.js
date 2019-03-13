@@ -44,6 +44,7 @@ ol_ext_element.create = function (tagName, options) {
           this.setStyle(elt, options.style);
           break;
         }
+        case 'change':
         case 'click': {
           ol_ext_element.addListener(elt, attr, options[attr]);
           break;
@@ -75,6 +76,14 @@ ol_ext_element.create = function (tagName, options) {
 ol_ext_element.setHTML = function(element, html) {
   if (html instanceof Element) element.appendChild(html)
   else if (html!==undefined) element.innerHTML = html;
+};
+
+/** Append text into an elemnt
+ * @param {Element} element
+ * @param {string} text text content
+ */
+ol_ext_element.appendText = function(element, text) {
+  element.appendChild(document.createTextNode(text||''));
 };
 
 /**
