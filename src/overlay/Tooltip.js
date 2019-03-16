@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import {getArea as ol_sphere_getArea} from 'ol/sphere.js';
@@ -40,7 +40,7 @@ var ol_Overlay_Tooltip = function (options) {
     }.bind(this)
   });
 };
-ol_inherits(ol_Overlay_Tooltip, ol_Overlay_Popup);
+ol_ext_inherits(ol_Overlay_Tooltip, ol_Overlay_Popup);
 
 /**
  * Set the map instance the control is associated with

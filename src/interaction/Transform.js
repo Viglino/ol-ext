@@ -1,4 +1,4 @@
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Stroke from 'ol/style/Stroke'
 import ol_source_Vector from 'ol/source/Vector'
@@ -101,7 +101,7 @@ var ol_interaction_Transform = function(options) {
   // setstyle
   this.setDefaultStyle();
 };
-ol_inherits(ol_interaction_Transform, ol_interaction_Pointer);
+ol_ext_inherits(ol_interaction_Transform, ol_interaction_Pointer);
 
 /** Cursors for transform
 */

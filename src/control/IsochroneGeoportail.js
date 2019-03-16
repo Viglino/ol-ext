@@ -2,7 +2,7 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_control_Control from 'ol/control/Control'
 import ol_format_WKT from 'ol/format/WKT'
 import {toLonLat as ol_proj_toLonLat} from 'ol/proj'
@@ -155,7 +155,7 @@ var ol_control_IsochroneGeoportail = function(options) {
 
   this.setMethod(options.method);
 };
-ol_inherits(ol_control_IsochroneGeoportail, ol_control_Control);
+ol_ext_inherits(ol_control_IsochroneGeoportail, ol_control_Control);
 
 /**
  * Set the map instance the control is associated with

@@ -3,17 +3,18 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_control_Control from 'ol/control/Control'
 import ol_style_RegularShape from 'ol/style/RegularShape'
 import ol_geom_Point from 'ol/geom/Point'
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Stroke from 'ol/style/Stroke'
 import ol_Map from 'ol/Map'
+import ol_control_CanvasBase from './CanvasBase'
 
 /** ol_control_Target draw a target at the center of the map.
  * @constructor
+ * @extends {ol_control_CanvasBase}
  * @param {Object} options
  *  - style {ol.style.Style|Array<ol.style.Style>} ol.style.Stroke: draw a cross on the map, ol.style.Image: draw the image on the map
  *  - composite {string} composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
@@ -30,14 +31,14 @@ var ol_control_Target = function(options)
 
 	var div = document.createElement('div');
 	div.className = "ol-target ol-unselectable ol-control";
-	ol_control_Control.call(this,
+	ol_control_CanvasBase.call(this,
 	{	element: div,
 		target: options.target
 	});
 
 	this.setVisible(options.visible!==false);
 };
-ol_inherits(ol_control_Target, ol_control_Control);
+ol_ext_inherits(ol_control_Target, ol_control_CanvasBase);
 
 /**
  * Remove the control from its current map and attach it to the new map.
@@ -53,7 +54,7 @@ ol_control_Target.prototype.setMap = function (map)
 	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 
-	ol_control_Control.prototype.setMap.call(this, map);
+	ol_control_CanvasBase.prototype.setMap.call(this, map);
 
 	if (map) 
 	{	this._listener = map.on('postcompose', this.drawTarget_.bind(this));
@@ -80,7 +81,7 @@ ol_control_Target.prototype.getVisible = function ()
 */
 ol_control_Target.prototype.drawTarget_ = function (e)
 {	if (!this.getMap() || !this.getVisible()) return;
-	var ctx = e.context;
+	var ctx = this.getContext(e);
 	var ratio = e.frameState.pixelRatio;
 
 	ctx.save();
@@ -93,6 +94,7 @@ ol_control_Target.prototype.drawTarget_ = function (e)
 
 		if (this.composite) ctx.globalCompositeOperation = this.composite;
 
+	/**/
 		for (var i=0; i<this.style.length; i++)
 		{	var style = this.style[i];
 
@@ -104,13 +106,27 @@ ol_control_Target.prototype.drawTarget_ = function (e)
 				{	sc = imgs.getScale(); 
 					imgs.setScale(ratio*sc);
 				}
-				e.vectorContext.setStyle(style);
-				e.vectorContext.drawGeometry(geom);
+				var vectorContext = e.vectorContext;
+				if (!vectorContext) {
+					var event = {
+						inversePixelTransform: [ratio,0,0,ratio,0,0],
+						context: ctx,
+						frameState: {
+							pixelRatio: ratio,
+							extent: e.frameState.extent,
+							coordinateToPixelTransform: e.frameState.coordinateToPixelTransform,
+							viewState: e.frameState.viewState
+						}
+					}
+					vectorContext = ol_render_getVectorContext(event);
+				} 
+				vectorContext.setStyle(style);
+				vectorContext.drawGeometry(geom);
 				if (imgs) imgs.setScale(sc);
 			}
 		}
 
-	/*
+	/*/
 		for (var i=0; i<this.style.length; i++)
 		{	var style = this.style[i];
 			if (style.stroke instanceof ol.style.Stroke)
@@ -149,7 +165,7 @@ ol_control_Target.prototype.drawTarget_ = function (e)
 				}
 			}
 		}
-		*/
+		/**/
 
 	ctx.restore();
 };

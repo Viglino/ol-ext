@@ -8,7 +8,7 @@
   Inherits from:
   <ol.source.Vector>
 */
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {bbox as ol_loadingstrategy_bbox} from 'ol/loadingstrategy'
 import ol_source_Vector from 'ol/source/Vector'
 import ol_Feature from 'ol/Feature'
@@ -43,7 +43,7 @@ var ol_source_WikiCommons = function(opt_options) {
 
   ol_source_Vector.call (this, options);
 };
-ol_inherits (ol_source_WikiCommons, ol_source_Vector);
+ol_ext_inherits(ol_source_WikiCommons, ol_source_Vector);
 
 
 /** Decode wiki attributes and choose to add feature to the layer

@@ -1,4 +1,4 @@
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_interaction_Pointer from 'ol/interaction/Pointer'
 
 /** Drag an overlay on the map
@@ -63,7 +63,7 @@ var ol_interaction_DragOverlay = function(options) {
   if (!(options.overlays instanceof Array)) options.overlays = [options.overlays];
   options.overlays.forEach(this.addOverlay.bind(this));
 };
-ol_inherits(ol_interaction_DragOverlay, ol_interaction_Pointer);
+ol_ext_inherits(ol_interaction_DragOverlay, ol_interaction_Pointer);
 
 /** Add an overlay to the interacton
  * @param {ol.Overlay} ov

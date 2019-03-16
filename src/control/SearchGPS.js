@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {transform as ol_proj_transform} from 'ol/proj'
 import {toStringHDMS as ol_coordinate_toStringHDMS} from 'ol/coordinate';
 import ol_Geolocation from 'ol/Geolocation'
@@ -85,7 +85,7 @@ var ol_control_SearchGPS = function(options) {
   this.element.appendChild(ul);
   
 };
-ol_inherits(ol_control_SearchGPS, ol_control_Search);
+ol_ext_inherits(ol_control_SearchGPS, ol_control_Search);
 
 
 /** Create input form

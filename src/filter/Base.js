@@ -3,7 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_layer_Base from 'ol/layer/Base'
 import ol_Object from 'ol/Object'
@@ -33,7 +33,7 @@ var ol_filter_Base = function(options) {
   if (options && options.active===false) this.set('active', false);
   else this.set('active', true);
 };
-ol_inherits(ol_filter_Base, ol_Object);
+ol_ext_inherits(ol_filter_Base, ol_Object);
 
 /** Activate / deactivate filter
 *	@param {boolean} b
@@ -56,14 +56,14 @@ ol_filter_Base.prototype.getActive = function () {
 * @private
 */
 function precompose_(e) {
-  if (this.get('active')) this.precompose(e);
+  if (this.get('active') && e.context) this.precompose(e);
 }
 /** Internal function
 * @this {ol.filter} this the filter
 * @private
 */
 function postcompose_(e) {
-  if (this.get('active')) this.postcompose(e);
+  if (this.get('active') && e.context) this.postcompose(e);
 }
 
 /** Force filter redraw / Internal function
@@ -82,8 +82,8 @@ function filterRedraw_() {
 function addFilter_(filter) {
   if (!this.filters_) this.filters_ = [];
   this.filters_.push(filter);
-  if (filter.precompose) filter._listener.push ( { listener: this.on('precompose', precompose_.bind(filter)), target: this });
-  if (filter.postcompose) filter._listener.push ( { listener: this.on('postcompose', postcompose_.bind(filter)), target: this });
+  if (filter.precompose) filter._listener.push ( { listener: this.on(['precompose','prerender'], precompose_.bind(filter)), target: this });
+  if (filter.postcompose) filter._listener.push ( { listener: this.on(['postcompose','postrender'], postcompose_.bind(filter)), target: this });
   filter._listener.push ( { listener: filter.on('propertychange', filterRedraw_.bind(this)), target: this });
   filterRedraw_.call (this);
 }
@@ -112,6 +112,7 @@ function removeFilter_(filter) {
 *	@param {ol.filter}
 */
 ol_Map.prototype.addFilter = function (filter) {
+  console.warn('[OL-EXT] addFilter deprecated on map.')
   addFilter_.call (this, filter);
 };
 /** Remove a filter to an ol.Map

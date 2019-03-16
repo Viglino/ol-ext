@@ -1,4 +1,4 @@
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_interaction_DragAndDrop from 'ol/interaction/DragAndDrop'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import ol_format_GPX from 'ol/format/GPX'
@@ -35,7 +35,7 @@ var ol_interaction_DropFile = function(options)
 	var self = this;
 	zone.addEventListener('drop', function(e){ return self.ondrop(e);});
 };
-ol_inherits(ol_interaction_DropFile, ol_interaction_DragAndDrop);
+ol_ext_inherits(ol_interaction_DropFile, ol_interaction_DragAndDrop);
 
 /** Set the map
 */

@@ -5,7 +5,7 @@
 *  Add a chart style to display charts (pies or bars) on a map 
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_style_RegularShape from 'ol/style/RegularShape'
 import ol_style_Fill from 'ol/style/Fill'
 import {asString as ol_color_asString} from 'ol/color'
@@ -66,7 +66,7 @@ var ol_style_Chart = function(opt_options)
 
 	this.renderChart_();
 };
-ol_inherits(ol_style_Chart, ol_style_RegularShape);
+ol_ext_inherits(ol_style_Chart, ol_style_RegularShape);
 
 /** Default color set: classic, dark, pale, pastel, neon
 */

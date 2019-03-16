@@ -1,4 +1,4 @@
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {shiftKeyOnly as ol_events_condition_shiftKeyOnly} from 'ol/events/condition'
 import {click as ol_events_condition_click} from 'ol/events/condition'
 import ol_interaction_Draw from 'ol/interaction/Draw'
@@ -50,7 +50,7 @@ var ol_control_EditBar = function(options) {
   if (options.edition!==false) this._setEditInteraction(options);
   this._setModifyInteraction(options);
 };
-ol_inherits(ol_control_EditBar, ol_control_Bar);
+ol_ext_inherits(ol_control_EditBar, ol_control_Bar);
 
 /**
  * Set the map instance the control is associated with

@@ -3,7 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_Overlay from 'ol/Overlay'
 import ol_ext_element from '../util/element'
 
@@ -83,7 +83,7 @@ var ol_Overlay_Popup = function (options) {
     setTimeout(function(){ this.show(options.position); }.bind(this));
   }
 };
-ol_inherits(ol_Overlay_Popup, ol_Overlay);
+ol_ext_inherits(ol_Overlay_Popup, ol_Overlay);
 
 /**
  * Get CSS class of the popup according to its positioning.

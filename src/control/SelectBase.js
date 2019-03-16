@@ -2,8 +2,10 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_control_Control from 'ol/control/Control'
+import ol_Collection from 'ol/Collection'
+import ol_source_Vector from 'ol/source/Vector'
 import ol_ext_element from '../util/element'
 
 /**
@@ -60,7 +62,7 @@ var ol_control_SelectBase = function(options) {
 
   this.setSources(options.source);
 };
-ol_inherits(ol_control_SelectBase, ol_control_Control);
+ol_ext_inherits(ol_control_SelectBase, ol_control_Control);
 
 /** Set the current sources
  * @param {ol.source.Vector|Array<ol.source.Vector>|undefined} source
@@ -167,6 +169,7 @@ ol_control_SelectBase.prototype._checkCondition = function (f, condition, usecas
  */
 ol_control_SelectBase.prototype._selectFeatures = function (result, features, conditions, all, usecase) {
   conditions = conditions || [];
+  var f;
   for (var i=features.length-1; f=features[i]; i--) {
     var isok = all;
     for (var k=0, c; c=conditions[k]; k++) {
@@ -202,7 +205,7 @@ ol_control_SelectBase.prototype.getSources = function () {
         sources.push(l.getSource());
       }
     });
-  };
+  }
   if (this.getMap()) {
     getSources(this.getMap().getLayers());
   }

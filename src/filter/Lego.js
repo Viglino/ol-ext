@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_filter_Base from './Base'
 
 /** Make a map or layer look like made of a set of Lego bricks.
@@ -31,7 +31,7 @@ var ol_filter_Lego = function(options)
 	this.setBrick (options.brickSize, img);
 	this.internal_ = document.createElement('canvas');
 }
-ol_inherits(ol_filter_Lego, ol_filter_Base);
+ol_ext_inherits(ol_filter_Lego, ol_filter_Base);
 
 /** Image definition
 */

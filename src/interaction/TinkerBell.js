@@ -7,7 +7,7 @@
 	@link https://github.com/Viglino
  */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_interaction_Pointer from 'ol/interaction/Pointer'
 import {asString as ol_color_asString} from 'ol/color'
@@ -35,7 +35,7 @@ var ol_interaction_TinkerBell = function(options)
 	this.out_ = function() { self.isout_=true; };
 	this.isout_ = true;
 };
-ol_inherits(ol_interaction_TinkerBell, ol_interaction_Pointer);
+ol_ext_inherits(ol_interaction_TinkerBell, ol_interaction_Pointer);
 
 /** Set the map > start postcompose
 */

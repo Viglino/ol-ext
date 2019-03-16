@@ -110,11 +110,11 @@
 
 		// Enhance filter
 		var enhance = new ol.filter.Colorize({ operation:'enhance'});
-		map.addFilter(enhance);
+		osm.addFilter(enhance);
 
 		// Custom filter
 		var filter = new ol.filter.Colorize();
-		map.addFilter(filter);
+		osm.addFilter(filter);
 
 		function setFilter()
 		{	enhance.setActive($("#enhance").prop('checked'));

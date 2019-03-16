@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_control_Control from 'ol/control/Control'
 
 /** Control overlay for OL3
@@ -35,7 +35,7 @@ var ol_control_Notification = function(options) {
   });
   
 };
-ol_inherits(ol_control_Notification, ol_control_Control);
+ol_ext_inherits(ol_control_Notification, ol_control_Control);
 
 /**
  * Display a notification on the map

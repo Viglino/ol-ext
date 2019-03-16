@@ -1,4 +1,4 @@
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_control_Control from 'ol/control/Control'
 import ol_has_TOUCH from 'ol/has'
@@ -66,7 +66,7 @@ var ol_control_Imageline = function(options) {
 
   this.refresh();
 };
-ol_inherits(ol_control_Imageline, ol_control_Control);
+ol_ext_inherits(ol_control_Imageline, ol_control_Control);
 
 /**
  * Remove the control from its current map and attach it to the new map.

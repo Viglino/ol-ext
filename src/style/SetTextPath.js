@@ -1,4 +1,4 @@
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_layer_Vector from 'ol/layer/Vector'
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Text from 'ol/style/Text'
@@ -124,7 +124,7 @@ var ol_style_TextPath = function(options)
 	this.textOverflow_ = typeof(options.textOverflow)!="undefined" ?  options.textOverflow : "visible";
 	this.minWidth_ = options.minWidth || 0;
 }
-ol_inherits(ol_style_TextPath, ol_style_Text);
+ol_ext_inherits(ol_style_TextPath, ol_style_Text);
 
 ol_style_TextPath.prototype.getTextOverflow = function()
 {	return this.textOverflow_; 

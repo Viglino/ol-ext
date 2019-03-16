@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_filter_Base from './Base'
 
 /** Fold filer map
@@ -25,8 +25,8 @@ var ol_filter_Fold = function(options)
 	this.set("padding", options.padding || 8);
 	if (typeof options.fsize == "number") options.fsize = [options.fsize,options.fsize];
 	this.set("fsize", options.fsize || [8,10]);
-}
-ol_inherits(ol_filter_Fold, ol_filter_Base);
+};
+ol_ext_inherits(ol_filter_Fold, ol_filter_Base);
 
 ol_filter_Fold.prototype.drawLine_ = function(ctx, d, m)
 {	var canvas = ctx.canvas;
@@ -58,7 +58,7 @@ ol_filter_Fold.prototype.drawLine_ = function(ctx, d, m)
 		ctx.lineTo ( x, y );
 	}
 	ctx.closePath();
-}
+};
 
 ol_filter_Fold.prototype.precompose = function(e)
 {	var ctx = e.context;
@@ -79,7 +79,7 @@ ol_filter_Fold.prototype.precompose = function(e)
 	this.drawLine_(ctx, this.get("fsize"), this.get("margin") + this.get("padding"));
 	ctx.clip();
 
-}
+};
 
 ol_filter_Fold.prototype.postcompose = function(e)
 {	var ctx = e.context;
@@ -106,6 +106,6 @@ ol_filter_Fold.prototype.postcompose = function(e)
 			ctx.restore()
 		}
 	ctx.restore();
-}
+};
 
 export default ol_filter_Fold

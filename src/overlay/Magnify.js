@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_Collection from 'ol/Collection'
 import ol_View from 'ol/View'
@@ -46,7 +46,7 @@ var ol_Overlay_Magnify = function (options) {
 	this.set("active", true);
 	this.on("propertychange", this.setView_.bind(this));
 };
-ol_inherits(ol_Overlay_Magnify, ol_Overlay);
+ol_ext_inherits(ol_Overlay_Magnify, ol_Overlay);
 
 /**
  * Set the map instance the overlay is associated with.

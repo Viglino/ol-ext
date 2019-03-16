@@ -1,5 +1,5 @@
 /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_source_Vector from 'ol/source/Vector'
 import ol_Feature from 'ol/Feature'
 import ol_geom_Polygon from 'ol/geom/Polygon'
@@ -31,7 +31,7 @@ var ol_source_Delaunay = function(options) {
 
   this.set ('epsilon', options.epsilon || .0001)
 };
-ol_inherits (ol_source_Delaunay, ol_source_Vector);
+ol_ext_inherits(ol_source_Delaunay, ol_source_Vector);
 
 /** Add a new triangle in the source
  * @param {Array<ol/coordinates>} pts

@@ -3,7 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_control_Control from 'ol/control/Control'
 import ol_geom_Polygon from 'ol/geom/Polygon'
@@ -163,7 +163,7 @@ var ol_control_Overview = function(options)
     }
   }));
 };
-ol_inherits(ol_control_Overview, ol_control_Control);
+ol_ext_inherits(ol_control_Overview, ol_control_Control);
 
 /** Get overview map
 *	@return {ol.Map}

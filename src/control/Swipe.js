@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_control_Control from 'ol/control/Control'
 
@@ -36,8 +36,10 @@ var ol_control_Swipe = function(options) {
 	});
 
 	// An array of listener on layer postcompose
-	this._listener = [];
-	
+	this.precomposeRight_ = this.precomposeRight.bind(this);
+	this.precomposeLeft_ = this.precomposeLeft.bind(this);
+	this.postcompose_ = this.postcompose.bind(this);
+
 	this.layers = [];
 	if (options.layers) this.addLayer(options.layers, false);
 	if (options.rightLayers) this.addLayer(options.rightLayers, true);
@@ -59,7 +61,7 @@ var ol_control_Swipe = function(options) {
 	this.set('position', options.position || 0.5);
 	this.set('orientation', options.orientation || 'vertical');
 };
-ol_inherits(ol_control_Swipe, ol_control_Control);
+ol_ext_inherits(ol_control_Swipe, ol_control_Control);
 
 /**
  * Set the map instance the control associated with.
@@ -68,11 +70,12 @@ ol_inherits(ol_control_Swipe, ol_control_Control);
 ol_control_Swipe.prototype.setMap = function(map) {
 	var i;
 
-	for (i=0; i<this._listener.length; i++) {
-		ol_Observable_unByKey(this._listener[i]);
-	}
-	this._listener = [];
 	if (this.getMap()) {
+		for (i=0; i<this.layers.length; i++) {
+			if (l.right) l.layer.un(['precompose','prerender'], this.precomposeRight_);
+			else l.layer.un(['precompose','prerender'], this.precomposeLeft_);
+			l.layer.un(['postcompose','postrender'], this.postcompose_);
+		}
 		this.getMap().renderSync();
 	}
 
@@ -82,9 +85,9 @@ ol_control_Swipe.prototype.setMap = function(map) {
     this._listener = [];
 		for (i=0; i<this.layers.length; i++) {
       var l = this.layers[i];
-			if (l.right) this._listener.push (l.layer.on('precompose', this.precomposeRight.bind(this)));
-			else this._listener.push (l.layer.on('precompose', this.precomposeLeft.bind(this)));
-			this._listener.push(l.layer.on('postcompose', this.postcompose.bind(this)));
+			if (l.right) l.layer.on(['precompose','prerender'], this.precomposeRight_);
+			else l.layer.on(['precompose','prerender'], this.precomposeLeft_);
+			l.layer.on(['postcompose','postrender'], this.postcompose_);
 		}
 		map.renderSync();
 	}
@@ -110,9 +113,9 @@ ol_control_Swipe.prototype.addLayer = function(layers, right) {
 		if (this.isLayer_(l) < 0) {
       this.layers.push({ layer:l, right:right });
 			if (this.getMap()) {
-        if (right) this._listener.push (l.on('precompose', this.precomposeRight.bind(this)));
-				else this._listener.push (l.on('precompose', this.precomposeLeft.bind(this)));
-				this._listener.push(l.on('postcompose', this.postcompose.bind(this)));
+        if (right) l.on(['precompose','prerender'], this.precomposeRight_);
+				else l.on(['precompose','prerender'], this.precomposeLeft_);
+				l.on(['postcompose','postrender'], this.postcompose_);
 				this.getMap().renderSync();
 			}
 		}
@@ -127,9 +130,9 @@ ol_control_Swipe.prototype.removeLayer = function(layers) {
 	for (var i=0; i<layers.length; i++) {
     var k = this.isLayer_(layers[i]);
 		if (k >=0 && this.getMap()) {
-      if (this.layers[k].right) layers[i].un('precompose', this.precomposeRight, this);
-			else layers[i].un('precompose', this.precomposeLeft, this);
-			layers[i].un('postcompose', this.postcompose, this);
+      if (this.layers[k].right) layers[i].un(['precompose','prerender'], this.precomposeRight_);
+			else layers[i].un(['precompose','prerender'], this.precomposeLeft_);
+			layers[i].un(['postcompose','postrender'], this.postcompose_);
 			this.layers.splice(k,1);
 			this.getMap().renderSync();
 		}

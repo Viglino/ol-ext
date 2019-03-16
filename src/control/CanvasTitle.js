@@ -3,17 +3,17 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_control_Control from 'ol/control/Control'
 import {asString as ol_color_asString} from 'ol/color'
 import ol_style_Style from 'ol/style/Style'
+import ol_control_CanvasBase from './CanvasBase'
 
 /**
  * OpenLayers 3 Title Control integrated in the canvas (for jpeg/png export purposes).
  *
  * @constructor
- * @extends {ol_control_Control}
+ * @extends {ol_control_CanvasBase}
  * @param {Object=} options extend the ol.control options. 
  * 	@param {ol_style_Style} options.style style usesd to draw the title.
  */
@@ -41,12 +41,12 @@ var ol_control_CanvasTitle = function(options)
 		elt.style[key] = css[key];
 	});
 
-	ol_control_Control.call(this,
+	ol_control_CanvasBase.call(this,
 	{	element: elt,
 		target: options.target
 	});
 }
-ol_inherits(ol_control_CanvasTitle, ol_control_Control);
+ol_ext_inherits(ol_control_CanvasTitle, ol_control_CanvasBase);
 
 /**
  * Remove the control from its current map and attach it to the new map.
@@ -136,6 +136,10 @@ ol_control_CanvasTitle.prototype.getVisible = function ()
 ol_control_CanvasTitle.prototype.drawTitle_ = function(e)
 {	if (!this.getVisible()) return;
 	var ctx = e.context;
+	if (!ctx) {
+		var c = this.getMap().getViewport().querySelectorAll('canvas')
+		ctx = c[c.length-1].getContext('2d');
+	}
 	
 	// Retina device
 	var ratio = e.frameState.pixelRatio;

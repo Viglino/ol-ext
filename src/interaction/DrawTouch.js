@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_interaction_CenterTouch from './CenterTouch'
 import ol_style_Style from 'ol/style/Style'
@@ -84,7 +84,7 @@ var ol_interaction_DrawTouch = function(options) {
 	this.geom_ = [];
 	
 };
-ol_inherits(ol_interaction_DrawTouch, ol_interaction_CenterTouch);
+ol_ext_inherits(ol_interaction_DrawTouch, ol_interaction_CenterTouch);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new

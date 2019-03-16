@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {bbox as ol_loadingstrategy_bbox} from 'ol/loadingstrategy'
 import ol_source_Vector from 'ol/source/Vector'
 import ol_source_OSM from 'ol/source/OSM'
@@ -51,7 +51,7 @@ var ol_source_Overpass = function(options) {
   };
   this._filter = options.filter;
 };
-ol_inherits (ol_source_Overpass, ol_source_Vector);
+ol_ext_inherits(ol_source_Overpass, ol_source_Vector);
 
 /** Loader function used to load features.
 * @private

@@ -1,4 +1,4 @@
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import ol_layer_Vector from 'ol/layer/Vector'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
@@ -29,7 +29,7 @@ var ol_interaction_UndoRedo = function(options) {
   // Custom definitions
   this._defs = {};
 };
-ol_inherits(ol_interaction_UndoRedo, ol_interaction_Interaction);
+ol_ext_inherits(ol_interaction_UndoRedo, ol_interaction_Interaction);
 
 /** Add a custom undo/redo
  * @param {string} action the action key name

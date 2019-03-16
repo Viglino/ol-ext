@@ -1,4 +1,4 @@
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_interaction_Select from 'ol/interaction/Select'
 import {click as ol_events_condition_click} from 'ol/events/condition'
 
@@ -60,7 +60,7 @@ var ol_interaction_FillAttribute = function(options, properties) {
     this._cursor = 'url('+canvas.toDataURL()+') 0 13, auto';
   }
 };
-ol_inherits(ol_interaction_FillAttribute, ol_interaction_Select);
+ol_ext_inherits(ol_interaction_FillAttribute, ol_interaction_Select);
 
 /** Activate the interaction
  * @param {boolean} active

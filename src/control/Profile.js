@@ -4,7 +4,7 @@
 */
 /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {getDistance as ol_sphere_getDistance} from 'ol/sphere'
 import {transform as ol_proj_transform} from 'ol/proj'
 import ol_control_Control from 'ol/control/Control'
@@ -145,7 +145,7 @@ var ol_control_Profil = function(opt_options)
 	{	this.setGeometry (options.feature);
 	}
 };
-ol_inherits(ol_control_Profil, ol_control_Control);
+ol_ext_inherits(ol_control_Profil, ol_control_Control);
 
 /** Custom infos list
 * @api stable

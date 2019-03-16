@@ -1,5 +1,5 @@
 /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_source_Vector from 'ol/source/Vector'
 import ol_control_Control from 'ol/control/Control'
 import ol_has_TOUCH from 'ol/has'
@@ -142,7 +142,7 @@ var ol_control_Timeline = function(options) {
   // Feature source 
   this.setFeatures(options.features || options.source, options.zoom);
 };
-ol_inherits(ol_control_Timeline, ol_control_Control);
+ol_ext_inherits(ol_control_Timeline, ol_control_Control);
 
 /**
  * Set the map instance the control is associated with

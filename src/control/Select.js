@@ -2,7 +2,7 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_control_SelectBase from './SelectBase'
 import ol_ext_element from '../util/element'
 
@@ -74,7 +74,7 @@ var ol_control_Select = function(options) {
   this.set('valuePlaceHolder', options.valuePlaceHolder || 'value');
   this.addCondition();
 };
-ol_inherits(ol_control_Select, ol_control_SelectBase);
+ol_ext_inherits(ol_control_Select, ol_control_SelectBase);
 
 /** Add a new condition
  * @param {*} options

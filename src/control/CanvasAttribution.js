@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_control_Attribution from 'ol/control/Attribution'
 import ol_style_Style from 'ol/style/Style'
@@ -32,7 +32,7 @@ var ol_control_CanvasAttribution = function(options)
 	if (!options.style) options.style = new ol_style_Style();
 	this.setStyle (options.style);
 }
-ol_inherits(ol_control_CanvasAttribution, ol_control_Attribution);
+ol_ext_inherits(ol_control_CanvasAttribution, ol_control_Attribution);
 
 /**
  * Draw attribution on canvas
@@ -43,6 +43,12 @@ ol_control_CanvasAttribution.prototype.setCanvas = function (b)
 	this.element.style.visibility = b ? "hidden":"visible";
 	if (this.map_) this.map_.renderSync();
 };
+
+
+/** Get map Canvas
+ * @private
+ */
+ol_control_CanvasAttribution.prototype.getContext = ol_control_CanvasBase.prototype.getContext;
 
 /**
  * Change the control style
@@ -87,10 +93,10 @@ ol_control_CanvasAttribution.prototype.setMap = function (map)
  * Draw attribution in the final canvas
  * @private
  */
-ol_control_CanvasAttribution.prototype.drawAttribution_ = function(e)
-{	var ctx = e.context;
+ol_control_CanvasAttribution.prototype.drawAttribution_ = function(e) {
 	if (!this.isCanvas_) return;
-
+	var ctx = this.getContext(e);
+	
 	var text = "";
 	Array.prototype.slice.call(this.element.querySelectorAll('li'))
 		.filter(function(el) {

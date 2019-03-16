@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_control_Search from './Search'
 import {ol_coordinate_fromDFCI} from '../geom/DFCI'
 import {ol_coordinate_toDFCI} from '../geom/DFCI'
@@ -34,7 +34,7 @@ var ol_control_SearchDFCI = function(options) {
 
   ol_control_Search.call(this, options);
 };
-ol_inherits(ol_control_SearchDFCI, ol_control_Search);
+ol_ext_inherits(ol_control_SearchDFCI, ol_control_Search);
 
 /** Autocomplete function
 * @param {string} s search string

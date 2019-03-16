@@ -15,7 +15,7 @@
 	}
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_source_ImageCanvas from 'ol/source/ImageCanvas'
 import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent'
 
@@ -97,7 +97,7 @@ var ol_source_GeoImage = function(opt_options)
 	ol_source_ImageCanvas.call (this, options);	
 	this.setCrop (this.crop);
 };
-ol_inherits (ol_source_GeoImage, ol_source_ImageCanvas);
+ol_ext_inherits(ol_source_GeoImage, ol_source_ImageCanvas);
 
 /**
  * Get coordinate of the image center.

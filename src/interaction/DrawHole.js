@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_geom_Polygon from 'ol/geom/Polygon'
 import ol_geom_MultiPolygon from 'ol/geom/MultiPolygon'
 import ol_geom_LinearRing from 'ol/geom/LinearRing'
@@ -63,7 +63,7 @@ var ol_interaction_DrawHole = function(options)
 	// End drawing add the hole to the current Polygon
 	this.on('drawend', this._finishDrawing.bind(this));
 };
-ol_inherits(ol_interaction_DrawHole, ol_interaction_Draw);
+ol_ext_inherits(ol_interaction_DrawHole, ol_interaction_Draw);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new

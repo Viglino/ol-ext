@@ -1,4 +1,4 @@
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import ol_Geolocation from 'ol/Geolocation'
 import ol_style_Circle from 'ol/style/Circle'
@@ -134,7 +134,7 @@ var ol_interaction_GeolocationDraw = function(options) {
 
 	this.setActive(false);
 };
-ol_inherits(ol_interaction_GeolocationDraw, ol_interaction_Interaction);
+ol_ext_inherits(ol_interaction_GeolocationDraw, ol_interaction_Interaction);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new

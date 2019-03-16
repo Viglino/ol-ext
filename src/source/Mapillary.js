@@ -9,7 +9,7 @@
 	<ol.source.Vector>
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {bbox as ol_loadingstrategy_bbox} from 'ol/loadingstrategy'
 import ol_source_Vector from 'ol/source/Vector'
 import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
@@ -43,7 +43,7 @@ var ol_source_Mapillary = function(opt_options)
 	// Client ID
 	// this.set("clientId", options.clientId);
 };
-ol_inherits (ol_source_Mapillary, ol_source_Vector);
+ol_ext_inherits(ol_source_Mapillary, ol_source_Vector);
 
 
 /** Decode wiki attributes and choose to add feature to the layer

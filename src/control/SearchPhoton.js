@@ -2,7 +2,7 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {transform as ol_proj_transform} from 'ol/proj'
 import ol_control_SearchJSON from "./SearchJSON";
 import ol_geom_Point from 'ol/geom/Point'
@@ -37,7 +37,7 @@ var ol_control_SearchPhoton = function(options)
 	this.set('lang', options.lang);
 	this.set('position', options.position);
 };
-ol_inherits(ol_control_SearchPhoton, ol_control_SearchJSON);
+ol_ext_inherits(ol_control_SearchPhoton, ol_control_SearchJSON);
 
 /** Returns the text to be displayed in the menu
 *	@param {ol.Feature} f the feature

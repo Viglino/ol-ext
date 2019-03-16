@@ -3,7 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_style_Style from 'ol/style/Style'
 import {asString as ol_color_asString} from 'ol/color'
 import {asArray as ol_color_asArray} from 'ol/color'
@@ -49,7 +49,7 @@ var ol_style_FlowLine = function(options) {
   // LineCap
   this.setLineCap(options.lineCap);
 };
-ol_inherits(ol_style_FlowLine, ol_style_Style);
+ol_ext_inherits(ol_style_FlowLine, ol_style_Style);
 
 /** Set the initial width
  * @param {number} width width, default 0

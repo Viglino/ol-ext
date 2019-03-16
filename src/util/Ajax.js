@@ -1,4 +1,4 @@
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_Object from 'ol/Object'
 
 /** Ajax request
@@ -16,7 +16,7 @@ var ol_ext_Ajax = function(options) {
   this._auth = options.auth;
   this.set('dataType', options.dataType || 'JSON');
 };
-ol_inherits(ol_ext_Ajax, ol_Object);
+ol_ext_inherits(ol_ext_Ajax, ol_Object);
 
 /** Helper for get
  * @param {*} options

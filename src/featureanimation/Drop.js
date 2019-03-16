@@ -4,7 +4,7 @@
 	
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_featureAnimation from './FeatureAnimation'
 
 /** Drop animation: drop a feature on the map
@@ -20,7 +20,7 @@ var ol_featureAnimation_Drop = function(options)
 	ol_featureAnimation.call(this, options);
 	this.side_ = options.side || 'top';
 }
-ol_inherits(ol_featureAnimation_Drop, ol_featureAnimation);
+ol_ext_inherits(ol_featureAnimation_Drop, ol_featureAnimation);
 
 /** Animate
 * @param {ol_featureAnimationEvent} e

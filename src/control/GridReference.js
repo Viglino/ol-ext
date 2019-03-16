@@ -3,20 +3,20 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_control_Control from 'ol/control/Control'
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Stroke from 'ol/style/Stroke'
 import ol_style_Fill from 'ol/style/Fill'
 import ol_style_Text from 'ol/style/Text'
 import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent'
+import ol_control_CanvasBase from './CanvasBase'
 
 /**
  * Draw a grid reference on the map and add an index.
  *
  * @constructor
- * @extends {ol_control_Control}
+ * @extends {ol_control_CanvasBase}
  * @fires select
  * @param {Object=} Control options.
  *	- style {ol_style_Style} Style to use for drawing the grid (stroke and text), default black.
@@ -37,7 +37,7 @@ var ol_control_GridReference = function(options) {
 	var elt = document.createElement("div");
 	elt.className = (!options.target ? "ol-control ":"") +"ol-gridreference ol-unselectable "+(options.className||"");
 
-	ol_control_Control.call(this,
+	ol_control_CanvasBase.call(this,
 		{	element: elt,
 			target: options.target
 		});
@@ -76,7 +76,7 @@ var ol_control_GridReference = function(options) {
 			})
 		});
 };
-ol_inherits(ol_control_GridReference, ol_control_Control);
+ol_ext_inherits(ol_control_GridReference, ol_control_CanvasBase);
 
 /** Returns the text to be displayed in the index
 *	@param {ol.Feature} f the feature
@@ -241,7 +241,7 @@ ol_control_GridReference.prototype.getStyle = function ()
 ol_control_GridReference.prototype.drawGrid_ = function (e)
 {	if (this.get('maxResolution')<e.frameState.viewState.resolution) return;
 
-	var ctx = e.context;
+	var ctx = this.getContext(e);
 	var canvas = ctx.canvas;
 	var ratio = e.frameState.pixelRatio;
 

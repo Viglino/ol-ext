@@ -3,15 +3,15 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_control_Control from 'ol/control/Control'
+import ol_control_CanvasBase from './CanvasBase'
 
 /**
  * Draw a compass on the map. The position/size of the control is defined in the css.
  *
  * @constructor
- * @extends {ol_control_Control}
+ * @extends {ol_control_CanvasBase}
  * @param {Object=} options Control options. The style {_ol_style_Stroke_} option is usesd to draw the text.
  *	@param {string} options.className class name for the control
  *	@param {Image} options.image an image, default use the src option or a default image
@@ -29,7 +29,7 @@ var ol_control_Compass = function(options)
 	elt.style.position = "absolute";
 	elt.style.visibility = "hidden";
 	
-	ol_control_Control.call(this, { element: elt });
+	ol_control_CanvasBase.call(this, { element: elt });
 
 	this.set('rotateVithView', options.rotateWithView!==false);
 	// Style to draw the lines
@@ -50,7 +50,7 @@ var ol_control_Compass = function(options)
 	this.da_ = [];
 	for (var i=0; i<8; i++) this.da_[i] = [ Math.cos(Math.PI*i/8), Math.sin(Math.PI*i/8) ];
 };
-ol_inherits(ol_control_Compass, ol_control_Control);
+ol_ext_inherits(ol_control_Compass, ol_control_CanvasBase);
 
 /**
  * Remove the control from its current map and attach it to the new map.
@@ -62,7 +62,7 @@ ol_control_Compass.prototype.setMap = function (map)
 	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 	
-	ol_control_Control.prototype.setMap.call(this, map);
+	ol_control_CanvasBase.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 
 	// Get change (new layer added or removed)
@@ -137,7 +137,7 @@ ol_control_Compass.prototype.defaultCompass_ = function (s, color)
 * @private
 */
 ol_control_Compass.prototype.drawCompass_ = function(e)
-{	var ctx = e.context;
+{	var ctx = this.getContext(e);
 	var canvas = ctx.canvas;
 
 	// Retina device

@@ -4,7 +4,7 @@
 	
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_featureAnimation from './FeatureAnimation'
 
 /** Slice animation: feature enter from left
@@ -19,7 +19,7 @@ var ol_featureAnimation_Slide = function(options)
 	ol_featureAnimation.call(this, options);
 	this.side_ = options.side || 'left';
 }
-ol_inherits(ol_featureAnimation_Slide, ol_featureAnimation);
+ol_ext_inherits(ol_featureAnimation_Slide, ol_featureAnimation);
 
 /** Animate
 * @param {ol_featureAnimationEvent} e

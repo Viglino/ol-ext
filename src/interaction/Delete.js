@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_interaction_Select from 'ol/interaction/Select'
 import ol_source_Vector from 'ol/source/Vector'
 
@@ -21,7 +21,7 @@ var ol_interaction_Delete = function(options) {
     this.delete(e.selected);
   }.bind(this));
 };
-ol_inherits(ol_interaction_Delete, ol_interaction_Select);
+ol_ext_inherits(ol_interaction_Delete, ol_interaction_Select);
 
 /** Get vector source of the map
  * @return {Array<ol.source.Vector}

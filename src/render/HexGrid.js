@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_Object from 'ol/Object'
 
 /** @typedef {'pointy' | 'flat'} HexagonLayout
@@ -33,7 +33,7 @@ var ol_HexGrid = function (options)
 	this.layout_ = this.layout[options.layout] || this.layout.pointy;
 
 };
-ol_inherits (ol_HexGrid, ol_Object);
+ol_ext_inherits(ol_HexGrid, ol_Object);
 
 /** Layout
 */

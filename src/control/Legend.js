@@ -1,4 +1,4 @@
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {DEVICE_PIXEL_RATIO as ol_has_DEVICE_PIXEL_RATIO} from 'ol/has'
 import ol_control_Control from 'ol/control/Control'
 import {toContext as ol_render_toContext} from 'ol/render'
@@ -72,7 +72,7 @@ var ol_control_Legend = function(options) {
 
   this.refresh();
 };
-ol_inherits(ol_control_Legend, ol_control_Control);
+ol_ext_inherits(ol_control_Legend, ol_control_Control);
 
 
 /** Set the style

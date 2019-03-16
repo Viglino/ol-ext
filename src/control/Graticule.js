@@ -3,9 +3,8 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_control_Control from 'ol/control/Control'
 import ol_proj_Projection from 'ol/proj/Projection'
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Stroke from 'ol/style/Stroke'
@@ -13,12 +12,13 @@ import ol_style_Fill from 'ol/style/Fill'
 import ol_style_Text from 'ol/style/Text'
 import {transform as ol_proj_transform} from 'ol/proj'
 import {get as ol_proj_get} from 'ol/proj'
+import ol_control_CanvasBase from './CanvasBase'
 
 /**
  * Draw a graticule on the map.
  *
  * @constructor
- * @extends {ol_control_Control}
+ * @extends {ol_control_CanvasBase}
  * @param {Object=} _ol_control_ options.
  *	- projection {ol.projectionLike} projection to use for the graticule, default EPSG:4326 
  *	- maxResolution {number} max resolution to display the graticule
@@ -36,7 +36,7 @@ var ol_control_Graticule = function(options) {
 	var elt = document.createElement("div");
 	elt.className = "ol-graticule ol-unselectable ol-hidden";
 	
-	ol_control_Control.call(this, { element: elt });
+	ol_control_CanvasBase.call(this, { element: elt });
 
 	this.set('projection', options.projection || 'EPSG:4326');
 
@@ -68,7 +68,7 @@ var ol_control_Graticule = function(options) {
 			}) 
 		});
 };
-ol_inherits(ol_control_Graticule, ol_control_Control);
+ol_ext_inherits(ol_control_Graticule, ol_control_CanvasBase);
 
 /**
  * Remove the control from its current map and attach it to the new map.
@@ -80,7 +80,7 @@ ol_control_Graticule.prototype.setMap = function (map) {
 	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 	
-	ol_control_Control.prototype.setMap.call(this, map);
+	ol_control_CanvasBase.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 
 	// Get change (new layer added or removed)
@@ -100,7 +100,7 @@ ol_control_Graticule.prototype.getStyle = function (style)
 ol_control_Graticule.prototype.drawGraticule_ = function (e)
 {	if (this.get('maxResolution')<e.frameState.viewState.resolution) return;
 	
-	var ctx = e.context;
+	var ctx = this.getContext(e);
 	var canvas = ctx.canvas;
 	var ratio = e.frameState.pixelRatio;
 	var w = canvas.width/ratio;

@@ -1,4 +1,4 @@
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
 
 /** Interaction hover do to something when hovering a feature
@@ -29,7 +29,7 @@ var ol_interaction_Hover = function(options)
 	this.set('hitTolerance', options.hitTolerance)
 	this.setCursor (options.cursor);
 };
-ol_inherits(ol_interaction_Hover, ol_interaction_Interaction);
+ol_ext_inherits(ol_interaction_Hover, ol_interaction_Interaction);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new

@@ -1,4 +1,4 @@
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_control_Control from 'ol/control/Control'
 
 /** Bookmark positions on ol maps.
@@ -91,7 +91,7 @@ var ol_control_GeoBookmark = function(options) {
   // Set default bmark
   this.setBookmarks(localStorage[this.get('namespace')+"@bookmark"] ? null:options.marks);
 };
-ol_inherits(ol_control_GeoBookmark, ol_control_Control);
+ol_ext_inherits(ol_control_GeoBookmark, ol_control_Control);
 
 /** Set bookmarks
 * @param {} bmark a list of bookmarks, default retreave in the localstorage

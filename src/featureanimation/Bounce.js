@@ -4,7 +4,7 @@
 	
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_featureAnimation from './FeatureAnimation'
 
 /** Bounce animation: 
@@ -22,7 +22,7 @@ var ol_featureAnimation_Bounce = function(options)
 	this.amplitude_ = options.amplitude || 40;
 	this.bounce_ = -Math.PI*(options.bounce || 3);
 }
-ol_inherits(ol_featureAnimation_Bounce, ol_featureAnimation);
+ol_ext_inherits(ol_featureAnimation_Bounce, ol_featureAnimation);
 
 /** Animate
 * @param {ol_featureAnimationEvent} e

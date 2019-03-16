@@ -13,7 +13,7 @@
 	@link https://github.com/Viglino
  */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_interaction_Pointer from 'ol/interaction/Pointer'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 
@@ -44,7 +44,7 @@ var ol_interaction_Ripple = function(options)
     this.interval = options.interval;
 	this.rains (this.interval);
 };
-ol_inherits(ol_interaction_Ripple, ol_interaction_Pointer);
+ol_ext_inherits(ol_interaction_Ripple, ol_interaction_Pointer);
 
 /** Set the map > start postcompose
 */

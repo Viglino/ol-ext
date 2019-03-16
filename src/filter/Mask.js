@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_filter_Base from './Base'
 import {asString as ol_color_asString} from 'ol/color'
 
@@ -31,7 +31,7 @@ var ol_filter_Mask = function(options)
 	this.set("inner", options.inner);
 	this.fillColor_ = options.fill ? ol_color_asString(options.fill.getColor()) || "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.2)";
 }
-ol_inherits(ol_filter_Mask, ol_filter_Base);
+ol_ext_inherits(ol_filter_Mask, ol_filter_Base);
 
 /** Draw the feature into canvas */
 ol_filter_Mask.prototype.drawFeaturePath_ = function(e, out)

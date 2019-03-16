@@ -5,7 +5,7 @@
 *  Photo style for vector features
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_style_RegularShape from 'ol/style/RegularShape'
 import {asString as ol_color_asString} from 'ol/color'
 import ol_style_Stroke from 'ol/style/Stroke'
@@ -78,7 +78,7 @@ var ol_style_Photo = function(options)
 	if (typeof(options.rotation)=='number') this.setRotation(options.rotation);
 	this.renderPhoto_();
 };
-ol_inherits(ol_style_Photo, ol_style_RegularShape);
+ol_ext_inherits(ol_style_Photo, ol_style_RegularShape);
 
 
 /**

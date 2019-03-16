@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_control_Search from './Search'
 
 /**
@@ -36,7 +36,7 @@ var ol_control_SearchFeature = function(options) {
 
   this.source_ = options.source;
 };
-ol_inherits(ol_control_SearchFeature, ol_control_Search);
+ol_ext_inherits(ol_control_SearchFeature, ol_control_Search);
 
 /** No history avaliable on features
  */

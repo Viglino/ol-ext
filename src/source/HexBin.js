@@ -2,7 +2,7 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import { inherits as ol_inherits } from 'ol'
+import ol_ext_inherits from 'ol'
 import ol_geom_Polygon from 'ol/geom/Polygon'
 
 import ol_source_BinBase from './BinBase'
@@ -30,7 +30,7 @@ var ol_source_HexBin = function (options) {
   ol_source_BinBase.call(this, options);
 
 };
-ol_inherits(ol_source_HexBin, ol_source_BinBase);
+ol_ext_inherits(ol_source_HexBin, ol_source_BinBase);
 
 /** Get the hexagon geometry at the coord 
  * @param {ol.Coordinate} coord

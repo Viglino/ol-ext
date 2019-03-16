@@ -4,7 +4,7 @@
 	
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_featureAnimation from './FeatureAnimation'
 
 /** Do nothing for a given duration
@@ -16,7 +16,7 @@ import ol_featureAnimation from './FeatureAnimation'
 var ol_featureAnimation_None = function(options)
 {	ol_featureAnimation.call(this, options);
 };
-ol_inherits(ol_featureAnimation_None, ol_featureAnimation);
+ol_ext_inherits(ol_featureAnimation_None, ol_featureAnimation);
 
 /** Animate: do nothing during the laps time
 * @param {ol_featureAnimationEvent} e

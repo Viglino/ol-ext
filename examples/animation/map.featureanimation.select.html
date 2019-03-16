@@ -110,7 +110,7 @@
 		});
 
 	// On select start/stop animation
-	var select = new ol.interaction.Select();
+	var select = new ol.interaction.Select({ hitTolerance: 1 });
 	map.addInteraction(select);
 	select.on('select', function(e)
 	{	if (e.selected.length)

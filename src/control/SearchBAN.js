@@ -2,7 +2,7 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {transform as ol_proj_transform} from 'ol/proj'
 import ol_control_SearchPhoton from "./SearchPhoton";
 
@@ -34,7 +34,7 @@ var ol_control_SearchBAN = function(options)
     options.copy = '<a href="https://adresse.data.gouv.fr/" target="new">&copy; BAN-data.gouv.fr</a>';
     ol_control_SearchPhoton.call(this, options);
 };
-ol_inherits(ol_control_SearchBAN, ol_control_SearchPhoton);
+ol_ext_inherits(ol_control_SearchBAN, ol_control_SearchPhoton);
 
 /** Returns the text to be displayed in the menu
  *	@param {ol.Feature} f the feature

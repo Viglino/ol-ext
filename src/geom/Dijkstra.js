@@ -3,7 +3,7 @@
 	released under the CeCILL-B license (http://www.cecill.info/).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_Object from 'ol/Object';
 import ol_geom_LineString from 'ol/geom/LineString';
 import ol_geom_Point from 'ol/geom/Point';
@@ -54,7 +54,7 @@ var ol_graph_Dijskra = function (options) {
 
   this.set ('epsilon', options.epsilon || 1E-6);
 };
-ol_inherits(ol_graph_Dijskra, ol_Object);
+ol_ext_inherits(ol_graph_Dijskra, ol_Object);
 
 /** Get the weighting of the edge, for example a speed factor
  * The function returns a value beetween ]0,1]

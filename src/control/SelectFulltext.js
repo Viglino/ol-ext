@@ -2,7 +2,7 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_control_SelectBase from './SelectBase'
 import ol_ext_element from '../util/element'
 
@@ -43,7 +43,7 @@ var ol_control_SelectFulltext = function(options) {
   this._onchoice = options.onchoice;
   this.set('property', options.property || 'name');
 };
-ol_inherits(ol_control_SelectFulltext, ol_control_SelectBase);
+ol_ext_inherits(ol_control_SelectFulltext, ol_control_SelectBase);
 
 /** Select features by condition
  */

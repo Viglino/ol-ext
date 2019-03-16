@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_control_ScaleLine from 'ol/control/ScaleLine'
 import ol_style_Style from 'ol/style/Style'
@@ -29,7 +29,12 @@ var ol_control_CanvasScaleLine = function(options)
 	if (!options.style) options.style = new ol_style_Style();
 	this.setStyle(options.style);
 }
-ol_inherits(ol_control_CanvasScaleLine, ol_control_ScaleLine);
+ol_ext_inherits(ol_control_CanvasScaleLine, ol_control_ScaleLine);
+
+/** Get map Canvas
+ * @private
+ */
+ol_control_CanvasScaleLine.prototype.getContext = ol_control_CanvasBase.prototype.getContext;
 
 /**
  * Remove the control from its current map and attach it to the new map.
@@ -86,8 +91,8 @@ ol_control_CanvasScaleLine.prototype.setStyle = function (style)
  */
 ol_control_CanvasScaleLine.prototype.drawScale_ = function(e)
 {	if ( this.element.style.visibility!=="hidden" ) return;
-	var ctx = e.context;
-
+	var ctx = this.getContext(e);
+	
 	// Get size of the scale div
 	var scalewidth = parseInt(this.olscale.style.width);
 	if (!scalewidth) return;

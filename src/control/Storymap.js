@@ -1,4 +1,4 @@
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_control_Control from 'ol/control/Control'
 import ol_has_TOUCH from 'ol/has'
 import ol_ext_element from '../util/element'
@@ -94,7 +94,7 @@ var ol_control_Storymap = function(options) {
 
   
 };
-ol_inherits(ol_control_Storymap, ol_control_Control);
+ol_ext_inherits(ol_control_Storymap, ol_control_Control);
 
 /** Scroll to a chapter
  * @param {string} name Name of the chapter to scroll to

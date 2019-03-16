@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import {DEVICE_PIXEL_RATIO as ol_has_DEVICE_PIXEL_RATIO} from 'ol/has'
 import ol_style_Stroke from 'ol/style/Stroke'
 import ol_style_Fill from 'ol/style/Fill'
@@ -145,7 +145,7 @@ var ol_style_StrokePattern = function(options)
 	ol_style_Stroke.call (this, options);
 
 };
-ol_inherits(ol_style_StrokePattern, ol_style_Stroke);
+ol_ext_inherits(ol_style_StrokePattern, ol_style_Stroke);
 
 
 /**

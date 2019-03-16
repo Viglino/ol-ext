@@ -4,7 +4,7 @@
 	
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_featureAnimation from './FeatureAnimation'
 
 /** Teleport a feature at a given place
@@ -15,7 +15,7 @@ import ol_featureAnimation from './FeatureAnimation'
 var ol_featureAnimation_Teleport = function(options)
 {	ol_featureAnimation.call(this, options);
 }
-ol_inherits(ol_featureAnimation_Teleport, ol_featureAnimation);
+ol_ext_inherits(ol_featureAnimation_Teleport, ol_featureAnimation);
 
 /** Animate
 * @param {ol_featureAnimationEvent} e

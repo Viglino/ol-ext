@@ -65,14 +65,14 @@ import ol_control_MyControl from 'ol-ext/control/MyControl';
 Example:
 ````javascript
 // Import ol classes
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_control_Control from 'ol/control/Control'
 
 // Create my control
 var ol_control_MyControl = function(options) {
   ol_control_Control.call(this,options);
 }
-ol_inherits(ol_control_MyControl, ol_control_Control);
+ol_ext_inherits(ol_control_MyControl, ol_control_Control);
 
 // Export my control
 export default ol_control_MyControl

@@ -3,7 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_Overlay_Popup from './Popup'
 
 /**
@@ -42,7 +42,7 @@ var ol_Overlay_Placemark = function (options) {
   if (options.contentColor ) this.setContentColor(options.contentColor);
   if (options.size) this.setRadius(options.size);
 };
-ol_inherits(ol_Overlay_Placemark, ol_Overlay_Popup);
+ol_ext_inherits(ol_Overlay_Placemark, ol_Overlay_Popup);
 
 /**
  * Set the position and the content of the placemark (hide it before to enable animation).

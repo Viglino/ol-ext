@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_control_Button from "./Button";
 
 /** A simple push button control drawn as text
@@ -21,6 +21,6 @@ var ol_control_TextButton = function(options)
     options.className = (options.className||"") + " ol-text-button";
     ol_control_Button.call(this, options);
 };
-ol_inherits(ol_control_TextButton, ol_control_Button);
+ol_ext_inherits(ol_control_TextButton, ol_control_Button);
 
 export default ol_control_TextButton

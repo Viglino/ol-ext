@@ -2,7 +2,7 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_control_SelectBase from './SelectBase'
 import ol_ext_element from '../util/element'
 
@@ -37,7 +37,7 @@ var ol_control_SelectMulti = function(options) {
   this._controls = [];
   options.controls.forEach(this.addControl.bind(this));
 };
-ol_inherits(ol_control_SelectMulti, ol_control_SelectBase);
+ol_ext_inherits(ol_control_SelectMulti, ol_control_SelectBase);
 
 /**
 * Set the map instance the control associated with.
@@ -85,7 +85,7 @@ ol_control_SelectMulti.prototype.getControls = function() {
  */
 ol_control_SelectMulti.prototype.doSelect = function() {
   var features = [];
-  selectCtrl.getSources().forEach(function(s) {
+  this.getSources().forEach(function(s) {
     features = features.concat(s.getFeatures());
   });
   this._controls.forEach(function(c) {

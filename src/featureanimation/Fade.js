@@ -4,7 +4,7 @@
 	
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_featureAnimation from './FeatureAnimation'
 
 /** Fade animation: feature fade in
@@ -17,7 +17,7 @@ var ol_featureAnimation_Fade = function(options)
 	this.speed_ = options.speed || 0;
 	ol_featureAnimation.call(this, options);
 }
-ol_inherits(ol_featureAnimation_Fade, ol_featureAnimation);
+ol_ext_inherits(ol_featureAnimation_Fade, ol_featureAnimation);
 
 /** Animate
 * @param {ol_featureAnimationEvent} e

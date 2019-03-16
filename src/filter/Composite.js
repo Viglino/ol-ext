@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_filter_Base from './Base'
 
 /** Colorize map or layer
@@ -18,7 +18,7 @@ var ol_filter_Composite = function(options)
 
 	this.set("operation", options.operation || "source-over");
 }
-ol_inherits(ol_filter_Composite, ol_filter_Base);
+ol_ext_inherits(ol_filter_Composite, ol_filter_Base);
 
 /** Change the current operation
 *	@param {string} operation composite function

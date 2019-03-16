@@ -3,13 +3,14 @@
 	released under the CeCILL license (http://www.cecill.info/).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_Object from 'ol/Object'
 import {linear as ol_easing_linear} from 'ol/easing'
 import ol_Map from 'ol/Map'
 import ol_layer_Vector from 'ol/layer/Vector'
 import {getCenter as ol_extent_getCenter} from 'ol/extent'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import {getVectorContext as ol_render_getVectorContext} from 'ol/render';
 
 /** Feature animation base class
  * Use the {@link _ol_Map_#animateFeature} or {@link _ol_layer_Vector_#animateFeature} to animate a feature
@@ -42,7 +43,7 @@ var ol_featureAnimation = function(options)
 
 	ol_Object.call(this);
 };
-ol_inherits(ol_featureAnimation, ol_Object);
+ol_ext_inherits(ol_featureAnimation, ol_Object);
 
 /** Draw a geometry 
 * @param {olx.animateFeatureEvent} e
@@ -64,10 +65,11 @@ ol_featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
 			imgs.setScale(e.frameState.pixelRatio*sc);
 		}
 		// Prevent crach if the style is not ready (image not loaded)
-		try{
-			e.vectorContext.setStyle(style[i]);
-			if (style[i].getZIndex()<0) e.vectorContext.drawGeometry(shadow||geom);
-			else e.vectorContext.drawGeometry(geom);
+		try {
+			var vectorContext = e.vectorContext || ol_render_getVectorContext(e);
+			vectorContext.setStyle(style[i]);
+			if (style[i].getZIndex()<0) vectorContext.drawGeometry(shadow||geom);
+			else vectorContext.drawGeometry(geom);
 		} catch(e) { /* ok */ }
 		if (imgs) imgs.setScale(sc);
 	}
@@ -100,26 +102,39 @@ ol_featureAnimation.prototype.animate = function (/* e */)
  * @param {ol_featureAnimation|Array<ol_featureAnimation>} fanim the animation to play
  * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
  */
-ol_Map.prototype.animateFeature =
+ol_Map.prototype.animateFeature = function(feature, fanim) {
+	// Animate on last visible layer
+	function animLayer(layers) {
+		for (var l, i=layers.length-1; l=layers[i]; i--) {
+			if (l.getVisible()) {
+				if (l.getLayers) {
+					if (animLayer(l.getLayers().getArray())) return true;
+				} else {
+					l.animateFeature(feature, fanim);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	animLayer(this.getLayers().getArray());
+};
 
 /** Animate feature on a vector layer 
  * @fires animationstart, animationend
  * @param {ol.Feature} feature Feature to animate
  * @param {ol_featureAnimation|Array<ol_featureAnimation>} fanim the animation to play
  * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
-*/
-ol_layer_Vector.prototype.animateFeature = function(feature, fanim)
+ */
+ol_layer_Base.prototype.animateFeature = function(feature, fanim)
 {	var self = this;
 	var listenerKey;
-	
+
 	// Save style
 	var style = feature.getStyle();
 	var flashStyle = style || (this.getStyleFunction ? this.getStyleFunction()(feature) : null);
 	if (!flashStyle) flashStyle=[];
 	if (!(flashStyle instanceof Array)) flashStyle = [flashStyle];
-
-	// Hide feature while animating
-	feature.setStyle(fanim.hiddenStyle || []);
 
 	// Structure pass for animating
 	var event = 
@@ -147,8 +162,10 @@ ol_layer_Vector.prototype.animateFeature = function(feature, fanim)
 
 	var nb=0, step = 0;
 
-	function animate(e) 
-	{	event.vectorContext = e.vectorContext;
+	function animate(e) {
+		try {
+			event.vectorContext = e.vectorContext || ol_render_getVectorContext(e);
+		} catch(e) {}
 		event.frameState = e.frameState;
 		if (!event.extent) 
 		{	event.extent = e.frameState.extent;
@@ -201,12 +218,14 @@ ol_layer_Vector.prototype.animateFeature = function(feature, fanim)
 	}
 
 	// Launch animation
-	function start(options)
-	{	if (fanim.length && !listenerKey)
-		{	listenerKey = self.on('postcompose', animate.bind(self));
+	function start(options){
+		if (fanim.length && !listenerKey)
+		{	listenerKey = self.on(['postcompose','postrender'], animate.bind(self));
 			// map or layer?
 			if (self.renderSync) self.renderSync();
 			else self.changed();
+			// Hide feature while animating
+			feature.setStyle(fanim[step].hiddenStyle || new ol_style_Style({ image: new ol_style_Circle({}) }));
 			// Send event
 			var event = { type:'animationstart', feature: feature };
 			if (options) 

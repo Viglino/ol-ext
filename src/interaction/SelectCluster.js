@@ -6,7 +6,7 @@
 	
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_Map from 'ol/Map'
 import ol_Collection from 'ol/Collection'
 import ol_layer_Vector from 'ol/layer/Vector'
@@ -19,7 +19,7 @@ import {easeOut as ol_easing_easeOut} from 'ol/easing'
 import ol_geom_Point from 'ol/geom/Point'
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Circle from 'ol/style/Circle'
-//import {getVectorContext as ol_render_getVectorContext} from 'ol/render';
+import {getVectorContext as ol_render_getVectorContext} from 'ol/render';
 
 /**
  * @classdesc
@@ -102,7 +102,7 @@ var ol_interaction_SelectCluster = function(options)
 	this.on("select", this.selectCluster.bind(this));
 };
 
-ol_inherits(ol_interaction_SelectCluster, ol_interaction_Select);
+ol_ext_inherits(ol_interaction_SelectCluster, ol_interaction_Select);
 
 
 /**
@@ -249,7 +249,7 @@ ol_interaction_SelectCluster.prototype.animateCluster_ = function(center, featur
 	
 	// Animate function
 	function animate(event) {
-		var vectorContext = event.vectorContext;// || ol_render_getVectorContext(event);
+		var vectorContext = event.vectorContext || ol_render_getVectorContext(event);
 		// Retina device
 		var ratio = event.frameState.pixelRatio;
 		var res = this.getMap().getView().getResolution();

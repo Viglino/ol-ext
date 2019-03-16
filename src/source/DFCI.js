@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_geom_Polygon from 'ol/geom/Polygon'
 import ol_Feature from 'ol/Feature'
 import ol_source_Vector from 'ol/source/Vector'
@@ -39,7 +39,7 @@ var ol_source_DFCI = function(options) {
   if (!proj4.defs["EPSG:27572"]) proj4.defs("EPSG:27572","+proj=lcc +lat_1=46.8 +lat_0=46.8 +lon_0=0 +k_0=0.99987742 +x_0=600000 +y_0=2200000 +a=6378249.2 +b=6356515 +towgs84=-168,-60,320,0,0,0,0 +pm=paris +units=m +no_defs");
   ol_proj_proj4_register(proj4);
 };
-ol_inherits (ol_source_DFCI, ol_source_Vector);
+ol_ext_inherits(ol_source_DFCI, ol_source_Vector);
 
 
 /** Cacluate grid according extent/resolution

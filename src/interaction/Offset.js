@@ -2,7 +2,7 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_interaction_Pointer from 'ol/interaction/Pointer'
 import ol_geom_LineString from 'ol/geom/LineString'
 import ol_geom_Polygon from 'ol/geom/Polygon'
@@ -42,7 +42,7 @@ var ol_interaction_Offset = function(options) {
   // init
   this.previousCursor_ = false;
 };
-ol_inherits(ol_interaction_Offset, ol_interaction_Pointer);
+ol_ext_inherits(ol_interaction_Offset, ol_interaction_Pointer);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new

@@ -3,7 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_interaction_Pointer from 'ol/interaction/Pointer'
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Stroke from 'ol/style/Stroke'
@@ -138,7 +138,7 @@ var ol_interaction_ModifyFeature = function(options){
   });
 
 };
-ol_inherits(ol_interaction_ModifyFeature, ol_interaction_Pointer);
+ol_ext_inherits(ol_interaction_ModifyFeature, ol_interaction_Pointer);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new

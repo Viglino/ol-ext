@@ -3,7 +3,7 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_Overlay_Popup from './Popup'
 import ol_ext_element from '../util/element'
 
@@ -44,7 +44,7 @@ var ol_Overlay_PopupFeature = function (options) {
     }.bind(this));
   }
 };
-ol_inherits(ol_Overlay_PopupFeature, ol_Overlay_Popup);
+ol_ext_inherits(ol_Overlay_PopupFeature, ol_Overlay_Popup);
 
 /** Set the template
  * @param {*} template A template with a list of properties to use in the popup
@@ -144,7 +144,7 @@ ol_Overlay_PopupFeature.prototype._getHtml = function(feature) {
       if (feature.getGeometry().getType()==='Point') {
         this.getMap().getView().animate({
           center: feature.getGeometry().getFirstCoordinate(),
-          zoom:  Math.max(map.getView().getZoom(), 18)
+          zoom:  Math.max(this.getMap().getView().getZoom(), 18)
         });
       } else  {
         var ext = feature.getGeometry().getExtent();

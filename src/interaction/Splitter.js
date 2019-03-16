@@ -4,7 +4,7 @@
 */
 /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import ol_source_Vector from 'ol/source/Vector'
 import ol_Collection from 'ol/Collection'
@@ -75,7 +75,7 @@ var ol_interaction_Splitter = function(options)
 	// Get all features candidate
 	this.filterSplit_ = options.filter || function(){ return true; };
 };
-ol_inherits(ol_interaction_Splitter, ol_interaction_Interaction);
+ol_ext_inherits(ol_interaction_Splitter, ol_interaction_Interaction);
 
 /** Calculate intersection on 2 segs
 * @param {Array<_ol_coordinate_>} s1 first seg to intersect (2 points)

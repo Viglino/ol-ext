@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_interaction_Modify from 'ol/interaction/Modify'
 import ol_Overlay_Popup from '../overlay/Popup'
 import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent'
@@ -94,7 +94,7 @@ var ol_interaction_ModifyTouch = function(options) {
   // Use a popup ?
   this.set('usePopup', options.usePopup !== false);
 };
-ol_inherits(ol_interaction_ModifyTouch, ol_interaction_Modify);
+ol_ext_inherits(ol_interaction_ModifyTouch, ol_interaction_Modify);
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new

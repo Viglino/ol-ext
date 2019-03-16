@@ -2,7 +2,7 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import {inherits as ol_inherits} from 'ol'
+import ol_ext_inherits from '../util/ext'
 import ol_control_Control from 'ol/control/Control'
 import ol_geom_LineString from 'ol/geom/LineString';
 import ol_Feature from 'ol/Feature'
@@ -85,7 +85,7 @@ var ol_control_RoutingGeoportail = function(options) {
 
   this.setMode(options.mode || 'car');
 };
-ol_inherits(ol_control_RoutingGeoportail, ol_control_Control);
+ol_ext_inherits(ol_control_RoutingGeoportail, ol_control_Control);
 
 ol_control_RoutingGeoportail.prototype.setMode = function (mode) {
   this.set('mode', mode);
