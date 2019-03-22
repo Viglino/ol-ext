@@ -9,6 +9,7 @@ import ol_control_Attribution from 'ol/control/Attribution'
 import ol_style_Style from 'ol/style/Style'
 import {asString as ol_color_asString} from 'ol/color'
 import ol_control_ScaleLine from 'ol/control/Scaleline'
+import ol_control_CanvasBase from './CanvasBase'
 
 /**
  * @classdesc 

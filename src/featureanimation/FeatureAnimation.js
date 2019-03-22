@@ -7,10 +7,12 @@ import ol_ext_inherits from '../util/ext'
 import ol_Object from 'ol/Object'
 import {linear as ol_easing_linear} from 'ol/easing'
 import ol_Map from 'ol/Map'
-import ol_layer_Vector from 'ol/layer/Vector'
 import {getCenter as ol_extent_getCenter} from 'ol/extent'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import {getVectorContext as ol_render_getVectorContext} from 'ol/render';
+import ol_layer_Base from 'ol/layer/Base'
+import ol_style_Style from 'ol/style/Style'
+import ol_style_Circle from 'ol/style/Circle'
 
 /** Feature animation base class
  * Use the {@link _ol_Map_#animateFeature} or {@link _ol_layer_Vector_#animateFeature} to animate a feature
@@ -165,7 +167,7 @@ ol_layer_Base.prototype.animateFeature = function(feature, fanim)
 	function animate(e) {
 		try {
 			event.vectorContext = e.vectorContext || ol_render_getVectorContext(e);
-		} catch(e) {}
+		} catch(e) { /* nothing todo */ }
 		event.frameState = e.frameState;
 		if (!event.extent) 
 		{	event.extent = e.frameState.extent;

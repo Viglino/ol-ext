@@ -4,7 +4,6 @@
 */
 
 import ol_ext_inherits from '../util/ext'
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_control_Control from 'ol/control/Control'
 
 /**

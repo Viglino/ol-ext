@@ -210,7 +210,7 @@ ol_control_GridReference.prototype.setMap = function (map)
 	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 
-	ol_control_Control.prototype.setMap.call(this, map);
+	ol_control_CanvasBase.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 
 	// Get change (new layer added or removed)

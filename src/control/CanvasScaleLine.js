@@ -8,7 +8,7 @@ import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_control_ScaleLine from 'ol/control/ScaleLine'
 import ol_style_Style from 'ol/style/Style'
 import {asString as ol_color_asString} from 'ol/color'
-
+import ol_control_CanvasBase from './CanvasBase'
 /**
  * @classdesc 
  *    OpenLayers 3 Scale Line Control integrated in the canvas (for jpeg/png export purposes).
