@@ -78,9 +78,13 @@ ol_render3D.prototype.onPostcompose_ = function(e)
 /** Set layer to render 3D
 */
 ol_render3D.prototype.setLayer = function(l) {
-	if (this._listener) ol_Observable_unByKey(this._listener);
+	if (this._listener) {
+		this._listener.forEach( function(l) { 
+			ol_Observable_unByKey(l); 
+		});
+	}
 	this.layer_ = l;
-	this._listener = l.on ('postcompose', this.onPostcompose_.bind(this));
+	this._listener = l.on (['postcompose', 'postrender'], this.onPostcompose_.bind(this));
 }
 
 /** Create a function that return height of a feature

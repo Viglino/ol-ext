@@ -18767,9 +18767,13 @@ ol.render3D.prototype.onPostcompose_ = function(e)
 /** Set layer to render 3D
 */
 ol.render3D.prototype.setLayer = function(l) {
-	if (this._listener) ol.Observable.unByKey(this._listener);
+	if (this._listener) {
+		this._listener.forEach( function(l) { 
+			ol.Observable.unByKey(l); 
+		});
+	}
 	this.layer_ = l;
-	this._listener = l.on ('postcompose', this.onPostcompose_.bind(this));
+	this._listener = l.on (['postcompose', 'postrender'], this.onPostcompose_.bind(this));
 }
 /** Create a function that return height of a feature
 *	@param {function|string|number} h a height function or a popertie name or a fixed value
