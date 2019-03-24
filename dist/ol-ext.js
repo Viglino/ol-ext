@@ -42,7 +42,7 @@ ol.ext.Ajax = function(options) {
   this._auth = options.auth;
   this.set('dataType', options.dataType || 'JSON');
 };
-ol.inherits(ol.ext.Ajax, ol.Object);
+ol.ext.inherits(ol.ext.Ajax, ol.Object);
 /** Helper for get
  * @param {*} options
  *  @param {string} options.url
@@ -465,6 +465,113 @@ if (window.ol && !ol.sphere) {
   ol.sphere.getArea = ol.Sphere.getArea;
   ol.sphere.getLength = ol.Sphere.getLength;
 }
+/**
+ * @classdesc 
+ *   OpenLayers 3 Attribution Control integrated in the canvas (for jpeg/png 
+ * @see http://www.kreidefossilien.de/webgis/dokumentation/beispiele/export-map-to-png-with-scale
+ *
+ * @constructor
+ * @extends {ol.control.Control}
+ * @param {Object=} options extend the ol.control options. 
+ *  @param {ol.style.Style} options.style style used to draw the title.
+ */
+ol.control.CanvasBase = function(options) {
+  if (!options) options = {};
+  // Define a style to draw on the canvas
+  this.setStyle(options.style);
+  ol.control.Control.call(this, options);
+}
+ol.ext.inherits(ol.control.CanvasBase, ol.control.Control);
+/**
+ * Remove the control from its current map and attach it to the new map.
+ * Subclasses may set up event handlers to get notified about changes to
+ * the map here.
+ * @param {o.Map} map Map.
+ * @api stable
+ */
+ol.control.CanvasBase.prototype.setMap = function (map) {
+  var oldmap = this.getMap();
+  if (this._listener) {
+    ol.Observable.unByKey(this._listener);
+    this._listener = null;
+  }
+  ol.control.Control.prototype.setMap.call(this, map);
+  if (oldmap) oldmap.renderSync();
+  // Get change redraw the map
+  if (map) {
+    this._listener = map.on('postcompose', this._draw.bind(this));
+  }
+};
+/** Get map Canvas
+ * @private
+ */
+ol.control.CanvasBase.prototype.getContext = function(e) {
+  var ctx = e.context;
+  if (!ctx) {
+    var c = this.getMap().getViewport().querySelectorAll('canvas');
+    for (var i=c.length-1; i>=0; i--) {
+      ctx = c[i].getContext('2d');
+      if (ctx.canvas.width && ctx.canvas.height) break;
+    }
+  }
+  return ctx;
+};
+/** Get stroke
+ * @api
+ */
+ol.control.CanvasBase.prototype.setStyle = function(style) {
+  this._style = style ||  new ol.style.Style ({});
+};
+/** Get stroke
+ * @api
+ */
+ol.control.CanvasBase.prototype.getStroke = function() {
+  var t = this._style.getStroke();
+  if (!t) this._style.setStroke(new ol.style.Stroke ({ color:'#000', width:3 }));
+  return this._style.getStroke();
+};
+/** Get fill
+ * @api
+ */
+ol.control.CanvasBase.prototype.getFill = function() {
+  var t = this._style.getFill();
+  if (!t) this._style.setFill(new ol.style.Fill ({ color:'#fff' }));
+  return this._style.getFill();
+};
+/** Get stroke
+ * @api
+ */
+ol.control.CanvasBase.prototype.getTextStroke = function() {
+  var t = this._style.getText();
+  if (!t) t = new ol.style.Text({});
+  if (!t.getStroke()) t.setStroke(new ol.style.Stroke ({ color:'#fff', width:3 }));
+  return t.getStroke();
+};
+/** Get text fill
+ * @api
+ */
+ol.control.CanvasBase.prototype.getTextFill = function() {
+  var t = this._style.getText();
+  if (!t) t = new ol.style.Text({});
+  if (!t.getFill()) t.setFill(new ol.style.Fill ({ color:'#fff', width:3 }));
+  return t.getFill();
+};
+/** Get text font
+ * @api
+ */
+ol.control.CanvasBase.prototype.getTextFont = function() {
+  var t = this._style.getText();
+  if (!t) t = new ol.style.Text({});
+  if (!t.getFont()) t.setFont('12px sans-serif');
+  return t.getFont();
+};
+/** Draw the control on canvas
+ * @private
+ */
+ol.control.CanvasBase.prototype._draw = function(/* e */) {
+  console.warn('[CanvasBase] draw function not implemented.');
+};
+
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -518,7 +625,7 @@ ol.control.SelectBase = function(options) {
   });
   this.setSources(options.source);
 };
-ol.inherits(ol.control.SelectBase, ol.control.Control);
+ol.ext.inherits(ol.control.SelectBase, ol.control.Control);
 /** Set the current sources
  * @param {ol.source.Vector|Array<ol.source.Vector>|undefined} source
  */
@@ -618,6 +725,7 @@ ol.control.SelectBase.prototype._checkCondition = function (f, condition, usecas
  */
 ol.control.SelectBase.prototype._selectFeatures = function (result, features, conditions, all, usecase) {
   conditions = conditions || [];
+  var f;
   for (var i=features.length-1; f=features[i]; i--) {
     var isok = all;
     for (var k=0, c; c=conditions[k]; k++) {
@@ -652,7 +760,7 @@ ol.control.SelectBase.prototype.getSources = function () {
         sources.push(l.getSource());
       }
     });
-  };
+  }
   if (this.getMap()) {
     getSources(this.getMap().getLayers());
   }
@@ -839,7 +947,7 @@ ol.control.Search = function(options) {
   this.restoreHistory();
   this.drawList_();
 };
-ol.inherits(ol.control.Search, ol.control.Control);
+ol.ext.inherits(ol.control.Search, ol.control.Control);
 /** Get the input field
 *	@return {Element} 
 *	@api
@@ -1071,7 +1179,7 @@ ol.control.SearchJSON = function(options)
 	// Overwrite handleResponse
 	if (typeof(options.handleResponse)==='function') this.handleResponse = options.handleResponse;
 };
-ol.inherits(ol.control.SearchJSON, ol.control.Search);
+ol.ext.inherits(ol.control.SearchJSON, ol.control.Search);
 /** Autocomplete function (ajax request to the server)
 * @param {string} s search string
 * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
@@ -1181,7 +1289,7 @@ ol.control.SearchPhoton = function(options)
 	this.set('lang', options.lang);
 	this.set('position', options.position);
 };
-ol.inherits(ol.control.SearchPhoton, ol.control.SearchJSON);
+ol.ext.inherits(ol.control.SearchPhoton, ol.control.SearchJSON);
 /** Returns the text to be displayed in the menu
 *	@param {ol.Feature} f the feature
 *	@return {string} the text to be displayed in the index
@@ -1284,7 +1392,7 @@ ol.control.SearchGeoportail = function(options) {
   ol.control.SearchJSON.call(this, options);
   this.set('type', options.type || 'StreetAddress,PositionOfInterest');
 };
-ol.inherits(ol.control.SearchGeoportail, ol.control.SearchJSON);
+ol.ext.inherits(ol.control.SearchGeoportail, ol.control.SearchJSON);
 /** Returns the text to be displayed in the menu
  *	@param {ol.Feature} f the feature
  *	@return {string} the text to be displayed in the index
@@ -1481,7 +1589,7 @@ ol.control.LayerSwitcher = function(options) {
     target: options.target
   });
 };
-ol.inherits(ol.control.LayerSwitcher, ol.control.Control);
+ol.ext.inherits(ol.control.LayerSwitcher, ol.control.Control);
 /** List of tips for internationalization purposes
 */
 ol.control.LayerSwitcher.prototype.tip = {
@@ -2154,7 +2262,7 @@ ol.control.Bar = function(options) {
 		}
 	}
 };
-ol.inherits(ol.control.Bar, ol.control.Control);
+ol.ext.inherits(ol.control.Bar, ol.control.Control);
 /** Set the control visibility
 * @param {boolean} b
 */
@@ -2341,7 +2449,7 @@ ol.control.Button = function(options)
 	if (options.title) this.set("title", options.title);
 	if (options.name) this.set("name", options.name);
 };
-ol.inherits(ol.control.Button, ol.control.Control);
+ol.ext.inherits(ol.control.Button, ol.control.Control);
 /** Set the control visibility
 * @param {boolean} b 
 */
@@ -2390,7 +2498,7 @@ ol.control.CanvasAttribution = function(options)
 	if (!options.style) options.style = new ol.style.Style();
 	this.setStyle (options.style);
 }
-ol.inherits(ol.control.CanvasAttribution, ol.control.Attribution);
+ol.ext.inherits(ol.control.CanvasAttribution, ol.control.Attribution);
 /**
  * Draw attribution on canvas
  * @param {boolean} b draw the attribution on canvas.
@@ -2400,6 +2508,10 @@ ol.control.CanvasAttribution.prototype.setCanvas = function (b)
 	this.element.style.visibility = b ? "hidden":"visible";
 	if (this.map_) this.map_.renderSync();
 };
+/** Get map Canvas
+ * @private
+ */
+ol.control.CanvasAttribution.prototype.getContext = ol.control.CanvasBase.prototype.getContext;
 /**
  * Change the control style
  * @param {ol.style.Style} style
@@ -2438,9 +2550,9 @@ ol.control.CanvasAttribution.prototype.setMap = function (map)
  * Draw attribution in the final canvas
  * @private
  */
-ol.control.CanvasAttribution.prototype.drawAttribution_ = function(e)
-{	var ctx = e.context;
+ol.control.CanvasAttribution.prototype.drawAttribution_ = function(e) {
 	if (!this.isCanvas_) return;
+	var ctx = this.getContext(e);
 	var text = "";
 	Array.prototype.slice.call(this.element.querySelectorAll('li'))
 		.filter(function(el) {
@@ -2499,7 +2611,11 @@ ol.control.CanvasScaleLine = function(options)
 	if (!options.style) options.style = new ol.style.Style();
 	this.setStyle(options.style);
 }
-ol.inherits(ol.control.CanvasScaleLine, ol.control.ScaleLine);
+ol.ext.inherits(ol.control.CanvasScaleLine, ol.control.ScaleLine);
+/** Get map Canvas
+ * @private
+ */
+ol.control.CanvasScaleLine.prototype.getContext = ol.control.CanvasBase.prototype.getContext;
 /**
  * Remove the control from its current map and attach it to the new map.
  * Subclasses may set up event handlers to get notified about changes to
@@ -2547,7 +2663,7 @@ ol.control.CanvasScaleLine.prototype.setStyle = function (style)
  */
 ol.control.CanvasScaleLine.prototype.drawScale_ = function(e)
 {	if ( this.element.style.visibility!=="hidden" ) return;
-	var ctx = e.context;
+	var ctx = this.getContext(e);
 	// Get size of the scale div
 	var scalewidth = parseInt(this.olscale.style.width);
 	if (!scalewidth) return;
@@ -2598,143 +2714,224 @@ ol.control.CanvasScaleLine.prototype.drawScale_ = function(e)
 }
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
- * OpenLayers 3 Title Control integrated in the canvas (for jpeg/png 
+ * A title Control integrated in the canvas (for jpeg/png 
  *
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol.control.CanvasBase}
  * @param {Object=} options extend the ol.control options. 
- * 	@param {ol.style.Style} options.style style usesd to draw the title.
+ *  @param {string} options.title the title, default 'Title'
+ *  @param {ol.style.Style} options.style style used to draw the title.
  */
-ol.control.CanvasTitle = function(options)
-{	if (!options) options={};
-	// Get style options
-	if (!options.style) options.style = new ol.style.Style();
-	this.setStyle(options.style);
-	// Initialize parent
-	var elt = document.createElement('div');
-	elt.textContent = this.text_;
-	elt.className = 'ol-title ol-unselectable';
-	var css = {
-		font: this.font_,
-		position: 'absolute',
-		top:0,
-		left:0,
-		right:0,
-		display: 'block',
-		visibility: 'hidden'
-	};
-	Object.keys(css).forEach(function(key) {
-		elt.style[key] = css[key];
-	});
-	ol.control.Control.call(this,
-	{	element: elt,
-		target: options.target
-	});
-}
-ol.inherits(ol.control.CanvasTitle, ol.control.Control);
-/**
- * Remove the control from its current map and attach it to the new map.
- * Subclasses may set up event handlers to get notified about changes to
- * the map here.
- * @param {_ol_Map_} map Map.
- * @api stable
- */
-ol.control.CanvasTitle.prototype.setMap = function (map)
-{	var oldmap = this.getMap();
-	if (this._listener) ol.Observable.unByKey(this._listener);
-	this._listener = null;
-	ol.control.Control.prototype.setMap.call(this, map);
-	if (oldmap) oldmap.renderSync();
-	// Get change (new layer added or removed)
-	if (map) {
-		this._listener = map.on('postcompose', this.drawTitle_.bind(this));
-	}
-}
+ol.control.CanvasTitle = function(options) {
+  if (!options) options = {};
+  var elt = ol.ext.element.create('DIV', {
+    className: (options.className || '') + ' ol-title ol-unselectable',
+    style: {
+      display: 'block',
+      visibility: 'hidden'
+    }
+  });
+  ol.control.CanvasBase.call(this, {
+    element: elt
+  });
+  this.setTitle(options.title || 'Title');
+  this.element.style.font = this.getTextFont();
+};
+ol.ext.inherits(ol.control.CanvasTitle, ol.control.CanvasBase);
 /**
  * Change the control style
  * @param {ol.style.Style} style
  */
-ol.control.CanvasTitle.prototype.setStyle = function (style)
-{	var text = style.getText();
-	this.font_ = text ? text.getFont() || "20px Arial" : "20px Arial";
-	this.text_ = text ? text.getText() : "";
-	var stroke = text ? text.getStroke() : null;
-	var fill = text ? text.getFill() : null;
-	this.strokeStyle_ = stroke ? ol.color.asString(stroke.getColor()) : "#fff";
-	this.fillStyle_ = fill ? ol.color.asString(fill.getColor()) : "#000";
-	if (this.element) 
-	{	this.element.textContent = this.text_;
-		this.element.style.font = this.font_;
-	}
-	// refresh
-	if (this.getMap()) this.getMap().render();
-}
+ol.control.CanvasTitle.prototype.setStyle = function (style) {
+  ol.control.CanvasBase.prototype.setStyle.call(this, style);
+  // Element style
+  if (this.element) {
+    this.element.style.font = this.getTextFont();
+  }
+  // refresh
+  if (this.getMap()) this.getMap().render();
+};
 /**
  * Set the map title 
  * @param {string} map title.
  * @api stable
  */
-ol.control.CanvasTitle.prototype.setTitle = function (title)
-{	this.text_ = title;
-	this.element.textContent = this.text_;
-	if (this.getMap()) this.getMap().renderSync();
-}
+ol.control.CanvasTitle.prototype.setTitle = function (title) {
+  this.element.textContent = title;
+  this.set('title', title);
+  if (this.getMap()) this.getMap().renderSync();
+};
 /**
  * Get the map title 
  * @param {string} map title.
  * @api stable
  */
-ol.control.CanvasTitle.prototype.getTitle = function ()
-{	return this.text_;
-}
+ol.control.CanvasTitle.prototype.getTitle = function () {
+  return this.get('title');
+};
 /**
  * Set control visibility
  * @param {bool} b
  * @api stable
  */
-ol.control.CanvasTitle.prototype.setVisible = function (b)
-{	if (b) this.element.style.display = '';
-	else this.element.style.display = 'none';
-	if (this.getMap()) this.getMap().renderSync();
-}
+ol.control.CanvasTitle.prototype.setVisible = function (b) {
+  this.element.style.display = (b ? '' : 'none');
+  if (this.getMap()) this.getMap().renderSync();
+};
 /**
  * Get control visibility
  * @return {bool} 
  * @api stable
  */
-ol.control.CanvasTitle.prototype.getVisible = function ()
-{	return this.element.style.display !== 'none';
-}
-/** Draw scale line in the final canvas
+ol.control.CanvasTitle.prototype.getVisible = function () {
+  return this.element.style.display !== 'none';
+};
+/** Draw title in the final canvas
+ * @private
 */
-ol.control.CanvasTitle.prototype.drawTitle_ = function(e)
-{	if (!this.getVisible()) return;
-	var ctx = e.context;
-	// Retina device
-	var ratio = e.frameState.pixelRatio;
-	ctx.save();
-	ctx.scale(ratio,ratio);
-	var w = ctx.canvas.width/ratio;
-	var h = this.element.clientHeight;
-	var position = { top:0, left:w/2 };
-	ctx.beginPath();
-	ctx.fillStyle = this.strokeStyle_;
-	ctx.rect(0,0, w, h);
-	ctx.fill();
-	ctx.closePath();
-	ctx.beginPath();
-	ctx.fillStyle = this.fillStyle_;
-	ctx.textAlign = "center";
-	ctx.textBaseline = "middle";
-	ctx.font = this.font_;
-	ctx.fillText(this.text_, position.left, position.top +h/2);
-	ctx.closePath();
-	ctx.restore();
-}
+ol.control.CanvasTitle.prototype._draw = function(e) {
+  if (!this.getVisible()) return;
+  var ctx = this.getContext(e);
+  // Retina device
+  var ratio = e.frameState.pixelRatio;
+  ctx.save();
+  ctx.scale(ratio,ratio);
+  var eltRect = this.element.getBoundingClientRect();
+  var mapRect = this.getMap().getTargetElement().getBoundingClientRect();
+  ctx.translate(eltRect.left-mapRect.left, eltRect.top-mapRect.top);
+  var h = this.element.clientHeight;
+  var w = this.element.clientWidth;
+  var left = w/2;
+  ctx.beginPath();
+  ctx.fillStyle = ol.color.asString(this.getFill().getColor());
+  ctx.rect(0,0, w, h);
+  ctx.fill();
+  ctx.closePath();
+  ctx.beginPath();
+  ctx.fillStyle = ol.color.asString(this.getTextFill().getColor());
+  ctx.strokeStyle = ol.color.asString(this.getTextStroke().getColor());
+  ctx.lineWidth = this.getTextStroke().getWidth();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = this.getTextFont();
+  if (ctx.lineWidth) ctx.strokeText(this.getTitle(), left, h/2);
+  ctx.fillText(this.getTitle(), left, h/2);
+  ctx.closePath();
+  ctx.restore();
+};
+
+/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * A title Control integrated in the canvas (for jpeg/png 
+ *
+ * @constructor
+ * @extends {ol.control.CanvasBase}
+ * @param {Object=} options extend the ol.control options. 
+ *  @param {string} options.className CSS class name
+ *  @param {ol.style.Style} options.style style used to draw in the canvas
+ *  @param {ol.proj.ProjectionLike} options.projection	Projection. Default is the view projection.
+ *  @param {ol.coordinate.CoordinateFormat} options.coordinateFormat A function that takes a ol.Coordinate and transforms it into a string.
+ *  @param {boolean} options.canvas true to draw in the canvas
+ */
+ol.control.CenterPosition = function(options) {
+  if (!options) options = {};
+  var elt = ol.ext.element.create('DIV', {
+    className: (options.className || '') + ' ol-center-position ol-unselectable',
+    style: {
+      display: 'block',
+      visibility: 'hidden'
+    }
+  });
+  ol.control.CanvasBase.call(this, {
+    element: elt
+  });
+  this.element.style.font = this.getTextFont();
+  this.set('projection', options.projection);
+  this.setCanvas(options.canvas);
+  this._format = (typeof options.coordinateFormat === 'function') ? options.coordinateFormat : ol.coordinate.toStringXY; 
+};
+ol.ext.inherits(ol.control.CenterPosition, ol.control.CanvasBase);
+/**
+ * Change the control style
+ * @param {ol.style.Style} style
+ */
+ol.control.CenterPosition.prototype.setStyle = function (style) {
+  ol.control.CanvasBase.prototype.setStyle.call(this, style);
+  // Element style
+  if (this.element) {
+    this.element.style.font = this.getTextFont();
+  }
+  // refresh
+  if (this.getMap()) this.getMap().render();
+};
+/**
+ * Draw on canvas
+ * @param {boolean} b draw the attribution on canvas.
+ */
+ol.control.CenterPosition.prototype.setCanvas = function (b) {
+  this.set('canvas', b);
+	this.element.style.visibility = b ? "hidden":"visible";
+	if (this.getMap()) this.getMap().renderSync();
+};
+/**
+ * Set control visibility
+ * @param {bool} b
+ * @api stable
+ */
+ol.control.CenterPosition.prototype.setVisible = function (b) {
+  this.element.style.display = (b ? '' : 'none');
+  if (this.getMap()) this.getMap().renderSync();
+};
+/**
+ * Get control visibility
+ * @return {bool} 
+ * @api stable
+ */
+ol.control.CenterPosition.prototype.getVisible = function () {
+  return this.element.style.display !== 'none';
+};
+/** Draw position in the final canvas
+ * @private
+*/
+ol.control.CenterPosition.prototype._draw = function(e) {
+  if (!this.getVisible() || !this.getMap()) return;
+  // Coordinate
+  var coord = this.getMap().getView().getCenter();
+  if (this.get('projection')) coord = ol.proj.transform (coord, this.getMap().getView().getProjection(), this.get('projection'));
+  coord  = this._format(coord);
+  this.element.textContent = coord;
+  if (!this.get('canvas')) return;
+  var ctx = this.getContext(e);
+  // Retina device
+  var ratio = e.frameState.pixelRatio;
+  ctx.save();
+  ctx.scale(ratio,ratio);
+  // Poistion
+  var eltRect = this.element.getBoundingClientRect();
+  var mapRect = this.getMap().getTargetElement().getBoundingClientRect();
+  ctx.translate(eltRect.left-mapRect.left, eltRect.top-mapRect.top);
+  var h = this.element.clientHeight;
+  var w = this.element.clientWidth;
+  var left = w/2;
+  ctx.beginPath();
+  ctx.fillStyle = ol.color.asString(this.getTextFill().getColor());
+  ctx.strokeStyle = ol.color.asString(this.getTextStroke().getColor());
+  ctx.lineWidth = this.getTextStroke().getWidth();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = this.getTextFont();
+  if (ctx.lineWidth) ctx.strokeText(coord, left, h/2);
+  ctx.fillText(coord, left, h/2);
+  ctx.closePath();
+  ctx.restore();
+};
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -2744,7 +2941,7 @@ ol.control.CanvasTitle.prototype.drawTitle_ = function(e)
  * Draw a compass on the map. The position/size of the control is defined in the css.
  *
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol.control.CanvasBase}
  * @param {Object=} options Control options. The style {_ol_style_Stroke_} option is usesd to draw the text.
  *	@param {string} options.className class name for the control
  *	@param {Image} options.image an image, default use the src option or a default image
@@ -2760,7 +2957,7 @@ ol.control.Compass = function(options)
 	elt.className = "ol-compassctrl ol-unselectable ol-hidden" + (options.className ? " "+options.className : "");
 	elt.style.position = "absolute";
 	elt.style.visibility = "hidden";
-	ol.control.Control.call(this, { element: elt });
+	ol.control.CanvasBase.call(this, { element: elt });
 	this.set('rotateVithView', options.rotateWithView!==false);
 	// Style to draw the lines
 	this.style = options.style;
@@ -2778,7 +2975,7 @@ ol.control.Compass = function(options)
 	this.da_ = [];
 	for (var i=0; i<8; i++) this.da_[i] = [ Math.cos(Math.PI*i/8), Math.sin(Math.PI*i/8) ];
 };
-ol.inherits(ol.control.Compass, ol.control.Control);
+ol.ext.inherits(ol.control.Compass, ol.control.CanvasBase);
 /**
  * Remove the control from its current map and attach it to the new map.
  * @param {_ol_Map_} map Map.
@@ -2788,7 +2985,7 @@ ol.control.Compass.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
 	if (this._listener) ol.Observable.unByKey(this._listener);
 	this._listener = null;
-	ol.control.Control.prototype.setMap.call(this, map);
+	ol.control.CanvasBase.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 	// Get change (new layer added or removed)
 	if (map) this._listener = map.on('postcompose', this.drawCompass_.bind(this));
@@ -2854,7 +3051,7 @@ ol.control.Compass.prototype.defaultCompass_ = function (s, color)
 * @private
 */
 ol.control.Compass.prototype.drawCompass_ = function(e)
-{	var ctx = e.context;
+{	var ctx = this.getContext(e);
 	var canvas = ctx.canvas;
 	// Retina device
 	var ratio = e.frameState.pixelRatio;
@@ -2912,7 +3109,7 @@ ol.control.Disable = function(options)
 	{	element: element
 	});
 }
-ol.inherits(ol.control.Disable, ol.control.Control);
+ol.ext.inherits(ol.control.Disable, ol.control.Control);
 /** Test if the control is on
  * @return {bool}
  * @api stable
@@ -2962,7 +3159,7 @@ ol.control.EditBar = function(options) {
   if (options.edition!==false) this._setEditInteraction(options);
   this._setModifyInteraction(options);
 };
-ol.inherits(ol.control.EditBar, ol.control.Bar);
+ol.ext.inherits(ol.control.EditBar, ol.control.Bar);
 /**
  * Set the map instance the control is associated with
  * and add its controls associated to this map.
@@ -3339,7 +3536,7 @@ ol.control.Gauge = function(options)
 	this.val(options.val);
 	this.set("max", options.max||100);
 };
-ol.inherits(ol.control.Gauge, ol.control.Control);
+ol.ext.inherits(ol.control.Gauge, ol.control.Control);
 /** Set the control title
 * @param {string} title
 */
@@ -3445,7 +3642,7 @@ ol.control.GeoBookmark = function(options) {
   // Set default bmark
   this.setBookmarks(localStorage[this.get('namespace')+"@bookmark"] ? null:options.marks);
 };
-ol.inherits(ol.control.GeoBookmark, ol.control.Control);
+ol.ext.inherits(ol.control.GeoBookmark, ol.control.Control);
 /** Set bookmarks
 * @param {} bmark a list of bookmarks, default retreave in the localstorage
 * @example 
@@ -3607,7 +3804,7 @@ ol.control.GeolocationBar = function(options) {
     }
   });
 };
-ol.inherits(ol.control.GeolocationBar, ol.control.Bar);
+ol.ext.inherits(ol.control.GeolocationBar, ol.control.Bar);
 /** Get the ol.interaction.GeolocationDraw associatedwith the bar
  * 
  */
@@ -3692,7 +3889,7 @@ ol.control.Globe = function(opt_options)
 	})
 	this.ovmap_.addLayer(this.extentLayer);
 };
-ol.inherits(ol.control.Globe, ol.control.Control);
+ol.ext.inherits(ol.control.Globe, ol.control.Control);
 /**
  * Set the map instance the control associated with.
  * @param {ol.Map} map The map instance.
@@ -3768,7 +3965,7 @@ ol.control.Globe.prototype.setCenter = function (center, show)
  * Draw a graticule on the map.
  *
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol.control.CanvasBase}
  * @param {Object=} _ol_control_ options.
  *	- projection {ol.projectionLike} projection to use for the graticule, default EPSG:4326 
  *	- maxResolution {number} max resolution to display the graticule
@@ -3784,7 +3981,7 @@ ol.control.Graticule = function(options) {
 	// Initialize parent
 	var elt = document.createElement("div");
 	elt.className = "ol-graticule ol-unselectable ol-hidden";
-	ol.control.Control.call(this, { element: elt });
+	ol.control.CanvasBase.call(this, { element: elt });
 	this.set('projection', options.projection || 'EPSG:4326');
 	// Use to limit calculation 
 	var p = new ol.proj.Projection({code:this.get('projection')});
@@ -3812,7 +4009,7 @@ ol.control.Graticule = function(options) {
 			}) 
 		});
 };
-ol.inherits(ol.control.Graticule, ol.control.Control);
+ol.ext.inherits(ol.control.Graticule, ol.control.CanvasBase);
 /**
  * Remove the control from its current map and attach it to the new map.
  * @param {_ol_Map_} map Map.
@@ -3822,7 +4019,7 @@ ol.control.Graticule.prototype.setMap = function (map) {
 	var oldmap = this.getMap();
 	if (this._listener) ol.Observable.unByKey(this._listener);
 	this._listener = null;
-	ol.control.Control.prototype.setMap.call(this, map);
+	ol.control.CanvasBase.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 	// Get change (new layer added or removed)
 	if (map) {
@@ -3837,7 +4034,7 @@ ol.control.Graticule.prototype.getStyle = function (style)
 };
 ol.control.Graticule.prototype.drawGraticule_ = function (e)
 {	if (this.get('maxResolution')<e.frameState.viewState.resolution) return;
-	var ctx = e.context;
+	var ctx = this.getContext(e);
 	var canvas = ctx.canvas;
 	var ratio = e.frameState.pixelRatio;
 	var w = canvas.width/ratio;
@@ -4024,7 +4221,7 @@ ol.control.Graticule.prototype.drawGraticule_ = function (e)
  * Draw a grid reference on the map and add an index.
  *
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol.control.CanvasBase}
  * @fires select
  * @param {Object=} Control options.
  *	- style {ol.style.Style} Style to use for drawing the grid (stroke and text), default black.
@@ -4043,7 +4240,7 @@ ol.control.GridReference = function(options) {
 	// Initialize parent
 	var elt = document.createElement("div");
 	elt.className = (!options.target ? "ol-control ":"") +"ol-gridreference ol-unselectable "+(options.className||"");
-	ol.control.Control.call(this,
+	ol.control.CanvasBase.call(this,
 		{	element: elt,
 			target: options.target
 		});
@@ -4078,7 +4275,7 @@ ol.control.GridReference = function(options) {
 			})
 		});
 };
-ol.inherits(ol.control.GridReference, ol.control.Control);
+ol.ext.inherits(ol.control.GridReference, ol.control.CanvasBase);
 /** Returns the text to be displayed in the index
 *	@param {ol.Feature} f the feature
 *	@return {string} the text to be displayed in the index
@@ -4201,7 +4398,7 @@ ol.control.GridReference.prototype.setMap = function (map)
 {	var oldmap = this.getMap();
 	if (this._listener) ol.Observable.unByKey(this._listener);
 	this._listener = null;
-	ol.control.Control.prototype.setMap.call(this, map);
+	ol.control.CanvasBase.prototype.setMap.call(this, map);
 	if (oldmap) oldmap.renderSync();
 	// Get change (new layer added or removed)
 	if (map)
@@ -4227,7 +4424,7 @@ ol.control.GridReference.prototype.getStyle = function ()
 */
 ol.control.GridReference.prototype.drawGrid_ = function (e)
 {	if (this.get('maxResolution')<e.frameState.viewState.resolution) return;
-	var ctx = e.context;
+	var ctx = this.getContext(e);
 	var canvas = ctx.canvas;
 	var ratio = e.frameState.pixelRatio;
 	var w = canvas.width/ratio;
@@ -4363,7 +4560,7 @@ ol.control.Imageline = function(options) {
   this.set('useExtent', options.useExtent || false);
   this.refresh();
 };
-ol.inherits(ol.control.Imageline, ol.control.Control);
+ol.ext.inherits(ol.control.Imageline, ol.control.Control);
 /**
  * Remove the control from its current map and attach it to the new map.
  * @param {ol.Map} map Map.
@@ -4737,7 +4934,7 @@ ol.control.IsochroneGeoportail = function(options) {
   }.bind(this));
   this.setMethod(options.method);
 };
-ol.inherits(ol.control.IsochroneGeoportail, ol.control.Control);
+ol.ext.inherits(ol.control.IsochroneGeoportail, ol.control.Control);
 /**
  * Set the map instance the control is associated with
  * and add its controls associated to this map.
@@ -4895,7 +5092,7 @@ ol.control.LayerPopup = function(options) {
 	if (options.mouseover!==false) options.mouseover=true;
 	ol.control.LayerSwitcher.call(this, options);
 };
-ol.inherits(ol.control.LayerPopup, ol.control.LayerSwitcher);
+ol.ext.inherits(ol.control.LayerPopup, ol.control.LayerSwitcher);
 /** Disable overflow
 */
 ol.control.LayerPopup.prototype.overflow = function(){};
@@ -4944,7 +5141,7 @@ ol.control.LayerSwitcherImage = function(options) {
 	if (options.mouseover!==false) options.mouseover=true;
 	ol.control.LayerSwitcher.call(this, options);
 };
-ol.inherits(ol.control.LayerSwitcherImage, ol.control.LayerSwitcher);
+ol.ext.inherits(ol.control.LayerSwitcherImage, ol.control.LayerSwitcher);
 /** Render a list of layer
  * @param {elt} element to render
  * @layers {Array{ol.layer}} list of layer to show
@@ -5044,7 +5241,7 @@ ol.control.Legend = function(options) {
   if (options.collapsed===false) this.show();
   this.refresh();
 };
-ol.inherits(ol.control.Legend, ol.control.Control);
+ol.ext.inherits(ol.control.Legend, ol.control.Control);
 /** Set the style
  * @param { ol.style.Style | Array<ol.style.Style> | ol.StyleFunction | undefined	} style a style or a style function to use with features
  */
@@ -5424,7 +5621,7 @@ ol.control.Notification = function(options) {
     target: options.target
   });
 };
-ol.inherits(ol.control.Notification, ol.control.Control);
+ol.ext.inherits(ol.control.Notification, ol.control.Control);
 /**
  * Display a notification on the map
  * @param {string|node|undefined} what the notification to show, default get the last one
@@ -5517,7 +5714,7 @@ ol.control.Overlay = function(options)
 	this._timeout = false;
 	this.setContent (options.content);
 };
-ol.inherits(ol.control.Overlay, ol.control.Control);
+ol.ext.inherits(ol.control.Overlay, ol.control.Control);
 /** Set the content of the overlay
 * @param {string|Element} html the html to display in the control
 */
@@ -5745,7 +5942,7 @@ ol.control.Overview = function(options)
     }
   }));
 };
-ol.inherits(ol.control.Overview, ol.control.Control);
+ol.ext.inherits(ol.control.Overview, ol.control.Control);
 /** Get overview map
 *	@return {ol.Map}
 */
@@ -5915,7 +6112,7 @@ ol.control.Permalink = function(opt_options) {
 	// Decode permalink
 	this.setPosition();
 };
-ol.inherits(ol.control.Permalink, ol.control.Control);
+ol.ext.inherits(ol.control.Permalink, ol.control.Control);
 /**
  * Set the map instance the control associated with.
  * @param {ol.Map} map The map instance.
@@ -6226,7 +6423,7 @@ ol.control.Profil = function(opt_options)
 	{	this.setGeometry (options.feature);
 	}
 };
-ol.inherits(ol.control.Profil, ol.control.Control);
+ol.ext.inherits(ol.control.Profil, ol.control.Control);
 /** Custom infos list
 * @api stable
 */
@@ -6563,7 +6760,7 @@ ol.control.RoutingGeoportail = function(options) {
   element.appendChild(this.resultElement);
   this.setMode(options.mode || 'car');
 };
-ol.inherits(ol.control.RoutingGeoportail, ol.control.Control);
+ol.ext.inherits(ol.control.RoutingGeoportail, ol.control.Control);
 ol.control.RoutingGeoportail.prototype.setMode = function (mode) {
   this.set('mode', mode);
   this.element.querySelector(".ol-car").classList.remove("selected");
@@ -6833,7 +7030,7 @@ ol.control.Scale = function(options) {
   this._input.addEventListener("change", this.setScale.bind(this));
   this.set('ppi', options.ppi || 96)
 };
-ol.inherits(ol.control.Scale, ol.control.Control);
+ol.ext.inherits(ol.control.Scale, ol.control.Control);
 /**
  * Remove the control from its current map and attach it to the new map.
  * Subclasses may set up event handlers to get notified about changes to
@@ -6939,7 +7136,7 @@ ol.control.SearchBAN = function(options)
     options.copy = '<a href="https://adresse.data.gouv.fr/" target="new">&copy; BAN-data.gouv.fr</a>';
     ol.control.SearchPhoton.call(this, options);
 };
-ol.inherits(ol.control.SearchBAN, ol.control.SearchPhoton);
+ol.ext.inherits(ol.control.SearchBAN, ol.control.SearchPhoton);
 /** Returns the text to be displayed in the menu
  *	@param {ol.Feature} f the feature
  *	@return {string} the text to be displayed in the index
@@ -6991,7 +7188,7 @@ ol.control.SearchDFCI = function(options) {
   options.placeholder = options.placeholder || 'Code DFCI';
   ol.control.Search.call(this, options);
 };
-ol.inherits(ol.control.SearchDFCI, ol.control.Search);
+ol.ext.inherits(ol.control.SearchDFCI, ol.control.Search);
 /** Autocomplete function
 * @param {string} s search string
 * @return {Array<any>|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
@@ -7063,7 +7260,7 @@ ol.control.SearchFeature = function(options) {
   this.set('property', options.property || 'name');
   this.source_ = options.source;
 };
-ol.inherits(ol.control.SearchFeature, ol.control.Search);
+ol.ext.inherits(ol.control.SearchFeature, ol.control.Search);
 /** No history avaliable on features
  */
 ol.control.SearchFeature.prototype.restoreHistory = function () {
@@ -7203,7 +7400,7 @@ ol.control.SearchGPS = function(options) {
   var ul = this.element.querySelector("ul.autocomplete");
   this.element.appendChild(ul);
 };
-ol.inherits(ol.control.SearchGPS, ol.control.Search);
+ol.ext.inherits(ol.control.SearchGPS, ol.control.Search);
 /** Create input form
  * @private
  */
@@ -7412,7 +7609,7 @@ ol.control.SearchGeoportailParcelle = function(options) {
 	this.on('select', this.selectCommune.bind(this));
 	this.set('pageSize', options.pageSize || 5);
 };
-ol.inherits(ol.control.SearchGeoportailParcelle, ol.control.SearchGeoportail);
+ol.ext.inherits(ol.control.SearchGeoportailParcelle, ol.control.SearchGeoportail);
 /** Select a commune => start searching parcelle  
  * @param {any} e 
  * @private
@@ -7600,7 +7797,7 @@ ol.control.SearchNominatim = function(options)
     this.set('polygon', options.polygon);
     this.set('viewbox', options.viewbox);
 };
-ol.inherits(ol.control.SearchNominatim, ol.control.SearchJSON);
+ol.ext.inherits(ol.control.SearchNominatim, ol.control.SearchJSON);
 /** Returns the text to be displayed in the menu
  *	@param {ol.Feature} f the feature
  *	@return {string} the text to be displayed in the index
@@ -7673,7 +7870,7 @@ ol.control.SearchWikipedia = function(options){
   ol.control.SearchJSON.call(this, options);
   this.set('lang', options.lang);
 };
-ol.inherits(ol.control.SearchWikipedia, ol.control.SearchJSON);
+ol.ext.inherits(ol.control.SearchWikipedia, ol.control.SearchJSON);
 /** Returns the text to be displayed in the menu
 *	@param {ol.Feature} f the feature
 *	@return {string} the text to be displayed in the index
@@ -7836,7 +8033,7 @@ ol.control.Select = function(options) {
   this.set('valuePlaceHolder', options.valuePlaceHolder || 'value');
   this.addCondition();
 };
-ol.inherits(ol.control.Select, ol.control.SelectBase);
+ol.ext.inherits(ol.control.Select, ol.control.SelectBase);
 /** Add a new condition
  * @param {*} options
  * 	@param {string} options.attr attribute name
@@ -8060,7 +8257,7 @@ ol.control.SelectCheck = function(options) {
   // Set select options
   this.setValues();
 };
-ol.inherits(ol.control.SelectCheck, ol.control.SelectBase);
+ol.ext.inherits(ol.control.SelectCheck, ol.control.SelectBase);
 /**
 * Set the map instance the control associated with.
 * @param {o.Map} map The map instance.
@@ -8206,7 +8403,7 @@ ol.control.SelectCondition = function(options) {
   this._selectAll = options.selectAll;
   this._onchoice = options.onchoice;
 };
-ol.inherits(ol.control.SelectCondition, ol.control.SelectBase);
+ol.ext.inherits(ol.control.SelectCondition, ol.control.SelectBase);
 /** Set condition to select on
  * @param {condition, Arrat<condition>} condition
  *  @param {string} attr property to select on
@@ -8279,7 +8476,7 @@ ol.control.SelectFulltext = function(options) {
   this._onchoice = options.onchoice;
   this.set('property', options.property || 'name');
 };
-ol.inherits(ol.control.SelectFulltext, ol.control.SelectBase);
+ol.ext.inherits(ol.control.SelectFulltext, ol.control.SelectBase);
 /** Select features by condition
  */
 ol.control.SelectFulltext.prototype.doSelect= function(options) {
@@ -8327,7 +8524,7 @@ ol.control.SelectMulti = function(options) {
   this._controls = [];
   options.controls.forEach(this.addControl.bind(this));
 };
-ol.inherits(ol.control.SelectMulti, ol.control.SelectBase);
+ol.ext.inherits(ol.control.SelectMulti, ol.control.SelectBase);
 /**
 * Set the map instance the control associated with.
 * @param {o.Map} map The map instance.
@@ -8371,7 +8568,7 @@ ol.control.SelectMulti.prototype.getControls = function() {
  */
 ol.control.SelectMulti.prototype.doSelect = function() {
   var features = [];
-  selectCtrl.getSources().forEach(function(s) {
+  this.getSources().forEach(function(s) {
     features = features.concat(s.getFeatures());
   });
   this._controls.forEach(function(c) {
@@ -8428,7 +8625,7 @@ ol.control.SelectPopup = function(options) {
   // Set select options
   this.setValues();
 };
-ol.inherits(ol.control.SelectPopup, ol.control.SelectBase);
+ol.ext.inherits(ol.control.SelectPopup, ol.control.SelectBase);
 /**
 * Set the map instance the control associated with.
 * @param {o.Map} map The map instance.
@@ -8585,7 +8782,7 @@ ol.control.Storymap = function(options) {
     }
   }.bind(this));
 };
-ol.inherits(ol.control.Storymap, ol.control.Control);
+ol.ext.inherits(ol.control.Storymap, ol.control.Control);
 /** Scroll to a chapter
  * @param {string} name Name of the chapter to scroll to
  */
@@ -8626,7 +8823,9 @@ ol.control.Swipe = function(options) {
     element: element
 	});
 	// An array of listener on layer postcompose
-	this._listener = [];
+	this.precomposeRight_ = this.precomposeRight.bind(this);
+	this.precomposeLeft_ = this.precomposeLeft.bind(this);
+	this.postcompose_ = this.postcompose.bind(this);
 	this.layers = [];
 	if (options.layers) this.addLayer(options.layers, false);
 	if (options.rightLayers) this.addLayer(options.rightLayers, true);
@@ -8646,18 +8845,19 @@ ol.control.Swipe = function(options) {
 	this.set('position', options.position || 0.5);
 	this.set('orientation', options.orientation || 'vertical');
 };
-ol.inherits(ol.control.Swipe, ol.control.Control);
+ol.ext.inherits(ol.control.Swipe, ol.control.Control);
 /**
  * Set the map instance the control associated with.
  * @param {_ol_Map_} map The map instance.
  */
 ol.control.Swipe.prototype.setMap = function(map) {
 	var i;
-	for (i=0; i<this._listener.length; i++) {
-		ol.Observable.unByKey(this._listener[i]);
-	}
-	this._listener = [];
 	if (this.getMap()) {
+		for (i=0; i<this.layers.length; i++) {
+			if (l.right) l.layer.un(['precompose','prerender'], this.precomposeRight_);
+			else l.layer.un(['precompose','prerender'], this.precomposeLeft_);
+			l.layer.un(['postcompose','postrender'], this.postcompose_);
+		}
 		this.getMap().renderSync();
 	}
 	ol.control.Control.prototype.setMap.call(this, map);
@@ -8665,9 +8865,9 @@ ol.control.Swipe.prototype.setMap = function(map) {
     this._listener = [];
 		for (i=0; i<this.layers.length; i++) {
       var l = this.layers[i];
-			if (l.right) this._listener.push (l.layer.on('precompose', this.precomposeRight.bind(this)));
-			else this._listener.push (l.layer.on('precompose', this.precomposeLeft.bind(this)));
-			this._listener.push(l.layer.on('postcompose', this.postcompose.bind(this)));
+			if (l.right) l.layer.on(['precompose','prerender'], this.precomposeRight_);
+			else l.layer.on(['precompose','prerender'], this.precomposeLeft_);
+			l.layer.on(['postcompose','postrender'], this.postcompose_);
 		}
 		map.renderSync();
 	}
@@ -8691,9 +8891,9 @@ ol.control.Swipe.prototype.addLayer = function(layers, right) {
 		if (this.isLayer_(l) < 0) {
       this.layers.push({ layer:l, right:right });
 			if (this.getMap()) {
-        if (right) this._listener.push (l.on('precompose', this.precomposeRight.bind(this)));
-				else this._listener.push (l.on('precompose', this.precomposeLeft.bind(this)));
-				this._listener.push(l.on('postcompose', this.postcompose.bind(this)));
+        if (right) l.on(['precompose','prerender'], this.precomposeRight_);
+				else l.on(['precompose','prerender'], this.precomposeLeft_);
+				l.on(['postcompose','postrender'], this.postcompose_);
 				this.getMap().renderSync();
 			}
 		}
@@ -8707,9 +8907,9 @@ ol.control.Swipe.prototype.removeLayer = function(layers) {
 	for (var i=0; i<layers.length; i++) {
     var k = this.isLayer_(layers[i]);
 		if (k >=0 && this.getMap()) {
-      if (this.layers[k].right) layers[i].un('precompose', this.precomposeRight, this);
-			else layers[i].un('precompose', this.precomposeLeft, this);
-			layers[i].un('postcompose', this.postcompose, this);
+      if (this.layers[k].right) layers[i].un(['precompose','prerender'], this.precomposeRight_);
+			else layers[i].un(['precompose','prerender'], this.precomposeLeft_);
+			layers[i].un(['postcompose','postrender'], this.postcompose_);
 			this.layers.splice(k,1);
 			this.getMap().renderSync();
 		}
@@ -8804,6 +9004,7 @@ ol.control.Swipe.prototype.postcompose = function(e) {
 */
 /** ol.control.Target draw a target at the center of the map.
  * @constructor
+ * @extends {ol.control.CanvasBase}
  * @param {Object} options
  *  - style {ol.style.Style|Array<ol.style.Style>} ol.style.Stroke: draw a cross on the map, ol.style.Image: draw the image on the map
  *  - composite {string} composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
@@ -8818,13 +9019,13 @@ ol.control.Target = function(options)
 	this.composite = options.composite || '';
 	var div = document.createElement('div');
 	div.className = "ol-target ol-unselectable ol-control";
-	ol.control.Control.call(this,
+	ol.control.CanvasBase.call(this,
 	{	element: div,
 		target: options.target
 	});
 	this.setVisible(options.visible!==false);
 };
-ol.inherits(ol.control.Target, ol.control.Control);
+ol.ext.inherits(ol.control.Target, ol.control.CanvasBase);
 /**
  * Remove the control from its current map and attach it to the new map.
  * Subclasses may set up event handlers to get notified about changes to
@@ -8838,7 +9039,7 @@ ol.control.Target.prototype.setMap = function (map)
 	}
 	if (this._listener) ol.Observable.unByKey(this._listener);
 	this._listener = null;
-	ol.control.Control.prototype.setMap.call(this, map);
+	ol.control.CanvasBase.prototype.setMap.call(this, map);
 	if (map) 
 	{	this._listener = map.on('postcompose', this.drawTarget_.bind(this));
 	}
@@ -8861,7 +9062,7 @@ ol.control.Target.prototype.getVisible = function ()
 */
 ol.control.Target.prototype.drawTarget_ = function (e)
 {	if (!this.getMap() || !this.getVisible()) return;
-	var ctx = e.context;
+	var ctx = this.getContext(e);
 	var ratio = e.frameState.pixelRatio;
 	ctx.save();
 		ctx.scale(ratio,ratio);
@@ -8869,6 +9070,7 @@ ol.control.Target.prototype.drawTarget_ = function (e)
 		var cy = ctx.canvas.height/(2*ratio);
 		var geom = new ol.geom.Point (this.getMap().getCoordinateFromPixel([cx,cy]));
 		if (this.composite) ctx.globalCompositeOperation = this.composite;
+	/**/
 		for (var i=0; i<this.style.length; i++)
 		{	var style = this.style[i];
 			if (style instanceof ol.style.Style)
@@ -8879,12 +9081,26 @@ ol.control.Target.prototype.drawTarget_ = function (e)
 				{	sc = imgs.getScale(); 
 					imgs.setScale(ratio*sc);
 				}
-				e.vectorContext.setStyle(style);
-				e.vectorContext.drawGeometry(geom);
+				var vectorContext = e.vectorContext;
+				if (!vectorContext) {
+					var event = {
+						inversePixelTransform: [ratio,0,0,ratio,0,0],
+						context: ctx,
+						frameState: {
+							pixelRatio: ratio,
+							extent: e.frameState.extent,
+							coordinateToPixelTransform: e.frameState.coordinateToPixelTransform,
+							viewState: e.frameState.viewState
+						}
+					}
+					vectorContext = ol.render.getVectorContext(event);
+				} 
+				vectorContext.setStyle(style);
+				vectorContext.drawGeometry(geom);
 				if (imgs) imgs.setScale(sc);
 			}
 		}
-	/*
+	/*/
 		for (var i=0; i<this.style.length; i++)
 		{	var style = this.style[i];
 			if (style.stroke instanceof ol.style.Stroke)
@@ -8921,7 +9137,7 @@ ol.control.Target.prototype.drawTarget_ = function (e)
 				}
 			}
 		}
-		*/
+		/**/
 	ctx.restore();
 };
 
@@ -8943,7 +9159,7 @@ ol.control.TextButton = function(options)
     options.className = (options.className||"") + " ol-text-button";
     ol.control.Button.call(this, options);
 };
-ol.inherits(ol.control.TextButton, ol.control.Button);
+ol.ext.inherits(ol.control.TextButton, ol.control.Button);
 
 /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
 /** Timeline control
@@ -9072,7 +9288,7 @@ ol.control.Timeline = function(options) {
   // Feature source 
   this.setFeatures(options.features || options.source, options.zoom);
 };
-ol.inherits(ol.control.Timeline, ol.control.Control);
+ol.ext.inherits(ol.control.Timeline, ol.control.Control);
 /**
  * Set the map instance the control is associated with
  * and add interaction attached to it to this map.
@@ -9523,7 +9739,7 @@ ol.control.Toggle = function(options)
 	this.setActive (options.active);
 	this.setDisable (options.disable);
 };
-ol.inherits(ol.control.Toggle, ol.control.Button);
+ol.ext.inherits(ol.control.Toggle, ol.control.Button);
 /**
  * Set the map instance the control is associated with
  * and add interaction attached to it to this map.
@@ -9635,7 +9851,7 @@ ol.featureAnimation = function(options)
 	this.hiddenStyle = options.hiddenStyle;
 	ol.Object.call(this);
 };
-ol.inherits(ol.featureAnimation, ol.Object);
+ol.ext.inherits(ol.featureAnimation, ol.Object);
 /** Draw a geometry 
 * @param {olx.animateFeatureEvent} e
 * @param {ol.geom} geom geometry for shadow
@@ -9656,10 +9872,11 @@ ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
 			imgs.setScale(e.frameState.pixelRatio*sc);
 		}
 		// Prevent crach if the style is not ready (image not loaded)
-		try{
-			e.vectorContext.setStyle(style[i]);
-			if (style[i].getZIndex()<0) e.vectorContext.drawGeometry(shadow||geom);
-			else e.vectorContext.drawGeometry(geom);
+		try {
+			var vectorContext = e.vectorContext || ol.render.getVectorContext(e);
+			vectorContext.setStyle(style[i]);
+			if (style[i].getZIndex()<0) vectorContext.drawGeometry(shadow||geom);
+			else vectorContext.drawGeometry(geom);
 		} catch(e) { /* ok */ }
 		if (imgs) imgs.setScale(sc);
 	}
@@ -9689,14 +9906,30 @@ ol.featureAnimation.prototype.animate = function (/* e */)
  * @param {ol.featureAnimation|Array<ol.featureAnimation>} fanim the animation to play
  * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
  */
-ol.Map.prototype.animateFeature =
+ol.Map.prototype.animateFeature = function(feature, fanim) {
+	// Animate on last visible layer
+	function animLayer(layers) {
+		for (var l, i=layers.length-1; l=layers[i]; i--) {
+			if (l.getVisible()) {
+				if (l.getLayers) {
+					if (animLayer(l.getLayers().getArray())) return true;
+				} else {
+					l.animateFeature(feature, fanim);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	animLayer(this.getLayers().getArray());
+};
 /** Animate feature on a vector layer 
  * @fires animationstart, animationend
  * @param {ol.Feature} feature Feature to animate
  * @param {ol.featureAnimation|Array<ol.featureAnimation>} fanim the animation to play
  * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
-*/
-ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
+ */
+ol.layer.Base.prototype.animateFeature = function(feature, fanim)
 {	var self = this;
 	var listenerKey;
 	// Save style
@@ -9704,8 +9937,6 @@ ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 	var flashStyle = style || (this.getStyleFunction ? this.getStyleFunction()(feature) : null);
 	if (!flashStyle) flashStyle=[];
 	if (!(flashStyle instanceof Array)) flashStyle = [flashStyle];
-	// Hide feature while animating
-	feature.setStyle(fanim.hiddenStyle || []);
 	// Structure pass for animating
 	var event = 
 		{	// Frame context
@@ -9729,8 +9960,10 @@ ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 	{	if (fanim[i].duration_===0) fanim.splice(i,1);
 	}
 	var nb=0, step = 0;
-	function animate(e) 
-	{	event.vectorContext = e.vectorContext;
+	function animate(e) {
+		try {
+			event.vectorContext = e.vectorContext || ol.render.getVectorContext(e);
+		} catch(e) { /* nothing todo */ }
 		event.frameState = e.frameState;
 		if (!event.extent) 
 		{	event.extent = e.frameState.extent;
@@ -9778,12 +10011,14 @@ ol.layer.Vector.prototype.animateFeature = function(feature, fanim)
 		self.dispatchEvent(event);
 	}
 	// Launch animation
-	function start(options)
-	{	if (fanim.length && !listenerKey)
-		{	listenerKey = self.on('postcompose', animate.bind(self));
+	function start(options){
+		if (fanim.length && !listenerKey)
+		{	listenerKey = self.on(['postcompose','postrender'], animate.bind(self));
 			// map or layer?
 			if (self.renderSync) self.renderSync();
 			else self.changed();
+			// Hide feature while animating
+			feature.setStyle(fanim[step].hiddenStyle || new ol.style.Style({ image: new ol.style.Circle({}) }));
 			// Send event
 			var event = { type:'animationstart', feature: feature };
 			if (options) 
@@ -9823,7 +10058,7 @@ ol.featureAnimation.Bounce = function(options)
 	this.amplitude_ = options.amplitude || 40;
 	this.bounce_ = -Math.PI*(options.bounce || 3);
 }
-ol.inherits(ol.featureAnimation.Bounce, ol.featureAnimation);
+ol.ext.inherits(ol.featureAnimation.Bounce, ol.featureAnimation);
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
@@ -9857,7 +10092,7 @@ ol.featureAnimation.Drop = function(options)
 	ol.featureAnimation.call(this, options);
 	this.side_ = options.side || 'top';
 }
-ol.inherits(ol.featureAnimation.Drop, ol.featureAnimation);
+ol.ext.inherits(ol.featureAnimation.Drop, ol.featureAnimation);
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
@@ -9897,7 +10132,7 @@ ol.featureAnimation.Fade = function(options)
 	this.speed_ = options.speed || 0;
 	ol.featureAnimation.call(this, options);
 }
-ol.inherits(ol.featureAnimation.Fade, ol.featureAnimation);
+ol.ext.inherits(ol.featureAnimation.Fade, ol.featureAnimation);
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
@@ -9920,7 +10155,7 @@ ol.featureAnimation.Fade.prototype.animate = function (e)
 ol.featureAnimation.None = function(options)
 {	ol.featureAnimation.call(this, options);
 };
-ol.inherits(ol.featureAnimation.None, ol.featureAnimation);
+ol.ext.inherits(ol.featureAnimation.None, ol.featureAnimation);
 /** Animate: do nothing during the laps time
 * @param {ol.featureAnimationEvent} e
 */
@@ -9940,7 +10175,7 @@ ol.featureAnimation.None.prototype.animate = function (e)
 ol.featureAnimation.Null = function() {
   ol.featureAnimation.call(this, { duration:0 });
 };
-ol.inherits(ol.featureAnimation.Null, ol.featureAnimation);
+ol.ext.inherits(ol.featureAnimation.Null, ol.featureAnimation);
 
 /*
 	Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
@@ -9977,7 +10212,7 @@ ol.featureAnimation.Path = function(options)
 	else this.dist_ = 0;
 	if (this.speed_>0) this.duration_ = this.dist_/this.speed_;
 }
-ol.inherits(ol.featureAnimation.Path, ol.featureAnimation);
+ol.ext.inherits(ol.featureAnimation.Path, ol.featureAnimation);
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
@@ -10038,7 +10273,7 @@ ol.featureAnimation.Shake = function(options)
 	this.bounce_ = -Math.PI*(options.bounce || 6);
 	this.horizontal_ = options.horizontal;
 }
-ol.inherits(ol.featureAnimation.Shake, ol.featureAnimation);
+ol.ext.inherits(ol.featureAnimation.Shake, ol.featureAnimation);
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
@@ -10069,7 +10304,7 @@ ol.featureAnimation.Shake.prototype.animate = function (e)
 ol.featureAnimation.Show = function(options)
 {	ol.featureAnimation.call(this, options);
 }
-ol.inherits(ol.featureAnimation.Show, ol.featureAnimation);
+ol.ext.inherits(ol.featureAnimation.Show, ol.featureAnimation);
 /** Animate: just show the object during the laps time
 * @param {ol.featureAnimationEvent} e
 */
@@ -10095,7 +10330,7 @@ ol.featureAnimation.Slide = function(options)
 	ol.featureAnimation.call(this, options);
 	this.side_ = options.side || 'left';
 }
-ol.inherits(ol.featureAnimation.Slide, ol.featureAnimation);
+ol.ext.inherits(ol.featureAnimation.Slide, ol.featureAnimation);
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
@@ -10125,7 +10360,7 @@ ol.featureAnimation.Slide.prototype.animate = function (e)
 ol.featureAnimation.Teleport = function(options)
 {	ol.featureAnimation.call(this, options);
 }
-ol.inherits(ol.featureAnimation.Teleport, ol.featureAnimation);
+ol.ext.inherits(ol.featureAnimation.Teleport, ol.featureAnimation);
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
@@ -10162,7 +10397,7 @@ ol.featureAnimation.Throw = function(options)
 	this.speed_ = options.speed || 0;
 	this.side_ = options.side || 'left';
 }
-ol.inherits(ol.featureAnimation.Throw, ol.featureAnimation);
+ol.ext.inherits(ol.featureAnimation.Throw, ol.featureAnimation);
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
@@ -10205,7 +10440,7 @@ ol.featureAnimation.Zoom = function(options)
 	ol.featureAnimation.call(this, options);
 	this.set('zoomout', options.zoomOut);
 }
-ol.inherits(ol.featureAnimation.Zoom, ol.featureAnimation);
+ol.ext.inherits(ol.featureAnimation.Zoom, ol.featureAnimation);
 /** Zoom animation: feature zoom out (for points)
  * @constructor
  * @extends {ol.featureAnimation}
@@ -10216,7 +10451,7 @@ ol.featureAnimation.ZoomOut = function(options)
 	options.zoomOut = true;
 	ol.featureAnimation.Zoom.call(this, options);
 }
-ol.inherits(ol.featureAnimation.ZoomOut, ol.featureAnimation.Zoom);
+ol.ext.inherits(ol.featureAnimation.ZoomOut, ol.featureAnimation.Zoom);
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
@@ -10291,7 +10526,7 @@ ol.filter.Base = function(options) {
   if (options && options.active===false) this.set('active', false);
   else this.set('active', true);
 };
-ol.inherits(ol.filter.Base, ol.Object);
+ol.ext.inherits(ol.filter.Base, ol.Object);
 /** Activate / deactivate filter
 *	@param {boolean} b
 */
@@ -10310,14 +10545,14 @@ ol.filter.Base.prototype.getActive = function () {
 * @private
 */
 function precompose_(e) {
-  if (this.get('active')) this.precompose(e);
+  if (this.get('active') && e.context) this.precompose(e);
 }
 /** Internal function
 * @this {ol.filter} this the filter
 * @private
 */
 function postcompose_(e) {
-  if (this.get('active')) this.postcompose(e);
+  if (this.get('active') && e.context) this.postcompose(e);
 }
 /** Force filter redraw / Internal function
 * @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
@@ -10334,8 +10569,8 @@ function filterRedraw_() {
 function addFilter_(filter) {
   if (!this.filters_) this.filters_ = [];
   this.filters_.push(filter);
-  if (filter.precompose) filter._listener.push ( { listener: this.on('precompose', precompose_.bind(filter)), target: this });
-  if (filter.postcompose) filter._listener.push ( { listener: this.on('postcompose', postcompose_.bind(filter)), target: this });
+  if (filter.precompose) filter._listener.push ( { listener: this.on(['precompose','prerender'], precompose_.bind(filter)), target: this });
+  if (filter.postcompose) filter._listener.push ( { listener: this.on(['postcompose','postrender'], postcompose_.bind(filter)), target: this });
   filter._listener.push ( { listener: filter.on('propertychange', filterRedraw_.bind(this)), target: this });
   filterRedraw_.call (this);
 }
@@ -10362,6 +10597,7 @@ function removeFilter_(filter) {
 *	@param {ol.filter}
 */
 ol.Map.prototype.addFilter = function (filter) {
+  console.warn('[OL-EXT] addFilter deprecated on map.')
   addFilter_.call (this, filter);
 };
 /** Remove a filter to an ol.Map
@@ -10424,7 +10660,7 @@ ol.filter.Mask = function(options)
 	this.set("inner", options.inner);
 	this.fillColor_ = options.fill ? ol.color.asString(options.fill.getColor()) || "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.2)";
 }
-ol.inherits(ol.filter.Mask, ol.filter.Base);
+ol.ext.inherits(ol.filter.Mask, ol.filter.Base);
 /** Draw the feature into canvas */
 ol.filter.Mask.prototype.drawFeaturePath_ = function(e, out)
 {	var ctx = e.context;
@@ -10518,7 +10754,7 @@ ol.filter.Clip = function(options)
 		options.extent = [xmin,ymin,xmax,ymax];
 	}
 }
-ol.inherits(ol.filter.Clip, ol.filter.Base);
+ol.ext.inherits(ol.filter.Clip, ol.filter.Base);
 ol.filter.Clip.prototype.clipPath_ = function(e)
 {	var ctx = e.context;
 	var canvas = ctx.canvas;
@@ -10610,7 +10846,7 @@ ol.filter.Colorize = function(options)
 {	ol.filter.Base.call(this, options);
 	this.setFilter(options);
 }
-ol.inherits(ol.filter.Colorize, ol.filter.Base);
+ol.ext.inherits(ol.filter.Colorize, ol.filter.Base);
 /** Set options to the filter
  * @param {FilterColorizeOptions} [options]
  */
@@ -10720,7 +10956,7 @@ ol.filter.Composite = function(options)
 {	ol.filter.Base.call(this, options);
 	this.set("operation", options.operation || "source-over");
 }
-ol.inherits(ol.filter.Composite, ol.filter.Base);
+ol.ext.inherits(ol.filter.Composite, ol.filter.Base);
 /** Change the current operation
 *	@param {string} operation composite function
 */
@@ -10737,8 +10973,8 @@ ol.filter.Composite.prototype.postcompose = function(e)
 }
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Crop drawing using an ol.Feature
 * @constructor
@@ -10749,20 +10985,20 @@ ol.filter.Composite.prototype.postcompose = function(e)
 *  @param {ol.Feature} [options.feature] feature to crop with
 *  @param {boolean} [options.inner=false] mask inner, default false
 */
-ol.filter.Crop = function(options)
-{	options = options || {};
-	ol.filter.Mask.call(this, options);
+ol.filter.Crop = function(options) {
+  options = options || {};
+  ol.filter.Mask.call(this, options);
 }
-ol.inherits(ol.filter.Crop, ol.filter.Mask);
-ol.filter.Crop.prototype.precompose = function(e)
-{	if (!this.feature_) return;
-	var ctx = e.context;
-	ctx.save();
-	this.drawFeaturePath_(e, this.get("inner"));
-	ctx.clip("evenodd");
+ol.ext.inherits(ol.filter.Crop, ol.filter.Mask);
+ol.filter.Crop.prototype.precompose = function(e) {
+  if (!this.feature_) return;
+  var ctx = e.context;
+  ctx.save();
+  this.drawFeaturePath_(e, this.get("inner"));
+  ctx.clip("evenodd");
 }
-ol.filter.Crop.prototype.postcompose = function(e)
-{	if (this.feature_) e.context.restore();
+ol.filter.Crop.prototype.postcompose = function(e) {
+  if (this.feature_) e.context.restore();
 }
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
@@ -10787,8 +11023,8 @@ ol.filter.Fold = function(options)
 	this.set("padding", options.padding || 8);
 	if (typeof options.fsize == "number") options.fsize = [options.fsize,options.fsize];
 	this.set("fsize", options.fsize || [8,10]);
-}
-ol.inherits(ol.filter.Fold, ol.filter.Base);
+};
+ol.ext.inherits(ol.filter.Fold, ol.filter.Base);
 ol.filter.Fold.prototype.drawLine_ = function(ctx, d, m)
 {	var canvas = ctx.canvas;
 	var fold = this.get("fold");
@@ -10818,7 +11054,7 @@ ol.filter.Fold.prototype.drawLine_ = function(ctx, d, m)
 		ctx.lineTo ( x, y );
 	}
 	ctx.closePath();
-}
+};
 ol.filter.Fold.prototype.precompose = function(e)
 {	var ctx = e.context;
 	ctx.save();
@@ -10835,7 +11071,7 @@ ol.filter.Fold.prototype.precompose = function(e)
 	ctx.save();
 	this.drawLine_(ctx, this.get("fsize"), this.get("margin") + this.get("padding"));
 	ctx.clip();
-}
+};
 ol.filter.Fold.prototype.postcompose = function(e)
 {	var ctx = e.context;
 	var canvas = ctx.canvas;
@@ -10858,7 +11094,7 @@ ol.filter.Fold.prototype.postcompose = function(e)
 			ctx.restore()
 		}
 	ctx.restore();
-}
+};
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -10887,7 +11123,7 @@ ol.filter.Lego = function(options)
 	this.setBrick (options.brickSize, img);
 	this.internal_ = document.createElement('canvas');
 }
-ol.inherits(ol.filter.Lego, ol.filter.Base);
+ol.ext.inherits(ol.filter.Lego, ol.filter.Base);
 /** Image definition
 */
 ol.filter.Lego.prototype.img =
@@ -11024,7 +11260,7 @@ ol.filter.Texture = function(options)
 {	ol.filter.Base.call(this, options);
 	this.setFilter(options);
 }
-ol.inherits(ol.filter.Texture, ol.filter.Base);
+ol.ext.inherits(ol.filter.Texture, ol.filter.Base);
 /** Set texture
  * @param {FilterTextureOptions} [options]
  */
@@ -11205,7 +11441,7 @@ ol.interaction.CenterTouch = function(options)
 			}
 		});
 };
-ol.inherits(ol.interaction.CenterTouch, ol.interaction.Interaction);
+ol.ext.inherits(ol.interaction.CenterTouch, ol.interaction.Interaction);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -11284,111 +11520,111 @@ ol.interaction.CenterTouch.prototype.drawTarget_ = function (e)
 /** Clip interaction to clip layers in a circle
  * @constructor
  * @extends {ol.interaction.Pointer}
- *	@param {ol.interaction.Clip.options} options flashlight  param
- *		- radius {number} radius of the clip, default 100
- *		- layers {ol.layer|Array<ol.layer>} layers to clip
+ * @param {ol.interaction.Clip.options} options flashlight  param
+ *  @param {number} options.radius radius of the clip, default 100
+ *	@param {ol.layer|Array<ol.layer>} options.layers layers to clip
  */
 ol.interaction.Clip = function(options) {
-	this.layers_ = [];
-	ol.interaction.Pointer.call(this,
-	{	handleDownEvent: this.setPosition,
-		handleMoveEvent: this.setPosition
-	});
-	// Default options
-	options = options || {};
-	this.pos = false;
-	this.radius = (options.radius||100);
-	if (options.layers) this.addLayer(options.layers);
+  this.layers_ = [];
+  ol.interaction.Pointer.call(this, {
+    handleDownEvent: this.setPosition,
+    handleMoveEvent: this.setPosition
+  });
+  this.precomposeBind_ = this.precompose_.bind(this);
+  this.postcomposeBind_ = this.postcompose_.bind(this);
+  // Default options
+  options = options || {};
+  this.pos = false;
+  this.radius = (options.radius||100);
+  if (options.layers) this.addLayer(options.layers);
 };
-ol.inherits(ol.interaction.Clip, ol.interaction.Pointer);
+ol.ext.inherits(ol.interaction.Clip, ol.interaction.Pointer);
 /** Set the map > start postcompose
 */
 ol.interaction.Clip.prototype.setMap = function(map) {
-	var i;
-	if (this.getMap()) {
-		for (i=0; i<this.layers_.length; i++) {
-			if (this.layers_[i].precompose) ol.Observable.unByKey(this.layers_[i].precompose);
-			if (this.layers_[i].postcompose) ol.Observable.unByKey(this.layers_[i].postcompose);
-			this.layers_[i].precompose = this.layers_[i].postcompose = null;
-		}
-		this.getMap().renderSync();
-	}
-	ol.interaction.Pointer.prototype.setMap.call(this, map);
-	if (map) {
-		for (i=0; i<this.layers_.length; i++) {
-			this.layers_[i].precompose = this.layers_[i].layer.on('precompose', this.precompose_.bind(this));
-			this.layers_[i].postcompose = this.layers_[i].layer.on('postcompose', this.postcompose_.bind(this));
-		}
-		map.renderSync();
-	}
+  var i;
+  if (this.getMap()) {
+    for (i=0; i<this.layers_.length; i++) {
+      this.layers_[i].un(['precompose','prerender'], this.precomposeBind_);
+      this.layers_[i].un(['postcompose','postrender'], this.postcomposeBind_);
+    }
+    this.getMap().renderSync();
+  }
+  ol.interaction.Pointer.prototype.setMap.call(this, map);
+  if (map) {
+    for (i=0; i<this.layers_.length; i++) {
+      this.layers_[i].on(['precompose','prerender'], this.precomposeBind_);
+      this.layers_[i].on(['postcompose','postrender'], this.postcomposeBind_);
+    }
+    map.renderSync();
+  }
 }
 /** Set clip radius
  *	@param {integer} radius
- */
-ol.interaction.Clip.prototype.setRadius = function(radius)
-{	this.radius = radius;
-	if (this.getMap()) this.getMap().renderSync();
+*/
+ol.interaction.Clip.prototype.setRadius = function(radius) {
+  this.radius = radius;
+  if (this.getMap()) this.getMap().renderSync();
 }
 /** Add a layer to clip
  *	@param {ol.layer|Array<ol.layer>} layer to clip
- */
-ol.interaction.Clip.prototype.addLayer = function(layers)
-{	if (!(layers instanceof Array)) layers = [layers];
-	for (var i=0; i<layers.length; i++) {
-		var l = { layer: layers[i] }
-		if (this.getMap()) {
-			l.precompose = layers[i].on('precompose', this.precompose_.bind(this));
-			l.postcompose = layers[i].on('postcompose', this.postcompose_.bind(this));
-			this.getMap().renderSync();
-		}
-		this.layers_.push(l);
-	}
-}
+*/
+ol.interaction.Clip.prototype.addLayer = function(layers)  {
+  if (!(layers instanceof Array)) layers = [layers];
+  for (var i=0; i<layers.length; i++) {
+    if (this.getMap()) {
+      layers[i].on(['precompose','prerender'], this.precomposeBind_);
+      layers[i].on(['postcompose','postrender'], this.postcomposeBind_);
+      this.getMap().renderSync();
+    }
+    this.layers_.push(layers[i]);
+  }
+};
 /** Remove a layer to clip
  *	@param {ol.layer|Array<ol.layer>} layer to clip
- */
-ol.interaction.Clip.prototype.removeLayer = function(layers)
-{	if (!(layers instanceof Array)) layers = [layers];
-	for (var i=0; i<layers.length; i++)
-	{	var k;
-		for (k=0; k<this.layers_.length; k++)
-		{	if (this.layers_[k].layer===layers[i]) 
-			{	break;
-			}
-		}
-		if (k!=this.layers_.length && this.getMap())
-		{	if (this.layers_[k].precompose) ol.Observable.unByKey(this.layers_[k].precompose);
-			if (this.layers_[k].postcompose) ol.Observable.unByKey(this.layers_[k].postcompose);
-			this.layers_.splice(k,1);
-			this.getMap().renderSync();
-		}
-	}
-}
+*/
+ol.interaction.Clip.prototype.removeLayer = function(layers) {
+  if (!(layers instanceof Array)) layers = [layers];
+  for (var i=0; i<layers.length; i++) {
+    var k;
+    for (k=0; k<this.layers_.length; k++) {
+      if (this.layers_[k]===layers[i]) {
+        break;
+      }
+    }
+    if (k!=this.layers_.length && this.getMap()) {
+      this.layers_[k].un(['precompose','prerender'], this.precomposeBind_);
+      this.layers_[k].un(['postcompose','postrender'], this.postcomposeBind_);
+      this.layers_.splice(k,1);
+      this.getMap().renderSync();
+    }
+  }
+};
 /** Set position of the clip
 *	@param {ol.Pixel|ol.MapBrowserEvent}
 */
-ol.interaction.Clip.prototype.setPosition = function(e)
-{	if (e.pixel) this.pos = e.pixel;
-	else 
-	{	if (e && e instanceof Array) this.pos = e;
-		else e = [-10000000,-10000000];
-	}
-	if (this.getMap()) this.getMap().renderSync();
-}
+ol.interaction.Clip.prototype.setPosition = function(e) {
+  if (e.pixel) this.pos = e.pixel;
+  else {
+    if (e && e instanceof Array) this.pos = e;
+    else e = [-10000000,-10000000];
+  }
+  if (this.getMap()) this.getMap().renderSync();
+};
 /* @private
 */
-ol.interaction.Clip.prototype.precompose_ = function(e)
-{	var ctx = e.context;
-	var ratio = e.frameState.pixelRatio;
-	ctx.save();
-	ctx.beginPath();
-	ctx.arc (this.pos[0]*ratio, this.pos[1]*ratio, this.radius*ratio, 0, 2*Math.PI);
-	ctx.clip();
-}
+ol.interaction.Clip.prototype.precompose_ = function(e) {
+  var ctx = e.context;
+  var ratio = e.frameState.pixelRatio;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc (this.pos[0]*ratio, this.pos[1]*ratio, this.radius*ratio, 0, 2*Math.PI);
+  ctx.clip();
+};
 /* @private
 */
-ol.interaction.Clip.prototype.postcompose_ = function(e)
-{	e.context.restore();
+ol.interaction.Clip.prototype.postcompose_ = function(e) {
+  e.context.restore();
 };
 /**
  * Activate or deactivate the interaction.
@@ -11397,22 +11633,22 @@ ol.interaction.Clip.prototype.postcompose_ = function(e)
  * @api
  */
 ol.interaction.Clip.prototype.setActive = function(b) {
-	var i;
-	ol.interaction.Pointer.prototype.setActive.call (this, b);
-	if(b) {
-		for(i=0; i<this.layers_.length; i++) {
-			this.layers_[i].precompose = this.layers_[i].layer.on('precompose', this.precompose_.bind(this));
-			this.layers_[i].postcompose = this.layers_[i].layer.on('postcompose', this.postcompose_.bind(this));
-		}
-	} else {
-		for(i=0; i<this.layers_.length; i++) {
-			if (this.layers_[i].precompose) ol.Observable.unByKey(this.layers_[i].precompose);
-			if (this.layers_[i].postcompose) ol.Observable.unByKey(this.layers_[i].postcompose);
-			this.layers_[i].precompose = this.layers_[i].postcompose = null;
-		}
-	}
-	if (this.getMap()) this.getMap().renderSync();
-}
+  if (b===this.getActive()) return;
+  ol.interaction.Pointer.prototype.setActive.call (this, b);
+  var i;
+  if (b) {
+    for(i=0; i<this.layers_.length; i++) {
+      this.layers_[i].on(['precompose','prerender'], this.precomposeBind_);
+      this.layers_[i].on(['postcompose','postrender'], this.postcomposeBind_);
+    }
+  } else {
+    for(i=0; i<this.layers_.length; i++) {
+      this.layers_[i].un(['precompose','prerender'], this.precomposeBind_);
+      this.layers_[i].un(['postcompose','postrender'], this.postcomposeBind_);
+    }
+  }
+  if (this.getMap()) this.getMap().renderSync();
+};
 
 /*	Copyright (c) 2018 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -11432,7 +11668,7 @@ ol.interaction.Delete = function(options) {
     this.delete(e.selected);
   }.bind(this));
 };
-ol.inherits(ol.interaction.Delete, ol.interaction.Select);
+ol.ext.inherits(ol.interaction.Delete, ol.interaction.Select);
 /** Get vector source of the map
  * @return {Array<ol.source.Vector}
  */
@@ -11534,7 +11770,7 @@ ol.interaction.DragOverlay = function(options) {
   if (!(options.overlays instanceof Array)) options.overlays = [options.overlays];
   options.overlays.forEach(this.addOverlay.bind(this));
 };
-ol.inherits(ol.interaction.DragOverlay, ol.interaction.Pointer);
+ol.ext.inherits(ol.interaction.DragOverlay, ol.interaction.Pointer);
 /** Add an overlay to the interacton
  * @param {ol.Overlay} ov
  */
@@ -11622,7 +11858,7 @@ ol.interaction.DrawHole = function(options)
 	// End drawing add the hole to the current Polygon
 	this.on('drawend', this._finishDrawing.bind(this));
 };
-ol.inherits(ol.interaction.DrawHole, ol.interaction.Draw);
+ol.ext.inherits(ol.interaction.DrawHole, ol.interaction.Draw);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -11842,7 +12078,7 @@ ol.interaction.DrawRegular = function(options) {
       handleEvent: this.handleEvent_
     });
 };
-ol.inherits(ol.interaction.DrawRegular, ol.interaction.Interaction);
+ol.ext.inherits(ol.interaction.DrawRegular, ol.interaction.Interaction);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -12222,7 +12458,7 @@ ol.interaction.DrawTouch = function(options) {
 		});
 	this.geom_ = [];
 };
-ol.inherits(ol.interaction.DrawTouch, ol.interaction.CenterTouch);
+ol.ext.inherits(ol.interaction.DrawTouch, ol.interaction.CenterTouch);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -12385,7 +12621,7 @@ ol.interaction.DropFile = function(options)
 	var self = this;
 	zone.addEventListener('drop', function(e){ return self.ondrop(e);});
 };
-ol.inherits(ol.interaction.DropFile, ol.interaction.DragAndDrop);
+ol.ext.inherits(ol.interaction.DropFile, ol.interaction.DragAndDrop);
 /** Set the map
 */
 ol.interaction.DropFile.prototype.setMap = function(map)
@@ -12497,7 +12733,7 @@ ol.interaction.FillAttribute = function(options, properties) {
     this._cursor = 'url('+canvas.toDataURL()+') 0 13, auto';
   }
 };
-ol.inherits(ol.interaction.FillAttribute, ol.interaction.Select);
+ol.ext.inherits(ol.interaction.FillAttribute, ol.interaction.Select);
 /** Activate the interaction
  * @param {boolean} active
  */
@@ -12575,7 +12811,7 @@ ol.interaction.Flashlight = function(options) {
 	this.radius = (options.radius||100);
 	this.setColor(options);
 };
-ol.inherits(ol.interaction.Flashlight, ol.interaction.Pointer);
+ol.ext.inherits(ol.interaction.Flashlight, ol.interaction.Pointer);
 /** Set the map > start postcompose
 */
 ol.interaction.Flashlight.prototype.setMap = function(map) {
@@ -12762,7 +12998,7 @@ ol.interaction.GeolocationDraw = function(options) {
 	this.setFollowTrack (options.followTrack===undefined ? true : options.followTrack);
 	this.setActive(false);
 };
-ol.inherits(ol.interaction.GeolocationDraw, ol.interaction.Interaction);
+ol.ext.inherits(ol.interaction.GeolocationDraw, ol.interaction.Interaction);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -12989,7 +13225,7 @@ ol.interaction.Hover = function(options)
 	this.set('hitTolerance', options.hitTolerance)
 	this.setCursor (options.cursor);
 };
-ol.inherits(ol.interaction.Hover, ol.interaction.Interaction);
+ol.ext.inherits(ol.interaction.Hover, ol.interaction.Interaction);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -13125,7 +13361,7 @@ ol.interaction.LongTouch = function(options)
 		}
 	});
 };
-ol.inherits(ol.interaction.LongTouch, ol.interaction.Interaction);
+ol.ext.inherits(ol.interaction.LongTouch, ol.interaction.Interaction);
 
 /* Extent the ol/interaction/Modify with a getModifyFeatures
  * Get the features modified by the interaction
@@ -13250,7 +13486,7 @@ ol.interaction.ModifyFeature = function(options){
     style: sketchStyle
   });
 };
-ol.inherits(ol.interaction.ModifyFeature, ol.interaction.Pointer);
+ol.ext.inherits(ol.interaction.ModifyFeature, ol.interaction.Pointer);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -13849,7 +14085,7 @@ ol.interaction.ModifyTouch = function(options) {
   // Use a popup ?
   this.set('usePopup', options.usePopup !== false);
 };
-ol.inherits(ol.interaction.ModifyTouch, ol.interaction.Modify);
+ol.ext.inherits(ol.interaction.ModifyTouch, ol.interaction.Modify);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -13948,7 +14184,7 @@ ol.interaction.Offset = function(options) {
   // init
   this.previousCursor_ = false;
 };
-ol.inherits(ol.interaction.Offset, ol.interaction.Pointer);
+ol.ext.inherits(ol.interaction.Offset, ol.interaction.Pointer);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -14141,7 +14377,7 @@ ol.interaction.Ripple = function(options)
     this.interval = options.interval;
 	this.rains (this.interval);
 };
-ol.inherits(ol.interaction.Ripple, ol.interaction.Pointer);
+ol.ext.inherits(ol.interaction.Ripple, ol.interaction.Pointer);
 /** Set the map > start postcompose
 */
 ol.interaction.Ripple.prototype.setMap = function(map)
@@ -14274,7 +14510,6 @@ ol.interaction.Ripple.prototype.postcompose_ = function(e)
 	released under the CeCILL-B license (http://www.cecill.info/).
 	ol.interaction.SelectCluster is an interaction for selecting vector features in a cluster.
 */
-//
 /**
  * @classdesc
  * Interaction for selecting vector features in a cluster. 
@@ -14350,7 +14585,7 @@ ol.interaction.SelectCluster = function(options)
 	ol.interaction.Select.call(this, options);
 	this.on("select", this.selectCluster.bind(this));
 };
-ol.inherits(ol.interaction.SelectCluster, ol.interaction.Select);
+ol.ext.inherits(ol.interaction.SelectCluster, ol.interaction.Select);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -14478,7 +14713,7 @@ ol.interaction.SelectCluster.prototype.animateCluster_ = function(center, featur
 	var start = new Date().getTime();
 	// Animate function
 	function animate(event) {
-		var vectorContext = event.vectorContext;// || ol.render.getVectorContext(event);
+		var vectorContext = event.vectorContext || ol.render.getVectorContext(event);
 		// Retina device
 		var ratio = event.frameState.pixelRatio;
 		var res = this.getMap().getView().getResolution();
@@ -14622,7 +14857,7 @@ ol.interaction.SnapGuides = function(options) {
 		}
 	});
 };
-ol.inherits(ol.interaction.SnapGuides, ol.interaction.Interaction);
+ol.ext.inherits(ol.interaction.SnapGuides, ol.interaction.Interaction);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -14910,7 +15145,7 @@ ol.interaction.Split = function(options)
 		}
 	});
 };
-ol.inherits(ol.interaction.Split, ol.interaction.Interaction);
+ol.ext.inherits(ol.interaction.Split, ol.interaction.Interaction);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -15108,7 +15343,7 @@ ol.interaction.Splitter = function(options)
 	// Get all features candidate
 	this.filterSplit_ = options.filter || function(){ return true; };
 };
-ol.inherits(ol.interaction.Splitter, ol.interaction.Interaction);
+ol.ext.inherits(ol.interaction.Splitter, ol.interaction.Interaction);
 /** Calculate intersection on 2 segs
 * @param {Array<_ol_coordinate_>} s1 first seg to intersect (2 points)
 * @param {Array<_ol_coordinate_>} s2 second seg to intersect (2 points)
@@ -15292,7 +15527,7 @@ ol.interaction.Synchronize = function(options)
 		});
 	this.maps = options.maps;
 };
-ol.inherits(ol.interaction.Synchronize, ol.interaction.Interaction);
+ol.ext.inherits(ol.interaction.Synchronize, ol.interaction.Interaction);
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -15423,7 +15658,7 @@ ol.interaction.TinkerBell = function(options)
 	this.out_ = function() { self.isout_=true; };
 	this.isout_ = true;
 };
-ol.inherits(ol.interaction.TinkerBell, ol.interaction.Pointer);
+ol.ext.inherits(ol.interaction.TinkerBell, ol.interaction.Pointer);
 /** Set the map > start postcompose
 */
 ol.interaction.TinkerBell.prototype.setMap = function(map) {
@@ -15549,7 +15784,7 @@ ol.interaction.TouchCompass = function(options) {
 		ctx.fill();
 	}
 };
-ol.inherits(ol.interaction.TouchCompass, ol.interaction.Pointer);
+ol.ext.inherits(ol.interaction.TouchCompass, ol.interaction.Pointer);
 /** Compass Image as a JS Image object
 * @api
 */
@@ -15711,7 +15946,7 @@ ol.interaction.Transform = function(options) {
   // setstyle
   this.setDefaultStyle();
 };
-ol.inherits(ol.interaction.Transform, ol.interaction.Pointer);
+ol.ext.inherits(ol.interaction.Transform, ol.interaction.Pointer);
 /** Cursors for transform
 */
 ol.interaction.Transform.prototype.Cursors = {
@@ -16226,7 +16461,7 @@ ol.interaction.UndoRedo = function(options) {
   // Custom definitions
   this._defs = {};
 };
-ol.inherits(ol.interaction.UndoRedo, ol.interaction.Interaction);
+ol.ext.inherits(ol.interaction.UndoRedo, ol.interaction.Interaction);
 /** Add a custom undo/redo
  * @param {string} action the action key name
  * @param {function} undoFn function called when undoing
@@ -16728,7 +16963,7 @@ ol.source.DBPedia = function(opt_options) {
     if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
   ol.source.Vector.call (this, options);
 };
-ol.inherits (ol.source.DBPedia, ol.source.Vector);
+ol.ext.inherits(ol.source.DBPedia, ol.source.Vector);
 /** Decode RDF attributes and choose to add feature to the layer
 * @param {feature} the feature
 * @param {attributes} RDF attributes
@@ -16910,7 +17145,7 @@ ol.source.DFCI = function(options) {
   if (!proj4.defs["EPSG:27572"]) proj4.defs("EPSG:27572","+proj=lcc +lat_1=46.8 +lat_0=46.8 +lon_0=0 +k_0=0.99987742 +x_0=600000 +y_0=2200000 +a=6378249.2 +b=6356515 +towgs84=-168,-60,320,0,0,0,0 +pm=paris +units=m +no_defs");
   ol.proj.proj4.register(proj4);
 };
-ol.inherits (ol.source.DFCI, ol.source.Vector);
+ol.ext.inherits(ol.source.DFCI, ol.source.Vector);
 /** Cacluate grid according extent/resolution
  */
 ol.source.DFCI.prototype._calcGrid = function (extent, resolution, projection) {
@@ -17031,7 +17266,7 @@ ol.source.Delaunay = function(options) {
   this._nodes.on('removefeature', this._onRemoveNode.bind(this));
   this.set ('epsilon', options.epsilon || .0001)
 };
-ol.inherits (ol.source.Delaunay, ol.source.Vector);
+ol.ext.inherits(ol.source.Delaunay, ol.source.Vector);
 /** Add a new triangle in the source
  * @param {Array<ol/coordinates>} pts
  */
@@ -17553,7 +17788,7 @@ ol.source.GeoImage = function(opt_options)
 	ol.source.ImageCanvas.call (this, options);	
 	this.setCrop (this.crop);
 };
-ol.inherits (ol.source.GeoImage, ol.source.ImageCanvas);
+ol.ext.inherits(ol.source.GeoImage, ol.source.ImageCanvas);
 /**
  * Get coordinate of the image center.
  * @return {ol.Coordinate} coordinate of the image center.
@@ -17748,7 +17983,7 @@ ol.source.HexBin = function (options) {
   this._hexgrid = new ol.HexGrid(options);
   ol.source.BinBase.call(this, options);
 };
-ol.inherits(ol.source.HexBin, ol.source.BinBase);
+ol.ext.inherits(ol.source.HexBin, ol.source.BinBase);
 /** Get the hexagon geometry at the coord 
  * @param {ol.Coordinate} coord
  * @returns {ol.geom.Polygon} 
@@ -17893,7 +18128,7 @@ ol.source.Mapillary = function(opt_options)
 	// Client ID
 	// this.set("clientId", options.clientId);
 };
-ol.inherits (ol.source.Mapillary, ol.source.Vector);
+ol.ext.inherits(ol.source.Mapillary, ol.source.Vector);
 /** Decode wiki attributes and choose to add feature to the layer
 * @param {feature} the feature
 * @param {attributes} wiki attributes
@@ -18001,7 +18236,7 @@ ol.source.Overpass = function(options) {
   };
   this._filter = options.filter;
 };
-ol.inherits (ol.source.Overpass, ol.source.Vector);
+ol.ext.inherits(ol.source.Overpass, ol.source.Vector);
 /** Loader function used to load features.
 * @private
 */
@@ -18097,7 +18332,7 @@ ol.source.WikiCommons = function(opt_options) {
     if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
   ol.source.Vector.call (this, options);
 };
-ol.inherits (ol.source.WikiCommons, ol.source.Vector);
+ol.ext.inherits(ol.source.WikiCommons, ol.source.Vector);
 /** Decode wiki attributes and choose to add feature to the layer
 * @param {feature} the feature
 * @param {attributes} wiki attributes
@@ -18177,7 +18412,6 @@ ol.source.WikiCommons.prototype._loaderFn = function(extent, resolution, project
 	released under the CeCILL-B license (http://www.cecill.info/).
 	ol.layer.AnimatedCluster is a vector layer that animate cluster
 */
-//
 /**
  *  A vector layer for animated cluster
  * @constructor 
@@ -18200,7 +18434,7 @@ ol.layer.AnimatedCluster = function(opt_options)
 	this.on(['precompose','prerender'], this.animate.bind(this));
 	this.on(['postcompose','postrender'], this.postanimate.bind(this));
 };
-ol.inherits (ol.layer.AnimatedCluster, ol.layer.Vector);
+ol.ext.inherits(ol.layer.AnimatedCluster, ol.layer.Vector);
 /** save cluster features before change
  * @private
  */
@@ -18288,7 +18522,7 @@ ol.layer.AnimatedCluster.prototype.animate = function(e)
 	}
 	// Run animation
 	if (a.start) {
-		var vectorContext = e.vectorContext; // || ol.render.getVectorContext(e);
+		var vectorContext = e.vectorContext || ol.render.getVectorContext(e);
 		var d = (time - a.start) / duration;
 		// Animation ends
 		if (d > 1.0) 
@@ -18780,7 +19014,7 @@ ol.Overlay.Popup = function (options) {
     setTimeout(function(){ this.show(options.position); }.bind(this));
   }
 };
-ol.inherits(ol.Overlay.Popup, ol.Overlay);
+ol.ext.inherits(ol.Overlay.Popup, ol.Overlay);
 /**
  * Get CSS class of the popup according to its positioning.
  * @private
@@ -19011,7 +19245,7 @@ ol.Overlay.Magnify = function (options) {
 	this.set("active", true);
 	this.on("propertychange", this.setView_.bind(this));
 };
-ol.inherits(ol.Overlay.Magnify, ol.Overlay);
+ol.ext.inherits(ol.Overlay.Magnify, ol.Overlay);
 /**
  * Set the map instance the overlay is associated with.
  * @param {ol.Map} map The map instance.
@@ -19127,7 +19361,7 @@ ol.Overlay.Placemark = function (options) {
   if (options.contentColor ) this.setContentColor(options.contentColor);
   if (options.size) this.setRadius(options.size);
 };
-ol.inherits(ol.Overlay.Placemark, ol.Overlay.Popup);
+ol.ext.inherits(ol.Overlay.Placemark, ol.Overlay.Popup);
 /**
  * Set the position and the content of the placemark (hide it before to enable animation).
  * @param {ol.Coordinate|string} coordinate the coordinate of the popup or the HTML content.
@@ -19218,7 +19452,7 @@ ol.Overlay.PopupFeature = function (options) {
     }.bind(this));
   }
 };
-ol.inherits(ol.Overlay.PopupFeature, ol.Overlay.Popup);
+ol.ext.inherits(ol.Overlay.PopupFeature, ol.Overlay.Popup);
 /** Set the template
  * @param {*} template A template with a list of properties to use in the popup
  */
@@ -19314,7 +19548,7 @@ ol.Overlay.PopupFeature.prototype._getHtml = function(feature) {
       if (feature.getGeometry().getType()==='Point') {
         this.getMap().getView().animate({
           center: feature.getGeometry().getFirstCoordinate(),
-          zoom:  Math.max(map.getView().getZoom(), 18)
+          zoom:  Math.max(this.getMap().getView().getZoom(), 18)
         });
       } else  {
         var ext = feature.getGeometry().getExtent();
@@ -19399,7 +19633,7 @@ ol.Overlay.Tooltip = function (options) {
     }.bind(this)
   });
 };
-ol.inherits(ol.Overlay.Tooltip, ol.Overlay.Popup);
+ol.ext.inherits(ol.Overlay.Tooltip, ol.Overlay.Popup);
 /**
  * Set the map instance the control is associated with
  * and add its controls associated to this map.
@@ -19772,7 +20006,7 @@ ol.graph.Dijskra = function (options) {
   ol.Object.call (this);
   this.set ('epsilon', options.epsilon || 1E-6);
 };
-ol.inherits(ol.graph.Dijskra, ol.Object);
+ol.ext.inherits(ol.graph.Dijskra, ol.Object);
 /** Get the weighting of the edge, for example a speed factor
  * The function returns a value beetween ]0,1]
  * - 1   = no weighting
@@ -20608,7 +20842,7 @@ ol.HexGrid = function (options)
 	this.origin_ = options.origin || [0,0];
 	this.layout_ = this.layout[options.layout] || this.layout.pointy;
 };
-ol.inherits (ol.HexGrid, ol.Object);
+ol.ext.inherits(ol.HexGrid, ol.Object);
 /** Layout
 */
 ol.HexGrid.prototype.layout =
@@ -21160,7 +21394,7 @@ ol.style.Chart = function(opt_options)
 	}
 	this.renderChart_();
 };
-ol.inherits(ol.style.Chart, ol.style.RegularShape);
+ol.ext.inherits(ol.style.Chart, ol.style.RegularShape);
 /** Default color set: classic, dark, pale, pastel, neon
 */
 ol.style.Chart.colors =
@@ -21491,7 +21725,7 @@ ol.style.FillPattern = function(options)
 	}
 	ol.style.Fill.call (this, { color: pattern });
 };
-ol.inherits(ol.style.FillPattern, ol.style.Fill);
+ol.ext.inherits(ol.style.FillPattern, ol.style.Fill);
 /**
  * Clones the style. 
  * @return {ol.style.FillPattern}
@@ -21960,7 +22194,7 @@ ol.style.FlowLine = function(options) {
   // LineCap
   this.setLineCap(options.lineCap);
 };
-ol.inherits(ol.style.FlowLine, ol.style.Style);
+ol.ext.inherits(ol.style.FlowLine, ol.style.Style);
 /** Set the initial width
  * @param {number} width width, default 0
  */
@@ -22160,7 +22394,7 @@ ol.style.FontSymbol = function(options)
 	this.glyph_ = this.getGlyph(options.glyph) || "";
 	this.renderMarker_();
 };
-ol.inherits(ol.style.FontSymbol, ol.style.RegularShape);
+ol.ext.inherits(ol.style.FontSymbol, ol.style.RegularShape);
 /** Cool stuff to get the image symbol for a style
 */
 ol.style.Image.prototype.getImagePNG = function()
@@ -22551,7 +22785,7 @@ ol.style.Photo = function(options)
 	if (typeof(options.rotation)=='number') this.setRotation(options.rotation);
 	this.renderPhoto_();
 };
-ol.inherits(ol.style.Photo, ol.style.RegularShape);
+ol.ext.inherits(ol.style.Photo, ol.style.RegularShape);
 /**
  * Clones the style. 
  * @return {ol.style.Photo}
@@ -22879,7 +23113,7 @@ ol.style.TextPath = function(options)
 	this.textOverflow_ = typeof(options.textOverflow)!="undefined" ?  options.textOverflow : "visible";
 	this.minWidth_ = options.minWidth || 0;
 }
-ol.inherits(ol.style.TextPath, ol.style.Text);
+ol.ext.inherits(ol.style.TextPath, ol.style.Text);
 ol.style.TextPath.prototype.getTextOverflow = function()
 {	return this.textOverflow_; 
 };
@@ -23016,7 +23250,7 @@ ol.style.Shadow = function(options)
 	this.offset_ = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
 	this.renderShadow_();
 };
-ol.inherits(ol.style.Shadow, ol.style.RegularShape);
+ol.ext.inherits(ol.style.Shadow, ol.style.RegularShape);
 /**
  * Clones the style. 
  * @return {ol.style.Shadow}
@@ -23211,7 +23445,7 @@ ol.style.StrokePattern = function(options)
 	options.color = pattern;
 	ol.style.Stroke.call (this, options);
 };
-ol.inherits(ol.style.StrokePattern, ol.style.Stroke);
+ol.ext.inherits(ol.style.StrokePattern, ol.style.Stroke);
 /**
  * Clones the style. 
  * @return {ol.style.StrokePattern}
