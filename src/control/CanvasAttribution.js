@@ -97,6 +97,7 @@ ol_control_CanvasAttribution.prototype.setMap = function (map)
 ol_control_CanvasAttribution.prototype.drawAttribution_ = function(e) {
 	if (!this.isCanvas_) return;
 	var ctx = this.getContext(e);
+	if (!ctx) return;
 	
 	var text = "";
 	Array.prototype.slice.call(this.element.querySelectorAll('li'))

@@ -101,6 +101,7 @@ ol_control_CenterPosition.prototype._draw = function(e) {
   if (!this.get('canvas')) return;
 
   var ctx = this.getContext(e);
+	if (!ctx) return;
   
   // Retina device
   var ratio = e.frameState.pixelRatio;

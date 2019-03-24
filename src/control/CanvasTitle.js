@@ -98,6 +98,7 @@ ol_control_CanvasTitle.prototype.getVisible = function () {
 ol_control_CanvasTitle.prototype._draw = function(e) {
   if (!this.getVisible()) return;
   var ctx = this.getContext(e);
+	if (!ctx) return;
   
   // Retina device
   var ratio = e.frameState.pixelRatio;

@@ -2553,6 +2553,7 @@ ol.control.CanvasAttribution.prototype.setMap = function (map)
 ol.control.CanvasAttribution.prototype.drawAttribution_ = function(e) {
 	if (!this.isCanvas_) return;
 	var ctx = this.getContext(e);
+	if (!ctx) return;
 	var text = "";
 	Array.prototype.slice.call(this.element.querySelectorAll('li'))
 		.filter(function(el) {
@@ -2664,6 +2665,7 @@ ol.control.CanvasScaleLine.prototype.setStyle = function (style)
 ol.control.CanvasScaleLine.prototype.drawScale_ = function(e)
 {	if ( this.element.style.visibility!=="hidden" ) return;
 	var ctx = this.getContext(e);
+	if (!ctx) return;
 	// Get size of the scale div
 	var scalewidth = parseInt(this.olscale.style.width);
 	if (!scalewidth) return;
@@ -2673,14 +2675,6 @@ ol.control.CanvasScaleLine.prototype.drawScale_ = function(e)
 	var ratio = e.frameState.pixelRatio;
 	ctx.save();
 	ctx.scale(ratio,ratio);
-/*
-	// Position if transform:scale()
-	var container = this.getMap().getTargetElement();
-	var scx = container.offsetWidth / container.getBoundingClientRect().width;
-	var scy = container.offsetHeight / container.getBoundingClientRect().height;
-	position.left *= scx;
-	position.top *= scy;
-*/
 	// On top
 	position.top += this.element.clientHeight - this.scaleHeight_;
 	// Draw scale text
@@ -2796,6 +2790,7 @@ ol.control.CanvasTitle.prototype.getVisible = function () {
 ol.control.CanvasTitle.prototype._draw = function(e) {
   if (!this.getVisible()) return;
   var ctx = this.getContext(e);
+	if (!ctx) return;
   // Retina device
   var ratio = e.frameState.pixelRatio;
   ctx.save();
@@ -2909,6 +2904,7 @@ ol.control.CenterPosition.prototype._draw = function(e) {
   this.element.textContent = coord;
   if (!this.get('canvas')) return;
   var ctx = this.getContext(e);
+	if (!ctx) return;
   // Retina device
   var ratio = e.frameState.pixelRatio;
   ctx.save();
