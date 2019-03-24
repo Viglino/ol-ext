@@ -34,7 +34,7 @@ ol.control.Cloud = function(options)
 	this.set('density', options.density||0.5);
 	this.setWind(options);
 };
-ol.inherits(ol.control.Cloud, ol.control.Control);
+ol.ext.inherits(ol.control.Cloud, ol.control.Control);
 /**
  * Remove the control from its current map and attach it to the new map.
  * Subclasses may set up event handlers to get notified about changes to

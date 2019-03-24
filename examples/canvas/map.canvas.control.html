@@ -1,161 +1,187 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!-- --------------------------------------------------------
- 
-	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
----------------------------------------------------------- -->
-	<title>ol-ext: canvas control</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!--
+  Copyright (c) 2015-2019 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: canvas control</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
 
-	<!-- ol-ext -->
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
-	<!-- https://github.com/MrRio/jsPDF -->
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
+  <!-- https://github.com/MrRio/jsPDF -->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
 
-	<!--jQuery export map plugin -->
-	<script type="text/javascript" src="../../dist/extra/ExportMap.js"></script>
+  <!--jQuery export map plugin -->
+  <script type="text/javascript" src="../../dist/extra/ExportMap.js"></script>
+
+  <style>
+    .ol-mouse-position{
+      left: 50%;
+      top: auto;
+      bottom: 0;
+      right: auto;
+      -webkit-transform: translateX(-50%);
+      transform: translateX(-50%);
+    }
+  </style>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: canvas controls</h1>
-	</a>
-	<div class="info">
-		Canvas controls are controls drawn on the map canvas so they can be exported to JPEG / PNG images.
-		<ul><li>
-			<b>ol.control.CanvasScaleLine</b> is an ol.control.scaleLine that is drawn on the canevas.
-		</li><li>
-			<b>ol.control.CanvasAttribution</b> is an ol.control.attribution that is drawn on the canevas. 
-			The <i>setCanvas</i> function toggles beetween standard/canvas attribution
-		</li><li>
-			<b>ol.control.CanvasTitle</b> draw a title on the map. Use the style option to style the title.
-		</li><li>
-			<b>jqExportMap</b> is a jQuery plugin used to export the map as an image (PNG/JPEG) or as a PDF file 
-			(use <a href="https://github.com/MrRio/jsPDF">MrRio/jsPDF</a> lib).
-		</li></ul>
-	</div>
+  <a href="../../index.html">
+    <h1>ol-ext: canvas controls</h1>
+  </a>
+  <div class="info">
+    Canvas controls are controls drawn on the map canvas so they can be exported to JPEG / PNG images.
+    <ul><li>
+      <b>ol.control.CanvasScaleLine</b> is an ol.control.scaleLine that is drawn on the canevas.
+    </li><li>
+      <b>ol.control.CanvasAttribution</b> is an ol.control.attribution that is drawn on the canevas. 
+      The <i>setCanvas</i> function toggles beetween standard/canvas attribution
+    </li><li>
+      <b>ol.control.CanvasTitle</b> draw a title on the map. Use the style option to style the title.
+    </li><li>
+      <b>ol.control.CenterPosition</b> draw the coordinate of the center of the map.
+    </li><li>
+      <b>jqExportMap</b> is a jQuery plugin used to export the map as an image (PNG/JPEG) or as a PDF file 
+      (use <a href="https://github.com/MrRio/jsPDF">MrRio/jsPDF</a> lib).
+    </li></ul>
+  </div>
 
-	<!-- Map div -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options">
-		<h2>Options:</h2>
-		<ul><li>
-			Title of the map : <input id="title" value ="Title" />
-		</li><li>
-			Font: <select id="font" onchange="setControlStyle()">
-				<option value="serif">serif</option>
-				<option value="sans-serif">sans-serif</option>
-				<option value="monospace">monospace</option>
-				<option value="Comic Sans MS">Comic Sans MS</option>
-			</select>
-		</li><li>
-			<input id="italic" type="checkbox" onchange="setControlStyle()"/><label for="italic"> italic</label>
-			<input id="bold" type="checkbox" onchange="setControlStyle()"/><label for="bold"> bold</label>
-		</li><li>
-			Color: <select id="color" onchange="setControlStyle()">
-				<option value="black">black</option>
-				<option value="red">red</option>
-				<option value="green">green</option>
-				<option value="blue">blue</option>
-			</select>
-		</li><li>
-			<hr />
-			<input id="attribution" type="checkbox" checked="checked" /><label for="attribution">Draw attribution on canvas</label>
-		</li></ul>
-	</div>
-	<div class="block">
-		<a id="export-jpg" class="btn" download="map.jpg" target="_new">
-			Export JPEG
-		</a>
-		<a id="export-png" class="btn" download="map.png" target="_new">
-			Export PNG
-		</a>
-		<a id="export-pdf" class="btn" download="map.pdf" data-margin="10" target="_new">
-			Export PDF
-		</a>
-	</div>
+  <div class="options">
+    <h2>Options:</h2>
+    <ul><li>
+      Title of the map : <input id="title" value ="Title" />
+    </li><li>
+      Font: <select id="font" onchange="setControlStyle()">
+        <option value="sans-serif">sans-serif</option>
+        <option value="serif">serif</option>
+        <option value="monospace">monospace</option>
+        <option value="Comic Sans MS">Comic Sans MS</option>
+      </select>
+    </li><li>
+      <input id="italic" type="checkbox" onchange="setControlStyle()"/><label for="italic"> italic</label>
+      <input id="bold" type="checkbox" onchange="setControlStyle()"/><label for="bold"> bold</label>
+    </li><li>
+      Color: <select id="color" onchange="setControlStyle()">
+        <option value="black">black</option>
+        <option value="red">red</option>
+        <option value="green">green</option>
+        <option value="blue">blue</option>
+      </select>
+    </li><li>
+      <hr />
+      <label><input id="attribution" type="checkbox" checked="checked" />Draw attribution on canvas</label>
+      <br/>
+      <label><input id="coordinate" type="checkbox" checked="checked" />Draw coordinbates on canvas</label>
+    </li></ul>
+  </div>
+  <div class="block">
+    <a id="export-jpg" class="btn" download="map.jpg" target="_new">
+      Export JPEG
+    </a>
+    <a id="export-png" class="btn" download="map.png" target="_new">
+      Export PNG
+    </a>
+    <a id="export-pdf" class="btn" download="map.pdf" data-margin="10" target="_new">
+      Export PDF
+    </a>
+  </div>
 
-	<script type="text/javascript">
+  <script type="text/javascript">
 
-		// The map
-		var map = new ol.Map
-			({	target: 'map',
-				view: new ol.View
-				({	zoom: 14,
-					center: [270148, 6247782]
-				}),
-				controls: ol.control.defaults({ "attribution": false }),
-				layers: [new ol.layer.Tile(
-					{	name: "OSM",
-						source: new ol.source.OSM(),
-						visible: true
-					})]
-			});
+    // The map
+    var map = new ol.Map({
+        target: 'map',
+        view: new ol.View ({
+          zoom: 14,
+          center: [270148, 6247782]
+        }),
+        controls: ol.control.defaults({ "attribution": false }),
+        layers: [new ol.layer.Tile({
+          name: "OSM",
+          source: new ol.source.OSM(),
+          visible: true
+        })]
+      });
 
-		// CanvasScaleLine control
-		var scaleLineControl = new ol.control.CanvasScaleLine();
-		map.addControl(scaleLineControl);
-				
-		// CanvasAttribution control
-		var attributionControl = new ol.control.CanvasAttribution();
-		map.addControl(attributionControl);
-		attributionControl.setCanvas($("#attribution").prop("checked"));
+    // CanvasScaleLine control
+    var scaleLineControl = new ol.control.CanvasScaleLine();
+    map.addControl(scaleLineControl);
+        
+    // CanvasAttribution control
+    var attributionControl = new ol.control.CanvasAttribution();
+    map.addControl(attributionControl);
+    attributionControl.setCanvas($("#attribution").prop("checked"));
 
-		// CanvasTitle control
-		var titleControl = new ol.control.CanvasTitle();
-		map.addControl(titleControl);
+    // CanvasTitle control
+    var titleControl = new ol.control.CanvasTitle();
+    map.addControl(titleControl);
 
-		// setStyle function: Change control style
-		function setControlStyle(c)
-		{	if (!c) 
-			{	setControlStyle(scaleLineControl);
-				setControlStyle(attributionControl);
-				setControlStyle(titleControl);
-				return;
-			}
-			c.setStyle (new ol.style.Style(
-					{	text: new ol.style.Text(
-						{	text: $("#title").val(),
-							font: ($("#italic").prop("checked")?"italic ":"") 
-								+ ($("#bold").prop("checked")?"bold ":"")
-								+ (c===titleControl?28:10)+"px "+$("#font").val(),
-							fill: new ol.style.Fill(
-								{	color: $("#color").val()
-								})
-						}),
-						stroke: new ol.style.Stroke({ width: 2, color: $("#color").val() })
-					})); 
-		}
-		setControlStyle();
+    // Coordinate control
+    var positionControl = new ol.control.CenterPosition({
+      canvas: $("#coordinate").prop("checked"),
+      coordinateFormat: function(coord) {
+        return ol.coordinate.toStringHDMS(coord);
+      },
+      projection: 'EPSG:4326'
+    });
+    map.addControl(positionControl);
 
-		// Handle propertie changes
-		$("#title").on("change", function () { titleControl.setTitle(this.value); });
-		$("#attribution").on("change", function () { attributionControl.setCanvas($(this).prop("checked")); });
+    // setStyle function: Change control style
+    function setControlStyle(c) {
+      if (!c) {
+        setControlStyle(scaleLineControl);
+        setControlStyle(attributionControl);
+        setControlStyle(titleControl);
+        setControlStyle(positionControl);
+        return;
+      }
+      c.setStyle (new ol.style.Style({
+        text: new ol.style.Text({
+          text: $("#title").val(),
+          font: ($("#italic").prop("checked")?"italic ":"") 
+            + ($("#bold").prop("checked")?"bold ":"")
+            + (c===titleControl?28:12)+"px "+$("#font").val(),
+          fill: new ol.style.Fill({
+            color: $("#color").val()
+          })
+        }),
+        stroke: new ol.style.Stroke({ width: 2, color: $("#color").val() })
+      })); 
+    }
+    setControlStyle();
 
-		
-		/** Export PNG / JPEG */
-		$(document).ready(function()
-		{	if (map) exportMap(Array.prototype.slice.call(document.querySelectorAll("a[download]")), map);
-		});
+    // Handle propertie changes
+    $("#title").on("change", function () { titleControl.setTitle(this.value); });
+    $("#attribution").on("change", function () { attributionControl.setCanvas($(this).prop("checked")); });
+    $("#coordinate").on("change", function () { positionControl.setCanvas($(this).prop("checked")); });
 
-	</script>
+    
+    /** Export PNG / JPEG */
+    $(document).ready(function() {
+      if (map) exportMap(Array.prototype.slice.call(document.querySelectorAll("a[download]")), map);
+    });
+
+  </script>
 
 </body>
 </html>
