@@ -23,7 +23,7 @@ var ol_control_CanvasTitle = function(options) {
   if (!options) options = {};
   
   var elt = ol_ext_element.create('DIV', {
-    className: (options.className || '') + ' ol-title ol-unselectable',
+    className: (options.className || '') + ' ol-control-title ol-unselectable',
     style: {
       display: 'block',
       visibility: 'hidden'

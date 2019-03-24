@@ -2723,7 +2723,7 @@ ol.control.CanvasScaleLine.prototype.drawScale_ = function(e)
 ol.control.CanvasTitle = function(options) {
   if (!options) options = {};
   var elt = ol.ext.element.create('DIV', {
-    className: (options.className || '') + ' ol-title ol-unselectable',
+    className: (options.className || '') + ' ol-control-title ol-unselectable',
     style: {
       display: 'block',
       visibility: 'hidden'
