@@ -29,6 +29,7 @@ import ol_ext_element from '../util/element'
  *  @param {function} oninfo callback on click on info button, if none no info button is shown DEPRECATED: use on(info) instead
  *  @param {boolean} extent add an extent button to zoom to the extent of the layer
  *  @param {function} onextent callback when click on extent, default fits view to extent
+ *  @param {number} drawDelay delay in ms to redraw the layer (usefull to prevent flickering when manipulating the layers)
  *
  * Layers attributes that control the switcher
  *	- allwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false
@@ -119,6 +120,8 @@ var ol_control_LayerSwitcher = function(options) {
     element: element,
     target: options.target
   });
+
+  this.set('drawDelay',options.drawDelay||0);
 };
 ol_ext_inherits(ol_control_LayerSwitcher, ol_control_Control);
 
@@ -312,7 +315,7 @@ ol_control_LayerSwitcher.prototype.drawPanel = function() {
   var self = this;
   // Multiple event simultaneously / draw once => put drawing in the event queue
   this.dcount++;
-  setTimeout (function(){ self.drawPanel_(); }, 0);
+  setTimeout (function(){ self.drawPanel_(); }, this.get('drawDelay') || 0);
 };
 
 /** Delayed draw panel control 
