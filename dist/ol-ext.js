@@ -14882,7 +14882,9 @@ ol.interaction.SnapGuides.prototype.clearGuides = function(features)
 {	if (!features) this.overlaySource_.clear();
 	else
 	{	for (var i=0, f; f=features[i]; i++)
-		{	this.overlaySource_.removeFeature(f);
+		{	try {
+				this.overlaySource_.removeFeature(f);
+			} catch(e) {/* nothing to to */}
 		}
 	}
 }
