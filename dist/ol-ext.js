@@ -1507,6 +1507,7 @@ ol.control.SearchGeoportail.prototype.searchCommune = function (f, cback) {
  *  @param {function} oninfo callback on click on info button, if none no info button is shown DEPRECATED: use on(info) instead
  *  @param {boolean} extent add an extent button to zoom to the extent of the layer
  *  @param {function} onextent callback when click on extent, default fits view to extent
+ *  @param {number} drawDelay delay in ms to redraw the layer (usefull to prevent flickering when manipulating the layers)
  *
  * Layers attributes that control the switcher
  *	- allwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false
@@ -1588,6 +1589,7 @@ ol.control.LayerSwitcher = function(options) {
     element: element,
     target: options.target
   });
+  this.set('drawDelay',options.drawDelay||0);
 };
 ol.ext.inherits(ol.control.LayerSwitcher, ol.control.Control);
 /** List of tips for internationalization purposes
@@ -1765,7 +1767,7 @@ ol.control.LayerSwitcher.prototype.drawPanel = function() {
   var self = this;
   // Multiple event simultaneously / draw once => put drawing in the event queue
   this.dcount++;
-  setTimeout (function(){ self.drawPanel_(); }, 0);
+  setTimeout (function(){ self.drawPanel_(); }, this.get('drawDelay') || 0);
 };
 /** Delayed draw panel control 
  * @private
@@ -2562,30 +2564,28 @@ ol.control.CanvasAttribution.prototype.drawAttribution_ = function(e) {
 		.map(function(el) {
 			text += (text ? " - ":"") + el.textContent;
 		});
-	// Get size of the scale div
-	var position = {left: this.element.offsetLeft, top: this.element.offsetTop};
 	// Retina device
 	var ratio = e.frameState.pixelRatio;
 	ctx.save();
 	ctx.scale(ratio,ratio);
-	// Position if transform:scale()
-	var container = this.getMap().getTargetElement();
-	var scx = container.offsetWidth / container.getBoundingClientRect().width;
-	var scy = container.offsetHeight / container.getBoundingClientRect().height;
-	position.left *= scx;
-	position.top *= scy;
-	position.right = position.left + this.element.offsetWidth;
-	position.bottom = position.top + this.element.offsetHeight;
+	// Position
+	var eltRect = this.element.getBoundingClientRect();
+	var mapRect = this.getMap().getViewport().getBoundingClientRect();
+	var sc = ctx.canvas.width / mapRect.width;
+	ctx.translate((eltRect.left-mapRect.left)*sc, (eltRect.top-mapRect.top)*sc);
+	var h = this.element.clientHeight;
+	var w = this.element.clientWidth;
+	var left = w/2;
 	// Draw scale text
 	ctx.beginPath();
 		ctx.strokeStyle = this.fontStrokeStyle_;
 		ctx.fillStyle = this.fontFillStyle_;
 		ctx.lineWidth = this.fontStrokeWidth_;
-		ctx.textAlign = "right";
-	ctx.textBaseline ="bottom";
+		ctx.textAlign = "center";
+		ctx.textBaseline ="middle";
 		ctx.font = this.font_;
-	ctx.strokeText(text, position.right, position.bottom);
-		ctx.fillText(text, position.right, position.bottom);
+		ctx.strokeText(text, left, h/2);
+		ctx.fillText(text, left, h/2);
 	ctx.closePath();
 	ctx.restore();
 };
@@ -2773,7 +2773,7 @@ ol.control.CanvasTitle.prototype.getTitle = function () {
  * @api stable
  */
 ol.control.CanvasTitle.prototype.setVisible = function (b) {
-  this.element.style.display = (b ? '' : 'none');
+  this.element.style.display = (b ? 'block' : 'none');
   if (this.getMap()) this.getMap().renderSync();
 };
 /**
@@ -2795,9 +2795,11 @@ ol.control.CanvasTitle.prototype._draw = function(e) {
   var ratio = e.frameState.pixelRatio;
   ctx.save();
   ctx.scale(ratio,ratio);
+  // Position
   var eltRect = this.element.getBoundingClientRect();
-  var mapRect = this.getMap().getTargetElement().getBoundingClientRect();
-  ctx.translate(eltRect.left-mapRect.left, eltRect.top-mapRect.top);
+  var mapRect = this.getMap().getViewport().getBoundingClientRect();
+  var sc = ctx.canvas.width / mapRect.width;
+  ctx.translate((eltRect.left-mapRect.left)*sc, (eltRect.top-mapRect.top)*sc);
   var h = this.element.clientHeight;
   var w = this.element.clientWidth;
   var left = w/2;
@@ -2909,13 +2911,13 @@ ol.control.CenterPosition.prototype._draw = function(e) {
   var ratio = e.frameState.pixelRatio;
   ctx.save();
   ctx.scale(ratio,ratio);
-  // Poistion
+  // Position
   var eltRect = this.element.getBoundingClientRect();
-  var mapRect = this.getMap().getTargetElement().getBoundingClientRect();
-  ctx.translate(eltRect.left-mapRect.left, eltRect.top-mapRect.top);
+  var mapRect = this.getMap().getViewport().getBoundingClientRect();
+  var sc = ctx.canvas.width / mapRect.width;
+  ctx.translate((eltRect.left-mapRect.left)*sc, (eltRect.top-mapRect.top)*sc);
   var h = this.element.clientHeight;
   var w = this.element.clientWidth;
-  var left = w/2;
   ctx.beginPath();
   ctx.fillStyle = ol.color.asString(this.getTextFill().getColor());
   ctx.strokeStyle = ol.color.asString(this.getTextStroke().getColor());
@@ -2923,8 +2925,8 @@ ol.control.CenterPosition.prototype._draw = function(e) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.font = this.getTextFont();
-  if (ctx.lineWidth) ctx.strokeText(coord, left, h/2);
-  ctx.fillText(coord, left, h/2);
+  if (ctx.lineWidth) ctx.strokeText(coord, w/2, h/2);
+  ctx.fillText(coord, w/2, h/2);
   ctx.closePath();
   ctx.restore();
 };
@@ -19471,6 +19473,11 @@ ol.Overlay.PopupFeature.prototype.setTemplate = function(template) {
  * @param {ol.Feature|Array<ol.Feature>} features The features on the popup
  */
 ol.Overlay.PopupFeature.prototype.show = function(coordinate, features) {
+  if (coordinate instanceof ol.Feature 
+    || (coordinate instanceof Array && coordinate[0] instanceof ol.Feature)) {
+    features = coordinate;
+    coordinate = null;
+  }
   if (!(features instanceof Array)) features = [features];
   this._features = features.slice();
   if (!this._count) this._count = 1;
@@ -19574,10 +19581,13 @@ ol.Overlay.PopupFeature.prototype._getHtml = function(feature) {
         ol.Overlay.Popup.prototype.show.call(this, this.getPosition(), html);
       }.bind(this));
   }
-  this._noselect = true;
-  this._select.getFeatures().clear();
-  this._select.getFeatures().push(feature);
-  this._noselect = false;
+  // Use select interaction
+  if (this._select) {
+    this._noselect = true;
+    this._select.getFeatures().clear();
+    this._select.getFeatures().push(feature);
+    this._noselect = false;
+  }
   return html;
 };
 /** Get a function to use as format to get local string for an attribute
