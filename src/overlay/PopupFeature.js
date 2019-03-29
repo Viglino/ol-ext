@@ -3,6 +3,7 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+import ol_Feature from 'ol/Feature'
 import ol_ext_inherits from '../util/ext'
 import ol_Overlay_Popup from './Popup'
 import ol_ext_element from '../util/element'
@@ -65,6 +66,11 @@ ol_Overlay_PopupFeature.prototype.setTemplate = function(template) {
  * @param {ol.Feature|Array<ol.Feature>} features The features on the popup
  */
 ol_Overlay_PopupFeature.prototype.show = function(coordinate, features) {
+  if (coordinate instanceof ol_Feature 
+    || (coordinate instanceof Array && coordinate[0] instanceof ol_Feature)) {
+    features = coordinate;
+    coordinate = null;
+  }
   if (!(features instanceof Array)) features = [features];
   this._features = features.slice();
   if (!this._count) this._count = 1;
@@ -171,10 +177,13 @@ ol_Overlay_PopupFeature.prototype._getHtml = function(feature) {
         ol_Overlay_Popup.prototype.show.call(this, this.getPosition(), html);
       }.bind(this));
   }
-  this._noselect = true;
-  this._select.getFeatures().clear();
-  this._select.getFeatures().push(feature);
-  this._noselect = false;
+  // Use select interaction
+  if (this._select) {
+    this._noselect = true;
+    this._select.getFeatures().clear();
+    this._select.getFeatures().push(feature);
+    this._noselect = false;
+  }
   return html;
 };
 
