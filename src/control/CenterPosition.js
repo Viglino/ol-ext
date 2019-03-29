@@ -107,14 +107,14 @@ ol_control_CenterPosition.prototype._draw = function(e) {
   var ratio = e.frameState.pixelRatio;
   ctx.save();
   ctx.scale(ratio,ratio);
-  // Poistion
+  // Position
   var eltRect = this.element.getBoundingClientRect();
-  var mapRect = this.getMap().getTargetElement().getBoundingClientRect();
-  ctx.translate(eltRect.left-mapRect.left, eltRect.top-mapRect.top);
+  var mapRect = this.getMap().getViewport().getBoundingClientRect();
+  var sc = ctx.canvas.width / mapRect.width;
+  ctx.translate((eltRect.left-mapRect.left)*sc, (eltRect.top-mapRect.top)*sc);
 
   var h = this.element.clientHeight;
   var w = this.element.clientWidth;
-  var left = w/2;
 
   ctx.beginPath();
   ctx.fillStyle = ol_color_asString(this.getTextFill().getColor());
@@ -123,8 +123,8 @@ ol_control_CenterPosition.prototype._draw = function(e) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.font = this.getTextFont();
-  if (ctx.lineWidth) ctx.strokeText(coord, left, h/2);
-  ctx.fillText(coord, left, h/2);
+  if (ctx.lineWidth) ctx.strokeText(coord, w/2, h/2);
+  ctx.fillText(coord, w/2, h/2);
   ctx.closePath();
 
   ctx.restore();

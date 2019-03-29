@@ -79,7 +79,7 @@ ol_control_CanvasTitle.prototype.getTitle = function () {
  * @api stable
  */
 ol_control_CanvasTitle.prototype.setVisible = function (b) {
-  this.element.style.display = (b ? '' : 'none');
+  this.element.style.display = (b ? 'block' : 'none');
   if (this.getMap()) this.getMap().renderSync();
 };
 
@@ -104,9 +104,11 @@ ol_control_CanvasTitle.prototype._draw = function(e) {
   var ratio = e.frameState.pixelRatio;
   ctx.save();
   ctx.scale(ratio,ratio);
+  // Position
   var eltRect = this.element.getBoundingClientRect();
-  var mapRect = this.getMap().getTargetElement().getBoundingClientRect();
-  ctx.translate(eltRect.left-mapRect.left, eltRect.top-mapRect.top);
+  var mapRect = this.getMap().getViewport().getBoundingClientRect();
+  var sc = ctx.canvas.width / mapRect.width;
+  ctx.translate((eltRect.left-mapRect.left)*sc, (eltRect.top-mapRect.top)*sc);
 
   var h = this.element.clientHeight;
   var w = this.element.clientWidth;

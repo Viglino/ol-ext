@@ -108,33 +108,31 @@ ol_control_CanvasAttribution.prototype.drawAttribution_ = function(e) {
 			text += (text ? " - ":"") + el.textContent;
 		});
 
-	// Get size of the scale div
-	var position = {left: this.element.offsetLeft, top: this.element.offsetTop};
 	// Retina device
 	var ratio = e.frameState.pixelRatio;
 	ctx.save();
 	ctx.scale(ratio,ratio);
 
-	// Position if transform:scale()
-	var container = this.getMap().getTargetElement();
-	var scx = container.offsetWidth / container.getBoundingClientRect().width;
-	var scy = container.offsetHeight / container.getBoundingClientRect().height;
-	position.left *= scx;
-	position.top *= scy;
+	// Position
+	var eltRect = this.element.getBoundingClientRect();
+	var mapRect = this.getMap().getViewport().getBoundingClientRect();
+	var sc = ctx.canvas.width / mapRect.width;
+	ctx.translate((eltRect.left-mapRect.left)*sc, (eltRect.top-mapRect.top)*sc);
 
-	position.right = position.left + this.element.offsetWidth;
-	position.bottom = position.top + this.element.offsetHeight;
-
+	var h = this.element.clientHeight;
+	var w = this.element.clientWidth;
+	var left = w/2;
+  
 	// Draw scale text
 	ctx.beginPath();
 		ctx.strokeStyle = this.fontStrokeStyle_;
 		ctx.fillStyle = this.fontFillStyle_;
 		ctx.lineWidth = this.fontStrokeWidth_;
-		ctx.textAlign = "right";
-	ctx.textBaseline ="bottom";
+		ctx.textAlign = "center";
+		ctx.textBaseline ="middle";
 		ctx.font = this.font_;
-	ctx.strokeText(text, position.right, position.bottom);
-		ctx.fillText(text, position.right, position.bottom);
+		ctx.strokeText(text, left, h/2);
+		ctx.fillText(text, left, h/2);
 	ctx.closePath();
 
 	ctx.restore();
