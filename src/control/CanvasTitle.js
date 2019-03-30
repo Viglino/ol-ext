@@ -5,7 +5,6 @@
 
 import ol_ext_inherits from '../util/ext'
 import {asString as ol_color_asString} from 'ol/color'
-import ol_style_Style from 'ol/style/Style'
 
 import ol_control_CanvasBase from './CanvasBase'
 import ol_ext_element from '../util/element'

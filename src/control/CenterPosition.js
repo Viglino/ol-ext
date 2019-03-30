@@ -5,7 +5,8 @@
 
 import ol_ext_inherits from '../util/ext'
 import {asString as ol_color_asString} from 'ol/color'
-import ol_style_Style from 'ol/style/Style'
+import {toStringXY as ol_coordinate_toStringXY} from 'ol/coordinate'
+import {transform as ol_proj_transform} from 'ol/proj'
 
 import ol_control_CanvasBase from './CanvasBase'
 import ol_ext_element from '../util/element'
@@ -40,7 +41,7 @@ var ol_control_CenterPosition = function(options) {
 
   this.set('projection', options.projection);
   this.setCanvas(options.canvas);
-  this._format = (typeof options.coordinateFormat === 'function') ? options.coordinateFormat : ol.coordinate.toStringXY; 
+  this._format = (typeof options.coordinateFormat === 'function') ? options.coordinateFormat : ol_coordinate_toStringXY; 
 };
 ol_ext_inherits(ol_control_CenterPosition, ol_control_CanvasBase);
 
