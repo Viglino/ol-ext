@@ -106,8 +106,7 @@ ol_control_CanvasTitle.prototype._draw = function(e) {
   // Position
   var eltRect = this.element.getBoundingClientRect();
   var mapRect = this.getMap().getViewport().getBoundingClientRect();
-  var sc = ctx.canvas.width / mapRect.width;
-  ctx.translate((eltRect.left-mapRect.left)*sc, (eltRect.top-mapRect.top)*sc);
+  ctx.translate(eltRect.left-mapRect.left, eltRect.top-mapRect.top);
 
   var h = this.element.clientHeight;
   var w = this.element.clientWidth;

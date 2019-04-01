@@ -26,7 +26,7 @@ var ol_control_CanvasAttribution = function(options)
 	ol_control_Attribution.call(this, options);
 
 	// Draw in canvas
-	this.isCanvas_ = !!options.canvas;
+	this.setCanvas(!!options.canvas);
 
 	// Get style options
 	if (!options) options={};
@@ -41,6 +41,7 @@ ol_ext_inherits(ol_control_CanvasAttribution, ol_control_Attribution);
  */
 ol_control_CanvasAttribution.prototype.setCanvas = function (b)
 {	this.isCanvas_ = b;
+	if (b) this.setCollapsed(false);
 	this.element.style.visibility = b ? "hidden":"visible";
 	if (this.map_) this.map_.renderSync();
 };
@@ -116,12 +117,11 @@ ol_control_CanvasAttribution.prototype.drawAttribution_ = function(e) {
 	// Position
 	var eltRect = this.element.getBoundingClientRect();
 	var mapRect = this.getMap().getViewport().getBoundingClientRect();
-	var sc = ctx.canvas.width / mapRect.width;
-	ctx.translate((eltRect.left-mapRect.left)*sc, (eltRect.top-mapRect.top)*sc);
+	ctx.translate(eltRect.left-mapRect.left, eltRect.top-mapRect.top);
 
 	var h = this.element.clientHeight;
 	var w = this.element.clientWidth;
-	var left = w/2;
+	var left = w/2 + this.element.querySelectorAll('button')[0].clientWidth;
   
 	// Draw scale text
 	ctx.beginPath();

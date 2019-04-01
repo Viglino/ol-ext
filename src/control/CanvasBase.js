@@ -5,6 +5,8 @@ import ol_style_Style from 'ol/style/Style'
 import ol_style_Fill from 'ol/style/Fill'
 import ol_style_Stroke from 'ol/style/Stroke'
 import ol_style_Text from 'ol/style/Text'
+import ol_layer_Image from 'ol/layer/Image'
+import ol_source_ImageCanvas from 'ol/source/ImageCanvas'
 
 /**
  * @classdesc 
@@ -43,9 +45,9 @@ ol_control_CanvasBase.prototype.setMap = function (map) {
   ol_control_Control.prototype.setMap.call(this, map);
   if (oldmap) oldmap.renderSync();
 
-  // Get change redraw the map
   if (map) {
     this._listener = map.on('postcompose', this._draw.bind(this));
+    // Get a canvas layer on top of the map
   }
 };
 
@@ -55,10 +57,30 @@ ol_control_CanvasBase.prototype.setMap = function (map) {
 ol_control_CanvasBase.prototype.getContext = function(e) {
   var ctx = e.context;
   if (!ctx) {
-    var c = this.getMap().getViewport().querySelectorAll('canvas');
+    var c = this.getMap().getViewport().querySelectorAll('canvas.ol-fixed-canvas-layer');
     for (var i=c.length-1; i>=0; i--) {
       ctx = c[i].getContext('2d');
       if (ctx.canvas.width && ctx.canvas.height) break;
+    }
+    if (!ctx) {
+      // Add a fixed canvas layer on top of the map
+      var canvas = document.createElement('canvas');
+      var canvasLayer = new ol_layer_Image({
+        source: new ol_source_ImageCanvas({
+          canvasFunction: function(extent, resolution, pixelRatio, size) {
+            canvas.setAttribute('width', size[0]);
+            canvas.setAttribute('height', size[1]);
+            return canvas;
+          }.bind(this)
+        }),
+        zIndex: 999
+      });
+      canvasLayer.setMap(this.getMap());
+      // Fix the layer
+      canvasLayer.on('postrender', function(e) {
+        e.context.canvas.classList.add('ol-fixed-canvas-layer');
+        e.context.canvas.style.width = (e.context.canvas.width / e.frameState.pixelRatio) + 'px';
+      }.bind(this));
     }
   }
   return ctx;
