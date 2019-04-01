@@ -497,9 +497,9 @@ ol.control.CanvasBase.prototype.setMap = function (map) {
   }
   ol.control.Control.prototype.setMap.call(this, map);
   if (oldmap) oldmap.renderSync();
-  // Get change redraw the map
   if (map) {
     this._listener = map.on('postcompose', this._draw.bind(this));
+    // Get a canvas layer on top of the map
   }
 };
 /** Get map Canvas
@@ -508,10 +508,30 @@ ol.control.CanvasBase.prototype.setMap = function (map) {
 ol.control.CanvasBase.prototype.getContext = function(e) {
   var ctx = e.context;
   if (!ctx) {
-    var c = this.getMap().getViewport().querySelectorAll('canvas');
+    var c = this.getMap().getViewport().querySelectorAll('canvas.ol-fixed-canvas-layer');
     for (var i=c.length-1; i>=0; i--) {
       ctx = c[i].getContext('2d');
       if (ctx.canvas.width && ctx.canvas.height) break;
+    }
+    if (!ctx) {
+      // Add a fixed canvas layer on top of the map
+      var canvas = document.createElement('canvas');
+      var canvasLayer = new ol.layer.Image({
+        source: new ol.source.ImageCanvas({
+          canvasFunction: function(extent, resolution, pixelRatio, size) {
+            canvas.setAttribute('width', size[0]);
+            canvas.setAttribute('height', size[1]);
+            return canvas;
+          }.bind(this)
+        }),
+        zIndex: 999
+      });
+      canvasLayer.setMap(this.getMap());
+      // Fix the layer
+      canvasLayer.on('postrender', function(e) {
+        e.context.canvas.classList.add('ol-fixed-canvas-layer');
+        e.context.canvas.style.width = (e.context.canvas.width / e.frameState.pixelRatio) + 'px';
+      }.bind(this));
     }
   }
   return ctx;
@@ -2494,7 +2514,7 @@ ol.control.CanvasAttribution = function(options)
 {	if (!options) options = {};
 	ol.control.Attribution.call(this, options);
 	// Draw in canvas
-	this.isCanvas_ = !!options.canvas;
+	this.setCanvas(!!options.canvas);
 	// Get style options
 	if (!options) options={};
 	if (!options.style) options.style = new ol.style.Style();
@@ -2507,6 +2527,7 @@ ol.ext.inherits(ol.control.CanvasAttribution, ol.control.Attribution);
  */
 ol.control.CanvasAttribution.prototype.setCanvas = function (b)
 {	this.isCanvas_ = b;
+	if (b) this.setCollapsed(false);
 	this.element.style.visibility = b ? "hidden":"visible";
 	if (this.map_) this.map_.renderSync();
 };
@@ -2571,11 +2592,10 @@ ol.control.CanvasAttribution.prototype.drawAttribution_ = function(e) {
 	// Position
 	var eltRect = this.element.getBoundingClientRect();
 	var mapRect = this.getMap().getViewport().getBoundingClientRect();
-	var sc = ctx.canvas.width / mapRect.width;
-	ctx.translate((eltRect.left-mapRect.left)*sc, (eltRect.top-mapRect.top)*sc);
+	ctx.translate(eltRect.left-mapRect.left, eltRect.top-mapRect.top);
 	var h = this.element.clientHeight;
 	var w = this.element.clientWidth;
-	var left = w/2;
+	var left = w/2 + this.element.querySelectorAll('button')[0].clientWidth;
 	// Draw scale text
 	ctx.beginPath();
 		ctx.strokeStyle = this.fontStrokeStyle_;
@@ -2798,8 +2818,7 @@ ol.control.CanvasTitle.prototype._draw = function(e) {
   // Position
   var eltRect = this.element.getBoundingClientRect();
   var mapRect = this.getMap().getViewport().getBoundingClientRect();
-  var sc = ctx.canvas.width / mapRect.width;
-  ctx.translate((eltRect.left-mapRect.left)*sc, (eltRect.top-mapRect.top)*sc);
+  ctx.translate(eltRect.left-mapRect.left, eltRect.top-mapRect.top);
   var h = this.element.clientHeight;
   var w = this.element.clientWidth;
   var left = w/2;
@@ -2914,8 +2933,7 @@ ol.control.CenterPosition.prototype._draw = function(e) {
   // Position
   var eltRect = this.element.getBoundingClientRect();
   var mapRect = this.getMap().getViewport().getBoundingClientRect();
-  var sc = ctx.canvas.width / mapRect.width;
-  ctx.translate((eltRect.left-mapRect.left)*sc, (eltRect.top-mapRect.top)*sc);
+  ctx.translate(eltRect.left-mapRect.left, eltRect.top-mapRect.top);
   var h = this.element.clientHeight;
   var w = this.element.clientWidth;
   ctx.beginPath();
@@ -6294,6 +6312,135 @@ ol.control.Permalink.prototype.layerChange_ = function() {
 	getLayers(this.getMap().getLayers().getArray());
 	this.layerStr_ = l;
 	this.viewChange_();
+};
+
+/*	Copyright (c) 2019 Jean-Marc VIGLINO,
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Print control to get an image of the map
+ *
+ * @constructor
+ * @fire print
+ * @fire printing
+ * @extends {ol.control.Control}
+ * @param {Object=} options Control options.
+ *	@param {String} options.className class of the control
+ *	@param {string} options.imageType A string indicating the image format, default image/jpeg
+ *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
+ */
+ol.control.Print = function(options) {
+	if (!options) options = {};
+	var element = ol.ext.element.create('DIV', {
+		className: (options.className || 'ol-print')
+	});
+  if (!options.target) {
+		element.classList.add('ol-unselectable', 'ol-control');
+    ol.ext.element.create('BUTTON', {
+			type: 'button',
+			click: function() { this.print(); }.bind(this),
+			parent: element
+		});
+	}
+	ol.control.Control.call(this, {
+    element: element,
+		target: options.target
+	});
+	this.set('imageType', options.imageType || 'image/jpeg');
+	this.set('quality', options.quality || .8);
+};
+ol.ext.inherits(ol.control.Print, ol.control.Control);
+/** Print the map
+ * @param {function} cback a callback function that take a string containing the requested data URI.
+ * @param {Object} options
+ *	@param {string} options.imageType A string indicating the image format, default the control one
+ *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
+ *  @param {*} options.any any options passed to the print event when fired
+ * @api
+ */
+ol.control.Print.prototype.print = function(options) {
+	options = options || {};
+	var imageType = options.imageType || this.get('imageType');
+	var quality = options.quality || this.get('quality');
+	if (this.getMap()) {
+		this.dispatchEvent(Object.assign({ 
+			type: 'printing',
+		}, options));
+		this.getMap().once('rendercomplete', function(event) {
+			var canvas, ctx;
+			// ol <= 5 > get the canavs
+			if (event.context) {
+				canvas = event.context.canvas;
+			} else {
+				// ol6 > create canvas using layer canvas
+				this.getMap().getViewport().querySelectorAll('.ol-layer').forEach(function(c) {
+					if (c.width) {
+						// Create a canvas if none
+						if (!canvas) {
+							canvas = document.createElement('canvas');
+							var size = this.getMap().getSize();
+							canvas.width = size[0];
+							canvas.height = size[1];
+							ctx = canvas.getContext('2d');
+							if (/jp.*g$/.test(imageType)) {
+								ctx.fillStyle = "white";
+								ctx.fillRect(0,0,canvas.width,canvas.height);		
+							}
+						}
+						ctx.save();
+						// opacity
+						ctx.globalAlpha = c.style.opacity || 1;
+						// transform
+						var tr = ol.ext.element.getStyle(c,'transform') || ol.ext.element.getStyle(c,'-webkit-transform');
+						if (/^matrix/.test(tr)) {
+							tr = tr.replace(/^matrix\(|\)$/g,'').split(',');
+							tr.forEach(function(t,i) { tr[i] = parseFloat(t); });
+							ctx.transform(tr[0],tr[1],tr[2],tr[3],tr[4],tr[5]);
+							ctx.drawImage(c, 0, 0);
+						} else {
+							ctx.drawImage(c, 0, 0, ol.ext.element.getStyle(c,'width'), ol.ext.element.getStyle(c,'height'));
+						}
+						ctx.restore();
+					}
+				}.bind(this));
+			}
+			// Calculate print format
+			var size = [210,297], w, h, position, orient, format = 'a4';
+			var margin = 10;
+			if (canvas) {
+				// Calculate size
+				if (canvas.width > canvas.height) {
+					orient = 'landscape';
+					size = [size[1],size[0]];
+				} else {
+					orient = 'portrait';
+				}
+				var sc = Math.min ((size[0]-2*margin)/canvas.width,(size[1]-2*margin)/canvas.height);
+				w = sc * canvas.width;
+				h = sc * canvas.height;
+				// Image position
+				position = [(size[0] - w)/2, (size[1] - h)/2];
+			}
+			// Fire print event
+			var e = Object.assign({ 
+				type: 'print',
+				print: {
+					format: format,
+					orientation: orient,
+					unit: 'mm',
+					size: size,
+					position: position,
+					imageWidth: w,
+					imageHeight: h
+				},
+				image: canvas ? canvas.toDataURL(imageType, quality) : null,
+				imageType: imageType,
+				canvas: canvas
+			}, options);
+			this.dispatchEvent(e);
+		}.bind(this));
+		this.getMap().render();
+	}
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
