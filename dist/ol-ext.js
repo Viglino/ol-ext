@@ -22444,7 +22444,7 @@ ol.style.FlowLine.prototype._render = function(geom, e) {
     ctx.save();
       ctx.lineJoin = 'round';
       ctx.lineCap = this._lineCap || 'mitter';
-      geoms.forEach((g) => {
+      geoms.forEach(function(g) {
         var step = k++/nb;
         ctx.lineWidth = this.getWidth(e.feature, step) * e.pixelRatio;
         ctx.strokeStyle = this.getColor(e.feature, step);
@@ -22454,7 +22454,7 @@ ol.style.FlowLine.prototype._render = function(geom, e) {
           ctx.lineTo(p[0],p[1]);
           ctx.stroke();
         }
-      });
+      }.bind(this));
     ctx.restore();
   }
 };
