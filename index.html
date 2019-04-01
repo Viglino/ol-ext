@@ -84,7 +84,11 @@
       width: 100%;
     }
   }
-
+  @media (max-width: 950px) {
+    header h1 span {
+      display: none;
+    }
+  }
   .example,
   .desc {
     background-color: #f5f5f5;
@@ -238,7 +242,9 @@
     
   <header role="navigation" class="navbar navbar-fixed-top">
     <div class="container">
-      <h1><img src="http://openlayers.org/en/master/examples/resources/logo-70x70.png">&nbsp;ol-ext: Extensions for OpenLayers (ol)</h1>
+      <h1><img src="http://openlayers.org/en/master/examples/resources/logo-70x70.png">&nbsp;ol-ext<span>: 
+        Extensions for OpenLayers (ol)</span>
+      </h1>
       <input type="search" placeholder="Search" class="search-query" id="keywords" name="q">
       <span id="count"></span>
     </div>
@@ -631,6 +637,14 @@
       
   <h2>Canvas controls</h2>
     <div>
+      <div class="example" data-date="2019-04-01">
+        <a class="mainlink" href="examples/canvas/map.control.print.html">
+          <strong>Print control</strong><br>
+        </a>
+        <p class="description">A control to print the map.</p>
+        <p class="tag">control, canvas, print, map, export</p>
+      </div>
+
       <div class="example">
         <a class="mainlink" href="examples/canvas/map.canvas.control.html">
           <strong>Canvas control</strong><br>
