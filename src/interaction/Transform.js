@@ -18,7 +18,7 @@ import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
  * @extends {ol_interaction_Pointer}
  * @fires select | rotatestart | rotating | rotateend | translatestart | translating | translateend | scalestart | scaling | scaleend
  * @param {any} options
- *  @param {function} options.filter A function that takes a Feature and a Layer and returns true if the feature may be transformed or false otherwise. 
+ *  @param {function} options.filter A function that takes a Feature and a Layer and returns true if the feature may be transformed or false otherwise.
  *  @param {Array<ol.Layer>} options.layers array of layers to transform,
  *  @param {ol.Collection<ol.Feature>} options.features collection of feature to transform,
  *	@param {ol.EventsConditionType|undefined} options.addCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled. default: ol.events.condition.never.
@@ -52,7 +52,7 @@ var ol_interaction_Transform = function(options) {
     // Return the style according to the handle type
     style: function (feature) {
       return (self.style[(feature.get('handle')||'default')+(feature.get('constraint')||'')+(feature.get('option')||'')]);
-    }, 
+    },
   });
 
   // Extend pointer
@@ -65,7 +65,7 @@ var ol_interaction_Transform = function(options) {
 
   // Collection of feature to transform
   this.features_ = options.features;
-  // Filter or list of layers to transform 
+  // Filter or list of layers to transform
   if (typeof(options.filter)==='function') this._filter = options.filter;
   this.layers_ = options.layers ? (options.layers instanceof Array) ? options.layers:[options.layers] : null;
 
@@ -551,9 +551,9 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
         geometry.applyTransform(function(g1, g2, dim) {
           if (dim<2) return g2;
 
-          for (i=0; i<g1.length; i+=dim) {
-            if (scx!=1) g2[i] = center[0] + (g1[i]-center[0])*scx;
-            if (scy!=1) g2[i+1] = center[1] + (g1[i+1]-center[1])*scy;
+          for (let j=0; j<g1.length; j+=dim) {
+            if (scx!=1) g2[j] = center[0] + (g1[j]-center[0])*scx;
+            if (scy!=1) g2[j+1] = center[1] + (g1[j+1]-center[1])*scy;
           }
           return g2;
         });
