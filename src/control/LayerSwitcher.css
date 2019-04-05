@@ -209,18 +209,18 @@
 {	display:block;
 }
 
-.ol-layerswitcher button {
+.ol-layerswitcher > button {
 	background-color: white;
 	float: right;
 	z-index: 10;
 	position: relative;
 	font-size: 1.7em;
 }
-.ol-touch .ol-layerswitcher button {
+.ol-touch .ol-layerswitcher > button {
 	font-size: 2.5em;
 }
-.ol-layerswitcher button:before,
-.ol-layerswitcher button:after {
+.ol-layerswitcher > button:before,
+.ol-layerswitcher > button:after {
 	content: "";
 	position:absolute;
 	width: .75em;
@@ -231,14 +231,14 @@
 	-ms-transform: scaleY(.8) rotate(45deg);
 	transform: scaleY(.8) rotate(45deg);
 }
-.ol-layerswitcher button:before {
+.ol-layerswitcher > button:before {
 	background: #e2e4e1;
 	top: .32em;
     left: .34em;
 	-webkit-box-shadow: 0.1em 0.1em #325158;
 	box-shadow: 0.1em 0.1em #325158;
 }
-.ol-layerswitcher button:after {
+.ol-layerswitcher > button:after {
 	top: .22em;
     left: .34em;
 	background: #83bcc5;
