@@ -2592,7 +2592,8 @@ ol.control.CanvasAttribution.prototype.drawAttribution_ = function(e) {
 	// Position
 	var eltRect = this.element.getBoundingClientRect();
 	var mapRect = this.getMap().getViewport().getBoundingClientRect();
-	ctx.translate(eltRect.left-mapRect.left, eltRect.top-mapRect.top);
+	var sc = this.getMap().getSize()[0] / mapRect.width;
+	ctx.translate((eltRect.left-mapRect.left)*sc, (eltRect.top-mapRect.top)*sc);
 	var h = this.element.clientHeight;
 	var w = this.element.clientWidth;
 	var left = w/2 + this.element.querySelectorAll('button')[0].clientWidth;
@@ -2750,7 +2751,8 @@ ol.control.CanvasTitle = function(options) {
     }
   });
   ol.control.CanvasBase.call(this, {
-    element: elt
+    element: elt,
+    style: options.style
   });
   this.setTitle(options.title || 'Title');
   this.element.style.font = this.getTextFont();
@@ -2818,7 +2820,8 @@ ol.control.CanvasTitle.prototype._draw = function(e) {
   // Position
   var eltRect = this.element.getBoundingClientRect();
   var mapRect = this.getMap().getViewport().getBoundingClientRect();
-  ctx.translate(eltRect.left-mapRect.left, eltRect.top-mapRect.top);
+  var sc = this.getMap().getSize()[0] / mapRect.width;
+  ctx.translate((eltRect.left-mapRect.left)*sc, (eltRect.top-mapRect.top)*sc);
   var h = this.element.clientHeight;
   var w = this.element.clientWidth;
   var left = w/2;
@@ -2866,7 +2869,8 @@ ol.control.CenterPosition = function(options) {
     }
   });
   ol.control.CanvasBase.call(this, {
-    element: elt
+    element: elt,
+    style: options.style
   });
   this.element.style.font = this.getTextFont();
   this.set('projection', options.projection);
@@ -2933,7 +2937,8 @@ ol.control.CenterPosition.prototype._draw = function(e) {
   // Position
   var eltRect = this.element.getBoundingClientRect();
   var mapRect = this.getMap().getViewport().getBoundingClientRect();
-  ctx.translate(eltRect.left-mapRect.left, eltRect.top-mapRect.top);
+  var sc = this.getMap().getSize()[0] / mapRect.width;
+  ctx.translate((eltRect.left-mapRect.left)*sc, (eltRect.top-mapRect.top)*sc);
   var h = this.element.clientHeight;
   var w = this.element.clientWidth;
   ctx.beginPath();
@@ -16017,7 +16022,7 @@ ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
  * @extends {ol.interaction.Pointer}
  * @fires select | rotatestart | rotating | rotateend | translatestart | translating | translateend | scalestart | scaling | scaleend
  * @param {any} options
- *  @param {function} options.filter A function that takes a Feature and a Layer and returns true if the feature may be transformed or false otherwise. 
+ *  @param {function} options.filter A function that takes a Feature and a Layer and returns true if the feature may be transformed or false otherwise.
  *  @param {Array<ol.Layer>} options.layers array of layers to transform,
  *  @param {ol.Collection<ol.Feature>} options.features collection of feature to transform,
  *	@param {ol.EventsConditionType|undefined} options.addCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled. default: ol.events.condition.never.
@@ -16050,7 +16055,7 @@ ol.interaction.Transform = function(options) {
     // Return the style according to the handle type
     style: function (feature) {
       return (self.style[(feature.get('handle')||'default')+(feature.get('constraint')||'')+(feature.get('option')||'')]);
-    }, 
+    },
   });
   // Extend pointer
   ol.interaction.Pointer.call(this, {
@@ -16061,7 +16066,7 @@ ol.interaction.Transform = function(options) {
   });
   // Collection of feature to transform
   this.features_ = options.features;
-  // Filter or list of layers to transform 
+  // Filter or list of layers to transform
   if (typeof(options.filter)==='function') this._filter = options.filter;
   this.layers_ = options.layers ? (options.layers instanceof Array) ? options.layers:[options.layers] : null;
   this.addFn_ = options.addCondition || function() { return false; };
@@ -16518,9 +16523,9 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
         geometry = this.geoms_[i].clone();
         geometry.applyTransform(function(g1, g2, dim) {
           if (dim<2) return g2;
-          for (i=0; i<g1.length; i+=dim) {
-            if (scx!=1) g2[i] = center[0] + (g1[i]-center[0])*scx;
-            if (scy!=1) g2[i+1] = center[1] + (g1[i+1]-center[1])*scy;
+          for (var j=0; j<g1.length; j+=dim) {
+            if (scx!=1) g2[j] = center[0] + (g1[j]-center[0])*scx;
+            if (scy!=1) g2[j+1] = center[1] + (g1[j+1]-center[1])*scy;
           }
           return g2;
         });
