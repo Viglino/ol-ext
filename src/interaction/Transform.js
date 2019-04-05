@@ -551,7 +551,7 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
         geometry.applyTransform(function(g1, g2, dim) {
           if (dim<2) return g2;
 
-          for (let j=0; j<g1.length; j+=dim) {
+          for (var j=0; j<g1.length; j+=dim) {
             if (scx!=1) g2[j] = center[0] + (g1[j]-center[0])*scx;
             if (scy!=1) g2[j+1] = center[1] + (g1[j+1]-center[1])*scy;
           }
