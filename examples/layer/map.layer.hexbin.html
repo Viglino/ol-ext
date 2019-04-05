@@ -319,7 +319,7 @@
               fill: new ol.style.Fill({ color: [0,0,255] }),
               rotateWithView: true
             }),
-            geometry: f.get('center')
+            geometry: new ol.geom.Point(f.get('center'))
           })
           //, new ol.style.Style({ fill: new ol.style.Fill({color: [0,0,255,.1] }) })
         ];

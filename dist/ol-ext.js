@@ -18176,7 +18176,7 @@ ol.source.HexBin.prototype.setLayout = function (newLayout, noreset) {
  */
 ol.source.HexBin.prototype.getLayout = function () {
   return this._hexgrid.getLayout();
-}
+};
 /**	Set the inner HexGrid origin.
  * 	@param {ol.Coordinate} newLayout
  * 	@param {boolean} noreset If true, reset will not be called (It need to be called through)
@@ -18186,13 +18186,13 @@ ol.source.HexBin.prototype.setOrigin = function (newLayout, noreset) {
   if (!noreset) {
     this.reset();
   }
-}
+};
 /**	Get the inner HexGrid origin.
  * 	@return {ol.Coordinate}
  */
 ol.source.HexBin.prototype.getOrigin = function () {
   return this._hexgrid.getOrigin();
-}
+};
 /**
  * Get hexagons without circular dependencies (vs. getFeatures)
  * @return {Array<ol.Feature>}

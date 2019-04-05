@@ -76,7 +76,7 @@ ol_source_HexBin.prototype.setLayout = function (newLayout, noreset) {
  */
 ol_source_HexBin.prototype.getLayout = function () {
   return this._hexgrid.getLayout();
-}
+};
 
 /**	Set the inner HexGrid origin.
  * 	@param {ol.Coordinate} newLayout
@@ -87,14 +87,14 @@ ol_source_HexBin.prototype.setOrigin = function (newLayout, noreset) {
   if (!noreset) {
     this.reset();
   }
-}
+};
 
 /**	Get the inner HexGrid origin.
  * 	@return {ol.Coordinate}
  */
 ol_source_HexBin.prototype.getOrigin = function () {
   return this._hexgrid.getOrigin();
-}
+};
 
 /**
  * Get hexagons without circular dependencies (vs. getFeatures)
