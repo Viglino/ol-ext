@@ -117,8 +117,9 @@ ol_control_CanvasAttribution.prototype.drawAttribution_ = function(e) {
 	// Position
 	var eltRect = this.element.getBoundingClientRect();
 	var mapRect = this.getMap().getViewport().getBoundingClientRect();
-	ctx.translate(eltRect.left-mapRect.left, eltRect.top-mapRect.top);
-
+	var sc = this.getMap().getSize()[0] / mapRect.width;
+	ctx.translate((eltRect.left-mapRect.left)*sc, (eltRect.top-mapRect.top)*sc);
+  
 	var h = this.element.clientHeight;
 	var w = this.element.clientWidth;
 	var left = w/2 + this.element.querySelectorAll('button')[0].clientWidth;
