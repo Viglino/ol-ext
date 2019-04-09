@@ -58,7 +58,7 @@ See the following examples for more detail on bundling OpenLayers with your appl
 
 * Using [webpack](https://github.com/darkscript/ol-ol-ext-webpack-example)
 * Using [parcel](https://github.com/Viglino/ol-ext-parcel-bundler)
-* Using [parcel](https://github.com/Viglino/ol-ext-angular)
+* Using [angular](https://github.com/Viglino/ol-ext-angular)
 
 ### using ol-ext in a web page
 
