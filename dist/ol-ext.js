@@ -10077,9 +10077,10 @@ ol.Map.prototype.animateFeature = function(feature, fanim) {
  * @fires animationstart, animationend
  * @param {ol.Feature} feature Feature to animate
  * @param {ol.featureAnimation|Array<ol.featureAnimation>} fanim the animation to play
+ * @param {boolean} useFilter use the filters of the layer
  * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
  */
-ol.layer.Base.prototype.animateFeature = function(feature, fanim)
+ol.layer.Base.prototype.animateFeature = function(feature, fanim, useFilter)
 {	var self = this;
 	var listenerKey;
 	// Save style
@@ -10110,6 +10111,8 @@ ol.layer.Base.prototype.animateFeature = function(feature, fanim)
 	{	if (fanim[i].duration_===0) fanim.splice(i,1);
 	}
 	var nb=0, step = 0;
+	// Filter availiable on the layer
+	var filters = (useFilter && this.getFilters) ? this.getFilters() : [];
 	function animate(e) {
 		try {
 			event.vectorContext = e.vectorContext || ol.render.getVectorContext(e);
@@ -10123,6 +10126,14 @@ ol.layer.Base.prototype.animateFeature = function(feature, fanim)
 		event.time = e.frameState.time - event.start;
 		event.elapsed = event.time / fanim[step].duration_;
 		if (event.elapsed > 1) event.elapsed = 1;
+		// Filter
+		e.context.save();
+		filters.forEach(function(f) {
+			if (f.get('active')) f.precompose(e);
+		});
+		if (this.getOpacity) {
+			e.context.globalAlpha = this.getOpacity();
+		}
 		// Stop animation?
 		if (!fanim[step].animate(event))
 		{	nb++;
@@ -10142,6 +10153,10 @@ ol.layer.Base.prototype.animateFeature = function(feature, fanim)
 			{	stop();
 			}
 		}
+		filters.forEach(function(f) {
+			if (f.get('active')) f.postcompose(e);
+		});
+		e.context.restore();
 		// tell OL3 to continue postcompose animation
 		e.frameState.animate = true;
 	}
@@ -10760,7 +10775,7 @@ ol.Map.prototype.removeFilter = function (filter) {
 *	@return {Array<ol.filter>}
 */
 ol.Map.prototype.getFilters = function () {
-  return this.filters_;
+  return this.filters_ || [];
 };
 /** Add a filter to an ol.Layer
 *	@param {ol.filter}
@@ -10778,7 +10793,7 @@ ol.layer.Base.prototype.removeFilter = function (filter) {
 *	@return {Array<ol.filter>}
 */
 ol.layer.Base.prototype.getFilters = function () {
-  return this.filters_;
+  return this.filters_ || [];
 };
 })();
 
