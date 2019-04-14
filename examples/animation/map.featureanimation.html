@@ -145,6 +145,16 @@
 	});
 	map.addLayer(vector);
 
+	/* Use filter or opacity * /
+	var c = map.getView().getCenter()
+	var g = ol.geom.Polygon.fromExtent(ol.extent.buffer(ol.extent.boundingExtent([c]),500000));
+	vector.addFilter(new ol.filter.Crop({
+		feature: new ol.Feature(g),
+		fill: new ol.style.Fill({color: [255,0,0,.5]})
+	}));
+	vector.setOpacity(.5)
+	/**/
+
 	// Add a feature on the map
 	function addFeatureAt(p)
 	{	var f, r = map.getView().getResolution() *10;

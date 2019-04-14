@@ -126,9 +126,10 @@ ol_Map.prototype.animateFeature = function(feature, fanim) {
  * @fires animationstart, animationend
  * @param {ol.Feature} feature Feature to animate
  * @param {ol_featureAnimation|Array<ol_featureAnimation>} fanim the animation to play
+ * @param {boolean} useFilter use the filters of the layer
  * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
  */
-ol_layer_Base.prototype.animateFeature = function(feature, fanim)
+ol_layer_Base.prototype.animateFeature = function(feature, fanim, useFilter)
 {	var self = this;
 	var listenerKey;
 
@@ -163,6 +164,8 @@ ol_layer_Base.prototype.animateFeature = function(feature, fanim)
 	}
 
 	var nb=0, step = 0;
+	// Filter availiable on the layer
+	var filters = (useFilter && this.getFilters) ? this.getFilters() : [];
 
 	function animate(e) {
 		try {
@@ -177,6 +180,15 @@ ol_layer_Base.prototype.animateFeature = function(feature, fanim)
 		event.time = e.frameState.time - event.start;
 		event.elapsed = event.time / fanim[step].duration_;
 		if (event.elapsed > 1) event.elapsed = 1;
+
+		// Filter
+		e.context.save();
+		filters.forEach(function(f) {
+			if (f.get('active')) f.precompose(e);
+		});
+		if (this.getOpacity) {
+			e.context.globalAlpha = this.getOpacity();
+		}
 		
 		// Stop animation?
 		if (!fanim[step].animate(event))
@@ -196,8 +208,12 @@ ol_layer_Base.prototype.animateFeature = function(feature, fanim)
 			else 
 			{	stop();
 			}
-			
 		}
+
+		filters.forEach(function(f) {
+			if (f.get('active')) f.postcompose(e);
+		});
+		e.context.restore();
 
 		// tell OL3 to continue postcompose animation
 		e.frameState.animate = true;

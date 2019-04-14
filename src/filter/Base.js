@@ -125,7 +125,7 @@ ol_Map.prototype.removeFilter = function (filter) {
 *	@return {Array<ol.filter>}
 */
 ol_Map.prototype.getFilters = function () {
-  return this.filters_;
+  return this.filters_ || [];
 };
 
 /** Add a filter to an ol.Layer
@@ -145,7 +145,7 @@ ol_layer_Base.prototype.removeFilter = function (filter) {
 *	@return {Array<ol.filter>}
 */
 ol_layer_Base.prototype.getFilters = function () {
-  return this.filters_;
+  return this.filters_ || [];
 };
 
 })();
