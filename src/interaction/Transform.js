@@ -486,6 +486,8 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
         for (i=0, f; f=this.selection_[i]; i++) {
           geometry = this.geoms_[i].clone();
           geometry.rotate(a - this.angle_, this.center_);
+          // bug: ol, bad calculation circle geom extent
+          if (geometry.getType() == 'Circle') geometry.setCenterAndRadius(geometry.getCenter(), geometry.getRadius());
           f.setGeometry(geometry);
         }
       }
