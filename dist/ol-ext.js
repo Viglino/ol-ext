@@ -16544,6 +16544,8 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
             if (scx!=1) g2[j] = center[0] + (g1[j]-center[0])*scx;
             if (scy!=1) g2[j+1] = center[1] + (g1[j+1]-center[1])*scy;
           }
+          // bug: ol, bad calculation circle geom extent
+          if (geometry.getType() == 'Circle') geometry.setCenterAndRadius(geometry.getCenter(), geometry.getRadius());
           return g2;
         });
         f.setGeometry(geometry);
