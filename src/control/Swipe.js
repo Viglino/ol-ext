@@ -1,4 +1,4 @@
-/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
+/*	Copyright (c) 2015 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
@@ -56,7 +56,7 @@ var ol_control_Swipe = function(options) {
 		this.element.classList.remove("horizontal", "vertical");
 		this.element.classList.add(this.get('orientation'));
 	}.bind(this));
-	
+
 	this.set('position', options.position || 0.5);
 	this.set('orientation', options.orientation || 'vertical');
 };
@@ -68,9 +68,11 @@ ol_ext_inherits(ol_control_Swipe, ol_control_Control);
  */
 ol_control_Swipe.prototype.setMap = function(map) {
 	var i;
+	var l;
 
 	if (this.getMap()) {
 		for (i=0; i<this.layers.length; i++) {
+			l = this.layers[i];
 			if (l.right) l.layer.un(['precompose','prerender'], this.precomposeRight_);
 			else l.layer.un(['precompose','prerender'], this.precomposeLeft_);
 			l.layer.un(['postcompose','postrender'], this.postcompose_);
@@ -83,7 +85,7 @@ ol_control_Swipe.prototype.setMap = function(map) {
 	if (map) {
     this._listener = [];
 		for (i=0; i<this.layers.length; i++) {
-      var l = this.layers[i];
+      l = this.layers[i];
 			if (l.right) l.layer.on(['precompose','prerender'], this.precomposeRight_);
 			else l.layer.on(['precompose','prerender'], this.precomposeLeft_);
 			l.layer.on(['postcompose','postrender'], this.postcompose_);
