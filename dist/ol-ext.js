@@ -8954,7 +8954,7 @@ ol.control.Storymap.prototype.setChapter = function (name) {
   }
 };
 
-/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
+/*	Copyright (c) 2015 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
@@ -9011,8 +9011,10 @@ ol.ext.inherits(ol.control.Swipe, ol.control.Control);
  */
 ol.control.Swipe.prototype.setMap = function(map) {
 	var i;
+	var l;
 	if (this.getMap()) {
 		for (i=0; i<this.layers.length; i++) {
+			l = this.layers[i];
 			if (l.right) l.layer.un(['precompose','prerender'], this.precomposeRight_);
 			else l.layer.un(['precompose','prerender'], this.precomposeLeft_);
 			l.layer.un(['postcompose','postrender'], this.postcompose_);
@@ -9023,7 +9025,7 @@ ol.control.Swipe.prototype.setMap = function(map) {
 	if (map) {
     this._listener = [];
 		for (i=0; i<this.layers.length; i++) {
-      var l = this.layers[i];
+      l = this.layers[i];
 			if (l.right) l.layer.on(['precompose','prerender'], this.precomposeRight_);
 			else l.layer.on(['precompose','prerender'], this.precomposeLeft_);
 			l.layer.on(['postcompose','postrender'], this.postcompose_);
