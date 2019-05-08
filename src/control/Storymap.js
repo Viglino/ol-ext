@@ -24,12 +24,21 @@ var ol_control_Storymap = function(options) {
     options.target.innerHTML = '';
   }
 
+  // New element
   var element = ol_ext_element.create('DIV', {
     className: (options.className || '') + ' ol-storymap'
       + (options.target ? '': ' ol-unselectable ol-control')
       + (ol_has_TOUCH ? ' ol-touch' : ''),
     html: options.html
   });
+  element.querySelectorAll('.chapter').forEach(function(c) {
+    c.addEventListener('click', function(e) {
+      if (!c.classList.contains('select')) {
+        this.element.scrollTop = c.offsetTop - 30;
+        e.preventDefault();
+      }
+    }.bind(this));
+  }.bind(this));
 
   // Initialize
   ol_control_Control.call(this, {
@@ -55,7 +64,7 @@ var ol_control_Storymap = function(options) {
           break;
         }
       }
-      this.element.scrollTop = scrollto;
+      this.element.scrollTop = scrollto - 30;
     }.bind(this));
   }.bind(this));
 
@@ -103,7 +112,7 @@ ol_control_Storymap.prototype.setChapter = function (name) {
   var chapter = this.element.querySelectorAll('.chapter');
   for (var i=0, s; s=chapter[i]; i++) {
     if (s.getAttribute('name')===name) {
-      this.element.scrollTop = s.offsetTop;
+      this.element.scrollTop = s.offsetTop - 30;
     }
   }
 };
