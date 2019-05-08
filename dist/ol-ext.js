@@ -8870,12 +8870,21 @@ ol.control.Storymap = function(options) {
     }
     options.target.innerHTML = '';
   }
+  // New element
   var element = ol.ext.element.create('DIV', {
     className: (options.className || '') + ' ol-storymap'
       + (options.target ? '': ' ol-unselectable ol-control')
       + (ol.has.TOUCH ? ' ol-touch' : ''),
     html: options.html
   });
+  element.querySelectorAll('.chapter').forEach(function(c) {
+    c.addEventListener('click', function(e) {
+      if (!c.classList.contains('select')) {
+        this.element.scrollTop = c.offsetTop - 30;
+        e.preventDefault();
+      }
+    }.bind(this));
+  }.bind(this));
   // Initialize
   ol.control.Control.call(this, {
     element: element,
@@ -8898,7 +8907,7 @@ ol.control.Storymap = function(options) {
           break;
         }
       }
-      this.element.scrollTop = scrollto;
+      this.element.scrollTop = scrollto - 30;
     }.bind(this));
   }.bind(this));
   // Scroll top 
@@ -8940,7 +8949,7 @@ ol.control.Storymap.prototype.setChapter = function (name) {
   var chapter = this.element.querySelectorAll('.chapter');
   for (var i=0, s; s=chapter[i]; i++) {
     if (s.getAttribute('name')===name) {
-      this.element.scrollTop = s.offsetTop;
+      this.element.scrollTop = s.offsetTop - 30;
     }
   }
 };

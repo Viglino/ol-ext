@@ -3059,12 +3059,35 @@
   overflow-y: auto;
 }
 
+.ol-control.ol-storymap .chapter {
+  padding: .5em;
+}
+.ol-storymap .chapter {
+  cursor: pointer;
+  opacity: .4;
+}
+.ol-storymap .chapter.select {
+  cursor: default;
+  opacity: 1;
+}
+
 .ol-storymap .ol-scroll-top,
 .ol-storymap .ol-scroll-next {
   position: relative;
-  min-height: 1em;
+  min-height: 1.7em;
   color: rgba(0,60,136,.5);
+  text-align: center;
+  cursor: pointer;
 }
+.ol-storymap .ol-scroll-next span {
+  padding-bottom: 1.4em;
+  display: block;
+}
+.ol-storymap .ol-scroll-top span {
+  padding-top: 1.4em;
+  display: block;
+}
+
 .ol-storymap .ol-scroll-top:before,
 .ol-storymap .ol-scroll-next:before {
   content: "";
