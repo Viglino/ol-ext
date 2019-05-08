@@ -83,6 +83,15 @@
       border: 0;
       padding: .2em 1em;
     }
+    .attributes label {
+      width: 7em;
+      display: inline-block;
+      text-align: right;
+      margin-right: .5em;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
   </style>
 
 </head>
@@ -136,6 +145,12 @@
         <input id="add" type="checkbox" />
         add features when dropped
       </label>
+    </div>
+    <div class="info">
+      Report attributes in the bin:
+      <ul class='attributes'></ul>
+      <p class='pop' style="display:none;">Pop per <input type="number" style="width:5em;" value=100 /> hab. (1km x 1km)</p>
+      <button onclick='updateAttributes()'>update <i class="fa fa-undo"></i></button>
     </div>
   </div>
 
@@ -237,8 +252,18 @@
   // add 1000 features
   addFeatures(1000);
 
+  // Save bin
+  function save() {
+    var pop = false;
+    $(".attributes select").each(function(){
+      if (/pop/.test($(this).val())) pop = true;
+    });
+    if (pop) saveWithPop();
+    else saveBin();
+  }
+
   // Save
-  function save (point) {
+  function saveBin (point) {
     var format = new ol.format.GeoJSON();
     var features = grid.getSource().getGridFeatures();
     if (point) {
@@ -273,15 +298,85 @@
             bin.set('pop', (bin.get('pop')||0) + Number(data[2]));
           }
         });
-        save();
+        saveBin();
         $('body').removeClass('waiting');
       }
     });
   }
+
+  // List of attribute to add to the cluster on save
+  function updateAttributes() {
+    var f = source.getFeatures()[0];
+    var ul = $('.attributes').html('');
+    var found = false;
+    for (var p in f.getProperties()) {
+      if (p==='geometry') continue;
+      found = true;
+      var li = $('<li>').appendTo(ul);
+      $('<label>').text(p).appendTo(li);
+      var sel = $('<select>').data('attr', p).appendTo(li);
+      ['none','nb/pop','sum()','sum()/pop','sum()/area','sum()/area/pop','moy()','moy()/pop','moy()/area','moy()/area/pop'].forEach(function(op) {
+        $('<option>').text(op).appendTo(sel);
+      });
+    };
+    if (!found) {
+      var li = $('<li>').text('no attributes to report...').appendTo(ul);
+    }
+    $('p.pop').show();
+  }
+
+  // Flatten attributes on save
   grid.getSource()._flatAttributes = function (bin, features) {
+    /*
     if (bin.get('pop')) {
       bin.set('nb_pop',100*bin.get('nb')/bin.get('pop'));
     }
+    */
+    $(".attributes select").each(function(){
+      var att = $(this).data('attr');
+      var val = 0;
+      var what = $(this).val();
+      switch (what) {
+        case 'nb/pop': {
+          val = bin.get('nb');
+          break;
+        }
+        case 'sum()':
+        case 'sum()/pop':
+        case 'sum()/area':
+        case 'sum()/area/pop': {
+          features.forEach(function(f) {
+            val += parseFloat(f.get(att)||0);
+          });
+          break;
+        }
+        case 'moy()':
+        case 'moy()/pop':
+        case 'moy()/area':
+        case 'moy()/area/pop': {
+          features.forEach(function(f) {
+            val += parseFloat(f.get(att)||0);
+          })
+          val /= features.length;
+          break;
+        }
+        default: break;
+      }
+      if (what!=='none') {
+        if (/area/.test(what)) {
+          var s = parseFloat($('#size').val())
+          val /= s*s;
+        }
+        if (/pop$/.test(what)) {
+          var per = parseInt($('p.pop input').val()||1);
+          var p = (per===1 ? '' : '_'+per);
+          if (what==='nb/pop') bin.set('nb_pop'+p, per*val/bin.get('pop'));
+          else bin.set(att+'_pop'+p, per*val/bin.get('pop'));
+        } else {
+          bin.set(att, val);
+        }
+      }
+    });
   }
 
 </script>

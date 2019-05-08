@@ -25,6 +25,7 @@
   },
   "scripts": {
     "test": "npm test npmtest.js",
+    "start": "node ./node_modules/gulp/bin/gulp.js serve",
     "lint": "eslint --fix src/ || exit 0",
     "prepack": "gulp prepublish",
     "postpack": "gulp postpublish"
