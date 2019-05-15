@@ -8,10 +8,10 @@
 import ol_ext_inherits from '../util/ext'
 import ol_layer_Vector from 'ol/layer/Vector'
 import ol_source_Vector from 'ol/source/Vector'
+import ol_Feature from 'ol/Feature'
 import {easeOut as ol_easing_easeOut} from 'ol/easing'
 import {buffer as ol_extent_buffer} from 'ol/extent'
 import ol_geom_Point from 'ol/geom/Point'
-import ol_Map from 'ol/Map'
 import {getVectorContext as ol_render_getVectorContext} from 'ol/render';
 
 /**
@@ -148,8 +148,6 @@ ol_layer_AnimatedCluster.prototype.animate = function(e)
 		// Layer opacity
 		e.context.save();
 		e.context.globalAlpha = this.getOpacity();
-		// Retina device
-		var ratio = e.frameState.pixelRatio;
 		for (i=0, c; c=a.clusters[i]; i++)
 		{	var pt = c.f.getGeometry().getCoordinates();
 			var dx = pt[0]-c.pt[0];
@@ -164,10 +162,63 @@ ol_layer_AnimatedCluster.prototype.animate = function(e)
 			}
 			// Draw feature
 			var st = stylefn(c.f, resolution, true);
-			// Preserve pixel ration on retina
-			var geo = new ol_geom_Point(pt);
-			for (var k=0, s; s=st[k]; k++)
-			{	var sc;
+			// If one feature: draw the feature
+			if (c.f.get("features").length===1 && !dx && !dy) {
+				f = c.f.get("features")[0];
+			}
+			// else draw a point
+			else {
+				var geo = new ol_geom_Point(pt);
+				f = new ol_Feature(geo);
+			}
+			for (var k=0, s; s=st[k]; k++) {
+				// Multi-line text
+				if (s.getText() && /\n/.test(s.getText().getText())) {
+					var offsetX = s.getText().getOffsetX();
+					var offsetY = s.getText().getOffsetY();
+					var rot = s.getText().getRotation() || 0;
+					var fontSize = Number((s.getText().getFont() || '10px').match(/\d+/)) * 1.2;
+					var str = s.getText().getText().split('\n')
+					var dl, nb = str.length-1;
+					var s2 = s.clone();
+					// Draw each lines
+					str.forEach(function(t, i) {
+						if (i==1) {
+							// Allready drawn
+							s2.setImage();
+							s2.setFill();
+							s2.setStroke();
+						}
+						switch (s.getText().getTextBaseline()) {
+							case 'alphabetic':
+							case 'ideographic':
+							case 'bottom': {
+								dl = nb;
+								break;
+							}
+							case 'hanging':
+							case 'top': {
+								dl = 0;
+								break;
+							}
+							default : {
+								dl = nb/2;
+								break;
+							}
+						}
+						s2.getText().setOffsetX(offsetX - Math.sin(rot)*fontSize*(i - dl));
+						s2.getText().setOffsetY(offsetY + Math.cos(rot)*fontSize*(i - dl));
+						s2.getText().setText(t);
+						vectorContext.drawFeature(f, s2);
+					});
+				} else {
+					vectorContext.drawFeature(f, s);
+				}
+				/* OLD VERSION OL < 4.3
+				// Retina device
+				var ratio = e.frameState.pixelRatio;
+
+				var sc;
 				// OL < v4.3 : setImageStyle doesn't check retina
 				var imgs = ol_Map.prototype.getFeaturesAtPixel ? false : s.getImage();
 				if (imgs)
@@ -193,10 +244,11 @@ ol_layer_AnimatedCluster.prototype.animate = function(e)
 					vectorContext.drawPointGeometry(geo);
 				}
 				if (imgs) imgs.setScale(sc);
+				*/
 			}
 		}
 		e.context.restore();
-		// tell OL3 to continue postcompose animation
+		// tell ol to continue postcompose animation
 		e.frameState.animate = true;
 
 		// Prevent layer drawing (clip with null rect)
