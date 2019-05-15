@@ -1,12 +1,10 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
-
+<!--
   Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
   released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-  
------------------------------------------------------------->
+-->
   <title>ol-ext: Split interaction</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
@@ -49,9 +47,10 @@
         the <i>modifyend</i> event is fired after the modification
       </li>
       <li>
-        it fires a <i>modifying</i> event
+        it fires a <i>modifying</i> event in beetween.
       </li>
     </ul>
+    For a more complete integration with undo/redo, see <a href="./map.interaction.undoredo.html">undo/redo example</a>.
     </div>
 
   <!-- Map div -->
@@ -102,8 +101,7 @@
           fill: new ol.style.Fill({ color: [255,255,255,.5] })
         }),
         new ol.style.Style({
-          image: new ol.style.RegularShape({ radius: 4, points:4, fill: new ol.style.Fill({ color: '#f00' }) }),
-          geometry: new ol.geom.MultiPoint([f.getGeometry().getFirstCoordinate(),f.getGeometry().getLastCoordinate()])
+          image: new ol.style.RegularShape({ radius: 4, points:4, fill: new ol.style.Fill({ color: '#f00' }) })
         })
       ]
     }
@@ -131,6 +129,14 @@
       [[300000, 6500000], [200000, 6600000], [100000, 6600000]],
     ])));
 
+    function toGeometryCollection () {
+      var geom = [];
+      vector.getSource().getFeatures().forEach(function(f) {
+        geom.push(f.getGeometry());
+      });
+      vector.getSource().clear();
+      vector.getSource().addFeature(new ol.Feature(new ol.geom.GeometryCollection(geom)));
+    }
 
     var interactions = {
       draw: new ol.interaction.Draw({
@@ -172,21 +178,19 @@
       // First modify feature
       var f = e.features[0];
       if (e.type==='modifystart') $('.options p').html('');
-      $('.options .'+e.type).text(
-        e.type + ' '+ e.features.length + ' feature(s) : ' 
-        + (f ? f.getGeometry().getType() : '')+' '
-        + (f ? (f.getGeometry().flatCoordinates.length/2) : '?') + ' point(s)'
-      );
+      var info = e.type + ' '+ (e.features.length||'??') + ' feature(s) : '; 
+      info += (f ? f.getGeometry().getType() : '');
+      if (f && f.getGeometry().flatCoordinates) info += ' '+(f ? (f.getGeometry().flatCoordinates.length/2) : '?') + ' point(s)'
+      $('.options .'+e.type).text(info);
     });
     interactions.modify.on(['modifystart', 'modifyend', 'modifying'], function(e) {
       // Try to get the modified features
       var f = interactions.modify.getModifiedFeatures()[0];
       if (e.type==='modifystart') $('.options p').html('');
-      $('.options .'+e.type).text(
-        e.type + ' '+ e.features.getLength() + ' feature(s) : ' 
-        + (f ? f.getGeometry().getType() : '')+' '
-        + (f ? (f.getGeometry().flatCoordinates.length/2) : '?') + ' point(s)'
-      );
+      var info = e.type + ' '+ (e.features.length||'??') + ' feature(s) : '; 
+      info += (f ? f.getGeometry().getType() : '');
+      if (f && f.getGeometry().flatCoordinates) info += ' '+(f ? (f.getGeometry().flatCoordinates.length/2) : '?') + ' point(s)'
+      $('.options .'+e.type).text(info);
     });
     
   </script>
