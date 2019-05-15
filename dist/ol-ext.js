@@ -13783,7 +13783,21 @@ ol.interaction.ModifyFeature.prototype.getNearestCoord = function(pt, geom) {
         if (p && p.dist<dm) {
           p0 = p;
           dm = p.dist;
-          poly.poly = i;
+          p0.poly = i;
+        }
+      }
+      return p0;
+    }
+    case 'GeometryCollection': {
+      var g = geom.getGeometries();
+      p0 = false;
+      dm = Number.MAX_VALUE;
+      for (i=0; l=g[i]; i++) {
+        p = this.getNearestCoord(pt, l);
+        if (p && p.dist<dm) {
+          p0 = p;
+          dm = p.dist;
+          p0.geom = i;
         }
       }
       return p0;
@@ -13800,12 +13814,14 @@ ol.interaction.ModifyFeature.prototype.getArcs = function(geom, coord) {
   var coords, i, s, l;
   switch(geom.getType()) {
     case 'Point': {
-      arcs = { 
-        geom: geom, 
-        type: geom.getType(),
-        coord1: [],
-        coord2: [],
-        node: true
+      if (ol.coordinate.equal(coord, geom.getCoordinates())) {
+        arcs = { 
+          geom: geom, 
+          type: geom.getType(),
+          coord1: [],
+          coord2: [],
+          node: true
+        }
       }
       break;
     }
@@ -13934,8 +13950,23 @@ ol.interaction.ModifyFeature.prototype.getArcs = function(geom, coord) {
       }
       break;
     }
+    case 'GeometryCollection': {
+      var g = geom.getGeometries();
+      for (i=0; l=g[i]; i++) {
+        arcs = this.getArcs(l, coord);
+        if (arcs) {
+          arcs.geom = geom;
+          arcs.g = i;
+          arcs.typeg = arcs.type;
+          arcs.type = geom.getType();
+          break;
+        }
+      }
+      break;
+    }
     default: {
       console.error('ol/interaction/ModifyFeature '+geom.getType()+' not supported!');
+      break;
     }
   }
   return arcs;
@@ -13999,6 +14030,77 @@ ol.interaction.ModifyFeature.prototype.getModifiedFeatures = function() {
 ol.interaction.ModifyFeature.prototype.removePoint = function() {
   this._removePoint({},{});
 };
+/**
+ * @private
+ */
+ol.interaction.ModifyFeature.prototype._getModification = function(a) {
+  var coords = a.coord1.concat(a.coord2);
+  switch (a.type) {
+    case 'LineString': {
+      if (a.closed) coords.push(coords[0]);
+      if (coords.length>1) {
+        if (a.geom.getCoordinates().length != coords.length) {
+          a.coords = coords;
+          return true;
+        }
+      }
+      break;
+    }
+    case 'MultiLineString': {
+      if (a.closed) coords.push(coords[0]);
+      if (coords.length>1) {
+        var c = a.geom.getCoordinates();
+        if (c[a.lstring].length != coords.length) {
+          c[a.lstring] = coords;
+          a.coords = c;
+          return true;
+        }
+      }
+      break;
+    }
+    case 'Polygon': {
+      if (a.closed) coords.push(coords[0]);
+      if (coords.length>3) {
+        c = a.geom.getCoordinates();
+        if (c[a.index].length != coords.length) {
+          c[a.index] = coords;
+          a.coords = c;
+          return true;
+        }
+      }
+      break;
+    }
+    case 'MultiPolygon': {
+      if (a.closed) coords.push(coords[0]);
+      if (coords.length>3) {
+        c = a.geom.getCoordinates();
+        if (c[a.poly][a.index].length != coords.length) {
+          c[a.poly][a.index] = coords;
+          a.coords = c;
+          return true;
+        }
+      }
+      break;
+    }
+    case 'GeometryCollection': {
+      a.type = a.typeg;
+      var geom = a.geom;
+      var geoms = geom.getGeometries();
+      a.geom = geoms[a.g];
+      var found = this._getModification(a);
+      // Restore current arc
+      geom.setGeometries(geoms);
+      a.geom = geom;
+      a.type = 'GeometryCollection';
+      return found;
+    }
+    default: {
+      //console.error('ol/interaction/ModifyFeature '+a.type+' not supported!');
+      break;
+    }
+  }
+  return false;
+};
 /** Removes the vertex currently being pointed.
  * @private
  */
@@ -14008,55 +14110,7 @@ ol.interaction.ModifyFeature.prototype._removePoint = function(current, evt) {
   var found = false;
   // Get all modifications
   this.arcs.forEach(function(a) {
-    var coords = a.coord1.concat(a.coord2);
-    switch (a.type) {
-      case 'LineString': {
-        if (a.closed) coords.push(coords[0]);
-        if (coords.length>1) {
-          if (a.geom.getCoordinates().length != coords.length) {
-            a.coords = coords;
-            found = true;
-          }
-        }
-        break;
-      }
-      case 'MultiLineString': {
-        if (a.closed) coords.push(coords[0]);
-        if (coords.length>1) {
-          var c = a.geom.getCoordinates();
-          if (c[a.lstring].length != coords.length) {
-            c[a.lstring] = coords;
-            a.coords = c;
-            found = true;
-          }
-        }
-        break;
-      }
-      case 'Polygon': {
-        if (a.closed) coords.push(coords[0]);
-        if (coords.length>3) {
-          c = a.geom.getCoordinates();
-          if (c[a.index].length != coords.length) {
-            c[a.index] = coords;
-            a.coords = c;
-            found = true;
-          }
-        }
-        break;
-      }
-      case 'MultiPolygon': {
-        if (a.closed) coords.push(coords[0]);
-        if (coords.length>3) {
-          c = a.geom.getCoordinates();
-          if (c[a.poly][a.index].length != coords.length) {
-            c[a.poly][a.index] = coords;
-            a.coords = c;
-            found = true;
-          }
-        }
-        break;
-      }
-    }
+    found = found || this._getModification(a);
   }.bind(this));
   // Almost one point is removed
   if (found) {
@@ -14067,8 +14121,16 @@ ol.interaction.ModifyFeature.prototype._removePoint = function(current, evt) {
       features: this._modifiedFeatures
     });
     this.arcs.forEach(function(a) {
-      if (a.coords) a.geom.setCoordinates(a.coords)
-    });
+      if (a.geom.getType() === 'GeometryCollection') {
+        if (a.coords) {
+          var geoms = a.geom.getGeometries();
+          geoms[a.g].setCoordinates(a.coords);
+          a.geom.setGeometries(geoms);
+        }
+      } else {
+        if (a.coords) a.geom.setCoordinates(a.coords);
+      }
+    }.bind(this));
     this.dispatchEvent({ 
       type:'modifyend', 
       coordinate: current.coord,
@@ -14097,6 +14159,57 @@ ol.interaction.ModifyFeature.prototype.handleUpEvent = function(e) {
 /**
  * @private
  */
+ol.interaction.ModifyFeature.prototype.setArcCoordinates = function(a, coords) {
+  var c;
+  switch (a.type) {
+    case 'Point': {
+      a.geom.setCoordinates(coords[0]);
+      break;
+    }
+    case 'MultiPoint': {
+      c = a.geom.getCoordinates();
+      c[a.index] = coords[0];
+      a.geom.setCoordinates(c);
+      break;
+    }
+    case 'LineString': {
+      a.geom.setCoordinates(coords);
+      break;
+    }
+    case 'MultiLineString': {
+      c = a.geom.getCoordinates();
+      c[a.lstring] = coords;
+      a.geom.setCoordinates(c);
+      break;
+    }
+    case 'Polygon': {
+      c = a.geom.getCoordinates();
+      c[a.index] = coords;
+      a.geom.setCoordinates(c);
+      break;
+    }
+    case 'MultiPolygon': {
+      c = a.geom.getCoordinates();
+      c[a.poly][a.index] = coords;
+      a.geom.setCoordinates(c);
+      break;
+    }
+    case 'GeometryCollection': {
+      a.type = a.typeg;
+      var geom = a.geom;
+      var geoms = geom.getGeometries();
+      a.geom = geoms[a.g];
+      this.setArcCoordinates(a, coords);
+      geom.setGeometries(geoms);
+      a.geom = geom;
+      a.type = 'GeometryCollection';
+      break;
+    }
+  }
+};
+/**
+ * @private
+ */
 ol.interaction.ModifyFeature.prototype.handleDragEvent = function(e) {
   if (!this.getActive()) return false;
   if (!this.arcs) return true;
@@ -14108,42 +14221,9 @@ ol.interaction.ModifyFeature.prototype.handleDragEvent = function(e) {
   if (!this.arcs.length) return true;
   // Move arcs
   this.arcs.forEach(function(a) {
-    var c, coords = a.coord1.concat([e.coordinate], a.coord2);
+    var coords = a.coord1.concat([e.coordinate], a.coord2);
     if (a.closed) coords.push(e.coordinate);
-    switch (a.type) {
-      case 'Point': {
-        a.geom.setCoordinates(e.coordinate);
-        break;
-      }
-      case 'MultiPoint': {
-        c = a.geom.getCoordinates();
-        c[a.index] = e.coordinate;
-        a.geom.setCoordinates(c);
-        break;
-      }
-      case 'LineString': {
-        a.geom.setCoordinates(coords);
-        break;
-      }
-      case 'MultiLineString': {
-        c = a.geom.getCoordinates();
-        c[a.lstring] = coords;
-        a.geom.setCoordinates(c);
-        break;
-      }
-      case 'Polygon': {
-        c = a.geom.getCoordinates();
-        c[a.index] = coords;
-        a.geom.setCoordinates(c);
-        break;
-      }
-      case 'MultiPolygon': {
-        c = a.geom.getCoordinates();
-        c[a.poly][a.index] = coords;
-        a.geom.setCoordinates(c);
-        break;
-      }
-    }
+    this.setArcCoordinates(a, coords);
   }.bind(this));
   this.dispatchEvent({ 
     type:'modifying', 
@@ -18718,8 +18798,6 @@ ol.layer.AnimatedCluster.prototype.animate = function(e)
 		// Layer opacity
 		e.context.save();
 		e.context.globalAlpha = this.getOpacity();
-		// Retina device
-		var ratio = e.frameState.pixelRatio;
 		for (i=0, c; c=a.clusters[i]; i++)
 		{	var pt = c.f.getGeometry().getCoordinates();
 			var dx = pt[0]-c.pt[0];
@@ -18734,10 +18812,62 @@ ol.layer.AnimatedCluster.prototype.animate = function(e)
 			}
 			// Draw feature
 			var st = stylefn(c.f, resolution, true);
-			// Preserve pixel ration on retina
-			var geo = new ol.geom.Point(pt);
-			for (var k=0, s; s=st[k]; k++)
-			{	var sc;
+			// If one feature: draw the feature
+			if (c.f.get("features").length===1 && !dx && !dy) {
+				f = c.f.get("features")[0];
+			}
+			// else draw a point
+			else {
+				var geo = new ol.geom.Point(pt);
+				f = new ol.Feature(geo);
+			}
+			for (var k=0, s; s=st[k]; k++) {
+				// Multi-line text
+				if (s.getText() && /\n/.test(s.getText().getText())) {
+					var offsetX = s.getText().getOffsetX();
+					var offsetY = s.getText().getOffsetY();
+					var rot = s.getText().getRotation() || 0;
+					var fontSize = Number((s.getText().getFont() || '10px').match(/\d+/)) * 1.2;
+					var str = s.getText().getText().split('\n')
+					var dl, nb = str.length-1;
+					var s2 = s.clone();
+					// Draw each lines
+					str.forEach(function(t, i) {
+						if (i==1) {
+							// Allready drawn
+							s2.setImage();
+							s2.setFill();
+							s2.setStroke();
+						}
+						switch (s.getText().getTextBaseline()) {
+							case 'alphabetic':
+							case 'ideographic':
+							case 'bottom': {
+								dl = nb;
+								break;
+							}
+							case 'hanging':
+							case 'top': {
+								dl = 0;
+								break;
+							}
+							default : {
+								dl = nb/2;
+								break;
+							}
+						}
+						s2.getText().setOffsetX(offsetX - Math.sin(rot)*fontSize*(i - dl));
+						s2.getText().setOffsetY(offsetY + Math.cos(rot)*fontSize*(i - dl));
+						s2.getText().setText(t);
+						vectorContext.drawFeature(f, s2);
+					});
+				} else {
+					vectorContext.drawFeature(f, s);
+				}
+				/* OLD VERSION OL < 4.3
+				// Retina device
+				var ratio = e.frameState.pixelRatio;
+				var sc;
 				// OL < v4.3 : setImageStyle doesn't check retina
 				var imgs = ol.Map.prototype.getFeaturesAtPixel ? false : s.getImage();
 				if (imgs)
@@ -18763,10 +18893,11 @@ ol.layer.AnimatedCluster.prototype.animate = function(e)
 					vectorContext.drawPointGeometry(geo);
 				}
 				if (imgs) imgs.setScale(sc);
+				*/
 			}
 		}
 		e.context.restore();
-		// tell OL3 to continue postcompose animation
+		// tell ol to continue postcompose animation
 		e.frameState.animate = true;
 		// Prevent layer drawing (clip with null rect)
 		e.context.save();
