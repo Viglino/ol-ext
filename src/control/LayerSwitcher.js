@@ -17,6 +17,7 @@ import ol_ext_element from '../util/element'
 /**
  * @classdesc OpenLayers 3 Layer Switcher Control.
  * @fires drawlist
+ * @fires toggle
  * 
  * @constructor
  * @extends {ol_control_Control}
@@ -68,19 +69,27 @@ var ol_control_LayerSwitcher = function(options) {
       parent: element
     });
     this.button.addEventListener('touchstart', function(e){
-      element.classList.toggle('ol-collapsed'); 
+      element.classList.toggle('ol-collapsed');
+      self.dispatchEvent({ type: 'toggle', collapsed: element.classList.contains('ol-collapsed') });
       e.preventDefault(); 
       self.overflow();
     });
     this.button.addEventListener('click', function(){
       element.classList.toggle("ol-forceopen");
       element.classList.add("ol-collapsed"); 
+      self.dispatchEvent({ type: 'toggle', collapsed: !element.classList.contains('ol-forceopen') });
       self.overflow();
     });
 
     if (options.mouseover) {
-      element.addEventListener ('mouseleave', function(){ element.classList.add("ol-collapsed"); });
-      element.addEventListener ('mouseover', function(){ element.classList.remove("ol-collapsed"); });
+      element.addEventListener ('mouseleave', function(){ 
+        element.classList.add("ol-collapsed"); 
+        self.dispatchEvent({ type: 'toggle', collapsed: true });
+      });
+      element.addEventListener ('mouseover', function(){ 
+        element.classList.remove("ol-collapsed"); 
+        self.dispatchEvent({ type: 'toggle', collapsed: false });
+      });
     }
 
     this.topv = ol_ext_element.create('DIV', {
