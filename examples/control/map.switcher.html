@@ -98,6 +98,9 @@
       <li>
         You can use the <i>drawlist</i> event handle the current line display (add button, change list style, etc.)
       </li>
+      <li>
+        It trigger a <i>toogle</i> event when shown/hidden
+      </li>
     </ul>
     <p>
       <a href="map.switcher2.html">You can customize the LayerSwitcher using CSS</a>
@@ -203,6 +206,9 @@
   // Add control inside the map
   var ctrl = new ol.control.LayerSwitcher();
   map.addControl(ctrl);
+  ctrl.on('toggle', function(e) {
+    console.log('Collapse layerswitcher', e.collapsed);
+  });
 
   // Add a layer switcher outside the map
   var switcher = new ol.control.LayerSwitcher({

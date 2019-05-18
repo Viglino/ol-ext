@@ -1,0 +1,218 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2017-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Openagenda</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="ol.source.HexBin is a source to display hexagonal binning on a map." />
+  <meta name="keywords" content="ol3, layer, hexbin, cluster, hexagon, binning, heatmap" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <!-- filesaver-js -->
+	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    #map {
+      width: 600px;
+      height: 400px;
+    }
+    .fullscreen #map {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .fullscreen .options {
+      position: fixed;
+      top: 0;
+      right: 0;
+    }
+    .fullscreen .info:last-child {
+      display: none;
+    }
+    .waiting {
+      opacity: .5;
+    }
+    .waiting:before {
+      content: "Loading...";
+      background: #fff;
+      padding: 1em;
+      font-size: 2em;
+      top: 30%;
+      left: 50%;
+      position: fixed;
+      transform: translate(-50%,-30%);
+      z-index: 999;
+      box-shadow: 1px 1px 2px 2px;
+    }
+    .fa-arrows-alt {
+      float: right;
+      cursor: pointer;
+    }
+    button {
+      font-size: 1em;
+      color: #fff;
+      background: #369;
+      border: 0;
+      padding: .2em 1em;
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: v</h1>
+  </a>
+
+  <div class="info">
+    This example loads events from the <a href="https://openagenda.com/">Openagenda</a> on a map.
+    <br/>
+    You have to run <a href="https://alfilatov.com/posts/run-chrome-without-cors/">your browser without CORS</a> to enable event upload from the site.
+  </div>
+
+  <!-- Map DIV -->
+  <div id="map"></div>
+
+  <div class="options">
+    <i class="fa fa-arrows-alt"  title="fullscreen" onclick="$('body').toggleClass('fullscreen'); map.updateSize();"></i>
+    <h2>Options:</h2>
+    <ul>
+      <li>
+        Agenda ID: <input id="id" />
+        <button onclick="load($('#id').val())">
+          <i class="fa fa-download"></i> load
+        </button>
+      </li><li>
+        <button onclick="save()">
+          <i class="fa fa-save"></i> save
+        </button>
+      </li>
+    </ul>
+    <div class="info"></div>
+  </div>
+
+<script type="text/javascript">
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 4,
+      center: [166326, 5992663]
+    }),
+    layers: [ new ol.layer.Tile({ source: new ol.source.OSM() })]
+  });
+
+  var select  = new ol.interaction.Select();
+  map.addInteraction(select);
+  select.on('select', function(e){
+    if (e.selected.length){
+      var f = e.selected[0];
+      if (f) {
+        $(".options .info").html(f.get('description')+'<br/>'+f.get('locationName'));
+      } else {
+        $(".options .info").html("");
+      }
+    } else {
+      $(".options .info").html("");
+    }
+  });
+
+  // Vector source
+  var source = new ol.source.Vector();
+  var layerSource = new ol.layer.Vector({ source: source })
+  map.addLayer(layerSource);
+
+  function load(id, i) {
+    $('body').addClass('waiting');
+    i = i || 0;
+    if (i===0) source.clear();
+    console.log('load', i);
+    $.ajax({
+      url: 'https://openagenda.com/agendas/'+id+'/events.json?lang=fr&limit='+(300*i+300)+'&offset='+(300*i),
+      success: function(r){
+        if (r.events && r.events.length) {
+          getFeatures(r, i);
+          console.log(source.getFeatures().length)
+          load(id,i+1);
+        } else {
+          $('body').removeClass('waiting');
+          alert (source.getFeatures().length + ' features loaded...');
+        }
+      },
+      error: function() {
+        $('body').removeClass('waiting');
+      }
+    });
+  }
+
+  function getFeatures(table, nb) {
+    var features = [];
+    table.events.forEach((e)=>{
+      var attr = { geometry: new ol.geom.Point(ol.proj.fromLonLat([e.longitude, e.latitude])) };
+      var attributes = ['address','city','image',
+        'description.fr','locationName','longDescription.fr',
+        'firstDate','range.fr','canonicalUrl','registrationUrl'
+      ];
+      attributes.forEach(function(a) {
+        a = a.split('.');
+        if (a.length>1) {
+          if (e[a[0]]) attr[a[0]] = e[a[0]][a[1]] || '';
+          else attr[a[0]] = '';
+        } else {
+          attr[a[0]] = e[a[0]] || '';
+        }
+      })
+      var tags = e.tags;
+      if (tags.length > 3) {
+        attr.tags = 'Divers';
+      } else {
+        attr.tags = [];
+        tags.forEach(function(t) {
+          attr.tags.push(t.label);
+        })
+        attr.tags = attr.tags.join(' - ');
+      }
+      source.addFeature(new ol.Feature(attr));
+    })
+  }
+
+  // Save
+  function save () {
+    var format = new ol.format.GeoJSON();
+		var data = format.writeFeatures(source.getFeatures(), {
+			dataProjection: 'EPSG:4326',
+			featureProjection: map.getView().getProjection()
+    });
+		var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
+		saveAs(blob, "agenda.geojson");
+	}
+
+</script>
+
+</body>
+</html>
