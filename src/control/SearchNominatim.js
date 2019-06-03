@@ -7,7 +7,7 @@ import {transform as ol_proj_transform} from 'ol/proj'
 import ol_control_SearchJSON from "./SearchJSON";
 
 /**
- * Search places using the French National Base Address (BAN) API.
+ * Search places using the Nominatim geocoder from the OpenStreetmap project.
  *
  * @constructor
  * @extends {ol.control.Search}
@@ -23,7 +23,7 @@ import ol_control_SearchJSON from "./SearchJSON";
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
  *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
  *
- *	@param {string|undefined} options.url Url to Nominatim api, default "https://nominatim.openstreetmap.org/search"
+ *	@param {string|undefined} options.url URL to Nominatim API, default "https://nominatim.openstreetmap.org/search"
  * @see {@link https://wiki.openstreetmap.org/wiki/Nominatim}
  */
 var ol_control_SearchNominatim = function(options)
