@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--
+	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+	<title>ol-ext: Geoportail layer</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="Geoportail layer for ol" />
+	<meta name="keywords" content="ol, openlayers, layer, source, geoportail" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+	
+	<!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+	<link rel="stylesheet" href="../style.css" />
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+	<a href="../../index.html">
+		<h1>ol-ext: Geoportail layer</h1>
+	</a>
+	<div class="info">
+    <p>
+      <i>ol.source.Geoportail</i> is IGN's <a href="https://www.geoportail.gouv.fr/">Géoportail</a> WMTS source.
+      <br/>
+      <i>ol.layer.Geoportail</i> get information on the service to handle the layer visibility and source 
+      attribution according to the view.
+    </p>
+    <ul>
+      <li>
+        ol-ext provide capabilities for the main layers. 
+        <br/>
+        Use the <i>ol.layer.Geoportail.getCapabilities()</i> function to get the capabilities 
+        from the server for a specific key.
+        <br/>
+        Use the <i>ol.layer.Geoportail.loadCapabilities()</i> function to load the capabilities in the lib.
+      </li>
+      <li>
+        You have to get <a href="https://depot.ign.fr/geoportail/api/develop/tech-docs-js/developpeur/geodrm.html">an API key</a>
+        to access the service. 
+        <br/>
+        The default key is provided for development only and access to a limited set of layers.
+      </li>
+    </ul>
+  </div>
+
+	<!-- DIV pour la carte -->
+	<div id="map" style="width: 600px; height: 400px;"></div>
+	<div class="options">
+	</div>
+	
+	<script type="text/javascript">
+	// The map
+	var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 15,
+      center: [261204.43490751847, 6250258.191535994]
+    })
+  });
+
+  map.addControl(new ol.control.LayerSwitcher());
+
+
+/*
+  map.addLayer(new ol.layer.Tile({
+    source: new ol.source.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS', {
+      gppKey: 'choisirgeoportail'
+    })
+  }));
+*/
+  map.addLayer (new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS', {
+    gppKey: 'choisirgeoportail',
+  }));
+  map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGN', {
+    gppKey: 'choisirgeoportail',
+    visible: true,
+    opacity: .5
+  }));
+  map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.MAPS', {
+    gppKey: 'choisirgeoportail',
+    visible: false
+  }));
+  map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD', {
+    gppKey: 'choisirgeoportail',
+    visible: false
+  }));
+  map.addLayer (new ol.layer.Geoportail('CADASTRALPARCELS.PARCELS', {
+    gppKey: 'choisirgeoportail',
+    visible: false
+  }));
+
+	</script>
+</body>
+</html>
