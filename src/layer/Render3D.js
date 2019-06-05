@@ -1,262 +1,310 @@
-﻿import ol_layer_Vector from 'ol/layer/Vector'
+﻿import ol_ext_inherits from '../util/ext'
+import ol_layer_Vector from 'ol/layer/Vector'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import {easeOut as ol_easing_easeOut} from 'ol/easing'
+import ol_Object from 'ol/Object'
+import ol_style_Style from 'ol/style/Style'
+import ol_style_Stroke from 'ol/style/Stroke'
+import ol_style_Fill from 'ol/style/Fill'
+import {asString as ol_color_asString} from 'ol/color'
 
 /** ol.layer.Vector.prototype.setRender3D
  * @extends {ol.layer.Vector}
  * @param {ol_render3D}
  */
-ol_layer_Vector.prototype.setRender3D = function (r)
-{	r.setLayer(this);
+ol_layer_Vector.prototype.setRender3D = function (r) {
+  r.setLayer(this);
 }
 
 /** 
- *	@classdesc
- *	ol_render3D 3D vector layer rendering
- *	@constructor
- *	@param {olx.render3DOption}
- *		- masResolution {number} max resolution to render 3D
- *		- defaultHeight {number} default height if none is return by a propertie
- *		- height {function|string|Number} a height function (return height giving a feature) or a popertie name for the height or a fixed value
+ * @classdesc
+ *ol_render3D 3D vector layer rendering
+ * @constructor
+ * @param {Object} param
+ *  @param {ol.layer.Vector} param.layer the layer to display in 3D
+ *  @param {function} param.geometry a function that takes a feature ans returns the geometry to use
+ *  @param {number} param.maxResolution  max resolution to render 3D
+ *  @param {number} param.defaultHeight default height if none is return by a propertie
+ *  @param {function|string|Number} param.height a height function (returns height giving a feature) or a popertie name for the height or a fixed value
  */
 var ol_render3D = function (options) {
-	options = options || {};
-	
-	this.maxResolution_ = options.maxResolution || 100
-	this.defaultHeight_ = options.defaultHeight || 0;
-	this.height_ = this.getHfn (options.height);
+  options = options || {};
+
+  this.setStyle(options.style);
+  delete options.style;
+
+  options.maxResolution = options.maxResolution || 100
+  options.defaultHeight = options.defaultHeight || 0;
+  options.geometry =options.geometry || function(f) { return f.getGeometry(); };
+  ol_Object.call (this, options);
+
+  this.height_ = options.height = this.getHfn (options.height);
+  if (options.layer) this.setLayer(options.layer);
 }
+ol_ext_inherits(ol_render3D, ol_Object);
+
+/**
+ * Set style associated with the renderer
+ * @param {ol.style.Style} s
+ */
+ol_render3D.prototype.setStyle = function(s) {
+  if (s instanceof ol_style_Style) this._style = s;
+  else this._style = new ol_style_Style ();
+  if (!this._style.getStroke()) {
+    this._style.setStroke(new ol_style_Stroke({
+      width: 1,
+      color: 'red'
+    }));
+  }
+  if (!this._style.getFill()) {
+    this._style.setFill( new ol_style_Fill({ color: 'rgba(0,0,255,0.5)'}) );
+  }
+};
+
+/**
+ * Get style associated with the renderer
+ * @return {ol.style.Style}
+ */
+ol_render3D.prototype.getStyle = function() {
+  return this._style;
+};
 
 /** Calculate 3D at potcompose
 */
-ol_render3D.prototype.onPostcompose_ = function(e)
-{	var res = e.frameState.viewState.resolution;
-	if (res > this.maxResolution_) return;
-	this.res_ = res*400;
+ol_render3D.prototype.onPostcompose_ = function(e) {
+  var res = e.frameState.viewState.resolution;
+  if (res > this.get('maxResolution')) return;
+  this.res_ = res*400;
 
-	if (this.animate_) 
-	{	var elapsed = e.frameState.time - this.animate_;
-		if (elapsed < this.animateDuration_)
-		{	this.elapsedRatio_ = this.easing_(elapsed / this.animateDuration_);
-			// tell OL3 to continue postcompose animation
-			e.frameState.animate = true;
-		}
-		else
-		{	this.animate_ = false;
-			this.height_ = this.toHeight_
-		}
-	}
+  if (this.animate_) {
+    var elapsed = e.frameState.time - this.animate_;
+    if (elapsed < this.animateDuration_) {
+      this.elapsedRatio_ = this.easing_(elapsed / this.animateDuration_);
+      // tell OL3 to continue postcompose animation
+      e.frameState.animate = true;
+    } else {
+      this.animate_ = false;
+      this.height_ = this.toHeight_
+    }
+  }
 
-	var ratio = e.frameState.pixelRatio;
-	var ctx = e.context;
-	var m = this.matrix_ = e.frameState.coordinateToPixelTransform;
-	// Old version (matrix)
-	if (!m)
-	{	m = e.frameState.coordinateToPixelMatrix,
-		m[2] = m[4];
-		m[3] = m[5];
-		m[4] = m[12];
-		m[5] = m[13];
-	}
-	this.center_ = [ctx.canvas.width/2/ratio, ctx.canvas.height/ratio];
+  var ratio = e.frameState.pixelRatio;
+  var ctx = e.context;
+  var m = this.matrix_ = e.frameState.coordinateToPixelTransform;
+  // Old version (matrix)
+  if (!m) {
+    m = e.frameState.coordinateToPixelMatrix,
+    m[2] = m[4];
+    m[3] = m[5];
+    m[4] = m[12];
+    m[5] = m[13];
+  }
+  this.center_ = [ ctx.canvas.width/2/ratio, ctx.canvas.height/ratio ];
 
-	var f = this.layer_.getSource().getFeaturesInExtent(e.frameState.extent);
-		
-	ctx.save();
-	ctx.scale(ratio,ratio);
-	ctx.lineWidth = 1;
-	ctx.strokeStyle = "red";
-	ctx.fillStyle = "rgba(0,0,255,0.5)";
-	var builds = [];
-	for (var i=0; i<f.length; i++)
-	{	builds.push (this.getFeature3D_ (f[i], this.getFeatureHeight(f[i])));
-	}
-	this.drawFeature3D_ (ctx, builds);
-	ctx.restore();
+  var f = this.layer_.getSource().getFeaturesInExtent(e.frameState.extent);
+    
+  ctx.save();
+    ctx.scale(ratio,ratio);
+    var s = this.getStyle();
+    ctx.lineWidth = s.getStroke().getWidth();
+    ctx.strokeStyle = ol_color_asString(s.getStroke().getColor());
+    ctx.fillStyle = ol_color_asString(s.getFill().getColor());
+    var builds = [];
+    for (var i=0; i<f.length; i++) {
+      builds.push (this.getFeature3D_ (f[i], this.getFeatureHeight(f[i])));
+    }
+    this.drawFeature3D_ (ctx, builds);
+  ctx.restore();
 }
 
 /** Set layer to render 3D
 */
 ol_render3D.prototype.setLayer = function(l) {
-	if (this._listener) {
-		this._listener.forEach( function(l) { 
-			ol_Observable_unByKey(l); 
-		});
-	}
-	this.layer_ = l;
-	this._listener = l.on (['postcompose', 'postrender'], this.onPostcompose_.bind(this));
+  if (this._listener) {
+    this._listener.forEach( function(l) { 
+      ol_Observable_unByKey(l); 
+    });
+  }
+  this.layer_ = l;
+  this._listener = l.on (['postcompose', 'postrender'], this.onPostcompose_.bind(this));
 }
 
 /** Create a function that return height of a feature
 *	@param {function|string|number} h a height function or a popertie name or a fixed value
 *	@return {function} function(f) return height of the feature f
 */
-ol_render3D.prototype.getHfn= function(h)
-{	switch (typeof(h))
-	{	case 'function': return h;
-		case 'string': 
-			{	var dh = this.defaultHeight_;
-				return (function(f) 
-				{	return (Number(f.get(h)) || dh); 
-				});
-			}
-		case 'number': return (function(/*f*/) { return h; });
-		default: return (function(/*f*/) { return 10; });
-	}
+ol_render3D.prototype.getHfn= function(h) {
+  switch (typeof(h)) {
+    case 'function': return h;
+    case 'string': {
+      var dh = this.get('defaultHeight');
+        return (function(f) {
+          return (Number(f.get(h)) || dh); 
+        });
+      }
+    case 'number': return (function(/*f*/) { return h; });
+    default: return (function(/*f*/) { return 10; });
+  }
 }
 
 /** Animate rendering
-*	@param {olx.render3D.animateOptions}
-*		- height {string|function|number} an attribute name or a function returning height of a feature or a fixed value
-*		- durtion {number} the duration of the animatioin ms, default 1000
-*		- easing {ol.easing} an ol easing function
-*	@api
-*/
-ol_render3D.prototype.animate = function(options)
-{	options = options || {};
-	this.toHeight_ = this.getHfn(options.height);
-	this.animate_ = new Date().getTime();
-	this.animateDuration_ = options.duration ||1000;
-	this.easing_ = options.easing || ol_easing_easeOut;
-	// Force redraw
-	this.layer_.changed();
+ * @param {olx.render3D.animateOptions}
+ *  @param {string|function|number} param.height an attribute name or a function returning height of a feature or a fixed value
+ *  @param {number} param.duration the duration of the animatioin ms, default 1000
+ *  @param {ol.easing} param.easing an ol easing function
+ *	@api
+ */
+ol_render3D.prototype.animate = function(options) {
+  options = options || {};
+  this.toHeight_ = this.getHfn(options.height);
+  this.animate_ = new Date().getTime();
+  this.animateDuration_ = options.duration ||1000;
+  this.easing_ = options.easing || ol_easing_easeOut;
+  // Force redraw
+  this.layer_.changed();
 }
 
 /** Check if animation is on
 *	@return {bool}
 */
-ol_render3D.prototype.animating = function()
-{	if (this.animate_ && new Date().getTime() - this.animate_ > this.animateDuration_) 
-	{	this.animate_ = false;
-	}
-	return !!this.animate_;
+ol_render3D.prototype.animating = function() {
+  if (this.animate_ && new Date().getTime() - this.animate_ > this.animateDuration_) {
+    this.animate_ = false;
+  }
+  return !!this.animate_;
 }
 
 /** 
 */
-ol_render3D.prototype.getFeatureHeight = function (f)
-{	if (this.animate_)
-	{	var h1 = this.height_(f);
-		var h2 = this.toHeight_(f);
-		return (h1*(1-this.elapsedRatio_)+this.elapsedRatio_*h2);
-	}
-	else return this.height_(f);
-}
+ol_render3D.prototype.getFeatureHeight = function (f) {
+  if (this.animate_) {
+    var h1 = this.height_(f);
+    var h2 = this.toHeight_(f);
+    return (h1*(1-this.elapsedRatio_)+this.elapsedRatio_*h2);
+  }
+  else return this.height_(f);
+};
 
 /**
 */
-ol_render3D.prototype.hvector_ = function (pt, h)
-{	var p0 = [	pt[0]*this.matrix_[0] + pt[1]*this.matrix_[1] + this.matrix_[4],
-			pt[0]*this.matrix_[2] + pt[1]*this.matrix_[3] + this.matrix_[5]
-		];
-	var p1 = [	p0[0] + h/this.res_*(p0[0]-this.center_[0]),
-			p0[1] + h/this.res_*(p0[1]-this.center_[1])
-		];
-	return {p0:p0, p1:p1};
-}
+ol_render3D.prototype.hvector_ = function (pt, h) {
+  var p0 = [
+    pt[0]*this.matrix_[0] + pt[1]*this.matrix_[1] + this.matrix_[4],
+    pt[0]*this.matrix_[2] + pt[1]*this.matrix_[3] + this.matrix_[5]
+  ];
+  return {
+    p0: p0, 
+    p1: [
+      p0[0] + h/this.res_ * (p0[0]-this.center_[0]),
+      p0[1] + h/this.res_ * (p0[1]-this.center_[1])
+    ]
+  };
+};
 
 /**
 */
-ol_render3D.prototype.getFeature3D_ = function (f, h)
-{	var c = f.getGeometry().getCoordinates();
-	switch (f.getGeometry().getType())
-	{	case "Polygon":
-			c = [c];
-		// fallthrough
-		case "MultiPolygon":
-			var build = [];
-			for (var i=0; i<c.length; i++) 
-			{	for (var j=0; j<c[i].length; j++)
-				{	var b = [];
-					for (var k=0; k<c[i][j].length; k++)
-					{	b.push( this.hvector_(c[i][j][k], h) );
-					}
-					build.push(b);
-				}
-			}
-			return { type:"MultiPolygon", feature:f, geom:build };
-		case "Point":
-			return { type:"Point", feature:f, geom:this.hvector_(c,h) };
-		default: return {};
-	}
+ol_render3D.prototype.getFeature3D_ = function (f, h) {
+  var geom = this.get('geometry')(f);
+  var c = geom.getCoordinates();
+  switch (geom.getType()) {
+    case "Polygon":
+      c = [c];
+    // fallthrough
+    case "MultiPolygon":
+      var build = [];
+      for (var i=0; i<c.length; i++) {
+        for (var j=0; j<c[i].length; j++) {
+          var b = [];
+          for (var k=0; k<c[i][j].length; k++) {
+            b.push( this.hvector_(c[i][j][k], h) );
+          }
+          build.push(b);
+        }
+      }
+      return { type:"MultiPolygon", feature: f, geom: build };
+    case "Point":
+      return { type:"Point", feature: f, geom: this.hvector_(c,h) };
+    default: return {};
+  }
 }
 
 /**
 */
 ol_render3D.prototype.drawFeature3D_ = function(ctx, build) {
-	var i,j, b, k;
-	// Construct
-	for (i=0; i<build.length; i++) 
-	{	
-		switch (build[i].type)
-		{	case "MultiPolygon":
-				for (j=0; j<build[i].geom.length; j++)
-				{	b = build[i].geom[j];
-					for (k=0; k < b.length; k++)
-					{	ctx.beginPath();
-						ctx.moveTo(b[k].p0[0], b[k].p0[1]);
-						ctx.lineTo(b[k].p1[0], b[k].p1[1]);
-						ctx.stroke();
-					}
-				}
-				break;
-			case "Point":
-				{	var g = build[i].geom;
-					ctx.beginPath();
-					ctx.moveTo(g.p0[0], g.p0[1]);
-					ctx.lineTo(g.p1[0], g.p1[1]);
-					ctx.stroke();
-					break;
-				}
-			default: break;
-		}
-	}
-	// Roof
-	for (i=0; i<build.length; i++) 
-	{	switch (build[i].type)
-		{	case "MultiPolygon":
-			{	ctx.beginPath();
-				for (j=0; j<build[i].geom.length; j++)
-				{	b = build[i].geom[j];
-					if (j==0)
-					{	ctx.moveTo(b[0].p1[0], b[0].p1[1]);
-						for (k=1; k < b.length; k++)
-						{	ctx.lineTo(b[k].p1[0], b[k].p1[1]);
-						}
-					}
-					else
-					{	ctx.moveTo(b[0].p1[0], b[0].p1[1]);
-						for (k=b.length-2; k>=0; k--)
-						{	ctx.lineTo(b[k].p1[0], b[k].p1[1]);
-						}
-					}
-					ctx.closePath();
-				}
-				ctx.fill("evenodd");
-				ctx.stroke();
-				break;
-			}
-			case "Point":
-			{	b = build[i];
-				var t = b.feature.get('label');
-				var p = b.geom.p1;
-				var f = ctx.fillStyle;
-				ctx.fillStyle = ctx.strokeStyle;
-				ctx.textAlign = 'center';
-				ctx.textBaseline = 'bottom';
-				ctx.fillText ( t, p[0], p[1] );
-				var m = ctx.measureText(t);
-				var h = Number (ctx.font.match(/\d+(\.\d+)?/g).join([]));
-				ctx.fillStyle = "rgba(255,255,255,0.5)";
-				ctx.fillRect (p[0]-m.width/2 -5, p[1]-h -5, m.width +10, h +10)
-				ctx.strokeRect (p[0]-m.width/2 -5, p[1]-h -5, m.width +10, h +10)
-				ctx.fillStyle = f;
-				//console.log(build[i].feature.getProperties())
-				break;
-			}
-			default: break;
-		}
-	}
+  var i,j, b, k;
+  // Construct
+  for (i=0; i<build.length; i++) {	
+    switch (build[i].type) {
+      case "MultiPolygon": {
+        for (j=0; j<build[i].geom.length; j++) {
+          b = build[i].geom[j];
+          for (k=0; k < b.length; k++) {
+            ctx.beginPath();
+            ctx.moveTo(b[k].p0[0], b[k].p0[1]);
+            ctx.lineTo(b[k].p1[0], b[k].p1[1]);
+            ctx.stroke();
+          }
+        }
+        break;
+      }
+      case "Point": {
+        var g = build[i].geom;
+          ctx.beginPath();
+          ctx.moveTo(g.p0[0], g.p0[1]);
+          ctx.lineTo(g.p1[0], g.p1[1]);
+          ctx.stroke();
+          break;
+        }
+      default: break;
+    }
+  }
+  // Roof
+  for (i=0; i<build.length; i++) {
+    switch (build[i].type) {
+      case "MultiPolygon": {
+        ctx.beginPath();
+        for (j=0; j<build[i].geom.length; j++) {
+          b = build[i].geom[j];
+          if (j==0) {
+            ctx.moveTo(b[0].p1[0], b[0].p1[1]);
+            for (k=1; k < b.length; k++) {
+              ctx.lineTo(b[k].p1[0], b[k].p1[1]);
+            }
+          } else {
+            ctx.moveTo(b[0].p1[0], b[0].p1[1]);
+            for (k=b.length-2; k>=0; k--) {
+              ctx.lineTo(b[k].p1[0], b[k].p1[1]);
+            }
+          }
+          ctx.closePath();
+        }
+        ctx.fill("evenodd");
+        ctx.stroke();
+        break;
+      }
+      case "Point": {
+        b = build[i];
+        var t = b.feature.get('label');
+        if (t) {
+          var p = b.geom.p1;
+          var f = ctx.fillStyle;
+          ctx.fillStyle = ctx.strokeStyle;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText ( t, p[0], p[1] );
+          var m = ctx.measureText(t);
+          var h = Number (ctx.font.match(/\d+(\.\d+)?/g).join([]));
+          ctx.fillStyle = "rgba(255,255,255,0.5)";
+          ctx.fillRect (p[0]-m.width/2 -5, p[1]-h -5, m.width +10, h +10)
+          ctx.strokeRect (p[0]-m.width/2 -5, p[1]-h -5, m.width +10, h +10)
+          ctx.fillStyle = f;
+          //console.log(build[i].feature.getProperties())
+        }
+        break;
+      }
+      default: break;
+    }
+  }
 }
 
 export default ol_render3D
