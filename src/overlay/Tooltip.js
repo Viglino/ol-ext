@@ -8,7 +8,7 @@ import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import {getArea as ol_sphere_getArea} from 'ol/sphere.js';
 import {getLength as ol_sphere_getLength} from 'ol/sphere.js';
-import ol_Overlay_Popup from 'Popup'
+import ol_Overlay_Popup from './Popup'
 
 /** A tooltip element to be displayed over the map and attached on the cursor position.
  * @constructor
@@ -25,6 +25,7 @@ var ol_Overlay_Tooltip = function (options) {
 
   options.popupClass = options.popupClass || options.className || 'tooltips black';
   options.positioning = options.positioning || 'center-left';
+  options.stopEvent = !!(options.stopEvent);
 	ol_Overlay_Popup.call(this, options);
 
   this._interaction = new ol_interaction_Interaction({
