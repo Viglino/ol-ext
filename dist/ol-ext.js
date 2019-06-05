@@ -7927,7 +7927,7 @@ ol.control.SearchGeoportailParcelle.prototype._handleParcelle = function(parc) {
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
- * Search places using the French National Base Address (BAN) API.
+ * Search places using the Nominatim geocoder from the OpenStreetmap project.
  *
  * @constructor
  * @extends {ol.control.Search}
@@ -7943,7 +7943,7 @@ ol.control.SearchGeoportailParcelle.prototype._handleParcelle = function(parc) {
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
  *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
  *
- *	@param {string|undefined} options.url Url to Nominatim api, default "https://nominatim.openstreetmap.org/search"
+ *	@param {string|undefined} options.url URL to Nominatim API, default "https://nominatim.openstreetmap.org/search"
  * @see {@link https://wiki.openstreetmap.org/wiki/Nominatim}
  */
 ol.control.SearchNominatim = function(options)
@@ -11835,6 +11835,149 @@ ol.interaction.Clip.prototype.setActive = function(b) {
   if (this.getMap()) this.getMap().renderSync();
 };
 
+/** An interaction to copy/paste features on a map
+ * @constructor
+ * @fires focus
+ * @fires copy
+ * @fires paste
+ * @extends {ol.interaction.Interaction}
+ * @param {Object} options Options
+ *  @param {function} options.condition a function that take a mapBrowserEvent and return the actio nto perform: 'copy', 'cut' or 'paste', default Ctrl+C / Ctrl+V
+ *  @param {ol.Collection<ol.Feature>} options.features list of features to copy
+ *  @param {ol.source.Vector | Array<ol.source.Vector>} options.sources the source to copy from (used for cut), if not defined, it will use the destination
+ *  @param {ol.source.Vector} options.destination the source to copy to
+ */
+ol.interaction.CopyPaste = function(options) {
+  options = options || {};
+  // Features to copy
+  this.features = [];
+  this._cloneFeature = true;
+  var condition = options.condition;
+  if (typeof (condition) !== 'function') {
+    condition = function (e) {
+      if (e.originalEvent.ctrlKey) {
+        if (/^c$/i.test(e.originalEvent.key)) return 'copy';
+        if (/^x$/i.test(e.originalEvent.key)) return 'cut';
+        if (/^v$/i.test(e.originalEvent.key)) return 'paste';
+      }
+      return false;
+    }
+  }
+  this._featuresSource = options.features || new ol.Collection();
+  this.setSources(options.sources);
+  this.setDestination(options.destination);
+  // Create intreaction
+  ol.interaction.Interaction.call(this, {
+    handleEvent: function(e) {
+      if (e.type==='keydown' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+        switch (condition(e)) {
+          case 'copy': {
+            this.copy({ silent: false });
+            break;
+          }
+          case 'cut': {
+            this.copy({ cut: true, silent: false });
+            break;
+          }
+          case 'paste': {
+            this.paste({ silent: false });
+            break;
+          }
+          default: break;
+        }
+      }
+      return true;
+    }.bind(this)
+  });
+};
+ol.ext.inherits(ol.interaction.CopyPaste, ol.interaction.Interaction);
+/** Sources to cut feature from
+ * @param { ol.source.Vector | Array<ol.source.Vector> } sources
+ */
+ol.interaction.CopyPaste.prototype.setSources = function (sources) {
+  if (sources) {
+    this._source = [];
+    this._source = sources instanceof Array ? sources : [sources];
+  } else {
+    this._source = null;
+  }
+};
+/** Get sources to cut feature from
+ * @return { Array<ol.source.Vector> } 
+ */
+ol.interaction.CopyPaste.prototype.getSources = function () {
+  return this._source;
+};
+/** Source to paste features
+ * @param { ol.source.Vector } source
+ */
+ol.interaction.CopyPaste.prototype.setDestination = function (destination) {
+  this._destination = destination;
+};
+/** Get source to paste features
+ * @param { ol.source.Vector } 
+ */
+ol.interaction.CopyPaste.prototype.getDestination = function () {
+  return this._destination;
+};
+/** Get current feature to copy
+ * @return {Array<ol.Feature>}
+ */
+ol.interaction.CopyPaste.prototype.getFeatures = function() {
+  return this.features;
+};
+/** Set current feature to copy
+ * @param {Object} options
+ *  @param {Array<ol.Feature> | ol.Collection<ol.Feature>} options.features feature to copy, default get in the provided collection
+ *  @param {boolean} options.cut try to cut feature from the sources, default false
+ *  @param {boolean} options.silent true to send an event, default true
+ */
+ol.interaction.CopyPaste.prototype.copy = function (options) {
+  options = options || {};
+  var features = options.features || this._featuresSource.getArray();
+  // Try to remove feature from sources
+  if (options.cut) {
+    var sources = this._source || [this._destination];
+    // Remove feature from sources
+    features.forEach(function(f) {
+      sources.forEach(function(source) {
+        try {
+          source.removeFeature(f);
+        } catch(e) {/*ok*/}
+      });
+    });
+  }
+  if (this._cloneFeature) {
+    this.features = [];
+    features.forEach(function(f) {
+      this.features.push(f.clone());
+    }.bind(this));
+  } else {
+    this.features = features;
+  }
+  // Send an event
+  if (options.silent===false) this.dispatchEvent({ type: options.cut ? 'cut' : 'copy', time: (new Date).getTime() });
+};
+/** Paste features
+ * @param {Object} options
+ *  @param {Array<ol.Feature> | ol.Collection<ol.Feature>} features feature to copy, default get current features
+ *  @param {ol.source.Vector} options.destination Source to paste to, default the current source
+ *  @param {boolean} options.silent true to send an event, default true
+ */
+ol.interaction.CopyPaste.prototype.paste = function(options) {
+  options = options || {};
+  var features = options.features || this.features;
+  if (features) {
+    var destination = options.destination || this._destination;
+    if (destination) {
+      destination.addFeatures(this.features);
+      if (this._cloneFeature) this.copy({ features: this.features });
+    }
+  }
+  // Send an event
+  if (options.silent===false) this.dispatchEvent({ type:'paste', features: features, time: (new Date).getTime() });
+};
+
 /*	Copyright (c) 2018 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -13075,6 +13218,46 @@ ol.interaction.Flashlight.prototype.postcompose_ = function(e)
 	ctx.restore();
 };
 
+/** An interaction to focus on the map on click. Usefull when using keyboard event on the map.
+ * @constructor
+ * @fires focus
+ * @extends {ol.interaction.Interaction}
+ */
+ol.interaction.FocusMap = function() {
+  //
+  ol.interaction.Interaction.call(this, {});
+  // Focus (hidden) button to focus on the map when click on it 
+  this.focusBt = ol.ext.element.create('BUTTON', {
+    on: {
+      focus: function() {
+        this.dispatchEvent({ type:'focus' });
+      }.bind(this)
+    },
+    style: {
+      position: 'absolute',
+      zIndex: -1,
+      top: 0,
+      opacity: 0
+    }
+  });
+};
+ol.ext.inherits(ol.interaction.FocusMap, ol.interaction.Interaction);
+/** Set the map > add the focus button and focus on the map when pointerdown to enable keyboard events.
+ */
+ol.interaction.FocusMap.prototype.setMap = function(map) {
+  if (this._listener) ol.Observable.unByKey(this._listener);
+  this._listener = null;
+  if (this.getMap()) { this.getMap().getViewport().removeChild(this.focusBt); }
+  ol.interaction.Interaction.prototype.setMap.call (this, map);
+  if (this.getMap()) {
+    // Force focus on the clicked map
+    this._listener = this.getMap().on('pointerdown', function() {
+      if (this.getActive()) this.focusBt.focus();
+    }.bind(this));
+    this.getMap().getViewport().appendChild(this.focusBt); 
+  }
+};
+
 /** Interaction to draw on the current geolocation
  *	It combines a draw with a ol.Geolocation
  * @constructor
@@ -13960,7 +14143,6 @@ ol.interaction.ModifyFeature.prototype.getArcs = function(geom, coord) {
       break;
     }
     case 'GeometryCollection': {
-      var g = geom.getGeometries();
       for (i=0; l=g[i]; i++) {
         arcs = this.getArcs(l, coord);
         if (arcs) {
@@ -16157,6 +16339,7 @@ ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
 ol.interaction.Transform = function(options) {
   if (!options) options = {};
 	var self = this;
+  this.selection_ = new ol.Collection();
 	// Create a new overlay layer for the sketch
 	this.handles_ = new ol.Collection();
 	this.overlayLayer_ = new ol.layer.Vector({
@@ -16205,7 +16388,6 @@ ol.interaction.Transform = function(options) {
   this.set('selection', (options.selection !== false));
   /*  */
   this.set('hitTolerance', (options.hitTolerance || 0));
-  this.selection_ = [];
   // Force redraw when changed
   this.on ('propertychange', function() {
     this.drawSketch_();
@@ -16354,7 +16536,7 @@ ol.interaction.Transform.prototype.getFeatureAtPixel_ = function(pixel) {
       // No seletion
       if (!self.get('selection')) {
         // Return the currently selected feature the user is interacting with.
-        if (self.selection_.some(function(f) { return feature === f; })) {
+        if (self.selection_.getArray().some(function(f) { return feature === f; })) {
           return { feature: feature };
         }
         return null;
@@ -16389,13 +16571,13 @@ ol.interaction.Transform.prototype.getFeatureAtPixel_ = function(pixel) {
 ol.interaction.Transform.prototype.drawSketch_ = function(center) {
   var i, f, geom;
   this.overlayLayer_.getSource().clear();
-  if (!this.selection_.length) return;
-  var ext = this.selection_[0].getGeometry().getExtent();
+  if (!this.selection_.getLength()) return;
+  var ext = this.selection_.item(0).getGeometry().getExtent();
   // Clone and extend
   ext = ol.extent.buffer(ext, 0);
-  for (i=1, f; f = this.selection_[i]; i++) {
+  this.selection_.forEach(function (f) {
     ol.extent.extend(ext, f.getGeometry().getExtent());
-  }
+  });
   if (center===true) {
     if (!this.ispt_) {
       this.overlayLayer_.getSource().addFeature(new ol.Feature( { geometry: new ol.geom.Point(this.center_), handle:'rotate0' }) );
@@ -16449,15 +16631,18 @@ ol.interaction.Transform.prototype.drawSketch_ = function(center) {
 */
 ol.interaction.Transform.prototype.select = function(feature, add) {
   if (!feature) {
-    this.selection_ = [];
+    this.selection_.clear();
     this.drawSketch_();
     return;
   }
   if (!feature.getGeometry || !feature.getGeometry()) return;
   // Add to selection
   if (add) this.selection_.push(feature);
-  else this.selection_ = [feature];
-  this.ispt_ = (this.selection_.length===1 ? (this.selection_[0].getGeometry().getType() == "Point") : false);
+  else {
+    this.selection_.clear()
+    this.selection_.push(feature);
+  }
+  this.ispt_ = (this.selection_.getLength()===1 ? (this.selection_.item(0).getGeometry().getType() == "Point") : false);
   this.drawSketch_();
   this.watchFeatures_();
   // select event
@@ -16489,8 +16674,8 @@ ol.interaction.Transform.prototype.watchFeatures_ = function() {
 ol.interaction.Transform.prototype.handleDownEvent_ = function(evt) {
   var sel = this.getFeatureAtPixel_(evt.pixel);
   var feature = sel.feature;
-  if (this.selection_.length
-    && this.selection_.indexOf(feature) >=0
+  if (this.selection_.getLength()
+    && this.selection_.getArray().indexOf(feature) >= 0
     && ((this.ispt_ && this.get('translate')) || this.get('translateFeature'))
   ){
     sel.handle = 'translate';
@@ -16504,7 +16689,7 @@ ol.interaction.Transform.prototype.handleDownEvent_ = function(evt) {
     this.pixel_ = evt.pixel;
     this.geoms_ = [];
     var extent = ol.extent.createEmpty();
-    for (var i=0, f; f=this.selection_[i]; i++) {
+    for (var i=0, f; f=this.selection_.item(i); i++) {
       this.geoms_.push(f.getGeometry().clone());
       extent = ol.extent.extend(extent, f.getGeometry().getExtent());
     }
@@ -16521,7 +16706,7 @@ ol.interaction.Transform.prototype.handleDownEvent_ = function(evt) {
     this.angle_ = Math.atan2(this.center_[1]-evt.coordinate[1], this.center_[0]-evt.coordinate[0]);
     this.dispatchEvent({
       type: this.mode_+'start',
-      feature: this.selection_[0], // backward compatibility
+      feature: this.selection_.item(0), // backward compatibility
       features: this.selection_,
       pixel: evt.pixel,
       coordinate: evt.coordinate
@@ -16530,14 +16715,14 @@ ol.interaction.Transform.prototype.handleDownEvent_ = function(evt) {
   }
   else if (this.get('selection')) {
     if (feature){
-      if (!this.addFn_(evt)) this.selection_ = [];
-      var index = this.selection_.indexOf(feature);
+      if (!this.addFn_(evt)) this.selection_.clear();
+      var index = this.selection_.getArray().indexOf(feature);
       if (index < 0) this.selection_.push(feature);
-      else this.selection_.splice(index,1);
+      else this.selection_.removeAt(index);
     } else {
-      this.selection_ = [];
+      this.selection_.clear();
     }
-    this.ispt_ = this.selection_.length===1 ? (this.selection_[0].getGeometry().getType() == "Point") : false;
+    this.ispt_ = this.selection_.getLength()===1 ? (this.selection_.item(0).getGeometry().getType() == "Point") : false;
     this.drawSketch_();
     this.watchFeatures_();
     this.dispatchEvent({ type:'select', feature: feature, features: this.selection_, pixel: evt.pixel, coordinate: evt.coordinate });
@@ -16546,7 +16731,7 @@ ol.interaction.Transform.prototype.handleDownEvent_ = function(evt) {
 };
 /**
  * Get features to transform
- * @return {Array<ol.Feature>}
+ * @return {ol.Collection<ol.Feature>}
  */
 ol.interaction.Transform.prototype.getFeatures = function() {
   return this.selection_;
@@ -16577,7 +16762,7 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
         // var geometry = this.geom_.clone();
         // geometry.rotate(a-this.angle_, this.center_);
         // this.feature_.setGeometry(geometry);
-        for (i=0, f; f=this.selection_[i]; i++) {
+        for (i=0, f; f=this.selection_.item(i); i++) {
           geometry = this.geoms_[i].clone();
           geometry.rotate(a - this.angle_, this.center_);
           // bug: ol, bad calculation circle geom extent
@@ -16588,7 +16773,7 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
       this.drawSketch_(true);
       this.dispatchEvent({
         type:'rotating',
-        feature: this.selection_[0],
+        feature: this.selection_.item(0),
         features: this.selection_,
         angle: a-this.angle_,
         pixel: evt.pixel,
@@ -16600,7 +16785,7 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
       var deltaX = evt.coordinate[0] - this.coordinate_[0];
       var deltaY = evt.coordinate[1] - this.coordinate_[1];
       //this.feature_.getGeometry().translate(deltaX, deltaY);
-      for (i=0, f; f=this.selection_[i]; i++) {
+      for (i=0, f; f=this.selection_.item(i); i++) {
         f.getGeometry().translate(deltaX, deltaY);
       }
       this.handles_.forEach(function(f) {
@@ -16609,7 +16794,7 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
       this.coordinate_ = evt.coordinate;
       this.dispatchEvent({
         type:'translating',
-        feature: this.selection_[0],
+        feature: this.selection_.item(0),
         features: this.selection_,
         delta:[deltaX,deltaY],
         pixel: evt.pixel,
@@ -16636,7 +16821,7 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
           scx = scy = Math.min(scx,scy);
         }
       }
-      for (i=0, f; f=this.selection_[i]; i++) {
+      for (i=0, f; f=this.selection_.item(i); i++) {
         geometry = this.geoms_[i].clone();
         geometry.applyTransform(function(g1, g2, dim) {
           if (dim<2) return g2;
@@ -16653,7 +16838,7 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
       this.drawSketch_();
       this.dispatchEvent({
         type:'scaling',
-        feature: this.selection_[0],
+        feature: this.selection_.item(0),
         features: this.selection_,
         scale:[scx,scy],
         pixel: evt.pixel,
@@ -16699,7 +16884,7 @@ ol.interaction.Transform.prototype.handleUpEvent_ = function(evt) {
   //dispatchEvent
   this.dispatchEvent({
     type:this.mode_+'end',
-    feature: this.selection_[0],
+    feature: this.selection_.item(0),
     features: this.selection_,
     oldgeom: this.geoms_[0],
     oldgeoms: this.geoms_
@@ -18187,6 +18372,132 @@ ol.source.GeoImage.prototype.setCrop = function(crop)
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+/** IGN's Geoportail WMTS source
+ * @constructor
+ * @extends {ol.source.WMTS}
+ * @param {String=} layer Layer name.
+ * @param {olx.source.OSMOptions=} options WMTS options 
+ *  @param {number} options.minZoom
+ *  @param {number} options.maxZoom
+ *  @param {string} options.server
+ *  @param {string} options.gppKey api key, default 'choisirgeoportail'
+ *  @param {string} options.authentication basic authentication associated with the gppKey as btoa("login:pwd")
+ *  @param {string} options.format image format, default 'image/jpeg'
+ *  @param {string} options.style layer style, default 'normal'
+ *  @param {string} options.crossOrigin default 'anonymous'
+ *  @param {string} options.wrapX default true
+ */
+ol.source.Geoportail = function (layer, options) {
+  options = options || {};
+  var matrixIds = new Array();
+	var resolutions = new Array();//[156543.03392804103,78271.5169640205,39135.75848201024,19567.879241005125,9783.939620502562,4891.969810251281,2445.9849051256406,1222.9924525628203,611.4962262814101,305.74811314070485,152.87405657035254,76.43702828517625,38.218514142588134,19.109257071294063,9.554628535647034,4.777314267823517,2.3886571339117584,1.1943285669558792,0.5971642834779396,0.29858214173896974,0.14929107086948493,0.07464553543474241];
+	var size = ol.extent.getWidth(ol.proj.get('EPSG:3857').getExtent()) / 256;
+	for (var z=0; z <= (options.maxZoom ? options.maxZoom : 20) ; z++) {
+    matrixIds[z] = z ; 
+		resolutions[z] = size / Math.pow(2, z);
+	}
+	var tg = new ol.tilegrid.WMTS ({
+    origin: [-20037508, 20037508],
+    resolutions: resolutions,
+    matrixIds: matrixIds
+  });
+	tg.minZoom = (options.minZoom ? options.minZoom : 0);
+	var attr = [ ol.source.Geoportail.prototype.attribution ];
+	if (options.attributions) attr = options.attributions;
+	this._server = options.server;
+	this._gppKey = options.gppKey || 'choisirgeoportail';
+	wmts_options = {
+    url: this.serviceURL(),
+		layer: layer,
+		matrixSet: 'PM',
+		format: options.format ? options.format : 'image/jpeg',
+		projection: 'EPSG:3857',
+		tileGrid: tg,
+		style: options.style ? options.style : 'normal',
+		attributions: attr,
+		crossOrigin: (typeof options.crossOrigin == 'undefined') ? 'anonymous' : options.crossOrigin,
+		wrapX: !(options.wrapX===false)
+	};
+  ol.source.WMTS.call(this, wmts_options);
+	// Load url using basic authentification
+	if (options.authentication) {
+		this.setTileLoadFunction(ol.source.Geoportail.tileLoadFunctionWithAuthentication(options.authentication, this.getFormat()));
+	}
+};
+ol.ext.inherits(ol.source.Geoportail, ol.source.WMTS);
+/** Standard IGN-GEOPORTAIL attribution 
+*/
+ol.source.Geoportail.prototype.attribution = '<a href="http://www.geoportail.gouv.fr/">Géoportail</a> &copy; <a href="http://www.ign.fr/">IGN-France</a>';
+/** Get service URL according to server url or standard url
+*/
+ol.source.Geoportail.prototype.serviceURL = function() {
+  if (this._server) {
+    return this._server.replace (/^(https?:\/\/[^\/]*)(.*)$/, "$1/"+this._gppKey+"$2") ;
+	} else {
+    return (window.geoportailConfig ? geoportailConfig.url : "https://wxs.ign.fr/") +this._gppKey+ "/wmts" ;
+  }
+};
+/**
+ * Return the associated API key of the Map.
+ * @function
+ * @return the API key.
+ * @api stable
+ */
+ol.source.Geoportail.prototype.getGPPKey = function() {
+  return this._gppKey;
+};
+/**
+ * Set the associated API key to the Map.
+ * @param {String} key the API key.
+ * @param {String} authentication as btoa("login:pwd")
+ * @api stable
+ */
+ol.source.Geoportail.prototype.setGPPKey = function(key, authentication) {
+  this._gppKey = key;
+	var serviceURL = this.serviceURL();
+	this.setTileUrlFunction (function() {
+    var url = ol.source.Geoportail.prototype.getTileUrlFunction().apply(this, arguments);
+		if (url) {
+      var args = url.split("?");
+			return serviceURL+"?"+args[1];
+		}
+		else return url;
+	});
+	// Load url using basic authentification
+	if (authentication) {
+		this.setTileLoadFunction(ol.source.Geoportail.tileLoadFunctionWithAuthentication(authentication, this.getFormat()));
+	}
+};
+/** Get a tile load function to load tiles with basic authentication
+ * @param {string} authentication as btoa("login:pwd")
+ * @param {string} format mime type
+ * @return {function} tile load function to load tiles with basic authentication
+ */
+ol.source.Geoportail.tileLoadFunctionWithAuthentication = function(authentication, format) {
+	if (!authentication) return undefined;
+	return function(tile, src) {
+		var xhr = new XMLHttpRequest();
+		xhr.open("GET", src);
+		xhr.setRequestHeader("Authorization", "Basic " + authentication);
+		xhr.responseType = "arraybuffer";
+		xhr.onload = function () {
+			var arrayBufferView = new Uint8Array(this.response);
+			var blob = new Blob([arrayBufferView], { type: format });
+			var urlCreator = window.URL || window.webkitURL;
+			var imageUrl = urlCreator.createObjectURL(blob);
+			tile.getImage().src = imageUrl;
+		};
+		xhr.onerror = function () {
+			tile.getImage().src = "";
+		};
+		xhr.send();
+	};
+};
+
+/*	Copyright (c) 2019 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
 /** A source for grid binning
  * @constructor
  * @extends {ol.source.Vector}
@@ -18575,6 +18886,291 @@ ol.source.Overpass.prototype.hasFeature = function(feature) {
   };
 })();
 
+/** 
+ * @classdesc 3D vector layer rendering
+ * @constructor
+ * @extends {pl.layer.Image}
+ * @param {Object} options
+ *  @param {ol.layer.Vector} options.source the source to display in 3D
+ *  @param {ol.style.Style} options.styler drawing style
+ *  @param {number} options.maxResolution  max resolution to render 3D
+ *  @param {number} options.defaultHeight default height if none is return by a propertie
+ *  @param {function|string|Number} options.height a height function (returns height giving a feature) or a popertie name for the height or a fixed value
+ */
+ol.layer.Vector3D = function (options) {
+  options = options || {};
+  this._source = options.source;
+  this.height_ = options.height = this.getHfn (options.height);
+  var canvas = document.createElement('canvas');
+  ol.layer.Image.call (this, { 
+    source: new ol.source.ImageCanvas({
+      canvasFunction: function(extent, resolution, pixelRatio, size /*, projection*/ ) {
+        canvas.width = size[0];
+        canvas.height = size[1];
+        return canvas;
+      }
+    }), 
+    height: options.height,
+    defaultHeight: options.defaultHeight || 0,
+    maxResolution: options.maxResolution || Infinity 
+  });
+  this.setStyle(options.style);
+  this.on (['postcompose', 'postrender'], this.onPostcompose_.bind(this));
+}
+ol.ext.inherits(ol.layer.Vector3D, ol.layer.Image);
+/**
+ * Set style associated with the renderer
+ * @param {ol.style.Style} s
+ */
+ol.layer.Vector3D.prototype.setStyle = function(s) {
+  if (s instanceof ol.style.Style) this._style = s;
+  else this._style = new ol.style.Style();
+  if (!this._style.getStroke()) {
+    this._style.setStroke(new ol.style.Stroke({
+      width: 1,
+      color: 'red'
+    }));
+  }
+  if (!this._style.getFill()) {
+    this._style.setFill( new ol.style.Fill({ color: 'rgba(0,0,255,0.5)'}) );
+  }
+  if (!this._style.getText()) {
+    this._style.setText( new ol.style.Fill({ 
+      color: 'red'}) 
+    );
+  }
+  // Get the geometry
+  if (s && s.getGeometry()) {
+    var geom = s.getGeometry();
+    if (typeof(geom)==='function') {
+      this.set('geometry', geom);
+    } else {
+      this.set('geometry', function(f) { geom });
+    }
+  } else {
+    this.set('geometry', function(f) { return f.getGeometry(); });
+  }
+};
+/**
+ * Get style associated with the renderer
+ * @return {ol.style.Style}
+ */
+ol.layer.Vector3D.prototype.getStyle = function() {
+  return this._style;
+};
+/** Calculate 3D at potcompose
+*/
+ol.layer.Vector3D.prototype.onPostcompose_ = function(e) {
+  var res = e.frameState.viewState.resolution;
+  if (res > this.get('maxResolution')) return;
+  this.res_ = res*400;
+  if (this.animate_) {
+    var elapsed = e.frameState.time - this.animate_;
+    if (elapsed < this.animateDuration_) {
+      this.elapsedRatio_ = this.easing_(elapsed / this.animateDuration_);
+      // tell OL3 to continue postcompose animation
+      e.frameState.animate = true;
+    } else {
+      this.animate_ = false;
+      this.height_ = this.toHeight_
+    }
+  }
+  var ratio = e.frameState.pixelRatio;
+  var ctx = e.context;
+  var m = this.matrix_ = e.frameState.coordinateToPixelTransform;
+  // Old version (matrix)
+  if (!m) {
+    m = e.frameState.coordinateToPixelMatrix,
+    m[2] = m[4];
+    m[3] = m[5];
+    m[4] = m[12];
+    m[5] = m[13];
+  }
+  this.center_ = [ ctx.canvas.width/2/ratio, ctx.canvas.height/ratio ];
+  var f = this._source.getFeaturesInExtent(e.frameState.extent);
+  ctx.save();
+    ctx.scale(ratio,ratio);
+    var s = this.getStyle();
+    ctx.lineWidth = s.getStroke().getWidth();
+    ctx.strokeStyle = ol.color.asString(s.getStroke().getColor());
+    ctx.fillStyle = ol.color.asString(s.getFill().getColor());
+    var builds = [];
+    for (var i=0; i<f.length; i++) {
+      builds.push (this.getFeature3D_ (f[i], this.getFeatureHeight(f[i])));
+    }
+    this.drawFeature3D_ (ctx, builds);
+  ctx.restore();
+};
+/** Create a function that return height of a feature
+*	@param {function|string|number} h a height function or a popertie name or a fixed value
+*	@return {function} function(f) return height of the feature f
+*/
+ol.layer.Vector3D.prototype.getHfn= function(h) {
+  switch (typeof(h)) {
+    case 'function': return h;
+    case 'string': {
+      var dh = this.get('defaultHeight');
+        return (function(f) {
+          return (Number(f.get(h)) || dh); 
+        });
+      }
+    case 'number': return (function(/*f*/) { return h; });
+    default: return (function(/*f*/) { return 10; });
+  }
+}
+/** Animate rendering
+ * @param {olx.render3D.animateOptions}
+ *  @param {string|function|number} param.height an attribute name or a function returning height of a feature or a fixed value
+ *  @param {number} param.duration the duration of the animatioin ms, default 1000
+ *  @param {ol.easing} param.easing an ol easing function
+ *	@api
+ */
+ol.layer.Vector3D.prototype.animate = function(options) {
+  options = options || {};
+  this.toHeight_ = this.getHfn(options.height);
+  this.animate_ = new Date().getTime();
+  this.animateDuration_ = options.duration ||1000;
+  this.easing_ = options.easing || ol.easing.easeOut;
+  // Force redraw
+  this.changed();
+}
+/** Check if animation is on
+*	@return {bool}
+*/
+ol.layer.Vector3D.prototype.animating = function() {
+  if (this.animate_ && new Date().getTime() - this.animate_ > this.animateDuration_) {
+    this.animate_ = false;
+  }
+  return !!this.animate_;
+}
+/** 
+*/
+ol.layer.Vector3D.prototype.getFeatureHeight = function (f) {
+  if (this.animate_) {
+    var h1 = this.height_(f);
+    var h2 = this.toHeight_(f);
+    return (h1*(1-this.elapsedRatio_)+this.elapsedRatio_*h2);
+  }
+  else return this.height_(f);
+};
+/**
+*/
+ol.layer.Vector3D.prototype.hvector_ = function (pt, h) {
+  var p0 = [
+    pt[0]*this.matrix_[0] + pt[1]*this.matrix_[1] + this.matrix_[4],
+    pt[0]*this.matrix_[2] + pt[1]*this.matrix_[3] + this.matrix_[5]
+  ];
+  return {
+    p0: p0, 
+    p1: [
+      p0[0] + h/this.res_ * (p0[0]-this.center_[0]),
+      p0[1] + h/this.res_ * (p0[1]-this.center_[1])
+    ]
+  };
+};
+/**
+*/
+ol.layer.Vector3D.prototype.getFeature3D_ = function (f, h) {
+  var geom = this.get('geometry')(f);
+  var c = geom.getCoordinates();
+  switch (geom.getType()) {
+    case "Polygon":
+      c = [c];
+    // fallthrough
+    case "MultiPolygon":
+      var build = [];
+      for (var i=0; i<c.length; i++) {
+        for (var j=0; j<c[i].length; j++) {
+          var b = [];
+          for (var k=0; k<c[i][j].length; k++) {
+            b.push( this.hvector_(c[i][j][k], h) );
+          }
+          build.push(b);
+        }
+      }
+      return { type:"MultiPolygon", feature: f, geom: build };
+    case "Point":
+      return { type:"Point", feature: f, geom: this.hvector_(c,h) };
+    default: return {};
+  }
+}
+/**
+*/
+ol.layer.Vector3D.prototype.drawFeature3D_ = function(ctx, build) {
+  var i,j, b, k;
+  // Construct
+  for (i=0; i<build.length; i++) {	
+    switch (build[i].type) {
+      case "MultiPolygon": {
+        for (j=0; j<build[i].geom.length; j++) {
+          b = build[i].geom[j];
+          for (k=0; k < b.length; k++) {
+            ctx.beginPath();
+            ctx.moveTo(b[k].p0[0], b[k].p0[1]);
+            ctx.lineTo(b[k].p1[0], b[k].p1[1]);
+            ctx.stroke();
+          }
+        }
+        break;
+      }
+      case "Point": {
+        var g = build[i].geom;
+          ctx.beginPath();
+          ctx.moveTo(g.p0[0], g.p0[1]);
+          ctx.lineTo(g.p1[0], g.p1[1]);
+          ctx.stroke();
+          break;
+        }
+      default: break;
+    }
+  }
+  // Roof
+  for (i=0; i<build.length; i++) {
+    switch (build[i].type) {
+      case "MultiPolygon": {
+        ctx.beginPath();
+        for (j=0; j<build[i].geom.length; j++) {
+          b = build[i].geom[j];
+          if (j==0) {
+            ctx.moveTo(b[0].p1[0], b[0].p1[1]);
+            for (k=1; k < b.length; k++) {
+              ctx.lineTo(b[k].p1[0], b[k].p1[1]);
+            }
+          } else {
+            ctx.moveTo(b[0].p1[0], b[0].p1[1]);
+            for (k=b.length-2; k>=0; k--) {
+              ctx.lineTo(b[k].p1[0], b[k].p1[1]);
+            }
+          }
+          ctx.closePath();
+        }
+        ctx.fill("evenodd");
+        ctx.stroke();
+        break;
+      }
+      case "Point": {
+        b = build[i];
+        var t = b.feature.get('label');
+        if (t) {
+          var p = b.geom.p1;
+          var m = ctx.measureText(t);
+          var h = Number (ctx.font.match(/\d+(\.\d+)?/g).join([]));
+          ctx.fillRect (p[0]-m.width/2 -5, p[1]-h -5, m.width +10, h +10)
+          ctx.strokeRect (p[0]-m.width/2 -5, p[1]-h -5, m.width +10, h +10)
+          ctx.save()
+            ctx.fillStyle = ol.color.asString(this._style.getText().getFill().getColor());
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText ( t, p[0], p[1] );
+          ctx.restore();
+        }
+        break;
+      }
+      default: break;
+    }
+  }
+}
+
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -18928,6 +19524,281 @@ ol.layer.AnimatedCluster.prototype.postanimate = function(e)
 	}
 };
 
+/*	Copyright (c) 2019 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** IGN's Geoportail WMTS layer definition
+* @constructor 
+* @extends {ol.layer.Tile}
+* @param {string} layer Layer name
+* @param {olx.layer.WMTSOptions=} options WMTS options if not defined default are used
+* @param {olx.source.WMTSOptions=} options WMTS options if not defined default are used
+*/
+ol.layer.Geoportail = function(layer, options, tileoptions) {
+  options = options || {};
+	tileoptions = tileoptions || {};
+	var capabilities = window.geoportailConfig ? geoportailConfig.capabilities[options.key] || geoportailConfig.capabilities["default"] : ol.layer.Geoportail.capabilities;
+	capabilities = capabilities[layer];
+	if (!capabilities) {
+    capabilities = { title: layer, originators: [] };
+    console.error("ol.layer.Geoportail: no layer definition for \""+layer+"\"\nTry to use ol/layer/Geoportail~loadCapabilities() to get it.");
+    // throw new Error("ol.layer.Geoportail: no layer definition for \""+layer+"\"");
+  }
+	// tile options & default params
+	for (var i in capabilities) if (typeof	tileoptions[i]== "undefined") tileoptions[i] = capabilities[i];
+	this._originators = capabilities.originators;
+	if (!tileoptions.gppKey) tileoptions.gppKey = options.gppKey || options.key;
+	options.source = new ol.source.Geoportail(layer, tileoptions);
+	if (!options.name) options.name = capabilities.title;
+	if (!options.desc) options.desc = capabilities.desc;
+	if (!options.extent && capabilities.bbox) {
+    if (capabilities.bbox[0]>-170 && capabilities.bbox[2]<170)
+    options.extent = ol.proj.transformExtent(capabilities.bbox, 'EPSG:4326', 'EPSG:3857');
+	}
+	// calculate layer max resolution
+	if (!options.maxResolution && tileoptions.minZoom) {
+    options.source.getTileGrid().minZoom -= (tileoptions.minZoom>1 ? 2 : 1);
+		options.maxResolution = options.source.getTileGrid().getResolution(options.source.getTileGrid().minZoom)
+		options.source.getTileGrid().minZoom = tileoptions.minZoom;
+  }
+  ol.layer.Tile.call (this, options);
+  // BUG GPP: Attributions constraints are not set properly :(
+  return;
+  // Set attribution according to the originators
+  var counter = 0;
+  // Get default attribution
+  var getAttrib = function(title, o) {
+    if (this.get('attributionMode')==='logo') {
+      if (!title) return ol.source.Geoportail.prototype.attribution;
+      else return '<a href=\"'+o.href+'"><img src="'+o.logo+'" title="&copy; '+o.attribution+'" /></a>';
+    } else {
+      if (!title) return ol.source.Geoportail.prototype.attribution;
+      else return '&copy; <a href=\"'+o.href+'" title="&copy; '+(o.attribution||title)+'" >'+title+'</a>'
+    }
+  }.bind(this);
+  var currentZ, currentCenter = [];
+  var setAttribution = function(e) {
+    counter--;
+    if (!counter) {
+      var z = e.frameState.viewState.zoom;
+      console.log(e)
+      if (z===currentZ 
+        && e.frameState.viewState.center[0]===currentCenter[0]
+        && e.frameState.viewState.center[1]===currentCenter[1]){
+          return;
+      }
+      currentZ = z;
+      currentCenter = e.frameState.viewState.center;
+      var ex = e.frameState.extent;
+      ex = ol.proj.transformExtent (ex, e.frameState.viewState.projection, 'EPSG:4326');
+      if (this._originators) {
+        var attrib = this.getSource().getAttributions();
+        // ol v5
+        if (typeof(attrib)==='function') attrib = attrib();
+        attrib.splice(0, attrib.length);
+        var maxZoom = 0;
+        for (var a in this._originators) {
+          var o = this._originators[a];
+          for (var i=0; i<o.constraint.length; i++) {
+            if (o.constraint[i].maxZoom > maxZoom
+              && ol.extent.intersects(ex, o.constraint[i].bbox)) {
+                maxZoom = o.constraint[i].maxZoom;
+            }
+          }	
+        }
+        if (maxZoom < z) z = maxZoom;
+        if (this.getSource().getTileGrid() && z < this.getSource().getTileGrid().getMinZoom()) {
+          z = this.getSource().getTileGrid().getMinZoom();
+        }
+        for (var a in this._originators) {
+          var o = this._originators[a];
+          if (!o.constraint.length) {
+            attrib.push (getAttrib(a, o));
+          } else {
+            for (var i=0; i<o.constraint.length; i++) {
+              console.log(ex, o)
+              if ( z <= o.constraint[i].maxZoom 
+                && z >= o.constraint[i].minZoom 
+                && ol.extent.intersects(ex, o.constraint[i].bbox)) {
+                  attrib.push (getAttrib(a, o));
+                  break;
+              }
+            }
+          }
+        }
+        if (!attrib.length) attrib.push ( getAttrib() );
+        this.getSource().setAttributions(attrib);
+      }
+    }
+  }.bind(this);
+  this.on('precompose', function(e) {
+    counter++;
+    setTimeout(function () { setAttribution(e) }, 500);
+  });
+};
+ol.ext.inherits (ol.layer.Geoportail, ol.layer.Tile);
+/** Default capabilities for main layers
+ */
+ol.layer.Geoportail.capabilities = {
+	"GEOGRAPHICALGRIDSYSTEMS.MAPS":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Cartes IGN","order":"9980000","format":"image/jpeg","tilematrix":"PM","style":"normal","minZoom":0,"maxZoom":18,"bbox":[-180,-68.138855,180,80],"desc":"Cartes IGN","keys":"Cartes","qlook":"https://wxs.ign.fr/static/pictures/ign_carte2.jpg","legend":[],"originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":18,"constraint":[{"minZoom":17,"maxZoom":17,"bbox":[-63.189117,-21.428364,55.84698,51.175068]},{"minZoom":18,"maxZoom":18,"bbox":[-63.189068,-21.428364,55.846638,51.175068]},{"minZoom":7,"maxZoom":8,"bbox":[-178.20573,-68.138855,144.84375,51.909786]},{"minZoom":13,"maxZoom":14,"bbox":[-178.20573,-67.101425,142.03836,51.44377]},{"minZoom":11,"maxZoom":12,"bbox":[-178.20573,-67.101425,142.03836,51.444122]},{"minZoom":9,"maxZoom":10,"bbox":[-178.20573,-68.138855,144.84375,51.444016]},{"minZoom":15,"maxZoom":16,"bbox":[-178.20573,-46.502903,77.60037,51.175068]},{"minZoom":0,"maxZoom":6,"bbox":[-180,-60,180,80]}]},"NCL-DITTT":{"href":"http://www.dittt.gouv.nc/portal/page/portal/dittt","attribution":"Direction des Infrastructures, de la Topographie et des Transports Terrestres du gouvernement de la Nouvelle-Calédonie","logo":"https://wxs.ign.fr/static/logos/NCL-DITTT/NCL-DITTT.gif","minZoom":0,"maxZoom":16,"constraint":[{"minZoom":8,"maxZoom":10,"bbox":[163.47784,-22.854631,168.24048,-19.402704]},{"minZoom":11,"maxZoom":13,"bbox":[163.47784,-22.972307,168.24327,-19.494438]},{"minZoom":14,"maxZoom":15,"bbox":[164.53125,-22.75592,168.22266,-20.303417]},{"minZoom":16,"maxZoom":16,"bbox":[163.47784,-22.79525,168.19109,-19.494438]}]}}},
+	"GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Carte IGN","format":"image/jpeg","tilematrix":"PM","style":"normal","minZoom":0,"maxZoom":18,"bbox":[-179.62723,-84.5047,179.74588,85.47958],"desc":"Cartographie topographique multi-échelles du territoire français issue des bases de données vecteur de l’IGN - emprise nationale, visible du 1/200 au 1/130000000","keys":"Cartes","qlook":"https://wxs.ign.fr/static/pictures/ign_scan-express-standard.png","legend":[{"zoom":5,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-1000k.png"},{"zoom":2,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-1000k.png"},{"zoom":3,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-1000k.png"},{"zoom":4,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-1000k.png"},{"zoom":8,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-1000k.png"},{"zoom":16,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-50k-25k.png"},{"zoom":18,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-GE.png"},{"zoom":17,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-GE.png"},{"zoom":15,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-50k-25k.png"},{"zoom":14,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-50k-25k.png"},{"zoom":13,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-100k.png"}],"originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":13,"bbox":[-63.37252,13.428586,11.429714,51.44377]},{"minZoom":11,"maxZoom":12,"bbox":[-63.37252,13.428586,11.496459,51.444122]},{"minZoom":9,"maxZoom":9,"bbox":[-64.81273,13.428586,11.496459,51.444016]},{"minZoom":10,"maxZoom":10,"bbox":[-63.37252,13.428586,11.496459,51.444016]},{"minZoom":0,"maxZoom":2,"bbox":[-175.99709,-84.42859,175.99709,84.2865]},{"minZoom":4,"maxZoom":4,"bbox":[-179.62723,-84.0159,-179.21112,85.47958]},{"minZoom":18,"maxZoom":18,"bbox":[-63.189068,-21.428364,55.846638,51.175068]},{"minZoom":15,"maxZoom":17,"bbox":[-63.189117,-21.428364,55.84698,51.175068]},{"minZoom":14,"maxZoom":14,"bbox":[-63.283817,-21.7006,56.039127,51.44377]},{"minZoom":6,"maxZoom":8,"bbox":[-179.49689,-84.02368,179.74588,85.30035]},{"minZoom":3,"maxZoom":3,"bbox":[-176.23093,-84.5047,179.08267,84.89126]},{"minZoom":5,"maxZoom":5,"bbox":[-179.57285,-83.84196,178.4975,85.36646]}]}}},
+	"ELEVATION.SLOPES":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Altitude","order":"9890000","format":"image/jpeg","tilematrix":"PM","style":"normal","minZoom":6,"maxZoom":14,"bbox":[-178.20589,-22.595179,167.43176,50.93085],"desc":"La couche altitude se compose d'un MNT (Modèle Numérique de Terrain) affiché en teintes hypsométriques et issu de la BD ALTI®.","keys":"Cartes","qlook":"https://wxs.ign.fr/static/pictures/ign_altitude.jpg","legend":[],"originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":5,"maxZoom":14,"constraint":[{"minZoom":6,"maxZoom":14,"bbox":[55.205746,-21.392344,55.846554,-20.86271]}]}}},
+	"GEOGRAPHICALGRIDSYSTEMS.MAPS.BDUNI.J1":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Plan IGN j+1","format":"image/png","tilematrix":"PM","style":"normal","minZoom":0,"maxZoom":18,"bbox":[-179.5,-75,179.5,75],"desc":"Plan IGN j+1","keys":"Plan IGN J+1","legend":[{"zoom":18,"url":"https://wxs.ign.fr/static/legends/BDUNI/BDUNI.png"}],"originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-179,-80,179,80]}]}}},
+	"CADASTRALPARCELS.PARCELS":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Parcelles cadastrales","order":"9790000","format":"image/png","tilematrix":"PM","style":"bdparcellaire","minZoom":0,"maxZoom":20,"bbox":[-63.160706,-21.39223,55.84643,51.090965],"desc":"Limites des parcelles cadastrales issues de plans scannés et de plans numériques.","keys":"Parcelles cadastrales","qlook":"https://wxs.ign.fr/static/pictures/BDPARCELLAIRE.png","legend":[],"originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":20,"constraint":[{"minZoom":0,"maxZoom":20,"bbox":[-63.160706,-21.39223,55.84643,51.090965]}]}}},
+	"ORTHOIMAGERY.ORTHOPHOTOS":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Photographies aériennes","order":"9990000","format":"image/jpeg","tilematrix":"PM","style":"normal","minZoom":0,"bbox":[-180,-86,180,84],"desc":"Photographies aériennes","keys":"Photographies","qlook":"https://wxs.ign.fr/static/pictures/ign_ortho.jpg","legend":[{"zoom":19,"url":"https://wxs.ign.fr/static/legends/ign_bdortho_legende.jpg"}],"originators":{"PLANETOBSERVER":{"href":"http://www.planetobserver.com/","attribution":"PlanetObserver (images satellites)","logo":"https://wxs.ign.fr/static/logos/PLANETOBSERVER/PLANETOBSERVER.gif","minZoom":0,"maxZoom":12,"constraint":[{"minZoom":0,"maxZoom":12,"bbox":[-180,-86,180,84]}]},"MPM":{"href":"http://www.marseille-provence.com/","attribution":"Marseille Provence Métropole","logo":"https://wxs.ign.fr/static/logos/MPM/MPM.gif","minZoom":0,"maxZoom":20,"constraint":[{"minZoom":20,"maxZoom":20,"bbox":[5.076959,43.153347,5.7168245,43.454994]}]},"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":13,"maxZoom":20,"constraint":[{"bbox":[0.035491213,43.221077,6.0235267,49.696926]},{"minZoom":20,"maxZoom":20,"bbox":[0.035491213,43.221077,6.0235267,49.696926]},{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CRAIG":{"href":"http://www.craig.fr","attribution":"Centre Régional Auvergnat de l'Information Géographique (CRAIG)","logo":"https://wxs.ign.fr/static/logos/CRAIG/CRAIG.gif","minZoom":13,"maxZoom":20,"constraint":[{"minZoom":20,"maxZoom":20,"bbox":[2.2243388,44.76621,2.7314367,45.11295]},{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CNES":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES/CNES.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CG06":{"href":"http://www.cg06.fr","attribution":"Département Alpes Maritimes (06) en partenariat avec : Groupement Orthophoto 06 (NCA, Ville de Cannes, CARF, CASA,CG06, CA de Grasse) ","logo":"https://wxs.ign.fr/static/logos/CG06/CG06.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CG45":{"href":"http://www.loiret.com","attribution":"Le conseil général du Loiret","logo":"https://wxs.ign.fr/static/logos/CG45/CG45.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"RGD_SAVOIE":{"href":"http://www.rgd.fr","attribution":"Régie de Gestion de Données des Pays de Savoie (RGD 73-74)","logo":"https://wxs.ign.fr/static/logos/RGD_SAVOIE/RGD_SAVOIE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"e-Megalis":{"href":"http://www.e-megalisbretagne.org//","attribution":"Syndicat mixte de coopération territoriale (e-Megalis)","logo":"https://wxs.ign.fr/static/logos/e-Megalis/e-Megalis.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"SIGLR":{"href":"http://www.siglr.org//","attribution":"SIGLR","logo":"https://wxs.ign.fr/static/logos/SIGLR/SIGLR.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"PPIGE":{"href":"http://www.ppige-npdc.fr/","attribution":"PPIGE","logo":"https://wxs.ign.fr/static/logos/PPIGE/PPIGE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"FEDER2":{"href":"http://www.europe-en-france.gouv.fr/","attribution":"Fonds européen de développement économique et régional","logo":"https://wxs.ign.fr/static/logos/FEDER2/FEDER2.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"FEDER":{"href":"http://www.europe-en-france.gouv.fr/","attribution":"Fonds européen de développement économique et régional","logo":"https://wxs.ign.fr/static/logos/FEDER/FEDER.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CRCORSE":{"href":"http://www.corse.fr//","attribution":"CRCORSE","logo":"https://wxs.ign.fr/static/logos/CRCORSE/CRCORSE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CNES_AUVERGNE":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_AUVERGNE/CNES_AUVERGNE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"FEDER_PAYSDELALOIRE":{"href":"http://www.europe-en-paysdelaloire.eu/","attribution":"Pays-de-la-Loire","logo":"https://wxs.ign.fr/static/logos/FEDER_PAYSDELALOIRE/FEDER_PAYSDELALOIRE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"FEDER_AUVERGNE":{"href":"http://www.europe-en-auvergne.eu/","attribution":"Auvergne","logo":"https://wxs.ign.fr/static/logos/FEDER_AUVERGNE/FEDER_AUVERGNE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"PREFECTURE_GUADELOUPE":{"href":"www.guadeloupe.pref.gouv.fr/","attribution":"guadeloupe","logo":"https://wxs.ign.fr/static/logos/PREFECTURE_GUADELOUPE/PREFECTURE_GUADELOUPE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"BOURGOGNE-FRANCHE-COMTE":{"href":"https://www.bourgognefranchecomte.fr/","attribution":"Auvergne","logo":"https://wxs.ign.fr/static/logos/BOURGOGNE-FRANCHE-COMTE/BOURGOGNE-FRANCHE-COMTE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"ASTRIUM":{"href":"http://www.geo-airbusds.com/","attribution":"Airbus Defence and Space","logo":"https://wxs.ign.fr/static/logos/ASTRIUM/ASTRIUM.gif","minZoom":13,"maxZoom":16,"constraint":[{"minZoom":13,"maxZoom":16,"bbox":[-55.01953,1.845384,-50.88867,6.053161]}]},"DITTT":{"href":"http://www.dittt.gouv.nc/portal/page/portal/dittt/","attribution":"Direction des Infrastructures, de la Topographie et des Transports Terrestres","logo":"https://wxs.ign.fr/static/logos/DITTT/DITTT.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[163.47784,-22.767689,167.94624,-19.434975]}]},"CNES_ALSACE":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_ALSACE/CNES_ALSACE.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_971":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_971/CNES_971.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_972":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_972/CNES_972.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_974":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_974/CNES_974.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_975":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_975/CNES_975.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_976":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_976/CNES_976.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_977":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_977/CNES_977.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_978":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_978/CNES_978.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]}}},
+	"GEOGRAPHICALGRIDSYSTEMS.PLANIGN":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Plan IGN","format":"image/jpeg","tilematrix":"PM","style":"normal","minZoom":0,"maxZoom":18,"bbox":[-179.5,-75,179.5,75],"desc":"Représentation graphique des bases de données IGN.","keys":"Cartes","qlook":"https://wxs.ign.fr/static/pictures/ign_carte2.jpg","legend":[],"originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":9,"maxZoom":18,"constraint":[{"minZoom":10,"maxZoom":18,"bbox":[-63.37252,-21.475586,55.925865,51.31212]},{"minZoom":0,"maxZoom":9,"bbox":[-179.5,-75,179.5,75]}]}}}
+};
+/** Load capabilities from the service
+ * @param {string} gppKey the API key to get capabilities for
+ * @return {*} Promise-like response
+ */
+ol.layer.Geoportail.loadCapabilities = function(gppKey, all) {
+  var onSuccess = function() {}
+  var onError = function() {}
+  var onFinally = function() {}
+  this.getCapabilities(gppKey,all).then(function(c) {
+    ol.layer.Geoportail.capabilities = c;
+    onSuccess(c);
+  }).catch(function(e) { 
+    onError(e);
+  }).finally(function(c) {
+    onFinally(c);
+  });
+  return {
+    then: function (callback) {
+      if (typeof(callback)==='function') onSuccess = callback;
+    },
+    catch: function (callback) {
+      if (typeof(callback)==='function') onError = callback;
+    },
+    finally: function (callback) {
+      if (typeof(callback)==='function') onFinally = callback;
+    },
+  }
+};
+/** Get Key capabilities
+ * @param {string} gppKey the API key to get capabilities for
+ * @return {*} Promise-like response
+ */
+ol.layer.Geoportail.getCapabilities = function(gppKey, all) {
+  var capabilities = {};
+  var onSuccess = function() {}
+  var onError = function() {}
+  var onFinally = function() {}
+  var geopresolutions = [156543.03390625,78271.516953125,39135.7584765625,19567.87923828125,9783.939619140625,4891.9698095703125,2445.9849047851562,1222.9924523925781,611.4962261962891,305.74811309814453,152.87405654907226,76.43702827453613,38.218514137268066,19.109257068634033,9.554628534317017,4.777314267158508,2.388657133579254,1.194328566789627,0.5971642833948135,0.29858214169740677,0.14929107084870338];
+  // Transform resolution to zoom
+	function getZoom(res) {
+    res = Number(res) * 0.000281;
+		for (var r=0; r<geopresolutions.length; r++) 
+			if (res>geopresolutions[r]) return r;
+  }
+  // Merge constraints 
+  function mergeConstraints(ori) {
+    for (var i=ori.constraint.length-1; i>0; i--) {
+      for (var j=0; j<i; j++) {
+        var bok = true;
+        for (k=0; k<4; k++) {
+          if (ori.constraint[i].bbox[k] != ori.constraint[j].bbox[k]) {
+            bok = false;
+            break;
+          }
+        }
+        if (!bok) continue;
+        if (ori.constraint[i].maxZoom == ori.constraint[j].minZoom 
+         || ori.constraint[j].maxZoom == ori.constraint[i].minZoom 
+         || ori.constraint[i].maxZoom+1 == ori.constraint[j].minZoom 
+         || ori.constraint[j].maxZoom+1 == ori.constraint[i].minZoom
+         || ori.constraint[i].minZoom-1 == ori.constraint[j].maxZoom
+         || ori.constraint[j].minZoom-1 == ori.constraint[i].maxZoom) {
+          ori.constraint[j].maxZoom = Math.max(ori.constraint[i].maxZoom, ori.constraint[j].maxZoom);
+          ori.constraint[j].minZoom = Math.min(ori.constraint[i].minZoom, ori.constraint[j].minZoom);
+          ori.constraint.splice(i,1);
+          break;
+        }
+      }
+    }
+  }
+  // Get capabilities
+  ol.ext.Ajax.get({
+    url: 'https://wxs.ign.fr/'+gppKey+'/autoconf/',
+    dataType: 'TEXT',
+    error: function (e) {
+      onError(e);
+      onFinally({});
+    },
+    success: function(resp) {
+      var parser = new DOMParser();
+      var config = parser.parseFromString(resp,"text/xml");
+      var layers = config.getElementsByTagName('Layer');
+      for (var i=0, l; l=layers[i]; i++) {
+        // WMTS ?
+        if (!/WMTS/.test(l.getElementsByTagName('Server')[0].attributes['service'].value)) continue;
+//        if (!all && !/geoportail\/wmts/.test(l.find("OnlineResource").attr("href"))) continue;
+        var service = {
+          server: l.getElementsByTagName('gpp:Key')[0].innerHTML.replace(gppKey+"/",""), 
+          layer: l.getElementsByTagName('Name')[0].innerHTML,
+          title: l.getElementsByTagName('Title')[0].innerHTML,
+          format: l.getElementsByTagName('Format')[0].innerHTML,
+          tilematrix: 'PM',
+          minZoom: getZoom(l.getElementsByTagName('sld:MaxScaleDenominator')[0].innerHTML),
+          maxZoom: getZoom(l.getElementsByTagName('sld:MinScaleDenominator')[0].innerHTML),
+          bbox: JSON.parse('['+l.getElementsByTagName('gpp:BoundingBox')[0].innerHTML+']'),
+          desc: l.getElementsByTagName('Abstract')[0].innerHTML.replace(/^<!\[CDATA\[(.*)\]\]>$/, '$1')
+        };
+        service.originators = {};
+        var origin = l.getElementsByTagName('gpp:Originator');
+        for (var k=0, o; o=origin[k]; k++) {
+          var ori = service.originators[o.attributes['name'].value] = {
+            href: o.getElementsByTagName('gpp:URL')[0].innerHTML,
+						attribution: o.getElementsByTagName('gpp:Attribution')[0].innerHTML,
+						logo: o.getElementsByTagName('gpp:Logo')[0].innerHTML,
+						minZoom: 20,
+						maxZoom: 0,
+						constraint: []
+          };
+          // Scale contraints
+          var constraint = o.getElementsByTagName('gpp:Constraint');
+					for (var j=0, c; c=constraint[j]; j++) {
+            var zmax = getZoom(c.getElementsByTagName('sld:MinScaleDenominator')[0].innerHTML);
+						var zmin = getZoom(c.getElementsByTagName('sld:MaxScaleDenominator')[0].innerHTML);
+						if (zmin > ori.maxZoom) ori.maxZoom = zmin;
+						if (zmin < ori.minZoom) ori.minZoom = zmin;
+						if (zmax>ori.maxZoom) ori.maxZoom = zmax;
+						if (zmax<ori.minZoom) ori.minZoom = zmax;
+						ori.constraint.push({
+              minZoom: zmin,
+							maxZoom: zmax,
+							bbox: JSON.parse('['+c.getElementsByTagName('gpp:BoundingBox')[0].innerHTML+']')
+						});
+          }
+          // Merge constraints
+          mergeConstraints(ori)
+        }
+        capabilities[service.layer] = service;
+      }
+      onSuccess(capabilities);
+      onFinally(capabilities);
+    }
+  });
+  // Promise like response
+  var response = {
+    then: function (callback) {
+      if (typeof(callback)==='function') onSuccess = callback;
+      return response;
+    },
+    catch: function (callback) {
+      if (typeof(callback)==='function') onError = callback;
+      return response;
+    },
+    finally: function (callback) {
+      if (typeof(callback)==='function') onFinally = callback;
+      return response;
+    },
+  }
+  return response;
+};
+
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -19029,242 +19900,289 @@ ol.layer.Group.prototype.getPreview = function(lonlat, resolution)
  * @extends {ol.layer.Vector}
  * @param {ol.render3D}
  */
-ol.layer.Vector.prototype.setRender3D = function (r)
-{	r.setLayer(this);
+ol.layer.Vector.prototype.setRender3D = function (r) {
+  r.setLayer(this);
 }
 /** 
- *	@classdesc
- *	ol.render3D 3D vector layer rendering
- *	@constructor
- *	@param {olx.render3DOption}
- *		- masResolution {number} max resolution to render 3D
- *		- defaultHeight {number} default height if none is return by a propertie
- *		- height {function|string|Number} a height function (return height giving a feature) or a popertie name for the height or a fixed value
+ * @classdesc
+ *ol.render3D 3D vector layer rendering
+ * @constructor
+ * @param {Object} param
+ *  @param {ol.layer.Vector} param.layer the layer to display in 3D
+ *  @param {ol.style.Style} options.styler drawing style
+ *  @param {number} param.maxResolution  max resolution to render 3D
+ *  @param {number} param.defaultHeight default height if none is return by a propertie
+ *  @param {function|string|Number} param.height a height function (returns height giving a feature) or a popertie name for the height or a fixed value
  */
 ol.render3D = function (options) {
-	options = options || {};
-	this.maxResolution_ = options.maxResolution || 100
-	this.defaultHeight_ = options.defaultHeight || 0;
-	this.height_ = this.getHfn (options.height);
+  options = options || {};
+  options.maxResolution = options.maxResolution || 100
+  options.defaultHeight = options.defaultHeight || 0;
+  ol.Object.call (this, options);
+  this.setStyle(options.style);
+  this.height_ = options.height = this.getHfn (options.height);
+  if (options.layer) this.setLayer(options.layer);
 }
+ol.ext.inherits(ol.render3D, ol.Object);
+/**
+ * Set style associated with the renderer
+ * @param {ol.style.Style} s
+ */
+ol.render3D.prototype.setStyle = function(s) {
+  if (s instanceof ol.style.Style) this._style = s;
+  else this._style = new ol.style.Style ();
+  if (!this._style.getStroke()) {
+    this._style.setStroke(new ol.style.Stroke({
+      width: 1,
+      color: 'red'
+    }));
+  }
+  if (!this._style.getFill()) {
+    this._style.setFill( new ol.style.Fill({ color: 'rgba(0,0,255,0.5)'}) );
+  }
+  // Get the geometry
+  if (s && s.getGeometry()) {
+    var geom = s.getGeometry();
+    if (typeof(geom)==='function') {
+      this.set('geometry', geom);
+    } else {
+      this.set('geometry', function(f) { geom });
+    }
+  } else {
+    this.set('geometry', function(f) { return f.getGeometry(); });
+  }
+};
+/**
+ * Get style associated with the renderer
+ * @return {ol.style.Style}
+ */
+ol.render3D.prototype.getStyle = function() {
+  return this._style;
+};
 /** Calculate 3D at potcompose
 */
-ol.render3D.prototype.onPostcompose_ = function(e)
-{	var res = e.frameState.viewState.resolution;
-	if (res > this.maxResolution_) return;
-	this.res_ = res*400;
-	if (this.animate_) 
-	{	var elapsed = e.frameState.time - this.animate_;
-		if (elapsed < this.animateDuration_)
-		{	this.elapsedRatio_ = this.easing_(elapsed / this.animateDuration_);
-			// tell OL3 to continue postcompose animation
-			e.frameState.animate = true;
-		}
-		else
-		{	this.animate_ = false;
-			this.height_ = this.toHeight_
-		}
-	}
-	var ratio = e.frameState.pixelRatio;
-	var ctx = e.context;
-	var m = this.matrix_ = e.frameState.coordinateToPixelTransform;
-	// Old version (matrix)
-	if (!m)
-	{	m = e.frameState.coordinateToPixelMatrix,
-		m[2] = m[4];
-		m[3] = m[5];
-		m[4] = m[12];
-		m[5] = m[13];
-	}
-	this.center_ = [ctx.canvas.width/2/ratio, ctx.canvas.height/ratio];
-	var f = this.layer_.getSource().getFeaturesInExtent(e.frameState.extent);
-	ctx.save();
-	ctx.scale(ratio,ratio);
-	ctx.lineWidth = 1;
-	ctx.strokeStyle = "red";
-	ctx.fillStyle = "rgba(0,0,255,0.5)";
-	var builds = [];
-	for (var i=0; i<f.length; i++)
-	{	builds.push (this.getFeature3D_ (f[i], this.getFeatureHeight(f[i])));
-	}
-	this.drawFeature3D_ (ctx, builds);
-	ctx.restore();
-}
+ol.render3D.prototype.onPostcompose_ = function(e) {
+  var res = e.frameState.viewState.resolution;
+  if (res > this.get('maxResolution')) return;
+  this.res_ = res*400;
+  if (this.animate_) {
+    var elapsed = e.frameState.time - this.animate_;
+    if (elapsed < this.animateDuration_) {
+      this.elapsedRatio_ = this.easing_(elapsed / this.animateDuration_);
+      // tell OL3 to continue postcompose animation
+      e.frameState.animate = true;
+    } else {
+      this.animate_ = false;
+      this.height_ = this.toHeight_
+    }
+  }
+  var ratio = e.frameState.pixelRatio;
+  var ctx = e.context;
+  var m = this.matrix_ = e.frameState.coordinateToPixelTransform;
+  // Old version (matrix)
+  if (!m) {
+    m = e.frameState.coordinateToPixelMatrix,
+    m[2] = m[4];
+    m[3] = m[5];
+    m[4] = m[12];
+    m[5] = m[13];
+  }
+  this.center_ = [ ctx.canvas.width/2/ratio, ctx.canvas.height/ratio ];
+  var f = this.layer_.getSource().getFeaturesInExtent(e.frameState.extent);
+  ctx.save();
+    ctx.scale(ratio,ratio);
+    var s = this.getStyle();
+    ctx.lineWidth = s.getStroke().getWidth();
+    ctx.strokeStyle = ol.color.asString(s.getStroke().getColor());
+    ctx.fillStyle = ol.color.asString(s.getFill().getColor());
+    var builds = [];
+    for (var i=0; i<f.length; i++) {
+      builds.push (this.getFeature3D_ (f[i], this.getFeatureHeight(f[i])));
+    }
+    this.drawFeature3D_ (ctx, builds);
+  ctx.restore();
+};
 /** Set layer to render 3D
 */
 ol.render3D.prototype.setLayer = function(l) {
-	if (this._listener) {
-		this._listener.forEach( function(l) { 
-			ol.Observable.unByKey(l); 
-		});
-	}
-	this.layer_ = l;
-	this._listener = l.on (['postcompose', 'postrender'], this.onPostcompose_.bind(this));
+  if (this._listener) {
+    this._listener.forEach( function(l) { 
+      ol.Observable.unByKey(l); 
+    });
+  }
+  this.layer_ = l;
+  this._listener = l.on (['postcompose', 'postrender'], this.onPostcompose_.bind(this));
 }
 /** Create a function that return height of a feature
 *	@param {function|string|number} h a height function or a popertie name or a fixed value
 *	@return {function} function(f) return height of the feature f
 */
-ol.render3D.prototype.getHfn= function(h)
-{	switch (typeof(h))
-	{	case 'function': return h;
-		case 'string': 
-			{	var dh = this.defaultHeight_;
-				return (function(f) 
-				{	return (Number(f.get(h)) || dh); 
-				});
-			}
-		case 'number': return (function(/*f*/) { return h; });
-		default: return (function(/*f*/) { return 10; });
-	}
+ol.render3D.prototype.getHfn= function(h) {
+  switch (typeof(h)) {
+    case 'function': return h;
+    case 'string': {
+      var dh = this.get('defaultHeight');
+        return (function(f) {
+          return (Number(f.get(h)) || dh); 
+        });
+      }
+    case 'number': return (function(/*f*/) { return h; });
+    default: return (function(/*f*/) { return 10; });
+  }
 }
 /** Animate rendering
-*	@param {olx.render3D.animateOptions}
-*		- height {string|function|number} an attribute name or a function returning height of a feature or a fixed value
-*		- durtion {number} the duration of the animatioin ms, default 1000
-*		- easing {ol.easing} an ol easing function
-*	@api
-*/
-ol.render3D.prototype.animate = function(options)
-{	options = options || {};
-	this.toHeight_ = this.getHfn(options.height);
-	this.animate_ = new Date().getTime();
-	this.animateDuration_ = options.duration ||1000;
-	this.easing_ = options.easing || ol.easing.easeOut;
-	// Force redraw
-	this.layer_.changed();
+ * @param {olx.render3D.animateOptions}
+ *  @param {string|function|number} param.height an attribute name or a function returning height of a feature or a fixed value
+ *  @param {number} param.duration the duration of the animatioin ms, default 1000
+ *  @param {ol.easing} param.easing an ol easing function
+ *	@api
+ */
+ol.render3D.prototype.animate = function(options) {
+  options = options || {};
+  this.toHeight_ = this.getHfn(options.height);
+  this.animate_ = new Date().getTime();
+  this.animateDuration_ = options.duration ||1000;
+  this.easing_ = options.easing || ol.easing.easeOut;
+  // Force redraw
+  this.layer_.changed();
 }
 /** Check if animation is on
 *	@return {bool}
 */
-ol.render3D.prototype.animating = function()
-{	if (this.animate_ && new Date().getTime() - this.animate_ > this.animateDuration_) 
-	{	this.animate_ = false;
-	}
-	return !!this.animate_;
+ol.render3D.prototype.animating = function() {
+  if (this.animate_ && new Date().getTime() - this.animate_ > this.animateDuration_) {
+    this.animate_ = false;
+  }
+  return !!this.animate_;
 }
 /** 
 */
-ol.render3D.prototype.getFeatureHeight = function (f)
-{	if (this.animate_)
-	{	var h1 = this.height_(f);
-		var h2 = this.toHeight_(f);
-		return (h1*(1-this.elapsedRatio_)+this.elapsedRatio_*h2);
-	}
-	else return this.height_(f);
-}
+ol.render3D.prototype.getFeatureHeight = function (f) {
+  if (this.animate_) {
+    var h1 = this.height_(f);
+    var h2 = this.toHeight_(f);
+    return (h1*(1-this.elapsedRatio_)+this.elapsedRatio_*h2);
+  }
+  else return this.height_(f);
+};
 /**
 */
-ol.render3D.prototype.hvector_ = function (pt, h)
-{	var p0 = [	pt[0]*this.matrix_[0] + pt[1]*this.matrix_[1] + this.matrix_[4],
-			pt[0]*this.matrix_[2] + pt[1]*this.matrix_[3] + this.matrix_[5]
-		];
-	var p1 = [	p0[0] + h/this.res_*(p0[0]-this.center_[0]),
-			p0[1] + h/this.res_*(p0[1]-this.center_[1])
-		];
-	return {p0:p0, p1:p1};
-}
+ol.render3D.prototype.hvector_ = function (pt, h) {
+  var p0 = [
+    pt[0]*this.matrix_[0] + pt[1]*this.matrix_[1] + this.matrix_[4],
+    pt[0]*this.matrix_[2] + pt[1]*this.matrix_[3] + this.matrix_[5]
+  ];
+  return {
+    p0: p0, 
+    p1: [
+      p0[0] + h/this.res_ * (p0[0]-this.center_[0]),
+      p0[1] + h/this.res_ * (p0[1]-this.center_[1])
+    ]
+  };
+};
 /**
 */
-ol.render3D.prototype.getFeature3D_ = function (f, h)
-{	var c = f.getGeometry().getCoordinates();
-	switch (f.getGeometry().getType())
-	{	case "Polygon":
-			c = [c];
-		// fallthrough
-		case "MultiPolygon":
-			var build = [];
-			for (var i=0; i<c.length; i++) 
-			{	for (var j=0; j<c[i].length; j++)
-				{	var b = [];
-					for (var k=0; k<c[i][j].length; k++)
-					{	b.push( this.hvector_(c[i][j][k], h) );
-					}
-					build.push(b);
-				}
-			}
-			return { type:"MultiPolygon", feature:f, geom:build };
-		case "Point":
-			return { type:"Point", feature:f, geom:this.hvector_(c,h) };
-		default: return {};
-	}
+ol.render3D.prototype.getFeature3D_ = function (f, h) {
+  var geom = this.get('geometry')(f);
+  var c = geom.getCoordinates();
+  switch (geom.getType()) {
+    case "Polygon":
+      c = [c];
+    // fallthrough
+    case "MultiPolygon":
+      var build = [];
+      for (var i=0; i<c.length; i++) {
+        for (var j=0; j<c[i].length; j++) {
+          var b = [];
+          for (var k=0; k<c[i][j].length; k++) {
+            b.push( this.hvector_(c[i][j][k], h) );
+          }
+          build.push(b);
+        }
+      }
+      return { type:"MultiPolygon", feature: f, geom: build };
+    case "Point":
+      return { type:"Point", feature: f, geom: this.hvector_(c,h) };
+    default: return {};
+  }
 }
 /**
 */
 ol.render3D.prototype.drawFeature3D_ = function(ctx, build) {
-	var i,j, b, k;
-	// Construct
-	for (i=0; i<build.length; i++) 
-	{	
-		switch (build[i].type)
-		{	case "MultiPolygon":
-				for (j=0; j<build[i].geom.length; j++)
-				{	b = build[i].geom[j];
-					for (k=0; k < b.length; k++)
-					{	ctx.beginPath();
-						ctx.moveTo(b[k].p0[0], b[k].p0[1]);
-						ctx.lineTo(b[k].p1[0], b[k].p1[1]);
-						ctx.stroke();
-					}
-				}
-				break;
-			case "Point":
-				{	var g = build[i].geom;
-					ctx.beginPath();
-					ctx.moveTo(g.p0[0], g.p0[1]);
-					ctx.lineTo(g.p1[0], g.p1[1]);
-					ctx.stroke();
-					break;
-				}
-			default: break;
-		}
-	}
-	// Roof
-	for (i=0; i<build.length; i++) 
-	{	switch (build[i].type)
-		{	case "MultiPolygon":
-			{	ctx.beginPath();
-				for (j=0; j<build[i].geom.length; j++)
-				{	b = build[i].geom[j];
-					if (j==0)
-					{	ctx.moveTo(b[0].p1[0], b[0].p1[1]);
-						for (k=1; k < b.length; k++)
-						{	ctx.lineTo(b[k].p1[0], b[k].p1[1]);
-						}
-					}
-					else
-					{	ctx.moveTo(b[0].p1[0], b[0].p1[1]);
-						for (k=b.length-2; k>=0; k--)
-						{	ctx.lineTo(b[k].p1[0], b[k].p1[1]);
-						}
-					}
-					ctx.closePath();
-				}
-				ctx.fill("evenodd");
-				ctx.stroke();
-				break;
-			}
-			case "Point":
-			{	b = build[i];
-				var t = b.feature.get('label');
-				var p = b.geom.p1;
-				var f = ctx.fillStyle;
-				ctx.fillStyle = ctx.strokeStyle;
-				ctx.textAlign = 'center';
-				ctx.textBaseline = 'bottom';
-				ctx.fillText ( t, p[0], p[1] );
-				var m = ctx.measureText(t);
-				var h = Number (ctx.font.match(/\d+(\.\d+)?/g).join([]));
-				ctx.fillStyle = "rgba(255,255,255,0.5)";
-				ctx.fillRect (p[0]-m.width/2 -5, p[1]-h -5, m.width +10, h +10)
-				ctx.strokeRect (p[0]-m.width/2 -5, p[1]-h -5, m.width +10, h +10)
-				ctx.fillStyle = f;
-				//console.log(build[i].feature.getProperties())
-				break;
-			}
-			default: break;
-		}
-	}
+  var i,j, b, k;
+  // Construct
+  for (i=0; i<build.length; i++) {	
+    switch (build[i].type) {
+      case "MultiPolygon": {
+        for (j=0; j<build[i].geom.length; j++) {
+          b = build[i].geom[j];
+          for (k=0; k < b.length; k++) {
+            ctx.beginPath();
+            ctx.moveTo(b[k].p0[0], b[k].p0[1]);
+            ctx.lineTo(b[k].p1[0], b[k].p1[1]);
+            ctx.stroke();
+          }
+        }
+        break;
+      }
+      case "Point": {
+        var g = build[i].geom;
+          ctx.beginPath();
+          ctx.moveTo(g.p0[0], g.p0[1]);
+          ctx.lineTo(g.p1[0], g.p1[1]);
+          ctx.stroke();
+          break;
+        }
+      default: break;
+    }
+  }
+  // Roof
+  for (i=0; i<build.length; i++) {
+    switch (build[i].type) {
+      case "MultiPolygon": {
+        ctx.beginPath();
+        for (j=0; j<build[i].geom.length; j++) {
+          b = build[i].geom[j];
+          if (j==0) {
+            ctx.moveTo(b[0].p1[0], b[0].p1[1]);
+            for (k=1; k < b.length; k++) {
+              ctx.lineTo(b[k].p1[0], b[k].p1[1]);
+            }
+          } else {
+            ctx.moveTo(b[0].p1[0], b[0].p1[1]);
+            for (k=b.length-2; k>=0; k--) {
+              ctx.lineTo(b[k].p1[0], b[k].p1[1]);
+            }
+          }
+          ctx.closePath();
+        }
+        ctx.fill("evenodd");
+        ctx.stroke();
+        break;
+      }
+      case "Point": {
+        b = build[i];
+        var t = b.feature.get('label');
+        if (t) {
+          var p = b.geom.p1;
+          var f = ctx.fillStyle;
+          ctx.fillStyle = ctx.strokeStyle;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText ( t, p[0], p[1] );
+          var m = ctx.measureText(t);
+          var h = Number (ctx.font.match(/\d+(\.\d+)?/g).join([]));
+          ctx.fillStyle = "rgba(255,255,255,0.5)";
+          ctx.fillRect (p[0]-m.width/2 -5, p[1]-h -5, m.width +10, h +10)
+          ctx.strokeRect (p[0]-m.width/2 -5, p[1]-h -5, m.width +10, h +10)
+          ctx.fillStyle = f;
+          //console.log(build[i].feature.getProperties())
+        }
+        break;
+      }
+      default: break;
+    }
+  }
 }
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -19914,6 +20832,19 @@ ol.Overlay.PopupFeature.prototype._getHtml = function(feature) {
   }
   return html;
 };
+/** Fix the popup
+ * @param {boolean} fix
+ */
+ol.Overlay.PopupFeature.prototype.setFix = function (fix) {
+  if (fix) this.element.classList.add('ol-fixed');
+  else this.element.classList.remove('ol-fixed');
+};
+/** Is a popup fixed
+ * @return {boolean} 
+ */
+ol.Overlay.PopupFeature.prototype.getFix = function () {
+  return this.element.classList.contains('ol-fixed');
+};
 /** Get a function to use as format to get local string for an attribute
  * if the attribute is a number: Number.toLocaleString()
  * if the attribute is a date: Date.toLocaleString()
@@ -19953,6 +20884,7 @@ ol.Overlay.Tooltip = function (options) {
   options = options || {};
   options.popupClass = options.popupClass || options.className || 'tooltips black';
   options.positioning = options.positioning || 'center-left';
+  options.stopEvent = !!(options.stopEvent);
 	ol.Overlay.Popup.call(this, options);
   this._interaction = new ol.interaction.Interaction({
     handleEvent: function(e){
