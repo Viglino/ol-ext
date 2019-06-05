@@ -18406,7 +18406,7 @@ ol.source.Geoportail = function (layer, options) {
 	if (options.attributions) attr = options.attributions;
 	this._server = options.server;
 	this._gppKey = options.gppKey || 'choisirgeoportail';
-	wmts_options = {
+	var wmts_options = {
     url: this.serviceURL(),
 		layer: layer,
 		matrixSet: 'PM',
@@ -18432,9 +18432,9 @@ ol.source.Geoportail.prototype.attribution = '<a href="http://www.geoportail.gou
 */
 ol.source.Geoportail.prototype.serviceURL = function() {
   if (this._server) {
-    return this._server.replace (/^(https?:\/\/[^\/]*)(.*)$/, "$1/"+this._gppKey+"$2") ;
+    return this._server.replace (/^(https?:\/\/[^/]*)(.*)$/, "$1/"+this._gppKey+"$2") ;
 	} else {
-    return (window.geoportailConfig ? geoportailConfig.url : "https://wxs.ign.fr/") +this._gppKey+ "/wmts" ;
+    return (window.geoportailConfig ? window.geoportailConfig.url : "https://wxs.ign.fr/") +this._gppKey+ "/wmts" ;
   }
 };
 /**
@@ -18945,7 +18945,7 @@ ol.layer.Vector3D.prototype.setStyle = function(s) {
     if (typeof(geom)==='function') {
       this.set('geometry', geom);
     } else {
-      this.set('geometry', function(f) { geom });
+      this.set('geometry', function() { return geom; });
     }
   } else {
     this.set('geometry', function(f) { return f.getGeometry(); });
@@ -19528,6 +19528,7 @@ ol.layer.AnimatedCluster.prototype.postanimate = function(e)
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+// 
 /** IGN's Geoportail WMTS layer definition
 * @constructor 
 * @extends {ol.layer.Tile}
@@ -19538,7 +19539,7 @@ ol.layer.AnimatedCluster.prototype.postanimate = function(e)
 ol.layer.Geoportail = function(layer, options, tileoptions) {
   options = options || {};
 	tileoptions = tileoptions || {};
-	var capabilities = window.geoportailConfig ? geoportailConfig.capabilities[options.key] || geoportailConfig.capabilities["default"] : ol.layer.Geoportail.capabilities;
+	var capabilities = window.geoportailConfig ? window.geoportailConfig.capabilities[options.key] || window.geoportailConfig.capabilities["default"] : ol.layer.Geoportail.capabilities;
 	capabilities = capabilities[layer];
 	if (!capabilities) {
     capabilities = { title: layer, originators: [] };
@@ -19563,22 +19564,23 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
 		options.source.getTileGrid().minZoom = tileoptions.minZoom;
   }
   ol.layer.Tile.call (this, options);
-  // BUG GPP: Attributions constraints are not set properly :(
-  return;
+// BUG GPP: Attributions constraints are not set properly :(
+/** /
   // Set attribution according to the originators
   var counter = 0;
   // Get default attribution
   var getAttrib = function(title, o) {
     if (this.get('attributionMode')==='logo') {
       if (!title) return ol.source.Geoportail.prototype.attribution;
-      else return '<a href=\"'+o.href+'"><img src="'+o.logo+'" title="&copy; '+o.attribution+'" /></a>';
+      else return '<a href="'+o.href+'"><img src="'+o.logo+'" title="&copy; '+o.attribution+'" /></a>';
     } else {
       if (!title) return ol.source.Geoportail.prototype.attribution;
-      else return '&copy; <a href=\"'+o.href+'" title="&copy; '+(o.attribution||title)+'" >'+title+'</a>'
+      else return '&copy; <a href="'+o.href+'" title="&copy; '+(o.attribution||title)+'" >'+title+'</a>'
     }
   }.bind(this);
   var currentZ, currentCenter = [];
   var setAttribution = function(e) {
+    var a, o, i;
     counter--;
     if (!counter) {
       var z = e.frameState.viewState.zoom;
@@ -19598,9 +19600,9 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
         if (typeof(attrib)==='function') attrib = attrib();
         attrib.splice(0, attrib.length);
         var maxZoom = 0;
-        for (var a in this._originators) {
-          var o = this._originators[a];
-          for (var i=0; i<o.constraint.length; i++) {
+        for (a in this._originators) {
+          o = this._originators[a];
+          for (i=0; i<o.constraint.length; i++) {
             if (o.constraint[i].maxZoom > maxZoom
               && ol.extent.intersects(ex, o.constraint[i].bbox)) {
                 maxZoom = o.constraint[i].maxZoom;
@@ -19611,13 +19613,12 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
         if (this.getSource().getTileGrid() && z < this.getSource().getTileGrid().getMinZoom()) {
           z = this.getSource().getTileGrid().getMinZoom();
         }
-        for (var a in this._originators) {
-          var o = this._originators[a];
+        for (a in this._originators) {
+          o = this._originators[a];
           if (!o.constraint.length) {
             attrib.push (getAttrib(a, o));
           } else {
-            for (var i=0; i<o.constraint.length; i++) {
-              console.log(ex, o)
+            for (i=0; i<o.constraint.length; i++) {
               if ( z <= o.constraint[i].maxZoom 
                 && z >= o.constraint[i].minZoom 
                 && ol.extent.intersects(ex, o.constraint[i].bbox)) {
@@ -19636,6 +19637,7 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
     counter++;
     setTimeout(function () { setAttribution(e) }, 500);
   });
+/**/
 };
 ol.ext.inherits (ol.layer.Geoportail, ol.layer.Tile);
 /** Default capabilities for main layers
@@ -19681,7 +19683,7 @@ ol.layer.Geoportail.loadCapabilities = function(gppKey, all) {
  * @param {string} gppKey the API key to get capabilities for
  * @return {*} Promise-like response
  */
-ol.layer.Geoportail.getCapabilities = function(gppKey, all) {
+ol.layer.Geoportail.getCapabilities = function(gppKey) {
   var capabilities = {};
   var onSuccess = function() {}
   var onError = function() {}
@@ -19698,7 +19700,7 @@ ol.layer.Geoportail.getCapabilities = function(gppKey, all) {
     for (var i=ori.constraint.length-1; i>0; i--) {
       for (var j=0; j<i; j++) {
         var bok = true;
-        for (k=0; k<4; k++) {
+        for (var k=0; k<4; k++) {
           if (ori.constraint[i].bbox[k] != ori.constraint[j].bbox[k]) {
             bok = false;
             break;
@@ -19946,7 +19948,7 @@ ol.render3D.prototype.setStyle = function(s) {
     if (typeof(geom)==='function') {
       this.set('geometry', geom);
     } else {
-      this.set('geometry', function(f) { geom });
+      this.set('geometry', function() { return geom; });
     }
   } else {
     this.set('geometry', function(f) { return f.getGeometry(); });

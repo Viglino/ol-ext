@@ -5,6 +5,10 @@
 import ol_layer_Tile from 'ol/layer/Tile'
 import {ol_ext_inherits} from '../util/ext'
 import ol_ext_Ajax from '../util/Ajax'
+import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
+// import {intersects as ol_extent_intersects} from 'ol/extent'
+
+import ol_source_Geoportail from '../source/Geoportail'
 
 /** IGN's Geoportail WMTS layer definition
 * @constructor 
@@ -13,11 +17,11 @@ import ol_ext_Ajax from '../util/Ajax'
 * @param {olx.layer.WMTSOptions=} options WMTS options if not defined default are used
 * @param {olx.source.WMTSOptions=} options WMTS options if not defined default are used
 */
-ol.layer.Geoportail = function(layer, options, tileoptions) {
+var ol_layer_Geoportail = function(layer, options, tileoptions) {
   options = options || {};
 	tileoptions = tileoptions || {};
 
-	var capabilities = window.geoportailConfig ? geoportailConfig.capabilities[options.key] || geoportailConfig.capabilities["default"] : ol_layer_Geoportail.capabilities;
+	var capabilities = window.geoportailConfig ? window.geoportailConfig.capabilities[options.key] || window.geoportailConfig.capabilities["default"] : ol_layer_Geoportail.capabilities;
 	capabilities = capabilities[layer];
 	if (!capabilities) {
     capabilities = { title: layer, originators: [] };
@@ -31,12 +35,12 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
 	this._originators = capabilities.originators;
 
 	if (!tileoptions.gppKey) tileoptions.gppKey = options.gppKey || options.key;
-	options.source = new ol.source.Geoportail(layer, tileoptions);
+	options.source = new ol_source_Geoportail(layer, tileoptions);
 	if (!options.name) options.name = capabilities.title;
 	if (!options.desc) options.desc = capabilities.desc;
 	if (!options.extent && capabilities.bbox) {
     if (capabilities.bbox[0]>-170 && capabilities.bbox[2]<170)
-    options.extent = ol.proj.transformExtent(capabilities.bbox, 'EPSG:4326', 'EPSG:3857');
+    options.extent = ol_proj_transformExtent(capabilities.bbox, 'EPSG:4326', 'EPSG:3857');
 	}
 
 	// calculate layer max resolution
@@ -48,8 +52,8 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
 
   ol_layer_Tile.call (this, options);
 
-  // BUG GPP: Attributions constraints are not set properly :(
-  return;
+// BUG GPP: Attributions constraints are not set properly :(
+/** /
 
   // Set attribution according to the originators
   var counter = 0;
@@ -57,15 +61,16 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
   var getAttrib = function(title, o) {
     if (this.get('attributionMode')==='logo') {
       if (!title) return ol_source_Geoportail.prototype.attribution;
-      else return '<a href=\"'+o.href+'"><img src="'+o.logo+'" title="&copy; '+o.attribution+'" /></a>';
+      else return '<a href="'+o.href+'"><img src="'+o.logo+'" title="&copy; '+o.attribution+'" /></a>';
     } else {
       if (!title) return ol_source_Geoportail.prototype.attribution;
-      else return '&copy; <a href=\"'+o.href+'" title="&copy; '+(o.attribution||title)+'" >'+title+'</a>'
+      else return '&copy; <a href="'+o.href+'" title="&copy; '+(o.attribution||title)+'" >'+title+'</a>'
     }
   }.bind(this);
 
   var currentZ, currentCenter = [];
   var setAttribution = function(e) {
+    var a, o, i;
     counter--;
     if (!counter) {
       var z = e.frameState.viewState.zoom;
@@ -85,11 +90,11 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
         if (typeof(attrib)==='function') attrib = attrib();
         attrib.splice(0, attrib.length);
         var maxZoom = 0;
-        for (var a in this._originators) {
-          var o = this._originators[a];
-          for (var i=0; i<o.constraint.length; i++) {
+        for (a in this._originators) {
+          o = this._originators[a];
+          for (i=0; i<o.constraint.length; i++) {
             if (o.constraint[i].maxZoom > maxZoom
-              && ol.extent.intersects(ex, o.constraint[i].bbox)) {
+              && ol_extent_intersects(ex, o.constraint[i].bbox)) {
                 maxZoom = o.constraint[i].maxZoom;
             }
           }	
@@ -98,13 +103,12 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
         if (this.getSource().getTileGrid() && z < this.getSource().getTileGrid().getMinZoom()) {
           z = this.getSource().getTileGrid().getMinZoom();
         }
-        for (var a in this._originators) {
-          var o = this._originators[a];
+        for (a in this._originators) {
+          o = this._originators[a];
           if (!o.constraint.length) {
             attrib.push (getAttrib(a, o));
           } else {
-            for (var i=0; i<o.constraint.length; i++) {
-              console.log(ex, o)
+            for (i=0; i<o.constraint.length; i++) {
               if ( z <= o.constraint[i].maxZoom 
                 && z >= o.constraint[i].minZoom 
                 && ol_extent_intersects(ex, o.constraint[i].bbox)) {
@@ -124,6 +128,7 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
     counter++;
     setTimeout(function () { setAttribution(e) }, 500);
   });
+/**/
 };
 ol_ext_inherits (ol_layer_Geoportail, ol_layer_Tile);
 
@@ -173,7 +178,7 @@ ol_layer_Geoportail.loadCapabilities = function(gppKey, all) {
  * @param {string} gppKey the API key to get capabilities for
  * @return {*} Promise-like response
  */
-ol_layer_Geoportail.getCapabilities = function(gppKey, all) {
+ol_layer_Geoportail.getCapabilities = function(gppKey) {
   var capabilities = {};
   var onSuccess = function() {}
   var onError = function() {}
@@ -191,7 +196,7 @@ ol_layer_Geoportail.getCapabilities = function(gppKey, all) {
     for (var i=ori.constraint.length-1; i>0; i--) {
       for (var j=0; j<i; j++) {
         var bok = true;
-        for (k=0; k<4; k++) {
+        for (var k=0; k<4; k++) {
           if (ori.constraint[i].bbox[k] != ori.constraint[j].bbox[k]) {
             bok = false;
             break;

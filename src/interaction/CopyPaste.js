@@ -1,8 +1,6 @@
 import ol_ext_inherits from '../util/ext'
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import ol_Collection from 'ol/Collection'
-import ol_ext_element from '../util/element'
 
 /** An interaction to copy/paste features on a map
  * @constructor

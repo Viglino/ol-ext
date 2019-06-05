@@ -63,7 +63,7 @@ ol_render3D.prototype.setStyle = function(s) {
     if (typeof(geom)==='function') {
       this.set('geometry', geom);
     } else {
-      this.set('geometry', function(f) { geom });
+      this.set('geometry', function() { return geom; });
     }
   } else {
     this.set('geometry', function(f) { return f.getGeometry(); });

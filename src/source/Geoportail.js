@@ -4,6 +4,9 @@
 */
 import ol_source_WMTS from 'ol/source/WMTS'
 import {ol_ext_inherits} from '../util/ext'
+import {getWidth as ol_extent_getWidth} from 'ol/extent'
+import ol_tilegrid_WMTS from 'ol/tilegrid/WMTS'
+import {get as ol_proj_get} from 'ol/proj' 
 
 /** IGN's Geoportail WMTS source
  * @constructor
@@ -25,24 +28,24 @@ var ol_source_Geoportail = function (layer, options) {
   
   var matrixIds = new Array();
 	var resolutions = new Array();//[156543.03392804103,78271.5169640205,39135.75848201024,19567.879241005125,9783.939620502562,4891.969810251281,2445.9849051256406,1222.9924525628203,611.4962262814101,305.74811314070485,152.87405657035254,76.43702828517625,38.218514142588134,19.109257071294063,9.554628535647034,4.777314267823517,2.3886571339117584,1.1943285669558792,0.5971642834779396,0.29858214173896974,0.14929107086948493,0.07464553543474241];
-	var size = ol.extent.getWidth(ol.proj.get('EPSG:3857').getExtent()) / 256;
+	var size = ol_extent_getWidth(ol_proj_get('EPSG:3857').getExtent()) / 256;
 	for (var z=0; z <= (options.maxZoom ? options.maxZoom : 20) ; z++) {
     matrixIds[z] = z ; 
 		resolutions[z] = size / Math.pow(2, z);
 	}
-	var tg = new ol.tilegrid.WMTS ({
+	var tg = new ol_tilegrid_WMTS ({
     origin: [-20037508, 20037508],
     resolutions: resolutions,
     matrixIds: matrixIds
   });
 	tg.minZoom = (options.minZoom ? options.minZoom : 0);
-	var attr = [ ol.source.Geoportail.prototype.attribution ];
+	var attr = [ ol_source_Geoportail.prototype.attribution ];
 	if (options.attributions) attr = options.attributions;
 
 	this._server = options.server;
 	this._gppKey = options.gppKey || 'choisirgeoportail';
 
-	wmts_options = {
+	var wmts_options = {
     url: this.serviceURL(),
 		layer: layer,
 		matrixSet: 'PM',
@@ -59,7 +62,7 @@ var ol_source_Geoportail = function (layer, options) {
 
 	// Load url using basic authentification
 	if (options.authentication) {
-		this.setTileLoadFunction(ol.source.Geoportail.tileLoadFunctionWithAuthentication(options.authentication, this.getFormat()));
+		this.setTileLoadFunction(ol_source_Geoportail.tileLoadFunctionWithAuthentication(options.authentication, this.getFormat()));
 	}
 
 };
@@ -73,9 +76,9 @@ ol_source_Geoportail.prototype.attribution = '<a href="http://www.geoportail.gou
 */
 ol_source_Geoportail.prototype.serviceURL = function() {
   if (this._server) {
-    return this._server.replace (/^(https?:\/\/[^\/]*)(.*)$/, "$1/"+this._gppKey+"$2") ;
+    return this._server.replace (/^(https?:\/\/[^/]*)(.*)$/, "$1/"+this._gppKey+"$2") ;
 	} else {
-    return (window.geoportailConfig ? geoportailConfig.url : "https://wxs.ign.fr/") +this._gppKey+ "/wmts" ;
+    return (window.geoportailConfig ? window.geoportailConfig.url : "https://wxs.ign.fr/") +this._gppKey+ "/wmts" ;
   }
 };
 
