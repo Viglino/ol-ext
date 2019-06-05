@@ -39,6 +39,8 @@ var ol_interaction_Transform = function(options) {
   if (!options) options = {};
 	var self = this;
 
+  this.selection_ = new ol_Collection();
+
 	// Create a new overlay layer for the sketch
 	this.handles_ = new ol_Collection();
 	this.overlayLayer_ = new ol_layer_Vector({
@@ -91,7 +93,6 @@ var ol_interaction_Transform = function(options) {
   /*  */
   this.set('hitTolerance', (options.hitTolerance || 0));
 
-  this.selection_ = [];
 
   // Force redraw when changed
   this.on ('propertychange', function() {
@@ -248,7 +249,7 @@ ol_interaction_Transform.prototype.getFeatureAtPixel_ = function(pixel) {
       // No seletion
       if (!self.get('selection')) {
         // Return the currently selected feature the user is interacting with.
-        if (self.selection_.some(function(f) { return feature === f; })) {
+        if (self.selection_.getArray().some(function(f) { return feature === f; })) {
           return { feature: feature };
         }
         return null;
@@ -284,13 +285,13 @@ ol_interaction_Transform.prototype.getFeatureAtPixel_ = function(pixel) {
 ol_interaction_Transform.prototype.drawSketch_ = function(center) {
   var i, f, geom;
   this.overlayLayer_.getSource().clear();
-  if (!this.selection_.length) return;
-  var ext = this.selection_[0].getGeometry().getExtent();
+  if (!this.selection_.getLength()) return;
+  var ext = this.selection_.item(0).getGeometry().getExtent();
   // Clone and extend
   ext = ol_extent_buffer(ext, 0);
-  for (i=1, f; f = this.selection_[i]; i++) {
+  this.selection_.forEach(function (f) {
     ol_extent_extend(ext, f.getGeometry().getExtent());
-  }
+  });
   if (center===true) {
     if (!this.ispt_) {
       this.overlayLayer_.getSource().addFeature(new ol_Feature( { geometry: new ol_geom_Point(this.center_), handle:'rotate0' }) );
@@ -346,15 +347,18 @@ ol_interaction_Transform.prototype.drawSketch_ = function(center) {
 */
 ol_interaction_Transform.prototype.select = function(feature, add) {
   if (!feature) {
-    this.selection_ = [];
+    this.selection_.clear();
     this.drawSketch_();
     return;
   }
   if (!feature.getGeometry || !feature.getGeometry()) return;
   // Add to selection
   if (add) this.selection_.push(feature);
-  else this.selection_ = [feature];
-  this.ispt_ = (this.selection_.length===1 ? (this.selection_[0].getGeometry().getType() == "Point") : false);
+  else {
+    this.selection_.clear()
+    this.selection_.push(feature);
+  }
+  this.ispt_ = (this.selection_.getLength()===1 ? (this.selection_.item(0).getGeometry().getType() == "Point") : false);
   this.drawSketch_();
   this.watchFeatures_();
   // select event
@@ -388,8 +392,8 @@ ol_interaction_Transform.prototype.watchFeatures_ = function() {
 ol_interaction_Transform.prototype.handleDownEvent_ = function(evt) {
   var sel = this.getFeatureAtPixel_(evt.pixel);
   var feature = sel.feature;
-  if (this.selection_.length
-    && this.selection_.indexOf(feature) >=0
+  if (this.selection_.getLength()
+    && this.selection_.getArray().indexOf(feature) >= 0
     && ((this.ispt_ && this.get('translate')) || this.get('translateFeature'))
   ){
     sel.handle = 'translate';
@@ -403,7 +407,7 @@ ol_interaction_Transform.prototype.handleDownEvent_ = function(evt) {
     this.pixel_ = evt.pixel;
     this.geoms_ = [];
     var extent = ol_extent_createEmpty();
-    for (var i=0, f; f=this.selection_[i]; i++) {
+    for (var i=0, f; f=this.selection_.item(i); i++) {
       this.geoms_.push(f.getGeometry().clone());
       extent = ol_extent_extend(extent, f.getGeometry().getExtent());
     }
@@ -422,7 +426,7 @@ ol_interaction_Transform.prototype.handleDownEvent_ = function(evt) {
 
     this.dispatchEvent({
       type: this.mode_+'start',
-      feature: this.selection_[0], // backward compatibility
+      feature: this.selection_.item(0), // backward compatibility
       features: this.selection_,
       pixel: evt.pixel,
       coordinate: evt.coordinate
@@ -431,14 +435,14 @@ ol_interaction_Transform.prototype.handleDownEvent_ = function(evt) {
   }
   else if (this.get('selection')) {
     if (feature){
-      if (!this.addFn_(evt)) this.selection_ = [];
-      var index = this.selection_.indexOf(feature);
+      if (!this.addFn_(evt)) this.selection_.clear();
+      var index = this.selection_.getArray().indexOf(feature);
       if (index < 0) this.selection_.push(feature);
-      else this.selection_.splice(index,1);
+      else this.selection_.removeAt(index);
     } else {
-      this.selection_ = [];
+      this.selection_.clear();
     }
-    this.ispt_ = this.selection_.length===1 ? (this.selection_[0].getGeometry().getType() == "Point") : false;
+    this.ispt_ = this.selection_.getLength()===1 ? (this.selection_.item(0).getGeometry().getType() == "Point") : false;
     this.drawSketch_();
     this.watchFeatures_();
     this.dispatchEvent({ type:'select', feature: feature, features: this.selection_, pixel: evt.pixel, coordinate: evt.coordinate });
@@ -449,7 +453,7 @@ ol_interaction_Transform.prototype.handleDownEvent_ = function(evt) {
 
 /**
  * Get features to transform
- * @return {Array<ol.Feature>}
+ * @return {ol.Collection<ol.Feature>}
  */
 ol_interaction_Transform.prototype.getFeatures = function() {
   return this.selection_;
@@ -483,7 +487,7 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
         // var geometry = this.geom_.clone();
         // geometry.rotate(a-this.angle_, this.center_);
         // this.feature_.setGeometry(geometry);
-        for (i=0, f; f=this.selection_[i]; i++) {
+        for (i=0, f; f=this.selection_.item(i); i++) {
           geometry = this.geoms_[i].clone();
           geometry.rotate(a - this.angle_, this.center_);
           // bug: ol, bad calculation circle geom extent
@@ -494,7 +498,7 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
       this.drawSketch_(true);
       this.dispatchEvent({
         type:'rotating',
-        feature: this.selection_[0],
+        feature: this.selection_.item(0),
         features: this.selection_,
         angle: a-this.angle_,
         pixel: evt.pixel,
@@ -507,7 +511,7 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
       var deltaY = evt.coordinate[1] - this.coordinate_[1];
 
       //this.feature_.getGeometry().translate(deltaX, deltaY);
-      for (i=0, f; f=this.selection_[i]; i++) {
+      for (i=0, f; f=this.selection_.item(i); i++) {
         f.getGeometry().translate(deltaX, deltaY);
       }
       this.handles_.forEach(function(f) {
@@ -517,7 +521,7 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
       this.coordinate_ = evt.coordinate;
       this.dispatchEvent({
         type:'translating',
-        feature: this.selection_[0],
+        feature: this.selection_.item(0),
         features: this.selection_,
         delta:[deltaX,deltaY],
         pixel: evt.pixel,
@@ -548,7 +552,7 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
         }
       }
 
-      for (i=0, f; f=this.selection_[i]; i++) {
+      for (i=0, f; f=this.selection_.item(i); i++) {
         geometry = this.geoms_[i].clone();
         geometry.applyTransform(function(g1, g2, dim) {
           if (dim<2) return g2;
@@ -566,7 +570,7 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
       this.drawSketch_();
       this.dispatchEvent({
         type:'scaling',
-        feature: this.selection_[0],
+        feature: this.selection_.item(0),
         features: this.selection_,
         scale:[scx,scy],
         pixel: evt.pixel,
@@ -616,7 +620,7 @@ ol_interaction_Transform.prototype.handleUpEvent_ = function(evt) {
   //dispatchEvent
   this.dispatchEvent({
     type:this.mode_+'end',
-    feature: this.selection_[0],
+    feature: this.selection_.item(0),
     features: this.selection_,
     oldgeom: this.geoms_[0],
     oldgeoms: this.geoms_
