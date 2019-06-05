@@ -1,0 +1,139 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Copy/paste interaction</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="An interaction to copy/paste features on a map" />
+  <meta name="keywords" content="openlayers, ol, interaction, copy, paste" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Copy/paste interaction</h1>
+  </a>
+  <div class="info">
+    <p>
+      The <b>ol/interaction/CopyPaste</b> is an interaction to copy/paste features on a map.
+    </p>
+    <ul>
+      <li>
+        The <i>features</i> option lets you define a collection of feature to copy (typically the result of a select interaction)
+      </li>
+      <li>
+        The <i>destination</i> option define the source in wich you want to paste the features.
+      </li>
+      <li>
+        You can also define the <i>sources</i> to remove features when cut (default will cut from the destination).
+      </li>
+    </ul>
+    The example uses a <b>ol/ineraction/FocusMap</b> to focus on the map when clicked to ensure the key events are avaliable.
+    <br/><br/>
+    Look at <a href="map.interaction.copypaste.2.html">this example</a> to copy features beetween maps.
+  </div>
+
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options" >
+    Click on feature to select / transform it.
+    <br/>
+    Use Shift to select many features.
+    <br/>
+    Use <b>Ctrl+C</b>, <b>Ctrl+X</b>, <b>Ctrl+V</b> to copy paste selected features.
+  </div>
+
+  <script type="text/javascript">
+    // The map
+    var map = new ol.Map ({
+      target: 'map',
+      view: new ol.View({
+        zoom: 5,
+        center: [261720, 5951081]
+      }),
+      controls: ol.control.defaults({ "attribution": false }),
+      layers: [ new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }) ]
+    });
+
+    // New vector layer
+    var vector = new ol.layer.Vector({
+      name: 'Vecteur',
+      source: new ol.source.Vector()
+    });
+    map.addLayer(vector);
+    vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[-288626, 5757848], [210354, 5576845], [34243, 6305749]])));
+    vector.getSource().addFeature(new ol.Feature(new ol.geom.Polygon([[[406033, 5664901], [689767, 5718712], [699551, 6149206], [425601, 6183449],[406033, 5664901]]])));
+
+    // Important: add a focus interaction on the map to enable keyboard events
+    map.addInteraction(new ol.interaction.FocusMap());
+
+    var transform = new ol.interaction.Transform ({
+      addCondition: ol.events.condition.shiftKeyOnly
+    });
+    map.addInteraction(transform);
+
+    var copy = new ol.interaction.CopyPaste({
+      destination: vector.getSource(),
+      features: transform.getFeatures()
+    });
+    map.addInteraction(copy);
+    // Remove selection if cut
+    copy.on('cut', function(e) {
+      transform.select();
+    });
+    copy.on('paste', function (e) {
+      transform.select();
+      e.features.forEach (function(f) {
+        transform.select(f, true);
+      });
+    });
+
+    map.addControl(new ol.control.SearchBAN());
+
+    map.addControl(new ol.control.Bar({
+      controls: [
+      new ol.control.Button({
+          html:'C',
+          handleClick: function(){
+            copy.copy({ silent: false });
+          }
+        }),
+        new ol.control.Button({
+          html:'X',
+          handleClick: function(){
+            copy.copy({ cut: true, silent: false });
+          }
+        }),
+        new ol.control.Button({
+          html:'V',
+          handleClick: function(){
+            copy.paste({ silent: false });
+          }
+        })
+      ]
+    }))
+
+  </script>
+
+</body>
+</html>

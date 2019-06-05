@@ -1,0 +1,137 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Copy/paste interaction</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="An interaction to copy/paste features on a map" />
+  <meta name="keywords" content="openlayers, ol, interaction, copy, paste" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Copy/paste interaction</h1>
+  </a>
+  <div class="info">
+    This example shows how to used <b>ol/interaction/CopyPaste</b> to copy / paste features from one map to another.
+    <br/><br/>
+    Look at <a href="map.interaction.copypaste.html">this example</a> for more information on the the interaction itself.
+  </div>
+
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
+  <div id="map2" style="width:600px; height:400px; float: left;"></div>
+
+  <div class="options" >
+    Click on feature to select / transform it.
+    <br/>
+    Use Shift to select many features.
+    <br/>
+    Use <b>Ctrl+C</b>, <b>Ctrl+X</b>, <b>Ctrl+V</b> to copy paste selected features.
+  </div>
+  
+  <script type="text/javascript">
+    // The map
+    var map = new ol.Map ({
+      target: 'map',
+      view: new ol.View({
+        zoom: 5,
+        center: [261720, 5951081]
+      }),
+      layers: [ new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }) ]
+    });
+
+    var map2 = new ol.Map ({
+      target: 'map2',
+      view: new ol.View({
+        zoom: 5,
+        center: [261720, 5951081]
+      }),
+      layers: [ new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }) ]
+    });
+
+    // New vector layer
+    var vector = new ol.layer.Vector({ source: new ol.source.Vector() });
+    map.addLayer(vector);
+    vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[-288626, 5757848], [210354, 5576845], [34243, 6305749]])));
+    vector.getSource().addFeature(new ol.Feature(new ol.geom.Polygon([[[406033, 5664901], [689767, 5718712], [699551, 6149206], [425601, 6183449],[406033, 5664901]]])));
+
+    var vector2 = new ol.layer.Vector({ source: new ol.source.Vector() });
+    map2.addLayer(vector2);
+
+    // Important: add a focus interaction on the map to enable keyboard events
+    map.addInteraction(new ol.interaction.FocusMap());
+    map2.addInteraction(new ol.interaction.FocusMap());
+
+    // Interactions
+    var transform = new ol.interaction.Transform ({
+      addCondition: ol.events.condition.shiftKeyOnly
+    });
+    map.addInteraction(transform);
+
+    var copy = new ol.interaction.CopyPaste({
+      destination: vector.getSource(),
+      features: transform.getFeatures()
+    });
+    map.addInteraction(copy);
+
+    var transform2 = new ol.interaction.Transform ({
+      addCondition: ol.events.condition.shiftKeyOnly
+    });
+    map2.addInteraction(transform2);
+
+    var copy2 = new ol.interaction.CopyPaste({
+      destination: vector2.getSource(),
+      features: transform2.getFeatures()
+    });
+    map2.addInteraction(copy2);
+
+    // Update feature on copy
+    copy.on(['copy','cut'], function (e) {
+      copy2.copy({ features: copy.getFeatures() });
+      if (e.type==='cut') transform.select();
+    });
+    copy.on('paste', function (e) {
+      transform.select();
+      e.features.forEach (function(f) {
+        transform.select(f, true);
+      });
+    });
+
+    copy2.on(['copy','cut'], function (e) {
+      copy.copy({ features: copy2.getFeatures() });
+      if (e.type==='cut') transform2.select();
+    });
+    copy2.on('paste', function (e) {
+      transform2.select();
+      e.features.forEach (function(f) {
+        transform2.select(f, true);
+      });
+    });
+
+    
+
+  </script>
+
+</body>
+</html>
