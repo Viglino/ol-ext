@@ -187,6 +187,21 @@ ol_Overlay_PopupFeature.prototype._getHtml = function(feature) {
   return html;
 };
 
+/** Fix the popup
+ * @param {boolean} fix
+ */
+ol_Overlay_PopupFeature.prototype.setFix = function (fix) {
+  if (fix) this.element.classList.add('ol-fixed');
+  else this.element.classList.remove('ol-fixed');
+};
+
+/** Is a popup fixed
+ * @return {boolean} 
+ */
+ol_Overlay_PopupFeature.prototype.getFix = function () {
+  return this.element.classList.contains('ol-fixed');
+};
+
 /** Get a function to use as format to get local string for an attribute
  * if the attribute is a number: Number.toLocaleString()
  * if the attribute is a date: Date.toLocaleString()
