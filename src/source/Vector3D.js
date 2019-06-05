@@ -8,20 +8,19 @@ import ol_style_Fill from 'ol/style/Fill'
 import {asString as ol_color_asString} from 'ol/color'
 
 /** 
- * @classdesc
- *ol_layer_Vector3D 3D vector layer rendering
+ * @classdesc 3D vector layer rendering
  * @constructor
- * @param {Object} param
- *  @param {ol.layer.Vector} param.layer the layer to display in 3D
- *  @param {function} param.geometry a function that takes a feature ans returns the geometry to use
- *  @param {number} param.maxResolution  max resolution to render 3D
- *  @param {number} param.defaultHeight default height if none is return by a propertie
- *  @param {function|string|Number} param.height a height function (returns height giving a feature) or a popertie name for the height or a fixed value
+ * @extends {pl.layer.Image}
+ * @param {Object} options
+ *  @param {ol.layer.Vector} options.source the source to display in 3D
+ *  @param {ol.style.Style} options.styler drawing style
+ *  @param {number} options.maxResolution  max resolution to render 3D
+ *  @param {number} options.defaultHeight default height if none is return by a propertie
+ *  @param {function|string|Number} options.height a height function (returns height giving a feature) or a popertie name for the height or a fixed value
  */
 var ol_layer_Vector3D = function (options) {
   options = options || {};
 
-  this.setStyle(options.style);
   this._source = options.source;
   this.height_ = options.height = this.getHfn (options.height);
 
@@ -36,9 +35,9 @@ var ol_layer_Vector3D = function (options) {
     }), 
     height: options.height,
     defaultHeight: options.defaultHeight || 0,
-    geometry: options.geometry || function(f) { return f.getGeometry(); },
-    maxResolution: options.maxResolution || 100 
+    maxResolution: options.maxResolution || Infinity 
   });
+  this.setStyle(options.style);
 
   this.on (['postcompose', 'postrender'], this.onPostcompose_.bind(this));
 
@@ -51,7 +50,7 @@ ol_ext_inherits(ol_layer_Vector3D, ol_layer_Image);
  */
 ol_layer_Vector3D.prototype.setStyle = function(s) {
   if (s instanceof ol_style_Style) this._style = s;
-  else this._style = new ol_style_Style ();
+  else this._style = new ol_style_Style();
   if (!this._style.getStroke()) {
     this._style.setStroke(new ol_style_Stroke({
       width: 1,
@@ -65,6 +64,17 @@ ol_layer_Vector3D.prototype.setStyle = function(s) {
     this._style.setText( new ol_style_Fill({ 
       color: 'red'}) 
     );
+  }
+  // Get the geometry
+  if (s && s.getGeometry()) {
+    var geom = s.getGeometry();
+    if (typeof(geom)==='function') {
+      this.set('geometry', geom);
+    } else {
+      this.set('geometry', function(f) { geom });
+    }
+  } else {
+    this.set('geometry', function(f) { return f.getGeometry(); });
   }
 };
 
@@ -122,7 +132,7 @@ ol_layer_Vector3D.prototype.onPostcompose_ = function(e) {
     }
     this.drawFeature3D_ (ctx, builds);
   ctx.restore();
-}
+};
 
 /** Create a function that return height of a feature
 *	@param {function|string|number} h a height function or a popertie name or a fixed value

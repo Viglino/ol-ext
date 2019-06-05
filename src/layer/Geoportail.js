@@ -9,7 +9,8 @@ import ol_ext_Ajax from '../util/Ajax'
 /** IGN's Geoportail WMTS layer definition
 * @constructor 
 * @extends {ol.layer.Tile}
-* @param {options=} layer: Layer name, key: APIKey.
+* @param {string} layer Layer name
+* @param {olx.layer.WMTSOptions=} options WMTS options if not defined default are used
 * @param {olx.source.WMTSOptions=} options WMTS options if not defined default are used
 */
 ol.layer.Geoportail = function(layer, options, tileoptions) {
@@ -18,9 +19,13 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
 
 	var capabilities = window.geoportailConfig ? geoportailConfig.capabilities[options.key] || geoportailConfig.capabilities["default"] : ol_layer_Geoportail.capabilities;
 	capabilities = capabilities[layer];
-	if (!capabilities) throw new Error("ol.layer.Geoportail: no layer definition for \""+layer+"\"");
+	if (!capabilities) {
+    capabilities = { title: layer, originators: [] };
+    console.error("ol.layer.Geoportail: no layer definition for \""+layer+"\"\nTry to use ol/layer/Geoportail~loadCapabilities() to get it.");
+    // throw new Error("ol.layer.Geoportail: no layer definition for \""+layer+"\"");
+  }
 
-	// tileoptions default params
+	// tile options & default params
 	for (var i in capabilities) if (typeof	tileoptions[i]== "undefined") tileoptions[i] = capabilities[i];
 
 	this._originators = capabilities.originators;
@@ -29,7 +34,7 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
 	options.source = new ol.source.Geoportail(layer, tileoptions);
 	if (!options.name) options.name = capabilities.title;
 	if (!options.desc) options.desc = capabilities.desc;
-	if (!options.extent) {
+	if (!options.extent && capabilities.bbox) {
     if (capabilities.bbox[0]>-170 && capabilities.bbox[2]<170)
     options.extent = ol.proj.transformExtent(capabilities.bbox, 'EPSG:4326', 'EPSG:3857');
 	}

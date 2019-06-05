@@ -22,7 +22,7 @@ ol_layer_Vector.prototype.setRender3D = function (r) {
  * @constructor
  * @param {Object} param
  *  @param {ol.layer.Vector} param.layer the layer to display in 3D
- *  @param {function} param.geometry a function that takes a feature ans returns the geometry to use
+ *  @param {ol.style.Style} options.styler drawing style
  *  @param {number} param.maxResolution  max resolution to render 3D
  *  @param {number} param.defaultHeight default height if none is return by a propertie
  *  @param {function|string|Number} param.height a height function (returns height giving a feature) or a popertie name for the height or a fixed value
@@ -30,13 +30,11 @@ ol_layer_Vector.prototype.setRender3D = function (r) {
 var ol_render3D = function (options) {
   options = options || {};
 
-  this.setStyle(options.style);
-  delete options.style;
-
   options.maxResolution = options.maxResolution || 100
   options.defaultHeight = options.defaultHeight || 0;
-  options.geometry =options.geometry || function(f) { return f.getGeometry(); };
   ol_Object.call (this, options);
+
+  this.setStyle(options.style);
 
   this.height_ = options.height = this.getHfn (options.height);
   if (options.layer) this.setLayer(options.layer);
@@ -58,6 +56,17 @@ ol_render3D.prototype.setStyle = function(s) {
   }
   if (!this._style.getFill()) {
     this._style.setFill( new ol_style_Fill({ color: 'rgba(0,0,255,0.5)'}) );
+  }
+  // Get the geometry
+  if (s && s.getGeometry()) {
+    var geom = s.getGeometry();
+    if (typeof(geom)==='function') {
+      this.set('geometry', geom);
+    } else {
+      this.set('geometry', function(f) { geom });
+    }
+  } else {
+    this.set('geometry', function(f) { return f.getGeometry(); });
   }
 };
 
@@ -115,7 +124,7 @@ ol_render3D.prototype.onPostcompose_ = function(e) {
     }
     this.drawFeature3D_ (ctx, builds);
   ctx.restore();
-}
+};
 
 /** Set layer to render 3D
 */
