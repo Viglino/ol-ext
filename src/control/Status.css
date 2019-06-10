@@ -1,0 +1,30 @@
+.ol-control.ol-status {
+  top: 0;
+  left: 0;
+  background: rgba(0,0,0,.2);
+  color: #fff;
+  font-size: .9em;
+  padding: .3em 3em;
+  border-radius: 0;
+  width: 100%;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+.ol-control.ol-status.ol-bottom {
+  top: auto;
+  bottom: 0;
+}
+.ol-control.ol-status.ol-left {
+  top: 0;
+  bottom: 0;
+  padding: .3em .5em .3em 3em;
+  width: auto;
+}
+.ol-control.ol-status.ol-right {
+  top: 0;
+  bottom: 0;
+  left: auto;
+  right: 0;
+  padding: .3em 3em .3em .5em;
+  width: auto;
+}
