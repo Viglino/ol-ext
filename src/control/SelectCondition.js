@@ -7,7 +7,7 @@ import ol_control_SelectBase from './SelectBase'
 import ol_ext_element from '../util/element'
 
 /**
- * Select features by property using a popup 
+ * Select features by property using a condition 
  *
  * @constructor
  * @extends {ol_control_SelectBase}

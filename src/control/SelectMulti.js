@@ -17,10 +17,7 @@ import ol_ext_element from '../util/element'
  *  @param {string} options.className control class name
  *  @param {Element | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *  @param {ol/source/Vector | Array<ol/source/Vector>} options.source the source to search in
- *  @param {string} options.label control label, default 'condition'
- *  @param {number} options.selectAll select all features if no option selected
- *  @param {condition|Array<condition>} options.condition conditions 
- *  @param {function|undefined} options.onchoice function triggered when an option is clicked, default doSelect
+ *  @param {Array<ol.control.SelectBase>} options.controls an array of controls
  */
 var ol_control_SelectMulti = function(options) {
   if (!options) options = {};

@@ -81,7 +81,10 @@ ol_control_SelectCheck.prototype.doSelect = function(options) {
     }
   }.bind(this));
   if (!conditions.length) {
-    return ol_control_SelectBase.prototype.doSelect.call(this, { features: options.features, matchAll: this._selectAll });
+    return ol_control_SelectBase.prototype.doSelect.call(this, { 
+      features: options.features, 
+      matchAll: this._selectAll 
+    });
   } else {
     return ol_control_SelectBase.prototype.doSelect.call(this, {
       features: options.features, 

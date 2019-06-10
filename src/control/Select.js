@@ -11,7 +11,7 @@ import ol_ext_element from '../util/element'
  * A control to select features by attributes
  *
  * @constructor
- * @extends {ol_control_Control}
+ * @extends {ol_control_SelectBase}
  * @fires select
  * @param {Object=} options
  *  @param {string} options.className control class name
