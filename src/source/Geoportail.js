@@ -78,7 +78,7 @@ ol_source_Geoportail.prototype.serviceURL = function() {
   if (this._server) {
     return this._server.replace (/^(https?:\/\/[^/]*)(.*)$/, "$1/"+this._gppKey+"$2") ;
 	} else {
-    return (window.geoportailConfig ? window.geoportailConfig.url : "https://wxs.ign.fr/") +this._gppKey+ "/wmts" ;
+    return (window.geoportailConfig ? window.geoportailConfig.url : "https://wxs.ign.fr/") +this._gppKey+ "/geoportail/wmts" ;
   }
 };
 
