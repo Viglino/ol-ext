@@ -17,6 +17,7 @@ import {asString as ol_color_asString} from 'ol/color'
  *  @param {number} options.maxResolution  max resolution to render 3D
  *  @param {number} options.defaultHeight default height if none is return by a propertie
  *  @param {function|string|Number} options.height a height function (returns height giving a feature) or a popertie name for the height or a fixed value
+ *  @param {Array<number>} options.center center of the view, default [.5,1]
  */
 var ol_layer_Vector3D = function (options) {
   options = options || {};
@@ -34,6 +35,7 @@ var ol_layer_Vector3D = function (options) {
       }
     }), 
     height: options.height,
+    center: options.center || [.5,1],
     defaultHeight: options.defaultHeight || 0,
     maxResolution: options.maxResolution || Infinity 
   });
@@ -116,7 +118,10 @@ ol_layer_Vector3D.prototype.onPostcompose_ = function(e) {
     m[4] = m[12];
     m[5] = m[13];
   }
-  this.center_ = [ ctx.canvas.width/2/ratio, ctx.canvas.height/ratio ];
+  this.center_ = [ 
+    ctx.canvas.width*this.get('center')[0]/ratio, 
+    ctx.canvas.height*this.get('center')[1]/ratio 
+  ];
 
   var f = this._source.getFeaturesInExtent(e.frameState.extent);
     
@@ -124,6 +129,7 @@ ol_layer_Vector3D.prototype.onPostcompose_ = function(e) {
     ctx.scale(ratio,ratio);
     var s = this.getStyle();
     ctx.lineWidth = s.getStroke().getWidth();
+    ctx.lineCap = s.getStroke().getLineCap();
     ctx.strokeStyle = ol_color_asString(s.getStroke().getColor());
     ctx.fillStyle = ol_color_asString(s.getFill().getColor());
     var builds = [];
