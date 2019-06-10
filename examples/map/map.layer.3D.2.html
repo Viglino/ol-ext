@@ -104,11 +104,16 @@
   var vector = new ol.layer.Vector3D({
     source: vectorSource,
     style: new ol.style.Style({
-      stroke: new ol.style.Stroke({ width: 5, color: [255,0,0,.5] }),
+      stroke: new ol.style.Stroke({ 
+        width: 5, 
+        color: [255,0,0,.5],
+        //lineCap: 'round'
+      }),
       geometry: function(f) { 
         return f.getGeometry().getInteriorPoint(); 
       }
     }),
+    //center: [.5,1.5],
     height: 0, 
     //maxResolution: 40, 
     defaultHeight: 0 

@@ -7701,7 +7701,7 @@ ol.control.SearchGPS.prototype.autocomplete = function (s) {
 ol.control.SearchGeoportailParcelle = function(options) {
 	var self = this;
 	options.type = "Commune";
-	options.className = options.className ? options.className+" IGNF-parcelle" : "IGNF-parcelle";
+	options.className = (options.className ? options.className:"")+" IGNF-parcelle ol-collapsed-list ol-collapsed-num";
 	options.inputLabel = "Commune";
 	options.noCollapse = true;
 	options.placeholder = options.placeholder || "Choisissez une commune...";
@@ -7739,18 +7739,29 @@ ol.control.SearchGeoportailParcelle = function(options) {
     }, options.typing || 0);
 	}
 	// Add inputs
+	var tout;
 	for (var i in this._inputParcelle) {
 		div.appendChild(this._inputParcelle[i]);
 		this._inputParcelle[i].addEventListener("keyup", doSearch);
+		this._inputParcelle[i].addEventListener('blur', function() {
+			tout = setTimeout(function(){ element.classList.add('ol-collapsed-num'); }, 200);
+		});
+		this._inputParcelle[i].addEventListener('focus', function() {
+			clearTimeout(tout);
+			element.classList.remove('ol-collapsed-num');
+		});
 	}
 	this.activateParcelle(false);
-  // Autocomplete list
+	// Autocomplete list
+	var auto = document.createElement('DIV');
+	auto.className = 'autocomplete-parcelle';
+	element.appendChild(auto);
 	var ul = document.createElement('UL');
 	ul.classList.add('autocomplete-parcelle');
-	element.appendChild(ul);
+	auto.appendChild(ul);
 	ul = document.createElement('UL');
 	ul.classList.add('autocomplete-page');
-	element.appendChild(ul);
+	auto.appendChild(ul);
 	// Show/hide list on fcus/blur	
 	this._input.addEventListener('blur', function() {
 		setTimeout(function(){ element.classList.add('ol-collapsed-list') }, 200);
@@ -7779,6 +7790,20 @@ ol.control.SearchGeoportailParcelle.prototype.selectCommune = function(e) {
 	this.activateParcelle(true);
   this._inputParcelle.numero.focus();
   this.autocompleteParcelle();
+};
+/** Set the input parcelle
+ * @param {*} p parcel
+ * 	@param {string} p.Commune
+ * 	@param {string} p.CommuneAbsorbee
+ * 	@param {string} p.Section
+ * 	@param {string} p.Numero
+ * @param {boolean} search start a search
+ */
+ol.control.SearchGeoportailParcelle.prototype.setParcelle = function(p, search) {
+	this._inputParcelle.prefix.value = (p.Commune||'') + (p.CommuneAbsorbee||'');
+	this._inputParcelle.section.value = p.Section||'';
+	this._inputParcelle.numero.value = p.Numero||'';
+	if (search) this._triggerCustomEvent("keyup", this._inputParcelle.prefix);
 };
 /** Activate parcelle inputs
  * @param {bolean} b
@@ -8136,7 +8161,7 @@ ol.control.SearchWikipedia.prototype.select = function (f){
  * A control to select features by attributes
  *
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol.control.SelectBase}
  * @fires select
  * @param {Object=} options
  *  @param {string} options.className control class name
@@ -8442,7 +8467,10 @@ ol.control.SelectCheck.prototype.doSelect = function(options) {
     }
   }.bind(this));
   if (!conditions.length) {
-    return ol.control.SelectBase.prototype.doSelect.call(this, { features: options.features, matchAll: this._selectAll });
+    return ol.control.SelectBase.prototype.doSelect.call(this, { 
+      features: options.features, 
+      matchAll: this._selectAll 
+    });
   } else {
     return ol.control.SelectBase.prototype.doSelect.call(this, {
       features: options.features, 
@@ -8519,7 +8547,7 @@ ol.control.SelectCheck.prototype.setValues = function(options) {
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
- * Select features by property using a popup 
+ * Select features by property using a condition 
  *
  * @constructor
  * @extends {ol.control.SelectBase}
@@ -8666,10 +8694,7 @@ ol.control.SelectFulltext.prototype.doSelect= function(options) {
  *  @param {string} options.className control class name
  *  @param {Element | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *  @param {ol/source/Vector | Array<ol/source/Vector>} options.source the source to search in
- *  @param {string} options.label control label, default 'condition'
- *  @param {number} options.selectAll select all features if no option selected
- *  @param {condition|Array<condition>} options.condition conditions 
- *  @param {function|undefined} options.onchoice function triggered when an option is clicked, default doSelect
+ *  @param {Array<ol.control.SelectBase>} options.controls an array of controls
  */
 ol.control.SelectMulti = function(options) {
   if (!options) options = {};
@@ -8857,6 +8882,75 @@ ol.control.SelectPopup.prototype.setValues = function(options) {
       parent: this._input
     });
   }
+};
+
+/** A control with scroll-driven navigation to create narrative maps
+ *
+ * @constructor
+ * @extends {ol.control.Control}
+ * @fires 
+ * @param {Object=} options Control options.
+ *	@param {String} options.className class of the control
+ */
+ol.control.Status = function(options) {
+  options = options || {};
+  // New element
+  var element = ol.ext.element.create('DIV', {
+    className: (options.className || '') + ' ol-status'
+      + (options.target ? '': ' ol-unselectable ol-control')
+  });
+  // Initialize
+  ol.control.Control.call(this, {
+    element: element,
+    target: options.target
+  });
+};
+ol.ext.inherits(ol.control.Status, ol.control.Control);
+/** Show status on the map
+ * @param {string|Element} html status text or DOM element
+ */
+ol.control.Status.prototype.status = function(html) {
+  var s = html || '';
+  if (typeof(s)==='object' && !(s instanceof String)) {
+    s = '';
+    for (var i in html) {
+      s += '<label>'+i+':</label> '+html[i]+'<br/>';
+    }
+  }
+  ol.ext.element.setHTML(this.element, s);
+};
+/** Set status position
+ * @param {string} position position of the status 'top', 'left', 'bottom' or 'right', default top
+ */
+ol.control.Status.prototype.setPosition = function(position) {
+  this.element.classList.remove('ol-left');
+  this.element.classList.remove('ol-right');
+  this.element.classList.remove('ol-bottom');
+  if (/^left$|^right$|^bottom$/.test(position)) {
+    this.element.classList.add('ol-'+position);
+  }
+};
+/** Show the status
+ * @param {boolean} show show or hide the control, default true
+ */
+ol.control.Status.prototype.show = function(show) {
+  if (show===false) ol.ext.element.hide(this.element);
+  else ol.ext.element.show(this.element);
+};
+/** Hide the status
+ */
+ol.control.Status.prototype.hide = function() {
+  ol.ext.element.hide(this.element);
+};
+/** Toggle the status
+ */
+ol.control.Status.prototype.toggle = function() {
+  ol.ext.element.toggle(this.element);
+};
+/** Is status visible
+ */
+ol.control.Status.prototype.isShown = function() {
+  return this.element.style.display==='none';
 };
 
 /** A control with scroll-driven navigation to create narrative maps
@@ -18434,7 +18528,7 @@ ol.source.Geoportail.prototype.serviceURL = function() {
   if (this._server) {
     return this._server.replace (/^(https?:\/\/[^/]*)(.*)$/, "$1/"+this._gppKey+"$2") ;
 	} else {
-    return (window.geoportailConfig ? window.geoportailConfig.url : "https://wxs.ign.fr/") +this._gppKey+ "/wmts" ;
+    return (window.geoportailConfig ? window.geoportailConfig.url : "https://wxs.ign.fr/") +this._gppKey+ "/geoportail/wmts" ;
   }
 };
 /**
@@ -18896,6 +18990,7 @@ ol.source.Overpass.prototype.hasFeature = function(feature) {
  *  @param {number} options.maxResolution  max resolution to render 3D
  *  @param {number} options.defaultHeight default height if none is return by a propertie
  *  @param {function|string|Number} options.height a height function (returns height giving a feature) or a popertie name for the height or a fixed value
+ *  @param {Array<number>} options.center center of the view, default [.5,1]
  */
 ol.layer.Vector3D = function (options) {
   options = options || {};
@@ -18911,6 +19006,7 @@ ol.layer.Vector3D = function (options) {
       }
     }), 
     height: options.height,
+    center: options.center || [.5,1],
     defaultHeight: options.defaultHeight || 0,
     maxResolution: options.maxResolution || Infinity 
   });
@@ -18986,12 +19082,16 @@ ol.layer.Vector3D.prototype.onPostcompose_ = function(e) {
     m[4] = m[12];
     m[5] = m[13];
   }
-  this.center_ = [ ctx.canvas.width/2/ratio, ctx.canvas.height/ratio ];
+  this.center_ = [ 
+    ctx.canvas.width*this.get('center')[0]/ratio, 
+    ctx.canvas.height*this.get('center')[1]/ratio 
+  ];
   var f = this._source.getFeaturesInExtent(e.frameState.extent);
   ctx.save();
     ctx.scale(ratio,ratio);
     var s = this.getStyle();
     ctx.lineWidth = s.getStroke().getWidth();
+    ctx.lineCap = s.getStroke().getLineCap();
     ctx.strokeStyle = ol.color.asString(s.getStroke().getColor());
     ctx.fillStyle = ol.color.asString(s.getFill().getColor());
     var builds = [];
@@ -19540,7 +19640,7 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
   options = options || {};
 	tileoptions = tileoptions || {};
 	var capabilities = window.geoportailConfig ? window.geoportailConfig.capabilities[options.key] || window.geoportailConfig.capabilities["default"] : ol.layer.Geoportail.capabilities;
-	capabilities = capabilities[layer];
+  capabilities = capabilities[layer];
 	if (!capabilities) {
     capabilities = { title: layer, originators: [] };
     console.error("ol.layer.Geoportail: no layer definition for \""+layer+"\"\nTry to use ol/layer/Geoportail~loadCapabilities() to get it.");
@@ -19649,7 +19749,8 @@ ol.layer.Geoportail.capabilities = {
 	"GEOGRAPHICALGRIDSYSTEMS.MAPS.BDUNI.J1":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Plan IGN j+1","format":"image/png","tilematrix":"PM","style":"normal","minZoom":0,"maxZoom":18,"bbox":[-179.5,-75,179.5,75],"desc":"Plan IGN j+1","keys":"Plan IGN J+1","legend":[{"zoom":18,"url":"https://wxs.ign.fr/static/legends/BDUNI/BDUNI.png"}],"originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-179,-80,179,80]}]}}},
 	"CADASTRALPARCELS.PARCELS":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Parcelles cadastrales","order":"9790000","format":"image/png","tilematrix":"PM","style":"bdparcellaire","minZoom":0,"maxZoom":20,"bbox":[-63.160706,-21.39223,55.84643,51.090965],"desc":"Limites des parcelles cadastrales issues de plans scannés et de plans numériques.","keys":"Parcelles cadastrales","qlook":"https://wxs.ign.fr/static/pictures/BDPARCELLAIRE.png","legend":[],"originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":20,"constraint":[{"minZoom":0,"maxZoom":20,"bbox":[-63.160706,-21.39223,55.84643,51.090965]}]}}},
 	"ORTHOIMAGERY.ORTHOPHOTOS":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Photographies aériennes","order":"9990000","format":"image/jpeg","tilematrix":"PM","style":"normal","minZoom":0,"bbox":[-180,-86,180,84],"desc":"Photographies aériennes","keys":"Photographies","qlook":"https://wxs.ign.fr/static/pictures/ign_ortho.jpg","legend":[{"zoom":19,"url":"https://wxs.ign.fr/static/legends/ign_bdortho_legende.jpg"}],"originators":{"PLANETOBSERVER":{"href":"http://www.planetobserver.com/","attribution":"PlanetObserver (images satellites)","logo":"https://wxs.ign.fr/static/logos/PLANETOBSERVER/PLANETOBSERVER.gif","minZoom":0,"maxZoom":12,"constraint":[{"minZoom":0,"maxZoom":12,"bbox":[-180,-86,180,84]}]},"MPM":{"href":"http://www.marseille-provence.com/","attribution":"Marseille Provence Métropole","logo":"https://wxs.ign.fr/static/logos/MPM/MPM.gif","minZoom":0,"maxZoom":20,"constraint":[{"minZoom":20,"maxZoom":20,"bbox":[5.076959,43.153347,5.7168245,43.454994]}]},"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":13,"maxZoom":20,"constraint":[{"bbox":[0.035491213,43.221077,6.0235267,49.696926]},{"minZoom":20,"maxZoom":20,"bbox":[0.035491213,43.221077,6.0235267,49.696926]},{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CRAIG":{"href":"http://www.craig.fr","attribution":"Centre Régional Auvergnat de l'Information Géographique (CRAIG)","logo":"https://wxs.ign.fr/static/logos/CRAIG/CRAIG.gif","minZoom":13,"maxZoom":20,"constraint":[{"minZoom":20,"maxZoom":20,"bbox":[2.2243388,44.76621,2.7314367,45.11295]},{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CNES":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES/CNES.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CG06":{"href":"http://www.cg06.fr","attribution":"Département Alpes Maritimes (06) en partenariat avec : Groupement Orthophoto 06 (NCA, Ville de Cannes, CARF, CASA,CG06, CA de Grasse) ","logo":"https://wxs.ign.fr/static/logos/CG06/CG06.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CG45":{"href":"http://www.loiret.com","attribution":"Le conseil général du Loiret","logo":"https://wxs.ign.fr/static/logos/CG45/CG45.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"RGD_SAVOIE":{"href":"http://www.rgd.fr","attribution":"Régie de Gestion de Données des Pays de Savoie (RGD 73-74)","logo":"https://wxs.ign.fr/static/logos/RGD_SAVOIE/RGD_SAVOIE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"e-Megalis":{"href":"http://www.e-megalisbretagne.org//","attribution":"Syndicat mixte de coopération territoriale (e-Megalis)","logo":"https://wxs.ign.fr/static/logos/e-Megalis/e-Megalis.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"SIGLR":{"href":"http://www.siglr.org//","attribution":"SIGLR","logo":"https://wxs.ign.fr/static/logos/SIGLR/SIGLR.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"PPIGE":{"href":"http://www.ppige-npdc.fr/","attribution":"PPIGE","logo":"https://wxs.ign.fr/static/logos/PPIGE/PPIGE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"FEDER2":{"href":"http://www.europe-en-france.gouv.fr/","attribution":"Fonds européen de développement économique et régional","logo":"https://wxs.ign.fr/static/logos/FEDER2/FEDER2.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"FEDER":{"href":"http://www.europe-en-france.gouv.fr/","attribution":"Fonds européen de développement économique et régional","logo":"https://wxs.ign.fr/static/logos/FEDER/FEDER.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CRCORSE":{"href":"http://www.corse.fr//","attribution":"CRCORSE","logo":"https://wxs.ign.fr/static/logos/CRCORSE/CRCORSE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CNES_AUVERGNE":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_AUVERGNE/CNES_AUVERGNE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"FEDER_PAYSDELALOIRE":{"href":"http://www.europe-en-paysdelaloire.eu/","attribution":"Pays-de-la-Loire","logo":"https://wxs.ign.fr/static/logos/FEDER_PAYSDELALOIRE/FEDER_PAYSDELALOIRE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"FEDER_AUVERGNE":{"href":"http://www.europe-en-auvergne.eu/","attribution":"Auvergne","logo":"https://wxs.ign.fr/static/logos/FEDER_AUVERGNE/FEDER_AUVERGNE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"PREFECTURE_GUADELOUPE":{"href":"www.guadeloupe.pref.gouv.fr/","attribution":"guadeloupe","logo":"https://wxs.ign.fr/static/logos/PREFECTURE_GUADELOUPE/PREFECTURE_GUADELOUPE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"BOURGOGNE-FRANCHE-COMTE":{"href":"https://www.bourgognefranchecomte.fr/","attribution":"Auvergne","logo":"https://wxs.ign.fr/static/logos/BOURGOGNE-FRANCHE-COMTE/BOURGOGNE-FRANCHE-COMTE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"ASTRIUM":{"href":"http://www.geo-airbusds.com/","attribution":"Airbus Defence and Space","logo":"https://wxs.ign.fr/static/logos/ASTRIUM/ASTRIUM.gif","minZoom":13,"maxZoom":16,"constraint":[{"minZoom":13,"maxZoom":16,"bbox":[-55.01953,1.845384,-50.88867,6.053161]}]},"DITTT":{"href":"http://www.dittt.gouv.nc/portal/page/portal/dittt/","attribution":"Direction des Infrastructures, de la Topographie et des Transports Terrestres","logo":"https://wxs.ign.fr/static/logos/DITTT/DITTT.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[163.47784,-22.767689,167.94624,-19.434975]}]},"CNES_ALSACE":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_ALSACE/CNES_ALSACE.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_971":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_971/CNES_971.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_972":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_972/CNES_972.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_974":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_974/CNES_974.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_975":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_975/CNES_975.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_976":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_976/CNES_976.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_977":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_977/CNES_977.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_978":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_978/CNES_978.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]}}},
-	"GEOGRAPHICALGRIDSYSTEMS.PLANIGN":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Plan IGN","format":"image/jpeg","tilematrix":"PM","style":"normal","minZoom":0,"maxZoom":18,"bbox":[-179.5,-75,179.5,75],"desc":"Représentation graphique des bases de données IGN.","keys":"Cartes","qlook":"https://wxs.ign.fr/static/pictures/ign_carte2.jpg","legend":[],"originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":9,"maxZoom":18,"constraint":[{"minZoom":10,"maxZoom":18,"bbox":[-63.37252,-21.475586,55.925865,51.31212]},{"minZoom":0,"maxZoom":9,"bbox":[-179.5,-75,179.5,75]}]}}}
+	"GEOGRAPHICALGRIDSYSTEMS.PLANIGN":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Plan IGN","format":"image/jpeg","tilematrix":"PM","style":"normal","minZoom":0,"maxZoom":18,"bbox":[-179.5,-75,179.5,75],"desc":"Représentation graphique des bases de données IGN.","keys":"Cartes","qlook":"https://wxs.ign.fr/static/pictures/ign_carte2.jpg","legend":[],"originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":9,"maxZoom":18,"constraint":[{"minZoom":10,"maxZoom":18,"bbox":[-63.37252,-21.475586,55.925865,51.31212]},{"minZoom":0,"maxZoom":9,"bbox":[-179.5,-75,179.5,75]}]}}},
+	"TRANSPORTNETWORKS.ROADS":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Routes","order":"8990000","format":"image/png","tilematrix":"PM","style":"normal","minZoom":6,"maxZoom":18,"bbox":[-63.969162,-21.49687,55.964417,71.584076],"desc":"Affichage du réseau routier français et européen.","keys":"Réseau routier","qlook":"https://wxs.ign.fr/static/pictures/ign_routes2.jpg","legend":[],"originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":9,"maxZoom":18,"constraint":[{"minZoom":15,"maxZoom":18,"bbox":[-63.37252,-21.475586,55.925865,51.31212]},{"minZoom":6,"maxZoom":14,"bbox":[-63.969162,-21.49687,55.964417,71.584076]}]}}}
 };
 /** Load capabilities from the service
  * @param {string} gppKey the API key to get capabilities for
@@ -20664,6 +20765,19 @@ ol.Overlay.Placemark.prototype.setRadius = function(size) {
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+/** Template attributes for popup
+ * @typedef {Object} TemplateAttributes
+ * @property {string} title
+ * @property {function} format a function that takes an attribute and returns it formated
+ * @property {string} before string to instert before the attribute (prefix)
+ * @property {string} after string to instert after the attribute (sudfix)
+ * @property {function} value a function that takes feature and a value and returns a value (calculated attributes)
+ */
+/** Template 
+ * @typedef {Object} Template
+ * @property {string|function} title title of the popup, attribute name or a function that takes a feature and returns the title
+ * @property {Object.<TemplateAttributes>} attributes a list of template attributes 
+ */
 /**
  * A popup element to be displayed on a feature.
  *
@@ -20677,7 +20791,7 @@ ol.Overlay.Placemark.prototype.setRadius = function(size) {
  *  @param {Number|Array<number>} options.offsetBox an offset box
  *  @param {ol.OverlayPositioning | string | undefined} options.positionning 
  *    the 'auto' positioning var the popup choose its positioning to stay on the map.
- *  @param {*} options.template A template with a list of properties to use in the popup
+ *  @param {Template} options.template A template with a list of properties to use in the popup
  *  @param {boolean} options.canFix Enable popup to be fixed, default false
  *  @param {boolean} options.showImage display image url as image, default false
  *  @param {boolean} options.maxChar max char to display in a cell, default 200
@@ -20700,7 +20814,7 @@ ol.Overlay.PopupFeature = function (options) {
 };
 ol.ext.inherits(ol.Overlay.PopupFeature, ol.Overlay.Popup);
 /** Set the template
- * @param {*} template A template with a list of properties to use in the popup
+ * @param {Template} template A template with a list of properties to use in the popup
  */
 ol.Overlay.PopupFeature.prototype.setTemplate = function(template) {
   this._template = template;
@@ -20776,6 +20890,10 @@ ol.Overlay.PopupFeature.prototype._getHtml = function(feature) {
       tr = ol.ext.element.create('TR', { parent: table });
       ol.ext.element.create('TD', { html: a.title || att, parent: tr });
       var content, val = feature.get(att);
+      // Get calculated value
+      if (typeof(a.value)==='function') {
+        val = a.value(feature, val);
+      }
       // Show image or content
       if (this.get('showImage') && /(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)/.test(val)) {
         content = ol.ext.element.create('IMG',{

@@ -133,7 +133,8 @@
     select: select,
     canFix: true,
     template: {
-        title: // 'nom',
+        title: 
+          // 'nom',   // only display the name
           function(f) {
             return f.get('nom')+' ('+f.get('id')+')';
           },
@@ -143,12 +144,20 @@
           'arrond': { title: 'Arrondissement' },
           'cantons': { title: 'Cantons' },
           'communes': { title: 'Communes' },
+          // with prefix and suffix
           'pop': { 
             title: 'Population',  // attribute's title
-            before: '', // something to add before
+            before: '',           // something to add before
             format: ol.Overlay.PopupFeature.localString(),  // format as local string
-            after: ' hab.'  // something to add after
+            after: ' hab.'        // something to add after
           },
+          // calculated attribute
+          'pop2': {
+            title: 'Population (kHab.)',  // attribute's title
+            value: function(f, val) { 
+              return Math.round(parseInt(f.get('pop'))/100).toLocaleString() + ' kHab.' 
+            }
+          }
           /* Using localString with a date * /
           'date': { 
             title: 'Date', 
