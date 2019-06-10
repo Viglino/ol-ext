@@ -8,6 +8,22 @@ import ol_ext_inherits from '../util/ext'
 import ol_Overlay_Popup from './Popup'
 import ol_ext_element from '../util/element'
 
+
+/** Template attributes for popup
+ * @typedef {Object} TemplateAttributes
+ * @property {string} title
+ * @property {function} format a function that takes an attribute and returns it formated
+ * @property {string} before string to instert before the attribute (prefix)
+ * @property {string} after string to instert after the attribute (sudfix)
+ * @property {function} value a function that takes feature and a value and returns a value (calculated attributes)
+ */
+
+/** Template 
+ * @typedef {Object} Template
+ * @property {string|function} title title of the popup, attribute name or a function that takes a feature and returns the title
+ * @property {Object.<TemplateAttributes>} attributes a list of template attributes 
+ */
+
 /**
  * A popup element to be displayed on a feature.
  *
@@ -21,7 +37,7 @@ import ol_ext_element from '../util/element'
  *  @param {Number|Array<number>} options.offsetBox an offset box
  *  @param {ol.OverlayPositioning | string | undefined} options.positionning 
  *    the 'auto' positioning var the popup choose its positioning to stay on the map.
- *  @param {*} options.template A template with a list of properties to use in the popup
+ *  @param {Template} options.template A template with a list of properties to use in the popup
  *  @param {boolean} options.canFix Enable popup to be fixed, default false
  *  @param {boolean} options.showImage display image url as image, default false
  *  @param {boolean} options.maxChar max char to display in a cell, default 200
@@ -48,7 +64,7 @@ var ol_Overlay_PopupFeature = function (options) {
 ol_ext_inherits(ol_Overlay_PopupFeature, ol_Overlay_Popup);
 
 /** Set the template
- * @param {*} template A template with a list of properties to use in the popup
+ * @param {Template} template A template with a list of properties to use in the popup
  */
 ol_Overlay_PopupFeature.prototype.setTemplate = function(template) {
   this._template = template;
@@ -127,6 +143,10 @@ ol_Overlay_PopupFeature.prototype._getHtml = function(feature) {
       tr = ol_ext_element.create('TR', { parent: table });
       ol_ext_element.create('TD', { html: a.title || att, parent: tr });
       var content, val = feature.get(att);
+      // Get calculated value
+      if (typeof(a.value)==='function') {
+        val = a.value(feature, val);
+      }
       // Show image or content
       if (this.get('showImage') && /(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)/.test(val)) {
         content = ol_ext_element.create('IMG',{
