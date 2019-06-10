@@ -30,7 +30,7 @@ var ol_control_SearchGeoportailParcelle = function(options) {
 	var self = this;
 
 	options.type = "Commune";
-	options.className = options.className ? options.className+" IGNF-parcelle" : "IGNF-parcelle";
+	options.className = (options.className ? options.className:"")+" IGNF-parcelle ol-collapsed-list ol-collapsed-num";
 	options.inputLabel = "Commune";
 	options.noCollapse = true;
 	options.placeholder = options.placeholder || "Choisissez une commune...";
@@ -73,19 +73,30 @@ var ol_control_SearchGeoportailParcelle = function(options) {
 	}
 	
 	// Add inputs
+	var tout;
 	for (var i in this._inputParcelle) {
 		div.appendChild(this._inputParcelle[i]);
 		this._inputParcelle[i].addEventListener("keyup", doSearch);
+		this._inputParcelle[i].addEventListener('blur', function() {
+			tout = setTimeout(function(){ element.classList.add('ol-collapsed-num'); }, 200);
+		});
+		this._inputParcelle[i].addEventListener('focus', function() {
+			clearTimeout(tout);
+			element.classList.remove('ol-collapsed-num');
+		});
 	}
 	this.activateParcelle(false);
 
-  // Autocomplete list
+	// Autocomplete list
+	var auto = document.createElement('DIV');
+	auto.className = 'autocomplete-parcelle';
+	element.appendChild(auto);
 	var ul = document.createElement('UL');
 	ul.classList.add('autocomplete-parcelle');
-	element.appendChild(ul);
+	auto.appendChild(ul);
 	ul = document.createElement('UL');
 	ul.classList.add('autocomplete-page');
-	element.appendChild(ul);
+	auto.appendChild(ul);
 
 	// Show/hide list on fcus/blur	
 	this._input.addEventListener('blur', function() {
@@ -117,6 +128,21 @@ ol_control_SearchGeoportailParcelle.prototype.selectCommune = function(e) {
 	this.activateParcelle(true);
   this._inputParcelle.numero.focus();
   this.autocompleteParcelle();
+};
+
+/** Set the input parcelle
+ * @param {*} p parcel
+ * 	@param {string} p.Commune
+ * 	@param {string} p.CommuneAbsorbee
+ * 	@param {string} p.Section
+ * 	@param {string} p.Numero
+ * @param {boolean} search start a search
+ */
+ol_control_SearchGeoportailParcelle.prototype.setParcelle = function(p, search) {
+	this._inputParcelle.prefix.value = (p.Commune||'') + (p.CommuneAbsorbee||'');
+	this._inputParcelle.section.value = p.Section||'';
+	this._inputParcelle.numero.value = p.Numero||'';
+	if (search) this._triggerCustomEvent("keyup", this._inputParcelle.prefix);
 };
 
 /** Activate parcelle inputs

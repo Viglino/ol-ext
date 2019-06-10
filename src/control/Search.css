@@ -110,7 +110,8 @@
   display: block;
   clear: both;
 }
-.ol-search.IGNF-parcelle > div * {
+.ol-search.IGNF-parcelle > div input,
+.ol-search.IGNF-parcelle > div label {
   width: 5em;
   box-sizing: border-box;
   display: inline-block;
