@@ -18484,39 +18484,39 @@ ol.source.GeoImage.prototype.setCrop = function(crop)
 ol.source.Geoportail = function (layer, options) {
   options = options || {};
   var matrixIds = new Array();
-	var resolutions = new Array();//[156543.03392804103,78271.5169640205,39135.75848201024,19567.879241005125,9783.939620502562,4891.969810251281,2445.9849051256406,1222.9924525628203,611.4962262814101,305.74811314070485,152.87405657035254,76.43702828517625,38.218514142588134,19.109257071294063,9.554628535647034,4.777314267823517,2.3886571339117584,1.1943285669558792,0.5971642834779396,0.29858214173896974,0.14929107086948493,0.07464553543474241];
-	var size = ol.extent.getWidth(ol.proj.get('EPSG:3857').getExtent()) / 256;
-	for (var z=0; z <= (options.maxZoom ? options.maxZoom : 20) ; z++) {
+  var resolutions = new Array();//[156543.03392804103,78271.5169640205,39135.75848201024,19567.879241005125,9783.939620502562,4891.969810251281,2445.9849051256406,1222.9924525628203,611.4962262814101,305.74811314070485,152.87405657035254,76.43702828517625,38.218514142588134,19.109257071294063,9.554628535647034,4.777314267823517,2.3886571339117584,1.1943285669558792,0.5971642834779396,0.29858214173896974,0.14929107086948493,0.07464553543474241];
+  var size = ol.extent.getWidth(ol.proj.get('EPSG:3857').getExtent()) / 256;
+  for (var z=0; z <= (options.maxZoom ? options.maxZoom : 20) ; z++) {
     matrixIds[z] = z ; 
-		resolutions[z] = size / Math.pow(2, z);
-	}
-	var tg = new ol.tilegrid.WMTS ({
+    resolutions[z] = size / Math.pow(2, z);
+  }
+  var tg = new ol.tilegrid.WMTS ({
     origin: [-20037508, 20037508],
     resolutions: resolutions,
     matrixIds: matrixIds
   });
-	tg.minZoom = (options.minZoom ? options.minZoom : 0);
-	var attr = [ ol.source.Geoportail.prototype.attribution ];
-	if (options.attributions) attr = options.attributions;
-	this._server = options.server;
-	this._gppKey = options.gppKey || 'choisirgeoportail';
-	var wmts_options = {
+  tg.minZoom = (options.minZoom ? options.minZoom : 0);
+  var attr = [ ol.source.Geoportail.prototype.attribution ];
+  if (options.attributions) attr = options.attributions;
+  this._server = options.server;
+  this._gppKey = options.gppKey || 'choisirgeoportail';
+  var wmts_options = {
     url: this.serviceURL(),
-		layer: layer,
-		matrixSet: 'PM',
-		format: options.format ? options.format : 'image/jpeg',
-		projection: 'EPSG:3857',
-		tileGrid: tg,
-		style: options.style ? options.style : 'normal',
-		attributions: attr,
-		crossOrigin: (typeof options.crossOrigin == 'undefined') ? 'anonymous' : options.crossOrigin,
-		wrapX: !(options.wrapX===false)
-	};
+    layer: layer,
+    matrixSet: 'PM',
+    format: options.format ? options.format : 'image/jpeg',
+    projection: 'EPSG:3857',
+    tileGrid: tg,
+    style: options.style ? options.style : 'normal',
+    attributions: attr,
+    crossOrigin: (typeof options.crossOrigin == 'undefined') ? 'anonymous' : options.crossOrigin,
+    wrapX: !(options.wrapX===false)
+  };
   ol.source.WMTS.call(this, wmts_options);
-	// Load url using basic authentification
-	if (options.authentication) {
-		this.setTileLoadFunction(ol.source.Geoportail.tileLoadFunctionWithAuthentication(options.authentication, this.getFormat()));
-	}
+  // Load url using basic authentification
+  if (options.authentication) {
+    this.setTileLoadFunction(ol.source.Geoportail.tileLoadFunctionWithAuthentication(options.authentication, this.getFormat()));
+  }
 };
 ol.ext.inherits(ol.source.Geoportail, ol.source.WMTS);
 /** Standard IGN-GEOPORTAIL attribution 
@@ -18527,7 +18527,7 @@ ol.source.Geoportail.prototype.attribution = '<a href="http://www.geoportail.gou
 ol.source.Geoportail.prototype.serviceURL = function() {
   if (this._server) {
     return this._server.replace (/^(https?:\/\/[^/]*)(.*)$/, "$1/"+this._gppKey+"$2") ;
-	} else {
+  } else {
     return (window.geoportailConfig ? window.geoportailConfig.url : "https://wxs.ign.fr/") +this._gppKey+ "/geoportail/wmts" ;
   }
 };
@@ -18548,19 +18548,62 @@ ol.source.Geoportail.prototype.getGPPKey = function() {
  */
 ol.source.Geoportail.prototype.setGPPKey = function(key, authentication) {
   this._gppKey = key;
-	var serviceURL = this.serviceURL();
-	this.setTileUrlFunction (function() {
+  var serviceURL = this.serviceURL();
+  this.setTileUrlFunction (function() {
     var url = ol.source.Geoportail.prototype.getTileUrlFunction().apply(this, arguments);
-		if (url) {
+    if (url) {
       var args = url.split("?");
-			return serviceURL+"?"+args[1];
-		}
-		else return url;
-	});
-	// Load url using basic authentification
-	if (authentication) {
-		this.setTileLoadFunction(ol.source.Geoportail.tileLoadFunctionWithAuthentication(authentication, this.getFormat()));
-	}
+      return serviceURL+"?"+args[1];
+    }
+    else return url;
+  });
+  // Load url using basic authentification
+  if (authentication) {
+    this.setTileLoadFunction(ol.source.Geoportail.tileLoadFunctionWithAuthentication(authentication, this.getFormat()));
+  }
+};
+/** Return the GetFeatureInfo URL for the passed coordinate, resolution, and
+ * projection. Return `undefined` if the GetFeatureInfo URL cannot be
+ * constructed.
+ * @param {ol.Coordinate} coord 
+ * @param {Number} resolution 
+ * @param {ol.proj.Projection} projection default the source projection
+ * @param {Object} options 
+ *  @param {string} options.format response format text/plain, text/html, application/json, default text/plain
+ * @return {String|undefined} GetFeatureInfo URL.
+ */
+ol.source.Geoportail.prototype.getFeatureInfoUrl  = function(coord, resolution, projection, options) {
+  options = options || {};
+  if (!projection) projection = this.getProjection();
+  var tileCoord = this.tileGrid.getTileCoordForCoordAndResolution(coord, resolution);
+  var ratio = 1;
+  var url = this.getTileUrlFunction()(tileCoord, ratio, projection);
+  if (!url) return url;
+  var tileResolution = this.tileGrid.getResolution(tileCoord[0]);
+  var tileExtent = this.tileGrid.getTileCoordExtent(tileCoord);
+  var i = Math.floor((coord[0] - tileExtent[0]) / (tileResolution / ratio));
+  var j = Math.floor((tileExtent[3] - coord[1]) / (tileResolution / ratio));
+  return url.replace(/Request=GetTile/i, 'Request=getFeatureInfo')
+    +'&INFOFORMAT='+(options.format||'text/plain')
+    +'&I='+i
+    +'&J='+j;
+};
+/** Get feature info
+ * 
+ */
+ol.source.Geoportail.prototype.getFeatureInfo = function(coord, resolution, options) {
+  var url = this.getFeatureInfoUrl(coord, resolution, null, options)
+  ol.ext.Ajax.get({
+    url: url,
+    dataType: options.format || 'text/plain',
+    options: { 
+      encode: false 
+    },
+    success: function(resp) {
+      if (options.callback) options.callback(resp);
+    },
+    error: options.error || function(){}
+  })
 };
 /** Get a tile load function to load tiles with basic authentication
  * @param {string} authentication as btoa("login:pwd")
@@ -18568,24 +18611,24 @@ ol.source.Geoportail.prototype.setGPPKey = function(key, authentication) {
  * @return {function} tile load function to load tiles with basic authentication
  */
 ol.source.Geoportail.tileLoadFunctionWithAuthentication = function(authentication, format) {
-	if (!authentication) return undefined;
-	return function(tile, src) {
-		var xhr = new XMLHttpRequest();
-		xhr.open("GET", src);
-		xhr.setRequestHeader("Authorization", "Basic " + authentication);
-		xhr.responseType = "arraybuffer";
-		xhr.onload = function () {
-			var arrayBufferView = new Uint8Array(this.response);
-			var blob = new Blob([arrayBufferView], { type: format });
-			var urlCreator = window.URL || window.webkitURL;
-			var imageUrl = urlCreator.createObjectURL(blob);
-			tile.getImage().src = imageUrl;
-		};
-		xhr.onerror = function () {
-			tile.getImage().src = "";
-		};
-		xhr.send();
-	};
+  if (!authentication) return undefined;
+  return function(tile, src) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", src);
+    xhr.setRequestHeader("Authorization", "Basic " + authentication);
+    xhr.responseType = "arraybuffer";
+    xhr.onload = function () {
+      var arrayBufferView = new Uint8Array(this.response);
+      var blob = new Blob([arrayBufferView], { type: format });
+      var urlCreator = window.URL || window.webkitURL;
+      var imageUrl = urlCreator.createObjectURL(blob);
+      tile.getImage().src = imageUrl;
+    };
+    xhr.onerror = function () {
+      tile.getImage().src = "";
+    };
+    xhr.send();
+  };
 };
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
@@ -21524,12 +21567,6 @@ ol.graph.Dijskra.prototype.closestCoordinate = function(p) {
  */
 ol.graph.Dijskra.prototype.path = function(start, end) {
   if (this.running) return false;
-  // Initialize
-  var self = this;
-  this.nodes.clear();
-  this.candidat = [];
-  this.wdist = 0;
-  this.running = true;
   // Starting nodes
   start = this.closestCoordinate(start);
   this.end = this.closestCoordinate(end);
@@ -21538,10 +21575,17 @@ ol.graph.Dijskra.prototype.path = function(start, end) {
       this.dispatchEvent({
         type: 'finish',
         route: [],
+        wDistance: -1,
         distance: this.wdist
       });
       return false;
     }
+  // Initialize
+  var self = this;
+  this.nodes.clear();
+  this.candidat = [];
+  this.wdist = 0;
+  this.running = true;
   // Starting point
   this.addNode(start, 0);
   // Arrival
