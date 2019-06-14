@@ -1,12 +1,10 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
-
+<!--
 	Copyright (c) 2018 Jean-Marc VIGLINO,
 	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-
------------------------------------------------------------->
+-->
 	<title>ol-ext: Dijkstra short path</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
@@ -144,6 +142,9 @@
   <p id="notfound" style="background:#f80; color:#fff; padding:.5em; display:none; float:left;">
     Sorry, there is no route to go there!
   </p>
+  <p id="notfound0" style="background:#f80; color:#fff; padding:.5em; display:none; float:left;">
+    You're allready there!
+  </p>
   <p id="result" style="background:#0b0; color:#fff; padding:.5em; display:none; float:left;">
     Found it!
     <br/>
@@ -216,6 +217,7 @@
   dijkstra.on('start', function(e) {
     $('#warning').hide();
     $("#notfound").hide();
+    $("#notfound0").hide();
     $("#result").hide();
     result.clear();
   });
@@ -223,11 +225,13 @@
   dijkstra.on('finish', function(e) {
     $('#warning').hide();
     result.clear();
+    console.log(e);
     if (!e.route.length) {
-      $("#notfound").show();
+      if (e.wDistance===-1) $("#notfound0").show();
+      else $("#notfound").show();
+      $("#result").hide();
     } else {
       $("#result").show();
-      console.log(e)
       var t = (e.distance/1000).toFixed(2) + 'km';
       // Weighted distance
       if ($("#speed").prop('checked')) {
@@ -307,9 +311,11 @@
       popStart.show(start);
     } else {
       var se = dijkstra.path(start, e.coordinate);
-      start = se[0];
-      end = se[1];
-      popEnd.show(end);
+      if (se) {
+        start = se[0];
+        end = se[1];
+        popEnd.show(end);
+      }
     }
   });
 

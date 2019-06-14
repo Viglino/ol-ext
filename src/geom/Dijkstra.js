@@ -197,13 +197,6 @@ ol_graph_Dijskra.prototype.closestCoordinate = function(p) {
 ol_graph_Dijskra.prototype.path = function(start, end) {
   if (this.running) return false;
 
-  // Initialize
-  var self = this;
-  this.nodes.clear();
-  this.candidat = [];
-  this.wdist = 0;
-  this.running = true;
-
   // Starting nodes
   start = this.closestCoordinate(start);
   this.end = this.closestCoordinate(end);
@@ -212,10 +205,18 @@ ol_graph_Dijskra.prototype.path = function(start, end) {
       this.dispatchEvent({
         type: 'finish',
         route: [],
+        wDistance: -1,
         distance: this.wdist
       });
       return false;
     }
+
+  // Initialize
+  var self = this;
+  this.nodes.clear();
+  this.candidat = [];
+  this.wdist = 0;
+  this.running = true;
 
   // Starting point
   this.addNode(start, 0);
