@@ -59,6 +59,7 @@
 	<!-- DIV pour la carte -->
 	<div id="map" style="width: 600px; height: 400px;"></div>
 	<div class="options">
+    Click on the map to get info on the photo layer.
 	</div>
 	
 	<script type="text/javascript">
@@ -102,6 +103,23 @@
     visible: false
   }));
 
+  // Show information on click
+  var popup = new ol.Overlay.Popup();
+  map.addOverlay(popup);
+  map.on('click', function(e) {
+    popup.hide();
+    var layers = map.getLayers().getArray();
+    if (layers.length && layers[0].getVisible()) {
+      layers[0].getSource().getFeatureInfo(
+        e.coordinate, 
+        map.getView().getResolution(), {
+          format: 'text/html', 
+          callback: function(resp) {
+            popup.show(e.coordinate, resp);
+          }
+        })
+      }
+  });
 	</script>
 </body>
 </html>
