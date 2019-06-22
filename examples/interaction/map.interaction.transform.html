@@ -10,7 +10,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
   <meta name="description" content="transform interaction for OL3" />
-  <meta name="keywords" content="ol3, vector, transform, rotate, scale, stretch" />
+  <meta name="keywords" content="ol, openlayers, vector, transform, rotate, scale, stretch" />
 
   <link rel="stylesheet" href="../style.css" />
 
@@ -92,13 +92,9 @@
   <script type="text/javascript">
     // Layers
     var layers = [
-      new ol.layer.Tile({
-        name: "Natural Earth", 
-        minResolution: 306,
-          source: new ol.source.XYZ({
-            url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
-            attributions: [ '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' ] 
-          })
+      new ol.layer.Tile({ 
+        title:'terrain-background',
+        source: new ol.source.Stamen({ layer: 'terrain' })
       })
     ]
     // The map

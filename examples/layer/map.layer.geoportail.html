@@ -113,9 +113,9 @@
       layers[0].getSource().getFeatureInfo(
         e.coordinate, 
         map.getView().getResolution(), {
-          format: 'text/html', 
+          INFO_FORMAT: 'text/html', 
           callback: function(resp) {
-            popup.show(e.coordinate, resp);
+            if (resp) popup.show(e.coordinate, resp);
           }
         })
       }

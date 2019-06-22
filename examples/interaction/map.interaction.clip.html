@@ -55,12 +55,9 @@
 	<script type="text/javascript">
 	// Layers
 	var mapbox = new ol.layer.Tile({
-			minResolution: 306,
-    		source: new ol.source.XYZ(
-			{	url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
-				attributions: [ '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' ] 
-    		})
-		});
+		title:'terrain-background',
+		source: new ol.source.Stamen({ layer: 'terrain' })
+	});
 	var stamen = new ol.layer.Tile(
 		{	source: new ol.source.Stamen({ layer: 'watercolor' }) 
 		});
