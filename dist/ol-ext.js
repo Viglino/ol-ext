@@ -1520,15 +1520,16 @@ ol.control.SearchGeoportail.prototype.searchCommune = function (f, cback) {
  * @constructor
  * @extends {ol.control.Control}
  * @param {Object=} options
- *  @param {function} displayInLayerSwitcher function that takes a layer and return a boolean if the layer is displayed in the switcher, default test the displayInLayerSwitcher layer attribute
+ *  @param {function} options.displayInLayerSwitcher function that takes a layer and return a boolean if the layer is displayed in the switcher, default test the displayInLayerSwitcher layer attribute
  *  @param {boolean} options.show_progress show a progress bar on tile layers, default false
- *  @param {boolean} mouseover show the panel on mouseover, default false
- *  @param {boolean} reordering allow layer reordering, default true
- *  @param {boolean} trash add a trash button to delete the layer, default false
- *  @param {function} oninfo callback on click on info button, if none no info button is shown DEPRECATED: use on(info) instead
- *  @param {boolean} extent add an extent button to zoom to the extent of the layer
- *  @param {function} onextent callback when click on extent, default fits view to extent
- *  @param {number} drawDelay delay in ms to redraw the layer (usefull to prevent flickering when manipulating the layers)
+ *  @param {boolean} options.mouseover show the panel on mouseover, default false
+ *  @param {boolean} options.reordering allow layer reordering, default true
+ *  @param {boolean} options.trash add a trash button to delete the layer, default false
+ *  @param {function} options.oninfo callback on click on info button, if none no info button is shown DEPRECATED: use on(info) instead
+ *  @param {boolean} options.extent add an extent button to zoom to the extent of the layer
+ *  @param {function} options.onextent callback when click on extent, default fits view to extent
+ *  @param {number} options.drawDelay delay in ms to redraw the layer (usefull to prevent flickering when manipulating the layers)
+ *  @param {boolean} options.collapsed collapse the layerswitcher at beginning, default true
  *
  * Layers attributes that control the switcher
  *	- allwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false
@@ -1557,8 +1558,10 @@ ol.control.LayerSwitcher = function(options) {
     });
   } else {
     element = ol.ext.element.create('DIV', {
-      className: (options.switcherClass || "ol-layerswitcher") +' ol-unselectable ol-control ol-collapsed'
+      className: (options.switcherClass || "ol-layerswitcher") +' ol-unselectable ol-control'
     });
+    if (options.collapsed !== false) element.classList.add('ol-collapsed'); 
+    else element.classList.add('ol-forceopen'); 
     this.button = ol.ext.element.create('BUTTON', {
       type: 'button',
       parent: element
@@ -1570,8 +1573,8 @@ ol.control.LayerSwitcher = function(options) {
       self.overflow();
     });
     this.button.addEventListener('click', function(){
-      element.classList.toggle("ol-forceopen");
-      element.classList.add("ol-collapsed"); 
+      element.classList.toggle('ol-forceopen');
+      element.classList.add('ol-collapsed'); 
       self.dispatchEvent({ type: 'toggle', collapsed: !element.classList.contains('ol-forceopen') });
       self.overflow();
     });
@@ -6328,9 +6331,10 @@ ol.control.Permalink.prototype.layerChange_ = function() {
 	this.viewChange_();
 };
 
-/*	Copyright (c) 2019 Jean-Marc VIGLINO,
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+/*
+  Copyright (c) 2019 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Print control to get an image of the map
  *
@@ -6342,26 +6346,28 @@ ol.control.Permalink.prototype.layerChange_ = function() {
  *	@param {String} options.className class of the control
  *	@param {string} options.imageType A string indicating the image format, default image/jpeg
  *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
+ *	@param {string} options.orientation Page orientation (landscape/portrait), default guest the best one
  */
 ol.control.Print = function(options) {
-	if (!options) options = {};
-	var element = ol.ext.element.create('DIV', {
-		className: (options.className || 'ol-print')
-	});
+  if (!options) options = {};
+  var element = ol.ext.element.create('DIV', {
+    className: (options.className || 'ol-print')
+  });
   if (!options.target) {
-		element.classList.add('ol-unselectable', 'ol-control');
+    element.classList.add('ol-unselectable', 'ol-control');
     ol.ext.element.create('BUTTON', {
-			type: 'button',
-			click: function() { this.print(); }.bind(this),
-			parent: element
-		});
-	}
-	ol.control.Control.call(this, {
+      type: 'button',
+      click: function() { this.print(); }.bind(this),
+      parent: element
+    });
+  }
+  ol.control.Control.call(this, {
     element: element,
-		target: options.target
-	});
-	this.set('imageType', options.imageType || 'image/jpeg');
-	this.set('quality', options.quality || .8);
+    target: options.target
+  });
+  this.set('imageType', options.imageType || 'image/jpeg');
+  this.set('quality', options.quality || .8);
+  this.set('orientation', options.orientation);
 };
 ol.ext.inherits(ol.control.Print, ol.control.Control);
 /** Print the map
@@ -6373,88 +6379,88 @@ ol.ext.inherits(ol.control.Print, ol.control.Control);
  * @api
  */
 ol.control.Print.prototype.print = function(options) {
-	options = options || {};
-	var imageType = options.imageType || this.get('imageType');
-	var quality = options.quality || this.get('quality');
-	if (this.getMap()) {
-		this.dispatchEvent(Object.assign({ 
-			type: 'printing',
-		}, options));
-		this.getMap().once('rendercomplete', function(event) {
-			var canvas, ctx;
-			// ol <= 5 > get the canavs
-			if (event.context) {
-				canvas = event.context.canvas;
-			} else {
-				// ol6 > create canvas using layer canvas
-				this.getMap().getViewport().querySelectorAll('.ol-layer').forEach(function(c) {
-					if (c.width) {
-						// Create a canvas if none
-						if (!canvas) {
-							canvas = document.createElement('canvas');
-							var size = this.getMap().getSize();
-							canvas.width = size[0];
-							canvas.height = size[1];
-							ctx = canvas.getContext('2d');
-							if (/jp.*g$/.test(imageType)) {
-								ctx.fillStyle = "white";
-								ctx.fillRect(0,0,canvas.width,canvas.height);		
-							}
-						}
-						ctx.save();
-						// opacity
-						ctx.globalAlpha = c.style.opacity || 1;
-						// transform
-						var tr = ol.ext.element.getStyle(c,'transform') || ol.ext.element.getStyle(c,'-webkit-transform');
-						if (/^matrix/.test(tr)) {
-							tr = tr.replace(/^matrix\(|\)$/g,'').split(',');
-							tr.forEach(function(t,i) { tr[i] = parseFloat(t); });
-							ctx.transform(tr[0],tr[1],tr[2],tr[3],tr[4],tr[5]);
-							ctx.drawImage(c, 0, 0);
-						} else {
-							ctx.drawImage(c, 0, 0, ol.ext.element.getStyle(c,'width'), ol.ext.element.getStyle(c,'height'));
-						}
-						ctx.restore();
-					}
-				}.bind(this));
-			}
-			// Calculate print format
-			var size = [210,297], w, h, position, orient, format = 'a4';
-			var margin = 10;
-			if (canvas) {
-				// Calculate size
-				if (canvas.width > canvas.height) {
-					orient = 'landscape';
-					size = [size[1],size[0]];
-				} else {
-					orient = 'portrait';
-				}
-				var sc = Math.min ((size[0]-2*margin)/canvas.width,(size[1]-2*margin)/canvas.height);
-				w = sc * canvas.width;
-				h = sc * canvas.height;
-				// Image position
-				position = [(size[0] - w)/2, (size[1] - h)/2];
-			}
-			// Fire print event
-			var e = Object.assign({ 
-				type: 'print',
-				print: {
-					format: format,
-					orientation: orient,
-					unit: 'mm',
-					size: size,
-					position: position,
-					imageWidth: w,
-					imageHeight: h
-				},
-				image: canvas ? canvas.toDataURL(imageType, quality) : null,
-				imageType: imageType,
-				canvas: canvas
-			}, options);
-			this.dispatchEvent(e);
-		}.bind(this));
-		this.getMap().render();
-	}
+  options = options || {};
+  var imageType = options.imageType || this.get('imageType');
+  var quality = options.quality || this.get('quality');
+  if (this.getMap()) {
+    this.dispatchEvent(Object.assign({ 
+      type: 'printing',
+    }, options));
+    this.getMap().once('rendercomplete', function(event) {
+      var canvas, ctx;
+      // ol <= 5 > get the canavs
+      if (event.context) {
+        canvas = event.context.canvas;
+      } else {
+        // ol6 > create canvas using layer canvas
+        this.getMap().getViewport().querySelectorAll('.ol-layer').forEach(function(c) {
+          if (c.width) {
+            // Create a canvas if none
+            if (!canvas) {
+              canvas = document.createElement('canvas');
+              var size = this.getMap().getSize();
+              canvas.width = size[0];
+              canvas.height = size[1];
+              ctx = canvas.getContext('2d');
+              if (/jp.*g$/.test(imageType)) {
+                ctx.fillStyle = "white";
+                ctx.fillRect(0,0,canvas.width,canvas.height);		
+              }
+            }
+            ctx.save();
+            // opacity
+            ctx.globalAlpha = c.style.opacity || 1;
+            // transform
+            var tr = ol.ext.element.getStyle(c,'transform') || ol.ext.element.getStyle(c,'-webkit-transform');
+            if (/^matrix/.test(tr)) {
+              tr = tr.replace(/^matrix\(|\)$/g,'').split(',');
+              tr.forEach(function(t,i) { tr[i] = parseFloat(t); });
+              ctx.transform(tr[0],tr[1],tr[2],tr[3],tr[4],tr[5]);
+              ctx.drawImage(c, 0, 0);
+            } else {
+              ctx.drawImage(c, 0, 0, ol.ext.element.getStyle(c,'width'), ol.ext.element.getStyle(c,'height'));
+            }
+            ctx.restore();
+          }
+        }.bind(this));
+      }
+      // Calculate print format
+      var size = [210,297], format = 'a4';
+      var w, h, position;
+      var orient = options.orient || this.get('orientation');
+      var margin = options.margin || 10;
+      if (canvas) {
+        // Calculate size
+        if (orient!=='landscape' && orient!=='portrait') {
+          orient = (canvas.width > canvas.height) ? 'landscape' : 'portrait';
+        }
+        if (orient === 'landscape') size = [size[1],size[0]];
+        var sc = Math.min ((size[0]-2*margin)/canvas.width,(size[1]-2*margin)/canvas.height);
+        w = sc * canvas.width;
+        h = sc * canvas.height;
+        // Image position
+        position = [(size[0] - w)/2, (size[1] - h)/2];
+      }
+      // Fire print event
+      var e = Object.assign({ 
+        type: 'print',
+        print: {
+          format: format,
+          orientation: orient,
+          unit: 'mm',
+          size: size,
+          position: position,
+          imageWidth: w,
+          imageHeight: h
+        },
+        image: canvas ? canvas.toDataURL(imageType, quality) : null,
+        imageType: imageType,
+        canvas: canvas
+      }, options);
+      this.dispatchEvent(e);
+    }.bind(this));
+    this.getMap().render();
+  }
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -7675,8 +7681,8 @@ ol.control.SearchGPS.prototype.autocomplete = function (s) {
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
  * Search places using the French National Base Address (BAN) API.
@@ -7699,85 +7705,84 @@ ol.control.SearchGPS.prototype.autocomplete = function (s) {
  * @see {@link https://geoservices.ign.fr/documentation/geoservices/geocodage.html}
  */
 ol.control.SearchGeoportailParcelle = function(options) {
-	var self = this;
-	options.type = "Commune";
-	options.className = (options.className ? options.className:"")+" IGNF-parcelle ol-collapsed-list ol-collapsed-num";
-	options.inputLabel = "Commune";
-	options.noCollapse = true;
-	options.placeholder = options.placeholder || "Choisissez une commune...";
-	ol.control.SearchGeoportail.call(this, options);
-	this.set('copy', null);
-	var element = this.element;
-	// Add parcel form
-	var div = document.createElement("DIV");
-	element.appendChild(div);
-	var label = document.createElement("LABEL");
-	label.innerText = 'Préfixe'
-	div.appendChild(label);
-	label = document.createElement("LABEL");
-	label.innerText = 'Section'
-	div.appendChild(label);
-	label = document.createElement("LABEL");
-	label.innerText = 'Numéro'
-	div.appendChild(label);
-	div.appendChild(document.createElement("BR"));
-	// Input
-	this._inputParcelle = {
-		prefix: document.createElement("INPUT"),
-		section: document.createElement("INPUT"),
-		numero: document.createElement("INPUT")
+  var self = this;
+  options.type = "Commune";
+  options.className = (options.className ? options.className:"")+" IGNF-parcelle ol-collapsed-list ol-collapsed-num";
+  options.inputLabel = "Commune";
+  options.noCollapse = true;
+  options.placeholder = options.placeholder || "Choisissez une commune...";
+  ol.control.SearchGeoportail.call(this, options);
+  this.set('copy', null);
+  var element = this.element;
+  // Add parcel form
+  var div = document.createElement("DIV");
+  element.appendChild(div);
+  var label = document.createElement("LABEL");
+  label.innerText = 'Préfixe'
+  div.appendChild(label);
+  label = document.createElement("LABEL");
+  label.innerText = 'Section'
+  div.appendChild(label);
+  label = document.createElement("LABEL");
+  label.innerText = 'Numéro'
+  div.appendChild(label);
+  div.appendChild(document.createElement("BR"));
+  // Input
+  this._inputParcelle = {
+    prefix: document.createElement("INPUT"),
+    section: document.createElement("INPUT"),
+    numero: document.createElement("INPUT")
   };
   this._inputParcelle.prefix.setAttribute('maxlength',3);
   this._inputParcelle.section.setAttribute('maxlength',2);
-	this._inputParcelle.numero.setAttribute('maxlength',4);
+  this._inputParcelle.numero.setAttribute('maxlength',4);
   // Delay search
   var tout;
-	var doSearch = function() {
+  var doSearch = function() {
     if (tout) clearTimeout(tout);
     tout = setTimeout(function() {
         self.autocompleteParcelle();
     }, options.typing || 0);
-	}
-	// Add inputs
-	var tout;
-	for (var i in this._inputParcelle) {
-		div.appendChild(this._inputParcelle[i]);
-		this._inputParcelle[i].addEventListener("keyup", doSearch);
-		this._inputParcelle[i].addEventListener('blur', function() {
-			tout = setTimeout(function(){ element.classList.add('ol-collapsed-num'); }, 200);
-		});
-		this._inputParcelle[i].addEventListener('focus', function() {
-			clearTimeout(tout);
-			element.classList.remove('ol-collapsed-num');
-		});
-	}
-	this.activateParcelle(false);
-	// Autocomplete list
-	var auto = document.createElement('DIV');
-	auto.className = 'autocomplete-parcelle';
-	element.appendChild(auto);
-	var ul = document.createElement('UL');
-	ul.classList.add('autocomplete-parcelle');
-	auto.appendChild(ul);
-	ul = document.createElement('UL');
-	ul.classList.add('autocomplete-page');
-	auto.appendChild(ul);
-	// Show/hide list on fcus/blur	
-	this._input.addEventListener('blur', function() {
-		setTimeout(function(){ element.classList.add('ol-collapsed-list') }, 200);
-	});
-	this._input.addEventListener('focus', function() {
+  }
+  // Add inputs
+  for (var i in this._inputParcelle) {
+    div.appendChild(this._inputParcelle[i]);
+    this._inputParcelle[i].addEventListener("keyup", doSearch);
+    this._inputParcelle[i].addEventListener('blur', function() {
+      tout = setTimeout(function(){ element.classList.add('ol-collapsed-num'); }, 200);
+    });
+    this._inputParcelle[i].addEventListener('focus', function() {
+      clearTimeout(tout);
+      element.classList.remove('ol-collapsed-num');
+    });
+  }
+  this.activateParcelle(false);
+  // Autocomplete list
+  var auto = document.createElement('DIV');
+  auto.className = 'autocomplete-parcelle';
+  element.appendChild(auto);
+  var ul = document.createElement('UL');
+  ul.classList.add('autocomplete-parcelle');
+  auto.appendChild(ul);
+  ul = document.createElement('UL');
+  ul.classList.add('autocomplete-page');
+  auto.appendChild(ul);
+  // Show/hide list on fcus/blur	
+  this._input.addEventListener('blur', function() {
+    setTimeout(function(){ element.classList.add('ol-collapsed-list') }, 200);
+  });
+  this._input.addEventListener('focus', function() {
     element.classList.remove('ol-collapsed-list');
     self._listParcelle([]);
     if (self._commune) {
       self._commune = null;
       self._input.value = '';
       self.drawList_();
-		}
-		self.activateParcelle(false);
-	});
-	this.on('select', this.selectCommune.bind(this));
-	this.set('pageSize', options.pageSize || 5);
+    }
+    self.activateParcelle(false);
+  });
+  this.on('select', this.selectCommune.bind(this));
+  this.set('pageSize', options.pageSize || 5);
 };
 ol.ext.inherits(ol.control.SearchGeoportailParcelle, ol.control.SearchGeoportail);
 /** Select a commune => start searching parcelle  
@@ -7785,9 +7790,9 @@ ol.ext.inherits(ol.control.SearchGeoportailParcelle, ol.control.SearchGeoportail
  * @private
  */
 ol.control.SearchGeoportailParcelle.prototype.selectCommune = function(e) {
-	this._commune = e.search.insee;
-	this._input.value = e.search.insee + ' - ' + e.search.fulltext;
-	this.activateParcelle(true);
+  this._commune = e.search.insee;
+  this._input.value = e.search.insee + ' - ' + e.search.fulltext;
+  this.activateParcelle(true);
   this._inputParcelle.numero.focus();
   this.autocompleteParcelle();
 };
@@ -7800,68 +7805,68 @@ ol.control.SearchGeoportailParcelle.prototype.selectCommune = function(e) {
  * @param {boolean} search start a search
  */
 ol.control.SearchGeoportailParcelle.prototype.setParcelle = function(p, search) {
-	this._inputParcelle.prefix.value = (p.Commune||'') + (p.CommuneAbsorbee||'');
-	this._inputParcelle.section.value = p.Section||'';
-	this._inputParcelle.numero.value = p.Numero||'';
-	if (search) this._triggerCustomEvent("keyup", this._inputParcelle.prefix);
+  this._inputParcelle.prefix.value = (p.Commune||'') + (p.CommuneAbsorbee||'');
+  this._inputParcelle.section.value = p.Section||'';
+  this._inputParcelle.numero.value = p.Numero||'';
+  if (search) this._triggerCustomEvent("keyup", this._inputParcelle.prefix);
 };
 /** Activate parcelle inputs
  * @param {bolean} b
  */
 ol.control.SearchGeoportailParcelle.prototype.activateParcelle = function(b) {
-	for (var i in this._inputParcelle) {
-		this._inputParcelle[i].readOnly = !b;
-	}
-	if (b) {
-		this._inputParcelle.section.parentElement.classList.add('ol-active');
-	} else {
-		this._inputParcelle.section.parentElement.classList.remove('ol-active');		
-	}
+  for (var i in this._inputParcelle) {
+    this._inputParcelle[i].readOnly = !b;
+  }
+  if (b) {
+    this._inputParcelle.section.parentElement.classList.add('ol-active');
+  } else {
+    this._inputParcelle.section.parentElement.classList.remove('ol-active');		
+  }
 };
 /** Send search request for the parcelle  
  * @private
  */
 ol.control.SearchGeoportailParcelle.prototype.autocompleteParcelle = function() {
   var self = this;
-	// Add 0 to fit the format
-	function complete (s, n, c)
-	{	if (!s) return s;
-		c = c || "0";
-		while (s.length < n) s = c+s;
-		return s.replace(/\*/g,'_');
-	}
-	// The selected commune
-	var commune = this._commune;
-	var prefix = complete (this._inputParcelle.prefix.value, 3);
-	if (prefix === '000') {
-		prefix = '___';
-	}
-	// Get parcelle number
-	var section = complete (this._inputParcelle.section.value, 2);
-	var numero = complete (this._inputParcelle.numero.value, 4, "0");
-	var search = commune + (prefix||'___') + (section||"__") + (numero ?  numero : section ? "____":"0001");
-	// Request
-	var request = '<?xml version="1.0" encoding="UTF-8"?>'
-	+'<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
-		+'<RequestHeader/>'
-		+'<Request requestID="1" version="1.2" methodName="LocationUtilityService">'
-			+'<GeocodeRequest returnFreeForm="false">'
-				+'<Address countryCode="CadastralParcel">'
-				+'<freeFormAddress>'+search+'+</freeFormAddress>'
-				+'</Address>'
-			+'</GeocodeRequest>'
-		+'</Request>'
+  // Add 0 to fit the format
+  function complete (s, n, c)
+  {	if (!s) return s;
+    c = c || "0";
+    while (s.length < n) s = c+s;
+    return s.replace(/\*/g,'_');
+  }
+  // The selected commune
+  var commune = this._commune;
+  var prefix = complete (this._inputParcelle.prefix.value, 3);
+  if (prefix === '000') {
+    prefix = '___';
+  }
+  // Get parcelle number
+  var section = complete (this._inputParcelle.section.value, 2);
+  var numero = complete (this._inputParcelle.numero.value, 4, "0");
+  var search = commune + (prefix||'___') + (section||"__") + (numero ?  numero : section ? "____":"0001");
+  // Request
+  var request = '<?xml version="1.0" encoding="UTF-8"?>'
+  +'<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
+    +'<RequestHeader/>'
+    +'<Request requestID="1" version="1.2" methodName="LocationUtilityService">'
+      +'<GeocodeRequest returnFreeForm="false">'
+        +'<Address countryCode="CadastralParcel">'
+        +'<freeFormAddress>'+search+'+</freeFormAddress>'
+        +'</Address>'
+      +'</GeocodeRequest>'
+    +'</Request>'
   +'</XLS>'
-	var url = this.get('url').replace('ols/apis/completion','geoportail/ols?xls=')+encodeURIComponent(request);
-	// Geocode
-	this.ajax(url, function(resp) {
-		// XML to JSON
+  var url = this.get('url').replace('ols/apis/completion','geoportail/ols?xls=')+encodeURIComponent(request);
+  // Geocode
+  this.ajax(url, function(resp) {
+    // XML to JSON
     var parser = new DOMParser();
     var xmlDoc = parser.parseFromString(resp.response,"text/xml");
     var parcelles = xmlDoc.getElementsByTagName('GeocodedAddress');
     var jsonResp = []
     for (var i=0, parc; parc= parcelles[i]; i++) {
-			var node = parc.getElementsByTagName('gml:pos')[0] || parc.getElementsByTagName('pos')[0];
+      var node = parc.getElementsByTagName('gml:pos')[0] || parc.getElementsByTagName('pos')[0];
       var p = node.childNodes[0].nodeValue.split(' ');
       var att = parc.getElementsByTagName('Place');
       var json = { 
@@ -7874,9 +7879,9 @@ ol.control.SearchGeoportailParcelle.prototype.autocompleteParcelle = function() 
       jsonResp.push(json);
     }
     self._listParcelle(jsonResp);
-	}, function() {
-		console.log('oops')
-	});
+  }, function() {
+    console.log('oops')
+  });
 };
 /**
  * Draw the autocomplete list
@@ -7889,50 +7894,50 @@ ol.control.SearchGeoportailParcelle.prototype._listParcelle = function(resp) {
   ul.innerHTML='';
   var page = this.element.querySelector("ul.autocomplete-page");
   page.innerHTML='';
-	this._listParc = [];
-	// Show page i
-	function showPage(i) {
-		var l = ul.children;
-		var visible = "ol-list-"+i;
-		var k;
-		for (k=0; k<l.length; k++) {
-			l[k].style.display = (l[k].className===visible) ? '' : 'none';
-		}
-		l = page.children;
-		for (k=0; k<l.length; k++) {
-			l[k].className = (l[k].innerText==i) ? 'selected' : '';
-		}
-		page.style.display = l.length>1 ? '' : 'none';
-	}
-	// Sort table
-	resp.sort(function(a,b) {
-		var na = a.INSEE+a.CommuneAbsorbee+a.Section+a.Numero;
-		var nb = b.INSEE+b.CommuneAbsorbee+b.Section+b.Numero;
-		return na===nb ? 0 : na<nb ? -1 : 1;
-	});
-	// Show list
-	var n = this.get('pageSize');
+  this._listParc = [];
+  // Show page i
+  function showPage(i) {
+    var l = ul.children;
+    var visible = "ol-list-"+i;
+    var k;
+    for (k=0; k<l.length; k++) {
+      l[k].style.display = (l[k].className===visible) ? '' : 'none';
+    }
+    l = page.children;
+    for (k=0; k<l.length; k++) {
+      l[k].className = (l[k].innerText==i) ? 'selected' : '';
+    }
+    page.style.display = l.length>1 ? '' : 'none';
+  }
+  // Sort table
+  resp.sort(function(a,b) {
+    var na = a.INSEE+a.CommuneAbsorbee+a.Section+a.Numero;
+    var nb = b.INSEE+b.CommuneAbsorbee+b.Section+b.Numero;
+    return na===nb ? 0 : na<nb ? -1 : 1;
+  });
+  // Show list
+  var n = this.get('pageSize');
   for (var i=0, r; r = resp[i]; i++) {
     var li = document.createElement("LI");
     li.setAttribute("data-search", i);
-		if (n>0) li.classList.add("ol-list-"+Math.floor(i/n));
+    if (n>0) li.classList.add("ol-list-"+Math.floor(i/n));
     this._listParc.push(r);
     li.addEventListener("click", function(e) {
       self._handleParcelle(self._listParc[e.currentTarget.getAttribute("data-search")]);
     });
     li.innerHTML = r.INSEE+r.CommuneAbsorbee+r.Section+r.Numero;
-		ul.appendChild(li);
-		//
-		if (n>0 && !(i%n)) {
-			li = document.createElement("LI");
-			li.innerText = Math.floor(i/n);
-			li.addEventListener("click", function(e) {
-				showPage(e.currentTarget.innerText);
-			});
-			page.appendChild(li);
-		}
-	}
-	if (n>0) showPage(0);
+    ul.appendChild(li);
+    //
+    if (n>0 && !(i%n)) {
+      li = document.createElement("LI");
+      li.innerText = Math.floor(i/n);
+      li.addEventListener("click", function(e) {
+        showPage(e.currentTarget.innerText);
+      });
+      page.appendChild(li);
+    }
+  }
+  if (n>0) showPage(0);
 };
 /**
  * Handle parcelle section
@@ -9803,10 +9808,10 @@ ol.control.Timeline.prototype._drawTime = function(div, min, max, scale) {
   var heigth = ol.ext.element.getStyle(tdiv, 'height');
   // Year
   var year = (new Date(this._minDate)).getFullYear();
-  dt = (new Date(String(year)) - new Date(String(year-1))) * scale;
+  dt = ((new Date(0)).setFullYear(String(year)) - new Date(0).setFullYear(String(year-1))) * scale;
   var dyear = Math.round(2*heigth/dt)+1;
   while(true) {
-    d = new Date(String(year));
+    d = new Date(0).setFullYear(year);
     if (d > this._maxDate) break;
     ol.ext.element.create('DIV', {
       className: 'ol-time ol-year',
@@ -9820,13 +9825,14 @@ ol.control.Timeline.prototype._drawTime = function(div, min, max, scale) {
   }
   // Month
   if (/day|month/.test(this.get('graduation'))) {
-    dt = (new Date(String(year)) - new Date(String(year-1))) * scale;
+    dt = ((new Date(0)).setFullYear(String(year)) - new Date(0).setFullYear(String(year-1))) * scale;
     dmonth = Math.max(1, Math.round(12 / Math.round(dt/heigth/2)));
     if (dmonth < 12) {
       year = (new Date(this._minDate)).getFullYear();
       month = dmonth+1;
       while(true) {
-        d = new Date(year+'/'+month+'/01');
+        d = new Date('0/'+month+'/01');
+        d.setFullYear(year);
         if (d > this._maxDate) break;
         ol.ext.element.create('DIV', {
           className: 'ol-time ol-month',
@@ -9846,21 +9852,24 @@ ol.control.Timeline.prototype._drawTime = function(div, min, max, scale) {
   }
   // Day
   if (this.get('graduation')==='day') {
-    dt = (new Date(year+'/02/01') - new Date(year+'/01/01')) * scale;
+    dt = (new Date('0/02/01') - new Date('0/01/01')) * scale;
     var dday = Math.max(1, Math.round(31 / Math.round(dt/heigth/2)));
     if (dday < 31) {
       year = (new Date(this._minDate)).getFullYear();
-      month = 1;
+      month = 0;
       var day = dday;
       while(true) {
-        d = new Date(year+'/'+month+'/'+day);
+        d = new Date(0);
+        d.setFullYear(year);
+        d.setMonth(month);
+        d.setDate(day);
         if (isNaN(d)) {
           month++;
           if (month>12) {
             month = 1;
             year++;
           }
-          day=dday;
+          day = dday;
         } else {
           if (d > this._maxDate) break;
           ol.ext.element.create('DIV', {
@@ -9871,8 +9880,13 @@ ol.control.Timeline.prototype._drawTime = function(div, min, max, scale) {
             html: day,
             parent: tdiv
           });
-          day += dday;
-          if (day+dday/2>31) day=32;
+          year = d.getFullYear();
+          month = d.getMonth();
+          day = d.getDate() + dday;
+          if (day+dday/2>31) {
+            month++;
+            day = dday;
+          }
         }
       }
     }
@@ -18569,7 +18583,7 @@ ol.source.Geoportail.prototype.setGPPKey = function(key, authentication) {
  * @param {Number} resolution 
  * @param {ol.proj.Projection} projection default the source projection
  * @param {Object} options 
- *  @param {string} options.format response format text/plain, text/html, application/json, default text/plain
+ *  @param {string} options.INFO_FORMAT response format text/plain, text/html, application/json, default text/plain
  * @return {String|undefined} GetFeatureInfo URL.
  */
 ol.source.Geoportail.prototype.getFeatureInfoUrl  = function(coord, resolution, projection, options) {
@@ -18584,15 +18598,30 @@ ol.source.Geoportail.prototype.getFeatureInfoUrl  = function(coord, resolution, 
   var i = Math.floor((coord[0] - tileExtent[0]) / (tileResolution / ratio));
   var j = Math.floor((tileExtent[3] - coord[1]) / (tileResolution / ratio));
   return url.replace(/Request=GetTile/i, 'Request=getFeatureInfo')
-    +'&INFOFORMAT='+(options.format||'text/plain')
+    +'&INFOFORMAT='+(options.INFO_FORMAT||'text/plain')
     +'&I='+i
     +'&J='+j;
 };
 /** Get feature info
- * 
+ * @param {ol.Coordinate} coord 
+ * @param {Number} resolution 
+ * @param {ol.proj.Projection} projection default the source projection
+ * @param {Object} options 
+ *  @param {string} options.INFO_FORMAT response format text/plain, text/html, application/json, default text/plain
+ *  @param {function} options.callback a function that take the response as parameter
+ *  @param {function} options.error function called when an error occurred
  */
 ol.source.Geoportail.prototype.getFeatureInfo = function(coord, resolution, options) {
-  var url = this.getFeatureInfoUrl(coord, resolution, null, options)
+  var url = this.getFeatureInfoUrl(coord, resolution, null, options);
+  /*
+  if (!this.ajax) this.ajax = new ol.ext.Ajax();
+  this.ajax.send(url, undefined, { 
+    INFO_FORMAT: options.INFO_FORMAT,
+    options: { 
+      encode: false 
+    },
+  });
+  */
   ol.ext.Ajax.get({
     url: url,
     dataType: options.format || 'text/plain',
@@ -20783,7 +20812,8 @@ ol.Overlay.Placemark.prototype.setBackgroundColor = function(color) {
  * @param {string} color
  */
 ol.Overlay.Placemark.prototype.setContentColor = function(color) {
-  this.element.getElementsByClassName('content')[0].style.color = color;
+  var c = this.element.getElementsByClassName('ol-popup-content')[0];
+  if (c) c.style.color = color;
 };
 /**
  * Set the placemark class.
