@@ -78,7 +78,8 @@ ol_Overlay_Placemark.prototype.setBackgroundColor = function(color) {
  * @param {string} color
  */
 ol_Overlay_Placemark.prototype.setContentColor = function(color) {
-  this.element.getElementsByClassName('content')[0].style.color = color;
+  var c = this.element.getElementsByClassName('ol-popup-content')[0];
+  if (c) c.style.color = color;
 };
 
 /**
