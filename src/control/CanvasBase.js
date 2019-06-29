@@ -56,7 +56,7 @@ ol_control_CanvasBase.prototype.setMap = function (map) {
  */
 ol_control_CanvasBase.prototype.getContext = function(e) {
   var ctx = e.context;
-  if (!ctx) {
+  if (!ctx && this.getMap()) {
     var c = this.getMap().getViewport().querySelectorAll('canvas.ol-fixed-canvas-layer');
     for (var i=c.length-1; i>=0; i--) {
       ctx = c[i].getContext('2d');
@@ -86,11 +86,18 @@ ol_control_CanvasBase.prototype.getContext = function(e) {
   return ctx;
 };
 
-/** Get stroke
+/** Set Style
  * @api
  */
 ol_control_CanvasBase.prototype.setStyle = function(style) {
   this._style = style ||  new ol_style_Style ({});
+};
+
+/** Get style
+ * @api
+ */
+ol_control_CanvasBase.prototype.getStyle = function() {
+  return this._style;
 };
 
 /** Get stroke
@@ -98,7 +105,7 @@ ol_control_CanvasBase.prototype.setStyle = function(style) {
  */
 ol_control_CanvasBase.prototype.getStroke = function() {
   var t = this._style.getStroke();
-  if (!t) this._style.setStroke(new ol_style_Stroke ({ color:'#000', width:3 }));
+  if (!t) this._style.setStroke(new ol_style_Stroke ({ color:'#000', width:1.25 }));
   return this._style.getStroke();
 };
 
