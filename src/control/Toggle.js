@@ -126,11 +126,12 @@ ol_control_Toggle.prototype.toggle = function()
 * @param {bool} b activate or deactivate the control, default false
 */
 ol_control_Toggle.prototype.setActive = function(b)
-{	if (this.getActive()==b) return;
-	if (b) this.element.classList.add("ol-active");
-	else this.element.classList.remove("ol-active");
+{	
 	if (this.interaction_) this.interaction_.setActive (b);
 	if (this.subbar_) this.subbar_.setActive(b);
+	if (this.getActive()===b) return;
+	if (b) this.element.classList.add("ol-active");
+	else this.element.classList.remove("ol-active");
 
 	this.dispatchEvent({ type:'change:active', key:'active', oldValue:!b, active:b });
 };
