@@ -15,6 +15,10 @@ import ol_Overlay_Popup from './Popup'
  * @extends {ol_Overlay_Popup}
  * @param {} options Extend Popup options 
  *	@param {String} options.popupClass the a class of the overlay to style the popup.
+ *  @param {number} options.maximumFractionDigits maximum digits to display on measure, default 2
+ *  @param {function} options.formatLength a function that takes a number and returns the formated value, default length in meter
+ *  @param {function} options.formatArea a function that takes a number and returns the formated value, default length in square-meter
+ *  @param {function} options.getHTML a function that takes a feature and the info string and return a formated info to display in the tooltip, default display feature measure & info
  *	@param {Number|Array<number>} options.offsetBox an offset box
  *	@param {ol.OverlayPositioning | string | undefined} options.positionning 
  *		the 'auto' positioning var the popup choose its positioning to stay on the map.
@@ -26,13 +30,19 @@ var ol_Overlay_Tooltip = function (options) {
   options.popupClass = options.popupClass || options.className || 'tooltips black';
   options.positioning = options.positioning || 'center-left';
   options.stopEvent = !!(options.stopEvent);
-	ol_Overlay_Popup.call(this, options);
+  ol_Overlay_Popup.call(this, options);
+  
+  this.set('maximumFractionDigits', options.maximumFractionDigits||2);
+  if (typeof(options.formatLength)==='function') this.formatLength = options.formatLength;
+  if (typeof(options.formatArea)==='function') this.formatArea = options.formatArea;
+  if (typeof(options.getHTML)==='function') this.getHTML = options.getHTML;
 
   this._interaction = new ol_interaction_Interaction({
     handleEvent: function(e){
       if (e.type==='pointermove' || e.type==='click') {
-        if (this.get('info')) {
-          this.show(e.coordinate, this.get('info'));
+        var info = this.getHTML(this._feature, this.get('info'));
+        if (info) {
+          this.show(e.coordinate, info);
         }
         else this.hide();
         this._coord = e.coordinate;
@@ -54,23 +64,22 @@ ol_Overlay_Tooltip.prototype.setMap = function (map) {
   if (this.getMap()) this.getMap().addInteraction(this._interaction);
 };
 
-/** Show the popup. If a feature has been passed to the 
- * Tooltip the area/length will be added to the Tooltip
- * @param {ol.Coordinate|string} coordinate the coordinate of the popup or the HTML content.
- * @param {string|undefined} html the HTML content (undefined = previous content).
+/** Get the information to show in the tooltip
+ * The area/length will be added if a feature is attached.
+ * @param {ol.Feature|undefined} feature the feature
+ * @param {string} info the info string
+ * @api
  */
-ol_Overlay_Tooltip.prototype.show = function(coord, html) {
-  // Add measure
-  if (this.get('measure')) html = this.get('measure') +'<br/>'+ html;
-  // Show popup
-  ol_Overlay_Popup.prototype.show.call(this, coord, html);
+ol_Overlay_Tooltip.prototype.getHTML = function(feature, info) {
+  if (this.get('measure')) return this.get('measure') + (info ? '<br/>'+ info : '');
+  else return info || '';
 };
 
 /** Set the Tooltip info
  * If information is not null it will be set with a delay,
  * thus watever the information is inserted, the significant information will be set.
  * ie. ttip.setInformation('ok'); ttip.setInformation(null); will set 'ok' 
- * ttip.set('info,'ok'); ttip.set('info', null); will set null
+ * ttip.set('info','ok'); ttip.set('info', null); will set null
  * @param {string} what The information to display in the tooltip, default remove information
  */
 ol_Overlay_Tooltip.prototype.setInfo = function(what) {
@@ -84,10 +93,56 @@ ol_Overlay_Tooltip.prototype.setInfo = function(what) {
   }.bind(this));
 };
 
-/** Set a feature associated with the tooltips
- * @param {ol.Feature} feature
+/** Remove the current featue attached to the tip 
+ * Similar to setFeature() with no argument
+ */
+ol_Overlay_Tooltip.prototype.removeFeature = function() {
+  this.setFeature();
+};
+
+/** Format area to display in the popup. 
+ * Can be overwritten to display measure in a different unit (default: square-metter).
+ * @param {number} area area in m2
+ * @return {string} the formated area
+ * @api
+ */
+ol_Overlay_Tooltip.prototype.formatArea = function(area) {
+  if (area > Math.pow(10,-1*this.get('maximumFractionDigits'))) {
+    if (area>10000) {
+      return (area/1000000).toLocaleString(undefined, {maximumFractionDigits: this.get('maximumFractionDigits)')}) + ' km²';
+    } else {
+      return area.toLocaleString(undefined, {maximumFractionDigits: this.get('maximumFractionDigits')}) + ' m²';
+    }
+  } else {
+    return '';
+  }
+};
+
+/** Format area to display in the popup
+ * Can be overwritten to display measure in different unit (default: meter).
+ * @param {number} length length in m
+ * @return {string} the formated length
+ * @api
+ */
+ol_Overlay_Tooltip.prototype.formatLength = function(length) {
+  if (length > Math.pow(10,-1*this.get('maximumFractionDigits'))) {
+    if (length>100) {
+      return (length/1000).toLocaleString(undefined, {maximumFractionDigits: this.get('maximumFractionDigits')}) + ' km';
+    } else {
+      return length.toLocaleString(undefined, {maximumFractionDigits: this.get('maximumFractionDigits')}) + ' m';
+    }
+  } else {
+    return '';
+  }
+};
+
+/** Set a feature associated with the tooltips, measure info on the feature will be added in the tooltip
+ * @param {ol.Feature|ol.Event} feature an ol.Feature or an event (object) with a feature property
  */
 ol_Overlay_Tooltip.prototype.setFeature = function(feature) {
+  // Handle event with a feature as property.
+  if (feature && feature.feature) feature = feature.feature;
+  // The feature
   this._feature = feature;
   if (this._listener) {
     this._listener.forEach(function(l) {
@@ -101,27 +156,9 @@ ol_Overlay_Tooltip.prototype.setFeature = function(feature) {
       var geom = e.target;
       var measure;
       if (geom.getArea) {
-        var area = ol_sphere_getArea(geom, { projection: this.getMap().getView().getProjection() });
-        area = Math.round(area*100) / 100;
-        if (area) {
-          if (area>10000) {
-            area = (area/1000000).toLocaleString(undefined, {maximumFractionDigits:2}) + ' km²';
-          } else {
-            area = area.toLocaleString(undefined, {maximumFractionDigits:2}) + ' m²';
-          }
-        }
-        measure = area;
+        measure = this.formatArea(ol_sphere_getArea(geom, { projection: this.getMap().getView().getProjection() }));
       } else if (geom.getLength) {
-        var length = ol_sphere_getLength(geom, { projection: this.getMap().getView().getProjection() });
-        length = Math.round(length*100) / 100;
-        if (length) {
-          if (length>100) {
-            length = (length/1000).toLocaleString(undefined, {maximumFractionDigits:2}) + ' km';
-          } else {
-            length = length.toLocaleString(undefined, {maximumFractionDigits:2}) + ' m';
-          }
-        }
-        measure = length;
+        measure = this.formatLength(ol_sphere_getLength(geom, { projection: this.getMap().getView().getProjection() }));
       }
       this.set('measure', measure);
     }.bind(this)));
