@@ -95,7 +95,9 @@ var ol_control_Search = function(options) {
     }
     // Clear input
     else if (e.type=='input' && !val) {
-      self.drawList_();
+      setTimeout(function(){
+        self.drawList_();
+      }, 200);
     }
     // Select in the list
     else if (li && (e.type=="search" || e.key =="Enter")) {
