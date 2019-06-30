@@ -315,7 +315,7 @@ ol_interaction_Transform.prototype.drawSketch_ = function(center) {
     if (!this.ispt_) {
       features.push(f);
       // Middle
-      if (this.get('stretch') && this.get('scale')) for (i=0; i<g.length-1; i++) {
+      if (!this.iscircle_ && this.get('stretch') && this.get('scale')) for (i=0; i<g.length-1; i++) {
         f = new ol_Feature( { geometry: new ol_geom_Point([(g[i][0]+g[i+1][0])/2,(g[i][1]+g[i+1][1])/2]), handle:'scale', constraint:i%2?"h":"v", option:i });
         features.push(f);
       }
@@ -331,7 +331,7 @@ ol_interaction_Transform.prototype.drawSketch_ = function(center) {
       }
     }
     // Rotate
-    if (this.get('rotate')) {
+    if (!this.iscircle_ && this.get('rotate')) {
       f = new ol_Feature( { geometry: new ol_geom_Point(g[3]), handle:'rotate' });
       features.push(f);
     }
@@ -353,12 +353,14 @@ ol_interaction_Transform.prototype.select = function(feature, add) {
   }
   if (!feature.getGeometry || !feature.getGeometry()) return;
   // Add to selection
-  if (add) this.selection_.push(feature);
-  else {
+  if (add) {
+    this.selection_.push(feature);
+  } else {
     this.selection_.clear()
     this.selection_.push(feature);
   }
   this.ispt_ = (this.selection_.getLength()===1 ? (this.selection_.item(0).getGeometry().getType() == "Point") : false);
+  this.iscircle_ = (this.selection_.getLength()===1 ? (this.selection_.item(0).getGeometry().getType() == "Circle") : false);
   this.drawSketch_();
   this.watchFeatures_();
   // select event
@@ -443,6 +445,7 @@ ol_interaction_Transform.prototype.handleDownEvent_ = function(evt) {
       this.selection_.clear();
     }
     this.ispt_ = this.selection_.getLength()===1 ? (this.selection_.item(0).getGeometry().getType() == "Point") : false;
+    this.iscircle_ = (this.selection_.getLength()===1 ? (this.selection_.item(0).getGeometry().getType() == "Circle") : false);
     this.drawSketch_();
     this.watchFeatures_();
     this.dispatchEvent({ type:'select', feature: feature, features: this.selection_, pixel: evt.pixel, coordinate: evt.coordinate });
