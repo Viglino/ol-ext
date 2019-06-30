@@ -290,9 +290,12 @@
   padding: .1em 1em;
 }
 
-.ol-fixed-canvas-layer {
-  -webkit-transform: none!important;
-          transform: none!important;
+.ol-fixedoverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .ol-editbar .ol-button button {
