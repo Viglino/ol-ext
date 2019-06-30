@@ -57,30 +57,20 @@ ol_control_CanvasBase.prototype.setMap = function (map) {
 ol_control_CanvasBase.prototype.getContext = function(e) {
   var ctx = e.context;
   if (!ctx && this.getMap()) {
-    var c = this.getMap().getViewport().querySelectorAll('canvas.ol-fixed-canvas-layer');
-    for (var i=c.length-1; i>=0; i--) {
-      ctx = c[i].getContext('2d');
-      if (ctx.canvas.width && ctx.canvas.height) break;
-    }
+    var c = this.getMap().getViewport().getElementsByClassName('ol-fixedoverlay')[0];
+    var ctx = c ? c.getContext('2d') : null;
     if (!ctx) {
       // Add a fixed canvas layer on top of the map
       var canvas = document.createElement('canvas');
-      var canvasLayer = new ol_layer_Image({
-        source: new ol_source_ImageCanvas({
-          canvasFunction: function(extent, resolution, pixelRatio, size) {
-            canvas.setAttribute('width', size[0]);
-            canvas.setAttribute('height', size[1]);
-            return canvas;
-          }.bind(this)
-        }),
-        zIndex: 999
-      });
-      canvasLayer.setMap(this.getMap());
-      // Fix the layer
-      canvasLayer.on('postrender', function(e) {
-        e.context.canvas.classList.add('ol-fixed-canvas-layer');
-        e.context.canvas.style.width = (e.context.canvas.width / e.frameState.pixelRatio) + 'px';
-      }.bind(this));
+      canvas.className = 'ol-fixedoverlay';
+      this.getMap().getViewport().querySelector('.ol-layers').after(canvas);
+      ctx = canvas.getContext('2d');
+      canvas.width = this.getMap().getSize()[0] * e.frameState.pixelRatio;
+      canvas.height = this.getMap().getSize()[1] * e.frameState.pixelRatio;
+      this.getMap().on('change:size', function() {
+        canvas.width = this.getMap().getSize()[0] * e.frameState.pixelRatio;
+        canvas.height = this.getMap().getSize()[1] * e.frameState.pixelRatio;
+      }.bind(this))
     }
   }
   return ctx;

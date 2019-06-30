@@ -70,7 +70,7 @@ ol_control_Print.prototype.print = function(options) {
         canvas = event.context.canvas;
       } else {
         // ol6 > create canvas using layer canvas
-        this.getMap().getViewport().querySelectorAll('.ol-layer').forEach(function(c) {
+        this.getMap().getViewport().querySelectorAll('.ol-layer canvas, canvas.ol-fixedoverlay').forEach(function(c) {
           if (c.width) {
             // Create a canvas if none
             if (!canvas) {
@@ -95,6 +95,7 @@ ol_control_Print.prototype.print = function(options) {
               ctx.transform(tr[0],tr[1],tr[2],tr[3],tr[4],tr[5]);
               ctx.drawImage(c, 0, 0);
             } else {
+              console.log('draw')
               ctx.drawImage(c, 0, 0, ol_ext_element.getStyle(c,'width'), ol_ext_element.getStyle(c,'height'));
             }
             ctx.restore();
