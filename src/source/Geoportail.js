@@ -7,6 +7,7 @@ import {ol_ext_inherits} from '../util/ext'
 import {getWidth as ol_extent_getWidth} from 'ol/extent'
 import ol_tilegrid_WMTS from 'ol/tilegrid/WMTS'
 import {get as ol_proj_get} from 'ol/proj' 
+import ol_ext_Ajax from '../util/Ajax'
 
 /** IGN's Geoportail WMTS source
  * @constructor
@@ -122,7 +123,7 @@ ol_source_Geoportail.prototype.setGPPKey = function(key, authentication) {
  * @param {Number} resolution 
  * @param {ol.proj.Projection} projection default the source projection
  * @param {Object} options 
- *  @param {string} options.format response format text/plain, text/html, application/json, default text/plain
+ *  @param {string} options.INFO_FORMAT response format text/plain, text/html, application/json, default text/plain
  * @return {String|undefined} GetFeatureInfo URL.
  */
 ol_source_Geoportail.prototype.getFeatureInfoUrl  = function(coord, resolution, projection, options) {
@@ -139,17 +140,33 @@ ol_source_Geoportail.prototype.getFeatureInfoUrl  = function(coord, resolution, 
   var j = Math.floor((tileExtent[3] - coord[1]) / (tileResolution / ratio));
 
   return url.replace(/Request=GetTile/i, 'Request=getFeatureInfo')
-    +'&INFOFORMAT='+(options.format||'text/plain')
+    +'&INFOFORMAT='+(options.INFO_FORMAT||'text/plain')
     +'&I='+i
     +'&J='+j;
 };
 
 /** Get feature info
- * 
+ * @param {ol.Coordinate} coord 
+ * @param {Number} resolution 
+ * @param {ol.proj.Projection} projection default the source projection
+ * @param {Object} options 
+ *  @param {string} options.INFO_FORMAT response format text/plain, text/html, application/json, default text/plain
+ *  @param {function} options.callback a function that take the response as parameter
+ *  @param {function} options.error function called when an error occurred
  */
 ol_source_Geoportail.prototype.getFeatureInfo = function(coord, resolution, options) {
-  var url = this.getFeatureInfoUrl(coord, resolution, null, options)
-  ol.ext.Ajax.get({
+  var url = this.getFeatureInfoUrl(coord, resolution, null, options);
+  /*
+  if (!this.ajax) this.ajax = new ol_ext_Ajax();
+  this.ajax.send(url, undefined, { 
+    INFO_FORMAT: options.INFO_FORMAT,
+    options: { 
+      encode: false 
+    },
+
+  });
+  */
+  ol_ext_Ajax.get({
     url: url,
     dataType: options.format || 'text/plain',
     options: { 

@@ -85,14 +85,10 @@
 	// Layers
 	var layers = [
 		new ol.layer.Tile({
-			name: "Natural Earth", 
-			minResolution: 306,
-    		source: new ol.source.XYZ(
-			{	url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
-				attributions: [ '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' ] 
-    		})
+			title:'terrain-background',
+			source: new ol.source.Stamen({ layer: 'terrain' })
 		})
-	]
+	];
 
 	// Popup overlay with popupClass=anim
 	var popup = new ol.Overlay.Popup (

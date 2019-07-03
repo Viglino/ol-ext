@@ -22,15 +22,16 @@ import ol_ext_element from '../util/element'
  * @constructor
  * @extends {ol_control_Control}
  * @param {Object=} options
- *  @param {function} displayInLayerSwitcher function that takes a layer and return a boolean if the layer is displayed in the switcher, default test the displayInLayerSwitcher layer attribute
+ *  @param {function} options.displayInLayerSwitcher function that takes a layer and return a boolean if the layer is displayed in the switcher, default test the displayInLayerSwitcher layer attribute
  *  @param {boolean} options.show_progress show a progress bar on tile layers, default false
- *  @param {boolean} mouseover show the panel on mouseover, default false
- *  @param {boolean} reordering allow layer reordering, default true
- *  @param {boolean} trash add a trash button to delete the layer, default false
- *  @param {function} oninfo callback on click on info button, if none no info button is shown DEPRECATED: use on(info) instead
- *  @param {boolean} extent add an extent button to zoom to the extent of the layer
- *  @param {function} onextent callback when click on extent, default fits view to extent
- *  @param {number} drawDelay delay in ms to redraw the layer (usefull to prevent flickering when manipulating the layers)
+ *  @param {boolean} options.mouseover show the panel on mouseover, default false
+ *  @param {boolean} options.reordering allow layer reordering, default true
+ *  @param {boolean} options.trash add a trash button to delete the layer, default false
+ *  @param {function} options.oninfo callback on click on info button, if none no info button is shown DEPRECATED: use on(info) instead
+ *  @param {boolean} options.extent add an extent button to zoom to the extent of the layer
+ *  @param {function} options.onextent callback when click on extent, default fits view to extent
+ *  @param {number} options.drawDelay delay in ms to redraw the layer (usefull to prevent flickering when manipulating the layers)
+ *  @param {boolean} options.collapsed collapse the layerswitcher at beginning, default true
  *
  * Layers attributes that control the switcher
  *	- allwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false
@@ -61,9 +62,11 @@ var ol_control_LayerSwitcher = function(options) {
     });
   } else {
     element = ol_ext_element.create('DIV', {
-      className: (options.switcherClass || "ol-layerswitcher") +' ol-unselectable ol-control ol-collapsed'
+      className: (options.switcherClass || "ol-layerswitcher") +' ol-unselectable ol-control'
     });
-    
+    if (options.collapsed !== false) element.classList.add('ol-collapsed'); 
+    else element.classList.add('ol-forceopen'); 
+  
     this.button = ol_ext_element.create('BUTTON', {
       type: 'button',
       parent: element
@@ -75,8 +78,8 @@ var ol_control_LayerSwitcher = function(options) {
       self.overflow();
     });
     this.button.addEventListener('click', function(){
-      element.classList.toggle("ol-forceopen");
-      element.classList.add("ol-collapsed"); 
+      element.classList.toggle('ol-forceopen');
+      element.classList.add('ol-collapsed'); 
       self.dispatchEvent({ type: 'toggle', collapsed: !element.classList.contains('ol-forceopen') });
       self.overflow();
     });

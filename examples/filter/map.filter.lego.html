@@ -88,13 +88,10 @@
 	<script type="text/javascript">
 		var stamen = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
 		var mbox = new ol.layer.Tile({
-							name: "Natural Earth", 
-							minResolution: 306,
-							source: new ol.source.XYZ(
-							{	url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.blue-marble-topo-bathy-jan/{z}/{x}/{y}.png',
-								attributions: [ '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' ] 
-    						})
-						})
+			title:'terrain-background',
+			source: new ol.source.Stamen({ layer: 'terrain' })
+		});
+
 		// The map
 		var map = new ol.Map
 			({	target: 'map',

@@ -418,10 +418,10 @@ ol_control_Timeline.prototype._drawTime = function(div, min, max, scale) {
   var heigth = ol_ext_element.getStyle(tdiv, 'height');
   // Year
   var year = (new Date(this._minDate)).getFullYear();
-  dt = (new Date(String(year)) - new Date(String(year-1))) * scale;
+  dt = ((new Date(0)).setFullYear(String(year)) - new Date(0).setFullYear(String(year-1))) * scale;
   var dyear = Math.round(2*heigth/dt)+1;
   while(true) {
-    d = new Date(String(year));
+    d = new Date(0).setFullYear(year);
     if (d > this._maxDate) break;
     ol_ext_element.create('DIV', {
       className: 'ol-time ol-year',
@@ -435,13 +435,14 @@ ol_control_Timeline.prototype._drawTime = function(div, min, max, scale) {
   }
   // Month
   if (/day|month/.test(this.get('graduation'))) {
-    dt = (new Date(String(year)) - new Date(String(year-1))) * scale;
+    dt = ((new Date(0)).setFullYear(String(year)) - new Date(0).setFullYear(String(year-1))) * scale;
     dmonth = Math.max(1, Math.round(12 / Math.round(dt/heigth/2)));
     if (dmonth < 12) {
       year = (new Date(this._minDate)).getFullYear();
       month = dmonth+1;
       while(true) {
-        d = new Date(year+'/'+month+'/01');
+        d = new Date('0/'+month+'/01');
+        d.setFullYear(year);
         if (d > this._maxDate) break;
         ol_ext_element.create('DIV', {
           className: 'ol-time ol-month',
@@ -461,21 +462,24 @@ ol_control_Timeline.prototype._drawTime = function(div, min, max, scale) {
   }
   // Day
   if (this.get('graduation')==='day') {
-    dt = (new Date(year+'/02/01') - new Date(year+'/01/01')) * scale;
+    dt = (new Date('0/02/01') - new Date('0/01/01')) * scale;
     var dday = Math.max(1, Math.round(31 / Math.round(dt/heigth/2)));
     if (dday < 31) {
       year = (new Date(this._minDate)).getFullYear();
-      month = 1;
+      month = 0;
       var day = dday;
       while(true) {
-        d = new Date(year+'/'+month+'/'+day);
+        d = new Date(0);
+        d.setFullYear(year);
+        d.setMonth(month);
+        d.setDate(day);
         if (isNaN(d)) {
           month++;
           if (month>12) {
             month = 1;
             year++;
           }
-          day=dday;
+          day = dday;
         } else {
           if (d > this._maxDate) break;
           ol_ext_element.create('DIV', {
@@ -486,8 +490,13 @@ ol_control_Timeline.prototype._drawTime = function(div, min, max, scale) {
             html: day,
             parent: tdiv
           });
-          day += dday;
-          if (day+dday/2>31) day=32;
+          year = d.getFullYear();
+          month = d.getMonth();
+          day = d.getDate() + dday;
+          if (day+dday/2>31) {
+            month++;
+            day = dday;
+          }
         }
       }
     }
