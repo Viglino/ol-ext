@@ -16,6 +16,7 @@ import ol_ext_element from '../util/element'
  * @property {string} before string to instert before the attribute (prefix)
  * @property {string} after string to instert after the attribute (sudfix)
  * @property {function} value a function that takes feature and a value and returns a value (calculated attributes)
+ * @property {boolean|function} visible boolean or a function (feature, value) that decides the visibility of a attribute entry
  */
 
 /** Template 
@@ -140,28 +141,41 @@ ol_Overlay_PopupFeature.prototype._getHtml = function(feature) {
     var atts = template.attributes;
     for (var att in atts) {
       var a = atts[att];
-      tr = ol_ext_element.create('TR', { parent: table });
-      ol_ext_element.create('TD', { html: a.title || att, parent: tr });
       var content, val = feature.get(att);
       // Get calculated value
       if (typeof(a.value)==='function') {
         val = a.value(feature, val);
       }
-      // Show image or content
-      if (this.get('showImage') && /(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)/.test(val)) {
-        content = ol_ext_element.create('IMG',{
-          src: val
-        });
-      } else {
-        content = (a.before||'') + (a.format ? a.format(val) : val) + (a.after||'');
-        var maxc = this.get('maxChar') || 200;
-        if (typeof(content) === 'string' && content.length>maxc) content = content.substr(0,maxc)+'[...]';
+
+      // Is entry visible?
+      var visible = true;
+      if (typeof(a.visible)==='boolean') {
+        visible = a.visible;
+      } else if (typeof(a.visible)==='function') {
+        visible = a.visible(feature, val);
       }
-      // Add value
-      ol_ext_element.create('TD', { 
-        html: content, 
-        parent: tr 
-      });
+
+      if (visible) {
+        tr = ol_ext_element.create('TR', { parent: table });
+        ol_ext_element.create('TD', { html: a.title || att, parent: tr });
+
+        // Show image or content
+        if (this.get('showImage') && /(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)/.test(val)) {
+          content = ol_ext_element.create('IMG',{
+            src: val
+          });
+        } else {
+          content = (a.before||'') + (a.format ? a.format(val) : val) + (a.after||'');
+          var maxc = this.get('maxChar') || 200;
+          if (typeof(content) === 'string' && content.length>maxc) content = content.substr(0,maxc)+'[...]';
+        }
+
+        // Add value
+        ol_ext_element.create('TD', {
+          html: content,
+          parent: tr
+        });
+      }
     }
   }
   // Zoom button
