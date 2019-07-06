@@ -479,7 +479,7 @@ if (window.ol && !ol.sphere) {
 }
 /**
  * @classdesc 
- *   OpenLayers 3 Attribution Control integrated in the canvas (for jpeg/png 
+ *   Attribution Control integrated in the canvas (for jpeg/png 
  * @see http://www.kreidefossilien.de/webgis/dokumentation/beispiele/export-map-to-png-with-scale
  *
  * @constructor
@@ -502,6 +502,7 @@ ol.ext.inherits(ol.control.CanvasBase, ol.control.Control);
  * @api stable
  */
 ol.control.CanvasBase.prototype.setMap = function (map) {
+  this.getCanvas(map);
   var oldmap = this.getMap();
   if (this._listener) {
     ol.Observable.unByKey(this._listener);
@@ -514,6 +515,24 @@ ol.control.CanvasBase.prototype.setMap = function (map) {
     // Get a canvas layer on top of the map
   }
 };
+/** Get canvas overlay
+ */
+ol.control.CanvasBase.prototype.getCanvas = function(map) {
+  if (!map) return null;
+  var canvas = map.getViewport().getElementsByClassName('ol-fixedoverlay')[0];
+  if (!canvas && map.getViewport().querySelector('.ol-layers')) {
+    // Add a fixed canvas layer on top of the map
+    canvas = document.createElement('canvas');
+    canvas.className = 'ol-fixedoverlay';
+    map.getViewport().querySelector('.ol-layers').after(canvas);
+    // Clear before new compose
+    map.on('precompose', function (e){
+      canvas.width = map.getSize()[0] * e.frameState.pixelRatio;
+      canvas.height = map.getSize()[1] * e.frameState.pixelRatio;
+    });
+  }
+  return canvas;
+};
 /** Get map Canvas
  * @private
  */
@@ -521,20 +540,7 @@ ol.control.CanvasBase.prototype.getContext = function(e) {
   var ctx = e.context;
   if (!ctx && this.getMap()) {
     var c = this.getMap().getViewport().getElementsByClassName('ol-fixedoverlay')[0];
-    var ctx = c ? c.getContext('2d') : null;
-    if (!ctx) {
-      // Add a fixed canvas layer on top of the map
-      var canvas = document.createElement('canvas');
-      canvas.className = 'ol-fixedoverlay';
-      this.getMap().getViewport().querySelector('.ol-layers').after(canvas);
-      ctx = canvas.getContext('2d');
-      canvas.width = this.getMap().getSize()[0] * e.frameState.pixelRatio;
-      canvas.height = this.getMap().getSize()[1] * e.frameState.pixelRatio;
-      this.getMap().on('change:size', function() {
-        canvas.width = this.getMap().getSize()[0] * e.frameState.pixelRatio;
-        canvas.height = this.getMap().getSize()[1] * e.frameState.pixelRatio;
-      }.bind(this))
-    }
+    ctx = c ? c.getContext('2d') : null;
   }
   return ctx;
 };
@@ -2579,7 +2585,9 @@ ol.control.CanvasAttribution.prototype.setStyle = function (style)
  * @api stable
  */
 ol.control.CanvasAttribution.prototype.setMap = function (map)
-{	var oldmap = this.getMap();
+{	
+	ol.control.CanvasBase.prototype.getCanvas.call(this, map);
+	var oldmap = this.getMap();
 	if (this._listener) ol.Observable.unByKey(this._listener);
 	this._listener = null;
 	ol.control.ScaleLine.prototype.setMap.call(this, map);
@@ -2668,7 +2676,9 @@ ol.control.CanvasScaleLine.prototype.getContext = ol.control.CanvasBase.prototyp
  * @api stable
  */
 ol.control.CanvasScaleLine.prototype.setMap = function (map)
-{	var oldmap = this.getMap();
+{	
+	ol.control.CanvasBase.prototype.getCanvas.call(this, map);
+	var oldmap = this.getMap();
 	if (this._listener) ol.Observable.unByKey(this._listener);
 	this._listener = null;
 	ol.control.ScaleLine.prototype.setMap.call(this, map);
@@ -6298,6 +6308,7 @@ ol.control.Permalink.prototype.layerChange_ = function() {
  *
  * @constructor
  * @fire print
+ * @fire error
  * @fire printing
  * @extends {ol.control.Control}
  * @param {Object=} options Control options.
@@ -6333,6 +6344,7 @@ ol.ext.inherits(ol.control.Print, ol.control.Control);
  * @param {Object} options
  *	@param {string} options.imageType A string indicating the image format, default the control one
  *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
+ *  @param {boolean} options.immediate true to prevent delay for printing
  *  @param {*} options.any any options passed to the print event when fired
  * @api
  */
@@ -6341,16 +6353,28 @@ ol.control.Print.prototype.print = function(options) {
   var imageType = options.imageType || this.get('imageType');
   var quality = options.quality || this.get('quality');
   if (this.getMap()) {
-    this.dispatchEvent(Object.assign({ 
-      type: 'printing',
-    }, options));
+    if (options.immediate !== 'silent') {
+      this.dispatchEvent(Object.assign({ 
+        type: 'printing',
+      }, options));
+    }
+    // Start printing after delay to var user show info in the DOM
+    if (!options.immediate) {
+      setTimeout (function () {
+        options = Object.assign({}, options);
+        options.immediate = 'silent';
+        this.print(options);
+      }.bind(this), 200);
+      return;
+    }
+    // Run printing
     this.getMap().once('rendercomplete', function(event) {
       var canvas, ctx;
-      // ol <= 5 > get the canavs
+      // ol <= 5 : get the canvas
       if (event.context) {
         canvas = event.context.canvas;
       } else {
-        // ol6 > create canvas using layer canvas
+        // ol6+ : create canvas using layer canvas
         this.getMap().getViewport().querySelectorAll('.ol-layer canvas, canvas.ol-fixedoverlay').forEach(function(c) {
           if (c.width) {
             // Create a canvas if none
@@ -6361,7 +6385,7 @@ ol.control.Print.prototype.print = function(options) {
               canvas.height = size[1];
               ctx = canvas.getContext('2d');
               if (/jp.*g$/.test(imageType)) {
-                ctx.fillStyle = "white";
+                ctx.fillStyle = this.get('bgColor') || 'white';
                 ctx.fillRect(0,0,canvas.width,canvas.height);		
               }
             }
@@ -6376,7 +6400,6 @@ ol.control.Print.prototype.print = function(options) {
               ctx.transform(tr[0],tr[1],tr[2],tr[3],tr[4],tr[5]);
               ctx.drawImage(c, 0, 0);
             } else {
-              console.log('draw')
               ctx.drawImage(c, 0, 0, ol.ext.element.getStyle(c,'width'), ol.ext.element.getStyle(c,'height'));
             }
             ctx.restore();
@@ -6400,6 +6423,18 @@ ol.control.Print.prototype.print = function(options) {
         // Image position
         position = [(size[0] - w)/2, (size[1] - h)/2];
       }
+      // get the canvas image
+      var image;
+      try { 
+        image = canvas ? canvas.toDataURL(imageType, quality) : null;
+      } catch(e) {
+        // Fire error event
+        this.dispatchEvent({
+          type: 'error',
+          canvas: canvas
+        });
+        return;
+      }
       // Fire print event
       var e = Object.assign({ 
         type: 'print',
@@ -6412,7 +6447,7 @@ ol.control.Print.prototype.print = function(options) {
           imageWidth: w,
           imageHeight: h
         },
-        image: canvas ? canvas.toDataURL(imageType, quality) : null,
+        image: image,
         imageType: imageType,
         canvas: canvas
       }, options);
@@ -8855,6 +8890,8 @@ ol.control.SelectPopup.prototype.setValues = function(options) {
  * @fires 
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
+ *  @param {string} options.status status, default none
+ *  @param {string} options.position position of the status 'top', 'left', 'bottom' or 'right', default top
  */
 ol.control.Status = function(options) {
   options = options || {};
@@ -8868,6 +8905,8 @@ ol.control.Status = function(options) {
     element: element,
     target: options.target
   });
+  if (options.position) this.setPosition(options.position);
+  this.status(options.status || '');
 };
 ol.ext.inherits(ol.control.Status, ol.control.Control);
 /** Show status on the map
@@ -8875,13 +8914,18 @@ ol.ext.inherits(ol.control.Status, ol.control.Control);
  */
 ol.control.Status.prototype.status = function(html) {
   var s = html || '';
-  if (typeof(s)==='object' && !(s instanceof String)) {
-    s = '';
-    for (var i in html) {
-      s += '<label>'+i+':</label> '+html[i]+'<br/>';
+  if (s) {
+    ol.ext.element.show(this.element);
+    if (typeof(s)==='object' && !(s instanceof String)) {
+      s = '';
+      for (var i in html) {
+        s += '<label>'+i+':</label> '+html[i]+'<br/>';
+      }
     }
+    ol.ext.element.setHTML(this.element, s);
+  } else {
+    ol.ext.element.hide(this.element);
   }
-  ol.ext.element.setHTML(this.element, s);
 };
 /** Set status position
  * @param {string} position position of the status 'top', 'left', 'bottom' or 'right', default top
@@ -8890,7 +8934,8 @@ ol.control.Status.prototype.setPosition = function(position) {
   this.element.classList.remove('ol-left');
   this.element.classList.remove('ol-right');
   this.element.classList.remove('ol-bottom');
-  if (/^left$|^right$|^bottom$/.test(position)) {
+  this.element.classList.remove('ol-center');
+  if (/^left$|^right$|^bottom$|^center$/.test(position)) {
     this.element.classList.add('ol-'+position);
   }
 };
@@ -12138,8 +12183,8 @@ ol.interaction.DragOverlay.prototype.removeOverlay = function (ov) {
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Interaction to draw holes in a polygon.
  * It fires a drawstart, drawend event when drawing the hole
@@ -12154,40 +12199,40 @@ ol.interaction.DragOverlay.prototype.removeOverlay = function (ov) {
  * 	@param {Array<ol.layer.Vector> | function | undefined} options.layers A list of layers from which polygons should be selected. Alternatively, a filter function can be provided. default: all visible layers
  * 	@param { ol.style.Style | Array<ol.style.Style> | StyleFunction | undefined }	Style for the selected features, default: default edit style
  */
-ol.interaction.DrawHole = function(options)
-{	if (!options) options = {};
-	var self = this;
-	// Select interaction for the current feature
-	this._select = new ol.interaction.Select({ style: options.style });
-	this._select.setActive(false);
-	// Geometry function that test points inside the current
-	var geometryFn, geomFn = options.geometryFunction;
-	if (geomFn)
-	{	geometryFn = function(c,g) 
-		{ 	g = self._geometryFn (c, g);
-			return geomFn (c,g);
-		}
-	}
-	else
-	{	geometryFn = function(c,g) { return self._geometryFn (c, g); }
-	}
-	// Create draw interaction
-	options.type = "Polygon";
-	options.geometryFunction = geometryFn;
-	ol.interaction.Draw.call(this, options);
-	// Layer filter function
-	if (options.layers) 
-	{	if (typeof (options.layers) === 'function') this.layers_ = options.layers;
-		else if (options.layers.indexOf) 
-		{	this.layers_ = function(l) 
-			{ return (options.layers.indexOf(l) >= 0); 
-			};
-		}
-	}
-	// Start drawing if inside a feature
-	this.on('drawstart', this._startDrawing.bind(this));
-	// End drawing add the hole to the current Polygon
-	this.on('drawend', this._finishDrawing.bind(this));
+ol.interaction.DrawHole = function(options) {
+  if (!options) options = {};
+  var self = this;
+  // Select interaction for the current feature
+  this._select = new ol.interaction.Select({ style: options.style });
+  this._select.setActive(false);
+  // Geometry function that test points inside the current
+  var geometryFn, geomFn = options.geometryFunction;
+  if (geomFn) {
+    geometryFn = function(c,g) {
+      g = self._geometryFn (c, g);
+      return geomFn (c,g);
+    }
+  } else {
+    geometryFn = function(c,g) { return self._geometryFn (c, g); }
+  }
+  // Create draw interaction
+  options.type = "Polygon";
+  options.geometryFunction = geometryFn;
+  ol.interaction.Draw.call(this, options);
+  // Layer filter function
+  if (options.layers) {
+    if (typeof (options.layers) === 'function') {
+      this.layers_ = options.layers;
+    } else if (options.layers.indexOf) {
+      this.layers_ = function(l) {
+        return (options.layers.indexOf(l) >= 0); 
+      };
+    }
+  }
+  // Start drawing if inside a feature
+  this.on('drawstart', this._startDrawing.bind(this));
+  // End drawing add the hole to the current Polygon
+  this.on('drawend', this._finishDrawing.bind(this));
 };
 ol.ext.inherits(ol.interaction.DrawHole, ol.interaction.Draw);
 /**
@@ -12196,119 +12241,119 @@ ol.ext.inherits(ol.interaction.DrawHole, ol.interaction.Draw);
  * @param {ol.Map} map Map.
  * @api stable
  */
-ol.interaction.DrawHole.prototype.setMap = function(map)
-{	if (this.getMap()) this.getMap().removeInteraction(this._select);
-	if (map) map.addInteraction(this._select);
-	ol.interaction.Draw.prototype.setMap.call (this, map);
+ol.interaction.DrawHole.prototype.setMap = function(map) {
+  if (this.getMap()) this.getMap().removeInteraction(this._select);
+  if (map) map.addInteraction(this._select);
+  ol.interaction.Draw.prototype.setMap.call (this, map);
 };
 /**
  * Activate/deactivate the interaction
  * @param {boolean}
  * @api stable
  */
-ol.interaction.DrawHole.prototype.setActive = function(b)
-{	this._select.getFeatures().clear();
-	ol.interaction.Draw.prototype.setActive.call (this, b);
+ol.interaction.DrawHole.prototype.setActive = function(b) {
+  this._select.getFeatures().clear();
+  ol.interaction.Draw.prototype.setActive.call (this, b);
 };
 /**
  * Remove last point of the feature currently being drawn 
  * (test if points to remove before).
  */
-ol.interaction.DrawHole.prototype.removeLastPoint = function()
-{	if (this._feature && this._feature.getGeometry().getCoordinates()[0].length>2) 
-	{	ol.interaction.Draw.prototype.removeLastPoint.call(this);
-	}
+ol.interaction.DrawHole.prototype.removeLastPoint = function() {
+  if (this._feature && this._feature.getGeometry().getCoordinates()[0].length>2) {
+    ol.interaction.Draw.prototype.removeLastPoint.call(this);
+  }
 };
 /** 
  * Get the current polygon to hole
  * @return {ol.Feature}
  */
-ol.interaction.DrawHole.prototype.getPolygon = function()
-{	return this._polygon;
-	// return this._select.getFeatures().item(0).getGeometry();
+ol.interaction.DrawHole.prototype.getPolygon = function() {
+  return this._polygon;
+  // return this._select.getFeatures().item(0).getGeometry();
 };
 /**
  * Get current feature to add a hole and start drawing
  * @param {ol.interaction.Draw.Event} e
  * @private
  */
-ol.interaction.DrawHole.prototype._startDrawing = function(e)
-{	var map = this.getMap();
-	var layersFilter = this.layers_;
-	this._feature = e.feature;
-	var coord = e.feature.getGeometry().getCoordinates()[0][0];
-	// Check object under the pointer
-	var features = map.getFeaturesAtPixel(
-		map.getPixelFromCoordinate(coord),
-		{ 	layerFilter: layersFilter
-		}
-	);
-	this._current = null;
-	if (features) {
-		for (var k=0; k<features.length; k++) {
-			var poly = features[k].getGeometry();
-			if (poly.getType() === "Polygon"
-				&& poly.intersectsCoordinate(coord)) {
-				this._polygonIndex = false;
-				this._polygon = poly;
-				this._current = features[k];
-			}
-			else if (poly.getType() === "MultiPolygon"
-				&& poly.intersectsCoordinate(coord)) {
-				for (var i=0, p; p=poly.getPolygon(i); i++) {
-					if (p.intersectsCoordinate(coord)) {
-						this._polygonIndex = i;
-						this._polygon = p;
-						this._current = features[k];
-						break;
-					}
-				}
-			}
-			if (this._current) break;
-		}
-	}
-	this._select.getFeatures().clear();
-	if (!this._current)
-	{	this.setActive(false);
-		this.setActive(true);
-	}
-	else
-	{	this._select.getFeatures().push(this._current);
-	}
+ol.interaction.DrawHole.prototype._startDrawing = function(e) {
+  var map = this.getMap();
+  var layersFilter = this.layers_;
+  this._feature = e.feature;
+  var coord = e.feature.getGeometry().getCoordinates()[0][0];
+  // Check object under the pointer
+  var features = map.getFeaturesAtPixel(
+    map.getPixelFromCoordinate(coord), {
+      layerFilter: layersFilter
+    }
+  );
+  this._current = null;
+  if (features) {
+    for (var k=0; k<features.length; k++) {
+      var poly = features[k].getGeometry();
+      if (poly.getType() === "Polygon"
+        && poly.intersectsCoordinate(coord)) {
+        this._polygonIndex = false;
+        this._polygon = poly;
+        this._current = features[k];
+      }
+      else if (poly.getType() === "MultiPolygon"
+        && poly.intersectsCoordinate(coord)) {
+        for (var i=0, p; p=poly.getPolygon(i); i++) {
+          if (p.intersectsCoordinate(coord)) {
+            this._polygonIndex = i;
+            this._polygon = p;
+            this._current = features[k];
+            break;
+          }
+        }
+      }
+      if (this._current) break;
+    }
+  }
+  this._select.getFeatures().clear();
+  if (!this._current) {
+    this.setActive(false);
+    this.setActive(true);
+  } else {
+    this._select.getFeatures().push(this._current);
+  }
 };
 /**
  * Stop drawing and add the sketch feature to the target feature. 
  * @param {ol.interaction.Draw.Event} e
  * @private
  */
-ol.interaction.DrawHole.prototype._finishDrawing = function(e)
-{	// The feature is the hole
-	e.hole = e.feature;
-	// Get the current feature
-	e.feature = this._select.getFeatures().item(0);
-	this.dispatchEvent({ type: 'modifystart', features: [ this._current ] });
-	// Create the hole
-	var c = e.hole.getGeometry().getCoordinates()[0];
-	if (c.length > 3) {
-		if (this._polygonIndex!==false) {
-			var geom = e.feature.getGeometry();
-			var newGeom = new ol.geom.MultiPolygon([]);
-			for (var i=0, pi; pi=geom.getPolygon(i); i++) {
-				if (i===this._polygonIndex) {
-					pi.appendLinearRing(new ol.geom.LinearRing(c));
-					newGeom.appendPolygon(pi);
-				}
-				else newGeom.appendPolygon(pi);
-			}
-			e.feature.setGeometry(newGeom);
-		} else {
-			this.getPolygon().appendLinearRing(new ol.geom.LinearRing(c));
-		}
-	}
-	this.dispatchEvent({ type: 'modifyend', features: [ this._current ] });
-	// reset
-	this._feature = null;
-	this._select.getFeatures().clear();
+ol.interaction.DrawHole.prototype._finishDrawing = function(e) {
+  // The feature is the hole
+  e.hole = e.feature;
+  // Get the current feature
+  e.feature = this._select.getFeatures().item(0);
+  this.dispatchEvent({ type: 'modifystart', features: [ this._current ] });
+  // Create the hole
+  var c = e.hole.getGeometry().getCoordinates()[0];
+  if (c.length > 3) {
+    if (this._polygonIndex!==false) {
+      var geom = e.feature.getGeometry();
+      var newGeom = new ol.geom.MultiPolygon([]);
+      for (var i=0, pi; pi=geom.getPolygon(i); i++) {
+        if (i===this._polygonIndex) {
+          pi.appendLinearRing(new ol.geom.LinearRing(c));
+          newGeom.appendPolygon(pi);
+        } else {
+          newGeom.appendPolygon(pi);
+        }
+      }
+      e.feature.setGeometry(newGeom);
+    } else {
+      this.getPolygon().appendLinearRing(new ol.geom.LinearRing(c));
+    }
+  }
+  this.dispatchEvent({ type: 'modifyend', features: [ this._current ] });
+  // reset
+  this._feature = null;
+  this._select.getFeatures().clear();
 };
 /**
  * Function that is called when a geometry's coordinates are updated.
@@ -12317,19 +12362,18 @@ ol.interaction.DrawHole.prototype._finishDrawing = function(e)
  * @return {ol.geom.Polygon}
  * @private
  */
-ol.interaction.DrawHole.prototype._geometryFn = function(coordinates, geometry)
-{	var coord = coordinates[0].pop();
-	if (!this.getPolygon() || this.getPolygon().intersectsCoordinate(coord))
-	{	this.lastOKCoord = [coord[0],coord[1]];
-	}
-	coordinates[0].push([this.lastOKCoord[0],this.lastOKCoord[1]]);
-	if (geometry) 
-	{	geometry.setCoordinates([coordinates[0].concat([coordinates[0][0]])]);
-	} 
-	else 
-	{	geometry = new ol.geom.Polygon(coordinates);
-	}
-	return geometry;
+ol.interaction.DrawHole.prototype._geometryFn = function(coordinates, geometry) {
+  var coord = coordinates[0].pop();
+  if (!this.getPolygon() || this.getPolygon().intersectsCoordinate(coord)) {
+    this.lastOKCoord = [coord[0],coord[1]];
+  }
+  coordinates[0].push([this.lastOKCoord[0],this.lastOKCoord[1]]);
+  if (geometry) {
+    geometry.setCoordinates([coordinates[0].concat([coordinates[0][0]])]);
+  } else {
+    geometry = new ol.geom.Polygon(coordinates);
+  }
+  return geometry;
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -15492,110 +15536,110 @@ ol.interaction.SnapGuides.prototype.setModifyInteraction = function (modifyi) {
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Interaction split interaction for splitting feature geometry
  * @constructor
  * @extends {ol.interaction.Interaction}
  * @fires  beforesplit, aftersplit, pointermove
- * @param {olx.interaction.SplitOptions} 
- *	- source {ol.source.Vector|Array{ol.source.Vector}} a list of source to split (configured with useSpatialIndex set to true)
- *	- features {ol.Collection.<ol.Feature>} collection of feature to split
- *	- snapDistance {integer} distance (in px) to snap to an object, default 25px
- *	- cursor {string|undefined} cursor name to display when hovering an objet
- *	- filter {function|undefined} a filter that takes a feature and return true if it can be clipped, default always split.
- *	- featureStyle {ol.style.Style | Array<ol.style.Style> | false | undefined} Style for the selected features, choose false if you don't want feature selection. By default the default edit style is used.
- *	- sketchStyle {ol.style.Style | Array<ol.style.Style> | undefined} Style for the sektch features.
- *	- tolerance {function|undefined} Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split.  Default is 1e-10.
+ * @param {*} 
+ *  @param {ol.source.Vector|Array{ol.source.Vector}} options.source a list of source to split (configured with useSpatialIndex set to true)
+ *  @param {ol.Collection.<ol.Feature>} options.features collection of feature to split
+ *  @param {integer} options.snapDistance distance (in px) to snap to an object, default 25px
+ *	@param {string|undefined} options.cursor cursor name to display when hovering an objet
+ *  @param {function|undefined} opttion.filter a filter that takes a feature and return true if it can be clipped, default always split.
+ *  @param ol.style.Style | Array<ol.style.Style> | false | undefined} options.featureStyle Style for the selected features, choose false if you don't want feature selection. By default the default edit style is used.
+ *  @param {ol.style.Style | Array<ol.style.Style> | undefined} options.sketchStyle Style for the sektch features. 
+ *  @param {function|undefined} options.tolerance Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split.  Default is 1e-10.
  */
-ol.interaction.Split = function(options)
-{	if (!options) options = {};
-	ol.interaction.Interaction.call(this,
-	{	handleEvent: function(e)
-		{	switch (e.type)
-			{	case "singleclick":
-					return this.handleDownEvent(e);
-				case "pointermove":
-					return this.handleMoveEvent(e);
-				default: 
-					return true;
-			}
-			//return true;
-		}
-	});
-	// Snap distance (in px)
-	this.snapDistance_ = options.snapDistance || 25;
-	// Split tolerance between the calculated intersection and the geometry
-	this.tolerance_ = options.tolerance || 1e-10;
-	// Cursor
-	this.cursor_ = options.cursor;
-	// List of source to split
-	this.sources_ = options.sources ? (options.sources instanceof Array) ? options.sources:[options.sources] : [];
-	if (options.features)
-	{	this.sources_.push (new ol.source.Vector({ features: options.features }));
-	}
-	// Get all features candidate
-	this.filterSplit_ = options.filter || function(){ return true; };
-	// Default style
-	var white = [255, 255, 255, 1];
-	var blue = [0, 153, 255, 1];
-	var width = 3;
-	var fill = new ol.style.Fill({ color: 'rgba(255,255,255,0.4)' });
-	var stroke = new ol.style.Stroke({
-		color: '#3399CC',
-		width: 1.25
-	});
-	var sketchStyle =
-	[	new ol.style.Style({
-			image: new ol.style.Circle({
-				fill: fill,
-				stroke: stroke,
-				radius: 5
-			}),
-			fill: fill,
-			stroke: stroke
-		})
-	];
-	var featureStyle =
-	[	new ol.style.Style({
-			stroke: new ol.style.Stroke({
-				color: white,
-				width: width + 2
-			})
-		}),
-		new ol.style.Style({
-			image: new ol.style.Circle({
-				radius: 2*width,
-				fill: new ol.style.Fill({
-					color: blue
-				}),
-				stroke: new ol.style.Stroke({
-					color: white,
-					width: width/2
-				})
-			}),
-			stroke: new ol.style.Stroke({
-					color: blue,
-					width: width
-				})
-		}),
-	];
-	// Custom style
-	if (options.sketchStyle) sketchStyle = options.sketchStyle instanceof Array ? options.sketchStyle : [options.sketchStyle];
-	if (options.featureStyle) featureStyle = options.featureStyle instanceof Array ? options.featureStyle : [options.featureStyle];
-	// Create a new overlay for the sketch
-	this.overlayLayer_ = new ol.layer.Vector(
-	{	source: new ol.source.Vector({
-			useSpatialIndex: false
-		}),
-		name:'Split overlay',
-		displayInLayerSwitcher: false,
-		style: function(f)
-		{	if (f._sketch_) return sketchStyle;
-			else return featureStyle;
-		}
-	});
+ol.interaction.Split = function(options) {
+  if (!options) options = {};
+  ol.interaction.Interaction.call(this, {
+    handleEvent: function(e) {
+      switch (e.type) {
+        case "singleclick":
+          return this.handleDownEvent(e);
+        case "pointermove":
+          return this.handleMoveEvent(e);
+        default: 
+          return true;
+      }
+      //return true;
+    }
+  });
+  // Snap distance (in px)
+  this.snapDistance_ = options.snapDistance || 25;
+  // Split tolerance between the calculated intersection and the geometry
+  this.tolerance_ = options.tolerance || 1e-10;
+  // Cursor
+  this.cursor_ = options.cursor;
+  // List of source to split
+  this.sources_ = options.sources ? (options.sources instanceof Array) ? options.sources:[options.sources] : [];
+  if (options.features) {
+    this.sources_.push (new ol.source.Vector({ features: options.features }));
+  }
+  // Get all features candidate
+  this.filterSplit_ = options.filter || function(){ return true; };
+  // Default style
+  var white = [255, 255, 255, 1];
+  var blue = [0, 153, 255, 1];
+  var width = 3;
+  var fill = new ol.style.Fill({ color: 'rgba(255,255,255,0.4)' });
+  var stroke = new ol.style.Stroke({
+    color: '#3399CC',
+    width: 1.25
+  });
+  var sketchStyle = [
+    new ol.style.Style({
+      image: new ol.style.Circle({
+        fill: fill,
+        stroke: stroke,
+        radius: 5
+      }),
+      fill: fill,
+      stroke: stroke
+    })
+  ];
+  var featureStyle = [
+    new ol.style.Style({
+      stroke: new ol.style.Stroke({
+        color: white,
+        width: width + 2
+      })
+    }),
+    new ol.style.Style({
+      image: new ol.style.Circle({
+        radius: 2*width,
+        fill: new ol.style.Fill({
+          color: blue
+        }),
+        stroke: new ol.style.Stroke({
+          color: white,
+          width: width/2
+        })
+      }),
+      stroke: new ol.style.Stroke({
+          color: blue,
+          width: width
+        })
+    }),
+  ];
+  // Custom style
+  if (options.sketchStyle) sketchStyle = options.sketchStyle instanceof Array ? options.sketchStyle : [options.sketchStyle];
+  if (options.featureStyle) featureStyle = options.featureStyle instanceof Array ? options.featureStyle : [options.featureStyle];
+  // Create a new overlay for the sketch
+  this.overlayLayer_ = new ol.layer.Vector({
+    source: new ol.source.Vector({
+      useSpatialIndex: false
+    }),
+    name:'Split overlay',
+    displayInLayerSwitcher: false,
+    style: function(f) {
+      if (f._sketch_) return sketchStyle;
+      else return featureStyle;
+    }
+  });
 };
 ol.ext.inherits(ol.interaction.Split, ol.interaction.Interaction);
 /**
@@ -15604,132 +15648,132 @@ ol.ext.inherits(ol.interaction.Split, ol.interaction.Interaction);
  * @param {ol.Map} map Map.
  * @api stable
  */
-ol.interaction.Split.prototype.setMap = function(map)
-{	if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_);
-	ol.interaction.Interaction.prototype.setMap.call (this, map);
-	this.overlayLayer_.setMap(map);
+ol.interaction.Split.prototype.setMap = function(map) {
+  if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_);
+  ol.interaction.Interaction.prototype.setMap.call (this, map);
+  this.overlayLayer_.setMap(map);
 };
 /** Get closest feature at pixel
  * @param {ol.Pixel} 
  * @return {ol.feature} 
  * @private
  */
-ol.interaction.Split.prototype.getClosestFeature = function(e)
-{	var f, c, g, d = this.snapDistance_+1;
-	for (var i=0; i<this.sources_.length; i++)
-	{	var source = this.sources_[i];
-		f = source.getClosestFeatureToCoordinate(e.coordinate);
-		if (f && f.getGeometry().splitAt) 
-		{	c = f.getGeometry().getClosestPoint(e.coordinate);
-			g = new ol.geom.LineString([e.coordinate,c]);
-			d = g.getLength() / e.frameState.viewState.resolution;
-			break;
-		}
-	}
-	if (d > this.snapDistance_) return false;
-	else 
-	{	// Snap to node
-		var coord = this.getNearestCoord (c, f.getGeometry().getCoordinates());
-		var p = this.getMap().getPixelFromCoordinate(coord);
-		if (ol.coordinate.dist2d(e.pixel, p) < this.snapDistance_)
-		{	c = coord;
-		}
-		//
-		return { source:source, feature:f, coord: c, link: g };
-	}
+ol.interaction.Split.prototype.getClosestFeature = function(e) {
+  var f, c, g, d = this.snapDistance_+1;
+  for (var i=0; i<this.sources_.length; i++) {
+    var source = this.sources_[i];
+    f = source.getClosestFeatureToCoordinate(e.coordinate);
+    if (f && f.getGeometry().splitAt) {
+      c = f.getGeometry().getClosestPoint(e.coordinate);
+      g = new ol.geom.LineString([e.coordinate,c]);
+      d = g.getLength() / e.frameState.viewState.resolution;
+      break;
+    }
+  }
+  if (d > this.snapDistance_) {
+    return false;
+  } else {
+    // Snap to node
+    var coord = this.getNearestCoord (c, f.getGeometry().getCoordinates());
+    var p = this.getMap().getPixelFromCoordinate(coord);
+    if (ol.coordinate.dist2d(e.pixel, p) < this.snapDistance_) {
+      c = coord;
+    }
+    //
+    return { source:source, feature:f, coord: c, link: g };
+  }
 }
 /** Get nearest coordinate in a list 
 * @param {ol.coordinate} pt the point to find nearest
 * @param {Array<ol.coordinate>} coords list of coordinates
 * @return {ol.coordinate} the nearest coordinate in the list
 */
-ol.interaction.Split.prototype.getNearestCoord = function(pt, coords)
-{	var d, dm=Number.MAX_VALUE, p0;
-	for (var i=0; i < coords.length; i++)
-	{	d = ol.coordinate.dist2d (pt, coords[i]);
-		if (d < dm)
-		{	dm = d;
-			p0 = coords[i];
-		}
-	}
-	return p0;
+ol.interaction.Split.prototype.getNearestCoord = function(pt, coords) {
+  var d, dm=Number.MAX_VALUE, p0;
+  for (var i=0; i < coords.length; i++) {
+    d = ol.coordinate.dist2d (pt, coords[i]);
+    if (d < dm) {
+      dm = d;
+      p0 = coords[i];
+    }
+  }
+  return p0;
 };
 /**
  * @param {ol.MapBrowserEvent} evt Map browser event.
  * @return {boolean} `true` to start the drag sequence.
  */
-ol.interaction.Split.prototype.handleDownEvent = function(evt)
-{	// Something to split ?
-	var current = this.getClosestFeature(evt);
-	if (current)
-	{	var self = this;
-		self.overlayLayer_.getSource().clear();
-		var split = current.feature.getGeometry().splitAt(current.coord, this.tolerance_);
-		var i;
-		if (split.length > 1)
-		{	var tosplit = [];
-			for (i=0; i<split.length; i++)
-			{	var f = current.feature.clone();
-				f.setGeometry(split[i]);
-				tosplit.push(f);
-			}
-			self.dispatchEvent({ type:'beforesplit', original: current.feature, features: tosplit });
-			current.source.dispatchEvent({ type:'beforesplit', original: current.feature, features: tosplit });
-			current.source.removeFeature(current.feature);
-			for (i=0; i<tosplit.length; i++)
-			{	current.source.addFeature(tosplit[i]);
-			}
-			self.dispatchEvent({ type:'aftersplit', original: current.feature, features: tosplit });
-			current.source.dispatchEvent({ type:'aftersplit', original: current.feature, features: tosplit });
-		}
-	}
-	return false;
+ol.interaction.Split.prototype.handleDownEvent = function(evt) {
+  // Something to split ?
+  var current = this.getClosestFeature(evt);
+  if (current) {
+    var self = this;
+    self.overlayLayer_.getSource().clear();
+    var split = current.feature.getGeometry().splitAt(current.coord, this.tolerance_);
+    var i;
+    if (split.length > 1) {
+      var tosplit = [];
+      for (i=0; i<split.length; i++) {
+        var f = current.feature.clone();
+        f.setGeometry(split[i]);
+        tosplit.push(f);
+      }
+      self.dispatchEvent({ type:'beforesplit', original: current.feature, features: tosplit });
+      current.source.dispatchEvent({ type:'beforesplit', original: current.feature, features: tosplit });
+      current.source.removeFeature(current.feature);
+      for (i=0; i<tosplit.length; i++) {
+        current.source.addFeature(tosplit[i]);
+      }
+      self.dispatchEvent({ type:'aftersplit', original: current.feature, features: tosplit });
+      current.source.dispatchEvent({ type:'aftersplit', original: current.feature, features: tosplit });
+    }
+  }
+  return false;
 };
 /**
  * @param {ol.MapBrowserEvent} evt Event.
  */
-ol.interaction.Split.prototype.handleMoveEvent = function(e)
-{	var map = e.map;
-	this.overlayLayer_.getSource().clear();
-	var current = this.getClosestFeature(e);
-	if (current && this.filterSplit_(current.feature)) {
-		var p, l;
-		// Draw sketch
-		this.overlayLayer_.getSource().addFeature(current.feature);
-		p = new ol.Feature(new ol.geom.Point(current.coord));
-		p._sketch_ = true;
-		this.overlayLayer_.getSource().addFeature(p);
-		//
-		l = new ol.Feature(current.link);
-		l._sketch_ = true;
-		this.overlayLayer_.getSource().addFeature(l);
-		// move event
-		this.dispatchEvent({
-			type: 'pointermove',
-			coordinate: e.coordinate,
-			frameState: e.frameState,
-			originalEvent: e.originalEvent,
-			map: e.map,
-			pixel: e.pixel,
-			feature: current.feature,
-			linkGeometry: current.link
-		});
-	} else {
-		this.dispatchEvent(e);
-	}
-	var element = map.getTargetElement();
-	if (this.cursor_) 
-	{	if (current) 
-		{	if (element.style.cursor != this.cursor_) 
-			{	this.previousCursor_ = element.style.cursor;
-				element.style.cursor = this.cursor_;
-			}
-		} 
-		else if (this.previousCursor_ !== undefined) 
-		{	element.style.cursor = this.previousCursor_;
-			this.previousCursor_ = undefined;
-		}
-	}
+ol.interaction.Split.prototype.handleMoveEvent = function(e) {
+  var map = e.map;
+  this.overlayLayer_.getSource().clear();
+  var current = this.getClosestFeature(e);
+  if (current && this.filterSplit_(current.feature)) {
+    var p, l;
+    // Draw sketch
+    this.overlayLayer_.getSource().addFeature(current.feature);
+    p = new ol.Feature(new ol.geom.Point(current.coord));
+    p._sketch_ = true;
+    this.overlayLayer_.getSource().addFeature(p);
+    //
+    l = new ol.Feature(current.link);
+    l._sketch_ = true;
+    this.overlayLayer_.getSource().addFeature(l);
+    // move event
+    this.dispatchEvent({
+      type: 'pointermove',
+      coordinate: e.coordinate,
+      frameState: e.frameState,
+      originalEvent: e.originalEvent,
+      map: e.map,
+      pixel: e.pixel,
+      feature: current.feature,
+      linkGeometry: current.link
+    });
+  } else {
+    this.dispatchEvent(e);
+  }
+  var element = map.getTargetElement();
+  if (this.cursor_) {
+    if (current) {
+      if (element.style.cursor != this.cursor_) {
+        this.previousCursor_ = element.style.cursor;
+        element.style.cursor = this.cursor_;
+      }
+    } else if (this.previousCursor_ !== undefined) {
+      element.style.cursor = this.previousCursor_;
+      this.previousCursor_ = undefined;
+    }
+  }
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -19634,6 +19678,7 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
 		options.source.getTileGrid().minZoom = tileoptions.minZoom;
   }
   ol.layer.Tile.call (this, options);
+  this.set('layer', layer);
 // BUG GPP: Attributions constraints are not set properly :(
 /** /
   // Set attribution according to the originators
@@ -20739,10 +20784,10 @@ ol.Overlay.Placemark.prototype.setRadius = function(size) {
 /** Template attributes for popup
  * @typedef {Object} TemplateAttributes
  * @property {string} title
- * @property {function} format a function that takes an attribute and returns it formated
+ * @property {function} format a function that takes an attribute and a feature and returns the formated attribute
  * @property {string} before string to instert before the attribute (prefix)
  * @property {string} after string to instert after the attribute (sudfix)
- * @property {function} value a function that takes feature and a value and returns a value (calculated attributes)
+ * @property {boolean|function} visible boolean or a function (feature, value) that decides the visibility of a attribute entry
  */
 /** Template 
  * @typedef {Object} Template
@@ -20858,28 +20903,37 @@ ol.Overlay.PopupFeature.prototype._getHtml = function(feature) {
     var atts = template.attributes;
     for (var att in atts) {
       var a = atts[att];
-      tr = ol.ext.element.create('TR', { parent: table });
-      ol.ext.element.create('TD', { html: a.title || att, parent: tr });
       var content, val = feature.get(att);
       // Get calculated value
-      if (typeof(a.value)==='function') {
-        val = a.value(feature, val);
+      if (typeof(a.format)==='function') {
+        val = a.format(val, feature);
       }
-      // Show image or content
-      if (this.get('showImage') && /(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)/.test(val)) {
-        content = ol.ext.element.create('IMG',{
-          src: val
+      // Is entry visible?
+      var visible = true;
+      if (typeof(a.visible)==='boolean') {
+        visible = a.visible;
+      } else if (typeof(a.visible)==='function') {
+        visible = a.visible(feature, val);
+      }
+      if (visible) {
+        tr = ol.ext.element.create('TR', { parent: table });
+        ol.ext.element.create('TD', { html: a.title || att, parent: tr });
+        // Show image or content
+        if (this.get('showImage') && /(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)/.test(val)) {
+          content = ol.ext.element.create('IMG',{
+            src: val
+          });
+        } else {
+          content = (a.before||'') + val + (a.after||'');
+          var maxc = this.get('maxChar') || 200;
+          if (typeof(content) === 'string' && content.length>maxc) content = content.substr(0,maxc)+'[...]';
+        }
+        // Add value
+        ol.ext.element.create('TD', {
+          html: content,
+          parent: tr
         });
-      } else {
-        content = (a.before||'') + (a.format ? a.format(val) : val) + (a.after||'');
-        var maxc = this.get('maxChar') || 200;
-        if (typeof(content) === 'string' && content.length>maxc) content = content.substr(0,maxc)+'[...]';
       }
-      // Add value
-      ol.ext.element.create('TD', { 
-        html: content, 
-        parent: tr 
-      });
     }
   }
   // Zoom button

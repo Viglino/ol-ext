@@ -3068,6 +3068,12 @@
   padding: .3em 3em .3em .5em;
   width: auto;
 }
+.ol-control.ol-status.ol-center {
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+          transform: translateY(-50%);
+}
+
 .ol-control.ol-storymap {
   top: .5em;
   left: .5em;
