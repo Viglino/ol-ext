@@ -5,12 +5,10 @@ import ol_style_Style from 'ol/style/Style'
 import ol_style_Fill from 'ol/style/Fill'
 import ol_style_Stroke from 'ol/style/Stroke'
 import ol_style_Text from 'ol/style/Text'
-import ol_layer_Image from 'ol/layer/Image'
-import ol_source_ImageCanvas from 'ol/source/ImageCanvas'
 
 /**
  * @classdesc 
- *   OpenLayers 3 Attribution Control integrated in the canvas (for jpeg/png export purposes).
+ *   Attribution Control integrated in the canvas (for jpeg/png export purposes).
  * @see http://www.kreidefossilien.de/webgis/dokumentation/beispiele/export-map-to-png-with-scale
  *
  * @constructor
@@ -36,6 +34,8 @@ ol_ext_inherits(ol_control_CanvasBase, ol_control_Control);
  * @api stable
  */
 ol_control_CanvasBase.prototype.setMap = function (map) {
+  this.getCanvas(map);
+
   var oldmap = this.getMap();
   if (this._listener) {
     ol_Observable_unByKey(this._listener);
@@ -51,6 +51,25 @@ ol_control_CanvasBase.prototype.setMap = function (map) {
   }
 };
 
+/** Get canvas overlay
+ */
+ol_control_CanvasBase.prototype.getCanvas = function(map) {
+  if (!map) return null;
+  var canvas = map.getViewport().getElementsByClassName('ol-fixedoverlay')[0];
+  if (!canvas && map.getViewport().querySelector('.ol-layers')) {
+    // Add a fixed canvas layer on top of the map
+    canvas = document.createElement('canvas');
+    canvas.className = 'ol-fixedoverlay';
+    map.getViewport().querySelector('.ol-layers').after(canvas);
+    // Clear before new compose
+    map.on('precompose', function (e){
+      canvas.width = map.getSize()[0] * e.frameState.pixelRatio;
+      canvas.height = map.getSize()[1] * e.frameState.pixelRatio;
+    });
+  }
+  return canvas;
+};
+
 /** Get map Canvas
  * @private
  */
@@ -58,20 +77,7 @@ ol_control_CanvasBase.prototype.getContext = function(e) {
   var ctx = e.context;
   if (!ctx && this.getMap()) {
     var c = this.getMap().getViewport().getElementsByClassName('ol-fixedoverlay')[0];
-    var ctx = c ? c.getContext('2d') : null;
-    if (!ctx) {
-      // Add a fixed canvas layer on top of the map
-      var canvas = document.createElement('canvas');
-      canvas.className = 'ol-fixedoverlay';
-      this.getMap().getViewport().querySelector('.ol-layers').after(canvas);
-      ctx = canvas.getContext('2d');
-      canvas.width = this.getMap().getSize()[0] * e.frameState.pixelRatio;
-      canvas.height = this.getMap().getSize()[1] * e.frameState.pixelRatio;
-      this.getMap().on('change:size', function() {
-        canvas.width = this.getMap().getSize()[0] * e.frameState.pixelRatio;
-        canvas.height = this.getMap().getSize()[1] * e.frameState.pixelRatio;
-      }.bind(this))
-    }
+    ctx = c ? c.getContext('2d') : null;
   }
   return ctx;
 };

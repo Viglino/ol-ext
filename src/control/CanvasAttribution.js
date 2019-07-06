@@ -75,7 +75,10 @@ ol_control_CanvasAttribution.prototype.setStyle = function (style)
  * @api stable
  */
 ol_control_CanvasAttribution.prototype.setMap = function (map)
-{	var oldmap = this.getMap();
+{	
+	ol_control_CanvasBase.prototype.getCanvas.call(this, map);
+	
+	var oldmap = this.getMap();
 	if (this._listener) ol_Observable_unByKey(this._listener);
 	this._listener = null;
 	
