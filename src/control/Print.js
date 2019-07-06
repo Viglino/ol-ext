@@ -12,6 +12,7 @@ import ol_ext_element from '../util/element'
  *
  * @constructor
  * @fire print
+ * @fire error
  * @fire printing
  * @extends {ol.control.Control}
  * @param {Object=} options Control options.
@@ -52,6 +53,7 @@ ol_ext_inherits(ol_control_Print, ol_control_Control);
  * @param {Object} options
  *	@param {string} options.imageType A string indicating the image format, default the control one
  *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
+ *  @param {boolean} options.immediate true to prevent delay for printing
  *  @param {*} options.any any options passed to the print event when fired
  * @api
  */
@@ -60,16 +62,28 @@ ol_control_Print.prototype.print = function(options) {
   var imageType = options.imageType || this.get('imageType');
   var quality = options.quality || this.get('quality');
   if (this.getMap()) {
-    this.dispatchEvent(Object.assign({ 
-      type: 'printing',
-    }, options));
+    if (options.immediate !== 'silent') {
+      this.dispatchEvent(Object.assign({ 
+        type: 'printing',
+      }, options));
+    }
+    // Start printing after delay to let user show info in the DOM
+    if (!options.immediate) {
+      setTimeout (function () {
+        options = Object.assign({}, options);
+        options.immediate = 'silent';
+        this.print(options);
+      }.bind(this), 200);
+      return;
+    }
+    // Run printing
     this.getMap().once('rendercomplete', function(event) {
       var canvas, ctx;
-      // ol <= 5 > get the canavs
+      // ol <= 5 : get the canvas
       if (event.context) {
         canvas = event.context.canvas;
       } else {
-        // ol6 > create canvas using layer canvas
+        // ol6+ : create canvas using layer canvas
         this.getMap().getViewport().querySelectorAll('.ol-layer canvas, canvas.ol-fixedoverlay').forEach(function(c) {
           if (c.width) {
             // Create a canvas if none
@@ -80,7 +94,7 @@ ol_control_Print.prototype.print = function(options) {
               canvas.height = size[1];
               ctx = canvas.getContext('2d');
               if (/jp.*g$/.test(imageType)) {
-                ctx.fillStyle = "white";
+                ctx.fillStyle = this.get('bgColor') || 'white';
                 ctx.fillRect(0,0,canvas.width,canvas.height);		
               }
             }
@@ -95,7 +109,6 @@ ol_control_Print.prototype.print = function(options) {
               ctx.transform(tr[0],tr[1],tr[2],tr[3],tr[4],tr[5]);
               ctx.drawImage(c, 0, 0);
             } else {
-              console.log('draw')
               ctx.drawImage(c, 0, 0, ol_ext_element.getStyle(c,'width'), ol_ext_element.getStyle(c,'height'));
             }
             ctx.restore();
@@ -119,6 +132,18 @@ ol_control_Print.prototype.print = function(options) {
         // Image position
         position = [(size[0] - w)/2, (size[1] - h)/2];
       }
+      // get the canvas image
+      var image;
+      try { 
+        image = canvas ? canvas.toDataURL(imageType, quality) : null;
+      } catch(e) {
+        // Fire error event
+        this.dispatchEvent({
+          type: 'error',
+          canvas: canvas
+        });
+        return;
+      }
       // Fire print event
       var e = Object.assign({ 
         type: 'print',
@@ -131,7 +156,7 @@ ol_control_Print.prototype.print = function(options) {
           imageWidth: w,
           imageHeight: h
         },
-        image: canvas ? canvas.toDataURL(imageType, quality) : null,
+        image: image,
         imageType: imageType,
         canvas: canvas
       }, options);
