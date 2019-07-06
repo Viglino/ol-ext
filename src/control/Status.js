@@ -9,6 +9,8 @@ import ol_ext_element from '../util/element'
  * @fires 
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
+ *  @param {string} options.status status, default none
+ *  @param {string} options.position position of the status 'top', 'left', 'bottom' or 'right', default top
  */
 var ol_control_Status = function(options) {
   options = options || {};
@@ -24,6 +26,9 @@ var ol_control_Status = function(options) {
     element: element,
     target: options.target
   });
+
+  if (options.position) this.setPosition(options.position);
+  this.status(options.status || '');
 };
 ol_ext_inherits(ol_control_Status, ol_control_Control);
 
@@ -32,13 +37,18 @@ ol_ext_inherits(ol_control_Status, ol_control_Control);
  */
 ol_control_Status.prototype.status = function(html) {
   var s = html || '';
-  if (typeof(s)==='object' && !(s instanceof String)) {
-    s = '';
-    for (var i in html) {
-      s += '<label>'+i+':</label> '+html[i]+'<br/>';
+  if (s) {
+    ol_ext_element.show(this.element);
+    if (typeof(s)==='object' && !(s instanceof String)) {
+      s = '';
+      for (var i in html) {
+        s += '<label>'+i+':</label> '+html[i]+'<br/>';
+      }
     }
+    ol_ext_element.setHTML(this.element, s);
+  } else {
+    ol_ext_element.hide(this.element);
   }
-  ol_ext_element.setHTML(this.element, s);
 };
 
 /** Set status position
@@ -48,7 +58,8 @@ ol_control_Status.prototype.setPosition = function(position) {
   this.element.classList.remove('ol-left');
   this.element.classList.remove('ol-right');
   this.element.classList.remove('ol-bottom');
-  if (/^left$|^right$|^bottom$/.test(position)) {
+  this.element.classList.remove('ol-center');
+  if (/^left$|^right$|^bottom$|^center$/.test(position)) {
     this.element.classList.add('ol-'+position);
   }
 };

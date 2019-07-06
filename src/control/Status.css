@@ -28,3 +28,7 @@
   padding: .3em 3em .3em .5em;
   width: auto;
 }
+.ol-control.ol-status.ol-center {
+  top: 50%;
+  transform: translateY(-50%);
+}
