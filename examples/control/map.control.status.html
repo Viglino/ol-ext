@@ -48,6 +48,7 @@
           <option value='bottom'>bottom</option>
           <option value='left'>left</option>
           <option value='right'>right</option>
+          <option value='center'>center</option>
         </select>
       </li>
       <li>
@@ -81,7 +82,7 @@
   map.addControl(ctrl);
   // Show information on each frame
   map.on('postrender', function(e) {
-    console.log(e)
+    // console.log(e)
     var c = map.getView().getCenter();
     ctrl.status({
       center: [Math.round(c[0]),Math.round(c[1])],
