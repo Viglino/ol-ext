@@ -150,7 +150,7 @@
           // calculated attribute
           'pop2': {
             title: 'Population (kHab.)',  // attribute's title
-            value: function(f, val) { 
+            format: function(val, f) { 
               return Math.round(parseInt(f.get('pop'))/100).toLocaleString() + ' kHab.' 
             }
           }
