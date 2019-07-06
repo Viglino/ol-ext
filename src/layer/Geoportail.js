@@ -51,6 +51,7 @@ var ol_layer_Geoportail = function(layer, options, tileoptions) {
   }
 
   ol_layer_Tile.call (this, options);
+  this.set('layer', layer);
 
 // BUG GPP: Attributions constraints are not set properly :(
 /** /
