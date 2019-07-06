@@ -111,10 +111,10 @@
       $('body').css('opacity', .1);
       console.log('printing')
     });
-    printControl.on('print', function(e) {
+    printControl.on(['print', 'error'], function(e) {
       $('body').css('opacity', 1);
       // Print success
-      if (e.canvas) {
+      if (e.image) {
         if (e.pdf) {
           // Export pdf using the print info
           var pdf = new jsPDF({
