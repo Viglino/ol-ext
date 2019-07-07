@@ -12,7 +12,7 @@ import ol_Feature from 'ol/Feature'
 import {easeOut as ol_easing_easeOut} from 'ol/easing'
 import {buffer as ol_extent_buffer} from 'ol/extent'
 import ol_geom_Point from 'ol/geom/Point'
-import {getVectorContext as ol_render_getVectorContext} from 'ol/render';
+import ol_render_getVectorContext from '../util/getVectorContext';
 
 /**
  *  A vector layer for animated cluster

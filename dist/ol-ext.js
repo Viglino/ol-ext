@@ -464,6 +464,11 @@ ol.ext.element.scrollDiv = function(elt, options) {
   }
 };
 
+/* Export getVector context for backward compatibility ol5 / ol6
+ * using ol5: export-> undefined
+ * using ol6: export-> getVectorContext
+ */
+
 /* global ol */
 /* Create ol.sphere for backward compatibility with ol < 5.0
  * To use with Openlayers package
