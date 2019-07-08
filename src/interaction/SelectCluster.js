@@ -19,7 +19,7 @@ import {easeOut as ol_easing_easeOut} from 'ol/easing'
 import ol_geom_Point from 'ol/geom/Point'
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Circle from 'ol/style/Circle'
-import {getVectorContext as ol_render_getVectorContext} from 'ol/render';
+import ol_render_getVectorContext from '../util/getVectorContext';
 
 /**
  * @classdesc

@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.1.3
+ * @version v3.1.4
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -463,6 +463,11 @@ ol.ext.element.scrollDiv = function(elt, options) {
     );
   }
 };
+
+/* Export getVector context for backward compatibility ol5 / ol6
+ * using ol5: export-> undefined
+ * using ol6: export-> getVectorContext
+ */
 
 /* global ol */
 /* Create ol.sphere for backward compatibility with ol < 5.0
