@@ -100,9 +100,8 @@ ol_control_Legend.prototype.addRow = function(row) {
   this.refresh();
 };
 
-/** Add a new row to the legend
- * @param {*} options a list of parameters 
- *  @param {} options.
+/** Remove a row from the legend
+ *  @param {int} index
  */
 ol_control_Legend.prototype.removeRow = function(index) {
   this._rows.splice(index,1);
