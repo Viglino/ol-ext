@@ -1,11 +1,18 @@
-import Projection from 'ol/proj/Projection';
+import  {ProjectionLike} from 'ol/proj';
+import  Projection from 'ol/proj/Projection'
 import {Point, Polygon, LineString} from 'ol/geom';
 import { Coordinate }  from 'ol/coordinate';
 import Feature from 'ol/Feature';
-import { OSM, TileWMS, Vector as VectorSource } from 'ol/source';
+import { OSM, TileWMS, Vector as VectorSource , WMTS, ImageCanvas} from 'ol/source';
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
 import { Circle as CircleStyle, Fill, Icon, Stroke, Style } from 'ol/style';
-
+import {Extent} from 'ol/extent';
+import {Size} from 'ol/size';
+import {Layer} from 'ol/layer'
+import {Map as _ol_Map_, View} from 'ol';
+import Attribution from 'ol/control/Attribution';
+import * as loadingstrategy from 'ol/loadingstrategy';
+import { Geometry } from 'ol/geom';
 declare namespace ol {
     
         /** Compute a convex hull using Andrew's Monotone Chain Algorithm
@@ -84,7 +91,7 @@ declare namespace ol {
          */
         function splitH(geom: Coordinate[], y: number, n: number): Coordinate[][];
     }
- namespace source{
+ declare namespace source{
         /** Abstract base class; normally only used for creating subclasses. Bin collector for data
          * @constructor
          * @extends {VectorSource}
@@ -186,9 +193,9 @@ declare namespace ol {
          * @param {any} options Vector source options
          *  @param {Array<Number>} resolutions a list of resolution to change the drawing level, default [1000,100,20]
          */
-        class DFCI extends Vector {
+        class DFCI extends VectorSource {
             constructor(options: any, resolutions: Number[]);
-            /** Cacluate grid according extent/resolution
+            /** Cacluate grid according Extent/resolution
              */
             _calcGrid(): void;
             /** Get features
@@ -202,23 +209,23 @@ declare namespace ol {
          *  @param {Vector} options.source the source that contains the points
          */
         function Delaunay(options: {
-            source: Vector;
+            source: VectorSource;
         }): void;
         /** A source for INSEE grid
          * @constructor
          * @extends {VectorSource}
          * @param {Object} options VectorSourceOptions + grid option
          *  @param {VectorSource} options.source Source
-         *  @param {number} [options.size] size of the grid in meter, default 200m
+         *  @param {number} [options.Size] Size of the grid in meter, default 200m
          *  @param {(f: Feature) => Point} [options.geometryFunction] Function that takes an Feature as argument and returns an Point as feature's center.
          *  @param {(bin: Feature, features: Array<Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
          */
         class FeatureBin extends VectorSource {
             constructor(options: {
                 source: VectorSource;
-                size?: number;
+                Size?: number;
             });
-            /** Set grid size
+            /** Set grid Size
              * @param {Feature} features
              */
             setFeatures(features: Feature): void;
@@ -237,7 +244,7 @@ declare namespace ol {
         * @extends {source.ImageCanvas}
         * @param {olx.source.GeoImageOptions=} options
          */
-        class GeoImage extends source.ImageCanvas {
+        class GeoImage extends ImageCanvas {
             constructor(options?: olx.source.GeoImageOptions);
             /**
              * Get coordinate of the image center.
@@ -253,16 +260,16 @@ declare namespace ol {
             setCenter(coordinate: Coordinate): void;
             /**
              * Get image scale.
-             * @return {size} image scale (along x and y axis).
+             * @return {Size} image scale (along x and y axis).
              * @api stable
              */
-            getScale(): size;
+            getScale(): Size;
             /**
              * Set image scale.
-             * @param {size|Number} image scale (along x and y axis or both).
+             * @param {Size|Number} image scale (along x and y axis or both).
              * @api stable
              */
-            setScale(image: size | number): void;
+            setScale(image: Size | number): void;
             /**
              * Get image rotation.
              * @return {Number} rotation in degre.
@@ -281,11 +288,11 @@ declare namespace ol {
              */
             getGeoImage(): void;
             /**
-             * Get image crop extent.
-             * @return {extent} image crop extent.
+             * Get image crop Extent.
+             * @return {Extent} image crop Extent.
              * @api stable
              */
-            getCrop(): extent;
+            getCrop(): Extent;
             /**
              * Set image mask.
              * @param {LineString} coords of the mask
@@ -299,15 +306,15 @@ declare namespace ol {
              */
             getMask(): LineString;
             /**
-             * Set image crop extent.
-             * @param {extent|Number} image crop extent or a number to crop from original size.
+             * Set image crop Extent.
+             * @param {Extent|Number} image crop Extent or a number to crop from original Size.
              * @api stable
              */
-            setCrop(image: extent | number): void;
+            setCrop(image: Extent | number): void;
         }
         /** IGN's Geoportail WMTS source
          * @constructor
-         * @extends {source.WMTS}
+         * @extends {WMTS}
          * @param {String=} layer Layer name.
          * @param {olx.source.OSMOptions=} options WMTS options
          *  @param {number} options.minZoom
@@ -320,7 +327,7 @@ declare namespace ol {
          *  @param {string} options.crossOrigin default 'anonymous'
          *  @param {string} options.wrapX default true
          */
-        class Geoportail extends source.WMTS {
+        class Geoportail extends WMTS {
             constructor(layer?: string, options?: {
                 minZoom: number;
                 maxZoom: number;
@@ -357,24 +364,24 @@ declare namespace ol {
              * constructed.
              * @param {Coordinate} coord
              * @param {Number} resolution
-             * @param {proj.Projection} projection default the source projection
+             * @param {Projection} projection default the source projection
              * @param {Object} options
              *  @param {string} options.INFO_FORMAT response format text/plain, text/html, application/json, default text/plain
              * @return {String|undefined} GetFeatureInfo URL.
              */
-            getFeatureInfoUrl(coord: Coordinate, resolution: number, projection: proj.Projection, options: {
+            getFeatureInfoUrl(coord: Coordinate, resolution: number, projection: Projection, options: {
                 INFO_FORMAT: string;
             }): string | undefined;
             /** Get feature info
              * @param {Coordinate} coord
              * @param {Number} resolution
-             * @param {proj.Projection} projection default the source projection
+             * @param {Projection} projection default the source projection
              * @param {Object} options
              *  @param {string} options.INFO_FORMAT response format text/plain, text/html, application/json, default text/plain
              *  @param {function} options.callback a function that take the response as parameter
              *  @param {function} options.error function called when an error occurred
              */
-            getFeatureInfo(coord: Coordinate, resolution: number, projection: proj.Projection, options: {
+            getFeatureInfo(coord: Coordinate, resolution: number, projection: Projection, options: {
                 INFO_FORMAT: string;
                 callback: (...params: any[]) => any;
                 error: (...params: any[]) => any;
@@ -391,23 +398,23 @@ declare namespace ol {
          * @extends {VectorSource}
          * @param {Object} options VectorSourceOptions + grid option
          *  @param {VectorSource} options.source Source
-         *  @param {number} [options.size] size of the grid in meter, default 200m
+         *  @param {number} [options.Size] Size of the grid in meter, default 200m
          *  @param {(f: Feature) => Point} [options.geometryFunction] Function that takes an Feature as argument and returns an Point as feature's center.
          *  @param {(bin: Feature, features: Array<Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
          */
         class GridBin extends VectorSource {
             constructor(options: {
                 source: VectorSource;
-                size?: number;
+                Size?: number;
             });
             /** Set grid projection
              * @param {ProjectionLike} proj
              */
             setGridProjection(proj: ProjectionLike): void;
-            /** Set grid size
-             * @param {number} size
+            /** Set grid Size
+             * @param {number} Size
              */
-            setSize(size: number): void;
+            setSize(Size: number): void;
             /** Get the grid geometry at the coord
              * @param {Coordinate} coord
              * @returns {Polygon}
@@ -423,7 +430,7 @@ declare namespace ol {
          * @extends {VectorSource}
          * @param {Object} options VectorSourceOptions + HexGridOptions
          *  @param {VectorSource} options.source Source
-         *  @param {number} [options.size] size of the hexagon in map units, default 80000
+         *  @param {number} [options.Size] Size of the hexagon in map units, default 80000
          *  @param {Coordinate} [options.origin] origin of the grid, default [0,0]
          *  @param {import('../render/HexGrid').HexagonLayout} [options.layout] grid layout, default pointy
          *  @param {(f: Feature) => Point} [options.geometryFunction] Function that takes an Feature as argument and returns an Point as feature's center.
@@ -432,7 +439,7 @@ declare namespace ol {
         class HexBin extends VectorSource {
             constructor(options: {
                 source: VectorSource;
-                size?: number;
+                Size?: number;
                 origin?: Coordinate;
             });
             /** The HexGrid
@@ -445,12 +452,12 @@ declare namespace ol {
              * @api
              */
             getGridGeomAt(coord: Coordinate): Polygon;
-            /**	Set the inner HexGrid size.
+            /**	Set the inner HexGrid Size.
              * 	@param {number} newSize
              * 	@param {boolean} noreset If true, reset will not be called (It need to be called through)
              */
             setSize(newSize: number, noreset: boolean): void;
-            /**	Get the inner HexGrid size.
+            /**	Get the inner HexGrid Size.
              * 	@return {number}
              */
             getSize(): number;
@@ -486,21 +493,21 @@ declare namespace ol {
          * @extends {VectorSource}
          * @param {Object} options VectorSourceOptions + grid option
          *  @param {VectorSource} options.source Source
-         *  @param {number} [options.size] size of the grid in meter, default 200m
+         *  @param {number} [options.Size] Size of the grid in meter, default 200m
          *  @param {(f: Feature) => Point} [options.geometryFunction] Function that takes an Feature as argument and returns an Point as feature's center.
          *  @param {(bin: Feature, features: Array<Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
          */
         class InseeBin extends VectorSource {
             constructor(options: {
                 source: VectorSource;
-                size?: number;
+                Size?: number;
             });
-            /** Set grid size
-             * @param {number} size
+            /** Set grid Size
+             * @param {number} Size
              */
-            setSize(size: number): void;
-            /** Get grid size
-             * @return {number} size
+            setSize(Size: number): void;
+            /** Get grid Size
+             * @return {number} Size
              */
             getSize(): number;
             /** Get the grid geometry at the coord
@@ -509,7 +516,7 @@ declare namespace ol {
              * @api
              */
             getGridGeomAt(coord: Coordinate): Polygon;
-            /** Get grid extent
+            /** Get grid Extent
              * @param {ProjectionLike} proj
              * @return {Extent}
              */
@@ -537,7 +544,7 @@ declare namespace ol {
             * @return {boolean} true: add the feature to the layer
             * @API stable
              */
-            readFeature(the: feature, wiki: attributes): boolean;
+            readFeature(featue: Feature, attibutes: attributes): boolean;
             /** Overwrite Vector clear to fire clearstart / clearend event
              */
             clear(): void;
@@ -552,7 +559,7 @@ declare namespace ol {
          *  @param {boolean} options.node get nodes, default: true
          *  @param {boolean} options.way get ways, default: true
          *  @param {boolean} options.rel get relations, default: false
-         *  @param {number} options.maxResolution maximum resolution to load features
+         *  @param {number} options.maxResolution maximum resolution to load Features
          *  @param {string|Attribution|Array<string>} options.attributions source attribution, default OSM attribution
          *  @param {loadingstrategy} options.strategy loading strategy, default loadingstrategy.bbox
          */
@@ -599,7 +606,7 @@ declare namespace ol {
             * @return {boolean} true: add the feature to the layer
             * @API stable
              */
-            readFeature(the: feature, wiki: attributes): boolean;
+            readFeature(the: Feature, wiki: attributes): boolean;
             /** Overwrite #Vector clear to fire clearstart / clearend event
              */
             clear(): void;
@@ -613,14 +620,13 @@ declare namespace ol {
      * @namespace control
      * @see {@link https://openlayers.org/en/master/apidoc/module-ol_contrhtml}
      */
-    namespace control {
+ declare  namespace control {
         /** Openlayers base class for controls.
          * A control is a visible widget with a DOM element in a fixed position on the screen.
          * They can involve user input (buttons), or be informational only; the position is determined using CSS.
          * @namespace contrControl
          * @see {@link http://openlayers.org/en/latest/apidoc/module-ol_control_Contrhtml}
          */
-        namespace Control { }
         /**
          * @classdesc
          *   Attribution Control integrated in the canvas (for jpeg/png
@@ -629,11 +635,11 @@ declare namespace ol {
          * @constructor
          * @extends {contrControl}
          * @param {Object=} options extend the control options.
-         *  @param {style.Style} options.style style used to draw the title.
+         *  @param {Style} options.style style used to draw the title.
          */
         class CanvasBase extends contrControl {
             constructor(options?: {
-                style: style.Style;
+                style: Style;
             });
             /**
              * Remove the control from its current map and attach it to the new map.
@@ -769,9 +775,9 @@ declare namespace ol {
          *  @param {string | undefined} options.inputLabel label for the input, default none
          *  @param {string | undefined} options.noCollapse prevent collapsing on input blur, default false
          *  @param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
-         *  @param {integer | undefined} options.minLength minimum length to start searching, default 1
-         *  @param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
-         *  @param {integer | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
+         *  @param {number | undefined} options.minLength minimum length to start searching, default 1
+         *  @param {number | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+         *  @param {number | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
          *  @param {function} options.getTitle a function that takes a feature and return the name to display in the index.
          *  @param {function} options.autocomplete a function that take a search string and callback function to send an array
          */
@@ -784,9 +790,9 @@ declare namespace ol {
                 inputLabel: string | undefined;
                 noCollapse: string | undefined;
                 typing: number | undefined;
-                minLength: integer | undefined;
-                maxItems: integer | undefined;
-                maxHistory: integer | undefined;
+                minLength: number | undefined;
+                maxItems: number | undefined;
+                maxHistory: number | undefined;
                 getTitle: (...params: any[]) => any;
                 autocomplete: (...params: any[]) => any;
             });
@@ -856,8 +862,8 @@ declare namespace ol {
          *	@param {string | undefined} options.label Text label to use for the search button, default "search"
          *	@param {string | undefined} options.placeholder placeholder, default "Search..."
          *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
-         *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
-         *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+         *	@param {number | undefined} options.minLength minimum length to start searching, default 3
+         *	@param {number | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
          *  @param {function | undefined} options.handleResponse Handle server response to pass the features array to the list
          *
          *	@param {string|undefined} options.url Url of the search api
@@ -870,8 +876,8 @@ declare namespace ol {
                 label: string | undefined;
                 placeholder: string | undefined;
                 typing: number | undefined;
-                minLength: integer | undefined;
-                maxItems: integer | undefined;
+                minLength: number | undefined;
+                maxItems: number | undefined;
                 handleResponse: ((...params: any[]) => any) | undefined;
                 url: string | undefined;
                 authentication: string | undefined;
@@ -958,8 +964,8 @@ declare namespace ol {
          *	@param {string | undefined} options.label Text label to use for the search button, default "search"
          *	@param {string | undefined} options.placeholder placeholder, default "Search..."
          *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
-         *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
-         *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+         *	@param {number | undefined} options.minLength minimum length to start searching, default 3
+         *	@param {number | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
          *  @param {function | undefined} options.handleResponse Handle server response to pass the features array to the list
          *
          *	@param {string|undefined} options.url Url to photon api, default "http://photon.komoot.de/api/"
@@ -1053,8 +1059,8 @@ declare namespace ol {
          *	@param {string | undefined} options.label Text label to use for the search button, default "search"
          *	@param {string | undefined} options.placeholder placeholder, default "Search..."
          *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
-         *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
-         *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+         *	@param {number | undefined} options.minLength minimum length to start searching, default 3
+         *	@param {number | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
          *
          *	@param {StreetAddress|PositionOfInterest|CadastralParcel|Commune} options.type type of search. Using Commune will return the INSEE code, default StreetAddress,PositionOfInterest
          * @see {@link https://geoservices.ign.fr/documentation/geoservices/geocodage.html}
@@ -1068,8 +1074,8 @@ declare namespace ol {
                 label: string | undefined;
                 placeholder: string | undefined;
                 typing: number | undefined;
-                minLength: integer | undefined;
-                maxItems: integer | undefined;
+                minLength: number | undefined;
+                maxItems: number | undefined;
                 type: StreetAddress | PositionOfInterest | CadastralParcel | Commune;
             });
             /** Returns the text to be displayed in the menu
@@ -1160,8 +1166,8 @@ declare namespace ol {
          *  @param {boolean} options.reordering allow layer reordering, default true
          *  @param {boolean} options.trash add a trash button to delete the layer, default false
          *  @param {function} options.oninfo callback on click on info button, if none no info button is shown DEPRECATED: use on(info) instead
-         *  @param {boolean} options.extent add an extent button to zoom to the extent of the layer
-         *  @param {function} options.onextent callback when click on extent, default fits view to extent
+         *  @param {boolean} options.Extent add an Extent button to zoom to the Extent of the layer
+         *  @param {function} options.onExtent callback when click on Extent, default fits view to Extent
          *  @param {number} options.drawDelay delay in ms to redraw the layer (usefull to prevent flickering when manipulating the layers)
          *  @param {boolean} options.collapsed collapse the layerswitcher at beginning, default true
          *
@@ -1178,8 +1184,8 @@ declare namespace ol {
                 reordering: boolean;
                 trash: boolean;
                 oninfo: (...params: any[]) => any;
-                extent: boolean;
-                onextent: (...params: any[]) => any;
+                Extent: boolean;
+                onExtent: (...params: any[]) => any;
                 drawDelay: number;
                 collapsed: boolean;
             });
@@ -1190,7 +1196,7 @@ declare namespace ol {
              * @param {layer} layer
              * @return {boolean} true if the layer is displayed
              */
-            displayInLayerSwitcher(layer: layer): boolean;
+            displayInLayerSwitcher(layer: Layer): boolean;
             /**
              * Set the map instance the control is associated with.
              * @param {_ol_Map_} map The map instance.
@@ -1236,7 +1242,7 @@ declare namespace ol {
              * @param {Array<layer>} related layers
              */
             switchLayerVisibility(l: layer, related: layer[]): void;
-            /** Check if layer is on the map (depending on zoom and extent)
+            /** Check if layer is on the map (depending on zoom and Extent)
              * @param {layer}
              * @return {boolean}
              */
@@ -1356,11 +1362,11 @@ declare namespace ol {
          * @constructor
          * @extends {contrAttribution}
          * @param {Object=} options extend the contrAttribution options.
-         * 	@param {style.Style} options.style  option is usesd to draw the text.
+         * 	@param {Style} options.style  option is usesd to draw the text.
          */
         class CanvasAttribution extends contrAttribution {
             constructor(options?: {
-                style: style.Style;
+                style: Style;
             });
             /**
              * Draw attribution on canvas
@@ -1369,9 +1375,9 @@ declare namespace ol {
             setCanvas(b: boolean): void;
             /**
              * Change the control style
-             * @param {style.Style} style
+             * @param {Style} style
              */
-            setStyle(style: style.Style): void;
+            setStyle(style: Style): void;
             /**
              * Remove the control from its current map and attach it to the new map.
              * Subclasses may set up event handlers to get notified about changes to
@@ -1389,25 +1395,25 @@ declare namespace ol {
          * @constructor
          * @extends {contrScaleLine}
          * @param {Object=} options extend the contrScaleLine options.
-         * 	@param {style.Style} options.style used to draw the scale line (default is black/white, 10px Arial).
+         * 	@param {Style} options.style used to draw the scale line (default is black/white, 10px Arial).
          */
         class CanvasScaleLine extends contrScaleLine {
             constructor(options?: {
-                style: style.Style;
+                style: Style;
             });
             /**
              * Remove the control from its current map and attach it to the new map.
              * Subclasses may set up event handlers to get notified about changes to
              * the map here.
-             * @param {_ol_Map_} map Map.
+             * @param {Map} map Map.
              * @api stable
              */
             setMap(map: _ol_Map_): void;
             /**
              * Change the control style
-             * @param {_ol_style_Style_} style
+             * @param {Style} style
              */
-            setStyle(style: _ol_style_Style_): void;
+            setStyle(style: Style): void;
         }
         /**
          * A title Control integrated in the canvas (for jpeg/png
@@ -1416,18 +1422,18 @@ declare namespace ol {
          * @extends {contrCanvasBase}
          * @param {Object=} options extend the control options.
          *  @param {string} options.title the title, default 'Title'
-         *  @param {style.Style} options.style style used to draw the title.
+         *  @param {Style} options.style style used to draw the title.
          */
         class CanvasTitle extends contrCanvasBase {
             constructor(options?: {
                 title: string;
-                style: style.Style;
+                style: Style;
             });
             /**
              * Change the control style
-             * @param {style.Style} style
+             * @param {Style} style
              */
-            setStyle(style: style.Style): void;
+            setStyle(style: Style): void;
             /**
              * Set the map title
              * @param {string} map title.
@@ -1456,10 +1462,10 @@ declare namespace ol {
              * Remove the control from its current map and attach it to the new map.
              * Subclasses may set up event handlers to get notified about changes to
              * the map here.
-             * @param {o.Map} map Map.
+             * @param {_ol_Map_} map Map.
              * @api stable
              */
-            setMap(map: o.Map): void;
+            setMap(map: _ol_Map_): void;
             /** Get canvas overlay
              */
             getCanvas(): void;
@@ -1495,24 +1501,24 @@ declare namespace ol {
          * @extends {contrCanvasBase}
          * @param {Object=} options extend the control options.
          *  @param {string} options.className CSS class name
-         *  @param {style.Style} options.style style used to draw in the canvas
-         *  @param {proj.ProjectionLike} options.projection	Projection. Default is the view projection.
+         *  @param {Style} options.style style used to draw in the canvas
+         *  @param {ProjectionLike} options.projection	Projection. Default is the view projection.
          *  @param {Coordinate.CoordinateFormat} options.coordinateFormat A function that takes a Coordinate and transforms it into a string.
          *  @param {boolean} options.canvas true to draw in the canvas
          */
         class CenterPosition extends contrCanvasBase {
             constructor(options?: {
                 className: string;
-                style: style.Style;
-                projection: proj.ProjectionLike;
+                style: Style;
+                projection: ProjectionLike;
                 coordinateFormat: Coordinate.CoordinateFormat;
                 canvas: boolean;
             });
             /**
              * Change the control style
-             * @param {style.Style} style
+             * @param {Style} style
              */
-            setStyle(style: style.Style): void;
+            setStyle(style: Style): void;
             /**
              * Draw on canvas
              * @param {boolean} b draw the attribution on canvas.
@@ -1567,7 +1573,7 @@ declare namespace ol {
             getTextFont(): void;
         }
         /**
-         * Draw a compass on the map. The position/size of the control is defined in the css.
+         * Draw a compass on the map. The position/Size of the control is defined in the css.
          *
          * @constructor
          * @extends {contrCanvasBase}
@@ -1703,7 +1709,7 @@ declare namespace ol {
             /** Set tool bar position
             *	@param {top|left|bottom|right} pos
              */
-            setPosition(pos: top | left | bottom | right): void;
+            setPosition(pos: 'top' | 'left' | 'bottom '| 'right'): void;
             /** Add a control to the bar
             *	@param {_ol_control_} c control to add
              */
@@ -1792,7 +1798,7 @@ declare namespace ol {
              */
             setBookmarks(bmark: any): void;
             /** Get Geo bookmarks
-            * @return {any} a list of bookmarks : { BM1:{pos:Coordinates, zoom: integer}, BM2:{pos:Coordinates, zoom: integer} }
+            * @return {any} a list of bookmarks : { BM1:{pos:Coordinates, zoom: number}, BM2:{pos:Coordinates, zoom: number} }
              */
             getBookmarks(): any;
             /** Remove a Geo bookmark
@@ -1801,11 +1807,11 @@ declare namespace ol {
             removeBookmark(name: string): void;
             /** Add a new Geo bookmark (replace existing one if any)
             * @param {string} name name of the bookmark (display in the menu)
-            * @param {_ol_coordinate_} position default current position
+            * @param {Coordinate} position default current position
             * @param {number} zoom default current map zoom
             * @param {bool} permanent prevent from deletion, default false
              */
-            addBookmark(name: string, position: _ol_coordinate_, zoom: number, permanent: boolean): void;
+            addBookmark(name: string, position: Coordinate, zoom: number, permanent: boolean): void;
         }
         /** Control bar for OL3
          * The control bar is a container for other controls. It can be used to create toolbars.
@@ -1880,10 +1886,10 @@ declare namespace ol {
          * 	@param {boolean} follow follow the map when center change, default false
          * 	@param {top|bottom-left|right} align position as top-left, etc.
          * 	@param {Array<layer>} layers list of layers to display on the globe
-         * 	@param {style.Style | Array.<style.Style> | undefined} style style to draw the position on the map , default a marker
+         * 	@param {Style | Array.<Style> | undefined} style style to draw the position on the map , default a marker
          */
         class Globe extends contrControl {
-            constructor(options?: any, follow: boolean, align: 'top' | 'bottom-left' | 'right', layers: layer[], style: style.Style | style.Style[] | undefined);
+            constructor(options?: any, follow: boolean, align: 'top' | 'bottom-left' | 'right', layers: layer[], style: Style | Style[] | undefined);
             /**
              * Set the map instance the control associated with.
              * @param {Map} map The map instance.
@@ -1904,10 +1910,10 @@ declare namespace ol {
              */
             setPosition(align: 'top' | 'bottom-left' | 'right'): void;
             /** Set the globe center
-            * @param {_ol_coordinate_} center the point to center to
+            * @param {Coordinate} center the point to center to
             * @param {boolean} show show a pointer on the map, defaylt true
              */
-            setCenter(center: _ol_coordinate_, show: boolean): void;
+            setCenter(center: Coordinate, show: boolean): void;
         }
         /**
          * Draw a graticule on the map.
@@ -1917,7 +1923,7 @@ declare namespace ol {
          * @param {Object=} _ol_control_ options.
          *  @param {projectionLike} options.projection projection to use for the graticule, default EPSG:4326
          *  @param {number} options.maxResolution max resolution to display the graticule
-         *  @param {style.Style} options.style Style to use for drawing the graticule, default black.
+         *  @param {Style} options.style Style to use for drawing the graticule, default black.
          *  @param {number} options.step step beetween lines (in proj units), default 1
          *  @param {number} options.stepCoord show a coord every stepCoord, default 1
          *  @param {number} options.spacing spacing beetween lines (in px), default 40px
@@ -1973,10 +1979,10 @@ declare namespace ol {
          * @extends {contrCanvasBase}
          * @fires select
          * @param {Object=} Control options.
-         *  @param {style.Style} options.style Style to use for drawing the grid (stroke and text), default black.
+         *  @param {Style} options.style Style to use for drawing the grid (stroke and text), default black.
          *  @param {number} options.maxResolution max resolution to display the graticule
-         *  @param {extent} options.extent extent of the grid, required
-         *  @param {size} options.size number of lines and cols, required
+         *  @param {Extent} options.Extent Extent of the grid, required
+         *  @param {Size} options.Size number of lines and cols, required
          *  @param {number} options.margin margin to display text (in px), default 0px
          *  @param {VectorSource} options.source source to use for the index, default none (use setIndex to reset the index)
          *  @param {string | function} options.property a property to display in the index or a function that takes a feature and return the name to display in the index, default 'name'.
@@ -2118,7 +2124,7 @@ declare namespace ol {
              * @param {boolean} scroll scroll the line to center on the image, default true
              * @api
              */
-            select(feature: feature, scroll: boolean): void;
+            select(feature: Feature, scroll: boolean): void;
         }
         /**
          * Geoportail isochrone Contr
@@ -2135,9 +2141,9 @@ declare namespace ol {
          *	@param {string | undefined} options.inputLabel label for the input, default none
          *	@param {string | undefined} options.noCollapse prevent collapsing on input blur, default false
          *	@param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
-         *	@param {integer | undefined} options.minLength minimum length to start searching, default 1
-         *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
-         *	@param {integer | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
+         *	@param {number | undefined} options.minLength minimum length to start searching, default 1
+         *	@param {number | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+         *	@param {number | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
          *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index.
          *	@param {function} options.autocomplete a function that take a search string and callback function to send an array
          *
@@ -2152,9 +2158,9 @@ declare namespace ol {
                 inputLabel: string | undefined;
                 noCollapse: string | undefined;
                 typing: number | undefined;
-                minLength: integer | undefined;
-                maxItems: integer | undefined;
-                maxHistory: integer | undefined;
+                minLength: number | undefined;
+                maxItems: number | undefined;
+                maxHistory: number | undefined;
                 getTitle: (...params: any[]) => any;
                 autocomplete: (...params: any[]) => any;
                 exclusions: string;
@@ -2251,7 +2257,7 @@ declare namespace ol {
              * @param {Array<layer>} related layers
              */
             switchLayerVisibility(l: layer, related: layer[]): void;
-            /** Check if layer is on the map (depending on zoom and extent)
+            /** Check if layer is on the map (depending on zoom and Extent)
              * @param {layer}
              * @return {boolean}
              */
@@ -2325,7 +2331,7 @@ declare namespace ol {
              * @param {Array<layer>} related layers
              */
             switchLayerVisibility(l: layer, related: layer[]): void;
-            /** Check if layer is on the map (depending on zoom and extent)
+            /** Check if layer is on the map (depending on zoom and Extent)
              * @param {layer}
              * @return {boolean}
              */
@@ -2337,29 +2343,29 @@ declare namespace ol {
          * @param {*} options
          *  @param {String} options.className class of the control
          *  @param {String} options.title Legend title
-         *  @param {size | undefined} options.size Size of the symboles in the legend, default [40, 25]
-         *  @param {int | undefined} options.margin Size of the symbole's margin, default 10
+         *  @param {Size | undefined} options.Size Size of the symboles in the legend, default [40, 25]
+         *  @param {number | undefined} options.margin Size of the symbole's margin, default 10
          *  @param {boolean | undefined} options.collapsed Specify if attributions should be collapsed at startup. Default is true.
          *  @param {boolean | undefined} options.collapsible Specify if attributions can be collapsed, default true.
          *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
-         *  @param { style.Style | Array<style.Style> | StyleFunction | undefined	} options.style a style or a style function to use with features
+         *  @param { Style | Array<Style> | StyleFunction | undefined	} options.style a style or a style function to use with features
          * @extends {contrControl}
          */
         class Legend extends contrControl {
             constructor(options: {
                 className: string;
                 title: string;
-                size: size | undefined;
-                margin: int | undefined;
+                Size: Size | undefined;
+                margin: number | undefined;
                 collapsed: boolean | undefined;
                 collapsible: boolean | undefined;
                 target: Element | string | undefined;
-                style: style.Style | style.Style[] | StyleFunction | undefined;
+                style: Style | Style[] | StyleFunction | undefined;
             });
             /** Set the style
-             * @param { style.Style | Array<style.Style> | StyleFunction | undefined	} style a style or a style function to use with features
+             * @param { Style | Array<Style> | StyleFunction | undefined	} style a style or a style function to use with features
              */
-            setStyle(style: style.Style | style.Style[] | StyleFunction | undefined): void;
+            setStyle(style: Style | Style[] | StyleFunction | undefined): void;
             /** Add a new row to the legend
              * * You can provide in options:
              * - a feature width a style
@@ -2368,13 +2374,13 @@ declare namespace ol {
              * - or a style and a geometry type
              * @param {*} options a list of parameters
              *  @param {Feature} options.feature a feature to draw
-             *  @param {style.Style} options.style the style to use if no feature is provided
+             *  @param {Style} options.style the style to use if no feature is provided
              *  @param {*} options.properties properties to use with a style function
              *  @param {string} options.typeGeom type geom to draw with the style or the properties
              */
             addRow(options: {
                 feature: Feature;
-                style: style.Style;
+                style: Style;
                 properties: any;
                 typeGeom: string;
             }): void;
@@ -2386,14 +2392,14 @@ declare namespace ol {
             removeRow(index: number) : void;
 
             /** Get a legend row
-             * @param {int} index
+             * @param {number} index
              * @return {*}
              */
-            getRow(index: int): any;
+            getRow(index: number): any;
             /** Get a legend row
-             * @return {int}
+             * @return {number}
              */
-            getLength(): int;
+            getLength(): number;
             /** Refresh the legend
              */
             refresh(): void;
@@ -2414,19 +2420,19 @@ declare namespace ol {
              * - or a style and a geometry type
              * @param {*} options
              *  @param {Feature} options.feature a feature to draw
-             *  @param {style.Style} options.style the style to use if no feature is provided
+             *  @param {Style} options.style the style to use if no feature is provided
              *  @param {*} options.properties properties to use with a style function
              *  @param {string} options.typeGeom type geom to draw with the style or the properties
              * @param {Canvas|undefined} canvas a canvas to draw in
-             * @param {int|undefined} row row number to draw in canvas
+             * @param {number|undefined} row row number to draw in canvas
              * @return {CanvasElement}
              */
             getStyleImage(options: {
                 feature: Feature;
-                style: style.Style;
+                style: Style;
                 properties: any;
                 typeGeom: string;
-            }, canvas: Canvas | undefined, row: int | undefined): CanvasElement;
+            }, canvas: Canvas | undefined, row: number | undefined): CanvasElement;
         }
         /** A control to jump from one zone to another.
          *
@@ -2437,7 +2443,7 @@ declare namespace ol {
          *	@param {string} options.className class name
          *	@param {layer.Layer} options.layer layer to display in the control
          *	@param {ProjectionLike} options.projection projection of the control, Default is EPSG:3857 (Spherical Mercator).
-         *  @param {Array<any>} options.zone an array of zone: { name, extent (in EPSG:4326) }
+         *  @param {Array<any>} options.zone an array of zone: { name, Extent (in EPSG:4326) }
          *  @param {bolean} options.centerOnClick center on click when click on zones, default true
          */
         class MapZone extends contrControl {
@@ -2544,7 +2550,7 @@ declare namespace ol {
          *  @param {boolean} options.rotation enable rotation, default false
          *  @param {top|bottom-left|right} options.align position
          *  @param {Array<layer>} options.layers list of layers
-         *  @param {style.Style | Array.<style.Style> | undefined} options.style style to draw the map extent on the overveiw
+         *  @param {Style | Array.<Style> | undefined} options.style style to draw the map Extent on the overveiw
          *  @param {bool|elastic} options.panAnimation use animation to center map on click, default true
          */
         class Overview extends contrControl {
@@ -2555,11 +2561,11 @@ declare namespace ol {
                 rotation: boolean;
                 align: 'top' | 'bottom-left' | 'right';
                 layers: layer[];
-                style: style.Style | style.Style[] | undefined;
+                style: Style | Style[] | undefined;
                 panAnimation: boolean | elastic;
             });
             /** Elastic bounce
-             *	@param {Int} bounce number of bounce
+             *	@param {number} bounce number of bounce
              *	@param {Number} amplitude amplitude of the bounce [0,1]
              *	@return {Number}
              * /
@@ -2573,15 +2579,15 @@ declare namespace ol {
                 }
               }
               /** Elastic bounce
-             *	@param {Int} bounce number of bounce
+             *	@param {number} bounce number of bounce
              *	@param {Number} amplitude amplitude of the bounce [0,1]
              *	@return {Number}
              */
-            elasticFn(bounce: Int, amplitude: number, bounce: Int, amplitude: number): void;
+            elasticFn(bounce: number, amplitude: number, bounce: number, amplitude: number): void;
             /** Get overview map
             *	@return {Map}
              */
-            getOverviewMap(): Map;
+            getOverviewMap(): _ol_Map_;
             /** Toggle overview map
              */
             toggleMap(): void;
@@ -2593,8 +2599,8 @@ declare namespace ol {
              * Set the map instance the control associated with.
              * @param {Map} map The map instance.
              */
-            setMap(map: Map): void;
-            /** Calculate the extent of the map and draw it on the overview
+            setMap(map: _ol_Map_): void;
+            /** Calculate the Extent of the map and draw it on the overview
              */
             calcExtent_(): void;
         }
@@ -2609,7 +2615,7 @@ declare namespace ol {
          * @extends {contrControl}
          * @param {Object=} options
          *	@param {bool} options.urlReplace replace url or not, default true
-         *	@param {integer} options.fixed number of digit in coords, default 6
+         *	@param {number} options.fixed number of digit in coords, default 6
          *	@param {bool} options.anchor use "#" instead of "?" in href
          *	@param {bool} options.hidden hide the button on the map, default false
          *	@param {function} options.onclick a function called when control is clicked
@@ -2617,7 +2623,7 @@ declare namespace ol {
         class Permalink extends contrControl {
             constructor(options?: {
                 urlReplace: boolean;
-                fixed: integer;
+                fixed: number;
                 anchor: boolean;
                 hidden: boolean;
                 onclick: (...params: any[]) => any;
@@ -2759,10 +2765,10 @@ declare namespace ol {
              *		- zmin {Number|undefined} default 0
              *		- zmax {Number|undefined} default max Z of the feature
              *		- graduation {Number|undefined} z graduation default 100
-             *		- amplitude {integer|undefined} amplitude of the altitude, default zmax-zmin
+             *		- amplitude {number|undefined} amplitude of the altitude, default zmax-zmin
              * @api stable
              */
-            setGeometry(f: Feature | geom, options?: any): void;
+            setGeometry(f: Feature | Geometry, options?: any): void;
             /** Get profil image
             * @param {string|undefined} type image format or 'canvas' to get the canvas image, default image/png.
             * @param {Number|undefined} encoderOptions between 0 and 1 indicating image quality image/jpeg or image/webp, default 0.92.
@@ -2785,9 +2791,9 @@ declare namespace ol {
          *	@param {string | undefined} options.inputLabel label for the input, default none
          *	@param {string | undefined} options.noCollapse prevent collapsing on input blur, default false
          *	@param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
-         *	@param {integer | undefined} options.minLength minimum length to start searching, default 1
-         *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
-         *	@param {integer | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
+         *	@param {number | undefined} options.minLength minimum length to start searching, default 1
+         *	@param {number | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+         *	@param {number | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
          *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index.
          *	@param {function} options.autocomplete a function that take a search string and callback function to send an array
          */
@@ -2800,9 +2806,9 @@ declare namespace ol {
                 inputLabel: string | undefined;
                 noCollapse: string | undefined;
                 typing: number | undefined;
-                minLength: integer | undefined;
-                maxItems: integer | undefined;
-                maxHistory: integer | undefined;
+                minLength: number | undefined;
+                maxItems: number | undefined;
+                maxHistory: number | undefined;
                 getTitle: (...params: any[]) => any;
                 autocomplete: (...params: any[]) => any;
             });
@@ -2849,7 +2855,7 @@ declare namespace ol {
              * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: Map): void;
+            setMap(map: _ol_Map_): void;
             /** Display the scale
              */
             _showScale(): void;
@@ -2875,8 +2881,8 @@ declare namespace ol {
          *	@param {string | undefined} options.label Text label to use for the search button, default "search"
          *	@param {string | undefined} options.placeholder placeholder, default "Search..."
          *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
-         *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
-         *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+         *	@param {number | undefined} options.minLength minimum length to start searching, default 3
+         *	@param {number | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
          *
          *	@param {string|undefined} options.url Url to BAN api, default "https://api-adresse.data.gouv.fr/search/"
          *	@param {boolean} options.position Search, with priority to geo position, default false
@@ -2950,8 +2956,8 @@ declare namespace ol {
          *	@param {string | undefined} options.label Text label to use for the search button, default "search"
          *	@param {string | undefined} options.placeholder placeholder, default "Search..."
          *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 300.
-         *	@param {integer | undefined} options.minLength minimum length to start searching, default 1
-         *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+         *	@param {number | undefined} options.minLength minimum length to start searching, default 1
+         *	@param {number | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
          *
          *	@param {string | undefined} options.property a property to display in the index, default 'name'.
          *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return the property
@@ -3023,8 +3029,8 @@ declare namespace ol {
          *	@param {string | undefined} options.label Text label to use for the search button, default "search"
          *	@param {string | undefined} options.placeholder placeholder, default "Search..."
          *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 300.
-         *	@param {integer | undefined} options.minLength minimum length to start searching, default 1
-         *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+         *	@param {number | undefined} options.minLength minimum length to start searching, default 1
+         *	@param {number | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
          *
          *	@param {string | undefined} options.property a property to display in the index, default 'name'.
          *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return the property
@@ -3062,12 +3068,12 @@ declare namespace ol {
             setSource(source: VectorSource): void;
             /** Autocomplete function
             * @param {string} s search string
-            * @param {int} max max
+            * @param {number} max max
             * @param {function} cback a callback function that takes an array to display in the autocomplete field (for asynchronous search)
             * @return {Array<any>|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
             * @api
              */
-            autocomplete(s: string, max: int, cback: (...params: any[]) => any): any[] | false;
+            autocomplete(s: string, max: number, cback: (...params: any[]) => any): any[] | false;
             /** Get the input field
             *	@return {Element}
             *	@api
@@ -3114,8 +3120,8 @@ declare namespace ol {
          *  @param {string | undefined} options.label Text label to use for the search button, default "search"
          *  @param {string | undefined} options.placeholder placeholder, default "Search..."
          *  @param {number | undefined} options.typing a delay on each typing to start searching (ms), default 300.
-         *  @param {integer | undefined} options.minLength minimum length to start searching, default 1
-         *  @param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+         *  @param {number | undefined} options.minLength minimum length to start searching, default 1
+         *  @param {number | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
          */
         class SearchGPS extends contrSearch {
             constructor(Control?: any);
@@ -3185,8 +3191,8 @@ declare namespace ol {
          *	@param {string | undefined} options.label Text label to use for the search button, default "search"
          *	@param {string | undefined} options.placeholder placeholder, default "Search..."
          *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
-         *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
-         *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+         *	@param {number | undefined} options.minLength minimum length to start searching, default 3
+         *	@param {number | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
          *
          *	@param {Number} options.pageSize item per page for parcelle list paging, use -1 for no paging, default 5
          * @see {@link https://geoservices.ign.fr/documentation/geoservices/geocodage.html}
@@ -3200,8 +3206,8 @@ declare namespace ol {
                 label: string | undefined;
                 placeholder: string | undefined;
                 typing: number | undefined;
-                minLength: integer | undefined;
-                maxItems: integer | undefined;
+                minLength: number | undefined;
+                maxItems: number | undefined;
                 pageSize: number;
             });
             /** Set the input parcelle
@@ -3306,8 +3312,8 @@ declare namespace ol {
          *	@param {string | undefined} options.label Text label to use for the search button, default "search"
          *	@param {string | undefined} options.placeholder placeholder, default "Search..."
          *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
-         *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
-         *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+         *	@param {number | undefined} options.minLength minimum length to start searching, default 3
+         *	@param {number | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
          *
          *	@param {string|undefined} options.url URL to Nominatim API, default "https://nominatim.openstreetmap.org/search"
          * @see {@link https://wiki.openstreetmap.org/wiki/Nominatim}
@@ -3386,8 +3392,8 @@ declare namespace ol {
          *  @param {string | undefined} options.label Text label to use for the search button, default "search"
          *  @param {string | undefined} options.placeholder placeholder, default "Search..."
          *  @param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
-         *  @param {integer | undefined} options.minLength minimum length to start searching, default 3
-         *  @param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+         *  @param {number | undefined} options.minLength minimum length to start searching, default 3
+         *  @param {number | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
          *  @param {function | undefined} options.handleResponse Handle server response to pass the features array to the list
          *
          *  @param {string|undefined} options.lang API language, default none
@@ -3518,9 +3524,9 @@ declare namespace ol {
              */
             getConditionsString(): void;
             /** Remove the ith condition
-             * @param {int} i condition index
+             * @param {number} i condition index
              */
-            removeCondition(i: int): void;
+            removeCondition(i: number): void;
             /** Select features by attributes
              * @param {*} options
              *  @param {Array<Vector|undefined} options.sources source to apply rules, default the select sources
@@ -3597,7 +3603,7 @@ declare namespace ol {
             constructor(options?: {
                 className: string;
                 target: Element | undefined;
-                source: Vector | Vector[];
+                source: VectorSource | VectorSource[];
                 property: string;
                 label: string;
                 max: number;
@@ -4004,12 +4010,12 @@ declare namespace ol {
          * @constructor
          * @extends {contrCanvasBase}
          * @param {Object} options
-         *  @param {style.Style|Array<style.Style>} options.style
+         *  @param {Style|Array<Style>} options.style
          *  @param {string} options.composite composite operation = difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
          */
         class Target extends contrCanvasBase {
             constructor(options: {
-                style: style.Style | style.Style[];
+                style: Style | Style[];
                 composite: string;
             });
             /** Set the control visibility
@@ -4285,7 +4291,7 @@ declare namespace ol {
          * @constructor
          * @extends {interaction.Interaction}
          * @param {olx.interaction.InteractionOptions} options Options
-         *  - targetStyle {style.Style|Array<style.Style>} a style to draw the target point, default cross style
+         *  - targetStyle {Style|Array<Style>} a style to draw the target point, default cross style
          *  - composite {string} composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
          */
         class CenterTouch extends interaction.Interaction {
@@ -4325,9 +4331,9 @@ declare namespace ol {
              */
             setMap(): void;
             /** Set clip radius
-             *	@param {integer} radius
+             *	@param {number} radius
              */
-            setRadius(radius: integer): void;
+            setRadius(radius: number): void;
             /** Add a layer to clip
              *	@param {layer|Array<layer>} layer to clip
              */
@@ -4459,12 +4465,12 @@ declare namespace ol {
          * @fires modifyend
          * @param {olx.interaction.DrawHoleOptions} options extend olx.interaction.DrawOptions
          * 	@param {Array<layer.Vector> | function | undefined} options.layers A list of layers from which polygons should be selected. Alternatively, a filter function can be provided. default: all visible layers
-         * 	@param { style.Style | Array<style.Style> | StyleFunction | undefined }	Style for the selected features, default: default edit style
+         * 	@param { Style | Array<Style> | StyleFunction | undefined }	Style for the selected features, default: default edit style
          */
         class DrawHole extends interaction.Interaction {
             constructor(options: {
                 layers: layer.Vector[] | ((...params: any[]) => any) | undefined;
-            }, Style: style.Style | style.Style[] | StyleFunction | undefined);
+            }, Style: Style | Style[] | StyleFunction | undefined);
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
              * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -4496,8 +4502,8 @@ declare namespace ol {
          * @param {olx.interaction.TransformOptions} options
          *  @param {Array<Layer>} source Destination source for the drawn features
          *  @param {Collection<Feature>} features Destination collection for the drawn features
-         *  @param {style.Style | Array.<style.Style> | style.StyleFunction | undefined} style style for the sketch
-         *  @param {integer} sides number of sides, default 0 = circle
+         *  @param {Style | Array.<Style> | StyleFunction | undefined} style style for the sketch
+         *  @param {number} sides number of sides, default 0 = circle
          *  @param { events.ConditionType | undefined } squareCondition A function that takes an MapBrowserEvent and returns a boolean to draw square features.
          *  @param { events.ConditionType | undefined } centerCondition A function that takes an MapBrowserEvent and returns a boolean to draw centered features.
          *  @param { bool } canRotate Allow rotation when centered + square, default: true
@@ -4505,7 +4511,7 @@ declare namespace ol {
          *  @param { number } maxCircleCoordinates Maximum number of point on a circle, default: 100
          */
         class DrawRegular extends interaction.Interaction {
-            constructor(options: olx.interaction.TransformOptions, source: Layer[], features: Collection<Feature>, style: style.Style | style.Style[] | style.StyleFunction | undefined, sides: integer, squareCondition: events.ConditionType | undefined, centerCondition: events.ConditionType | undefined, canRotate: boolean, clickTolerance: number, maxCircleCoordinates: number);
+            constructor(options: olx.interaction.TransformOptions, source: Layer[], features: Collection<Feature>, style: Style | Style[] | StyleFunction | undefined, sides: number, squareCondition: events.ConditionType | undefined, centerCondition: events.ConditionType | undefined, canRotate: boolean, clickTolerance: number, maxCircleCoordinates: number);
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
              * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -4526,10 +4532,10 @@ declare namespace ol {
             reset(): void;
             /**
              * Set the number of sides.
-             * @param {int} number of sides.
+             * @param {number} number of sides.
              * @api stable
              */
-            setSides(number: int): void;
+            setSides(number: number): void;
             /**
              * Allow rotation when centered + square
              * @param {bool}
@@ -4538,10 +4544,10 @@ declare namespace ol {
             canRotate(b: boolean): void;
             /**
              * Get the number of sides.
-             * @return {int} number of sides.
+             * @return {number} number of sides.
              * @api stable
              */
-            getSides(): int;
+            getSides(): number;
             /** Default start angle array for each sides
              */
             startAngle: any;
@@ -4586,7 +4592,7 @@ declare namespace ol {
          *	- type {GeometryType} Drawing type ('Point', 'LineString', 'Polygon') not ('MultiPoint', 'MultiLineString', 'MultiPolygon' or 'Circle'). Required.
          *	- tap {boolean} enable on tap, default true
          *	Inherited params
-         *  - targetStyle {style.Style|Array<style.Style>} a style to draw the target point, default cross style
+         *  - targetStyle {Style|Array<Style>} a style to draw the target point, default cross style
          *  - composite {string} composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
          */
         class DrawTouch extends interaction.CenterTouch {
@@ -4655,7 +4661,7 @@ declare namespace ol {
          * @extends {interaction.Interaction}
          * @fires setattributestart
          * @fires setattributeend
-         * @param {*} options extentinteraction.Select options
+         * @param {*} options Extentinteraction.Select options
          *  @param {boolean} options.active activate the interaction on start, default true
          *  @param {boolean} options.cursor use a paint bucket cursor, default true
          * @param {*} properties The properties as key/value
@@ -4707,9 +4713,9 @@ declare namespace ol {
              */
             setMap(): void;
             /** Set flashlight radius
-             *	@param {integer} radius
+             *	@param {number} radius
              */
-            setRadius(radius: integer): void;
+            setRadius(radius: number): void;
             /** Set flashlight color
              *	@param {flashlight.options} flashlight options param
              *		- color {Color} light color, default transparent
@@ -4749,7 +4755,7 @@ declare namespace ol {
          *	@param {Number} options.tolerance tolerance to add a new point (in projection unit), use LineString.simplify() method, default 5
          *	@param {Number} options.zoom zoom for tracking, default 16
          *	@param {boolean|auto|position|visible} options.followTrack true if you want the interaction to follow the track on the map, default true
-         *	@param { style.Style | Array.<style.Style> | StyleFunction | undefined } options.style Style for sketch features.
+         *	@param { Style | Array.<Style> | StyleFunction | undefined } options.style Style for sketch features.
          */
         class GeolocationDraw extends interaction.Interaction {
             constructor(options: {
@@ -4761,7 +4767,7 @@ declare namespace ol {
                 tolerance: number;
                 zoom: number;
                 followTrack: boolean | auto | position | visible;
-                style: style.Style | style.Style[] | StyleFunction | undefined;
+                style: Style | Style[] | StyleFunction | undefined;
             });
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
@@ -4797,7 +4803,7 @@ declare namespace ol {
             *	true: follow (position+zoom),
             *	'position': follow only position,
             *	'auto': start following until user move the map,
-            *	'visible': center when position gets out of the visible extent
+            *	'visible': center when position gets out of the visible Extent
              */
             setFollowTrack(follow: boolean | 'auto'|'position' | 'visible'): void;
         }
@@ -4872,9 +4878,9 @@ declare namespace ol {
          * @param {*} options
          *	@param {VectorSource|Array{VectorSource}} options.source a list of source to modify (configured with useSpatialIndex set to true)
          *  @param {Collection.<Feature>} options.features collection of feature to modify
-         *  @param {integer} options.pixelTolerance Pixel tolerance for considering the pointer close enough to a segment or vertex for editing. Default is 10.
+         *  @param {number} options.pixelTolerance Pixel tolerance for considering the pointer close enough to a segment or vertex for editing. Default is 10.
          *  @param {function|undefined} options.filter a filter that takes a feature and return true if it can be modified, default always true.
-         *  @param {style.Style | Array<style.Style> | undefined} options.style Style for the sketch features.
+         *  @param {Style | Array<Style> | undefined} options.style Style for the sketch features.
          *  @param {EventsConditionType | undefined} options.condition A function that takes an MapBrowserEvent and returns a boolean to indicate whether that event will be considered to add or move a vertex to the sketch. Default is events.condition.primaryAction.
          *  @param {EventsConditionType | undefined} options.deleteCondition A function that takes an MapBrowserEvent and returns a boolean to indicate whether that event should be handled. By default, events.condition.singleClick with events.condition.altKeyOnly results in a vertex deletion.
          *  @param {EventsConditionType | undefined} options.insertVertexCondition A function that takes an MapBrowserEvent and returns a boolean to indicate whether a new vertex can be added to the sketch features. Default is events.condition.always
@@ -4882,9 +4888,9 @@ declare namespace ol {
         class ModifyFeature extends interaction.Pointer {
             constructor(options: {
                 features: Collection<Feature>;
-                pixelTolerance: integer;
+                pixelTolerance: number;
                 filter: ((...params: any[]) => any) | undefined;
-                style: style.Style | style.Style[] | undefined;
+                style: Style | Style[] | undefined;
                 condition: EventsConditionType | undefined;
                 deleteCondition: EventsConditionType | undefined;
                 insertVertexCondition: EventsConditionType | undefined;
@@ -5013,9 +5019,9 @@ declare namespace ol {
              */
             setMap(): void;
             /** Generate random rain drop
-            *	@param {integer} interval
+            *	@param {number} interval
              */
-            rains(interval: integer): void;
+            rains(interval: number): void;
             /** Disturb water at specified point
             *	@param {Pixel|MapBrowserEvent}
              */
@@ -5092,7 +5098,7 @@ declare namespace ol {
          * @param {olx.interaction.SnapGuidesOptions}
          *	- pixelTolerance {number | undefined} distance (in px) to snap to a guideline, default 10 px
          *  - enableInitialGuides {bool | undefined} whether to draw initial guidelines based on the maps orientation, default false.
-         *	- style {style.Style | Array<style.Style> | undefined} Style for the sektch features.
+         *	- style {Style | Array<Style> | undefined} Style for the sektch features.
          */
         class SnapGuides extends interaction.Interaction {
             constructor(options: olx.interaction.SnapGuidesOptions);
@@ -5143,19 +5149,19 @@ declare namespace ol {
          * @param {*}
          *  @param {VectorSource|Array{VectorSource}} options.source a list of source to split (configured with useSpatialIndex set to true)
          *  @param {Collection.<Feature>} options.features collection of feature to split
-         *  @param {integer} options.snapDistance distance (in px) to snap to an object, default 25px
+         *  @param {number} options.snapDistance distance (in px) to snap to an object, default 25px
          *	@param {string|undefined} options.cursor cursor name to display when hovering an objet
          *  @param {function|undefined} opttion.filter a filter that takes a feature and return true if it can be clipped, default always split.
-         *  @param style.Style | Array<style.Style> | false | undefined} options.featureStyle Style for the selected features, choose false if you don't want feature selection. By default the default edit style is used.
-         *  @param {style.Style | Array<style.Style> | undefined} options.sketchStyle Style for the sektch features.
+         *  @param Style | Array<Style> | false | undefined} options.featureStyle Style for the selected features, choose false if you don't want feature selection. By default the default edit style is used.
+         *  @param {Style | Array<Style> | undefined} options.sketchStyle Style for the sektch features.
          *  @param {function|undefined} options.tolerance Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split.  Default is 1e-10.
          */
         class Split extends interaction.Interaction {
             constructor(options: {
                 features: Collection<Feature>;
-                snapDistance: integer;
+                snapDistance: number;
                 cursor: string | undefined;
-                sketchStyle: style.Style | style.Style[] | undefined;
+                sketchStyle: Style | Style[] | undefined;
                 tolerance: ((...params: any[]) => any) | undefined;
             });
             /**
@@ -5197,11 +5203,11 @@ declare namespace ol {
         class Splitter extends interaction.Interaction {
             constructor(options: olx.interaction.SplitOptions);
             /** Calculate intersection on 2 segs
-            * @param {Array<_ol_coordinate_>} s1 first seg to intersect (2 points)
-            * @param {Array<_ol_coordinate_>} s2 second seg to intersect (2 points)
-            * @return { boolean | _ol_coordinate_ } intersection point or false no intersection
+            * @param {Array<Coordinate>} s1 first seg to intersect (2 points)
+            * @param {Array<Coordinate>} s2 second seg to intersect (2 points)
+            * @return { boolean | Coordinate } intersection point or false no intersection
              */
-            intersectSegs(s1: _ol_coordinate_[], s2: _ol_coordinate_[]): boolean | _ol_coordinate_;
+            intersectSegs(s1: Coordinate[], s2: Coordinate[]): boolean | Coordinate;
             /** Split the source using a feature
             * @param {Feature} feature The feature to use to split.
              */
@@ -5263,7 +5269,7 @@ declare namespace ol {
          * @extends {interaction.Pointer}
          * @param {olx.interaction.TouchCompass}
          *	- onDrag {function|undefined} Function handling "drag" events. It provides a dpixel and a traction (in projection) vector form the center of the compas
-         *	- size {Number} size of the compass in px, default 80
+         *	- Size {Number} Size of the compass in px, default 80
          *	- alpha {Number} opacity of the compass, default 0.5
          */
         class TouchCompass extends interaction.Pointer {
@@ -5352,10 +5358,10 @@ declare namespace ol {
             /**
              * Set sketch style.
              * @param {style} style Style name: 'default','translate','rotate','rotate0','scale','scale1','scale2','scale3','scalev','scaleh1','scalev2','scaleh3'
-             * @param {style.Style|Array<style.Style>} olstyle
+             * @param {Style|Array<Style>} olstyle
              * @api stable
              */
-            setStyle(style: style, olstyle: style.Style | style.Style[]): void;
+            setStyle(style: style, olstyle: Style | Style[]): void;
             /** Draw transform sketch
             * @param {boolean} draw only the center
              */
@@ -5535,7 +5541,7 @@ declare namespace ol {
         * @extends {filter.Base}
         * @param {Object} [options]
         *  @param {Array<Coordinate>} [options.coords]
-        *  @param {Extent} [options.extent]
+        *  @param {Extent} [options.Extent]
         *  @param {string} [options.units] coords units percent (%) or pixel (px)
         *  @param {boolean} [options.keepAspectRatio] keep aspect ratio
         *  @param {string} [options.color] backgroundcolor
@@ -5543,7 +5549,7 @@ declare namespace ol {
         class Clip extends filter.Base {
             constructor(options?: {
                 coords?: Coordinate[];
-                extent?: Extent;
+                Extent?: Extent;
                 units?: string;
                 keepAspectRatio?: boolean;
                 color?: string;
@@ -5646,13 +5652,13 @@ declare namespace ol {
         *  @param {[number, number]} [options.fold] number of fold (horizontal and vertical)
         *  @param {number} [options.margin] margin in px, default 8
         *  @param {number} [options.padding] padding in px, default 8
-        *  @param {number|number[]} [options.fsize] fold size in px, default 8,10
+        *  @param {number|number[]} [options.fSize] fold Size in px, default 8,10
          */
         class Fold extends filter.Base {
             constructor(options?: {
                 margin?: number;
                 padding?: number;
-                fsize?: number | number[];
+                fSize?: number | number[];
             });
             /** Activate / deactivate filter
             *	@param {boolean} b
@@ -5669,7 +5675,7 @@ declare namespace ol {
          * @extends {filter.Base}
          * @param {Object} [options]
          *  @param {string} [options.img]
-         *  @param {number} [options.brickSize] size of te brick, default 30
+         *  @param {number} [options.brickSize] Size of te brick, default 30
          *  @param {null | string | undefined} [options.crossOrigin] crossOrigin attribute for loaded images.
          */
         class Lego extends filter.Base {
@@ -5758,15 +5764,15 @@ declare namespace ol {
          * @fires pause
          * @param {any} options
          *  @param {Vector} options.source the source for the edges
-         *  @param {integer} [options.maxIteration=20000] maximum iterations before a pause event is fired, default 20000
-         *  @param {integer} [options.stepIteration=2000] number of iterations before a calculating event is fired, default 2000
+         *  @param {number} [options.maxIteration=20000] maximum iterations before a pause event is fired, default 20000
+         *  @param {number} [options.stepIteration=2000] number of iterations before a calculating event is fired, default 2000
          *  @param {number} [options.epsilon=1E-6] geometric precision (min distance beetween 2 points), default 1E-6
          */
         class Dijskra {
             constructor(options: {
                 source: Vector;
-                maxIteration?: integer;
-                stepIteration?: integer;
+                maxIteration?: number;
+                stepIteration?: number;
                 epsilon?: number;
             });
             /** Get the weighting of the edge, for example a speed factor
@@ -5863,7 +5869,7 @@ declare namespace ol {
          * @constructor
          * @param {} options
          *	@param {String} options.type Chart type: pie,pie3D, donut or bar
-         *	@param {number} options.radius Chart radius/size, default 20
+         *	@param {number} options.radius Chart radius/Size, default 20
          *	@param {number} options.rotation Rotation in radians (positive rotation clockwise). Default is 0.
          *	@param {bool} options.snapToPixel use integral numbers of pixels, default true
          *	@param {_ol_style_Stroke_} options.stroke stroke style
@@ -5936,7 +5942,7 @@ declare namespace ol {
          *	@param {color} options.color pattern color
          *	@param {style.Fill} options.fill fill color (background)
          *	@param {number} options.offset pattern offset for hash/dot/circle/cross pattern
-         *	@param {number} options.size line size for hash/dot/circle/cross pattern
+         *	@param {number} options.Size line Size for hash/dot/circle/cross pattern
          *	@param {number} options.spacing spacing for hash/dot/circle/cross pattern
          *	@param {number|bool} options.angle angle for hash pattern / true for 45deg dot/circle/cross
          *	@param {number} options.scale pattern scale
@@ -5952,7 +5958,7 @@ declare namespace ol {
                 color: color;
                 fill: style.Fill;
                 offset: number;
-                size: number;
+                Size: number;
                 spacing: number;
                 angle: number | boolean;
                 scale: number;
@@ -5973,12 +5979,12 @@ declare namespace ol {
             /** Static fuction to add char patterns
             *	@param {title}
             *	@param {olx.fillpattern.Option}
-            *		- size {integer} default 10
-            *		- width {integer} default 10
-            *		- height {integer} default 10
+            *		- Size {number} default 10
+            *		- width {number} default 10
+            *		- height {number} default 10
             *		- circles {Array<circles>}
             *		- lines: {Array<pointlist>}
-            *		- stroke {integer}
+            *		- stroke {number}
             *		- fill {bool}
             *		- char {char}
             *		- font {string} default "10px Arial"
@@ -5992,7 +5998,7 @@ declare namespace ol {
         /** Flow line style
          * Draw LineString with a variable color / width
          *
-         * @extends {style.Style}
+         * @extends {Style}
          * @constructor
          * @param {Object} options
          *  @param {boolean} options.visible draw only the visible part of the line, default true
@@ -6001,7 +6007,7 @@ declare namespace ol {
          *  @param {colorLike|function} options.color Stroke color or a function that gets a feature and the position (beetween [0,1]) and returns current color
          *  @param {colorLike} options.color2 Final sroke color
          */
-        class FlowLine extends style.Style {
+        class FlowLine extends Style {
             constructor(options: {
                 visible: boolean;
                 width: number | ((...params: any[]) => any);
@@ -6156,7 +6162,7 @@ declare namespace ol {
          * @param {} options
          *  @param { default | square | round | anchored | folio } options.kind
          *  @param {boolean} options.crop crop within square, default is false
-         *  @param {Number} options.radius symbol size
+         *  @param {Number} options.radius symbol Size
          *  @param {boolean} options.shadow drop a shadow
          *  @param {style.Stroke} options.stroke
          *  @param {String} options.src image src
@@ -6250,7 +6256,7 @@ declare namespace ol {
          *	@param {colorLike} options.color pattern color
          *	@param {style.Fill} options.fill fill color (background)
          *	@param {number} options.offset pattern offset for hash/dot/circle/cross pattern
-         *	@param {number} options.size line size for hash/dot/circle/cross pattern
+         *	@param {number} options.Size line Size for hash/dot/circle/cross pattern
          *	@param {number} options.spacing spacing for hash/dot/circle/cross pattern
          *	@param {number|bool} options.angle angle for hash pattern / true for 45deg dot/circle/cross
          *	@param {number} options.scale pattern scale
@@ -6266,7 +6272,7 @@ declare namespace ol {
                 color: colorLike;
                 fill: style.Fill;
                 offset: number;
-                size: number;
+                Size: number;
                 spacing: number;
                 angle: number | boolean;
                 scale: number;
@@ -6319,7 +6325,7 @@ declare namespace ol {
         /** Hide the target overlay
          */
         function hideTarget(): void;
-        /** Pulse an extent on postcompose
+        /** Pulse an Extent on postcompose
         *	@param {Coordinates} point to pulse
         *	@param {pulse.options} options pulse options param
         *	  @param {projectionLike|undefined} options.projection projection of coords, default no transform
@@ -6340,7 +6346,7 @@ declare namespace ol {
         *		- projection {projection|String|undefined} projection of coords, default none
         *		- delay {Number} delay before mark fadeout
         *		- maxZoom {Number} zoom when mark fadeout
-        *		- style {style.Image|style.Style|Array<style.Style>} Image to draw as markup, default red circle
+        *		- style {style.Image|Style|Array<Style>} Image to draw as markup, default red circle
         *	@return Unique key for the listener with a stop function to stop animation
          */
         function markup(point: Coordinates, pulse: markup.options): any;
@@ -6352,7 +6358,7 @@ declare namespace ol {
         *		- duration {Number} animation duration in ms, default 3000
         *		- amplitude {Number} movement amplitude 0: none - 0.5: start at 0.5*radius of the image - 1: max, default 1
         *		- easing {easing} easing function, default easing.easeOut
-        *		- style {style.Image|style.Style|Array<style.Style>} Image to draw as markup, default red circle
+        *		- style {style.Image|Style|Array<Style>} Image to draw as markup, default red circle
          */
         function pulse(point: Coordinates, pulse: pulse.options): void;
     }
@@ -6541,9 +6547,9 @@ declare namespace ol {
             setClassName(name: string): void;
             /**
              * Set the placemark radius.
-             * @param {number} size size in pixel
+             * @param {number} Size Size in pixel
              */
-            setRadius(size: number): void;
+            setRadius(Size: number): void;
         }
         /**
          * A popup element to be displayed on a feature.
@@ -6804,7 +6810,7 @@ declare namespace ol {
     *	@param {Number} options.duration duration of the animation in ms, default 1000
     *	@param {bool} options.revers revers the animation direction
     *	@param {Number} options.repeat number of time to repeat the animation, default 0
-    *	@param {oo.style.Style} options.hiddenStyle a style to display the feature when playing the animation
+    *	@param {oo.Style} options.hiddenStyle a style to display the feature when playing the animation
     *		to be used to make the feature selectable when playing animation
     *		(@see {@link ../examples/map.featureanimation.select.html}), default the feature
     *		will be hidden when playing (and niot selectable)
@@ -6816,7 +6822,7 @@ declare namespace ol {
             duration: number;
             revers: boolean;
             repeat: number;
-            hiddenStyle: oo.style.Style;
+            hiddenStyle: oo.Style;
             fade: easing.Function;
             easing: easing.Function;
         });
@@ -6847,17 +6853,17 @@ declare namespace ol {
          * @constructor
          * @extends {featureAnimation}
          * @param {featureAnimationBounceOptions} options
-         *	@param {Integer} options.bounce number of bounce, default 3
-         *	@param {Integer} options.amplitude bounce amplitude,default 40
+         *	@param {number} options.bounce number of bounce, default 3
+         *	@param {number} options.amplitude bounce amplitude,default 40
          *	@param {easing} options.easing easing used for decaying amplitude, use function(){return 0} for no decay, default easing.linear
-         *	@param {Integer} options.duration duration in ms, default 1000
+         *	@param {number} options.duration duration in ms, default 1000
          */
         class Bounce extends featureAnimation {
             constructor(options: {
-                bounce: Integer;
-                amplitude: Integer;
+                bounce: number;
+                amplitude: number;
                 easing: easing;
-                duration: Integer;
+                duration: number;
             });
             /** Animate
             * @param {featureAnimationEvent} e
@@ -6944,14 +6950,14 @@ declare namespace ol {
          * @constructor
          * @extends {featureAnimation}
          * @param {featureAnimationShakeOptions} options
-         *	@param {Integer} options.bounce number o bounds, default 6
-         *	@param {Integer} options.amplitude amplitude of the animation, default 40
+         *	@param {number} options.bounce number o bounds, default 6
+         *	@param {number} options.amplitude amplitude of the animation, default 40
          *	@param {bool} options.horizontal shake horizontally default false (vertical)
          */
         class Shake extends featureAnimation {
             constructor(options: {
-                bounce: Integer;
-                amplitude: Integer;
+                bounce: number;
+                amplitude: number;
                 horizontal: boolean;
             });
             /** Animate
@@ -7052,7 +7058,7 @@ declare namespace ol {
      * @constructor
      * @param {Object} param
      *  @param {layer.Vector} param.layer the layer to display in 3D
-     *  @param {style.Style} options.styler drawing style
+     *  @param {Style} options.styler drawing style
      *  @param {number} param.maxResolution  max resolution to render 3D
      *  @param {number} param.defaultHeight default height if none is return by a propertie
      *  @param {function|string|Number} param.height a height function (returns height giving a feature) or a popertie name for the height or a fixed value
@@ -7066,14 +7072,14 @@ declare namespace ol {
         });
         /**
          * Set style associated with the renderer
-         * @param {style.Style} s
+         * @param {Style} s
          */
-        setStyle(s: style.Style): void;
+        setStyle(s: Style): void;
         /**
          * Get style associated with the renderer
-         * @return {style.Style}
+         * @return {Style}
          */
-        getStyle(): style.Style;
+        getStyle(): Style;
         /** Calculate 3D at potcompose
          */
         onPostcompose_(): void;
@@ -7118,13 +7124,13 @@ declare namespace ol {
     * @constructor HexGrid
     * @extends {Object}
     * @param {Object} [options]
-    *	@param {number} [options.size] size of the exagon in map units, default 80000
+    *	@param {number} [options.Size] Size of the exagon in map units, default 80000
     *	@param {Coordinate} [options.origin] orgin of the grid, default [0,0]
     *	@param {HexagonLayout} [options.layout] grid layout, default pointy
      */
     class HexGrid extends Object {
         constructor(options?: {
-            size?: number;
+            Size?: number;
             origin?: Coordinate;
             layout?: HexagonLayout;
         });
@@ -7147,12 +7153,12 @@ declare namespace ol {
         * @return {Coordinate} coord origin
          */
         getOrigin(): Coordinate;
-        /** Set hexagon size
-        * @param {number} hexagon size
+        /** Set hexagon Size
+        * @param {number} hexagon Size
          */
         setSize(hexagon: number): void;
-        /** Get hexagon size
-        * @return {number} hexagon size
+        /** Get hexagon Size
+        * @return {number} hexagon Size
          */
         getSize(): number;
         /** Convert cube to axial coords
@@ -7256,16 +7262,16 @@ declare namespace ol {
      * @constructor
      * @extends {Object}
      * @param {Object} [options]
-     *  @param {number} [options.size] size grid size in meter, default 200 (200x200m)
+     *  @param {number} [options.Size] Size grid Size in meter, default 200 (200x200m)
      */
     class InseeGrid extends Object {
         constructor(options?: {
-            size?: number;
+            Size?: number;
         });
-        /** Grid extent (in EPSG:3035)
+        /** Grid Extent (in EPSG:3035)
          */
-        static extent: any;
-        /** Get the grid extent
+        static Extent: any;
+        /** Get the grid Extent
          * @param {proj.ProjLike} [proj='EPSG:3857']
          */
         getExtent(proj?: proj.ProjLike): void;
