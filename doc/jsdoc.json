@@ -8,7 +8,7 @@
     },
     "plugins": [
       "plugins/markdown",
-      "../node_modules/jsdoc-export-default-interop/dist/index"
+      "./node_modules/jsdoc-export-default-interop/dist/index"
     ],
     "templates": {
       "cleverLinks": false,
