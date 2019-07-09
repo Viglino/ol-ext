@@ -1,155 +1,151 @@
-import Point from "ol/geom/Point";
-import Projection from 'ol/proj';
+import Projection from 'ol/proj/Projection';
+import {Point, Polygon, LineString} from 'ol/geom';
+import { Coordinate }  from 'ol/coordinate';
+import Feature from 'ol/Feature';
+import { OSM, TileWMS, Vector as VectorSource } from 'ol/source';
+import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
+import { Circle as CircleStyle, Fill, Icon, Stroke, Style } from 'ol/style';
 
-/** @namespace ol
- * @see {@link https://openlayers.org/en/latest/apidoc/module-ol.html}
- */
 declare namespace ol {
-    /** @namespace ol.coordinate
-     * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_coordinate.html}
-     */
-    namespace coordinate {
+    
         /** Compute a convex hull using Andrew's Monotone Chain Algorithm
-         * @param {Array<ol.geom.Point>} points an array of 2D points
-         * @return {Array<ol.geom.Point>} the convex hull vertices
+         * @param {Array<Point>} points an array of 2D points
+         * @return {Array<Point>} the convex hull vertices
          */
-        function convexHull(points: ol.geom.Point[]): ol.geom.Point[];
+        function convexHull(points: Point[]): Point[];
         /** Convert coordinate to French DFCI grid
-         * @param {ol/coordinate} coord
+         * @param {Coordinate} coord
          * @param {number} level [0-3]
-         * @param {ol/proj/Projection} projection of the coord, default EPSG:27572
+         * @param {Projection} projection of the coord, default EPSG:27572
          * @return {String} the DFCI index
          */
-        function toDFCI(coord: ol/coordinate, level: number, projection: ol/proj/Projection): string;
+        function toDFCI(coord: Coordinate, level: number, projection: Projection): string;
         /** Get coordinate from French DFCI index
          * @param {String} index the DFCI index
-         * @param {ol/proj/Projection} projection result projection, default EPSG:27572
-         * @return {ol/coordinate} coord
+         * @param {Projection} projection result projection, default EPSG:27572
+         * @return {Coordinate} coord
          */
-        function fromDFCI(index: string, projection: ol/proj/Projection): ol/coordinate;
+        function fromDFCI(index: string, projection: Projection): Coordinate;
         /** The string is a valid DFCI index
          * @param {string} index DFCI index
          * @return {boolean}
          */
         function validDFCI(index: string): boolean;
         /** Coordinate is valid for DFCI
-         * @param {ol/coordinate} coord
-         * @param {ol/proj/Projection} projection result projection, default EPSG:27572
+         * @param {Coordinate} coord
+         * @param {Projection} projection result projection, default EPSG:27572
          * @return {boolean}
          */
-        function validDFCICoord(coord: ol/coordinate, projection: ol/proj/Projection): boolean;
+        function validDFCICoord(coord: Coordinate, projection: Projection): boolean;
         /** Distance beetween 2 points
         *	Usefull geometric functions
-        * @param {ol.Coordinate} p1 first point
-        * @param {ol.Coordinate} p2 second point
+        * @param {Coordinate} p1 first point
+        * @param {Coordinate} p2 second point
         * @return {number} distance
          */
-        function dist2d(p1: ol.Coordinate, p2: ol.Coordinate): number;
+        function dist2d(p1: Coordinate, p2: Coordinate): number;
         /** 2 points are equal
         *	Usefull geometric functions
-        * @param {ol.Coordinate} p1 first point
-        * @param {ol.Coordinate} p2 second point
+        * @param {Coordinate} p1 first point
+        * @param {Coordinate} p2 second point
         * @return {boolean}
          */
-        function equal(p1: ol.Coordinate, p2: ol.Coordinate): boolean;
+        function equal(p1: Coordinate, p2: Coordinate): boolean;
         /** Get center coordinate of a feature
-        * @param {ol.Feature} f
-        * @return {ol.coordinate} the center
+        * @param {Feature} f
+        * @return {Coordinate} the center
          */
-        function getFeatureCenter(f: ol.Feature): ol.coordinate;
+        function getFeatureCenter(f: Feature): Coordinate;
         /** Get center coordinate of a geometry
-        * @param {ol.Feature} geom
-        * @return {ol.Coordinate} the center
+        * @param {Feature} geom
+        * @return {Coordinate} the center
          */
-        function getGeomCenter(geom: ol.Feature): ol.Coordinate;
+        function getGeomCenter(geom: Feature): Coordinate;
         /** Offset a polyline
-         * @param {Array<ol.Coordinate>} coords
+         * @param {Array<Coordinate>} coords
          * @param {number} offset
-         * @return {Array<ol.Coordinate>} resulting coord
+         * @return {Array<Coordinate>} resulting coord
          * @see http://stackoverflow.com/a/11970006/796832
          * @see https://drive.google.com/viewerng/viewer?a=v&pid=sites&srcid=ZGVmYXVsdGRvbWFpbnxqa2dhZGdldHN0b3JlfGd4OjQ4MzI5M2Y0MjNmNzI2MjY
          */
-        function offsetCoords(coords: ol.Coordinate[], offset: number): ol.Coordinate[];
+        function offsetCoords(coords: Coordinate[], offset: number): Coordinate[];
         /** Find the segment a point belongs to
-         * @param {ol.Coordinate} pt
-         * @param {Array<ol.Coordinate>} coords
+         * @param {Coordinate} pt
+         * @param {Array<Coordinate>} coords
          * @return {} the index (-1 if not found) and the segment
          */
-        function findSegment(pt: ol.Coordinate, coords: ol.Coordinate[]): any;
+        function findSegment(pt: Coordinate, coords: Coordinate[]): any;
         /**
          * Split a Polygon geom with horizontal lines
-         * @param {Array<ol.Coordinate>} geom
+         * @param {Array<Coordinate>} geom
          * @param {number} y the y to split
          * @param {number} n contour index
-         * @return {Array<Array<ol.Coordinate>>}
+         * @return {Array<Array<Coordinate>>}
          */
-        function splitH(geom: ol.Coordinate[], y: number, n: number): ol.Coordinate[][];
+        function splitH(geom: Coordinate[], y: number, n: number): Coordinate[][];
     }
-    /** @namespace ol.source
-     * @see {@link https://openlayers.org/en/master/apidoc/module-ol_source.html}
-     */
-    namespace source {
+ namespace source{
         /** Abstract base class; normally only used for creating subclasses. Bin collector for data
          * @constructor
-         * @extends {ol.source.Vector}
-         * @param {Object} options ol.source.VectorOptions + grid option
-         *  @param {ol.source.Vector} options.source Source
+         * @extends {VectorSource}
+         * @param {Object} options VectorSourceOptions + grid option
+         *  @param {VectorSource} options.source Source
          *  @param {boolean} options.listenChange listen changes (move) on source features to recalculate the bin, default true
-         *  @param {(f: ol.Feature) => ol.geom.Point} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
-         *  @param {(bin: ol.Feature, features: Array<ol.Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
+         *  @param {(f: Feature) => Point} [options.geometryFunction] Function that takes an Feature as argument and returns an Point as feature's center.
+         *  @param {(bin: Feature, features: Array<Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
          */
-        class BinBase extends ol.source.Vector {
+        class BinBase extends VectorSource {
             constructor(options: {
-                source: ol.source.Vector;
+                source: VectorSource;
                 listenChange: boolean;
             });
             /**
              * Get the bin that contains a feature
-             * @param {ol.Feature} f the feature
-             * @return {ol.Feature} the bin or null it doesn't exit
+             * @param {Feature} f the feature
+             * @return {Feature} the bin or null it doesn't exit
              */
-            getBin(f: ol.Feature): ol.Feature;
+            getBin(f: Feature): Feature;
             /** Get the grid geometry at the coord
-             * @param {ol.Coordinate} coord
+             * @param {Coordinate} coord
              * @param {Object} attributes add key/value to this object to add properties to the grid feature
-             * @returns {ol.geom.Polygon}
+             * @returns {Polygon}
              * @api
              */
-            getGridGeomAt(coord: ol.Coordinate, attributes: any): ol.geom.Polygon;
+            getGridGeomAt(coord: Coordinate, attributes: any): Polygon;
             /** Get the bean at a coord
-             * @param {ol.Coordinate} coord
+             * @param {Coordinate} coord
              * @param {boolean} create true to create if doesn't exit
-             * @return {ol.Feature} the bin or null it doesn't exit
+             * @return {Feature} the bin or null it doesn't exit
              */
-            getBinAt(coord: ol.Coordinate, create: boolean): ol.Feature;
+            getBinAt(coord: Coordinate, create: boolean): Feature;
             /** Clear all bins and generate a new one.
              */
             reset(): void;
             /**
              * Get features without circular dependencies (vs. getFeatures)
-             * @return {Array<ol.Feature>}
+             * @return {Array<Feature>}
              */
-            getGridFeatures(): ol.Feature[];
+            getGridFeatures(): Feature[];
             /** Create bin attributes using the features it contains when exporting
-             * @param {ol.Feature} bin the bin to export
-             * @param {Array<ol.Features>} features the features it contains
+             * @param {Feature} bin the bin to export
+             * @param {Array<Features>} features the features it contains
              */
-            _flatAttributes(bin: ol.Feature, features: ol.Features[]): void;
+            _flatAttributes(bin: Feature, features: Feature[]): void;
             /**
              * Get the orginal source
-             * @return {ol.source.Vector}
+             * @return {VectorSource}
              */
-            getSource(): ol.source.Vector;
-            /** Overwrite ol/source/Vector clear to fire clearstart / clearend event
+            getSource(): VectorSource;
+            /** Overwrite Vector clear to fire clearstart / clearend event
              */
             clear(): void;
         }
         /**
-        * @constructor ol.source.DBPedia
-        * @extends {ol.source.Vector}
+        * @constructor source.DBPedia
+        * @extends {VectorSource}
         * @param {olx.source.DBPedia=} opt_options
          */
-        class DBPedia extends ol.source.Vector {
+        class DBPedia extends VectorSource {
             constructor(opt_options?: olx.source.DBPedia);
             /** Url for DBPedia SPARQL
              */
@@ -170,7 +166,7 @@ declare namespace ol {
             * @return {boolean} true: add the feature to the layer
             * @API stable
              */
-            readFeature(the: feature, RDF: attributes, last: lastfeature): boolean;
+            readFeature(feature: Feature, attributes: RDF, lastfeature: Feature): boolean;
             /** Set RDF query subject, default: select label, thumbnail, abstract and type
             * @API stable
              */
@@ -179,18 +175,18 @@ declare namespace ol {
             * @API stable
              */
             queryFilter(): void;
-            /** Overwrite ol/source/Vector clear to fire clearstart / clearend event
+            /** Overwrite Vector clear to fire clearstart / clearend event
              */
             clear(): void;
         }
         /** DFCI source: a source to display the French DFCI grid on a map
          * @see http://ccffpeynier.free.fr/Files/dfci.pdf
-         * @constructor ol.source.DFCI
-         * @extends {ol/source/Vector}
+         * @constructor source.DFCI
+         * @extends {Vector}
          * @param {any} options Vector source options
          *  @param {Array<Number>} resolutions a list of resolution to change the drawing level, default [1000,100,20]
          */
-        class DFCI extends ol/source/Vector {
+        class DFCI extends Vector {
             constructor(options: any, resolutions: Number[]);
             /** Cacluate grid according extent/resolution
              */
@@ -202,71 +198,71 @@ declare namespace ol {
         }
         /** Delaunay source
          * Calculate a delaunay triangulation from points in a source
-         * @param {*} options extend ol/source/Vector options
-         *  @param {ol/source/Vector} options.source the source that contains the points
+         * @param {*} options extend Vector options
+         *  @param {Vector} options.source the source that contains the points
          */
         function Delaunay(options: {
-            source: ol/source/Vector;
+            source: Vector;
         }): void;
         /** A source for INSEE grid
          * @constructor
-         * @extends {ol.source.Vector}
-         * @param {Object} options ol.source.VectorOptions + grid option
-         *  @param {ol.source.Vector} options.source Source
+         * @extends {VectorSource}
+         * @param {Object} options VectorSourceOptions + grid option
+         *  @param {VectorSource} options.source Source
          *  @param {number} [options.size] size of the grid in meter, default 200m
-         *  @param {(f: ol.Feature) => ol.geom.Point} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
-         *  @param {(bin: ol.Feature, features: Array<ol.Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
+         *  @param {(f: Feature) => Point} [options.geometryFunction] Function that takes an Feature as argument and returns an Point as feature's center.
+         *  @param {(bin: Feature, features: Array<Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
          */
-        class FeatureBin extends ol.source.Vector {
+        class FeatureBin extends VectorSource {
             constructor(options: {
-                source: ol.source.Vector;
+                source: VectorSource;
                 size?: number;
             });
             /** Set grid size
-             * @param {ol.Feature} features
+             * @param {Feature} features
              */
-            setFeatures(features: ol.Feature): void;
+            setFeatures(features: Feature): void;
             /** Get the grid geometry at the coord
-             * @param {ol.Coordinate} coord
-             * @returns {ol.geom.Polygon}
+             * @param {Coordinate} coord
+             * @returns {Polygon}
              * @api
              */
-            getGridGeomAt(coord: ol.Coordinate): ol.geom.Polygon;
-            /** Overwrite ol/source/Vector clear to fire clearstart / clearend event
+            getGridGeomAt(coord: Coordinate): Polygon;
+            /** Overwrite Vector clear to fire clearstart / clearend event
              */
             clear(): void;
         }
         /** Layer source with georeferencement to place it on a map
         * @constructor
-        * @extends {ol.source.ImageCanvas}
+        * @extends {source.ImageCanvas}
         * @param {olx.source.GeoImageOptions=} options
          */
-        class GeoImage extends ol.source.ImageCanvas {
+        class GeoImage extends source.ImageCanvas {
             constructor(options?: olx.source.GeoImageOptions);
             /**
              * Get coordinate of the image center.
-             * @return {ol.Coordinate} coordinate of the image center.
+             * @return {Coordinate} coordinate of the image center.
              * @api stable
              */
-            getCenter(): ol.Coordinate;
+            getCenter(): Coordinate;
             /**
              * Set coordinate of the image center.
-             * @param {ol.Coordinate} coordinate of the image center.
+             * @param {Coordinate} coordinate of the image center.
              * @api stable
              */
-            setCenter(coordinate: ol.Coordinate): void;
+            setCenter(coordinate: Coordinate): void;
             /**
              * Get image scale.
-             * @return {ol.size} image scale (along x and y axis).
+             * @return {size} image scale (along x and y axis).
              * @api stable
              */
-            getScale(): ol.size;
+            getScale(): size;
             /**
              * Set image scale.
-             * @param {ol.size|Number} image scale (along x and y axis or both).
+             * @param {size|Number} image scale (along x and y axis or both).
              * @api stable
              */
-            setScale(image: ol.size | number): void;
+            setScale(image: size | number): void;
             /**
              * Get image rotation.
              * @return {Number} rotation in degre.
@@ -286,32 +282,32 @@ declare namespace ol {
             getGeoImage(): void;
             /**
              * Get image crop extent.
-             * @return {ol.extent} image crop extent.
+             * @return {extent} image crop extent.
              * @api stable
              */
-            getCrop(): ol.extent;
+            getCrop(): extent;
             /**
              * Set image mask.
-             * @param {ol.geom.LineString} coords of the mask
+             * @param {LineString} coords of the mask
              * @api stable
              */
-            setMask(coords: ol.geom.LineString): void;
+            setMask(coords: LineString): void;
             /**
              * Get image mask.
-             * @return {ol.geom.LineString} coords of the mask
+             * @return {LineString} coords of the mask
              * @api stable
              */
-            getMask(): ol.geom.LineString;
+            getMask(): LineString;
             /**
              * Set image crop extent.
-             * @param {ol.extent|Number} image crop extent or a number to crop from original size.
+             * @param {extent|Number} image crop extent or a number to crop from original size.
              * @api stable
              */
-            setCrop(image: ol.extent | number): void;
+            setCrop(image: extent | number): void;
         }
         /** IGN's Geoportail WMTS source
          * @constructor
-         * @extends {ol.source.WMTS}
+         * @extends {source.WMTS}
          * @param {String=} layer Layer name.
          * @param {olx.source.OSMOptions=} options WMTS options
          *  @param {number} options.minZoom
@@ -324,7 +320,7 @@ declare namespace ol {
          *  @param {string} options.crossOrigin default 'anonymous'
          *  @param {string} options.wrapX default true
          */
-        class Geoportail extends ol.source.WMTS {
+        class Geoportail extends source.WMTS {
             constructor(layer?: string, options?: {
                 minZoom: number;
                 maxZoom: number;
@@ -359,26 +355,26 @@ declare namespace ol {
             /** Return the GetFeatureInfo URL for the passed coordinate, resolution, and
              * projection. Return `undefined` if the GetFeatureInfo URL cannot be
              * constructed.
-             * @param {ol.Coordinate} coord
+             * @param {Coordinate} coord
              * @param {Number} resolution
-             * @param {ol.proj.Projection} projection default the source projection
+             * @param {proj.Projection} projection default the source projection
              * @param {Object} options
              *  @param {string} options.INFO_FORMAT response format text/plain, text/html, application/json, default text/plain
              * @return {String|undefined} GetFeatureInfo URL.
              */
-            getFeatureInfoUrl(coord: ol.Coordinate, resolution: number, projection: ol.proj.Projection, options: {
+            getFeatureInfoUrl(coord: Coordinate, resolution: number, projection: proj.Projection, options: {
                 INFO_FORMAT: string;
             }): string | undefined;
             /** Get feature info
-             * @param {ol.Coordinate} coord
+             * @param {Coordinate} coord
              * @param {Number} resolution
-             * @param {ol.proj.Projection} projection default the source projection
+             * @param {proj.Projection} projection default the source projection
              * @param {Object} options
              *  @param {string} options.INFO_FORMAT response format text/plain, text/html, application/json, default text/plain
              *  @param {function} options.callback a function that take the response as parameter
              *  @param {function} options.error function called when an error occurred
              */
-            getFeatureInfo(coord: ol.Coordinate, resolution: number, projection: ol.proj.Projection, options: {
+            getFeatureInfo(coord: Coordinate, resolution: number, projection: proj.Projection, options: {
                 INFO_FORMAT: string;
                 callback: (...params: any[]) => any;
                 error: (...params: any[]) => any;
@@ -392,63 +388,63 @@ declare namespace ol {
         }
         /** A source for grid binning
          * @constructor
-         * @extends {ol.source.Vector}
-         * @param {Object} options ol.source.VectorOptions + grid option
-         *  @param {ol.source.Vector} options.source Source
+         * @extends {VectorSource}
+         * @param {Object} options VectorSourceOptions + grid option
+         *  @param {VectorSource} options.source Source
          *  @param {number} [options.size] size of the grid in meter, default 200m
-         *  @param {(f: ol.Feature) => ol.geom.Point} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
-         *  @param {(bin: ol.Feature, features: Array<ol.Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
+         *  @param {(f: Feature) => Point} [options.geometryFunction] Function that takes an Feature as argument and returns an Point as feature's center.
+         *  @param {(bin: Feature, features: Array<Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
          */
-        class GridBin extends ol.source.Vector {
+        class GridBin extends VectorSource {
             constructor(options: {
-                source: ol.source.Vector;
+                source: VectorSource;
                 size?: number;
             });
             /** Set grid projection
-             * @param {ol.ProjectionLike} proj
+             * @param {ProjectionLike} proj
              */
-            setGridProjection(proj: ol.ProjectionLike): void;
+            setGridProjection(proj: ProjectionLike): void;
             /** Set grid size
              * @param {number} size
              */
             setSize(size: number): void;
             /** Get the grid geometry at the coord
-             * @param {ol.Coordinate} coord
-             * @returns {ol.geom.Polygon}
+             * @param {Coordinate} coord
+             * @returns {Polygon}
              * @api
              */
-            getGridGeomAt(coord: ol.Coordinate): ol.geom.Polygon;
-            /** Overwrite ol/source/Vector clear to fire clearstart / clearend event
+            getGridGeomAt(coord: Coordinate): Polygon;
+            /** Overwrite Vector clear to fire clearstart / clearend event
              */
             clear(): void;
         }
         /** A source for hexagonal binning
          * @constructor
-         * @extends {ol.source.Vector}
-         * @param {Object} options ol.source.VectorOptions + ol.HexGridOptions
-         *  @param {ol.source.Vector} options.source Source
+         * @extends {VectorSource}
+         * @param {Object} options VectorSourceOptions + HexGridOptions
+         *  @param {VectorSource} options.source Source
          *  @param {number} [options.size] size of the hexagon in map units, default 80000
-         *  @param {ol.coordinate} [options.origin] origin of the grid, default [0,0]
+         *  @param {Coordinate} [options.origin] origin of the grid, default [0,0]
          *  @param {import('../render/HexGrid').HexagonLayout} [options.layout] grid layout, default pointy
-         *  @param {(f: ol.Feature) => ol.geom.Point} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
-         *  @param {(bin: ol.Feature, features: Array<ol.Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
+         *  @param {(f: Feature) => Point} [options.geometryFunction] Function that takes an Feature as argument and returns an Point as feature's center.
+         *  @param {(bin: Feature, features: Array<Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
          */
-        class HexBin extends ol.source.Vector {
+        class HexBin extends VectorSource {
             constructor(options: {
-                source: ol.source.Vector;
+                source: VectorSource;
                 size?: number;
-                origin?: ol.coordinate;
+                origin?: Coordinate;
             });
             /** The HexGrid
-             * 	@type {ol.HexGrid}
+             * 	@type {HexGrid}
              */
-            _hexgrid: ol.HexGrid;
+            _hexgrid: HexGrid;
             /** Get the hexagon geometry at the coord
-             * @param {ol.Coordinate} coord
-             * @returns {ol.geom.Polygon}
+             * @param {Coordinate} coord
+             * @returns {Polygon}
              * @api
              */
-            getGridGeomAt(coord: ol.Coordinate): ol.geom.Polygon;
+            getGridGeomAt(coord: Coordinate): Polygon;
             /**	Set the inner HexGrid size.
              * 	@param {number} newSize
              * 	@param {boolean} noreset If true, reset will not be called (It need to be called through)
@@ -468,35 +464,35 @@ declare namespace ol {
              */
             getLayout(): any;
             /**	Set the inner HexGrid origin.
-             * 	@param {ol.Coordinate} newLayout
+             * 	@param {Coordinate} newLayout
              * 	@param {boolean} noreset If true, reset will not be called (It need to be called through)
              */
-            setOrigin(newLayout: ol.Coordinate, noreset: boolean): void;
+            setOrigin(newLayout: Coordinate, noreset: boolean): void;
             /**	Get the inner HexGrid origin.
-             * 	@return {ol.Coordinate}
+             * 	@return {Coordinate}
              */
-            getOrigin(): ol.Coordinate;
+            getOrigin(): Coordinate;
             /**
              * Get hexagons without circular dependencies (vs. getFeatures)
-             * @return {Array<ol.Feature>}
+             * @return {Array<Feature>}
              */
-            getHexFeatures(): ol.Feature[];
-            /** Overwrite ol/source/Vector clear to fire clearstart / clearend event
+            getHexFeatures(): Feature[];
+            /** Overwrite Vector clear to fire clearstart / clearend event
              */
             clear(): void;
         }
         /** A source for INSEE grid
          * @constructor
-         * @extends {ol.source.Vector}
-         * @param {Object} options ol.source.VectorOptions + grid option
-         *  @param {ol.source.Vector} options.source Source
+         * @extends {VectorSource}
+         * @param {Object} options VectorSourceOptions + grid option
+         *  @param {VectorSource} options.source Source
          *  @param {number} [options.size] size of the grid in meter, default 200m
-         *  @param {(f: ol.Feature) => ol.geom.Point} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
-         *  @param {(bin: ol.Feature, features: Array<ol.Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
+         *  @param {(f: Feature) => Point} [options.geometryFunction] Function that takes an Feature as argument and returns an Point as feature's center.
+         *  @param {(bin: Feature, features: Array<Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
          */
-        class InseeBin extends ol.source.Vector {
+        class InseeBin extends VectorSource {
             constructor(options: {
-                source: ol.source.Vector;
+                source: VectorSource;
                 size?: number;
             });
             /** Set grid size
@@ -508,26 +504,26 @@ declare namespace ol {
              */
             getSize(): number;
             /** Get the grid geometry at the coord
-             * @param {ol.Coordinate} coord
-             * @returns {ol.geom.Polygon}
+             * @param {Coordinate} coord
+             * @returns {Polygon}
              * @api
              */
-            getGridGeomAt(coord: ol.Coordinate): ol.geom.Polygon;
+            getGridGeomAt(coord: Coordinate): Polygon;
             /** Get grid extent
-             * @param {ol.ProjectionLike} proj
-             * @return {ol.Extent}
+             * @param {ProjectionLike} proj
+             * @return {Extent}
              */
-            getGridExtent(proj: ol.ProjectionLike): ol.Extent;
-            /** Overwrite ol/source/Vector clear to fire clearstart / clearend event
+            getGridExtent(proj: ProjectionLike): Extent;
+            /** Overwrite Vector clear to fire clearstart / clearend event
              */
             clear(): void;
         }
         /**
-        * @constructor ol.source.Mapillary
-        * @extends {ol.source.Vector}
+        * @constructor source.Mapillary
+        * @extends {VectorSource}
         * @param {olx.source.Mapillary=} options
          */
-        class Mapillary extends ol.source.Vector {
+        class Mapillary extends VectorSource {
             constructor(options?: olx.source.Mapillary);
             /** Max resolution to load features
              */
@@ -542,14 +538,14 @@ declare namespace ol {
             * @API stable
              */
             readFeature(the: feature, wiki: attributes): boolean;
-            /** Overwrite ol/source/Vector clear to fire clearstart / clearend event
+            /** Overwrite Vector clear to fire clearstart / clearend event
              */
             clear(): void;
         }
         /**
          * OSM layer using the Ovepass API
-         * @constructor ol.source.Overpass
-         * @extends {ol.source.Vector}
+         * @constructor source.Overpass
+         * @extends {VectorSource}
          * @param {any} options
          *  @param {string} options.url service url, default: https://overpass-api.de/api/interpreter
          *  @param {Array<string>} options.filter an array of tag filters, ie. ["key", "key=value", "key~value", ...]
@@ -557,10 +553,10 @@ declare namespace ol {
          *  @param {boolean} options.way get ways, default: true
          *  @param {boolean} options.rel get relations, default: false
          *  @param {number} options.maxResolution maximum resolution to load features
-         *  @param {string|ol.Attribution|Array<string>} options.attributions source attribution, default OSM attribution
-         *  @param {ol.loadingstrategy} options.strategy loading strategy, default ol.loadingstrategy.bbox
+         *  @param {string|Attribution|Array<string>} options.attributions source attribution, default OSM attribution
+         *  @param {loadingstrategy} options.strategy loading strategy, default loadingstrategy.bbox
          */
-        class Overpass extends ol.source.Vector {
+        class Overpass extends VectorSource {
             constructor(options: {
                 url: string;
                 filter: string[];
@@ -568,8 +564,8 @@ declare namespace ol {
                 way: boolean;
                 rel: boolean;
                 maxResolution: number;
-                attributions: string | ol.Attribution | string[];
-                strategy: ol.loadingstrategy;
+                attributions: string | Attribution | string[];
+                strategy: loadingstrategy;
             });
             /** Ovepass API Url
              */
@@ -577,16 +573,16 @@ declare namespace ol {
             /** Max resolution to load features
              */
             _maxResolution: any;
-            /** Overwrite ol/source/Vector clear to fire clearstart / clearend event
+            /** Overwrite Vector clear to fire clearstart / clearend event
              */
             clear(): void;
         }
         /**
-        * @constructor ol.source.WikiCommons
-        * @extends {ol.source.Vector}
+        * @constructor source.WikiCommons
+        * @extends {VectorSource}
         * @param {olx.source.WikiCommons=} options
          */
-        class WikiCommons extends ol.source.Vector {
+        class WikiCommons extends VectorSource {
             constructor(options?: olx.source.WikiCommons);
             /** Max resolution to load features
              */
@@ -604,25 +600,25 @@ declare namespace ol {
             * @API stable
              */
             readFeature(the: feature, wiki: attributes): boolean;
-            /** Overwrite ol/source/Vector clear to fire clearstart / clearend event
+            /** Overwrite #Vector clear to fire clearstart / clearend event
              */
             clear(): void;
         }
-    }
+ }
     /** A control is a visible widget with a DOM element in a fixed position on the screen.
      * They can involve user input (buttons), or be informational only;
      * the position is determined using CSS. B
      * y default these are placed in the container with CSS class name ol-overlaycontainer-stopevent,
      * but can use any outside DOM element.
-     * @namespace ol.control
-     * @see {@link https://openlayers.org/en/master/apidoc/module-ol_control.html}
+     * @namespace control
+     * @see {@link https://openlayers.org/en/master/apidoc/module-ol_contrhtml}
      */
     namespace control {
         /** Openlayers base class for controls.
          * A control is a visible widget with a DOM element in a fixed position on the screen.
          * They can involve user input (buttons), or be informational only; the position is determined using CSS.
-         * @namespace ol.control.Control
-         * @see {@link http://openlayers.org/en/latest/apidoc/module-ol_control_Control.html}
+         * @namespace contrControl
+         * @see {@link http://openlayers.org/en/latest/apidoc/module-ol_control_Contrhtml}
          */
         namespace Control { }
         /**
@@ -631,13 +627,13 @@ declare namespace ol {
          * @see http://www.kreidefossilien.de/webgis/dokumentation/beispiele/export-map-to-png-with-scale
          *
          * @constructor
-         * @extends {ol.control.Control}
-         * @param {Object=} options extend the ol.control options.
-         *  @param {ol.style.Style} options.style style used to draw the title.
+         * @extends {contrControl}
+         * @param {Object=} options extend the control options.
+         *  @param {style.Style} options.style style used to draw the title.
          */
-        class CanvasBase extends ol.control.Control {
+        class CanvasBase extends contrControl {
             constructor(options?: {
-                style: ol.style.Style;
+                style: style.Style;
             });
             /**
              * Remove the control from its current map and attach it to the new map.
@@ -685,33 +681,33 @@ declare namespace ol {
          * normally only used for creating subclasses and not instantiated in apps.
          *
          * @constructor
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @fires select
          * @param {Object=} options
          *  @param {string} options.className control class name
          *  @param {Element | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
-         *  @param {ol.Collection<ol.Feature>} options.features a collection of feature to search in, the collection will be kept in date while selection
-         *  @param {ol/source/Vector | Array<ol/source/Vector>} options.source the source to search in if no features set
+         *  @param {Collection<Feature>} options.features a collection of feature to search in, the collection will be kept in date while selection
+         *  @param {Vector | Array<Vector>} options.source the source to search in if no features set
          */
-        class SelectBase extends ol.control.Control {
+        class SelectBase extends contrControl {
             constructor(options?: {
                 className: string;
                 target: Element | undefined;
-                features: ol.Collection<ol.Feature>;
-                source: ol/source/Vector | ol/source/Vector[];
+                features: Collection<Feature>;
+                source: Vector | Vector[];
             });
             /** Set the current sources
-             * @param {ol.source.Vector|Array<ol.source.Vector>|undefined} source
+             * @param {VectorSource|Array<VectorSource>|undefined} source
              */
-            setSources(source: ol.source.Vector | ol.source.Vector[] | undefined): void;
+            setSources(source: VectorSource | VectorSource[] | undefined): void;
             /** Set feature collection to search in
-             * @param {ol.Collection<ol.Feature>} features
+             * @param {Collection<Feature>} features
              */
-            setFeatures(features: ol.Collection<ol.Feature>): void;
+            setFeatures(features: Collection<Feature>): void;
             /** Get feature collection to search in
-             * @return {ol.Collection<ol.Feature>}
+             * @return {Collection<Feature>}
              */
-            getFeatures(): ol.Collection<ol.Feature>;
+            getFeatures(): Collection<Feature>;
             /** List of operators / translation
              * @api
              */
@@ -722,8 +718,8 @@ declare namespace ol {
              */
             _escape(search: string): string;
             /** Selection features in a list of features
-             * @param {Array<ol.Feature>} result the current list of features
-             * @param {Array<ol.Feature>} features to test in
+             * @param {Array<Feature>} result the current list of features
+             * @param {Array<Feature>} features to test in
              * @param {Object} condition
              *  @param {string} condition.attr attribute name
              *  @param {string} condition.op operator
@@ -731,38 +727,38 @@ declare namespace ol {
              * @param {boolean} all all conditions must be valid
              * @param {boolean} usecase use case or not when testing strings
              */
-            _selectFeatures(result: ol.Feature[], features: ol.Feature[], condition: {
+            _selectFeatures(result: Feature[], features: Feature[], condition: {
                 attr: string;
                 op: string;
                 val: any;
             }, all: boolean, usecase: boolean): void;
             /** Get vector source
-             * @return {Array<ol.source.Vector>}
+             * @return {Array<VectorSource>}
              */
-            getSources(): ol.source.Vector[];
+            getSources(): VectorSource[];
             /** Select features by attributes
              * @param {*} options
-             *  @param {Array<ol/source/Vector|undefined} options.sources source to apply rules, default the select sources
+             *  @param {Array<Vector|undefined} options.sources source to apply rules, default the select sources
              *  @param {bool} options.useCase case sensitive, default false
              *  @param {bool} options.matchAll match all conditions, default false
              *  @param {Array<conditions>} options.conditions array of conditions
-             * @return {Array<ol.Feature>}
+             * @return {Array<Feature>}
              * @fires select
              */
             doSelect(options: {
                 useCase: boolean;
                 matchAll: boolean;
                 conditions: conditions[];
-            }): ol.Feature[];
+            }): Feature[];
         }
         /**
-         * Search Control.
+         * Search Contr
          * This is the base class for search controls. You can use it for simple custom search or as base to new class.
-         * @see ol.control.SearchFeature
-         * @see ol.control.SearchPhoton
+         * @see contrSearchFeature
+         * @see contrSearchPhoton
          *
          * @constructor
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @fires select
          * @fires change:input
          * @param {Object=} options
@@ -779,7 +775,7 @@ declare namespace ol {
          *  @param {function} options.getTitle a function that takes a feature and return the name to display in the index.
          *  @param {function} options.autocomplete a function that take a search string and callback function to send an array
          */
-        class Search extends ol.control.Control {
+        class Search extends contrControl {
             constructor(options?: {
                 className: string;
                 target: Element | string | undefined;
@@ -852,9 +848,9 @@ declare namespace ol {
          * You can use it for simple custom search or as base to new class.
          *
          * @constructor
-         * @extends {ol.control.Search}
+         * @extends {contrSearch}
          * @fires select
-         * @param {any} options extend ol.control.Search options
+         * @param {any} options extend contrSearch options
          *	@param {string} options.className control class name
          *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
          *	@param {string | undefined} options.label Text label to use for the search button, default "search"
@@ -867,7 +863,7 @@ declare namespace ol {
          *	@param {string|undefined} options.url Url of the search api
          *	@param {string | undefined} options.authentication: basic authentication for the search API as btoa("login:pwd")
          */
-        class SearchJSON extends ol.control.Search {
+        class SearchJSON extends contrSearch {
             constructor(options: {
                 className: string;
                 target: Element | string | undefined;
@@ -878,7 +874,7 @@ declare namespace ol {
                 maxItems: integer | undefined;
                 handleResponse: ((...params: any[]) => any) | undefined;
                 url: string | undefined;
-                authentication:: string | undefined;
+                authentication: string | undefined;
             });
             /** Autocomplete function (ajax request to the server)
             * @param {string} s search string
@@ -954,7 +950,7 @@ declare namespace ol {
          * Search places using the photon API.
          *
          * @constructor
-         * @extends {ol.control.SearchJSON}
+         * @extends {contrSearchJSON}
          * @fires select
          * @param {Object=} Control options.
          *	@param {string} options.className control class name
@@ -971,14 +967,14 @@ declare namespace ol {
          *	@param {boolean} options.position Search, with priority to geo position, default false
          *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return street + name + contry
          */
-        class SearchPhoton extends ol.control.SearchJSON {
+        class SearchPhoton extends contrSearchJSON {
             constructor(Control?: any);
             /** Returns the text to be displayed in the menu
-            *	@param {ol.Feature} f the feature
+            *	@param {Feature} f the feature
             *	@return {string} the text to be displayed in the index
             *	@api
              */
-            getTitle(f: ol.Feature): string;
+            getTitle(f: Feature): string;
             /**
              * @param {string} s the search string
              * @return {Object} request data (as key:value)
@@ -1047,9 +1043,9 @@ declare namespace ol {
          * Search places using the French National Base Address (BAN) API.
          *
          * @constructor
-         * @extends {ol.control.SearchJSON}
+         * @extends {contrSearchJSON}
          * @fires select
-         * @param {any} options extend ol.control.SearchJSON options
+         * @param {any} options extend contrSearchJSON options
          *	@param {string} options.className control class name
          *	@param {boolean | undefined} options.apiKey the service api key.
          *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
@@ -1063,11 +1059,11 @@ declare namespace ol {
          *	@param {StreetAddress|PositionOfInterest|CadastralParcel|Commune} options.type type of search. Using Commune will return the INSEE code, default StreetAddress,PositionOfInterest
          * @see {@link https://geoservices.ign.fr/documentation/geoservices/geocodage.html}
          */
-        class SearchGeoportail extends ol.control.SearchJSON {
+        class SearchGeoportail extends contrSearchJSON {
             constructor(options: {
                 className: string;
                 apiKey: boolean | undefined;
-                authentication:: string | undefined;
+                authentication: string | undefined;
                 target: Element | string | undefined;
                 label: string | undefined;
                 placeholder: string | undefined;
@@ -1077,11 +1073,11 @@ declare namespace ol {
                 type: StreetAddress | PositionOfInterest | CadastralParcel | Commune;
             });
             /** Returns the text to be displayed in the menu
-             *	@param {ol.Feature} f the feature
+             *	@param {Feature} f the feature
              *	@return {string} the text to be displayed in the index
              *	@api
              */
-            getTitle(f: ol.Feature): string;
+            getTitle(f: Feature): string;
             /**
              * @param {string} s the search string
              * @return {Object} request data (as key:value)
@@ -1151,12 +1147,12 @@ declare namespace ol {
             equalFeatures(f1: any, f2: any): boolean;
         }
         /**
-         * @classdesc OpenLayers 3 Layer Switcher Control.
+         * @classdesc OpenLayers 3 Layer Switcher Contr
          * @fires drawlist
          * @fires toggle
          *
          * @constructor
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @param {Object=} options
          *  @param {function} options.displayInLayerSwitcher function that takes a layer and return a boolean if the layer is displayed in the switcher, default test the displayInLayerSwitcher layer attribute
          *  @param {boolean} options.show_progress show a progress bar on tile layers, default false
@@ -1174,7 +1170,7 @@ declare namespace ol {
          *	- displayInLayerSwitcher {boolean} display in switcher, default true
          *	- noSwitcherDelete {boolean} to prevent layer deletion (w. trash option = true), default false
          */
-        class LayerSwitcher extends ol.control.Control {
+        class LayerSwitcher extends contrControl {
             constructor(options?: {
                 displayInLayerSwitcher: (...params: any[]) => any;
                 show_progress: boolean;
@@ -1191,10 +1187,10 @@ declare namespace ol {
              */
             tip: any;
             /** Test if a layer should be displayed in the switcher
-             * @param {ol.layer} layer
+             * @param {layer} layer
              * @return {boolean} true if the layer is displayed
              */
-            displayInLayerSwitcher(layer: ol.layer): boolean;
+            displayInLayerSwitcher(layer: layer): boolean;
             /**
              * Set the map instance the control is associated with.
              * @param {_ol_Map_} map The map instance.
@@ -1223,41 +1219,41 @@ declare namespace ol {
             overflow(dir: number): void;
             /** Set the layer associated with a li
              * @param {Element} li
-             * @param {ol.layer} layer
+             * @param {layer} layer
              */
-            _setLayerForLI(li: Element, layer: ol.layer): void;
+            _setLayerForLI(li: Element, layer: layer): void;
             /** Get the layer associated with a li
              * @param {Element} li
-             * @return {ol.layer}
+             * @return {layer}
              */
-            _getLayerForLI(li: Element): ol.layer;
+            _getLayerForLI(li: Element): layer;
             /**
              *	Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
              */
             drawPanel(): void;
             /** Change layer visibility according to the baselayer option
-             * @param {ol.layer}
-             * @param {Array<ol.layer>} related layers
+             * @param {layer}
+             * @param {Array<layer>} related layers
              */
-            switchLayerVisibility(l: ol.layer, related: ol.layer[]): void;
+            switchLayerVisibility(l: layer, related: layer[]): void;
             /** Check if layer is on the map (depending on zoom and extent)
-             * @param {ol.layer}
+             * @param {layer}
              * @return {boolean}
              */
-            testLayerVisibility(layer: ol.layer): boolean;
+            testLayerVisibility(layer: layer): boolean;
             /** Render a list of layer
              * @param {Elemen} element to render
-             * @layers {Array{ol.layer}} list of layer to show
+             * @layers {Array{layer}} list of layer to show
              * @api stable
              */
             drawList(element: Elemen): void;
         }
         /** Control bar for OL3
          * The control bar is a container for other controls. It can be used to create toolbars.
-         * Control bars can be nested and combined with ol.control.Toggle to handle activate/deactivate.
+         * Control bars can be nested and combined with contrToggle to handle activate/deactivate.
          *
          * @constructor
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @param {Object=} options Control options.
          *	@param {String} options.className class of the control
          *	@param {bool} options.group is a group, default false
@@ -1265,7 +1261,7 @@ declare namespace ol {
          *	@param {bool} options.autoDeactivate used with subbar to deactivate all control when top level control deactivate, default false
          *	@param {Array<_ol_control_>} options.controls a list of control to add to the bar
          */
-        class Bar extends ol.control.Control {
+        class Bar extends contrControl {
             constructor(options?: {
                 className: string;
                 group: boolean;
@@ -1308,18 +1304,18 @@ declare namespace ol {
              */
             setActive(b: boolean): void;
             /** Post-process an activated/deactivated control
-            *	@param {ol.event} e :an object with a target {_ol_control_} and active flag {bool}
+            *	@param {event} e :an object with a target {_ol_control_} and active flag {bool}
              */
-            onActivateControl_(e: ol.event): void;
+            onActivateControl_(e: event): void;
             /**
              * @param {string} name of the control to search
-             * @return {ol.control.Control}
+             * @return {contrControl}
              */
-            getControlsByName(name: string): ol.control.Control;
+            getControlsByName(name: string): contrControl;
         }
         /** A simple push button control
         * @constructor
-        * @extends {ol.control.Control}
+        * @extends {contrControl}
         * @param {Object=} options Control options.
         *	@param {String} options.className class of the control
         *	@param {String} options.title title of the control
@@ -1327,7 +1323,7 @@ declare namespace ol {
         *	@param {String} options.html html to insert in the control
         *	@param {function} options.handleClick callback when control is clicked (or use change:active event)
          */
-        class Button extends ol.control.Control {
+        class Button extends contrControl {
             constructor(options?: {
                 className: string;
                 title: string;
@@ -1358,13 +1354,13 @@ declare namespace ol {
          * @see http://www.kreidefossilien.de/webgis/dokumentation/beispiele/export-map-to-png-with-scale
          *
          * @constructor
-         * @extends {ol.control.Attribution}
-         * @param {Object=} options extend the ol.control.Attribution options.
-         * 	@param {ol.style.Style} options.style  option is usesd to draw the text.
+         * @extends {contrAttribution}
+         * @param {Object=} options extend the contrAttribution options.
+         * 	@param {style.Style} options.style  option is usesd to draw the text.
          */
-        class CanvasAttribution extends ol.control.Attribution {
+        class CanvasAttribution extends contrAttribution {
             constructor(options?: {
-                style: ol.style.Style;
+                style: style.Style;
             });
             /**
              * Draw attribution on canvas
@@ -1373,17 +1369,17 @@ declare namespace ol {
             setCanvas(b: boolean): void;
             /**
              * Change the control style
-             * @param {ol.style.Style} style
+             * @param {style.Style} style
              */
-            setStyle(style: ol.style.Style): void;
+            setStyle(style: style.Style): void;
             /**
              * Remove the control from its current map and attach it to the new map.
              * Subclasses may set up event handlers to get notified about changes to
              * the map here.
-             * @param {ol.Map} map Map.
+             * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
         }
         /**
          * @classdesc
@@ -1391,13 +1387,13 @@ declare namespace ol {
          * @see http://www.kreidefossilien.de/webgis/dokumentation/beispiele/export-map-to-png-with-scale
          *
          * @constructor
-         * @extends {ol.control.ScaleLine}
-         * @param {Object=} options extend the ol.control.ScaleLine options.
-         * 	@param {ol.style.Style} options.style used to draw the scale line (default is black/white, 10px Arial).
+         * @extends {contrScaleLine}
+         * @param {Object=} options extend the contrScaleLine options.
+         * 	@param {style.Style} options.style used to draw the scale line (default is black/white, 10px Arial).
          */
-        class CanvasScaleLine extends ol.control.ScaleLine {
+        class CanvasScaleLine extends contrScaleLine {
             constructor(options?: {
-                style: ol.style.Style;
+                style: style.Style;
             });
             /**
              * Remove the control from its current map and attach it to the new map.
@@ -1417,21 +1413,21 @@ declare namespace ol {
          * A title Control integrated in the canvas (for jpeg/png
          *
          * @constructor
-         * @extends {ol.control.CanvasBase}
-         * @param {Object=} options extend the ol.control options.
+         * @extends {contrCanvasBase}
+         * @param {Object=} options extend the control options.
          *  @param {string} options.title the title, default 'Title'
-         *  @param {ol.style.Style} options.style style used to draw the title.
+         *  @param {style.Style} options.style style used to draw the title.
          */
-        class CanvasTitle extends ol.control.CanvasBase {
+        class CanvasTitle extends contrCanvasBase {
             constructor(options?: {
                 title: string;
-                style: ol.style.Style;
+                style: style.Style;
             });
             /**
              * Change the control style
-             * @param {ol.style.Style} style
+             * @param {style.Style} style
              */
-            setStyle(style: ol.style.Style): void;
+            setStyle(style: style.Style): void;
             /**
              * Set the map title
              * @param {string} map title.
@@ -1496,27 +1492,27 @@ declare namespace ol {
          * A title Control integrated in the canvas (for jpeg/png
          *
          * @constructor
-         * @extends {ol.control.CanvasBase}
-         * @param {Object=} options extend the ol.control options.
+         * @extends {contrCanvasBase}
+         * @param {Object=} options extend the control options.
          *  @param {string} options.className CSS class name
-         *  @param {ol.style.Style} options.style style used to draw in the canvas
-         *  @param {ol.proj.ProjectionLike} options.projection	Projection. Default is the view projection.
-         *  @param {ol.coordinate.CoordinateFormat} options.coordinateFormat A function that takes a ol.Coordinate and transforms it into a string.
+         *  @param {style.Style} options.style style used to draw in the canvas
+         *  @param {proj.ProjectionLike} options.projection	Projection. Default is the view projection.
+         *  @param {Coordinate.CoordinateFormat} options.coordinateFormat A function that takes a Coordinate and transforms it into a string.
          *  @param {boolean} options.canvas true to draw in the canvas
          */
-        class CenterPosition extends ol.control.CanvasBase {
+        class CenterPosition extends contrCanvasBase {
             constructor(options?: {
                 className: string;
-                style: ol.style.Style;
-                projection: ol.proj.ProjectionLike;
-                coordinateFormat: ol.coordinate.CoordinateFormat;
+                style: style.Style;
+                projection: proj.ProjectionLike;
+                coordinateFormat: Coordinate.CoordinateFormat;
                 canvas: boolean;
             });
             /**
              * Change the control style
-             * @param {ol.style.Style} style
+             * @param {style.Style} style
              */
-            setStyle(style: ol.style.Style): void;
+            setStyle(style: style.Style): void;
             /**
              * Draw on canvas
              * @param {boolean} b draw the attribution on canvas.
@@ -1574,21 +1570,21 @@ declare namespace ol {
          * Draw a compass on the map. The position/size of the control is defined in the css.
          *
          * @constructor
-         * @extends {ol.control.CanvasBase}
+         * @extends {contrCanvasBase}
          * @param {Object=} options Control options. The style {_ol_style_Stroke_} option is usesd to draw the text.
          *  @param {string} options.className class name for the control
          *  @param {Image} options.image an image, default use the src option or a default image
          *  @param {string} options.src image src, default use the image option or a default image
          *  @param {boolean} options.rotateVithView rotate vith view (false to show watermark), default true
-         *  @param {ol.style.Stroke} options.style style to draw the lines, default draw no lines
+         *  @param {style.Stroke} options.style style to draw the lines, default draw no lines
          */
-        class Compass extends ol.control.CanvasBase {
+        class Compass extends contrCanvasBase {
             constructor(options?: {
                 className: string;
                 image: Image;
                 src: string;
                 rotateVithView: boolean;
-                style: ol.style.Stroke;
+                style: style.Stroke;
             });
             /**
              * Remove the control from its current map and attach it to the new map.
@@ -1633,14 +1629,14 @@ declare namespace ol {
         /** A simple control to disable all actions on the map.
          * The control will create an invisible div over the map.
          * @constructor
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @param {Object=} options Control options.
          *		@param {String} options.class class of the control
          *		@param {String} options.html html code to insert in the control
          *		@param {bool} options.on the control is on
          *		@param {function} options.toggleFn callback when control is clicked
          */
-        class Disable extends ol.control.Control {
+        class Disable extends contrControl {
             constructor(options?: {
                 class: string;
                 html: string;
@@ -1656,11 +1652,11 @@ declare namespace ol {
              * @param {bool} b, default false
              * @api stable
              */
-            disableMap(b,: boolean): void;
+            disableMap(b: boolean): void;
         }
         /** Control bar for editing in a layer
          * @constructor
-         * @extends {ol.control.Bar}
+         * @extends {contrBar}
          * @fires info
          * @param {Object=} options Control options.
          *	@param {String} options.className class of the control
@@ -1669,15 +1665,15 @@ declare namespace ol {
          *	@param {Object} options.interactions List of interactions to add to the bar
          *    ie. Select, Delete, Info, DrawPoint, DrawLine, DrawPolygon
          *    Each interaction can be an interaction or true (to get the default one) or false to remove it from bar
-         *	@param {ol.source.Vector} options.source Source for the drawn features.
+         *	@param {VectorSource} options.source Source for the drawn features.
          */
-        class EditBar extends ol.control.Bar {
+        class EditBar extends contrBar {
             constructor(options?: {
                 className: string;
                 target: string;
                 edition: boolean;
                 interactions: any;
-                source: ol.source.Vector;
+                source: VectorSource;
             });
             /**
              * Set the map instance the control is associated with
@@ -1721,26 +1717,26 @@ declare namespace ol {
              */
             setActive(b: boolean): void;
             /** Post-process an activated/deactivated control
-            *	@param {ol.event} e :an object with a target {_ol_control_} and active flag {bool}
+            *	@param {event} e :an object with a target {_ol_control_} and active flag {bool}
              */
-            onActivateControl_(e: ol.event): void;
+            onActivateControl_(e: event): void;
             /**
              * @param {string} name of the control to search
-             * @return {ol.control.Control}
+             * @return {contrControl}
              */
-            getControlsByName(name: string): ol.control.Control;
+            getControlsByName(name: string): contrControl;
         }
         /** A simple gauge control to display level information on the map.
          *
          * @constructor
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @param {Object=} options Control options.
          *		@param {String} options.className class of the control
          *		@param {String} options.title title of the control
          *		@param {number} options.max maximum value, default 100;
          *		@param {number} options.val the value, default 0
          */
-        class Gauge extends ol.control.Control {
+        class Gauge extends contrControl {
             constructor(options?: {
                 className: string;
                 title: string;
@@ -1760,7 +1756,7 @@ declare namespace ol {
         /** Bookmark positions on ol maps.
          *
          * @constructor
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @fires add
          * @fires remove
          * @param {} options Geobookmark's options
@@ -1769,7 +1765,7 @@ declare namespace ol {
          *  @param {bool} options.editable enable modification, default true
          *  @param {string} options.namespace a namespace to save the boolmark (if more than one on a page), default ol
          *  @param {Array<any>} options.marks a list of default bookmarks:
-         * @see [Geobookmark example](../../examples/map.control.geobookmark.html)
+         * @see [Geobookmark example](../../examples/map.contrgeobookmark.html)
          * @example
         var bm = new GeoBookmark ({
           marks: {
@@ -1778,7 +1774,7 @@ declare namespace ol {
           }
         });
          */
-        class GeoBookmark extends ol.control.Control {
+        class GeoBookmark extends contrControl {
             constructor(options: {
                 className: string;
                 placeholder: string;
@@ -1796,7 +1792,7 @@ declare namespace ol {
              */
             setBookmarks(bmark: any): void;
             /** Get Geo bookmarks
-            * @return {any} a list of bookmarks : { BM1:{pos:ol.coordinates, zoom: integer}, BM2:{pos:ol.coordinates, zoom: integer} }
+            * @return {any} a list of bookmarks : { BM1:{pos:Coordinates, zoom: integer}, BM2:{pos:Coordinates, zoom: integer} }
              */
             getBookmarks(): any;
             /** Remove a Geo bookmark
@@ -1813,20 +1809,20 @@ declare namespace ol {
         }
         /** Control bar for OL3
          * The control bar is a container for other controls. It can be used to create toolbars.
-         * Control bars can be nested and combined with ol.control.Toggle to handle activate/deactivate.
+         * Control bars can be nested and combined with contrToggle to handle activate/deactivate.
          *
          * @constructor
-         * @extends {ol.control.Bar}
+         * @extends {contrBar}
          * @param {Object=} options Control options.
          *	@param {String} options.className class of the control
          *	@param {String} options.centerLabel label for center button, default center
          */
-        class GeolocationBar extends ol.control.Bar {
+        class GeolocationBar extends contrBar {
             constructor(options?: {
                 className: string;
                 centerLabel: string;
             });
-            /** Get the ol.interaction.GeolocationDraw associatedwith the bar
+            /** Get the interaction.GeolocationDraw associatedwith the bar
              *
              */
             getInteraction(): void;
@@ -1865,48 +1861,48 @@ declare namespace ol {
              */
             setActive(b: boolean): void;
             /** Post-process an activated/deactivated control
-            *	@param {ol.event} e :an object with a target {_ol_control_} and active flag {bool}
+            *	@param {event} e :an object with a target {_ol_control_} and active flag {bool}
              */
-            onActivateControl_(e: ol.event): void;
+            onActivateControl_(e: event): void;
             /**
              * @param {string} name of the control to search
-             * @return {ol.control.Control}
+             * @return {contrControl}
              */
-            getControlsByName(name: string): ol.control.Control;
+            getControlsByName(name: string): contrControl;
         }
         /**
-         * OpenLayers 3 lobe Overview Control.
+         * OpenLayers 3 lobe Overview Contr
          * The globe can rotate with map (follow.)
          *
          * @constructor
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @param {Object=} options Control options.
          * 	@param {boolean} follow follow the map when center change, default false
          * 	@param {top|bottom-left|right} align position as top-left, etc.
-         * 	@param {Array<ol.layer>} layers list of layers to display on the globe
-         * 	@param {ol.style.Style | Array.<ol.style.Style> | undefined} style style to draw the position on the map , default a marker
+         * 	@param {Array<layer>} layers list of layers to display on the globe
+         * 	@param {style.Style | Array.<style.Style> | undefined} style style to draw the position on the map , default a marker
          */
-        class Globe extends ol.control.Control {
-            constructor(options?: any, follow: boolean, align: top | bottom-left | right, layers: ol.layer[], style: ol.style.Style | ol.style.Style[] | undefined);
+        class Globe extends contrControl {
+            constructor(options?: any, follow: boolean, align: 'top' | 'bottom-left' | 'right', layers: layer[], style: style.Style | style.Style[] | undefined);
             /**
              * Set the map instance the control associated with.
-             * @param {ol.Map} map The map instance.
+             * @param {Map} map The map instance.
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
             /** Set the globe center with the map center
              */
             setView(): void;
             /** Get globe map
-            *	@return {ol.Map}
+            *	@return {Map}
              */
-            getGlobe(): ol.Map;
+            getGlobe(): Map;
             /** Show/hide the globe
              */
             show(): void;
             /** Set position on the map
             *	@param {top|bottom-left|right}  align
              */
-            setPosition(align: top | bottom-left | right): void;
+            setPosition(align: 'top' | 'bottom-left' | 'right'): void;
             /** Set the globe center
             * @param {_ol_coordinate_} center the point to center to
             * @param {boolean} show show a pointer on the map, defaylt true
@@ -1917,18 +1913,18 @@ declare namespace ol {
          * Draw a graticule on the map.
          *
          * @constructor
-         * @extends {ol.control.CanvasBase}
+         * @extends {contrCanvasBase}
          * @param {Object=} _ol_control_ options.
-         *  @param {ol.projectionLike} options.projection projection to use for the graticule, default EPSG:4326
+         *  @param {projectionLike} options.projection projection to use for the graticule, default EPSG:4326
          *  @param {number} options.maxResolution max resolution to display the graticule
-         *  @param {ol.style.Style} options.style Style to use for drawing the graticule, default black.
+         *  @param {style.Style} options.style Style to use for drawing the graticule, default black.
          *  @param {number} options.step step beetween lines (in proj units), default 1
          *  @param {number} options.stepCoord show a coord every stepCoord, default 1
          *  @param {number} options.spacing spacing beetween lines (in px), default 40px
          *  @param {number} options.borderWidthwidth of the border (in px), default 5px
          *  @param {number} options.marginmargin of the border (in px), default 0px
          */
-        class Graticule extends ol.control.CanvasBase {
+        class Graticule extends contrCanvasBase {
             constructor(_ol_control_?: any);
             /**
              * Remove the control from its current map and attach it to the new map.
@@ -1974,50 +1970,50 @@ declare namespace ol {
          * Draw a grid reference on the map and add an index.
          *
          * @constructor
-         * @extends {ol.control.CanvasBase}
+         * @extends {contrCanvasBase}
          * @fires select
          * @param {Object=} Control options.
-         *  @param {ol.style.Style} options.style Style to use for drawing the grid (stroke and text), default black.
+         *  @param {style.Style} options.style Style to use for drawing the grid (stroke and text), default black.
          *  @param {number} options.maxResolution max resolution to display the graticule
-         *  @param {ol.extent} options.extent extent of the grid, required
-         *  @param {ol.size} options.size number of lines and cols, required
+         *  @param {extent} options.extent extent of the grid, required
+         *  @param {size} options.size number of lines and cols, required
          *  @param {number} options.margin margin to display text (in px), default 0px
-         *  @param {ol.source.Vector} options.source source to use for the index, default none (use setIndex to reset the index)
+         *  @param {VectorSource} options.source source to use for the index, default none (use setIndex to reset the index)
          *  @param {string | function} options.property a property to display in the index or a function that takes a feature and return the name to display in the index, default 'name'.
          *  @param {function|undefined} options.sortFeatures sort function to sort 2 features in the index, default sort on property option
          *  @param {function|undefined} options.indexTitle a function that takes a feature and return the title to display in the index, default the first letter of property option
          *  @param {string} options.filterLabel label to display in the search bar, default 'filter'
          */
-        class GridReference extends ol.control.CanvasBase {
+        class GridReference extends contrCanvasBase {
             constructor(Control?: any);
             /** Returns the text to be displayed in the index
-             * @param {ol.Feature} f the feature
+             * @param {Feature} f the feature
              * @return {string} the text to be displayed in the index
              * @api
              */
-            getFeatureName(f: ol.Feature): string;
+            getFeatureName(f: Feature): string;
             /** Sort function
-             * @param {ol.Feature} a first feature
-             * @param {ol.Feature} b second feature
+             * @param {Feature} a first feature
+             * @param {Feature} b second feature
              * @return {Number} 0 if a==b, -1 if a<b, 1 if a>b
              * @api
              */
-            sortFeatures(a: ol.Feature, b: ol.Feature): number;
+            sortFeatures(a: Feature, b: Feature): number;
             /** Get the feature title
-             * @param {ol.Feature} f
+             * @param {Feature} f
              * @return the first letter of the eature name (getFeatureName)
              * @api
              */
-            indexTitle(f: ol.Feature): any;
+            indexTitle(f: Feature): any;
             /** Display features in the index
-             * @param { Array<ol.Feature> | ol.Collection<ol.Feature> } features
+             * @param { Array<Feature> | Collection<Feature> } features
              */
-            setIndex(features: ol.Feature[] | ol.Collection<ol.Feature>): void;
+            setIndex(features: Feature[] | Collection<Feature>): void;
             /** Get reference for a coord
-            *	@param {ol.coordinate} coords
+            *	@param {Coordinate} coords
             *	@return {string} the reference
              */
-            getReference(coords: ol.coordinate): string;
+            getReference(coords: Coordinate): string;
             /**
              * Remove the control from its current map and attach it to the new map.
              * Subclasses may set up event handlers to get notified about changes to
@@ -2061,12 +2057,12 @@ declare namespace ol {
         /** Image line control
          *
          * @constructor
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @fires select
          * @fires collapse
          * @param {Object=} options Control options.
          *	@param {String} options.className class of the control
-         *	@param {ol.source.Vector} options.source a vector source that contains the images
+         *	@param {VectorSource} options.source a vector source that contains the images
          *	@param {function} options.getImage a function that gets a feature and return the image url, default return the img propertie
          *	@param {function} options.getTitle a function that gets a feature and return the title, default return an empty string
          *	@param {boolean} options.collapsed the line is collapse, default false
@@ -2075,10 +2071,10 @@ declare namespace ol {
          *	@param {boolean} options.hover select image on hover, default false
          *	@param {string|boolean} options.linkColor link color or false if no link, default false
          */
-        class Imageline extends ol.control.Control {
+        class Imageline extends contrControl {
             constructor(options?: {
                 className: string;
-                source: ol.source.Vector;
+                source: VectorSource;
                 getImage: (...params: any[]) => any;
                 getTitle: (...params: any[]) => any;
                 collapsed: boolean;
@@ -2089,10 +2085,10 @@ declare namespace ol {
             });
             /**
              * Remove the control from its current map and attach it to the new map.
-             * @param {ol.Map} map Map.
+             * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
             /** Set useExtent param and refresh the line
              * @param {boolean} b
              */
@@ -2110,25 +2106,25 @@ declare namespace ol {
             toggle(): void;
             /**
              * Get features
-             * @return {Array<ol.Feature>}
+             * @return {Array<Feature>}
              */
-            getFeatures(): ol.Feature[];
+            getFeatures(): Feature[];
             /**
              * Refresh the imageline with new data
              */
             refresh(): void;
             /** Center image line on a feature
-             * @param {ol.feature} feature
+             * @param {feature} feature
              * @param {boolean} scroll scroll the line to center on the image, default true
              * @api
              */
-            select(feature: ol.feature, scroll: boolean): void;
+            select(feature: feature, scroll: boolean): void;
         }
         /**
-         * Geoportail isochrone Control.
+         * Geoportail isochrone Contr
          * @see https://geoservices.ign.fr/documentation/geoservices/isochrones.html
          * @constructor
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @fires isochrone
          * @fires error
          * @param {Object=} options
@@ -2147,7 +2143,7 @@ declare namespace ol {
          *
          *  @param {string} options.exclusions Exclusion list separate with a comma 'Toll,Tunnel,Bridge'
          */
-        class IsochroneGeoportail extends ol.control.Control {
+        class IsochroneGeoportail extends contrControl {
             constructor(options?: {
                 className: string;
                 target: Element | string | undefined;
@@ -2182,27 +2178,27 @@ declare namespace ol {
              */
             setDirection(direction: string): void;
             /** Calculate an isochrone
-             * @param {ol.coordinate} coord
+             * @param {Coordinate} coord
              * @param {number|string} option A number as time (in second) or distance (in meter), depend on method propertie
              * or a string with a unit (s, mn, h for time or km, m)
              */
-            search(coord: ol.coordinate, option: number | string): void;
+            search(coord: Coordinate, option: number | string): void;
         }
         /**
-         * OpenLayers Layer Switcher Control.
+         * OpenLayers Layer Switcher Contr
          *
          * @constructor
-         * @extends {ol.control.LayerSwitcher}
+         * @extends {contrLayerSwitcher}
          * @param {Object=} options Control options.
          */
-        class LayerPopup extends ol.control.LayerSwitcher {
+        class LayerPopup extends contrLayerSwitcher {
             constructor(options?: any);
             /** Disable overflow
              */
             overflow(): void;
             /** Render a list of layer
              * @param {elt} element to render
-             * @layers {Array{ol.layer}} list of layer to show
+             * @layers {Array{layer}} list of layer to show
              * @api stable
              */
             drawList(element: elt): void;
@@ -2210,10 +2206,10 @@ declare namespace ol {
              */
             tip: any;
             /** Test if a layer should be displayed in the switcher
-             * @param {ol.layer} layer
+             * @param {layer} layer
              * @return {boolean} true if the layer is displayed
              */
-            displayInLayerSwitcher(layer: ol.layer): boolean;
+            displayInLayerSwitcher(layer: layer): boolean;
             /**
              * Set the map instance the control is associated with.
              * @param {_ol_Map_} map The map instance.
@@ -2238,42 +2234,42 @@ declare namespace ol {
             setHeader(html: Element | string): void;
             /** Set the layer associated with a li
              * @param {Element} li
-             * @param {ol.layer} layer
+             * @param {layer} layer
              */
-            _setLayerForLI(li: Element, layer: ol.layer): void;
+            _setLayerForLI(li: Element, layer: layer): void;
             /** Get the layer associated with a li
              * @param {Element} li
-             * @return {ol.layer}
+             * @return {layer}
              */
-            _getLayerForLI(li: Element): ol.layer;
+            _getLayerForLI(li: Element): layer;
             /**
              *	Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
              */
             drawPanel(): void;
             /** Change layer visibility according to the baselayer option
-             * @param {ol.layer}
-             * @param {Array<ol.layer>} related layers
+             * @param {layer}
+             * @param {Array<layer>} related layers
              */
-            switchLayerVisibility(l: ol.layer, related: ol.layer[]): void;
+            switchLayerVisibility(l: layer, related: layer[]): void;
             /** Check if layer is on the map (depending on zoom and extent)
-             * @param {ol.layer}
+             * @param {layer}
              * @return {boolean}
              */
-            testLayerVisibility(layer: ol.layer): boolean;
+            testLayerVisibility(layer: layer): boolean;
         }
         /**
-         * @classdesc OpenLayers Layer Switcher Control.
+         * @classdesc OpenLayers Layer Switcher Contr
          * @require layer.getPreview
          *
          * @constructor
-         * @extends {ol.control.LayerSwitcher}
+         * @extends {contrLayerSwitcher}
          * @param {Object=} options Control options.
          */
-        class LayerSwitcherImage extends ol.control.LayerSwitcher {
+        class LayerSwitcherImage extends contrLayerSwitcher {
             constructor(options?: any);
             /** Render a list of layer
              * @param {elt} element to render
-             * @layers {Array{ol.layer}} list of layer to show
+             * @layers {Array{layer}} list of layer to show
              * @api stable
              */
             drawList(element: elt): void;
@@ -2284,10 +2280,10 @@ declare namespace ol {
              */
             tip: any;
             /** Test if a layer should be displayed in the switcher
-             * @param {ol.layer} layer
+             * @param {layer} layer
              * @return {boolean} true if the layer is displayed
              */
-            displayInLayerSwitcher(layer: ol.layer): boolean;
+            displayInLayerSwitcher(layer: layer): boolean;
             /**
              * Set the map instance the control is associated with.
              * @param {_ol_Map_} map The map instance.
@@ -2312,28 +2308,28 @@ declare namespace ol {
             setHeader(html: Element | string): void;
             /** Set the layer associated with a li
              * @param {Element} li
-             * @param {ol.layer} layer
+             * @param {layer} layer
              */
-            _setLayerForLI(li: Element, layer: ol.layer): void;
+            _setLayerForLI(li: Element, layer: layer): void;
             /** Get the layer associated with a li
              * @param {Element} li
-             * @return {ol.layer}
+             * @return {layer}
              */
-            _getLayerForLI(li: Element): ol.layer;
+            _getLayerForLI(li: Element): layer;
             /**
              *	Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
              */
             drawPanel(): void;
             /** Change layer visibility according to the baselayer option
-             * @param {ol.layer}
-             * @param {Array<ol.layer>} related layers
+             * @param {layer}
+             * @param {Array<layer>} related layers
              */
-            switchLayerVisibility(l: ol.layer, related: ol.layer[]): void;
+            switchLayerVisibility(l: layer, related: layer[]): void;
             /** Check if layer is on the map (depending on zoom and extent)
-             * @param {ol.layer}
+             * @param {layer}
              * @return {boolean}
              */
-            testLayerVisibility(layer: ol.layer): boolean;
+            testLayerVisibility(layer: layer): boolean;
         }
         /** Create a legend for styles
          * @constructor
@@ -2341,29 +2337,29 @@ declare namespace ol {
          * @param {*} options
          *  @param {String} options.className class of the control
          *  @param {String} options.title Legend title
-         *  @param {ol.size | undefined} options.size Size of the symboles in the legend, default [40, 25]
+         *  @param {size | undefined} options.size Size of the symboles in the legend, default [40, 25]
          *  @param {int | undefined} options.margin Size of the symbole's margin, default 10
          *  @param {boolean | undefined} options.collapsed Specify if attributions should be collapsed at startup. Default is true.
          *  @param {boolean | undefined} options.collapsible Specify if attributions can be collapsed, default true.
          *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
-         *  @param { ol.style.Style | Array<ol.style.Style> | ol.StyleFunction | undefined	} options.style a style or a style function to use with features
-         * @extends {ol.control.Control}
+         *  @param { style.Style | Array<style.Style> | StyleFunction | undefined	} options.style a style or a style function to use with features
+         * @extends {contrControl}
          */
-        class Legend extends ol.control.Control {
+        class Legend extends contrControl {
             constructor(options: {
                 className: string;
                 title: string;
-                size: ol.size | undefined;
+                size: size | undefined;
                 margin: int | undefined;
                 collapsed: boolean | undefined;
                 collapsible: boolean | undefined;
                 target: Element | string | undefined;
-                style: ol.style.Style | ol.style.Style[] | ol.StyleFunction | undefined;
+                style: style.Style | style.Style[] | StyleFunction | undefined;
             });
             /** Set the style
-             * @param { ol.style.Style | Array<ol.style.Style> | ol.StyleFunction | undefined	} style a style or a style function to use with features
+             * @param { style.Style | Array<style.Style> | StyleFunction | undefined	} style a style or a style function to use with features
              */
-            setStyle(style: ol.style.Style | ol.style.Style[] | ol.StyleFunction | undefined): void;
+            setStyle(style: style.Style | style.Style[] | StyleFunction | undefined): void;
             /** Add a new row to the legend
              * * You can provide in options:
              * - a feature width a style
@@ -2371,24 +2367,24 @@ declare namespace ol {
              * - or properties ans a geometry type that will use the legend style function
              * - or a style and a geometry type
              * @param {*} options a list of parameters
-             *  @param {ol.Feature} options.feature a feature to draw
-             *  @param {ol.style.Style} options.style the style to use if no feature is provided
+             *  @param {Feature} options.feature a feature to draw
+             *  @param {style.Style} options.style the style to use if no feature is provided
              *  @param {*} options.properties properties to use with a style function
              *  @param {string} options.typeGeom type geom to draw with the style or the properties
              */
             addRow(options: {
-                feature: ol.Feature;
-                style: ol.style.Style;
+                feature: Feature;
+                style: style.Style;
                 properties: any;
                 typeGeom: string;
             }): void;
+
             /** Add a new row to the legend
              * @param {*} options a list of parameters
              *  @param {} options.
              */
-            removeRow(options: {
-                : any;
-            }): void;
+            removeRow(index: number) : void;
+
             /** Get a legend row
              * @param {int} index
              * @return {*}
@@ -2417,8 +2413,8 @@ declare namespace ol {
              * - or properties and a geometry type that will use the legend style function
              * - or a style and a geometry type
              * @param {*} options
-             *  @param {ol.Feature} options.feature a feature to draw
-             *  @param {ol.style.Style} options.style the style to use if no feature is provided
+             *  @param {Feature} options.feature a feature to draw
+             *  @param {style.Style} options.style the style to use if no feature is provided
              *  @param {*} options.properties properties to use with a style function
              *  @param {string} options.typeGeom type geom to draw with the style or the properties
              * @param {Canvas|undefined} canvas a canvas to draw in
@@ -2426,8 +2422,8 @@ declare namespace ol {
              * @return {CanvasElement}
              */
             getStyleImage(options: {
-                feature: ol.Feature;
-                style: ol.style.Style;
+                feature: Feature;
+                style: style.Style;
                 properties: any;
                 typeGeom: string;
             }, canvas: Canvas | undefined, row: int | undefined): CanvasElement;
@@ -2436,19 +2432,19 @@ declare namespace ol {
          *
          * @constructor
          * @fires select
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @param {Object=} options Control options.
          *	@param {string} options.className class name
-         *	@param {ol.layer.Layer} options.layer layer to display in the control
-         *	@param {ol.ProjectionLike} options.projection projection of the control, Default is EPSG:3857 (Spherical Mercator).
+         *	@param {layer.Layer} options.layer layer to display in the control
+         *	@param {ProjectionLike} options.projection projection of the control, Default is EPSG:3857 (Spherical Mercator).
          *  @param {Array<any>} options.zone an array of zone: { name, extent (in EPSG:4326) }
          *  @param {bolean} options.centerOnClick center on click when click on zones, default true
          */
-        class MapZone extends ol.control.Control {
+        class MapZone extends contrControl {
             constructor(options?: {
                 className: string;
-                layer: ol.layer.Layer;
-                projection: ol.ProjectionLike;
+                layer: layer.Layer;
+                projection: ProjectionLike;
                 zone: any[];
                 centerOnClick: bolean;
             });
@@ -2464,14 +2460,14 @@ declare namespace ol {
          * The overlay control is a control that display an overlay over the map
          *
          * @constructor
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @fire change:visible
          * @param {Object=} options Control options.
          *  @param {string} className class of the control
          *  @param {boolean} hideOnClick hide the control on click, default false
          *  @param {boolean} closeBox add a closeBox to the control, default false
          */
-        class Notification extends ol.control.Control {
+        class Notification extends contrControl {
             constructor(options?: any, className: string, hideOnClick: boolean, closeBox: boolean);
             /**
              * Display a notification on the map
@@ -2493,7 +2489,7 @@ declare namespace ol {
          * The overlay control is a control that display an overlay over the map
          *
          * @constructor
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @fire change:visible
          * @param {Object=} options Control options.
          *	@param {String} options.className class of the control
@@ -2501,7 +2497,7 @@ declare namespace ol {
          *	@param {bool} options.hideOnClick hide the control on click, default false
          *	@param {bool} options.closeBox add a closeBox to the control, default false
          */
-        class Overlay extends ol.control.Control {
+        class Overlay extends contrControl {
             constructor(options?: {
                 className: string;
                 content: string | Element;
@@ -2514,9 +2510,9 @@ declare namespace ol {
             setContent(html: string | Element): void;
             /** Set the control visibility
             * @param {string|Element} html the html to display in the control
-            * @param {ol.coordinate} coord coordinate of the top left corner of the control to start from
+            * @param {Coordinate} coord coordinate of the top left corner of the control to start from
              */
-            show(html: string | Element, coord: ol.coordinate): void;
+            show(html: string | Element, coord: Coordinate): void;
             /** Set the control visibility hidden
              */
             hide(): void;
@@ -2533,33 +2529,33 @@ declare namespace ol {
             setClass(className: string): void;
         }
         /**
-         * OpenLayers 3 Layer Overview Control.
+         * OpenLayers 3 Layer Overview Contr
          * The overview can rotate with map.
          * Zoom levels are configurable.
          * Click on the overview will center the map.
          * Change width/height of the overview trough css.
          *
          * @constructor
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @param {Object=} options Control options.
-         *  @param {ol.ProjectionLike} options.projection The projection. Default is EPSG:3857 (Spherical Mercator).
+         *  @param {ProjectionLike} options.projection The projection. Default is EPSG:3857 (Spherical Mercator).
          *  @param {Number} options.minZoom default 0
          *  @param {Number} options.maxZoom default 18
          *  @param {boolean} options.rotation enable rotation, default false
          *  @param {top|bottom-left|right} options.align position
-         *  @param {Array<ol.layer>} options.layers list of layers
-         *  @param {ol.style.Style | Array.<ol.style.Style> | undefined} options.style style to draw the map extent on the overveiw
+         *  @param {Array<layer>} options.layers list of layers
+         *  @param {style.Style | Array.<style.Style> | undefined} options.style style to draw the map extent on the overveiw
          *  @param {bool|elastic} options.panAnimation use animation to center map on click, default true
          */
-        class Overview extends ol.control.Control {
+        class Overview extends contrControl {
             constructor(options?: {
-                projection: ol.ProjectionLike;
+                projection: ProjectionLike;
                 minZoom: number;
                 maxZoom: number;
                 rotation: boolean;
-                align: top | bottom-left | right;
-                layers: ol.layer[];
-                style: ol.style.Style | ol.style.Style[] | undefined;
+                align: 'top' | 'bottom-left' | 'right';
+                layers: layer[];
+                style: style.Style | style.Style[] | undefined;
                 panAnimation: boolean | elastic;
             });
             /** Elastic bounce
@@ -2583,34 +2579,34 @@ declare namespace ol {
              */
             elasticFn(bounce: Int, amplitude: number, bounce: Int, amplitude: number): void;
             /** Get overview map
-            *	@return {ol.Map}
+            *	@return {Map}
              */
-            getOverviewMap(): ol.Map;
+            getOverviewMap(): Map;
             /** Toggle overview map
              */
             toggleMap(): void;
             /** Set overview map position
             *	@param {top|bottom-left|right}
              */
-            setPosition(align: top | bottom-left | right): void;
+            setPosition(align: 'top' | 'bottom-left' | 'right'): void;
             /**
              * Set the map instance the control associated with.
-             * @param {ol.Map} map The map instance.
+             * @param {Map} map The map instance.
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
             /** Calculate the extent of the map and draw it on the overview
              */
             calcExtent_(): void;
         }
         /**
-         * Permalink Control.
+         * Permalink Contr
          *
          *	Add a `permalink`property to layers to be handled by the control (and added in the url).
          *  The layer's permalink property is used to name the layer in the url.
          *	The control must be added after all layer are inserted in the map to take them into acount.
          *
          * @constructor
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @param {Object=} options
          *	@param {bool} options.urlReplace replace url or not, default true
          *	@param {integer} options.fixed number of digit in coords, default 6
@@ -2618,7 +2614,7 @@ declare namespace ol {
          *	@param {bool} options.hidden hide the button on the map, default false
          *	@param {function} options.onclick a function called when control is clicked
          */
-        class Permalink extends ol.control.Control {
+        class Permalink extends contrControl {
             constructor(options?: {
                 urlReplace: boolean;
                 fixed: integer;
@@ -2628,15 +2624,15 @@ declare namespace ol {
             });
             /**
              * Set the map instance the control associated with.
-             * @param {ol.Map} map The map instance.
+             * @param {Map} map The map instance.
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
             /** Get layer given a permalink name (permalink propertie in the layer)
             *	@param {string} the permalink to search for
-            *	@param {Array<ol.layer>|undefined} an array of layer to search in
-            *	@return {ol.layer|false}
+            *	@param {Array<layer>|undefined} an array of layer to search in
+            *	@return {layer|false}
              */
-            getLayerByLink(the: string, an: ol.layer[] | undefined): ol.layer | false;
+            getLayerByLink(the: string, an: layer[] | undefined): layer | false;
             /** Set map position according to the current link
              */
             setPosition(): void;
@@ -2684,14 +2680,14 @@ declare namespace ol {
          * @fire print
          * @fire error
          * @fire printing
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @param {Object=} options Control options.
          *	@param {String} options.className class of the control
          *	@param {string} options.imageType A string indicating the image format, default image/jpeg
          *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
          *	@param {string} options.orientation Page orientation (landscape/portrait), default guest the best one
          */
-        class Print extends ol.control.Control {
+        class Print extends contrControl {
             constructor(options?: {
                 className: string;
                 imageType: string;
@@ -2715,16 +2711,16 @@ declare namespace ol {
             }): void;
         }
         /**
-         * @classdesc OpenLayers 3 Profil Control.
+         * @classdesc OpenLayers 3 Profil Contr
          *	Draw a profil of a feature (with a 3D geometry)
          *
          * @constructor
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @fires  over, out, show
          * @param {Object=} _ol_control_ opt_options.
          *
          */
-        class Profil extends ol.control.Control {
+        class Profil extends contrControl {
             constructor(_ol_control_?: any);
             /** Custom infos list
             * @api stable
@@ -2755,9 +2751,9 @@ declare namespace ol {
             isShown(): void;
             /**
              * Set the geometry to draw the profil.
-             * @param {ol.Feature|ol.geom} f the feature.
+             * @param {Feature|geom} f the feature.
              * @param {Object=} options
-             *		- projection {ol.ProjectionLike} feature projection, default projection of the map
+             *		- projection {ProjectionLike} feature projection, default projection of the map
              *		- zunit {m|km} default m
              *		- unit {m|km} default km
              *		- zmin {Number|undefined} default 0
@@ -2766,7 +2762,7 @@ declare namespace ol {
              *		- amplitude {integer|undefined} amplitude of the altitude, default zmax-zmin
              * @api stable
              */
-            setGeometry(f: ol.Feature | ol.geom, options?: any): void;
+            setGeometry(f: Feature | geom, options?: any): void;
             /** Get profil image
             * @param {string|undefined} type image format or 'canvas' to get the canvas image, default image/png.
             * @param {Number|undefined} encoderOptions between 0 and 1 indicating image quality image/jpeg or image/webp, default 0.92.
@@ -2776,9 +2772,9 @@ declare namespace ol {
             getImage(type: string | undefined, encoderOptions: number | undefined): string;
         }
         /**
-         * Geoportail routing Control.
+         * Geoportail routing Contr
          * @constructor
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @fires select
          * @fires change:input
          * @param {Object=} options
@@ -2795,7 +2791,7 @@ declare namespace ol {
          *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index.
          *	@param {function} options.autocomplete a function that take a search string and callback function to send an array
          */
-        class RoutingGeoportail extends ol.control.Control {
+        class RoutingGeoportail extends contrControl {
             constructor(options?: {
                 className: string;
                 target: Element | string | undefined;
@@ -2828,11 +2824,11 @@ declare namespace ol {
             ajax(url: string, onsuccess: (...params: any[]) => any, onerror: (...params: any[]) => any): void;
         }
         /**
-         * Scale Control.
+         * Scale Contr
          * A control to display the scale of the center on the map
          *
          * @constructor
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @fires select
          * @fires change:input
          * @param {Object=} options
@@ -2840,7 +2836,7 @@ declare namespace ol {
          *  @param {string} options.ppi screen ppi, default 96
          * 	@param {string} options.editable make the control editable, default true
          */
-        class Scale extends ol.control.Control {
+        class Scale extends contrControl {
             constructor(options?: {
                 className: string;
                 ppi: string;
@@ -2850,10 +2846,10 @@ declare namespace ol {
              * Remove the control from its current map and attach it to the new map.
              * Subclasses may set up event handlers to get notified about changes to
              * the map here.
-             * @param {ol.Map} map Map.
+             * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
             /** Display the scale
              */
             _showScale(): void;
@@ -2871,7 +2867,7 @@ declare namespace ol {
          * Search places using the French National Base Address (BAN) API.
          *
          * @constructor
-         * @extends {ol.control.Search}
+         * @extends {contrSearch}
          * @fires select
          * @param {Object=} Control options.
          *	@param {string} options.className control class name
@@ -2887,14 +2883,14 @@ declare namespace ol {
          *	@param {function} options.getTitle a function that takes a feature and return the text to display in the menu, default return label attribute
          * @see {@link https://adresse.data.gouv.fr/api/}
          */
-        class SearchBAN extends ol.control.Search {
+        class SearchBAN extends contrSearch {
             constructor(Control?: any);
             /** Returns the text to be displayed in the menu
-             *	@param {ol.Feature} f the feature
+             *	@param {Feature} f the feature
              *	@return {string} the text to be displayed in the index
              *	@api
              */
-            getTitle(f: ol.Feature): string;
+            getTitle(f: Feature): string;
             /** A ligne has been clicked in the menu > dispatch event
              *	@param {any} f the feature, as passed in the autocomplete
              *	@api
@@ -2946,7 +2942,7 @@ declare namespace ol {
          * Search on DFCI grid.
          *
          * @constructor
-         * @extends {ol.control.Search}
+         * @extends {contrSearch}
          * @fires select
          * @param {Object=} Control options.
          *	@param {string} options.className control class name
@@ -2961,7 +2957,7 @@ declare namespace ol {
          *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return the property
          *	@param {function | undefined} options.getSearchString a function that take a feature and return a text to be used as search string, default geTitle() is used as search string
          */
-        class SearchDFCI extends ol.control.Search {
+        class SearchDFCI extends contrSearch {
             constructor(Control?: any);
             /** Autocomplete function
             * @param {string} s search string
@@ -3019,7 +3015,7 @@ declare namespace ol {
          * Search features.
          *
          * @constructor
-         * @extends {ol.control.Search}
+         * @extends {contrSearch}
          * @fires select
          * @param {Object=} Control options.
          *	@param {string} options.className control class name
@@ -3034,7 +3030,7 @@ declare namespace ol {
          *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return the property
          *	@param {function | undefined} options.getSearchString a function that take a feature and return a text to be used as search string, default geTitle() is used as search string
          */
-        class SearchFeature extends ol.control.Search {
+        class SearchFeature extends contrSearch {
             constructor(Control?: any);
             /** No history avaliable on features
              */
@@ -3043,27 +3039,27 @@ declare namespace ol {
              */
             saveHistory(): void;
             /** Returns the text to be displayed in the menu
-            *	@param {ol.Feature} f the feature
+            *	@param {Feature} f the feature
             *	@return {string} the text to be displayed in the index
             *	@api
              */
-            getTitle(f: ol.Feature): string;
+            getTitle(f: Feature): string;
             /** Return the string to search in
-            *	@param {ol.Feature} f the feature
+            *	@param {Feature} f the feature
             *	@return {string} the text to be used as search string
             *	@api
              */
-            getSearchString(f: ol.Feature): string;
+            getSearchString(f: Feature): string;
             /** Get the source
-            *	@return {ol.source.Vector}
+            *	@return {VectorSource}
             *	@api
              */
-            getSource(): ol.source.Vector;
+            getSource(): VectorSource;
             /** Get the source
-            *	@param {ol.source.Vector} source
+            *	@param {VectorSource} source
             *	@api
              */
-            setSource(source: ol.source.Vector): void;
+            setSource(source: VectorSource): void;
             /** Autocomplete function
             * @param {string} s search string
             * @param {int} max max
@@ -3110,7 +3106,7 @@ declare namespace ol {
          * Search on GPS coordinate.
          *
          * @constructor
-         * @extends {ol.control.Search}
+         * @extends {contrSearch}
          * @fires select
          * @param {Object=} Control options.
          *  @param {string} options.className control class name
@@ -3121,7 +3117,7 @@ declare namespace ol {
          *  @param {integer | undefined} options.minLength minimum length to start searching, default 1
          *  @param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
          */
-        class SearchGPS extends ol.control.Search {
+        class SearchGPS extends contrSearch {
             constructor(Control?: any);
             /** Autocomplete function
             * @param {string} s search string
@@ -3179,9 +3175,9 @@ declare namespace ol {
          * Search places using the French National Base Address (BAN) API.
          *
          * @constructor
-         * @extends {ol.control.SearchJSON}
+         * @extends {contrSearchJSON}
          * @fires select
-         * @param {any} options extend ol.control.SearchJSON options
+         * @param {any} options extend contrSearchJSON options
          *	@param {string} options.className control class name
          *	@param {boolean | undefined} options.apiKey the service api key.
          *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
@@ -3195,11 +3191,11 @@ declare namespace ol {
          *	@param {Number} options.pageSize item per page for parcelle list paging, use -1 for no paging, default 5
          * @see {@link https://geoservices.ign.fr/documentation/geoservices/geocodage.html}
          */
-        class SearchGeoportailParcelle extends ol.control.SearchJSON {
+        class SearchGeoportailParcelle extends contrSearchJSON {
             constructor(options: {
                 className: string;
                 apiKey: boolean | undefined;
-                authentication:: string | undefined;
+                authentication: string | undefined;
                 target: Element | string | undefined;
                 label: string | undefined;
                 placeholder: string | undefined;
@@ -3300,7 +3296,7 @@ declare namespace ol {
          * Search places using the Nominatim geocoder from the OpenStreetmap project.
          *
          * @constructor
-         * @extends {ol.control.Search}
+         * @extends {contrSearch}
          * @fires select
          * @param {Object=} Control options.
          *	@param {string} options.className control class name
@@ -3316,14 +3312,14 @@ declare namespace ol {
          *	@param {string|undefined} options.url URL to Nominatim API, default "https://nominatim.openstreetmap.org/search"
          * @see {@link https://wiki.openstreetmap.org/wiki/Nominatim}
          */
-        class SearchNominatim extends ol.control.Search {
+        class SearchNominatim extends contrSearch {
             constructor(Control?: any);
             /** Returns the text to be displayed in the menu
-             *	@param {ol.Feature} f the feature
+             *	@param {Feature} f the feature
              *	@return {string} the text to be displayed in the index
              *	@api
              */
-            getTitle(f: ol.Feature): string;
+            getTitle(f: Feature): string;
             /**
              * @param {string} s the search string
              * @return {Object} request data (as key:value)
@@ -3382,7 +3378,7 @@ declare namespace ol {
          * @see https://www.mediawiki.org/wiki/API:Main_page
          *
          * @constructor
-         * @extends {ol.control.SearchJSON}
+         * @extends {contrSearchJSON}
          * @fires select
          * @param {Object=} Control options.
          *  @param {string} options.className control class name
@@ -3396,14 +3392,14 @@ declare namespace ol {
          *
          *  @param {string|undefined} options.lang API language, default none
          */
-        class SearchWikipedia extends ol.control.SearchJSON {
+        class SearchWikipedia extends contrSearchJSON {
             constructor(Control?: any);
             /** Returns the text to be displayed in the menu
-            *	@param {ol.Feature} f the feature
+            *	@param {Feature} f the feature
             *	@return {string} the text to be displayed in the index
             *	@api
              */
-            getTitle(f: ol.Feature): string;
+            getTitle(f: Feature): string;
             /** Set the current language
              * @param {string} lang the current language as ISO string (en, fr, de, es, it, ja, ...)
              */
@@ -3472,16 +3468,16 @@ declare namespace ol {
             equalFeatures(f1: any, f2: any): boolean;
         }
         /**
-         * Select Control.
+         * Select Contr
          * A control to select features by attributes
          *
          * @constructor
-         * @extends {ol.control.SelectBase}
+         * @extends {contrSelectBase}
          * @fires select
          * @param {Object=} options
          *  @param {string} options.className control class name
          *  @param {Element | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
-         *  @param {ol/source/Vector | Array<ol/source/Vector>} options.source the source to search in
+         *  @param {Vector | Array<Vector>} options.source the source to search in
          *  @param {string} [options.selectLabel=select] select button label
          *  @param {string} [options.addLabel=add] add button label
          *  @param {string} [options.caseLabel=case sensitive] case checkbox label
@@ -3489,11 +3485,11 @@ declare namespace ol {
          *  @param {string} [options.attrPlaceHolder=attribute]
          *  @param {string} [options.valuePlaceHolder=value]
          */
-        class Select extends ol.control.SelectBase {
+        class Select extends contrSelectBase {
             constructor(options?: {
                 className: string;
                 target: Element | undefined;
-                source: ol/source/Vector | ol/source/Vector[];
+                source: Vector | Vector[];
                 selectLabel?: string;
                 addLabel?: string;
                 caseLabel?: string;
@@ -3527,7 +3523,7 @@ declare namespace ol {
             removeCondition(i: int): void;
             /** Select features by attributes
              * @param {*} options
-             *  @param {Array<ol/source/Vector|undefined} options.sources source to apply rules, default the select sources
+             *  @param {Array<Vector|undefined} options.sources source to apply rules, default the select sources
              *  @param {bool} options.useCase case sensitive, default checkbox state
              *  @param {bool} options.matchAll match all conditions, , default checkbox state
              *  @param {Array<conditions>} options.conditions array of conditions
@@ -3539,17 +3535,17 @@ declare namespace ol {
                 conditions: conditions[];
             }): void;
             /** Set the current sources
-             * @param {ol.source.Vector|Array<ol.source.Vector>|undefined} source
+             * @param {VectorSource|Array<VectorSource>|undefined} source
              */
-            setSources(source: ol.source.Vector | ol.source.Vector[] | undefined): void;
+            setSources(source: VectorSource | VectorSource[] | undefined): void;
             /** Set feature collection to search in
-             * @param {ol.Collection<ol.Feature>} features
+             * @param {Collection<Feature>} features
              */
-            setFeatures(features: ol.Collection<ol.Feature>): void;
+            setFeatures(features: Collection<Feature>): void;
             /** Get feature collection to search in
-             * @return {ol.Collection<ol.Feature>}
+             * @return {Collection<Feature>}
              */
-            getFeatures(): ol.Collection<ol.Feature>;
+            getFeatures(): Collection<Feature>;
             /** List of operators / translation
              * @api
              */
@@ -3560,8 +3556,8 @@ declare namespace ol {
              */
             _escape(search: string): string;
             /** Selection features in a list of features
-             * @param {Array<ol.Feature>} result the current list of features
-             * @param {Array<ol.Feature>} features to test in
+             * @param {Array<Feature>} result the current list of features
+             * @param {Array<Feature>} features to test in
              * @param {Object} condition
              *  @param {string} condition.attr attribute name
              *  @param {string} condition.op operator
@@ -3569,26 +3565,26 @@ declare namespace ol {
              * @param {boolean} all all conditions must be valid
              * @param {boolean} usecase use case or not when testing strings
              */
-            _selectFeatures(result: ol.Feature[], features: ol.Feature[], condition: {
+            _selectFeatures(result: Feature[], features: Feature[], condition: {
                 attr: string;
                 op: string;
                 val: any;
             }, all: boolean, usecase: boolean): void;
             /** Get vector source
-             * @return {Array<ol.source.Vector>}
+             * @return {Array<VectorSource>}
              */
-            getSources(): ol.source.Vector[];
+            getSources(): VectorSource[];
         }
         /**
          * Select features by property using a popup
          *
          * @constructor
-         * @extends {ol.control.SelectBase}
+         * @extends {contrSelectBase}
          * @fires select
          * @param {Object=} options
          *  @param {string} options.className control class name
          *  @param {Element | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
-         *  @param {ol/source/Vector | Array<ol/source/Vector>} options.source the source to search in
+         *  @param {Vector | Array<Vector>} options.source the source to search in
          *  @param {string} options.property property to select on
          *  @param {string} options.label control label
          *  @param {number} options.max max feature to test to get the values, default 10000
@@ -3597,11 +3593,11 @@ declare namespace ol {
          *  @param {number} options.defaultLabel label for the default radio button
          *  @param {function|undefined} options.onchoice function triggered when an option is clicked, default doSelect
          */
-        class SelectCheck extends ol.control.SelectBase {
+        class SelectCheck extends contrSelectBase {
             constructor(options?: {
                 className: string;
                 target: Element | undefined;
-                source: ol/source/Vector | ol/source/Vector[];
+                source: Vector | Vector[];
                 property: string;
                 label: string;
                 max: number;
@@ -3628,17 +3624,17 @@ declare namespace ol {
                 sort: boolean;
             }): void;
             /** Set the current sources
-             * @param {ol.source.Vector|Array<ol.source.Vector>|undefined} source
+             * @param {VectorSource|Array<VectorSource>|undefined} source
              */
-            setSources(source: ol.source.Vector | ol.source.Vector[] | undefined): void;
+            setSources(source: VectorSource | VectorSource[] | undefined): void;
             /** Set feature collection to search in
-             * @param {ol.Collection<ol.Feature>} features
+             * @param {Collection<Feature>} features
              */
-            setFeatures(features: ol.Collection<ol.Feature>): void;
+            setFeatures(features: Collection<Feature>): void;
             /** Get feature collection to search in
-             * @return {ol.Collection<ol.Feature>}
+             * @return {Collection<Feature>}
              */
-            getFeatures(): ol.Collection<ol.Feature>;
+            getFeatures(): Collection<Feature>;
             /** List of operators / translation
              * @api
              */
@@ -3649,8 +3645,8 @@ declare namespace ol {
              */
             _escape(search: string): string;
             /** Selection features in a list of features
-             * @param {Array<ol.Feature>} result the current list of features
-             * @param {Array<ol.Feature>} features to test in
+             * @param {Array<Feature>} result the current list of features
+             * @param {Array<Feature>} features to test in
              * @param {Object} condition
              *  @param {string} condition.attr attribute name
              *  @param {string} condition.op operator
@@ -3658,36 +3654,36 @@ declare namespace ol {
              * @param {boolean} all all conditions must be valid
              * @param {boolean} usecase use case or not when testing strings
              */
-            _selectFeatures(result: ol.Feature[], features: ol.Feature[], condition: {
+            _selectFeatures(result: Feature[], features: Feature[], condition: {
                 attr: string;
                 op: string;
                 val: any;
             }, all: boolean, usecase: boolean): void;
             /** Get vector source
-             * @return {Array<ol.source.Vector>}
+             * @return {Array<VectorSource>}
              */
-            getSources(): ol.source.Vector[];
+            getSources(): VectorSource[];
         }
         /**
          * Select features by property using a condition
          *
          * @constructor
-         * @extends {ol.control.SelectBase}
+         * @extends {contrSelectBase}
          * @fires select
          * @param {Object=} options
          *  @param {string} options.className control class name
          *  @param {Element | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
-         *  @param {ol/source/Vector | Array<ol/source/Vector>} options.source the source to search in
+         *  @param {Vector | Array<Vector>} options.source the source to search in
          *  @param {string} options.label control label, default 'condition'
          *  @param {number} options.selectAll select all features if no option selected
          *  @param {condition|Array<condition>} options.condition conditions
          *  @param {function|undefined} options.onchoice function triggered when an option is clicked, default doSelect
          */
-        class SelectCondition extends ol.control.SelectBase {
+        class SelectCondition extends contrSelectBase {
             constructor(options?: {
                 className: string;
                 target: Element | undefined;
-                source: ol/source/Vector | ol/source/Vector[];
+                source: Vector | Vector[];
                 label: string;
                 selectAll: number;
                 condition: condition | condition[];
@@ -3711,17 +3707,17 @@ declare namespace ol {
              */
             doSelect(): void;
             /** Set the current sources
-             * @param {ol.source.Vector|Array<ol.source.Vector>|undefined} source
+             * @param {VectorSource|Array<VectorSource>|undefined} source
              */
-            setSources(source: ol.source.Vector | ol.source.Vector[] | undefined): void;
+            setSources(source: VectorSource | VectorSource[] | undefined): void;
             /** Set feature collection to search in
-             * @param {ol.Collection<ol.Feature>} features
+             * @param {Collection<Feature>} features
              */
-            setFeatures(features: ol.Collection<ol.Feature>): void;
+            setFeatures(features: Collection<Feature>): void;
             /** Get feature collection to search in
-             * @return {ol.Collection<ol.Feature>}
+             * @return {Collection<Feature>}
              */
-            getFeatures(): ol.Collection<ol.Feature>;
+            getFeatures(): Collection<Feature>;
             /** List of operators / translation
              * @api
              */
@@ -3732,8 +3728,8 @@ declare namespace ol {
              */
             _escape(search: string): string;
             /** Selection features in a list of features
-             * @param {Array<ol.Feature>} result the current list of features
-             * @param {Array<ol.Feature>} features to test in
+             * @param {Array<Feature>} result the current list of features
+             * @param {Array<Feature>} features to test in
              * @param {Object} condition
              *  @param {string} condition.attr attribute name
              *  @param {string} condition.op operator
@@ -3741,34 +3737,34 @@ declare namespace ol {
              * @param {boolean} all all conditions must be valid
              * @param {boolean} usecase use case or not when testing strings
              */
-            _selectFeatures(result: ol.Feature[], features: ol.Feature[], condition: {
+            _selectFeatures(result: Feature[], features: Feature[], condition: {
                 attr: string;
                 op: string;
                 val: any;
             }, all: boolean, usecase: boolean): void;
             /** Get vector source
-             * @return {Array<ol.source.Vector>}
+             * @return {Array<VectorSource>}
              */
-            getSources(): ol.source.Vector[];
+            getSources(): VectorSource[];
         }
         /**
          * Select features by property using a simple text input
          *
          * @constructor
-         * @extends {ol.control.SelectBase}
+         * @extends {contrSelectBase}
          * @fires select
          * @param {Object=} options
          *  @param {string} options.className control class name
          *  @param {Element | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
-         *  @param {ol/source/Vector | Array<ol/source/Vector>} options.source the source to search in
+         *  @param {Vector | Array<Vector>} options.source the source to search in
          *  @param {string} options.property property to select on
          *  @param {function|undefined} options.onchoice function triggered the text change, default nothing
          */
-        class SelectFulltext extends ol.control.SelectBase {
+        class SelectFulltext extends contrSelectBase {
             constructor(options?: {
                 className: string;
                 target: Element | undefined;
-                source: ol/source/Vector | ol/source/Vector[];
+                source: Vector | Vector[];
                 property: string;
                 onchoice: ((...params: any[]) => any) | undefined;
             });
@@ -3776,17 +3772,17 @@ declare namespace ol {
              */
             doSelect(): void;
             /** Set the current sources
-             * @param {ol.source.Vector|Array<ol.source.Vector>|undefined} source
+             * @param {VectorSource|Array<VectorSource>|undefined} source
              */
-            setSources(source: ol.source.Vector | ol.source.Vector[] | undefined): void;
+            setSources(source: VectorSource | VectorSource[] | undefined): void;
             /** Set feature collection to search in
-             * @param {ol.Collection<ol.Feature>} features
+             * @param {Collection<Feature>} features
              */
-            setFeatures(features: ol.Collection<ol.Feature>): void;
+            setFeatures(features: Collection<Feature>): void;
             /** Get feature collection to search in
-             * @return {ol.Collection<ol.Feature>}
+             * @return {Collection<Feature>}
              */
-            getFeatures(): ol.Collection<ol.Feature>;
+            getFeatures(): Collection<Feature>;
             /** List of operators / translation
              * @api
              */
@@ -3797,8 +3793,8 @@ declare namespace ol {
              */
             _escape(search: string): string;
             /** Selection features in a list of features
-             * @param {Array<ol.Feature>} result the current list of features
-             * @param {Array<ol.Feature>} features to test in
+             * @param {Array<Feature>} result the current list of features
+             * @param {Array<Feature>} features to test in
              * @param {Object} condition
              *  @param {string} condition.attr attribute name
              *  @param {string} condition.op operator
@@ -3806,35 +3802,35 @@ declare namespace ol {
              * @param {boolean} all all conditions must be valid
              * @param {boolean} usecase use case or not when testing strings
              */
-            _selectFeatures(result: ol.Feature[], features: ol.Feature[], condition: {
+            _selectFeatures(result: Feature[], features: Feature[], condition: {
                 attr: string;
                 op: string;
                 val: any;
             }, all: boolean, usecase: boolean): void;
             /** Get vector source
-             * @return {Array<ol.source.Vector>}
+             * @return {Array<VectorSource>}
              */
-            getSources(): ol.source.Vector[];
+            getSources(): VectorSource[];
         }
         /**
-         * A multiselect control.
+         * A multiselect contr
          * A container that manage other control Select
          *
          * @constructor
-         * @extends {ol.control.SelectBase}
+         * @extends {contrSelectBase}
          * @fires select
          * @param {Object=} options
          *  @param {string} options.className control class name
          *  @param {Element | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
-         *  @param {ol/source/Vector | Array<ol/source/Vector>} options.source the source to search in
-         *  @param {Array<ol.control.SelectBase>} options.controls an array of controls
+         *  @param {Vector | Array<Vector>} options.source the source to search in
+         *  @param {Array<contrSelectBase>} options.controls an array of controls
          */
-        class SelectMulti extends ol.control.SelectBase {
+        class SelectMulti extends contrSelectBase {
             constructor(options?: {
                 className: string;
                 target: Element | undefined;
-                source: ol/source/Vector | ol/source/Vector[];
-                controls: ol.control.SelectBase[];
+                source: Vector | Vector[];
+                controls: contrSelectBase[];
             });
             /**
             * Set the map instance the control associated with.
@@ -3842,28 +3838,28 @@ declare namespace ol {
              */
             setMap(map: o.Map): void;
             /** Add a new control
-             * @param {ol.control.SelectBase} c
+             * @param {contrSelectBase} c
              */
-            addControl(c: ol.control.SelectBase): void;
+            addControl(c: contrSelectBase): void;
             /** Get select controls
-             * @return {Aray<ol.control.SelectBase>}
+             * @return {Aray<contrSelectBase>}
              */
-            getControls(): Aray<ol.control.SelectBase>;
+            getControls(): Aray<contrSelectBase>;
             /** Select features by condition
              */
             doSelect(): void;
             /** Set the current sources
-             * @param {ol.source.Vector|Array<ol.source.Vector>|undefined} source
+             * @param {VectorSource|Array<VectorSource>|undefined} source
              */
-            setSources(source: ol.source.Vector | ol.source.Vector[] | undefined): void;
+            setSources(source: VectorSource | VectorSource[] | undefined): void;
             /** Set feature collection to search in
-             * @param {ol.Collection<ol.Feature>} features
+             * @param {Collection<Feature>} features
              */
-            setFeatures(features: ol.Collection<ol.Feature>): void;
+            setFeatures(features: Collection<Feature>): void;
             /** Get feature collection to search in
-             * @return {ol.Collection<ol.Feature>}
+             * @return {Collection<Feature>}
              */
-            getFeatures(): ol.Collection<ol.Feature>;
+            getFeatures(): Collection<Feature>;
             /** List of operators / translation
              * @api
              */
@@ -3874,8 +3870,8 @@ declare namespace ol {
              */
             _escape(search: string): string;
             /** Selection features in a list of features
-             * @param {Array<ol.Feature>} result the current list of features
-             * @param {Array<ol.Feature>} features to test in
+             * @param {Array<Feature>} result the current list of features
+             * @param {Array<Feature>} features to test in
              * @param {Object} condition
              *  @param {string} condition.attr attribute name
              *  @param {string} condition.op operator
@@ -3883,37 +3879,37 @@ declare namespace ol {
              * @param {boolean} all all conditions must be valid
              * @param {boolean} usecase use case or not when testing strings
              */
-            _selectFeatures(result: ol.Feature[], features: ol.Feature[], condition: {
+            _selectFeatures(result: Feature[], features: Feature[], condition: {
                 attr: string;
                 op: string;
                 val: any;
             }, all: boolean, usecase: boolean): void;
             /** Get vector source
-             * @return {Array<ol.source.Vector>}
+             * @return {Array<VectorSource>}
              */
-            getSources(): ol.source.Vector[];
+            getSources(): VectorSource[];
         }
         /**
          * Select features by property using a popup
          *
          * @constructor
-         * @extends {ol.control.SelectBase}
+         * @extends {contrSelectBase}
          * @fires select
          * @param {Object=} options
          *  @param {string} options.className control class name
          *  @param {Element | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
-         *  @param {ol/source/Vector | Array<ol/source/Vector>} options.source the source to search in
+         *  @param {Vector | Array<Vector>} options.source the source to search in
          *  @param {string} options.property property to select on
          *  @param {number} options.max max feature to test to get the values, default 10000
          *  @param {number} options.selectAll select all features if no option selected
          *  @param {string} options.defaultLabel label for the default selection
          *  @param {function|undefined} options.onchoice function triggered when an option is clicked, default doSelect
          */
-        class SelectPopup extends ol.control.SelectBase {
+        class SelectPopup extends contrSelectBase {
             constructor(options?: {
                 className: string;
                 target: Element | undefined;
-                source: ol/source/Vector | ol/source/Vector[];
+                source: Vector | Vector[];
                 property: string;
                 max: number;
                 selectAll: number;
@@ -3933,17 +3929,17 @@ declare namespace ol {
              */
             setValues(values: any): void;
             /** Set the current sources
-             * @param {ol.source.Vector|Array<ol.source.Vector>|undefined} source
+             * @param {VectorSource|Array<VectorSource>|undefined} source
              */
-            setSources(source: ol.source.Vector | ol.source.Vector[] | undefined): void;
+            setSources(source: VectorSource | VectorSource[] | undefined): void;
             /** Set feature collection to search in
-             * @param {ol.Collection<ol.Feature>} features
+             * @param {Collection<Feature>} features
              */
-            setFeatures(features: ol.Collection<ol.Feature>): void;
+            setFeatures(features: Collection<Feature>): void;
             /** Get feature collection to search in
-             * @return {ol.Collection<ol.Feature>}
+             * @return {Collection<Feature>}
              */
-            getFeatures(): ol.Collection<ol.Feature>;
+            getFeatures(): Collection<Feature>;
             /** List of operators / translation
              * @api
              */
@@ -3954,8 +3950,8 @@ declare namespace ol {
              */
             _escape(search: string): string;
             /** Selection features in a list of features
-             * @param {Array<ol.Feature>} result the current list of features
-             * @param {Array<ol.Feature>} features to test in
+             * @param {Array<Feature>} result the current list of features
+             * @param {Array<Feature>} features to test in
              * @param {Object} condition
              *  @param {string} condition.attr attribute name
              *  @param {string} condition.op operator
@@ -3963,31 +3959,31 @@ declare namespace ol {
              * @param {boolean} all all conditions must be valid
              * @param {boolean} usecase use case or not when testing strings
              */
-            _selectFeatures(result: ol.Feature[], features: ol.Feature[], condition: {
+            _selectFeatures(result: Feature[], features: Feature[], condition: {
                 attr: string;
                 op: string;
                 val: any;
             }, all: boolean, usecase: boolean): void;
             /** Get vector source
-             * @return {Array<ol.source.Vector>}
+             * @return {Array<VectorSource>}
              */
-            getSources(): ol.source.Vector[];
+            getSources(): VectorSource[];
         }
         function Status(): void;
         function Storymap(): void;
         /**
-         * @classdesc Swipe Control.
+         * @classdesc Swipe Contr
          *
          * @constructor
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @param {Object=} Control options.
-         *	@param {ol.layer} options.layers layer to swipe
-         *	@param {ol.layer} options.rightLayer layer to swipe on right side
+         *	@param {layer} options.layers layer to swipe
+         *	@param {layer} options.rightLayer layer to swipe on right side
          *	@param {string} options.className control class name
          *	@param {number} options.position position propertie of the swipe [0,1], default 0.5
          *	@param {string} options.orientation orientation propertie (vertical|horizontal), default vertical
          */
-        class Swipe extends ol.control.Control {
+        class Swipe extends contrControl {
             constructor(Control?: any);
             /**
              * Set the map instance the control associated with.
@@ -3995,25 +3991,25 @@ declare namespace ol {
              */
             setMap(map: _ol_Map_): void;
             /** Add a layer to clip
-             *	@param {ol.layer|Array<ol.layer>} layer to clip
+             *	@param {layer|Array<layer>} layer to clip
             *	@param {bool} add layer in the right part of the map, default left.
              */
-            addLayer(layer: ol.layer | ol.layer[], add: boolean): void;
+            addLayer(layer: layer | layer[], add: boolean): void;
             /** Remove a layer to clip
-             *	@param {ol.layer|Array<ol.layer>} layer to clip
+             *	@param {layer|Array<layer>} layer to clip
              */
-            removeLayer(layer: ol.layer | ol.layer[]): void;
+            removeLayer(layer: layer | layer[]): void;
         }
-        /** ol.control.Target draw a target at the center of the map.
+        /** contrTarget draw a target at the center of the map.
          * @constructor
-         * @extends {ol.control.CanvasBase}
+         * @extends {contrCanvasBase}
          * @param {Object} options
-         *  @param {ol.style.Style|Array<ol.style.Style>} options.style
+         *  @param {style.Style|Array<style.Style>} options.style
          *  @param {string} options.composite composite operation = difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
          */
-        class Target extends ol.control.CanvasBase {
+        class Target extends contrCanvasBase {
             constructor(options: {
-                style: ol.style.Style | ol.style.Style[];
+                style: style.Style | style.Style[];
                 composite: string;
             });
             /** Set the control visibility
@@ -4066,14 +4062,14 @@ declare namespace ol {
         }
         /** A simple push button control drawn as text
          * @constructor
-         * @extends {ol.control.Button}
+         * @extends {contrButton}
          * @param {Object=} options Control options.
          *	@param {String} options.className class of the control
          *	@param {String} options.title title of the control
          *	@param {String} options.html html to insert in the control
          *	@param {function} options.handleClick callback when control is clicked (or use change:active event)
          */
-        class TextButton extends ol.control.Button {
+        class TextButton extends contrButton {
             constructor(options?: {
                 className: string;
                 title: string;
@@ -4100,14 +4096,14 @@ declare namespace ol {
         /** Timeline control
          *
          * @constructor
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @fires select
          * @fires scroll
          * @fires collapse
          * @param {Object=} options Control options.
          *	@param {String} options.className class of the control
-         *	@param {Array<ol.Feature>} options.features Features to show in the timeline
-         *	@param {ol.SourceImageOptions.vector} options.source class of the control
+         *	@param {Array<Feature>} options.features Features to show in the timeline
+         *	@param {SourceImageOptions.vector} options.source class of the control
          *	@param {Number} options.interval time interval length in ms or a text with a format d, h, mn, s (31 days = '31d'), default none
          *	@param {String} options.maxWidth width of the time line in px, default 2000px
          *	@param {String} options.minDate minimum date
@@ -4121,11 +4117,11 @@ declare namespace ol {
          *	@param {String} options.graduation day|month to show month or day graduation, default show only years
          *	@param {String} options.scrollTimeout Time in milliseconds to get a scroll event, default 15ms
          */
-        class Timeline extends ol.control.Control {
+        class Timeline extends contrControl {
             constructor(options?: {
                 className: string;
-                features: ol.Feature[];
-                source: ol.SourceImageOptions.vector;
+                features: Feature[];
+                source: SourceImageOptions.vector;
                 interval: number;
                 maxWidth: string;
                 minDate: string;
@@ -4174,27 +4170,27 @@ declare namespace ol {
              */
             toggle(): void;
             /** Set the features to display in the timeline
-             * @param {Array<ol.Features>|ol.source.Vector} features An array of features or a vector source
+             * @param {Array<Features>|VectorSource} features An array of features or a vector source
              * @param {number} zoom zoom to draw the line default 1
              */
-            setFeatures(features: ol.Features[] | ol.source.Vector, zoom: number): void;
+            setFeatures(features: Features[] | VectorSource, zoom: number): void;
             /**
              * Get features
-             * @return {Array<ol.Feature>}
+             * @return {Array<Feature>}
              */
-            getFeatures(): ol.Feature[];
+            getFeatures(): Feature[];
             /**
              * Refresh the timeline with new data
              * @param {Number} zoom Zoom factor from 0.25 to 10, default 1
              */
             refresh(zoom: number): void;
             /** Center timeline on a date
-             * @param {Date|String|ol.feature} feature a date or a feature with a date
+             * @param {Date|String|feature} feature a date or a feature with a date
              * @param {Object} options
              *  @param {boolean} options.anim animate scroll
              *  @param {string} options.position start, end or middle, default middle
              */
-            setDate(feature: Date | string | ol.feature, options: {
+            setDate(feature: Date | string | feature, options: {
                 anim: boolean;
                 position: string;
             }): void;
@@ -4208,28 +4204,28 @@ declare namespace ol {
          * The control can be created with an interaction to control its activation.
          *
          * @constructor
-         * @extends {ol.control.Control}
+         * @extends {contrControl}
          * @fires change:active, change:disable
          * @param {Object=} options Control options.
          *	@param {String} options.className class of the control
          *	@param {String} options.title title of the control
          *	@param {String} options.html html to insert in the control
-         *	@param {ol.interaction} options.interaction interaction associated with the control
+         *	@param {interaction} options.interaction interaction associated with the control
          *	@param {bool} options.active the control is created active, default false
          *	@param {bool} options.disable the control is created disabled, default false
-         *	@param {ol.control.Bar} options.bar a subbar associated with the control (drawn when active if control is nested in a ol.control.Bar)
-         *	@param {bool} options.autoActive the control will activate when shown in an ol.control.Bar, default false
+         *	@param {contrBar} options.bar a subbar associated with the control (drawn when active if control is nested in a contrBar)
+         *	@param {bool} options.autoActive the control will activate when shown in an contrBar, default false
          *	@param {function} options.onToggle callback when control is clicked (or use change:active event)
          */
-        class Toggle extends ol.control.Control {
+        class Toggle extends contrControl {
             constructor(options?: {
                 className: string;
                 title: string;
                 html: string;
-                interaction: ol.interaction;
+                interaction: interaction;
                 active: boolean;
                 disable: boolean;
-                bar: ol.control.Bar;
+                bar: contrBar;
                 autoActive: boolean;
                 onToggle: (...params: any[]) => any;
             });
@@ -4240,16 +4236,16 @@ declare namespace ol {
              */
             setMap(map: _ol_Map_): void;
             /** Get the subbar associated with a control
-            * @return {ol.control.Bar}
+            * @return {contrBar}
              */
-            getSubBar(): ol.control.Bar;
+            getSubBar(): contrBar;
             /**
              * Test if the control is disabled.
              * @return {bool}.
              * @api stable
              */
             getDisable(): boolean;
-            /** Disable the control. If disable, the control will be deactivated too.
+            /** Disable the contr If disable, the control will be deactivated too.
             * @param {bool} b disable (or enable) the control, default false (enable)
              */
             setDisable(b: boolean): void;
@@ -4278,7 +4274,7 @@ declare namespace ol {
     }
     /** User actions that change the state of the map. Some are similar to controls,
      * but are not associated with a DOM element.
-     * @namespace ol.interaction
+     * @namespace interaction
      * @see {@link https://openlayers.org/en/master/apidoc/module-ol_interaction.html}
      */
     namespace interaction {
@@ -4287,12 +4283,12 @@ declare namespace ol {
          * The CenterTouch interaction modifies map browser event coordinate and pixel properties to force pointer on the viewport center to any interaction that them.
          * Only pointermove pointerup are concerned with it.
          * @constructor
-         * @extends {ol.interaction.Interaction}
+         * @extends {interaction.Interaction}
          * @param {olx.interaction.InteractionOptions} options Options
-         *  - targetStyle {ol.style.Style|Array<ol.style.Style>} a style to draw the target point, default cross style
+         *  - targetStyle {style.Style|Array<style.Style>} a style to draw the target point, default cross style
          *  - composite {string} composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
          */
-        class CenterTouch extends ol.interaction.Interaction {
+        class CenterTouch extends interaction.Interaction {
             constructor(options: olx.interaction.InteractionOptions);
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
@@ -4309,21 +4305,21 @@ declare namespace ol {
              */
             setActive(active: boolean): void;
             /** Get the position of the target
-             * @return {ol.coordinate}
+             * @return {Coordinate}
              */
-            getPosition(): ol.coordinate;
+            getPosition(): Coordinate;
         }
         /** Clip interaction to clip layers in a circle
          * @constructor
-         * @extends {ol.interaction.Pointer}
-         * @param {ol.interaction.Clip.options} options flashlight  param
+         * @extends {interaction.Pointer}
+         * @param {interaction.Clip.options} options flashlight  param
          *  @param {number} options.radius radius of the clip, default 100
-         *	@param {ol.layer|Array<ol.layer>} options.layers layers to clip
+         *	@param {layer|Array<layer>} options.layers layers to clip
          */
-        class Clip extends ol.interaction.Pointer {
+        class Clip extends interaction.Pointer {
             constructor(options: {
                 radius: number;
-                layers: ol.layer | ol.layer[];
+                layers: layer | layer[];
             });
             /** Set the map > start postcompose
              */
@@ -4333,17 +4329,17 @@ declare namespace ol {
              */
             setRadius(radius: integer): void;
             /** Add a layer to clip
-             *	@param {ol.layer|Array<ol.layer>} layer to clip
+             *	@param {layer|Array<layer>} layer to clip
              */
-            addLayer(layer: ol.layer | ol.layer[]): void;
+            addLayer(layer: layer | layer[]): void;
             /** Remove a layer to clip
-             *	@param {ol.layer|Array<ol.layer>} layer to clip
+             *	@param {layer|Array<layer>} layer to clip
              */
-            removeLayer(layer: ol.layer | ol.layer[]): void;
+            removeLayer(layer: layer | layer[]): void;
             /** Set position of the clip
-            *	@param {ol.Pixel|ol.MapBrowserEvent}
+            *	@param {Pixel|MapBrowserEvent}
              */
-            setPosition(e: ol.Pixel | ol.MapBrowserEvent): void;
+            setPosition(e: Pixel | MapBrowserEvent): void;
             /**
              * Activate or deactivate the interaction.
              * @param {boolean} active Active.
@@ -4357,125 +4353,125 @@ declare namespace ol {
          * @fires focus
          * @fires copy
          * @fires paste
-         * @extends {ol.interaction.Interaction}
+         * @extends {interaction.Interaction}
          * @param {Object} options Options
          *  @param {function} options.condition a function that take a mapBrowserEvent and return the actio nto perform: 'copy', 'cut' or 'paste', default Ctrl+C / Ctrl+V
-         *  @param {ol.Collection<ol.Feature>} options.features list of features to copy
-         *  @param {ol.source.Vector | Array<ol.source.Vector>} options.sources the source to copy from (used for cut), if not defined, it will use the destination
-         *  @param {ol.source.Vector} options.destination the source to copy to
+         *  @param {Collection<Feature>} options.features list of features to copy
+         *  @param {VectorSource | Array<VectorSource>} options.sources the source to copy from (used for cut), if not defined, it will use the destination
+         *  @param {VectorSource} options.destination the source to copy to
          */
-        class CopyPaste extends ol.interaction.Interaction {
+        class CopyPaste extends interaction.Interaction {
             constructor(options: {
                 condition: (...params: any[]) => any;
-                features: ol.Collection<ol.Feature>;
-                sources: ol.source.Vector | ol.source.Vector[];
-                destination: ol.source.Vector;
+                features: Collection<Feature>;
+                sources: VectorSource | VectorSource[];
+                destination: VectorSource;
             });
             /** Sources to cut feature from
-             * @param { ol.source.Vector | Array<ol.source.Vector> } sources
+             * @param { VectorSource | Array<VectorSource> } sources
              */
-            setSources(sources: ol.source.Vector | ol.source.Vector[]): void;
+            setSources(sources: VectorSource | VectorSource[]): void;
             /** Get sources to cut feature from
-             * @return { Array<ol.source.Vector> }
+             * @return { Array<VectorSource> }
              */
-            getSources(): ol.source.Vector[];
+            getSources(): VectorSource[];
             /** Source to paste features
-             * @param { ol.source.Vector } source
+             * @param { VectorSource } source
              */
-            setDestination(source: ol.source.Vector): void;
+            setDestination(source: VectorSource): void;
             /** Get source to paste features
-             * @param { ol.source.Vector }
+             * @param { VectorSource }
              */
             getDestination(): void;
             /** Get current feature to copy
-             * @return {Array<ol.Feature>}
+             * @return {Array<Feature>}
              */
-            getFeatures(): ol.Feature[];
+            getFeatures(): Feature[];
             /** Set current feature to copy
              * @param {Object} options
-             *  @param {Array<ol.Feature> | ol.Collection<ol.Feature>} options.features feature to copy, default get in the provided collection
+             *  @param {Array<Feature> | Collection<Feature>} options.features feature to copy, default get in the provided collection
              *  @param {boolean} options.cut try to cut feature from the sources, default false
              *  @param {boolean} options.silent true to send an event, default true
              */
             copy(options: {
-                features: ol.Feature[] | ol.Collection<ol.Feature>;
+                features: Feature[] | Collection<Feature>;
                 cut: boolean;
                 silent: boolean;
             }): void;
             /** Paste features
              * @param {Object} options
-             *  @param {Array<ol.Feature> | ol.Collection<ol.Feature>} features feature to copy, default get current features
-             *  @param {ol.source.Vector} options.destination Source to paste to, default the current source
+             *  @param {Array<Feature> | Collection<Feature>} features feature to copy, default get current features
+             *  @param {VectorSource} options.destination Source to paste to, default the current source
              *  @param {boolean} options.silent true to send an event, default true
              */
             paste(options: {
-                destination: ol.source.Vector;
+                destination: VectorSource;
                 silent: boolean;
-            }, features: ol.Feature[] | ol.Collection<ol.Feature>): void;
+            }, features: Feature[] | Collection<Feature>): void;
         }
         /** A Select interaction to delete features on click.
          * @constructor
-         * @extends {ol.interaction.Interaction}
+         * @extends {interaction.Interaction}
          * @fires deletestart
          * @fires deleteend
-         * @param {*} options ol.interaction.Select options
+         * @param {*} options interaction.Select options
          */
-        class Delete extends ol.interaction.Interaction {
+        class Delete extends interaction.Interaction {
             constructor(options: any);
             /** Get vector source of the map
-             * @return {Array<ol.source.Vector}
+             * @return {Array<VectorSource}
              */
             _getSources(): any;
             /** Delete features: remove the features from the map (from all layers in the map)
-             * @param {ol.Collection<ol.Feature>|Array<ol.Feature>} features The features to delete
+             * @param {Collection<Feature>|Array<Feature>} features The features to delete
              * @api
              */
-            delete(features: ol.Collection<ol.Feature> | ol.Feature[]): void;
+            delete(features: Collection<Feature> | Feature[]): void;
         }
         /** Drag an overlay on the map
          * @constructor
-         * @extends {ol.interaction.Pointer}
+         * @extends {interaction.Pointer}
          * @fires dragstart
          * @fires dragging
          * @fires dragend
          * @param {any} options
-         *  @param {ol.Overlay|Array<ol.Overlay} options.overlays the overlays to drag
+         *  @param {Overlay|Array<Overlay} options.overlays the overlays to drag
          */
-        class DragOverlay extends ol.interaction.Pointer {
+        class DragOverlay extends interaction.Pointer {
             constructor(options: any);
             /** Add an overlay to the interacton
-             * @param {ol.Overlay} ov
+             * @param {Overlay} ov
              */
-            addOverlay(ov: ol.Overlay): void;
+            addOverlay(ov: Overlay): void;
             /** Remove an overlay from the interacton
-             * @param {ol.Overlay} ov
+             * @param {Overlay} ov
              */
-            removeOverlay(ov: ol.Overlay): void;
+            removeOverlay(ov: Overlay): void;
         }
         /** Interaction to draw holes in a polygon.
          * It fires a drawstart, drawend event when drawing the hole
          * and a modifystart, modifyend event before and after inserting the hole in the feature geometry.
          * @constructor
-         * @extends {ol.interaction.Interaction}
+         * @extends {interaction.Interaction}
          * @fires drawstart
          * @fires drawend
          * @fires modifystart
          * @fires modifyend
          * @param {olx.interaction.DrawHoleOptions} options extend olx.interaction.DrawOptions
-         * 	@param {Array<ol.layer.Vector> | function | undefined} options.layers A list of layers from which polygons should be selected. Alternatively, a filter function can be provided. default: all visible layers
-         * 	@param { ol.style.Style | Array<ol.style.Style> | StyleFunction | undefined }	Style for the selected features, default: default edit style
+         * 	@param {Array<layer.Vector> | function | undefined} options.layers A list of layers from which polygons should be selected. Alternatively, a filter function can be provided. default: all visible layers
+         * 	@param { style.Style | Array<style.Style> | StyleFunction | undefined }	Style for the selected features, default: default edit style
          */
-        class DrawHole extends ol.interaction.Interaction {
+        class DrawHole extends interaction.Interaction {
             constructor(options: {
-                layers: ol.layer.Vector[] | ((...params: any[]) => any) | undefined;
-            }, Style: ol.style.Style | ol.style.Style[] | StyleFunction | undefined);
+                layers: layer.Vector[] | ((...params: any[]) => any) | undefined;
+            }, Style: style.Style | style.Style[] | StyleFunction | undefined);
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
              * map, if any. Pass `null` to just remove the interaction from the current map.
-             * @param {ol.Map} map Map.
+             * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
             /**
              * Activate/deactivate the interaction
              * @param {boolean}
@@ -4489,34 +4485,34 @@ declare namespace ol {
             removeLastPoint(): void;
             /**
              * Get the current polygon to hole
-             * @return {ol.Feature}
+             * @return {Feature}
              */
-            getPolygon(): ol.Feature;
+            getPolygon(): Feature;
         }
         /** Interaction rotate
          * @constructor
-         * @extends {ol.interaction.Interaction}
+         * @extends {interaction.Interaction}
          * @fires drawstart, drawing, drawend, drawcancel
          * @param {olx.interaction.TransformOptions} options
-         *  @param {Array<ol.Layer>} source Destination source for the drawn features
-         *  @param {ol.Collection<ol.Feature>} features Destination collection for the drawn features
-         *  @param {ol.style.Style | Array.<ol.style.Style> | ol.style.StyleFunction | undefined} style style for the sketch
+         *  @param {Array<Layer>} source Destination source for the drawn features
+         *  @param {Collection<Feature>} features Destination collection for the drawn features
+         *  @param {style.Style | Array.<style.Style> | style.StyleFunction | undefined} style style for the sketch
          *  @param {integer} sides number of sides, default 0 = circle
-         *  @param { ol.events.ConditionType | undefined } squareCondition A function that takes an ol.MapBrowserEvent and returns a boolean to draw square features.
-         *  @param { ol.events.ConditionType | undefined } centerCondition A function that takes an ol.MapBrowserEvent and returns a boolean to draw centered features.
+         *  @param { events.ConditionType | undefined } squareCondition A function that takes an MapBrowserEvent and returns a boolean to draw square features.
+         *  @param { events.ConditionType | undefined } centerCondition A function that takes an MapBrowserEvent and returns a boolean to draw centered features.
          *  @param { bool } canRotate Allow rotation when centered + square, default: true
          *  @param { number } clickTolerance click tolerance on touch devices, default: 6
          *  @param { number } maxCircleCoordinates Maximum number of point on a circle, default: 100
          */
-        class DrawRegular extends ol.interaction.Interaction {
-            constructor(options: olx.interaction.TransformOptions, source: ol.Layer[], features: ol.Collection<ol.Feature>, style: ol.style.Style | ol.style.Style[] | ol.style.StyleFunction | undefined, sides: integer, squareCondition: ol.events.ConditionType | undefined, centerCondition: ol.events.ConditionType | undefined, canRotate: boolean, clickTolerance: number, maxCircleCoordinates: number);
+        class DrawRegular extends interaction.Interaction {
+            constructor(options: olx.interaction.TransformOptions, source: Layer[], features: Collection<Feature>, style: style.Style | style.Style[] | style.StyleFunction | undefined, sides: integer, squareCondition: events.ConditionType | undefined, centerCondition: events.ConditionType | undefined, canRotate: boolean, clickTolerance: number, maxCircleCoordinates: number);
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
              * map, if any. Pass `null` to just remove the interaction from the current map.
-             * @param {ol.Map} map Map.
+             * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
             /**
              * Activate/deactivate the interaction
              * @param {boolean}
@@ -4550,68 +4546,68 @@ declare namespace ol {
              */
             startAngle: any;
             /** Get geom of the current drawing
-            * @return {ol.geom.Polygon | ol.geom.Point}
+            * @return {Polygon | Point}
              */
-            getGeom_(): ol.geom.Polygon | ol.geom.Point;
+            getGeom_(): Polygon | Point;
             /** Draw sketch
-            * @return {ol.Feature} The feature being drawn.
+            * @return {Feature} The feature being drawn.
              */
-            drawSketch_(): ol.Feature;
+            drawSketch_(): Feature;
             /** Draw sketch (Point)
              */
             drawPoint_(): void;
             /**
-             * @param {ol.MapBrowserEvent} evt Map browser event.
+             * @param {MapBrowserEvent} evt Map browser event.
              */
-            handleEvent_(evt: ol.MapBrowserEvent): void;
+            handleEvent_(evt: MapBrowserEvent): void;
             /** Stop drawing.
              */
             finishDrawing(): void;
             /**
-             * @param {ol.MapBrowserEvent} evt Event.
+             * @param {MapBrowserEvent} evt Event.
              */
-            handleMoveEvent_(evt: ol.MapBrowserEvent): void;
+            handleMoveEvent_(evt: MapBrowserEvent): void;
             /** Start an new draw
-             * @param {ol.MapBrowserEvent} evt Map browser event.
+             * @param {MapBrowserEvent} evt Map browser event.
              * @return {boolean} `false` to stop the drag sequence.
              */
-            start_(evt: ol.MapBrowserEvent): boolean;
+            start_(evt: MapBrowserEvent): boolean;
             /** End drawing
-             * @param {ol.MapBrowserEvent} evt Map browser event.
+             * @param {MapBrowserEvent} evt Map browser event.
              * @return {boolean} `false` to stop the drag sequence.
              */
-            end_(evt: ol.MapBrowserEvent): boolean;
+            end_(evt: MapBrowserEvent): boolean;
         }
         /** Interaction DrawTouch :
          * @constructor
-         * @extends {ol.interaction.CenterTouch}
+         * @extends {interaction.CenterTouch}
          * @param {olx.interaction.DrawOptions} options
-         *	- source {ol.source.Vector | undefined} Destination source for the drawn features.
-         *	- type {ol.geom.GeometryType} Drawing type ('Point', 'LineString', 'Polygon') not ('MultiPoint', 'MultiLineString', 'MultiPolygon' or 'Circle'). Required.
+         *	- source {VectorSource | undefined} Destination source for the drawn features.
+         *	- type {GeometryType} Drawing type ('Point', 'LineString', 'Polygon') not ('MultiPoint', 'MultiLineString', 'MultiPolygon' or 'Circle'). Required.
          *	- tap {boolean} enable on tap, default true
          *	Inherited params
-         *  - targetStyle {ol.style.Style|Array<ol.style.Style>} a style to draw the target point, default cross style
+         *  - targetStyle {style.Style|Array<style.Style>} a style to draw the target point, default cross style
          *  - composite {string} composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
          */
-        class DrawTouch extends ol.interaction.CenterTouch {
+        class DrawTouch extends interaction.CenterTouch {
             constructor(options: olx.interaction.DrawOptions);
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
              * map, if any. Pass `null` to just remove the interaction from the current map.
-             * @param {ol.Map} map Map.
+             * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
             /** Start drawing and add the sketch feature to the target layer.
-            * The ol.interaction.Draw.EventType.DRAWSTART event is dispatched before inserting the feature.
+            * The interaction.Draw.EventType.DRAWSTART event is dispatched before inserting the feature.
              */
             startDrawing(): void;
             /** Get geometry type
-            * @return {ol.geom.GeometryType}
+            * @return {GeometryType}
              */
-            getGeometryType(): ol.geom.GeometryType;
+            getGeometryType(): GeometryType;
             /** Start drawing and add the sketch feature to the target layer.
-            * The ol.interaction.Draw.EventType.DRAWEND event is dispatched before inserting the feature.
+            * The interaction.Draw.EventType.DRAWEND event is dispatched before inserting the feature.
              */
             finishDrawing(): void;
             /** Add a new Point to the drawing
@@ -4628,22 +4624,22 @@ declare namespace ol {
              */
             setActive(active: boolean): void;
             /** Get the position of the target
-             * @return {ol.coordinate}
+             * @return {Coordinate}
              */
-            getPosition(): ol.coordinate;
+            getPosition(): Coordinate;
         }
         /** Extend DragAndDrop choose drop zone + fires loadstart, loadend
          * @constructor
-         * @extends {ol.interaction.DragAndDrop}
+         * @extends {interaction.DragAndDrop}
          *	@fires loadstart, loadend, addfeatures
-         *	@param {ol.dropfile.options} flashlight options param
+         *	@param {dropfile.options} flashlight options param
          *		- zone {string} selector for the drop zone, default document
-         *		- projection {ol.projection} default projection of the map
-         *		- formatConstructors {Array<function(new:ol.format.Feature)>|undefined} Format constructors, default [ ol.format.GPX, ol.format.GeoJSON, ol.format.IGC, ol.format.KML, ol.format.TopoJSON ]
+         *		- projection {projection} default projection of the map
+         *		- formatConstructors {Array<function(new:format.Feature)>|undefined} Format constructors, default [ format.GPX, format.GeoJSON, format.IGC, format.KML, format.TopoJSON ]
          *		- accept {Array<string>|undefined} list of eccepted format, default ["gpx","json","geojson","igc","kml","topojson"]
          */
-        class DropFile extends ol.interaction.DragAndDrop {
-            constructor(flashlight: ol.dropfile.options);
+        class DropFile extends interaction.DragAndDrop {
+            constructor(flashlight: dropfile.options);
             /** Set the map
              */
             setMap(): void;
@@ -4656,15 +4652,15 @@ declare namespace ol {
         }
         /** A Select interaction to fill feature's properties on click.
          * @constructor
-         * @extends {ol.interaction.Interaction}
+         * @extends {interaction.Interaction}
          * @fires setattributestart
          * @fires setattributeend
-         * @param {*} options extentol.interaction.Select options
+         * @param {*} options extentinteraction.Select options
          *  @param {boolean} options.active activate the interaction on start, default true
          *  @param {boolean} options.cursor use a paint bucket cursor, default true
          * @param {*} properties The properties as key/value
          */
-        class FillAttribute extends ol.interaction.Interaction {
+        class FillAttribute extends interaction.Interaction {
             constructor(options: {
                 active: boolean;
                 cursor: boolean;
@@ -4692,21 +4688,21 @@ declare namespace ol {
              */
             getAttribute(key: string): any;
             /** Fill feature attributes
-             * @param {Array<ol.Feature>} features The features to modify
+             * @param {Array<Feature>} features The features to modify
              * @param {*} properties The properties as key/value
              */
-            fill(features: ol.Feature[], properties: any): void;
+            fill(features: Feature[], properties: any): void;
         }
         /**
          * @constructor
-         * @extends {ol.interaction.Pointer}
-         *	@param {ol.flashlight.options} flashlight options param
-         *		- color {ol.Color} light color, default transparent
-         *		- fill {ol.Color} fill color, default rgba(0,0,0,0.8)
+         * @extends {interaction.Pointer}
+         *	@param {flashlight.options} flashlight options param
+         *		- color {Color} light color, default transparent
+         *		- fill {Color} fill color, default rgba(0,0,0,0.8)
          *		- radius {number} radius of the flash
          */
-        class Flashlight extends ol.interaction.Pointer {
-            constructor(flashlight: ol.flashlight.options);
+        class Flashlight extends interaction.Pointer {
+            constructor(flashlight: flashlight.options);
             /** Set the map > start postcompose
              */
             setMap(): void;
@@ -4715,15 +4711,15 @@ declare namespace ol {
              */
             setRadius(radius: integer): void;
             /** Set flashlight color
-             *	@param {ol.flashlight.options} flashlight options param
-             *		- color {ol.Color} light color, default transparent
-             *		- fill {ol.Color} fill color, default rgba(0,0,0,0.8)
+             *	@param {flashlight.options} flashlight options param
+             *		- color {Color} light color, default transparent
+             *		- fill {Color} fill color, default rgba(0,0,0,0.8)
              */
-            setColor(flashlight: ol.flashlight.options): void;
+            setColor(flashlight: flashlight.options): void;
             /** Set position of the flashlight
-            *	@param {ol.Pixel|ol.MapBrowserEvent}
+            *	@param {Pixel|MapBrowserEvent}
              */
-            setPosition(e: ol.Pixel | ol.MapBrowserEvent): void;
+            setPosition(e: Pixel | MapBrowserEvent): void;
             /** Postcompose function
              */
             postcompose_(): void;
@@ -4731,49 +4727,49 @@ declare namespace ol {
         /** An interaction to focus on the map on click. Usefull when using keyboard event on the map.
          * @constructor
          * @fires focus
-         * @extends {ol.interaction.Interaction}
+         * @extends {interaction.Interaction}
          */
-        class FocusMap extends ol.interaction.Interaction {
+        class FocusMap extends interaction.Interaction {
             /** Set the map > add the focus button and focus on the map when pointerdown to enable keyboard events.
              */
             setMap(): void;
         }
         /** Interaction to draw on the current geolocation
-         *	It combines a draw with a ol.Geolocation
+         *	It combines a draw with a Geolocation
          * @constructor
-         * @extends {ol.interaction.Interaction}
+         * @extends {interaction.Interaction}
          * @fires drawstart, drawend, drawing, tracking, follow
          * @param {any} options
-         *	@param { ol.Collection.<ol.Feature> | undefined } option.features Destination collection for the drawn features.
-         *	@param { ol.source.Vector | undefined } options.source Destination source for the drawn features.
-         *	@param {ol.geom.GeometryType} options.type Drawing type ('Point', 'LineString', 'Polygon'), default LineString.
+         *	@param { Collection.<Feature> | undefined } option.features Destination collection for the drawn features.
+         *	@param { VectorSource | undefined } options.source Destination source for the drawn features.
+         *	@param {GeometryType} options.type Drawing type ('Point', 'LineString', 'Polygon'), default LineString.
          *	@param {Number | undefined} options.minAccuracy minimum accuracy underneath a new point will be register (if no condition), default 20
-         *	@param {function | undefined} options.condition a function that take a ol.Geolocation object and return a boolean to indicate whether location should be handled or not, default return true if accuraty < minAccuraty
+         *	@param {function | undefined} options.condition a function that take a Geolocation object and return a boolean to indicate whether location should be handled or not, default return true if accuraty < minAccuraty
          *	@param {Object} options.attributes a list of attributes to register as Point properties: {accuracy:true,accuracyGeometry:true,heading:true,speed:true}, default none.
-         *	@param {Number} options.tolerance tolerance to add a new point (in projection unit), use ol.geom.LineString.simplify() method, default 5
+         *	@param {Number} options.tolerance tolerance to add a new point (in projection unit), use LineString.simplify() method, default 5
          *	@param {Number} options.zoom zoom for tracking, default 16
          *	@param {boolean|auto|position|visible} options.followTrack true if you want the interaction to follow the track on the map, default true
-         *	@param { ol.style.Style | Array.<ol.style.Style> | ol.StyleFunction | undefined } options.style Style for sketch features.
+         *	@param { style.Style | Array.<style.Style> | StyleFunction | undefined } options.style Style for sketch features.
          */
-        class GeolocationDraw extends ol.interaction.Interaction {
+        class GeolocationDraw extends interaction.Interaction {
             constructor(options: {
-                source: ol.source.Vector | undefined;
-                type: ol.geom.GeometryType;
+                source: VectorSource | undefined;
+                type: GeometryType;
                 minAccuracy: number | undefined;
                 condition: ((...params: any[]) => any) | undefined;
                 attributes: any;
                 tolerance: number;
                 zoom: number;
                 followTrack: boolean | auto | position | visible;
-                style: ol.style.Style | ol.style.Style[] | ol.StyleFunction | undefined;
+                style: style.Style | style.Style[] | StyleFunction | undefined;
             });
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
              * map, if any. Pass `null` to just remove the interaction from the current map.
-             * @param {ol.Map} map Map.
+             * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
             /** Activate or deactivate the interaction.
             * @param {boolean} active
              */
@@ -4803,11 +4799,11 @@ declare namespace ol {
             *	'auto': start following until user move the map,
             *	'visible': center when position gets out of the visible extent
              */
-            setFollowTrack(follow,: boolean | auto | position | visible): void;
+            setFollowTrack(follow: boolean | 'auto'|'position' | 'visible'): void;
         }
         /** Interaction hover do to something when hovering a feature
          * @constructor
-         * @extends {ol.interaction.Interaction}
+         * @extends {interaction.Interaction}
          * @fires hover, enter, leave
          * @param {olx.interaction.HoverOptions}
          *	@param { string | undefined } options.cursor css cursor propertie or a function that gets a feature, default: none
@@ -4816,7 +4812,7 @@ declare namespace ol {
          *	@param {number | undefined} options.hitTolerance Hit-detection tolerance in pixels.
          *	@param { function | undefined } options.handleEvent Method called by the map to notify the interaction that a browser event was dispatched to the map. The function may return false to prevent the propagation of the event to other interactions in the map's interactions chain.
          */
-        class Hover extends ol.interaction.Interaction {
+        class Hover extends interaction.Interaction {
             constructor(options: {
                 cursor: string | undefined;
                 layerFilter: ((...params: any[]) => any) | undefined;
@@ -4826,10 +4822,10 @@ declare namespace ol {
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
              * map, if any. Pass `null` to just remove the interaction from the current map.
-             * @param {ol.Map} map Map.
+             * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
             /**
              * Set cursor on hover
              * @param { string } cursor css cursor propertie or a function that gets a feature, default: none
@@ -4845,18 +4841,18 @@ declare namespace ol {
              */
             setLayerFilter(filter: (...params: any[]) => any): void;
             /** Get features whenmove
-            * @param {ol.event} e "move" event
+            * @param {event} e "move" event
              */
-            handleMove_(e: ol.event): void;
+            handleMove_(e: event): void;
         }
         /** Interaction to handle longtouch events
          * @constructor
-         * @extends {ol.interaction.Interaction}
+         * @extends {interaction.Interaction}
          * @param {olx.interaction.LongTouchOptions}
          * 	@param {function | undefined} options.handleLongTouchEvent Function handling "longtouch" events, it will receive a mapBrowserEvent.
          *	@param {interger | undefined} options.delay The delay for a long touch in ms, default is 1000
          */
-        class LongTouch extends ol.interaction.Interaction {
+        class LongTouch extends interaction.Interaction {
             constructor(options: {
                 handleLongTouchEvent: ((...params: any[]) => any) | undefined;
                 delay: interger | undefined;
@@ -4869,37 +4865,37 @@ declare namespace ol {
          * - the modifyend event is fired after the modification
          * - it fires a modifying event
          * @constructor
-         * @extends {ol.interaction.Pointer}
+         * @extends {interaction.Pointer}
          * @fires modifystart
          * @fires modifying
          * @fires modifyend
          * @param {*} options
-         *	@param {ol.source.Vector|Array{ol.source.Vector}} options.source a list of source to modify (configured with useSpatialIndex set to true)
-         *  @param {ol.Collection.<ol.Feature>} options.features collection of feature to modify
+         *	@param {VectorSource|Array{VectorSource}} options.source a list of source to modify (configured with useSpatialIndex set to true)
+         *  @param {Collection.<Feature>} options.features collection of feature to modify
          *  @param {integer} options.pixelTolerance Pixel tolerance for considering the pointer close enough to a segment or vertex for editing. Default is 10.
          *  @param {function|undefined} options.filter a filter that takes a feature and return true if it can be modified, default always true.
-         *  @param {ol.style.Style | Array<ol.style.Style> | undefined} options.style Style for the sketch features.
-         *  @param {ol.EventsConditionType | undefined} options.condition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event will be considered to add or move a vertex to the sketch. Default is ol.events.condition.primaryAction.
-         *  @param {ol.EventsConditionType | undefined} options.deleteCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled. By default, ol.events.condition.singleClick with ol.events.condition.altKeyOnly results in a vertex deletion.
-         *  @param {ol.EventsConditionType | undefined} options.insertVertexCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether a new vertex can be added to the sketch features. Default is ol.events.condition.always
+         *  @param {style.Style | Array<style.Style> | undefined} options.style Style for the sketch features.
+         *  @param {EventsConditionType | undefined} options.condition A function that takes an MapBrowserEvent and returns a boolean to indicate whether that event will be considered to add or move a vertex to the sketch. Default is events.condition.primaryAction.
+         *  @param {EventsConditionType | undefined} options.deleteCondition A function that takes an MapBrowserEvent and returns a boolean to indicate whether that event should be handled. By default, events.condition.singleClick with events.condition.altKeyOnly results in a vertex deletion.
+         *  @param {EventsConditionType | undefined} options.insertVertexCondition A function that takes an MapBrowserEvent and returns a boolean to indicate whether a new vertex can be added to the sketch features. Default is events.condition.always
          */
-        class ModifyFeature extends ol.interaction.Pointer {
+        class ModifyFeature extends interaction.Pointer {
             constructor(options: {
-                features: ol.Collection<ol.Feature>;
+                features: Collection<Feature>;
                 pixelTolerance: integer;
                 filter: ((...params: any[]) => any) | undefined;
-                style: ol.style.Style | ol.style.Style[] | undefined;
-                condition: ol.EventsConditionType | undefined;
-                deleteCondition: ol.EventsConditionType | undefined;
-                insertVertexCondition: ol.EventsConditionType | undefined;
+                style: style.Style | style.Style[] | undefined;
+                condition: EventsConditionType | undefined;
+                deleteCondition: EventsConditionType | undefined;
+                insertVertexCondition: EventsConditionType | undefined;
             });
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
              * map, if any. Pass `null` to just remove the interaction from the current map.
-             * @param {ol.Map} map Map.
+             * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
             /**
              * Activate or deactivate the interaction + remove the sketch.
              * @param {boolean} active.
@@ -4907,25 +4903,25 @@ declare namespace ol {
              */
             setActive(): void;
             /** Get nearest coordinate in a list
-            * @param {ol.coordinate} pt the point to find nearest
-            * @param {ol.geom} coords list of coordinates
+            * @param {Coordinate} pt the point to find nearest
+            * @param {geom} coords list of coordinates
             * @return {*} the nearest point with a coord (projected point), dist (distance to the geom), ring (if Polygon)
              */
-            getNearestCoord(pt: ol.coordinate, coords: ol.geom): any;
+            getNearestCoord(pt: Coordinate, coords: geom): any;
             /** Get arcs concerned by a modification
-             * @param {ol.geom} geom the geometry concerned
-             * @param {ol.coordinate} coord pointed coordinates
+             * @param {geom} geom the geometry concerned
+             * @param {Coordinate} coord pointed coordinates
              */
-            getArcs(geom: ol.geom, coord: ol.coordinate): void;
+            getArcs(geom: geom, coord: Coordinate): void;
             /**
-             * @param {ol.MapBrowserEvent} evt Map browser event.
+             * @param {MapBrowserEvent} evt Map browser event.
              * @return {boolean} `true` to start the drag sequence.
              */
-            handleDownEvent(evt: ol.MapBrowserEvent): boolean;
+            handleDownEvent(evt: MapBrowserEvent): boolean;
             /** Get modified features
-             * @return {Array<ol.Feature>} list of modified features
+             * @return {Array<Feature>} list of modified features
              */
-            getModifiedFeatures(): ol.Feature[];
+            getModifiedFeatures(): Feature[];
             /** Removes the vertex currently being pointed.
              */
             removePoint(): void;
@@ -4934,12 +4930,12 @@ declare namespace ol {
          * @constructor
          * @fires showpopup
          * @fires hidepopup
-         * @extends {ol.interaction.Modify}
+         * @extends {interaction.Modify}
          * @param {olx.interaction.ModifyOptions} options
          *  @param {String|undefined} options.title title to display, default "remove point"
          *  @param {Boolean|undefined} options.usePopup use a popup, default true
          */
-        class ModifyTouch extends ol.interaction.Modify {
+        class ModifyTouch extends interaction.Modify {
             constructor(options: {
                 title: string | undefined;
                 usePopup: boolean | undefined;
@@ -4947,10 +4943,10 @@ declare namespace ol {
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
              * map, if any. Pass `null` to just remove the interaction from the current map.
-             * @param {ol.Map} map Map.
+             * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
             /** Activate the interaction and remove popup
              * @param {Boolean} b
              */
@@ -4978,41 +4974,41 @@ declare namespace ol {
         }
         /** Offset interaction for offseting feature geometry
          * @constructor
-         * @extends {ol.interaction.Pointer}
+         * @extends {interaction.Pointer}
          * @fires offsetstart
          * @fires offsetting
          * @fires offsetend
          * @param {any} options
-         *	@param {ol.layer.Vector | Array<ol.layer.Vector>} options.layers list of feature to transform
-         *	@param {ol.Collection.<ol.Feature>} options.features collection of feature to transform
-         *	@param {ol.source.Vector | undefined} options.source source to duplicate feature when ctrl key is down
+         *	@param {layer.Vector | Array<layer.Vector>} options.layers list of feature to transform
+         *	@param {Collection.<Feature>} options.features collection of feature to transform
+         *	@param {VectorSource | undefined} options.source source to duplicate feature when ctrl key is down
          *	@param {boolean} options.duplicate force feature to duplicate (source must be set)
          */
-        class Offset extends ol.interaction.Pointer {
+        class Offset extends interaction.Pointer {
             constructor(options: {
-                layers: ol.layer.Vector | ol.layer.Vector[];
-                features: ol.Collection<ol.Feature>;
-                source: ol.source.Vector | undefined;
+                layers: layer.Vector | layer.Vector[];
+                features: Collection<Feature>;
+                source: VectorSource | undefined;
                 duplicate: boolean;
             });
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
              * map, if any. Pass `null` to just remove the interaction from the current map.
-             * @param {ol.Map} map Map.
+             * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
         }
         /**
          * @constructor
-         * @extends {ol.interaction.Pointer}
-         *	@param {ol.flashlight.options} flashlight options param
-         *		- color {ol.Color} light color, default transparent
-         *		- fill {ol.Color} fill color, default rgba(0,0,0,0.8)
+         * @extends {interaction.Pointer}
+         *	@param {flashlight.options} flashlight options param
+         *		- color {Color} light color, default transparent
+         *		- fill {Color} fill color, default rgba(0,0,0,0.8)
          *		- radius {number} radius of the flash
          */
-        class Ripple extends ol.interaction.Pointer {
-            constructor(flashlight: ol.flashlight.options);
+        class Ripple extends interaction.Pointer {
+            constructor(flashlight: flashlight.options);
             /** Set the map > start postcompose
              */
             setMap(): void;
@@ -5021,9 +5017,9 @@ declare namespace ol {
              */
             rains(interval: integer): void;
             /** Disturb water at specified point
-            *	@param {ol.Pixel|ol.MapBrowserEvent}
+            *	@param {Pixel|MapBrowserEvent}
              */
-            rainDrop(e: ol.Pixel | ol.MapBrowserEvent): void;
+            rainDrop(e: Pixel | MapBrowserEvent): void;
             /** Postcompose function
              */
             postcompose_(): void;
@@ -5031,15 +5027,15 @@ declare namespace ol {
         /**
          * @classdesc
          * Interaction for selecting vector features in a cluster.
-         * It can be used as an ol.interaction.Select.
+         * It can be used as an interaction.Select.
          * When clicking on a cluster, it springs apart to reveal the features in the cluster.
          * Revealed features are selectable and you can pick the one you meant.
          * Revealed features are themselves a cluster with an attribute features that contain the original feature.
          *
          * @constructor
-         * @extends {ol.interaction.Select}
+         * @extends {interaction.Select}
          * @param {olx.interaction.SelectOptions=} options SelectOptions.
-         *  @param {ol.style} options.featureStyle used to style the revealed features as options.style is used by the Select interaction.
+         *  @param {style} options.featureStyle used to style the revealed features as options.style is used by the Select interaction.
          * 	@param {boolean} options.selectCluster false if you don't want to get cluster selected
          * 	@param {Number} options.PointRadius to calculate distance between the features
          * 	@param {bool} options.spiral means you want the feature to be placed on a spiral (or a circle)
@@ -5047,12 +5043,12 @@ declare namespace ol {
          * 	@param {Number} options.maxObjects number of object that can be drawn, other are hidden
          * 	@param {bool} options.animation if the cluster will animate when features spread out, default is false
          * 	@param {Number} options.animationDuration animation duration in ms, default is 500ms
-         * @fires ol.interaction.SelectEvent
+         * @fires interaction.SelectEvent
          * @api stable
          */
-        class SelectCluster extends ol.interaction.Select {
+        class SelectCluster extends interaction.Select {
             constructor(options?: {
-                featureStyle: ol.style;
+                featureStyle: style;
                 selectCluster: boolean;
                 PointRadius: number;
                 spiral: boolean;
@@ -5064,10 +5060,10 @@ declare namespace ol {
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
              * map, if any. Pass `null` to just remove the interaction from the current map.
-             * @param {ol.Map} map Map.
+             * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
             /**
              * Clear the selection, close the cluster and remove revealed features
              * @api stable
@@ -5080,55 +5076,55 @@ declare namespace ol {
             getLayer(): void;
             /**
              * Select a cluster
-             * @param {ol.Feature} a cluster feature ie. a feature with a 'features' attribute.
+             * @param {Feature} a cluster feature ie. a feature with a 'features' attribute.
              * @api stable
              */
-            selectCluster(a: ol.Feature): void;
+            selectCluster(a: Feature): void;
             /**
              * Animate the cluster and spread out the features
-             * @param {ol.Coordinates} the center of the cluster
+             * @param {Coordinates} the center of the cluster
              */
-            animateCluster_(the: ol.Coordinates): void;
+            animateCluster_(the: Coordinates): void;
         }
         /** Interaction to snap to guidelines
          * @constructor
-         * @extends {ol.interaction.Interaction}
+         * @extends {interaction.Interaction}
          * @param {olx.interaction.SnapGuidesOptions}
          *	- pixelTolerance {number | undefined} distance (in px) to snap to a guideline, default 10 px
          *  - enableInitialGuides {bool | undefined} whether to draw initial guidelines based on the maps orientation, default false.
-         *	- style {ol.style.Style | Array<ol.style.Style> | undefined} Style for the sektch features.
+         *	- style {style.Style | Array<style.Style> | undefined} Style for the sektch features.
          */
-        class SnapGuides extends ol.interaction.Interaction {
+        class SnapGuides extends interaction.Interaction {
             constructor(options: olx.interaction.SnapGuidesOptions);
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
              * map, if any. Pass `null` to just remove the interaction from the current map.
-             * @param {ol.Map} map Map.
+             * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
             /** Activate or deactivate the interaction.
             * @param {boolean} active
              */
             setActive(active: boolean): void;
             /** Clear previous added guidelines
-            * @param {Array<ol.Feature> | undefined} features a list of feature to remove, default remove all feature
+            * @param {Array<Feature> | undefined} features a list of feature to remove, default remove all feature
              */
-            clearGuides(features: ol.Feature[] | undefined): void;
+            clearGuides(features: Feature[] | undefined): void;
             /** Get guidelines
-            * @return {ol.Collection} guidelines features
+            * @return {Collection} guidelines features
              */
-            getGuides(): ol.Collection;
+            getGuides(): Collection;
             /** Add a new guide to snap to
-            * @param {Array<ol.coordinate>} v the direction vector
-            * @return {ol.Feature} feature guide
+            * @param {Array<Coordinate>} v the direction vector
+            * @return {Feature} feature guide
              */
-            addGuide(v: ol.coordinate[]): ol.Feature;
+            addGuide(v: Coordinate[]): Feature;
             /** Add a new orthogonal guide to snap to
-            * @param {Array<ol.coordinate>} v the direction vector
-            * @return {ol.Feature} feature guide
+            * @param {Array<Coordinate>} v the direction vector
+            * @return {Feature} feature guide
              */
-            addOrthoGuide(v: ol.coordinate[]): ol.Feature;
+            addOrthoGuide(v: Coordinate[]): Feature;
             /** Listen to draw event to add orthogonal guidelines on the first and last point.
             * @param {_ol_interaction_Draw_} drawi a draw interaction to listen to
             * @api
@@ -5142,63 +5138,63 @@ declare namespace ol {
         }
         /** Interaction split interaction for splitting feature geometry
          * @constructor
-         * @extends {ol.interaction.Interaction}
+         * @extends {interaction.Interaction}
          * @fires  beforesplit, aftersplit, pointermove
          * @param {*}
-         *  @param {ol.source.Vector|Array{ol.source.Vector}} options.source a list of source to split (configured with useSpatialIndex set to true)
-         *  @param {ol.Collection.<ol.Feature>} options.features collection of feature to split
+         *  @param {VectorSource|Array{VectorSource}} options.source a list of source to split (configured with useSpatialIndex set to true)
+         *  @param {Collection.<Feature>} options.features collection of feature to split
          *  @param {integer} options.snapDistance distance (in px) to snap to an object, default 25px
          *	@param {string|undefined} options.cursor cursor name to display when hovering an objet
          *  @param {function|undefined} opttion.filter a filter that takes a feature and return true if it can be clipped, default always split.
-         *  @param ol.style.Style | Array<ol.style.Style> | false | undefined} options.featureStyle Style for the selected features, choose false if you don't want feature selection. By default the default edit style is used.
-         *  @param {ol.style.Style | Array<ol.style.Style> | undefined} options.sketchStyle Style for the sektch features.
+         *  @param style.Style | Array<style.Style> | false | undefined} options.featureStyle Style for the selected features, choose false if you don't want feature selection. By default the default edit style is used.
+         *  @param {style.Style | Array<style.Style> | undefined} options.sketchStyle Style for the sektch features.
          *  @param {function|undefined} options.tolerance Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split.  Default is 1e-10.
          */
-        class Split extends ol.interaction.Interaction {
+        class Split extends interaction.Interaction {
             constructor(options: {
-                features: ol.Collection<ol.Feature>;
+                features: Collection<Feature>;
                 snapDistance: integer;
                 cursor: string | undefined;
-                sketchStyle: ol.style.Style | ol.style.Style[] | undefined;
+                sketchStyle: style.Style | style.Style[] | undefined;
                 tolerance: ((...params: any[]) => any) | undefined;
             });
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
              * map, if any. Pass `null` to just remove the interaction from the current map.
-             * @param {ol.Map} map Map.
+             * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
             /** Get nearest coordinate in a list
-            * @param {ol.coordinate} pt the point to find nearest
-            * @param {Array<ol.coordinate>} coords list of coordinates
-            * @return {ol.coordinate} the nearest coordinate in the list
+            * @param {Coordinate} pt the point to find nearest
+            * @param {Array<Coordinate>} coords list of coordinates
+            * @return {Coordinate} the nearest coordinate in the list
              */
-            getNearestCoord(pt: ol.coordinate, coords: ol.coordinate[]): ol.coordinate;
+            getNearestCoord(pt: Coordinate, coords: Coordinate[]): Coordinate;
             /**
-             * @param {ol.MapBrowserEvent} evt Map browser event.
+             * @param {MapBrowserEvent} evt Map browser event.
              * @return {boolean} `true` to start the drag sequence.
              */
-            handleDownEvent(evt: ol.MapBrowserEvent): boolean;
+            handleDownEvent(evt: MapBrowserEvent): boolean;
             /**
-             * @param {ol.MapBrowserEvent} evt Event.
+             * @param {MapBrowserEvent} evt Event.
              */
-            handleMoveEvent(evt: ol.MapBrowserEvent): void;
+            handleMoveEvent(evt: MapBrowserEvent): void;
         }
         /** Interaction splitter: acts as a split feature agent while editing vector features (LineString).
          * @constructor
-         * @extends {ol.interaction.Interaction}
+         * @extends {interaction.Interaction}
          * @fires  beforesplit, aftersplit
          * @param {olx.interaction.SplitOptions}
-         *	- source {ol.source.Vector|Array{ol.source.Vector}} The target source (or array of source) with features to be split (configured with useSpatialIndex set to true)
-         *	- triggerSource {ol.source.Vector} Any newly created or modified features from this source will be used to split features on the target source. If none is provided the target source is used instead.
-         *	- features {ol.Collection.<ol.Feature>} A collection of feature to be split (replace source target).
-         *	- triggerFeatures {ol.Collection.<ol.Feature>} Any newly created or modified features from this collection will be used to split features on the target source (replace triggerSource).
+         *	- source {VectorSource|Array{VectorSource}} The target source (or array of source) with features to be split (configured with useSpatialIndex set to true)
+         *	- triggerSource {VectorSource} Any newly created or modified features from this source will be used to split features on the target source. If none is provided the target source is used instead.
+         *	- features {Collection.<Feature>} A collection of feature to be split (replace source target).
+         *	- triggerFeatures {Collection.<Feature>} Any newly created or modified features from this collection will be used to split features on the target source (replace triggerSource).
          *	- filter {function|undefined} a filter that takes a feature and return true if the feature is eligible for splitting, default always split.
          *	- tolerance {function|undefined} Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split. Default is 1e-10.
          * @todo verify auto intersection on features that split.
          */
-        class Splitter extends ol.interaction.Interaction {
+        class Splitter extends interaction.Interaction {
             constructor(options: olx.interaction.SplitOptions);
             /** Calculate intersection on 2 segs
             * @param {Array<_ol_coordinate_>} s1 first seg to intersect (2 points)
@@ -5207,9 +5203,9 @@ declare namespace ol {
              */
             intersectSegs(s1: _ol_coordinate_[], s2: _ol_coordinate_[]): boolean | _ol_coordinate_;
             /** Split the source using a feature
-            * @param {ol.Feature} feature The feature to use to split.
+            * @param {Feature} feature The feature to use to split.
              */
-            splitSource(feature: ol.Feature): void;
+            splitSource(feature: Feature): void;
             /** New feature source is added
              */
             onAddFeature(): void;
@@ -5222,26 +5218,26 @@ declare namespace ol {
         }
         /** Interaction synchronize
          * @constructor
-         * @extends {ol.interaction.Interaction}
+         * @extends {interaction.Interaction}
          * @param {olx.interaction.SynchronizeOptions}
-         *  - maps {Array<ol.Map>} An array of maps to synchronize with the map of the interaction
+         *  - maps {Array<Map>} An array of maps to synchronize with the map of the interaction
          */
-        class Synchronize extends ol.interaction.Interaction {
+        class Synchronize extends interaction.Interaction {
             constructor(options: olx.interaction.SynchronizeOptions);
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
              * map, if any. Pass `null` to just remove the interaction from the current map.
-             * @param {ol.Map} map Map.
+             * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
             /** Synchronize the maps
              */
             syncMaps(): void;
             /** Cursor move > tells other maps to show the cursor
-            * @param {ol.event} e "move" event
+            * @param {event} e "move" event
              */
-            handleMove_(e: ol.event): void;
+            handleMove_(e: event): void;
             /** Cursor out of map > tells other maps to hide the cursor
             * @param {event} e "mouseOut" event
              */
@@ -5249,12 +5245,12 @@ declare namespace ol {
         }
         /**
          * @constructor
-         * @extends {ol.interaction.Pointer}
-         *	@param {ol.interaction.TinkerBell.options}  options flashlight param
-         *		- color {ol.color} color of the sparkles
+         * @extends {interaction.Pointer}
+         *	@param {interaction.TinkerBell.options}  options flashlight param
+         *		- color {color} color of the sparkles
          */
-        class TinkerBell extends ol.interaction.Pointer {
-            constructor(options: ol.interaction.TinkerBell.options);
+        class TinkerBell extends interaction.Pointer {
+            constructor(options: interaction.TinkerBell.options);
             /** Set the map > start postcompose
              */
             setMap(): void;
@@ -5264,13 +5260,13 @@ declare namespace ol {
         }
         /** Interaction splitter: acts as a split feature agent while editing vector features (LineString).
          * @constructor
-         * @extends {ol.interaction.Pointer}
+         * @extends {interaction.Pointer}
          * @param {olx.interaction.TouchCompass}
          *	- onDrag {function|undefined} Function handling "drag" events. It provides a dpixel and a traction (in projection) vector form the center of the compas
          *	- size {Number} size of the compass in px, default 80
          *	- alpha {Number} opacity of the compass, default 0.5
          */
-        class TouchCompass extends ol.interaction.Pointer {
+        class TouchCompass extends interaction.Pointer {
             constructor(options: olx.interaction.TouchCompass);
             /** Compass Image as a JS Image object
             * @api
@@ -5293,13 +5289,13 @@ declare namespace ol {
         }
         /** Interaction rotate
          * @constructor
-         * @extends {ol.interaction.Pointer}
+         * @extends {interaction.Pointer}
          * @fires select | rotatestart | rotating | rotateend | translatestart | translating | translateend | scalestart | scaling | scaleend
          * @param {any} options
          *  @param {function} options.filter A function that takes a Feature and a Layer and returns true if the feature may be transformed or false otherwise.
-         *  @param {Array<ol.Layer>} options.layers array of layers to transform,
-         *  @param {ol.Collection<ol.Feature>} options.features collection of feature to transform,
-         *	@param {ol.EventsConditionType|undefined} options.addCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled. default: ol.events.condition.never.
+         *  @param {Array<Layer>} options.layers array of layers to transform,
+         *  @param {Collection<Feature>} options.features collection of feature to transform,
+         *	@param {EventsConditionType|undefined} options.addCondition A function that takes an MapBrowserEvent and returns a boolean to indicate whether that event should be handled. default: events.condition.never.
          *	@param {number | undefined} options.hitTolerance Tolerance to select feature in pixel, default 0
          *	@param {bool} options.translateFeature Translate when click on feature
          *	@param {bool} options.translate Can translate the feature
@@ -5308,17 +5304,17 @@ declare namespace ol {
          *	@param {bool} options.rotate can rotate the feature
          *	@param {bool} options.noFlip prevent the feature geometry to flip, default false
          *	@param {bool} options.selection the intraction handle selection/deselection, if not use the select prototype to add features to transform, default true
-         *	@param {ol.events.ConditionType | undefined} options.keepAspectRatio A function that takes an ol.MapBrowserEvent and returns a boolean to keep aspect ratio, default ol.events.condition.shiftKeyOnly.
-         *	@param {ol.events.ConditionType | undefined} options.modifyCenter A function that takes an ol.MapBrowserEvent and returns a boolean to apply scale & strech from the center, default ol.events.condition.metaKey or ol.events.condition.ctrlKey.
-         *	@param {} options.style list of ol.style for handles
+         *	@param {events.ConditionType | undefined} options.keepAspectRatio A function that takes an MapBrowserEvent and returns a boolean to keep aspect ratio, default events.condition.shiftKeyOnly.
+         *	@param {events.ConditionType | undefined} options.modifyCenter A function that takes an MapBrowserEvent and returns a boolean to apply scale & strech from the center, default events.condition.metaKey or events.condition.ctrlKey.
+         *	@param {} options.style list of style for handles
          *
          */
-        class Transform extends ol.interaction.Pointer {
+        class Transform extends interaction.Pointer {
             constructor(options: {
                 filter: (...params: any[]) => any;
-                layers: ol.Layer[];
-                features: ol.Collection<ol.Feature>;
-                addCondition: ol.EventsConditionType | undefined;
+                layers: Layer[];
+                features: Collection<Feature>;
+                addCondition: EventsConditionType | undefined;
                 hitTolerance: number | undefined;
                 translateFeature: boolean;
                 translate: boolean;
@@ -5327,8 +5323,8 @@ declare namespace ol {
                 rotate: boolean;
                 noFlip: boolean;
                 selection: boolean;
-                keepAspectRatio: ol.events.ConditionType | undefined;
-                modifyCenter: ol.events.ConditionType | undefined;
+                keepAspectRatio: events.ConditionType | undefined;
+                modifyCenter: events.ConditionType | undefined;
                 style: any;
             });
             /** Cursors for transform
@@ -5337,10 +5333,10 @@ declare namespace ol {
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
              * map, if any. Pass `null` to just remove the interaction from the current map.
-             * @param {ol.Map} map Map.
+             * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
             /**
              * Activate/deactivate interaction
              * @param {bool}
@@ -5356,61 +5352,61 @@ declare namespace ol {
             /**
              * Set sketch style.
              * @param {style} style Style name: 'default','translate','rotate','rotate0','scale','scale1','scale2','scale3','scalev','scaleh1','scalev2','scaleh3'
-             * @param {ol.style.Style|Array<ol.style.Style>} olstyle
+             * @param {style.Style|Array<style.Style>} olstyle
              * @api stable
              */
-            setStyle(style: style, olstyle: ol.style.Style | ol.style.Style[]): void;
+            setStyle(style: style, olstyle: style.Style | style.Style[]): void;
             /** Draw transform sketch
             * @param {boolean} draw only the center
              */
             drawSketch_(draw: boolean): void;
             /** Select a feature to transform
-            * @param {ol.Feature} feature the feature to transform
+            * @param {Feature} feature the feature to transform
             * @param {boolean} add true to add the feature to the selection, default false
              */
-            select(feature: ol.Feature, add: boolean): void;
+            select(feature: Feature, add: boolean): void;
             /**
-             * @param {ol.MapBrowserEvent} evt Map browser event.
+             * @param {MapBrowserEvent} evt Map browser event.
              * @return {boolean} `true` to start the drag sequence.
              */
-            handleDownEvent_(evt: ol.MapBrowserEvent): boolean;
+            handleDownEvent_(evt: MapBrowserEvent): boolean;
             /**
              * Get features to transform
-             * @return {ol.Collection<ol.Feature>}
+             * @return {Collection<Feature>}
              */
-            getFeatures(): ol.Collection<ol.Feature>;
+            getFeatures(): Collection<Feature>;
             /**
              * Get the rotation center
-             * @return {ol.coordinates|undefined}
+             * @return {Coordinates|undefined}
              */
-            getCenter(): ol.coordinates | undefined;
+            getCenter(): Coordinates | undefined;
             /**
              * Set the rotation center
-             * @param {ol.coordinates|undefined} c the center point, default center on the objet
+             * @param {Coordinates|undefined} c the center point, default center on the objet
              */
-            setCenter(c: ol.coordinates | undefined): void;
+            setCenter(c: Coordinates | undefined): void;
             /**
-             * @param {ol.MapBrowserEvent} evt Map browser event.
+             * @param {MapBrowserEvent} evt Map browser event.
              */
-            handleDragEvent_(evt: ol.MapBrowserEvent): void;
+            handleDragEvent_(evt: MapBrowserEvent): void;
             /**
-             * @param {ol.MapBrowserEvent} evt Event.
+             * @param {MapBrowserEvent} evt Event.
              */
-            handleMoveEvent_(evt: ol.MapBrowserEvent): void;
+            handleMoveEvent_(evt: MapBrowserEvent): void;
             /**
-             * @param {ol.MapBrowserEvent} evt Map browser event.
+             * @param {MapBrowserEvent} evt Map browser event.
              * @return {boolean} `false` to stop the drag sequence.
              */
-            handleUpEvent_(evt: ol.MapBrowserEvent): boolean;
+            handleUpEvent_(evt: MapBrowserEvent): boolean;
         }
         /** Undo/redo interaction
          * @constructor
-         * @extends {ol.interaction.Interaction}
+         * @extends {interaction.Interaction}
          * @fires undo
          * @fires redo
          * @param {*} options
          */
-        class UndoRedo extends ol.interaction.Interaction {
+        class UndoRedo extends interaction.Interaction {
             constructor(options: any);
             /** Add a custom undo/redo
              * @param {string} action the action key name
@@ -5433,10 +5429,10 @@ declare namespace ol {
             /**
              * Remove the interaction from its current map, if any, and attach it to a new
              * map, if any. Pass `null` to just remove the interaction from the current map.
-             * @param {ol.Map} map Map.
+             * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
             /** A feature is added / removed
              */
             _onAddRemove(): void;
@@ -5474,10 +5470,10 @@ declare namespace ol {
     }
     /** Filters are effects that render over a map or a layer.
      * Use the map methods to add or remove filter on a map
-     * ({@link ol.Map#addFilter}, {@link ol.Map#removeFilter}, {@link ol.Map#getFilters}).
+     * ({@link Map#addFilter}, {@link Map#removeFilter}, {@link Map#getFilters}).
      * Use the layer methods to add or remove filter on a layer
-     * ({@link ol.layer.Base#addFilter}, {@link ol.layer.Base#removeFilter}, {@link ol.layer.Base#getFilters}).
-     * @namespace ol.filter
+     * ({@link layer.Base#addFilter}, {@link layer.Base#removeFilter}, {@link layer.Base#getFilters}).
+     * @namespace filter
      */
     namespace filter {
         /**
@@ -5485,15 +5481,15 @@ declare namespace ol {
          * Abstract base class; normally only used for creating subclasses and not instantiated in apps.
          * Used to create filters
          * Use {@link _ol_Map_#addFilter}, {@link _ol_Map_#removeFilter} or {@link _ol_Map_#getFilters} to handle filters on a map.
-         * Use {@link ol.layer.Base#addFilter}, {@link ol.layer.Base#removeFilter} or {@link ol.layer.Base#getFilters}
+         * Use {@link layer.Base#addFilter}, {@link layer.Base#removeFilter} or {@link layer.Base#getFilters}
          * to handle filters on layers.
          *
          * @constructor
-         * @extends {ol.Object}
+         * @extends {Object}
          * @param {Object} options Extend {@link _ol_control_Control_} options.
          *  @param {boolean} [options.active]
          */
-        class Base extends ol.Object {
+        class Base extends Object {
             constructor(options: {
                 active?: boolean;
             });
@@ -5506,19 +5502,19 @@ declare namespace ol {
              */
             getActive(): boolean;
         }
-        /** Mask drawing using an ol.Feature
+        /** Mask drawing using an Feature
          * @constructor
-         * @requires ol.filter
-         * @extends {ol.filter.Base}
+         * @requires filter
+         * @extends {filter.Base}
          * @param {Object} [options]
-         *  @param {ol.Feature} [options.feature] feature to mask with
-         *  @param {ol.style.Fill} [options.fill] style to fill with
+         *  @param {Feature} [options.feature] feature to mask with
+         *  @param {style.Fill} [options.fill] style to fill with
          *  @param {boolean} [options.inner] mask inner, default false
          */
-        class Mask extends ol.filter.Base {
+        class Mask extends filter.Base {
             constructor(options?: {
-                feature?: ol.Feature;
-                fill?: ol.style.Fill;
+                feature?: Feature;
+                fill?: style.Fill;
                 inner?: boolean;
             });
             /** Draw the feature into canvas
@@ -5535,19 +5531,19 @@ declare namespace ol {
         }
         /** Clip layer or map
         *  @constructor
-        * @requires ol.filter
-        * @extends {ol.filter.Base}
+        * @requires filter
+        * @extends {filter.Base}
         * @param {Object} [options]
-        *  @param {Array<ol.Coordinate>} [options.coords]
-        *  @param {ol.Extent} [options.extent]
+        *  @param {Array<Coordinate>} [options.coords]
+        *  @param {Extent} [options.extent]
         *  @param {string} [options.units] coords units percent (%) or pixel (px)
         *  @param {boolean} [options.keepAspectRatio] keep aspect ratio
         *  @param {string} [options.color] backgroundcolor
          */
-        class Clip extends ol.filter.Base {
+        class Clip extends filter.Base {
             constructor(options?: {
-                coords?: ol.Coordinate[];
-                extent?: ol.Extent;
+                coords?: Coordinate[];
+                extent?: Extent;
                 units?: string;
                 keepAspectRatio?: boolean;
                 color?: string;
@@ -5563,20 +5559,20 @@ declare namespace ol {
         }
         /** Colorize map or layer
          * @constructor
-         * @requires ol.filter
-         * @extends {ol.filter.Base}
+         * @requires filter
+         * @extends {filter.Base}
          * @author Thomas Tilak https://github.com/thhomas
          * @author Jean-Marc Viglino https://github.com/viglino
          * @param {FilterColorizeOptions} options
          */
-        class Colorize extends ol.filter.Base {
+        class Colorize extends filter.Base {
             constructor(options: FilterColorizeOptions);
             /** Set options to the filter
              * @param {FilterColorizeOptions} [options]
              */
             setFilter(options?: FilterColorizeOptions): void;
             /** Set the filter value
-             *  @param {ol.Color} options.color style to fill with
+             *  @param {Color} options.color style to fill with
              */
             setValue(): void;
             /** Set the color value
@@ -5594,12 +5590,12 @@ declare namespace ol {
         }
         /** Colorize map or layer
         * @constructor
-        * @requires ol.filter
-        * @extends {ol.filter.Base}
+        * @requires filter
+        * @extends {filter.Base}
         * @param {Object} options
         *   @param {string} options.operation composite operation
          */
-        class Composite extends ol.filter.Base {
+        class Composite extends filter.Base {
             constructor(options: {
                 operation: string;
             });
@@ -5616,18 +5612,18 @@ declare namespace ol {
              */
             getActive(): boolean;
         }
-        /** Crop drawing using an ol.Feature
+        /** Crop drawing using an Feature
         * @constructor
-        * @requires ol.filter
-        * @requires ol.filter.Mask
-        * @extends {ol.filter.Mask}
+        * @requires filter
+        * @requires filter.Mask
+        * @extends {filter.Mask}
         * @param {Object} [options]
-        *  @param {ol.Feature} [options.feature] feature to crop with
+        *  @param {Feature} [options.feature] feature to crop with
         *  @param {boolean} [options.inner=false] mask inner, default false
          */
-        class Crop extends ol.filter.Mask {
+        class Crop extends filter.Mask {
             constructor(options?: {
-                feature?: ol.Feature;
+                feature?: Feature;
                 inner?: boolean;
             });
             /** Draw the feature into canvas
@@ -5644,15 +5640,15 @@ declare namespace ol {
         }
         /** Fold filer map
         * @constructor
-        * @requires ol.filter
-        * @extends {ol.filter.Base}
+        * @requires filter
+        * @extends {filter.Base}
         * @param {Object} [options]
         *  @param {[number, number]} [options.fold] number of fold (horizontal and vertical)
         *  @param {number} [options.margin] margin in px, default 8
         *  @param {number} [options.padding] padding in px, default 8
         *  @param {number|number[]} [options.fsize] fold size in px, default 8,10
          */
-        class Fold extends ol.filter.Base {
+        class Fold extends filter.Base {
             constructor(options?: {
                 margin?: number;
                 padding?: number;
@@ -5669,14 +5665,14 @@ declare namespace ol {
         }
         /** Make a map or layer look like made of a set of Lego bricks.
          *  @constructor
-         * @requires ol.filter
-         * @extends {ol.filter.Base}
+         * @requires filter
+         * @extends {filter.Base}
          * @param {Object} [options]
          *  @param {string} [options.img]
          *  @param {number} [options.brickSize] size of te brick, default 30
          *  @param {null | string | undefined} [options.crossOrigin] crossOrigin attribute for loaded images.
          */
-        class Lego extends ol.filter.Base {
+        class Lego extends filter.Base {
             constructor(options?: {
                 img?: string;
                 brickSize?: number;
@@ -5715,11 +5711,11 @@ declare namespace ol {
         }
         /** Add texture effects on maps or layers
          * @constructor
-         * @requires ol.filter
-         * @extends {ol.filter.Base}
+         * @requires filter
+         * @extends {filter.Base}
          * @param {FilterTextureOptions} options
          */
-        class Texture extends ol.filter.Base {
+        class Texture extends filter.Base {
             constructor(options: FilterTextureOptions);
             /** Set texture
              * @param {FilterTextureOptions} [options]
@@ -5744,7 +5740,7 @@ declare namespace ol {
         }
     }
     /** Algorithms to on a graph (shortest path).
-     * @namespace ol.graph
+     * @namespace graph
      */
     namespace graph {
         /**
@@ -5761,14 +5757,14 @@ declare namespace ol {
          * @fires finish
          * @fires pause
          * @param {any} options
-         *  @param {ol/source/Vector} options.source the source for the edges
+         *  @param {Vector} options.source the source for the edges
          *  @param {integer} [options.maxIteration=20000] maximum iterations before a pause event is fired, default 20000
          *  @param {integer} [options.stepIteration=2000] number of iterations before a calculating event is fired, default 2000
          *  @param {number} [options.epsilon=1E-6] geometric precision (min distance beetween 2 points), default 1E-6
          */
         class Dijskra {
             constructor(options: {
-                source: ol/source/Vector;
+                source: Vector;
                 maxIteration?: integer;
                 stepIteration?: integer;
                 epsilon?: number;
@@ -5779,47 +5775,47 @@ declare namespace ol {
              * - 0.5 = goes twice more faster on this road
              *
              * If no feature is provided you must return the lower weighting you're using
-             * @param {ol/Feature} feature
+             * @param {Feature} feature
              * @return {number} a number beetween 0-1
              * @api
              */
-            weight(feature: ol/Feature): number;
+            weight(feature: Feature): number;
             /** Get the edge direction
              * -  0 : the road is blocked
              * -  1 : direct way
              * - -1 : revers way
              * -  2 : both way
-             * @param {ol/Feature} feature
+             * @param {Feature} feature
              * @return {Number} 0: blocked, 1: direct way, -1: revers way, 2:both way
              * @api
              */
-            direction(feature: ol/Feature): number;
+            direction(feature: Feature): number;
             /** Calculate the length of an edge
-             * @param {ol/Feature|ol/geom/LineString} geom
+             * @param {Feature|LineString} geom
              * @return {number}
              * @api
              */
-            getLength(geom: ol/Feature | ol/geom/LineString): number;
+            getLength(geom: Feature | LineString): number;
             /** Get the nodes source concerned in the calculation
-             * @return {ol/source/Vector}
+             * @return {VectorSource}
              */
-            getNodeSource(): ol/source/Vector;
+            getNodeSource(): VectorSource;
             /** Get all features at a coordinate
-             * @param {ol/coordinate} coord
-             * @return {Array<ol/Feature>}
+             * @param {Coordinate} coord
+             * @return {Array<Feature>}
              */
-            getEdges(coord: ol/coordinate): ol/Feature[];
+            getEdges(coord: Coordinate): Feature[];
             /** Get a node at a coordinate
-             * @param {ol/coordinate} coord
-             * @return {ol/Feature} the node
+             * @param {Coordinate} coord
+             * @return {Feature} the node
              */
-            getNode(coord: ol/coordinate): ol/Feature;
+            getNode(coord: Coordinate): Feature;
             /** Calculate a path beetween 2 points
-             * @param {ol/coordinate} start
-             * @param {ol/coordinate} end
-             * @return {boolean|Array<ol/coordinate>} false if don't start (still running) or start and end nodes
+             * @param {Coordinate} start
+             * @param {Coordinate} end
+             * @return {boolean|Array<Coordinate>} false if don't start (still running) or start and end nodes
              */
-            path(start: ol/coordinate, end: ol/coordinate): boolean | ol/coordinate[];
+            path(start: Coordinate, end: Coordinate): boolean | Coordinate[];
             /** Restart after pause
              */
             resume(): void;
@@ -5828,13 +5824,13 @@ declare namespace ol {
             pause(): void;
             /** Get the current 'best way'.
              * This may be used to animate while calculating.
-             * @return {Array<ol/Feature>}
+             * @return {Array<Feature>}
              */
-            getBestWay(): ol/Feature[];
+            getBestWay(): Feature[];
         }
     }
     /** Vector feature rendering styles.
-     * @namespace ol.style
+     * @namespace style
      * @see {@link https://openlayers.org/en/master/apidoc/module-ol_style.html}
      */
     namespace style {
@@ -5845,20 +5841,20 @@ declare namespace ol {
         * @param {} options
         * @param {string|function|undefined} options.glyph a glyph name or a function that takes a feature and return a glyph
         * @param {number} options.radius radius of the symbol, default 8
-        * @param {ol.style.Fill} options.fill style for fill, default navy
-        * @param {ol.style.stroke} options.stroke style for stroke, default 2px white
+        * @param {style.Fill} options.fill style for fill, default navy
+        * @param {style.stroke} options.stroke style for stroke, default 2px white
         * @param {string} options.prefix a prefix if many style used for the same type
         *
-        * @require ol.style.FontSymbol and FontAwesome defs are required for dbPediaStyleFunction()
+        * @require style.FontSymbol and FontAwesome defs are required for dbPediaStyleFunction()
          */
         function dbPediaStyleFunction(options: {
             glyph: string | ((...params: any[]) => any) | undefined;
             radius: number;
-            fill: ol.style.Fill;
-            stroke: ol.style.stroke;
+            fill: style.Fill;
+            stroke: style.stroke;
             prefix: string;
         }): void;
-        interface Chart extends ol.structs.IHasChecksum {
+        interface Chart extends structs.IHasChecksum {
         }
         /**
          * @classdesc
@@ -5871,24 +5867,24 @@ declare namespace ol {
          *	@param {number} options.rotation Rotation in radians (positive rotation clockwise). Default is 0.
          *	@param {bool} options.snapToPixel use integral numbers of pixels, default true
          *	@param {_ol_style_Stroke_} options.stroke stroke style
-         *	@param {String|Array<ol.color>} options.colors predefined color set "classic","dark","pale","pastel","neon" / array of color string, default classic
+         *	@param {String|Array<color>} options.colors predefined color set "classic","dark","pale","pastel","neon" / array of color string, default classic
          *	@param {number} options.offsetX X offset in px
          *	@param {number} options.offsetY Y offset in px
          *	@param {number} options.animation step in an animation sequence [0,1]
          *	@param {number} options.max maximum value for bar chart
          * @see [Statistic charts example](../../examples/map.style.chart.html)
-         * @extends {ol.style.RegularShape}
-         * @implements {ol.structs.IHasChecksum}
+         * @extends {style.RegularShape}
+         * @implements {structs.IHasChecksum}
          * @api
          */
-        class Chart extends ol.style.RegularShape implements ol.structs.IHasChecksum {
+        class Chart extends style.RegularShape implements structs.IHasChecksum {
             constructor(options: {
                 type: string;
                 radius: number;
                 rotation: number;
                 snapToPixel: boolean;
                 stroke: _ol_style_Stroke_;
-                colors: string | ol.color[];
+                colors: string | color[];
                 offsetX: number;
                 offsetY: number;
                 animation: number;
@@ -5899,9 +5895,9 @@ declare namespace ol {
             static colors: any;
             /**
              * Clones the style.
-             * @return {ol.style.Chart}
+             * @return {style.Chart}
              */
-            clone(): ol.style.Chart;
+            clone(): style.Chart;
             /** Get data associatied with the chart
              */
             getData(): void;
@@ -5920,13 +5916,13 @@ declare namespace ol {
             /** Set animation step
             *	@param {false|number} false to stop animation or the step of the animation [0,1]
              */
-            setAnimation(false: false | number): void;
+            setAnimation(step: false | number): void;
             /**
              * @inheritDoc
              */
             getChecksum(): void;
         }
-        interface FillPattern extends ol.structs.IHasChecksum {
+        interface FillPattern extends structs.IHasChecksum {
         }
         /**
          * @classdesc
@@ -5934,27 +5930,27 @@ declare namespace ol {
          *
          * @constructor
          * @param {olx.style.FillPatternOption=}  options
-         *	@param {ol.style.Image|undefined} options.image an image pattern, image must be preloaded to draw on first call
+         *	@param {style.Image|undefined} options.image an image pattern, image must be preloaded to draw on first call
          *	@param {number|undefined} options.opacity opacity with image pattern, default:1
          *	@param {olx.style.fillPattern} options.pattern pattern name (override by image option)
-         *	@param {ol.color} options.color pattern color
-         *	@param {ol.style.Fill} options.fill fill color (background)
+         *	@param {color} options.color pattern color
+         *	@param {style.Fill} options.fill fill color (background)
          *	@param {number} options.offset pattern offset for hash/dot/circle/cross pattern
          *	@param {number} options.size line size for hash/dot/circle/cross pattern
          *	@param {number} options.spacing spacing for hash/dot/circle/cross pattern
          *	@param {number|bool} options.angle angle for hash pattern / true for 45deg dot/circle/cross
          *	@param {number} options.scale pattern scale
-         * @extends {ol.style.Fill}
-         * @implements {ol.structs.IHasChecksum}
+         * @extends {style.Fill}
+         * @implements {structs.IHasChecksum}
          * @api
          */
-        class FillPattern extends ol.style.Fill implements ol.structs.IHasChecksum {
+        class FillPattern extends style.Fill implements structs.IHasChecksum {
             constructor(options?: {
-                image: ol.style.Image | undefined;
+                image: style.Image | undefined;
                 opacity: number | undefined;
                 pattern: olx.style.fillPattern;
-                color: ol.color;
-                fill: ol.style.Fill;
+                color: color;
+                fill: style.Fill;
                 offset: number;
                 size: number;
                 spacing: number;
@@ -5963,9 +5959,9 @@ declare namespace ol {
             });
             /**
              * Clones the style.
-             * @return {ol.style.FillPattern}
+             * @return {style.FillPattern}
              */
-            clone(): ol.style.FillPattern;
+            clone(): style.FillPattern;
             /** Get canvas used as pattern
             *	@return {canvas}
              */
@@ -5996,22 +5992,22 @@ declare namespace ol {
         /** Flow line style
          * Draw LineString with a variable color / width
          *
-         * @extends {ol.style.Style}
+         * @extends {style.Style}
          * @constructor
          * @param {Object} options
          *  @param {boolean} options.visible draw only the visible part of the line, default true
          *  @param {number|function} options.width Stroke width or a function that gets a feature and the position (beetween [0,1]) and returns current width
          *  @param {number} options.width2 Final stroke width
-         *  @param {ol.colorLike|function} options.color Stroke color or a function that gets a feature and the position (beetween [0,1]) and returns current color
-         *  @param {ol.colorLike} options.color2 Final sroke color
+         *  @param {colorLike|function} options.color Stroke color or a function that gets a feature and the position (beetween [0,1]) and returns current color
+         *  @param {colorLike} options.color2 Final sroke color
          */
-        class FlowLine extends ol.style.Style {
+        class FlowLine extends style.Style {
             constructor(options: {
                 visible: boolean;
                 width: number | ((...params: any[]) => any);
                 width2: number;
-                color: ol.colorLike | ((...params: any[]) => any);
-                color2: ol.colorLike;
+                color: colorLike | ((...params: any[]) => any);
+                color2: colorLike;
             });
             /** Set the initial width
              * @param {number} width width, default 0
@@ -6026,38 +6022,38 @@ declare namespace ol {
              */
             setLineCap(cap: steing): void;
             /** Get the current width at step
-             * @param {ol.feature} feature
+             * @param {feature} feature
              * @param {number} step current drawing step beetween [0,1]
              * @return {number}
              */
-            getWidth(feature: ol.feature, step: number): number;
+            getWidth(feature: feature, step: number): number;
             /** Set the initial color
-             * @param {ol.colorLike} color
+             * @param {colorLike} color
              */
-            setColor(color: ol.colorLike): void;
+            setColor(color: colorLike): void;
             /** Set the final color
-             * @param {ol.colorLike} color
+             * @param {colorLike} color
              */
-            setColor2(color: ol.colorLike): void;
+            setColor2(color: colorLike): void;
             /** Get the current color at step
-             * @param {ol.feature} feature
+             * @param {feature} feature
              * @param {number} step current drawing step beetween [0,1]
              * @return {string}
              */
-            getColor(feature: ol.feature, step: number): string;
+            getColor(feature: feature, step: number): string;
             /** Renderer function
-             * @param {Array<ol.coordinate>} geom The pixel coordinates of the geometry in GeoJSON notation
-             * @param {ol.render.State} e The olx.render.State of the layer renderer
+             * @param {Array<Coordinate>} geom The pixel coordinates of the geometry in GeoJSON notation
+             * @param {render.State} e The olx.render.State of the layer renderer
              */
-            _render(geom: ol.coordinate[], e: ol.render.State): void;
+            _render(geom: Coordinate[], e: render.State): void;
             /** Split line geometry into equal length geometries
-             * @param {Array<ol.coordinate>} geom
+             * @param {Array<Coordinate>} geom
              * @param {number} nb number of resulting geometries, default 255
              * @param {number} nim minimum length of the resulting geometries, default 1
              */
-            _splitInto(geom: ol.coordinate[], nb: number, nim: number): void;
+            _splitInto(geom: Coordinate[], nb: number, nim: number): void;
         }
-        interface FontSymbol extends ol.structs.IHasChecksum {
+        interface FontSymbol extends structs.IHasChecksum {
         }
         /**
          * @classdesc
@@ -6065,8 +6061,8 @@ declare namespace ol {
          *
          * @constructor
          * @param {} options Options.
-         *  @param {number} options.glyph the glyph name or a char to display as symbol.
-         * 		The name must be added using the {@link ol.style.FontSymbol.addDefs} function.
+         *  @param {number} options.glyph the glyph name or a char to display as symb
+         * 		The name must be added using the {@link style.FontSymbaddDefs} function.
          *  @param {string} options.form
          * 		none|circle|poi|bubble|marker|coma|shield|blazon|bookmark|hexagon|diamond|triangle|sign|ban|lozenge|square
          * 		a form that will enclose the glyph, default none
@@ -6079,11 +6075,11 @@ declare namespace ol {
          *  @param {boolean} options.gradient true to display a gradient on the symbol
          *  @param {_ol_style_Fill_} options.fill
          *  @param {_ol_style_Stroke_} options.stroke
-         * @extends {ol.style.RegularShape}
-         * @implements {ol.structs.IHasChecksum}
+         * @extends {style.RegularShape}
+         * @implements {structs.IHasChecksum}
          * @api
          */
-        class FontSymbol extends ol.style.RegularShape implements ol.structs.IHasChecksum {
+        class FontSymbol extends style.RegularShape implements structs.IHasChecksum {
             constructor(options: {
                 glyph: number;
                 form: string;
@@ -6091,7 +6087,7 @@ declare namespace ol {
                 rotation: number;
                 rotateWithView: number;
                 opacity: number;
-                fontSize,: number;
+                fontSize: number;
                 fontStyle: string;
                 gradient: boolean;
                 fill: _ol_style_Fill_;
@@ -6111,23 +6107,23 @@ declare namespace ol {
             static addDefs(font: string | any, glyphs: any): void;
             /**
              * Clones the style.
-             * @return {ol.style.FontSymbol}
+             * @return {style.FontSymbol}
              */
-            clone(): ol.style.FontSymbol;
+            clone(): style.FontSymbol;
             /**
-             * Get the fill style for the symbol.
-             * @return {ol.style.Fill} Fill style.
+             * Get the fill style for the symb
+             * @return {style.Fill} Fill style.
              * @api
              */
-            getFill(): ol.style.Fill;
+            getFill(): style.Fill;
             /**
-             * Get the stroke style for the symbol.
+             * Get the stroke style for the symb
              * @return {_ol_style_Stroke_} Stroke style.
              * @api
              */
             getStroke(): _ol_style_Stroke_;
             /**
-             * Get the glyph definition for the symbol.
+             * Get the glyph definition for the symb
              * @param {string|undefined} name a glyph name to get the definition, default return the glyph definition for the style.
              * @return {_ol_style_Stroke_} Stroke style.
              * @api
@@ -6140,7 +6136,7 @@ declare namespace ol {
              */
             getGlyphName(): string;
             /**
-             * Get the stroke style for the symbol.
+             * Get the stroke style for the symb
              * @return {_ol_style_Stroke_} Stroke style.
              * @api
              */
@@ -6150,7 +6146,7 @@ declare namespace ol {
              */
             getChecksum(): void;
         }
-        interface Photo extends ol.structs.IHasChecksum {
+        interface Photo extends structs.IHasChecksum {
         }
         /**
          * @classdesc
@@ -6162,23 +6158,23 @@ declare namespace ol {
          *  @param {boolean} options.crop crop within square, default is false
          *  @param {Number} options.radius symbol size
          *  @param {boolean} options.shadow drop a shadow
-         *  @param {ol.style.Stroke} options.stroke
+         *  @param {style.Stroke} options.stroke
          *  @param {String} options.src image src
          *  @param {String} options.crossOrigin The crossOrigin attribute for loaded images. Note that you must provide a crossOrigin value if you want to access pixel data with the Canvas renderer.
          *  @param {Number} options.offsetX Horizontal offset in pixels. Default is 0.
          *  @param {Number} options.offsetY Vertical offset in pixels. Default is 0.
          *  @param {function} options.onload callback when image is loaded (to redraw the layer)
-         * @extends {ol.style.RegularShape}
-         * @implements {ol.structs.IHasChecksum}
+         * @extends {style.RegularShape}
+         * @implements {structs.IHasChecksum}
          * @api
          */
-        class Photo extends ol.style.RegularShape implements ol.structs.IHasChecksum {
+        class Photo extends style.RegularShape implements structs.IHasChecksum {
             constructor(options: {
                 kind: default | square | round | anchored | folio;
                 crop: boolean;
                 radius: number;
                 shadow: boolean;
-                stroke: ol.style.Stroke;
+                stroke: style.Stroke;
                 src: string;
                 crossOrigin: string;
                 offsetX: number;
@@ -6187,16 +6183,16 @@ declare namespace ol {
             });
             /**
              * Clones the style.
-             * @return {ol.style.Photo}
+             * @return {style.Photo}
              */
-            clone(): ol.style.Photo;
+            clone(): style.Photo;
             /**
              * @inheritDoc
              */
             getChecksum(): void;
         }
-        /** Add new properties to ol.style.Text
-        * to use with ol.layer.Vector.prototype.setTextPathStyle
+        /** Add new properties to style.Text
+        * to use with layer.Vector.prototype.setTextPathStyle
         * @constructor
         * @param {} options
         *	@param {visible|ellipsis|string} textOverflow
@@ -6205,7 +6201,7 @@ declare namespace ol {
         class TextPath {
             constructor(options: any, textOverflow: visible | ellipsis | string, minWidth: number);
         }
-        interface Shadow extends ol.structs.IHasChecksum {
+        interface Shadow extends structs.IHasChecksum {
         }
         /**
          * @classdesc
@@ -6213,18 +6209,18 @@ declare namespace ol {
          *
          * @constructor
          * @param {} options Options.
-         *   @param {ol.style.Fill | undefined} options.fill fill style, default rgba(0,0,0,0.5)
+         *   @param {style.Fill | undefined} options.fill fill style, default rgba(0,0,0,0.5)
          *   @param {number} options.radius point radius
          * 	 @param {number} options.blur lur radius, default radius/3
          * 	 @param {number} options.offsetX x offset, default 0
          * 	 @param {number} options.offsetY y offset, default 0
-         * @extends {ol.style.RegularShape}
-         * @implements {ol.structs.IHasChecksum}
+         * @extends {style.RegularShape}
+         * @implements {structs.IHasChecksum}
          * @api
          */
-        class Shadow extends ol.style.RegularShape implements ol.structs.IHasChecksum {
+        class Shadow extends style.RegularShape implements structs.IHasChecksum {
             constructor(options: {
-                fill: ol.style.Fill | undefined;
+                fill: style.Fill | undefined;
                 radius: number;
                 blur: number;
                 offsetX: number;
@@ -6232,15 +6228,15 @@ declare namespace ol {
             });
             /**
              * Clones the style.
-             * @return {ol.style.Shadow}
+             * @return {style.Shadow}
              */
-            clone(): ol.style.Shadow;
+            clone(): style.Shadow;
             /**
              * @inheritDoc
              */
             getChecksum(): void;
         }
-        interface StrokePattern extends ol.structs.IHasChecksum {
+        interface StrokePattern extends structs.IHasChecksum {
         }
         /**
          * @classdesc
@@ -6248,27 +6244,27 @@ declare namespace ol {
          *
          * @constructor
          * @param {any}  options
-         *	@param {ol.style.Image|undefined} options.image an image pattern, image must be preloaded to draw on first call
+         *	@param {style.Image|undefined} options.image an image pattern, image must be preloaded to draw on first call
          *	@param {number|undefined} options.opacity opacity with image pattern, default:1
          *	@param {olx.style.fillPattern} options.pattern pattern name (override by image option)
-         *	@param {ol.colorLike} options.color pattern color
-         *	@param {ol.style.Fill} options.fill fill color (background)
+         *	@param {colorLike} options.color pattern color
+         *	@param {style.Fill} options.fill fill color (background)
          *	@param {number} options.offset pattern offset for hash/dot/circle/cross pattern
          *	@param {number} options.size line size for hash/dot/circle/cross pattern
          *	@param {number} options.spacing spacing for hash/dot/circle/cross pattern
          *	@param {number|bool} options.angle angle for hash pattern / true for 45deg dot/circle/cross
          *	@param {number} options.scale pattern scale
-         * @extends {ol.style.Fill}
-         * @implements {ol.structs.IHasChecksum}
+         * @extends {style.Fill}
+         * @implements {structs.IHasChecksum}
          * @api
          */
-        class StrokePattern extends ol.style.Fill implements ol.structs.IHasChecksum {
+        class StrokePattern extends style.Fill implements structs.IHasChecksum {
             constructor(options: {
-                image: ol.style.Image | undefined;
+                image: style.Image | undefined;
                 opacity: number | undefined;
                 pattern: olx.style.fillPattern;
-                color: ol.colorLike;
-                fill: ol.style.Fill;
+                color: colorLike;
+                fill: style.Fill;
                 offset: number;
                 size: number;
                 spacing: number;
@@ -6277,9 +6273,9 @@ declare namespace ol {
             });
             /**
              * Clones the style.
-             * @return {ol.style.StrokePattern}
+             * @return {style.StrokePattern}
              */
-            clone(): ol.style.StrokePattern;
+            clone(): style.StrokePattern;
             /** Get canvas used as pattern
             *	@return {canvas}
              */
@@ -6292,77 +6288,77 @@ declare namespace ol {
     }
     /** The map is the core component of OpenLayers.
      * For a map to render, a view, one or more layers, and a target container are needed:
-     * @namespace ol.Map
+     * @namespace Map
      * @see {@link http://openlayers.org/en/latest/apidoc/module-ol_Map.html}
      */
     namespace Map {
         /** Animate feature on a map
          * @function
          * @fires animationstart, animationend
-         * @param {ol.Feature} feature Feature to animate
-         * @param {ol.featureAnimation|Array<ol.featureAnimation>} fanim the animation to play
+         * @param {Feature} feature Feature to animate
+         * @param {featureAnimation|Array<featureAnimation>} fanim the animation to play
          * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
          */
-        function animateFeature(feature: ol.Feature, fanim: ol.featureAnimation | ol.featureAnimation[]): olx.animationControler;
-        /** Add a filter to an ol.Map
-        *	@param {ol.filter}
+        function animateFeature(feature: Feature, fanim: featureAnimation | featureAnimation[]): olx.animationControler;
+        /** Add a filter to an Map
+        *	@param {filter}
          */
-        function addFilter(filter: ol.filter): void;
-        /** Remove a filter to an ol.Map
-        *	@param {ol.filter}
+        function addFilter(filter: filter): void;
+        /** Remove a filter to an Map
+        *	@param {filter}
          */
-        function removeFilter(filter: ol.filter): void;
-        /** Get filters associated with an ol.Map
-        *	@return {Array<ol.filter>}
+        function removeFilter(filter: filter): void;
+        /** Get filters associated with an Map
+        *	@return {Array<filter>}
          */
-        function getFilters(): ol.filter[];
+        function getFilters(): filter[];
         /** Show a target overlay at coord
-        * @param {ol.coordinate} coord
+        * @param {Coordinate} coord
          */
-        function showTarget(coord: ol.coordinate): void;
+        function showTarget(coord: Coordinate): void;
         /** Hide the target overlay
          */
         function hideTarget(): void;
         /** Pulse an extent on postcompose
-        *	@param {ol.coordinates} point to pulse
-        *	@param {ol.pulse.options} options pulse options param
-        *	  @param {ol.projectionLike|undefined} options.projection projection of coords, default no transform
+        *	@param {Coordinates} point to pulse
+        *	@param {pulse.options} options pulse options param
+        *	  @param {projectionLike|undefined} options.projection projection of coords, default no transform
         *	  @param {Number} options.duration animation duration in ms, default 2000
-        *	  @param {ol.easing} options.easing easing function, default ol.easing.upAndDown
-        *	  @param {ol.style.Stroke} options.style stroke style, default 2px red
+        *	  @param {easing} options.easing easing function, default easing.upAndDown
+        *	  @param {style.Stroke} options.style stroke style, default 2px red
          */
-        function animExtent(point: ol.coordinates, options: {
-            projection: ol.projectionLike | undefined;
+        function animExtent(point: Coordinates, options: {
+            projection: projectionLike | undefined;
             duration: number;
-            easing: ol.easing;
-            style: ol.style.Stroke;
+            easing: easing;
+            style: style.Stroke;
         }): void;
         /** Show a markup a point on postcompose
         *	@deprecated use map.animateFeature instead
-        *	@param {ol.coordinates} point to pulse
-        *	@param {ol.markup.options} pulse options param
-        *		- projection {ol.projection|String|undefined} projection of coords, default none
+        *	@param {Coordinates} point to pulse
+        *	@param {markup.options} pulse options param
+        *		- projection {projection|String|undefined} projection of coords, default none
         *		- delay {Number} delay before mark fadeout
         *		- maxZoom {Number} zoom when mark fadeout
-        *		- style {ol.style.Image|ol.style.Style|Array<ol.style.Style>} Image to draw as markup, default red circle
+        *		- style {style.Image|style.Style|Array<style.Style>} Image to draw as markup, default red circle
         *	@return Unique key for the listener with a stop function to stop animation
          */
-        function markup(point: ol.coordinates, pulse: ol.markup.options): any;
+        function markup(point: Coordinates, pulse: markup.options): any;
         /** Pulse a point on postcompose
         *	@deprecated use map.animateFeature instead
-        *	@param {ol.coordinates} point to pulse
-        *	@param {ol.pulse.options} pulse options param
-        *		- projection {ol.projection||String} projection of coords
+        *	@param {Coordinates} point to pulse
+        *	@param {pulse.options} pulse options param
+        *		- projection {projection||String} projection of coords
         *		- duration {Number} animation duration in ms, default 3000
         *		- amplitude {Number} movement amplitude 0: none - 0.5: start at 0.5*radius of the image - 1: max, default 1
-        *		- easing {ol.easing} easing function, default ol.easing.easeOut
-        *		- style {ol.style.Image|ol.style.Style|Array<ol.style.Style>} Image to draw as markup, default red circle
+        *		- easing {easing} easing function, default easing.easeOut
+        *		- style {style.Image|style.Style|Array<style.Style>} Image to draw as markup, default red circle
          */
-        function pulse(point: ol.coordinates, pulse: ol.pulse.options): void;
+        function pulse(point: Coordinates, pulse: pulse.options): void;
     }
     /** Openlayers Overlay.
      * An element to be displayed over the map and attached to a single map location.
-     * @namespace ol.Overlay
+     * @namespace Overlay
      * @see {@link http://openlayers.org/en/latest/apidoc/module-ol_Overlay.html}
      */
     namespace Overlay {
@@ -6372,31 +6368,31 @@ declare namespace ol {
          * location. The popup are customized using CSS.
          *
          * @example
-        var popup = new ol.Overlay.Popup();
+        var popup = new Overlay.Popup();
         map.addOverlay(popup);
         popup.show(coordinate, "Hello!");
         popup.hide();
         *
         * @constructor
-        * @extends {ol.Overlay}
+        * @extends {Overlay}
         * @param {} options Extend Overlay options
         *	@param {String} options.popupClass the a class of the overlay to style the popup.
         *	@param {bool} options.closeBox popup has a close box, default false.
         *	@param {function|undefined} options.onclose: callback function when popup is closed
         *	@param {function|undefined} options.onshow callback function when popup is shown
         *	@param {Number|Array<number>} options.offsetBox an offset box
-        *	@param {ol.OverlayPositioning | string | undefined} options.positionning
+        *	@param {OverlayPositioning | string | undefined} options.positionning
         *		the 'auto' positioning var the popup choose its positioning to stay on the map.
         * @api stable
          */
-        class Popup extends ol.Overlay {
+        class Popup extends Overlay {
             constructor(options: {
                 popupClass: string;
                 closeBox: boolean;
-                onclose:: ((...params: any[]) => any) | undefined;
+                onclose: ((...params: any[]) => any) | undefined;
                 onshow: ((...params: any[]) => any) | undefined;
                 offsetBox: number | number[];
-                positionning: ol.OverlayPositioning | string | undefined;
+                positionning: OverlayPositioning | string | undefined;
             });
             /**
              * Set a close box to the popup.
@@ -6424,21 +6420,21 @@ declare namespace ol {
             removePopupClass(c: string): void;
             /**
              * Set positionning of the popup
-             * @param {ol.OverlayPositioning | string | undefined} pos an ol.OverlayPositioning
+             * @param {OverlayPositioning | string | undefined} pos an OverlayPositioning
              * 		or 'auto' to var the popup choose the best position
              * @api stable
              */
-            setPositioning(pos: ol.OverlayPositioning | string | undefined): void;
+            setPositioning(pos: OverlayPositioning | string | undefined): void;
             /** Check if popup is visible
             * @return {boolean}
              */
             getVisible(): boolean;
             /**
              * Set the position and the content of the popup.
-             * @param {ol.Coordinate|string} coordinate the coordinate of the popup or the HTML content.
+             * @param {Coordinate|string} coordinate the coordinate of the popup or the HTML content.
              * @param {string|undefined} html the HTML content (undefined = previous content).
              * @example
-            var popup = new ol.Overlay.Popup();
+            var popup = new Overlay.Popup();
             // Show popup
             popup.show([166000, 5992000], "Hello world!");
             // Move popup at coord with the same info
@@ -6447,7 +6443,7 @@ declare namespace ol {
             popup.show("New informations");
             * @api stable
              */
-            show(coordinate: ol.Coordinate | string, html: string | undefined): void;
+            show(coordinate: Coordinate | string, html: string | undefined): void;
             /**
              * Hide the popup
              * @api stable
@@ -6460,17 +6456,17 @@ declare namespace ol {
          *	a portion of the map in a different zoom (and actually display different content).
          *
          * @constructor
-         * @extends {ol.Overlay}
+         * @extends {Overlay}
          * @param {olx.OverlayOptions} options Overlay options
          * @api stable
          */
-        class Magnify extends ol.Overlay {
+        class Magnify extends Overlay {
             constructor(options: olx.OverlayOptions);
             /**
              * Set the map instance the overlay is associated with.
-             * @param {ol.Map} map The map instance.
+             * @param {Map} map The map instance.
              */
-            setMap(map: ol.Map): void;
+            setMap(map: Map): void;
             /** Get the magnifier map
             *	@return {_ol_Map_}
              */
@@ -6490,13 +6486,13 @@ declare namespace ol {
          * location. The placemarks are customized using CSS.
          *
          * @example
-        var popup = new ol.Overlay.Placemark();
+        var popup = new Overlay.Placemark();
         map.addOverlay(popup);
         popup.show(coordinate);
         popup.hide();
         *
         * @constructor
-        * @extends {ol.Overlay}
+        * @extends {Overlay}
         * @param {} options Extend ol/Overlay/Popup options
         *	@param {String} options.color placemark color
         *	@param {String} options.backgroundColor placemark color
@@ -6507,22 +6503,22 @@ declare namespace ol {
         *	@param {function|undefined} options.onshow callback function when popup is shown
         * @api stable
          */
-        class Placemark extends ol.Overlay {
+        class Placemark extends Overlay {
             constructor(options: {
                 color: string;
                 backgroundColor: string;
                 contentColor: string;
                 radius: number;
                 popupClass: string;
-                onclose:: ((...params: any[]) => any) | undefined;
+                onclose: ((...params: any[]) => any) | undefined;
                 onshow: ((...params: any[]) => any) | undefined;
             });
             /**
              * Set the position and the content of the placemark (hide it before to enable animation).
-             * @param {ol.Coordinate|string} coordinate the coordinate of the popup or the HTML content.
+             * @param {Coordinate|string} coordinate the coordinate of the popup or the HTML content.
              * @param {string|undefined} html the HTML content (undefined = previous content).
              */
-            show(coordinate: ol.Coordinate | string, html: string | undefined): void;
+            show(coordinate: Coordinate | string, html: string | undefined): void;
             /**
              * Set the placemark color.
              * @param {string} color
@@ -6553,14 +6549,14 @@ declare namespace ol {
          * A popup element to be displayed on a feature.
          *
          * @constructor
-         * @extends {ol.Overlay.Popup}
+         * @extends {Overlay.Popup}
          * @param {} options Extend Popup options
          *  @param {String} options.popupClass the a class of the overlay to style the popup.
          *  @param {bool} options.closeBox popup has a close box, default false.
          *  @param {function|undefined} options.onclose: callback function when popup is closed
          *  @param {function|undefined} options.onshow callback function when popup is shown
          *  @param {Number|Array<number>} options.offsetBox an offset box
-         *  @param {ol.OverlayPositioning | string | undefined} options.positionning
+         *  @param {OverlayPositioning | string | undefined} options.positionning
          *    the 'auto' positioning var the popup choose its positioning to stay on the map.
          *  @param {Template} options.template A template with a list of properties to use in the popup
          *  @param {boolean} options.canFix Enable popup to be fixed, default false
@@ -6568,14 +6564,14 @@ declare namespace ol {
          *  @param {boolean} options.maxChar max char to display in a cell, default 200
          *  @api stable
          */
-        class PopupFeature extends ol.Overlay.Popup {
+        class PopupFeature extends Overlay.Popup {
             constructor(options: {
                 popupClass: string;
                 closeBox: boolean;
-                onclose:: ((...params: any[]) => any) | undefined;
+                onclose: ((...params: any[]) => any) | undefined;
                 onshow: ((...params: any[]) => any) | undefined;
                 offsetBox: number | number[];
-                positionning: ol.OverlayPositioning | string | undefined;
+                positionning: OverlayPositioning | string | undefined;
                 template: Template;
                 canFix: boolean;
                 showImage: boolean;
@@ -6586,10 +6582,10 @@ declare namespace ol {
              */
             setTemplate(template: Template): void;
             /** Show the popup on the map
-             * @param {ol.coordinate|undefined} coordinate Position of the popup
-             * @param {ol.Feature|Array<ol.Feature>} features The features on the popup
+             * @param {Coordinate|undefined} coordinate Position of the popup
+             * @param {Feature|Array<Feature>} features The features on the popup
              */
-            show(coordinate: ol.coordinate | undefined, features: ol.Feature | ol.Feature[]): void;
+            show(coordinate: Coordinate | undefined, features: Feature | Feature[]): void;
             /** Fix the popup
              * @param {boolean} fix
              */
@@ -6633,11 +6629,11 @@ declare namespace ol {
             removePopupClass(c: string): void;
             /**
              * Set positionning of the popup
-             * @param {ol.OverlayPositioning | string | undefined} pos an ol.OverlayPositioning
+             * @param {OverlayPositioning | string | undefined} pos an OverlayPositioning
              * 		or 'auto' to var the popup choose the best position
              * @api stable
              */
-            setPositioning(pos: ol.OverlayPositioning | string | undefined): void;
+            setPositioning(pos: OverlayPositioning | string | undefined): void;
             /** Check if popup is visible
             * @return {boolean}
              */
@@ -6650,7 +6646,7 @@ declare namespace ol {
         }
         /** A tooltip element to be displayed over the map and attached on the cursor position.
          * @constructor
-         * @extends {ol.Overlay.Popup}
+         * @extends {Overlay.Popup}
          * @param {} options Extend Popup options
          *	@param {String} options.popupClass the a class of the overlay to style the popup.
          *  @param {number} options.maximumFractionDigits maximum digits to display on measure, default 2
@@ -6658,11 +6654,11 @@ declare namespace ol {
          *  @param {function} options.formatArea a function that takes a number and returns the formated value, default length in square-meter
          *  @param {function} options.getHTML a function that takes a feature and the info string and return a formated info to display in the tooltip, default display feature measure & info
          *	@param {Number|Array<number>} options.offsetBox an offset box
-         *	@param {ol.OverlayPositioning | string | undefined} options.positionning
+         *	@param {OverlayPositioning | string | undefined} options.positionning
          *		the 'auto' positioning var the popup choose its positioning to stay on the map.
          * @api stable
          */
-        class Tooltip extends ol.Overlay.Popup {
+        class Tooltip extends Overlay.Popup {
             constructor(options: {
                 popupClass: string;
                 maximumFractionDigits: number;
@@ -6670,7 +6666,7 @@ declare namespace ol {
                 formatArea: (...params: any[]) => any;
                 getHTML: (...params: any[]) => any;
                 offsetBox: number | number[];
-                positionning: ol.OverlayPositioning | string | undefined;
+                positionning: OverlayPositioning | string | undefined;
             });
             /**
              * Set the map instance the control is associated with
@@ -6680,11 +6676,11 @@ declare namespace ol {
             setMap(map: _ol_Map_): void;
             /** Get the information to show in the tooltip
              * The area/length will be added if a feature is attached.
-             * @param {ol.Feature|undefined} feature the feature
+             * @param {Feature|undefined} feature the feature
              * @param {string} info the info string
              * @api
              */
-            getHTML(feature: ol.Feature | undefined, info: string): void;
+            getHTML(feature: Feature | undefined, info: string): void;
             /** Set the Tooltip info
              * If information is not null it will be set with a delay,
              * thus watever the information is inserted, the significant information will be set.
@@ -6712,9 +6708,9 @@ declare namespace ol {
              */
             formatLength(length: number): string;
             /** Set a feature associated with the tooltips, measure info on the feature will be added in the tooltip
-             * @param {ol.Feature|ol.Event} feature an ol.Feature or an event (object) with a feature property
+             * @param {Feature|Event} feature an Feature or an event (object) with a feature property
              */
-            setFeature(feature: ol.Feature | ol.Event): void;
+            setFeature(feature: Feature | Event): void;
             /**
              * Set a close box to the popup.
              * @param {bool} b
@@ -6741,21 +6737,21 @@ declare namespace ol {
             removePopupClass(c: string): void;
             /**
              * Set positionning of the popup
-             * @param {ol.OverlayPositioning | string | undefined} pos an ol.OverlayPositioning
+             * @param {OverlayPositioning | string | undefined} pos an OverlayPositioning
              * 		or 'auto' to var the popup choose the best position
              * @api stable
              */
-            setPositioning(pos: ol.OverlayPositioning | string | undefined): void;
+            setPositioning(pos: OverlayPositioning | string | undefined): void;
             /** Check if popup is visible
             * @return {boolean}
              */
             getVisible(): boolean;
             /**
              * Set the position and the content of the popup.
-             * @param {ol.Coordinate|string} coordinate the coordinate of the popup or the HTML content.
+             * @param {Coordinate|string} coordinate the coordinate of the popup or the HTML content.
              * @param {string|undefined} html the HTML content (undefined = previous content).
              * @example
-            var popup = new ol.Overlay.Popup();
+            var popup = new Overlay.Popup();
             // Show popup
             popup.show([166000, 5992000], "Hello world!");
             // Move popup at coord with the same info
@@ -6764,7 +6760,7 @@ declare namespace ol {
             popup.show("New informations");
             * @api stable
              */
-            show(coordinate: ol.Coordinate | string, html: string | undefined): void;
+            show(coordinate: Coordinate | string, html: string | undefined): void;
             /**
              * Hide the popup
              * @api stable
@@ -6774,11 +6770,11 @@ declare namespace ol {
     }
     /**
      * Easing functions.
-     * @namespace ol.easing
+     * @namespace easing
      * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_easing.html}
      */
     namespace easing { }
-    /** @namespace  ol.ext
+    /** @namespace  ext
      */
     namespace ext {
         /** Ajax request
@@ -6804,7 +6800,7 @@ declare namespace ol {
      * on postcompose in a map or a layer
     * @constructor
     * @fires animationstart|animationend
-    * @param {ol.featureAnimationOptions} options
+    * @param {featureAnimationOptions} options
     *	@param {Number} options.duration duration of the animation in ms, default 1000
     *	@param {bool} options.revers revers the animation direction
     *	@param {Number} options.repeat number of time to repeat the animation, default 0
@@ -6812,8 +6808,8 @@ declare namespace ol {
     *		to be used to make the feature selectable when playing animation
     *		(@see {@link ../examples/map.featureanimation.select.html}), default the feature
     *		will be hidden when playing (and niot selectable)
-    *	@param {ol.easing.Function} options.fade an easing function used to fade in the feature, default none
-    *	@param {ol.easing.Function} options.easing an easing function for the animation, default ol.easing.linear
+    *	@param {easing.Function} options.fade an easing function used to fade in the feature, default none
+    *	@param {easing.Function} options.easing an easing function for the animation, default easing.linear
      */
     class featureAnimation {
         constructor(options: {
@@ -6821,22 +6817,22 @@ declare namespace ol {
             revers: boolean;
             repeat: number;
             hiddenStyle: oo.style.Style;
-            fade: ol.easing.Function;
-            easing: ol.easing.Function;
+            fade: easing.Function;
+            easing: easing.Function;
         });
         /** Function to perform manipulations onpostcompose.
-         * This function is called with an ol.featureAnimationEvent argument.
+         * This function is called with an featureAnimationEvent argument.
          * The function will be overridden by the child implementation.
          * Return true to keep this function for the next frame, false to remove it.
-         * @param {ol.featureAnimationEvent} e
+         * @param {featureAnimationEvent} e
          * @return {bool} true to continue animation.
          * @api
          */
-        animate(e: ol.featureAnimationEvent): boolean;
+        animate(e: featureAnimationEvent): boolean;
     }
     /** An animation controler object an object to control animation with start, stop and isPlaying function.
-     * To be used with {@link olx.Map#animateFeature} or {@link ol.layer.Vector#animateFeature}
-     * @typedef {Object} ol.animationControler
+     * To be used with {@link olx.Map#animateFeature} or {@link layer.Vector#animateFeature}
+     * @typedef {Object} animationControler
      * @property {function} start - start animation.
      * @property {function} stop - stop animation option arguments can be passed in animationend event.
      * @property {function} isPlaying - return true if animation is playing.
@@ -6849,235 +6845,235 @@ declare namespace ol {
     namespace featureAnimation {
         /** Bounce animation:
          * @constructor
-         * @extends {ol.featureAnimation}
-         * @param {ol.featureAnimationBounceOptions} options
+         * @extends {featureAnimation}
+         * @param {featureAnimationBounceOptions} options
          *	@param {Integer} options.bounce number of bounce, default 3
          *	@param {Integer} options.amplitude bounce amplitude,default 40
-         *	@param {ol.easing} options.easing easing used for decaying amplitude, use function(){return 0} for no decay, default ol.easing.linear
+         *	@param {easing} options.easing easing used for decaying amplitude, use function(){return 0} for no decay, default easing.linear
          *	@param {Integer} options.duration duration in ms, default 1000
          */
-        class Bounce extends ol.featureAnimation {
+        class Bounce extends featureAnimation {
             constructor(options: {
                 bounce: Integer;
                 amplitude: Integer;
-                easing: ol.easing;
+                easing: easing;
                 duration: Integer;
             });
             /** Animate
-            * @param {ol.featureAnimationEvent} e
+            * @param {featureAnimationEvent} e
              */
-            animate(e: ol.featureAnimationEvent): void;
+            animate(e: featureAnimationEvent): void;
         }
         /** Drop animation: drop a feature on the map
          * @constructor
-         * @extends {ol.featureAnimation}
-         * @param {ol.featureAnimationDropOptions} options
+         * @extends {featureAnimation}
+         * @param {featureAnimationDropOptions} options
          *  @param {Number} options.speed speed of the feature if 0 the duration parameter will be used instead, default 0
          *  @param {Number} options.side top or bottom, default top
          */
-        class Drop extends ol.featureAnimation {
+        class Drop extends featureAnimation {
             constructor(options: {
                 speed: number;
                 side: number;
             });
             /** Animate
-            * @param {ol.featureAnimationEvent} e
+            * @param {featureAnimationEvent} e
              */
-            animate(e: ol.featureAnimationEvent): void;
+            animate(e: featureAnimationEvent): void;
         }
         /** Fade animation: feature fade in
          * @constructor
-         * @extends {ol.featureAnimation}
-         * @param {ol.featureAnimationOptions} options
+         * @extends {featureAnimation}
+         * @param {featureAnimationOptions} options
          */
-        class Fade extends ol.featureAnimation {
-            constructor(options: ol.featureAnimationOptions);
+        class Fade extends featureAnimation {
+            constructor(options: featureAnimationOptions);
             /** Animate
-            * @param {ol.featureAnimationEvent} e
+            * @param {featureAnimationEvent} e
              */
-            animate(e: ol.featureAnimationEvent): void;
+            animate(e: featureAnimationEvent): void;
         }
         /** Do nothing for a given duration
          * @constructor
-         * @extends {ol.featureAnimation}
-         * @param {ol.featureAnimationShowOptions} options
+         * @extends {featureAnimation}
+         * @param {featureAnimationShowOptions} options
          *
          */
-        class None extends ol.featureAnimation {
-            constructor(options: ol.featureAnimationShowOptions);
+        class None extends featureAnimation {
+            constructor(options: featureAnimationShowOptions);
             /** Animate: do nothing during the laps time
-            * @param {ol.featureAnimationEvent} e
+            * @param {featureAnimationEvent} e
              */
-            animate(e: ol.featureAnimationEvent): void;
+            animate(e: featureAnimationEvent): void;
         }
         /** Do nothing
          * @constructor
-         * @extends {ol.featureAnimation}
+         * @extends {featureAnimation}
          */
-        class Null extends ol.featureAnimation {
+        class Null extends featureAnimation {
             /** Function to perform manipulations onpostcompose.
-             * This function is called with an ol.featureAnimationEvent argument.
+             * This function is called with an featureAnimationEvent argument.
              * The function will be overridden by the child implementation.
              * Return true to keep this function for the next frame, false to remove it.
-             * @param {ol.featureAnimationEvent} e
+             * @param {featureAnimationEvent} e
              * @return {bool} true to continue animation.
              * @api
              */
-            animate(e: ol.featureAnimationEvent): boolean;
+            animate(e: featureAnimationEvent): boolean;
         }
         /** Path animation: feature follow a path
          * @constructor
-         * @extends {ol.featureAnimation}
-         * @param {ol.featureAnimationPathOptions} options extend ol.featureAnimation options
+         * @extends {featureAnimation}
+         * @param {featureAnimationPathOptions} options extend featureAnimation options
          *  @param {Number} options.speed speed of the feature, if 0 the duration parameter will be used instead, default 0
          *  @param {Number|boolean} options.rotate rotate the symbol when following the path, true or the initial rotation, default false
-         *  @param {ol.geom.LineString|ol.Feature} options.path the path to follow
+         *  @param {LineString|Feature} options.path the path to follow
          */
-        class Path extends ol.featureAnimation {
+        class Path extends featureAnimation {
             constructor(options: {
                 speed: number;
                 rotate: number | boolean;
-                path: ol.geom.LineString | ol.Feature;
+                path: LineString | Feature;
             });
             /** Animate
-            * @param {ol.featureAnimationEvent} e
+            * @param {featureAnimationEvent} e
              */
-            animate(e: ol.featureAnimationEvent): void;
+            animate(e: featureAnimationEvent): void;
         }
         /** Shakee animation:
          * @constructor
-         * @extends {ol.featureAnimation}
-         * @param {ol.featureAnimationShakeOptions} options
+         * @extends {featureAnimation}
+         * @param {featureAnimationShakeOptions} options
          *	@param {Integer} options.bounce number o bounds, default 6
          *	@param {Integer} options.amplitude amplitude of the animation, default 40
          *	@param {bool} options.horizontal shake horizontally default false (vertical)
          */
-        class Shake extends ol.featureAnimation {
+        class Shake extends featureAnimation {
             constructor(options: {
                 bounce: Integer;
                 amplitude: Integer;
                 horizontal: boolean;
             });
             /** Animate
-            * @param {ol.featureAnimationEvent} e
+            * @param {featureAnimationEvent} e
              */
-            animate(e: ol.featureAnimationEvent): void;
+            animate(e: featureAnimationEvent): void;
         }
         /** Show an object for a given duration
          * @constructor
-         * @extends {ol.featureAnimation}
-         * @param {ol.featureAnimationOptions} options
+         * @extends {featureAnimation}
+         * @param {featureAnimationOptions} options
          */
-        class Show extends ol.featureAnimation {
-            constructor(options: ol.featureAnimationOptions);
+        class Show extends featureAnimation {
+            constructor(options: featureAnimationOptions);
             /** Animate: just show the object during the laps time
-            * @param {ol.featureAnimationEvent} e
+            * @param {featureAnimationEvent} e
              */
-            animate(e: ol.featureAnimationEvent): void;
+            animate(e: featureAnimationEvent): void;
         }
         /** Slice animation: feature enter from left
          * @constructor
-         * @extends {ol.featureAnimation}
-         * @param {ol.featureAnimationSlideOptions} options
+         * @extends {featureAnimation}
+         * @param {featureAnimationSlideOptions} options
          *  @param {Number} options.speed speed of the animation, if 0 the duration parameter will be used instead, default 0
          */
-        class Slide extends ol.featureAnimation {
+        class Slide extends featureAnimation {
             constructor(options: {
                 speed: number;
             });
             /** Animate
-            * @param {ol.featureAnimationEvent} e
+            * @param {featureAnimationEvent} e
              */
-            animate(e: ol.featureAnimationEvent): void;
+            animate(e: featureAnimationEvent): void;
         }
         /** Teleport a feature at a given place
          * @constructor
-         * @extends {ol.featureAnimation}
-         * @param {ol.featureAnimationOptions} options
+         * @extends {featureAnimation}
+         * @param {featureAnimationOptions} options
          */
-        class Teleport extends ol.featureAnimation {
-            constructor(options: ol.featureAnimationOptions);
+        class Teleport extends featureAnimation {
+            constructor(options: featureAnimationOptions);
             /** Animate
-            * @param {ol.featureAnimationEvent} e
+            * @param {featureAnimationEvent} e
              */
-            animate(e: ol.featureAnimationEvent): void;
+            animate(e: featureAnimationEvent): void;
         }
         /** Slice animation: feature enter from left
          * @constructor
-         * @extends {ol.featureAnimation}
-         * @param {ol.featureAnimationThrowOptions} options
+         * @extends {featureAnimation}
+         * @param {featureAnimationThrowOptions} options
          *  @param {left|right} options.side side of the animation, default left
          */
-        class Throw extends ol.featureAnimation {
+        class Throw extends featureAnimation {
             constructor(options: {
                 side: left | right;
             });
             /** Animate
-            * @param {ol.featureAnimationEvent} e
+            * @param {featureAnimationEvent} e
              */
-            animate(e: ol.featureAnimationEvent): void;
+            animate(e: featureAnimationEvent): void;
         }
         /** Zoom animation: feature zoom in (for points)
          * @constructor
-         * @extends {ol.featureAnimation}
-         * @param {ol.featureAnimationZoomOptions} options
+         * @extends {featureAnimation}
+         * @param {featureAnimationZoomOptions} options
          *  @param {bool} options.zoomOut to zoom out
          */
-        class Zoom extends ol.featureAnimation {
+        class Zoom extends featureAnimation {
             constructor(options: {
                 zoomOut: boolean;
             });
             /** Animate
-            * @param {ol.featureAnimationEvent} e
+            * @param {featureAnimationEvent} e
              */
-            animate(e: ol.featureAnimationEvent): void;
+            animate(e: featureAnimationEvent): void;
         }
         /** Zoom animation: feature zoom out (for points)
          * @constructor
-         * @extends {ol.featureAnimation}
-         * @param {ol.featureAnimationZoomOptions} options
+         * @extends {featureAnimation}
+         * @param {featureAnimationZoomOptions} options
          */
-        class ZoomOut extends ol.featureAnimation {
-            constructor(options: ol.featureAnimationZoomOptions);
+        class ZoomOut extends featureAnimation {
+            constructor(options: featureAnimationZoomOptions);
             /** Function to perform manipulations onpostcompose.
-             * This function is called with an ol.featureAnimationEvent argument.
+             * This function is called with an featureAnimationEvent argument.
              * The function will be overridden by the child implementation.
              * Return true to keep this function for the next frame, false to remove it.
-             * @param {ol.featureAnimationEvent} e
+             * @param {featureAnimationEvent} e
              * @return {bool} true to continue animation.
              * @api
              */
-            animate(e: ol.featureAnimationEvent): boolean;
+            animate(e: featureAnimationEvent): boolean;
         }
     }
     /**
      * @classdesc
-     *ol.render3D 3D vector layer rendering
+     *render3D 3D vector layer rendering
      * @constructor
      * @param {Object} param
-     *  @param {ol.layer.Vector} param.layer the layer to display in 3D
-     *  @param {ol.style.Style} options.styler drawing style
+     *  @param {layer.Vector} param.layer the layer to display in 3D
+     *  @param {style.Style} options.styler drawing style
      *  @param {number} param.maxResolution  max resolution to render 3D
      *  @param {number} param.defaultHeight default height if none is return by a propertie
      *  @param {function|string|Number} param.height a height function (returns height giving a feature) or a popertie name for the height or a fixed value
      */
     class render3D {
         constructor(param: {
-            layer: ol.layer.Vector;
+            layer: layer.Vector;
             maxResolution: number;
             defaultHeight: number;
             height: ((...params: any[]) => any) | string | number;
         });
         /**
          * Set style associated with the renderer
-         * @param {ol.style.Style} s
+         * @param {style.Style} s
          */
-        setStyle(s: ol.style.Style): void;
+        setStyle(s: style.Style): void;
         /**
          * Get style associated with the renderer
-         * @return {ol.style.Style}
+         * @return {style.Style}
          */
-        getStyle(): ol.style.Style;
+        getStyle(): style.Style;
         /** Calculate 3D at potcompose
          */
         onPostcompose_(): void;
@@ -7093,7 +7089,7 @@ declare namespace ol {
          * @param {olx.render3D.animateOptions}
          *  @param {string|function|number} param.height an attribute name or a function returning height of a feature or a fixed value
          *  @param {number} param.duration the duration of the animatioin ms, default 1000
-         *  @param {ol.easing} param.easing an ol easing function
+         *  @param {easing} param.easing an ol easing function
          *	@api
          */
         animate(options: olx.render3D.animateOptions): void;
@@ -7116,20 +7112,20 @@ declare namespace ol {
     }
     /**
     * Hexagonal grids
-    * @classdesc ol.HexGrid is a class to compute hexagonal grids
+    * @classdesc HexGrid is a class to compute hexagonal grids
     * @see http://www.redblobgames.com/grids/hexagons
     *
-    * @constructor ol.HexGrid
-    * @extends {ol.Object}
+    * @constructor HexGrid
+    * @extends {Object}
     * @param {Object} [options]
     *	@param {number} [options.size] size of the exagon in map units, default 80000
-    *	@param {ol.Coordinate} [options.origin] orgin of the grid, default [0,0]
+    *	@param {Coordinate} [options.origin] orgin of the grid, default [0,0]
     *	@param {HexagonLayout} [options.layout] grid layout, default pointy
      */
-    class HexGrid extends ol.Object {
+    class HexGrid extends Object {
         constructor(options?: {
             size?: number;
-            origin?: ol.Coordinate;
+            origin?: Coordinate;
             layout?: HexagonLayout;
         });
         /** Layout
@@ -7144,13 +7140,13 @@ declare namespace ol {
          */
         getLayout(): HexagonLayout;
         /** Set hexagon origin
-        * @param {ol.Coordinate} coord origin
+        * @param {Coordinate} coord origin
          */
-        setOrigin(coord: ol.Coordinate): void;
+        setOrigin(coord: Coordinate): void;
         /** Get hexagon origin
-        * @return {ol.Coordinate} coord origin
+        * @return {Coordinate} coord origin
          */
-        getOrigin(): ol.Coordinate;
+        getOrigin(): Coordinate;
         /** Set hexagon size
         * @param {number} hexagon size
          */
@@ -7160,96 +7156,96 @@ declare namespace ol {
          */
         getSize(): number;
         /** Convert cube to axial coords
-        * @param {ol.Coordinate} c cube coordinate
-        * @return {ol.Coordinate} axial coordinate
+        * @param {Coordinate} c cube coordinate
+        * @return {Coordinate} axial coordinate
          */
-        cube2hex(c: ol.Coordinate): ol.Coordinate;
+        cube2hex(c: Coordinate): Coordinate;
         /** Convert axial to cube coords
-        * @param {ol.Coordinate} h axial coordinate
-        * @return {ol.Coordinate} cube coordinate
+        * @param {Coordinate} h axial coordinate
+        * @return {Coordinate} cube coordinate
          */
-        hex2cube(h: ol.Coordinate): ol.Coordinate;
+        hex2cube(h: Coordinate): Coordinate;
         /** Convert offset to axial coords
-        * @param {ol.Coordinate} h axial coordinate
-        * @return {ol.Coordinate} offset coordinate
+        * @param {Coordinate} h axial coordinate
+        * @return {Coordinate} offset coordinate
          */
-        hex2offset(h: ol.Coordinate): ol.Coordinate;
+        hex2offset(h: Coordinate): Coordinate;
         /** Convert axial to offset coords
-        * @param {ol.Coordinate} o offset coordinate
-        * @return {ol.Coordinate} axial coordinate
+        * @param {Coordinate} o offset coordinate
+        * @return {Coordinate} axial coordinate
          */
-        offset2hex(o: ol.Coordinate): ol.Coordinate;
+        offset2hex(o: Coordinate): Coordinate;
         /** Convert offset to cube coords
-        * @param {ol.Coordinate} c cube coordinate
-        * @return {ol.Coordinate} offset coordinate
+        * @param {Coordinate} c cube coordinate
+        * @return {Coordinate} offset coordinate
         * /
-        ol.HexGrid.prototype.cube2offset = function(c)
+        HexGrid.prototype.cube2offset = function(c)
         {	return hex2offset(cube2hex(c));
         };
         /** Convert cube to offset coords
-        * @param {ol.Coordinate} o offset coordinate
-        * @return {ol.Coordinate} cube coordinate
+        * @param {Coordinate} o offset coordinate
+        * @return {Coordinate} cube coordinate
         * /
-        ol.HexGrid.prototype.offset2cube = function (o)
+        HexGrid.prototype.offset2cube = function (o)
         {	return hex2cube(offset2Hex(o));
         };
         /** Round cube coords
-        * @param {ol.Coordinate} h cube coordinate
-        * @return {ol.Coordinate} rounded cube coordinate
+        * @param {Coordinate} h cube coordinate
+        * @return {Coordinate} rounded cube coordinate
          */
-        cube_round(c: ol.Coordinate, o: ol.Coordinate, h: ol.Coordinate): void;
+        cube_round(c: Coordinate, o: Coordinate, h: Coordinate): void;
         /** Round axial coords
-        * @param {ol.Coordinate} h axial coordinate
-        * @return {ol.Coordinate} rounded axial coordinate
+        * @param {Coordinate} h axial coordinate
+        * @return {Coordinate} rounded axial coordinate
          */
-        hex_round(h: ol.Coordinate): ol.Coordinate;
+        hex_round(h: Coordinate): Coordinate;
         /** Get hexagon corners
          */
         hex_corner(): void;
         /** Get hexagon coordinates at a coordinate
-        * @param {ol.Coordinate} coord
-        * @return {Arrary<ol.Coordinate>}
+        * @param {Coordinate} coord
+        * @return {Arrary<Coordinate>}
          */
-        getHexagonAtCoord(coord: ol.Coordinate): Arrary<ol.Coordinate>;
+        getHexagonAtCoord(coord: Coordinate): Arrary<Coordinate>;
         /** Get hexagon coordinates at hex
-        * @param {ol.Coordinate} hex
-        * @return {Arrary<ol.Coordinate>}
+        * @param {Coordinate} hex
+        * @return {Arrary<Coordinate>}
          */
-        getHexagon(hex: ol.Coordinate): Arrary<ol.Coordinate>;
+        getHexagon(hex: Coordinate): Arrary<Coordinate>;
         /** Convert hex to coord
-        * @param {ol.hex} hex
-        * @return {ol.Coordinate}
+        * @param {hex} hex
+        * @return {Coordinate}
          */
-        hex2coord(hex: ol.hex): ol.Coordinate;
+        hex2coord(hex: hex): Coordinate;
         /** Convert coord to hex
-        * @param {ol.Coordinate} coord
-        * @return {ol.hex}
+        * @param {Coordinate} coord
+        * @return {hex}
          */
-        coord2hex(coord: ol.Coordinate): ol.hex;
+        coord2hex(coord: Coordinate): hex;
         /** Calculate distance between to hexagon (number of cube)
-        * @param {ol.Coordinate} a first cube coord
-        * @param {ol.Coordinate} a second cube coord
+        * @param {Coordinate} a first cube coord
+        * @param {Coordinate} a second cube coord
         * @return {number} distance
          */
-        cube_distance(a: ol.Coordinate, a: ol.Coordinate): number;
+        cube_distance(a: Coordinate, a: Coordinate): number;
         /** Calculate line between to hexagon
-        * @param {ol.Coordinate} a first cube coord
-        * @param {ol.Coordinate} b second cube coord
-        * @return {Array<ol.Coordinate>} array of cube coordinates
+        * @param {Coordinate} a first cube coord
+        * @param {Coordinate} b second cube coord
+        * @return {Array<Coordinate>} array of cube coordinates
          */
-        cube_line(a: ol.Coordinate, b: ol.Coordinate): ol.Coordinate[];
+        cube_line(a: Coordinate, b: Coordinate): Coordinate[];
         /** Get the neighbors for an hexagon
-        * @param {ol.Coordinate} h axial coord
+        * @param {Coordinate} h axial coord
         * @param {number} direction
-        * @return { ol.Coordinate | Array<ol.Coordinate> } neighbor || array of neighbors
+        * @return { Coordinate | Array<Coordinate> } neighbor || array of neighbors
          */
-        hex_neighbors(h: ol.Coordinate, direction: number): ol.Coordinate | ol.Coordinate[];
+        hex_neighbors(h: Coordinate, direction: number): Coordinate | Coordinate[];
         /** Get the neighbors for an hexagon
-        * @param {ol.Coordinate} c cube coord
+        * @param {Coordinate} c cube coord
         * @param {number} direction
-        * @return { ol.Coordinate | Array<ol.Coordinate> } neighbor || array of neighbors
+        * @return { Coordinate | Array<Coordinate> } neighbor || array of neighbors
          */
-        cube_neighbors(c: ol.Coordinate, direction: number): ol.Coordinate | ol.Coordinate[];
+        cube_neighbors(c: Coordinate, direction: number): Coordinate | Coordinate[];
     }
     /**
      * French INSEE grids
@@ -7258,11 +7254,11 @@ declare namespace ol {
      *
      * @requires proj4
      * @constructor
-     * @extends {ol.Object}
+     * @extends {Object}
      * @param {Object} [options]
      *  @param {number} [options.size] size grid size in meter, default 200 (200x200m)
      */
-    class InseeGrid extends ol.Object {
+    class InseeGrid extends Object {
         constructor(options?: {
             size?: number;
         });
@@ -7270,17 +7266,17 @@ declare namespace ol {
          */
         static extent: any;
         /** Get the grid extent
-         * @param {ol.proj.ProjLike} [proj='EPSG:3857']
+         * @param {proj.ProjLike} [proj='EPSG:3857']
          */
-        getExtent(proj?: ol.proj.ProjLike): void;
+        getExtent(proj?: proj.ProjLike): void;
         /** Get grid geom at coord
-         * @param {ol.Coordinate} coord
-         * @param {ol.proj.ProjLike} [proj='EPSG:3857']
+         * @param {Coordinate} coord
+         * @param {proj.ProjLike} [proj='EPSG:3857']
          */
-        getGridAtCoordinate(coord: ol.Coordinate, proj?: ol.proj.ProjLike): void;
+        getGridAtCoordinate(coord: Coordinate, proj?: proj.ProjLike): void;
     }
-    /** Ordering function for ol.layer.Vector renderOrder parameter
-    *	ol.ordering.fn (options)
+    /** Ordering function for layer.Vector renderOrder parameter
+    *	ordering.fn (options)
     *	It will return an ordering function (f0,f1)
     *	@namespace
      */
@@ -7300,16 +7296,16 @@ declare namespace ol {
             equalFn: (...params: any[]) => any;
         }): any;
     }
-}
+
 
 /** @typedef {Object} FilterColorizeOptions
- *  @property {ol.Color} color style to fill with
+ *  @property {Color} color style to fill with
  *  @property {string} operation 'enhance' or a CanvasRenderingContext2D.globalCompositeOperation
  *  @property {number} value a [0-1] value to modify the effect value
  *  @property {boolean} inner mask inner, default false
  */
 declare type FilterColorizeOptions = {
-    color: ol.Color;
+    color: Color;
     operation: string;
     value: number;
     inner: boolean;
