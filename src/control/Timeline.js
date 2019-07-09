@@ -2,7 +2,6 @@
 import ol_ext_inherits from '../util/ext'
 import ol_source_Vector from 'ol/source/Vector'
 import ol_control_Control from 'ol/control/Control'
-import ol_has_TOUCH from 'ol/has'
 import ol_ext_element from '../util/element'
 
 /** Timeline control
@@ -35,7 +34,7 @@ var ol_control_Timeline = function(options) {
     className: (options.className || '') + ' ol-timeline'
       + (options.target ? '': ' ol-unselectable ol-control')
       + (options.zoomButton ? ' ol-hasbutton':'')
-      + (ol_has_TOUCH ? ' ol-touch' : '')
+      + ('ontouchstart' in window ? ' ol-touch' : '')
   });
 
   // Initialize

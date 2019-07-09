@@ -1,6 +1,5 @@
 import ol_ext_inherits from '../util/ext'
 import ol_control_Control from 'ol/control/Control'
-import ol_has_TOUCH from 'ol/has'
 import ol_ext_element from '../util/element'
 
 /** A control with scroll-driven navigation to create narrative maps
@@ -28,7 +27,7 @@ var ol_control_Storymap = function(options) {
   var element = ol_ext_element.create('DIV', {
     className: (options.className || '') + ' ol-storymap'
       + (options.target ? '': ' ol-unselectable ol-control')
-      + (ol_has_TOUCH ? ' ol-touch' : ''),
+      + ('ontouchstart' in window ? ' ol-touch' : ''),
     html: options.html
   });
   element.querySelectorAll('.chapter').forEach(function(c) {

@@ -4534,7 +4534,7 @@ ol.control.Imageline = function(options) {
     className: (options.className || '') + ' ol-imageline'
       + (options.target ? '': ' ol-unselectable ol-control')
       + (options.collapsed && options.collapsible ? 'ol-collapsed' : '')
-      + (ol.has.TOUCH ? ' ol-touch' : '')
+      + ('ontouchstart' in window ? ' ol-touch' : '')
   });
   if (!options.target && options.collapsible) {
     ol.ext.element.create('BUTTON', {
@@ -8991,7 +8991,7 @@ ol.control.Storymap = function(options) {
   var element = ol.ext.element.create('DIV', {
     className: (options.className || '') + ' ol-storymap'
       + (options.target ? '': ' ol-unselectable ol-control')
-      + (ol.has.TOUCH ? ' ol-touch' : ''),
+      + ('ontouchstart' in window ? ' ol-touch' : ''),
     html: options.html
   });
   element.querySelectorAll('.chapter').forEach(function(c) {
@@ -9404,7 +9404,7 @@ ol.control.Timeline = function(options) {
     className: (options.className || '') + ' ol-timeline'
       + (options.target ? '': ' ol-unselectable ol-control')
       + (options.zoomButton ? ' ol-hasbutton':'')
-      + (ol.has.TOUCH ? ' ol-touch' : '')
+      + ('ontouchstart' in window ? ' ol-touch' : '')
   });
   // Initialize
   ol.control.Control.call(this, {
