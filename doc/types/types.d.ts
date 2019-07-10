@@ -1,18 +1,26 @@
-import  {ProjectionLike} from 'ol/proj';
-import  Projection from 'ol/proj/Projection'
-import {Point, Polygon, LineString} from 'ol/geom';
-import { Coordinate }  from 'ol/coordinate';
+import { Map as _ol_Map_, Overlay} from 'ol';
+
+import Collection from 'ol/Collection';
+import { default as Attribution, default as ol_control_Attribution } from 'ol/control/Attribution';
+import ol_control_Control from 'ol/control/Control';
+import ol_control_ScaleLine from 'ol/control/ScaleLine';
+import { Coordinate, CoordinateFormat} from 'ol/coordinate';
+import { Extent } from 'ol/extent';
 import Feature from 'ol/Feature';
-import { OSM, TileWMS, Vector as VectorSource , WMTS, ImageCanvas} from 'ol/source';
-import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
-import { Circle as CircleStyle, Fill, Icon, Stroke, Style } from 'ol/style';
-import {Extent} from 'ol/extent';
-import {Size} from 'ol/size';
-import {Layer} from 'ol/layer'
-import {Map as _ol_Map_, View} from 'ol';
-import Attribution from 'ol/control/Attribution';
-import * as loadingstrategy from 'ol/loadingstrategy';
-import { Geometry } from 'ol/geom';
+import { Geometry, LineString, Point, Polygon } from 'ol/geom';
+import { Layer, Vector } from 'ol/layer';
+import { ProjectionLike } from 'ol/proj';
+import Projection from 'ol/proj/Projection';
+import { Size } from 'ol/size';
+import { ImageCanvas, Vector as VectorSource, WMTS } from 'ol/source';
+import { AttributionLike } from 'ol/source/Source';
+import { LoadingStrategy } from 'ol/source/Vector';
+import {StyleLike} from 'ol/style/Style';
+import { Circle as CircleStyle, Fill, Icon, Stroke, Style, Image } from 'ol/style';
+import GeometryType from 'ol/geom/GeometryType'
+import {Pointer, Interaction} from 'ol/interaction';
+import MapBrowserEvent from 'ol/MapBrowserEvent';
+
 declare namespace ol {
     
         /** Compute a convex hull using Andrew's Monotone Chain Algorithm
@@ -544,7 +552,7 @@ declare namespace ol {
             * @return {boolean} true: add the feature to the layer
             * @API stable
              */
-            readFeature(featue: Feature, attibutes: attributes): boolean;
+            readFeature(featue: Feature, attributes: AttributionLike): boolean;
             /** Overwrite Vector clear to fire clearstart / clearend event
              */
             clear(): void;
@@ -561,7 +569,7 @@ declare namespace ol {
          *  @param {boolean} options.rel get relations, default: false
          *  @param {number} options.maxResolution maximum resolution to load Features
          *  @param {string|Attribution|Array<string>} options.attributions source attribution, default OSM attribution
-         *  @param {loadingstrategy} options.strategy loading strategy, default loadingstrategy.bbox
+         *  @param {LoadingStrategy} options.strategy loading strategy, default loadingstrategy.bbox
          */
         class Overpass extends VectorSource {
             constructor(options: {
@@ -572,7 +580,7 @@ declare namespace ol {
                 rel: boolean;
                 maxResolution: number;
                 attributions: string | Attribution | string[];
-                strategy: loadingstrategy;
+                strategy: LoadingStrategy;
             });
             /** Ovepass API Url
              */
@@ -606,7 +614,7 @@ declare namespace ol {
             * @return {boolean} true: add the feature to the layer
             * @API stable
              */
-            readFeature(the: Feature, wiki: attributes): boolean;
+            readFeature(featue: Feature, attibute: AttributionLike): boolean;
             /** Overwrite #Vector clear to fire clearstart / clearend event
              */
             clear(): void;
@@ -624,7 +632,7 @@ declare namespace ol {
         /** Openlayers base class for controls.
          * A control is a visible widget with a DOM element in a fixed position on the screen.
          * They can involve user input (buttons), or be informational only; the position is determined using CSS.
-         * @namespace contrControl
+         * @namespace ol_control_Control
          * @see {@link http://openlayers.org/en/latest/apidoc/module-ol_control_Contrhtml}
          */
         /**
@@ -633,11 +641,11 @@ declare namespace ol {
          * @see http://www.kreidefossilien.de/webgis/dokumentation/beispiele/export-map-to-png-with-scale
          *
          * @constructor
-         * @extends {contrControl}
+         * @extends {ol_control_Control}
          * @param {Object=} options extend the control options.
          *  @param {Style} options.style style used to draw the title.
          */
-        class CanvasBase extends contrControl {
+        class CanvasBase extends ol_control_Control {
             constructor(options?: {
                 style: Style;
             });
@@ -645,17 +653,17 @@ declare namespace ol {
              * Remove the control from its current map and attach it to the new map.
              * Subclasses may set up event handlers to get notified about changes to
              * the map here.
-             * @param {o.Map} map Map.
+             * @param {_ol_Map_} map Map.
              * @api stable
              */
-            setMap(map: o.Map): void;
+            setMap(map: _ol_Map_): void;
             /** Get canvas overlay
              */
             getCanvas(): void;
             /** Set Style
              * @api
              */
-            setStyle(): void;
+            setStyle(style: Style): void;
             /** Get style
              * @api
              */
@@ -695,12 +703,12 @@ declare namespace ol {
          *  @param {Collection<Feature>} options.features a collection of feature to search in, the collection will be kept in date while selection
          *  @param {Vector | Array<Vector>} options.source the source to search in if no features set
          */
-        class SelectBase extends contrControl {
+        class SelectBase extends ol_control_Control {
             constructor(options?: {
                 className: string;
                 target: Element | undefined;
                 features: Collection<Feature>;
-                source: Vector | Vector[];
+                source: VectorSource | VectorSource[];
             });
             /** Set the current sources
              * @param {VectorSource|Array<VectorSource>|undefined} source
@@ -764,7 +772,7 @@ declare namespace ol {
          * @see contrSearchPhoton
          *
          * @constructor
-         * @extends {contrControl}
+         * @extends {ol_control_Control}
          * @fires select
          * @fires change:input
          * @param {Object=} options
@@ -781,7 +789,7 @@ declare namespace ol {
          *  @param {function} options.getTitle a function that takes a feature and return the name to display in the index.
          *  @param {function} options.autocomplete a function that take a search string and callback function to send an array
          */
-        class Search extends contrControl {
+        class Search extends ol_control_Control {
             constructor(options?: {
                 className: string;
                 target: Element | string | undefined;
@@ -841,7 +849,7 @@ declare namespace ol {
             * @return {Array|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
             * @api
              */
-            autocomplete(s: string, cback: (...params: any[]) => any): Array | false;
+            autocomplete(s: string, cback: (...params: any[]) => any): Array<any> | false;
             /** Test if 2 features are equal
              * @param {any} f1
              * @param {any} f2
@@ -854,7 +862,7 @@ declare namespace ol {
          * You can use it for simple custom search or as base to new class.
          *
          * @constructor
-         * @extends {contrSearch}
+         * @extends {Search}
          * @fires select
          * @param {any} options extend contrSearch options
          *	@param {string} options.className control class name
@@ -869,7 +877,7 @@ declare namespace ol {
          *	@param {string|undefined} options.url Url of the search api
          *	@param {string | undefined} options.authentication: basic authentication for the search API as btoa("login:pwd")
          */
-        class SearchJSON extends contrSearch {
+        class SearchJSON extends Search {
             constructor(options: {
                 className: string;
                 target: Element | string | undefined;
@@ -886,7 +894,7 @@ declare namespace ol {
             * @param {string} s search string
             * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
              */
-            autocomplete(s: string, cback: (...params: any[]) => any): void;
+            autocomplete(s: string, cback: (...params: any[]) => any): Array<any> | false;
             /** Send an ajax request (GET)
              * @param {string} url
              * @param {function} onsuccess callback
@@ -973,7 +981,7 @@ declare namespace ol {
          *	@param {boolean} options.position Search, with priority to geo position, default false
          *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return street + name + contry
          */
-        class SearchPhoton extends contrSearchJSON {
+        class SearchPhoton extends SearchJSON {
             constructor(Control?: any);
             /** Returns the text to be displayed in the menu
             *	@param {Feature} f the feature
@@ -1009,7 +1017,7 @@ declare namespace ol {
             * @param {string} s search string
             * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
              */
-            autocomplete(s: string, cback: (...params: any[]) => any): void;
+            autocomplete(s: string, cback: (...params: any[]) => any): void | false;
             /** Send an ajax request (GET)
              * @param {string} url
              * @param {function} onsuccess callback
@@ -1045,6 +1053,8 @@ declare namespace ol {
              */
             getHistory(): void;
         }
+      type AddressType = 'StreetAddress' | 'PositionOfInterest' | 'CadastralParcel' | 'Commune';
+
         /**
          * Search places using the French National Base Address (BAN) API.
          *
@@ -1065,7 +1075,7 @@ declare namespace ol {
          *	@param {StreetAddress|PositionOfInterest|CadastralParcel|Commune} options.type type of search. Using Commune will return the INSEE code, default StreetAddress,PositionOfInterest
          * @see {@link https://geoservices.ign.fr/documentation/geoservices/geocodage.html}
          */
-        class SearchGeoportail extends contrSearchJSON {
+        class SearchGeoportail extends SearchJSON {
             constructor(options: {
                 className: string;
                 apiKey: boolean | undefined;
@@ -1076,7 +1086,7 @@ declare namespace ol {
                 typing: number | undefined;
                 minLength: number | undefined;
                 maxItems: number | undefined;
-                type: StreetAddress | PositionOfInterest | CadastralParcel | Commune;
+                type: AddressType;
             });
             /** Returns the text to be displayed in the menu
              *	@param {Feature} f the feature
@@ -1158,7 +1168,7 @@ declare namespace ol {
          * @fires toggle
          *
          * @constructor
-         * @extends {contrControl}
+         * @extends {ol_control_Control}
          * @param {Object=} options
          *  @param {function} options.displayInLayerSwitcher function that takes a layer and return a boolean if the layer is displayed in the switcher, default test the displayInLayerSwitcher layer attribute
          *  @param {boolean} options.show_progress show a progress bar on tile layers, default false
@@ -1176,7 +1186,7 @@ declare namespace ol {
          *	- displayInLayerSwitcher {boolean} display in switcher, default true
          *	- noSwitcherDelete {boolean} to prevent layer deletion (w. trash option = true), default false
          */
-        class LayerSwitcher extends contrControl {
+        class LayerSwitcher extends ol_control_Control {
             constructor(options?: {
                 displayInLayerSwitcher: (...params: any[]) => any;
                 show_progress: boolean;
@@ -1227,33 +1237,35 @@ declare namespace ol {
              * @param {Element} li
              * @param {layer} layer
              */
-            _setLayerForLI(li: Element, layer: layer): void;
+            _setLayerForLI(li: Element, layer: Layer): void;
             /** Get the layer associated with a li
              * @param {Element} li
-             * @return {layer}
+             * @return {Layer}
              */
-            _getLayerForLI(li: Element): layer;
+            _getLayerForLI(li: Element): Layer;
             /**
              *	Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
              */
             drawPanel(): void;
             /** Change layer visibility according to the baselayer option
-             * @param {layer}
+             * @param {Layer}
              * @param {Array<layer>} related layers
              */
-            switchLayerVisibility(l: layer, related: layer[]): void;
-            /** Check if layer is on the map (depending on zoom and Extent)
-             * @param {layer}
+            switchLayerVisibility(l: Layer, related: Layer[]): void;
+            /** Check if Layer is on the map (depending on zoom and Extent)
+             * @param {Layer}
              * @return {boolean}
              */
-            testLayerVisibility(layer: layer): boolean;
+            testLayerVisibility(layer: Layer): boolean;
             /** Render a list of layer
              * @param {Elemen} element to render
              * @layers {Array{layer}} list of layer to show
              * @api stable
              */
-            drawList(element: Elemen): void;
+            drawList(element: Element): void;
         }
+       type position = 'top' | 'left' | 'bottom' | 'right';
+
         /** Control bar for OL3
          * The control bar is a container for other controls. It can be used to create toolbars.
          * Control bars can be nested and combined with contrToggle to handle activate/deactivate.
@@ -1267,13 +1279,13 @@ declare namespace ol {
          *	@param {bool} options.autoDeactivate used with subbar to deactivate all control when top level control deactivate, default false
          *	@param {Array<_ol_control_>} options.controls a list of control to add to the bar
          */
-        class Bar extends contrControl {
+        class Bar extends ol_control_Control {
             constructor(options?: {
                 className: string;
                 group: boolean;
                 toggleOne: boolean;
                 autoDeactivate: boolean;
-                controls: _ol_control_[];
+                controls: ol_control_Control[];
             });
             /** Set the control visibility
             * @param {boolean} b
@@ -1296,28 +1308,28 @@ declare namespace ol {
             /** Set tool bar position
             *	@param {top|left|bottom|right} pos
              */
-            setPosition(pos: top | left | bottom | right): void;
+            setPosition(pos: position): void;
             /** Add a control to the bar
             *	@param {_ol_control_} c control to add
              */
-            addControl(c: _ol_control_): void;
+            addControl(c: ol_control_Control): void;
             /** Deativate all controls in a bar
             * @param {_ol_control_} except a control
              */
-            deactivateControls(except: _ol_control_): void;
+            deactivateControls(except: ol_control_Control): void;
             /** Auto activate/deactivate controls in the bar
             * @param {boolean} b activate/deactivate
              */
             setActive(b: boolean): void;
             /** Post-process an activated/deactivated control
-            *	@param {event} e :an object with a target {_ol_control_} and active flag {bool}
+            *	@param {Event} e :an object with a target {ol_control_Control} and active flag {boolean}
              */
-            onActivateControl_(e: event): void;
+            onActivateControl_(e: Event): void;
             /**
              * @param {string} name of the control to search
-             * @return {contrControl}
+             * @return {ol_control_Control}
              */
-            getControlsByName(name: string): contrControl;
+            getControlsByName(name: string): ol_control_Control;
         }
         /** A simple push button control
         * @constructor
@@ -1329,7 +1341,7 @@ declare namespace ol {
         *	@param {String} options.html html to insert in the control
         *	@param {function} options.handleClick callback when control is clicked (or use change:active event)
          */
-        class Button extends contrControl {
+        class Button extends ol_control_Control {
             constructor(options?: {
                 className: string;
                 title: string;
@@ -1364,7 +1376,7 @@ declare namespace ol {
          * @param {Object=} options extend the contrAttribution options.
          * 	@param {Style} options.style  option is usesd to draw the text.
          */
-        class CanvasAttribution extends contrAttribution {
+        class CanvasAttribution extends ol_control_Attribution {
             constructor(options?: {
                 style: Style;
             });
@@ -1385,7 +1397,7 @@ declare namespace ol {
              * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: Map): void;
+            setMap(map: _ol_Map_): void;
         }
         /**
          * @classdesc
@@ -1397,7 +1409,8 @@ declare namespace ol {
          * @param {Object=} options extend the contrScaleLine options.
          * 	@param {Style} options.style used to draw the scale line (default is black/white, 10px Arial).
          */
-        class CanvasScaleLine extends contrScaleLine {
+
+        class CanvasScaleLine extends ol_control_ScaleLine {
             constructor(options?: {
                 style: Style;
             });
@@ -1424,7 +1437,7 @@ declare namespace ol {
          *  @param {string} options.title the title, default 'Title'
          *  @param {Style} options.style style used to draw the title.
          */
-        class CanvasTitle extends contrCanvasBase {
+        class CanvasTitle extends CanvasBase {
             constructor(options?: {
                 title: string;
                 style: Style;
@@ -1506,12 +1519,12 @@ declare namespace ol {
          *  @param {Coordinate.CoordinateFormat} options.coordinateFormat A function that takes a Coordinate and transforms it into a string.
          *  @param {boolean} options.canvas true to draw in the canvas
          */
-        class CenterPosition extends contrCanvasBase {
+        class CenterPosition extends CanvasBase {
             constructor(options?: {
                 className: string;
                 style: Style;
                 projection: ProjectionLike;
-                coordinateFormat: Coordinate.CoordinateFormat;
+                coordinateFormat: CoordinateFormat;
                 canvas: boolean;
             });
             /**
@@ -1540,10 +1553,10 @@ declare namespace ol {
              * Remove the control from its current map and attach it to the new map.
              * Subclasses may set up event handlers to get notified about changes to
              * the map here.
-             * @param {o.Map} map Map.
+             * @param {_ol_Map_} map Map.
              * @api stable
              */
-            setMap(map: o.Map): void;
+            setMap(map: _ol_Map_): void;
             /** Get canvas overlay
              */
             getCanvas(): void;
@@ -1577,29 +1590,29 @@ declare namespace ol {
          *
          * @constructor
          * @extends {contrCanvasBase}
-         * @param {Object=} options Control options. The style {_ol_style_Stroke_} option is usesd to draw the text.
+         * @param {Object=} options Control options. The style {Stroke} option is usesd to draw the text.
          *  @param {string} options.className class name for the control
          *  @param {Image} options.image an image, default use the src option or a default image
          *  @param {string} options.src image src, default use the image option or a default image
          *  @param {boolean} options.rotateVithView rotate vith view (false to show watermark), default true
          *  @param {style.Stroke} options.style style to draw the lines, default draw no lines
          */
-        class Compass extends contrCanvasBase {
+        class Compass extends CanvasBase {
             constructor(options?: {
                 className: string;
                 image: Image;
                 src: string;
                 rotateVithView: boolean;
-                style: style.Stroke;
+                style: Stroke;
             });
             /**
              * Remove the control from its current map and attach it to the new map.
              * Subclasses may set up event handlers to get notified about changes to
              * the map here.
-             * @param {o.Map} map Map.
+             * @param {_ol_Map_} map Map.
              * @api stable
              */
-            setMap(map: o.Map): void;
+            setMap(map: _ol_Map_): void;
             /** Get canvas overlay
              */
             getCanvas(): void;
@@ -1642,7 +1655,7 @@ declare namespace ol {
          *		@param {bool} options.on the control is on
          *		@param {function} options.toggleFn callback when control is clicked
          */
-        class Disable extends contrControl {
+        class Disable extends ol_control_Control {
             constructor(options?: {
                 class: string;
                 html: string;
@@ -1673,7 +1686,7 @@ declare namespace ol {
          *    Each interaction can be an interaction or true (to get the default one) or false to remove it from bar
          *	@param {VectorSource} options.source Source for the drawn features.
          */
-        class EditBar extends contrBar {
+        class EditBar extends Bar {
             constructor(options?: {
                 className: string;
                 target: string;
@@ -1709,15 +1722,15 @@ declare namespace ol {
             /** Set tool bar position
             *	@param {top|left|bottom|right} pos
              */
-            setPosition(pos: 'top' | 'left' | 'bottom '| 'right'): void;
+            setPosition(pos: position): void;
             /** Add a control to the bar
             *	@param {_ol_control_} c control to add
              */
-            addControl(c: _ol_control_): void;
+            addControl(c: ol_control_Control): void;
             /** Deativate all controls in a bar
             * @param {_ol_control_} except a control
              */
-            deactivateControls(except: _ol_control_): void;
+            deactivateControls(except: ol_control_Control): void;
             /** Auto activate/deactivate controls in the bar
             * @param {boolean} b activate/deactivate
              */
@@ -1725,12 +1738,12 @@ declare namespace ol {
             /** Post-process an activated/deactivated control
             *	@param {event} e :an object with a target {_ol_control_} and active flag {bool}
              */
-            onActivateControl_(e: event): void;
+            onActivateControl_(e: Event): void;
             /**
              * @param {string} name of the control to search
              * @return {contrControl}
              */
-            getControlsByName(name: string): contrControl;
+            getControlsByName(name: string): ol_control_Control;
         }
         /** A simple gauge control to display level information on the map.
          *
@@ -1742,7 +1755,7 @@ declare namespace ol {
          *		@param {number} options.max maximum value, default 100;
          *		@param {number} options.val the value, default 0
          */
-        class Gauge extends contrControl {
+        class Gauge extends ol_control_Control {
             constructor(options?: {
                 className: string;
                 title: string;
@@ -1780,7 +1793,7 @@ declare namespace ol {
           }
         });
          */
-        class GeoBookmark extends contrControl {
+        class GeoBookmark extends ol_control_Control {
             constructor(options: {
                 className: string;
                 placeholder: string;
@@ -1823,7 +1836,7 @@ declare namespace ol {
          *	@param {String} options.className class of the control
          *	@param {String} options.centerLabel label for center button, default center
          */
-        class GeolocationBar extends contrBar {
+        class GeolocationBar extends Bar {
             constructor(options?: {
                 className: string;
                 centerLabel: string;
@@ -1853,15 +1866,15 @@ declare namespace ol {
             /** Set tool bar position
             *	@param {top|left|bottom|right} pos
              */
-            setPosition(pos: top | left | bottom | right): void;
+            setPosition(pos: position): void;
             /** Add a control to the bar
             *	@param {_ol_control_} c control to add
              */
-            addControl(c: _ol_control_): void;
+            addControl(c: ol_control_Control): void;
             /** Deativate all controls in a bar
             * @param {_ol_control_} except a control
              */
-            deactivateControls(except: _ol_control_): void;
+            deactivateControls(except: ol_control_Control): void;
             /** Auto activate/deactivate controls in the bar
             * @param {boolean} b activate/deactivate
              */
@@ -1874,8 +1887,17 @@ declare namespace ol {
              * @param {string} name of the control to search
              * @return {contrControl}
              */
-            getControlsByName(name: string): contrControl;
+            getControlsByName(name: string): ol_control_Control;
         }
+
+        interface options
+        {
+            follow?: boolean,
+            align: 'top' | 'bottom-left' | 'right',
+            layers: Layer[], 
+            style: Style | Style[] | undefined
+        }
+
         /**
          * OpenLayers 3 lobe Overview Contr
          * The globe can rotate with map (follow.)
@@ -1888,20 +1910,20 @@ declare namespace ol {
          * 	@param {Array<layer>} layers list of layers to display on the globe
          * 	@param {Style | Array.<Style> | undefined} style style to draw the position on the map , default a marker
          */
-        class Globe extends contrControl {
-            constructor(options?: any, follow: boolean, align: 'top' | 'bottom-left' | 'right', layers: layer[], style: Style | Style[] | undefined);
+        class Globe extends ol_control_Control {
+            constructor(options?: options);
             /**
              * Set the map instance the control associated with.
              * @param {Map} map The map instance.
              */
-            setMap(map: Map): void;
+            setMap(map: _ol_Map_): void;
             /** Set the globe center with the map center
              */
             setView(): void;
             /** Get globe map
             *	@return {Map}
              */
-            getGlobe(): Map;
+            getGlobe(): _ol_Map_;
             /** Show/hide the globe
              */
             show(): void;
@@ -1930,16 +1952,16 @@ declare namespace ol {
          *  @param {number} options.borderWidthwidth of the border (in px), default 5px
          *  @param {number} options.marginmargin of the border (in px), default 0px
          */
-        class Graticule extends contrCanvasBase {
+        class Graticule extends CanvasBase {
             constructor(_ol_control_?: any);
             /**
              * Remove the control from its current map and attach it to the new map.
              * Subclasses may set up event handlers to get notified about changes to
              * the map here.
-             * @param {o.Map} map Map.
+             * @param {_ol_Map_} map Map.
              * @api stable
              */
-            setMap(map: o.Map): void;
+            setMap(map: _ol_Map_): void;
             /** Get canvas overlay
              */
             getCanvas(): void;
@@ -1990,7 +2012,7 @@ declare namespace ol {
          *  @param {function|undefined} options.indexTitle a function that takes a feature and return the title to display in the index, default the first letter of property option
          *  @param {string} options.filterLabel label to display in the search bar, default 'filter'
          */
-        class GridReference extends contrCanvasBase {
+        class GridReference extends CanvasBase {
             constructor(Control?: any);
             /** Returns the text to be displayed in the index
              * @param {Feature} f the feature
@@ -2024,10 +2046,10 @@ declare namespace ol {
              * Remove the control from its current map and attach it to the new map.
              * Subclasses may set up event handlers to get notified about changes to
              * the map here.
-             * @param {o.Map} map Map.
+             * @param {_ol_Map_} map Map.
              * @api stable
              */
-            setMap(map: o.Map): void;
+            setMap(map: _ol_Map_): void;
             /** Get canvas overlay
              */
             getCanvas(): void;
@@ -2077,7 +2099,7 @@ declare namespace ol {
          *	@param {boolean} options.hover select image on hover, default false
          *	@param {string|boolean} options.linkColor link color or false if no link, default false
          */
-        class Imageline extends contrControl {
+        class Imageline extends ol_control_Control {
             constructor(options?: {
                 className: string;
                 source: VectorSource;
@@ -2094,7 +2116,7 @@ declare namespace ol {
              * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: Map): void;
+            setMap(map: _ol_Map_): void;
             /** Set useExtent param and refresh the line
              * @param {boolean} b
              */
@@ -2149,7 +2171,7 @@ declare namespace ol {
          *
          *  @param {string} options.exclusions Exclusion list separate with a comma 'Toll,Tunnel,Bridge'
          */
-        class IsochroneGeoportail extends contrControl {
+        class IsochroneGeoportail extends ol_control_Control {
             constructor(options?: {
                 className: string;
                 target: Element | string | undefined;
@@ -2197,7 +2219,7 @@ declare namespace ol {
          * @extends {contrLayerSwitcher}
          * @param {Object=} options Control options.
          */
-        class LayerPopup extends contrLayerSwitcher {
+        class LayerPopup extends LayerSwitcher {
             constructor(options?: any);
             /** Disable overflow
              */
@@ -2207,7 +2229,7 @@ declare namespace ol {
              * @layers {Array{layer}} list of layer to show
              * @api stable
              */
-            drawList(element: elt): void;
+            drawList(element: Element): void;
             /** List of tips for internationalization purposes
              */
             tip: any;
@@ -2215,7 +2237,7 @@ declare namespace ol {
              * @param {layer} layer
              * @return {boolean} true if the layer is displayed
              */
-            displayInLayerSwitcher(layer: layer): boolean;
+            displayInLayerSwitcher(layer: Layer): boolean;
             /**
              * Set the map instance the control is associated with.
              * @param {_ol_Map_} map The map instance.
@@ -2238,16 +2260,16 @@ declare namespace ol {
              * @param {Element|string} html content html
              */
             setHeader(html: Element | string): void;
-            /** Set the layer associated with a li
+            /** Set the Layer associated with a li
              * @param {Element} li
-             * @param {layer} layer
+             * @param {Layer} layer
              */
-            _setLayerForLI(li: Element, layer: layer): void;
+            _setLayerForLI(li: Element, layer: Layer): void;
             /** Get the layer associated with a li
              * @param {Element} li
              * @return {layer}
              */
-            _getLayerForLI(li: Element): layer;
+            _getLayerForLI(li: Element): Layer;
             /**
              *	Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
              */
@@ -2256,12 +2278,12 @@ declare namespace ol {
              * @param {layer}
              * @param {Array<layer>} related layers
              */
-            switchLayerVisibility(l: layer, related: layer[]): void;
+            switchLayerVisibility(l: Layer, related: Layer[]): void;
             /** Check if layer is on the map (depending on zoom and Extent)
              * @param {layer}
              * @return {boolean}
              */
-            testLayerVisibility(layer: layer): boolean;
+            testLayerVisibility(layer: Layer): boolean;
         }
         /**
          * @classdesc OpenLayers Layer Switcher Contr
@@ -2271,14 +2293,14 @@ declare namespace ol {
          * @extends {contrLayerSwitcher}
          * @param {Object=} options Control options.
          */
-        class LayerSwitcherImage extends contrLayerSwitcher {
+        class LayerSwitcherImage extends LayerSwitcher {
             constructor(options?: any);
             /** Render a list of layer
              * @param {elt} element to render
              * @layers {Array{layer}} list of layer to show
              * @api stable
              */
-            drawList(element: elt): void;
+            drawList(element: Element): void;
             /** Disable overflow
              */
             overflow(): void;
@@ -2289,7 +2311,7 @@ declare namespace ol {
              * @param {layer} layer
              * @return {boolean} true if the layer is displayed
              */
-            displayInLayerSwitcher(layer: layer): boolean;
+            displayInLayerSwitcher(layer: Layer): boolean;
             /**
              * Set the map instance the control is associated with.
              * @param {_ol_Map_} map The map instance.
@@ -2316,12 +2338,12 @@ declare namespace ol {
              * @param {Element} li
              * @param {layer} layer
              */
-            _setLayerForLI(li: Element, layer: layer): void;
+            _setLayerForLI(li: Element, layer: Layer): void;
             /** Get the layer associated with a li
              * @param {Element} li
              * @return {layer}
              */
-            _getLayerForLI(li: Element): layer;
+            _getLayerForLI(li: Element): Layer;
             /**
              *	Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
              */
@@ -2330,12 +2352,12 @@ declare namespace ol {
              * @param {layer}
              * @param {Array<layer>} related layers
              */
-            switchLayerVisibility(l: layer, related: layer[]): void;
+            switchLayerVisibility(l: Layer, related: Layer[]): void;
             /** Check if layer is on the map (depending on zoom and Extent)
              * @param {layer}
              * @return {boolean}
              */
-            testLayerVisibility(layer: layer): boolean;
+            testLayerVisibility(layer: Layer): boolean;
         }
         /** Create a legend for styles
          * @constructor
@@ -2351,7 +2373,7 @@ declare namespace ol {
          *  @param { Style | Array<Style> | StyleFunction | undefined	} options.style a style or a style function to use with features
          * @extends {contrControl}
          */
-        class Legend extends contrControl {
+        class Legend extends ol_control_Control {
             constructor(options: {
                 className: string;
                 title: string;
@@ -2360,12 +2382,12 @@ declare namespace ol {
                 collapsed: boolean | undefined;
                 collapsible: boolean | undefined;
                 target: Element | string | undefined;
-                style: Style | Style[] | StyleFunction | undefined;
+                style: StyleLike
             });
             /** Set the style
              * @param { Style | Array<Style> | StyleFunction | undefined	} style a style or a style function to use with features
              */
-            setStyle(style: Style | Style[] | StyleFunction | undefined): void;
+            setStyle(style: StyleLike | undefined): void;
             /** Add a new row to the legend
              * * You can provide in options:
              * - a feature width a style
@@ -2432,7 +2454,7 @@ declare namespace ol {
                 style: Style;
                 properties: any;
                 typeGeom: string;
-            }, canvas: Canvas | undefined, row: number | undefined): CanvasElement;
+            }, canvas: Canvas | undefined, row: number | undefined): HTMLCanvasElement ;
         }
         /** A control to jump from one zone to another.
          *
@@ -2446,13 +2468,13 @@ declare namespace ol {
          *  @param {Array<any>} options.zone an array of zone: { name, Extent (in EPSG:4326) }
          *  @param {bolean} options.centerOnClick center on click when click on zones, default true
          */
-        class MapZone extends contrControl {
+        class MapZone extends ol_control_Control {
             constructor(options?: {
                 className: string;
-                layer: layer.Layer;
+                layer: Layer;
                 projection: ProjectionLike;
                 zone: any[];
-                centerOnClick: bolean;
+                centerOnClick: boolean;
             });
             /** Set the control visibility
             * @param {boolean} b
@@ -2473,14 +2495,14 @@ declare namespace ol {
          *  @param {boolean} hideOnClick hide the control on click, default false
          *  @param {boolean} closeBox add a closeBox to the control, default false
          */
-        class Notification extends contrControl {
-            constructor(options?: any, className: string, hideOnClick: boolean, closeBox: boolean);
+        class Notification extends ol_control_Control {
+            constructor(options?: { className: string, hideOnClick: boolean, closeBox: boolean});
             /**
              * Display a notification on the map
              * @param {string|node|undefined} what the notification to show, default get the last one
              * @param {number} [duration=3000] duration in ms, if -1 never hide
              */
-            show(what: string | node | undefined, duration?: number): void;
+            show(what: string | Node | undefined, duration?: number): void;
             /**
              * Remove a notification on the map
              */
@@ -2503,7 +2525,7 @@ declare namespace ol {
          *	@param {bool} options.hideOnClick hide the control on click, default false
          *	@param {bool} options.closeBox add a closeBox to the control, default false
          */
-        class Overlay extends contrControl {
+        class Overlay extends ol_control_Control {
             constructor(options?: {
                 className: string;
                 content: string | Element;
@@ -2553,16 +2575,16 @@ declare namespace ol {
          *  @param {Style | Array.<Style> | undefined} options.style style to draw the map Extent on the overveiw
          *  @param {bool|elastic} options.panAnimation use animation to center map on click, default true
          */
-        class Overview extends contrControl {
+        class Overview extends ol_control_Control {
             constructor(options?: {
                 projection: ProjectionLike;
                 minZoom: number;
                 maxZoom: number;
                 rotation: boolean;
                 align: 'top' | 'bottom-left' | 'right';
-                layers: layer[];
+                layers: Layer[];
                 style: Style | Style[] | undefined;
-                panAnimation: boolean | elastic;
+                panAnimation: boolean | 'elastic';
             });
             /** Elastic bounce
              *	@param {number} bounce number of bounce
@@ -2583,7 +2605,7 @@ declare namespace ol {
              *	@param {Number} amplitude amplitude of the bounce [0,1]
              *	@return {Number}
              */
-            elasticFn(bounce: number, amplitude: number, bounce: number, amplitude: number): void;
+            elasticFn(bounce: number, amplitude: number): void;
             /** Get overview map
             *	@return {Map}
              */
@@ -2620,7 +2642,7 @@ declare namespace ol {
          *	@param {bool} options.hidden hide the button on the map, default false
          *	@param {function} options.onclick a function called when control is clicked
          */
-        class Permalink extends contrControl {
+        class Permalink extends ol_control_Control {
             constructor(options?: {
                 urlReplace: boolean;
                 fixed: number;
@@ -2632,13 +2654,13 @@ declare namespace ol {
              * Set the map instance the control associated with.
              * @param {Map} map The map instance.
              */
-            setMap(map: Map): void;
+            setMap(map: _ol_Map_): void;
             /** Get layer given a permalink name (permalink propertie in the layer)
             *	@param {string} the permalink to search for
             *	@param {Array<layer>|undefined} an array of layer to search in
             *	@return {layer|false}
              */
-            getLayerByLink(the: string, an: layer[] | undefined): layer | false;
+            getLayerByLink(the: string, an: Layer[] | undefined): Layer | false;
             /** Set map position according to the current link
              */
             setPosition(): void;
@@ -2673,7 +2695,7 @@ declare namespace ol {
              * Get the permalink
              * @return {permalink}
              */
-            getLink(): permalink;
+            getLink(): string;
             /**
              * Enable / disable url replacement (replaceSate)
              *	@param {bool}
@@ -2693,7 +2715,7 @@ declare namespace ol {
          *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
          *	@param {string} options.orientation Page orientation (landscape/portrait), default guest the best one
          */
-        class Print extends contrControl {
+        class Print extends ol_control_Control {
             constructor(options?: {
                 className: string;
                 imageType: string;
@@ -2726,7 +2748,7 @@ declare namespace ol {
          * @param {Object=} _ol_control_ opt_options.
          *
          */
-        class Profil extends contrControl {
+        class Profil extends ol_control_Control {
             constructor(_ol_control_?: any);
             /** Custom infos list
             * @api stable
@@ -2797,7 +2819,7 @@ declare namespace ol {
          *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index.
          *	@param {function} options.autocomplete a function that take a search string and callback function to send an array
          */
-        class RoutingGeoportail extends contrControl {
+        class RoutingGeoportail extends ol_control_Control {
             constructor(options?: {
                 className: string;
                 target: Element | string | undefined;
@@ -2842,7 +2864,7 @@ declare namespace ol {
          *  @param {string} options.ppi screen ppi, default 96
          * 	@param {string} options.editable make the control editable, default true
          */
-        class Scale extends contrControl {
+        class Scale extends ol_control_Control {
             constructor(options?: {
                 className: string;
                 ppi: string;
@@ -2889,7 +2911,7 @@ declare namespace ol {
          *	@param {function} options.getTitle a function that takes a feature and return the text to display in the menu, default return label attribute
          * @see {@link https://adresse.data.gouv.fr/api/}
          */
-        class SearchBAN extends contrSearch {
+        class SearchBAN extends Search {
             constructor(Control?: any);
             /** Returns the text to be displayed in the menu
              *	@param {Feature} f the feature
@@ -2936,7 +2958,7 @@ declare namespace ol {
             * @return {Array|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
             * @api
              */
-            autocomplete(s: string, cback: (...params: any[]) => any): Array | false;
+            autocomplete(s: string, cback: (...params: any[]) => any): Array<any> | false;
             /** Test if 2 features are equal
              * @param {any} f1
              * @param {any} f2
@@ -2963,7 +2985,7 @@ declare namespace ol {
          *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return the property
          *	@param {function | undefined} options.getSearchString a function that take a feature and return a text to be used as search string, default geTitle() is used as search string
          */
-        class SearchDFCI extends contrSearch {
+        class SearchDFCI extends Search {
             constructor(Control?: any);
             /** Autocomplete function
             * @param {string} s search string
@@ -3036,7 +3058,7 @@ declare namespace ol {
          *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return the property
          *	@param {function | undefined} options.getSearchString a function that take a feature and return a text to be used as search string, default geTitle() is used as search string
          */
-        class SearchFeature extends contrSearch {
+        class SearchFeature extends Search {
             constructor(Control?: any);
             /** No history avaliable on features
              */
@@ -3123,7 +3145,7 @@ declare namespace ol {
          *  @param {number | undefined} options.minLength minimum length to start searching, default 1
          *  @param {number | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
          */
-        class SearchGPS extends contrSearch {
+        class SearchGPS extends Search {
             constructor(Control?: any);
             /** Autocomplete function
             * @param {string} s search string
@@ -3197,7 +3219,7 @@ declare namespace ol {
          *	@param {Number} options.pageSize item per page for parcelle list paging, use -1 for no paging, default 5
          * @see {@link https://geoservices.ign.fr/documentation/geoservices/geocodage.html}
          */
-        class SearchGeoportailParcelle extends contrSearchJSON {
+        class SearchGeoportailParcelle extends SearchJSON {
             constructor(options: {
                 className: string;
                 apiKey: boolean | undefined;
@@ -3227,7 +3249,7 @@ declare namespace ol {
             /** Activate parcelle inputs
              * @param {bolean} b
              */
-            activateParcelle(b: bolean): void;
+            activateParcelle(b: boolean): void;
             /** Autocomplete function (ajax request to the server)
             * @param {string} s search string
             * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
@@ -3318,7 +3340,7 @@ declare namespace ol {
          *	@param {string|undefined} options.url URL to Nominatim API, default "https://nominatim.openstreetmap.org/search"
          * @see {@link https://wiki.openstreetmap.org/wiki/Nominatim}
          */
-        class SearchNominatim extends contrSearch {
+        class SearchNominatim extends Search {
             constructor(Control?: any);
             /** Returns the text to be displayed in the menu
              *	@param {Feature} f the feature
@@ -3371,7 +3393,7 @@ declare namespace ol {
             * @return {Array|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
             * @api
              */
-            autocomplete(s: string, cback: (...params: any[]) => any): Array | false;
+            autocomplete(s: string, cback: (...params: any[]) => any): Array<any> | false;
             /** Test if 2 features are equal
              * @param {any} f1
              * @param {any} f2
@@ -3398,7 +3420,7 @@ declare namespace ol {
          *
          *  @param {string|undefined} options.lang API language, default none
          */
-        class SearchWikipedia extends contrSearchJSON {
+        class SearchWikipedia extends SearchJSON {
             constructor(Control?: any);
             /** Returns the text to be displayed in the menu
             *	@param {Feature} f the feature
@@ -3491,11 +3513,11 @@ declare namespace ol {
          *  @param {string} [options.attrPlaceHolder=attribute]
          *  @param {string} [options.valuePlaceHolder=value]
          */
-        class Select extends contrSelectBase {
+        class Select extends SelectBase {
             constructor(options?: {
                 className: string;
                 target: Element | undefined;
-                source: Vector | Vector[];
+                source: VectorSource | VectorSource[];
                 selectLabel?: string;
                 addLabel?: string;
                 caseLabel?: string;
@@ -3599,7 +3621,7 @@ declare namespace ol {
          *  @param {number} options.defaultLabel label for the default radio button
          *  @param {function|undefined} options.onchoice function triggered when an option is clicked, default doSelect
          */
-        class SelectCheck extends contrSelectBase {
+        class SelectCheck extends SelectBase {
             constructor(options?: {
                 className: string;
                 target: Element | undefined;
@@ -3614,9 +3636,9 @@ declare namespace ol {
             });
             /**
             * Set the map instance the control associated with.
-            * @param {o.Map} map The map instance.
+            * @param {_ol_Map_} map The map instance.
              */
-            setMap(map: o.Map): void;
+            setMap(map: _ol_Map_): void;
             /** Select features by attributes
              */
             doSelect(): void;
@@ -3685,11 +3707,11 @@ declare namespace ol {
          *  @param {condition|Array<condition>} options.condition conditions
          *  @param {function|undefined} options.onchoice function triggered when an option is clicked, default doSelect
          */
-        class SelectCondition extends contrSelectBase {
+        class SelectCondition extends SelectBase {
             constructor(options?: {
                 className: string;
                 target: Element | undefined;
-                source: Vector | Vector[];
+                source: VectorSource | VectorSource[];
                 label: string;
                 selectAll: number;
                 condition: condition | condition[];
@@ -3766,11 +3788,11 @@ declare namespace ol {
          *  @param {string} options.property property to select on
          *  @param {function|undefined} options.onchoice function triggered the text change, default nothing
          */
-        class SelectFulltext extends contrSelectBase {
+        class SelectFulltext extends SelectBase {
             constructor(options?: {
                 className: string;
                 target: Element | undefined;
-                source: Vector | Vector[];
+                source: VectorSource | VectorSource[];
                 property: string;
                 onchoice: ((...params: any[]) => any) | undefined;
             });
@@ -3831,26 +3853,26 @@ declare namespace ol {
          *  @param {Vector | Array<Vector>} options.source the source to search in
          *  @param {Array<contrSelectBase>} options.controls an array of controls
          */
-        class SelectMulti extends contrSelectBase {
+        class SelectMulti extends SelectBase {
             constructor(options?: {
                 className: string;
                 target: Element | undefined;
-                source: Vector | Vector[];
-                controls: contrSelectBase[];
+                source: VectorSource | VectorSource[];
+                controls: SelectBase[];
             });
             /**
             * Set the map instance the control associated with.
-            * @param {o.Map} map The map instance.
+            * @param {_ol_Map_} map The map instance.
              */
-            setMap(map: o.Map): void;
+            setMap(map: _ol_Map_): void;
             /** Add a new control
              * @param {contrSelectBase} c
              */
-            addControl(c: contrSelectBase): void;
+            addControl(c: SelectBase): void;
             /** Get select controls
              * @return {Aray<contrSelectBase>}
              */
-            getControls(): Aray<contrSelectBase>;
+            getControls(): Array<SelectBase>;
             /** Select features by condition
              */
             doSelect(): void;
@@ -3911,11 +3933,11 @@ declare namespace ol {
          *  @param {string} options.defaultLabel label for the default selection
          *  @param {function|undefined} options.onchoice function triggered when an option is clicked, default doSelect
          */
-        class SelectPopup extends contrSelectBase {
+        class SelectPopup extends SelectBase {
             constructor(options?: {
                 className: string;
                 target: Element | undefined;
-                source: Vector | Vector[];
+                source: VectorSource | VectorSource[];
                 property: string;
                 max: number;
                 selectAll: number;
@@ -3924,9 +3946,9 @@ declare namespace ol {
             });
             /**
             * Set the map instance the control associated with.
-            * @param {o.Map} map The map instance.
+            * @param {_ol_Map_} map The map instance.
              */
-            setMap(map: o.Map): void;
+            setMap(map: _ol_Map_): void;
             /** Select features by attributes
              */
             doSelect(): void;
@@ -3989,7 +4011,7 @@ declare namespace ol {
          *	@param {number} options.position position propertie of the swipe [0,1], default 0.5
          *	@param {string} options.orientation orientation propertie (vertical|horizontal), default vertical
          */
-        class Swipe extends contrControl {
+        class Swipe extends ol_control_Control {
             constructor(Control?: any);
             /**
              * Set the map instance the control associated with.
@@ -4000,11 +4022,11 @@ declare namespace ol {
              *	@param {layer|Array<layer>} layer to clip
             *	@param {bool} add layer in the right part of the map, default left.
              */
-            addLayer(layer: layer | layer[], add: boolean): void;
+            addLayer(layer: Layer | Layer[], add: boolean): void;
             /** Remove a layer to clip
              *	@param {layer|Array<layer>} layer to clip
              */
-            removeLayer(layer: layer | layer[]): void;
+            removeLayer(layer: Layer | Layer[]): void;
         }
         /** contrTarget draw a target at the center of the map.
          * @constructor
@@ -4013,7 +4035,7 @@ declare namespace ol {
          *  @param {Style|Array<Style>} options.style
          *  @param {string} options.composite composite operation = difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
          */
-        class Target extends contrCanvasBase {
+        class Target extends CanvasBase {
             constructor(options: {
                 style: Style | Style[];
                 composite: string;
@@ -4030,10 +4052,10 @@ declare namespace ol {
              * Remove the control from its current map and attach it to the new map.
              * Subclasses may set up event handlers to get notified about changes to
              * the map here.
-             * @param {o.Map} map Map.
+             * @param {_ol_Map_} map Map.
              * @api stable
              */
-            setMap(map: o.Map): void;
+            setMap(map: _ol_Map_): void;
             /** Get canvas overlay
              */
             getCanvas(): void;
@@ -4075,7 +4097,7 @@ declare namespace ol {
          *	@param {String} options.html html to insert in the control
          *	@param {function} options.handleClick callback when control is clicked (or use change:active event)
          */
-        class TextButton extends contrButton {
+        class TextButton extends Button {
             constructor(options?: {
                 className: string;
                 title: string;
@@ -4123,7 +4145,7 @@ declare namespace ol {
          *	@param {String} options.graduation day|month to show month or day graduation, default show only years
          *	@param {String} options.scrollTimeout Time in milliseconds to get a scroll event, default 15ms
          */
-        class Timeline extends contrControl {
+        class Timeline extends ol_control_Control {
             constructor(options?: {
                 className: string;
                 features: Feature[];
@@ -4155,7 +4177,6 @@ declare namespace ol {
              *  @param {function} button.click a function called when the button is clicked
              */
             addButton(button: {
-                className: title;
                 className: title;
                 html: Element | string;
                 click: (...params: any[]) => any;
@@ -4223,7 +4244,7 @@ declare namespace ol {
          *	@param {bool} options.autoActive the control will activate when shown in an contrBar, default false
          *	@param {function} options.onToggle callback when control is clicked (or use change:active event)
          */
-        class Toggle extends contrControl {
+        class Toggle extends ol_control_Control {
             constructor(options?: {
                 className: string;
                 title: string;
@@ -4231,7 +4252,7 @@ declare namespace ol {
                 interaction: interaction;
                 active: boolean;
                 disable: boolean;
-                bar: contrBar;
+                bar: Bar;
                 autoActive: boolean;
                 onToggle: (...params: any[]) => any;
             });
@@ -4244,7 +4265,7 @@ declare namespace ol {
             /** Get the subbar associated with a control
             * @return {contrBar}
              */
-            getSubBar(): contrBar;
+            getSubBar(): Bar;
             /**
              * Test if the control is disabled.
              * @return {bool}.
@@ -4283,18 +4304,18 @@ declare namespace ol {
      * @namespace interaction
      * @see {@link https://openlayers.org/en/master/apidoc/module-ol_interaction.html}
      */
-    namespace interaction {
+declare    namespace interaction {
         /** Handles coordinates on the center of the viewport.
          * It can be used as abstract base class used for creating subclasses.
          * The CenterTouch interaction modifies map browser event coordinate and pixel properties to force pointer on the viewport center to any interaction that them.
          * Only pointermove pointerup are concerned with it.
          * @constructor
-         * @extends {interaction.Interaction}
+         * @extends {Interaction}
          * @param {olx.interaction.InteractionOptions} options Options
          *  - targetStyle {Style|Array<Style>} a style to draw the target point, default cross style
          *  - composite {string} composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
          */
-        class CenterTouch extends interaction.Interaction {
+        class CenterTouch extends Interaction {
             constructor(options: olx.interaction.InteractionOptions);
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
@@ -4325,7 +4346,7 @@ declare namespace ol {
         class Clip extends interaction.Pointer {
             constructor(options: {
                 radius: number;
-                layers: layer | layer[];
+                layers: Layer | Layer[];
             });
             /** Set the map > start postcompose
              */
@@ -4337,11 +4358,11 @@ declare namespace ol {
             /** Add a layer to clip
              *	@param {layer|Array<layer>} layer to clip
              */
-            addLayer(layer: layer | layer[]): void;
+            addLayer(layer: Layer | Layer[]): void;
             /** Remove a layer to clip
              *	@param {layer|Array<layer>} layer to clip
              */
-            removeLayer(layer: layer | layer[]): void;
+            removeLayer(layer: Layer | Layer[]): void;
             /** Set position of the clip
             *	@param {Pixel|MapBrowserEvent}
              */
@@ -4359,14 +4380,14 @@ declare namespace ol {
          * @fires focus
          * @fires copy
          * @fires paste
-         * @extends {interaction.Interaction}
+         * @extends {Interaction}
          * @param {Object} options Options
          *  @param {function} options.condition a function that take a mapBrowserEvent and return the actio nto perform: 'copy', 'cut' or 'paste', default Ctrl+C / Ctrl+V
          *  @param {Collection<Feature>} options.features list of features to copy
          *  @param {VectorSource | Array<VectorSource>} options.sources the source to copy from (used for cut), if not defined, it will use the destination
          *  @param {VectorSource} options.destination the source to copy to
          */
-        class CopyPaste extends interaction.Interaction {
+        class CopyPaste extends Interaction {
             constructor(options: {
                 condition: (...params: any[]) => any;
                 features: Collection<Feature>;
@@ -4417,12 +4438,12 @@ declare namespace ol {
         }
         /** A Select interaction to delete features on click.
          * @constructor
-         * @extends {interaction.Interaction}
+         * @extends {Interaction}
          * @fires deletestart
          * @fires deleteend
          * @param {*} options interaction.Select options
          */
-        class Delete extends interaction.Interaction {
+        class Delete extends Interaction {
             constructor(options: any);
             /** Get vector source of the map
              * @return {Array<VectorSource}
@@ -4443,7 +4464,7 @@ declare namespace ol {
          * @param {any} options
          *  @param {Overlay|Array<Overlay} options.overlays the overlays to drag
          */
-        class DragOverlay extends interaction.Pointer {
+        class DragOverlay extends Pointer {
             constructor(options: any);
             /** Add an overlay to the interacton
              * @param {Overlay} ov
@@ -4458,7 +4479,7 @@ declare namespace ol {
          * It fires a drawstart, drawend event when drawing the hole
          * and a modifystart, modifyend event before and after inserting the hole in the feature geometry.
          * @constructor
-         * @extends {interaction.Interaction}
+         * @extends {Interaction}
          * @fires drawstart
          * @fires drawend
          * @fires modifystart
@@ -4467,17 +4488,17 @@ declare namespace ol {
          * 	@param {Array<layer.Vector> | function | undefined} options.layers A list of layers from which polygons should be selected. Alternatively, a filter function can be provided. default: all visible layers
          * 	@param { Style | Array<Style> | StyleFunction | undefined }	Style for the selected features, default: default edit style
          */
-        class DrawHole extends interaction.Interaction {
+        class DrawHole extends Interaction {
             constructor(options: {
-                layers: layer.Vector[] | ((...params: any[]) => any) | undefined;
-            }, Style: Style | Style[] | StyleFunction | undefined);
+                layers: Vector[] | ((...params: any[]) => any) | undefined;
+            }, Style: StyleLike);
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
              * map, if any. Pass `null` to just remove the interaction from the current map.
              * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: Map): void;
+            setMap(map: _ol_Map_): void;
             /**
              * Activate/deactivate the interaction
              * @param {boolean}
@@ -4497,7 +4518,7 @@ declare namespace ol {
         }
         /** Interaction rotate
          * @constructor
-         * @extends {interaction.Interaction}
+         * @extends {Interaction}
          * @fires drawstart, drawing, drawend, drawcancel
          * @param {olx.interaction.TransformOptions} options
          *  @param {Array<Layer>} source Destination source for the drawn features
@@ -4510,15 +4531,15 @@ declare namespace ol {
          *  @param { number } clickTolerance click tolerance on touch devices, default: 6
          *  @param { number } maxCircleCoordinates Maximum number of point on a circle, default: 100
          */
-        class DrawRegular extends interaction.Interaction {
-            constructor(options: olx.interaction.TransformOptions, source: Layer[], features: Collection<Feature>, style: Style | Style[] | StyleFunction | undefined, sides: number, squareCondition: events.ConditionType | undefined, centerCondition: events.ConditionType | undefined, canRotate: boolean, clickTolerance: number, maxCircleCoordinates: number);
+        class DrawRegular extends Interaction {
+            constructor(options: olx.interaction.TransformOptions, source: Layer[], features: Collection<Feature>, style: StyleLike, sides: number, squareCondition: events.ConditionType | undefined, centerCondition: events.ConditionType | undefined, canRotate: boolean, clickTolerance: number, maxCircleCoordinates: number);
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
              * map, if any. Pass `null` to just remove the interaction from the current map.
              * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: Map): void;
+            setMap(map: _ol_Map_): void;
             /**
              * Activate/deactivate the interaction
              * @param {boolean}
@@ -4603,7 +4624,7 @@ declare namespace ol {
              * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: Map): void;
+            setMap(map: _ol_Map_): void;
             /** Start drawing and add the sketch feature to the target layer.
             * The interaction.Draw.EventType.DRAWSTART event is dispatched before inserting the feature.
              */
@@ -4658,7 +4679,7 @@ declare namespace ol {
         }
         /** A Select interaction to fill feature's properties on click.
          * @constructor
-         * @extends {interaction.Interaction}
+         * @extends {Interaction}
          * @fires setattributestart
          * @fires setattributeend
          * @param {*} options Extentinteraction.Select options
@@ -4666,7 +4687,7 @@ declare namespace ol {
          *  @param {boolean} options.cursor use a paint bucket cursor, default true
          * @param {*} properties The properties as key/value
          */
-        class FillAttribute extends interaction.Interaction {
+        class FillAttribute extends Interaction {
             constructor(options: {
                 active: boolean;
                 cursor: boolean;
@@ -4733,9 +4754,9 @@ declare namespace ol {
         /** An interaction to focus on the map on click. Usefull when using keyboard event on the map.
          * @constructor
          * @fires focus
-         * @extends {interaction.Interaction}
+         * @extends {Interaction}
          */
-        class FocusMap extends interaction.Interaction {
+        class FocusMap extends Interaction {
             /** Set the map > add the focus button and focus on the map when pointerdown to enable keyboard events.
              */
             setMap(): void;
@@ -4743,7 +4764,7 @@ declare namespace ol {
         /** Interaction to draw on the current geolocation
          *	It combines a draw with a Geolocation
          * @constructor
-         * @extends {interaction.Interaction}
+         * @extends {Interaction}
          * @fires drawstart, drawend, drawing, tracking, follow
          * @param {any} options
          *	@param { Collection.<Feature> | undefined } option.features Destination collection for the drawn features.
@@ -4757,7 +4778,7 @@ declare namespace ol {
          *	@param {boolean|auto|position|visible} options.followTrack true if you want the interaction to follow the track on the map, default true
          *	@param { Style | Array.<Style> | StyleFunction | undefined } options.style Style for sketch features.
          */
-        class GeolocationDraw extends interaction.Interaction {
+        class GeolocationDraw extends Interaction {
             constructor(options: {
                 source: VectorSource | undefined;
                 type: GeometryType;
@@ -4775,7 +4796,7 @@ declare namespace ol {
              * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: Map): void;
+            setMap(map: _ol_Map_): void;
             /** Activate or deactivate the interaction.
             * @param {boolean} active
              */
@@ -4809,7 +4830,7 @@ declare namespace ol {
         }
         /** Interaction hover do to something when hovering a feature
          * @constructor
-         * @extends {interaction.Interaction}
+         * @extends {Interaction}
          * @fires hover, enter, leave
          * @param {olx.interaction.HoverOptions}
          *	@param { string | undefined } options.cursor css cursor propertie or a function that gets a feature, default: none
@@ -4818,7 +4839,7 @@ declare namespace ol {
          *	@param {number | undefined} options.hitTolerance Hit-detection tolerance in pixels.
          *	@param { function | undefined } options.handleEvent Method called by the map to notify the interaction that a browser event was dispatched to the map. The function may return false to prevent the propagation of the event to other interactions in the map's interactions chain.
          */
-        class Hover extends interaction.Interaction {
+        class Hover extends Interaction {
             constructor(options: {
                 cursor: string | undefined;
                 layerFilter: ((...params: any[]) => any) | undefined;
@@ -4831,7 +4852,7 @@ declare namespace ol {
              * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: Map): void;
+            setMap(map: _ol_Map_): void;
             /**
              * Set cursor on hover
              * @param { string } cursor css cursor propertie or a function that gets a feature, default: none
@@ -4853,15 +4874,15 @@ declare namespace ol {
         }
         /** Interaction to handle longtouch events
          * @constructor
-         * @extends {interaction.Interaction}
+         * @extends {Interaction}
          * @param {olx.interaction.LongTouchOptions}
          * 	@param {function | undefined} options.handleLongTouchEvent Function handling "longtouch" events, it will receive a mapBrowserEvent.
          *	@param {interger | undefined} options.delay The delay for a long touch in ms, default is 1000
          */
-        class LongTouch extends interaction.Interaction {
+        class LongTouch extends Interaction {
             constructor(options: {
                 handleLongTouchEvent: ((...params: any[]) => any) | undefined;
-                delay: interger | undefined;
+                delay: number | undefined;
             });
         }
         /** Interaction for modifying feature geometries. Similar to the core ol/interaction/Modify.
@@ -4885,7 +4906,7 @@ declare namespace ol {
          *  @param {EventsConditionType | undefined} options.deleteCondition A function that takes an MapBrowserEvent and returns a boolean to indicate whether that event should be handled. By default, events.condition.singleClick with events.condition.altKeyOnly results in a vertex deletion.
          *  @param {EventsConditionType | undefined} options.insertVertexCondition A function that takes an MapBrowserEvent and returns a boolean to indicate whether a new vertex can be added to the sketch features. Default is events.condition.always
          */
-        class ModifyFeature extends interaction.Pointer {
+        class ModifyFeature extends Pointer {
             constructor(options: {
                 features: Collection<Feature>;
                 pixelTolerance: number;
@@ -4901,7 +4922,7 @@ declare namespace ol {
              * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: Map): void;
+            setMap(map: _ol_Map_): void;
             /**
              * Activate or deactivate the interaction + remove the sketch.
              * @param {boolean} active.
@@ -4952,7 +4973,7 @@ declare namespace ol {
              * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: Map): void;
+            setMap(map: _ol_Map_): void;
             /** Activate the interaction and remove popup
              * @param {Boolean} b
              */
@@ -4992,7 +5013,7 @@ declare namespace ol {
          */
         class Offset extends interaction.Pointer {
             constructor(options: {
-                layers: layer.Vector | layer.Vector[];
+                layers: Vector| Vector[];
                 features: Collection<Feature>;
                 source: VectorSource | undefined;
                 duplicate: boolean;
@@ -5003,7 +5024,7 @@ declare namespace ol {
              * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: Map): void;
+            setMap(map: _ol_Map_): void;
         }
         /**
          * @constructor
@@ -5054,7 +5075,7 @@ declare namespace ol {
          */
         class SelectCluster extends interaction.Select {
             constructor(options?: {
-                featureStyle: style;
+                featureStyle: Style;
                 selectCluster: boolean;
                 PointRadius: number;
                 spiral: boolean;
@@ -5069,7 +5090,7 @@ declare namespace ol {
              * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: Map): void;
+            setMap(map: _ol_Map_): void;
             /**
              * Clear the selection, close the cluster and remove revealed features
              * @api stable
@@ -5094,13 +5115,13 @@ declare namespace ol {
         }
         /** Interaction to snap to guidelines
          * @constructor
-         * @extends {interaction.Interaction}
+         * @extends {Interaction}
          * @param {olx.interaction.SnapGuidesOptions}
          *	- pixelTolerance {number | undefined} distance (in px) to snap to a guideline, default 10 px
          *  - enableInitialGuides {bool | undefined} whether to draw initial guidelines based on the maps orientation, default false.
          *	- style {Style | Array<Style> | undefined} Style for the sektch features.
          */
-        class SnapGuides extends interaction.Interaction {
+        class SnapGuides extends Interaction {
             constructor(options: olx.interaction.SnapGuidesOptions);
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
@@ -5108,7 +5129,7 @@ declare namespace ol {
              * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: Map): void;
+            setMap(map: _ol_Map_): void;
             /** Activate or deactivate the interaction.
             * @param {boolean} active
              */
@@ -5144,7 +5165,7 @@ declare namespace ol {
         }
         /** Interaction split interaction for splitting feature geometry
          * @constructor
-         * @extends {interaction.Interaction}
+         * @extends {Interaction}
          * @fires  beforesplit, aftersplit, pointermove
          * @param {*}
          *  @param {VectorSource|Array{VectorSource}} options.source a list of source to split (configured with useSpatialIndex set to true)
@@ -5156,7 +5177,7 @@ declare namespace ol {
          *  @param {Style | Array<Style> | undefined} options.sketchStyle Style for the sektch features.
          *  @param {function|undefined} options.tolerance Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split.  Default is 1e-10.
          */
-        class Split extends interaction.Interaction {
+        class Split extends Interaction {
             constructor(options: {
                 features: Collection<Feature>;
                 snapDistance: number;
@@ -5170,7 +5191,7 @@ declare namespace ol {
              * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: Map): void;
+            setMap(map: _ol_Map_): void;
             /** Get nearest coordinate in a list
             * @param {Coordinate} pt the point to find nearest
             * @param {Array<Coordinate>} coords list of coordinates
@@ -5189,7 +5210,7 @@ declare namespace ol {
         }
         /** Interaction splitter: acts as a split feature agent while editing vector features (LineString).
          * @constructor
-         * @extends {interaction.Interaction}
+         * @extends {Interaction}
          * @fires  beforesplit, aftersplit
          * @param {olx.interaction.SplitOptions}
          *	- source {VectorSource|Array{VectorSource}} The target source (or array of source) with features to be split (configured with useSpatialIndex set to true)
@@ -5200,7 +5221,7 @@ declare namespace ol {
          *	- tolerance {function|undefined} Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split. Default is 1e-10.
          * @todo verify auto intersection on features that split.
          */
-        class Splitter extends interaction.Interaction {
+        class Splitter extends Interaction {
             constructor(options: olx.interaction.SplitOptions);
             /** Calculate intersection on 2 segs
             * @param {Array<Coordinate>} s1 first seg to intersect (2 points)
@@ -5224,11 +5245,11 @@ declare namespace ol {
         }
         /** Interaction synchronize
          * @constructor
-         * @extends {interaction.Interaction}
+         * @extends {Interaction}
          * @param {olx.interaction.SynchronizeOptions}
          *  - maps {Array<Map>} An array of maps to synchronize with the map of the interaction
          */
-        class Synchronize extends interaction.Interaction {
+        class Synchronize extends Interaction {
             constructor(options: olx.interaction.SynchronizeOptions);
             /**
              * Remove the interaction from its current map, if any,  and attach it to a new
@@ -5236,7 +5257,7 @@ declare namespace ol {
              * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: Map): void;
+            setMap(map: _ol_Map_): void;
             /** Synchronize the maps
              */
             syncMaps(): void;
@@ -5315,7 +5336,7 @@ declare namespace ol {
          *	@param {} options.style list of style for handles
          *
          */
-        class Transform extends interaction.Pointer {
+        class Transform extends Pointer {
             constructor(options: {
                 filter: (...params: any[]) => any;
                 layers: Layer[];
@@ -5342,7 +5363,7 @@ declare namespace ol {
              * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: Map): void;
+            setMap(map: _ol_Map_): void;
             /**
              * Activate/deactivate interaction
              * @param {bool}
@@ -5361,7 +5382,7 @@ declare namespace ol {
              * @param {Style|Array<Style>} olstyle
              * @api stable
              */
-            setStyle(style: style, olstyle: Style | Style[]): void;
+            setStyle(style: Style, olstyle: Style | Style[]): void;
             /** Draw transform sketch
             * @param {boolean} draw only the center
              */
@@ -5407,12 +5428,12 @@ declare namespace ol {
         }
         /** Undo/redo interaction
          * @constructor
-         * @extends {interaction.Interaction}
+         * @extends {Interaction}
          * @fires undo
          * @fires redo
          * @param {*} options
          */
-        class UndoRedo extends interaction.Interaction {
+        class UndoRedo extends Interaction {
             constructor(options: any);
             /** Add a custom undo/redo
              * @param {string} action the action key name
@@ -5438,7 +5459,7 @@ declare namespace ol {
              * @param {Map} map Map.
              * @api stable
              */
-            setMap(map: Map): void;
+            setMap(map: _ol_Map_): void;
             /** A feature is added / removed
              */
             _onAddRemove(): void;
@@ -5481,7 +5502,7 @@ declare namespace ol {
      * ({@link layer.Base#addFilter}, {@link layer.Base#removeFilter}, {@link layer.Base#getFilters}).
      * @namespace filter
      */
-    namespace filter {
+  declare  namespace filter {
         /**
          * @classdesc
          * Abstract base class; normally only used for creating subclasses and not instantiated in apps.
@@ -5514,13 +5535,13 @@ declare namespace ol {
          * @extends {filter.Base}
          * @param {Object} [options]
          *  @param {Feature} [options.feature] feature to mask with
-         *  @param {style.Fill} [options.fill] style to fill with
+         *  @param {Fill} [options.fill] style to fill with
          *  @param {boolean} [options.inner] mask inner, default false
          */
         class Mask extends filter.Base {
             constructor(options?: {
                 feature?: Feature;
-                fill?: style.Fill;
+                fill?: Fill;
                 inner?: boolean;
             });
             /** Draw the feature into canvas
@@ -5748,7 +5769,7 @@ declare namespace ol {
     /** Algorithms to on a graph (shortest path).
      * @namespace graph
      */
-    namespace graph {
+ declare   namespace graph {
         /**
          * @classdesc
          * Compute the shortest paths between nodes in a graph source
@@ -5847,7 +5868,7 @@ declare namespace ol {
         * @param {} options
         * @param {string|function|undefined} options.glyph a glyph name or a function that takes a feature and return a glyph
         * @param {number} options.radius radius of the symbol, default 8
-        * @param {style.Fill} options.fill style for fill, default navy
+        * @param {Fill} options.fill style for fill, default navy
         * @param {style.stroke} options.stroke style for stroke, default 2px white
         * @param {string} options.prefix a prefix if many style used for the same type
         *
@@ -5856,7 +5877,7 @@ declare namespace ol {
         function dbPediaStyleFunction(options: {
             glyph: string | ((...params: any[]) => any) | undefined;
             radius: number;
-            fill: style.Fill;
+            fill: Fill;
             stroke: style.stroke;
             prefix: string;
         }): void;
@@ -5872,7 +5893,7 @@ declare namespace ol {
          *	@param {number} options.radius Chart radius/Size, default 20
          *	@param {number} options.rotation Rotation in radians (positive rotation clockwise). Default is 0.
          *	@param {bool} options.snapToPixel use integral numbers of pixels, default true
-         *	@param {_ol_style_Stroke_} options.stroke stroke style
+         *	@param {Stroke} options.stroke stroke style
          *	@param {String|Array<color>} options.colors predefined color set "classic","dark","pale","pastel","neon" / array of color string, default classic
          *	@param {number} options.offsetX X offset in px
          *	@param {number} options.offsetY Y offset in px
@@ -5889,7 +5910,7 @@ declare namespace ol {
                 radius: number;
                 rotation: number;
                 snapToPixel: boolean;
-                stroke: _ol_style_Stroke_;
+                stroke: Stroke;
                 colors: string | color[];
                 offsetX: number;
                 offsetY: number;
@@ -5940,23 +5961,23 @@ declare namespace ol {
          *	@param {number|undefined} options.opacity opacity with image pattern, default:1
          *	@param {olx.style.fillPattern} options.pattern pattern name (override by image option)
          *	@param {color} options.color pattern color
-         *	@param {style.Fill} options.fill fill color (background)
+         *	@param {Fill} options.fill fill color (background)
          *	@param {number} options.offset pattern offset for hash/dot/circle/cross pattern
          *	@param {number} options.Size line Size for hash/dot/circle/cross pattern
          *	@param {number} options.spacing spacing for hash/dot/circle/cross pattern
          *	@param {number|bool} options.angle angle for hash pattern / true for 45deg dot/circle/cross
          *	@param {number} options.scale pattern scale
-         * @extends {style.Fill}
+         * @extends {Fill}
          * @implements {structs.IHasChecksum}
          * @api
          */
-        class FillPattern extends style.Fill implements structs.IHasChecksum {
+        class FillPattern extends Fill implements structs.IHasChecksum {
             constructor(options?: {
                 image: style.Image | undefined;
                 opacity: number | undefined;
                 pattern: olx.style.fillPattern;
                 color: color;
-                fill: style.Fill;
+                fill: Fill;
                 offset: number;
                 Size: number;
                 spacing: number;
@@ -6080,12 +6101,12 @@ declare namespace ol {
          *  @param {string} options.fontStyle the font style (bold, italic, bold italic, etc), default none
          *  @param {boolean} options.gradient true to display a gradient on the symbol
          *  @param {_ol_style_Fill_} options.fill
-         *  @param {_ol_style_Stroke_} options.stroke
+         *  @param {Stroke} options.stroke
          * @extends {style.RegularShape}
          * @implements {structs.IHasChecksum}
          * @api
          */
-        class FontSymbol extends style.RegularShape implements structs.IHasChecksum {
+        class FontSymbol extends RegularShape implements structs.IHasChecksum {
             constructor(options: {
                 glyph: number;
                 form: string;
@@ -6096,8 +6117,8 @@ declare namespace ol {
                 fontSize: number;
                 fontStyle: string;
                 gradient: boolean;
-                fill: _ol_style_Fill_;
-                stroke: _ol_style_Stroke_;
+                fill: Fill;
+                stroke: Stroke;
             });
             /**
              *	Font defs
@@ -6118,23 +6139,23 @@ declare namespace ol {
             clone(): style.FontSymbol;
             /**
              * Get the fill style for the symb
-             * @return {style.Fill} Fill style.
+             * @return {Fill} Fill style.
              * @api
              */
-            getFill(): style.Fill;
+            getFill(): Fill;
             /**
              * Get the stroke style for the symb
-             * @return {_ol_style_Stroke_} Stroke style.
+             * @return {Stroke} Stroke style.
              * @api
              */
-            getStroke(): _ol_style_Stroke_;
+            getStroke(): Stroke;
             /**
              * Get the glyph definition for the symb
              * @param {string|undefined} name a glyph name to get the definition, default return the glyph definition for the style.
-             * @return {_ol_style_Stroke_} Stroke style.
+             * @return {Stroke} Stroke style.
              * @api
              */
-            getGlyph(name: string | undefined): _ol_style_Stroke_;
+            getGlyph(name: string | undefined): Stroke;
             /**
              * Get the glyph name.
              * @return {string} the name
@@ -6143,10 +6164,10 @@ declare namespace ol {
             getGlyphName(): string;
             /**
              * Get the stroke style for the symb
-             * @return {_ol_style_Stroke_} Stroke style.
+             * @return {Stroke} Stroke style.
              * @api
              */
-            getFontInfo(): _ol_style_Stroke_;
+            getFontInfo(): Stroke;
             /**
              * @inheritDoc
              */
@@ -6215,7 +6236,7 @@ declare namespace ol {
          *
          * @constructor
          * @param {} options Options.
-         *   @param {style.Fill | undefined} options.fill fill style, default rgba(0,0,0,0.5)
+         *   @param {Fill | undefined} options.fill fill style, default rgba(0,0,0,0.5)
          *   @param {number} options.radius point radius
          * 	 @param {number} options.blur lur radius, default radius/3
          * 	 @param {number} options.offsetX x offset, default 0
@@ -6226,7 +6247,7 @@ declare namespace ol {
          */
         class Shadow extends style.RegularShape implements structs.IHasChecksum {
             constructor(options: {
-                fill: style.Fill | undefined;
+                fill: Fill | undefined;
                 radius: number;
                 blur: number;
                 offsetX: number;
@@ -6254,23 +6275,23 @@ declare namespace ol {
          *	@param {number|undefined} options.opacity opacity with image pattern, default:1
          *	@param {olx.style.fillPattern} options.pattern pattern name (override by image option)
          *	@param {colorLike} options.color pattern color
-         *	@param {style.Fill} options.fill fill color (background)
+         *	@param {Fill} options.fill fill color (background)
          *	@param {number} options.offset pattern offset for hash/dot/circle/cross pattern
          *	@param {number} options.Size line Size for hash/dot/circle/cross pattern
          *	@param {number} options.spacing spacing for hash/dot/circle/cross pattern
          *	@param {number|bool} options.angle angle for hash pattern / true for 45deg dot/circle/cross
          *	@param {number} options.scale pattern scale
-         * @extends {style.Fill}
+         * @extends {Fill}
          * @implements {structs.IHasChecksum}
          * @api
          */
-        class StrokePattern extends style.Fill implements structs.IHasChecksum {
+        class StrokePattern extends Fill implements structs.IHasChecksum {
             constructor(options: {
                 image: style.Image | undefined;
                 opacity: number | undefined;
                 pattern: olx.style.fillPattern;
                 color: colorLike;
-                fill: style.Fill;
+                fill:  Fill;
                 offset: number;
                 Size: number;
                 spacing: number;
@@ -6334,10 +6355,10 @@ declare namespace ol {
         *	  @param {style.Stroke} options.style stroke style, default 2px red
          */
         function animExtent(point: Coordinates, options: {
-            projection: projectionLike | undefined;
+            projection: ProjectionLike | undefined;
             duration: number;
             easing: easing;
-            style: style.Stroke;
+            style: Stroke;
         }): void;
         /** Show a markup a point on postcompose
         *	@deprecated use map.animateFeature instead
@@ -6367,7 +6388,7 @@ declare namespace ol {
      * @namespace Overlay
      * @see {@link http://openlayers.org/en/latest/apidoc/module-ol_Overlay.html}
      */
-    namespace Overlay {
+ namespace Overlay {
         /**
          * @classdesc
          * A popup element to be displayed over the map and attached to a single map
@@ -6472,7 +6493,7 @@ declare namespace ol {
              * Set the map instance the overlay is associated with.
              * @param {Map} map The map instance.
              */
-            setMap(map: Map): void;
+            setMap(map: _ol_Map_): void;
             /** Get the magnifier map
             *	@return {_ol_Map_}
              */
@@ -7012,7 +7033,7 @@ declare namespace ol {
          */
         class Throw extends featureAnimation {
             constructor(options: {
-                side: left | right;
+                side: 'left' | 'right';
             });
             /** Animate
             * @param {featureAnimationEvent} e
@@ -7065,7 +7086,7 @@ declare namespace ol {
      */
     class render3D {
         constructor(param: {
-            layer: layer.Vector;
+            layer: Vector;
             maxResolution: number;
             defaultHeight: number;
             height: ((...params: any[]) => any) | string | number;
@@ -7212,12 +7233,12 @@ declare namespace ol {
         * @param {Coordinate} coord
         * @return {Arrary<Coordinate>}
          */
-        getHexagonAtCoord(coord: Coordinate): Arrary<Coordinate>;
+        getHexagonAtCoord(coord: Coordinate): Array<Coordinate>;
         /** Get hexagon coordinates at hex
         * @param {Coordinate} hex
         * @return {Arrary<Coordinate>}
          */
-        getHexagon(hex: Coordinate): Arrary<Coordinate>;
+        getHexagon(hex: Coordinate): Array<Coordinate>;
         /** Convert hex to coord
         * @param {hex} hex
         * @return {Coordinate}
@@ -7233,7 +7254,7 @@ declare namespace ol {
         * @param {Coordinate} a second cube coord
         * @return {number} distance
          */
-        cube_distance(a: Coordinate, a: Coordinate): number;
+        cube_distance(a: Coordinate, b: Coordinate): number;
         /** Calculate line between to hexagon
         * @param {Coordinate} a first cube coord
         * @param {Coordinate} b second cube coord
@@ -7274,12 +7295,12 @@ declare namespace ol {
         /** Get the grid Extent
          * @param {proj.ProjLike} [proj='EPSG:3857']
          */
-        getExtent(proj?: proj.ProjLike): void;
+        getExtent(proj?: ProjectionLike): void;
         /** Get grid geom at coord
          * @param {Coordinate} coord
          * @param {proj.ProjLike} [proj='EPSG:3857']
          */
-        getGridAtCoordinate(coord: Coordinate, proj?: proj.ProjLike): void;
+        getGridAtCoordinate(coord: Coordinate, proj?: ProjectionLike): void;
     }
     /** Ordering function for layer.Vector renderOrder parameter
     *	ordering.fn (options)
