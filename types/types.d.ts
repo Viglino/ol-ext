@@ -1,4 +1,5 @@
-import { Map as _ol_Map_, Overlay , View} from 'ol';
+import { Map as _ol_Map_, View, Overlay } from 'ol';
+import { Options as OverlayOptions } from 'ol/Overlay';
 
 import Collection from 'ol/Collection';
 import { default as Attribution, default as ol_control_Attribution } from 'ol/control/Attribution';
@@ -6,7 +7,8 @@ import ol_control_Control from 'ol/control/Control';
 import ol_control_ScaleLine from 'ol/control/ScaleLine';
 import { Coordinate, CoordinateFormat } from 'ol/coordinate';
 import { Extent } from 'ol/extent';
-import Feature,  { FeatureLike } from 'ol/Feature';
+import Feature, { FeatureLike } from 'ol/Feature';
+import { FeatureLoader } from 'ol/featureloader';
 import { Geometry, LineString, Point, Polygon } from 'ol/geom';
 import { Layer, Vector } from 'ol/layer';
 import { ProjectionLike } from 'ol/proj';
@@ -14,19 +16,18 @@ import Projection from 'ol/proj/Projection';
 import { Size } from 'ol/size';
 import { ImageCanvas, Vector as VectorSource, WMTS } from 'ol/source';
 import { AttributionLike } from 'ol/source/Source';
-import { LoadingStrategy } from 'ol/source/Vector';
-import { StyleLike } from 'ol/style/Style';
+import { LoadingStrategy, Options as VectorSourceOptions } from 'ol/source/Vector';
+import { StyleLike, RenderFunction } from 'ol/style/Style';
 import { Circle as CircleStyle, Fill, Icon, Stroke, Style, Image, RegularShape } from 'ol/style';
 import GeometryType from 'ol/geom/GeometryType'
-import { Pointer, Interaction, Draw, Modify, Select} from 'ol/interaction';
+import { Pointer, Interaction, Draw, Modify, Select, DragAndDrop } from 'ol/interaction';
 import MapBrowserEvent from 'ol/MapBrowserEvent';
 import { Condition as EventsConditionType } from 'ol/events/condition'
 import { Color } from 'ol/color';
-import {ColorLike} from 'ol/colorlike';
+import { ColorLike } from 'ol/colorlike';
 import { Pixel } from 'ol/pixel';
 import FeatureFormat from 'ol/format/Feature';
 import Event from 'ol/events/Event';
-import * as easing from 'ol/easing';
 import OverlayPositioning from 'ol/OverlayPositioning';
 
 declare namespace ol {
@@ -169,19 +170,18 @@ declare namespace source {
     * @param {olx.source.DBPedia=} opt_options
      */
     class DBPedia extends VectorSource {
-        constructor(opt_options?: olx.source.DBPedia);
-        /** Url for DBPedia SPARQL
-         */
-        _url: any;
-        /** Max resolution to load features
-         */
-        _maxResolution: any;
-        /** Result language
-         */
-        _lang: any;
-        /** Query limit
-         */
-        _limit: any;
+        constructor(opt_options?: {
+            loader: FeatureLoader
+            url?: string;
+            maxResolution?: number;
+            lang?: string;
+            limit: number;
+            attributions?: AttributionLike;
+            stragety: LoadingStrategy;
+
+        });
+
+
         /** Decode RDF attributes and choose to add feature to the layer
         * @param {feature} the feature
         * @param {attributes} RDF attributes
@@ -189,7 +189,7 @@ declare namespace source {
         * @return {boolean} true: add the feature to the layer
         * @API stable
          */
-        readFeature(feature: Feature, attributes: RDF, lastfeature: Feature): boolean;
+        readFeature(feature: Feature, attributes: any[], lastfeature: Feature): boolean;
         /** Set RDF query subject, default: select label, thumbnail, abstract and type
         * @API stable
          */
@@ -261,7 +261,9 @@ declare namespace source {
     * @param {olx.source.GeoImageOptions=} options
      */
     class GeoImage extends ImageCanvas {
-        constructor(options?: olx.source.GeoImageOptions);
+        constructor(options?: {
+
+        });
         /**
          * Get coordinate of the image center.
          * @return {Coordinate} coordinate of the image center.
@@ -547,7 +549,7 @@ declare namespace source {
     * @param {olx.source.Mapillary=} options
      */
     class Mapillary extends VectorSource {
-        constructor(options?: olx.source.Mapillary);
+        constructor(options?: VectorSourceOptions);
         /** Max resolution to load features
          */
         _maxResolution: any;
@@ -606,7 +608,7 @@ declare namespace source {
     * @param {olx.source.WikiCommons=} options
      */
     class WikiCommons extends VectorSource {
-        constructor(options?: olx.source.WikiCommons);
+        constructor(options?: VectorSourceOptions);
         /** Max resolution to load features
          */
         _maxResolution: any;
@@ -1025,7 +1027,7 @@ declare namespace control {
         * @param {string} s search string
         * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
          */
-        autocomplete(s: string, cback: (...params: any[]) => any): void | false;
+        autocomplete(s: string, cback: (...params: any[]) => any): Array<any> | false;
         /** Send an ajax request (GET)
          * @param {string} url
          * @param {function} onsuccess callback
@@ -1128,7 +1130,7 @@ declare namespace control {
         * @param {string} s search string
         * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
          */
-        autocomplete(s: string, cback: (...params: any[]) => any): void;
+        autocomplete(s: string, cback: (...params: any[]) => any): Array<any> | false;
         /** Send an ajax request (GET)
          * @param {string} url
          * @param {function} onsuccess callback
@@ -2461,7 +2463,7 @@ declare namespace control {
             style: Style;
             properties: any;
             typeGeom: string;
-        }, canvas: Canvas | undefined, row: number | undefined): HTMLCanvasElement;
+        }, canvas: HTMLCanvasElement | undefined, row: number | undefined): HTMLCanvasElement;
     }
     /** A control to jump from one zone to another.
      *
@@ -3102,7 +3104,7 @@ declare namespace control {
         * @return {Array<any>|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
         * @api
          */
-        autocomplete(s: string, max: number, cback: (...params: any[]) => any): any[] | false;
+        autocomplete(s: string, cback: (...params: any[]) => any): Array<any> | false;
         /** Get the input field
         *	@return {Element}
         *	@api
@@ -3261,7 +3263,7 @@ declare namespace control {
         * @param {string} s search string
         * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
          */
-        autocomplete(s: string, cback: (...params: any[]) => any): void;
+        autocomplete(s: string, cback: (...params: any[]) => any): Array<any> | false;
         /** Send an ajax request (GET)
          * @param {string} url
          * @param {function} onsuccess callback
@@ -3460,7 +3462,7 @@ declare namespace control {
         * @param {string} s search string
         * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
          */
-        autocomplete(s: string, cback: (...params: any[]) => any): void;
+        autocomplete(s: string, cback: (...params: any[]) => any): Array<any> | false;
         /** Send an ajax request (GET)
          * @param {string} url
          * @param {function} onsuccess callback
@@ -3568,7 +3570,7 @@ declare namespace control {
             useCase: boolean;
             matchAll: boolean;
             conditions: condition[];
-        }): void;
+        }): Feature[];
         /** Set the current sources
          * @param {VectorSource|Array<VectorSource>|undefined} source
          */
@@ -3648,8 +3650,11 @@ declare namespace control {
         setMap(map: _ol_Map_): void;
         /** Select features by attributes
          */
-        doSelect(): void;
-        /** Set the popup values
+        doSelect(options: {
+            useCase: boolean;
+            matchAll: boolean;
+            conditions: condition[];
+        }): Feature[];        /** Set the popup values
          * @param {Object} options
          *  @param {Object} options.values a key/value list with key = property value, value = title shown in the popup, default search values in the sources
          *  @param {boolean} options.sort sort values
@@ -3746,8 +3751,11 @@ declare namespace control {
         addCondition(condition: condition, attr: string, op: string, val: any): void;
         /** Select features by condition
          */
-        doSelect(): void;
-        /** Set the current sources
+        doSelect(options: {
+            useCase: boolean;
+            matchAll: boolean;
+            conditions: condition[];
+        }): Feature[];        /** Set the current sources
          * @param {VectorSource|Array<VectorSource>|undefined} source
          */
         setSources(source: VectorSource | VectorSource[] | undefined): void;
@@ -3811,8 +3819,11 @@ declare namespace control {
         });
         /** Select features by condition
          */
-        doSelect(): void;
-        /** Set the current sources
+        doSelect(options: {
+            useCase: boolean;
+            matchAll: boolean;
+            conditions: condition[];
+        }): Feature[];        /** Set the current sources
          * @param {VectorSource|Array<VectorSource>|undefined} source
          */
         setSources(source: VectorSource | VectorSource[] | undefined): void;
@@ -3888,7 +3899,11 @@ declare namespace control {
         getControls(): Array<SelectBase>;
         /** Select features by condition
          */
-        doSelect(): void;
+        doSelect(options: {
+            useCase: boolean;
+            matchAll: boolean;
+            conditions: condition[];
+        }): Feature[];
         /** Set the current sources
          * @param {VectorSource|Array<VectorSource>|undefined} source
          */
@@ -3964,8 +3979,11 @@ declare namespace control {
         setMap(map: _ol_Map_): void;
         /** Select features by attributes
          */
-        doSelect(): void;
-        /** Set the popup values
+        doSelect(options: {
+            useCase: boolean;
+            matchAll: boolean;
+            conditions: condition[];
+        }): Feature[];        /** Set the popup values
          * @param {Object} values a key/value list with key = property value, value = title shown in the popup, default search values in the sources
          */
         setValues(values: any): void;
@@ -4549,7 +4567,8 @@ declare namespace interaction {
      */
     class DrawRegular extends Interaction {
         constructor(options: {
-            source: Layer[], features: Collection<Feature>, style: StyleLike, sides: number, squareCondition: EventsConditionType | undefined, centerCondition: EventsConditionType | undefined, canRotate: boolean, clickTolerance: number, maxCircleCoordinates: number});
+            source: Layer[], features: Collection<Feature>, style: StyleLike, sides: number, squareCondition: EventsConditionType | undefined, centerCondition: EventsConditionType | undefined, canRotate: boolean, clickTolerance: number, maxCircleCoordinates: number
+        });
         /**
          * Remove the interaction from its current map, if any,  and attach it to a new
          * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -4757,7 +4776,7 @@ declare namespace interaction {
      *		- radius {number} radius of the flash
      */
     class Flashlight extends Pointer {
-        constructor(options:{
+        constructor(options: {
             color: Color,
             fill: Color,
             radius: number
@@ -4774,7 +4793,7 @@ declare namespace interaction {
          *		- color {Color} light color, default transparent
          *		- fill {Color} fill color, default rgba(0,0,0,0.8)
          */
-        setColor(options:{
+        setColor(options: {
             color: Color,
             fill: Color
         }): void;
@@ -4905,7 +4924,7 @@ declare namespace interaction {
         /** Get features whenmove
         * @param {event} e "move" event
          */
-        handleMove_(e: event): void;
+        handleMove_(e: Event): void;
     }
     /** Interaction to handle longtouch events
      * @constructor
@@ -4969,12 +4988,12 @@ declare namespace interaction {
         * @param {geom} coords list of coordinates
         * @return {*} the nearest point with a coord (projected point), dist (distance to the geom), ring (if Polygon)
          */
-        getNearestCoord(pt: Coordinate, coords: geom): any;
+        getNearestCoord(pt: Coordinate, coords: GeometryType): any;
         /** Get arcs concerned by a modification
          * @param {geom} geom the geometry concerned
          * @param {Coordinate} coord pointed coordinates
          */
-        getArcs(geom: geom, coord: Coordinate): void;
+        getArcs(geom: GeometryType, coord: Coordinate): void;
         /**
          * @param {MapBrowserEvent} evt Map browser event.
          * @return {boolean} `true` to start the drag sequence.
@@ -5016,7 +5035,7 @@ declare namespace interaction {
         /**
          * Remove the current point
          */
-        removePoint(): void;
+        removePoint(): boolean;
         /**
          * Show the delete button (menu)
          * @param {Event} e
@@ -5263,7 +5282,13 @@ declare namespace interaction {
      * @todo verify auto intersection on features that split.
      */
     class Splitter extends Interaction {
-        constructor(options: olx.interaction.SplitOptions);
+        constructor(options: {
+            source: VectorSource | VectorSource[];
+            triggerSource: VectorSource;
+            features: Collection<Feature>;
+            filter: (f: Feature) => boolean | undefined;
+            tolerance: ((...params: any[]) => any) | undefined;
+        });
         /** Calculate intersection on 2 segs
         * @param {Array<Coordinate>} s1 first seg to intersect (2 points)
         * @param {Array<Coordinate>} s2 second seg to intersect (2 points)
@@ -5291,7 +5316,9 @@ declare namespace interaction {
      *  - maps {Array<Map>} An array of maps to synchronize with the map of the interaction
      */
     class Synchronize extends Interaction {
-        constructor(options: olx.interaction.SynchronizeOptions);
+        constructor(options: {
+            map: _ol_Map_[]
+        });
         /**
          * Remove the interaction from its current map, if any,  and attach it to a new
          * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -5305,11 +5332,11 @@ declare namespace interaction {
         /** Cursor move > tells other maps to show the cursor
         * @param {event} e "move" event
          */
-        handleMove_(e: event): void;
+        handleMove_(e: Event): void;
         /** Cursor out of map > tells other maps to hide the cursor
         * @param {event} e "mouseOut" event
          */
-        handleMouseOut_(e: event): void;
+        handleMouseOut_(e: Event): void;
     }
     /**
      * @constructor
@@ -5385,7 +5412,7 @@ declare namespace interaction {
      */
     class Transform extends Pointer {
         constructor(options: {
-            filter: (...params: any[]) => any;
+            filter: (f: Feature, l: Layer) => boolean;
             layers: Layer[];
             features: Collection<Feature>;
             addCondition: EventsConditionType | undefined;
@@ -5928,7 +5955,7 @@ declare namespace style {
         stroke: Stroke;
         prefix: string;
     }): void;
- 
+
     /**
      * @classdesc
      * Set chart style for vector features.
@@ -5950,7 +5977,7 @@ declare namespace style {
      * @implements {structs.IHasChecksum}
      * @api
      */
-    class Chart extends RegularShape  {
+    class Chart extends RegularShape {
         constructor(options: {
             type: string;
             radius: number;
@@ -5995,7 +6022,20 @@ declare namespace style {
          */
         getChecksum(): string;
     }
-    
+
+
+    interface FillPatternOptions {
+        size: number;
+        width: number;
+        height: number;
+        circles: number[][];
+        lines: number[][];
+        stroke: number;
+        fill: boolean;
+        char: string;
+        font: string;
+    }
+
     /**
      * @classdesc
      * Fill style with named pattern
@@ -6016,13 +6056,13 @@ declare namespace style {
      * @implements {structs.IHasChecksum}
      * @api
      */
-    class FillPattern extends Fill  {
+    class FillPattern extends Fill {
         constructor(options?: {
             image: Image | undefined;
             opacity: number | undefined;
             pattern: FillPattern;
             color: Color;
-            fill: Fill;
+            fill: Color;
             offset: number;
             Size: number;
             spacing: number;
@@ -6037,11 +6077,11 @@ declare namespace style {
         /** Get canvas used as pattern
         *	@return {canvas}
          */
-        getImage(): canvas;
+        getImage(): HTMLCanvasElement;
         /** Get pattern
         *	@param {olx.style.FillPatternOption}
          */
-        getPattern_(options: ): void;
+        getPattern_(options: FillPatternOptions): void;
         /** Static fuction to add char patterns
         *	@param {title}
         *	@param {olx.fillpattern.Option}
@@ -6055,7 +6095,7 @@ declare namespace style {
         *		- char {char}
         *		- font {string} default "10px Arial"
          */
-        static addPattern(title: title, options: olx.fillpattern.Option): void;
+        static addPattern(title: string, options: FillPatternOptions): void
         /** Patterns definitions
             Examples : http://seig.ensg.ign.fr/fichchap.php?NOFICHE=FP31&NOCHEM=CHEMS009&NOLISTE=1&N=8
          */
@@ -6076,9 +6116,9 @@ declare namespace style {
     class FlowLine extends Style {
         constructor(options: {
             visible: boolean;
-            width: number | ((...params: any[]) => any);
+            width: number | ((...params: any[]) => number);
             width2: number;
-            color: ColorLike | ((...params: any[]) => any);
+            color: ColorLike | ((...params: any[]) => ColorLike);
             color2: ColorLike;
         });
         /** Set the initial width
@@ -6117,15 +6157,8 @@ declare namespace style {
          * @param {Array<Coordinate>} geom The pixel coordinates of the geometry in GeoJSON notation
          * @param {render.State} e The olx.render.State of the layer renderer
          */
-        _render(geom: Coordinate[], e: render.State): void;
-        /** Split line geometry into equal length geometries
-         * @param {Array<Coordinate>} geom
-         * @param {number} nb number of resulting geometries, default 255
-         * @param {number} nim minimum length of the resulting geometries, default 1
-         */
-        _splitInto(geom: Coordinate[], nb: number, nim: number): void;
     }
-  
+
     /**
      * @classdesc
      * A marker style to use with font symbols.
@@ -6150,7 +6183,7 @@ declare namespace style {
      * @implements {structs.IHasChecksum}
      * @api
      */
-    class FontSymbol extends RegularShape  {
+    class FontSymbol extends RegularShape {
         constructor(options: {
             glyph: number;
             form: string;
@@ -6217,7 +6250,7 @@ declare namespace style {
          */
         getChecksum(): string;
     }
-   
+
     /**
      * @classdesc
      * Set Photo style for vector features.
@@ -6238,7 +6271,7 @@ declare namespace style {
      * @implements {structs.IHasChecksum}
      * @api
      */
-    class Photo extends RegularShape  {
+    class Photo extends RegularShape {
         constructor(options: {
             kind: 'default' | 'square' | 'round' | 'anchored' | 'folio';
             crop: boolean;
@@ -6269,9 +6302,9 @@ declare namespace style {
     *	@param {number} minWidth minimum width (px) to draw text, default 0
      */
     class TextPath {
-        constructor(options: any, textOverflow: 'visible' | 'ellipsis'| string, minWidth: number);
+        constructor(options: any, textOverflow: 'visible' | 'ellipsis' | string, minWidth: number);
     }
-  
+
     /**
      * @classdesc
      * Set Shadow style for point vector features.
@@ -6287,7 +6320,7 @@ declare namespace style {
      * @implements {structs.IHasChecksum}
      * @api
      */
-    class Shadow extends RegularShape  {
+    class Shadow extends RegularShape {
         constructor(options: {
             fill: Fill | undefined;
             radius: number;
@@ -6306,8 +6339,8 @@ declare namespace style {
         getChecksum(): string;
     }
 
-    interface FillPatternOptions{
-        image:  Image | undefined;
+    interface StrokePatternOptions {
+        image: Image | undefined;
         opacity: number | undefined;
         pattern: FillPattern;
         color: ColorLike;
@@ -6339,7 +6372,7 @@ declare namespace style {
      * @implements {structs.IHasChecksum}
      * @api
      */
-    class StrokePattern extends FillPattern  {
+    class StrokePattern extends FillPattern {
         constructor(options: FillPatternOptions);
         /**
          * Clones the style.
@@ -6349,7 +6382,7 @@ declare namespace style {
         /** Get canvas used as pattern
         *	@return {canvas}
          */
-        getImage(): HTMLCanvasElement ;
+        getImage(): HTMLCanvasElement;
         /** Get pattern
         *	@param {olx.style.FillPatternOption}
          */
@@ -6361,7 +6394,16 @@ declare namespace style {
  * @namespace Map
  * @see {@link http://openlayers.org/en/latest/apidoc/module-ol_Map.html}
  */
-namespace Map {
+declare namespace Map {
+
+    interface PulseOptions {
+        projection: ProjectionLike | undefined;
+        duration: number;
+        easing: ((p0: number) => number);
+        style: Stroke;
+    }
+
+
     /** Animate feature on a map
      * @function
      * @fires animationstart, animationend
@@ -6373,15 +6415,15 @@ namespace Map {
     /** Add a filter to an Map
     *	@param {filter}
      */
-    function addFilter(filter: filter): void;
+    function addFilter(filter: filter.Base): void;
     /** Remove a filter to an Map
     *	@param {filter}
      */
-    function removeFilter(filter: filter): void;
+    function removeFilter(filter: filter.Base): void;
     /** Get filters associated with an Map
     *	@return {Array<filter>}
      */
-    function getFilters(): filter[];
+    function getFilters(): filter.Base[];
     /** Show a target overlay at coord
     * @param {Coordinate} coord
      */
@@ -6397,12 +6439,7 @@ namespace Map {
     *	  @param {easing} options.easing easing function, default easing.upAndDown
     *	  @param {style.Stroke} options.style stroke style, default 2px red
      */
-    function animExtent(point: Coordinates, options: {
-        projection: ProjectionLike | undefined;
-        duration: number;
-        easing: ((p0: number) => number);
-        style: Stroke;
-    }): void;
+    function animExtent(point: Coordinates, options: PulseOptions): void;
     /** Show a markup a point on postcompose
     *	@deprecated use map.animateFeature instead
     *	@param {Coordinates} point to pulse
@@ -6413,7 +6450,12 @@ namespace Map {
     *		- style {style.Image|Style|Array<Style>} Image to draw as markup, default red circle
     *	@return Unique key for the listener with a stop function to stop animation
      */
-    function markup(point: Coordinates, pulse: markup.options): any;
+    function markup(point: Coordinates, options: {
+        projection: ProjectionLike,
+        delay: number,
+        maxZoom: number,
+        style: Image | Style | Style[]
+    }): any;
     /** Pulse a point on postcompose
     *	@deprecated use map.animateFeature instead
     *	@param {Coordinates} point to pulse
@@ -6424,14 +6466,14 @@ namespace Map {
     *		- easing {easing} easing function, default easing.easeOut
     *		- style {style.Image|Style|Array<Style>} Image to draw as markup, default red circle
      */
-    function pulse(point: Coordinates, pulse: pulse.options): void;
+    function pulse(point: Coordinates, pulse: PulseOptions): void;
 }
 /** Openlayers Overlay.
  * An element to be displayed over the map and attached to a single map location.
  * @namespace Overlay
  * @see {@link http://openlayers.org/en/latest/apidoc/module-ol_Overlay.html}
  */
-namespace Overlay {
+declare namespace overlay {
     /**
      * @classdesc
      * A popup element to be displayed over the map and attached to a single map
@@ -6513,7 +6555,7 @@ namespace Overlay {
         popup.show("New informations");
         * @api stable
          */
-        show(coordinate: Coordinate | string, html: string | undefined): void;
+        show(coordinate: Coordinate | undefined, features: Feature | Feature[]): void;
         /**
          * Hide the popup
          * @api stable
@@ -6531,7 +6573,7 @@ namespace Overlay {
      * @api stable
      */
     class Magnify extends Overlay {
-        constructor(options: olx.OverlayOptions);
+        constructor(options?: OverlayOptions)
         /**
          * Set the map instance the overlay is associated with.
          * @param {Map} map The map instance.
@@ -6634,7 +6676,7 @@ namespace Overlay {
      *  @param {boolean} options.maxChar max char to display in a cell, default 200
      *  @api stable
      */
-    class PopupFeature extends Overlay.Popup {
+    class PopupFeature extends Popup {
         constructor(options: {
             popupClass: string;
             closeBox: boolean;
@@ -6728,7 +6770,7 @@ namespace Overlay {
      *		the 'auto' positioning var the popup choose its positioning to stay on the map.
      * @api stable
      */
-    class Tooltip extends Overlay.Popup {
+    class Tooltip extends Popup {
         constructor(options: {
             popupClass: string;
             maximumFractionDigits: number;
@@ -6830,7 +6872,7 @@ namespace Overlay {
         popup.show("New informations");
         * @api stable
          */
-        show(coordinate: Coordinate | string, html: string | undefined): void;
+        show(coordinate: Coordinate | undefined, features: Feature | Feature[]): void;
         /**
          * Hide the popup
          * @api stable
@@ -6839,7 +6881,7 @@ namespace Overlay {
     }
 }
 
-namespace ext {
+declare namespace ext {
     /** Ajax request
      * @fires success
      * @fires error
@@ -6858,41 +6900,7 @@ namespace ext {
      */
     var element: any;
 }
-/** Feature animation base class
- * Use the {@link _ol_Map_#animateFeature} or {@link _ol_layer_Vector_#animateFeature} to animate a feature
- * on postcompose in a map or a layer
-* @constructor
-* @fires animationstart|animationend
-* @param {featureAnimationOptions} options
-*	@param {Number} options.duration duration of the animation in ms, default 1000
-*	@param {bool} options.revers revers the animation direction
-*	@param {Number} options.repeat number of time to repeat the animation, default 0
-*	@param {oo.Style} options.hiddenStyle a style to display the feature when playing the animation
-*		to be used to make the feature selectable when playing animation
-*		(@see {@link ../examples/map.featureanimation.select.html}), default the feature
-*		will be hidden when playing (and niot selectable)
-*	@param {easing.Function} options.fade an easing function used to fade in the feature, default none
-*	@param {easing.Function} options.easing an easing function for the animation, default easing.linear
- */
-class featureAnimation {
-    constructor(options: {
-        duration: number;
-        revers: boolean;
-        repeat: number;
-        hiddenStyle: Style;
-        fade:  typeof easing
-        easing:typeof easing
-    });
-    /** Function to perform manipulations onpostcompose.
-     * This function is called with an featureAnimationEvent argument.
-     * The function will be overridden by the child implementation.
-     * Return true to keep this function for the next frame, false to remove it.
-     * @param {featureAnimationEvent} e
-     * @return {bool} true to continue animation.
-     * @api
-     */
-    animate(e: featureAnimationEvent): boolean;
-}
+
 /** An animation controler object an object to control animation with start, stop and isPlaying function.
  * To be used with {@link olx.Map#animateFeature} or {@link layer.Vector#animateFeature}
  * @typedef {Object} animationControler
@@ -6905,7 +6913,45 @@ type animationControler = {
     stop: (...params: any[]) => any;
     isPlaying: (...params: any[]) => any;
 };
-namespace featureAnimation {
+declare namespace featureAnimation {
+
+
+    /** Feature animation base class
+     * Use the {@link _ol_Map_#animateFeature} or {@link _ol_layer_Vector_#animateFeature} to animate a feature
+     * on postcompose in a map or a layer
+    * @constructor
+    * @fires animationstart|animationend
+    * @param {featureAnimationOptions} options
+    *	@param {Number} options.duration duration of the animation in ms, default 1000
+    *	@param {bool} options.revers revers the animation direction
+    *	@param {Number} options.repeat number of time to repeat the animation, default 0
+    *	@param {oo.Style} options.hiddenStyle a style to display the feature when playing the animation
+    *		to be used to make the feature selectable when playing animation
+    *		(@see {@link ../examples/map.featureanimation.select.html}), default the feature
+    *		will be hidden when playing (and niot selectable)
+    *	@param {easing.Function} options.fade an easing function used to fade in the feature, default none
+    *	@param {easing.Function} options.easing an easing function for the animation, default easing.linear
+     */
+    export class featureAnimation {
+        constructor(options: {
+            duration: number;
+            revers: boolean;
+            repeat: number;
+            hiddenStyle: Style;
+            fade: ((p0: number) => number);
+            easing: ((p0: number) => number);
+        });
+        /** Function to perform manipulations onpostcompose.
+         * This function is called with an featureAnimationEvent argument.
+         * The function will be overridden by the child implementation.
+         * Return true to keep this function for the next frame, false to remove it.
+         * @param {featureAnimationEvent} e
+         * @return {bool} true to continue animation.
+         * @api
+         */
+        animate(e: featureAnimationEvent): boolean;
+    }
+
     /** Bounce animation:
      * @constructor
      * @extends {featureAnimation}
@@ -6919,13 +6965,13 @@ namespace featureAnimation {
         constructor(options: {
             bounce: number;
             amplitude: number;
-            easing: easing;
+            easing: ((p0: number) => number);
             duration: number;
         });
         /** Animate
         * @param {featureAnimationEvent} e
          */
-        animate(e: featureAnimationEvent): void;
+        animate(e: featureAnimationEvent): boolean;
     }
     /** Drop animation: drop a feature on the map
      * @constructor
@@ -6942,7 +6988,7 @@ namespace featureAnimation {
         /** Animate
         * @param {featureAnimationEvent} e
          */
-        animate(e: featureAnimationEvent): void;
+        animate(e: featureAnimationEvent): boolean;
     }
     /** Fade animation: feature fade in
      * @constructor
@@ -6954,7 +7000,7 @@ namespace featureAnimation {
         /** Animate
         * @param {featureAnimationEvent} e
          */
-        animate(e: featureAnimationEvent): void;
+        animate(e: featureAnimationEvent): boolean;
     }
     /** Do nothing for a given duration
      * @constructor
@@ -6967,7 +7013,7 @@ namespace featureAnimation {
         /** Animate: do nothing during the laps time
         * @param {featureAnimationEvent} e
          */
-        animate(e: featureAnimationEvent): void;
+        animate(e: featureAnimationEvent): boolean;
     }
     /** Do nothing
      * @constructor
@@ -7001,7 +7047,7 @@ namespace featureAnimation {
         /** Animate
         * @param {featureAnimationEvent} e
          */
-        animate(e: featureAnimationEvent): void;
+        animate(e: featureAnimationEvent): boolean;
     }
     /** Shakee animation:
      * @constructor
@@ -7020,7 +7066,7 @@ namespace featureAnimation {
         /** Animate
         * @param {featureAnimationEvent} e
          */
-        animate(e: featureAnimationEvent): void;
+        animate(e: featureAnimationEvent): boolean;
     }
     /** Show an object for a given duration
      * @constructor
@@ -7032,7 +7078,7 @@ namespace featureAnimation {
         /** Animate: just show the object during the laps time
         * @param {featureAnimationEvent} e
          */
-        animate(e: featureAnimationEvent): void;
+        animate(e: featureAnimationEvent): boolean;
     }
     /** Slice animation: feature enter from left
      * @constructor
@@ -7120,7 +7166,7 @@ namespace featureAnimation {
  *  @param {number} param.defaultHeight default height if none is return by a propertie
  *  @param {function|string|Number} param.height a height function (returns height giving a feature) or a popertie name for the height or a fixed value
  */
-class render3D {
+export class render3D {
     constructor(param: {
         layer: Vector;
         maxResolution: number;
@@ -7147,7 +7193,7 @@ class render3D {
     *	@param {function|string|number} h a height function or a popertie name or a fixed value
     *	@return {function} function(f) return height of the feature f
      */
-     getHfn(h: ((...params: any[]) => any) | string | number): (...params: any[]) => any;
+    getHfn(h: ((...params: any[]) => any) | string | number): (...params: any[]) => any;
     /** Animate rendering
      * @param {olx.render3D.animateOptions}
      *  @param {string|function|number} param.height an attribute name or a function returning height of a feature or a fixed value
@@ -7155,10 +7201,10 @@ class render3D {
      *  @param {easing} param.easing an ol easing function
      *	@api
      */
-    animate(options:{
+    animate(options: {
         height: ((...params: any[]) => any) | string | number,
         duration: number
-        easing : ((p0: number) => number);
+        easing: ((p0: number) => number);
 
     }): void;
     /** Check if animation is on
@@ -7190,7 +7236,7 @@ class render3D {
 *	@param {Coordinate} [options.origin] orgin of the grid, default [0,0]
 *	@param {HexagonLayout} [options.layout] grid layout, default pointy
  */
-class HexGrid extends Object {
+export class HexGrid extends Object {
     constructor(options?: {
         Size?: number;
         origin?: Coordinate;
@@ -7326,7 +7372,7 @@ class HexGrid extends Object {
  * @param {Object} [options]
  *  @param {number} [options.Size] Size grid Size in meter, default 200 (200x200m)
  */
-class InseeGrid extends Object {
+export class InseeGrid extends Object {
     constructor(options?: {
         Size?: number;
     });
@@ -7348,7 +7394,7 @@ class InseeGrid extends Object {
 *	It will return an ordering function (f0,f1)
 *	@namespace
  */
-namespace ordering {
+declare namespace ordering {
     /** y-Ordering
     *	@return ordering function (f0,f1)
      */
