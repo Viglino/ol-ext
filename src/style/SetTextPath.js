@@ -111,28 +111,31 @@ ol_layer_Vector.prototype.setTextPathStyle = function(style, maxResolution)
 }
 
 
-/** Add new properties to ol.style.Text
-* to use with ol.layer.Vector.prototype.setTextPathStyle
-* @constructor
-* @param {} options
-*	@param {visible|ellipsis|string} textOverflow
-*	@param {number} minWidth minimum width (px) to draw text, default 0
-*/
-var ol_style_TextPath = function(options)
-{	if (!options) options={};
-	ol_style_Text.call (this, options);
-	this.textOverflow_ = typeof(options.textOverflow)!="undefined" ?  options.textOverflow : "visible";
-	this.minWidth_ = options.minWidth || 0;
-}
+	/** Add new properties to ol.style.Text
+	* to use with ol.layer.Vector.prototype.setTextPathStyle
+	* @constructor
+	* @param {} options
+	*	@param {visible|ellipsis|string} textOverflow
+	*	@param {number} minWidth minimum width (px) to draw text, default 0
+	*/
+	class ol_style_TextPath {
+		constructor(options) {
+			if (!options)
+				options = {};
+			ol_style_Text.call(this, options);
+			this.textOverflow_ = typeof (options.textOverflow) != "undefined" ? options.textOverflow : "visible";
+			this.minWidth_ = options.minWidth || 0;
+		}
+		getTextOverflow() {
+			return this.textOverflow_;
+		}
+		getMinWidth() {
+			return this.minWidth_;
+		}
+	}
 ol_ext_inherits(ol_style_TextPath, ol_style_Text);
 
-ol_style_TextPath.prototype.getTextOverflow = function()
-{	return this.textOverflow_; 
-};
 
-ol_style_TextPath.prototype.getMinWidth = function()
-{	return this.minWidth_; 
-};
 
 /**/
 

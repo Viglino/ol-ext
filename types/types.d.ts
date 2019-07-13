@@ -345,7 +345,7 @@ declare namespace source {
      *  @param {string} options.crossOrigin default 'anonymous'
      *  @param {string} options.wrapX default true
      */
-    class Geoportail extends WMTS {
+   export class Geoportail extends WMTS {
         constructor(layer?: string, options?: {
             minZoom: number;
             maxZoom: number;
@@ -5816,7 +5816,7 @@ declare namespace filter {
      * @extends {filter.Base}
      * @param {FilterTextureOptions} options
      */
-    class Texture extends filter.Base {
+     class Texture extends filter.Base {
         constructor(options: FilterTextureOptions);
         /** Set texture
          * @param {FilterTextureOptions} [options]
@@ -7361,117 +7361,6 @@ export class HexGrid extends Object {
      */
     cube_neighbors(c: Coordinate, direction: number): Coordinate | Coordinate[];
 }
-/**
- * French INSEE grids
- * @classdesc a class to compute French INSEE grids, ie. fix area (200x200m) square grid,
- * based appon EPSG:3035
- *
- * @requires proj4
- * @constructor
- * @extends {Object}
- * @param {Object} [options]
- *  @param {number} [options.Size] Size grid Size in meter, default 200 (200x200m)
- */
-export class InseeGrid extends Object {
-    constructor(options?: {
-        Size?: number;
-    });
-    /** Grid Extent (in EPSG:3035)
-     */
-    static Extent: any;
-    /** Get the grid Extent
-     * @param {proj.ProjLike} [proj='EPSG:3857']
-     */
-    getExtent(proj?: ProjectionLike): void;
-    /** Get grid geom at coord
-     * @param {Coordinate} coord
-     * @param {proj.ProjLike} [proj='EPSG:3857']
-     */
-    getGridAtCoordinate(coord: Coordinate, proj?: ProjectionLike): void;
-}
-/** Ordering function for layer.Vector renderOrder parameter
-*	ordering.fn (options)
-*	It will return an ordering function (f0,f1)
-*	@namespace
- */
-declare namespace ordering {
-    /** y-Ordering
-    *	@return ordering function (f0,f1)
-     */
-    function yOrdering(): any;
-    /** Order with a feature attribute
-     * @param options
-     *  @param {string} options.attribute ordering attribute, default zIndex
-     *  @param {function} options.equalFn ordering function for equal values
-     * @return ordering function (f0,f1)
-     */
-    function zIndex(options: {
-        attribute: string;
-        equalFn: (...params: any[]) => any;
-    }): any;
-}
 
 
-/** @typedef {Object} FilterColorizeOptions
- *  @property {Color} color style to fill with
- *  @property {string} operation 'enhance' or a CanvasRenderingContext2D.globalCompositeOperation
- *  @property {number} value a [0-1] value to modify the effect value
- *  @property {boolean} inner mask inner, default false
- */
-declare type FilterColorizeOptions = {
-    color: Color;
-    operation: string;
-    value: number;
-    inner: boolean;
-};
-
-/** @typedef {Object} FilterTextureOptions
- *  @property {Image | undefined} img Image object for the texture
- *  @property {string} src Image source URI
- *  @property {number} scale scale to draw the image. Default 1.
- *  @property {number} [opacity]
- *  @property {boolean} rotate Whether to rotate the texture with the view (may cause animation lags on mobile or slow devices). Default is true.
- *  @property {null | string | undefined} crossOrigin The crossOrigin attribute for loaded images.
- */
-declare type FilterTextureOptions = {
-    img: Image | undefined;
-    src: string;
-    scale: number;
-    opacity?: number;
-    rotate: boolean;
-    crossOrigin: null | string | undefined;
-};
-
-/** Template attributes for popup
- * @typedef {Object} TemplateAttributes
- * @property {string} title
- * @property {function} format a function that takes an attribute and a feature and returns the formated attribute
- * @property {string} before string to instert before the attribute (prefix)
- * @property {string} after string to instert after the attribute (sudfix)
- * @property {boolean|function} visible boolean or a function (feature, value) that decides the visibility of a attribute entry
- */
-declare type TemplateAttributes = {
-    title: string;
-    format: (...params: any[]) => any;
-    before: string;
-    after: string;
-    visible: boolean | ((...params: any[]) => any);
-};
-
-/** Template
- * @typedef {Object} Template
- * @property {string|function} title title of the popup, attribute name or a function that takes a feature and returns the title
- * @property {Object.<TemplateAttributes>} attributes a list of template attributes
- */
-declare type Template = {
-    title: string | ((...params: any[]) => any);
-    attributes: {
-        [key: string]: any;
-    };
-};
-
-/** @typedef {'pointy' | 'flat'} HexagonLayout
- *  Layout of a Hexagon. Flat means the bottom part of the hexagon is flat.
- */
-declare type HexagonLayout = 'pointy' | 'flat';
 
