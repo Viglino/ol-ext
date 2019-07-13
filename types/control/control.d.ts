@@ -14,5 +14,4 @@ import { StyleLike } from 'ol/style/Style';
         val: string;
     }
     export function Status(): void;
-    export function Storymap(): void;
 

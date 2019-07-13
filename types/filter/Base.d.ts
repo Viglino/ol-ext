@@ -18,7 +18,7 @@
  * @param {Object} options Extend {@link _ol_control_Control_} options.
  *  @param {boolean} [options.active]
  */
-export class Base extends Object {
+export abstract class Base extends Object {
     constructor(options: {
         active?: boolean;
     });
@@ -31,3 +31,15 @@ export class Base extends Object {
      */
     getActive(): boolean;
 }
+/** Add a filter to an Map
+*	@param {filter}
+ */
+export function addFilter(filter: Base): void;
+/** Remove a filter to an Map
+*	@param {filter}
+ */
+export function removeFilter(filter: Base): void;
+/** Get filters associated with an Map
+*	@return {Array<filter>}
+ */
+export function getFilters(): Base[];
