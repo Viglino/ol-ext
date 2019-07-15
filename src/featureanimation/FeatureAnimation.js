@@ -23,75 +23,71 @@ import ol_render_getVectorContext from '../util/getVectorContext';
 *	@param {Number} options.duration duration of the animation in ms, default 1000
 *	@param {bool} options.revers revers the animation direction
 *	@param {Number} options.repeat number of time to repeat the animation, default 0
-*	@param {ol.style.Style} options.hiddenStyle a style to display the feature when playing the animation
-*		to be used to make the feature selectable when playing animation
-*		(@see {@link ../examples/map.featureanimation.select.html}), default the feature
+*	@param {oo.style.Style} options.hiddenStyle a style to display the feature when playing the animation
+*		to be used to make the feature selectable when playing animation 
+*		(@see {@link ../examples/map.featureanimation.select.html}), default the feature 
 *		will be hidden when playing (and niot selectable)
 *	@param {ol_easing_Function} options.fade an easing function used to fade in the feature, default none
 *	@param {ol_easing_Function} options.easing an easing function for the animation, default ol_easing_linear
 */
-class ol_featureAnimation {
-	constructor(options) {
-		options = options || {};
-		this.duration_ = typeof (options.duration) == 'number' ? (options.duration >= 0 ? options.duration : 0) : 1000;
-		this.fade_ = typeof (options.fade) == 'function' ? options.fade : null;
-		this.repeat_ = Number(options.repeat);
-		var easing = typeof (options.easing) == 'function' ? options.easing : ol_easing_linear;
-		if (options.revers)
-			this.easing_ = function (t) { return (1 - easing(t)); };
-		else
-			this.easing_ = easing;
-		this.hiddenStyle = options.hiddenStyle;
-		ol_Object.call(this);
-	}
-    /** Draw a geometry
-    * @param {olx.animateFeatureEvent} e
-    * @param {ol.geom} geom geometry for shadow
-    * @param {ol.geom} shadow geometry for shadow (ie. style with zIndex = -1)
-    * @private
-    */
-	drawGeom_(e, geom, shadow) {
-		if (this.fade_) {
-			e.context.globalAlpha = this.fade_(1 - e.elapsed);
-		}
-		var style = e.style;
-		for (var i = 0; i < style.length; i++) {
-			var sc = 0;
-			// OL < v4.3 : setImageStyle doesn't check retina
-			var imgs = ol_Map.prototype.getFeaturesAtPixel ? false : style[i].getImage();
-			if (imgs) {
-				sc = imgs.getScale();
-				imgs.setScale(e.frameState.pixelRatio * sc);
-			}
-			// Prevent crach if the style is not ready (image not loaded)
-			try {
-				var vectorContext = e.vectorContext || ol_render_getVectorContext(e);
-				vectorContext.setStyle(style[i]);
-				if (style[i].getZIndex() < 0)
-					vectorContext.drawGeometry(shadow || geom);
-				else
-					vectorContext.drawGeometry(geom);
-			}
-			catch (e) { /* ok */ }
-			if (imgs)
-				imgs.setScale(sc);
-		}
-	}
-    /** Function to perform manipulations onpostcompose.
-     * This function is called with an ol_featureAnimationEvent argument.
-     * The function will be overridden by the child implementation.
-     * Return true to keep this function for the next frame, false to remove it.
-     * @param {ol_featureAnimationEvent} e
-     * @return {bool} true to continue animation.
-     * @api
-     */
-	animate( /* e */) {
-		return false;
-	}
-}
+var ol_featureAnimation = function(options)
+{	options = options || {};
+	
+	this.duration_ = typeof (options.duration)=='number' ? (options.duration>=0 ? options.duration : 0) : 1000;
+	this.fade_ = typeof(options.fade) == 'function' ? options.fade : null;
+	this.repeat_ = Number(options.repeat);
+
+	var easing = typeof(options.easing) =='function' ? options.easing : ol_easing_linear;
+	if (options.revers) this.easing_ = function(t) { return (1 - easing(t)); };
+	else this.easing_ = easing;
+
+	this.hiddenStyle = options.hiddenStyle;
+
+	ol_Object.call(this);
+};
 ol_ext_inherits(ol_featureAnimation, ol_Object);
 
+/** Draw a geometry 
+* @param {olx.animateFeatureEvent} e
+* @param {ol.geom} geom geometry for shadow
+* @param {ol.geom} shadow geometry for shadow (ie. style with zIndex = -1)
+* @private
+*/
+ol_featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
+{	if (this.fade_) 
+	{	e.context.globalAlpha = this.fade_(1-e.elapsed);
+	}
+	var style = e.style;
+	for (var i=0; i<style.length; i++)
+	{	var sc=0;
+		// OL < v4.3 : setImageStyle doesn't check retina
+		var imgs = ol_Map.prototype.getFeaturesAtPixel ? false : style[i].getImage();
+		if (imgs) 
+		{	sc = imgs.getScale(); 
+			imgs.setScale(e.frameState.pixelRatio*sc);
+		}
+		// Prevent crach if the style is not ready (image not loaded)
+		try {
+			var vectorContext = e.vectorContext || ol_render_getVectorContext(e);
+			vectorContext.setStyle(style[i]);
+			if (style[i].getZIndex()<0) vectorContext.drawGeometry(shadow||geom);
+			else vectorContext.drawGeometry(geom);
+		} catch(e) { /* ok */ }
+		if (imgs) imgs.setScale(sc);
+	}
+};
 
+/** Function to perform manipulations onpostcompose. 
+ * This function is called with an ol_featureAnimationEvent argument.
+ * The function will be overridden by the child implementation.    
+ * Return true to keep this function for the next frame, false to remove it.
+ * @param {ol_featureAnimationEvent} e
+ * @return {bool} true to continue animation.
+ * @api 
+ */
+ol_featureAnimation.prototype.animate = function (/* e */)
+{	return false;
+};
 
 /** An animation controler object an object to control animation with start, stop and isPlaying function.    
  * To be used with {@link olx.Map#animateFeature} or {@link ol.layer.Vector#animateFeature}
