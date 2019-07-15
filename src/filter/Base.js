@@ -14,9 +14,9 @@ var ol_filter = {};
 export {ol_filter};
 
 /**
- * @classdesc
- * Abstract base class; normally only used for creating subclasses and not instantiated in apps.
- * Used to create filters
+ * @classdesc 
+ * Abstract base class; normally only used for creating subclasses and not instantiated in apps.    
+ * Used to create filters    
  * Use {@link _ol_Map_#addFilter}, {@link _ol_Map_#removeFilter} or {@link _ol_Map_#getFilters} to handle filters on a map.
  * Use {@link ol_layer_Base#addFilter}, {@link ol_layer_Base#removeFilter} or {@link ol_layer_Base#getFilters}
  * to handle filters on layers.
@@ -26,32 +26,28 @@ export {ol_filter};
  * @param {Object} options Extend {@link _ol_control_Control_} options.
  *  @param {boolean} [options.active]
  */
-class ol_filter_Base {
-  constructor(options) {
-    ol_Object.call(this);
-    // Array of postcompose listener
-    this._listener = [];
-    if (options && options.active === false)
-      this.set('active', false);
-    else
-      this.set('active', true);
-  }
-  /** Activate / deactivate filter
-  *	@param {boolean} b
-  */
-  setActive(b) {
-    this.set('active', b === true);
-  }
-  /** Get filter active
-  *	@return {boolean}
-  */
-  getActive() {
-    return this.get('active');
-  }
-}
+var ol_filter_Base = function(options) {
+  ol_Object.call(this);
+  // Array of postcompose listener
+  this._listener = [];
+  if (options && options.active===false) this.set('active', false);
+  else this.set('active', true);
+};
 ol_ext_inherits(ol_filter_Base, ol_Object);
 
+/** Activate / deactivate filter
+*	@param {boolean} b
+*/
+ol_filter_Base.prototype.setActive = function (b) {
+  this.set('active', b===true);
+};
 
+/** Get filter active
+*	@return {boolean}
+*/
+ol_filter_Base.prototype.getActive = function () {
+  return this.get('active');
+};
 
 (function(){
 
