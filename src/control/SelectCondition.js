@@ -7,7 +7,7 @@ import ol_control_SelectBase from './SelectBase'
 import ol_ext_element from '../util/element'
 
 /**
- * Select features by property using a condition 
+ * Select features by property using a condition
  *
  * @constructor
  * @extends {ol_control_SelectBase}
@@ -18,77 +18,82 @@ import ol_ext_element from '../util/element'
  *  @param {ol/source/Vector | Array<ol/source/Vector>} options.source the source to search in
  *  @param {string} options.label control label, default 'condition'
  *  @param {number} options.selectAll select all features if no option selected
- *  @param {condition|Array<condition>} options.condition conditions 
+ *  @param {condition|Array<condition>} options.condition conditions
  *  @param {function|undefined} options.onchoice function triggered when an option is clicked, default doSelect
  */
-var ol_control_SelectCondition = function(options) {
-  if (!options) options = {};
-
-  // Container
-  var div = options.content = ol_ext_element.create('DIV');
-  var label = ol_ext_element.create('LABEL', {
-    parent: div
-  });
-  this._check = ol_ext_element.create('INPUT', {
-    type: 'checkbox',
-    change: function () { 
-      if (this._onchoice) this._onchoice()
-      else this.doSelect();
-    }.bind(this),
-    parent: label
-  });
-  ol_ext_element.create('DIV', {
-    html: options.label || 'condition',
-    parent: label
-  });
-  // Input div
-  this._input = ol_ext_element.create('DIV', {
-    parent: div
-  });
-
-  options.className = options.className || 'ol-select-condition';
-  ol_control_SelectBase.call(this, options);
-
-  this.setCondition(options.condition);
-  this._selectAll = options.selectAll;
-  this._onchoice = options.onchoice;
-};
+class ol_control_SelectCondition {
+  constructor(options) {
+    if (!options)
+      options = {};
+    // Container
+    var div = options.content = ol_ext_element.create('DIV');
+    var label = ol_ext_element.create('LABEL', {
+      parent: div
+    });
+    this._check = ol_ext_element.create('INPUT', {
+      type: 'checkbox',
+      change: function () {
+        if (this._onchoice)
+          this._onchoice();
+        else
+          this.doSelect();
+      }.bind(this),
+      parent: label
+    });
+    ol_ext_element.create('DIV', {
+      html: options.label || 'condition',
+      parent: label
+    });
+    // Input div
+    this._input = ol_ext_element.create('DIV', {
+      parent: div
+    });
+    options.className = options.className || 'ol-select-condition';
+    ol_control_SelectBase.call(this, options);
+    this.setCondition(options.condition);
+    this._selectAll = options.selectAll;
+    this._onchoice = options.onchoice;
+  }
+  /** Set condition to select on
+   * @param {condition, Arrat<condition>} condition
+   *  @param {string} attr property to select on
+   *  @param {string} op operator (=, !=, <; <=, >, >=, contain, !contain, regecp)
+   *  @param {*} val value to select on
+   */
+  setCondition(condition) {
+    if (!condition)
+      this._conditions = [];
+    else
+      this._conditions = (condition instanceof Array ? condition : [condition]);
+  }
+  /** Add a condition to select on
+   * @param {condition} condition
+   *  @param {string} attr property to select on
+   *  @param {string} op operator (=, !=, <; <=, >, >=, contain, !contain, regecp)
+   *  @param {*} val value to select on
+   */
+  addCondition(condition) {
+    this._conditions.push(condition);
+  }
+  /** Select features by condition
+   */
+  doSelect(options) {
+    options = options || {};
+    var conditions = this._conditions;
+    if (!this._check.checked) {
+      return ol_control_SelectBase.prototype.doSelect.call(this, { features: options.features, matchAll: this._selectAll });
+    }
+    else {
+      return ol_control_SelectBase.prototype.doSelect.call(this, {
+        features: options.features,
+        conditions: conditions
+      });
+    }
+  }
+}
 ol_ext_inherits(ol_control_SelectCondition, ol_control_SelectBase);
 
-/** Set condition to select on
- * @param {condition, Arrat<condition>} condition
- *  @param {string} attr property to select on
- *  @param {string} op operator (=, !=, <; <=, >, >=, contain, !contain, regecp)
- *  @param {*} val value to select on
- */
-ol_control_SelectCondition.prototype.setCondition = function(condition) {
-  if (!condition) this._conditions = [];
-  else this._conditions = (condition instanceof Array ?  condition : [condition]);
-};
 
-/** Add a condition to select on
- * @param {condition} condition
- *  @param {string} attr property to select on
- *  @param {string} op operator (=, !=, <; <=, >, >=, contain, !contain, regecp)
- *  @param {*} val value to select on
- */
-ol_control_SelectCondition.prototype.addCondition = function(condition) {
-  this._conditions.push(condition);
-};
 
-/** Select features by condition
- */
-ol_control_SelectCondition.prototype.doSelect = function(options) {
-  options = options || {};
-  var conditions = this._conditions;
-  if (!this._check.checked) {
-    return ol_control_SelectBase.prototype.doSelect.call(this, { features: options.features, matchAll: this._selectAll });
-  } else {
-    return ol_control_SelectBase.prototype.doSelect.call(this, {
-      features: options.features,
-      conditions: conditions
-    })
-  }
-};
 
 export default ol_control_SelectCondition

@@ -3,10 +3,12 @@
       "allowUnknownTags": true
     },
     "opts": {
-      "destination": "./doc/doc-pages"
+      "destination": "./doc/doc-pages",
+      "template": "./node_modules/tsd-jsdoc/dist"
     },
     "plugins": [
-      "plugins/markdown"
+      "plugins/markdown",
+      "./node_modules/jsdoc-export-default-interop/dist/index"
     ],
     "templates": {
       "cleverLinks": false,
