@@ -52,7 +52,7 @@ function transform() {
         content = content.replace(/\blet\b/g, 'var');
         content = content.replace(/\bconst\b/g, 'var');
         // return content
-        file.contents = new Buffer(content);
+        file.contents = Buffer.from(content);// new Buffer(content);
       }
       return callback(null, file);
     }
