@@ -103,6 +103,8 @@
     visible: false
   }));
 
+  map.addControl(new ol.control.ScaleLine());
+
   // Show information on click
   var popup = new ol.Overlay.Popup();
   map.addOverlay(popup);
