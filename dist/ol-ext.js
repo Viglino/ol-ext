@@ -850,6 +850,7 @@ ol.control.SelectBase.prototype.doSelect = function (options) {
  *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *  @param {string | undefined} options.label Text label to use for the search button, default "search"
  *  @param {string | undefined} options.placeholder placeholder, default "Search..."
+ *  @param {boolean | undefined} options.reverse enable reverse geocoding, default false
  *  @param {string | undefined} options.inputLabel label for the input, default none
  *  @param {string | undefined} options.noCollapse prevent collapsing on input blur, default false
  *  @param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
@@ -962,13 +963,40 @@ ol.control.Search = function(options) {
   input.addEventListener("input", doSearch);
   if (!options.noCollapse) {
     input.addEventListener('blur', function() {
-      setTimeout(function(){ element.classList.add('ol-collapsed') }, 200);
-    });
+      setTimeout(function(){ 
+        if (input !== document.activeElement) {
+          element.classList.add('ol-collapsed');
+          this.set('reverse', false);
+          element.classList.remove('ol-revers');
+        }
+      }.bind(this), 200);
+    }.bind(this));
     input.addEventListener('focus', function() {
-      element.classList.remove('ol-collapsed');
-    });
+      if (!this.get('reverse')) {
+        element.classList.remove('ol-collapsed');
+        element.classList.remove('ol-revers');
+      }
+    }.bind(this));
   }
   element.appendChild(input);
+  // Reverse geocode
+  if (options.reverse) {
+    var reverse = ol.ext.element.create('BUTTON', {
+      tyoe: 'button',
+      class: 'ol-revers',
+      title: 'click on the map',
+      click: function() {
+        if (!this.get('reverse')) {
+          this.set('reverse', !this.get('reverse'));
+          input.focus();
+          element.classList.add('ol-revers');
+        } else {
+          this.set('reverse', false);
+        }
+      }.bind(this)
+    });
+    element.appendChild(reverse);
+  }
   // Autocomplete list
   var ul = document.createElement('UL');
   ul.classList.add('autocomplete');
@@ -989,6 +1017,21 @@ ol.control.Search = function(options) {
   this.drawList_();
 };
 ol.ext.inherits(ol.control.Search, ol.control.Control);
+/**
+ * Remove the control from its current map and attach it to the new map.
+ * Subclasses may set up event handlers to get notified about changes to
+ * the map here.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ol.control.Search.prototype.setMap = function (map) {
+  if (this._listener) ol.Observable.unByKey(this._listener);
+	this._listener = null;
+  ol.control.Control.prototype.setMap.call(this, map);
+  if (map) {
+		this._listener = map.on('click', this._handleClick.bind(this));
+	}
+};
 /** Get the input field
 *	@return {Element} 
 *	@api
@@ -1009,6 +1052,25 @@ ol.control.Search.prototype.getTitle = function (f) {
 ol.control.Search.prototype.search = function () {
   var search = this.element.querySelector("input.search");
   this._triggerCustomEvent('search', search);
+};
+/** Reverse geocode
+ * @param {Object} event
+ *  @param {ol.coordinate} event.coordinate
+ * @private
+ */
+ol.control.Search.prototype._handleClick = function (e) {
+  if (this.get('reverse')) {
+    document.activeElement.blur();
+    this.reverseGeocode(e.coordinate);
+  }
+};
+/** Reverse geocode
+ * @param {ol.coordinate} coord
+ * @param {function | undefined} cback a callback function, default trigger a select event
+ * @api
+ */
+ol.control.Search.prototype.reverseGeocode = function (coord, cback) {
+  // this._handleSelect(f);
 };
 /** Trigger custom event on elemebt
  * @param {*} eventName 
@@ -1076,6 +1138,8 @@ ol.control.Search.prototype._handleSelect = function (f) {
   this.select(f);
   //this.drawList_();
 };
+/** Current history */
+ol.control.Search.prototype._history = {};
 /** Save history (in the localstorage)
  */
 ol.control.Search.prototype.saveHistory = function () {
@@ -1090,10 +1154,15 @@ ol.control.Search.prototype.saveHistory = function () {
 /** Restore history (from the localstorage) 
  */
 ol.control.Search.prototype.restoreHistory = function () {
-  try {
-    this.set('history', JSON.parse(localStorage["ol@search-"+this._classname]) );
-  } catch(e) {
-    this.set('history', []);
+  if (this._history[this._classname]) {
+    this.set('history', this._history[this._classname]);
+  } else {
+    try {
+      this._history[this._classname] = JSON.parse(localStorage["ol@search-"+this._classname]);
+      this.set('history', this._history[this._classname]);
+    } catch(e) {
+      this.set('history', []);
+    }
   }
 };
 /**
@@ -1416,6 +1485,7 @@ ol.control.SearchPhoton.prototype.select = function (f)
  *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
+ *	@param {boolean | undefined} options.reverse enable reverse geocoding, default false
  *	@param {string | undefined} options.placeholder placeholder, default "Search..."
  *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
@@ -1429,19 +1499,73 @@ ol.control.SearchGeoportail = function(options) {
   options.className = options.className || 'IGNF';
   options.typing = options.typing || 500;
   options.url = "https://wxs.ign.fr/"+options.apiKey+"/ols/apis/completion";
-	options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
+  options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
   ol.control.SearchJSON.call(this, options);
   this.set('type', options.type || 'StreetAddress,PositionOfInterest');
 };
 ol.ext.inherits(ol.control.SearchGeoportail, ol.control.SearchJSON);
+/** Reverse geocode
+ * @param {ol.coordinate} coord
+ * @api
+ */
+ol.control.SearchGeoportail.prototype.reverseGeocode = function (coord, cback) {
+  // Search type
+  var type = this.get('type')==='Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress';
+  type = 'StreetAddress';
+  var lonlat = ol.proj.transform(coord, this.getMap().getView().getProjection(), 'EPSG:4326');
+  // request
+  var request = '<?xml version="1.0" encoding="UTF-8"?>'
+    +'<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
+    +' <Request requestID="1" version="1.2" methodName="ReverseGeocodeRequest" maximumResponses="1" >'
+    +'  <ReverseGeocodeRequest>'
+    +'   <ReverseGeocodePreference>'+type+'</ReverseGeocodePreference>'
+    +'   <Position>'
+    +'    <gml:Point><gml:pos>'+lonlat[1]+' '+lonlat[0]+'</gml:pos></gml:Point>'
+    +'   </Position>'
+    +'  </ReverseGeocodeRequest>'
+    +' </Request>'
+  	+'</XLS>'
+  var url = this.get('url').replace('ols/apis/completion','geoportail/ols')+"?xls="+encodeURIComponent(request);
+  this.ajax (url, function(resp) {
+    var xml = resp.response;
+    if (xml) {
+      xml = xml.replace(/\n|\r/g,'');
+      var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
+      var f = {};
+      if (!Number(p[1]) && !Number(p[0])) {
+        f = { x: lonlat[0], y: lonlat[1], fulltext: String(lonlat) }
+      } else {
+        f.x = lonlat[0];
+        f.y = lonlat[1];
+        f.city = (xml.replace(/.*<Place type="Municipality">([^<]*)<\/Place>.*/, "$1"));
+        f.insee = (xml.replace(/.*<Place type="INSEE">([^<]*)<\/Place>.*/, "$1"));
+        f.zipcode = (xml.replace(/.*<PostalCode>([^<]*)<\/PostalCode>.*/, "$1"));
+        if (/<Street>/.test(xml)) {
+          f.kind = '';
+          f.country = 'StreetAddress';
+          f.street = (xml.replace(/.*<Street>([^<]*)<\/Street>.*/, "$1"));
+          number = (xml.replace(/.*<Building number="([^"]*).*/, "$1"));
+          f.fulltext = number+' '+f.street+', '+f.zipcode+' '+f.city;
+        } else {
+          f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));
+          f.country = 'PositionOfInterest';
+          f.street = '';
+          f.fulltext = f.zipcode+' '+f.city;
+        }
+      }
+      if (cback) cback.call(this, [f]);
+      else this._handleSelect(f);
+    }
+  });
+};
 /** Returns the text to be displayed in the menu
  *	@param {ol.Feature} f the feature
  *	@return {string} the text to be displayed in the index
  *	@api
  */
 ol.control.SearchGeoportail.prototype.getTitle = function (f) {
-    var title = f.fulltext;
-    return (title);
+  var title = f.fulltext;
+  return (title);
 };
 /** 
  * @param {string} s the search string
@@ -1450,10 +1574,10 @@ ol.control.SearchGeoportail.prototype.getTitle = function (f) {
  */
 ol.control.SearchGeoportail.prototype.requestData = function (s) {
 	return { 
-        text: s, 
-        type: this.get('type')==='Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress,PositionOfInterest', 
-        maximumResponses: this.get('maxItems')
-    };
+    text: s, 
+    type: this.get('type')==='Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress,PositionOfInterest', 
+    maximumResponses: this.get('maxItems')
+  };
 };
 /**
  * Handle server response to pass the features array to the display list
@@ -5271,9 +5395,8 @@ ol.control.Legend.prototype.addRow = function(row) {
   this._rows.push(row||{});
   this.refresh();
 };
-/** Add a new row to the legend
- * @param {*} options a list of parameters 
- *  @param {} options.
+/** Remove a row from the legend
+ *  @param {int} index
  */
 ol.control.Legend.prototype.removeRow = function(index) {
   this._rows.splice(index,1);
@@ -6957,7 +7080,8 @@ ol.control.RoutingGeoportail.prototype.addSearch = function (element, options) {
   var search = new ol.control.SearchGeoportail({
     className: 'IGNF ol-collapsed',
     apiKey: options.apiKey,
-    target: div
+    target: div,
+    reverse: true
   });
   this._search.push(search);
   search.on('select', function(e){
@@ -7101,6 +7225,7 @@ ol.control.RoutingGeoportail.prototype.handleResponse = function (data, start, e
  * 
  */
 ol.control.RoutingGeoportail.prototype.calculate = function () {
+  console.log('calculate')
   this.resultElement.innerHTML = '';
   for (var i=0; i<this._search.length; i++) {
     if (!this._search[i].get('selection')) return;
