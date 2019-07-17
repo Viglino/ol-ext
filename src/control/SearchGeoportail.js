@@ -18,6 +18,7 @@ import ol_control_SearchJSON from "./SearchJSON";
  *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
+ *	@param {boolean | undefined} options.reverse enable reverse geocoding, default false
  *	@param {string | undefined} options.placeholder placeholder, default "Search..."
  *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
@@ -31,11 +32,67 @@ var ol_control_SearchGeoportail = function(options) {
   options.className = options.className || 'IGNF';
   options.typing = options.typing || 500;
   options.url = "https://wxs.ign.fr/"+options.apiKey+"/ols/apis/completion";
-	options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
+  options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
   ol_control_SearchJSON.call(this, options);
   this.set('type', options.type || 'StreetAddress,PositionOfInterest');
 };
 ol_ext_inherits(ol_control_SearchGeoportail, ol_control_SearchJSON);
+
+/** Reverse geocode
+ * @param {ol.coordinate} coord
+ * @api
+ */
+ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, cback) {
+  // Search type
+  var type = this.get('type')==='Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress';
+  type = 'StreetAddress';
+  var lonlat = ol_proj_transform(coord, this.getMap().getView().getProjection(), 'EPSG:4326');
+  // request
+  var request = '<?xml version="1.0" encoding="UTF-8"?>'
+    +'<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
+    +' <Request requestID="1" version="1.2" methodName="ReverseGeocodeRequest" maximumResponses="1" >'
+    +'  <ReverseGeocodeRequest>'
+    +'   <ReverseGeocodePreference>'+type+'</ReverseGeocodePreference>'
+    +'   <Position>'
+    +'    <gml:Point><gml:pos>'+lonlat[1]+' '+lonlat[0]+'</gml:pos></gml:Point>'
+    +'   </Position>'
+    +'  </ReverseGeocodeRequest>'
+    +' </Request>'
+  	+'</XLS>'
+  var url = this.get('url').replace('ols/apis/completion','geoportail/ols')+"?xls="+encodeURIComponent(request);
+  this.ajax (url, function(resp) {
+    var xml = resp.response;
+    if (xml) {
+      xml = xml.replace(/\n|\r/g,'');
+      var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
+      var f = {};
+      if (!Number(p[1]) && !Number(p[0])) {
+        f = { x: lonlat[0], y: lonlat[1], fulltext: String(lonlat) }
+      } else {
+        f.x = lonlat[0];
+        f.y = lonlat[1];
+        f.city = (xml.replace(/.*<Place type="Municipality">([^<]*)<\/Place>.*/, "$1"));
+        f.insee = (xml.replace(/.*<Place type="INSEE">([^<]*)<\/Place>.*/, "$1"));
+        f.zipcode = (xml.replace(/.*<PostalCode>([^<]*)<\/PostalCode>.*/, "$1"));
+        if (/<Street>/.test(xml)) {
+          f.kind = '';
+          f.country = 'StreetAddress';
+          f.street = (xml.replace(/.*<Street>([^<]*)<\/Street>.*/, "$1"));
+          number = (xml.replace(/.*<Building number="([^"]*).*/, "$1"));
+          f.fulltext = number+' '+f.street+', '+f.zipcode+' '+f.city;
+        } else {
+          f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));
+          f.country = 'PositionOfInterest';
+          f.street = '';
+          f.fulltext = f.zipcode+' '+f.city;
+        }
+      }
+      if (cback) cback.call(this, [f]);
+      else this._handleSelect(f);
+    }
+  });
+
+};
 
 /** Returns the text to be displayed in the menu
  *	@param {ol.Feature} f the feature
@@ -43,8 +100,8 @@ ol_ext_inherits(ol_control_SearchGeoportail, ol_control_SearchJSON);
  *	@api
  */
 ol_control_SearchGeoportail.prototype.getTitle = function (f) {
-    var title = f.fulltext;
-    return (title);
+  var title = f.fulltext;
+  return (title);
 };
 
 /** 
@@ -54,10 +111,10 @@ ol_control_SearchGeoportail.prototype.getTitle = function (f) {
  */
 ol_control_SearchGeoportail.prototype.requestData = function (s) {
 	return { 
-        text: s, 
-        type: this.get('type')==='Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress,PositionOfInterest', 
-        maximumResponses: this.get('maxItems')
-    };
+    text: s, 
+    type: this.get('type')==='Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress,PositionOfInterest', 
+    maximumResponses: this.get('maxItems')
+  };
 };
 
 /**

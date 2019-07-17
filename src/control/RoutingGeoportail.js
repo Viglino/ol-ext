@@ -120,7 +120,8 @@ ol_control_RoutingGeoportail.prototype.addSearch = function (element, options) {
   var search = new ol_control_SearchGeoportail({
     className: 'IGNF ol-collapsed',
     apiKey: options.apiKey,
-    target: div
+    target: div,
+    reverse: true
   });
   this._search.push(search);
   search.on('select', function(e){
@@ -276,6 +277,7 @@ ol_control_RoutingGeoportail.prototype.handleResponse = function (data, start, e
  * 
  */
 ol_control_RoutingGeoportail.prototype.calculate = function () {
+  console.log('calculate')
   this.resultElement.innerHTML = '';
   for (var i=0; i<this._search.length; i++) {
     if (!this._search[i].get('selection')) return;
