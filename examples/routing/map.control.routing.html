@@ -61,6 +61,7 @@
   </a>
 
   <div class="info">
+    <button style="float:right" onclick="$('.info').hide(); $('#map').height(800); map.updateSize();">hide</button>
     <i>ol.control.SearchGeoportail</i> is a control to search place using the 
     <a href="https://geoservices.ign.fr/documentation/geoservices/geocodage.html">Geoportail API</a>.
     <div style="text-align: center">
@@ -98,7 +99,8 @@
   
   <script type="text/javascript">
   // Layers
-  var layers = [ new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }) ];
+  // var layers = [ new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }) ];
+  var layers = [ new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.MAPS') ];
 
   // The map
   var map = new ol.Map ({
@@ -190,7 +192,7 @@
 			featureProjection: map.getView().getProjection()
 		})
 		var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
-		saveAs(blob, "isochrone.geojson");
+		saveAs(blob, "route.geojson");
 	}
 
   </script>
