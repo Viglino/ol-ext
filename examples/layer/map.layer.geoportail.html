@@ -23,6 +23,9 @@
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
 	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
+  <!-- filesaver-js -->
+	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+
 	<link rel="stylesheet" href="../style.css" />
 </head>
 <body >
@@ -41,11 +44,26 @@
     <ul>
       <li>
         ol-ext provide capabilities for the main layers. 
-        <br/>
-        Use the <i>ol.layer.Geoportail.getCapabilities()</i> function to get the capabilities 
-        from the server for a specific key.
-        <br/>
-        Use the <i>ol.layer.Geoportail.loadCapabilities()</i> function to load the capabilities of your key in the lib.
+      </li>
+      <li>
+        If you want to access other capabilities :
+        <ul>
+          <li>
+            Asynchronous way: 
+            <ul>
+              <li>
+                Use the <i>ol.layer.Geoportail.getCapabilities()</i> function to get the capabilities 
+                from the server for a specific key.
+              </li>
+              <li>
+                Use the <i>ol.layer.Geoportail.loadCapabilities()</i> function to load the capabilities of your key in the lib.
+              </li>
+            </ul>
+          </li>
+          <li>
+            Synchronous way: use the form below to get a js file for your key.
+          </li>
+        </ul>
       </li>
       <li>
         You have to get <a href="http://professionnels.ign.fr/ign/contrats">an API key</a>
@@ -60,6 +78,19 @@
 	<div id="map" style="width: 600px; height: 400px;"></div>
 	<div class="options">
     Click on the map to get info on the photo layer.
+	</div>
+	<div class="options">
+    Get capabilities for your key (as js file):
+    <br/>
+    <i>(then just add the file in your project)</i>
+    <ul style="text-align: right;">
+      <li>
+          <input id="key" type="text" placeholder="your_key" style="width:100%" />
+      </li>
+      <li>
+        <button onclick="loadCapabilities()">Load</button>
+      </li>
+    </ul>
 	</div>
 	
 	<script type="text/javascript">
@@ -122,6 +153,25 @@
         })
       }
   });
+
+  function loadCapabilities() {
+    var k = $('#key').val();
+    if (true) {
+      ol.layer.Geoportail.getCapabilities(k).then(function(cap) {
+        var js = '// Define global\n'
+          + 'if (!window.geoportailConfig) window.geoportailConfig = { capabilities: {} };\n'
+          + 'window.geoportailConfig.capabilities[\'default\'] = window.geoportailConfig.capabilities[\''+k+'\'] = {';
+        for (var c in cap) {
+          js += '\n  "'+c+'": '+JSON.stringify(cap[c])+',';
+        }
+        js += '\n};'
+        var blob = new Blob([js], {type: "text/plain;charset=utf-8"});
+        saveAs(blob, 'capabilities.js');
+      }).catch(function(e) {
+        alert ('Error while loading capabilities for key "'+k+'".');
+      });
+    }
+  }
 	</script>
 </body>
 </html>
