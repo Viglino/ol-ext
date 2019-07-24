@@ -153,7 +153,8 @@ ol_layer_Geoportail.capabilities = {
 ol_layer_Geoportail.loadCapabilities = function(gppKey, all) {
   var onSuccess = function() {}
   var onError = function() {}
-  var onFinally = function() {}
+  var onFinally = function() {};
+
   this.getCapabilities(gppKey,all).then(function(c) {
     ol_layer_Geoportail.capabilities = c;
     onSuccess(c);
@@ -163,17 +164,21 @@ ol_layer_Geoportail.loadCapabilities = function(gppKey, all) {
     onFinally(c);
   });
 
-  return {
+  var response = {
     then: function (callback) {
       if (typeof(callback)==='function') onSuccess = callback;
+      return response;
     },
     catch: function (callback) {
       if (typeof(callback)==='function') onError = callback;
+      return response;
     },
     finally: function (callback) {
       if (typeof(callback)==='function') onFinally = callback;
-    },
+      return response;
+    }
   }
+  return response;
 };
 
 /** Get Key capabilities
