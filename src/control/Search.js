@@ -4,6 +4,7 @@
 */
 import ol_ext_inherits from '../util/ext'
 import ol_control_Control from 'ol/control/Control'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 
 import ol_ext_element from '../util/element'
 
@@ -255,7 +256,7 @@ ol_control_Search.prototype._handleClick = function (e) {
  * @param {function | undefined} cback a callback function, default trigger a select event
  * @api
  */
-ol_control_Search.prototype.reverseGeocode = function (coord, cback) {
+ol_control_Search.prototype.reverseGeocode = function (/*coord, cback*/) {
   // this._handleSelect(f);
 };
 

@@ -58,7 +58,7 @@ ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, cback) {
     +'   </Position>'
     +'  </ReverseGeocodeRequest>'
     +' </Request>'
-  	+'</XLS>'
+    +'</XLS>'
   var url = this.get('url').replace('ols/apis/completion','geoportail/ols')+"?xls="+encodeURIComponent(request);
   this.ajax (url, function(resp) {
     var xml = resp.response;
@@ -78,7 +78,7 @@ ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, cback) {
           f.kind = '';
           f.country = 'StreetAddress';
           f.street = (xml.replace(/.*<Street>([^<]*)<\/Street>.*/, "$1"));
-          number = (xml.replace(/.*<Building number="([^"]*).*/, "$1"));
+          var number = (xml.replace(/.*<Building number="([^"]*).*/, "$1"));
           f.fulltext = number+' '+f.street+', '+f.zipcode+' '+f.city;
         } else {
           f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));
