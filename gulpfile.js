@@ -85,6 +85,7 @@ gulp.task('css', function () {
     "./src/layer/*.css",
     "./src/overlay/*.css", 
     "./src/style/*.css",
+    "./src/util/*.css",
     "./src/utils/*.css"
     ])
   .pipe(autoprefixer('last 2 versions'))
@@ -99,6 +100,7 @@ gulp.task('css', function () {
     "./src/layer/*.css",
     "./src/overlay/*.css", 
     "./src/style/*.css",
+    "./src/util/*.css",
     "./src/utils/*.css"
     ])
   .pipe(autoprefixer('last 2 versions'))
