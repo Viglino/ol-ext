@@ -1,0 +1,116 @@
+.ol-ext-dialog {
+  position: fixed;
+  top: -100%;
+  left: 0;
+  width: 150%;
+  height: 100%;
+  opacity: 0;
+  background-color: rgba(0,0,0,.5);
+  z-index: 1000;
+  pointer-events: none;
+  transition: opacity .2s, top 0s .2s;
+}
+.ol-ext-dialog.ol-visible {
+  opacity: 1;
+  top: 0;
+  pointer-events: unset;
+  transition: opacity .2s, top 0s;
+}
+
+.ol-viewport .ol-ext-dialog {
+  position: absolute;
+}
+.ol-ext-dialog h2 {
+  margin: 0 .5em .5em 0;
+  display: none;
+}
+.ol-ext-dialog > form.ol-title h2 {
+  display: block;;
+}
+.ol-ext-dialog > form {
+  position: absolute;
+  top: 0;
+  left: 33.33%;
+  min-width: 5em;
+  max-width: 60%;
+  min-height: 3em;
+  max-height: 100%;
+  background-color: #fff;
+  border: 1px solid #333;
+  box-shadow: 3px 3px 4px rgba(0,0,0, 0.5);
+  transform: translate(-50%, -30%);
+  transition: top .2s, transform .2s;
+  padding: 1em;
+  box-sizing: border-box;
+}
+.ol-ext-dialog > form.ol-closebox {
+  padding-top: 1.5em;
+}
+.ol-ext-dialog > form.ol-title {
+  padding-top: 1em;
+}
+.ol-ext-dialog > form.ol-button {
+  padding-bottom: .5em;
+}
+
+.ol-ext-dialog.ol-zoom > form {
+  top: 30%;
+  transform: translate(-30%, -50%) scale(0);
+}
+.ol-ext-dialog.ol-visible > form {
+  top: 30%;
+}
+.ol-ext-dialog.ol-zoom.ol-visible > form {
+  transform: translate(-30%, -50%) scale(1);
+}
+
+.ol-ext-dialog > form .ol-content {
+  overflow-x: hidden;
+}
+
+.ol-ext-dialog > form .ol-closebox {
+  position: absolute;
+  top: .5em;
+  right: .5em;
+  width: 1em;
+  height: 1em;
+  cursor: pointer;
+  display: none;
+}
+.ol-ext-dialog > form.ol-closebox .ol-closebox {
+  display: block;
+}
+.ol-ext-dialog > form .ol-closebox:before,
+.ol-ext-dialog > form .ol-closebox:after {
+  content: "";
+  position: absolute;
+  background-color: currentColor;
+  top: 50%;
+  left: 50%;
+  width: 1em;
+  height: .1em;
+  border-radius: .1em;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.ol-ext-dialog > form .ol-closebox:before {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.ol-ext-dialog > form .ol-buttons {
+  text-align: right;
+}
+.ol-ext-dialog > form .ol-buttons input {
+  margin-top: .5em;
+  padding: .5em;
+  background: none;
+  border: 0;
+  font-size: 1em;
+  color: rgba(0,60,136,1);
+  cursor: pointer;
+}
+.ol-ext-dialog > form .ol-buttons input:hover {
+  background-color:  rgba(0,60,136,.1);
+}
+.ol-ext-dialog > form .ol-buttons input[type=submit] {
+  font-weight: bold;
+}
