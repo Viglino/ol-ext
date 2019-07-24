@@ -14,6 +14,9 @@
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
+  <!-- FontAwesome -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
   <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
@@ -27,6 +30,19 @@
   <style>
     .center {
       text-align: center;
+    }
+    .alert > form {
+      border: 5px dashed #f80;
+      background-color: #ff6;
+      color: #800;
+    }
+    .alert > form:before {
+      content: '\f071';
+      font-family: fontawesome;
+      float: left;
+      margin: 0 .2em 0 0;
+      font-size: 3em;
+      margin-top: -.1em;
     }
   </style>
 </head>
@@ -73,6 +89,8 @@
       <button onclick="dialogMap.show('I\'m insde the map!<br/><i>click outside to close</i>')">Show dialog inside map</button>
     </li><li>
       <button onclick="dialogPrompt.show()">Show a prompt dialog...</button>
+    </li><li>
+      <button onclick="alert.show('This is an alert!<br/>Nothing goes wrong...')">Show an alert!</button>
     </li></ul>
     <p>
     </p>
@@ -130,6 +148,10 @@
     dialogMap.close();
   });
   map.addControl(dialogPrompt);
+
+  // Alert
+  var alert = new ol.control.Dialog({ className: 'alert', hideOnClick: true, closeBox: true });
+  map.addControl(alert);
 
   </script>
   
