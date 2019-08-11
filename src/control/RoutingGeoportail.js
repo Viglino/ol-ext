@@ -61,10 +61,11 @@ var ol_control_RoutingGeoportail = function(options) {
 
   var content = ol_ext_element.create('DIV', { className: 'content', parent: element } )
 
-  var listElt = document.createElement("DIV");
-  this.addSearch(content, options);
-  this.addSearch(content, options);
-  content.appendChild(listElt);
+  var listElt = ol_ext_element.create('DIV', { className: 'search-input', parent: content });
+
+  this._search = [];
+  this.addSearch(listElt, options);
+  this.addSearch(listElt, options);
 
   ol_ext_element.create('I', { className: 'ol-car', title: options.carlabel||'by car', parent: content })
     .addEventListener("click", function() {
@@ -78,6 +79,10 @@ var ol_control_RoutingGeoportail = function(options) {
     .addEventListener("click", function() {
       self.calculate();
     });
+  ol_ext_element.create('I', { className: 'ol-cancel', html:'cancel', parent: content })
+    .addEventListener("click", function() {
+      this.resultElement.innerHTML = '';
+    }.bind(this));
 
   this.resultElement = document.createElement("DIV");
   this.resultElement.setAttribute('class', 'ol-result');
@@ -105,25 +110,46 @@ ol_control_RoutingGeoportail.prototype.addButton = function (className, title, i
   return bt;
 };
 
+/** Remove a new search input
+ * @private
+ */
+ol_control_RoutingGeoportail.prototype.removeSearch = function (element, options, after) {
+  element.removeChild(after);
+  if (this.getMap()) this.getMap().removeControl(after.olsearch);
+  this._search = [];
+  element.querySelectorAll('div').forEach(function(d) {
+    if (d.olsearch) this._search.push(d.olsearch);
+  }.bind(this));
+};
+
 /** Add a new search input
  * @private
  */
-ol_control_RoutingGeoportail.prototype.addSearch = function (element, options) {
+ol_control_RoutingGeoportail.prototype.addSearch = function (element, options, after) {
   var self = this;
-  var div = ol_ext_element.create("DIV", { parent:element });
+  var div = ol_ext_element.create('DIV');
+  if (after) element.insertBefore(div, after.nextSibling);
+  else element.appendChild(div);
 
-  ol_ext_element.create ('BUTTON', { title: options.startlabel||"search", parent: div})
-    .addEventListener('click', function() {
-      self.resultElement.innerHTML = '';
-    });
+  ol_ext_element.create ('BUTTON', { title: options.startlabel||"add/remove", parent: div})
+    .addEventListener('click', function(e) {
+      if (e.ctrlKey) {
+        if (this._search.length>2) this.removeSearch(element, options, div);
+      } else if (e.shiftKey) {
+        this.addSearch(element, options, div);
+      }
+    }.bind(this));
 
-  var search = new ol_control_SearchGeoportail({
+  var search = div.olsearch = new ol_control_SearchGeoportail({
     className: 'IGNF ol-collapsed',
     apiKey: options.apiKey,
     target: div,
     reverse: true
   });
-  this._search.push(search);
+  this._search = [];
+  element.querySelectorAll('div').forEach(function(d) {
+    if (d.olsearch) this._search.push(d.olsearch);
+  }.bind(this));
   search.on('select', function(e){
     search.setInput(e.search.fulltext);
     search.set('selection', e.search);
@@ -132,6 +158,7 @@ ol_control_RoutingGeoportail.prototype.addSearch = function (element, options) {
     search.set('selection', null);
     self.resultElement.innerHTML = '';
   });
+  if (this.getMap()) this.getMap().addControl(search);
 };
 
 /**
@@ -152,14 +179,20 @@ ol_control_RoutingGeoportail.prototype.setMap = function (map) {
 /** Get request data
  * @private
  */
-ol_control_RoutingGeoportail.prototype.requestData = function (start, end) {
+ol_control_RoutingGeoportail.prototype.requestData = function (steps) {
+  var start = steps[0];
+  var end = steps[steps.length-1];
+  var waypoints = '';
+  for (var i=1; i<steps.length-1; i++) {
+    waypoints += (waypoints ? ';':'') + steps[i].x+','+steps[i].y;
+  }
   return {
     'gp-access-lib': '1.1.0',
     origin: start.x+','+start.y,
     destination: end.x+','+end.y,
     method: 'time', // 'distance'
     graphName: this.get('mode')==='pedestrian' ? 'Pieton' : 'Voiture',
-    waypoints:'',
+    waypoints: waypoints,
     format: 'STANDARDEXT'
   };
 };
@@ -279,14 +312,16 @@ ol_control_RoutingGeoportail.prototype.handleResponse = function (data, start, e
 ol_control_RoutingGeoportail.prototype.calculate = function () {
   console.log('calculate')
   this.resultElement.innerHTML = '';
+  var steps = []
   for (var i=0; i<this._search.length; i++) {
-    if (!this._search[i].get('selection')) return;
+    if (this._search[i].get('selection')) steps.push(this._search[i].get('selection'));
   }
+  if (steps.length<2) return;
 
-  var start = this._search[0].get('selection');
-  var end = this._search[1].get('selection');
+  var start = steps[0];
+  var end = steps[steps.length-1];
 
-  var data = this.requestData(start,end);
+  var data = this.requestData(steps);
 
   var url = encodeURI(this.get('url'));
 

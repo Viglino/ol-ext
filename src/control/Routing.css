@@ -74,7 +74,7 @@
 .ol-routing .ol-search ul.history {
   /* display: none; */
 }
-.ol-routing .content > div > * {
+.ol-routing .content .search-input > div > * {
   display: inline-block;
   vertical-align: top;
 }
@@ -127,6 +127,8 @@
 
 .ol-routing .content > i {
   vertical-align: middle;
+  margin: 0 .3em 0 .1em;
+  font-style: normal;
 }
 .ol-routing .ol-button,
 .ol-routing .ol-button:focus,
@@ -150,4 +152,12 @@
 .ol-routing i.selected {
   opacity: 1;
   background: transparent;
+}
+
+.ol-control.ol-routing:hover {
+  background-color: rgba(255,255,255,.85);
+}
+
+.search-input > div > button:before {
+  content: '\00b1';
 }
