@@ -1,144 +1,143 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
- 
-	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
------------------------------------------------------------->
-	<title>ol-ext: GeoImage source</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!--
+  Copyright (c) 2015 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: GeoImage source</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-    <link rel="stylesheet" href="../../dist/ol-ext.css" />
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
-	<link rel="stylesheet" href="../style.css" />
-	<style>
-		.options input[type="number"]
-		{	width:5em;
-		}
-		.options input[type="range"]
-		{	vertical-align: middle;
-		}
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .options input[type="number"] {
+      width:5em;
+    }
+    .options input[type="range"] {
+      vertical-align: middle;
+    }
 
-	</style>
+  </style>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: GeoImage source</h1>
-	</a>
-	<p class="info">
-		<i>ol.source.GeoImage</i> georeference images on a map.
-		<br />
-		You can choose the center, rotation and the scale (x and y axis) of the image.
-		The image can be crop by an extent (imageCrop) or by a polygon (imageMask).
-		<br />
-		Use the <a href="http://viglino.github.io/Map-georeferencer/">Map-georeferencer</a> project to calculate the parameters for an images.
-	</p>
+  <a href="../../index.html">
+    <h1>ol-ext: GeoImage source</h1>
+  </a>
+  <p class="info">
+    <i>ol.source.GeoImage</i> georeference images on a map.
+    <br />
+    You can choose the center, rotation and the scale (x and y axis) of the image.
+    The image can be crop by an extent (imageCrop) or by a polygon (imageMask).
+    <br />
+    Use the <a href="http://viglino.github.io/Map-georeferencer/">Map-georeferencer</a> project to calculate the parameters for an images.
+  </p>
 
-	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
-	
-	<div class="options">
-		<h2>Otions:</h2>
-		Opacity: <input id="opacity" class="option" type="range" value="0.7" min="0" max="1" step="0.1" />
-		<br />
-		Rotation: <input id="rotate" class="option" type="number" value="7.44" step="0.1" />
-		<br />
-		Center: 
-		<input id ="x" class="option" type="number" value="274764.75" />
-		<input id ="y" class="option" type="number" value="6243935.64" />
-		<br />
-		Scale:
-		<input id ="w" class="option" type="number" step="0.001" value="0.589" />
-		<input id ="h" class="option" type="number" step="0.001" value ="0.597" />
-		<br />
-		Crop:
-		<input id ="xmin" class="option" type="number" value="0" step="10" />
-		<input id ="ymin" class="option" type="number" value ="0" step="10" />
-		<input id ="xmax" class="option" type="number" value="5526" step="10" />
-		<input id ="ymax" class="option" type="number" value ="5000" step="10" />
-	</div>
-	
-	<script type="text/javascript">
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
+  
+  <div class="options">
+    <h2>Otions:</h2>
+    Rotation: <input id="rotate" class="option" type="number" value="7.44" step="0.1" />
+    <br />
+    Center: 
+    <input id ="x" class="option" type="number" value="274764.75" />
+    <input id ="y" class="option" type="number" value="6243935.64" />
+    <br />
+    Scale:
+    <input id ="w" class="option" type="number" step="0.001" value="0.589" />
+    <input id ="h" class="option" type="number" step="0.001" value ="0.597" />
+    <br />
+    Crop:
+    <input id ="xmin" class="option" type="number" value="0" step="10" />
+    <input id ="ymin" class="option" type="number" value ="0" step="10" />
+    <input id ="xmax" class="option" type="number" value="5526" step="10" />
+    <input id ="ymax" class="option" type="number" value ="5000" step="10" />
+  </div>
+  
+  <script type="text/javascript">
 
-	// The map
-	var map = new ol.Map
-		({	target: 'map',
-			view: new ol.View
-			({	zoom: 14,
-				center: [274770, 6243929]
-			}),
-			layers: [ new ol.layer.Tile({ source: new ol.source.OSM() }) ]
-		});
+  // The map
+  var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 14,
+      center: [274770, 6243929]
+    }),
+    layers: [ new ol.layer.Tile({ title:'OSM', source: new ol.source.OSM() }) ]
+  });
 
-	// Options
-	$(".option").on("change", resetSource);
+  // Options
+  $(".option").on("change", resetSource);
 
-	var x = Number($("#x").val());
-	var y = Number($("#y").val());
-	var sx = Number($("#w").val());
-	var sy = Number($("#h").val());
-	var xmin = Number($("#xmin").val());
-	var ymin = Number($("#ymin").val());
-	var xmax = Number($("#xmax").val());
-	var ymax = Number($("#ymax").val());
-	var opacity = Number($("#opacity").val());
+  var x = Number($("#x").val());
+  var y = Number($("#y").val());
+  var sx = Number($("#w").val());
+  var sy = Number($("#h").val());
+  var xmin = Number($("#xmin").val());
+  var ymin = Number($("#ymin").val());
+  var xmax = Number($("#xmax").val());
+  var ymax = Number($("#ymax").val());
 
-	var geoimg = new ol.layer.Image(
-	{	name: "Georef",
-		opacity: opacity,
-		source: new ol.source.GeoImage(
-		{	url: '../data/IGNF_PVA_1-0__1976-03-24_pt.jpg',
-			imageCenter: [x,y],
-			imageScale: [sx,sy],
-			imageCrop: [xmin,ymin,xmax,ymax],
-			imageRotate: Number($("#rotate").val()*Math.PI/180),
-			projection: 'EPSG:3857',
-			attributions: [ "<a href='http://www.geoportail.gouv.fr/actualite/181/telechargez-les-cartes-et-photographies-aeriennes-historiques'>Photo historique &copy; IGN</a>" ]
-		})
+  var geoimg = new ol.layer.GeoImage({
+    name: "Georef",
+    opacity: .7,
+    source: new ol.source.GeoImage({
+      url: '../data/IGNF_PVA_1-0__1976-03-24_pt.jpg',
+      imageCenter: [x,y],
+      imageScale: [sx,sy],
+      imageCrop: [xmin,ymin,xmax,ymax],
+      //imageMask: [[273137.343,6242443.14],[273137.343,6245428.14],[276392.157,6245428.14],[276392.157,6242443.14],[273137.343,6242443.14]],
+      imageRotate: Number($("#rotate").val()*Math.PI/180),
+      projection: 'EPSG:3857',
+      attributions: [ "<a href='http://www.geoportail.gouv.fr/actualite/181/telechargez-les-cartes-et-photographies-aeriennes-historiques'>Photo historique &copy; IGN</a>" ]
     })
-	map.addLayer(geoimg);
+  });
+  map.addLayer(geoimg);
 
-	function resetSource ()
-	{	var x = Number($("#x").val());
-		var y = Number($("#y").val());
-		var sx = Number($("#w").val());
-		var sy = Number($("#h").val());
-		var xmin = Number($("#xmin").val());
-		var ymin = Number($("#ymin").val());
-		var xmax = Number($("#xmax").val());
-		var ymax = Number($("#ymax").val());
-		var opacity = Number($("#opacity").val());
-		if (opacity>1) opacity=1;
-		else if (opacity<0) opacity=0;
-		$("#opacity").val(opacity);
-		geoimg.setOpacity(opacity);
-		geoimg.getSource().setCenter([x,y]);
-		geoimg.getSource().setRotation($("#rotate").val()*Math.PI/180);
-		geoimg.getSource().setScale([sx,sy]);
-		geoimg.getSource().setCrop([xmin,ymin,xmax,ymax]);
-		var crop = geoimg.getSource().getCrop();
-		$("#xmin").val(crop[0]);
-		$("#ymin").val(crop[1]);
-		$("#xmax").val(crop[2]);
-		$("#ymax").val(crop[3]);
-	}
+  function resetSource () {
+    var x = Number($("#x").val());
+    var y = Number($("#y").val());
+    var sx = Number($("#w").val());
+    var sy = Number($("#h").val());
+    var xmin = Number($("#xmin").val());
+    var ymin = Number($("#ymin").val());
+    var xmax = Number($("#xmax").val());
+    var ymax = Number($("#ymax").val());
+    geoimg.getSource().setCenter([x,y]);
+    geoimg.getSource().setRotation($("#rotate").val()*Math.PI/180);
+    geoimg.getSource().setScale([sx,sy]);
+    geoimg.getSource().setCrop([xmin,ymin,xmax,ymax]);
+    var crop = geoimg.getSource().getCrop();
+    $("#xmin").val(crop[0]);
+    $("#ymin").val(crop[1]);
+    $("#xmax").val(crop[2]);
+    $("#ymax").val(crop[3]);
+  }
 
-	</script>
-	
+  // Show extent in the layerswitcher
+  map.addControl(new ol.control.LayerSwitcher({ extent:true }));
+  /*
+  geoimg.getExtent = function() {
+    return geoimg.getSource().getExtent();
+  }
+  */
+
+  </script>
+  
 </body>
 </html>
