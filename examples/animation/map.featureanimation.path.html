@@ -123,10 +123,11 @@
 		}
 	});
 	// Add a feature on the map
+	var f, anim;
 	function animateFeature()
 	{	if (path) 
-		{	var f = new ol.Feature(new ol.geom.Point([0,0]));
-			var anim = new ol.featureAnimation.Path(
+		{	f = new ol.Feature(new ol.geom.Point([0,0]));
+			anim = new ol.featureAnimation.Path(
 			{	path: path,
 				rotate: $("#rotation").prop('checked'),
 				easing: ol.easing[$("#easing").val()],

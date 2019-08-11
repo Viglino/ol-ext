@@ -1,182 +1,163 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
- 
-	Copyright (c) 2015-2017 Jean-Marc VIGLINO,
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
------------------------------------------------------------->
-	<title>ol-ext: Control overlay</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!--
+  Copyright (c) 2015-2017 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Control overlay</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="styled popup for OL3" />
-	<meta name="keywords" content="ol3, menu, control, overlay, jQuery" />
+  <meta name="description" content="styled popup for OL3" />
+  <meta name="keywords" content="ol3, menu, control, overlay, jQuery" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-    <link rel="stylesheet" href="../../dist/ol-ext.css" />
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
-	<link rel="stylesheet" href="../style.css" />
-	<style>
-		.ol-overlay > div
-		{	width: 100%;
-			height: 100%;
-
-		}
-		.ol-overlay img
-		{	margin: auto;
-			display: block;
-			min-height: 80%;
-			max-width: 100%;
-			max-height: 80%;
-		}
-		.ol-overlay p
-		{	margin:0;
-			text-align:center;
-		}
-		.ol-overlay p.copy
-		{	font-size: 0.8em;
-			text-align:initial;
-		}
-
-	</style>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .ol-overlay .ol-fullscreen-image.ol-has-title img {
+      padding-bottom: 6em;
+    }
+  </style>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Control overlay</h1>
-	</a>
+  <a href="../../index.html">
+    <h1>ol-ext: Control overlay</h1>
+  </a>
 
-	<div class="info">
-		Display an overlay with a content on the map. 
-		<ul>
-			<li>
-				The <i>closeBox</i> option adds a close button to hide the overlay.
-			</li>
-			<li>
-				The <i>closeOnClick</i> option enable close when click on the element.
-			</li>
-			<li>
-				You can listen to the <i>change:visible</i> event to sknow when overlay is displayed/hidden.
-			</li>
-			<li>
-				You can use CSS class to specify an animation or define your own one.
-			</li>
-		</ul>
-		<i>ol.control.Overlay</i> requires jQuery.
-	</div>
+  <div class="info">
+    Display an overlay with a content on the map. 
+    <ul>
+      <li>
+        The <i>closeBox</i> option adds a close button to hide the overlay.
+      </li>
+      <li>
+        The <i>closeOnClick</i> option enable close when click on the element.
+      </li>
+      <li>
+        You can listen to the <i>change:visible</i> event to sknow when overlay is displayed/hidden.
+      </li>
+      <li>
+        You can use CSS class to specify an animation or define your own one.
+      </li>
+    </ul>
+    <i>ol.control.Overlay</i> requires jQuery.
+  </div>
 
-	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options">
-		<h2>Options:</h2>
-		Animation:
-		<select id="anim" onchange="popup.setClass(this.value);">
-			<option value="">default (fade)</option>
-			<option value="slide-up">slide-up</option>
-			<option value="slide-down">slide-down</option>
-			<option value="slide-left">slide-left</option>
-			<option value="slide-right">slide-right</option>
-			<option value="zoom">zoom (from center)</option>
-			<option value="zoom frompoint">zoom (from point)</option>
-			<option value="zoomout">zoom out</option>
-			<option value="zoomrotate">zoom+rotate (from center)</option>
-			<option value="zoomrotate frompoint">zoom+rotate (from point)</option>
-			<option value="stretch">stretch</option>
-			<option value="stretchy">stretch-y</option>
-			<option value="wipe">wipe</option>
-			<option value="flip">flip</option>
-			<option value="card">card</option>
-			<option value="book">book</option>
-		</select>
-	</div>
-	<p>Click on the points to show an overlay!</p>
-	
-	<script type="text/javascript">
-	// Layers
-	var layers = [
-		new ol.layer.Tile({
-			title:'terrain-background',
-			source: new ol.source.Stamen({ layer: 'terrain' })
-		})
-	]
+  <div class="options">
+    <h2>Options:</h2>
+    Animation:
+    <select id="anim" onchange="popup.setClass(this.value);">
+      <option value="">default (fade)</option>
+      <option value="slide-up">slide-up</option>
+      <option value="slide-down">slide-down</option>
+      <option value="slide-left">slide-left</option>
+      <option value="slide-right">slide-right</option>
+      <option value="zoom">zoom (from center)</option>
+      <option value="zoom frompoint">zoom (from point)</option>
+      <option value="zoomout">zoom out</option>
+      <option value="zoomrotate">zoom+rotate (from center)</option>
+      <option value="zoomrotate frompoint">zoom+rotate (from point)</option>
+      <option value="stretch">stretch</option>
+      <option value="stretchy">stretch-y</option>
+      <option value="wipe">wipe</option>
+      <option value="flip">flip</option>
+      <option value="card">card</option>
+      <option value="book">book</option>
+    </select>
+  </div>
+  <p>Click on the points to show an overlay!</p>
+  
+  <script type="text/javascript">
+  // Layers
+  var layers = [
+    new ol.layer.Tile({
+      title:'terrain-background',
+      source: new ol.source.Stamen({ layer: 'terrain' })
+    })
+  ]
 
-	// The map
-	var map = new ol.Map
-		({	target: 'map',
-			view: new ol.View
-			({	zoom: 5,
-				center: [166326, 5992663]
-			}),
-			layers: layers
-		});
+  // The map
+  var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 5,
+      center: [166326, 5992663]
+    }),
+    layers: layers
+  });
 
-	// Popup overlay
-	var popup = new ol.control.Overlay ({ hideOnClick: true, className: $("#anim").val() });
-	map.addControl(popup);
+  // Popup overlay
+  var popup = new ol.control.Overlay ({ hideOnClick: true, className: $("#anim").val() });
+  map.addControl(popup);
 
-	// Set wipe parameters before/after vivibility change
-	popup.on("change:visible", function(e)
-	{	// wipe needs to know the size of the element to clip on
-		if (/wipe/.test($("#anim").val()))
-		{	if (e.visible)
-			{	$(e.element).css("clip","rect(0px,"+map.getSize()[0]+"px,"+map.getSize()[1]+"px,0px)");
-			}
-			else
-			{	$(e.element).css("clip","rect(0px,0px,"+map.getSize()[1]+"px,0px)");
-			}
-		}
-		// Reset clip for others
-		else $(e.element).css("clip","");
-	});
+  // Set wipe parameters before/after vivibility change
+  popup.on("change:visible", function(e) {
+    // wipe needs to know the size of the element to clip on
+    if (/wipe/.test($("#anim").val())) {
+      if (e.visible) {
+        $(e.element).css("clip","rect(0px,"+map.getSize()[0]+"px,"+map.getSize()[1]+"px,0px)");
+      } else {
+        $(e.element).css("clip","rect(0px,0px,"+map.getSize()[1]+"px,0px)");
+      }
+    }
+    // Reset clip for others
+    else $(e.element).css("clip","");
+  });
 
-	// GeoJSON layer
-	var vectorSource = new ol.source.Vector(
-	{	url: '../data/fond_guerre.geojson',
-		projection: 'EPSG:3857',
-		format: new ol.format.GeoJSON(),
-		attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
-		logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
-	});
+  // GeoJSON layer
+  var vectorSource = new ol.source.Vector({
+    url: '../data/fond_guerre.geojson',
+    projection: 'EPSG:3857',
+    format: new ol.format.GeoJSON(),
+    attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
+    logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+  });
 
-	map.addLayer(new ol.layer.Vector(
-	{	name: 'Fonds de guerre 14-18',
-		source: vectorSource
-	}));
+  map.addLayer(new ol.layer.Vector({
+    name: 'Fonds de guerre 14-18',
+    source: vectorSource
+  }));
 
-	// Control Select 
-	var select = new ol.interaction.Select({});
-	map.addInteraction(select);
+  // Control Select 
+  var select = new ol.interaction.Select({});
+  map.addInteraction(select);
 
-	// Remove selection on close
-	popup.on("change:visible", function(e){ if (!e.visible) select.getFeatures().clear(); });
+  // Remove selection on close
+  popup.on("change:visible", function(e){ if (!e.visible) select.getFeatures().clear(); });
 
-	// On selected => show/hide popup
-	select.getFeatures().on('add', function(e)
-	{	var feature = e.element;
-		var img = $("<img>").attr("src", feature.get("img").replace("_v.jpg","_p.jpg"));
-		var info = $("<div>").append( $("<p>").text(feature.get("text")) )
-				.append( $("<p>").text(feature.get("commune")+" ("+feature.get("region")+" - "+feature.get("date").replace(".","/")+")") )
-				.append( $("<p>").addClass("copy").html("&copy; "+feature.get("copy")+" - "+feature.get("author")) );
-		var content = $("<div>")
-				.append( img )
-				.append(info);
-		popup.show(content.get(0).outerHTML, /frompoint/.test($("#anim").val()) ? feature.getGeometry().getCoordinates():null);
-	});
+  // On selected => show/hide popup
+  select.getFeatures().on('add', function(e) {	
+    var feature = e.element;
+    popup.showImage(feature.get("img").replace("_v.jpg","_p.jpg"), {
+      coordinate: (/frompoint/.test($("#anim").val()) ? feature.getGeometry().getCoordinates() : null),
+      title: feature.get("text") +'<br/>'
+        +feature.get("commune")+" ("+feature.get("region")+" - "+feature.get("date").replace(".","/")+")<br/>"
+        +"&copy; "+feature.get("copy")+" - "+feature.get("author")
+    });
+    /*
+    var img = $("<img>").attr("src", feature.get("img").replace("_v.jpg","_p.jpg"));
+    popup.show(img.get(0).outerHTML, /frompoint/.test($("#anim").val()) ? feature.getGeometry().getCoordinates():null);
+    */
+  });
 
-	</script>
+  </script>
 
 </body>
 </html>

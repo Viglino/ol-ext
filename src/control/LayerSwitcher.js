@@ -296,10 +296,13 @@ ol_control_LayerSwitcher.prototype._getLayerForLI = function(li) {
  */
 ol_control_LayerSwitcher.prototype.viewChange = function() {
   var map = this.getMap();
-  var res = map.getView().getResolution();
   this.panel_.querySelectorAll('li').forEach( function(li) {
     var l = this._getLayerForLI(li);
     if (l) {
+      if (this.testLayerVisibility(l)) li.classList.remove('ol-layer-hidden');
+      else li.classList.add('ol-layer-hidden');
+      /*
+      var res = map.getView().getResolution();
       if (l.getMaxResolution()<=res || l.getMinResolution()>=res) {
         li.classList.add('ol-layer-hidden');
       } else {
@@ -315,6 +318,7 @@ ol_control_LayerSwitcher.prototype.viewChange = function() {
           li.classList.remove('ol-layer-hidden');
         }
       }
+      */
     }
   }.bind(this));
 };
@@ -364,19 +368,18 @@ ol_control_LayerSwitcher.prototype.switchLayerVisibility = function(l, layers) {
  * @return {boolean}
  */
 ol_control_LayerSwitcher.prototype.testLayerVisibility = function(layer) {
-  if (this.getMap())
-  {	var res = this.getMap().getView().getResolution();
-    if (layer.getMaxResolution()<=res || layer.getMinResolution()>=res) return false;
-    else 
-    {	var ex0 = layer.getExtent();
-      if (ex0)
-      {	var ex = this.getMap().getView().calculateExtent(this.getMap().getSize());
-        return ol_extent_intersects(ex, ex0);
-      }
-      return true;
+  if (!this.getMap()) return true;
+  var res = this.getMap().getView().getResolution();
+  if (layer.getMaxResolution()<=res || layer.getMinResolution()>=res) {
+    return false;
+  } else {
+    var ex0 = layer.getExtent();
+    if (ex0) {
+      var ex = this.getMap().getView().calculateExtent(this.getMap().getSize());
+      return ol_extent_intersects(ex, ex0);
     }
+    return true;
   }
-  return true;
 };
 
 
@@ -637,7 +640,7 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection) {
 
     // Content div
     var d = ol_ext_element.create('DIV', {
-      className: 'li-content' + (this.testLayerVisibility(layer) ? '' : ' ol-layer-hidden'),
+      className: 'li-content',// + (this.testLayerVisibility(layer) ? '' : ' ol-layer-hidden'),
       parent: li
     });
     

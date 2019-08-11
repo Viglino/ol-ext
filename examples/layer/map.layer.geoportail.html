@@ -77,7 +77,7 @@
 	<!-- DIV pour la carte -->
 	<div id="map" style="width: 600px; height: 400px;"></div>
 	<div class="options">
-    Click on the map to get info on the photo layer.
+    Click on the map to get info (photo or INSEE layer only).
 	</div>
 	<div class="options">
     Get capabilities for your key (as js file):
@@ -93,7 +93,16 @@
     </ul>
 	</div>
 	
-	<script type="text/javascript">
+  <script type="text/javascript">
+  // Capabilities
+  if (!window.geoportailConfig) window.geoportailConfig = { capabilities: {} };
+  window.geoportailConfig.capabilities['h1osiyvfm7c4wu976jv6gpum'] = {
+    "INSEE.FILOSOFI.NIVEAU.DE.VIE.SECRET": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.NIVEAU.DE.VIE.SECRET","title":"Niveau de vie winsorisé des individus (secret signalé)","format":"image/png","style":"CARROYAGE INSEE NIVEAU DE VIE SECRET","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Niveau de vie des individus, retraité des valeurs extrêmes (les cases hachurées correspondent aux données secrétisées)","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
+    "INSEE.FILOSOFI.ENFANTS.0.17.ANS.SECRET": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.ENFANTS.0.17.ANS.SECRET","title":"% des 0-17 ans  (secret signalé)","format":"image/png","style":"CARROYAGE INSEE PART ENFANTS 0 A 17 ANS SECRET","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Nombre d’individus âgés de 0 à 17 ans dans la population (les cases hachurées correspondent aux données secrétisées)","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
+    "INSEE.FILOSOFI.PART.PLUS.65.ANS.SECRET": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.PART.PLUS.65.ANS.SECRET","title":"% des plus de 65 ans (secret signalé)","format":"image/png","style":"CARROYAGE INSEE PART PLUS 65 ANS SECRET","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Nombre d’individus âgés de plus de 65 ans dans la population (les cases hachurées correspondent aux données secrétisées)","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
+    "INSEE.FILOSOFI.POPULATION": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.POPULATION","title":"Densité de population","format":"image/png","style":"CARROYAGE INSEE POPULATION","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Nombre d'individus par km²","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
+    "Aire-Parcellaire": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"Aire-Parcellaire","title":"Délimitation parcellaire AOC viticole","format":"image/png","style":"normal","queryable":true,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-5.1504726,41.32521,9.570543,51.099052],"desc":"<![CDATA[Selon les règlements européens n°110/2008 du 15 janvier 2008, n°1151/2012 du 21 novembre 2012 et n°1308/2013 de l’OCM , le cahier des charges des appellations définit l’aire géographique. Le terme de « délimitation parcellaire » désigne une aire qui repose sur les limites administratives du cadastre (les parcelles) et dont le maillage suffisamment fin permet de tenir compte de variations très localisées des éléments du milieu physique. Elle correspond à l'aire de production de la matière première. Elle est incluse dans l'aire géographique.\n\nDonnées produites par l'Institut National des Origines et la Qualité (INAO)]]>","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-5.1504726,41.32521,9.570543,51.099052]}]}}},
+  };
 	// The map
 	var map = new ol.Map ({
     target: 'map',
@@ -133,6 +142,16 @@
     gppKey: 'choisirgeoportail',
     visible: false
   }));
+  map.addLayer (new ol.layer.Geoportail('INSEE.FILOSOFI.POPULATION', {
+    gppKey: 'h1osiyvfm7c4wu976jv6gpum',
+    visible: false
+  }));
+  map.addLayer (new ol.layer.Geoportail('Aire-Parcellaire', {
+    gppKey: 'h1osiyvfm7c4wu976jv6gpum',
+    title: 'Délimitation AOC viticole',
+    opacity: .5,
+    visible: false
+  }));
 
   map.addControl(new ol.control.ScaleLine());
 
@@ -142,16 +161,20 @@
   map.on('click', function(e) {
     popup.hide();
     var layers = map.getLayers().getArray();
-    if (layers.length && layers[0].getVisible()) {
-      layers[0].getSource().getFeatureInfo(
-        e.coordinate, 
-        map.getView().getResolution(), {
-          INFO_FORMAT: 'text/html', 
-          callback: function(resp) {
-            if (resp) popup.show(e.coordinate, resp);
+    if (layers.length) {
+      var l = layers[5].getVisible() ? layers[5] : (layers[0].getVisible() ? layers[0] : null);
+      if (l) {
+        l.getSource().getFeatureInfo(
+          e.coordinate, 
+          map.getView().getResolution(), {
+            INFO_FORMAT: 'text/html', // 'application/json',
+            callback: function(resp) {
+              if (resp) popup.show(e.coordinate, resp);
+            }
           }
-        })
+        )
       }
+    }
   });
 
   function loadCapabilities() {

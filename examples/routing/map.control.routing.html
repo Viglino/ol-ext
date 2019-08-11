@@ -74,6 +74,12 @@
         You need an API key (<a href="http://professionnels.ign.fr/ign/contrats">get a key</a> 
         see <a href="https://geoservices.ign.fr/documentation/services-acces.html">documentation page</a>).
       </li>
+      <li>
+        Use <i>shift-click</i> ±  button to add a new line in the destination list.
+      </li>
+      <li>
+        Use <i>ctrl-click</i> ± button to remove a destination.
+      </li>
     </ul>
     <br/>
     <i>ol.control.SearchGeoportail</i> use the <a href="map.control.search.html">ol.control.Search</a> control.
@@ -112,6 +118,8 @@
     interactions: ol.interaction.defaults({ altShiftDragRotate:false, pinchRotate:false }),
     layers: layers
   });
+
+  map.addControl(new ol.control.Permalink({ hidden: true }));
 
   // Set the control grid reference
   var search = new ol.control.RoutingGeoportail({
