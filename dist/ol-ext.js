@@ -905,6 +905,7 @@ ol.control.Search = function(options) {
   var input = this._input = document.createElement("INPUT");
   input.setAttribute("type", "search");
   input.setAttribute("class", "search");
+  input.setAttribute("autocomplete", "off");
   input.setAttribute("placeholder", options.placeholder||"Search...");
   input.addEventListener("change", function(e) {
     self.dispatchEvent({ type:"change:input", input:e, value:input.value });
@@ -1248,8 +1249,8 @@ ol.control.Search.prototype.equalFeatures = function (/* f1, f2 */) {
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
  * This is the base class for search controls that use a json service to search features.
@@ -1259,96 +1260,62 @@ ol.control.Search.prototype.equalFeatures = function (/* f1, f2 */) {
  * @extends {ol.control.Search}
  * @fires select
  * @param {any} options extend ol.control.Search options
- *	@param {string} options.className control class name
- *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *	@param {string | undefined} options.label Text label to use for the search button, default "search"
- *	@param {string | undefined} options.placeholder placeholder, default "Search..."
- *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
- *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
- *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *  @param {string} options.className control class name
+ *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *  @param {string | undefined} options.label Text label to use for the search button, default "search"
+ *  @param {string | undefined} options.placeholder placeholder, default "Search..."
+ *  @param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
+ *  @param {integer | undefined} options.minLength minimum length to start searching, default 3
+ *  @param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
  *  @param {function | undefined} options.handleResponse Handle server response to pass the features array to the list
  *
- *	@param {string|undefined} options.url Url of the search api
- *	@param {string | undefined} options.authentication: basic authentication for the search API as btoa("login:pwd")
+ *  @param {string|undefined} options.url Url of the search api
+ *  @param {string | undefined} options.authentication: basic authentication for the search API as btoa("login:pwd")
  */
-ol.control.SearchJSON = function(options)
-{	options = options || {};
-	options.className = options.className || 'JSON';
-	delete options.autocomplete;
-	options.minLength = options.minLength || 3;
-	options.typing = options.typing || 800;
-	ol.control.Search.call(this, options);
-	// Handle Mix Content Warning
-	// If the current connection is an https connection all other connections must be https either
-	var url = options.url || "";
-	if (window.location.protocol === "https:") {
-		var parser = document.createElement('a');
-		parser.href = url;
-		parser.protocol = window.location.protocol;
-		url = parser.href;
-	}
-	this.set('url', url);
-	this._auth = options.authentication;
-	// Overwrite handleResponse
-	if (typeof(options.handleResponse)==='function') this.handleResponse = options.handleResponse;
+ol.control.SearchJSON = function(options) {
+  options = options || {};
+  options.className = options.className || 'JSON';
+  delete options.autocomplete;
+  options.minLength = options.minLength || 3;
+  options.typing = options.typing || 800;
+  ol.control.Search.call(this, options);
+  // Handle Mix Content Warning
+  // If the current connection is an https connection all other connections must be https either
+  var url = options.url || "";
+  if (window.location.protocol === "https:") {
+    var parser = document.createElement('a');
+    parser.href = url;
+    parser.protocol = window.location.protocol;
+    url = parser.href;
+  }
+  this.set('url', url);
+  this._ajax = new ol.ext.Ajax({ dataType:'JSON', auth: options.authentication });
+  this._ajax.on('success', function (resp) {
+    this.element.classList.remove('searching');
+    if (resp.status >= 200 && resp.status < 400) {
+      if (typeof(this._callback) === 'function') this._callback(this.handleResponse(resp.response));
+    } else {
+      console.log('AJAX ERROR', arguments);
+    }
+  }.bind(this));
+  this._ajax.on('error', function() {
+    this.element.classList.remove('searching');
+    console.log('AJAX ERROR', arguments);
+  }.bind(this));
+  // Overwrite handleResponse
+  if (typeof(options.handleResponse)==='function') this.handleResponse = options.handleResponse;
 };
 ol.ext.inherits(ol.control.SearchJSON, ol.control.Search);
 /** Autocomplete function (ajax request to the server)
 * @param {string} s search string
 * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
 */
-ol.control.SearchJSON.prototype.autocomplete = function (s, cback)
-{	var data = this.requestData(s);
-	var url = encodeURI(this.get('url'));
-	var parameters = '';
-	for (var index in data) {
-		parameters += (parameters) ? '&' : '?';
-		if (data.hasOwnProperty(index)) parameters += index + '=' + encodeURIComponent(data[index]);
-	}
-	this.ajax(url + parameters, 
-		function (resp) {
-			if (resp.status >= 200 && resp.status < 400) {
-				var data = JSON.parse(resp.response);
-				cback(this.handleResponse(data));
-			} else {
-				console.log(url + parameters, arguments);
-			}
-		}, function(){
-			console.log(url + parameters, arguments);
-		});
-};
-/** Send an ajax request (GET)
- * @param {string} url
- * @param {function} onsuccess callback
- * @param {function} onerror callback
- */
-ol.control.SearchJSON.prototype.ajax = function (url, onsuccess, onerror){
-	var self = this;
-	// Abort previous request
-	if (this._request) {
-		this._request.abort();
-	}
-	// New request
-	var ajax = this._request = new XMLHttpRequest();
-	ajax.open('GET', url, true);
-	if (this._auth) {
-		ajax.setRequestHeader("Authorization", "Basic " + this._auth);
-	}
-	this.element.classList.add('searching');
-	// Load complete
-	ajax.onload = function() {
-		self._request = null;
-		self.element.classList.remove('searching');
-		onsuccess.call(self, this);
-	};
-	// Oops, TODO do something ?
-	ajax.onerror = function() {
-		self._request = null;
-		self.element.classList.remove('searching');
-		if (onerror) onerror.call(self);
-	};
-	// GO!
-	ajax.send();
+ol.control.SearchJSON.prototype.autocomplete = function (s, cback) {
+  var data = this.requestData(s);
+  var url = encodeURI(this.get('url'));
+  this._callback = cback;
+  this.element.classList.add('searching');
+  this._ajax.send(url, data);
 };
 /**
  * @param {string} s the search string
@@ -1356,7 +1323,7 @@ ol.control.SearchJSON.prototype.ajax = function (url, onsuccess, onerror){
  * @api
  */
 ol.control.SearchJSON.prototype.requestData = function (s){
-	return { q: s };
+  return { q: s };
 };
 /**
  * Handle server response to pass the features array to the display list
@@ -1365,7 +1332,7 @@ ol.control.SearchJSON.prototype.requestData = function (s){
  * @api
  */
 ol.control.SearchJSON.prototype.handleResponse = function (response) {
-	return response;
+  return response;
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
@@ -1917,10 +1884,13 @@ ol.control.LayerSwitcher.prototype._getLayerForLI = function(li) {
  */
 ol.control.LayerSwitcher.prototype.viewChange = function() {
   var map = this.getMap();
-  var res = map.getView().getResolution();
   this.panel_.querySelectorAll('li').forEach( function(li) {
     var l = this._getLayerForLI(li);
     if (l) {
+      if (this.testLayerVisibility(l)) li.classList.remove('ol-layer-hidden');
+      else li.classList.add('ol-layer-hidden');
+      /*
+      var res = map.getView().getResolution();
       if (l.getMaxResolution()<=res || l.getMinResolution()>=res) {
         li.classList.add('ol-layer-hidden');
       } else {
@@ -1936,6 +1906,7 @@ ol.control.LayerSwitcher.prototype.viewChange = function() {
           li.classList.remove('ol-layer-hidden');
         }
       }
+      */
     }
   }.bind(this));
 };
@@ -1981,19 +1952,18 @@ ol.control.LayerSwitcher.prototype.switchLayerVisibility = function(l, layers) {
  * @return {boolean}
  */
 ol.control.LayerSwitcher.prototype.testLayerVisibility = function(layer) {
-  if (this.getMap())
-  {	var res = this.getMap().getView().getResolution();
-    if (layer.getMaxResolution()<=res || layer.getMinResolution()>=res) return false;
-    else 
-    {	var ex0 = layer.getExtent();
-      if (ex0)
-      {	var ex = this.getMap().getView().calculateExtent(this.getMap().getSize());
-        return ol.extent.intersects(ex, ex0);
-      }
-      return true;
+  if (!this.getMap()) return true;
+  var res = this.getMap().getView().getResolution();
+  if (layer.getMaxResolution()<=res || layer.getMinResolution()>=res) {
+    return false;
+  } else {
+    var ex0 = layer.getExtent();
+    if (ex0) {
+      var ex = this.getMap().getView().calculateExtent(this.getMap().getSize());
+      return ol.extent.intersects(ex, ex0);
     }
+    return true;
   }
-  return true;
 };
 /** Start ordering the list
 *	@param {event} e drag event
@@ -2234,7 +2204,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection) {
     });
     // Content div
     var d = ol.ext.element.create('DIV', {
-      className: 'li-content' + (this.testLayerVisibility(layer) ? '' : ' ol-layer-hidden'),
+      className: 'li-content',// + (this.testLayerVisibility(layer) ? '' : ' ol-layer-hidden'),
       parent: li
     });
     // Visibility
@@ -5968,8 +5938,8 @@ ol.control.Notification.prototype.toggle = function(duration) {
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Control overlay for OL3
  * The overlay control is a control that display an overlay over the map
@@ -5979,119 +5949,135 @@ ol.control.Notification.prototype.toggle = function(duration) {
  * @fire change:visible
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
- *	@param {String|Element} options.content
- *	@param {bool} options.hideOnClick hide the control on click, default false
- *	@param {bool} options.closeBox add a closeBox to the control, default false
- */
-ol.control.Overlay = function(options)
-{	if (!options) options={};
-/*
-	var element = document.createElement("div");
-	element.classList.add('ol-unselectable', 'ol-overlay');
-	//if (options.className) element.classList.add(options.className);
+*	@param {String|Element} options.content
+*	@param {bool} options.hideOnClick hide the control on click, default false
+*	@param {bool} options.closeBox add a closeBox to the control, default false
 */
-	var element = ol.ext.element.create('DIV', {
-		className: 'ol-unselectable ol-overlay '+(options.className||''),
-		html: options.content
-	});
-	ol.control.Control.call(this,
-	{	element: element,
-		target: options.target
-	});
-	var self = this;
-	if (options.hideOnClick) element.addEventListener("click", function(){self.hide();});
-	this.set("closeBox", options.closeBox);
-	this._timeout = false;
-	this.setContent (options.content);
+ol.control.Overlay = function(options) {
+  if (!options) options={};
+/*
+  var element = document.createElement("div");
+  element.classList.add('ol-unselectable', 'ol-overlay');
+  //if (options.className) element.classList.add(options.className);
+*/
+  var element = ol.ext.element.create('DIV', {
+    className: 'ol-unselectable ol-overlay '+(options.className||''),
+    html: options.content
+  });
+  ol.control.Control.call(this, {
+    element: element,
+    target: options.target
+  });
+  var self = this;
+  if (options.hideOnClick) element.addEventListener("click", function(){self.hide();});
+  this.set("closeBox", options.closeBox);
+  this._timeout = false;
+  this.setContent (options.content);
 };
 ol.ext.inherits(ol.control.Overlay, ol.control.Control);
 /** Set the content of the overlay
 * @param {string|Element} html the html to display in the control
 */
-ol.control.Overlay.prototype.setContent = function (html)
-{	var self = this;
-	if (html)
-	{	var elt = this.element;
-		if (html instanceof Element) elt.appendChild(html)
-		else if (html!==undefined) elt.innerHTML = html;
-		if (this.get("closeBox"))
-		{	var cb = document.createElement("div");
-					cb.classList.add("ol-closebox");
-					cb.addEventListener("click", function(){self.hide();});
-			elt.insertBefore(cb, elt.firstChild);
-		}
-	}
+ol.control.Overlay.prototype.setContent = function (html) {
+  var self = this;
+  if (html) {
+    var elt = this.element;
+    if (html instanceof Element) {
+      elt.innerHTML='';
+      elt.appendChild(html)
+    }
+    else if (html!==undefined) elt.innerHTML = html;
+    if (this.get("closeBox")) {
+      var cb = document.createElement("div");
+      cb.classList.add("ol-closebox");
+      cb.addEventListener("click", function(){self.hide();});
+      elt.insertBefore(cb, elt.firstChild);
+    }
+  }
 };
 /** Set the control visibility
 * @param {string|Element} html the html to display in the control
 * @param {ol.coordinate} coord coordinate of the top left corner of the control to start from
 */
-ol.control.Overlay.prototype.show = function (html, coord)
-{	var self = this;
-	var elt = this.element;
-	elt.style.display = 'block';
-	if (coord) {
-		this.center_ = this.getMap().getPixelFromCoordinate(coord);
-		elt.style.top = this.center_[1]+'px';
-		elt.style.left = this.center_[0]+'px';
-	} else {
-		//TODO: Do fix from  hkollmann pull request
-		this.center_ = false;
-		elt.style.top = "";
-		elt.style.left = "";
-	}
-	if (html) this.setContent(html);
-	if (this._timeout) clearTimeout(this._timeout);
-	this._timeout = setTimeout(function()
-		{	elt.classList.add("ol-visible")
-			elt.style.top = "";
-			elt.style.left = "";
-			self.dispatchEvent({ type:'change:visible', visible:true, element: self.element });
-		}, 10);
-	self.dispatchEvent({ type:'change:visible', visible:false, element: self.element });
+ol.control.Overlay.prototype.show = function (html, coord) {
+  var self = this;
+  var elt = this.element;
+  elt.style.display = 'block';
+  if (coord) {
+    this.center_ = this.getMap().getPixelFromCoordinate(coord);
+    elt.style.top = this.center_[1]+'px';
+    elt.style.left = this.center_[0]+'px';
+  } else {
+    //TODO: Do fix from  hkollmann pull request
+    this.center_ = false;
+    elt.style.top = "";
+    elt.style.left = "";
+  }
+  if (html) this.setContent(html);
+  if (this._timeout) clearTimeout(this._timeout);
+  this._timeout = setTimeout(function() {
+    elt.classList.add("ol-visible")
+    elt.style.top = "";
+    elt.style.left = "";
+    self.dispatchEvent({ type:'change:visible', visible:true, element: self.element });
+  }, 10);
+};
+/** Show an image
+ * @param {string} src image url
+ * @param {*} options
+ *  @param {string} options.title
+ *  @param {ol.coordinate} coordinate
+ */
+ol.control.Overlay.prototype.showImage = function (src, options) {
+  options = options || {};
+  var content = ol.ext.element.create('DIV', {
+    className: 'ol-fullscreen-image'
+  });
+  ol.ext.element.create('IMG', {
+    src: src,
+    parent: content
+  });
+  if (options.title) {
+    content.classList.add('ol-has-title');
+    ol.ext.element.create('P', { 
+      html: options.title,
+      parent: content
+    });
+  }
+  this.show(content, options.coordinate);
 };
 /** Set the control visibility hidden
 */
-ol.control.Overlay.prototype.hide = function ()
-{	var elt = this.element;
-	this.element.classList.remove("ol-visible");
-	if (this.center_)
-	{	elt.style.top = this.center_[1]+'px';
-		elt.style.left = this.center_[0]+'px';
-		this.center_ = false;
-	}
-	if (this._timeout) clearTimeout(this._timeout);
-	this._timeout = setTimeout(function(){ elt.style.display = 'none'; }, 500);
-	this.dispatchEvent({ type:'change:visible', visible:false, element: this.element });
+ol.control.Overlay.prototype.hide = function () {
+  var elt = this.element;
+  this.element.classList.remove("ol-visible");
+  if (this.center_) {
+    elt.style.top = this.center_[1]+'px';
+    elt.style.left = this.center_[0]+'px';
+    this.center_ = false;
+  }
+  if (this._timeout) clearTimeout(this._timeout);
+  this._timeout = setTimeout(function(){ elt.style.display = 'none'; }, 500);
+  this.dispatchEvent({ type:'change:visible', visible:false, element: this.element });
 };
 /** Toggle control visibility
 */
-ol.control.Overlay.prototype.toggle = function ()
-{	
-	/*
-	if (this.getVisible()) this.element.style.display = 'none';
-	else this.element.style.display = 'block';
-	this.element.classList.toggle('ol-visible');
-	*/
-	if (this.getVisible()) this.hide();
-	else this.show();
+ol.control.Overlay.prototype.toggle = function () {	
+  if (this.getVisible()) this.hide();
+  else this.show();
 }
 /** Get the control visibility
 * @return {boolean} b
 */
-ol.control.Overlay.prototype.getVisible = function ()
-{	return ol.ext.element.getStyle(this.element, 'display') !== 'none';
+ol.control.Overlay.prototype.getVisible = function () {
+  return ol.ext.element.getStyle(this.element, 'display') !== 'none';
 };
 /** Change class name
 * @param {String} className a class name or a list of class names separated by a space
 */
-ol.control.Overlay.prototype.setClass = function (className)
-{	var vis = this.element.classList.contains("ol-visible");
-	this.element.className = "";
-	var classes = ['ol-unselectable', 'ol-overlay'];
-	if (vis) classes.push('ol-visible');
-	classes = classes.concat(className.split(' '));
-	this.element.classList.add.apply(this.element.classList, classes);
+ol.control.Overlay.prototype.setClass = function (className) {
+  var vis = this.element.classList.contains('ol-visible');
+  this.element.className = ('ol-unselectable ol-overlay '+(vis ? 'ol-visible ' : '')+className).trim();
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -6341,66 +6327,65 @@ ol.control.Overview.prototype.setView = function(e){
 };
 
 /*	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
- * Permalink Control.    
- * 
- *	Add a `permalink`property to layers to be handled by the control (and added in the url). 
- *  The layer's permalink property is used to name the layer in the url.
- *	The control must be added after all layer are inserted in the map to take them into acount.
+ * Set an hyperlink that will return the user to the current map view.
+ * Just add a `permalink`property to layers to be handled by the control (and added in the url). 
+ * The layer's permalink property is used to name the layer in the url.
+ * The control must be added after all layer are inserted in the map to take them into acount.
  *
  * @constructor
  * @extends {ol.control.Control}
  * @param {Object=} options
- *	@param {bool} options.urlReplace replace url or not, default true
- *	@param {integer} options.fixed number of digit in coords, default 6
- *	@param {bool} options.anchor use "#" instead of "?" in href
- *	@param {bool} options.hidden hide the button on the map, default false
- *	@param {function} options.onclick a function called when control is clicked
- */
+ *  @param {bool} options.urlReplace replace url or not, default true
+ *  @param {integer} options.fixed number of digit in coords, default 6
+ *  @param {bool} options.anchor use "#" instead of "?" in href
+ *  @param {bool} options.hidden hide the button on the map, default false
+ *  @param {function} options.onclick a function called when control is clicked
+*/
 ol.control.Permalink = function(opt_options) {
   var options = opt_options || {};
-	var self = this;
-	var button = document.createElement('button');
-	this.replaceState_ = (options.urlReplace!==false);
-	this.fixed_ = options.fixed || 6;
-	this.hash_ = options.anchor ? "#" : "?";
-	function linkto() {
+  var self = this;
+  var button = document.createElement('button');
+  this.replaceState_ = (options.urlReplace!==false);
+  this.fixed_ = options.fixed || 6;
+  this.hash_ = options.anchor ? "#" : "?";
+  function linkto() {
     if (typeof(options.onclick) == 'function') options.onclick(self.getLink());
-		else self.setUrlReplace(!self.replaceState_);
-	}
+    else self.setUrlReplace(!self.replaceState_);
+  }
   button.addEventListener('click', linkto, false);
   button.addEventListener('touchstart', linkto, false);
-	var element = document.createElement('div');
+  var element = document.createElement('div');
   element.className = (options.className || "ol-permalink") + " ol-unselectable ol-control";
-	element.appendChild(button);
-	if (options.hidden) ol.ext.element.hide(element);
-	ol.control.Control.call(this, {
+  element.appendChild(button);
+  if (options.hidden) ol.ext.element.hide(element);
+  ol.control.Control.call(this, {
     element: element,
-		target: options.target
-	});
-	this.on ('change', this.viewChange_.bind(this));
-	// Save search params
-	this.search_ = {};
-	var hash = document.location.hash || document.location.search;
-	if (hash) {
+    target: options.target
+  });
+  this.on ('change', this.viewChange_.bind(this));
+  // Save search params
+  this.search_ = {};
+  var hash = document.location.hash || document.location.search;
+  if (hash) {
     hash = hash.replace(/(^#|^\?)/,"").split("&");
-		for (var i=0; i<hash.length;  i++) {
+    for (var i=0; i<hash.length;  i++) {
       var t = hash[i].split("=");
-			switch(t[0]) {
+      switch(t[0]) {
         case 'lon':
-				case 'lat':
-				case 'z':
-				case 'r':
-				case 'l': break;
-				default: this.search_[t[0]] = t[1];
-			}
-		}
-	}
-	// Decode permalink
-	this.setPosition();
+        case 'lat':
+        case 'z':
+        case 'r':
+        case 'l': break;
+        default: this.search_[t[0]] = t[1];
+      }
+    }
+  }
+  // Decode permalink
+  this.setPosition();
 };
 ol.ext.inherits(ol.control.Permalink, ol.control.Control);
 /**
@@ -6408,20 +6393,20 @@ ol.ext.inherits(ol.control.Permalink, ol.control.Control);
  * @param {ol.Map} map The map instance.
  */
 ol.control.Permalink.prototype.setMap = function(map) {
-	if (this._listener) {
-		ol.Observable.unByKey(this._listener.change);
-		ol.Observable.unByKey(this._listener.moveend);
-	}
-	this._listener = null;
-	ol.control.Control.prototype.setMap.call(this, map);
-	// Get change 
-	if (map) 
-	{	this._listener = {
-			change: map.getLayerGroup().on('change', this.layerChange_.bind(this)),
-			moveend: map.on('moveend', this.viewChange_.bind(this))
-		};
-		this.setPosition();
-	}
+  if (this._listener) {
+    ol.Observable.unByKey(this._listener.change);
+    ol.Observable.unByKey(this._listener.moveend);
+  }
+  this._listener = null;
+  ol.control.Control.prototype.setMap.call(this, map);
+  // Get change 
+  if (map) 
+  {	this._listener = {
+      change: map.getLayerGroup().on('change', this.layerChange_.bind(this)),
+      moveend: map.on('moveend', this.viewChange_.bind(this))
+    };
+    this.setPosition();
+  }
 };
 /** Get layer given a permalink name (permalink propertie in the layer)
 *	@param {string} the permalink to search for
@@ -6430,59 +6415,59 @@ ol.control.Permalink.prototype.setMap = function(map) {
 */
 ol.control.Permalink.prototype.getLayerByLink =  function (id, layers) {
   if (!layers && this.getMap()) layers = this.getMap().getLayers().getArray();
-	for (var i=0; i<layers.length; i++) {
+  for (var i=0; i<layers.length; i++) {
     if (layers[i].get('permalink') == id) return layers[i];
-		// Layer Group
-		if (layers[i].getLayers) {
+    // Layer Group
+    if (layers[i].getLayers) {
       var li = this.getLayerByLink ( id, layers[i].getLayers().getArray() );
-			if (li) return li;
-		}
-	}
-	return false;
+      if (li) return li;
+    }
+  }
+  return false;
 };
 /** Set map position according to the current link 
 */
 ol.control.Permalink.prototype.setPosition = function() {
   var map = this.getMap();
-	if (!map) return;
-	var hash = document.location.hash || document.location.search;
-	if (!hash) return;
-	var i, t, param = {};
-	hash = hash.replace(/(^#|^\?)/,"").split("&");
-	for (i=0; i<hash.length;  i++) {
+  if (!map) return;
+  var hash = document.location.hash || document.location.search;
+  if (!hash) return;
+  var i, t, param = {};
+  hash = hash.replace(/(^#|^\?)/,"").split("&");
+  for (i=0; i<hash.length;  i++) {
     t = hash[i].split("=");
-		param[t[0]] = t[1];
-	}
-	var c = ol.proj.transform([Number(param.lon),Number(param.lat)], 'EPSG:4326', map.getView().getProjection());
-	if (c[0] && c[1]) map.getView().setCenter(c);
-	if (param.z) map.getView().setZoom(Number(param.z));
-	if (param.r) map.getView().setRotation(Number(param.r));
-	// Reset layers visibility
-	function resetLayers(layers) {
+    param[t[0]] = t[1];
+  }
+  var c = ol.proj.transform([Number(param.lon),Number(param.lat)], 'EPSG:4326', map.getView().getProjection());
+  if (c[0] && c[1]) map.getView().setCenter(c);
+  if (param.z) map.getView().setZoom(Number(param.z));
+  if (param.r) map.getView().setRotation(Number(param.r));
+  // Reset layers visibility
+  function resetLayers(layers) {
     if (!layers) layers = map.getLayers().getArray();
-		for (var i=0; i<layers.length; i++){
+    for (var i=0; i<layers.length; i++){
       if (layers[i].get('permalink')) {
         layers[i].setVisible(false);
-				// console.log("hide "+layers[i].get('permalink'));
-			}
-			if (layers[i].getLayers) {
+        // console.log("hide "+layers[i].get('permalink'));
+      }
+      if (layers[i].getLayers) {
         resetLayers (layers[i].getLayers().getArray());
-			}
-		}
-	}
-	if (param.l) {
-		resetLayers();
-		var l = param.l.split("|");
+      }
+    }
+  }
+  if (param.l) {
+    resetLayers();
+    var l = param.l.split("|");
     for (i=0; i<l.length; i++) {
       t = l[i].split(":");
-			var li = this.getLayerByLink(t[0]);
-			var op = Number(t[1]);
-			if (li) {
+      var li = this.getLayerByLink(t[0]);
+      var op = Number(t[1]);
+      if (li) {
         li.setOpacity(op);
-				li.setVisible(true);
-			}
-		}
-	}
+        li.setVisible(true);
+      }
+    }
+  }
 };
 /**
  * Get the parameters added to the url. The object can be changed to add new values.
@@ -6529,32 +6514,32 @@ ol.control.Permalink.prototype.hasUrlParam = function(key) {
  */
 ol.control.Permalink.prototype.getLink = function() {
   var map = this.getMap();
-	var c = ol.proj.transform(map.getView().getCenter(), map.getView().getProjection(), 'EPSG:4326');
-	var z = map.getView().getZoom();
-	var r = map.getView().getRotation();
-	var l = this.layerStr_;
-	// Change anchor
-	var anchor = "lon="+c[0].toFixed(this.fixed_)+"&lat="+c[1].toFixed(this.fixed_)+"&z="+z+(r?"&r="+(Math.round(r*10000)/10000):"")+(l?"&l="+l:"");
-	for (var i in this.search_) anchor += "&"+i+"="+this.search_[i];
-	//return document.location.origin+document.location.pathname+this.hash_+anchor;
-	return document.location.protocol+"//"+document.location.host+document.location.pathname+this.hash_+anchor;
+  var c = ol.proj.transform(map.getView().getCenter(), map.getView().getProjection(), 'EPSG:4326');
+  var z = map.getView().getZoom();
+  var r = map.getView().getRotation();
+  var l = this.layerStr_;
+  // Change anchor
+  var anchor = "lon="+c[0].toFixed(this.fixed_)+"&lat="+c[1].toFixed(this.fixed_)+"&z="+z+(r?"&r="+(Math.round(r*10000)/10000):"")+(l?"&l="+l:"");
+  for (var i in this.search_) anchor += "&"+i+"="+this.search_[i];
+  //return document.location.origin+document.location.pathname+this.hash_+anchor;
+  return document.location.protocol+"//"+document.location.host+document.location.pathname+this.hash_+anchor;
 };
 /**
  * Enable / disable url replacement (replaceSate)
  *	@param {bool}
- */
+*/
 ol.control.Permalink.prototype.setUrlReplace = function(replace) {
   try {
-		this.replaceState_ = replace;
-		if (!replace) 
-		{	var s = "";
-			for (var i in this.search_)
-			{	s += (s==""?"?":"&") + i+"="+this.search_[i];
-			}
-			window.history.replaceState (null,null, document.location.origin+document.location.pathname+s);
-		}
-		else window.history.replaceState (null,null, this.getLink());
-	} catch(e) {/* ok */}
+    this.replaceState_ = replace;
+    if (!replace) {
+      var s = "";
+      for (var i in this.search_) {
+        s += (s==""?"?":"&") + i+"="+this.search_[i];
+      }
+      window.history.replaceState (null,null, document.location.origin+document.location.pathname+s);
+    }
+    else window.history.replaceState (null,null, this.getLink());
+  } catch(e) {/* ok */}
 }
 /**
  * On view change refresh link
@@ -6563,8 +6548,8 @@ ol.control.Permalink.prototype.setUrlReplace = function(replace) {
  */
 ol.control.Permalink.prototype.viewChange_ = function() {
   try {
-		if (this.replaceState_) window.history.replaceState (null,null, this.getLink());
-	} catch(e) {/* ok */}
+    if (this.replaceState_) window.history.replaceState (null,null, this.getLink());
+  } catch(e) {/* ok */}
 }
 /**
  * Layer change refresh link
@@ -6572,20 +6557,20 @@ ol.control.Permalink.prototype.viewChange_ = function() {
  */
 ol.control.Permalink.prototype.layerChange_ = function() {
   // Get layers
-	var l = "";
+  var l = "";
   function getLayers(layers) {
-		for (var i=0; i<layers.length; i++) {
-			if (layers[i].getVisible() && layers[i].get("permalink")) {
+    for (var i=0; i<layers.length; i++) {
+      if (layers[i].getVisible() && layers[i].get("permalink")) {
         if (l) l += "|";
-				l += layers[i].get("permalink")+":"+layers[i].get("opacity");
-			}
-			// Layer Group
-			if (layers[i].getLayers) getLayers(layers[i].getLayers().getArray());
-		}
-	}
-	getLayers(this.getMap().getLayers().getArray());
-	this.layerStr_ = l;
-	this.viewChange_();
+        l += layers[i].get("permalink")+":"+layers[i].get("opacity");
+      }
+      // Layer Group
+      if (layers[i].getLayers) getLayers(layers[i].getLayers().getArray());
+    }
+  }
+  getLayers(this.getMap().getLayers().getArray());
+  this.layerStr_ = l;
+  this.viewChange_();
 };
 
 /*
@@ -7190,10 +7175,10 @@ ol.control.RoutingGeoportail = function(options) {
   this.set('url', 'https://wxs.ign.fr/'+options.apiKey+'/itineraire/rest/route.json');
   this._search = [];
   var content = ol.ext.element.create('DIV', { className: 'content', parent: element } )
-  var listElt = document.createElement("DIV");
-  this.addSearch(content, options);
-  this.addSearch(content, options);
-  content.appendChild(listElt);
+  var listElt = ol.ext.element.create('DIV', { className: 'search-input', parent: content });
+  this._search = [];
+  this.addSearch(listElt, options);
+  this.addSearch(listElt, options);
   ol.ext.element.create('I', { className: 'ol-car', title: options.carlabel||'by car', parent: content })
     .addEventListener("click", function() {
       self.setMode('car');
@@ -7206,6 +7191,10 @@ ol.control.RoutingGeoportail = function(options) {
     .addEventListener("click", function() {
       self.calculate();
     });
+  ol.ext.element.create('I', { className: 'ol-cancel', html:'cancel', parent: content })
+    .addEventListener("click", function() {
+      this.resultElement.innerHTML = '';
+    }.bind(this));
   this.resultElement = document.createElement("DIV");
   this.resultElement.setAttribute('class', 'ol-result');
   element.appendChild(this.resultElement);
@@ -7228,23 +7217,43 @@ ol.control.RoutingGeoportail.prototype.addButton = function (className, title, i
   this.element.appendChild(bt);
   return bt;
 };
+/** Remove a new search input
+ * @private
+ */
+ol.control.RoutingGeoportail.prototype.removeSearch = function (element, options, after) {
+  element.removeChild(after);
+  if (this.getMap()) this.getMap().removeControl(after.olsearch);
+  this._search = [];
+  element.querySelectorAll('div').forEach(function(d) {
+    if (d.olsearch) this._search.push(d.olsearch);
+  }.bind(this));
+};
 /** Add a new search input
  * @private
  */
-ol.control.RoutingGeoportail.prototype.addSearch = function (element, options) {
+ol.control.RoutingGeoportail.prototype.addSearch = function (element, options, after) {
   var self = this;
-  var div = ol.ext.element.create("DIV", { parent:element });
-  ol.ext.element.create ('BUTTON', { title: options.startlabel||"search", parent: div})
-    .addEventListener('click', function() {
-      self.resultElement.innerHTML = '';
-    });
-  var search = new ol.control.SearchGeoportail({
+  var div = ol.ext.element.create('DIV');
+  if (after) element.insertBefore(div, after.nextSibling);
+  else element.appendChild(div);
+  ol.ext.element.create ('BUTTON', { title: options.startlabel||"add/remove", parent: div})
+    .addEventListener('click', function(e) {
+      if (e.ctrlKey) {
+        if (this._search.length>2) this.removeSearch(element, options, div);
+      } else if (e.shiftKey) {
+        this.addSearch(element, options, div);
+      }
+    }.bind(this));
+  var search = div.olsearch = new ol.control.SearchGeoportail({
     className: 'IGNF ol-collapsed',
     apiKey: options.apiKey,
     target: div,
     reverse: true
   });
-  this._search.push(search);
+  this._search = [];
+  element.querySelectorAll('div').forEach(function(d) {
+    if (d.olsearch) this._search.push(d.olsearch);
+  }.bind(this));
   search.on('select', function(e){
     search.setInput(e.search.fulltext);
     search.set('selection', e.search);
@@ -7253,6 +7262,7 @@ ol.control.RoutingGeoportail.prototype.addSearch = function (element, options) {
     search.set('selection', null);
     self.resultElement.innerHTML = '';
   });
+  if (this.getMap()) this.getMap().addControl(search);
 };
 /**
  * Set the map instance the control is associated with
@@ -7269,14 +7279,20 @@ ol.control.RoutingGeoportail.prototype.setMap = function (map) {
 /** Get request data
  * @private
  */
-ol.control.RoutingGeoportail.prototype.requestData = function (start, end) {
+ol.control.RoutingGeoportail.prototype.requestData = function (steps) {
+  var start = steps[0];
+  var end = steps[steps.length-1];
+  var waypoints = '';
+  for (var i=1; i<steps.length-1; i++) {
+    waypoints += (waypoints ? ';':'') + steps[i].x+','+steps[i].y;
+  }
   return {
     'gp-access-lib': '1.1.0',
     origin: start.x+','+start.y,
     destination: end.x+','+end.y,
     method: 'time', // 'distance'
     graphName: this.get('mode')==='pedestrian' ? 'Pieton' : 'Voiture',
-    waypoints:'',
+    waypoints: waypoints,
     format: 'STANDARDEXT'
   };
 };
@@ -7388,12 +7404,14 @@ ol.control.RoutingGeoportail.prototype.handleResponse = function (data, start, e
 ol.control.RoutingGeoportail.prototype.calculate = function () {
   console.log('calculate')
   this.resultElement.innerHTML = '';
+  var steps = []
   for (var i=0; i<this._search.length; i++) {
-    if (!this._search[i].get('selection')) return;
+    if (this._search[i].get('selection')) steps.push(this._search[i].get('selection'));
   }
-  var start = this._search[0].get('selection');
-  var end = this._search[1].get('selection');
-  var data = this.requestData(start,end);
+  if (steps.length<2) return;
+  var start = steps[0];
+  var end = steps[steps.length-1];
+  var data = this.requestData(steps);
   var url = encodeURI(this.get('url'));
   var parameters = '';
   for (var index in data) {
@@ -8115,10 +8133,9 @@ ol.control.SearchGeoportailParcelle.prototype.activateParcelle = function(b) {
  * @private
  */
 ol.control.SearchGeoportailParcelle.prototype.autocompleteParcelle = function() {
-  var self = this;
   // Add 0 to fit the format
-  function complete (s, n, c)
-  {	if (!s) return s;
+  function complete (s, n, c) {
+    if (!s) return s;
     c = c || "0";
     while (s.length < n) s = c+s;
     return s.replace(/\*/g,'_');
@@ -8133,6 +8150,20 @@ ol.control.SearchGeoportailParcelle.prototype.autocompleteParcelle = function() 
   var section = complete (this._inputParcelle.section.value, 2);
   var numero = complete (this._inputParcelle.numero.value, 4, "0");
   var search = commune + (prefix||'___') + (section||"__") + (numero ?  numero : section ? "____":"0001");
+  this.searchParcelle(search, 
+    function(jsonResp) {
+      this._listParcelle(jsonResp);
+    }.bind(this),
+    function() {
+      console.log('oops')
+    })
+};
+/** Send search request for a parcelle number
+ * @param {string} search search parcelle number
+ * @param {function} success callback function called on success
+ * @param {function} error callback function called on error
+ */
+ol.control.SearchGeoportailParcelle.prototype.searchParcelle = function(search, success, error) {
   // Request
   var request = '<?xml version="1.0" encoding="UTF-8"?>'
   +'<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
@@ -8166,10 +8197,9 @@ ol.control.SearchGeoportailParcelle.prototype.autocompleteParcelle = function() 
       }
       jsonResp.push(json);
     }
-    self._listParcelle(jsonResp);
-  }, function() {
-    console.log('oops')
-  });
+    success(jsonResp);
+  }, 
+  error);
 };
 /**
  * Draw the autocomplete list
@@ -9260,7 +9290,8 @@ ol.control.Status.prototype.isShown = function() {
  *
  * @constructor
  * @extends {ol.control.Control}
- * @fires 
+ * @fires scrollto
+ * @fires clickimage
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
  *	@param {Element | string | undefined} options.html The storymap content
@@ -9288,6 +9319,19 @@ ol.control.Storymap = function(options) {
       if (!c.classList.contains('select')) {
         this.element.scrollTop = c.offsetTop - 30;
         e.preventDefault();
+      } else {
+        if (e.target.tagName==='IMG' && e.target.dataset.title) {
+          console.log(e);
+          this.dispatchEvent({ 
+            coordinate: this.getMap() ? this.getMap().getCoordinateFromPixel([e.layerX,e.layerY]) : null,
+            type: 'clickimage', 
+            img: e.target, 
+            title: e.target.dataset.title, 
+            element: c, 
+            name: c.getAttribute('name'),
+            originalEvent: e
+          });
+        }
       }
     }.bind(this));
   }.bind(this));
@@ -18047,6 +18091,7 @@ ol.source.DFCI.prototype._getFeatures = function (level, extent, projection) {
   }
   return features
 };
+
 /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
 /** Delaunay source
  * Calculate a delaunay triangulation from points in a source
@@ -18505,88 +18550,93 @@ ol.source.FeatureBin.prototype.getGridGeomAt = function (coord, attributes) {
 };
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-	ol.source.GeoImage is a layer source with georeferencement to place it on a map.
-	olx.source.GeoImageOptions:
-	{	url: {string} url of the static image
-		image: {image} the static image, if not provided, use url to load an image
-		imageCenter: {ol.Coordinate} of the center of the image
-		imageScale: {ol.Size|Number} [scalex, scaley] of the image
-		imageRotate: {number} angle of the image in radian, default 0
-		imageCrop: {ol.Extent} of the image to be show (in the image) default: [0,0,imageWidth,imageHeight]
-		imageMask: {Array.<ol.Coordinate>} - linestring to mask the image on the map
-	}
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  ol.source.GeoImage is a layer source with georeferencement to place it on a map.
+  olx.source.GeoImageOptions:
+  {	url: {string} url of the static image
+    image: {image} the static image, if not provided, use url to load an image
+    imageCenter: {ol.Coordinate} of the center of the image
+    imageScale: {ol.Size|Number} [scalex, scaley] of the image
+    imageRotate: {number} angle of the image in radian, default 0
+    imageCrop: {ol.Extent} of the image to be show (in the image) default: [0,0,imageWidth,imageHeight]
+    imageMask: {Array.<ol.Coordinate>} - linestring to mask the image on the map
+  }
 */
 /** Layer source with georeferencement to place it on a map
 * @constructor 
 * @extends {ol.source.ImageCanvas}
 * @param {olx.source.GeoImageOptions=} options
 */
-ol.source.GeoImage = function(opt_options)
-{	var options = { 
-		attributions: opt_options.attributions,
-		logo: opt_options.logo,
-		projection: opt_options.projection
-	};
-	// options.projection = opt_options.projection;
-	// Coordinate of the image center 
-	this.center = opt_options.imageCenter;
-	// Scale of the image 
-	this.scale = opt_options.imageScale;
-	// Rotation of the image
-	this.rotate = opt_options.imageRotate ? opt_options.imageRotate : 0;
-	// Crop of the image
-	this.crop = opt_options.imageCrop;
-	// Mask of the image
-	this.mask = opt_options.imageMask;
-	// Load Image
-	this._image = (opt_options.image ? opt_options.image : new Image );
-	this._image.crossOrigin = opt_options.crossOrigin; // 'anonymous';
-	// Show image on load
-	var self = this;
-	this._image.onload = function()
-	{	self.setCrop (self.crop);
-		self.changed();
-	}
-	if (!opt_options.image) this._image.src = opt_options.url;
-	// Draw image on canvas
-	options.canvasFunction = function(extent, resolution, pixelRatio, size /*, projection*/ ) 
-	{	var canvas = document.createElement('canvas');
-		canvas.width = size[0];
-		canvas.height = size[1];
-		var ctx = canvas.getContext('2d');
-		if (!this._imageSize) return canvas;
-		// transform coords to pixel
-		function tr(xy)
-		{	return [(xy[0]-extent[0])/(extent[2]-extent[0]) * size[0],
-					(xy[1]-extent[3])/(extent[1]-extent[3]) * size[1]
-					];
-		}
-		// Clipping mask
-		if (this.mask)
-		{	ctx.beginPath();
-			var p = tr(this.mask[0]);
-			ctx.moveTo(p[0],p[1]);
-			for (var i=1; i<this.mask.length; i++) 
-			{	p = tr(this.mask[i]);
-				ctx.lineTo(p[0],p[1]);
-			}
-			ctx.clip();
-		}
-		// Draw
-		var pixel = tr(this.center);
-		var dx = (this._image.naturalWidth/2 - this.crop[0]) *this.scale[0] /resolution *pixelRatio;
-		var dy = (this._image.naturalHeight/2 - this.crop[1]) *this.scale[1] /resolution *pixelRatio;
-		var sx = this._imageSize[0]*this.scale[0]/resolution *pixelRatio;
-		var sy = this._imageSize[1]*this.scale[1]/resolution *pixelRatio;
-		ctx.translate(pixel[0],pixel[1]);
-		if (this.rotate) ctx.rotate(this.rotate);
-		ctx.drawImage(this._image, this.crop[0], this.crop[1], this._imageSize[0], this._imageSize[1], -dx, -dy, sx,sy);
-		return canvas;
-	}
-	ol.source.ImageCanvas.call (this, options);	
-	this.setCrop (this.crop);
+ol.source.GeoImage = function(opt_options) {
+  var options = { 
+    attributions: opt_options.attributions,
+    logo: opt_options.logo,
+    projection: opt_options.projection
+  };
+  // options.projection = opt_options.projection;
+  // Coordinate of the image center 
+  this.center = opt_options.imageCenter;
+  // Scale of the image 
+  this.scale = opt_options.imageScale;
+  // Rotation of the image
+  this.rotate = opt_options.imageRotate ? opt_options.imageRotate : 0;
+  // Crop of the image
+  this.crop = opt_options.imageCrop;
+  // Mask of the image
+  this.mask = opt_options.imageMask;
+  // Load Image
+  this._image = (opt_options.image ? opt_options.image : new Image );
+  this._image.crossOrigin = opt_options.crossOrigin; // 'anonymous';
+  // Show image on load
+  var self = this;
+  this._image.onload = function() {
+    self.setCrop (self.crop);
+    self.changed();
+  }
+  if (!opt_options.image) this._image.src = opt_options.url;
+  // Draw image on canvas
+  options.canvasFunction = function(extent, resolution, pixelRatio, size /*, projection*/ ) {
+    var canvas = document.createElement('canvas');
+    canvas.width = size[0];
+    canvas.height = size[1];
+    var ctx = canvas.getContext('2d');
+    if (!this._imageSize) return canvas;
+    // transform coords to pixel
+    function tr(xy) {
+      return [
+        (xy[0]-extent[0])/(extent[2]-extent[0]) * size[0],
+        (xy[1]-extent[3])/(extent[1]-extent[3]) * size[1]
+      ];
+    }
+    // Clipping mask
+    if (this.mask) {
+      ctx.beginPath();
+      var p = tr(this.mask[0]);
+      ctx.moveTo(p[0],p[1]);
+      for (var i=1; i<this.mask.length; i++) {
+        p = tr(this.mask[i]);
+        ctx.lineTo(p[0],p[1]);
+      }
+      ctx.clip();
+    }
+    // Draw
+    var pixel = tr(this.center);
+    var dx = (this._image.naturalWidth/2 - this.crop[0]) *this.scale[0] /resolution *pixelRatio;
+    var dy = (this._image.naturalHeight/2 - this.crop[1]) *this.scale[1] /resolution *pixelRatio;
+    var sx = this._imageSize[0]*this.scale[0]/resolution *pixelRatio;
+    var sy = this._imageSize[1]*this.scale[1]/resolution *pixelRatio;
+    ctx.translate(pixel[0],pixel[1]);
+    if (this.rotate) ctx.rotate(this.rotate);
+    ctx.drawImage(this._image, this.crop[0], this.crop[1], this._imageSize[0], this._imageSize[1], -dx, -dy, sx,sy);
+    return canvas;
+  }
+  ol.source.ImageCanvas.call (this, options);	
+  this.setCrop (this.crop);
+  // Calculate extent on change
+  this.on('change', function(e) {
+    this.calculateExtent();
+  }.bind(this));
 };
 ol.ext.inherits(ol.source.GeoImage, ol.source.ImageCanvas);
 /**
@@ -18594,122 +18644,160 @@ ol.ext.inherits(ol.source.GeoImage, ol.source.ImageCanvas);
  * @return {ol.Coordinate} coordinate of the image center.
  * @api stable
  */
-ol.source.GeoImage.prototype.getCenter = function()
-{	return this.center;
+ol.source.GeoImage.prototype.getCenter = function() {
+  return this.center;
 }
 /**
  * Set coordinate of the image center.
  * @param {ol.Coordinate} coordinate of the image center.
  * @api stable
  */
-ol.source.GeoImage.prototype.setCenter = function(center)
-{	this.center = center;
-	this.changed();
+ol.source.GeoImage.prototype.setCenter = function(center) {
+  this.center = center;
+  this.changed();
 }
 /**
  * Get image scale.
  * @return {ol.size} image scale (along x and y axis).
  * @api stable
  */
-ol.source.GeoImage.prototype.getScale = function()
-{	return this.scale;
+ol.source.GeoImage.prototype.getScale = function() {
+  return this.scale;
 }
 /**
  * Set image scale.
  * @param {ol.size|Number} image scale (along x and y axis or both).
  * @api stable
  */
-ol.source.GeoImage.prototype.setScale = function(scale)
-{	switch (typeof(scale))
-	{	case 'number':
-			scale = [scale,scale];
-			break;
-		case 'object': 
-			if (scale.length != 2) return;
-			break;
-		default: return;
-	}
-	this.scale = scale;
-	this.changed();
+ol.source.GeoImage.prototype.setScale = function(scale) {
+  switch (typeof(scale)) {
+    case 'number':
+      scale = [scale,scale];
+      break;
+    case 'object': 
+      if (scale.length != 2) return;
+      break;
+    default: return;
+  }
+  this.scale = scale;
+  this.changed();
 };
 /**
  * Get image rotation.
  * @return {Number} rotation in degre.
  * @api stable
  */
-ol.source.GeoImage.prototype.getRotation = function()
-{	return this.rotate;
+ol.source.GeoImage.prototype.getRotation = function() {
+  return this.rotate;
 };
 /**
  * Set image rotation.
  * @param {Number} rotation in radian.
  * @api stable
  */
-ol.source.GeoImage.prototype.setRotation = function(angle)
-{	this.rotate = angle;
-	this.changed();
+ol.source.GeoImage.prototype.setRotation = function(angle) {
+  this.rotate = angle;
+  this.changed();
 };
 /**
  * Get the image.
  * @api stable
  */
-ol.source.GeoImage.prototype.getGeoImage = function()
-{	return this._image;
+ol.source.GeoImage.prototype.getGeoImage = function() {
+  return this._image;
 };
 /**
  * Get image crop extent.
  * @return {ol.extent} image crop extent.
  * @api stable
  */
-ol.source.GeoImage.prototype.getCrop = function()
-{	return this.crop;
+ol.source.GeoImage.prototype.getCrop = function() {
+  return this.crop;
 };
 /**
  * Set image mask.
  * @param {ol.geom.LineString} coords of the mask
  * @api stable
  */
-ol.source.GeoImage.prototype.setMask = function(mask)
-{	this.mask = mask;
-	this.changed();
+ol.source.GeoImage.prototype.setMask = function(mask) {
+  this.mask = mask;
+  this.changed();
 };
 /**
  * Get image mask.
  * @return {ol.geom.LineString} coords of the mask
  * @api stable
  */
-ol.source.GeoImage.prototype.getMask = function()
-{	return this.mask;
+ol.source.GeoImage.prototype.getMask = function() {
+  return this.mask;
 };
 /**
  * Set image crop extent.
  * @param {ol.extent|Number} image crop extent or a number to crop from original size.
  * @api stable
  */
-ol.source.GeoImage.prototype.setCrop = function(crop)
-{	// Image not loaded => get it latter
-	if (!this._image.naturalWidth) 
-	{	this.crop = crop;
-		return;
-	}
-	if (crop) 
-	{	switch (typeof(crop))
-		{	case 'number':
-				crop = [crop,crop,this._image.naturalWidth-crop,this._image.naturalHeight-crop];
-				break;
-			case 'object': 
-				if (crop.length != 4) return;
-				break;
-			default: return;
-		}
-		crop = ol.extent.boundingExtent([ [crop[0],crop[1]], [crop[2],crop[3]] ]);
-		this.crop = [ Math.max(0,crop[0]), Math.max(0,crop[1]), Math.min(this._image.naturalWidth,crop[2]), Math.min(this._image.naturalHeight,crop[3]) ];
-	}
-	else this.crop = [0,0, this._image.naturalWidth,this._image.naturalHeight];
-	if (this.crop[2]<=this.crop[0]) this.crop[2] = this.crop[0]+1;
-	if (this.crop[3]<=this.crop[1]) this.crop[3] = this.crop[1]+1;
-	this._imageSize = [ this.crop[2]-this.crop[0], this.crop[3]-this.crop[1] ];
-	this.changed();
+ol.source.GeoImage.prototype.setCrop = function(crop) {
+  // Image not loaded => get it latter
+  if (!this._image.naturalWidth) {
+    this.crop = crop;
+    return;
+  }
+  if (crop) {
+    switch (typeof(crop)) {
+      case 'number':
+        crop = [crop,crop,this._image.naturalWidth-crop,this._image.naturalHeight-crop];
+        break;
+      case 'object': 
+        if (crop.length != 4) return;
+        break;
+      default: return;
+    }
+    crop = ol.extent.boundingExtent([ [crop[0],crop[1]], [crop[2],crop[3]] ]);
+    this.crop = [ Math.max(0,crop[0]), Math.max(0,crop[1]), Math.min(this._image.naturalWidth,crop[2]), Math.min(this._image.naturalHeight,crop[3]) ];
+  }
+  else this.crop = [0,0, this._image.naturalWidth,this._image.naturalHeight];
+  if (this.crop[2]<=this.crop[0]) this.crop[2] = this.crop[0]+1;
+  if (this.crop[3]<=this.crop[1]) this.crop[3] = this.crop[1]+1;
+  this._imageSize = [ this.crop[2]-this.crop[0], this.crop[3]-this.crop[1] ];
+  this.changed();
+};
+/** Get the extent of the source.
+ * @param {module:ol/extent~Extent} extent If provided, no new extent will be created. Instead, that extent's coordinates will be overwritten.
+ * @return {ol.extent}
+ */
+ol.source.GeoImage.prototype.getExtent = function(opt_extent) {
+  if (opt_extent) {
+    var ext = this.get('extent');
+    for (var i=0; i<opt_extent.length; i++) {
+      opt_extent[i] = ext[i];
+    };
+    return ext;
+  } else {
+    return this.get('extent');
+  }
+};
+/** Calculate the extent of the source (on change).
+ * @return {ol.extent}
+ */
+ol.source.GeoImage.prototype.calculateExtent = function() {
+  var polygon;
+  if (this.getMask()) {
+    polygon = new ol.geom.Polygon([this.getMask()])
+  } else {
+    var center = this.getCenter();
+    var scale = this.getScale();
+    var width = this.getGeoImage().width * scale[0];
+    var height = this.getGeoImage().height * scale[1];
+    var extent = ol.extent.boundingExtent([
+      [ center[0]-width/2, center[1]-height/2 ],
+      [ center[0]+width/2, center[1]+height/2 ]
+    ]);
+    polygon = ol.geom.Polygon.fromExtent(extent);
+    polygon.rotate(-this.getRotation(), center);
+  }
+  var ext = polygon.getExtent();
+  this.set('extent', ext);
+  return ext;
 };
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
@@ -18748,7 +18836,7 @@ ol.source.Geoportail = function (layer, options) {
   tg.minZoom = (options.minZoom ? options.minZoom : 0);
   var attr = [ ol.source.Geoportail.prototype.attribution ];
   if (options.attributions) attr = options.attributions;
-  this._server = options.server;
+  this._server = options.server || 'https://wxs.ign.fr/geoportail/wmts';
   this._gppKey = options.gppKey || 'choisirgeoportail';
   var wmts_options = {
     url: this.serviceURL(),
@@ -19936,18 +20024,44 @@ ol.layer.AnimatedCluster.prototype.postanimate = function(e)
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+/**
+ * @classdesc
+ * Image layer to use with a GeoImage source and return the extent calcaulted with this source.
+ * @extends {ol.layer.Image}
+ * @param {Object=} options Layer Image options.
+ * @api
+ */
+ol.layer.GeoImage = function(options) {
+  ol.layer.Image.call(this, options);
+}
+ol.ext.inherits (ol.layer.GeoImage, ol.layer.Image);
+/**
+ * Return the {@link module:ol/extent~Extent extent} of the source associated with the layer.
+ * @return {ol.Extent} The layer extent.
+ * @observable
+ * @api
+ */
+ol.layer.GeoImage.prototype.getExtent = function() {
+  return this.getSource().getExtent();
+}
+
+/*	Copyright (c) 2019 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
 // 
 /** IGN's Geoportail WMTS layer definition
-* @constructor 
-* @extends {ol.layer.Tile}
-* @param {string} layer Layer name
-* @param {olx.layer.WMTSOptions=} options WMTS options if not defined default are used
-* @param {olx.source.WMTSOptions=} options WMTS options if not defined default are used
-*/
+ * @constructor 
+ * @extends {ol.layer.Tile}
+ * @param {string} layer Layer name
+ * @param {olx.layer.WMTSOptions=} options WMTS options if not defined default are used
+ *  @param {string} options.gppKey Geoportail API key
+ * @param {olx.source.WMTSOptions=} tileoptions WMTS options if not defined default are used
+ */
 ol.layer.Geoportail = function(layer, options, tileoptions) {
   options = options || {};
 	tileoptions = tileoptions || {};
-	var capabilities = window.geoportailConfig ? window.geoportailConfig.capabilities[options.key] || window.geoportailConfig.capabilities["default"] : ol.layer.Geoportail.capabilities;
+	var capabilities = window.geoportailConfig ? window.geoportailConfig.capabilities[options.gppKey || options.key] || window.geoportailConfig.capabilities["default"] || ol.layer.Geoportail.capabilities : ol.layer.Geoportail.capabilities;
   capabilities = capabilities[layer];
 	if (!capabilities) {
     capabilities = { title: layer, originators: [] };
@@ -19973,7 +20087,8 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
   }
   ol.layer.Tile.call (this, options);
   this.set('layer', layer);
-// BUG GPP: Attributions constraints are not set properly :(
+  this.set('queryable', capabilities.queryable);
+  // BUG GPP: Attributions constraints are not set properly :(
 /** /
   // Set attribution according to the originators
   var counter = 0;
@@ -20052,14 +20167,14 @@ ol.ext.inherits (ol.layer.Geoportail, ol.layer.Tile);
 /** Default capabilities for main layers
  */
 ol.layer.Geoportail.capabilities = {
-	"GEOGRAPHICALGRIDSYSTEMS.MAPS":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Cartes IGN","order":"9980000","format":"image/jpeg","tilematrix":"PM","style":"normal","minZoom":0,"maxZoom":18,"bbox":[-180,-68.138855,180,80],"desc":"Cartes IGN","keys":"Cartes","qlook":"https://wxs.ign.fr/static/pictures/ign_carte2.jpg","legend":[],"originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":18,"constraint":[{"minZoom":17,"maxZoom":17,"bbox":[-63.189117,-21.428364,55.84698,51.175068]},{"minZoom":18,"maxZoom":18,"bbox":[-63.189068,-21.428364,55.846638,51.175068]},{"minZoom":7,"maxZoom":8,"bbox":[-178.20573,-68.138855,144.84375,51.909786]},{"minZoom":13,"maxZoom":14,"bbox":[-178.20573,-67.101425,142.03836,51.44377]},{"minZoom":11,"maxZoom":12,"bbox":[-178.20573,-67.101425,142.03836,51.444122]},{"minZoom":9,"maxZoom":10,"bbox":[-178.20573,-68.138855,144.84375,51.444016]},{"minZoom":15,"maxZoom":16,"bbox":[-178.20573,-46.502903,77.60037,51.175068]},{"minZoom":0,"maxZoom":6,"bbox":[-180,-60,180,80]}]},"NCL-DITTT":{"href":"http://www.dittt.gouv.nc/portal/page/portal/dittt","attribution":"Direction des Infrastructures, de la Topographie et des Transports Terrestres du gouvernement de la Nouvelle-Calédonie","logo":"https://wxs.ign.fr/static/logos/NCL-DITTT/NCL-DITTT.gif","minZoom":0,"maxZoom":16,"constraint":[{"minZoom":8,"maxZoom":10,"bbox":[163.47784,-22.854631,168.24048,-19.402704]},{"minZoom":11,"maxZoom":13,"bbox":[163.47784,-22.972307,168.24327,-19.494438]},{"minZoom":14,"maxZoom":15,"bbox":[164.53125,-22.75592,168.22266,-20.303417]},{"minZoom":16,"maxZoom":16,"bbox":[163.47784,-22.79525,168.19109,-19.494438]}]}}},
-	"GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Carte IGN","format":"image/jpeg","tilematrix":"PM","style":"normal","minZoom":0,"maxZoom":18,"bbox":[-179.62723,-84.5047,179.74588,85.47958],"desc":"Cartographie topographique multi-échelles du territoire français issue des bases de données vecteur de l’IGN - emprise nationale, visible du 1/200 au 1/130000000","keys":"Cartes","qlook":"https://wxs.ign.fr/static/pictures/ign_scan-express-standard.png","legend":[{"zoom":5,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-1000k.png"},{"zoom":2,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-1000k.png"},{"zoom":3,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-1000k.png"},{"zoom":4,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-1000k.png"},{"zoom":8,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-1000k.png"},{"zoom":16,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-50k-25k.png"},{"zoom":18,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-GE.png"},{"zoom":17,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-GE.png"},{"zoom":15,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-50k-25k.png"},{"zoom":14,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-50k-25k.png"},{"zoom":13,"url":"https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD-legend-100k.png"}],"originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":13,"bbox":[-63.37252,13.428586,11.429714,51.44377]},{"minZoom":11,"maxZoom":12,"bbox":[-63.37252,13.428586,11.496459,51.444122]},{"minZoom":9,"maxZoom":9,"bbox":[-64.81273,13.428586,11.496459,51.444016]},{"minZoom":10,"maxZoom":10,"bbox":[-63.37252,13.428586,11.496459,51.444016]},{"minZoom":0,"maxZoom":2,"bbox":[-175.99709,-84.42859,175.99709,84.2865]},{"minZoom":4,"maxZoom":4,"bbox":[-179.62723,-84.0159,-179.21112,85.47958]},{"minZoom":18,"maxZoom":18,"bbox":[-63.189068,-21.428364,55.846638,51.175068]},{"minZoom":15,"maxZoom":17,"bbox":[-63.189117,-21.428364,55.84698,51.175068]},{"minZoom":14,"maxZoom":14,"bbox":[-63.283817,-21.7006,56.039127,51.44377]},{"minZoom":6,"maxZoom":8,"bbox":[-179.49689,-84.02368,179.74588,85.30035]},{"minZoom":3,"maxZoom":3,"bbox":[-176.23093,-84.5047,179.08267,84.89126]},{"minZoom":5,"maxZoom":5,"bbox":[-179.57285,-83.84196,178.4975,85.36646]}]}}},
-	"ELEVATION.SLOPES":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Altitude","order":"9890000","format":"image/jpeg","tilematrix":"PM","style":"normal","minZoom":6,"maxZoom":14,"bbox":[-178.20589,-22.595179,167.43176,50.93085],"desc":"La couche altitude se compose d'un MNT (Modèle Numérique de Terrain) affiché en teintes hypsométriques et issu de la BD ALTI®.","keys":"Cartes","qlook":"https://wxs.ign.fr/static/pictures/ign_altitude.jpg","legend":[],"originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":5,"maxZoom":14,"constraint":[{"minZoom":6,"maxZoom":14,"bbox":[55.205746,-21.392344,55.846554,-20.86271]}]}}},
-	"GEOGRAPHICALGRIDSYSTEMS.MAPS.BDUNI.J1":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Plan IGN j+1","format":"image/png","tilematrix":"PM","style":"normal","minZoom":0,"maxZoom":18,"bbox":[-179.5,-75,179.5,75],"desc":"Plan IGN j+1","keys":"Plan IGN J+1","legend":[{"zoom":18,"url":"https://wxs.ign.fr/static/legends/BDUNI/BDUNI.png"}],"originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-179,-80,179,80]}]}}},
-	"CADASTRALPARCELS.PARCELS":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Parcelles cadastrales","order":"9790000","format":"image/png","tilematrix":"PM","style":"bdparcellaire","minZoom":0,"maxZoom":20,"bbox":[-63.160706,-21.39223,55.84643,51.090965],"desc":"Limites des parcelles cadastrales issues de plans scannés et de plans numériques.","keys":"Parcelles cadastrales","qlook":"https://wxs.ign.fr/static/pictures/BDPARCELLAIRE.png","legend":[],"originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":20,"constraint":[{"minZoom":0,"maxZoom":20,"bbox":[-63.160706,-21.39223,55.84643,51.090965]}]}}},
-	"ORTHOIMAGERY.ORTHOPHOTOS":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Photographies aériennes","order":"9990000","format":"image/jpeg","tilematrix":"PM","style":"normal","minZoom":0,"bbox":[-180,-86,180,84],"desc":"Photographies aériennes","keys":"Photographies","qlook":"https://wxs.ign.fr/static/pictures/ign_ortho.jpg","legend":[{"zoom":19,"url":"https://wxs.ign.fr/static/legends/ign_bdortho_legende.jpg"}],"originators":{"PLANETOBSERVER":{"href":"http://www.planetobserver.com/","attribution":"PlanetObserver (images satellites)","logo":"https://wxs.ign.fr/static/logos/PLANETOBSERVER/PLANETOBSERVER.gif","minZoom":0,"maxZoom":12,"constraint":[{"minZoom":0,"maxZoom":12,"bbox":[-180,-86,180,84]}]},"MPM":{"href":"http://www.marseille-provence.com/","attribution":"Marseille Provence Métropole","logo":"https://wxs.ign.fr/static/logos/MPM/MPM.gif","minZoom":0,"maxZoom":20,"constraint":[{"minZoom":20,"maxZoom":20,"bbox":[5.076959,43.153347,5.7168245,43.454994]}]},"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":13,"maxZoom":20,"constraint":[{"bbox":[0.035491213,43.221077,6.0235267,49.696926]},{"minZoom":20,"maxZoom":20,"bbox":[0.035491213,43.221077,6.0235267,49.696926]},{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CRAIG":{"href":"http://www.craig.fr","attribution":"Centre Régional Auvergnat de l'Information Géographique (CRAIG)","logo":"https://wxs.ign.fr/static/logos/CRAIG/CRAIG.gif","minZoom":13,"maxZoom":20,"constraint":[{"minZoom":20,"maxZoom":20,"bbox":[2.2243388,44.76621,2.7314367,45.11295]},{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CNES":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES/CNES.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CG06":{"href":"http://www.cg06.fr","attribution":"Département Alpes Maritimes (06) en partenariat avec : Groupement Orthophoto 06 (NCA, Ville de Cannes, CARF, CASA,CG06, CA de Grasse) ","logo":"https://wxs.ign.fr/static/logos/CG06/CG06.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CG45":{"href":"http://www.loiret.com","attribution":"Le conseil général du Loiret","logo":"https://wxs.ign.fr/static/logos/CG45/CG45.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"RGD_SAVOIE":{"href":"http://www.rgd.fr","attribution":"Régie de Gestion de Données des Pays de Savoie (RGD 73-74)","logo":"https://wxs.ign.fr/static/logos/RGD_SAVOIE/RGD_SAVOIE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"e-Megalis":{"href":"http://www.e-megalisbretagne.org//","attribution":"Syndicat mixte de coopération territoriale (e-Megalis)","logo":"https://wxs.ign.fr/static/logos/e-Megalis/e-Megalis.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"SIGLR":{"href":"http://www.siglr.org//","attribution":"SIGLR","logo":"https://wxs.ign.fr/static/logos/SIGLR/SIGLR.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"PPIGE":{"href":"http://www.ppige-npdc.fr/","attribution":"PPIGE","logo":"https://wxs.ign.fr/static/logos/PPIGE/PPIGE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"FEDER2":{"href":"http://www.europe-en-france.gouv.fr/","attribution":"Fonds européen de développement économique et régional","logo":"https://wxs.ign.fr/static/logos/FEDER2/FEDER2.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"FEDER":{"href":"http://www.europe-en-france.gouv.fr/","attribution":"Fonds européen de développement économique et régional","logo":"https://wxs.ign.fr/static/logos/FEDER/FEDER.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CRCORSE":{"href":"http://www.corse.fr//","attribution":"CRCORSE","logo":"https://wxs.ign.fr/static/logos/CRCORSE/CRCORSE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CNES_AUVERGNE":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_AUVERGNE/CNES_AUVERGNE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"FEDER_PAYSDELALOIRE":{"href":"http://www.europe-en-paysdelaloire.eu/","attribution":"Pays-de-la-Loire","logo":"https://wxs.ign.fr/static/logos/FEDER_PAYSDELALOIRE/FEDER_PAYSDELALOIRE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"FEDER_AUVERGNE":{"href":"http://www.europe-en-auvergne.eu/","attribution":"Auvergne","logo":"https://wxs.ign.fr/static/logos/FEDER_AUVERGNE/FEDER_AUVERGNE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"PREFECTURE_GUADELOUPE":{"href":"www.guadeloupe.pref.gouv.fr/","attribution":"guadeloupe","logo":"https://wxs.ign.fr/static/logos/PREFECTURE_GUADELOUPE/PREFECTURE_GUADELOUPE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"BOURGOGNE-FRANCHE-COMTE":{"href":"https://www.bourgognefranchecomte.fr/","attribution":"Auvergne","logo":"https://wxs.ign.fr/static/logos/BOURGOGNE-FRANCHE-COMTE/BOURGOGNE-FRANCHE-COMTE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"ASTRIUM":{"href":"http://www.geo-airbusds.com/","attribution":"Airbus Defence and Space","logo":"https://wxs.ign.fr/static/logos/ASTRIUM/ASTRIUM.gif","minZoom":13,"maxZoom":16,"constraint":[{"minZoom":13,"maxZoom":16,"bbox":[-55.01953,1.845384,-50.88867,6.053161]}]},"DITTT":{"href":"http://www.dittt.gouv.nc/portal/page/portal/dittt/","attribution":"Direction des Infrastructures, de la Topographie et des Transports Terrestres","logo":"https://wxs.ign.fr/static/logos/DITTT/DITTT.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[163.47784,-22.767689,167.94624,-19.434975]}]},"CNES_ALSACE":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_ALSACE/CNES_ALSACE.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_971":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_971/CNES_971.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_972":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_972/CNES_972.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_974":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_974/CNES_974.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_975":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_975/CNES_975.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_976":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_976/CNES_976.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_977":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_977/CNES_977.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_978":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_978/CNES_978.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]}}},
-	"GEOGRAPHICALGRIDSYSTEMS.PLANIGN":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Plan IGN","format":"image/jpeg","tilematrix":"PM","style":"normal","minZoom":0,"maxZoom":18,"bbox":[-179.5,-75,179.5,75],"desc":"Représentation graphique des bases de données IGN.","keys":"Cartes","qlook":"https://wxs.ign.fr/static/pictures/ign_carte2.jpg","legend":[],"originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":9,"maxZoom":18,"constraint":[{"minZoom":10,"maxZoom":18,"bbox":[-63.37252,-21.475586,55.925865,51.31212]},{"minZoom":0,"maxZoom":9,"bbox":[-179.5,-75,179.5,75]}]}}},
-	"TRANSPORTNETWORKS.ROADS":{"server":"https://wxs.ign.fr/geoportail/wmts","title":"Routes","order":"8990000","format":"image/png","tilematrix":"PM","style":"normal","minZoom":6,"maxZoom":18,"bbox":[-63.969162,-21.49687,55.964417,71.584076],"desc":"Affichage du réseau routier français et européen.","keys":"Réseau routier","qlook":"https://wxs.ign.fr/static/pictures/ign_routes2.jpg","legend":[],"originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":9,"maxZoom":18,"constraint":[{"minZoom":15,"maxZoom":18,"bbox":[-63.37252,-21.475586,55.925865,51.31212]},{"minZoom":6,"maxZoom":14,"bbox":[-63.969162,-21.49687,55.964417,71.584076]}]}}}
+  "GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD","title":"Carte IGN","format":"image/jpeg","style":"normal","queryable":false,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-179.62723,-84.5047,179.74588,85.47958],"desc":"Cartographie topographique multi-échelles du territoire français issue des bases de données vecteur de l’IGN - emprise nationale, visible du 1/200 au 1/130000000","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":13,"bbox":[-63.37252,13.428586,11.429714,51.44377]},{"minZoom":11,"maxZoom":12,"bbox":[-63.37252,13.428586,11.496459,51.444122]},{"minZoom":9,"maxZoom":9,"bbox":[-64.81273,13.428586,11.496459,51.444016]},{"minZoom":10,"maxZoom":10,"bbox":[-63.37252,13.428586,11.496459,51.444016]},{"minZoom":0,"maxZoom":2,"bbox":[-175.99709,-84.42859,175.99709,84.2865]},{"minZoom":4,"maxZoom":4,"bbox":[-179.62723,-84.0159,-179.21112,85.47958]},{"minZoom":18,"maxZoom":18,"bbox":[-63.189068,-21.428364,55.846638,51.175068]},{"minZoom":15,"maxZoom":17,"bbox":[-63.189117,-21.428364,55.84698,51.175068]},{"minZoom":14,"maxZoom":14,"bbox":[-63.283817,-21.7006,56.039127,51.44377]},{"minZoom":6,"maxZoom":8,"bbox":[-179.49689,-84.02368,179.74588,85.30035]},{"minZoom":3,"maxZoom":3,"bbox":[-176.23093,-84.5047,179.08267,84.89126]},{"minZoom":5,"maxZoom":5,"bbox":[-179.57285,-83.84196,178.4975,85.36646]}]}}},
+  "ELEVATION.SLOPES": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"ELEVATION.SLOPES","title":"Altitude","format":"image/jpeg","style":"normal","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":14,"bbox":[-178.20589,-22.595179,167.43176,50.93085],"desc":"La couche altitude se compose d'un MNT (Modèle Numérique de Terrain) affiché en teintes hypsométriques et issu de la BD ALTI®.","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":14,"constraint":[{"minZoom":6,"maxZoom":14,"bbox":[55.205746,-21.392344,55.846554,-20.86271]}]}}},
+  "GEOGRAPHICALGRIDSYSTEMS.MAPS.BDUNI.J1": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"GEOGRAPHICALGRIDSYSTEMS.MAPS.BDUNI.J1","title":"Plan IGN j+1","format":"image/png","style":"normal","queryable":false,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-179.5,-75,179.5,75],"desc":"Plan IGN j+1","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-179,-80,179,80]}]}}},
+  "CADASTRALPARCELS.PARCELS": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"CADASTRALPARCELS.PARCELS","title":"Parcelles cadastrales","format":"image/png","style":"bdparcellaire","queryable":false,"tilematrix":"PM","minZoom":0,"maxZoom":20,"bbox":[-63.160706,-21.39223,55.84643,51.090965],"desc":"Limites des parcelles cadastrales issues de plans scannés et de plans numériques.","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":20,"constraint":[{"minZoom":0,"maxZoom":20,"bbox":[-63.160706,-21.39223,55.84643,51.090965]}]}}},
+  "ORTHOIMAGERY.ORTHOPHOTOS": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"ORTHOIMAGERY.ORTHOPHOTOS","title":"Photographies aériennes","format":"image/jpeg","style":"normal","queryable":true,"tilematrix":"PM","minZoom":0,"bbox":[-180,-86,180,84],"desc":"Photographies aériennes","originators":{"PLANETOBSERVER":{"href":"http://www.planetobserver.com/","attribution":"PlanetObserver (images satellites)","logo":"https://wxs.ign.fr/static/logos/PLANETOBSERVER/PLANETOBSERVER.gif","minZoom":0,"maxZoom":12,"constraint":[{"minZoom":0,"maxZoom":12,"bbox":[-180,-86,180,84]}]},"MPM":{"href":"http://www.marseille-provence.com/","attribution":"Marseille Provence Métropole","logo":"https://wxs.ign.fr/static/logos/MPM/MPM.gif","minZoom":20,"maxZoom":20,"constraint":[{"minZoom":20,"maxZoom":20,"bbox":[5.076959,43.153347,5.7168245,43.454994]}]},"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":13,"maxZoom":20,"constraint":[{"bbox":[0.035491213,43.221077,6.0235267,49.696926]},{"minZoom":20,"maxZoom":20,"bbox":[0.035491213,43.221077,6.0235267,49.696926]},{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CRAIG":{"href":"http://www.craig.fr","attribution":"Centre Régional Auvergnat de l'Information Géographique (CRAIG)","logo":"https://wxs.ign.fr/static/logos/CRAIG/CRAIG.gif","minZoom":13,"maxZoom":20,"constraint":[{"minZoom":20,"maxZoom":20,"bbox":[2.2243388,44.76621,2.7314367,45.11295]},{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CNES":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES/CNES.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CG06":{"href":"http://www.cg06.fr","attribution":"Département Alpes Maritimes (06) en partenariat avec : Groupement Orthophoto 06 (NCA, Ville de Cannes, CARF, CASA,CG06, CA de Grasse) ","logo":"https://wxs.ign.fr/static/logos/CG06/CG06.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CG45":{"href":"http://www.loiret.com","attribution":"Le conseil général du Loiret","logo":"https://wxs.ign.fr/static/logos/CG45/CG45.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"RGD_SAVOIE":{"href":"http://www.rgd.fr","attribution":"Régie de Gestion de Données des Pays de Savoie (RGD 73-74)","logo":"https://wxs.ign.fr/static/logos/RGD_SAVOIE/RGD_SAVOIE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"e-Megalis":{"href":"http://www.e-megalisbretagne.org//","attribution":"Syndicat mixte de coopération territoriale (e-Megalis)","logo":"https://wxs.ign.fr/static/logos/e-Megalis/e-Megalis.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"SIGLR":{"href":"http://www.siglr.org//","attribution":"SIGLR","logo":"https://wxs.ign.fr/static/logos/SIGLR/SIGLR.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"PPIGE":{"href":"http://www.ppige-npdc.fr/","attribution":"PPIGE","logo":"https://wxs.ign.fr/static/logos/PPIGE/PPIGE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"FEDER2":{"href":"http://www.europe-en-france.gouv.fr/","attribution":"Fonds européen de développement économique et régional","logo":"https://wxs.ign.fr/static/logos/FEDER2/FEDER2.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"FEDER":{"href":"http://www.europe-en-france.gouv.fr/","attribution":"Fonds européen de développement économique et régional","logo":"https://wxs.ign.fr/static/logos/FEDER/FEDER.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CRCORSE":{"href":"http://www.corse.fr//","attribution":"CRCORSE","logo":"https://wxs.ign.fr/static/logos/CRCORSE/CRCORSE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"CNES_AUVERGNE":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_AUVERGNE/CNES_AUVERGNE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"FEDER_PAYSDELALOIRE":{"href":"http://www.europe-en-paysdelaloire.eu/","attribution":"Pays-de-la-Loire","logo":"https://wxs.ign.fr/static/logos/FEDER_PAYSDELALOIRE/FEDER_PAYSDELALOIRE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"FEDER_AUVERGNE":{"href":"http://www.europe-en-auvergne.eu/","attribution":"Auvergne","logo":"https://wxs.ign.fr/static/logos/FEDER_AUVERGNE/FEDER_AUVERGNE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"PREFECTURE_GUADELOUPE":{"href":"www.guadeloupe.pref.gouv.fr/","attribution":"guadeloupe","logo":"https://wxs.ign.fr/static/logos/PREFECTURE_GUADELOUPE/PREFECTURE_GUADELOUPE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"BOURGOGNE-FRANCHE-COMTE":{"href":"https://www.bourgognefranchecomte.fr/","attribution":"Auvergne","logo":"https://wxs.ign.fr/static/logos/BOURGOGNE-FRANCHE-COMTE/BOURGOGNE-FRANCHE-COMTE.gif","minZoom":13,"maxZoom":19,"constraint":[{"minZoom":13,"maxZoom":19,"bbox":[-179.5,-75,179.5,75]}]},"ASTRIUM":{"href":"http://www.geo-airbusds.com/","attribution":"Airbus Defence and Space","logo":"https://wxs.ign.fr/static/logos/ASTRIUM/ASTRIUM.gif","minZoom":13,"maxZoom":16,"constraint":[{"minZoom":13,"maxZoom":16,"bbox":[-55.01953,1.845384,-50.88867,6.053161]}]},"DITTT":{"href":"http://www.dittt.gouv.nc/portal/page/portal/dittt/","attribution":"Direction des Infrastructures, de la Topographie et des Transports Terrestres","logo":"https://wxs.ign.fr/static/logos/DITTT/DITTT.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[163.47784,-22.767689,167.94624,-19.434975]}]},"CNES_ALSACE":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_ALSACE/CNES_ALSACE.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_971":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_971/CNES_971.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_972":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_972/CNES_972.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_974":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_974/CNES_974.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_975":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_975/CNES_975.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_976":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_976/CNES_976.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_977":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_977/CNES_977.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CNES_978":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES_978/CNES_978.gif","minZoom":13,"maxZoom":18,"constraint":[{"minZoom":13,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]}}},
+  "GEOGRAPHICALGRIDSYSTEMS.PLANIGN": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"GEOGRAPHICALGRIDSYSTEMS.PLANIGN","title":"Plan IGN","format":"image/jpeg","style":"normal","queryable":false,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-179.5,-75,179.5,75],"desc":"Représentation graphique des bases de données IGN.","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":10,"maxZoom":18,"bbox":[-63.37252,-21.475586,55.925865,51.31212]},{"minZoom":0,"maxZoom":9,"bbox":[-179.5,-75,179.5,75]}]}}},
+  "GEOGRAPHICALGRIDSYSTEMS.MAPS": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"GEOGRAPHICALGRIDSYSTEMS.MAPS","title":"Cartes IGN","format":"image/jpeg","style":"normal","queryable":true,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-180,-68.138855,180,80],"desc":"Cartes IGN","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":17,"maxZoom":17,"bbox":[-63.189117,-21.428364,55.84698,51.175068]},{"minZoom":18,"maxZoom":18,"bbox":[-63.189068,-21.428364,55.846638,51.175068]},{"minZoom":7,"maxZoom":8,"bbox":[-178.20573,-68.138855,144.84375,51.909786]},{"minZoom":13,"maxZoom":14,"bbox":[-178.20573,-67.101425,142.03836,51.44377]},{"minZoom":11,"maxZoom":12,"bbox":[-178.20573,-67.101425,142.03836,51.444122]},{"minZoom":9,"maxZoom":10,"bbox":[-178.20573,-68.138855,144.84375,51.444016]},{"minZoom":15,"maxZoom":16,"bbox":[-178.20573,-46.502903,77.60037,51.175068]},{"minZoom":0,"maxZoom":6,"bbox":[-180,-60,180,80]}]},"NCL-DITTT":{"href":"http://www.dittt.gouv.nc/portal/page/portal/dittt","attribution":"Direction des Infrastructures, de la Topographie et des Transports Terrestres du gouvernement de la Nouvelle-Calédonie","logo":"https://wxs.ign.fr/static/logos/NCL-DITTT/NCL-DITTT.gif","minZoom":8,"maxZoom":16,"constraint":[{"minZoom":8,"maxZoom":10,"bbox":[163.47784,-22.854631,168.24048,-19.402704]},{"minZoom":11,"maxZoom":13,"bbox":[163.47784,-22.972307,168.24327,-19.494438]},{"minZoom":14,"maxZoom":15,"bbox":[164.53125,-22.75592,168.22266,-20.303417]},{"minZoom":16,"maxZoom":16,"bbox":[163.47784,-22.79525,168.19109,-19.494438]}]}}},
+  "TRANSPORTNETWORKS.ROADS": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"TRANSPORTNETWORKS.ROADS","title":"Routes","format":"image/png","style":"normal","queryable":false,"tilematrix":"PM","minZoom":6,"maxZoom":18,"bbox":[-63.969162,-21.49687,55.964417,71.584076],"desc":"Affichage du réseau routier français et européen.","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":18,"constraint":[{"minZoom":15,"maxZoom":18,"bbox":[-63.37252,-21.475586,55.925865,51.31212]},{"minZoom":6,"maxZoom":14,"bbox":[-63.969162,-21.49687,55.964417,71.584076]}]}}},
 };
 /** Load capabilities from the service
  * @param {string} gppKey the API key to get capabilities for
@@ -20156,6 +20271,8 @@ ol.layer.Geoportail.getCapabilities = function(gppKey) {
           layer: l.getElementsByTagName('Name')[0].innerHTML,
           title: l.getElementsByTagName('Title')[0].innerHTML,
           format: l.getElementsByTagName('Format')[0].innerHTML,
+          style: l.getElementsByTagName('Style')[0].getElementsByTagName('Name')[0].innerHTML,
+          queryable: (l.attributes.queryable.value==='1'),
           tilematrix: 'PM',
           minZoom: getZoom(l.getElementsByTagName('sld:MaxScaleDenominator')[0].innerHTML),
           maxZoom: getZoom(l.getElementsByTagName('sld:MinScaleDenominator')[0].innerHTML),
@@ -22024,53 +22141,53 @@ ol.graph.Dijskra.prototype.getRoute = function(node) {
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-	Usefull function to handle geometric operations
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  Usefull function to handle geometric operations
 */
 /** Distance beetween 2 points
-*	Usefull geometric functions
-* @param {ol.Coordinate} p1 first point
-* @param {ol.Coordinate} p2 second point
-* @return {number} distance
-*/
-ol.coordinate.dist2d = function(p1, p2)
-{	var dx = p1[0]-p2[0];
-	var dy = p1[1]-p2[1];
-	return Math.sqrt(dx*dx+dy*dy);
+ *	Usefull geometric functions
+ * @param {ol.Coordinate} p1 first point
+ * @param {ol.Coordinate} p2 second point
+ * @return {number} distance
+ */
+ol.coordinate.dist2d = function(p1, p2) {
+  var dx = p1[0]-p2[0];
+  var dy = p1[1]-p2[1];
+  return Math.sqrt(dx*dx+dy*dy);
 }
 /** 2 points are equal
-*	Usefull geometric functions
-* @param {ol.Coordinate} p1 first point
-* @param {ol.Coordinate} p2 second point
-* @return {boolean}
-*/
-ol.coordinate.equal = function(p1, p2)
-{	return (p1[0]==p2[0] && p1[1]==p2[1]);
+ *	Usefull geometric functions
+ * @param {ol.Coordinate} p1 first point
+ * @param {ol.Coordinate} p2 second point
+ * @return {boolean}
+ */
+ol.coordinate.equal = function(p1, p2) {
+  return (p1[0]==p2[0] && p1[1]==p2[1]);
 }
 /** Get center coordinate of a feature
-* @param {ol.Feature} f
-* @return {ol.coordinate} the center
-*/
-ol.coordinate.getFeatureCenter = function(f)
-{	return ol.coordinate.getGeomCenter (f.getGeometry());
+ * @param {ol.Feature} f
+ * @return {ol.coordinate} the center
+ */
+ol.coordinate.getFeatureCenter = function(f) {
+  return ol.coordinate.getGeomCenter (f.getGeometry());
 };
 /** Get center coordinate of a geometry
 * @param {ol.Feature} geom
 * @return {ol.Coordinate} the center
 */
-ol.coordinate.getGeomCenter = function(geom)
-{	switch (geom.getType())
-	{	case 'Point': 
-			return geom.getCoordinates();
-		case "MultiPolygon":
+ol.coordinate.getGeomCenter = function(geom) {
+  switch (geom.getType()) {
+    case 'Point': 
+      return geom.getCoordinates();
+    case "MultiPolygon":
             geom = geom.getPolygon(0);
             // fallthrough
-		case "Polygon":
-			return geom.getInteriorPoint().getCoordinates();
-		default:
-			return geom.getClosestPoint(ol.extent.getCenter(geom.getExtent()));
-	}
+    case "Polygon":
+      return geom.getInteriorPoint().getCoordinates();
+    default:
+      return geom.getClosestPoint(ol.extent.getCenter(geom.getExtent()));
+  }
 };
 /** Offset a polyline
  * @param {Array<ol.Coordinate>} coords
@@ -22080,65 +22197,65 @@ ol.coordinate.getGeomCenter = function(geom)
  * @see https://drive.google.com/viewerng/viewer?a=v&pid=sites&srcid=ZGVmYXVsdGRvbWFpbnxqa2dhZGdldHN0b3JlfGd4OjQ4MzI5M2Y0MjNmNzI2MjY
  */
 ol.coordinate.offsetCoords = function (coords, offset) {
-    var path = [];
-    var N = coords.length-1;
-    var max = N;
-    var mi, mi1, li, li1, ri, ri1, si, si1, Xi1, Yi1;
-    var p0, p1, p2;
-    var isClosed = ol.coordinate.equal(coords[0],coords[N]);
-    if (!isClosed) {
-        p0 = coords[0];
-        p1 = coords[1];
-        p2 = [
-            p0[0] + (p1[1] - p0[1]) / ol.coordinate.dist2d(p0,p1) *offset,
-            p0[1] - (p1[0] - p0[0]) / ol.coordinate.dist2d(p0,p1) *offset
-        ];
-        path.push(p2);
-        coords.push(coords[N])
-        N++;
-        max--;
+  var path = [];
+  var N = coords.length-1;
+  var max = N;
+  var mi, mi1, li, li1, ri, ri1, si, si1, Xi1, Yi1;
+  var p0, p1, p2;
+  var isClosed = ol.coordinate.equal(coords[0],coords[N]);
+  if (!isClosed) {
+    p0 = coords[0];
+    p1 = coords[1];
+    p2 = [
+      p0[0] + (p1[1] - p0[1]) / ol.coordinate.dist2d(p0,p1) *offset,
+      p0[1] - (p1[0] - p0[0]) / ol.coordinate.dist2d(p0,p1) *offset
+    ];
+    path.push(p2);
+    coords.push(coords[N])
+    N++;
+    max--;
+  }
+  for (var i = 0; i < max; i++) {
+    p0 = coords[i];
+    p1 = coords[(i+1) % N];
+    p2 = coords[(i+2) % N];
+    mi = (p1[1] - p0[1])/(p1[0] - p0[0]);
+    mi1 = (p2[1] - p1[1])/(p2[0] - p1[0]);
+    // Prevent alignements
+    if (Math.abs(mi-mi1) > 1e-10) {
+      li = Math.sqrt((p1[0] - p0[0])*(p1[0] - p0[0])+(p1[1] - p0[1])*(p1[1] - p0[1]));
+      li1 = Math.sqrt((p2[0] - p1[0])*(p2[0] - p1[0])+(p2[1] - p1[1])*(p2[1] - p1[1]));
+      ri = p0[0] + offset*(p1[1] - p0[1])/li;
+      ri1 = p1[0] + offset*(p2[1] - p1[1])/li1;
+      si = p0[1] - offset*(p1[0] - p0[0])/li;
+      si1 = p1[1] - offset*(p2[0] - p1[0])/li1;
+      Xi1 = (mi1*ri1-mi*ri+si-si1) / (mi1-mi);
+      Yi1 = (mi*mi1*(ri1-ri)+mi1*si-mi*si1) / (mi1-mi);
+      // Correction for vertical lines
+      if(p1[0] - p0[0] == 0) {
+        Xi1 = p1[0] + offset*(p1[1] - p0[1])/Math.abs(p1[1] - p0[1]);
+        Yi1 = mi1*Xi1 - mi1*ri1 + si1;
+      }
+      if (p2[0] - p1[0] == 0 ) {
+        Xi1 = p2[0] + offset*(p2[1] - p1[1])/Math.abs(p2[1] - p1[1]);
+        Yi1 = mi*Xi1 - mi*ri + si;
+      }
+      path.push([Xi1, Yi1]);
     }
-    for (var i = 0; i < max; i++) {
-        p0 = coords[i];
-        p1 = coords[(i+1) % N];
-        p2 = coords[(i+2) % N];
-        mi = (p1[1] - p0[1])/(p1[0] - p0[0]);
-        mi1 = (p2[1] - p1[1])/(p2[0] - p1[0]);
-        // Prevent alignements
-        if (Math.abs(mi-mi1) > 1e-10) {
-            li = Math.sqrt((p1[0] - p0[0])*(p1[0] - p0[0])+(p1[1] - p0[1])*(p1[1] - p0[1]));
-            li1 = Math.sqrt((p2[0] - p1[0])*(p2[0] - p1[0])+(p2[1] - p1[1])*(p2[1] - p1[1]));
-            ri = p0[0] + offset*(p1[1] - p0[1])/li;
-            ri1 = p1[0] + offset*(p2[1] - p1[1])/li1;
-            si = p0[1] - offset*(p1[0] - p0[0])/li;
-            si1 = p1[1] - offset*(p2[0] - p1[0])/li1;
-            Xi1 = (mi1*ri1-mi*ri+si-si1) / (mi1-mi);
-            Yi1 = (mi*mi1*(ri1-ri)+mi1*si-mi*si1) / (mi1-mi);
-            // Correction for vertical lines
-            if(p1[0] - p0[0] == 0) {
-                Xi1 = p1[0] + offset*(p1[1] - p0[1])/Math.abs(p1[1] - p0[1]);
-                Yi1 = mi1*Xi1 - mi1*ri1 + si1;
-            }
-            if (p2[0] - p1[0] == 0 ) {
-                Xi1 = p2[0] + offset*(p2[1] - p1[1])/Math.abs(p2[1] - p1[1]);
-                Yi1 = mi*Xi1 - mi*ri + si;
-            }
-            path.push([Xi1, Yi1]);
-        }
-    }
-    if (isClosed) {
-        path.push(path[0]);
-    } else {
-        coords.pop();
-        p0 = coords[coords.length-1];
-        p1 = coords[coords.length-2];
-        p2 = [
-            p0[0] - (p1[1] - p0[1]) / ol.coordinate.dist2d(p0,p1) *offset,
-            p0[1] + (p1[0] - p0[0]) / ol.coordinate.dist2d(p0,p1) *offset
-        ];
-        path.push(p2);
-    }
-    return path;
+  }
+  if (isClosed) {
+    path.push(path[0]);
+  } else {
+    coords.pop();
+    p0 = coords[coords.length-1];
+    p1 = coords[coords.length-2];
+    p2 = [
+      p0[0] - (p1[1] - p0[1]) / ol.coordinate.dist2d(p0,p1) *offset,
+      p0[1] + (p1[0] - p0[0]) / ol.coordinate.dist2d(p0,p1) *offset
+    ];
+    path.push(p2);
+  }
+  return path;
 }
 /** Find the segment a point belongs to
  * @param {ol.Coordinate} pt
@@ -22146,22 +22263,22 @@ ol.coordinate.offsetCoords = function (coords, offset) {
  * @return {} the index (-1 if not found) and the segment
  */
 ol.coordinate.findSegment = function (pt, coords) {
-    for (var i=0; i<coords.length-1; i++) {
-        var p0 = coords[i];
-        var p1 = coords[i+1];
-        if (ol.coordinate.equal(pt, p0) || ol.coordinate.equal(pt, p1)) {
-            return { index:1, segment: [p0,p1] };
-        } else {
-            var d0 = ol.coordinate.dist2d(p0,p1);
-            var v0 = [ (p1[0] - p0[0]) / d0, (p1[1] - p0[1]) / d0 ];
-            var d1 = ol.coordinate.dist2d(p0,pt);
-            var v1 = [ (pt[0] - p0[0]) / d1, (pt[1] - p0[1]) / d1 ];
-            if (Math.abs(v0[0]*v1[1] - v0[1]*v1[0]) < 1e-10) {
-                return { index:1, segment: [p0,p1] };
-            }
-        }
+  for (var i=0; i<coords.length-1; i++) {
+    var p0 = coords[i];
+    var p1 = coords[i+1];
+    if (ol.coordinate.equal(pt, p0) || ol.coordinate.equal(pt, p1)) {
+      return { index:1, segment: [p0,p1] };
+    } else {
+      var d0 = ol.coordinate.dist2d(p0,p1);
+      var v0 = [ (p1[0] - p0[0]) / d0, (p1[1] - p0[1]) / d0 ];
+      var d1 = ol.coordinate.dist2d(p0,pt);
+      var v1 = [ (pt[0] - p0[0]) / d1, (pt[1] - p0[1]) / d1 ];
+      if (Math.abs(v0[0]*v1[1] - v0[1]*v1[0]) < 1e-10) {
+        return { index:1, segment: [p0,p1] };
+      }
     }
-    return { index: -1 };
+  }
+  return { index: -1 };
 };
 /**
  * Split a Polygon geom with horizontal lines
@@ -22171,26 +22288,41 @@ ol.coordinate.findSegment = function (pt, coords) {
  * @return {Array<Array<ol.Coordinate>>}
  */
 ol.coordinate.splitH = function (geom, y, n) {
-    var x, abs;
-    var list = [];
-    for (var i=0; i<geom.length-1; i++) {
-        // Hole separator?
-        if (!geom[i].length || !geom[i+1].length) continue;
-        // Intersect
-        if (geom[i][1]<=y && geom[i+1][1]>y || geom[i][1]>=y && geom[i+1][1]<y) {
-            abs = (y-geom[i][1]) / (geom[i+1][1]-geom[i][1]);
-            x = abs * (geom[i+1][0]-geom[i][0]) + geom[i][0];
-            list.push ({ contour: n, index: i, pt: [x,y], abs: abs });
-        }
+  var x, abs;
+  var list = [];
+  for (var i=0; i<geom.length-1; i++) {
+    // Hole separator?
+    if (!geom[i].length || !geom[i+1].length) continue;
+    // Intersect
+    if (geom[i][1]<=y && geom[i+1][1]>y || geom[i][1]>=y && geom[i+1][1]<y) {
+      abs = (y-geom[i][1]) / (geom[i+1][1]-geom[i][1]);
+      x = abs * (geom[i+1][0]-geom[i][0]) + geom[i][0];
+      list.push ({ contour: n, index: i, pt: [x,y], abs: abs });
     }
-    // Sort x
-    list.sort(function(a,b) { return a.pt[0] - b.pt[0] });
-    // Horizontal segement
-    var result = [];
-    for (var j=0; j<list.length-1; j += 2) {
-        result.push([list[j], list[j+1]])
-    }
-    return result;
+  }
+  // Sort x
+  list.sort(function(a,b) { return a.pt[0] - b.pt[0] });
+  // Horizontal segement
+  var result = [];
+  for (var j=0; j<list.length-1; j += 2) {
+    result.push([list[j], list[j+1]])
+  }
+  return result;
+};
+/** Create a geometrie given a type and coordinates */
+ol.geom.createFromType = function (type, coordinates) {
+  switch (type) {
+    case 'LineString': return new ol.geom.LineString(coordinates);
+    case 'LinearRing': return new ol.geom.LinearRing(coordinates);
+    case 'MultiLineString': return new ol.geom.MultiLineString(coordinates);
+    case 'MultiPoint': return new ol.geom.MultiPoint(coordinates);
+    case 'MultiPolygon': return new ol.geom.MultiPolygon(coordinates);
+    case 'Point': return new ol.geom.Point(coordinates);
+    case 'Polygon': return new ol.geom.Polygon(coordinates);
+    default:
+      console.error('[createFromType] Unsupported type: '+type);
+      return null;
+  }
 };
 
 /** Split a lineString by a point or a list of points
