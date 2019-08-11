@@ -1883,30 +1883,11 @@ ol.control.LayerSwitcher.prototype._getLayerForLI = function(li) {
  * @private
  */
 ol.control.LayerSwitcher.prototype.viewChange = function() {
-  var map = this.getMap();
   this.panel_.querySelectorAll('li').forEach( function(li) {
     var l = this._getLayerForLI(li);
     if (l) {
       if (this.testLayerVisibility(l)) li.classList.remove('ol-layer-hidden');
       else li.classList.add('ol-layer-hidden');
-      /*
-      var res = map.getView().getResolution();
-      if (l.getMaxResolution()<=res || l.getMinResolution()>=res) {
-        li.classList.add('ol-layer-hidden');
-      } else {
-        var ex0 = l.getExtent();
-        if (ex0) {
-          var ex = map.getView().calculateExtent(map.getSize());
-          if (!ol.extent.intersects(ex, ex0)) {
-            li.classList.add('ol-layer-hidden');
-          } else {
-            li.classList.remove('ol-layer-hidden');
-          }
-        } else {
-          li.classList.remove('ol-layer-hidden');
-        }
-      }
-      */
     }
   }.bind(this));
 };
@@ -18634,7 +18615,7 @@ ol.source.GeoImage = function(opt_options) {
   ol.source.ImageCanvas.call (this, options);	
   this.setCrop (this.crop);
   // Calculate extent on change
-  this.on('change', function(e) {
+  this.on('change', function() {
     this.set('extent', this.calculateExtent());
   }.bind(this));
 };
@@ -18770,7 +18751,7 @@ ol.source.GeoImage.prototype.getExtent = function(opt_extent) {
     var ext = this.get('extent');
     for (var i=0; i<opt_extent.length; i++) {
       opt_extent[i] = ext[i];
-    };
+    }
     return ext;
   } else {
     return this.get('extent');

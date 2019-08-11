@@ -100,7 +100,7 @@ var ol_source_GeoImage = function(opt_options) {
   ol_source_ImageCanvas.call (this, options);	
   this.setCrop (this.crop);
   // Calculate extent on change
-  this.on('change', function(e) {
+  this.on('change', function() {
     this.set('extent', this.calculateExtent());
   }.bind(this));
 };
@@ -246,7 +246,7 @@ ol_source_GeoImage.prototype.getExtent = function(opt_extent) {
     var ext = this.get('extent');
     for (var i=0; i<opt_extent.length; i++) {
       opt_extent[i] = ext[i];
-    };
+    }
     return ext;
   } else {
     return this.get('extent');

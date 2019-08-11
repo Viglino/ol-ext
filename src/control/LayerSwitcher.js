@@ -295,30 +295,11 @@ ol_control_LayerSwitcher.prototype._getLayerForLI = function(li) {
  * @private
  */
 ol_control_LayerSwitcher.prototype.viewChange = function() {
-  var map = this.getMap();
   this.panel_.querySelectorAll('li').forEach( function(li) {
     var l = this._getLayerForLI(li);
     if (l) {
       if (this.testLayerVisibility(l)) li.classList.remove('ol-layer-hidden');
       else li.classList.add('ol-layer-hidden');
-      /*
-      var res = map.getView().getResolution();
-      if (l.getMaxResolution()<=res || l.getMinResolution()>=res) {
-        li.classList.add('ol-layer-hidden');
-      } else {
-        var ex0 = l.getExtent();
-        if (ex0) {
-          var ex = map.getView().calculateExtent(map.getSize());
-          if (!ol_extent_intersects(ex, ex0)) {
-            li.classList.add('ol-layer-hidden');
-          } else {
-            li.classList.remove('ol-layer-hidden');
-          }
-        } else {
-          li.classList.remove('ol-layer-hidden');
-        }
-      }
-      */
     }
   }.bind(this));
 };
