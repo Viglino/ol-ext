@@ -147,3 +147,5 @@ ol_source_DFCI.prototype._getFeatures = function (level, extent, projection) {
   }
   return features
 };
+
+export default ol_source_DFCI
