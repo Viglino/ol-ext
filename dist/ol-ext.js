@@ -18635,7 +18635,7 @@ ol.source.GeoImage = function(opt_options) {
   this.setCrop (this.crop);
   // Calculate extent on change
   this.on('change', function(e) {
-    this.calculateExtent();
+    this.set('extent', this.calculateExtent());
   }.bind(this));
 };
 ol.ext.inherits(ol.source.GeoImage, ol.source.ImageCanvas);
@@ -18776,12 +18776,13 @@ ol.source.GeoImage.prototype.getExtent = function(opt_extent) {
     return this.get('extent');
   }
 };
-/** Calculate the extent of the source (on change).
+/** Calculate the extent of the source image.
+ * @param {boolean} usemask return the mask extent, default return the image extent
  * @return {ol.extent}
  */
-ol.source.GeoImage.prototype.calculateExtent = function() {
+ol.source.GeoImage.prototype.calculateExtent = function(usemask) {
   var polygon;
-  if (this.getMask()) {
+  if (usemask!==false && this.getMask()) {
     polygon = new ol.geom.Polygon([this.getMask()])
   } else {
     var center = this.getCenter();
@@ -18796,7 +18797,6 @@ ol.source.GeoImage.prototype.calculateExtent = function() {
     polygon.rotate(-this.getRotation(), center);
   }
   var ext = polygon.getExtent();
-  this.set('extent', ext);
   return ext;
 };
 

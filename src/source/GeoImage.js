@@ -101,7 +101,7 @@ var ol_source_GeoImage = function(opt_options) {
   this.setCrop (this.crop);
   // Calculate extent on change
   this.on('change', function(e) {
-    this.calculateExtent();
+    this.set('extent', this.calculateExtent());
   }.bind(this));
 };
 ol_ext_inherits(ol_source_GeoImage, ol_source_ImageCanvas);
@@ -253,12 +253,13 @@ ol_source_GeoImage.prototype.getExtent = function(opt_extent) {
   }
 };
 
-/** Calculate the extent of the source (on change).
+/** Calculate the extent of the source image.
+ * @param {boolean} usemask return the mask extent, default return the image extent
  * @return {ol.extent}
  */
-ol_source_GeoImage.prototype.calculateExtent = function() {
+ol_source_GeoImage.prototype.calculateExtent = function(usemask) {
   var polygon;
-  if (this.getMask()) {
+  if (usemask!==false && this.getMask()) {
     polygon = new ol_geom_Polygon([this.getMask()])
   } else {
     var center = this.getCenter();
@@ -273,7 +274,6 @@ ol_source_GeoImage.prototype.calculateExtent = function() {
     polygon.rotate(-this.getRotation(), center);
   }
   var ext = polygon.getExtent();
-  this.set('extent', ext);
   return ext;
 };
 
