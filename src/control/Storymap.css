@@ -79,3 +79,7 @@
   from {bottom: -.2em;}
   to   {bottom: .5em;}
 }
+
+.ol-storymap img[data-title] {
+  cursor: pointer;
+}

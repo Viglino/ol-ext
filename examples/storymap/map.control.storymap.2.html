@@ -32,11 +32,14 @@
     }
     #story {
       height: 400px;
+      max-width: 1200px;
+      margin: auto;
     }
     #story img {
       display: block;
       margin: auto;
       max-width: 100%;
+      max-height: 300px;
     }
     .options a {
       cursor: pointer;
@@ -100,21 +103,21 @@
     <div class="chapter" name="Paris">
 
       <h2>Paris</h2>
-      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Seine_and_Eiffel_Tower_from_Tour_Saint_Jacques_2013-08.JPG/275px-Seine_and_Eiffel_Tower_from_Tour_Saint_Jacques_2013-08.JPG">
+      <img data-title="Paris" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Seine_and_Eiffel_Tower_from_Tour_Saint_Jacques_2013-08.JPG/1000px-Seine_and_Eiffel_Tower_from_Tour_Saint_Jacques_2013-08.JPG">
       <p>
         Paris is the capital and most populous city of France, with an area of 105 square kilometres (41 square miles) and a population of 2,206,488. Since the 17th century, Paris has been one of Europe's major centres of finance, commerce, fashion, science, and the arts.
       </p>
     </div>
     <div class="chapter" name="London">
       <h2>London</h2>
-      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/London_Montage_L.jpg/275px-London_Montage_L.jpg">
+      <img data-title="London" src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/London_Montage_L.jpg/600px-London_Montage_L.jpg">
       <p>
         London is the capital and largest city of both the United Kingdom and England. Standing on the River Thames in southeastern England, 50 miles (80 km) upstream from its estuary with the North Sea, London has been a major settlement for two millennia. Londinium was founded by the Romans. The City of London, London's ancient core − an area of just 1.12 square miles (2.9 km2) and colloquially known as the Square Mile − retains its medieval boundaries.
       </p>
     </div>
     <div class="chapter" name="Berlin">
       <h2>Berlin</h2>
-      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Berlin_Skyline_Fernsehturm_02.jpg/280px-Berlin_Skyline_Fernsehturm_02.jpg">
+      <img data-title="Berlin" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Berlin_Skyline_Fernsehturm_02.jpg/1000px-Berlin_Skyline_Fernsehturm_02.jpg">
       <p>
         Berlin is the capital and largest city of Germany by both area and population. Its 3,711,930 (2017) inhabitants make it the second most populous city proper of the European Union after London. The city is one of Germany's 16 federal states. It is surrounded by the state of Brandenburg and forms the center of the Berlin/Brandenburg Metropolitan Region, which is, with 6,004,857 (2015) inhabitants and area of 30,370 square km, Germany's third-largest metropolitan region after the Rhine-Ruhr and Rhine-Main regions.
       </p>
@@ -159,7 +162,15 @@
     London: { xy: ol.proj.fromLonLat([-0.1275,51.507222]), z: 8 },
     Berlin: { xy: ol.proj.fromLonLat([13.383333,52.516667]), z: 7 },
   }
-  // ly to the chapter on the map
+
+  // Show image fullscreen on click
+	var fullscreen = new ol.control.Overlay ({ hideOnClick: true, target: document.body });
+	map.addControl(fullscreen);
+  story.on('clickimage', function(e){
+   fullscreen.showImage(e.img.src, { title: e.title });
+  });
+
+  // Fly to the chapter on the map
   story.on('scrollto', function(e){
     $('#story .chapter').removeClass('select');
     $(e.element).addClass('select');

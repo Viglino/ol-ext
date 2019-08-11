@@ -6,7 +6,8 @@ import ol_ext_element from '../util/element'
  *
  * @constructor
  * @extends {ol.control.Control}
- * @fires 
+ * @fires scrollto
+ * @fires clickimage
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
  *	@param {Element | string | undefined} options.html The storymap content
@@ -35,6 +36,19 @@ var ol_control_Storymap = function(options) {
       if (!c.classList.contains('select')) {
         this.element.scrollTop = c.offsetTop - 30;
         e.preventDefault();
+      } else {
+        if (e.target.tagName==='IMG' && e.target.dataset.title) {
+          console.log(e);
+          this.dispatchEvent({ 
+            coordinate: this.getMap() ? this.getMap().getCoordinateFromPixel([e.layerX,e.layerY]) : null,
+            type: 'clickimage', 
+            img: e.target, 
+            title: e.target.dataset.title, 
+            element: c, 
+            name: c.getAttribute('name'),
+            originalEvent: e
+          });
+        }
       }
     }.bind(this));
   }.bind(this));
