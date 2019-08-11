@@ -78,6 +78,7 @@ var ol_control_Search = function(options) {
   var input = this._input = document.createElement("INPUT");
   input.setAttribute("type", "search");
   input.setAttribute("class", "search");
+  input.setAttribute("autocomplete", "off");
   input.setAttribute("placeholder", options.placeholder||"Search...");
   input.addEventListener("change", function(e) {
     self.dispatchEvent({ type:"change:input", input:e, value:input.value });
