@@ -1,0 +1,106 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2015 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: geometry CSpline</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="setTextPathStyle is a function to draw text along a LineString on postcompose." />
+  <meta name="keywords" content="ol3, geom, linestring, spline, smooth, curve" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    input[type="range"] {
+      vertical-align: middle;
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: style textPath</h1>
+  </a>
+  <div class="info">
+    <p>
+      The <i>ol.geom.greatCircleTrack()</i> computes the <a href="https://en.wikipedia.org/wiki/Great_circle">great circle</a> 
+      line beetween 2 points (shortest road between 2 poins). 
+    </p><p>
+      Source: <a href="http://www.movable-type.co.uk/scripts/latlong.html">Calculate distance, bearing and more between Latitude/Longitude points</a>
+    </p>
+  </div>
+
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
+  <div class="options">
+    <h2>Options:</h2>
+    <ul>
+      <li>
+        Distance: <span id="dist"></span>
+      </li>
+      <li>
+        Bearing: <span id="bearing"></span>
+      </li>
+    </ul>
+    <i>Click on the map to draw lines</i>
+  </div>
+
+  <script type="text/javascript">
+
+  // Layers
+  var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
+    
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 1,
+      center: [0, 3000000]
+    }),
+    layers: [layer]
+  });
+
+  var vector = new ol.layer.Vector({
+    name: 'Vecteur',
+    source: new ol.source.Vector(),
+    style: new ol.style.Style({
+      stroke: new ol.style.Stroke({ color:'red', width: 2 }),
+    }),
+  });
+  map.addLayer(vector);
+
+  var p0 = null;
+  map.on('click', function(e) {
+    p0 = ol.proj.toLonLat(e.coordinate);
+  });
+  map.on('pointermove', function(e) {
+    if (p0) {
+      var l = new ol.geom.LineString(ol.sphere.greatCircleTrack(p0, ol.proj.toLonLat(e.coordinate)));
+      l.transform('EPSG:4326', map.getView().getProjection());
+      vector.getSource().clear();
+      vector.getSource().addFeature(new ol.Feature(l));
+      $('#dist').text((ol.sphere.getDistance(p0, ol.proj.toLonLat(e.coordinate))/1000).toFixed(2)+' km');
+      $('#bearing').text((ol.sphere.greatCircleBearing(p0, ol.proj.toLonLat(e.coordinate))*180/Math.PI).toFixed(2)+' deg');
+    }
+  });
+
+  </script>
+  
+</body>
+</html>

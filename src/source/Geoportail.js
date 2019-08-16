@@ -156,16 +156,6 @@ ol_source_Geoportail.prototype.getFeatureInfoUrl  = function(coord, resolution, 
  */
 ol_source_Geoportail.prototype.getFeatureInfo = function(coord, resolution, options) {
   var url = this.getFeatureInfoUrl(coord, resolution, null, options);
-  /*
-  if (!this.ajax) this.ajax = new ol_ext_Ajax();
-  this.ajax.send(url, undefined, { 
-    INFO_FORMAT: options.INFO_FORMAT,
-    options: { 
-      encode: false 
-    },
-
-  });
-  */
   ol_ext_Ajax.get({
     url: url,
     dataType: options.format || 'text/plain',

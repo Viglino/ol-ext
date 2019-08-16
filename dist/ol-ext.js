@@ -62,6 +62,7 @@ ol.ext.inherits(ol.ext.Ajax, ol.Object);
  *  @param {string} options.dataType The type of data that you're expecting back from the server, default JSON
  *  @param {string} options.success
  *  @param {string} options.error
+ *  @param {*} options.options get options
  */
 ol.ext.Ajax.get = function(options) {
   var ajax = new ol.ext.Ajax(options);
@@ -1291,31 +1292,47 @@ ol.control.SearchJSON = function(options) {
   this.set('url', url);
   this._ajax = new ol.ext.Ajax({ dataType:'JSON', auth: options.authentication });
   this._ajax.on('success', function (resp) {
-    this.element.classList.remove('searching');
     if (resp.status >= 200 && resp.status < 400) {
-      if (typeof(this._callback) === 'function') this._callback(this.handleResponse(resp.response));
+      if (typeof(this._callback) === 'function') this._callback(resp.response);
     } else {
       console.log('AJAX ERROR', arguments);
     }
   }.bind(this));
   this._ajax.on('error', function() {
-    this.element.classList.remove('searching');
     console.log('AJAX ERROR', arguments);
+  }.bind(this));
+  // Handle searchin
+  this._ajax.on('loadstart', function() {
+    this.element.classList.add('searching');
+  }.bind(this));
+  this._ajax.on('loadend', function() {
+    this.element.classList.remove('searching');
   }.bind(this));
   // Overwrite handleResponse
   if (typeof(options.handleResponse)==='function') this.handleResponse = options.handleResponse;
 };
 ol.ext.inherits(ol.control.SearchJSON, ol.control.Search);
+/** Send ajax request
+ * @param {string} url
+ * @param {*} data
+ * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
+ */
+ol.control.SearchJSON.prototype.ajax = function (url, data, cback, options) {
+  options = options || {};
+  this._callback = cback;
+  this._ajax.set('dataType', options.dataType || 'JSON');
+  this._ajax.send(url, data, options);
+};
 /** Autocomplete function (ajax request to the server)
-* @param {string} s search string
-* @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
-*/
+ * @param {string} s search string
+ * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
+ */
 ol.control.SearchJSON.prototype.autocomplete = function (s, cback) {
   var data = this.requestData(s);
   var url = encodeURI(this.get('url'));
-  this._callback = cback;
-  this.element.classList.add('searching');
-  this._ajax.send(url, data);
+  this.ajax(url, data, function(resp) {
+    if (typeof(cback) === 'function') cback(this.handleResponse(resp));
+  });
 };
 /**
  * @param {string} s the search string
@@ -1336,8 +1353,8 @@ ol.control.SearchJSON.prototype.handleResponse = function (response) {
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
  * Search places using the photon API.
@@ -1346,28 +1363,28 @@ ol.control.SearchJSON.prototype.handleResponse = function (response) {
  * @extends {ol.control.SearchJSON}
  * @fires select
  * @param {Object=} Control options.
- *	@param {string} options.className control class name
- *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *	@param {string | undefined} options.label Text label to use for the search button, default "search"
- *	@param {string | undefined} options.placeholder placeholder, default "Search..."
- *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
- *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
- *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *  @param {string} options.className control class name
+ *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *  @param {string | undefined} options.label Text label to use for the search button, default "search"
+ *  @param {string | undefined} options.placeholder placeholder, default "Search..."
+ *  @param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
+ *  @param {integer | undefined} options.minLength minimum length to start searching, default 3
+ *  @param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
  *  @param {function | undefined} options.handleResponse Handle server response to pass the features array to the list
  * 
- *	@param {string|undefined} options.url Url to photon api, default "http://photon.komoot.de/api/"
- *	@param {string|undefined} options.lang Force preferred language, default none
- *	@param {boolean} options.position Search, with priority to geo position, default false
- *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return street + name + contry
+ *  @param {string|undefined} options.url Url to photon api, default "http://photon.komoot.de/api/"
+ *  @param {string|undefined} options.lang Force preferred language, default none
+ *  @param {boolean} options.position Search, with priority to geo position, default false
+ *  @param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return street + name + contry
  */
-ol.control.SearchPhoton = function(options)
-{	options = options || {};
-	options.className = options.className || 'photon';
-	options.url = options.url || 'http://photon.komoot.de/api/';
-	options.copy = '<a href="http://www.openstreetmap.org/copyright" target="new">&copy; OpenStreetMap contributors</a>';
-	ol.control.SearchJSON.call(this, options);
-	this.set('lang', options.lang);
-	this.set('position', options.position);
+ol.control.SearchPhoton = function(options) {
+  options = options || {};
+  options.className = options.className || 'photon';
+  options.url = options.url || 'http://photon.komoot.de/api/';
+  options.copy = '<a href="http://www.openstreetmap.org/copyright" target="new">&copy; OpenStreetMap contributors</a>';
+  ol.control.SearchJSON.call(this, options);
+  this.set('lang', options.lang);
+  this.set('position', options.position);
 };
 ol.ext.inherits(ol.control.SearchPhoton, ol.control.SearchJSON);
 /** Returns the text to be displayed in the menu
@@ -1375,36 +1392,36 @@ ol.ext.inherits(ol.control.SearchPhoton, ol.control.SearchJSON);
 *	@return {string} the text to be displayed in the index
 *	@api
 */
-ol.control.SearchPhoton.prototype.getTitle = function (f)
-{	var p = f.properties;
-	return (p.housenumber||"")
-		+ " "+(p.street || p.name || "")
-		+ "<i>"
-		+ " "+(p.postcode||"")
-		+ " "+(p.city||"")
-		+ " ("+p.country
-		+ ")</i>";
+ol.control.SearchPhoton.prototype.getTitle = function (f) {
+  var p = f.properties;
+  return (p.housenumber||"")
+    + " "+(p.street || p.name || "")
+    + "<i>"
+    + " "+(p.postcode||"")
+    + " "+(p.city||"")
+    + " ("+p.country
+    + ")</i>";
 };
 /** 
  * @param {string} s the search string
  * @return {Object} request data (as key:value)
  * @api
  */
-ol.control.SearchPhoton.prototype.requestData = function (s)
-{	var data =
-	{	q: s,
-		lang: this.get('lang'),
-		limit: this.get('maxItems')
-	}
-	// Handle position proirity
-	if (this.get('position'))
-	{	var view = this.getMap().getView();
-		var pt = new ol.geom.Point(view.getCenter());
-		pt = (pt.transform (view.getProjection(), "EPSG:4326")).getCoordinates();
-		data.lon = pt[0];
-		data.lat = pt[1];
-	}
-	return data;
+ol.control.SearchPhoton.prototype.requestData = function (s) {
+  var data = {
+    q: s,
+    lang: this.get('lang'),
+    limit: this.get('maxItems')
+  }
+  // Handle position proirity
+  if (this.get('position')) {
+    var view = this.getMap().getView();
+    var pt = new ol.geom.Point(view.getCenter());
+    pt = (pt.transform (view.getProjection(), "EPSG:4326")).getCoordinates();
+    data.lon = pt[0];
+    data.lat = pt[1];
+  }
+  return data;
 };
 /**
  * Handle server response to pass the features array to the list
@@ -1412,7 +1429,7 @@ ol.control.SearchPhoton.prototype.requestData = function (s)
  * @return {Array<any>} an array of feature
  */
 ol.control.SearchPhoton.prototype.handleResponse = function (response) {
-	return response.features;
+  return response.features;
 };
 /** Prevent same feature to be drawn twice: test equality
  * @param {} f1 First feature to compare
@@ -1421,23 +1438,48 @@ ol.control.SearchPhoton.prototype.handleResponse = function (response) {
  * @api
  */
 ol.control.SearchPhoton.prototype.equalFeatures = function (f1, f2) {
-	return (this.getTitle(f1) === this.getTitle(f2)
-		&& f1.geometry.coordinates[0] === f2.geometry.coordinates[0]
-		&& f1.geometry.coordinates[1] === f2.geometry.coordinates[1]);
+  return (this.getTitle(f1) === this.getTitle(f2)
+    && f1.geometry.coordinates[0] === f2.geometry.coordinates[0]
+    && f1.geometry.coordinates[1] === f2.geometry.coordinates[1]);
 };
 /** A ligne has been clicked in the menu > dispatch event
 *	@param {any} f the feature, as passed in the autocomplete
 *	@api
 */
-ol.control.SearchPhoton.prototype.select = function (f)
-{	var c = f.geometry.coordinates;
-	// Add coordinate to the event
-	try {
-		c = ol.proj.transform (f.geometry.coordinates, 'EPSG:4326', this.getMap().getView().getProjection());
-	} catch(e) { /* ok */ }
-	this.dispatchEvent({ type:"select", search:f, coordinate: c });
+ol.control.SearchPhoton.prototype.select = function (f) {
+  var c = f.geometry.coordinates;
+  // Add coordinate to the event
+  try {
+    c = ol.proj.transform (f.geometry.coordinates, 'EPSG:4326', this.getMap().getView().getProjection());
+  } catch(e) { /* ok */ }
+  this.dispatchEvent({ type:"select", search:f, coordinate: c });
 };
-/** */
+/** Get data for reverse geocode 
+ * @param {ol.coordinate} coord
+ */
+ol.control.SearchPhoton.prototype.reverseData = function (coord) {
+  var lonlat = ol.proj.transform (coord, this.getMap().getView().getProjection(), 'EPSG:4326');
+  return { lon: lonlat[0], lat: lonlat[1] };
+};
+/** Reverse geocode
+ * @param {ol.coordinate} coord
+ * @api
+ */
+ol.control.SearchPhoton.prototype.reverseGeocode = function (coord, cback) {
+  this.ajax(
+    this.get('url').replace('/api/', '/reverse/').replace('/search/', '/reverse/'),
+    this.reverseData(coord),
+    function(resp) {
+      if (resp.features) resp = resp.features;
+      if (!(resp instanceof Array)) resp = [resp]
+      if (cback) cback.call(this, resp);
+      else {
+        this._handleSelect(resp[0]);
+        search.setInput('', true);
+      }
+    }
+  );
+};
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
@@ -1472,6 +1514,8 @@ ol.control.SearchGeoportail = function(options) {
   options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
   ol.control.SearchJSON.call(this, options);
   this.set('type', options.type || 'StreetAddress,PositionOfInterest');
+  // Authentication
+  // this._auth = options.authentication;
 };
 ol.ext.inherits(ol.control.SearchGeoportail, ol.control.SearchJSON);
 /** Reverse geocode
@@ -1494,39 +1538,44 @@ ol.control.SearchGeoportail.prototype.reverseGeocode = function (coord, cback) {
     +'   </Position>'
     +'  </ReverseGeocodeRequest>'
     +' </Request>'
-    +'</XLS>'
-  var url = this.get('url').replace('ols/apis/completion','geoportail/ols')+"?xls="+encodeURIComponent(request);
-  this.ajax (url, function(resp) {
-    var xml = resp.response;
-    if (xml) {
-      xml = xml.replace(/\n|\r/g,'');
-      var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
-      var f = {};
-      if (!Number(p[1]) && !Number(p[0])) {
-        f = { x: lonlat[0], y: lonlat[1], fulltext: String(lonlat) }
-      } else {
-        f.x = lonlat[0];
-        f.y = lonlat[1];
-        f.city = (xml.replace(/.*<Place type="Municipality">([^<]*)<\/Place>.*/, "$1"));
-        f.insee = (xml.replace(/.*<Place type="INSEE">([^<]*)<\/Place>.*/, "$1"));
-        f.zipcode = (xml.replace(/.*<PostalCode>([^<]*)<\/PostalCode>.*/, "$1"));
-        if (/<Street>/.test(xml)) {
-          f.kind = '';
-          f.country = 'StreetAddress';
-          f.street = (xml.replace(/.*<Street>([^<]*)<\/Street>.*/, "$1"));
-          var number = (xml.replace(/.*<Building number="([^"]*).*/, "$1"));
-          f.fulltext = number+' '+f.street+', '+f.zipcode+' '+f.city;
+    +'</XLS>';
+  this.ajax (this.get('url').replace('ols/apis/completion','geoportail/ols'), 
+    { xls: request },
+    function(xml) {
+      if (xml) {
+        xml = xml.replace(/\n|\r/g,'');
+        var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
+        var f = {};
+        if (!Number(p[1]) && !Number(p[0])) {
+          f = { x: lonlat[0], y: lonlat[1], fulltext: String(lonlat) }
         } else {
-          f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));
-          f.country = 'PositionOfInterest';
-          f.street = '';
-          f.fulltext = f.zipcode+' '+f.city;
+          f.x = lonlat[0];
+          f.y = lonlat[1];
+          f.city = (xml.replace(/.*<Place type="Municipality">([^<]*)<\/Place>.*/, "$1"));
+          f.insee = (xml.replace(/.*<Place type="INSEE">([^<]*)<\/Place>.*/, "$1"));
+          f.zipcode = (xml.replace(/.*<PostalCode>([^<]*)<\/PostalCode>.*/, "$1"));
+          if (/<Street>/.test(xml)) {
+            f.kind = '';
+            f.country = 'StreetAddress';
+            f.street = (xml.replace(/.*<Street>([^<]*)<\/Street>.*/, "$1"));
+            var number = (xml.replace(/.*<Building number="([^"]*).*/, "$1"));
+            f.fulltext = number+' '+f.street+', '+f.zipcode+' '+f.city;
+          } else {
+            f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));
+            f.country = 'PositionOfInterest';
+            f.street = '';
+            f.fulltext = f.zipcode+' '+f.city;
+          }
+        }
+        if (cback) cback.call(this, [f]);
+        else {
+          this._handleSelect(f);
+          search.setInput('', true);
         }
       }
-      if (cback) cback.call(this, [f]);
-      else this._handleSelect(f);
-    }
-  });
+    }.bind(this),
+    { dataType: 'XML' }
+  );
 };
 /** Returns the text to be displayed in the menu
  *	@param {ol.Feature} f the feature
@@ -1605,22 +1654,25 @@ ol.control.SearchGeoportail.prototype.searchCommune = function (f, cback) {
 			+'</GeocodeRequest>'
 		+'</Request>'
 	+'</XLS>'
-  var url = this.get('url').replace('ols/apis/completion','geoportail/ols')+"?xls="+encodeURIComponent(request);
-  this.ajax (url, function(resp) {
-    var xml = resp.response;
-    if (xml) {
-      xml = xml.replace(/\n|\r/g,'');
-      var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
-      f.x = Number(p[1]);
-      f.y = Number(p[0]);
-      f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));
-      f.insee = (xml.replace(/.*<Place type="INSEE">([^<]*)<\/Place>.*/, "$1"));
-      if (f.x || f.y) {
-        if (cback) cback.call(this, [f]);
-        else this._handleSelect(f);
+  // Search 
+  this.ajax (this.get('url').replace('ols/apis/completion','geoportail/ols'),
+    { 'xls': request }, 
+    function(xml) {
+      if (xml) {
+        xml = xml.replace(/\n|\r/g,'');
+        var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
+        f.x = Number(p[1]);
+        f.y = Number(p[0]);
+        f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));
+        f.insee = (xml.replace(/.*<Place type="INSEE">([^<]*)<\/Place>.*/, "$1"));
+        if (f.x || f.y) {
+          if (cback) cback.call(this, [f]);
+          else this._handleSelect(f);
+        }
       }
-    }
-  });
+    }.bind(this),
+    { dataType: 'XML' }
+  );
 };
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
@@ -7557,8 +7609,8 @@ ol.control.Scale.prototype.setScale = function (value) {
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
  * Search places using the French National Base Address (BAN) API.
@@ -7567,48 +7619,48 @@ ol.control.Scale.prototype.setScale = function (value) {
  * @extends {ol.control.Search}
  * @fires select
  * @param {Object=} Control options.
- *	@param {string} options.className control class name
- *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *	@param {string | undefined} options.label Text label to use for the search button, default "search"
- *	@param {string | undefined} options.placeholder placeholder, default "Search..."
- *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
- *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
- *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *  @param {string} options.className control class name
+ *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *  @param {string | undefined} options.label Text label to use for the search button, default "search"
+ *  @param {string | undefined} options.placeholder placeholder, default "Search..."
+ *  @param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
+ *  @param {integer | undefined} options.minLength minimum length to start searching, default 3
+ *  @param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
  *
- *	@param {string|undefined} options.url Url to BAN api, default "https://api-adresse.data.gouv.fr/search/"
- *	@param {boolean} options.position Search, with priority to geo position, default false
- *	@param {function} options.getTitle a function that takes a feature and return the text to display in the menu, default return label attribute
+ *  @param {string|undefined} options.url Url to BAN api, default "https://api-adresse.data.gouv.fr/search/"
+ *  @param {boolean} options.position Search, with priority to geo position, default false
+ *  @param {function} options.getTitle a function that takes a feature and return the text to display in the menu, default return label attribute
  * @see {@link https://adresse.data.gouv.fr/api/}
  */
-ol.control.SearchBAN = function(options)
-{	options = options || {};
-    options.typing = options.typing || 500;
-    options.url = options.url || 'https://api-adresse.data.gouv.fr/search/';
-    options.className = options.className || 'BAN';
-    options.copy = '<a href="https://adresse.data.gouv.fr/" target="new">&copy; BAN-data.gouv.fr</a>';
-    ol.control.SearchPhoton.call(this, options);
+ol.control.SearchBAN = function(options) {
+  options = options || {};
+  options.typing = options.typing || 500;
+  options.url = options.url || 'https://api-adresse.data.gouv.fr/search/';
+  options.className = options.className || 'BAN';
+  options.copy = '<a href="https://adresse.data.gouv.fr/" target="new">&copy; BAN-data.gouv.fr</a>';
+  ol.control.SearchPhoton.call(this, options);
 };
 ol.ext.inherits(ol.control.SearchBAN, ol.control.SearchPhoton);
 /** Returns the text to be displayed in the menu
- *	@param {ol.Feature} f the feature
- *	@return {string} the text to be displayed in the index
- *	@api
+ * @param {ol.Feature} f the feature
+ * @return {string} the text to be displayed in the index
+ * @api
  */
 ol.control.SearchBAN.prototype.getTitle = function (f) {
-    var p = f.properties;
-    return (p.label);
+  var p = f.properties;
+  return (p.label);
 };
 /** A ligne has been clicked in the menu > dispatch event
- *	@param {any} f the feature, as passed in the autocomplete
- *	@api
+ * @param {any} f the feature, as passed in the autocomplete
+ * @api
  */
 ol.control.SearchBAN.prototype.select = function (f){
-    var c = f.geometry.coordinates;
-    // Add coordinate to the event
-    try {
-        c = ol.proj.transform (f.geometry.coordinates, 'EPSG:4326', this.getMap().getView().getProjection());
-    } catch(e) { /* ok */ }
-    this.dispatchEvent({ type:"select", search:f, coordinate: c });
+  var c = f.geometry.coordinates;
+  // Add coordinate to the event
+  try {
+    c = ol.proj.transform (f.geometry.coordinates, 'EPSG:4326', this.getMap().getView().getProjection());
+  } catch(e) { /* ok */ }
+  this.dispatchEvent({ type:"select", search:f, coordinate: c });
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
@@ -8157,30 +8209,33 @@ ol.control.SearchGeoportailParcelle.prototype.searchParcelle = function(search, 
       +'</GeocodeRequest>'
     +'</Request>'
   +'</XLS>'
-  var url = this.get('url').replace('ols/apis/completion','geoportail/ols?xls=')+encodeURIComponent(request);
   // Geocode
-  this.ajax(url, function(resp) {
-    // XML to JSON
-    var parser = new DOMParser();
-    var xmlDoc = parser.parseFromString(resp.response,"text/xml");
-    var parcelles = xmlDoc.getElementsByTagName('GeocodedAddress');
-    var jsonResp = []
-    for (var i=0, parc; parc= parcelles[i]; i++) {
-      var node = parc.getElementsByTagName('gml:pos')[0] || parc.getElementsByTagName('pos')[0];
-      var p = node.childNodes[0].nodeValue.split(' ');
-      var att = parc.getElementsByTagName('Place');
-      var json = { 
-        lon: Number(p[1]), 
-        lat: Number(p[0])
-      };
-      for (var k=0, a; a=att[k]; k++) {
-        json[a.attributes.type.value] = a.childNodes[0].nodeValue;
+  this.ajax(
+    this.get('url').replace('ols/apis/completion','geoportail/ols'), 
+    { xls: request },
+    function(xml) {
+      // XML to JSON
+      var parser = new DOMParser();
+      var xmlDoc = parser.parseFromString(xml,"text/xml");
+      var parcelles = xmlDoc.getElementsByTagName('GeocodedAddress');
+      var jsonResp = []
+      for (var i=0, parc; parc= parcelles[i]; i++) {
+        var node = parc.getElementsByTagName('gml:pos')[0] || parc.getElementsByTagName('pos')[0];
+        var p = node.childNodes[0].nodeValue.split(' ');
+        var att = parc.getElementsByTagName('Place');
+        var json = { 
+          lon: Number(p[1]), 
+          lat: Number(p[0])
+        };
+        for (var k=0, a; a=att[k]; k++) {
+          json[a.attributes.type.value] = a.childNodes[0].nodeValue;
+        }
+        jsonResp.push(json);
       }
-      jsonResp.push(json);
-    }
-    success(jsonResp);
-  }, 
-  error);
+      success(jsonResp);
+    }, 
+    { dataType: 'XML' }
+  );
 };
 /**
  * Draw the autocomplete list
@@ -8252,8 +8307,8 @@ ol.control.SearchGeoportailParcelle.prototype._handleParcelle = function(parc) {
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
  * Search places using the Nominatim geocoder from the OpenStreetmap project.
@@ -8262,39 +8317,42 @@ ol.control.SearchGeoportailParcelle.prototype._handleParcelle = function(parc) {
  * @extends {ol.control.Search}
  * @fires select
  * @param {Object=} Control options.
- *	@param {string} options.className control class name
- *	@param {boolean | undefined} options.polygon To get output geometry of results (in geojson format), default false.
- *	@param {viewbox | undefined} options.viewbox The preferred area to find search results. Any two corner points of the box are accepted in any order as long as they span a real box, default none.
- *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *	@param {string | undefined} options.label Text label to use for the search button, default "search"
- *	@param {string | undefined} options.placeholder placeholder, default "Search..."
- *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
- *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
- *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *  @param {string} options.className control class name
+ *  @param {boolean | undefined} options.polygon To get output geometry of results (in geojson format), default false.
+ *  @param {viewbox | undefined} options.viewbox The preferred area to find search results. Any two corner points of the box are accepted in any order as long as they span a real box, default none.
+ *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *  @param {string | undefined} options.label Text label to use for the search button, default "search"
+ *  @param {string | undefined} options.placeholder placeholder, default "Search..."
+ *  @param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
+ *  @param {integer | undefined} options.minLength minimum length to start searching, default 3
+ *  @param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
  *
- *	@param {string|undefined} options.url URL to Nominatim API, default "https://nominatim.openstreetmap.org/search"
+ *  @param {string|undefined} options.url URL to Nominatim API, default "https://nominatim.openstreetmap.org/search"
  * @see {@link https://wiki.openstreetmap.org/wiki/Nominatim}
  */
-ol.control.SearchNominatim = function(options)
-{	options = options || {};
-    options.className = options.className || 'nominatim';
-    options.typing = options.typing || 500;
-    options.url = options.url || 'https://nominatim.openstreetmap.org/search';
-    options.copy = '<a href="http://www.openstreetmap.org/copyright" target="new">&copy; OpenStreetMap contributors</a>';
-    ol.control.SearchJSON.call(this, options);
-    this.set('polygon', options.polygon);
-    this.set('viewbox', options.viewbox);
+ol.control.SearchNominatim = function(options) {
+  options = options || {};
+  options.className = options.className || 'nominatim';
+  options.typing = options.typing || 500;
+  options.url = options.url || 'https://nominatim.openstreetmap.org/search';
+  options.copy = '<a href="http://www.openstreetmap.org/copyright" target="new">&copy; OpenStreetMap contributors</a>';
+  ol.control.SearchJSON.call(this, options);
+  this.set('polygon', options.polygon);
+  this.set('viewbox', options.viewbox);
 };
 ol.ext.inherits(ol.control.SearchNominatim, ol.control.SearchJSON);
 /** Returns the text to be displayed in the menu
  *	@param {ol.Feature} f the feature
- *	@return {string} the text to be displayed in the index
- *	@api
- */
+*	@return {string} the text to be displayed in the index
+*	@api
+*/
 ol.control.SearchNominatim.prototype.getTitle = function (f) {
-    var title = f.display_name+"<i>"+f.class+" - "+f.type+"</i>";
-    if (f.icon) title = "<img src='"+f.icon+"' />" + title;
-    return (title);
+  var info = [];
+  if (f.class) info.push(f.class);
+  if (f.type) info.push(f.type);
+  var title = f.display_name+(info.length ? "<i>"+info.join(' - ')+"</i>" : '');
+  if (f.icon) title = "<img src='"+f.icon+"' />" + title;
+  return (title);
 };
 /** 
  * @param {string} s the search string
@@ -8302,27 +8360,45 @@ ol.control.SearchNominatim.prototype.getTitle = function (f) {
  * @api
  */
 ol.control.SearchNominatim.prototype.requestData = function (s) {
-	var data = { 
-        format: "json", 
-        addressdetails: 1, 
-        q: s, 
-        polygon_geojson: this.get('polygon') ? 1:0,
-        limit: this.get('maxItems')
-    };
-    if (this.get('viewbox')) data.viewbox = this.get('viewbox');
-    return data;
+  var data = { 
+    format: "json", 
+    addressdetails: 1, 
+    q: s, 
+    polygon_geojson: this.get('polygon') ? 1:0,
+    limit: this.get('maxItems')
+  };
+  if (this.get('viewbox')) data.viewbox = this.get('viewbox');
+  return data;
 };
 /** A ligne has been clicked in the menu > dispatch event
  *	@param {any} f the feature, as passed in the autocomplete
- *	@api
- */
+*	@api
+*/
 ol.control.SearchNominatim.prototype.select = function (f){
-    var c = [Number(f.lon), Number(f.lat)];
-    // Add coordinate to the event
-    try {
-        c = ol.proj.transform (c, 'EPSG:4326', this.getMap().getView().getProjection());
-    } catch(e) { /* ok */}
-    this.dispatchEvent({ type:"select", search:f, coordinate: c });
+  var c = [Number(f.lon), Number(f.lat)];
+  // Add coordinate to the event
+  try {
+    c = ol.proj.transform (c, 'EPSG:4326', this.getMap().getView().getProjection());
+  } catch(e) { /* ok */}
+  this.dispatchEvent({ type:"select", search:f, coordinate: c });
+};
+/** Reverse geocode
+ * @param {ol.coordinate} coord
+ * @api
+ */
+ol.control.SearchNominatim.prototype.reverseGeocode = function (coord, cback) {
+  var lonlat = ol.proj.transform (coord, this.getMap().getView().getProjection(), 'EPSG:4326');
+  this.ajax(
+    this.get('url').replace('search', 'reverse'),
+    { lon: lonlat[0], lat: lonlat[1], format: 'json' },
+    function(resp) {
+      if (cback) cback.call(this, [resp]);
+      else {
+        this._handleSelect(resp);
+        search.setInput('', true);
+      }
+    }
+  );
 };
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
@@ -18918,15 +18994,6 @@ ol.source.Geoportail.prototype.getFeatureInfoUrl  = function(coord, resolution, 
  */
 ol.source.Geoportail.prototype.getFeatureInfo = function(coord, resolution, options) {
   var url = this.getFeatureInfoUrl(coord, resolution, null, options);
-  /*
-  if (!this.ajax) this.ajax = new ol.ext.Ajax();
-  this.ajax.send(url, undefined, { 
-    INFO_FORMAT: options.INFO_FORMAT,
-    options: { 
-      encode: false 
-    },
-  });
-  */
   ol.ext.Ajax.get({
     url: url,
     dataType: options.format || 'text/plain',
@@ -22492,6 +22559,82 @@ ol.geom.Polygon.prototype.scribbleFill = function (options) {
 	return mline.cspline({ pointsPerSeg:8, tension:.9 });
 };
 // import('ol-ext/geom/Scribble')
+/** Compute great circle bearing of two points.
+ * @See http://www.movable-type.co.uk/scripts/latlong.html for the original code
+ * @param {ol.coordinate} origin origin in lonlat
+ * @param {ol.coordinate} destination destination in lonlat
+ * @return {number} bearing angle in radian
+ */
+ol.sphere.greatCircleBearing = function(origin, destination) {
+  var toRad = Math.PI/180;
+  var ori = [ origin[0]*toRad, origin[1]*toRad ];
+  var dest = [ destination[0]*toRad, destination[1]*toRad ];
+  var bearing = Math.atan2(
+    Math.sin(dest[0] - ori[0]) * Math.cos(dest[1]),
+    Math.cos(ori[1]) * Math.sin(dest[1]) - Math.sin(ori[1]) * Math.cos(dest[1]) * Math.cos(dest[0] - ori[0])
+  );
+  return bearing;
+};
+/** 
+ * Computes the destination point given an initial point, a distance and a bearing
+ * @See http://www.movable-type.co.uk/scripts/latlong.html for the original code
+ * @param {ol.coordinate} origin stating point in lonlat coords
+ * @param {number} distance
+ * @param {number} bearing bearing angle in radian
+ * @param {*} options
+ *  @param {booelan} normalize normalize longitude beetween -180/180, deafulet true
+ *  @param {number|undefined} options.radius sphere radius, default 6371008.8
+ */
+ol.sphere.computeDestinationPoint = function(origin, distance, bearing, options) {
+  options = options || {};
+  var toRad = Math.PI/180;
+  var radius = options.radius || 6371008.8;
+  var phi1 = origin[1] * toRad;
+  var lambda1 = origin[0] * toRad;
+  var delta = distance / radius;
+  var phi2 = Math.asin(
+    Math.sin(phi1) * Math.cos(delta) +
+    Math.cos(phi1) * Math.sin(delta) * Math.cos(bearing)
+  );
+  var lambda2 = lambda1 +
+    Math.atan2(
+      Math.sin(bearing) * Math.sin(delta) * Math.cos(phi1),
+      Math.cos(delta) - Math.sin(phi1) * Math.sin(phi2)
+    );
+  var lon = lambda2 / toRad;
+  // normalise to >=-180 and <=180° 
+  if (options.normalize!==false && (lon < -180 || lon > 180)) {
+    lon = ((lon * 540) % 360) - 180;
+  }
+  return [ lon, phi2 / toRad ];
+};
+/** Calculate a track along the great circle given an origin and a destination
+ * @param {ol.coordinate} origin origin in lonlat
+ * @param {ol.coordinate} destination destination in lonlat
+ * @param {number} distance distance between point along the track in meter, default 1km (1000)
+ * @param {number|undefined} radius sphere radius, default 6371008.8
+ * @return {Array<ol.coordinate>}
+ */
+ol.sphere.greatCircleTrack = function(origin, destination, options) {
+  options = options || {};
+  var bearing = ol.sphere.greatCircleBearing(origin, destination);
+  var dist = ol.sphere.getDistance(origin, destination, options.radius);
+  var distance = options.distance || 1000;
+  var d = distance;
+  var geom = [origin];
+  while (d < dist) {
+    geom.push(ol.sphere.computeDestinationPoint(origin, d, bearing, { radius: options.radius, normalize: false }));
+    d += distance;
+  }
+  var pt = ol.sphere.computeDestinationPoint(origin, dist, bearing, { radius: options.radius, normalize: false });
+  if (Math.abs(pt[0]-destination[0]) > 1) {
+    if (pt[0] > destination[0]) destination[0] += 360;
+    else destination[0] -= 360;
+  } 
+  geom.push(destination);
+  return geom;
+};
+
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).

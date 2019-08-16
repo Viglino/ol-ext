@@ -1,7 +1,4 @@
-import ol_geom_LineString from 'ol/geom/LineString'
 import {getDistance as ol_sphere_getDistance} from 'ol/sphere'
-
-/* https://github.com/manuelbieh/geolib/ */
 
 /** Compute great circle bearing of two points.
  * @See http://www.movable-type.co.uk/scripts/latlong.html for the original code

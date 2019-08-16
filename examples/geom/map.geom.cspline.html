@@ -1,146 +1,143 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
+<!--
+  Copyright (c) 2015 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: geometry CSpline</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	Copyright (c) 2015 Jean-Marc VIGLINO,
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+  <meta name="description" content="setTextPathStyle is a function to draw text along a LineString on postcompose." />
+  <meta name="keywords" content="ol3, geom, linestring, spline, smooth, curve" />
 
------------------------------------------------------------->
-	<title>ol-ext: geometry CSpline</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<meta name="description" content="setTextPathStyle is a function to draw text along a LineString on postcompose." />
-	<meta name="keywords" content="ol3, geom, linestring, spline, smooth, curve" />
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-    <link rel="stylesheet" href="../../dist/ol-ext.css" />
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
-
-	<link rel="stylesheet" href="../style.css" />
-	<style>
-		input[type="range"]
-		{	vertical-align: middle;
-		}
-	</style>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    input[type="range"] {
+      vertical-align: middle;
+    }
+  </style>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: style textPath</h1>
-	</a>
-	<p class="info">
-		The <i>ol.geom.Geometry.cspline()</i> smooth lines by using <a href="https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Cardinal_spline">cardinal splines</a> 
-		(canonical spline) to draw smooth curves that goes through the points.
-	</p>
+  <a href="../../index.html">
+    <h1>ol-ext: style textPath</h1>
+  </a>
+  <p class="info">
+    The <i>ol.geom.Geometry.cspline()</i> smooth lines by using <a href="https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Cardinal_spline">cardinal splines</a> 
+    (canonical spline) to draw smooth curves that goes through the points.
+  </p>
 
-	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
-	<div class="options">
-		<h2>Options:</h2>
-		<ul>
-			<li>
-				<input id="cspline" type="checkbox" onchange="vector.changed()" checked="checked" />
-				<label for="cspline"> smooth support</label>
-			</li><li>
-				tension:<input id="tension" type="range" min="0" max="1" step="0.1" value="0.5" onchange="vector.changed()" /> 
-			</li><li>
-				pointsPerSeg:<input id="pps" type="range" min="0" max="100" step="1" value="10" onchange="vector.changed()" /> 
-			</li><li>
-				<input id="normalize" type="checkbox" onchange="vector.changed()" />
-				<label for="normalize"> normalize</label>
-			</li><li>
-				<input id="dpt" type="checkbox" onchange="vector.changed()" />
-				<label for="dpt"> draw spline points</label>
-			</li>
-		</ul>
-		<i>Click on the line to move points</i>
-	</div>
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
+  <div class="options">
+    <h2>Options:</h2>
+    <ul>
+      <li>
+        <input id="cspline" type="checkbox" onchange="vector.changed()" checked="checked" />
+        <label for="cspline"> smooth support</label>
+      </li><li>
+        tension:<input id="tension" type="range" min="0" max="1" step="0.1" value="0.5" onchange="vector.changed()" /> 
+      </li><li>
+        pointsPerSeg:<input id="pps" type="range" min="0" max="100" step="1" value="10" onchange="vector.changed()" /> 
+      </li><li>
+        <input id="normalize" type="checkbox" onchange="vector.changed()" />
+        <label for="normalize"> normalize</label>
+      </li><li>
+        <input id="dpt" type="checkbox" onchange="vector.changed()" />
+        <label for="dpt"> draw spline points</label>
+      </li>
+    </ul>
+    <i>Click on the line to move points</i>
+  </div>
 
-	<script type="text/javascript">
+  <script type="text/javascript">
 
-	// Layers
-	var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
-		
-	// The map
-	var map = new ol.Map
-		({	target: 'map',
-			view: new ol.View
-			({	zoom: 6,
-				center: [166246, 6118863]
-			}),
-			layers: [layer]
-		});
+  // Layers
+  var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
+    
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 6,
+      center: [166246, 6118863]
+    }),
+    layers: [layer]
+  });
 
-	// Data to draw on the map
-	var lstring = [[-315612,5859589],[-144393,6211811],[232288,6275406],[354587,5952536],[755728,6113971]];
-	
-	var features = new ol.Collection();
-	features.push (new ol.Feature( new ol.geom.LineString(lstring)));
-	
-	var vector = new ol.layer.Vector(
-	{	name: 'Vecteur',
-		source: new ol.source.Vector({ features: features }),
-		style: function(f) 
-		{	
-			var opt = 
-			{	tension: Number($("#tension").val()), 
-				pointsPerSeg: Number($("#pps").val()),
-				normalize: $("#normalize").prop("checked")
-			};
-			var csp = f.getGeometry().cspline(opt);
-			return [ new ol.style.Style(
-			{	stroke: new ol.style.Stroke({ color:"red", width:1 }),
-				geometry: $("#cspline").prop("checked") ? csp : null
-			}),
-			new ol.style.Style(
-			{	image: new ol.style.Circle({ stroke:new ol.style.Stroke({color:"blue",width:1}), radius:1 }),
-				geometry: ($("#dpt").prop("checked") && $("#cspline").prop("checked")) ? new ol.geom.MultiPoint(csp.getCoordinates()) : null
-			}),
-			new ol.style.Style(
-			{	image: new ol.style.Circle({ stroke:new ol.style.Stroke({color:"red",width:4}), radius:2 }),
-				geometry: new ol.geom.MultiPoint(f.getGeometry().getCoordinates())
-			})
-			]
-		}
-	})
-	map.addLayer(vector);
+  // Data to draw on the map
+  var lstring = [[-315612,5859589],[-144393,6211811],[232288,6275406],[354587,5952536],[755728,6113971]];
+  
+  var features = new ol.Collection();
+  features.push (new ol.Feature( new ol.geom.LineString(lstring)));
+  
+  var vector = new ol.layer.Vector({
+    name: 'Vecteur',
+    source: new ol.source.Vector({ features: features }),
+    style: function(f) {	
+      var opt = {
+        tension: Number($("#tension").val()), 
+        pointsPerSeg: Number($("#pps").val()),
+        normalize: $("#normalize").prop("checked")
+      };
+      var csp = f.getGeometry().cspline(opt);
+      return [ new ol.style.Style({
+        stroke: new ol.style.Stroke({ color:"red", width:1 }),
+        geometry: $("#cspline").prop("checked") ? csp : null
+      }),
+      new ol.style.Style({
+        image: new ol.style.Circle({ stroke:new ol.style.Stroke({color:"blue",width:1}), radius:1 }),
+        geometry: ($("#dpt").prop("checked") && $("#cspline").prop("checked")) ? new ol.geom.MultiPoint(csp.getCoordinates()) : null
+      }),
+      new ol.style.Style({
+        image: new ol.style.Circle({ stroke:new ol.style.Stroke({color:"red",width:4}), radius:2 }),
+        geometry: new ol.geom.MultiPoint(f.getGeometry().getCoordinates())
+      })
+      ]
+    }
+  })
+  map.addLayer(vector);
 
-	var mod = new ol.interaction.Modify({ features:features });
-	map.addInteraction(mod);
-		
-	/* split function
-	mod.on("modifystart", function(e)
-	{	this.mod = true;
-		this.splitCoord = e.mapBrowserEvent.coordinate;
-		var f = e.features.item(0);
-		console.log(f.getGeometry().getCoordinates().length)
-	})
-	mod.on("modifyend", function(e)
-	{	this.mod = false;
-		console.log(e);
-		var f = e.features.item(0);
-		var g = f.getGeometry();
-		console.log(f.getGeometry().getCoordinates().length)
-	});
-	var save = mod.handleEvent;
-	mod.handleEvent = function(e)
-	{	if (!this.mod || this.type!="pointerup") save.call(this,e);
-		return true;
-	}
-	*/
+  var mod = new ol.interaction.Modify({ features:features });
+  map.addInteraction(mod);
+    
+  /* split function
+  mod.on("modifystart", function(e)
+  {	this.mod = true;
+    this.splitCoord = e.mapBrowserEvent.coordinate;
+    var f = e.features.item(0);
+    console.log(f.getGeometry().getCoordinates().length)
+  })
+  mod.on("modifyend", function(e)
+  {	this.mod = false;
+    console.log(e);
+    var f = e.features.item(0);
+    var g = f.getGeometry();
+    console.log(f.getGeometry().getCoordinates().length)
+  });
+  var save = mod.handleEvent;
+  mod.handleEvent = function(e)
+  {	if (!this.mod || this.type!="pointerup") save.call(this,e);
+    return true;
+  }
+  */
 
-	</script>
-	
+  </script>
+  
 </body>
 </html>
