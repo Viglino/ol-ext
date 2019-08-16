@@ -29,11 +29,14 @@ export {ol_sphere_greatCircleBearing as greatCircleBearing}
  * @param {ol.coordinate} origin stating point in lonlat coords
  * @param {number} distance
  * @param {number} bearing bearing angle in radian
- * @param {number|undefined} radius sphere radius, default 6371008.8
+ * @param {*} options
+ *  @param {booelan} normalize normalize longitude beetween -180/180, deafulet true
+ *  @param {number|undefined} options.radius sphere radius, default 6371008.8
  */
-var ol_sphere_computeDestinationPoint = function(origin, distance, bearing, radius) {
+var ol_sphere_computeDestinationPoint = function(origin, distance, bearing, options) {
+  options = options || {};
   var toRad = Math.PI/180;
-  radius = radius || 6371008.8;
+  var radius = options.radius || 6371008.8;
 
   var phi1 = origin[1] * toRad;
   var lambda1 = origin[0] * toRad;
@@ -52,7 +55,7 @@ var ol_sphere_computeDestinationPoint = function(origin, distance, bearing, radi
 
   var lon = lambda2 / toRad;
   // normalise to >=-180 and <=180° 
-  if (lon < -180 || lon > 180) {
+  if (options.normalize!==false && (lon < -180 || lon > 180)) {
     lon = ((lon * 540) % 360) - 180;
   }
 
@@ -66,19 +69,26 @@ export {ol_sphere_computeDestinationPoint as computeDestinationPoint}
  * @param {ol.coordinate} destination destination in lonlat
  * @param {number} distance distance between point along the track in meter, default 1km (1000)
  * @param {number|undefined} radius sphere radius, default 6371008.8
- * @return {ol.geom.LineString}
+ * @return {Array<ol.coordinate>}
  */
-var ol_sphere_greatCircleTrack = function(origin, destination, distance, radius) {
+var ol_sphere_greatCircleTrack = function(origin, destination, options) {
+  options = options || {};
   var bearing = ol_sphere_greatCircleBearing(origin, destination);
-  var dist = ol_sphere_getDistance(origin, destination, radius);
-  var d = distance || 1000;
+  var dist = ol_sphere_getDistance(origin, destination, options.radius);
+  var distance = options.distance || 1000;
+  var d = distance;
   var geom = [origin];
-  while (d<dist) {
-    geom.push(ol_sphere_computeDestinationPoint(origin, d, bearing, radius));
+  while (d < dist) {
+    geom.push(ol_sphere_computeDestinationPoint(origin, d, bearing, { radius: options.radius, normalize: false }));
     d += distance;
   }
+  var pt = ol_sphere_computeDestinationPoint(origin, dist, bearing, { radius: options.radius, normalize: false });
+  if (Math.abs(pt[0]-destination[0]) > 1) {
+    if (pt[0] > destination[0]) destination[0] += 360;
+    else destination[0] -= 360;
+  } 
   geom.push(destination);
-  return new ol_geom_LineString(geom);
+  return geom;
 };
 
 export {ol_sphere_greatCircleTrack as greatCircleTrack}
