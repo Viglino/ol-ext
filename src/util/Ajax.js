@@ -25,6 +25,7 @@ ol_ext_inherits(ol_ext_Ajax, ol_Object);
  *  @param {string} options.dataType The type of data that you're expecting back from the server, default JSON
  *  @param {string} options.success
  *  @param {string} options.error
+ *  @param {*} options.options get options
  */
 ol_ext_Ajax.get = function(options) {
   var ajax = new ol_ext_Ajax(options);
