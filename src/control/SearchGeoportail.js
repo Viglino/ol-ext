@@ -4,7 +4,8 @@
 */
 import ol_ext_inherits from '../util/ext'
 import {transform as ol_proj_transform} from 'ol/proj'
-import ol_control_SearchJSON from "./SearchJSON";
+import ol_control_SearchJSON from './SearchJSON';
+import ol_ext_Ajax from '../util/Ajax';
 
 /**
  * Search places using the French National Base Address (BAN) API.
@@ -35,6 +36,9 @@ var ol_control_SearchGeoportail = function(options) {
   options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
   ol_control_SearchJSON.call(this, options);
   this.set('type', options.type || 'StreetAddress,PositionOfInterest');
+
+  // Authentication
+  // this._auth = options.authentication;
 };
 ol_ext_inherits(ol_control_SearchGeoportail, ol_control_SearchJSON);
 
@@ -58,40 +62,45 @@ ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, cback) {
     +'   </Position>'
     +'  </ReverseGeocodeRequest>'
     +' </Request>'
-    +'</XLS>'
-  var url = this.get('url').replace('ols/apis/completion','geoportail/ols')+"?xls="+encodeURIComponent(request);
-  this.ajax (url, function(resp) {
-    var xml = resp.response;
-    if (xml) {
-      xml = xml.replace(/\n|\r/g,'');
-      var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
-      var f = {};
-      if (!Number(p[1]) && !Number(p[0])) {
-        f = { x: lonlat[0], y: lonlat[1], fulltext: String(lonlat) }
-      } else {
-        f.x = lonlat[0];
-        f.y = lonlat[1];
-        f.city = (xml.replace(/.*<Place type="Municipality">([^<]*)<\/Place>.*/, "$1"));
-        f.insee = (xml.replace(/.*<Place type="INSEE">([^<]*)<\/Place>.*/, "$1"));
-        f.zipcode = (xml.replace(/.*<PostalCode>([^<]*)<\/PostalCode>.*/, "$1"));
-        if (/<Street>/.test(xml)) {
-          f.kind = '';
-          f.country = 'StreetAddress';
-          f.street = (xml.replace(/.*<Street>([^<]*)<\/Street>.*/, "$1"));
-          var number = (xml.replace(/.*<Building number="([^"]*).*/, "$1"));
-          f.fulltext = number+' '+f.street+', '+f.zipcode+' '+f.city;
+    +'</XLS>';
+    
+  this.ajax (this.get('url').replace('ols/apis/completion','geoportail/ols'), 
+    { xls: request },
+    function(xml) {
+      if (xml) {
+        xml = xml.replace(/\n|\r/g,'');
+        var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
+        var f = {};
+        if (!Number(p[1]) && !Number(p[0])) {
+          f = { x: lonlat[0], y: lonlat[1], fulltext: String(lonlat) }
         } else {
-          f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));
-          f.country = 'PositionOfInterest';
-          f.street = '';
-          f.fulltext = f.zipcode+' '+f.city;
+          f.x = lonlat[0];
+          f.y = lonlat[1];
+          f.city = (xml.replace(/.*<Place type="Municipality">([^<]*)<\/Place>.*/, "$1"));
+          f.insee = (xml.replace(/.*<Place type="INSEE">([^<]*)<\/Place>.*/, "$1"));
+          f.zipcode = (xml.replace(/.*<PostalCode>([^<]*)<\/PostalCode>.*/, "$1"));
+          if (/<Street>/.test(xml)) {
+            f.kind = '';
+            f.country = 'StreetAddress';
+            f.street = (xml.replace(/.*<Street>([^<]*)<\/Street>.*/, "$1"));
+            var number = (xml.replace(/.*<Building number="([^"]*).*/, "$1"));
+            f.fulltext = number+' '+f.street+', '+f.zipcode+' '+f.city;
+          } else {
+            f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));
+            f.country = 'PositionOfInterest';
+            f.street = '';
+            f.fulltext = f.zipcode+' '+f.city;
+          }
+        }
+        if (cback) cback.call(this, [f]);
+        else {
+          this._handleSelect(f);
+          search.setInput('', true);
         }
       }
-      if (cback) cback.call(this, [f]);
-      else this._handleSelect(f);
-    }
-  });
-
+    }.bind(this),
+    { dataType: 'XML' }
+  );
 };
 
 /** Returns the text to be displayed in the menu
@@ -176,23 +185,26 @@ ol_control_SearchGeoportail.prototype.searchCommune = function (f, cback) {
 		+'</Request>'
 	+'</XLS>'
 
-  var url = this.get('url').replace('ols/apis/completion','geoportail/ols')+"?xls="+encodeURIComponent(request);
-  
-  this.ajax (url, function(resp) {
-    var xml = resp.response;
-    if (xml) {
-      xml = xml.replace(/\n|\r/g,'');
-      var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
-      f.x = Number(p[1]);
-      f.y = Number(p[0]);
-      f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));
-      f.insee = (xml.replace(/.*<Place type="INSEE">([^<]*)<\/Place>.*/, "$1"));
-      if (f.x || f.y) {
-        if (cback) cback.call(this, [f]);
-        else this._handleSelect(f);
+  // Search 
+  this.ajax (this.get('url').replace('ols/apis/completion','geoportail/ols'),
+    { 'xls': request }, 
+    function(xml) {
+      if (xml) {
+        xml = xml.replace(/\n|\r/g,'');
+        var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
+        f.x = Number(p[1]);
+        f.y = Number(p[0]);
+        f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));
+        f.insee = (xml.replace(/.*<Place type="INSEE">([^<]*)<\/Place>.*/, "$1"));
+        if (f.x || f.y) {
+          if (cback) cback.call(this, [f]);
+          else this._handleSelect(f);
+        }
       }
-    }
-  });
+    }.bind(this),
+    { dataType: 'XML' }
+  );
+  
 };
 
 export default ol_control_SearchGeoportail

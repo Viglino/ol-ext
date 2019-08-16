@@ -207,30 +207,33 @@ ol_control_SearchGeoportailParcelle.prototype.searchParcelle = function(search, 
       +'</GeocodeRequest>'
     +'</Request>'
   +'</XLS>'
-  var url = this.get('url').replace('ols/apis/completion','geoportail/ols?xls=')+encodeURIComponent(request);
   // Geocode
-  this.ajax(url, function(resp) {
-    // XML to JSON
-    var parser = new DOMParser();
-    var xmlDoc = parser.parseFromString(resp.response,"text/xml");
-    var parcelles = xmlDoc.getElementsByTagName('GeocodedAddress');
-    var jsonResp = []
-    for (var i=0, parc; parc= parcelles[i]; i++) {
-      var node = parc.getElementsByTagName('gml:pos')[0] || parc.getElementsByTagName('pos')[0];
-      var p = node.childNodes[0].nodeValue.split(' ');
-      var att = parc.getElementsByTagName('Place');
-      var json = { 
-        lon: Number(p[1]), 
-        lat: Number(p[0])
-      };
-      for (var k=0, a; a=att[k]; k++) {
-        json[a.attributes.type.value] = a.childNodes[0].nodeValue;
+  this.ajax(
+    this.get('url').replace('ols/apis/completion','geoportail/ols'), 
+    { xls: request },
+    function(xml) {
+      // XML to JSON
+      var parser = new DOMParser();
+      var xmlDoc = parser.parseFromString(xml,"text/xml");
+      var parcelles = xmlDoc.getElementsByTagName('GeocodedAddress');
+      var jsonResp = []
+      for (var i=0, parc; parc= parcelles[i]; i++) {
+        var node = parc.getElementsByTagName('gml:pos')[0] || parc.getElementsByTagName('pos')[0];
+        var p = node.childNodes[0].nodeValue.split(' ');
+        var att = parc.getElementsByTagName('Place');
+        var json = { 
+          lon: Number(p[1]), 
+          lat: Number(p[0])
+        };
+        for (var k=0, a; a=att[k]; k++) {
+          json[a.attributes.type.value] = a.childNodes[0].nodeValue;
+        }
+        jsonResp.push(json);
       }
-      jsonResp.push(json);
-    }
-    success(jsonResp);
-  }, 
-  error);
+      success(jsonResp);
+    }, 
+    { dataType: 'XML' }
+  );
 };
 
 /**

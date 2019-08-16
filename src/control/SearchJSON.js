@@ -46,34 +46,50 @@ var ol_control_SearchJSON = function(options) {
 
   this._ajax = new ol_ext_Ajax({ dataType:'JSON', auth: options.authentication });
   this._ajax.on('success', function (resp) {
-    this.element.classList.remove('searching');
     if (resp.status >= 200 && resp.status < 400) {
-      if (typeof(this._callback) === 'function') this._callback(this.handleResponse(resp.response));
+      if (typeof(this._callback) === 'function') this._callback(resp.response);
     } else {
       console.log('AJAX ERROR', arguments);
     }
   }.bind(this));
   this._ajax.on('error', function() {
-    this.element.classList.remove('searching');
     console.log('AJAX ERROR', arguments);
   }.bind(this));
-
+  // Handle searchin
+  this._ajax.on('loadstart', function() {
+    this.element.classList.add('searching');
+  }.bind(this));
+  this._ajax.on('loadend', function() {
+    this.element.classList.remove('searching');
+  }.bind(this));
 
   // Overwrite handleResponse
   if (typeof(options.handleResponse)==='function') this.handleResponse = options.handleResponse;
 };
 ol_ext_inherits(ol_control_SearchJSON, ol_control_Search);
 
+/** Send ajax request
+ * @param {string} url
+ * @param {*} data
+ * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
+ */
+ol_control_SearchJSON.prototype.ajax = function (url, data, cback, options) {
+  options = options || {};
+  this._callback = cback;
+  this._ajax.set('dataType', options.dataType || 'JSON');
+  this._ajax.send(url, data, options);
+};
+
 /** Autocomplete function (ajax request to the server)
-* @param {string} s search string
-* @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
-*/
+ * @param {string} s search string
+ * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
+ */
 ol_control_SearchJSON.prototype.autocomplete = function (s, cback) {
   var data = this.requestData(s);
   var url = encodeURI(this.get('url'));
-  this._callback = cback;
-  this.element.classList.add('searching');
-  this._ajax.send(url, data);
+  this.ajax(url, data, function(resp) {
+    if (typeof(cback) === 'function') cback(this.handleResponse(resp));
+  });
 };
 
 /**
