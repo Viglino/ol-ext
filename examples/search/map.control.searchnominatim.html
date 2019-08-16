@@ -130,6 +130,7 @@
 	var search = new ol.control.SearchNominatim (
 		{	//target: $(".options").get(0),
 			polygon: $("#polygon").prop("checked"),
+			reverse: true,
 			position: true	// Search, with priority to geo position
 		});
 	map.addControl (search);
