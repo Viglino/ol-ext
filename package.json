@@ -5,7 +5,6 @@
   "main": "dist/ol-ext.js",
   "style": "dist/ol-ext.css",
   "dependencies": {
-    "ajax": "0.0.4",
     "ol": "^5.3.0"
   },
   "devDependencies": {

@@ -4,7 +4,6 @@
   "description": "A set of cool extensions for OpenLayers (ol).",
   "main": "index.js",
   "dependencies": {
-    "ajax": "0.0.4",
     "openlayers": "^4.6.5"
   },
   "devDependencies": {
