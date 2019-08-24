@@ -95,9 +95,9 @@ ol_control_SearchNominatim.prototype.reverseGeocode = function (coord, cback) {
       if (cback) cback.call(this, [resp]);
       else {
         this._handleSelect(resp);
-        search.setInput('', true);
+        this.setInput('', true);
       }
-    }
+    }.bind(this)
   );
 };
 

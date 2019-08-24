@@ -194,7 +194,7 @@ ol_control_SearchGeoportailParcelle.prototype.autocompleteParcelle = function() 
  * @param {function} success callback function called on success
  * @param {function} error callback function called on error
  */
-ol_control_SearchGeoportailParcelle.prototype.searchParcelle = function(search, success, error) {
+ol_control_SearchGeoportailParcelle.prototype.searchParcelle = function(search, success /*, error */) {
   // Request
   var request = '<?xml version="1.0" encoding="UTF-8"?>'
   +'<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
