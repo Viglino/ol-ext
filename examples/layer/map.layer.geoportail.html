@@ -94,7 +94,7 @@
 	</div>
 	
   <script type="text/javascript">
-  // Capabilities
+  // Key Capabilities
   if (!window.geoportailConfig) window.geoportailConfig = { capabilities: {} };
   window.geoportailConfig.capabilities['h1osiyvfm7c4wu976jv6gpum'] = {
     "INSEE.FILOSOFI.NIVEAU.DE.VIE.SECRET": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.NIVEAU.DE.VIE.SECRET","title":"Niveau de vie winsorisé des individus (secret signalé)","format":"image/png","style":"CARROYAGE INSEE NIVEAU DE VIE SECRET","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Niveau de vie des individus, retraité des valeurs extrêmes (les cases hachurées correspondent aux données secrétisées)","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
@@ -113,7 +113,7 @@
   });
 
   map.addControl(new ol.control.LayerSwitcher());
-
+  map.addControl(new ol.control.Permalink());
 
 /*
   map.addLayer(new ol.layer.Tile({
@@ -153,6 +153,9 @@
     visible: false
   }));
 
+  var vector = new ol.layer.Vector({ title: 'vector', source: new ol.source.Vector() });
+  map.addLayer(vector);
+
   map.addControl(new ol.control.ScaleLine());
 
   // Show information on click
@@ -162,17 +165,38 @@
     popup.hide();
     var layers = map.getLayers().getArray();
     if (layers.length) {
-      var l = layers[5].getVisible() ? layers[5] : (layers[0].getVisible() ? layers[0] : null);
-      if (l) {
-        l.getSource().getFeatureInfo(
+      if (layers[6].getVisible()) {
+        // Get feature object
+        layers[6].getSource().getFeatureInfo(
           e.coordinate, 
           map.getView().getResolution(), {
-            INFO_FORMAT: 'text/html', // 'application/json',
+            INFO_FORMAT: 'application/json',
             callback: function(resp) {
-              if (resp) popup.show(e.coordinate, resp);
+              if (resp) {
+                resp = JSON.parse(resp);
+                vector.getSource().clear();
+                var format = new ol.format.GeoJSON();
+                var features = format.readFeatures(resp);
+                vector.getSource().addFeatures(features);
+                console.log(resp.features[0].properties);
+              }
             }
           }
-        )
+        );
+      } else {
+        // Show Popup
+        var l = layers[5].getVisible() ? layers[5] : (layers[0].getVisible() ? layers[0] : null);
+        if (l) {
+          l.getSource().getFeatureInfo(
+            e.coordinate, 
+            map.getView().getResolution(), {
+              INFO_FORMAT: 'text/html', // 'application/json',
+              callback: function(resp) {
+                if (resp) popup.show(e.coordinate, resp);
+              }
+            }
+          )
+        }
       }
     }
   });
