@@ -31,8 +31,7 @@ var ol_control_Toggle = function(options) {
   this.interaction_ = options.interaction;
   if (this.interaction_) {
     this.interaction_.setActive(options.active);
-    this.interaction_.on("change:active", function(e) {
-      if (self === ledit) console.log(e)
+    this.interaction_.on("change:active", function() {
       self.setActive(self.interaction_.getActive());
     });
   }
