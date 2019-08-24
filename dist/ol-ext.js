@@ -465,14 +465,6 @@ ol.ext.element.scrollDiv = function(elt, options) {
   }
 };
 
-/* Export getVector context for backward compatibility ol5 / ol6
- * using ol5: export-> null
- * using ol6: export-> getVectorContext
- */
-if (!ol.render.hasOwnProperty('getVectorContext')) {
-  ol.render.getVectorContext = null;
-}
-
 /* global ol */
 /* Create ol.sphere for backward compatibility with ol < 5.0
  * To use with Openlayers package
@@ -1471,13 +1463,13 @@ ol.control.SearchPhoton.prototype.reverseGeocode = function (coord, cback) {
     this.reverseData(coord),
     function(resp) {
       if (resp.features) resp = resp.features;
-      if (!(resp instanceof Array)) resp = [resp]
+      if (!(resp instanceof Array)) resp = [resp];
       if (cback) cback.call(this, resp);
       else {
         this._handleSelect(resp[0]);
-        search.setInput('', true);
+        this.setInput('', true);
       }
-    }
+    }.bind(this)
   );
 };
 
@@ -1570,7 +1562,7 @@ ol.control.SearchGeoportail.prototype.reverseGeocode = function (coord, cback) {
         if (cback) cback.call(this, [f]);
         else {
           this._handleSelect(f);
-          search.setInput('', true);
+          this.setInput('', true);
         }
       }
     }.bind(this),
@@ -8197,7 +8189,7 @@ ol.control.SearchGeoportailParcelle.prototype.autocompleteParcelle = function() 
  * @param {function} success callback function called on success
  * @param {function} error callback function called on error
  */
-ol.control.SearchGeoportailParcelle.prototype.searchParcelle = function(search, success, error) {
+ol.control.SearchGeoportailParcelle.prototype.searchParcelle = function(search, success /*, error */) {
   // Request
   var request = '<?xml version="1.0" encoding="UTF-8"?>'
   +'<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
@@ -8396,9 +8388,9 @@ ol.control.SearchNominatim.prototype.reverseGeocode = function (coord, cback) {
       if (cback) cback.call(this, [resp]);
       else {
         this._handleSelect(resp);
-        search.setInput('', true);
+        this.setInput('', true);
       }
-    }
+    }.bind(this)
   );
 };
 
@@ -10332,8 +10324,7 @@ ol.control.Toggle = function(options) {
   this.interaction_ = options.interaction;
   if (this.interaction_) {
     this.interaction_.setActive(options.active);
-    this.interaction_.on("change:active", function(e) {
-      if (self === ledit) console.log(e)
+    this.interaction_.on("change:active", function() {
       self.setActive(self.interaction_.getActive());
     });
   }
