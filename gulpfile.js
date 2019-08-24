@@ -112,7 +112,7 @@ gulp.task('css', function () {
 // Build js
 gulp.task("js", function() {
   gulp.src([
-    "./src/util/ext.js", "./src/util/*.js",
+    "!./src/util/getVectorContext.js", "./src/util/ext.js", "./src/util/*.js",
     "./src/control/CanvasBase.js","./src/control/SelectBase.js","./src/control/Search.js","./src/control/SearchJSON.js","./src/control/SearchPhoton.js","./src/control/SearchGeoportail.js",
     "./src/control/LayerSwitcher.js", "./src/control/*.js", 
     "!./src/control/PirateMap.js", "!./src/control/Cloud.js",
