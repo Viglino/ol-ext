@@ -92,10 +92,11 @@ ol_control_SearchNominatim.prototype.reverseGeocode = function (coord, cback) {
     this.get('url').replace('search', 'reverse'),
     { lon: lonlat[0], lat: lonlat[1], format: 'json' },
     function(resp) {
-      if (cback) cback.call(this, [resp]);
-      else {
-        this._handleSelect(resp);
-        this.setInput('', true);
+      if (cback) {
+        cback.call(this, [resp]);
+      } else {
+        this._handleSelect(resp, true);
+        //this.setInput('', true);
       }
     }.bind(this)
   );

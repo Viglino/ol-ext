@@ -91,10 +91,12 @@ ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, cback) {
             f.fulltext = f.zipcode+' '+f.city;
           }
         }
-        if (cback) cback.call(this, [f]);
-        else {
-          this._handleSelect(f);
-          this.setInput('', true);
+        if (cback) {
+          cback.call(this, [f]);
+        } else {
+          this._handleSelect(f, true);
+          // this.setInput('', true);
+          // this.drawList_();
         }
       }
     }.bind(this),

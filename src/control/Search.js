@@ -290,18 +290,19 @@ ol_control_Search.prototype.setInput = function (value, search) {
 
 /** A ligne has been clicked in the menu > dispatch event
 *	@param {any} f the feature, as passed in the autocomplete
-*	@api
+*	@api * @param {boolean} reverse true if reverse geocode
 */
-ol_control_Search.prototype.select = function (f) {
-  this.dispatchEvent({ type:"select", search:f });
+ol_control_Search.prototype.select = function (f, reverse) {
+  this.dispatchEvent({ type:"select", search:f, reverse: !!reverse });
 };
 
 /**
  * Save history and select
  * @param {*} f 
+ * @param {boolean} reverse true if reverse geocode
  * @private
  */
-ol_control_Search.prototype._handleSelect = function (f) {
+ol_control_Search.prototype._handleSelect = function (f, reverse) {
   if (!f) return;
   // Save input in history
   var hist = this.get('history');
@@ -327,7 +328,7 @@ ol_control_Search.prototype._handleSelect = function (f) {
   } 
   this.saveHistory();
   // Select feature
-  this.select(f);
+  this.select(f, reverse);
   //this.drawList_();
 };
 

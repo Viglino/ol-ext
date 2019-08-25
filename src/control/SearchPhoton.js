@@ -131,10 +131,11 @@ ol_control_SearchPhoton.prototype.reverseGeocode = function (coord, cback) {
     function(resp) {
       if (resp.features) resp = resp.features;
       if (!(resp instanceof Array)) resp = [resp];
-      if (cback) cback.call(this, resp);
-      else {
-        this._handleSelect(resp[0]);
-        this.setInput('', true);
+      if (cback) {
+        cback.call(this, resp);
+      } else {
+        this._handleSelect(resp[0], true);
+        // this.setInput('', true);
       }
     }.bind(this)
   );
