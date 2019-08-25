@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.1.5
+ * @version v3.1.6
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -1096,17 +1096,18 @@ ol.control.Search.prototype.setInput = function (value, search) {
 };
 /** A ligne has been clicked in the menu > dispatch event
 *	@param {any} f the feature, as passed in the autocomplete
-*	@api
+*	@api * @param {boolean} reverse true if reverse geocode
 */
-ol.control.Search.prototype.select = function (f) {
-  this.dispatchEvent({ type:"select", search:f });
+ol.control.Search.prototype.select = function (f, reverse) {
+  this.dispatchEvent({ type:"select", search:f, reverse: !!reverse });
 };
 /**
  * Save history and select
  * @param {*} f 
+ * @param {boolean} reverse true if reverse geocode
  * @private
  */
-ol.control.Search.prototype._handleSelect = function (f) {
+ol.control.Search.prototype._handleSelect = function (f, reverse) {
   if (!f) return;
   // Save input in history
   var hist = this.get('history');
@@ -1132,7 +1133,7 @@ ol.control.Search.prototype._handleSelect = function (f) {
   } 
   this.saveHistory();
   // Select feature
-  this.select(f);
+  this.select(f, reverse);
   //this.drawList_();
 };
 /** Current history */
@@ -1464,10 +1465,11 @@ ol.control.SearchPhoton.prototype.reverseGeocode = function (coord, cback) {
     function(resp) {
       if (resp.features) resp = resp.features;
       if (!(resp instanceof Array)) resp = [resp];
-      if (cback) cback.call(this, resp);
-      else {
-        this._handleSelect(resp[0]);
-        this.setInput('', true);
+      if (cback) {
+        cback.call(this, resp);
+      } else {
+        this._handleSelect(resp[0], true);
+        // this.setInput('', true);
       }
     }.bind(this)
   );
@@ -1559,10 +1561,12 @@ ol.control.SearchGeoportail.prototype.reverseGeocode = function (coord, cback) {
             f.fulltext = f.zipcode+' '+f.city;
           }
         }
-        if (cback) cback.call(this, [f]);
-        else {
-          this._handleSelect(f);
-          this.setInput('', true);
+        if (cback) {
+          cback.call(this, [f]);
+        } else {
+          this._handleSelect(f, true);
+          // this.setInput('', true);
+          // this.drawList_();
         }
       }
     }.bind(this),
@@ -8385,10 +8389,11 @@ ol.control.SearchNominatim.prototype.reverseGeocode = function (coord, cback) {
     this.get('url').replace('search', 'reverse'),
     { lon: lonlat[0], lat: lonlat[1], format: 'json' },
     function(resp) {
-      if (cback) cback.call(this, [resp]);
-      else {
-        this._handleSelect(resp);
-        this.setInput('', true);
+      if (cback) {
+        cback.call(this, [resp]);
+      } else {
+        this._handleSelect(resp, true);
+        //this.setInput('', true);
       }
     }.bind(this)
   );
@@ -11623,8 +11628,8 @@ ol.filter.Crop.prototype.postcompose = function(e) {
 }
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Fold filer map
 * @constructor
@@ -11636,85 +11641,85 @@ ol.filter.Crop.prototype.postcompose = function(e) {
 *  @param {number} [options.padding] padding in px, default 8
 *  @param {number|number[]} [options.fsize] fold size in px, default 8,10
 */
-ol.filter.Fold = function(options)
-{	options = options || {};
-	ol.filter.Base.call(this, options);
-	this.set("fold", options.fold || [8,4]);
-	this.set("margin", options.margin || 8);
-	this.set("padding", options.padding || 8);
-	if (typeof options.fsize == "number") options.fsize = [options.fsize,options.fsize];
-	this.set("fsize", options.fsize || [8,10]);
+ol.filter.Fold = function(options) {
+  options = options || {};
+  ol.filter.Base.call(this, options);
+  this.set("fold", options.fold || [8,4]);
+  this.set("margin", options.margin || 8);
+  this.set("padding", options.padding || 8);
+  if (typeof options.fsize == "number") options.fsize = [options.fsize,options.fsize];
+  this.set("fsize", options.fsize || [8,10]);
 };
 ol.ext.inherits(ol.filter.Fold, ol.filter.Base);
-ol.filter.Fold.prototype.drawLine_ = function(ctx, d, m)
-{	var canvas = ctx.canvas;
-	var fold = this.get("fold");
-	var w = canvas.width;
-	var h = canvas.height;
-	var x, y, i;
-	ctx.beginPath();
-	ctx.moveTo ( m, m );
-	for (i=1; i<=fold[0]; i++)
-	{	x = i*w/fold[0] - (i==fold[0] ? m : 0);
-		y =  d[1]*(i%2) +m;
-		ctx.lineTo ( x, y );
-	}
-	for (i=1; i<=fold[1]; i++)
-	{	x = w - d[0]*(i%2) - m;
-		y = i*h/fold[1] - (i==fold[1] ? d[0]*(fold[0]%2) + m : 0);
-		ctx.lineTo ( x, y );
-	}
-	for (i=fold[0]; i>0; i--)
-	{	x = i*w/fold[0] - (i==fold[0] ? d[0]*(fold[1]%2) + m : 0);
-		y = h - d[1]*(i%2) -m;
-		ctx.lineTo ( x, y );
-	}
-	for (i=fold[1]; i>0; i--)
-	{	x = d[0]*(i%2) + m;
-		y = i*h/fold[1] - (i==fold[1] ? m : 0);
-		ctx.lineTo ( x, y );
-	}
-	ctx.closePath();
+ol.filter.Fold.prototype.drawLine_ = function(ctx, d, m) {
+  var canvas = ctx.canvas;
+  var fold = this.get("fold");
+  var w = canvas.width;
+  var h = canvas.height;
+  var x, y, i;
+  ctx.beginPath();
+  ctx.moveTo ( m, m );
+  for (i=1; i<=fold[0]; i++) {
+    x = i*w/fold[0] - (i==fold[0] ? m : 0);
+    y =  d[1]*(i%2) +m;
+    ctx.lineTo ( x, y );
+  }
+  for (i=1; i<=fold[1]; i++) {
+    x = w - d[0]*(i%2) - m;
+    y = i*h/fold[1] - (i==fold[1] ? d[0]*(fold[0]%2) + m : 0);
+    ctx.lineTo ( x, y );
+  }
+  for (i=fold[0]; i>0; i--) {
+    x = i*w/fold[0] - (i==fold[0] ? d[0]*(fold[1]%2) + m : 0);
+    y = h - d[1]*(i%2) -m;
+    ctx.lineTo ( x, y );
+  }
+  for (i=fold[1]; i>0; i--) {
+    x = d[0]*(i%2) + m;
+    y = i*h/fold[1] - (i==fold[1] ? m : 0);
+    ctx.lineTo ( x, y );
+  }
+  ctx.closePath();
 };
-ol.filter.Fold.prototype.precompose = function(e)
-{	var ctx = e.context;
-	ctx.save();
-		ctx.shadowColor = "rgba(0,0,0,0.3)";
-		ctx.shadowBlur = 8;
-		ctx.shadowOffsetX = 2;
-		ctx.shadowOffsetY = 3;
-		this.drawLine_(ctx, this.get("fsize"), this.get("margin"));
-		ctx.fillStyle="#fff";
-		ctx.fill();
-		ctx.strokeStyle = "rgba(0,0,0,0.1)";
-		ctx.stroke();
-	ctx.restore();
-	ctx.save();
-	this.drawLine_(ctx, this.get("fsize"), this.get("margin") + this.get("padding"));
-	ctx.clip();
+ol.filter.Fold.prototype.precompose = function(e) {
+  var ctx = e.context;
+  ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.3)";
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 3;
+    this.drawLine_(ctx, this.get("fsize"), this.get("margin"));
+    ctx.fillStyle="#fff";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.1)";
+    ctx.stroke();
+  ctx.restore();
+  ctx.save();
+    this.drawLine_(ctx, this.get("fsize"), this.get("margin") + this.get("padding"));
+    ctx.clip();
 };
-ol.filter.Fold.prototype.postcompose = function(e)
-{	var ctx = e.context;
-	var canvas = ctx.canvas;
-	ctx.restore();
-	ctx.save();
-		this.drawLine_(ctx, this.get("fsize"), this.get("margin"));
-		ctx.clip();
-		var fold = this.get("fold");
-		var w = canvas.width/fold[0];
-		var h = canvas.height/fold[1];
-		var grd = ctx.createRadialGradient(5*w/8,5*w/8,w/4,w/2,w/2,w);
-		grd.addColorStop(0,"transparent");
-		grd.addColorStop(1,"rgba(0,0,0,0.2)");
-		ctx.fillStyle = grd;
-		ctx.scale (1,h/w);
-		for (var i=0; i<fold[0]; i++) for (var j=0; j<fold[1]; j++)
-		{	ctx.save()
-			ctx.translate(i*w, j*w);
-			ctx.fillRect(0,0,w,w);
-			ctx.restore()
-		}
-	ctx.restore();
+ol.filter.Fold.prototype.postcompose = function(e) {
+  var ctx = e.context;
+  var canvas = ctx.canvas;
+  ctx.restore();
+  ctx.save();
+    this.drawLine_(ctx, this.get("fsize"), this.get("margin"));
+    ctx.clip();
+    var fold = this.get("fold");
+    var w = canvas.width/fold[0];
+    var h = canvas.height/fold[1];
+    var grd = ctx.createRadialGradient(5*w/8,5*w/8,w/4,w/2,w/2,w);
+    grd.addColorStop(0,"transparent");
+    grd.addColorStop(1,"rgba(0,0,0,0.2)");
+    ctx.fillStyle = grd;
+    ctx.scale (1,h/w);
+    for (var i=0; i<fold[0]; i++) for (var j=0; j<fold[1]; j++) {
+      ctx.save()
+      ctx.translate(i*w, j*w);
+      ctx.fillRect(0,0,w,w);
+      ctx.restore()
+    }
+  ctx.restore();
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
