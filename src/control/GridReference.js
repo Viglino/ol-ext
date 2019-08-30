@@ -271,7 +271,7 @@ ol_control_GridReference.prototype._draw = function (e) {
       ctx.fillText(letter, x, y);
     }
     ctx.textBaseline = 'middle';
-    for (i=0; i<size[0]; i++) {
+    for (i=0; i<size[1]; i++) {
       y = p0[1]+i*dy+dy/2;
       ctx.textAlign = 'right';
       x = p0[0] - spacing;
@@ -291,7 +291,6 @@ ol_control_GridReference.prototype._draw = function (e) {
       ctx.strokeText(i, x, y);
       ctx.fillText(i, x, y);
     }
-
 
   ctx.restore();
 };
