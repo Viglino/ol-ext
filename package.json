@@ -4,8 +4,8 @@
   "description": "A set of cool extensions for OpenLayers (ol) in node modules structure",
   "main": "dist/ol-ext.js",
   "style": "dist/ol-ext.css",
-  "dependencies": {
-    "ol": "^5.3.0"
+  "peerDependencies": {
+    "ol": ">= 5.3.0"
   },
   "devDependencies": {
     "eslint": "^5.10.0",
