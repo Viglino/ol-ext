@@ -1,0 +1,301 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2019 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+  
+  https://vectortiles.ign.fr/demonstrateur/
+  http://calac-4.ign.fr/pyramide_ecran/demonstrateur.html
+  
+  Documentation:
+  https://geoservices.ign.fr/documentation/services_betas/vecteur-tuile.html
+  
+-->
+  <title>ol-ext: Geoportail vector tile</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="DBPedia layer for OL3" />
+  <meta name="keywords" content="ol3, layer, source, vector, wikipedia, dbpedia" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- chroma.js -->
+  <script type="text/javascript" src="https://gka.github.io/chroma.js/libs/chroma.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <script type="text/javascript" src="../olms.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .options > ul > li > label {
+      font-weight: bold;
+      color: #369;
+    }
+    .options select {
+      float: right;
+    }
+    .ol-permalink {
+      display: none;
+    }
+  </style>
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Geoportail vector tile</h1>
+  </a>
+  <p class="info">
+    Testing <a href="  https://geoservices.ign.fr/documentation/services_betas/vecteur-tuile.html">Geoportail vector tiles</a>.
+  </p>
+
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px; background: #fff;"></div>
+  <div class="options">
+    <ul></ul>
+  </div>
+  
+<script type="text/javascript">
+
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 15,
+      center: [261204.43490751847, 6250258.191535994]
+    }),
+    interactions: ol.interaction.defaults(),
+    //layers: [ new ol.layer.Tile({ name:"OSM", source: new ol.source.OSM(), opacity:.2 })]
+  });
+  map.addControl(new ol.control.Permalink());
+
+  var vlayer = new ol.layer.VectorTile({
+    title: "Plan IGN vecteur",
+    source: new ol.source.VectorTile({
+      tilePixelRatio: 1,
+      tileGrid: ol.tilegrid.createXYZ({maxZoom: 21}),
+      format: new ol.format.MVT(),
+      projection: new ol.proj.Projection({code:"EPSG:3857"}),
+      url: "https://vectortiles.ign.fr/rok4server/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
+      // url: "https://vectortiles.ign.fr/rok4server/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
+      attributions: '<a href="https://geoservices.ign.fr/blog/2018/07/08/nouveautes_vecteur.html">&copy; IGN-Géoportail</a>'
+    }),
+    minResolution : 0,
+    maxResolution : 200000,
+    declutter: true
+  });
+  map.addLayer(vlayer);
+
+  // Lecture du fichier de style
+  var globalStyle;
+  ol.ext.Ajax.get({
+    //url: './styles/planign.json',
+    url: 'https://vectortiles.ign.fr/demonstrateur/styles/planign.json',
+    //url: 'http://calac-4.ign.fr/pyramide_ecran/style_mapbox.json',
+    // url: 'https://vectortiles.ign.fr/demonstrateur/styles/gris.json',
+    // url: 'https://vectortiles.ign.fr/demonstrateur/styles/muet.json',
+    success: function(style) {
+      globalStyle = style;
+      olms.applyStyle(vlayer, style, "plan_ign").then(function () {});
+      showLayers();
+    }
+  });
+
+  function showLayers() {
+    var sources = {};
+    globalStyle.layers.forEach(function(l) {
+      var name = l['source-layer'];
+      if (name) {
+        var theme = name.split('_').shift();
+        if (!sources[theme]) sources[theme] = [];
+        sources[theme][name] = l;
+      }
+    });
+    var ul = $('.options ul');
+    console.log(sources)
+    Object.keys(sources).forEach(function(s) {
+      var li = $('<li>').appendTo(ul);
+      var label = $('<label>').text(s).appendTo(li);
+      $('<input type="checkbox">')
+        .on('change', function() {
+          var vis = $(this).prop('checked');
+          $('input', ul2).each(function() {
+            $(this).prop('checked', vis).change();
+          })
+        })
+        .prependTo(label);
+      var color;
+      $('<select>').html(`
+        <option value="">normal</option>
+        <option value="gray">gray</option>
+        <option value="saturate">saturate</option>
+        <option value="saturate2">saturate2</option>
+        <option value="desaturate">desaturate</option>
+        <option value="desaturate2">desaturate2</option>
+        <option value="darken">darken</option>
+        <option value="darken2">darken2</option>
+        <option value="brighten">brighten</option>
+        <option value="brighten2">brighten2</option>
+        <option value="red">red</option>
+        <option value="green">green</option>
+        <option value="blue">blue</option>
+        `)
+        .on('change', function(){
+          color = $(this).val();
+          $('input', ul2).each(function() {
+            $(this).change();
+          })
+        })
+        .appendTo(li);
+      var ul2 = $("<ul>").appendTo(li);
+      Object.keys(sources[s]).forEach(function(i) {
+        var li = $('<li>').appendTo(ul2);
+        var source = sources[s][i];
+        var label = $('<label>').text(i).appendTo(li);
+        $('<input type="checkbox">')
+          .prop('checked', source.layout.visibility==='visible' ? 'checked':'')
+          .on('change', function() {
+            var vis = $(this).prop('checked') ? 'visible' : 'hidden';
+            var style = $.extend({}, globalStyle);
+            style.layers = [];
+            globalStyle.layers.forEach(function(l) {
+              if (l.layout) {
+                if (l['source-layer'] === i) {
+                  l.layout.visibility = vis;
+                  // l.paint[l.type+'-color'] = '#ff0000';
+                  if (l.savePaintColor) {
+                    if (l.savePaintColor.stops) l.paint[l.type+'-color'] = $.extend(true, {}, l.savePaintColor);
+                    else l.paint[l.type+'-color'] = l.savePaintColor;
+                  }
+                  if (color && l.paint) {
+                    if (!l.savePaintColor) {
+                      if (l.paint[l.type+'-color'] && l.paint[l.type+'-color'].stops) l.savePaintColor = $.extend(true, {}, l.paint[l.type+'-color']);
+                      else l.savePaintColor = l.paint[l.type+'-color'];
+                    }
+                    switch(color) {
+                      case 'brighten':
+                      case 'darken':
+                      case 'brighten2':
+                      case 'darken2':
+                      case 'saturate':
+                      case 'desaturate':
+                      case 'saturate2':
+                      case 'desaturate2':
+                      case 'gray': {
+                        var opt = parseInt(color.replace(/([^0-9])/g,'')) || .5;
+                        var operation = color.replace(/[0-9]$/, '');
+                        if (color==='gray') {
+                          opt = 4;
+                          operation = 'desaturate';
+                        }
+                        console.log(operation,opt)
+                        try {
+                          if (l.paint[l.type+'-color'].stops) {
+                            l.paint[l.type+'-color'].stops.forEach(function (s) {
+                              s[1] = chroma(s[1])[operation](opt).hex(); 
+                              console.log('STOP:',s)
+                            })
+                          } else {
+                            l.paint[l.type+'-color'] = chroma(l.savePaintColor)[operation](opt).hex(); 
+                          }
+                        } catch(e){};
+                        break; //'#cccccc'; break;
+                      }
+                      case 'red':
+                      case 'green':
+                      case 'blue': {
+                        try {
+                          if (l.paint[l.type+'-color'].stops) {
+                            l.paint[l.type+'-color'].stops.forEach(function (s) {
+                              s[1] = chroma.mix(s[1],color).hex(); 
+                            })
+                          } else {
+                            l.paint[l.type+'-color'] = chroma.mix(l.savePaintColor,color).hex(); 
+                          }
+                        } catch(e){};
+                        break; 
+                      }
+                    }
+                    console.log(l.savePaintColor, l.paint[l.type+'-color']);
+                  }
+                }
+                if (l.layout.visibility === 'visible') style.layers.push(l);
+              }
+            });
+            olms.applyStyle(vlayer, style, "plan_ign")
+          })
+          .prependTo(label);
+      });
+    });
+  }
+
+  // Selection
+  var select = new ol.interaction.Select({
+    style: new ol.style.Style ({
+      image: new ol.style.Circle({ 
+        radius: 5,
+        fill: new ol.style.Fill({ color: [255,0,0,.5] })
+      }),
+      stroke: new ol.style.Stroke({ width: 1.5, color: [255,0,0,.5] }),
+      fill: new ol.style.Fill({ color: [255,0,0,.5] }),
+    })
+  });
+  select.setActive(false);
+  map.addInteraction(select);
+
+  var tooltip  = new ol.Overlay.Tooltip();
+  map.addOverlay(tooltip);
+
+  var hover = new ol.interaction.Hover({ cursor: "pointer" });
+  map.addInteraction(hover);
+  hover.on("enter", function(e) {
+    // hover.setCursor("pointer");
+    var feature = e.feature;
+    select.getFeatures().clear();
+    tooltip.setInfo(feature ? feature.get('layer') : '');
+    console.log(feature.getProperties());
+    /* Select feature * /
+    var coords = [];
+    if (feature instanceof ol.Feature) {
+      select.getFeatures().push(feature);
+    } else {
+      var c = feature.getFlatCoordinates();
+      for (var i=0; i<c.length; i+=2) {
+        coords.push ([c[i],c[i+1]]);
+      }
+      switch (feature.getType()) {
+        case 'Point': {
+          coords = coords.pop();
+          break;
+        }
+        case 'MultiLineString' : 
+        case 'Polygon' : {
+          coords = [coords];
+          break;
+        }
+      }
+      var geom = new ol.geom[feature.getType()](coords)
+      var f2 = new ol.Feature(geom);
+      select.getFeatures().push(f2);
+    }
+    /**/
+  });
+  hover.on("leave", function(e) {
+    tooltip.setInfo('');
+    select.getFeatures().clear();
+  });
+
+</script>
+
+</body>
+</html>
