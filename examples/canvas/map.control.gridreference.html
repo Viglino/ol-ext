@@ -1,189 +1,186 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
+<!--
+  Copyright (c) 2017-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Grid reference control</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	Copyright (c) 2017-2018 Jean-Marc VIGLINO,
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+  <meta name="description" content="Control to add a grid reference to a map." />
+  <meta name="keywords" content="ol3, control, index, grid, reference" />
 
------------------------------------------------------------->
-	<title>ol-ext: Grid reference control</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-	<meta name="description" content="Control to add a grid reference to a map." />
-	<meta name="keywords" content="ol3, control, index, grid, reference" />
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- FontAwesome -->
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  <link rel="stylesheet" href="../style.css" id="style"/>
+  <style>
+    .ol-gridreference {
+      position: relative;
+    }
+    .ol-gridreference ul {
+      columns: 3;
+      padding: 0;
+    }
+    .ol-gridreference li.ol-title {
+      break-after: avoid-column;
+    }
+    .ol-gridreference input {
+      padding-left:2em;
+    }
+    .ol-gridreference:before {
+      content:"\f002";
+      font-family: FontAwesome;
+      position:absolute;
+      top: 2px;
+      left: 5px;
+      color: #aaa;
+    }
 
-	<!-- ol-ext -->
-    <link rel="stylesheet" href="../../dist/ol-ext.css" />
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
-
-	<link rel="stylesheet" href="../style.css" id="style"/>
-	<style>
-		.ol-gridreference
-		{	position: relative;
-		}
-		.ol-gridreference ul
-		{	columns: 3;
-			padding: 0;
-		}
-		.ol-gridreference li.ol-title
-		{	break-after: avoid-column;
-		}
-		.ol-gridreference input
-		{	padding-left:2em;
-		}
-		.ol-gridreference:before
-		{	content:"\f002";
-			font-family: FontAwesome;
-			position:absolute;
-			top: 2px;
-			left: 5px;
-			color: #aaa;
-		}
-
-	</style>
+  </style>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Grid reference control</h1>
-	</a>
+  <a href="../../index.html">
+    <h1>ol-ext: Grid reference control</h1>
+  </a>
 
-	<div class="info">
-		Display a grid reference on the map and an index associated with.
-		<ul>
-			<li>
-				You have to define the <i>extent</i> and the <i>size</i> of the grid.
-			</li>
-			<li>
-				You can define a <i>ol.source.vector</i> or use the <i>setIndex</i> method to display an index.
-			</li>
-			<li>
-				You can define a <i>property</i> (or a function to retrieve it) that will be displayed in the index.
-			</li>
-			<li>
-				You can customize a <i>sortFeature</i> function and the <i>indexTitle</i>
-				that will be displayed in the index.
-			</li>
-		</ul>
-	</div>
+  <div class="info">
+    Display a grid reference on the map and an index associated with.
+    <ul>
+      <li>
+        You have to define the <i>extent</i> and the <i>size</i> of the grid.
+      </li>
+      <li>
+        You can define a <i>ol.source.vector</i> or use the <i>setIndex</i> method to display an index.
+      </li>
+      <li>
+        You can define a <i>property</i> (or a function to retrieve it) that will be displayed in the index.
+      </li>
+      <li>
+        You can customize a <i>sortFeature</i> function and the <i>indexTitle</i>
+        that will be displayed in the index.
+      </li>
+    </ul>
+  </div>
 
-	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options">
-		<h2>Options</h2>
-		<input id="region" type="checkbox" onchange="setControl();" /><label for="region"> sort by region</label>
-		<h2>Index:</h2>
-		<div></div>
-		<p>Click on the index to locate the features!</p>
-	</div>
+  <div class="options">
+    <h2>Options</h2>
+    <input id="region" type="checkbox" onchange="setControl();" /><label for="region"> sort by region</label>
+    <h2>Index:</h2>
+    <div></div>
+    <p>Click on the index to locate the features!</p>
+  </div>
 
-	<script type="text/javascript">
-	// Layers
-	var layers = [
-		new ol.layer.Tile({
-			title:'terrain-background',
-			source: new ol.source.Stamen({ layer: 'terrain' })
-		})
-	]
+  <script type="text/javascript">
+  // Layers
+  var layers = [
+    new ol.layer.Tile({
+      title:'terrain-background',
+      source: new ol.source.Stamen({ layer: 'terrain' })
+    })
+  ]
 
-	// The map
-	var map = new ol.Map
-		({	target: 'map',
-			view: new ol.View
-			({	zoom: 5,
-				center: [166326, 5992663]
-			}),
-			interactions: ol.interaction.defaults({ altShiftDragRotate:false, pinchRotate:false }),
-			layers: layers
-		});
+  // The map
+  var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 5,
+      center: [166326, 5992663]
+    }),
+    interactions: ol.interaction.defaults({ altShiftDragRotate:false, pinchRotate:false }),
+    layers: layers
+  });
 
-	// GeoJSON layer
-	var vectorSource = new ol.source.Vector(
-	{	url: '../data/fond_guerre.geojson',
-		projection: 'EPSG:3857',
-		format: new ol.format.GeoJSON(),
-		attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
-		logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg"
-	});
+  // GeoJSON layer
+  var vectorSource = new ol.source.Vector({
+    url: '../data/fond_guerre.geojson',
+    projection: 'EPSG:3857',
+    format: new ol.format.GeoJSON(),
+    attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
+    logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg"
+  });
 
-	map.addLayer(new ol.layer.Vector(
-	{	name: 'Fonds de guerre 14-18',
-		source: vectorSource,
-		style: new ol.style.Style({ image: new ol.style.Icon({ src:"../data/camera.png", scale: 0.8 }) })
-	}));
+  map.addLayer(new ol.layer.Vector({
+    name: 'Fonds de guerre 14-18',
+    source: vectorSource,
+    style: new ol.style.Style({ image: new ol.style.Icon({ src:"../data/camera.png", scale: 0.8 }) })
+  }));
 
-	// Control Select
-	var select = new ol.interaction.Select({});
-	map.addInteraction(select);
+  // Control Select
+  var select = new ol.interaction.Select({});
+  map.addInteraction(select);
 
-	// Set the control grid reference
-	var ref;
+  // Set the control grid reference
+  var ref;
 
-	function setControl()
-	{	if (ref) map.removeControl(ref);
-		// Sort by region
-		var sort, title;
-		if (document.querySelector("#region").checked)
-		{	// Sort by region + name
-			sort = function(a,b)
-				{	var c1 = a.get('region')+" "+this.getFeatureName(a);
-					var c2 = b.get('region')+" "+this.getFeatureName(b);
-					return (c1==c2) ? 0 : (c1<c2) ? -1 : 1;
-				}
-			// display region as title
-			title = function(f)
-				{	return f.get('region');
-				}
-		}
+  function setControl() {
+    if (ref) map.removeControl(ref);
+    // Sort by region
+    var sort, title;
+    if (document.querySelector("#region").checked) {
+      // Sort by region + name
+      sort = function(a,b) {
+        var c1 = a.get('region')+" "+this.getFeatureName(a);
+        var c2 = b.get('region')+" "+this.getFeatureName(b);
+        return (c1==c2) ? 0 : (c1<c2) ? -1 : 1;
+      }
+      // display region as title
+      title = function(f) {
+        return f.get('region');
+      }
+    }
 
-		// New control
-		ref = new ol.control.GridReference(
-		{	extent: [ -550000, 5250000, 850000, 6650000 ],
-			size: [10,10],
-			target: document.querySelector(".options div"),
-			source: vectorSource,
-			property: "commune",
-			sortFeatures: sort,
-			indexTitle: title
-		});
-		map.addControl (ref);
+    // New control
+    ref = new ol.control.GridReference({
+      extent: [ -550000, 5250000, 850000, 6650000 ],
+      size: [10,12],
+      target: document.querySelector(".options div"),
+      source: vectorSource,
+      property: "commune",
+      sortFeatures: sort,
+      indexTitle: title
+    });
+    map.addControl (ref);
 
-		// Select feature when click on the reference index
-		ref.on('select', function(e)
-			{	select.getFeatures().clear();
-				select.getFeatures().push (e.feature);
-				var p = e.feature.getGeometry().getFirstCoordinate();
-				/*
-				var ex = map.getView().calculateExtent(map.getSize());
-				if (!ol.extent.containsCoordinate(ex, p))
-				{	map.getView().setCenter(p);
-				}
-				*/
-				map.getView().animate({
-					center: p,
-					duration: 500
-				});
-			});
-	};
-	setControl();
+    // Select feature when click on the reference index
+    ref.on('select', function(e) {
+      select.getFeatures().clear();
+      select.getFeatures().push (e.feature);
+      var p = e.feature.getGeometry().getFirstCoordinate();
+      /*
+      var ex = map.getView().calculateExtent(map.getSize());
+      if (!ol.extent.containsCoordinate(ex, p))
+      {	map.getView().setCenter(p);
+      }
+      */
+      map.getView().animate({
+        center: p,
+        duration: 500
+      });
+    });
+  };
+  setControl();
 
-
-	</script>
+  </script>
 
 </body>
 </html>
