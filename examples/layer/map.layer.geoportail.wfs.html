@@ -41,56 +41,11 @@
       <i>ol.layer.Geoportail</i> gets information on the service to handle the layer visibility 
       and source attribution according to the view.
     </p>
-    <ul>
-      <li>
-        ol-ext provide capabilities for the main layers. 
-      </li>
-      <li>
-        If you want to access other capabilities :
-        <ul>
-          <li>
-            Asynchronous way: 
-            <ul>
-              <li>
-                Use the <i>ol.layer.Geoportail.getCapabilities()</i> function to get the capabilities 
-                from the server for a specific key.
-              </li>
-              <li>
-                Use the <i>ol.layer.Geoportail.loadCapabilities()</i> function to load the capabilities of your key in the lib.
-              </li>
-            </ul>
-          </li>
-          <li>
-            Synchronous way: use the form below to get a js file for your key.
-          </li>
-        </ul>
-      </li>
-      <li>
-        You have to get <a href="http://professionnels.ign.fr/ign/contrats">an API key</a>
-        to access the service. 
-        <br/>
-        The <a href="https://geoservices.ign.fr/documentation/">default key</a> is provided for development only and access to a limited set of layers.
-      </li>
-    </ul>
   </div>
 
 	<!-- DIV pour la carte -->
 	<div id="map" style="width: 600px; height: 400px;"></div>
 	<div class="options">
-    Click on the map to get info (photo or INSEE layer only).
-	</div>
-	<div class="options">
-    Get capabilities for your key (as js file):
-    <br/>
-    <i>(then just add the file in your project)</i>
-    <ul style="text-align: right;">
-      <li>
-          <input id="key" type="text" placeholder="your_key" style="width:100%" />
-      </li>
-      <li>
-        <button onclick="loadCapabilities()">Load</button>
-      </li>
-    </ul>
 	</div>
 	
   <script type="text/javascript">
@@ -114,6 +69,7 @@
 
   map.addControl(new ol.control.LayerSwitcher());
   map.addControl(new ol.control.Permalink());
+  map.addControl(new ol.control.ScaleLine());
 
 /*
   map.addLayer(new ol.layer.Tile({
@@ -122,109 +78,56 @@
     })
   }));
 */
-  map.addLayer (new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS', {
-    gppKey: 'choisirgeoportail',
-  }));
   map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGN', {
     gppKey: 'choisirgeoportail',
     visible: true,
     opacity: .5
   }));
-  map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.MAPS', {
-    gppKey: 'choisirgeoportail',
-    visible: false
-  }));
-  map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD', {
-    gppKey: 'choisirgeoportail',
-    visible: false
-  }));
-  map.addLayer (new ol.layer.Geoportail('CADASTRALPARCELS.PARCELS', {
-    gppKey: 'choisirgeoportail',
-    visible: false
-  }));
-  map.addLayer (new ol.layer.Geoportail('INSEE.FILOSOFI.POPULATION', {
-    gppKey: 'h1osiyvfm7c4wu976jv6gpum',
-    visible: false
-  }));
-  map.addLayer (new ol.layer.Geoportail('Aire-Parcellaire', {
-    gppKey: 'h1osiyvfm7c4wu976jv6gpum',
-    title: 'Délimitation AOC viticole',
-    opacity: .5,
-    visible: false
-  }));
 
-  var vector = new ol.layer.Vector({ title: 'vector', source: new ol.source.Vector() });
-  map.addLayer(vector);
+  var type = 'BDTOPO_BDD_WLD_WGS84G:route';
+  //type = 'BDTOPO_BDD_WLD_WGS84G:chemin';
+  //type = 'ADMINEXPRESS_COG_2018:commune';
+  //type = 'BDPARCELLAIRE-VECTEUR_WLD_BDD_WGS84G:parcelle';
+  //type = 'BDPARCELLAIRE-VECTEUR_WLD_BDD_WGS84G:divcad';
+  //type = 'BDTOPO_BDD_WLD_WGS84G:bati_indifferencie';
+  //type = 'BDTOPO_BDD_WLD_WGS84G:bati_industriel';
+  //type = 'BDTOPO_BDD_WLD_WGS84G:bati_remarquable';
 
-  map.addControl(new ol.control.ScaleLine());
-
-  // Show information on click
-  var popup = new ol.Overlay.Popup();
-  map.addOverlay(popup);
-  map.on('click', function(e) {
-    popup.hide();
-    map.forEachLayerAtPixel(e.pixel, function(l) {
-      console.log(l.get('layer'))
-      if (l.get('queryable')) {
-        var layers = map.getLayers().getArray();
-        // Get info in a popup
-        if (/INSEE|ORTHOIMAGERY|GEOGRAPHICALGRIDSYSTEMS/.test(l.get('layer'))) {
-          l.getSource().getFeatureInfo(
-            e.coordinate, 
-            map.getView().getResolution(), {
-              INFO_FORMAT: 'text/html', // 'application/json',
-              callback: function(resp) {
-                if (resp) popup.show(e.coordinate, resp);
-              }
-            }
-          )
-        } else {
-          // Create new object
-          l.getSource().getFeatureInfo(
-            e.coordinate, 
-            map.getView().getResolution(), {
-              INFO_FORMAT: 'application/json',
-              callback: function(resp) {
-                if (resp) {
-                  resp = JSON.parse(resp);
-                  vector.getSource().clear();
-                  var format = new ol.format.GeoJSON();
-                  var features = format.readFeatures(resp);
-                  vector.getSource().addFeatures(features);
-                  console.log(resp.features[0].properties);
-                }
-              }
-            }
-          );
-        }
-      }
-      return true;
-    });
+  var vectorSource = new ol.source.Vector({
+    title: 'WFS-IGN',
+    format: new ol.format.GeoJSON(),
+    url: function(extent) {
+      return 'https://wxs.ign.fr/choisirgeoportail/geoportail/wfs?service=WFS&' +
+        'version=1.1.0&request=GetFeature&' +
+        'typename='+type+'&' +
+        'outputFormat=application/json&srsname=EPSG:3857&' +
+        'bbox=' + extent.join(',') + ',EPSG:3857';
+    },
+    //strategy: ol.loadingstrategy.bbox
+    strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: 15, maxZoom: 15, tileSize:512  }))
   });
+  map.addLayer (new ol.layer.Vector({
+    source: vectorSource,
+    maxResolution: 10,
+    style: new ol.style.Style({
+      stroke: new ol.style.Stroke({
+        color: 'rgba(0, 0, 255, 1.0)',
+        width: 2
+      })
+    })
+  }));
 
-  function loadCapabilities() {
-    var k = $('#key').val();
-    if (true) {
-      ol.layer.Geoportail.getCapabilities(k).then(function(cap) {
-        var js = '// Define global\n'
-          + 'if (!window.geoportailConfig) window.geoportailConfig = { capabilities: {} };\n'
-          + 'window.geoportailConfig.capabilities[\'default\'] = window.geoportailConfig.capabilities[\''+k+'\'] = {';
-        for (var c in cap) {
-          js += '\n  "'+c+'": '+JSON.stringify(cap[c])+',';
-        }
-        js += '\n};'
-        var blob = new Blob([js], {type: "text/plain;charset=utf-8"});
-        saveAs(blob, 'capabilities.js');
-      }).catch(function(e) {
-        alert ('Error while loading capabilities for key "'+k+'".');
-      });
-    }
-  }
+  var sel = new ol.interaction.Select({
+    multi: true,
+    condition: ol.events.condition.click,
+    hitTolerance: 3
+  })
+  map.addInteraction(sel)
 
   // Save Vector layer
   function save() {
     var format = new ol.format.GeoJSON();
-    var features = vector.getSource().getFeatures();
+    var features = vectorSource.getFeatures();
 		var data = format.writeFeatures(features, {
 			dataProjection: 'EPSG:4326',
 			featureProjection: map.getView().getProjection()
