@@ -28,10 +28,23 @@ var ol_control_Overlay = function(options) {
   element.classList.add('ol-unselectable', 'ol-overlay');
   //if (options.className) element.classList.add(options.className);
 */
-  var element = ol_ext_element.create('DIV', {
-    className: 'ol-unselectable ol-overlay '+(options.className||''),
-    html: options.content
-  });
+  var element;
+  if (options.element) {
+    element = options.element;
+    element.setAttribute('class', (options.className || '') + ' ol-unselectable ol-overlay');
+    
+    if (options.closeBox){
+      var cb = document.createElement("div");
+      cb.classList.add("ol-closebox");
+      cb.addEventListener("click", function(){self.hide();});
+      elt.insertBefore(cb, elt.firstChild);
+    }
+  } else {
+    element = ol_ext_element.create('DIV', {
+      className: 'ol-unselectable ol-overlay ' + (options.className || ''),
+      html: options.content
+    });
+  }
   ol_control_Control.call(this, {
     element: element,
     target: options.target
@@ -43,7 +56,9 @@ var ol_control_Overlay = function(options) {
   this.set("closeBox", options.closeBox);
 
   this._timeout = false;
-  this.setContent (options.content);
+  if (options.content){
+    this.setContent (options.content);
+  }
 };
 ol_ext_inherits(ol_control_Overlay, ol_control_Control);
 
