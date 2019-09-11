@@ -86,4 +86,20 @@ ol_control_Button.prototype.setHtml = function(html) {
 	ol_ext_element.setHTML (this.button_, html);
 };
 
+/**
+ * Add event listener
+ * @returns {HTMLButtonElement}
+ */
+ol_control_Button.prototype.on = function(event, listener) {
+	this.button_.addEventListener(event, listener);
+};
+
+/**
+ * Remove event listener
+ * @returns {HTMLButtonElement}
+ */
+ol_control_Button.prototype.un = function(event, listener) {
+	this.button_.removeEventListener(event, listener);
+};
+
 export default ol_control_Button
