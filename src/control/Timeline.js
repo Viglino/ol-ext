@@ -581,4 +581,18 @@ ol_control_Timeline.prototype.getDate = function(position) {
   return new Date(d);
 };
 
+/** Get the start date of the control
+ * @return {Date}
+ */
+ol_control_Timeline.prototype.getStartDate = function() {
+  return new Date(this.get('minDate'));
+}
+
+/** Get the end date of the control
+ * @return {Date}
+ */
+ol_control_Timeline.prototype.getEndDate = function() {
+  return new Date(this.get('maxDate'));
+}
+
 export default ol_control_Timeline
