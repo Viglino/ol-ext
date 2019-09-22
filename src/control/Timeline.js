@@ -440,8 +440,9 @@ ol_control_Timeline.prototype._drawTime = function(div, min, max, scale) {
       year = (new Date(this._minDate)).getFullYear();
       month = dmonth+1;
       while(true) {
-        d = new Date('0/'+month+'/01');
+        d = new Date('0/01/01');
         d.setFullYear(year);
+        d.setMonth(month-1);
         if (d > this._maxDate) break;
         ol_ext_element.create('DIV', {
           className: 'ol-time ol-month',
@@ -461,7 +462,7 @@ ol_control_Timeline.prototype._drawTime = function(div, min, max, scale) {
   }
   // Day
   if (this.get('graduation')==='day') {
-    dt = (new Date('0/02/01') - new Date('0/01/01')) * scale;
+    dt = (new Date('2000/02/01') - new Date('2000/01/01')) * scale;
     var dday = Math.max(1, Math.round(31 / Math.round(dt/heigth/2)));
     if (dday < 31) {
       year = (new Date(this._minDate)).getFullYear();
