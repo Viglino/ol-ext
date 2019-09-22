@@ -56,7 +56,7 @@ var ol_control_SelectCondition = function(options) {
 ol_ext_inherits(ol_control_SelectCondition, ol_control_SelectBase);
 
 /** Set condition to select on
- * @param {condition, Arrat<condition>} condition
+ * @param {condition | Array<condition>} condition
  *  @param {string} attr property to select on
  *  @param {string} op operator (=, !=, <; <=, >, >=, contain, !contain, regecp)
  *  @param {*} val value to select on

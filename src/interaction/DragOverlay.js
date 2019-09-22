@@ -8,7 +8,7 @@ import ol_interaction_Pointer from 'ol/interaction/Pointer'
  * @fires dragging
  * @fires dragend
  * @param {any} options
- *  @param {ol.Overlay|Array<ol.Overlay} options.overlays the overlays to drag
+ *  @param {ol.Overlay|Array<ol.Overlay>} options.overlays the overlays to drag
  */
 var ol_interaction_DragOverlay = function(options) {
   if (!options) options = {};

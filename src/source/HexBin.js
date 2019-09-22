@@ -15,9 +15,9 @@ import ol_HexGrid from '../render/HexGrid'
  *  @param {ol.source.Vector} options.source Source
  *  @param {number} [options.size] size of the hexagon in map units, default 80000
  *  @param {ol.coordinate} [options.origin] origin of the grid, default [0,0]
- *  @param {import('../render/HexGrid').HexagonLayout} [options.layout] grid layout, default pointy
- *  @param {(f: ol.Feature) => ol.geom.Point} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
- *  @param {(bin: ol.Feature, features: Array<ol.Feature>)} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
+ *  @param {HexagonLayout} [options.layout] grid layout, default pointy
+ *  @param {function} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
+ *  @param {function} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
  */
 var ol_source_HexBin = function (options) {
   options = options || {};
@@ -61,7 +61,7 @@ ol_source_HexBin.prototype.getSize = function () {
 }
 
 /**	Set the inner HexGrid layout.
- * 	@param {import('../render/HexGrid').HexagonLayout} newLayout
+ * 	@param {HexagonLayout} newLayout
  * 	@param {boolean} noreset If true, reset will not be called (It need to be called through)
  */
 ol_source_HexBin.prototype.setLayout = function (newLayout, noreset) {
@@ -72,7 +72,7 @@ ol_source_HexBin.prototype.setLayout = function (newLayout, noreset) {
 }
 
 /**	Get the inner HexGrid layout.
- * 	@return {import('../render/HexGrid').HexagonLayout}
+ * 	@return {HexagonLayout}
  */
 ol_source_HexBin.prototype.getLayout = function () {
   return this._hexgrid.getLayout();

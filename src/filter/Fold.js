@@ -11,7 +11,7 @@ import ol_filter_Base from './Base'
 * @requires ol_filter
 * @extends {ol_filter_Base}
 * @param {Object} [options]
-*  @param {[number, number]} [options.fold] number of fold (horizontal and vertical)
+*  @param {Array<number>} [options.fold] number of fold (horizontal and vertical)
 *  @param {number} [options.margin] margin in px, default 8
 *  @param {number} [options.padding] padding in px, default 8
 *  @param {number|number[]} [options.fsize] fold size in px, default 8,10

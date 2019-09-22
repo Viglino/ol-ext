@@ -20,7 +20,7 @@ import ol_ext_element from '../util/element'
  *  @param {string} options.className control class name
  *  @param {Element | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *  @param {ol.Collection<ol.Feature>} options.features a collection of feature to search in, the collection will be kept in date while selection
- *  @param {ol/source/Vector | Array<ol/source/Vector>} options.source the source to search in if no features set
+ *  @param {ol.source.Vector | Array<ol.source.Vector>} options.source the source to search in if no features set
  */
 var ol_control_SelectBase = function(options) {
   if (!options) options = {};
@@ -214,7 +214,7 @@ ol_control_SelectBase.prototype.getSources = function () {
 
 /** Select features by attributes
  * @param {*} options
- *  @param {Array<ol/source/Vector|undefined} options.sources source to apply rules, default the select sources
+ *  @param {Array<ol.source.Vector>|undefined} options.sources source to apply rules, default the select sources
  *  @param {bool} options.useCase case sensitive, default false
  *  @param {bool} options.matchAll match all conditions, default false
  *  @param {Array<conditions>} options.conditions array of conditions

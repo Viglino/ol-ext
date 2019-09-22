@@ -36,7 +36,7 @@ import '../geom/LineStringSplitAt'
  * @fires modifying
  * @fires modifyend
  * @param {*} options
- *	@param {ol.source.Vector|Array{ol.source.Vector}} options.source a list of source to modify (configured with useSpatialIndex set to true)
+ *	@param {ol.source.Vector|Array<ol.source.Vector>} options.source a list of source to modify (configured with useSpatialIndex set to true)
  *  @param {ol.Collection.<ol.Feature>} options.features collection of feature to modify
  *  @param {integer} options.pixelTolerance Pixel tolerance for considering the pointer close enough to a segment or vertex for editing. Default is 10.
  *  @param {function|undefined} options.filter a filter that takes a feature and return true if it can be modified, default always true.

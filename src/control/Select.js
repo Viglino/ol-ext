@@ -16,7 +16,7 @@ import ol_ext_element from '../util/element'
  * @param {Object=} options
  *  @param {string} options.className control class name
  *  @param {Element | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *  @param {ol/source/Vector | Array<ol/source/Vector>} options.source the source to search in
+ *  @param {ol.source.Vector | Array<ol.source.Vector>} options.source the source to search in
  *  @param {string} [options.selectLabel=select] select button label
  *  @param {string} [options.addLabel=add] add button label
  *  @param {string} [options.caseLabel=case sensitive] case checkbox label
@@ -249,7 +249,7 @@ ol_control_Select.prototype.removeCondition = function (i) {
 
 /** Select features by attributes
  * @param {*} options
- *  @param {Array<ol/source/Vector|undefined} options.sources source to apply rules, default the select sources
+ *  @param {Array<ol.source.Vector>|undefined} options.sources source to apply rules, default the select sources
  *  @param {bool} options.useCase case sensitive, default checkbox state
  *  @param {bool} options.matchAll match all conditions, , default checkbox state
  *  @param {Array<conditions>} options.conditions array of conditions

@@ -6,7 +6,6 @@ import ol_ext_element from '../util/element'
  *
  * @constructor
  * @extends {ol.control.Control}
- * @fires 
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
  *  @param {string} options.status status, default none

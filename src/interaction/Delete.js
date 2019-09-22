@@ -24,7 +24,7 @@ var ol_interaction_Delete = function(options) {
 ol_ext_inherits(ol_interaction_Delete, ol_interaction_Select);
 
 /** Get vector source of the map
- * @return {Array<ol.source.Vector}
+ * @return {Array<ol.source.Vector>}
  */
 ol_interaction_Delete.prototype._getSources = function(layers) {
   if (!this.getMap()) return [];

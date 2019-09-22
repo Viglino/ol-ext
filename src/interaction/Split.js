@@ -22,7 +22,7 @@ import '../geom/LineStringSplitAt'
  * @extends {ol_interaction_Interaction}
  * @fires  beforesplit, aftersplit, pointermove
  * @param {*} 
- *  @param {ol.source.Vector|Array{ol.source.Vector}} options.source a list of source to split (configured with useSpatialIndex set to true)
+ *  @param {ol.source.Vector|Array<ol.source.Vector>} options.source a list of source to split (configured with useSpatialIndex set to true)
  *  @param {ol.Collection.<ol.Feature>} options.features collection of feature to split
  *  @param {integer} options.snapDistance distance (in px) to snap to an object, default 25px
  *	@param {string|undefined} options.cursor cursor name to display when hovering an objet
