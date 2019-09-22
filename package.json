@@ -59,5 +59,8 @@
     "type": "git",
     "url": "git+https://github.com/Viglino/ol-ext.git"
   },
-  "license": "BSD-3-Clause"
+  "license": "BSD-3-Clause",
+  "dependencies": {
+    "gulp-jsdoc3": "^2.0.0"
+  }
 }
