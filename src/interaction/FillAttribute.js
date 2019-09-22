@@ -66,12 +66,13 @@ ol_ext_inherits(ol_interaction_FillAttribute, ol_interaction_Select);
  * @param {boolean} active
  */
 ol_interaction_FillAttribute.prototype.setActive = function(active) {
+  if(active === this.getActive()) return;
   ol_interaction_Select.prototype.setActive.call(this, active);
   if (this.getMap() && this._cursor) {
     if (active) {
       this._previousCursor = this.getMap().getTargetElement().style.cursor;
       this.getMap().getTargetElement().style.cursor = this._cursor;
-      console.log('setCursor',this._cursor)
+//      console.log('setCursor',this._cursor)
     } else {
       this.getMap().getTargetElement().style.cursor = this._previousCursor;
       this._previousCursor = undefined;
