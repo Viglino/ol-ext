@@ -149,8 +149,8 @@
         return new ol.style.Style({
           image: new ol.style.Circle({
             radius: 5,
-            stroke: new ol.style.Stroke({ width: 1.5, color: [255,128,0] }),
-            fill: new ol.style.Fill({ color: [255,128,0,.3] })
+            stroke: new ol.style.Stroke({ width: 1.5, color: f.get('color') || [255,128,0] }),
+            fill: new ol.style.Fill({ color: (f.get('color') || [255,128,0]).concat([.3]) })
           }),
           stroke: new ol.style.Stroke({ width: 2.5, color: f.get('color') || [255,128,0] }),
           fill: new ol.style.Fill({ color: (f.get('color') || [255,128,0]).concat([.3]) })
