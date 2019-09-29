@@ -6377,6 +6377,7 @@ ol.control.Overview.prototype.setView = function(e){
  * @extends {ol.control.Control}
  * @param {Object=} options
  *  @param {bool} options.urlReplace replace url or not, default true
+ *  @param {bool} options.localStorage save current map view in localStorage, default false
  *  @param {integer} options.fixed number of digit in coords, default 6
  *  @param {bool} options.anchor use "#" instead of "?" in href
  *  @param {bool} options.hidden hide the button on the map, default false
@@ -6389,6 +6390,8 @@ ol.control.Permalink = function(opt_options) {
   this.replaceState_ = (options.urlReplace!==false);
   this.fixed_ = options.fixed || 6;
   this.hash_ = options.anchor ? "#" : "?";
+  this._localStorage = options.localStorage;
+  if (!this._localStorage) localStorage.removeItem('ol@parmalink');
   function linkto() {
     if (typeof(options.onclick) == 'function') options.onclick(self.getLink());
     else self.setUrlReplace(!self.replaceState_);
@@ -6406,7 +6409,11 @@ ol.control.Permalink = function(opt_options) {
   this.on ('change', this.viewChange_.bind(this));
   // Save search params
   this.search_ = {};
-  var hash = document.location.hash || document.location.search;
+  var hash = this.replaceState_ ? document.location.hash || document.location.search : '';
+  console.log('hash', hash)
+  if (!hash && this._localStorage) {
+    hash = localStorage['ol@parmalink'];
+  }
   if (hash) {
     hash = hash.replace(/(^#|^\?)/,"").split("&");
     for (var i=0; i<hash.length;  i++) {
@@ -6437,8 +6444,8 @@ ol.control.Permalink.prototype.setMap = function(map) {
   this._listener = null;
   ol.control.Control.prototype.setMap.call(this, map);
   // Get change 
-  if (map) 
-  {	this._listener = {
+  if (map) {
+    this._listener = {
       change: map.getLayerGroup().on('change', this.layerChange_.bind(this)),
       moveend: map.on('moveend', this.viewChange_.bind(this))
     };
@@ -6467,7 +6474,10 @@ ol.control.Permalink.prototype.getLayerByLink =  function (id, layers) {
 ol.control.Permalink.prototype.setPosition = function() {
   var map = this.getMap();
   if (!map) return;
-  var hash = document.location.hash || document.location.search;
+  var hash = this.replaceState_ ? document.location.hash || document.location.search : '';
+  if (!hash && this._localStorage) {
+    hash = localStorage['ol@parmalink'];
+  }
   if (!hash) return;
   var i, t, param = {};
   hash = hash.replace(/(^#|^\?)/,"").split("&");
@@ -6549,7 +6559,7 @@ ol.control.Permalink.prototype.hasUrlParam = function(key) {
  * Get the permalink
  * @return {permalink}
  */
-ol.control.Permalink.prototype.getLink = function() {
+ol.control.Permalink.prototype.getLink = function(param) {
   var map = this.getMap();
   var c = ol.proj.transform(map.getView().getCenter(), map.getView().getProjection(), 'EPSG:4326');
   var z = map.getView().getZoom();
@@ -6558,6 +6568,7 @@ ol.control.Permalink.prototype.getLink = function() {
   // Change anchor
   var anchor = "lon="+c[0].toFixed(this.fixed_)+"&lat="+c[1].toFixed(this.fixed_)+"&z="+z+(r?"&r="+(Math.round(r*10000)/10000):"")+(l?"&l="+l:"");
   for (var i in this.search_) anchor += "&"+i+"="+this.search_[i];
+  if (param) return anchor;
   //return document.location.origin+document.location.pathname+this.hash_+anchor;
   return document.location.protocol+"//"+document.location.host+document.location.pathname+this.hash_+anchor;
 };
@@ -6577,7 +6588,12 @@ ol.control.Permalink.prototype.setUrlReplace = function(replace) {
     }
     else window.history.replaceState (null,null, this.getLink());
   } catch(e) {/* ok */}
-}
+  /*
+  if (this._localStorage) {
+    localStorage['ol@parmalink'] = this.getLink(true);
+  }
+  */
+};
 /**
  * On view change refresh link
  * @param {ol.event} The map instance.
@@ -6587,7 +6603,10 @@ ol.control.Permalink.prototype.viewChange_ = function() {
   try {
     if (this.replaceState_) window.history.replaceState (null,null, this.getLink());
   } catch(e) {/* ok */}
-}
+  if (this._localStorage) {
+    localStorage['ol@parmalink'] = this.getLink(true);
+  }
+};
 /**
  * Layer change refresh link
  * @private
@@ -16780,7 +16799,8 @@ ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
  *  @param {function} options.filter A function that takes a Feature and a Layer and returns true if the feature may be transformed or false otherwise.
  *  @param {Array<ol.Layer>} options.layers array of layers to transform,
  *  @param {ol.Collection<ol.Feature>} options.features collection of feature to transform,
- *	@param {ol.EventsConditionType|undefined} options.addCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled. default: ol.events.condition.never.
+ *	@param {ol.EventsConditionType|undefined} options.condition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled. default: ol.events.condition.always.
+ *	@param {ol.EventsConditionType|undefined} options.addCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled ie. the feature will be added to the transforms features. default: ol.events.condition.never.
  *	@param {number | undefined} options.hitTolerance Tolerance to select feature in pixel, default 0
  *	@param {bool} options.translateFeature Translate when click on feature
  *	@param {bool} options.translate Can translate the feature
@@ -16825,6 +16845,7 @@ ol.interaction.Transform = function(options) {
   // Filter or list of layers to transform
   if (typeof(options.filter)==='function') this._filter = options.filter;
   this.layers_ = options.layers ? (options.layers instanceof Array) ? options.layers:[options.layers] : null;
+  this._handleEvent = options.condition || function() { return true; };
   this.addFn_ = options.addCondition || function() { return false; };
   /* Translate when click on feature */
   this.set('translateFeature', (options.translateFeature!==false));
@@ -17130,8 +17151,10 @@ ol.interaction.Transform.prototype.watchFeatures_ = function() {
 /**
  * @param {ol.MapBrowserEvent} evt Map browser event.
  * @return {boolean} `true` to start the drag sequence.
+ * @private
  */
 ol.interaction.Transform.prototype.handleDownEvent_ = function(evt) {
+  if (!this._handleEvent(evt)) return;
   var sel = this.getFeatureAtPixel_(evt.pixel);
   var feature = sel.feature;
   if (this.selection_.getLength()
@@ -17213,8 +17236,10 @@ ol.interaction.Transform.prototype.setCenter = function(c) {
 }
 /**
  * @param {ol.MapBrowserEvent} evt Map browser event.
+ * @private
  */
 ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
+  if (!this._handleEvent(evt)) return;
   var i, f, geometry;
   switch (this.mode_) {
     case 'rotate': {
@@ -17312,21 +17337,22 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
 };
 /**
  * @param {ol.MapBrowserEvent} evt Event.
+ * @private
  */
 ol.interaction.Transform.prototype.handleMoveEvent_ = function(evt) {
+  if (!this._handleEvent(evt)) return;
   // console.log("handleMoveEvent");
   if (!this.mode_) {
     var sel = this.getFeatureAtPixel_(evt.pixel);
     var element = evt.map.getTargetElement();
-    if (sel.feature)
-    {	var c = sel.handle ? this.Cursors[(sel.handle||'default')+(sel.constraint||'')+(sel.option||'')] : this.Cursors.select;
-      if (this.previousCursor_===undefined)
-      {	this.previousCursor_ = element.style.cursor;
+    if (sel.feature) {
+      var c = sel.handle ? this.Cursors[(sel.handle||'default')+(sel.constraint||'')+(sel.option||'')] : this.Cursors.select;
+      if (this.previousCursor_===undefined) {
+        this.previousCursor_ = element.style.cursor;
       }
       element.style.cursor = c;
-    }
-    else
-    {	if (this.previousCursor_!==undefined) element.style.cursor = this.previousCursor_;
+    } else {
+      if (this.previousCursor_!==undefined) element.style.cursor = this.previousCursor_;
       this.previousCursor_ = undefined;
     }
   }
@@ -17353,6 +17379,12 @@ ol.interaction.Transform.prototype.handleUpEvent_ = function(evt) {
   this.drawSketch_();
   this.mode_ = null;
   return false;
+};
+/** Get the features that are selected for transform
+ * @return ol.Collection
+ */
+ol.interaction.Transform.prototype.getFeatures = function() {
+  return this.selection_
 };
 
 /** Undo/redo interaction
