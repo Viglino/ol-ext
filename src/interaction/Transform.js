@@ -21,7 +21,8 @@ import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
  *  @param {function} options.filter A function that takes a Feature and a Layer and returns true if the feature may be transformed or false otherwise.
  *  @param {Array<ol.Layer>} options.layers array of layers to transform,
  *  @param {ol.Collection<ol.Feature>} options.features collection of feature to transform,
- *	@param {ol.EventsConditionType|undefined} options.addCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled. default: ol.events.condition.never.
+ *	@param {ol.EventsConditionType|undefined} options.condition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled. default: ol.events.condition.always.
+ *	@param {ol.EventsConditionType|undefined} options.addCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled ie. the feature will be added to the transforms features. default: ol.events.condition.never.
  *	@param {number | undefined} options.hitTolerance Tolerance to select feature in pixel, default 0
  *	@param {bool} options.translateFeature Translate when click on feature
  *	@param {bool} options.translate Can translate the feature
@@ -71,6 +72,7 @@ var ol_interaction_Transform = function(options) {
   if (typeof(options.filter)==='function') this._filter = options.filter;
   this.layers_ = options.layers ? (options.layers instanceof Array) ? options.layers:[options.layers] : null;
 
+  this._handleEvent = options.condition || function() { return true; };
   this.addFn_ = options.addCondition || function() { return false; };
   /* Translate when click on feature */
   this.set('translateFeature', (options.translateFeature!==false));
@@ -390,8 +392,10 @@ ol_interaction_Transform.prototype.watchFeatures_ = function() {
 /**
  * @param {ol.MapBrowserEvent} evt Map browser event.
  * @return {boolean} `true` to start the drag sequence.
+ * @private
  */
 ol_interaction_Transform.prototype.handleDownEvent_ = function(evt) {
+  if (!this._handleEvent(evt)) return;
   var sel = this.getFeatureAtPixel_(evt.pixel);
   var feature = sel.feature;
   if (this.selection_.getLength()
@@ -480,8 +484,10 @@ ol_interaction_Transform.prototype.setCenter = function(c) {
 
 /**
  * @param {ol.MapBrowserEvent} evt Map browser event.
+ * @private
  */
 ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
+  if (!this._handleEvent(evt)) return;
   var i, f, geometry;
   switch (this.mode_) {
     case 'rotate': {
@@ -587,22 +593,23 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
 
 /**
  * @param {ol.MapBrowserEvent} evt Event.
+ * @private
  */
 ol_interaction_Transform.prototype.handleMoveEvent_ = function(evt) {
+  if (!this._handleEvent(evt)) return;
   // console.log("handleMoveEvent");
   if (!this.mode_) {
     var sel = this.getFeatureAtPixel_(evt.pixel);
     var element = evt.map.getTargetElement();
-    if (sel.feature)
-    {	var c = sel.handle ? this.Cursors[(sel.handle||'default')+(sel.constraint||'')+(sel.option||'')] : this.Cursors.select;
+    if (sel.feature) {
+      var c = sel.handle ? this.Cursors[(sel.handle||'default')+(sel.constraint||'')+(sel.option||'')] : this.Cursors.select;
 
-      if (this.previousCursor_===undefined)
-      {	this.previousCursor_ = element.style.cursor;
+      if (this.previousCursor_===undefined) {
+        this.previousCursor_ = element.style.cursor;
       }
       element.style.cursor = c;
-    }
-    else
-    {	if (this.previousCursor_!==undefined) element.style.cursor = this.previousCursor_;
+    } else {
+      if (this.previousCursor_!==undefined) element.style.cursor = this.previousCursor_;
       this.previousCursor_ = undefined;
     }
   }
@@ -632,6 +639,13 @@ ol_interaction_Transform.prototype.handleUpEvent_ = function(evt) {
   this.drawSketch_();
   this.mode_ = null;
   return false;
+};
+
+/** Get the features that are selected for transform
+ * @return ol.Collection
+ */
+ol_interaction_Transform.prototype.getFeatures = function() {
+  return this.selection_
 };
 
 export default ol_interaction_Transform

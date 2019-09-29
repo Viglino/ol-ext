@@ -225,6 +225,11 @@
     }
 
     var interaction = new ol.interaction.Transform ({
+      /* Limit interaction inside bbox * /
+      condition: function(e, features) {
+        return ol.extent.containsXY([-465960, 5536486, 1001630, 6514880], e.coordinate[0], e.coordinate[1]);
+      },
+      /* */
       addCondition: ol.events.condition.shiftKeyOnly,
       // filter: function(f,l) { return f.getGeometry().getType()==='Polygon'; },
       // layers: [vector],
