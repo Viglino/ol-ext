@@ -2,105 +2,117 @@
 <html>
 <head>
 <!----------------------------------------------------------
- 
-	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
+
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+  
 ------------------------------------------------------------>
-	<title>ol-ext: Premalinkl control</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>ol-ext: Premalinkl control</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="ol.control.Permalink add a premalink control to the map." />
-	<meta name="keywords" content="ol3, control, permalink, anchor" />
+  <meta name="description" content="ol.control.Permalink add a premalink control to the map." />
+  <meta name="keywords" content="ol3, control, permalink, anchor" />
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-    <link rel="stylesheet" href="../../dist/ol-ext.css" />
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Permalink control</h1>
-	</a>
-	<div class="info">
-		<i>ol.control.Permalink</i> is hyperlink that will return the user to the current map view. 
-		<br/>
-		The href is updated as the map is zoomed, panned, rotated and whilst layers are switched or opacity is changed 
-		(as soon as the layer has a <i>permalink</i> propertie).
-		<ul><li>
-			Only layers with a <i>permalink</i> properties are handled by the control.
-			The permalink propertie is used to name the layer in the url.
-		</li><li>
-		 	By default, clicking the control will enable/disable the url replacement. Use the <i>onclick</i> option to change this behavior (mail to a friend...).
-		</li><li>
-			Use <i>getUrlParam</i>, <i>setUrlParam</i> or <i>hasUrlParam</i> methods 
-			to get, add or test user parameters in the url and handle new functionnalities 
-			(layers opacity, visibility, ordering, etc.)
-		</li></ul>
-	</div>
+  <a href="../../index.html">
+    <h1>ol-ext: Permalink control</h1>
+  </a>
+  <div class="info">
+    <i>ol.control.Permalink</i> is hyperlink that will return the user to the current map view. 
+    <br/>
+    The href is updated as the map is zoomed, panned, rotated and whilst layers are switched or opacity is changed 
+    (as soon as the layer has a <i>permalink</i> propertie).
+    <ul><li>
+      Use <i>urlReplace</i> option to activate the url replacement.
+    </li><li>
+      Use <i>localStorage</i> option to save the the current map view in the localstorage.
+      <br/>
+      Information in the url has priority over the localStorage, ie. localStorage is used if no information 
+      is provided in the url or if <i>urlReplace</i> option is set to false.
+    </li><li>
+      You can hide the control on the map using the <i>hidden</i> option.
+    </li><li>
+      Only layers with a <i>permalink</i> properties are handled by the control.
+      The permalink propertie is used to name the layer in the url.
+    </li><li>
+      By default, clicking the control will enable/disable the url replacement. 
+      Use the <i>onclick</i> option to change this behavior (mail to a friend...).
+    </li><li>
+      Use <i>getUrlParam</i>, <i>setUrlParam</i> or <i>hasUrlParam</i> methods 
+      to get, add or test user parameters in the url and handle new functionnalities 
+      (layers opacity, visibility, ordering, etc.)
+    </li></ul>
+  </div>
 
-	<!-- Map div -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options" >
-		<ul><li>
-			<input id="url" type="checkbox" checked="checked" onchange="ctrl.setUrlReplace($(this).prop('checked'))" /><label for="url"> urlReplace (replace url in the browser bar).</label>
-		</li><li>
-		 	OSM opacity: <input id="opacity" type="range" min="0" max="1" step="0.1" value="1" onchange="osm.setOpacity(Number(this.value))" style="vertical-align:middle;"/>
-		</li><li>
-			User parameter: <input id="user" type="text" />
-		</li></ul>
-	</div>
+  <div class="options" >
+    <ul><li>
+      <input id="url" type="checkbox" checked="checked" onchange="ctrl.setUrlReplace($(this).prop('checked'))" /><label for="url"> urlReplace (replace url in the browser bar).</label>
+    </li><li>
+      OSM opacity: <input id="opacity" type="range" min="0" max="1" step="0.1" value="1" onchange="osm.setOpacity(Number(this.value))" style="vertical-align:middle;"/>
+    </li><li>
+      User parameter: <input id="user" type="text" />
+    </li></ul>
+  </div>
 
-	<script type="text/javascript">
-		// Layers
-		var osm = new ol.layer.Tile(
-			{	permalink:"O",	// Name of the layer in the permalink
-				source: new ol.source.OSM() 
-			});
-		var stamen = new ol.layer.Tile(
-			{	permalink:"S",	// Name of the layer in the permalink
-				source: new ol.source.Stamen({ layer: 'watercolor' }) 
-			});
+  <script type="text/javascript">
+    // Layers
+    var osm = new ol.layer.Tile({
+      permalink:"O",	// Name of the layer in the permalink
+      source: new ol.source.OSM() 
+    });
+    var stamen = new ol.layer.Tile({
+      permalink:"S",	// Name of the layer in the permalink
+      source: new ol.source.Stamen({ layer: 'watercolor' }) 
+    });
 
-		// The map
-		var map = new ol.Map
-			({	target: 'map',
-				view: new ol.View
-				({	zoom: 14,
-					center: [270701, 6247637]
-				}),
-				layers: [ stamen, osm ]
-			});
+    // The map
+    var map = new ol.Map({
+      target: 'map',
+      view: new ol.View({
+        zoom: 14,
+        center: [270701, 6247637]
+      }),
+      layers: [ stamen, osm ]
+    });
 
-		// Control
-		var ctrl = new ol.control.Permalink(
-			{	onclick: function(url) 
-				{	document.location = "mailto:?subject=subject&body="+encodeURIComponent(url);
-				}
-			});
-		map.addControl(ctrl);
+    // Control
+    var ctrl = new ol.control.Permalink({	
+      // urlReplace: false,
+      localStorage: true,	// Save permalink in localStorage if no url provided
+      onclick: function(url) {
+        document.location = "mailto:?subject=subject&body="+encodeURIComponent(url);
+      }
+    });
+    map.addControl(ctrl);
 
-		// Handle user parameter
-		$("#user").val(ctrl.getUrlParam('user'))
-				.on ('change', function() {
-					ctrl.setUrlParam('user', this.value);
-				});
-		$('#opacity').val(osm.getOpacity());
+    // Handle user parameter
+    $("#user").val(ctrl.getUrlParam('user'))
+        .on ('change', function() {
+          ctrl.setUrlParam('user', this.value);
+        });
+    $('#opacity').val(osm.getOpacity());
 
-	</script>
+  </script>
 
 </body>
 </html>

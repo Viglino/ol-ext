@@ -19,6 +19,7 @@ import ol_ext_element from '../util/element'
  * @extends {ol_control_Control}
  * @param {Object=} options
  *  @param {bool} options.urlReplace replace url or not, default true
+ *  @param {bool} options.localStorage save current map view in localStorage, default false
  *  @param {integer} options.fixed number of digit in coords, default 6
  *  @param {bool} options.anchor use "#" instead of "?" in href
  *  @param {bool} options.hidden hide the button on the map, default false
@@ -32,7 +33,9 @@ var ol_control_Permalink = function(opt_options) {
   this.replaceState_ = (options.urlReplace!==false);
   this.fixed_ = options.fixed || 6;
   this.hash_ = options.anchor ? "#" : "?";
-
+  this._localStorage = options.localStorage;
+  if (!this._localStorage) localStorage.removeItem('ol@parmalink');
+  
   function linkto() {
     if (typeof(options.onclick) == 'function') options.onclick(self.getLink());
     else self.setUrlReplace(!self.replaceState_);
@@ -54,7 +57,11 @@ var ol_control_Permalink = function(opt_options) {
 
   // Save search params
   this.search_ = {};
-  var hash = document.location.hash || document.location.search;
+  var hash = this.replaceState_ ? document.location.hash || document.location.search : '';
+  console.log('hash', hash)
+  if (!hash && this._localStorage) {
+    hash = localStorage['ol@parmalink'];
+  }
   if (hash) {
     hash = hash.replace(/(^#|^\?)/,"").split("&");
     for (var i=0; i<hash.length;  i++) {
@@ -89,8 +96,8 @@ ol_control_Permalink.prototype.setMap = function(map) {
   ol_control_Control.prototype.setMap.call(this, map);
   
   // Get change 
-  if (map) 
-  {	this._listener = {
+  if (map) {
+    this._listener = {
       change: map.getLayerGroup().on('change', this.layerChange_.bind(this)),
       moveend: map.on('moveend', this.viewChange_.bind(this))
     };
@@ -122,7 +129,10 @@ ol_control_Permalink.prototype.setPosition = function() {
   var map = this.getMap();
   if (!map) return;
 
-  var hash = document.location.hash || document.location.search;
+  var hash = this.replaceState_ ? document.location.hash || document.location.search : '';
+  if (!hash && this._localStorage) {
+    hash = localStorage['ol@parmalink'];
+  }
   if (!hash) return;
   
   var i, t, param = {};
@@ -213,7 +223,7 @@ ol_control_Permalink.prototype.hasUrlParam = function(key) {
  * Get the permalink
  * @return {permalink}
  */
-ol_control_Permalink.prototype.getLink = function() {
+ol_control_Permalink.prototype.getLink = function(param) {
   var map = this.getMap();
   var c = ol_proj_transform(map.getView().getCenter(), map.getView().getProjection(), 'EPSG:4326');
   var z = map.getView().getZoom();
@@ -223,6 +233,7 @@ ol_control_Permalink.prototype.getLink = function() {
   var anchor = "lon="+c[0].toFixed(this.fixed_)+"&lat="+c[1].toFixed(this.fixed_)+"&z="+z+(r?"&r="+(Math.round(r*10000)/10000):"")+(l?"&l="+l:"");
 
   for (var i in this.search_) anchor += "&"+i+"="+this.search_[i];
+  if (param) return anchor;
 
   //return document.location.origin+document.location.pathname+this.hash_+anchor;
   return document.location.protocol+"//"+document.location.host+document.location.pathname+this.hash_+anchor;
@@ -244,7 +255,12 @@ ol_control_Permalink.prototype.setUrlReplace = function(replace) {
     }
     else window.history.replaceState (null,null, this.getLink());
   } catch(e) {/* ok */}
-}
+  /*
+  if (this._localStorage) {
+    localStorage['ol@parmalink'] = this.getLink(true);
+  }
+  */
+};
 
 /**
  * On view change refresh link
@@ -255,7 +271,10 @@ ol_control_Permalink.prototype.viewChange_ = function() {
   try {
     if (this.replaceState_) window.history.replaceState (null,null, this.getLink());
   } catch(e) {/* ok */}
-}
+  if (this._localStorage) {
+    localStorage['ol@parmalink'] = this.getLink(true);
+  }
+};
 
 /**
  * Layer change refresh link
