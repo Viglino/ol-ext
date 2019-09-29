@@ -16799,7 +16799,7 @@ ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
  *  @param {function} options.filter A function that takes a Feature and a Layer and returns true if the feature may be transformed or false otherwise.
  *  @param {Array<ol.Layer>} options.layers array of layers to transform,
  *  @param {ol.Collection<ol.Feature>} options.features collection of feature to transform,
- *	@param {ol.EventsConditionType|undefined} options.condition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled. default: ol.events.condition.always.
+ *	@param {ol.EventsConditionType|undefined} options.condition A function that takes an ol.MapBrowserEvent and a feature collection and returns a boolean to indicate whether that event should be handled. default: ol.events.condition.always.
  *	@param {ol.EventsConditionType|undefined} options.addCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled ie. the feature will be added to the transforms features. default: ol.events.condition.never.
  *	@param {number | undefined} options.hitTolerance Tolerance to select feature in pixel, default 0
  *	@param {bool} options.translateFeature Translate when click on feature
@@ -17154,7 +17154,7 @@ ol.interaction.Transform.prototype.watchFeatures_ = function() {
  * @private
  */
 ol.interaction.Transform.prototype.handleDownEvent_ = function(evt) {
-  if (!this._handleEvent(evt)) return;
+  if (!this._handleEvent(evt, this.selection_)) return;
   var sel = this.getFeatureAtPixel_(evt.pixel);
   var feature = sel.feature;
   if (this.selection_.getLength()
@@ -17239,7 +17239,7 @@ ol.interaction.Transform.prototype.setCenter = function(c) {
  * @private
  */
 ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
-  if (!this._handleEvent(evt)) return;
+  if (!this._handleEvent(evt, this.features_)) return;
   var i, f, geometry;
   switch (this.mode_) {
     case 'rotate': {
@@ -17340,7 +17340,7 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
  * @private
  */
 ol.interaction.Transform.prototype.handleMoveEvent_ = function(evt) {
-  if (!this._handleEvent(evt)) return;
+  if (!this._handleEvent(evt, this.features_)) return;
   // console.log("handleMoveEvent");
   if (!this.mode_) {
     var sel = this.getFeatureAtPixel_(evt.pixel);
@@ -17384,7 +17384,7 @@ ol.interaction.Transform.prototype.handleUpEvent_ = function(evt) {
  * @return ol.Collection
  */
 ol.interaction.Transform.prototype.getFeatures = function() {
-  return this.selection_
+  return this.selection_;
 };
 
 /** Undo/redo interaction
