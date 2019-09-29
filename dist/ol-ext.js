@@ -8342,7 +8342,8 @@ ol.control.SearchGeoportailParcelle.prototype._handleParcelle = function(parc) {
  * @param {Object=} Control options.
  *  @param {string} options.className control class name
  *  @param {boolean | undefined} options.polygon To get output geometry of results (in geojson format), default false.
- *  @param {viewbox | undefined} options.viewbox The preferred area to find search results. Any two corner points of the box are accepted in any order as long as they span a real box, default none.
+ *  @param {Array<Number> | undefined} options.viewbox The preferred area to find search results. Any two corner points of the box are accepted in any order as long as they span a real box, default none.
+ *  @param {boolean | undefined} options.bounded Restrict the results to only items contained with the bounding box. Restricting the results to the bounding box also enables searching by amenity only. default false
  *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *  @param {string | undefined} options.label Text label to use for the search button, default "search"
  *  @param {string | undefined} options.placeholder placeholder, default "Search..."
@@ -8362,6 +8363,7 @@ ol.control.SearchNominatim = function(options) {
   ol.control.SearchJSON.call(this, options);
   this.set('polygon', options.polygon);
   this.set('viewbox', options.viewbox);
+  this.set('bounded', options.bounded);
 };
 ol.ext.inherits(ol.control.SearchNominatim, ol.control.SearchJSON);
 /** Returns the text to be displayed in the menu
@@ -8388,6 +8390,7 @@ ol.control.SearchNominatim.prototype.requestData = function (s) {
     addressdetails: 1, 
     q: s, 
     polygon_geojson: this.get('polygon') ? 1:0,
+    bounded: this.get('bounded') ? 1:0,
     limit: this.get('maxItems')
   };
   if (this.get('viewbox')) data.viewbox = this.get('viewbox');
