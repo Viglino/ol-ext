@@ -124,36 +124,43 @@
 */
   map.addLayer (new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS', {
     gppKey: 'choisirgeoportail',
+    className: 'photo',
   }));
   map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGN', {
     gppKey: 'choisirgeoportail',
+    className: 'plan',
     visible: true,
     opacity: .5
   }));
   map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.MAPS', {
     gppKey: 'choisirgeoportail',
+    className: 'map',
     visible: false
   }));
   map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD', {
     gppKey: 'choisirgeoportail',
+    className: 'express',
     visible: false
   }));
   map.addLayer (new ol.layer.Geoportail('CADASTRALPARCELS.PARCELS', {
     gppKey: 'choisirgeoportail',
+    className: 'parcel',
     visible: false
   }));
   map.addLayer (new ol.layer.Geoportail('INSEE.FILOSOFI.POPULATION', {
     gppKey: 'h1osiyvfm7c4wu976jv6gpum',
+    className: 'insee',
     visible: false
   }));
   map.addLayer (new ol.layer.Geoportail('Aire-Parcellaire', {
     gppKey: 'h1osiyvfm7c4wu976jv6gpum',
+    className: 'AOC',
     title: 'Délimitation AOC viticole',
     opacity: .5,
     visible: false
   }));
 
-  var vector = new ol.layer.Vector({ title: 'vector', source: new ol.source.Vector() });
+  var vector = new ol.layer.Vector({ title: 'vector', className: 'vector', source: new ol.source.Vector() });
   map.addLayer(vector);
 
   map.addControl(new ol.control.ScaleLine());
@@ -163,8 +170,7 @@
   map.addOverlay(popup);
   map.on('click', function(e) {
     popup.hide();
-    map.forEachLayerAtPixel(e.pixel, function(l) {
-      console.log(l.get('layer'))
+    map.forEachLayerAtPixel(e.pixel, function(l, pixel) {
       if (l.get('queryable')) {
         var layers = map.getLayers().getArray();
         // Get info in a popup
@@ -188,10 +194,12 @@
                 if (resp) {
                   resp = JSON.parse(resp);
                   vector.getSource().clear();
-                  var format = new ol.format.GeoJSON();
-                  var features = format.readFeatures(resp);
-                  vector.getSource().addFeatures(features);
-                  console.log(resp.features[0].properties);
+                  if (resp.features[0]) {
+                    var format = new ol.format.GeoJSON();
+                    var features = format.readFeatures(resp);
+                    vector.getSource().addFeatures(features);
+                    console.log(resp.features[0].properties);
+                  }
                 }
               }
             }

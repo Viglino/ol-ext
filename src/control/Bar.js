@@ -114,10 +114,10 @@ ol_control_Bar.prototype.addControl = function (c) {
     this.getMap().addControl(c);
   }
   // Activate and toogleOne
-  c.on ('change:active', this.onActivateControl_.bind(this));
-  if (c.getActive && c.getActive()) {
+  c.on ('change:active', function(e) { this.onActivateControl_(e, c); }.bind(this));
+  if (c.getActive) {
     // c.dispatchEvent({ type:'change:active', key:'active', oldValue:false, active:true });
-    this.onActivateControl_({ target: c, active: c.getActive() });
+    this.onActivateControl_({ target: c, active: c.getActive() }, c);
   }
 };
 
@@ -159,11 +159,11 @@ ol_control_Bar.prototype.setActive = function (b) {
 /** Post-process an activated/deactivated control
  *	@param {ol.event} e :an object with a target {_ol_control_} and active flag {bool}
  */
-ol_control_Bar.prototype.onActivateControl_ = function (e) {
+ol_control_Bar.prototype.onActivateControl_ = function (e, ctrl) {
   if (this.get('toggleOne')) {
     if (e.active) {
       var n;
-      var ctrl = e.target;
+      //var ctrl = e.target;
       for (n=0; n<this.controls_.length; n++) {
         if (this.controls_[n]===ctrl) break;
       }

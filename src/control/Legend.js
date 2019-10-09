@@ -228,6 +228,7 @@ ol_control_Legend.prototype.getStyleImage = function(options, theCanvas, row) {
   }
   if (feature) {
     style = feature.getStyle();
+    if (typeof(style)==='function') style = style(feature);
     if (!style) {
       style = typeof(this._style) === 'function' ? this._style(feature) : this._style || [];
     }

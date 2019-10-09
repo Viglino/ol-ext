@@ -141,14 +141,18 @@
   map.addLayer(vector);
 
   // Add features
+  /* */
   var f = new ol.Feature(new ol.geom.Polygon([[[30000, 6300000], [-200000, 6000000], [300000, 6000000], [34000, 6300000]]]));
   vector.getSource().addFeature(f);
   f = new ol.Feature(new ol.geom.LineString([[400000, 6000000], [680000, 5900000], [690000, 6100000], [420000, 6200000]]));
   vector.getSource().addFeature(f);
-  f0 = new ol.Feature(new ol.geom.Point(	[269914, 6248592]));
+  /* */
+  var f0 = new ol.Feature(new ol.geom.Point(	[269914, 6248592]));
   vector.getSource().addFeature(f0);
+  /* */
   // Add features with style
   f = new ol.Feature(new ol.geom.Point(	[500000, 6300000]));
+  vector.getSource().addFeature(f);
   f.setStyle (new ol.style.Style({
     image: new ol.style.RegularShape({
       radius: 18,
@@ -158,7 +162,6 @@
       fill: new ol.style.Fill ({ color: [255,255,0,.3], width: 1 })
     })
   }));
-  vector.getSource().addFeature(f);
   // Add features with style
   var f = new ol.Feature(new ol.geom.Point(	[500000, 6100000]));
   f.setStyle (new ol.style.Style({
@@ -183,6 +186,7 @@
     })
   ]);
   vector.getSource().addFeature(f);
+  /* */
 
   // Define a new legend
   var legend = new ol.control.Legend({ 
@@ -203,6 +207,8 @@
 
   select.on('select', function(e){
     var f = e.selected[0];
+    // Remove feature from select (to get its style back) BUG ol6 ?
+    select.getFeatures().remove(f);
     if (f) {
       var img = legend.getStyleImage({
         /* given a style  and a geom type
@@ -217,11 +223,14 @@
     } else {
       $('.options .row').hide();
     }
+    select.getFeatures().push(f);
   });
 
   // Add selection to legend
   function addToLegend() {
     var f = select.getFeatures().item(0);
+    // Remove feature from select (to get its style back) BUG ol6 ?
+    select.getFeatures().remove(f);
     if (f) {
       legend.addRow({
         title: $(".options .row input").val(),
@@ -233,6 +242,7 @@
         feature: f
       });
     }
+    select.getFeatures().push(f);
   }
 
 	$(window).on("load", function(){ legend.refresh(); vector.changed(); });

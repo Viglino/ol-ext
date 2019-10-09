@@ -54,7 +54,9 @@ ol_source_TileWMS.prototype.getPreview = function(lonlat, resolution)
 	return fn.call(this, lonlat, this.getProjection());
 */
 	// Use getfeature info instead
-	var url = this.getGetFeatureInfoUrl(lonlat, resolution, this.getProjection() || 'EPSG:3857', {});
+	var url = this.getGetFeatureInfoUrl ? 
+		this.getGetFeatureInfoUrl(lonlat, resolution, this.getProjection() || 'EPSG:3857', {})
+		: this.getFeatureInfoUrl(lonlat, resolution, this.getProjection() || 'EPSG:3857', {});
 	url = url.replace(/getfeatureinfo/i,"GetMap");
 	return url;
 };

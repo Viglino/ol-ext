@@ -71,6 +71,7 @@
       </li>
     </ul>
     <p id="curZoom"></p>
+    <p id="zoomTo" style="background: yellow; color: red; margin: 0; padding: .5em;">Zoom to display features</p>
 	</div>
 	
   <script type="text/javascript">
@@ -147,13 +148,16 @@
       strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: zoom, maxZoom: zoom, tileSize:512  }))
     });
     vectorLayer.setSource(vectorSource);
-    var v = new ol.View({ zoom: zoom });
+    var v = new ol.View({ zoom: zoom-1 });
     vectorLayer.setMaxResolution(v.getResolution());
+    $('#curZoom').text(map.getView().getZoom()+' / '+curZoom);
   }
   setWFS();
 
-  map.on('rendercomplete', function(e) {
+  map.on('moveend', function(e) {
     $('#curZoom').text(map.getView().getZoom()+' / '+curZoom);
+    if (map.getView().getZoom()<curZoom) $('#zoomTo').show();
+    else $('#zoomTo').hide();
   });
 
   var sel = new ol.interaction.Select({

@@ -1,12 +1,10 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
- 
+<!--
 	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
 	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
------------------------------------------------------------->
+-->
 	<title>ol-ext: DFCI layer</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
@@ -106,7 +104,6 @@
 
 	map.addLayer(new ol.layer.Vector({
     source: vectorSource,
-    renderMode:'image',
 		style: function(f, resolution) {
 			return [ 
         new ol.style.Style({
@@ -141,7 +138,7 @@
   });
 
 	// Show info
-	var popup = new ol.Overlay.Popup({ popupClass:'tooltips', offsetBox:15 });
+  var popup = new ol.Overlay.Popup({ popupClass:'tooltips', offsetBox:15, positioning:'top-left' });
 	map.addOverlay(popup);
 	var select = new ol.interaction.Select({
     condition: ol.events.condition.click,

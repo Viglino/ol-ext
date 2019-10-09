@@ -1,3 +1,8 @@
+.ol-overlaycontainer-stopevent {
+  /* BOUG OL6 to enable DragOverlay interaction */
+  position: initial!important;
+}
+
 /** ol.popup */
 .ol-popup {
   font-size:0.9em;

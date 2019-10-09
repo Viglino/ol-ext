@@ -194,21 +194,31 @@ ol_Overlay_PopupFeature.prototype._getHtml = function(feature) {
   // Counter
   if (this._features.length > 1) {
     var div = ol_ext_element.create('DIV', { className: 'ol-count', parent: html });
-    ol_ext_element.create('DIV', { className: 'ol-prev', parent: div })
-      .addEventListener('click', function() {
+    ol_ext_element.create('DIV', { 
+      className: 'ol-prev', 
+      parent: div,
+      click: function() {
         this._count--;
         if (this._count<1) this._count = this._features.length;
         html = this._getHtml(this._features[this._count-1]);
-        ol_Overlay_Popup.prototype.show.call(this, this.getPosition(), html);
-      }.bind(this));
+        setTimeout(function() { 
+          ol_Overlay_Popup.prototype.show.call(this, this.getPosition(), html); 
+        }.bind(this), 350 );
+      }.bind(this)
+    });
     ol_ext_element.create('TEXT', { html:this._count+'/'+this._features.length, parent: div });
-    ol_ext_element.create('DIV', { className: 'ol-next', parent: div })
-      .addEventListener('click', function() {
+    ol_ext_element.create('DIV', { 
+      className: 'ol-next', 
+      parent: div,
+      click: function() {
         this._count++;
         if (this._count>this._features.length) this._count = 1;
         html = this._getHtml(this._features[this._count-1]);
-        ol_Overlay_Popup.prototype.show.call(this, this.getPosition(), html);
-      }.bind(this));
+        setTimeout(function() { 
+          ol_Overlay_Popup.prototype.show.call(this, this.getPosition(), html); 
+        }.bind(this), 350 );
+      }.bind(this)
+    });
   }
   // Use select interaction
   if (this._select) {
