@@ -5,6 +5,7 @@ import ol_style_Style from 'ol/style/Style'
 import ol_style_Fill from 'ol/style/Fill'
 import ol_style_Stroke from 'ol/style/Stroke'
 import ol_style_Text from 'ol/style/Text'
+import ol_ext_getMapCanvas from '../util/getMapCanvas'
 
 /**
  * @classdesc 
@@ -54,20 +55,7 @@ ol_control_CanvasBase.prototype.setMap = function (map) {
 /** Get canvas overlay
  */
 ol_control_CanvasBase.prototype.getCanvas = function(map) {
-  if (!map) return null;
-  var canvas = map.getViewport().getElementsByClassName('ol-fixedoverlay')[0];
-  if (!canvas && map.getViewport().querySelector('.ol-layers')) {
-    // Add a fixed canvas layer on top of the map
-    canvas = document.createElement('canvas');
-    canvas.className = 'ol-fixedoverlay';
-    map.getViewport().querySelector('.ol-layers').after(canvas);
-    // Clear before new compose
-    map.on('precompose', function (e){
-      canvas.width = map.getSize()[0] * e.frameState.pixelRatio;
-      canvas.height = map.getSize()[1] * e.frameState.pixelRatio;
-    });
-  }
-  return canvas;
+  return ol_ext_getMapCanvas(map);
 };
 
 /** Get map Canvas

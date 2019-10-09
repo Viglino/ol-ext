@@ -6,6 +6,7 @@
 import ol_ext_inherits from '../util/ext'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_interaction_Pointer from 'ol/interaction/Pointer'
+import ol_ext_getMapCanvas from '../util/getMapCanvas'
 
 /** Interaction splitter: acts as a split feature agent while editing vector features (LineString).
  * @constructor
@@ -102,6 +103,7 @@ ol_interaction_TouchCompass.prototype.setMap = function(map) {
 
 	if (map) {
 		this._listener = map.on('postcompose', this.drawCompass_.bind(this));
+		ol_ext_getMapCanvas(map);
 	}
 };
 
@@ -135,7 +137,8 @@ ol_interaction_TouchCompass.prototype.getCenter_ = function()
 ol_interaction_TouchCompass.prototype.drawCompass_ = function(e)
 {	if (!this.getActive()) return;
 
-	var ctx = e.context;
+	var canvas = ol_ext_getMapCanvas(this.getMap());
+	var ctx = canvas.getContext('2d');
 	var ratio = e.frameState.pixelRatio;
 
 	ctx.save();
