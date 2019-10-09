@@ -465,6 +465,27 @@ ol.ext.element.scrollDiv = function(elt, options) {
   }
 };
 
+/** Get a canvas overlay for a map (non rotated, on top of the map)
+ * @param {ol.Map} map
+ * @return 
+ */
+ol.ext.getMapCanvas = function(map) {
+  if (!map) return null;
+  var canvas = map.getViewport().getElementsByClassName('ol-fixedoverlay')[0];
+  if (!canvas && map.getViewport().querySelector('.ol-layers')) {
+    // Add a fixed canvas layer on top of the map
+    canvas = document.createElement('canvas');
+    canvas.className = 'ol-fixedoverlay';
+    map.getViewport().querySelector('.ol-layers').after(canvas);
+    // Clear before new compose
+    map.on('precompose', function (e){
+      canvas.width = map.getSize()[0] * e.frameState.pixelRatio;
+      canvas.height = map.getSize()[1] * e.frameState.pixelRatio;
+    });
+  }
+  return canvas;
+};
+  
 /* global ol */
 /* Create ol.sphere for backward compatibility with ol < 5.0
  * To use with Openlayers package
@@ -519,20 +540,7 @@ ol.control.CanvasBase.prototype.setMap = function (map) {
 /** Get canvas overlay
  */
 ol.control.CanvasBase.prototype.getCanvas = function(map) {
-  if (!map) return null;
-  var canvas = map.getViewport().getElementsByClassName('ol-fixedoverlay')[0];
-  if (!canvas && map.getViewport().querySelector('.ol-layers')) {
-    // Add a fixed canvas layer on top of the map
-    canvas = document.createElement('canvas');
-    canvas.className = 'ol-fixedoverlay';
-    map.getViewport().querySelector('.ol-layers').after(canvas);
-    // Clear before new compose
-    map.on('precompose', function (e){
-      canvas.width = map.getSize()[0] * e.frameState.pixelRatio;
-      canvas.height = map.getSize()[1] * e.frameState.pixelRatio;
-    });
-  }
-  return canvas;
+  return ol.ext.getMapCanvas(map);
 };
 /** Get map Canvas
  * @private
@@ -2504,10 +2512,10 @@ ol.control.Bar.prototype.addControl = function (c) {
     this.getMap().addControl(c);
   }
   // Activate and toogleOne
-  c.on ('change:active', this.onActivateControl_.bind(this));
-  if (c.getActive && c.getActive()) {
+  c.on ('change:active', function(e) { this.onActivateControl_(e, c); }.bind(this));
+  if (c.getActive) {
     // c.dispatchEvent({ type:'change:active', key:'active', oldValue:false, active:true });
-    this.onActivateControl_({ target: c, active: c.getActive() });
+    this.onActivateControl_({ target: c, active: c.getActive() }, c);
   }
 };
 /** Deativate all controls in a bar
@@ -2544,11 +2552,11 @@ ol.control.Bar.prototype.setActive = function (b) {
 /** Post-process an activated/deactivated control
  *	@param {ol.event} e :an object with a target {_ol_control_} and active flag {bool}
  */
-ol.control.Bar.prototype.onActivateControl_ = function (e) {
+ol.control.Bar.prototype.onActivateControl_ = function (e, ctrl) {
   if (this.get('toggleOne')) {
     if (e.active) {
       var n;
-      var ctrl = e.target;
+      //var ctrl = e.target;
       for (n=0; n<this.controls_.length; n++) {
         if (this.controls_[n]===ctrl) break;
       }
@@ -5681,6 +5689,7 @@ ol.control.Legend.prototype.getStyleImage = function(options, theCanvas, row) {
   }
   if (feature) {
     style = feature.getStyle();
+    if (typeof(style)==='function') style = style(feature);
     if (!style) {
       style = typeof(this._style) === 'function' ? this._style(feature) : this._style || [];
     }
@@ -16730,6 +16739,7 @@ ol.interaction.TouchCompass.prototype.setMap = function(map) {
 	ol.interaction.Pointer.prototype.setMap.call (this, map);
 	if (map) {
 		this._listener = map.on('postcompose', this.drawCompass_.bind(this));
+		ol.ext.getMapCanvas(map);
 	}
 };
 /**
@@ -16759,7 +16769,8 @@ ol.interaction.TouchCompass.prototype.getCenter_ = function()
  */
 ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
 {	if (!this.getActive()) return;
-	var ctx = e.context;
+	var canvas = ol.ext.getMapCanvas(this.getMap());
+	var ctx = canvas.getContext('2d');
 	var ratio = e.frameState.pixelRatio;
 	ctx.save();
 	ctx.scale(ratio,ratio);
@@ -18087,6 +18098,7 @@ ol.source.DFCI = function(options) {
   options.strategy =  function(extent, resolution) {
     if (this.resolution && this.resolution != resolution){
       this.clear();
+      this.refresh();
     }
     return [extent];
   }
@@ -20474,7 +20486,9 @@ ol.source.TileWMS.prototype.getPreview = function(lonlat, resolution)
 	return fn.call(this, lonlat, this.getProjection());
 */
 	// Use getfeature info instead
-	var url = this.getGetFeatureInfoUrl(lonlat, resolution, this.getProjection() || 'EPSG:3857', {});
+	var url = this.getGetFeatureInfoUrl ? 
+		this.getGetFeatureInfoUrl(lonlat, resolution, this.getProjection() || 'EPSG:3857', {})
+		: this.getFeatureInfoUrl(lonlat, resolution, this.getProjection() || 'EPSG:3857', {});
 	url = url.replace(/getfeatureinfo/i,"GetMap");
 	return url;
 };
@@ -20840,7 +20854,7 @@ popup.hide();
 *	@param {function|undefined} options.onclose: callback function when popup is closed
 *	@param {function|undefined} options.onshow callback function when popup is shown
 *	@param {Number|Array<number>} options.offsetBox an offset box
-*	@param {ol.OverlayPositioning | string | undefined} options.positionning 
+*	@param {ol.OverlayPositioning | string | undefined} options.positioning 
 *		the 'auto' positioning var the popup choose its positioning to stay on the map.
 * @api stable
 */
@@ -21466,21 +21480,31 @@ ol.Overlay.PopupFeature.prototype._getHtml = function(feature) {
   // Counter
   if (this._features.length > 1) {
     var div = ol.ext.element.create('DIV', { className: 'ol-count', parent: html });
-    ol.ext.element.create('DIV', { className: 'ol-prev', parent: div })
-      .addEventListener('click', function() {
+    ol.ext.element.create('DIV', { 
+      className: 'ol-prev', 
+      parent: div,
+      click: function() {
         this._count--;
         if (this._count<1) this._count = this._features.length;
         html = this._getHtml(this._features[this._count-1]);
-        ol.Overlay.Popup.prototype.show.call(this, this.getPosition(), html);
-      }.bind(this));
+        setTimeout(function() { 
+          ol.Overlay.Popup.prototype.show.call(this, this.getPosition(), html); 
+        }.bind(this), 350 );
+      }.bind(this)
+    });
     ol.ext.element.create('TEXT', { html:this._count+'/'+this._features.length, parent: div });
-    ol.ext.element.create('DIV', { className: 'ol-next', parent: div })
-      .addEventListener('click', function() {
+    ol.ext.element.create('DIV', { 
+      className: 'ol-next', 
+      parent: div,
+      click: function() {
         this._count++;
         if (this._count>this._features.length) this._count = 1;
         html = this._getHtml(this._features[this._count-1]);
-        ol.Overlay.Popup.prototype.show.call(this, this.getPosition(), html);
-      }.bind(this));
+        setTimeout(function() { 
+          ol.Overlay.Popup.prototype.show.call(this, this.getPosition(), html); 
+        }.bind(this), 350 );
+      }.bind(this)
+    });
   }
   // Use select interaction
   if (this._select) {

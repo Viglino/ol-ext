@@ -290,14 +290,6 @@
   padding: .1em 1em;
 }
 
-.ol-fixedoverlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-
 .ol-ext-dialog {
   position: fixed;
   top: -100%;
@@ -3790,6 +3782,11 @@
 	-webkit-transform-origin:100% 50%;
 }
 
+.ol-overlaycontainer-stopevent {
+  /* BOUG OL6 to enable DragOverlay interaction */
+  position: initial!important;
+}
+
 /** ol.popup */
 .ol-popup {
   font-size:0.9em;
@@ -4434,3 +4431,11 @@
   border-width: 5px 10px;
   margin: -5px -21px;
 }
+.ol-fixedoverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  
