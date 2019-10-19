@@ -162,6 +162,7 @@ ol_layer_AnimatedCluster.prototype.animate = function(e)
 			}
 			// Draw feature
 			var st = stylefn(c.f, resolution, true);
+			if (!st.length) st = [st];
 			// If one feature: draw the feature
 			if (c.f.get("features").length===1 && !dx && !dy) {
 				f = c.f.get("features")[0];
