@@ -14228,7 +14228,7 @@ ol.interaction.Modify.prototype.getModifiedFeatures = function() {
   var featuresById = {};
   this.dragSegments_.forEach( function(s) {
     var feature = s[0].feature;
-    featuresById[ol.getUid(feature)] = feature;
+    featuresById[ol.util.getUid(feature)] = feature;
   });
   var features = [];
   for (var i in featuresById) features.push(featuresById[i]);

@@ -126,15 +126,6 @@
       [[300000, 6500000], [200000, 6600000], [100000, 6600000]],
     ])));
 
-    function toGeometryCollection () {
-      var geom = [];
-      vector.getSource().getFeatures().forEach(function(f) {
-        geom.push(f.getGeometry());
-      });
-      vector.getSource().clear();
-      vector.getSource().addFeature(new ol.Feature(new ol.geom.GeometryCollection(geom)));
-    }
-
     var interactions = {
       draw: new ol.interaction.Draw({
         source: vector.getSource(),
