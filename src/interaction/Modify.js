@@ -1,5 +1,5 @@
 import ol_interaction_Modify from 'ol/interaction/Modify'
-import {getUid as ol_getUid} from 'ol/util'
+import {getUid as ol_util_getUid} from 'ol/util'
 
 /* Extent the ol/interaction/Modify with a getModifyFeatures
  * Get the features modified by the interaction
@@ -9,7 +9,7 @@ ol_interaction_Modify.prototype.getModifiedFeatures = function() {
   var featuresById = {};
   this.dragSegments_.forEach( function(s) {
     var feature = s[0].feature;
-    featuresById[ol_getUid(feature)] = feature;
+    featuresById[ol_util_getUid(feature)] = feature;
   });
   var features = [];
   for (var i in featuresById) features.push(featuresById[i]);
