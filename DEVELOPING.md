@@ -6,7 +6,7 @@ You will obviously start by [forking](https://github.com/viglino/ol-ext/fork) th
 
 ### Install the dependencies
 
-Go in the project directory and run the `npm install` that wil install the dependencies in the local node_modules folder.
+Go in the project directory and run the `npm install` that will install the dependencies in the local node_modules folder.
 
 ### Creating the distribution
 

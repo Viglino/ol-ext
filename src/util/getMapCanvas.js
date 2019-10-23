@@ -1,6 +1,6 @@
 /** Get a canvas overlay for a map (non rotated, on top of the map)
  * @param {ol.Map} map
- * @return 
+ * @return {canvas}
  */
 var ol_ext_getMapCanvas = function(map) {
   if (!map) return null;
