@@ -118,6 +118,7 @@ gulp.task("js", function() {
     "!./src/control/PirateMap.js", "!./src/control/Cloud.js",
     "./src/featureanimation/FeatureAnimation.js", "./src/featureanimation/*.js",
     "./src/filter/Base.js", "./src/filter/Mask.js", "./src/filter/*.js",
+    "./src/format/*.js",
     "./src/interaction/*.js",
     "./src/source/*.js",
     "./src/layer/*.js",
@@ -183,7 +184,7 @@ gulp.task("extrajs", function() {
 
 // Build files to be used individually
 gulp.task("lib", function() {
-  var src = ['control','featureanimation','filter','geom','interaction','layer','overlay','render','source','style','util','utils'];
+  var src = ['control','featureanimation','filter','format','geom','interaction','layer','overlay','render','source','style','util','utils'];
   for (var i=0; i<src.length; i++) {
     gulp.src("./src/"+src[i]+"/*.js")
       .pipe(transform())
@@ -213,6 +214,7 @@ gulp.task ("postpublish", function(){
       "./control",
       "./featureanimation",
       "./filter",
+      "./format",
       "./geom",
       "./interaction",
       "./layer",
