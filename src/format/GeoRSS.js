@@ -45,8 +45,8 @@ ol_format_GeoRSS.prototype.readFeature = function(source, options) {
   if (f.get('geo:long')) {
     // LonLat
     g = new ol_geom_Point([f.get('geo:long'), f.get('geo:lat')]);
-    f.unset('georss:long');
-    f.unset('georss:lat');
+    f.unset('geo:long');
+    f.unset('geo:lat');
   } else if (f.get('georss:point')) {
     // Point
     coord = f.get('georss:point').trim().split(' ');
