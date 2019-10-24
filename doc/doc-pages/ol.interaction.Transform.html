@@ -259,6 +259,33 @@
 
         <tr>
             
+                <td class="name"><code>condition</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">ol.EventsConditionType</span>
+|
+
+<span class="param-type">undefined</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>A function that takes an ol.MapBrowserEvent and a feature collection and returns a boolean to indicate whether that event should be handled. default: ol.events.condition.always.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
                 <td class="name"><code>addCondition</code></td>
             
 
@@ -279,7 +306,7 @@
 
             
 
-            <td class="description last"><p>A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled. default: ol.events.condition.never.</p></td>
+            <td class="description last"><p>A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled ie. the feature will be added to the transforms features. default: ol.events.condition.never.</p></td>
         </tr>
 
     
@@ -1106,69 +1133,23 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="handleDownEvent_"><span class="type-signature"></span>handleDownEvent_(evt)</h4>
+    <h4 class="name" id="getFeatures"><span class="type-signature"></span>getFeatures()</h4>
     
     
 </dt>
 <dd>
 
     
-
+    <div class="description">
+        <p>Get the features that are selected for transform</p>
+    </div>
     
 
     
 
     
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>evt</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">ol.MapBrowserEvent</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Map browser event.</p></td>
-        </tr>
 
     
-    </tbody>
-</table>
-
     
 
     
@@ -1226,274 +1207,13 @@
     
             
 <div class="param-desc">
-    <p><code>true</code> to start the drag sequence.</p>
+    <p>ol.Collection</p>
 </div>
 
 
 
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">boolean</span>
-
-
-
-    </dd>
-</dl>
-
 
         
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="handleDragEvent_"><span class="type-signature"></span>handleDragEvent_(evt)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>evt</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">ol.MapBrowserEvent</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Map browser event.</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="handleMoveEvent_"><span class="type-signature"></span>handleMoveEvent_(evt)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>evt</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">ol.MapBrowserEvent</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Event.</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
 
     
 </dd>
