@@ -173,7 +173,7 @@ var ol_coordinate_splitH = function (geom, y, n) {
   }
   // Sort x
   list.sort(function(a,b) { return a.pt[0] - b.pt[0] });
-  // Horizontal segement
+  // Horizontal segment
   var result = [];
   for (var j=0; j<list.length-1; j += 2) {
     result.push([list[j], list[j+1]])
@@ -189,7 +189,7 @@ import ol_geom_MultiPolygon from 'ol/geom/MultiPolygon'
 import ol_geom_Point from 'ol/geom/Point'
 import ol_geom_Polygon from 'ol/geom/Polygon'
 
-/** Create a geometrie given a type and coordinates */
+/** Create a geometry given a type and coordinates */
 var ol_geom_createFromType = function (type, coordinates) {
   switch (type) {
     case 'LineString': return new ol_geom_LineString(coordinates);
