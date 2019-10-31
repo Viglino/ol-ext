@@ -96,13 +96,13 @@ function removeFilter_(filter) {
   var i
   if (!this.filters_) this.filters_ = [];
   for (i=this.filters_.length-1; i>=0; i--) {
-    if (this.filters_[i]===filter) this.filters_.splice(i,1);
+    if (this.filters_[i]===filter) this.filters_.splice(i,11);
   }
   for (i=filter._listener.length-1; i>=0; i--) {
     // Remove listener on this object
     if (filter._listener[i].target === this) {
       ol_Observable_unByKey(filter._listener[i].listener);
-      filter._listener.splice(i,1);
+      filter._listener.splice(i,11);
     }
   }
   filterRedraw_.call (this);
