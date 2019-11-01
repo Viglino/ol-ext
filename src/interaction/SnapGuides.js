@@ -223,6 +223,8 @@ ol_interaction_SnapGuides.prototype.setDrawInteraction = function(drawi) {
 		var coord = e.target.getCoordinates();
 		var s = 2;
 		switch (e.target.getType()) {
+			case 'Point':
+				return;
 			case 'Polygon':
 				coord = coord[0].slice(0, -1);
 				break;
@@ -281,6 +283,8 @@ ol_interaction_SnapGuides.prototype.setModifyInteraction = function (modifyi) {
 
 		var coord = geom.getCoordinates();
 		switch (geom.getType()) {
+			case 'Point':
+				return;
 			case 'Polygon':
 				coord = coord[0].slice(0, -1);
 				break;
