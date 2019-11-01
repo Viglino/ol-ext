@@ -358,8 +358,8 @@ ol_interaction_Transform.prototype.select = function(feature, add) {
   if (add) {
     this.selection_.push(feature);
   } else {
-    this.selection_.clear()
-    this.selection_.push(feature);
+	var index = this.selection_.getArray().indexOf(feature);
+	this.selection_.removeAt(index);	
   }
   this.ispt_ = (this.selection_.getLength()===1 ? (this.selection_.item(0).getGeometry().getType() == "Point") : false);
   this.iscircle_ = (this.selection_.getLength()===1 ? (this.selection_.item(0).getGeometry().getType() == "Circle") : false);
