@@ -22,12 +22,12 @@ var ol_filter_Crop = function(options) {
 ol_ext_inherits(ol_filter_Crop, ol_filter_Mask);
 
 ol_filter_Crop.prototype.precompose = function(e) {
-  if (!this.feature_) return;
-  
-  var ctx = e.context;
-  ctx.save();
-  this.drawFeaturePath_(e, this.get("inner"));
-  ctx.clip("evenodd");
+  if (this.feature_) {
+    var ctx = e.context;
+    ctx.save();
+      this.drawFeaturePath_(e, this.get("inner"));
+      ctx.clip("evenodd");
+  }
 }
 
 ol_filter_Crop.prototype.postcompose = function(e) {

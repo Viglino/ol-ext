@@ -1,6 +1,6 @@
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
 import ol_ext_inherits from '../util/ext'
@@ -16,78 +16,81 @@ import {asString as ol_color_asString} from 'ol/color'
  *  @param {ol.style.Fill} [options.fill] style to fill with
  *  @param {boolean} [options.inner] mask inner, default false
  */
-var ol_filter_Mask = function(options)
-{	options = options || {};
-	ol_filter_Base.call(this, options);
-	if (options.feature)
-	{	switch (options.feature.getGeometry().getType())
-		{	case "Polygon":
-			case "MultiPolygon":
-				this.feature_ = options.feature;
-				break;
-			default: break;
-		}
-	}
-	this.set("inner", options.inner);
-	this.fillColor_ = options.fill ? ol_color_asString(options.fill.getColor()) || "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.2)";
+var ol_filter_Mask = function(options) {
+  options = options || {};
+  ol_filter_Base.call(this, options);
+  if (options.feature) {
+    switch (options.feature.getGeometry().getType()) {
+      case 'Polygon':
+      case 'MultiPolygon':
+        this.feature_ = options.feature;
+        break;
+      default: break;
+    }
+  }
+  this.set('inner', options.inner);
+  this.fillColor_ = options.fill ? ol_color_asString(options.fill.getColor()) || "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.2)";
 }
 ol_ext_inherits(ol_filter_Mask, ol_filter_Base);
 
 /** Draw the feature into canvas */
-ol_filter_Mask.prototype.drawFeaturePath_ = function(e, out)
-{	var ctx = e.context;
-	var canvas = ctx.canvas;
-	var ratio = e.frameState.pixelRatio;
-	// Transform
-	var m = e.frameState.coordinateToPixelTransform;
-	var tr = function(pt)
-	{	return [
-			(pt[0]*m[0]+pt[1]*m[1]+m[4])*ratio,
-			(pt[0]*m[2]+pt[1]*m[3]+m[5])*ratio
-		];
-	}
-	// Old ol version
-	if (!m)
-	{	m = e.frameState.coordinateToPixelMatrix;
-		tr = function(pt)
-		{	return [
-				(pt[0]*m[0]+pt[1]*m[1]+m[12])*ratio,
-				(pt[0]*m[4]+pt[1]*m[5]+m[13])*ratio
-			];
-		}
-	}
-	// Geometry
-	var ll = this.feature_.getGeometry().getCoordinates();
-	if (this.feature_.getGeometry().getType()=="Polygon") ll = [ll];
-	ctx.beginPath();
-        if (out)
-		{	ctx.moveTo (0,0);
-			ctx.lineTo (canvas.width, 0);
-			ctx.lineTo (canvas.width, canvas.height);
-			ctx.lineTo (0, canvas.height);
-			ctx.lineTo (0, 0);
-		}
-		for (var l=0; l<ll.length; l++)
-		{	var c = ll[l];
-			for (var i=0; i<c.length; i++) 
-			{	var pt = tr(c[i][0]);
-				ctx.moveTo (pt[0], pt[1]);
-				for (var j=1; j<c[i].length; j++) 
-				{	pt = tr(c[i][j]);
-					ctx.lineTo (pt[0], pt[1]);
-				}
-			}
-		}
+ol_filter_Mask.prototype.drawFeaturePath_ = function(e, out) {
+  var ctx = e.context;
+  var canvas = ctx.canvas;
+  var ratio = e.frameState.pixelRatio;
+  console.log(ratio)
+  // ol v6
+  if (/render$/.test(e.type)) ratio = 1;
+  // Transform
+  var m = e.frameState.coordinateToPixelTransform;
+  var tr = function(pt) {
+    return [
+      (pt[0]*m[0]+pt[1]*m[1]+m[4])*ratio,
+      (pt[0]*m[2]+pt[1]*m[3]+m[5])*ratio
+    ];
+  }
+  // Old ol version
+  if (!m) {
+    m = e.frameState.coordinateToPixelMatrix;
+    tr = function(pt) {
+      return [
+        (pt[0]*m[0]+pt[1]*m[1]+m[12])*ratio,
+        (pt[0]*m[4]+pt[1]*m[5]+m[13])*ratio
+      ];
+    }
+  }
+  // Geometry
+  var ll = this.feature_.getGeometry().getCoordinates();
+  if (this.feature_.getGeometry().getType()=="Polygon") ll = [ll];
+  ctx.beginPath();
+    if (out) {
+      ctx.moveTo (0,0);
+      ctx.lineTo (canvas.width, 0);
+      ctx.lineTo (canvas.width, canvas.height);
+      ctx.lineTo (0, canvas.height);
+      ctx.lineTo (0, 0);
+    }
+    for (var l=0; l<ll.length; l++) {
+      var c = ll[l];
+      for (var i=0; i<c.length; i++) {
+        var pt = tr(c[i][0]);
+        ctx.moveTo (pt[0], pt[1]);
+        for (var j=1; j<c[i].length; j++) {
+          pt = tr(c[i][j]);
+          ctx.lineTo (pt[0], pt[1]);
+        }
+      }
+    }
 }
 
-ol_filter_Mask.prototype.postcompose = function(e)
-{	if (!this.feature_) return;
-	var ctx = e.context;
-	ctx.save();
-		this.drawFeaturePath_(e, !this.get("inner"));
-		ctx.fillStyle = this.fillColor_;
-		ctx.fill("evenodd");
-	ctx.restore();
+ol_filter_Mask.prototype.postcompose = function(e) {
+  if (!this.feature_) return;
+  var ctx = e.context;
+  ctx.save();
+    this.drawFeaturePath_(e, !this.get("inner"));
+    ctx.fillStyle = this.fillColor_;
+    ctx.fill("evenodd");
+  ctx.restore();
 }
 
 export default ol_filter_Mask

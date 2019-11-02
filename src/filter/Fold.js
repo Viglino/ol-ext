@@ -7,24 +7,28 @@ import ol_ext_inherits from '../util/ext'
 import ol_filter_Base from './Base'
 
 /** Fold filer map
-* @constructor
-* @requires ol_filter
-* @extends {ol_filter_Base}
-* @param {Object} [options]
-*  @param {Array<number>} [options.fold] number of fold (horizontal and vertical)
-*  @param {number} [options.margin] margin in px, default 8
-*  @param {number} [options.padding] padding in px, default 8
-*  @param {number|number[]} [options.fsize] fold size in px, default 8,10
-*/
+ * @constructor
+ * @requires ol_filter
+ * @extends {ol_filter_Base}
+ * @param {Object} [options]
+ *  @param {Array<number>} [options.fold] number of fold (horizontal and vertical)
+ *  @param {number} [options.margin] margin in px, default 8
+ *  @param {number} [options.padding] padding in px, default 8
+ *  @param {number|number[]} [options.fsize] fold size in px, default 8,10
+ *  @param {boolean} [options.fill] true to fill the background, default false
+ *  @param {boolean} [options.shadow] true to display shadow, default true
+ */
 var ol_filter_Fold = function(options) {
   options = options || {};
   ol_filter_Base.call(this, options);
 
-  this.set("fold", options.fold || [8,4]);
-  this.set("margin", options.margin || 8);
-  this.set("padding", options.padding || 8);
-  if (typeof options.fsize == "number") options.fsize = [options.fsize,options.fsize];
-  this.set("fsize", options.fsize || [8,10]);
+  this.set('fold', options.fold || [8,4]);
+  this.set('margin', options.margin || 8);
+  this.set('padding', options.padding || 8);
+  if (typeof options.fsize == 'number') options.fsize = [options.fsize,options.fsize];
+  this.set('fsize', options.fsize || [8,10]);
+  this.set('fill', options.fill);
+  this.set('shadow', options.shadow!==false);
 };
 ol_ext_inherits(ol_filter_Fold, ol_filter_Base);
 
@@ -70,7 +74,7 @@ ol_filter_Fold.prototype.precompose = function(e) {
     ctx.shadowOffsetY = 3;
     this.drawLine_(ctx, this.get("fsize"), this.get("margin"));
     ctx.fillStyle="#fff";
-    ctx.fill();
+    if (this.get('fill')) ctx.fill();
     ctx.strokeStyle = "rgba(0,0,0,0.1)";
     ctx.stroke();
   ctx.restore();
@@ -89,20 +93,22 @@ ol_filter_Fold.prototype.postcompose = function(e) {
     this.drawLine_(ctx, this.get("fsize"), this.get("margin"));
     ctx.clip();
 
-    var fold = this.get("fold");
-    var w = canvas.width/fold[0];
-    var h = canvas.height/fold[1];
+    if (this.get('shadow')) {
+      var fold = this.get("fold");
+      var w = canvas.width/fold[0];
+      var h = canvas.height/fold[1];
 
-    var grd = ctx.createRadialGradient(5*w/8,5*w/8,w/4,w/2,w/2,w);
-    grd.addColorStop(0,"transparent");
-    grd.addColorStop(1,"rgba(0,0,0,0.2)");
-    ctx.fillStyle = grd;
-    ctx.scale (1,h/w);
-    for (var i=0; i<fold[0]; i++) for (var j=0; j<fold[1]; j++) {
-      ctx.save()
-      ctx.translate(i*w, j*w);
-      ctx.fillRect(0,0,w,w);
-      ctx.restore()
+      var grd = ctx.createRadialGradient(5*w/8,5*w/8,w/4,w/2,w/2,w);
+      grd.addColorStop(0,"transparent");
+      grd.addColorStop(1,"rgba(0,0,0,0.2)");
+      ctx.fillStyle = grd;
+      ctx.scale (1,h/w);
+      for (var i=0; i<fold[0]; i++) for (var j=0; j<fold[1]; j++) {
+        ctx.save()
+        ctx.translate(i*w, j*w);
+        ctx.fillRect(0,0,w,w);
+        ctx.restore()
+      }
     }
   ctx.restore();
 };
