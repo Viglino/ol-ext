@@ -71,8 +71,10 @@
     </li><li>
       <input id="translateFeature" type="checkbox" onchange="setPropertie(this.id);" /><label for="translateFeature"> translate when click on feature</label>
     </li><li>
-      <input id="keepAspectRatio" type="checkbox" onchange="setAspectRatio(this.id);" /><label for="keepAspectRatio"> force keepAspectRatio (default use <i>Shift</i>)</label>
-    </li><li>
+        <input id="keepAspectRatio" type="checkbox" onchange="setAspectRatio(this.id);" /><label for="keepAspectRatio"> force keepAspectRatio (default use <i>Shift</i>)</label>
+      </li><li>
+        <input id="enableRotatedTransform" type="checkbox" onchange="setPropertie(this.id);" /><label for="enableRotatedTransform"> force matching the map rotation</label>
+      </li><li>
       SetRotateCenter:
       <button onclick='firstPoint=false; interaction.setCenter()'>objects</button>
       <button onclick='firstPoint=false; interaction.setCenter(map.getView().getCenter())'>view center</button>
@@ -225,6 +227,7 @@
     }
 
     var interaction = new ol.interaction.Transform ({
+      enableRotatedTransform: false,
       /* Limit interaction inside bbox * /
       condition: function(e, features) {
         return ol.extent.containsXY([-465960, 5536486, 1001630, 6514880], e.coordinate[0], e.coordinate[1]);
