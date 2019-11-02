@@ -3,6 +3,7 @@
 <head>
   <title>ol-ext</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
   
   <meta name="description" content="Cool extensions to use with Openlayers (ol)." />
   <meta name="keywords" content="ol,extension,canvas,3D,animation,layer,selection,control,openlayers,popup" />
@@ -41,6 +42,12 @@
     z-index: 1;
     background-color: #1f6b75;
     color: white;
+    height: 4em;
+    overflow: hidden;
+  }
+  .navbar p {
+    display: inline-block;
+    margin: 0;
   }
   .navbar img {
     height:1.5em;
@@ -50,10 +57,16 @@
     display: inline-block;
     font-size:1.5em;
     margin: 0.5em;
+    vertical-align: middle;
   }
   h2 {
     clear:both;
     margin:1em 0 0;
+  }
+  input[type="search"] {
+    font-size: 1em;
+    padding: .3em 1em;
+    border-radius: 1em;;
   }
   .container {
     width:1170px;
@@ -89,6 +102,21 @@
       display: none;
     }
   }
+  @media (max-width: 500px) {
+    .navbar {
+      height: 6.5em;
+    }
+    .navbar p {
+      display: block;
+    }
+    #examples {
+      margin-top: 7em;
+    }
+    .navbar .news {
+      display: none;
+    }
+  }
+
   .example,
   .desc {
     background-color: #f5f5f5;
@@ -245,8 +273,10 @@
       <h1><img src="http://openlayers.org/en/master/examples/resources/logo-70x70.png">&nbsp;ol-ext<span>: 
         Extensions for OpenLayers (ol)</span>
       </h1>
-      <input type="search" placeholder="Search" class="search-query" id="keywords" name="q">
-      <span id="count"></span>
+      <p>
+        <input type="search" placeholder="Search" class="search-query" id="keywords" name="q">
+        <span id="count"></span>
+      </p>
     </div>
   </header>
   <div id="examples">
