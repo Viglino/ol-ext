@@ -1,160 +1,159 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!-- --------------------------------------------------------
- 
-	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
----------------------------------------------------------- -->
-	<title>ol-ext: Image Photo Style</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!--
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Image Photo Style</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="photo style for OL3 marker." />
-	<meta name="keywords" content="ol3, style, vector, photo, image" />
+  <meta name="description" content="photo style for OL3 marker." />
+  <meta name="keywords" content="ol3, style, vector, photo, image" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
-	<link rel="stylesheet" href="../style.css" />
-	<style>
-		.options { max-width:400px;  }
-		.options p { margin:0; font-size:0.9em; }
-		.options p.copy
-		{	font-size: 0.8em;
-			color: navy;
-		}
-	</style>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .options { max-width:400px;  }
+    .options p { margin:0; font-size:0.9em; }
+    .options p.copy {
+      font-size: 0.8em;
+      color: navy;
+    }
+  </style>
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Image Photo Style</h1>
-	</a>
-	<p class="info">
-		The <i>ol.style.Photo</i> is a style to show photos or images on a map.
-		<br/>
-		The photo are drawn in a box, a circle and can be anchored.
-	</p>
+  <a href="../../index.html">
+    <h1>ol-ext: Image Photo Style</h1>
+  </a>
+  <p class="info">
+    The <i>ol.style.Photo</i> is a style to show photos or images on a map.
+    <br/>
+    The photo are drawn in a box, a circle and can be anchored.
+  </p>
 
-	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
-	<div class="options">
-		<h2>Options:</h2>
-		<ul>
-			<li>
-				kind:
-				<select id="kind" onchange="vector.changed();">
-					<option value="default">default</option>
-					<option value="square">square</option>
-					<option value="circle">circle</option>
-					<option value="anchored">anchored</option>
-					<option value="folio">folio</option>
-				</select>
-			</li>
-			<li>
-				border:
-				<input id="border" type="number" onchange="vector.changed();" value="3" style="width:4em" />
-			</li>
-			<li>
-				<input id="shadow" type="checkbox" checked="checked" onchange="vector.changed();" />
-				<label for="shadow"> shadow</label>
-			</li>
-			<li>
-				<input id="crop" type="checkbox" checked="checked" onchange="vector.changed();" />
-				<label for="crop"> crop image within square</label>
-			</li>
-		</ul>
-	</div>
-	<div id ="select" class="options" >Select an image.</div>
-	
-	<script type="text/javascript">
-	// Layers
-	var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
-		
-	// The map
-	var map = new ol.Map
-		({	target: 'map',
-			view: new ol.View
-			({	zoom: 6,
-				center: [166326, 5992663]
-			}),
-			layers: [layer]
-		});
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
+  <div class="options">
+    <h2>Options:</h2>
+    <ul>
+      <li>
+        kind:
+        <select id="kind" onchange="vector.changed();">
+          <option value="default">default</option>
+          <option value="square">square</option>
+          <option value="circle">circle</option>
+          <option value="anchored">anchored</option>
+          <option value="folio">folio</option>
+        </select>
+      </li>
+      <li>
+        border:
+        <input id="border" type="number" onchange="vector.changed();" value="3" style="width:4em" />
+      </li>
+      <li>
+        <input id="shadow" type="checkbox" checked="checked" onchange="vector.changed();" />
+        <label for="shadow"> shadow</label>
+      </li>
+      <li>
+        <input id="crop" type="checkbox" checked="checked" onchange="vector.changed();" />
+        <label for="crop"> crop image within square</label>
+      </li>
+    </ul>
+  </div>
+  <div id ="select" class="options" >Select an image.</div>
+  
+  <script type="text/javascript">
+  // Layers
+  var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
+    
+  // The map
+  var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 6,
+      center: [166326, 5992663]
+    }),
+    layers: [layer]
+  });
 
-	// Array to cache image style
-	var styleCache = {};
-	// Vector style
-	function getFeatureStyle (feature, resolution, sel)
-	{	var k = $('#kind').val()+"_"+$("#border").val()+"_"+feature.get("img").match(/[^\\/]+$/)[0]+($("#shadow").prop('checked')?"_1":"_0")+($("#crop").prop('checked')?"_1":"_0")+(sel?"_1":"");
-		var style = styleCache[k];
-		if (!style)
-		{	styleCache[k] = style = new ol.style.Style
-			({	image: new ol.style.Photo (
-				{	src: feature.get("img"),
-					radius: 20,
-					crop: $("#crop").prop('checked'),
-					kind: $('#kind').val(),
-					shadow: $("#shadow").prop('checked')?5:0,
-					onload: function() { vector.changed(); },
-					stroke: new ol.style.Stroke(
-					{	width: Number($("#border").val()) + (sel ? 3 : 0),
-						color: sel ? 'red' : '#fff'
-					})
-				})
-			});
-		}
-		return [style];
-	}
-
-	// GeoJSON layer
-	var vectorSource = new ol.source.Vector(
-	{	url: '../data/fond_guerre.geojson',
-		projection: 'EPSG:3857',
-		format: new ol.format.GeoJSON(),
-		attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
-		logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
-	});
-
-	var vector = new ol.layer.Vector(
-	{	name: '1914-18',
-		preview: "http://www.culture.gouv.fr/Wave/image/memoire/2445/sap40_z0004141_v.jpg",
-		source: vectorSource,
-		// y ordering
-		renderOrder: ol.ordering.yOrdering(),
-		style: getFeatureStyle
-	});
-
-	map.addLayer(vector);
-
-	// Control Select 
-	var select = new ol.interaction.Select(
-		{   style: function (feature, resolution) { return getFeatureStyle(feature, resolution, true); }
+  // Array to cache image style
+  var styleCache = {};
+  // Vector style
+  function getFeatureStyle (feature, resolution, sel) {
+    var k = $('#kind').val()+"_"+$("#border").val()+"_"+feature.get("img").match(/[^\\/]+$/)[0]+($("#shadow").prop('checked')?"_1":"_0")+($("#crop").prop('checked')?"_1":"_0")+(sel?"_1":"");
+    var style = styleCache[k];
+    if (!style) {
+      styleCache[k] = style = new ol.style.Style ({
+        image: new ol.style.Photo ({
+          src: feature.get("img"),
+          radius: 20,
+          crop: $("#crop").prop('checked'),
+          kind: $('#kind').val(),
+          shadow: $("#shadow").prop('checked')?5:0,
+          onload: function() { vector.changed(); },
+          stroke: new ol.style.Stroke({
+            width: Number($("#border").val()) + (sel ? 3 : 0),
+            color: sel ? 'red' : '#fff'
+          })
         })
-	map.addInteraction(select);
-	
-	// onselect
-	select.getFeatures().on(['add','remove'], function(e)
-	{	if (e.type=="add") 
-		{	var info = $("#select").html("<p>Selection:</p>");
-			var el = e.element;
-			$("<img>").attr('src',el.get("img")).appendTo(info);
-			$("<p>").text(el.get("text")).appendTo(info);
-			$("<p>").text(el.get("commune")+" ("+el.get("region")+" - "+el.get("date").replace(".","/")+")").appendTo(info);
-			$("<p>").addClass('copy').html("&copy; "+el.get("copy")+" - "+el.get("author")).appendTo(info);
-		}
-		else $("#select").html("<p>Select an image.</p>");
-	});
+      });
+    }
+    return [style];
+  }
 
-	</script>
+  // GeoJSON layer
+  var vectorSource = new ol.source.Vector({
+    url: '../data/fond_guerre.geojson',
+    projection: 'EPSG:3857',
+    format: new ol.format.GeoJSON(),
+    attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
+    logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+  });
+
+  var vector = new ol.layer.Vector({
+    name: '1914-18',
+    preview: "http://www.culture.gouv.fr/Wave/image/memoire/2445/sap40_z0004141_v.jpg",
+    source: vectorSource,
+    // y ordering
+    renderOrder: ol.ordering.yOrdering(),
+    style: getFeatureStyle
+  });
+
+  map.addLayer(vector);
+
+  // Control Select 
+  var select = new ol.interaction.Select({
+    condition: ol.events.condition.click,
+    style: function (feature, resolution) { return getFeatureStyle(feature, resolution, true); }
+  })
+  map.addInteraction(select);
+  
+  // onselect
+  select.getFeatures().on(['add','remove'], function(e) {
+    if (e.type=="add") {
+      var info = $("#select").html("<p>Selection:</p>");
+      var el = e.element;
+      $("<img>").attr('src',el.get("img")).appendTo(info);
+      $("<p>").text(el.get("text")).appendTo(info);
+      $("<p>").text(el.get("commune")+" ("+el.get("region")+" - "+el.get("date").replace(".","/")+")").appendTo(info);
+      $("<p>").addClass('copy').html("&copy; "+el.get("copy")+" - "+el.get("author")).appendTo(info);
+    }
+    else $("#select").html("<p>Select an image.</p>");
+  });
+
+  </script>
 </body>
 </html>

@@ -41,7 +41,7 @@
       margin: auto;
       max-width: 100%;
     }
-    #story .chapter.select {
+    #story .chapter.ol-select {
       background-color: rgba(255,255,255,.8);
     }
     .options a {
@@ -72,7 +72,11 @@
       </li><li>
         Listen to the <i>scrollto</i> event to get the current chapter.
       </li><li>
-        Listen to the <i>clickimage</i> event to get warned when an image with `data-title` is clicked.
+        You can set <i>data-lon</i>, <i>data-lat</i> and <i>data-zoom</i> global attributes to your chapter to get them back on <i>scrollto</i> event.
+        <br/>
+        Set a <i>data-animation="flyto"</i> attribute to fly to the position defined by this attributes when the chapter is reached.
+      </li><li>
+        Listen to the <i>clickimage</i> event to get warned when an image with <i>data-title</i> is clicked.
       </li><li>
         Use an element with a <i>ol-scroll-next</i> class in your story to scroll to the next chapter on click.
       </li>
@@ -105,7 +109,7 @@
   </div>
 
   <div id="story">
-    <div class="chapter" name="start">
+    <div class="chapter" name="start" data-lon="1.5600502550133257" data-lat="48.356243383667106" data-zoom="6" data-animation="flyto">
       <h2>Capitals</h2>
       <p>
         A story map with Openlayers.
@@ -116,22 +120,21 @@
       </p>
       <div class="ol-scroll-next"><span>Start</span></div>
     </div>
-    <div class="chapter" name="Paris">
-
+    <div class="chapter" name="Paris" data-lon="2.351828" data-lat="48.856578" data-zoom="9" data-animation="flyto">
       <h2>Paris</h2>
       <img data-title="Paris" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Seine_and_Eiffel_Tower_from_Tour_Saint_Jacques_2013-08.JPG/600px-Seine_and_Eiffel_Tower_from_Tour_Saint_Jacques_2013-08.JPG">
       <p>
         Paris is the capital and most populous city of France, with an area of 105 square kilometres (41 square miles) and a population of 2,206,488. Since the 17th century, Paris has been one of Europe's major centres of finance, commerce, fashion, science, and the arts.
       </p>
     </div>
-    <div class="chapter" name="London">
+    <div class="chapter" name="London" data-lon="-0.1275" data-lat="51.507222" data-zoom="8" data-animation="flyto">
       <h2>London</h2>
       <img data-title="London" src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/London_Montage_L.jpg/600px-London_Montage_L.jpg">
       <p>
         London is the capital and largest city of both the United Kingdom and England. Standing on the River Thames in southeastern England, 50 miles (80 km) upstream from its estuary with the North Sea, London has been a major settlement for two millennia. Londinium was founded by the Romans. The City of London, London's ancient core − an area of just 1.12 square miles (2.9 km2) and colloquially known as the Square Mile − retains its medieval boundaries.
       </p>
     </div>
-    <div class="chapter" name="Berlin">
+    <div class="chapter" name="Berlin" data-lon="13.383333" data-lat="52.516667" data-zoom="7" data-animation="flyto">
       <h2>Berlin</h2>
       <img data-title="Berlin" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Berlin_Skyline_Fernsehturm_02.jpg/600px-Berlin_Skyline_Fernsehturm_02.jpg">
       <p>
@@ -173,13 +176,6 @@
     //target: document.getElementById('story')
   });
 
-  var positions = {
-    start: { xy: [173664, 6166327], z: 6 },
-    Paris: { xy: ol.proj.fromLonLat([2.351828, 48.856578]), z: 9 },
-    London: { xy: ol.proj.fromLonLat([-0.1275,51.507222]), z: 8 },
-    Berlin: { xy: ol.proj.fromLonLat([13.383333,52.516667]), z: 7 },
-  }
-
   // Show image fullscreen on click
 	var fullscreen = new ol.control.Overlay ({ hideOnClick: true, className: 'zoom' });
 	map.addControl(fullscreen);
@@ -190,30 +186,10 @@
 
   // Fly to the chapter on the map
   story.on('scrollto', function(e){
-    $('#story .chapter').removeClass('select');
-    $(e.element).addClass('select');
-    map.getView().cancelAnimations();
     if (e.name==='start') {
       placemark.hide();
-      map.getView().animate ({
-        center: positions[e.name].xy,
-        zoom: positions[e.name].z
-      })
     } else {
-      placemark.show(positions[e.name].xy);
-      // Fly to destination
-      var duration = 2000;
-      map.getView().animate ({
-        center: positions[e.name].xy,
-        duration: duration
-      });
-      map.getView().animate ({
-        zoom: Math.min(map.getView().getZoom(), positions[e.name].z)-1,
-        duration: duration/2
-      },{
-        zoom: positions[e.name].z,
-        duration: duration/2
-      });
+      placemark.show(e.coordinate);
     }
   });
   map.addControl (story);

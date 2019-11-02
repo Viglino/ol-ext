@@ -88,7 +88,6 @@
 
     var stamen = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) })
     var labels = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'toner-labels' }), opacity:0.8 })
-    //var labels = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'terrain-labels' }), opacity:0.8 })
 
     // The map
     var map = new ol.Map({
@@ -102,17 +101,22 @@
     });
 
     function setFilter () {
-      filter.set('fold', [ Math.max(1, parseInt($('#foldx').val())), Math.max(1, parseInt($('#foldy').val())) ]);
-      filter.set('margin', Math.max(0, parseInt($('#margin').val())));
-      filter.set('padding', Math.max(0, parseInt($('#padding').val())));
-      filter.set('fsize', [Math.max(0, parseInt($('#fsizex').val())), Math.max(0, parseInt($('#fsizey').val()))]);
+      for (var i=0; i<2; i++) {
+        filter[i].set('fold', [ Math.max(1, parseInt($('#foldx').val())), Math.max(1, parseInt($('#foldy').val())) ]);
+        filter[i].set('margin', Math.max(0, parseInt($('#margin').val())));
+        filter[i].set('padding', Math.max(0, parseInt($('#padding').val())));
+        filter[i].set('fsize', [Math.max(0, parseInt($('#fsizex').val())), Math.max(0, parseInt($('#fsizey').val()))]);
+      }
     }
 
     // Fold filter
-    var filter = new ol.filter.Fold({});
-    //stamen.addFilter(filter);
-    //labels.addFilter(filter);
-    map.addFilter(filter);
+    var filter = [
+      new ol.filter.Fold({ fill: true, shadow: false }),
+      new ol.filter.Fold({})
+    ];
+    stamen.addFilter(filter[0]);
+    labels.addFilter(filter[1]);
+    // map.addFilter(filter);
     setFilter();
 
   </script>

@@ -1,145 +1,143 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!-- --------------------------------------------------------
- 
-	Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
----------------------------------------------------------- -->
-	<title>ol-ext: Map pulse</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!--
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Map pulse</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="An example of ol.featureAnimation to add pulses on a map." />
-	<meta name="keywords" content="ol3, animation, pulse, map" />
+  <meta name="description" content="An example of ol.featureAnimation to add pulses on a map." />
+  <meta name="keywords" content="ol3, animation, pulse, map" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
-	<link rel="stylesheet" href="../style.css" />
-	</head>
+  <link rel="stylesheet" href="../style.css" />
+  </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Map pulse</h1>
-	</a>
-	<p class="info">
-		This example use ol.featureAnimation to add pulses on a map.
-	</p>
+  <a href="../../index.html">
+    <h1>ol-ext: Map pulse</h1>
+  </a>
+  <p class="info">
+    This example use ol.featureAnimation to add pulses on a map.
+  </p>
 
-	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options">
-		<h2>Options:</h2>
-		Form:
-		<select id="form">
-			<option value="Circle">circle</option>
-			<option value="RegularShape">square</option>
-			<option value="Icon">icon</option>
-		</select>
-		<br />
-		Easing:
-		<select id="easing">
-			<option value="easeOut">easeOut</option>
-			<option value="upAndDown">upAndDown</option>
-			<option value="bounce">bounce</option>
-		</select>
-		<br />
-		Color:
-		<select id="color">
-			<option value="red">red</option>
-			<option value="orange">orange</option>
-			<option value="black">black</option>
-			<option value="green">green</option>
-		</select>
-		<br />
-		<button onclick="pulse([2.351828, 48.856578])">Paris</button>
-		<button onclick="pulse([-0.1275,51.507222])">London</button>
-		<button onclick="pulse([6.149985,46.200013])">Geneve</button>
-		<button onclick="pulse([4.35,50.83])">Bruxelles</button>
-		<button onclick="pulse([13.383333,52.516667])">Berlin</button>
-		<button onclick="pulse([-3.683333,40.433333])">Madrid</button>
-		<button onclick="pulse([12.48657,41.888732])">Roma</button>
-		<p>
-			> <i>Click on the map to pulse!</i>
-		</p>
-	</div>
-	
-	<script type="text/javascript">
-	// Layers
-	var layer = new ol.layer.Tile({
-        title:'terrain-background',
-        source: new ol.source.Stamen({ layer: 'terrain' })
-	});
+  <div class="options">
+    <h2>Options:</h2>
+    Form:
+    <select id="form">
+      <option value="Circle">circle</option>
+      <option value="RegularShape">square</option>
+      <option value="Icon">icon</option>
+    </select>
+    <br />
+    Easing:
+    <select id="easing">
+      <option value="easeOut">easeOut</option>
+      <option value="upAndDown">upAndDown</option>
+      <option value="bounce">bounce</option>
+    </select>
+    <br />
+    Color:
+    <select id="color">
+      <option value="red">red</option>
+      <option value="orange">orange</option>
+      <option value="black">black</option>
+      <option value="green">green</option>
+    </select>
+    <br />
+    <button onclick="pulse([2.351828, 48.856578])">Paris</button>
+    <button onclick="pulse([-0.1275,51.507222])">London</button>
+    <button onclick="pulse([6.149985,46.200013])">Geneve</button>
+    <button onclick="pulse([4.35,50.83])">Bruxelles</button>
+    <button onclick="pulse([13.383333,52.516667])">Berlin</button>
+    <button onclick="pulse([-3.683333,40.433333])">Madrid</button>
+    <button onclick="pulse([12.48657,41.888732])">Roma</button>
+    <p>
+      > <i>Click on the map to pulse!</i>
+    </p>
+  </div>
+  
+  <script type="text/javascript">
+  // Layers
+  var layer = new ol.layer.Tile({
+    title:'terrain-background',
+    source: new ol.source.Stamen({ layer: 'terrain' })
+  });
 
-	// The map
-	var map = new ol.Map
-		({	target: 'map',
-			view: new ol.View
-			({	zoom: 5,
-				center: [166326, 5992663]
-			}),
-			layers: [layer]
-		});
+  // The map
+  var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View({
+      zoom: 5,
+      center: [166326, 5992663]
+    }),
+    layers: [layer]
+  });
 
-	// Bounce easing (custom)
-	var bounce = 5;
-	var a = (2*bounce+1) * Math.PI/2;
-	var b = -0.01;
-	var c = -Math.cos(a) * Math.pow(2, b);
-	ol.easing.bounce = function(t)
-	{	t = 1-Math.cos(t*Math.PI/2);
-		return (1 + Math.abs( Math.cos(a*t) ) * Math.pow(2, b*t) + c*t)/2;
-	}
-	
-	// Preload image (?)
-	var icon = new ol.style.Icon ({ src:"../data/smile.png" });
-	icon.load();
+  // Bounce easing (custom)
+  var bounce = 5;
+  var a = (2*bounce+1) * Math.PI/2;
+  var b = -0.01;
+  var c = -Math.cos(a) * Math.pow(2, b);
+  ol.easing.bounce = function(t) {
+    t = 1-Math.cos(t*Math.PI/2);
+    return (1 + Math.abs( Math.cos(a*t) ) * Math.pow(2, b*t) + c*t)/2;
+  }
+  
+  // Preload image (?)
+  var icon = new ol.style.Icon ({ src:"../data/smile.png" });
+  icon.load();
 
-	// Pulse feature at coord
-	function pulseFeature(coord)
-	{	var f = new ol.Feature (new ol.geom.Point(coord));
-		f.setStyle (new ol.style.Style(
-					{	image: new ol.style[$("#form").val()] (
-						{	radius: 30, 
-							points: 4,
-							src: "../data/smile.png",
-							stroke: new ol.style.Stroke ({ color: $("#color").val(), width:2 })
-						})
-					}));
-		map.animateFeature (f, new ol.featureAnimation.Zoom(
-			{	fade: ol.easing.easeOut, 
-				duration:3000, 
-				easing: ol.easing[$("#easing").val()] 
-			}));
-	}
+  // Pulse feature at coord
+  function pulseFeature(coord){
+    var f = new ol.Feature (new ol.geom.Point(coord));
+    f.setStyle (new ol.style.Style({
+      image: new ol.style[$("#form").val()] ({
+        radius: 30, 
+        points: 4,
+        src: "../data/smile.png",
+        stroke: new ol.style.Stroke ({ color: $("#color").val(), width:2 })
+      })
+    }));
+    map.animateFeature (f, new ol.featureAnimation.Zoom({
+      fade: ol.easing.easeOut, 
+      duration: 3000, 
+      easing: ol.easing[$("#easing").val()] 
+    }));
+  }
 
-	// Pulse on click 
-	map.on('singleclick', function(evt) 
-	{	pulseFeature(evt.coordinate);
-	});
+  // Pulse on click 
+  map.on('singleclick', function(evt) {
+    pulseFeature(evt.coordinate);
+  });
 
-	// Pulse at lonlat
-	function pulse(lonlat)
-	{	var nb = $("#easing").val()=='bounce' ? 1:3;
-		for (var i=0; i<nb; i++)
-		{	setTimeout (function()
-			{	pulseFeature (ol.proj.transform(lonlat, 'EPSG:4326', map.getView().getProjection()));
-			}, i*500);
-		};
-	}
+  // Pulse at lonlat
+  function pulse(lonlat) {
+    var nb = $("#easing").val()=='bounce' ? 1:3;
+    for (var i=0; i<nb; i++) {
+      setTimeout (function() {
+        pulseFeature (ol.proj.transform(lonlat, 'EPSG:4326', map.getView().getProjection()));
+      }, i*500);
+    };
+  }
 
-	</script>
-	
+  </script>
+  
 </body>
 </html>

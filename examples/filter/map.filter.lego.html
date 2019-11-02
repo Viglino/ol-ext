@@ -1,12 +1,10 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
- 
+<!--
 	Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
 	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
------------------------------------------------------------->
+-->
 	<title>ol-ext: Lego map</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
@@ -113,7 +111,8 @@
 
 		// Enhance filter
 		var lego = new ol.filter.Lego({ brickSize:$("#size").val(), img:$("#brick").val() });
-		map.addFilter(lego);
+		mbox.addFilter(lego);
+		stamen.addFilter(lego);
 
 	</script>
 
