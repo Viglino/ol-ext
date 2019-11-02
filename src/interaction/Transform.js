@@ -94,6 +94,8 @@ var ol_interaction_Transform = function(options) {
   this.set('selection', (options.selection !== false));
   /*  */
   this.set('hitTolerance', (options.hitTolerance || 0));
+  /* Enable view rotated transforms */
+  this.set('enableRotatedTransform', (options.enableRotatedTransform || false));
 
 
   // Force redraw when changed
@@ -284,6 +286,17 @@ ol_interaction_Transform.prototype.getFeatureAtPixel_ = function(pixel) {
   ) || {};
 }
 
+ol_interaction_Transform.prototype.getGeometryRotateToZero_ = function(item, viewRotation, alwaysClone) {
+  var origGeom = item.getGeometry();
+  if (viewRotation === 0 || !this.get('enableRotatedTransform')) {
+    return (alwaysClone) ? origGeom.clone() : origGeom;
+  }
+  var origExt = origGeom.getExtent();
+  var rotGeom = origGeom.clone();
+  rotGeom.rotate(viewRotation * -1, ol_extent_getCenter(origExt));
+  return rotGeom;
+}
+
 /** Draw transform sketch
 * @param {boolean} draw only the center
 */
@@ -291,16 +304,22 @@ ol_interaction_Transform.prototype.drawSketch_ = function(center) {
   var i, f, geom;
   this.overlayLayer_.getSource().clear();
   if (!this.selection_.getLength()) return;
-  var ext = this.selection_.item(0).getGeometry().getExtent();
+  var viewRotation = this.getMap().getView().getRotation();
+  var ext = this.getGeometryRotateToZero_(this.selection_.item(0), viewRotation).getExtent();
   // Clone and extend
   ext = ol_extent_buffer(ext, 0);
   this.selection_.forEach(function (f) {
-    ol_extent_extend(ext, f.getGeometry().getExtent());
-  });
+    var extendExt = this.getGeometryRotateToZero_(f, viewRotation).getExtent();
+    ol_extent_extend(ext, extendExt);
+  }.bind(this));
+
   if (center===true) {
     if (!this.ispt_) {
       this.overlayLayer_.getSource().addFeature(new ol_Feature( { geometry: new ol_geom_Point(this.center_), handle:'rotate0' }) );
       geom = ol_geom_Polygon_fromExtent(ext);
+      if (this.get('enableRotatedTransform') && viewRotation !== 0) {
+        geom.rotate(viewRotation, ol_extent_getCenter(ext));
+      }
       f = this.bbox_ = new ol_Feature(geom);
       this.overlayLayer_.getSource().addFeature (f);
     }
@@ -314,6 +333,9 @@ ol_interaction_Transform.prototype.drawSketch_ = function(center) {
       ]);
     }
     geom = ol_geom_Polygon_fromExtent(ext);
+    if (this.get('enableRotatedTransform') && viewRotation !== 0) {
+      geom.rotate(viewRotation, ol_extent_getCenter(ext));
+    }
     f = this.bbox_ = new ol_Feature(geom);
     var features = [];
     var g = geom.getCoordinates()[0];
@@ -412,17 +434,31 @@ ol_interaction_Transform.prototype.handleDownEvent_ = function(evt) {
     this.opt_ = sel.option;
     this.constraint_ = sel.constraint;
     // Save info
+    var viewRotation = this.getMap().getView().getRotation();
     this.coordinate_ = evt.coordinate;
     this.pixel_ = evt.pixel;
     this.geoms_ = [];
+    this.rotatedGeoms_ = [];
     var extent = ol_extent_createEmpty();
+    var rotExtent = ol_extent_createEmpty();
     for (var i=0, f; f=this.selection_.item(i); i++) {
       this.geoms_.push(f.getGeometry().clone());
       extent = ol_extent_extend(extent, f.getGeometry().getExtent());
+      if (this.get('enableRotatedTransform') && viewRotation !== 0) {
+        var rotGeom = this.getGeometryRotateToZero_(f, viewRotation, true);
+        this.rotatedGeoms_.push(rotGeom);
+        rotExtent = ol_extent_extend(rotExtent, rotGeom.getExtent());
+      }
     }
     this.extent_ = (ol_geom_Polygon_fromExtent(extent)).getCoordinates()[0];
+    if (this.get('enableRotatedTransform') && viewRotation !== 0) {
+      this.rotatedExtent_ = (ol_geom_Polygon_fromExtent(rotExtent)).getCoordinates()[0];
+    }
     if (this.mode_==='rotate') {
       this.center_ = this.getCenter() || ol_extent_getCenter(extent);
+      if (this.get('enableRotatedTransform') && viewRotation !== 0) {
+        this.rotatedCenter_ = this.getCenter() || ol_extent_getCenter(rotExtent);
+      }
 
       // we are now rotating (cursor down on rotate mode), so apply the grabbing cursor
       var element = evt.map.getTargetElement();
@@ -430,8 +466,17 @@ ol_interaction_Transform.prototype.handleDownEvent_ = function(evt) {
       this.previousCursor_ = element.style.cursor;
     } else {
       this.center_ = ol_extent_getCenter(extent);
+      if (this.get('enableRotatedTransform') && viewRotation !== 0) {
+        this.rotatedCenter_ = ol_extent_getCenter(rotExtent);
+      }
     }
     this.angle_ = Math.atan2(this.center_[1]-evt.coordinate[1], this.center_[0]-evt.coordinate[0]);
+
+    if (this.get('enableRotatedTransform') && viewRotation !== 0) {
+      var downPoint = new ol_geom_Point(evt.coordinate);
+      downPoint.rotate(viewRotation * -1, this.rotatedCenter_);
+      this.rotatedCoordinate_ = downPoint.getCoordinates();
+    }
 
     this.dispatchEvent({
       type: this.mode_+'start',
@@ -542,13 +587,31 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
       break;
     }
     case 'scale': {
+      var viewRotation = this.getMap().getView().getRotation();
       var center = this.center_;
+      var rotationCenter = this.center_;
       if (this.get('modifyCenter')(evt)) {
-        center = this.extent_[(Number(this.opt_)+2)%4];
+        var extentCoordinates = this.extent_;
+        if (this.get('enableRotatedTransform') && viewRotation !== 0) {
+          extentCoordinates = this.rotatedExtent_;
+        }
+        center = extentCoordinates[(Number(this.opt_)+2)%4];
       }
 
-      var scx = (evt.coordinate[0] - center[0]) / (this.coordinate_[0] - center[0]);
-      var scy = (evt.coordinate[1] - center[1]) / (this.coordinate_[1] - center[1]);
+      var downCoordinate = this.coordinate_;
+      if (this.get('enableRotatedTransform') && viewRotation !== 0) {
+        downCoordinate = this.rotatedCoordinate_;
+      }
+
+      var dragCoordinate = evt.coordinate;
+      if (this.get('enableRotatedTransform') && viewRotation !== 0) {
+        var dragPoint = new ol_geom_Point(evt.coordinate);
+        dragPoint.rotate(viewRotation * -1, rotationCenter);
+        dragCoordinate = dragPoint.getCoordinates();
+      }
+
+      var scx = ((dragCoordinate)[0] - (center)[0]) / (downCoordinate[0] - (center)[0]);
+      var scy = ((dragCoordinate)[1] - (center)[1]) / (downCoordinate[1] - (center)[1]);
 
       if (this.get('noFlip')) {
         if (scx<0) scx=-scx;
@@ -565,7 +628,7 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
       }
 
       for (i=0, f; f=this.selection_.item(i); i++) {
-        geometry = this.geoms_[i].clone();
+        geometry = (viewRotation === 0 || !this.get('enableRotatedTransform')) ? this.geoms_[i].clone() : this.rotatedGeoms_[i].clone();
         geometry.applyTransform(function(g1, g2, dim) {
           if (dim<2) return g2;
 
@@ -577,6 +640,9 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
           if (geometry.getType() == 'Circle') geometry.setCenterAndRadius(geometry.getCenter(), geometry.getRadius());
           return g2;
         });
+        if (this.get('enableRotatedTransform') && viewRotation !== 0) {
+          geometry.rotate(viewRotation, rotationCenter);
+        }
         f.setGeometry(geometry);
       }
       this.drawSketch_();
