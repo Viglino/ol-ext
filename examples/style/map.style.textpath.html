@@ -2,175 +2,179 @@
 <html>
 <head>
 <!--
-	Copyright (c) 2015-2018 Jean-Marc VIGLINO,
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 -->
-	<title>ol-ext: style textPath</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>ol-ext: style textPath</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="setTextPathStyle is a function to draw text along a LineString on postcompose." />
-	<meta name="keywords" content="ol3, style, vector, textpath, text, along" />
+  <meta name="description" content="setTextPathStyle is a function to draw text along a LineString on postcompose." />
+  <meta name="keywords" content="ol3, style, vector, textpath, text, along" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: style textPath</h1>
-	</a>
-	<div class="info">
-		The <i>ol.vector.setTextPathStyle()</i> is a function to draw text along a linear feature (ol.geom.lineString) on postcompose.
-		<br />
-		The function is called as the ol.vector.setStyle() function but rendered in a postcompose frame.
-		<br/>
-		An <i>ol.style.TextPath</i> is defined but <i>ol.style.Text</i> can be used instead.
-		<br/>
-		You can specify a <i>minResolution</i> to prevent drawing beneath this resolution.
-		<ul>
-			<li>
-				The <i>rotateWithView</i> option is used to render readable text (the function tries to display text upward).
-			</li>
-			<li>
-				The <i>textOverflow</i> option determines how overflowed content that is not displayed is signaled to users.
-			</li>
-			<li>
-				If the length of the linestring (in pixel) is less than <i>minWidth</i>, text won't be displayed.
-			</li>
-		</ul>
-		The example uses an <a href="map.geom.cspline.html">ol.geom.LineString.cspline</a> to smooth support and avoid letters collision.
-	</div>
+  <a href="../../index.html">
+    <h1>ol-ext: style textPath</h1>
+  </a>
+  <div class="info">
+    <p><span class="experimental">Deprecated</span> 
+      Use <a href="https://openlayers.org/en/latest/apidoc/module-ol_style_Text.html">ol/style/Text</a> 
+      with placement:line instead.
+    </p>
+    The <i>ol.vector.setTextPathStyle()</i> is a function to draw text along a linear feature (ol.geom.lineString) on postcompose.
+    <br />
+    The function is called as the ol.vector.setStyle() function but rendered in a postcompose frame.
+    <br/>
+    An <i>ol.style.TextPath</i> is defined but <i>ol.style.Text</i> can be used instead.
+    <br/>
+    You can specify a <i>minResolution</i> to prevent drawing beneath this resolution.
+    <ul>
+      <li>
+        The <i>rotateWithView</i> option is used to render readable text (the function tries to display text upward).
+      </li>
+      <li>
+        The <i>textOverflow</i> option determines how overflowed content that is not displayed is signaled to users.
+      </li>
+      <li>
+        If the length of the linestring (in pixel) is less than <i>minWidth</i>, text won't be displayed.
+      </li>
+    </ul>
+    The example uses an <a href="map.geom.cspline.html">ol.geom.LineString.cspline</a> to smooth support and avoid letters collision.
+  </div>
 
-	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
-	<div class="options">
-		<h2>Options:</h2>
-		textAlign: 
-		<select id="textAlign" onchange="setTextPathStyle()">
-			<option value="left">left</option>
-			<option value="center" selected="selected">center</option>
-			<option value="right">right</option>
-			<option value="justify">justify</option>
-		</select>
-		<br />
-		textBaseline: <select id="textBaseline" onchange="setTextPathStyle();">
-			<option value="top">top</option>
-			<option value="middle" selected="selected">middle</option>
-			<option value="bottom">bottom</option>
-			<option value="alphabetic">alphabetic</option>
-			<option value="hanging">hanging</option>
-		</select>
-		<br />
-		textOverflow: <select id="overflow" onchange="setTextPathStyle();">
-			<option value="">hidden</option>
-			<option value="visible">visible</option>
-			<option value="ellipsis">ellipsis</option>
-			<option value=".">custom</option>
-		</select>
-		<br />
-		minWidth: <input id="minwidth" type="number" onchange="setTextPathStyle()" style="width:4em;" value="0" />px
-		<br />
-		<input id="rotation" type="checkbox" onchange="setTextPathStyle()" />
-		<label for="rotation"> rotateWithView <small>(readable)</small></label>
-		<br />
-		<input id="cspline" type="checkbox" onchange="setTextPathStyle()" />
-		<label for="cspline"> smooth support</label>
-		<hr/>
-		minZoom: <select id="resolution" onchange="setTextPathStyle();">
-			<option value="0">all</option>
-			<option value="78000">1</option>
-			<option value="39000">2</option>
-			<option value="19500">3</option>
-			<option value="9700">4</option>
-		</select> <small>(~ maxResolution)</small>
-	</div>
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
+  <div class="options">
+    <h2>Options:</h2>
+    textAlign: 
+    <select id="textAlign" onchange="setTextPathStyle()">
+      <option value="left">left</option>
+      <option value="center" selected="selected">center</option>
+      <option value="right">right</option>
+      <option value="justify">justify</option>
+    </select>
+    <br />
+    textBaseline: <select id="textBaseline" onchange="setTextPathStyle();">
+      <option value="top">top</option>
+      <option value="middle" selected="selected">middle</option>
+      <option value="bottom">bottom</option>
+      <option value="alphabetic">alphabetic</option>
+      <option value="hanging">hanging</option>
+    </select>
+    <br />
+    textOverflow: <select id="overflow" onchange="setTextPathStyle();">
+      <option value="">hidden</option>
+      <option value="visible">visible</option>
+      <option value="ellipsis">ellipsis</option>
+      <option value=".">custom</option>
+    </select>
+    <br />
+    minWidth: <input id="minwidth" type="number" onchange="setTextPathStyle()" style="width:4em;" value="0" />px
+    <br />
+    <input id="rotation" type="checkbox" onchange="setTextPathStyle()" />
+    <label for="rotation"> rotateWithView <small>(readable)</small></label>
+    <br />
+    <input id="cspline" type="checkbox" onchange="setTextPathStyle()" />
+    <label for="cspline"> smooth support</label>
+    <hr/>
+    minZoom: <select id="resolution" onchange="setTextPathStyle();">
+      <option value="0">all</option>
+      <option value="78000">1</option>
+      <option value="39000">2</option>
+      <option value="19500">3</option>
+      <option value="9700">4</option>
+    </select> <small>(~ maxResolution)</small>
+  </div>
 
-	<script type="text/javascript">
+  <script type="text/javascript">
 
-	// Layers
-	var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
-		
-	// The map
-	var map = new ol.Map
-		({	target: 'map',
-			view: new ol.View
-			({	zoom: 1,
-				center: [1957830, 3212031]
-			}),
-			layers: [layer]
-		});
+  // Layers
+  var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
+    
+  // The map
+  var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 1,
+      center: [1957830, 3212031]
+    }),
+    layers: [layer]
+  });
 
-	// Data to draw on the map
-	var data = {
-		"Africa":[[430493,2755157],[1721973,1581084],[2856910,-923604],[2935182,-2802121]],
-		"Europe":[[-587036,4985895],[313086,5846882],[1643702,6433918],[3052589,7060091]],
-		"Asia":[[7474930,4751081],[11662456,8116756],[14206280,8977743]],
-		"Australia":[[12797393,-2684713],[14323688,-2606442],[15928254,-3232614],[16632697,-4054465]],
-		"North America":[[-15654303,9564779],[-13580108,8273299],[-11897271,5964289],[-11075420,2989972]],
-		"South America":[[-8375052,563555],[-7122708,-493111],[-6457400,-2762985],[-7631473,-5502488]],
-		"Atlantic Ocean":[[-313086,-6011253],[-1252344,-2762985],[-2856910,759233],[-4774563,3185651],[-6848758,4711945]],
-		"Pacific Ocean":[[18354671,4711945],[21642074,2950836],[25633922,-688790],[27982067,-5150266]],
-		"Antartica":[[-547901,-15129884],[3091725,-14308034],[8101102,-14112355],[14206280,-14855934]],
-		"Southern Ocean":[[469629,-9102978],[4578884,-7537547],[10057890,-7028782],[13814923,-7498412],[17493684,-8907299]],
-		"Indian Ocean":[[11271098,-4641501],[10175297,-2410763],[8727274,-1197554],[6457400,-453975]],
-		"Artic Ocean":[[5439870,13713170],[1995924,12969590],[-1174073,10973666],[-3013453,9056014]]
-	};
+  // Data to draw on the map
+  var data = {
+    "Africa":[[430493,2755157],[1721973,1581084],[2856910,-923604],[2935182,-2802121]],
+    "Europe":[[-587036,4985895],[313086,5846882],[1643702,6433918],[3052589,7060091]],
+    "Asia":[[7474930,4751081],[11662456,8116756],[14206280,8977743]],
+    "Australia":[[12797393,-2684713],[14323688,-2606442],[15928254,-3232614],[16632697,-4054465]],
+    "North America":[[-15654303,9564779],[-13580108,8273299],[-11897271,5964289],[-11075420,2989972]],
+    "South America":[[-8375052,563555],[-7122708,-493111],[-6457400,-2762985],[-7631473,-5502488]],
+    "Atlantic Ocean":[[-313086,-6011253],[-1252344,-2762985],[-2856910,759233],[-4774563,3185651],[-6848758,4711945]],
+    "Pacific Ocean":[[18354671,4711945],[21642074,2950836],[25633922,-688790],[27982067,-5150266]],
+    "Antartica":[[-547901,-15129884],[3091725,-14308034],[8101102,-14112355],[14206280,-14855934]],
+    "Southern Ocean":[[469629,-9102978],[4578884,-7537547],[10057890,-7028782],[13814923,-7498412],[17493684,-8907299]],
+    "Indian Ocean":[[11271098,-4641501],[10175297,-2410763],[8727274,-1197554],[6457400,-453975]],
+    "Artic Ocean":[[5439870,13713170],[1995924,12969590],[-1174073,10973666],[-3013453,9056014]]
+  };
 
-	var features=[];
-	for (var i in data)
-	{	features.push (new ol.Feature(
-			{	geometry: new ol.geom.LineString(data[i]),
-				name: i
-			}));
-	}
-	var vector = new ol.layer.Vector(
-	{	name: 'Vecteur',
-		source: new ol.source.Vector({ features: features }),
-		style: function(f) 
-		{	return [ new ol.style.Style(
-			{	stroke: new ol.style.Stroke({ color:"red", width:1 }),
-				geometry: $("#cspline").prop("checked") ? f.getGeometry().cspline() : null
-			})]
-		}
-	})
+  var features=[];
+  for (var i in data) {
+    features.push (new ol.Feature({
+      geometry: new ol.geom.LineString(data[i]),
+      name: i
+    }));
+  }
+  var vector = new ol.layer.Vector({
+    name: 'Vecteur',
+    source: new ol.source.Vector({ features: features }),
+    style: function(f) {
+      return [ new ol.style.Style({
+        stroke: new ol.style.Stroke({ color:"red", width:1 }),
+        geometry: $("#cspline").prop("checked") ? f.getGeometry().cspline() : null
+      })]
+    }
+  })
 
-	// Set textPathStyle according inputs
-	function setTextPathStyle()
-	{	vector.setTextPathStyle(function (f)
-		{	return [ new ol.style.Style(
-			{	text: new ol.style.TextPath(
-				{	text: f.get("name"),
-					font: "15px Arial",
-					fill: new ol.style.Fill ({ color:"#369" }),
-					stroke: new ol.style.Stroke({ color:"#fff", width:3 }),
-					textBaseline: $("#textBaseline").val(),
-					textAlign: $("#textAlign").val(),
-					rotateWithView: $("#rotation").prop("checked"),
-					textOverflow: $("#overflow").val(),
-					minWidth: Number($("#minwidth").val())
-				}),
-				geometry: $("#cspline").prop("checked") ? f.getGeometry().cspline() : null
-			})]
-		}, 
-		Number($("#resolution").val()));
-	}
-	setTextPathStyle();
+  // Set textPathStyle according inputs
+  function setTextPathStyle() {
+    vector.setTextPathStyle(function (f) {
+      return [ new ol.style.Style({
+        text: new ol.style.TextPath({
+          text: f.get("name"),
+          font: "15px Arial",
+          fill: new ol.style.Fill ({ color:"#369" }),
+          stroke: new ol.style.Stroke({ color:"#fff", width:3 }),
+          textBaseline: $("#textBaseline").val(),
+          textAlign: $("#textAlign").val(),
+          rotateWithView: $("#rotation").prop("checked"),
+          textOverflow: $("#overflow").val(),
+          minWidth: Number($("#minwidth").val())
+        }),
+        geometry: $("#cspline").prop("checked") ? f.getGeometry().cspline() : null
+      })]
+    }, 
+    Number($("#resolution").val()));
+  }
+  setTextPathStyle();
 
-	map.addLayer(vector);
+  map.addLayer(vector);
 
-	</script>
-	
+  </script>
+  
 </body>
 </html>
