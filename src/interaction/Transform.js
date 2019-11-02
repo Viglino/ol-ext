@@ -140,6 +140,9 @@ ol_interaction_Transform.prototype.setMap = function(map) {
   }
   ol_interaction_Pointer.prototype.setMap.call (this, map);
   this.overlayLayer_.setMap(map);
+  if (map === null) {
+    this.select(null);
+  }
   if (map !== null) {
     this.isTouch = /touch/.test(map.getViewport().className);
     this.setDefaultStyle();
