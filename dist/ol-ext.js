@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.1.7
+ * @version v3.1.8
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -407,18 +407,21 @@ ol.ext.element.scrollDiv = function(elt, options) {
   var onmove = (typeof(options.onmove) === 'function' ? options.onmove : function(){});
   var page = options.vertical ? 'pageY' : 'pageX';
   var scroll = options.vertical ? 'scrollTop' : 'scrollLeft';
+  var moving = false;
   // Prevent image dragging
   elt.querySelectorAll('img').forEach(function(i) {
     i.ondragstart = function(){ return false; };
   });
   // Start scrolling
   ol.ext.element.addListener(elt, ['mousedown'], function(e) {
+    moving = false;
     pos = e[page];
     dt = new Date();
     elt.classList.add('ol-move');
   });
   // Register scroll
   ol.ext.element.addListener(window, ['mousemove'], function(e) {
+    moving = true;
     if (pos !== false) {
       var delta = pos - e[page];
       elt[scroll] += delta;
@@ -437,7 +440,9 @@ ol.ext.element.scrollDiv = function(elt, options) {
   });
   // Stop scrolling
   ol.ext.element.addListener(window, ['mouseup'], function(e) {
-    elt.classList.remove('ol-move');
+    if (moving) setTimeout (function() { elt.classList.remove('ol-move'); });
+    else elt.classList.remove('ol-move');
+    moving = false;
     dt = new Date() - dt;
     if (dt>100) {
       // User stop: no speed
@@ -459,6 +464,7 @@ ol.ext.element.scrollDiv = function(elt, options) {
         var delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
         elt.classList.add('ol-move');
         elt[scroll] -= delta*30;
+        elt.classList.remove('ol-move');
         return false;
       }
     );
@@ -5078,7 +5084,7 @@ ol.control.Imageline.prototype._drawLink = function(e) {
   if (!this.get('linkColor') | this.isCollapsed()) return;
   var map = this.getMap();
   if (map && this._select && this._select.elt) {
-    var ctx = e.context;
+    var ctx = e.context || ol.ext.getMapCanvas(this.getMap()).getContext('2d');
     var ratio = e.frameState.pixelRatio;
     var pt = [ 
       this._select.elt.offsetLeft 
@@ -9408,21 +9414,23 @@ ol.control.Storymap = function(options) {
   });
   element.querySelectorAll('.chapter').forEach(function(c) {
     c.addEventListener('click', function(e) {
-      if (!c.classList.contains('select')) {
-        this.element.scrollTop = c.offsetTop - 30;
-        e.preventDefault();
-      } else {
-        if (e.target.tagName==='IMG' && e.target.dataset.title) {
-          console.log(e);
-          this.dispatchEvent({ 
-            coordinate: this.getMap() ? this.getMap().getCoordinateFromPixel([e.layerX,e.layerY]) : null,
-            type: 'clickimage', 
-            img: e.target, 
-            title: e.target.dataset.title, 
-            element: c, 
-            name: c.getAttribute('name'),
-            originalEvent: e
-          });
+      // Not moving
+      if (!this.element.classList.contains('ol-move')) {
+        if (!c.classList.contains('ol-select')) {
+          this.element.scrollTop = c.offsetTop - 30;
+          e.preventDefault();
+        } else {
+          if (e.target.tagName==='IMG' && e.target.dataset.title) {
+            this.dispatchEvent({ 
+              coordinate: this.getMap() ? this.getMap().getCoordinateFromPixel([e.layerX,e.layerY]) : null,
+              type: 'clickimage', 
+              img: e.target, 
+              title: e.target.dataset.title, 
+              element: c, 
+              name: c.getAttribute('name'),
+              originalEvent: e
+            });
+          }
         }
       }
     }.bind(this));
@@ -9440,32 +9448,54 @@ ol.control.Storymap = function(options) {
   // Scroll to the next chapter
   var sc = this.element.querySelectorAll('.ol-scroll-next');
   sc.forEach(function(s) {
-    s.addEventListener('click', function(){ 
-      var chapter = this.element.querySelectorAll('.chapter');
-      var scrollto = s.offsetTop;
-      for (var i=0, c; c=chapter[i]; i++) {
-        if (c.offsetTop > scrollto) {
-          scrollto = c.offsetTop;
-          break;
+    s.addEventListener('click', function(e) { 
+      if (s.parentElement.classList.contains('ol-select')) {
+        var chapter = this.element.querySelectorAll('.chapter');
+        var scrollto = s.offsetTop;
+        for (var i=0, c; c=chapter[i]; i++) {
+          if (c.offsetTop > scrollto) {
+            scrollto = c.offsetTop;
+            break;
+          }
         }
+        this.element.scrollTop = scrollto - 30;
+        e.stopPropagation();
+        e.preventDefault();
       }
-      this.element.scrollTop = scrollto - 30;
     }.bind(this));
   }.bind(this));
   // Scroll top 
   sc = this.element.querySelectorAll('.ol-scroll-top');
   sc.forEach(function(i) {
-    i.addEventListener('click', function(){ 
+    i.addEventListener('click', function(e){ 
       this.element.scrollTop = 0;
+      e.stopPropagation();
+      e.preventDefault();
     }.bind(this));
   }.bind(this));
+  var getEvent = function(currentDiv) {
+    var lonlat = [ parseFloat(currentDiv.getAttribute('data-lon')),
+      parseFloat(currentDiv.getAttribute('data-lat'))];
+    var coord = ol.proj.fromLonLat(lonlat, this.getMap().getView().getProjection());
+    var zoom = parseFloat(currentDiv.getAttribute('data-zoom'));
+    hasMove = true;
+    return { 
+      type: 'scrollto', 
+      element: currentDiv, 
+      name: currentDiv.getAttribute('name'),
+      coordinate: coord,
+      lon: lonlat,
+      zoom: zoom
+    };
+  }.bind(this);
   // Handle scrolling
   var currentDiv = this.element.querySelectorAll('.chapter')[0];
   setTimeout (function (){
-    this.dispatchEvent({ type: 'scrollto', start: true, element: currentDiv, name: currentDiv.getAttribute('name') });
+    currentDiv.classList.add('ol-select');
+    this.dispatchEvent(getEvent(currentDiv));
   }.bind(this));
   // Trigger change event on scroll
-  this.element.addEventListener("scroll", function() {
+  this.element.addEventListener('scroll', function() {
     var current, chapter = this.element.querySelectorAll('.chapter');
     var height = ol.ext.element.getStyle(this.element, 'height');
     if (!this.element.scrollTop) {
@@ -9478,8 +9508,32 @@ ol.control.Storymap = function(options) {
       }
     }
     if (current && current!==currentDiv) {
+      if (currentDiv) currentDiv.classList.remove('ol-select');
       currentDiv = current;
-      this.dispatchEvent({ type: 'scrollto', element: currentDiv, name: currentDiv.getAttribute('name') });
+      currentDiv.classList.add('ol-select');
+      var e = getEvent(currentDiv);
+      var view = this.getMap().getView();
+      view.cancelAnimations();
+      switch (currentDiv.getAttribute('data-animation')) {
+        case 'flyto': {
+          // Fly to destination
+          var duration = 2000;
+          view.animate ({
+            center: e.coordinate,
+            duration: duration
+          });
+          view.animate ({
+            zoom: Math.min(view.getZoom(), e.zoom)-1,
+            duration: duration/2
+          },{
+            zoom: e.zoom,
+            duration: duration/2
+          });
+          break;
+        };
+        default: break;
+      }
+      this.dispatchEvent(e);
     }
   }.bind(this));
 };
@@ -10482,8 +10536,8 @@ ol.control.Toggle.prototype.getInteraction = function() {
 };
 
 /*
-	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL license (http://www.cecill.info/).
+  Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL license (http://www.cecill.info/).
 */
 /** Feature animation base class
  * Use the {@link _ol_Map_#animateFeature} or {@link _ol_layer_Vector_#animateFeature} to animate a feature
@@ -10495,22 +10549,22 @@ ol.control.Toggle.prototype.getInteraction = function() {
 *	@param {bool} options.revers revers the animation direction
 *	@param {Number} options.repeat number of time to repeat the animation, default 0
 *	@param {oo.style.Style} options.hiddenStyle a style to display the feature when playing the animation
-*		to be used to make the feature selectable when playing animation 
-*		(@see {@link ../examples/map.featureanimation.select.html}), default the feature 
-*		will be hidden when playing (and niot selectable)
+*	  to be used to make the feature selectable when playing animation 
+*	  (@see {@link ../examples/map.featureanimation.select.html}), default the feature 
+*	  will be hidden when playing (and niot selectable)
 *	@param {ol.easing.Function} options.fade an easing function used to fade in the feature, default none
 *	@param {ol.easing.Function} options.easing an easing function for the animation, default ol.easing.linear
 */
-ol.featureAnimation = function(options)
-{	options = options || {};
-	this.duration_ = typeof (options.duration)=='number' ? (options.duration>=0 ? options.duration : 0) : 1000;
-	this.fade_ = typeof(options.fade) == 'function' ? options.fade : null;
-	this.repeat_ = Number(options.repeat);
-	var easing = typeof(options.easing) =='function' ? options.easing : ol.easing.linear;
-	if (options.revers) this.easing_ = function(t) { return (1 - easing(t)); };
-	else this.easing_ = easing;
-	this.hiddenStyle = options.hiddenStyle;
-	ol.Object.call(this);
+ol.featureAnimation = function(options) {
+  options = options || {};
+  this.duration_ = typeof (options.duration)=='number' ? (options.duration>=0 ? options.duration : 0) : 1000;
+  this.fade_ = typeof(options.fade) == 'function' ? options.fade : null;
+  this.repeat_ = Number(options.repeat);
+  var easing = typeof(options.easing) =='function' ? options.easing : ol.easing.linear;
+  if (options.revers) this.easing_ = function(t) { return (1 - easing(t)); };
+  else this.easing_ = easing;
+  this.hiddenStyle = options.hiddenStyle;
+  ol.Object.call(this);
 };
 ol.ext.inherits(ol.featureAnimation, ol.Object);
 /** Draw a geometry 
@@ -10519,28 +10573,20 @@ ol.ext.inherits(ol.featureAnimation, ol.Object);
 * @param {ol.geom} shadow geometry for shadow (ie. style with zIndex = -1)
 * @private
 */
-ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
-{	if (this.fade_) 
-	{	e.context.globalAlpha = this.fade_(1-e.elapsed);
-	}
-	var style = e.style;
-	for (var i=0; i<style.length; i++)
-	{	var sc=0;
-		// OL < v4.3 : setImageStyle doesn't check retina
-		var imgs = ol.Map.prototype.getFeaturesAtPixel ? false : style[i].getImage();
-		if (imgs) 
-		{	sc = imgs.getScale(); 
-			imgs.setScale(e.frameState.pixelRatio*sc);
-		}
-		// Prevent crach if the style is not ready (image not loaded)
-		try {
-			var vectorContext = e.vectorContext || ol.render.getVectorContext(e);
-			vectorContext.setStyle(style[i]);
-			if (style[i].getZIndex()<0) vectorContext.drawGeometry(shadow||geom);
-			else vectorContext.drawGeometry(geom);
-		} catch(e) { /* ok */ }
-		if (imgs) imgs.setScale(sc);
-	}
+ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow) {
+  if (this.fade_) {
+    e.context.globalAlpha = this.fade_(1-e.elapsed);
+  }
+  var style = e.style;
+  for (var i=0; i<style.length; i++) {
+    // Prevent crach if the style is not ready (image not loaded)
+    try {
+      var vectorContext = e.vectorContext || ol.render.getVectorContext(e);
+      vectorContext.setStyle(style[i]);
+      if (style[i].getZIndex()<0) vectorContext.drawGeometry(shadow||geom);
+      else vectorContext.drawGeometry(geom);
+    } catch(e) { /* ok */ }
+  }
 };
 /** Function to perform manipulations onpostcompose. 
  * This function is called with an ol.featureAnimationEvent argument.
@@ -10550,8 +10596,8 @@ ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow)
  * @return {bool} true to continue animation.
  * @api 
  */
-ol.featureAnimation.prototype.animate = function (/* e */)
-{	return false;
+ol.featureAnimation.prototype.animate = function (/* e */) {
+  return false;
 };
 /** An animation controler object an object to control animation with start, stop and isPlaying function.    
  * To be used with {@link olx.Map#animateFeature} or {@link ol.layer.Vector#animateFeature}
@@ -10568,21 +10614,21 @@ ol.featureAnimation.prototype.animate = function (/* e */)
  * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
  */
 ol.Map.prototype.animateFeature = function(feature, fanim) {
-	// Animate on last visible layer
-	function animLayer(layers) {
-		for (var l, i=layers.length-1; l=layers[i]; i--) {
-			if (l.getVisible()) {
-				if (l.getLayers) {
-					if (animLayer(l.getLayers().getArray())) return true;
-				} else {
-					l.animateFeature(feature, fanim);
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-	animLayer(this.getLayers().getArray());
+  // Animate on last visible layer
+  function animLayer(layers) {
+    for (var l, i=layers.length-1; l=layers[i]; i--) {
+      if (l.getVisible()) {
+        if (l.getLayers) {
+          if (animLayer(l.getLayers().getArray())) return true;
+        } else {
+          l.animateFeature(feature, fanim);
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  animLayer(this.getLayers().getArray());
 };
 /** Animate feature on a vector layer 
  * @fires animationstart, animationend
@@ -10591,128 +10637,127 @@ ol.Map.prototype.animateFeature = function(feature, fanim) {
  * @param {boolean} useFilter use the filters of the layer
  * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
  */
-ol.layer.Base.prototype.animateFeature = function(feature, fanim, useFilter)
-{	var self = this;
-	var listenerKey;
-	// Save style
-	var style = feature.getStyle();
-	var flashStyle = style || (this.getStyleFunction ? this.getStyleFunction()(feature) : null);
-	if (!flashStyle) flashStyle=[];
-	if (!(flashStyle instanceof Array)) flashStyle = [flashStyle];
-	// Structure pass for animating
-	var event = 
-		{	// Frame context
-			vectorContext: null,
-			frameState: null,
-			start: 0,
-			time: 0,
-			elapsed: 0,
-			extent: false,
-			// Feature information
-			feature: feature,
-			geom: feature.getGeometry(),
-			typeGeom: feature.getGeometry().getType(),
-			bbox: feature.getGeometry().getExtent(),
-			coord: ol.extent.getCenter(feature.getGeometry().getExtent()),
-			style: flashStyle
-		};
-	if (!(fanim instanceof Array)) fanim = [fanim];
-	// Remove null animations
-	for (var i=fanim.length-1; i>=0; i--)
-	{	if (fanim[i].duration_===0) fanim.splice(i,1);
-	}
-	var nb=0, step = 0;
-	// Filter availiable on the layer
-	var filters = (useFilter && this.getFilters) ? this.getFilters() : [];
-	function animate(e) {
-		try {
-			event.vectorContext = e.vectorContext || ol.render.getVectorContext(e);
-		} catch(e) { /* nothing todo */ }
-		event.frameState = e.frameState;
-		if (!event.extent) 
-		{	event.extent = e.frameState.extent;
-			event.start = e.frameState.time;
-			event.context = e.context;
-		}
-		event.time = e.frameState.time - event.start;
-		event.elapsed = event.time / fanim[step].duration_;
-		if (event.elapsed > 1) event.elapsed = 1;
-		// Filter
-		e.context.save();
-		filters.forEach(function(f) {
-			if (f.get('active')) f.precompose(e);
-		});
-		if (this.getOpacity) {
-			e.context.globalAlpha = this.getOpacity();
-		}
-		// Stop animation?
-		if (!fanim[step].animate(event))
-		{	nb++;
-			// Repeat animation
-			if (nb < fanim[step].repeat_)
-			{	event.extent = false;
-			}
-			// newt step
-			else if (step < fanim.length-1)
-			{	fanim[step].dispatchEvent({ type:'animationend', feature: feature });
-				step++;
-				nb=0;
-				event.extent = false;
-			}
-			// the end
-			else 
-			{	stop();
-			}
-		}
-		filters.forEach(function(f) {
-			if (f.get('active')) f.postcompose(e);
-		});
-		e.context.restore();
-		// tell OL3 to continue postcompose animation
-		e.frameState.animate = true;
-	}
-	// Stop animation
-	function stop(options)
-	{	ol.Observable.unByKey(listenerKey);
-		listenerKey = null;
-		feature.setStyle(style);
-		// Send event
-		var event = { type:'animationend', feature: feature };
-		if (options) 
-		{	for (var i in options) if (options.hasOwnProperty(i))
-			{ 	event[i] = options[i]; 
-			}
-		}
-		fanim[step].dispatchEvent(event);
-		self.dispatchEvent(event);
-	}
-	// Launch animation
-	function start(options){
-		if (fanim.length && !listenerKey)
-		{	listenerKey = self.on(['postcompose','postrender'], animate.bind(self));
-			// map or layer?
-			if (self.renderSync) self.renderSync();
-			else self.changed();
-			// Hide feature while animating
-			feature.setStyle(fanim[step].hiddenStyle || new ol.style.Style({ image: new ol.style.Circle({}) }));
-			// Send event
-			var event = { type:'animationstart', feature: feature };
-			if (options) 
-			{	for (var i in options) if (options.hasOwnProperty(i))
-				{ 	event[i] = options[i]; 
-				}
-			}
-			fanim[step].dispatchEvent(event);
-			self.dispatchEvent(event);
-		}
-	}
-	start();
-	// Return animation controler
-	return {
-		start: start,
-		stop: stop,
-		isPlaying: function() { return (!!listenerKey); }
-	};
+ol.layer.Base.prototype.animateFeature = function(feature, fanim, useFilter) {
+  var self = this;
+  var listenerKey;
+  // Save style
+  var style = feature.getStyle();
+  var flashStyle = style || (this.getStyleFunction ? this.getStyleFunction()(feature) : null);
+  if (!flashStyle) flashStyle=[];
+  if (!(flashStyle instanceof Array)) flashStyle = [flashStyle];
+  // Structure pass for animating
+  var event = {
+    // Frame context
+    vectorContext: null,
+    frameState: null,
+    start: 0,
+    time: 0,
+    elapsed: 0,
+    extent: false,
+    // Feature information
+    feature: feature,
+    geom: feature.getGeometry(),
+    typeGeom: feature.getGeometry().getType(),
+    bbox: feature.getGeometry().getExtent(),
+    coord: ol.extent.getCenter(feature.getGeometry().getExtent()),
+    style: flashStyle
+  };
+  if (!(fanim instanceof Array)) fanim = [fanim];
+  // Remove null animations
+  for (var i=fanim.length-1; i>=0; i--) {
+    if (fanim[i].duration_===0) fanim.splice(i,1);
+  }
+  var nb=0, step = 0;
+  // Filter availiable on the layer
+  var filters = (useFilter && this.getFilters) ? this.getFilters() : [];
+  function animate(e) {
+    event.type = e.type;
+    try {
+      event.vectorContext = e.vectorContext || ol.render.getVectorContext(e);
+    } catch(e) { /* nothing todo */ }
+    event.frameState = e.frameState;
+    if (!event.extent) {
+      event.extent = e.frameState.extent;
+      event.start = e.frameState.time;
+      event.context = e.context;
+    }
+    event.time = e.frameState.time - event.start;
+    event.elapsed = event.time / fanim[step].duration_;
+    if (event.elapsed > 1) event.elapsed = 1;
+    // Filter
+    e.context.save();
+    filters.forEach(function(f) {
+      if (f.get('active')) f.precompose(e);
+    });
+    if (this.getOpacity) {
+      e.context.globalAlpha = this.getOpacity();
+    }
+    // Stop animation?
+    if (!fanim[step].animate(event)) {
+      nb++;
+      // Repeat animation
+      if (nb < fanim[step].repeat_) {
+        event.extent = false;
+      } else if (step < fanim.length-1) {
+        // newt step
+        fanim[step].dispatchEvent({ type:'animationend', feature: feature });
+        step++;
+        nb=0;
+        event.extent = false;
+      } else {
+        // the end
+        stop();
+      }
+    }
+    filters.forEach(function(f) {
+      if (f.get('active')) f.postcompose(e);
+    });
+    e.context.restore();
+    // tell OL3 to continue postcompose animation
+    e.frameState.animate = true;
+  }
+  // Stop animation
+  function stop(options) {
+    ol.Observable.unByKey(listenerKey);
+    listenerKey = null;
+    feature.setStyle(style);
+    // Send event
+    var event = { type:'animationend', feature: feature };
+    if (options) {
+      for (var i in options) if (options.hasOwnProperty(i)) {
+        event[i] = options[i]; 
+      }
+    }
+    fanim[step].dispatchEvent(event);
+    self.dispatchEvent(event);
+  }
+  // Launch animation
+  function start(options) {
+    if (fanim.length && !listenerKey) {
+      listenerKey = self.on(['postcompose','postrender'], animate.bind(self));
+      // map or layer?
+      if (self.renderSync) self.renderSync();
+      else self.changed();
+      // Hide feature while animating
+      feature.setStyle(fanim[step].hiddenStyle || new ol.style.Style({ image: new ol.style.Circle({}) }));
+      // Send event
+      var event = { type:'animationstart', feature: feature };
+      if (options) {
+        for (var i in options) if (options.hasOwnProperty(i)) {
+          event[i] = options[i]; 
+        }
+      }
+      fanim[step].dispatchEvent(event);
+      self.dispatchEvent(event);
+    }
+  }
+  start();
+  // Return animation controler
+  return {
+    start: start,
+    stop: stop,
+    isPlaying: function() { return (!!listenerKey); }
+  };
 };
 
 /*
@@ -11102,8 +11147,8 @@ ol.featureAnimation.Throw.prototype.animate = function (e)
 }
 
 /*
-	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL license (http://www.cecill.info/).
+  Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL license (http://www.cecill.info/).
 */
 /** Zoom animation: feature zoom in (for points)
  * @constructor
@@ -11111,10 +11156,10 @@ ol.featureAnimation.Throw.prototype.animate = function (e)
  * @param {ol.featureAnimationZoomOptions} options
  *  @param {bool} options.zoomOut to zoom out
  */
-ol.featureAnimation.Zoom = function(options)
-{	options = options || {};
-	ol.featureAnimation.call(this, options);
-	this.set('zoomout', options.zoomOut);
+ol.featureAnimation.Zoom = function(options){
+  options = options || {};
+  ol.featureAnimation.call(this, options);
+  this.set('zoomout', options.zoomOut);
 }
 ol.ext.inherits(ol.featureAnimation.Zoom, ol.featureAnimation);
 /** Zoom animation: feature zoom out (for points)
@@ -11122,58 +11167,52 @@ ol.ext.inherits(ol.featureAnimation.Zoom, ol.featureAnimation);
  * @extends {ol.featureAnimation}
  * @param {ol.featureAnimationZoomOptions} options
  */
-ol.featureAnimation.ZoomOut = function(options)
-{	options = options || {};
-	options.zoomOut = true;
-	ol.featureAnimation.Zoom.call(this, options);
+ol.featureAnimation.ZoomOut = function(options) {
+  options = options || {};
+  options.zoomOut = true;
+  ol.featureAnimation.Zoom.call(this, options);
 }
 ol.ext.inherits(ol.featureAnimation.ZoomOut, ol.featureAnimation.Zoom);
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
-ol.featureAnimation.Zoom.prototype.animate = function (e)
-{	var fac = this.easing_(e.elapsed);
-	if (fac)
-	{	if (this.get('zoomout')) fac  = 1/fac;
-		var style = e.style;
-		var i, imgs, sc=[]
-		for (i=0; i<style.length; i++)
-		{	imgs = style[i].getImage();
-			if (imgs) 
-			{	sc[i] = imgs.getScale(); 
-				imgs.setScale(sc[i]*fac);
-			}
-		}
-		e.context.save()
-			var ratio = e.frameState.pixelRatio;
-			var m = e.frameState.coordinateToPixelTransform;
-			var dx = (1/fac-1)* ratio * (m[0]*e.coord[0] + m[1]*e.coord[1] +m[4]);
-			var dy = (1/fac-1)* ratio * (m[2]*e.coord[0] + m[3]*e.coord[1] +m[5]);
-			e.context.scale(fac,fac);
-			e.context.translate(dx,dy);
-			this.drawGeom_(e, e.geom);
-		e.context.restore()
-		for (i=0; i<style.length; i++)
-		{	imgs = style[i].getImage();
-			if (imgs) imgs.setScale(sc[i]);
-		}
-	}
+ol.featureAnimation.Zoom.prototype.animate = function (e) {
+  var fac = this.easing_(e.elapsed);
+  if (fac) {
+    if (this.get('zoomout')) fac  = 1/fac;
+    var style = e.style;
+    var i, imgs, sc=[]
+    for (i=0; i<style.length; i++) {
+      imgs = style[i].getImage();
+      if (imgs) {
+        sc[i] = imgs.getScale();
+        // ol >= v6
+        if (e.type==='postrender') imgs.setScale(sc[i]*fac/e.frameState.pixelRatio);
+        else imgs.setScale(sc[i]*fac);
+      }
+    }
+    this.drawGeom_(e, e.geom);
+    for (i=0; i<style.length; i++) {
+      imgs = style[i].getImage();
+      if (imgs) imgs.setScale(sc[i]);
+    }
+  }
 /*
-	var sc = this.easing_(e.elapsed);
-	if (sc)
-	{	e.context.save()
-		console.log(e)
-			var ratio = e.frameState.pixelRatio;
-			var m = e.frameState.coordinateToPixelTransform;
-			var dx = (1/(sc)-1)* ratio * (m[0]*e.coord[0] + m[1]*e.coord[1] +m[4]);
-			var dy = (1/(sc)-1)*ratio * (m[2]*e.coord[0] + m[3]*e.coord[1] +m[5]);
-			e.context.scale(sc,sc);
-			e.context.translate(dx,dy);
-			this.drawGeom_(e, e.geom);
-		e.context.restore()
-	}
+  var sc = this.easing_(e.elapsed);
+  if (sc)
+  {	e.context.save()
+    console.log(e)
+      var ratio = e.frameState.pixelRatio;
+      var m = e.frameState.coordinateToPixelTransform;
+      var dx = (1/(sc)-1)* ratio * (m[0]*e.coord[0] + m[1]*e.coord[1] +m[4]);
+      var dy = (1/(sc)-1)*ratio * (m[2]*e.coord[0] + m[3]*e.coord[1] +m[5]);
+      e.context.scale(sc,sc);
+      e.context.translate(dx,dy);
+      this.drawGeom_(e, e.geom);
+    e.context.restore()
+  }
 */
-	return (e.time <= this.duration_);
+  return (e.time <= this.duration_);
 }
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -11309,8 +11348,8 @@ ol.layer.Base.prototype.getFilters = function () {
 })();
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Mask drawing using an ol.Feature
  * @constructor
@@ -11321,76 +11360,79 @@ ol.layer.Base.prototype.getFilters = function () {
  *  @param {ol.style.Fill} [options.fill] style to fill with
  *  @param {boolean} [options.inner] mask inner, default false
  */
-ol.filter.Mask = function(options)
-{	options = options || {};
-	ol.filter.Base.call(this, options);
-	if (options.feature)
-	{	switch (options.feature.getGeometry().getType())
-		{	case "Polygon":
-			case "MultiPolygon":
-				this.feature_ = options.feature;
-				break;
-			default: break;
-		}
-	}
-	this.set("inner", options.inner);
-	this.fillColor_ = options.fill ? ol.color.asString(options.fill.getColor()) || "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.2)";
+ol.filter.Mask = function(options) {
+  options = options || {};
+  ol.filter.Base.call(this, options);
+  if (options.feature) {
+    switch (options.feature.getGeometry().getType()) {
+      case 'Polygon':
+      case 'MultiPolygon':
+        this.feature_ = options.feature;
+        break;
+      default: break;
+    }
+  }
+  this.set('inner', options.inner);
+  this.fillColor_ = options.fill ? ol.color.asString(options.fill.getColor()) || "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.2)";
 }
 ol.ext.inherits(ol.filter.Mask, ol.filter.Base);
 /** Draw the feature into canvas */
-ol.filter.Mask.prototype.drawFeaturePath_ = function(e, out)
-{	var ctx = e.context;
-	var canvas = ctx.canvas;
-	var ratio = e.frameState.pixelRatio;
-	// Transform
-	var m = e.frameState.coordinateToPixelTransform;
-	var tr = function(pt)
-	{	return [
-			(pt[0]*m[0]+pt[1]*m[1]+m[4])*ratio,
-			(pt[0]*m[2]+pt[1]*m[3]+m[5])*ratio
-		];
-	}
-	// Old ol version
-	if (!m)
-	{	m = e.frameState.coordinateToPixelMatrix;
-		tr = function(pt)
-		{	return [
-				(pt[0]*m[0]+pt[1]*m[1]+m[12])*ratio,
-				(pt[0]*m[4]+pt[1]*m[5]+m[13])*ratio
-			];
-		}
-	}
-	// Geometry
-	var ll = this.feature_.getGeometry().getCoordinates();
-	if (this.feature_.getGeometry().getType()=="Polygon") ll = [ll];
-	ctx.beginPath();
-        if (out)
-		{	ctx.moveTo (0,0);
-			ctx.lineTo (canvas.width, 0);
-			ctx.lineTo (canvas.width, canvas.height);
-			ctx.lineTo (0, canvas.height);
-			ctx.lineTo (0, 0);
-		}
-		for (var l=0; l<ll.length; l++)
-		{	var c = ll[l];
-			for (var i=0; i<c.length; i++) 
-			{	var pt = tr(c[i][0]);
-				ctx.moveTo (pt[0], pt[1]);
-				for (var j=1; j<c[i].length; j++) 
-				{	pt = tr(c[i][j]);
-					ctx.lineTo (pt[0], pt[1]);
-				}
-			}
-		}
+ol.filter.Mask.prototype.drawFeaturePath_ = function(e, out) {
+  var ctx = e.context;
+  var canvas = ctx.canvas;
+  var ratio = e.frameState.pixelRatio;
+  console.log(ratio)
+  // ol v6
+  if (/render$/.test(e.type)) ratio = 1;
+  // Transform
+  var m = e.frameState.coordinateToPixelTransform;
+  var tr = function(pt) {
+    return [
+      (pt[0]*m[0]+pt[1]*m[1]+m[4])*ratio,
+      (pt[0]*m[2]+pt[1]*m[3]+m[5])*ratio
+    ];
+  }
+  // Old ol version
+  if (!m) {
+    m = e.frameState.coordinateToPixelMatrix;
+    tr = function(pt) {
+      return [
+        (pt[0]*m[0]+pt[1]*m[1]+m[12])*ratio,
+        (pt[0]*m[4]+pt[1]*m[5]+m[13])*ratio
+      ];
+    }
+  }
+  // Geometry
+  var ll = this.feature_.getGeometry().getCoordinates();
+  if (this.feature_.getGeometry().getType()=="Polygon") ll = [ll];
+  ctx.beginPath();
+    if (out) {
+      ctx.moveTo (0,0);
+      ctx.lineTo (canvas.width, 0);
+      ctx.lineTo (canvas.width, canvas.height);
+      ctx.lineTo (0, canvas.height);
+      ctx.lineTo (0, 0);
+    }
+    for (var l=0; l<ll.length; l++) {
+      var c = ll[l];
+      for (var i=0; i<c.length; i++) {
+        var pt = tr(c[i][0]);
+        ctx.moveTo (pt[0], pt[1]);
+        for (var j=1; j<c[i].length; j++) {
+          pt = tr(c[i][j]);
+          ctx.lineTo (pt[0], pt[1]);
+        }
+      }
+    }
 }
-ol.filter.Mask.prototype.postcompose = function(e)
-{	if (!this.feature_) return;
-	var ctx = e.context;
-	ctx.save();
-		this.drawFeaturePath_(e, !this.get("inner"));
-		ctx.fillStyle = this.fillColor_;
-		ctx.fill("evenodd");
-	ctx.restore();
+ol.filter.Mask.prototype.postcompose = function(e) {
+  if (!this.feature_) return;
+  var ctx = e.context;
+  ctx.save();
+    this.drawFeaturePath_(e, !this.get("inner"));
+    ctx.fillStyle = this.fillColor_;
+    ctx.fill("evenodd");
+  ctx.restore();
 }
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -11667,11 +11709,12 @@ ol.filter.Crop = function(options) {
 }
 ol.ext.inherits(ol.filter.Crop, ol.filter.Mask);
 ol.filter.Crop.prototype.precompose = function(e) {
-  if (!this.feature_) return;
-  var ctx = e.context;
-  ctx.save();
-  this.drawFeaturePath_(e, this.get("inner"));
-  ctx.clip("evenodd");
+  if (this.feature_) {
+    var ctx = e.context;
+    ctx.save();
+      this.drawFeaturePath_(e, this.get("inner"));
+      ctx.clip("evenodd");
+  }
 }
 ol.filter.Crop.prototype.postcompose = function(e) {
   if (this.feature_) e.context.restore();
@@ -11682,23 +11725,27 @@ ol.filter.Crop.prototype.postcompose = function(e) {
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Fold filer map
-* @constructor
-* @requires ol.filter
-* @extends {ol.filter.Base}
-* @param {Object} [options]
-*  @param {Array<number>} [options.fold] number of fold (horizontal and vertical)
-*  @param {number} [options.margin] margin in px, default 8
-*  @param {number} [options.padding] padding in px, default 8
-*  @param {number|number[]} [options.fsize] fold size in px, default 8,10
-*/
+ * @constructor
+ * @requires ol.filter
+ * @extends {ol.filter.Base}
+ * @param {Object} [options]
+ *  @param {Array<number>} [options.fold] number of fold (horizontal and vertical)
+ *  @param {number} [options.margin] margin in px, default 8
+ *  @param {number} [options.padding] padding in px, default 8
+ *  @param {number|number[]} [options.fsize] fold size in px, default 8,10
+ *  @param {boolean} [options.fill] true to fill the background, default false
+ *  @param {boolean} [options.shadow] true to display shadow, default true
+ */
 ol.filter.Fold = function(options) {
   options = options || {};
   ol.filter.Base.call(this, options);
-  this.set("fold", options.fold || [8,4]);
-  this.set("margin", options.margin || 8);
-  this.set("padding", options.padding || 8);
-  if (typeof options.fsize == "number") options.fsize = [options.fsize,options.fsize];
-  this.set("fsize", options.fsize || [8,10]);
+  this.set('fold', options.fold || [8,4]);
+  this.set('margin', options.margin || 8);
+  this.set('padding', options.padding || 8);
+  if (typeof options.fsize == 'number') options.fsize = [options.fsize,options.fsize];
+  this.set('fsize', options.fsize || [8,10]);
+  this.set('fill', options.fill);
+  this.set('shadow', options.shadow!==false);
 };
 ol.ext.inherits(ol.filter.Fold, ol.filter.Base);
 ol.filter.Fold.prototype.drawLine_ = function(ctx, d, m) {
@@ -11740,7 +11787,7 @@ ol.filter.Fold.prototype.precompose = function(e) {
     ctx.shadowOffsetY = 3;
     this.drawLine_(ctx, this.get("fsize"), this.get("margin"));
     ctx.fillStyle="#fff";
-    ctx.fill();
+    if (this.get('fill')) ctx.fill();
     ctx.strokeStyle = "rgba(0,0,0,0.1)";
     ctx.stroke();
   ctx.restore();
@@ -11755,26 +11802,28 @@ ol.filter.Fold.prototype.postcompose = function(e) {
   ctx.save();
     this.drawLine_(ctx, this.get("fsize"), this.get("margin"));
     ctx.clip();
-    var fold = this.get("fold");
-    var w = canvas.width/fold[0];
-    var h = canvas.height/fold[1];
-    var grd = ctx.createRadialGradient(5*w/8,5*w/8,w/4,w/2,w/2,w);
-    grd.addColorStop(0,"transparent");
-    grd.addColorStop(1,"rgba(0,0,0,0.2)");
-    ctx.fillStyle = grd;
-    ctx.scale (1,h/w);
-    for (var i=0; i<fold[0]; i++) for (var j=0; j<fold[1]; j++) {
-      ctx.save()
-      ctx.translate(i*w, j*w);
-      ctx.fillRect(0,0,w,w);
-      ctx.restore()
+    if (this.get('shadow')) {
+      var fold = this.get("fold");
+      var w = canvas.width/fold[0];
+      var h = canvas.height/fold[1];
+      var grd = ctx.createRadialGradient(5*w/8,5*w/8,w/4,w/2,w/2,w);
+      grd.addColorStop(0,"transparent");
+      grd.addColorStop(1,"rgba(0,0,0,0.2)");
+      ctx.fillStyle = grd;
+      ctx.scale (1,h/w);
+      for (var i=0; i<fold[0]; i++) for (var j=0; j<fold[1]; j++) {
+        ctx.save()
+        ctx.translate(i*w, j*w);
+        ctx.fillRect(0,0,w,w);
+        ctx.restore()
+      }
     }
   ctx.restore();
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Make a map or layer look like made of a set of Lego bricks.
  *  @constructor
@@ -11785,133 +11834,136 @@ ol.filter.Fold.prototype.postcompose = function(e) {
  *  @param {number} [options.brickSize] size of te brick, default 30
  *  @param {null | string | undefined} [options.crossOrigin] crossOrigin attribute for loaded images.
  */
-ol.filter.Lego = function(options)
-{	if (!options) options = {};
-	ol.filter.Base.call(this, options);
-	var img = new Image();
-	// Default image
-	img.src = this.img[options.img] || this.img.ol3;
-	img.crossOrigin = options.crossOrigin || null;
-	// and pattern 
-	this.pattern = 
-	{	canvas: document.createElement('canvas')
-	};
-	this.setBrick (options.brickSize, img);
-	this.internal_ = document.createElement('canvas');
+ol.filter.Lego = function(options) {
+  if (!options) options = {};
+  ol.filter.Base.call(this, options);
+  var img = new Image();
+  // Default image
+  img.src = this.img[options.img] || this.img.ol3;
+  img.crossOrigin = options.crossOrigin || null;
+  // and pattern 
+  this.pattern = {
+    canvas: document.createElement('canvas')
+  };
+  this.setBrick (options.brickSize, img);
+  this.internal_ = document.createElement('canvas');
 }
 ol.ext.inherits(ol.filter.Lego, ol.filter.Base);
 /** Image definition
 */
-ol.filter.Lego.prototype.img =
-{	brick: "data:image/png;base64,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",
-	ol3: "data:image/png;base64,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",
-	lego: "data:image/png;base64,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"
+ol.filter.Lego.prototype.img = {
+  brick: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAQAAAAAYLlVAAAAAnNCSVQICFXsRgQAAAAJcEhZcwAAD10AAA9dAah0GUAAAAAZdEVYdFNvZnR3YXJlAHd3dy5pbmtzY2FwZS5vcmeb7jwaAAAGAElEQVRo3sWZy4tkVx3HP+fcc29Vd1dP17TdTcbJPDKPMGR0kVEZkuBCF0EE9Z8QXLhxMUsRF4oLwYWQTSCgSxUXroQhoiEuskgEUUQh+BhHOpkZO11dr3vvefxc3FPlNHNvPbrD1Dl016XoqvM539/znFbcZo3VjbFmxcMA3Mg2fSoAiQJDov7/B1o9+aEgkycv4PBSPU9eHeDEixNwOAFXPYvFia0+rcnQEeBr218cfLIwCqW1UWillEYphUKpCmCCIQAiCEhAJIggTiSISBAfggTvJZTifQghWO+89cOQexuOXN8Pwz/9ff9X/xF0uEA7AmTsjLp/2xZQCgXHlj0OEBEAeRwGkep3qN6pfibDB3DBixMnvdCXt8J3FZowNYFSjgv71RtPaehjD0alalVOqCtHU3qlAGrVAGbidCtUYLUAiV6dCUx8XV4BhUKjY0AJgUB4LE8sA7CkCRSalFYnE72WiBrLSCKCp6TALZNRDEDCwgAKQ/vyRidN9c32K1sbqlCP/C+P9kXJI597PA7HkGJRCLNUGCY767udF9e+9dz1S5ueoRzIEZa1OxcK9td+/fAHvYH0LY6MkgHFIuYwS0ifXe1+qXvn1vk99QfzCwokToUylPrre1/de/vMnf9+5MsSg2HMELegAsl86duvnP3e8y/f1r83v8Li1RO7k/9c2t/avHnt27xpyhRDguEIuxDA3OXXX93+8a0rz6ZvcKgadqUEL73wx+9sb5//WWKTGCOHsxEWM0H71e2ffmF3lPyEkZppVyVYefCw/9a5f3epSvsWh7MMsUgeaL20/dpLu4fJXZUvFCgi46/8i5RNFCCc4bA5JuZ7f/Kp7g9fuLSdvLnY8lEHxz8ItOPcaN7gPAB1tvPl7udupT9nvGSmLLlHSosWLdbJTgpgLna+eVv9hiO1ZIpFOGBEFmejBnrO/tc/0znXTf+sHMuPwD0MrSnETID6/SXPrH/junp3Xiw3atCjxJCRktKu10DHzrZ+pOvpc5cP/6T8CWtt4BATZ4tkBoCvTz8tbTb8TnHiYi/0pgCmPufMUkB1ss9vtU7Trgt9EgyGhIS0zgjRB6RukaSdfHpLPly2xTg2chQJmgRN2qiAa3DBtu5kYXgqAIFYEzTJDAVCnQIqaA+O0wyFjj8q1oY6AB/qd5nLw9JvcpqOOcFMT5dqlg/UAoy5exS2TgGg6DxhkHofqHVCGYf3ho/S904DcHZ6jpZ6lWMY1iogCDxsn8oDduP3BEI9QvSBWgU8YRDeGezsyEk1SNlD8HF51wjQoEAgHNkffXBw+XfJiZbXXCTBT2fZaAJfn4iEEt+z73bTk92jZTxPwOFxVCeGRif0tt4HCtxB+f0P7l//rTlBAN6gjcNicThcfU2NCnjf0NU43L59vf2XZf1A8wzX8JRTgLw+Ckx17SahIZGOyMri7dHalXf6DJdYfovPAgVlRLAzAXwI0gCQU5La8m6SXeH9pi+pWf5lUooIUFKSN6V0A1AE39RyeAYYEpvYNjf4OwP8XNuf50UycnKKKURjSTMALkjzzgpyEhI0LW7ygHvYRh00G7zARQL5dBYU9JtLWvQB52e0VX0MOl5anmOP+3yIjZldpteZijZXuIbBxZ1PAEbkc05GVspZtnX04hlHEDKucpUePYbklCgyNjjDLp9AERhjKSNAQc6IwSzPMQClt37OIeOQ7vQWxJPSZSf2OZMyK1h8jHsbNSgY0Z/tNRWA2HmuVXLIZsxnliw2mROAyR2Rjwmn8vyC0XynrUwQ3PzGs6QX06rDRgD9GIDEjF9pUFLSXyRsowLFIp2/44icDpZ02umq6S3ZxDwupp3hYs1cVMAu1noLBZaMNbJoAD3tl6prOodnTF5feBoBRmGweO8fyClISMlIowkkApRYyqbeZ5YJQrHc4UNieeGYArL8NeUkFcvgJKc/AU56ajxejod+/DT/W/IkQC4P3GoBwoGsFKAf9v2qAGIxej9MU8rTGdNjWtVsJv315aL3YwDYqG5MTDxAPMvTNkJS3ReY6AmtlTrhKsf/AHgAA6ezGE+FAAAAAElFTkSuQmCC",
+  ol3: "data:image/png;base64,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",
+  lego: "data:image/png;base64,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"
 };
 /** Overwrite to handle brickSize
 * @param {string} key
 * @param {any} val
 */
-ol.filter.Lego.prototype.set = function (key, val)
-{	ol.filter.Base.prototype.set.call(this, key, val);
-	if (key=="brickSize" && this.pattern.canvas.width!=val)
-	{	this.setBrick(val);
-	}
+ol.filter.Lego.prototype.set = function (key, val) {
+  ol.filter.Base.prototype.set.call(this, key, val);
+  if (key=="brickSize" && this.pattern.canvas.width!=val) {
+    this.setBrick(val);
+  }
 }
 /** Set the current brick
 *	@param {number} width the pattern width, default 30
 *	@param {'brick'|'ol3'|'lego'|undefined} img the pattern, default ol3
 *	@param {string} crossOrigin
 */
-ol.filter.Lego.prototype.setBrick = function (width, img, crossOrigin)
-{	width = Number(width) || 30;
-	if (typeof(img) === 'string')
-	{	var i = new Image;
-		i.src = this.img[img] || this.img.ol3;
-		i.crossOrigin = crossOrigin || null;
-		img = i;
-	}
-	if (img) this.pattern.img = img;
-	if (!this.pattern.img.width)
-	{	var self = this;
-		this.pattern.img.onload = function()
-		{	self.setBrick(width,img);
-		}
-		return;
-	}
-	this.pattern.canvas.width = this.pattern.canvas.height = width;
-	this.pattern.ctx = this.pattern.canvas.getContext("2d");
-	this.pattern.ctx.fillStyle = this.pattern.ctx.createPattern (this.pattern.img, 'repeat');
-	this.set("brickSize", width);
-	this.set("img", img.src);
+ol.filter.Lego.prototype.setBrick = function (width, img, crossOrigin) {
+  width = Number(width) || 30;
+  if (typeof(img) === 'string') {
+    var i = new Image;
+    i.src = this.img[img] || this.img.ol3;
+    i.crossOrigin = crossOrigin || null;
+    img = i;
+  }
+  if (img) this.pattern.img = img;
+  if (!this.pattern.img.width) {
+    var self = this;
+    this.pattern.img.onload = function() {
+      self.setBrick(width,img);
+    }
+    return;
+  }
+  this.pattern.canvas.width = this.pattern.canvas.height = width;
+  this.pattern.ctx = this.pattern.canvas.getContext("2d");
+  this.pattern.ctx.fillStyle = this.pattern.ctx.createPattern (this.pattern.img, 'repeat');
+  this.set("brickSize", width);
+  this.set("img", img.src);
 };
 /** Get translated pattern
 *	@param {number} offsetX x offset
 *	@param {number} offsetY y offset
 */
-ol.filter.Lego.prototype.getPattern = function (offsetX, offsetY)
-{	
-	if (!this.pattern.ctx) return "transparent";
-	//return this.pattern.ctx.fillStyle
-	var c = this.pattern.canvas;
-	var ctx = this.pattern.ctx;
-	var sc = c.width / this.pattern.img.width;
-	ctx.save();
-		ctx.clearRect(0,0,c.width,c.height);
-		ctx.scale(sc,sc);
-		offsetX /= sc;
-		offsetY /= sc;
-		ctx.translate(offsetX, offsetY);
-		ctx.beginPath();
-		ctx.clearRect(-2*c.width, -2*c.height, 4*c.width, 4*c.height);
-		ctx.rect(-offsetX, -offsetY, 2*c.width/sc, 2*c.height/sc);
-		ctx.fill(); 
-	ctx.restore();
-	return ctx.createPattern(c, 'repeat');
+ol.filter.Lego.prototype.getPattern = function (offsetX, offsetY) {	
+  if (!this.pattern.ctx) return "transparent";
+  //return this.pattern.ctx.fillStyle
+  var c = this.pattern.canvas;
+  var ctx = this.pattern.ctx;
+  var sc = c.width / this.pattern.img.width;
+  ctx.save();
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.scale(sc,sc);
+    offsetX /= sc;
+    offsetY /= sc;
+    ctx.translate(offsetX, offsetY);
+    ctx.beginPath();
+    ctx.clearRect(-2*c.width, -2*c.height, 4*c.width, 4*c.height);
+    ctx.rect(-offsetX, -offsetY, 2*c.width/sc, 2*c.height/sc);
+    ctx.fill(); 
+  ctx.restore();
+  return ctx.createPattern(c, 'repeat');
 };
 /** Postcompose operation
 */
-ol.filter.Lego.prototype.postcompose = function(e)
-{	// Set back color hue
-	var ctx = e.context;
-	var canvas = ctx.canvas;
-	var ratio = e.frameState.pixelRatio;
-	ctx.save();
-		// resize 
-		var step = this.pattern.canvas.width*ratio;
-		var p = e.frameState.extent;
-		var res = e.frameState.viewState.resolution/ratio;
-		var offset = [ -Math.round((p[0]/res)%step), Math.round((p[1]/res)%step) ];
-		var ctx2 = this.internal_.getContext("2d");
-		var w = this.internal_.width = canvas.width;
-		var h = this.internal_.height = canvas.height;
-		// No smoothing please
-		ctx2.webkitImageSmoothingEnabled =
-		ctx2.mozImageSmoothingEnabled =
-		ctx2.msImageSmoothingEnabled =
-		ctx2.imageSmoothingEnabled = false;
-		var w2 = Math.floor((w-offset[0])/step);
-		var h2 = Math.floor((h-offset[1])/step);
-		ctx2.drawImage (canvas, offset[0], offset[1], w2*step, h2*step, 0, 0, w2, h2);
-		//
-		ctx.webkitImageSmoothingEnabled =
-		ctx.mozImageSmoothingEnabled =
-		ctx.msImageSmoothingEnabled =
-		ctx.imageSmoothingEnabled = false;
-		ctx.clearRect (0, 0, w,h);
-		ctx.drawImage (this.internal_, 0,0, w2,h2, offset[0],offset[1], w2*step, h2*step);
+ol.filter.Lego.prototype.postcompose = function(e) {
+  // Set back color hue
+  var ctx = e.context;
+  var canvas = ctx.canvas;
+  var ratio = e.frameState.pixelRatio;
+  // ol v6+
+  if (e.type==='postrender') {
+    ratio = 1;
+  }
+  ctx.save();
+    // resize 
+    var step = this.pattern.canvas.width*ratio;
+    var p = e.frameState.extent;
+    var res = e.frameState.viewState.resolution/ratio;
+    var offset = [ -Math.round((p[0]/res)%step), Math.round((p[1]/res)%step) ];
+    var ctx2 = this.internal_.getContext("2d");
+    var w = this.internal_.width = canvas.width;
+    var h = this.internal_.height = canvas.height;
+    // No smoothing please
+    ctx2.webkitImageSmoothingEnabled =
+    ctx2.mozImageSmoothingEnabled =
+    ctx2.msImageSmoothingEnabled =
+    ctx2.imageSmoothingEnabled = false;
+    var w2 = Math.floor((w-offset[0])/step);
+    var h2 = Math.floor((h-offset[1])/step);
+    ctx2.drawImage (canvas, offset[0], offset[1], w2*step, h2*step, 0, 0, w2, h2);
+    //
+    ctx.webkitImageSmoothingEnabled =
+    ctx.mozImageSmoothingEnabled =
+    ctx.msImageSmoothingEnabled =
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect (0, 0, w,h);
+    ctx.drawImage (this.internal_, 0,0, w2,h2, offset[0],offset[1], w2*step, h2*step);
 /*
-		for (var x=offset[0]; x<w; x+=step) for (var y=offset[1]; y<h; y+=step)
-		{	if (x>=0 && y<h) ctx2.drawImage (canvas, x, y, 1, 1, x, y, step, step);
-		}
-		ctx.clearRect (0, 0, w,h);
-		ctx.drawImage (c, 0, 0);
+    for (var x=offset[0]; x<w; x+=step) for (var y=offset[1]; y<h; y+=step)
+    {	if (x>=0 && y<h) ctx2.drawImage (canvas, x, y, 1, 1, x, y, step, step);
+    }
+    ctx.clearRect (0, 0, w,h);
+    ctx.drawImage (c, 0, 0);
 */
-		// Draw brick stud
-		ctx.scale(ratio,ratio);
-		ctx.fillStyle = this.getPattern (offset[0]/ratio, offset[1]/ratio);
-		ctx.rect(0,0, w, h);
-		ctx.fill(); 
-	ctx.restore();
+    // Draw brick stud
+    ctx.scale(ratio,ratio);
+    ctx.fillStyle = this.getPattern (offset[0]/ratio, offset[1]/ratio);
+    ctx.rect(0,0, w, h);
+    ctx.fill(); 
+  ctx.restore();
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -15387,166 +15439,152 @@ ol.interaction.Offset.prototype.handleMoveEvent_ = function(e) {
 };
 
 /*	
-	Water ripple effect.
-	Original code (Java) by Neil Wallis 
-	@link http://www.neilwallis.com/java/water.html
-	Original code (JS) by Sergey Chikuyonok (serge.che@gmail.com)
-	@link http://chikuyonok.ru
-	@link http://media.chikuyonok.ru/ripple/
-	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-	@link https://github.com/Viglino
- */
+  Water ripple effect.
+  Original code (Java) by Neil Wallis 
+  @link http://www.neilwallis.com/java/water.html
+  Original code (JS) by Sergey Chikuyonok (serge.che@gmail.com)
+  @link http://chikuyonok.ru
+  @link http://media.chikuyonok.ru/ripple/
+  Copyright (c) 2015 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  @link https://github.com/Viglino
+*/
 /**
  * @constructor
  * @extends {ol.interaction.Pointer}
- *	@param {ol.flashlight.options} flashlight options param
- *		- color {ol.Color} light color, default transparent
- *		- fill {ol.Color} fill color, default rgba(0,0,0,0.8)
- *		- radius {number} radius of the flash
+ * @param {*} options
+ *  @param {ol/layer/Layer} options.layer layer to animate
+ *  @param {number} options.radius raindrop radius
+ *  @param {number} options.interval raindrop interval (in ms), default 1000
  */
-ol.interaction.Ripple = function(options)
-{
-	ol.interaction.Pointer.call(this,
-	{	handleDownEvent: this.rainDrop,
-		handleMoveEvent: this.rainDrop
-	});
-	// Default options
-	options = options||{};
-	this.riprad = options.radius || 3;
-	this.ripplemap = [];
-    this.last_map = [];
-    // Generate random ripples
-    this.interval = options.interval;
-	this.rains (this.interval);
+ol.interaction.Ripple = function(options) {
+  ol.interaction.Pointer.call(this, {
+    handleDownEvent: this.rainDrop,
+    handleMoveEvent: this.rainDrop
+  });
+  // Default options
+  options = options||{};
+  this.riprad = options.radius || 3;
+  this.ripplemap = [];
+  this.last_map = [];
+  // Generate random ripples
+  this.rains (this.interval);
+  options.layer.on(['postcompose', 'postrender'], this.postcompose_.bind(this));
 };
 ol.ext.inherits(ol.interaction.Ripple, ol.interaction.Pointer);
-/** Set the map > start postcompose
-*/
-ol.interaction.Ripple.prototype.setMap = function(map)
-{	if (this.oncompose)
-	{	ol.Observable.unByKey(this.oncompose);
-		if (this.getMap()) this.getMap().render();
-	}
-	ol.interaction.Pointer.prototype.setMap.call(this, map);
-	if (map)
-	{	this.oncompose = map.on('postcompose', this.postcompose_.bind(this));
-	}
-}
 /** Generate random rain drop
 *	@param {integer} interval
 */
-ol.interaction.Ripple.prototype.rains = function(interval)
-{	if (this.onrain) clearTimeout (this.onrain);
-	var self = this;
-	var vdelay = (typeof(interval)=="number" ? interval : 1000)/2;
-	var delay = 3*vdelay/2;
-	var rnd = Math.random;
-	function rain() 
-	{	if (self.width) self.rainDrop([rnd() * self.width, rnd() * self.height]);
-		self.onrain = setTimeout (rain, rnd()*vdelay + delay);
-	}
-	// Start raining
-	if (delay) rain();
+ol.interaction.Ripple.prototype.rains = function(interval) {
+  if (this.onrain) clearTimeout (this.onrain);
+  var self = this;
+  var vdelay = (typeof(interval)=="number" ? interval : 1000)/2;
+  var delay = 3*vdelay/2;
+  var rnd = Math.random;
+  function rain() {
+    if (self.width) self.rainDrop([rnd() * self.width, rnd() * self.height]);
+    self.onrain = setTimeout (rain, rnd()*vdelay + delay);
+  }
+  // Start raining
+  if (delay) rain();
 }
 /** Disturb water at specified point
 *	@param {ol.Pixel|ol.MapBrowserEvent}
 */
-ol.interaction.Ripple.prototype.rainDrop = function(e)
-{	if (!this.width) return;
-	var dx,dy;
-	if (e.pixel) 
-	{	dx = e.pixel[0]*this.ratio;
-		dy = e.pixel[1]*this.ratio;
-	}
-	else 
-	{	dx = e[0]*this.ratio;
-		dy = e[1]*this.ratio;
-	}
-	dx <<= 0;
-    dy <<= 0;
-    for (var j = dy - this.riprad*this.ratio; j < dy + this.riprad*this.ratio; j++) 
-	{   for (var k = dx - this.riprad*this.ratio; k < dx + this.riprad*this.ratio; k++) 
-		{   this.ripplemap[this.oldind + (j * this.width) + k] += 128;
-        }
+ol.interaction.Ripple.prototype.rainDrop = function(e) {
+  if (!this.width) return;
+  var dx,dy;
+  if (e.pixel) {
+    dx = e.pixel[0]*this.ratio;
+    dy = e.pixel[1]*this.ratio;
+  } else {
+    dx = e[0]*this.ratio;
+    dy = e[1]*this.ratio;
+  }
+  dx <<= 0;
+  dy <<= 0;
+  for (var j = dy - this.riprad*this.ratio; j < dy + this.riprad*this.ratio; j++) {
+    for (var k = dx - this.riprad*this.ratio; k < dx + this.riprad*this.ratio; k++) {
+      this.ripplemap[this.oldind + (j * this.width) + k] += 128;
     }
+  }
 }
 /** Postcompose function
 */
-ol.interaction.Ripple.prototype.postcompose_ = function(e)
-{	var ctx = e.context;
-	var canvas = ctx.canvas;
-	// Initialize when canvas is ready / modified
-	if (this.width != canvas.width || this.height != canvas.height)
-	{	this.width = canvas.width;
-		this.height = canvas.height;
-		this.ratio = e.frameState.pixelRatio;
-		this.half_width = this.width >> 1;
-		this.half_height = this.height >> 1;
-		this.size = this.width * (this.height + 2) * 2;
-		this.oldind = this.width;
-		this.newind = this.width * (this.height + 3);
-		for (var i = 0; i < this.size; i++) {
-			this.last_map[i] = this.ripplemap[i] = 0;
-		}
-	}
-	this.texture = ctx.getImageData(0, 0, this.width, this.height);
-	this.ripple = ctx.getImageData(0, 0, this.width, this.height);	
-	// Run animation
-	var a, b, data, cur_pixel, new_pixel;
+ol.interaction.Ripple.prototype.postcompose_ = function(e) {
+  var ctx = e.context;
+  var canvas = ctx.canvas;
+  // Initialize when canvas is ready / modified
+  if (this.width != canvas.width || this.height != canvas.height) {
+    this.width = canvas.width;
+    this.height = canvas.height;
+    this.ratio = e.frameState.pixelRatio;
+    this.half_width = this.width >> 1;
+    this.half_height = this.height >> 1;
+    this.size = this.width * (this.height + 2) * 2;
+    this.oldind = this.width;
+    this.newind = this.width * (this.height + 3);
+    for (var i = 0; i < this.size; i++) {
+      this.last_map[i] = this.ripplemap[i] = 0;
+    }
+  }
+  this.texture = ctx.getImageData(0, 0, this.width, this.height);
+  this.ripple = ctx.getImageData(0, 0, this.width, this.height);	
+  // Run animation
+  var a, b, data, cur_pixel, new_pixel;
     var t = this.oldind; this.oldind = this.newind; this.newind = t;
     i = 0;
     var _rd = this.ripple.data,
         _td = this.texture.data;
     for (var y = 0; y < this.height; y++) {
-        for (var x = 0; x < this.width; x++) {
-            var _newind = this.newind + i,
-				_mapind = this.oldind + i;
-            data = (
-                this.ripplemap[_mapind - this.width] + 
-                this.ripplemap[_mapind + this.width] + 
-                this.ripplemap[_mapind - 1] + 
-                this.ripplemap[_mapind + 1]) >> 1;
-            data -= this.ripplemap[_newind];
-            data -= data >> 5;
-            this.ripplemap[_newind] = data;
-            //where data=0 then still, where data>0 then wave
-            data = 1024 - data;
-            if (this.last_map[i] != data) 
-			{   this.last_map[i] = data;
-				//offsets
-                a = (((x - this.half_width) * data / 1024) << 0) + this.half_width;
-                b = (((y - this.half_height) * data / 1024) << 0) + this.half_height;
-                //bounds check
-                if (a >= this.width) a = this.width - 1;
-                if (a < 0) a = 0;
-                if (b >= this.height) b = this.height - 1;
-                if (b < 0) b = 0;
-                new_pixel = (a + (b * this.width)) * 4;
-                cur_pixel = i * 4;
-				/**/
-                _rd[cur_pixel] = _td[new_pixel];
-                _rd[cur_pixel + 1] = _td[new_pixel + 1];
-                _rd[cur_pixel + 2] = _td[new_pixel + 2];
-				/*/
-				// only in blue pixels 
+      for (var x = 0; x < this.width; x++) {
+          var _newind = this.newind + i,
+      _mapind = this.oldind + i;
+      data = (
+          this.ripplemap[_mapind - this.width] + 
+          this.ripplemap[_mapind + this.width] + 
+          this.ripplemap[_mapind - 1] + 
+          this.ripplemap[_mapind + 1]) >> 1;
+      data -= this.ripplemap[_newind];
+      data -= data >> 5;
+      this.ripplemap[_newind] = data;
+      //where data=0 then still, where data>0 then wave
+      data = 1024 - data;
+      if (this.last_map[i] != data) {
+        this.last_map[i] = data;
+        //offsets
+        a = (((x - this.half_width) * data / 1024) << 0) + this.half_width;
+        b = (((y - this.half_height) * data / 1024) << 0) + this.half_height;
+        //bounds check
+        if (a >= this.width) a = this.width - 1;
+        if (a < 0) a = 0;
+        if (b >= this.height) b = this.height - 1;
+        if (b < 0) b = 0;
+        new_pixel = (a + (b * this.width)) * 4;
+        cur_pixel = i * 4;
+        /**/
+        _rd[cur_pixel] = _td[new_pixel];
+        _rd[cur_pixel + 1] = _td[new_pixel + 1];
+        _rd[cur_pixel + 2] = _td[new_pixel + 2];
+        /*/
+        // only in blue pixels 
                 if (_td[new_pixel + 2]>_td[new_pixel + 1]
-					&& _td[new_pixel + 2]>_td[new_pixel])
-				{
+          && _td[new_pixel + 2]>_td[new_pixel])
+        {
                 _rd[cur_pixel] = _td[new_pixel];
                 _rd[cur_pixel + 1] = _td[new_pixel + 1];
                 _rd[cur_pixel + 2] = _td[new_pixel + 2];
-				}
-				else this.ripplemap[_newind] = 0;
-				/**/
-            }
-            ++i;
         }
+        else this.ripplemap[_newind] = 0;
+        /**/
+      }
+      ++i;
     }
-	ctx.putImageData(this.ripple, 0, 0);
-	// tell OL3 to continue postcompose animation
-	this.getMap().render(); 
+  }
+  ctx.putImageData(this.ripple, 0, 0);
+  // tell OL3 to continue postcompose animation
+  this.getMap().render(); 
 };
 
 /*
@@ -16678,83 +16716,83 @@ ol.Map.prototype.hideTarget = function()
 };
 
 /*	
-	Tinker Bell effect on maps.
-	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-	@link https://github.com/Viglino
- */
+  Tinker Bell effect on maps.
+  Copyright (c) 2015 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  @link https://github.com/Viglino
+*/
 /**
  * @constructor
  * @extends {ol.interaction.Pointer}
  *	@param {ol.interaction.TinkerBell.options}  options flashlight param
- *		- color {ol.color} color of the sparkles
- */
-ol.interaction.TinkerBell = function(options)
-{	options = options || {};
-	ol.interaction.Pointer.call(this,
-	{	handleDownEvent: this.onMove,
-		handleMoveEvent: this.onMove
-	});
-	this.set('color', options.color ? ol.color.asString(options.color) : "#fff");
-	this.sparkle = [0,0];
-	this.sparkles = [];
-	this.lastSparkle = this.time = new Date();
-	var self = this;
-	this.out_ = function() { self.isout_=true; };
-	this.isout_ = true;
+*		- color {ol.color} color of the sparkles
+*/
+ol.interaction.TinkerBell = function(options) {
+  options = options || {};
+  ol.interaction.Pointer.call(this, {
+    handleDownEvent: this.onMove,
+    handleMoveEvent: this.onMove
+  });
+  this.set('color', options.color ? ol.color.asString(options.color) : "#fff");
+  this.sparkle = [0,0];
+  this.sparkles = [];
+  this.lastSparkle = this.time = new Date();
+  var self = this;
+  this.out_ = function() { self.isout_=true; };
+  this.isout_ = true;
 };
 ol.ext.inherits(ol.interaction.TinkerBell, ol.interaction.Pointer);
 /** Set the map > start postcompose
 */
 ol.interaction.TinkerBell.prototype.setMap = function(map) {
-	if (this._listener) ol.Observable.unByKey(this._listener);
-	this._listener = null;
-	if (this.getMap()) {
-		map.getViewport().removeEventListener('mouseout', this.out_, false);
-		this.getMap().render();
-	}
-	ol.interaction.Pointer.prototype.setMap.call(this, map);
-	if (map) {
-		this._listener = map.on('postcompose', this.postcompose_.bind(this));
-		map.getViewport().addEventListener('mouseout', this.out_, false);
-	}
+  if (this._listener) ol.Observable.unByKey(this._listener);
+  this._listener = null;
+  if (this.getMap()) {
+    map.getViewport().removeEventListener('mouseout', this.out_, false);
+    this.getMap().render();
+  }
+  ol.interaction.Pointer.prototype.setMap.call(this, map);
+  if (map) {
+    this._listener = map.on('postcompose', this.postcompose_.bind(this));
+    map.getViewport().addEventListener('mouseout', this.out_, false);
+  }
 };
-ol.interaction.TinkerBell.prototype.onMove = function(e)
-{	this.sparkle = e.pixel;
-	this.isout_ = false;
-	this.getMap().render();
+ol.interaction.TinkerBell.prototype.onMove = function(e) {
+  this.sparkle = e.pixel;
+  this.isout_ = false;
+  this.getMap().render();
 };
 /** Postcompose function
 */
-ol.interaction.TinkerBell.prototype.postcompose_ = function(e)
-{	var delta = 15;
-	var ctx = e.context;
-	var dt = e.frameState.time - this.time;
-	this.time = e.frameState.time;
-	if (e.frameState.time-this.lastSparkle > 30 && !this.isout_)
-	{	this.lastSparkle = e.frameState.time;
-		this.sparkles.push({ p:[this.sparkle[0]+Math.random()*delta-delta/2, this.sparkle[1]+Math.random()*delta], o:1 });
-	}
-	ctx.save();
-		ctx.scale(e.frameState.pixelRatio,e.frameState.pixelRatio);
-		ctx.fillStyle = this.get("color");
-		for (var i=this.sparkles.length-1, p; p=this.sparkles[i]; i--)
-		{	if (p.o < 0.2) 
-			{	this.sparkles.splice(0,i+1);
-				break;
-			}
-			ctx.globalAlpha = p.o;
-			ctx.beginPath();
-			ctx.arc (p.p[0], p.p[1], 2.2, 0, 2 * Math.PI, false);
-			ctx.fill();
-			p.o *= 0.98;
-			p.p[0] += (Math.random()-0.5);
-			p.p[1] += dt*(1+Math.random())/30;
-		}
-	ctx.restore();
-	// tell OL3 to continue postcompose animation
-	if (this.sparkles.length) this.getMap().render(); 
+ol.interaction.TinkerBell.prototype.postcompose_ = function(e) {
+  var delta = 15;
+  var ctx = e.context || ol.ext.getMapCanvas(this.getMap()).getContext('2d');
+  var dt = e.frameState.time - this.time;
+  this.time = e.frameState.time;
+  if (e.frameState.time-this.lastSparkle > 30 && !this.isout_) {
+    this.lastSparkle = e.frameState.time;
+    this.sparkles.push({ p:[this.sparkle[0]+Math.random()*delta-delta/2, this.sparkle[1]+Math.random()*delta], o:1 });
+  }
+  ctx.save();
+    ctx.scale(e.frameState.pixelRatio,e.frameState.pixelRatio);
+    ctx.fillStyle = this.get("color");
+    for (var i=this.sparkles.length-1, p; p=this.sparkles[i]; i--) {
+      if (p.o < 0.2) {
+        this.sparkles.splice(0,i+1);
+        break;
+      }
+      ctx.globalAlpha = p.o;
+      ctx.beginPath();
+      ctx.arc (p.p[0], p.p[1], 2.2, 0, 2 * Math.PI, false);
+      ctx.fill();
+      p.o *= 0.98;
+      p.p[0] += (Math.random()-0.5);
+      p.p[1] += dt*(1+Math.random())/30;
+    }
+  ctx.restore();
+  // continue postcompose animation
+  if (this.sparkles.length) this.getMap().render(); 
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -22566,14 +22604,14 @@ ol.coordinate.splitH = function (geom, y, n) {
   }
   // Sort x
   list.sort(function(a,b) { return a.pt[0] - b.pt[0] });
-  // Horizontal segement
+  // Horizontal segment
   var result = [];
   for (var j=0; j<list.length-1; j += 2) {
     result.push([list[j], list[j+1]])
   }
   return result;
 };
-/** Create a geometrie given a type and coordinates */
+/** Create a geometry given a type and coordinates */
 ol.geom.createFromType = function (type, coordinates) {
   switch (type) {
     case 'LineString': return new ol.geom.LineString(coordinates);
@@ -24929,15 +24967,11 @@ ol.style.FontSymbol.prototype.getChecksum = function()
 };
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 *
 *  Photo style for vector features
 */
-/**
- * @requires ol.style.RegularShape
- * @requires ol.structs.IHasChecksum
- */
 /**
  * @classdesc
  * Set Photo style for vector features.
@@ -24958,65 +24992,69 @@ ol.style.FontSymbol.prototype.getChecksum = function()
  * @implements {ol.structs.IHasChecksum}
  * @api
  */
-ol.style.Photo = function(options)
-{	options = options || {};
-	this.sanchor_ = options.kind=="anchored" ? 8:0;
-	this.shadow_ = Number(options.shadow) || 0;
-	if (!options.stroke) 
-	{	options.stroke = new ol.style.Stroke({ width: 0, color: "#000"})
-	}
-	var strokeWidth = options.stroke.getWidth();
-	if (strokeWidth<0) strokeWidth = 0;
-	if (options.kind=='folio') strokeWidth += 6;
-	options.stroke.setWidth(strokeWidth);
-	ol.style.RegularShape.call (this,
-	{	radius: options.radius + strokeWidth + this.sanchor_/2 + this.shadow_/2, 
-		points:0
-	//	fill:new ol.style.Fill({color:"red"}) // No fill to create a hit detection Image
-	});
-	// Hack to get the hit detection Image (no API exported)
-	if (!this.hitDetectionCanvas_)
-	{	var img = this.getImage();
-		for (var i in this)
-		{	if (this[i] && this[i].getContext && this[i]!==img)
-			{	this.hitDetectionCanvas_ = this[i];
-				break;
-			}
-		}
-	}
-	this.stroke_ = options.stroke;
-	this.fill_ = options.fill;
-	this.crop_ = options.crop;
-	this.crossOrigin_ = options.crossOrigin;
-	this.kind_ = options.kind || "default";
-	this.radius_ = options.radius;
-	this.src_ = options.src;
-	this.offset_ = [options.offsetX ? options.offsetX :0, options.offsetY ? options.offsetY :0];
-	this.onload_ = options.onload;
-	if (typeof(options.opacity)=='number') this.setOpacity(options.opacity);
-	if (typeof(options.rotation)=='number') this.setRotation(options.rotation);
-	this.renderPhoto_();
+ol.style.Photo = function(options) {
+  options = options || {};
+  this.sanchor_ = options.kind=="anchored" ? 8:0;
+  this.shadow_ = Number(options.shadow) || 0;
+  if (!options.stroke) {
+    options.stroke = new ol.style.Stroke({ width: 0, color: "#000"})
+  }
+  var strokeWidth = options.stroke.getWidth();
+  if (strokeWidth<0) strokeWidth = 0;
+  if (options.kind=='folio') strokeWidth += 6;
+  options.stroke.setWidth(strokeWidth);
+  ol.style.RegularShape.call (this, {
+    radius: options.radius + strokeWidth + this.sanchor_/2 + this.shadow_/2, 
+    points:0
+  //	fill:new ol.style.Fill({color:"red"}) // No fill to create a hit detection Image
+  });
+  // Hack to get the hit detection Image (no API exported)
+  if (!this.hitDetectionCanvas_) {
+    var img = this.getImage();
+    for (var i in this) {
+      if (this[i] && this[i].getContext && this[i]!==img) {
+        this.hitDetectionCanvas_ = this[i];
+        break;
+      }
+    }
+  }
+  // Clone canvas for hit detection
+  this.hitDetectionCanvas_ = document.createElement('canvas');
+  this.hitDetectionCanvas_.width = this.getImage().width;
+  this.hitDetectionCanvas_.height = this.getImage().height;
+  this.stroke_ = options.stroke;
+  this.fill_ = options.fill;
+  this.crop_ = options.crop;
+  this.crossOrigin_ = options.crossOrigin;
+  this.kind_ = options.kind || "default";
+  this.radius_ = options.radius;
+  this.src_ = options.src;
+  this.offset_ = [options.offsetX ? options.offsetX :0, options.offsetY ? options.offsetY :0];
+  this.onload_ = options.onload;
+  if (typeof(options.opacity)=='number') this.setOpacity(options.opacity);
+  if (typeof(options.rotation)=='number') this.setRotation(options.rotation);
+  this.renderPhoto_();
 };
 ol.ext.inherits(ol.style.Photo, ol.style.RegularShape);
 /**
  * Clones the style. 
  * @return {ol.style.Photo}
  */
-ol.style.Photo.prototype.clone = function()
-{	return new ol.style.Photo(
-	{	stroke: this.stroke_,
-		fill: this.fill_,
-		shadow: this.shadow_,
-		crop: this.crop_,
-		crossOrigin: this.crossOrigin_,
-		kind: this.kind_,
-		radius: this.radius_,
-		src: this.src_,
-		offsetX: this.offset_[0],
-		offsetY: this.offset_[1],
-		opacity: this.getOpacity(),
-		rotation: this.getRotation()
-	});
+ol.style.Photo.prototype.clone = function() {
+  return new ol.style.Photo({
+    stroke: this.stroke_,
+    fill: this.fill_,
+    shadow: this.shadow_,
+    crop: this.crop_,
+    crossOrigin: this.crossOrigin_,
+    kind: this.kind_,
+    radius: this.radius_,
+    src: this.src_,
+    offsetX: this.offset_[0],
+    offsetY: this.offset_[1],
+    opacity: this.getOpacity(),
+    rotation: this.getRotation()
+  });
 };
 /**
  * Draws a rounded rectangle using the current state of the canvas. 
@@ -25027,192 +25065,180 @@ ol.style.Photo.prototype.clone = function()
  * @param {Number} height The height of the rectangle
  * @param {Number} radius The corner radius.
  */
-CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) 
-{	if (!r) this.rect(x,y,w,h);
-	else
-	{	if (w < 2 * r) r = w / 2;
-		if (h < 2 * r) r = h / 2;
-		this.beginPath();
-		this.moveTo(x+r, y);
-		this.arcTo(x+w, y, x+w, y+h, r);
-		this.arcTo(x+w, y+h, x, y+h, r);
-		this.arcTo(x, y+h, x, y, r);
-		this.arcTo(x, y, x+w, y, r);
-		this.closePath();
-	}
-	return this;
-}
+CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+  if (!r) {
+    this.rect(x,y,w,h);
+  } else {
+    if (w < 2 * r) r = w / 2;
+    if (h < 2 * r) r = h / 2;
+    this.beginPath();
+    this.moveTo(x+r, y);
+    this.arcTo(x+w, y, x+w, y+h, r);
+    this.arcTo(x+w, y+h, x, y+h, r);
+    this.arcTo(x, y+h, x, y, r);
+    this.arcTo(x, y, x+w, y, r);
+    this.closePath();
+  }
+  return this;
+};
 /**
  * Draw the form without the image
  * @private
  */
-ol.style.Photo.prototype.drawBack_ = function(context, color, strokeWidth)
-{	var canvas = context.canvas;
-	context.beginPath();
-    context.fillStyle = color;
-	context.clearRect(0, 0, canvas.width, canvas.height);
-	switch (this.kind_)
-	{	case 'square':
-			context.rect(0,0,canvas.width-this.shadow_, canvas.height-this.shadow_);
-			break;
-		case 'circle':
-			context.arc(this.radius_+strokeWidth, this.radius_+strokeWidth, this.radius_+strokeWidth, 0, 2 * Math.PI, false);
-			break;
-		case 'folio':
-			var offset = 6;
-			strokeWidth -= offset;
-			context.strokeStyle = 'rgba(0,0,0,0.5)';
-			var w = canvas.width-this.shadow_-2*offset;
-			var a = Math.atan(6/w);
-			context.save();
-			context.rotate(-a);
-			context.translate(-6,2);
-			context.beginPath();
-			context.rect(offset,offset,w,w);
-			context.stroke();
-			context.fill();
-			context.restore();
-			context.save();
-			context.translate(6,-1);
-			context.rotate(a);
-			context.beginPath();
-			context.rect(offset,offset,w,w);
-			context.stroke();
-			context.fill();
-			context.restore();
-			context.beginPath();
-			context.rect(offset,offset,w,w);
-			context.stroke();
-			break;
-		case 'anchored':
-			context.roundRect(this.sanchor_/2,0,canvas.width-this.sanchor_-this.shadow_, canvas.height-this.sanchor_-this.shadow_, strokeWidth);
-			context.moveTo(canvas.width/2-this.sanchor_-this.shadow_/2,canvas.height-this.sanchor_-this.shadow_);
-			context.lineTo(canvas.width/2+this.sanchor_-this.shadow_/2,canvas.height-this.sanchor_-this.shadow_);
-			context.lineTo(canvas.width/2-this.shadow_/2,canvas.height-this.shadow_);break;
-		default: /* roundrect */
-			context.roundRect(0,0,canvas.width-this.shadow_, canvas.height-this.shadow_, strokeWidth);
-			break;
-	}
-	context.closePath();
-}
+ol.style.Photo.prototype.drawBack_ = function(context, color, strokeWidth) {
+  var canvas = context.canvas;
+  context.beginPath();
+  context.fillStyle = color;
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  switch (this.kind_) {
+    case 'square': {
+      context.rect(0,0,canvas.width-this.shadow_, canvas.height-this.shadow_);
+      break;
+    }
+    case 'circle': {
+      context.arc(this.radius_+strokeWidth, this.radius_+strokeWidth, this.radius_+strokeWidth, 0, 2 * Math.PI, false);
+      break;
+    }
+    case 'folio': {
+      var offset = 6;
+      strokeWidth -= offset;
+      context.strokeStyle = 'rgba(0,0,0,0.5)';
+      var w = canvas.width-this.shadow_-2*offset;
+      var a = Math.atan(6/w);
+      context.save();
+      context.rotate(-a);
+      context.translate(-6,2);
+      context.beginPath();
+      context.rect(offset,offset,w,w);
+      context.stroke();
+      context.fill();
+      context.restore();
+      context.save();
+      context.translate(6,-1);
+      context.rotate(a);
+      context.beginPath();
+      context.rect(offset,offset,w,w);
+      context.stroke();
+      context.fill();
+      context.restore();
+      context.beginPath();
+      context.rect(offset,offset,w,w);
+      context.stroke();
+      break;
+    }
+    case 'anchored': {
+      context.roundRect(this.sanchor_/2,0,canvas.width-this.sanchor_-this.shadow_, canvas.height-this.sanchor_-this.shadow_, strokeWidth);
+      context.moveTo(canvas.width/2-this.sanchor_-this.shadow_/2,canvas.height-this.sanchor_-this.shadow_);
+      context.lineTo(canvas.width/2+this.sanchor_-this.shadow_/2,canvas.height-this.sanchor_-this.shadow_);
+      context.lineTo(canvas.width/2-this.shadow_/2,canvas.height-this.shadow_);break;
+    }
+    default: {
+      // roundrect
+      context.roundRect(0,0,canvas.width-this.shadow_, canvas.height-this.shadow_, strokeWidth);
+      break;
+    }
+  }
+  context.closePath();
+};
 /**
  * @private
  */
-ol.style.Photo.prototype.renderPhoto_ = function()
-{
-	var strokeStyle;
-	var strokeWidth = 0;
-	if (this.stroke_) 
-	{	strokeStyle = ol.color.asString(this.stroke_.getColor());
-		strokeWidth = this.stroke_.getWidth();
-	}
-	var canvas = this.getImage();
-	// Draw hitdetection image
-	var context = this.hitDetectionCanvas_.getContext('2d');
-	this.drawBack_(context,"#000",strokeWidth);
-    context.fill();
-	// Draw the image
-	context = canvas.getContext('2d');
-	this.drawBack_(context,strokeStyle,strokeWidth);
-	// Draw a shadow
-	if (this.shadow_)
-	{	context.shadowColor = 'rgba(0,0,0,0.5)';
-		context.shadowBlur = this.shadow_/2;
-		context.shadowOffsetX = this.shadow_/2;
-		context.shadowOffsetY = this.shadow_/2;
-	}
-    context.fill();
-	context.shadowColor = 'transparent';
-	var self = this;
-	var img = this.img_ = new Image();
-	if (this.crossOrigin_) img.crossOrigin = this.crossOrigin_;
-	img.src = this.src_;
-	// Draw image
-	if (img.width) self.drawImage_(img);
-	else img.onload = function()
-	{	self.drawImage_(img);
-		// Force change (?!)
-		// self.setScale(1);
-		if (self.onload_) self.onload_();
-	};
-	// Set anchor
-	var a = this.getAnchor();
-	a[0] = (canvas.width - this.shadow_)/2;
-	a[1] = (canvas.height - this.shadow_)/2;
-	if (this.sanchor_)
-	{	a[1] = canvas.height - this.shadow_;
-	}
-}
+ol.style.Photo.prototype.renderPhoto_ = function() {
+  var strokeStyle;
+  var strokeWidth = 0;
+  if (this.stroke_) {
+    strokeStyle = ol.color.asString(this.stroke_.getColor());
+    strokeWidth = this.stroke_.getWidth();
+  }
+  var canvas = this.getImage();
+  // Draw hitdetection image
+  var context = this.hitDetectionCanvas_.getContext('2d');
+  this.drawBack_(context,"#000",strokeWidth);
+  context.fill();
+  // Draw the image
+  context = canvas.getContext('2d');
+  this.drawBack_(context,strokeStyle,strokeWidth);
+  // Draw a shadow
+  if (this.shadow_) {
+    context.shadowColor = 'rgba(0,0,0,0.5)';
+    context.shadowBlur = this.shadow_/2;
+    context.shadowOffsetX = this.shadow_/2;
+    context.shadowOffsetY = this.shadow_/2;
+  }
+  context.fill();
+  context.shadowColor = 'transparent';
+  var self = this;
+  var img = this.img_ = new Image();
+  if (this.crossOrigin_) img.crossOrigin = this.crossOrigin_;
+  img.src = this.src_;
+  // Draw image
+  if (img.width) {
+    self.drawImage_(img);
+  } else {
+    img.onload = function() {
+      self.drawImage_(img);
+      // Force change (?!)
+      // self.setScale(1);
+      if (self.onload_) self.onload_();
+    };
+  }
+  // Set anchor
+  var a = this.getAnchor();
+  a[0] = (canvas.width - this.shadow_)/2;
+  a[1] = (canvas.height - this.shadow_)/2;
+  if (this.sanchor_) {
+    a[1] = canvas.height - this.shadow_;
+  }
+};
 /**
  * Draw an timage when loaded
  * @private
  */
-ol.style.Photo.prototype.drawImage_ = function(img)
-{	var canvas = this.getImage();
-	// Remove the circle on the canvas
-	var context = (canvas.getContext('2d'));
-	var strokeWidth = 0;
-	if (this.stroke_) strokeWidth = this.stroke_.getWidth();
-	var size = 2*this.radius_;
-	context.save();
-	if (this.kind_=='circle')
-	{	context.beginPath();
-		context.arc(this.radius_+strokeWidth, this.radius_+strokeWidth, this.radius_, 0, 2 * Math.PI, false);
-		context.clip();
-	}
-	var s, x, y, w, h, sx, sy, sw, sh;
-	// Crop the image to a square vignette
-	if (this.crop_) 
-	{	s = Math.min (img.width/size, img.height/size);
-		sw = sh = s*size;
-		sx = (img.width-sw)/2;
-		sy = (img.height-sh)/2;
-		x = y = 0;
-		w = h = size+1;
-	}
-	// Fit the image to the size
-	else 
-	{	s = Math.min (size/img.width, size/img.height);
-		sx = sy = 0;
-		sw = img.width;
-		sh = img.height;
-		w = s*sw;
-		h = s*sh;
-		x = (size-w)/2;
-		y = (size-h)/2;
-	}
-	x += strokeWidth + this.sanchor_/2;
-	y += strokeWidth;
-	context.drawImage(img, sx, sy, sw, sh, x, y, w, h);
-	context.restore();
-	// Draw a circle to avoid aliasing on clip
-	if (this.kind_=='circle' && strokeWidth)
-	{	context.beginPath();
-		context.strokeStyle = ol.color.asString(this.stroke_.getColor());
-		context.lineWidth = strokeWidth/4;
-		context.arc(this.radius_+strokeWidth, this.radius_+strokeWidth, this.radius_, 0, 2 * Math.PI, false);
-		context.stroke();
-	}
-}
-/**
- * @inheritDoc
- */
-ol.style.Photo.prototype.getChecksum = function()
-{
-	var strokeChecksum = (this.stroke_!==null) ?
-		this.stroke_.getChecksum() : '-';
-	var fillChecksum = (this.fill_!==null) ?
-		this.fill_.getChecksum() : '-';
-	var recalculate = (this.checksums_===null) ||
-		(strokeChecksum != this.checksums_[1] ||
-		fillChecksum != this.checksums_[2] ||
-		this.radius_ != this.checksums_[3]);
-	if (recalculate) {
-		var checksum = 'c' + strokeChecksum + fillChecksum 
-			+ ((this.radius_ !== void 0) ? this.radius_.toString() : '-');
-		this.checksums_ = [checksum, strokeChecksum, fillChecksum, this.radius_];
-	}
-	return this.checksums_[0];
+ol.style.Photo.prototype.drawImage_ = function(img) {
+  var canvas = this.getImage();
+  // Remove the circle on the canvas
+  var context = (canvas.getContext('2d'));
+  var strokeWidth = 0;
+  if (this.stroke_) strokeWidth = this.stroke_.getWidth();
+  var size = 2*this.radius_;
+  context.save();
+  if (this.kind_=='circle') {
+    context.beginPath();
+    context.arc(this.radius_+strokeWidth, this.radius_+strokeWidth, this.radius_, 0, 2 * Math.PI, false);
+    context.clip();
+  }
+  var s, x, y, w, h, sx, sy, sw, sh;
+  // Crop the image to a square vignette
+  if (this.crop_) {
+    s = Math.min (img.width/size, img.height/size);
+    sw = sh = s*size;
+    sx = (img.width-sw)/2;
+    sy = (img.height-sh)/2;
+    x = y = 0;
+    w = h = size+1;
+  } else {
+    // Fit the image to the size
+    s = Math.min (size/img.width, size/img.height);
+    sx = sy = 0;
+    sw = img.width;
+    sh = img.height;
+    w = s*sw;
+    h = s*sh;
+    x = (size-w)/2;
+    y = (size-h)/2;
+  }
+  x += strokeWidth + this.sanchor_/2;
+  y += strokeWidth;
+  context.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+  context.restore();
+  // Draw a circle to avoid aliasing on clip
+  if (this.kind_=='circle' && strokeWidth) {
+    context.beginPath();
+    context.strokeStyle = ol.color.asString(this.stroke_.getColor());
+    context.lineWidth = strokeWidth/4;
+    context.arc(this.radius_+strokeWidth, this.radius_+strokeWidth, this.radius_, 0, 2 * Math.PI, false);
+    context.stroke();
+  }
 };
 
 /** Add a setTextPath style to draw text along linestrings

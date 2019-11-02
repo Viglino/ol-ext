@@ -3315,7 +3315,7 @@
   cursor: pointer;
   opacity: .4;
 }
-.ol-storymap .chapter.select {
+.ol-storymap .chapter.ol-select {
   cursor: default;
   opacity: 1;
 }
