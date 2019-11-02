@@ -254,6 +254,7 @@ ol_ext_element.scrollDiv = function(elt, options) {
   var onmove = (typeof(options.onmove) === 'function' ? options.onmove : function(){});
   var page = options.vertical ? 'pageY' : 'pageX';
   var scroll = options.vertical ? 'scrollTop' : 'scrollLeft';
+  var moving = false;
 
   // Prevent image dragging
   elt.querySelectorAll('img').forEach(function(i) {
@@ -262,6 +263,7 @@ ol_ext_element.scrollDiv = function(elt, options) {
   
   // Start scrolling
   ol_ext_element.addListener(elt, ['mousedown'], function(e) {
+    moving = false;
     pos = e[page];
     dt = new Date();
     elt.classList.add('ol-move');
@@ -269,6 +271,7 @@ ol_ext_element.scrollDiv = function(elt, options) {
   
   // Register scroll
   ol_ext_element.addListener(window, ['mousemove'], function(e) {
+    moving = true;
     if (pos !== false) {
       var delta = pos - e[page];
       elt[scroll] += delta;
@@ -288,7 +291,9 @@ ol_ext_element.scrollDiv = function(elt, options) {
   
   // Stop scrolling
   ol_ext_element.addListener(window, ['mouseup'], function(e) {
-    elt.classList.remove('ol-move');
+    if (moving) setTimeout (function() { elt.classList.remove('ol-move'); });
+    else elt.classList.remove('ol-move');
+    moving = false;
     dt = new Date() - dt;
     if (dt>100) {
       // User stop: no speed
@@ -311,6 +316,7 @@ ol_ext_element.scrollDiv = function(elt, options) {
         var delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
         elt.classList.add('ol-move');
         elt[scroll] -= delta*30;
+        elt.classList.remove('ol-move');
         return false;
       }
     );

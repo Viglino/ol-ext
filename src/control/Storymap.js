@@ -1,6 +1,7 @@
 import ol_ext_inherits from '../util/ext'
 import ol_control_Control from 'ol/control/Control'
 import ol_ext_element from '../util/element'
+import {fromLonLat as ol_proj_fromLonLat} from 'ol/proj'
 
 /** A control with scroll-driven navigation to create narrative maps
  *
@@ -33,21 +34,23 @@ var ol_control_Storymap = function(options) {
   });
   element.querySelectorAll('.chapter').forEach(function(c) {
     c.addEventListener('click', function(e) {
-      if (!c.classList.contains('select')) {
-        this.element.scrollTop = c.offsetTop - 30;
-        e.preventDefault();
-      } else {
-        if (e.target.tagName==='IMG' && e.target.dataset.title) {
-          console.log(e);
-          this.dispatchEvent({ 
-            coordinate: this.getMap() ? this.getMap().getCoordinateFromPixel([e.layerX,e.layerY]) : null,
-            type: 'clickimage', 
-            img: e.target, 
-            title: e.target.dataset.title, 
-            element: c, 
-            name: c.getAttribute('name'),
-            originalEvent: e
-          });
+      // Not moving
+      if (!this.element.classList.contains('ol-move')) {
+        if (!c.classList.contains('ol-select')) {
+          this.element.scrollTop = c.offsetTop - 30;
+          e.preventDefault();
+        } else {
+          if (e.target.tagName==='IMG' && e.target.dataset.title) {
+            this.dispatchEvent({ 
+              coordinate: this.getMap() ? this.getMap().getCoordinateFromPixel([e.layerX,e.layerY]) : null,
+              type: 'clickimage', 
+              img: e.target, 
+              title: e.target.dataset.title, 
+              element: c, 
+              name: c.getAttribute('name'),
+              originalEvent: e
+            });
+          }
         }
       }
     }.bind(this));
@@ -68,35 +71,58 @@ var ol_control_Storymap = function(options) {
   // Scroll to the next chapter
   var sc = this.element.querySelectorAll('.ol-scroll-next');
   sc.forEach(function(s) {
-    s.addEventListener('click', function(){ 
-      var chapter = this.element.querySelectorAll('.chapter');
-      var scrollto = s.offsetTop;
-      for (var i=0, c; c=chapter[i]; i++) {
-        if (c.offsetTop > scrollto) {
-          scrollto = c.offsetTop;
-          break;
+    s.addEventListener('click', function(e) { 
+      if (s.parentElement.classList.contains('ol-select')) {
+        var chapter = this.element.querySelectorAll('.chapter');
+        var scrollto = s.offsetTop;
+        for (var i=0, c; c=chapter[i]; i++) {
+          if (c.offsetTop > scrollto) {
+            scrollto = c.offsetTop;
+            break;
+          }
         }
+        this.element.scrollTop = scrollto - 30;
+        e.stopPropagation();
+        e.preventDefault();
       }
-      this.element.scrollTop = scrollto - 30;
     }.bind(this));
   }.bind(this));
 
   // Scroll top 
   sc = this.element.querySelectorAll('.ol-scroll-top');
   sc.forEach(function(i) {
-    i.addEventListener('click', function(){ 
+    i.addEventListener('click', function(e){ 
       this.element.scrollTop = 0;
+      e.stopPropagation();
+      e.preventDefault();
     }.bind(this));
   }.bind(this));
+
+  var getEvent = function(currentDiv) {
+    var lonlat = [ parseFloat(currentDiv.getAttribute('data-lon')),
+      parseFloat(currentDiv.getAttribute('data-lat'))];
+    var coord = ol_proj_fromLonLat(lonlat, this.getMap().getView().getProjection());
+    var zoom = parseFloat(currentDiv.getAttribute('data-zoom'));
+    hasMove = true;
+    return { 
+      type: 'scrollto', 
+      element: currentDiv, 
+      name: currentDiv.getAttribute('name'),
+      coordinate: coord,
+      lon: lonlat,
+      zoom: zoom
+    };
+  }.bind(this);
 
   // Handle scrolling
   var currentDiv = this.element.querySelectorAll('.chapter')[0];
   setTimeout (function (){
-    this.dispatchEvent({ type: 'scrollto', start: true, element: currentDiv, name: currentDiv.getAttribute('name') });
+    currentDiv.classList.add('ol-select');
+    this.dispatchEvent(getEvent(currentDiv));
   }.bind(this));
 
   // Trigger change event on scroll
-  this.element.addEventListener("scroll", function() {
+  this.element.addEventListener('scroll', function() {
     var current, chapter = this.element.querySelectorAll('.chapter');
     var height = ol_ext_element.getStyle(this.element, 'height');
     if (!this.element.scrollTop) {
@@ -109,8 +135,32 @@ var ol_control_Storymap = function(options) {
       }
     }
     if (current && current!==currentDiv) {
+      if (currentDiv) currentDiv.classList.remove('ol-select');
       currentDiv = current;
-      this.dispatchEvent({ type: 'scrollto', element: currentDiv, name: currentDiv.getAttribute('name') });
+      currentDiv.classList.add('ol-select');
+      var e = getEvent(currentDiv);
+      var view = this.getMap().getView();
+      view.cancelAnimations();
+      switch (currentDiv.getAttribute('data-animation')) {
+        case 'flyto': {
+          // Fly to destination
+          var duration = 2000;
+          view.animate ({
+            center: e.coordinate,
+            duration: duration
+          });
+          view.animate ({
+            zoom: Math.min(view.getZoom(), e.zoom)-1,
+            duration: duration/2
+          },{
+            zoom: e.zoom,
+            duration: duration/2
+          });
+          break;
+        };
+        default: break;
+      }
+      this.dispatchEvent(e);
     }
   }.bind(this));
 
