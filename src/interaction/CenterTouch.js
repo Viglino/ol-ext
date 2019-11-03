@@ -4,13 +4,11 @@
 */
 
 import ol_ext_inherits from '../util/ext'
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_style_RegularShape from 'ol/style/RegularShape'
 import ol_style_Style from 'ol/style/Style'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
-import ol_geom_Point from 'ol/geom/Point'
-import ol_Map from 'ol/Map'
 import ol_style_Stroke from 'ol/style/Stroke'
+import ol_control_Target from '../control/Target'
 
 /** Handles coordinates on the center of the viewport.
  * It can be used as abstract base class used for creating subclasses. 
@@ -19,8 +17,8 @@ import ol_style_Stroke from 'ol/style/Stroke'
  * @constructor
  * @extends {ol_interaction_Interaction}
  * @param {olx.interaction.InteractionOptions} options Options
- *  - targetStyle {ol_style_Style|Array<ol_style_Style>} a style to draw the target point, default cross style
- *  - composite {string} composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
+ *  @param {ol_style_Style|Array<ol_style_Style>} options.targetStyle a style to draw the target point, default cross style
+ *  @param {string} options.compositecomposite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
  */
 var ol_interaction_CenterTouch = function(options)
 {	options = options || {};
@@ -51,6 +49,9 @@ var ol_interaction_CenterTouch = function(options)
 				}
 		});
 
+	// Target on map center
+	this._target = new ol_control_Target();
+
 	ol_interaction_Interaction.call(this,
 		{	handleEvent: function(e) 
 			{	if (rex.test(e.type)) this.pos_ = e.coordinate;
@@ -70,15 +71,16 @@ ol_ext_inherits(ol_interaction_CenterTouch, ol_interaction_Interaction);
 ol_interaction_CenterTouch.prototype.setMap = function(map)
 {	if (this.getMap())
 	{	this.getMap().removeInteraction(this.ctouch);
+		this.getMap().removeInteraction(this._target);
 	}
-	if (this._listener.drawtarget) ol_Observable_unByKey(this._listener.drawtarget);
-	this._listener.drawtarget = null;
 
 	ol_interaction_Interaction.prototype.setMap.call (this, map);
 
 	if (this.getMap())
-	{	if (this.getActive()) this.getMap().addInteraction(this.ctouch);
-		this._listener.drawtarget = this.getMap().on('postcompose', this.drawTarget_.bind(this));
+	{	if (this.getActive()) {
+			this.getMap().addInteraction(this.ctouch);
+			this.getMap().addControl(this._target);
+		}
 	}
 };
 
@@ -96,8 +98,12 @@ ol_interaction_CenterTouch.prototype.setActive = function(b)
 	if (this.getMap())
 	{	if (this.getActive()) 
 		{	this.getMap().addInteraction(this.ctouch);
+			this.getMap().addControl(this._target);
 		}
-		else this.getMap().removeInteraction(this.ctouch);
+		else {
+			this.getMap().removeInteraction(this.ctouch);
+			this.getMap().removeControl(this._target);
+		}
 	}
 	
 };
@@ -112,44 +118,6 @@ ol_interaction_CenterTouch.prototype.getPosition = function ()
 		this.pos_ = this.getMap().getCoordinateFromPixel(px);
 	}
 	return this.pos_; 
-};
-
-/** Draw the target
-* @private
-*/
-ol_interaction_CenterTouch.prototype.drawTarget_ = function (e)
-{	if (!this.getMap() || !this.getActive()) return;
-
-	var ctx = e.context;
-	var ratio = e.frameState.pixelRatio;
-
-	ctx.save();
-	
-		var cx = ctx.canvas.width/(2*ratio);
-		var cy = ctx.canvas.height/(2*ratio);
-
-		var geom = new ol_geom_Point (this.getMap().getCoordinateFromPixel([cx,cy]));
-
-		if (this.composite) ctx.globalCompositeOperation = this.composite;
-
-		for (var i=0; i<this.targetStyle.length; i++)
-		{	var style = this.targetStyle[i];
-
-			if (style instanceof ol_style_Style)
-			{	var sc=0;
-				// OL < v4.3 : setImageStyle doesn't check retina
-				var imgs = ol_Map.prototype.getFeaturesAtPixel ? false : style.getImage();
-				if (imgs) 
-				{	sc = imgs.getScale(); 
-					imgs.setScale(ratio*sc);
-				}
-				e.vectorContext.setStyle(style);
-				e.vectorContext.drawGeometry(geom);
-				if (imgs) imgs.setScale(sc);
-			}
-		}
-
-	ctx.restore();
 };
 
 export default ol_interaction_CenterTouch
