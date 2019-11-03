@@ -103,7 +103,6 @@ var ol_control_Storymap = function(options) {
       parseFloat(currentDiv.getAttribute('data-lat'))];
     var coord = ol_proj_fromLonLat(lonlat, this.getMap().getView().getProjection());
     var zoom = parseFloat(currentDiv.getAttribute('data-zoom'));
-    hasMove = true;
     return { 
       type: 'scrollto', 
       element: currentDiv, 
@@ -157,7 +156,7 @@ var ol_control_Storymap = function(options) {
             duration: duration/2
           });
           break;
-        };
+        }
         default: break;
       }
       this.dispatchEvent(e);
