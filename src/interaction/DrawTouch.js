@@ -208,7 +208,7 @@ ol_interaction_DrawTouch.prototype.drawSketch_ = function() {
 ol_interaction_DrawTouch.prototype.drawSketchLink_ = function(e) {
   if (!this.getActive() || !this.getPosition()) return;
 
-  var ctx = ol_ext_getMapCanvas(this.getMap()).getContext('2d');
+  var ctx = e.context || ol_ext_getMapCanvas(this.getMap()).getContext('2d');
   ctx.save();
     var p, pt = this.getMap().getPixelFromCoordinate(this.getPosition());
     var ratio = e.frameState.pixelRatio || 1;
