@@ -9478,7 +9478,6 @@ ol.control.Storymap = function(options) {
       parseFloat(currentDiv.getAttribute('data-lat'))];
     var coord = ol.proj.fromLonLat(lonlat, this.getMap().getView().getProjection());
     var zoom = parseFloat(currentDiv.getAttribute('data-zoom'));
-    hasMove = true;
     return { 
       type: 'scrollto', 
       element: currentDiv, 
@@ -9530,7 +9529,7 @@ ol.control.Storymap = function(options) {
             duration: duration/2
           });
           break;
-        };
+        }
         default: break;
       }
       this.dispatchEvent(e);
@@ -12236,8 +12235,8 @@ ol.format.GeoRSS.prototype.readFeatures = function(source, options) {
  * @constructor
  * @extends {ol.interaction.Interaction}
  * @param {olx.interaction.InteractionOptions} options Options
- *  - targetStyle {ol.style.Style|Array<ol.style.Style>} a style to draw the target point, default cross style
- *  - composite {string} composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
+ *  @param {ol.style.Style|Array<ol.style.Style>} options.targetStyle a style to draw the target point, default cross style
+ *  @param {string} options.compositecomposite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
  */
 ol.interaction.CenterTouch = function(options)
 {	options = options || {};
@@ -12264,6 +12263,8 @@ ol.interaction.CenterTouch = function(options)
 					return true; 
 				}
 		});
+	// Target on map center
+	this._target = new ol.control.Target();
 	ol.interaction.Interaction.call(this,
 		{	handleEvent: function(e) 
 			{	if (rex.test(e.type)) this.pos_ = e.coordinate;
@@ -12282,13 +12283,14 @@ ol.ext.inherits(ol.interaction.CenterTouch, ol.interaction.Interaction);
 ol.interaction.CenterTouch.prototype.setMap = function(map)
 {	if (this.getMap())
 	{	this.getMap().removeInteraction(this.ctouch);
+		this.getMap().removeInteraction(this._target);
 	}
-	if (this._listener.drawtarget) ol.Observable.unByKey(this._listener.drawtarget);
-	this._listener.drawtarget = null;
 	ol.interaction.Interaction.prototype.setMap.call (this, map);
 	if (this.getMap())
-	{	if (this.getActive()) this.getMap().addInteraction(this.ctouch);
-		this._listener.drawtarget = this.getMap().on('postcompose', this.drawTarget_.bind(this));
+	{	if (this.getActive()) {
+			this.getMap().addInteraction(this.ctouch);
+			this.getMap().addControl(this._target);
+		}
 	}
 };
 /**
@@ -12303,8 +12305,12 @@ ol.interaction.CenterTouch.prototype.setActive = function(b)
 	if (this.getMap())
 	{	if (this.getActive()) 
 		{	this.getMap().addInteraction(this.ctouch);
+			this.getMap().addControl(this._target);
 		}
-		else this.getMap().removeInteraction(this.ctouch);
+		else {
+			this.getMap().removeInteraction(this.ctouch);
+			this.getMap().removeControl(this._target);
+		}
 	}
 };
 /** Get the position of the target
@@ -12317,35 +12323,6 @@ ol.interaction.CenterTouch.prototype.getPosition = function ()
 		this.pos_ = this.getMap().getCoordinateFromPixel(px);
 	}
 	return this.pos_; 
-};
-/** Draw the target
-* @private
-*/
-ol.interaction.CenterTouch.prototype.drawTarget_ = function (e)
-{	if (!this.getMap() || !this.getActive()) return;
-	var ctx = e.context;
-	var ratio = e.frameState.pixelRatio;
-	ctx.save();
-		var cx = ctx.canvas.width/(2*ratio);
-		var cy = ctx.canvas.height/(2*ratio);
-		var geom = new ol.geom.Point (this.getMap().getCoordinateFromPixel([cx,cy]));
-		if (this.composite) ctx.globalCompositeOperation = this.composite;
-		for (var i=0; i<this.targetStyle.length; i++)
-		{	var style = this.targetStyle[i];
-			if (style instanceof ol.style.Style)
-			{	var sc=0;
-				// OL < v4.3 : setImageStyle doesn't check retina
-				var imgs = ol.Map.prototype.getFeaturesAtPixel ? false : style.getImage();
-				if (imgs) 
-				{	sc = imgs.getScale(); 
-					imgs.setScale(ratio*sc);
-				}
-				e.vectorContext.setStyle(style);
-				e.vectorContext.drawGeometry(geom);
-				if (imgs) imgs.setScale(sc);
-			}
-		}
-	ctx.restore();
 };
 
 /** Clip interaction to clip layers in a circle
@@ -13367,69 +13344,68 @@ ol.interaction.DrawRegular.prototype.end_ = function(evt) {
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Interaction DrawTouch :
  * @constructor
  * @extends {ol.interaction.CenterTouch}
  * @param {olx.interaction.DrawOptions} options
- *	- source {ol.source.Vector | undefined} Destination source for the drawn features.
- *	- type {ol.geom.GeometryType} Drawing type ('Point', 'LineString', 'Polygon') not ('MultiPoint', 'MultiLineString', 'MultiPolygon' or 'Circle'). Required.
- *	- tap {boolean} enable on tap, default true
- *	Inherited params
- *  - targetStyle {ol.style.Style|Array<ol.style.Style>} a style to draw the target point, default cross style
- *  - composite {string} composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
+ *  @param {ol.source.Vector | undefined} options.source Destination source for the drawn features.
+ *  @param {ol.geom.GeometryType} options.type Drawing type ('Point', 'LineString', 'Polygon') not ('MultiPoint', 'MultiLineString', 'MultiPolygon' or 'Circle'). Required.
+ *	@param {boolean} options.tap enable on tap, default true
+ *  @param {ol.style.Style|Array<ol.style.Style>} options.targetStyle a style to draw the target point, default cross style
+ *  @param {string} options.composite composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
  */
 ol.interaction.DrawTouch = function(options) {
-	options = options||{};
-	options.handleEvent = function(e) {
-		if (this.get("tap")) {
-			switch (e.type) {
-				case "singleclick": {
-					this.addPoint();
-					break;
-				}
-				case "dblclick": {
-					this.addPoint();
-					this.finishDrawing();
-					return false;
-					//break;
-				}
-				default: break;
-			}
-		}
-		return true;
-	}
-	ol.interaction.CenterTouch.call(this, options);
-	this.typeGeom_ = options.type;
-	this.source_ = options.source;
-	this.set("tap", (options.tap!==false));
-	// Style
-	var white = [255, 255, 255, 1];
-	var blue = [0, 153, 255, 1];
-	var width = 3;
-	var defaultStyle = [
-		new ol.style.Style({
-			stroke: new ol.style.Stroke({ color: white, width: width + 2 })
-		}),
-		new ol.style.Style({
-			image: new ol.style.Circle({
-				radius: width * 2,
-				fill: new ol.style.Fill({ color: blue }),
-				stroke: new ol.style.Stroke({ color: white, width: width / 2 })
-			}),
-			stroke: new ol.style.Stroke({ color: blue, width: width }),
-			fill: new ol.style.Fill({
-				color: [255, 255, 255, 0.5]
-			})
-		})
-	];
-	this.overlay_ = new ol.layer.Vector(
-		{	source: new ol.source.Vector({useSpatialIndex: false }),
-			style: defaultStyle
-		});
-	this.geom_ = [];
+  options = options||{};
+  options.handleEvent = function(e) {
+    if (this.get("tap")) {
+      switch (e.type) {
+        case "singleclick": {
+          this.addPoint();
+          break;
+        }
+        case "dblclick": {
+          this.addPoint();
+          this.finishDrawing();
+          return false;
+          //break;
+        }
+        default: break;
+      }
+    }
+    return true;
+  }
+  ol.interaction.CenterTouch.call(this, options);
+  this.typeGeom_ = options.type;
+  this.source_ = options.source;
+  this.set("tap", (options.tap!==false));
+  // Style
+  var white = [255, 255, 255, 1];
+  var blue = [0, 153, 255, 1];
+  var width = 3;
+  var defaultStyle = [
+    new ol.style.Style({
+      stroke: new ol.style.Stroke({ color: white, width: width + 2 })
+    }),
+    new ol.style.Style({
+      image: new ol.style.Circle({
+        radius: width * 2,
+        fill: new ol.style.Fill({ color: blue }),
+        stroke: new ol.style.Stroke({ color: white, width: width / 2 })
+      }),
+      stroke: new ol.style.Stroke({ color: blue, width: width }),
+      fill: new ol.style.Fill({
+        color: [255, 255, 255, 0.5]
+      })
+    })
+  ];
+  this.overlay_ = new ol.layer.Vector({
+    source: new ol.source.Vector({useSpatialIndex: false }),
+    style: defaultStyle
+  });
+  this.geom_ = [];
 };
 ol.ext.inherits(ol.interaction.DrawTouch, ol.interaction.CenterTouch);
 /**
@@ -13439,124 +13415,128 @@ ol.ext.inherits(ol.interaction.DrawTouch, ol.interaction.CenterTouch);
  * @api stable
  */
 ol.interaction.DrawTouch.prototype.setMap = function(map) {
-	if (this._listener.drawSketch) ol.Observable.unByKey(this._listener.drawSketch);
-	this._listener.drawSketch = null;
-	ol.interaction.CenterTouch.prototype.setMap.call (this, map);
-	this.overlay_.setMap(map);
-	if (this.getMap())
-	{	this._listener.drawSketch = this.getMap().on("postcompose", this.drawSketchLink_.bind(this));
-	}
+  if (this._listener.drawSketch) ol.Observable.unByKey(this._listener.drawSketch);
+  this._listener.drawSketch = null;
+  ol.interaction.CenterTouch.prototype.setMap.call (this, map);
+  this.overlay_.setMap(map);
+  if (this.getMap()){
+    this._listener.drawSketch = this.getMap().on("postcompose", this.drawSketchLink_.bind(this));
+  }
 };
 /** Start drawing and add the sketch feature to the target layer. 
-* The ol.interaction.Draw.EventType.DRAWSTART event is dispatched before inserting the feature.
-*/
-ol.interaction.DrawTouch.prototype.startDrawing = function()
-{	this.geom_ = [];
-	this.addPoint();
+ * The ol.interaction.Draw.EventType.DRAWSTART event is dispatched before inserting the feature.
+ */
+ol.interaction.DrawTouch.prototype.startDrawing = function() {
+  this.geom_ = [];
+  this.addPoint();
 };
 /** Get geometry type
 * @return {ol.geom.GeometryType}
 */
-ol.interaction.DrawTouch.prototype.getGeometryType = function()
-{	return this.typeGeom_;
+ol.interaction.DrawTouch.prototype.getGeometryType = function() {
+  return this.typeGeom_;
 };
 /** Start drawing and add the sketch feature to the target layer. 
 * The ol.interaction.Draw.EventType.DRAWEND event is dispatched before inserting the feature.
 */
-ol.interaction.DrawTouch.prototype.finishDrawing = function()
-{	if (!this.getMap()) return;
-	var f;
-	switch (this.typeGeom_)
-	{	case "LineString":
-			if (this.geom_.length > 1) f = new ol.Feature(new ol.geom.LineString(this.geom_));
-			break;
-		case "Polygon":
-			// Close polygon
-			if (this.geom_[this.geom_.length-1] != this.geom_[0]) 
-			{	this.geom_.push(this.geom_[0]);
-			}
-			// Valid ?
-			if (this.geom_.length > 3) 
-			{	f = new ol.Feature(new ol.geom.Polygon([ this.geom_ ]));
-			}
-			break;
-		default: break;
-	}
-	if (f) this.source_.addFeature (f);
-	// reset
-	this.geom_ = [];
-	this.drawSketch_();
+ol.interaction.DrawTouch.prototype.finishDrawing = function() {
+  if (!this.getMap()) return;
+  var f;
+  switch (this.typeGeom_) {
+    case "LineString":
+      if (this.geom_.length > 1) f = new ol.Feature(new ol.geom.LineString(this.geom_));
+      break;
+    case "Polygon":
+      // Close polygon
+      if (this.geom_[this.geom_.length-1] != this.geom_[0]) {
+        this.geom_.push(this.geom_[0]);
+      }
+      // Valid ?
+      if (this.geom_.length > 3) {
+        f = new ol.Feature(new ol.geom.Polygon([ this.geom_ ]));
+      }
+      break;
+    default: break;
+  }
+  if (f) this.source_.addFeature (f);
+  // reset
+  this.geom_ = [];
+  this.drawSketch_();
+  this.dispatchEvent({ 
+    type: 'drawend',
+    feature: f
+  });
 }
 /** Add a new Point to the drawing
 */
-ol.interaction.DrawTouch.prototype.addPoint = function()
-{	if (!this.getMap()) return;
-	this.geom_.push(this.getPosition());
-	switch (this.typeGeom_)
-	{	case "Point": 
-			var f = new ol.Feature( new ol.geom.Point (this.geom_.pop()));
-			this.source_.addFeature(f);
-			break;
-		case "LineString":
-		case "Polygon":
-			this.drawSketch_();
-			break;
-		default: break;
-	}
+ol.interaction.DrawTouch.prototype.addPoint = function() {
+  if (!this.getMap()) return;
+  this.geom_.push(this.getPosition());
+  switch (this.typeGeom_) {
+    case "Point": 
+      var f = new ol.Feature( new ol.geom.Point (this.geom_.pop()));
+      this.source_.addFeature(f);
+      break;
+    case "LineString":
+    case "Polygon":
+      this.drawSketch_();
+      break;
+    default: break;
+  }
 }
 /** Remove last point of the feature currently being drawn.
 */
-ol.interaction.DrawTouch.prototype.removeLastPoint = function()
-{	if (!this.getMap()) return;
-	this.geom_.pop();
-	this.drawSketch_();
+ol.interaction.DrawTouch.prototype.removeLastPoint = function() {
+  if (!this.getMap()) return;
+  this.geom_.pop();
+  this.drawSketch_();
 }
 /** Draw sketch
 * @private
 */
-ol.interaction.DrawTouch.prototype.drawSketch_ = function()
-{	if (!this.overlay_) return;
-	this.overlay_.getSource().clear();
-	if (this.geom_.length)
-	{	var f;
-		if (this.typeGeom_ == "Polygon") 
-		{	f = new ol.Feature(new ol.geom.Polygon([this.geom_]));
-			this.overlay_.getSource().addFeature(f);
-		}
-		var geom = new ol.geom.LineString(this.geom_);
-		f = new ol.Feature(geom);
-		this.overlay_.getSource().addFeature(f);
-		f = new ol.Feature( new ol.geom.Point (this.geom_.slice(-1).pop()) );
-		this.overlay_.getSource().addFeature(f);
-	}
-}
+ol.interaction.DrawTouch.prototype.drawSketch_ = function() {
+  if (!this.overlay_) return;
+  this.overlay_.getSource().clear();
+  if (this.geom_.length) {
+    var f;
+    if (this.typeGeom_ == "Polygon") {
+      f = new ol.Feature(new ol.geom.Polygon([this.geom_]));
+      this.overlay_.getSource().addFeature(f);
+    }
+    var geom = new ol.geom.LineString(this.geom_);
+    f = new ol.Feature(geom);
+    this.overlay_.getSource().addFeature(f);
+    f = new ol.Feature( new ol.geom.Point (this.geom_.slice(-1).pop()) );
+    this.overlay_.getSource().addFeature(f);
+  }
+};
 /** Draw contruction lines on postcompose
 * @private
 */
-ol.interaction.DrawTouch.prototype.drawSketchLink_ = function(e)
-{	if (!this.getActive() || !this.getPosition()) return;
-	var ctx = e.context;
-	ctx.save();
-		var p, pt = this.getMap().getPixelFromCoordinate(this.getPosition());
-		var ratio = e.frameState.pixelRatio || 1;
-		ctx.scale(ratio,ratio);
-		ctx.strokeStyle = "rgba(0, 153, 255, 1)";
-		ctx.lineWidth = 1;
-		ctx.beginPath();
-		ctx.arc (pt[0],pt[1], 5, 0, 2*Math.PI);
-		ctx.stroke();
-		if (this.geom_.length)
-		{	p = this.getMap().getPixelFromCoordinate(this.geom_[this.geom_.length-1]);
-			ctx.beginPath();
-			ctx.moveTo(p[0],p[1]);
-			ctx.lineTo(pt[0],pt[1]);
-			if (this.typeGeom_ == "Polygon")
-			{	p = this.getMap().getPixelFromCoordinate(this.geom_[0]);
-				ctx.lineTo(p[0],p[1]);
-			}
-			ctx.stroke();
-		}
-	ctx.restore();
+ol.interaction.DrawTouch.prototype.drawSketchLink_ = function(e) {
+  if (!this.getActive() || !this.getPosition()) return;
+  var ctx = ol.ext.getMapCanvas(this.getMap()).getContext('2d');
+  ctx.save();
+    var p, pt = this.getMap().getPixelFromCoordinate(this.getPosition());
+    var ratio = e.frameState.pixelRatio || 1;
+    ctx.scale(ratio,ratio);
+    ctx.strokeStyle = "rgba(0, 153, 255, 1)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc (pt[0],pt[1], 5, 0, 2*Math.PI);
+    ctx.stroke();
+    if (this.geom_.length) {
+      p = this.getMap().getPixelFromCoordinate(this.geom_[this.geom_.length-1]);
+      ctx.beginPath();
+      ctx.moveTo(p[0],p[1]);
+      ctx.lineTo(pt[0],pt[1]);
+      if (this.typeGeom_ == "Polygon") {
+        p = this.getMap().getPixelFromCoordinate(this.geom_[0]);
+        ctx.lineTo(p[0],p[1]);
+      }
+      ctx.stroke();
+    }
+  ctx.restore();
 }
 /**
  * Activate or deactivate the interaction.
@@ -13564,10 +13544,10 @@ ol.interaction.DrawTouch.prototype.drawSketchLink_ = function(e)
  * @observable
  * @api
  */
-ol.interaction.DrawTouch.prototype.setActive = function(b)
-{	ol.interaction.CenterTouch.prototype.setActive.call (this, b);
-	if (!b) this.geom_ = [];
-	this.drawSketch_();
+ol.interaction.DrawTouch.prototype.setActive = function(b) {
+  ol.interaction.CenterTouch.prototype.setActive.call (this, b);
+  if (!b) this.geom_ = [];
+  this.drawSketch_();
 }
 
 /** Extend DragAndDrop choose drop zone + fires loadstart, loadend
@@ -17214,14 +17194,19 @@ ol.interaction.Transform.prototype.getFeatureAtPixel_ = function(pixel) {
     { hitTolerance: this.get('hitTolerance') }
   ) || {};
 }
-ol.interaction.Transform.prototype.getGeometryRotateToZero_ = function(item, viewRotation, alwaysClone) {
-  var origGeom = item.getGeometry();
+/** Rotate feature from map view rotation
+ * @param {ol.Feature} f the feature
+ * @param {boolean} clone clone resulting geom
+ * @param {ol.geom.Geometry} rotated geometry
+ */
+ol.interaction.Transform.prototype.getGeometryRotateToZero_ = function(f, clone) {
+  var origGeom = f.getGeometry();
+  var viewRotation = this.getMap().getView().getRotation();
   if (viewRotation === 0 || !this.get('enableRotatedTransform')) {
-    return (alwaysClone) ? origGeom.clone() : origGeom;
+    return (clone) ? origGeom.clone() : origGeom;
   }
-  var origExt = origGeom.getExtent();
   var rotGeom = origGeom.clone();
-  rotGeom.rotate(viewRotation * -1, ol.extent.getCenter(origExt));
+  rotGeom.rotate(viewRotation * -1, this.getMap().getView().getCenter());
   return rotGeom;
 }
 /** Draw transform sketch
@@ -17232,11 +17217,11 @@ ol.interaction.Transform.prototype.drawSketch_ = function(center) {
   this.overlayLayer_.getSource().clear();
   if (!this.selection_.getLength()) return;
   var viewRotation = this.getMap().getView().getRotation();
-  var ext = this.getGeometryRotateToZero_(this.selection_.item(0), viewRotation).getExtent();
+  var ext = this.getGeometryRotateToZero_(this.selection_.item(0)).getExtent();
   // Clone and extend
   ext = ol.extent.buffer(ext, 0);
   this.selection_.forEach(function (f) {
-    var extendExt = this.getGeometryRotateToZero_(f, viewRotation).getExtent();
+    var extendExt = this.getGeometryRotateToZero_(f).getExtent();
     ol.extent.extend(ext, extendExt);
   }.bind(this));
   if (center===true) {
@@ -17244,7 +17229,7 @@ ol.interaction.Transform.prototype.drawSketch_ = function(center) {
       this.overlayLayer_.getSource().addFeature(new ol.Feature( { geometry: new ol.geom.Point(this.center_), handle:'rotate0' }) );
       geom = ol.geom.Polygon.fromExtent(ext);
       if (this.get('enableRotatedTransform') && viewRotation !== 0) {
-        geom.rotate(viewRotation, ol.extent.getCenter(ext));
+        geom.rotate(viewRotation, this.getMap().getView().getCenter())
       }
       f = this.bbox_ = new ol.Feature(geom);
       this.overlayLayer_.getSource().addFeature (f);
@@ -17260,7 +17245,7 @@ ol.interaction.Transform.prototype.drawSketch_ = function(center) {
     }
     geom = ol.geom.Polygon.fromExtent(ext);
     if (this.get('enableRotatedTransform') && viewRotation !== 0) {
-      geom.rotate(viewRotation, ol.extent.getCenter(ext));
+      geom.rotate(viewRotation, this.getMap().getView().getCenter())
     }
     f = this.bbox_ = new ol.Feature(geom);
     var features = [];
@@ -17367,7 +17352,7 @@ ol.interaction.Transform.prototype.handleDownEvent_ = function(evt) {
       this.geoms_.push(f.getGeometry().clone());
       extent = ol.extent.extend(extent, f.getGeometry().getExtent());
       if (this.get('enableRotatedTransform') && viewRotation !== 0) {
-        var rotGeom = this.getGeometryRotateToZero_(f, viewRotation, true);
+        var rotGeom = this.getGeometryRotateToZero_(f, true);
         this.rotatedGeoms_.push(rotGeom);
         rotExtent = ol.extent.extend(rotExtent, rotGeom.getExtent());
       }
@@ -17546,7 +17531,8 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
           return g2;
         });
         if (this.get('enableRotatedTransform') && viewRotation !== 0) {
-          geometry.rotate(viewRotation, rotationCenter);
+          //geometry.rotate(viewRotation, rotationCenter);
+          geometry.rotate(viewRotation, this.getMap().getView().getCenter());
         }
         f.setGeometry(geometry);
       }
