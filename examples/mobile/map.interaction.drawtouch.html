@@ -1,169 +1,172 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
- 
-	Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
------------------------------------------------------------->
-	<title>ol-ext: interaction touch draw</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!--
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: interaction touch draw</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="An interactioon for drawing feature geometry on a touch device." />
-	<meta name="keywords" content="ol3, interaction, touch, draw, vector" />
+  <meta name="description" content="An interactioon for drawing feature geometry on a touch device." />
+  <meta name="keywords" content="ol3, interaction, touch, draw, vector" />
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-	<!-- FontAwesome -->
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-    <link rel="stylesheet" href="../../dist/ol-ext.css" />
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
-	<style>
-		.ol-button i
-		{	color: inherit;
-		}
-	</style>
+  <style>
+    .ol-button i {
+      color: inherit;
+    }
+  </style>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: interaction touch draw</h1>
-	</a>
-	<div class="info">
-		<i>ol.interaction.TouchDraw</i> is an interaction to use on touch devices.
-		The pointer is deferred to the center of the viewport and a target is drawn to materialize this point. 
-		<br />
-		So drawing consists in moving the map under the target thus the sketch is not masked by the finger when moving.
-		<ul>
-		<li>
-			Tapping on the device will create a new point and a double tap finish the drawing. You can disable the behavior when setting the <i>tap</i> option to false.
-		</li>
-		</ul>
+  <a href="../../index.html">
+    <h1>ol-ext: interaction touch draw</h1>
+  </a>
+  <div class="info">
+    <i>ol.interaction.TouchDraw</i> is an interaction to use on touch devices.
+    The pointer is deferred to the center of the viewport and a target is drawn to materialize this point. 
+    <br />
+    So drawing consists in moving the map under the target thus the sketch is not masked by the finger when moving.
+    <ul>
+    <li>
+      Tapping on the device will create a new point and a double tap finish the drawing. You can disable the behavior when setting the <i>tap</i> option to false.
+    </li>
+    </ul>
 
-		It derives from an <i>ol.interaction.CenterTouch</i> that handle the centering:
-		<ul>
-		<li>
-			It modifies map browser event coordinate and pixel properties to force pointer on the center of the viewport to any interaction that them. 
-		</li>
-		<li>
-			The coordinate modification is deported on the top of the interaction queue and other can be used after then (a snap interaction is used in this example).
-		</li>
-		</ul>
-		The example uses an <a href="map.control.bar.html">ol.control.Bar</a> with <a href="map.control.toggle.html">ol.control.Toggle</a> to control the interaction.
-	</div>
+    It derives from an <i>ol.interaction.CenterTouch</i> that handle the centering:
+    <ul>
+    <li>
+      It modifies map browser event coordinate and pixel properties to force pointer on the center of the viewport to any interaction that them. 
+    </li>
+    <li>
+      The coordinate modification is deported on the top of the interaction queue and other can be used after then (a snap interaction is used in this example).
+    </li>
+    </ul>
+    The example uses an <a href="map.control.bar.html">ol.control.Bar</a> with <a href="map.control.toggle.html">ol.control.Toggle</a> to control the interaction.
+  </div>
 
-	<!-- Map div -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options" >
-		Options:
-		<ul>
-		<li>
-			<input id="tap" type="checkbox" checked="checked" onclick="setTap();" /><label for="tap"> tap: add a point on tap end finish drawing on double tap.</label> 
-		</li>
-		</ul>
-	</div>
+  <div class="options" >
+    Options:
+    <ul>
+    <li>
+      <input id="tap" type="checkbox" checked="checked" onclick="setTap();" /><label for="tap"> tap: add a point on tap and finish drawing on double tap.</label> 
+    </li>
+    </ul>
+  </div>
 
-	<script type="text/javascript">
+  <script type="text/javascript">
 
-		//  Vector layer
-		var vector = new ol.layer.Vector( { source: new ol.source.Vector() })
+    //  Vector layer
+    var vector = new ol.layer.Vector( { source: new ol.source.Vector() })
 
-		// The map
-		var map = new ol.Map
-			({	target: 'map',
-				view: new ol.View
-				({	zoom: 14,
-					center: [270701, 6247637]
-				}),
-				layers: 
-					[	new ol.layer.Tile({ source: new ol.source.OSM() }),
-						vector
-					]
-			});
+    // The map
+    var map = new ol.Map ({
+      target: 'map',
+      view: new ol.View ({
+        zoom: 14,
+        center: [270701, 6247637]
+      }),
+      layers: [
+        new ol.layer.Tile({ source: new ol.source.OSM() }),
+        vector
+      ]
+    });
 
-		// Control bar to handle interaction activation
-		var cbar = new ol.control.Bar({ toggleOne: true });
-		map.addControl (cbar);
+    // Control bar to handle interaction activation
+    var cbar = new ol.control.Bar({ toggleOne: true });
+    map.addControl (cbar);
 
-		var controls = {};
-		var interactions = {};
-		var t = [ "Point", "LineString", "Polygon" ];
-		var icon = [ "fa-map-marker", "fa-share-alt", "fa-bookmark-o fa-rotate-270" ];
+    var controls = {};
+    var interactions = [];
+    var t = [ "Point", "LineString", "Polygon" ];
+    var icon = [ "fa-map-marker", "fa-share-alt", "fa-bookmark-o fa-rotate-270" ];
 
-		// A control to the bar
-		function addControl(interaction)
-		{	var sbar = new ol.control.Bar();
-			switch (interaction.getGeometryType())
-			{	case "Point":
-					sbar.addControl ( new ol.control.Button(
-							{	html: '<i class="fa fa-check"></i>', 
-								title: "Add a point",
-								handleClick: function(e) { interaction.addPoint(); }
-							}));
-					break;
-				default:
-					sbar.addControl ( new ol.control.Button(
-							{	html:"+", 
-								title: "Add a point",
-								handleClick: function(e) { interaction.addPoint(); }
-							}));
-					sbar.addControl (new ol.control.Button(
-							{	html:"−", 
-								title: "Remove last point",
-								handleClick: function(e) { interaction.removeLastPoint(); }
-							}));
-					sbar.addControl (new ol.control.Button(
-							{	html:'<i class="fa fa-check"></i>', 
-								title: "Create...",
-								handleClick: function(e) { interaction.finishDrawing(); }
-							}));
-					break;
-			}
-			controls[i] = new ol.control.Toggle(
-				{	html: '<i class="fa '+icon[i]+'"></i>', 
-					interaction: interaction,
-					bar: sbar
-				});
-			cbar.addControl (controls[i]);
-		}
+    // A control to the bar
+    function addControl(interaction) {
+      var sbar = new ol.control.Bar();
+      switch (interaction.getGeometryType()) {
+        case "Point": {
+          sbar.addControl ( new ol.control.Button({
+            html: '<i class="fa fa-check"></i>', 
+            title: "Add a point",
+            handleClick: function(e) { interaction.addPoint(); }
+          }));
+          break;
+        }
+        default: {
+          sbar.addControl ( new ol.control.Button({
+            html:"+", 
+            title: "Add a point",
+            handleClick: function(e) { interaction.addPoint(); }
+          }));
+          sbar.addControl (new ol.control.Button({
+            html:"−", 
+            title: "Remove last point",
+            handleClick: function(e) { interaction.removeLastPoint(); }
+          }));
+          sbar.addControl (new ol.control.Button({
+            html:'<i class="fa fa-check"></i>', 
+            title: "Create...",
+            handleClick: function(e) { interaction.finishDrawing(); }
+          }));
+          break;
+        }
+      }
+      controls[i] = new ol.control.Toggle({
+        html: '<i class="fa '+icon[i]+'"></i>', 
+        interaction: interaction,
+        bar: sbar
+      });
+      cbar.addControl (controls[i]);
+    }
 
-		// Create interactions
-		for (var i=0; i<t.length; i++)
-		{	var type = t[i];
-			// The interaction
-			interactions[i] = new ol.interaction.DrawTouch(
-				{	source: vector.getSource(),
-					type: type
-				});
-			addControl (interactions[i]);
-		}
+    // Create interactions
+    for (var i=0; i<t.length; i++) {
+      var type = t[i];
+      // The interaction
+      interactions[i] = new ol.interaction.DrawTouch({
+        source: vector.getSource(),
+        type: type
+      });
+      addControl (interactions[i]);
+    }
 
-		// Add a snap interaction
-		map.addInteraction (new ol.interaction.Snap({ source: vector.getSource(), pixelTolerance:15 }));
+    // Add a snap interaction
+    map.addInteraction (new ol.interaction.Snap({ source: vector.getSource(), pixelTolerance:15 }));
 
-		function setTap()
-		{	for (var i in interactions)
-			{	interactions[i].set("tap", $("#tap").prop("checked"));
-			}
-		}
-		setTap();
+    function setTap() {
+      for (var i in interactions) {
+        interactions[i].set("tap", $("#tap").prop("checked"));
+      }
+    }
+    setTap();
 
+interactions.forEach(element => {
+  element.on('drawstart',()=>{console.log('start')})
+});
 
-	</script>
+  </script>
 
 </body>
 </html>
