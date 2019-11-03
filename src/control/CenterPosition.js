@@ -12,7 +12,7 @@ import ol_control_CanvasBase from './CanvasBase'
 import ol_ext_element from '../util/element'
 
 /**
- * A title Control integrated in the canvas (for jpeg/png export purposes).
+ * A Control to display map center coordinates on the canvas.
  *
  * @constructor
  * @extends {ol_control_CanvasBase}
