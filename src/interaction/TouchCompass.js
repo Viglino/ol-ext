@@ -137,8 +137,7 @@ ol_interaction_TouchCompass.prototype.getCenter_ = function()
 ol_interaction_TouchCompass.prototype.drawCompass_ = function(e)
 {	if (!this.getActive()) return;
 
-	var canvas = ol_ext_getMapCanvas(this.getMap());
-	var ctx = canvas.getContext('2d');
+	var ctx = e.context || ol_ext_getMapCanvas(this.getMap()).getContext('2d');
 	var ratio = e.frameState.pixelRatio;
 
 	ctx.save();
