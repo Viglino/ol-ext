@@ -287,14 +287,19 @@ ol_interaction_Transform.prototype.getFeatureAtPixel_ = function(pixel) {
   ) || {};
 }
 
-ol_interaction_Transform.prototype.getGeometryRotateToZero_ = function(item, viewRotation, alwaysClone) {
-  var origGeom = item.getGeometry();
+/** Rotate feature from map view rotation
+ * @param {ol.Feature} f the feature
+ * @param {boolean} clone clone resulting geom
+ * @param {ol.geom.Geometry} rotated geometry
+ */
+ol_interaction_Transform.prototype.getGeometryRotateToZero_ = function(f, clone) {
+  var origGeom = f.getGeometry();
+  var viewRotation = this.getMap().getView().getRotation();
   if (viewRotation === 0 || !this.get('enableRotatedTransform')) {
-    return (alwaysClone) ? origGeom.clone() : origGeom;
+    return (clone) ? origGeom.clone() : origGeom;
   }
-  var origExt = origGeom.getExtent();
   var rotGeom = origGeom.clone();
-  rotGeom.rotate(viewRotation * -1, ol_extent_getCenter(origExt));
+  rotGeom.rotate(viewRotation * -1, this.getMap().getView().getCenter());
   return rotGeom;
 }
 
@@ -306,11 +311,11 @@ ol_interaction_Transform.prototype.drawSketch_ = function(center) {
   this.overlayLayer_.getSource().clear();
   if (!this.selection_.getLength()) return;
   var viewRotation = this.getMap().getView().getRotation();
-  var ext = this.getGeometryRotateToZero_(this.selection_.item(0), viewRotation).getExtent();
+  var ext = this.getGeometryRotateToZero_(this.selection_.item(0)).getExtent();
   // Clone and extend
   ext = ol_extent_buffer(ext, 0);
   this.selection_.forEach(function (f) {
-    var extendExt = this.getGeometryRotateToZero_(f, viewRotation).getExtent();
+    var extendExt = this.getGeometryRotateToZero_(f).getExtent();
     ol_extent_extend(ext, extendExt);
   }.bind(this));
 
@@ -319,7 +324,7 @@ ol_interaction_Transform.prototype.drawSketch_ = function(center) {
       this.overlayLayer_.getSource().addFeature(new ol_Feature( { geometry: new ol_geom_Point(this.center_), handle:'rotate0' }) );
       geom = ol_geom_Polygon_fromExtent(ext);
       if (this.get('enableRotatedTransform') && viewRotation !== 0) {
-        geom.rotate(viewRotation, ol_extent_getCenter(ext));
+        geom.rotate(viewRotation, this.getMap().getView().getCenter())
       }
       f = this.bbox_ = new ol_Feature(geom);
       this.overlayLayer_.getSource().addFeature (f);
@@ -335,7 +340,8 @@ ol_interaction_Transform.prototype.drawSketch_ = function(center) {
     }
     geom = ol_geom_Polygon_fromExtent(ext);
     if (this.get('enableRotatedTransform') && viewRotation !== 0) {
-      geom.rotate(viewRotation, ol_extent_getCenter(ext));
+      geom.rotate(viewRotation, this.getMap().getView().getCenter())
+
     }
     f = this.bbox_ = new ol_Feature(geom);
     var features = [];
@@ -446,7 +452,7 @@ ol_interaction_Transform.prototype.handleDownEvent_ = function(evt) {
       this.geoms_.push(f.getGeometry().clone());
       extent = ol_extent_extend(extent, f.getGeometry().getExtent());
       if (this.get('enableRotatedTransform') && viewRotation !== 0) {
-        var rotGeom = this.getGeometryRotateToZero_(f, viewRotation, true);
+        var rotGeom = this.getGeometryRotateToZero_(f, true);
         this.rotatedGeoms_.push(rotGeom);
         rotExtent = ol_extent_extend(rotExtent, rotGeom.getExtent());
       }
@@ -642,7 +648,8 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
           return g2;
         });
         if (this.get('enableRotatedTransform') && viewRotation !== 0) {
-          geometry.rotate(viewRotation, rotationCenter);
+          //geometry.rotate(viewRotation, rotationCenter);
+          geometry.rotate(viewRotation, this.getMap().getView().getCenter());
         }
         f.setGeometry(geometry);
       }
