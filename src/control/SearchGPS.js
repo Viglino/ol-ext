@@ -118,7 +118,7 @@ ol_control_SearchGPS.prototype._createForm = function () {
       latm.value = parseInt(c[0][1]);
       lats.value = parseInt(c[0][2]);
     }
-    this._input.dispatchEvent(new Event('search'));
+    this.search();
   }.bind(this);
 
   function createInput(className, unit) {
@@ -187,7 +187,7 @@ ol_control_SearchGPS.prototype._createForm = function () {
     var coord = this.geolocation.getPosition();
     lon.value = coord[0];
     lat.value = coord[1];
-    lon.dispatchEvent(new Event('keyup'));
+    this._triggerCustomEvent('keyup', lon);
   }.bind(this));
 };
 

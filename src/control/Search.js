@@ -268,9 +268,9 @@ ol_control_Search.prototype.reverseGeocode = function (/*coord, cback*/) {
  */
 ol_control_Search.prototype._triggerCustomEvent = function (eventName, element) {
   var event;
-  if (window.CustomEvent) {
+  try {
     event = new CustomEvent(eventName);
-  } else {
+  } catch(e) {
     event = document.createEvent("CustomEvent");
     event.initCustomEvent(eventName, true, true, {});
   }
