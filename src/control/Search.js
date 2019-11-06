@@ -267,14 +267,7 @@ ol_control_Search.prototype.reverseGeocode = function (/*coord, cback*/) {
  * @private
  */
 ol_control_Search.prototype._triggerCustomEvent = function (eventName, element) {
-  var event;
-  try {
-    event = new CustomEvent(eventName);
-  } catch(e) {
-    event = document.createEvent("CustomEvent");
-    event.initCustomEvent(eventName, true, true, {});
-  }
-  element.dispatchEvent(event);
+  ol_ext_element.dispatchEvent(eventName, element);
 };
 
 /** Set the input value in the form (for initialisation purpose)

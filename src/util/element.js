@@ -323,4 +323,20 @@ ol_ext_element.scrollDiv = function(elt, options) {
   }
 };
 
+/** Dispatch an event to an Element 
+ * @param {string} eventName
+ * @param {Element} element
+*/
+ol_ext_element.dispatchEvent = function (eventName, element) {
+  var event;
+  try {
+    event = new CustomEvent(eventName);
+  } catch(e) {
+    // Try customevent on IE
+    event = document.createEvent("CustomEvent");
+    event.initCustomEvent(eventName, true, true, {});
+  }
+  element.dispatchEvent(event);
+};
+
 export default ol_ext_element
