@@ -470,6 +470,21 @@ ol.ext.element.scrollDiv = function(elt, options) {
     );
   }
 };
+/** Dispatch an event to an Element 
+ * @param {string} eventName
+ * @param {Element} element
+*/
+ol.ext.element.dispatchEvent = function (eventName, element) {
+  var event;
+  try {
+    event = new CustomEvent(eventName);
+  } catch(e) {
+    // Try customevent on IE
+    event = document.createEvent("CustomEvent");
+    event.initCustomEvent(eventName, true, true, {});
+  }
+  element.dispatchEvent(event);
+};
 
 /** Get a canvas overlay for a map (non rotated, on top of the map)
  * @param {ol.Map} map
@@ -1093,14 +1108,7 @@ ol.control.Search.prototype.reverseGeocode = function (/*coord, cback*/) {
  * @private
  */
 ol.control.Search.prototype._triggerCustomEvent = function (eventName, element) {
-  var event;
-  if (window.CustomEvent) {
-    event = new CustomEvent(eventName);
-  } else {
-    event = document.createEvent("CustomEvent");
-    event.initCustomEvent(eventName, true, true, {});
-  }
-  element.dispatchEvent(event);
+  ol.ext.element.dispatchEvent(eventName, element);
 };
 /** Set the input value in the form (for initialisation purpose)
 *	@param {string} value
@@ -7975,7 +7983,7 @@ ol.control.SearchGPS.prototype._createForm = function () {
       latm.value = parseInt(c[0][1]);
       lats.value = parseInt(c[0][2]);
     }
-    this._input.dispatchEvent(new Event('search'));
+    this.search();
   }.bind(this);
   function createInput(className, unit) {
     var input = ol.ext.element.create('INPUT', {
@@ -8038,7 +8046,7 @@ ol.control.SearchGPS.prototype._createForm = function () {
     var coord = this.geolocation.getPosition();
     lon.value = coord[0];
     lat.value = coord[1];
-    lon.dispatchEvent(new Event('keyup'));
+    this._triggerCustomEvent('keyup', lon);
   }.bind(this));
 };
 /** Autocomplete function
