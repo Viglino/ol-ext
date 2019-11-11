@@ -13360,6 +13360,8 @@ ol.interaction.DrawRegular.prototype.end_ = function(evt) {
 */
 /** Interaction DrawTouch :
  * @constructor
+ * @fires drawstart
+ * @fires drawend
  * @extends {ol.interaction.CenterTouch}
  * @param {olx.interaction.DrawOptions} options
  *  @param {ol.source.Vector | undefined} options.source Destination source for the drawn features.
@@ -13434,59 +13436,68 @@ ol.interaction.DrawTouch.prototype.setMap = function(map) {
     this._listener.drawSketch = this.getMap().on("postcompose", this.drawSketchLink_.bind(this));
   }
 };
-/** Start drawing and add the sketch feature to the target layer. 
- * The ol.interaction.Draw.EventType.DRAWSTART event is dispatched before inserting the feature.
- */
-ol.interaction.DrawTouch.prototype.startDrawing = function() {
-  this.geom_ = [];
-  this.addPoint();
-};
 /** Get geometry type
-* @return {ol.geom.GeometryType}
-*/
+ * @return {ol.geom.GeometryType}
+ */
 ol.interaction.DrawTouch.prototype.getGeometryType = function() {
   return this.typeGeom_;
 };
 /** Start drawing and add the sketch feature to the target layer. 
-* The ol.interaction.Draw.EventType.DRAWEND event is dispatched before inserting the feature.
-*/
+ * The ol.interaction.Draw.EventType.DRAWEND event is dispatched before inserting the feature.
+ */
 ol.interaction.DrawTouch.prototype.finishDrawing = function() {
   if (!this.getMap()) return;
-  var f;
-  switch (this.typeGeom_) {
-    case "LineString":
-      if (this.geom_.length > 1) f = new ol.Feature(new ol.geom.LineString(this.geom_));
-      break;
-    case "Polygon":
-      // Close polygon
-      if (this.geom_[this.geom_.length-1] != this.geom_[0]) {
-        this.geom_.push(this.geom_[0]);
+  var valid = true;
+  if (this._feature) {
+    switch (this.typeGeom_) {
+      case "LineString": {
+        if (this.geom_.length > 1) {
+          this._feature.setGeometry(new ol.geom.LineString(this.geom_));
+        } else {
+          valid = false;
+        }
+        break;
       }
-      // Valid ?
-      if (this.geom_.length > 3) {
-        f = new ol.Feature(new ol.geom.Polygon([ this.geom_ ]));
+      case "Polygon": {
+        // Close polygon
+        if (this.geom_[this.geom_.length-1] != this.geom_[0]) {
+          this.geom_.push(this.geom_[0]);
+        }
+        // Valid ?
+        if (this.geom_.length > 3) {
+          this._feature.setGeometry(new ol.geom.Polygon([ this.geom_ ]));
+        } else {
+          valid = false;
+        }
+        break;
       }
-      break;
-    default: break;
-  }
-  if (f) this.source_.addFeature (f);
+      default: break;
+    }
+    if (this._feature) this.source_.addFeature (this._feature);
+    this.dispatchEvent({ 
+      type: 'drawend',
+      feature: this._feature,
+      valid: valid
+    });
+  }  
   // reset
   this.geom_ = [];
   this.drawSketch_();
-  this.dispatchEvent({ 
-    type: 'drawend',
-    feature: f
-  });
-}
+  this._feature = null;
+};
 /** Add a new Point to the drawing
-*/
+ */
 ol.interaction.DrawTouch.prototype.addPoint = function() {
   if (!this.getMap()) return;
   this.geom_.push(this.getPosition());
+  var start = false;
+  if (!this._feature) {
+    this._feature = new ol.Feature();
+    start = true;
+  }
   switch (this.typeGeom_) {
     case "Point": 
-      var f = new ol.Feature( new ol.geom.Point (this.geom_.pop()));
-      this.source_.addFeature(f);
+      this._feature.setGeometry(new ol.geom.Point(this.geom_.pop()));
       break;
     case "LineString":
     case "Polygon":
@@ -13494,36 +13505,54 @@ ol.interaction.DrawTouch.prototype.addPoint = function() {
       break;
     default: break;
   }
-}
+  // Dispatch events
+  if (start) {
+    this.dispatchEvent({ 
+      type: 'drawstart',
+      feature: this._feature
+    });
+  }
+  if (this.typeGeom_ ==='Point') {
+      this.finishDrawing();
+  }
+};
 /** Remove last point of the feature currently being drawn.
-*/
+ */
 ol.interaction.DrawTouch.prototype.removeLastPoint = function() {
   if (!this.getMap()) return;
   this.geom_.pop();
   this.drawSketch_();
-}
+};
 /** Draw sketch
-* @private
-*/
+ * @private
+ */
 ol.interaction.DrawTouch.prototype.drawSketch_ = function() {
   if (!this.overlay_) return;
   this.overlay_.getSource().clear();
   if (this.geom_.length) {
-    var f;
-    if (this.typeGeom_ == "Polygon") {
-      f = new ol.Feature(new ol.geom.Polygon([this.geom_]));
-      this.overlay_.getSource().addFeature(f);
-    }
     var geom = new ol.geom.LineString(this.geom_);
-    f = new ol.Feature(geom);
-    this.overlay_.getSource().addFeature(f);
-    f = new ol.Feature( new ol.geom.Point (this.geom_.slice(-1).pop()) );
+    if (this.typeGeom_ == "Polygon") {
+      if (!this._feature.getGeometry()) {
+        this._feature.setGeometry(new ol.geom.Polygon([this.geom_]));
+      } else {
+        this._feature.getGeometry().setCoordinates([this.geom_]);
+      }
+      this.overlay_.getSource().addFeature(new ol.Feature(geom));
+    } else {
+      if (!this._feature.getGeometry()) {
+        this._feature.setGeometry(new ol.geom.LineString(this.geom_));
+      } else {
+        this._feature.getGeometry().setCoordinates(this.geom_);
+      }
+    }
+    this.overlay_.getSource().addFeature(this._feature);
+    var f = new ol.Feature( new ol.geom.Point (this.geom_.slice(-1).pop()) );
     this.overlay_.getSource().addFeature(f);
   }
 };
 /** Draw contruction lines on postcompose
-* @private
-*/
+ * @private
+ */
 ol.interaction.DrawTouch.prototype.drawSketchLink_ = function(e) {
   if (!this.getActive() || !this.getPosition()) return;
   var ctx = e.context || ol.ext.getMapCanvas(this.getMap()).getContext('2d');
@@ -13548,7 +13577,7 @@ ol.interaction.DrawTouch.prototype.drawSketchLink_ = function(e) {
       ctx.stroke();
     }
   ctx.restore();
-}
+};
 /**
  * Activate or deactivate the interaction.
  * @param {boolean} active Active.
@@ -13559,7 +13588,7 @@ ol.interaction.DrawTouch.prototype.setActive = function(b) {
   ol.interaction.CenterTouch.prototype.setActive.call (this, b);
   if (!b) this.geom_ = [];
   this.drawSketch_();
-}
+};
 
 /** Extend DragAndDrop choose drop zone + fires loadstart, loadend
  * @constructor
