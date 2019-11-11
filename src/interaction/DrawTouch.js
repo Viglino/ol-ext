@@ -2,7 +2,6 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-
 import ol_ext_inherits from '../util/ext'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_interaction_CenterTouch from './CenterTouch'
@@ -20,6 +19,8 @@ import ol_ext_getMapCanvas from '../util/getMapCanvas'
 
 /** Interaction DrawTouch :
  * @constructor
+ * @fires drawstart
+ * @fires drawend
  * @extends {ol_interaction_CenterTouch}
  * @param {olx.interaction.DrawOptions} options
  *  @param {ol_source_Vector | undefined} options.source Destination source for the drawn features.
@@ -104,67 +105,75 @@ ol_interaction_DrawTouch.prototype.setMap = function(map) {
   }
 };
 
-/** Start drawing and add the sketch feature to the target layer. 
- * The ol.interaction.Draw.EventType.DRAWSTART event is dispatched before inserting the feature.
- */
-ol_interaction_DrawTouch.prototype.startDrawing = function() {
-  this.geom_ = [];
-  this.addPoint();
-};
-
 /** Get geometry type
-* @return {ol.geom.GeometryType}
-*/
+ * @return {ol.geom.GeometryType}
+ */
 ol_interaction_DrawTouch.prototype.getGeometryType = function() {
   return this.typeGeom_;
 };
 
 /** Start drawing and add the sketch feature to the target layer. 
-* The ol.interaction.Draw.EventType.DRAWEND event is dispatched before inserting the feature.
-*/
+ * The ol.interaction.Draw.EventType.DRAWEND event is dispatched before inserting the feature.
+ */
 ol_interaction_DrawTouch.prototype.finishDrawing = function() {
   if (!this.getMap()) return;
 
-  var f;
-  switch (this.typeGeom_) {
-    case "LineString":
-      if (this.geom_.length > 1) f = new ol_Feature(new ol_geom_LineString(this.geom_));
-      break;
-    case "Polygon":
-      // Close polygon
-      if (this.geom_[this.geom_.length-1] != this.geom_[0]) {
-        this.geom_.push(this.geom_[0]);
+  var valid = true;
+  if (this._feature) {
+    switch (this.typeGeom_) {
+      case "LineString": {
+        if (this.geom_.length > 1) {
+          this._feature.setGeometry(new ol_geom_LineString(this.geom_));
+        } else {
+          valid = false;
+        }
+        break;
       }
-      // Valid ?
-      if (this.geom_.length > 3) {
-        f = new ol_Feature(new ol_geom_Polygon([ this.geom_ ]));
+      case "Polygon": {
+        // Close polygon
+        if (this.geom_[this.geom_.length-1] != this.geom_[0]) {
+          this.geom_.push(this.geom_[0]);
+        }
+        // Valid ?
+        if (this.geom_.length > 3) {
+          this._feature.setGeometry(new ol_geom_Polygon([ this.geom_ ]));
+        } else {
+          valid = false;
+        }
+        break;
       }
-      break;
-    default: break;
-  }
-  if (f) this.source_.addFeature (f);
+      default: break;
+    }
+    if (this._feature) this.source_.addFeature (this._feature);
+    this.dispatchEvent({ 
+      type: 'drawend',
+      feature: this._feature,
+      valid: valid
+    });
+  }  
 
   // reset
   this.geom_ = [];
   this.drawSketch_();
-
-  this.dispatchEvent({ 
-    type: 'drawend',
-    feature: f
-  });
-}
+  this._feature = null;
+};
 
 /** Add a new Point to the drawing
-*/
+ */
 ol_interaction_DrawTouch.prototype.addPoint = function() {
   if (!this.getMap()) return;
 
   this.geom_.push(this.getPosition());
 
+  var start = false;
+  if (!this._feature) {
+    this._feature = new ol_Feature();
+    start = true;
+  }
+
   switch (this.typeGeom_) {
     case "Point": 
-      var f = new ol_Feature( new ol_geom_Point (this.geom_.pop()));
-      this.source_.addFeature(f);
+      this._feature.setGeometry(new ol_geom_Point(this.geom_.pop()));
       break;
     case "LineString":
     case "Polygon":
@@ -172,39 +181,57 @@ ol_interaction_DrawTouch.prototype.addPoint = function() {
       break;
     default: break;
   }
-}
+  // Dispatch events
+  if (start) {
+    this.dispatchEvent({ 
+      type: 'drawstart',
+      feature: this._feature
+    });
+  }
+  if (this.typeGeom_ ==='Point') {
+      this.finishDrawing();
+  }
+};
 
 /** Remove last point of the feature currently being drawn.
-*/
+ */
 ol_interaction_DrawTouch.prototype.removeLastPoint = function() {
   if (!this.getMap()) return;
   this.geom_.pop();
   this.drawSketch_();
-}
+};
 
 /** Draw sketch
-* @private
-*/
+ * @private
+ */
 ol_interaction_DrawTouch.prototype.drawSketch_ = function() {
   if (!this.overlay_) return;
   this.overlay_.getSource().clear();
   if (this.geom_.length) {
-    var f;
-    if (this.typeGeom_ == "Polygon") {
-      f = new ol_Feature(new ol_geom_Polygon([this.geom_]));
-      this.overlay_.getSource().addFeature(f);
-    }
     var geom = new ol_geom_LineString(this.geom_);
-    f = new ol_Feature(geom);
-    this.overlay_.getSource().addFeature(f);
-    f = new ol_Feature( new ol_geom_Point (this.geom_.slice(-1).pop()) );
+    if (this.typeGeom_ == "Polygon") {
+      if (!this._feature.getGeometry()) {
+        this._feature.setGeometry(new ol_geom_Polygon([this.geom_]));
+      } else {
+        this._feature.getGeometry().setCoordinates([this.geom_]);
+      }
+      this.overlay_.getSource().addFeature(new ol_Feature(geom));
+    } else {
+      if (!this._feature.getGeometry()) {
+        this._feature.setGeometry(new ol_geom_LineString(this.geom_));
+      } else {
+        this._feature.getGeometry().setCoordinates(this.geom_);
+      }
+    }
+    this.overlay_.getSource().addFeature(this._feature);
+    var f = new ol_Feature( new ol_geom_Point (this.geom_.slice(-1).pop()) );
     this.overlay_.getSource().addFeature(f);
   }
 };
 
 /** Draw contruction lines on postcompose
-* @private
-*/
+ * @private
+ */
 ol_interaction_DrawTouch.prototype.drawSketchLink_ = function(e) {
   if (!this.getActive() || !this.getPosition()) return;
 
@@ -230,7 +257,7 @@ ol_interaction_DrawTouch.prototype.drawSketchLink_ = function(e) {
       ctx.stroke();
     }
   ctx.restore();
-}
+};
 
 /**
  * Activate or deactivate the interaction.
@@ -243,6 +270,6 @@ ol_interaction_DrawTouch.prototype.setActive = function(b) {
 
   if (!b) this.geom_ = [];
   this.drawSketch_();
-}
+};
 
 export default ol_interaction_DrawTouch
