@@ -6747,7 +6747,7 @@ ol.control.Print.prototype.print = function(options) {
             }
             ctx.save();
             // opacity
-            ctx.globalAlpha = c.style.opacity || 1;
+            ctx.globalAlpha = parseFloat(c.parentNode.style.opacity) || 1;
             // transform
             var tr = ol.ext.element.getStyle(c,'transform') || ol.ext.element.getStyle(c,'-webkit-transform');
             if (/^matrix/.test(tr)) {
