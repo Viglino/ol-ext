@@ -13789,99 +13789,97 @@ ol.interaction.FillAttribute.prototype.fill = function(features, properties) {
 /**
  * @constructor
  * @extends {ol.interaction.Pointer}
- *	@param {ol.flashlight.options} flashlight options param
- *		- color {ol.Color} light color, default transparent
- *		- fill {ol.Color} fill color, default rgba(0,0,0,0.8)
- *		- radius {number} radius of the flash
+ * @param {ol.flashlight.options} flashlight options param
+ *	@param {ol.Color} options.color light color, default transparent
+ *  @param {ol.Color} options.fill fill color, default rgba(0,0,0,0.8)
+ *  @param {number} options.radius radius of the flash
  */
 ol.interaction.Flashlight = function(options) {
-	ol.interaction.Pointer.call(this,
-	{	handleDownEvent: this.setPosition,
-		handleMoveEvent: this.setPosition
-	});
-	// Default options
-	options = options||{};
-	this.pos = false;
-	this.radius = (options.radius||100);
-	this.setColor(options);
+  ol.interaction.Pointer.call(this, {
+    handleDownEvent: this.setPosition,
+    handleMoveEvent: this.setPosition
+  });
+  // Default options
+  options = options||{};
+  this.pos = false;
+  this.radius = (options.radius||100);
+  this.setColor(options);
 };
 ol.ext.inherits(ol.interaction.Flashlight, ol.interaction.Pointer);
 /** Set the map > start postcompose
 */
 ol.interaction.Flashlight.prototype.setMap = function(map) {
-	if (this.getMap()) {
-		this.getMap().render();
-	}
-	if (this._listener) ol.Observable.unByKey(this._listener);
-	this._listener = null;
-	ol.interaction.Pointer.prototype.setMap.call(this, map);
-	if (map) {
-		this._listener = map.on('postcompose', this.postcompose_.bind(this));
-	}
+  if (this.getMap()) {
+    this.getMap().render();
+  }
+  if (this._listener) ol.Observable.unByKey(this._listener);
+  this._listener = null;
+  ol.interaction.Pointer.prototype.setMap.call(this, map);
+  if (map) {
+    this._listener = map.on('postcompose', this.postcompose_.bind(this));
+  }
 }
 /** Set flashlight radius
  *	@param {integer} radius
- */
-ol.interaction.Flashlight.prototype.setRadius = function(radius)
-{	this.radius = radius
-	if (this.getMap()) this.getMap().renderSync();
+*/
+ol.interaction.Flashlight.prototype.setRadius = function(radius) {
+  this.radius = radius
+  if (this.getMap()) this.getMap().renderSync();
 }
 /** Set flashlight color
  *	@param {ol.flashlight.options} flashlight options param
- *		- color {ol.Color} light color, default transparent
- *		- fill {ol.Color} fill color, default rgba(0,0,0,0.8)
- */
-ol.interaction.Flashlight.prototype.setColor = function(options)
-{	// Backcolor
-	var color = (options.fill ? options.fill : [0,0,0,0.8]);
-	var c = ol.color.asArray(color);
-	this.startColor = ol.color.asString(c);
-	// Halo color
-	if (options.color) {
-		c = this.endColor = ol.color.asString(ol.color.asArray(options.color)||options.color);
-	}
-	else 
-	{	c[3] = 0
-		this.endColor = ol.color.asString(c);
-	}
-	c[3] = 0.1;
-	this.midColor = ol.color.asString(c);
-	if (this.getMap()) this.getMap().renderSync();
+*		- color {ol.Color} light color, default transparent
+*		- fill {ol.Color} fill color, default rgba(0,0,0,0.8)
+*/
+ol.interaction.Flashlight.prototype.setColor = function(options) {
+  // Backcolor
+  var color = (options.fill ? options.fill : [0,0,0,0.8]);
+  var c = ol.color.asArray(color);
+  this.startColor = ol.color.asString(c);
+  // Halo color
+  if (options.color) {
+    c = this.endColor = ol.color.asString(ol.color.asArray(options.color)||options.color);
+  } else  {
+    c[3] = 0
+    this.endColor = ol.color.asString(c);
+  }
+  c[3] = 0.1;
+  this.midColor = ol.color.asString(c);
+  if (this.getMap()) this.getMap().renderSync();
 }
 /** Set position of the flashlight
 *	@param {ol.Pixel|ol.MapBrowserEvent}
 */
-ol.interaction.Flashlight.prototype.setPosition = function(e)
-{	if (e.pixel) this.pos = e.pixel;
-	else this.pos = e;
-	if (this.getMap()) 
-	{	this.getMap().renderSync();
-	}
+ol.interaction.Flashlight.prototype.setPosition = function(e) {
+  if (e.pixel) this.pos = e.pixel;
+  else this.pos = e;
+  if (this.getMap()) {
+    this.getMap().renderSync();
+  }
 }
 /** Postcompose function
 */
-ol.interaction.Flashlight.prototype.postcompose_ = function(e)
-{	var ctx = e.context;
-	var ratio = e.frameState.pixelRatio;
-	var w = ctx.canvas.width;
-	var h = ctx.canvas.height;
-	ctx.save();
-	ctx.scale(ratio,ratio);
-	if (!this.pos) 
-	{	ctx.fillStyle = this.startColor;
-		ctx.fillRect( 0,0,w,h );
-	}
-	else
-	{	var d = Math.max(w, h);
-		// reveal wherever we drag
-		var radGrd = ctx.createRadialGradient( this.pos[0], this.pos[1], w*this.radius/d, this.pos[0], this.pos[1], h*this.radius/d );
-		radGrd.addColorStop(   0, this.startColor );
-		radGrd.addColorStop( 0.8, this.midColor );
-		radGrd.addColorStop(   1, this.endColor );
-		ctx.fillStyle = radGrd;
-		ctx.fillRect( this.pos[0] - d, this.pos[1] - d, 2*d, 2*d );
-	}
-	ctx.restore();
+ol.interaction.Flashlight.prototype.postcompose_ = function(e) {
+  var ctx = ol.ext.getMapCanvas(this.getMap()).getContext('2d');
+  var ratio = e.frameState.pixelRatio;
+  var w = ctx.canvas.width;
+  var h = ctx.canvas.height;
+  ctx.save();
+  ctx.scale(ratio,ratio);
+  if (!this.pos) {
+    ctx.fillStyle = this.startColor;
+    ctx.fillRect( 0,0,w,h );
+  } else {
+    var d = Math.max(w, h);
+    // reveal wherever we drag
+    var radGrd = ctx.createRadialGradient( this.pos[0], this.pos[1], w*this.radius/d, this.pos[0], this.pos[1], h*this.radius/d );
+    radGrd.addColorStop(   0, this.startColor );
+    radGrd.addColorStop( 0.8, this.midColor );
+    radGrd.addColorStop(   1, this.endColor );
+    ctx.fillStyle = radGrd;
+    ctx.fillRect( this.pos[0] - d, this.pos[1] - d, 2*d, 2*d );
+  }
+  ctx.restore();
 };
 
 /** An interaction to focus on the map on click. Usefull when using keyboard event on the map.
@@ -14236,26 +14234,33 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function() {
  * @extends {ol.interaction.Interaction}
  * @fires hover, enter, leave
  * @param {olx.interaction.HoverOptions} 
- *	@param { string | undefined } options.cursor css cursor propertie or a function that gets a feature, default: none
- *	@param {function | undefined} optionsfeatureFilter filter a function with two arguments, the feature and the layer of the feature. Return true to select the feature 
- *	@param {function | undefined} options.layerFilter filter a function with one argument, the layer to test. Return true to test the layer
- *	@param {number | undefined} options.hitTolerance Hit-detection tolerance in pixels.
- *	@param { function | undefined } options.handleEvent Method called by the map to notify the interaction that a browser event was dispatched to the map. The function may return false to prevent the propagation of the event to other interactions in the map's interactions chain.
-*/
-ol.interaction.Hover = function(options)
-{	if (!options) options={};
-	var self = this;
-	ol.interaction.Interaction.call(this,
-	{	handleEvent: function(e)
-		{	if (e.type=="pointermove") { self.handleMove_(e); } 
-			if (options.handleEvent) return options.handleEvent(e);
-			return true; 
-		}
-	});
-	this.setFeatureFilter (options.featureFilter);
-	this.setLayerFilter (options.layerFilter);
-	this.set('hitTolerance', options.hitTolerance)
-	this.setCursor (options.cursor);
+ *  @param { string | undefined } options.cursor css cursor propertie or a function that gets a feature, default: none
+ *  @param {function | undefined} optionsfeatureFilter filter a function with two arguments, the feature and the layer of the feature. Return true to select the feature 
+ *  @param {function | undefined} options.layerFilter filter a function with one argument, the layer to test. Return true to test the layer
+ *  @param {Array<ol.layer> | undefined} options.layers a set of layers to test
+ *  @param {number | undefined} options.hitTolerance Hit-detection tolerance in pixels.
+ *  @param { function | undefined } options.handleEvent Method called by the map to notify the interaction that a browser event was dispatched to the map. The function may return false to prevent the propagation of the event to other interactions in the map's interactions chain.
+ */
+ol.interaction.Hover = function(options) {
+  if (!options) options={};
+  var self = this;
+  ol.interaction.Interaction.call(this, {
+    handleEvent: function(e) {
+      if (e.type=="pointermove") { self.handleMove_(e); } 
+      if (options.handleEvent) return options.handleEvent(e);
+      return true; 
+    }
+  });
+  if (options.layers && options.layers.length) {
+    this.setFeatureFilter(function(f, l) {
+      return (options.layers.indexOf(l) >= 0);
+    })
+  } else {
+    this.setFeatureFilter (options.featureFilter);
+  }
+  this.setLayerFilter (options.layerFilter);
+  this.set('hitTolerance', options.hitTolerance)
+  this.setCursor (options.cursor);
 };
 ol.ext.inherits(ol.interaction.Hover, ol.interaction.Interaction);
 /**
@@ -14264,85 +14269,111 @@ ol.ext.inherits(ol.interaction.Hover, ol.interaction.Interaction);
  * @param {ol.Map} map Map.
  * @api stable
  */
-ol.interaction.Hover.prototype.setMap = function(map)
-{	if (this.previousCursor_!==undefined && this.getMap())
-	{	this.getMap().getTargetElement().style.cursor = this.previousCursor_;
-		this.previousCursor_ = undefined;
-	}
-	ol.interaction.Interaction.prototype.setMap.call (this, map);
+ol.interaction.Hover.prototype.setMap = function(map) {
+  if (this.previousCursor_!==undefined && this.getMap()) {
+    this.getMap().getTargetElement().style.cursor = this.previousCursor_;
+    this.previousCursor_ = undefined;
+  }
+  ol.interaction.Interaction.prototype.setMap.call (this, map);
 };
 /**
  * Set cursor on hover
  * @param { string } cursor css cursor propertie or a function that gets a feature, default: none
  * @api stable
  */
-ol.interaction.Hover.prototype.setCursor = function(cursor)
-{	if (!cursor && this.previousCursor_!==undefined && this.getMap())
-	{	this.getMap().getTargetElement().style.cursor = this.previousCursor_;
-		this.previousCursor_ = undefined;
-	}
-	this.cursor_ = cursor;
+ol.interaction.Hover.prototype.setCursor = function(cursor) {
+  if (!cursor && this.previousCursor_!==undefined && this.getMap()) {
+    this.getMap().getTargetElement().style.cursor = this.previousCursor_;
+    this.previousCursor_ = undefined;
+  }
+  this.cursor_ = cursor;
 };
 /** Feature filter to get only one feature
 * @param {function} filter a function with two arguments, the feature and the layer of the feature. Return true to select the feature 
 */
-ol.interaction.Hover.prototype.setFeatureFilter = function(filter)
-{	if (typeof (filter) == 'function') this.featureFilter_ = filter;
-	else this.featureFilter_ = function(){ return true; };
+ol.interaction.Hover.prototype.setFeatureFilter = function(filter) {
+  if (typeof (filter) == 'function') this.featureFilter_ = filter;
+  else this.featureFilter_ = function(){ return true; };
 };
 /** Feature filter to get only one feature
 * @param {function} filter a function with one argument, the layer to test. Return true to test the layer
 */
-ol.interaction.Hover.prototype.setLayerFilter = function(filter)
-{	if (typeof (filter) == 'function') this.layerFilter_ = filter;
-	else this.layerFilter_ = function(){ return true; };
+ol.interaction.Hover.prototype.setLayerFilter = function(filter) {
+  if (typeof (filter) == 'function') this.layerFilter_ = filter;
+  else this.layerFilter_ = function(){ return true; };
 };
 /** Get features whenmove
 * @param {ol.event} e "move" event
 */
-ol.interaction.Hover.prototype.handleMove_ = function(e)
-{	var map = this.getMap();
-	if (map)
-	{	//var b = map.hasFeatureAtPixel(e.pixel);
-		var feature, layer;
-		var self = this;
-		var b = map.forEachFeatureAtPixel(e.pixel, 
-					function(f, l)
-					{	if (self.layerFilter_.call(null, l) 
-						&& self.featureFilter_.call(null,f,l))
-						{	feature = f;
-							layer = l;
-							return true;
-						}
-						else 
-						{	feature = layer = null;
-							return false;
-						}
-					},{ hitTolerance: this.get('hitTolerance') });
-		if (b) this.dispatchEvent({ type:"hover", feature:feature, layer:layer, coordinate:e.coordinate, pixel: e.pixel, map: e.map, dragging:e.dragging });
-		if (this.feature_===feature && this.layer_===layer)
-		{	/* ok */
-		}
-		else
-		{	this.feature_ = feature;
-			this.layer_ = layer;
-			if (feature) this.dispatchEvent({ type:"enter", feature:feature, layer:layer, coordinate:e.coordinate, pixel: e.pixel, map: e.map, dragging:e.dragging });
-			else this.dispatchEvent({ type:"leave", coordinate:e.coordinate, pixel: e.pixel, map: e.map, dragging:e.dragging });
-		}
-		if (this.cursor_) 
-		{	var style = map.getTargetElement().style;
-			if (b) 
-			{	if (style.cursor != this.cursor_) 
-				{	this.previousCursor_ = style.cursor;
-					style.cursor = this.cursor_;
-				}
-			} 
-			else if (this.previousCursor_ !== undefined) 
-			{	style.cursor = this.previousCursor_;
-				this.previousCursor_ = undefined;
-			}
-		}
-	}
+ol.interaction.Hover.prototype.handleMove_ = function(e) {
+  var map = this.getMap();
+  if (map) {
+    //var b = map.hasFeatureAtPixel(e.pixel);
+    var feature, layer;
+    var self = this;
+    var b = map.forEachFeatureAtPixel(
+      e.pixel, 
+      function(f, l) {
+        if (self.layerFilter_.call(null, l) 
+        && self.featureFilter_.call(null,f,l)) {
+          feature = f;
+          layer = l;
+          return true;
+        } else {
+          feature = layer = null;
+          return false;
+        }
+      },{ 
+        hitTolerance: this.get('hitTolerance') 
+      }
+    );
+    if (b) this.dispatchEvent({ 
+      type: 'hover', 
+      feature: feature, 
+      layer: layer, 
+      coordinate: e.coordinate, 
+      pixel: e.pixel, 
+      map: e.map, 
+      dragging: e.dragging 
+    });
+    if (this.feature_===feature && this.layer_===layer){
+      /* ok */
+    } else {
+      this.feature_ = feature;
+      this.layer_ = layer;
+      if (feature) {
+        this.dispatchEvent({ 
+          type: 'enter', 
+          feature: feature, 
+          layer: layer, 
+          coordinate: e.coordinate, 
+          pixel: e.pixel, 
+          map: e.map, 
+          dragging: e.dragging 
+        });
+      } else {
+        this.dispatchEvent({ 
+          type: 'leave', 
+          coordinate: e.coordinate, 
+          pixel: e.pixel, 
+          map: e.map, 
+          dragging: e.dragging 
+        });
+      }
+    }
+    if (this.cursor_) {
+      var style = map.getTargetElement().style;
+      if (b) {
+        if (style.cursor != this.cursor_) {
+          this.previousCursor_ = style.cursor;
+          style.cursor = this.cursor_;
+        }
+      } else if (this.previousCursor_ !== undefined) {
+        style.cursor = this.previousCursor_;
+        this.previousCursor_ = undefined;
+      }
+    }
+  }
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
