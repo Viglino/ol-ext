@@ -100,7 +100,7 @@ ol_control_Print.prototype.print = function(options) {
             }
             ctx.save();
             // opacity
-            ctx.globalAlpha = c.style.opacity || 1;
+            ctx.globalAlpha = parseFloat(c.parentNode.style.opacity) || 1;
             // transform
             var tr = ol_ext_element.getStyle(c,'transform') || ol_ext_element.getStyle(c,'-webkit-transform');
             if (/^matrix/.test(tr)) {
