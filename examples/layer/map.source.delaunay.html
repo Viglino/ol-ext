@@ -91,13 +91,13 @@
   }
 
 	// Base layers
-	var stamen = new ol.layer.Tile(
-		{	title: "Watercolor",
-			baseLayer: true,
-			source: new ol.source.Stamen({
-				layer: 'watercolor'
-			})
-		});
+	var stamen = new ol.layer.Tile({
+    title: "Watercolor",
+    baseLayer: true,
+    source: new ol.source.Stamen({
+      layer: 'watercolor'
+    })
+  });
 
 	// The map
 	var map = new ol.Map ({
@@ -147,6 +147,7 @@
     e.feature.set('id', nb++);
   });
   var vector = new ol.layer.Vector({
+    name: 'vector',
 		source: nodes,
 		style: function(f) {
 			style.getText().setText(String(f.get('id')||'0'));
@@ -159,10 +160,11 @@
 	  source: nodes
   });
   var triangle = new ol.layer.Vector({
+    name: 'triangle',
     source: delaunay
   });
 
-// In the map
+  // In the map
   map.addLayer(triangle);
   map.addLayer(vector);
 
@@ -216,31 +218,31 @@
 */
 
   // Select
-  var select = new ol.interaction.Select();
-  select.setActive(false);
-  map.addInteraction(select);
-
+  var circle = new ol.layer.Vector({
+    name: 'circle',
+    source: new ol.source.Vector(),
+    style: redStyle
+  });
+  map.addLayer(circle);
 
   // Show circumcircle on hover
 	var hover = new ol.interaction.Hover({
-    layers: [vector],
-    hitTolerance: 5
+    layers: [triangle]
   });
   hover.on('enter', function(e){
-    select.getFeatures().clear();
+    circle.getSource().clear();
     if (e.layer===triangle) {
       var c = e.feature.getGeometry().getCoordinates()[0];
       c = delaunay.getCircumCircle(c);
       if (c.radius) {
         c = new ol.geom.Circle(c.center, c.radius);
         var f = new ol.Feature(c);
-        f.setStyle(redStyle);
-        select.getFeatures().push(f);
+        circle.getSource().addFeature(f);
       }
     }
   });
   hover.on('leave', function(e){
-    select.getFeatures().clear();
+    circle.getSource().clear();
   });
 	bar.addControl(new ol.control.Toggle({
     className: 'ol-text-button',

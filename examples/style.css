@@ -256,3 +256,7 @@ i.icss-book:after {
   transform: rotate(-5deg);
   margin: -1em 0;
 }
+
+.ol-attribution ul {
+  font-size: .8em;
+}
