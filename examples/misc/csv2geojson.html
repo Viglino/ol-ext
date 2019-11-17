@@ -142,34 +142,27 @@
   <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
   <a class="title" href="../../index.html">
-    <h1><i class="fa fa-file-excel-o"></i> GeoJSON2CSV</h1>
+    <h1><i class="fa fa-globe"></i> CSV2GeoJSON</h1>
   </a>
 
   <div class="info">
-    Convert GeoJSON file into CSV (Comma Separated Values).
-    <br/>
-    If the file only contains points features a lon and lat column is added. 
-    Otherwise a type column is added with a coord column that contains all the coordinates filed as JSON array.
+    Convert CSV (Comma Separated Values) file into GeoJSON.
   </div>
   
   <div class="globe">
-    <i class="fa fa-globe"></i><i class="fa fa-arrow-circle-right"></i><i class="fa fa-file-excel-o"></i>
+    <i class="fa fa-file-excel-o"></i><i class="fa fa-arrow-circle-right"></i><i class="fa fa-globe"></i>
   </div>
 
   <div id="dropfile">
-    Drag & drop GeoJSON file to convert.
+    Drag & drop CSV file to convert.
   </div>
 
   <div class="info">
-    <p>Options:</p>
-    <ul style="list-style:none;">
-      <li>
-        Encoding: <input id="encode" value="UTF-8" style="width:5em; padding: .1em .5em;" />
-      </li>
-    </ul>
-  
-    <p style="margin-bottom:0;">Result:</p>
+
     <div id="pbar"><div></div></div>
+    <label class='lon'>longitude: <select></select></label>
+    <br/>
+    <label class='lat'>latitude: <select></select></label>
     <button onclick="download()"><i class="fa fa-download"></i> Download</button>
     <div class="loading"></div>
 
@@ -180,10 +173,37 @@
 
   <script>
     var name, result;
-    function download() {
-      var blob = new Blob([result], {type: "text/plain;charset=utf-8"});
-      saveAs(blob, name+".csv");
+    function getGeoJSON() {
+      var json = {
+        type: 'FeatureCollection',
+        features: []
+      };
+      var lon = $('label.lon select').val();
+      var lat = $('label.lat select').val();
+      result.data.forEach(function (d) {
+        var f = {
+          type: 'Feature',
+          geometry: {
+            coordinates: [ parseFloat(d[lon]), parseFloat(d[lat])],
+            type: 'Point'
+          },
+          properties: d
+        }
+        json.features.push(f);
+      });
+      var res = JSON.stringify(json, null, ' ');
+      if (res.length>5000) {
+        $('textarea').html(res.substr(0,5000)+'\n...');
+      } else {
+        $('textarea').html(res);
+      }
+      return res;
     }
+    function download() {
+      var res = getGeoJSON();
+      var blob = new Blob([res], {type: "text/plain;charset=utf-8"});
+      saveAs(blob, name+".geojson");
+    };
 
     $(document).on('dragover dragleave', function (e) {
       e.preventDefault();
@@ -191,6 +211,21 @@
       if (e.type=='dragover') $("#dropfile").addClass('hover');
       else $("#dropfile").removeClass('hover');
       return false;
+    });
+
+    $('label.lon select').on('change', function() {
+      if ($('label.lon select').val() && $('label.lat select').val()) {
+        $('button').show();
+        getGeoJSON();
+      }
+      else $('button').hide();
+    });
+    $('label.lat select').on('change', function() {
+      if ($('label.lon select').val() && $('label.lat select').val()) {
+        $('button').show();
+        getGeoJSON();
+      }
+      else $('button').hide();
     });
 
     $(document).on('drop', function (e) {
@@ -203,65 +238,25 @@
           $(".loading").html(" loading...");
           // Main function to upload
           var file = e.originalEvent.dataTransfer.files[0];
-          name = file.name;
-          var reader = new FileReader();
-          reader.onload = function(event) { 
-            console.log(reader)
-            var features;
-            try {
-              features = JSON.parse(reader.result).features;
-            } catch (e) {
-              $('.loading').html('<span class="warn">No valid file...</span>');
-              return;
+          name = file.name.split('.').slice(0, -1).join('.');
+          Papa.parse(file, {
+            header: true,
+            complete: function(results) {
+              result = results;
+              $('label.lon select').html('');
+              $('label.lat select').html('');
+              results.meta.fields.forEach(function(att, i) {
+                $('<option>').val(att).text(att).prop('selected',/^long?$|longitude/.test(att)).appendTo($('label.lon select'));
+                $('<option>').val(att).text(att).prop('selected',/^lat$|latitude/.test(att)).appendTo($('label.lat select'));
+              });
+              $(".loading").html("");
+              $('label.lon select').change();
             }
-            var csv = [];
-            var header = {};
-            var n = 0;
-            var isPt = true;
-            features.forEach(function(f) {
-              for (var p in f.properties) {
-                if (header[p]===undefined) {
-                  header[p] = n++;
-                }
-              }
-              if (f.geometry.type!=='Point') isPt = false;
-            });
-            features.forEach(function(f) {
-              var row = [];
-              for (var p in header) {
-                row[header[p]] = f.properties[p];
-              }
-              if (isPt) {
-                row.push(f.geometry.coordinates[0]);
-                row.push(f.geometry.coordinates[1]);
-              } else {
-                row.push(f.geometry.type);
-                row.push(JSON.stringify(f.geometry.coordinates));
-              }
-              csv.push(row);
-            });
-            var cols = []
-            for (var p in header) {
-              cols.push(p);
-            }
-            if (isPt) {
-              cols.push('lon');
-              cols.push('lat');
-            } else {
-              cols.push('type');
-              cols.push('coord');
-            }
-            csv.unshift(cols);
-            result = Papa.unparse(csv);
-            $("#result").val(result.substr(0,50000)+(result.length>50000? '\n...':''));
-            $(".loading").html(" "+features.length+" feature(s) loaded.");
-            $("#pbar > div").width(0);
-            $("button").show();
-          };
-          reader.readAsText(file, $('#encode').val());
+          });
         }
-      }
-      else $(this).css('border', '3px dashed #BBBBBB');
+      } else {
+        $(this).css('border', '3px dashed #BBBBBB');
+      } 
       return false;
     });
 
