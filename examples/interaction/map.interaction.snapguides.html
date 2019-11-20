@@ -1,94 +1,91 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
- 
-	Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
------------------------------------------------------------->
-	<title>ol-ext: Snap guides interaction</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!--
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Snap guides interaction</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="an OL3 interaction to draw regular polygon" />
-	<meta name="keywords" content="ol3, interaction, draw, regular, rectangle, circle, triangle" />
+  <meta name="description" content="an Openlayers interaction to draw regular polygon" />
+  <meta name="keywords" content="openlayers, interaction, draw, regular, polygon, snap, guide, square" />
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-	<!-- FontAwesome -->
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-    <link rel="stylesheet" href="../../dist/ol-ext.css" />
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Snap guides interaction</h1>
-	</a>
-	<div class="info">
-		<b>ol.interaction.SnapGuide</b> handles snapping of vector features using guides lines while modifying or drawing them. 
-		<br/>
-		The snap interaction modifies map browser event coordinate and pixel properties to force the snap to occur 
-		to any interaction that them.
-		<ul>
-			<li>
-				You can add guidelines to snap to.
-			</li>
-			<li>
-				You can set an <i>ol.interaction.Draw</i> to control orthogonal drawing (similar to <a href="https://github.com/geops/ole">OLE snapping</a> with OL2).
-			</li>
-			<li>
-				You can also set an <i>ol.interaction.Modify</i> to control orthogonal drawing while modifying.
-			</li>
-		</ul>
-	</div>
+  <a href="../../index.html">
+    <h1>ol-ext: Snap guides interaction</h1>
+  </a>
+  <div class="info">
+    <b>ol.interaction.SnapGuide</b> handles snapping of vector features using guides lines while modifying or drawing them. 
+    <br/>
+    The snap interaction modifies map browser event coordinate and pixel properties to force the snap to occur 
+    to any interaction that them.
+    <ul>
+      <li>
+        You can add guidelines to snap to.
+      </li><li>
+        You can set an <i>ol.interaction.Draw</i> (setDrawInteraction)to control orthogonal drawing (similar to <a href="https://github.com/geops/ole">OLE snapping</a> with OL2).
+      </li><li>
+        You can also set an <i>ol.interaction.Modify</i> (setModifyInteraction) to control orthogonal drawing while modifying.
+      </li><li>
+        <b>With ol6</b> use <i>ol/layer/VectorImage</i> class as <i>vectorClass</i> options to enhance drawing performances.
+      </li>
+    </ul>
+  </div>
 
-	<!-- Map div -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options" >
-		<h2>Options:</h2>
-		<ul><li>
+  <div class="options" >
+    <h2>Options:</h2>
+    <ul><li>
       <label><input type="checkbox" onchange="setInitial(this.checked)" /> use initial guides</label>
-		</li></ul>
-		<button onclick="addMeridian(0)">Add a Greenwich origin guideline</button>
-	</div>
-	
+    </li></ul>
+    <button onclick="addMeridian(0)">Add a Greenwich origin guideline</button>
+  </div>
 
-	<script type="text/javascript">
-		// Layers
-		var layers = [ new ol.layer.Tile({ source: new ol.source.OSM() }) ];
+  <script type="text/javascript">
+    // Layers
+    var layers = [ new ol.layer.Tile({ source: new ol.source.OSM() }) ];
 
-		// The map
-		var map = new ol.Map ({
+    // The map
+    var map = new ol.Map ({
       target: 'map',
       view: new ol.View ({
         zoom: 17,
-        center: [269766, 6248649]
+        center: [0, 6713891]
       }),
       controls: ol.control.defaults({ "attribution": false }),
       layers: layers
     });
 
-		// New vector layer
-		var vector = new ol.layer.Vector({
+    // New vector layer
+    var vector = new ol.layer.Vector({
       name: 'Vecteur',
-			source: new ol.source.Vector({ features: new ol.Collection() }),
-		})
-		map.addLayer(vector);
+      source: new ol.source.Vector({ features: new ol.Collection() }),
+    })
+    map.addLayer(vector);
 
-		var drawi = new ol.interaction.Draw({
+    var drawi = new ol.interaction.Draw({
       source: vector.getSource(),
       //type: "LineString"
       type: "Polygon"
@@ -98,23 +95,25 @@
     var modi = new ol.interaction.Modify({ source: vector.getSource() });
     map.addInteraction(modi);
 
-		var snapi = new ol.interaction.SnapGuides();
-		snapi.setDrawInteraction(drawi);
-		snapi.setModifyInteraction(modi);
-		map.addInteraction(snapi);
+    var snapi = new ol.interaction.SnapGuides({ 
+      vectorClass: ol.layer.VectorImage 
+    });
+    snapi.setDrawInteraction(drawi);
+    snapi.setModifyInteraction(modi);
+    map.addInteraction(snapi);
 
-		// New guide on meridian (default Greenwich)
-		function addMeridian (x) {
+    // New guide on meridian (default Greenwich)
+    function addMeridian (x) {
       var p1 = ol.proj.transform([x||0,1], 'EPSG:4326', map.getView().getProjection());
       var p2 = ol.proj.transform([x||0,-1], 'EPSG:4326', map.getView().getProjection());
-			snapi.addGuide([ p1, p2 ]);
-		};
-		// Switch initial condition
-		function setInitial (b) {
+      snapi.addGuide([ p1, p2 ]);
+    };
+    // Switch initial condition
+    function setInitial (b) {
       snapi.enableInitialGuides_ = b;
-		};
+    };
 
-	</script>
+  </script>
 
 </body>
 </html>
