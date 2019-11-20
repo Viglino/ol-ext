@@ -92,15 +92,30 @@
     var map = new ol.Map({
         target: 'map',
         view: new ol.View ({
-          zoom: 14,
-          center: [270148, 6247782]
+          zoom: 5,
+          center: [266812, 5960201]
         }),
         controls: ol.control.defaults({ "attribution": false }),
         layers: [
-          new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }),
-          new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'toner-labels' }) })
+          new ol.layer.Tile({ title:'Waterolor', source: new ol.source.Stamen({ layer: 'watercolor' }) }),
+          new ol.layer.Tile({ title:'Labels', source: new ol.source.Stamen({ layer: 'toner-labels' }) })
         ]
       });
+
+    map.addControl(new ol.control.LayerSwitcher());
+
+    // GeoJSON vector layer
+    var vector = new ol.layer.Vector({
+      name: '1914-18',
+      source: new ol.source.Vector({
+        url: '../data/fond_guerre.geojson',
+        projection: 'EPSG:3857',
+        format: new ol.format.GeoJSON(),
+        attributions: [ '&copy; <a href="https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire">data.culture.gouv.fr</a>' ]
+      })
+    });
+
+    map.addLayer(vector);
 
     // Print control
     var printControl = new ol.control.Print();
