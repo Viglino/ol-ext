@@ -18,6 +18,8 @@ import ol_ext_element from '../util/element'
  * @classdesc OpenLayers 3 Layer Switcher Control.
  * @fires drawlist
  * @fires toggle
+ * @fires reorder-start
+ * @fires reorder-end
  * 
  * @constructor
  * @extends {ol_control_Control}
@@ -409,6 +411,8 @@ ol_control_LayerSwitcher.prototype.dragOrdering_ = function(e) {
           }
         }
       }
+
+      self.dispatchEvent({ type: "reorder-end", layer: drop, group: group });
     }
     
     elt.parentNode.querySelectorAll('li').forEach(function(li){
@@ -452,6 +456,7 @@ ol_control_LayerSwitcher.prototype.dragOrdering_ = function(e) {
         parent: panel 
       });
       self.element.classList.add('drag');
+      self.dispatchEvent({ type: "reorder-start", layer: layer, group: group });
     }
     // Start a new drag sequence
     if (!start) {
