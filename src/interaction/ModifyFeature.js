@@ -652,7 +652,8 @@ ol_interaction_ModifyFeature.prototype.handleUpEvent = function(e) {
     originalEvent: e.originalEvent,
     features: this._modifiedFeatures
   });
-
+  
+  this.arcs = [];
   return true;
 };
 
