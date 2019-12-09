@@ -26,6 +26,7 @@ import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
  *	@param {number | undefined} options.hitTolerance Tolerance to select feature in pixel, default 0
  *	@param {bool} options.translateFeature Translate when click on feature
  *	@param {bool} options.translate Can translate the feature
+ *  @param {bool} options.translateBBox Enable translate when the user drags inside the bounding box
  *	@param {bool} options.stretch can stretch the feature
  *	@param {bool} options.scale can scale the feature
  *	@param {bool} options.rotate can rotate the feature
@@ -79,6 +80,8 @@ var ol_interaction_Transform = function(options) {
   this.set('translateFeature', (options.translateFeature!==false));
   /* Can translate the feature */
   this.set('translate', (options.translate!==false));
+  /* Translate when click on the bounding box */
+  this.set('translateBBox', (options.translateBBox===true));
   /* Can stretch the feature */
   this.set('stretch', (options.stretch!==false));
   /* Can scale the feature */
@@ -250,7 +253,13 @@ ol_interaction_Transform.prototype.getFeatureAtPixel_ = function(pixel) {
       var found = false;
       // Overlay ?
       if (!layer) {
-        if (feature===self.bbox_) return false;
+        if (feature===self.bbox_) {
+          if (self.get('translateBBox')) {
+            return { feature: feature, handle: 'translate', constraint:'', option: '' };
+          } else {
+            return false;
+          }
+        }
         self.handles_.forEach (function(f) { if (f===feature) found=true; });
         if (found) return { feature: feature, handle:feature.get('handle'), constraint:feature.get('constraint'), option:feature.get('option') };
       }
