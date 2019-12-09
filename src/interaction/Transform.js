@@ -401,6 +401,23 @@ ol_interaction_Transform.prototype.select = function(feature, add) {
   this.dispatchEvent({ type:'select', feature: feature, features: this.selection_ });
 };
 
+/** Update the selection collection.
+* @param {ol.Collection<ol.Feature>} features the features to transform
+*/
+ol_interaction_Transform.prototype.setSelection = function(features) {
+  this.selection_.clear();
+  features.forEach((feature) => {
+    this.selection_.push(feature);
+  });
+
+  this.ispt_ = (this.selection_.getLength()===1 ? (this.selection_.item(0).getGeometry().getType() == "Point") : false);
+  this.iscircle_ = (this.selection_.getLength()===1 ? (this.selection_.item(0).getGeometry().getType() == "Circle") : false);
+  this.drawSketch_();
+  this.watchFeatures_();
+  // select event
+  this.dispatchEvent({ type:'select', features: this.selection_ });
+};
+
 /** Watch selected features
  * @private
  */
