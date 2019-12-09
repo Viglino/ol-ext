@@ -415,7 +415,9 @@ ol_interaction_Transform.prototype.watchFeatures_ = function() {
   this.selection_.forEach(function(f) {
     this._featureListeners.push(
       f.on('change', function() {
-        this.drawSketch_();
+        if (!this.isUpdating_) {
+          this.drawSketch_();
+        }
       }.bind(this))
     );
   }.bind(this));
@@ -544,6 +546,7 @@ ol_interaction_Transform.prototype.setCenter = function(c) {
 ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
   if (!this._handleEvent(evt, this.features_)) return;
   var i, f, geometry;
+  this.isUpdating_ = true;
   switch (this.mode_) {
     case 'rotate': {
       var a = Math.atan2(this.center_[1]-evt.coordinate[1], this.center_[0]-evt.coordinate[0]);
@@ -666,6 +669,7 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
     }
     default: break;
   }
+  this.isUpdating_ = false;
 };
 
 /**
