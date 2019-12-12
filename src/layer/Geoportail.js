@@ -37,11 +37,15 @@ var ol_layer_Geoportail = function(layer, options, tileoptions) {
 
 	if (!tileoptions.gppKey) tileoptions.gppKey = options.gppKey || options.key;
 	options.source = new ol_source_Geoportail(layer, tileoptions);
-	if (!options.name) options.name = capabilities.title;
+	if (!options.title) options.title = capabilities.title;
+	if (!options.name) options.name = layer;
+	options.layer = layer;
+	if (!options.queryable) options.queryable = capabilities.queryable;
 	if (!options.desc) options.desc = capabilities.desc;
 	if (!options.extent && capabilities.bbox) {
-    if (capabilities.bbox[0]>-170 && capabilities.bbox[2]<170)
-    options.extent = ol_proj_transformExtent(capabilities.bbox, 'EPSG:4326', 'EPSG:3857');
+    if (capabilities.bbox[0]>-170 && capabilities.bbox[2]<170) {
+      options.extent = ol_proj_transformExtent(capabilities.bbox, 'EPSG:4326', 'EPSG:3857');
+    }
 	}
 
 	// calculate layer max resolution
@@ -52,8 +56,6 @@ var ol_layer_Geoportail = function(layer, options, tileoptions) {
   }
 
   ol_layer_Tile.call (this, options);
-  this.set('layer', layer);
-  this.set('queryable', capabilities.queryable);
 
   // BUG GPP: Attributions constraints are not set properly :(
 /** /
