@@ -621,7 +621,7 @@ ol_control_Timeline.prototype.roundDate = function(d, stick) {
       d = d.setDate(1);
       return new Date(d);
     }
-    default: return d;
+    default: return new Date(d);
   }
 };
 
@@ -632,6 +632,7 @@ ol_control_Timeline.prototype.roundDate = function(d, stick) {
  */
 ol_control_Timeline.prototype.getDate = function(position, stick) {
   var pos;
+  if (!stick) stick = position;
   switch (position) {
     case 'start': {
       if (this.get('interval')) {
