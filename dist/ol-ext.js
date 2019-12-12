@@ -10444,7 +10444,7 @@ ol.control.Timeline.prototype.roundDate = function(d, stick) {
       d = d.setDate(1);
       return new Date(d);
     }
-    default: return d;
+    default: return new Date(d);
   }
 };
 /** Get the date of the center
@@ -10454,6 +10454,7 @@ ol.control.Timeline.prototype.roundDate = function(d, stick) {
  */
 ol.control.Timeline.prototype.getDate = function(position, stick) {
   var pos;
+  if (!stick) stick = position;
   switch (position) {
     case 'start': {
       if (this.get('interval')) {
