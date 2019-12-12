@@ -23,7 +23,7 @@ var ol_layer_Vector3D = function (options) {
   options = options || {};
 
   this._source = options.source;
-  this.height_ = options.height = this.getHfn (options.height);
+  this.height_ = this.getHfn (options.height);
 
   var canvas = document.createElement('canvas');
   ol_layer_Image.call (this, { 
@@ -34,7 +34,6 @@ var ol_layer_Vector3D = function (options) {
         return canvas;
       }
     }), 
-    height: options.height,
     center: options.center || [.5,1],
     defaultHeight: options.defaultHeight || 0,
     maxResolution: options.maxResolution || Infinity 
@@ -47,7 +46,16 @@ var ol_layer_Vector3D = function (options) {
 ol_ext_inherits(ol_layer_Vector3D, ol_layer_Image);
 
 /**
- * Set style associated with the renderer
+ * Set the height function for the layer
+ * @param {function|string|Number} height a height function (returns height giving a feature) or a popertie name or a fixed value
+ */
+ol_layer_Vector3D.prototype.setHeight = function(height) {
+  this.height_ = this.getHfn (height);
+  this.changed();
+};
+
+/**
+ * Set style associated with the layer
  * @param {ol.style.Style} s
  */
 ol_layer_Vector3D.prototype.setStyle = function(s) {
@@ -81,7 +89,7 @@ ol_layer_Vector3D.prototype.setStyle = function(s) {
 };
 
 /**
- * Get style associated with the renderer
+ * Get style associated with the layer
  * @return {ol.style.Style}
  */
 ol_layer_Vector3D.prototype.getStyle = function() {
@@ -89,7 +97,8 @@ ol_layer_Vector3D.prototype.getStyle = function() {
 };
 
 /** Calculate 3D at potcompose
-*/
+ * @private
+ */
 ol_layer_Vector3D.prototype.onPostcompose_ = function(e) {
   var res = e.frameState.viewState.resolution;
   if (res > this.get('maxResolution')) return;
@@ -134,16 +143,17 @@ ol_layer_Vector3D.prototype.onPostcompose_ = function(e) {
     ctx.fillStyle = ol_color_asString(s.getFill().getColor());
     var builds = [];
     for (var i=0; i<f.length; i++) {
-      builds.push (this.getFeature3D_ (f[i], this.getFeatureHeight(f[i])));
+      builds.push (this.getFeature3D_ (f[i], this._getFeatureHeight(f[i])));
     }
     this.drawFeature3D_ (ctx, builds);
   ctx.restore();
 };
 
 /** Create a function that return height of a feature
-*	@param {function|string|number} h a height function or a popertie name or a fixed value
-*	@return {function} function(f) return height of the feature f
-*/
+ * @param {function|string|number} h a height function or a popertie name or a fixed value
+ * @return {function} function(f) return height of the feature f
+ * @private
+ */
 ol_layer_Vector3D.prototype.getHfn= function(h) {
   switch (typeof(h)) {
     case 'function': return h;
@@ -156,13 +166,13 @@ ol_layer_Vector3D.prototype.getHfn= function(h) {
     case 'number': return (function(/*f*/) { return h; });
     default: return (function(/*f*/) { return 10; });
   }
-}
+};
 
 /** Animate rendering
- * @param {olx.render3D.animateOptions}
- *  @param {string|function|number} param.height an attribute name or a function returning height of a feature or a fixed value
- *  @param {number} param.duration the duration of the animatioin ms, default 1000
- *  @param {ol.easing} param.easing an ol easing function
+ * @param {*} options
+ *  @param {string|function|number} options.height an attribute name or a function returning height of a feature or a fixed value
+ *  @param {number} options.duration the duration of the animatioin ms, default 1000
+ *  @param {ol.easing} options.easing an ol easing function
  *	@api
  */
 ol_layer_Vector3D.prototype.animate = function(options) {
@@ -173,7 +183,7 @@ ol_layer_Vector3D.prototype.animate = function(options) {
   this.easing_ = options.easing || ol_easing_easeOut;
   // Force redraw
   this.changed();
-}
+};
 
 /** Check if animation is on
 *	@return {bool}
@@ -185,9 +195,12 @@ ol_layer_Vector3D.prototype.animating = function() {
   return !!this.animate_;
 }
 
-/** 
-*/
-ol_layer_Vector3D.prototype.getFeatureHeight = function (f) {
+/** Get height for a feature
+ * @param {ol.Feature} f
+ * @return {number}
+ * @private
+ */
+ol_layer_Vector3D.prototype._getFeatureHeight = function (f) {
   if (this.animate_) {
     var h1 = this.height_(f);
     var h2 = this.toHeight_(f);
@@ -196,8 +209,9 @@ ol_layer_Vector3D.prototype.getFeatureHeight = function (f) {
   else return this.height_(f);
 };
 
-/**
-*/
+/** Get hvector for a point
+ * @private
+ */
 ol_layer_Vector3D.prototype.hvector_ = function (pt, h) {
   var p0 = [
     pt[0]*this.matrix_[0] + pt[1]*this.matrix_[1] + this.matrix_[4],
@@ -212,8 +226,9 @@ ol_layer_Vector3D.prototype.hvector_ = function (pt, h) {
   };
 };
 
-/**
-*/
+/** Get a vector 3D for a feature
+ * @private
+ */
 ol_layer_Vector3D.prototype.getFeature3D_ = function (f, h) {
   var geom = this.get('geometry')(f);
   var c = geom.getCoordinates();
@@ -237,10 +252,11 @@ ol_layer_Vector3D.prototype.getFeature3D_ = function (f, h) {
       return { type:"Point", feature: f, geom: this.hvector_(c,h) };
     default: return {};
   }
-}
+};
 
-/**
-*/
+/** Draw 3D feature
+ * @private
+ */
 ol_layer_Vector3D.prototype.drawFeature3D_ = function(ctx, build) {
   var i,j, b, k;
   // Construct
@@ -314,6 +330,6 @@ ol_layer_Vector3D.prototype.drawFeature3D_ = function(ctx, build) {
       default: break;
     }
   }
-}
+};
 
 export default ol_layer_Vector3D
