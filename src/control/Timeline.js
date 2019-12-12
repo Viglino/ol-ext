@@ -100,6 +100,7 @@ var ol_control_Timeline = function(options) {
   // Trigger scroll event
   var scrollListener = null;
   this._scrollDiv.addEventListener('scroll', function() {
+    this._setScrollLeft();
     if (scrollListener) {
       clearTimeout(scrollListener);
       scrollListener = null;
@@ -127,6 +128,7 @@ var ol_control_Timeline = function(options) {
   this._tline = [];
 
   // Parameters
+  this._scrollLeft = 0;
   this.set('maxWidth', options.maxWidth || 2000);
   this.set('minDate', options.minDate || Infinity);
   this.set('maxDate', options.maxDate || -Infinity);
@@ -402,6 +404,50 @@ ol_control_Timeline.prototype.refresh = function(zoom, first) {
   });
 };
 
+/** Get offset given a date
+ * @param {Date} date
+ * @return {number}
+ * @private
+ */
+ol_control_Timeline.prototype._getOffsetFromDate = function(date) {
+  return (date - this._minDate) * this._scale;
+};
+
+/** Get date given an offset
+ * @param {Date} date
+ * @return {number}
+ * @private
+ */
+ol_control_Timeline.prototype._getDateFromOffset = function(offset) {
+  return offset / this._scale + this._minDate;
+};
+
+/** Set the current position 
+ * @param {number} scrollLeft current position (undefined when scrolling)
+ * @returns {number}
+ * @private
+ */
+ol_control_Timeline.prototype._setScrollLeft = function(scrollLeft) {
+  this._scrollLeft = scrollLeft;
+  if (scrollLeft !== undefined) {
+    this._scrollDiv.scrollLeft = scrollLeft;
+  }
+};
+
+/** Get the current position 
+ * @returns {number}
+ * @private
+ */
+ol_control_Timeline.prototype._getScrollLeft = function() {
+  // Unset when scrolling
+  if (this._scrollLeft === undefined) {
+    return this._scrollDiv.scrollLeft;
+  } else {
+    // St by user
+    return this._scrollLeft;
+  }
+};
+
 /**
  * Draw dates on line
  * @private
@@ -425,7 +471,7 @@ ol_control_Timeline.prototype._drawTime = function(div, min, max, scale) {
     ol_ext_element.create('DIV', {
       className: 'ol-time ol-year',
       style: {
-        left: Math.round((d-this._minDate)*scale) - dx
+        left: this._getOffsetFromDate(d) - dx
       },
       html: year,
       parent: tdiv
@@ -434,20 +480,20 @@ ol_control_Timeline.prototype._drawTime = function(div, min, max, scale) {
   }
   // Month
   if (/day|month/.test(this.get('graduation'))) {
-    dt = ((new Date(0)).setFullYear(String(year)) - new Date(0).setFullYear(String(year-1))) * scale;
+    dt = ((new Date(0,0,1)).setFullYear(String(year)) - new Date(0,0,1).setFullYear(String(year-1))) * scale;
     dmonth = Math.max(1, Math.round(12 / Math.round(dt/heigth/2)));
     if (dmonth < 12) {
       year = (new Date(this._minDate)).getFullYear();
       month = dmonth+1;
       while(true) {
-        d = new Date('0/01/01');
+        d = new Date(0,0,1);
         d.setFullYear(year);
         d.setMonth(month-1);
         if (d > this._maxDate) break;
         ol_ext_element.create('DIV', {
           className: 'ol-time ol-month',
           style: {
-            left: Math.round((d-this._minDate)*scale) - dx
+            left: this._getOffsetFromDate(d) - dx
           },
           html: d.toLocaleDateString(undefined, { month: 'short'}),
           parent: tdiv
@@ -462,14 +508,14 @@ ol_control_Timeline.prototype._drawTime = function(div, min, max, scale) {
   }
   // Day
   if (this.get('graduation')==='day') {
-    dt = (new Date('2000/02/01') - new Date('2000/01/01')) * scale;
+    dt = (new Date(0,1,1) - new Date(0,0,1)) * scale;
     var dday = Math.max(1, Math.round(31 / Math.round(dt/heigth/2)));
     if (dday < 31) {
       year = (new Date(this._minDate)).getFullYear();
       month = 0;
       var day = dday;
       while(true) {
-        d = new Date(0);
+        d = new Date(0,0,1);
         d.setFullYear(year);
         d.setMonth(month);
         d.setDate(day);
@@ -485,7 +531,7 @@ ol_control_Timeline.prototype._drawTime = function(div, min, max, scale) {
           ol_ext_element.create('DIV', {
             className: 'ol-time ol-day',
             style: {
-              left: Math.round((d-this._minDate)*scale) - dx
+              left: this._getOffsetFromDate(d) - dx
             },
             html: day,
             parent: tdiv
@@ -529,13 +575,13 @@ ol_control_Timeline.prototype.setDate = function(feature, options) {
   }
   if (!isNaN(date)) {
     if (options.anim === false) this._scrollDiv.classList.add('ol-move');
-    var scrollLeft = (date-this._minDate)*this._scale;
+    var scrollLeft = this._getOffsetFromDate(date);
     if (options.position==='start') {
       scrollLeft += ol_ext_element.outerWidth(this._scrollDiv)/2 - ol_ext_element.getStyle(this._scrollDiv, 'marginLeft')/2;
     } else if (options.position==='end') {
       scrollLeft -= ol_ext_element.outerWidth(this._scrollDiv)/2 - ol_ext_element.getStyle(this._scrollDiv, 'marginLeft')/2;
     }
-    this._scrollDiv.scrollLeft = scrollLeft;
+    this._setScrollLeft(scrollLeft);
     if (options.anim === false) this._scrollDiv.classList.remove('ol-move');
     if (feature) {
       for (var i=0, f; f = this._tline[i]; i++) {
@@ -551,10 +597,11 @@ ol_control_Timeline.prototype.setDate = function(feature, options) {
 };
 
 /** Get the date of the center
- * @param {string} position start, end or middle, default middle
+ * @param {string} position position to get 'start', 'end' or 'middle', default middle
+ * @param {string} stick sticking option to stick date to: 'mn', 'hour', 'day', 'month', default no stick
  * @return {Date}
  */
-ol_control_Timeline.prototype.getDate = function(position) {
+ol_control_Timeline.prototype.getDate = function(position, stick) {
   var pos;
   switch (position) {
     case 'start': {
@@ -578,8 +625,41 @@ ol_control_Timeline.prototype.getDate = function(position) {
       break;
     }
   }
-  var d = (this._scrollDiv.scrollLeft + pos)/this._scale + this._minDate;
+  var d = this._getDateFromOffset(this._getScrollLeft() + pos);
+  switch (stick) {
+    case 'mn': {
+      d = this._roundTo(d, 60*1000);
+      break;
+    }
+    case 'hour': {
+      d = this._roundTo(d, 60*60*1000);
+      break;
+    }
+    case 'day': {
+      d = this._roundTo(d, 24*60*60*1000);
+      break;
+    }
+    case 'month': {
+      d = new Date(this._roundTo(d, 24*60*60*1000));
+      if (d.getDate() > 15) {
+        d = new Date(d.setMonth(d.getMonth() + 1));
+      }
+      d = d.setDate(1);
+      break;
+    }
+    default: break;
+  }
   return new Date(d);
+};
+
+/** Round number to 
+ * @param {number} d
+ * @param {number} r
+ * @return {number}
+ * @private
+ */
+ol_control_Timeline.prototype._roundTo = function(d, r) {
+  return Math.round(d/r) * r;
 };
 
 /** Get the start date of the control
