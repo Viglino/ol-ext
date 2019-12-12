@@ -26,6 +26,7 @@ import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
  *	@param {number | undefined} options.hitTolerance Tolerance to select feature in pixel, default 0
  *	@param {bool} options.translateFeature Translate when click on feature
  *	@param {bool} options.translate Can translate the feature
+ *  @param {bool} options.translateBBox Enable translate when the user drags inside the bounding box
  *	@param {bool} options.stretch can stretch the feature
  *	@param {bool} options.scale can scale the feature
  *	@param {bool} options.rotate can rotate the feature
@@ -79,6 +80,8 @@ var ol_interaction_Transform = function(options) {
   this.set('translateFeature', (options.translateFeature!==false));
   /* Can translate the feature */
   this.set('translate', (options.translate!==false));
+  /* Translate when click on the bounding box */
+  this.set('translateBBox', (options.translateBBox===true));
   /* Can stretch the feature */
   this.set('stretch', (options.stretch!==false));
   /* Can scale the feature */
@@ -250,7 +253,13 @@ ol_interaction_Transform.prototype.getFeatureAtPixel_ = function(pixel) {
       var found = false;
       // Overlay ?
       if (!layer) {
-        if (feature===self.bbox_) return false;
+        if (feature===self.bbox_) {
+          if (self.get('translateBBox')) {
+            return { feature: feature, handle: 'translate', constraint:'', option: '' };
+          } else {
+            return false;
+          }
+        }
         self.handles_.forEach (function(f) { if (f===feature) found=true; });
         if (found) return { feature: feature, handle:feature.get('handle'), constraint:feature.get('constraint'), option:feature.get('option') };
       }
@@ -401,6 +410,23 @@ ol_interaction_Transform.prototype.select = function(feature, add) {
   this.dispatchEvent({ type:'select', feature: feature, features: this.selection_ });
 };
 
+/** Update the selection collection.
+* @param {ol.Collection<ol.Feature>} features the features to transform
+*/
+ol_interaction_Transform.prototype.setSelection = function(features) {
+  this.selection_.clear();
+  features.forEach((feature) => {
+    this.selection_.push(feature);
+  });
+
+  this.ispt_ = (this.selection_.getLength()===1 ? (this.selection_.item(0).getGeometry().getType() == "Point") : false);
+  this.iscircle_ = (this.selection_.getLength()===1 ? (this.selection_.item(0).getGeometry().getType() == "Circle") : false);
+  this.drawSketch_();
+  this.watchFeatures_();
+  // select event
+  this.dispatchEvent({ type:'select', features: this.selection_ });
+};
+
 /** Watch selected features
  * @private
  */
@@ -415,7 +441,9 @@ ol_interaction_Transform.prototype.watchFeatures_ = function() {
   this.selection_.forEach(function(f) {
     this._featureListeners.push(
       f.on('change', function() {
-        this.drawSketch_();
+        if (!this.isUpdating_) {
+          this.drawSketch_();
+        }
       }.bind(this))
     );
   }.bind(this));
@@ -544,6 +572,7 @@ ol_interaction_Transform.prototype.setCenter = function(c) {
 ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
   if (!this._handleEvent(evt, this.features_)) return;
   var i, f, geometry;
+  this.isUpdating_ = true;
   switch (this.mode_) {
     case 'rotate': {
       var a = Math.atan2(this.center_[1]-evt.coordinate[1], this.center_[0]-evt.coordinate[0]);
@@ -666,6 +695,7 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
     }
     default: break;
   }
+  this.isUpdating_ = false;
 };
 
 /**
