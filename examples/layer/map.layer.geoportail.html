@@ -171,10 +171,11 @@
   map.on('click', function(e) {
     popup.hide();
     map.forEachLayerAtPixel(e.pixel, function(l, pixel) {
+      vector.getSource().clear();
       if (l.get('queryable')) {
         var layers = map.getLayers().getArray();
         // Get info in a popup
-        if (/INSEE|ORTHOIMAGERY|GEOGRAPHICALGRIDSYSTEMS/.test(l.get('layer'))) {
+        if (/INSEE|ORTHOIMAGERY|GEOGRAPHICALGRIDSYSTEMS/.test(l.get('name'))) {
           l.getSource().getFeatureInfo(
             e.coordinate, 
             map.getView().getResolution(), {
@@ -183,7 +184,7 @@
                 if (resp) popup.show(e.coordinate, resp);
               }
             }
-          )
+          );
         } else {
           // Create new object
           l.getSource().getFeatureInfo(
@@ -193,7 +194,6 @@
               callback: function(resp) {
                 if (resp) {
                   resp = JSON.parse(resp);
-                  vector.getSource().clear();
                   if (resp.features[0]) {
                     var format = new ol.format.GeoJSON();
                     var features = format.readFeatures(resp);

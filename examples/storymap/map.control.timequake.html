@@ -183,7 +183,6 @@
   map.addControl (tline);
   // Set the date when ready
   setTimeout(function(){ tline.setDate('2015'); });
-
   tline.addButton ({
     className: "go",
     title: "GO!",
@@ -194,7 +193,8 @@
 
   // Show features on scroll
   tline.on('scroll', function(e){
-    $('.dateStart').text(e.date.toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric'}));
+    var d = tline.roundDate(e.date, 'day')
+    $('.dateStart').text(d.toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric'}));
     // Filter features visibility
     vectorSource.getFeatures().forEach(function(f) {
       var dt = f.get('time') - e.date;
