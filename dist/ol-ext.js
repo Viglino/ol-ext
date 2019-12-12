@@ -9958,6 +9958,7 @@ ol.control.Timeline = function(options) {
   // Trigger scroll event
   var scrollListener = null;
   this._scrollDiv.addEventListener('scroll', function() {
+    this._setScrollLeft();
     if (scrollListener) {
       clearTimeout(scrollListener);
       scrollListener = null;
@@ -9982,6 +9983,7 @@ ol.control.Timeline = function(options) {
   });
   this._tline = [];
   // Parameters
+  this._scrollLeft = 0;
   this.set('maxWidth', options.maxWidth || 2000);
   this.set('minDate', options.minDate || Infinity);
   this.set('maxDate', options.maxDate || -Infinity);
@@ -10231,6 +10233,46 @@ ol.control.Timeline.prototype.refresh = function(zoom, first) {
     dateEnd: this.getDate('end')
   });
 };
+/** Get offset given a date
+ * @param {Date} date
+ * @return {number}
+ * @private
+ */
+ol.control.Timeline.prototype._getOffsetFromDate = function(date) {
+  return (date - this._minDate) * this._scale;
+};
+/** Get date given an offset
+ * @param {Date} date
+ * @return {number}
+ * @private
+ */
+ol.control.Timeline.prototype._getDateFromOffset = function(offset) {
+  return offset / this._scale + this._minDate;
+};
+/** Set the current position 
+ * @param {number} scrollLeft current position (undefined when scrolling)
+ * @returns {number}
+ * @private
+ */
+ol.control.Timeline.prototype._setScrollLeft = function(scrollLeft) {
+  this._scrollLeft = scrollLeft;
+  if (scrollLeft !== undefined) {
+    this._scrollDiv.scrollLeft = scrollLeft;
+  }
+};
+/** Get the current position 
+ * @returns {number}
+ * @private
+ */
+ol.control.Timeline.prototype._getScrollLeft = function() {
+  // Unset when scrolling
+  if (this._scrollLeft === undefined) {
+    return this._scrollDiv.scrollLeft;
+  } else {
+    // St by user
+    return this._scrollLeft;
+  }
+};
 /**
  * Draw dates on line
  * @private
@@ -10254,7 +10296,7 @@ ol.control.Timeline.prototype._drawTime = function(div, min, max, scale) {
     ol.ext.element.create('DIV', {
       className: 'ol-time ol-year',
       style: {
-        left: Math.round((d-this._minDate)*scale) - dx
+        left: this._getOffsetFromDate(d) - dx
       },
       html: year,
       parent: tdiv
@@ -10263,20 +10305,20 @@ ol.control.Timeline.prototype._drawTime = function(div, min, max, scale) {
   }
   // Month
   if (/day|month/.test(this.get('graduation'))) {
-    dt = ((new Date(0)).setFullYear(String(year)) - new Date(0).setFullYear(String(year-1))) * scale;
+    dt = ((new Date(0,0,1)).setFullYear(String(year)) - new Date(0,0,1).setFullYear(String(year-1))) * scale;
     dmonth = Math.max(1, Math.round(12 / Math.round(dt/heigth/2)));
     if (dmonth < 12) {
       year = (new Date(this._minDate)).getFullYear();
       month = dmonth+1;
       while(true) {
-        d = new Date('0/01/01');
+        d = new Date(0,0,1);
         d.setFullYear(year);
         d.setMonth(month-1);
         if (d > this._maxDate) break;
         ol.ext.element.create('DIV', {
           className: 'ol-time ol-month',
           style: {
-            left: Math.round((d-this._minDate)*scale) - dx
+            left: this._getOffsetFromDate(d) - dx
           },
           html: d.toLocaleDateString(undefined, { month: 'short'}),
           parent: tdiv
@@ -10291,14 +10333,14 @@ ol.control.Timeline.prototype._drawTime = function(div, min, max, scale) {
   }
   // Day
   if (this.get('graduation')==='day') {
-    dt = (new Date('2000/02/01') - new Date('2000/01/01')) * scale;
+    dt = (new Date(0,1,1) - new Date(0,0,1)) * scale;
     var dday = Math.max(1, Math.round(31 / Math.round(dt/heigth/2)));
     if (dday < 31) {
       year = (new Date(this._minDate)).getFullYear();
       month = 0;
       var day = dday;
       while(true) {
-        d = new Date(0);
+        d = new Date(0,0,1);
         d.setFullYear(year);
         d.setMonth(month);
         d.setDate(day);
@@ -10314,7 +10356,7 @@ ol.control.Timeline.prototype._drawTime = function(div, min, max, scale) {
           ol.ext.element.create('DIV', {
             className: 'ol-time ol-day',
             style: {
-              left: Math.round((d-this._minDate)*scale) - dx
+              left: this._getOffsetFromDate(d) - dx
             },
             html: day,
             parent: tdiv
@@ -10357,13 +10399,13 @@ ol.control.Timeline.prototype.setDate = function(feature, options) {
   }
   if (!isNaN(date)) {
     if (options.anim === false) this._scrollDiv.classList.add('ol-move');
-    var scrollLeft = (date-this._minDate)*this._scale;
+    var scrollLeft = this._getOffsetFromDate(date);
     if (options.position==='start') {
       scrollLeft += ol.ext.element.outerWidth(this._scrollDiv)/2 - ol.ext.element.getStyle(this._scrollDiv, 'marginLeft')/2;
     } else if (options.position==='end') {
       scrollLeft -= ol.ext.element.outerWidth(this._scrollDiv)/2 - ol.ext.element.getStyle(this._scrollDiv, 'marginLeft')/2;
     }
-    this._scrollDiv.scrollLeft = scrollLeft;
+    this._setScrollLeft(scrollLeft);
     if (options.anim === false) this._scrollDiv.classList.remove('ol-move');
     if (feature) {
       for (var i=0, f; f = this._tline[i]; i++) {
@@ -10377,11 +10419,40 @@ ol.control.Timeline.prototype.setDate = function(feature, options) {
     }
   }
 };
-/** Get the date of the center
- * @param {string} position start, end or middle, default middle
+/** Get round date (sticked to mn, hour day or month)
+ * @param {Date} d
+ * @param {string} stick sticking option to stick date to: 'mn', 'hour', 'day', 'month', default no stick
  * @return {Date}
  */
-ol.control.Timeline.prototype.getDate = function(position) {
+ol.control.Timeline.prototype.roundDate = function(d, stick) {
+  console.log(d)
+  switch (stick) {
+    case 'mn': {
+      return new Date(this._roundTo(d, 60*1000));
+    }
+    case 'hour': {
+      return new Date(this._roundTo(d, 60*60*1000));
+    }
+    case 'day': {
+      return new Date(this._roundTo(d, 24*60*60*1000));
+    }
+    case 'month': {
+      d = new Date(this._roundTo(d, 24*60*60*1000));
+      if (d.getDate() > 15) {
+        d = new Date(d.setMonth(d.getMonth() + 1));
+      }
+      d = d.setDate(1);
+      return new Date(d);
+    }
+    default: return d;
+  }
+};
+/** Get the date of the center
+ * @param {string} position position to get 'start', 'end' or 'middle', default middle
+ * @param {string} stick sticking option to stick date to: 'mn', 'hour', 'day', 'month', default no stick
+ * @return {Date}
+ */
+ol.control.Timeline.prototype.getDate = function(position, stick) {
   var pos;
   switch (position) {
     case 'start': {
@@ -10405,8 +10476,18 @@ ol.control.Timeline.prototype.getDate = function(position) {
       break;
     }
   }
-  var d = (this._scrollDiv.scrollLeft + pos)/this._scale + this._minDate;
+  var d = this._getDateFromOffset(this._getScrollLeft() + pos);
+  d = this.roundDate(d, stick);
   return new Date(d);
+};
+/** Round number to 
+ * @param {number} d
+ * @param {number} r
+ * @return {number}
+ * @private
+ */
+ol.control.Timeline.prototype._roundTo = function(d, r) {
+  return Math.round(d/r) * r;
 };
 /** Get the start date of the control
  * @return {Date}
@@ -16659,8 +16740,8 @@ ol.interaction.Splitter.prototype.onChangeFeature = function(e)
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Interaction synchronize
  * @constructor
@@ -16668,16 +16749,16 @@ ol.interaction.Splitter.prototype.onChangeFeature = function(e)
  * @param {olx.interaction.SynchronizeOptions} 
  *  - maps {Array<ol.Map>} An array of maps to synchronize with the map of the interaction
  */
-ol.interaction.Synchronize = function(options)
-{	if (!options) options={};
-	var self = this;
-	ol.interaction.Interaction.call(this,
-		{	handleEvent: function(e)
-				{	if (e.type=="pointermove") { self.handleMove_(e); }
-					return true;
-				}
-		});
-	this.maps = options.maps;
+ol.interaction.Synchronize = function(options) {
+  if (!options) options={};
+  var self = this;
+  ol.interaction.Interaction.call(this, {
+    handleEvent: function(e) {
+      if (e.type=="pointermove") { self.handleMove_(e); }
+      return true;
+    }
+  });
+  this.maps = options.maps;
 };
 ol.ext.inherits(ol.interaction.Synchronize, ol.interaction.Interaction);
 /**
@@ -16686,101 +16767,100 @@ ol.ext.inherits(ol.interaction.Synchronize, ol.interaction.Interaction);
  * @param {ol.Map} map Map.
  * @api stable
  */
-ol.interaction.Synchronize.prototype.setMap = function(map)
-{
-	if (this._listener) {
-		ol.Observable.unByKey(this._listener.center);
-		ol.Observable.unByKey(this._listener.rotation);
-		ol.Observable.unByKey(this._listener.resolution);
-		this.getMap().getTargetElement().removeEventListener('mouseout', this._listener.mouseout);
-	}
-	this._listener = null;
-	ol.interaction.Interaction.prototype.setMap.call (this, map);
-	if (map) {
-		this._listener = {};
-		this._listener.center = this.getMap().getView().on('change:center', this.syncMaps.bind(this));
-		this._listener.rotation = this.getMap().getView().on('change:rotation', this.syncMaps.bind(this));
-		this._listener.resolution = this.getMap().getView().on('change:resolution', this.syncMaps.bind(this));
-		this._listener.mouseout = this.handleMouseOut_.bind(this);
-		this.getMap().getTargetElement().addEventListener('mouseout', this._listener.mouseout);
-		this.syncMaps();
-	}
+ol.interaction.Synchronize.prototype.setMap = function(map) {
+  if (this._listener) {
+    ol.Observable.unByKey(this._listener.center);
+    ol.Observable.unByKey(this._listener.rotation);
+    ol.Observable.unByKey(this._listener.resolution);
+    this.getMap().getTargetElement().removeEventListener('mouseout', this._listener.mouseout);
+  }
+  this._listener = null;
+  ol.interaction.Interaction.prototype.setMap.call (this, map);
+  if (map) {
+    this._listener = {};
+    this._listener.center = this.getMap().getView().on('change:center', this.syncMaps.bind(this));
+    this._listener.rotation = this.getMap().getView().on('change:rotation', this.syncMaps.bind(this));
+    this._listener.resolution = this.getMap().getView().on('change:resolution', this.syncMaps.bind(this));
+    this._listener.mouseout = this.handleMouseOut_.bind(this);
+    if (this.getMap().getTargetElement()) {
+      this.getMap().getTargetElement().addEventListener('mouseout', this._listener.mouseout);
+    }
+    this.syncMaps();
+  }
 };
 /** Synchronize the maps
 */
-ol.interaction.Synchronize.prototype.syncMaps = function(e)
-{	var map = this.getMap();
-	if (!e) e = { type:'all' };
-	if (map)
-	{	for (var i=0; i<this.maps.length; i++)
-		{	switch (e.type)
-			{	case 'change:rotation':
-					if (this.maps[i].getView().getRotation() != map.getView().getRotation())
-						this.maps[i].getView().setRotation(map.getView().getRotation()); 
-					break;
-				case 'change:center':
-					if (this.maps[i].getView().getCenter() != map.getView().getCenter())
-						this.maps[i].getView().setCenter(map.getView().getCenter()); 
-					break;
-				case 'change:resolution':
-					if (this.maps[i].getView().getResolution() != map.getView().getResolution())
-					{	/* old version prior to 1.19.1
-						this.maps[i].beforeRender ( ol.animation.zoom(
-							{	duration: 250,
-								resolution: this.maps[i].getView().getResolution()
-							}));
-						*/
-						this.maps[i].getView().setResolution(map.getView().getResolution());
-					}
-					break;
-				default:
-					this.maps[i].getView().setRotation(map.getView().getRotation());
-					this.maps[i].getView().setCenter(map.getView().getCenter());
-					this.maps[i].getView().setResolution(map.getView().getResolution());
-					break;
-			}
-		}
-	}
+ol.interaction.Synchronize.prototype.syncMaps = function(e) {
+  var map = this.getMap();
+  if (!e) e = { type:'all' };
+  if (map) {
+    for (var i=0; i<this.maps.length; i++) {
+      switch (e.type) {
+        case 'change:rotation': {
+          if (this.maps[i].getView().getRotation() != map.getView().getRotation())
+            this.maps[i].getView().setRotation(map.getView().getRotation()); 
+          break;
+        }
+        case 'change:center': {
+          if (this.maps[i].getView().getCenter() != map.getView().getCenter()) {
+            this.maps[i].getView().setCenter(map.getView().getCenter()); 
+          }
+          break;
+        }
+        case 'change:resolution': {
+          if (this.maps[i].getView().getResolution() != map.getView().getResolution()) {
+            this.maps[i].getView().setResolution(map.getView().getResolution());
+          }
+          break;
+        }
+        default: {
+          this.maps[i].getView().setRotation(map.getView().getRotation());
+          this.maps[i].getView().setCenter(map.getView().getCenter());
+          this.maps[i].getView().setResolution(map.getView().getResolution());
+          break;
+        }
+      }
+    }
+  }
 };
 /** Cursor move > tells other maps to show the cursor
 * @param {ol.event} e "move" event
 */
-ol.interaction.Synchronize.prototype.handleMove_ = function(e)
-{	for (var i=0; i<this.maps.length; i++)
-	{	this.maps[i].showTarget(e.coordinate);
-	}
-	this.getMap().showTarget();
+ol.interaction.Synchronize.prototype.handleMove_ = function(e) {
+  for (var i=0; i<this.maps.length; i++) {
+    this.maps[i].showTarget(e.coordinate);
+  }
+  this.getMap().showTarget();
 };
 /** Cursor out of map > tells other maps to hide the cursor
 * @param {event} e "mouseOut" event
 */
 ol.interaction.Synchronize.prototype.handleMouseOut_ = function(/*e*/) {
-	for (var i=0; i<this.maps.length; i++) {
-		this.maps[i].targetOverlay_.setPosition(undefined);
-	}
+  for (var i=0; i<this.maps.length; i++) {
+    this.maps[i].targetOverlay_.setPosition(undefined);
+  }
 };
 /** Show a target overlay at coord
 * @param {ol.coordinate} coord
 */
-ol.Map.prototype.showTarget = function(coord)
-{	if (!this.targetOverlay_)
-	{	var elt = document.createElement("div");
-				elt.classList.add("ol-target");
-		this.targetOverlay_ = new ol.Overlay({ element: elt });
-		this.targetOverlay_.setPositioning('center-center');
-		this.addOverlay(this.targetOverlay_);
-		elt.parentElement.classList.add("ol-target-overlay");
-		// hack to render targetOverlay before positioning it
-		this.targetOverlay_.setPosition([0,0]);
-	}
-	this.targetOverlay_.setPosition(coord);
+ol.Map.prototype.showTarget = function(coord) {
+  if (!this.targetOverlay_) {
+    var elt = document.createElement("div");
+    elt.classList.add("ol-target");
+    this.targetOverlay_ = new ol.Overlay({ element: elt });
+    this.targetOverlay_.setPositioning('center-center');
+    this.addOverlay(this.targetOverlay_);
+    elt.parentElement.classList.add("ol-target-overlay");
+    // hack to render targetOverlay before positioning it
+    this.targetOverlay_.setPosition([0,0]);
+  }
+  this.targetOverlay_.setPosition(coord);
 };
 /** Hide the target overlay
 */
-ol.Map.prototype.hideTarget = function()
-{
-	this.removeOverlay(this.targetOverlay_);
-	this.targetOverlay_ = undefined;
+ol.Map.prototype.hideTarget = function() {
+  this.removeOverlay(this.targetOverlay_);
+  this.targetOverlay_ = undefined;
 };
 
 /*	
@@ -17031,6 +17111,7 @@ ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
  *	@param {number | undefined} options.hitTolerance Tolerance to select feature in pixel, default 0
  *	@param {bool} options.translateFeature Translate when click on feature
  *	@param {bool} options.translate Can translate the feature
+ *  @param {bool} options.translateBBox Enable translate when the user drags inside the bounding box
  *	@param {bool} options.stretch can stretch the feature
  *	@param {bool} options.scale can scale the feature
  *	@param {bool} options.rotate can rotate the feature
@@ -17079,6 +17160,8 @@ ol.interaction.Transform = function(options) {
   this.set('translateFeature', (options.translateFeature!==false));
   /* Can translate the feature */
   this.set('translate', (options.translate!==false));
+  /* Translate when click on the bounding box */
+  this.set('translateBBox', (options.translateBBox===true));
   /* Can stretch the feature */
   this.set('stretch', (options.stretch!==false));
   /* Can scale the feature */
@@ -17241,7 +17324,13 @@ ol.interaction.Transform.prototype.getFeatureAtPixel_ = function(pixel) {
       var found = false;
       // Overlay ?
       if (!layer) {
-        if (feature===self.bbox_) return false;
+        if (feature===self.bbox_) {
+          if (self.get('translateBBox')) {
+            return { feature: feature, handle: 'translate', constraint:'', option: '' };
+          } else {
+            return false;
+          }
+        }
         self.handles_.forEach (function(f) { if (f===feature) found=true; });
         if (found) return { feature: feature, handle:feature.get('handle'), constraint:feature.get('constraint'), option:feature.get('option') };
       }
@@ -17385,6 +17474,21 @@ ol.interaction.Transform.prototype.select = function(feature, add) {
   // select event
   this.dispatchEvent({ type:'select', feature: feature, features: this.selection_ });
 };
+/** Update the selection collection.
+* @param {ol.Collection<ol.Feature>} features the features to transform
+*/
+ol.interaction.Transform.prototype.setSelection = function(features) {
+  this.selection_.clear();
+  features.forEach((feature) => {
+    this.selection_.push(feature);
+  });
+  this.ispt_ = (this.selection_.getLength()===1 ? (this.selection_.item(0).getGeometry().getType() == "Point") : false);
+  this.iscircle_ = (this.selection_.getLength()===1 ? (this.selection_.item(0).getGeometry().getType() == "Circle") : false);
+  this.drawSketch_();
+  this.watchFeatures_();
+  // select event
+  this.dispatchEvent({ type:'select', features: this.selection_ });
+};
 /** Watch selected features
  * @private
  */
@@ -17399,7 +17503,9 @@ ol.interaction.Transform.prototype.watchFeatures_ = function() {
   this.selection_.forEach(function(f) {
     this._featureListeners.push(
       f.on('change', function() {
-        this.drawSketch_();
+        if (!this.isUpdating_) {
+          this.drawSketch_();
+        }
       }.bind(this))
     );
   }.bind(this));
@@ -17446,25 +17552,14 @@ ol.interaction.Transform.prototype.handleDownEvent_ = function(evt) {
     }
     if (this.mode_==='rotate') {
       this.center_ = this.getCenter() || ol.extent.getCenter(extent);
-      if (this.get('enableRotatedTransform') && viewRotation !== 0) {
-        this.rotatedCenter_ = this.getCenter() || ol.extent.getCenter(rotExtent);
-      }
       // we are now rotating (cursor down on rotate mode), so apply the grabbing cursor
       var element = evt.map.getTargetElement();
       element.style.cursor = this.Cursors.rotate0;
       this.previousCursor_ = element.style.cursor;
     } else {
       this.center_ = ol.extent.getCenter(extent);
-      if (this.get('enableRotatedTransform') && viewRotation !== 0) {
-        this.rotatedCenter_ = ol.extent.getCenter(rotExtent);
-      }
     }
     this.angle_ = Math.atan2(this.center_[1]-evt.coordinate[1], this.center_[0]-evt.coordinate[0]);
-    if (this.get('enableRotatedTransform') && viewRotation !== 0) {
-      var downPoint = new ol.geom.Point(evt.coordinate);
-      downPoint.rotate(viewRotation * -1, this.rotatedCenter_);
-      this.rotatedCoordinate_ = downPoint.getCoordinates();
-    }
     this.dispatchEvent({
       type: this.mode_+'start',
       feature: this.selection_.item(0), // backward compatibility
@@ -17518,10 +17613,14 @@ ol.interaction.Transform.prototype.setCenter = function(c) {
  */
 ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
   if (!this._handleEvent(evt, this.features_)) return;
+  var viewRotation = this.getMap().getView().getRotation();
   var i, f, geometry;
+  var pt0 = [this.coordinate_[0], this.coordinate_[1]];
+  var pt = [evt.coordinate[0], evt.coordinate[1]];
+  this.isUpdating_ = true;
   switch (this.mode_) {
     case 'rotate': {
-      var a = Math.atan2(this.center_[1]-evt.coordinate[1], this.center_[0]-evt.coordinate[0]);
+      var a = Math.atan2(this.center_[1]-pt[1], this.center_[0]-pt[0]);
       if (!this.ispt) {
         // var geometry = this.geom_.clone();
         // geometry.rotate(a-this.angle_, this.center_);
@@ -17546,8 +17645,8 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
       break;
     }
     case 'translate': {
-      var deltaX = evt.coordinate[0] - this.coordinate_[0];
-      var deltaY = evt.coordinate[1] - this.coordinate_[1];
+      var deltaX = pt[0] - pt0[0];
+      var deltaY = pt[1] - pt0[1];
       //this.feature_.getGeometry().translate(deltaX, deltaY);
       for (i=0, f; f=this.selection_.item(i); i++) {
         f.getGeometry().translate(deltaX, deltaY);
@@ -17567,9 +17666,7 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
       break;
     }
     case 'scale': {
-      var viewRotation = this.getMap().getView().getRotation();
       var center = this.center_;
-      var rotationCenter = this.center_;
       if (this.get('modifyCenter')(evt)) {
         var extentCoordinates = this.extent_;
         if (this.get('enableRotatedTransform') && viewRotation !== 0) {
@@ -17578,17 +17675,22 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
         center = extentCoordinates[(Number(this.opt_)+2)%4];
       }
       var downCoordinate = this.coordinate_;
-      if (this.get('enableRotatedTransform') && viewRotation !== 0) {
-        downCoordinate = this.rotatedCoordinate_;
-      }
       var dragCoordinate = evt.coordinate;
       if (this.get('enableRotatedTransform') && viewRotation !== 0) {
+        var downPoint = new ol.geom.Point(this.coordinate_);
+        downPoint.rotate(viewRotation * -1, center);
+        downCoordinate = downPoint.getCoordinates();
         var dragPoint = new ol.geom.Point(evt.coordinate);
-        dragPoint.rotate(viewRotation * -1, rotationCenter);
+        dragPoint.rotate(viewRotation * -1, center);
         dragCoordinate = dragPoint.getCoordinates();
       }
       var scx = ((dragCoordinate)[0] - (center)[0]) / (downCoordinate[0] - (center)[0]);
       var scy = ((dragCoordinate)[1] - (center)[1]) / (downCoordinate[1] - (center)[1]);
+      if (this.get('enableRotatedTransform') && viewRotation !== 0) {
+        var centerPoint = new ol.geom.Point(center);
+        centerPoint.rotate(viewRotation * -1, this.getMap().getView().getCenter());
+        center = centerPoint.getCoordinates();
+      }
       if (this.get('noFlip')) {
         if (scx<0) scx=-scx;
         if (scy<0) scy=-scy;
@@ -17632,6 +17734,7 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
     }
     default: break;
   }
+  this.isUpdating_ = false;
 };
 /**
  * @param {ol.MapBrowserEvent} evt Event.
@@ -17998,7 +18101,7 @@ ol.interaction.UndoRedo.prototype.hasRedo = function() {
 ol.source.BinBase = function (options) {
   options = options || {};
   this._bindModify = this._onModifyFeature.bind(this);
-  this._watch === true;
+  this._watch = true;
   ol.source.Vector.call(this, options);
   this._origin = options.source;
   this._listen = (options.listenChange !== false);
@@ -19970,7 +20073,7 @@ ol.source.Overpass.prototype.hasFeature = function(feature) {
 ol.layer.Vector3D = function (options) {
   options = options || {};
   this._source = options.source;
-  this.height_ = options.height = this.getHfn (options.height);
+  this.height_ = this.getHfn (options.height);
   var canvas = document.createElement('canvas');
   ol.layer.Image.call (this, { 
     source: new ol.source.ImageCanvas({
@@ -19980,7 +20083,6 @@ ol.layer.Vector3D = function (options) {
         return canvas;
       }
     }), 
-    height: options.height,
     center: options.center || [.5,1],
     defaultHeight: options.defaultHeight || 0,
     maxResolution: options.maxResolution || Infinity 
@@ -19990,7 +20092,15 @@ ol.layer.Vector3D = function (options) {
 }
 ol.ext.inherits(ol.layer.Vector3D, ol.layer.Image);
 /**
- * Set style associated with the renderer
+ * Set the height function for the layer
+ * @param {function|string|Number} height a height function (returns height giving a feature) or a popertie name or a fixed value
+ */
+ol.layer.Vector3D.prototype.setHeight = function(height) {
+  this.height_ = this.getHfn (height);
+  this.changed();
+};
+/**
+ * Set style associated with the layer
  * @param {ol.style.Style} s
  */
 ol.layer.Vector3D.prototype.setStyle = function(s) {
@@ -20023,14 +20133,15 @@ ol.layer.Vector3D.prototype.setStyle = function(s) {
   }
 };
 /**
- * Get style associated with the renderer
+ * Get style associated with the layer
  * @return {ol.style.Style}
  */
 ol.layer.Vector3D.prototype.getStyle = function() {
   return this._style;
 };
 /** Calculate 3D at potcompose
-*/
+ * @private
+ */
 ol.layer.Vector3D.prototype.onPostcompose_ = function(e) {
   var res = e.frameState.viewState.resolution;
   if (res > this.get('maxResolution')) return;
@@ -20071,15 +20182,16 @@ ol.layer.Vector3D.prototype.onPostcompose_ = function(e) {
     ctx.fillStyle = ol.color.asString(s.getFill().getColor());
     var builds = [];
     for (var i=0; i<f.length; i++) {
-      builds.push (this.getFeature3D_ (f[i], this.getFeatureHeight(f[i])));
+      builds.push (this.getFeature3D_ (f[i], this._getFeatureHeight(f[i])));
     }
     this.drawFeature3D_ (ctx, builds);
   ctx.restore();
 };
 /** Create a function that return height of a feature
-*	@param {function|string|number} h a height function or a popertie name or a fixed value
-*	@return {function} function(f) return height of the feature f
-*/
+ * @param {function|string|number} h a height function or a popertie name or a fixed value
+ * @return {function} function(f) return height of the feature f
+ * @private
+ */
 ol.layer.Vector3D.prototype.getHfn= function(h) {
   switch (typeof(h)) {
     case 'function': return h;
@@ -20092,12 +20204,12 @@ ol.layer.Vector3D.prototype.getHfn= function(h) {
     case 'number': return (function(/*f*/) { return h; });
     default: return (function(/*f*/) { return 10; });
   }
-}
+};
 /** Animate rendering
- * @param {olx.render3D.animateOptions}
- *  @param {string|function|number} param.height an attribute name or a function returning height of a feature or a fixed value
- *  @param {number} param.duration the duration of the animatioin ms, default 1000
- *  @param {ol.easing} param.easing an ol easing function
+ * @param {*} options
+ *  @param {string|function|number} options.height an attribute name or a function returning height of a feature or a fixed value
+ *  @param {number} options.duration the duration of the animatioin ms, default 1000
+ *  @param {ol.easing} options.easing an ol easing function
  *	@api
  */
 ol.layer.Vector3D.prototype.animate = function(options) {
@@ -20108,7 +20220,7 @@ ol.layer.Vector3D.prototype.animate = function(options) {
   this.easing_ = options.easing || ol.easing.easeOut;
   // Force redraw
   this.changed();
-}
+};
 /** Check if animation is on
 *	@return {bool}
 */
@@ -20118,9 +20230,12 @@ ol.layer.Vector3D.prototype.animating = function() {
   }
   return !!this.animate_;
 }
-/** 
-*/
-ol.layer.Vector3D.prototype.getFeatureHeight = function (f) {
+/** Get height for a feature
+ * @param {ol.Feature} f
+ * @return {number}
+ * @private
+ */
+ol.layer.Vector3D.prototype._getFeatureHeight = function (f) {
   if (this.animate_) {
     var h1 = this.height_(f);
     var h2 = this.toHeight_(f);
@@ -20128,8 +20243,9 @@ ol.layer.Vector3D.prototype.getFeatureHeight = function (f) {
   }
   else return this.height_(f);
 };
-/**
-*/
+/** Get hvector for a point
+ * @private
+ */
 ol.layer.Vector3D.prototype.hvector_ = function (pt, h) {
   var p0 = [
     pt[0]*this.matrix_[0] + pt[1]*this.matrix_[1] + this.matrix_[4],
@@ -20143,8 +20259,9 @@ ol.layer.Vector3D.prototype.hvector_ = function (pt, h) {
     ]
   };
 };
-/**
-*/
+/** Get a vector 3D for a feature
+ * @private
+ */
 ol.layer.Vector3D.prototype.getFeature3D_ = function (f, h) {
   var geom = this.get('geometry')(f);
   var c = geom.getCoordinates();
@@ -20168,9 +20285,10 @@ ol.layer.Vector3D.prototype.getFeature3D_ = function (f, h) {
       return { type:"Point", feature: f, geom: this.hvector_(c,h) };
     default: return {};
   }
-}
-/**
-*/
+};
+/** Draw 3D feature
+ * @private
+ */
 ol.layer.Vector3D.prototype.drawFeature3D_ = function(ctx, build) {
   var i,j, b, k;
   // Construct
@@ -20244,7 +20362,7 @@ ol.layer.Vector3D.prototype.drawFeature3D_ = function(ctx, build) {
       default: break;
     }
   }
-}
+};
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -20653,11 +20771,15 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
 	this._originators = capabilities.originators;
 	if (!tileoptions.gppKey) tileoptions.gppKey = options.gppKey || options.key;
 	options.source = new ol.source.Geoportail(layer, tileoptions);
-	if (!options.name) options.name = capabilities.title;
+	if (!options.title) options.title = capabilities.title;
+	if (!options.name) options.name = layer;
+	options.layer = layer;
+	if (!options.queryable) options.queryable = capabilities.queryable;
 	if (!options.desc) options.desc = capabilities.desc;
 	if (!options.extent && capabilities.bbox) {
-    if (capabilities.bbox[0]>-170 && capabilities.bbox[2]<170)
-    options.extent = ol.proj.transformExtent(capabilities.bbox, 'EPSG:4326', 'EPSG:3857');
+    if (capabilities.bbox[0]>-170 && capabilities.bbox[2]<170) {
+      options.extent = ol.proj.transformExtent(capabilities.bbox, 'EPSG:4326', 'EPSG:3857');
+    }
 	}
 	// calculate layer max resolution
 	if (!options.maxResolution && tileoptions.minZoom) {
@@ -20666,8 +20788,6 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
 		options.source.getTileGrid().minZoom = tileoptions.minZoom;
   }
   ol.layer.Tile.call (this, options);
-  this.set('layer', layer);
-  this.set('queryable', capabilities.queryable);
   // BUG GPP: Attributions constraints are not set properly :(
 /** /
   // Set attribution according to the originators
