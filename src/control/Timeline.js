@@ -596,6 +596,35 @@ ol_control_Timeline.prototype.setDate = function(feature, options) {
   }
 };
 
+/** Get round date (sticked to mn, hour day or month)
+ * @param {Date} d
+ * @param {string} stick sticking option to stick date to: 'mn', 'hour', 'day', 'month', default no stick
+ * @return {Date}
+ */
+ol_control_Timeline.prototype.roundDate = function(d, stick) {
+  console.log(d)
+  switch (stick) {
+    case 'mn': {
+      return new Date(this._roundTo(d, 60*1000));
+    }
+    case 'hour': {
+      return new Date(this._roundTo(d, 60*60*1000));
+    }
+    case 'day': {
+      return new Date(this._roundTo(d, 24*60*60*1000));
+    }
+    case 'month': {
+      d = new Date(this._roundTo(d, 24*60*60*1000));
+      if (d.getDate() > 15) {
+        d = new Date(d.setMonth(d.getMonth() + 1));
+      }
+      d = d.setDate(1);
+      return new Date(d);
+    }
+    default: return d;
+  }
+};
+
 /** Get the date of the center
  * @param {string} position position to get 'start', 'end' or 'middle', default middle
  * @param {string} stick sticking option to stick date to: 'mn', 'hour', 'day', 'month', default no stick
@@ -626,29 +655,7 @@ ol_control_Timeline.prototype.getDate = function(position, stick) {
     }
   }
   var d = this._getDateFromOffset(this._getScrollLeft() + pos);
-  switch (stick) {
-    case 'mn': {
-      d = this._roundTo(d, 60*1000);
-      break;
-    }
-    case 'hour': {
-      d = this._roundTo(d, 60*60*1000);
-      break;
-    }
-    case 'day': {
-      d = this._roundTo(d, 24*60*60*1000);
-      break;
-    }
-    case 'month': {
-      d = new Date(this._roundTo(d, 24*60*60*1000));
-      if (d.getDate() > 15) {
-        d = new Date(d.setMonth(d.getMonth() + 1));
-      }
-      d = d.setDate(1);
-      break;
-    }
-    default: break;
-  }
+  d = this.roundDate(d, stick);
   return new Date(d);
 };
 
