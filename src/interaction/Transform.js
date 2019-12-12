@@ -350,7 +350,6 @@ ol_interaction_Transform.prototype.drawSketch_ = function(center) {
     geom = ol_geom_Polygon_fromExtent(ext);
     if (this.get('enableRotatedTransform') && viewRotation !== 0) {
       geom.rotate(viewRotation, this.getMap().getView().getCenter())
-
     }
     f = this.bbox_ = new ol_Feature(geom);
     var features = [];
@@ -491,27 +490,14 @@ ol_interaction_Transform.prototype.handleDownEvent_ = function(evt) {
     }
     if (this.mode_==='rotate') {
       this.center_ = this.getCenter() || ol_extent_getCenter(extent);
-      if (this.get('enableRotatedTransform') && viewRotation !== 0) {
-        this.rotatedCenter_ = this.getCenter() || ol_extent_getCenter(rotExtent);
-      }
-
       // we are now rotating (cursor down on rotate mode), so apply the grabbing cursor
       var element = evt.map.getTargetElement();
       element.style.cursor = this.Cursors.rotate0;
       this.previousCursor_ = element.style.cursor;
     } else {
       this.center_ = ol_extent_getCenter(extent);
-      if (this.get('enableRotatedTransform') && viewRotation !== 0) {
-        this.rotatedCenter_ = ol_extent_getCenter(rotExtent);
-      }
     }
     this.angle_ = Math.atan2(this.center_[1]-evt.coordinate[1], this.center_[0]-evt.coordinate[0]);
-
-    if (this.get('enableRotatedTransform') && viewRotation !== 0) {
-      var downPoint = new ol_geom_Point(evt.coordinate);
-      downPoint.rotate(viewRotation * -1, this.rotatedCenter_);
-      this.rotatedCoordinate_ = downPoint.getCoordinates();
-    }
 
     this.dispatchEvent({
       type: this.mode_+'start',
@@ -571,11 +557,14 @@ ol_interaction_Transform.prototype.setCenter = function(c) {
  */
 ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
   if (!this._handleEvent(evt, this.features_)) return;
+  var viewRotation = this.getMap().getView().getRotation();
   var i, f, geometry;
+  var pt0 = [this.coordinate_[0], this.coordinate_[1]];
+  var pt = [evt.coordinate[0], evt.coordinate[1]];
   this.isUpdating_ = true;
   switch (this.mode_) {
     case 'rotate': {
-      var a = Math.atan2(this.center_[1]-evt.coordinate[1], this.center_[0]-evt.coordinate[0]);
+      var a = Math.atan2(this.center_[1]-pt[1], this.center_[0]-pt[0]);
       if (!this.ispt) {
         // var geometry = this.geom_.clone();
         // geometry.rotate(a-this.angle_, this.center_);
@@ -600,8 +589,8 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
       break;
     }
     case 'translate': {
-      var deltaX = evt.coordinate[0] - this.coordinate_[0];
-      var deltaY = evt.coordinate[1] - this.coordinate_[1];
+      var deltaX = pt[0] - pt0[0];
+      var deltaY = pt[1] - pt0[1];
 
       //this.feature_.getGeometry().translate(deltaX, deltaY);
       for (i=0, f; f=this.selection_.item(i); i++) {
@@ -623,9 +612,7 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
       break;
     }
     case 'scale': {
-      var viewRotation = this.getMap().getView().getRotation();
       var center = this.center_;
-      var rotationCenter = this.center_;
       if (this.get('modifyCenter')(evt)) {
         var extentCoordinates = this.extent_;
         if (this.get('enableRotatedTransform') && viewRotation !== 0) {
@@ -635,19 +622,25 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
       }
 
       var downCoordinate = this.coordinate_;
-      if (this.get('enableRotatedTransform') && viewRotation !== 0) {
-        downCoordinate = this.rotatedCoordinate_;
-      }
-
       var dragCoordinate = evt.coordinate;
       if (this.get('enableRotatedTransform') && viewRotation !== 0) {
+        var downPoint = new ol_geom_Point(this.coordinate_);
+        downPoint.rotate(viewRotation * -1, center);
+        downCoordinate = downPoint.getCoordinates();
+
         var dragPoint = new ol_geom_Point(evt.coordinate);
-        dragPoint.rotate(viewRotation * -1, rotationCenter);
+        dragPoint.rotate(viewRotation * -1, center);
         dragCoordinate = dragPoint.getCoordinates();
       }
 
       var scx = ((dragCoordinate)[0] - (center)[0]) / (downCoordinate[0] - (center)[0]);
       var scy = ((dragCoordinate)[1] - (center)[1]) / (downCoordinate[1] - (center)[1]);
+
+      if (this.get('enableRotatedTransform') && viewRotation !== 0) {
+        var centerPoint = new ol_geom_Point(center);
+        centerPoint.rotate(viewRotation * -1, this.getMap().getView().getCenter());
+        center = centerPoint.getCoordinates();
+      }
 
       if (this.get('noFlip')) {
         if (scx<0) scx=-scx;
