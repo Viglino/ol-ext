@@ -22,7 +22,7 @@ import {ol_ext_inherits} from '../util/ext'
 var ol_source_BinBase = function (options) {
   options = options || {};
   this._bindModify = this._onModifyFeature.bind(this);
-  this._watch === true;
+  this._watch = true;
 
   ol_source_Vector.call(this, options);
 
