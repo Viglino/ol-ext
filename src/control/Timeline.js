@@ -108,7 +108,7 @@ var ol_control_Timeline = function(options) {
     scrollListener = setTimeout(function() {
       this.dispatchEvent({ 
         type: 'scroll', 
-        date: this.getDate(), 
+        date: this.getDate('middle', this.get('graduation') || 'day'), 
         dateStart: this.getDate('start'), 
         dateEnd: this.getDate('end')
       });
@@ -398,7 +398,7 @@ ol_control_Timeline.prototype.refresh = function(zoom, first) {
   // Dispatch scroll event
   this.dispatchEvent({ 
     type: 'scroll', 
-    date: this.getDate(), 
+    date: this.getDate('middle', this.get('graduation') || 'day'), 
     dateStart: this.getDate('start'), 
     dateEnd: this.getDate('end')
   });
@@ -410,7 +410,7 @@ ol_control_Timeline.prototype.refresh = function(zoom, first) {
  * @private
  */
 ol_control_Timeline.prototype._getOffsetFromDate = function(date) {
-  return (date - this._minDate) * this._scale;
+  return (date - this._minDate) * (this._scale / window.devicePixelRatio);
 };
 
 /** Get date given an offset
@@ -419,7 +419,7 @@ ol_control_Timeline.prototype._getOffsetFromDate = function(date) {
  * @private
  */
 ol_control_Timeline.prototype._getDateFromOffset = function(offset) {
-  return offset / this._scale + this._minDate;
+  return ((offset / this._scale) * window.devicePixelRatio) + this._minDate;
 };
 
 /** Set the current position 
@@ -602,7 +602,6 @@ ol_control_Timeline.prototype.setDate = function(feature, options) {
  * @return {Date}
  */
 ol_control_Timeline.prototype.roundDate = function(d, stick) {
-  console.log(d)
   switch (stick) {
     case 'mn': {
       return new Date(this._roundTo(d, 60*1000));
