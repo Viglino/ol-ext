@@ -69,7 +69,7 @@ npm install openlayers-ext
 The library will be available in the `node_modules/openlayers-ext/dist` directory. You can find individual files in the `node_modules/openlayers-ext/lib` directory.
 * You can download the [scripts](dist) of the ./dist directory of the repository in your project and insert the .js and .css in your page.
 * If you just want to add a `<script>` tag to test things out, you can link directly to the builds from the github rawgit (not recommended in production).
-* For compatibility with older browsers and platforms (like Internet Explorer down to version 9 and Android 4.x), the Openalerys needs to be transpiled (e.g. using Babel) and bundled with polyfills for `requestAnimationFrame`, `Element.prototype.classList`, `Object.assign`and `URL`.
+* For compatibility with older browsers and platforms (like Internet Explorer down to version 9 and Android 4.x), the OpenLayers needs to be transpiled (e.g. using Babel) and bundled with polyfills for `requestAnimationFrame`, `Element.prototype.classList`, `Object.assign`and `URL`.
 
 ````html
 <!-- Openlayers -->
