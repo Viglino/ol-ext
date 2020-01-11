@@ -11478,19 +11478,34 @@ ol.filter.Mask.prototype.drawFeaturePath_ = function(e, out) {
   var ctx = e.context;
   var canvas = ctx.canvas;
   var ratio = e.frameState.pixelRatio;
-  console.log(ratio)
-  // ol v6
-  if (/render$/.test(e.type)) ratio = 1;
   // Transform
-  var m = e.frameState.coordinateToPixelTransform;
-  var tr = function(pt) {
-    return [
-      (pt[0]*m[0]+pt[1]*m[1]+m[4])*ratio,
-      (pt[0]*m[2]+pt[1]*m[3]+m[5])*ratio
-    ];
-  }
-  // Old ol version
-  if (!m) {
+  var tr;
+  if (e.frameState.coordinateToPixelTransform) {
+    var m = e.frameState.coordinateToPixelTransform;
+    // ol > 6
+    if (e.inversePixelTransform) {
+      var ipt = e.inversePixelTransform;
+      tr = function(pt) {
+        var pt = [
+          (pt[0]*m[0]+pt[1]*m[1]+m[4]),
+          (pt[0]*m[2]+pt[1]*m[3]+m[5])
+        ];
+        return [
+          (pt[0]*ipt[0] - pt[1]*ipt[1] + ipt[4]),
+          (-pt[0]*ipt[2] + pt[1]*ipt[3] + ipt[5])
+        ]
+      }
+    } else {
+      // ol 5
+      tr = function(pt) {
+        return [
+          (pt[0]*m[0]+pt[1]*m[1]+m[4])*ratio,
+          (pt[0]*m[2]+pt[1]*m[3]+m[5])*ratio
+        ];
+      }
+    }
+  } else {
+    // Older version
     m = e.frameState.coordinateToPixelMatrix;
     tr = function(pt) {
       return [
@@ -11521,7 +11536,7 @@ ol.filter.Mask.prototype.drawFeaturePath_ = function(e, out) {
         }
       }
     }
-}
+};
 ol.filter.Mask.prototype.postcompose = function(e) {
   if (!this.feature_) return;
   var ctx = e.context;
@@ -11530,7 +11545,7 @@ ol.filter.Mask.prototype.postcompose = function(e) {
     ctx.fillStyle = this.fillColor_;
     ctx.fill("evenodd");
   ctx.restore();
-}
+};
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
