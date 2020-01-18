@@ -290,6 +290,17 @@
   padding: .1em 1em;
 }
 
+.ol-control.ol-control-canvas-overlay {
+  background-color: transparent;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
 .ol-ext-dialog {
   position: fixed;
   top: -100%;

@@ -2809,6 +2809,172 @@ ol.control.CanvasAttribution.prototype.drawAttribution_ = function(e) {
   ctx.restore();
 };
 
+/*	Copyright (c) 2016 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Control bar for OL3
+ * The control bar is a container for other controls. It can be used to create toolbars.
+ * Control bars can be nested and combined with ol.control.Toggle to handle activate/deactivate.
+ *
+ * @constructor
+ * @extends {ol.control.Control}
+ * @param {Object=} options Control options.
+ *  @param {String} options.className class of the control
+ *  @param {bool} options.group is a group, default false
+ *  @param {bool} options.toggleOne only one toggle control is active at a time, default false
+ *  @param {bool} options.autoDeactivate used with subbar to deactivate all control when top level control deactivate, default false
+ *  @param {Array<_ol_control_>} options.controls a list of control to add to the bar
+ */
+ol.control.CanvasOverlay = function(options) {
+  if (!options) options={};
+  this._canvas = ol.ext.element.create('CANVAS', {
+    className: (options.className || '') + ' ol-control ol-control-canvas-overlay ol-unselectable'
+  });
+  this._ctx = this._canvas.getContext('2d');
+  ol.control.Control.call(this, {
+    element: this._canvas
+  });
+  this._listener = [];
+  this._time = 0;
+  // 25fps
+  this._fps = 1000/25;
+};
+ol.ext.inherits(ol.control.CanvasOverlay, ol.control.Control);
+/** Set the control visibility
+ * @param {boolean} b
+ */
+ol.control.CanvasOverlay.prototype.setVisible = function (val) {
+  if (val) this.element.style.display = '';
+  else this.element.style.display = 'none';
+}
+/** Get the control visibility
+ * @return {boolean} b
+ */
+ol.control.CanvasOverlay.prototype.getVisible = function () {
+  return this.element.style.display != 'none';
+}
+/**
+ * Set the map instance the control is associated with
+ * @param {ol.Map} map The map instance.
+ */
+ol.control.CanvasOverlay.prototype.setMap = function (map) {
+  if (this.getMap()) {
+    this.getMap().getViewport().querySelector('.ol-overlaycontainer').removeChild(this._canvas);
+  }
+  this._listener.forEach(function(l) {
+    ol.Observable.unByKey(l);
+  });
+  this._listener = [];
+  ol.control.Control.prototype.setMap.call(this, map);
+  if (map) {
+    var size = map.getSize();
+    this._canvas.width = size[0];
+    this._canvas.height = size[1];
+    this.draw();
+    map.on('change:size', function()  {
+      var size = map.getSize();
+      if (this._canvas.width !== size[0] || this._canvas.height !== size[1]) {
+        this._canvas.width = size[0];
+        this._canvas.height = size[1];
+        this.draw();
+      }
+    }.bind(this));
+    // Append to the map
+    map.getViewport().querySelector('.ol-overlaycontainer').appendChild(this._canvas);
+  }
+};
+/** Crete particules */
+ol.control.CanvasOverlay.prototype.getParticules = function() {
+  if (!this._particules) {
+    this._particules = [];
+    for (var i=0; i<50; i++) {
+      var xy = [Math.random()*this._canvas.width, Math.random()*this._canvas.height];
+      var p = [ xy ];
+      for (var k=0; k<7; k++) {
+        p.push([ (Math.random()*15 +15) * (Math.random()>.5 ? 1:-1), (Math.random()*15 +15) * (Math.random()>.5 ? 1:-1) ]);
+      }
+      this._particules.push(p);
+    }
+  }
+  return this._particules;
+};
+/** Draw control overlay 
+ * @param {number} dt
+ */
+ol.control.CanvasOverlay.prototype.draw = function(dt) {
+  var ctx = this._ctx;
+  this.clear();
+  ctx.beginPath();
+  var w = 50;
+  var h = 50;
+  var speed = 5;
+  var angle = -Math.PI / 3;
+  var cos = Math.cos(angle);
+  var sin = Math.sin(angle);
+  this.getParticules().forEach(function(p) {
+    if (dt) {
+      p[0][0] += speed*cos;
+      p[0][1] += speed*sin;
+      if (p[0][0] < -w) {
+        p[0][0] = this._canvas.width + w;
+        p[0][1] = Math.random() * (this._canvas.height+h) - h/2;
+        console.log(p[0])
+      } else if (p[0][0] > this._canvas.width +w) {
+        p[0][0] = -w;
+        p[0][1] = Math.random() * (this._canvas.height+h) - h/2;
+      } else if (p[0][1] < -h) {
+        p[0][0] = Math.random() * (this._canvas.width+w) - w/2;
+        p[0][1] = this._canvas.height + h;
+      } else if (p[0][1] > this._canvas.height +h) {
+        p[0][0] = Math.random() * (this._canvas.width+w) - w/2;
+        p[0][1] = -h;
+      }
+    }
+    p.forEach(function(pi, i) {
+      if (!i) this.drawCloud(pi);
+      else this.drawCloud([p[0][0]+pi[0], p[0][1]+pi[1]]);
+    }.bind(this))
+  }.bind(this));
+};
+ol.control.CanvasOverlay.prototype.drawCloud = function(xy) {
+  var ctx = this._ctx;
+  var grd = ctx.createRadialGradient(xy[0],xy[1], 0, xy[0],xy[1], 50);
+  grd.addColorStop(0, 'rgba(255,255,255,.2');
+  grd.addColorStop(1, 'rgba(255,255,255,0');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);
+};  
+/** Clear canvas
+ */
+ol.control.CanvasOverlay.prototype.clear = function() {
+  this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+};
+/** Set canvas animation
+ * @param {boolean} anim, default true
+ * @api
+ */
+ol.control.CanvasOverlay.prototype.setAnimation = function(anim) {
+  anim = (anim!==false);
+  this.set('animation', anim);
+  if (anim) {
+    requestAnimationFrame(this._animate.bind(this));
+  }
+};
+/**
+ * @private
+ */
+ol.control.CanvasOverlay.prototype._animate = function(time) {
+  if (this.get('animation')) {
+    // Test fps
+    if (time - this._time > this._fps) {
+      this.draw(time - this._time);
+      this._time = time;
+    }
+    requestAnimationFrame(this._animate.bind(this));
+  }
+};
+
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -15742,9 +15908,9 @@ ol.interaction.Ripple.prototype.postcompose_ = function(e) {
 };
 
 /*
-	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (http://www.cecill.info/).
-	ol.interaction.SelectCluster is an interaction for selecting vector features in a cluster.
+  Copyright (c) 2015 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (http://www.cecill.info/).
+  ol.interaction.SelectCluster is an interaction for selecting vector features in a cluster.
 */
 /**
  * @classdesc
@@ -15768,58 +15934,56 @@ ol.interaction.Ripple.prototype.postcompose_ = function(e) {
  * @fires ol.interaction.SelectEvent
  * @api stable
  */
-ol.interaction.SelectCluster = function(options) 
-{	options = options || {};
-	var fn; 
-	this.pointRadius = options.pointRadius || 12;
-	this.circleMaxObjects = options.circleMaxObjects || 10;
-	this.maxObjects = options.maxObjects || 60;
-	this.spiral = (options.spiral !== false);
-	this.animate = options.animate;
-	this.animationDuration = options.animationDuration || 500;
-	this.selectCluster_ = (options.selectCluster !== false);
-	// Create a new overlay layer for 
-	var overlay = this.overlayLayer_ = new ol.layer.Vector(
-		{	source: new ol.source.Vector({
-				features: new ol.Collection(),
-				wrapX: options.wrapX,
-				useSpatialIndex: true
-			}),
-			name:'Cluster overlay',
-			updateWhileAnimating: true,
-			updateWhileInteracting: true,
-			displayInLayerSwitcher: false,
-			style: options.featureStyle
-		});
-	// Add the overlay to selection
-	if (options.layers)
-	{	if (typeof(options.layers) == "function")
-		{	fn = options.layers;
-			options.layers = function(layer)
-			{	return (layer===overlay || fn(layer));
-			};
-		}
-		else if (options.layers.push)
-		{	options.layers.push(this.overlayLayer_);
-		}
-	}
-	// Don't select links
-	if (options.filter)
-	{	fn = options.filter;
-		options.filter = function(f,l)
-		{	//if (l===overlay && f.get("selectclusterlink")) return false;
-			if (!l && f.get("selectclusterlink")) return false;
-			else return fn(f,l);
-		};
-	}
-	else options.filter = function(f,l) 
-	{	//if (l===overlay && f.get("selectclusterlink")) return false; 
-		if (!l && f.get("selectclusterlink")) return false; 
-		else return true;
-	};
-	this.filter_ = options.filter;
-	ol.interaction.Select.call(this, options);
-	this.on("select", this.selectCluster.bind(this));
+ol.interaction.SelectCluster = function(options) {
+  options = options || {};
+  var fn; 
+  this.pointRadius = options.pointRadius || 12;
+  this.circleMaxObjects = options.circleMaxObjects || 10;
+  this.maxObjects = options.maxObjects || 60;
+  this.spiral = (options.spiral !== false);
+  this.animate = options.animate;
+  this.animationDuration = options.animationDuration || 500;
+  this.selectCluster_ = (options.selectCluster !== false);
+  // Create a new overlay layer for 
+  var overlay = this.overlayLayer_ = new ol.layer.Vector({
+    source: new ol.source.Vector({
+      features: new ol.Collection(),
+      wrapX: options.wrapX,
+      useSpatialIndex: true
+    }),
+    name:'Cluster overlay',
+    updateWhileAnimating: true,
+    updateWhileInteracting: true,
+    displayInLayerSwitcher: false,
+    style: options.featureStyle
+  });
+  // Add the overlay to selection
+  if (options.layers) {
+    if (typeof(options.layers) == "function") {
+      fn = options.layers;
+      options.layers = function(layer) {
+        return (layer===overlay || fn(layer));
+      };
+    } else if (options.layers.push) {
+      options.layers.push(this.overlayLayer_);
+    }
+  }
+  // Don't select links
+  if (options.filter) {
+    fn = options.filter;
+    options.filter = function(f,l){
+      //if (l===overlay && f.get("selectclusterlink")) return false;
+      if (!l && f.get("selectclusterlink")) return false;
+      else return fn(f,l);
+    };
+  } else options.filter = function(f,l) {
+    //if (l===overlay && f.get("selectclusterlink")) return false; 
+    if (!l && f.get("selectclusterlink")) return false; 
+    else return true;
+  };
+  this.filter_ = options.filter;
+  ol.interaction.Select.call(this, options);
+  this.on("select", this.selectCluster.bind(this));
 };
 ol.ext.inherits(ol.interaction.SelectCluster, ol.interaction.Select);
 /**
@@ -15829,175 +15993,179 @@ ol.ext.inherits(ol.interaction.SelectCluster, ol.interaction.Select);
  * @api stable
  */
 ol.interaction.SelectCluster.prototype.setMap = function(map) {
-	if (this.getMap()) {
-		this.getMap().removeLayer(this.overlayLayer_);
-	}
-	if (this._listener) ol.Observable.unByKey(this._listener);
-	this._listener = null;
-	ol.interaction.Select.prototype.setMap.call (this, map);
-	this.overlayLayer_.setMap(map);
-	// map.addLayer(this.overlayLayer_);
-	if (map && map.getView()) {
-		this._listener = map.getView().on('change:resolution', this.clear.bind(this));
-	}
+  if (this.getMap()) {
+    this.getMap().removeLayer(this.overlayLayer_);
+  }
+  if (this._listener) ol.Observable.unByKey(this._listener);
+  this._listener = null;
+  ol.interaction.Select.prototype.setMap.call (this, map);
+  this.overlayLayer_.setMap(map);
+  // map.addLayer(this.overlayLayer_);
+  if (map && map.getView()) {
+    this._listener = map.getView().on('change:resolution', this.clear.bind(this));
+  }
 };
 /**
  * Clear the selection, close the cluster and remove revealed features
  * @api stable
  */
-ol.interaction.SelectCluster.prototype.clear = function() 
-{	this.getFeatures().clear();
-	this.overlayLayer_.getSource().clear();
+ol.interaction.SelectCluster.prototype.clear = function() {
+  this.getFeatures().clear();
+  this.overlayLayer_.getSource().clear();
 };
 /**
  * Get the layer for the revealed features
  * @api stable
  */
-ol.interaction.SelectCluster.prototype.getLayer = function() 
-{	return this.overlayLayer_;
+ol.interaction.SelectCluster.prototype.getLayer = function() {
+  return this.overlayLayer_;
 };
 /**
  * Select a cluster 
- * @param {ol.Feature} a cluster feature ie. a feature with a 'features' attribute.
+ * @param {ol.SelectEvent | ol.Feature} a cluster feature ie. a feature with a 'features' attribute.
  * @api stable
  */
-ol.interaction.SelectCluster.prototype.selectCluster = function (e) 
-{	// Nothing selected
-	if (!e.selected.length)
-	{	this.clear();
-		return;
-	}
-	// Get selection
-	var feature = e.selected[0];
-	// It's one of ours
-	if (feature.get('selectclusterfeature')) return;
-	// Clic out of the cluster => close it
-	var source = this.overlayLayer_.getSource();
-	source.clear();
-	var cluster = feature.get('features');
-	// Not a cluster (or just one feature)
-	if (!cluster || cluster.length==1) return;
-	// Remove cluster from selection
-	if (!this.selectCluster_) this.getFeatures().clear();
-	var center = feature.getGeometry().getCoordinates();
-	// Pixel size in map unit
-	var pix = this.getMap().getView().getResolution();
-	var r = pix * this.pointRadius * (0.5 + cluster.length / 4);
-	var a, i, max;
-	var p, cf, lk;
-	// The features
-	var features = [];
-	// Draw on a circle
-	if (!this.spiral || cluster.length <= this.circleMaxObjects)
-	{	max = Math.min(cluster.length, this.circleMaxObjects);
-		for (i=0; i<max; i++)
-		{	a = 2*Math.PI*i/max;
-			if (max==2 || max == 4) a += Math.PI/4;
-			p = [ center[0]+r*Math.sin(a), center[1]+r*Math.cos(a) ];
-			cf = new ol.Feature({ 'selectclusterfeature':true, 'features':[cluster[i]], geometry: new ol.geom.Point(p) });
-			cf.setStyle(cluster[i].getStyle());
-			features.push(cf);
-			lk = new ol.Feature({ 'selectclusterlink':true, geometry: new ol.geom.LineString([center,p]) });
-			features.push(lk);
-		}
-	}
-	// Draw on a spiral
-	else
-	{	// Start angle
-		a = 0;
-		r;
-		var d = 2*this.pointRadius;
-		max = Math.min (this.maxObjects, cluster.length);
-		// Feature on a spiral
-		for (i=0; i<max; i++)
-		{	// New radius => increase d in one turn
-			r = d/2 + d*a/(2*Math.PI);
-			// Angle
-			a = a + (d+0.1)/r;
-			var dx = pix*r*Math.sin(a)
-			var dy = pix*r*Math.cos(a)
-			p = [ center[0]+dx, center[1]+dy ];
-			cf = new ol.Feature({ 'selectclusterfeature':true, 'features':[cluster[i]], geometry: new ol.geom.Point(p) });
-			cf.setStyle(cluster[i].getStyle()); 
-			features.push(cf);
-			lk = new ol.Feature({ 'selectclusterlink':true, geometry: new ol.geom.LineString([center,p]) });
-			features.push(lk);
-		}
-	}
-	source.clear();
-	if (this.animate) {
-		this.animateCluster_(center, features);
-	} else {
-		source.addFeatures(features);
-	}
+ol.interaction.SelectCluster.prototype.selectCluster = function (e) {
+  // It's a feature => convert to SelectEvent
+  if (e instanceof ol.Feature) {
+    e = { selected: [e] };
+  }
+  // Nothing selected
+  if (!e.selected.length) {
+    this.clear();
+    return;
+  }
+  // Get selection
+  var feature = e.selected[0];
+  // It's one of ours
+  if (feature.get('selectclusterfeature')) return;
+  // Clic out of the cluster => close it
+  var source = this.overlayLayer_.getSource();
+  source.clear();
+  var cluster = feature.get('features');
+  // Not a cluster (or just one feature)
+  if (!cluster || cluster.length==1) return;
+  // Remove cluster from selection
+  if (!this.selectCluster_) this.getFeatures().clear();
+  var center = feature.getGeometry().getCoordinates();
+  // Pixel size in map unit
+  var pix = this.getMap().getView().getResolution();
+  var r = pix * this.pointRadius * (0.5 + cluster.length / 4);
+  var a, i, max;
+  var p, cf, lk;
+  // The features
+  var features = [];
+  // Draw on a circle
+  if (!this.spiral || cluster.length <= this.circleMaxObjects) {
+    max = Math.min(cluster.length, this.circleMaxObjects);
+    for (i=0; i<max; i++) {
+      a = 2*Math.PI*i/max;
+      if (max==2 || max == 4) a += Math.PI/4;
+      p = [ center[0]+r*Math.sin(a), center[1]+r*Math.cos(a) ];
+      cf = new ol.Feature({ 'selectclusterfeature':true, 'features':[cluster[i]], geometry: new ol.geom.Point(p) });
+      cf.setStyle(cluster[i].getStyle());
+      features.push(cf);
+      lk = new ol.Feature({ 'selectclusterlink':true, geometry: new ol.geom.LineString([center,p]) });
+      features.push(lk);
+    }
+  }
+  // Draw on a spiral
+  else {
+    // Start angle
+    a = 0;
+    r;
+    var d = 2*this.pointRadius;
+    max = Math.min (this.maxObjects, cluster.length);
+    // Feature on a spiral
+    for (i=0; i<max; i++) {
+      // New radius => increase d in one turn
+      r = d/2 + d*a/(2*Math.PI);
+      // Angle
+      a = a + (d+0.1)/r;
+      var dx = pix*r*Math.sin(a)
+      var dy = pix*r*Math.cos(a)
+      p = [ center[0]+dx, center[1]+dy ];
+      cf = new ol.Feature({ 'selectclusterfeature':true, 'features':[cluster[i]], geometry: new ol.geom.Point(p) });
+      cf.setStyle(cluster[i].getStyle()); 
+      features.push(cf);
+      lk = new ol.Feature({ 'selectclusterlink':true, geometry: new ol.geom.LineString([center,p]) });
+      features.push(lk);
+    }
+  }
+  source.clear();
+  if (this.animate) {
+    this.animateCluster_(center, features);
+  } else {
+    source.addFeatures(features);
+  }
 };
 /**
  * Animate the cluster and spread out the features
  * @param {ol.Coordinates} the center of the cluster
  */
-ol.interaction.SelectCluster.prototype.animateCluster_ = function(center, features)
-{	// Stop animation (if one is running)
-	if (this.listenerKey_) {
-		ol.Observable.unByKey(this.listenerKey_);
-	}
-	// Features to animate
-	// var features = this.overlayLayer_.getSource().getFeatures();
-	if (!features.length) return;
-	var style = this.overlayLayer_.getStyle();
-	var stylefn = (typeof(style) == 'function') ? style : style.length ? function(){ return style; } : function(){ return [style]; } ;
-	var duration = this.animationDuration || 500;
-	var start = new Date().getTime();
-	// Animate function
-	function animate(event) {
-		var vectorContext = event.vectorContext || ol.render.getVectorContext(event);
-		// Retina device
-		var ratio = event.frameState.pixelRatio;
-		var res = this.getMap().getView().getResolution();
-		var e = ol.easing.easeOut((event.frameState.time - start) / duration);
-		for (var i=0, feature; feature = features[i]; i++) if (feature.get('features'))
-		{	var pt = feature.getGeometry().getCoordinates();
-			pt[0] = center[0] + e * (pt[0]-center[0]);
-			pt[1] = center[1] + e * (pt[1]-center[1]);
-			var geo = new ol.geom.Point(pt);
-			// Image style
-			var st = stylefn(feature, res);
-			for (var s=0; s<st.length; s++)
-			{	var sc;
-				// OL < v4.3 : setImageStyle doesn't check retina
-				var imgs = ol.Map.prototype.getFeaturesAtPixel ? false : st[s].getImage();
-				if (imgs)
-				{	sc = imgs.getScale();
-					imgs.setScale(ratio); 
-				}
-				// OL3 > v3.14
-				if (vectorContext.setStyle)
-				{	vectorContext.setStyle(st[s]);
-					vectorContext.drawGeometry(geo);
-				}
-				// older version
-				else
-				{	vectorContext.setImageStyle(imgs);
-					vectorContext.drawPointGeometry(geo);
-				}
-				if (imgs) imgs.setScale(sc);
-			}
-		}
-		// Stop animation and restore cluster visibility
-		if (e > 1.0) {
-			ol.Observable.unByKey(this.listenerKey_);
-			this.overlayLayer_.getSource().addFeatures(features);
-			this.overlayLayer_.changed();
-			return;
-		}
-		// tell OL3 to continue postcompose animation
-		event.frameState.animate = true;
-	}
-	// Start a new postcompose animation
-	this.listenerKey_ = this.overlayLayer_.on(['postcompose','postrender'], animate.bind(this));
-	// Start animation with a ghost feature
-	var feature = new ol.Feature(new ol.geom.Point(this.getMap().getView().getCenter()));
-	feature.setStyle(new ol.style.Style({ image: new ol.style.Circle({}) }));
-	this.overlayLayer_.getSource().addFeature(feature);
+ol.interaction.SelectCluster.prototype.animateCluster_ = function(center, features) {
+  // Stop animation (if one is running)
+  if (this.listenerKey_) {
+    ol.Observable.unByKey(this.listenerKey_);
+  }
+  // Features to animate
+  // var features = this.overlayLayer_.getSource().getFeatures();
+  if (!features.length) return;
+  var style = this.overlayLayer_.getStyle();
+  var stylefn = (typeof(style) == 'function') ? style : style.length ? function(){ return style; } : function(){ return [style]; } ;
+  var duration = this.animationDuration || 500;
+  var start = new Date().getTime();
+  // Animate function
+  function animate(event) {
+    var vectorContext = event.vectorContext || ol.render.getVectorContext(event);
+    // Retina device
+    var ratio = event.frameState.pixelRatio;
+    var res = this.getMap().getView().getResolution();
+    var e = ol.easing.easeOut((event.frameState.time - start) / duration);
+    for (var i=0, feature; feature = features[i]; i++) if (feature.get('features')) {
+      var pt = feature.getGeometry().getCoordinates();
+      pt[0] = center[0] + e * (pt[0]-center[0]);
+      pt[1] = center[1] + e * (pt[1]-center[1]);
+      var geo = new ol.geom.Point(pt);
+      // Image style
+      var st = stylefn(feature, res);
+      for (var s=0; s<st.length; s++) {
+        var sc;
+        // OL < v4.3 : setImageStyle doesn't check retina
+        var imgs = ol.Map.prototype.getFeaturesAtPixel ? false : st[s].getImage();
+        if (imgs) {
+          sc = imgs.getScale();
+          imgs.setScale(ratio); 
+        }
+        // OL3 > v3.14
+        if (vectorContext.setStyle) {
+          vectorContext.setStyle(st[s]);
+          vectorContext.drawGeometry(geo);
+        }
+        // older version
+        else {
+          vectorContext.setImageStyle(imgs);
+          vectorContext.drawPointGeometry(geo);
+        }
+        if (imgs) imgs.setScale(sc);
+      }
+    }
+    // Stop animation and restore cluster visibility
+    if (e > 1.0) {
+      ol.Observable.unByKey(this.listenerKey_);
+      this.overlayLayer_.getSource().addFeatures(features);
+      this.overlayLayer_.changed();
+      return;
+    }
+    // tell OL3 to continue postcompose animation
+    event.frameState.animate = true;
+  }
+  // Start a new postcompose animation
+  this.listenerKey_ = this.overlayLayer_.on(['postcompose','postrender'], animate.bind(this));
+  // Start animation with a ghost feature
+  var feature = new ol.Feature(new ol.geom.Point(this.getMap().getView().getCenter()));
+  feature.setStyle(new ol.style.Style({ image: new ol.style.Circle({}) }));
+  this.overlayLayer_.getSource().addFeature(feature);
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -20484,254 +20652,252 @@ ol.source.WikiCommons.prototype._loaderFn = function(extent, resolution, project
 };
 
 /*
-	Copyright (c) 2015 Jean-Marc VIGLINO,
-	released under the CeCILL-B license (http://www.cecill.info/).
-	ol.layer.AnimatedCluster is a vector layer that animate cluster
+  Copyright (c) 2015 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (http://www.cecill.info/).
+  ol.layer.AnimatedCluster is a vector layer that animate cluster
 */
 /**
  *  A vector layer for animated cluster
  * @constructor 
  * @extends {ol.layer.Vector}
  * @param {olx.layer.AnimatedClusterOptions=} options extend olx.layer.Options
- * 	@param {Number} options.animationDuration animation duration in ms, default is 700ms 
- * 	@param {ol.easingFunction} animationMethod easing method to use, default ol.easing.easeOut
+ *  @param {Number} options.animationDuration animation duration in ms, default is 700ms 
+ *  @param {ol.easingFunction} animationMethod easing method to use, default ol.easing.easeOut
  */
-ol.layer.AnimatedCluster = function(opt_options)
-{	var options = opt_options || {};
-	ol.layer.Vector.call (this, options);
-	this.oldcluster = new ol.source.Vector();
-	this.clusters = [];
-	this.animation={start:false};
-	this.set('animationDuration', typeof(options.animationDuration)=='number' ? options.animationDuration : 700);
-	this.set('animationMethod', options.animationMethod || ol.easing.easeOut);
-	// Save cluster before change
-	this.getSource().on('change', this.saveCluster.bind(this));
-	// Animate the cluster
-	this.on(['precompose','prerender'], this.animate.bind(this));
-	this.on(['postcompose','postrender'], this.postanimate.bind(this));
+ol.layer.AnimatedCluster = function(opt_options) {
+  var options = opt_options || {};
+  ol.layer.Vector.call (this, options);
+  this.oldcluster = new ol.source.Vector();
+  this.clusters = [];
+  this.animation={start:false};
+  this.set('animationDuration', typeof(options.animationDuration)=='number' ? options.animationDuration : 700);
+  this.set('animationMethod', options.animationMethod || ol.easing.easeOut);
+  // Save cluster before change
+  this.getSource().on('change', this.saveCluster.bind(this));
+  // Animate the cluster
+  this.on(['precompose','prerender'], this.animate.bind(this));
+  this.on(['postcompose','postrender'], this.postanimate.bind(this));
 };
 ol.ext.inherits(ol.layer.AnimatedCluster, ol.layer.Vector);
 /** save cluster features before change
  * @private
  */
 ol.layer.AnimatedCluster.prototype.saveCluster = function() {
-	if (this.oldcluster) {
-		this.oldcluster.clear();
-		if (!this.get('animationDuration')) return;
-		var features = this.getSource().getFeatures();
-		if (features.length && features[0].get('features'))
-		{	this.oldcluster.addFeatures (this.clusters);
-			this.clusters = features.slice(0);
-			this.sourceChanged = true;
-		}
-	}
+  if (this.oldcluster) {
+    this.oldcluster.clear();
+    if (!this.get('animationDuration')) return;
+    var features = this.getSource().getFeatures();
+    if (features.length && features[0].get('features')) {
+      this.oldcluster.addFeatures (this.clusters);
+      this.clusters = features.slice(0);
+      this.sourceChanged = true;
+    }
+  }
 };
 /** 
  * Get the cluster that contains a feature
  * @private
 */
-ol.layer.AnimatedCluster.prototype.getClusterForFeature = function(f, cluster)
-{	for (var j=0, c; c=cluster[j]; j++)
-	{	var features = c.get('features');
-		if (features && features.length) 
-		{	for (var k=0, f2; f2=features[k]; k++)
-			{	if (f===f2) 
-				{	return c;
-				}
-			}
-		}
-	}
-	return false;
+ol.layer.AnimatedCluster.prototype.getClusterForFeature = function(f, cluster) {
+  for (var j=0, c; c=cluster[j]; j++) {
+    var features = c.get('features');
+    if (features && features.length) {
+      for (var k=0, f2; f2=features[k]; k++) {
+        if (f===f2) {
+          return c;
+        }
+      }
+    }
+  }
+  return false;
 };
 /** 
  * Stop animation 
  * @private 
  */
-ol.layer.AnimatedCluster.prototype.stopAnimation = function()
-{	this.animation.start = false;
-	this.animation.cA = [];
-	this.animation.cB = [];
+ol.layer.AnimatedCluster.prototype.stopAnimation = function() {
+  this.animation.start = false;
+  this.animation.cA = [];
+  this.animation.cB = [];
 };
 /** 
  * animate the cluster
  * @private
  */
-ol.layer.AnimatedCluster.prototype.animate = function(e)
-{	var duration = this.get('animationDuration');
-	if (!duration) return;
-	var resolution = e.frameState.viewState.resolution;
-	var i, c0, a = this.animation;
-	var time = e.frameState.time;
-	// Start a new animation, if change resolution and source has changed
-	if (a.resolution != resolution && this.sourceChanged)
-	{	var extent = e.frameState.extent;
-		if (a.resolution < resolution)
-		{	extent = ol.extent.buffer(extent, 100*resolution);
-			a.cA = this.oldcluster.getFeaturesInExtent(extent);
-			a.cB = this.getSource().getFeaturesInExtent(extent);
-			a.revers = false;
-		}
-		else
-		{	extent = ol.extent.buffer(extent, 100*resolution);
-			a.cA = this.getSource().getFeaturesInExtent(extent);
-			a.cB = this.oldcluster.getFeaturesInExtent(extent);
-			a.revers = true;
-		}
-		a.clusters = [];
-		for (i=0, c0; c0=a.cA[i]; i++)
-		{	var f = c0.get('features');
-			if (f && f.length) 
-			{	var c = this.getClusterForFeature (f[0], a.cB);
-				if (c) a.clusters.push({ f:c0, pt:c.getGeometry().getCoordinates() });
-			}
-		}
-		// Save state
-		a.resolution = resolution;
-		this.sourceChanged = false;
-		// No cluster or too much to animate
-		if (!a.clusters.length || a.clusters.length>1000) 
-		{	this.stopAnimation();
-			return;
-		}
-		// Start animation from now
-		time = a.start = (new Date()).getTime();
-	}
-	// Run animation
-	if (a.start) {
-		var vectorContext = e.vectorContext || ol.render.getVectorContext(e);
-		var d = (time - a.start) / duration;
-		// Animation ends
-		if (d > 1.0) 
-		{	this.stopAnimation();
-			d = 1;
-		}
-		d = this.get('animationMethod')(d);
-		// Animate
-		var style = this.getStyle();
-		var stylefn = (typeof(style) == 'function') ? style : style.length ? function(){ return style; } : function(){ return [style]; } ;
-		// Layer opacity
-		e.context.save();
-		e.context.globalAlpha = this.getOpacity();
-		for (i=0, c; c=a.clusters[i]; i++)
-		{	var pt = c.f.getGeometry().getCoordinates();
-			var dx = pt[0]-c.pt[0];
-			var dy = pt[1]-c.pt[1];
-			if (a.revers)
-			{	pt[0] = c.pt[0] + d * dx;
-				pt[1] = c.pt[1] + d * dy;
-			}
-			else
-			{	pt[0] = pt[0] - d * dx;
-				pt[1] = pt[1] - d * dy;
-			}
-			// Draw feature
-			var st = stylefn(c.f, resolution, true);
-			if (!st.length) st = [st];
-			// If one feature: draw the feature
-			if (c.f.get("features").length===1 && !dx && !dy) {
-				f = c.f.get("features")[0];
-			}
-			// else draw a point
-			else {
-				var geo = new ol.geom.Point(pt);
-				f = new ol.Feature(geo);
-			}
-			for (var k=0, s; s=st[k]; k++) {
-				// Multi-line text
-				if (s.getText() && /\n/.test(s.getText().getText())) {
-					var offsetX = s.getText().getOffsetX();
-					var offsetY = s.getText().getOffsetY();
-					var rot = s.getText().getRotation() || 0;
-					var fontSize = Number((s.getText().getFont() || '10px').match(/\d+/)) * 1.2;
-					var str = s.getText().getText().split('\n')
-					var dl, nb = str.length-1;
-					var s2 = s.clone();
-					// Draw each lines
-					str.forEach(function(t, i) {
-						if (i==1) {
-							// Allready drawn
-							s2.setImage();
-							s2.setFill();
-							s2.setStroke();
-						}
-						switch (s.getText().getTextBaseline()) {
-							case 'alphabetic':
-							case 'ideographic':
-							case 'bottom': {
-								dl = nb;
-								break;
-							}
-							case 'hanging':
-							case 'top': {
-								dl = 0;
-								break;
-							}
-							default : {
-								dl = nb/2;
-								break;
-							}
-						}
-						s2.getText().setOffsetX(offsetX - Math.sin(rot)*fontSize*(i - dl));
-						s2.getText().setOffsetY(offsetY + Math.cos(rot)*fontSize*(i - dl));
-						s2.getText().setText(t);
-						vectorContext.drawFeature(f, s2);
-					});
-				} else {
-					vectorContext.drawFeature(f, s);
-				}
-				/* OLD VERSION OL < 4.3
-				// Retina device
-				var ratio = e.frameState.pixelRatio;
-				var sc;
-				// OL < v4.3 : setImageStyle doesn't check retina
-				var imgs = ol.Map.prototype.getFeaturesAtPixel ? false : s.getImage();
-				if (imgs)
-				{	sc = imgs.getScale(); 
-					imgs.setScale(sc*ratio); 
-				}
-				// OL3 > v3.14
-				if (vectorContext.setStyle)
-				{	// If one feature: draw the feature
-					if (c.f.get("features").length===1 && !dx && !dy) {
-						vectorContext.drawFeature(c.f.get("features")[0], s);
-					}
-					// else draw a point
-					else {
-						vectorContext.setStyle(s);
-						vectorContext.drawGeometry(geo);
-					}
-				}
-				// older version
-				else
-				{	vectorContext.setImageStyle(imgs);
-					vectorContext.setTextStyle(s.getText());
-					vectorContext.drawPointGeometry(geo);
-				}
-				if (imgs) imgs.setScale(sc);
-				*/
-			}
-		}
-		e.context.restore();
-		// tell ol to continue postcompose animation
-		e.frameState.animate = true;
-		// Prevent layer drawing (clip with null rect)
-		e.context.save();
-		e.context.beginPath();
-		e.context.rect(0,0,0,0);
-		e.context.clip();
-		this.clip_ = true;
-	}
-	return;
+ol.layer.AnimatedCluster.prototype.animate = function(e) {
+  var duration = this.get('animationDuration');
+  if (!duration) return;
+  var resolution = e.frameState.viewState.resolution;
+  var i, c0, a = this.animation;
+  var time = e.frameState.time;
+  // Start a new animation, if change resolution and source has changed
+  if (a.resolution != resolution && this.sourceChanged) {
+    var extent = e.frameState.extent;
+    if (a.resolution < resolution) {
+      extent = ol.extent.buffer(extent, 100*resolution);
+      a.cA = this.oldcluster.getFeaturesInExtent(extent);
+      a.cB = this.getSource().getFeaturesInExtent(extent);
+      a.revers = false;
+    } else {
+      extent = ol.extent.buffer(extent, 100*resolution);
+      a.cA = this.getSource().getFeaturesInExtent(extent);
+      a.cB = this.oldcluster.getFeaturesInExtent(extent);
+      a.revers = true;
+    }
+    a.clusters = [];
+    for (i=0, c0; c0=a.cA[i]; i++) {
+      var f = c0.get('features');
+      if (f && f.length) {
+        var c = this.getClusterForFeature (f[0], a.cB);
+        if (c) a.clusters.push({ f:c0, pt:c.getGeometry().getCoordinates() });
+      }
+    }
+    // Save state
+    a.resolution = resolution;
+    this.sourceChanged = false;
+    // No cluster or too much to animate
+    if (!a.clusters.length || a.clusters.length>1000) {
+      this.stopAnimation();
+      return;
+    }
+    // Start animation from now
+    time = a.start = (new Date()).getTime();
+  }
+  // Run animation
+  if (a.start) {
+    var vectorContext = e.vectorContext || ol.render.getVectorContext(e);
+    var d = (time - a.start) / duration;
+    // Animation ends
+    if (d > 1.0) {
+      this.stopAnimation();
+      d = 1;
+    }
+    d = this.get('animationMethod')(d);
+    // Animate
+    var style = this.getStyle();
+    var stylefn = (typeof(style) == 'function') ? style : style.length ? function(){ return style; } : function(){ return [style]; } ;
+    // Layer opacity
+    e.context.save();
+    e.context.globalAlpha = this.getOpacity();
+    for (i=0, c; c=a.clusters[i]; i++) {
+      var pt = c.f.getGeometry().getCoordinates();
+      var dx = pt[0]-c.pt[0];
+      var dy = pt[1]-c.pt[1];
+      if (a.revers) {
+        pt[0] = c.pt[0] + d * dx;
+        pt[1] = c.pt[1] + d * dy;
+      } else {
+        pt[0] = pt[0] - d * dx;
+        pt[1] = pt[1] - d * dy;
+      }
+      // Draw feature
+      var st = stylefn(c.f, resolution, true);
+      if (!st.length) st = [st];
+      // If one feature: draw the feature
+      if (c.f.get("features").length===1 && !dx && !dy) {
+        f = c.f.get("features")[0];
+      }
+      // else draw a point
+      else {
+        var geo = new ol.geom.Point(pt);
+        f = new ol.Feature(geo);
+      }
+      for (var k=0, s; s=st[k]; k++) {
+        // Multi-line text
+        if (s.getText() && /\n/.test(s.getText().getText())) {
+          var offsetX = s.getText().getOffsetX();
+          var offsetY = s.getText().getOffsetY();
+          var rot = s.getText().getRotation() || 0;
+          var fontSize = Number((s.getText().getFont() || '10px').match(/\d+/)) * 1.2;
+          var str = s.getText().getText().split('\n')
+          var dl, nb = str.length-1;
+          var s2 = s.clone();
+          // Draw each lines
+          str.forEach(function(t, i) {
+            if (i==1) {
+              // Allready drawn
+              s2.setImage();
+              s2.setFill();
+              s2.setStroke();
+            }
+            switch (s.getText().getTextBaseline()) {
+              case 'alphabetic':
+              case 'ideographic':
+              case 'bottom': {
+                dl = nb;
+                break;
+              }
+              case 'hanging':
+              case 'top': {
+                dl = 0;
+                break;
+              }
+              default : {
+                dl = nb/2;
+                break;
+              }
+            }
+            s2.getText().setOffsetX(offsetX - Math.sin(rot)*fontSize*(i - dl));
+            s2.getText().setOffsetY(offsetY + Math.cos(rot)*fontSize*(i - dl));
+            s2.getText().setText(t);
+            vectorContext.drawFeature(f, s2);
+          });
+        } else {
+          vectorContext.drawFeature(f, s);
+        }
+        /* OLD VERSION OL < 4.3
+        // Retina device
+        var ratio = e.frameState.pixelRatio;
+        var sc;
+        // OL < v4.3 : setImageStyle doesn't check retina
+        var imgs = ol.Map.prototype.getFeaturesAtPixel ? false : s.getImage();
+        if (imgs)
+        {	sc = imgs.getScale(); 
+          imgs.setScale(sc*ratio); 
+        }
+        // OL3 > v3.14
+        if (vectorContext.setStyle)
+        {	// If one feature: draw the feature
+          if (c.f.get("features").length===1 && !dx && !dy) {
+            vectorContext.drawFeature(c.f.get("features")[0], s);
+          }
+          // else draw a point
+          else {
+            vectorContext.setStyle(s);
+            vectorContext.drawGeometry(geo);
+          }
+        }
+        // older version
+        else
+        {	vectorContext.setImageStyle(imgs);
+          vectorContext.setTextStyle(s.getText());
+          vectorContext.drawPointGeometry(geo);
+        }
+        if (imgs) imgs.setScale(sc);
+        */
+      }
+    }
+    e.context.restore();
+    // tell ol to continue postcompose animation
+    e.frameState.animate = true;
+    // Prevent layer drawing (clip with null rect)
+    e.context.save();
+    e.context.beginPath();
+    e.context.rect(0,0,0,0);
+    e.context.clip();
+    this.clip_ = true;
+  }
+  return;
 };
 /**  
  * remove clipping after the layer is drawn
  * @private
  */
-ol.layer.AnimatedCluster.prototype.postanimate = function(e)
-{	if (this.clip_)
-	{	e.context.restore();
-		this.clip_ = false;
-	}
+ol.layer.AnimatedCluster.prototype.postanimate = function(e) {
+  if (this.clip_) {
+    e.context.restore();
+    this.clip_ = false;
+  }
 };
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,

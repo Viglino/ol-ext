@@ -3,7 +3,6 @@
   released under the CeCILL-B license (http://www.cecill.info/).
 
   ol_layer_AnimatedCluster is a vector layer that animate cluster
-
 */
 import ol_ext_inherits from '../util/ext'
 import ol_layer_Vector from 'ol/layer/Vector'
