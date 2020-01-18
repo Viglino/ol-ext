@@ -183,7 +183,7 @@
       style: function(f,res){
         var cluster = f.get('features');
         if (cluster.length>1){
-          var s = getStyle(f,res);
+          var s = [ getStyle(f,res) ];
           if ($("#convexhull").prop("checked") && ol.coordinate.convexHull){
             var coords = [];
             for (i=0; i<cluster.length; i++) coords.push(cluster[i].getGeometry().getFirstCoordinate());
