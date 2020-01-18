@@ -1,0 +1,107 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2015-2019 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: DayNight source</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="DayNight source for Openlayers" />
+  <meta name="keywords" content="openlayers, layer, source, vector, day, night" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <style>
+    #map {
+      width: 600px;
+      height: 600px;
+    }
+  </style>
+
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: DayNight source</h1>
+  </a>
+  <div class="info">
+    The <i>ol/source/DayNight</i> lets you display night and day on the map.
+    <ul>
+      <li>
+        Set the date time to display the using the <i>setTime</i> function
+      </li><li>
+        Use the <i>getCoordinates()</i> function to get the night/day separation line.
+      </li>
+    </ul>
+  </div>
+
+  <!-- Map div -->
+  <div id="map"></div>
+
+  <div class="options">
+    <h2>Options:</h2>
+    <ul>
+      <li>
+        Date:<br/>
+        <input id="date" type="datetime-local" />
+      </li><li>
+        Projection: <br/>
+        <label><input id="proj" name="proj" type="radio" value="EPSG:4326" checked="checked" onclick="setProjection(this.value)" /> Geog.</label>
+        <label><input name="proj" type="radio" value="EPSG:3857" onclick="setProjection(this.value)" /> WebMercator</label>
+      </li>
+    </ul>
+
+  </div>
+
+<script type="text/javascript">
+  // The map
+  var map = new ol.Map ({	
+    target: 'map',
+    view: new ol.View ({
+      zoom: 0,
+      center: [0,0],
+      projection:'EPSG:4326'
+    }),
+    interactions: ol.interaction.defaults(),
+    layers: [ new ol.layer.Tile({ name:"OSM", source: new ol.source.OSM() })]
+  });
+
+  function setProjection(p) {
+    map.setView(new ol.View({ zoom: 0, center: [0,0], projection: p })); vectorSource.refresh()
+  }
+  // DayNight source
+  var vectorSource = new ol.source.DayNight({ });
+
+  map.addLayer(new ol.layer.Vector({
+    source: vectorSource,
+    opacity: .5,
+    style: new ol.style.Style({
+      fill: new ol.style.Fill({
+        color: [0,0,0]
+      })
+    })
+  }));
+
+  $('#date').on('change', function() {
+    vectorSource.setTime($(this).val());
+  }).val(new Date(vectorSource.get('time')).toISOString().substring(0, 16));
+
+  
+</script>
+
+</body>
+</html>
