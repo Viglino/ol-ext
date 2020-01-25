@@ -46,7 +46,7 @@ ol_filter_Mask.prototype.drawFeaturePath_ = function(e, out) {
     if (e.inversePixelTransform) {
       var ipt = e.inversePixelTransform;
       tr = function(pt) {
-        var pt = [
+        pt = [
           (pt[0]*m[0]+pt[1]*m[1]+m[4]),
           (pt[0]*m[2]+pt[1]*m[3]+m[5])
         ];
