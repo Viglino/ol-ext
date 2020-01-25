@@ -1,0 +1,167 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2015-2020 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Animated canvas Overlay</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="Animated canvas Overlay for Openlayers" />
+  <meta name="keywords" content="openlayers, overlay, animation, cloud, rain, snow" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- Openlayers -->
+    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+    <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Animated canvas Overlay</h1>
+  </a>
+
+  <div class="info">
+    <p>
+      <i>ol/Overlay/AnimateddCanvas</i> is an overlay to play animations on top of the map.
+    </p>
+  </div>
+
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options">
+    <ul>
+      <li>
+        <label>
+          <input type="checkbox" checked="checked" onchange="cloud.setVisible(this.checked)"> Coulds
+        </label>
+      </li>
+      <li>
+        <label>
+          <input type="checkbox" onchange="cloud2.setVisible(this.checked)"> Coulds 2
+        </label>
+      </li>
+      <li>
+        <label>
+          <input type="checkbox" onchange="rain.setVisible(this.checked)"> Rain
+        </label>
+      </li>
+      <li>
+        <label>
+          <input type="checkbox" onchange="raindrop.setVisible(this.checked)"> Rain drops
+        </label>
+      </li>
+      <li>
+        <label>
+          <input type="checkbox" onchange="snow.setVisible(this.checked)"> Snow
+        </label>
+      </li>
+      <li>
+        <label>
+          <input type="checkbox" onchange="birds.setVisible(this.checked)"> Birds
+        </label>
+      </li>
+    </ul>
+  </div>
+
+  <script type="text/javascript">
+  // Layers
+  var layers = [
+    new ol.layer.Tile({
+      title:'terrain-background',
+      source: new ol.source.Stamen({ layer: 'terrain' })
+    })
+  ]
+
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 5,
+      center: [166326, 5992663]
+    }),
+    layers: layers
+  });
+
+  // Raindrop
+  var raindrop = new ol.Overlay.AnimatedCanvas({
+    particule: ol.particule.RainDrop,
+    size: [50,50],
+    density: 1,
+    speed: 5
+  });
+  raindrop.setVisible(false);
+  map.addOverlay(raindrop);
+
+  // Rain
+  var rain = new ol.Overlay.AnimatedCanvas({
+    particule: ol.particule.Rain,
+    size: [50,50],
+    density: 1,
+    angle: 2 * Math.PI / 5,
+    speed: 5
+  });
+  rain.setVisible(false);
+  map.addOverlay(rain);
+
+  // Snow
+  var snow = new ol.Overlay.AnimatedCanvas({
+    particule: ol.particule.Snow,
+    size: [50,50],
+    density: 5,
+    angle: Math.PI / 2,
+    speed: .5
+  });
+  snow.setVisible(false);
+  map.addOverlay(snow);
+
+  // Clouds 
+  var cloud = new ol.Overlay.AnimatedCanvas({
+    particule: ol.particule.Cloud,
+    density: .3,
+    angle: Math.PI/3,
+    speed: 2
+  });
+  map.addOverlay(cloud);
+
+  // Clouds 
+  var cloud2 = new ol.Overlay.AnimatedCanvas({
+    particule: ol.particule.Cloud,
+    density: .2,
+    angle: Math.PI/4,
+    speed: 2
+  });
+  cloud2.setVisible(false);
+  map.addOverlay(cloud2);
+
+  // Birds 
+  var birds = new ol.Overlay.AnimatedCanvas({
+    particule: ol.particule.Bird,
+    density: .1,
+    angle: Math.PI/3,
+    speed: 2
+  });
+  birds.setVisible(false);
+  map.addOverlay(birds);
+
+  </script>
+  
+</body>
+</html>
