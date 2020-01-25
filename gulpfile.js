@@ -220,6 +220,7 @@ gulp.task ("postpublish", function(){
       "./interaction",
       "./layer",
       "./overlay",
+      "./particule",
       "./render",
       "./source",
       "./style",
