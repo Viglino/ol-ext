@@ -43,7 +43,6 @@ ol_particule_RainDrop.prototype.draw = function(ctx) {
     ctx.save();
       ctx.translate (this.coordinate[0], this.coordinate[1]);
       ctx.globalAlpha = this.size/50;
-      console.log(this.z);
       ctx.scale(1-this.size/50,1-this.size/50);
       ctx.drawImage(this.image, -50,-50);
     ctx.restore();

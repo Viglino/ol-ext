@@ -100,15 +100,15 @@
     layers: layers
   });
 
-  // Raindrop
-  var raindrop = new ol.Overlay.AnimatedCanvas({
-    particule: ol.particule.RainDrop,
-    size: [50,50],
-    density: 1,
-    speed: 5
+  // Birds 
+  var birds = new ol.Overlay.AnimatedCanvas({
+    particule: ol.particule.Bird,
+    density: .1,
+    angle: Math.PI/3,
+    speed: 2
   });
-  raindrop.setVisible(false);
-  map.addOverlay(raindrop);
+  birds.setVisible(false);
+  map.addOverlay(birds);
 
   // Rain
   var rain = new ol.Overlay.AnimatedCanvas({
@@ -151,15 +151,15 @@
   cloud2.setVisible(false);
   map.addOverlay(cloud2);
 
-  // Birds 
-  var birds = new ol.Overlay.AnimatedCanvas({
-    particule: ol.particule.Bird,
-    density: .1,
-    angle: Math.PI/3,
-    speed: 2
+  // Raindrop
+  var raindrop = new ol.Overlay.AnimatedCanvas({
+    particule: ol.particule.RainDrop,
+    size: [50,50],
+    density: 1,
+    speed: 5
   });
-  birds.setVisible(false);
-  map.addOverlay(birds);
+  raindrop.setVisible(false);
+  map.addOverlay(raindrop);
 
   </script>
   
