@@ -108,7 +108,7 @@ function _sunEquatorialPosition(sunEclLon, eclObliq) {
   alpha = alpha + (lQuadrant - raQuadrant);
 
   return {alpha: alpha, delta: delta};
-};
+}
 
 /** Get night-day separation line
  * @param {string} time DateTime string, default yet

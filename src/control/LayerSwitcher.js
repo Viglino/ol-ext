@@ -34,6 +34,7 @@ import ol_ext_element from '../util/element'
  *  @param {function} options.onextent callback when click on extent, default fits view to extent
  *  @param {number} options.drawDelay delay in ms to redraw the layer (usefull to prevent flickering when manipulating the layers)
  *  @param {boolean} options.collapsed collapse the layerswitcher at beginning, default true
+ *  @param {ol.layer.Group} options.layerGroup a layer group to display in the switcher, default display all layers of the map
  *
  * Layers attributes that control the switcher
  *	- allwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false
@@ -51,6 +52,7 @@ var ol_control_LayerSwitcher = function(options) {
   this.hastrash = options.trash;
   this.reordering = (options.reordering!==false);
   this._layers = [];
+  this._layerGroup = (options.layerGroup && options.layerGroup.getLayers) ? options.layerGroup : null;
 
   // displayInLayerSwitcher
   if (typeof(options.displayInLayerSwitcher) === 'function') {
@@ -176,9 +178,15 @@ ol_control_LayerSwitcher.prototype.setMap = function(map) {
   // Get change (new layer added or removed)
   if (map) {
     this._listener = {
-      change: map.getLayerGroup().on('change', this.drawPanel.bind(this)),
       moveend: map.on('moveend', this.viewChange.bind(this)),
       size: map.on('change:size', this.overflow.bind(this))
+    }
+    // Listen to a layer group
+    if (this._layerGroup) {
+      this._listener.change = this._layerGroup.on('change', this.drawPanel.bind(this));
+    } else  {
+      //Listen to all layers
+      this._listener.change = map.getLayerGroup().on('change', this.drawPanel.bind(this));
     }
   }
 };
@@ -328,7 +336,7 @@ ol_control_LayerSwitcher.prototype.drawPanel_ = function() {
     if (!li.classList.contains('ol-header')) li.remove();
   }.bind(this));
   // Draw list
-  this.drawList (this.panel_, this.getMap().getLayers());
+  this.drawList (this.panel_, this._layerGroup ?  this._layerGroup.getLayers() : this.getMap().getLayers());
 };
 
 /** Change layer visibility according to the baselayer option

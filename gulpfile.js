@@ -122,6 +122,7 @@ gulp.task("js", function() {
     "./src/interaction/*.js",
     "./src/source/*.js",
     "./src/layer/*.js",
+    "./src/particule/*.js",
     "./src/overlay/Popup.js", "./src/overlay/*.js",
     "./src/geom/*.js",
     "./src/render/*.js",

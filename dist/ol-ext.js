@@ -1721,6 +1721,7 @@ ol.control.SearchGeoportail.prototype.searchCommune = function (f, cback) {
  *  @param {function} options.onextent callback when click on extent, default fits view to extent
  *  @param {number} options.drawDelay delay in ms to redraw the layer (usefull to prevent flickering when manipulating the layers)
  *  @param {boolean} options.collapsed collapse the layerswitcher at beginning, default true
+ *  @param {ol.layer.Group} options.layerGroup a layer group to display in the switcher, default display all layers of the map
  *
  * Layers attributes that control the switcher
  *	- allwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false
@@ -1738,6 +1739,7 @@ ol.control.LayerSwitcher = function(options) {
   this.hastrash = options.trash;
   this.reordering = (options.reordering!==false);
   this._layers = [];
+  this._layerGroup = (options.layerGroup && options.layerGroup.getLayers) ? options.layerGroup : null;
   // displayInLayerSwitcher
   if (typeof(options.displayInLayerSwitcher) === 'function') {
     this.displayInLayerSwitcher = options.displayInLayerSwitcher;
@@ -1848,9 +1850,15 @@ ol.control.LayerSwitcher.prototype.setMap = function(map) {
   // Get change (new layer added or removed)
   if (map) {
     this._listener = {
-      change: map.getLayerGroup().on('change', this.drawPanel.bind(this)),
       moveend: map.on('moveend', this.viewChange.bind(this)),
       size: map.on('change:size', this.overflow.bind(this))
+    }
+    // Listen to a layer group
+    if (this._layerGroup) {
+      this._listener.change = this._layerGroup.on('change', this.drawPanel.bind(this));
+    } else  {
+      //Listen to all layers
+      this._listener.change = map.getLayerGroup().on('change', this.drawPanel.bind(this));
     }
   }
 };
@@ -1988,7 +1996,7 @@ ol.control.LayerSwitcher.prototype.drawPanel_ = function() {
     if (!li.classList.contains('ol-header')) li.remove();
   }.bind(this));
   // Draw list
-  this.drawList (this.panel_, this.getMap().getLayers());
+  this.drawList (this.panel_, this._layerGroup ?  this._layerGroup.getLayers() : this.getMap().getLayers());
 };
 /** Change layer visibility according to the baselayer option
  * @param {ol.layer}
@@ -2807,172 +2815,6 @@ ol.control.CanvasAttribution.prototype.drawAttribution_ = function(e) {
     ctx.fillText(text, left, h/2);
   ctx.closePath();
   ctx.restore();
-};
-
-/*	Copyright (c) 2016 Jean-Marc VIGLINO,
-  released under the CeCILL-B license (French BSD license)
-  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-/** Control bar for OL3
- * The control bar is a container for other controls. It can be used to create toolbars.
- * Control bars can be nested and combined with ol.control.Toggle to handle activate/deactivate.
- *
- * @constructor
- * @extends {ol.control.Control}
- * @param {Object=} options Control options.
- *  @param {String} options.className class of the control
- *  @param {bool} options.group is a group, default false
- *  @param {bool} options.toggleOne only one toggle control is active at a time, default false
- *  @param {bool} options.autoDeactivate used with subbar to deactivate all control when top level control deactivate, default false
- *  @param {Array<_ol_control_>} options.controls a list of control to add to the bar
- */
-ol.control.CanvasOverlay = function(options) {
-  if (!options) options={};
-  this._canvas = ol.ext.element.create('CANVAS', {
-    className: (options.className || '') + ' ol-control ol-control-canvas-overlay ol-unselectable'
-  });
-  this._ctx = this._canvas.getContext('2d');
-  ol.control.Control.call(this, {
-    element: this._canvas
-  });
-  this._listener = [];
-  this._time = 0;
-  // 25fps
-  this._fps = 1000/25;
-};
-ol.ext.inherits(ol.control.CanvasOverlay, ol.control.Control);
-/** Set the control visibility
- * @param {boolean} b
- */
-ol.control.CanvasOverlay.prototype.setVisible = function (val) {
-  if (val) this.element.style.display = '';
-  else this.element.style.display = 'none';
-}
-/** Get the control visibility
- * @return {boolean} b
- */
-ol.control.CanvasOverlay.prototype.getVisible = function () {
-  return this.element.style.display != 'none';
-}
-/**
- * Set the map instance the control is associated with
- * @param {ol.Map} map The map instance.
- */
-ol.control.CanvasOverlay.prototype.setMap = function (map) {
-  if (this.getMap()) {
-    this.getMap().getViewport().querySelector('.ol-overlaycontainer').removeChild(this._canvas);
-  }
-  this._listener.forEach(function(l) {
-    ol.Observable.unByKey(l);
-  });
-  this._listener = [];
-  ol.control.Control.prototype.setMap.call(this, map);
-  if (map) {
-    var size = map.getSize();
-    this._canvas.width = size[0];
-    this._canvas.height = size[1];
-    this.draw();
-    map.on('change:size', function()  {
-      var size = map.getSize();
-      if (this._canvas.width !== size[0] || this._canvas.height !== size[1]) {
-        this._canvas.width = size[0];
-        this._canvas.height = size[1];
-        this.draw();
-      }
-    }.bind(this));
-    // Append to the map
-    map.getViewport().querySelector('.ol-overlaycontainer').appendChild(this._canvas);
-  }
-};
-/** Crete particules */
-ol.control.CanvasOverlay.prototype.getParticules = function() {
-  if (!this._particules) {
-    this._particules = [];
-    for (var i=0; i<50; i++) {
-      var xy = [Math.random()*this._canvas.width, Math.random()*this._canvas.height];
-      var p = [ xy ];
-      for (var k=0; k<7; k++) {
-        p.push([ (Math.random()*15 +15) * (Math.random()>.5 ? 1:-1), (Math.random()*15 +15) * (Math.random()>.5 ? 1:-1) ]);
-      }
-      this._particules.push(p);
-    }
-  }
-  return this._particules;
-};
-/** Draw control overlay 
- * @param {number} dt
- */
-ol.control.CanvasOverlay.prototype.draw = function(dt) {
-  var ctx = this._ctx;
-  this.clear();
-  ctx.beginPath();
-  var w = 50;
-  var h = 50;
-  var speed = 5;
-  var angle = -Math.PI / 3;
-  var cos = Math.cos(angle);
-  var sin = Math.sin(angle);
-  this.getParticules().forEach(function(p) {
-    if (dt) {
-      p[0][0] += speed*cos;
-      p[0][1] += speed*sin;
-      if (p[0][0] < -w) {
-        p[0][0] = this._canvas.width + w;
-        p[0][1] = Math.random() * (this._canvas.height+h) - h/2;
-        console.log(p[0])
-      } else if (p[0][0] > this._canvas.width +w) {
-        p[0][0] = -w;
-        p[0][1] = Math.random() * (this._canvas.height+h) - h/2;
-      } else if (p[0][1] < -h) {
-        p[0][0] = Math.random() * (this._canvas.width+w) - w/2;
-        p[0][1] = this._canvas.height + h;
-      } else if (p[0][1] > this._canvas.height +h) {
-        p[0][0] = Math.random() * (this._canvas.width+w) - w/2;
-        p[0][1] = -h;
-      }
-    }
-    p.forEach(function(pi, i) {
-      if (!i) this.drawCloud(pi);
-      else this.drawCloud([p[0][0]+pi[0], p[0][1]+pi[1]]);
-    }.bind(this))
-  }.bind(this));
-};
-ol.control.CanvasOverlay.prototype.drawCloud = function(xy) {
-  var ctx = this._ctx;
-  var grd = ctx.createRadialGradient(xy[0],xy[1], 0, xy[0],xy[1], 50);
-  grd.addColorStop(0, 'rgba(255,255,255,.2');
-  grd.addColorStop(1, 'rgba(255,255,255,0');
-  ctx.fillStyle = grd;
-  ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);
-};  
-/** Clear canvas
- */
-ol.control.CanvasOverlay.prototype.clear = function() {
-  this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-};
-/** Set canvas animation
- * @param {boolean} anim, default true
- * @api
- */
-ol.control.CanvasOverlay.prototype.setAnimation = function(anim) {
-  anim = (anim!==false);
-  this.set('animation', anim);
-  if (anim) {
-    requestAnimationFrame(this._animate.bind(this));
-  }
-};
-/**
- * @private
- */
-ol.control.CanvasOverlay.prototype._animate = function(time) {
-  if (this.get('animation')) {
-    // Test fps
-    if (time - this._time > this._fps) {
-      this.draw(time - this._time);
-      this._time = time;
-    }
-    requestAnimationFrame(this._animate.bind(this));
-  }
 };
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
@@ -11652,7 +11494,7 @@ ol.filter.Mask.prototype.drawFeaturePath_ = function(e, out) {
     if (e.inversePixelTransform) {
       var ipt = e.inversePixelTransform;
       tr = function(pt) {
-        var pt = [
+        pt = [
           (pt[0]*m[0]+pt[1]*m[1]+m[4]),
           (pt[0]*m[2]+pt[1]*m[3]+m[5])
         ];
@@ -18877,7 +18719,7 @@ function _sunEquatorialPosition(sunEclLon, eclObliq) {
   var raQuadrant = Math.floor(alpha / 90) * 90;
   alpha = alpha + (lQuadrant - raQuadrant);
   return {alpha: alpha, delta: delta};
-};
+}
 /** Get night-day separation line
  * @param {string} time DateTime string, default yet
  * @param {string} options use 'line' to get the separation line, 'day' to get the day polygon, 'night' to get the night polygon or 'daynight' to get both polygon, default 'night'
@@ -21602,6 +21444,320 @@ ol.render3D.prototype.drawFeature3D_ = function(ctx, build) {
   }
 }
 
+/*
+  Copyright (c) 2020 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/*global ol*/
+if (window.ol && !ol.particule) {
+  ol.particule = {};
+}
+/** Abstract base class; normally only used for creating subclasses. 
+ * An object with coordinates, draw and update
+ * @constructor
+ * @extends {ol.Object}
+ * @param {*} options
+ *  @param {ol.Overlay} options.overlay
+ *  @param {ol.pixel} coordinate the position of the particule
+ */
+ol.particule.Base = function(options) {
+  if (!options) options = {};
+  ol.Object.call(this);
+  this.setOverlay(options.overlay) ;
+  this.coordinate = options.coordinate || [0,0];
+};
+ol.ext.inherits(ol.particule.Base, ol.Object);
+/** Set the particule overlay
+ * @param {ol.Overlay} overl
+ */
+ol.particule.Base.prototype.setOverlay = function(overlay) {
+  this._overlay = overlay;
+};
+/** Get the particule overlay
+ * @return {ol.Overlay}
+ */
+ol.particule.Base.prototype.getOverlay = function() {
+  return this._overlay;
+};
+/** Draw the particule
+ * @param {CanvasRenderingContext2D } ctx
+ */
+ol.particule.Base.prototype.draw = function(/* ctx */) {
+};
+/** Update the particule
+ * @param {number} dt timelapes since last call
+ */
+ol.particule.Base.prototype.update = function(/* dt */) {
+};
+/** Update the particule
+ * @param {number} dt timelapes since last call
+ */
+ol.particule.Base.prototype.getRandomCoord = function(dt) {
+  if (this.getOverlay().randomCoord) return this.getOverlay().randomCoord();
+  else return [dt,0];
+};
+
+/*
+  Copyright (c) 2020 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** A cloud particule to display clouds over the map
+ * @constructor
+ * @extends {ol.particule.Base}
+ * @param {*} options
+ *  @param {ol.Overlay} options.overlay
+ *  @param {ol.pixel} coordinate the position of the particule
+ */
+ol.particule.Bird = function(options) {
+  if (!options) options = {};
+  ol.particule.Base.call(this, options);
+  this.bird = new Image();
+  this.bird.src = "data:image/png;base64,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";
+};
+ol.ext.inherits(ol.particule.Bird, ol.particule.Base);
+/** Draw the particule
+ * @param {CanvasRenderingContext2D } ctx
+ */
+ol.particule.Bird.prototype.draw = function(ctx) {
+  //ctx.drawImage(this.bird, this.coordinate[0], this.coordinate[1]);
+  var angle = this.getOverlay().get('angle');
+  ctx.save();
+    ctx.translate (this.coordinate[0], this.coordinate[1]);
+    ctx.rotate(angle+Math.PI/2);
+    ctx.scale(.5,.5);
+    ctx.drawImage( this.bird, -this.bird.width/2, -this.bird.height/2 );
+  ctx.restore();
+};
+/** Update the particule
+ * @param {number} dt timelapes since last call
+ */
+ol.particule.Bird.prototype.update = function(dt) {
+  var speed = this.getOverlay().get('speed') * dt / this.getOverlay()._fps;
+  var angle = this.getOverlay().get('angle');
+  this.coordinate[0] += speed * Math.cos(angle);
+  this.coordinate[1] += speed * Math.sin(angle);
+};
+
+/*
+  Copyright (c) 2020 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** A cloud particule to display clouds over the map
+ * @constructor
+ * @extends {ol.particule.Base}
+ * @param {*} options
+ *  @param {ol.Overlay} options.overlay
+ *  @param {ol.pixel} coordinate the position of the particule
+ */
+ol.particule.Cloud = function(options) {
+  if (!options) options = {};
+  ol.particule.Base.call(this, options);
+  this.fog = [];
+  for (var k=0; k<7; k++) {
+    this.fog.push([ (Math.random()*15 +15) * (Math.random()>.5 ? 1:-1), (Math.random()*15 +15) * (Math.random()>.5 ? 1:-1) ]);
+  }
+  var canvas = document.createElement('CANVAS');
+  canvas.width = 100;
+  canvas.height = 100;
+  var ctx = canvas.getContext('2d');
+  var grd = this.gradient = ctx.createRadialGradient(50,50, 0, 50,50, 50);
+  grd.addColorStop(0, 'rgba(255,255,255,.2');
+  grd.addColorStop(1, 'rgba(255,255,255,0');
+  this.image = canvas;
+  ctx.fillStyle = grd;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+};
+ol.ext.inherits(ol.particule.Cloud, ol.particule.Base);
+/** Set the particule overlay
+ * @param {ol.Overlay} overl
+ * /
+ol.particule.Base.prototype.setOverlay = function(overlay) {
+};
+/** Draw the particule
+ * @param {CanvasRenderingContext2D } ctx
+ */
+ol.particule.Cloud.prototype.draw = function(ctx) {
+  this.fog.forEach(function(f) {
+    ctx.save();
+      ctx.translate (this.coordinate[0]+f[0], this.coordinate[1]+f[1]);
+      ctx.drawImage(this.image, -50, -50);
+    ctx.restore();
+  }.bind(this))
+};
+/** Update the particule
+ * @param {number} dt timelapes since last call
+ */
+ol.particule.Cloud.prototype.update = function(dt) {
+  var speed = this.getOverlay().get('speed') * dt / this.getOverlay()._fps;
+  var angle = this.getOverlay().get('angle');
+  this.coordinate[0] += speed * Math.cos(angle);
+  this.coordinate[1] += speed * Math.sin(angle);
+};
+
+/*
+  Copyright (c) 2020 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Rain particules to display clouds over the map
+ * @constructor
+ * @extends {ol.particule.Base}
+ * @param {*} options
+ *  @param {ol.Overlay} options.overlay
+ *  @param {ol.pixel} coordinate the position of the particule
+ */
+ol.particule.Rain = function(options) {
+  if (!options) options = {};
+  ol.particule.Base.call(this, options);
+  this.z = Math.floor(Math.random()*5) + 1;
+  var canvas = document.createElement('CANVAS');
+  canvas.width = 50;
+  canvas.height = 50;
+  var ctx = canvas.getContext('2d');
+  this.gradient = ctx.createRadialGradient(0,0, 0, 0,0, 25);
+  this.gradient.addColorStop(0, 'rgba(0,0,80,0)');
+  this.gradient.addColorStop(1, 'rgba(0,0,80,.3)');
+};
+ol.ext.inherits(ol.particule.Rain, ol.particule.Base);
+/** Draw the particule
+ * @param {CanvasRenderingContext2D } ctx
+ */
+ol.particule.Rain.prototype.draw = function(ctx) {
+  ctx.save();
+    var angle = this.getOverlay().get('angle');
+    ctx.beginPath();
+    var x1 = Math.cos(angle) * 10 * (1+this.z/2);
+    var y1 = Math.sin(angle) * 10 * (1+this.z/2);
+    ctx.lineWidth = Math.round(this.z/2);
+    ctx.strokeStyle = this.gradient;
+    ctx.translate (this.coordinate[0], this.coordinate[1]);
+    ctx.moveTo(0,0);
+    ctx.lineTo(x1, y1);
+    ctx.stroke();
+  ctx.restore();
+};
+/** Update the particule
+ * @param {number} dt timelapes since last call
+ */
+ol.particule.Rain.prototype.update = function(dt) {
+  var dl = this.getOverlay().get('speed') * dt / this.getOverlay()._fps * this.z;
+  var angle = this.getOverlay().get('angle');
+  this.coordinate[0] += dl * Math.cos(angle);
+  this.coordinate[1] += dl * Math.sin(angle);
+};
+
+/*
+  Copyright (c) 2020 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Raindrop particules to display clouds over the map
+ * @constructor
+ * @extends {ol.particule.Base}
+ * @param {*} options
+ *  @param {ol.Overlay} options.overlay
+ *  @param {ol.pixel} coordinate the position of the particule
+ */
+ol.particule.RainDrop = function(options) {
+  if (!options) options = {};
+  ol.particule.Base.call(this, options);
+  this.size = 0;
+  // Drops
+  var canvas = document.createElement('CANVAS');
+  canvas.width = 100;
+  canvas.height = 100;
+  var ctx = canvas.getContext('2d');
+  var grd = ctx.createRadialGradient(50,50, 0, 50,50, 50);
+  grd.addColorStop(0, 'rgba(128,128,192,.8');
+  grd.addColorStop(1, 'rgba(128,128,192,0');
+  this.image = canvas;
+  ctx.fillStyle = grd;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+};
+ol.ext.inherits(ol.particule.RainDrop, ol.particule.Base);
+/** Draw the particule
+ * @param {CanvasRenderingContext2D } ctx
+ */
+ol.particule.RainDrop.prototype.draw = function(ctx) {
+  if (this.size>0) {
+    ctx.save();
+      ctx.translate (this.coordinate[0], this.coordinate[1]);
+      ctx.globalAlpha = this.size/50;
+      console.log(this.z);
+      ctx.scale(1-this.size/50,1-this.size/50);
+      ctx.drawImage(this.image, -50,-50);
+    ctx.restore();
+  }
+};
+/** Update the particule
+ * @param {number} dt timelapes since last call
+ */
+ol.particule.RainDrop.prototype.update = function(dt) {
+  if (this.size>0 || Math.random() < .01) {
+    if (this.size<=0) {
+      this.size = 50;
+      this.coordinates = this.getRandomCoord();
+    }
+    this.size = this.size - Math.round(dt/20);
+  }
+};
+
+/*
+  Copyright (c) 2020 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Rain particules to display clouds over the map
+ * @constructor
+ * @extends {ol.particule.Base}
+ * @param {*} options
+ *  @param {ol.Overlay} options.overlay
+ *  @param {ol.pixel} coordinate the position of the particule
+ */
+ol.particule.Snow = function(options) {
+  if (!options) options = {};
+  ol.particule.Base.call(this, options);
+  this.z = (Math.floor(Math.random()*5) + 1) / 5;
+  this.angle = Math.random() * Math.PI;
+  // Snow fakes
+  var canvas = document.createElement('CANVAS');
+  canvas.width = 20;
+  canvas.height = 20;
+  var ctx = canvas.getContext('2d');
+  var grd = ctx.createRadialGradient(10,10, 0, 10,10, 10);
+  grd.addColorStop(0, "rgba(255, 255, 255,1)");  // white
+  grd.addColorStop(.8, "rgba(210, 236, 242,.8)");  // bluish
+  grd.addColorStop(1, "rgba(237, 247, 249,0)");   // lighter bluish
+  this.image = canvas;
+  ctx.fillStyle = grd;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+};
+ol.ext.inherits(ol.particule.Snow, ol.particule.Base);
+/** Draw the particule
+ * @param {CanvasRenderingContext2D } ctx
+ */
+ol.particule.Snow.prototype.draw = function(ctx) {
+  ctx.save();
+    ctx.translate (this.coordinate[0], this.coordinate[1]);
+    ctx.globalAlpha = .4 + this.z/2;
+    ctx.scale(this.z,this.z);
+    ctx.drawImage(this.image, -10,-10);
+  ctx.restore();
+};
+/** Update the particule
+ * @param {number} dt timelapes since last call
+ */
+ol.particule.Snow.prototype.update = function(dt) {
+  var speed = this.getOverlay().get('speed') * dt / this.getOverlay()._fps * this.z * 5;
+  var angle = this.getOverlay().get('angle');
+  this.angle = this.angle + dt / this.getOverlay()._fps / 100;
+  this.coordinate[0] += Math.sin(this.angle + this.z) * 2 + speed * Math.cos(angle);
+  this.coordinate[1] += Math.cos(this.angle) + speed * Math.sin(angle);
+};
+
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -21867,6 +22023,207 @@ ol.Overlay.Popup.prototype.hide = function () {
   this.setPosition(undefined);
   if (this._tout) clearTimeout(this._tout);
   this._elt.classList.remove("visible");
+};
+
+/*	Copyright (c) 2020 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** An overlay to play animations on top of the map
+ * The overlay define a set of particules animated on top of the map.
+ * Particules are objects with coordinates.
+ * They are dawn in a canvas using the draw particule method. 
+ * The update particule method updates the particule position according to the timelapse
+ *
+ * @constructor
+ * @extends {ol.Overlay}
+ * @param {*} options
+ *  @param {String} options.className class of the Overlay
+ *  @param {ol.size} option.size particule size, default [50,50]
+ *  @param {number} option.density particule density, default .5
+ *  @param {number} option.speed particule speed, default 4
+ *  @param {number} option.angle particule angle in radian, default PI/4
+ *  @param {boolean} options.animate start animation, default true
+ *  @param {number} options.fps frame per second, default 25
+ */
+ol.Overlay.AnimatedCanvas = function(options) {
+  if (!options) options = {};
+  this._canvas = ol.ext.element.create('CANVAS', {
+    className: ((options.className || '') + ' ol-animated-overlay').trim()
+  });
+  this._ctx = this._canvas.getContext('2d');
+  ol.Overlay.call(this, {
+    element: this._canvas,
+    stopEvent: false
+  });
+  this._listener = [];
+  this._time = 0;
+  this._particuleClass = options.particule || ol.particule.Base;
+  // 25fps
+  this._fps = 1000 / (options.fps || 25);
+  // Default particules properties
+  this.set('size', options.size || [50,50]);
+  this.set('density', options.density || .5);
+  this.set('speed', options.speed || 4);
+  this.set('angle', typeof(options.angle) === 'number' ? options.angle : Math.PI / 4);
+  if (options.animate !== false) this.setAnimation(true);
+  // Prevent animation when window on background
+  document.addEventListener("visibilitychange", function() {
+    this._pause = true;
+  }.bind(this));
+};
+ol.ext.inherits(ol.Overlay.AnimatedCanvas, ol.Overlay);
+/** Set the visibility
+ * @param {boolean} b
+ */
+ol.Overlay.AnimatedCanvas.prototype.setVisible = function (b) {
+  this.element.style.display = b ? 'block' : 'none';
+  if (b) this.setAnimation(this.get('animation'));
+}
+/** Get the visibility
+ * @return {boolean} b
+ */
+ol.Overlay.AnimatedCanvas.prototype.getVisible = function () {
+  return this.element.style.display != 'none';
+}
+/** No update for this overlay
+ */
+ol.Overlay.AnimatedCanvas.prototype.updatePixelPosition = function () {};
+/**
+ * Set the map instance the overlay is associated with
+ * @param {ol.Map} map The map instance.
+ */
+ol.Overlay.AnimatedCanvas.prototype.setMap = function (map) {
+  if (this.getMap()) {
+    this.getMap().getViewport().querySelector('.ol-overlaycontainer').removeChild(this._canvas);
+  }
+  this._listener.forEach(function(l) {
+    ol.Observable.unByKey(l);
+  });
+  this._listener = [];
+  ol.Overlay.prototype.setMap.call(this, map);
+  if (map) {
+    var size = map.getSize();
+    this._canvas.width = size[0];
+    this._canvas.height = size[1];
+    this.draw();
+    this._listener.push (map.on('change:size', function()  {
+      var size = map.getSize();
+      if (this._canvas.width !== size[0] || this._canvas.height !== size[1]) {
+        this._canvas.width = size[0];
+        this._canvas.height = size[1];
+        this.draw();
+      }
+    }.bind(this)));
+  }
+};
+/** Create particules or return exiting ones
+ */
+ol.Overlay.AnimatedCanvas.prototype.getParticules = function() {
+  var w = this.get('size')[0];
+  var h = this.get('size')[1];
+  var d = (this.get('density') * this._canvas.width * this._canvas.height / w / h) << 0;
+  if (!this._particules) this._particules = [];
+  if (d > this._particules.length) {
+    for (var i=this._particules.length; i<d; i++) {
+      this._particules.push(new this._particuleClass({
+        overlay: this, 
+        coordinate: this.randomCoord()
+      }));
+    } 
+  } else {
+    this._particules.length = d;
+  }
+  return this._particules;
+};
+/** Get random coordinates on canvas
+ */
+ol.Overlay.AnimatedCanvas.prototype.randomCoord = function() {
+  return [ 
+    Math.random()*(this._canvas.width + this.get('size')[0]) - this.get('size')[0]/2 , 
+    Math.random()*(this._canvas.height + this.get('size')[1]) - this.get('size')[1]/2 
+  ];
+};
+/** Draw canvas overlay (draw each particules)
+ * @param {number} dt timelapes since last call
+ */
+ol.Overlay.AnimatedCanvas.prototype.draw = function(dt) {
+  var ctx = this._ctx;
+  this.clear();
+  ctx.beginPath();
+  this.getParticules().forEach(function(p) {
+    if (dt) {
+      p.update(dt);
+      this.testExit(p, this.get('size'));
+    }
+    p.draw(this._ctx);
+  }.bind(this));
+};
+/** Test if particule exit the canvas and add it on other side
+ * @param {*} p the point to test
+ * @param {ol.size} size size of the overlap
+ */
+ol.Overlay.AnimatedCanvas.prototype.testExit = function(p, size) {
+  if (p.coordinate[0] < -size[0]) {
+    p.coordinate[0] = this._canvas.width + size[0];
+    p.coordinate[1] = Math.random() * (this._canvas.height+size[1]) - size[1]/2;
+  } else if (p.coordinate[0] > this._canvas.width +size[0]) {
+    p.coordinate[0] = -size[0];
+    p.coordinate[1] = Math.random() * (this._canvas.height+size[1]) - size[1]/2;
+  } else if (p.coordinate[1] < -size[1]) {
+    p.coordinate[0] = Math.random() * (this._canvas.width+size[0]) - size[0]/2;
+    p.coordinate[1] = this._canvas.height + size[1];
+  } else if (p.coordinate[1] > this._canvas.height +size[1]) {
+    p.coordinate[0] = Math.random() * (this._canvas.width+size[0]) - size[0]/2;
+    p.coordinate[1] = -size[1];
+  }
+};
+/** Clear canvas
+ */
+ol.Overlay.AnimatedCanvas.prototype.clear = function() {
+  this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+};
+/** Get overlay canvas
+ * @return {CanvasElement}
+ */
+ol.Overlay.AnimatedCanvas.prototype.getCanvas = function() {
+  return this._canvas;
+};
+/** Set canvas animation
+ * @param {boolean} anim, default true
+ * @api
+ */
+ol.Overlay.AnimatedCanvas.prototype.setAnimation = function(anim) {
+  anim = (anim!==false);
+  this.set('animation', anim);
+  if (anim) {
+    this._pause = true;
+    requestAnimationFrame(this._animate.bind(this));
+  } else {
+    this.dispatchEvent({ type:'animation:stop', time: this._time });
+  }
+};
+/**
+ * @private
+ */
+ol.Overlay.AnimatedCanvas.prototype._animate = function(time) {
+  if (this.getVisible() && this.get('animation')) {
+    if (this._pause) {
+      // reset time
+      requestAnimationFrame(function(time){
+        this._time = time;
+        requestAnimationFrame(this._animate.bind(this));
+      }.bind(this));  
+    } else {
+      // Test fps
+      if (time - this._time > this._fps) {
+        this.draw(time - this._time);
+        this._time = time;
+      }
+      requestAnimationFrame(this._animate.bind(this));
+    }
+  }
+  this._pause = false;
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
