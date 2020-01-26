@@ -21515,6 +21515,7 @@ ol.particule.Bird = function(options) {
   ol.particule.Base.call(this, options);
   this.bird = new Image();
   this.bird.src = "data:image/png;base64,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";
+  this.set('size', [this.bird.width || 50, this.bird.height || 50]);
 };
 ol.ext.inherits(ol.particule.Bird, ol.particule.Base);
 /** Draw the particule
@@ -21555,37 +21556,35 @@ ol.particule.Bird.prototype.update = function(dt) {
 ol.particule.Cloud = function(options) {
   if (!options) options = {};
   ol.particule.Base.call(this, options);
-  this.fog = [];
-  for (var k=0; k<7; k++) {
-    this.fog.push([ (Math.random()*15 +15) * (Math.random()>.5 ? 1:-1), (Math.random()*15 +15) * (Math.random()>.5 ? 1:-1) ]);
-  }
+  this.set('size', [100,100])
   var canvas = document.createElement('CANVAS');
-  canvas.width = 100;
-  canvas.height = 100;
+  canvas.width = 200;
+  canvas.height = 200;
   var ctx = canvas.getContext('2d');
   var grd = this.gradient = ctx.createRadialGradient(50,50, 0, 50,50, 50);
   grd.addColorStop(0, 'rgba(255,255,255,.2');
   grd.addColorStop(1, 'rgba(255,255,255,0');
+  // Create cloud image
   this.image = canvas;
-  ctx.fillStyle = grd;
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  for (var k=0; k<7; k++) {
+    ctx.save();
+      x = Math.random()*100;
+      y = Math.random()*100;
+      ctx.translate (x,y);
+      ctx.fillStyle = grd;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.restore();
+  }
 };
 ol.ext.inherits(ol.particule.Cloud, ol.particule.Base);
-/** Set the particule overlay
- * @param {ol.Overlay} overl
- * /
-ol.particule.Base.prototype.setOverlay = function(overlay) {
-};
 /** Draw the particule
  * @param {CanvasRenderingContext2D } ctx
  */
 ol.particule.Cloud.prototype.draw = function(ctx) {
-  this.fog.forEach(function(f) {
-    ctx.save();
-      ctx.translate (this.coordinate[0]+f[0], this.coordinate[1]+f[1]);
-      ctx.drawImage(this.image, -50, -50);
-    ctx.restore();
-  }.bind(this))
+  ctx.save();
+    ctx.translate (this.coordinate[0], this.coordinate[1]);
+    ctx.drawImage(this.image, -this.image.width/2, -this.image.width/2);
+  ctx.restore();
 };
 /** Update the particule
  * @param {number} dt timelapes since last call
@@ -21686,7 +21685,6 @@ ol.particule.RainDrop.prototype.draw = function(ctx) {
     ctx.save();
       ctx.translate (this.coordinate[0], this.coordinate[1]);
       ctx.globalAlpha = this.size/50;
-      console.log(this.z);
       ctx.scale(1-this.size/50,1-this.size/50);
       ctx.drawImage(this.image, -50,-50);
     ctx.restore();
@@ -22039,7 +22037,6 @@ ol.Overlay.Popup.prototype.hide = function () {
  * @extends {ol.Overlay}
  * @param {*} options
  *  @param {String} options.className class of the Overlay
- *  @param {ol.size} option.size particule size, default [50,50]
  *  @param {number} option.density particule density, default .5
  *  @param {number} option.speed particule speed, default 4
  *  @param {number} option.angle particule angle in radian, default PI/4
@@ -22059,10 +22056,12 @@ ol.Overlay.AnimatedCanvas = function(options) {
   this._listener = [];
   this._time = 0;
   this._particuleClass = options.particule || ol.particule.Base;
+  if (options.createParticule) this._createParticule = options.createParticule;
   // 25fps
   this._fps = 1000 / (options.fps || 25);
   // Default particules properties
-  this.set('size', options.size || [50,50]);
+  var p = this._createParticule();
+  this._psize = p.get('size') || [50,50];
   this.set('density', options.density || .5);
   this.set('speed', options.speed || 4);
   this.set('angle', typeof(options.angle) === 'number' ? options.angle : Math.PI / 4);
@@ -22120,28 +22119,34 @@ ol.Overlay.AnimatedCanvas.prototype.setMap = function (map) {
 /** Create particules or return exiting ones
  */
 ol.Overlay.AnimatedCanvas.prototype.getParticules = function() {
-  var w = this.get('size')[0];
-  var h = this.get('size')[1];
+  var w = this._psize[0];
+  var h = this._psize[1];
   var d = (this.get('density') * this._canvas.width * this._canvas.height / w / h) << 0;
   if (!this._particules) this._particules = [];
   if (d > this._particules.length) {
     for (var i=this._particules.length; i<d; i++) {
-      this._particules.push(new this._particuleClass({
-        overlay: this, 
-        coordinate: this.randomCoord()
-      }));
+      this._particules.push(this._createParticule(this, this.randomCoord()));
     } 
   } else {
     this._particules.length = d;
   }
   return this._particules;
 };
+/** Create a particule
+ * @private
+ */
+ol.Overlay.AnimatedCanvas.prototype._createParticule = function(overlay, coordinate) {
+  return new this._particuleClass({
+    overlay: overlay, 
+    coordinate: coordinate
+  });
+};
 /** Get random coordinates on canvas
  */
 ol.Overlay.AnimatedCanvas.prototype.randomCoord = function() {
   return [ 
-    Math.random()*(this._canvas.width + this.get('size')[0]) - this.get('size')[0]/2 , 
-    Math.random()*(this._canvas.height + this.get('size')[1]) - this.get('size')[1]/2 
+    Math.random()*(this._canvas.width + this._psize[0]) - this._psize[0]/2 , 
+    Math.random()*(this._canvas.height + this._psize[1]) - this._psize[1]/2 
   ];
 };
 /** Draw canvas overlay (draw each particules)
@@ -22154,7 +22159,7 @@ ol.Overlay.AnimatedCanvas.prototype.draw = function(dt) {
   this.getParticules().forEach(function(p) {
     if (dt) {
       p.update(dt);
-      this.testExit(p, this.get('size'));
+      this.testExit(p);
     }
     p.draw(this._ctx);
   }.bind(this));
@@ -22163,7 +22168,8 @@ ol.Overlay.AnimatedCanvas.prototype.draw = function(dt) {
  * @param {*} p the point to test
  * @param {ol.size} size size of the overlap
  */
-ol.Overlay.AnimatedCanvas.prototype.testExit = function(p, size) {
+ol.Overlay.AnimatedCanvas.prototype.testExit = function(p) {
+  var size = this._psize;
   if (p.coordinate[0] < -size[0]) {
     p.coordinate[0] = this._canvas.width + size[0];
     p.coordinate[1] = Math.random() * (this._canvas.height+size[1]) - size[1]/2;
