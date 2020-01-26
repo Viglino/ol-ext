@@ -19,7 +19,6 @@ import ol_particule_Base from '../particule/Base';
  * @extends {ol_Overlay}
  * @param {*} options
  *  @param {String} options.className class of the Overlay
- *  @param {ol.size} option.size particule size, default [50,50]
  *  @param {number} option.density particule density, default .5
  *  @param {number} option.speed particule speed, default 4
  *  @param {number} option.angle particule angle in radian, default PI/4
@@ -42,11 +41,13 @@ var ol_Overlay_AnimatedCanvas = function(options) {
   this._listener = [];
   this._time = 0;
   this._particuleClass = options.particule || ol_particule_Base;
+  if (options.createParticule) this._createParticule = options.createParticule;
   // 25fps
   this._fps = 1000 / (options.fps || 25);
 
   // Default particules properties
-  this.set('size', options.size || [50,50]);
+  var p = this._createParticule();
+  this._psize = p.get('size') || [50,50];
   this.set('density', options.density || .5);
   this.set('speed', options.speed || 4);
   this.set('angle', typeof(options.angle) === 'number' ? options.angle : Math.PI / 4);
@@ -57,7 +58,6 @@ var ol_Overlay_AnimatedCanvas = function(options) {
   document.addEventListener("visibilitychange", function() {
     this._pause = true;
   }.bind(this));
-
 };
 ol_ext_inherits(ol_Overlay_AnimatedCanvas, ol_Overlay);
 
@@ -114,16 +114,13 @@ ol_Overlay_AnimatedCanvas.prototype.setMap = function (map) {
 /** Create particules or return exiting ones
  */
 ol_Overlay_AnimatedCanvas.prototype.getParticules = function() {
-  var w = this.get('size')[0];
-  var h = this.get('size')[1];
+  var w = this._psize[0];
+  var h = this._psize[1];
   var d = (this.get('density') * this._canvas.width * this._canvas.height / w / h) << 0;
   if (!this._particules) this._particules = [];
   if (d > this._particules.length) {
     for (var i=this._particules.length; i<d; i++) {
-      this._particules.push(new this._particuleClass({
-        overlay: this, 
-        coordinate: this.randomCoord()
-      }));
+      this._particules.push(this._createParticule(this, this.randomCoord()));
     } 
   } else {
     this._particules.length = d;
@@ -131,12 +128,22 @@ ol_Overlay_AnimatedCanvas.prototype.getParticules = function() {
   return this._particules;
 };
 
+/** Create a particule
+ * @private
+ */
+ol_Overlay_AnimatedCanvas.prototype._createParticule = function(overlay, coordinate) {
+  return new this._particuleClass({
+    overlay: overlay, 
+    coordinate: coordinate
+  });
+};
+
 /** Get random coordinates on canvas
  */
 ol_Overlay_AnimatedCanvas.prototype.randomCoord = function() {
   return [ 
-    Math.random()*(this._canvas.width + this.get('size')[0]) - this.get('size')[0]/2 , 
-    Math.random()*(this._canvas.height + this.get('size')[1]) - this.get('size')[1]/2 
+    Math.random()*(this._canvas.width + this._psize[0]) - this._psize[0]/2 , 
+    Math.random()*(this._canvas.height + this._psize[1]) - this._psize[1]/2 
   ];
 };
 
@@ -151,7 +158,7 @@ ol_Overlay_AnimatedCanvas.prototype.draw = function(dt) {
   this.getParticules().forEach(function(p) {
     if (dt) {
       p.update(dt);
-      this.testExit(p, this.get('size'));
+      this.testExit(p);
     }
     p.draw(this._ctx);
   }.bind(this));
@@ -161,7 +168,8 @@ ol_Overlay_AnimatedCanvas.prototype.draw = function(dt) {
  * @param {*} p the point to test
  * @param {ol.size} size size of the overlap
  */
-ol_Overlay_AnimatedCanvas.prototype.testExit = function(p, size) {
+ol_Overlay_AnimatedCanvas.prototype.testExit = function(p) {
+  var size = this._psize;
   if (p.coordinate[0] < -size[0]) {
     p.coordinate[0] = this._canvas.width + size[0];
     p.coordinate[1] = Math.random() * (this._canvas.height+size[1]) - size[1]/2;

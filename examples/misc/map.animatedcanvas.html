@@ -103,7 +103,7 @@
   // Birds 
   var birds = new ol.Overlay.AnimatedCanvas({
     particule: ol.particule.Bird,
-    density: .1,
+    density: .2,
     angle: Math.PI/3,
     speed: 2
   });
@@ -113,7 +113,6 @@
   // Rain
   var rain = new ol.Overlay.AnimatedCanvas({
     particule: ol.particule.Rain,
-    size: [50,50],
     density: 1,
     angle: 2 * Math.PI / 5,
     speed: 5
@@ -124,7 +123,6 @@
   // Snow
   var snow = new ol.Overlay.AnimatedCanvas({
     particule: ol.particule.Snow,
-    size: [50,50],
     density: 5,
     angle: Math.PI / 2,
     speed: .5
@@ -135,7 +133,7 @@
   // Clouds 
   var cloud = new ol.Overlay.AnimatedCanvas({
     particule: ol.particule.Cloud,
-    density: .3,
+    density: 2,
     angle: Math.PI/3,
     speed: 2
   });
@@ -144,7 +142,7 @@
   // Clouds 
   var cloud2 = new ol.Overlay.AnimatedCanvas({
     particule: ol.particule.Cloud,
-    density: .2,
+    density: 1.5,
     angle: Math.PI/4,
     speed: 2
   });
@@ -154,7 +152,6 @@
   // Raindrop
   var raindrop = new ol.Overlay.AnimatedCanvas({
     particule: ol.particule.RainDrop,
-    size: [50,50],
     density: 1,
     speed: 5
   });
