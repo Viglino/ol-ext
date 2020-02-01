@@ -276,6 +276,7 @@ ol_control_IsochroneGeoportail.prototype.search = function(coord, option, iter) 
     this._ajax.send(this.get('url'), data, { 
       coord: coord, 
       option: option,
+      data: data,
       iteration: (iter||0)+1 
     });
   }
@@ -293,6 +294,9 @@ ol_control_IsochroneGeoportail.prototype._success = function(e) {
     dataProjection: 'EPSG:4326',
     featureProjection: proj
   });
+  evt.feature.set('iteration', e.options.iteration);
+  evt.feature.set('method', e.options.data.method);
+  evt.feature.set(e.options.data.method, e.options.data[e.options.data.method]);
   delete evt.wktGeometry;
   evt.type = 'isochrone';
   evt.iteration = e.options.iteration-1;
