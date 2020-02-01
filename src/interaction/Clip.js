@@ -118,7 +118,20 @@ ol_interaction_Clip.prototype.precompose_ = function(e) {
 
   ctx.save();
   ctx.beginPath();
-  ctx.arc (this.pos[0]*ratio, this.pos[1]*ratio, this.radius*ratio, 0, 2*Math.PI);
+  var pt = [ this.pos[0], this.pos[1] ];
+  var radius = this.radius;
+  var tr = e.inversePixelTransform;
+  if (tr) {
+    pt = [
+      (pt[0]*tr[0] - pt[1]*tr[1] + tr[4]),
+      (-pt[0]*tr[2] + pt[1]*tr[3] + tr[5])
+    ];
+  } else {
+    pt[0] *= ratio;
+    pt[1] *= ratio;
+    radius *= ratio;
+  }
+  ctx.arc (pt[0], pt[1], radius, 0, 2*Math.PI);
   ctx.clip();
 };
 

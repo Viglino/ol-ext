@@ -2,153 +2,151 @@
 
 <html>
 <head>
-<!-- --------------------------------------------------------
- 
-	Copyright (c) 2016-2017 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
----------------------------------------------------------- -->	
-	<title>ol-ext: Clip map or layer</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!--
+  Copyright (c) 2016-2017 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->	
+  <title>ol-ext: Clip map or layer</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="Crop and mask filter on an ol map or layer." />
-	<meta name="keywords" content="ol3, filter, clip, mask" />
+  <meta name="description" content="Crop and mask filter on an ol map or layer." />
+  <meta name="keywords" content="ol3, filter, clip, mask" />
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-	<!-- FontAwesome -->
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
-	<style>
-		#map
-		{	background: none;
-			border: 2px solid #369;
-		}
-	</style>
+  <style>
+    #map
+    {	background: none;
+      border: 2px solid #369;
+    }
+  </style>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Clip map or layer</h1>
-	</a>
-	<div class="info">
-		<i>ol.filter.Clip</i> use a list of coordinates to clip map or layer.
-		<br />
-		Coordinates can be defined with pixel units or percentage.
-	</div>
+  <a href="../../index.html">
+    <h1>ol-ext: Clip map or layer</h1>
+  </a>
+  <div class="info">
+    <i>ol.filter.Clip</i> use a list of coordinates to clip map or layer.
+    <br />
+    Coordinates can be defined with pixel units or percentage.
+  </div>
 
-	<!-- Map div -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options" >
-		<ul><li>
-			Form:
-			<select id="form" onchange="setFilter()">
-				<optgroup label="percent">
-					<option value="circle">circle</option>
-					<option value="square">square</option>
-					<option value="old map">old map</option>
-				</optgroup>
-				<optgroup label="pixel">
-					<option value="pxcircle">circle</option>
-				</optgroup>
-			</select>
-		</li><li>
-			<input id="keep" type="checkbox" onchange="setFilter();" /><label for="keep"> keep aspect ratio</label>
-		</li><li>
-			Color:
-			<select id="color" onchange="setFilter()">
-				<option value="">none</option>
-				<option value="rgba(0,0,0,0.5)">black</option>
-				<option value="rgba(255,0,0,0.5)">red</option>
-			</select>
-		</li><li>
-			Position
-			<select id="position" onchange="setFilter()">
-				<option value="top-left">top-left</option>
-				<option value="top-center">top-center</option>
-				<option value="top-right">top-right</option>
-				<option value="middle-left">middle-left</option>
-				<option value="middle-center">middle-center</option>
-				<option value="middle-right">middle-right</option>
-				<option value="bottom-left">bottom-left</option>
-				<option value="bottom-center">bottom-center</option>
-				<option value="bottom-right">bottom-right</option>
-			</select>
-		</li><li>
-		</li></ul>
-	</div>
+  <div class="options" >
+    <ul><li>
+      Form:
+      <select id="form" onchange="setFilter()">
+        <optgroup label="percent">
+          <option value="circle">circle</option>
+          <option value="square">square</option>
+          <option value="old map">old map</option>
+        </optgroup>
+        <optgroup label="pixel">
+          <option value="pxcircle">circle</option>
+        </optgroup>
+      </select>
+    </li><li>
+      <input id="keep" type="checkbox" onchange="setFilter();" /><label for="keep"> keep aspect ratio</label>
+    </li><li>
+      Color:
+      <select id="color" onchange="setFilter()">
+        <option value="">none</option>
+        <option value="rgba(0,0,0,0.5)">black</option>
+        <option value="rgba(255,0,0,0.5)">red</option>
+      </select>
+    </li><li>
+      Position
+      <select id="position" onchange="setFilter()">
+        <option value="top-left">top-left</option>
+        <option value="top-center">top-center</option>
+        <option value="top-right">top-right</option>
+        <option value="middle-left">middle-left</option>
+        <option value="middle-center">middle-center</option>
+        <option value="middle-right">middle-right</option>
+        <option value="bottom-left">bottom-left</option>
+        <option value="bottom-center">bottom-center</option>
+        <option value="bottom-right">bottom-right</option>
+      </select>
+    </li><li>
+    </li></ul>
+  </div>
 
-	<script type="text/javascript">
+  <script type="text/javascript">
 
-		var osm = new ol.layer.Tile({ source: new ol.source.OSM() });
-		var stamen = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) })
+    var osm = new ol.layer.Tile({ source: new ol.source.OSM() });
+    var stamen = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) })
 
-		// The map
-		var map = new ol.Map
-			({	target: 'map',
-				view: new ol.View
-				({	zoom: 8,
-					center: [247044, 6549736.]
-				}),
-				layers: [ osm,stamen ]
-			});
+    // The map
+    var map = new ol.Map
+      ({	target: 'map',
+        view: new ol.View
+        ({	zoom: 8,
+          center: [247044, 6549736.]
+        }),
+        layers: [ osm,stamen ]
+      });
 
-		// Enhance filter
-		var clip = new ol.filter.Clip({ operation:'enhance'});
-		stamen.addFilter(clip);
+    // Enhance filter
+    var clip = new ol.filter.Clip({ operation:'enhance'});
+    stamen.addFilter(clip);
 
-		function setFilter()
-		{	var c=[];
-			var unit="%";
-			var extent = [0,0,1,1];
-			switch ($("#form").val())
-			{	case "circle":
-				{	for (var i=0; i<2*Math.PI; i+=0.1)
-					{	c.push([ 0.5+Math.cos(i)*0.4, 0.5+Math.sin(i)*0.4 ]);
-					}
-					break;
-				}
-				case "pxcircle":
-				{	for (var i=0; i<2*Math.PI; i+=0.1)
-					{	c.push([ 200*(0.5+Math.cos(i)/2)+10, 200*(0.5+Math.sin(i)/2)+10 ]);
-					}
-					extent = [0,0,220,220];
-					unit="px";
-					break;
-				}
-				case "square":
-				{	c = [ [0.1,0.1],[0.1,0.9],[0.9,0.9],[0.9,0.1]];
-					//c = [ [0.5,0.1],[0.9,0.1],[0.9,0.5],[0.5,0.5]];
-					break;
-				}
-				default:
-					c = [[0.023, 0.957], [0, 0.463], [0.007, 0.42], [0.004, 0.397], [0.029, 0.383], [0.013, 0.383], [0.046, 0.367], [0.011, 0.371], [0.004, 0.349], [0.006, 0.297], [0.012, 0.265], [0.007, 0.246], [0.016, 0.191], [0.031, 0.191], [0.019, 0.171], [0.012, 0.1], [0.046, 0.001], [0.071, 0.012], [0.1, 0], [0.186, 0.01], [0.228, 0.008], [0.239, 0.022], [0.25, 0.009], [0.304, 0.002], [0.311, 0.027], [0.313, 0.007], [0.322, 0.064], [0.311, 0.101], [0.329, 0.055], [0.321, 0.018], [0.334, 0.01], [0.496, 0.009], [0.53, 0.019], [0.553, 0.01], [0.615, 0.014], [0.683, 0.03], [0.697, 0.019], [0.728, 0.027], [0.732, 0.066], [0.735, 0.012], [0.752, 0.006], [0.795, 0.014], [0.85, 0.007], [0.929, 0.013], [1, 0.204], [0.994, 0.324], [0.999, 0.393], [0.988, 0.464], [0.947, 0.46], [0.977, 0.47], [0.978, 0.479], [0.99, 0.489], [0.994, 0.572], [0.992, 0.669], [0.982, 0.673], [0.994, 0.689], [1, 0.716], [0.999, 0.81], [0.987, 0.816], [0.996, 0.83], [0.99, 0.894], [0.944, 1], [0.848, 0.993], [0.841, 0.97], [0.837, 0.993], [0.798, 0.981], [0.697, 0.98], [0.653, 0.986], [0.606, 0.981], [0.598, 0.968], [0.598, 0.941], [0.592, 0.982], [0.558, 0.988], [0.507, 0.983], [0.485, 0.988], [0.418, 0.978], [0.4, 0.969], [0.393, 0.98], [0.338, 0.984], [0.304, 0.977], [0.251, 0.984], [0.238, 0.979], [0.252, 0.915], [0.239, 0.969], [0.233, 0.953], [0.23, 0.984], [0.155, 0.971], [0.147, 0.957], [0.142, 0.974], [0.095, 0.976], [0.066, 0.98], [0.023, 0.957]];
-					break;
+    function setFilter()
+    {	var c=[];
+      var unit="%";
+      var extent = [0,0,1,1];
+      switch ($("#form").val())
+      {	case "circle":
+        {	for (var i=0; i<2*Math.PI; i+=0.1)
+          {	c.push([ 0.5+Math.cos(i)*0.4, 0.5+Math.sin(i)*0.4 ]);
+          }
+          break;
+        }
+        case "pxcircle":
+        {	for (var i=0; i<2*Math.PI; i+=0.1)
+          {	c.push([ 200*(0.5+Math.cos(i)/2)+10, 200*(0.5+Math.sin(i)/2)+10 ]);
+          }
+          extent = [0,0,220,220];
+          unit="px";
+          break;
+        }
+        case "square":
+        {	c = [ [0.1,0.1],[0.1,0.9],[0.9,0.9],[0.9,0.1]];
+          //c = [ [0.5,0.1],[0.9,0.1],[0.9,0.5],[0.5,0.5]];
+          break;
+        }
+        default:
+          c = [[0.023, 0.957], [0, 0.463], [0.007, 0.42], [0.004, 0.397], [0.029, 0.383], [0.013, 0.383], [0.046, 0.367], [0.011, 0.371], [0.004, 0.349], [0.006, 0.297], [0.012, 0.265], [0.007, 0.246], [0.016, 0.191], [0.031, 0.191], [0.019, 0.171], [0.012, 0.1], [0.046, 0.001], [0.071, 0.012], [0.1, 0], [0.186, 0.01], [0.228, 0.008], [0.239, 0.022], [0.25, 0.009], [0.304, 0.002], [0.311, 0.027], [0.313, 0.007], [0.322, 0.064], [0.311, 0.101], [0.329, 0.055], [0.321, 0.018], [0.334, 0.01], [0.496, 0.009], [0.53, 0.019], [0.553, 0.01], [0.615, 0.014], [0.683, 0.03], [0.697, 0.019], [0.728, 0.027], [0.732, 0.066], [0.735, 0.012], [0.752, 0.006], [0.795, 0.014], [0.85, 0.007], [0.929, 0.013], [1, 0.204], [0.994, 0.324], [0.999, 0.393], [0.988, 0.464], [0.947, 0.46], [0.977, 0.47], [0.978, 0.479], [0.99, 0.489], [0.994, 0.572], [0.992, 0.669], [0.982, 0.673], [0.994, 0.689], [1, 0.716], [0.999, 0.81], [0.987, 0.816], [0.996, 0.83], [0.99, 0.894], [0.944, 1], [0.848, 0.993], [0.841, 0.97], [0.837, 0.993], [0.798, 0.981], [0.697, 0.98], [0.653, 0.986], [0.606, 0.981], [0.598, 0.968], [0.598, 0.941], [0.592, 0.982], [0.558, 0.988], [0.507, 0.983], [0.485, 0.988], [0.418, 0.978], [0.4, 0.969], [0.393, 0.98], [0.338, 0.984], [0.304, 0.977], [0.251, 0.984], [0.238, 0.979], [0.252, 0.915], [0.239, 0.969], [0.233, 0.953], [0.23, 0.984], [0.155, 0.971], [0.147, 0.957], [0.142, 0.974], [0.095, 0.976], [0.066, 0.98], [0.023, 0.957]];
+          break;
 
-			}
-			clip.set("coords", c);
-			clip.set("units", unit);
-			clip.set("extent", extent);
-			clip.set("keepAspectRatio", $("#keep").prop('checked'));
-			clip.set("position", $("#position").val());
-			clip.set("color", $("#color").val());
-		}
-		setFilter();
+      }
+      clip.set("coords", c);
+      clip.set("units", unit);
+      clip.set("extent", extent);
+      clip.set("keepAspectRatio", $("#keep").prop('checked'));
+      clip.set("position", $("#position").val());
+      clip.set("color", $("#color").val());
+    }
+    setFilter();
 
-	</script>
+  </script>
 
 </body>
 </html>

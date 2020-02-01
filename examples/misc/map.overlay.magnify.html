@@ -84,7 +84,15 @@
 			});
 
 		// Layers for the overview
-		var layers2 =
+		var layersOV1 =
+		[	new ol.layer.Tile({	source: new ol.source.OSM()	}),
+			new ol.layer.Tile(
+				{	source: new ol.source.Stamen({
+					layer: 'watercolor'
+				  })
+				})
+		];
+		var layersOV2 =
 		[	new ol.layer.Tile({	source: new ol.source.OSM()	}),
 			new ol.layer.Tile(
 				{	source: new ol.source.Stamen({
@@ -96,13 +104,13 @@
 
 		// New control on the map
 		var ov = new ol.Overlay.Magnify(
-			{	layers: layers2,
+			{	layers: layersOV1,
 				zoomOffset: $("#zoom").val(),
 			});
 		map.addOverlay(ov);
 
 		var ov2 = new ol.Overlay.Magnify(
-			{	layers: layers2,
+			{	layers: layersOV2,
 				target: $(".overview").get(0),
 				zoomOffset: $("#zoom").val(),
 			});
@@ -110,8 +118,10 @@
 
 		// Options changes
 		function setOVLayer (e)
-		{	layers2[$(e).val()].setVisible(true);
-			layers2[1-$(e).val()].setVisible(false);
+		{	layersOV1[$(e).val()].setVisible(true);
+			layersOV1[1-$(e).val()].setVisible(false);
+			layersOV2[$(e).val()].setVisible(true);
+			layersOV2[1-$(e).val()].setVisible(false);
 		}
 
 		$("#zoom").on("change", function ()
