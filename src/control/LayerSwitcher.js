@@ -402,7 +402,7 @@ ol_control_LayerSwitcher.prototype.dragOrdering_ = function(e) {
       if (drop && target) {
         var collection ;
         if (group) collection = group.getLayers();
-        else collection = self.getMap().getLayers();
+        else collection = self._layerGroup ?  self._layerGroup.getLayers() : self.getMap().getLayers();
         var layers = collection.getArray();
         // Switch layers
         for (var i=0; i<layers.length; i++) {
