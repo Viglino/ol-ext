@@ -165,6 +165,7 @@ ol_layer_Base.prototype.animateFeature = function(feature, fanim, useFilter) {
       event.vectorContext = e.vectorContext || ol_render_getVectorContext(e);
     } catch(e) { /* nothing todo */ }
     event.frameState = e.frameState;
+    event.inversePixelTransform = e.inversePixelTransform;
     if (!event.extent) {
       event.extent = e.frameState.extent;
       event.start = e.frameState.time;
