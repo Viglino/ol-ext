@@ -112,8 +112,15 @@ ol_ext_inherits(ol_control_MapZone, ol_control_Control);
 * @param {boolean} b
 */
 ol_control_MapZone.prototype.setVisible = function (b) {
-  if (b) this.element.classList.remove('ol-collapsed');
-  else this.element.classList.add('ol-collapsed');
+  if (b) {
+    this.element.classList.remove('ol-collapsed');
+    // Force map rendering
+    maps.forEach(function (m) {
+      m.updateSize();
+    });
+  } else {
+    this.element.classList.add('ol-collapsed');
+  }
 };
 
 /** Pre-defined zones */
