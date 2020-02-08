@@ -31,8 +31,8 @@ var ol_particule_Cloud = function(options) {
   this.image = canvas;
   for (var k=0; k<7; k++) {
     ctx.save();
-      x = Math.random()*100;
-      y = Math.random()*100;
+      var x = Math.random()*100;
+      var y = Math.random()*100;
       ctx.translate (x,y);
       ctx.fillStyle = grd;
       ctx.fillRect(0,0,canvas.width,canvas.height);

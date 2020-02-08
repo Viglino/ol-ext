@@ -201,7 +201,7 @@ ol_control_Swipe.prototype.move = function(e) {
 ol_control_Swipe.prototype._drawRect = function(e, pts) {
   var tr = e.inversePixelTransform;
   if (tr) {
-    r = [
+    var r = [
       [pts[0][0], pts[0][1]],
       [pts[0][0], pts[1][1]],
       [pts[1][0], pts[1][1]],

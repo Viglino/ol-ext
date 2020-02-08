@@ -60,7 +60,7 @@ var ol_control_MapZone = function(options) {
   });
   
   // Create maps
-  var maps = [];
+  var maps = this._maps = [];
   options.zones.forEach(function(z) {
     var view = new ol_View({ zoom: 6, center: [0,0], projection: options.projection });
     var extent = ol_proj_transformExtent(z.extent, 'EPSG:4326', view.getProjection());
@@ -115,12 +115,20 @@ ol_control_MapZone.prototype.setVisible = function (b) {
   if (b) {
     this.element.classList.remove('ol-collapsed');
     // Force map rendering
-    maps.forEach(function (m) {
+    this.getMaps().forEach(function (m) {
       m.updateSize();
     });
   } else {
     this.element.classList.add('ol-collapsed');
   }
+};
+
+
+/** Get associated maps
+ * @return {ol.Map}
+ */
+ol_control_MapZone.prototype.getMaps = function () {
+  return this._maps
 };
 
 /** Pre-defined zones */

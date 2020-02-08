@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.1.8
+ * @version v3.1.9
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -2057,7 +2057,7 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e) {
       if (drop && target) {
         var collection ;
         if (group) collection = group.getLayers();
-        else collection = self.getMap().getLayers();
+        else collection = self._layerGroup ?  self._layerGroup.getLayers() : self.getMap().getLayers();
         var layers = collection.getArray();
         // Switch layers
         for (var i=0; i<layers.length; i++) {
@@ -3885,56 +3885,72 @@ ol.control.EditBar.prototype._setModifyInteraction = function (options) {
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** A simple gauge control to display level information on the map.
  *
  * @constructor
  * @extends {ol.control.Control}
  * @param {Object=} options Control options.
- *		@param {String} options.className class of the control
- *		@param {String} options.title title of the control
- *		@param {number} options.max maximum value, default 100;
- *		@param {number} options.val the value, default 0
+ *  @param {String} options.className class of the control
+ *  @param {String} options.title title of the control
+ *  @param {number} options.max maximum value, default 100;
+ *  @param {number} options.val the value, default 0
  */
-ol.control.Gauge = function(options)
-{	options = options || {};
-	var element = document.createElement("div");
-			element.className = ((options.className||"") + ' ol-gauge ol-unselectable ol-control').trim();
-	this.title_ = document.createElement("span");
-	element.appendChild(this.title_);
-	this.gauge_ = document.createElement("button");
-	this.gauge_.setAttribute('type','button');
-	element.appendChild(document.createElement("div").appendChild(this.gauge_))
-	this.gauge_.style.width = '0px';
-	ol.control.Control.call(this,
-	{	element: element,
-		target: options.target
-	});
-	this.setTitle(options.title);
-	this.val(options.val);
-	this.set("max", options.max||100);
+ol.control.Gauge = function(options) {
+  options = options || {};
+  var element = ol.ext.element.create('DIV', {
+    className: ((options.className||"") + ' ol-gauge ol-unselectable ol-control').trim()
+  });
+  this.title_ = ol.ext.element.create('SPAN', {
+    parent: element
+  });
+  var div =  ol.ext.element.create('DIV', {
+    parent: element
+  });
+  this.gauge_ = ol.ext.element.create('BUTTON', {
+    type: 'button',
+    style: { width: '0px' },
+    parent: div
+  });
+  /*
+  var element = document.createElement("div");
+  element.className = ((options.className||"") + ' ol-gauge ol-unselectable ol-control').trim();
+  this.title_ = document.createElement("span");
+  element.appendChild(this.title_);
+  this.gauge_ = document.createElement("button");
+  this.gauge_.setAttribute('type','button');
+  element.appendChild(document.createElement("div").appendChild(this.gauge_))
+  this.gauge_.style.width = '0px';
+  */
+  ol.control.Control.call(this, {
+    element: element,
+    target: options.target
+  });
+  this.setTitle(options.title);
+  this.set("max", options.max||100);
+  this.val(options.val);
 };
 ol.ext.inherits(ol.control.Gauge, ol.control.Control);
 /** Set the control title
 * @param {string} title
 */
-ol.control.Gauge.prototype.setTitle = function(title)
-{	this.title_.innerHTML = title||"";
-	if (!title) this.title_.display = 'none';
-	else this.title_.display = '';
+ol.control.Gauge.prototype.setTitle = function(title) {
+  this.title_.innerHTML = title||"";
+  if (!title) this.title_.display = 'none';
+  else this.title_.display = '';
 };
 /** Set/get the gauge value
 * @param {number|undefined} v the value or undefined to get it
 * @return {number} the value
 */
-ol.control.Gauge.prototype.val = function(v)
-{	if (v!==undefined)
-	{	this.val_ = v;
-		this.gauge_.style.width = (v/this.get('max')*100)+"%";
-	}
-	return this.val_;
+ol.control.Gauge.prototype.val = function(v) {
+  if (v!==undefined) {
+    this.val_ = v;
+    this.gauge_.style.width = (v/this.get('max')*100)+"%";
+  }
+  return this.val_;
 };
 
 /** Bookmark positions on ol maps.
@@ -5835,7 +5851,7 @@ ol.control.MapZone = function(options) {
     target: options.target
   });
   // Create maps
-  var maps = [];
+  var maps = this._maps = [];
   options.zones.forEach(function(z) {
     var view = new ol.View({ zoom: 6, center: [0,0], projection: options.projection });
     var extent = ol.proj.transformExtent(z.extent, 'EPSG:4326', view.getProjection());
@@ -5885,8 +5901,21 @@ ol.ext.inherits(ol.control.MapZone, ol.control.Control);
 * @param {boolean} b
 */
 ol.control.MapZone.prototype.setVisible = function (b) {
-  if (b) this.element.classList.remove('ol-collapsed');
-  else this.element.classList.add('ol-collapsed');
+  if (b) {
+    this.element.classList.remove('ol-collapsed');
+    // Force map rendering
+    this.getMaps().forEach(function (m) {
+      m.updateSize();
+    });
+  } else {
+    this.element.classList.add('ol-collapsed');
+  }
+};
+/** Get associated maps
+ * @return {ol.Map}
+ */
+ol.control.MapZone.prototype.getMaps = function () {
+  return this._maps
 };
 /** Pre-defined zones */
 ol.control.MapZone.zones = {};
@@ -9757,7 +9786,7 @@ ol.control.Swipe.prototype.move = function(e) {
 ol.control.Swipe.prototype._drawRect = function(e, pts) {
   var tr = e.inversePixelTransform;
   if (tr) {
-    r = [
+    var r = [
       [pts[0][0], pts[0][1]],
       [pts[0][0], pts[1][1]],
       [pts[1][0], pts[1][1]],
@@ -10832,6 +10861,7 @@ ol.layer.Base.prototype.animateFeature = function(feature, fanim, useFilter) {
       event.vectorContext = e.vectorContext || ol.render.getVectorContext(e);
     } catch(e) { /* nothing todo */ }
     event.frameState = e.frameState;
+    event.inversePixelTransform = e.inversePixelTransform;
     if (!event.extent) {
       event.extent = e.frameState.extent;
       event.start = e.frameState.time;
@@ -21650,8 +21680,8 @@ ol.particule.Cloud = function(options) {
   this.image = canvas;
   for (var k=0; k<7; k++) {
     ctx.save();
-      x = Math.random()*100;
-      y = Math.random()*100;
+      var x = Math.random()*100;
+      var y = Math.random()*100;
       ctx.translate (x,y);
       ctx.fillStyle = grd;
       ctx.fillRect(0,0,canvas.width,canvas.height);
