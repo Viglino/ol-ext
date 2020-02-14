@@ -180,7 +180,7 @@ ol_control_SearchGeoportail.prototype.searchCommune = function (f, cback) {
 		+'<Request requestID="1" version="1.2" methodName="LocationUtilityService">'
 			+'<GeocodeRequest returnFreeForm="false">'
 				+'<Address countryCode="PositionOfInterest">'
-				+'<freeFormAddress>'+f.fulltext+'+</freeFormAddress>'
+				+'<freeFormAddress>'+f.zipcode+' '+f.city+'+</freeFormAddress>'
 				+'</Address>'
 			+'</GeocodeRequest>'
 		+'</Request>'
@@ -191,12 +191,24 @@ ol_control_SearchGeoportail.prototype.searchCommune = function (f, cback) {
     { 'xls': request }, 
     function(xml) {
       if (xml) {
-        xml = xml.replace(/\n|\r/g,'');
-        var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
-        f.x = Number(p[1]);
-        f.y = Number(p[0]);
-        f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));
-        f.insee = (xml.replace(/.*<Place type="INSEE">([^<]*)<\/Place>.*/, "$1"));
+        // XML to JSON
+        var parser = new DOMParser();
+        var xmlDoc = parser.parseFromString(xml,"text/xml");
+        var com = xmlDoc.getElementsByTagName('GeocodedAddress')[0];
+        var coord = com.getElementsByTagName('gml:Point')[0].textContent.trim().split(' ');
+        f.x = Number(coord[1]);
+        f.y = Number(coord[0]);
+        var place = com.getElementsByTagName('Place');
+        for (var i=0; i<place.length; i++) {
+          switch (place[i].attributes.type.value) {
+            case 'Nature': 
+              f.kind = place[i].textContent;
+              break;
+            case 'INSEE': 
+              f.insee = place[i].textContent;
+              break;
+          }
+        }
         if (f.x || f.y) {
           if (cback) cback.call(this, [f]);
           else this._handleSelect(f);
