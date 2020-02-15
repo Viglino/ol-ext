@@ -12,6 +12,7 @@ import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_layer_Base from 'ol/layer/Base'
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Circle from 'ol/style/Circle'
+import ol_style_Stroke from 'ol/style/Stroke'
 import ol_render_getVectorContext from '../util/getVectorContext';
 
 /** Feature animation base class
@@ -23,10 +24,10 @@ import ol_render_getVectorContext from '../util/getVectorContext';
 *	@param {Number} options.duration duration of the animation in ms, default 1000
 *	@param {bool} options.revers revers the animation direction
 *	@param {Number} options.repeat number of time to repeat the animation, default 0
-*	@param {oo.style.Style} options.hiddenStyle a style to display the feature when playing the animation
+*	@param {ol.style.Style} options.hiddenStyle a style to display the feature when playing the animation
 *	  to be used to make the feature selectable when playing animation 
 *	  (@see {@link ../examples/map.featureanimation.select.html}), default the feature 
-*	  will be hidden when playing (and niot selectable)
+*	  will be hidden when playing (and not selectable)
 *	@param {ol_easing_Function} options.fade an easing function used to fade in the feature, default none
 *	@param {ol_easing_Function} options.easing an easing function for the animation, default ol_easing_linear
 */
@@ -46,6 +47,16 @@ var ol_featureAnimation = function(options) {
   ol_Object.call(this);
 };
 ol_ext_inherits(ol_featureAnimation, ol_Object);
+
+
+/** Hidden style: a transparent style
+ */
+ol_featureAnimation.hiddenStyle = new ol_style_Style({ 
+  image: new ol_style_Circle({}), 
+  stroke: new ol_style_Stroke({ 
+    color: 'transparent' 
+  }) 
+});
 
 /** Draw a geometry 
 * @param {olx.animateFeatureEvent} e
@@ -235,7 +246,7 @@ ol_layer_Base.prototype.animateFeature = function(feature, fanim, useFilter) {
       if (self.renderSync) self.renderSync();
       else self.changed();
       // Hide feature while animating
-      feature.setStyle(fanim[step].hiddenStyle || new ol_style_Style({ image: new ol_style_Circle({}) }));
+      feature.setStyle(fanim[step].hiddenStyle || ol_featureAnimation.hiddenStyle);
       // Send event
       var event = { type:'animationstart', feature: feature };
       if (options) {
