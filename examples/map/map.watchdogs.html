@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>ol-ext: We are Data (Watchdogs like)</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="Calculate the Delaunay triangulation of a Point vector source." />
+	<meta name="keywords" content="ol, openlayers tirangulation, delaunay" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
+	
+	<!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+  
+  <style>
+    #map {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+    }
+    #map:after {
+      content: "";
+      background-image: radial-gradient(circle, transparent 20%, rgba(0,0,0,.8) 80%);
+      pointer-events: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+	<a href="../../index.html">
+		<h1>ol-ext: We are Data (Watchdogs like)</h1>
+	</a>
+	<div class="info">
+	</div>
+
+	<!-- Map div -->
+	<div id="map"></div>
+	
+	<!--div class="options"></!--div-->
+
+<script type="text/javascript">
+
+	// Base layers
+	var carte = new ol.layer.Geoportail({
+    layer: 'GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD'    
+  });
+  carte.addFilter(new ol.filter.Colorize({ 
+    operation: 'difference',
+    color: [255,192,128]
+  }));
+/*
+  carte.addFilter(new ol.filter.Colorize({ 
+    operation: 'color',
+    color: [153,102,51]
+  }));
+*/
+
+	// The map
+	var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 15,
+      center: [205461, 5867916]
+    }),
+    layers: [carte]
+  });
+  map.addControl(new ol.control.Permalink({ visible: false }));
+
+  // Default style
+  lineStyle =  [
+    new ol.style.Style({
+      stroke: new ol.style.Stroke({
+        color: [0,255,255],
+        width: 1
+      }),
+      fill: new ol.style.Fill({ color: [0,255,255,.2] })
+    })
+  ];
+  var circleRedStyle = new ol.style.Style({
+    image: new ol.style.Circle ({
+      radius: 30, 
+      stroke: new ol.style.Stroke ({ color: [0,255,192], width: 1.5 })
+    })
+  });
+  var styles = {
+    hexa: [
+      new ol.style.Style({
+        image: new ol.style.RegularShape({
+          radius: 10,
+          points: 6,
+          stroke: new ol.style.Stroke({
+            color: [0,255,0],
+            width: 1.5
+          })
+        })
+      }),
+      new ol.style.Style({
+        image: new ol.style.RegularShape({
+          radius: 5,
+          points: 6,
+          fill: new ol.style.Fill({
+            color: [0,255,0]
+          })
+        })
+      })
+    ],
+    square: [
+      new ol.style.Style({
+        image: new ol.style.RegularShape({
+          radius: 8,
+          points: 4,
+          angle: Math.PI/4,
+          fill: new ol.style.Fill({
+            color: [255,192,0]
+          })
+        })
+      }),
+    ],
+    losange: [
+      new ol.style.Style({
+        image: new ol.style.RegularShape({
+          radius: 10,
+          points: 4,
+          stroke: new ol.style.Stroke({
+            color: [255,255,0],
+            width: 1.5
+          })
+        })
+      }),
+      new ol.style.Style({
+        image: new ol.style.RegularShape({
+          radius: 5,
+          points: 4,
+          fill: new ol.style.Fill({
+            color: [255,255,0]
+          })
+        })
+      })
+    ],
+    triangle: [
+      new ol.style.Style({
+        image: new ol.style.RegularShape({
+          radius: 12,
+          points: 3,
+          stroke: new ol.style.Stroke({
+            color: [255,0,0],
+            width: 1.5
+          })
+        })
+      }),
+      new ol.style.Style({
+        image: new ol.style.Circle({
+          radius: 4,
+          fill: new ol.style.Fill({
+            color: [255,0,0]
+          })
+        })
+      })
+    ]
+  };
+  var keys = Object.keys(styles);
+
+  // Node source
+  var nodes = new ol.source.Vector();
+  var nb = 0;
+  nodes.on('addfeature', function(e) {
+    e.feature.set('style', keys[Math.floor(Math.random()*keys.length)]);
+  });
+  var vector = new ol.layer.Vector({
+    name: 'vector',
+		source: nodes,
+		style: function(f) {
+			return styles[f.get('style')];
+		}
+  });
+
+  // Delaunay source based on the node source
+  var delaunay = new ol.source.Delaunay({
+	  source: nodes
+  });
+  var triangle = new ol.layer.Vector({
+    name: 'triangle',
+    source: delaunay,
+    style: function() { return lineStyle }
+  });
+
+  // Add to map
+  map.addLayer(triangle);
+  map.addLayer(vector);
+
+  // Check adds
+  vector.getSource().on('addfeature', function(e) {
+    vector.animateFeature (e.feature, new ol.featureAnimation.Zoom({
+      duration: 500, 
+      easing: ol.easing.easeIn
+    }));
+    var f = new ol.Feature (e.feature.getGeometry().clone());
+    f.setStyle(circleRedStyle);
+    vector.animateFeature (f, new ol.featureAnimation.ZoomOut({
+      fade: ol.easing.easeOut, 
+      duration: 1500, 
+      easing: ol.easing.linear
+    }));
+  });
+  triangle.getSource().on('addfeature', function(e) {
+    triangle.animateFeature (e.feature, new ol.featureAnimation.Blink({
+      nb: 15,
+      duration: 2000, 
+      easing: ol.easing.easeIn
+    }));
+  });
+
+  // Control Bar
+  var bar = new ol.control.Bar({ toggleOne: true });
+  map.addControl(bar);
+
+  // Draw interaction to add new points
+  var draw = new ol.interaction.Draw({ source: nodes, type:"Point" });
+  bar.addControl(new ol.control.Toggle({
+    className: 'ol-text-button',
+    html: "add",
+    interaction: draw,
+    active: true
+  }));
+
+  // Delete
+	var del = new ol.interaction.Select({
+    layers: [vector],
+    hitTolerance: 5
+  });
+  del.on('select', function(e){
+    var f = e.selected[0];
+    if (f) nodes.removeFeature(f);
+    del.getFeatures().clear();
+  });
+  bar.addControl(new ol.control.Toggle({
+    className: 'ol-text-button',
+    html: "del",
+    interaction: del
+  }));
+
+  // Select
+  var circle = new ol.layer.Vector({
+    name: 'circle',
+    source: new ol.source.Vector(),
+//    style: redStyle
+  });
+  map.addLayer(circle);
+
+  // Show circumcircle on hover
+	var hover = new ol.interaction.Hover({
+    layers: [triangle]
+  });
+  hover.on('enter', function(e){
+    circle.getSource().clear();
+    if (e.layer===triangle) {
+      var c = e.feature.getGeometry().getCoordinates()[0];
+      c = delaunay.getCircumCircle(c);
+      if (c.radius) {
+        c = new ol.geom.Circle(c.center, c.radius);
+        var f = new ol.Feature(c);
+        circle.getSource().addFeature(f);
+      }
+    }
+  });
+  hover.on('leave', function(e){
+    circle.getSource().clear();
+  });
+	bar.addControl(new ol.control.Toggle({
+    className: 'ol-text-button',
+    html: 'circle',
+    interaction: hover
+  }));
+
+
+</script>
+	
+</body>
+</html>
