@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.1.9
+ * @version v3.1.10
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -6463,7 +6463,8 @@ ol.control.Overview.prototype.setView = function(e){
  *  @param {bool} options.localStorage save current map view in localStorage, default false
  *  @param {integer} options.fixed number of digit in coords, default 6
  *  @param {bool} options.anchor use "#" instead of "?" in href
- *  @param {bool} options.hidden hide the button on the map, default false
+ *  @param {bool} options.visible hide the button on the map, default true
+ *  @param {bool} options.hidden hide the button on the map, default false DEPRECATED: use visible instead
  *  @param {function} options.onclick a function called when control is clicked
 */
 ol.control.Permalink = function(opt_options) {
@@ -6484,7 +6485,7 @@ ol.control.Permalink = function(opt_options) {
   var element = document.createElement('div');
   element.className = (options.className || "ol-permalink") + " ol-unselectable ol-control";
   element.appendChild(button);
-  if (options.hidden) ol.ext.element.hide(element);
+  if (options.hidden || options.visible===false) ol.ext.element.hide(element);
   ol.control.Control.call(this, {
     element: element,
     target: options.target
@@ -6493,7 +6494,7 @@ ol.control.Permalink = function(opt_options) {
   // Save search params
   this.search_ = {};
   var hash = this.replaceState_ ? document.location.hash || document.location.search : '';
-  console.log('hash', hash)
+//  console.log('hash', hash)
   if (!hash && this._localStorage) {
     hash = localStorage['ol@parmalink'];
   }
@@ -10745,10 +10746,10 @@ ol.control.Toggle.prototype.getInteraction = function() {
 *	@param {Number} options.duration duration of the animation in ms, default 1000
 *	@param {bool} options.revers revers the animation direction
 *	@param {Number} options.repeat number of time to repeat the animation, default 0
-*	@param {oo.style.Style} options.hiddenStyle a style to display the feature when playing the animation
+*	@param {ol.style.Style} options.hiddenStyle a style to display the feature when playing the animation
 *	  to be used to make the feature selectable when playing animation 
 *	  (@see {@link ../examples/map.featureanimation.select.html}), default the feature 
-*	  will be hidden when playing (and niot selectable)
+*	  will be hidden when playing (and not selectable)
 *	@param {ol.easing.Function} options.fade an easing function used to fade in the feature, default none
 *	@param {ol.easing.Function} options.easing an easing function for the animation, default ol.easing.linear
 */
@@ -10764,6 +10765,14 @@ ol.featureAnimation = function(options) {
   ol.Object.call(this);
 };
 ol.ext.inherits(ol.featureAnimation, ol.Object);
+/** Hidden style: a transparent style
+ */
+ol.featureAnimation.hiddenStyle = new ol.style.Style({ 
+  image: new ol.style.Circle({}), 
+  stroke: new ol.style.Stroke({ 
+    color: 'transparent' 
+  }) 
+});
 /** Draw a geometry 
 * @param {olx.animateFeatureEvent} e
 * @param {ol.geom} geom geometry for shadow
@@ -10937,7 +10946,7 @@ ol.layer.Base.prototype.animateFeature = function(feature, fanim, useFilter) {
       if (self.renderSync) self.renderSync();
       else self.changed();
       // Hide feature while animating
-      feature.setStyle(fanim[step].hiddenStyle || new ol.style.Style({ image: new ol.style.Circle({}) }));
+      feature.setStyle(fanim[step].hiddenStyle || ol.featureAnimation.hiddenStyle);
       // Send event
       var event = { type:'animationstart', feature: feature };
       if (options) {
@@ -10957,6 +10966,31 @@ ol.layer.Base.prototype.animateFeature = function(feature, fanim, useFilter) {
     isPlaying: function() { return (!!listenerKey); }
   };
 };
+
+/*
+  Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL license (http://www.cecill.info/).
+*/
+/** Blink a feature
+ * @constructor
+ * @extends {ol.featureAnimation}
+ * @param {ol.featureAnimationOptions} options
+ *  @param {Number} options.nb number of blink, default 10
+ */
+ol.featureAnimation.Blink = function(options) {
+  ol.featureAnimation.call(this, options);
+  this.set('nb', options.nb || 10)
+}
+ol.ext.inherits(ol.featureAnimation.Blink, ol.featureAnimation);
+/** Animate: Show or hide feature depending on the laptimes
+* @param {ol.featureAnimationEvent} e
+*/
+ol.featureAnimation.Blink.prototype.animate = function (e) {	
+  if (!(Math.round(this.easing_(e.elapsed)*this.get('nb'))%2)) {
+    this.drawGeom_(e, e.geom);
+  }
+  return (e.time <= this.duration_);
+}
 
 /*
 	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -11212,25 +11246,24 @@ ol.featureAnimation.Shake.prototype.animate = function (e)
 }
 
 /*
-	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL license (http://www.cecill.info/).
+  Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL license (http://www.cecill.info/).
 */
 /** Show an object for a given duration
  * @constructor
  * @extends {ol.featureAnimation}
  * @param {ol.featureAnimationOptions} options
  */
-ol.featureAnimation.Show = function(options)
-{	ol.featureAnimation.call(this, options);
+ol.featureAnimation.Show = function(options) {
+  ol.featureAnimation.call(this, options);
 }
 ol.ext.inherits(ol.featureAnimation.Show, ol.featureAnimation);
 /** Animate: just show the object during the laps time
 * @param {ol.featureAnimationEvent} e
 */
-ol.featureAnimation.Show.prototype.animate = function (e)
-{	
-	this.drawGeom_(e, e.geom);
-	return (e.time <= this.duration_);
+ol.featureAnimation.Show.prototype.animate = function (e) {	
+  this.drawGeom_(e, e.geom);
+  return (e.time <= this.duration_);
 }
 
 /*
@@ -18925,6 +18958,7 @@ ol.ext.inherits(ol.source.Delaunay, ol.source.Vector);
  * @param {Array<ol/coordinates>} pts
  */
 ol.source.Delaunay.prototype._addTriangle = function(pts) {
+  pts.push(pts[0]);
   var triangle = new ol.Feature(new ol.geom.Polygon([pts]));
   this.addFeature(triangle);
   this.flip.push(triangle);
@@ -18961,7 +18995,8 @@ ol.source.Delaunay.prototype._onRemoveNode = function(evt) {
     this.removeFeature(tr);
     tr = tr.getGeometry().getCoordinates()[0];
     var pts = [];
-    for (i=0, p; p = tr[i]; i++) {
+    for (i=0; i<3; i++) {
+      p = tr[i];
       if (!ol.coordinate.equal(p,pt)) {
         pts.push(p);
       }
@@ -18969,11 +19004,13 @@ ol.source.Delaunay.prototype._onRemoveNode = function(evt) {
     edges.push(pts);
   }
   pts = edges.pop();
+/* DEBUG
 var se = '';
 edges.forEach(function(e){
   se += ' - '+this.listpt(e);
 }.bind(this));
 console.log('EDGES', se);
+*/
   i = 0;
   function testEdge(p0, p1, index) {
     if (ol.coordinate.equal(p0, pts[index])) {
@@ -18997,12 +19034,12 @@ console.log('EDGES', se);
     }
     if (!edges.length) break;
     if (i>=edges.length) {
-      console.log(this.listpt(pts), this.listpt(edges));
+//      console.log(this.listpt(pts), this.listpt(edges));
       throw '[DELAUNAY:removePoint] No edge found';
     }
   }
   // Closed = interior
-console.log('PTS', this.listpt(pts))
+// console.log('PTS', this.listpt(pts))
   var closed = ol.coordinate.equal(pts[0], pts[pts.length-1]);
   if (closed) pts.pop();
   // Update convex hull: remove pt + add new ones
@@ -19022,23 +19059,23 @@ console.log('PTS', this.listpt(pts))
       i1 = (i+1) % t.length;
       s += (t[i1][0] - t[i][0]) * (t[i1][1] + t[i][1]);
     }
-    console.log(s)
+//    console.log(s)
     return (s>=0 ? 1:-1)
   };
   // Add ears
-  // a l'interieur : Si surface ear et surface de l'objet ont meme signe
-  // extrieur ? ajoute le point et idem ? + ferme la 
+  // interior point : ear area and object area have the same sign
+  // extrior point : add a new point and close
   var clock;
-var enveloppe = pts.slice();
+  var enveloppe = pts.slice();
   if (closed) {
     clock = clockwise(pts);
   } else {
-    console.log('ouvert', pts, pts.slice().push(pt))
-enveloppe.push(pt);
+//    console.log('ouvert', pts, pts.slice().push(pt))
+    enveloppe.push(pt);
     clock = clockwise(enveloppe);
   }
-console.log('S=',clock,'CLOSED',closed)
-console.log('E=',this.listpt(enveloppe))
+// console.log('S=',clock,'CLOSED',closed)
+// console.log('E=',this.listpt(enveloppe))
   for (i=0; i<=pts.length+1; i++) {
     if (pts.length<3) break;
     var t = [
@@ -19049,14 +19086,14 @@ console.log('E=',this.listpt(enveloppe))
     if (clockwise(t)===clock) {
       var ok = true;
       for (var k=i+3; k<i+pts.length; k++) {
-        console.log('test '+k, this.listpt([pts[k % pts.length]]))
+//        console.log('test '+k, this.listpt([pts[k % pts.length]]))
         if (this.inCircle(pts[k % pts.length], t)) {
           ok = false;
           break;
         }
       }
       if (ok) {
-console.log(this.listpt(t),'ok');
+// console.log(this.listpt(t),'ok');
         this._addTriangle(t);
         // remove
         pts.splice((i+1) % pts.length, 1);
@@ -19064,7 +19101,7 @@ console.log(this.listpt(t),'ok');
         i = -1;
       }
     }
-else console.log(this.listpt(t),'nok');
+// else console.log(this.listpt(t),'nok');
   }
 /* DEBUG * /
 if (pts.length>3) console.log('oops');
@@ -19114,7 +19151,7 @@ ol.source.Delaunay.prototype._onAddNode = function(e) {
   var pt = finserted.getGeometry().getCoordinates();
   // Test existing point
   if (this.getNodesAt(pt).length > 1) {
-    console.log('remove duplicated points')
+//    console.log('remove duplicated points')
     this._nodes.removeFeature(finserted);
     return;
   }
@@ -19648,8 +19685,8 @@ ol.source.GeoRSS.prototype._loaderFn = function(extent, resolution, projection){
 /** IGN's Geoportail WMTS source
  * @constructor
  * @extends {ol.source.WMTS}
- * @param {String=} layer Layer name.
- * @param {olx.source.OSMOptions=} options WMTS options 
+ * @param {olx.source.Geoportail=} options WMTS options 
+ *  @param {string=} options.layer Geoportail layer name
  *  @param {number} options.minZoom
  *  @param {number} options.maxZoom
  *  @param {string} options.server
@@ -19662,6 +19699,10 @@ ol.source.GeoRSS.prototype._loaderFn = function(extent, resolution, projection){
  */
 ol.source.Geoportail = function (layer, options) {
   options = options || {};
+  if (layer.layer) {
+    options = layer;
+    layer = options.layer;
+  }
   var matrixIds = new Array();
   var resolutions = new Array();//[156543.03392804103,78271.5169640205,39135.75848201024,19567.879241005125,9783.939620502562,4891.969810251281,2445.9849051256406,1222.9924525628203,611.4962262814101,305.74811314070485,152.87405657035254,76.43702828517625,38.218514142588134,19.109257071294063,9.554628535647034,4.777314267823517,2.3886571339117584,1.1943285669558792,0.5971642834779396,0.29858214173896974,0.14929107086948493,0.07464553543474241];
   var size = ol.extent.getWidth(ol.proj.get('EPSG:3857').getExtent()) / 256;
@@ -20899,41 +20940,49 @@ ol.layer.GeoImage.prototype.getExtent = function() {
 /** IGN's Geoportail WMTS layer definition
  * @constructor 
  * @extends {ol.layer.Tile}
- * @param {string} layer Layer name
  * @param {olx.layer.WMTSOptions=} options WMTS options if not defined default are used
+ *  @param {string} options.layer Geoportail layer name
  *  @param {string} options.gppKey Geoportail API key
- * @param {olx.source.WMTSOptions=} tileoptions WMTS options if not defined default are used
+ *  @param {olx.source.WMTSOptions=} tileoptions WMTS options if not defined default are used
  */
 ol.layer.Geoportail = function(layer, options, tileoptions) {
   options = options || {};
-	tileoptions = tileoptions || {};
-	var capabilities = window.geoportailConfig ? window.geoportailConfig.capabilities[options.gppKey || options.key] || window.geoportailConfig.capabilities["default"] || ol.layer.Geoportail.capabilities : ol.layer.Geoportail.capabilities;
+  tileoptions = tileoptions || {};
+  // use function(options, tileoption) when layer is set in options
+  if (layer.layer) {
+    options = layer;
+    tileoptions = options;
+    layer = options.layer;
+  }
+  var maxZoom = options.maxZoom;
+  var capabilities = window.geoportailConfig ? window.geoportailConfig.capabilities[options.gppKey || options.key] || window.geoportailConfig.capabilities["default"] || ol.layer.Geoportail.capabilities : ol.layer.Geoportail.capabilities;
   capabilities = capabilities[layer];
-	if (!capabilities) {
+  if (!capabilities) {
     capabilities = { title: layer, originators: [] };
     console.error("ol.layer.Geoportail: no layer definition for \""+layer+"\"\nTry to use ol/layer/Geoportail~loadCapabilities() to get it.");
     // throw new Error("ol.layer.Geoportail: no layer definition for \""+layer+"\"");
   }
-	// tile options & default params
-	for (var i in capabilities) if (typeof	tileoptions[i]== "undefined") tileoptions[i] = capabilities[i];
-	this._originators = capabilities.originators;
-	if (!tileoptions.gppKey) tileoptions.gppKey = options.gppKey || options.key;
-	options.source = new ol.source.Geoportail(layer, tileoptions);
-	if (!options.title) options.title = capabilities.title;
-	if (!options.name) options.name = layer;
-	options.layer = layer;
-	if (!options.queryable) options.queryable = capabilities.queryable;
-	if (!options.desc) options.desc = capabilities.desc;
-	if (!options.extent && capabilities.bbox) {
+  // tile options & default params
+  for (var i in capabilities) if (typeof	tileoptions[i]== "undefined") tileoptions[i] = capabilities[i];
+  this._originators = capabilities.originators;
+  if (!tileoptions.gppKey) tileoptions.gppKey = options.gppKey || options.key;
+  options.source = new ol.source.Geoportail(layer, tileoptions);
+  if (!options.title) options.title = capabilities.title;
+  if (!options.name) options.name = layer;
+  options.layer = layer;
+  if (!options.queryable) options.queryable = capabilities.queryable;
+  if (!options.desc) options.desc = capabilities.desc;
+  if (!options.extent && capabilities.bbox) {
     if (capabilities.bbox[0]>-170 && capabilities.bbox[2]<170) {
       options.extent = ol.proj.transformExtent(capabilities.bbox, 'EPSG:4326', 'EPSG:3857');
     }
-	}
-	// calculate layer max resolution
-	if (!options.maxResolution && tileoptions.minZoom) {
+  }
+  options.maxZoom = maxZoom;
+  // calculate layer max resolution
+  if (!options.maxResolution && tileoptions.minZoom) {
     options.source.getTileGrid().minZoom -= (tileoptions.minZoom>1 ? 2 : 1);
-		options.maxResolution = options.source.getTileGrid().getResolution(options.source.getTileGrid().minZoom)
-		options.source.getTileGrid().minZoom = tileoptions.minZoom;
+    options.maxResolution = options.source.getTileGrid().getResolution(options.source.getTileGrid().minZoom)
+    options.source.getTileGrid().minZoom = tileoptions.minZoom;
   }
   ol.layer.Tile.call (this, options);
   // BUG GPP: Attributions constraints are not set properly :(
@@ -21067,10 +21116,10 @@ ol.layer.Geoportail.getCapabilities = function(gppKey) {
   var onFinally = function() {}
   var geopresolutions = [156543.03390625,78271.516953125,39135.7584765625,19567.87923828125,9783.939619140625,4891.9698095703125,2445.9849047851562,1222.9924523925781,611.4962261962891,305.74811309814453,152.87405654907226,76.43702827453613,38.218514137268066,19.109257068634033,9.554628534317017,4.777314267158508,2.388657133579254,1.194328566789627,0.5971642833948135,0.29858214169740677,0.14929107084870338];
   // Transform resolution to zoom
-	function getZoom(res) {
+  function getZoom(res) {
     res = Number(res) * 0.000281;
-		for (var r=0; r<geopresolutions.length; r++) 
-			if (res>geopresolutions[r]) return r;
+    for (var r=0; r<geopresolutions.length; r++) 
+      if (res>geopresolutions[r]) return r;
   }
   // Merge constraints 
   function mergeConstraints(ori) {
@@ -21085,11 +21134,11 @@ ol.layer.Geoportail.getCapabilities = function(gppKey) {
         }
         if (!bok) continue;
         if (ori.constraint[i].maxZoom == ori.constraint[j].minZoom 
-         || ori.constraint[j].maxZoom == ori.constraint[i].minZoom 
-         || ori.constraint[i].maxZoom+1 == ori.constraint[j].minZoom 
-         || ori.constraint[j].maxZoom+1 == ori.constraint[i].minZoom
-         || ori.constraint[i].minZoom-1 == ori.constraint[j].maxZoom
-         || ori.constraint[j].minZoom-1 == ori.constraint[i].maxZoom) {
+        || ori.constraint[j].maxZoom == ori.constraint[i].minZoom 
+        || ori.constraint[i].maxZoom+1 == ori.constraint[j].minZoom 
+        || ori.constraint[j].maxZoom+1 == ori.constraint[i].minZoom
+        || ori.constraint[i].minZoom-1 == ori.constraint[j].maxZoom
+        || ori.constraint[j].minZoom-1 == ori.constraint[i].maxZoom) {
           ori.constraint[j].maxZoom = Math.max(ori.constraint[i].maxZoom, ori.constraint[j].maxZoom);
           ori.constraint[j].minZoom = Math.min(ori.constraint[i].minZoom, ori.constraint[j].minZoom);
           ori.constraint.splice(i,1);
@@ -21132,26 +21181,26 @@ ol.layer.Geoportail.getCapabilities = function(gppKey) {
         for (var k=0, o; o=origin[k]; k++) {
           var ori = service.originators[o.attributes['name'].value] = {
             href: o.getElementsByTagName('gpp:URL')[0].innerHTML,
-						attribution: o.getElementsByTagName('gpp:Attribution')[0].innerHTML,
-						logo: o.getElementsByTagName('gpp:Logo')[0].innerHTML,
-						minZoom: 20,
-						maxZoom: 0,
-						constraint: []
+            attribution: o.getElementsByTagName('gpp:Attribution')[0].innerHTML,
+            logo: o.getElementsByTagName('gpp:Logo')[0].innerHTML,
+            minZoom: 20,
+            maxZoom: 0,
+            constraint: []
           };
           // Scale contraints
           var constraint = o.getElementsByTagName('gpp:Constraint');
-					for (var j=0, c; c=constraint[j]; j++) {
+          for (var j=0, c; c=constraint[j]; j++) {
             var zmax = getZoom(c.getElementsByTagName('sld:MinScaleDenominator')[0].innerHTML);
-						var zmin = getZoom(c.getElementsByTagName('sld:MaxScaleDenominator')[0].innerHTML);
-						if (zmin > ori.maxZoom) ori.maxZoom = zmin;
-						if (zmin < ori.minZoom) ori.minZoom = zmin;
-						if (zmax>ori.maxZoom) ori.maxZoom = zmax;
-						if (zmax<ori.minZoom) ori.minZoom = zmax;
-						ori.constraint.push({
+            var zmin = getZoom(c.getElementsByTagName('sld:MaxScaleDenominator')[0].innerHTML);
+            if (zmin > ori.maxZoom) ori.maxZoom = zmin;
+            if (zmin < ori.minZoom) ori.minZoom = zmin;
+            if (zmax>ori.maxZoom) ori.maxZoom = zmax;
+            if (zmax<ori.minZoom) ori.minZoom = zmax;
+            ori.constraint.push({
               minZoom: zmin,
-							maxZoom: zmax,
-							bbox: JSON.parse('['+c.getElementsByTagName('gpp:BoundingBox')[0].innerHTML+']')
-						});
+              maxZoom: zmax,
+              bbox: JSON.parse('['+c.getElementsByTagName('gpp:BoundingBox')[0].innerHTML+']')
+            });
           }
           // Merge constraints
           mergeConstraints(ori)
