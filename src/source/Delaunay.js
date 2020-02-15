@@ -37,6 +37,7 @@ ol_ext_inherits(ol_source_Delaunay, ol_source_Vector);
  * @param {Array<ol/coordinates>} pts
  */
 ol_source_Delaunay.prototype._addTriangle = function(pts) {
+  pts.push(pts[0]);
   var triangle = new ol_Feature(new ol_geom_Polygon([pts]));
   this.addFeature(triangle);
   this.flip.push(triangle);
@@ -78,7 +79,8 @@ ol_source_Delaunay.prototype._onRemoveNode = function(evt) {
     this.removeFeature(tr);
     tr = tr.getGeometry().getCoordinates()[0];
     var pts = [];
-    for (i=0, p; p = tr[i]; i++) {
+    for (i=0; i<3; i++) {
+      p = tr[i];
       if (!ol_coordinate_equal(p,pt)) {
         pts.push(p);
       }
@@ -87,11 +89,13 @@ ol_source_Delaunay.prototype._onRemoveNode = function(evt) {
   }
   pts = edges.pop();
 
+/* DEBUG
 var se = '';
 edges.forEach(function(e){
   se += ' - '+this.listpt(e);
 }.bind(this));
 console.log('EDGES', se);
+*/
 
   i = 0;
   function testEdge(p0, p1, index) {
@@ -116,12 +120,12 @@ console.log('EDGES', se);
     }
     if (!edges.length) break;
     if (i>=edges.length) {
-      console.log(this.listpt(pts), this.listpt(edges));
+//      console.log(this.listpt(pts), this.listpt(edges));
       throw '[DELAUNAY:removePoint] No edge found';
     }
   }
   // Closed = interior
-console.log('PTS', this.listpt(pts))
+// console.log('PTS', this.listpt(pts))
   var closed = ol_coordinate_equal(pts[0], pts[pts.length-1]);
   if (closed) pts.pop();
 
@@ -143,24 +147,24 @@ console.log('PTS', this.listpt(pts))
       i1 = (i+1) % t.length;
       s += (t[i1][0] - t[i][0]) * (t[i1][1] + t[i][1]);
     }
-    console.log(s)
+//    console.log(s)
     return (s>=0 ? 1:-1)
   };
   // Add ears
-  // a l'interieur : Si surface ear et surface de l'objet ont meme signe
-  // extrieur ? ajoute le point et idem ? + ferme la 
+  // interior point : ear area and object area have the same sign
+  // extrior point : add a new point and close
   var clock;
-var enveloppe = pts.slice();
+  var enveloppe = pts.slice();
   if (closed) {
     clock = clockwise(pts);
   } else {
-    console.log('ouvert', pts, pts.slice().push(pt))
-enveloppe.push(pt);
+//    console.log('ouvert', pts, pts.slice().push(pt))
+    enveloppe.push(pt);
     clock = clockwise(enveloppe);
   }
 
-console.log('S=',clock,'CLOSED',closed)
-console.log('E=',this.listpt(enveloppe))
+// console.log('S=',clock,'CLOSED',closed)
+// console.log('E=',this.listpt(enveloppe))
 
   for (i=0; i<=pts.length+1; i++) {
     if (pts.length<3) break;
@@ -172,14 +176,14 @@ console.log('E=',this.listpt(enveloppe))
     if (clockwise(t)===clock) {
       var ok = true;
       for (var k=i+3; k<i+pts.length; k++) {
-        console.log('test '+k, this.listpt([pts[k % pts.length]]))
+//        console.log('test '+k, this.listpt([pts[k % pts.length]]))
         if (this.inCircle(pts[k % pts.length], t)) {
           ok = false;
           break;
         }
       }
       if (ok) {
-console.log(this.listpt(t),'ok');
+// console.log(this.listpt(t),'ok');
         this._addTriangle(t);
         // remove
         pts.splice((i+1) % pts.length, 1);
@@ -187,7 +191,7 @@ console.log(this.listpt(t),'ok');
         i = -1;
       }
     }
-else console.log(this.listpt(t),'nok');
+// else console.log(this.listpt(t),'nok');
   }
 
 /* DEBUG * /
@@ -244,7 +248,7 @@ ol_source_Delaunay.prototype._onAddNode = function(e) {
   var pt = finserted.getGeometry().getCoordinates();
   // Test existing point
   if (this.getNodesAt(pt).length > 1) {
-    console.log('remove duplicated points')
+//    console.log('remove duplicated points')
     this._nodes.removeFeature(finserted);
     return;
   }
