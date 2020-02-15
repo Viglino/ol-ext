@@ -31,7 +31,7 @@
       width: 100%;
       height: 100%;
     }
-    #map:after {
+    .ol-overlaycontainer-stopevent:before {
       content: "";
       background-image: radial-gradient(circle, transparent 20%, rgba(0,0,0,.8) 80%);
       pointer-events: none;
@@ -42,6 +42,12 @@
       bottom: 0;
       width: 100%;
       height: 100%;
+    }
+    #map .ol-button > div {
+      color: #fff;
+    }
+    #map .ol-button.ol-active > div {
+      color: #0ff;
     }
   </style>
 </head>
@@ -63,18 +69,22 @@
 
 	// Base layers
 	var carte = new ol.layer.Geoportail({
-    layer: 'GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD'    
+    layer: 'GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD'
+    //layer: 'ORTHOIMAGERY.ORTHOPHOTOS'    
+    //layer: 'GEOGRAPHICALGRIDSYSTEMS.MAPS'    
   });
+/**/
   carte.addFilter(new ol.filter.Colorize({ 
     operation: 'difference',
     color: [255,192,128]
+    //color: [0,0,128]
   }));
-/*
+/** /
   carte.addFilter(new ol.filter.Colorize({ 
-    operation: 'color',
-    color: [153,102,51]
+    operation: 'grayscale',
+    color: [192,192,255]
   }));
-*/
+/**/
 
 	// The map
 	var map = new ol.Map ({
