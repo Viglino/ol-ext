@@ -22,7 +22,8 @@ import ol_ext_element from '../util/element'
  *  @param {bool} options.localStorage save current map view in localStorage, default false
  *  @param {integer} options.fixed number of digit in coords, default 6
  *  @param {bool} options.anchor use "#" instead of "?" in href
- *  @param {bool} options.hidden hide the button on the map, default false
+ *  @param {bool} options.visible hide the button on the map, default true
+ *  @param {bool} options.hidden hide the button on the map, default false DEPRECATED: use visible instead
  *  @param {function} options.onclick a function called when control is clicked
 */
 var ol_control_Permalink = function(opt_options) {
@@ -46,7 +47,7 @@ var ol_control_Permalink = function(opt_options) {
   var element = document.createElement('div');
   element.className = (options.className || "ol-permalink") + " ol-unselectable ol-control";
   element.appendChild(button);
-  if (options.hidden) ol_ext_element.hide(element);
+  if (options.hidden || options.visible===false) ol_ext_element.hide(element);
   
   ol_control_Control.call(this, {
     element: element,
@@ -58,7 +59,7 @@ var ol_control_Permalink = function(opt_options) {
   // Save search params
   this.search_ = {};
   var hash = this.replaceState_ ? document.location.hash || document.location.search : '';
-  console.log('hash', hash)
+//  console.log('hash', hash)
   if (!hash && this._localStorage) {
     hash = localStorage['ol@parmalink'];
   }
