@@ -13,46 +13,54 @@ import ol_source_Geoportail from '../source/Geoportail'
 /** IGN's Geoportail WMTS layer definition
  * @constructor 
  * @extends {ol.layer.Tile}
- * @param {string} layer Layer name
  * @param {olx.layer.WMTSOptions=} options WMTS options if not defined default are used
+ *  @param {string} options.layer Geoportail layer name
  *  @param {string} options.gppKey Geoportail API key
- * @param {olx.source.WMTSOptions=} tileoptions WMTS options if not defined default are used
+ *  @param {olx.source.WMTSOptions=} tileoptions WMTS options if not defined default are used
  */
 var ol_layer_Geoportail = function(layer, options, tileoptions) {
   options = options || {};
-	tileoptions = tileoptions || {};
+  tileoptions = tileoptions || {};
+  // use function(options, tileoption) when layer is set in options
+  if (layer.layer) {
+    options = layer;
+    tileoptions = options;
+    layer = options.layer;
+  }
+  var maxZoom = options.maxZoom;
 
-	var capabilities = window.geoportailConfig ? window.geoportailConfig.capabilities[options.gppKey || options.key] || window.geoportailConfig.capabilities["default"] || ol_layer_Geoportail.capabilities : ol_layer_Geoportail.capabilities;
+  var capabilities = window.geoportailConfig ? window.geoportailConfig.capabilities[options.gppKey || options.key] || window.geoportailConfig.capabilities["default"] || ol_layer_Geoportail.capabilities : ol_layer_Geoportail.capabilities;
   capabilities = capabilities[layer];
-	if (!capabilities) {
+  if (!capabilities) {
     capabilities = { title: layer, originators: [] };
     console.error("ol.layer.Geoportail: no layer definition for \""+layer+"\"\nTry to use ol/layer/Geoportail~loadCapabilities() to get it.");
     // throw new Error("ol.layer.Geoportail: no layer definition for \""+layer+"\"");
   }
 
-	// tile options & default params
-	for (var i in capabilities) if (typeof	tileoptions[i]== "undefined") tileoptions[i] = capabilities[i];
+  // tile options & default params
+  for (var i in capabilities) if (typeof	tileoptions[i]== "undefined") tileoptions[i] = capabilities[i];
 
-	this._originators = capabilities.originators;
+  this._originators = capabilities.originators;
 
-	if (!tileoptions.gppKey) tileoptions.gppKey = options.gppKey || options.key;
-	options.source = new ol_source_Geoportail(layer, tileoptions);
-	if (!options.title) options.title = capabilities.title;
-	if (!options.name) options.name = layer;
-	options.layer = layer;
-	if (!options.queryable) options.queryable = capabilities.queryable;
-	if (!options.desc) options.desc = capabilities.desc;
-	if (!options.extent && capabilities.bbox) {
+  if (!tileoptions.gppKey) tileoptions.gppKey = options.gppKey || options.key;
+  options.source = new ol_source_Geoportail(layer, tileoptions);
+  if (!options.title) options.title = capabilities.title;
+  if (!options.name) options.name = layer;
+  options.layer = layer;
+  if (!options.queryable) options.queryable = capabilities.queryable;
+  if (!options.desc) options.desc = capabilities.desc;
+  if (!options.extent && capabilities.bbox) {
     if (capabilities.bbox[0]>-170 && capabilities.bbox[2]<170) {
       options.extent = ol_proj_transformExtent(capabilities.bbox, 'EPSG:4326', 'EPSG:3857');
     }
-	}
+  }
+  options.maxZoom = maxZoom;
 
-	// calculate layer max resolution
-	if (!options.maxResolution && tileoptions.minZoom) {
+  // calculate layer max resolution
+  if (!options.maxResolution && tileoptions.minZoom) {
     options.source.getTileGrid().minZoom -= (tileoptions.minZoom>1 ? 2 : 1);
-		options.maxResolution = options.source.getTileGrid().getResolution(options.source.getTileGrid().minZoom)
-		options.source.getTileGrid().minZoom = tileoptions.minZoom;
+    options.maxResolution = options.source.getTileGrid().getResolution(options.source.getTileGrid().minZoom)
+    options.source.getTileGrid().minZoom = tileoptions.minZoom;
   }
 
   ol_layer_Tile.call (this, options);
@@ -197,10 +205,10 @@ ol_layer_Geoportail.getCapabilities = function(gppKey) {
 
   var geopresolutions = [156543.03390625,78271.516953125,39135.7584765625,19567.87923828125,9783.939619140625,4891.9698095703125,2445.9849047851562,1222.9924523925781,611.4962261962891,305.74811309814453,152.87405654907226,76.43702827453613,38.218514137268066,19.109257068634033,9.554628534317017,4.777314267158508,2.388657133579254,1.194328566789627,0.5971642833948135,0.29858214169740677,0.14929107084870338];
   // Transform resolution to zoom
-	function getZoom(res) {
+  function getZoom(res) {
     res = Number(res) * 0.000281;
-		for (var r=0; r<geopresolutions.length; r++) 
-			if (res>geopresolutions[r]) return r;
+    for (var r=0; r<geopresolutions.length; r++) 
+      if (res>geopresolutions[r]) return r;
   }
   // Merge constraints 
   function mergeConstraints(ori) {
@@ -215,11 +223,11 @@ ol_layer_Geoportail.getCapabilities = function(gppKey) {
         }
         if (!bok) continue;
         if (ori.constraint[i].maxZoom == ori.constraint[j].minZoom 
-         || ori.constraint[j].maxZoom == ori.constraint[i].minZoom 
-         || ori.constraint[i].maxZoom+1 == ori.constraint[j].minZoom 
-         || ori.constraint[j].maxZoom+1 == ori.constraint[i].minZoom
-         || ori.constraint[i].minZoom-1 == ori.constraint[j].maxZoom
-         || ori.constraint[j].minZoom-1 == ori.constraint[i].maxZoom) {
+        || ori.constraint[j].maxZoom == ori.constraint[i].minZoom 
+        || ori.constraint[i].maxZoom+1 == ori.constraint[j].minZoom 
+        || ori.constraint[j].maxZoom+1 == ori.constraint[i].minZoom
+        || ori.constraint[i].minZoom-1 == ori.constraint[j].maxZoom
+        || ori.constraint[j].minZoom-1 == ori.constraint[i].maxZoom) {
           ori.constraint[j].maxZoom = Math.max(ori.constraint[i].maxZoom, ori.constraint[j].maxZoom);
           ori.constraint[j].minZoom = Math.min(ori.constraint[i].minZoom, ori.constraint[j].minZoom);
           ori.constraint.splice(i,1);
@@ -263,27 +271,27 @@ ol_layer_Geoportail.getCapabilities = function(gppKey) {
         for (var k=0, o; o=origin[k]; k++) {
           var ori = service.originators[o.attributes['name'].value] = {
             href: o.getElementsByTagName('gpp:URL')[0].innerHTML,
-						attribution: o.getElementsByTagName('gpp:Attribution')[0].innerHTML,
-						logo: o.getElementsByTagName('gpp:Logo')[0].innerHTML,
-						minZoom: 20,
-						maxZoom: 0,
-						constraint: []
+            attribution: o.getElementsByTagName('gpp:Attribution')[0].innerHTML,
+            logo: o.getElementsByTagName('gpp:Logo')[0].innerHTML,
+            minZoom: 20,
+            maxZoom: 0,
+            constraint: []
           };
           // Scale contraints
           var constraint = o.getElementsByTagName('gpp:Constraint');
-					for (var j=0, c; c=constraint[j]; j++) {
+          for (var j=0, c; c=constraint[j]; j++) {
             var zmax = getZoom(c.getElementsByTagName('sld:MinScaleDenominator')[0].innerHTML);
-						var zmin = getZoom(c.getElementsByTagName('sld:MaxScaleDenominator')[0].innerHTML);
-						if (zmin > ori.maxZoom) ori.maxZoom = zmin;
-						if (zmin < ori.minZoom) ori.minZoom = zmin;
-						if (zmax>ori.maxZoom) ori.maxZoom = zmax;
-						if (zmax<ori.minZoom) ori.minZoom = zmax;
+            var zmin = getZoom(c.getElementsByTagName('sld:MaxScaleDenominator')[0].innerHTML);
+            if (zmin > ori.maxZoom) ori.maxZoom = zmin;
+            if (zmin < ori.minZoom) ori.minZoom = zmin;
+            if (zmax>ori.maxZoom) ori.maxZoom = zmax;
+            if (zmax<ori.minZoom) ori.minZoom = zmax;
 
-						ori.constraint.push({
+            ori.constraint.push({
               minZoom: zmin,
-							maxZoom: zmax,
-							bbox: JSON.parse('['+c.getElementsByTagName('gpp:BoundingBox')[0].innerHTML+']')
-						});
+              maxZoom: zmax,
+              bbox: JSON.parse('['+c.getElementsByTagName('gpp:BoundingBox')[0].innerHTML+']')
+            });
           }
           // Merge constraints
           mergeConstraints(ori)
