@@ -113,7 +113,7 @@ ol-ext is licensed under the French Opensource **BSD** compatible CeCILL-B FREE 
 Some resources (mapping services and API) used in this sofware may have a specific license.  
 You must check before use.
 
-> [Full text license in English](http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt)  
-> [Full text license in French](http://www.cecill.info/licences/Licence_CeCILL-B_V1-fr.txt)
+> [Full text license in English](https://cecill.info/licences/Licence_CeCILL-B_V1-en.txt)
+> [Full text license in French](https://cecill.info/licences/Licence_CeCILL-B_V1-fr.txt)
 
 For convenience you can use the BSD licence instead when publish content to webpack.
