@@ -30,7 +30,7 @@ import {asString as ol_color_asString} from 'ol/color'
  *	@param {number} options.offsetY Y offset in px
  *	@param {number} options.animation step in an animation sequence [0,1]
  *	@param {number} options.max maximum value for bar chart
- * @see [Statistic charts example](../../examples/map.style.chart.html)
+ * @see [Statistic charts example](../../examples/style/map.style.chart.html)
  * @extends {ol_style_RegularShape}
  * @implements {ol.structs.IHasChecksum}
  * @api
