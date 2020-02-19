@@ -43,7 +43,7 @@ ol_particule_Base.prototype.getOverlay = function() {
 };
 
 /** Draw the particule
- * @param {CanvasRenderingContext2D } ctx
+ * @param { CanvasRenderingContext2D } ctx
  */
 ol_particule_Base.prototype.draw = function(/* ctx */) {
 };

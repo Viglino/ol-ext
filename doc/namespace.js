@@ -8,15 +8,27 @@
  * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_coordinate.html}
  */
 /** Layers are lightweight containers that get their data from sources.
+ * @namespace ol.layer
+ * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_layer_Base.html}
+ */
+/** Layers are lightweight containers that get their data from sources.
  * @namespace ol.layer.Base
  * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_layer_Base.html}
+ */
+/** A Collection of layers that are handled together.
+ * @namespace ol.layer.Group
+ * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_layer_Group-LayerGroup.html}
  */
 /** Vector data that is rendered client-side. 
  * @namespace ol.layer.Vector 
  * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_layer_Vector.html}
  */
 /** @namespace ol.source 
- * @see {@link https://openlayers.org/en/master/apidoc/module-ol_source.html}
+ * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_source_Source-Source.html}
+ */
+/** Provides a source of features for vector layers. Vector features provided by this source are suitable for editing. See module:ol/source/VectorTile~VectorTile for vector data that is optimized for rendering.
+ * @namespace ol.source.Vector 
+ * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_source_Vector-VectorSource.html}
  */
 /** Abstract base class; normally only used for creating subclasses and not instantiated in apps. Base class for vector geometries.
  * @namespace ol.geom.Geometry 
@@ -63,7 +75,11 @@
  */
 /** Vector feature rendering styles. 
  * @namespace ol.style
- * @see {@link https://openlayers.org/en/master/apidoc/module-ol_style.html}
+ * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_style_Style-Style.html}
+ */
+/** A base class used for creating subclasses and not instantiated in apps (Icons, Circcle, RegularShape...) 
+ * @namespace ol.style.Image
+ * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_style_Image-ImageStyle.html}
  */
 
 /** The map is the core component of OpenLayers. 
@@ -88,3 +104,8 @@
  * @namespace ol.easing
  * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_easing.html}
  */
+
+ /** 2D rendering context for the Canvas API
+  * @namespace CanvasRenderingContext2D
+  * @see {@link https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D}
+  */

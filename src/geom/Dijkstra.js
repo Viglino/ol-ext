@@ -25,7 +25,7 @@ export {ol_graph};
  * 
  * It uses a A* optimisation.
  * You can overwrite methods to customize the result.
- * @see https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
+ * @see https://en.wikipedia.org/wiki/Dijkstras_algorithm
  * @constructor
  * @fires calculating 
  * @fires start

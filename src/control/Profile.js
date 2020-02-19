@@ -252,7 +252,7 @@ ol_control_Profil.prototype.isShown = function()
 
 /**
  * Set the geometry to draw the profil.
- * @param {ol.Feature|ol.geom} f the feature.
+ * @param {ol.Feature|ol.geom.Geometry} f the feature.
  * @param {Object=} options
  *  @param {ol.ProjectionLike} options.projection feature projection, default projection of the map
  *  @param {string} options.zunit 'm' or 'km', default m

@@ -7098,7 +7098,7 @@ ol.control.Profil.prototype.isShown = function()
 }
 /**
  * Set the geometry to draw the profil.
- * @param {ol.Feature|ol.geom} f the feature.
+ * @param {ol.Feature|ol.geom.Geometry} f the feature.
  * @param {Object=} options
  *  @param {ol.ProjectionLike} options.projection feature projection, default projection of the map
  *  @param {string} options.zunit 'm' or 'km', default m
@@ -21654,7 +21654,7 @@ ol.particule.Base.prototype.getOverlay = function() {
   return this._overlay;
 };
 /** Draw the particule
- * @param {CanvasRenderingContext2D } ctx
+ * @param { CanvasRenderingContext2D } ctx
  */
 ol.particule.Base.prototype.draw = function(/* ctx */) {
 };
@@ -23269,7 +23269,7 @@ ol.graph = {};
  * 
  * It uses a A* optimisation.
  * You can overwrite methods to customize the result.
- * @see https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
+ * @see https://en.wikipedia.org/wiki/Dijkstras_algorithm
  * @constructor
  * @fires calculating 
  * @fires start
