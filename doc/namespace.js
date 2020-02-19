@@ -31,6 +31,10 @@
  * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_source_Vector-VectorSource.html}
  */
 /** Abstract base class; normally only used for creating subclasses and not instantiated in apps. Base class for vector geometries.
+ * @namespace ol.geom
+ * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_geom_Geometry-Geometry.html}
+ */
+/** Abstract base class; normally only used for creating subclasses and not instantiated in apps. Base class for vector geometries.
  * @namespace ol.geom.Geometry 
  * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_geom_Geometry-Geometry.html}
  */
