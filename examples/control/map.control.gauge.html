@@ -1,0 +1,68 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>ol-ext: Control GeoBookmark</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <meta name="description" content="ol.control.Geobookmark add a control to handle bookmarks." />
+  <meta name="keywords" content="ol3, control, bookmark, place" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <!-- -->
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+
+  </style>
+
+  </head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>Gauge control</h1>
+  </a>
+  <div class="info">
+    <i>ol.control.Gauge</i> 
+  </div>
+
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options">
+    <h2>Options:</h2>
+    <ul>
+      <li>
+        <label>Value: </label>
+        <input type="range" min="0" max="100" onchange="gauge.val($(this).val());" />
+      </li>
+    </ul>
+  </div>
+  
+  <script type="text/javascript">
+  // The map
+  var map = new ol.Map
+    ({	target: 'map',
+      view: new ol.View ({ zoom: 13, center: [649083, 5408224] }),
+      layers: [new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) })]
+    });
+
+  var gauge = new ol.control.Gauge({ title: 'Gauge' });
+  gauge.val(50);
+  map.addControl(gauge);
+
+  </script>
+
+</body>
+</html>
