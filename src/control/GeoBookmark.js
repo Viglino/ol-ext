@@ -13,7 +13,7 @@ import ol_control_Control from 'ol/control/Control'
  *  @param {bool} options.editable enable modification, default true
  *  @param {string} options.namespace a namespace to save the boolmark (if more than one on a page), default ol
  *  @param {Array<any>} options.marks a list of default bookmarks: 
- * @see [Geobookmark example](../../examples/map.control.geobookmark.html)
+ * @see [Geobookmark example](../../examples/control/map.control.geobookmark.html)
  * @example 
 var bm = new GeoBookmark ({ 
   marks: {
