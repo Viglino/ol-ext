@@ -2,395 +2,401 @@
 <html>
 <head>
 <!--
-	Copyright (c) 2013-2018 Jean-Marc VIGLINO, 
-	released under the Beerware license (http://fr.wikipedia.org/wiki/Beerware).
+  Copyright (c) 2013-2018 Jean-Marc VIGLINO, 
+  released under the Beerware license (http://fr.wikipedia.org/wiki/Beerware).
 -->
-	<title>ol-ext: font style</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>ol-ext: font style</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="iconic font and scalable vector icons for OL3" />
-	<meta name="keywords" content="ol3, style, vector, font, fontawesome, icon, maki" />
+  <meta name="description" content="iconic font and scalable vector icons for OL3" />
+  <meta name="keywords" content="ol3, style, vector, font, fontawesome, icon, maki" />
 
-    <link rel="stylesheet" href="../style.css" />
-    <link rel="stylesheet" href="../css/fontmaki.css" />
-    <link rel="stylesheet" href="../css/fontmaki2.css" />
-	<!-- FontAwesome -->
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-			
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../css/fontmaki.css" />
+  <link rel="stylesheet" href="../css/fontmaki2.css" />
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<!--
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" />
+-->
+    
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
 
-	<!-- ol-ext -->
-    <link rel="stylesheet" href="../../dist/ol-ext.css" />
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
-	<!-- ol-ext maki and fontawesome defintions used in fontsymbol -->
-	<script type="text/javascript" src="../../dist/extra/FontMakiDef.js"></script>
-	<script type="text/javascript" src="../../dist/extra/FontMaki2Def.js"></script>
-	<script type="text/javascript" src="../../dist/extra/FontAwesomeDef.js"></script>
+  <!-- ol-ext maki and fontawesome defintions used in fontsymbol -->
+  <script type="text/javascript" src="../../dist/extra/FontMakiDef.js"></script>
+  <script type="text/javascript" src="../../dist/extra/FontMaki2Def.js"></script>
+  <script type="text/javascript" src="../../dist/extra/FontAwesomeDef.js"></script>
 
-	<style>
-		.options i.standard,
-		.options .fa
-		{	height: 1em;
-			margin: 0;
-			padding: 0.5em;
-			width: 1em;
-			cursor:pointer;
-		}
-		.options i.standard,
-		.options .fa:before
-		{	margin:0;
-			border: 1px solid transparent;
-			display:inline-block;
-			height: 1em;
-			width: 1em;
-			text-align:center;
-			padding:2px;
-		}
-		.options i.standard
-		{	font-style: normal;
-			font-weight: bold;
-			font-family: sherif;
-			padding-bottom:0.1em;
-			line-height:0.9em;
-			margin-left: 0.35em;
-		}
-		.options i.standard:hover,
-		.options .fa:hover:before
-		{	border: 1px solid #369;
-			border-radius: 100%;
-			transform: scale(3);
-			-webkit-transform: scale(3);
-			background:#fff;
-		}
-		
-	</style>
+  <style>
+    .options i.standard,
+    .options .fa {
+      height: 1em;
+      margin: 0;
+      padding: 0.5em;
+      width: 1em;
+      cursor:pointer;
+    }
+    .options i.standard,
+    .options .fa:before {
+      margin:0;
+      border: 1px solid transparent;
+      display:inline-block;
+      height: 1em;
+      width: 1em;
+      text-align:center;
+      padding:2px;
+    }
+    .options i.standard {
+      font-style: normal;
+      font-weight: bold;
+      font-family: sherif;
+      padding-bottom:0.1em;
+      line-height:0.9em;
+      margin-left: 0.35em;
+    }
+    .options i.standard:hover,
+    .options .fa:hover:before {
+      border: 1px solid #369;
+      border-radius: 100%;
+      transform: scale(3);
+      -webkit-transform: scale(3);
+      background:#fff;
+    }
+    
+  </style>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Font style</h1>
-	</a>
-	<div class="info">
-		<i>ol.style.FontSymbol</i> uses font to draw symbol on the map. 
-		It gives you scalable vector icons that can instantly be customized (form, size, color, drop shadow) using attributes.
-		<br/>
-		<i>ol.style.Shadow</i> is an image style to draw a shadow on a point. The shadow is not selectable 
-		(you have to add an other style on top to make it selectable).
-		<br/>
-		The symbols are composed of:
-		<ul>
-			<li>
-				a form (POI, cicle, square, sign, ...)
-			</li>
-			<li>
-				a glyph that overlap the form
-			</li>
-		</ul>
-		<a href="../../doc/doc-pages/ol.style.FontSymbol.html"><i class="icss-book"></i> See the online doc.</a>
+  <a href="../../index.html">
+    <h1>ol-ext: Font style</h1>
+  </a>
+  <div class="info">
+    <i>ol.style.FontSymbol</i> uses font to draw symbol on the map. 
+    It gives you scalable vector icons that can instantly be customized (form, size, color, drop shadow) using attributes.
+    <br/>
+    <i>ol.style.Shadow</i> is an image style to draw a shadow on a point. The shadow is not selectable 
+    (you have to add an other style on top to make it selectable).
+    <br/>
+    The symbols are composed of:
+    <ul>
+      <li>
+        a form (POI, cicle, square, sign, ...)
+      </li>
+      <li>
+        a glyph that overlap the form
+      </li>
+    </ul>
+    <a href="../../doc/doc-pages/ol.style.FontSymbol.html"><i class="icss-book"></i> See the online doc.</a>
 
-		<br />
-		<br />
-		<a href="https://github.com/mapbox/maki" >Maki</a> is a clean point of interest icon set made by 
-		<a href="https://www.mapbox.com/maki/">Mapbox</a> (CC0)
-		<br />
-		<a href="https://github.com/FortAwesome/Font-Awesome" >Font-Awesome</a> is a full suite of 605 pictographic icons for easy scalable 
-		vector graphics on websitescreated and maintained by  <a href="https://fortawesome.github.io/Font-Awesome/">Dave Gandy</a> (SIL OFL 1.1)
-	</div>
+    <br />
+    <br />
+    <a href="https://github.com/mapbox/maki" >Maki</a> is a clean point of interest icon set made by 
+    <a href="https://www.mapbox.com/maki/">Mapbox</a> (CC0)
+    <br />
+    <a href="https://github.com/FortAwesome/Font-Awesome" >Font-Awesome</a> is a full suite of 605 pictographic icons for easy scalable 
+    vector graphics on websitescreated and maintained by  <a href="https://fortawesome.github.io/Font-Awesome/">Dave Gandy</a> (SIL OFL 1.1)
+  </div>
 
-	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
-	<div class="info">
-		<h2>Examples:</h2>
-		<button onclick="setOptions('maki-circle', 'poi', '', 'white', 'navy', 3,20,1, true, true, true)">POI</button>
-		<button onclick="setOptions('maki-cafe', 'marker', 'blue', 'white', '#fd0', 3,20,1, true, true, true)">Cafe</button>
-		<button onclick="setOptions('maki-toilets', 'square', '', 'white', 'navy', 3,20,1, false, true)">Toilets</button>
-		<button onclick="setOptions('maki-telephone', 'circle', '', 'white', 'navy', 0,15,1.1, false, true)">Phone</button>
-		<button onclick="setOptions('fa-info', 'circle', '', 'white', 'navy', 3,20,1, false, true)">Information</button>
-		<button onclick="setOptions('maki-disability', 'square', 'black', 'blue', 'white', 3,20,1)">Facilities</button>
-		<button onclick="setOptions('fa-exclamation', 'sign', '', 'red', '#fd0', 3,20,1.1)">Warning</button>
-		<br/>
-		Road signs: 
-		<!--
-		<button onclick="setOptions('maki-roadblock', 'circle', 'red', 'transparent', 'white', 10, 20, 2.6)">No entry</button>
-		-->
-		<button onclick="setOptions('maki-roadblock', 'none', 'white', 'white', 'red', 3, 20, 1.3)">No entry</button>
-		<button onclick="setOptions('maki-school', 'sign', 'black', 'red', 'white', 4, 23, 1)">School</button>
-		<button onclick="setOptions('maki-slaughterhouse', 'sign', 'black', 'red', 'white', 4, 23, 1)">Animal</button>
-		<button onclick="setOptions('fa-road', 'square', '', 'white', 'navy', 4,20,0.8)">Road</button>
-		<button onclick="setOptions('maki-pitch', 'ban', 'black', 'red', 'white', 4, 20, 1)">No pedestrian</button>
-		<button onclick="setOptions('fa-bicycle', 'ban', 'black', 'red', 'white', 4, 20, 0.7)">No bicycle</button>
-		<button onclick="setOptions('fa-camera', 'ban', 'black', 'red', 'white', 4, 20, 0.7)">No camera</button>
-		<button onclick="setOptions('fa-train', 'lozenge', '', 'black', '#fd0', 4, 25, 0.7)">Train zone</button>
-		<button onclick="setOptions('fa-plane', 'lozenge', '', 'black', '#fd0', 4, 25, 0.8)">Airport</button>
-	</div>
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
+  <div class="info">
+    <h2>Examples:</h2>
+    <button onclick="setOptions('maki-circle', 'poi', '', 'white', 'navy', 3,20,1, true, true, true)">POI</button>
+    <button onclick="setOptions('maki-cafe', 'marker', 'blue', 'white', '#fd0', 3,20,1, true, true, true)">Cafe</button>
+    <button onclick="setOptions('maki-toilets', 'square', '', 'white', 'navy', 3,20,1, false, true)">Toilets</button>
+    <button onclick="setOptions('maki-telephone', 'circle', '', 'white', 'navy', 0,15,1.1, false, true)">Phone</button>
+    <button onclick="setOptions('fa-info', 'circle', '', 'white', 'navy', 3,20,1, false, true)">Information</button>
+    <button onclick="setOptions('maki-disability', 'square', 'black', 'blue', 'white', 3,20,1)">Facilities</button>
+    <button onclick="setOptions('fa-exclamation', 'sign', '', 'red', '#fd0', 3,20,1.1)">Warning</button>
+    <br/>
+    Road signs: 
+    <!--
+    <button onclick="setOptions('maki-roadblock', 'circle', 'red', 'transparent', 'white', 10, 20, 2.6)">No entry</button>
+    -->
+    <button onclick="setOptions('maki-roadblock', 'none', 'white', 'white', 'red', 3, 20, 1.3)">No entry</button>
+    <button onclick="setOptions('maki-school', 'sign', 'black', 'red', 'white', 4, 23, 1)">School</button>
+    <button onclick="setOptions('maki-slaughterhouse', 'sign', 'black', 'red', 'white', 4, 23, 1)">Animal</button>
+    <button onclick="setOptions('fa-road', 'square', '', 'white', 'navy', 4,20,0.8)">Road</button>
+    <button onclick="setOptions('maki-pitch', 'ban', 'black', 'red', 'white', 4, 20, 1)">No pedestrian</button>
+    <button onclick="setOptions('fa-bicycle', 'ban', 'black', 'red', 'white', 4, 20, 0.7)">No bicycle</button>
+    <button onclick="setOptions('fa-camera', 'ban', 'black', 'red', 'white', 4, 20, 0.7)">No camera</button>
+    <button onclick="setOptions('fa-train', 'lozenge', '', 'black', '#fd0', 4, 25, 0.7)">Train zone</button>
+    <button onclick="setOptions('fa-plane', 'lozenge', '', 'black', '#fd0', 4, 25, 0.8)">Airport</button>
+  </div>
 
-	<div class="options">
-		<h2>Options:</h2>
-		<ul>
-			<li>
-				Symbol color: 
-				<select id="color" onchange="vector.changed();" >
-					<option value="" selected="selected">use stroke color</option>
-					<option value="black" >black</option>
-					<option value="red">red</option>
-					<option value="orange">orange</option>
-					<option value="yellow">yellow</option>
-					<option value="blue">blue</option>
-				</select>
-			</li>
-			<li>
-				form: 
-				<select id="form" onchange="vector.changed();" >
-					<option value="none" selected="selected">none</option>
-					<option value="circle">circle</option>
-					<option value="poi">poi</option>
-					<option value="bubble">bubble</option>
-					<option value="marker">marker</option>
-					<option value="coma">coma</option>
-					<option value="shield">shield</option>
-					<option value="blazon">blazon</option>
-					<option value="bookmark">bookmark</option>
-					<option value="hexagon">hexagon</option>
-					<option value="diamond">diamond</option>
-					<option value="triangle">triangle</option>
-					<option value="sign">sign</option>
-					<option value="ban">ban</option>
-					<option value="lozenge">lozenge</option>
-					<option value="square">square</option>
-				</select>
-			</li>
-			<li>
-				fill color: 
-				<select id="fill" onchange="vector.changed();" >
-					<option value="white" >white</option>
-					<option value="red">red</option>
-					<option value="green">green</option>
-					<option value="#fd0">yellow</option>
-					<option value="navy" selected="selected">navy</option>
-				</select>
-			</li>
-			<li>
-				style: 
-				<select id="style" onchange="vector.changed();" >
-					<option value="">unset</option>
-					<option value="bold" >bold</option>
-					<option value="italic" >italic</option>
-					<option value="bold italic" >bold italic</option>
-				</select>
-			</li>
-			<li>
-				stroke color: 
-				<select id="stroke" onchange="vector.changed();" >
-					<option value="transparent">transparent</option>
-					<option value="white" selected="selected">white</option>
-					<option value="black">black</option>
-					<option value="red">red</option>
-					<option value="orange">orange</option>
-					<option value="yellow">yellow</option>
-					<option value="blue">blue</option>
-				</select>
-			</li>
-			<li>
-				border: <input id="border" type="number" style="width:4em" value=3 onchange="vector.changed();" />
-			</li>
-			<li>
-				radius: <input id="radius" type="number" style="width:4em" value=15 onchange="vector.changed();" />
-			</li>
-			<li>
-				fontSize: <input id="fontsize" type="number" style="width:4em" value=1 onchange="vector.changed();" step="0.1" />
-			</li>
-			<li>
-				rotation: <input id="rotation" type="number" style="width:4em" value=0 onchange="vector.changed();" step="1" />
-			</li>
-			<li>
-				<input id="rwview" type="checkbox" onchange="vector.changed();" /><label for="rwview"> rotateWithView</label>
-			</li>
-			<li>
-				<input id="offset" type="checkbox" onchange="vector.changed();" /><label for="offset"> offset</label>
-			</li>
-			<li>
-				<input id="gradient" type="checkbox" onchange="vector.changed();" /><label for="gradient"> gradient (avaliable on form)</label>
-			</li>
-			<li>
-				<input id="shadow" type="checkbox" onchange="vector.changed();" /><label for="shadow"> shadow</label>
-			</li>
-		</ul>
-		<h2>Select a font glyph:</h2>
-		<h2>Standard</h2>
-		<i class="standard" onclick="setFont('1')">1</i>
-		<i class="standard" onclick="setFont('2')">2</i>
-		<i class="standard" onclick="setFont('3')">3</i>
-		<i class="standard" onclick="setFont('8')">8</i>
-		<i class="standard" onclick="setFont('9')">9</i>
-		<i class="standard" onclick="setFont('0')">0</i>
-		<i class="standard" onclick="setFont('A')">A</i>
-		<i class="standard" onclick="setFont('B')">B</i>
-		<i class="standard" onclick="setFont('C')">C</i>
-		<i class="standard" onclick="setFont('X')">X</i>
-		<i class="standard" onclick="setFont('Y')">Y</i>
-		<i class="standard" onclick="setFont('Z')">Z</i>
-		<i class="standard" onclick="setFont('i')">i</i>
-		<i class="standard" onclick="setFont('$')">$</i>
-		<i class="standard" onclick="setFont('€')">€</i>
-		<i class="standard" onclick="setFont('@')">@</i>
-		<i class="standard" onclick="setFont('&')">&</i>
-		<i class="standard" onclick="setFont('&#x2600;')">&#x2600;</i>
-		<i class="standard" onclick="setFont('&#x2601;')">&#x2601;</i>
-		<i class="standard" onclick="setFont('&#x2603;')">&#x2603;</i>
-		<i class="standard" onclick="setFont('&#x2604;')">&#x2604;</i>
-		<i class="standard" onclick="setFont('&#x263A;')">&#x263A;</i>
-		<i class="standard" onclick="setFont('&#x2639;')">&#x2639;</i>
-	</div>
-
-
-	<script type="text/javascript">
-	
-	// Layers
-	var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
-		
-	// The map
-	var map = new ol.Map
-		({	target: 'map',
-			view: new ol.View
-			({	zoom: 6,
-				center: [166326, 5992663]
-			}),
-			layers: [layer]
-		});
+  <div class="options">
+    <h2>Options:</h2>
+    <ul>
+      <li>
+        Symbol color: 
+        <select id="color" onchange="vector.changed();" >
+          <option value="" selected="selected">use stroke color</option>
+          <option value="black" >black</option>
+          <option value="red">red</option>
+          <option value="orange">orange</option>
+          <option value="yellow">yellow</option>
+          <option value="blue">blue</option>
+        </select>
+      </li>
+      <li>
+        form: 
+        <select id="form" onchange="vector.changed();" >
+          <option value="none" selected="selected">none</option>
+          <option value="circle">circle</option>
+          <option value="poi">poi</option>
+          <option value="bubble">bubble</option>
+          <option value="marker">marker</option>
+          <option value="coma">coma</option>
+          <option value="shield">shield</option>
+          <option value="blazon">blazon</option>
+          <option value="bookmark">bookmark</option>
+          <option value="hexagon">hexagon</option>
+          <option value="diamond">diamond</option>
+          <option value="triangle">triangle</option>
+          <option value="sign">sign</option>
+          <option value="ban">ban</option>
+          <option value="lozenge">lozenge</option>
+          <option value="square">square</option>
+        </select>
+      </li>
+      <li>
+        fill color: 
+        <select id="fill" onchange="vector.changed();" >
+          <option value="white" >white</option>
+          <option value="red">red</option>
+          <option value="green">green</option>
+          <option value="#fd0">yellow</option>
+          <option value="navy" selected="selected">navy</option>
+        </select>
+      </li>
+      <li>
+        style: 
+        <select id="style" onchange="vector.changed();" >
+          <option value="">unset</option>
+          <option value="bold" >bold</option>
+          <option value="italic" >italic</option>
+          <option value="bold italic" >bold italic</option>
+        </select>
+      </li>
+      <li>
+        stroke color: 
+        <select id="stroke" onchange="vector.changed();" >
+          <option value="transparent">transparent</option>
+          <option value="white" selected="selected">white</option>
+          <option value="black">black</option>
+          <option value="red">red</option>
+          <option value="orange">orange</option>
+          <option value="yellow">yellow</option>
+          <option value="blue">blue</option>
+        </select>
+      </li>
+      <li>
+        border: <input id="border" type="number" style="width:4em" value=3 onchange="vector.changed();" />
+      </li>
+      <li>
+        radius: <input id="radius" type="number" style="width:4em" value=15 onchange="vector.changed();" />
+      </li>
+      <li>
+        fontSize: <input id="fontsize" type="number" style="width:4em" value=1 onchange="vector.changed();" step="0.1" />
+      </li>
+      <li>
+        rotation: <input id="rotation" type="number" style="width:4em" value=0 onchange="vector.changed();" step="1" />
+      </li>
+      <li>
+        <input id="rwview" type="checkbox" onchange="vector.changed();" /><label for="rwview"> rotateWithView</label>
+      </li>
+      <li>
+        <input id="offset" type="checkbox" onchange="vector.changed();" /><label for="offset"> offset</label>
+      </li>
+      <li>
+        <input id="gradient" type="checkbox" onchange="vector.changed();" /><label for="gradient"> gradient (avaliable on form)</label>
+      </li>
+      <li>
+        <input id="shadow" type="checkbox" onchange="vector.changed();" /><label for="shadow"> shadow</label>
+      </li>
+    </ul>
+    <h2>Select a font glyph:</h2>
+    <h2>Standard</h2>
+    <i class="standard" onclick="setFont('1')">1</i>
+    <i class="standard" onclick="setFont('2')">2</i>
+    <i class="standard" onclick="setFont('3')">3</i>
+    <i class="standard" onclick="setFont('8')">8</i>
+    <i class="standard" onclick="setFont('9')">9</i>
+    <i class="standard" onclick="setFont('0')">0</i>
+    <i class="standard" onclick="setFont('A')">A</i>
+    <i class="standard" onclick="setFont('B')">B</i>
+    <i class="standard" onclick="setFont('C')">C</i>
+    <i class="standard" onclick="setFont('X')">X</i>
+    <i class="standard" onclick="setFont('Y')">Y</i>
+    <i class="standard" onclick="setFont('Z')">Z</i>
+    <i class="standard" onclick="setFont('i')">i</i>
+    <i class="standard" onclick="setFont('$')">$</i>
+    <i class="standard" onclick="setFont('€')">€</i>
+    <i class="standard" onclick="setFont('@')">@</i>
+    <i class="standard" onclick="setFont('&')">&</i>
+    <i class="standard" onclick="setFont('&#x2600;')">&#x2600;</i>
+    <i class="standard" onclick="setFont('&#x2601;')">&#x2601;</i>
+    <i class="standard" onclick="setFont('&#x2603;')">&#x2603;</i>
+    <i class="standard" onclick="setFont('&#x2604;')">&#x2604;</i>
+    <i class="standard" onclick="setFont('&#x263A;')">&#x263A;</i>
+    <i class="standard" onclick="setFont('&#x2639;')">&#x2639;</i>
+  </div>
 
 
-	// Get font glyph
-	var theGlyph = "maki-building";
-	function setFont(g)
-	{	if (typeof(g)=='string') theGlyph = g;
-		else theGlyph = $(this).data("glyph");
-		vector.changed();
-	}
-	// Fill font glyphs
-	var glyph = ol.style.FontSymbol.prototype.defs.glyphs;
-	var opt = $(".options");
-	for (var font in ol.style.FontSymbol.prototype.defs.fonts)
-	{	$("<h2>").text(font+":").appendTo(opt);
-		for (var i in glyph)
-		{	if (glyph[i].font == font)	
-			{	$("<i>").addClass("fa "+i)
-						.data("glyph",i)
-						.attr("title", glyph[i].name)
-						.on("click", setFont)
-						.appendTo(opt);
-			}
-		}
-	}
-	
-	
-	// Style function
-	function getFeatureStyle (feature)
-	{	var st= [];
-		// Shadow style
-		if ($("#shadow").prop('checked')) st.push ( new ol.style.Style(
-					{	image: new ol.style.Shadow(
-						{	radius: 15,
-							blur: 5,
-							offsetX: 0,
-							offsetY: 0,
-							fill: new ol.style.Fill(
-							{	color: "rgba(0,0,0,0.5)"
-							})
-						})
-					}));
-		// Font style
-		st.push ( new ol.style.Style(
-					{	image: new ol.style.FontSymbol(
-						{	form: $("#form").val(), //"hexagone", 
-							gradient: $("#gradient").prop('checked'),
-							glyph: theGlyph,//car[Math.floor(Math.random()*car.length)], 
-							fontSize: Number($("#fontsize").val()),
-							fontStyle: $("#style").val(),
-							radius: Number($("#radius").val()), 
-							//offsetX: -15,
-							rotation: Number($("#rotation").val())*Math.PI/180,
-							rotateWithView: $("#rwview").prop('checked'),
-							offsetY: $("#offset").prop('checked') ? -Number($("#radius").val()):0 ,
-							color: $("#color").val(),
-							fill: new ol.style.Fill(
-							{	color: $("#fill").val()
-							}),
-							stroke: new ol.style.Stroke(
-							{	color: $("#stroke").val(),
-								width: Number($("#border").val())
-							})
-						}),
-						stroke: new ol.style.Stroke(
-						{	width: 2,
-							color: '#f80'
-						}),
-						fill: new ol.style.Fill(
-						{	color: [255, 136, 0, 0.6]
-						})
-					}));
-			return st;
-	}
+  <script type="text/javascript">
+  
+  // Using FontAwesome > 5, set package here
+  // ol.style.FontSymbol.prototype.defs.fonts.FontAwesome.font = "Font Awesome 5 Free";
 
-	function getStyle(feature, resolution) 
-	{	var s = getFeatureStyle(feature);
-		// Ne pas recalculer
-		//feature.setStyle(s);
-		return s;
-		
-	};
-
-	// GeoJSON layer
-	var vectorSource = new ol.source.Vector(
-	{	url: '../data/fond_guerre.geojson',
-		projection: 'EPSG:3857',
-		format: new ol.format.GeoJSON(),
-		attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
-		logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
-	});
-
-	var vector = new ol.layer.Vector(
-	{	name: '1914-18',
-		preview: "http://www.culture.gouv.fr/Wave/image/memoire/2445/sap40_z0004141_v.jpg",
-		source: vectorSource,
-		// y ordering
-		renderOrder: ol.ordering.yOrdering(),
-		style: getStyle
-	})
-
-	map.addLayer(vector);
+  // Layers
+  var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
+    
+  // The map
+  var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View({
+      zoom: 6,
+      center: [166326, 5992663]
+    }),
+    layers: [layer]
+  });
 
 
-	//
-	function setOptions(glyph, form, color, scolor, fcolor, border, radius, fsize, offset, gradient, shadow)
-	{	theGlyph = glyph;
-		$("#style").val('');
-		$("#color").val(color);
-		$("#form").val(form);
-		$("#fill").val(fcolor);
-		$("#stroke").val(scolor);
-		$("#border").val(border);
-		$("#radius").val(radius);
-		$("#fontsize").val(fsize||1);
-		$("#offset").prop("checked", offset||false);
-		$("#gradient").prop("checked", gradient||false);
-		$("#shadow").prop("checked", shadow||false);
-		// Refresh
-		vector.changed();
-	}
+  // Get font glyph
+  var theGlyph = "maki-building";
+  function setFont(g) {
+    if (typeof(g)=='string') theGlyph = g;
+    else theGlyph = $(this).data("glyph");
+    vector.changed();
+  }
+  // Fill font glyphs
+  var glyph = ol.style.FontSymbol.prototype.defs.glyphs;
+  var opt = $(".options");
+  for (var font in ol.style.FontSymbol.prototype.defs.fonts) {
+    $("<h2>").text(font+":").appendTo(opt);
+    for (var i in glyph) {
+      if (glyph[i].font == font) {
+        $("<i>").addClass("fa "+i)
+          .data("glyph",i)
+          .attr("title", glyph[i].name)
+          .on("click", setFont)
+          .appendTo(opt);
+      }
+    }
+  }
+  
+  
+  // Style function
+  function getFeatureStyle (feature) {
+    var st= [];
+    // Shadow style
+    if ($("#shadow").prop('checked')) st.push ( new ol.style.Style({
+      image: new ol.style.Shadow({
+        radius: 15,
+        blur: 5,
+        offsetX: 0,
+        offsetY: 0,
+        fill: new ol.style.Fill({
+          color: "rgba(0,0,0,0.5)"
+        })
+      })
+    }));
+    // Font style
+    st.push ( new ol.style.Style({
+      image: new ol.style.FontSymbol({
+        form: $("#form").val(), //"hexagone", 
+          gradient: $("#gradient").prop('checked'),
+          glyph: theGlyph,//car[Math.floor(Math.random()*car.length)], 
+          fontSize: Number($("#fontsize").val()),
+          fontStyle: $("#style").val(),
+          radius: Number($("#radius").val()), 
+          //offsetX: -15,
+          rotation: Number($("#rotation").val())*Math.PI/180,
+          rotateWithView: $("#rwview").prop('checked'),
+          offsetY: $("#offset").prop('checked') ? -Number($("#radius").val()):0 ,
+          color: $("#color").val(),
+          fill: new ol.style.Fill({
+            color: $("#fill").val()
+          }),
+          stroke: new ol.style.Stroke({
+            color: $("#stroke").val(),
+            width: Number($("#border").val())
+          })
+        }),
+        stroke: new ol.style.Stroke({
+          width: 2,
+          color: '#f80'
+        }),
+        fill: new ol.style.Fill({
+          color: [255, 136, 0, 0.6]
+        })
+      }));
+      return st;
+  }
 
-	// Redraw layer when fonts are loaded
-	$(window).on("load", function(){ console.log("loaded"); vector.changed(); });
+  function getStyle(feature, resolution) {
+    var s = getFeatureStyle(feature);
+    // Ne pas recalculer
+    //feature.setStyle(s);
+    return s;
+    
+  };
 
-	</script>
-	
+  // GeoJSON layer
+  var vectorSource = new ol.source.Vector({
+    url: '../data/fond_guerre.geojson',
+    projection: 'EPSG:3857',
+    format: new ol.format.GeoJSON(),
+    attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
+    logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+  });
+
+  var vector = new ol.layer.Vector({
+    name: '1914-18',
+    preview: "http://www.culture.gouv.fr/Wave/image/memoire/2445/sap40_z0004141_v.jpg",
+    source: vectorSource,
+    // y ordering
+    renderOrder: ol.ordering.yOrdering(),
+    style: getStyle
+  })
+
+  map.addLayer(vector);
+
+
+  //
+  function setOptions(glyph, form, color, scolor, fcolor, border, radius, fsize, offset, gradient, shadow) {
+    theGlyph = glyph;
+    $("#style").val('');
+    $("#color").val(color);
+    $("#form").val(form);
+    $("#fill").val(fcolor);
+    $("#stroke").val(scolor);
+    $("#border").val(border);
+    $("#radius").val(radius);
+    $("#fontsize").val(fsize||1);
+    $("#offset").prop("checked", offset||false);
+    $("#gradient").prop("checked", gradient||false);
+    $("#shadow").prop("checked", shadow||false);
+    // Refresh
+    vector.changed();
+  }
+
+  // Redraw layer when fonts are loaded
+  $(window).on("load", function(){ console.log("loaded"); vector.changed(); });
+
+  </script>
+  
 </body>
 </html>

@@ -254,13 +254,13 @@ ol_control_Profil.prototype.isShown = function()
  * Set the geometry to draw the profil.
  * @param {ol.Feature|ol.geom} f the feature.
  * @param {Object=} options
- *		- projection {ol.ProjectionLike} feature projection, default projection of the map
- *		- zunit {m|km} default m
- *		- unit {m|km} default km
- *		- zmin {Number|undefined} default 0
- *		- zmax {Number|undefined} default max Z of the feature
- *		- graduation {Number|undefined} z graduation default 100
- *		- amplitude {integer|undefined} amplitude of the altitude, default zmax-zmin
+ *  @param {ol.ProjectionLike} options.projection feature projection, default projection of the map
+ *  @param {string} options.zunit 'm' or 'km', default m
+ *  @param {string} options.unit 'm' or 'km', default km
+ *  @param {Number|undefined} options.zmin default 0
+ *  @param {Number|undefined} options.zmax default max Z of the feature
+ *  @param {Number|undefined} options.graduation z graduation default 100
+ *  @param {integer|undefined} options.amplitude amplitude of the altitude, default zmax-zmin
  * @api stable
  */
 ol_control_Profil.prototype.setGeometry = function(g, options)
