@@ -8,6 +8,8 @@ import ol_style_Stroke from 'ol/style/Stroke'
 import ol_style_Fill from 'ol/style/Fill'
 import {asString as ol_color_asString} from 'ol/color'
 
+import {ol_coordinate_getIntersectionPoint} from '../geom/GeomUtils'
+
 /** ol.layer.Vector.prototype.setRender3D
  * @extends {ol.layer.Vector}
  * @param {ol_render3D}
@@ -18,11 +20,12 @@ ol_layer_Vector.prototype.setRender3D = function (r) {
 
 /** 
  * @classdesc
- *ol_render3D 3D vector layer rendering
+ *  3D vector layer rendering
  * @constructor
  * @param {Object} param
  *  @param {ol.layer.Vector} param.layer the layer to display in 3D
- *  @param {ol.style.Style} options.styler drawing style
+ *  @param {ol.style.Style} options.style drawing style
+ *  @param {boolean} param.ghost use ghost style
  *  @param {number} param.maxResolution  max resolution to render 3D
  *  @param {number} param.defaultHeight default height if none is return by a propertie
  *  @param {function|string|Number} param.height a height function (returns height giving a feature) or a popertie name for the height or a fixed value
@@ -35,6 +38,7 @@ var ol_render3D = function (options) {
   ol_Object.call (this, options);
 
   this.setStyle(options.style);
+  this.set('ghost', options.ghost);
 
   this.height_ = options.height = this.getHfn (options.height);
   if (options.layer) this.setLayer(options.layer);
@@ -122,7 +126,8 @@ ol_render3D.prototype.onPostcompose_ = function(e) {
     for (var i=0; i<f.length; i++) {
       builds.push (this.getFeature3D_ (f[i], this.getFeatureHeight(f[i])));
     }
-    this.drawFeature3D_ (ctx, builds);
+    if (this.get('ghost')) this.drawGhost3D_ (ctx, builds);
+    else this.drawFeature3D_ (ctx, builds);
   ctx.restore();
 };
 
@@ -230,9 +235,9 @@ ol_render3D.prototype.getFeature3D_ = function (f, h) {
           build.push(b);
         }
       }
-      return { type:"MultiPolygon", feature: f, geom: build };
+      return { type:"MultiPolygon", feature: f, geom: build, height: h };
     case "Point":
-      return { type:"Point", feature: f, geom: this.hvector_(c,h) };
+      return { type:"Point", feature: f, geom: this.hvector_(c,h), height: h };
     default: return {};
   }
 }
@@ -314,6 +319,53 @@ ol_render3D.prototype.drawFeature3D_ = function(ctx, build) {
       default: break;
     }
   }
-}
+};
+
+ol_render3D.prototype.drawGhost3D_ = function(ctx, build) {
+  var i,j, b, k;
+  // Construct
+  for (i=0; i<build.length; i++) {	
+    switch (build[i].type) {
+      case "MultiPolygon": {
+        for (j=0; j<build[i].geom.length; j++) {
+          b = build[i].geom[j];
+          for (k=0; k < b.length-1; k++) {
+            ctx.beginPath();
+              ctx.moveTo(b[k].p0[0], b[k].p0[1]);
+              ctx.lineTo(b[k].p1[0], b[k].p1[1]);
+              ctx.lineTo(b[k+1].p1[0], b[k+1].p1[1]);
+              ctx.lineTo(b[k+1].p0[0], b[k+1].p0[1]);
+              ctx.lineTo(b[k].p0[0], b[k].p0[1]);
+
+              var m = [(b[k].p0[0] + b[k+1].p0[0]) /2, (b[k].p0[1] + b[k+1].p0[1]) /2];
+              var h = [b[k].p0[1] - b[k+1].p0[1], - b[k].p0[0] + b[k+1].p0[0]];
+              var c = ol_coordinate_getIntersectionPoint(
+                [m, [m[0] + h[0], m[1]+ h[1]]],
+                [b[k].p1, b[k+1].p1]
+              );
+              var gradient = ctx.createLinearGradient(
+                m[0], m[1],              
+                c[0], c[1]
+              );
+              gradient.addColorStop(0, 'rgba(255,255,255,.2)');
+              gradient.addColorStop(1, 'rgba(255,255,255,0)');
+              ctx.fillStyle = gradient;
+              ctx.fill();
+          }
+        }
+        break;
+      }
+      case "Point": {
+        var g = build[i].geom;
+          ctx.beginPath();
+          ctx.moveTo(g.p0[0], g.p0[1]);
+          ctx.lineTo(g.p1[0], g.p1[1]);
+          ctx.stroke();
+          break;
+        }
+      default: break;
+    }
+  }
+};
 
 export default ol_render3D

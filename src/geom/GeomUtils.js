@@ -207,3 +207,23 @@ var ol_geom_createFromType = function (type, coordinates) {
 
 export {ol_geom_createFromType}
 export {ol_coordinate_dist2d, ol_coordinate_equal, ol_coordinate_findSegment, ol_coordinate_getFeatureCenter, ol_coordinate_getGeomCenter, ol_coordinate_offsetCoords, ol_coordinate_splitH}
+
+/** Intersect 2 lines
+ * @param {Arrar<ol.coordinate>} d1
+ * @param {Arrar<ol.coordinate>} d2
+ */
+var ol_coordinate_getIntersectionPoint = function (d1, d2) {
+  var d1x = d1[1][0] - d1[0][0];
+  var d1y = d1[1][1] - d1[0][1];
+  var d2x = d2[1][0] - d2[0][0];
+  var d2y = d2[1][1] - d2[0][1];
+  var det = d1x * d2y - d1y * d2x;
+  if (det != 0) {
+    var k = (d1x * d1[0][1] - d1x * d2[0][1] - d1y * d1[0][0] + d1y * d2[0][0]) / det;
+    return [d2[0][0] + k*d2x, d2[0][1] + k*d2y];
+  } else {
+    return false;
+  }
+};
+
+export { ol_coordinate_getIntersectionPoint }
