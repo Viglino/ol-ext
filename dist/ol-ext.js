@@ -21341,11 +21341,12 @@ ol.layer.Vector.prototype.setRender3D = function (r) {
 }
 /** 
  * @classdesc
- *ol.render3D 3D vector layer rendering
+ *  3D vector layer rendering
  * @constructor
  * @param {Object} param
  *  @param {ol.layer.Vector} param.layer the layer to display in 3D
- *  @param {ol.style.Style} options.styler drawing style
+ *  @param {ol.style.Style} options.style drawing style
+ *  @param {boolean} param.ghost use ghost style
  *  @param {number} param.maxResolution  max resolution to render 3D
  *  @param {number} param.defaultHeight default height if none is return by a propertie
  *  @param {function|string|Number} param.height a height function (returns height giving a feature) or a popertie name for the height or a fixed value
@@ -21356,6 +21357,7 @@ ol.render3D = function (options) {
   options.defaultHeight = options.defaultHeight || 0;
   ol.Object.call (this, options);
   this.setStyle(options.style);
+  this.set('ghost', options.ghost);
   this.height_ = options.height = this.getHfn (options.height);
   if (options.layer) this.setLayer(options.layer);
 }
@@ -21435,7 +21437,8 @@ ol.render3D.prototype.onPostcompose_ = function(e) {
     for (var i=0; i<f.length; i++) {
       builds.push (this.getFeature3D_ (f[i], this.getFeatureHeight(f[i])));
     }
-    this.drawFeature3D_ (ctx, builds);
+    if (this.get('ghost')) this.drawGhost3D_ (ctx, builds);
+    else this.drawFeature3D_ (ctx, builds);
   ctx.restore();
 };
 /** Set layer to render 3D
@@ -21536,9 +21539,9 @@ ol.render3D.prototype.getFeature3D_ = function (f, h) {
           build.push(b);
         }
       }
-      return { type:"MultiPolygon", feature: f, geom: build };
+      return { type:"MultiPolygon", feature: f, geom: build, height: h };
     case "Point":
-      return { type:"Point", feature: f, geom: this.hvector_(c,h) };
+      return { type:"Point", feature: f, geom: this.hvector_(c,h), height: h };
     default: return {};
   }
 }
@@ -21619,7 +21622,147 @@ ol.render3D.prototype.drawFeature3D_ = function(ctx, build) {
       default: break;
     }
   }
-}
+};
+ol.render3D.prototype.drawGhost3D_ = function(ctx, build) {
+  var i,j, b, k;
+  // Construct
+  for (i=0; i<build.length; i++) {	
+    switch (build[i].type) {
+      case "MultiPolygon": {
+        for (j=0; j<build[i].geom.length; j++) {
+          b = build[i].geom[j];
+          for (k=0; k < b.length-1; k++) {
+            ctx.beginPath();
+              ctx.moveTo(b[k].p0[0], b[k].p0[1]);
+              ctx.lineTo(b[k].p1[0], b[k].p1[1]);
+              ctx.lineTo(b[k+1].p1[0], b[k+1].p1[1]);
+              ctx.lineTo(b[k+1].p0[0], b[k+1].p0[1]);
+              ctx.lineTo(b[k].p0[0], b[k].p0[1]);
+              var m = [(b[k].p0[0] + b[k+1].p0[0]) /2, (b[k].p0[1] + b[k+1].p0[1]) /2];
+              var h = [b[k].p0[1] - b[k+1].p0[1], - b[k].p0[0] + b[k+1].p0[0]];
+              var c = ol.coordinate.getIntersectionPoint(
+                [m, [m[0] + h[0], m[1]+ h[1]]],
+                [b[k].p1, b[k+1].p1]
+              );
+              var gradient = ctx.createLinearGradient(
+                m[0], m[1],              
+                c[0], c[1]
+              );
+              gradient.addColorStop(0, 'rgba(255,255,255,.2)');
+              gradient.addColorStop(1, 'rgba(255,255,255,0)');
+              ctx.fillStyle = gradient;
+              ctx.fill();
+          }
+        }
+        break;
+      }
+      case "Point": {
+        var g = build[i].geom;
+          ctx.beginPath();
+          ctx.moveTo(g.p0[0], g.p0[1]);
+          ctx.lineTo(g.p1[0], g.p1[1]);
+          ctx.stroke();
+          break;
+        }
+      default: break;
+    }
+  }
+};
+
+/*	Copyright (c) 2019 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** A map with a perspective
+ * @constructor 
+ * @extends {ol.Map}
+ * @param {olx.MapOptions=} options 
+ */
+ol.PerspectiveMap = function(options) {
+  // Map div
+  var divMap = options.target instanceof Element ? options.target : document.getElementById(options.target);
+  console.log(divMap.style)
+  if (window.getComputedStyle(divMap).position !== 'absolute') {
+    divMap.style.position = 'relative';
+  }
+  divMap.style.overflow = 'hidden';
+  // Create map inside
+  var map = ol.ext.element.create('DIV', {
+    className: 'ol-perspective-map',
+    parent: divMap
+  });
+  var opts = {};
+  Object.assign(opts, options);
+  opts.target = map;
+  // enhance pixel ratio
+  //opts.pixelRatio = 2;
+  console.log(opts)
+  ol.Map.call (this, opts);
+  this.reversInteraction = new ol.interaction.Interaction({
+    // Transform the position to the current perspective
+    handleEvent: function(e) {
+      e.pixel = [
+        e.originalEvent.offsetX / this.getPixelRatio(), 
+        e.originalEvent.offsetY / this.getPixelRatio()
+      ];
+      e.coordinate = this.getCoordinateFromPixel(e.pixel);
+      return true;
+    }.bind(this)
+  });
+  this.addInteraction(this.reversInteraction);
+};
+ol.ext.inherits (ol.PerspectiveMap, ol.Map);
+ol.PerspectiveMap.prototype.getPixelRatio = function(){
+  return window.devicePixelRatio;
+};
+/** Set perspective angle
+ * @param {number} angle the perspective angle 0 (vertical), 10, 20 or 30
+ */
+ol.PerspectiveMap.prototype.setPerspective = function(angle) {
+  angle = Math.round(angle/10)*10;
+  if (angle > 30) angle = 30;
+  this.getTarget().className = 'ol-perspective-map ol-perspective-'+angle+'deg';
+};
+ol.PerspectiveMap.prototype.getMatrix = function() {
+  var m = window.getComputedStyle(this.getTarget().querySelector('.ol-layer')).transform.replace('matrix3d(','').replace(')','').split(',');
+  for (var i=0; i<m.length; i++) m[i] = Number(m[i]);
+  return m;
+};
+/** See https://evanw.github.io/lightgl.js/docs/matrix.html
+ * See https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web
+ * https://github.com/jlmakes/rematrix
+ * https://jsfiddle.net/2znLxda2/
+ * 
+ */
+ol.PerspectiveMap.prototype.inversMatrix = function() {
+  var m = this.getMatrix();
+  var r = [];
+  r[0] = m[5]*m[10]*m[15] - m[5]*m[14]*m[11] - m[6]*m[9]*m[15] + m[6]*m[13]*m[11] + m[7]*m[9]*m[14] - m[7]*m[13]*m[10];
+  r[1] = -m[1]*m[10]*m[15] + m[1]*m[14]*m[11] + m[2]*m[9]*m[15] - m[2]*m[13]*m[11] - m[3]*m[9]*m[14] + m[3]*m[13]*m[10];
+  r[2] = m[1]*m[6]*m[15] - m[1]*m[14]*m[7] - m[2]*m[5]*m[15] + m[2]*m[13]*m[7] + m[3]*m[5]*m[14] - m[3]*m[13]*m[6];
+  r[3] = -m[1]*m[6]*m[11] + m[1]*m[10]*m[7] + m[2]*m[5]*m[11] - m[2]*m[9]*m[7] - m[3]*m[5]*m[10] + m[3]*m[9]*m[6];
+  r[4] = -m[4]*m[10]*m[15] + m[4]*m[14]*m[11] + m[6]*m[8]*m[15] - m[6]*m[12]*m[11] - m[7]*m[8]*m[14] + m[7]*m[12]*m[10];
+  r[5] = m[0]*m[10]*m[15] - m[0]*m[14]*m[11] - m[2]*m[8]*m[15] + m[2]*m[12]*m[11] + m[3]*m[8]*m[14] - m[3]*m[12]*m[10];
+  r[6] = -m[0]*m[6]*m[15] + m[0]*m[14]*m[7] + m[2]*m[4]*m[15] - m[2]*m[12]*m[7] - m[3]*m[4]*m[14] + m[3]*m[12]*m[6];
+  r[7] = m[0]*m[6]*m[11] - m[0]*m[10]*m[7] - m[2]*m[4]*m[11] + m[2]*m[8]*m[7] + m[3]*m[4]*m[10] - m[3]*m[8]*m[6];
+  r[8] = m[4]*m[9]*m[15] - m[4]*m[13]*m[11] - m[5]*m[8]*m[15] + m[5]*m[12]*m[11] + m[7]*m[8]*m[13] - m[7]*m[12]*m[9];
+  r[9] = -m[0]*m[9]*m[15] + m[0]*m[13]*m[11] + m[1]*m[8]*m[15] - m[1]*m[12]*m[11] - m[3]*m[8]*m[13] + m[3]*m[12]*m[9];
+  r[10] = m[0]*m[5]*m[15] - m[0]*m[13]*m[7] - m[1]*m[4]*m[15] + m[1]*m[12]*m[7] + m[3]*m[4]*m[13] - m[3]*m[12]*m[5];
+  r[11] = -m[0]*m[5]*m[11] + m[0]*m[9]*m[7] + m[1]*m[4]*m[11] - m[1]*m[8]*m[7] - m[3]*m[4]*m[9] + m[3]*m[8]*m[5];
+  r[12] = -m[4]*m[9]*m[14] + m[4]*m[13]*m[10] + m[5]*m[8]*m[14] - m[5]*m[12]*m[10] - m[6]*m[8]*m[13] + m[6]*m[12]*m[9];
+  r[13] = m[0]*m[9]*m[14] - m[0]*m[13]*m[10] - m[1]*m[8]*m[14] + m[1]*m[12]*m[10] + m[2]*m[8]*m[13] - m[2]*m[12]*m[9];
+  r[14] = -m[0]*m[5]*m[14] + m[0]*m[13]*m[6] + m[1]*m[4]*m[14] - m[1]*m[12]*m[6] - m[2]*m[4]*m[13] + m[2]*m[12]*m[5];
+  r[15] = m[0]*m[5]*m[10] - m[0]*m[9]*m[6] - m[1]*m[4]*m[10] + m[1]*m[8]*m[6] + m[2]*m[4]*m[9] - m[2]*m[8]*m[5];
+  var det = m[0]*r[0] + m[1]*r[4] + m[2]*r[8] + m[3]*r[12];
+  for (var i = 0; i < 16; i++) r[i] /= det;
+  return r;
+};
+ol.PerspectiveMap.prototype.addInteraction = function(interaction) {
+  ol.Map.prototype.addInteraction.call(this, interaction);
+  // Add inversInteraction on top
+  this.removeInteraction(this.reversInteraction);
+  ol.Map.prototype.addInteraction.call(this, this.reversInteraction);
+};
 
 /*
   Copyright (c) 2020 Jean-Marc VIGLINO,
@@ -23755,6 +23898,23 @@ ol.geom.createFromType = function (type, coordinates) {
     default:
       console.error('[createFromType] Unsupported type: '+type);
       return null;
+  }
+};
+/** Intersect 2 lines
+ * @param {Arrar<ol.coordinate>} d1
+ * @param {Arrar<ol.coordinate>} d2
+ */
+ol.coordinate.getIntersectionPoint = function (d1, d2) {
+  var d1x = d1[1][0] - d1[0][0];
+  var d1y = d1[1][1] - d1[0][1];
+  var d2x = d2[1][0] - d2[0][0];
+  var d2y = d2[1][1] - d2[0][1];
+  var det = d1x * d2y - d1y * d2x;
+  if (det != 0) {
+    var k = (d1x * d1[0][1] - d1x * d2[0][1] - d1y * d1[0][0] + d1y * d2[0][0]) / det;
+    return [d2[0][0] + k*d2x, d2[0][1] + k*d2y];
+  } else {
+    return false;
   }
 };
 

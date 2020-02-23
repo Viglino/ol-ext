@@ -3662,6 +3662,48 @@
 	left:0px;
 }
 
+.vertex {
+  width: 5px;
+  height: 5px;
+  background: red;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+}
+.ol-perspective-map {
+  position: absolute;
+  left: -50%;
+  top: -50%;
+  width: 200%;
+  height: 200%;
+}
+.ol-perspective-map .ol-overlaycontainer-stopevent {
+  position: absolute!important;
+  z-index: 0;
+  width: 50%!important;
+  height: 50%!important;
+  -webkit-transform: translate(-50% ,-50%);
+          transform: translate(-50% ,-50%);
+  top: 50%;
+  left: 50%;
+}
+.ol-perspective-map .ol-layer {
+  -webkit-transform: translateY(-150px) perspective(200px) rotateX(0deg) scaleY(1);
+          transform: translateY(-150px) perspective(200px) rotateX(0deg) scaleY(1);
+  -webkit-transition: 1s;
+  transition: 1s;
+}
+.ol-perspective-map.ol-perspective-10deg .ol-layer {
+  -webkit-transform: translateY(-150px) perspective(200px) rotateX(10deg) scaleY(.7);
+          transform: translateY(-150px) perspective(200px) rotateX(10deg) scaleY(.7);
+}
+.ol-perspective-map.ol-perspective-20deg .ol-layer {
+  -webkit-transform: translateY(-150px) perspective(200px) rotateX(20deg) scaleY(.6);
+          transform: translateY(-150px) perspective(200px) rotateX(20deg) scaleY(.6);
+}
+.ol-perspective-map.ol-perspective-30deg .ol-layer {
+  -webkit-transform: translateY(-150px) perspective(200px) rotateX(30deg) scaleY(.5);
+          transform: translateY(-150px) perspective(200px) rotateX(30deg) scaleY(.5);
+}
 .ol-overlay-container .ol-magnify 
 {	background: rgba(0,0,0, 0.5);
 	border:3px solid #369;
