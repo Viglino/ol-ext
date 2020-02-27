@@ -1,6 +1,7 @@
 .ol-overlaycontainer-stopevent {
-  /* BOUG OL6 to enable DragOverlay interaction */
+  /* BOUG ol6.1 to enable DragOverlay interaction 
   position: initial!important;
+  */
 }
 
 /** ol.popup */
