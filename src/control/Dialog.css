@@ -13,7 +13,7 @@
 .ol-ext-dialog.ol-visible {
   opacity: 1;
   top: 0;
-  pointer-events: unset;
+  pointer-events: auto;
   transition: opacity .2s, top 0s;
 }
 
