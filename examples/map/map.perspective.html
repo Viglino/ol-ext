@@ -5,7 +5,7 @@
   Copyright (c) 2015-2019 Jean-Marc VIGLINO, 
   released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 -->
-  <title>Layer 3D</title>
+  <title>Perspective ol Map</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
   <meta name="description" content="Perspective ol map" />
@@ -30,20 +30,6 @@
       height: 600px;
       z-index: 0;
     }
-    .loading {
-      background: #fff;
-      border: 2px solid #369;
-      left: 50%;
-      margin: -2em -100px;
-      padding: 0.5em;
-      position: fixed;
-      text-align: center;
-      top: 50%;
-      width: 200px;
-      z-index: 1;
-      box-sizing: border-box;
-      box-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    }
   </style>
 </head>
 <body >
@@ -62,17 +48,13 @@
     <ul>
       <li>
         <label>Perspective:</label>
-        <input type="range" step=10 min=0 max=30 onchange="map.setPerspective(this.value)" value=0 style="vertical-align: middle;" />
-      </li><li>
-        <button onclick="doAnime();">Animate!</button>
+        <input type="range" step=1 min=0 max=30 onchange="map.setPerspective(this.value)" value=0 style="vertical-align: middle;" />
       </li>
     </ul>
   </div>
-  <div class="loading">Please wait while loading data...</div>
   
   <script type="text/javascript">
   var layer = new ol.layer.Tile({ name:"OSM", source: new ol.source.OSM() });
-  // layer.addFilter(new ol.filter.Colorize('invert'));
   
   // The map
   var map = new ol.PerspectiveMap({
@@ -85,54 +67,29 @@
     layers: [ layer ]
   });
 
-  // Create layer
+  // Create vector layer for select
   var vectorSource = new ol.source.Vector({
     url: '../data/ignf.json',
-    // projection: 'EPSG:3857',
     format: new ol.format.GeoJSON(),
     attributions: [ "&copy; <a href='http://professionnels.ign.fr/bdtopo'>ign.fr</a>" ]
   });
   var vector = new ol.layer.Vector({
     source: vectorSource,
-    /*
-    style: new ol.style.Style({
-      fill: new ol.style.Fill({ color: '#333' })
-    }),
-    */
     maxResolution: 2
   });
   map.addLayer(vector);
 
-  var listenerKey = vectorSource.on('change', function(e) {
-    if (vectorSource.getState() == 'ready') {
-      ol.Observable.unByKey(listenerKey)
-      $(".loading").hide();
-//      setTimeout (doAnime, 200);
-    }
-  });
-
-/*
-  // Set 3D renderer
-  var r3D = new ol.render3D({ height:0, maxResolution:0.6, defaultHeight:3.5 });
-  vector.setRender3D(r3D);
-
-  var height = 0;
-  function doAnime() {
-    if (r3D.animating()) return;
-    height = height ? 0 : "HAUTEUR";
-    r3D.animate({ height:height });
-  }
-*/
-
+  // Select and draw interaction
   map.addInteraction(new ol.interaction.Select({ layers: [vector], condition: ol.events.condition.pointerMove }));
   map.addInteraction(new ol.interaction.Draw({ type: 'LineString' }))
 
+  // An overlay
   var place = new ol.Overlay.Placemark ({
     contentColor: '#000'
   });
   map.addOverlay(place);
-  map.on('pointermove', function(e) {
-    // place.show(e.coordinate);
+  map.on('click', function(e) {
+    place.show(e.coordinate);
   });
 
   </script>

@@ -2,10 +2,10 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_interaction_Interaction from 'ol/interaction/interaction'
 import ol_Map from 'ol/Map'
 import {ol_ext_inherits} from '../util/ext'
 import ol_ext_element from '../util/element';
+import ol_Overlay from 'ol/Overlay'
 
 /** A map with a perspective
  * @constructor 
@@ -16,7 +16,6 @@ var ol_PerspectiveMap = function(options) {
 
   // Map div
   var divMap = options.target instanceof Element ? options.target : document.getElementById(options.target);
-  console.log(divMap.style)
   if (window.getComputedStyle(divMap).position !== 'absolute') {
     divMap.style.position = 'relative';
   }
@@ -32,21 +31,7 @@ var ol_PerspectiveMap = function(options) {
   opts.target = map;
   // enhance pixel ratio
   //opts.pixelRatio = 2;
-  console.log(opts)
   ol_Map.call (this, opts);
-  
-  this.reversInteraction = new ol_interaction_Interaction({
-    // Transform the position to the current perspective
-    handleEvent: function(e) {
-      e.pixel = [
-        e.originalEvent.offsetX / this.getPixelRatio(), 
-        e.originalEvent.offsetY / this.getPixelRatio()
-      ];
-      e.coordinate = this.getCoordinateFromPixel(e.pixel);
-      return true;
-    }.bind(this)
-  });
-  this.addInteraction(this.reversInteraction);
 
 };
 ol_ext_inherits (ol_PerspectiveMap, ol_Map);
@@ -56,60 +41,141 @@ ol_PerspectiveMap.prototype.getPixelRatio = function(){
 };
 
 /** Set perspective angle
- * @param {number} angle the perspective angle 0 (vertical), 10, 20 or 30
+ * @param {number} angle the perspective angle 0 (vertical) - 30 (max), default 0
+ * @param {*} options
+ *  @param {number} options.duration The duration of the animation in milliseconds, default 500
+ *  @param {function} options.easing	The easing function used during the animation, defaults to ol.easing.inAndOut).
  */
-ol_PerspectiveMap.prototype.setPerspective = function(angle) {
-  angle = Math.round(angle/10)*10;
+ol_PerspectiveMap.prototype.setPerspective = function(angle, options) {
+  options = options || {};
+  // max angle
   if (angle > 30) angle = 30;
-  this.getTarget().className = 'ol-perspective-map ol-perspective-'+angle+'deg';
+  else if (angle<0) angle = 0;
+  var fromAngle = this._angle || 0;
+  var toAngle = Math.round(angle);
+  var style = this.getTarget().querySelector('.ol-layers').style;
+  cancelAnimationFrame(this._animatedPerspective)
+  requestAnimationFrame(function(t) {
+    this._animatePerpective(t, t, style, fromAngle, toAngle, options.duration||500, options.easing||ol.easing.inAndOut);
+  }.bind(this))
 };
 
-ol_PerspectiveMap.prototype.getMatrix = function() {
-  var m = window.getComputedStyle(this.getTarget().querySelector('.ol-layer')).transform.replace('matrix3d(','').replace(')','').split(',');
-  for (var i=0; i<m.length; i++) m[i] = Number(m[i]);
-  return m;
+/**
+ * @private
+ */
+ol_PerspectiveMap.prototype._animatePerpective = function(t0, t, style, fromAngle, toAngle, duration, easing ) {
+  var dt = (t-t0)/(duration||500);
+  var end = (dt>=1);
+  dt = easing(dt);
+  var angle;
+  if (end) {
+    angle = this._angle = toAngle;
+  } else {
+    angle = this._angle = fromAngle + (toAngle-fromAngle)*dt;
+  }
+  var fac = angle/30;
+  // apply transform to the style
+  style.transform = 'translateY(-'+(17*fac)+'%) perspective(200px) rotateX('+angle+'deg) scaleY('+(1-fac/2)+')';
+  this.getMatrix3D(true);
+  this.render();
+  if (!end) {
+    requestAnimationFrame(function(t) {
+      this._animatePerpective(t0, t, style, fromAngle, toAngle, duration||500, easing||ol.easing.inAndOut);
+    }.bind(this))  
+  }
 };
 
-/** See https://evanw.github.io/lightgl.js/docs/matrix.html
- * See https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web
- * https://github.com/jlmakes/rematrix
- * https://jsfiddle.net/2znLxda2/
+/** Convert to pixel coord according to the perspective
+ * @param {MapBrowserEvent} mapBrowserEvent The event to handle.
+ */
+ol_PerspectiveMap.prototype.handleMapBrowserEvent = function(e) {
+  e.pixel = [
+    e.originalEvent.offsetX / this.getPixelRatio(), 
+    e.originalEvent.offsetY / this.getPixelRatio()
+  ];
+  e.coordinate = this.getCoordinateFromPixel(e.pixel);
+  ol_Map.prototype.handleMapBrowserEvent.call (this, e);
+};
+
+/** Get map full teansform matrix3D
+ * @return {Array<Array<number>>} 
+ */
+ol_PerspectiveMap.prototype.getMatrix3D = function (compute) {
+  if (compute) {
+    var ele = this.getTarget().querySelector('.ol-layers');
+    
+    // Get transform matrix3D from CSS
+    var tx = ol_matrix3D.getTransform(ele);
+    
+    // Get the CSS transform origin from the transformed parent - default is '50% 50%'
+    var txOrigin = ol_matrix3D.getTransformOrigin(ele);
+    
+    // Compute the full transform that is applied to the transformed parent (-origin * tx * origin)
+    this._matrixTransform = ol_matrix3D.computeTransformMatrix(tx, txOrigin);
+  }
+  if (!this._matrixTransform) this._matrixTransform = ol_matrix3D.identity();
+  return this._matrixTransform;
+};
+
+/** Get pixel at screen from coordinate.
+ * The default getPixelFromCoordinate get pixel in the perspective.
+ * @param {ol.coordinate} coord
+ * @param {ol.pixel} 
+ */
+ol_PerspectiveMap.prototype.getPixelScreenFromCoordinate = function (coord) {
+  // Get pixel in the transform system
+  var px = map.getPixelFromCoordinate(coord);
+
+  // Get transform matrix3D from CSS
+  var fullTx = map.getMatrix3D();
+
+  // Transform the point using full transform
+  var pixel = ol_matrix3D.transformVertex(fullTx, px);
+  // Perform the homogeneous divide to apply perspective to the points (divide x,y,z by the w component).
+  pixel = ol_matrix3D.projectVertex(pixel);
+
+  return [pixel[0], pixel[1]];
+};
+
+/** Not working...
  * 
  */
-ol_PerspectiveMap.prototype.inversMatrix = function() {
-  var m = this.getMatrix();
-  var r = [];
+ol_PerspectiveMap.prototype.getPixelFromPixelScreen = function (px) {
+  // Get transform matrix3D from CSS
+  var fullTx = ol_matrix3D.inverse(map.getMatrix3D());
 
-  r[0] = m[5]*m[10]*m[15] - m[5]*m[14]*m[11] - m[6]*m[9]*m[15] + m[6]*m[13]*m[11] + m[7]*m[9]*m[14] - m[7]*m[13]*m[10];
-  r[1] = -m[1]*m[10]*m[15] + m[1]*m[14]*m[11] + m[2]*m[9]*m[15] - m[2]*m[13]*m[11] - m[3]*m[9]*m[14] + m[3]*m[13]*m[10];
-  r[2] = m[1]*m[6]*m[15] - m[1]*m[14]*m[7] - m[2]*m[5]*m[15] + m[2]*m[13]*m[7] + m[3]*m[5]*m[14] - m[3]*m[13]*m[6];
-  r[3] = -m[1]*m[6]*m[11] + m[1]*m[10]*m[7] + m[2]*m[5]*m[11] - m[2]*m[9]*m[7] - m[3]*m[5]*m[10] + m[3]*m[9]*m[6];
+  // Transform the point using full transform
+  var pixel = ol_matrix3D.transformVertex(fullTx, px);
+  // Perform the homogeneous divide to apply perspective to the points (divide x,y,z by the w component).
+  pixel = ol_matrix3D.projectVertex(pixel);
 
-  r[4] = -m[4]*m[10]*m[15] + m[4]*m[14]*m[11] + m[6]*m[8]*m[15] - m[6]*m[12]*m[11] - m[7]*m[8]*m[14] + m[7]*m[12]*m[10];
-  r[5] = m[0]*m[10]*m[15] - m[0]*m[14]*m[11] - m[2]*m[8]*m[15] + m[2]*m[12]*m[11] + m[3]*m[8]*m[14] - m[3]*m[12]*m[10];
-  r[6] = -m[0]*m[6]*m[15] + m[0]*m[14]*m[7] + m[2]*m[4]*m[15] - m[2]*m[12]*m[7] - m[3]*m[4]*m[14] + m[3]*m[12]*m[6];
-  r[7] = m[0]*m[6]*m[11] - m[0]*m[10]*m[7] - m[2]*m[4]*m[11] + m[2]*m[8]*m[7] + m[3]*m[4]*m[10] - m[3]*m[8]*m[6];
-
-  r[8] = m[4]*m[9]*m[15] - m[4]*m[13]*m[11] - m[5]*m[8]*m[15] + m[5]*m[12]*m[11] + m[7]*m[8]*m[13] - m[7]*m[12]*m[9];
-  r[9] = -m[0]*m[9]*m[15] + m[0]*m[13]*m[11] + m[1]*m[8]*m[15] - m[1]*m[12]*m[11] - m[3]*m[8]*m[13] + m[3]*m[12]*m[9];
-  r[10] = m[0]*m[5]*m[15] - m[0]*m[13]*m[7] - m[1]*m[4]*m[15] + m[1]*m[12]*m[7] + m[3]*m[4]*m[13] - m[3]*m[12]*m[5];
-  r[11] = -m[0]*m[5]*m[11] + m[0]*m[9]*m[7] + m[1]*m[4]*m[11] - m[1]*m[8]*m[7] - m[3]*m[4]*m[9] + m[3]*m[8]*m[5];
-
-  r[12] = -m[4]*m[9]*m[14] + m[4]*m[13]*m[10] + m[5]*m[8]*m[14] - m[5]*m[12]*m[10] - m[6]*m[8]*m[13] + m[6]*m[12]*m[9];
-  r[13] = m[0]*m[9]*m[14] - m[0]*m[13]*m[10] - m[1]*m[8]*m[14] + m[1]*m[12]*m[10] + m[2]*m[8]*m[13] - m[2]*m[12]*m[9];
-  r[14] = -m[0]*m[5]*m[14] + m[0]*m[13]*m[6] + m[1]*m[4]*m[14] - m[1]*m[12]*m[6] - m[2]*m[4]*m[13] + m[2]*m[12]*m[5];
-  r[15] = m[0]*m[5]*m[10] - m[0]*m[9]*m[6] - m[1]*m[4]*m[10] + m[1]*m[8]*m[6] + m[2]*m[4]*m[9] - m[2]*m[8]*m[5];
-
-  var det = m[0]*r[0] + m[1]*r[4] + m[2]*r[8] + m[3]*r[12];
-  for (var i = 0; i < 16; i++) r[i] /= det;
-  return r;
+  return [pixel[0], pixel[1]];  
 };
 
-ol_PerspectiveMap.prototype.addInteraction = function(interaction) {
-  ol_Map.prototype.addInteraction.call(this, interaction);
-  // Add inversInteraction on top
-  this.removeInteraction(this.reversInteraction);
-  ol_Map.prototype.addInteraction.call(this, this.reversInteraction);
+
+/* Overwrited Overlay function to handle overlay positin in a perspective map */
+(function() {
+var _updatePixelPosition = ol_Overlay.prototype.updatePixelPosition;
+
+/** Update pixel projection in a perspective map (apply projection to the position)
+ */
+ol_Overlay.prototype.updatePixelPosition = function () {
+  var map = this.getMap();
+  if (map && map._angle) {
+    var position = this.getPosition();
+    if (!map || !map.isRendered() || !position) {
+      this.setVisible(false);
+      return;
+    }
+    // Get pixel at screen
+    var pixel = map.getPixelScreenFromCoordinate(position)
+    var mapSize = map.getSize();
+    this.updateRenderedPosition(pixel, mapSize);
+  } else {
+    _updatePixelPosition.call(this);
+  }
 };
+
+})();
 
 export default ol_PerspectiveMap
