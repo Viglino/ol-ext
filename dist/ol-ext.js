@@ -533,15 +533,16 @@ ol.matrix3D.getTransform = function(ele) {
     || style.getPropertyValue("transform");
   var values = tr.split('(')[1].split(')')[0].split(',');
   var mx = [ [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1] ];    
+  var i, j;
   if (values.length === 16) {
-    for (var i = 0; i < 4; ++i) {
-      for (var j = 0; j < 4; ++j) {
+    for (i = 0; i < 4; ++i) {
+      for (j = 0; j < 4; ++j) {
         mx[j][i] = +values[i * 4 + j];
       }
     }
   } else {
-    for (var i = 0; i < 3; ++i) {
-      for (var j = 0; j < 2; ++j) {
+    for (i = 0; i < 3; ++i) {
+      for (j = 0; j < 2; ++j) {
         mx[j][i] = +values[i * 2 + j];
       }
     }
@@ -21973,9 +21974,9 @@ ol.PerspectiveMap.prototype.getMatrix3D = function (compute) {
  */
 ol.PerspectiveMap.prototype.getPixelScreenFromCoordinate = function (coord) {
   // Get pixel in the transform system
-  var px = map.getPixelFromCoordinate(coord);
+  var px = this.getPixelFromCoordinate(coord);
   // Get transform matrix3D from CSS
-  var fullTx = map.getMatrix3D();
+  var fullTx = this.getMatrix3D();
   // Transform the point using full transform
   var pixel = ol.matrix3D.transformVertex(fullTx, px);
   // Perform the homogeneous divide to apply perspective to the points (divide x,y,z by the w component).
@@ -21987,7 +21988,7 @@ ol.PerspectiveMap.prototype.getPixelScreenFromCoordinate = function (coord) {
  */
 ol.PerspectiveMap.prototype.getPixelFromPixelScreen = function (px) {
   // Get transform matrix3D from CSS
-  var fullTx = ol.matrix3D.inverse(map.getMatrix3D());
+  var fullTx = ol.matrix3D.inverse(this.getMatrix3D());
   // Transform the point using full transform
   var pixel = ol.matrix3D.transformVertex(fullTx, px);
   // Perform the homogeneous divide to apply perspective to the points (divide x,y,z by the w component).

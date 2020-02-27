@@ -6,6 +6,8 @@ import ol_Map from 'ol/Map'
 import {ol_ext_inherits} from '../util/ext'
 import ol_ext_element from '../util/element';
 import ol_Overlay from 'ol/Overlay'
+import { inAndOut as ol_easing_inAndOut } from 'ol/easing'
+import ol_matrix3D from '../util/matrix3D'
 
 /** A map with a perspective
  * @constructor 
@@ -56,7 +58,7 @@ ol_PerspectiveMap.prototype.setPerspective = function(angle, options) {
   var style = this.getTarget().querySelector('.ol-layers').style;
   cancelAnimationFrame(this._animatedPerspective)
   requestAnimationFrame(function(t) {
-    this._animatePerpective(t, t, style, fromAngle, toAngle, options.duration||500, options.easing||ol.easing.inAndOut);
+    this._animatePerpective(t, t, style, fromAngle, toAngle, options.duration||500, options.easing||ol_easing_inAndOut);
   }.bind(this))
 };
 
@@ -80,7 +82,7 @@ ol_PerspectiveMap.prototype._animatePerpective = function(t0, t, style, fromAngl
   this.render();
   if (!end) {
     requestAnimationFrame(function(t) {
-      this._animatePerpective(t0, t, style, fromAngle, toAngle, duration||500, easing||ol.easing.inAndOut);
+      this._animatePerpective(t0, t, style, fromAngle, toAngle, duration||500, easing||ol_easing_inAndOut);
     }.bind(this))  
   }
 };
@@ -124,10 +126,10 @@ ol_PerspectiveMap.prototype.getMatrix3D = function (compute) {
  */
 ol_PerspectiveMap.prototype.getPixelScreenFromCoordinate = function (coord) {
   // Get pixel in the transform system
-  var px = map.getPixelFromCoordinate(coord);
+  var px = this.getPixelFromCoordinate(coord);
 
   // Get transform matrix3D from CSS
-  var fullTx = map.getMatrix3D();
+  var fullTx = this.getMatrix3D();
 
   // Transform the point using full transform
   var pixel = ol_matrix3D.transformVertex(fullTx, px);
@@ -142,7 +144,7 @@ ol_PerspectiveMap.prototype.getPixelScreenFromCoordinate = function (coord) {
  */
 ol_PerspectiveMap.prototype.getPixelFromPixelScreen = function (px) {
   // Get transform matrix3D from CSS
-  var fullTx = ol_matrix3D.inverse(map.getMatrix3D());
+  var fullTx = ol_matrix3D.inverse(this.getMatrix3D());
 
   // Transform the point using full transform
   var pixel = ol_matrix3D.transformVertex(fullTx, px);

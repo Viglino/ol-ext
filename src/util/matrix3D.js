@@ -6,7 +6,7 @@ https://evanw.github.io/lightgl.js/docs/matrix.html
 https://github.com/jlmakes/rematrix
 https://jsfiddle.net/2znLxda2/
 */
-ol_matrix3D = {};
+var ol_matrix3D = {};
 
 /** Get transform matrix3D of an element
  * @param {Element} ele
@@ -24,15 +24,16 @@ ol_matrix3D.getTransform = function(ele) {
   var values = tr.split('(')[1].split(')')[0].split(',');
 
   var mx = [ [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1] ];    
+  var i, j;
   if (values.length === 16) {
-    for (var i = 0; i < 4; ++i) {
-      for (var j = 0; j < 4; ++j) {
+    for (i = 0; i < 4; ++i) {
+      for (j = 0; j < 4; ++j) {
         mx[j][i] = +values[i * 4 + j];
       }
     }
   } else {
-    for (var i = 0; i < 3; ++i) {
-      for (var j = 0; j < 2; ++j) {
+    for (i = 0; i < 3; ++i) {
+      for (j = 0; j < 2; ++j) {
         mx[j][i] = +values[i * 2 + j];
       }
     }
