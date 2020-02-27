@@ -21873,6 +21873,7 @@ ol.render3D.prototype.drawGhost3D_ = function(ctx, build) {
  * @constructor 
  * @extends {ol.Map}
  * @param {olx.MapOptions=} options 
+ * @fires change:perspective
  */
 ol.PerspectiveMap = function(options) {
   // Map div
@@ -21894,6 +21895,8 @@ ol.PerspectiveMap = function(options) {
   ol.Map.call (this, opts);
 };
 ol.ext.inherits (ol.PerspectiveMap, ol.Map);
+/** Get pixel ratio for the map
+ */
 ol.PerspectiveMap.prototype.getPixelRatio = function(){
   return window.devicePixelRatio;
 };
@@ -21901,7 +21904,7 @@ ol.PerspectiveMap.prototype.getPixelRatio = function(){
  * @param {number} angle the perspective angle 0 (vertical) - 30 (max), default 0
  * @param {*} options
  *  @param {number} options.duration The duration of the animation in milliseconds, default 500
- *  @param {function} options.easing	The easing function used during the animation, defaults to ol.easing.inAndOut).
+ *  @param {function} options.easing The easing function used during the animation, defaults to ol.easing.inAndOut).
  */
 ol.PerspectiveMap.prototype.setPerspective = function(angle, options) {
   options = options || {};
@@ -21916,7 +21919,14 @@ ol.PerspectiveMap.prototype.setPerspective = function(angle, options) {
     this._animatePerpective(t, t, style, fromAngle, toAngle, options.duration||500, options.easing||ol.easing.inAndOut);
   }.bind(this))
 };
-/**
+/** Animate the perspective
+ * @param {number} t0 starting timestamp
+ * @param {number} t current timestamp
+ * @param {CSSStyleDeclaration} style style to modify
+ * @param {number} fromAngle starting angle
+ * @param {number} toAngle ending angle
+ * @param {number} duration The duration of the animation in milliseconds, default 500
+ * @param {function} easing The easing function used during the animation, defaults to ol.easing.inAndOut).
  * @private
  */
 ol.PerspectiveMap.prototype._animatePerpective = function(t0, t, style, fromAngle, toAngle, duration, easing ) {
@@ -21939,6 +21949,12 @@ ol.PerspectiveMap.prototype._animatePerpective = function(t0, t, style, fromAngl
       this._animatePerpective(t0, t, style, fromAngle, toAngle, duration||500, easing||ol.easing.inAndOut);
     }.bind(this))  
   }
+  // Dispatch event
+  this.dispatchEvent({
+    type: 'change:perspective', 
+    angle: angle,
+    animating: !end
+  });
 };
 /** Convert to pixel coord according to the perspective
  * @param {MapBrowserEvent} mapBrowserEvent The event to handle.
@@ -21995,23 +22011,37 @@ ol.PerspectiveMap.prototype.getPixelFromPixelScreen = function (px) {
   pixel = ol.matrix3D.projectVertex(pixel);
   return [pixel[0], pixel[1]];  
 };
-/* Overwrited Overlay function to handle overlay positin in a perspective map */
+/* Overwrited Overlay function to handle overlay positing in a perspective map */
 (function() {
 var _updatePixelPosition = ol.Overlay.prototype.updatePixelPosition;
 /** Update pixel projection in a perspective map (apply projection to the position)
+ * @private
  */
 ol.Overlay.prototype.updatePixelPosition = function () {
   var map = this.getMap();
-  if (map && map._angle) {
+  if (map && map instanceof ol.PerspectiveMap) {
     var position = this.getPosition();
     if (!map || !map.isRendered() || !position) {
       this.setVisible(false);
       return;
     }
     // Get pixel at screen
-    var pixel = map.getPixelScreenFromCoordinate(position)
+    var pixel = map.getPixelScreenFromCoordinate(position);
     var mapSize = map.getSize();
-    this.updateRenderedPosition(pixel, mapSize);
+    // Offset according poqsitioning
+    var pos = this.getPositioning();
+    if (/bottom/.test(pos)) {
+      pixel[1] += mapSize[1]/4
+    } else {
+      pixel[1] -= mapSize[1]/4
+    }
+    if (/right/.test(pos)) {
+      pixel[0] += mapSize[0]/4
+    } else {
+      pixel[0] -= mapSize[0]/4
+    }
+    // Update
+    this.updateRenderedPosition(pixel , mapSize);
   } else {
     _updatePixelPosition.call(this);
   }

@@ -306,7 +306,7 @@
 .ol-ext-dialog.ol-visible {
   opacity: 1;
   top: 0;
-  pointer-events: unset;
+  pointer-events: auto;
   -webkit-transition: opacity .2s, top 0s;
   transition: opacity .2s, top 0s;
 }
@@ -3678,47 +3678,16 @@
   -webkit-transform: translateY(0) perspective(200px) rotateX(0deg) scaleY(1);
           transform: translateY(0) perspective(200px) rotateX(0deg) scaleY(1);
 }
-/*
-.ol-perspective-map.ol-perspective-10deg .ol-layers {
-  transform: translateY(-5%) perspective(200px) rotateX(10deg) scaleY(.8);
-}
-.ol-perspective-map.ol-perspective-20deg .ol-layers {
-  transform: translateY(-11%) perspective(200px) rotateX(20deg) scaleY(.6);
-}
-.ol-perspective-map.ol-perspective-30deg .ol-layers {
-  transform: translateY(-17%) perspective(200px) rotateX(30deg) scaleY(.5);
-}
-*/
 
-/* Controls position on the map */
-.ol-perspective-map .ol-zoom {
-  top: calc(25% + .5em);
-  left: calc(25% + .5em);
-}
-.ol-perspective-map .ol-rotate {
-  top: calc(25% + .5em);
-  right: calc(25% + .5em);
-}
-.ol-perspective-map .ol-attribution {
-  bottom: calc(25% + .5em);
-  right: calc(25% + .5em);
-}
-.ol-perspective-map .ol-attribution.ol-uncollapsible {
-  bottom: 25%;
-  right: 25%;
+.ol-perspective-map .ol-overlaycontainer-stopevent {
+  width: 50%!important;
+  height: 50%!important;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
 }
 
-.ol-perspective-map .ol-layerswitcher {
-  top: calc(25% + 3em);
-  right: calc(25% + .5em);
-}
-.ol-touch .ol-search {
-  left: calc(25% + 3.5em);
-}
-.ol-search {
-  top: calc(25% + .5em);
-  left: calc(25% + 3em);
-}
 .ol-overlay-container .ol-magnify 
 {	background: rgba(0,0,0, 0.5);
 	border:3px solid #369;
@@ -3840,8 +3809,9 @@
 }
 
 .ol-overlaycontainer-stopevent {
-  /* BOUG OL6 to enable DragOverlay interaction */
+  /* BOUG ol6.1 to enable DragOverlay interaction 
   position: initial!important;
+  */
 }
 
 /** ol.popup */
