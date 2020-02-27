@@ -511,6 +511,201 @@ ol.ext.getMapCanvas = function(map) {
   return canvas;
 };
   
+/** Matrix3D; a set of functions to handle matrix3D
+ */
+/* See 
+https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web
+https://evanw.github.io/lightgl.js/docs/matrix.html 
+https://github.com/jlmakes/rematrix
+https://jsfiddle.net/2znLxda2/
+*/
+ol.matrix3D = {};
+/** Get transform matrix3D of an element
+ * @param {Element} ele
+ * @return {Array<Array<<number>>}
+ */
+ol.matrix3D.getTransform = function(ele) {
+  var style = window.getComputedStyle(ele, null);
+  var tr = style.getPropertyValue("-webkit-transform") 
+    || style.getPropertyValue("-moz-transform") 
+    || style.getPropertyValue("-ms-transform") 
+    || style.getPropertyValue("-o-transform") 
+    || style.getPropertyValue("transform");
+  var values = tr.split('(')[1].split(')')[0].split(',');
+  var mx = [ [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1] ];    
+  if (values.length === 16) {
+    for (var i = 0; i < 4; ++i) {
+      for (var j = 0; j < 4; ++j) {
+        mx[j][i] = +values[i * 4 + j];
+      }
+    }
+  } else {
+    for (var i = 0; i < 3; ++i) {
+      for (var j = 0; j < 2; ++j) {
+        mx[j][i] = +values[i * 2 + j];
+      }
+    }
+  }
+  return mx;
+};
+/** Get transform matrix3D of an element
+ * @param {Element} ele
+ * @return {Array<number>}
+ */
+ol.matrix3D.getTransformOrigin = function (ele) {
+  var style = window.getComputedStyle(ele, null);
+  var tr = style.getPropertyValue("-webkit-transform-origin") 
+    || style.getPropertyValue("-moz-transform-origin") 
+    || style.getPropertyValue("-ms-transform-origin") 
+    || style.getPropertyValue("-o-transform-origin") 
+    || style.getPropertyValue("transform-origin");
+  var values = tr.split(' ');
+  var mx = [ 0, 0, 0, 1 ];
+  for (var i = 0; i < values.length; ++i) {
+    mx[i] = parseInt(values[i]);
+  }
+  return mx;
+};
+/** Compute translate matrix
+ * @param {number} x
+ * @param {number} y
+ * @param {number} z
+ * @return {Array<Array<<number>>}
+ */
+ol.matrix3D.translateMatrix = function(x, y, z) {
+  return [
+    [1, 0, 0, x],
+    [0, 1, 0, y],
+    [0, 0, 1, z],
+    [0, 0, 0, 1]
+  ];
+};
+/** Identity matrix
+ * @return {Array<Array<<number>>}
+ */
+ol.matrix3D.identity = function() {
+  return [
+    [1, 0, 0, 0],
+    [0, 1, 0, 0],
+    [0, 0, 1, 0],
+    [0, 0, 0, 1]
+  ];
+};
+/** Round matrix
+ * @param {Array<Array<number>>} mx
+ * @param {number} round Rounding value, default 1E-10
+ */
+ol.matrix3D.roundTo = function(mx, round) {
+  if (!round) round = 1E-10;
+  var m = [[],[],[],[]];
+  for (var i=0; i<4; i++) {
+    for (var j=0; j<4; j++) {
+      m[i][j] = Math.round(mx[i][j] / round) * round;
+    }
+  }
+  return m;
+};
+/** Multiply matrix3D 
+ * @param {Array<Array<number>>} mx1
+ * @param {Array<Array<number>>} mx2
+ * @return {Array<Array<number>>} 
+ */
+ol.matrix3D.multiply = function (mx1, mx2) {
+  var mx = [ [], [], [], [] ];
+  for (var i = 0; i < 4; ++i) {
+    for (var j = 0; j < 4; ++j) {
+      var sum = 0;
+      for (var k = 0; k < 4; ++k) {
+          sum += (mx1[k][i] * mx2[j][k]);
+      }
+      mx[j][i] = sum;
+    }
+  }
+  return mx;
+};
+/** Compute the full transform that is applied to the transformed parent: -origin o tx o origin
+ * @param {Array<Array<number>>} tx transform matrix
+ * @param {Array<Array<number>>} origin transform origin
+ * @return {Array<Array<number>>} 
+ */
+ol.matrix3D.computeTransformMatrix = function(tx, origin) {
+  var preTx = ol.matrix3D.translateMatrix(-origin[0], -origin[1], -origin[2]);
+  var postTx = ol.matrix3D.translateMatrix(origin[0], origin[1], origin[2]);
+  var temp1 = ol.matrix3D.multiply(preTx, tx);
+  return ol.matrix3D.multiply(temp1, postTx);
+};
+/** Apply transform to a coordinate
+ * @param {Array<Array<number>>} tx
+ * @param {ol.pixel} px
+ */
+ol.matrix3D.transformVertex = function(tx, px) {
+  var vert = [px[0], px[1], 0, 1]
+  var mx = [ ];
+  for (var i = 0; i < 4; ++i) {
+    mx[i] = 0;
+    for (var j = 0; j < 4; ++j) {
+      mx[i] += +tx[i][j] * vert[j];
+    }
+  }
+  return mx;
+}
+/** Perform the homogeneous divide to apply perspective to the points (divide x,y,z by the w component).
+ * @param {Array<number>} vert
+ * @return {Array<number>}
+ */
+ol.matrix3D.projectVertex = function(vert) {
+  var out = [ ];
+  for (var i = 0; i < 4; ++i) {
+    out[i] = vert[i] / vert[3];
+  }
+  return out;
+};
+/** Inverse a matrix3D 
+ * @return {Array<Array<number>>} m matrix to transform
+ * @return {Array<Array<number>>}
+ */
+ol.matrix3D.inverse = function(m) {
+  var s0 = m[0][0] * m[1][1] - m[1][0] * m[0][1]
+  var s1 = m[0][0] * m[1][2] - m[1][0] * m[0][2]
+  var s2 = m[0][0] * m[1][3] - m[1][0] * m[0][3]
+  var s3 = m[0][1] * m[1][2] - m[1][1] * m[0][2]
+  var s4 = m[0][1] * m[1][3] - m[1][1] * m[0][3]
+  var s5 = m[0][2] * m[1][3] - m[1][2] * m[0][3]
+  var c5 = m[2][2] * m[3][3] - m[3][2] * m[2][3]
+  var c4 = m[2][1] * m[3][3] - m[3][1] * m[2][3]
+  var c3 = m[2][1] * m[3][2] - m[3][1] * m[2][2]
+  var c2 = m[2][0] * m[3][3] - m[3][0] * m[2][3]
+  var c1 = m[2][0] * m[3][2] - m[3][0] * m[2][2]
+  var c0 = m[2][0] * m[3][1] - m[3][0] * m[2][1]
+  var determinant = 1 / (s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0)
+  if (isNaN(determinant) || determinant === Infinity) {
+    throw new Error('Inverse determinant attempted to divide by zero.')
+  }
+  return [
+    [
+      (m[1][1] * c5 - m[1][2] * c4 + m[1][3] * c3) * determinant,
+      (-m[0][1] * c5 + m[0][2] * c4 - m[0][3] * c3) * determinant,
+      (m[3][1] * s5 - m[3][2] * s4 + m[3][3] * s3) * determinant,
+      (-m[2][1] * s5 + m[2][2] * s4 - m[2][3] * s3) * determinant
+    ],[
+      (-m[1][0] * c5 + m[1][2] * c2 - m[1][3] * c1) * determinant,
+      (m[0][0] * c5 - m[0][2] * c2 + m[0][3] * c1) * determinant,
+      (-m[3][0] * s5 + m[3][2] * s2 - m[3][3] * s1) * determinant,
+      (m[2][0] * s5 - m[2][2] * s2 + m[2][3] * s1) * determinant
+    ],[
+      (m[1][0] * c4 - m[1][1] * c2 + m[1][3] * c0) * determinant,
+      (-m[0][0] * c4 + m[0][1] * c2 - m[0][3] * c0) * determinant,
+      (m[3][0] * s4 - m[3][1] * s2 + m[3][3] * s0) * determinant,
+      (-m[2][0] * s4 + m[2][1] * s2 - m[2][3] * s0) * determinant
+    ],[
+      (-m[1][0] * c3 + m[1][1] * c1 - m[1][2] * c0) * determinant,
+      (m[0][0] * c3 - m[0][1] * c1 + m[0][2] * c0) * determinant,
+      (-m[3][0] * s3 + m[3][1] * s1 - m[3][2] * s0) * determinant,
+      (m[2][0] * s3 - m[2][1] * s1 + m[2][2] * s0) * determinant
+    ]
+  ]
+};
+
 /* global ol */
 /* Create ol.sphere for backward compatibility with ol < 5.0
  * To use with Openlayers package
@@ -21681,7 +21876,6 @@ ol.render3D.prototype.drawGhost3D_ = function(ctx, build) {
 ol.PerspectiveMap = function(options) {
   // Map div
   var divMap = options.target instanceof Element ? options.target : document.getElementById(options.target);
-  console.log(divMap.style)
   if (window.getComputedStyle(divMap).position !== 'absolute') {
     divMap.style.position = 'relative';
   }
@@ -21696,73 +21890,132 @@ ol.PerspectiveMap = function(options) {
   opts.target = map;
   // enhance pixel ratio
   //opts.pixelRatio = 2;
-  console.log(opts)
   ol.Map.call (this, opts);
-  this.reversInteraction = new ol.interaction.Interaction({
-    // Transform the position to the current perspective
-    handleEvent: function(e) {
-      e.pixel = [
-        e.originalEvent.offsetX / this.getPixelRatio(), 
-        e.originalEvent.offsetY / this.getPixelRatio()
-      ];
-      e.coordinate = this.getCoordinateFromPixel(e.pixel);
-      return true;
-    }.bind(this)
-  });
-  this.addInteraction(this.reversInteraction);
 };
 ol.ext.inherits (ol.PerspectiveMap, ol.Map);
 ol.PerspectiveMap.prototype.getPixelRatio = function(){
   return window.devicePixelRatio;
 };
 /** Set perspective angle
- * @param {number} angle the perspective angle 0 (vertical), 10, 20 or 30
+ * @param {number} angle the perspective angle 0 (vertical) - 30 (max), default 0
+ * @param {*} options
+ *  @param {number} options.duration The duration of the animation in milliseconds, default 500
+ *  @param {function} options.easing	The easing function used during the animation, defaults to ol.easing.inAndOut).
  */
-ol.PerspectiveMap.prototype.setPerspective = function(angle) {
-  angle = Math.round(angle/10)*10;
+ol.PerspectiveMap.prototype.setPerspective = function(angle, options) {
+  options = options || {};
+  // max angle
   if (angle > 30) angle = 30;
-  this.getTarget().className = 'ol-perspective-map ol-perspective-'+angle+'deg';
+  else if (angle<0) angle = 0;
+  var fromAngle = this._angle || 0;
+  var toAngle = Math.round(angle);
+  var style = this.getTarget().querySelector('.ol-layers').style;
+  cancelAnimationFrame(this._animatedPerspective)
+  requestAnimationFrame(function(t) {
+    this._animatePerpective(t, t, style, fromAngle, toAngle, options.duration||500, options.easing||ol.easing.inAndOut);
+  }.bind(this))
 };
-ol.PerspectiveMap.prototype.getMatrix = function() {
-  var m = window.getComputedStyle(this.getTarget().querySelector('.ol-layer')).transform.replace('matrix3d(','').replace(')','').split(',');
-  for (var i=0; i<m.length; i++) m[i] = Number(m[i]);
-  return m;
+/**
+ * @private
+ */
+ol.PerspectiveMap.prototype._animatePerpective = function(t0, t, style, fromAngle, toAngle, duration, easing ) {
+  var dt = (t-t0)/(duration||500);
+  var end = (dt>=1);
+  dt = easing(dt);
+  var angle;
+  if (end) {
+    angle = this._angle = toAngle;
+  } else {
+    angle = this._angle = fromAngle + (toAngle-fromAngle)*dt;
+  }
+  var fac = angle/30;
+  // apply transform to the style
+  style.transform = 'translateY(-'+(17*fac)+'%) perspective(200px) rotateX('+angle+'deg) scaleY('+(1-fac/2)+')';
+  this.getMatrix3D(true);
+  this.render();
+  if (!end) {
+    requestAnimationFrame(function(t) {
+      this._animatePerpective(t0, t, style, fromAngle, toAngle, duration||500, easing||ol.easing.inAndOut);
+    }.bind(this))  
+  }
 };
-/** See https://evanw.github.io/lightgl.js/docs/matrix.html
- * See https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web
- * https://github.com/jlmakes/rematrix
- * https://jsfiddle.net/2znLxda2/
+/** Convert to pixel coord according to the perspective
+ * @param {MapBrowserEvent} mapBrowserEvent The event to handle.
+ */
+ol.PerspectiveMap.prototype.handleMapBrowserEvent = function(e) {
+  e.pixel = [
+    e.originalEvent.offsetX / this.getPixelRatio(), 
+    e.originalEvent.offsetY / this.getPixelRatio()
+  ];
+  e.coordinate = this.getCoordinateFromPixel(e.pixel);
+  ol.Map.prototype.handleMapBrowserEvent.call (this, e);
+};
+/** Get map full teansform matrix3D
+ * @return {Array<Array<number>>} 
+ */
+ol.PerspectiveMap.prototype.getMatrix3D = function (compute) {
+  if (compute) {
+    var ele = this.getTarget().querySelector('.ol-layers');
+    // Get transform matrix3D from CSS
+    var tx = ol.matrix3D.getTransform(ele);
+    // Get the CSS transform origin from the transformed parent - default is '50% 50%'
+    var txOrigin = ol.matrix3D.getTransformOrigin(ele);
+    // Compute the full transform that is applied to the transformed parent (-origin * tx * origin)
+    this._matrixTransform = ol.matrix3D.computeTransformMatrix(tx, txOrigin);
+  }
+  if (!this._matrixTransform) this._matrixTransform = ol.matrix3D.identity();
+  return this._matrixTransform;
+};
+/** Get pixel at screen from coordinate.
+ * The default getPixelFromCoordinate get pixel in the perspective.
+ * @param {ol.coordinate} coord
+ * @param {ol.pixel} 
+ */
+ol.PerspectiveMap.prototype.getPixelScreenFromCoordinate = function (coord) {
+  // Get pixel in the transform system
+  var px = map.getPixelFromCoordinate(coord);
+  // Get transform matrix3D from CSS
+  var fullTx = map.getMatrix3D();
+  // Transform the point using full transform
+  var pixel = ol.matrix3D.transformVertex(fullTx, px);
+  // Perform the homogeneous divide to apply perspective to the points (divide x,y,z by the w component).
+  pixel = ol.matrix3D.projectVertex(pixel);
+  return [pixel[0], pixel[1]];
+};
+/** Not working...
  * 
  */
-ol.PerspectiveMap.prototype.inversMatrix = function() {
-  var m = this.getMatrix();
-  var r = [];
-  r[0] = m[5]*m[10]*m[15] - m[5]*m[14]*m[11] - m[6]*m[9]*m[15] + m[6]*m[13]*m[11] + m[7]*m[9]*m[14] - m[7]*m[13]*m[10];
-  r[1] = -m[1]*m[10]*m[15] + m[1]*m[14]*m[11] + m[2]*m[9]*m[15] - m[2]*m[13]*m[11] - m[3]*m[9]*m[14] + m[3]*m[13]*m[10];
-  r[2] = m[1]*m[6]*m[15] - m[1]*m[14]*m[7] - m[2]*m[5]*m[15] + m[2]*m[13]*m[7] + m[3]*m[5]*m[14] - m[3]*m[13]*m[6];
-  r[3] = -m[1]*m[6]*m[11] + m[1]*m[10]*m[7] + m[2]*m[5]*m[11] - m[2]*m[9]*m[7] - m[3]*m[5]*m[10] + m[3]*m[9]*m[6];
-  r[4] = -m[4]*m[10]*m[15] + m[4]*m[14]*m[11] + m[6]*m[8]*m[15] - m[6]*m[12]*m[11] - m[7]*m[8]*m[14] + m[7]*m[12]*m[10];
-  r[5] = m[0]*m[10]*m[15] - m[0]*m[14]*m[11] - m[2]*m[8]*m[15] + m[2]*m[12]*m[11] + m[3]*m[8]*m[14] - m[3]*m[12]*m[10];
-  r[6] = -m[0]*m[6]*m[15] + m[0]*m[14]*m[7] + m[2]*m[4]*m[15] - m[2]*m[12]*m[7] - m[3]*m[4]*m[14] + m[3]*m[12]*m[6];
-  r[7] = m[0]*m[6]*m[11] - m[0]*m[10]*m[7] - m[2]*m[4]*m[11] + m[2]*m[8]*m[7] + m[3]*m[4]*m[10] - m[3]*m[8]*m[6];
-  r[8] = m[4]*m[9]*m[15] - m[4]*m[13]*m[11] - m[5]*m[8]*m[15] + m[5]*m[12]*m[11] + m[7]*m[8]*m[13] - m[7]*m[12]*m[9];
-  r[9] = -m[0]*m[9]*m[15] + m[0]*m[13]*m[11] + m[1]*m[8]*m[15] - m[1]*m[12]*m[11] - m[3]*m[8]*m[13] + m[3]*m[12]*m[9];
-  r[10] = m[0]*m[5]*m[15] - m[0]*m[13]*m[7] - m[1]*m[4]*m[15] + m[1]*m[12]*m[7] + m[3]*m[4]*m[13] - m[3]*m[12]*m[5];
-  r[11] = -m[0]*m[5]*m[11] + m[0]*m[9]*m[7] + m[1]*m[4]*m[11] - m[1]*m[8]*m[7] - m[3]*m[4]*m[9] + m[3]*m[8]*m[5];
-  r[12] = -m[4]*m[9]*m[14] + m[4]*m[13]*m[10] + m[5]*m[8]*m[14] - m[5]*m[12]*m[10] - m[6]*m[8]*m[13] + m[6]*m[12]*m[9];
-  r[13] = m[0]*m[9]*m[14] - m[0]*m[13]*m[10] - m[1]*m[8]*m[14] + m[1]*m[12]*m[10] + m[2]*m[8]*m[13] - m[2]*m[12]*m[9];
-  r[14] = -m[0]*m[5]*m[14] + m[0]*m[13]*m[6] + m[1]*m[4]*m[14] - m[1]*m[12]*m[6] - m[2]*m[4]*m[13] + m[2]*m[12]*m[5];
-  r[15] = m[0]*m[5]*m[10] - m[0]*m[9]*m[6] - m[1]*m[4]*m[10] + m[1]*m[8]*m[6] + m[2]*m[4]*m[9] - m[2]*m[8]*m[5];
-  var det = m[0]*r[0] + m[1]*r[4] + m[2]*r[8] + m[3]*r[12];
-  for (var i = 0; i < 16; i++) r[i] /= det;
-  return r;
+ol.PerspectiveMap.prototype.getPixelFromPixelScreen = function (px) {
+  // Get transform matrix3D from CSS
+  var fullTx = ol.matrix3D.inverse(map.getMatrix3D());
+  // Transform the point using full transform
+  var pixel = ol.matrix3D.transformVertex(fullTx, px);
+  // Perform the homogeneous divide to apply perspective to the points (divide x,y,z by the w component).
+  pixel = ol.matrix3D.projectVertex(pixel);
+  return [pixel[0], pixel[1]];  
 };
-ol.PerspectiveMap.prototype.addInteraction = function(interaction) {
-  ol.Map.prototype.addInteraction.call(this, interaction);
-  // Add inversInteraction on top
-  this.removeInteraction(this.reversInteraction);
-  ol.Map.prototype.addInteraction.call(this, this.reversInteraction);
+/* Overwrited Overlay function to handle overlay positin in a perspective map */
+(function() {
+var _updatePixelPosition = ol.Overlay.prototype.updatePixelPosition;
+/** Update pixel projection in a perspective map (apply projection to the position)
+ */
+ol.Overlay.prototype.updatePixelPosition = function () {
+  var map = this.getMap();
+  if (map && map._angle) {
+    var position = this.getPosition();
+    if (!map || !map.isRendered() || !position) {
+      this.setVisible(false);
+      return;
+    }
+    // Get pixel at screen
+    var pixel = map.getPixelScreenFromCoordinate(position)
+    var mapSize = map.getSize();
+    this.updateRenderedPosition(pixel, mapSize);
+  } else {
+    _updatePixelPosition.call(this);
+  }
 };
+})();
 
 /*
   Copyright (c) 2020 Jean-Marc VIGLINO,
