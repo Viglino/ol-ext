@@ -10937,7 +10937,9 @@ ol.control.Toggle.prototype.getInteraction = function() {
  * Use the {@link _ol_Map_#animateFeature} or {@link _ol_layer_Vector_#animateFeature} to animate a feature
  * on postcompose in a map or a layer
 * @constructor
-* @fires animationstart|animationend
+* @fires animationstart
+* @fires animating
+* @fires animationend
 * @param {ol.featureAnimationOptions} options
 *	@param {Number} options.duration duration of the animation in ms, default 1000
 *	@param {bool} options.revers revers the animation direction
@@ -11111,6 +11113,20 @@ ol.layer.Base.prototype.animateFeature = function(feature, fanim, useFilter) {
         // the end
         stop();
       }
+    } else {
+      var animEvent = { 
+        type: 'animating', 
+        step: step,
+        start: event.start,
+        time: event.time,
+        elapsed: event.elapsed,
+        rotation: event.rotation||0,
+        geom: event.geom,
+        coordinate: event.coord,
+        feature: feature 
+      };
+      fanim[step].dispatchEvent(animEvent);
+      self.dispatchEvent(animEvent);
     }
     filters.forEach(function(f) {
       if (f.get('active')) f.postcompose(e);
@@ -11327,8 +11343,8 @@ ol.featureAnimation.Null = function() {
 ol.ext.inherits(ol.featureAnimation.Null, ol.featureAnimation);
 
 /*
-	Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
-	released under the CeCILL license (http://www.cecill.info/).
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
+  released under the CeCILL license (http://www.cecill.info/).
 */
 /** Path animation: feature follow a path
  * @constructor
@@ -11338,68 +11354,79 @@ ol.ext.inherits(ol.featureAnimation.Null, ol.featureAnimation);
  *  @param {Number|boolean} options.rotate rotate the symbol when following the path, true or the initial rotation, default false
  *  @param {ol.geom.LineString|ol.Feature} options.path the path to follow
  */
-ol.featureAnimation.Path = function(options)
-{	options = options || {};
-	ol.featureAnimation.call(this, options);
-	this.speed_ = options.speed || 0;
-	this.path_ = options.path;
-	switch (options.rotate) {
-		case true: 
-		case 0:
-			this.rotate_ = 0;
-			break;
-		default:
-			this.rotate_ = options.rotate || false;
-			break;
-	}
-	if (this.path_ && this.path_.getGeometry) this.path_ = this.path_.getGeometry();
-	if (this.path_ && this.path_.getLineString) this.path_ = this.path_.getLineString();
-	if (this.path_.getLength)
-	{	this.dist_ = this.path_.getLength()
-		if (this.path_ && this.path_.getCoordinates) this.path_ = this.path_.getCoordinates();
-	}
-	else this.dist_ = 0;
-	if (this.speed_>0) this.duration_ = this.dist_/this.speed_;
+ol.featureAnimation.Path = function(options){
+  options = options || {};
+  ol.featureAnimation.call(this, options);
+  this.speed_ = options.speed || 0;
+  this.path_ = options.path;
+  switch (options.rotate) {
+    case true: 
+    case 0:
+      this.rotate_ = 0;
+      break;
+    default:
+      this.rotate_ = options.rotate || false;
+      break;
+  }
+  if (this.path_ && this.path_.getGeometry) this.path_ = this.path_.getGeometry();
+  if (this.path_ && this.path_.getLineString) this.path_ = this.path_.getLineString();
+  if (this.path_.getLength) {
+    this.dist_ = this.path_.getLength()
+    if (this.path_ && this.path_.getCoordinates) this.path_ = this.path_.getCoordinates();
+  } else {
+    this.dist_ = 0;
+  }
+  if (this.speed_>0) this.duration_ = this.dist_/this.speed_;
 }
 ol.ext.inherits(ol.featureAnimation.Path, ol.featureAnimation);
 /** Animate
 * @param {ol.featureAnimationEvent} e
 */
-ol.featureAnimation.Path.prototype.animate = function (e)
-{	// First time 
-	if (!e.time) 
-	{	if (!this.dist_) return false;
-	}
-	var dmax = this.dist_*this.easing_(e.elapsed);
-	var p0, p, s, dx,dy, dl, d = 0;
-	p = this.path_[0];
-	// Linear interpol
-	for (var i = 1; i<this.path_.length; i++)
-	{	p0 = p;
-		p = this.path_[i];
-		dx = p[0]-p0[0];
-		dy = p[1]-p0[1];
-		dl = Math.sqrt(dx*dx+dy*dy);
-		if (dl && d+dl>=dmax) 
-		{	s = (dmax-d)/dl;
-			p = [ p0[0] + (p[0]-p0[0])*s, p0[1] + (p[1]-p0[1])*s];
-			break;
-		}
-		d += dl;
-	}
-	// Rotate symbols
-	if (this.rotate_!==false) {
-		var angle = this.rotate_ - Math.atan2(p0[1] - p[1], p0[0] - p[0]);
-		for (var k=0; s=e.style[k]; k++) {
-			if (s.getImage()) {
-				s.getImage().setRotation(angle)
-			}
-		}
-	}
-	e.geom.setCoordinates(p);
-	// Animate
-	this.drawGeom_(e, e.geom);
-	return (e.time <= this.duration_);
+ol.featureAnimation.Path.prototype.animate = function (e) {
+  // First time 
+  if (!e.time) {
+    if (!this.dist_) return false;
+  }
+  var dmax = this.dist_*this.easing_(e.elapsed);
+  var p0, p, s, dx,dy, dl, d = 0;
+  p = this.path_[0];
+  // Linear interpol
+  for (var i = 1; i<this.path_.length; i++) {
+    p0 = p;
+    p = this.path_[i];
+    dx = p[0]-p0[0];
+    dy = p[1]-p0[1];
+    dl = Math.sqrt(dx*dx+dy*dy);
+    if (dl && d+dl>=dmax) {
+      s = (dmax-d)/dl;
+      p = [ p0[0] + (p[0]-p0[0])*s, p0[1] + (p[1]-p0[1])*s];
+      break;
+    }
+    d += dl;
+  }
+  // Rotate symbols
+  var style = e.style;
+  e.rotation = Math.PI/2 + Math.atan2(p0[1] - p[1], p0[0] - p[0]);
+  if (this.rotate_!==false) {
+    var st = []
+    var angle = this.rotate_ - e.rotation + e.frameState.viewState.rotation;
+    e.rotation = Math.PI/2 + Math.atan2(p0[1] - p[1], p0[0] - p[0]);
+    for (var k=0; s=e.style[k]; k++) {
+      if (s.getImage()) {
+        //s = s.clone();
+        s.getImage().setRotation(angle);
+      }
+      st.push(s);
+    }
+    // Rotated style
+    e.style = st;
+  }
+  e.geom.setCoordinates(p);
+  // Animate
+  this.drawGeom_(e, e.geom);
+  // restore style (if modify by rotation)
+  e.style = style;
+  return (e.time <= this.duration_);
 }
 
 /*
