@@ -1,154 +1,193 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-	<title>ol-ext: Openlayers feature animation</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>ol-ext: Openlayers feature animation</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="ol.featureAnimation are used to play animations on ol3 maps." />
-	<meta name="keywords" content="ol3, animation, along, line, path" />
+  <meta name="description" content="ol.featureAnimation are used to play animations on ol3 maps." />
+  <meta name="keywords" content="ol3, animation, along, line, path" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
-	<link rel="stylesheet" href="../style.css" />
-	</head>
+  <link rel="stylesheet" href="../style.css" />
+  </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Openlayers feature animation</h1>
-	</a>
-	<p class="info">
-		This example show how to use <i>ol.featureAnimation.Path</i> to animate a feature along a path.
-		<br/>
-		Use the <i>rotate</i> option to make the symbols rotate along the path.
-	</p>
+  <a href="../../index.html">
+    <h1>ol-ext: Openlayers feature animation</h1>
+  </a>
+  <p class="info">
+    This example show how to use <i>ol.featureAnimation.Path</i> to animate a feature along a path.
+    <br/>
+    Use the <i>rotate</i> option to make the symbols rotate along the path.
+  </p>
 
-	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options">
-		<h2>Options:</h2>
-		<ul><li>
-			Easing:
-			<select id="easing" >
-				<option value="linear">linear</option>
-				<option value="easeOut">easeOut</option>
-				<option value="easeIn">easeIn</option>
-				<option value="inAndOut">inAndOut</option>
-			</select>
-		</li><li>
-			<label><input id="revers" type="checkbox" /> revers</label>
-		</li><li>
-			<label><input id="rotation" type="checkbox" /> rotate symbol</label>
-		</li><li>
-			speed: <input id="speed" type="range" min="0" max="3" step="0.1" value="1.2" style="vertical-align:middle" />
-		</li><li>
-		 	<button onclick="animateFeature()">Animate!</button>
-		</li></ul>
-	</div>
-	
-	<script type="text/javascript">
-	// Layers
-	var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
+  <div class="options">
+    <h2>Options:</h2>
+    <ul><li>
+      Easing:
+      <select id="easing" >
+        <option value="linear">linear</option>
+        <option value="easeOut">easeOut</option>
+        <option value="easeIn">easeIn</option>
+        <option value="inAndOut">inAndOut</option>
+      </select>
+    </li><li>
+      <label><input id="revers" type="checkbox" /> revers</label>
+    </li><li>
+      <label><input id="rotation" type="checkbox" /> rotate symbol</label>
+    </li><li>
+      speed: <input id="speed" type="range" min="0" max="3" step="0.1" value="1.2" style="vertical-align:middle" />
+    </li><li>
+      <button onclick="animateFeature()">Animate!</button>
+    </li></ul>
+  </div>
+  
+  <script type="text/javascript">
+  // Layers
+  var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
 
-	// The map
-	var map = new ol.Map
-		({	target: 'map',
-			view: new ol.View
-			({	zoom: 13,
-				//center: [740741, 5776642]
-				center: [646752, 5407059]
-			}),
-			layers: [layer]
-		});
+  // The map
+  var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 13,
+      //center: [740741, 5776642]
+      center: [646752, 5407059]
+    }),
+    layers: [layer]
+  });
 
-	var style = 
-	[	new ol.style.Style(
-			{	image: new ol.style.Shadow(
-				{	radius: 15,
-				}),
-				stroke: new ol.style.Stroke(
-				{	color: [0,0,0,0.3],
-					width: 2
-				}),
-				fill: new ol.style.Fill(
-					{	color: [0,0,0,0.3]
-					}),
-				zIndex: -1
-			}),
-		new ol.style.Style(
-			{	image: new ol.style.RegularShape(
-				{	radius: 10,
-					radius2: 5,
-					points: 5,
-					fill: new ol.style.Fill({ color: 'blue' })
-				}),
-			stroke: new ol.style.Stroke(
-				{	color: [0,0,255],
-					width: 2
-				}),
-			fill: new ol.style.Fill(
-				{	color: [0,0,255,0.3]
-				})
-			})
-	];
-	style[1].getImage().getAnchor()[1] += 10
+  var style = [
+    new ol.style.Style({
+      image: new ol.style.Shadow({
+        radius: 15,
+      }),
+      stroke: new ol.style.Stroke({
+        color: [0,0,0,0.3],
+        width: 2
+      }),
+      fill: new ol.style.Fill({
+        color: [0,0,0,0.3]
+      }),
+      zIndex: -1
+    }),
+    new ol.style.Style({
+      image: new ol.style.RegularShape({
+        radius: 10,
+        radius2: 5,
+        points: 5,
+        fill: new ol.style.Fill({ color: 'blue' })
+      }),
+      stroke: new ol.style.Stroke({
+        color: [0,0,255],
+        width: 2
+      }),
+      fill: new ol.style.Fill({
+        color: [0,0,255,0.3]
+      })
+    })
+  ];
+  // Offset image
+  style[1].getImage().getAnchor()[1] += 10
 
-	// Vector layer
-	var source = new ol.source.Vector(
-		{	//url: '../data/192553.gpx',
-			url: '../data/2009-09-04_rando.gpx',
-			format: new ol.format.GPX()
-		});
-	var vector = new ol.layer.Vector(
-	{	source: source,
-		style: style
-	});
-	map.addLayer(vector);
+  // Triangle style
+  var triangle = new ol.style.RegularShape({
+    radius: 14,
+    points: 3,
+    fill: new ol.style.Fill({ color: '#00f' }),
+    stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
+  });
+  // stretch the symbol
+  var c = triangle.getImage();
+  var ctx = c.getContext("2d");
+  var c2 = document.createElement('canvas');
+  c2.width = c2.height = c.width;
+  c2.getContext("2d").drawImage(c, 0,0);
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.drawImage(c2, 0,0, c.width, c.height, 6, 0, c.width-12, c.height);
 
-	// Animation
-	var path;
-	source.once('change',function(e)
-	{	if (source.getState() === 'ready') 
-		{	path = source.getFeatures()[0];
-		}
-	});
-	// Add a feature on the map
-	var f, anim;
-	function animateFeature()
-	{	if (path) 
-		{	f = new ol.Feature(new ol.geom.Point([0,0]));
-			anim = new ol.featureAnimation.Path(
-			{	path: path,
-				rotate: $("#rotation").prop('checked'),
-				easing: ol.easing[$("#easing").val()],
-				speed: Number($("#speed").val()),
-				revers: $("#revers").prop('checked')
-			});
-			/** / 
-			source.addFeature(f);
-			anim.on('animationend', function(e)
-			{	if (e.feature) source.removeFeature(e.feature);
-			});
-			/**/
-			vector.animateFeature ( f, anim );
-		}
-	}
+  var styleTriangle = 
+    new ol.style.Style({
+      image: triangle,
+      stroke: new ol.style.Stroke({
+        color: [0,0,255],
+        width: 2
+      }),
+      fill: new ol.style.Fill({
+        color: [0,0,255,0.3]
+      })
+    })
+  ;
 
-	for (var i=0; i<4; i++)
-	{	setTimeout (animateFeature, i*500);
-	}
+  // Vector layer
+  var source = new ol.source.Vector({
+    //url: '../data/192553.gpx',
+    url: '../data/2009-09-04_rando.gpx',
+    format: new ol.format.GPX()
+  });
+  var vector = new ol.layer.Vector({
+    source: source,
+    style: style
+  });
+  map.addLayer(vector);
 
-	</script>
-	
+  // Animation
+  var path;
+  source.once('change',function(e){
+    if (source.getState() === 'ready') {
+      path = source.getFeatures()[0];
+    }
+  });
+  // Add a feature on the map
+  var f, anim;
+  function animateFeature(){
+    if (path) {
+      f = new ol.Feature(new ol.geom.Point([0,0]));
+      if ($("#rotation").prop('checked')) f.setStyle(styleTriangle);
+      else f.setStyle(style);
+      anim = new ol.featureAnimation.Path({
+        path: path,
+        rotate: $("#rotation").prop('checked'),
+        easing: ol.easing[$("#easing").val()],
+        speed: Number($("#speed").val()),
+        revers: $("#revers").prop('checked')
+      });
+      /** / 
+      source.addFeature(f);
+      anim.on('animationend', function(e)
+      {	if (e.feature) source.removeFeature(e.feature);
+      });
+      /**/
+      /** /
+      anim.on('animating', (e) => {
+        map.getView().setCenter(e.geom.getCoordinates())
+        map.getView().setRotation(e.rotation||0)
+      })
+      /**/
+      vector.animateFeature ( f, anim );
+    }
+  }
+
+  for (var i=0; i<4; i++){
+    setTimeout (animateFeature, i*500);
+  }
+
+
+  </script>
+  
 </body>
 </html>

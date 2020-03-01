@@ -19,7 +19,9 @@ import ol_render_getVectorContext from '../util/getVectorContext';
  * Use the {@link _ol_Map_#animateFeature} or {@link _ol_layer_Vector_#animateFeature} to animate a feature
  * on postcompose in a map or a layer
 * @constructor
-* @fires animationstart|animationend
+* @fires animationstart
+* @fires animating
+* @fires animationend
 * @param {ol_featureAnimationOptions} options
 *	@param {Number} options.duration duration of the animation in ms, default 1000
 *	@param {bool} options.revers revers the animation direction
@@ -195,6 +197,7 @@ ol_layer_Base.prototype.animateFeature = function(feature, fanim, useFilter) {
       e.context.globalAlpha = this.getOpacity();
     }
     
+
     // Stop animation?
     if (!fanim[step].animate(event)) {
       nb++;
@@ -211,6 +214,20 @@ ol_layer_Base.prototype.animateFeature = function(feature, fanim, useFilter) {
         // the end
         stop();
       }
+    } else {
+      var animEvent = { 
+        type: 'animating', 
+        step: step,
+        start: event.start,
+        time: event.time,
+        elapsed: event.elapsed,
+        rotation: event.rotation||0,
+        geom: event.geom,
+        coordinate: event.coord,
+        feature: feature 
+      };
+      fanim[step].dispatchEvent(animEvent);
+      self.dispatchEvent(animEvent);
     }
 
     filters.forEach(function(f) {
