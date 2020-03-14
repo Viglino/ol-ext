@@ -66,10 +66,10 @@ ol_style_FlowLine.prototype.setWidth2 = function(width) {
 };
 
 /** Set the LineCap
- * @param {steing} cap LineCap (round or mitter), default mitter
+ * @param {steing} cap LineCap (round or butt), default butt
  */
 ol_style_FlowLine.prototype.setLineCap = function(cap) {
-  this._lineCap = (cap==='round' ? 'round' : 'mitter');
+  this._lineCap = (cap==='round' ? 'round' : 'butt');
 };
 
 /** Get the current width at step
@@ -147,7 +147,7 @@ ol_style_FlowLine.prototype._render = function(geom, e) {
     // Draw
     ctx.save();
       ctx.lineJoin = 'round';
-      ctx.lineCap = this._lineCap || 'mitter';
+      ctx.lineCap = this._lineCap || 'butt';
       geoms.forEach(function(g) {
         var step = k++/nb;
         ctx.lineWidth = this.getWidth(e.feature, step) * e.pixelRatio;
