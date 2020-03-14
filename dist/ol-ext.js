@@ -13494,25 +13494,7 @@ ol.interaction.DrawRegular = function(options) {
   // Number of sides (default=0: circle)
   this.setSides(options.sides);
   // Style
-  var white = [255, 255, 255, 1];
-  var blue = [0, 153, 255, 1];
-  var width = 3;
-  var defaultStyle = [
-    new ol.style.Style({
-      stroke: new ol.style.Stroke({ color: white, width: width + 2 })
-    }),
-    new ol.style.Style({
-      image: new ol.style.Circle({
-        radius: width * 2,
-        fill: new ol.style.Fill({ color: blue }),
-        stroke: new ol.style.Stroke({ color: white, width: width / 2 })
-      }),
-      stroke: new ol.style.Stroke({ color: blue, width: width }),
-      fill: new ol.style.Fill({
-        color: [255, 255, 255, 0.5]
-      })
-    })
-  ];
+  var defaultStyle = ol.style.Style.defaultStyle(true);
   // Create a new overlay layer for the sketch
   this.sketch_ = new ol.Collection();
   this.overlayLayer_ = new ol.layer.Vector({
@@ -15806,6 +15788,7 @@ ol.interaction.ModifyTouch.prototype.getPopupContent = function() {
  *	@param {ol.Collection.<ol.Feature>} options.features collection of feature to transform
  *	@param {ol.source.Vector | undefined} options.source source to duplicate feature when ctrl key is down
  *	@param {boolean} options.duplicate force feature to duplicate (source must be set)
+ *  @param {ol.style.Style | Array.<ol.style.Style> | ol.style.StyleFunction | undefined} style style for the sketch
  */
 ol.interaction.Offset = function(options) {
   if (!options) options = {};
@@ -15823,6 +15806,11 @@ ol.interaction.Offset = function(options) {
   // duplicate
   this.set('duplicate', options.duplicate);
   this.source_ = options.source;
+  // Style
+  this._style = (typeof (options.style) === 'function') ? options.style : function () { 
+    if (options.style) return options.style;
+    else return ol.style.Style.defaultStyle(true);
+  };
   // init
   this.previousCursor_ = false;
 };
@@ -15899,16 +15887,16 @@ ol.interaction.Offset.prototype.getFeatureAtPixel_ = function(e) {
  */
 ol.interaction.Offset.prototype.handleDownEvent_ = function(e) {	
   this.current_ = this.getFeatureAtPixel_(e);
-  if (this.source_ && (this.get('duplicate') || e.originalEvent.ctrlKey)) {
-    this.current_.feature = this.current_.feature.clone();
-    this.source_.addFeature(this.current_.feature);
-  } else {
-    // Modify the current feature
-    if (this.current_) {
+  if (this.current_) {
+    this.currentStyle_ = this.current_.feature.getStyle();
+    this.current_.feature.setStyle(this._style(this.current_.feature));
+    if (this.source_ && (this.get('duplicate') || e.originalEvent.ctrlKey)) {
+      this.current_.feature = this.current_.feature.clone();
+      this.source_.addFeature(this.current_.feature);
+    } else {
+      // Modify the current feature
       this.dispatchEvent({ type:'modifystart', features: [ this.current_.feature ] });
     }
-  }
-	if (this.current_) {
     this.dispatchEvent({ type:'offsetstart', feature: this.current_.feature, offset: 0 });
     return true;
   } else  {
@@ -15964,7 +15952,8 @@ ol.interaction.Offset.prototype.handleDragEvent_ = function(e) {
  * @private
  */
 ol.interaction.Offset.prototype.handleUpEvent_ = function(e) {
-  this.dispatchEvent({ type:'offsetend', feature: this.current_.feature, coordinate: e.coordinate });  
+  this.dispatchEvent({ type:'offsetend', feature: this.current_.feature, coordinate: e.coordinate }); 
+  this.current_.feature.setStyle(this.currentStyle_);
   this.current_ = false;
 };
 /**
@@ -27428,4 +27417,54 @@ ol.style.StrokePattern.prototype.getPattern_ = function(options)
 		}
 	}
 	return pat
-}
+};
+
+ol.style.Style.defaultStyle;
+(function() {
+// Style
+var white = [255, 255, 255, 1];
+var blue = [0, 153, 255, 1];
+var width = 3;
+var defaultEditStyle = [
+  new ol.style.Style({
+    stroke: new ol.style.Stroke({ color: white, width: width + 2 })
+  }),
+  new ol.style.Style({
+    image: new ol.style.Circle({
+      radius: width * 2,
+      fill: new ol.style.Fill({ color: blue }),
+      stroke: new ol.style.Stroke({ color: white, width: width / 2 })
+    }),
+    stroke: new ol.style.Stroke({ color: blue, width: width }),
+    fill: new ol.style.Fill({
+      color: [255, 255, 255, 0.5]
+    })
+  })
+];
+var fill = new ol.style.Fill({
+  color: 'rgba(255,255,255,0.4)'
+});
+var stroke = new ol.style.Stroke({
+  color: '#3399CC',
+  width: 1.25
+});
+var defaultStyle = [
+  new ol.style.Style({
+    image: new ol.style.Circle({
+      fill: fill,
+      stroke: stroke,
+      radius: 5
+    }),
+    fill: fill,
+    stroke: stroke
+  })
+];
+/**
+ * Get the default style
+ * @param {boolean} edit true to get editing style
+ */
+ol.style.Style.defaultStyle = function(edit) {
+  if (edit) return defaultEditStyle;
+  else return defaultStyle;
+};
+})();
