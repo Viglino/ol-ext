@@ -8,6 +8,8 @@ import ol_geom_LineString from 'ol/geom/LineString'
 import ol_geom_Polygon from 'ol/geom/Polygon'
 import {ol_coordinate_dist2d, ol_coordinate_findSegment, ol_coordinate_offsetCoords} from "../geom/GeomUtils";
 
+import ol_style_Style_defaultStyle from '../style/defaultStyle'
+
 /** Offset interaction for offseting feature geometry
  * @constructor
  * @extends {ol_interaction_Pointer}
@@ -19,6 +21,7 @@ import {ol_coordinate_dist2d, ol_coordinate_findSegment, ol_coordinate_offsetCoo
  *	@param {ol.Collection.<ol.Feature>} options.features collection of feature to transform
  *	@param {ol.source.Vector | undefined} options.source source to duplicate feature when ctrl key is down
  *	@param {boolean} options.duplicate force feature to duplicate (source must be set)
+ *  @param {ol.style.Style | Array.<ol.style.Style> | ol.style.StyleFunction | undefined} style style for the sketch
  */
 var ol_interaction_Offset = function(options) {
   if (!options) options = {};
@@ -38,6 +41,11 @@ var ol_interaction_Offset = function(options) {
   // duplicate
   this.set('duplicate', options.duplicate);
   this.source_ = options.source;
+  // Style
+  this._style = (typeof (options.style) === 'function') ? options.style : function () { 
+    if (options.style) return options.style;
+    else return ol_style_Style_defaultStyle(true);
+  };
 
   // init
   this.previousCursor_ = false;
@@ -120,16 +128,16 @@ ol_interaction_Offset.prototype.getFeatureAtPixel_ = function(e) {
  */
 ol_interaction_Offset.prototype.handleDownEvent_ = function(e) {	
   this.current_ = this.getFeatureAtPixel_(e);
-  if (this.source_ && (this.get('duplicate') || e.originalEvent.ctrlKey)) {
-    this.current_.feature = this.current_.feature.clone();
-    this.source_.addFeature(this.current_.feature);
-  } else {
-    // Modify the current feature
-    if (this.current_) {
+  if (this.current_) {
+    this.currentStyle_ = this.current_.feature.getStyle();
+    this.current_.feature.setStyle(this._style(this.current_.feature));
+    if (this.source_ && (this.get('duplicate') || e.originalEvent.ctrlKey)) {
+      this.current_.feature = this.current_.feature.clone();
+      this.source_.addFeature(this.current_.feature);
+    } else {
+      // Modify the current feature
       this.dispatchEvent({ type:'modifystart', features: [ this.current_.feature ] });
     }
-  }
-	if (this.current_) {
     this.dispatchEvent({ type:'offsetstart', feature: this.current_.feature, offset: 0 });
     return true;
   } else  {
@@ -188,7 +196,8 @@ ol_interaction_Offset.prototype.handleDragEvent_ = function(e) {
  * @private
  */
 ol_interaction_Offset.prototype.handleUpEvent_ = function(e) {
-  this.dispatchEvent({ type:'offsetend', feature: this.current_.feature, coordinate: e.coordinate });  
+  this.dispatchEvent({ type:'offsetend', feature: this.current_.feature, coordinate: e.coordinate }); 
+  this.current_.feature.setStyle(this.currentStyle_);
   this.current_ = false;
 };
 

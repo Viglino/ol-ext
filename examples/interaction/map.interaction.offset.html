@@ -2,102 +2,105 @@
 
 <html>
 <head>
-<!----------------------------------------------------------
- 
-	Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
------------------------------------------------------------->	
-	<title>ol-ext: Offset interaction</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!--
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Offset interaction</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="offset interaction for OL" />
-	<meta name="keywords" content="ol, interaction, vector, transform, offset, feature" />
+  <meta name="description" content="offset interaction for OL" />
+  <meta name="keywords" content="ol, interaction, vector, transform, offset, feature" />
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-	<!-- FontAwesome -->
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-    <link rel="stylesheet" href="../../dist/ol-ext.css" />
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Offset interaction</h1>
-	</a>
-	<div class="info">
+  <a href="../../index.html">
+    <h1>ol-ext: Offset interaction</h1>
+  </a>
+  <div class="info">
+    <!-- force font to load -->
+    <i class="fa fa-rotate-left" style="position:absolute; top:-1000px;"></i>
 
-		<!-- force font to load -->
-		<i class="fa fa-rotate-left" style="position:absolute; top:-1000px;"></i>
+    <b>ol.interaction.Offset</b> is an interaction to offset feature geometry.
+  </div>
 
-		<b>ol.interaction.Offset</b> is an interaction to offset feature geometry.
-	</div>
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<!-- Map div -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <div class="options" >
+    <h2>Options:</h2>
+    <i>
+      Drag features to offset there geometry.
+      <br/>
+      Use Ctrl key to duplicate feature.
+    </i>
+    <p>Offset: <span id="offset"></span></p>
+  </div>
+  
 
-	<div class="options" >
-		<h2>Options:</h2>
-		<i>
-			Drag features to offset there geometry.
-			<br/>
-			Use Ctrl key to duplicate feature.
-		</i>
-		<p>Offset: <span id="offset"></span></p>
-	</div>
-	
+  <script type="text/javascript">
+    // Layers
+    var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
 
-	<script type="text/javascript">
-		// Layers
-		var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
+    // The map
+    var map = new ol.Map ({
+      target: 'map',
+      view: new ol.View({
+        zoom: 5,
+        center: [261720, 5951081]
+      }),
+      controls: ol.control.defaults({ "attribution": false }),
+      layers: [ layer ]
+    });
 
-		// The map
-		var map = new ol.Map
-			({	target: 'map',
-				view: new ol.View
-				({	zoom: 5,
-					center: [261720, 5951081]
-				}),
-				controls: ol.control.defaults({ "attribution": false }),
-				layers: [ layer ]
-			});
+    // New vector layer
+    var vector = new ol.layer.Vector({
+      name: 'Vecteur',
+      source: new ol.source.Vector()
+    })
+    map.addLayer(vector);
+    vector.getSource().addFeature(new ol.Feature(new ol.geom.Polygon([[[34243, 6305749], [-288626, 5757848], [210354, 5576845], [34243, 6305749]]])));
+    vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[406033, 5664901], [689767, 5718712], [699551, 6149206], [425601, 6183449]])));
+    vector.getSource().addFeature(new ol.Feature(new ol.geom.Point(	[269914, 6248592])));
 
-		// New vector layer
-		var vector = new ol.layer.Vector(
-		{	name: 'Vecteur',
-			source: new ol.source.Vector()
-		})
-		map.addLayer(vector);
-		vector.getSource().addFeature(new ol.Feature(new ol.geom.Polygon([[[34243, 6305749], [-288626, 5757848], [210354, 5576845], [34243, 6305749]]])));
-		vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[406033, 5664901], [689767, 5718712], [699551, 6149206], [425601, 6183449]])));
-		vector.getSource().addFeature(new ol.Feature(new ol.geom.Point(	[269914, 6248592])));
+    var interaction = new ol.interaction.Offset ({
+      /*
+      style: new ol.style.Style({ stroke: new ol.style.Stroke({
+        color: 'red',
+        width: 3
+      })}),
+      */
+      source: vector.getSource()
+    });
+    map.addInteraction(interaction);
 
-		var interaction = new ol.interaction.Offset (
-			{	source: vector.getSource()
-			});
-		map.addInteraction(interaction);
+    interaction.on('offsetting', function(e) {
+      $('#offset').text(e.offset.toFixed(0));
+    });
+    interaction.on('offsetend', function(e) {
+      $('#offset').text("");
+    });
 
-		interaction.on('offsetting', function(e) {
-			$('#offset').text(e.offset.toFixed(0));
-		});
-		interaction.on('offsetend', function(e) {
-			$('#offset').text("");
-		});
-
-	</script>
+  </script>
 
 </body>
 </html>
