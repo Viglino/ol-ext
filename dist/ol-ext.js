@@ -26011,7 +26011,9 @@ ol.style.FillPattern.prototype.getChecksum = function()
 */
 /** Flow line style
  * Draw LineString with a variable color / width
- *
+ * NB: the FlowLine style doesn't impress the hit-detection.
+ * If you want your lines to be sectionable you have to add your own style to handle this.
+ * (with transparent line: stroke color opacity to .1 or zero width)
  * @extends {ol.style.Style}
  * @constructor
  * @param {Object} options
