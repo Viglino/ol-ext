@@ -9,9 +9,10 @@
   },
   "devDependencies": {
     "eslint": "^5.10.0",
-    "gulp": "^3.9.1",
+    "gulp": "^4.0.2",
     "gulp-autoprefixer": "^5.0.0",
     "gulp-clean": "^0.4.0",
+    "gulp-cli": "^2.2.0",
     "gulp-concat": "^2.6.1",
     "gulp-cssmin": "^0.2.0",
     "gulp-header": "^2.0.5",
