@@ -4,6 +4,7 @@
 */
 
 import ol_ext_inherits from '../util/ext'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_control_Bar from './Bar'
 import ol_control_Toggle from './Toggle'
 import ol_control_Button from './Button'
@@ -115,7 +116,7 @@ ol_control_GeolocationBar.prototype.setMap = function (map) {
 
   // Get change (new layer added or removed)
   if (map) {
-    this._listener = map.on('moveend', function(e) {
+    this._listener = map.on('moveend', function() {
       var geo = this.getInteraction();
       if (geo.getActive() && geo.get('followTrack') === 'auto' && geo.path_.length) {
         if (geo.path_[geo.path_.length-1][0] !== map.getView().getCenter()[0]) {

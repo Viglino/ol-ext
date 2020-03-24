@@ -102,6 +102,8 @@
     It is specially designed to record GPS tracks on mobile.
     <br/>
     You can activate the location, start recording a track, pause and restart, then stop by click on the track button.
+    <br/>
+    <button onclick="simulate()">Simulate a track</button>
   </div>
 
   <!-- Map div -->
@@ -168,6 +170,25 @@
     {	$(".follow").hide();
     });
 */
+
+    function simulate() {
+      if (geolocBar.getInteraction().simulating()) {
+        geolocBar.getInteraction().simulate(false);
+      } else {
+        $.ajax('../data/2009-09-04_rando.gpx', {
+          dataType: 'text',
+          success: function(gpx) {
+            var reader = new ol.format.GPX();
+            var feature = reader.readFeature(gpx, {
+              dataProjection: 'EPSG:4326', 
+              featureProjection: map.getView().getProjection() 
+            });
+            var coords = feature.getGeometry().getCoordinates()[0];
+            geolocBar.getInteraction().simulate(coords, { delay: 200, repeat: true });
+          }
+        });
+      }
+    }
   </script>
 
 </body>

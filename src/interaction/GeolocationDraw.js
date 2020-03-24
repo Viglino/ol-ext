@@ -6,6 +6,8 @@ import ol_style_Stroke from 'ol/style/Stroke'
 import ol_geom_Point from 'ol/geom/Point'
 import ol_geom_LineString from 'ol/geom/LineString'
 import ol_geom_Polygon from 'ol/geom/Polygon'
+import ol_geom_Circle from 'ol/geom/Circle'
+import { fromCircle as ol_geom_Polygon_fromCircle } from 'ol/geom/Polygon'
 import ol_style_Style from 'ol/style/Style'
 import ol_style_RegularShape from 'ol/style/RegularShape'
 import ol_style_Fill from 'ol/style/Fill'
@@ -116,7 +118,9 @@ var ol_interaction_GeolocationDraw = function(options) {
   this.features_ = options.features;
   this.source_ = options.source;
 
-  this.condition_ = options.condition || function(loc) { return loc.getAccuracy() < this.get("minAccuracy") };
+  this.condition_ = options.condition || function(loc) { 
+    return loc.getAccuracy() < this.get("minAccuracy") 
+  };
 
   // Prevent interaction when tracking
   ol_interaction_Interaction.call(this, {
@@ -174,6 +178,52 @@ ol_interaction_GeolocationDraw.prototype.setActive = function(active) {
       this.dispatchEvent({ type:'drawend', feature: f});
     }
   }
+};
+
+/** Simulate a track and override current geolocation
+ * @param {Array<ol.coordinate>|boolean} track a list of point or false to stop
+ * @param {*} options
+ *  @param {number} delay delay in ms, default 1000 (1s)
+ *  @param {number} accuracy gps accuracy, default 10
+ *  @param {boolean} repeat repeat track, default true
+ */
+ol_interaction_GeolocationDraw.prototype.simulate = function(track, options) {
+  if (this._track) {
+    clearTimeout(this._track.timeout);
+  }
+  if (!track) {
+    this._track = false;
+    return;
+  }
+  options = options || {};
+  var delay = options.delay || 1000;
+  function handleTrack() {
+    if (this._track.pos >= this._track.track.length) {
+      this._track = false;
+      return;
+    }
+    var coord = this._track.track[this._track.pos];
+    coord[2] = coord[3] || 0;
+    coord[3] = (new Date()).getTime();
+    this._track.pos++;
+    if (options.repeat !== false) {
+      this._track.pos = this._track.pos % this._track.track.length;
+    } 
+    if (this.getActive()) this.draw_(true, coord, options.accuracy);
+    this._track.timeout = setTimeout(handleTrack.bind(this), delay);
+  }
+  this._track = {
+    track: track,
+    pos: 0,
+    timeout: setTimeout(handleTrack.bind(this), 0)
+  }
+};
+
+/** Is simulation on ?
+ * @returns {boolean}
+ */
+ol_interaction_GeolocationDraw.prototype.simulating = function() {
+  return !!this._track;
 };
 
 /** Reset drawing
@@ -253,17 +303,32 @@ ol_interaction_GeolocationDraw.prototype.setFollowTrack = function(follow) {
 /** Add a new point to the current path
  * @private
  */
-ol_interaction_GeolocationDraw.prototype.draw_ = function() {
+ol_interaction_GeolocationDraw.prototype.draw_ = function(simulate, coord, accuracy) {
   var map = this.getMap();
   if (!map) return;
 
-  // Current location
-  var loc = this.geolocation;
-  var accu = loc.getAccuracy();
-  var pos = loc.getPosition();
-  pos.push (Math.round((loc.getAltitude()||0)*100)/100);
-  pos.push (Math.round((new Date()).getTime()/1000));
-  var p = loc.getAccuracyGeometry();
+  var accu, pos, p, loc, heading;
+  // Simulation mode
+  if (this._track) {
+    if (simulate!==true) return;
+    pos = coord;
+    accu = accuracy || 10;
+    if (this.path_ && this.path_.length) {
+      var pt = this.path_[this.path_.length-1];
+      heading = Math.atan2(coord[0]-pt[0],coord[1]-pt[1])
+    }
+    var circle = new ol_geom_Circle(pos, map.getView().getResolution()*accu);
+    p = ol_geom_Polygon_fromCircle(circle);
+  } else {
+    // Current location
+    loc = this.geolocation;
+    accu = loc.getAccuracy();
+    pos = loc.getPosition();
+    pos.push (Math.round((loc.getAltitude()||0)*100)/100);
+    pos.push (Math.round((new Date()).getTime()/1000));
+    p = loc.getAccuracyGeometry();
+    heading = loc.getHeading();
+  }
 
   // Center on point
   // console.log(this.get('followTrack'))
@@ -339,7 +404,7 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function() {
   if (this.pause_) {
     this.path_ = [pos];   
   }
-  if (!this.pause_ && this.condition_.call(this, loc)) {
+  if (!this.pause_ && (!loc || this.condition_.call(this, loc))) {
     f = this.sketch_[1];
     this.path_.push(pos);
     switch (this.get("type")) {
@@ -373,7 +438,7 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function() {
     this.dispatchEvent({ type:'drawing', feature: this.sketch_[1], geolocation: loc });
   }
   this.sketch_[2].setGeometry(new ol_geom_Point(pos));
-  this.sketch_[2].set("heading",loc.getHeading());
+  this.sketch_[2].set("heading", heading);
   // Drawing
   this.dispatchEvent({ type:'tracking', feature: this.sketch_[1], geolocation: loc });
 };
