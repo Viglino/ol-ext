@@ -4329,15 +4329,15 @@ ol.control.GeoBookmark.prototype.addBookmark = function(name, position, zoom, pe
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/** Control bar for OL3
+/** Geolocation bar
  * The control bar is a container for other controls. It can be used to create toolbars.
  * Control bars can be nested and combined with ol.control.Toggle to handle activate/deactivate.
  *
  * @constructor
  * @extends {ol.control.Bar}
- * @param {Object=} options Control options.
- *	@param {String} options.className class of the control
- *	@param {String} options.centerLabel label for center button, default center
+ * @param {Object=} options Control bar options.
+ *  @param {String} options.className class of the control
+ *  @param {String} options.centerLabel label for center button, default center
  */
 ol.control.GeolocationBar = function(options) {
   if (!options) options = {};
@@ -4349,6 +4349,7 @@ ol.control.GeolocationBar = function(options) {
   var interaction = new ol.interaction.GeolocationDraw({
     source: options.source,
     zoom: options.zoom,
+    minZoom: options.minZoom,
     followTrack: options.followTrack,
     minAccuracy: options.minAccuracy || 10000
   });
@@ -4409,8 +4410,31 @@ ol.control.GeolocationBar = function(options) {
   });
 };
 ol.ext.inherits(ol.control.GeolocationBar, ol.control.Bar);
+/**
+ * Remove the control from its current map and attach it to the new map.
+ * Subclasses may set up event handlers to get notified about changes to
+ * the map here.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ol.control.GeolocationBar.prototype.setMap = function (map) {
+  if (this._listener) ol.Observable.unByKey(this._listener);
+  this._listener = null;
+  ol.control.Bar.prototype.setMap.call(this, map);
+  // Get change (new layer added or removed)
+  if (map) {
+    this._listener = map.on('moveend', function(e) {
+      var geo = this.getInteraction();
+      if (geo.getActive() && geo.get('followTrack') === 'auto' && geo.path_.length) {
+        if (geo.path_[geo.path_.length-1][0] !== map.getView().getCenter()[0]) {
+          this.element.classList.add('centerTrack');
+        }
+      }
+    }.bind(this));
+  }
+};
 /** Get the ol.interaction.GeolocationDraw associatedwith the bar
- * 
+ * @return {ol.interaction.GeolocationDraw}
  */
 ol.control.GeolocationBar.prototype.getInteraction = function () {
   return this._geolocBt.getInteraction();
@@ -14412,6 +14436,7 @@ ol.interaction.FocusMap.prototype.setMap = function(map) {
  *  @param {Object} options.attributes a list of attributes to register as Point properties: {accuracy:true,accuracyGeometry:true,heading:true,speed:true}, default none.
  *  @param {Number} options.tolerance tolerance to add a new point (in projection unit), use ol.geom.LineString.simplify() method, default 5
  *  @param {Number} options.zoom zoom for tracking, default 16
+ *  @param {Number} options.minZoom min zoom for tracking, if zoom is less it will zoom to it, default use zoom option
  *  @param {boolean|auto|position|visible} options.followTrack true if you want the interaction to follow the track on the map, default true
  *  @param { ol.style.Style | Array.<ol.style.Style> | ol.StyleFunction | undefined } options.style Style for sketch features.
  */
@@ -14497,11 +14522,12 @@ ol.interaction.GeolocationDraw = function(options) {
       return (!this.get('followTrack') || this.get('followTrack')=='auto');//  || !geoloc.getTracking());
     }
   });
-  this.set("type", options.type||"LineString");
-  this.set("attributes", options.attributes||{});
-  this.set("minAccuracy", options.minAccuracy||20);
-  this.set("tolerance", options.tolerance||5);
-  this.set("zoom", options.zoom);
+  this.set('type', options.type||"LineString");
+  this.set('attributes', options.attributes||{});
+  this.set('minAccuracy', options.minAccuracy||20);
+  this.set('tolerance', options.tolerance||5);
+  this.set('zoom', options.zoom);
+  this.set('minZoom', options.minZoom);
   this.setFollowTrack (options.followTrack===undefined ? true : options.followTrack);
   this.setActive(false);
 };
@@ -14584,12 +14610,27 @@ ol.interaction.GeolocationDraw.prototype.setFollowTrack = function(follow) {
   this.set('followTrack', follow);
   var map = this.getMap();
   // Center if wanted
-  if (follow !== false && !this.lastPosition_ && map) {
-    var pos = this.path_[this.path_.length-1];
-    if (pos) {
+  if (this.getActive() && map) {
+    var zoom;
+    if (follow !== 'position') {
+      if (this.get('minZoom')) {
+        zoom = Math.max(this.get('minZoom'), map.getView().getZoom());
+      } else {
+        zoom = this.get('zoom');
+      }
+    }
+    if (follow !== false && !this.lastPosition_) {
+      var pos = this.path_[this.path_.length-1];
+      if (pos) {
+        map.getView().animate({
+          center: pos,
+          zoom: zoom
+        });
+      }
+    } else if (follow==='auto' && this.lastPosition_) {
       map.getView().animate({
-        center: pos,
-        zoom: (follow!="position" ? this.get("zoom") : undefined)
+        center: this.lastPosition_,
+        zoom: zoom
       });
     }
   }
@@ -14616,7 +14657,13 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function() {
     case true: {
       // modify zoom
       if (this.get('followTrack') == true) {
-        map.getView().setZoom( this.get("zoom") || 16 );
+        if (this.get('minZoom')) {
+          if (this.get('minZoom') > map.getView().getZoom()) {
+            map.getView().setZoom(this.get('minZoom'));
+          }
+        } else {
+          map.getView().setZoom( this.get('zoom') || 16 );
+        }
         if (!ol.extent.containsExtent(map.getView().calculateExtent(map.getSize()), p.getExtent())) {
           map.getView().fit(p.getExtent());
         }
@@ -14644,7 +14691,13 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function() {
         }
       } else {
         map.getView().setCenter( pos );	
-        if (this.get("zoom")) map.getView().setZoom( this.get("zoom") );
+        if (this.get('minZoom')) {
+          if (this.get('minZoom') > map.getView().getZoom()) {
+            map.getView().setZoom(this.get('minZoom'));
+          }
+        } else if (this.get('zoom')) {
+          map.getView().setZoom( this.get('zoom'));
+        }
         this.lastPosition_ = pos;
       }
       break;
@@ -14666,6 +14719,9 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function() {
   else if (accu < this.get("minAccuracy")) f.setStyle(this.locStyle.warn);
   else f.setStyle(this.locStyle.error);
   var geo;
+  if (this.pause_) {
+    this.path_ = [pos];   
+  }
   if (!this.pause_ && this.condition_.call(this, loc)) {
     f = this.sketch_[1];
     this.path_.push(pos);
