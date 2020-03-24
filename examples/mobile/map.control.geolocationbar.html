@@ -1,175 +1,174 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
- 
-	Copyright (c) 2017-2018 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
------------------------------------------------------------->
-	<title>ol-ext: Geolocation draw</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!--
+  Copyright (c) 2017-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Geolocation draw</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="an OL3 interaction to draw using the GPS of your device." />
-	<meta name="keywords" content="ol3, interaction, draw, GPS, location, geolocation" />
+  <meta name="description" content="an OL3 interaction to draw using the GPS of your device." />
+  <meta name="keywords" content="ol3, interaction, draw, GPS, location, geolocation" />
 
-	<link rel="icon" type="image/png" href="https://openlayers.org/assets/theme/img/logo70.png" />
+  <link rel="icon" type="image/png" href="https://openlayers.org/assets/theme/img/logo70.png" />
 
-	<!-- android -->
-	<meta name="mobile-web-app-capable" content="yes">
-	<!-- iOS -->
-	<meta name="apple-mobile-web-app-capable" content="yes">
-	<meta name="apple-mobile-web-app-status-bar-style" content="translucent-black">
-	<link rel="apple-touch-icon" href="https://openlayers.org/assets/theme/img/logo70.png" />
-	<link rel="apple-touch-startup-image" href="https://openlayers.org/assets/theme/img/logo70.png" />
+  <!-- android -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <!-- iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="translucent-black">
+  <link rel="apple-touch-icon" href="https://openlayers.org/assets/theme/img/logo70.png" />
+  <link rel="apple-touch-startup-image" href="https://openlayers.org/assets/theme/img/logo70.png" />
 
-	<meta name="format-detection" content="telephone=no" />
-	<meta name="msapplication-tap-highlight" content="no" />
-	<!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
-	<!meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
-	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="msapplication-tap-highlight" content="no" />
+  <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+  <!meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
 
-	<!-- Geolocation only works on https -->
-	<script>
-		if (location.protocol == 'http:' && !/^localhost/.test(location.host))
-		{	location.href = window.location.href.replace(/^http:/,"https:");
-		}
-	</script>
+  <!-- Geolocation only works on https -->
+  <script>
+    if (location.protocol == 'http:' && !/^localhost/.test(location.host))
+    {	location.href = window.location.href.replace(/^http:/,"https:");
+    }
+  </script>
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-    <link rel="stylesheet" href="../../dist/ol-ext.css" />
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
-	<style>
-		#map
-		{	position: fixed;
-			top:2.5em;
-			left:0;
-			right:0;
-			bottom:0;
-			width:auto;
-			height: auto;
-			margin: 0;
-		}
-		h1
-		{	position: fixed;
-			top:0;
-			left:0;
-			right:0;
-			height: 1.25em;
-			font-size: 1.5em;
-			padding: 0.2em 0em 0.2em 2em;
-		}
-		.options 
-		{	position: fixed;
-			right: 0;
-			top: 7em;
-			margin: 0;
-			font-size: 0.8em;
-			padding: 0 0.3em;
-		}
-		.info {
-			background: #f5f5f5;
-			padding: 0.5em;
-			position: fixed;
-			z-index: 2;
-			margin: 0.5em 0.5em 0.5em 3em;
-			top: 2.5em;
-			overflow: auto;
-			max-height: calc(100% - 4em);
-		}
+  <style>
+    #map {
+      position: fixed;
+      top:2.5em;
+      left:0;
+      right:0;
+      bottom:0;
+      width:auto;
+      height: auto;
+      margin: 0;
+    }
+    h1 {
+      position: fixed;
+      top:0;
+      left:0;
+      right:0;
+      height: 1.25em;
+      font-size: 1.5em;
+      padding: 0.2em 0em 0.2em 2em;
+    }
+    .options {
+      position: fixed;
+      right: 0;
+      top: 7em;
+      margin: 0;
+      font-size: 0.8em;
+      padding: 0 0.3em;
+    }
+    .info {
+      background: #f5f5f5;
+      padding: 0.5em;
+      position: fixed;
+      z-index: 2;
+      margin: 0.5em 0.5em 0.5em 3em;
+      top: 2.5em;
+      overflow: auto;
+      max-height: calc(100% - 4em);
+    }
 </style>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Geolocation Bar</h1>
-	</a>
-	<div class="info">
-		The <i>ol.control.GeolocationBar</i> is an <a href="../bar/map.control.bar.html">ol.control.Bar</a> 
-		with a LineString <a href="./map.interaction.geolocationdraw.html">ol.interaction.GeolocationDraw</a> interaction.
-		<br/>
-		It is specially designed to record GPS tracks on mobile.
-		<br/>
-		You can activate the location, start recording a track, pause and restart, then stop by click on the track button.
-	</div>
+  <a href="../../index.html">
+    <h1>ol-ext: Geolocation Bar</h1>
+  </a>
+  <div class="info">
+    The <i>ol.control.GeolocationBar</i> is an <a href="../bar/map.control.bar.html">ol.control.Bar</a> 
+    with a LineString <a href="./map.interaction.geolocationdraw.html">ol.interaction.GeolocationDraw</a> interaction.
+    <br/>
+    It is specially designed to record GPS tracks on mobile.
+    <br/>
+    You can activate the location, start recording a track, pause and restart, then stop by click on the track button.
+  </div>
 
-	<!-- Map div -->
-	<div id="map"></div>
-	<div class="follow" onclick="draw.setFollowTrack('auto');">Re-center</div>
+  <!-- Map div -->
+  <div id="map"></div>
+  <div class="follow" onclick="draw.setFollowTrack('auto');">Re-center</div>
 
-	<script type="text/javascript">
-		// Layers
-		var layer = new ol.layer.Tile({ source: new ol.source.OSM() });
-		
-		// The map
-		var map = new ol.Map ({
+  <script type="text/javascript">
+    // Layers
+    var layer = new ol.layer.Tile({ source: new ol.source.OSM() });
+    
+    // The map
+    var map = new ol.Map ({
       target: 'map',
-      view: new ol.View
-      ({	zoom: 5,
+      view: new ol.View({
+        zoom: 5,
         center: [261720, 5951081]
       }),
       controls: ol.control.defaults({ "attribution": false }),
       layers: [layer]
     });
 
-		// New vector layer
-		var vector = new ol.layer.Vector({
+    // New vector layer
+    var vector = new ol.layer.Vector({
       name: 'Vecteur',
       source: new ol.source.Vector()
     });
-		map.addLayer(vector);
+    map.addLayer(vector);
 
-		var geolocBar = new ol.control.GeolocationBar({
+    var geolocBar = new ol.control.GeolocationBar({
       source: vector.getSource(),
-      zoom: 16,
+      followTrack: 'auto',
+      minZoom: 16,
       minAccuracy:10000
     });
     map.addControl(geolocBar);
 /*
-		var gauge = new ol.control.Gauge({ title:'Accurracy:', max:200 });
-		map.addControl(gauge);
+    var gauge = new ol.control.Gauge({ title:'Accurracy:', max:200 });
+    map.addControl(gauge);
 
-		// Draw interaction
-		var draw = new ol.interaction.GeolocationDraw(
-			{	source: vector.getSource(),
-				zoom: 16,
-				minAccuracy:10000
-			});
-		map.addInteraction(draw);
+    // Draw interaction
+    var draw = new ol.interaction.GeolocationDraw({
+      source: vector.getSource(),
+      zoom: 16,
+      minAccuracy:10000
+    });
+    map.addInteraction(draw);
 
-		draw.on("tracking", function(e)
-		{	$("#accuraty").width((e.geolocation.getAccuracy()));
-			gauge.val(e.geolocation.getAccuracy());
-			$("#heading").val(e.geolocation.getHeading());
-			$("#z").val(e.geolocation.getAltitude());
-		});
-		//
-		draw.on('follow', function(e)
-		{	if (e.following) $(".follow").hide();
-			else $(".follow").show();
-		});
-		// Handle drawing
-		draw.on("drawstart", function(e)
-		{	
-		});
-		draw.on("drawend", function(e)
-		{	$(".follow").hide();
-		});
+    draw.on("tracking", function(e) {
+      $("#accuraty").width((e.geolocation.getAccuracy()));
+      gauge.val(e.geolocation.getAccuracy());
+      $("#heading").val(e.geolocation.getHeading());
+      $("#z").val(e.geolocation.getAltitude());
+    });
+    //
+    draw.on('follow', function(e)
+    {	if (e.following) $(".follow").hide();
+      else $(".follow").show();
+    });
+    // Handle drawing
+    draw.on("drawstart", function(e)
+    {	
+    });
+    draw.on("drawend", function(e)
+    {	$(".follow").hide();
+    });
 */
-	</script>
+  </script>
 
 </body>
 </html>

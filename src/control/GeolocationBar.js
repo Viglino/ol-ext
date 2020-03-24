@@ -11,15 +11,15 @@ import ol_control_TextButton from './TextButton'
 import ol_interaction_GeolocationDraw from '../interaction/GeolocationDraw'
 
 
-/** Control bar for OL3
+/** Geolocation bar
  * The control bar is a container for other controls. It can be used to create toolbars.
  * Control bars can be nested and combined with ol.control.Toggle to handle activate/deactivate.
  *
  * @constructor
  * @extends {ol_control_Bar}
- * @param {Object=} options Control options.
- *	@param {String} options.className class of the control
- *	@param {String} options.centerLabel label for center button, default center
+ * @param {Object=} options Control bar options.
+ *  @param {String} options.className class of the control
+ *  @param {String} options.centerLabel label for center button, default center
  */
 var ol_control_GeolocationBar = function(options) {
   if (!options) options = {};
@@ -34,6 +34,7 @@ var ol_control_GeolocationBar = function(options) {
   var interaction = new ol_interaction_GeolocationDraw({
     source: options.source,
     zoom: options.zoom,
+    minZoom: options.minZoom,
     followTrack: options.followTrack,
     minAccuracy: options.minAccuracy || 10000
   });
@@ -99,8 +100,34 @@ var ol_control_GeolocationBar = function(options) {
 };
 ol_ext_inherits(ol_control_GeolocationBar, ol_control_Bar);
 
+/**
+ * Remove the control from its current map and attach it to the new map.
+ * Subclasses may set up event handlers to get notified about changes to
+ * the map here.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ol_control_GeolocationBar.prototype.setMap = function (map) {
+  if (this._listener) ol_Observable_unByKey(this._listener);
+  this._listener = null;
+  
+  ol_control_Bar.prototype.setMap.call(this, map);
+
+  // Get change (new layer added or removed)
+  if (map) {
+    this._listener = map.on('moveend', function(e) {
+      var geo = this.getInteraction();
+      if (geo.getActive() && geo.get('followTrack') === 'auto' && geo.path_.length) {
+        if (geo.path_[geo.path_.length-1][0] !== map.getView().getCenter()[0]) {
+          this.element.classList.add('centerTrack');
+        }
+      }
+    }.bind(this));
+  }
+};
+
 /** Get the ol.interaction.GeolocationDraw associatedwith the bar
- * 
+ * @return {ol.interaction.GeolocationDraw}
  */
 ol_control_GeolocationBar.prototype.getInteraction = function () {
   return this._geolocBt.getInteraction();

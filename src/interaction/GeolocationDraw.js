@@ -29,6 +29,7 @@ import {containsCoordinate as ol_extent_containsCoordinate, containsExtent as ol
  *  @param {Object} options.attributes a list of attributes to register as Point properties: {accuracy:true,accuracyGeometry:true,heading:true,speed:true}, default none.
  *  @param {Number} options.tolerance tolerance to add a new point (in projection unit), use ol.geom.LineString.simplify() method, default 5
  *  @param {Number} options.zoom zoom for tracking, default 16
+ *  @param {Number} options.minZoom min zoom for tracking, if zoom is less it will zoom to it, default use zoom option
  *  @param {boolean|auto|position|visible} options.followTrack true if you want the interaction to follow the track on the map, default true
  *  @param { ol.style.Style | Array.<ol.style.Style> | ol.StyleFunction | undefined } options.style Style for sketch features.
  */
@@ -124,11 +125,12 @@ var ol_interaction_GeolocationDraw = function(options) {
     }
   });
 
-  this.set("type", options.type||"LineString");
-  this.set("attributes", options.attributes||{});
-  this.set("minAccuracy", options.minAccuracy||20);
-  this.set("tolerance", options.tolerance||5);
-  this.set("zoom", options.zoom);
+  this.set('type', options.type||"LineString");
+  this.set('attributes', options.attributes||{});
+  this.set('minAccuracy', options.minAccuracy||20);
+  this.set('tolerance', options.tolerance||5);
+  this.set('zoom', options.zoom);
+  this.set('minZoom', options.minZoom);
   this.setFollowTrack (options.followTrack===undefined ? true : options.followTrack);
 
   this.setActive(false);
@@ -220,12 +222,27 @@ ol_interaction_GeolocationDraw.prototype.setFollowTrack = function(follow) {
   this.set('followTrack', follow);
   var map = this.getMap();
   // Center if wanted
-  if (follow !== false && !this.lastPosition_ && map) {
-    var pos = this.path_[this.path_.length-1];
-    if (pos) {
+  if (this.getActive() && map) {
+    var zoom;
+    if (follow !== 'position') {
+      if (this.get('minZoom')) {
+        zoom = Math.max(this.get('minZoom'), map.getView().getZoom());
+      } else {
+        zoom = this.get('zoom');
+      }
+    }
+    if (follow !== false && !this.lastPosition_) {
+      var pos = this.path_[this.path_.length-1];
+      if (pos) {
+        map.getView().animate({
+          center: pos,
+          zoom: zoom
+        });
+      }
+    } else if (follow==='auto' && this.lastPosition_) {
       map.getView().animate({
-        center: pos,
-        zoom: (follow!="position" ? this.get("zoom") : undefined)
+        center: this.lastPosition_,
+        zoom: zoom
       });
     }
   }
@@ -255,7 +272,13 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function() {
     case true: {
       // modify zoom
       if (this.get('followTrack') == true) {
-        map.getView().setZoom( this.get("zoom") || 16 );
+        if (this.get('minZoom')) {
+          if (this.get('minZoom') > map.getView().getZoom()) {
+            map.getView().setZoom(this.get('minZoom'));
+          }
+        } else {
+          map.getView().setZoom( this.get('zoom') || 16 );
+        }
         if (!ol_extent_containsExtent(map.getView().calculateExtent(map.getSize()), p.getExtent())) {
           map.getView().fit(p.getExtent());
         }
@@ -283,7 +306,13 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function() {
         }
       } else {
         map.getView().setCenter( pos );	
-        if (this.get("zoom")) map.getView().setZoom( this.get("zoom") );
+        if (this.get('minZoom')) {
+          if (this.get('minZoom') > map.getView().getZoom()) {
+            map.getView().setZoom(this.get('minZoom'));
+          }
+        } else if (this.get('zoom')) {
+          map.getView().setZoom( this.get('zoom'));
+        }
         this.lastPosition_ = pos;
       }
       break;
@@ -307,6 +336,9 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function() {
   else f.setStyle(this.locStyle.error);
 
   var geo;
+  if (this.pause_) {
+    this.path_ = [pos];   
+  }
   if (!this.pause_ && this.condition_.call(this, loc)) {
     f = this.sketch_[1];
     this.path_.push(pos);
