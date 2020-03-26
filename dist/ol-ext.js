@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.1.10
+ * @version v3.1.11
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -11049,14 +11049,14 @@ ol.Map.prototype.animateFeature = function(feature, fanim) {
         if (l.getLayers) {
           if (animLayer(l.getLayers().getArray())) return true;
         } else {
-          l.animateFeature(feature, fanim);
-          return true;
+          var controller = l.animateFeature(feature, fanim);
+          return controller;
         }
       }
     }
     return false;
   }
-  animLayer(this.getLayers().getArray());
+  return animLayer(this.getLayers().getArray());
 };
 /** Animate feature on a vector layer 
  * @fires animationstart, animationend
