@@ -117,14 +117,14 @@ ol_Map.prototype.animateFeature = function(feature, fanim) {
         if (l.getLayers) {
           if (animLayer(l.getLayers().getArray())) return true;
         } else {
-          l.animateFeature(feature, fanim);
-          return true;
+          var controller = l.animateFeature(feature, fanim);
+          return controller;
         }
       }
     }
     return false;
   }
-  animLayer(this.getLayers().getArray());
+  return animLayer(this.getLayers().getArray());
 };
 
 /** Animate feature on a vector layer 
