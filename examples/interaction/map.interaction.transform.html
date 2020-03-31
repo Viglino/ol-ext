@@ -254,8 +254,8 @@
     // Handle rotate on first point
     var firstPoint = false;
     interaction.on (['select'], function(e) {
-      if (firstPoint && e.features && e.features.length) {
-        interaction.setCenter(e.features[0].getGeometry().getFirstCoordinate());
+      if (firstPoint && e.features && e.features.getLength()) {
+        interaction.setCenter(e.features.getArray()[0].getGeometry().getFirstCoordinate());
       }
     });
 
