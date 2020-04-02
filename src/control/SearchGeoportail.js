@@ -14,7 +14,7 @@ import ol_control_SearchJSON from './SearchJSON';
  * @fires select
  * @param {any} options extend ol.control.SearchJSON options
  *	@param {string} options.className control class name
- *	@param {boolean | undefined} options.apiKey the service api key.
+ *	@param {string | undefined} options.apiKey the service api key.
  *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
