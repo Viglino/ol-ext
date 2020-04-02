@@ -254,8 +254,8 @@
     // Handle rotate on first point
     var firstPoint = false;
     interaction.on (['select'], function(e) {
-      if (firstPoint && e.features && e.features.length) {
-        interaction.setCenter(e.features[0].getGeometry().getFirstCoordinate());
+      if (firstPoint && e.features && e.features.getLength()) {
+        interaction.setCenter(e.features.getArray()[0].getGeometry().getFirstCoordinate());
       }
     });
 
@@ -274,9 +274,15 @@
       d[0]+=e.delta[0];
       d[1]+=e.delta[1];
       $('#info').text("translate: "+d[0].toFixed(2)+","+d[1].toFixed(2)); 
+      if (firstPoint) {
+        interaction.setCenter(e.features.getArray()[0].getGeometry().getFirstCoordinate());
+      }
     });
     interaction.on('scaling', function (e){
       $('#info').text("scale: "+e.scale[0].toFixed(2)+","+e.scale[1].toFixed(2)); 
+      if (firstPoint) {
+        interaction.setCenter(e.features.getArray()[0].getGeometry().getFirstCoordinate());
+      }
     });
     interaction.on(['rotateend', 'translateend', 'scaleend'], function (e) {
       $('#info').text(""); 
