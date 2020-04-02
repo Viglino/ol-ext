@@ -7662,24 +7662,30 @@ ol.control.RoutingGeoportail.prototype.requestData = function (steps) {
     format: 'STANDARDEXT'
   };
 };
+/** Gets time as string
+ * @param {*} routing routing response
+ * @return {string}
+ * @api
+ */
+ol.control.RoutingGeoportail.prototype.getTimeString = function (t) {
+  t /= 60;
+  return (t<1) ? '' : (t<60) ? t.toFixed(0)+' min' : (t/60).toFixed(0)+' h '+(t%60).toFixed(0)+' min';
+};
+/** Gets distance as string
+ * @param {number} d distance
+ * @return {string}
+ * @api
+ */
+ol.control.RoutingGeoportail.prototype.getDistanceString = function (d) {
+  return (d<1000) ? d.toFixed(0)+' m' : (d/1000).toFixed(2)+' km';
+};
 /** Show routing as a list
  * @private
  */
 ol.control.RoutingGeoportail.prototype.listRouting = function (routing) {
-  var time = routing.duration/60;
   this.resultElement.innerHTML = '';
-  var t = '';
-  if (time<60) {
-    t += time.toFixed(0)+' min';
-  } else {
-    t+= (time/60).toFixed(0)+' h '+(time%60).toFixed(0)+' min';
-  }
-  var dist = routing.distance;
-  if (dist<1000) {
-    t += ' ('+dist.toFixed(0)+' m)';
-  } else {
-    t += ' ('+(dist/1000).toFixed(2)+' km)';
-  }
+  var t = this.getTimeString(routing.duration);
+  t += ' ('+this.getDistanceString(routing.distance)+')';
   var iElement = document.createElement('i');
   iElement.textContent = t;
   this.resultElement.appendChild(iElement)
@@ -7694,11 +7700,8 @@ ol.control.RoutingGeoportail.prototype.listRouting = function (routing) {
     'F': 'Continuer tout droit sur ',
   }
   for (var i=0, f; f=routing.features[i]; i++) {
-    var d = f.get('distance');
-    d = (d<1000) ? d.toFixed(0)+' m' : (d/1000).toFixed(2)+' km';
-    t = f.get('durationT')/60;
-    // console.log(f.get('duration'),t)
-    t = (f.get('duration')<40) ? '' : (t<60) ? t.toFixed(0)+' min' : (t/60).toFixed(0)+' h '+(t%60).toFixed(0)+' min';
+    var d = this.getDistanceString(f.get('distance'));
+    t = this.getTimeString(f.get('durationT'));
     var li = document.createElement('li');
         li.classList.add(f.get('instruction'));
         li.innerHTML = (info[f.get('instruction')||'none']||'#')
