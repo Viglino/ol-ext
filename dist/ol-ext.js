@@ -1709,7 +1709,7 @@ ol.control.SearchPhoton.prototype.reverseGeocode = function (coord, cback) {
  * @fires select
  * @param {any} options extend ol.control.SearchJSON options
  *	@param {string} options.className control class name
- *	@param {boolean | undefined} options.apiKey the service api key.
+ *	@param {string | undefined} options.apiKey the service api key.
  *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
@@ -7499,6 +7499,8 @@ ol.control.Profil.prototype.getImage = function(type, encoderOptions)
  * @fires change:input
  * @param {Object=} options
  *	@param {string} options.className control class name
+ *	@param {string | undefined} options.apiKey the service api key.
+ *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
  *	@param {string | undefined} options.placeholder placeholder, default "Search..."
@@ -7517,6 +7519,8 @@ ol.control.RoutingGeoportail = function(options) {
   if (options.typing == undefined) options.typing = 300;
   // Class name for history
   this._classname = options.className || 'search';
+  // Authentication
+  this._auth = options.authentication;
   var element = document.createElement("DIV");
   var classNames = (options.className||"")+ " ol-routing";
   if (!options.target) {
@@ -7608,6 +7612,7 @@ ol.control.RoutingGeoportail.prototype.addSearch = function (element, options, a
   var search = div.olsearch = new ol.control.SearchGeoportail({
     className: 'IGNF ol-collapsed',
     apiKey: options.apiKey,
+    authentication: options.authentication,
     target: div,
     reverse: true
   });
@@ -7692,7 +7697,7 @@ ol.control.RoutingGeoportail.prototype.listRouting = function (routing) {
     var d = f.get('distance');
     d = (d<1000) ? d.toFixed(0)+' m' : (d/1000).toFixed(2)+' km';
     t = f.get('durationT')/60;
-    console.log(f.get('duration'),t)
+    // console.log(f.get('duration'),t)
     t = (f.get('duration')<40) ? '' : (t<60) ? t.toFixed(0)+' min' : (t/60).toFixed(0)+' h '+(t%60).toFixed(0)+' min';
     var li = document.createElement('li');
         li.classList.add(f.get('instruction'));
@@ -7760,16 +7765,24 @@ ol.control.RoutingGeoportail.prototype.handleResponse = function (data, start, e
   return routing;
 };
 /** Calculate route
- * 
+ * @param {Array<ol.coordinate>|undefined} steps an array of steps in EPSG:4326, default use control input values
+ * @return {boolean} true is a new request is send (more than 2 points to calculate)
  */
-ol.control.RoutingGeoportail.prototype.calculate = function () {
-  console.log('calculate')
+ol.control.RoutingGeoportail.prototype.calculate = function (steps) {
   this.resultElement.innerHTML = '';
-  var steps = []
-  for (var i=0; i<this._search.length; i++) {
-    if (this._search[i].get('selection')) steps.push(this._search[i].get('selection'));
+  if (steps) {
+    var convert = [];
+    steps.forEach(function(s) {
+      convert.push({ x: s[0], y: s[1] });
+    });
+    steps = convert;
+  } else {
+    steps = []
+    for (var i=0; i<this._search.length; i++) {
+      if (this._search[i].get('selection')) steps.push(this._search[i].get('selection'));
+    }
   }
-  if (steps.length<2) return;
+  if (steps.length<2) return false;
   var start = steps[0];
   var end = steps[steps.length-1];
   var data = this.requestData(steps);
@@ -7789,7 +7802,9 @@ ol.control.RoutingGeoportail.prototype.calculate = function () {
       }
     }, function(){
       console.log(url + parameters, arguments);
-    });
+    }
+  );
+  return true;
 };	
 /** Send an ajax request (GET)
  * @param {string} url
