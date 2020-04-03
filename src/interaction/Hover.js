@@ -7,7 +7,7 @@ import ol_interaction_Interaction from 'ol/interaction/Interaction'
  * @fires hover, enter, leave
  * @param {olx.interaction.HoverOptions} 
  *  @param { string | undefined } options.cursor css cursor propertie or a function that gets a feature, default: none
- *  @param {function | undefined} optionsfeatureFilter filter a function with two arguments, the feature and the layer of the feature. Return true to select the feature 
+ *  @param {function | undefined} options.featureFilter filter a function with two arguments, the feature and the layer of the feature. Return true to select the feature 
  *  @param {function | undefined} options.layerFilter filter a function with one argument, the layer to test. Return true to test the layer
  *  @param {Array<ol.layer> | undefined} options.layers a set of layers to test
  *  @param {number | undefined} options.hitTolerance Hit-detection tolerance in pixels.

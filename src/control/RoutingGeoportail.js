@@ -40,6 +40,8 @@ var ol_control_RoutingGeoportail = function(options) {
   // Class name for history
   this._classname = options.className || 'search';
 
+  this._source = new ol_source_Vector();
+
   // Authentication
   this._auth = options.authentication;
 
@@ -62,8 +64,6 @@ var ol_control_RoutingGeoportail = function(options) {
   });
   
   this.set('url', 'https://wxs.ign.fr/'+options.apiKey+'/itineraire/rest/route.json');
-
-  this._search = [];
 
   var content = ol_ext_element.create('DIV', { className: 'content', parent: element } )
 
@@ -117,16 +117,37 @@ ol_control_RoutingGeoportail.prototype.addButton = function (className, title, i
   return bt;
 };
 
+/** Get point source
+ * @return {ol.source.Vector }
+ */
+ol_control_RoutingGeoportail.prototype.getSource = function () {
+  return this._source;
+};
+
+ol_control_RoutingGeoportail.prototype._resetArray = function (element) {
+  this._search = [];
+  var q = element.parentNode.querySelectorAll('.search-input > div')
+  q.forEach(function(d) {
+    if (d.olsearch) {
+      if (d.olsearch.get('feature')) {
+        d.olsearch.get('feature').set('step', this._search.length);
+        if (this._search.length===0) d.olsearch.get('feature').set('pos', 'start');
+        else if (this._search.length === q.length-1) d.olsearch.get('feature').set('pos', 'end');
+        else d.olsearch.get('feature').set('pos', '');
+      }
+      this._search.push(d.olsearch);
+    }
+  }.bind(this));
+};
+
 /** Remove a new search input
  * @private
  */
 ol_control_RoutingGeoportail.prototype.removeSearch = function (element, options, after) {
   element.removeChild(after);
+  if (after.olsearch.get('feature')) this._source.removeFeature(after.olsearch.get('feature'));
   if (this.getMap()) this.getMap().removeControl(after.olsearch);
-  this._search = [];
-  element.querySelectorAll('div').forEach(function(d) {
-    if (d.olsearch) this._search.push(d.olsearch);
-  }.bind(this));
+  this._resetArray(element);
 };
 
 /** Add a new search input
@@ -154,20 +175,62 @@ ol_control_RoutingGeoportail.prototype.addSearch = function (element, options, a
     target: div,
     reverse: true
   });
-  this._search = [];
-  element.querySelectorAll('div').forEach(function(d) {
-    if (d.olsearch) this._search.push(d.olsearch);
-  }.bind(this));
+  search._changeCounter = 0;
+  this._resetArray(element);
   search.on('select', function(e){
     search.setInput(e.search.fulltext);
+    var f = search.get('feature');
+    if (!f) {
+      f = new ol_Feature(new ol_geom_Point(e.coordinate));
+      search.set('feature', f);
+      this._source.addFeature(f);
+      // Check geometry change
+      search.checkgeom = true;
+      f.getGeometry().on('change', function(e) {
+        if (search.checkgeom) this.onGeometryChange(search, f);
+      }.bind(this));
+    } else {
+      search.checkgeom = false;
+      if (!e.silent) f.getGeometry().setCoordinates(e.coordinate);
+      search.checkgeom = true;
+    }
+    f.set('name', search.getTitle(e.search));
+    f.set('step', this._search.indexOf(search));
+    if (f.get('step') === 0) f.set('pos','start');
+    else if (f.get('step') === this._search.length-1) f.set('pos','end');
     search.set('selection', e.search);
-  });
+  }.bind(this));
   search.element.querySelector('input').addEventListener('change', function(){
     search.set('selection', null);
     self.resultElement.innerHTML = '';
   });
   if (this.getMap()) this.getMap().addControl(search);
 };
+
+/** Geometry has changed
+ * @private
+ */
+ol_control_RoutingGeoportail.prototype.onGeometryChange = function (search, f, delay) {
+  var lonlat = ol_proj_transform(f.getGeometry().getCoordinates(), this.getMap().getView().getProjection(), 'EPSG:4326');
+  search._handleSelect({ 
+    x: lonlat[0], 
+    y: lonlat[1], 
+    fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) 
+  }, null, true);
+
+  if (delay) {
+    search._changeCounter--;
+    if (!search._changeCounter) {
+      search.reverseGeocode(f.getGeometry().getCoordinates(), null, true);
+      return;
+    }
+  } else {
+    search._changeCounter++;
+    setTimeout(function() {
+      this.onGeometryChange(search, f, true);
+    }.bind(this), 1000);
+  }
+}
 
 /**
  * Set the map instance the control is associated with
@@ -365,7 +428,6 @@ ol_control_RoutingGeoportail.prototype.calculate = function (steps) {
     }.bind(this), 
     function(resp){
       console.log('ERROR', resp)
-      console.log(url + parameters, arguments);
       this.dispatchEvent({ type: 'error', status: resp.status, statusText: resp.statusText});
     }.bind(this)
   );

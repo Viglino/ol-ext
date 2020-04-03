@@ -35,7 +35,7 @@ var ol_control_SearchGeoportail = function(options) {
   options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
   ol_control_SearchJSON.call(this, options);
   this.set('type', options.type || 'StreetAddress,PositionOfInterest');
-
+  this.set('timeout', options.timeout || 2000);
   // Authentication
   // this._auth = options.authentication;
 };
@@ -45,11 +45,19 @@ ol_ext_inherits(ol_control_SearchGeoportail, ol_control_SearchJSON);
  * @param {ol.coordinate} coord
  * @api
  */
-ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, cback) {
+ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, cback, silent) {
+  var lonlat = ol_proj_transform(coord, this.getMap().getView().getProjection(), 'EPSG:4326');
+  if (!cback) {
+    this._handleSelect({ 
+      x: lonlat[0], 
+      y: lonlat[1], 
+      fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) 
+    }, true, silent);
+  }
+
   // Search type
   var type = this.get('type')==='Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress';
-  type = 'StreetAddress';
-  var lonlat = ol_proj_transform(coord, this.getMap().getView().getProjection(), 'EPSG:4326');
+  if (/,/.test(type)) type = 'StreetAddress';
   // request
   var request = '<?xml version="1.0" encoding="UTF-8"?>'
     +'<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
@@ -66,10 +74,12 @@ ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, cback) {
   this.ajax (this.get('url').replace('ols/apis/completion','geoportail/ols'), 
     { xls: request },
     function(xml) {
-      if (xml) {
+      var f = {};
+      if (!xml) {
+        f = { x: lonlat[0], y: lonlat[1], fulltext: String(lonlat) }
+      } else {
         xml = xml.replace(/\n|\r/g,'');
         var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
-        var f = {};
         if (!Number(p[1]) && !Number(p[0])) {
           f = { x: lonlat[0], y: lonlat[1], fulltext: String(lonlat) }
         } else {
@@ -91,16 +101,18 @@ ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, cback) {
             f.fulltext = f.zipcode+' '+f.city;
           }
         }
-        if (cback) {
-          cback.call(this, [f]);
-        } else {
-          this._handleSelect(f, true);
-          // this.setInput('', true);
-          // this.drawList_();
-        }
       }
-    }.bind(this),
-    { dataType: 'XML' }
+      if (cback) {
+        cback.call(this, [f]);
+      } else {
+        this._handleSelect(f, true, silent);
+        // this.setInput('', true);
+        // this.drawList_();
+      }
+    }.bind(this), {
+      timeout: this.get('timeout'),
+      dataType: 'XML'
+    }
   );
 };
 
@@ -150,7 +162,7 @@ ol_control_SearchGeoportail.prototype.handleResponse = function (response) {
  *	@param {any} f the feature, as passed in the autocomplete
  *	@api
  */
-ol_control_SearchGeoportail.prototype.select = function (f){
+ol_control_SearchGeoportail.prototype.select = function (f, reverse, silent){
   if (f.x || f.y) {
     var c = [Number(f.x), Number(f.y)];
     // Add coordinate to the event
@@ -160,10 +172,10 @@ ol_control_SearchGeoportail.prototype.select = function (f){
     // Get insee commune ?
     if (this.get('type')==='Commune') {
       this.searchCommune(f, function () {
-        this.dispatchEvent({ type:"select", search:f, coordinate: c });
+        this.dispatchEvent({ type:"select", search:f, coordinate: c, silent: silent });
       });
     } else {
-      this.dispatchEvent({ type:"select", search:f, coordinate: c });
+      this.dispatchEvent({ type:"select", search:f, coordinate: c, silent: silent });
     }
   } else {
     this.searchCommune(f);
