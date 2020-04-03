@@ -50,7 +50,7 @@ if (window.Element && !Element.prototype.remove) {
  */
 ol.ext.Ajax = function(options) {
   options = options || {};
-	ol.Object.call(this);
+  ol.Object.call(this);
   this._auth = options.auth;
   this.set('dataType', options.dataType || 'JSON');
 };
@@ -80,31 +80,32 @@ ol.ext.Ajax.get = function(options) {
  */
 ol.ext.Ajax.prototype.send = function (url, data, options){
   options = options || {};
-	var self = this;
+  var self = this;
   // Url
   var encode = (options.encode !== false) 
   if (encode) url = encodeURI(url);
   // Parameters
   var parameters = '';
-	for (var index in data) {
-		if (data.hasOwnProperty(index) && data[index]!==undefined) {
+  for (var index in data) {
+    if (data.hasOwnProperty(index) && data[index]!==undefined) {
       parameters += (parameters ? '&' : '?') + index + '=' + (encode ? encodeURIComponent(data[index]) : data[index]);
     }
   }
-	// Abort previous request
-	if (this._request && options.abort!==false) {
-		this._request.abort();
-	}
-	// New request
-	var ajax = this._request = new XMLHttpRequest();
-	ajax.open('GET', url + parameters, true);
-	if (this._auth) {
-		ajax.setRequestHeader("Authorization", "Basic " + this._auth);
-	}
+  // Abort previous request
+  if (this._request && options.abort!==false) {
+    this._request.abort();
+  }
+  // New request
+  var ajax = this._request = new XMLHttpRequest();
+  ajax.open('GET', url + parameters, true);
+  if (options.timeout) ajax.timeout = options.timeout;
+  if (this._auth) {
+    ajax.setRequestHeader("Authorization", "Basic " + this._auth);
+  }
   // Load complete
   this.dispatchEvent ({ type: 'loadstart' });
-	ajax.onload = function() {
-		self._request = null;
+  ajax.onload = function() {
+    self._request = null;
     self.dispatchEvent ({ type: 'loadend' });
     if (this.status >= 200 && this.status < 400) {
       var response;
@@ -150,9 +151,20 @@ ol.ext.Ajax.prototype.send = function (url, data, options){
         jqXHR: this
       });
     }
-	};
-	// Oops
-	ajax.onerror = function() {
+  };
+  // Oops
+  ajax.ontimeout = function() {
+    self._request = null;
+    self.dispatchEvent ({ type: 'loadend' });
+    self.dispatchEvent ({ 
+      type: 'error',
+      status: this.status,
+      statusText: 'Timeout',
+      options: options,
+      jqXHR: this
+    });
+  };
+  ajax.onerror = function() {
     self._request = null;
     self.dispatchEvent ({ type: 'loadend' });
     self.dispatchEvent ({ 
@@ -163,8 +175,8 @@ ol.ext.Ajax.prototype.send = function (url, data, options){
       jqXHR: this
     });
   };
-	// GO!
-	ajax.send();
+  // GO!
+  ajax.send();
 };
 
 /** Vanilla JS helper to manipulate DOM without jQuery
@@ -1320,16 +1332,17 @@ ol.control.Search.prototype.setInput = function (value, search) {
 *	@param {any} f the feature, as passed in the autocomplete
 *	@api * @param {boolean} reverse true if reverse geocode
 */
-ol.control.Search.prototype.select = function (f, reverse) {
-  this.dispatchEvent({ type:"select", search:f, reverse: !!reverse });
+ol.control.Search.prototype.select = function (f, reverse, silent) {
+  this.dispatchEvent({ type:"select", search:f, reverse: !!reverse, silent: silent });
 };
 /**
  * Save history and select
  * @param {*} f 
  * @param {boolean} reverse true if reverse geocode
+ * @param {boolean} silent prevent sending en eventif 
  * @private
  */
-ol.control.Search.prototype._handleSelect = function (f, reverse) {
+ol.control.Search.prototype._handleSelect = function (f, reverse, silent) {
   if (!f) return;
   // Save input in history
   var hist = this.get('history');
@@ -1355,7 +1368,7 @@ ol.control.Search.prototype._handleSelect = function (f, reverse) {
   } 
   this.saveHistory();
   // Select feature
-  this.select(f, reverse);
+  this.select(f, reverse, silent);
   //this.drawList_();
 };
 /** Current history */
@@ -1510,10 +1523,12 @@ ol.control.SearchJSON = function(options) {
     if (resp.status >= 200 && resp.status < 400) {
       if (typeof(this._callback) === 'function') this._callback(resp.response);
     } else {
+      if (typeof(this._callback) === 'function') this._callback(false, 'error');
       console.log('AJAX ERROR', arguments);
     }
   }.bind(this));
   this._ajax.on('error', function() {
+    if (typeof(this._callback) === 'function') this._callback(false, 'error');
     console.log('AJAX ERROR', arguments);
   }.bind(this));
   // Handle searchin
@@ -1730,6 +1745,7 @@ ol.control.SearchGeoportail = function(options) {
   options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
   ol.control.SearchJSON.call(this, options);
   this.set('type', options.type || 'StreetAddress,PositionOfInterest');
+  this.set('timeout', options.timeout || 2000);
   // Authentication
   // this._auth = options.authentication;
 };
@@ -1738,11 +1754,18 @@ ol.ext.inherits(ol.control.SearchGeoportail, ol.control.SearchJSON);
  * @param {ol.coordinate} coord
  * @api
  */
-ol.control.SearchGeoportail.prototype.reverseGeocode = function (coord, cback) {
+ol.control.SearchGeoportail.prototype.reverseGeocode = function (coord, cback, silent) {
+  var lonlat = ol.proj.transform(coord, this.getMap().getView().getProjection(), 'EPSG:4326');
+  if (!cback) {
+    this._handleSelect({ 
+      x: lonlat[0], 
+      y: lonlat[1], 
+      fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) 
+    }, true, silent);
+  }
   // Search type
   var type = this.get('type')==='Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress';
-  type = 'StreetAddress';
-  var lonlat = ol.proj.transform(coord, this.getMap().getView().getProjection(), 'EPSG:4326');
+  if (/,/.test(type)) type = 'StreetAddress';
   // request
   var request = '<?xml version="1.0" encoding="UTF-8"?>'
     +'<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
@@ -1758,10 +1781,12 @@ ol.control.SearchGeoportail.prototype.reverseGeocode = function (coord, cback) {
   this.ajax (this.get('url').replace('ols/apis/completion','geoportail/ols'), 
     { xls: request },
     function(xml) {
-      if (xml) {
+      var f = {};
+      if (!xml) {
+        f = { x: lonlat[0], y: lonlat[1], fulltext: String(lonlat) }
+      } else {
         xml = xml.replace(/\n|\r/g,'');
         var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
-        var f = {};
         if (!Number(p[1]) && !Number(p[0])) {
           f = { x: lonlat[0], y: lonlat[1], fulltext: String(lonlat) }
         } else {
@@ -1783,16 +1808,18 @@ ol.control.SearchGeoportail.prototype.reverseGeocode = function (coord, cback) {
             f.fulltext = f.zipcode+' '+f.city;
           }
         }
-        if (cback) {
-          cback.call(this, [f]);
-        } else {
-          this._handleSelect(f, true);
-          // this.setInput('', true);
-          // this.drawList_();
-        }
       }
-    }.bind(this),
-    { dataType: 'XML' }
+      if (cback) {
+        cback.call(this, [f]);
+      } else {
+        this._handleSelect(f, true, silent);
+        // this.setInput('', true);
+        // this.drawList_();
+      }
+    }.bind(this), {
+      timeout: this.get('timeout'),
+      dataType: 'XML'
+    }
   );
 };
 /** Returns the text to be displayed in the menu
@@ -1838,7 +1865,7 @@ ol.control.SearchGeoportail.prototype.handleResponse = function (response) {
  *	@param {any} f the feature, as passed in the autocomplete
  *	@api
  */
-ol.control.SearchGeoportail.prototype.select = function (f){
+ol.control.SearchGeoportail.prototype.select = function (f, reverse, silent){
   if (f.x || f.y) {
     var c = [Number(f.x), Number(f.y)];
     // Add coordinate to the event
@@ -1848,10 +1875,10 @@ ol.control.SearchGeoportail.prototype.select = function (f){
     // Get insee commune ?
     if (this.get('type')==='Commune') {
       this.searchCommune(f, function () {
-        this.dispatchEvent({ type:"select", search:f, coordinate: c });
+        this.dispatchEvent({ type:"select", search:f, coordinate: c, silent: silent });
       });
     } else {
-      this.dispatchEvent({ type:"select", search:f, coordinate: c });
+      this.dispatchEvent({ type:"select", search:f, coordinate: c, silent: silent });
     }
   } else {
     this.searchCommune(f);
@@ -7520,6 +7547,7 @@ ol.control.RoutingGeoportail = function(options) {
   if (options.typing == undefined) options.typing = 300;
   // Class name for history
   this._classname = options.className || 'search';
+  this._source = new ol.source.Vector();
   // Authentication
   this._auth = options.authentication;
   var element = document.createElement("DIV");
@@ -7539,7 +7567,6 @@ ol.control.RoutingGeoportail = function(options) {
     target: options.target
   });
   this.set('url', 'https://wxs.ign.fr/'+options.apiKey+'/itineraire/rest/route.json');
-  this._search = [];
   var content = ol.ext.element.create('DIV', { className: 'content', parent: element } )
   var listElt = ol.ext.element.create('DIV', { className: 'search-input', parent: content });
   this._search = [];
@@ -7584,16 +7611,35 @@ ol.control.RoutingGeoportail.prototype.addButton = function (className, title, i
   this.element.appendChild(bt);
   return bt;
 };
+/** Get point source
+ * @return {ol.source.Vector }
+ */
+ol.control.RoutingGeoportail.prototype.getSource = function () {
+  return this._source;
+};
+ol.control.RoutingGeoportail.prototype._resetArray = function (element) {
+  this._search = [];
+  var q = element.parentNode.querySelectorAll('.search-input > div')
+  q.forEach(function(d) {
+    if (d.olsearch) {
+      if (d.olsearch.get('feature')) {
+        d.olsearch.get('feature').set('step', this._search.length);
+        if (this._search.length===0) d.olsearch.get('feature').set('pos', 'start');
+        else if (this._search.length === q.length-1) d.olsearch.get('feature').set('pos', 'end');
+        else d.olsearch.get('feature').set('pos', '');
+      }
+      this._search.push(d.olsearch);
+    }
+  }.bind(this));
+};
 /** Remove a new search input
  * @private
  */
 ol.control.RoutingGeoportail.prototype.removeSearch = function (element, options, after) {
   element.removeChild(after);
+  if (after.olsearch.get('feature')) this._source.removeFeature(after.olsearch.get('feature'));
   if (this.getMap()) this.getMap().removeControl(after.olsearch);
-  this._search = [];
-  element.querySelectorAll('div').forEach(function(d) {
-    if (d.olsearch) this._search.push(d.olsearch);
-  }.bind(this));
+  this._resetArray(element);
 };
 /** Add a new search input
  * @private
@@ -7618,20 +7664,60 @@ ol.control.RoutingGeoportail.prototype.addSearch = function (element, options, a
     target: div,
     reverse: true
   });
-  this._search = [];
-  element.querySelectorAll('div').forEach(function(d) {
-    if (d.olsearch) this._search.push(d.olsearch);
-  }.bind(this));
+  search._changeCounter = 0;
+  this._resetArray(element);
   search.on('select', function(e){
     search.setInput(e.search.fulltext);
+    var f = search.get('feature');
+    if (!f) {
+      f = new ol.Feature(new ol.geom.Point(e.coordinate));
+      search.set('feature', f);
+      this._source.addFeature(f);
+      // Check geometry change
+      search.checkgeom = true;
+      f.getGeometry().on('change', function(e) {
+        if (search.checkgeom) this.onGeometryChange(search, f);
+      }.bind(this));
+    } else {
+      search.checkgeom = false;
+      if (!e.silent) f.getGeometry().setCoordinates(e.coordinate);
+      search.checkgeom = true;
+    }
+    f.set('name', search.getTitle(e.search));
+    f.set('step', this._search.indexOf(search));
+    if (f.get('step') === 0) f.set('pos','start');
+    else if (f.get('step') === this._search.length-1) f.set('pos','end');
     search.set('selection', e.search);
-  });
+  }.bind(this));
   search.element.querySelector('input').addEventListener('change', function(){
     search.set('selection', null);
     self.resultElement.innerHTML = '';
   });
   if (this.getMap()) this.getMap().addControl(search);
 };
+/** Geometry has changed
+ * @private
+ */
+ol.control.RoutingGeoportail.prototype.onGeometryChange = function (search, f, delay) {
+  var lonlat = ol.proj.transform(f.getGeometry().getCoordinates(), this.getMap().getView().getProjection(), 'EPSG:4326');
+  search._handleSelect({ 
+    x: lonlat[0], 
+    y: lonlat[1], 
+    fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) 
+  }, null, true);
+  if (delay) {
+    search._changeCounter--;
+    if (!search._changeCounter) {
+      search.reverseGeocode(f.getGeometry().getCoordinates(), null, true);
+      return;
+    }
+  } else {
+    search._changeCounter++;
+    setTimeout(function() {
+      this.onGeometryChange(search, f, true);
+    }.bind(this), 1000);
+  }
+}
 /**
  * Set the map instance the control is associated with
  * and add its controls associated to this map.
@@ -7810,7 +7896,6 @@ ol.control.RoutingGeoportail.prototype.calculate = function (steps) {
     }.bind(this), 
     function(resp){
       console.log('ERROR', resp)
-      console.log(url + parameters, arguments);
       this.dispatchEvent({ type: 'error', status: resp.status, statusText: resp.statusText});
     }.bind(this)
   );
@@ -14860,7 +14945,7 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(simulate, coord, accur
  * @fires hover, enter, leave
  * @param {olx.interaction.HoverOptions} 
  *  @param { string | undefined } options.cursor css cursor propertie or a function that gets a feature, default: none
- *  @param {function | undefined} optionsfeatureFilter filter a function with two arguments, the feature and the layer of the feature. Return true to select the feature 
+ *  @param {function | undefined} options.featureFilter filter a function with two arguments, the feature and the layer of the feature. Return true to select the feature 
  *  @param {function | undefined} options.layerFilter filter a function with one argument, the layer to test. Return true to test the layer
  *  @param {Array<ol.layer> | undefined} options.layers a set of layers to test
  *  @param {number | undefined} options.hitTolerance Hit-detection tolerance in pixels.
