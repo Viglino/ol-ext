@@ -30,6 +30,7 @@ import ol_control_SearchGeoportail from './SearchGeoportail'
  *	@param {integer | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
  *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index.
  *	@param {function} options.autocomplete a function that take a search string and callback function to send an array
+ *	@param {number} options.timeout default 10s
  */
 var ol_control_RoutingGeoportail = function(options) {
   var self = this;
@@ -94,6 +95,7 @@ var ol_control_RoutingGeoportail = function(options) {
   element.appendChild(this.resultElement);
 
   this.setMode(options.mode || 'car');
+  this.set('timeout', options.timeout || 10000);
 };
 ol_ext_inherits(ol_control_RoutingGeoportail, ol_control_Control);
 
@@ -261,14 +263,15 @@ ol_control_RoutingGeoportail.prototype.listRouting = function (routing) {
  * @private
  */
 ol_control_RoutingGeoportail.prototype.handleResponse = function (data, start, end) {
+  if (data.status === 'ERROR') {
+    this.dispatchEvent({
+      type: 'errror',
+      status: '200',
+      statusText: data.message
+    })
+    return;
+  }
   var routing = { type:'routing' };
-/*
-  var format = new ol_format_WKT();
-  routing.features = [ format.readFeature(data.geometryWkt, {
-    dataProjection: 'EPSG:4326',
-    featureProjection: this.getMap().getView().getProjection()
-  }) ];
-*/
   routing.features = [];
   var distance = 0;
   var duration = 0;
@@ -356,11 +359,15 @@ ol_control_RoutingGeoportail.prototype.calculate = function (steps) {
       if (resp.status >= 200 && resp.status < 400) {
         self.listRouting(self.handleResponse (JSON.parse(resp.response), start, end));
       } else {
-        console.log(url + parameters, arguments);
+        //console.log(url + parameters, arguments);
+        this.dispatchEvent({ type: 'error', status: resp.status, statusText: resp.statusText});
       }
-    }, function(){
+    }.bind(this), 
+    function(resp){
+      console.log('ERROR', resp)
       console.log(url + parameters, arguments);
-    }
+      this.dispatchEvent({ type: 'error', status: resp.status, statusText: resp.statusText});
+    }.bind(this)
   );
 
   return true;
@@ -382,6 +389,8 @@ ol_control_RoutingGeoportail.prototype.ajax = function (url, onsuccess, onerror)
   // New request
   var ajax = this._request = new XMLHttpRequest();
   ajax.open('GET', url, true);
+  ajax.timeout = this.get('timeout') || 10000;
+
   if (this._auth) {
     ajax.setRequestHeader("Authorization", "Basic " + this._auth);
   }
@@ -394,11 +403,18 @@ ol_control_RoutingGeoportail.prototype.ajax = function (url, onsuccess, onerror)
     onsuccess.call(self, this);
   };
 
+  // Timeout
+  ajax.ontimeout = function (e) {
+    self._request = null;
+    self.element.classList.remove('ol-searching');
+    if (onerror) onerror.call(self, this);
+  };
+  
   // Oops, TODO do something ?
   ajax.onerror = function() {
     self._request = null;
     self.element.classList.remove('ol-searching');
-    if (onerror) onerror.call(self);
+    if (onerror) onerror.call(self, this);
   };
 
   // GO!
