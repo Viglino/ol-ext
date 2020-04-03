@@ -11,7 +11,7 @@ import ol_Object from 'ol/Object'
 var ol_ext_Ajax = function(options) {
   options = options || {};
 
-	ol_Object.call(this);
+  ol_Object.call(this);
 
   this._auth = options.auth;
   this.set('dataType', options.dataType || 'JSON');
@@ -44,35 +44,36 @@ ol_ext_Ajax.get = function(options) {
  */
 ol_ext_Ajax.prototype.send = function (url, data, options){
   options = options || {};
-	var self = this;
+  var self = this;
   // Url
   var encode = (options.encode !== false) 
   if (encode) url = encodeURI(url);
 
   // Parameters
   var parameters = '';
-	for (var index in data) {
-		if (data.hasOwnProperty(index) && data[index]!==undefined) {
+  for (var index in data) {
+    if (data.hasOwnProperty(index) && data[index]!==undefined) {
       parameters += (parameters ? '&' : '?') + index + '=' + (encode ? encodeURIComponent(data[index]) : data[index]);
     }
   }
 
-	// Abort previous request
-	if (this._request && options.abort!==false) {
-		this._request.abort();
-	}
+  // Abort previous request
+  if (this._request && options.abort!==false) {
+    this._request.abort();
+  }
 
-	// New request
-	var ajax = this._request = new XMLHttpRequest();
-	ajax.open('GET', url + parameters, true);
-	if (this._auth) {
-		ajax.setRequestHeader("Authorization", "Basic " + this._auth);
-	}
+  // New request
+  var ajax = this._request = new XMLHttpRequest();
+  ajax.open('GET', url + parameters, true);
+  if (options.timeout) ajax.timeout = options.timeout;
+  if (this._auth) {
+    ajax.setRequestHeader("Authorization", "Basic " + this._auth);
+  }
 
   // Load complete
   this.dispatchEvent ({ type: 'loadstart' });
-	ajax.onload = function() {
-		self._request = null;
+  ajax.onload = function() {
+    self._request = null;
     self.dispatchEvent ({ type: 'loadend' });
     if (this.status >= 200 && this.status < 400) {
       var response;
@@ -118,10 +119,21 @@ ol_ext_Ajax.prototype.send = function (url, data, options){
         jqXHR: this
       });
     }
-	};
+  };
 
-	// Oops
-	ajax.onerror = function() {
+  // Oops
+  ajax.ontimeout = function() {
+    self._request = null;
+    self.dispatchEvent ({ type: 'loadend' });
+    self.dispatchEvent ({ 
+      type: 'error',
+      status: this.status,
+      statusText: 'Timeout',
+      options: options,
+      jqXHR: this
+    });
+  };
+  ajax.onerror = function() {
     self._request = null;
     self.dispatchEvent ({ type: 'loadend' });
     self.dispatchEvent ({ 
@@ -133,8 +145,8 @@ ol_ext_Ajax.prototype.send = function (url, data, options){
     });
   };
 
-	// GO!
-	ajax.send();
+  // GO!
+  ajax.send();
 };
 
 export default ol_ext_Ajax
