@@ -211,17 +211,19 @@ ol_control_RoutingGeoportail.prototype.addSearch = function (element, options, a
  * @private
  */
 ol_control_RoutingGeoportail.prototype.onGeometryChange = function (search, f, delay) {
+  // Set current geom 
   var lonlat = ol_proj_transform(f.getGeometry().getCoordinates(), this.getMap().getView().getProjection(), 'EPSG:4326');
   search._handleSelect({ 
     x: lonlat[0], 
     y: lonlat[1], 
     fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) 
-  }, null, true);
+  }, true, { silent: true });
 
+  // Try to revers geocode
   if (delay) {
     search._changeCounter--;
     if (!search._changeCounter) {
-      search.reverseGeocode(f.getGeometry().getCoordinates(), null, true);
+      search.reverseGeocode(f.getGeometry().getCoordinates(), { silent: true });
       return;
     }
   } else {

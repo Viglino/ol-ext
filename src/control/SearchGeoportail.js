@@ -43,17 +43,16 @@ ol_ext_inherits(ol_control_SearchGeoportail, ol_control_SearchJSON);
 
 /** Reverse geocode
  * @param {ol.coordinate} coord
+ * @param {function|*} options callback function called when revers located or options passed to the select event
  * @api
  */
-ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, cback, silent) {
+ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, options) {
   var lonlat = ol_proj_transform(coord, this.getMap().getView().getProjection(), 'EPSG:4326');
-  if (!cback) {
-    this._handleSelect({ 
-      x: lonlat[0], 
-      y: lonlat[1], 
-      fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) 
-    }, true, silent);
-  }
+  this._handleSelect({ 
+    x: lonlat[0], 
+    y: lonlat[1], 
+    fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) 
+  }, true, options);
 
   // Search type
   var type = this.get('type')==='Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress';
@@ -102,10 +101,10 @@ ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, cback, s
           }
         }
       }
-      if (cback) {
+      if (typeof(cback)==='function') {
         cback.call(this, [f]);
       } else {
-        this._handleSelect(f, true, silent);
+        this._handleSelect(f, true, options);
         // this.setInput('', true);
         // this.drawList_();
       }
@@ -159,10 +158,13 @@ ol_control_SearchGeoportail.prototype.handleResponse = function (response) {
 };
 
 /** A ligne has been clicked in the menu > dispatch event
- *	@param {any} f the feature, as passed in the autocomplete
+ * @param {any} f the feature, as passed in the autocomplete
+ * @param {boolean} reverse true if reverse geocode
+ * @param {ol.coordinate} coord
+ * @param {*} options options passed to the event
  *	@api
  */
-ol_control_SearchGeoportail.prototype.select = function (f, reverse, silent){
+ol_control_SearchGeoportail.prototype.select = function (f, reverse, coord, options){
   if (f.x || f.y) {
     var c = [Number(f.x), Number(f.y)];
     // Add coordinate to the event
@@ -172,10 +174,12 @@ ol_control_SearchGeoportail.prototype.select = function (f, reverse, silent){
     // Get insee commune ?
     if (this.get('type')==='Commune') {
       this.searchCommune(f, function () {
-        this.dispatchEvent({ type:"select", search:f, coordinate: c, silent: silent });
+        ol_control_Search.prototype.select.call(this, f, reverse, c, options);
+        //this.dispatchEvent({ type:"select", search:f, coordinate: c, revers: reverse, options: options });
       });
     } else {
-      this.dispatchEvent({ type:"select", search:f, coordinate: c, silent: silent });
+        ol_control_Search.prototype.select.call(this, f, reverse, c, options);
+        //this.dispatchEvent({ type:"select", search:f, coordinate: c, revers: reverse, options: options });
     }
   } else {
     this.searchCommune(f);

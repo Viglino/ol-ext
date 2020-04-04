@@ -281,22 +281,31 @@ ol_control_Search.prototype.setInput = function (value, search) {
   if (search) this._triggerCustomEvent("keyup", input);
 };
 
-/** A ligne has been clicked in the menu > dispatch event
-*	@param {any} f the feature, as passed in the autocomplete
-*	@api * @param {boolean} reverse true if reverse geocode
-*/
-ol_control_Search.prototype.select = function (f, reverse, silent) {
-  this.dispatchEvent({ type:"select", search:f, reverse: !!reverse, silent: silent });
+/** A line has been clicked in the menu > dispatch event
+ * @param {any} f the feature, as passed in the autocomplete
+ * @param {boolean} reverse true if reverse geocode
+ * @param {ol.coordinate} coord
+ * @param {*} options options passed to the event
+ *	@api
+ */
+ol_control_Search.prototype.select = function (f, reverse, coord, options) {
+  var event = { type:"select", search:f, reverse: !!reverse, coordinate: coord };
+  if (options) {
+    for (var i in options) {
+      event[i] = options[i];
+    }
+  }
+  this.dispatchEvent(event);
 };
 
 /**
  * Save history and select
  * @param {*} f 
  * @param {boolean} reverse true if reverse geocode
- * @param {boolean} silent prevent sending en eventif 
+ * @param {*} options options send in the event 
  * @private
  */
-ol_control_Search.prototype._handleSelect = function (f, reverse, silent) {
+ol_control_Search.prototype._handleSelect = function (f, reverse, options) {
   if (!f) return;
   // Save input in history
   var hist = this.get('history');
@@ -322,7 +331,7 @@ ol_control_Search.prototype._handleSelect = function (f, reverse, silent) {
   } 
   this.saveHistory();
   // Select feature
-  this.select(f, reverse, silent);
+  this.select(f, reverse, null, options);
   //this.drawList_();
 };
 
