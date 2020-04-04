@@ -1328,21 +1328,30 @@ ol.control.Search.prototype.setInput = function (value, search) {
   input.value = value;
   if (search) this._triggerCustomEvent("keyup", input);
 };
-/** A ligne has been clicked in the menu > dispatch event
-*	@param {any} f the feature, as passed in the autocomplete
-*	@api * @param {boolean} reverse true if reverse geocode
-*/
-ol.control.Search.prototype.select = function (f, reverse, silent) {
-  this.dispatchEvent({ type:"select", search:f, reverse: !!reverse, silent: silent });
+/** A line has been clicked in the menu > dispatch event
+ * @param {any} f the feature, as passed in the autocomplete
+ * @param {boolean} reverse true if reverse geocode
+ * @param {ol.coordinate} coord
+ * @param {*} options options passed to the event
+ *	@api
+ */
+ol.control.Search.prototype.select = function (f, reverse, coord, options) {
+  var event = { type:"select", search:f, reverse: !!reverse, coordinate: coord };
+  if (options) {
+    for (var i in options) {
+      event[i] = options[i];
+    }
+  }
+  this.dispatchEvent(event);
 };
 /**
  * Save history and select
  * @param {*} f 
  * @param {boolean} reverse true if reverse geocode
- * @param {boolean} silent prevent sending en eventif 
+ * @param {*} options options send in the event 
  * @private
  */
-ol.control.Search.prototype._handleSelect = function (f, reverse, silent) {
+ol.control.Search.prototype._handleSelect = function (f, reverse, options) {
   if (!f) return;
   // Save input in history
   var hist = this.get('history');
@@ -1368,7 +1377,7 @@ ol.control.Search.prototype._handleSelect = function (f, reverse, silent) {
   } 
   this.saveHistory();
   // Select feature
-  this.select(f, reverse, silent);
+  this.select(f, reverse, null, options);
   //this.drawList_();
 };
 /** Current history */
@@ -1752,17 +1761,16 @@ ol.control.SearchGeoportail = function(options) {
 ol.ext.inherits(ol.control.SearchGeoportail, ol.control.SearchJSON);
 /** Reverse geocode
  * @param {ol.coordinate} coord
+ * @param {function|*} options callback function called when revers located or options passed to the select event
  * @api
  */
-ol.control.SearchGeoportail.prototype.reverseGeocode = function (coord, cback, silent) {
+ol.control.SearchGeoportail.prototype.reverseGeocode = function (coord, options) {
   var lonlat = ol.proj.transform(coord, this.getMap().getView().getProjection(), 'EPSG:4326');
-  if (!cback) {
-    this._handleSelect({ 
-      x: lonlat[0], 
-      y: lonlat[1], 
-      fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) 
-    }, true, silent);
-  }
+  this._handleSelect({ 
+    x: lonlat[0], 
+    y: lonlat[1], 
+    fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) 
+  }, true, options);
   // Search type
   var type = this.get('type')==='Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress';
   if (/,/.test(type)) type = 'StreetAddress';
@@ -1809,10 +1817,10 @@ ol.control.SearchGeoportail.prototype.reverseGeocode = function (coord, cback, s
           }
         }
       }
-      if (cback) {
+      if (typeof(cback)==='function') {
         cback.call(this, [f]);
       } else {
-        this._handleSelect(f, true, silent);
+        this._handleSelect(f, true, options);
         // this.setInput('', true);
         // this.drawList_();
       }
@@ -1862,10 +1870,13 @@ ol.control.SearchGeoportail.prototype.handleResponse = function (response) {
 	return features;
 };
 /** A ligne has been clicked in the menu > dispatch event
- *	@param {any} f the feature, as passed in the autocomplete
+ * @param {any} f the feature, as passed in the autocomplete
+ * @param {boolean} reverse true if reverse geocode
+ * @param {ol.coordinate} coord
+ * @param {*} options options passed to the event
  *	@api
  */
-ol.control.SearchGeoportail.prototype.select = function (f, reverse, silent){
+ol.control.SearchGeoportail.prototype.select = function (f, reverse, coord, options){
   if (f.x || f.y) {
     var c = [Number(f.x), Number(f.y)];
     // Add coordinate to the event
@@ -1875,10 +1886,12 @@ ol.control.SearchGeoportail.prototype.select = function (f, reverse, silent){
     // Get insee commune ?
     if (this.get('type')==='Commune') {
       this.searchCommune(f, function () {
-        this.dispatchEvent({ type:"select", search:f, coordinate: c, silent: silent });
+        ol.control.Search.prototype.select.call(this, f, reverse, c, options);
+        //this.dispatchEvent({ type:"select", search:f, coordinate: c, revers: reverse, options: options });
       });
     } else {
-      this.dispatchEvent({ type:"select", search:f, coordinate: c, silent: silent });
+        ol.control.Search.prototype.select.call(this, f, reverse, c, options);
+        //this.dispatchEvent({ type:"select", search:f, coordinate: c, revers: reverse, options: options });
     }
   } else {
     this.searchCommune(f);
@@ -7699,16 +7712,18 @@ ol.control.RoutingGeoportail.prototype.addSearch = function (element, options, a
  * @private
  */
 ol.control.RoutingGeoportail.prototype.onGeometryChange = function (search, f, delay) {
+  // Set current geom 
   var lonlat = ol.proj.transform(f.getGeometry().getCoordinates(), this.getMap().getView().getProjection(), 'EPSG:4326');
   search._handleSelect({ 
     x: lonlat[0], 
     y: lonlat[1], 
     fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) 
-  }, null, true);
+  }, true, { silent: true });
+  // Try to revers geocode
   if (delay) {
     search._changeCounter--;
     if (!search._changeCounter) {
-      search.reverseGeocode(f.getGeometry().getCoordinates(), null, true);
+      search.reverseGeocode(f.getGeometry().getCoordinates(), { silent: true });
       return;
     }
   } else {
