@@ -42,17 +42,21 @@
     .ol-popup.tooltips img {
       display:none;
     }
+    /* Custom red style (tips) */
+    .ol-popup.red > div {
+      background-color: red;
+    }
+    .ol-popup.red .anchor {
+      color: red;
+    }
 
     /* Custom orange style (tips) */
-    .ol-popup.tips.orange {
+    .ol-popup.tips.orange > div {
       border-color:#da7;
       background-color:#eca;
     }
-    .ol-popup.tips.orange .anchor::before {
-      border-color: #da7 transparent;
-    }
-    .ol-popup-middle.tips.orange .anchor::before {
-      border-color: transparent #da7;
+    .ol-popup.tips.orange .anchor {
+      color: #da7;
     }
 
     /* orange style (default) */
@@ -68,11 +72,8 @@
     .ol-popup-middle.default.orange .anchor::after {
       margin: -10.5px -27px /*border:4 +2 px */; 
     }
-    .ol-popup.default.orange .anchor::before {
-      border-color: #f96 transparent;
-    }
-    .ol-popup-middle.default.orange .anchor::before {
-      border-color: transparent #da7;
+    .ol-popup.default.orange .anchor {
+      color: #f96;
     }
     .ol-popup.default.orange .closeBox {
       background-color: rgba(255, 153, 102, 0.7);
@@ -142,6 +143,7 @@
       <option value="default">default</option>
       <option value="default orange">orange</option>
       <option value="black">black</option>
+      <option value="red black">red</option>
       <option value="tips">green tips</option>
       <option value="tips orange">orange tips</option>
       <option value="warning">warning</option>

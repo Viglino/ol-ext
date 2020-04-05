@@ -204,10 +204,13 @@
   transform: translate(-20, 0);
 }
 
+.ol-popup.default .anchor {
+  color: #69f;
+}
 .ol-popup.default .anchor:after,
 .ol-popup.default .anchor:before {
   content:"";
-  border-color: #69f transparent;
+  border-color: currentColor transparent;
   border-style: solid;
   border-width: 11px;
   margin: 0 -11px;
@@ -232,7 +235,7 @@
 
 .ol-popup-middle.default .anchor:before {
   margin: -11px -33px;
-  border-color: transparent #69f;
+  border-color: transparent currentColor;
 }
 .ol-popup-middle.default .anchor:after {
   margin: -11px -31px;
@@ -428,11 +431,13 @@
 }
 
 .ol-popup.black {
+  margin: -20px 0;
+  transform: translate(0, -40px);
+}
+.ol-popup.black > div{
   background-color: rgba(0,0,0,0.6);
   border-radius: 5px;
   color:#fff;
-  margin: -20px 0;
-  transform: translate(0, -40px);
 }
 .ol-popup-top.ol-popup.black {
   margin: 20px 0;
@@ -468,30 +473,31 @@
 
 .ol-popup.black .anchor {
   margin: -20px 11px;
+  color: rgba(0,0,0,0.6);
 } 
 .ol-popup.black .anchor:before {
   content:"";
-  border-color: rgba(0,0,0,0.6) transparent;
+  border-color: currentColor transparent;
   border-style: solid;
   border-width: 20px 11px;
 }
 
-.ol-popup-top.black .anchor:before
-{	border-top:0;
+.ol-popup-top.black .anchor:before {
+  border-top:0;
   top:0;
 }
 
-.ol-popup-bottom.black .anchor:before
-{	border-bottom:0;
+.ol-popup-bottom.black .anchor:before {
+  border-bottom:0;
   bottom:0;
 }
 
-.ol-popup-middle.black .anchor:before
-{	margin: -20px -22px;
-  border-color: transparent rgba(0,0,0,0.6);
+.ol-popup-middle.black .anchor:before {
+  margin: -20px -22px;
+  border-color: transparent currentColor;
 }
-.ol-popup-middle.ol-popup-left.black .anchor:before
-{	border-left:0;
+.ol-popup-middle.ol-popup-left.black .anchor:before {
+  border-left:0;
 }
 .ol-popup-middle.ol-popup-right.black .anchor:before {
   border-right:0;
@@ -515,12 +521,14 @@
 }
 
 .ol-popup.tips {
+  margin: -20px 0;
+  transform: translate(0,-40px);
+}
+.ol-popup.tips > div {
   background-color: #cea;
   border: 5px solid #ad7;
   border-radius: 5px;
   color:#333;
-  margin: -20px 0;
-  transform: translate(0,-40px);
 }
 .ol-popup-top.ol-popup.tips {
   margin: 20px 0;
@@ -556,11 +564,12 @@
 }
 
 .ol-popup.tips .anchor {
-  margin: -25px 16px;
+  margin: -18px 22px;
+  color: #ad7;
 } 
 .ol-popup.tips .anchor:before {
   content:"";
-  border-color: #ad7 transparent;
+  border-color: currentColor transparent;
   border-style: solid;
   border-width: 20px 11px;
 }
@@ -588,7 +597,7 @@
 
 .ol-popup-middle.tips .anchor:before {
   margin: -6px -41px;
-  border-color: transparent #ad7;
+  border-color: transparent currentColor;
   border-width:6px 20px;
 }
 .ol-popup-middle.ol-popup-left.tips .anchor:before {
