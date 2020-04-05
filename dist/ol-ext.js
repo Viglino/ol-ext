@@ -1817,8 +1817,8 @@ ol.control.SearchGeoportail.prototype.reverseGeocode = function (coord, options)
           }
         }
       }
-      if (typeof(cback)==='function') {
-        cback.call(this, [f]);
+      if (typeof(options)==='function') {
+        options.call(this, [f]);
       } else {
         this._handleSelect(f, true, options);
         // this.setInput('', true);
@@ -7608,12 +7608,16 @@ ol.control.RoutingGeoportail = function(options) {
   this.set('timeout', options.timeout || 10000);
 };
 ol.ext.inherits(ol.control.RoutingGeoportail, ol.control.Control);
-ol.control.RoutingGeoportail.prototype.setMode = function (mode) {
+ol.control.RoutingGeoportail.prototype.setMode = function (mode, silent) {
   this.set('mode', mode);
   this.element.querySelector(".ol-car").classList.remove("selected");
   this.element.querySelector(".ol-pedestrian").classList.remove("selected");
   this.element.querySelector(".ol-"+mode).classList.add("selected");
-  this.calculate();
+  if (!silent) this.calculate();
+};
+ol.control.RoutingGeoportail.prototype.setMethod = function (method, silent) {
+  this.set('method', method);
+  if (!silent) this.calculate();
 };
 ol.control.RoutingGeoportail.prototype.addButton = function (className, title, info) {
   var bt = document.createElement("I");
@@ -7688,7 +7692,7 @@ ol.control.RoutingGeoportail.prototype.addSearch = function (element, options, a
       this._source.addFeature(f);
       // Check geometry change
       search.checkgeom = true;
-      f.getGeometry().on('change', function(e) {
+      f.getGeometry().on('change', function() {
         if (search.checkgeom) this.onGeometryChange(search, f);
       }.bind(this));
     } else {
@@ -7759,7 +7763,7 @@ ol.control.RoutingGeoportail.prototype.requestData = function (steps) {
     'gp-access-lib': '1.1.0',
     origin: start.x+','+start.y,
     destination: end.x+','+end.y,
-    method: 'time', // 'distance'
+    method: this.get('method') || 'time', // 'distance'
     graphName: this.get('mode')==='pedestrian' ? 'Pieton' : 'Voiture',
     waypoints: waypoints,
     format: 'STANDARDEXT'
@@ -7942,7 +7946,7 @@ ol.control.RoutingGeoportail.prototype.ajax = function (url, onsuccess, onerror)
     onsuccess.call(self, this);
   };
   // Timeout
-  ajax.ontimeout = function (e) {
+  ajax.ontimeout = function () {
     self._request = null;
     self.element.classList.remove('ol-searching');
     if (onerror) onerror.call(self, this);
@@ -22689,7 +22693,7 @@ ol.Overlay.Popup = function (options) {
     element.addEventListener("touchstart", function(e){ e.stopPropagation(); });
   }
   ol.Overlay.call(this, options);
-  this._elt = this.element;
+  this._elt = element;
   // call setPositioning first in constructor so getClassPositioning is called only once
   this.setPositioning(options.positioning || 'auto');
   this.setPopupClass(options.popupClass || options.className || 'default');
@@ -22721,8 +22725,8 @@ ol.Overlay.Popup.prototype.getClassPositioning = function () {
  */
 ol.Overlay.Popup.prototype.setClosebox = function (b) {
   this.closeBox = b;
-  if (b) this._elt.classList.add("hasclosebox");
-  else this._elt.classList.remove("hasclosebox");
+  if (b) this.element.classList.add("hasclosebox");
+  else this.element.classList.remove("hasclosebox");
 };
 /**
  * Set the CSS class of the popup.
@@ -22730,7 +22734,7 @@ ol.Overlay.Popup.prototype.setClosebox = function (b) {
  * @api stable
  */
 ol.Overlay.Popup.prototype.setPopupClass = function (c) {
-  this._elt.className = "";
+  this.element.className = "";
     var classesPositioning = this.getClassPositioning().split(' ')
       .filter(function(className) {
         return className.length > 0;
@@ -22752,7 +22756,7 @@ ol.Overlay.Popup.prototype.setPopupClass = function (c) {
     if (this.closeBox) {
       classes.push("hasclosebox");
     }
-    this._elt.classList.add.apply(this._elt.classList, classes);
+    this.element.classList.add.apply(this.element.classList, classes);
 };
 /**
  * Add a CSS class to the popup.
@@ -22760,7 +22764,7 @@ ol.Overlay.Popup.prototype.setPopupClass = function (c) {
  * @api stable
  */
 ol.Overlay.Popup.prototype.addPopupClass = function (c) {
-  this._elt.classList.add(c);
+  this.element.classList.add(c);
 };
 /**
  * Remove a CSS class to the popup.
@@ -22768,7 +22772,7 @@ ol.Overlay.Popup.prototype.addPopupClass = function (c) {
  * @api stable
  */
 ol.Overlay.Popup.prototype.removePopupClass = function (c) {
-  this._elt.classList.remove(c);
+  this.element.classList.remove(c);
 };
 /**
  * Set positionning of the popup
@@ -22792,21 +22796,21 @@ ol.Overlay.Popup.prototype.setPositioning = function (pos) {
  * @param {ol.OverlayPositioning | string | undefined} pos
  */
 ol.Overlay.Popup.prototype.setPositioning_ = function (pos) {
-  if (this._elt) {
+  if (this.element) {
     ol.Overlay.prototype.setPositioning.call(this, pos);
-    this._elt.classList.remove("ol-popup-top", "ol-popup-bottom", "ol-popup-left", "ol-popup-right", "ol-popup-center", "ol-popup-middle");
+    this.element.classList.remove("ol-popup-top", "ol-popup-bottom", "ol-popup-left", "ol-popup-right", "ol-popup-center", "ol-popup-middle");
     var classes = this.getClassPositioning().split(' ')
       .filter(function(className) {
         return className.length > 0;
       });
-    this._elt.classList.add.apply(this._elt.classList, classes);
+    this.element.classList.add.apply(this.element.classList, classes);
   }
 };
 /** Check if popup is visible
 * @return {boolean}
 */
 ol.Overlay.Popup.prototype.getVisible = function () {
-  return this._elt.classList.contains("visible");
+  return this.element.classList.contains("visible");
 };
 /**
  * Set the position and the content of the popup.
@@ -22873,10 +22877,10 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html) {
     // Show
     this.setPosition(coordinate);
     // Set visible class (wait to compute the size/position first)
-    this._elt.parentElement.style.display = '';
+    this.element.parentElement.style.display = '';
     if (typeof (this.onshow) == 'function') this.onshow();
     this._tout = setTimeout (function() {
-      self._elt.classList.add("visible"); 
+      self.element.classList.add("visible"); 
     }, 0);
   }
 };
@@ -22889,7 +22893,7 @@ ol.Overlay.Popup.prototype.hide = function () {
   if (typeof (this.onclose) == 'function') this.onclose();
   this.setPosition(undefined);
   if (this._tout) clearTimeout(this._tout);
-  this._elt.classList.remove("visible");
+  this.element.classList.remove("visible");
 };
 
 /*	Copyright (c) 2020 Jean-Marc VIGLINO,
@@ -23278,7 +23282,7 @@ ol.Overlay.Placemark.prototype.setColor = function(color) {
  * @param {string} color
  */
 ol.Overlay.Placemark.prototype.setBackgroundColor = function(color) {
-  this.element.style.backgroundColor = color;
+  this._elt.style.backgroundColor = color;
 };
 /**
  * Set the placemark content color.

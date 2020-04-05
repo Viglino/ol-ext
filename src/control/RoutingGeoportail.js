@@ -8,6 +8,9 @@ import ol_geom_LineString from 'ol/geom/LineString';
 import ol_Feature from 'ol/Feature'
 import ol_ext_element from '../util/element';
 import ol_control_SearchGeoportail from './SearchGeoportail'
+import ol_source_Vector from 'ol/source/Vector'
+import ol_geom_Point from 'ol/geom/Point'
+import {transform as ol_proj_transform} from 'ol/proj'
 
 /**
  * Geoportail routing Control.
@@ -99,12 +102,17 @@ var ol_control_RoutingGeoportail = function(options) {
 };
 ol_ext_inherits(ol_control_RoutingGeoportail, ol_control_Control);
 
-ol_control_RoutingGeoportail.prototype.setMode = function (mode) {
+ol_control_RoutingGeoportail.prototype.setMode = function (mode, silent) {
   this.set('mode', mode);
   this.element.querySelector(".ol-car").classList.remove("selected");
   this.element.querySelector(".ol-pedestrian").classList.remove("selected");
   this.element.querySelector(".ol-"+mode).classList.add("selected");
-  this.calculate();
+  if (!silent) this.calculate();
+};
+
+ol_control_RoutingGeoportail.prototype.setMethod = function (method, silent) {
+  this.set('method', method);
+  if (!silent) this.calculate();
 };
 
 ol_control_RoutingGeoportail.prototype.addButton = function (className, title, info) {
@@ -186,7 +194,7 @@ ol_control_RoutingGeoportail.prototype.addSearch = function (element, options, a
       this._source.addFeature(f);
       // Check geometry change
       search.checkgeom = true;
-      f.getGeometry().on('change', function(e) {
+      f.getGeometry().on('change', function() {
         if (search.checkgeom) this.onGeometryChange(search, f);
       }.bind(this));
     } else {
@@ -263,7 +271,7 @@ ol_control_RoutingGeoportail.prototype.requestData = function (steps) {
     'gp-access-lib': '1.1.0',
     origin: start.x+','+start.y,
     destination: end.x+','+end.y,
-    method: 'time', // 'distance'
+    method: this.get('method') || 'time', // 'distance'
     graphName: this.get('mode')==='pedestrian' ? 'Pieton' : 'Voiture',
     waypoints: waypoints,
     format: 'STANDARDEXT'
@@ -468,7 +476,7 @@ ol_control_RoutingGeoportail.prototype.ajax = function (url, onsuccess, onerror)
   };
 
   // Timeout
-  ajax.ontimeout = function (e) {
+  ajax.ontimeout = function () {
     self._request = null;
     self.element.classList.remove('ol-searching');
     if (onerror) onerror.call(self, this);

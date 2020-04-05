@@ -4,7 +4,8 @@
 */
 import ol_ext_inherits from '../util/ext'
 import {transform as ol_proj_transform} from 'ol/proj'
-import ol_control_SearchJSON from './SearchJSON';
+import ol_control_Search from './Search'
+import ol_control_SearchJSON from './SearchJSON'
 
 /**
  * Search places using the French National Base Address (BAN) API.
@@ -101,8 +102,8 @@ ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, options)
           }
         }
       }
-      if (typeof(cback)==='function') {
-        cback.call(this, [f]);
+      if (typeof(options)==='function') {
+        options.call(this, [f]);
       } else {
         this._handleSelect(f, true, options);
         // this.setInput('', true);

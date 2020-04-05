@@ -72,7 +72,7 @@ var ol_Overlay_Popup = function (options) {
   }
 
   ol_Overlay.call(this, options);
-  this._elt = this.element;
+  this._elt = element;
 
   // call setPositioning first in constructor so getClassPositioning is called only once
   this.setPositioning(options.positioning || 'auto');
@@ -108,8 +108,8 @@ ol_Overlay_Popup.prototype.getClassPositioning = function () {
  */
 ol_Overlay_Popup.prototype.setClosebox = function (b) {
   this.closeBox = b;
-  if (b) this._elt.classList.add("hasclosebox");
-  else this._elt.classList.remove("hasclosebox");
+  if (b) this.element.classList.add("hasclosebox");
+  else this.element.classList.remove("hasclosebox");
 };
 
 /**
@@ -118,7 +118,7 @@ ol_Overlay_Popup.prototype.setClosebox = function (b) {
  * @api stable
  */
 ol_Overlay_Popup.prototype.setPopupClass = function (c) {
-  this._elt.className = "";
+  this.element.className = "";
     var classesPositioning = this.getClassPositioning().split(' ')
       .filter(function(className) {
         return className.length > 0;
@@ -140,7 +140,7 @@ ol_Overlay_Popup.prototype.setPopupClass = function (c) {
     if (this.closeBox) {
       classes.push("hasclosebox");
     }
-    this._elt.classList.add.apply(this._elt.classList, classes);
+    this.element.classList.add.apply(this.element.classList, classes);
 };
 
 /**
@@ -149,7 +149,7 @@ ol_Overlay_Popup.prototype.setPopupClass = function (c) {
  * @api stable
  */
 ol_Overlay_Popup.prototype.addPopupClass = function (c) {
-  this._elt.classList.add(c);
+  this.element.classList.add(c);
 };
 
 /**
@@ -158,7 +158,7 @@ ol_Overlay_Popup.prototype.addPopupClass = function (c) {
  * @api stable
  */
 ol_Overlay_Popup.prototype.removePopupClass = function (c) {
-  this._elt.classList.remove(c);
+  this.element.classList.remove(c);
 };
 
 /**
@@ -184,14 +184,14 @@ ol_Overlay_Popup.prototype.setPositioning = function (pos) {
  * @param {ol.OverlayPositioning | string | undefined} pos
  */
 ol_Overlay_Popup.prototype.setPositioning_ = function (pos) {
-  if (this._elt) {
+  if (this.element) {
     ol_Overlay.prototype.setPositioning.call(this, pos);
-    this._elt.classList.remove("ol-popup-top", "ol-popup-bottom", "ol-popup-left", "ol-popup-right", "ol-popup-center", "ol-popup-middle");
+    this.element.classList.remove("ol-popup-top", "ol-popup-bottom", "ol-popup-left", "ol-popup-right", "ol-popup-center", "ol-popup-middle");
     var classes = this.getClassPositioning().split(' ')
       .filter(function(className) {
         return className.length > 0;
       });
-    this._elt.classList.add.apply(this._elt.classList, classes);
+    this.element.classList.add.apply(this.element.classList, classes);
   }
 };
 
@@ -199,7 +199,7 @@ ol_Overlay_Popup.prototype.setPositioning_ = function (pos) {
 * @return {boolean}
 */
 ol_Overlay_Popup.prototype.getVisible = function () {
-  return this._elt.classList.contains("visible");
+  return this.element.classList.contains("visible");
 };
 
 /**
@@ -270,10 +270,10 @@ ol_Overlay_Popup.prototype.show = function (coordinate, html) {
     // Show
     this.setPosition(coordinate);
     // Set visible class (wait to compute the size/position first)
-    this._elt.parentElement.style.display = '';
+    this.element.parentElement.style.display = '';
     if (typeof (this.onshow) == 'function') this.onshow();
     this._tout = setTimeout (function() {
-      self._elt.classList.add("visible"); 
+      self.element.classList.add("visible"); 
     }, 0);
   }
 };
@@ -287,7 +287,7 @@ ol_Overlay_Popup.prototype.hide = function () {
   if (typeof (this.onclose) == 'function') this.onclose();
   this.setPosition(undefined);
   if (this._tout) clearTimeout(this._tout);
-  this._elt.classList.remove("visible");
+  this.element.classList.remove("visible");
 };
 
 export  default ol_Overlay_Popup
