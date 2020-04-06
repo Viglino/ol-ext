@@ -1,4 +1,3 @@
-
 /*	Copyright (c) 2018 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).

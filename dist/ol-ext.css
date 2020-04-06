@@ -3869,13 +3869,15 @@
   right: .5em!important;
   left: auto!important;
   bottom: auto!important;
+  -webkit-transform: none!important;
+          transform: none!important;
 }
 .ol-popup.ol-fixed .anchor {
   display: none;
 }
-.ol-popup.ol-fixed.anim {
+.ol-popup.ol-fixed.anim > div {
   -webkit-animation: none;
-  animation: none;
+          animation: none;
 }
 
 .ol-popup .ol-fix {

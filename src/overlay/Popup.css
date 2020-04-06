@@ -69,12 +69,12 @@
   right: .5em!important;
   left: auto!important;
   bottom: auto!important;
+  transform: none!important;
 }
 .ol-popup.ol-fixed .anchor {
   display: none;
 }
-.ol-popup.ol-fixed.anim {
-  -webkit-animation: none;
+.ol-popup.ol-fixed.anim > div {
   animation: none;
 }
 
