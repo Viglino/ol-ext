@@ -25,8 +25,9 @@ import ol_control_CanvasBase from './CanvasBase'
  *  @param {number} options.step step beetween lines (in proj units), default 1
  *  @param {number} options.stepCoord show a coord every stepCoord, default 1
  *  @param {number} options.spacing spacing beetween lines (in px), default 40px 
- *  @param {number} options.borderWidthwidth of the border (in px), default 5px 
- *  @param {number} options.marginmargin of the border (in px), default 0px 
+ *  @param {number} options.borderWidth width of the border (in px), default 5px 
+ *  @param {number} options.margin margin of the border (in px), default 0px 
+ *  @param {number} options.formatCoord a function that takes a coordinate and a position and return the formated coordinate
  */
 var ol_control_Graticule = function(options) {
   if (!options) options = {};
