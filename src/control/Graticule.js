@@ -195,26 +195,26 @@ ol_control_Graticule.prototype._draw = function (e) {
       var t, tf;
       var offset = (hasBorder ? borderWidth : 0) + margin + 2;
       for (i=0; t = txt.top[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
-      {	tf = this.formatCoord(t[0]);
+      {	tf = this.formatCoord(t[0], 'top');
         ctx.strokeText(tf, t[1][0], offset);
         ctx.fillText(tf, t[1][0], offset);
       }
       ctx.textBaseline = 'alphabetic';
       for (i=0; t = txt.bottom[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
-      {	tf = this.formatCoord(t[0]);
+      {	tf = this.formatCoord(t[0], 'bottom');
         ctx.strokeText(tf, t[1][0], h-offset);
         ctx.fillText(tf, t[1][0], h-offset);
       }
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'left';
       for (i=0; t = txt.left[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
-      {	tf = this.formatCoord(t[0]);
+      {	tf = this.formatCoord(t[0], 'left');
         ctx.strokeText(tf, offset, t[1][1]);
         ctx.fillText(tf, offset, t[1][1]);
       }
       ctx.textAlign = 'right';
       for (i=0; t = txt.right[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
-      {	tf = this.formatCoord(t[0]);
+      {	tf = this.formatCoord(t[0], 'right');
         ctx.strokeText(tf, w-offset, t[1][1]);
         ctx.fillText(tf, w-offset, t[1][1]);
       }
