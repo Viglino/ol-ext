@@ -18132,9 +18132,9 @@ ol.interaction.Transform.prototype.select = function(feature, add) {
 */
 ol.interaction.Transform.prototype.setSelection = function(features) {
   this.selection_.clear();
-  features.forEach((feature) => {
+  features.forEach(function(feature) {
     this.selection_.push(feature);
-  });
+  }.bind(this));
   this.ispt_ = (this.selection_.getLength()===1 ? (this.selection_.item(0).getGeometry().getType() == "Point") : false);
   this.iscircle_ = (this.selection_.getLength()===1 ? (this.selection_.item(0).getGeometry().getType() == "Circle") : false);
   this.drawSketch_();
