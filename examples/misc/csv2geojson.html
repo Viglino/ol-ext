@@ -55,6 +55,7 @@
       float:left;
       font-size: 5em;
       width:40%;
+      line-height: 1em;
     }
     .globe .fa {
       vertical-align: middle;
@@ -76,7 +77,7 @@
       padding:1em 3.5em;
       text-align:center;
       box-sizing: border-box;
-      margin: 0 3em 1em -3em;
+      margin: .5em 3em 1em -3em;
       font-weight: bold;
     }
     #dropfile.hover{
@@ -134,6 +135,26 @@
       background: #fe0;
       color: #800;
       padding: 0 1em;
+    }
+    @media (max-height: 450px) {
+      body {
+        margin: 0 auto;
+      }
+      .globe {
+        font-size: 3em;
+      }
+      #dropfile {
+        margin: 0 3em 0 -3em;
+        padding: .5em;
+      }
+      .info {
+        margin: 0;
+        padding: .3em 2em;
+      }
+      .loading {
+        margin: 0;
+        padding: .1em .5em;
+      }
     }
   </style>
 
@@ -246,8 +267,8 @@
               $('label.lon select').html('');
               $('label.lat select').html('');
               results.meta.fields.forEach(function(att, i) {
-                $('<option>').val(att).text(att).prop('selected',/^long?$|longitude/.test(att)).appendTo($('label.lon select'));
-                $('<option>').val(att).text(att).prop('selected',/^lat$|latitude/.test(att)).appendTo($('label.lat select'));
+                $('<option>').val(att).text(att).prop('selected',/^long?$|longitude/i.test(att)).appendTo($('label.lon select'));
+                $('<option>').val(att).text(att).prop('selected',/^lat$|latitude/i.test(att)).appendTo($('label.lat select'));
               });
               $(".loading").html("");
               $('label.lon select').change();
