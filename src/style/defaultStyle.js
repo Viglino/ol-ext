@@ -36,17 +36,15 @@ var stroke = new ol_style_Stroke({
   color: '#3399CC',
   width: 1.25
 });
-var defaultStyle = [
-  new ol_style_Style({
-    image: new ol_style_Circle({
-      fill: fill,
-      stroke: stroke,
-      radius: 5
-    }),
+var defaultStyle = new ol_style_Style({
+  image: new ol_style_Circle({
     fill: fill,
-    stroke: stroke
-  })
-];
+    stroke: stroke,
+    radius: 5
+  }),
+  fill: fill,
+  stroke: stroke
+});
 
 /**
  * Get the default style
@@ -54,7 +52,7 @@ var defaultStyle = [
  */
 ol_style_Style_defaultStyle = function(edit) {
   if (edit) return defaultEditStyle;
-  else return defaultStyle;
+  else return [ defaultStyle ];
 };
 
 })();

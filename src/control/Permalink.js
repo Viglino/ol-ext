@@ -8,6 +8,8 @@ import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_control_Control from 'ol/control/Control'
 import {transform as ol_proj_transform} from 'ol/proj'
 import ol_ext_element from '../util/element'
+import { toLonLat as ol_geohash_toLonLat } from '../geom/geohash'
+import { fromLonLat as ol_geohash_fromLonLat } from '../geom/geohash'
 
 /**
  * Set an hyperlink that will return the user to the current map view.
@@ -18,12 +20,13 @@ import ol_ext_element from '../util/element'
  * @constructor
  * @extends {ol_control_Control}
  * @param {Object=} options
- *  @param {bool} options.urlReplace replace url or not, default true
- *  @param {bool} options.localStorage save current map view in localStorage, default false
+ *  @param {boolean} options.urlReplace replace url or not, default true
+ *  @param {boolean} options.localStorage save current map view in localStorage, default false
+ *  @param {boolean} options.geohash use geohash instead of lonlat, default false
  *  @param {integer} options.fixed number of digit in coords, default 6
- *  @param {bool} options.anchor use "#" instead of "?" in href
- *  @param {bool} options.visible hide the button on the map, default true
- *  @param {bool} options.hidden hide the button on the map, default false DEPRECATED: use visible instead
+ *  @param {boolean} options.anchor use "#" instead of "?" in href
+ *  @param {boolean} options.visible hide the button on the map, default true
+ *  @param {boolean} options.hidden hide the button on the map, default false DEPRECATED: use visible instead
  *  @param {function} options.onclick a function called when control is clicked
 */
 var ol_control_Permalink = function(opt_options) {
@@ -53,6 +56,7 @@ var ol_control_Permalink = function(opt_options) {
     element: element,
     target: options.target
   });
+  this.set('geohash', options.geohash);
 
   this.on ('change', this.viewChange_.bind(this));
 
@@ -70,6 +74,7 @@ var ol_control_Permalink = function(opt_options) {
       switch(t[0]) {
         case 'lon':
         case 'lat':
+        case 'gh':
         case 'z':
         case 'r':
         case 'l': break;
@@ -124,8 +129,16 @@ ol_control_Permalink.prototype.getLayerByLink =  function (id, layers) {
   return false;
 };
 
+/** Set coordinates as geohash
+ * @param {boolean}
+ */
+ol_control_Permalink.prototype.setGeohash = function(b) {
+  this.set('geohash', b);
+  this.setUrlParam();
+};
+
 /** Set map position according to the current link 
-*/
+ */
 ol_control_Permalink.prototype.setPosition = function() {
   var map = this.getMap();
   if (!map) return;
@@ -141,6 +154,13 @@ ol_control_Permalink.prototype.setPosition = function() {
   for (i=0; i<hash.length;  i++) {
     t = hash[i].split("=");
     param[t[0]] = t[1];
+  }
+  if (param.gh) {
+    var ghash = param.gh.split('-');
+    var lonlat = ol_geohash_toLonLat(ghash[0] );
+    param.lon = lonlat[0];
+    param.lat = lonlat[1];
+    param.z = ghash[1];
   }
   var c = ol_proj_transform([Number(param.lon),Number(param.lat)], 'EPSG:4326', map.getView().getProjection());
   if (c[0] && c[1]) map.getView().setCenter(c);
@@ -227,11 +247,17 @@ ol_control_Permalink.prototype.hasUrlParam = function(key) {
 ol_control_Permalink.prototype.getLink = function(param) {
   var map = this.getMap();
   var c = ol_proj_transform(map.getView().getCenter(), map.getView().getProjection(), 'EPSG:4326');
-  var z = map.getView().getZoom();
+  var z = Math.round(map.getView().getZoom()*10)/10;
   var r = map.getView().getRotation();
   var l = this.layerStr_;
   // Change anchor
-  var anchor = "lon="+c[0].toFixed(this.fixed_)+"&lat="+c[1].toFixed(this.fixed_)+"&z="+z+(r?"&r="+(Math.round(r*10000)/10000):"")+(l?"&l="+l:"");
+  var anchor = (r?"&r="+(Math.round(r*10000)/10000):"")+(l?"&l="+l:"");
+  if (this.get('geohash')) {
+    var ghash = ol_geohash_fromLonLat(c,8);
+    anchor = "gh=" + ghash + '-' + z + anchor;
+  } else {
+    anchor = "lon="+c[0].toFixed(this.fixed_)+"&lat="+c[1].toFixed(this.fixed_)+"&z="+z + anchor;
+  }
 
   for (var i in this.search_) anchor += "&"+i+"="+this.search_[i];
   if (param) return anchor;

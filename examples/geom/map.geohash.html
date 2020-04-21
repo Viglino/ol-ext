@@ -1,0 +1,122 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>ol-ext: Geohash</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="Calculate the convex hull of a set of points." />
+  <meta name="keywords" content="openlayers, geom, geohash" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    #geohash {
+      width: 100%;
+      text-align: center;
+      padding: .5em 1em;
+      background-color: #9af;
+      font-weight: bold;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Geohash</h1>
+  </a>
+  <div class="info">
+    A <a href="https://en.wikipedia.org/wiki/Geohash">geohash</a> is a convenient way of expressing a location (anywhere in the world) 
+    using a short alphanumeric string, with greater precision obtained with longer strings.
+    <br/>
+    The <i>ol/geohash</i> adds functions to convert a geohash to/from a latitude/longitude point,
+    and to determine bounds of a geohash cell and find neighbours of a geohash.
+    <br/>
+    Geohash can be used with permalink.
+  </div>
+
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
+  
+  <div class="options">
+    Click on the map show geohash.
+    <ul>
+      <li>
+        <label>precision: </label><input id="precision" type="number" value=3 minValue=0 maxValue=12 />
+      </li>
+    </ul>
+    <label>Geohash: </label><div id="geohash"></div>
+  </div>
+
+<script type="text/javascript">
+
+  // Two base layers
+  var stamen = new ol.layer.Tile({
+    title: "Watercolor",
+    baseLayer: true,
+    source: new ol.source.Stamen({
+      layer: 'watercolor'
+    })
+  });
+
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 4,
+      center: [205461, 5867916]
+    }),
+    layers: [stamen]
+  });
+
+  map.addControl(new ol.control.Permalink({
+    geohash: true,
+    visible: false
+  }));
+
+  // Add over interaction that draw hull in a layer
+  var vector = new ol.layer.Vector({ 
+    source: new ol.source.Vector(),
+    style: function (f) {
+      var style = ol.style.Style.defaultStyle();
+      style.push(new ol.style.Style({
+        text: new ol.style.Text({
+          font: 'bold 12px sans-serif',
+          overflow: true,
+          text: f.get('name')
+         })
+      }));
+      return style;
+    }
+  })
+  map.addLayer(vector);
+
+  map.on('click', function(e) {
+    var geohash = ol.geohash.fromLonLat( ol.proj.toLonLat(e.coordinate), $('#precision').val() );
+    $('#geohash').text(geohash);
+    var extent = ol.geohash.getExtent(geohash);
+    var geom = ol.geom.Polygon.fromExtent(extent);
+    geom.transform('EPSG:4326', map.getView().getProjection());
+    var f = new ol.Feature(geom);
+    f.set('name', geohash);
+    vector.getSource().clear();
+    vector.getSource().addFeature(f);
+  });
+
+</script>
+  
+</body>
+</html>
