@@ -763,6 +763,9 @@
 }
 
 .ol-popup.tooltips.black {
+  background-color: transparent;
+}
+.ol-popup.tooltips.black > div {
   transform: scaleY(1.3);
   padding: .2em .5em;
   background-color: rgba(0,0,0, 0.5);
