@@ -19332,6 +19332,7 @@ ol.source.BinBase.prototype.reset = function () {
   for (var i = 0, f; f = features[i]; i++) {
     this._onAddFeature({ feature: f });
   }
+  this.changed();
 };
 /**
  * Get features without circular dependencies (vs. getFeatures)
@@ -20256,26 +20257,44 @@ ol.source.Delaunay.prototype.getNodesAt = function(coord) {
   return this._nodes.getFeaturesInExtent(extent);
 };
 
-  /*	Copyright (c) 2019 Jean-Marc VIGLINO,
+/*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/** A source for INSEE grid
+/** A source that use a set of feature to collect data on it.
+ * If a binSource is provided the bin is recalculated when features change.
  * @constructor
  * @extends {ol.source.Vector}
  * @param {Object} options ol.source.VectorOptions + grid option
- *  @param {ol.source.Vector} options.source Source
+ *  @param {ol.source.Vector} options.source source to collect in the bin
+ *  @param {ol.source.Vector} options.binSource a source to use as bin collector, default none
+ *  @param {Array<ol.Feature>} options.features the features, ignored if binSource is provided, default none
  *  @param {number} [options.size] size of the grid in meter, default 200m
  *  @param {function} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
  *  @param {function} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
  */
 ol.source.FeatureBin = function (options) {
   options = options || {};
-  this._sourceFeature = new ol.source.Vector ({ features: options.features || [] });
+  if (options.binSource) {
+    this._sourceFeature = options.binSource;
+    // When features change recalculate the bin...
+    var timout;
+    this._sourceFeature.on(['addfeature','changefeature','removefeature'], function(e) {
+      if (timout) {
+        // Do it only one time
+        clearTimeout(timout);
+      }
+      timout = setTimeout(function () {
+        this.reset();
+      }.bind(this));
+    }.bind(this));
+  } else {
+    this._sourceFeature = new ol.source.Vector ({ features: options.features || [] });
+  }
   ol.source.BinBase.call(this, options);
 };
 ol.ext.inherits(ol.source.FeatureBin, ol.source.BinBase);
-/** Set grid size
+/** Set features to use as bin collector
  * @param {ol.Feature} features
  */
 ol.source.FeatureBin.prototype.setFeatures = function (features) {
