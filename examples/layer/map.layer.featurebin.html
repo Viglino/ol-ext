@@ -134,7 +134,7 @@
   var map = new ol.Map({
     target: 'map',
     view: new ol.View({
-      zoom: 4,
+      zoom: 5,
       center: [166326, 5992663]
     }),
     layers: [ new ol.layer.Tile({ source: new ol.source.OSM() })]
@@ -174,8 +174,16 @@
     reset();
   }
 
-  // Vector source
+  // Vector source with features to collect
   var source = new ol.source.Vector();
+  // Vector source with features collector
+  var binSource = new ol.source.Vector({
+    url: '../data/departements.geojson',
+    format: new ol.format.GeoJSON()
+  });
+  // Force source to load
+  binSource.loadFeatures(null, null, map.getView().getProjection());
+
   // Interaction to move the source features
   var modify = new ol.interaction.Modify({ source: source });
   modify.setActive(false);
@@ -192,25 +200,22 @@
     else color = [0, 136, 0, .5];
     return [ new ol.style.Style({ fill: new ol.style.Fill({  color: color }) }) ];
   };
-  // The rid layer
-  var grid = new ol.layer.Vector({ 
+  // Feature collector layer
+  var collector = new ol.layer.Vector({ 
     style: styleFn, 
     source: new ol.source.FeatureBin({ 
-      source: source
+      // Features to collect
+      source: source,
+      // Feature to use as collector
+      binSource: binSource
     })
   })
-  map.addLayer(grid);
-  $.ajax('../data/departements.geojson', {
-    success: function (result) {
-      var format = new ol.format.GeoJSON();
-      var features = format.readFeatures(result, {
-        dataProjection: 'EPSG:4326',
-        featureProjection: map.getView().getProjection()
-      });
-      grid.getSource().setFeatures(features);
-      reset();
-    }
+  map.addLayer(collector);
+  // When features are loaded
+  collector.getSource().on('change', function() {
+    reset();
   });
+
   // add 1000 features
   addFeatures(1000);
 
@@ -230,18 +235,18 @@
   function reset() {
     max = 0;
     min = Infinity;
-    grid.getSource().getFeatures().forEach(function (f) {
+    collector.getSource().getFeatures().forEach(function (f) {
       var nb = f.get('features').length;
       if (nb>max) max = nb;
       if (nb<min) min = nb;
     });
-    grid.changed();
+    collector.changed();
   };
 
   // Save
   function save (point) {
     var format = new ol.format.GeoJSON();
-    var features = grid.getSource().getGridFeatures();
+    var features = collector.getSource().getcollectorFeatures();
     if (point) {
       features.forEach(function (f) {
         var g = f.getGeometry().getInteriorPoint();
@@ -253,19 +258,19 @@
 			featureProjection: map.getView().getProjection()
     });
 		var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
-		saveAs(blob, "grid.geojson");
+		saveAs(blob, "collector.geojson");
   }
   
-  // Add population to the grid
+  // Add population to the collector
   function addPop1km() {
     $('body').addClass('waiting');
     $.ajax('../data/insee_1km.csv', {
       success: function(res){
         res = res.split('\n');
         res.shift();
-        grid.getSource().getFeatures().forEach(function(b) { b.set('pop',0); });
+        collector.getSource().getFeatures().forEach(function(b) { b.set('pop',0); });
         res.forEach(function(data){
-          var source = grid.getSource();
+          var source = collector.getSource();
           data = data.split(',');
           var coord = [ Number(data[0]*1000)+500, Number(data[1]*1000)+500];
           coord = ol.proj.transform(coord, 'EPSG:3035', map.getView().getProjection());
@@ -278,7 +283,7 @@
       }
     });
   }
-  grid.getSource()._flatAttributes = function (bin, features) {
+  collector.getSource()._flatAttributes = function (bin, features) {
     var pc = Number($('#percent').val());
     if (bin.get('pop')) {
       bin.set('nb_pop',pc*bin.get('nb')/bin.get('pop'));
