@@ -13207,6 +13207,147 @@ ol.filter.Texture.prototype.postcompose = function(e)
 	ctx.restore();
 }
 
+/** Feature format for reading and writing data in the GeoJSONX format.
+ * @constructor 
+ * @extends {ol.format.GeoJSON}
+ * @param {*} options options.
+ *  @param {ol.ProjectionLike} options.dataProjection Projection of the data we are reading. If not provided `EPSG:4326`
+ *  @param {ol.ProjectionLike} options.featureProjection Projection of the feature geometries created by the format reader. If not provided, features will be returned in the dataProjection.
+ */
+ol.format.GeoJSONX = function(options) {
+  options = options || {};
+  ol.format.GeoJSON.call (this, options);
+  this._lineFormat = new ol.format.Polyline({ factor: options.factor || 1e6 });
+  this._hash = {};
+  this._count = 0;
+};
+ol.ext.inherits(ol.format.GeoJSONX, ol.format.GeoJSON);
+/** Encode coordinates
+ */
+ol.format.GeoJSONX.prototype.encodeCoordinates = function(v) {
+  var g;
+  if (typeof(v[0]) === 'number') {
+    g = new ol.geom.Point(v);
+    return this._lineFormat.writeGeometry(g);
+  } else if (v.length && v[0]) {
+    var tab = (typeof(v[0][0]) === 'number');
+    if (tab) {
+      g = new ol.geom.LineString(v);
+      v = this._lineFormat.writeGeometry(g);
+    } else {
+      for (var i=0; i<v.length; i++) {
+        v[i] = this.encodeCoordinates(v[i]);
+      }
+    }
+    return v;
+  } else {
+    return null;
+  }
+};
+/** Decode coordinates
+ */
+ol.format.GeoJSONX.prototype.decodeCoordinates = function(v) {
+  var i, g;
+  if (typeof(v) === 'string') {
+    g = this._lineFormat.readGeometry(v);
+    return g.getCoordinates()[0];
+  } else if (v.length) {
+    var tab = (typeof(v[0]) === 'string');
+    if (tab) {
+      for (i=0; i<v.length; i++) {
+        g = this._lineFormat.readGeometry(v[i]);
+        v[i] = g.getCoordinates();
+      }
+    } else {
+      for (i=0; i<v.length; i++) {
+        v[i] = this.decodeCoordinates(v[i]);
+      }
+    }
+    return v;
+  } else {
+    return null;
+  }
+};
+/** Encode an array of features as a GeoJSONX object.
+ * @param {Array<ol.Feature>} features Features.
+ * @param {*} options Write options.
+ * @return {*} GeoJSONX Object.
+ * @override
+ * @api
+ */
+ol.format.GeoJSONX.prototype.writeFeaturesObject = function (features, options) {
+  this._count = 0;
+  this._hash = {};
+  var geojson = ol.format.GeoJSON.prototype.writeFeaturesObject.call(this, features, options);
+  geojson.hashProperties = {};
+  Object.keys(this._hash).forEach(function(k) {
+    geojson.hashProperties[this._hash[k]] = k;
+  }.bind(this));
+  return geojson;
+};
+/** Encode a of features as a GeoJSONX object.
+ * @param {ol.Feature} feature Feature
+ * @param {*} options Write options.
+ * @return {*} GeoJSONX Object.
+ * @override
+ * @api
+ */
+ol.format.GeoJSONX.prototype.writeFeatureObject = function(source, options) {
+  var f = ol.format.GeoJSON.prototype.writeFeatureObject.call(this, source, options);
+  // Encode geometry
+  f.geo = [
+    f.geometry.type,
+    this.encodeCoordinates(f.geometry.coordinates)
+  ];
+  delete f.geometry;
+  // Encode properties
+  var prop = {};
+  for (var k in f.properties) {
+    if (!this._hash[k]) {
+      this._hash[k] = this._count.toString(32);
+      this._count++;
+    }
+    prop[this._hash[k]] = f.properties[k];
+  }
+  f.prop = prop;
+  delete f.properties
+  return f;
+};
+/** Encode a geometry as a GeoJSONX object.
+ * @param {ol.geom.Geometry} geometry Geometry.
+ * @param {*} opt_options Write options.
+ * @return {*} Object.
+ * @override
+ * @api
+ */
+ol.format.GeoJSONX.prototype.writeGeometryObject = function(source, options) {
+  var g = ol.format.GeoJSON.prototype.writeGeometryObject.call(this, source, options);
+  return [
+    g.type,
+    this.encodeCoordinates(g.coordinates)
+  ]
+};
+ol.format.GeoJSONX.prototype.readFeaturesFromObject = function (object, options) {
+  this._hashProperties = object.hashProperties || {};
+  return ol.format.GeoJSON.prototype.readFeaturesFromObject.call(this, object, options)
+}
+/** */
+ol.format.GeoJSONX.prototype.readFeatureFromObject = function (f, options) {
+  f.geometry = {
+    type: f.geo[0],
+    coordinates: this.decodeCoordinates(f.geo[1])
+  }
+  if (this._hashProperties) {
+    f.properties = {};
+    for (var k in this._hashProperties) {
+      f.properties[this._hashProperties[k]] = f.prop[k]
+    }
+  } else {
+    f.properties = f.prop;
+  }
+  return ol.format.GeoJSON.prototype.readFeatureFromObject.call(this, f, options);
+};
+
 /*	Copyright (c) 2019 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -14663,85 +14804,85 @@ ol.interaction.DrawTouch.prototype.setActive = function(b) {
 /** Extend DragAndDrop choose drop zone + fires loadstart, loadend
  * @constructor
  * @extends {ol.interaction.DragAndDrop}
- *	@fires loadstart, loadend, addfeatures
- *	@param {ol.dropfile.options} flashlight options param
- *		- zone {string} selector for the drop zone, default document
- *		- projection {ol.projection} default projection of the map
- *		- formatConstructors {Array<function(new:ol.format.Feature)>|undefined} Format constructors, default [ ol.format.GPX, ol.format.GeoJSON, ol.format.IGC, ol.format.KML, ol.format.TopoJSON ]
- *		- accept {Array<string>|undefined} list of eccepted format, default ["gpx","json","geojson","igc","kml","topojson"]
+ * @fires loadstart, loadend, addfeatures
+ * @param {*} options
+ *  @param {string} options.zone selector for the drop zone, default document
+ *  @param{ol.projection} options.projection default projection of the map
+ *  @param {Array<function(new:ol.format.Feature)>|undefined} options.formatConstructors Format constructors, default [ ol.format.GPX, ol.format.GeoJSON, ol.format.IGC, ol.format.KML, ol.format.TopoJSON ]
+ *  @param {Array<string>|undefined} options.accept list of eccepted format, default ["gpx","json","geojson","igc","kml","topojson"]
  */
-ol.interaction.DropFile = function(options)
-{	options = options||{};
-	ol.interaction.DragAndDrop.call(this, {});
-	var zone = options.zone || document;
-	zone.addEventListener('dragenter', this.onstop );
-	zone.addEventListener('dragover', this.onstop );
-	zone.addEventListener('dragleave', this.onstop );
-	// Options
-	this.formatConstructors_ = options.formatConstructors || [ ol.format.GPX, ol.format.GeoJSON, ol.format.IGC, ol.format.KML, ol.format.TopoJSON ];
-	this.projection_ = options.projection;
-	this.accept_ = options.accept || ["gpx","json","geojson","igc","kml","topojson"];
-	var self = this;
-	zone.addEventListener('drop', function(e){ return self.ondrop(e);});
+ol.interaction.DropFile = function(options) {
+  options = options||{};
+  ol.interaction.DragAndDrop.call(this, {});
+  var zone = options.zone || document;
+  zone.addEventListener('dragenter', this.onstop );
+  zone.addEventListener('dragover', this.onstop );
+  zone.addEventListener('dragleave', this.onstop );
+  // Options
+  this.formatConstructors_ = options.formatConstructors || [ ol.format.GPX, ol.format.GeoJSONX, ol.format.GeoJSON, ol.format.IGC, ol.format.KML, ol.format.TopoJSON ];
+  this.projection_ = options.projection;
+  this.accept_ = options.accept || ["gpx","json","geojsonx","geojson","igc","kml","topojson"];
+  var self = this;
+  zone.addEventListener('drop', function(e){ return self.ondrop(e);});
 };
 ol.ext.inherits(ol.interaction.DropFile, ol.interaction.DragAndDrop);
 /** Set the map
 */
-ol.interaction.DropFile.prototype.setMap = function(map)
-{	ol.interaction.Interaction.prototype.setMap.call(this, map);
+ol.interaction.DropFile.prototype.setMap = function(map) {
+  ol.interaction.Interaction.prototype.setMap.call(this, map);
 };
-/** Do somthing when over
+/** Do something when over
 */
-ol.interaction.DropFile.prototype.onstop = function(e)
-{	e.preventDefault();
-	e.stopPropagation();
-	return false;
+ol.interaction.DropFile.prototype.onstop = function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  return false;
 }
 /** Do something when over
 */
-ol.interaction.DropFile.prototype.ondrop = function(e)
-{	e.preventDefault();
-	if (e.dataTransfer && e.dataTransfer.files.length)
-	{	var self = this;
-		// fetch FileList object
-		var files = e.dataTransfer.files; // e.originalEvent.target.files ?
-		// process all File objects
-		var file;
-		var pat = /\.([0-9a-z]+)(?=[?#])|(\.)(?:[\w]+)$/;
-		for (var i=0; file=files[i]; i++)
-		{	var ex = file.name.match(pat)[0];
-			self.dispatchEvent({ type:'loadstart', file: file, filesize: file.size, filetype: file.type, fileextension: ex, projection: projection, target: self });
-			// Load file
-			var reader = new FileReader();
-			var projection = this.projection_ || this.getMap().getView().getProjection();
-			var formatConstructors = this.formatConstructors_
-			if (!projection) return;
-			var tryReadFeatures = function (format, result, options)
-			{	try
-				{	return format.readFeatures(result, options);
-				} catch (e) { /* ok */ }
-			}
-			var theFile = file;
-			reader.onload = function(e)
-			{	var result = e.target.result;
-				var features = [];
-				var i, ii;
-				for (i = 0, ii = formatConstructors.length; i < ii; ++i)
-				{	var formatConstructor = formatConstructors[i];
-					var format = new formatConstructor();
-					features = tryReadFeatures(format, result, { featureProjection: projection });
-					if (features && features.length > 0)
-					{	self.dispatchEvent({ type:'addfeatures', features: features, file: theFile, projection: projection, target: self });
-						self.dispatchEvent({ type:'loadend', features: features, file: theFile, projection: projection, target: self });
-						return;
-					}
-				}
-				self.dispatchEvent({ type:'loadend', file: theFile, target: self });
-			};
-			reader.readAsText(file);
-		}
-	}
-    return false;
+ol.interaction.DropFile.prototype.ondrop = function(e) {
+  e.preventDefault();
+  if (e.dataTransfer && e.dataTransfer.files.length) {
+    var self = this;
+    // fetch FileList object
+    var files = e.dataTransfer.files; // e.originalEvent.target.files ?
+    // process all File objects
+    var file;
+    var pat = /\.([0-9a-z]+)(?=[?#])|(\.)(?:[\w]+)$/;
+    for (var i=0; file=files[i]; i++) {
+      var ex = file.name.match(pat)[0];
+      self.dispatchEvent({ type:'loadstart', file: file, filesize: file.size, filetype: file.type, fileextension: ex, projection: projection, target: self });
+      // Load file
+      var reader = new FileReader();
+      var projection = this.projection_ || (this.getMap() ? this.getMap().getView().getProjection() : null);
+      var formatConstructors = this.formatConstructors_
+      //if (!projection) return;
+      var tryReadFeatures = function (format, result, options) {
+        try {
+          return format.readFeatures(result, options);
+        } catch (e) { /* ok */ }
+      }
+      var theFile = file;
+      reader.onload = function(e) {
+        var result = e.target.result;
+        var features = [];
+        var i, ii;
+        for (i = 0, ii = formatConstructors.length; i < ii; ++i) {
+          var formatConstructor = formatConstructors[i];
+          var format = new formatConstructor();
+          features = tryReadFeatures(format, result, { featureProjection: projection });
+          if (features && features.length > 0) {
+            self.dispatchEvent({ type:'addfeatures', features: features, file: theFile, projection: projection, target: self });
+            self.dispatchEvent({ type:'loadend', features: features, file: theFile, projection: projection, target: self });
+            return;
+          }
+        }
+        self.dispatchEvent({ type:'loadend', file: theFile, target: self });
+      };
+      reader.readAsText(file);
+    }
+  }
+  return false;
 };
 
 /** A Select interaction to fill feature's properties on click.
@@ -20279,7 +20420,7 @@ ol.source.FeatureBin = function (options) {
     this._sourceFeature = options.binSource;
     // When features change recalculate the bin...
     var timout;
-    this._sourceFeature.on(['addfeature','changefeature','removefeature'], function(e) {
+    this._sourceFeature.on(['addfeature','changefeature','removefeature'], function() {
       if (timout) {
         // Do it only one time
         clearTimeout(timout);
