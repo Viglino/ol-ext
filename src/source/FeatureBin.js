@@ -25,7 +25,7 @@ var ol_source_FeatureBin = function (options) {
     this._sourceFeature = options.binSource;
     // When features change recalculate the bin...
     var timout;
-    this._sourceFeature.on(['addfeature','changefeature','removefeature'], function(e) {
+    this._sourceFeature.on(['addfeature','changefeature','removefeature'], function() {
       if (timout) {
         // Do it only one time
         clearTimeout(timout);
