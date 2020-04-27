@@ -30,6 +30,9 @@
       height: 600px;
       z-index: 0;
     }
+    .isloading {
+      opacity: .5;
+    }
   </style>
 </head>
 <body >
@@ -67,12 +70,13 @@
 
   // Select  interaction
   var select = new ol.interaction.Select({
-    hitTolerance: 5,
+    hitTolerance: 3,
     condition: ol.events.condition.singleClick
   });
   map.addInteraction(select);
   // Popup on select
   var popup = new ol.Overlay.PopupFeature({
+    className: 'default anim',
     select: select
   });
   map.addOverlay (popup);
@@ -81,17 +85,17 @@
   var dd = new ol.interaction.DropFile();
   map.addInteraction(dd);
   dd.on('loadstart', function () { 
-    $('#dropfile').removeClass('hover');
     $('body').addClass('isloading');
-    $('.loading').html(' loading...');
   });
   dd.on('loadend', function (e) { 
-    var layer = new ol.layer.Vector({
+    var layer = new ol.layer.VectorImage({
       title: e.file.name,
-      source: new ol.source.Vector({ features: e.features })
+      source: new ol.source.Vector()
     })
+    layer.getSource().addFeatures(e.features);
     map.addLayer(layer);
-    window.features = e.features;
+    $('body').removeClass('isloading');
+    window.feat = e.features;
     window.layer = layer;
   });
 </script>

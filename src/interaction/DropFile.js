@@ -7,6 +7,7 @@ import ol_format_IGC from 'ol/format/IGC'
 import ol_format_KML from 'ol/format/KML'
 import ol_format_TopoJSON from 'ol/format/TopoJSON'
 import ol_format_GeoJSONX from '../format/GeoJSONX'
+import ol_format_GeoJSONP from '../format/GeoJSONP'
 
 /** Extend DragAndDrop choose drop zone + fires loadstart, loadend
  * @constructor
@@ -15,8 +16,8 @@ import ol_format_GeoJSONX from '../format/GeoJSONX'
  * @param {*} options
  *  @param {string} options.zone selector for the drop zone, default document
  *  @param{ol.projection} options.projection default projection of the map
- *  @param {Array<function(new:ol.format.Feature)>|undefined} options.formatConstructors Format constructors, default [ ol.format.GPX, ol.format.GeoJSON, ol.format.IGC, ol.format.KML, ol.format.TopoJSON ]
- *  @param {Array<string>|undefined} options.accept list of eccepted format, default ["gpx","json","geojson","igc","kml","topojson"]
+ *  @param {Array<function(new:ol.format.Feature)>|undefined} options.formatConstructors Format constructors, default [ ol.format.GPX, ol.format.GeoJSONX, ol.format.GeoJSONP, ol.format.GeoJSON, ol.format.IGC, ol.format.KML, ol.format.TopoJSON ]
+ *  @param {Array<string>|undefined} options.accept list of eccepted format, default ["gpx","json","geojsonx","geojsonp","geojson","igc","kml","topojson"]
  */
 var ol_interaction_DropFile = function(options) {
   options = options||{};
@@ -29,9 +30,9 @@ var ol_interaction_DropFile = function(options) {
   zone.addEventListener('dragleave', this.onstop );
 
   // Options
-  this.formatConstructors_ = options.formatConstructors || [ ol_format_GPX, ol_format_GeoJSONX, ol_format_GeoJSON, ol_format_IGC, ol_format_KML, ol_format_TopoJSON ];
+  this.formatConstructors_ = options.formatConstructors || [ ol_format_GPX, ol_format_GeoJSONX, ol_format_GeoJSONP, ol_format_GeoJSON, ol_format_IGC, ol_format_KML, ol_format_TopoJSON ];
   this.projection_ = options.projection;
-  this.accept_ = options.accept || ["gpx","json","geojsonx","geojson","igc","kml","topojson"];
+  this.accept_ = options.accept || ["gpx","json","geojsonx","geojsonp","geojson","igc","kml","topojson"];
 
   var self = this;
   zone.addEventListener('drop', function(e){ return self.ondrop(e);});
