@@ -128,8 +128,7 @@
       color:#fff;
     }
     #map {
-      display: none;
-      float:none;
+      float: none;
       width: 100%;
       height: 400px;
     }
@@ -199,9 +198,9 @@
     <button onclick="download()"><i class="fa fa-download"></i> Download</button>
     <div class="loading"></div>
 
-    <div id="map"></div>
-
     <textarea id="result"></textarea>
+
+    <div id="map"></div>
     
     <a href="./map.geojsonx.html" target="geojsonx" style="display: block; text-align: right; width: 100%;">
       <i class="fa fa-globe"></i> See result on this page.
@@ -210,31 +209,11 @@
   </div>
 
 <script>
-  var name, result;
+  var name, fileSize, features, geojson, result;
+
   function download() {
     var blob = new Blob([result], {type: "text/plain;charset=utf-8"});
     saveAs(blob, name+".geojsonx");
-  }
-
-  var format = new ol.format.Polyline();
-  function encode(v) {
-    if (typeof(v[0]) === 'number') {
-      var g = new ol.geom.Point(v);
-      return format.writeGeometry(g);
-    } else if (v.length) {
-      var tab = (typeof(v[0][0]) === 'number');
-      if (tab) {
-        var g = new ol.geom.LineString(v);
-        v = format.writeGeometry(g);
-      } else {
-        for (var i=0; i<v.length; i++) {
-          v[i] = encode(v[i]);
-        }
-      }
-      return v;
-    } else {
-      return null;
-    }
   }
 
   // Add feature on drop
@@ -245,25 +224,42 @@
     $('.loading').html(' loading...');
   });
   dd.on('loadend', function (e) { 
-    var features = e.features;
-    if (!features) {
+    if (!e.features) {
       $('.loading').html('<span class="warn">No valid file...</span>');
       return;
+    } else {
+      features = e.features;
+      showFeatures(origin, features);
+      name = e.file.name.replace(/\..+$/, '');
+      fileSize = e.file.size;
+      encode();
     }
-    name = e.file.name.replace(/\..+$/, '');
-    var size0 = e.file.size;
+  });
+
+  function showFeatures(layer, features) {
+    layer.getSource().clear();
+    features.forEach(function (f) {
+      f = f.clone();
+      f.getGeometry().transform('EPSG:4326', map.getView().getProjection())
+      layer.getSource().addFeature(f);
+    });
+  }
+
+  function encode() {
+    if (!features) return;
     var format = new ol.format.GeoJSONX();
-    var geojson = format.writeFeaturesObject(features);
+    geojson = format.writeFeaturesObject(features);
+    showFeatures(encoded, format.readFeaturesFromObject(geojson));
     result = JSON.stringify(geojson);
     $("#result").val(JSON.stringify(geojson,null,' ').substr(0,50000)+(result.length>50000? '\n...':''));
     $(".loading").html(
-      '<div class="saved">' + (100*(size0-result.length)/size0).toFixed(0) + '% saved</div>'
+      '<div class="saved">' + (100*(fileSize-result.length)/fileSize).toFixed(0) + '% saved</div>'
       + features.length+' feature(s) loaded.'
-      +'<br/>'+ (size0/1024).toFixed(0) +'Ko / '+ (result.length/1024).toFixed(0) + 'Ko'
+      +'<br/>'+ (fileSize/1024).toFixed(0) +'Ko / '+ (result.length/1024).toFixed(0) + 'Ko'
     );
     $('body').removeClass('isloading');
     $("button").show();
-  });
+  }
 
   $(document).on('dragover dragleave', function (e) {
     e.preventDefault();
@@ -283,15 +279,23 @@
     layers: [new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) })]
   });
 
-  var vector = new ol.layer.Vector({
-    source: new ol.source.Vector(),
-    style: new ol.style.Style({
-      image: new ol.style.Circle({
-      fill: new ol.style.Fill({ color:"rgba(102, 68, 68, 0.6)" }),
-      radius: 5
-    })})
+  var origin = new ol.layer.Vector({
+    title: 'Origin',
+    source: new ol.source.Vector()
   });
-  map.addLayer(vector);
+  map.addLayer(origin);
+  var style = ol.style.Style.defaultStyle();
+  style[0].getImage().getStroke().setColor([0,255,0]);
+  style[0].getImage().render();
+  style[0].getStroke().setColor([0,255,0]);
+  style[0].getFill().setColor([0,255,0,.2]);
+  var encoded = new ol.layer.Vector({
+    title: 'Encoded',
+    source: new ol.source.Vector(),
+    style: style
+  });
+  map.addLayer(encoded);
+  map.addControl(new ol.control.LayerSwitcher);
 </script>
 </body>
 </html>
