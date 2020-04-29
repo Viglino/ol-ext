@@ -48,11 +48,27 @@ var defaultStyle = new ol_style_Style({
 
 /**
  * Get the default style
- * @param {boolean} edit true to get editing style
+ * @param {boolean|*} [edit] true to get editing style or a { color, fillColor } object, default get default blue style
+ * @return {Array<ol.style.Style>}
  */
 ol_style_Style_defaultStyle = function(edit) {
-  if (edit) return defaultEditStyle;
-  else return [ defaultStyle ];
+  if (edit===true) {
+    return defaultEditStyle;
+  } else {
+    var style = defaultStyle.clone();
+    if (edit) {
+      if (edit.color) {
+        style.getImage().getStroke().setColor(edit.color);
+        style.getStroke().setColor(edit.color);
+      }
+      if (edit.fillColor) {
+        style.getImage().getFill().setColor(edit.fillColor);
+        style.getFill().setColor(edit.fillColor);
+      }
+      style.getImage().render();
+    }
+    return [ style ];
+  }
 };
 
 })();
