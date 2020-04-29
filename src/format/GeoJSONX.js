@@ -7,7 +7,7 @@ import ol_ext_inherits from '../util/ext'
  * @extends {ol_format_GeoJSON}
  * @param {*} options options.
  *  @param {number} options.decimals number of decimals to save, default 7 for EPSG:4326, 2 for other projections
- *  @param {boolean} options._keepNull , default false
+ *  @param {boolean|Array<*>} options.deleteNullProperties An array of property values to remove, if false, keep all properties, default [null,undefined,""]
  *  @param {ol.ProjectionLike} options.dataProjection Projection of the data we are reading. If not provided `EPSG:4326`
  *  @param {ol.ProjectionLike} options.featureProjection Projection of the feature geometries created by the format reader. If not provided, features will be returned in the dataProjection.
  */
@@ -18,7 +18,7 @@ var ol_format_GeoJSONX = function(options) {
   this._lineFormat = new ol_format_Polyline({ factor: options.factor || 1e6 });
   this._hash = {};
   this._count = 0;
-  this._keepNull = options.keepNullProperties;
+  this._deleteNull = options.deleteNullProperties===false ? false : [null,undefined,""];
   var decimals = 2;
   if (!options.dataProjection || options.dataProjection === 'EPSG:4326') decimals = 7;
   if (options.decimals) decimals = options.decimals;
@@ -27,7 +27,8 @@ var ol_format_GeoJSONX = function(options) {
 ol_ext_inherits(ol_format_GeoJSONX, ol_format_GeoJSON);
 
 /** Radix */
-ol_format_GeoJSONX.prototype._radix = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/ !#$%&()*.:<=>?@[]^_`{|}~'
+ol_format_GeoJSONX.prototype._radix = 
+'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/ !#$%&\'()*.:<=>?@[]^_`{|}~';
 
 /** Radix size */
 ol_format_GeoJSONX.prototype._size = ol_format_GeoJSONX.prototype._radix.length;
@@ -136,10 +137,11 @@ ol_format_GeoJSONX.prototype.decodeCoordinates = function(v, decimals) {
       return [ this.decodeNumber(v[0], decimals), this.decodeNumber(v[1], decimals) ];
     }
   } else if (v.length) {
+    var r = [];
     for (i=0; i<v.length; i++) {
-      v[i] = this.decodeCoordinates(v[i], decimals);
+      r[i] = this.decodeCoordinates(v[i], decimals);
     }
-    return v;
+    return r;
   } else {
     return [0,0];
   }
@@ -181,15 +183,18 @@ ol_format_GeoJSONX.prototype.writeFeatureObject = function(source, options) {
   delete f.geometry;
   // Encode properties
   var prop = [];
+  var keys = [];
   for (var k in f.properties) {
     if (!this._hash[k]) {
       this._hash[k] = this._count.toString(32);
       this._count++;
     }
-    if (this._keepNull || (f.properties[k] !== null && f.properties[k] !== undefined)) {
-      prop.push (this._hash[k] +':'+ f.properties[k]);
+    if (!this._deleteNull || this._deleteNull.indexOf(f.properties[k])<0) {
+      prop.push (f.properties[k]);
+      keys.push(this._hash[k]);
+    }
   }
-  }
+  prop.unshift(keys.join(','));
   f.prop = prop;
   delete f.properties
   return f;
@@ -204,10 +209,11 @@ ol_format_GeoJSONX.prototype.writeFeatureObject = function(source, options) {
  */
 ol_format_GeoJSONX.prototype.writeGeometryObject = function(source, options) {
   var g = ol_format_GeoJSON.prototype.writeGeometryObject.call(this, source, options);
-  return [
-    g.type,
+  var geo = [
     this.encodeCoordinates(g.coordinates)
-  ]
+  ];
+  if (g.type!=='Point') geo.push(g.type);
+  return geo;
 };
 
 /** Decode a GeoJSONX object.
@@ -236,9 +242,10 @@ ol_format_GeoJSONX.prototype.readFeatureFromObject = function (f, options) {
   }
   if (this._hashProperties) {
     f.properties = {};
-    f.prop.forEach(function(p) {
-      p = p.split(/:(.+)/);
-      f.properties[this._hashProperties[p[0]]] = p[1]
+    var keys;
+    f.prop.forEach(function(p, i) {
+      if (i===0) keys = p.split(',');
+      else f.properties[this._hashProperties[keys[i-1]]] = p;
     }.bind(this));
   } else {
     f.properties = f.prop;

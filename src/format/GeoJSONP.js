@@ -34,20 +34,21 @@ ol_format_GeoJSONP.prototype.encodeCoordinates = function(v) {
     var tab = (typeof(v[0][0]) === 'number');
     if (tab) {
       g = new ol_geom_LineString(v);
-      v = this._lineFormat.writeGeometry(g);
+      return this._lineFormat.writeGeometry(g);
     } else {
+      var r = [];
       for (var i=0; i<v.length; i++) {
-        v[i] = this.encodeCoordinates(v[i]);
+        r[i] = this.encodeCoordinates(v[i]);
       }
+      return r;
     }
-    return v;
   } else {
     return this.encodeCoordinates([0,0]);
   }
 };
 
 /** Decode coordinates
- * @paraù {string|Array<string>}
+ * @param {string|Array<string>}
  * @return {ol.coordinate|Array<ol.coordinate>} v
  * @api
  */
@@ -58,17 +59,18 @@ ol_format_GeoJSONP.prototype.decodeCoordinates = function(v) {
     return g.getCoordinates()[0];
   } else if (v.length) {
     var tab = (typeof(v[0]) === 'string');
+    var r = [];
     if (tab) {
       for (i=0; i<v.length; i++) {
         g = this._lineFormat.readGeometry(v[i]);
-        v[i] = g.getCoordinates();
+        r[i] = g.getCoordinates();
       }
     } else {
       for (i=0; i<v.length; i++) {
-        v[i] = this.decodeCoordinates(v[i]);
+        r[i] = this.decodeCoordinates(v[i]);
       }
     }
-    return v;
+    return r;
   } else {
     return null;
   }

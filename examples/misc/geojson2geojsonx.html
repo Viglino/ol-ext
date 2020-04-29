@@ -152,6 +152,12 @@
       background: #0af;
       padding: .5em 1em;
     }
+    .nosave .saved {
+      background: #800;
+    }
+    #map .ol-zoombt {
+      display: none!important;
+    }
 </style>
 
 </head>
@@ -190,6 +196,21 @@
     <p>Options:</p>
     <ul style="list-style:none;">
       <li>
+        <label>Format:</label>
+        <select id="format" onchange="setFormat()">
+          <option value='geojson'>GeoJSON</option>
+          <option value='geojsonx' selected="selected">GeoJSONX</option>
+          <option value='geojsonp'>GeoJSONP</option>
+        </select>
+      </li>
+      <li>
+        <label>Decimals:</label>
+        <input id="decimals" type="number" value="7" min="0" max="20" onchange="setFormat()" />
+      </li>
+      <li>
+        <label>Remove null properties:
+          <input id="nonull" type="checkbox" checked="checked" onchange="setFormat()" />
+        </label>
       </li>
     </ul>
   
@@ -210,10 +231,36 @@
 
 <script>
   var name, fileSize, features, geojson, result;
+  var format;
 
+  function setFormat() {
+    var v = $('#format').val();
+    document.body.className = v;
+    switch(v) {
+      case 'geojsonx': {
+        format = new ol.format.GeoJSONX({ 
+          deleteNullProperties: $('#nonull').val(),
+          decimals: $('#decimals').val() 
+        });
+        break;
+      }
+      case 'geojsonp': {
+        format = new ol.format.GeoJSONP();
+        break;
+      }
+      default: {
+        format = new ol.format.GeoJSON();
+        break;
+      }
+    }
+    encode();
+  }
+  setFormat();
+
+  /** Save file */
   function download() {
     var blob = new Blob([result], {type: "text/plain;charset=utf-8"});
-    saveAs(blob, name+".geojsonx");
+    saveAs(blob, name+'.'+$('#format').val());
   }
 
   // Add feature on drop
@@ -247,7 +294,12 @@
 
   function encode() {
     if (!features) return;
-    var format = new ol.format.GeoJSONX();
+    if (!$('body').hasClass('isloading')) {
+      $('body').addClass('isloading');
+      $('.loading').html(' loading...');
+      setTimeout(encode, 100);
+      return;
+    }
     geojson = format.writeFeaturesObject(features);
     showFeatures(encoded, format.readFeaturesFromObject(geojson));
     result = JSON.stringify(geojson);
@@ -255,9 +307,10 @@
     $(".loading").html(
       '<div class="saved">' + (100*(fileSize-result.length)/fileSize).toFixed(0) + '% saved</div>'
       + features.length+' feature(s) loaded.'
-      +'<br/>'+ (fileSize/1024).toFixed(0) +'Ko / '+ (result.length/1024).toFixed(0) + 'Ko'
+      +'<br/>'+ (result.length/1024).toFixed(0) +'Ko / '+ (fileSize/1024).toFixed(0) + 'Ko'
     );
     $('body').removeClass('isloading');
+    if (fileSize<result.length) $('body').addClass('nosave');
     $("button").show();
   }
 
@@ -276,26 +329,31 @@
       zoom: 1,
       center: [270055, 3528229.]
     }),
-    layers: [new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) })]
+    layers: [new ol.layer.Tile({ source: new ol.source.OSM() })]
   });
 
   var origin = new ol.layer.Vector({
     title: 'Origin',
-    source: new ol.source.Vector()
+    source: new ol.source.Vector(),
+    style: ol.style.Style.defaultStyle({color:[255,0,0]})
   });
   map.addLayer(origin);
-  var style = ol.style.Style.defaultStyle();
-  style[0].getImage().getStroke().setColor([0,255,0]);
-  style[0].getImage().render();
-  style[0].getStroke().setColor([0,255,0]);
-  style[0].getFill().setColor([0,255,0,.2]);
   var encoded = new ol.layer.Vector({
     title: 'Encoded',
     source: new ol.source.Vector(),
-    style: style
+    // style: ol.style.Style.defaultStyle({color:[0,255,0]})
   });
   map.addLayer(encoded);
   map.addControl(new ol.control.LayerSwitcher);
+
+  var select = new ol.interaction.Select();
+  map.addInteraction(select);
+  var popup = new ol.Overlay.PopupFeature({ 
+    className: 'default anim',
+    canFix: true,
+    select: select
+  });
+  map.addOverlay(popup);
 </script>
 </body>
 </html>
