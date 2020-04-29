@@ -13231,7 +13231,7 @@ ol.format.GeoJSONX = function(options) {
 ol.ext.inherits(ol.format.GeoJSONX, ol.format.GeoJSON);
 /** Radix */
 ol.format.GeoJSONX.prototype._radix = 
-'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/ !#$%&\'()*.:<=>?@[]^_`{|}~';
+'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/ !#$%&\'()*-.:<=>?@[]^_`{|}~';
 /** Radix size */
 ol.format.GeoJSONX.prototype._size = ol.format.GeoJSONX.prototype._radix.length;
 /** Encode a number
@@ -13243,14 +13243,14 @@ ol.format.GeoJSONX.prototype.encodeNumber = function(number, decimals) {
   if (isNaN(Number(number)) || number === null || !isFinite(number)) {
     number = 0;
   }
-  if (number < 0) {
-    return '-' + this.encodeNumber(-number, decimals);
-  }
   // Round number
   number = Math.round(number * Math.pow(10, decimals));
+  // Zigzag encoding (get positive number)
+  if (number<0) number = -2*number - 1;
+  else number = 2*number;
   // Encode
   var result = '';
-  var modulo, residual = Math.floor(number);
+  var modulo, residual = number;
   while (true) {
     modulo = residual % this._size
     result = this._radix.charAt(modulo) + result;
@@ -13265,49 +13265,43 @@ ol.format.GeoJSONX.prototype.encodeNumber = function(number, decimals) {
  */
 ol.format.GeoJSONX.prototype.decodeNumber = function(s, decimals) {
   if (!decimals && decimals!==0) decimals = this._decimals;
-  var result = 0;
-  var sign = 1;
+  var decode = 0;
   s.split('').forEach(function (c) {
-    if (c === '-') {
-      sign = -1;
-    } else {
-      result = (result * this._size) + this._radix.indexOf(c);
-    }
+    decode = (decode * this._size) + this._radix.indexOf(c);
   }.bind(this));
-  return sign * result / Math.pow(10, decimals);
+  // Zigzag encoding
+  var result = Math.floor(decode/2)
+  if (result !== decode/2) result = -1-result;
+  return result / Math.pow(10, decimals);
 };
 /** Encode coordinates
  * @param {ol.coordinate|Array<ol.coordinate>} v
+ * @param {number} decimal
  * @return {string|Array<string>}
  * @api
  */
-ol.format.GeoJSONX.prototype.encodeCoordinates = function(v) {
+ol.format.GeoJSONX.prototype.encodeCoordinates = function(v, decimal) {
   if (typeof(v[0]) === 'number') {
-    return this.encodeNumber(v[0]) +','+ this.encodeNumber(v[1]);
+    return this.encodeNumber(v[0], decimal) +','+ this.encodeNumber(v[1], decimal);
   } else if (v.length && v[0]) {
-    var line = (typeof(v[0][0]) === 'number');
-    if (line) {
-      var xmin = Infinity, ymin = Infinity;
-      v.forEach(function(vi) {
-        xmin = Math.min(xmin, vi[0]);
-        ymin = Math.min(ymin, vi[1]);
-      });
-      xmin = Math.floor(xmin);
-      ymin = Math.floor(ymin);
-      v.forEach(function(vi) {
-        vi[0] -= xmin;
-        vi[1] -= ymin;
-      });
-      this.encodeNumber(xmin);
-      this.encodeNumber(ymin);
+    if (typeof(v[0][0]) === 'number') {
+      var dxy=[0,0];
+      var xy = [];
+      for (var i=0; i<v.length; i++) {
+        v[i] = [
+          Math.round( v[i][0] * Math.pow(10, this._decimals)),
+          Math.round( v[i][1] * Math.pow(10, this._decimals))
+        ];
+        xy[i] = this.encodeCoordinates([ v[i][0]-dxy[0], v[i][1]-dxy[1] ], 0);
+        dxy = v[i];
+      }
+      return this._decimals + ';' + xy.join(';');
+    } else {
+      for (var i=0; i<v.length; i++) {
+        v[i] = this.encodeCoordinates(v[i]);
+      }
+      return v;
     }
-    for (var i=0; i<v.length; i++) {
-      v[i] = this.encodeCoordinates(v[i]);
-    }
-    if (line) {
-      v = this._decimals + ';' + this.encodeNumber(xmin,0)+','+this.encodeNumber(ymin,0)+ ';' + v.join(';');
-    }
-    return v;
   } else {
     return this.encodeCoordinates([0,0]);
   }
@@ -13323,11 +13317,12 @@ ol.format.GeoJSONX.prototype.decodeCoordinates = function(v, decimals) {
     if (/;/.test(v)) {
       v = v.split(';');
       var decimals = parseInt(v.shift());
-      var min = this.decodeCoordinates(v.shift(), 0);
       v = this.decodeCoordinates(v, decimals);
+      var dxy=[0,0];
       v.forEach(function(vi) {
-        vi[0] += min[0];
-        vi[1] += min[1];
+        vi[0] += dxy[0];
+        vi[1] += dxy[1];
+        dxy = vi;
       })
       return v;
     } else {
