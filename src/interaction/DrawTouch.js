@@ -15,7 +15,9 @@ import ol_source_Vector from 'ol/source/Vector'
 import ol_geom_LineString from 'ol/geom/LineString'
 import ol_geom_Polygon from 'ol/geom/Polygon'
 import ol_geom_Point from 'ol/geom/Point'
+import ol_geom_Circle from 'ol/geom/Circle'
 import ol_ext_getMapCanvas from '../util/getMapCanvas'
+import {ol_coordinate_dist2d} from '../geom/GeomUtils'
 
 /** Interaction DrawTouch :
  * @constructor
@@ -33,13 +35,13 @@ var ol_interaction_DrawTouch = function(options) {
   options = options||{};
 
   options.handleEvent = function(e) {
-    if (this.get("tap")) {
+    if (this.get('tap')) {
       switch (e.type) {
-        case "singleclick": {
+        case 'singleclick': {
           this.addPoint();
           break;
         }
-        case "dblclick": {
+        case 'dblclick': {
           this.addPoint();
           this.finishDrawing();
           return false;
@@ -53,8 +55,9 @@ var ol_interaction_DrawTouch = function(options) {
   ol_interaction_CenterTouch.call(this, options);
 
   this.typeGeom_ = options.type;
+  this._geometryFunction = options.geometryFunction;
   this.source_ = options.source;
-  this.set("tap", (options.tap!==false));
+  this.set('tap', (options.tap!==false));
 
   // Style
   var white = [255, 255, 255, 1];
@@ -101,7 +104,7 @@ ol_interaction_DrawTouch.prototype.setMap = function(map) {
   this.overlay_.setMap(map);
 
   if (this.getMap()){
-    this._listener.drawSketch = this.getMap().on("postcompose", this.drawSketchLink_.bind(this));
+    this._listener.drawSketch = this.getMap().on('postcompose', this.drawSketchLink_.bind(this));
   }
 };
 
@@ -121,7 +124,7 @@ ol_interaction_DrawTouch.prototype.finishDrawing = function() {
   var valid = true;
   if (this._feature) {
     switch (this.typeGeom_) {
-      case "LineString": {
+      case 'LineString': {
         if (this.geom_.length > 1) {
           this._feature.setGeometry(new ol_geom_LineString(this.geom_));
         } else {
@@ -129,7 +132,7 @@ ol_interaction_DrawTouch.prototype.finishDrawing = function() {
         }
         break;
       }
-      case "Polygon": {
+      case 'Polygon': {
         // Close polygon
         if (this.geom_[this.geom_.length-1] != this.geom_[0]) {
           this.geom_.push(this.geom_[0]);
@@ -172,11 +175,12 @@ ol_interaction_DrawTouch.prototype.addPoint = function() {
   }
 
   switch (this.typeGeom_) {
-    case "Point": 
+    case 'Point': 
       this._feature.setGeometry(new ol_geom_Point(this.geom_.pop()));
       break;
-    case "LineString":
-    case "Polygon":
+    case 'LineString':
+    case 'Polygon':
+    case 'Circle':
       this.drawSketch_();
       break;
     default: break;
@@ -188,8 +192,9 @@ ol_interaction_DrawTouch.prototype.addPoint = function() {
       feature: this._feature
     });
   }
-  if (this.typeGeom_ ==='Point') {
-      this.finishDrawing();
+  if (this.typeGeom_ ==='Point'
+  || (this.typeGeom_==='Circle' && this.geom_.length>1) ) {
+    this.finishDrawing();
   }
 };
 
@@ -209,18 +214,32 @@ ol_interaction_DrawTouch.prototype.drawSketch_ = function() {
   this.overlay_.getSource().clear();
   if (this.geom_.length) {
     var geom = new ol_geom_LineString(this.geom_);
-    if (this.typeGeom_ == "Polygon") {
-      if (!this._feature.getGeometry()) {
-        this._feature.setGeometry(new ol_geom_Polygon([this.geom_]));
-      } else {
-        this._feature.getGeometry().setCoordinates([this.geom_]);
+    switch (this.typeGeom_) {
+      case 'Circle': {
+        if (!this._feature.getGeometry()) {
+          this._feature.setGeometry(new ol_geom_Circle(this.geom_[0], ol_coordinate_dist2d(this.geom_[0], this.geom_[this.geom_.length-1])));
+        } else {
+          this._feature.getGeometry().setCenter(this.geom_[0]);
+          this._feature.getGeometry().setRadius(ol_coordinate_dist2d(this.geom_[0], this.geom_[this.geom_.length-1]));
+        }
+        break;
       }
-      this.overlay_.getSource().addFeature(new ol_Feature(geom));
-    } else {
-      if (!this._feature.getGeometry()) {
-        this._feature.setGeometry(new ol_geom_LineString(this.geom_));
-      } else {
-        this._feature.getGeometry().setCoordinates(this.geom_);
+      case 'Polygon': {
+        if (!this._feature.getGeometry()) {
+          this._feature.setGeometry(new ol_geom_Polygon([this.geom_]));
+        } else {
+          this._feature.getGeometry().setCoordinates([this.geom_]);
+        }
+        this.overlay_.getSource().addFeature(new ol_Feature(geom));
+        break;
+      }
+      default: {
+        if (!this._feature.getGeometry()) {
+          this._feature.setGeometry(new ol_geom_LineString(this.geom_));
+        } else {
+          this._feature.getGeometry().setCoordinates(this.geom_);
+        }
+        break;
       }
     }
     this.overlay_.getSource().addFeature(this._feature);
@@ -240,21 +259,29 @@ ol_interaction_DrawTouch.prototype.drawSketchLink_ = function(e) {
     var p, pt = this.getMap().getPixelFromCoordinate(this.getPosition());
     var ratio = e.frameState.pixelRatio || 1;
     ctx.scale(ratio,ratio);
-    ctx.strokeStyle = "rgba(0, 153, 255, 1)";
+    ctx.strokeStyle = 'rgba(0, 153, 255, 1)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.arc (pt[0],pt[1], 5, 0, 2*Math.PI);
     ctx.stroke();
     if (this.geom_.length) {
-      p = this.getMap().getPixelFromCoordinate(this.geom_[this.geom_.length-1]);
-      ctx.beginPath();
-      ctx.moveTo(p[0],p[1]);
-      ctx.lineTo(pt[0],pt[1]);
-      if (this.typeGeom_ == "Polygon") {
+      if (this.typeGeom_ === 'Circle') {
         p = this.getMap().getPixelFromCoordinate(this.geom_[0]);
-        ctx.lineTo(p[0],p[1]);
+        var r = ol_coordinate_dist2d(pt, p);
+        ctx.beginPath();
+        ctx.arc (p[0],p[1], r, 0, 2*Math.PI);
+        ctx.stroke();
+      } else  {
+        p = this.getMap().getPixelFromCoordinate(this.geom_[this.geom_.length-1]);
+        ctx.beginPath();
+        ctx.moveTo(p[0],p[1]);
+        ctx.lineTo(pt[0],pt[1]);
+        if (this.typeGeom_ == 'Polygon') {
+          p = this.getMap().getPixelFromCoordinate(this.geom_[0]);
+          ctx.lineTo(p[0],p[1]);
+        }
+        ctx.stroke();
       }
-      ctx.stroke();
     }
   ctx.restore();
 };

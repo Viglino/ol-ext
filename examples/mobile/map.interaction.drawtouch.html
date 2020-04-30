@@ -99,8 +99,8 @@
 
     var controls = {};
     var interactions = [];
-    var t = [ "Point", "LineString", "Polygon" ];
-    var icon = [ "fa-map-marker", "fa-share-alt", "fa-bookmark-o fa-rotate-270" ];
+    var t = [ "Point", "LineString", "Polygon", "Circle" ];
+    var icon = [ "fa-map-marker", "fa-share-alt", "fa-bookmark-o fa-rotate-270", "fa-circle-o" ];
 
     // A control to the bar
     function addControl(interaction) {
@@ -111,6 +111,19 @@
             html: '<i class="fa fa-check"></i>', 
             title: "Add a point",
             handleClick: function(e) { interaction.addPoint(); }
+          }));
+          break;
+        }
+        case 'Circle': {
+          sbar.addControl ( new ol.control.Button({
+            html:"+", 
+            title: "Add a point",
+            handleClick: function(e) { interaction.addPoint(); }
+          }));
+          sbar.addControl ( new ol.control.Button({
+            html: '<i class="fa fa-check"></i>', 
+            title: "Add a point",
+            handleClick: function(e) { interaction.addPoint(); interaction.finishDrawing(); }
           }));
           break;
         }
@@ -163,7 +176,7 @@
     setTap();
 
 interactions.forEach(element => {
-  element.on('drawstart',()=>{console.log('start')})
+  element.on('drawstart',()=>{ console.log('start') })
 });
 
   </script>
