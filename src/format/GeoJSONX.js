@@ -1,5 +1,5 @@
+/*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
 import ol_format_GeoJSON from 'ol/format/GeoJSON'
-import ol_format_Polyline from 'ol/format/Polyline'
 import ol_ext_inherits from '../util/ext'
 
 /** Feature format for reading and writing data in the GeoJSONX format.
@@ -15,7 +15,6 @@ var ol_format_GeoJSONX = function(options) {
   options = options || {};
   ol_format_GeoJSON.call (this, options);
   
-  this._lineFormat = new ol_format_Polyline({ factor: options.factor || 1e6 });
   this._hash = {};
   this._count = 0;
   this._deleteNull = options.deleteNullProperties===false ? false : [null,undefined,""];
@@ -82,13 +81,14 @@ ol_format_GeoJSONX.prototype.decodeNumber = function(s, decimals) {
  * @api
  */
 ol_format_GeoJSONX.prototype.encodeCoordinates = function(v, decimal) {
+  var i;
   if (typeof(v[0]) === 'number') {
     return this.encodeNumber(v[0], decimal) +','+ this.encodeNumber(v[1], decimal);
   } else if (v.length && v[0]) {
     if (typeof(v[0][0]) === 'number') {
       var dxy=[0,0];
       var xy = [];
-      for (var i=0; i<v.length; i++) {
+      for (i=0; i<v.length; i++) {
         v[i] = [
           Math.round( v[i][0] * Math.pow(10, this._decimals)),
           Math.round( v[i][1] * Math.pow(10, this._decimals))
@@ -98,7 +98,7 @@ ol_format_GeoJSONX.prototype.encodeCoordinates = function(v, decimal) {
       }
       return this._decimals + ';' + xy.join(';');
     } else {
-      for (var i=0; i<v.length; i++) {
+      for (i=0; i<v.length; i++) {
         v[i] = this.encodeCoordinates(v[i]);
       }
       return v;
@@ -118,7 +118,7 @@ ol_format_GeoJSONX.prototype.decodeCoordinates = function(v, decimals) {
   if (typeof(v) === 'string') {
     if (/;/.test(v)) {
       v = v.split(';');
-      var decimals = parseInt(v.shift());
+      decimals = parseInt(v.shift());
       v = this.decodeCoordinates(v, decimals);
       var dxy=[0,0];
       v.forEach(function(vi) {
