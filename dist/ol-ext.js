@@ -13207,6 +13207,7 @@ ol.filter.Texture.prototype.postcompose = function(e)
 	ctx.restore();
 }
 
+/*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
 /** Feature format for reading and writing data in the GeoJSONX format.
  * @constructor 
  * @extends {ol.format.GeoJSON}
@@ -13219,7 +13220,6 @@ ol.filter.Texture.prototype.postcompose = function(e)
 ol.format.GeoJSONX = function(options) {
   options = options || {};
   ol.format.GeoJSON.call (this, options);
-  this._lineFormat = new ol.format.Polyline({ factor: options.factor || 1e6 });
   this._hash = {};
   this._count = 0;
   this._deleteNull = options.deleteNullProperties===false ? false : [null,undefined,""];
@@ -13281,13 +13281,14 @@ ol.format.GeoJSONX.prototype.decodeNumber = function(s, decimals) {
  * @api
  */
 ol.format.GeoJSONX.prototype.encodeCoordinates = function(v, decimal) {
+  var i;
   if (typeof(v[0]) === 'number') {
     return this.encodeNumber(v[0], decimal) +','+ this.encodeNumber(v[1], decimal);
   } else if (v.length && v[0]) {
     if (typeof(v[0][0]) === 'number') {
       var dxy=[0,0];
       var xy = [];
-      for (var i=0; i<v.length; i++) {
+      for (i=0; i<v.length; i++) {
         v[i] = [
           Math.round( v[i][0] * Math.pow(10, this._decimals)),
           Math.round( v[i][1] * Math.pow(10, this._decimals))
@@ -13297,7 +13298,7 @@ ol.format.GeoJSONX.prototype.encodeCoordinates = function(v, decimal) {
       }
       return this._decimals + ';' + xy.join(';');
     } else {
-      for (var i=0; i<v.length; i++) {
+      for (i=0; i<v.length; i++) {
         v[i] = this.encodeCoordinates(v[i]);
       }
       return v;
@@ -13316,7 +13317,7 @@ ol.format.GeoJSONX.prototype.decodeCoordinates = function(v, decimals) {
   if (typeof(v) === 'string') {
     if (/;/.test(v)) {
       v = v.split(';');
-      var decimals = parseInt(v.shift());
+      decimals = parseInt(v.shift());
       v = this.decodeCoordinates(v, decimals);
       var dxy=[0,0];
       v.forEach(function(vi) {
@@ -14750,13 +14751,13 @@ ol.interaction.DrawRegular.prototype.end_ = function(evt) {
 ol.interaction.DrawTouch = function(options) {
   options = options||{};
   options.handleEvent = function(e) {
-    if (this.get("tap")) {
+    if (this.get('tap')) {
       switch (e.type) {
-        case "singleclick": {
+        case 'singleclick': {
           this.addPoint();
           break;
         }
-        case "dblclick": {
+        case 'dblclick': {
           this.addPoint();
           this.finishDrawing();
           return false;
@@ -14769,8 +14770,9 @@ ol.interaction.DrawTouch = function(options) {
   }
   ol.interaction.CenterTouch.call(this, options);
   this.typeGeom_ = options.type;
+  this._geometryFunction = options.geometryFunction;
   this.source_ = options.source;
-  this.set("tap", (options.tap!==false));
+  this.set('tap', (options.tap!==false));
   // Style
   var white = [255, 255, 255, 1];
   var blue = [0, 153, 255, 1];
@@ -14810,7 +14812,7 @@ ol.interaction.DrawTouch.prototype.setMap = function(map) {
   ol.interaction.CenterTouch.prototype.setMap.call (this, map);
   this.overlay_.setMap(map);
   if (this.getMap()){
-    this._listener.drawSketch = this.getMap().on("postcompose", this.drawSketchLink_.bind(this));
+    this._listener.drawSketch = this.getMap().on('postcompose', this.drawSketchLink_.bind(this));
   }
 };
 /** Get geometry type
@@ -14827,7 +14829,7 @@ ol.interaction.DrawTouch.prototype.finishDrawing = function() {
   var valid = true;
   if (this._feature) {
     switch (this.typeGeom_) {
-      case "LineString": {
+      case 'LineString': {
         if (this.geom_.length > 1) {
           this._feature.setGeometry(new ol.geom.LineString(this.geom_));
         } else {
@@ -14835,7 +14837,7 @@ ol.interaction.DrawTouch.prototype.finishDrawing = function() {
         }
         break;
       }
-      case "Polygon": {
+      case 'Polygon': {
         // Close polygon
         if (this.geom_[this.geom_.length-1] != this.geom_[0]) {
           this.geom_.push(this.geom_[0]);
@@ -14873,11 +14875,12 @@ ol.interaction.DrawTouch.prototype.addPoint = function() {
     start = true;
   }
   switch (this.typeGeom_) {
-    case "Point": 
+    case 'Point': 
       this._feature.setGeometry(new ol.geom.Point(this.geom_.pop()));
       break;
-    case "LineString":
-    case "Polygon":
+    case 'LineString':
+    case 'Polygon':
+    case 'Circle':
       this.drawSketch_();
       break;
     default: break;
@@ -14889,8 +14892,9 @@ ol.interaction.DrawTouch.prototype.addPoint = function() {
       feature: this._feature
     });
   }
-  if (this.typeGeom_ ==='Point') {
-      this.finishDrawing();
+  if (this.typeGeom_ ==='Point'
+  || (this.typeGeom_==='Circle' && this.geom_.length>1) ) {
+    this.finishDrawing();
   }
 };
 /** Remove last point of the feature currently being drawn.
@@ -14908,18 +14912,32 @@ ol.interaction.DrawTouch.prototype.drawSketch_ = function() {
   this.overlay_.getSource().clear();
   if (this.geom_.length) {
     var geom = new ol.geom.LineString(this.geom_);
-    if (this.typeGeom_ == "Polygon") {
-      if (!this._feature.getGeometry()) {
-        this._feature.setGeometry(new ol.geom.Polygon([this.geom_]));
-      } else {
-        this._feature.getGeometry().setCoordinates([this.geom_]);
+    switch (this.typeGeom_) {
+      case 'Circle': {
+        if (!this._feature.getGeometry()) {
+          this._feature.setGeometry(new ol.geom.Circle(this.geom_[0], ol.coordinate.dist2d(this.geom_[0], this.geom_[this.geom_.length-1])));
+        } else {
+          this._feature.getGeometry().setCenter(this.geom_[0]);
+          this._feature.getGeometry().setRadius(ol.coordinate.dist2d(this.geom_[0], this.geom_[this.geom_.length-1]));
+        }
+        break;
       }
-      this.overlay_.getSource().addFeature(new ol.Feature(geom));
-    } else {
-      if (!this._feature.getGeometry()) {
-        this._feature.setGeometry(new ol.geom.LineString(this.geom_));
-      } else {
-        this._feature.getGeometry().setCoordinates(this.geom_);
+      case 'Polygon': {
+        if (!this._feature.getGeometry()) {
+          this._feature.setGeometry(new ol.geom.Polygon([this.geom_]));
+        } else {
+          this._feature.getGeometry().setCoordinates([this.geom_]);
+        }
+        this.overlay_.getSource().addFeature(new ol.Feature(geom));
+        break;
+      }
+      default: {
+        if (!this._feature.getGeometry()) {
+          this._feature.setGeometry(new ol.geom.LineString(this.geom_));
+        } else {
+          this._feature.getGeometry().setCoordinates(this.geom_);
+        }
+        break;
       }
     }
     this.overlay_.getSource().addFeature(this._feature);
@@ -14937,21 +14955,29 @@ ol.interaction.DrawTouch.prototype.drawSketchLink_ = function(e) {
     var p, pt = this.getMap().getPixelFromCoordinate(this.getPosition());
     var ratio = e.frameState.pixelRatio || 1;
     ctx.scale(ratio,ratio);
-    ctx.strokeStyle = "rgba(0, 153, 255, 1)";
+    ctx.strokeStyle = 'rgba(0, 153, 255, 1)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.arc (pt[0],pt[1], 5, 0, 2*Math.PI);
     ctx.stroke();
     if (this.geom_.length) {
-      p = this.getMap().getPixelFromCoordinate(this.geom_[this.geom_.length-1]);
-      ctx.beginPath();
-      ctx.moveTo(p[0],p[1]);
-      ctx.lineTo(pt[0],pt[1]);
-      if (this.typeGeom_ == "Polygon") {
+      if (this.typeGeom_ === 'Circle') {
         p = this.getMap().getPixelFromCoordinate(this.geom_[0]);
-        ctx.lineTo(p[0],p[1]);
+        var r = ol.coordinate.dist2d(pt, p);
+        ctx.beginPath();
+        ctx.arc (p[0],p[1], r, 0, 2*Math.PI);
+        ctx.stroke();
+      } else  {
+        p = this.getMap().getPixelFromCoordinate(this.geom_[this.geom_.length-1]);
+        ctx.beginPath();
+        ctx.moveTo(p[0],p[1]);
+        ctx.lineTo(pt[0],pt[1]);
+        if (this.typeGeom_ == 'Polygon') {
+          p = this.getMap().getPixelFromCoordinate(this.geom_[0]);
+          ctx.lineTo(p[0],p[1]);
+        }
+        ctx.stroke();
       }
-      ctx.stroke();
     }
   ctx.restore();
 };
