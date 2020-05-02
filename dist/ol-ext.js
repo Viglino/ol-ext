@@ -13283,7 +13283,7 @@ ol.format.GeoJSONX.prototype.decodeNumber = function(s, decimals) {
 ol.format.GeoJSONX.prototype.encodeCoordinates = function(v, decimal) {
   var i;
   if (typeof(v[0]) === 'number') {
-    return this.encodeNumber(v[0], decimal) +','+ this.encodeNumber(v[1], decimal);
+    return this._decimals + ';' + this.encodeNumber(v[0], decimal) +','+ this.encodeNumber(v[1], decimal);
   } else if (v.length && v[0]) {
     if (typeof(v[0][0]) === 'number') {
       var dxy=[0,0];
@@ -13293,7 +13293,7 @@ ol.format.GeoJSONX.prototype.encodeCoordinates = function(v, decimal) {
           Math.round( v[i][0] * Math.pow(10, this._decimals)),
           Math.round( v[i][1] * Math.pow(10, this._decimals))
         ];
-        xy[i] = this.encodeCoordinates([ v[i][0]-dxy[0], v[i][1]-dxy[1] ], 0);
+        xy[i] = this.encodeNumber(v[i][0]-dxy[0], 0) +','+ this.encodeNumber(v[i][1]-dxy[1], 0);
         dxy = v[i];
       }
       return this._decimals + ';' + xy.join(';');
@@ -13315,19 +13315,19 @@ ol.format.GeoJSONX.prototype.encodeCoordinates = function(v, decimal) {
 ol.format.GeoJSONX.prototype.decodeCoordinates = function(v, decimals) {
   var i;
   if (typeof(v) === 'string') {
-    if (/;/.test(v)) {
-      v = v.split(';');
-      decimals = parseInt(v.shift());
-      v = this.decodeCoordinates(v, decimals);
+    v = v.split(';');
+    decimals = parseInt(v.shift());
+    if (v.length>1) {
       var dxy=[0,0];
-      v.forEach(function(vi) {
-        vi[0] += dxy[0];
-        vi[1] += dxy[1];
-        dxy = vi;
-      })
+      v.forEach(function(vi, i) {
+        v[i] = vi.split(',');
+        v[i][0] = this.decodeNumber(v[i][0], decimals) + dxy[0];
+        v[i][1] = this.decodeNumber(v[i][1], decimals) + dxy[1];
+        dxy = v[i];
+      }.bind(this));
       return v;
     } else {
-      v = v.split(',');
+      v = v[0].split(',');
       return [ this.decodeNumber(v[0], decimals), this.decodeNumber(v[1], decimals) ];
     }
   } else if (v.length) {
@@ -13368,10 +13368,14 @@ ol.format.GeoJSONX.prototype.writeFeatureObject = function(source, options) {
   var f = ol.format.GeoJSON.prototype.writeFeatureObject.call(this, source, options);
   delete f.type;
   // Encode geometry
-  f.geo = [
-    this.encodeCoordinates(f.geometry.coordinates)
-  ];
-  if (f.geometry.type!=='Point') f.geo.push(f.geometry.type);
+  if (f.geometry.type==='Point') {
+    f.geo = this.encodeCoordinates(f.geometry.coordinates)
+  } else {
+    f.geo = [
+      f.geometry.type,
+      this.encodeCoordinates(f.geometry.coordinates)
+    ];
+  }
   delete f.geometry;
   // Encode properties
   var prop = [];
@@ -13400,11 +13404,15 @@ ol.format.GeoJSONX.prototype.writeFeatureObject = function(source, options) {
  */
 ol.format.GeoJSONX.prototype.writeGeometryObject = function(source, options) {
   var g = ol.format.GeoJSON.prototype.writeGeometryObject.call(this, source, options);
-  var geo = [
-    this.encodeCoordinates(g.coordinates)
-  ];
-  if (g.type!=='Point') geo.push(g.type);
-  return geo;
+  // Encode geometry
+  if (g.type==='Point') {
+    return this.encodeCoordinates(g.coordinates)
+  } else {
+    return [
+      g.type,
+      this.encodeCoordinates(g.coordinates)
+    ];
+  }
 };
 /** Decode a GeoJSONX object.
  * @param {*} object GeoJSONX
@@ -13425,9 +13433,16 @@ ol.format.GeoJSONX.prototype.readFeaturesFromObject = function (object, options)
  */
 ol.format.GeoJSONX.prototype.readFeatureFromObject = function (f, options) {
   f.type = 'Feature';
-  f.geometry = {
-    type: f.geo[1] || 'Point',
-    coordinates: this.decodeCoordinates(f.geo[0])
+  if (typeof(f.geo) === 'string') {
+    f.geometry = {
+      type: 'Point',
+      coordinates: this.decodeCoordinates(f.geo)
+    }  
+  } else {
+    f.geometry = {
+      type: f.geo[0],
+      coordinates: this.decodeCoordinates(f.geo[1])
+    }
   }
   if (this._hashProperties) {
     f.properties = {};
