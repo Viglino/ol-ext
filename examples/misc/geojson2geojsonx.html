@@ -212,6 +212,14 @@
           <input id="nonull" type="checkbox" checked="checked" onchange="setFormat()" />
         </label>
       </li>
+      <li>
+        <label>White list (a list of properties separtated with ','):</label>
+        <input id="whitel" onchange="setFormat()" />
+      </li>
+      <li>
+        <label>Black list (a list of properties separtated with ','):</label>
+        <input id="blackl" onchange="setFormat()" />
+      </li>
     </ul>
   
     <p style="margin-bottom:0;">Result:</p>
@@ -240,12 +248,19 @@
       case 'geojsonx': {
         format = new ol.format.GeoJSONX({ 
           deleteNullProperties: $('#nonull').val(),
-          decimals: $('#decimals').val() 
+          decimals: $('#decimals').val(),
+          whiteList: $('#whitel').val() ? $('#whitel').val().split(',') : null,
+          blackList: $('#blackl').val() ? $('#blackl').val().split(',') : null
         });
         break;
       }
       case 'geojsonp': {
-        format = new ol.format.GeoJSONP();
+        format = new ol.format.GeoJSONP({ 
+          deleteNullProperties: $('#nonull').val(),
+          decimals: $('#decimals').val(),
+          whiteList: $('#whitel').val() ? $('#whitel').val().split(',') : null,
+          blackList: $('#blackl').val() ? $('#blackl').val().split(',') : null
+        });
         break;
       }
       default: {

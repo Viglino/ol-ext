@@ -8,7 +8,9 @@ import ol_ext_inherits from '../util/ext'
  * @param {*} options options.
  *  @param {number} options.decimals number of decimals to save, default 7 for EPSG:4326, 2 for other projections
  *  @param {boolean|Array<*>} options.deleteNullProperties An array of property values to remove, if false, keep all properties, default [null,undefined,""]
- *  @param {boolean|Array<*>} options.extended Decode extended GeoJSON with foreign members (id, bbox, title, etc.), default false;
+ *  @param {boolean|Array<*>} options.extended Decode/encode extended GeoJSON with foreign members (id, bbox, title, etc.), default false;
+ *  @param {Array<string>|function} options.whiteList A list of properties to keep on features when encoding or a function that takes a property name and retrun true if the property is whitelisted
+ *  @param {Array<string>|function} options.blackList A list of properties to remove from features when encoding or a function that takes a property name and retrun true if the property is blacklisted
  *  @param {ol.ProjectionLike} options.dataProjection Projection of the data we are reading. If not provided `EPSG:4326`
  *  @param {ol.ProjectionLike} options.featureProjection Projection of the feature geometries created by the format reader. If not provided, features will be returned in the dataProjection.
  */
@@ -19,10 +21,24 @@ var ol_format_GeoJSONX = function(options) {
   this._hash = {};
   this._count = 0;
   this._extended = options.extended;
+  if (typeof(options.whiteList)==='function') {
+    this._whiteList = options.whiteList;
+  } else if (options.whiteList && options.whiteList.indexOf) {
+    this._whiteList = function (k) { return options.whiteList.indexOf(k) > -1 };
+  } else {
+    this._whiteList = function() { return true };
+  } 
+  if (typeof(options.blackList)==='function') {
+    this._blackList = options.blackList;
+  } else if (options.blackList && options.blackList.indexOf) {
+    this._blackList = function (k) { return options.blackList.indexOf(k) > -1 };
+  } else {
+    this._blackList = function() { return false };
+  } 
   this._deleteNull = options.deleteNullProperties===false ? false : [null,undefined,""];
   var decimals = 2;
   if (!options.dataProjection || options.dataProjection === 'EPSG:4326') decimals = 7;
-  if (options.decimals) decimals = options.decimals;
+  if (!isNaN(parseInt(options.decimals))) decimals = parseInt(options.decimals);
   this._decimals = decimals;
 };
 ol_ext_inherits(ol_format_GeoJSONX, ol_format_GeoJSON);
@@ -65,6 +81,7 @@ ol_format_GeoJSONX.prototype.encodeNumber = function(number, decimals) {
   if (isNaN(Number(number)) || number === null || !isFinite(number)) {
     number = 0;
   }
+  if (!decimals && decimals!==0) decimals = this._decimals;
   // Round number
   number = Math.round(number * Math.pow(10, decimals));
   // Zigzag encoding (get positive number)
@@ -216,7 +233,7 @@ ol_format_GeoJSONX.prototype.writeFeatureObject = function(source, options) {
     throw 'GeoJSONX doesn\'t support '+f0.geometry.type+'.';
   } 
   if (f0.geometry.type==='Point') {
-      f.push(this.encodeCoordinates(f0.geometry.coordinates), this._decimals);
+    f.push(this.encodeCoordinates(f0.geometry.coordinates, this._decimals));
   } else {
     f.push ([
       this._type[f0.geometry.type],
@@ -227,6 +244,7 @@ ol_format_GeoJSONX.prototype.writeFeatureObject = function(source, options) {
   var prop = [];
   var keys = [];
   for (var k in f0.properties) {
+    if (!this._whiteList(k) || this._blackList(k)) continue;
     if (!this._hash[k]) {
       this._hash[k] = this._count.toString(32);
       this._count++;
@@ -284,6 +302,7 @@ ol_format_GeoJSONX.prototype.readFeaturesFromObject = function (object, options)
   this._hashProperties = object.hashProperties || {};
   options = options || {};
   options.decimals = parseInt(object.decimals);
+  if (!options.decimals) throw 'Bad file format...';
   var features = ol_format_GeoJSON.prototype.readFeaturesFromObject.call(this, object, options);
   return features;
 };
