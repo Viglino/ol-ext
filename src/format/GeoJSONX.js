@@ -209,10 +209,10 @@ ol_format_GeoJSONX.prototype.writeFeaturesObject = function (features, options) 
   }.bind(this));
   this._count = 0;
   this._hash = {};
-  // Push features at the end of the file
-  var features = geojson.features;
+  // Push features at the end of the object
+  var temp = geojson.features;
   delete geojson.features;
-  geojson.features = features;
+  geojson.features = temp;
   return geojson;
 };
 
@@ -241,9 +241,10 @@ ol_format_GeoJSONX.prototype.writeFeatureObject = function(source, options) {
     ]);
   }
   // Encode properties
+  var k;
   var prop = [];
   var keys = [];
-  for (var k in f0.properties) {
+  for (k in f0.properties) {
     if (!this._whiteList(k) || this._blackList(k)) continue;
     if (!this._hash[k]) {
       this._hash[k] = this._count.toString(32);
@@ -260,7 +261,7 @@ ol_format_GeoJSONX.prototype.writeFeatureObject = function(source, options) {
   if (this._extended) {
     var found = false;
     prop = {};
-    for (var k in f0) {
+    for (k in f0) {
       if (!/^type$|^geometry$|^properties$/.test(k)) {
         prop[k] = f0[k];
         found = true;

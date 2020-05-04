@@ -7014,6 +7014,7 @@ ol.control.Permalink.prototype.layerChange_ = function() {
  *	@param {string} options.imageType A string indicating the image format, default image/jpeg
  *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
  *	@param {string} options.orientation Page orientation (landscape/portrait), default guest the best one
+ *	@param {boolean} options.immediate force print even if render is not complete,  default false
  */
 ol.control.Print = function(options) {
   if (!options) options = {};
@@ -7032,6 +7033,7 @@ ol.control.Print = function(options) {
     element: element,
     target: options.target
   });
+  this.set('immediate', options.immediate);
   this.set('imageType', options.imageType || 'image/jpeg');
   this.set('quality', options.quality || .8);
   this.set('orientation', options.orientation);
@@ -7066,7 +7068,7 @@ ol.control.Print.prototype.print = function(options) {
       return;
     }
     // Run printing
-    this.getMap().once('rendercomplete', function(event) {
+    this.getMap().once(this.get('immediate') ? 'postcompose' : 'rendercomplete', function(event) {
       var canvas, ctx;
       // ol <= 5 : get the canvas
       if (event.context) {
@@ -13405,10 +13407,10 @@ ol.format.GeoJSONX.prototype.writeFeaturesObject = function (features, options) 
   }.bind(this));
   this._count = 0;
   this._hash = {};
-  // Push features at the end of the file
-  var features = geojson.features;
+  // Push features at the end of the object
+  var temp = geojson.features;
   delete geojson.features;
-  geojson.features = features;
+  geojson.features = temp;
   return geojson;
 };
 /** Encode a set of features as a GeoJSONX object.
@@ -13436,9 +13438,10 @@ ol.format.GeoJSONX.prototype.writeFeatureObject = function(source, options) {
     ]);
   }
   // Encode properties
+  var k;
   var prop = [];
   var keys = [];
-  for (var k in f0.properties) {
+  for (k in f0.properties) {
     if (!this._whiteList(k) || this._blackList(k)) continue;
     if (!this._hash[k]) {
       this._hash[k] = this._count.toString(32);
@@ -13455,7 +13458,7 @@ ol.format.GeoJSONX.prototype.writeFeatureObject = function(source, options) {
   if (this._extended) {
     var found = false;
     prop = {};
-    for (var k in f0) {
+    for (k in f0) {
       if (!/^type$|^geometry$|^properties$/.test(k)) {
         prop[k] = f0[k];
         found = true;
