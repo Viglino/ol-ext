@@ -20,6 +20,7 @@ import ol_ext_element from '../util/element'
  *	@param {string} options.imageType A string indicating the image format, default image/jpeg
  *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
  *	@param {string} options.orientation Page orientation (landscape/portrait), default guest the best one
+ *	@param {boolean} options.immediate force print even if render is not complete,  default false
  */
 var ol_control_Print = function(options) {
   if (!options) options = {};
@@ -42,6 +43,7 @@ var ol_control_Print = function(options) {
     target: options.target
   });
 
+  this.set('immediate', options.immediate);
   this.set('imageType', options.imageType || 'image/jpeg');
   this.set('quality', options.quality || .8);
   this.set('orientation', options.orientation);
@@ -77,7 +79,7 @@ ol_control_Print.prototype.print = function(options) {
       return;
     }
     // Run printing
-    this.getMap().once('rendercomplete', function(event) {
+    this.getMap().once(this.get('immediate') ? 'postcompose' : 'rendercomplete', function(event) {
       var canvas, ctx;
       // ol <= 5 : get the canvas
       if (event.context) {

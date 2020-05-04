@@ -122,9 +122,8 @@
     map.addControl(printControl);
 
     /* On print > save image file */
-    printControl.on('print', function(e) {
-      $('body').css('opacity', .1);
-      console.log('printing')
+    printControl.on('printing', function(e) {
+      $('body').css('opacity', .5);
     });
     printControl.on(['print', 'error'], function(e) {
       $('body').css('opacity', 1);
