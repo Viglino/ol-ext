@@ -5,13 +5,12 @@
 
 import ol_ext_inherits from '../util/ext'
 import ol_control_Button from './Button'
-import ol_control_Control from 'ol/control/Control'
 
 /** A simple toggle control
  * The control can be created with an interaction to control its activation.
  *
  * @constructor
- * @extends {ol_control_Control}
+ * @extends {ol_control_Button}
  * @fires change:active, change:disable
  * @param {Object=} options Control options.
  *  @param {String} options.className class of the control
@@ -71,7 +70,7 @@ ol_control_Toggle.prototype.setMap = function(map) {
     if (this.subbar_) this.getMap().removeControl (this.subbar_);
   }
 
-  ol_control_Control.prototype.setMap.call(this, map);
+  ol_control_Button.prototype.setMap.call(this, map);
 
   if (map) {
     if (this.interaction_) map.addInteraction (this.interaction_);

@@ -10989,7 +10989,7 @@ ol.control.Timeline.prototype.getEndDate = function() {
  * The control can be created with an interaction to control its activation.
  *
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol.control.Button}
  * @fires change:active, change:disable
  * @param {Object=} options Control options.
  *  @param {String} options.className class of the control
@@ -11042,7 +11042,7 @@ ol.control.Toggle.prototype.setMap = function(map) {
     }
     if (this.subbar_) this.getMap().removeControl (this.subbar_);
   }
-  ol.control.Control.prototype.setMap.call(this, map);
+  ol.control.Button.prototype.setMap.call(this, map);
   if (map) {
     if (this.interaction_) map.addInteraction (this.interaction_);
     if (this.subbar_) map.addControl (this.subbar_);
@@ -11115,32 +11115,115 @@ ol.control.Toggle.prototype.getInteraction = function() {
   The tiles will be reprojected to map pojection (EPSG:3857).
   NB: reduce tileSize to minimize deformations on small scales.
 */
-/* Need proj4js to load IGN-France projections
-*/
-/* global $ */
-if (window.proj4) {
-  if (!window.proj4.defs["EPSG:2154"]) window.proj4.defs("EPSG:2154","+proj=lcc +lat_1=49 +lat_2=44 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
-  if (!window.proj4.defs["IGNF:LAMB93"]) window.proj4.defs("IGNF:LAMB93","+proj=lcc +lat_1=49 +lat_2=44 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
-}
 /** WMSCapabilities
  * @constructor
- * @param {String} proxy proxy to use when requesting Getcapabilites, default none (suppose the service use CORS)
+ * @param {*} options
+ *  @param {String} options.proxy proxy to use when requesting Getcapabilites, default none (suppose the service use CORS)
  */
-var WMSCapabilities = function (proxy) {
-  this.proxy = proxy;
+ol.control.WMSCapabilities = function (options) {
+  options = options || {};
+  this._proxy = options.proxy;
+  var element = ol.ext.element.create('DIV', {
+    className: (options.className || 'ol-wmscapabilities') 
+      + (options.target ? '': ' ol-unselectable ol-control')
+  });
+  var input = ol.ext.element.create('INPUT', {
+    placeholder: options.placeholder || 'Service url...',
+    parent: element
+  });
+  ol.ext.element.create('BUTTON', {
+    click: function() {
+      this.getCapabilities(input.value).then(this.showCapabilitis.bind(this));
+    }.bind(this),
+    html: options.loadLabel || 'load',
+    parent: element
+  });
+  ol.control.Control.call(this, {
+    element: element,
+    target: options.target
+  });
+  // Ajax request
+  var parser = new ol.format.WMSCapabilities();
+  this._ajax = new ol.ext.Ajax({ dataType:'text', auth: options.authentication });
+  this._ajax.on('success', function (e) {
+    var layers = parser.read(e.response);
+    if (this._then) this._then(layers);
+    if (this._finally) this._finally(layers);
+    this._then = this._catch = this._finally = null;
+  }.bind(this));
+  this._ajax.on('error', function(e) {
+    if (this._catch) this._then(e);
+    if (this._finally) this._finally(null);
+    this._then = this._catch = this._finally = null;
+  }.bind(this));
+  // Handle searching
+  this._ajax.on('loadstart', function() {
+    this.element.classList.add('ol-searching');
+  }.bind(this));
+  this._ajax.on('loadend', function() {
+    this.element.classList.remove('ol-searching');
+  }.bind(this));
 };
-/** Enable trace, ie. display the resulting parameters on console
- * @param {bool} b true to display trace, default false
+ol.ext.inherits(ol.control.WMSCapabilities, ol.control.Control);
+/** Get WMS capabilities for a server
+ * @param {string} url service url
+ * @param {*} options 
+ *  @param {string} options.version WMS version, default 1.3.0
+ *  @param {Number} options.timeout
+ *  @param {string} options.map WMS map
+ * @return {*} PromiseLike to handle response
  */
-WMSCapabilities.setTrace = function(b) {
-  WMSCapabilities.prototype.trace = b;
-}
+ol.control.WMSCapabilities.prototype.getCapabilities = function(url, options) {
+  options = options || {};
+  var request = {
+    SERVICE: 'WMS',
+    REQUEST: 'GetCapabilities',
+    VERSION: options.version || '1.3.0'
+  }
+  if (options.map) request.map = options.map;
+  if (this._proxy) {
+    var q = '';
+    for (var r in request) q += (q?'&':'')+r+'='+request[r]
+    this._ajax.send(this._proxy, {
+      url: q
+    }, {
+      timeout: options.timeout || 10000
+    });
+  } else {
+    this._ajax.send(url, request, {
+      timeout: options.timeout || 10000
+    });
+  };
+  // PromiseLike response
+  this._then = this._catch = this._finally = null;
+  var promise = {
+    then: function(f) {
+      if (typeof(f) === 'function') this._then = f;
+      return promise;
+    }.bind(this),
+    catch: function(f) {
+      if (typeof(f) === 'function') this._catch = f;
+      return promise;
+    }.bind(this),
+    finally: function(f) {
+      if (typeof(f) === 'function') this._finally = f;
+      return promise;
+    }.bind(this)
+  }
+  return promise;
+};
+/** Display capabilities in the dialog
+ * @param {*} layers JSON capabilities
+ */
+ol.control.WMSCapabilities.prototype.showCapabilitis = function(layers) {
+  console.log(layers)
+};
 /** Convert capabilities to options
  * @param {} layer layer capabilities (read from the capabilities)
  * @param {} options
  * @return {} the options to create the ol.layer.WMS
-*/
-WMSCapabilities.prototype.getOptionsFromCap = function(layer, options) {
+* /
+ol.control.WMSCapabilities.prototype.getOptionsFromCap = function(layer, options) {
   var i;
   if (!options) options={};
   options = $.extend({
@@ -11167,7 +11250,6 @@ WMSCapabilities.prototype.getOptionsFromCap = function(layer, options) {
 //	var srserror = false;
   if (!layer.CRS || layer.CRS.indexOf(srs)<0) {
     //srserror = true;
-  /* try to change srs ??? */
     if (window.proj4) {
       //if (layer.CRS && layer.CRS.indexOf("EPSG:4326")>=0) srs = "EPSG:4326";
 //			console.log(layer.CRS)
@@ -11175,7 +11257,6 @@ WMSCapabilities.prototype.getOptionsFromCap = function(layer, options) {
       else if (layer.CRS && layer.CRS.indexOf("EPSG:4326")>=0) srs = "EPSG:4326";
       else console.log("ERROR "+srs);
     }
-  /**/
   }
   var bbox, bb = layer.BoundingBox;
   if (bb) {
@@ -11292,8 +11373,8 @@ WMSCapabilities.prototype.getOptionsFromCap = function(layer, options) {
 /** Return a WMS ol.layer.Tile for the given options
  * @param {} options
  * @static
- */
-WMSCapabilities.getLayer = function(options) {
+ * /
+ol.control.WMSCapabilities.getLayer = function(options) {
   var opt = $.extend(true, {}, options);
   // Create layer
   if (opt.attribution.html) opt.source.attributions = [ 
@@ -11310,78 +11391,16 @@ WMSCapabilities.getLayer = function(options) {
 /** Return a WMS ol.layer.Tile for the given capabilities
  * @param {} layer layer capabilities (read from the capabilities)
  * @param {} options 
- */
-WMSCapabilities.prototype.getLayerFromCap = function(layer, options) {
+ * /
+ol.control.WMSCapabilities.prototype.getLayerFromCap = function(layer, options) {
   var opt = this.getOptionsFromCap(layer, options);
   return WMSCapabilities.getLayer(opt);
 }
-/** Get WMS capabilities for a server
- * @param {string} url service url
- * @param {function} callback function called with an array of layers 
- * @param {string} map map of the service, default no map
- * @param {string} version WMS version, default 1.3.0
- * @param {Number} timeout
-*/
-WMSCapabilities.prototype.get = function(url, callback, map, version, timeout) {
-  // Format url	
-  var uri = url + "?SERVICE=WMS&VERSION="+(version||'1.3.0')+"&REQUEST=GetCapabilities";
-  if (map) uri += "&map="+map;
-  if (this.proxy) uri = this.proxy +"?url="+ encodeURIComponent( url + "?SERVICE=WMS&VERSION="+(version||'1.3.0')+"&REQUEST=GetCapabilities" );
-  $.ajax(uri, { timeout:timeout||10000, dataType:'text' })
-  .fail(function(/*response*/) {
-    if (callback) callback ([]);
-  })
-  .done(function(response) {
-    var layers = [];
-    if (response) {
-      var parser = new ol.format.WMSCapabilities();
-      var xmlDoc, $xml;
-      try {
-        xmlDoc = $.parseXML( response ); 
-        $xml = $(xmlDoc);
-      } catch(e) {
-        if (callback) callback ([]);
-        return;
-      }
-      var nodes = $("Capability > Layer", $xml);
-      var r;
-      var addLayers = function(l, crs, level) {
-        if (!level) level = 0;
-        l.url = url;
-        l.service = r.Service;
-        if (map) l.map = map;
-        l.Format = r.Capability.Request.GetMap.Format;
-        l.version = r.version;
-        l.level = level;
-        if (crs) {
-          if (l.CRS) l.CRS = l.CRS.concat(crs);
-          else l.CRS = crs;
-        }
-        if (!l.Name) l.Name = l.Title;
-        if (l.Name) layers.push(l);
-        for (var i=0; i<l.length; i++) {
-          addLayers(l[i], l.CRS, level+1);
-        }
-        if (l.Layer) addLayers(l.Layer, l.CRS, level);
-      }
-      while (nodes.length) {
-        r = parser.read(xmlDoc);
-        var l = r.Capability.Layer;
-        addLayers (l);
-        // next
-        $(nodes.get(nodes.length-1)).remove();
-        nodes = $("Capability > Layer", $xml);
-      }
-      // console.log(layers);
-    }
-    if (callback) callback (layers);
-  });
-};
 /** Gets all layers for a server
  * @param {string} url service url
  * @param {function} callback function called with a list of layers 
-*/
-WMSCapabilities.prototype.getLayers = function(url, callback) {
+* /
+ol.control.WMSCapabilities.prototype.getLayers = function(url, callback) {
   var self = this;
   this.get(url, function(layers) {
     if (layers) for (var i=0; i<layers.length; i++) {
@@ -11390,135 +11409,7 @@ WMSCapabilities.prototype.getLayers = function(url, callback) {
     if (callback) callback (layers);
   });
 };
-(function ( $ ) {
-/** jQuery plugin to get capabilities
- *	Add a choice to load avaliable layers 
-* @function external:"jQuery.fn".wmsCapabilities
-* @param {string} url the service url
-* @param {} options
-* 	@param {String} options.proxy
-* 	@param {Number} options.selectSize size of the select, default 6
-* 	@param {function} options.onSelect callback when select a service
-* 	@param {String} options.srs srs
-* 	@param {bool|auto} options.cors if you want cors request
-* 	@param {ol.Map} options.map a map to put the result in
-* 	@param {String} options.version WMS version number
-* 	@param {Number} options.timeout timeout
-* @example
-$("#capabilities").wmsCapabilities($("#service").val(), 
-{ 	proxy: "proxy.php", 
-  map: null, // map du service
-  selectSize: 6,
-  onChange: function(l)
-  {	// Do something with the layer
-  },
-  onSelect: function(l, opt)
-  {	// Add the selected layer to the map
-    map.addLayer(l);
-    // or get it throw option
-    var wms = WMSCapabilities.getLayer(opt);
-    // test if CORS enabled
-    if (!opt.source.crossOrigin) alert ("CORS Headers missing");
-  },
-  cors: true | false | "auto", // auto will autodetect CORS Headers
-  srs: projection
-});
-*/
-$.fn.wmsCapabilities = function(url, options) {
-  if (!options) options={};
-  var self = this;
-  self.html(self.data("loading")||"loading...").addClass("wms-capabilities loading");
-  var cap = new WMSCapabilities(options.proxy);
-  cap.get(url, function(layers) {
-    self.html("").removeClass("loading");
-    if (!layers || !layers.length) {
-      $("<p>").addClass("error").text(self.data("error")||"service non reachable...").appendTo(self);
-      return;
-    }
-    var select = $("<select>").appendTo(self);
-    select.attr("size", options.selectSize || 6);
-    var btn, proj;
-    if (options.onSelect) btn = $("<button>").text(self.data("btn-add") || "Select").appendTo(self);
-    proj = $("<div>").addClass("crs-error")
-          .appendTo(self);
-    var info = $("<div>").addClass("wms-info").appendTo(self);
-    select.on ("change", function() {
-      var n = $("option:selected", this).val();
-        var l = layers[n];
-        if (options.srs) {
-          if (!l.CRS || l.CRS.indexOf(options.srs)<0) proj.text(self.data("crs-error")||"bad projection");
-          else proj.text("");
-        }
-        info.html("");
-        $("<h1>").text(l.Title).appendTo(info);
-        $("<p>").text(l.Abstract || "").appendTo(info);
-        if (l.Style) {
-          for (var i in l.Style) if (l.Style[i].LegendURL) {
-        // Gestion du cas où l'utilisateur n'a pas fait attention au http ou https	
-            if(!url.contains('https') && url.contains('http') && l.Style[i].LegendURL[0].OnlineResource.contains('https'))
-            {
-        $('#listWMS input#service').val(url.replace('http','https'));
-          $('#listWMS #find').click();
-            }	
-          else if( url.contains('https') && !url.contains('http') && l.Style[i].LegendURL[0].OnlineResource.contains('http'))
-        {
-        $('#listWMS input#service').val(url.replace('https','http'));
-          $('#listWMS #find').click();
-        }
-            $("<img>").attr("src",l.Style[i].LegendURL[0].OnlineResource).appendTo(info);
-          }
-        }
-        // The layer
-        var lay = cap.getLayerFromCap(l, { srs:options.srs, cors:options.cors });
-        if (options.onChange) options.onChange(lay);
-      });
-    if (options.onSelect) btn.click(function() {
-      var n = $("option:selected", select).val();
-        if (typeof n == "undefined") return;
-        info.html("");
-        // Auto-detect CORS headers
-        if (options.cors=="auto") {
-          var klay = cap.getLayerFromCap(layers[n], {srs:options.srs, cors:options.cors });
-          $("p.crs-error", self).remove();
-          // Get auto cors
-          $.ajax({
-            url: klay.getPreview()[0],
-            type:'HEAD',
-            //crossDomain: true,
-            withCredentials: true
-          })
-          .done(function(data, status, request) {
-            // console.warn("Download enabled - CORS Headers present or not required");
-            // things worked out, we can add the CORS attribute and reset the source
-            var cors = request.getResponseHeader('Access-Control-Allow-Origin');
-            // Firefox > cors is null / 
-            var opt = cap.getOptionsFromCap(layers[n], { srs:options.srs, cors:!cors || cors=="*" });
-            var l = WMSCapabilities.getLayer(opt);
-            options.onSelect(l, opt);
-          })
-          .fail(function() {
-            // console.warn("Download disabled - CORS Headers missing");
-            // things worked out, we can add the CORS attribute and reset the source
-            $("<p>").addClass("crs-error").text(self.data("cors-error")||"Download disabled - CORS Headers missing").appendTo(self);
-            var opt = cap.getOptionsFromCap(layers[n], { srs:options.srs, cors:false });
-            var l = WMSCapabilities.getLayer(opt);
-            options.onSelect(l, opt);
-          });
-        } else {
-          var opt = cap.getOptionsFromCap(layers[n], { srs:options.srs, cors:options.cors });
-          var l = WMSCapabilities.getLayer(opt);
-          options.onSelect(l, opt);
-        }
-      });
-    for (var i=0; i<layers.length; i++) {
-      $("<option>").text(layers[i].Name)
-        .val(i)
-        .addClass("level_"+layers[i].level)
-        .appendTo(select);
-    }
-  }, options.map, options.version, options.timeout);
-}
-}( $ ));
+/**/
 
 /*
   Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -13451,6 +13342,7 @@ ol.format.GeoJSONX.prototype.writeFeatureObject = function(source, options) {
   f.push(prop);
   // Other properties (id, title, bbox, centerline...
   if (this._extended) {
+    console.log('extended')
     var found = false;
     prop = {};
     for (k in f0) {
@@ -13502,33 +13394,38 @@ ol.format.GeoJSONX.prototype.readFeaturesFromObject = function (object, options)
  * @param {*} options Read options.
  * @return {ol.Feature}
  */
-ol.format.GeoJSONX.prototype.readFeatureFromObject = function (f, options) {
-  f.type = 'Feature';
-  if (typeof(f[0]) === 'string') {
+ol.format.GeoJSONX.prototype.readFeatureFromObject = function (f0, options) {
+  f = {
+    type: 'Feature'
+  }
+  if (typeof(f0[0]) === 'string') {
     f.geometry = {
       type: 'Point',
-      coordinates: this.decodeCoordinates(f[0], options.decimals || this.decimals)
+      coordinates: this.decodeCoordinates(f0[0], options.decimals || this.decimals)
     }  
   } else {
     f.geometry = {
-      type: this._toType[f[0][0]],
-      coordinates: this.decodeCoordinates(f[0][1], options.decimals || this.decimals)
+      type: this._toType[f0[0][0]],
+      coordinates: this.decodeCoordinates(f0[0][1], options.decimals || this.decimals)
     }
   }
   if (this._hashProperties) {
     f.properties = {};
     var keys;
-    f[1].forEach(function(p, i) {
+    f0[1].forEach(function(p, i) {
       if (i===0) keys = p.split(',');
       else f.properties[this._hashProperties[keys[i-1]]] = p;
     }.bind(this));
   } else {
-    f.properties = f[1];
+    f.properties = f0[1];
+  }
+  // Extended properties
+  if (f0[2]) {
+    for (k in f0[2]) {
+      f[k] = f0[2][k];
+    }
   }
   var feature = ol.format.GeoJSON.prototype.readFeatureFromObject.call(this, f, options);
-  delete f.type;
-  delete f.geometry;
-  delete f.properties;
   return feature;
 };
 
