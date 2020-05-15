@@ -208,8 +208,15 @@
         <input id="decimals" type="number" value="7" min="0" max="20" onchange="setFormat()" />
       </li>
       <li>
-        <label>Remove null properties:
+        <label>
           <input id="nonull" type="checkbox" checked="checked" onchange="setFormat()" />
+          Remove null properties:
+        </label>
+      </li>
+      <li>
+        <label>
+          <input id="extended" type="checkbox" onchange="setFormat()" />
+          Extract extended properties on fearures (id, bbox, etc.):
         </label>
       </li>
       <li>
@@ -247,8 +254,9 @@
     switch(v) {
       case 'geojsonx': {
         format = new ol.format.GeoJSONX({ 
-          deleteNullProperties: $('#nonull').val(),
+          deleteNullProperties: $('#nonull').prop('checked'),
           decimals: $('#decimals').val(),
+          extended: $('#extended').prop('checked'),
           whiteList: $('#whitel').val() ? $('#whitel').val().split(',') : null,
           blackList: $('#blackl').val() ? $('#blackl').val().split(',') : null
         });
@@ -256,8 +264,9 @@
       }
       case 'geojsonp': {
         format = new ol.format.GeoJSONP({ 
-          deleteNullProperties: $('#nonull').val(),
+          deleteNullProperties: $('#nonull').prop('checked'),
           decimals: $('#decimals').val(),
+          extended: $('#extended').prop('checked'),
           whiteList: $('#whitel').val() ? $('#whitel').val().split(',') : null,
           blackList: $('#blackl').val() ? $('#blackl').val().split(',') : null
         });

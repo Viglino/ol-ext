@@ -259,6 +259,7 @@ ol_format_GeoJSONX.prototype.writeFeatureObject = function(source, options) {
   f.push(prop);
   // Other properties (id, title, bbox, centerline...
   if (this._extended) {
+    console.log('extended')
     var found = false;
     prop = {};
     for (k in f0) {
@@ -313,33 +314,38 @@ ol_format_GeoJSONX.prototype.readFeaturesFromObject = function (object, options)
  * @param {*} options Read options.
  * @return {ol.Feature}
  */
-ol_format_GeoJSONX.prototype.readFeatureFromObject = function (f, options) {
-  f.type = 'Feature';
-  if (typeof(f[0]) === 'string') {
+ol_format_GeoJSONX.prototype.readFeatureFromObject = function (f0, options) {
+  f = {
+    type: 'Feature'
+  }
+  if (typeof(f0[0]) === 'string') {
     f.geometry = {
       type: 'Point',
-      coordinates: this.decodeCoordinates(f[0], options.decimals || this.decimals)
+      coordinates: this.decodeCoordinates(f0[0], options.decimals || this.decimals)
     }  
   } else {
     f.geometry = {
-      type: this._toType[f[0][0]],
-      coordinates: this.decodeCoordinates(f[0][1], options.decimals || this.decimals)
+      type: this._toType[f0[0][0]],
+      coordinates: this.decodeCoordinates(f0[0][1], options.decimals || this.decimals)
     }
   }
   if (this._hashProperties) {
     f.properties = {};
     var keys;
-    f[1].forEach(function(p, i) {
+    f0[1].forEach(function(p, i) {
       if (i===0) keys = p.split(',');
       else f.properties[this._hashProperties[keys[i-1]]] = p;
     }.bind(this));
   } else {
-    f.properties = f[1];
+    f.properties = f0[1];
+  }
+  // Extended properties
+  if (f0[2]) {
+    for (k in f0[2]) {
+      f[k] = f0[2][k];
+    }
   }
   var feature = ol_format_GeoJSON.prototype.readFeatureFromObject.call(this, f, options);
-  delete f.type;
-  delete f.geometry;
-  delete f.properties;
   return feature;
 };
 
