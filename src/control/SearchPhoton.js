@@ -32,7 +32,7 @@ var ol_control_SearchPhoton = function(options) {
   options = options || {};
   options.className = options.className || 'photon';
   options.url = options.url || 'http://photon.komoot.de/api/';
-  options.copy = '<a href="http://www.openstreetmap.org/copyright" target="new">&copy; OpenStreetMap contributors</a>';
+  options.copy = options.copy || '<a href="http://www.openstreetmap.org/copyright" target="new">&copy; OpenStreetMap contributors</a>';
   ol_control_SearchJSON.call(this, options);
   this.set('lang', options.lang);
   this.set('position', options.position);
