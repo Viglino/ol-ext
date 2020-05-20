@@ -1,4 +1,5 @@
-/*	Copyright (c) 2015 Jean-Marc VIGLINO,
+/*
+  Copyright (c) 2015 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
@@ -220,7 +221,8 @@ ol_control_Swipe.prototype._drawRect = function(e, pts) {
       }
     });
   } else {
-    e.context.rect(pts[0][0],pts[0][1],pts[1][0],pts[1][1])
+    var ratio = e.frameState.pixelRatio;
+    e.context.rect(pts[0][0]*ratio,pts[0][1]*ratio,pts[1][0]*ratio,pts[1][1]*ratio);
   }
 };
 
