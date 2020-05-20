@@ -315,7 +315,7 @@ ol_format_GeoJSONX.prototype.readFeaturesFromObject = function (object, options)
  * @return {ol.Feature}
  */
 ol_format_GeoJSONX.prototype.readFeatureFromObject = function (f0, options) {
-  f = {
+  var f = {
     type: 'Feature'
   }
   if (typeof(f0[0]) === 'string') {
@@ -341,7 +341,7 @@ ol_format_GeoJSONX.prototype.readFeatureFromObject = function (f0, options) {
   }
   // Extended properties
   if (f0[2]) {
-    for (k in f0[2]) {
+    for (var k in f0[2]) {
       f[k] = f0[2][k];
     }
   }

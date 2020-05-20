@@ -289,9 +289,10 @@ ol_control_Profil.prototype.setGeometry = function(g, options) {
   // Distance beetween 2 coords
   var proj = options.projection || this.getMap().getView().getProjection();
   function dist2d(p1,p2) {
-    	return ol_sphere_getDistance(
+    return ol_sphere_getDistance(
       ol_proj_transform(p1, proj, 'EPSG:4326'),
-      ol_proj_transform(p2, proj, 'EPSG:4326'));
+      ol_proj_transform(p2, proj, 'EPSG:4326')
+    );
   }
 
   function getTime(t0, t1) {
