@@ -50,7 +50,7 @@ ol_control_LayerPopup.prototype.drawList = function(ul, layers) {
       self._setLayerForLI(d, layer);
 
 			if (self.testLayerVisibility(layer)) d.classList.add("ol-layer-hidden");
-			if (layer.getVisible()) d.classList.add("select");
+			if (layer.getVisible()) d.classList.add('ol-visible');
 		}
 	});
 };

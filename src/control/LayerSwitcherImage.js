@@ -44,7 +44,7 @@ ol_control_LayerSwitcherImage.prototype.drawList = function(ul, layers) {
     if (self.displayInLayerSwitcher(layer)) {
       var preview = layer.getPreview ? layer.getPreview() : ["none"];
       var d = ol_ext_element.create('LI', {
-        className: 'ol-imgcontainer' + (layer.getVisible() ? ' select':''),
+        className: 'ol-imgcontainer' + (layer.getVisible() ? ' ol-visible':''),
         on: { 'touchstart click': setVisibility },
         parent: ul
       });

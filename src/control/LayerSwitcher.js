@@ -292,15 +292,13 @@ ol_control_LayerSwitcher.prototype._setLayerForLI = function(li, layer) {
   }
   if (li) {
     // Handle opacity change
-    listeners.push(layer.on('change:opacity', function(e) {
-      var i = li.querySelector('.layerswitcher-opacity-cursor')
-      if (i) i.style.left = (layer.getOpacity()*100)+"%"
-    }));
+    listeners.push(layer.on('change:opacity', (function() {
+      this.setLayerOpacity(layer, li);
+    }).bind(this)));
     // Handle visibility chage
-    listeners.push(layer.on('change:visible', function(e) {
-      var i = li.querySelector('.ol-visibility');
-      if (i) i.checked = layer.getVisible();
-    }));
+    listeners.push(layer.on('change:visible', (function() {
+      this.setLayerVisibility(layer, li);
+    }).bind(this)));
   }
   // Other properties
   listeners.push(layer.on('propertychange', (function(e) {
@@ -309,6 +307,28 @@ ol_control_LayerSwitcher.prototype._setLayerForLI = function(li, layer) {
     }
   }).bind(this)));
   this._layers.push({ li:li, layer:layer, listeners: listeners });
+};
+
+/** Set opacity for a layer
+ * @param {ol.layer.Layer} layer
+ * @param {Element} li the list element
+ * @api
+ */
+ol_control_LayerSwitcher.prototype.setLayerOpacity = function(layer, li) {
+  var i = li.querySelector('.layerswitcher-opacity-cursor')
+  if (i) i.style.left = (layer.getOpacity()*100)+"%"
+};
+
+/** Set visibility for a layer
+ * @param {ol.layer.Layer} layer
+ * @param {Element} li the list element
+ * @api
+ */
+ol_control_LayerSwitcher.prototype.setLayerVisibility = function(layer, li) {
+  var i = li.querySelector('.ol-visibility');
+  if (i) i.checked = layer.getVisible();
+  if (layer.getVisible()) li.classList.add('ol-visible');
+  else li.classList.remove('ol-visible');
 };
 
 /** Clear layers associated with li
