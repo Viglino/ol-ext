@@ -9,6 +9,7 @@ import ol_ext_inherits from '../util/ext'
  * @constructor 
  * @extends {ol_format_GeoJSON}
  * @param {*} options options.
+ *  @param {number} options.decimals number of decimals to save, default 6
  *  @param {ol.ProjectionLike} options.dataProjection Projection of the data we are reading. If not provided `EPSG:4326`
  *  @param {ol.ProjectionLike} options.featureProjection Projection of the feature geometries created by the format reader. If not provided, features will be returned in the dataProjection.
  */
@@ -16,7 +17,7 @@ var ol_format_GeoJSONP = function(options) {
   options = options || {};
   ol_format_GeoJSONX.call (this, options);
   
-  this._lineFormat = new ol_format_Polyline({ factor: options.factor || 1e6 });
+  this._lineFormat = new ol_format_Polyline({ factor: Math.pow(10, options.decimals || 6) });
 };
 ol_ext_inherits(ol_format_GeoJSONP, ol_format_GeoJSONX);
 

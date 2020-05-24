@@ -255,11 +255,12 @@ ol_format_GeoJSONX.prototype.writeFeatureObject = function(source, options) {
       keys.push(this._hash[k]);
     }
   }
-  prop.unshift(keys.join(','));
-  f.push(prop);
+  if (prop.length || this._extended) {
+    prop.unshift(keys.join(','));
+    f.push(prop);
+  }
   // Other properties (id, title, bbox, centerline...
   if (this._extended) {
-    console.log('extended')
     var found = false;
     prop = {};
     for (k in f0) {
@@ -329,7 +330,7 @@ ol_format_GeoJSONX.prototype.readFeatureFromObject = function (f0, options) {
       coordinates: this.decodeCoordinates(f0[0][1], options.decimals || this.decimals)
     }
   }
-  if (this._hashProperties) {
+  if (this._hashProperties && f0[1]) {
     f.properties = {};
     var keys;
     f0[1].forEach(function(p, i) {

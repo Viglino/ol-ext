@@ -109,7 +109,7 @@
     }
     .loading {
       font-weight: bold;
-      margin:0 0 1em;
+      margin: 0;
       padding:0.5em;
       height:1em;
     }
@@ -158,6 +158,28 @@
     #map .ol-zoombt {
       display: none!important;
     }
+    .help {
+      display: none;
+      padding: .5em 1em .5em 3em;
+      background-color: #eee;
+      margin: 0 -1em .5em -3em;
+    }
+    .geojsonp .help.geojsonp,
+    .geojsonx .help.geojsonx {
+      display: block;
+    }
+    .info li input[type="text"] {
+      width: 100%;
+    }
+    li .warning {
+      margin: 0;
+      padding: .5em 1em;
+      background-color: #d70;
+      color: yellow;
+    }
+    .geojson .x {
+      display: none;
+    }
 </style>
 
 </head>
@@ -169,17 +191,11 @@
   </a>
 
   <div class="info">
-    Convert GeoJSON file into GeoJSONX...
-    <br/>
-    The aim of <i>ol/format/GeoJSONX</i> is to encode features properties and geometry  so as to minimize the file size.
-    <br/>
-    Properties keys are stored in a dictionnary to minimize the redondances.
-    Geometry is written using the  
-    <a href="https://developers.google.com/maps/documentation/utilities/polylinealgorithm">Encoded Polyline Algorithm Format</a>.
-    <br/>
+    Compress (minify) GeoJSON.
     <p class="warning">
       <i class="fa fa-warning fa-2x" style="float: left; color: orange; margin-right: .5em;"></i>
-      Keep in mind the encoding process use a <b>loosy</b> compression algorithm that will reduce the precision of the data (to 6 digits).
+      Keep in mind the encoding process use a <b>loosy</b> compression algorithm that will reduce 
+      the precision of the data (to x digits).
       If you are after highly accurate coordinates this process probably isn’t for you.
     </p>
   </div>
@@ -201,31 +217,47 @@
           <option value='geojson'>GeoJSON</option>
           <option value='geojsonx' selected="selected">GeoJSONX</option>
           <option value='geojsonp'>GeoJSONP</option>
+          <option value='topojson'>TopoJSON</option>
         </select>
+      </li>
+      <li class="help geojson">
+        The default GeoJSON format.
+      </li>
+      <li class="help geojsonx">
+        <b>ol/format/GeoJSONX</b> encode features properties and geometry to minimize the file size.
+        <br/>
+        Properties keys are stored in a dictionnary to minimize the redondances.
+      </li>
+      <li class="help geojsonp">
+        <b>ol/format/GeoJSONP</b> encode features geometry using
+        <a href="https://developers.google.com/maps/documentation/utilities/polylinealgorithm">Encoded Polyline Algorithm Format</a>.
+        <br/>
+        Properties keys are stored in a dictionnary to minimize the redondances.
+        <p class="warning">EPA only support 5/6 decimals precision. Using more digits may lead to invalid geometry.</p>
       </li>
       <li>
         <label>Decimals:</label>
-        <input id="decimals" type="number" value="7" min="0" max="20" onchange="setFormat()" />
+        <input id="decimals" type="number" value="6" min="-2" max="20" onchange="setFormat()" />
       </li>
-      <li>
+      <li class="x">
         <label>
           <input id="nonull" type="checkbox" checked="checked" onchange="setFormat()" />
           Remove null properties:
         </label>
       </li>
-      <li>
+      <li class="x">
         <label>
           <input id="extended" type="checkbox" onchange="setFormat()" />
           Extract extended properties on fearures (id, bbox, etc.):
         </label>
       </li>
-      <li>
+      <li class="x">
         <label>White list (a list of properties separtated with ','):</label>
-        <input id="whitel" onchange="setFormat()" />
+        <input id="whitel" type="text" onchange="setFormat()" />
       </li>
-      <li>
+      <li class="x">
         <label>Black list (a list of properties separtated with ','):</label>
-        <input id="blackl" onchange="setFormat()" />
+        <input id="blackl" type="text" onchange="setFormat()" />
       </li>
     </ul>
   
@@ -251,7 +283,16 @@
   function setFormat() {
     var v = $('#format').val();
     document.body.className = v;
+    if ($('#decimals').val()<6) $('.geojsonp .warning').hide();
+    else $('.geojsonp .warning').show();
     switch(v) {
+      case 'topojson': {
+        format = new ol.format.TopoJSON();
+        format.writeFeaturesObject = function (features) {
+          return topojson.topology({ layer: geojson });
+        }
+        break;
+      }
       case 'geojsonx': {
         format = new ol.format.GeoJSONX({ 
           deleteNullProperties: $('#nonull').prop('checked'),
@@ -324,7 +365,9 @@
       setTimeout(encode, 100);
       return;
     }
-    geojson = format.writeFeaturesObject(features);
+    console.log(features[0].getGeometry())
+    geojson = format.writeFeaturesObject(features, { decimals: $('#decimals').val() });
+    console.log(geojson)
     showFeatures(encoded, format.readFeaturesFromObject(geojson));
     result = JSON.stringify(geojson);
     $("#result").val(JSON.stringify(geojson,null,' ').substr(0,50000)+(result.length>50000? '\n...':''));
@@ -355,6 +398,7 @@
     }),
     layers: [new ol.layer.Tile({ source: new ol.source.OSM() })]
   });
+  map.addControl(new ol.control.Permalink({ visible: false }));
 
   var origin = new ol.layer.Vector({
     title: 'Origin',

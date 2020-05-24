@@ -2080,7 +2080,7 @@ ol.control.LayerSwitcher.prototype.tip = {
  * @return {boolean} true if the layer is displayed
  */
 ol.control.LayerSwitcher.prototype.displayInLayerSwitcher = function(layer) {
-  return (layer.get("displayInLayerSwitcher")!==false);
+  return (layer.get('displayInLayerSwitcher')!==false);
 };
 /**
  * Set the map instance the control is associated with.
@@ -2214,7 +2214,9 @@ ol.control.LayerSwitcher.prototype._setLayerForLI = function(li, layer) {
   }
   // Other properties
   listeners.push(layer.on('propertychange', (function(e) {
-    if (e.key === 'displayInLayerSwitcher') {
+    console.log('change',e)
+    if (e.key === 'displayInLayerSwitcher'
+      || e.key === 'openInLayerSwitcher') {
       this.drawPanel(e);
     }
   }).bind(this)));
@@ -13395,11 +13397,12 @@ ol.format.GeoJSONX.prototype.writeFeatureObject = function(source, options) {
       keys.push(this._hash[k]);
     }
   }
-  prop.unshift(keys.join(','));
-  f.push(prop);
+  if (prop.length || this._extended) {
+    prop.unshift(keys.join(','));
+    f.push(prop);
+  }
   // Other properties (id, title, bbox, centerline...
   if (this._extended) {
-    console.log('extended')
     var found = false;
     prop = {};
     for (k in f0) {
@@ -13466,7 +13469,7 @@ ol.format.GeoJSONX.prototype.readFeatureFromObject = function (f0, options) {
       coordinates: this.decodeCoordinates(f0[0][1], options.decimals || this.decimals)
     }
   }
-  if (this._hashProperties) {
+  if (this._hashProperties && f0[1]) {
     f.properties = {};
     var keys;
     f0[1].forEach(function(p, i) {
@@ -13491,13 +13494,14 @@ ol.format.GeoJSONX.prototype.readFeatureFromObject = function (f0, options) {
  * @constructor 
  * @extends {ol.format.GeoJSON}
  * @param {*} options options.
+ *  @param {number} options.decimals number of decimals to save, default 6
  *  @param {ol.ProjectionLike} options.dataProjection Projection of the data we are reading. If not provided `EPSG:4326`
  *  @param {ol.ProjectionLike} options.featureProjection Projection of the feature geometries created by the format reader. If not provided, features will be returned in the dataProjection.
  */
 ol.format.GeoJSONP = function(options) {
   options = options || {};
   ol.format.GeoJSONX.call (this, options);
-  this._lineFormat = new ol.format.Polyline({ factor: options.factor || 1e6 });
+  this._lineFormat = new ol.format.Polyline({ factor: Math.pow(10, options.decimals || 6) });
 };
 ol.ext.inherits(ol.format.GeoJSONP, ol.format.GeoJSONX);
 /** Encode coordinates
