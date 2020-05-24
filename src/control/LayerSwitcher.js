@@ -157,7 +157,7 @@ ol_control_LayerSwitcher.prototype.tip = {
  * @return {boolean} true if the layer is displayed
  */
 ol_control_LayerSwitcher.prototype.displayInLayerSwitcher = function(layer) {
-  return (layer.get("displayInLayerSwitcher")!==false);
+  return (layer.get('displayInLayerSwitcher')!==false);
 };
 
 /**
@@ -302,7 +302,9 @@ ol_control_LayerSwitcher.prototype._setLayerForLI = function(li, layer) {
   }
   // Other properties
   listeners.push(layer.on('propertychange', (function(e) {
-    if (e.key === 'displayInLayerSwitcher') {
+    console.log('change',e)
+    if (e.key === 'displayInLayerSwitcher'
+      || e.key === 'openInLayerSwitcher') {
       this.drawPanel(e);
     }
   }).bind(this)));
