@@ -2214,7 +2214,6 @@ ol.control.LayerSwitcher.prototype._setLayerForLI = function(li, layer) {
   }
   // Other properties
   listeners.push(layer.on('propertychange', (function(e) {
-    console.log('change',e)
     if (e.key === 'displayInLayerSwitcher'
       || e.key === 'openInLayerSwitcher') {
       this.drawPanel(e);
@@ -13161,7 +13160,7 @@ ol.filter.Texture.prototype.postcompose = function(e)
  * @param {*} options options.
  *  @param {number} options.decimals number of decimals to save, default 7 for EPSG:4326, 2 for other projections
  *  @param {boolean|Array<*>} options.deleteNullProperties An array of property values to remove, if false, keep all properties, default [null,undefined,""]
- *  @param {boolean|Array<*>} options.extended Decode/encode extended GeoJSON with foreign members (id, bbox, title, etc.), default false;
+ *  @param {boolean|Array<*>} options.extended Decode/encode extended GeoJSON with foreign members (id, bbox, title, etc.), default false
  *  @param {Array<string>|function} options.whiteList A list of properties to keep on features when encoding or a function that takes a property name and retrun true if the property is whitelisted
  *  @param {Array<string>|function} options.blackList A list of properties to remove from features when encoding or a function that takes a property name and retrun true if the property is blacklisted
  *  @param {ol.ProjectionLike} options.dataProjection Projection of the data we are reading. If not provided `EPSG:4326`
@@ -13445,7 +13444,7 @@ ol.format.GeoJSONX.prototype.readFeaturesFromObject = function (object, options)
   this._hashProperties = object.hashProperties || {};
   options = options || {};
   options.decimals = parseInt(object.decimals);
-  if (!options.decimals) throw 'Bad file format...';
+  if (!options.decimals && options.decimals!==0) throw 'Bad file format...';
   var features = ol.format.GeoJSON.prototype.readFeaturesFromObject.call(this, object, options);
   return features;
 };
@@ -17859,17 +17858,24 @@ ol.interaction.Split.prototype.setMap = function(map) {
  * @private
  */
 ol.interaction.Split.prototype.getClosestFeature = function(e) {
-  var f, c, g, d = this.snapDistance_+1;
-  for (var i=0; i<this.sources_.length; i++) {
-    var source = this.sources_[i];
-    f = source.getClosestFeatureToCoordinate(e.coordinate);
-    if (f && f.getGeometry().splitAt) {
-      c = f.getGeometry().getClosestPoint(e.coordinate);
-      g = new ol.geom.LineString([e.coordinate,c]);
-      d = g.getLength() / e.frameState.viewState.resolution;
-      break;
+  var source, f, c, g, d = this.snapDistance_+1;
+  // Look for closest point in the sources
+  this.sources_.forEach(function(si) {
+    var fi = si.getClosestFeatureToCoordinate(e.coordinate);
+    if (fi && fi.getGeometry().splitAt) {
+      var ci = fi.getGeometry().getClosestPoint(e.coordinate);
+      var gi = new ol.geom.LineString([e.coordinate,ci]);
+      var di = gi.getLength() / e.frameState.viewState.resolution;
+      if (di < d) {
+        source = si;
+        d = di;
+        f = fi;
+        g = gi;
+        c = ci;
+      }
     }
-  }
+  });
+  // Snap ?
   if (d > this.snapDistance_) {
     return false;
   } else {

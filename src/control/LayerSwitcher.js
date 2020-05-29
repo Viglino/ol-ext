@@ -302,7 +302,6 @@ ol_control_LayerSwitcher.prototype._setLayerForLI = function(li, layer) {
   }
   // Other properties
   listeners.push(layer.on('propertychange', (function(e) {
-    console.log('change',e)
     if (e.key === 'displayInLayerSwitcher'
       || e.key === 'openInLayerSwitcher') {
       this.drawPanel(e);
