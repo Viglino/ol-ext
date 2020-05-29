@@ -5,7 +5,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
   <meta name="description" content="Convert CSV file to GeoJSON." />
-  <meta name="keywords" content="csv, geojson, online" />
+  <meta name="keywords" content="openlayers, geojson, topojson, online, minify, compress" />
 
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
@@ -99,6 +99,10 @@
       width: 0; 
       background: #664;
     }
+    label,
+    input {
+      vertical-align: middle;
+    }
     textarea {
       width:100%; 
       height:15em; 
@@ -164,6 +168,8 @@
       background-color: #eee;
       margin: 0 -1em .5em -3em;
     }
+    .geojson .help.geojson,
+    .topojson .help.topojson,
     .geojsonp .help.geojsonp,
     .geojsonx .help.geojsonx {
       display: block;
@@ -177,6 +183,7 @@
       background-color: #d70;
       color: yellow;
     }
+    .topojson .x,
     .geojson .x {
       display: none;
     }
@@ -191,13 +198,8 @@
   </a>
 
   <div class="info">
-    Compress (minify) GeoJSON.
-    <p class="warning">
-      <i class="fa fa-warning fa-2x" style="float: left; color: orange; margin-right: .5em;"></i>
-      Keep in mind the encoding process use a <b>loosy</b> compression algorithm that will reduce 
-      the precision of the data (to x digits).
-      If you are after highly accurate coordinates this process probably isn’t for you.
-    </p>
+    <b>Compress (minify) GeoJSON.</b><br/>
+    Choose your format, compare resulting file size and look at result on the map.
   </div>
   
   <div class="globe">
@@ -215,13 +217,17 @@
         <label>Format:</label>
         <select id="format" onchange="setFormat()">
           <option value='geojson'>GeoJSON</option>
+          <option value='topojson'>TopoJSON</option>
           <option value='geojsonx' selected="selected">GeoJSONX</option>
           <option value='geojsonp'>GeoJSONP</option>
-          <option value='topojson'>TopoJSON</option>
         </select>
       </li>
       <li class="help geojson">
-        The default GeoJSON format.
+        Standard <a href="https://en.wikipedia.org/wiki/GeoJSON">GeoJSON</a> format.
+      </li>
+      <li class="help topojson">
+        <a href="https://en.wikipedia.org/wiki/GeoJSON#TopoJSON">TopoJSON</a> is an extension 
+        of GeoJSON that encodes geospatial topology and that typically provides smaller file sizes.
       </li>
       <li class="help geojsonx">
         <b>ol/format/GeoJSONX</b> encode features properties and geometry to minimize the file size.
@@ -238,6 +244,7 @@
       <li>
         <label>Decimals:</label>
         <input id="decimals" type="number" value="6" min="-2" max="20" onchange="setFormat()" />
+        <label>Reduce the precision of the data (to x digits).</label>
       </li>
       <li class="x">
         <label>
@@ -269,11 +276,7 @@
     <textarea id="result"></textarea>
 
     <div id="map"></div>
-    
-    <a href="./map.geojsonx.html" target="geojsonx" style="display: block; text-align: right; width: 100%;">
-      <i class="fa fa-globe"></i> See result on this page.
-    </a>
-    
+      
   </div>
 
 <script>
@@ -289,6 +292,8 @@
       case 'topojson': {
         format = new ol.format.TopoJSON();
         format.writeFeaturesObject = function (features) {
+          var fmt = new ol.format.GeoJSON()
+          var geojson = fmt.writeFeaturesObject(features, { decimals: $('#decimals').val() });
           return topojson.topology({ layer: geojson });
         }
         break;
@@ -365,9 +370,7 @@
       setTimeout(encode, 100);
       return;
     }
-    console.log(features[0].getGeometry())
     geojson = format.writeFeaturesObject(features, { decimals: $('#decimals').val() });
-    console.log(geojson)
     showFeatures(encoded, format.readFeaturesFromObject(geojson));
     result = JSON.stringify(geojson);
     $("#result").val(JSON.stringify(geojson,null,' ').substr(0,50000)+(result.length>50000? '\n...':''));
@@ -396,9 +399,9 @@
       zoom: 1,
       center: [270055, 3528229.]
     }),
-    layers: [new ol.layer.Tile({ source: new ol.source.OSM() })]
+    layers: [new ol.layer.Tile({ title: 'OSM', source: new ol.source.OSM() })]
   });
-  map.addControl(new ol.control.Permalink({ visible: false }));
+  map.addControl(new ol.control.Permalink({ visible: false, geohash: true }));
 
   var origin = new ol.layer.Vector({
     title: 'Origin',

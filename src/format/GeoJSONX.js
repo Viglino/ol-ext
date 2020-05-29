@@ -8,7 +8,7 @@ import ol_ext_inherits from '../util/ext'
  * @param {*} options options.
  *  @param {number} options.decimals number of decimals to save, default 7 for EPSG:4326, 2 for other projections
  *  @param {boolean|Array<*>} options.deleteNullProperties An array of property values to remove, if false, keep all properties, default [null,undefined,""]
- *  @param {boolean|Array<*>} options.extended Decode/encode extended GeoJSON with foreign members (id, bbox, title, etc.), default false;
+ *  @param {boolean|Array<*>} options.extended Decode/encode extended GeoJSON with foreign members (id, bbox, title, etc.), default false
  *  @param {Array<string>|function} options.whiteList A list of properties to keep on features when encoding or a function that takes a property name and retrun true if the property is whitelisted
  *  @param {Array<string>|function} options.blackList A list of properties to remove from features when encoding or a function that takes a property name and retrun true if the property is blacklisted
  *  @param {ol.ProjectionLike} options.dataProjection Projection of the data we are reading. If not provided `EPSG:4326`
@@ -305,7 +305,7 @@ ol_format_GeoJSONX.prototype.readFeaturesFromObject = function (object, options)
   this._hashProperties = object.hashProperties || {};
   options = options || {};
   options.decimals = parseInt(object.decimals);
-  if (!options.decimals) throw 'Bad file format...';
+  if (!options.decimals && options.decimals!==0) throw 'Bad file format...';
   var features = ol_format_GeoJSON.prototype.readFeaturesFromObject.call(this, object, options);
   return features;
 };
