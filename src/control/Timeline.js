@@ -602,7 +602,6 @@ ol_control_Timeline.prototype.setDate = function(feature, options) {
  * @return {Date}
  */
 ol_control_Timeline.prototype.roundDate = function(d, stick) {
-  console.log(d)
   switch (stick) {
     case 'mn': {
       return new Date(this._roundTo(d, 60*1000));
