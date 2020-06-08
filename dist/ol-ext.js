@@ -7225,8 +7225,13 @@ ol.control.Print.prototype.print = function(options) {
  * @constructor
  * @extends {ol.control.Control}
  * @fires  over, out, show
- * @param {Object=} _ol_control_ opt_options.
- *
+ * @param {Object=} options
+ *  @param {string} className
+ *  @param {ol.style.Style} style style to draw the profil
+ *  @param {*} info keys/values for i19n
+ *  @param {number} width
+ *  @param {number} height
+ *  @parma {ol.Feature} feature the feature to draw profil
  */
 ol.control.Profil = function(opt_options) {
   var options = opt_options || {};
@@ -7249,6 +7254,18 @@ ol.control.Profil = function(opt_options) {
     this.button.addEventListener("touchstart", click_touchstart_function);
     element.appendChild(this.button);
   }
+  if (options.style instanceof ol.style.Style) {
+    this._style = options.style;
+  } else {
+    this._style = new ol.style.Style({
+      text: new ol.style.Text(),
+      stroke: new ol.style.Stroke({
+        width: 1.5,
+        color: '#369'
+      })
+    });
+  }
+  if (!this._style.getText()) this._style.setText(new ol.style.Text());
   var div_inner = document.createElement("div");
       div_inner.classList.add("ol-inner");
       element.appendChild(div_inner);
@@ -7489,7 +7506,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options) {
   w -= this.margin_.right + this.margin_.left;
   h -= this.margin_.top + this.margin_.bottom;
   // Draw axes
-  ctx.strokeStyle = "#000";
+  ctx.strokeStyle = this._style.getText().getFill().getColor() || '#000';
   ctx.lineWidth = 0.5*ratio;
   ctx.beginPath();
   ctx.moveTo(0,0); ctx.lineTo(0,-h);
@@ -7539,11 +7556,31 @@ ol.control.Profil.prototype.setGeometry = function(g, options) {
   var scy = -h/(zmax-zmin);
   var dy = this.dy_ = -zmin*scy;
   this.scale_ = [scx,scy];
+  // Draw Path
+  ctx.beginPath();
+  for (i=0; p=t[i]; i++) {
+    if (i==0) ctx.moveTo(p[0]*scx,p[1]*scy+dy);
+    else ctx.lineTo(p[0]*scx,p[1]*scy+dy);
+  }
+  if (this._style.getStroke()) {
+    ctx.strokeStyle = this._style.getStroke().getColor() || '#000';
+    ctx.lineWidth = this._style.getStroke().getWidth() * ratio;
+    ctx.setLineDash([]);
+    ctx.stroke();
+  }
+  // Fill path
+  if (this._style.getFill()) {
+    ctx.fillStyle = this._style.getFill().getColor() || '#000';
+    ctx.Style = this._style.getFill().getColor() || '#000';
+    ctx.lineTo(t[t.length-1][0]*scx, 0);
+    ctx.lineTo(t[0][0]*scx, 0);
+    ctx.fill();
+  }
   // Draw
-  ctx.font = (10*ratio)+"px arial";
-  ctx.textAlign = "right";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle="#000";
+  ctx.font = (10*ratio)+'px arial';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = this._style.getText().getFill().getColor() || '#000';
   // Scale Z
   ctx.beginPath();
   for (i=zmin; i<=zmax; i+=grad) {
@@ -7581,16 +7618,6 @@ ol.control.Profil.prototype.setGeometry = function(g, options) {
   ctx.rotate(-Math.PI/2);
   ctx.fillText(this.info.ytitle, h/2, -this.margin_.left);
   ctx.restore();
-  ctx.stroke();
-  // 
-  ctx.strokeStyle = "#369";
-  ctx.lineWidth = 1;
-  ctx.setLineDash([]);
-  ctx.beginPath();
-  for (i=0; p=t[i]; i++) {
-    if (i==0) ctx.moveTo(p[0]*scx,p[1]*scy+dy);
-    else ctx.lineTo(p[0]*scx,p[1]*scy+dy);
-  }
   ctx.stroke();
 };
 /** Get profil image
