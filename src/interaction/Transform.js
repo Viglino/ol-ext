@@ -137,12 +137,14 @@ ol_interaction_Transform.prototype.Cursors = {
  * @api stable
  */
 ol_interaction_Transform.prototype.setMap = function(map) {
-  if (this.getMap()) {
-    this.getMap().removeLayer(this.overlayLayer_);
-    if (this.previousCursor_) {
-      this.getMap().getTargetElement().style.cursor = this.previousCursor_;
-      this.previousCursor_ = undefined;
+  var oldMap = this.getMap();
+  if (oldMap) {
+    var targetElement = oldMap.getTargetElement();
+    oldMap.removeLayer(this.overlayLayer_);
+    if (this.previousCursor_ && targetElement) {
+      targetElement.style.cursor = this.previousCursor_;
     }
+    this.previousCursor_ = undefined;
   }
   ol_interaction_Pointer.prototype.setMap.call (this, map);
   this.overlayLayer_.setMap(map);
