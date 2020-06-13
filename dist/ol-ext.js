@@ -11576,30 +11576,37 @@ ol.featureAnimation.prototype.animate = function (/* e */) {
  * @property {function} stop - stop animation option arguments can be passed in animationend event.
  * @property {function} isPlaying - return true if animation is playing.
  */
+(function() {
+var _internals = [];
 /** Animate feature on a map
  * @function 
- * @fires animationstart, animationend
  * @param {ol.Feature} feature Feature to animate
  * @param {ol.featureAnimation|Array<ol.featureAnimation>} fanim the animation to play
  * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
  */
 ol.Map.prototype.animateFeature = function(feature, fanim) {
-  // Animate on last visible layer
-  function animLayer(layers) {
-    for (var l, i=layers.length-1; l=layers[i]; i--) {
-      if (l.getVisible()) {
-        if (l.getLayers) {
-          if (animLayer(l.getLayers().getArray())) return true;
-        } else {
-          var controller = l.animateFeature(feature, fanim);
-          return controller;
-        }
-      }
-    }
-    return false;
+  var layer;
+  // Get or create an animation layer associated with the map 
+  _internals.forEach(function(l) {
+    if (l[0] === this) layer = l[1];
+  }.bind(this));
+  if (!layer) {
+    layer = new ol.layer.Vector({ source: new ol.source.Vector() });
+    _internals.push([this, layer]);
+    layer.setMap(this);
   }
-  return animLayer(this.getLayers().getArray());
+  // Animate feature on this layer
+  layer.getSource().addFeature(feature);
+  var listener = fanim.on('animationend', function(e) {
+    if (e.feature===feature) {
+      // Remove feature on ends
+      layer.getSource().removeFeature(feature);
+      ol.Observable.unByKey(listener);
+    }
+  });
+  layer.animateFeature(feature, fanim);
 };
+})();
 /** Animate feature on a vector layer 
  * @fires animationstart, animationend
  * @param {ol.Feature} feature Feature to animate
