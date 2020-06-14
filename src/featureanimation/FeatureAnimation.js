@@ -105,10 +105,6 @@ ol_featureAnimation.prototype.animate = function (/* e */) {
  * @property {function} isPlaying - return true if animation is playing.
  */
 
-(function() {
-
-var _internals = [];
-
 /** Animate feature on a map
  * @function 
  * @param {ol.Feature} feature Feature to animate
@@ -116,30 +112,23 @@ var _internals = [];
  * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
  */
 ol_Map.prototype.animateFeature = function(feature, fanim) {
-  var layer;
   // Get or create an animation layer associated with the map 
-  _internals.forEach(function(l) {
-    if (l[0] === this) layer = l[1];
-  }.bind(this));
+  var layer = map._featureAnimationLayer;
   if (!layer) {
-    layer = new ol_layer_Vector({ source: new ol_source_Vector() });
-    _internals.push([this, layer]);
+    layer = map._featureAnimationLayer = new ol_layer_Vector({ source: new ol_source_Vector() });
     layer.setMap(this);
   }
   // Animate feature on this layer
   layer.getSource().addFeature(feature);
   var listener = fanim.on('animationend', function(e) {
     if (e.feature===feature) {
-      // Remove feature on ends
+      // Remove feature on end
       layer.getSource().removeFeature(feature);
       ol_Observable_unByKey(listener);
     }
   });
   layer.animateFeature(feature, fanim);
 };
-
-})();
-
 
 /** Animate feature on a vector layer 
  * @fires animationstart, animationend
