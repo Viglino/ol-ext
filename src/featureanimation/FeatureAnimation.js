@@ -113,9 +113,9 @@ ol_featureAnimation.prototype.animate = function (/* e */) {
  */
 ol_Map.prototype.animateFeature = function(feature, fanim) {
   // Get or create an animation layer associated with the map 
-  var layer = map._featureAnimationLayer;
+  var layer = this._featureAnimationLayer;
   if (!layer) {
-    layer = map._featureAnimationLayer = new ol_layer_Vector({ source: new ol_source_Vector() });
+    layer = this._featureAnimationLayer = new ol_layer_Vector({ source: new ol_source_Vector() });
     layer.setMap(this);
   }
   // Animate feature on this layer
