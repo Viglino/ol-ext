@@ -79,6 +79,10 @@
       <br/>
       Undo can be stacked in a block to make them undoing at a time. 
       Just enclose the operation between a <i>blockStart()</i> and <i>blockEnd()</i>.
+      <br/>
+      You can stack operation on a map by enclosing operations beetween 
+      <i>undoblockstart</i> and <i>undoblockend</i> events
+      (<i>map.dispatchEvent('undoblockstart')</i> and <i>map.dispatchEvent('undoblockend')</i>).
     </p>
     Cancelable operations:
     <ul>

@@ -71,7 +71,16 @@ ol_interaction_UndoRedo.prototype.setActive = function(active) {
  * @api stable
  */
 ol_interaction_UndoRedo.prototype.setMap = function(map) {
+  if (this._mapListener) {
+    this._mapListener.forEach(function(l) { ol_Observable_unByKey(l); })
+  }
+  this._mapListener = [];
   ol_interaction_Interaction.prototype.setMap.call (this, map);
+  // Watch blocks
+  if (map) {
+    this._mapListener.push(map.on('undoblockstart', this.blockStart.bind(this)));
+    this._mapListener.push(map.on('undoblockend', this.blockEnd.bind(this)));
+  }
   // Watch sources
   this._watchSources();
   this._watchInteractions();
