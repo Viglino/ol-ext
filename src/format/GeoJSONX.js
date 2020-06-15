@@ -52,25 +52,24 @@ ol_format_GeoJSONX.prototype._size = ol_format_GeoJSONX.prototype._radix.length;
 
 /** GeoSJON types */
 ol_format_GeoJSONX.prototype._type = {
-  "Point": "p",
-  "LineString": "L",
-  "Polygon": "P",
-  "MultiPoint": "Mp",
-  "MultiLineString": "ML",
-  "MultiPolygon": "MP",
-  "GeometryCollection": "" // Not supported
+  "Point": 0,
+  "LineString": 1,
+  "Polygon": 2,
+  "MultiPoint": 3,
+  "MultiLineString": 4,
+  "MultiPolygon": 5,
+  "GeometryCollection": null // Not supported
 };
 
 /** GeoSJONX types */
-ol_format_GeoJSONX.prototype._toType = {
-  "p": "Point",
-  "L": "LineString",
-  "P": "Polygon",
-  "Mp": "MultiPoint",
-  "ML": "MultiLineString",
-  "MP": "MultiPolygon",
-  "": "GeometryCollection" // Not supported
-};
+ol_format_GeoJSONX.prototype._toType = [
+  "Point",
+  "LineString",
+  "Polygon",
+  "MultiPoint",
+  "MultiLineString",
+  "MultiPolygon"
+];
 
 /** Encode a number
  * @param {number} number Number to encode
@@ -203,9 +202,9 @@ ol_format_GeoJSONX.prototype.writeFeaturesObject = function (features, options) 
   this._hash = {};
   var geojson = ol_format_GeoJSON.prototype.writeFeaturesObject.call(this, features, options);
   geojson.decimals = this._decimals;
-  geojson.hashProperties = {};
+  geojson.hashProperties = [];
   Object.keys(this._hash).forEach(function(k) {
-    geojson.hashProperties[this._hash[k]] = k;
+    geojson.hashProperties.push(k);
   }.bind(this));
   this._count = 0;
   this._hash = {};
@@ -229,12 +228,12 @@ ol_format_GeoJSONX.prototype.writeFeatureObject = function(source, options) {
   if (f0.type !== 'Feature') throw 'GeoJSONX doesn\'t support '+f0.type+'.';
   var f = [];
   // Encode geometry
-  if (f0.geometry.type==='GeometryCollection') {
-    throw 'GeoJSONX doesn\'t support '+f0.geometry.type+'.';
-  } 
   if (f0.geometry.type==='Point') {
     f.push(this.encodeCoordinates(f0.geometry.coordinates, this._decimals));
   } else {
+    if (!this._type[f0.geometry.type]) {
+      throw 'GeoJSONX doesn\'t support '+f0.geometry.type+'.';
+    }
     f.push ([
       this._type[f0.geometry.type],
       this.encodeCoordinates(f0.geometry.coordinates, this._decimals)
@@ -243,20 +242,18 @@ ol_format_GeoJSONX.prototype.writeFeatureObject = function(source, options) {
   // Encode properties
   var k;
   var prop = [];
-  var keys = [];
   for (k in f0.properties) {
     if (!this._whiteList(k) || this._blackList(k)) continue;
-    if (!this._hash[k]) {
-      this._hash[k] = this._count.toString(32);
+    if (!this._hash.hasOwnProperty(k)) {
+      this._hash[k] = this._count;
       this._count++;
     }
     if (!this._deleteNull || this._deleteNull.indexOf(f0.properties[k])<0) {
-      prop.push (f0.properties[k]);
-      keys.push(this._hash[k]);
+      prop.push (this._hash[k], f0.properties[k]);
     }
   }
+  // Create prop table
   if (prop.length || this._extended) {
-    prop.unshift(keys.join(','));
     f.push(prop);
   }
   // Other properties (id, title, bbox, centerline...
@@ -302,7 +299,7 @@ ol_format_GeoJSONX.prototype.writeGeometryObject = function(source, options) {
  * @api
  */
 ol_format_GeoJSONX.prototype.readFeaturesFromObject = function (object, options) {
-  this._hashProperties = object.hashProperties || {};
+  this._hashProperties = object.hashProperties || [];
   options = options || {};
   options.decimals = parseInt(object.decimals);
   if (!options.decimals && options.decimals!==0) throw 'Bad file format...';
@@ -322,21 +319,20 @@ ol_format_GeoJSONX.prototype.readFeatureFromObject = function (f0, options) {
   if (typeof(f0[0]) === 'string') {
     f.geometry = {
       type: 'Point',
-      coordinates: this.decodeCoordinates(f0[0], options.decimals || this.decimals)
+      coordinates: this.decodeCoordinates(f0[0], typeof(options.decimals) === 'number' ? options.decimals : this.decimals)
     }  
   } else {
     f.geometry = {
       type: this._toType[f0[0][0]],
-      coordinates: this.decodeCoordinates(f0[0][1], options.decimals || this.decimals)
+      coordinates: this.decodeCoordinates(f0[0][1], typeof(options.decimals) === 'number' ? options.decimals : this.decimals)
     }
   }
   if (this._hashProperties && f0[1]) {
     f.properties = {};
-    var keys;
-    f0[1].forEach(function(p, i) {
-      if (i===0) keys = p.split(',');
-      else f.properties[this._hashProperties[keys[i-1]]] = p;
-    }.bind(this));
+    var t = f0[1];
+    for (var i=0; i<t.length; i+=2) {
+      f.properties[this._hashProperties[t[i]]] = t[i+1];
+    }
   } else {
     f.properties = f0[1];
   }

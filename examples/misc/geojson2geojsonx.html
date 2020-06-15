@@ -374,10 +374,16 @@
     showFeatures(encoded, format.readFeaturesFromObject(geojson));
     result = JSON.stringify(geojson);
     $("#result").val(JSON.stringify(geojson,null,' ').substr(0,50000)+(result.length>50000? '\n...':''));
+    var size;
+    if (result.length > 1024*1024) {
+      size = (result.length/1024/1024).toFixed(2) +' Mo / '+ (fileSize/1024/1024).toFixed(2) + ' Mo'
+    } else {
+      size = (result.length/1024).toFixed(0) +' Ko / '+ (fileSize/1024).toFixed(0) + ' Ko';
+    }
     $(".loading").html(
       '<div class="saved">' + (100*(fileSize-result.length)/fileSize).toFixed(0) + '% saved</div>'
       + features.length+' feature(s) loaded.'
-      +'<br/>'+ (result.length/1024).toFixed(0) +'Ko / '+ (fileSize/1024).toFixed(0) + 'Ko'
+      +'<br/>'+ size
     );
     $('body').removeClass('isloading');
     if (fileSize<result.length) $('body').addClass('nosave');
