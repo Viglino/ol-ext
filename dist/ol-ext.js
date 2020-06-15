@@ -11576,8 +11576,6 @@ ol.featureAnimation.prototype.animate = function (/* e */) {
  * @property {function} stop - stop animation option arguments can be passed in animationend event.
  * @property {function} isPlaying - return true if animation is playing.
  */
-(function() {
-var _internals = [];
 /** Animate feature on a map
  * @function 
  * @param {ol.Feature} feature Feature to animate
@@ -11585,28 +11583,23 @@ var _internals = [];
  * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
  */
 ol.Map.prototype.animateFeature = function(feature, fanim) {
-  var layer;
   // Get or create an animation layer associated with the map 
-  _internals.forEach(function(l) {
-    if (l[0] === this) layer = l[1];
-  }.bind(this));
+  var layer = this._featureAnimationLayer;
   if (!layer) {
-    layer = new ol.layer.Vector({ source: new ol.source.Vector() });
-    _internals.push([this, layer]);
+    layer = this._featureAnimationLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
     layer.setMap(this);
   }
   // Animate feature on this layer
   layer.getSource().addFeature(feature);
   var listener = fanim.on('animationend', function(e) {
     if (e.feature===feature) {
-      // Remove feature on ends
+      // Remove feature on end
       layer.getSource().removeFeature(feature);
       ol.Observable.unByKey(listener);
     }
   });
   layer.animateFeature(feature, fanim);
 };
-})();
 /** Animate feature on a vector layer 
  * @fires animationstart, animationend
  * @param {ol.Feature} feature Feature to animate
@@ -13233,24 +13226,23 @@ ol.format.GeoJSONX.prototype._radix =
 ol.format.GeoJSONX.prototype._size = ol.format.GeoJSONX.prototype._radix.length;
 /** GeoSJON types */
 ol.format.GeoJSONX.prototype._type = {
-  "Point": "p",
-  "LineString": "L",
-  "Polygon": "P",
-  "MultiPoint": "Mp",
-  "MultiLineString": "ML",
-  "MultiPolygon": "MP",
-  "GeometryCollection": "" // Not supported
+  "Point": 0,
+  "LineString": 1,
+  "Polygon": 2,
+  "MultiPoint": 3,
+  "MultiLineString": 4,
+  "MultiPolygon": 5,
+  "GeometryCollection": null // Not supported
 };
 /** GeoSJONX types */
-ol.format.GeoJSONX.prototype._toType = {
-  "p": "Point",
-  "L": "LineString",
-  "P": "Polygon",
-  "Mp": "MultiPoint",
-  "ML": "MultiLineString",
-  "MP": "MultiPolygon",
-  "": "GeometryCollection" // Not supported
-};
+ol.format.GeoJSONX.prototype._toType = [
+  "Point",
+  "LineString",
+  "Polygon",
+  "MultiPoint",
+  "MultiLineString",
+  "MultiPolygon"
+];
 /** Encode a number
  * @param {number} number Number to encode
  * @private {number} decimals Number of decimals
@@ -13378,9 +13370,9 @@ ol.format.GeoJSONX.prototype.writeFeaturesObject = function (features, options) 
   this._hash = {};
   var geojson = ol.format.GeoJSON.prototype.writeFeaturesObject.call(this, features, options);
   geojson.decimals = this._decimals;
-  geojson.hashProperties = {};
+  geojson.hashProperties = [];
   Object.keys(this._hash).forEach(function(k) {
-    geojson.hashProperties[this._hash[k]] = k;
+    geojson.hashProperties.push(k);
   }.bind(this));
   this._count = 0;
   this._hash = {};
@@ -13403,12 +13395,12 @@ ol.format.GeoJSONX.prototype.writeFeatureObject = function(source, options) {
   if (f0.type !== 'Feature') throw 'GeoJSONX doesn\'t support '+f0.type+'.';
   var f = [];
   // Encode geometry
-  if (f0.geometry.type==='GeometryCollection') {
-    throw 'GeoJSONX doesn\'t support '+f0.geometry.type+'.';
-  } 
   if (f0.geometry.type==='Point') {
     f.push(this.encodeCoordinates(f0.geometry.coordinates, this._decimals));
   } else {
+    if (!this._type[f0.geometry.type]) {
+      throw 'GeoJSONX doesn\'t support '+f0.geometry.type+'.';
+    }
     f.push ([
       this._type[f0.geometry.type],
       this.encodeCoordinates(f0.geometry.coordinates, this._decimals)
@@ -13417,20 +13409,18 @@ ol.format.GeoJSONX.prototype.writeFeatureObject = function(source, options) {
   // Encode properties
   var k;
   var prop = [];
-  var keys = [];
   for (k in f0.properties) {
     if (!this._whiteList(k) || this._blackList(k)) continue;
-    if (!this._hash[k]) {
-      this._hash[k] = this._count.toString(32);
+    if (!this._hash.hasOwnProperty(k)) {
+      this._hash[k] = this._count;
       this._count++;
     }
     if (!this._deleteNull || this._deleteNull.indexOf(f0.properties[k])<0) {
-      prop.push (f0.properties[k]);
-      keys.push(this._hash[k]);
+      prop.push (this._hash[k], f0.properties[k]);
     }
   }
+  // Create prop table
   if (prop.length || this._extended) {
-    prop.unshift(keys.join(','));
     f.push(prop);
   }
   // Other properties (id, title, bbox, centerline...
@@ -13474,7 +13464,7 @@ ol.format.GeoJSONX.prototype.writeGeometryObject = function(source, options) {
  * @api
  */
 ol.format.GeoJSONX.prototype.readFeaturesFromObject = function (object, options) {
-  this._hashProperties = object.hashProperties || {};
+  this._hashProperties = object.hashProperties || [];
   options = options || {};
   options.decimals = parseInt(object.decimals);
   if (!options.decimals && options.decimals!==0) throw 'Bad file format...';
@@ -13493,21 +13483,20 @@ ol.format.GeoJSONX.prototype.readFeatureFromObject = function (f0, options) {
   if (typeof(f0[0]) === 'string') {
     f.geometry = {
       type: 'Point',
-      coordinates: this.decodeCoordinates(f0[0], options.decimals || this.decimals)
+      coordinates: this.decodeCoordinates(f0[0], typeof(options.decimals) === 'number' ? options.decimals : this.decimals)
     }  
   } else {
     f.geometry = {
       type: this._toType[f0[0][0]],
-      coordinates: this.decodeCoordinates(f0[0][1], options.decimals || this.decimals)
+      coordinates: this.decodeCoordinates(f0[0][1], typeof(options.decimals) === 'number' ? options.decimals : this.decimals)
     }
   }
   if (this._hashProperties && f0[1]) {
     f.properties = {};
-    var keys;
-    f0[1].forEach(function(p, i) {
-      if (i===0) keys = p.split(',');
-      else f.properties[this._hashProperties[keys[i-1]]] = p;
-    }.bind(this));
+    var t = f0[1];
+    for (var i=0; i<t.length; i+=2) {
+      f.properties[this._hashProperties[t[i]]] = t[i+1];
+    }
   } else {
     f.properties = f0[1];
   }
@@ -18714,12 +18703,14 @@ ol.interaction.Transform.prototype.Cursors = {
  * @api stable
  */
 ol.interaction.Transform.prototype.setMap = function(map) {
-  if (this.getMap()) {
-    this.getMap().removeLayer(this.overlayLayer_);
-    if (this.previousCursor_) {
-      this.getMap().getTargetElement().style.cursor = this.previousCursor_;
-      this.previousCursor_ = undefined;
+  var oldMap = this.getMap();
+  if (oldMap) {
+    var targetElement = oldMap.getTargetElement();
+    oldMap.removeLayer(this.overlayLayer_);
+    if (this.previousCursor_ && targetElement) {
+      targetElement.style.cursor = this.previousCursor_;
     }
+    this.previousCursor_ = undefined;
   }
   ol.interaction.Pointer.prototype.setMap.call (this, map);
   this.overlayLayer_.setMap(map);
