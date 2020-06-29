@@ -13634,7 +13634,6 @@ ol.format.GeoRSS.prototype.readFeature = function(source, options) {
       coord.push([parseFloat(temp[i+1]), parseFloat(temp[i])]) 
     }
     g = new ol.geom.Polygon([coord]);
-    console.log(temp,coord)
     f.unset('georss:polygon');
   } else if (f.get('georss:where')) {
     // GML
@@ -13667,9 +13666,9 @@ ol.format.GeoRSS.prototype.readFeatures = function(source, options) {
   if (typeof(source)==='string') {
     var parser = new DOMParser();
     var xmlDoc = parser.parseFromString(source,"text/xml");
-    items = xmlDoc.getElementsByTagName('item');
+    items = xmlDoc.getElementsByTagName(this.getDocumentItemsTagName(xmlDoc));
   } else if (source instanceof Document) {
-    items = source.getElementsByTagName('item');
+    items = source.getElementsByTagName(this.getDocumentItemsTagName(source));
   } else if (source instanceof Node) {
     items = source;
   } else {
@@ -13682,6 +13681,21 @@ ol.format.GeoRSS.prototype.readFeatures = function(source, options) {
   }
   return features;
 };
+/**
+ * Get the tag name for the items in the XML Document depending if we are
+ * dealing with an atom base document or not.
+ * @param {Document} xmlDoc document to extract the tag name for the items
+ * @return {string} tag name
+ * @private
+ */
+ol.format.GeoRSS.prototype.getDocumentItemsTagName = function(xmlDoc) {
+  switch (xmlDoc.documentElement.tagName) {
+    case 'feed':
+      return 'entry';
+    default:
+      return 'item';
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
