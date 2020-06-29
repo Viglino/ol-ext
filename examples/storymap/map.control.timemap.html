@@ -96,6 +96,18 @@
     .ol-timeline .ol-scroll {
       height: 1.4em;
     }
+    .img {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      display: none;
+      max-width: 11em;
+      max-height: 15em;
+      border: .5em solid #fff;
+    }
+    .fullscreen .img {
+      display: block;
+    }
   </style>
 
 </head>
@@ -120,6 +132,7 @@
 
   <!-- Map div -->
   <div id="map" style="width:600px; height:400px;"></div>
+  <img class="img" />
 
   <div class='options'>
     <span class='dateStart'></span>
@@ -200,7 +213,7 @@
   });
   map.addControl(dnd);
 
-  var tline, minDate, maxDate;
+  var tline, minDate, maxDate, tdate={};
   function addTimeLine (features) {
     if (tline) {
       map.removeControl(tline);
@@ -212,6 +225,7 @@
     features.forEach(function(f) {
       var date = new Date(f.get('date'));
       f.set('date', date);
+      if (f.get('doc')) tdate[date.toLocaleDateString()] = f.get('doc');
       if (date && date < minDate) minDate = date;
       if (date && date > maxDate) maxDate = date;
     });
@@ -239,9 +253,15 @@
     });
 
     // Show features on scroll
+    var current='';
     tline.on('scroll', function(e){
       var d = tline.roundDate(e.date, 'day')
       $('.dateStart').text(d.toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric'}));
+      var doc = tdate[d.toLocaleDateString()];
+      if (doc && current!==doc) {
+        current = doc;
+        $('.img').attr('src', 'https://espacecollaboratif.ign.fr/document/image/' + doc);
+      }
       // Filter features visibility
       currentDate = d;
       vectorSource.changed();
