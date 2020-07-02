@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.1.12
+ * @version v3.1.13
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -27955,6 +27955,13 @@ ol.style.Photo = function(options) {
   this.renderPhoto_();
 };
 ol.ext.inherits(ol.style.Photo, ol.style.RegularShape);
+/** Set phptp offset
+ * @param {ol.pixel} offset
+ */
+ol.style.Photo.prototype.setOffset = function(offset) {
+  this.offset_ = [offset[0]||0, offset[1]||0];
+  this.renderPhoto_();
+};
 /**
  * Clones the style. 
  * @return {ol.style.Photo}
@@ -28103,10 +28110,11 @@ ol.style.Photo.prototype.renderPhoto_ = function() {
   }
   // Set anchor
   var a = this.getAnchor();
-  a[0] = (canvas.width - this.shadow_)/2;
-  a[1] = (canvas.height - this.shadow_)/2;
+  a[0] = (canvas.width - this.shadow_)/2  - this.offset_[0];
   if (this.sanchor_) {
-    a[1] = canvas.height - this.shadow_;
+    a[1] = canvas.height - this.shadow_ - this.offset_[1];
+  } else {
+    a[1] = (canvas.height - this.shadow_)/2 - this.offset_[1];
   }
 };
 /**
