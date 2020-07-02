@@ -80,6 +80,13 @@ var ol_style_Photo = function(options) {
 };
 ol_ext_inherits(ol_style_Photo, ol_style_RegularShape);
 
+/** Set phptp offset
+ * @param {ol.pixel} offset
+ */
+ol_style_Photo.prototype.setOffset = function(offset) {
+  this.offset_ = [offset[0]||0, offset[1]||0];
+  this.renderPhoto_();
+};
 
 /**
  * Clones the style. 
@@ -238,10 +245,11 @@ ol_style_Photo.prototype.renderPhoto_ = function() {
   
   // Set anchor
   var a = this.getAnchor();
-  a[0] = (canvas.width - this.shadow_)/2;
-  a[1] = (canvas.height - this.shadow_)/2;
+  a[0] = (canvas.width - this.shadow_)/2  - this.offset_[0];
   if (this.sanchor_) {
-    a[1] = canvas.height - this.shadow_;
+    a[1] = canvas.height - this.shadow_ - this.offset_[1];
+  } else {
+    a[1] = (canvas.height - this.shadow_)/2 - this.offset_[1];
   }
 };
 
