@@ -13,8 +13,8 @@ import ol_layer_Base from 'ol/layer/Base'
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Circle from 'ol/style/Circle'
 import ol_style_Stroke from 'ol/style/Stroke'
-import ol_layer_Vector from 'ol/layer/vector'
-import ol_source_Vector from 'ol/source/vector'
+import ol_layer_Vector from 'ol/layer/Vector'
+import ol_source_Vector from 'ol/source/Vector'
 
 import ol_render_getVectorContext from '../util/getVectorContext';
 
