@@ -7376,7 +7376,64 @@ ol.control.Profil.prototype.info = {
 */
 ol.control.Profil.prototype.popup = function(info) {
   this.popup_.innerHTML = info;
-}
+};
+/** Show point on profil
+ * @param {*} p 
+ * @param {number} dx 
+ * @private
+ */
+ol.control.Profil.prototype._drawAt = function(p, dx) {
+  if (p) {
+    this.cursor_.style.left = dx+"px";
+    this.cursor_.style.top = (this.canvas_.height-this.margin_.bottom+p[1]*this.scale_[1]+this.dy_)/this.ratio+"px";
+    this.cursor_.style.display = "block";
+    this.bar_.parentElement.classList.add("over");
+    this.bar_.style.left = dx+"px";
+    this.bar_.style.display = "block";
+    this.element.querySelector(".point-info .z").textContent = p[1]+this.info.altitudeUnits;
+    this.element.querySelector(".point-info .dist").textContent = (p[0]/1000).toFixed(1)+this.info.distanceUnitsKM;
+    this.element.querySelector(".point-info .time").textContent = p[2];
+    if (dx>this.canvas_.width/this.ratio/2) this.popup_.classList.add('ol-left');
+    else this.popup_.classList.remove('ol-left');
+  } else {
+    this.cursor_.style.display = "none";
+    this.bar_.style.display = 'none';
+    this.cursor_.style.display = 'none';  
+    this.bar_.parentElement.classList.remove("over");
+  }
+};
+/** Show point at coordinate on the profil
+ * @param { ol.coordinates||number } where a coordiniate or a distance from begining, if none it will hide the point
+ */
+ol.control.Profil.prototype.showAt = function(where) {
+  var i, p, p0, d0 = Infinity;
+  if (typeof(where) === 'undefined') {
+    if (this.bar_.parentElement.classList.contains("over")) {
+      // Remove it
+      this._drawAt();
+    }
+  } else if (where.length) {
+    // Look for closest the point
+    for (i=1; p=this.tab_[i]; i++) {
+      var d = ol.coordinate.dist2d(p[3], where);
+      if (d<d0) {
+        p0 = p;
+        d0 = d;
+      } 
+    }
+  } else {
+    for (i=0; p=this.tab_[i]; i++) {
+      p0 = p;
+      if (p[0] > where) {
+        break;
+      } 
+    }
+  }
+  if (p0) {
+    var dx = (p0[0] * this.scale_[0] + this.margin_.left) / this.ratio;
+    this._drawAt(p0, dx);
+  }
+};
 /** Mouse move over canvas
 */
 ol.control.Profil.prototype.onMove = function(e) {
@@ -7391,8 +7448,6 @@ ol.control.Profil.prototype.onMove = function(e) {
   var ratio = this.ratio;
   if (dx>this.margin_.left/ratio && dx<(this.canvas_.width-this.margin_.right)/ratio
     && dy>this.margin_.top/ratio && dy<(this.canvas_.height-this.margin_.bottom)/ratio) {
-      this.bar_.style.left = dx+"px";
-    this.bar_.style.display = "block";
     var d = (dx*ratio-this.margin_.left)/this.scale_[0];
     var p0 = this.tab_[0];
     for (var i=1, p; p=this.tab_[i]; i++) {
@@ -7401,25 +7456,11 @@ ol.control.Profil.prototype.onMove = function(e) {
         break;
       }
     }
-    if (p) {
-      this.cursor_.style.left = dx+"px";
-      this.cursor_.style.top = (this.canvas_.height-this.margin_.bottom+p[1]*this.scale_[1]+this.dy_)/ratio+"px";
-      this.cursor_.style.display = "block";
-    } else {
-      this.cursor_.style.display = "none";
-    }
-    this.bar_.parentElement.classList.add("over");
-    this.element.querySelector(".point-info .z").textContent = p[1]+this.info.altitudeUnits;
-    this.element.querySelector(".point-info .dist").textContent = (p[0]/1000).toFixed(1)+this.info.distanceUnitsKM;
-    this.element.querySelector(".point-info .time").textContent = p[2];
-    if (dx>this.canvas_.width/ratio/2) this.popup_.classList.add('ol-left');
-    else this.popup_.classList.remove('ol-left');
+    this._drawAt(p, dx);
     this.dispatchEvent({ type:'over', click:e.type=="click", coord: p[3], time: p[2], distance: p[0] });
   } else {
     if (this.bar_.parentElement.classList.contains("over")) {
-      this.bar_.style.display = 'none';
-      this.cursor_.style.display = 'none';
-      this.bar_.parentElement.classList.remove("over");
+      this._drawAt();
       this.dispatchEvent({ type:'out' });
     }
   }
