@@ -136,11 +136,12 @@
   map.addLayer(vector);
 
   // Show feature profile when loaded
-  var pt;
+  var pt, feature;
   source.once('change',function(e) {
     if (source.getState() === 'ready') {
-      profil.setGeometry(source.getFeatures()[0]);
-      profil2.setGeometry(source.getFeatures()[0], {
+      feature = source.getFeatures()[0];
+      profil.setGeometry(feature);
+      profil2.setGeometry(feature, {
         graduation:250,
         amplitude:1000,
         zmin:0
@@ -171,7 +172,16 @@
   // Just draw point
   profil2.on(["over","out"], drawPoint);
 
-
+  // Show on map over
+  var hover = new ol.interaction.Hover({ cursor: "pointer", hitTolerance:10 });
+  map.addInteraction(hover);
+  hover.on("hover", function(e) {
+    // var c = feature.getGeometry().getClosestPoint(e.coordinate)
+    profil2.showAt(e.coordinate);
+  });
+  hover.on("leave", function(e) {
+    profil2.showAt();
+  });
   </script>
   
 </body>
