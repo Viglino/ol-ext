@@ -221,6 +221,7 @@ ol_control_Profil.prototype._drawAt = function(p, dx) {
 
 /** Show point at coordinate on the profil
  * @param { ol.coordinates||number } where a coordiniate or a distance from begining, if none it will hide the point
+ * @return { ol.coordinates } current point
  */
 ol_control_Profil.prototype.showAt = function(where) {
   var i, p, p0, d0 = Infinity;
@@ -249,7 +250,9 @@ ol_control_Profil.prototype.showAt = function(where) {
   if (p0) {
     var dx = (p0[0] * this.scale_[0] + this.margin_.left) / this.ratio;
     this._drawAt(p0, dx);
+    return p0[3];
   }
+  return null;
 };
 
 /** Mouse move over canvas

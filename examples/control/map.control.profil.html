@@ -155,7 +155,6 @@
   // Draw a point on the map when mouse fly over profil
   function drawPoint(e) {
     if (!pt) return;
-    console.log(e)
     if (e.type=="over"){
       // Show point at coord
       pt.setGeometry(new ol.geom.Point(e.coord));
@@ -181,9 +180,13 @@
     var c = feature.getGeometry().getClosestPoint(e.coordinate)
     drawPoint({ type: "over", coord: c });
     // Show profil
+    var p = profil.showAt(e.coordinate);
+    profil.popup(p[2]+" m");
     profil2.showAt(e.coordinate);
   });
   hover.on("leave", function(e) {
+    profil.popup();
+    profil.showAt();
     profil2.showAt();
     drawPoint({});
   });
