@@ -1220,7 +1220,7 @@ ol.control.Search = function(options) {
   // Reverse geocode
   if (options.reverse) {
     var reverse = ol.ext.element.create('BUTTON', {
-      tyoe: 'button',
+      type: 'button',
       class: 'ol-revers',
       title: 'click on the map',
       click: function() {

@@ -159,7 +159,7 @@ var ol_control_Search = function(options) {
   // Reverse geocode
   if (options.reverse) {
     var reverse = ol_ext_element.create('BUTTON', {
-      tyoe: 'button',
+      type: 'button',
       class: 'ol-revers',
       title: 'click on the map',
       click: function() {
