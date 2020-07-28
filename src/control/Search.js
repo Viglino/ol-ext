@@ -326,7 +326,8 @@ ol_control_Search.prototype._handleSelect = function (f, reverse, options) {
     }
   }
   hist.unshift(f);
-  while (hist.length > (this.get('maxHistory')||10)) {
+  var size = Math.max(0, this.get('maxHistory')||10) || 0;
+  while (hist.length > size) {
     hist.pop();
   } 
   this.saveHistory();
