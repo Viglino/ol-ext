@@ -26574,19 +26574,19 @@ ol.style.Chart = function(opt_options) {
     snapToPixel: options.snapToPixel
   });
   if (options.scale) this.setScale(options.scale);
-  this.stroke_ = options.stroke;
-  this.radius_ = options.radius || 20;
-  this.donutratio_ = options.donutRatio || 0.5;
-  this.type_ = options.type;
-  this.offset_ = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
-  this.animation_ = (typeof(options.animation) == 'number') ? { animate:true, step:options.animation } : this.animation_ = { animate:false, step:1 };
-  this.max_ = options.max;
-  this.data_ = options.data;
+  this._stroke = options.stroke;
+  this._radius = options.radius || 20;
+  this._donutratio = options.donutRatio || 0.5;
+  this._type = options.type;
+  this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
+  this._animation = (typeof(options.animation) == 'number') ? { animate:true, step:options.animation } : this._animation = { animate:false, step:1 };
+  this._max = options.max;
+  this._data = options.data;
   if (options.colors instanceof Array) {
-    this.colors_ = options.colors;
+    this._colors = options.colors;
   } else {
-    this.colors_ = ol.style.Chart.colors[options.colors];
-    if(!this.colors_) this.colors_ = ol.style.Chart.colors.classic;
+    this._colors = ol.style.Chart.colors[options.colors];
+    if(!this._colors) this._colors = ol.style.Chart.colors.classic;
   }
   this.renderChart_();
 };
@@ -26606,17 +26606,17 @@ ol.style.Chart.colors = {
  */
 ol.style.Chart.prototype.clone = function() {
   var s = new ol.style.Chart({
-    type: this.type_,
-    radius: this.radius_,
+    type: this._type,
+    radius: this._radius,
     rotation: this.getRotation(),
     scale: this.getScale(),
     data: this.getData(),
     snapToPixel: this.getSnapToPixel ? this.getSnapToPixel() : false,
-    stroke: this.stroke_,
-    colors: this.colors_,
-    offsetX: this.offset_[0],
-    offsetY: this.offset_[1],
-    animation: this.animation_
+    stroke: this._stroke,
+    colors: this._colors,
+    offsetX: this._offset[0],
+    offsetY: this._offset[1],
+    animation: this._animation
   });
   s.setScale(this.getScale());
   s.setOpacity(this.getOpacity());
@@ -26625,26 +26625,26 @@ ol.style.Chart.prototype.clone = function() {
 /** Get data associatied with the chart
 */
 ol.style.Chart.prototype.getData = function() {
-  return this.data_;
+  return this._data;
 }
 /** Set data associatied with the chart
 *	@param {Array<number>}
 */
 ol.style.Chart.prototype.setData = function(data) {
-  this.data_ = data;
+  this._data = data;
   this.renderChart_();
 }
 /** Get symbol radius
 */
 ol.style.Chart.prototype.getRadius = function() {
-  return this.radius_;
+  return this._radius;
 }
 /** Set symbol radius
 *	@param {number} symbol radius
 *	@param {number} donut ratio
 */
 ol.style.Chart.prototype.setRadius = function(radius, ratio) {
-  this.radius_ = radius;
+  this._radius = radius;
   this.donuratio_ = ratio || this.donuratio_;
   this.renderChart_();
 }
@@ -26653,84 +26653,95 @@ ol.style.Chart.prototype.setRadius = function(radius, ratio) {
 */
 ol.style.Chart.prototype.setAnimation = function(step) {
   if (step===false) {
-    if (this.animation_.animate == false) return;
-    this.animation_.animate = false;
+    if (this._animation.animate == false) return;
+    this._animation.animate = false;
   } else {
-    if (this.animation_.step == step) return;
-    this.animation_.animate = true;
-    this.animation_.step = step;
+    if (this._animation.step == step) return;
+    this._animation.animate = true;
+    this._animation.step = step;
   }
   this.renderChart_();
 }
 /** @private
 */
-ol.style.Chart.prototype.renderChart_ = function() {
+ol.style.Chart.prototype.renderChart_ = function(pixelratio) {
+  if (!pixelratio) {
+    if (this.getPixelRatio) {
+      pixelratio = window.devicePixelRatio;
+      this.renderChart_(pixelratio);
+      if (this.getPixelRatio && pixelratio!==1) this.renderChart_(1); 
+    } else {
+      this.renderChart_(1);
+    }
+    return;
+  }
   var strokeStyle;
   var strokeWidth = 0;
-  if (this.stroke_)  {
-    strokeStyle = ol.color.asString(this.stroke_.getColor());
-    strokeWidth = this.stroke_.getWidth();
+  if (this._stroke)  {
+    strokeStyle = ol.color.asString(this._stroke.getColor());
+    strokeWidth = this._stroke.getWidth();
   }
   // no atlas manager is used, create a new canvas
-  var canvas = this.getImage();
+  var canvas = this.getImage(pixelratio);
   // draw the circle on the canvas
   var context = (canvas.getContext('2d'));
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.lineJoin = 'round';
   var sum=0;
   var i, c;
-  for (i=0; i<this.data_.length; i++) {
-    sum += this.data_[i];
+  for (i=0; i<this._data.length; i++) {
+    sum += this._data[i];
   }
+  context.save();
   // reset transform
-  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
   // then move to (x, y)
   context.translate(0,0);
-  var step = this.animation_.animate ? this.animation_.step : 1;
-  //console.log(this.animation_.step)
+  var step = this._animation.animate ? this._animation.step : 1;
+  //console.log(this._animation.step)
   // Draw pie
-  switch (this.type_) {
+  switch (this._type) {
     case "donut":
     case "pie3D":
     case "pie": {
       var a, a0 = Math.PI * (step-1.5);
-      c = canvas.width/2;
+      c = canvas.width/2/pixelratio;
       context.strokeStyle = strokeStyle;
       context.lineWidth = strokeWidth;
       context.save();
-      if (this.type_=="pie3D") {
+      if (this._type=="pie3D") {
         context.translate(0, c*0.3);
         context.scale(1, 0.7);
         context.beginPath();
         context.fillStyle = "#369";
-        context.arc ( c, c*1.4, this.radius_ *step, 0, 2*Math.PI);
+        context.arc ( c, c*1.4, this._radius *step, 0, 2*Math.PI);
         context.fill();
         context.stroke();
       }
-      if (this.type_=="donut") {
+      if (this._type=="donut") {
         context.save();
         context.beginPath();
         context.rect ( 0,0,2*c,2*c );
-        context.arc ( c, c, this.radius_ *step *this.donutratio_, 0, 2*Math.PI);
+        context.arc ( c, c, this._radius *step *this._donutratio, 0, 2*Math.PI);
         context.clip("evenodd");
       }
-      for (i=0; i<this.data_.length; i++) {
+      for (i=0; i<this._data.length; i++) {
         context.beginPath();
         context.moveTo(c,c);
-        context.fillStyle = this.colors_[i%this.colors_.length];
-        a = a0 + 2*Math.PI*this.data_[i]/sum *step;
-        context.arc ( c, c, this.radius_ *step, a0, a);
+        context.fillStyle = this._colors[i%this._colors.length];
+        a = a0 + 2*Math.PI*this._data[i]/sum *step;
+        context.arc ( c, c, this._radius *step, a0, a);
         context.closePath();
         context.fill();
         context.stroke();
         a0 = a;
       }
-      if (this.type_=="donut") {
+      if (this._type=="donut") {
         context.restore();
         context.beginPath();
         context.strokeStyle = strokeStyle;
         context.lineWidth = strokeWidth;
-        context.arc ( c, c, this.radius_ *step *this.donutratio_, Math.PI * (step-1.5), a0);
+        context.arc ( c, c, this._radius *step *this._donutratio, Math.PI * (step-1.5), a0);
         context.stroke();
       }
       context.restore();
@@ -26739,26 +26750,26 @@ ol.style.Chart.prototype.renderChart_ = function() {
     case "bar":
     default: {
       var max=0;
-      if (this.max_) {
-        max = this.max_;
+      if (this._max) {
+        max = this._max;
       } else {
-        for (i=0; i<this.data_.length; i++) {
-          if (max < this.data_[i]) max = this.data_[i];
+        for (i=0; i<this._data.length; i++) {
+          if (max < this._data[i]) max = this._data[i];
         }
       }
-      var s = Math.min(5,2*this.radius_/this.data_.length);
-      c = canvas.width/2;
-      var b = canvas.width - strokeWidth;
-      var x, x0 = c - this.data_.length*s/2
+      var s = Math.min(5,2*this._radius/this._data.length);
+      c = canvas.width/2/pixelratio;
+      var b = canvas.width/pixelratio - strokeWidth;
+      var x, x0 = c - this._data.length*s/2
       context.strokeStyle = strokeStyle;
       context.lineWidth = strokeWidth;
-      for (i=0; i<this.data_.length; i++) {
+      for (i=0; i<this._data.length; i++) {
         context.beginPath();
-        context.fillStyle = this.colors_[i%this.colors_.length];
+        context.fillStyle = this._colors[i%this._colors.length];
         x = x0 + s;
-        var h = this.data_[i]/max*2*this.radius_ *step;
+        var h = this._data[i]/max*2*this._radius *step;
         context.rect ( x0, b-h, s, h);
-        //console.log ( x0+", "+(b-this.data_[i]/max*2*this.radius_)+", "+x+", "+b);
+        //console.log ( x0+", "+(b-this._data[i]/max*2*this._radius)+", "+x+", "+b);
         context.closePath();
         context.fill();
         context.stroke();
@@ -26766,30 +26777,11 @@ ol.style.Chart.prototype.renderChart_ = function() {
       }
     }
   }
+  context.restore();
   // Set Anchor
   var anchor = this.getAnchor();
-  anchor[0] = c - this.offset_[0];
-  anchor[1] = c - this.offset_[1];
-};
-/**
- * @inheritDoc
- */
-ol.style.Chart.prototype.getChecksum = function() {
-  var strokeChecksum = (this.stroke_!==null) ?
-    this.stroke_.getChecksum() : '-';
-  var fillChecksum;
-  var recalculate = (this.checksums_===null) ||
-    (strokeChecksum != this.checksums_[1] ||
-    fillChecksum != this.checksums_[2] ||
-    this.radius_ != this.checksums_[3] ||
-    this.data_.join('|') != this.checksums_[4]);
-  if (recalculate) {
-    var checksum = 'c' + strokeChecksum + fillChecksum 
-      + ((this.radius_ !== void 0) ? this.radius_.toString() : '-')
-      + this.data_.join('|');
-    this.checksums_ = [checksum, strokeChecksum, fillChecksum, this.radius_, this.data_.join('|')];
-  }
-  return this.checksums_[0];
+  anchor[0] = c - this._offset[0];
+  anchor[1] = c - this._offset[1];
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -27713,26 +27705,36 @@ ol.style.FontSymbol.prototype.getFontInfo = function(glyph) {
 }
 /** @private
  */
-ol.style.FontSymbol.prototype.renderMarker_ = function() {
+ol.style.FontSymbol.prototype.renderMarker_ = function(pixelratio) {
+  if (!pixelratio) {
+    if (this.getPixelRatio) {
+      pixelratio = window.devicePixelRatio;
+      this.renderMarker_(pixelratio);
+      if (this.getPixelRatio && pixelratio!==1) this.renderMarker_(1); 
+    } else {
+      this.renderMarker_(1);
+    }
+    return;
+  }
   var strokeStyle;
   var strokeWidth = 0;
   if (this.stroke_) {
     strokeStyle = ol.color.asString(this.stroke_.getColor());
     strokeWidth = this.stroke_.getWidth();
   }
-  // no atlas manager is used, create a new canvas
-  var canvas = this.getImage();
+  // get canvas
+  var canvas = this.getImage(pixelratio);
   //console.log(this.getImage().width+" / "+(2 * (this.radius_ + strokeWidth) + 1));
   /** @type {ol.style.FontSymbol.RenderOptions} */
   var renderOptions = {
     strokeStyle: strokeStyle,
     strokeWidth: strokeWidth,
-    size: canvas.width,
+    size: canvas.width/pixelratio,
   };
   // draw the circle on the canvas
   var context = (canvas.getContext('2d'));
   context.clearRect(0, 0, canvas.width, canvas.height);
-  this.drawMarker_(renderOptions, context, 0, 0);
+  this.drawMarker_(renderOptions, context, 0, 0, pixelratio);
   // Set Anchor
   var a = this.getAnchor();
   a[0] = canvas.width / 2 - this.offset_[0];
@@ -27744,7 +27746,7 @@ ol.style.FontSymbol.prototype.renderMarker_ = function() {
  * @param {ol.style.FontSymbol.RenderOptions} renderOptions
  * @param {CanvasRenderingContext2D} context
  */
-ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context) {
+ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context, pixelratio) {
   var s = 2*this.radius_+renderOptions.strokeWidth+1;
   var w = renderOptions.strokeWidth/2;
   var c = renderOptions.size / 2;
@@ -27857,7 +27859,7 @@ ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context) {
  * @param {number} x The origin for the symbol (x).
  * @param {number} y The origin for the symbol (y).
  */
-ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, y) {
+ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, y, pixelratio) {
   var fcolor = this.fill_ ? this.fill_.getColor() : "#000";
   var scolor = this.stroke_ ? this.stroke_.getColor() : "#000";
   if (this.form_ == "none" && this.stroke_ && this.fill_) {
@@ -27865,10 +27867,10 @@ ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, 
     fcolor = this.stroke_.getColor();
   }
   // reset transform
-  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
   // then move to (x, y)
   context.translate(x, y);
-  var tr = this.drawPath_(renderOptions, context);
+  var tr = this.drawPath_(renderOptions, context, pixelratio);
   if (this.fill_) {
     if (this.gradient_ && this.form_!="none") {
       var grd = context.createLinearGradient(0,0,renderOptions.size/2,renderOptions.size);
@@ -27959,7 +27961,7 @@ ol.style.FontSymbol.prototype.getChecksum = function() {
 ol.style.Photo = function(options) {
   options = options || {};
   this.sanchor_ = options.kind=="anchored" ? 8:0;
-  this.shadow_ = Number(options.shadow) || 0;
+  this._shadow = (Number(options.shadow) || 0);
   if (!options.stroke) {
     options.stroke = new ol.style.Stroke({ width: 0, color: "#000"})
   }
@@ -27968,13 +27970,13 @@ ol.style.Photo = function(options) {
   if (options.kind=='folio') strokeWidth += 6;
   options.stroke.setWidth(strokeWidth);
   ol.style.RegularShape.call (this, {
-    radius: options.radius + strokeWidth + this.sanchor_/2 + this.shadow_/2, 
+    radius: options.radius + strokeWidth + this.sanchor_/2 + this._shadow/2, 
     points:0
   //	fill:new ol.style.Fill({color:"red"}) // No fill to create a hit detection Image
   });
   // Hack to get the hit detection Image (no API exported)
+  var img = this.getImage();
   if (!this.hitDetectionCanvas_) {
-    var img = this.getImage();
     for (var i in this) {
       if (this[i] && this[i].getContext && this[i]!==img) {
         this.hitDetectionCanvas_ = this[i];
@@ -27984,27 +27986,27 @@ ol.style.Photo = function(options) {
   }
   // Clone canvas for hit detection
   this.hitDetectionCanvas_ = document.createElement('canvas');
-  this.hitDetectionCanvas_.width = this.getImage().width;
-  this.hitDetectionCanvas_.height = this.getImage().height;
-  this.stroke_ = options.stroke;
-  this.fill_ = options.fill;
-  this.crop_ = options.crop;
-  this.crossOrigin_ = options.crossOrigin;
-  this.kind_ = options.kind || "default";
-  this.radius_ = options.radius;
-  this.src_ = options.src;
-  this.offset_ = [options.offsetX ? options.offsetX :0, options.offsetY ? options.offsetY :0];
-  this.onload_ = options.onload;
+  this.hitDetectionCanvas_.width = img.width;
+  this.hitDetectionCanvas_.height = img.height;
+  this._stroke = options.stroke;
+  this._fill = options.fill;
+  this._crop = options.crop;
+  this._crossOrigin = options.crossOrigin;
+  this._kind = options.kind || "default";
+  this._radius = options.radius;
+  this._src = options.src;
+  this._offset = [options.offsetX ? options.offsetX :0, options.offsetY ? options.offsetY :0];
+  this._onload = options.onload;
   if (typeof(options.opacity)=='number') this.setOpacity(options.opacity);
   if (typeof(options.rotation)=='number') this.setRotation(options.rotation);
   this.renderPhoto_();
 };
 ol.ext.inherits(ol.style.Photo, ol.style.RegularShape);
-/** Set phptp offset
+/** Set photo offset
  * @param {ol.pixel} offset
  */
 ol.style.Photo.prototype.setOffset = function(offset) {
-  this.offset_ = [offset[0]||0, offset[1]||0];
+  this._offset = [offset[0]||0, offset[1]||0];
   this.renderPhoto_();
 };
 /**
@@ -28012,20 +28014,22 @@ ol.style.Photo.prototype.setOffset = function(offset) {
  * @return {ol.style.Photo}
  */
 ol.style.Photo.prototype.clone = function() {
-  return new ol.style.Photo({
-    stroke: this.stroke_,
-    fill: this.fill_,
-    shadow: this.shadow_,
-    crop: this.crop_,
-    crossOrigin: this.crossOrigin_,
-    kind: this.kind_,
-    radius: this.radius_,
-    src: this.src_,
-    offsetX: this.offset_[0],
-    offsetY: this.offset_[1],
+  var i = new ol.style.Photo({
+    stroke: this._stroke,
+    fill: this._fill,
+    shadow: this._shadow,
+    crop: this._crop,
+    crossOrigin: this._crossOrigin,
+    kind: this._kind,
+    radius: this._radius,
+    src: this._src,
+    offsetX: this._offset[0],
+    offsetY: this._offset[1],
     opacity: this.getOpacity(),
     rotation: this.getRotation()
   });
+  i.renderPhoto_();
+  return i;
 };
 /**
  * Draws a rounded rectangle using the current state of the canvas. 
@@ -28056,25 +28060,29 @@ CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
  * Draw the form without the image
  * @private
  */
-ol.style.Photo.prototype.drawBack_ = function(context, color, strokeWidth) {
+ol.style.Photo.prototype.drawBack_ = function(context, color, strokeWidth, pixelratio) {
+  var shadow = this._shadow;
   var canvas = context.canvas;
   context.beginPath();
   context.fillStyle = color;
   context.clearRect(0, 0, canvas.width, canvas.height);
-  switch (this.kind_) {
+  var width = canvas.width/pixelratio;
+  var height = canvas.height/pixelratio;
+  switch (this._kind) {
     case 'square': {
-      context.rect(0,0,canvas.width-this.shadow_, canvas.height-this.shadow_);
+      context.rect(0,0, width-shadow, height-shadow);
       break;
     }
     case 'circle': {
-      context.arc(this.radius_+strokeWidth, this.radius_+strokeWidth, this.radius_+strokeWidth, 0, 2 * Math.PI, false);
+      context.arc(this._radius+strokeWidth, this._radius+strokeWidth, this._radius+strokeWidth, 0, 2 * Math.PI, false);
       break;
     }
     case 'folio': {
       var offset = 6;
       strokeWidth -= offset;
       context.strokeStyle = 'rgba(0,0,0,0.5)';
-      var w = canvas.width-this.shadow_-2*offset;
+      context.lineWidth = 1;
+      var w = width-shadow-2*offset;
       var a = Math.atan(6/w);
       context.save();
       context.rotate(-a);
@@ -28098,14 +28106,14 @@ ol.style.Photo.prototype.drawBack_ = function(context, color, strokeWidth) {
       break;
     }
     case 'anchored': {
-      context.roundRect(this.sanchor_/2,0,canvas.width-this.sanchor_-this.shadow_, canvas.height-this.sanchor_-this.shadow_, strokeWidth);
-      context.moveTo(canvas.width/2-this.sanchor_-this.shadow_/2,canvas.height-this.sanchor_-this.shadow_);
-      context.lineTo(canvas.width/2+this.sanchor_-this.shadow_/2,canvas.height-this.sanchor_-this.shadow_);
-      context.lineTo(canvas.width/2-this.shadow_/2,canvas.height-this.shadow_);break;
+      context.roundRect(this.sanchor_/2,0,width-this.sanchor_-shadow, height-this.sanchor_-shadow, strokeWidth);
+      context.moveTo(width/2-this.sanchor_-shadow/2,height-this.sanchor_-shadow);
+      context.lineTo(width/2+this.sanchor_-shadow/2,height-this.sanchor_-shadow);
+      context.lineTo(width/2-shadow/2,height-shadow);break;
     }
     default: {
       // roundrect
-      context.roundRect(0,0,canvas.width-this.shadow_, canvas.height-this.shadow_, strokeWidth);
+      context.roundRect(0,0,width-shadow, height-shadow, strokeWidth);
       break;
     }
   }
@@ -28114,34 +28122,45 @@ ol.style.Photo.prototype.drawBack_ = function(context, color, strokeWidth) {
 /**
  * @private
  */
-ol.style.Photo.prototype.renderPhoto_ = function() {
+ol.style.Photo.prototype.renderPhoto_ = function(pixelratio) {
+  if (!pixelratio) {
+    if (this.getPixelRatio) {
+      pixelratio = window.devicePixelRatio;
+      this.renderPhoto_(pixelratio);
+    } else {
+      this.renderPhoto_(1);
+    }
+    return;
+  }
   var strokeStyle;
   var strokeWidth = 0;
-  if (this.stroke_) {
-    strokeStyle = ol.color.asString(this.stroke_.getColor());
-    strokeWidth = this.stroke_.getWidth();
+  if (this._stroke) {
+    strokeStyle = ol.color.asString(this._stroke.getColor());
+    strokeWidth = this._stroke.getWidth();
   }
-  var canvas = this.getImage();
+  var canvas = this.getImage(pixelratio);
   // Draw hitdetection image
   var context = this.hitDetectionCanvas_.getContext('2d');
-  this.drawBack_(context,"#000",strokeWidth);
+  this.drawBack_(context,"#000",strokeWidth, 1);
   context.fill();
   // Draw the image
   context = canvas.getContext('2d');
-  this.drawBack_(context,strokeStyle,strokeWidth);
+  context.save();
+  context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
+  this.drawBack_(context,strokeStyle,strokeWidth, pixelratio);
   // Draw a shadow
-  if (this.shadow_) {
+  if (this._shadow) {
     context.shadowColor = 'rgba(0,0,0,0.5)';
-    context.shadowBlur = this.shadow_/2;
-    context.shadowOffsetX = this.shadow_/2;
-    context.shadowOffsetY = this.shadow_/2;
+    context.shadowBlur = pixelratio*this._shadow/2;
+    context.shadowOffsetX = pixelratio*this._shadow/2;
+    context.shadowOffsetY = pixelratio*this._shadow/2;
   }
   context.fill();
-  context.shadowColor = 'transparent';
+  context.restore();
   var self = this;
   var img = this.img_ = new Image();
-  if (this.crossOrigin_) img.crossOrigin = this.crossOrigin_;
-  img.src = this.src_;
+  if (this._crossOrigin) img.crossOrigin = this._crossOrigin;
+  img.src = this._src;
   // Draw image
   if (img.width) {
     self.drawImage_(img);
@@ -28150,16 +28169,16 @@ ol.style.Photo.prototype.renderPhoto_ = function() {
       self.drawImage_(img);
       // Force change (?!)
       // self.setScale(1);
-      if (self.onload_) self.onload_();
+      if (self._onload) self._onload();
     };
   }
   // Set anchor
   var a = this.getAnchor();
-  a[0] = (canvas.width - this.shadow_)/2  - this.offset_[0];
+  a[0] = (canvas.width/pixelratio - this._shadow)/2  - this._offset[0];
   if (this.sanchor_) {
-    a[1] = canvas.height - this.shadow_ - this.offset_[1];
+    a[1] = canvas.height/pixelratio - this._shadow - this._offset[1];
   } else {
-    a[1] = (canvas.height - this.shadow_)/2 - this.offset_[1];
+    a[1] = (canvas.height/pixelratio - this._shadow)/2 - this._offset[1];
   }
 };
 /**
@@ -28167,21 +28186,22 @@ ol.style.Photo.prototype.renderPhoto_ = function() {
  * @private
  */
 ol.style.Photo.prototype.drawImage_ = function(img) {
-  var canvas = this.getImage();
+  var pixelratio = window.devicePixelRatio;
+  var canvas = this.getImage(pixelratio);
   // Remove the circle on the canvas
   var context = (canvas.getContext('2d'));
   var strokeWidth = 0;
-  if (this.stroke_) strokeWidth = this.stroke_.getWidth();
-  var size = 2*this.radius_;
+  if (this._stroke) strokeWidth = this._stroke.getWidth();
+  var size = 2*this._radius;
   context.save();
-  if (this.kind_=='circle') {
+  if (this._kind=='circle') {
     context.beginPath();
-    context.arc(this.radius_+strokeWidth, this.radius_+strokeWidth, this.radius_, 0, 2 * Math.PI, false);
+    context.arc(this._radius+strokeWidth, this._radius+strokeWidth, this._radius, 0, 2 * Math.PI, false);
     context.clip();
   }
   var s, x, y, w, h, sx, sy, sw, sh;
   // Crop the image to a square vignette
-  if (this.crop_) {
+  if (this._crop) {
     s = Math.min (img.width/size, img.height/size);
     sw = sh = s*size;
     sx = (img.width-sw)/2;
@@ -28204,11 +28224,11 @@ ol.style.Photo.prototype.drawImage_ = function(img) {
   context.drawImage(img, sx, sy, sw, sh, x, y, w, h);
   context.restore();
   // Draw a circle to avoid aliasing on clip
-  if (this.kind_=='circle' && strokeWidth) {
+  if (this._kind=='circle' && strokeWidth) {
     context.beginPath();
-    context.strokeStyle = ol.color.asString(this.stroke_.getColor());
+    context.strokeStyle = ol.color.asString(this._stroke.getColor());
     context.lineWidth = strokeWidth/4;
-    context.arc(this.radius_+strokeWidth, this.radius_+strokeWidth, this.radius_, 0, 2 * Math.PI, false);
+    context.arc(this._radius+strokeWidth, this._radius+strokeWidth, this._radius, 0, 2 * Math.PI, false);
     context.stroke();
   }
 };
