@@ -47,20 +47,20 @@ var ol_style_Chart = function(opt_options) {
   });
   if (options.scale) this.setScale(options.scale);
 
-  this.stroke_ = options.stroke;
-  this.radius_ = options.radius || 20;
-  this.donutratio_ = options.donutRatio || 0.5;
-  this.type_ = options.type;
-  this.offset_ = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
-  this.animation_ = (typeof(options.animation) == 'number') ? { animate:true, step:options.animation } : this.animation_ = { animate:false, step:1 };
-  this.max_ = options.max;
+  this._stroke = options.stroke;
+  this._radius = options.radius || 20;
+  this._donutratio = options.donutRatio || 0.5;
+  this._type = options.type;
+  this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
+  this._animation = (typeof(options.animation) == 'number') ? { animate:true, step:options.animation } : this._animation = { animate:false, step:1 };
+  this._max = options.max;
 
-  this.data_ = options.data;
+  this._data = options.data;
   if (options.colors instanceof Array) {
-    this.colors_ = options.colors;
+    this._colors = options.colors;
   } else {
-    this.colors_ = ol_style_Chart.colors[options.colors];
-    if(!this.colors_) this.colors_ = ol_style_Chart.colors.classic;
+    this._colors = ol_style_Chart.colors[options.colors];
+    if(!this._colors) this._colors = ol_style_Chart.colors.classic;
   }
 
   this.renderChart_();
@@ -83,17 +83,17 @@ ol_style_Chart.colors = {
  */
 ol_style_Chart.prototype.clone = function() {
   var s = new ol_style_Chart({
-    type: this.type_,
-    radius: this.radius_,
+    type: this._type,
+    radius: this._radius,
     rotation: this.getRotation(),
     scale: this.getScale(),
     data: this.getData(),
     snapToPixel: this.getSnapToPixel ? this.getSnapToPixel() : false,
-    stroke: this.stroke_,
-    colors: this.colors_,
-    offsetX: this.offset_[0],
-    offsetY: this.offset_[1],
-    animation: this.animation_
+    stroke: this._stroke,
+    colors: this._colors,
+    offsetX: this._offset[0],
+    offsetY: this._offset[1],
+    animation: this._animation
   });
   s.setScale(this.getScale());
   s.setOpacity(this.getOpacity());
@@ -103,21 +103,21 @@ ol_style_Chart.prototype.clone = function() {
 /** Get data associatied with the chart
 */
 ol_style_Chart.prototype.getData = function() {
-  return this.data_;
+  return this._data;
 }
 
 /** Set data associatied with the chart
 *	@param {Array<number>}
 */
 ol_style_Chart.prototype.setData = function(data) {
-  this.data_ = data;
+  this._data = data;
   this.renderChart_();
 }
 
 /** Get symbol radius
 */
 ol_style_Chart.prototype.getRadius = function() {
-  return this.radius_;
+  return this._radius;
 }
 
 /** Set symbol radius
@@ -125,7 +125,7 @@ ol_style_Chart.prototype.getRadius = function() {
 *	@param {number} donut ratio
 */
 ol_style_Chart.prototype.setRadius = function(radius, ratio) {
-  this.radius_ = radius;
+  this._radius = radius;
   this.donuratio_ = ratio || this.donuratio_;
   this.renderChart_();
 }
@@ -135,12 +135,12 @@ ol_style_Chart.prototype.setRadius = function(radius, ratio) {
 */
 ol_style_Chart.prototype.setAnimation = function(step) {
   if (step===false) {
-    if (this.animation_.animate == false) return;
-    this.animation_.animate = false;
+    if (this._animation.animate == false) return;
+    this._animation.animate = false;
   } else {
-    if (this.animation_.step == step) return;
-    this.animation_.animate = true;
-    this.animation_.step = step;
+    if (this._animation.step == step) return;
+    this._animation.animate = true;
+    this._animation.step = step;
   }
   this.renderChart_();
 }
@@ -148,17 +148,28 @@ ol_style_Chart.prototype.setAnimation = function(step) {
 
 /** @private
 */
-ol_style_Chart.prototype.renderChart_ = function() {
+ol_style_Chart.prototype.renderChart_ = function(pixelratio) {
+  if (!pixelratio) {
+    if (this.getPixelRatio) {
+      pixelratio = window.devicePixelRatio;
+      this.renderChart_(pixelratio);
+      if (this.getPixelRatio && pixelratio!==1) this.renderChart_(1); 
+    } else {
+      this.renderChart_(1);
+    }
+    return;
+  }
+
   var strokeStyle;
   var strokeWidth = 0;
 
-  if (this.stroke_)  {
-    strokeStyle = ol_color_asString(this.stroke_.getColor());
-    strokeWidth = this.stroke_.getWidth();
+  if (this._stroke)  {
+    strokeStyle = ol_color_asString(this._stroke.getColor());
+    strokeWidth = this._stroke.getWidth();
   }
 
   // no atlas manager is used, create a new canvas
-  var canvas = this.getImage();
+  var canvas = this.getImage(pixelratio);
 
   // draw the circle on the canvas
   var context = (canvas.getContext('2d'));
@@ -167,62 +178,63 @@ ol_style_Chart.prototype.renderChart_ = function() {
 
   var sum=0;
   var i, c;
-  for (i=0; i<this.data_.length; i++) {
-    sum += this.data_[i];
+  for (i=0; i<this._data.length; i++) {
+    sum += this._data[i];
   }
 
+  context.save();
   // reset transform
-  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
 
   // then move to (x, y)
   context.translate(0,0);
 
-  var step = this.animation_.animate ? this.animation_.step : 1;
-  //console.log(this.animation_.step)
+  var step = this._animation.animate ? this._animation.step : 1;
+  //console.log(this._animation.step)
   
   // Draw pie
-  switch (this.type_) {
+  switch (this._type) {
     case "donut":
     case "pie3D":
     case "pie": {
       var a, a0 = Math.PI * (step-1.5);
-      c = canvas.width/2;
+      c = canvas.width/2/pixelratio;
       context.strokeStyle = strokeStyle;
       context.lineWidth = strokeWidth;
       context.save();
-      if (this.type_=="pie3D") {
+      if (this._type=="pie3D") {
         context.translate(0, c*0.3);
         context.scale(1, 0.7);
         context.beginPath();
         context.fillStyle = "#369";
-        context.arc ( c, c*1.4, this.radius_ *step, 0, 2*Math.PI);
+        context.arc ( c, c*1.4, this._radius *step, 0, 2*Math.PI);
         context.fill();
         context.stroke();
       }
-      if (this.type_=="donut") {
+      if (this._type=="donut") {
         context.save();
         context.beginPath();
         context.rect ( 0,0,2*c,2*c );
-        context.arc ( c, c, this.radius_ *step *this.donutratio_, 0, 2*Math.PI);
+        context.arc ( c, c, this._radius *step *this._donutratio, 0, 2*Math.PI);
         context.clip("evenodd");
       }
-      for (i=0; i<this.data_.length; i++) {
+      for (i=0; i<this._data.length; i++) {
         context.beginPath();
         context.moveTo(c,c);
-        context.fillStyle = this.colors_[i%this.colors_.length];
-        a = a0 + 2*Math.PI*this.data_[i]/sum *step;
-        context.arc ( c, c, this.radius_ *step, a0, a);
+        context.fillStyle = this._colors[i%this._colors.length];
+        a = a0 + 2*Math.PI*this._data[i]/sum *step;
+        context.arc ( c, c, this._radius *step, a0, a);
         context.closePath();
         context.fill();
         context.stroke();
         a0 = a;
       }
-      if (this.type_=="donut") {
+      if (this._type=="donut") {
         context.restore();
         context.beginPath();
         context.strokeStyle = strokeStyle;
         context.lineWidth = strokeWidth;
-        context.arc ( c, c, this.radius_ *step *this.donutratio_, Math.PI * (step-1.5), a0);
+        context.arc ( c, c, this._radius *step *this._donutratio, Math.PI * (step-1.5), a0);
         context.stroke();
       }
       context.restore();
@@ -231,64 +243,40 @@ ol_style_Chart.prototype.renderChart_ = function() {
     case "bar":
     default: {
       var max=0;
-      if (this.max_) {
-        max = this.max_;
+      if (this._max) {
+        max = this._max;
       } else {
-        for (i=0; i<this.data_.length; i++) {
-          if (max < this.data_[i]) max = this.data_[i];
+        for (i=0; i<this._data.length; i++) {
+          if (max < this._data[i]) max = this._data[i];
         }
       }
-      var s = Math.min(5,2*this.radius_/this.data_.length);
-      c = canvas.width/2;
-      var b = canvas.width - strokeWidth;
-      var x, x0 = c - this.data_.length*s/2
+      var s = Math.min(5,2*this._radius/this._data.length);
+      c = canvas.width/2/pixelratio;
+      var b = canvas.width/pixelratio - strokeWidth;
+      var x, x0 = c - this._data.length*s/2
       context.strokeStyle = strokeStyle;
       context.lineWidth = strokeWidth;
-      for (i=0; i<this.data_.length; i++) {
+      for (i=0; i<this._data.length; i++) {
         context.beginPath();
-        context.fillStyle = this.colors_[i%this.colors_.length];
+        context.fillStyle = this._colors[i%this._colors.length];
         x = x0 + s;
-        var h = this.data_[i]/max*2*this.radius_ *step;
+        var h = this._data[i]/max*2*this._radius *step;
         context.rect ( x0, b-h, s, h);
-        //console.log ( x0+", "+(b-this.data_[i]/max*2*this.radius_)+", "+x+", "+b);
+        //console.log ( x0+", "+(b-this._data[i]/max*2*this._radius)+", "+x+", "+b);
         context.closePath();
         context.fill();
         context.stroke();
         x0 = x;
       }
-
     }
   }
+  
+  context.restore();
 
   // Set Anchor
   var anchor = this.getAnchor();
-  anchor[0] = c - this.offset_[0];
-  anchor[1] = c - this.offset_[1];
-};
-
-
-/**
- * @inheritDoc
- */
-ol_style_Chart.prototype.getChecksum = function() {
-  var strokeChecksum = (this.stroke_!==null) ?
-    this.stroke_.getChecksum() : '-';
-
-  var fillChecksum;
-  var recalculate = (this.checksums_===null) ||
-    (strokeChecksum != this.checksums_[1] ||
-    fillChecksum != this.checksums_[2] ||
-    this.radius_ != this.checksums_[3] ||
-    this.data_.join('|') != this.checksums_[4]);
-
-  if (recalculate) {
-    var checksum = 'c' + strokeChecksum + fillChecksum 
-      + ((this.radius_ !== void 0) ? this.radius_.toString() : '-')
-      + this.data_.join('|');
-    this.checksums_ = [checksum, strokeChecksum, fillChecksum, this.radius_, this.data_.join('|')];
-  }
-
-  return this.checksums_[0];
+  anchor[0] = c - this._offset[0];
+  anchor[1] = c - this._offset[1];
 };
 
 export default ol_style_Chart

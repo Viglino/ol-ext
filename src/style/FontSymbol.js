@@ -57,7 +57,7 @@ var ol_style_FontSymbol = function(options) {
   this.offset_ = [options.offsetX ? options.offsetX :0, options.offsetY ? options.offsetY :0];
 
   this.glyph_ = this.getGlyph(options.glyph) || "";
-
+  
   this.renderMarker_();
 };
 ol_ext_inherits(ol_style_FontSymbol, ol_style_RegularShape);
@@ -188,7 +188,17 @@ ol_style_FontSymbol.prototype.getFontInfo = function(glyph) {
 
 /** @private
  */
-ol_style_FontSymbol.prototype.renderMarker_ = function() {
+ol_style_FontSymbol.prototype.renderMarker_ = function(pixelratio) {
+  if (!pixelratio) {
+    if (this.getPixelRatio) {
+      pixelratio = window.devicePixelRatio;
+      this.renderMarker_(pixelratio);
+      if (this.getPixelRatio && pixelratio!==1) this.renderMarker_(1); 
+    } else {
+      this.renderMarker_(1);
+    }
+    return;
+  }
   var strokeStyle;
   var strokeWidth = 0;
 
@@ -197,21 +207,21 @@ ol_style_FontSymbol.prototype.renderMarker_ = function() {
     strokeWidth = this.stroke_.getWidth();
   }
 
-  // no atlas manager is used, create a new canvas
-  var canvas = this.getImage();
+  // get canvas
+  var canvas = this.getImage(pixelratio);
   //console.log(this.getImage().width+" / "+(2 * (this.radius_ + strokeWidth) + 1));
 
   /** @type {ol_style_FontSymbol.RenderOptions} */
   var renderOptions = {
     strokeStyle: strokeStyle,
     strokeWidth: strokeWidth,
-    size: canvas.width,
+    size: canvas.width/pixelratio,
   };
 
   // draw the circle on the canvas
   var context = (canvas.getContext('2d'));
   context.clearRect(0, 0, canvas.width, canvas.height);
-  this.drawMarker_(renderOptions, context, 0, 0);
+  this.drawMarker_(renderOptions, context, 0, 0, pixelratio);
 
   // Set Anchor
   var a = this.getAnchor();
@@ -219,16 +229,14 @@ ol_style_FontSymbol.prototype.renderMarker_ = function() {
   a[1] = canvas.width / 2 - this.offset_[1];
 
   //this.createMarkerHitDetectionCanvas_(renderOptions);
-  
 };
-
 
 /**
  * @private
  * @param {ol_style_FontSymbol.RenderOptions} renderOptions
  * @param {CanvasRenderingContext2D} context
  */
-ol_style_FontSymbol.prototype.drawPath_ = function(renderOptions, context) {
+ol_style_FontSymbol.prototype.drawPath_ = function(renderOptions, context, pixelratio) {
   var s = 2*this.radius_+renderOptions.strokeWidth+1;
   var w = renderOptions.strokeWidth/2;
   var c = renderOptions.size / 2;
@@ -344,7 +352,7 @@ ol_style_FontSymbol.prototype.drawPath_ = function(renderOptions, context) {
  * @param {number} x The origin for the symbol (x).
  * @param {number} y The origin for the symbol (y).
  */
-ol_style_FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, y) {
+ol_style_FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, y, pixelratio) {
   var fcolor = this.fill_ ? this.fill_.getColor() : "#000";
   var scolor = this.stroke_ ? this.stroke_.getColor() : "#000";
   if (this.form_ == "none" && this.stroke_ && this.fill_) {
@@ -352,12 +360,12 @@ ol_style_FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, 
     fcolor = this.stroke_.getColor();
   }
   // reset transform
-  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
 
   // then move to (x, y)
   context.translate(x, y);
 
-  var tr = this.drawPath_(renderOptions, context);
+  var tr = this.drawPath_(renderOptions, context, pixelratio);
 
   if (this.fill_) {
     if (this.gradient_ && this.form_!="none") {
