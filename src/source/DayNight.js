@@ -152,8 +152,9 @@ ol_source_DayNight.prototype.getCoordinates = function (time, options) {
     default: {
       // Close polygon
       lat = (sunEqPos.delta < 0) ? 90 : -90;
-      lonlat.unshift([-180, lat]);
-      lonlat.push([180, lat]);
+      for(var tlon=180; tlon>=-180; tlon-=step){
+        lonlat.push([tlon,lat]);
+      }
       lonlat.push(lonlat[0])
       break;
     }
