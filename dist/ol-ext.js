@@ -28446,107 +28446,90 @@ CanvasRenderingContext2D.prototype.textPath = function (text, path)
 //NB: (Not confirmed)To use this module, you just have to :
 //   import('ol-ext/layer/getpreview')
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 *
 *  Shadow image style for point vector features
 */
-/**
- * @requires ol.style.Circle
- * @requires ol.structs.IHasChecksum
- */
 /**
  * @classdesc
  * Set Shadow style for point vector features.
  *
  * @constructor
  * @param {} options Options.
- *   @param {ol.style.Fill | undefined} options.fill fill style, default rgba(0,0,0,0.5)
- *   @param {number} options.radius point radius
- * 	 @param {number} options.blur lur radius, default radius/3
- * 	 @param {number} options.offsetX x offset, default 0
- * 	 @param {number} options.offsetY y offset, default 0
+ *  @param {ol.style.Fill | undefined} options.fill fill style, default rgba(0,0,0,0.5)
+ *  @param {number} options.radius point radius
+ * 	@param {number} options.blur lur radius, default radius/3
+ * 	@param {number} options.offsetX x offset, default 0
+ * 	@param {number} options.offsetY y offset, default 0
  * @extends {ol.style.RegularShape}
- * @implements {ol.structs.IHasChecksum}
  * @api
  */
-ol.style.Shadow = function(options)
-{	options = options || {};
-	if (!options.fill) options.fill = new ol.style.Fill({ color: "rgba(0,0,0,0.5)" });
-	ol.style.RegularShape.call (this,{ radius: options.radius, fill: options.fill });
-	this.fill_ = options.fill;
-	this.radius_ = options.radius;
-	this.blur_ = options.blur===0 ? 0 : options.blur || options.radius/3;
-	this.offset_ = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
-	this.renderShadow_();
+ol.style.Shadow = function(options) {
+  options = options || {};
+  if (!options.fill) options.fill = new ol.style.Fill({ color: "rgba(0,0,0,0.5)" });
+  ol.style.RegularShape.call (this,{ radius: options.radius, fill: options.fill });
+  this._fill = options.fill;
+  this._radius = options.radius;
+  this._blur = options.blur===0 ? 0 : options.blur || options.radius/3;
+  this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
+  this.renderShadow_();
 };
 ol.ext.inherits(ol.style.Shadow, ol.style.RegularShape);
 /**
  * Clones the style. 
  * @return {ol.style.Shadow}
  */
-ol.style.Shadow.prototype.clone = function()
-{	var s = new ol.style.Shadow(
-	{	fill: this.fill_,
-		radius: this.radius_,
-		blur: this.blur_,
-		offsetX: this.offset_[0],
-		offsetY: this.offset_[1]
-	});
-	s.setScale(this.getScale());
-	s.setOpacity(this.getOpacity());
-	return s;
+ol.style.Shadow.prototype.clone = function() {
+  var s = new ol.style.Shadow({
+    fill: this._fill,
+    radius: this._radius,
+    blur: this._blur,
+    offsetX: this._offset[0],
+    offsetY: this._offset[1]
+  });
+  s.setScale(this.getScale());
+  s.setOpacity(this.getOpacity());
+  return s;
 };
 /**
  * @private
  */
-ol.style.Shadow.prototype.renderShadow_ = function()
-{	
-	var radius = this.radius_;
-	var canvas = this.getImage();
-	var s = [canvas.width, canvas.height];
-	s[1] = radius;
-	// Remove the circle on the canvas
-	var context = (canvas.getContext('2d'));
-	context.beginPath();
-	context.clearRect(0, 0, canvas.width, canvas.height);
-	context.scale(1,0.5);
-	context.arc(radius, -radius, radius-this.blur_, 0, 2 * Math.PI, false);
+ol.style.Shadow.prototype.renderShadow_ = function(pixelratio) {	
+  if (!pixelratio) {
+    if (this.getPixelRatio) {
+      pixelratio = window.devicePixelRatio;
+      this.renderShadow_(pixelratio);
+      if (this.getPixelRatio && pixelratio!==1) this.renderShadow_(1); 
+    } else {
+      this.renderShadow_(1);
+    }
+    return;
+  }
+  var radius = this._radius;
+  var canvas = this.getImage(pixelratio);
+  // Remove the circle on the canvas
+  var context = (canvas.getContext('2d'));
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.save();
+  context.beginPath();
+    context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
+    context.scale(1,0.5);
+    context.arc(radius, -radius, radius-this._blur, 0, 2 * Math.PI, false);
     context.fillStyle = '#000';
-	context.shadowColor = this.fill_.getColor();
-	context.shadowBlur = 0.7*this.blur_;
-	context.shadowOffsetX = 0;
-	context.shadowOffsetY = 1.5*radius;
-	context.closePath();
-    context.fill();
-	context.shadowColor = 'transparent';
-	// Set anchor
-	var a = this.getAnchor();
-	a[0] = canvas.width /2 -this.offset_[0];
-	a[1] = canvas.height/2 -this.offset_[1];
+    context.shadowColor = this._fill.getColor();
+    context.shadowBlur = 0.7*this._blur*pixelratio;
+    context.shadowOffsetX = 0;
+    context.shadowOffsetY = 1.5*radius*pixelratio;
+  context.closePath();
+  context.fill();
+  context.shadowColor = 'transparent';
+  context.restore();
+  // Set anchor
+  var a = this.getAnchor();
+  a[0] = canvas.width /2 - this._offset[0];
+  a[1] = canvas.height /2 - this._offset[1];
 }
-/**
- * @inheritDoc
- */
-ol.style.Shadow.prototype.getChecksum = function()
-{
-	var strokeChecksum = (this.stroke_!==null) ?
-		this.stroke_.getChecksum() : '-';
-	var fillChecksum = (this.fill_!==null) ?
-		this.fill_.getChecksum() : '-';
-	var recalculate = (this.checksums_===null) ||
-		(strokeChecksum != this.checksums_[1] ||
-		fillChecksum != this.checksums_[2] ||
-		this.radius_ != this.checksums_[3] ||
-		this.form_+"-"+this.glyphs_ != this.checksums_[4]);
-	if (recalculate) {
-		var checksum = 'c' + strokeChecksum + fillChecksum 
-			+ ((this.radius_ !== void 0) ? this.radius_.toString() : '-')
-			+ this.form_+"-"+this.glyphs_;
-		this.checksums_ = [checksum, strokeChecksum, fillChecksum, this.radius_, this.form_+"-"+this.glyphs_];
-	}
-	return this.checksums_[0];
-};
 
 /*	Copyright (c) 2018 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)

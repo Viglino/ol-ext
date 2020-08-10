@@ -396,6 +396,8 @@
   // Redraw layer when fonts are loaded
   $(window).on("load", function(){ console.log("loaded"); vector.changed(); });
 
+  map.addInteraction(new ol.interaction.Select())
+
   </script>
   
 </body>
