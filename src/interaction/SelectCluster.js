@@ -2,8 +2,7 @@
   Copyright (c) 2015 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (http://www.cecill.info/).
   
-  ol.interaction.SelectCluster is an interaction for selecting vector features in a cluster.
-  
+  ol/interaction/SelectCluster is an interaction for selecting vector features in a cluster.
 */
 
 import ol_ext_inherits from '../util/ext'
@@ -20,6 +19,8 @@ import ol_geom_Point from 'ol/geom/Point'
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Circle from 'ol/style/Circle'
 import ol_render_getVectorContext from '../util/getVectorContext';
+import { createEmpty as ol_extent_createEmpty } from 'ol/extent'
+import { extend as ol_extent_extend } from 'ol/extent'
 
 /**
  * @classdesc
@@ -292,6 +293,7 @@ ol_interaction_SelectCluster.prototype.animateCluster_ = function(center, featur
       return;
     }
 
+    
     // tell OL3 to continue postcompose animation
     event.frameState.animate = true;
   }
@@ -302,6 +304,20 @@ ol_interaction_SelectCluster.prototype.animateCluster_ = function(center, featur
   var feature = new ol_Feature(new ol_geom_Point(this.getMap().getView().getCenter()));
   feature.setStyle(new ol_style_Style({ image: new ol_style_Circle({}) }));
   this.overlayLayer_.getSource().addFeature(feature);
+};
+
+
+/** Helper function to get the extent of a cluster
+ * @param {ol.feature} feature
+ * @return {ol.extent}
+ */
+ol_interaction_SelectCluster.prototype.getClusterExtent = function(feature) {
+  var features = feature.get('features') || [feature];
+  var extent = ol_extent_createEmpty();
+  features.forEach(function(f) {
+    extent = ol_extent_extend(extent, f.getGeometry().getExtent());
+  });
+  return extent;
 };
 
 export default ol_interaction_SelectCluster

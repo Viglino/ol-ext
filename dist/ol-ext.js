@@ -17269,7 +17269,7 @@ ol.interaction.Ripple.prototype.postcompose_ = function(e) {
 /*
   Copyright (c) 2015 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (http://www.cecill.info/).
-  ol.interaction.SelectCluster is an interaction for selecting vector features in a cluster.
+  ol/interaction/SelectCluster is an interaction for selecting vector features in a cluster.
 */
 /**
  * @classdesc
@@ -17525,6 +17525,18 @@ ol.interaction.SelectCluster.prototype.animateCluster_ = function(center, featur
   var feature = new ol.Feature(new ol.geom.Point(this.getMap().getView().getCenter()));
   feature.setStyle(new ol.style.Style({ image: new ol.style.Circle({}) }));
   this.overlayLayer_.getSource().addFeature(feature);
+};
+/** Helper function to get the extent of a cluster
+ * @param {ol.feature} feature
+ * @return {ol.extent}
+ */
+ol.interaction.SelectCluster.prototype.getClusterExtent = function(feature) {
+  var features = feature.get('features') || [feature];
+  var extent = ol.extent.createEmpty();
+  features.forEach(function(f) {
+    extent = ol.extent.extend(extent, f.getGeometry().getExtent());
+  });
+  return extent;
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -27747,7 +27759,7 @@ ol.style.FontSymbol.prototype.renderMarker_ = function(pixelratio) {
  * @param {ol.style.FontSymbol.RenderOptions} renderOptions
  * @param {CanvasRenderingContext2D} context
  */
-ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context, pixelratio) {
+ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context) {
   var s = 2*this.radius_+renderOptions.strokeWidth+1;
   var w = renderOptions.strokeWidth/2;
   var c = renderOptions.size / 2;

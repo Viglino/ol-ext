@@ -236,7 +236,7 @@ ol_style_FontSymbol.prototype.renderMarker_ = function(pixelratio) {
  * @param {ol_style_FontSymbol.RenderOptions} renderOptions
  * @param {CanvasRenderingContext2D} context
  */
-ol_style_FontSymbol.prototype.drawPath_ = function(renderOptions, context, pixelratio) {
+ol_style_FontSymbol.prototype.drawPath_ = function(renderOptions, context) {
   var s = 2*this.radius_+renderOptions.strokeWidth+1;
   var w = renderOptions.strokeWidth/2;
   var c = renderOptions.size / 2;
