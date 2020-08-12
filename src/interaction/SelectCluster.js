@@ -309,14 +309,15 @@ ol_interaction_SelectCluster.prototype.animateCluster_ = function(center, featur
 
 /** Helper function to get the extent of a cluster
  * @param {ol.feature} feature
- * @return {ol.extent}
+ * @return {ol.extent|null} the extent or null if extent is empty (no cluster or superimposed points)
  */
 ol_interaction_SelectCluster.prototype.getClusterExtent = function(feature) {
-  var features = feature.get('features') || [feature];
+  if (!feature.get('features')) return null;
   var extent = ol_extent_createEmpty();
-  features.forEach(function(f) {
+  feature.get('features').forEach(function(f) {
     extent = ol_extent_extend(extent, f.getGeometry().getExtent());
   });
+  if (extent[0]===extent[2] && extent[1]===extent[3]) return null;
   return extent;
 };
 
