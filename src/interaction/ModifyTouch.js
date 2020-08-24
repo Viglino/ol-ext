@@ -14,17 +14,20 @@ import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent'
  * @fires hidepopup
  * @extends {ol.interaction.Modify}
  * @param {olx.interaction.ModifyOptions} options
- *  @param {String|undefined} options.title title to display, default "remove point"
- *  @param {Boolean|undefined} options.usePopup use a popup, default true
+ * @param {String|undefined} options.title title to display, default "remove point"
+ * @param {String|undefined} options.className CSS class name for the popup
+ * @param {String|undefined} options.positioning positioning for the popup
+ * @param {Number|Array<number>|undefined} options.offsetBox offset box for the popup
+ * @param {Boolean|undefined} options.usePopup use a popup, default true
  */
 var ol_interaction_ModifyTouch = function(options) {
   var self = this;
   if (!options) options = {};
 
   this._popup = new ol_Overlay_Popup ({
-    popupClass: options.calssName || 'modifytouch',
-    positioning: 'bottom-rigth',
-    offsetBox: 10
+    popupClass: options.className || 'modifytouch',
+    positioning: options.positioning || 'bottom-rigth',
+    offsetBox: options.offsetBox || 10
   });
 
   this._source = options.source;
