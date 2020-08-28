@@ -219,7 +219,7 @@ ol_control_Profil.prototype._drawAt = function(p, dx) {
   }
 };
 
-/** Show point at coordinate on the profil
+/** Show point at coordinate or a distance on the profil
  * @param { ol.coordinates||number } where a coordiniate or a distance from begining, if none it will hide the point
  * @return { ol.coordinates } current point
  */
@@ -253,6 +253,25 @@ ol_control_Profil.prototype.showAt = function(where) {
     return p0[3];
   }
   return null;
+};
+
+/** Get the point at a given time on the profil
+ * @param { number } time time at which to show the point
+ * @return { ol.coordinates } current point
+ */
+ol_control_Profil.prototype.pointAtTime = function(time) {
+  var i, p;
+  // Look for closest the point
+  for (i=1; p=this.tab_[i]; i++) {
+    var t = p[3][3];
+    if (t >= time) {
+      // Previous one ?
+      var pt = this.tab_[i-1][3];
+      if ((pt[3]+t)/2 < time) return pt;
+      else return p;
+    }
+  }
+  return this.tab_[this.tab_.length-1][3];
 };
 
 /** Mouse move over canvas
