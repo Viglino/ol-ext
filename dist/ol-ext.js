@@ -7403,7 +7403,7 @@ ol.control.Profil.prototype._drawAt = function(p, dx) {
     this.bar_.parentElement.classList.remove("over");
   }
 };
-/** Show point at coordinate on the profil
+/** Show point at coordinate or a distance on the profil
  * @param { ol.coordinates||number } where a coordiniate or a distance from begining, if none it will hide the point
  * @return { ol.coordinates } current point
  */
@@ -7437,6 +7437,24 @@ ol.control.Profil.prototype.showAt = function(where) {
     return p0[3];
   }
   return null;
+};
+/** Get the point at a given time on the profil
+ * @param { number } time time at which to show the point
+ * @return { ol.coordinates } current point
+ */
+ol.control.Profil.prototype.pointAtTime = function(time) {
+  var i, p;
+  // Look for closest the point
+  for (i=1; p=this.tab_[i]; i++) {
+    var t = p[3][3];
+    if (t >= time) {
+      // Previous one ?
+      var pt = this.tab_[i-1][3];
+      if ((pt[3]+t)/2 < time) return pt;
+      else return p;
+    }
+  }
+  return this.tab_[this.tab_.length-1][3];
 };
 /** Mouse move over canvas
 */
@@ -13664,7 +13682,7 @@ ol.format.GeoRSS.prototype.readFeature = function(source, options) {
   // Get geometry
   if (f.get('geo:long')) {
     // LonLat
-    g = new ol.geom.Point([f.get('geo:long'), f.get('geo:lat')]);
+    g = new ol.geom.Point([parseFloat(f.get('geo:long')), parseFloat(f.get('geo:lat'))]);
     f.unset('geo:long');
     f.unset('geo:lat');
   } else if (f.get('georss:point')) {
@@ -16783,16 +16801,19 @@ ol.interaction.ModifyFeature.prototype.handleMoveEvent = function(e) {
  * @fires hidepopup
  * @extends {ol.interaction.Modify}
  * @param {olx.interaction.ModifyOptions} options
- *  @param {String|undefined} options.title title to display, default "remove point"
- *  @param {Boolean|undefined} options.usePopup use a popup, default true
+ * @param {String|undefined} options.title title to display, default "remove point"
+ * @param {String|undefined} options.className CSS class name for the popup
+ * @param {String|undefined} options.positioning positioning for the popup
+ * @param {Number|Array<number>|undefined} options.offsetBox offset box for the popup
+ * @param {Boolean|undefined} options.usePopup use a popup, default true
  */
 ol.interaction.ModifyTouch = function(options) {
   var self = this;
   if (!options) options = {};
   this._popup = new ol.Overlay.Popup ({
-    popupClass: options.calssName || 'modifytouch',
-    positioning: 'bottom-rigth',
-    offsetBox: 10
+    popupClass: options.className || 'modifytouch',
+    positioning: options.positioning || 'bottom-rigth',
+    offsetBox: options.offsetBox || 10
   });
   this._source = options.source;
   this._features = options.features;
