@@ -85,11 +85,11 @@ ol_control_Legend.prototype.setStyle = function(style) {
 
 /** Add a new row to the legend
  *  * You can provide in options:
- * - a feature width a style 
+ * - a feature width a style
  * - or a feature that will use the legend style function
  * - or properties ans a geometry type that will use the legend style function
  * - or a style and a geometry type
- * @param {*} options a list of parameters 
+ * @param {*} options a list of parameters
  *  @param {ol.Feature} options.feature a feature to draw
  *  @param {ol.style.Style} options.style the style to use if no feature is provided
  *  @param {*} options.properties properties to use with a style function
@@ -161,7 +161,7 @@ ol_control_Legend.prototype.refresh = function() {
   canvas.width = 5*width;
   canvas.height = (this._rows.length+1) * height * ol_has_DEVICE_PIXEL_RATIO;
   this._imgElement.innerHTML = '';
-  this._imgElement.append(canvas);
+  this._imgElement.appendChild(canvas);
   this._imgElement.style.height = (this._rows.length+1)*height + 'px';
   for (var i=0, r; r = this._rows[i]; i++) {
     addRow(r.title, false, r, i);
@@ -185,9 +185,9 @@ ol_control_Legend.prototype.toggle = function() {
   this.element.classList.toggle('ol-collapsed');
 };
 
-/** Get the image for a style 
+/** Get the image for a style
  * You can provide in options:
- * - a feature width a style 
+ * - a feature width a style
  * - or a feature that will use the legend style function
  * - or properties and a geometry type that will use the legend style function
  * - or a style and a geometry type
