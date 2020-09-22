@@ -308,22 +308,28 @@ ol_control_Permalink.prototype.viewChange_ = function() {
  * @private
  */
 ol_control_Permalink.prototype.layerChange_ = function() {
-  // Get layers
-  var l = "";
-  function getLayers(layers) {
-    for (var i=0; i<layers.length; i++) {
-      if (layers[i].getVisible() && layers[i].get("permalink")) {
-        if (l) l += "|";
-        l += layers[i].get("permalink")+":"+layers[i].get("opacity");
+  // Prevent multi change
+  if (this._tout) {
+    clearTimeout(this._tout);
+  } 
+  this._tout = setTimeout(function() {
+    // Get layers
+    var l = "";
+    function getLayers(layers) {
+      for (var i=0; i<layers.length; i++) {
+        if (layers[i].getVisible() && layers[i].get("permalink")) {
+          if (l) l += "|";
+          l += layers[i].get("permalink")+":"+layers[i].get("opacity");
+        }
+        // Layer Group
+        if (layers[i].getLayers) getLayers(layers[i].getLayers().getArray());
       }
-      // Layer Group
-      if (layers[i].getLayers) getLayers(layers[i].getLayers().getArray());
     }
-  }
-  getLayers(this.getMap().getLayers().getArray());
-  this.layerStr_ = l;
+    getLayers(this.getMap().getLayers().getArray());
+    this.layerStr_ = l;
 
-  this.viewChange_();
+    this.viewChange_();
+  }.bind(this), 200);
 };
 
 export default ol_control_Permalink
