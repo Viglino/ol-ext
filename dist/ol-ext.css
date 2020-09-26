@@ -3633,6 +3633,9 @@
           box-sizing: content-box;
   opacity: .2;
 }
+.ol-searching {
+  opacity: .5;
+}
 .ol-target-overlay .ol-target 
 {	border: 1px solid transparent;
 	-webkit-box-shadow: 0 0 1px 1px #fff;

@@ -195,7 +195,7 @@ var ol_geohash_getNeighbours = function(geohash) {
   };
 }
 
-export {ol_geohash_fromLonLat as fromLonlat}
+export {ol_geohash_fromLonLat as fromLonLat}
 export {ol_geohash_toLonLat as toLonLat}
 export {ol_geohash_getExtent as getExtent}
 export {ol_geohash_getAdjacent as getAdjacent}

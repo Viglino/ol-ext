@@ -7036,27 +7036,30 @@ ol.control.Permalink.prototype.viewChange_ = function() {
  * @private
  */
 ol.control.Permalink.prototype.layerChange_ = function() {
-  // Prevent multi change
+  // Prevent multiple change at the same time
   if (this._tout) {
     clearTimeout(this._tout);
-  } 
-  this._tout = setTimeout(function() {
-    // Get layers
-    var l = "";
-    function getLayers(layers) {
-      for (var i=0; i<layers.length; i++) {
-        if (layers[i].getVisible() && layers[i].get("permalink")) {
-          if (l) l += "|";
-          l += layers[i].get("permalink")+":"+layers[i].get("opacity");
+    this._tout = null;
+  } else {
+    this._tout = setTimeout(function() {
+      this._tout = null;
+      // Get layers
+      var l = "";
+      function getLayers(layers) {
+        for (var i=0; i<layers.length; i++) {
+          if (layers[i].getVisible() && layers[i].get("permalink")) {
+            if (l) l += "|";
+            l += layers[i].get("permalink")+":"+layers[i].get("opacity");
+          }
+          // Layer Group
+          if (layers[i].getLayers) getLayers(layers[i].getLayers().getArray());
         }
-        // Layer Group
-        if (layers[i].getLayers) getLayers(layers[i].getLayers().getArray());
       }
-    }
-    getLayers(this.getMap().getLayers().getArray());
-    this.layerStr_ = l;
-    this.viewChange_();
-  }.bind(this), 200);
+      getLayers(this.getMap().getLayers().getArray());
+      this.layerStr_ = l;
+      this.viewChange_();
+    }.bind(this), 200);
+  }
 };
 
 /*
@@ -11262,6 +11265,307 @@ ol.control.Toggle.prototype.setInteraction = function(i) {
 ol.control.Toggle.prototype.getInteraction = function() {
   return this.interaction_;
 };
+
+/* 
+  WMS Layer with EPSG:4326 projection.
+  The tiles will be reprojected to map pojection (EPSG:3857).
+  NB: reduce tileSize to minimize deformations on small scales.
+*/
+/** WMSCapabilities
+ * @constructor
+ * @param {*} options
+ *  @param {String} options.proxy proxy to use when requesting Getcapabilites, default none (suppose the service use CORS)
+ */
+ol.control.WMSCapabilities = function (options) {
+  options = options || {};
+  this._proxy = options.proxy;
+  var element = ol.ext.element.create('DIV', {
+    className: (options.className || 'ol-wmscapabilities') 
+      + (options.target ? '': ' ol-unselectable ol-control')
+  });
+  var input = ol.ext.element.create('INPUT', {
+    placeholder: options.placeholder || 'Service url...',
+    parent: element
+  });
+  ol.ext.element.create('BUTTON', {
+    click: function() {
+      this.getCapabilities(input.value).then(this.showCapabilitis.bind(this));
+    }.bind(this),
+    html: options.loadLabel || 'load',
+    parent: element
+  });
+  ol.control.Control.call(this, {
+    element: element,
+    target: options.target
+  });
+  // Ajax request
+  var parser = new ol.format.WMSCapabilities();
+  this._ajax = new ol.ext.Ajax({ dataType:'text', auth: options.authentication });
+  this._ajax.on('success', function (e) {
+    var layers = parser.read(e.response);
+    if (this._then) this._then(layers);
+    if (this._finally) this._finally(layers);
+    this._then = this._catch = this._finally = null;
+  }.bind(this));
+  this._ajax.on('error', function(e) {
+    if (this._catch) this._then(e);
+    if (this._finally) this._finally(null);
+    this._then = this._catch = this._finally = null;
+  }.bind(this));
+  // Handle searching
+  this._ajax.on('loadstart', function() {
+    this.element.classList.add('ol-searching');
+  }.bind(this));
+  this._ajax.on('loadend', function() {
+    this.element.classList.remove('ol-searching');
+  }.bind(this));
+};
+ol.ext.inherits(ol.control.WMSCapabilities, ol.control.Control);
+/** Get WMS capabilities for a server
+ * @param {string} url service url
+ * @param {*} options 
+ *  @param {string} options.version WMS version, default 1.3.0
+ *  @param {Number} options.timeout
+ *  @param {string} options.map WMS map
+ * @return {*} PromiseLike to handle response
+ */
+ol.control.WMSCapabilities.prototype.getCapabilities = function(url, options) {
+  options = options || {};
+  var request = {
+    SERVICE: 'WMS',
+    REQUEST: 'GetCapabilities',
+    VERSION: options.version || '1.3.0'
+  }
+  if (options.map) request.map = options.map;
+  if (this._proxy) {
+    var q = '';
+    for (var r in request) q += (q?'&':'')+r+'='+request[r]
+    this._ajax.send(this._proxy, {
+      url: q
+    }, {
+      timeout: options.timeout || 10000
+    });
+  } else {
+    this._ajax.send(url, request, {
+      timeout: options.timeout || 10000
+    });
+  }
+  // PromiseLike response
+  this._then = this._catch = this._finally = null;
+  var promise = {
+    then: function(f) {
+      if (typeof(f) === 'function') this._then = f;
+      return promise;
+    }.bind(this),
+    catch: function(f) {
+      if (typeof(f) === 'function') this._catch = f;
+      return promise;
+    }.bind(this),
+    finally: function(f) {
+      if (typeof(f) === 'function') this._finally = f;
+      return promise;
+    }.bind(this)
+  }
+  return promise;
+};
+/** Display capabilities in the dialog
+ * @param {*} layers JSON capabilities
+ */
+ol.control.WMSCapabilities.prototype.showCapabilitis = function(layers) {
+  console.log(layers)
+};
+/** Convert capabilities to options
+ * @param {} layer layer capabilities (read from the capabilities)
+ * @param {} options
+ * @return {} the options to create the ol.layer.WMS
+* /
+ol.control.WMSCapabilities.prototype.getOptionsFromCap = function(layer, options) {
+  var i;
+  if (!options) options={};
+  options = $.extend({
+    isBaseLayer: false,
+    minScale: layer.MinScaleDenominator,
+    maxScale: layer.MaxScaleDenominator,
+    attribution: layer.Attribution
+  }, options);
+  var format = false;
+  // Look for prefered format first
+  var pref =[/png/,/jpeg/,/gif/];
+  for (i=0; i<3; i++) {
+    for (var f=0; f<layer.Format.length; f++) {
+      if (pref[i].test(layer.Format[f])) {
+        format=layer.Format[f];
+        break;
+      }
+    }
+    if (format) break;
+  }
+  if (!format) format = layer.Format[0];
+  // Check srs
+  var srs = options.srs || 'EPSG:3857';
+//	var srserror = false;
+  if (!layer.CRS || layer.CRS.indexOf(srs)<0) {
+    //srserror = true;
+    if (window.proj4) {
+      //if (layer.CRS && layer.CRS.indexOf("EPSG:4326")>=0) srs = "EPSG:4326";
+//			console.log(layer.CRS)
+      if (layer.CRS && layer.CRS.indexOf("EPSG:2154")>=0) srs = "EPSG:2154";
+      else if (layer.CRS && layer.CRS.indexOf("EPSG:4326")>=0) srs = "EPSG:4326";
+      else console.log("ERROR "+srs);
+    }
+  }
+  var bbox, bb = layer.BoundingBox;
+  if (bb) {
+    for (i = 0; i < bb.length; i++) {
+      // On reconstruit les extent pour avoir la bonne etendue
+      var ext = bb[i].extent;
+      var extent = [ext[1], ext[0], ext[3], ext[2]];
+      // le formatage des extent n'est pas standard, donc on gere differents cas
+      if (/4326/.test(bb[i].crs) || /CRS:84/.test(bb[i].crs)) {
+        if (bb[i].extent[0] > 100) bbox = extent;
+        else {
+          if (ext[1] < 0) {
+            bbox = ol.proj.transformExtent(extent, bb[i].crs, 'EPSG:3857');
+          } else {
+            bbox = ol.proj.transformExtent(ext, bb[i].crs, 'EPSG:3857');
+          }
+          var world = ol.proj.get("EPSG:3857").getExtent();
+          for (var p=0; p<4; p++) {
+            if (!bbox[p]) bbox[p] = world[p];
+          }
+        }
+        break;
+      }
+      if (/3857/.test(bb[i].crs)) {
+        bbox = ext;
+        break;
+      }
+    }
+  }
+  function getresolution(m, layer, val) {
+    var att;
+    if (m=="min") att = "MinScaleDenominator";
+    else att = "MaxScaleDenominator";
+    if (typeof (layer[att]) != "undefined") return layer[att]/(72/2.54*100);
+    if (!layer.Layer) return (m=="min" ? 0 : 156543.03392804097);
+    // Get min / max of contained layers
+    val = (m=="min" ? 156543.03392804097 : 0);
+    for (var i=0; i<layer.Layer.length; i++) {
+      var res = getresolution(m, layer.Layer[i], val);
+      if (typeof(res) != "undefined") val = Math[m](val, res);
+    }
+    return val;
+  }
+  function getattribution(layer) {
+    if (layer.Attribution) {
+      return "<a href='"+layer.Attribution.OnlineResource+"'>&copy; "+layer.Attribution.Title+'</a>';
+    }
+    if (layer.Layer) {
+      for (var i=0; i<layer.Layer.length; i++) {
+        var attrib = getattribution(layer.Layer[i]);
+        if (attrib) return attrib;
+      }
+    }
+    return null;
+  }
+  var originator;
+  if (layer.Attribution) {
+    originator = {};
+    originator[layer.Attribution.Title] = {
+      attribution: layer.Attribution.Title,
+      constraint: [],
+      href: layer.Attribution.OnlineResource,
+      logo: layer.Attribution.LogoURL ? layer.Attribution.LogoURL.OnlineResource : null
+    }
+  }
+  var layer_opt = {
+    title: options.title || layer.Title,
+    extent: bbox,
+    minResolution: getresolution("min",layer),
+    maxResolution: getresolution("max",layer)
+  };
+  if (layer_opt.maxResolution==0) layer_opt.maxResolution = 156543.03392804097;
+  var attr_opt = 	{ html:getattribution(layer) };
+  var source_opt = {
+    url: layer.url,
+    projection: srs,
+    crossOrigin: options.cors ? 'anonymous':null,
+    params: {
+      'LAYERS': layer.Name,
+      'FORMAT': format,
+//			'EXCEPTIONS': 'application/vnd.ogc.se_xml', // 'application/vnd.ogc.se_inimage' 'application/vnd.ogc.se_blank'
+      'VERSION': layer.version || "1.3.0"
+    }
+  }
+  // Set map if exists
+  if (layer.map) source_opt.params.MAP = layer.map;
+  // Trace
+  if (this.trace) {
+    if (attr_opt.html) source_opt.attributions = [	"new ol.Attribution("+JSON.stringify(attr_opt).replace(/\\"/g,'"')+")" ];
+    var tso = JSON.stringify([ source_opt ], null, "\t").replace(/\\"/g,'"');
+    layer_opt.source = "new ol.source.TileWMS("+tso+")";
+    var t = "new ol.layer.Tile (" +JSON.stringify(layer_opt, null, "\t")+ ")" 
+    t = t.replace(/\\"/g,'"')
+      .replace(/"new/g,'new')
+      .replace(/\)"/g,')')
+      .replace(/\\t/g,"\t").replace(/\\n/g,"\n")
+      .replace("([\n\t","(")
+      .replace("}\n])","})");
+    console.log(t);
+  }
+  // Legend
+  var legend = [];
+  for (i in layer.Style) if (layer.Style[i].LegendURL) {
+    legend.push(layer.Style[i].LegendURL[0].OnlineResource);
+  }
+  return { 
+    layer: layer_opt, 
+    source: source_opt, 
+    attribution: attr_opt, 
+    originator: originator, 
+    legend: legend 
+  };
+};
+/** Return a WMS ol.layer.Tile for the given options
+ * @param {} options
+ * @static
+ * /
+ol.control.WMSCapabilities.getLayer = function(options) {
+  var opt = $.extend(true, {}, options);
+  // Create layer
+  if (opt.attribution.html) opt.source.attributions = [ 
+    opt.attribution.html 
+  ];
+  opt.layer.source = new ol.source.TileWMS(opt.source);
+  var wms = new ol.layer.Tile (opt.layer);
+  wms._originators = opt.originator;
+  // Save WMS options
+  // wms.WMSParams = options;
+  wms.set('wmsparam', options);
+  return wms;
+}
+/** Return a WMS ol.layer.Tile for the given capabilities
+ * @param {} layer layer capabilities (read from the capabilities)
+ * @param {} options 
+ * /
+ol.control.WMSCapabilities.prototype.getLayerFromCap = function(layer, options) {
+  var opt = this.getOptionsFromCap(layer, options);
+  return WMSCapabilities.getLayer(opt);
+}
+/** Gets all layers for a server
+ * @param {string} url service url
+ * @param {function} callback function called with a list of layers 
+* /
+ol.control.WMSCapabilities.prototype.getLayers = function(url, callback) {
+  var self = this;
+  this.get(url, function(layers) {
+    if (layers) for (var i=0; i<layers.length; i++) {
+      layers[i] = self.getLayerFromCap(layers[i]);
+    }
+    if (callback) callback (layers);
+  });
+};
+/**/
 
 /*
   Copyright (c) 2016 Jean-Marc VIGLINO, 
