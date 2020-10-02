@@ -276,7 +276,11 @@ ol_control_Swipe.prototype.precomposeRight = function(e) {
 /** @private
 */
 ol_control_Swipe.prototype.postcompose = function(e) {
-  e.context.restore();
+  // restore context when decluttering is done
+  // https://github.com/openlayers/openlayers/issues/10096
+  setTimeout(function () {
+    e.context.restore();
+  }, 0);
 };
 
 export default ol_control_Swipe
