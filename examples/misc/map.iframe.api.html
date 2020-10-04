@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>ol-ext: Iframe API</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="description" content="Use OlIframeAPI to control a map in an iframe" />
+  <meta name="keywords" content="Openlayers, ol, iframe, API" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <style>
+    #map {
+      width: 600px;
+      height: 400px;
+      border: 0;
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Openlayers iFrame API</h1>
+  </a>
+  <div class="info">
+    The ol-ext IFrame API lets you embed an ol map on your website and control the map using JavaScript.
+    <br/>
+    You don't need to include Openlayers js or css in your page, just add the js API...
+    <br/>
+    This lets you embed maps created in an other site into yours.
+  </div>
+
+  <!-- Map div -->
+  <iframe id="map" src="./map.iframe.html"></iframe>
+
+  <div class="options">
+  </div>
+
+
+  <script type="text/javascript">
+/* IFrame API */
+var olIFrameAPI = function(win) {
+  this.win = win;
+  this.counter = 0;
+};
+
+olIFrameAPI.prototype.setCenter = function(lonlat,zoom) {
+  this.win.postMessage({
+    api: 'center',
+    center: lonlat,
+    zoom: zoom
+  }, "*");
+};
+olIFrameAPI.prototype.getCenter = function(cback) {
+  var n = this.counter++;
+  function listener(e) {
+    if (e.data.counter === n) {
+      cback(e.data.center, e.data.zoom);
+      window.removeEventListener("message", listener);
+    }
+  }
+  window.addEventListener("message", listener, false);
+  this.win.postMessage({
+    api: 'getCenter',
+    counter: n
+  }, "*");
+};
+
+olIFrameAPI.ready = function(iframe, ready) {
+  var iframeWin = document.getElementById(iframe).contentWindow;
+  function onready(e) {
+    if (e.data.api==='ready') {
+      ready(new olIFrameAPI(iframeWin));
+      window.removeEventListener("message", onready);
+    }
+  }
+  window.addEventListener("message", onready, false);
+  iframeWin.postMessage({
+    api: 'ready'
+  }, "*");
+};
+
+var olMap;
+olIFrameAPI.ready('map', function(api) {
+  olMap = api;
+  console.log(api)
+  olMap.setCenter([2,45],10);
+})
+
+
+  </script>
+
+</body>
+</html>

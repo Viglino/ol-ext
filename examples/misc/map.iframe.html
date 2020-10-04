@@ -1,0 +1,86 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+  <title>ol-ext: iframe map</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="ol.control.cloud adds an animated clouds overlay on the map." />
+  <meta name="keywords" content="ol3, control, canvas, animation, cloud, bird" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <style>
+    #map {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width:100%;
+    }
+  </style>
+
+</head>
+<body >
+  <!-- Map div -->
+  <div id="map" ></div>
+  <script type="text/javascript">
+    var layers = [];
+    layers.push(new ol.layer.Tile({
+      title: 'OSM',
+      source: new ol.source.OSM()
+    }));
+
+    // The map
+    var map = new ol.Map({
+      target: 'map',
+      view: new ol.View({
+        zoom: 0,
+        center: [0,0]
+      }),
+      layers: layers
+    });
+
+function setIFrameMap(map) {
+  window.addEventListener("message", function(e) {
+    switch (e.data.api) {
+      case 'ready': {
+        window.parent.postMessage({ api: 'ready' }, '*');
+        break;
+      }
+      case 'center': {
+        if (e.data.center) map.getView().setCenter(ol.proj.fromLonLat(e.data.center))
+        if (e.data.zoom) map.getView().setZoom(e.data.zoom)
+        break;
+      }
+      case 'getCenter': {
+        e.data.center = ol.proj.toLonLat(map.getView().getCenter());
+        e.data.zoom = map.getView().getZoom();
+        window.parent.postMessage(e.data, '*');
+        break;
+      }
+      default: break;
+    }
+  }, false);
+  // ready
+  window.parent.postMessage({
+    api: 'ready'
+  }, '*');
+}
+setIFrameMap(map);
+    
+
+  </script>
+
+</body>
+</html>
