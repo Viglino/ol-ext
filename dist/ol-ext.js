@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.1.14
+ * @version v3.1.15
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -10402,7 +10402,11 @@ ol.control.Swipe.prototype.precomposeRight = function(e) {
 /** @private
 */
 ol.control.Swipe.prototype.postcompose = function(e) {
-  e.context.restore();
+  // restore context when decluttering is done
+  // https://github.com/openlayers/openlayers/issues/10096
+  setTimeout(function () {
+    e.context.restore();
+  }, 0);
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
