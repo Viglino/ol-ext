@@ -420,7 +420,7 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function(simulate, coord, accur
       case "LineString":
         if (this.path_.length>1) {
           geo = new ol_geom_LineString(this.path_, 'XYZM');
-          geo.simplify (this.get("tolerance"));
+          if (this.get("tolerance")) geo = geo.simplify (this.get("tolerance"));
           f.setGeometry(geo);
         } else {
           f.setGeometry();
@@ -429,7 +429,7 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function(simulate, coord, accur
       case "Polygon":
         if (this.path_.length>2) {
           geo = new ol_geom_Polygon([this.path_], 'XYZM');
-          geo.simplify (this.get("tolerance"));
+          if (this.get("tolerance")) geo = geo.simplify (this.get("tolerance"));
           f.setGeometry(geo);
         }
         else f.setGeometry();
