@@ -36,6 +36,7 @@ var ol_control_GeolocationBar = function(options) {
     source: options.source,
     zoom: options.zoom,
     minZoom: options.minZoom,
+    tolerance: options.tolerance,
     followTrack: options.followTrack,
     minAccuracy: options.minAccuracy || 10000
   });
