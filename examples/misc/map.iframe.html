@@ -1,5 +1,4 @@
 ﻿<!DOCTYPE html>
-
 <html>
 <head>
   <title>ol-ext: iframe map</title>
@@ -18,6 +17,7 @@
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <script type="text/javascript" src="../../dist/extra/IFrameAPI.js"></script>
 
   <style>
     #map {
@@ -51,33 +51,29 @@
       layers: layers
     });
 
-function setIFrameMap(map) {
-  window.addEventListener("message", function(e) {
-    switch (e.data.api) {
-      case 'ready': {
-        window.parent.postMessage({ api: 'ready' }, '*');
-        break;
-      }
-      case 'center': {
-        if (e.data.center) map.getView().setCenter(ol.proj.fromLonLat(e.data.center))
-        if (e.data.zoom) map.getView().setZoom(e.data.zoom)
-        break;
-      }
-      case 'getCenter': {
-        e.data.center = ol.proj.toLonLat(map.getView().getCenter());
-        e.data.zoom = map.getView().getZoom();
-        window.parent.postMessage(e.data, '*');
-        break;
-      }
-      default: break;
-    }
-  }, false);
-  // ready
-  window.parent.postMessage({
-    api: 'ready'
-  }, '*');
-}
-setIFrameMap(map);
+    /* Define user api function */
+    var api = new ol.ext.IFrameAPI(map);
+    // Add a setter function
+    api.addSetter('center', function(data) {
+      if (data.center) this.map.getView().setCenter(ol.proj.fromLonLat(data.center))
+      if (data.zoom) this.map.getView().setZoom(data.zoom)
+    });
+    // Add a getter function 
+    api.addGetter('getCenter', function(data) {
+      data.center = ol.proj.toLonLat(this.map.getView().getCenter());
+      data.zoom = this.map.getView().getZoom();
+    });
+    // Post message on moveend
+    map.on('moveend', function(e) {
+      api.postMessage('move', { 
+        center: ol.proj.toLonLat(map.getView().getCenter()),
+        zoom: map.getView().getZoom()
+      })
+    });
+    // Post message on moveend
+    map.on('click', function(e) {
+      api.postMessage('click', { center: ol.proj.toLonLat(e.coordinate) } )
+    });
     
 
   </script>
