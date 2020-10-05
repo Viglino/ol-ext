@@ -1,0 +1,361 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>GeiJSON2CSV</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="Convert CSV file to GeoJSON." />
+  <meta name="keywords" content="csv, geojson, online" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- ol3 to show the map -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
+  <!-- filesaver-js -->
+  <script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+  <!-- Papaparse -->
+  <script type="text/javascript" src="https://unpkg.com/papaparse@4.6.3/papaparse.min.js"></script>
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <!-- exif2geojson -->
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    #map {
+      float:none;
+      width: 100%;
+      height: 400px;
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a class="title" href="../../index.html">
+    <h1>GeoJSON Tile</h1>
+  </a>
+
+  <div class="info">
+  </div>
+  
+  <div class="info">
+    <p>Options:</p>
+    <ul style="list-style:none;">
+      <li>
+      </li>
+    </ul>
+  
+    <button onclick="calculate()">Calculate</button>
+    <button onclick="download()">Download</button>
+
+    <div id="map"></div>
+
+  </div>
+
+  <script>
+    var Base64 = {
+      _Rixits :
+      //   0       8       16      24      32      40      48      56     63
+      //   v       v       v       v       v       v       v       v      v
+      "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+/",
+      /** get Base64 string */
+      fromNumber : function(number) {
+        if (number<0) return ('-'+this.fromNumber(-number));
+        var rixit; // like 'digit', only in some non-decimal radix 
+        var residual = Math.floor(number);
+        var result = '';
+        while (true) {
+          rixit = residual % 64
+          result = this._Rixits.charAt(rixit) + result;
+          residual = Math.floor(residual / 64);
+          if (residual == 0) break;
+        }
+        return result;
+      },
+      /** get Number from Base64 */
+      toNumber : function(rixits) {
+        if (rixits.charAt(0) === '-') return -1 * this.toNumber(rixits.substr(1));
+        var result = 0;
+        rixits = rixits.split('');
+        for (var e = 0; e < rixits.length; e++) {
+          result = (result * 64) + this._Rixits.indexOf(rixits[e]);
+        }
+        return result;
+      }
+    };
+
+    var hash = [
+      'PONT-RAIL',          //  7688
+      'PONT-ROUTE',         //  5502
+      'PASSERELLE',         //  1943
+      'BORNE KILOMETRIQUE', //  2893
+      'BORNE',              // 60000
+      'SAINT',              // 10919
+      'IMMEUBLE',           //  1388
+      'MAISON',             // 86973
+      'ECOLE',              //  8331
+      'MAIRIE',             // 14753
+      'BATIMENT',           // 20673
+      'EGLISE',             // 23011
+      'CHAPELLE',           //  2663
+      'CIMETIERE',          //  4585
+      'GARAGE',             //  1318
+      'HOPITAL',            //   247
+      'CALVAIRE',           //  2856
+      'AQUEDUC',            // 36515
+      'PONCEAU',            // 14717
+      'RUISSEAU',           // 18735
+      'RIVIERE',            // 20320
+      'BARRAGE',            //  2250
+      'ESCALIER',           //  1590
+      'ANCIEN',             // 20027
+      'MUR DE CLOTURE',     //  8265
+      'MUR DE FACADE',      //126465
+      'MUR DE SOUTENEMENT', // 13448
+      'MUR EN AILE',        // 13491
+      'MUR EN RETOUR',      // 28791
+      'MUR PIGNON',         // 53630
+      'SOUBASSEMENT DU MUR',// 27842
+      'SOUBASSEMENT',       // 11542
+      'PILIER',             //  9622
+      'PORTAIL',            //  6770
+      'FACADE',             //126901
+      'PARAPET',            // 13780
+      'FACE A',             // 36705
+      'FACE',               //271471
+      'AVANCEE',            //  4035
+      'SUD-OUEST',          // 27388
+      'SUD-EST',            // 26991
+      'NORD-OUEST',         // 26263
+      'NORD-EST',           // 26076
+      'RIVE DROITE',        // 23249
+      'RIVE GAUCHE',        // 22424
+      'SUPERIEUR',          // 12779
+      'INFERIEUR',          //   503
+      'OPPOSE',             // 19368
+      'ACCES',              //  2407
+      'PRINCIPAL',          //  4590
+      'AMONT',              // 37377
+      'RETOUR',             // 29919
+      'AVAL',               // 34742
+      'ROCHER',             // 20495
+      'RAVIN',              //  1698
+      'PYLONE',             // 20495
+      'SOCLE',              // 13297
+      'ROUTE',              //138391
+      'CARREFOUR',          //  7346
+      'AVENUE',             //  1481
+      'CHEMIN',             //  6398
+      'RUE',                // 11110
+      'VOIE',               // 25992
+      'BOULEVARD'           //   774
+    ];
+    if (hash.length > 64) console.error('Too nuch hash!!!',hash.length);
+    else console.log(hash.length);
+    hash.forEach(function(h, i) {
+      hash[i] = new RegExp(hash[i],'g');
+    });
+
+    // The map
+    var map = new ol.Map({
+      target: 'map',
+      view: new ol.View({
+        zoom: 1,
+        center: [270055, 3528229]
+      }),
+      layers: [new ol.layer.Tile({title: 'WaterColor', source: new ol.source.Stamen({ layer: 'watercolor' }) })]
+    });
+
+    var vector = new ol.layer.VectorImage({
+      title: 'GeoJSON',
+      source: new ol.source.Vector(),
+      visible: false
+    });
+    map.addLayer(vector);
+
+    var dnd = new ol.interaction.DropFile();
+    var keys = [];
+    map.addInteraction(dnd);
+    dnd.on('addfeatures', function(e) {
+      /* remove null */
+      keys = [];
+      var first = true;
+      e.features.forEach(function(f){
+        Object.keys(f.getProperties()).forEach(function(k) {
+          var v = f.get(k);
+          if (v===null || v===undefined || v==='') f.set(k,'');
+          if (first && k!=='geometry') keys.push(k);
+        })
+        first = false;
+      });
+      /**/
+      vector.getSource().addFeatures(e.features);
+      $('#map').css('opacity', 1);
+    });
+    dnd.on('loadstart', function(){ 
+      $('#map').css('opacity', .3); 
+      vector.getSource().clear();
+    });
+
+    var select = new ol.interaction.Select();
+    map.addInteraction(select);
+    map.addOverlay(new ol.Overlay.PopupFeature({ select: select }));
+
+    map.addControl(new ol.control.Permalink({visible:false}));
+    map.addControl(new ol.control.LayerSwitcher());
+
+    var tile;
+    var tgrid;
+    function calculate() {
+      if (tile) map.removeLayer(tile);
+      tgrid = ol.tilegrid.createXYZ({ minZoom: 10, maxZoom: 10, tileSize:256 });
+      tile = new ol.layer.Vector({
+        title: 'tiles',
+        source: new ol.source.Vector({
+          loader: function(extent, resolution) {
+            resolution = tgrid.getResolution(tgrid.minZoom);
+            var features = vector.getSource().getFeaturesInExtent(extent);
+            if (features.length) {
+              var tcoord = tgrid.getTileCoordForCoordAndResolution(ol.extent.getCenter(extent), resolution);
+              var f = new ol.Feature(ol.geom.Polygon.fromExtent(extent));
+              f.features = features;
+              f.set('id', tcoord.join('-'));
+              f.set('size', features.length);
+              f.set('extent', extent);
+              tile.getSource().addFeature(f);
+            }
+          },
+          strategy: ol.loadingstrategy.tile(tgrid),
+        }),
+        minZoom: 0
+      });
+      map.addLayer(tile);
+    }
+
+    function download() {
+      var feature = tile.getSource().getFeatures()[0];
+      if (!feature) {
+        alert ('Finish')
+        return;
+      }
+      tile.getSource().removeFeature(feature)
+      console.log(tile.getSource().getFeatures().length)
+      var id = feature.get('id');
+      var extent = feature.get('extent')
+      /* GeoJSON * /
+      var format = new ol.format.GeoJSON()
+      var result = format.writeFeatures(f.features, { decimales:1 });
+      var blob = new Blob([result], {type: "text/plain;charset=utf-8"});
+      saveAs(blob, f.get('id')+'.geojson');
+      /**/
+      var type = {
+        nivf: 'N',
+        nivo: 'n',
+        rsgf: 'G',
+        rsgo: 'g'
+      }
+      var result = '';//keys.join('\t')+'\tx\ty';
+      feature.features.forEach(function (fi) {
+        if (result) result += '\n';
+        var p = fi.getGeometry().getCoordinates();
+        /* delta coords * /
+        p[0] -= Math.floor(extent[0]);
+        p[1] -= Math.floor(extent[1]);
+        result += Math.round(p[0]*10) + '\t' + Math.round(p[1]*10);
+        /* geohash */
+        keys = ["rtype","id","name","no","z","date","insee","support","info","img"];
+        result += ol.geohash.fromLonLat(ol.proj.toLonLat(p), 10);
+        /**/
+        keys.forEach(function(k) {
+          switch (k) {
+            case 'commune': break;
+            // G/N + Base64(id) 
+            case 'id': {
+              var id = fi.get(k);
+              result += type[fi.get('type')];
+              result += Base64.fromNumber(id);
+              break;
+            }
+            // Base64
+            case 'rtype': {
+              result += Base64.fromNumber(parseInt(fi.get(k)||0));
+              break;
+            }
+            // Base64
+            case 'z': 
+            case 'dimg': {
+              if (fi.get(k)==='') result += '\t';
+              else result += '\t' + Base64.fromNumber(parseInt(fi.get(k)));
+              break;
+            }
+            case 'img': {
+              if (!fi.get(k)) result += '\t';
+              else {
+                var img = fi.get(k).replace('.jpg','').split('_');
+                if (fi.get('date')===img[1]) {
+                  result += '\t' + Base64.fromNumber(parseInt(img[2]+img[3]))
+                } else {
+                  result += '\t' + Base64.fromNumber(parseInt(img[1]+img[2]+img[3]))
+                }
+              }
+              break;
+            }
+            // Base64(date - 1900)
+            case 'date': {
+              if (!fi.get(k)) result += '\t';
+              else result += '\t' + Base64.fromNumber(parseInt(fi.get(k))-1900);
+              break;
+            }
+            // Text
+            case 'support':
+            case 'info': {
+              var s = fi.get(k).replace(/\n/g,' ').replace(/\r/g,'').replace(/  /g,' ');
+              hash.forEach(function(h,i) {
+                s = s.replace(h, '@'+Base64.fromNumber(i));
+              });
+              result += '\t'+s;
+              break;
+            }
+            default: {
+              result += '\t' + fi.get(k);
+              break;
+            }
+          }
+        })
+      })
+      var blob = new Blob([result], {type: "text/plain;charset=utf-8"});
+      saveAs(blob, id+'.csv');
+      setTimeout(function() { download() }, 100);
+    }
+
+    function getCommunes() {
+      var communes = {}
+      vector.getSource().getFeatures().forEach(function(f) {
+        communes[f.get('insee')] = f.get('commune');
+      })
+      /**/
+      var result = 'export default ' + JSON.stringify(communes);
+      var blob = new Blob([result], {type: "text/plain;charset=utf-8"});
+      saveAs(blob,'communes.json');
+      /*/
+      var result = '';
+      for (var k in communes) {
+        result += (result ? '\n':'') + k +'\t'+communes[k];
+      }
+      var blob = new Blob([result], {type: "text/plain;charset=utf-8"});
+      saveAs(blob,'communes.csv');
+      /**/
+    }
+
+  </script>
+</body>
+</html>
