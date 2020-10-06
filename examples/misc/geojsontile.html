@@ -301,7 +301,7 @@
             // Text
             case 'support':
             case 'info': {
-              var s = fi.get(k);
+              var s = fi.get(k).replace(/\n/g,' ').replace(/\r/g,'').replace(/  /g,' ');
               hash.forEach(function(h,i) {
                 s = s.replace(h, '@'+Base64.fromNumber(i));
               });

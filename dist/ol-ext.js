@@ -4446,6 +4446,7 @@ ol.control.GeolocationBar = function(options) {
     source: options.source,
     zoom: options.zoom,
     minZoom: options.minZoom,
+    tolerance: options.tolerance,
     followTrack: options.followTrack,
     minAccuracy: options.minAccuracy || 10000
   });
@@ -10404,9 +10405,13 @@ ol.control.Swipe.prototype.precomposeRight = function(e) {
 ol.control.Swipe.prototype.postcompose = function(e) {
   // restore context when decluttering is done
   // https://github.com/openlayers/openlayers/issues/10096
-  setTimeout(function () {
+  if (e.target.getClassName()!=='ol-layer' && e.target.get('declutter')) {
+    setTimeout(function () {
+      e.context.restore();
+    }, 0);
+  } else {
     e.context.restore();
-  }, 0);
+  }
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -15556,7 +15561,7 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(simulate, coord, accur
       case "LineString":
         if (this.path_.length>1) {
           geo = new ol.geom.LineString(this.path_, 'XYZM');
-          geo.simplify (this.get("tolerance"));
+          if (this.get("tolerance")) geo = geo.simplify (this.get("tolerance"));
           f.setGeometry(geo);
         } else {
           f.setGeometry();
@@ -15565,7 +15570,7 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(simulate, coord, accur
       case "Polygon":
         if (this.path_.length>2) {
           geo = new ol.geom.Polygon([this.path_], 'XYZM');
-          geo.simplify (this.get("tolerance"));
+          if (this.get("tolerance")) geo = geo.simplify (this.get("tolerance"));
           f.setGeometry(geo);
         }
         else f.setGeometry();
