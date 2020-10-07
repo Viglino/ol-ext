@@ -121,7 +121,7 @@ var format = new ol.format.GeoJSON();
 select.on('select', function(e) {
   var selected = [];
   var deselected = [];
-  e.selected.forEach(function(f) {
+  select.getFeatures().getArray().forEach(function(f) {
     var p = format.writeFeatureObject(f, { featureProjection: map.getView().getProjection() });
     selected.push(p);
   })
