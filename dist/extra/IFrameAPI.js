@@ -35,10 +35,10 @@ ol.ext.IFrameAPI = function(targetOrigin) {
   }.bind(this), false);
   // ready
   setTimeout(function() {
-  window.parent.postMessage({
-    api: 'ready'
-  }, this.targetOrigin);
-})
+    window.parent.postMessage({
+      api: 'ready'
+    }, this.targetOrigin);
+  })
 }
 /** 
  * @typedef {Object} TemplateAPI
@@ -50,10 +50,10 @@ ol.ext.IFrameAPI = function(targetOrigin) {
  */
 ol.ext.IFrameAPI.prototype.set = function(api) {
   if (api==='ready' || api==='getAPI') {
+    console.error('Bad API key: '+api);
   } else {
     for (var k in api) {
       this.setter[k] = api[k];
-      console.log(k)
       window.parent.postMessage({
         api: 'getAPI',
         data: [k]

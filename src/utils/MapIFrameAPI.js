@@ -90,13 +90,11 @@ MapIFrameAPI.ready = function(iframe, ready, targetOrigin) {
     return;
   }
   function onready(e) {
-    if (e.data.api==='ready') {
-      var api = new MapIFrameAPI(iframeWin, targetOrigin);
-      window.removeEventListener('message', onready);
-      api.call('getAPI', null,  function() {
-        ready(api);
-      });
-    }
+    var api = new MapIFrameAPI(iframeWin, targetOrigin);
+    window.removeEventListener('message', onready);
+    api.call('getAPI', null,  function() {
+      ready(api);
+    });
   }
   window.addEventListener('message', onready, false);
   iframeWin.postMessage({
