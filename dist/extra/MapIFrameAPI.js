@@ -1,16 +1,32 @@
 /** IFrame API 
  * @internal
  */
-var MapIFrameAPI = function(win) {
+var MapIFrameAPI = function(win, targetOrigin) {
   this.win = win;
+  this.targetOrigin = targetOrigin;
   this.counter = 0;
+  this.fn = {};
+  window.addEventListener("message", function(e) {
+    if (e.data.api === 'getAPI') {
+      var name = e.data.data;
+      name.forEach(function(n) {
+        this.fn[n] = function(data, fn) {
+          this.call(n, data, fn);
+        }.bind(this)
+      }.bind(this));
+    }
+  }.bind(this), false);
 };
 /** 
  * @param {string} key api function
- * @param {Object|function} fn argumnets list for setter or a getter function
- * @param {Object} data data sen dwith a getter
+ * @param {Object|function} data argments or a callback function to get returned Transferable
+ * @param {function} fn callback function to get returned Transferable
  */
- MapIFrameAPI.prototype.call = function(key, fn, data) {
+ MapIFrameAPI.prototype.call = function(key, data, fn) {
+  if (typeof(data)==='function') { 
+    fn = data;
+    data = {};
+  }
   if (typeof(fn) === 'function') {
     var n = this.counter++;
     function listener(e) {
@@ -24,12 +40,12 @@ var MapIFrameAPI = function(win) {
       api: key,
       counter: n,
       data: data
-    }, "*");
+    }, this.targetOrigin);
   } else {
     this.win.postMessage({
       api: key,
-      data: fn
-    }, "*");
+      data: data
+    }, this.targetOrigin);
   }
 };
 /** Add iframe listener
@@ -55,8 +71,10 @@ var MapIFrameAPI = function(win) {
 /** Get API whenready
  * @param {string|Element} iframe the iframe or the iframe ID
  * @param {function} ready a function that takes an api as first argument
+ * @param {string} targetOrigin
  */
-MapIFrameAPI.ready = function(iframe, ready) {
+MapIFrameAPI.ready = function(iframe, ready, targetOrigin) {
+  targetOrigin = targetOrigin || '*';
   var iframeWin;
   if (typeof(iframe)==='string') {
     iframeWin = document.getElementById(iframe).contentWindow;
@@ -69,12 +87,15 @@ MapIFrameAPI.ready = function(iframe, ready) {
   }
   function onready(e) {
     if (e.data.api==='ready') {
-      ready(new MapIFrameAPI(iframeWin));
-      window.removeEventListener("message", onready);
+      var api = new MapIFrameAPI(iframeWin, targetOrigin);
+      window.removeEventListener('message', onready);
+      api.call('getAPI', null,  function() {
+        ready(api);
+      });
     }
   }
-  window.addEventListener("message", onready, false);
+  window.addEventListener('message', onready, false);
   iframeWin.postMessage({
     api: 'ready'
-  }, "*");
+  }, '*');
 };

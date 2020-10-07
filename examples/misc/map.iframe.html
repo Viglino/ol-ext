@@ -35,46 +35,115 @@
   <!-- Map div -->
   <div id="map" ></div>
   <script type="text/javascript">
-    var layers = [];
-    layers.push(new ol.layer.Tile({
-      title: 'OSM',
-      source: new ol.source.OSM()
-    }));
 
-    // The map
-    var map = new ol.Map({
-      target: 'map',
-      view: new ol.View({
-        zoom: 0,
-        center: [0,0]
-      }),
-      layers: layers
-    });
+var osm = new ol.layer.Tile({
+  title: 'OSM',
+  source: new ol.source.OSM()
+});
+var vector = new ol.layer.Vector({
+  name: 'Departements',
+  source: new ol.source.Vector({
+    url: '../data/departements.geojson',
+    format: new ol.format.GeoJSON(),
+    attributions: [ "&copy; <a href='https://www.insee.fr'>INSEE</a>", "&copy; <a href='https://www.data.gouv.fr/fr/datasets/geofla-r/'>IGN</a>" ],
+  })
+})
+var layers = [ osm, vector ];
 
-    /* Define user api function */
-    var api = new ol.ext.IFrameAPI(map);
-    // Add a setter function
-    api.addSetter('center', function(data) {
-      if (data.center) this.map.getView().setCenter(ol.proj.fromLonLat(data.center))
-      if (data.zoom) this.map.getView().setZoom(data.zoom)
-    });
-    // Add a getter function 
-    api.addGetter('getCenter', function(data) {
-      data.center = ol.proj.toLonLat(this.map.getView().getCenter());
-      data.zoom = this.map.getView().getZoom();
-    });
-    // Post message on moveend
-    map.on('moveend', function(e) {
-      api.postMessage('move', { 
-        center: ol.proj.toLonLat(map.getView().getCenter()),
-        zoom: map.getView().getZoom()
-      })
-    });
-    // Post message on moveend
-    map.on('click', function(e) {
-      api.postMessage('click', { center: ol.proj.toLonLat(e.coordinate) } )
-    });
-    
+// The map
+var map = new ol.Map({
+  target: 'map',
+  view: new ol.View({
+    zoom: 0,
+    center: [0,0]
+  }),
+  layers: layers
+});
+
+// Selection
+var select = new ol.interaction.Select();
+map.addInteraction(select);
+
+// DrawPolygon
+var draw = new ol.interaction.Draw({
+  type: 'Polygon'
+});
+draw.setActive(false);
+map.addInteraction(draw);
+
+
+// NEW API
+var api = new ol.ext.IFrameAPI();
+
+api.set({
+  setCenter: function(data) {
+    map.getView().setCenter(ol.proj.fromLonLat(data));
+  },
+  getCenter: function(data) {
+    return ol.proj.toLonLat(map.getView().getCenter());
+  },
+  setZoom: function(data) {
+    console.log(data)
+    map.getView().setZoom(data);
+  },
+  getZoom: function(data) {
+    return map.getView().getZoom()
+  },
+  selectById: function(id) {
+    select.getFeatures().clear();
+    var ext = ol.extent.createEmpty();
+    vector.getSource().getFeatures().forEach(function(f) {
+      if (f.get('id') == id) {
+        select.getFeatures().push(f);
+        ol.extent.extend(ext, f.getGeometry().getExtent());
+      }
+      if (select.getFeatures().getLength()) {
+        map.getView().fit(ext);
+      }
+    })
+  },
+  drawPolygon: function() {
+    draw.setActive(true);
+    select.setActive(false);
+  }
+});
+
+// Post message on moveend
+map.on('moveend', function(e) {
+  api.postMessage('move', { 
+    center: ol.proj.toLonLat(map.getView().getCenter()),
+    zoom: map.getView().getZoom()
+  })
+});
+
+// Select an object > post as GeoJSON
+var format = new ol.format.GeoJSON();
+select.on('select', function(e) {
+  var selected = [];
+  var deselected = [];
+  e.selected.forEach(function(f) {
+    var p = format.writeFeatureObject(f, { featureProjection: map.getView().getProjection() });
+    selected.push(p);
+  })
+  e.deselected.forEach(function(f) {
+    deselected.push(f.get('id'));
+  });
+  api.postMessage('select', {
+    selected: selected,
+    deselected: deselected
+  });
+});
+
+// Draw a polygon
+draw.on('drawend', function (e) {
+  var p = format.writeFeatureObject(e.feature, { featureProjection: map.getView().getProjection() });
+  p.geometry.length = ol.sphere.getLength(e.feature.getGeometry())
+  p.geometry.area = ol.sphere.getArea(e.feature.getGeometry())
+  api.postMessage('drawPolygon', p.geometry);
+  draw.setActive(false);
+  select.setActive(true);
+})
+
 
   </script>
 

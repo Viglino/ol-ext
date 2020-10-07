@@ -50,12 +50,20 @@
 var olMap;
 MapIFrameAPI.ready('map', function(api) {
   olMap = api;
-  olMap.call('center', { center: [2,45], zoom: 10 });
+  // Center map
+  olMap.fn.setCenter([2,45]);
+  olMap.fn.setZoom(10);
+  // Get on move
   olMap.addIFrameListener('move', function(data) { 
     console.log('move', data.center, data.zoom); 
   })
-  olMap.addIFrameListener('click', function(data) { 
-    console.log('click:', data.center); 
+  // Get selection
+  olMap.addIFrameListener('select', function(data) { 
+    console.log('Select:', data.selected[0]); 
+  })
+  // Get selection
+  olMap.addIFrameListener('drawPolygon', function(data) { 
+    console.log('Draw:', data); 
   })
 });
 
