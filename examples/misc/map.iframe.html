@@ -101,6 +101,21 @@ api.set({
       }
     })
   },
+  selectBy: function(atts) {
+    select.getFeatures().clear();
+    var ext = ol.extent.createEmpty();
+    vector.getSource().getFeatures().forEach(function(f) {
+      for (var i in atts) {
+        if (f.get(i) == atts[i]) {
+          select.getFeatures().push(f);
+          ol.extent.extend(ext, f.getGeometry().getExtent());
+        }
+      }
+      if (select.getFeatures().getLength()) {
+        map.getView().fit(ext);
+      }
+    })
+  },
   drawPolygon: function() {
     select.setActive(false);
     select.getFeatures().clear();
