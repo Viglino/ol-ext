@@ -64,6 +64,16 @@ var map = new ol.Map({
 var select = new ol.interaction.Select();
 map.addInteraction(select);
 
+// Get selection as JSON object
+function getSelectionAsJSON() {
+  var selected = [];
+  select.getFeatures().getArray().forEach(function(f) {
+    var p = format.writeFeatureObject(f, { featureProjection: map.getView().getProjection() });
+    selected.push(p);
+  })
+  return selected;
+}
+
 // DrawPolygon
 var draw = new ol.interaction.Draw({
   type: 'Polygon'
@@ -88,19 +98,6 @@ api.set({
   getZoom: function(data) {
     return map.getView().getZoom()
   },
-  selectById: function(id) {
-    select.getFeatures().clear();
-    var ext = ol.extent.createEmpty();
-    vector.getSource().getFeatures().forEach(function(f) {
-      if (f.get('id') == id) {
-        select.getFeatures().push(f);
-        ol.extent.extend(ext, f.getGeometry().getExtent());
-      }
-      if (select.getFeatures().getLength()) {
-        map.getView().fit(ext);
-      }
-    })
-  },
   selectBy: function(atts) {
     select.getFeatures().clear();
     var ext = ol.extent.createEmpty();
@@ -109,12 +106,17 @@ api.set({
         if (f.get(i) == atts[i]) {
           select.getFeatures().push(f);
           ol.extent.extend(ext, f.getGeometry().getExtent());
+          break;
         }
       }
-      if (select.getFeatures().getLength()) {
-        map.getView().fit(ext);
-      }
     })
+    if (select.getFeatures().getLength()) {
+      map.getView().fit(ext);
+    }
+    api.postMessage('select', {
+      selected: getSelectionAsJSON(),
+      deselected: []
+    });
   },
   drawPolygon: function() {
     select.setActive(false);
@@ -134,12 +136,8 @@ map.on('moveend', function(e) {
 // Select an object > post as GeoJSON
 var format = new ol.format.GeoJSON();
 select.on('select', function(e) {
-  var selected = [];
+  var selected = getSelectionAsJSON();
   var deselected = [];
-  select.getFeatures().getArray().forEach(function(f) {
-    var p = format.writeFeatureObject(f, { featureProjection: map.getView().getProjection() });
-    selected.push(p);
-  })
   e.deselected.forEach(function(f) {
     deselected.push(f.get('id'));
   });
