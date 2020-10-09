@@ -39,11 +39,10 @@ ol.ext.IFrameAPI = function(targetOrigin) {
     }
   }.bind(this), false);
   // ready
-  setTimeout(function() {
-    window.parent.postMessage({
-      api: 'ready'
-    }, this.targetOrigin);
-  })
+  console.log('ready');
+  window.parent.postMessage({
+    api: 'ready'
+  }, this.targetOrigin);
 }
 /** 
  * @typedef {Object} TemplateAPI
