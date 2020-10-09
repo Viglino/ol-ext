@@ -142,9 +142,7 @@ api.set({
   drawPolygon: function() {
     if (draw.getActive()) {
       draw.setActive(false);
-      if (select.get('autoactive')) select.setActive(true);
     } else {
-      select.setActive(false);
       select.getFeatures().clear();
       draw.setActive(true);
     }
@@ -172,7 +170,6 @@ api.set({
   // Remove select interaction
   activateSelection: function(b) {
     select.setActive(b);
-    select.set('autoactive', b);
   }
 });
 
@@ -211,11 +208,6 @@ draw.on('drawend', function (e) {
   polygon.getSource().addFeature(e.feature);
   api.postMessage('drawPolygon', getPoly(e.feature));
   draw.setActive(false);
-  if (select.get('autoactive')) {
-    setTimeout(function () { 
-      select.setActive(true); 
-    }, 500);
-  }
 });
 // Modify a polygon
 modify.on('modifyend', function(e){
