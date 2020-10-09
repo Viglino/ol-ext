@@ -91,7 +91,8 @@ function getSelectionAsJSON() {
 
 // DrawPolygon
 var draw = new ol.interaction.Draw({
-  type: 'Polygon'
+  type: 'Polygon',
+  stopClick: true
 });
 draw.setActive(false);
 map.addInteraction(draw);
@@ -156,10 +157,12 @@ api.set({
   },
   // Set the polygon
   setPolygon: function(p) {
-    var f = format.readFeature(p, { featureProjection: map.getView().getProjection() });
     polygon.getSource().clear();
-    polygon.getSource().addFeature(f);
-    map.getView().fit(f.getGeometry().getExtent());
+    try {
+      var f = format.readFeature(p, { featureProjection: map.getView().getProjection() });
+      polygon.getSource().addFeature(f);
+      map.getView().fit(f.getGeometry().getExtent());
+    } catch(e) {}
   },
   // Show Geoportail layer
   setLayer: function(name) {
@@ -213,6 +216,7 @@ draw.on('drawend', function (e) {
       select.setActive(true); 
     }, 500);
   }
+  console.log(e);
 });
 // Modify a polygon
 modify.on('modifyend', function(e){
