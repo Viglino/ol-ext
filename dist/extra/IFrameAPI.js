@@ -53,7 +53,7 @@ ol.ext.IFrameAPI = function(targetOrigin) {
  * @param {Array<TemplateAPI>} list of functions to add to the api
  */
 ol.ext.IFrameAPI.prototype.set = function(api) {
-  if (api==='ready' || api==='getAPI') {
+  if (/\bready\b|\bgetAPI\b|\bon\b|\bun\b/.test(api)) {
     console.error('Bad API key: '+api);
   } else {
     for (var k in api) {

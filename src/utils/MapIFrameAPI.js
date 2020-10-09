@@ -15,7 +15,14 @@ var MapIFrameAPI = function(win, id, targetOrigin) {
   // Callback counter
   this.counter = 0;
   // List of function
-  this.fn = {};
+  this.fn = {
+    on: function(key, fn) {
+      return this.addIFrameListener(key, fn);
+    }.bind(this),
+    un: function(listener) {
+      return this.removeIFrameListener(listener);
+    }.bind(this),
+  };
   // Get API fn
   window.addEventListener('message', function(e) {
     if (e.data.id === this.id && e.data.api === 'getAPI') {
@@ -117,7 +124,7 @@ MapIFrameAPI.ready = function(iframe, ready, targetOrigin) {
         var api = new MapIFrameAPI(iframeWin, idAPI, targetOrigin);
         window.removeEventListener('message', onready);
         api.call('getAPI', null,  function() {
-          ready(api);
+          ready(api.fn);
         });
       }
     }

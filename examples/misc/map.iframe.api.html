@@ -59,8 +59,8 @@
   <!-- iframe id="map2" src="./map.iframe.html"></iframe -->
 
   <div class="options">
-    <button onclick="mapAPI.fn.drawPolygon()">Draw Polygon</button>
-    <button onclick="mapAPI.fn.selectBy({id:93})">Select 93</button>
+    <button onclick="mapAPI.drawPolygon()">Draw Polygon</button>
+    <button onclick="mapAPI.selectBy({id:93})">Select 93</button>
     <br/>
     <i>Look messages in the console...</i>
     <hr/>
@@ -87,20 +87,20 @@ MapIFrameAPI.ready('map2', function(api) {
 MapIFrameAPI.ready('map', function(api) {
   document.getElementById('loading').style.display = 'none';
   mapAPI = api;
-  // mapAPI.fn.setLayer('geoportail');
+  // mapAPI.setLayer('geoportail');
   // Center map
-  mapAPI.fn.setCenter([2,45]);
-  mapAPI.fn.setZoom(10);
+  mapAPI.setCenter([2,45]);
+  mapAPI.setZoom(10);
   // Get on move
-  mapAPI.addIFrameListener('move', function(data) { 
+  mapAPI.on('move', function(data) { 
     console.log('Move: ' + data.center[0] +','+ data.center[1] + '-' + data.zoom); 
   })
   // Get selection
-  mapAPI.addIFrameListener('select', function(data) { 
+  mapAPI.on('select', function(data) { 
     console.log('Select:', data.selected[0]); 
   })
   // Get selection
-  mapAPI.addIFrameListener('drawPolygon', function(data) { 
+  mapAPI.on('drawPolygon', function(data) { 
     console.log('Draw:', data); 
   })
 });
