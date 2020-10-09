@@ -206,7 +206,7 @@ draw.on('drawend', function (e) {
 });
 // Modify a polygon
 modify.on('modifyend', function(e){
-  api.postMessage('drawPolygon', getPoly(e.feature));
+  api.postMessage('drawPolygon', getPoly(e.features.item(0)));
 });
 
   </script>
