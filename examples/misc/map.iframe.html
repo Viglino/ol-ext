@@ -148,11 +148,18 @@ api.set({
       draw.setActive(true);
     }
   },
-  // Activate draw
+  // Get the polygon
   getPolygon: function() {
     var f = polygon.getSource().getFeatures()[0];
     if (f) return getPoly(f);
     else return null;
+  },
+  // Set the polygon
+  setPolygon: function(p) {
+    var f = format.readFeature(p, { featureProjection: map.getView().getProjection() });
+    polygon.getSource().clear();
+    polygon.getSource().addFeature(f);
+    map.getView().fit(f.getGeometry().getExtent());
   },
   // Show Geoportail layer
   setLayer: function(name) {
