@@ -145,6 +145,12 @@ api.set({
       draw.setActive(true);
     }
   },
+  // Activate draw
+  getPolygon: function() {
+    var f = polygon.getSource().getFeatures()[0];
+    if (f) return getPoly(f);
+    else return null;
+  },
   // Show Geoportail layer
   setLayer: function(name) {
     geoportail.setVisible(name==='geoportail');
@@ -180,18 +186,17 @@ select.on('select', function(e) {
 });
 
 // Post a polygon
-function postPoly(feature) {
-  var p = format.writeFeatureObject(feature, { featureProjection: map.getView().getProjection() });
-  p.geometry.length = ol.sphere.getLength(feature.getGeometry())
-  p.geometry.area = ol.sphere.getArea(feature.getGeometry())
-  api.postMessage('drawPolygon', p.geometry);
+function getPoly(feature) {
+  feature.set('length', ol.sphere.getLength(feature.getGeometry()))
+  feature.set('area', ol.sphere.getArea(feature.getGeometry()))
+  return format.writeFeatureObject(feature, { featureProjection: map.getView().getProjection() });
 }
 
 // Draw a polygon
 draw.on('drawend', function (e) {
   polygon.getSource().clear();
   polygon.getSource().addFeature(e.feature);
-  postPoly(e.feature);
+  api.postMessage('drawPolygon', getPoly(e.feature));
   draw.setActive(false);
   if (select.get('autoactive')) {
     setTimeout(function () { 
@@ -201,7 +206,7 @@ draw.on('drawend', function (e) {
 });
 // Modify a polygon
 modify.on('modifyend', function(e){
-  postPoly(e.features.item(0));
+  api.postMessage('drawPolygon', getPoly(e.feature));
 });
 
   </script>
