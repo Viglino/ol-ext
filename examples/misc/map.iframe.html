@@ -95,6 +95,9 @@ var draw = new ol.interaction.Draw({
 });
 draw.setActive(false);
 map.addInteraction(draw);
+draw.on('change:active', function() {
+  modify.setActive(!draw.getActive());
+});
 
 // NEW API
 var api = new ol.ext.IFrameAPI();
