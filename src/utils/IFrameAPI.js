@@ -4,22 +4,26 @@ if (window.ol && !ol.ext) {
 }
 
 /** IFrame API create an api and wait the target ready
- * @param {*} targetOrigin 
+ * @constructor 
+ * @param {string} targetOrigin, default '*'
  */
 var ol_ext_IFrameAPI = function(targetOrigin) {
   this.targetOrigin = targetOrigin || '*';
+  this.id = -1;
   // Setter api
   this.setter = {};
   // Wait for target ready
-  window.addEventListener("message", function(e) {
+  window.addEventListener('message', function(e) {
     switch (e.data.api) {
       case 'ready': {
-        window.parent.postMessage({ api: 'ready' }, '*');
+        this.id = e.data.id;
+        window.parent.postMessage(e.data, this.targetOrigin);
         break;
       }
       case 'getAPI': {
         e.data.data = Object.keys(this.setter);
-        window.parent.postMessage(e.data, '*');
+        e.data.id = this.id;
+        window.parent.postMessage(e.data, this.targetOrigin);
         break;
       }
       default: {
@@ -27,7 +31,8 @@ var ol_ext_IFrameAPI = function(targetOrigin) {
           var data = this.setter[e.data.api].call(this, e.data.data);
           if (data !== undefined) {
             e.data.data = data;
-            window.parent.postMessage(e.data, '*');
+            e.data.id = this.id;
+            window.parent.postMessage(e.data, this.targetOrigin);
           }
         }
         break;
@@ -59,6 +64,7 @@ ol_ext_IFrameAPI.prototype.set = function(api) {
       this.setter[k] = api[k];
       window.parent.postMessage({
         api: 'getAPI',
+        id: this.id,
         data: [k]
       }, this.targetOrigin);
     }
@@ -72,6 +78,7 @@ ol_ext_IFrameAPI.prototype.set = function(api) {
 ol_ext_IFrameAPI.prototype.postMessage = function(name, data) {
   window.parent.postMessage({ 
     api: name,
+    id: this.id,
     data: data
   }, this.targetOrigin);
 }

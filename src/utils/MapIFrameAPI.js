@@ -1,13 +1,24 @@
 /** IFrame API 
+ * @constructor 
+ * @param {Window} win
+ * @param {number} id
+ * @param {string} targetOrigin
  * @internal
  */
-var MapIFrameAPI = function(win, targetOrigin) {
+var MapIFrameAPI = function(win, id, targetOrigin) {
+  // IFrame
   this.win = win;
+  // API id
+  this.id = id;
+  // 
   this.targetOrigin = targetOrigin;
+  // Callback counter
   this.counter = 0;
+  // List of function
   this.fn = {};
-  window.addEventListener("message", function(e) {
-    if (e.data.api === 'getAPI') {
+  // Get API fn
+  window.addEventListener('message', function(e) {
+    if (e.data.id === this.id && e.data.api === 'getAPI') {
       var name = e.data.data;
       name.forEach(function(n) {
         this.fn[n] = function(data, fn) {
@@ -30,21 +41,23 @@ var MapIFrameAPI = function(win, targetOrigin) {
   }
   if (typeof(fn) === 'function') {
     var n = this.counter++;
-    function listener(e) {
-      if (e.data.counter === n) {
+    var listener = function(e) {
+      if (e.data.id === this.id && e.data.counter === n) {
         fn.call(this, e.data.data);
-        window.removeEventListener("message", listener);
+        window.removeEventListener('message', listener);
       }
-    }
-    window.addEventListener("message", listener, false);
+    }.bind(this);
+    window.addEventListener('message', listener, false);
     this.win.postMessage({
       api: key,
+      id: this.id,
       counter: n,
       data: data
     }, this.targetOrigin);
   } else {
     this.win.postMessage({
       api: key,
+      id: this.id,
       data: data
     }, this.targetOrigin);
   }
@@ -57,11 +70,11 @@ var MapIFrameAPI = function(win, targetOrigin) {
  */
  MapIFrameAPI.prototype.addIFrameListener = function(key, fn) {
   var callback = function(e) {
-    if (e.data.api === key) {
+    if (e.data.id === this.id && e.data.api === key) {
       fn.call(this, e.data.data);
     }
   }.bind(this)
-  window.addEventListener("message", callback, false);
+  window.addEventListener('message', callback, false);
   return callback;
 };
 
@@ -69,8 +82,11 @@ var MapIFrameAPI = function(win, targetOrigin) {
  * @param {function} listener IFrameListener
  */
  MapIFrameAPI.prototype.removeIFrameListener = function(listener) {
-  window.removeEventListener("message", listener, false);
+  window.removeEventListener('message', listener, false);
 };
+
+MapIFrameAPI.prototype.idAPI = 1;
+
 
 /** Get API whenready
  * @param {string|Element} iframe the iframe or the iframe ID
@@ -78,6 +94,7 @@ var MapIFrameAPI = function(win, targetOrigin) {
  * @param {string} targetOrigin
  */
 MapIFrameAPI.ready = function(iframe, ready, targetOrigin) {
+  var idAPI = MapIFrameAPI.prototype.idAPI++;
   targetOrigin = targetOrigin || '*';
   var iframeWin;
   if (typeof(iframe)==='string') {
@@ -90,16 +107,25 @@ MapIFrameAPI.ready = function(iframe, ready, targetOrigin) {
     return;
   }
   function onready(e) {
-    var api = new MapIFrameAPI(iframeWin, targetOrigin);
-    window.removeEventListener('message', onready);
-    api.call('getAPI', null,  function() {
-      ready(api);
-    });
+    if (e.data.api==='ready') {
+      if (!e.data.id)  {
+        iframeWin.postMessage({
+          api: 'ready',
+          id: idAPI
+        }, targetOrigin);
+      } else if (e.data.id===idAPI) {
+        var api = new MapIFrameAPI(iframeWin, idAPI, targetOrigin);
+        window.removeEventListener('message', onready);
+        api.call('getAPI', null,  function() {
+          ready(api);
+        });
+      }
+    }
   }
   window.addEventListener('message', onready, false);
   iframeWin.postMessage({
     api: 'ready'
-  }, '*');
+  }, targetOrigin);
 };
 
 export default MapIFrameAPI

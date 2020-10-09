@@ -17,6 +17,25 @@
       height: 400px;
       border: 0;
     }
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 99;
+    }
+    #loading > div {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      border: 2px solid #369;
+      box-shadow: 2px 2px 4px rgba(0,0,0,.5);
+      padding: 1em 2em;
+    }
   </style>
 
 </head>
@@ -37,37 +56,54 @@
   <!-- Map div -->
   <iframe id="map" src="./map.iframe.html"></iframe>
   <!-- iframe id="map" src="https://viglino.github.io/ol-ext/examples/misc/map.iframe.html"></iframe -->
-  <div id="map2"></div>
+  <!-- iframe id="map2" src="./map.iframe.html"></iframe -->
 
   <div class="options">
+    <button onclick="mapAPI.fn.drawPolygon()">Draw Polygon</button>
+    <button onclick="mapAPI.fn.selectBy({id:93})">Select 93</button>
+    <br/>
+    <i>Look messages in the console...</i>
+    <hr/>
     <a href="https://codepen.io/viglino/pen/KKMPwxo">See example on CodePen</a>
+  </div>
+
+  <div id="loading">
+    <div>Connecting API...</div>
   </div>
 
 
   <script type="text/javascript">
+var mapAPI;
 
+/*
+MapIFrameAPI.ready('map2', function(api) {
+  api.addIFrameListener('select', function(data) { 
+    console.log('Select on Map2'); 
+  })
+});
+*/
 
 // Get API
-var olMap;
 MapIFrameAPI.ready('map', function(api) {
-  olMap = api;
+  document.getElementById('loading').style.display = 'none';
+  mapAPI = api;
+  // mapAPI.fn.setLayer('geoportail');
   // Center map
-  olMap.fn.setCenter([2,45]);
-  olMap.fn.setZoom(10);
+  mapAPI.fn.setCenter([2,45]);
+  mapAPI.fn.setZoom(10);
   // Get on move
-  olMap.addIFrameListener('move', function(data) { 
-    console.log('move', data.center, data.zoom); 
+  mapAPI.addIFrameListener('move', function(data) { 
+    console.log('Move: ' + data.center[0] +','+ data.center[1] + '-' + data.zoom); 
   })
   // Get selection
-  olMap.addIFrameListener('select', function(data) { 
+  mapAPI.addIFrameListener('select', function(data) { 
     console.log('Select:', data.selected[0]); 
   })
   // Get selection
-  olMap.addIFrameListener('drawPolygon', function(data) { 
+  mapAPI.addIFrameListener('drawPolygon', function(data) { 
     console.log('Draw:', data); 
   })
 });
-
 
   </script>
 

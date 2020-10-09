@@ -40,6 +40,10 @@ var osm = new ol.layer.Tile({
   title: 'OSM',
   source: new ol.source.OSM()
 });
+var geoportail = new ol.layer.Geoportail({
+  layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2',
+  visible: false
+});
 var vector = new ol.layer.Vector({
   name: 'Departements',
   source: new ol.source.Vector({
@@ -48,7 +52,7 @@ var vector = new ol.layer.Vector({
     attributions: [ "&copy; <a href='https://www.insee.fr'>INSEE</a>", "&copy; <a href='https://www.data.gouv.fr/fr/datasets/geofla-r/'>IGN</a>" ],
   })
 })
-var layers = [ osm, vector ];
+var layers = [ osm, geoportail, vector ];
 
 // The map
 var map = new ol.Map({
@@ -81,11 +85,11 @@ var draw = new ol.interaction.Draw({
 draw.setActive(false);
 map.addInteraction(draw);
 
-
 // NEW API
 var api = new ol.ext.IFrameAPI();
 
 api.set({
+  // Handle map
   setCenter: function(data) {
     map.getView().setCenter(ol.proj.fromLonLat(data));
   },
@@ -98,6 +102,7 @@ api.set({
   getZoom: function(data) {
     return map.getView().getZoom()
   },
+  // Select a feture by
   selectBy: function(atts) {
     select.getFeatures().clear();
     var ext = ol.extent.createEmpty();
@@ -118,10 +123,16 @@ api.set({
       deselected: []
     });
   },
+  // Activate draw
   drawPolygon: function() {
     select.setActive(false);
     select.getFeatures().clear();
     draw.setActive(true);
+  },
+  // Show Geoportail layer
+  setLayer: function(name) {
+    geoportail.setVisible(name==='geoportail');
+    osm.setVisible(name!=='geoportail')
   }
 });
 
