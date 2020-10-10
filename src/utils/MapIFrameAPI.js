@@ -146,8 +146,9 @@ MapIFrameAPI.ready = function(iframe, ready, targetOrigin) {
         api.call('getAPI', null,  function() {
           ready(api.fn);
           // register listeners
-          console.log(api)
+          console.log(api, api.listener)
           for (let k in api.listener) {
+            console.log('POST', k)
             api.win.postMessage({
               listener: k,
               data: api.listener[k]
