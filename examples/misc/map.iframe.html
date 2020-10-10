@@ -207,6 +207,7 @@ function getPoly(feature) {
 }
 
 api.addListener('drawPolygon', function() {
+  console.log('drawPolygonAPI')
   // Draw a polygon
   draw.on('drawend', function (e) {
     polygon.getSource().clear();
