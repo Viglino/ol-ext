@@ -175,6 +175,7 @@ api.set({
 });
 
 api.addListener('move', function() {
+  console.log('register move')
   // Post message on moveend
   map.on('moveend', function(e) {
     api.postMessage('move', { 
