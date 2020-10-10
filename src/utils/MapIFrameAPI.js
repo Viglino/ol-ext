@@ -148,11 +148,11 @@ MapIFrameAPI.ready = function(iframe, ready, targetOrigin) {
           // register listeners
           console.log(api, api.listener)
           for (let k in api.listener) {
-            console.log('POST', k)
+            console.log('POST-ok', k)
             api.win.postMessage({
               listener: k,
               data: api.listener[k]
-            });
+            }, targetOrigin);
           }
         });
       }
