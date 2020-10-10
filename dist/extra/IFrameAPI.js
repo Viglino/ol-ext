@@ -15,6 +15,7 @@ ol.ext.IFrameAPI = function(targetOrigin) {
   this.listener = {};
   // Wait for target ready
   window.addEventListener('message', function(e) {
+    console.log('message', e.data)
     if (e.data.listener) {
       if (this.listener[e.data.listener]) {
         this.listener[e.data.listener].call(e.data.data);
