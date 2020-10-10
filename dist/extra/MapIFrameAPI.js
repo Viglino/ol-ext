@@ -22,7 +22,23 @@ var MapIFrameAPI = function(win, id, targetOrigin) {
     un: function(listener) {
       return this.removeIFrameListener(listener);
     }.bind(this),
+    mapInput: function(key, input, value) {
+      if (!(input instanceof Element)) {
+        input = document.getElementById(input);
+      }
+      if (input.tagName==='INPUT') {
+        if (value) input.value = value;
+        this.addIFrameListener(key, function(data) {
+          input.value = data;
+        }, value);
+        input.addEventListener('change', function() {
+          this.call(key, input.value);
+        }.bind(this));
+      }
+    }.bind(this)
   };
+  // list of listener
+  this.listener = {};
   // Get API fn
   window.addEventListener('message', function(e) {
     if (e.data.id === this.id && e.data.api === 'getAPI') {
@@ -73,13 +89,20 @@ var MapIFrameAPI = function(win, id, targetOrigin) {
  * @param {function} fn callback function
  * @return {function} IFrameListener
  */
- MapIFrameAPI.prototype.addIFrameListener = function(key, fn) {
+ MapIFrameAPI.prototype.addIFrameListener = function(key, fn, data) {
   var callback = function(e) {
     if (e.data.id === this.id && e.data.api === key) {
       fn.call(this, e.data.data);
     }
   }.bind(this)
   window.addEventListener('message', callback, false);
+  if (!this.listener[key]) {
+    this.listener[key] = true;
+    this.win.postMessage({
+      listener: key,
+      data: data
+    });
+  }
   return callback;
 };
 /** Remove iframe listener

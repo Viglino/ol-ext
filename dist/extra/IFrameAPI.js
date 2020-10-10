@@ -11,30 +11,38 @@ ol.ext.IFrameAPI = function(targetOrigin) {
   this.id = -1;
   // Setter api
   this.setter = {};
+  // Listener api
+  this.listener = {};
   // Wait for target ready
   window.addEventListener('message', function(e) {
-    switch (e.data.api) {
-      case 'ready': {
-        this.id = e.data.id;
-        window.parent.postMessage(e.data, this.targetOrigin);
-        break;
+    if (e.data.listener) {
+      if (this.listener[e.data.listener]) {
+        this.listener[e.data.listener].call(e.data.data);
       }
-      case 'getAPI': {
-        e.data.data = Object.keys(this.setter);
-        e.data.id = this.id;
-        window.parent.postMessage(e.data, this.targetOrigin);
-        break;
-      }
-      default: {
-        if (this.setter[e.data.api]) {
-          var data = this.setter[e.data.api].call(this, e.data.data);
-          if (data !== undefined) {
-            e.data.data = data;
-            e.data.id = this.id;
-            window.parent.postMessage(e.data, this.targetOrigin);
-          }
+    } else {
+      switch (e.data.api) {
+        case 'ready': {
+          this.id = e.data.id;
+          window.parent.postMessage(e.data, this.targetOrigin);
+          break;
         }
-        break;
+        case 'getAPI': {
+          e.data.data = Object.keys(this.setter);
+          e.data.id = this.id;
+          window.parent.postMessage(e.data, this.targetOrigin);
+          break;
+        }
+        default: {
+          if (this.setter[e.data.api]) {
+            var data = this.setter[e.data.api].call(this, e.data.data);
+            if (data !== undefined) {
+              e.data.data = data;
+              e.data.id = this.id;
+              window.parent.postMessage(e.data, this.targetOrigin);
+            }
+          }
+          break;
+        }
       }
     }
   }.bind(this), false);
@@ -76,4 +84,7 @@ ol.ext.IFrameAPI.prototype.postMessage = function(name, data) {
     id: this.id,
     data: data
   }, this.targetOrigin);
+}
+ol.ext.IFrameAPI.prototype.addListener = function(name, listener) {
+  this.listener[name] = listener;
 }

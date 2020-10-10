@@ -36,6 +36,11 @@
       box-shadow: 2px 2px 4px rgba(0,0,0,.5);
       padding: 1em 2em;
     }
+    label {
+      display: inline-block;
+      min-width: 3em;
+      text-align: right;
+    }
   </style>
 
 </head>
@@ -61,7 +66,18 @@
   <div class="options">
     <button onclick="mapAPI.drawPolygon()">Draw Polygon</button>
     <button onclick="mapAPI.selectBy({id:93})">Select 93</button>
-    <br/>
+    <hr/>
+    Placemark:<br/>
+    <label>Lon:</label>
+    <input id="lon" />
+    <label>Lat:</label>
+    <input id="lat" />
+    <p style="text-align: right;">
+      <button onclick="mapAPI.getCenter((d)=>mapAPI.setLonLat(d))">
+        Center
+      </button>
+    </p>
+    <hr/>
     <i>Look messages in the console...</i>
     <hr/>
     <a href="https://codepen.io/viglino/pen/KKMPwxo">See example on CodePen</a>
@@ -94,15 +110,18 @@ MapIFrameAPI.ready('map', function(api) {
   // Get on move
   mapAPI.on('move', function(data) { 
     console.log('Move: ' + data.center[0] +','+ data.center[1] + '-' + data.zoom); 
-  })
+  });
   // Get selection
   mapAPI.on('select', function(data) { 
     console.log('Select:', data.selected[0]); 
-  })
+  });
   // Get selection
   mapAPI.on('drawPolygon', function(data) { 
     console.log('Draw:', data); 
-  })
+  });
+  // Connect lonlat input 
+  mapAPI.mapInput('getLon', document.getElementById('lon'));
+  mapAPI.mapInput('getLat', 'lat');
 });
 
   </script>

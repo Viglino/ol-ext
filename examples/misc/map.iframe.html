@@ -4,8 +4,8 @@
   <title>ol-ext: iframe map</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-  <meta name="description" content="ol.control.cloud adds an animated clouds overlay on the map." />
-  <meta name="keywords" content="ol3, control, canvas, animation, cloud, bird" />
+  <meta name="description" content="ol mapIFrameAPI." />
+  <meta name="keywords" content="Openlayers, ol, iframe, API" />
 
   <link rel="stylesheet" href="../style.css" />
 
@@ -102,6 +102,7 @@ draw.on('change:active', function() {
 
 // NEW API
 var api = new ol.ext.IFrameAPI();
+var format = new ol.format.GeoJSON();
 
 api.set({
   // Handle map
@@ -173,25 +174,28 @@ api.set({
   }
 });
 
-// Post message on moveend
-map.on('moveend', function(e) {
-  api.postMessage('move', { 
-    center: ol.proj.toLonLat(map.getView().getCenter()),
-    zoom: map.getView().getZoom()
-  })
+api.addListener('move', function() {
+  // Post message on moveend
+  map.on('moveend', function(e) {
+    api.postMessage('move', { 
+      center: ol.proj.toLonLat(map.getView().getCenter()),
+      zoom: map.getView().getZoom()
+    })
+  });
 });
 
-// Select an object > post as GeoJSON
-var format = new ol.format.GeoJSON();
-select.on('select', function(e) {
-  var selected = getSelectionAsJSON();
-  var deselected = [];
-  e.deselected.forEach(function(f) {
-    deselected.push(f.get('id'));
-  });
-  api.postMessage('select', {
-    selected: selected,
-    deselected: deselected
+api.addListener('select', function() {
+  // Select an object > post as GeoJSON
+  select.on('select', function(e) {
+    var selected = getSelectionAsJSON();
+    var deselected = [];
+    e.deselected.forEach(function(f) {
+      deselected.push(f.get('id'));
+    });
+    api.postMessage('select', {
+      selected: selected,
+      deselected: deselected
+    });
   });
 });
 
@@ -202,17 +206,81 @@ function getPoly(feature) {
   return format.writeFeatureObject(feature, { featureProjection: map.getView().getProjection() });
 }
 
-// Draw a polygon
-draw.on('drawend', function (e) {
-  polygon.getSource().clear();
-  polygon.getSource().addFeature(e.feature);
-  api.postMessage('drawPolygon', getPoly(e.feature));
-  draw.setActive(false);
+api.addListener('drawPolygon', function() {
+  // Draw a polygon
+  draw.on('drawend', function (e) {
+    polygon.getSource().clear();
+    polygon.getSource().addFeature(e.feature);
+    api.postMessage('drawPolygon', getPoly(e.feature));
+    draw.setActive(false);
+  });
+  // Modify a polygon
+  modify.on('modifyend', function(e){
+    api.postMessage('drawPolygon', getPoly(e.features.item(0)));
+  });
 });
-// Modify a polygon
-modify.on('modifyend', function(e){
-  api.postMessage('drawPolygon', getPoly(e.features.item(0)));
+
+/* Placemark API */
+var placemark = new ol.Overlay.Placemark ({
+  stopEvent: false
 });
+var drag = new ol.interaction.DragOverlay({
+  overlays: placemark
+});
+function getPosition() {
+  var pos = placemark.getPosition();
+  // Initialize
+  if (!pos) {
+    map.addOverlay(placemark);
+    map.addInteraction(drag);
+    pos = map.getView().getCenter();
+    placemark.show(pos);
+  }
+  return pos;
+}
+api.addListener('getLon', function(val) {
+  if (val) val = fromLonLat([val,0])
+  else val = map.getView().getCenter();
+  var pos = getPosition();
+  placemark.show([val[0], pos[1]]);
+  var p = ol.proj.toLonLat(placemark.getPosition())
+  api.postMessage('getLon', p[0]);
+  drag.on('dragend', function(e){
+    var p = ol.proj.toLonLat(placemark.getPosition())
+    api.postMessage('getLon', p[0]);
+  });
+});
+api.addListener('getLat', function(val) {
+  if (val) val = fromLonLat([0,val])
+  else val = map.getView().getCenter();
+  var pos = getPosition();
+  placemark.show([pos[0], val[1]]);
+  var p = ol.proj.toLonLat(placemark.getPosition())
+  api.postMessage('getLat', p[1]);
+  drag.on('dragend', function(e){
+    var p = ol.proj.toLonLat(placemark.getPosition())
+    api.postMessage('getLat', p[1]);
+  });
+});
+api.set({
+  getLon: function(lon) {
+    var pos = placemark.getPosition();
+    var p = ol.proj.fromLonLat([lon, 0]);
+    placemark.show([p[0],pos[1]]);
+  },
+  getLat: function(lat) {
+    var pos = placemark.getPosition();
+    var p = ol.proj.fromLonLat([0, lat]);
+    placemark.show([pos[0], p[1]]);
+  },
+  setLonLat: function(lonlat) {
+    var p = ol.proj.fromLonLat(lonlat);
+    placemark.show(p);
+    api.postMessage('getLon', lonlat[0]);
+    api.postMessage('getLat', lonlat[1]);
+  }
+});
+
 
   </script>
 
