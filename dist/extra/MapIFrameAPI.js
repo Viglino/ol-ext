@@ -118,6 +118,7 @@ MapIFrameAPI.prototype.idAPI = 1;
  * @param {string} targetOrigin
  */
 MapIFrameAPI.ready = function(iframe, ready, targetOrigin) {
+  console.log('ready')
   var idAPI = MapIFrameAPI.prototype.idAPI++;
   targetOrigin = targetOrigin || '*';
   var iframeWin;

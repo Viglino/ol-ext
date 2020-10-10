@@ -87,4 +87,5 @@ ol.ext.IFrameAPI.prototype.postMessage = function(name, data) {
 }
 ol.ext.IFrameAPI.prototype.addListener = function(name, listener) {
   this.listener[name] = listener;
+  console.log('addListener', name)
 }

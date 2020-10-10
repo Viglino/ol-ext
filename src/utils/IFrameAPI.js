@@ -92,6 +92,7 @@ ol_ext_IFrameAPI.prototype.postMessage = function(name, data) {
 
 ol_ext_IFrameAPI.prototype.addListener = function(name, listener) {
   this.listener[name] = listener;
+  console.log('addListener', name)
 }
 
 export default ol_ext_IFrameAPI
