@@ -97,11 +97,7 @@ var MapIFrameAPI = function(win, id, targetOrigin) {
   }.bind(this)
   window.addEventListener('message', callback, false);
   if (!this.listener[key]) {
-    this.listener[key] = true;
-    this.win.postMessage({
-      listener: key,
-      data: data
-    });
+    this.listener[key] = data;
   }
   return callback;
 };
@@ -143,6 +139,14 @@ MapIFrameAPI.ready = function(iframe, ready, targetOrigin) {
         window.removeEventListener('message', onready);
         api.call('getAPI', null,  function() {
           ready(api.fn);
+          // register listeners
+          console.log(this.listener)
+          for (var k in this.listener) {
+            this.win.postMessage({
+              listener: k,
+              data: this.listener[k]
+            });
+          }
         });
       }
     }
