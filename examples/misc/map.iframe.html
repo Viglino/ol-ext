@@ -41,11 +41,11 @@
 /* Create map */
 var osm = new ol.layer.Tile({
   title: 'OSM',
+  visible: false,
   source: new ol.source.OSM()
 });
 var geoportail = new ol.layer.Geoportail({
-  layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2',
-  visible: false
+  layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2'
 });
 
 var layers = [ osm, geoportail ];
@@ -61,7 +61,12 @@ var map = new ol.Map({
 });
 
 // Permalink
-map.addControl(new ol.control.Permalink({ visible: false }));
+var permalink = new ol.control.Permalink({ visible: false }); 
+map.addControl(permalink);
+if (permalink.getUrlParam('layer') === 'OSM') {
+  osm.setVisible(true);
+  geoportail.setVisible(false);
+}
 
 // Notification
 var notification = new ol.control.Notification();
