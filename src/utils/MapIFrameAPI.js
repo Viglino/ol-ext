@@ -62,7 +62,7 @@ var MapIFrameAPI = function(win, id, targetOrigin) {
  MapIFrameAPI.prototype.call = function(key, data, fn) {
   if (typeof(data)==='function') { 
     fn = data;
-    data = {};
+    data = undefined;
   }
   if (typeof(fn) === 'function') {
     var n = this.counter++;

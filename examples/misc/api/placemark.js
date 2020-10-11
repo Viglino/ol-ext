@@ -54,14 +54,24 @@ api.addListener('getLat', function(val) {
 /* Set placemark lon, lat */
 api.setAPI({
   getLon: function(lon) {
-    var pos = placemark.getPosition();
-    var p = ol.proj.fromLonLat([lon, 0]);
-    placemark.show([p[0],pos[1]]);
+    if (lon===undefined) {
+      var pos = ol.proj.toLonLat(placemark.getPosition());
+      return pos[0];
+    } else {
+      var pos = placemark.getPosition();
+      var p = ol.proj.fromLonLat([lon, 0]);
+      placemark.show([p[0],pos[1]]);
+    }
   },
   getLat: function(lat) {
-    var pos = placemark.getPosition();
-    var p = ol.proj.fromLonLat([0, lat]);
-    placemark.show([pos[0], p[1]]);
+    if (lat===undefined) {
+      var pos = ol.proj.toLonLat(placemark.getPosition());
+      return pos[1];
+    } else {
+      var pos = placemark.getPosition();
+      var p = ol.proj.fromLonLat([0, lat]);
+      placemark.show([pos[0], p[1]]);
+    }
   },
   setLonLat: function(lonlat) {
     var p = ol.proj.fromLonLat(lonlat);
