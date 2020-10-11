@@ -14,6 +14,7 @@ map.addLayer(vector);
 // Selection interaction
 var select = new ol.interaction.Select();
 map.addInteraction(select);
+select.setActive(false);
 
 // Get selection as JSON object
 function getSelectionAsJSON() {
