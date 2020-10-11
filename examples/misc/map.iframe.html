@@ -34,8 +34,11 @@
 <body >
   <!-- Map div -->
   <div id="map" ></div>
-  <script type="text/javascript">
 
+  <!-- API loader -->
+<script type="text/javascript">
+
+/* Create map */
 var osm = new ol.layer.Tile({
   title: 'OSM',
   source: new ol.source.OSM()
@@ -44,20 +47,8 @@ var geoportail = new ol.layer.Geoportail({
   layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2',
   visible: false
 });
-var vector = new ol.layer.Vector({
-  name: 'Departements',
-  source: new ol.source.Vector({
-    url: '../data/departements.geojson',
-    format: new ol.format.GeoJSON(),
-    attributions: [ "&copy; <a href='https://www.insee.fr'>INSEE</a>", "&copy; <a href='https://www.data.gouv.fr/fr/datasets/geofla-r/'>IGN</a>" ],
-  })
-})
-var polygon = new ol.layer.Vector({
-  name: 'Polygon',
-  source: new ol.source.Vector({})
-});
 
-var layers = [ osm, geoportail, vector, polygon ];
+var layers = [ osm, geoportail ];
 
 // The map
 var map = new ol.Map({
@@ -69,221 +60,30 @@ var map = new ol.Map({
   layers: layers
 });
 
-// Selection
-var select = new ol.interaction.Select();
-map.addInteraction(select);
-
-// Modify
-var modify = new ol.interaction.Modify({
-  source: polygon.getSource()
-});
-map.addInteraction(modify);
-
-// Get selection as JSON object
-function getSelectionAsJSON() {
-  var selected = [];
-  select.getFeatures().getArray().forEach(function(f) {
-    var p = format.writeFeatureObject(f, { featureProjection: map.getView().getProjection() });
-    selected.push(p);
-  })
-  return selected;
-}
-
-// DrawPolygon
-var draw = new ol.interaction.Draw({
-  type: 'Polygon',
-  stopClick: true
-});
-draw.setActive(false);
-map.addInteraction(draw);
-draw.on('change:active', function() {
-  modify.setActive(!draw.getActive());
-});
+// Notification
+var notification = new ol.control.Notification();
+map.addControl(notification);
 
 // NEW API
 var api = new ol.ext.IFrameAPI();
-var format = new ol.format.GeoJSON();
+api.set('map', map);
+api.set('format', new ol.format.GeoJSON());
+api.set('notification', notification);
 
-api.set({
-  // Handle map
-  setCenter: function(data) {
-    map.getView().setCenter(ol.proj.fromLonLat(data));
-  },
-  getCenter: function(data) {
-    return ol.proj.toLonLat(map.getView().getCenter());
-  },
-  setZoom: function(data) {
-    map.getView().setZoom(data);
-  },
-  getZoom: function(data) {
-    return map.getView().getZoom()
-  },
-  // Select a feture by
-  selectBy: function(atts) {
-    select.getFeatures().clear();
-    var ext = ol.extent.createEmpty();
-    vector.getSource().getFeatures().forEach(function(f) {
-      for (var i in atts) {
-        if (f.get(i) == atts[i]) {
-          select.getFeatures().push(f);
-          ol.extent.extend(ext, f.getGeometry().getExtent());
-          break;
-        }
-      }
-    })
-    if (select.getFeatures().getLength()) {
-      map.getView().fit(ext);
-    }
-    api.postMessage('select', {
-      selected: getSelectionAsJSON(),
-      deselected: []
-    });
-  },
-  // Activate draw
-  drawPolygon: function() {
-    if (draw.getActive()) {
-      draw.setActive(false);
-    } else {
-      select.getFeatures().clear();
-      draw.setActive(true);
-    }
-  },
-  // Get the polygon
-  getPolygon: function() {
-    var f = polygon.getSource().getFeatures()[0];
-    if (f) return getPoly(f);
-    else return null;
-  },
-  // Set the polygon
-  setPolygon: function(p) {
-    polygon.getSource().clear();
-    try {
-      var f = format.readFeature(p, { featureProjection: map.getView().getProjection() });
-      polygon.getSource().addFeature(f);
-      map.getView().fit(f.getGeometry().getExtent());
-    } catch(e) {}
-  },
+// API setter
+api.setAPI({
   // Show Geoportail layer
   setLayer: function(name) {
     geoportail.setVisible(name==='geoportail');
     osm.setVisible(name!=='geoportail')
-  },
-  // Remove select interaction
-  activateSelection: function(b) {
-    select.setActive(b);
   }
 });
-
-api.addListener('move', function() {
-  console.log('register move')
-  // Post message on moveend
-  map.on('moveend', function(e) {
-    api.postMessage('move', { 
-      center: ol.proj.toLonLat(map.getView().getCenter()),
-      zoom: map.getView().getZoom()
-    })
-  });
-});
-
-api.addListener('select', function() {
-  // Select an object > post as GeoJSON
-  select.on('select', function(e) {
-    var selected = getSelectionAsJSON();
-    var deselected = [];
-    e.deselected.forEach(function(f) {
-      deselected.push(f.get('id'));
-    });
-    api.postMessage('select', {
-      selected: selected,
-      deselected: deselected
-    });
-  });
-});
-
-// Post a polygon
-function getPoly(feature) {
-  feature.set('length', ol.sphere.getLength(feature.getGeometry()))
-  feature.set('area', ol.sphere.getArea(feature.getGeometry()))
-  return format.writeFeatureObject(feature, { featureProjection: map.getView().getProjection() });
-}
-
-api.addListener('drawPolygon', function() {
-  console.log('drawPolygonAPI')
-  // Draw a polygon
-  draw.on('drawend', function (e) {
-    polygon.getSource().clear();
-    polygon.getSource().addFeature(e.feature);
-    api.postMessage('drawPolygon', getPoly(e.feature));
-    draw.setActive(false);
-  });
-  // Modify a polygon
-  modify.on('modifyend', function(e){
-    api.postMessage('drawPolygon', getPoly(e.features.item(0)));
-  });
-});
-
-/* Placemark API */
-var placemark = new ol.Overlay.Placemark ({
-  stopEvent: false
-});
-var drag = new ol.interaction.DragOverlay({
-  overlays: placemark
-});
-function getPosition() {
-  var pos = placemark.getPosition();
-  // Initialize
-  if (!pos) {
-    map.addOverlay(placemark);
-    map.addInteraction(drag);
-    pos = map.getView().getCenter();
-    placemark.show(pos);
-  }
-  return pos;
-}
-api.addListener('getLon', function(val) {
-  if (val) val = fromLonLat([val,0])
-  else val = map.getView().getCenter();
-  var pos = getPosition();
-  placemark.show([val[0], pos[1]]);
-  var p = ol.proj.toLonLat(placemark.getPosition())
-  api.postMessage('getLon', p[0]);
-  drag.on('dragend', function(e){
-    var p = ol.proj.toLonLat(placemark.getPosition())
-    api.postMessage('getLon', p[0]);
-  });
-});
-api.addListener('getLat', function(val) {
-  if (val) val = fromLonLat([0,val])
-  else val = map.getView().getCenter();
-  var pos = getPosition();
-  placemark.show([pos[0], val[1]]);
-  var p = ol.proj.toLonLat(placemark.getPosition())
-  api.postMessage('getLat', p[1]);
-  drag.on('dragend', function(e){
-    var p = ol.proj.toLonLat(placemark.getPosition())
-    api.postMessage('getLat', p[1]);
-  });
-});
-api.set({
-  getLon: function(lon) {
-    var pos = placemark.getPosition();
-    var p = ol.proj.fromLonLat([lon, 0]);
-    placemark.show([p[0],pos[1]]);
-  },
-  getLat: function(lat) {
-    var pos = placemark.getPosition();
-    var p = ol.proj.fromLonLat([0, lat]);
-    placemark.show([pos[0], p[1]]);
-  },
-  setLonLat: function(lonlat) {
-    var p = ol.proj.fromLonLat(lonlat);
-    placemark.show(p);
-    api.postMessage('getLon', lonlat[0]);
-    api.postMessage('getLat', lonlat[1]);
-  }
-});
-
-  </script>
+</script>
+<!-- Load API -->
+<script src="./api/center.js"></script>
+<script src="./api/placemark.js"></script>
+<script src="./api/select.js"></script>
+<script src="./api/draw.js"></script>
 
 </body>
 </html>

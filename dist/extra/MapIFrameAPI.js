@@ -28,9 +28,11 @@ var MapIFrameAPI = function(win, id, targetOrigin) {
       }
       if (input.tagName==='INPUT') {
         if (value) input.value = value;
+        // Set change
         this.addIFrameListener(key, function(data) {
           input.value = data;
         }, value);
+        // Get input change
         input.addEventListener('change', function() {
           this.call(key, input.value);
         }.bind(this));
@@ -140,9 +142,7 @@ MapIFrameAPI.ready = function(iframe, ready, targetOrigin) {
         api.call('getAPI', null,  function() {
           ready(api.fn);
           // register listeners
-          console.log(api, api.listener)
           for (var k in api.listener) {
-            console.log('POST-ok', k)
             api.win.postMessage({
               listener: k,
               data: api.listener[k]

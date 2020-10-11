@@ -10,13 +10,13 @@ if (window.ol && !ol.ext) {
 var ol_ext_IFrameAPI = function(targetOrigin) {
   this.targetOrigin = targetOrigin || '*';
   this.id = -1;
+  this.properties = {};
   // Setter api
   this.setter = {};
   // Listener api
   this.listener = {};
   // Wait for target ready
   window.addEventListener('message', function(e) {
-    console.log('message', e.data)
     if (e.data.listener) {
       if (this.listener[e.data.listener]) {
         this.listener[e.data.listener].call(e.data.data);
@@ -49,11 +49,26 @@ var ol_ext_IFrameAPI = function(targetOrigin) {
     }
   }.bind(this), false);
   // ready
-  console.log('ready');
   window.parent.postMessage({
     api: 'ready'
   }, this.targetOrigin);
 }
+
+/** Add properties
+ * @param {string} key
+ * @param {*} value
+ */
+ol_ext_IFrameAPI.prototype.set = function(key, value) {
+  this.properties[key] = value;
+};
+
+/** Get properties
+ * @param {string} key
+ * @return {*}
+ */
+ol_ext_IFrameAPI.prototype.get = function(key) {
+  return this.properties[key];
+};
 
 /** 
  * @typedef {Object} TemplateAPI
@@ -64,8 +79,8 @@ var ol_ext_IFrameAPI = function(targetOrigin) {
 /** Add functions to the API 
  * @param {Array<TemplateAPI>} list of functions to add to the api
  */
-ol_ext_IFrameAPI.prototype.set = function(api) {
-  if (/\bready\b|\bgetAPI\b|\bon\b|\bun\b/.test(api)) {
+ol_ext_IFrameAPI.prototype.setAPI = function(api) {
+  if (/\bready\b|\bgetAPI\b|\bon\b|\bun\b|\baddInput\b/.test(api)) {
     console.error('Bad API key: '+api);
   } else {
     for (var k in api) {
@@ -89,11 +104,10 @@ ol_ext_IFrameAPI.prototype.postMessage = function(name, data) {
     id: this.id,
     data: data
   }, this.targetOrigin);
-}
+};
 
 ol_ext_IFrameAPI.prototype.addListener = function(name, listener) {
   this.listener[name] = listener;
-  console.log('addListener', name)
-}
+};
 
 export default ol_ext_IFrameAPI
