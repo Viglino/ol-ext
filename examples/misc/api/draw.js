@@ -39,7 +39,6 @@ api.setAPI({
     } else {
       select.getFeatures().clear();
       draw.setActive(true);
-      api.get('notification').show('Draw a polygon on the map');
     }
   },
   // Get the polygon

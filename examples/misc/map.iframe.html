@@ -76,6 +76,10 @@ api.setAPI({
   setLayer: function(name) {
     geoportail.setVisible(name==='geoportail');
     osm.setVisible(name!=='geoportail')
+  },
+  // Show notification on the map
+  notification: function (note) {
+    notification.show(note);
   }
 });
 </script>
