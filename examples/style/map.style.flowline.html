@@ -131,6 +131,16 @@
         <input class="width2" type="number" value="25" onchange="flowStyle.setWidth2(Number(this.value)); vector.changed();" />
       </li>
       <li>
+        <label>Arrow:</label>
+        <select onchange="flowStyle.setArrow(this.value); vector.changed();">
+          <option value=0 selected="selected">0</option>
+          <option value=-1>-1</option>
+          <option value=1>1</option>
+          <option value=2>2</option>
+        </select>
+        <i>experimental</i>
+      </li>
+      <li>
         LineCap:
         <label><input type="radio" name="cap" value="round" onchange="flowStyle.setLineCap($(this).val()); vector.changed();">round</label>
         <label><input type="radio" name="cap" value="butt" onchange="flowStyle.setLineCap($(this).val()); vector.changed();" checked="checked">butt</label>
