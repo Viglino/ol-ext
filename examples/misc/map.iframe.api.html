@@ -59,7 +59,7 @@
   </div>
 
   <!-- Map div -->
-  <iframe id="map" src="./map.iframe.html"></iframe>
+  <iframe id="map" src="./map.iframe.html?lon=2&lat=46.5&z=5"></iframe>
   <!-- iframe id="map" src="https://viglino.github.io/ol-ext/examples/misc/map.iframe.html"></iframe -->
   <!-- iframe id="map2" src="./map.iframe.html"></iframe -->
 
@@ -105,8 +105,8 @@ MapIFrameAPI.ready('map', function(api) {
   mapAPI = api;
   // mapAPI.setLayer('geoportail');
   // Center map
-  mapAPI.setCenter([2,45]);
-  mapAPI.setZoom(10);
+  // mapAPI.setCenter([2,45]);
+  // mapAPI.setZoom(10);
   // Get on move
   mapAPI.on('move', function(data) { 
     console.log('Move: ' + data.center[0] +','+ data.center[1] + '-' + data.zoom); 
