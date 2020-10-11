@@ -27411,6 +27411,7 @@ ol.style.FillPattern.prototype.getChecksum = function()
  *  @param {boolean} options.visible draw only the visible part of the line, default true
  *  @param {number|function} options.width Stroke width or a function that gets a feature and the position (beetween [0,1]) and returns current width
  *  @param {number} options.width2 Final stroke width
+ *  @param {number} options.arrow Arrow at start (-1), at end (1), at both (2), none (0), default geta
  *  @param {ol.colorLike|function} options.color Stroke color or a function that gets a feature and the position (beetween [0,1]) and returns current color
  *  @param {ol.colorLike} options.color2 Final sroke color
  */
@@ -27438,6 +27439,8 @@ ol.style.FlowLine = function(options) {
   this.setColor2(options.color2);
   // LineCap
   this.setLineCap(options.lineCap);
+  // 
+  this.setArrow(options.arrow);
 };
 ol.ext.inherits(ol.style.FlowLine, ol.style.Style);
 /** Set the initial width
@@ -27504,6 +27507,18 @@ ol.style.FlowLine.prototype.getColor = function(feature, step) {
           + (color[3] + (color2[3]-color[3]) * step)
           +')';
 };
+/** Get arrow
+ */
+ol.style.FlowLine.prototype.getArrow = function() {
+  return this._arrow;
+};
+/** Set arrow
+ * @param {number} n -1 | 0 | 1 | 2, default: 0
+ */
+ol.style.FlowLine.prototype.setArrow = function(n) {
+  this._arrow = parseInt(n);
+  if (this._arrow < -1 || this._arrow > 2) this._arrow = 0;
+}
 /** Renderer function
  * @param {Array<ol.coordinate>} geom The pixel coordinates of the geometry in GeoJSON notation
  * @param {ol.render.State} e The olx.render.State of the layer renderer
@@ -27526,12 +27541,61 @@ ol.style.FlowLine.prototype._render = function(geom, e) {
     var geoms = this._splitInto(geom, 255, 2);
     var k = 0;
     var nb = geoms.length;
+    function drawArrow(p0, p1, width) {
+      ctx.beginPath();
+      ctx.moveTo(p0[0],p0[1]);
+      var l = ol.coordinate.dist2d(p0, p1);
+      var dx = (p0[0]-p1[0])/l;
+      var dy = (p0[1]-p1[1])/l;
+      width = Math.max(8, width/2);
+      ctx.lineTo(p0[0]-16*dx+width*dy, p0[1]-16*dy-width*dx);
+      ctx.lineTo(p0[0]-16*dx-width*dy, p0[1]-16*dy+width*dx);
+      ctx.lineTo(p0[0],p0[1]);
+      ctx.fill();
+    }
+    // Calculate arrow length
+    var length = length0 = length1 = 0;
+    if (this.getArrow()) {
+      var p = geoms[0][0];
+      for (i=1; i<geoms[0].length; i++) {
+        length += ol.coordinate.dist2d(p,geoms[0][i])
+        p = geoms[0][i]
+      }
+      switch (this.getArrow()) {
+        case -1: {
+          length0 = Math.round(16/length);
+          break;
+        }
+        case 1: {
+          length1 = Math.round(16/length);
+          break;
+        }
+        case 2: {
+          length0 = length1 = Math.round(16/length);
+          break;
+        }
+      }
+    }
     // Draw
     ctx.save();
       ctx.lineJoin = 'round';
       ctx.lineCap = this._lineCap || 'butt';
-      geoms.forEach(function(g) {
-        var step = k++/nb;
+      if ((length0 && geoms[length0]) || (length1 && geoms[length1])) {
+        ctx.lineCap = 'butt';
+        if (length0) {
+          ctx.fillStyle = this.getColor(e.feature, 0);
+          drawArrow(geoms[0][0], geoms[length0][geoms[length0].length-1], this.getWidth(e.feature, 0) * e.pixelRatio);
+        }
+        if (length1) {
+          ctx.fillStyle = this.getColor(e.feature, 1);
+          var g0 = geoms[geoms.length-1];
+          var g1 = geoms[geoms.length-1-length1];
+          drawArrow(g0[g0.length-1], g1[0], this.getWidth(e.feature, 1) * e.pixelRatio);
+        }
+      }
+      for (k=length0; k<geoms.length-length1-1; k++) {
+        var step = k/nb;
+        var g = geoms[k];
         ctx.lineWidth = this.getWidth(e.feature, step) * e.pixelRatio;
         ctx.strokeStyle = this.getColor(e.feature, step);
         ctx.beginPath();
@@ -27540,7 +27604,7 @@ ol.style.FlowLine.prototype._render = function(geom, e) {
           ctx.lineTo(p[0],p[1]);
           ctx.stroke();
         }
-      }.bind(this));
+      }
     ctx.restore();
   }
 };
