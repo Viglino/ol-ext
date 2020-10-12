@@ -432,7 +432,7 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function(simulate, coord, accur
 
   var geo;
   if (this.pause_) {
-    this.path_ = [pos];   
+    this.lastPosition_ = pos;   
   }
   if (!this.pause_ && (!loc || this.condition_.call(this, loc))) {
     f = this.sketch_[1];
