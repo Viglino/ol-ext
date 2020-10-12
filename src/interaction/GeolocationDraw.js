@@ -16,6 +16,7 @@ import ol_source_Vector from 'ol/source/Vector'
 import ol_Feature from 'ol/Feature'
 import ol_interaction_Pointer from 'ol/interaction/Pointer'
 import {containsCoordinate as ol_extent_containsCoordinate, containsExtent as ol_extent_containsExtent} from 'ol/extent'
+import {ol_coordinate_equal} from '../geom/GeomUtils'
 
 /** Interaction to draw on the current geolocation
  *	It combines a draw with a ol_Geolocation
@@ -140,6 +141,35 @@ var ol_interaction_GeolocationDraw = function(options) {
   this.setActive(false);
 };
 ol_ext_inherits(ol_interaction_GeolocationDraw, ol_interaction_Interaction);
+
+
+/** Simplify 3D geometry
+ * @param {ol.geom.Geometry} geo
+ * @param {number} tolerance
+ */
+ol_interaction_GeolocationDraw.prototype.simplify3D = function(geo, tolerance) {
+  var simply = geo.simplify(tolerance).getCoordinates();
+  var step=0;
+  if (this.get("type")==='Polygon') {
+    simply = simply[0];
+  }
+  simply.forEach(function(p) {
+    for (var k=step; k<this.path_.length; k++) {
+      if (ol_coordinate_equal(p, this.path_[k])) {
+        p[2] = this.path_[k][2];
+        p[3] = this.path_[k][3];
+        break;
+      }
+    }
+  }.bind(this));
+  // Get 3D geom
+  if (this.get("type")==='Polygon') {
+    geo = new ol_geom_Polygon([simply], 'XYZM');
+  } else {
+    geo = new ol_geom_LineString(simply, 'XYZM');
+  }
+  return geo;
+};
 
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
@@ -420,7 +450,7 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function(simulate, coord, accur
       case "LineString":
         if (this.path_.length>1) {
           geo = new ol_geom_LineString(this.path_, 'XYZM');
-          if (this.get("tolerance")) geo = geo.simplify (this.get("tolerance"));
+          if (this.get("tolerance")) geo = this.simplify3D (geo, this.get("tolerance"));
           f.setGeometry(geo);
         } else {
           f.setGeometry();
@@ -429,7 +459,7 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function(simulate, coord, accur
       case "Polygon":
         if (this.path_.length>2) {
           geo = new ol_geom_Polygon([this.path_], 'XYZM');
-          if (this.get("tolerance")) geo = geo.simplify (this.get("tolerance"));
+          if (this.get("tolerance")) geo = this.simplify3D (geo, this.get("tolerance"));
           f.setGeometry(geo);
         }
         else f.setGeometry();

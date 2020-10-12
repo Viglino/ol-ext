@@ -147,11 +147,11 @@ ol_style_FlowLine.prototype.setArrow = function(n) {
  */
 ol_style_FlowLine.prototype._render = function(geom, e) {
   if (e.geometry.getType()==='LineString') {
-    var i, p, ctx = e.context;
+    var i, g, p, ctx = e.context;
     // Get geometry used at drawing
     if (!this._visible) {
       var a = e.pixelRatio / e.resolution;
-      var g = e.geometry.getCoordinates();
+      g = e.geometry.getCoordinates();
       var dx = geom[0][0] - g[0][0] * a;
       var dy = geom[0][1] + g[0][1] * a;
       geom = [];
@@ -163,10 +163,10 @@ ol_style_FlowLine.prototype._render = function(geom, e) {
     var geoms = this._splitInto(geom, 255, 2);
     var k = 0;
     var nb = geoms.length;
-    function drawArrow(p0, p1, width) {
+    var drawArrow = function (p0, p1, width) {
       ctx.beginPath();
       ctx.moveTo(p0[0],p0[1]);
-      var l = ol.coordinate.dist2d(p0, p1);
+      var l = ol_coordinate_dist2d(p0, p1);
       var dx = (p0[0]-p1[0])/l;
       var dy = (p0[1]-p1[1])/l;
       width = Math.max(8, width/2);
@@ -176,11 +176,11 @@ ol_style_FlowLine.prototype._render = function(geom, e) {
       ctx.fill();
     }
     // Calculate arrow length
-    var length = length0 = length1 = 0;
+    var length = 0, length0 = 0, length1 = 0;
     if (this.getArrow()) {
-      var p = geoms[0][0];
+      p = geoms[0][0];
       for (i=1; i<geoms[0].length; i++) {
-        length += ol.coordinate.dist2d(p,geoms[0][i])
+        length += ol_coordinate_dist2d(p,geoms[0][i])
         p = geoms[0][i]
       }
       switch (this.getArrow()) {
@@ -220,7 +220,7 @@ ol_style_FlowLine.prototype._render = function(geom, e) {
 
       for (k=length0; k<geoms.length-length1-1; k++) {
         var step = k/nb;
-        var g = geoms[k];
+        g = geoms[k];
         ctx.lineWidth = this.getWidth(e.feature, step) * e.pixelRatio;
         ctx.strokeStyle = this.getColor(e.feature, step);
         ctx.beginPath();
