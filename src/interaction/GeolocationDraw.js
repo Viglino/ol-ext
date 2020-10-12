@@ -149,15 +149,15 @@ ol_ext_inherits(ol_interaction_GeolocationDraw, ol_interaction_Interaction);
  */
 ol_interaction_GeolocationDraw.prototype.simplify3D = function(geo, tolerance) {
   var simply = geo.simplify(tolerance).getCoordinates();
-  var step=0;
   if (this.get("type")==='Polygon') {
     simply = simply[0];
   }
+  var step=0;
   simply.forEach(function(p) {
-    for (var k=step; k<this.path_.length; k++) {
-      if (ol_coordinate_equal(p, this.path_[k])) {
-        p[2] = this.path_[k][2];
-        p[3] = this.path_[k][3];
+    for (; step<this.path_.length; step++) {
+      if (ol_coordinate_equal(p, this.path_[step])) {
+        p[2] = this.path_[step][2];
+        p[3] = this.path_[step][3];
         break;
       }
     }
