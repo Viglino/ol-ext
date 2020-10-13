@@ -8,6 +8,7 @@ import ol_style_Style from 'ol/style/Style'
 import {asString as ol_color_asString} from 'ol/color'
 import {asArray as ol_color_asArray} from 'ol/color'
 import {ol_coordinate_dist2d} from '../geom/GeomUtils'
+import '../geom/LineStringSplitAt'
 
 /** Flow line style
  * Draw LineString with a variable color / width
@@ -141,6 +142,43 @@ ol_style_FlowLine.prototype.setArrow = function(n) {
   if (this._arrow < -1 || this._arrow > 2) this._arrow = 0;
 }
 
+/** getArrowSize
+ * @return {ol.size}
+ */
+ol_style_FlowLine.prototype.getArrowSize = function() {
+  return this._arrowSize || [16,16];
+};
+
+/** setArrowSize
+ * @param {number|ol.size} size
+ */
+ol_style_FlowLine.prototype.setArrowSize = function(size) {
+  if (Array.isArray(size)) this._arrowSize = size;
+  else if (typeof(size) === 'number') this._arrowSize = [size,size];
+};
+
+/** drawArrow
+ * @param {CanvasRenderingContext2D} ctx 
+ * @param {ol.coordinate} p0 
+ * @param ol.coordinate} p1 
+ * @param {number} width 
+ * @private
+ */
+ol_style_FlowLine.prototype.drawArrow = function (ctx, p0, p1, width) {
+  var asize = this.getArrowSize()[0];
+  var l = ol_coordinate_dist2d(p0, p1);
+  var dx = (p0[0]-p1[0])/l;
+  var dy = (p0[1]-p1[1])/l;
+  var width = Math.max(this.getArrowSize()[1]/2, width/2);
+  ctx.beginPath();
+  ctx.moveTo(p0[0],p0[1]);
+  ctx.lineTo(p0[0]-asize*dx+width*dy, p0[1]-asize*dy-width*dx);
+  ctx.lineTo(p0[0]-asize*dx-width*dy, p0[1]-asize*dy+width*dx);
+  ctx.lineTo(p0[0],p0[1]);
+  ctx.fill();
+};
+
+
 /** Renderer function
  * @param {Array<ol.coordinate>} geom The pixel coordinates of the geometry in GeoJSON notation
  * @param {ol.render.State} e The olx.render.State of the layer renderer
@@ -159,74 +197,71 @@ ol_style_FlowLine.prototype._render = function(geom, e) {
         geom[i] = [ dx + p[0] * a, dy - p[1] * a];
       }
     }
-    // Split into
-    var geoms = this._splitInto(geom, 255, 2);
-    var k = 0;
-    var nb = geoms.length;
-    var drawArrow = function (p0, p1, width) {
-      ctx.beginPath();
-      ctx.moveTo(p0[0],p0[1]);
-      var l = ol_coordinate_dist2d(p0, p1);
-      var dx = (p0[0]-p1[0])/l;
-      var dy = (p0[1]-p1[1])/l;
-      width = Math.max(8, width/2);
-      ctx.lineTo(p0[0]-16*dx+width*dy, p0[1]-16*dy-width*dx);
-      ctx.lineTo(p0[0]-16*dx-width*dy, p0[1]-16*dy+width*dx);
-      ctx.lineTo(p0[0],p0[1]);
-      ctx.fill();
-    }
-    // Calculate arrow length
-    var length = 0, length0 = 0, length1 = 0;
-    if (this.getArrow()) {
-      p = geoms[0][0];
-      for (i=1; i<geoms[0].length; i++) {
-        length += ol_coordinate_dist2d(p,geoms[0][i])
-        p = geoms[0][i]
-      }
-      switch (this.getArrow()) {
-        case -1: {
-          length0 = Math.round(16/length);
-          break;
-        }
-        case 1: {
-          length1 = Math.round(16/length);
-          break;
-        }
-        case 2: {
-          length0 = length1 = Math.round(16/length);
-          break;
-        }
-      }
-    }
 
-    // Draw
+    var asize = this.getArrowSize()[0];
+
     ctx.save();
+      // Arrow 1
+      if (geom.length>1 && (this.getArrow()===-1 || this.getArrow()===2)) {
+        var p, p1, p0;
+        var dl, d = 0;
+        p = p0 = geom.shift();
+        while(geom.length) {
+          p1 = geom.shift();
+          dl = ol_coordinate_dist2d(p,p1);
+          if (d+dl > asize) {
+            p = [p[0]+(p1[0]-p[0])*asize/dl, p[1]+(p1[1]-p[1])*asize/dl];
+            geom.unshift(p1);
+            geom.unshift(p);
+            break;
+          }
+          d += dl;
+          p = p1;
+        }
+        ctx.fillStyle = this.getColor(e.feature, 0);
+        this.drawArrow(ctx, p0, p, this.getWidth(e.feature, 0) * e.pixelRatio);
+      }
+      // Arrow 2 
+      if (geom.length>1 && this.getArrow()>0) {
+        var p, p1, p0;
+        var dl, d = 0;
+        p = p0 = geom.pop();
+        while(geom.length) {
+          p1 = geom.pop();
+          dl = ol_coordinate_dist2d(p,p1);
+          if (d+dl > asize) {
+            p = [p[0]+(p1[0]-p[0])*asize/dl, p[1]+(p1[1]-p[1])*asize/dl];
+            geom.push(p1);
+            geom.push(p);
+            break;
+          }
+          d += dl;
+          p = p1;
+        }
+        ctx.fillStyle = this.getColor(e.feature, 1);
+        this.drawArrow(ctx, p0, p, this.getWidth(e.feature, 1) * e.pixelRatio);
+      }
+
+      // Split into
+      var geoms = this._splitInto(geom, 255, 2);
+      var k = 0;
+      var nb = geoms.length;
+      
+      // Draw
       ctx.lineJoin = 'round';
       ctx.lineCap = this._lineCap || 'butt';
 
-      if ((length0 && geoms[length0]) || (length1 && geoms[length1])) {
-        ctx.lineCap = 'butt';
-        if (length0) {
-          ctx.fillStyle = this.getColor(e.feature, 0);
-          drawArrow(geoms[0][0], geoms[length0][geoms[length0].length-1], this.getWidth(e.feature, 0) * e.pixelRatio);
-        }
-        if (length1) {
-          ctx.fillStyle = this.getColor(e.feature, 1);
-          var g0 = geoms[geoms.length-1];
-          var g1 = geoms[geoms.length-1-length1];
-          drawArrow(g0[g0.length-1], g1[0], this.getWidth(e.feature, 1) * e.pixelRatio);
-        }
-      }
-
-      for (k=length0; k<geoms.length-length1-1; k++) {
-        var step = k/nb;
-        g = geoms[k];
-        ctx.lineWidth = this.getWidth(e.feature, step) * e.pixelRatio;
-        ctx.strokeStyle = this.getColor(e.feature, step);
-        ctx.beginPath();
-        ctx.moveTo(g[0][0],g[0][1]);
-        for (i=1; p=g[i]; i++) {
-          ctx.lineTo(p[0],p[1]);
+      if (geoms.length > 1) {
+        for (k=0; k<geoms.length; k++) {
+          var step = k/nb;
+          g = geoms[k];
+          ctx.lineWidth = this.getWidth(e.feature, step) * e.pixelRatio;
+          ctx.strokeStyle = this.getColor(e.feature, step);
+          ctx.beginPath();
+          ctx.moveTo(g[0][0],g[0][1]);
+          for (i=1; p=g[i]; i++) {
+            ctx.lineTo(p[0],p[1]);
+          }
           ctx.stroke();
         }
       }
