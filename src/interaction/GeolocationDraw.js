@@ -16,7 +16,10 @@ import ol_source_Vector from 'ol/source/Vector'
 import ol_Feature from 'ol/Feature'
 import ol_interaction_Pointer from 'ol/interaction/Pointer'
 import {containsCoordinate as ol_extent_containsCoordinate, containsExtent as ol_extent_containsExtent} from 'ol/extent'
-import {ol_coordinate_equal} from '../geom/GeomUtils'
+import {ol_coordinate_dist2d, ol_coordinate_equal} from '../geom/GeomUtils'
+import {transform as ol_proj_transform} from 'ol/proj'
+import {getDistance as ol_spehre_getDistance} from 'ol/sphere'
+
 
 /** Interaction to draw on the current geolocation
  *	It combines a draw with a ol_Geolocation
@@ -148,6 +151,23 @@ ol_ext_inherits(ol_interaction_GeolocationDraw, ol_interaction_Interaction);
  * @param {number} tolerance
  */
 ol_interaction_GeolocationDraw.prototype.simplify3D = function(geo, tolerance) {
+  var geom = geo.getCoordinates();
+  var proj = this.getMap().getView().getProjection();
+  if (this.get("type")==='Polygon') {
+    geom = geom[0];
+  }
+  var simply = [geom[0]];
+  var pi, p = ol_proj_transform(geom[0], proj, 'EPSG:4326')
+  for (var i=1; i<geom.length; i++) {
+    pi = ol_proj_transform(geom[i], proj, 'EPSG:4326')
+    var d = ol_spehre_getDistance(p, pi);
+    if (d > tolerance) {
+      simply.push(geom[i]);
+      p = pi;
+    }
+  }
+  simply.push(geom[geom.length-1]);
+  /*
   var simply = geo.simplify(tolerance).getCoordinates();
   if (this.get("type")==='Polygon') {
     simply = simply[0];
@@ -162,6 +182,7 @@ ol_interaction_GeolocationDraw.prototype.simplify3D = function(geo, tolerance) {
       }
     }
   }.bind(this));
+  */
   // Get 3D geom
   if (this.get("type")==='Polygon') {
     geo = new ol_geom_Polygon([simply], 'XYZM');
@@ -280,7 +301,7 @@ ol_interaction_GeolocationDraw.prototype.stop = function() {
  * @param {boolean} b 
  */
 ol_interaction_GeolocationDraw.prototype.pause = function(b) {
-  this.pause_ = b!==false;
+  this.pause_ = (b!==false);
 };
 
 /** Is paused
@@ -432,7 +453,7 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function(simulate, coord, accur
 
   var geo;
   if (this.pause_) {
-    this.lastPosition_ = pos;   
+    this.lastPosition_ = pos;
   }
   if (!this.pause_ && (!loc || this.condition_.call(this, loc))) {
     f = this.sketch_[1];
