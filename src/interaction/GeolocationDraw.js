@@ -33,7 +33,7 @@ import {getDistance as ol_spehre_getDistance} from 'ol/sphere'
  *  @param {Number | undefined} options.minAccuracy minimum accuracy underneath a new point will be register (if no condition), default 20
  *  @param {function | undefined} options.condition a function that take a ol_Geolocation object and return a boolean to indicate whether location should be handled or not, default return true if accuraty < minAccuraty
  *  @param {Object} options.attributes a list of attributes to register as Point properties: {accuracy:true,accuracyGeometry:true,heading:true,speed:true}, default none.
- *  @param {Number} options.tolerance tolerance to add a new point (in projection unit), use ol.geom.LineString.simplify() method, default 5
+ *  @param {Number} options.tolerance tolerance to add a new point (in meter), default 5
  *  @param {Number} options.zoom zoom for tracking, default 16
  *  @param {Number} options.minZoom min zoom for tracking, if zoom is less it will zoom to it, default use zoom option
  *  @param {boolean|auto|position|visible} options.followTrack true if you want the interaction to follow the track on the map, default true
@@ -166,7 +166,9 @@ ol_interaction_GeolocationDraw.prototype.simplify3D = function(geo, tolerance) {
       p = pi;
     }
   }
-  simply.push(geom[geom.length-1]);
+  if (simply[simply.length-1] !== geom[geom.length-1]) {
+    simply.push(geom[geom.length-1]);
+  }
   /*
   var simply = geo.simplify(tolerance).getCoordinates();
   if (this.get("type")==='Polygon') {
