@@ -54,6 +54,10 @@ var ol_style_FlowLine = function(options) {
   this.setLineCap(options.lineCap);
   // 
   this.setArrow(options.arrow);
+  //
+  this._offset = [0,0];
+  this.setOffset(options.offset0, 0);
+  this.setOffset(options.offset1, 1);
 };
 ol_ext_inherits(ol_style_FlowLine, ol_style_Style);
 
@@ -69,6 +73,32 @@ ol_style_FlowLine.prototype.setWidth = function(width) {
  */
 ol_style_FlowLine.prototype.setWidth2 = function(width) {
   this._width2 = width;
+};
+
+/** Get offset at start or end
+ * @param {number} where 0=start, 1=end
+ * @return {number} width
+ */
+ol_style_FlowLine.prototype.getOffset = function(where) {
+  return this._offset[where];
+};
+
+/** Add an offset at start or end
+ * @param {number} width
+ * @param {number} where 0=start, 1=end
+ */
+ol_style_FlowLine.prototype.setOffset = function(width, where) {
+  width = Math.max(0, parseFloat(width));
+  switch(where) {
+    case 0: {
+      this._offset[0] = width;
+      break;
+    }
+    case 1: {
+      this._offset[1] = width;
+      break;
+    }
+  }
 };
 
 /** Set the LineCap
@@ -178,7 +208,6 @@ ol_style_FlowLine.prototype.drawArrow = function (ctx, p0, p1, width) {
   ctx.fill();
 };
 
-
 /** Renderer function
  * @param {Array<ol.coordinate>} geom The pixel coordinates of the geometry in GeoJSON notation
  * @param {ol.render.State} e The olx.render.State of the layer renderer
@@ -201,45 +230,20 @@ ol_style_FlowLine.prototype._render = function(geom, e) {
     var asize = this.getArrowSize()[0];
 
     ctx.save();
+      // Offsets
+      if (this.getOffset(0)) this._splitAsize(geom, this.getOffset(0))
+      if (this.getOffset(1)) this._splitAsize(geom, this.getOffset(1), true)
       // Arrow 1
       if (geom.length>1 && (this.getArrow()===-1 || this.getArrow()===2)) {
-        var p, p1, p0;
-        var dl, d = 0;
-        p = p0 = geom.shift();
-        while(geom.length) {
-          p1 = geom.shift();
-          dl = ol_coordinate_dist2d(p,p1);
-          if (d+dl > asize) {
-            p = [p[0]+(p1[0]-p[0])*asize/dl, p[1]+(p1[1]-p[1])*asize/dl];
-            geom.unshift(p1);
-            geom.unshift(p);
-            break;
-          }
-          d += dl;
-          p = p1;
-        }
+        var p = this._splitAsize(geom, asize);
         ctx.fillStyle = this.getColor(e.feature, 0);
-        this.drawArrow(ctx, p0, p, this.getWidth(e.feature, 0) * e.pixelRatio);
+        this.drawArrow(ctx, p[0], p[1], this.getWidth(e.feature, 0) * e.pixelRatio);
       }
       // Arrow 2 
       if (geom.length>1 && this.getArrow()>0) {
-        var p, p1, p0;
-        var dl, d = 0;
-        p = p0 = geom.pop();
-        while(geom.length) {
-          p1 = geom.pop();
-          dl = ol_coordinate_dist2d(p,p1);
-          if (d+dl > asize) {
-            p = [p[0]+(p1[0]-p[0])*asize/dl, p[1]+(p1[1]-p[1])*asize/dl];
-            geom.push(p1);
-            geom.push(p);
-            break;
-          }
-          d += dl;
-          p = p1;
-        }
+        var p = this._splitAsize(geom, asize, true)
         ctx.fillStyle = this.getColor(e.feature, 1);
-        this.drawArrow(ctx, p0, p, this.getWidth(e.feature, 1) * e.pixelRatio);
+        this.drawArrow(ctx, p[0], p[1], this.getWidth(e.feature, 1) * e.pixelRatio);
       }
 
       // Split into
@@ -267,6 +271,38 @@ ol_style_FlowLine.prototype._render = function(geom, e) {
       }
     ctx.restore();
   }
+};
+
+/** Split extremity
+ * @param {ol.geom.LineString} geom
+ * @param {number} asize
+ * @param {boolean} end start=false or end=true, default false (start)
+ */
+ol_style_FlowLine.prototype._splitAsize = function(geom, asize, end) {
+  var p, p1, p0;
+  var dl, d = 0;
+  if (end) p0 = geom.pop();
+  else p0 = geom.shift();
+  p = p0;
+  while(geom.length) {
+    if (end) p1 = geom.pop();
+    else p1 = geom.shift();
+    dl = ol_coordinate_dist2d(p,p1);
+    if (d+dl > asize) {
+      p = [p[0]+(p1[0]-p[0])*asize/dl, p[1]+(p1[1]-p[1])*asize/dl];
+      if (end) {
+        geom.push(p1);
+        geom.push(p);
+      } else {
+        geom.unshift(p1);
+        geom.unshift(p);
+      }
+      break;
+    }
+    d += dl;
+    p = p1;
+  }
+  return [p0,p1];
 };
 
 /** Split line geometry into equal length geometries

@@ -30,6 +30,9 @@
     font-size: 16px;
     margin: 0.5em;
   }
+  input:focus {
+    outline-width: 0;
+  }
   a {
     color: #337ab7;
     text-decoration: none;
@@ -66,7 +69,11 @@
   input[type="search"] {
     font-size: 1em;
     padding: .3em 1em;
-    border-radius: 1em;;
+    border-radius: 1em;
+    border:0;
+    box-shadow: inset 1px 1px 2px 1px rgba(0,0,0,.5), 
+    1px 1px 2px 0px rgba(255,255,255,.5), 
+    -1px -1px 2px 0px rgba(0,0,0,.5);
   }
   .container {
     width:1170px;
@@ -375,6 +382,16 @@
           to display flows or Sankey diagram on a map.
         </p>
         <p class="tag">style, vector, flow, color, sankey</p>
+      </div>
+
+      <div class="example" data-date="2020-10">
+        <a class="mainlink" href="examples/style/map.style.flowarrow.html">
+          <strong>Flow arrow style</strong><br>
+        </a>
+        <p class="description">
+          With the <i>ol.style.FlowLine</i> you can add arrows to display flow on the map.
+        </p>
+        <p class="tag">style, vector, flow, color, arrow, sankey</p>
       </div>
 
       <div class="example" data-date="2019-02-05">

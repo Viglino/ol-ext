@@ -1,0 +1,237 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2015-2019 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Flow style</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <meta name="description" content="Draw flow maps or Sankey maps with Openlayers." />
+  <meta name="keywords" content="ol, openlayers, vector, style, stroke, width, color, variable, sankey, flow, arrow" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <style>
+    #map {
+      width: 100%;
+      min-height: 400px;
+      height: 70vh;
+    }
+    .options label {
+      display: inline-block;
+      text-align: right;
+      min-width: 4em;
+    }
+    .options input[type="number"] {
+        width: 5em;
+    }
+  </style>
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Flow line style</h1>
+  </a>
+  <div class="info">
+    <p>
+      The <i>ol.style.FlowLine</i> is a line style to draw LineString with variable colors and widths.
+      <br/>
+      This can be used to display <a href="https://en.wikipedia.org/wiki/Flow_map">flows</a> maps
+      or <a href="https://en.wikipedia.org/wiki/Sankey_diagram">Sankey diagram</a> on a map.
+    </p>
+    <ul>
+    </ul>
+    <p>
+      Look at <a href='map.style.flowline.html'>this example</a> for more information on FlowLine style.
+    </p>
+  </div>
+
+  <!-- Map div -->
+  <div id="map"></div>
+
+  <div class="options" style="min-width:300px;">
+    <h2>Options:</h2>
+    <ul>
+			<li>
+        <label>color:</label>
+        <select class="color" onchange="vector.changed();">
+          <option value='red' selected="selected">red</option>
+          <option value='yellow'>yellow</option>
+          <option value='#0f0'>green</option>
+          <option value='#00f'>blue</option>
+          <option value='#fff'>white</option>
+          <option value='#000'>black</option>
+          <option value='rgba(255,255,255,0)'>transparent</option>
+        </select>
+			</li>
+			<li>
+        <label>color2:</label>
+        <select class="color2" onchange="vector.changed();">
+          <option value='red'>red</option>
+          <option value='yellow' selected="selected">yellow</option>
+          <option value='#0f0'>green</option>
+          <option value='#00f'>blue</option>
+          <option value='#fff'>white</option>
+          <option value='#000'>black</option>
+          <option value='rgba(255,255,255,0)'>transparent</option>
+        </select>
+      </li>
+      <li>
+        <label>Offset:</label>
+        <input class="offset" value="10" type="number" step=1 onchange="vector.changed();" />
+      </li>
+		</ul>
+  </div>
+  
+<script type="text/javascript">
+  
+  // Layers
+  var layer = new ol.layer.Tile({
+    title:'terrain-background',
+    source: new ol.source.Stamen({ layer: 'terrain' })
+  });
+
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 7,
+      center: [218664, 6158372]
+    }),
+    layers: [layer]
+  });
+  // GeoJSON layer
+  var dep = new ol.layer.Vector ({ source: new ol.source.Vector({
+      url: '../data/departements.geojson',
+      format: new ol.format.GeoJSON(),
+      attributions: [ "&copy; <a href='https://www.insee.fr'>INSEE</a>", "&copy; <a href='https://www.data.gouv.fr/fr/datasets/geofla-r/'>IGN</a>" ],
+    })
+  });
+  map.addLayer(dep);
+  
+  // Event handlers when source is ready
+  var flowData = {};
+	var listener = dep.getSource().on('change',function(e) {
+    ol.Observable.unByKey(listener)
+    if (dep.getSource().getState() === 'ready') {
+      var sel;
+      dep.getSource().getFeatures().forEach(function (f) {
+        var p, g = f.getGeometry();
+        if (f.get('id')==='41') sel = f;
+        if (g.getInteriorPoint) {
+          p = g.getInteriorPoint().getFirstCoordinate();
+        } else {
+          var max = 0;
+          g.getPolygons().forEach(function(poly) {
+            var a = poly.getArea();
+            if (max<a) {
+              max = a;
+              p = poly.getInteriorPoint().getFirstCoordinate();
+            }
+          });
+        }
+        flowData[f.get('id')] = {
+          xy: p,
+          data: []
+        };
+      })
+      $.ajax({
+        url: '../data/mobilite-2017.csv',
+        success: function (data) {
+          data = data.split('\n');
+          data.shift();
+          data.forEach(function(l) {
+            l = l.split(',');
+            if (flowData[l[0]] && flowData[l[1]]) {
+              flowData[l[0]].data.push ({
+                dep: l[1],
+                xy: flowData[l[1]].xy,
+                flow: parseInt(l[2])
+              });
+            }
+          })
+        }
+      });
+      setTimeout(function() {
+        select.dispatchEvent({ type:'select', selected:[sel] })
+      }, 0);
+		}
+  });
+
+  // Default style to make the feature selectable
+  var defaultStyle = new ol.style.Style({
+    stroke: new ol.style.Stroke({ color: [255, 255, 255, .1], width: 2.5 })
+  });
+  // Flow style
+  var done = false;
+  function getStyle(feature, res) {
+    var flowStyle = new ol.style.FlowLine({
+      color: $('.color').val(),
+      color2: $('.color2').val(),
+      width: 2,
+      width2: feature.get('flow'),
+      offset0: parseInt($('.offset').val()),
+      arrow: 1
+    });
+    return [ defaultStyle, flowStyle ];
+  }
+
+  // Nouvelle source de donnee
+  var vector = new ol.layer.VectorImage({
+    source: new ol.source.Vector(),
+    style: getStyle
+  })
+  map.addLayer(vector);
+
+  var popup = new ol.Overlay.Popup({ className: 'tooltips' });
+  map.addOverlay(popup);
+
+  var hover = new ol.interaction.Hover({ cursor: 'pointer', layers: [vector], hitTolerance:2 });
+  map.addInteraction(hover);
+  hover.on('hover', function(e) {
+    popup.show(e.coordinate, e.feature.get('flux'));
+  });
+  hover.on('leave', function(e) {
+    popup.hide();
+  });
+
+  // global so we can remove it later
+  var select = new ol.interaction.Select ({ layers: [dep] });
+  map.addInteraction(select);
+  select.on('select', function(e) {
+    var f = e.selected[0];
+    vector.getSource().clear();
+    if (f) {
+      var dep = flowData[f.get('id')]
+      dep.data.forEach(function(d) {
+        if (d.flow > 300) {
+          var l = new ol.Feature(new ol.geom.LineString([dep.xy, d.xy]))
+          l.set('flow', Math.max(2, Math.min(30, d.flow/300)));
+          l.set('flux', d.flow.toLocaleString());
+          vector.getSource().addFeature(l);
+        }
+      });
+    }
+  });
+
+</script>
+
+</body>
+</html>
