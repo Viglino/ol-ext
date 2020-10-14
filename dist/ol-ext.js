@@ -15497,7 +15497,7 @@ ol.interaction.FocusMap.prototype.setMap = function(map) {
  *  @param {Number | undefined} options.minAccuracy minimum accuracy underneath a new point will be register (if no condition), default 20
  *  @param {function | undefined} options.condition a function that take a ol.Geolocation object and return a boolean to indicate whether location should be handled or not, default return true if accuraty < minAccuraty
  *  @param {Object} options.attributes a list of attributes to register as Point properties: {accuracy:true,accuracyGeometry:true,heading:true,speed:true}, default none.
- *  @param {Number} options.tolerance tolerance to add a new point (in projection unit), use ol.geom.LineString.simplify() method, default 5
+ *  @param {Number} options.tolerance tolerance to add a new point (in meter), default 5
  *  @param {Number} options.zoom zoom for tracking, default 16
  *  @param {Number} options.minZoom min zoom for tracking, if zoom is less it will zoom to it, default use zoom option
  *  @param {boolean|auto|position|visible} options.followTrack true if you want the interaction to follow the track on the map, default true
@@ -15597,6 +15597,53 @@ ol.interaction.GeolocationDraw = function(options) {
   this.setActive(false);
 };
 ol.ext.inherits(ol.interaction.GeolocationDraw, ol.interaction.Interaction);
+/** Simplify 3D geometry
+ * @param {ol.geom.Geometry} geo
+ * @param {number} tolerance
+ */
+ol.interaction.GeolocationDraw.prototype.simplify3D = function(geo, tolerance) {
+  var geom = geo.getCoordinates();
+  var proj = this.getMap().getView().getProjection();
+  if (this.get("type")==='Polygon') {
+    geom = geom[0];
+  }
+  var simply = [geom[0]];
+  var pi, p = ol.proj.transform(geom[0], proj, 'EPSG:4326')
+  for (var i=1; i<geom.length; i++) {
+    pi = ol.proj.transform(geom[i], proj, 'EPSG:4326')
+    var d = ol.spehre.getDistance(p, pi);
+    if (d > tolerance) {
+      simply.push(geom[i]);
+      p = pi;
+    }
+  }
+  if (simply[simply.length-1] !== geom[geom.length-1]) {
+    simply.push(geom[geom.length-1]);
+  }
+  /*
+  var simply = geo.simplify(tolerance).getCoordinates();
+  if (this.get("type")==='Polygon') {
+    simply = simply[0];
+  }
+  var step=0;
+  simply.forEach(function(p) {
+    for (; step<this.path_.length; step++) {
+      if (ol.coordinate.equal(p, this.path_[step])) {
+        p[2] = this.path_[step][2];
+        p[3] = this.path_[step][3];
+        break;
+      }
+    }
+  }.bind(this));
+  */
+  // Get 3D geom
+  if (this.get("type")==='Polygon') {
+    geo = new ol.geom.Polygon([simply], 'XYZM');
+  } else {
+    geo = new ol.geom.LineString(simply, 'XYZM');
+  }
+  return geo;
+};
 /**
  * Remove the interaction from its current map, if any,  and attach it to a new
  * map, if any. Pass `null` to just remove the interaction from the current map.
@@ -15699,7 +15746,7 @@ ol.interaction.GeolocationDraw.prototype.stop = function() {
  * @param {boolean} b 
  */
 ol.interaction.GeolocationDraw.prototype.pause = function(b) {
-  this.pause_ = b!==false;
+  this.pause_ = (b!==false);
 };
 /** Is paused
  * @return {boolean} b 
@@ -15844,7 +15891,7 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(simulate, coord, accur
   else f.setStyle(this.locStyle.error);
   var geo;
   if (this.pause_) {
-    this.path_ = [pos];   
+    this.lastPosition_ = pos;
   }
   if (!this.pause_ && (!loc || this.condition_.call(this, loc))) {
     f = this.sketch_[1];
@@ -15862,7 +15909,7 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(simulate, coord, accur
       case "LineString":
         if (this.path_.length>1) {
           geo = new ol.geom.LineString(this.path_, 'XYZM');
-          if (this.get("tolerance")) geo = geo.simplify (this.get("tolerance"));
+          if (this.get("tolerance")) geo = this.simplify3D (geo, this.get("tolerance"));
           f.setGeometry(geo);
         } else {
           f.setGeometry();
@@ -15871,7 +15918,7 @@ ol.interaction.GeolocationDraw.prototype.draw_ = function(simulate, coord, accur
       case "Polygon":
         if (this.path_.length>2) {
           geo = new ol.geom.Polygon([this.path_], 'XYZM');
-          if (this.get("tolerance")) geo = geo.simplify (this.get("tolerance"));
+          if (this.get("tolerance")) geo = this.simplify3D (geo, this.get("tolerance"));
           f.setGeometry(geo);
         }
         else f.setGeometry();
@@ -27441,6 +27488,10 @@ ol.style.FlowLine = function(options) {
   this.setLineCap(options.lineCap);
   // 
   this.setArrow(options.arrow);
+  //
+  this._offset = [0,0];
+  this.setOffset(options.offset0, 0);
+  this.setOffset(options.offset1, 1);
 };
 ol.ext.inherits(ol.style.FlowLine, ol.style.Style);
 /** Set the initial width
@@ -27454,6 +27505,30 @@ ol.style.FlowLine.prototype.setWidth = function(width) {
  */
 ol.style.FlowLine.prototype.setWidth2 = function(width) {
   this._width2 = width;
+};
+/** Get offset at start or end
+ * @param {number} where 0=start, 1=end
+ * @return {number} width
+ */
+ol.style.FlowLine.prototype.getOffset = function(where) {
+  return this._offset[where];
+};
+/** Add an offset at start or end
+ * @param {number} width
+ * @param {number} where 0=start, 1=end
+ */
+ol.style.FlowLine.prototype.setOffset = function(width, where) {
+  width = Math.max(0, parseFloat(width));
+  switch(where) {
+    case 0: {
+      this._offset[0] = width;
+      break;
+    }
+    case 1: {
+      this._offset[1] = width;
+      break;
+    }
+  }
 };
 /** Set the LineCap
  * @param {steing} cap LineCap (round or butt), default butt
@@ -27519,17 +27594,50 @@ ol.style.FlowLine.prototype.setArrow = function(n) {
   this._arrow = parseInt(n);
   if (this._arrow < -1 || this._arrow > 2) this._arrow = 0;
 }
+/** getArrowSize
+ * @return {ol.size}
+ */
+ol.style.FlowLine.prototype.getArrowSize = function() {
+  return this._arrowSize || [16,16];
+};
+/** setArrowSize
+ * @param {number|ol.size} size
+ */
+ol.style.FlowLine.prototype.setArrowSize = function(size) {
+  if (Array.isArray(size)) this._arrowSize = size;
+  else if (typeof(size) === 'number') this._arrowSize = [size,size];
+};
+/** drawArrow
+ * @param {CanvasRenderingContext2D} ctx 
+ * @param {ol.coordinate} p0 
+ * @param ol.coordinate} p1 
+ * @param {number} width 
+ * @private
+ */
+ol.style.FlowLine.prototype.drawArrow = function (ctx, p0, p1, width) {
+  var asize = this.getArrowSize()[0];
+  var l = ol.coordinate.dist2d(p0, p1);
+  var dx = (p0[0]-p1[0])/l;
+  var dy = (p0[1]-p1[1])/l;
+  var width = Math.max(this.getArrowSize()[1]/2, width/2);
+  ctx.beginPath();
+  ctx.moveTo(p0[0],p0[1]);
+  ctx.lineTo(p0[0]-asize*dx+width*dy, p0[1]-asize*dy-width*dx);
+  ctx.lineTo(p0[0]-asize*dx-width*dy, p0[1]-asize*dy+width*dx);
+  ctx.lineTo(p0[0],p0[1]);
+  ctx.fill();
+};
 /** Renderer function
  * @param {Array<ol.coordinate>} geom The pixel coordinates of the geometry in GeoJSON notation
  * @param {ol.render.State} e The olx.render.State of the layer renderer
  */
 ol.style.FlowLine.prototype._render = function(geom, e) {
   if (e.geometry.getType()==='LineString') {
-    var i, p, ctx = e.context;
+    var i, g, p, ctx = e.context;
     // Get geometry used at drawing
     if (!this._visible) {
       var a = e.pixelRatio / e.resolution;
-      var g = e.geometry.getCoordinates();
+      g = e.geometry.getCoordinates();
       var dx = geom[0][0] - g[0][0] * a;
       var dy = geom[0][1] + g[0][1] * a;
       geom = [];
@@ -27537,76 +27645,77 @@ ol.style.FlowLine.prototype._render = function(geom, e) {
         geom[i] = [ dx + p[0] * a, dy - p[1] * a];
       }
     }
-    // Split into
-    var geoms = this._splitInto(geom, 255, 2);
-    var k = 0;
-    var nb = geoms.length;
-    function drawArrow(p0, p1, width) {
-      ctx.beginPath();
-      ctx.moveTo(p0[0],p0[1]);
-      var l = ol.coordinate.dist2d(p0, p1);
-      var dx = (p0[0]-p1[0])/l;
-      var dy = (p0[1]-p1[1])/l;
-      width = Math.max(8, width/2);
-      ctx.lineTo(p0[0]-16*dx+width*dy, p0[1]-16*dy-width*dx);
-      ctx.lineTo(p0[0]-16*dx-width*dy, p0[1]-16*dy+width*dx);
-      ctx.lineTo(p0[0],p0[1]);
-      ctx.fill();
-    }
-    // Calculate arrow length
-    var length = length0 = length1 = 0;
-    if (this.getArrow()) {
-      var p = geoms[0][0];
-      for (i=1; i<geoms[0].length; i++) {
-        length += ol.coordinate.dist2d(p,geoms[0][i])
-        p = geoms[0][i]
-      }
-      switch (this.getArrow()) {
-        case -1: {
-          length0 = Math.round(16/length);
-          break;
-        }
-        case 1: {
-          length1 = Math.round(16/length);
-          break;
-        }
-        case 2: {
-          length0 = length1 = Math.round(16/length);
-          break;
-        }
-      }
-    }
-    // Draw
+    var asize = this.getArrowSize()[0];
     ctx.save();
+      // Offsets
+      if (this.getOffset(0)) this._splitAsize(geom, this.getOffset(0))
+      if (this.getOffset(1)) this._splitAsize(geom, this.getOffset(1), true)
+      // Arrow 1
+      if (geom.length>1 && (this.getArrow()===-1 || this.getArrow()===2)) {
+        var p = this._splitAsize(geom, asize);
+        ctx.fillStyle = this.getColor(e.feature, 0);
+        this.drawArrow(ctx, p[0], p[1], this.getWidth(e.feature, 0) * e.pixelRatio);
+      }
+      // Arrow 2 
+      if (geom.length>1 && this.getArrow()>0) {
+        var p = this._splitAsize(geom, asize, true)
+        ctx.fillStyle = this.getColor(e.feature, 1);
+        this.drawArrow(ctx, p[0], p[1], this.getWidth(e.feature, 1) * e.pixelRatio);
+      }
+      // Split into
+      var geoms = this._splitInto(geom, 255, 2);
+      var k = 0;
+      var nb = geoms.length;
+      // Draw
       ctx.lineJoin = 'round';
       ctx.lineCap = this._lineCap || 'butt';
-      if ((length0 && geoms[length0]) || (length1 && geoms[length1])) {
-        ctx.lineCap = 'butt';
-        if (length0) {
-          ctx.fillStyle = this.getColor(e.feature, 0);
-          drawArrow(geoms[0][0], geoms[length0][geoms[length0].length-1], this.getWidth(e.feature, 0) * e.pixelRatio);
-        }
-        if (length1) {
-          ctx.fillStyle = this.getColor(e.feature, 1);
-          var g0 = geoms[geoms.length-1];
-          var g1 = geoms[geoms.length-1-length1];
-          drawArrow(g0[g0.length-1], g1[0], this.getWidth(e.feature, 1) * e.pixelRatio);
-        }
-      }
-      for (k=length0; k<geoms.length-length1-1; k++) {
-        var step = k/nb;
-        var g = geoms[k];
-        ctx.lineWidth = this.getWidth(e.feature, step) * e.pixelRatio;
-        ctx.strokeStyle = this.getColor(e.feature, step);
-        ctx.beginPath();
-        ctx.moveTo(g[0][0],g[0][1]);
-        for (i=1; p=g[i]; i++) {
-          ctx.lineTo(p[0],p[1]);
+      if (geoms.length > 1) {
+        for (k=0; k<geoms.length; k++) {
+          var step = k/nb;
+          g = geoms[k];
+          ctx.lineWidth = this.getWidth(e.feature, step) * e.pixelRatio;
+          ctx.strokeStyle = this.getColor(e.feature, step);
+          ctx.beginPath();
+          ctx.moveTo(g[0][0],g[0][1]);
+          for (i=1; p=g[i]; i++) {
+            ctx.lineTo(p[0],p[1]);
+          }
           ctx.stroke();
         }
       }
     ctx.restore();
   }
+};
+/** Split extremity
+ * @param {ol.geom.LineString} geom
+ * @param {number} asize
+ * @param {boolean} end start=false or end=true, default false (start)
+ */
+ol.style.FlowLine.prototype._splitAsize = function(geom, asize, end) {
+  var p, p1, p0;
+  var dl, d = 0;
+  if (end) p0 = geom.pop();
+  else p0 = geom.shift();
+  p = p0;
+  while(geom.length) {
+    if (end) p1 = geom.pop();
+    else p1 = geom.shift();
+    dl = ol.coordinate.dist2d(p,p1);
+    if (d+dl > asize) {
+      p = [p[0]+(p1[0]-p[0])*asize/dl, p[1]+(p1[1]-p[1])*asize/dl];
+      if (end) {
+        geom.push(p1);
+        geom.push(p);
+      } else {
+        geom.unshift(p1);
+        geom.unshift(p);
+      }
+      break;
+    }
+    d += dl;
+    p = p1;
+  }
+  return [p0,p1];
 };
 /** Split line geometry into equal length geometries
  * @param {Array<ol.coordinate>} geom
