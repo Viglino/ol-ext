@@ -20,10 +20,14 @@ import '../geom/LineStringSplitAt'
  * @param {Object} options
  *  @param {boolean} options.visible draw only the visible part of the line, default true
  *  @param {number|function} options.width Stroke width or a function that gets a feature and the position (beetween [0,1]) and returns current width
- *  @param {number} options.width2 Final stroke width
+ *  @param {number} options.width2 Final stroke width (if width is not a function)
  *  @param {number} options.arrow Arrow at start (-1), at end (1), at both (2), none (0), default geta
  *  @param {ol.colorLike|function} options.color Stroke color or a function that gets a feature and the position (beetween [0,1]) and returns current color
  *  @param {ol.colorLike} options.color2 Final sroke color
+ *  @param {string} options.lineCap CanvasRenderingContext2D.lineCap 'butt' | 'round' | 'square', default 'butt'
+ *  @param {number|ol.size} options.arrowSize height and width of the arrow, default 16
+ *  @param {number} options.offset0 offset at line start
+ *  @param {number} options.offset1 offset at line end
  */
 var ol_style_FlowLine = function(options) {
   if (!options) options = {};
@@ -52,9 +56,10 @@ var ol_style_FlowLine = function(options) {
   this.setColor2(options.color2);
   // LineCap
   this.setLineCap(options.lineCap);
-  // 
+  // Arrow
   this.setArrow(options.arrow);
-  //
+  this.setArrowSize(options.arrowSize);
+  // Offset
   this._offset = [0,0];
   this.setOffset(options.offset0, 0);
   this.setOffset(options.offset1, 1);

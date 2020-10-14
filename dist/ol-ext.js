@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.1.15
+ * @version v3.1.16
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -27457,10 +27457,14 @@ ol.style.FillPattern.prototype.getChecksum = function()
  * @param {Object} options
  *  @param {boolean} options.visible draw only the visible part of the line, default true
  *  @param {number|function} options.width Stroke width or a function that gets a feature and the position (beetween [0,1]) and returns current width
- *  @param {number} options.width2 Final stroke width
+ *  @param {number} options.width2 Final stroke width (if width is not a function)
  *  @param {number} options.arrow Arrow at start (-1), at end (1), at both (2), none (0), default geta
  *  @param {ol.colorLike|function} options.color Stroke color or a function that gets a feature and the position (beetween [0,1]) and returns current color
  *  @param {ol.colorLike} options.color2 Final sroke color
+ *  @param {string} options.lineCap CanvasRenderingContext2D.lineCap 'butt' | 'round' | 'square', default 'butt'
+ *  @param {number|ol.size} options.arrowSize height and width of the arrow, default 16
+ *  @param {number} options.offset0 offset at line start
+ *  @param {number} options.offset1 offset at line end
  */
 ol.style.FlowLine = function(options) {
   if (!options) options = {};
@@ -27486,9 +27490,10 @@ ol.style.FlowLine = function(options) {
   this.setColor2(options.color2);
   // LineCap
   this.setLineCap(options.lineCap);
-  // 
+  // Arrow
   this.setArrow(options.arrow);
-  //
+  this.setArrowSize(options.arrowSize);
+  // Offset
   this._offset = [0,0];
   this.setOffset(options.offset0, 0);
   this.setOffset(options.offset1, 1);
