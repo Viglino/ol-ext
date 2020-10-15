@@ -11,6 +11,13 @@
   <meta name="description" content="A control to add timeline on a map." />
   <meta name="keywords" content="ol, timeline, control, date" />
 
+  <!-- Prevent image error on load with https -->
+	<script>
+		if (location.protocol == 'https:' && !/^localhost/.test(location.host)) {
+      location.href = window.location.href.replace(/^https:/,'http:');
+		}
+	</script>
+
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
@@ -22,6 +29,7 @@
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
 
   <link rel="stylesheet" href="../style.css" />
 
