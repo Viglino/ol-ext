@@ -122,6 +122,19 @@
           <option value='rgba(255,255,255,0)'>transparent</option>
         </select>
       </li>
+			<li>
+        <label>arrowColor:</label>
+        <select class="color2" onchange="flowStyle._acolor=this.value; vector.changed();">
+          <option value='' selected="selected">default</option>
+          <option value='red'>red</option>
+          <option value='yellow'>yellow</option>
+          <option value='#0f0'>green</option>
+          <option value='#00f'>blue</option>
+          <option value='#fff'>white</option>
+          <option value='#000'>black</option>
+          <option value='rgba(255,255,255,0)'>transparent</option>
+        </select>
+      </li>
       <li>
         <label>width:</label>
         <input class="width" type="number" value="2" onchange="flowStyle.setWidth(Number(this.value)); vector.changed();" />

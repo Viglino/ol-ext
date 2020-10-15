@@ -11275,307 +11275,6 @@ ol.control.Toggle.prototype.getInteraction = function() {
   return this.interaction_;
 };
 
-/* 
-  WMS Layer with EPSG:4326 projection.
-  The tiles will be reprojected to map pojection (EPSG:3857).
-  NB: reduce tileSize to minimize deformations on small scales.
-*/
-/** WMSCapabilities
- * @constructor
- * @param {*} options
- *  @param {String} options.proxy proxy to use when requesting Getcapabilites, default none (suppose the service use CORS)
- */
-ol.control.WMSCapabilities = function (options) {
-  options = options || {};
-  this._proxy = options.proxy;
-  var element = ol.ext.element.create('DIV', {
-    className: (options.className || 'ol-wmscapabilities') 
-      + (options.target ? '': ' ol-unselectable ol-control')
-  });
-  var input = ol.ext.element.create('INPUT', {
-    placeholder: options.placeholder || 'Service url...',
-    parent: element
-  });
-  ol.ext.element.create('BUTTON', {
-    click: function() {
-      this.getCapabilities(input.value).then(this.showCapabilitis.bind(this));
-    }.bind(this),
-    html: options.loadLabel || 'load',
-    parent: element
-  });
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  // Ajax request
-  var parser = new ol.format.WMSCapabilities();
-  this._ajax = new ol.ext.Ajax({ dataType:'text', auth: options.authentication });
-  this._ajax.on('success', function (e) {
-    var layers = parser.read(e.response);
-    if (this._then) this._then(layers);
-    if (this._finally) this._finally(layers);
-    this._then = this._catch = this._finally = null;
-  }.bind(this));
-  this._ajax.on('error', function(e) {
-    if (this._catch) this._then(e);
-    if (this._finally) this._finally(null);
-    this._then = this._catch = this._finally = null;
-  }.bind(this));
-  // Handle searching
-  this._ajax.on('loadstart', function() {
-    this.element.classList.add('ol-searching');
-  }.bind(this));
-  this._ajax.on('loadend', function() {
-    this.element.classList.remove('ol-searching');
-  }.bind(this));
-};
-ol.ext.inherits(ol.control.WMSCapabilities, ol.control.Control);
-/** Get WMS capabilities for a server
- * @param {string} url service url
- * @param {*} options 
- *  @param {string} options.version WMS version, default 1.3.0
- *  @param {Number} options.timeout
- *  @param {string} options.map WMS map
- * @return {*} PromiseLike to handle response
- */
-ol.control.WMSCapabilities.prototype.getCapabilities = function(url, options) {
-  options = options || {};
-  var request = {
-    SERVICE: 'WMS',
-    REQUEST: 'GetCapabilities',
-    VERSION: options.version || '1.3.0'
-  }
-  if (options.map) request.map = options.map;
-  if (this._proxy) {
-    var q = '';
-    for (var r in request) q += (q?'&':'')+r+'='+request[r]
-    this._ajax.send(this._proxy, {
-      url: q
-    }, {
-      timeout: options.timeout || 10000
-    });
-  } else {
-    this._ajax.send(url, request, {
-      timeout: options.timeout || 10000
-    });
-  }
-  // PromiseLike response
-  this._then = this._catch = this._finally = null;
-  var promise = {
-    then: function(f) {
-      if (typeof(f) === 'function') this._then = f;
-      return promise;
-    }.bind(this),
-    catch: function(f) {
-      if (typeof(f) === 'function') this._catch = f;
-      return promise;
-    }.bind(this),
-    finally: function(f) {
-      if (typeof(f) === 'function') this._finally = f;
-      return promise;
-    }.bind(this)
-  }
-  return promise;
-};
-/** Display capabilities in the dialog
- * @param {*} layers JSON capabilities
- */
-ol.control.WMSCapabilities.prototype.showCapabilitis = function(layers) {
-  console.log(layers)
-};
-/** Convert capabilities to options
- * @param {} layer layer capabilities (read from the capabilities)
- * @param {} options
- * @return {} the options to create the ol.layer.WMS
-* /
-ol.control.WMSCapabilities.prototype.getOptionsFromCap = function(layer, options) {
-  var i;
-  if (!options) options={};
-  options = $.extend({
-    isBaseLayer: false,
-    minScale: layer.MinScaleDenominator,
-    maxScale: layer.MaxScaleDenominator,
-    attribution: layer.Attribution
-  }, options);
-  var format = false;
-  // Look for prefered format first
-  var pref =[/png/,/jpeg/,/gif/];
-  for (i=0; i<3; i++) {
-    for (var f=0; f<layer.Format.length; f++) {
-      if (pref[i].test(layer.Format[f])) {
-        format=layer.Format[f];
-        break;
-      }
-    }
-    if (format) break;
-  }
-  if (!format) format = layer.Format[0];
-  // Check srs
-  var srs = options.srs || 'EPSG:3857';
-//	var srserror = false;
-  if (!layer.CRS || layer.CRS.indexOf(srs)<0) {
-    //srserror = true;
-    if (window.proj4) {
-      //if (layer.CRS && layer.CRS.indexOf("EPSG:4326")>=0) srs = "EPSG:4326";
-//			console.log(layer.CRS)
-      if (layer.CRS && layer.CRS.indexOf("EPSG:2154")>=0) srs = "EPSG:2154";
-      else if (layer.CRS && layer.CRS.indexOf("EPSG:4326")>=0) srs = "EPSG:4326";
-      else console.log("ERROR "+srs);
-    }
-  }
-  var bbox, bb = layer.BoundingBox;
-  if (bb) {
-    for (i = 0; i < bb.length; i++) {
-      // On reconstruit les extent pour avoir la bonne etendue
-      var ext = bb[i].extent;
-      var extent = [ext[1], ext[0], ext[3], ext[2]];
-      // le formatage des extent n'est pas standard, donc on gere differents cas
-      if (/4326/.test(bb[i].crs) || /CRS:84/.test(bb[i].crs)) {
-        if (bb[i].extent[0] > 100) bbox = extent;
-        else {
-          if (ext[1] < 0) {
-            bbox = ol.proj.transformExtent(extent, bb[i].crs, 'EPSG:3857');
-          } else {
-            bbox = ol.proj.transformExtent(ext, bb[i].crs, 'EPSG:3857');
-          }
-          var world = ol.proj.get("EPSG:3857").getExtent();
-          for (var p=0; p<4; p++) {
-            if (!bbox[p]) bbox[p] = world[p];
-          }
-        }
-        break;
-      }
-      if (/3857/.test(bb[i].crs)) {
-        bbox = ext;
-        break;
-      }
-    }
-  }
-  function getresolution(m, layer, val) {
-    var att;
-    if (m=="min") att = "MinScaleDenominator";
-    else att = "MaxScaleDenominator";
-    if (typeof (layer[att]) != "undefined") return layer[att]/(72/2.54*100);
-    if (!layer.Layer) return (m=="min" ? 0 : 156543.03392804097);
-    // Get min / max of contained layers
-    val = (m=="min" ? 156543.03392804097 : 0);
-    for (var i=0; i<layer.Layer.length; i++) {
-      var res = getresolution(m, layer.Layer[i], val);
-      if (typeof(res) != "undefined") val = Math[m](val, res);
-    }
-    return val;
-  }
-  function getattribution(layer) {
-    if (layer.Attribution) {
-      return "<a href='"+layer.Attribution.OnlineResource+"'>&copy; "+layer.Attribution.Title+'</a>';
-    }
-    if (layer.Layer) {
-      for (var i=0; i<layer.Layer.length; i++) {
-        var attrib = getattribution(layer.Layer[i]);
-        if (attrib) return attrib;
-      }
-    }
-    return null;
-  }
-  var originator;
-  if (layer.Attribution) {
-    originator = {};
-    originator[layer.Attribution.Title] = {
-      attribution: layer.Attribution.Title,
-      constraint: [],
-      href: layer.Attribution.OnlineResource,
-      logo: layer.Attribution.LogoURL ? layer.Attribution.LogoURL.OnlineResource : null
-    }
-  }
-  var layer_opt = {
-    title: options.title || layer.Title,
-    extent: bbox,
-    minResolution: getresolution("min",layer),
-    maxResolution: getresolution("max",layer)
-  };
-  if (layer_opt.maxResolution==0) layer_opt.maxResolution = 156543.03392804097;
-  var attr_opt = 	{ html:getattribution(layer) };
-  var source_opt = {
-    url: layer.url,
-    projection: srs,
-    crossOrigin: options.cors ? 'anonymous':null,
-    params: {
-      'LAYERS': layer.Name,
-      'FORMAT': format,
-//			'EXCEPTIONS': 'application/vnd.ogc.se_xml', // 'application/vnd.ogc.se_inimage' 'application/vnd.ogc.se_blank'
-      'VERSION': layer.version || "1.3.0"
-    }
-  }
-  // Set map if exists
-  if (layer.map) source_opt.params.MAP = layer.map;
-  // Trace
-  if (this.trace) {
-    if (attr_opt.html) source_opt.attributions = [	"new ol.Attribution("+JSON.stringify(attr_opt).replace(/\\"/g,'"')+")" ];
-    var tso = JSON.stringify([ source_opt ], null, "\t").replace(/\\"/g,'"');
-    layer_opt.source = "new ol.source.TileWMS("+tso+")";
-    var t = "new ol.layer.Tile (" +JSON.stringify(layer_opt, null, "\t")+ ")" 
-    t = t.replace(/\\"/g,'"')
-      .replace(/"new/g,'new')
-      .replace(/\)"/g,')')
-      .replace(/\\t/g,"\t").replace(/\\n/g,"\n")
-      .replace("([\n\t","(")
-      .replace("}\n])","})");
-    console.log(t);
-  }
-  // Legend
-  var legend = [];
-  for (i in layer.Style) if (layer.Style[i].LegendURL) {
-    legend.push(layer.Style[i].LegendURL[0].OnlineResource);
-  }
-  return { 
-    layer: layer_opt, 
-    source: source_opt, 
-    attribution: attr_opt, 
-    originator: originator, 
-    legend: legend 
-  };
-};
-/** Return a WMS ol.layer.Tile for the given options
- * @param {} options
- * @static
- * /
-ol.control.WMSCapabilities.getLayer = function(options) {
-  var opt = $.extend(true, {}, options);
-  // Create layer
-  if (opt.attribution.html) opt.source.attributions = [ 
-    opt.attribution.html 
-  ];
-  opt.layer.source = new ol.source.TileWMS(opt.source);
-  var wms = new ol.layer.Tile (opt.layer);
-  wms._originators = opt.originator;
-  // Save WMS options
-  // wms.WMSParams = options;
-  wms.set('wmsparam', options);
-  return wms;
-}
-/** Return a WMS ol.layer.Tile for the given capabilities
- * @param {} layer layer capabilities (read from the capabilities)
- * @param {} options 
- * /
-ol.control.WMSCapabilities.prototype.getLayerFromCap = function(layer, options) {
-  var opt = this.getOptionsFromCap(layer, options);
-  return WMSCapabilities.getLayer(opt);
-}
-/** Gets all layers for a server
- * @param {string} url service url
- * @param {function} callback function called with a list of layers 
-* /
-ol.control.WMSCapabilities.prototype.getLayers = function(url, callback) {
-  var self = this;
-  this.get(url, function(layers) {
-    if (layers) for (var i=0; i<layers.length; i++) {
-      layers[i] = self.getLayerFromCap(layers[i]);
-    }
-    if (callback) callback (layers);
-  });
-};
-/**/
-
 /*
   Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL license (http://www.cecill.info/).
@@ -27457,10 +27156,306 @@ ol.style.FillPattern.prototype.getChecksum = function()
  * @param {Object} options
  *  @param {boolean} options.visible draw only the visible part of the line, default true
  *  @param {number|function} options.width Stroke width or a function that gets a feature and the position (beetween [0,1]) and returns current width
- *  @param {number} options.width2 Final stroke width (if width is not a function)
+ *  @param {number} options.width2 Final stroke width
  *  @param {number} options.arrow Arrow at start (-1), at end (1), at both (2), none (0), default geta
  *  @param {ol.colorLike|function} options.color Stroke color or a function that gets a feature and the position (beetween [0,1]) and returns current color
  *  @param {ol.colorLike} options.color2 Final sroke color
+ */
+ol.style.FlowLine = function(options) {
+  if (!options) options = {};
+  ol.style.Style.call (this, { 
+    renderer: this._render.bind(this),
+    geometry: options.geometry
+  });
+  // Draw only visible
+  this._visible = (options.visible !== false);
+  // Width
+  if (typeof options.width === 'function') {
+    this._widthFn = options.width;
+  } else {
+    this.setWidth(options.width);
+  }
+  this.setWidth2(options.width2);
+  // Color
+  if (typeof options.color === 'function') {
+    this._colorFn = options.color;
+  } else {
+    this.setColor(options.color);
+  }
+  this.setColor2(options.color2);
+  // LineCap
+  this.setLineCap(options.lineCap);
+  // 
+  this.setArrow(options.arrow);
+};
+ol.ext.inherits(ol.style.FlowLine, ol.style.Style);
+/** Set the initial width
+ * @param {number} width width, default 0
+ */
+ol.style.FlowLine.prototype.setWidth = function(width) {
+  this._width = width || 0;
+};
+/** Set the final width
+ * @param {number} width width, default 0
+ */
+ol.style.FlowLine.prototype.setWidth2 = function(width) {
+  this._width2 = width;
+};
+/** Set the LineCap
+ * @param {steing} cap LineCap (round or butt), default butt
+ */
+ol.style.FlowLine.prototype.setLineCap = function(cap) {
+  this._lineCap = (cap==='round' ? 'round' : 'butt');
+};
+/** Get the current width at step
+ * @param {ol.feature} feature
+ * @param {number} step current drawing step beetween [0,1] 
+ * @return {number} 
+ */
+ol.style.FlowLine.prototype.getWidth = function(feature, step) {
+  if (this._widthFn) return this._widthFn(feature, step);
+  var w2 = (typeof(this._width2) === 'number') ? this._width2 : this._width;
+  return this._width + (w2-this._width) * step;
+};
+/** Set the initial color
+ * @param {ol.colorLike} color
+ */
+ol.style.FlowLine.prototype.setColor = function(color) {
+  try{
+    this._color = ol.color.asArray(color);
+  } catch(e) {
+    this._color = [0,0,0,1];
+  }
+};
+/** Set the final color
+ * @param {ol.colorLike} color
+ */
+ol.style.FlowLine.prototype.setColor2 = function(color) {
+  try {
+    this._color2 = ol.color.asArray(color);
+  } catch(e) {
+    this._color2 = null;    
+  }
+};
+/** Get the current color at step
+ * @param {ol.feature} feature
+ * @param {number} step current drawing step beetween [0,1] 
+ * @return {string} 
+ */
+ol.style.FlowLine.prototype.getColor = function(feature, step) {
+  if (this._colorFn) return ol.color.asString(this._colorFn(feature, step));
+  var color = this._color;
+  var color2 = this._color2 || this._color
+  return 'rgba('+
+          + Math.round(color[0] + (color2[0]-color[0]) * step) +','
+          + Math.round(color[1] + (color2[1]-color[1]) * step) +','
+          + Math.round(color[2] + (color2[2]-color[2]) * step) +','
+          + (color[3] + (color2[3]-color[3]) * step)
+          +')';
+};
+/** Get arrow
+ */
+ol.style.FlowLine.prototype.getArrow = function() {
+  return this._arrow;
+};
+/** Set arrow
+ * @param {number} n -1 | 0 | 1 | 2, default: 0
+ */
+ol.style.FlowLine.prototype.setArrow = function(n) {
+  this._arrow = parseInt(n);
+  if (this._arrow < -1 || this._arrow > 2) this._arrow = 0;
+}
+/** Renderer function
+ * @param {Array<ol.coordinate>} geom The pixel coordinates of the geometry in GeoJSON notation
+ * @param {ol.render.State} e The olx.render.State of the layer renderer
+ */
+ol.style.FlowLine.prototype._render = function(geom, e) {
+  if (e.geometry.getType()==='LineString') {
+    var i, g, p, ctx = e.context;
+    // Get geometry used at drawing
+    if (!this._visible) {
+      var a = e.pixelRatio / e.resolution;
+      g = e.geometry.getCoordinates();
+      var dx = geom[0][0] - g[0][0] * a;
+      var dy = geom[0][1] + g[0][1] * a;
+      geom = [];
+      for (i=0; p=g[i]; i++) {
+        geom[i] = [ dx + p[0] * a, dy - p[1] * a];
+      }
+    }
+    // Split into
+    var geoms = this._splitInto(geom, 255, 2);
+    var k = 0;
+    var nb = geoms.length;
+    var drawArrow = function (p0, p1, width) {
+      ctx.beginPath();
+      ctx.moveTo(p0[0],p0[1]);
+      var l = ol.coordinate.dist2d(p0, p1);
+      var dx = (p0[0]-p1[0])/l;
+      var dy = (p0[1]-p1[1])/l;
+      width = Math.max(8, width/2);
+      ctx.lineTo(p0[0]-16*dx+width*dy, p0[1]-16*dy-width*dx);
+      ctx.lineTo(p0[0]-16*dx-width*dy, p0[1]-16*dy+width*dx);
+      ctx.lineTo(p0[0],p0[1]);
+      ctx.fill();
+    }
+    var getLength = function(g) {
+      var length = 0;
+      p = g[0];
+      for (i=1; i<g.length; i++) {
+        length += ol.coordinate.dist2d(p,g[i]);
+        p = g[i];
+      }
+      return length;
+    }
+    // Calculate arrow length
+    var length0, length1;
+    if (this.getArrow()) {
+      length0 = 16 / getLength(geoms[0]);
+      if (length0<1) {
+        length0 = 1;
+        var p0 = geoms[0][0];
+        var p1 = geoms[0][1];
+        var l = 16 / ol.coordinate.dist2d(p0,p1);
+        var pi = [p0[0]+ (p1[0]-p0[0])*l, p0[1]+ (p1[1]-p0[1])*l];
+        geoms[0][0] = pi;
+        geoms.unshift([p0, pi]);
+      }
+      length1 = 16 / getLength(geoms[geoms.length-1]);
+      console.log(getLength(geoms[0]), getLength(geoms[geoms.length-1]), getLength(geoms[geoms.length-2]))
+      if (length1<1) {
+        console.log(length1)
+        length1 = 1;
+        var g = geoms[geoms.length-1];
+        p0 = g[g.length-1];
+        p1 = g[g.length-2];
+        l = 16 / ol.coordinate.dist2d(p0,p1);
+        pi = [p0[0]+ (p1[0]-p0[0])*l, p0[1]+ (p1[1]-p0[1])*l];
+        g[g.length-1] = pi;
+        geoms.push([pi, p0]);
+      }
+    }
+    switch (this.getArrow()) {
+      case -1: {
+        length0 = Math.round(length0);
+        length1 = 0;
+        break;
+      }
+      case 1: {
+        length0 = 0;
+        length1 = Math.round(length1);
+        break;
+      }
+      case 2: {
+        length0 = Math.round(length0);
+        length1 = Math.round(length1);
+        break;
+      }
+      default: {
+        length0 = length1 = 0;
+        break;
+      }
+    }
+    console.log(length0, length1)
+    // Draw
+    ctx.save();
+      ctx.lineJoin = 'round';
+      ctx.lineCap = this._lineCap || 'butt';
+      if ((length0 && geoms[length0]) || (length1 && geoms[length1])) {
+        ctx.lineCap = 'butt';
+        if (length0) {
+          ctx.fillStyle = this.getColor(e.feature, 0);
+          drawArrow(geoms[0][0], geoms[length0][0], this.getWidth(e.feature, 0) * e.pixelRatio);
+        }
+        if (length1) {
+          ctx.fillStyle = this.getColor(e.feature, 1);
+          var g0 = geoms[geoms.length-1];
+          var g1 = geoms[geoms.length-1-length1];
+          drawArrow(g0[g0.length-1], g1[g0.length-1], this.getWidth(e.feature, 1) * e.pixelRatio);
+        }
+      }
+      for (k=length0; k<geoms.length-length1-1; k++) {
+        var step = k/nb;
+        g = geoms[k];
+        ctx.lineWidth = this.getWidth(e.feature, step) * e.pixelRatio;
+        ctx.strokeStyle = this.getColor(e.feature, step);
+        ctx.beginPath();
+        ctx.moveTo(g[0][0],g[0][1]);
+        for (i=1; p=g[i]; i++) {
+          ctx.lineTo(p[0],p[1]);
+          ctx.stroke();
+        }
+      }
+    ctx.restore();
+  }
+};
+/** Split line geometry into equal length geometries
+ * @param {Array<ol.coordinate>} geom
+ * @param {number} nb number of resulting geometries, default 255
+ * @param {number} nim minimum length of the resulting geometries, default 1
+ */
+ol.style.FlowLine.prototype._splitInto = function(geom, nb, min) {
+  var i, p;
+  // Split geom into equal length geoms
+  var geoms = [];
+  var dl, l = 0;
+  for (i=1; p=geom[i]; i++) {
+    l += ol.coordinate.dist2d(geom[i-1], p);
+  }
+  var length = Math.max (min||2, l/(nb||255));
+  var p0 = geom[0];
+  l = 0;
+  var g = [p0];
+  i = 1;
+  p = geom[1];
+  while (i < geom.length) {
+    var dx = p[0]-p0[0];
+    var dy = p[1]-p0[1];
+    dl = Math.sqrt(dx*dx + dy*dy);
+    if (l+dl > length) {
+      var d = (length-l) / dl;
+      g.push([ 
+        p0[0] + dx * d,  
+        p0[1] + dy * d 
+      ]);
+      geoms.push(g);
+      p0 =[ 
+        p0[0] + dx * d*.9,  
+        p0[1] + dy * d*.9
+      ];
+      g = [p0];
+      l = 0;
+    } else {
+      l += dl;
+      p0 = p;
+      g.push(p0);
+      i++;
+      p = geom[i];
+    }
+  }
+  geoms.push(g);
+  return geoms;
+}
+
+/*	Copyright (c) 2019 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Flow line style
+ * Draw LineString with a variable color / width
+ * NB: the FlowLine style doesn't impress the hit-detection.
+ * If you want your lines to be sectionable you have to add your own style to handle this.
+ * (with transparent line: stroke color opacity to .1 or zero width)
+ * @extends {ol.style.Style}
+ * @constructor
+ * @param {Object} options
+ *  @param {boolean} options.visible draw only the visible part of the line, default true
+ *  @param {number|function} options.width Stroke width or a function that gets a feature and the position (beetween [0,1]) and returns current width
+ *  @param {number} options.width2 Final stroke width (if width is not a function)
+ *  @param {number} options.arrow Arrow at start (-1), at end (1), at both (2), none (0), default geta
+ *  @param {ol.colorLike|function} options.color Stroke color or a function that gets a feature and the position (beetween [0,1]) and returns current color
+ *  @param {ol.colorLike} options.color2 Final sroke color if color is nor a function
+ *  @param {ol.colorLike} options.arrowColor Color of arrows, if not defined used color or color2
  *  @param {string} options.lineCap CanvasRenderingContext2D.lineCap 'butt' | 'round' | 'square', default 'butt'
  *  @param {number|ol.size} options.arrowSize height and width of the arrow, default 16
  *  @param {number} options.offset0 offset at line start
@@ -27493,6 +27488,7 @@ ol.style.FlowLine = function(options) {
   // Arrow
   this.setArrow(options.arrow);
   this.setArrowSize(options.arrowSize);
+  this.setArrowColor(options.arrowColor);
   // Offset
   this._offset = [0,0];
   this.setOffset(options.offset0, 0);
@@ -27571,6 +27567,16 @@ ol.style.FlowLine.prototype.setColor2 = function(color) {
     this._color2 = null;    
   }
 };
+/** Set the arrow color
+ * @param {ol.colorLike} color
+ */
+ol.style.FlowLine.prototype.setArrowColor = function(color) {
+  try {
+    this._acolor = ol.color.asString(color);
+  } catch(e) {
+    this._acolor = null;    
+  }
+};
 /** Get the current color at step
  * @param {ol.feature} feature
  * @param {number} step current drawing step beetween [0,1] 
@@ -27617,14 +27623,15 @@ ol.style.FlowLine.prototype.setArrowSize = function(size) {
  * @param {ol.coordinate} p0 
  * @param ol.coordinate} p1 
  * @param {number} width 
+ * @param {number} ratio pixelratio
  * @private
  */
-ol.style.FlowLine.prototype.drawArrow = function (ctx, p0, p1, width) {
-  var asize = this.getArrowSize()[0];
+ol.style.FlowLine.prototype.drawArrow = function (ctx, p0, p1, width, ratio) {
+  var asize = this.getArrowSize()[0] * ratio;
   var l = ol.coordinate.dist2d(p0, p1);
   var dx = (p0[0]-p1[0])/l;
   var dy = (p0[1]-p1[1])/l;
-  var width = Math.max(this.getArrowSize()[1]/2, width/2);
+  var width = Math.max(this.getArrowSize()[1]/2, width/2) * ratio;
   ctx.beginPath();
   ctx.moveTo(p0[0],p0[1]);
   ctx.lineTo(p0[0]-asize*dx+width*dy, p0[1]-asize*dy-width*dx);
@@ -27650,22 +27657,24 @@ ol.style.FlowLine.prototype._render = function(geom, e) {
         geom[i] = [ dx + p[0] * a, dy - p[1] * a];
       }
     }
-    var asize = this.getArrowSize()[0];
+    var asize = this.getArrowSize()[0] * e.pixelRatio;
     ctx.save();
       // Offsets
-      if (this.getOffset(0)) this._splitAsize(geom, this.getOffset(0))
-      if (this.getOffset(1)) this._splitAsize(geom, this.getOffset(1), true)
+      if (this.getOffset(0)) this._splitAsize(geom, this.getOffset(0) * e.pixelRatio)
+      if (this.getOffset(1)) this._splitAsize(geom, this.getOffset(1) * e.pixelRatio, true)
       // Arrow 1
       if (geom.length>1 && (this.getArrow()===-1 || this.getArrow()===2)) {
         var p = this._splitAsize(geom, asize);
-        ctx.fillStyle = this.getColor(e.feature, 0);
-        this.drawArrow(ctx, p[0], p[1], this.getWidth(e.feature, 0) * e.pixelRatio);
+        if (this._acolor) ctx.fillStyle = this._acolor;
+        else ctx.fillStyle = this.getColor(e.feature, 0);
+        this.drawArrow(ctx, p[0], p[1], this.getWidth(e.feature, 0), e.pixelRatio);
       }
       // Arrow 2 
       if (geom.length>1 && this.getArrow()>0) {
-        var p = this._splitAsize(geom, asize, true)
-        ctx.fillStyle = this.getColor(e.feature, 1);
-        this.drawArrow(ctx, p[0], p[1], this.getWidth(e.feature, 1) * e.pixelRatio);
+        var p = this._splitAsize(geom, asize, true);
+        if (this._acolor) ctx.fillStyle = this._acolor;
+        else ctx.fillStyle = this.getColor(e.feature, 1);
+        this.drawArrow(ctx, p[0], p[1], this.getWidth(e.feature, 1), e.pixelRatio);
       }
       // Split into
       var geoms = this._splitInto(geom, 255, 2);
@@ -27691,7 +27700,7 @@ ol.style.FlowLine.prototype._render = function(geom, e) {
     ctx.restore();
   }
 };
-/** Split extremity
+/** Split extremity at
  * @param {ol.geom.LineString} geom
  * @param {number} asize
  * @param {boolean} end start=false or end=true, default false (start)
@@ -27707,20 +27716,23 @@ ol.style.FlowLine.prototype._splitAsize = function(geom, asize, end) {
     else p1 = geom.shift();
     dl = ol.coordinate.dist2d(p,p1);
     if (d+dl > asize) {
-      p = [p[0]+(p1[0]-p[0])*asize/dl, p[1]+(p1[1]-p[1])*asize/dl];
+      p = [p[0]+(p1[0]-p[0])*(asize-d)/dl, p[1]+(p1[1]-p[1])*(asize-d)/dl];
+      dl = ol.coordinate.dist2d(p,p0);
       if (end) {
         geom.push(p1);
         geom.push(p);
+        geom.push([p[0]+(p0[0]-p[0])/dl, p[1]+(p0[1]-p[1])/dl]);
       } else {
         geom.unshift(p1);
         geom.unshift(p);
+        geom.unshift([p[0]+(p0[0]-p[0])/dl, p[1]+(p0[1]-p[1])/dl]);
       }
       break;
     }
     d += dl;
     p = p1;
   }
-  return [p0,p1];
+  return [p0,p];
 };
 /** Split line geometry into equal length geometries
  * @param {Array<ol.coordinate>} geom
