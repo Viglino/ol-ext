@@ -35,6 +35,9 @@ var ol_style_FlowLine = function(options) {
   
   ol_style_Style.call (this, { 
     renderer: this._render.bind(this),
+    stroke: options.stroke,
+    text: options.text,
+    zIndex: options.zIndex,
     geometry: options.geometry
   });
 
@@ -218,7 +221,7 @@ ol_style_FlowLine.prototype.drawArrow = function (ctx, p0, p1, width, ratio) {
   var l = ol_coordinate_dist2d(p0, p1);
   var dx = (p0[0]-p1[0])/l;
   var dy = (p0[1]-p1[1])/l;
-  var width = Math.max(this.getArrowSize()[1]/2, width/2) * ratio;
+  width = Math.max(this.getArrowSize()[1]/2, width/2) * ratio;
   ctx.beginPath();
   ctx.moveTo(p0[0],p0[1]);
   ctx.lineTo(p0[0]-asize*dx+width*dy, p0[1]-asize*dy-width*dx);
@@ -254,14 +257,14 @@ ol_style_FlowLine.prototype._render = function(geom, e) {
       if (this.getOffset(1)) this._splitAsize(geom, this.getOffset(1) * e.pixelRatio, true)
       // Arrow 1
       if (geom.length>1 && (this.getArrow()===-1 || this.getArrow()===2)) {
-        var p = this._splitAsize(geom, asize);
+        p = this._splitAsize(geom, asize);
         if (this._acolor) ctx.fillStyle = this._acolor;
         else ctx.fillStyle = this.getColor(e.feature, 0);
         this.drawArrow(ctx, p[0], p[1], this.getWidth(e.feature, 0), e.pixelRatio);
       }
       // Arrow 2 
       if (geom.length>1 && this.getArrow()>0) {
-        var p = this._splitAsize(geom, asize, true);
+        p = this._splitAsize(geom, asize, true);
         if (this._acolor) ctx.fillStyle = this._acolor;
         else ctx.fillStyle = this.getColor(e.feature, 1);
         this.drawArrow(ctx, p[0], p[1], this.getWidth(e.feature, 1), e.pixelRatio);

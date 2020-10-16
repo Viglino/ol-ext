@@ -95,7 +95,12 @@
       </li>
       <li>
         <label>Offset:</label>
-        <input class="offset" value="10" type="number" step=1 onchange="vector.changed();" />
+        <input class="offset" value="10" type="number" step=1 onchange="vector.changed();" />px
+      </li>
+      <li>
+        <label>
+          <input type="checkbox" id="curve" onchange="vector.changed();" /> Curve lines
+        </label>
       </li>
 		</ul>
   </div>
@@ -118,16 +123,17 @@
     layers: [layer]
   });
   // GeoJSON layer
-  var dep = new ol.layer.Vector ({ source: new ol.source.Vector({
+  var dep = new ol.layer.VectorImage ({ source: new ol.source.Vector({
       url: '../data/departements.geojson',
       format: new ol.format.GeoJSON(),
       attributions: [ "&copy; <a href='https://www.insee.fr'>INSEE</a>", "&copy; <a href='https://www.data.gouv.fr/fr/datasets/geofla-r/'>IGN</a>" ],
     })
   });
   map.addLayer(dep);
-  
-  // Event handlers when source is ready
+
+  // Read Data
   var flowData = {};
+  // Event handlers when source is ready
 	var listener = dep.getSource().on('change',function(e) {
     ol.Observable.unByKey(listener)
     if (dep.getSource().getState() === 'ready') {
@@ -179,6 +185,27 @@
   var defaultStyle = new ol.style.Style({
     stroke: new ol.style.Stroke({ color: [255, 255, 255, .1], width: 2.5 })
   });
+
+  // Get geom
+  function getGeom(f) {
+    if ($('#curve').prop('checked')) {
+      var l = f.getGeometry().getCoordinates();
+      var pi0, pi1, p1 = l.pop();
+      var p0 = l[0];
+      var r = map.getView().getResolution();
+      l.push([
+        p0[0] + 8*(p1[0]-p0[0]) / 10, 
+        p1[1] + (p1[1]-p0[1] < -30*r ? 3*Math.abs(p1[1]-p0[1])/4 : 40*r)
+      ]);
+      l.push(p1);
+      var sp = ol.coordinate.cspline(l, {resolution: 500})
+      return (new ol.geom.LineString(sp));
+      //return f.getGeometry();
+    } else {
+      return f.getGeometry();
+    }
+  }
+
   // Flow style
   var done = false;
   function getStyle(feature, res) {
@@ -188,7 +215,9 @@
       width: 2,
       width2: feature.get('flow'),
       offset0: parseInt($('.offset').val()),
-      arrow: 1
+      arrow: 1,
+      geometry: getGeom,
+      zIndex: -(feature.getGeometry().getLastCoordinate()[1])
     });
     return [ defaultStyle, flowStyle ];
   }
@@ -219,9 +248,10 @@
     var f = e.selected[0];
     vector.getSource().clear();
     if (f) {
-      var dep = flowData[f.get('id')]
+      var id = f.get('id');
+      var dep = flowData[id]
       dep.data.forEach(function(d) {
-        if (d.flow > 300) {
+        if (d.flow > 300 && d.dep !== id) {
           var l = new ol.Feature(new ol.geom.LineString([dep.xy, d.xy]))
           l.set('flow', Math.max(2, Math.min(30, d.flow/300)));
           l.set('flux', d.flow.toLocaleString());

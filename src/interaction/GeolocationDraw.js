@@ -16,7 +16,7 @@ import ol_source_Vector from 'ol/source/Vector'
 import ol_Feature from 'ol/Feature'
 import ol_interaction_Pointer from 'ol/interaction/Pointer'
 import {containsCoordinate as ol_extent_containsCoordinate, containsExtent as ol_extent_containsExtent} from 'ol/extent'
-import {ol_coordinate_dist2d, ol_coordinate_equal} from '../geom/GeomUtils'
+// import {ol_coordinate_dist2d, ol_coordinate_equal} from '../geom/GeomUtils'
 import {transform as ol_proj_transform} from 'ol/proj'
 import {getDistance as ol_spehre_getDistance} from 'ol/sphere'
 
