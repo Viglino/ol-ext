@@ -42,6 +42,8 @@
   transition: top .2s, transform .2s;
   padding: 1em;
   box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 .ol-ext-dialog > form.ol-closebox {
   padding-top: 1.5em;

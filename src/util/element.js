@@ -37,7 +37,7 @@ ol_ext_element.create = function (tagName, options) {
           break;
         }
         case 'parent': {
-          options.parent.appendChild(elt);
+          if (options.parent) options.parent.appendChild(elt);
           break;
         }
         case 'style': {

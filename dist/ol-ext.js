@@ -217,7 +217,7 @@ ol.ext.element.create = function (tagName, options) {
           break;
         }
         case 'parent': {
-          options.parent.appendChild(elt);
+          if (options.parent) options.parent.appendChild(elt);
           break;
         }
         case 'style': {
@@ -3625,6 +3625,7 @@ ol.control.Compass.prototype._draw = function(e) {
  *  @param {boolean} options.zoom add a zoom effect
  *  @param {boolean} options.closeBox add a close button
  *  @param {boolean} options.hideOnClick close dialog when click the background
+ *  @param {boolean} options.noSubmit Prevent closing the dialog on submit
  */
 ol.control.Dialog = function(options) {
   options = options || {};
@@ -3670,6 +3671,7 @@ ol.control.Dialog = function(options) {
   this.set('zoom', options.zoom);
   this.set('hideOnClick', options.hideOnClick);
   this.set('className', options.className);
+  this.set('onSubmit', options.onSubmit);
 };
 ol.ext.inherits(ol.control.Dialog, ol.control.Control);
 /** Show a new dialog 
@@ -3707,6 +3709,7 @@ ol.control.Dialog.prototype.setContent = function(options) {
     this.element.classList.add(this.get('className'));
   }
   var form = this.element.querySelector('form');
+  if (options.content instanceof Element) ol.ext.element.setHTML(form.querySelector('.ol-content'), '');
   ol.ext.element.setHTML(form.querySelector('.ol-content'), options.content || '');
   // Title
   form.querySelector('h2').innerText = options.title || '';
@@ -3742,9 +3745,10 @@ ol.control.Dialog.prototype.setContent = function(options) {
  * @private
  */
 ol.control.Dialog.prototype._onButton = function(button) {
+  // Dispatch a button event
   var fn = function(e) {
     e.preventDefault();
-    this.hide();
+    if (button!=='submit' || this.get('onSubmit')!==false) this.hide();
     var inputs = {};
     this.element.querySelectorAll('form input').forEach (function(input) {
       if (input.className) inputs[input.className] = input;
@@ -11274,6 +11278,574 @@ ol.control.Toggle.prototype.setInteraction = function(i) {
 ol.control.Toggle.prototype.getInteraction = function() {
   return this.interaction_;
 };
+
+/* 
+  WMS Layer with EPSG:4326 projection.
+  The tiles will be reprojected to map pojection (EPSG:3857).
+  NB: reduce tileSize to minimize deformations on small scales.
+*/
+/** WMSCapabilities
+ * @constructor
+ * @param {*} options
+ *  @param {string} options.proxy proxy to use when requesting Getcapabilites, default none (suppose the service use CORS)
+ *  @param {string} options.placeholder input placeholder
+ *  @param {string} options.srs the layer SRS code, default map projection code or 'EPSG:3857'
+ *  @param {number} options.timeout Timeout for getCapabilities request, default 1000
+ *  @param {boolean} options.cors Use CORS, default false
+ *  @param {boolean} options.trace Log layer info, default false
+ */
+ol.control.WMSCapabilities = function (options) {
+  options = Object.assign({}, options || {});
+  this._proxy = options.proxy;
+  this.createDialog(options);
+  if (options.target===document.body) delete options.target;
+  if (options.target) {
+    options.className = ((options.className||'') + ' ol-wmscapabilities ol-hidden').trim();
+    delete options.target;
+  } else {
+    options.className = ((options.className||'') + ' ol-wmscapabilities').trim();
+    options.handleClick = function() {
+      this.showError();
+      this._dialog.show(this._elements.element);
+    }.bind(this);
+  }
+  console.log('options', options)
+  ol.control.Button.call(this, options);
+  // WMS options
+  this.set('srs', options.srs);
+  this.set('cors', options.cors);
+  this.set('trace', options.trace);
+  // Ajax request
+  var parser = new ol.format.WMSCapabilities();
+  this._ajax = new ol.ext.Ajax({ dataType:'text', auth: options.authentication });
+  this._ajax.on('success', function (e) {
+    try {
+      var caps = parser.read(e.response);
+      this.showCapabilitis(caps)
+    } catch (e) {
+      this.showError({ type: 'parser', error: e });
+    }
+  }.bind(this));
+  this._ajax.on('error', function(e) {
+    this.showError({ type: 'load', error: e });
+  }.bind(this));
+  // Handle waiting
+  this._ajax.on('loadstart', function() {
+    this.element.classList.add('ol-searching');
+    this.clearForm();
+  }.bind(this));
+  this._ajax.on('loadend', function() {
+    this.element.classList.remove('ol-searching');
+  }.bind(this));
+};
+ol.ext.inherits(ol.control.WMSCapabilities, ol.control.Button);
+/** Create dialog
+ * @private
+ */
+ol.control.WMSCapabilities.prototype.createDialog = function (options) {
+  var target = options.target;
+  if (!target || target===document.body) {
+    this._dialog = new ol.control.Dialog({
+      className: 'ol-wmscapabilities',
+      closeBox: true,
+      onSubmit: false,
+      target: options.target
+    });
+    this._dialog.on('button', function(e) {
+      if (e.button==='submit') {
+        e.inputs.url.value
+      }
+    })
+    target = null;
+  }
+  var element = ol.ext.element.create('DIV', {
+    className: ('ol-wmscapabilities '+(options.className||'')).trim(),
+    parent: target
+  });
+  this._elements = {
+    element: element
+  };
+  var inputdiv = ol.ext.element.create('DIV', {
+    parent: element
+  });
+  var input = this._elements.input = ol.ext.element.create('INPUT', {
+    className: 'url',
+    placeholder: options.placeholder || 'service url...',
+    parent: inputdiv
+  });
+  ol.ext.element.create('BUTTON', {
+    click: function() {
+      this.getCapabilities(input.value, options);
+    }.bind(this),
+    html: options.loadLabel || 'search',
+    parent: inputdiv
+  });
+  // Errors
+  this._elements.error = ol.ext.element.create('DIV', {
+    className: 'ol-error',
+    parent: inputdiv
+  });
+  // Result div
+  var rdiv = this._elements.result = ol.ext.element.create('DIV', {
+    className: 'ol-result',
+    parent: element
+  });
+  // Preview
+  var preview = ol.ext.element.create('DIV', {
+    className: 'ol-preview',
+    html: options.previewLabel || 'preview',
+    parent: rdiv
+  });
+  this._elements.preview = ol.ext.element.create('IMG', {
+    parent: preview
+  });
+  // Select list
+  this._elements.select = ol.ext.element.create('UL', {
+    className: 'ol-select-list',
+    parent: rdiv
+  });
+  // Info data
+  this._elements.data = ol.ext.element.create('DIV', {
+    className: 'ol-data',
+    parent: rdiv
+  });
+  this._elements.buttons = ol.ext.element.create('DIV', {
+    className: 'ol-buttons',
+    parent: rdiv
+  });
+  this._elements.legend = ol.ext.element.create('IMG', {
+    className: 'ol-legend',
+    parent: rdiv
+  });
+  return element;
+};
+/**
+ * Set the map instance the control is associated with
+ * and add its controls associated to this map.
+ * @param {_ol_Map_} map The map instance.
+ */
+ol.control.WMSCapabilities.prototype.setMap = function (map) {
+  ol.control.Button.prototype.setMap.call(this, map);
+  if (this._dialog) this._dialog.setMap(map);
+  console.log(map)
+  if (map && map.getView() && !this.get('srs')) {
+    this.set('srs', map.getView().getProjection().getCode());
+  }
+};
+/** Get WMS capabilities for a server
+ * @param {string} url service url
+ * @param {*} options 
+ *  @param {string} options.version WMS version, default 1.3.0
+ *  @param {Number} options.timeout
+ *  @param {string} options.map WMS map
+ * @return {*} PromiseLike to handle response
+ */
+ol.control.WMSCapabilities.prototype.getCapabilities = function(url, options, success, error) {
+  this._elements.input.value = url;
+  options = options || {};
+  var request = {
+    SERVICE: 'WMS',
+    REQUEST: 'GetCapabilities',
+    VERSION: options.version || '1.3.0'
+  }
+  if (options.map) request.map = options.map;
+  if (this._proxy) {
+    var q = '';
+    for (var r in request) q += (q?'&':'')+r+'='+request[r];
+    this._ajax.send(this._proxy, {
+      url: q
+    }, {
+      timeout: options.timeout || 10000
+    });
+  } else {
+    this._ajax.send(url, request, {
+      timeout: options.timeout || 10000
+    });
+  }
+};
+ol.control.WMSCapabilities.prototype.error = {
+};
+/** Display error
+ * @param {*} error event
+ */
+ol.control.WMSCapabilities.prototype.showError = function(e) {
+  if (!e) this._elements.error.innerHTML = '';
+  else this._elements.error.innerHTML = this.error[e.type] || ('ERROR ('+e.type+')');
+  console.log(e);
+};
+/** Clear form
+ */
+ol.control.WMSCapabilities.prototype.clearForm = function() {
+  this._elements.result.classList.remove('ol-visible')
+  this._elements.error.innerHTML = '';
+  this._elements.select.innerHTML = '';
+  this._elements.data.innerHTML = '';
+  this._elements.preview.src = '';
+  this._elements.legend.src = '';
+};
+/** Display capabilities in the dialog
+ * @param {*} caps JSON capabilities
+ */
+ol.control.WMSCapabilities.prototype.showCapabilitis = function(caps) {
+  this._elements.result.classList.add('ol-visible')
+  console.log(caps)
+  var list = [];
+  var addLayers = function(parent, ul) {
+    parent.Layer.forEach(function(l) {
+      if (!l.Attribution) l.Attribution = parent.Attribution;
+      if (!l.EX_GeographicBoundingBox) l.EX_GeographicBoundingBox = parent.EX_GeographicBoundingBox;
+      var li = ol.ext.element.create('LI', {
+        className: l.Layer ? 'ol-title' : '',
+        html: l.Name,
+        click: function() {
+          // Load layer
+          var options = this.getOptionsFromCap(l, caps);
+          console.log(options)
+          options.layer.source = new ol.source.TileWMS(options.source);
+          var layer = new ol.layer.Tile(options.layer);
+          delete options.layer.source;
+          //
+          list.forEach(function(i) {
+            i.classList.remove('selected');
+          })
+          li.classList.add('selected');
+          this._elements.buttons.innerHTML = '';
+          ol.ext.element.create('BUTTON', {
+            html: 'Load',
+            click: function() {
+              this.dispatchEvent({type: 'load', layer: layer, options: options });
+              if (this._dialog) this._dialog.hide();
+            }.bind(this),
+            parent: this._elements.buttons
+          });
+          // Show preview
+          var c = this.getMap().getView().getCenter();
+          var r = this.getMap().getView().getResolution();
+          this._elements.preview.src = layer.getPreview(c, r);
+          // ShowInfo
+          this._elements.data.innerHTML = '';
+          ol.ext.element.create('p', {
+            className: 'ol-title',
+            html: options.data.title,
+            parent: this._elements.data
+          });
+          ol.ext.element.create('p', {
+            html: options.data.abstract,
+            parent: this._elements.data
+          });
+          if (options.data.legend.length) {
+            this._elements.legend.src = options.data.legend[0];
+          } else {
+            this._elements.legend.src = '';
+          }
+        }.bind(this),
+        parent: ul || this._elements.select
+      });
+      list.push(li);
+      if (l.Layer) {
+        var lu = ol.ext.element.create('UL', {
+          parent: ul || this._elements.select
+        });
+        addLayers(l, lu);
+      }
+    }.bind(this));
+  }.bind(this);
+  this._elements.select.innerHTML = '';
+  addLayers(caps.Capability.Layer);
+};
+/** Get resolution for a layer
+ * @param {string} 'min' or 'max'
+ * @param {*} layer
+ * @param {number} val
+ * @return {number}
+ * @private
+ */
+ol.control.WMSCapabilities.prototype.getLayerResolution = function(m, layer, val) {
+  var att = m==='min' ? 'MinScaleDenominator' : 'MaxScaleDenominator';
+  if (layer[att] !== undefined) return layer[att]/(72/2.54*100);
+  if (!layer.Layer) return (m==='min' ? 0 : 156543.03392804097);
+  // Get min / max of contained layers
+  val = (m==='min' ? 156543.03392804097 : 0);
+  for (var i=0; i<layer.Layer.length; i++) {
+    var res = this.getLayerResolution(m, layer.Layer[i], val);
+    if (res !== undefined) val = Math[m](val, res);
+  }
+  return val;
+};
+/** Return a WMS ol.layer.Tile for the given capabilities
+ * @param {*} caps layer capabilities (read from the capabilities)
+ * @return {*} parent capabilities
+ */
+ol.control.WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) {
+  var formats = parent.Capability.Request.GetMap.Format;
+  // Look for prefered format first
+  var pref =[/png/,/jpeg/,/gif/];
+  for (i=0; i<3; i++) {
+    for (var f=0; f<formats.length; f++) {
+      if (pref[i].test(formats[f])) {
+        format = formats[f];
+        break;
+      }
+    }
+    if (format) break;
+  }
+  if (!format) format = formats[0];  
+  // Check srs
+  var srs = this.get('srs') || 'EPSG:3857';
+  if (!caps.CRS || caps.CRS.indexOf(srs)<0) {
+    // try to set EPSG:4326 instead
+    if (caps.CRS && caps.CRS.indexOf("EPSG:4326")>=0) {
+      srs = "EPSG:4326";
+    } else  {
+      this.showError({ type:'srs' });
+    }
+  }
+  var bbox = caps.EX_GeographicBoundingBox;
+  bbox = ol.proj.transformExtent(bbox, 'EPSG:4326', srs);
+  var attributions = [];
+  if (caps.Attribution) {
+    attributions.push('<a href="'+encodeURI(caps.Attribution.OnlineResource)+'">&copy; '+caps.Attribution.Title.replace(/</g,'&lt;')+'</a>');
+  }
+  var layer_opt = {
+    title: caps.Title,
+    extent: bbox,
+    minResolution: this.getLayerResolution('min', caps),
+    maxResolution: this.getLayerResolution('max', caps) || 156543.03392804097
+  };
+  var source_opt = {
+    url: parent.Service.OnlineResource,
+    projection: srs,
+    attributions: attributions,
+    crossOrigin: this.get('cors') ? 'anonymous' : null,
+    params: {
+      'LAYERS': caps.Name,
+      'FORMAT': format,
+      'VERSION': parent.version || '1.3.0'
+    }
+  }
+  // Trace
+  if (this.get('trace')) {
+    var tso = JSON.stringify([ source_opt ], null, "\t").replace(/\\"/g,'"');
+    layer_opt.source = "new ol.source.TileWMS("+tso+")";
+    var t = "new ol.layer.Tile (" +JSON.stringify(layer_opt, null, "\t")+ ")" 
+    t = t.replace(/\\"/g,'"')
+      .replace(/"new/g,'new')
+      .replace(/\)"/g,')')
+      .replace(/\\t/g,"\t").replace(/\\n/g,"\n")
+      .replace("([\n\t","(")
+      .replace("}\n])","})");
+    console.log(t);
+    delete layer_opt.source;
+  }
+  // Legend ?
+  var legend = [];
+  caps.Style.forEach(function(s) {
+    if (s.LegendURL) {
+      legend.push(s.LegendURL[0].OnlineResource);
+    }
+  });
+  return ({ 
+    layer: layer_opt, 
+    source: source_opt,
+    data: {
+      title: caps.Title,
+      abstract: caps.Abstract,
+      logo: caps.Attribution && caps.Attribution.LogoURL ? caps.Attribution.LogoURL.OnlineResource : undefined,
+      keyword: caps.KeywordList,
+      legend: legend,
+      opaque: caps.opaque,
+      queryable: caps.queryable
+    } 
+  });
+};
+/*
+ol.control.WMSCapabilities.prototype.getOptionsFromCap = function(layer, options) {
+  var i;
+  if (!options) options={};
+  options = $.extend({
+    isBaseLayer: false,
+    minScale: layer.MinScaleDenominator,
+    maxScale: layer.MaxScaleDenominator,
+    attribution: layer.Attribution
+  }, options);
+  var format = false;
+  // Look for prefered format first
+  var pref =[/png/,/jpeg/,/gif/];
+  for (i=0; i<3; i++) {
+    for (var f=0; f<layer.Format.length; f++) {
+      if (pref[i].test(layer.Format[f])) {
+        format=layer.Format[f];
+        break;
+      }
+    }
+    if (format) break;
+  }
+  if (!format) format = layer.Format[0];
+  // Check srs
+  var srs = options.srs || 'EPSG:3857';
+//	var srserror = false;
+  if (!layer.CRS || layer.CRS.indexOf(srs)<0) {
+    //srserror = true;
+    if (window.proj4) {
+      //if (layer.CRS && layer.CRS.indexOf("EPSG:4326")>=0) srs = "EPSG:4326";
+//			console.log(layer.CRS)
+      if (layer.CRS && layer.CRS.indexOf("EPSG:2154")>=0) srs = "EPSG:2154";
+      else if (layer.CRS && layer.CRS.indexOf("EPSG:4326")>=0) srs = "EPSG:4326";
+      else console.log("ERROR "+srs);
+    }
+  }
+  var bbox, bb = layer.BoundingBox;
+  if (bb) {
+    for (i = 0; i < bb.length; i++) {
+      // On reconstruit les extent pour avoir la bonne etendue
+      var ext = bb[i].extent;
+      var extent = [ext[1], ext[0], ext[3], ext[2]];
+      // le formatage des extent n'est pas standard, donc on gere differents cas
+      if (/4326/.test(bb[i].crs) || /CRS:84/.test(bb[i].crs)) {
+        if (bb[i].extent[0] > 100) bbox = extent;
+        else {
+          if (ext[1] < 0) {
+            bbox = ol.proj.transformExtent(extent, bb[i].crs, 'EPSG:3857');
+          } else {
+            bbox = ol.proj.transformExtent(ext, bb[i].crs, 'EPSG:3857');
+          }
+          var world = ol.proj.get("EPSG:3857").getExtent();
+          for (var p=0; p<4; p++) {
+            if (!bbox[p]) bbox[p] = world[p];
+          }
+        }
+        break;
+      }
+      if (/3857/.test(bb[i].crs)) {
+        bbox = ext;
+        break;
+      }
+    }
+  }
+  function getresolution(m, layer, val) {
+    var att;
+    if (m=="min") att = "MinScaleDenominator";
+    else att = "MaxScaleDenominator";
+    if (typeof (layer[att]) != "undefined") return layer[att]/(72/2.54*100);
+    if (!layer.Layer) return (m=="min" ? 0 : 156543.03392804097);
+    // Get min / max of contained layers
+    val = (m=="min" ? 156543.03392804097 : 0);
+    for (var i=0; i<layer.Layer.length; i++) {
+      var res = getresolution(m, layer.Layer[i], val);
+      if (typeof(res) != "undefined") val = Math[m](val, res);
+    }
+    return val;
+  }
+  function getattribution(layer) {
+    if (layer.Attribution) {
+      return "<a href='"+layer.Attribution.OnlineResource+"'>&copy; "+layer.Attribution.Title+'</a>';
+    }
+    if (layer.Layer) {
+      for (var i=0; i<layer.Layer.length; i++) {
+        var attrib = getattribution(layer.Layer[i]);
+        if (attrib) return attrib;
+      }
+    }
+    return null;
+  }
+  var originator;
+  if (layer.Attribution) {
+    originator = {};
+    originator[layer.Attribution.Title] = {
+      attribution: layer.Attribution.Title,
+      constraint: [],
+      href: layer.Attribution.OnlineResource,
+      logo: layer.Attribution.LogoURL ? layer.Attribution.LogoURL.OnlineResource : null
+    }
+  }
+  var layer_opt = {
+    title: options.title || layer.Title,
+    extent: bbox,
+    minResolution: getresolution("min",layer),
+    maxResolution: getresolution("max",layer)
+  };
+  if (layer_opt.maxResolution==0) layer_opt.maxResolution = 156543.03392804097;
+  var attr_opt = 	{ html:getattribution(layer) };
+  var source_opt = {
+    url: layer.url,
+    projection: srs,
+    crossOrigin: options.cors ? 'anonymous':null,
+    params: {
+      'LAYERS': layer.Name,
+      'FORMAT': format,
+//			'EXCEPTIONS': 'application/vnd.ogc.se_xml', // 'application/vnd.ogc.se_inimage' 'application/vnd.ogc.se_blank'
+      'VERSION': layer.version || "1.3.0"
+    }
+  }
+  // Set map if exists
+  if (layer.map) source_opt.params.MAP = layer.map;
+  // Trace
+  if (this.trace) {
+    if (attr_opt.html) source_opt.attributions = [	"new ol.Attribution("+JSON.stringify(attr_opt).replace(/\\"/g,'"')+")" ];
+    var tso = JSON.stringify([ source_opt ], null, "\t").replace(/\\"/g,'"');
+    layer_opt.source = "new ol.source.TileWMS("+tso+")";
+    var t = "new ol.layer.Tile (" +JSON.stringify(layer_opt, null, "\t")+ ")" 
+    t = t.replace(/\\"/g,'"')
+      .replace(/"new/g,'new')
+      .replace(/\)"/g,')')
+      .replace(/\\t/g,"\t").replace(/\\n/g,"\n")
+      .replace("([\n\t","(")
+      .replace("}\n])","})");
+    console.log(t);
+  }
+  // Legend
+  var legend = [];
+  for (i in layer.Style) if (layer.Style[i].LegendURL) {
+    legend.push(layer.Style[i].LegendURL[0].OnlineResource);
+  }
+  return { 
+    layer: layer_opt, 
+    source: source_opt, 
+    attribution: attr_opt, 
+    originator: originator, 
+    legend: legend 
+  };
+};
+/** Return a WMS ol.layer.Tile for the given options
+ * @param {} options
+ * @static
+ * /
+ol.control.WMSCapabilities.getLayer = function(options) {
+  var opt = $.extend(true, {}, options);
+  // Create layer
+  if (opt.attribution.html) opt.source.attributions = [ 
+    opt.attribution.html 
+  ];
+  opt.layer.source = new ol.source.TileWMS(opt.source);
+  var wms = new ol.layer.Tile (opt.layer);
+  wms._originators = opt.originator;
+  // Save WMS options
+  // wms.WMSParams = options;
+  wms.set('wmsparam', options);
+  return wms;
+}
+/** Return a WMS ol.layer.Tile for the given capabilities
+ * @param {} layer layer capabilities (read from the capabilities)
+ * @param {} options 
+ * /
+ol.control.WMSCapabilities.prototype.getLayerFromCap = function(layer, options) {
+  var opt = this.getOptionsFromCap(layer, options);
+  return WMSCapabilities.getLayer(opt);
+}
+/** Gets all layers for a server
+ * @param {string} url service url
+ * @param {function} callback function called with a list of layers 
+* /
+ol.control.WMSCapabilities.prototype.getLayers = function(url, callback) {
+  var self = this;
+  this.get(url, function(layers) {
+    if (layers) for (var i=0; i<layers.length; i++) {
+      layers[i] = self.getLayerFromCap(layers[i]);
+    }
+    if (callback) callback (layers);
+  });
+};
+/**/
 
 /*
   Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -25692,130 +26264,6 @@ ol.Map.prototype.animExtent = function(extent, options)
 	this.renderSync();
 }
 
-/** Create a cardinal spline version of this geometry.
-*	Original https://github.com/epistemex/cardinal-spline-js
-*	@see https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Cardinal_spline
-*
-* @param {} options
-*	@param {Number} options.tension a [0,1] number / can be interpreted as the "length" of the tangent, default 0.5
-*	@param {Number} options.resolution size of segment to split
-*	@param {Interger} options.pointsPerSeg number of points per segment to add if no resolution is provided, default add 10 points per segment
-*/
-/** Cache cspline calculation
-*/
-ol.geom.Geometry.prototype.cspline = function(options)
-{	// Calculate cspline
-	if (this.calcCSpline_)
-	{	if (this.csplineGeometryRevision != this.getRevision() 
-			|| this.csplineOption != JSON.stringify(options))
-		{	this.csplineGeometry_ = this.calcCSpline_(options)
-			this.csplineGeometryRevision = this.getRevision();
-			this.csplineOption = JSON.stringify(options);
-		}
-		return this.csplineGeometry_;
-	}
-	// Default do nothing
-	else
-	{	return this;
-	}
-}
-ol.geom.GeometryCollection.prototype.calcCSpline_ = function(options)
-{	var g=[], g0=this.getGeometries();
-	for (var i=0; i<g0.length; i++)
-	{	g.push(g0[i].cspline(options));
-	}
-	return new ol.geom.GeometryCollection(g);
-}
-ol.geom.MultiLineString.prototype.calcCSpline_ = function(options)
-{	var g=[], lines = this.getLineStrings();
-	for (var i=0; i<lines.length; i++)
-	{	g.push(lines[i].cspline(options).getCoordinates());
-	}
-	return new ol.geom.MultiLineString(g);
-}
-ol.geom.Polygon.prototype.calcCSpline_ = function(options)
-{	var g=[], g0=this.getCoordinates();
-	for (var i=0; i<g0.length; i++)
-	{	g.push((new ol.geom.LineString(g0[i])).cspline(options).getCoordinates());
-	}
-	return new ol.geom.Polygon(g);
-}
-ol.geom.MultiPolygon.prototype.calcCSpline_ = function(options)
-{	var g=[], g0=this.getPolygons();
-	for (var i=0; i<g0.length; i++)
-	{	g.push(g0[i].cspline(options).getCoordinates());
-	}
-	return new ol.geom.MultiPolygon(g);
-}
-/**
-*/
-ol.geom.LineString.prototype.calcCSpline_ = function(options)
- {	if (!options) options={};
-	var line = this.getCoordinates();
-	var tension = typeof options.tension === "number" ? options.tension : 0.5;
-	var resolution = options.resolution || (this.getLength() / line.length / (options.pointsPerSeg || 10));
-	var pts, res = [],			// clone array
-		x, y,					// our x,y coords
-		t1x, t2x, t1y, t2y,		// tension vectors
-		c1, c2, c3, c4,			// cardinal points
-		st, t, i;				// steps based on num. of segments
-	// clone array so we don't change the original
-	//
-	pts = line.slice(0);
-	// The algorithm require a previous and next point to the actual point array.
-	// Check if we will draw closed or open curve.
-	// If closed, copy end points to beginning and first points to end
-	// If open, duplicate first points to befinning, end points to end
-	if (line.length>2 && line[0][0]==line[line.length-1][0] && line[0][1]==line[line.length-1][1]) 
-	{	pts.unshift(line[line.length-2]);
-		pts.push(line[1]);
-	}
-	else 
-	{	pts.unshift(line[0]);
-		pts.push(line[line.length-1]);
-	}
-	// ok, lets start..
-	function dist2d(x1, y1, x2, y2)
-	{	var dx = x2-x1;
-		var dy = y2-y1;
-		return Math.sqrt(dx*dx+dy*dy);
-	}
-	// 1. loop goes through point array
-	// 2. loop goes through each segment between the 2 pts + 1e point before and after
-	for (i=1; i < (pts.length - 2); i++) 
-	{	var d1 = dist2d (pts[i][0], pts[i][1], pts[i+1][0], pts[i+1][1]);
-		var numOfSegments = Math.round(d1/resolution);
-		var d=1;
-		if (options.normalize)
-		{	d1 = dist2d (pts[i+1][0], pts[i+1][1], pts[i-1][0], pts[i-1][1]);
-			var d2 = dist2d (pts[i+2][0], pts[i+2][1], pts[i][0], pts[i][1]);
-			if (d1<d2) d = d1/d2;
-			else d = d2/d1;
-		}
-		// calc tension vectors
-		t1x = (pts[i+1][0] - pts[i-1][0]) * tension *d;
-		t2x = (pts[i+2][0] - pts[i][0]) * tension *d;
-		t1y = (pts[i+1][1] - pts[i-1][1]) * tension *d;
-		t2y = (pts[i+2][1] - pts[i][1]) * tension *d;
-		for (t=0; t <= numOfSegments; t++) 
-		{	// calc step
-			st = t / numOfSegments;
-			// calc cardinals
-			c1 =   2 * Math.pow(st, 3) 	- 3 * Math.pow(st, 2) + 1; 
-			c2 = -(2 * Math.pow(st, 3)) + 3 * Math.pow(st, 2); 
-			c3 = 	   Math.pow(st, 3)	- 2 * Math.pow(st, 2) + st; 
-			c4 = 	   Math.pow(st, 3)	- 	  Math.pow(st, 2);
-			// calc x and y cords with common control vectors
-			x = c1 * pts[i][0]	+ c2 * pts[i+1][0] + c3 * t1x + c4 * t2x;
-			y = c1 * pts[i][1]	+ c2 * pts[i+1][1] + c3 * t1y + c4 * t2y;
-			//store points in array
-			if (x && y) res.push([x,y]);
-		}
-	}
-	return new ol.geom.LineString(res);
-}
-//NB: (Not confirmed)To use this module, you just have to :
-//   import('ol-ext/utils/cspline')
 /** Create a cardinal spline version of this geometry.
  *	Original https://github.com/epistemex/cardinal-spline-js
  *	@see https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Cardinal_spline

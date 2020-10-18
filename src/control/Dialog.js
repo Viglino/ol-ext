@@ -14,6 +14,7 @@ import ol_ext_element from '../util/element'
  *  @param {boolean} options.zoom add a zoom effect
  *  @param {boolean} options.closeBox add a close button
  *  @param {boolean} options.hideOnClick close dialog when click the background
+ *  @param {boolean} options.noSubmit Prevent closing the dialog on submit
  */
 var ol_control_Dialog = function(options) {
   options = options || {};
@@ -60,6 +61,7 @@ var ol_control_Dialog = function(options) {
   this.set('zoom', options.zoom);
   this.set('hideOnClick', options.hideOnClick);
   this.set('className', options.className);
+  this.set('onSubmit', options.onSubmit);
 };
 ol_ext_inherits(ol_control_Dialog, ol_control_Control);
 
@@ -100,6 +102,7 @@ ol_control_Dialog.prototype.setContent = function(options) {
     this.element.classList.add(this.get('className'));
   }
   var form = this.element.querySelector('form');
+  if (options.content instanceof Element) ol_ext_element.setHTML(form.querySelector('.ol-content'), '');
   ol_ext_element.setHTML(form.querySelector('.ol-content'), options.content || '');
   // Title
   form.querySelector('h2').innerText = options.title || '';
@@ -136,9 +139,10 @@ ol_control_Dialog.prototype.setContent = function(options) {
  * @private
  */
 ol_control_Dialog.prototype._onButton = function(button) {
+  // Dispatch a button event
   var fn = function(e) {
     e.preventDefault();
-    this.hide();
+    if (button!=='submit' || this.get('onSubmit')!==false) this.hide();
     var inputs = {};
     this.element.querySelectorAll('form input').forEach (function(input) {
       if (input.className) inputs[input.className] = input;
