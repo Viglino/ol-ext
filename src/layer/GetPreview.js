@@ -8,6 +8,7 @@ import ol_source_Tile from 'ol/source/Tile'
 import ol_source_TileWMS from 'ol/source/TileWMS'
 import ol_layer_Base from 'ol/layer/Layer'
 import {containsCoordinate as ol_extent_containsCoordinate} from 'ol/extent'
+import {transform as ol_proj_transform} from 'ol/proj'
 import ol_layer_Group from 'ol/layer/Group'
 
 /**
@@ -49,10 +50,13 @@ ol_source_TileWMS.prototype.getPreview = function(lonlat, resolution) {
   if (!lonlat) lonlat = [21020, 6355964];
   if (!resolution) resolution = 150;
 
-/*	No way to acces tileUrlFunction...
   var fn = this.getTileUrlFunction();
-  return fn.call(this, lonlat, this.getProjection());
-*/
+  if (fn) {
+    var tileGrid = this.getTileGrid() || this.getTileGridForProjection(this.getProjection());
+    var coord = tileGrid.getTileCoordForCoordAndResolution(lonlat, resolution);
+    return fn.call(this, coord, 1, this.getProjection());
+  }
+
   // Use getfeature info instead
   var url = this.getGetFeatureInfoUrl ? 
     this.getGetFeatureInfoUrl(lonlat, resolution, this.getProjection() || 'EPSG:3857', {})
@@ -69,7 +73,7 @@ ol_source_TileWMS.prototype.getPreview = function(lonlat, resolution) {
  * @return {Array<String>} list of preview url
  * @api
  */
-ol_layer_Base.prototype.getPreview = function(lonlat, resolution) {
+ol_layer_Base.prototype.getPreview = function(lonlat, resolution, projection) {
   if (this.get("preview")) return [ this.get("preview") ];
   if (!resolution) resolution = 150;
   // Get middle resolution
@@ -88,6 +92,8 @@ ol_layer_Base.prototype.getPreview = function(lonlat, resolution) {
   var e = this.getExtent();
   if (!lonlat) lonlat = [21020, 6355964];	// Default lonlat
   if (e && !ol_extent_containsCoordinate(e,lonlat)) lonlat = [ (e[0]+e[2])/2, (e[1]+e[3])/2 ];
+
+  if (projection) lonlat = ol_proj_transform (lonlat, projection, this.getSource().getProjection());
 
   if (this.getSource && this.getSource()) {
     return [ this.getSource().getPreview(lonlat, resolution) ];

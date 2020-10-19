@@ -3648,72 +3648,105 @@
 .ol-control.ol-wmscapabilities button:before {
   content: "+";
   position: absolute;
-  top: calc(50% - .3em);
+  top: calc(50% - .35em);
   left: 50%;
   -webkit-transform: translate(-50%, -50%);
           transform: translate(-50%, -50%);
-  font-weight: normal;
 }
 .ol-control.ol-wmscapabilities button:after {
   content: "";
-  width: .7em;
-  height: .7em;
+  width: .75em;
+  height: .75em;
   position: absolute;
   background: transparent;
-  top: calc(50% + .1em);
+  top: calc(50% - .05em);
   left: 50%;
-  -webkit-transform: translate(-50%, -50%) rotate(45deg);
-          transform: translate(-50%, -50%) rotate(45deg);
-  border-width: 0 .1em .1em 0;
-  -webkit-box-shadow: inset -.1em -.1em currentColor, 
-    -.3em .2em 0 -.2em currentColor, 
-    .2em -.3em 0 -.2em currentColor;
-          box-shadow: inset -.1em -.1em currentColor, 
-    -.3em .2em 0 -.2em currentColor, 
-    .2em -.3em 0 -.2em currentColor;
+  -webkit-transform: scaleY(.6) translate(-50%, -50%) rotate(45deg);
+          transform: scaleY(.6) translate(-50%, -50%) rotate(45deg);
+  -webkit-box-shadow: inset -.18em -.18em currentColor, -.4em .1em 0 -.25em currentColor, .1em -.35em 0 -.25em currentColor, .15em .15em currentColor;
+          box-shadow: inset -.18em -.18em currentColor, -.4em .1em 0 -.25em currentColor, .1em -.35em 0 -.25em currentColor, .15em .15em currentColor;
   border-radius: .1em 0;
+  border: .15em solid transparent;
+  border-width: 0 .15em .15em 0;
 }
 
 .ol-wmscapabilities .ol-searching {
   opacity: .5;
 }
+.ol-wmscapabilities .ol-searching .ol-url:after{
+  content: "";
+  width: .7em;
+  height: .7em;
+  background-color: currentColor;
+  position: absolute;
+  top: 6em;
+  border-radius: 50%;
+  display: block;
+  left: calc(50% - .35em);
+  -webkit-box-shadow: 0 1em currentColor, 0 -1em currentColor, 1em 0 currentColor, -1em 0 currentColor;
+          box-shadow: 0 1em currentColor, 0 -1em currentColor, 1em 0 currentColor, -1em 0 currentColor;
+  -webkit-animation:ol-wmscapabilities-rotate 2s linear infinite;
+          animation:ol-wmscapabilities-rotate 2s linear infinite;
+}
+@-webkit-keyframes ol-wmscapabilities-rotate { 
+  100% { -webkit-transform:rotate(360deg); transform:rotate(360deg); } 
+}
+@keyframes ol-wmscapabilities-rotate { 
+  100% { -webkit-transform:rotate(360deg); transform:rotate(360deg); } 
+}
+
+.ol-wmscapabilities .ol-url input {
+  width: calc(100% - 8em);
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  min-width: min(100%, 20em);
+}
+.ol-wmscapabilities .ol-url button {
+  width: 7.5em;
+  margin-left: .5em;
+}
 .ol-wmscapabilities .ol-result {
   display: none;
+  margin-top: .5em;
 }
 .ol-wmscapabilities .ol-result.ol-visible {
   display: block;
 }
 
-.ol-wmscapabilities ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
 .ol-wmscapabilities .ol-select-list {
   border: 1px solid #369;
-  max-height: 10em;
   overflow-x: hidden;
+  width: calc(100% - 120px);
 }
-.ol-wmscapabilities .ol-select-list li {
-  cursor: pointer;
+.ol-wmscapabilities .ol-select-list options {
   padding: 0 .5em;
 }
-.ol-wmscapabilities .ol-select-list li.ol-title {
+.ol-wmscapabilities .ol-select-list .level-1 {
+  padding-left: 1em;
+}
+.ol-wmscapabilities .ol-select-list .level-2 {
+  padding-left: 1.5em;
+}
+.ol-wmscapabilities .ol-select-list .level-3 {
+  padding-left: 2em;
+}
+.ol-wmscapabilities .ol-select-list .level-4 {
+  padding-left: 2.5em;
+}
+.ol-wmscapabilities .ol-select-list .level-5 {
+  padding-left: 3em;
+}
+
+.ol-wmscapabilities .ol-select-list .ol-title {
   background-color: rgba(0,60,136,.1);
 }
-.ol-wmscapabilities .ol-select-list li:hover {
+.ol-wmscapabilities .ol-select-list option:hover {
   background-color: rgba(0,60,136,.5);
   color: #fff;
 }
-.ol-wmscapabilities .ol-select-list li.selected {
+.ol-wmscapabilities .ol-select-list option.selected {
   background-color: rgba(0,60,136,.7);
   color: #fff;
-}
-.ol-wmscapabilities .ol-select-list ul li {
-  padding-left: 1.5em;
-}
-.ol-wmscapabilities .ol-select-list ul ul li {
-  padding-left: 2.5em;
 }
 
 .ol-wmscapabilities .ol-preview {
@@ -3723,7 +3756,7 @@
   color: #fff;
   padding: 0 5px 5px;
   text-align: center;
-  margin-left: 1em;
+  margin-left: 10px;
 }
 .ol-wmscapabilities .ol-preview img {
   width: 100%;
@@ -3731,7 +3764,7 @@
   background: #fff;
 }
 .ol-wmscapabilities .ol-legend {
-  width: 100%;
+  max-width: 100%;
 }
 .ol-wmscapabilities .ol-buttons {
   clear: both;

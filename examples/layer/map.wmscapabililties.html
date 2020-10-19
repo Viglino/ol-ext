@@ -23,6 +23,9 @@
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
+  <!-- Proj4 -->
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.3.14/proj4.js"></script>
+
   <link rel="stylesheet" href="../style.css" />
   <style>
     .ol-wmscapabilities ul {
@@ -46,18 +49,68 @@
       <li>
         url: 
         <input id="url" type="text" value="http://geoservices.brgm.fr/geologie" />
-        <button onclick="cap.getCapabilities($('#url').val())">search</button>
+        <button onclick="cap.showDialog($('#url').val())">search</button>
       </li>
       <li>
         url: 
         <input id="url2" type="text" value="./geologie.xml" />
-        <button onclick="cap.getCapabilities($('#url2').val())">search</button>
+        <button onclick="cap.showDialog($('#url2').val())">search</button>
+      </li>
+      <li>
+        Services : 
+        <button onclick="cap.showDialog('http://geoservices.brgm.fr/geologie'); ">BRGM</button>
+        <button onclick="cap.showDialog('http://services.sandre.eaufrance.fr/geo/eth_FXX');">Sandre</button>
+            <button onclick="cap.showDialog('http://clc.developpement-durable.gouv.fr/geoserver/wms');">Corine Land Cover</button>
+        <!-- 
+        <button onclick="cap.showDialog('http://cartorisque.prim.net/wms/france');">Cartorisque</button>
+        -->
+        <button onclick="cap.showDialog('http://mapsref.brgm.fr/wxs/refcom-env/refign');">Cartorisque</button>
+            <button onclick="cap.showDialog('http://wms.geo.admin.ch/');">Swiss Topo</button>
+        <button onclick="cap.showDialog('http://tds0.ifremer.fr/thredds/wms/CORIOLIS-GLOBAL-NRTOA-OBS_TIME_SERIE');">IFREMER</button>
+        <button onclick="cap.showDialog('https://maps.ngdc.noaa.gov/soap/etopo1/MapServer/WMSServer');">Noaa</button>
+        <button onclick="cap.showDialog('http://webservices.nationalatlas.gov/wms');">National Atlas (US)</button>
+    
+        <br/>
+        <!-- http://www.georisques.gouv.fr -->
+        <button onclick="cap.showDialog('http://mapsref.brgm.fr/wxs/georisques/risques');">Géorisque</button>
+        <button onclick="cap.showDialog('http://mapsref.brgm.fr/wxs/risques/bdrisques');">BDRisques</button>
+        <button onclick="cap.showDialog('http://geoservices.brgm.fr/risques');">Risques</button>
+        <button onclick="cap.showDialog('http://ws.carmencarto.fr/WMS/119/fxx_inpn');">Natura 2000</button>
+        <!-- https://www.cigalsace.org/portail/fr/page/723/flux-donnees -->
+        <button onclick="cap.showDialog('https://www.cigalsace.org/geoserver/cigal/ows');">Cigalsace</button>
+        <button onclick="cap.showDialog('https://geoportail93.fr/cgi-bin/mapserv?map=SIGD/raster.map');">CG93</button>
+        <button onclick="cap.showDialog('https://geoportail93.fr/cgi-bin/mapserv?map=SIGD/fond_SIGD.map');">CG93</button>
+        <button onclick="cap.showDialog('https://geo.valdemarne.fr/viewer/index.php');">CG94</button>
+        <!-- http://www.geofoncier.fr/ -->
+        <button onclick="cap.showDialog('https://api.geofoncier.fr/referentielsoge/ogc/wxs');">GeoFoncier</button>
+    
+        <!-- http://www.geolittoral.equipement.gouv.fr/rubrique.php3?id_rubrique=39 -->
+        <button onclick="cap.showDialog('http://geolittoral.application.equipement.gouv.fr/wms/metropole');">GeoLittoral</button>
+    
+        <!-- http://www.sogefi-sig.com/sogefi-diffuse-des-donnees-en-wms/ -->
+        <button onclick="cap.showDialog('http://ws.sogefi-web.com/wms');">SOGEFI</button>
+    
+        <br/>
+    
+        <!-- http://inspire-geoportal.ec.europa.eu/discovery/ -->
+        <button onclick="cap.showDialog('http://www.ifremer.fr/services/photos_anciennes');">Photos anciennes litto</button>
+        <button onclick="cap.showDialog('http://geobretagne.fr/geoserver/dir_ouest/wms');">Geobretagne</button>
+    
+        <br/>
+        <button onclick="cap.showDialog('http://cigno.atlantedellalaguna.it/geoserver/wms');">Venise</button>
+        
+        <br/>
+        <button onclick="cap.showDialog('http://wxs.ign.fr/v625fjanypywtame8ro0e8dl/geoportail/r/wms');">Geoportail</button>
       </li>
     </ul>
   </div>
   <div id="select" class="options" >Select an item.</div>
   
 <script type="text/javascript">
+// Define proj4 2154
+  proj4.defs("EPSG:2154","+proj=lcc +lat_1=49 +lat_2=44 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
+  if (ol.proj.proj4 && ol.proj.proj4.register) ol.proj.proj4.register(proj4);
+
   // The map
   var map = new ol.Map({
     target: 'map',
@@ -69,11 +122,19 @@
     layers: [ new ol.layer.Tile({ name:"OSM", source: new ol.source.OSM() })]
   });
 
-  map.addControl(new ol.control.LayerSwitcher({ trash: true, collapsed: false }));
+  map.addControl(new ol.control.LayerSwitcher({ 
+    trash: true, 
+    extent: true,
+    collapsed: false 
+  }));
+  map.addControl(new ol.control.Permalink({ visible: false }));
+  map.addControl(new ol.control.Attribution());
 
   var cap = new ol.control.WMSCapabilities({ 
     // target: $('.options').get(0),
     target: document.body,
+    srs: ['EPSG:2154'],
+    cors: true,
     trace: true
   });
   map.addControl(cap);

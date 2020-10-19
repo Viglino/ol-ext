@@ -34,6 +34,21 @@ ol_ext_Ajax.get = function(options) {
   ajax.send(options.url, options.data, options.options);
 };
 
+/** Helper to get cors header
+ * @param {string} url
+ * @param {string} callback
+ */
+ol_ext_Ajax.getCORS = function(url, callback) {
+  var request = new XMLHttpRequest();
+  request.open('GET', url, true);
+  request.send();
+  request.onreadystatechange = function() {
+    if (this.readyState == this.HEADERS_RECEIVED) {
+      callback(request.getResponseHeader('Access-Control-Allow-Origin'));
+    }
+  }
+};
+
 /** Send an ajax request (GET)
  * @fires success
  * @fires error
