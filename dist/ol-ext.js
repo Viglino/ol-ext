@@ -11371,7 +11371,7 @@ ol.control.WMSCapabilities.prototype.labels = {
   formMaxZoom: 'Max zoom level:',
   formExtent: 'Extent:',
   formProjection: 'Projection:',
-  formCrossOrigin: 'Crosse Origin:',
+  formCrossOrigin: 'CrossOrigin:',
   formVersion: 'Version:'
 };
 /** Create dialog
@@ -11464,7 +11464,7 @@ ol.control.WMSCapabilities.prototype.createDialog = function (options) {
     className: 'ol-wmsform',
     parent: element
   });
-  var addLine = function(label, val) {
+  var addLine = function(label, val, pholder) {
     var li = ol.ext.element.create('li', {
       parent: form
     });
@@ -11492,18 +11492,19 @@ ol.control.WMSCapabilities.prototype.createDialog = function (options) {
     } else {
       this._elements[label] = ol.ext.element.create('INPUT', {
         value: (val===undefined ? '' : val),
+        placeholder: pholder || '',
         type: typeof(val),
         parent: li
       });
     }
   }.bind(this);
   addLine('formTitle');
-  addLine('formLayer');
+  addLine('formLayer', '', 'layer1,layer2,...');
   addLine('formMap');
   addLine('formFormat', ['image/png', 'image/jpeg']);
   addLine('formMinZoom', 0);
   addLine('formMaxZoom', 20);
-  addLine('formExtent');
+  addLine('formExtent', '', 'xmin,ymin,xmax,ymax');
   addLine('formProjection', '');
   addLine('formCrossOrigin', false);
   addLine('formVersion', '1.3.0');
@@ -11604,9 +11605,16 @@ ol.control.WMSCapabilities.prototype.getCapabilities = function(url, options) {
   if (search) {
     search = search.replace(/^\?/,'').split('&');
     search.forEach(function(s) {
+      console.log(s)
       s = s.split('=');
-      if (/^map$/i.test(s[0])) map = s[1];
-    })
+      if (/^map$/i.test(s[0])) {
+        map = s[1];
+        this._elements.formMap.value = map;
+      }
+      if (/^layers$/i.test(s[0])) {
+        this._elements.formLayer.value = s[1];
+      }
+    }.bind(this))
   }
   // Fill form
   this._elements.input.value = (url || '') + (map ? '?map='+map : '');
