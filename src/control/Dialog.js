@@ -61,7 +61,7 @@ var ol_control_Dialog = function(options) {
   this.set('zoom', options.zoom);
   this.set('hideOnClick', options.hideOnClick);
   this.set('className', options.className);
-  this.set('onSubmit', options.onSubmit);
+  this.set('closeOnSubmit', options.closeOnSubmit);
 };
 ol_ext_inherits(ol_control_Dialog, ol_control_Control);
 
@@ -142,7 +142,7 @@ ol_control_Dialog.prototype._onButton = function(button) {
   // Dispatch a button event
   var fn = function(e) {
     e.preventDefault();
-    if (button!=='submit' || this.get('onSubmit')!==false) this.hide();
+    if (button!=='submit' || this.get('closeOnSubmit')!==false) this.hide();
     var inputs = {};
     this.element.querySelectorAll('form input').forEach (function(input) {
       if (input.className) inputs[input.className] = input;

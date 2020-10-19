@@ -59,7 +59,7 @@ var ol_control_WMSCapabilities = function (options) {
       var caps = parser.read(e.response);
       this.showCapabilitis(caps)
     } catch (e) {
-      this.showError({ type: 'parser', error: e });
+      this.showError({ type: 'load', error: e });
     }
   }.bind(this));
   this._ajax.on('error', function(e) {
@@ -78,9 +78,23 @@ ol_ext_inherits(ol_control_WMSCapabilities, ol_control_Button);
 
 /** Error list */
 ol_control_WMSCapabilities.prototype.error = {
-  load: 'Bad service url...',
-  parser: 'Bad service url...',
+  load: 'Can\'t retrieve service capabilities, try to add it manually...',
+  badUrl: 'The input value is not a valid url...',
   srs: 'The service projection looks different from that of your map, it may not display correctly...'
+};
+
+/** Form labels */
+ol_control_WMSCapabilities.prototype.labels = {
+  formTitle: 'Title:',
+  formLayer: 'Layers:',
+  formMap: 'Map:',
+  formFormat: 'Format:',
+  formMinZoom: 'Min zoom level:',
+  formMaxZoom: 'Max zoom level:',
+  formExtent: 'Extent:',
+  formProjection: 'Projection:',
+  formCrossOrigin: 'Crosse Origin:',
+  formVersion: 'Version:'
 };
 
 /** Create dialog
@@ -92,7 +106,7 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
     this._dialog = new ol_control_Dialog({
       className: 'ol-wmscapabilities',
       closeBox: true,
-      onSubmit: false,
+      closeOnSubmit: false,
       target: options.target
     });
     this._dialog.on('button', function(e) {
@@ -150,8 +164,7 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
     size: 10,
     on: {
       change: function (e) {
-        console.log(select, e)
-        select.options[select.selectedIndex].click()
+        select.options[select.selectedIndex].click();
       }.bind(this)
     },
     parent: rdiv
@@ -169,6 +182,105 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
     className: 'ol-legend',
     parent: rdiv
   });
+  // WMS form
+  var form = this._elements.form = ol_ext_element.create('UL', {
+    className: 'ol-wmsform',
+    parent: element
+  });
+  var addLine = function(label, val) {
+    var li = ol_ext_element.create('li', {
+      parent: form
+    });
+    ol_ext_element.create('LABEL', {
+      html: this.labels[label],
+      parent: li
+    });
+    if (typeof(val) === 'boolean') {
+      this._elements[label] = ol_ext_element.create('INPUT', {
+        type: 'checkbox',
+        checked: val,
+        parent: li
+      });
+    } else if (val instanceof Array) {
+      var sel = this._elements[label] = ol_ext_element.create('SELECT', {
+        parent: li
+      });
+      val.forEach(function(v) {
+        ol_ext_element.create('OPTION', {
+          html: v,
+          value: v,
+          parent: sel
+        });
+      }.bind(this));
+    } else {
+      this._elements[label] = ol_ext_element.create('INPUT', {
+        value: (val===undefined ? '' : val),
+        type: typeof(val),
+        parent: li
+      });
+    }
+  }.bind(this);
+  addLine('formTitle');
+  addLine('formLayer');
+  addLine('formMap');
+  addLine('formFormat', ['image/png', 'image/jpeg']);
+  addLine('formMinZoom', 0);
+  addLine('formMaxZoom', 20);
+  addLine('formExtent');
+  addLine('formProjection', '');
+  addLine('formCrossOrigin', false);
+  addLine('formVersion', '1.3.0');
+
+  ol_ext_element.create('BUTTON', {
+    html: this.get('loadLabel') || 'Load',
+    click: function() {
+      var minZoom = parseInt(this._elements.formMinZoom.value);
+      var maxZoom = parseInt(this._elements.formMaxZoom.value);
+      var view = new ol_View({
+        projection: this.getMap().getView().getProjection()
+      })
+      view.setZoom(minZoom);
+      var maxResolution = view.getResolution();
+      view.setZoom(maxZoom);
+      var minResolution = view.getResolution();
+      var ext;
+      if (this._elements.formExtent.value) {
+        this._elements.formExtent.value.split(',').forEach(function(b) {
+          ext.push(parseFloat(b));
+        })
+        if (ext.length !== 4) ext = undefined;
+      }
+      var options = {
+        layer: {
+          title: this._elements.formTitle.value,
+          extent: ext,
+          maxResolution: maxResolution,
+          minResolution: minResolution
+        },
+        source: {
+          url: this._elements.input.value,
+          crossOrigin: this._elements.formCrossOrigin.checked ? 'anonymous' : null,
+          projection: this._elements.formProjection.value,
+          params: {
+            FORMAT: this._elements.formFormat.options[this._elements.formFormat.selectedIndex].value,
+            LAYERS: this._elements.formLayer.value,
+            VERSION: this._elements.formVersion.value
+          }
+        },
+        data: {
+          title: this._elements.formTitle.value
+        }
+      }
+      if (this._elements.formMap.value) options.source.param.MAP = this._elements.formMap.value;
+      console.log(options)
+      options.layer.source = new ol_source_TileWMS(options.source);
+      var layer = new ol_layer_Tile(options.layer);
+      delete options.layer.source;
+      this.dispatchEvent({type: 'load', layer: layer, options: options });
+    }.bind(this),
+    parent: form
+  });
+
   return element;
 };
 
@@ -182,8 +294,12 @@ ol_control_WMSCapabilities.prototype.setMap = function (map) {
   if (this._dialog) this._dialog.setMap(map);
 };
 
+/** Show dialog for url */
 ol_control_WMSCapabilities.prototype.showDialog = function(url, options) {
-  this.showError();
+  if (url) this.showError();
+  if (!this._elements.formProjection.value) {
+    this._elements.formProjection.value = this.getMap().getView().getProjection().getCode();
+  }
   this._dialog.show({
     title: this.get('title')===undefined ? 'WMS' : this.get('title'),
     content: this._elements.element
@@ -201,6 +317,13 @@ ol_control_WMSCapabilities.prototype.showDialog = function(url, options) {
  */
 ol_control_WMSCapabilities.prototype.getCapabilities = function(url, options) {
   if (!url) return;
+
+  if (!/(https?:\/\/)?([\da-z\.-]+)\.([a-z]{2,6})([\/\w\.-]*)*\/?/g.test(url)) {
+    this.showError({
+      type: 'badUrl'
+    })
+    return;
+  }
 
   options = options || {};
 
@@ -249,14 +372,18 @@ ol_control_WMSCapabilities.prototype.getCapabilities = function(url, options) {
 ol_control_WMSCapabilities.prototype.showError = function(e) {
   if (!e) this._elements.error.innerHTML = '';
   else this._elements.error.innerHTML = this.error[e.type] || ('ERROR ('+e.type+')');
-  console.log(e);
+  if (e && e.type === 'load') {
+    this._elements.form.classList.add('visible');
+  } else {
+    this._elements.form.classList.remove('visible');
+  }
 };
 
 /** Clear form
  */
 ol_control_WMSCapabilities.prototype.clearForm = function() {
   this._elements.result.classList.remove('ol-visible')
-  this._elements.error.innerHTML = '';
+  this.showError();
   this._elements.select.innerHTML = '';
   this._elements.data.innerHTML = '';
   this._elements.preview.src = '';
@@ -268,7 +395,7 @@ ol_control_WMSCapabilities.prototype.clearForm = function() {
  */
 ol_control_WMSCapabilities.prototype.showCapabilitis = function(caps) {
   this._elements.result.classList.add('ol-visible')
-  console.log(caps)
+//  console.log(caps)
   var list = [];
   var addLayers = function(parent, level) {
     level = level || 0;
@@ -278,7 +405,8 @@ ol_control_WMSCapabilities.prototype.showCapabilitis = function(caps) {
       var li = ol_ext_element.create('OPTION', {
         className: (l.Layer ? 'ol-title ' : '') + 'level-'+level,
         html: l.Name || l.Title,
-        click: function() {
+        click: function(e) {
+          if (e.isTrusted) return;
           // Load layer
           var options = this.getOptionsFromCap(l, caps);
           options.layer.source = new ol_source_TileWMS(options.source);
@@ -362,7 +490,7 @@ ol_control_WMSCapabilities.prototype.getLayerResolution = function(m, layer, val
 ol_control_WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) {
   var formats = parent.Capability.Request.GetMap.Format;
   // Look for prefered format first
-  var pref =[/png/,/jpeg/,/gif/];
+  var pref = [/png/,/jpeg/,/gif/];
   for (i=0; i<3; i++) {
     for (var f=0; f<formats.length; f++) {
       if (pref[i].test(formats[f])) {

@@ -71,6 +71,7 @@
   border: 1px solid #369;
   overflow-x: hidden;
   width: calc(100% - 120px);
+  min-width: min(200px, 100%);
 }
 .ol-wmscapabilities .ol-select-list options {
   padding: 0 .5em;
@@ -135,9 +136,34 @@
   color: #800;
 }
 
+.ol-wmscapabilities .ol-wmsform {
+  display: none;
+}
+.ol-wmscapabilities .ol-wmsform.visible {
+  display: block;
+}
+.ol-wmscapabilities .ol-wmsform label {
+  display: inline-block;
+  text-align: right;
+  width: calc(40% - .5em);
+  margin-right: .5em;
+}
+.ol-wmscapabilities .ol-wmsform input {
+  display: inline-block;
+  width: 60%;
+  box-sizing: border-box;
+}
+.ol-wmscapabilities .ol-wmsform input[type="checkbox"] {
+  width: auto;
+}
+.ol-wmscapabilities .ol-wmsform button {
+  float: right;
+  margin: 1em 0;
+}
+
 .ol-ext-dialog.ol-wmscapabilities form {
   max-height: calc(85% - 1em);
-  width: 50%;
+  width: 600px;
   min-height: 15em;
   top: 15%;
   transform: translate(-50%, 0);
