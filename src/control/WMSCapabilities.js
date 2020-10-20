@@ -21,6 +21,7 @@ import ol_control_Button from './Button'
  *  @param {string} options.title dialog title, default 'WMS'
  *  @param {string} options.searchLabel Label for search button, default 'search'
  *  @param {string} options.loadLabel Label for load button, default 'load'
+ *  @param {*} options.services a key/url object of services for quick access in a menu
  *  @param {Array<string>} options.srs an array of supported srs, default map projection code or 'EPSG:3857'
  *  @param {number} options.timeout Timeout for getCapabilities request, default 1000
  *  @param {boolean} options.cors Use CORS, default false
@@ -132,6 +133,31 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
     placeholder: options.placeholder || 'service url...',
     parent: inputdiv
   });
+  if (options.services) {
+    var qaccess = ol_ext_element.create('SELECT', {
+      className: 'url',
+      on: {
+        change: function(e) {
+          console.log(e)
+          var url = e.target.options[e.target.selectedIndex].value;
+          this.getCapabilities(url, options);
+          e.target.selectedIndex = 0;
+        }.bind(this)
+      },
+      parent: inputdiv
+    });
+    ol_ext_element.create('OPTION', {
+      html: ' ',
+      parent: qaccess
+    });
+    for (var k in options.services) {
+      ol_ext_element.create('OPTION', {
+        html: k,
+        value: options.services[k],
+        parent: qaccess
+      });
+    }
+  }
   ol_ext_element.create('BUTTON', {
     click: function() {
       this.getCapabilities(input.value, options);
@@ -273,16 +299,23 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
         }
       }
       if (this._elements.formMap.value) options.source.param.MAP = this._elements.formMap.value;
-      console.log(options)
-      options.layer.source = new ol_source_TileWMS(options.source);
-      var layer = new ol_layer_Tile(options.layer);
-      delete options.layer.source;
-      this.dispatchEvent({type: 'load', layer: layer, options: options });
+      var layer = this.getLayerFromOptions(options);
+      this.dispatchEvent({ type: 'load', layer: layer, options: options });
     }.bind(this),
     parent: form
   });
 
   return element;
+};
+
+/** Create a new layer using options received by getOptionsFromCap method
+ * @param {*} options
+ */
+ol_control_WMSCapabilities.prototype.getLayerFromOptions = function (options) {
+  options.layer.source = new ol_source_TileWMS(options.source);
+  var layer = new ol_layer_Tile(options.layer);
+  delete options.layer.source;
+  return layer;
 };
 
 /**
@@ -417,9 +450,7 @@ ol_control_WMSCapabilities.prototype.showCapabilitis = function(caps) {
           if (e.isTrusted) return;
           // Load layer
           var options = this.getOptionsFromCap(l, caps);
-          options.layer.source = new ol_source_TileWMS(options.source);
-          var layer = new ol_layer_Tile(options.layer);
-          delete options.layer.source;
+          var layer = this.getLayerFromOptions(options);
           //
           list.forEach(function(i) {
             i.classList.remove('selected');

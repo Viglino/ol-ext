@@ -11306,6 +11306,7 @@ ol.control.Toggle.prototype.getInteraction = function() {
  *  @param {string} options.title dialog title, default 'WMS'
  *  @param {string} options.searchLabel Label for search button, default 'search'
  *  @param {string} options.loadLabel Label for load button, default 'load'
+ *  @param {*} options.services a key/url object of services for quick access in a menu
  *  @param {Array<string>} options.srs an array of supported srs, default map projection code or 'EPSG:3857'
  *  @param {number} options.timeout Timeout for getCapabilities request, default 1000
  *  @param {boolean} options.cors Use CORS, default false
@@ -11409,6 +11410,31 @@ ol.control.WMSCapabilities.prototype.createDialog = function (options) {
     placeholder: options.placeholder || 'service url...',
     parent: inputdiv
   });
+  if (options.services) {
+    var qaccess = ol.ext.element.create('SELECT', {
+      className: 'url',
+      on: {
+        change: function(e) {
+          console.log(e)
+          var url = e.target.options[e.target.selectedIndex].value;
+          this.getCapabilities(url, options);
+          e.target.selectedIndex = 0;
+        }.bind(this)
+      },
+      parent: inputdiv
+    });
+    ol.ext.element.create('OPTION', {
+      html: ' ',
+      parent: qaccess
+    });
+    for (var k in options.services) {
+      ol.ext.element.create('OPTION', {
+        html: k,
+        value: options.services[k],
+        parent: qaccess
+      });
+    }
+  }
   ol.ext.element.create('BUTTON', {
     click: function() {
       this.getCapabilities(input.value, options);
@@ -11549,15 +11575,21 @@ ol.control.WMSCapabilities.prototype.createDialog = function (options) {
         }
       }
       if (this._elements.formMap.value) options.source.param.MAP = this._elements.formMap.value;
-      console.log(options)
-      options.layer.source = new ol.source.TileWMS(options.source);
-      var layer = new ol.layer.Tile(options.layer);
-      delete options.layer.source;
-      this.dispatchEvent({type: 'load', layer: layer, options: options });
+      var layer = this.getLayerFromOptions(options);
+      this.dispatchEvent({ type: 'load', layer: layer, options: options });
     }.bind(this),
     parent: form
   });
   return element;
+};
+/** Create a new layer using options received by getOptionsFromCap method
+ * @param {*} options
+ */
+ol.control.WMSCapabilities.prototype.getLayerFromOptions = function (options) {
+  options.layer.source = new ol.source.TileWMS(options.source);
+  var layer = new ol.layer.Tile(options.layer);
+  delete options.layer.source;
+  return layer;
 };
 /**
  * Set the map instance the control is associated with
@@ -11680,9 +11712,7 @@ ol.control.WMSCapabilities.prototype.showCapabilitis = function(caps) {
           if (e.isTrusted) return;
           // Load layer
           var options = this.getOptionsFromCap(l, caps);
-          options.layer.source = new ol.source.TileWMS(options.source);
-          var layer = new ol.layer.Tile(options.layer);
-          delete options.layer.source;
+          var layer = this.getLayerFromOptions(options);
           //
           list.forEach(function(i) {
             i.classList.remove('selected');
@@ -24656,7 +24686,7 @@ ol.Overlay.Placemark.prototype.setRadius = function(size) {
  *  @param {Number|Array<number>} options.offsetBox an offset box
  *  @param {ol.OverlayPositioning | string | undefined} options.positionning 
  *    the 'auto' positioning var the popup choose its positioning to stay on the map.
- *  @param {Template} options.template A template with a list of properties to use in the popup
+ *  @param {Template|function} options.template A template with a list of properties to use in the popup or a function that takes a feature and returns a Template
  *  @param {boolean} options.canFix Enable popup to be fixed, default false
  *  @param {boolean} options.showImage display image url as image, default false
  *  @param {boolean} options.maxChar max char to display in a cell, default 200
@@ -24729,13 +24759,15 @@ ol.Overlay.PopupFeature.prototype._getHtml = function(feature) {
   }
   var template = this._template;
   // calculate template
-  if (!template || !template.attributes) {
+  if (typeof(template) === 'function') {
+    template = template(feature, this._count, this._features.length);
+  } else if (!template || !template.attributes) {
     template = template || {};
     template. attributes = {};
     for (var i in feature.getProperties()) if (i!='geometry') {
       template.attributes[i] = i;
     }
-  }
+  }  
   // Display title
   if (template.title) {
     var title;
