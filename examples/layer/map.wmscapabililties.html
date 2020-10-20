@@ -62,17 +62,6 @@
         <button onclick="cap.showDialog('http://services.sandre.eaufrance.fr/geo/eth_FXX');">Sandre</button>
     
     
-        <br/>
-    
-        <!-- http://inspire-geoportal.ec.europa.eu/discovery/ -->
-        <button onclick="cap.showDialog('http://www.ifremer.fr/services/photos_anciennes');">Photos anciennes litto</button>
-        <button onclick="cap.showDialog('http://geobretagne.fr/geoserver/dir_ouest/wms');">Geobretagne</button>
-    
-        <br/>
-        <button onclick="cap.showDialog('http://cigno.atlantedellalaguna.it/geoserver/wms');">Venise</button>
-        
-        <br/>
-        <button onclick="cap.showDialog('http://wxs.ign.fr/choisirgeoportail/geoportail/r/wms');">Geoportail</button>
       </li>
     </ul>
   </div>
@@ -126,11 +115,20 @@
       // http://www.geolittoral.equipement.gouv.fr/rubrique.php3?id_rubrique=39 -->
       GeoLittoral: 'http://geolittoral.application.equipement.gouv.fr/wms/metropole',
       // http://www.sogefi-sig.com/sogefi-diffuse-des-donnees-en-wms/ -->
-      SOGEFI: 'http://ws.sogefi-web.com/wms'
+      SOGEFI: 'http://ws.sogefi-web.com/wms',
+      // http://inspire-geoportal.ec.europa.eu/discovery/ -->
+      'Photos anciennes litto': 'http://www.ifremer.fr/services/photos_anciennes',
+      Geobretagne: 'http://geobretagne.fr/geoserver/dir_ouest/wms',
+      Venise: 'http://cigno.atlantedellalaguna.it/geoserver/wms',
+      Geoportail: 'http://wxs.ign.fr/choisirgeoportail/geoportail/r/wms'
     },
     trace: true
   });
   map.addControl(cap);
+
+  var print = new ol.control.Print();
+  map.addControl(print);
+  print.on('print', function(e) { console.log(e); })
 
   cap.on('load', function(e) {
     map.addLayer(e.layer)

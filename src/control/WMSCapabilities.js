@@ -184,6 +184,15 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
   this._elements.preview = ol_ext_element.create('IMG', {
     parent: preview
   });
+  // Check tainted canvas
+  this._img = new Image;
+  this._img.crossOrigin = 'Anonymous';
+  this._img.addEventListener('error', function() {
+    preview.className = 'ol-preview tainted';
+  }.bind(this));
+  this._img.addEventListener('load', function() {
+    preview.className = 'ol-preview ok';
+  }.bind(this));
   // Select list
   var select = this._elements.select = ol_ext_element.create('SELECT', {
     className: 'ol-select-list',
@@ -469,6 +478,7 @@ ol_control_WMSCapabilities.prototype.showCapabilitis = function(caps) {
           var reso = this.getMap().getView().getResolution();
           var center = this.getMap().getView().getCenter();
           this._elements.preview.src = layer.getPreview(center, reso, this.getMap().getView().getProjection());
+          this._img.src = this._elements.preview.src;
           // ShowInfo
           this._elements.data.innerHTML = '';
           ol_ext_element.create('p', {

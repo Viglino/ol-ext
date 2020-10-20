@@ -119,6 +119,15 @@
   text-align: center;
   margin-left: 10px;
 }
+.ol-wmscapabilities .ol-preview.tainted {
+  width: 100px;
+  float: right;
+  background: rgba(136,0,60,.1);
+  color: #666;
+  padding: 0 5px 5px;
+  text-align: center;
+  margin-left: 10px;
+}
 .ol-wmscapabilities .ol-preview img {
   width: 100%;
   display: block;
