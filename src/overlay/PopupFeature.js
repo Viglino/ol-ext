@@ -36,7 +36,7 @@ import ol_ext_element from '../util/element'
  *  @param {Number|Array<number>} options.offsetBox an offset box
  *  @param {ol.OverlayPositioning | string | undefined} options.positionning 
  *    the 'auto' positioning var the popup choose its positioning to stay on the map.
- *  @param {Template} options.template A template with a list of properties to use in the popup
+ *  @param {Template|function} options.template A template with a list of properties to use in the popup or a function that takes a feature and returns a Template
  *  @param {boolean} options.canFix Enable popup to be fixed, default false
  *  @param {boolean} options.showImage display image url as image, default false
  *  @param {boolean} options.maxChar max char to display in a cell, default 200
@@ -116,13 +116,15 @@ ol_Overlay_PopupFeature.prototype._getHtml = function(feature) {
   }
   var template = this._template;
   // calculate template
-  if (!template || !template.attributes) {
+  if (typeof(template) === 'function') {
+    template = template(feature, this._count, this._features.length);
+  } else if (!template || !template.attributes) {
     template = template || {};
     template. attributes = {};
     for (var i in feature.getProperties()) if (i!='geometry') {
       template.attributes[i] = i;
     }
-  }
+  }  
   // Display title
   if (template.title) {
     var title;
