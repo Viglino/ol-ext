@@ -4,14 +4,16 @@
   NB: reduce tileSize to minimize deformations on small scales.
 */
 import ol_ext_inherits from '../util/ext'
+import ol_View from 'ol/View'
 import ol_source_TileWMS from 'ol/source/TileWMS'
 import ol_layer_Tile from 'ol/layer/Tile'
 import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
 import ol_format_WMSCapabilities from 'ol/format/WMSCapabilities'
 import ol_ext_element from '../util/element'
 import ol_ext_Ajax from '../util/Ajax'
-import '../layer/GetPreview';
 import ol_control_Button from './Button'
+import ol_control_Dialog from './Dialog'
+import '../layer/GetPreview';
 
 /** WMSCapabilities
  * @constructor
@@ -133,12 +135,16 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
     placeholder: options.placeholder || 'service url...',
     parent: inputdiv
   });
+  input.addEventListener('keyup', function(e) {
+    if (e.keyCode===13) {
+      this.getCapabilities(input.value, options);
+    }
+  }.bind(this));
   if (options.services) {
     var qaccess = ol_ext_element.create('SELECT', {
       className: 'url',
       on: {
         change: function(e) {
-          console.log(e)
           var url = e.target.options[e.target.selectedIndex].value;
           this.getCapabilities(url, options);
           e.target.selectedIndex = 0;
@@ -198,7 +204,7 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
     className: 'ol-select-list',
     size: 10,
     on: {
-      change: function (e) {
+      change: function () {
         select.options[select.selectedIndex].click();
       }.bind(this)
     },
@@ -310,6 +316,7 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
       if (this._elements.formMap.value) options.source.param.MAP = this._elements.formMap.value;
       var layer = this.getLayerFromOptions(options);
       this.dispatchEvent({ type: 'load', layer: layer, options: options });
+      this._dialog.hide();
     }.bind(this),
     parent: form
   });
@@ -351,6 +358,7 @@ ol_control_WMSCapabilities.prototype.showDialog = function(url, options) {
 };
 
 /** Get WMS capabilities for a server
+ * @fire load
  * @param {string} url service url
  * @param {*} options 
  *  @param {string} options.version WMS version, default 1.3.0
@@ -361,7 +369,7 @@ ol_control_WMSCapabilities.prototype.showDialog = function(url, options) {
 ol_control_WMSCapabilities.prototype.getCapabilities = function(url, options) {
   if (!url) return;
 
-  if (!/(https?:\/\/)?([\da-z\.-]+)\.([a-z]{2,6})([\/\w\.-]*)*\/?/g.test(url)) {
+  if (!/(https?:\/\/)([\da-z.-]+)\.([a-z]{2,6})([/\w.-]*)*\/?/g.test(url)) {
     this.showError({
       type: 'badUrl'
     })
@@ -374,18 +382,36 @@ ol_control_WMSCapabilities.prototype.getCapabilities = function(url, options) {
   url = url.split('?');
   var search = url[1];
   url = url[0];
+  // reset
+  this._elements.formMap.value = '';
+  this._elements.formLayer.value = '';
+  this._elements.formTitle.value = '';
+  this._elements.formProjection.value = this.getMap().getView().getProjection().getCode();
+  this._elements.formFormat.selectedIndex = 0;
   var map = options.map || '';
   if (search) {
     search = search.replace(/^\?/,'').split('&');
     search.forEach(function(s) {
-      console.log(s)
       s = s.split('=');
+      s[1] = decodeURIComponent(s[1] || '');
       if (/^map$/i.test(s[0])) {
         map = s[1];
         this._elements.formMap.value = map;
       }
       if (/^layers$/i.test(s[0])) {
         this._elements.formLayer.value = s[1];
+        this._elements.formTitle.value = s[1].split(',')[0];
+      }
+      if (/^crs$/i.test(s[0])) {
+        this._elements.formProjection.value = s[1];
+      }
+      if (/^format$/i.test(s[0])) {
+        for (var o,i=0; o=this._elements.formFormat.options[i]; i++) {
+          if (o.value===s[1]) {
+            this._elements.formFormat.selectedIndex = i;
+            break;
+          }
+        }
       }
     }.bind(this))
   }
@@ -438,6 +464,7 @@ ol_control_WMSCapabilities.prototype.clearForm = function() {
   this._elements.data.innerHTML = '';
   this._elements.preview.src = '';
   this._elements.legend.src = '';
+  this._elements.legend.classList.remove('visible');
 };
 
 /** Display capabilities in the dialog
@@ -474,6 +501,15 @@ ol_control_WMSCapabilities.prototype.showCapabilitis = function(caps) {
             }.bind(this),
             parent: this._elements.buttons
           });
+          ol_ext_element.create('BUTTON', {
+            html: '+',
+            className: 'ol-wmsform',
+            click: function() {
+              this._elements.form.classList.toggle('visible');
+              this._elements.legend.classList.toggle('visible');
+            }.bind(this),
+            parent: this._elements.buttons
+          });
           // Show preview
           var reso = this.getMap().getView().getResolution();
           var center = this.getMap().getView().getCenter();
@@ -492,8 +528,10 @@ ol_control_WMSCapabilities.prototype.showCapabilitis = function(caps) {
           });
           if (options.data.legend.length) {
             this._elements.legend.src = options.data.legend[0];
+            this._elements.legend.classList.add('visible');
           } else {
             this._elements.legend.src = '';
+            this._elements.legend.classList.remove('visible');
           }
         }.bind(this),
         parent: this._elements.select
@@ -538,6 +576,7 @@ ol_control_WMSCapabilities.prototype.getLayerResolution = function(m, layer, val
  */
 ol_control_WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) {
   var formats = parent.Capability.Request.GetMap.Format;
+  var format, i;
   // Look for prefered format first
   var pref = [/png/,/jpeg/,/gif/];
   for (i=0; i<3; i++) {
@@ -574,11 +613,11 @@ ol_control_WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) 
   if (!crs) {
     this.showError({ type:'srs' });
     if (this.get('trace')) console.log('BAD srs: ', caps.CRS);
-  };
+  }
 
   var bbox = caps.EX_GeographicBoundingBox;
   //bbox = ol_proj_transformExtent(bbox, 'EPSG:4326', srs);
-  bbox = ol_proj_transformExtent(bbox, 'EPSG:4326', this.getMap().getView().getProjection());
+  if (bbox) bbox = ol_proj_transformExtent(bbox, 'EPSG:4326', this.getMap().getView().getProjection());
 
   var attributions = [];
   if (caps.Attribution) {
@@ -605,6 +644,26 @@ ol_control_WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) 
       'VERSION': parent.version || '1.3.0'
     }
   }
+
+  // Fill form
+  this._elements.formTitle.value = layer_opt.title;
+  this._elements.formLayer.value = source_opt.params.LAYERS;
+  var o;
+  for (i=0; o=this._elements.formFormat.options[i]; i++) {
+    if (o.value===source_opt.params.FORMAT) {
+      this._elements.formFormat.selectedIndex = i;
+      break;
+    }
+  }
+  var view = new ol_View({
+    projection: this.getMap().getView().getProjection()
+  })
+  view.setResolution(layer_opt.minResolution);
+  this._elements.formMaxZoom.value = Math.round(view.getZoom());
+  view.setResolution(layer_opt.maxResolution);
+  this._elements.formMinZoom.value = Math.round(view.getZoom());
+  this._elements.formExtent.value = bbox ? bbox.join(',') : '';
+  this._elements.formProjection.value = source_opt.projection;
 
   // Trace
   if (this.get('trace')) {

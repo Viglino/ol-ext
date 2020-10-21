@@ -165,6 +165,10 @@ h2 {
 	background:#ddd;
 }
 
+#map button {
+  outline: none;
+}
+
 .ol-attribution img {
   vertical-align:middle;
 }
