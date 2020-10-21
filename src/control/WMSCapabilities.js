@@ -18,6 +18,7 @@ import '../layer/GetPreview';
 /** WMSCapabilities
  * @constructor
  * @param {*} options
+ *  @param {string|Element} options.target the target to set the dialog, use document.body to have fullwindow dialog
  *  @param {string} options.proxy proxy to use when requesting Getcapabilites, default none (suppose the service use CORS)
  *  @param {string} options.placeholder input placeholder, default 'service url...'
  *  @param {string} options.title dialog title, default 'WMS'
@@ -79,14 +80,18 @@ var ol_control_WMSCapabilities = function (options) {
 };
 ol_ext_inherits(ol_control_WMSCapabilities, ol_control_Button);
 
-/** Error list */
+/** Error list: a key/value list of error to display in the dialog 
+ * Overwrite it to handle internationalization
+ */
 ol_control_WMSCapabilities.prototype.error = {
   load: 'Can\'t retrieve service capabilities, try to add it manually...',
   badUrl: 'The input value is not a valid url...',
   srs: 'The service projection looks different from that of your map, it may not display correctly...'
 };
 
-/** Form labels */
+/** Form labels: a key/value list of form labels to display in the dialog
+ * Overwrite it to handle internationalization
+ */
 ol_control_WMSCapabilities.prototype.labels = {
   formTitle: 'Title:',
   formLayer: 'Layers:',
@@ -364,7 +369,8 @@ ol_control_WMSCapabilities.prototype.showDialog = function(url, options) {
  *  @param {string} options.version WMS version, default 1.3.0
  *  @param {Number} options.timeout
  *  @param {string} options.map WMS map or get map in url?map=xxx
- *  @param {string} options.version WMS version
+ *  @param {string} options.version WMS version (yet only 1.3.0 is implemented), default 1.3.0
+ *  @param {number} options.timeout timout to get the capabilities
  */
 ol_control_WMSCapabilities.prototype.getCapabilities = function(url, options) {
   if (!url) return;

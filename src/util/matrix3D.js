@@ -1,16 +1,16 @@
-/** Matrix3D; a set of functions to handle matrix3D
- */
 /* See 
 https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web
 https://evanw.github.io/lightgl.js/docs/matrix.html 
 https://github.com/jlmakes/rematrix
 https://jsfiddle.net/2znLxda2/
 */
+/** Matrix3D; a set of functions to handle matrix3D
+ */
 var ol_matrix3D = {};
 
 /** Get transform matrix3D of an element
  * @param {Element} ele
- * @return {Array<Array<<number>>}
+ * @return {Array<Array<number>>}
  */
 ol_matrix3D.getTransform = function(ele) {
   var style = window.getComputedStyle(ele, null);
@@ -68,7 +68,7 @@ ol_matrix3D.getTransformOrigin = function (ele) {
  * @param {number} x
  * @param {number} y
  * @param {number} z
- * @return {Array<Array<<number>>}
+ * @return {Array<Array<number>>}
  */
 ol_matrix3D.translateMatrix = function(x, y, z) {
   return [
@@ -80,7 +80,7 @@ ol_matrix3D.translateMatrix = function(x, y, z) {
 };
 
 /** Identity matrix
- * @return {Array<Array<<number>>}
+ * @return {Array<Array<number>>}
  */
 ol_matrix3D.identity = function() {
   return [

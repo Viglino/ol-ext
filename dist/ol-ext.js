@@ -537,18 +537,18 @@ ol.ext.getMapCanvas = function(map) {
   return canvas;
 };
   
-/** Matrix3D; a set of functions to handle matrix3D
- */
 /* See 
 https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web
 https://evanw.github.io/lightgl.js/docs/matrix.html 
 https://github.com/jlmakes/rematrix
 https://jsfiddle.net/2znLxda2/
 */
+/** Matrix3D; a set of functions to handle matrix3D
+ */
 ol.matrix3D = {};
 /** Get transform matrix3D of an element
  * @param {Element} ele
- * @return {Array<Array<<number>>}
+ * @return {Array<Array<number>>}
  */
 ol.matrix3D.getTransform = function(ele) {
   var style = window.getComputedStyle(ele, null);
@@ -597,7 +597,7 @@ ol.matrix3D.getTransformOrigin = function (ele) {
  * @param {number} x
  * @param {number} y
  * @param {number} z
- * @return {Array<Array<<number>>}
+ * @return {Array<Array<number>>}
  */
 ol.matrix3D.translateMatrix = function(x, y, z) {
   return [
@@ -608,7 +608,7 @@ ol.matrix3D.translateMatrix = function(x, y, z) {
   ];
 };
 /** Identity matrix
- * @return {Array<Array<<number>>}
+ * @return {Array<Array<number>>}
  */
 ol.matrix3D.identity = function() {
   return [
@@ -7432,7 +7432,7 @@ ol.control.Profil.prototype._drawAt = function(p, dx) {
   }
 };
 /** Show point at coordinate or a distance on the profil
- * @param { ol.coordinates||number } where a coordiniate or a distance from begining, if none it will hide the point
+ * @param { ol.coordinates|number } where a coordiniate or a distance from begining, if none it will hide the point
  * @return { ol.coordinates } current point
  */
 ol.control.Profil.prototype.showAt = function(where) {
@@ -11301,6 +11301,7 @@ ol.control.Toggle.prototype.getInteraction = function() {
 /** WMSCapabilities
  * @constructor
  * @param {*} options
+ *  @param {string|Element} options.target the target to set the dialog, use document.body to have fullwindow dialog
  *  @param {string} options.proxy proxy to use when requesting Getcapabilites, default none (suppose the service use CORS)
  *  @param {string} options.placeholder input placeholder, default 'service url...'
  *  @param {string} options.title dialog title, default 'WMS'
@@ -11356,13 +11357,17 @@ ol.control.WMSCapabilities = function (options) {
   }.bind(this));
 };
 ol.ext.inherits(ol.control.WMSCapabilities, ol.control.Button);
-/** Error list */
+/** Error list: a key/value list of error to display in the dialog 
+ * Overwrite it to handle internationalization
+ */
 ol.control.WMSCapabilities.prototype.error = {
   load: 'Can\'t retrieve service capabilities, try to add it manually...',
   badUrl: 'The input value is not a valid url...',
   srs: 'The service projection looks different from that of your map, it may not display correctly...'
 };
-/** Form labels */
+/** Form labels: a key/value list of form labels to display in the dialog
+ * Overwrite it to handle internationalization
+ */
 ol.control.WMSCapabilities.prototype.labels = {
   formTitle: 'Title:',
   formLayer: 'Layers:',
@@ -11410,12 +11415,16 @@ ol.control.WMSCapabilities.prototype.createDialog = function (options) {
     placeholder: options.placeholder || 'service url...',
     parent: inputdiv
   });
+  input.addEventListener('keyup', function(e) {
+    if (e.keyCode===13) {
+      this.getCapabilities(input.value, options);
+    }
+  }.bind(this));
   if (options.services) {
     var qaccess = ol.ext.element.create('SELECT', {
       className: 'url',
       on: {
         change: function(e) {
-          console.log(e)
           var url = e.target.options[e.target.selectedIndex].value;
           this.getCapabilities(url, options);
           e.target.selectedIndex = 0;
@@ -11475,7 +11484,7 @@ ol.control.WMSCapabilities.prototype.createDialog = function (options) {
     className: 'ol-select-list',
     size: 10,
     on: {
-      change: function (e) {
+      change: function () {
         select.options[select.selectedIndex].click();
       }.bind(this)
     },
@@ -11586,6 +11595,7 @@ ol.control.WMSCapabilities.prototype.createDialog = function (options) {
       if (this._elements.formMap.value) options.source.param.MAP = this._elements.formMap.value;
       var layer = this.getLayerFromOptions(options);
       this.dispatchEvent({ type: 'load', layer: layer, options: options });
+      this._dialog.hide();
     }.bind(this),
     parent: form
   });
@@ -11622,16 +11632,18 @@ ol.control.WMSCapabilities.prototype.showDialog = function(url, options) {
   this.getCapabilities(url, options);
 };
 /** Get WMS capabilities for a server
+ * @fire load
  * @param {string} url service url
  * @param {*} options 
  *  @param {string} options.version WMS version, default 1.3.0
  *  @param {Number} options.timeout
  *  @param {string} options.map WMS map or get map in url?map=xxx
- *  @param {string} options.version WMS version
+ *  @param {string} options.version WMS version (yet only 1.3.0 is implemented), default 1.3.0
+ *  @param {number} options.timeout timout to get the capabilities
  */
 ol.control.WMSCapabilities.prototype.getCapabilities = function(url, options) {
   if (!url) return;
-  if (!/(https?:\/\/)?([\da-z\.-]+)\.([a-z]{2,6})([\/\w\.-]*)*\/?/g.test(url)) {
+  if (!/(https?:\/\/)([\da-z.-]+)\.([a-z]{2,6})([/\w.-]*)*\/?/g.test(url)) {
     this.showError({
       type: 'badUrl'
     })
@@ -11642,18 +11654,36 @@ ol.control.WMSCapabilities.prototype.getCapabilities = function(url, options) {
   url = url.split('?');
   var search = url[1];
   url = url[0];
+  // reset
+  this._elements.formMap.value = '';
+  this._elements.formLayer.value = '';
+  this._elements.formTitle.value = '';
+  this._elements.formProjection.value = this.getMap().getView().getProjection().getCode();
+  this._elements.formFormat.selectedIndex = 0;
   var map = options.map || '';
   if (search) {
     search = search.replace(/^\?/,'').split('&');
     search.forEach(function(s) {
-      console.log(s)
       s = s.split('=');
+      s[1] = decodeURIComponent(s[1] || '');
       if (/^map$/i.test(s[0])) {
         map = s[1];
         this._elements.formMap.value = map;
       }
       if (/^layers$/i.test(s[0])) {
         this._elements.formLayer.value = s[1];
+        this._elements.formTitle.value = s[1].split(',')[0];
+      }
+      if (/^crs$/i.test(s[0])) {
+        this._elements.formProjection.value = s[1];
+      }
+      if (/^format$/i.test(s[0])) {
+        for (var o,i=0; o=this._elements.formFormat.options[i]; i++) {
+          if (o.value===s[1]) {
+            this._elements.formFormat.selectedIndex = i;
+            break;
+          }
+        }
       }
     }.bind(this))
   }
@@ -11701,6 +11731,7 @@ ol.control.WMSCapabilities.prototype.clearForm = function() {
   this._elements.data.innerHTML = '';
   this._elements.preview.src = '';
   this._elements.legend.src = '';
+  this._elements.legend.classList.remove('visible');
 };
 /** Display capabilities in the dialog
  * @param {*} caps JSON capabilities
@@ -11736,6 +11767,15 @@ ol.control.WMSCapabilities.prototype.showCapabilitis = function(caps) {
             }.bind(this),
             parent: this._elements.buttons
           });
+          ol.ext.element.create('BUTTON', {
+            html: '+',
+            className: 'ol-wmsform',
+            click: function() {
+              this._elements.form.classList.toggle('visible');
+              this._elements.legend.classList.toggle('visible');
+            }.bind(this),
+            parent: this._elements.buttons
+          });
           // Show preview
           var reso = this.getMap().getView().getResolution();
           var center = this.getMap().getView().getCenter();
@@ -11754,8 +11794,10 @@ ol.control.WMSCapabilities.prototype.showCapabilitis = function(caps) {
           });
           if (options.data.legend.length) {
             this._elements.legend.src = options.data.legend[0];
+            this._elements.legend.classList.add('visible');
           } else {
             this._elements.legend.src = '';
+            this._elements.legend.classList.remove('visible');
           }
         }.bind(this),
         parent: this._elements.select
@@ -11795,6 +11837,7 @@ ol.control.WMSCapabilities.prototype.getLayerResolution = function(m, layer, val
  */
 ol.control.WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) {
   var formats = parent.Capability.Request.GetMap.Format;
+  var format, i;
   // Look for prefered format first
   var pref = [/png/,/jpeg/,/gif/];
   for (i=0; i<3; i++) {
@@ -11830,10 +11873,10 @@ ol.control.WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) 
   if (!crs) {
     this.showError({ type:'srs' });
     if (this.get('trace')) console.log('BAD srs: ', caps.CRS);
-  };
+  }
   var bbox = caps.EX_GeographicBoundingBox;
   //bbox = ol.proj.transformExtent(bbox, 'EPSG:4326', srs);
-  bbox = ol.proj.transformExtent(bbox, 'EPSG:4326', this.getMap().getView().getProjection());
+  if (bbox) bbox = ol.proj.transformExtent(bbox, 'EPSG:4326', this.getMap().getView().getProjection());
   var attributions = [];
   if (caps.Attribution) {
     attributions.push('<a href="'+encodeURI(caps.Attribution.OnlineResource)+'">&copy; '+caps.Attribution.Title.replace(/</g,'&lt;')+'</a>');
@@ -11857,6 +11900,25 @@ ol.control.WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) 
       'VERSION': parent.version || '1.3.0'
     }
   }
+  // Fill form
+  this._elements.formTitle.value = layer_opt.title;
+  this._elements.formLayer.value = source_opt.params.LAYERS;
+  var o;
+  for (i=0; o=this._elements.formFormat.options[i]; i++) {
+    if (o.value===source_opt.params.FORMAT) {
+      this._elements.formFormat.selectedIndex = i;
+      break;
+    }
+  }
+  var view = new ol.View({
+    projection: this.getMap().getView().getProjection()
+  })
+  view.setResolution(layer_opt.minResolution);
+  this._elements.formMaxZoom.value = Math.round(view.getZoom());
+  view.setResolution(layer_opt.maxResolution);
+  this._elements.formMinZoom.value = Math.round(view.getZoom());
+  this._elements.formExtent.value = bbox ? bbox.join(',') : '';
+  this._elements.formProjection.value = source_opt.projection;
   // Trace
   if (this.get('trace')) {
     var tso = JSON.stringify([ source_opt ], null, "\t").replace(/\\"/g,'"');
@@ -13645,7 +13707,7 @@ ol.format.GeoJSONX.prototype._toType = [
 ];
 /** Encode a number
  * @param {number} number Number to encode
- * @private {number} decimals Number of decimals
+ * @param {number} decimals Number of decimals
  * @param {string}
  */
 ol.format.GeoJSONX.prototype.encodeNumber = function(number, decimals) {
@@ -13671,7 +13733,7 @@ ol.format.GeoJSONX.prototype.encodeNumber = function(number, decimals) {
 };
 /** Decode a number
  * @param {string} s 
- * @private {number} decimals Number of decimals
+ * @param {number} decimals Number of decimals
  * @return {number}
  */
 ol.format.GeoJSONX.prototype.decodeNumber = function(s, decimals) {

@@ -73,7 +73,7 @@ ol_format_GeoJSONX.prototype._toType = [
 
 /** Encode a number
  * @param {number} number Number to encode
- * @private {number} decimals Number of decimals
+ * @param {number} decimals Number of decimals
  * @param {string}
  */
 ol_format_GeoJSONX.prototype.encodeNumber = function(number, decimals) {
@@ -100,7 +100,7 @@ ol_format_GeoJSONX.prototype.encodeNumber = function(number, decimals) {
 
 /** Decode a number
  * @param {string} s 
- * @private {number} decimals Number of decimals
+ * @param {number} decimals Number of decimals
  * @return {number}
  */
 ol_format_GeoJSONX.prototype.decodeNumber = function(s, decimals) {
