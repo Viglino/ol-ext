@@ -18868,30 +18868,30 @@ ol.interaction.Synchronize.prototype.handleMove_ = function(e) {
 */
 ol.interaction.Synchronize.prototype.handleMouseOut_ = function(/*e*/) {
   for (var i=0; i<this.maps.length; i++) {
-    this.maps[i].targetOverlay_.setPosition(undefined);
+    if (this.maps[i]._targetOverlay) this.maps[i]._targetOverlay.setPosition(undefined);
   }
 };
 /** Show a target overlay at coord
 * @param {ol.coordinate} coord
 */
 ol.Map.prototype.showTarget = function(coord) {
-  if (!this.targetOverlay_) {
+  if (!this._targetOverlay) {
     var elt = document.createElement("div");
     elt.classList.add("ol-target");
-    this.targetOverlay_ = new ol.Overlay({ element: elt });
-    this.targetOverlay_.setPositioning('center-center');
-    this.addOverlay(this.targetOverlay_);
+    this._targetOverlay = new ol.Overlay({ element: elt });
+    this._targetOverlay.setPositioning('center-center');
+    this.addOverlay(this._targetOverlay);
     elt.parentElement.classList.add("ol-target-overlay");
     // hack to render targetOverlay before positioning it
-    this.targetOverlay_.setPosition([0,0]);
+    this._targetOverlay.setPosition([0,0]);
   }
-  this.targetOverlay_.setPosition(coord);
+  this._targetOverlay.setPosition(coord);
 };
 /** Hide the target overlay
 */
 ol.Map.prototype.hideTarget = function() {
-  this.removeOverlay(this.targetOverlay_);
-  this.targetOverlay_ = undefined;
+  this.removeOverlay(this._targetOverlay);
+  this._targetOverlay = undefined;
 };
 
 /*	
