@@ -220,7 +220,7 @@ ol_control_Profil.prototype._drawAt = function(p, dx) {
 };
 
 /** Show point at coordinate or a distance on the profil
- * @param { ol.coordinates|number } where a coordiniate or a distance from begining, if none it will hide the point
+ * @param { ol.coordinates|number } where a coordinate or a distance from begining, if none it will hide the point
  * @return { ol.coordinates } current point
  */
 ol_control_Profil.prototype.showAt = function(where) {
@@ -242,7 +242,40 @@ ol_control_Profil.prototype.showAt = function(where) {
   } else {
     for (i=0; p=this.tab_[i]; i++) {
       p0 = p;
-      if (p[0] > where) {
+      if (p[0] >= where) {
+        break;
+      } 
+    }
+  }
+  if (p0) {
+    var dx = (p0[0] * this.scale_[0] + this.margin_.left) / this.ratio;
+    this._drawAt(p0, dx);
+    return p0[3];
+  }
+  return null;
+};
+
+/** Show point at a time on the profil
+ * @param { Date|number } time a Date or a DateTime (in s) to show the profile on, if none it will hide the point
+ * @param { booelan } delta true if time is a delta from the start, default false
+ * @return { ol.coordinates } current point
+ */
+ol_control_Profil.prototype.showAtTime = function(time, delta) {
+  var i, p, p0;
+  if (time instanceof Date) {
+    time = time.getTime()/1000;
+  } else if (delta) {
+    time += this.tab_[0][3][3];
+  }
+  if (typeof(time) === 'undefined') {
+    if (this.bar_.parentElement.classList.contains("over")) {
+      // Remove it
+      this._drawAt();
+    }
+  } else {
+    for (i=0; p=this.tab_[i]; i++) {
+      p0 = p;
+      if (p[3][3] >= time) {
         break;
       } 
     }
