@@ -240,12 +240,18 @@ ol_style_FlowLine.prototype._render = function(geom, e) {
     // Get geometry used at drawing
     if (!this._visible) {
       var a = e.pixelRatio / e.resolution;
+      var cos = Math.cos(e.rotation)
+      var sin = Math.sin(e.rotation)
       g = e.geometry.getCoordinates();
-      var dx = geom[0][0] - g[0][0] * a;
-      var dy = geom[0][1] + g[0][1] * a;
+      var dx = geom[0][0] - g[0][0] * a *cos - g[0][1] * a *sin ;
+      var dy = geom[0][1] - g[0][0] * a * sin + g[0][1] * a * cos;
       geom = [];
       for (i=0; p=g[i]; i++) {
-        geom[i] = [ dx + p[0] * a, dy - p[1] * a];
+        geom[i] = [
+          dx + p[0] * a * cos + p[1] * a * sin,
+          dy + p[0] * a * sin - p[1] * a * cos,
+          p[2]
+        ];
       }
     }
 
