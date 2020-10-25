@@ -155,11 +155,6 @@ gulp.task("js", function() {
   .on('end', function(){ console.log('\x1b[32m','\n>>> Terminated...','\x1b[0m')});
 });
 
-/* Watch for modification to recreate the dist */
-gulp.task('watch', function() {
-  gulp.watch(['./src/*/*.js','./src/*/*.css'], ['default']);
-});
-
 /* Start a server and watch for modification for live reload */
 gulp.task('serve', function() {
   var liveServer = require("live-server");
