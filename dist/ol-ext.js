@@ -29635,22 +29635,6 @@ var defaultEditStyle = [
     })
   })
 ];
-var fill = new ol.style.Fill({
-  color: 'rgba(255,255,255,0.4)'
-});
-var stroke = new ol.style.Stroke({
-  color: '#3399CC',
-  width: 1.25
-});
-var defaultStyle = new ol.style.Style({
-  image: new ol.style.Circle({
-    fill: fill,
-    stroke: stroke,
-    radius: 5
-  }),
-  fill: fill,
-  stroke: stroke
-});
 /**
  * Get the default style
  * @param {boolean|*} [edit] true to get editing style or a { color, fillColor } object, default get default blue style
@@ -29660,18 +29644,23 @@ ol.style.Style.defaultStyle = function(edit) {
   if (edit===true) {
     return defaultEditStyle;
   } else {
-    var style = defaultStyle.clone();
-    if (edit) {
-      if (edit.color) {
-        style.getImage().getStroke().setColor(edit.color);
-        style.getStroke().setColor(edit.color);
-      }
-      if (edit.fillColor) {
-        style.getImage().getFill().setColor(edit.fillColor);
-        style.getFill().setColor(edit.fillColor);
-      }
-      style.getImage().render();
-    }
+    edit = edit || {};
+    var fill = new ol.style.Fill({
+      color: edit.fillColor || 'rgba(255,255,255,0.4)'
+    });
+    var stroke = new ol.style.Stroke({
+      color: edit.color || '#3399CC',
+      width: 1.25
+    });
+    var style = new ol.style.Style({
+      image: new ol.style.Circle({
+        fill: fill,
+        stroke: stroke,
+        radius: 5
+      }),
+      fill: fill,
+      stroke: stroke
+    });
     return [ style ];
   }
 };
