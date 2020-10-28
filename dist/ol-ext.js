@@ -18809,8 +18809,8 @@ ol.interaction.Splitter.prototype.onChangeFeature = function(e)
 /** Interaction synchronize
  * @constructor
  * @extends {ol.interaction.Interaction}
- * @param {olx.interaction.SynchronizeOptions} 
- *  - maps {Array<ol.Map>} An array of maps to synchronize with the map of the interaction
+ * @param {*} options
+ *  @param {Array<ol.Map>} options maps An array of maps to synchronize with the map of the interaction
  */
 ol.interaction.Synchronize = function(options) {
   if (!options) options={};
@@ -18855,9 +18855,11 @@ ol.interaction.Synchronize.prototype.setMap = function(map) {
 */
 ol.interaction.Synchronize.prototype.syncMaps = function(e) {
   var map = this.getMap();
+  if (map.get('lockView')) return;
   if (!e) e = { type:'all' };
   if (map) {
     for (var i=0; i<this.maps.length; i++) {
+      this.maps[i].set('lockView', true);
       switch (e.type) {
         case 'change:rotation': {
           if (this.maps[i].getView().getRotation() != map.getView().getRotation())
@@ -18883,6 +18885,7 @@ ol.interaction.Synchronize.prototype.syncMaps = function(e) {
           break;
         }
       }
+      this.maps[i].set('lockView', false);
     }
   }
 };
