@@ -290,13 +290,13 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
       var maxResolution = view.getResolution();
       view.setZoom(maxZoom);
       var minResolution = view.getResolution();
-      var ext;
+      var ext = [];
       if (this._elements.formExtent.value) {
         this._elements.formExtent.value.split(',').forEach(function(b) {
           ext.push(parseFloat(b));
         })
-        if (ext.length !== 4) ext = undefined;
       }
+      if (ext.length !== 4) ext = undefined;
       var options = {
         layer: {
           title: this._elements.formTitle.value,
