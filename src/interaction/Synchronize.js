@@ -12,8 +12,8 @@ import ol_Overlay from 'ol/Overlay'
 /** Interaction synchronize
  * @constructor
  * @extends {ol_interaction_Interaction}
- * @param {olx.interaction.SynchronizeOptions} 
- *  - maps {Array<ol.Map>} An array of maps to synchronize with the map of the interaction
+ * @param {*} options
+ *  @param {Array<ol.Map>} options maps An array of maps to synchronize with the map of the interaction
  */
 var ol_interaction_Synchronize = function(options) {
   if (!options) options={};
@@ -27,7 +27,6 @@ var ol_interaction_Synchronize = function(options) {
   });
 
   this.maps = options.maps;
-
 };
 ol_ext_inherits(ol_interaction_Synchronize, ol_interaction_Interaction);
 
@@ -65,9 +64,11 @@ ol_interaction_Synchronize.prototype.setMap = function(map) {
 */
 ol_interaction_Synchronize.prototype.syncMaps = function(e) {
   var map = this.getMap();
+  if (map.get('lockView')) return;
   if (!e) e = { type:'all' };
   if (map) {
     for (var i=0; i<this.maps.length; i++) {
+      this.maps[i].set('lockView', true);
       switch (e.type) {
         case 'change:rotation': {
           if (this.maps[i].getView().getRotation() != map.getView().getRotation())
@@ -93,6 +94,7 @@ ol_interaction_Synchronize.prototype.syncMaps = function(e) {
           break;
         }
       }
+      this.maps[i].set('lockView', false);
     }
   }
 };
@@ -106,7 +108,6 @@ ol_interaction_Synchronize.prototype.handleMove_ = function(e) {
   }
   this.getMap().showTarget();
 };
-
 
 /** Cursor out of map > tells other maps to hide the cursor
 * @param {event} e "mouseOut" event
