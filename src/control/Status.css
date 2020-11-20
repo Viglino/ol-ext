@@ -8,7 +8,11 @@
   border-radius: 0;
   width: 100%;
   box-sizing: border-box;
-  pointer-events: none;
+  pointer-events: none!important;
+  display: none;
+}
+.ol-control.ol-status.ol-visible {
+  display: initial;
 }
 .ol-control.ol-status.ol-bottom {
   top: auto;
