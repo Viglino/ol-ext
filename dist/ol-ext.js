@@ -9967,6 +9967,7 @@ ol.control.SelectPopup.prototype.setValues = function(options) {
  *	@param {String} options.className class of the control
  *  @param {string} options.status status, default none
  *  @param {string} options.position position of the status 'top', 'left', 'bottom' or 'right', default top
+ *  @param {boolean} options.visible default true
  */
 ol.control.Status = function(options) {
   options = options || {};
@@ -9980,10 +9981,18 @@ ol.control.Status = function(options) {
     element: element,
     target: options.target
   });
+  this.setVisible(options.visible!==false);
   if (options.position) this.setPosition(options.position);
   this.status(options.status || '');
 };
 ol.ext.inherits(ol.control.Status, ol.control.Control);
+/** Set visiblitity 
+ * @param {boolean} visible
+ */
+ol.control.Status.prototype.setVisible = function(visible) {
+  if (visible) this.element.classList.add ('ol-visible');
+  else this.element.classList.remove('ol-visible');
+};
 /** Show status on the map
  * @param {string|Element} html status text or DOM element
  */
