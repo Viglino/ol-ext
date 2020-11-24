@@ -21257,6 +21257,44 @@ ol.source.Delaunay.prototype.getNodesAt = function(coord) {
   var extent = ol.extent.buffer (ol.extent.boundingExtent([coord]), this.get('epsilon'));
   return this._nodes.getFeaturesInExtent(extent);
 };
+/** Get Voronoi
+ * @param {boolean} border include border, default false
+ * @return { Array< Array<ol.coordinate> > }
+ */
+ol.source.Delaunay.prototype.calculateVoronoi = function(border) {
+  var voronoi = [];
+  this.getNodes().forEach(function(f) {
+    var pt = f.getGeometry().getCoordinates();
+    var found = false;
+    if (border!==true) {
+      for (var i=0; i<this.hull.length; i++) {
+        if (ol.coordinate.equal(pt, this.hull[i])) {
+          found = true;
+          break;
+        }
+      }
+    }
+    if (!found) {
+      var tr = this.getTrianglesAt(pt);
+      var pts = [];
+      tr.forEach(function(triangle) {
+        var c = this.getCircumCircle(triangle.getGeometry().getCoordinates()[0]);
+        pts.push({
+          pt: c.center,
+          d: Math.atan2(c.center[1]-pt[1],c.center[0]-pt[0])
+        })
+      }.bind(this));
+      pts.sort(function(a,b) { return a.d - b.d });
+      var poly = [];
+      pts.forEach(function(p) {
+        poly.push(p.pt);
+      });
+      poly.push(poly[0]);
+      voronoi.push(poly);
+    }
+  }.bind(this));
+  return voronoi;
+};
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)

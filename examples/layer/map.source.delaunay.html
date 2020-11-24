@@ -57,7 +57,7 @@
       <br/>
       You can add/remove vertex from the point source and get the resulting triangles directly in the triangle source.
       <br/>
-      If you're looking for you'd better see an other algorithme like 
+      If you're looking for more efficient algorithm you'd better look at something like 
       <a href="https://github.com/mapbox/delaunator#performance">
         mapbox/delaunator
       </a>
@@ -73,6 +73,8 @@
 	<div class="options">
     <input type="number" value="20" />
     <button onclick="generate(Number($(this).prev().val()))">Generate!</button>
+    <br/>
+    <label><input type="checkbox" id="voronoi"/> show Voronoi</label>
     <br/>
     Generated triangles
     <ul class='triangles'></ul>
@@ -138,6 +140,10 @@
   
   var redStyle = new ol.style.Style({
     fill: new ol.style.Fill({ color: [255,0,0,.2] })
+  });
+  var voroStyle = new ol.style.Style({
+    stroke: new ol.style.Stroke({ color: [128,0,0,.5], width: 1.25 }),
+    fill: new ol.style.Fill({ color: [128,0,0,.1] })
   });
 
   // Node source
@@ -224,6 +230,33 @@
     style: redStyle
   });
   map.addLayer(circle);
+
+  // Voronoi
+  var voronoi = new ol.layer.Vector({
+    name: 'Voronoi',
+    source: new ol.source.Vector(),
+    style: voroStyle
+  });
+  map.addLayer(voronoi);
+
+  var tout
+  delaunay.on('addfeature', function() { 
+    if (tout) clearTimeout(tout);
+    tout = setTimeout(calculateVoronoi, 500);
+  });
+
+  function calculateVoronoi () {
+    voronoi.getSource().clear();
+    if ($('#voronoi').prop('checked')) {
+      var features = [];
+      delaunay.calculateVoronoi().forEach(function(v) {
+        features.push (new ol.Feature(new ol.geom.Polygon([v])));
+      });
+      voronoi.getSource().addFeatures(features);
+    }
+  }
+  $('#voronoi').on('change', calculateVoronoi);
+
 
   // Show circumcircle on hover
 	var hover = new ol.interaction.Hover({
