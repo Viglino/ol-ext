@@ -81,24 +81,42 @@
   });
 
   function setProjection(p) {
-    map.setView(new ol.View({ zoom: 0, center: [0,0], projection: p })); vectorSource.refresh()
+    map.setView(new ol.View({ zoom: 0, center: [0,0], projection: p })); 
+    source.forEach(function(s) { s.refresh() });
   }
-  // DayNight source
-  var vectorSource = new ol.source.DayNight({ });
 
-  map.addLayer(new ol.layer.Vector({
-    source: vectorSource,
-    style: new ol.style.Style({
-      fill: new ol.style.Fill({
-        color: [0,0,50,.5]
+  var source = [];
+  function addVector(time) {
+    console.log(time, new Date(time))
+    // DayNight source
+    var vectorSource = new ol.source.DayNight({
+      time: new Date(time)
+    });
+    source.push(vectorSource);
+
+    map.addLayer(new ol.layer.Vector({
+      source: vectorSource,
+      style: new ol.style.Style({
+        fill: new ol.style.Fill({
+          color: [0,0,50,.15]
+        })
       })
-    })
-  }));
+    }));
+  }
+
+  var deltaDay = 10*24*60*60*1000
+  for (var i=-2; i<=2; i++) {
+    addVector((new Date()).getTime() + deltaDay*i);
+  }
 
   $('#date').on('change', function() {
-    vectorSource.setTime($(this).val());
-  }).val(new Date(vectorSource.get('time')).toISOString().substring(0, 16));
-
+    console.log(source)
+    //vectorSource.setTime($(this).val());
+    console.log($(this).val())
+    for (var i=-2; i<=2; i++) {
+      source[i+2].setTime(new Date($(this).val()).getTime() + deltaDay*i);
+    }
+  }).val(new Date(source[2].get('time')).toISOString().substring(0, 16));
   
 </script>
 
