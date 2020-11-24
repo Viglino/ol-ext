@@ -99,7 +99,12 @@
       </li>
       <li>
         <label>
-          <input type="checkbox" id="curve" onchange="vector.changed();" /> Curve lines
+          Curve lines : 
+          <select id="curve" onchange="vector.changed();">
+            <option value="0">none</option>
+            <option value="curve">curve</option>
+            <option value="circle">circle</option>
+          </select>
         </label>
       </li>
 		</ul>
@@ -188,21 +193,48 @@
 
   // Get geom
   function getGeom(f) {
-    if ($('#curve').prop('checked')) {
-      var l = f.getGeometry().getCoordinates();
-      var pi0, pi1, p1 = l.pop();
-      var p0 = l[0];
-      var r = map.getView().getResolution();
-      l.push([
-        p0[0] + 8*(p1[0]-p0[0]) / 10, 
-        p1[1] + (p1[1]-p0[1] < -30*r ? 3*Math.abs(p1[1]-p0[1])/4 : 40*r)
-      ]);
-      l.push(p1);
-      var sp = ol.coordinate.cspline(l, {resolution: 500})
-      return (new ol.geom.LineString(sp));
-      //return f.getGeometry();
-    } else {
-      return f.getGeometry();
+    switch ($('#curve').val()) {
+      case 'curve': {
+        var l = f.getGeometry().getCoordinates();
+        var p1 = l.pop();
+        var p0 = l[0];
+        var r = map.getView().getResolution();
+        l.push([
+          p0[0] + 8*(p1[0]-p0[0]) / 10, 
+          p1[1] + (p1[1]-p0[1] < -30*r ? 3*Math.abs(p1[1]-p0[1])/4 : 40*r)
+        ]);
+        l.push(p1);
+        var sp = ol.coordinate.cspline(l, {
+          resolution: 500,
+          tension: .75
+        });
+        return (new ol.geom.LineString(sp));
+      }
+      case 'circle': {
+        var l = f.getGeometry().getCoordinates();
+        var p1 = l.pop();
+        var p0 = l[0];
+        var dx = (p1[0] - p0[0]);
+        var dy = (p1[1] - p0[1]);
+        var a = Math.atan2(dy,dx);
+        if (a < 0 || a > Math.PI) {
+          dx=-dx;
+          dy=-dy;
+        }
+        l.push([
+          (p0[0]+p1[0])/2 + dy / 3, 
+          (p0[1]+p1[1])/2 - dx / 3
+        ]);
+        l.push(p1);
+        var sp = ol.coordinate.cspline(l, {
+          resolution: 500,
+          tension: .75
+        });
+        return (new ol.geom.LineString(sp));
+      }
+      default: {
+        return f.getGeometry();
+      }
     }
   }
 
@@ -242,7 +274,10 @@
   });
 
   // global so we can remove it later
-  var select = new ol.interaction.Select ({ layers: [dep] });
+  var select = new ol.interaction.Select ({ 
+    condition: ol.events.condition.Click,
+    layers: [dep] 
+  });
   map.addInteraction(select);
   select.on('select', function(e) {
     var f = e.selected[0];
