@@ -9,14 +9,19 @@ import ol_interaction_Pointer from 'ol/interaction/Pointer'
  * @fires dragend
  * @param {any} options
  *  @param {ol.Overlay|Array<ol.Overlay>} options.overlays the overlays to drag
+ *  @param {ol.Size} options.offset overlay offset, default [0,0]
  */
 var ol_interaction_DragOverlay = function(options) {
   if (!options) options = {};
+
+  var offset = options.offset || [0,0];
 
   // Extend pointer
   ol_interaction_Pointer.call(this, {
     // start draging on an overlay
     handleDownEvent: function(evt) {
+      var res = evt.frameState.viewState.resolution
+      var coordinate = [evt.coordinate[0] + offset[0]*res, evt.coordinate[1] - offset[1]*res];
       // Click on a button (closeBox) or on a link: don't drag!
       if (/^(BUTTON|A)$/.test(evt.originalEvent.target.tagName)) {
         this._dragging = false;
@@ -24,11 +29,17 @@ var ol_interaction_DragOverlay = function(options) {
       }
       // Start dragging
       if (this._dragging) {
-        this._dragging.setPosition(evt.coordinate);
+        if (options.centerOnClick !== false) {
+          this._dragging.setPosition(coordinate);
+        } else {
+          coordinate = this._dragging.getPosition();
+        }
         this.dispatchEvent({ 
           type: 'dragstart',
           overlay: this._dragging,
-          coordinate: evt.coordinate
+          originalEvent: evt.originalEvent,
+          frameState: evt.frameState,
+          coordinate: coordinate
         });
         return true;
       }
@@ -36,25 +47,35 @@ var ol_interaction_DragOverlay = function(options) {
     },
     // Drag
     handleDragEvent: function(evt) {
+      var res = evt.frameState.viewState.resolution
+      var coordinate = [evt.coordinate[0] + offset[0]*res, evt.coordinate[1] - offset[1]*res];
       if (this._dragging) {
-        this._dragging.setPosition(evt.coordinate);
+        this._dragging.setPosition(coordinate);
         this.dispatchEvent({ 
           type: 'dragging',
           overlay: this._dragging,
-          coordinate: evt.coordinate
+          originalEvent: evt.originalEvent,
+          frameState: evt.frameState,
+          coordinate: coordinate
         });
       }
     },
     // Stop dragging
     handleUpEvent: function(evt) {
+      var res = evt.frameState.viewState.resolution
+      var coordinate = [evt.coordinate[0] + offset[0]*res, evt.coordinate[1] - offset[1]*res];
       if (this._dragging) {
         this.dispatchEvent({ 
           type: 'dragend',
           overlay: this._dragging,
-          coordinate: evt.coordinate
+          originalEvent: evt.originalEvent,
+          frameState: evt.frameState,
+          coordinate: coordinate
         });
+        this._dragging = false;
+        return true;
       }
-      return (this._dragging = false);
+      return false;
     }
   });
 

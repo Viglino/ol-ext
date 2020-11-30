@@ -36,7 +36,8 @@ import '../geom/LineStringSplitAt'
  * @fires modifying
  * @fires modifyend
  * @param {*} options
- *	@param {ol.source.Vector|Array<ol.source.Vector>} options.source a list of source to modify (configured with useSpatialIndex set to true)
+ *	@param {ol.source.Vector} options.source a source to modify (configured with useSpatialIndex set to true)
+ *	@param {ol.source.Vector|Array<ol.source.Vector>} options.sources a list of source to modify (configured with useSpatialIndex set to true)
  *  @param {ol.Collection.<ol.Feature>} options.features collection of feature to modify
  *  @param {integer} options.pixelTolerance Pixel tolerance for considering the pointer close enough to a segment or vertex for editing. Default is 10.
  *  @param {function|undefined} options.filter a filter that takes a feature and return true if it can be modified, default always true.
@@ -94,10 +95,8 @@ var ol_interaction_ModifyFeature = function(options){
 
   // List of source to split
   this.sources_ = options.sources ? (options.sources instanceof Array) ? options.sources:[options.sources] : [];
-
-  if (options.features) {
-    this.sources_.push (new ol_source_Vector({ features: options.features }));
-  }
+  if (options.source) this.sources_.push (options.source);
+  if (options.features) this.sources_.push (new ol_source_Vector({ features: options.features }));
 
   // Get all features candidate
   this.filterSplit_ = options.filter || function(){ return true; };
@@ -461,7 +460,7 @@ ol_interaction_ModifyFeature.prototype.getArcs = function(geom, coord) {
 ol_interaction_ModifyFeature.prototype.handleDownEvent = function(evt) {
   if (!this.getActive()) return false;
 
-  // Something to split ?
+  // Something to move ?
   var current = this.getClosestFeature(evt);
 
   if (current && (this._condition(evt) || this._deleteCondition(evt))) {
@@ -497,7 +496,10 @@ ol_interaction_ModifyFeature.prototype.handleDownEvent = function(evt) {
           originalEvent: evt.originalEvent,
           features: this._modifiedFeatures
         });
-        this.handleDragEvent({ coordinate: current.coord })
+        this.handleDragEvent({ 
+          coordinate: current.coord,
+          originalEvent: evt.originalEvent
+        })
         return true;
       }
     } else {

@@ -4,10 +4,8 @@
 */
 
 import ol_ext_inherits from '../util/ext'
-import ol_style_RegularShape from 'ol/style/RegularShape'
 import ol_style_Style from 'ol/style/Style'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
-import ol_style_Stroke from 'ol/style/Stroke'
 import ol_control_Target from '../control/Target'
 
 /** Handles coordinates on the center of the viewport.
@@ -18,7 +16,7 @@ import ol_control_Target from '../control/Target'
  * @extends {ol_interaction_Interaction}
  * @param {olx.interaction.InteractionOptions} options Options
  *  @param {ol_style_Style|Array<ol_style_Style>} options.targetStyle a style to draw the target point, default cross style
- *  @param {string} options.compositecomposite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
+ *  @param {string} options.composite composite operation for the target : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
  */
 var ol_interaction_CenterTouch = function(options)
 {	options = options || {};
@@ -27,14 +25,6 @@ var ol_interaction_CenterTouch = function(options)
 	this._listener = {};
 	// Filter event
 	var rex = /^pointermove$|^pointerup$/;
-
-	// Default style = cross
-	this.targetStyle = options.targetStyle ||
-		[	new ol_style_Style({ image: new ol_style_RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel:true, stroke: new ol_style_Stroke({ color: "#fff", width:3 }) }) }),
-			new ol_style_Style({ image: new ol_style_RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel:true, stroke: new ol_style_Stroke({ color: "#000", width:1 }) }) })
-		];
-	if (!(this.targetStyle instanceof Array)) this.targetStyle = [this.targetStyle];
-	this.composite = options.composite || '';
 
 	// Interaction to defer center on top of the interaction 
 	// this is done to enable other coordinates manipulation inserted after the interaction (snapping)
@@ -50,7 +40,10 @@ var ol_interaction_CenterTouch = function(options)
 		});
 
 	// Target on map center
-	this._target = new ol_control_Target();
+	this._target = new ol_control_Target({
+		style: options.targetStyle,
+		composite: options.composite
+	});
 
 	ol_interaction_Interaction.call(this,
 		{	handleEvent: function(e) 

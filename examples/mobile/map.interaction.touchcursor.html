@@ -1,0 +1,153 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: interaction touch draw</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="An interactioon for drawing feature geometry on a touch device." />
+  <meta name="keywords" content="ol3, interaction, touch, draw, vector" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <style>
+    .ol-button i {
+      color: inherit;
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: interaction touch draw</h1>
+  </a>
+  <div class="info">
+
+  </div>
+
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options" >
+    Options:
+    <ul>
+      <li>
+      </li>
+    </ul>
+  </div>
+
+  <script type="text/javascript">
+
+    //  Vector layer
+    var vector = new ol.layer.Vector( { source: new ol.source.Vector() })
+
+    // The map
+    var map = new ol.Map ({
+      target: 'map',
+      view: new ol.View ({
+        zoom: 14,
+        center: [270701, 6247637]
+      }),
+      layers: [
+        new ol.layer.Tile({ source: new ol.source.OSM() }),
+        vector
+      ]
+    });
+
+    vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[270318,6247293],[271226,6247178],[271799,6247933],[271083,6248945],[271952,6249108]])))
+/** /
+    var draw = new ol.interaction.Draw({
+      type: 'LineString',
+      source: vector.getSource()
+    })
+    map.addInteraction(draw)
+/*/
+    var mod = new ol.interaction.ModifyFeature ({ 
+      sources: vector.getSource(),
+      condition: function(e) {
+        if (!cursor.getActive()) return true;
+        return e.dragging
+      },
+      deleteCondition: function(e) {
+        return e.delete;
+      }
+    });
+    map.addInteraction(mod);
+
+/**/
+
+    var cursor = new ol.interaction.TouchCursor({
+      coordinate: map.getView().getCenter(),
+      buttons: [
+        { 
+          className: 'ol-button-x', 
+          on: { 
+            pointerdown: function(e) {
+              console.log('down')
+              sel = true;
+            },
+            pointerup: function(e) { 
+              sel = false;
+            }
+          }
+        },
+        { 
+          className: 'ol-button-add', 
+          click: function(e) { 
+            cursor._lastEvent.dragging = true;
+            mod.handleDownEvent(cursor._lastEvent);
+            mod.handleUpEvent(cursor._lastEvent);
+            cursor._lastEvent.dragging = false;
+          }
+        },
+        { 
+          className: 'ol-button-remove', 
+          click: function(e) { 
+            cursor._lastEvent.delete = true;
+            mod.handleDownEvent(cursor._lastEvent); 
+            delete cursor._lastEvent.delete;
+          }
+        }
+      ]
+    });
+    map.addInteraction(cursor);
+
+    var sel = false;
+    cursor.on('dragstart', function(e) {
+      if (sel) {
+        mod.handleDownEvent(e);
+      }
+    });
+    cursor.on('dragging', function(e) {
+      if (sel) {
+        mod.handleDragEvent(e);
+      }
+    });
+    cursor.on('dragend', function(e) {
+      mod.handleUpEvent(e);
+      sel = false;
+    })
+
+  </script>
+
+</body>
+</html>
