@@ -19,6 +19,9 @@
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
 	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
+  <!-- filesaver-js -->
+	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+
   <link rel="stylesheet" href="../style.css" />
   
   <style>
@@ -71,13 +74,24 @@
 	<div id="map" style="width:600px; height:400px;"></div>
 	
 	<div class="options">
-    <input type="number" value="20" />
-    <button onclick="generate(Number($(this).prev().val()))">Generate!</button>
-    <br/>
-    <label><input type="checkbox" id="voronoi"/> show Voronoi</label>
-    <br/>
-    Generated triangles
-    <ul class='triangles'></ul>
+    <ul>
+      <li>
+        <input type="number" value="20" />
+        <button onclick="generate(Number($(this).prev().val()))">Generate!</button>
+      </li>
+      <li>
+        <label><input type="checkbox" id="voronoi"/> show Voronoi</label>
+        (<label><input type="checkbox" id="border"/> border</label>)
+      </li>
+      <li>
+        <button onclick="save('delaunay')">Save Delaunay</button>
+        <button onclick="save('voronoi')">Save Voronoi</button>
+      </li>
+      <li>
+        Generated triangles
+        <ul class='triangles'></ul>
+      </li>
+    </ul>
 	</div>
 
 <script type="text/javascript">
@@ -249,13 +263,14 @@
     voronoi.getSource().clear();
     if ($('#voronoi').prop('checked')) {
       var features = [];
-      delaunay.calculateVoronoi().forEach(function(v) {
-        features.push (new ol.Feature(new ol.geom.Polygon([v])));
+      delaunay.calculateVoronoi($('#border').prop('checked')).forEach(function(f) {
+        features.push (f);
       });
       voronoi.getSource().addFeatures(features);
     }
   }
   $('#voronoi').on('change', calculateVoronoi);
+  $('#border').on('change', calculateVoronoi);
 
 
   // Show circumcircle on hover
@@ -282,6 +297,35 @@
     html: 'circle',
     interaction: hover
   }));
+
+  // Import / export data
+  var dd = new ol.interaction.DropFile();
+  map.addInteraction (dd);
+  dd.on('loadstart', function () { $('body').addClass('waiting'); });
+  dd.on('loadend', function () { $('body').removeClass('waiting'); });
+	dd.on ('addfeatures', function(event) {
+    var features = [];
+    delaunay.clear();
+    event.features.forEach(function(f) {
+      if (f.getGeometry().getType()==='Point') nodes.addFeature(f);
+    });
+  });
+
+  function save(what) {
+    var format = new ol.format.GeoJSON();
+    var features;
+    if (what === 'delaunay') {
+      features = delaunay.getFeatures();
+    } else {
+      features = voronoi.getSource().getFeatures();
+    }
+		var data = format.writeFeatures(features, {
+			dataProjection: 'EPSG:4326',
+			featureProjection: map.getView().getProjection()
+		});
+		var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
+		saveAs(blob, what+'.geojson');
+	}
 
 </script>
 	

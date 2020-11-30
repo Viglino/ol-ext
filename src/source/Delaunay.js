@@ -33,6 +33,15 @@ var ol_source_Delaunay = function(options) {
 };
 ol_ext_inherits(ol_source_Delaunay, ol_source_Vector);
 
+
+/** Clear source (and points)
+ * @param {boolean} opt_fast
+ */
+ol_source_Delaunay.prototype.clear = function(opt_fast) {
+  ol_source_Vector.prototype.clear.call(this, opt_fast);
+  this.getNodeSource().clear(opt_fast);
+};
+
 /** Add a new triangle in the source
  * @param {Array<ol/coordinates>} pts
  */
@@ -66,6 +75,7 @@ ol_source_Delaunay.prototype._onRemoveNode = function(evt) {
   if (!pt) return;
   // Still there (when removing duplicated points)
   if (this.getNodesAt(pt).length) return;
+  // console.log('removenode', evt.feature)
   // Get associated triangles
   var triangles = this.getTrianglesAt(pt);
 
@@ -248,7 +258,7 @@ ol_source_Delaunay.prototype._onAddNode = function(e) {
   var pt = finserted.getGeometry().getCoordinates();
   // Test existing point
   if (this.getNodesAt(pt).length > 1) {
-//    console.log('remove duplicated points')
+    // console.log('remove duplicated points')
     this._nodes.removeFeature(finserted);
     return;
   }
@@ -467,22 +477,22 @@ ol_source_Delaunay.prototype.getNodesAt = function(coord) {
 
 /** Get Voronoi
  * @param {boolean} border include border, default false
- * @return { Array< Array<ol.coordinate> > }
+ * @return { Array< ol.geom.Polygon > }
  */
 ol_source_Delaunay.prototype.calculateVoronoi = function(border) {
   var voronoi = [];
   this.getNodes().forEach(function(f) {
     var pt = f.getGeometry().getCoordinates();
-    var found = false;
-    if (border!==true) {
+    var isborder = false;
+    if (border !== true) {
       for (var i=0; i<this.hull.length; i++) {
         if (ol_coordinate_equal(pt, this.hull[i])) {
-          found = true;
+          isborder = true;
           break;
         }
       }
     }
-    if (!found) {
+    if (!isborder) {
       var tr = this.getTrianglesAt(pt);
       var pts = [];
       tr.forEach(function(triangle) {
@@ -498,7 +508,9 @@ ol_source_Delaunay.prototype.calculateVoronoi = function(border) {
         poly.push(p.pt);
       });
       poly.push(poly[0]);
-      voronoi.push(poly);
+      var prop = f.getProperties();
+      prop.geometry = new ol.geom.Polygon([poly]);
+      voronoi.push(new ol.Feature(prop));
     }
   }.bind(this));
   return voronoi;
