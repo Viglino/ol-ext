@@ -14212,7 +14212,7 @@ ol.format.GeoRSS.prototype.getDocumentItemsTagName = function(xmlDoc) {
  * @extends {ol.interaction.Interaction}
  * @param {olx.interaction.InteractionOptions} options Options
  *  @param {ol.style.Style|Array<ol.style.Style>} options.targetStyle a style to draw the target point, default cross style
- *  @param {string} options.compositecomposite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
+ *  @param {string} options.composite composite operation for the target : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
  */
 ol.interaction.CenterTouch = function(options)
 {	options = options || {};
@@ -14220,13 +14220,6 @@ ol.interaction.CenterTouch = function(options)
 	this._listener = {};
 	// Filter event
 	var rex = /^pointermove$|^pointerup$/;
-	// Default style = cross
-	this.targetStyle = options.targetStyle ||
-		[	new ol.style.Style({ image: new ol.style.RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel:true, stroke: new ol.style.Stroke({ color: "#fff", width:3 }) }) }),
-			new ol.style.Style({ image: new ol.style.RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel:true, stroke: new ol.style.Stroke({ color: "#000", width:1 }) }) })
-		];
-	if (!(this.targetStyle instanceof Array)) this.targetStyle = [this.targetStyle];
-	this.composite = options.composite || '';
 	// Interaction to defer center on top of the interaction 
 	// this is done to enable other coordinates manipulation inserted after the interaction (snapping)
 	this.ctouch = new ol.interaction.Interaction(
@@ -14240,7 +14233,10 @@ ol.interaction.CenterTouch = function(options)
 				}
 		});
 	// Target on map center
-	this._target = new ol.control.Target();
+	this._target = new ol.control.Target({
+		style: options.targetStyle,
+		composite: options.composite
+	});
 	ol.interaction.Interaction.call(this,
 		{	handleEvent: function(e) 
 			{	if (rex.test(e.type)) this.pos_ = e.coordinate;
@@ -14658,13 +14654,17 @@ ol.interaction.Delete.prototype.delete = function(features) {
  * @fires dragend
  * @param {any} options
  *  @param {ol.Overlay|Array<ol.Overlay>} options.overlays the overlays to drag
+ *  @param {ol.Size} options.offset overlay offset, default [0,0]
  */
 ol.interaction.DragOverlay = function(options) {
   if (!options) options = {};
+  var offset = options.offset || [0,0];
   // Extend pointer
   ol.interaction.Pointer.call(this, {
     // start draging on an overlay
     handleDownEvent: function(evt) {
+      var res = evt.frameState.viewState.resolution
+      var coordinate = [evt.coordinate[0] + offset[0]*res, evt.coordinate[1] - offset[1]*res];
       // Click on a button (closeBox) or on a link: don't drag!
       if (/^(BUTTON|A)$/.test(evt.originalEvent.target.tagName)) {
         this._dragging = false;
@@ -14672,11 +14672,17 @@ ol.interaction.DragOverlay = function(options) {
       }
       // Start dragging
       if (this._dragging) {
-        this._dragging.setPosition(evt.coordinate);
+        if (options.centerOnClick !== false) {
+          this._dragging.setPosition(coordinate);
+        } else {
+          coordinate = this._dragging.getPosition();
+        }
         this.dispatchEvent({ 
           type: 'dragstart',
           overlay: this._dragging,
-          coordinate: evt.coordinate
+          originalEvent: evt.originalEvent,
+          frameState: evt.frameState,
+          coordinate: coordinate
         });
         return true;
       }
@@ -14684,25 +14690,35 @@ ol.interaction.DragOverlay = function(options) {
     },
     // Drag
     handleDragEvent: function(evt) {
+      var res = evt.frameState.viewState.resolution
+      var coordinate = [evt.coordinate[0] + offset[0]*res, evt.coordinate[1] - offset[1]*res];
       if (this._dragging) {
-        this._dragging.setPosition(evt.coordinate);
+        this._dragging.setPosition(coordinate);
         this.dispatchEvent({ 
           type: 'dragging',
           overlay: this._dragging,
-          coordinate: evt.coordinate
+          originalEvent: evt.originalEvent,
+          frameState: evt.frameState,
+          coordinate: coordinate
         });
       }
     },
     // Stop dragging
     handleUpEvent: function(evt) {
+      var res = evt.frameState.viewState.resolution
+      var coordinate = [evt.coordinate[0] + offset[0]*res, evt.coordinate[1] - offset[1]*res];
       if (this._dragging) {
         this.dispatchEvent({ 
           type: 'dragend',
           overlay: this._dragging,
-          coordinate: evt.coordinate
+          originalEvent: evt.originalEvent,
+          frameState: evt.frameState,
+          coordinate: coordinate
         });
+        this._dragging = false;
+        return true;
       }
-      return (this._dragging = false);
+      return false;
     }
   });
   // List of overlays / listeners
@@ -16587,7 +16603,8 @@ ol.interaction.Modify.prototype.getModifiedFeatures = function() {
  * @fires modifying
  * @fires modifyend
  * @param {*} options
- *	@param {ol.source.Vector|Array<ol.source.Vector>} options.source a list of source to modify (configured with useSpatialIndex set to true)
+ *	@param {ol.source.Vector} options.source a source to modify (configured with useSpatialIndex set to true)
+ *	@param {ol.source.Vector|Array<ol.source.Vector>} options.sources a list of source to modify (configured with useSpatialIndex set to true)
  *  @param {ol.Collection.<ol.Feature>} options.features collection of feature to modify
  *  @param {integer} options.pixelTolerance Pixel tolerance for considering the pointer close enough to a segment or vertex for editing. Default is 10.
  *  @param {function|undefined} options.filter a filter that takes a feature and return true if it can be modified, default always true.
@@ -16642,9 +16659,8 @@ ol.interaction.ModifyFeature = function(options){
   this.cursor_ = options.cursor;
   // List of source to split
   this.sources_ = options.sources ? (options.sources instanceof Array) ? options.sources:[options.sources] : [];
-  if (options.features) {
-    this.sources_.push (new ol.source.Vector({ features: options.features }));
-  }
+  if (options.source) this.sources_.push (options.source);
+  if (options.features) this.sources_.push (new ol.source.Vector({ features: options.features }));
   // Get all features candidate
   this.filterSplit_ = options.filter || function(){ return true; };
   this._condition = options.condition || ol.events.condition.primaryAction;
@@ -16994,7 +17010,7 @@ ol.interaction.ModifyFeature.prototype.getArcs = function(geom, coord) {
  */
 ol.interaction.ModifyFeature.prototype.handleDownEvent = function(evt) {
   if (!this.getActive()) return false;
-  // Something to split ?
+  // Something to move ?
   var current = this.getClosestFeature(evt);
   if (current && (this._condition(evt) || this._deleteCondition(evt))) {
     var features = [];
@@ -17026,7 +17042,10 @@ ol.interaction.ModifyFeature.prototype.handleDownEvent = function(evt) {
           originalEvent: evt.originalEvent,
           features: this._modifiedFeatures
         });
-        this.handleDragEvent({ coordinate: current.coord })
+        this.handleDragEvent({ 
+          coordinate: current.coord,
+          originalEvent: evt.originalEvent
+        })
         return true;
       }
     } else {
@@ -19173,6 +19192,270 @@ ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
 	}
 };
 
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Handle a touch cursor to defer event position on overlay position
+ * It can be used as abstract base class used for creating subclasses. 
+ * The TouchCursor interaction modifies map browser event coordinate and pixel properties to force pointer on the graphic cursor on the screen to any interaction that them.
+ * @constructor
+ * @extends {ol.interaction.DragOverlay}
+ * @param {olx.interaction.InteractionOptions} options Options
+ *  @param {ol.coordinate} coordinate position of the 
+ */
+ol.interaction.TouchCursor = function(options) {
+  options = options || {};
+  // List of listerner on the object
+  this._listener = {};
+  // Interaction to defer position on top of the interaction 
+  // this is done to enable other coordinates manipulation inserted after the interaction (snapping)
+  var offset = [-20,-20];
+  this.ctouch = new ol.interaction.Interaction({
+    handleEvent: function(e) {
+      if (!/drag/.test(e.type) && this.getMap()) {
+        e.coordinate = this.overlay.getPosition();
+        e.pixel = this.getMap().getPixelFromCoordinate(e.coordinate);
+      } else {
+        var res = e.frameState.viewState.resolution
+        e.coordinate = [e.coordinate[0] + offset[0]*res, e.coordinate[1] - offset[1]*res];
+        e.pixel = this.getMap().getPixelFromCoordinate(e.coordinate);
+      }
+      this._lastEvent = e;
+      return true; 
+    }.bind(this)
+  });
+  // Add Overlay
+  this.overlay = new ol.Overlay({
+    className: 'ol-touch-cursor',
+    position: options.coordinate,
+    positioning: 'top-left',
+    element: ol.ext.element.create('DIV', {}),
+    stopEvent: false,
+  });
+  if (options.buttons) {
+    var elt = this.overlay.element;
+    var start = options.buttons.length > 4 ? 0 : 1;
+    options.buttons.forEach((function (b, i) {
+      ol.ext.element.create('DIV', {
+        className: (b.className||'')+' ol-button ol-button-' + (i+start),
+        html: ol.ext.element.create('DIV', { html: b.html }),
+        click: b.click,
+        on: b.on,
+        parent: elt
+      })
+    }))
+  }
+  ol.interaction.DragOverlay.call(this, {
+    centerOnClick: false,
+    //offset: [-20,-20],
+    overlays: this.overlay
+  });
+  // Replace events to handle click
+  var dragging = false;
+  var start = false;
+  this.on('dragstart', function (e) {
+    start = e;
+    return !e.overlay;
+  })
+  this.on('dragend', function (e) {
+    if (!e.overlay) return true;
+    if (dragging) {
+      this.dispatchEvent({
+        type: 'dragend', 
+        dragging: dragging,
+        originalEvent: e.originalEvent, 
+        frameState: e.frameState,
+        pixel: map.getPixelFromCoordinate(this.overlay.getPosition()),
+        coordinate: this.overlay.getPosition() 
+      });
+      dragging = false;
+    } else {
+      if (e.originalEvent.target === this.overlay.element) {
+        this.dispatchEvent({ 
+          type: 'click', 
+          dragging: dragging,
+          originalEvent: e.originalEvent, 
+          frameState: e.frameState,
+          pixel: map.getPixelFromCoordinate(this.overlay.getPosition()),
+          coordinate: this.overlay.getPosition() 
+        });
+      }
+    }
+    return false;
+  })
+  this.on('dragging', function (e) {
+    if (!e.overlay) return true;
+    dragging = true;
+    if (start) {
+      this.dispatchEvent({ 
+        type: 'dragstart', 
+        dragging: dragging,
+        originalEvent: start.originalEvent, 
+        frameState: e.frameState,
+        pixel: map.getPixelFromCoordinate(start.coordinate),
+        coordinate: start.coordinate
+      });
+      start = false;
+    }
+    this.dispatchEvent({ 
+      type: 'dragging', 
+      dragging: dragging,
+      originalEvent: e.originalEvent, 
+      frameState: e.frameState,
+      pixel: map.getPixelFromCoordinate(this.overlay.getPosition()),
+      coordinate: this.overlay.getPosition() 
+    });
+    return false;
+  })
+};
+ol.ext.inherits(ol.interaction.TouchCursor, ol.interaction.DragOverlay);
+/**
+ * Remove the interaction from its current map, if any,  and attach it to a new
+ * map, if any. Pass `null` to just remove the interaction from the current map.
+ * @param {_ol_Map_} map Map.
+ * @api stable
+ */
+ol.interaction.TouchCursor.prototype.setMap = function(map) {
+  if (this.getMap()) {
+    this.getMap().removeInteraction(this.ctouch);
+    this.getMap().removeOverlay(this.overlay);
+  }
+  ol.interaction.DragOverlay.prototype.setMap.call (this, map);
+  if (this.getMap()) {
+    this.getMap().addOverlay(this.overlay);
+    this.getMap().addInteraction(this.ctouch);
+  }
+};
+/**
+ * Activate or deactivate the interaction.
+ * @param {boolean} active Active.
+ * @param {ol.coordinate|null} position position of the cursor (when activating), default viewport center.
+ * @observable
+ * @api
+ */
+ol.interaction.TouchCursor.prototype.setActive = function(b, position) {
+  ol.interaction.DragOverlay.prototype.setActive.call (this, b);
+  this.ctouch.setActive(b);
+  if (!b) {
+    this.overlay.setPosition();
+    this.overlay.element.classList.remove('active');
+    return;
+  } else if (position) {
+    this.overlay.setPosition(position);
+  } else if (this.getMap()) {
+    this.overlay.setPosition(this.getMap().getView().getCenter());
+  }
+  setTimeout(function() {
+    this.overlay.element.classList.add('active');
+  }.bind(this), 100);
+};
+/** Set the position of the target
+ * @param {ol.coordinate} coord
+ */
+ol.interaction.TouchCursor.prototype.setPosition = function (coord) {
+  this.overlay.setPosition(coord); 
+};
+/** Get the position of the target
+ * @return {ol.coordinate}
+ */
+ol.interaction.TouchCursor.prototype.getPosition = function () {
+  return this.overlay.getPosition(); 
+};
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** TouchCursor interaction + ModifyFeature
+ * @constructor
+ * @extends {ol.interaction.DragOverlay}
+ * @param {olx.interaction.InteractionOptions} options Options
+ *  @param {ol.source.Vector} source a source to modify
+ *  @param {ol.source.Vector|Array<ol.source.Vector} sources a list of sources to modify
+ */
+ol.interaction.TouchCursorModify = function(options) {
+  options = options || {};
+  var drag = false;
+  var dragging = false;
+  var del = false;
+  // Modify interaction
+  var mod = this._modify = new ol.interaction.ModifyFeature ({ 
+    source: options.source,
+    sources: options.sources,
+    condition: function(e) {
+      return e.dragging || dragging;
+    },
+    deleteCondition: function(e) {
+      return del;
+    }
+  });
+  ol.interaction.TouchCursor.call(this, {
+    coordinate: options.coordinate,
+    buttons: [{ 
+        className: 'ol-button-x', 
+        on: { 
+          pointerdown: function() { drag = true; },
+          pointerup: function() { drag = false; }
+        }
+      }, { 
+        className: 'ol-button-add', 
+        click: function() { 
+          dragging = true;
+          mod.handleDownEvent(cursor._lastEvent);
+          mod.handleUpEvent(cursor._lastEvent);
+          dragging = false;
+        }
+      }, { 
+        className: 'ol-button-remove', 
+        click: function() { 
+          del = true;
+          mod.handleDownEvent(cursor._lastEvent); 
+          del = false;
+        }
+      }
+    ]
+  });
+  // Handle dragging
+  this.on('dragstart', function(e) {
+    if (drag) mod.handleDownEvent(e);
+  });
+  this.on('dragging', function(e) {
+    if (drag) mod.handleDragEvent(e);
+  });
+  this.on('dragend', function(e) {
+    mod.handleUpEvent(e);
+    drag = false;
+  });
+};
+ol.ext.inherits(ol.interaction.TouchCursorModify, ol.interaction.TouchCursor);
+/**
+ * Remove the interaction from its current map, if any,  and attach it to a new
+ * map, if any. Pass `null` to just remove the interaction from the current map.
+ * @param {_ol_Map_} map Map.
+ * @api stable
+ */
+ol.interaction.TouchCursorModify.prototype.setMap = function(map) {
+  if (this.getMap()) {
+    this.getMap().removeInteraction(this._modify);
+  }
+  if (map) {
+    map.addInteraction(this._modify);
+  }
+  ol.interaction.TouchCursor.prototype.setMap.call (this, map);
+};
+/**
+ * Activate or deactivate the interaction.
+ * @param {boolean} active Active.
+ * @param {ol.coordinate|null} position position of the cursor (when activating), default viewport center.
+ * @observable
+ * @api
+ */
+ol.interaction.TouchCursorModify.prototype.setActive = function(b, position) {
+  ol.interaction.TouchCursor.prototype.setActive.call (this, b);
+  this._modify.setActive(b);
+};
+
 /** Interaction rotate
  * @constructor
  * @extends {ol.interaction.Pointer}
@@ -20859,6 +21142,13 @@ ol.source.Delaunay = function(options) {
   this.set ('epsilon', options.epsilon || .0001)
 };
 ol.ext.inherits(ol.source.Delaunay, ol.source.Vector);
+/** Clear source (and points)
+ * @param {boolean} opt_fast
+ */
+ol.source.Delaunay.prototype.clear = function(opt_fast) {
+  ol.source.Vector.prototype.clear.call(this, opt_fast);
+  this.getNodeSource().clear(opt_fast);
+};
 /** Add a new triangle in the source
  * @param {Array<ol/coordinates>} pts
  */
@@ -20889,6 +21179,7 @@ ol.source.Delaunay.prototype._onRemoveNode = function(evt) {
   if (!pt) return;
   // Still there (when removing duplicated points)
   if (this.getNodesAt(pt).length) return;
+  // console.log('removenode', evt.feature)
   // Get associated triangles
   var triangles = this.getTrianglesAt(pt);
   this.flip=[];
@@ -21056,7 +21347,7 @@ ol.source.Delaunay.prototype._onAddNode = function(e) {
   var pt = finserted.getGeometry().getCoordinates();
   // Test existing point
   if (this.getNodesAt(pt).length > 1) {
-//    console.log('remove duplicated points')
+    // console.log('remove duplicated points')
     this._nodes.removeFeature(finserted);
     return;
   }
@@ -21259,22 +21550,22 @@ ol.source.Delaunay.prototype.getNodesAt = function(coord) {
 };
 /** Get Voronoi
  * @param {boolean} border include border, default false
- * @return { Array< Array<ol.coordinate> > }
+ * @return { Array< ol.geom.Polygon > }
  */
 ol.source.Delaunay.prototype.calculateVoronoi = function(border) {
   var voronoi = [];
   this.getNodes().forEach(function(f) {
     var pt = f.getGeometry().getCoordinates();
-    var found = false;
-    if (border!==true) {
+    var isborder = false;
+    if (border !== true) {
       for (var i=0; i<this.hull.length; i++) {
         if (ol.coordinate.equal(pt, this.hull[i])) {
-          found = true;
+          isborder = true;
           break;
         }
       }
     }
-    if (!found) {
+    if (!isborder) {
       var tr = this.getTrianglesAt(pt);
       var pts = [];
       tr.forEach(function(triangle) {
@@ -21290,7 +21581,9 @@ ol.source.Delaunay.prototype.calculateVoronoi = function(border) {
         poly.push(p.pt);
       });
       poly.push(poly[0]);
-      voronoi.push(poly);
+      var prop = f.getProperties();
+      prop.geometry = new ol.geom.Polygon([poly]);
+      voronoi.push(new ol.Feature(prop));
     }
   }.bind(this));
   return voronoi;
