@@ -45,6 +45,7 @@ import '../geom/LineStringSplitAt'
  *  @param {ol.EventsConditionType | undefined} options.condition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event will be considered to add or move a vertex to the sketch. Default is ol.events.condition.primaryAction.
  *  @param {ol.EventsConditionType | undefined} options.deleteCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled. By default, ol.events.condition.singleClick with ol.events.condition.altKeyOnly results in a vertex deletion.
  *  @param {ol.EventsConditionType | undefined} options.insertVertexCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether a new vertex can be added to the sketch features. Default is ol.events.condition.always
+ *  @param {boolean} options.wrapX Wrap the world horizontally on the sketch overlay, default false
  */
 var ol_interaction_ModifyFeature = function(options){
   if (!options) options = {};
@@ -133,7 +134,8 @@ var ol_interaction_ModifyFeature = function(options){
     }),
     name:'Modify overlay',
     displayInLayerSwitcher: false,
-    style: sketchStyle
+    style: sketchStyle,
+    wrapX: options.wrapX
   });
 
 };

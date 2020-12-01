@@ -1,6 +1,6 @@
 .ol-overlaycontainer .ol-touch-cursor {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   cursor: pointer;
   background: rgba(255,255,255,.4);
@@ -11,70 +11,83 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 15px;
-  height: 15px;
-  background: radial-gradient(circle at 100% 100%, transparent, transparent 50%, #369 50%, #369);
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle at 100% 100%, transparent, transparent 65%, #369 65%, #369);
 }
 
 .ol-overlaycontainer .ol-touch-cursor .ol-button {
   position: absolute;
   color: #369;
-  height: 25px;
-  width: 25px;
+  height: 28px;
+  width: 28px;
   border-radius: 50%;
   cursor: pointer;
   background: rgba(255,255,255,.4);
-  box-shadow: inset 0 0 0 2px currentColor;
+  box-shadow: inset 0 0 0 3px currentColor;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  opacity: 0;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 1;
   transition: .5s;
+  overflow: hidden;
 }
 .ol-overlaycontainer .ol-touch-cursor.active .ol-button {
   opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
 }
 .ol-overlaycontainer .ol-touch-cursor.active .ol-button-0 {
-  top: -25%;
-  left: 125%;
+  top: -18%;
+  left: 118%;
 }
 .ol-overlaycontainer .ol-touch-cursor.active .ol-button-1 {
   top: 50%;
-  left: 150%;
+  left: 140%;
 }
 .ol-overlaycontainer .ol-touch-cursor.active .ol-button-2 {
-  top: 125%;
-  left: 125%;
+  top: 120%;
+  left: 120%;
 }
 .ol-overlaycontainer .ol-touch-cursor.active .ol-button-3 {
-  top: 150%;
+  top: 140%;
   left: 50%;
 }
 .ol-overlaycontainer .ol-touch-cursor.active .ol-button-4 {
-  top: 125%;
-  left: -25%;
+  top: 118%;
+  left: -18%;
 }
-.ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-add:before,
-.ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-add:after,
-.ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-x:before,
-.ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-x:after,
-.ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-remove:before {
+.ol-overlaycontainer .ol-touch-cursor .ol-button:before {
   content: "";
-  width: 13px;
-  height: 2px;
-  background-color: currentColor;
+  width: 1.5em;
+  height: 1em;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  line-height: 1em;
+  text-align: center;
 }
-.ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-add:after,
-.ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-x:after {
-  width: 2px;
-  height: 13px;
+.ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-add:before,
+.ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-remove:before {
+  content: "−";
+  line-height: .95em;
+  font-size: 1.375em;
+  font-weight: bold;
 }
-.ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-x {
-  transform: translate(-50%, -50%) rotate(45deg);
+.ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-add:before {
+  content: "+";
+}
+.ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-x:before {
+  content: "\2716";
+  font-size: 1.2em;
+}
+.ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-move:before {
+  content: "\2725";
+  font-size: 1.2em;
+}
+.ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-check:before {
+  content: "\2714";
+  font-weight: bold;
 }
 .ol-overlaycontainer .ol-touch-cursor .ol-button > div {
   position: absolute;

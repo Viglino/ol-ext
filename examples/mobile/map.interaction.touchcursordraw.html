@@ -28,8 +28,16 @@
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
   <style>
-    .ol-button i {
-      color: inherit;
+    #map .ol-touch-cursor.Modify .ol-button-x:after {
+      content: none;
+    }
+    #map .ol-touch-cursor.Modify .ol-button-move:before {
+      content: "\f047";
+      font-family: "FontAwesome";
+      font-size: 1em;
+    }
+    .ol-touch-cursor.LineString:before {
+      content: ""
     }
   </style>
 
@@ -51,6 +59,16 @@
     Options:
     <ul>
       <li>
+        Draw: 
+        <select onchange="activate(this.value)">
+          <option value="Modify">Modify</option>
+          <option value="Point">Point</option>
+          <option value="LineString">LineString</option>
+          <option value="Polygon">Polygon</option>
+        </select>
+      </li>
+      <li>
+        <button onclick="active.setActive(true);">Center cursor</button>
       </li>
     </ul>
   </div>
@@ -75,11 +93,43 @@
 
     vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[270318,6247293],[271226,6247178],[271799,6247933],[271083,6248945],[271952,6249108]])))
 
-    var cursor = new ol.interaction.TouchCursorModify({
-      coordinate: map.getView().getCenter(),
-      sources: vector.getSource()
+    var cursor = {};
+    // Draw tools
+    ['Point', 'LineString', 'Polygon'].forEach(function(mode) {
+      cursor[mode] = new ol.interaction.TouchCursorDraw({
+        className: mode,
+        coordinate: map.getView().getCenter(),
+        type: mode,
+        source: vector.getSource()
+      });
+      cursor[mode].setActive(false);
+      map.addInteraction(cursor[mode]);
     });
-    map.addInteraction(cursor);
+    // Modify
+    var active = cursor.Modify = new ol.interaction.TouchCursorModify({
+      className: 'Modify',
+      coordinate: map.getView().getCenter(),
+      source: vector.getSource()
+    });
+    map.addInteraction(cursor.Modify);
+
+    // Activate mode
+    function activate(mode) {
+      var coord;
+      if (active) {
+        coord = active.getPosition();
+        active.setActive(false);
+      }
+      active = cursor[mode];
+      if (active) active.setActive(true, coord);
+    }
+
+    // Add a snap interaction
+    map.addInteraction(new ol.interaction.Snap({
+      source: vector.getSource(),
+      pixelTolerance: 10
+    }));
+
 
   </script>
 

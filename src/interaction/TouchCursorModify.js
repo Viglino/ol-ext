@@ -8,53 +8,69 @@ import ol_interaction_TouchCursor from './TouchCursor'
 
 /** TouchCursor interaction + ModifyFeature
  * @constructor
- * @extends {ol_interaction_DragOverlay}
+ * @extends {ol_interaction_TouchCursor}
  * @param {olx.interaction.InteractionOptions} options Options
- *  @param {ol.source.Vector} source a source to modify
- *  @param {ol.source.Vector|Array<ol.source.Vector} sources a list of sources to modify
+ *  @param {string} options.className cursor class name
+ *  @param {ol.coordinate} options.coordinate cursor position
+ *	@param {ol.source.Vector} options.source a source to modify (configured with useSpatialIndex set to true)
+ *	@param {ol.source.Vector|Array<ol.source.Vector>} options.sources a list of source to modify (configured with useSpatialIndex set to true)
+ *  @param {ol.Collection.<ol.Feature>} options.features collection of feature to modify
+ *  @param {function|undefined} options.filter a filter that takes a feature and return true if it can be modified, default always true.
+ *  @param {number} pixelTolerance Pixel tolerance for considering the pointer close enough to a segment or vertex for editing, default 10
+ *  @param {ol.style.Style | Array<ol.style.Style> | undefined} options.style Style for the sketch features.
+ *  @param {boolean} options.wrapX Wrap the world horizontally on the sketch overlay, default false
  */
 var ol_interaction_TouchCursorModify = function(options) {
   options = options || {};
 
-  var drag = false;
-  var dragging = false;
-  var del = false;
+  var drag = false;       // enable drag
+  var dragging = false;   // dragging a point
+  var del = false;        // deleting a point
 
   // Modify interaction
   var mod = this._modify = new ol.interaction.ModifyFeature ({ 
     source: options.source,
     sources: options.sources,
+    features: options.features,
+    pixelTolerance: options.pixelTolerance,
+    filter: options.filter,
+    style: options.style,
+    wrapX: options.wrapX,
     condition: function(e) {
       return e.dragging || dragging;
     },
-    deleteCondition: function(e) {
+    deleteCondition: function() {
       return del;
     }
   });
 
   ol_interaction_TouchCursor.call(this, {
+    className: options.className,
     coordinate: options.coordinate,
-    buttons: [{ 
-        className: 'ol-button-x', 
+    buttons: [{
+        // Dragging button
+        className: 'ol-button-move', 
         on: { 
           pointerdown: function() { drag = true; },
           pointerup: function() { drag = false; }
         }
       }, { 
+        // Add a new point to a line
         className: 'ol-button-add', 
         click: function() { 
           dragging = true;
-          mod.handleDownEvent(cursor._lastEvent);
-          mod.handleUpEvent(cursor._lastEvent);
+          mod.handleDownEvent(this._lastEvent);
+          mod.handleUpEvent(this._lastEvent);
           dragging = false;
-        }
+        }.bind(this)
       }, { 
+        // Remove a point
         className: 'ol-button-remove', 
         click: function() { 
           del = true;
-          mod.handleDownEvent(cursor._lastEvent); 
+          mod.handleDownEvent(this._lastEvent); 
           del = false;
-        }
+        }.bind(this)
       }
     ]
   });
@@ -99,8 +115,18 @@ ol_interaction_TouchCursorModify.prototype.setMap = function(map) {
  * @api
  */
 ol_interaction_TouchCursorModify.prototype.setActive = function(b, position) {
-  ol_interaction_TouchCursor.prototype.setActive.call (this, b);
+  ol_interaction_TouchCursor.prototype.setActive.call (this, b, position);
   this._modify.setActive(b);
+};
+
+/**
+ * Get the modify interaction.
+ * @retunr {ol.interaction.ModifyFeature} 
+ * @observable
+ * @api
+ */
+ol_interaction_TouchCursorModify.prototype.getInteraction = function() {
+  return this._modify;
 };
 
 export default ol_interaction_TouchCursorModify
