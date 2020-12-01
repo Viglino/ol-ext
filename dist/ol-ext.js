@@ -16612,6 +16612,7 @@ ol.interaction.Modify.prototype.getModifiedFeatures = function() {
  *  @param {ol.EventsConditionType | undefined} options.condition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event will be considered to add or move a vertex to the sketch. Default is ol.events.condition.primaryAction.
  *  @param {ol.EventsConditionType | undefined} options.deleteCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled. By default, ol.events.condition.singleClick with ol.events.condition.altKeyOnly results in a vertex deletion.
  *  @param {ol.EventsConditionType | undefined} options.insertVertexCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether a new vertex can be added to the sketch features. Default is ol.events.condition.always
+ *  @param {boolean} options.wrapX Wrap the world horizontally on the sketch overlay, default false
  */
 ol.interaction.ModifyFeature = function(options){
   if (!options) options = {};
@@ -16692,7 +16693,8 @@ ol.interaction.ModifyFeature = function(options){
     }),
     name:'Modify overlay',
     displayInLayerSwitcher: false,
-    style: sketchStyle
+    style: sketchStyle,
+    wrapX: options.wrapX
   });
 };
 ol.ext.inherits(ol.interaction.ModifyFeature, ol.interaction.Pointer);
@@ -19202,15 +19204,17 @@ ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
  * @constructor
  * @extends {ol.interaction.DragOverlay}
  * @param {olx.interaction.InteractionOptions} options Options
- *  @param {ol.coordinate} coordinate position of the 
+ *  @param {string} options.className cursor class name
+ *  @param {ol.coordinate} options.coordinate position of the cursor
+ *  @param {Array<*>} options.buttons an array of buttons
  */
 ol.interaction.TouchCursor = function(options) {
   options = options || {};
   // List of listerner on the object
-  this._listener = {};
+  this._listener = false;
   // Interaction to defer position on top of the interaction 
   // this is done to enable other coordinates manipulation inserted after the interaction (snapping)
-  var offset = [-20,-20];
+  var offset = [-22,-22];
   this.ctouch = new ol.interaction.Interaction({
     handleEvent: function(e) {
       if (!/drag/.test(e.type) && this.getMap()) {
@@ -19225,9 +19229,11 @@ ol.interaction.TouchCursor = function(options) {
       return true; 
     }.bind(this)
   });
+  // Force interaction on top
+  this.ctouch.set('onTop', true);
   // Add Overlay
   this.overlay = new ol.Overlay({
-    className: 'ol-touch-cursor',
+    className: ('ol-touch-cursor '+(options.className||'')).trim(),
     position: options.coordinate,
     positioning: 'top-left',
     element: ol.ext.element.create('DIV', {}),
@@ -19237,13 +19243,15 @@ ol.interaction.TouchCursor = function(options) {
     var elt = this.overlay.element;
     var start = options.buttons.length > 4 ? 0 : 1;
     options.buttons.forEach((function (b, i) {
-      ol.ext.element.create('DIV', {
-        className: (b.className||'')+' ol-button ol-button-' + (i+start),
-        html: ol.ext.element.create('DIV', { html: b.html }),
-        click: b.click,
-        on: b.on,
-        parent: elt
-      })
+      if (i<5) {
+        ol.ext.element.create('DIV', {
+          className: ((b.className||'')+' ol-button ol-button-' + (i+start)).trim(),
+          html: ol.ext.element.create('DIV', { html: b.html }),
+          click: b.click,
+          on: b.on,
+          parent: elt
+        })
+      }
     }))
   }
   ol.interaction.DragOverlay.call(this, {
@@ -19325,6 +19333,16 @@ ol.interaction.TouchCursor.prototype.setMap = function(map) {
   if (this.getMap()) {
     this.getMap().addOverlay(this.overlay);
     this.getMap().addInteraction(this.ctouch);
+    if (this._listener) {
+      ol.Observable.unByKey(this._listener);
+    }
+    this._listener = this.getMap().getInteractions().on('add', function(e) {
+      // Move on top
+      if (!e.element.get('onTop')) {
+        this.getMap().removeInteraction(this.ctouch);
+        this.getMap().addInteraction(this.ctouch);
+      }
+    }.bind(this));
   }
 };
 /**
@@ -19340,13 +19358,14 @@ ol.interaction.TouchCursor.prototype.setActive = function(b, position) {
   if (!b) {
     this.overlay.setPosition();
     this.overlay.element.classList.remove('active');
+    if (this._activate) clearTimeout(this._activate);
     return;
   } else if (position) {
     this.overlay.setPosition(position);
   } else if (this.getMap()) {
     this.overlay.setPosition(this.getMap().getView().getCenter());
   }
-  setTimeout(function() {
+  this._activate = setTimeout(function() {
     this.overlay.element.classList.add('active');
   }.bind(this), 100);
 };
@@ -19362,6 +19381,53 @@ ol.interaction.TouchCursor.prototype.setPosition = function (coord) {
 ol.interaction.TouchCursor.prototype.getPosition = function () {
   return this.overlay.getPosition(); 
 };
+/** Get cursor overlay
+ * @return {ol.Overlay}
+ */
+ol.interaction.TouchCursor.prototype.getOverlay = function () {
+  return this.overlay; 
+};
+/** Get cursor overlay element
+ * @return {Element}
+ */
+ol.interaction.TouchCursor.prototype.getOverlayElement = function () {
+  return this.overlay.element; 
+};
+/** Get cursor button element
+ * @param {string|number} button the button className or the button index
+ * @return {Element}
+ */
+ol.interaction.TouchCursor.prototype.getButtonElement = function (button) {
+  if (typeof(button) === 'number') return this.getOverlayElement().getElementsByClassName('ol-button')[button];
+  return this.getOverlayElement().getElementsByClassName(button)[0];
+};
+/** Get cursor button element
+ * @param {} options
+ *  @param {string} options.className button class name
+ *  @param {DOMElement|string} options.html button content
+ *  @param {function} options.click onclick function
+ *  @param {*} options.on an object with 
+ * 
+ */
+ol.interaction.TouchCursor.prototype.addButton = function (b) {
+  var buttons = this.getOverlayElement().getElementsByClassName('ol-button');
+  if (buttons.length > 4) {
+    console.error('[ol/interaction/TouchCursor~addButton] too many button on the cursor (max=5)...')
+    return;
+  } 
+  ol.ext.element.create('DIV', {
+    className: ((b.className||'')+' ol-button').trim(),
+    html: ol.ext.element.create('DIV', { html: b.html }),
+    click: b.click,
+    on: b.on,
+    parent: this.getOverlayElement()
+  });
+  // Reorder buttons
+  var start = buttons.length > 4 ? 0 : 1;
+  for (var i=0; i<buttons.length; i++) {
+    buttons[i].className = buttons[i].className.replace(/ol-button-\d/g, '').trim() + ' ol-button-' + (i+start);
+  }
+};
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -19369,50 +19435,209 @@ ol.interaction.TouchCursor.prototype.getPosition = function () {
 */
 /** TouchCursor interaction + ModifyFeature
  * @constructor
- * @extends {ol.interaction.DragOverlay}
+ * @extends {ol.interaction.TouchCursor}
  * @param {olx.interaction.InteractionOptions} options Options
- *  @param {ol.source.Vector} source a source to modify
- *  @param {ol.source.Vector|Array<ol.source.Vector} sources a list of sources to modify
+ *  @param {string} options.className cursor class name
+ *  @param {ol.coordinate} options.coordinate cursor position
+ *  @param {string} options.type geometry type
+ *  @param {ol.source.Vector} options.source Destination source for the drawn features
+ *  @param {ol.Collection<ol.Feature>} options.features Destination collection for the drawn features
+ *  @param {number} options.clickTolerance The maximum distance in pixels for "click" event to add a point/vertex to the geometry being drawn. default 6
+ *  @param {number} options.snapTolerance Pixel distance for snapping to the drawing finish, default 12
+ *  @param {number} options.maxPoints The number of points that can be drawn before a polygon ring or line string is finished. By default there is no restriction.
+ *  @param {number} options.minPoints The number of points that must be drawn before a polygon ring or line string can be finished. Default is 3 for polygon rings and 2 for line strings.
+ *  @param {ol.style.Style} options.style Style for sketch features.
+ *  @param {function} options.geometryFunction Function that is called when a geometry's coordinates are updated.
+ *  @param {string} options.geometryName Geometry name to use for features created by the draw interaction.
+ *  @param {boolean} options.wrapX Wrap the world horizontally on the sketch overlay, default false
+ */
+ol.interaction.TouchCursorDraw = function(options) {
+  options = options || {};
+  // Modify interaction
+  var draw = this._draw = new ol.interaction.Draw ({ 
+    source: options.source,
+    features: options.features,
+    clickTolerance: options.clickTolerance,
+    snapTolerance: options.snapTolerance,
+    maxPoints: options.maxPoints,
+    minPoints: options.minPoints,
+    style: options.style,
+    geometryFunction: options.geometryFunction,
+    geometryName: options.geometryName,
+    wrapX: options.wrapX,
+    type: options.type || 'LineString'
+  });
+  draw.set('type', options.type);
+  var addPoint = false;
+  draw.handleDownEvent = function(e) {
+    if (addPoint) return ol.interaction.Draw.prototype.handleDownEvent.call(draw, e);
+    return true;
+  }
+  draw.handleUpEvent = function(e) {
+    if (addPoint) {
+      addPoint = false;
+      return ol.interaction.Draw.prototype.handleUpEvent.call(draw, e);
+    }
+    return true;
+  }
+  // Buttons
+  var buttons = [];
+  if (options.type !== 'Point') {
+    buttons =[{
+      // Cancel drawing
+      className: 'ol-button-x', 
+      click: function() {
+        draw.abortDrawing();
+      }
+    }, { 
+      // Add a new point (nothing to do, just click)
+      className: 'ol-button-check',
+      click: function() {
+        draw.finishDrawing();
+      }
+    }, { 
+      // Remove a point
+      className: 'ol-button-remove', 
+      click: function() {
+        draw.removeLastPoint();
+        if (draw.sketchFeature_) {
+          var c = draw.sketchLineCoords_ ? draw.sketchLineCoords_.slice() : draw.sketchCoords_.slice();
+          c.pop();
+          if (!c.length) {
+            draw.abortDrawing();
+          } else {
+            if (draw.get('type')==='Polygon') {
+              draw.sketchLine_.getGeometry().setCoordinates(c);
+              c.push(c[0])
+              draw.sketchFeature_.getGeometry().setCoordinates([c]);
+              c.pop();
+            } else {
+              draw.sketchFeature_.getGeometry().setCoordinates(c);
+            }
+            var p = c.pop();
+            if (p) draw.sketchPoint_.getGeometry().setCoordinates(p);
+            else draw.abortDrawing();
+          }
+        }
+      }
+    }]
+  }
+  // Create cursor
+  ol.interaction.TouchCursor.call(this, {
+    className: options.className,
+    coordinate: options.coordinate,
+    buttons: buttons
+  });
+  // Add point on click
+  this.getOverlayElement().addEventListener('pointerdown', function(e) {
+    if (e.target === this.getOverlayElement()) {
+      addPoint = true;
+    }
+  }.bind(this));
+};
+ol.ext.inherits(ol.interaction.TouchCursorDraw, ol.interaction.TouchCursor);
+/**
+ * Remove the interaction from its current map, if any,  and attach it to a new
+ * map, if any. Pass `null` to just remove the interaction from the current map.
+ * @param {_ol_Map_} map Map.
+ * @api stable
+ */
+ol.interaction.TouchCursorDraw.prototype.setMap = function(map) {
+  if (this.getMap()) {
+    this.getMap().removeInteraction(this._modify);
+  }
+  if (map) {
+    map.addInteraction(this._draw);
+  }
+  ol.interaction.TouchCursor.prototype.setMap.call (this, map);
+};
+/**
+ * Activate or deactivate the interaction.
+ * @param {boolean} active Active.
+ * @param {ol.coordinate|null} position position of the cursor (when activating), default viewport center.
+ * @observable
+ * @api
+ */
+ol.interaction.TouchCursorDraw.prototype.setActive = function(b, position) {
+  ol.interaction.TouchCursor.prototype.setActive.call (this, b, position);
+  this._draw.setActive(b);
+};
+/**
+ * Get the draw interaction.
+ * @retunr {ol.interaction.ModifyFeature} 
+ * @observable
+ * @api
+ */
+ol.interaction.TouchCursorDraw.prototype.getInteraction = function() {
+  return this._draw;
+};
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** TouchCursor interaction + ModifyFeature
+ * @constructor
+ * @extends {ol.interaction.TouchCursor}
+ * @param {olx.interaction.InteractionOptions} options Options
+ *  @param {string} options.className cursor class name
+ *  @param {ol.coordinate} options.coordinate cursor position
+ *	@param {ol.source.Vector} options.source a source to modify (configured with useSpatialIndex set to true)
+ *	@param {ol.source.Vector|Array<ol.source.Vector>} options.sources a list of source to modify (configured with useSpatialIndex set to true)
+ *  @param {ol.Collection.<ol.Feature>} options.features collection of feature to modify
+ *  @param {function|undefined} options.filter a filter that takes a feature and return true if it can be modified, default always true.
+ *  @param {number} pixelTolerance Pixel tolerance for considering the pointer close enough to a segment or vertex for editing, default 10
+ *  @param {ol.style.Style | Array<ol.style.Style> | undefined} options.style Style for the sketch features.
+ *  @param {boolean} options.wrapX Wrap the world horizontally on the sketch overlay, default false
  */
 ol.interaction.TouchCursorModify = function(options) {
   options = options || {};
-  var drag = false;
-  var dragging = false;
-  var del = false;
+  var drag = false;       // enable drag
+  var dragging = false;   // dragging a point
+  var del = false;        // deleting a point
   // Modify interaction
   var mod = this._modify = new ol.interaction.ModifyFeature ({ 
     source: options.source,
     sources: options.sources,
+    features: options.features,
+    pixelTolerance: options.pixelTolerance,
+    filter: options.filter,
+    style: options.style,
+    wrapX: options.wrapX,
     condition: function(e) {
       return e.dragging || dragging;
     },
-    deleteCondition: function(e) {
+    deleteCondition: function() {
       return del;
     }
   });
   ol.interaction.TouchCursor.call(this, {
+    className: options.className,
     coordinate: options.coordinate,
-    buttons: [{ 
-        className: 'ol-button-x', 
+    buttons: [{
+        // Dragging button
+        className: 'ol-button-move', 
         on: { 
           pointerdown: function() { drag = true; },
           pointerup: function() { drag = false; }
         }
       }, { 
+        // Add a new point to a line
         className: 'ol-button-add', 
         click: function() { 
           dragging = true;
-          mod.handleDownEvent(cursor._lastEvent);
-          mod.handleUpEvent(cursor._lastEvent);
+          mod.handleDownEvent(this._lastEvent);
+          mod.handleUpEvent(this._lastEvent);
           dragging = false;
-        }
+        }.bind(this)
       }, { 
+        // Remove a point
         className: 'ol-button-remove', 
         click: function() { 
           del = true;
-          mod.handleDownEvent(cursor._lastEvent); 
+          mod.handleDownEvent(this._lastEvent); 
           del = false;
-        }
+        }.bind(this)
       }
     ]
   });
@@ -19452,8 +19677,17 @@ ol.interaction.TouchCursorModify.prototype.setMap = function(map) {
  * @api
  */
 ol.interaction.TouchCursorModify.prototype.setActive = function(b, position) {
-  ol.interaction.TouchCursor.prototype.setActive.call (this, b);
+  ol.interaction.TouchCursor.prototype.setActive.call (this, b, position);
   this._modify.setActive(b);
+};
+/**
+ * Get the modify interaction.
+ * @retunr {ol.interaction.ModifyFeature} 
+ * @observable
+ * @api
+ */
+ol.interaction.TouchCursorModify.prototype.getInteraction = function() {
+  return this._modify;
 };
 
 /** Interaction rotate
