@@ -16602,6 +16602,7 @@ ol.interaction.Modify.prototype.getModifiedFeatures = function() {
  * @fires modifystart
  * @fires modifying
  * @fires modifyend
+ * @fires select
  * @param {*} options
  *	@param {ol.source.Vector} options.source a source to modify (configured with useSpatialIndex set to true)
  *	@param {ol.source.Vector|Array<ol.source.Vector>} options.sources a list of source to modify (configured with useSpatialIndex set to true)
@@ -16739,6 +16740,8 @@ ol.interaction.ModifyFeature.prototype.getClosestFeature = function(e) {
     }
   }
   if (d > this.snapDistance_) {
+    if (this.currentFeature) this.dispatchEvent({ type: 'select', selected: [], deselected: [this.currentFeature] })
+    this.currentFeature = null;
     return false;
   } else {
     // Snap to node
@@ -16750,6 +16753,8 @@ ol.interaction.ModifyFeature.prototype.getClosestFeature = function(e) {
         c = coord;
       }
       //
+      if (this.currentFeature !== f) this.dispatchEvent({ type: 'select', selected: [f], deselected: [this.currentFeature] })
+      this.currentFeature = f;
       return { source:source, feature:f, coord: c };
     }
   }
@@ -17298,6 +17303,12 @@ ol.interaction.ModifyFeature.prototype.handleMoveEvent = function(e) {
       this.previousCursor_ = undefined;
     }
   }
+};
+/** Get the current feature to modify
+ * @return {ol.Feature} 
+ */
+ol.interaction.ModifyFeature.prototype.getCurrentFeature = function() {
+  return this.currentFeature;
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -19241,11 +19252,11 @@ ol.interaction.TouchCursor = function(options) {
   });
   if (options.buttons) {
     var elt = this.overlay.element;
-    var start = options.buttons.length > 4 ? 0 : 1;
+    var begin = options.buttons.length > 4 ? 0 : 1;
     options.buttons.forEach((function (b, i) {
       if (i<5) {
         ol.ext.element.create('DIV', {
-          className: ((b.className||'')+' ol-button ol-button-' + (i+start)).trim(),
+          className: ((b.className||'')+' ol-button ol-button-' + (i+begin)).trim(),
           html: ol.ext.element.create('DIV', { html: b.html }),
           click: b.click,
           on: b.on,
@@ -19274,7 +19285,7 @@ ol.interaction.TouchCursor = function(options) {
         dragging: dragging,
         originalEvent: e.originalEvent, 
         frameState: e.frameState,
-        pixel: map.getPixelFromCoordinate(this.overlay.getPosition()),
+        pixel: this.getMap().getPixelFromCoordinate(this.overlay.getPosition()),
         coordinate: this.overlay.getPosition() 
       });
       dragging = false;
@@ -19285,13 +19296,13 @@ ol.interaction.TouchCursor = function(options) {
           dragging: dragging,
           originalEvent: e.originalEvent, 
           frameState: e.frameState,
-          pixel: map.getPixelFromCoordinate(this.overlay.getPosition()),
+          pixel: this.getMap().getPixelFromCoordinate(this.overlay.getPosition()),
           coordinate: this.overlay.getPosition() 
         });
       }
     }
     return false;
-  })
+  }.bind(this))
   this.on('dragging', function (e) {
     if (!e.overlay) return true;
     dragging = true;
@@ -19301,7 +19312,7 @@ ol.interaction.TouchCursor = function(options) {
         dragging: dragging,
         originalEvent: start.originalEvent, 
         frameState: e.frameState,
-        pixel: map.getPixelFromCoordinate(start.coordinate),
+        pixel: this.getMap().getPixelFromCoordinate(start.coordinate),
         coordinate: start.coordinate
       });
       start = false;
@@ -19311,11 +19322,11 @@ ol.interaction.TouchCursor = function(options) {
       dragging: dragging,
       originalEvent: e.originalEvent, 
       frameState: e.frameState,
-      pixel: map.getPixelFromCoordinate(this.overlay.getPosition()),
+      pixel: this.getMap().getPixelFromCoordinate(this.overlay.getPosition()),
       coordinate: this.overlay.getPosition() 
     });
     return false;
-  })
+  }.bind(this))
 };
 ol.ext.inherits(ol.interaction.TouchCursor, ol.interaction.DragOverlay);
 /**
@@ -19453,10 +19464,20 @@ ol.interaction.TouchCursor.prototype.addButton = function (b) {
  */
 ol.interaction.TouchCursorDraw = function(options) {
   options = options || {};
+  // Add point when click on the cursor
+  var addPoint = false;
   // Modify interaction
   var draw = this._draw = new ol.interaction.Draw ({ 
     source: options.source,
     features: options.features,
+    condition: function() {
+      if (addPoint) {
+        addPoint = false;
+        return true;
+      } else {
+        return false;
+      }
+    },
     clickTolerance: options.clickTolerance,
     snapTolerance: options.snapTolerance,
     maxPoints: options.maxPoints,
@@ -19468,18 +19489,6 @@ ol.interaction.TouchCursorDraw = function(options) {
     type: options.type || 'LineString'
   });
   draw.set('type', options.type);
-  var addPoint = false;
-  draw.handleDownEvent = function(e) {
-    if (addPoint) return ol.interaction.Draw.prototype.handleDownEvent.call(draw, e);
-    return true;
-  }
-  draw.handleUpEvent = function(e) {
-    if (addPoint) {
-      addPoint = false;
-      return ol.interaction.Draw.prototype.handleUpEvent.call(draw, e);
-    }
-    return true;
-  }
   // Buttons
   var buttons = [];
   if (options.type !== 'Point') {
@@ -19528,7 +19537,7 @@ ol.interaction.TouchCursorDraw = function(options) {
     coordinate: options.coordinate,
     buttons: buttons
   });
-  // Add point on click
+  // Add point when click on the element
   this.getOverlayElement().addEventListener('pointerdown', function(e) {
     if (e.target === this.getOverlayElement()) {
       addPoint = true;
@@ -19612,7 +19621,7 @@ ol.interaction.TouchCursorModify = function(options) {
     }
   });
   ol.interaction.TouchCursor.call(this, {
-    className: options.className,
+    className: ('disable '+options.className).trim(),
     coordinate: options.coordinate,
     buttons: [{
         // Dragging button
@@ -19641,6 +19650,13 @@ ol.interaction.TouchCursorModify = function(options) {
       }
     ]
   });
+  mod.on('select', function(e) {
+    if (e.selected.length) {
+      this.getOverlayElement().classList.remove('disable')
+    } else {
+      this.getOverlayElement().classList.add('disable')
+    }
+  }.bind(this));
   // Handle dragging
   this.on('dragstart', function(e) {
     if (drag) mod.handleDownEvent(e);

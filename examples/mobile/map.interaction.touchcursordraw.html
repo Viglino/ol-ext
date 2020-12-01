@@ -36,8 +36,31 @@
       font-family: "FontAwesome";
       font-size: 1em;
     }
-    .ol-touch-cursor.LineString:before {
-      content: ""
+    #map .ol-touch-cursor.draw:before {
+      content: "\f041";
+      font-family: "FontAwesome";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      text-align: center;
+      transform: translate(-50%, -50%) scale(0);
+      color: #369;
+      font-size: 1.5em;
+      opacity: .8;
+      transition: .2s;
+    }
+    #map .ol-touch-cursor.LineString:before {
+      content: "\f1e0";
+    }
+    #map .ol-touch-cursor.Polygon:before {
+      content: "\f097";
+      transform: translate(-50%, -50%) rotate(-90deg) scale(0);
+    }
+    #map .ol-touch-cursor.draw.active:before {
+      transform: translate(-50%, -50%) scale(1);
+    }
+    #map .ol-touch-cursor.draw.Polygon.active:before {
+      transform: translate(-50%, -50%) rotate(-90deg) scale(1);
     }
   </style>
 
@@ -115,7 +138,7 @@
     // Draw tools
     ['Point', 'LineString', 'Polygon'].forEach(function(mode) {
       cursor[mode] = new ol.interaction.TouchCursorDraw({
-        className: mode,
+        className: 'draw ' + mode,
         coordinate: map.getView().getCenter(),
         type: mode,
         source: vector.getSource()

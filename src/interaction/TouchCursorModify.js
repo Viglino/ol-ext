@@ -5,6 +5,7 @@
 
 import ol_ext_inherits from '../util/ext'
 import ol_interaction_TouchCursor from './TouchCursor'
+import ol_interaction_ModifyFeature from './ModifyFeature'
 
 /** TouchCursor interaction + ModifyFeature
  * @constructor
@@ -28,7 +29,7 @@ var ol_interaction_TouchCursorModify = function(options) {
   var del = false;        // deleting a point
 
   // Modify interaction
-  var mod = this._modify = new ol.interaction.ModifyFeature ({ 
+  var mod = this._modify = new ol_interaction_ModifyFeature ({ 
     source: options.source,
     sources: options.sources,
     features: options.features,
@@ -45,7 +46,7 @@ var ol_interaction_TouchCursorModify = function(options) {
   });
 
   ol_interaction_TouchCursor.call(this, {
-    className: options.className,
+    className: ('disable '+options.className).trim(),
     coordinate: options.coordinate,
     buttons: [{
         // Dragging button
@@ -74,6 +75,14 @@ var ol_interaction_TouchCursorModify = function(options) {
       }
     ]
   });
+
+  mod.on('select', function(e) {
+    if (e.selected.length) {
+      this.getOverlayElement().classList.remove('disable')
+    } else {
+      this.getOverlayElement().classList.add('disable')
+    }
+  }.bind(this));
 
   // Handle dragging
   this.on('dragstart', function(e) {

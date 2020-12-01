@@ -509,8 +509,8 @@ ol_source_Delaunay.prototype.calculateVoronoi = function(border) {
       });
       poly.push(poly[0]);
       var prop = f.getProperties();
-      prop.geometry = new ol.geom.Polygon([poly]);
-      voronoi.push(new ol.Feature(prop));
+      prop.geometry = new ol_geom_Polygon([poly]);
+      voronoi.push(new ol_Feature(prop));
     }
   }.bind(this));
   return voronoi;

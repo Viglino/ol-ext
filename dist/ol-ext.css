@@ -3902,13 +3902,15 @@
   left: 50%;
   -webkit-transform: translate(-50%, -50%) scale(0);
           transform: translate(-50%, -50%) scale(0);
-  opacity: 1;
-  -webkit-transition: .5s;
-  transition: .5s;
+  -webkit-transition: all .5s, opacity 0s, background 0s;
+  transition: all .5s, opacity 0s, background 0s;
   overflow: hidden;
 }
+.ol-overlaycontainer .ol-touch-cursor.active.disable .ol-button {
+  opacity: .8;
+  background: rgba(51, 102, 153, .2);
+}
 .ol-overlaycontainer .ol-touch-cursor.active .ol-button {
-  opacity: 1;
   -webkit-transform: translate(-50%, -50%) scale(1);
           transform: translate(-50%, -50%) scale(1);
 }

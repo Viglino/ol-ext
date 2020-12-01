@@ -5,6 +5,7 @@
 
 import ol_ext_inherits from '../util/ext'
 import ol_interaction_TouchCursor from './TouchCursor'
+import ol_interaction_Draw from 'ol/interaction/Draw'
 
 /** TouchCursor interaction + ModifyFeature
  * @constructor
@@ -27,10 +28,21 @@ import ol_interaction_TouchCursor from './TouchCursor'
 var ol_interaction_TouchCursorDraw = function(options) {
   options = options || {};
 
+  // Add point when click on the cursor
+  var addPoint = false;
+
   // Modify interaction
   var draw = this._draw = new ol_interaction_Draw ({ 
     source: options.source,
     features: options.features,
+    condition: function() {
+      if (addPoint) {
+        addPoint = false;
+        return true;
+      } else {
+        return false;
+      }
+    },
     clickTolerance: options.clickTolerance,
     snapTolerance: options.snapTolerance,
     maxPoints: options.maxPoints,
@@ -42,18 +54,6 @@ var ol_interaction_TouchCursorDraw = function(options) {
     type: options.type || 'LineString'
   });
   draw.set('type', options.type);
-  var addPoint = false;
-  draw.handleDownEvent = function(e) {
-    if (addPoint) return ol_interaction_Draw.prototype.handleDownEvent.call(draw, e);
-    return true;
-  }
-  draw.handleUpEvent = function(e) {
-    if (addPoint) {
-      addPoint = false;
-      return ol_interaction_Draw.prototype.handleUpEvent.call(draw, e);
-    }
-    return true;
-  }
 
   // Buttons
   var buttons = [];
@@ -105,7 +105,7 @@ var ol_interaction_TouchCursorDraw = function(options) {
     buttons: buttons
   });
 
-  // Add point on click
+  // Add point when click on the element
   this.getOverlayElement().addEventListener('pointerdown', function(e) {
     if (e.target === this.getOverlayElement()) {
       addPoint = true;

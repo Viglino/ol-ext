@@ -35,6 +35,7 @@ import '../geom/LineStringSplitAt'
  * @fires modifystart
  * @fires modifying
  * @fires modifyend
+ * @fires select
  * @param {*} options
  *	@param {ol.source.Vector} options.source a source to modify (configured with useSpatialIndex set to true)
  *	@param {ol.source.Vector|Array<ol.source.Vector>} options.sources a list of source to modify (configured with useSpatialIndex set to true)
@@ -184,6 +185,8 @@ ol_interaction_ModifyFeature.prototype.getClosestFeature = function(e) {
     }
   }
   if (d > this.snapDistance_) {
+    if (this.currentFeature) this.dispatchEvent({ type: 'select', selected: [], deselected: [this.currentFeature] })
+    this.currentFeature = null;
     return false;
   } else {
     // Snap to node
@@ -195,6 +198,8 @@ ol_interaction_ModifyFeature.prototype.getClosestFeature = function(e) {
         c = coord;
       }
       //
+      if (this.currentFeature !== f) this.dispatchEvent({ type: 'select', selected: [f], deselected: [this.currentFeature] })
+      this.currentFeature = f;
       return { source:source, feature:f, coord: c };
     }
   }
@@ -773,6 +778,13 @@ ol_interaction_ModifyFeature.prototype.handleMoveEvent = function(e) {
       this.previousCursor_ = undefined;
     }
   }
+};
+
+/** Get the current feature to modify
+ * @return {ol.Feature} 
+ */
+ol_interaction_ModifyFeature.prototype.getCurrentFeature = function() {
+  return this.currentFeature;
 };
 
 export default ol_interaction_ModifyFeature

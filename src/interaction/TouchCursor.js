@@ -6,6 +6,9 @@
 import ol_ext_inherits from '../util/ext'
 import ol_interaction_DragOverlay from './DragOverlay'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_interaction_Interaction from 'ol/interaction/Interaction'
+import ol_Overlay from 'ol/Overlay'
+import ol_ext_element from '../util/element'
 
 /** Handle a touch cursor to defer event position on overlay position
  * It can be used as abstract base class used for creating subclasses. 
@@ -53,11 +56,11 @@ var ol_interaction_TouchCursor = function(options) {
   });
   if (options.buttons) {
     var elt = this.overlay.element;
-    var start = options.buttons.length > 4 ? 0 : 1;
+    var begin = options.buttons.length > 4 ? 0 : 1;
     options.buttons.forEach((function (b, i) {
       if (i<5) {
         ol_ext_element.create('DIV', {
-          className: ((b.className||'')+' ol-button ol-button-' + (i+start)).trim(),
+          className: ((b.className||'')+' ol-button ol-button-' + (i+begin)).trim(),
           html: ol_ext_element.create('DIV', { html: b.html }),
           click: b.click,
           on: b.on,
@@ -88,7 +91,7 @@ var ol_interaction_TouchCursor = function(options) {
         dragging: dragging,
         originalEvent: e.originalEvent, 
         frameState: e.frameState,
-        pixel: map.getPixelFromCoordinate(this.overlay.getPosition()),
+        pixel: this.getMap().getPixelFromCoordinate(this.overlay.getPosition()),
         coordinate: this.overlay.getPosition() 
       });
       dragging = false;
@@ -99,13 +102,13 @@ var ol_interaction_TouchCursor = function(options) {
           dragging: dragging,
           originalEvent: e.originalEvent, 
           frameState: e.frameState,
-          pixel: map.getPixelFromCoordinate(this.overlay.getPosition()),
+          pixel: this.getMap().getPixelFromCoordinate(this.overlay.getPosition()),
           coordinate: this.overlay.getPosition() 
         });
       }
     }
     return false;
-  })
+  }.bind(this))
   this.on('dragging', function (e) {
     if (!e.overlay) return true;
     dragging = true;
@@ -115,7 +118,7 @@ var ol_interaction_TouchCursor = function(options) {
         dragging: dragging,
         originalEvent: start.originalEvent, 
         frameState: e.frameState,
-        pixel: map.getPixelFromCoordinate(start.coordinate),
+        pixel: this.getMap().getPixelFromCoordinate(start.coordinate),
         coordinate: start.coordinate
       });
       start = false;
@@ -125,11 +128,11 @@ var ol_interaction_TouchCursor = function(options) {
       dragging: dragging,
       originalEvent: e.originalEvent, 
       frameState: e.frameState,
-      pixel: map.getPixelFromCoordinate(this.overlay.getPosition()),
+      pixel: this.getMap().getPixelFromCoordinate(this.overlay.getPosition()),
       coordinate: this.overlay.getPosition() 
     });
     return false;
-  })
+  }.bind(this))
 };
 ol_ext_inherits(ol_interaction_TouchCursor, ol_interaction_DragOverlay);
 
