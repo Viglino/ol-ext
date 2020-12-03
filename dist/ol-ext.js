@@ -19225,7 +19225,7 @@ ol.interaction.TouchCursor = function(options) {
   this._listeners = {};
   // Interaction to defer position on top of the interaction 
   // this is done to enable other coordinates manipulation inserted after the interaction (snapping)
-  var offset = [-30,-30];
+  var offset = [-33,-33];
   this.ctouch = new ol.interaction.Interaction({
     handleEvent: function(e) {
       if (!/drag/.test(e.type) && this.getMap()) {
@@ -19347,14 +19347,14 @@ ol.interaction.TouchCursor.prototype.setMap = function(map) {
   // Reset
   if (this.getMap()) {
     this.getMap().removeInteraction(this.ctouch);
-    this.getMap().removeOverlay(this.overlay);
+    if (this.getActive()) this.getMap().removeOverlay(this.overlay);
   }
   for (var l in this._listeners) ol.Observable.unByKey(l);
   this._listeners = {};
   ol.interaction.DragOverlay.prototype.setMap.call (this, map);
   // Set listeners
   if (this.getMap()) {
-    this.getMap().addOverlay(this.overlay);
+    if (this.getActive()) this.getMap().addOverlay(this.overlay);
     this._pixel = this.getMap().getPixelFromCoordinate(this.getPosition());
     this.getMap().addInteraction(this.ctouch);
     var view = this.getMap().getView();
@@ -19409,21 +19409,28 @@ ol.interaction.TouchCursor.prototype.setMap = function(map) {
  * @api
  */
 ol.interaction.TouchCursor.prototype.setActive = function(b, position) {
-  ol.interaction.DragOverlay.prototype.setActive.call (this, b);
-  this.ctouch.setActive(b);
-  if (!b) {
-    this.setPosition();
-    this.overlay.element.classList.remove('active');
-    if (this._activate) clearTimeout(this._activate);
-    return;
+  if (b!==this.getActive()) {
+    ol.interaction.DragOverlay.prototype.setActive.call (this, b);
+    this.ctouch.setActive(b);
+    if (!b) {
+      this.setPosition();
+      this.overlay.element.classList.remove('active');
+      if (this._activate) clearTimeout(this._activate);
+      if (this.getMap()) this.getMap().removeOverlay(this.overlay);
+      return;
+    } 
+    if (position) {
+      this.setPosition(position);
+    } else if (this.getMap()) {
+      this.setPosition(this.getMap().getView().getCenter());
+    }
+    if (this.getMap()) this.getMap().addOverlay(this.overlay);
+    this._activate = setTimeout(function() {
+      this.overlay.element.classList.add('active');
+    }.bind(this), 100);
   } else if (position) {
     this.setPosition(position);
-  } else if (this.getMap()) {
-    this.setPosition(this.getMap().getView().getCenter());
   }
-  this._activate = setTimeout(function() {
-    this.overlay.element.classList.add('active');
-  }.bind(this), 100);
 };
 /** Set the position of the target
  * @param {ol.coordinate} coord
@@ -19519,31 +19526,13 @@ ol.interaction.TouchCursor.prototype.addButton = function (b) {
  */
 ol.interaction.TouchCursorDraw = function(options) {
   options = options || {};
-  // Add point when click on the cursor
-  var addPoint = false;
-  // Modify interaction
-  var draw = this._draw = new ol.interaction.Draw ({ 
-    source: options.source,
-    features: options.features,
-    condition: function() {
-      if (addPoint) {
-        addPoint = false;
-        return true;
-      } else {
-        return false;
-      }
-    },
-    clickTolerance: options.clickTolerance,
-    snapTolerance: options.snapTolerance,
-    maxPoints: options.maxPoints,
-    minPoints: options.minPoints,
-    style: options.style,
-    geometryFunction: options.geometryFunction,
-    geometryName: options.geometryName,
-    wrapX: options.wrapX,
-    type: options.type || 'LineString'
+  // Draw 
+  var sketch = this.sketch = new ol.layer.SketchOverlay({
+    type: options.type
   });
-  draw.set('type', options.type);
+  sketch.on('drawend', function(e) {
+    if (e.valid && options.source) options.source.addFeature(e.feature);
+  });
   // Buttons
   var buttons = [];
   if (options.type !== 'Point') {
@@ -19551,38 +19540,19 @@ ol.interaction.TouchCursorDraw = function(options) {
       // Cancel drawing
       className: 'ol-button-x', 
       click: function() {
-        draw.abortDrawing();
+        sketch.abortDrawing();
       }
     }, { 
       // Add a new point (nothing to do, just click)
       className: 'ol-button-check',
       click: function() {
-        draw.finishDrawing();
+        sketch.finishDrawing(true);
       }
     }, { 
       // Remove a point
       className: 'ol-button-remove', 
       click: function() {
-        draw.removeLastPoint();
-        if (draw.sketchFeature_) {
-          var c = draw.sketchLineCoords_ ? draw.sketchLineCoords_.slice() : draw.sketchCoords_.slice();
-          c.pop();
-          if (!c.length) {
-            draw.abortDrawing();
-          } else {
-            if (draw.get('type')==='Polygon') {
-              draw.sketchLine_.getGeometry().setCoordinates(c);
-              c.push(c[0])
-              draw.sketchFeature_.getGeometry().setCoordinates([c]);
-              c.pop();
-            } else {
-              draw.sketchFeature_.getGeometry().setCoordinates(c);
-            }
-            var p = c.pop();
-            if (p) draw.sketchPoint_.getGeometry().setCoordinates(p);
-            else draw.abortDrawing();
-          }
-        }
+        sketch.removeLastPoint();
       }
     }]
   }
@@ -19592,12 +19562,12 @@ ol.interaction.TouchCursorDraw = function(options) {
     coordinate: options.coordinate,
     buttons: buttons
   });
-  // Add point when click on the element
-  this.getOverlayElement().addEventListener('pointerdown', function(e) {
-    if (e.target === this.getOverlayElement()) {
-      addPoint = true;
-    }
-  }.bind(this));
+  this.on('click', function(e) {
+    this.sketch.addPoint(this.getPosition());
+  }.bind(this))
+  this.on('dragging', function(e) {
+    this.sketch.setPosition(this.getPosition());
+  }.bind(this))
 };
 ol.ext.inherits(ol.interaction.TouchCursorDraw, ol.interaction.TouchCursor);
 /**
@@ -19611,7 +19581,7 @@ ol.interaction.TouchCursorDraw.prototype.setMap = function(map) {
     this.getMap().removeInteraction(this._modify);
   }
   if (map) {
-    map.addInteraction(this._draw);
+    this.sketch.setMap(map);
   }
   ol.interaction.TouchCursor.prototype.setMap.call (this, map);
 };
@@ -19624,16 +19594,8 @@ ol.interaction.TouchCursorDraw.prototype.setMap = function(map) {
  */
 ol.interaction.TouchCursorDraw.prototype.setActive = function(b, position) {
   ol.interaction.TouchCursor.prototype.setActive.call (this, b, position);
-  this._draw.setActive(b);
-};
-/**
- * Get the draw interaction.
- * @retunr {ol.interaction.ModifyFeature} 
- * @observable
- * @api
- */
-ol.interaction.TouchCursorDraw.prototype.getInteraction = function() {
-  return this._draw;
+  this.sketch.abortDrawing();
+  this.sketch.setVisible(b);
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -24261,27 +24223,102 @@ ol.render3D.prototype.drawGhost3D_ = function(ctx, build) {
 */
 /** A sketch layer used as overlay to handle drawing sketch (helper for drawing tools)
  * @constructor 
- * @extends {ol.layer.Layer}
+ * @extends {ol/layer/Vector}
  * @param {*} options 
  *  @param {string} type Geometry type, default LineString
  */
-ol.layer.SketchIOverlay = function(options) {
+ol.layer.SketchOverlay = function(options) {
   options = options || {};
-  var style = options.style || ol.style.Style.defaultStyle();
-  ol.layer.Tile.call (this, {
-    style: style
+  var style = options.style || ol.style.Style.defaultStyle(true);
+  var sketchStyle = options.sketchStyle;
+  if (!sketchStyle) {
+    sketchStyle = ol.style.Style.defaultStyle();
+    sketchStyle = [
+      new ol.style.Style({
+        image: new ol.style.RegularShape ({
+          points: 4,
+          radius: 10,
+          radius2: 0,
+          stroke: new ol.style.Stroke({
+            color: [255,255,255, .5],
+            width: 3
+          })
+        })
+      }),
+      sketchStyle[0].clone()
+    ];
+    sketchStyle[1].setImage(new ol.style.RegularShape ({
+      points: 4,
+      radius: 10,
+      radius2: 0,
+      stroke: new ol.style.Stroke({
+        color: [0, 153, 255, 1],
+        width: 1.25
+      })
+    }));
+  }
+  this._geom = [];
+  ol.layer.Vector.call (this, {
+    source: new ol.source.Vector({ useSpatialIndex: false }),
+    style: function(f) {
+      return (f.get('sketch') ? sketchStyle : style);
+    }
   });
-  this.set('type', opyions.type || 'LineString');
+  // Sketch features
+  this.getSource().addFeatures([
+    new ol.Feature({
+      sketch: true,
+      geometry: new ol.geom.Point([])
+    }),
+    new ol.Feature({
+      sketch: true,
+      geometry: new ol.geom.LineString([])
+    }),
+    new ol.Feature(),
+    new ol.Feature(new ol.geom.Point([]))
+  ]);
+  this.setType(options.type);
 };
-ol.ext.inherits (ol.layer.SketchIOverlay, ol.layer.Layer);
+ol.ext.inherits (ol.layer.SketchOverlay, ol.layer.Vector);
+/** Set geometry type
+ * @param {string} type Geometry type
+ */
+ol.layer.SketchOverlay.prototype.setType = function(type) {
+  var t = /^Point$|^LineString$|^Polygon$/.test(type) ? type : 'LineString';
+  if (t !== this._type) {
+    this.abortDrawing();
+    this._type = t;
+  }
+};
+/** Get geometry type
+ * @return {string} Geometry type
+ */
+ol.layer.SketchOverlay.prototype.getType = function() {
+  return this._type;
+};
 /** Add a new Point to the sketch
  * @param {ol.coordinate} coord
+ * @return {boolean} true if point has been added, false if same coord
  */
-ol.layer.SketchIOverlay.prototype.addPoint = function(coord) {
+ol.layer.SketchOverlay.prototype.addPoint = function(coord) {
+  if (this._lastCoord !== this._position) {
+    this._geom.push(coord);
+    this._lastCoord = coord; 
+    this._position = coord; 
+    this.drawSketch();
+    if (this.getType() === 'Point') {
+      this.finishDrawing();
+    }
+    return true;
+  }
+  return false;
 };
 /** Remove the last Point from the sketch
  */
-ol.layer.SketchIOverlay.prototype.removeLastPoint = function() {
+ol.layer.SketchOverlay.prototype.removeLastPoint = function() {
+  this._geom.pop();
+  this._lastCoord = this._geom[this._geom.length-1];
+  this.drawSketch();
 };
 /** Strat a new drawing
  * @param {*} options
@@ -24290,21 +24327,119 @@ ol.layer.SketchIOverlay.prototype.removeLastPoint = function() {
  *  @param {ol.Feature} feature a feature to extend (LineString or Polygon only)
  *  @param {boolean} atstart extent coordinates or feature at start, default false (extend at end)
  */
-ol.layer.SketchIOverlay.prototype.startDrawing = function(options) {
+ol.layer.SketchOverlay.prototype.startDrawing = function(options) {
+  this._geom = [];
+  this.setType(options.type);
+  this.drawSketch();
 };
-/** Remove the last Point from the sketch
- * @return {ol.Feature}
+/** Finish drawing
+ * @return {ol.Feature} the drawed feature
  */
-ol.layer.SketchIOverlay.prototype.finishDrawing = function() {
+ol.layer.SketchOverlay.prototype.finishDrawing = function(valid) {
+  var f = this.getSource().getFeatures()[2].clone();
+  var isvalid = !!f;
+  switch (this.getType()) {
+    case 'LineString': {
+      isvalid = this._geom.length > 1;
+      break;
+    }
+    case 'Polygon': {
+      isvalid = this._geom.length > 2;
+      break;
+    }
+  }
+  if (valid && !isvalid) return false;
+  this._geom = [];
+  this.drawSketch();
+  this.dispatchEvent({
+    type: 'drawend',
+    valid: isvalid,
+    feature: f
+  })
+  return f;
+};
+/** Abort drawing
+ */
+ol.layer.SketchOverlay.prototype.abortDrawing = function() {
+  this._geom = [];
+  this._position = null;
+  this.drawSketch();
 };
 /** Set the current position
  * @param {ol.coordinate} coord
  */
-ol.layer.SketchIOverlay.prototype.setPosition = function(coord) {
+ol.layer.SketchOverlay.prototype.setPosition = function(coord) {
+  this._position = coord;
+  this.drawLink();
+};
+/** Draw/refresh link
+ */
+ol.layer.SketchOverlay.prototype.drawLink = function() {
+  var features = this.getSource().getFeatures();
+  if (this._position) {
+    if (this._lastCoord && this._lastCoord === this._position) {
+      features[0].getGeometry().setCoordinates([]);
+    } else {
+      features[0].getGeometry().setCoordinates(this._position);
+    }
+    if (this._geom.length) {
+      if (this.getType()==='Polygon') {
+        features[1].getGeometry().setCoordinates([ this._lastCoord, this._position, this._geom[0] ]);
+      } else {
+        features[1].getGeometry().setCoordinates([ this._lastCoord, this._position ]);
+      }
+    } else {
+      features[1].getGeometry().setCoordinates([]);
+    }
+  } else {
+    features[0].getGeometry().setCoordinates([]);
+    features[1].getGeometry().setCoordinates([]);
+  }
+};
+ol.layer.SketchOverlay.prototype.getFeature = function() {
+  if (this._geom.length) {
+    return this.getSource().getFeatures()[2];
+  } else {
+    return null;
+  }
 };
 /** Draw/refresh sketch
  */
-ol.layer.SketchIOverlay.prototype.drawSketch = function() {
+ol.layer.SketchOverlay.prototype.drawSketch = function() {
+  this.drawLink();
+  var features = this.getSource().getFeatures();
+  if (!this._geom.length) {
+    features[2].setGeometry(null);
+    features[3].setGeometry(new ol.geom.Point([]));
+  } else {
+    features[3].getGeometry().setCoordinates(this._lastCoord);
+    switch (this._type) {
+      case 'Point': {
+        features[2].setGeometry(new ol.geom.Point(this._lastCoord));
+        break;
+      }
+      case 'LineString': {
+        if (!features[2].getGeometry()) {
+          features[2].setGeometry(new ol.geom.LineString(this._geom));
+        } else {
+          features[2].getGeometry().setCoordinates(this._geom);
+        }
+        break;
+      }
+      case 'Polygon': {
+        if (!features[2].getGeometry()) {
+          features[2].setGeometry(new ol.geom.Polygon([this._geom]));
+        } else {
+          features[2].getGeometry().setCoordinates([this._geom]);
+        }
+        break;
+      }
+      default: {
+        console.error('[ol/layer/SketchOverlay~drawSketch] geometry type not supported ('+this._type+')');
+        break;
+      }
+    }
+  }
 };
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
