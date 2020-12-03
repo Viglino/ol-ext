@@ -167,7 +167,6 @@ ol_interaction_TouchCursor.prototype.setMap = function(map) {
     this._pixel = this.getMap().getPixelFromCoordinate(this.getPosition());
     this.getMap().addInteraction(this.ctouch);
     var view = this.getMap().getView();
-    var changereso = false;
     var offsetPosition = function(e) {
       var center = view.getCenter();
       var pos = this.overlay.getPosition();
@@ -181,9 +180,9 @@ ol_interaction_TouchCursor.prototype.setMap = function(map) {
     var setPosition = function() {
       if (this._pixel && this.getMap()) {
         this.setPosition(this.getMap().getCoordinateFromPixel(this._pixel));
-        changereso = true;
       }
     }.bind(this);
+    // Handle view change 
     if (view) {
       this._listeners.center = view.on('change:center', offsetPosition);
       this._listeners.reso = view.on('change:resolution', setPosition);
@@ -199,6 +198,7 @@ ol_interaction_TouchCursor.prototype.setMap = function(map) {
       if (view) {
         this._listeners.view = view.on('change:center', offsetPosition);
         this._listeners.reso = view.on('change:resolution', changeResolution);
+        this._listeners.rot = view.on('change:rotation', setPosition);
       }
     }.bind(this));
     this._listeners.addInteraction = this.getMap().getInteractions().on('add', function(e) {
@@ -241,7 +241,7 @@ ol_interaction_TouchCursor.prototype.setActive = function(b, position) {
  */
 ol_interaction_TouchCursor.prototype.setPosition = function (coord) {
   this.overlay.setPosition(coord); 
-  if (this.getMap()) {
+  if (this.getMap() && coord) {
     this._pixel = this.getMap().getPixelFromCoordinate(coord);
   }
 };
