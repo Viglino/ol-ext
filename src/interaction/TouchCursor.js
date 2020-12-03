@@ -28,7 +28,7 @@ var ol_interaction_TouchCursor = function(options) {
 
   // Interaction to defer position on top of the interaction 
   // this is done to enable other coordinates manipulation inserted after the interaction (snapping)
-  var offset = [-30,-30];
+  var offset = [-33,-33];
   this.ctouch = new ol_interaction_Interaction({
     handleEvent: function(e) {
       if (!/drag/.test(e.type) && this.getMap()) {
@@ -154,7 +154,7 @@ ol_interaction_TouchCursor.prototype.setMap = function(map) {
   // Reset
   if (this.getMap()) {
     this.getMap().removeInteraction(this.ctouch);
-    this.getMap().removeOverlay(this.overlay);
+    if (this.getActive()) this.getMap().removeOverlay(this.overlay);
   }
   for (let l in this._listeners) ol_Observable_unByKey(l);
   this._listeners = {};
@@ -163,7 +163,7 @@ ol_interaction_TouchCursor.prototype.setMap = function(map) {
 
   // Set listeners
   if (this.getMap()) {
-    this.getMap().addOverlay(this.overlay);
+    if (this.getActive()) this.getMap().addOverlay(this.overlay);
     this._pixel = this.getMap().getPixelFromCoordinate(this.getPosition());
     this.getMap().addInteraction(this.ctouch);
     var view = this.getMap().getView();
@@ -219,21 +219,28 @@ ol_interaction_TouchCursor.prototype.setMap = function(map) {
  * @api
  */
 ol_interaction_TouchCursor.prototype.setActive = function(b, position) {
-  ol_interaction_DragOverlay.prototype.setActive.call (this, b);
-  this.ctouch.setActive(b);
-  if (!b) {
-    this.setPosition();
-    this.overlay.element.classList.remove('active');
-    if (this._activate) clearTimeout(this._activate);
-    return;
+  if (b!==this.getActive()) {
+    ol_interaction_DragOverlay.prototype.setActive.call (this, b);
+    this.ctouch.setActive(b);
+    if (!b) {
+      this.setPosition();
+      this.overlay.element.classList.remove('active');
+      if (this._activate) clearTimeout(this._activate);
+      if (this.getMap()) this.getMap().removeOverlay(this.overlay);
+      return;
+    } 
+    if (position) {
+      this.setPosition(position);
+    } else if (this.getMap()) {
+      this.setPosition(this.getMap().getView().getCenter());
+    }
+    if (this.getMap()) this.getMap().addOverlay(this.overlay);
+    this._activate = setTimeout(function() {
+      this.overlay.element.classList.add('active');
+    }.bind(this), 100);
   } else if (position) {
     this.setPosition(position);
-  } else if (this.getMap()) {
-    this.setPosition(this.getMap().getView().getCenter());
   }
-  this._activate = setTimeout(function() {
-    this.overlay.element.classList.add('active');
-  }.bind(this), 100);
 };
 
 /** Set the position of the target

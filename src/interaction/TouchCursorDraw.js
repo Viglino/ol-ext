@@ -5,7 +5,6 @@
 
 import ol_ext_inherits from '../util/ext'
 import ol_interaction_TouchCursor from './TouchCursor'
-import ol_interaction_Draw from 'ol/interaction/Draw'
 
 /** TouchCursor interaction + ModifyFeature
  * @constructor
@@ -28,32 +27,14 @@ import ol_interaction_Draw from 'ol/interaction/Draw'
 var ol_interaction_TouchCursorDraw = function(options) {
   options = options || {};
 
-  // Add point when click on the cursor
-  var addPoint = false;
-
-  // Modify interaction
-  var draw = this._draw = new ol_interaction_Draw ({ 
-    source: options.source,
-    features: options.features,
-    condition: function() {
-      if (addPoint) {
-        addPoint = false;
-        return true;
-      } else {
-        return false;
-      }
-    },
-    clickTolerance: options.clickTolerance,
-    snapTolerance: options.snapTolerance,
-    maxPoints: options.maxPoints,
-    minPoints: options.minPoints,
-    style: options.style,
-    geometryFunction: options.geometryFunction,
-    geometryName: options.geometryName,
-    wrapX: options.wrapX,
-    type: options.type || 'LineString'
+  // Draw 
+  var sketch = this.sketch = new ol.layer.SketchOverlay({
+    type: options.type
   });
-  draw.set('type', options.type);
+
+  sketch.on('drawend', function(e) {
+    if (e.valid && options.source) options.source.addFeature(e.feature);
+  });
 
   // Buttons
   var buttons = [];
@@ -62,38 +43,19 @@ var ol_interaction_TouchCursorDraw = function(options) {
       // Cancel drawing
       className: 'ol-button-x', 
       click: function() {
-        draw.abortDrawing();
+        sketch.abortDrawing();
       }
     }, { 
       // Add a new point (nothing to do, just click)
       className: 'ol-button-check',
       click: function() {
-        draw.finishDrawing();
+        sketch.finishDrawing(true);
       }
     }, { 
       // Remove a point
       className: 'ol-button-remove', 
       click: function() {
-        draw.removeLastPoint();
-        if (draw.sketchFeature_) {
-          var c = draw.sketchLineCoords_ ? draw.sketchLineCoords_.slice() : draw.sketchCoords_.slice();
-          c.pop();
-          if (!c.length) {
-            draw.abortDrawing();
-          } else {
-            if (draw.get('type')==='Polygon') {
-              draw.sketchLine_.getGeometry().setCoordinates(c);
-              c.push(c[0])
-              draw.sketchFeature_.getGeometry().setCoordinates([c]);
-              c.pop();
-            } else {
-              draw.sketchFeature_.getGeometry().setCoordinates(c);
-            }
-            var p = c.pop();
-            if (p) draw.sketchPoint_.getGeometry().setCoordinates(p);
-            else draw.abortDrawing();
-          }
-        }
+        sketch.removeLastPoint();
       }
     }]
   }
@@ -105,12 +67,13 @@ var ol_interaction_TouchCursorDraw = function(options) {
     buttons: buttons
   });
 
-  // Add point when click on the element
-  this.getOverlayElement().addEventListener('pointerdown', function(e) {
-    if (e.target === this.getOverlayElement()) {
-      addPoint = true;
-    }
-  }.bind(this));
+  this.on('click', function(e) {
+    this.sketch.addPoint(this.getPosition());
+  }.bind(this))
+
+  this.on('dragging', function(e) {
+    this.sketch.setPosition(this.getPosition());
+  }.bind(this))
 };
 ol_ext_inherits(ol_interaction_TouchCursorDraw, ol_interaction_TouchCursor);
 
@@ -126,7 +89,7 @@ ol_interaction_TouchCursorDraw.prototype.setMap = function(map) {
   }
 
   if (map) {
-    map.addInteraction(this._draw);
+    this.sketch.setMap(map);
   }
 
   ol_interaction_TouchCursor.prototype.setMap.call (this, map);
@@ -141,17 +104,8 @@ ol_interaction_TouchCursorDraw.prototype.setMap = function(map) {
  */
 ol_interaction_TouchCursorDraw.prototype.setActive = function(b, position) {
   ol_interaction_TouchCursor.prototype.setActive.call (this, b, position);
-  this._draw.setActive(b);
-};
-
-/**
- * Get the draw interaction.
- * @retunr {ol.interaction.ModifyFeature} 
- * @observable
- * @api
- */
-ol_interaction_TouchCursorDraw.prototype.getInteraction = function() {
-  return this._draw;
+  this.sketch.abortDrawing();
+  this.sketch.setVisible(b);
 };
 
 export default ol_interaction_TouchCursorDraw
