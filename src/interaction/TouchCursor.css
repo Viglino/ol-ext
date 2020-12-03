@@ -1,9 +1,10 @@
 .ol-overlaycontainer .ol-touch-cursor {
-  /* human fingertips are typically 16–20 mm = 45-57 pixels
+  /* human fingertips are typically 16x20 mm = 45x57 pixels
     source: http://touchlab.mit.edu/publications/2003_009.pdf
   */
   width: 56px;
   height: 56px;
+  margin: 2px;
   border-radius: 50%;
   cursor: pointer;
   background: rgba(255,255,255,.4);
@@ -23,8 +24,8 @@
 .ol-overlaycontainer .ol-touch-cursor .ol-button {
   position: absolute;
   color: #369;
-  height: 28px;
-  width: 28px;
+  height: 55%;
+  width: 55%;
   border-radius: 50%;
   cursor: pointer;
   background: rgba(255,255,255,.4);

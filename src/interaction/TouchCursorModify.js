@@ -6,6 +6,8 @@
 import ol_ext_inherits from '../util/ext'
 import ol_interaction_TouchCursor from './TouchCursor'
 import ol_interaction_ModifyFeature from './ModifyFeature'
+import ol_style_Style from 'ol/style/Style';
+import ol_style_RegularShape from 'ol/style/RegularShape';
 
 /** TouchCursor interaction + ModifyFeature
  * @constructor
@@ -35,7 +37,30 @@ var ol_interaction_TouchCursorModify = function(options) {
     features: options.features,
     pixelTolerance: options.pixelTolerance,
     filter: options.filter,
-    style: options.style,
+    style: options.style || [ 
+      new ol_style_Style({
+        image: new ol_style_RegularShape ({
+          points: 4,
+          radius: 10,
+          radius2: 0,
+          stroke: new ol_style_Stroke({
+            color: [255,255,255, .5],
+            width: 3
+          })
+        })
+      }),
+      new ol_style_Style({
+        image: new ol_style_RegularShape ({
+          points: 4,
+          radius: 10,
+          radius2: 0,
+          stroke: new ol_style_Stroke({
+            color: [0, 153, 255, 1],
+            width: 1.25
+          })
+        })
+      })
+    ],
     wrapX: options.wrapX,
     condition: function(e) {
       return e.dragging || dragging;
