@@ -3870,22 +3870,26 @@
 }
 
 .ol-overlaycontainer .ol-touch-cursor {
-  width: 44px;
-  height: 44px;
+  /* human fingertips are typically 16–20 mm = 45-57 pixels
+    source: http://touchlab.mit.edu/publications/2003_009.pdf
+  */
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   cursor: pointer;
   background: rgba(255,255,255,.4);
   -webkit-box-shadow: inset 0 0 0 5px #369;
           box-shadow: inset 0 0 0 5px #369;
 }
+
 .ol-overlaycontainer .ol-touch-cursor:after {
   content: "";
   position: absolute;
   top: 0;
   left: 0;
-  width: 20px;
-  height: 20px;
-  background: radial-gradient(circle at 100% 100%, transparent, transparent 65%, #369 65%, #369);
+  width: 50%;
+  height: 50%;
+  background: radial-gradient(circle at 100% 100%, transparent, transparent 70%, #369 70%, #369)
 }
 
 .ol-overlaycontainer .ol-touch-cursor .ol-button {

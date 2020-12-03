@@ -19650,6 +19650,7 @@ ol.interaction.TouchCursorModify = function(options) {
       }
     ]
   });
+  // Show when modification is active
   mod.on('select', function(e) {
     if (e.selected.length) {
       this.getOverlayElement().classList.remove('disable')
@@ -19657,7 +19658,7 @@ ol.interaction.TouchCursorModify = function(options) {
       this.getOverlayElement().classList.add('disable')
     }
   }.bind(this));
-  // Handle dragging
+  // Handle dragging, prevent drag outside the control
   this.on('dragstart', function(e) {
     if (drag) mod.handleDownEvent(e);
   });
