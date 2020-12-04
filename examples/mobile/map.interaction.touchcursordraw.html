@@ -37,32 +37,42 @@
       font-family: "FontAwesome";
       font-size: 1em;
     }
-    #map .ol-touch-cursor.draw:before {
+    #map .ol-touch-cursor .ol-button-type {
+      background-color: rgba(51,102,153, .5);
+    }
+    #map .ol-touch-cursor.draw:before,
+    #map .ol-touch-cursor .ol-button-type:before {
       content: "\f041";
       font-family: "FontAwesome";
       position: absolute;
       top: 50%;
       left: 50%;
       text-align: center;
-      transform: translate(-50%, -50%) scale(0);
+      transform: translate(-50%, -50%);
       color: #369;
       font-size: 1.5em;
       opacity: .8;
-      transition: .2s;
     }
-    #map .ol-touch-cursor.LineString:before {
+    #map .ol-touch-cursor .ol-button-type:before {
+      color: #fff;
+    }
+    #map .ol-touch-cursor .ol-button-type:before {
+      font-size: 1.2em;
+    }
+    #map .ol-touch-cursor .ol-button.del:before {
+      content: "\f0e2";
+      font-family: "FontAwesome";
+    }
+    #map .ol-touch-cursor.LineString:before,
+    #map .ol-touch-cursor .LineString:before {
       content: "\f1e0";
+      font-weight: normal;
     }
-    #map .ol-touch-cursor.Polygon:before {
+    #map .ol-touch-cursor.Polygon:before,
+    #map .ol-touch-cursor .Polygon:before {
       content: "\f097";
-      transform: translate(-50%, -50%) rotate(-90deg) scale(0);
+      transform: translate(-50%, -50%) rotate(-90deg);
       font-weight: bold;
-    }
-    #map .ol-touch-cursor.draw.active:before {
-      transform: translate(-50%, -50%) scale(1);
-    }
-    #map .ol-touch-cursor.draw.Polygon.active:before {
-      transform: translate(-50%, -50%) rotate(-90deg) scale(1);
     }
   </style>
 
@@ -102,13 +112,8 @@
     Options:
     <ul>
       <li>
-        Draw: 
-        <select onchange="setActive(this.value)">
-          <option value="Modify">Modify</option>
-          <option value="Point">Point</option>
-          <option value="LineString">LineString</option>
-          <option value="Polygon">Polygon</option>
-        </select>
+        <label><input type="radio" name="mode" onchange="setActive('Modify')" checked="checked"> Modify</label>
+        <label><input type="radio" name="mode" onchange="setActive('Draw')"> Draw</label>
       </li>
       <li>
         <button onclick="active.setActive(true);">Center cursor</button>
@@ -138,16 +143,27 @@
 
     var cursor = {};
     // Draw tools
-    ['Point', 'LineString', 'Polygon'].forEach(function(mode) {
-      cursor[mode] = new ol.interaction.TouchCursorDraw({
-        className: 'draw ' + mode,
-        coordinate: map.getView().getCenter(),
-        type: mode,
-        source: vector.getSource()
-      });
-      cursor[mode].setActive(false);
-      map.addInteraction(cursor[mode]);
+    cursor.Draw = new ol.interaction.TouchCursorDraw({
+      className: 'draw',
+      coordinate: map.getView().getCenter(),
+      type: 'Point',
+      types: ['Point', 'LineString', 'Polygon'],
+      source: vector.getSource()
     });
+    cursor.Draw.setActive(false);
+    map.addInteraction(cursor.Draw);
+    // Add a button to remove last feature
+    var feature = null;
+    cursor.Draw.on('drawend', function(e) {
+      cursor.Draw.removeButton('del');
+      cursor.Draw.addButton({
+        className: 'del', 
+        click: function() {
+          vector.getSource().removeFeature(e.feature);
+          cursor.Draw.removeButton('del');
+        }
+      })
+    })
 
     // Modify
     var active = cursor.Modify = new ol.interaction.TouchCursorModify({

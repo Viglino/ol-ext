@@ -9,10 +9,13 @@ import ol_interaction_TouchCursor from './TouchCursor'
 /** TouchCursor interaction + ModifyFeature
  * @constructor
  * @extends {ol_interaction_TouchCursor}
+ * @fires drawend
+ * @fires change:type
  * @param {olx.interaction.InteractionOptions} options Options
  *  @param {string} options.className cursor class name
  *  @param {ol.coordinate} options.coordinate cursor position
  *  @param {string} options.type geometry type
+ *  @param {Array<string>} options.types geometry types avaliable, default none
  *  @param {ol.source.Vector} options.source Destination source for the drawn features
  *  @param {ol.Collection<ol.Feature>} options.features Destination collection for the drawn features
  *  @param {number} options.clickTolerance The maximum distance in pixels for "click" event to add a point/vertex to the geometry being drawn. default 6
@@ -33,39 +36,27 @@ var ol_interaction_TouchCursorDraw = function(options) {
   });
 
   sketch.on('drawend', function(e) {
+    console.log(e)
     if (e.valid && options.source) options.source.addFeature(e.feature);
-  });
+    this.dispatchEvent(e);
+  }.bind(this));
+  sketch.on('drawstart', function(e) {
+    console.log(e)
+    this.dispatchEvent(e);
+  }.bind(this));
+  sketch.on('drawabort', function(e) {
+    console.log(e)
+    this.dispatchEvent(e);
+  }.bind(this));
 
-  // Buttons
-  var buttons = [];
-  if (options.type !== 'Point') {
-    buttons =[{
-      // Cancel drawing
-      className: 'ol-button-x', 
-      click: function() {
-        sketch.abortDrawing();
-      }
-    }, { 
-      // Add a new point (nothing to do, just click)
-      className: 'ol-button-check',
-      click: function() {
-        sketch.finishDrawing(true);
-      }
-    }, { 
-      // Remove a point
-      className: 'ol-button-remove', 
-      click: function() {
-        sketch.removeLastPoint();
-      }
-    }]
-  }
-  
   // Create cursor
   ol_interaction_TouchCursor.call(this, {
     className: options.className,
     coordinate: options.coordinate,
-    buttons: buttons
   });
+
+  this.set('types', options.types);
+  this.setType(options.type);
 
   this.on('click', function(e) {
     this.sketch.addPoint(this.getPosition());
@@ -105,6 +96,61 @@ ol_interaction_TouchCursorDraw.prototype.setActive = function(b, position) {
   ol_interaction_TouchCursor.prototype.setActive.call (this, b, position);
   this.sketch.abortDrawing();
   this.sketch.setVisible(b);
+};
+
+/**
+ * Set Geometry type
+ * @param {string} type Geometry type
+ */
+ol_interaction_TouchCursorDraw.prototype.setType = function(type) {
+  this.removeButton();
+  var sketch = this.sketch;
+  this.getOverlayElement().classList.remove(sketch.getGeometryType());
+  // Set type
+  var oldValue = sketch.setGeometryType();
+  type = sketch.setGeometryType(type);
+  this.getOverlayElement().classList.add(type);
+
+  this.dispatchEvent({
+    type: 'change:type',
+    oldValue: oldValue
+  });
+
+  // Next type
+  var types = this.get('types');
+  if (types && types.length) {
+    var next = types[(types.indexOf(type) + 1) % types.length];
+    this.addButton({
+      className: 'ol-button-type '+next, 
+      click: function() {
+        this.setType(next)
+      }.bind(this)
+    });
+  }
+  // Add buttons
+  if (type !== 'Point') {
+    // Cancel drawing
+    this.addButton({
+      className: 'ol-button-x', 
+      click: function() {
+        sketch.abortDrawing();
+      }
+    });
+    // Add a new point (nothing to do, just click)
+    this.addButton({ 
+      className: 'ol-button-check',
+      click: function() {
+        sketch.finishDrawing(true);
+      }
+    });
+    // Remove last point
+    this.addButton({  
+      className: 'ol-button-remove', 
+      click: function() {
+        sketch.removeLastPoint();
+      }
+    });
+  }
 };
 
 export default ol_interaction_TouchCursorDraw

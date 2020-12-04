@@ -27,7 +27,7 @@ var ol_interaction_TouchCursor = function(options) {
 
   // Interaction to defer position on top of the interaction 
   // this is done to enable other coordinates manipulation inserted after the interaction (snapping)
-  var offset = [-33,-33];
+  var offset = [-35,-35];
   this.ctouch = new ol_interaction_Interaction({
     handleEvent: function(e) {
       if (!/drag/.test(e.type) && this.getMap()) {
@@ -264,7 +264,23 @@ ol_interaction_TouchCursor.prototype.getButtonElement = function (button) {
   return this.getOverlayElement().getElementsByClassName(button)[0];
 };
 
-/** Get cursor button element
+/** Remove a button element
+ * @param {string|number|undefined} button the button className or the button index, if undefined remove all buttons, default remove all
+ * @return {Element}
+ */
+ol_interaction_TouchCursor.prototype.removeButton = function (button) {
+  if (button===undefined) {
+    var buttons = this.getOverlayElement().getElementsByClassName('ol-button');
+    for (var i=buttons.length-1; i>=0; i--) {
+      this.getOverlayElement().removeChild(buttons[i]);
+    }
+  } else {
+    var elt = this.getButtonElement(button);
+    if (elt) this.getOverlayElement().removeChild(elt);
+  }
+};
+
+/** Add a button element
  * @param {} options
  *  @param {string} options.className button class name
  *  @param {DOMElement|string} options.html button content

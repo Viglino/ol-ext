@@ -9,6 +9,9 @@ import ol_style_Style_defaultStyle from '../style/defaultStyle'
 /** A sketch layer used as overlay to handle drawing sketch (helper for drawing tools)
  * @constructor 
  * @extends {ol/layer/Vector}
+ * @fires drawstart
+ * @fires drawend
+ * @fires drawabort
  * @param {*} options 
  *  @param {string} type Geometry type, default LineString
  */
@@ -73,6 +76,7 @@ ol_ext_inherits (ol_layer_SketchOverlay, ol_layer_Vector);
 
 /** Set geometry type
  * @param {string} type Geometry type
+ * @return {string} the current type
  */
 ol_layer_SketchOverlay.prototype.setGeometryType = function(type) {
   var t = /^Point$|^LineString$|^Polygon$/.test(type) ? type : 'LineString';
@@ -80,6 +84,7 @@ ol_layer_SketchOverlay.prototype.setGeometryType = function(type) {
     this.abortDrawing();
     this._type = t;
   }
+  return this._type;
 };
 
 /** Get geometry type
@@ -95,12 +100,14 @@ ol_layer_SketchOverlay.prototype.getGeometryType = function() {
  */
 ol_layer_SketchOverlay.prototype.addPoint = function(coord) {
   if (this._lastCoord !== this._position) {
+    if (!this._geom.length) {
+      this.startDrawing();
+    }
     this._geom.push(coord);
     this._lastCoord = coord; 
     this._position = coord; 
     this.drawSketch();
     if (this.getGeometryType() === 'Point') {
-      console.log('fini')
       this.finishDrawing();
     }
     return true;
@@ -124,9 +131,17 @@ ol_layer_SketchOverlay.prototype.removeLastPoint = function() {
  *  @param {boolean} atstart extent coordinates or feature at start, default false (extend at end)
  */
 ol_layer_SketchOverlay.prototype.startDrawing = function(options) {
+  options = options || {};
   this._geom = [];
-  this.setType(options.type);
+  if (options.type) this.setGeometryType(options.type);
   this.drawSketch();
+  if (!this._drawing) {
+    this.dispatchEvent({
+      type: 'drawstart',
+      feature: this.getFeature()
+    });
+  }
+  this._drawing = true;
 };
 
 /** Finish drawing
@@ -148,17 +163,27 @@ ol_layer_SketchOverlay.prototype.finishDrawing = function(valid) {
   if (valid && !isvalid) return false;
   this._geom = [];
   this.drawSketch();
-  this.dispatchEvent({
-    type: 'drawend',
-    valid: isvalid,
-    feature: f
-  })
+  if (this._drawing) {
+    this.dispatchEvent({
+      type: 'drawend',
+      valid: isvalid,
+      feature: f
+    });
+  }
+  this._drawing = false
   return f;
 };
 
 /** Abort drawing
  */
 ol_layer_SketchOverlay.prototype.abortDrawing = function() {
+  if (this._drawing) {
+    this.dispatchEvent({
+      type: 'drawabort',
+      feature: this.getFeature()
+    });
+  }
+  this._drawing = false;
   this._geom = [];
   this._position = null;
   this.drawSketch();
@@ -197,12 +222,10 @@ ol_layer_SketchOverlay.prototype.drawLink = function() {
   }
 };
 
+/** Get current feature
+ */
 ol_layer_SketchOverlay.prototype.getFeature = function() {
-  if (this._geom.length) {
-    return this.getSource().getFeatures()[2];
-  } else {
-    return null;
-  }
+  return this.getSource().getFeatures()[2];
 };
 
 /** Draw/refresh sketch
@@ -229,11 +252,13 @@ ol_layer_SketchOverlay.prototype.drawSketch = function() {
         break;
       }
       case 'Polygon': {
+        this._geom.push(this._geom[0]);
         if (!features[2].getGeometry()) {
           features[2].setGeometry(new ol_geom_Polygon([this._geom]));
         } else {
           features[2].getGeometry().setCoordinates([this._geom]);
         }
+        this._geom.pop();
         break;
       }
       default: {
