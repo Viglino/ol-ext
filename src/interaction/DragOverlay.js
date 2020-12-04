@@ -30,7 +30,7 @@ var ol_interaction_DragOverlay = function(options) {
       // Start dragging
       if (this._dragging) {
         if (options.centerOnClick !== false) {
-          this._dragging.setPosition(coordinate);
+          this._dragging.setPosition(coordinate, true);
         } else {
           coordinate = this._dragging.getPosition();
         }
@@ -50,7 +50,7 @@ var ol_interaction_DragOverlay = function(options) {
       var res = evt.frameState.viewState.resolution
       var coordinate = [evt.coordinate[0] + offset[0]*res, evt.coordinate[1] - offset[1]*res];
       if (this._dragging) {
-        this._dragging.setPosition(coordinate);
+        this._dragging.setPosition(coordinate, true);
         this.dispatchEvent({ 
           type: 'dragging',
           overlay: this._dragging,

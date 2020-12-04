@@ -7,7 +7,6 @@ import ol_ext_inherits from '../util/ext'
 import ol_interaction_DragOverlay from './DragOverlay'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
-import ol_Overlay from 'ol/Overlay'
 import ol_ext_element from '../util/element'
 
 /** Handle a touch cursor to defer event position on overlay position
@@ -52,13 +51,14 @@ var ol_interaction_TouchCursor = function(options) {
   this.ctouch.set('onTop', true);
 
   // Add Overlay
-  this.overlay = new ol_Overlay({
+  this.overlay = new ol_Overlay_Fixed({
     className: ('ol-touch-cursor '+(options.className||'')).trim(),
     positioning: 'top-left',
     element: ol_ext_element.create('DIV', {}),
     stopEvent: false,
   });
-  this.setPosition(options.coordinate);
+
+  this.setPosition(options.coordinate, true);
   if (options.buttons) {
     var elt = this.overlay.element;
     var begin = options.buttons.length > 4 ? 0 : 1;
@@ -162,50 +162,19 @@ ol_interaction_TouchCursor.prototype.setMap = function(map) {
   ol_interaction_DragOverlay.prototype.setMap.call (this, map);
 
   // Set listeners
-  if (this.getMap()) {
-    if (this.getActive()) this.getMap().addOverlay(this.overlay);
-    this._pixel = this.getMap().getPixelFromCoordinate(this.getPosition());
-    this.getMap().addInteraction(this.ctouch);
-    var view = this.getMap().getView();
-    var offsetPosition = function(e) {
-      var center = view.getCenter();
-      var pos = this.overlay.getPosition();
-      if (pos) {
-        this.overlay.setPosition([
-          pos[0] + center[0] - e.oldValue[0], 
-          pos[1] + center[1] - e.oldValue[1]
-        ]); 
-      }
-    }.bind(this);
-    var setPosition = function() {
-      if (this._pixel && this.getMap()) {
-        this.setPosition(this.getMap().getCoordinateFromPixel(this._pixel));
-      }
-    }.bind(this);
-    // Handle view change 
-    if (view) {
-      this._listeners.center = view.on('change:center', offsetPosition);
-      this._listeners.reso = view.on('change:resolution', setPosition);
-      this._listeners.rot = view.on('change:rotation', setPosition);
+  if (map) {
+    if (this.getActive()) {
+      map.addOverlay(this.overlay);
+      setTimeout( function() {
+        this.setPosition(this.getPosition() || map.getView().getCenter());
+      }.bind(this));
     }
-    this._listeners.view = this.getMap().on ('change:view', function() {
-      if (this._listeners.view) {
-        ol_Observable_unByKey(this._listeners.view);
-        ol_Observable_unByKey(this._listeners.reso)
-        ol_Observable_unByKey(this._listeners.rot)
-      }
-      view = this.getMap().getView();
-      if (view) {
-        this._listeners.view = view.on('change:center', offsetPosition);
-        this._listeners.reso = view.on('change:resolution', changeResolution);
-        this._listeners.rot = view.on('change:rotation', setPosition);
-      }
-    }.bind(this));
-    this._listeners.addInteraction = this.getMap().getInteractions().on('add', function(e) {
+    map.addInteraction(this.ctouch);
+    this._listeners.addInteraction = map.getInteractions().on('add', function(e) {
       // Move on top
       if (!e.element.get('onTop')) {
-        this.getMap().removeInteraction(this.ctouch);
-        this.getMap().addInteraction(this.ctouch);
+        map.removeInteraction(this.ctouch);
+        map.addInteraction(this.ctouch);
       }
     }.bind(this));
   }
@@ -229,17 +198,21 @@ ol_interaction_TouchCursor.prototype.setActive = function(b, position) {
       if (this.getMap()) this.getMap().removeOverlay(this.overlay);
       return;
     } 
+    if (this.getMap()) {
+      this.getMap().addOverlay(this.overlay);
+    }
     if (position) {
       this.setPosition(position);
     } else if (this.getMap()) {
       this.setPosition(this.getMap().getView().getCenter());
     }
-    if (this.getMap()) this.getMap().addOverlay(this.overlay);
     this._activate = setTimeout(function() {
       this.overlay.element.classList.add('active');
     }.bind(this), 100);
   } else if (position) {
     this.setPosition(position);
+  } else if (this.getMap()) {
+    this.setPosition(this.getMap().getView().getCenter());
   }
 };
 
@@ -247,7 +220,7 @@ ol_interaction_TouchCursor.prototype.setActive = function(b, position) {
  * @param {ol.coordinate} coord
  */
 ol_interaction_TouchCursor.prototype.setPosition = function (coord) {
-  this.overlay.setPosition(coord); 
+  this.overlay.setPosition(coord, true); 
   if (this.getMap() && coord) {
     this._pixel = this.getMap().getPixelFromCoordinate(coord);
   }

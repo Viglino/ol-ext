@@ -84,15 +84,14 @@ ol_ext_inherits(ol_interaction_TouchCursorDraw, ol_interaction_TouchCursor);
  * @api stable
  */
 ol_interaction_TouchCursorDraw.prototype.setMap = function(map) {
-  if (this.getMap()) {
-    this.getMap().removeInteraction(this._modify);
-  }
+  ol_interaction_TouchCursor.prototype.setMap.call (this, map);
 
   if (map) {
     this.sketch.setMap(map);
+    this._listeners.movend = map.on('moveend', function() {
+      this.sketch.setPosition(this.getPosition())
+    }.bind(this))
   }
-
-  ol_interaction_TouchCursor.prototype.setMap.call (this, map);
 };
 
 /**

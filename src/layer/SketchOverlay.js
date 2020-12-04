@@ -47,6 +47,7 @@ var ol_layer_SketchOverlay = function(options) {
   this._geom = [];
 
   ol_layer_Vector.call (this, {
+    name: 'sketch',
     source: new ol_source_Vector({ useSpatialIndex: false }),
     style: function(f) {
       return (f.get('sketch') ? sketchStyle : style);
@@ -66,14 +67,14 @@ var ol_layer_SketchOverlay = function(options) {
     new ol_Feature(new ol_geom_Point([]))
   ]);
 
-  this.setType(options.type);
+  this.setGeometryType(options.type);
 };
 ol_ext_inherits (ol_layer_SketchOverlay, ol_layer_Vector);
 
 /** Set geometry type
  * @param {string} type Geometry type
  */
-ol_layer_SketchOverlay.prototype.setType = function(type) {
+ol_layer_SketchOverlay.prototype.setGeometryType = function(type) {
   var t = /^Point$|^LineString$|^Polygon$/.test(type) ? type : 'LineString';
   if (t !== this._type) {
     this.abortDrawing();
@@ -84,7 +85,7 @@ ol_layer_SketchOverlay.prototype.setType = function(type) {
 /** Get geometry type
  * @return {string} Geometry type
  */
-ol_layer_SketchOverlay.prototype.getType = function() {
+ol_layer_SketchOverlay.prototype.getGeometryType = function() {
   return this._type;
 };
 
@@ -98,7 +99,8 @@ ol_layer_SketchOverlay.prototype.addPoint = function(coord) {
     this._lastCoord = coord; 
     this._position = coord; 
     this.drawSketch();
-    if (this.getType() === 'Point') {
+    if (this.getGeometryType() === 'Point') {
+      console.log('fini')
       this.finishDrawing();
     }
     return true;
@@ -133,7 +135,7 @@ ol_layer_SketchOverlay.prototype.startDrawing = function(options) {
 ol_layer_SketchOverlay.prototype.finishDrawing = function(valid) {
   var f = this.getSource().getFeatures()[2].clone();
   var isvalid = !!f;
-  switch (this.getType()) {
+  switch (this.getGeometryType()) {
     case 'LineString': {
       isvalid = this._geom.length > 1;
       break;
@@ -181,7 +183,7 @@ ol_layer_SketchOverlay.prototype.drawLink = function() {
       features[0].getGeometry().setCoordinates(this._position);
     }
     if (this._geom.length) {
-      if (this.getType()==='Polygon') {
+      if (this.getGeometryType()==='Polygon') {
         features[1].getGeometry().setCoordinates([ this._lastCoord, this._position, this._geom[0] ]);
       } else {
         features[1].getGeometry().setCoordinates([ this._lastCoord, this._position ]);
