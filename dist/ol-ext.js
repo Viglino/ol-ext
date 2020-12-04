@@ -19225,7 +19225,7 @@ ol.interaction.TouchCursor = function(options) {
   this._listeners = {};
   // Interaction to defer position on top of the interaction 
   // this is done to enable other coordinates manipulation inserted after the interaction (snapping)
-  var offset = [-33,-33];
+  var offset = [-35,-35];
   this.ctouch = new ol.interaction.Interaction({
     handleEvent: function(e) {
       if (!/drag/.test(e.type) && this.getMap()) {
@@ -19447,7 +19447,22 @@ ol.interaction.TouchCursor.prototype.getButtonElement = function (button) {
   if (typeof(button) === 'number') return this.getOverlayElement().getElementsByClassName('ol-button')[button];
   return this.getOverlayElement().getElementsByClassName(button)[0];
 };
-/** Get cursor button element
+/** Remove a button element
+ * @param {string|number|undefined} button the button className or the button index, if undefined remove all buttons, default remove all
+ * @return {Element}
+ */
+ol.interaction.TouchCursor.prototype.removeButton = function (button) {
+  if (button===undefined) {
+    var buttons = this.getOverlayElement().getElementsByClassName('ol-button');
+    for (var i=buttons.length-1; i>=0; i--) {
+      this.getOverlayElement().removeChild(buttons[i]);
+    }
+  } else {
+    var elt = this.getButtonElement(button);
+    if (elt) this.getOverlayElement().removeChild(elt);
+  }
+};
+/** Add a button element
  * @param {} options
  *  @param {string} options.className button class name
  *  @param {DOMElement|string} options.html button content
@@ -19482,10 +19497,13 @@ ol.interaction.TouchCursor.prototype.addButton = function (b) {
 /** TouchCursor interaction + ModifyFeature
  * @constructor
  * @extends {ol.interaction.TouchCursor}
+ * @fires drawend
+ * @fires change:type
  * @param {olx.interaction.InteractionOptions} options Options
  *  @param {string} options.className cursor class name
  *  @param {ol.coordinate} options.coordinate cursor position
  *  @param {string} options.type geometry type
+ *  @param {Array<string>} options.types geometry types avaliable, default none
  *  @param {ol.source.Vector} options.source Destination source for the drawn features
  *  @param {ol.Collection<ol.Feature>} options.features Destination collection for the drawn features
  *  @param {number} options.clickTolerance The maximum distance in pixels for "click" event to add a point/vertex to the geometry being drawn. default 6
@@ -19504,37 +19522,25 @@ ol.interaction.TouchCursorDraw = function(options) {
     type: options.type
   });
   sketch.on('drawend', function(e) {
+    console.log(e)
     if (e.valid && options.source) options.source.addFeature(e.feature);
-  });
-  // Buttons
-  var buttons = [];
-  if (options.type !== 'Point') {
-    buttons =[{
-      // Cancel drawing
-      className: 'ol-button-x', 
-      click: function() {
-        sketch.abortDrawing();
-      }
-    }, { 
-      // Add a new point (nothing to do, just click)
-      className: 'ol-button-check',
-      click: function() {
-        sketch.finishDrawing(true);
-      }
-    }, { 
-      // Remove a point
-      className: 'ol-button-remove', 
-      click: function() {
-        sketch.removeLastPoint();
-      }
-    }]
-  }
+    this.dispatchEvent(e);
+  }.bind(this));
+  sketch.on('drawstart', function(e) {
+    console.log(e)
+    this.dispatchEvent(e);
+  }.bind(this));
+  sketch.on('drawabort', function(e) {
+    console.log(e)
+    this.dispatchEvent(e);
+  }.bind(this));
   // Create cursor
   ol.interaction.TouchCursor.call(this, {
     className: options.className,
     coordinate: options.coordinate,
-    buttons: buttons
   });
+  this.set('types', options.types);
+  this.setType(options.type);
   this.on('click', function(e) {
     this.sketch.addPoint(this.getPosition());
   }.bind(this))
@@ -19569,6 +19575,58 @@ ol.interaction.TouchCursorDraw.prototype.setActive = function(b, position) {
   ol.interaction.TouchCursor.prototype.setActive.call (this, b, position);
   this.sketch.abortDrawing();
   this.sketch.setVisible(b);
+};
+/**
+ * Set Geometry type
+ * @param {string} type Geometry type
+ */
+ol.interaction.TouchCursorDraw.prototype.setType = function(type) {
+  this.removeButton();
+  var sketch = this.sketch;
+  this.getOverlayElement().classList.remove(sketch.getGeometryType());
+  // Set type
+  var oldValue = sketch.setGeometryType();
+  type = sketch.setGeometryType(type);
+  this.getOverlayElement().classList.add(type);
+  this.dispatchEvent({
+    type: 'change:type',
+    oldValue: oldValue
+  });
+  // Next type
+  var types = this.get('types');
+  if (types && types.length) {
+    var next = types[(types.indexOf(type) + 1) % types.length];
+    this.addButton({
+      className: 'ol-button-type '+next, 
+      click: function() {
+        this.setType(next)
+      }.bind(this)
+    });
+  }
+  // Add buttons
+  if (type !== 'Point') {
+    // Cancel drawing
+    this.addButton({
+      className: 'ol-button-x', 
+      click: function() {
+        sketch.abortDrawing();
+      }
+    });
+    // Add a new point (nothing to do, just click)
+    this.addButton({ 
+      className: 'ol-button-check',
+      click: function() {
+        sketch.finishDrawing(true);
+      }
+    });
+    // Remove last point
+    this.addButton({  
+      className: 'ol-button-remove', 
+      click: function() {
+        sketch.removeLastPoint();
+      }
+    });
+  }
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -24197,6 +24255,9 @@ ol.render3D.prototype.drawGhost3D_ = function(ctx, build) {
 /** A sketch layer used as overlay to handle drawing sketch (helper for drawing tools)
  * @constructor 
  * @extends {ol/layer/Vector}
+ * @fires drawstart
+ * @fires drawend
+ * @fires drawabort
  * @param {*} options 
  *  @param {string} type Geometry type, default LineString
  */
@@ -24256,6 +24317,7 @@ ol.layer.SketchOverlay = function(options) {
 ol.ext.inherits (ol.layer.SketchOverlay, ol.layer.Vector);
 /** Set geometry type
  * @param {string} type Geometry type
+ * @return {string} the current type
  */
 ol.layer.SketchOverlay.prototype.setGeometryType = function(type) {
   var t = /^Point$|^LineString$|^Polygon$/.test(type) ? type : 'LineString';
@@ -24263,6 +24325,7 @@ ol.layer.SketchOverlay.prototype.setGeometryType = function(type) {
     this.abortDrawing();
     this._type = t;
   }
+  return this._type;
 };
 /** Get geometry type
  * @return {string} Geometry type
@@ -24276,12 +24339,14 @@ ol.layer.SketchOverlay.prototype.getGeometryType = function() {
  */
 ol.layer.SketchOverlay.prototype.addPoint = function(coord) {
   if (this._lastCoord !== this._position) {
+    if (!this._geom.length) {
+      this.startDrawing();
+    }
     this._geom.push(coord);
     this._lastCoord = coord; 
     this._position = coord; 
     this.drawSketch();
     if (this.getGeometryType() === 'Point') {
-      console.log('fini')
       this.finishDrawing();
     }
     return true;
@@ -24303,9 +24368,17 @@ ol.layer.SketchOverlay.prototype.removeLastPoint = function() {
  *  @param {boolean} atstart extent coordinates or feature at start, default false (extend at end)
  */
 ol.layer.SketchOverlay.prototype.startDrawing = function(options) {
+  options = options || {};
   this._geom = [];
-  this.setType(options.type);
+  if (options.type) this.setGeometryType(options.type);
   this.drawSketch();
+  if (!this._drawing) {
+    this.dispatchEvent({
+      type: 'drawstart',
+      feature: this.getFeature()
+    });
+  }
+  this._drawing = true;
 };
 /** Finish drawing
  * @return {ol.Feature} the drawed feature
@@ -24326,16 +24399,26 @@ ol.layer.SketchOverlay.prototype.finishDrawing = function(valid) {
   if (valid && !isvalid) return false;
   this._geom = [];
   this.drawSketch();
-  this.dispatchEvent({
-    type: 'drawend',
-    valid: isvalid,
-    feature: f
-  })
+  if (this._drawing) {
+    this.dispatchEvent({
+      type: 'drawend',
+      valid: isvalid,
+      feature: f
+    });
+  }
+  this._drawing = false
   return f;
 };
 /** Abort drawing
  */
 ol.layer.SketchOverlay.prototype.abortDrawing = function() {
+  if (this._drawing) {
+    this.dispatchEvent({
+      type: 'drawabort',
+      feature: this.getFeature()
+    });
+  }
+  this._drawing = false;
   this._geom = [];
   this._position = null;
   this.drawSketch();
@@ -24371,12 +24454,10 @@ ol.layer.SketchOverlay.prototype.drawLink = function() {
     features[1].getGeometry().setCoordinates([]);
   }
 };
+/** Get current feature
+ */
 ol.layer.SketchOverlay.prototype.getFeature = function() {
-  if (this._geom.length) {
-    return this.getSource().getFeatures()[2];
-  } else {
-    return null;
-  }
+  return this.getSource().getFeatures()[2];
 };
 /** Draw/refresh sketch
  */
@@ -24402,11 +24483,13 @@ ol.layer.SketchOverlay.prototype.drawSketch = function() {
         break;
       }
       case 'Polygon': {
+        this._geom.push(this._geom[0]);
         if (!features[2].getGeometry()) {
           features[2].setGeometry(new ol.geom.Polygon([this._geom]));
         } else {
           features[2].getGeometry().setCoordinates([this._geom]);
         }
+        this._geom.pop();
         break;
       }
       default: {
@@ -25416,22 +25499,18 @@ ol.ext.inherits(ol.Overlay.Fixed, ol.Overlay);
  * @param {boolean} force true to change the position, default false
  */
 ol.Overlay.Fixed.prototype.setPosition = function(position, force) {
+  if (this.getMap() && position) {
+    this._pixel = this.getMap().getPixelFromCoordinate(position);
+  }
   ol.Overlay.prototype.setPosition.call(this, position)
   if (force) {
-    this._pixel = null;
-    ol.Overlay.prototype.updatePixelPosition.call(this, true);
-    if (this.getMap() && position) {
-      this._pixel = this.getMap().getPixelFromCoordinate(position);
-    }
+    ol.Overlay.prototype.updatePixelPosition.call(this);
   } 
 };
-/** Update pixel position only if forced
- * @param {boolean} force
+/** Update position according the pixel position
  */
-ol.Overlay.Fixed.prototype.updatePixelPosition = function(force) {
-  if (force) {
-    ol.Overlay.prototype.updatePixelPosition.call(this)
-  } else if (this.getMap() && this._pixel && this.getPosition()) {
+ol.Overlay.Fixed.prototype.updatePixelPosition = function() {
+  if (this.getMap() && this._pixel && this.getPosition()) {
     var pixel = this.getMap().getPixelFromCoordinate(this.getPosition())
     if (Math.round(pixel[0]*1000) !== Math.round(this._pixel[0]*1000) 
       || Math.round(pixel[0]*1000) !== Math.round(this._pixel[0]*1000) ) {

@@ -3982,6 +3982,12 @@
           transform: translate(-50%, -50%);
 }
 
+.ol-overlaycontainer .ol-touch-cursor .ol-button-type:before {
+  content: "\21CE";
+  font-weight: bold;
+}
+
+
 
 .ol-perspective-map {
   position: absolute;
