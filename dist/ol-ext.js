@@ -14673,7 +14673,7 @@ ol.interaction.DragOverlay = function(options) {
       // Start dragging
       if (this._dragging) {
         if (options.centerOnClick !== false) {
-          this._dragging.setPosition(coordinate);
+          this._dragging.setPosition(coordinate, true);
         } else {
           coordinate = this._dragging.getPosition();
         }
@@ -14693,7 +14693,7 @@ ol.interaction.DragOverlay = function(options) {
       var res = evt.frameState.viewState.resolution
       var coordinate = [evt.coordinate[0] + offset[0]*res, evt.coordinate[1] - offset[1]*res];
       if (this._dragging) {
-        this._dragging.setPosition(coordinate);
+        this._dragging.setPosition(coordinate, true);
         this.dispatchEvent({ 
           type: 'dragging',
           overlay: this._dragging,
@@ -19248,13 +19248,13 @@ ol.interaction.TouchCursor = function(options) {
   // Force interaction on top
   this.ctouch.set('onTop', true);
   // Add Overlay
-  this.overlay = new ol.Overlay({
+  this.overlay = new ol.Overlay.Fixed({
     className: ('ol-touch-cursor '+(options.className||'')).trim(),
     positioning: 'top-left',
     element: ol.ext.element.create('DIV', {}),
     stopEvent: false,
   });
-  this.setPosition(options.coordinate);
+  this.setPosition(options.coordinate, true);
   if (options.buttons) {
     var elt = this.overlay.element;
     var begin = options.buttons.length > 4 ? 0 : 1;
@@ -19353,50 +19353,19 @@ ol.interaction.TouchCursor.prototype.setMap = function(map) {
   this._listeners = {};
   ol.interaction.DragOverlay.prototype.setMap.call (this, map);
   // Set listeners
-  if (this.getMap()) {
-    if (this.getActive()) this.getMap().addOverlay(this.overlay);
-    this._pixel = this.getMap().getPixelFromCoordinate(this.getPosition());
-    this.getMap().addInteraction(this.ctouch);
-    var view = this.getMap().getView();
-    var offsetPosition = function(e) {
-      var center = view.getCenter();
-      var pos = this.overlay.getPosition();
-      if (pos) {
-        this.overlay.setPosition([
-          pos[0] + center[0] - e.oldValue[0], 
-          pos[1] + center[1] - e.oldValue[1]
-        ]); 
-      }
-    }.bind(this);
-    var setPosition = function() {
-      if (this._pixel && this.getMap()) {
-        this.setPosition(this.getMap().getCoordinateFromPixel(this._pixel));
-      }
-    }.bind(this);
-    // Handle view change 
-    if (view) {
-      this._listeners.center = view.on('change:center', offsetPosition);
-      this._listeners.reso = view.on('change:resolution', setPosition);
-      this._listeners.rot = view.on('change:rotation', setPosition);
+  if (map) {
+    if (this.getActive()) {
+      map.addOverlay(this.overlay);
+      setTimeout( function() {
+        this.setPosition(this.getPosition() || map.getView().getCenter());
+      }.bind(this));
     }
-    this._listeners.view = this.getMap().on ('change:view', function() {
-      if (this._listeners.view) {
-        ol.Observable.unByKey(this._listeners.view);
-        ol.Observable.unByKey(this._listeners.reso)
-        ol.Observable.unByKey(this._listeners.rot)
-      }
-      view = this.getMap().getView();
-      if (view) {
-        this._listeners.view = view.on('change:center', offsetPosition);
-        this._listeners.reso = view.on('change:resolution', changeResolution);
-        this._listeners.rot = view.on('change:rotation', setPosition);
-      }
-    }.bind(this));
-    this._listeners.addInteraction = this.getMap().getInteractions().on('add', function(e) {
+    map.addInteraction(this.ctouch);
+    this._listeners.addInteraction = map.getInteractions().on('add', function(e) {
       // Move on top
       if (!e.element.get('onTop')) {
-        this.getMap().removeInteraction(this.ctouch);
-        this.getMap().addInteraction(this.ctouch);
+        map.removeInteraction(this.ctouch);
+        map.addInteraction(this.ctouch);
       }
     }.bind(this));
   }
@@ -19419,24 +19388,28 @@ ol.interaction.TouchCursor.prototype.setActive = function(b, position) {
       if (this.getMap()) this.getMap().removeOverlay(this.overlay);
       return;
     } 
+    if (this.getMap()) {
+      this.getMap().addOverlay(this.overlay);
+    }
     if (position) {
       this.setPosition(position);
     } else if (this.getMap()) {
       this.setPosition(this.getMap().getView().getCenter());
     }
-    if (this.getMap()) this.getMap().addOverlay(this.overlay);
     this._activate = setTimeout(function() {
       this.overlay.element.classList.add('active');
     }.bind(this), 100);
   } else if (position) {
     this.setPosition(position);
+  } else if (this.getMap()) {
+    this.setPosition(this.getMap().getView().getCenter());
   }
 };
 /** Set the position of the target
  * @param {ol.coordinate} coord
  */
 ol.interaction.TouchCursor.prototype.setPosition = function (coord) {
-  this.overlay.setPosition(coord); 
+  this.overlay.setPosition(coord, true); 
   if (this.getMap() && coord) {
     this._pixel = this.getMap().getPixelFromCoordinate(coord);
   }
@@ -19577,13 +19550,13 @@ ol.ext.inherits(ol.interaction.TouchCursorDraw, ol.interaction.TouchCursor);
  * @api stable
  */
 ol.interaction.TouchCursorDraw.prototype.setMap = function(map) {
-  if (this.getMap()) {
-    this.getMap().removeInteraction(this._modify);
-  }
+  ol.interaction.TouchCursor.prototype.setMap.call (this, map);
   if (map) {
     this.sketch.setMap(map);
+    this._listeners.movend = map.on('moveend', function() {
+      this.sketch.setPosition(this.getPosition())
+    }.bind(this))
   }
-  ol.interaction.TouchCursor.prototype.setMap.call (this, map);
 };
 /**
  * Activate or deactivate the interaction.
@@ -24259,6 +24232,7 @@ ol.layer.SketchOverlay = function(options) {
   }
   this._geom = [];
   ol.layer.Vector.call (this, {
+    name: 'sketch',
     source: new ol.source.Vector({ useSpatialIndex: false }),
     style: function(f) {
       return (f.get('sketch') ? sketchStyle : style);
@@ -24277,13 +24251,13 @@ ol.layer.SketchOverlay = function(options) {
     new ol.Feature(),
     new ol.Feature(new ol.geom.Point([]))
   ]);
-  this.setType(options.type);
+  this.setGeometryType(options.type);
 };
 ol.ext.inherits (ol.layer.SketchOverlay, ol.layer.Vector);
 /** Set geometry type
  * @param {string} type Geometry type
  */
-ol.layer.SketchOverlay.prototype.setType = function(type) {
+ol.layer.SketchOverlay.prototype.setGeometryType = function(type) {
   var t = /^Point$|^LineString$|^Polygon$/.test(type) ? type : 'LineString';
   if (t !== this._type) {
     this.abortDrawing();
@@ -24293,7 +24267,7 @@ ol.layer.SketchOverlay.prototype.setType = function(type) {
 /** Get geometry type
  * @return {string} Geometry type
  */
-ol.layer.SketchOverlay.prototype.getType = function() {
+ol.layer.SketchOverlay.prototype.getGeometryType = function() {
   return this._type;
 };
 /** Add a new Point to the sketch
@@ -24306,7 +24280,8 @@ ol.layer.SketchOverlay.prototype.addPoint = function(coord) {
     this._lastCoord = coord; 
     this._position = coord; 
     this.drawSketch();
-    if (this.getType() === 'Point') {
+    if (this.getGeometryType() === 'Point') {
+      console.log('fini')
       this.finishDrawing();
     }
     return true;
@@ -24338,7 +24313,7 @@ ol.layer.SketchOverlay.prototype.startDrawing = function(options) {
 ol.layer.SketchOverlay.prototype.finishDrawing = function(valid) {
   var f = this.getSource().getFeatures()[2].clone();
   var isvalid = !!f;
-  switch (this.getType()) {
+  switch (this.getGeometryType()) {
     case 'LineString': {
       isvalid = this._geom.length > 1;
       break;
@@ -24383,7 +24358,7 @@ ol.layer.SketchOverlay.prototype.drawLink = function() {
       features[0].getGeometry().setCoordinates(this._position);
     }
     if (this._geom.length) {
-      if (this.getType()==='Polygon') {
+      if (this.getGeometryType()==='Polygon') {
         features[1].getGeometry().setCoordinates([ this._lastCoord, this._position, this._geom[0] ]);
       } else {
         features[1].getGeometry().setCoordinates([ this._lastCoord, this._position ]);
@@ -25411,6 +25386,58 @@ ol.Overlay.AnimatedCanvas.prototype._animate = function(time) {
     }
   }
   this._pause = false;
+};
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * @classdesc
+ * An overlay fixed on the map. 
+ * Use setPosition(coord, true) to force the overlay position otherwise the position will be ignored.
+ *
+ * @example
+var popup = new ol.Overlay.Fixed();
+map.addOverlay(popup);
+popup.setposition(position, true);
+*
+* @constructor
+* @extends {ol.Overlay}
+* @param {} options Extend Overlay options 
+* @api stable
+*/
+ol.Overlay.Fixed = function (options) {
+  ol.Overlay.call(this, options);
+};
+ol.ext.inherits(ol.Overlay.Fixed, ol.Overlay);
+/** Prevent modifying position and use a force argument to force positionning.
+ * @param {ol.coordinate} position
+ * @param {boolean} force true to change the position, default false
+ */
+ol.Overlay.Fixed.prototype.setPosition = function(position, force) {
+  ol.Overlay.prototype.setPosition.call(this, position)
+  if (force) {
+    this._pixel = null;
+    ol.Overlay.prototype.updatePixelPosition.call(this, true);
+    if (this.getMap() && position) {
+      this._pixel = this.getMap().getPixelFromCoordinate(position);
+    }
+  } 
+};
+/** Update pixel position only if forced
+ * @param {boolean} force
+ */
+ol.Overlay.Fixed.prototype.updatePixelPosition = function(force) {
+  if (force) {
+    ol.Overlay.prototype.updatePixelPosition.call(this)
+  } else if (this.getMap() && this._pixel && this.getPosition()) {
+    var pixel = this.getMap().getPixelFromCoordinate(this.getPosition())
+    if (Math.round(pixel[0]*1000) !== Math.round(this._pixel[0]*1000) 
+      || Math.round(pixel[0]*1000) !== Math.round(this._pixel[0]*1000) ) {
+      this.setPosition(this.getMap().getCoordinateFromPixel(this._pixel));
+    }
+  }
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 

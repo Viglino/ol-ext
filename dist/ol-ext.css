@@ -3962,15 +3962,16 @@
   content: "+";
 }
 .ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-x:before {
-  content: "\2716";
+  content: "\00D7";
   font-size: 1.2em;
+  font-weight: bold;
 }
 .ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-move:before {
   content: "\2725";
   font-size: 1.2em;
 }
 .ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-check:before {
-  content: "\2714";
+  content: "\2713";
   font-weight: bold;
 }
 .ol-overlaycontainer .ol-touch-cursor .ol-button > div {
