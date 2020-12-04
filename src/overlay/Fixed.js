@@ -32,23 +32,19 @@ ol_ext_inherits(ol_Overlay_Fixed, ol_Overlay);
  * @param {boolean} force true to change the position, default false
  */
 ol_Overlay_Fixed.prototype.setPosition = function(position, force) {
+  if (this.getMap() && position) {
+    this._pixel = this.getMap().getPixelFromCoordinate(position);
+  }
   ol_Overlay.prototype.setPosition.call(this, position)
   if (force) {
-    this._pixel = null;
-    ol_Overlay.prototype.updatePixelPosition.call(this, true);
-    if (this.getMap() && position) {
-      this._pixel = this.getMap().getPixelFromCoordinate(position);
-    }
+    ol_Overlay.prototype.updatePixelPosition.call(this);
   } 
 };
 
-/** Update pixel position only if forced
- * @param {boolean} force
+/** Update position according the pixel position
  */
-ol_Overlay_Fixed.prototype.updatePixelPosition = function(force) {
-  if (force) {
-    ol_Overlay.prototype.updatePixelPosition.call(this)
-  } else if (this.getMap() && this._pixel && this.getPosition()) {
+ol_Overlay_Fixed.prototype.updatePixelPosition = function() {
+  if (this.getMap() && this._pixel && this.getPosition()) {
     var pixel = this.getMap().getPixelFromCoordinate(this.getPosition())
     if (Math.round(pixel[0]*1000) !== Math.round(this._pixel[0]*1000) 
       || Math.round(pixel[0]*1000) !== Math.round(this._pixel[0]*1000) ) {
