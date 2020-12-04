@@ -19522,16 +19522,13 @@ ol.interaction.TouchCursorDraw = function(options) {
     type: options.type
   });
   sketch.on('drawend', function(e) {
-    console.log(e)
     if (e.valid && options.source) options.source.addFeature(e.feature);
     this.dispatchEvent(e);
   }.bind(this));
   sketch.on('drawstart', function(e) {
-    console.log(e)
     this.dispatchEvent(e);
   }.bind(this));
   sketch.on('drawabort', function(e) {
-    console.log(e)
     this.dispatchEvent(e);
   }.bind(this));
   // Create cursor
@@ -24398,6 +24395,7 @@ ol.layer.SketchOverlay.prototype.finishDrawing = function(valid) {
   }
   if (valid && !isvalid) return false;
   this._geom = [];
+  this._lastCoord = null;
   this.drawSketch();
   if (this._drawing) {
     this.dispatchEvent({
@@ -24420,7 +24418,7 @@ ol.layer.SketchOverlay.prototype.abortDrawing = function() {
   }
   this._drawing = false;
   this._geom = [];
-  this._position = null;
+  this._lastCoord = null;
   this.drawSketch();
 };
 /** Set the current position

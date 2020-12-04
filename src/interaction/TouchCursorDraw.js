@@ -36,16 +36,13 @@ var ol_interaction_TouchCursorDraw = function(options) {
   });
 
   sketch.on('drawend', function(e) {
-    console.log(e)
     if (e.valid && options.source) options.source.addFeature(e.feature);
     this.dispatchEvent(e);
   }.bind(this));
   sketch.on('drawstart', function(e) {
-    console.log(e)
     this.dispatchEvent(e);
   }.bind(this));
   sketch.on('drawabort', function(e) {
-    console.log(e)
     this.dispatchEvent(e);
   }.bind(this));
 

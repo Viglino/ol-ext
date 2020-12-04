@@ -162,6 +162,7 @@ ol_layer_SketchOverlay.prototype.finishDrawing = function(valid) {
   }
   if (valid && !isvalid) return false;
   this._geom = [];
+  this._lastCoord = null;
   this.drawSketch();
   if (this._drawing) {
     this.dispatchEvent({
@@ -185,7 +186,7 @@ ol_layer_SketchOverlay.prototype.abortDrawing = function() {
   }
   this._drawing = false;
   this._geom = [];
-  this._position = null;
+  this._lastCoord = null;
   this.drawSketch();
 };
 
