@@ -74,8 +74,8 @@ ol_ext_inherits(ol_interaction_TouchCursorDraw, ol_interaction_TouchCursor);
 ol_interaction_TouchCursorDraw.prototype.setMap = function(map) {
   ol_interaction_TouchCursor.prototype.setMap.call (this, map);
 
+  this.sketch.setMap(map);
   if (map) {
-    this.sketch.setMap(map);
     this._listeners.movend = map.on('moveend', function() {
       this.sketch.setPosition(this.getPosition())
     }.bind(this))
@@ -133,21 +133,30 @@ ol_interaction_TouchCursorDraw.prototype.setType = function(type) {
         sketch.abortDrawing();
       }
     });
-    // Add a new point (nothing to do, just click)
-    this.addButton({ 
-      className: 'ol-button-check',
-      click: function() {
-        sketch.finishDrawing(true);
-      }
-    });
-    // Remove last point
-    this.addButton({  
-      className: 'ol-button-remove', 
-      click: function() {
-        sketch.removeLastPoint();
-      }
-    });
+    if (type !== 'Circle') {
+      // Add a new point (nothing to do, just click)
+      this.addButton({ 
+        className: 'ol-button-check',
+        click: function() {
+          sketch.finishDrawing(true);
+        }
+      });
+      // Remove last point
+      this.addButton({  
+        className: 'ol-button-remove', 
+        click: function() {
+          sketch.removeLastPoint();
+        }
+      });
+    }
   }
 };
+
+/** Get geometry type
+ */
+ol_interaction_TouchCursorDraw.prototype.getType = function() {
+  return this.sketch.getGeometryType();
+};
+
 
 export default ol_interaction_TouchCursorDraw

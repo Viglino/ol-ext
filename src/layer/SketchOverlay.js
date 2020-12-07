@@ -13,7 +13,9 @@ import ol_style_Style_defaultStyle from '../style/defaultStyle'
  * @fires drawend
  * @fires drawabort
  * @param {*} options 
- *  @param {string} type Geometry type, default LineString
+ *  @param {string} options.type Geometry type, default LineString
+ *  @param {ol_style_Style|Array<ol_style_Style>} options.style Drawing style
+ *  @param {ol_style_Style|Array<ol_style_Style>} options.sketchStyle Sketch style
  */
 var ol_layer_SketchOverlay = function(options) {
   options = options || {};
@@ -54,7 +56,9 @@ var ol_layer_SketchOverlay = function(options) {
     source: new ol_source_Vector({ useSpatialIndex: false }),
     style: function(f) {
       return (f.get('sketch') ? sketchStyle : style);
-    }
+    },
+    updateWhileAnimating: true,
+    updateWhileInteracting: true
   });
   // Sketch features
   this.getSource().addFeatures([
@@ -79,7 +83,7 @@ ol_ext_inherits (ol_layer_SketchOverlay, ol_layer_Vector);
  * @return {string} the current type
  */
 ol_layer_SketchOverlay.prototype.setGeometryType = function(type) {
-  var t = /^Point$|^LineString$|^Polygon$/.test(type) ? type : 'LineString';
+  var t = /^Point$|^LineString$|^Polygon$|^Circle$/.test(type) ? type : 'LineString';
   if (t !== this._type) {
     this.abortDrawing();
     this._type = t;
@@ -108,6 +112,9 @@ ol_layer_SketchOverlay.prototype.addPoint = function(coord) {
     this._position = coord; 
     this.drawSketch();
     if (this.getGeometryType() === 'Point') {
+      this.finishDrawing();
+    }
+    if (this.getGeometryType() === 'Circle' && this._geom.length>=2) {
       this.finishDrawing();
     }
     return true;
@@ -151,6 +158,7 @@ ol_layer_SketchOverlay.prototype.finishDrawing = function(valid) {
   var f = this.getSource().getFeatures()[2].clone();
   var isvalid = !!f;
   switch (this.getGeometryType()) {
+    case 'Circle': 
     case 'LineString': {
       isvalid = this._geom.length > 1;
       break;
@@ -190,12 +198,19 @@ ol_layer_SketchOverlay.prototype.abortDrawing = function() {
   this.drawSketch();
 };
 
-/** Set the current position
+/** Set current position
  * @param {ol.coordinate} coord
  */
 ol_layer_SketchOverlay.prototype.setPosition = function(coord) {
   this._position = coord;
   this.drawLink();
+};
+
+/** Get current position
+ * @return {ol.coordinate} 
+ */
+ol_layer_SketchOverlay.prototype.getPosition = function() {
+  return this._position;
 };
 
 /** Draw/refresh link
@@ -209,17 +224,19 @@ ol_layer_SketchOverlay.prototype.drawLink = function() {
       features[0].getGeometry().setCoordinates(this._position);
     }
     if (this._geom.length) {
-      if (this.getGeometryType()==='Polygon') {
-        features[1].getGeometry().setCoordinates([ this._lastCoord, this._position, this._geom[0] ]);
+      if (this.getGeometryType()==='Circle') {
+        features[1].setGeometry(new ol_geom_Circle(this._geom[0], ol_coordinate_dist2d(this._geom[0], this._position)));
+      } else if (this.getGeometryType()==='Polygon') {
+        features[1].setGeometry(new ol_geom_LineString([ this._lastCoord, this._position, this._geom[0] ]));
       } else {
-        features[1].getGeometry().setCoordinates([ this._lastCoord, this._position ]);
+        features[1].setGeometry(new ol_geom_LineString([ this._lastCoord, this._position ]));
       }
     } else {
-      features[1].getGeometry().setCoordinates([]);
+      features[1].setGeometry(new ol_geom_LineString([]));
     }
   } else {
     features[0].getGeometry().setCoordinates([]);
-    features[1].getGeometry().setCoordinates([]);
+    features[1].setGeometry(new ol_geom_LineString([]));
   }
 };
 
@@ -238,10 +255,19 @@ ol_layer_SketchOverlay.prototype.drawSketch = function() {
     features[2].setGeometry(null);
     features[3].setGeometry(new ol_geom_Point([]));
   } else {
+    if (!this._lastCoord) this._lastCoord = this._geom[this._geom.length-1];
     features[3].getGeometry().setCoordinates(this._lastCoord);
     switch (this._type) {
       case 'Point': {
         features[2].setGeometry(new ol_geom_Point(this._lastCoord));
+        break;
+      }
+      case 'Circle': {
+        if (!features[2].getGeometry()) {
+          features[2].setGeometry(new ol_geom_Circle(this._geom[0], ol_coordinate_dist2d(this._geom[0], this._geom[this._geom.length-1])));
+        } else {
+          features[2].getGeometry().setRadius(ol_coordinate_dist2d(this._geom[0], this._geom[this._geom.length-1]));
+        }
         break;
       }
       case 'LineString': {

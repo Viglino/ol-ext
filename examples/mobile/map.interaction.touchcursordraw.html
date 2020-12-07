@@ -63,6 +63,11 @@
       content: "\f0e2";
       font-family: "FontAwesome";
     }
+    #map .ol-touch-cursor.Circle:before,
+    #map .ol-touch-cursor .Circle:before {
+      content: "\f10c";
+      font-weight: normal;
+    }
     #map .ol-touch-cursor.LineString:before,
     #map .ol-touch-cursor .LineString:before {
       content: "\f1e0";
@@ -147,7 +152,7 @@
       className: 'draw',
       coordinate: map.getView().getCenter(),
       type: 'Point',
-      types: ['Point', 'LineString', 'Polygon'],
+      types: ['Point', 'LineString', 'Polygon', 'Circle'],
       source: vector.getSource()
     });
     cursor.Draw.setActive(false);
