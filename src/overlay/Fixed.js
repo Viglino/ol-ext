@@ -5,7 +5,6 @@
 
 import ol_ext_inherits from '../util/ext'
 import ol_Overlay from 'ol/Overlay'
-import ol_ext_element from '../util/element'
 
 /**
  * @classdesc

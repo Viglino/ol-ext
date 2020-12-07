@@ -6,6 +6,8 @@
 import ol_ext_inherits from '../util/ext'
 import ol_interaction_TouchCursor from './TouchCursor'
 
+import ol_layer_SketchOverlay from '../layer/SketchOverlay'
+
 /** TouchCursor interaction + ModifyFeature
  * @constructor
  * @extends {ol_interaction_TouchCursor}
@@ -31,7 +33,7 @@ var ol_interaction_TouchCursorDraw = function(options) {
   options = options || {};
 
   // Draw 
-  var sketch = this.sketch = new ol.layer.SketchOverlay({
+  var sketch = this.sketch = new ol_layer_SketchOverlay({
     type: options.type
   });
 
@@ -55,11 +57,11 @@ var ol_interaction_TouchCursorDraw = function(options) {
   this.set('types', options.types);
   this.setType(options.type);
 
-  this.on('click', function(e) {
+  this.on('click', function() {
     this.sketch.addPoint(this.getPosition());
   }.bind(this))
 
-  this.on('dragging', function(e) {
+  this.on('dragging', function() {
     this.sketch.setPosition(this.getPosition());
   }.bind(this))
 };

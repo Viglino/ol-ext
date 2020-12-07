@@ -5,19 +5,9 @@
 import ol_ext_inherits from '../util/ext'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_interaction_CenterTouch from './CenterTouch'
-import ol_style_Style from 'ol/style/Style'
-import ol_style_Circle from 'ol/style/Circle'
-import ol_style_Stroke from 'ol/style/Stroke'
-import ol_style_Fill from 'ol/style/Fill'
-import ol_Feature from 'ol/Feature'
-import ol_layer_Vector from 'ol/layer/Vector'
-import ol_source_Vector from 'ol/source/Vector'
-import ol_geom_LineString from 'ol/geom/LineString'
-import ol_geom_Polygon from 'ol/geom/Polygon'
-import ol_geom_Point from 'ol/geom/Point'
-import ol_geom_Circle from 'ol/geom/Circle'
-import ol_ext_getMapCanvas from '../util/getMapCanvas'
-import {ol_coordinate_dist2d} from '../geom/GeomUtils'
+import ol_style_Style_defaultStyle from '../style/defaultStyle'
+import ol_layer_SketchOverlay from '../layer/SketchOverlay'
+import {ol_coordinate_equal} from '../geom/GeomUtils';
 
 /** Interaction DrawTouch :
  * @constructor
@@ -26,12 +16,12 @@ import {ol_coordinate_dist2d} from '../geom/GeomUtils'
  * @fires drawabort
  * @extends {ol_interaction_CenterTouch}
  * @param {olx.interaction.DrawOptions} options
- *  @param {ol_source_Vector | undefined} options.source Destination source for the drawn features.
+ *  @param {ol.source.Vector | undefined} options.source Destination source for the drawn features.
  *  @param {ol.geom.GeometryType} options.type Drawing type ('Point', 'LineString', 'Polygon') not ('MultiPoint', 'MultiLineString', 'MultiPolygon' or 'Circle'). Required.
  *	@param {boolean} options.tap enable on tap, default true
- *  @param {ol_style_Style|Array<ol_style_Style>} options.style Drawing style
- *  @param {ol_style_Style|Array<ol_style_Style>} options.sketchStyle Sketch style
- *  @param {ol_style_Style|Array<ol_style_Style>} options.targetStyle a style to draw the target point, default cross style
+ *  @param {ol.style.Style|Array<ol.style.Style>} options.style Drawing style
+ *  @param {ol.style.Style|Array<ol.style.Style>} options.sketchStyle Sketch style
+ *  @param {ol.style.Style|Array<ol.style.Style>} options.targetStyle a style to draw the target point, default cross style
  *  @param {string} options.composite composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
  */
 var ol_interaction_DrawTouch = function(options) {

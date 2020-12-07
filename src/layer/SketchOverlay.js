@@ -4,7 +4,18 @@
 */
 import {ol_ext_inherits} from '../util/ext'
 import ol_layer_Vector from 'ol/layer/Vector'
+import ol_style_Style from 'ol/style/Style'
+import ol_style_RegularShape from 'ol/style/RegularShape'
+import ol_style_Stroke from 'ol/style/Stroke'
+import ol_source_Vector from 'ol/source/Vector'
+import ol_Feature from 'ol/Feature'
+import ol_geom_Point from 'ol/geom/Point'
+import ol_geom_LineString from 'ol/geom/LineString'
+import ol_geom_Polygon from 'ol/geom/Polygon'
+import ol_geom_Circle from 'ol/geom/Circle'
+
 import ol_style_Style_defaultStyle from '../style/defaultStyle'
+import {ol_coordinate_dist2d} from "../geom/GeomUtils";
 
 /** A sketch layer used as overlay to handle drawing sketch (helper for drawing tools)
  * @constructor 
