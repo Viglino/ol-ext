@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.1.16
+ * @version v3.1.17
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -15903,7 +15903,7 @@ ol.interaction.GeolocationDraw.prototype.simplify3D = function(geo, tolerance) {
   var pi, p = ol.proj.transform(geom[0], proj, 'EPSG:4326')
   for (var i=1; i<geom.length; i++) {
     pi = ol.proj.transform(geom[i], proj, 'EPSG:4326')
-    var d = ol.spehre.getDistance(p, pi);
+    var d = ol.sphere.getDistance(p, pi);
     if (d > tolerance) {
       simply.push(geom[i]);
       p = pi;

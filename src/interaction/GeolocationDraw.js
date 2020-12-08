@@ -18,7 +18,7 @@ import ol_interaction_Pointer from 'ol/interaction/Pointer'
 import {containsCoordinate as ol_extent_containsCoordinate, containsExtent as ol_extent_containsExtent} from 'ol/extent'
 // import {ol_coordinate_dist2d, ol_coordinate_equal} from '../geom/GeomUtils'
 import {transform as ol_proj_transform} from 'ol/proj'
-import {getDistance as ol_spehre_getDistance} from 'ol/sphere'
+import {getDistance as ol_sphere_getDistance} from 'ol/sphere'
 
 
 /** Interaction to draw on the current geolocation
@@ -160,7 +160,7 @@ ol_interaction_GeolocationDraw.prototype.simplify3D = function(geo, tolerance) {
   var pi, p = ol_proj_transform(geom[0], proj, 'EPSG:4326')
   for (var i=1; i<geom.length; i++) {
     pi = ol_proj_transform(geom[i], proj, 'EPSG:4326')
-    var d = ol_spehre_getDistance(p, pi);
+    var d = ol_sphere_getDistance(p, pi);
     if (d > tolerance) {
       simply.push(geom[i]);
       p = pi;
