@@ -283,12 +283,12 @@ ol_interaction_TouchCursor.prototype.removeButton = function (button) {
 };
 
 /** Add a button element
- * @param {} options
+ * @param {*} button
  *  @param {string} options.className button class name
  *  @param {DOMElement|string} options.html button content
  *  @param {function} options.click onclick function
  *  @param {*} options.on an object with 
- * 
+ *  @param {boolean} options.before
  */
 ol_interaction_TouchCursor.prototype.addButton = function (b) {
   var buttons = this.getOverlayElement().getElementsByClassName('ol-button');
@@ -296,13 +296,14 @@ ol_interaction_TouchCursor.prototype.addButton = function (b) {
     console.error('[ol/interaction/TouchCursor~addButton] too many button on the cursor (max=5)...')
     return;
   } 
-  ol_ext_element.create('DIV', {
+  var button = ol_ext_element.create('DIV', {
     className: ((b.className||'')+' ol-button').trim(),
     html: ol_ext_element.create('DIV', { html: b.html }),
     click: b.click,
     on: b.on,
-    parent: this.getOverlayElement()
   });
+  if (!b.before || buttons.length===0) this.getOverlayElement().appendChild(button);
+  else this.getOverlayElement().insertBefore(button, buttons[0]);
   // Reorder buttons
   var start = buttons.length > 4 ? 0 : 1;
   for (let i=0; i<buttons.length; i++) {
