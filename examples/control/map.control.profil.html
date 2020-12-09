@@ -97,6 +97,7 @@
   // New profil outside the map
   var profil2 = new ol.control.Profil({
     target: document.querySelector(".options"),
+    selectable: true,
     style: new ol.style.Style({
       fill: new ol.style.Fill({ color: '#ccc' })
     }),
@@ -114,11 +115,16 @@
         fill: new ol.style.Fill({ color: 'blue' })
       }),
       stroke: new ol.style.Stroke({
+        color: [255,0,0],
+        width: 2
+      })
+    })
+  ];
+  var selStyle = [	
+    new ol.style.Style({
+      stroke: new ol.style.Stroke({
         color: [0,0,255],
         width: 2
-      }),
-      fill: new ol.style.Fill({
-        color: [0,0,255,0.3]
       })
     })
   ];
@@ -131,7 +137,9 @@
   });
   var vector = new ol.layer.Vector({
     source: source,
-    style: style
+    style: function(f) {
+      return (f.get('select') ? selStyle : style);
+    }
   });
   map.addLayer(vector);
 
@@ -171,6 +179,31 @@
   });
   // Just draw point
   profil2.on(["over","out"], drawPoint);
+
+  // Show selection
+  var start = 0;
+  var selection;
+	profil2.on('click', function(e){
+    if (selection) {
+      source.removeFeature(selection);
+      selection = false;
+    }
+    
+  });
+	profil2.on('dragstart', function(e){
+    start = e.index;
+  });
+	profil2.on(['dragend', 'dragging'], function(e){
+    var g = profil2.getSelection(start, e.index);
+    if (selection) {
+      selection.getGeometry().setCoordinates(g);
+    } else {
+      selection = new ol.Feature(new ol.geom.LineString(g));
+      selection.set('select', true);
+      source.addFeature(selection);
+    }
+  });
+
 
   // Show on map over
   var hover = new ol.interaction.Hover({ cursor: "pointer", hitTolerance:10 });
