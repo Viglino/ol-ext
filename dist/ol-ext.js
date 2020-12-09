@@ -7255,12 +7255,13 @@ ol.control.Print.prototype.print = function(options) {
  * @extends {ol.control.Control}
  * @fires  over, out, show
  * @param {Object=} options
- *  @param {string} className
- *  @param {ol.style.Style} style style to draw the profil
- *  @param {*} info keys/values for i19n
- *  @param {number} width
- *  @param {number} height
- *  @parma {ol.Feature} feature the feature to draw profil
+ *  @param {string} options.className
+ *  @param {ol.style.Style} options.style style to draw the profil
+ *  @param {*} options.info keys/values for i19n
+ *  @param {number} options.width
+ *  @param {number} options.height
+ *  @param {ol.Feature} options.feature the feature to draw profil
+ *  @param {boolean} options.selectable enable selection on the profil, default false
  */
 ol.control.Profil = function(opt_options) {
   var options = opt_options || {};
@@ -7283,6 +7284,7 @@ ol.control.Profil = function(opt_options) {
     this.button.addEventListener("touchstart", click_touchstart_function);
     element.appendChild(this.button);
   }
+  // Drawing style
   if (options.style instanceof ol.style.Style) {
     this._style = options.style;
   } else {
@@ -7295,6 +7297,14 @@ ol.control.Profil = function(opt_options) {
     });
   }
   if (!this._style.getText()) this._style.setText(new ol.style.Text());
+  // Selection style
+  if (options.selectStyle instanceof ol.style.Style) {
+    this._selectStyle = options.selectStyle;
+  } else {
+    this._selectStyle = new ol.style.Style({
+      fill: new ol.style.Fill({ color: '#369' })
+    });
+  }
   var div_inner = document.createElement("div");
       div_inner.classList.add("ol-inner");
       element.appendChild(div_inner);
@@ -7321,12 +7331,14 @@ ol.control.Profil = function(opt_options) {
   div_to_canvas.style.width = this.canvas_.width/ratio + "px";
   div_to_canvas.style.height = this.canvas_.height/ratio + "px";
   div_to_canvas.appendChild(this.canvas_);
-  div_to_canvas.addEventListener("click", function(e){ self.onMove(e); });
-  div_to_canvas.addEventListener("mousemove", function(e){ self.onMove(e); });
+  div_to_canvas.addEventListener('pointerdown', this.onMove.bind(this));
+  document.addEventListener('pointerup', this.onMove.bind(this));
+  div_to_canvas.addEventListener('pointermove', this.onMove.bind(this));
   ol.control.Control.call(this, {
     element: element,
     target: options.target
   });
+  this.set('selectable', options.selectable)
   // Offset in px
   this.margin_ = { top:10*ratio, left:40*ratio, bottom:30*ratio, right:10*ratio };
   if (!this.info.ytitle) this.margin_.left -= 20*ratio;
@@ -7532,18 +7544,66 @@ ol.control.Profil.prototype.onMove = function(e) {
     && dy>this.margin_.top/ratio && dy<(this.canvas_.height-this.margin_.bottom)/ratio) {
     var d = (dx*ratio-this.margin_.left)/this.scale_[0];
     var p0 = this.tab_[0];
-    for (var i=1, p; p=this.tab_[i]; i++) {
+    var index;
+    for (index=1, p; p=this.tab_[index]; index++) {
       if (p[0]>=d) {
-        if (d < (p[0]+p0[0])/2) p = p0;
+        if (d < (p[0]+p0[0])/2) {
+          index = 0;
+          p = p0;
+        }
         break;
       }
     }
     this._drawAt(p, dx);
-    this.dispatchEvent({ type:'over', click:e.type=="click", coord: p[3], time: p[2], distance: p[0] });
+    this.dispatchEvent({ type:'over', click:e.type==='click', index: index, coord: p[3], time: p[2], distance: p[0] });
+    // Handle drag / click
+    switch (e.type) {
+      case 'pointerdown': {
+        this._dragging = {
+          event: { type:'dragstart', index: index, coord: p[3], time: p[2], distance: p[0] },
+          pageX: e.pageX,
+          pageY: e.pageY
+        }
+        break;
+      }
+      case 'pointerup': {
+        if (this._dragging && this._dragging.pageX) {
+          if (Math.abs(this._dragging.pageX - e.pageX)<3 && Math.abs(this._dragging.pageY - e.pageY) < 3) {
+            this.dispatchEvent({ type:'click', index: index, coord: p[3], time: p[2], distance: p[0] });
+            this.refresh();
+          }
+        } else {
+          this.dispatchEvent({ type:'dragend', index: index, coord: p[3], time: p[2], distance: p[0] });
+        }
+        this._dragging = false;
+        break;
+      }
+      default: {
+        if (this._dragging) {
+          if (this._dragging.pageX) {
+            if (Math.abs(this._dragging.pageX - e.pageX)>3 || Math.abs(this._dragging.pageY - e.pageY) > 3) {
+              this._dragging.pageX = this._dragging.pageY = false;
+              this.dispatchEvent(this._dragging.event);
+            }
+          } else {
+            this.dispatchEvent({ type:'dragging', index: index, coord: p[3], time: p[2], distance: p[0] });
+            var min = Math.min(this._dragging.event.index, index);
+            var max = Math.max(this._dragging.event.index, index);
+            this.refresh();
+            if (this.get('selectable')) this._drawGraph(this.tab_.slice(min, max), this._selectStyle);
+          }
+        }
+        break;
+      }
+    }
   } else {
-    if (this.bar_.parentElement.classList.contains("over")) {
+    if (this.bar_.parentElement.classList.contains('over')) {
       this._drawAt();
       this.dispatchEvent({ type:'out' });
+    }
+    if (e.type === 'pointerup' && this._dragging) {
+      this.dispatchEvent({ type:'canceldrag' });
+      this._dragging = false;
     }
   }
 };
@@ -7573,7 +7633,51 @@ ol.control.Profil.prototype.toggle = function() {
 */
 ol.control.Profil.prototype.isShown = function() {
   return (!this.element.classList.contains("ol-collapsed"));
-}
+};
+/** Get selection
+ * @param {number} starting point
+ * @param {number} ending point
+ * @return {Array<ol.coordinate>}
+ */
+ol.control.Profil.prototype.getSelection = function(start, end) {
+  var sel = [];
+  var min = Math.max(Math.min(start, end), 0);
+  var max = Math.min(Math.max(start, end), this.tab_.length-1);
+  for (var i=min; i <= max; i++) {
+    sel.push(this.tab_[i][3])
+  }
+  return sel;
+};
+/** Draw the graph
+ * @private
+ */
+ol.control.Profil.prototype._drawGraph = function(t, style) {
+  var ctx = this.canvas_.getContext('2d');
+  var scx = this.scale_[0];
+  var scy = this.scale_[1];
+  var dy = this.dy_;
+  var ratio = this.ratio;
+  // Draw Path
+  ctx.beginPath();
+  for (i=0; p=t[i]; i++) {
+    if (i==0) ctx.moveTo(p[0]*scx,p[1]*scy+dy);
+    else ctx.lineTo(p[0]*scx,p[1]*scy+dy);
+  }
+  if (style.getStroke()) {
+    ctx.strokeStyle = style.getStroke().getColor() || '#000';
+    ctx.lineWidth = style.getStroke().getWidth() * ratio;
+    ctx.setLineDash([]);
+    ctx.stroke();
+  }
+  // Fill path
+  if (style.getFill()) {
+    ctx.fillStyle = style.getFill().getColor() || '#000';
+    ctx.Style = style.getFill().getColor() || '#000';
+    ctx.lineTo(t[t.length-1][0]*scx, 0);
+    ctx.lineTo(t[0][0]*scx, 0);
+    ctx.fill();
+  }
+};
 /**
  * Set the geometry to draw the profil.
  * @param {ol.Feature|ol.geom.Geometry} f the feature.
@@ -7590,12 +7694,6 @@ ol.control.Profil.prototype.isShown = function() {
 ol.control.Profil.prototype.setGeometry = function(g, options) {
   if (!options) options = {};
   if (g instanceof ol.Feature) g = g.getGeometry();
-  var canvas = this.canvas_;
-  var ctx = canvas.getContext('2d');
-  var w = canvas.width;
-  var h = canvas.height;
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.clearRect(0,0, w, h);
   // No Z
   if (!/Z/.test(g.getLayout())) return;
   // No time
@@ -7623,18 +7721,6 @@ ol.control.Profil.prototype.setGeometry = function(g, options) {
     var mn = Math.trunc(dt-ti*60);
     return ti+"h"+(mn<10?"0":"")+mn+"mn";
   }
-  // Margin
-  ctx.setTransform(1, 0, 0, 1, this.margin_.left, h-this.margin_.bottom);
-  var ratio = this.ratio;
-  w -= this.margin_.right + this.margin_.left;
-  h -= this.margin_.top + this.margin_.bottom;
-  // Draw axes
-  ctx.strokeStyle = this._style.getText().getFill().getColor() || '#000';
-  ctx.lineWidth = 0.5*ratio;
-  ctx.beginPath();
-  ctx.moveTo(0,0); ctx.lineTo(0,-h);
-  ctx.moveTo(0,0); ctx.lineTo(w, 0);
-  ctx.stroke();
   // Calculate [distance, altitude, time, point] for each points
   var zmin=Infinity, zmax=-Infinity;
   var i, p, d, z, ti, t = this.tab_ = [];
@@ -7647,6 +7733,41 @@ ol.control.Profil.prototype.setGeometry = function(g, options) {
     ti = getTime(c[0][3],p[3]);
     t.push ([d, z, ti, p]);
   }
+  this._z = [zmin,zmax];
+  this.set('graduation', options.graduation || 100);
+  this.set('zmin', options.zmin);
+  this.set('zmax', options.zmax);
+  this.set('amplitude', options.amplitude);
+  this.set('unit', options.unit);
+  this.set('zunit', options.zunit);
+  this.refresh();
+};
+/** Refresh the profil
+ */
+ol.control.Profil.prototype.refresh = function() {
+  var canvas = this.canvas_;
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width;
+  var h = canvas.height;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0,0, w, h);
+  var zmin = this._z[0];
+  var zmax = this._z[1];
+  var t = this.tab_;
+  var d = t[t.length-1][0];
+  var ti = t[t.length-1][2];
+  // Margin
+  ctx.setTransform(1, 0, 0, 1, this.margin_.left, h-this.margin_.bottom);
+  var ratio = this.ratio;
+  w -= this.margin_.right + this.margin_.left;
+  h -= this.margin_.top + this.margin_.bottom;
+  // Draw axes
+  ctx.strokeStyle = this._style.getText().getFill().getColor() || '#000';
+  ctx.lineWidth = 0.5*ratio;
+  ctx.beginPath();
+  ctx.moveTo(0,0); ctx.lineTo(0,-h);
+  ctx.moveTo(0,0); ctx.lineTo(w, 0);
+  ctx.stroke();
   // Info
   this.element.querySelector(".track-info .zmin").textContent = zmin.toFixed(2)+this.info.altitudeUnits;
   this.element.querySelector(".track-info .zmax").textContent = zmax.toFixed(2)+this.info.altitudeUnits;
@@ -7657,7 +7778,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options) {
   }
   this.element.querySelector(".track-info .time").textContent = ti;
   // Set graduation
-  var grad = options.graduation || 100;
+  var grad = this.get('graduation');
   while (true) {
     zmax = Math.ceil(zmax/grad)*grad;
     zmin = Math.floor(zmin/grad)*grad;
@@ -7668,9 +7789,9 @@ ol.control.Profil.prototype.setGeometry = function(g, options) {
     else break;
   }
   // Set amplitude
-  if (typeof(options.zmin)=='number' && zmin > options.zmin) zmin = options.zmin;
-  if (typeof(options.zmax)=='number' && zmax < options.zmax) zmax = options.zmax;
-  var amplitude = options.amplitude;
+  if (typeof(this.get('zmin'))=='number' && zmin > this.get('zmin')) zmin = this.get('zmin');
+  if (typeof(this.get('zmax'))=='number' && zmax < this.get('zmax')) zmax = this.get('zmax');
+  var amplitude = this.get('amplitude');
   if (amplitude) {
     zmax = Math.max (zmin + amplitude, zmax);
   }
@@ -7679,26 +7800,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options) {
   var scy = -h/(zmax-zmin);
   var dy = this.dy_ = -zmin*scy;
   this.scale_ = [scx,scy];
-  // Draw Path
-  ctx.beginPath();
-  for (i=0; p=t[i]; i++) {
-    if (i==0) ctx.moveTo(p[0]*scx,p[1]*scy+dy);
-    else ctx.lineTo(p[0]*scx,p[1]*scy+dy);
-  }
-  if (this._style.getStroke()) {
-    ctx.strokeStyle = this._style.getStroke().getColor() || '#000';
-    ctx.lineWidth = this._style.getStroke().getWidth() * ratio;
-    ctx.setLineDash([]);
-    ctx.stroke();
-  }
-  // Fill path
-  if (this._style.getFill()) {
-    ctx.fillStyle = this._style.getFill().getColor() || '#000';
-    ctx.Style = this._style.getFill().getColor() || '#000';
-    ctx.lineTo(t[t.length-1][0]*scx, 0);
-    ctx.lineTo(t[0][0]*scx, 0);
-    ctx.fill();
-  }
+  this._drawGraph(t, this._style);
   // Draw
   ctx.font = (10*ratio)+'px arial';
   ctx.textAlign = 'right';
@@ -7707,7 +7809,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options) {
   // Scale Z
   ctx.beginPath();
   for (i=zmin; i<=zmax; i+=grad) {
-    if (options.zunit!="km") ctx.fillText(i, -4*ratio, i*scy+dy);
+    if (this.get('zunit')!="km") ctx.fillText(i, -4*ratio, i*scy+dy);
     else ctx.fillText((i/1000).toFixed(1), -4*ratio, i*scy+dy);
     ctx.moveTo (-2*ratio, i*scy+dy);
     if (i!=0) ctx.lineTo (d*scx, i*scy+dy);
@@ -7717,7 +7819,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options) {
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
   ctx.setLineDash([ratio,3*ratio]);
-  var unit = options.unit ||"km";
+  var unit = this.get('unit') ||"km";
   var step;
   if (d>1000) {
     step = Math.round(d/1000)*100;
