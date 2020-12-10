@@ -113,8 +113,10 @@ var ol_interaction_TouchCursorModify = function(options) {
 
   // Handle dragging, prevent drag outside the control
   this.on('dragstart', function(e) {
-    if (drag) mod.handleDownEvent(e);
-  });
+    if (drag) {
+      mod.handleDownEvent(this._lastEvent);
+    }
+  }.bind(this));
   this.on('dragging', function(e) {
     if (drag) mod.handleDragEvent(e);
   });

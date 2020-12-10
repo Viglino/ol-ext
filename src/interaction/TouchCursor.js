@@ -35,6 +35,7 @@ var ol_interaction_TouchCursor = function(options) {
       if (!/drag/.test(e.type) && this.getMap()) {
         e.coordinate = this.overlay.getPosition();
         e.pixel = this.getMap().getPixelFromCoordinate(e.coordinate);
+        this._lastEvent = e;
       } else {
         var res = e.frameState.viewState.resolution
         var cosa = Math.cos(e.frameState.viewState.rotation);
@@ -45,7 +46,6 @@ var ol_interaction_TouchCursor = function(options) {
         ];
         e.pixel = this.getMap().getPixelFromCoordinate(e.coordinate);
       }
-      this._lastEvent = e;
       return true; 
     }.bind(this)
   });
