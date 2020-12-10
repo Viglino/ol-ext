@@ -191,26 +191,26 @@ ol_interaction_TouchCursor.prototype.setMap = function(map) {
  */
 ol_interaction_TouchCursor.prototype.setActive = function(b, position) {
   if (b!==this.getActive()) {
-    ol_interaction_DragOverlay.prototype.setActive.call (this, b);
     this.ctouch.setActive(b);
     if (!b) {
       this.setPosition();
       this.overlay.element.classList.remove('active');
       if (this._activate) clearTimeout(this._activate);
       if (this.getMap()) this.getMap().removeOverlay(this.overlay);
-      return;
-    } 
-    if (this.getMap()) {
-      this.getMap().addOverlay(this.overlay);
+    } else {
+      if (this.getMap()) {
+        this.getMap().addOverlay(this.overlay);
+      }
+      if (position) {
+        this.setPosition(position);
+      } else if (this.getMap()) {
+        this.setPosition(this.getMap().getView().getCenter());
+      }
+      this._activate = setTimeout(function() {
+        this.overlay.element.classList.add('active');
+      }.bind(this), 100);
     }
-    if (position) {
-      this.setPosition(position);
-    } else if (this.getMap()) {
-      this.setPosition(this.getMap().getView().getCenter());
-    }
-    this._activate = setTimeout(function() {
-      this.overlay.element.classList.add('active');
-    }.bind(this), 100);
+    ol_interaction_DragOverlay.prototype.setActive.call (this, b);
   } else if (position) {
     this.setPosition(position);
   } else if (this.getMap()) {
@@ -241,6 +241,13 @@ ol_interaction_TouchCursor.prototype.offsetPosition = function (coord) {
  */
 ol_interaction_TouchCursor.prototype.getPosition = function () {
   return this.overlay.getPosition(); 
+};
+
+/** Get pixel position
+ * @return {ol.pixel}
+ */
+ol_interaction_TouchCursor.prototype.getPixel = function () {
+  if (this.getMap()) return this.getMap().getPixelFromCoordinate(this.getPosition());
 };
 
 /** Get cursor overlay

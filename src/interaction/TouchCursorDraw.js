@@ -94,6 +94,7 @@ ol_interaction_TouchCursorDraw.prototype.setMap = function(map) {
 ol_interaction_TouchCursorDraw.prototype.setActive = function(b, position) {
   ol_interaction_TouchCursor.prototype.setActive.call (this, b, position);
   this.sketch.abortDrawing();
+  this.sketch.setPosition(position);
   this.sketch.setVisible(b);
 };
 
