@@ -19186,6 +19186,7 @@ ol.interaction.TouchCursor = function(options) {
       if (!/drag/.test(e.type) && this.getMap()) {
         e.coordinate = this.overlay.getPosition();
         e.pixel = this.getMap().getPixelFromCoordinate(e.coordinate);
+        this._lastEvent = e;
       } else {
         var res = e.frameState.viewState.resolution
         var cosa = Math.cos(e.frameState.viewState.rotation);
@@ -19196,7 +19197,6 @@ ol.interaction.TouchCursor = function(options) {
         ];
         e.pixel = this.getMap().getPixelFromCoordinate(e.coordinate);
       }
-      this._lastEvent = e;
       return true; 
     }.bind(this)
   });
@@ -19418,12 +19418,12 @@ ol.interaction.TouchCursor.prototype.removeButton = function (button) {
   }
 };
 /** Add a button element
- * @param {} options
+ * @param {*} button
  *  @param {string} options.className button class name
  *  @param {DOMElement|string} options.html button content
  *  @param {function} options.click onclick function
  *  @param {*} options.on an object with 
- * 
+ *  @param {boolean} options.before
  */
 ol.interaction.TouchCursor.prototype.addButton = function (b) {
   var buttons = this.getOverlayElement().getElementsByClassName('ol-button');
@@ -19431,13 +19431,14 @@ ol.interaction.TouchCursor.prototype.addButton = function (b) {
     console.error('[ol/interaction/TouchCursor~addButton] too many button on the cursor (max=5)...')
     return;
   } 
-  ol.ext.element.create('DIV', {
+  var button = ol.ext.element.create('DIV', {
     className: ((b.className||'')+' ol-button').trim(),
     html: ol.ext.element.create('DIV', { html: b.html }),
     click: b.click,
     on: b.on,
-    parent: this.getOverlayElement()
   });
+  if (!b.before || buttons.length===0) this.getOverlayElement().appendChild(button);
+  else this.getOverlayElement().insertBefore(button, buttons[0]);
   // Reorder buttons
   var start = buttons.length > 4 ? 0 : 1;
   for (var i=0; i<buttons.length; i++) {
@@ -19690,8 +19691,10 @@ ol.interaction.TouchCursorModify = function(options) {
   }.bind(this));
   // Handle dragging, prevent drag outside the control
   this.on('dragstart', function(e) {
-    if (drag) mod.handleDownEvent(e);
-  });
+    if (drag) {
+      mod.handleDownEvent(this._lastEvent);
+    }
+  }.bind(this));
   this.on('dragging', function(e) {
     if (drag) mod.handleDragEvent(e);
   });
