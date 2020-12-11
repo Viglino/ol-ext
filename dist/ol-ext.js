@@ -19175,6 +19175,7 @@ ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
  *  @param {string} options.className cursor class name
  *  @param {ol.coordinate} options.coordinate position of the cursor
  *  @param {Array<*>} options.buttons an array of buttons
+ *  @param {number} options.maxButtons maximum number of buttons (default 5)
  */
 ol.interaction.TouchCursor = function(options) {
   options = options || {};
@@ -19216,9 +19217,10 @@ ol.interaction.TouchCursor = function(options) {
     //offset: [-20,-20],
     overlays: this.overlay
   });
-  this.set('maxButtons', options.maxButtons || 5);
   this.setPosition(options.coordinate, true);
+  this.set('maxButtons', options.maxButtons || 5);
   if (options.buttons) {
+    if (buttons.length > this.get('maxButtons')) this.set('maxButtons', buttons.length);
     var elt = this.overlay.element;
     var begin = options.buttons.length > 4 ? 0 : 1;
     options.buttons.forEach((function (b, i) {
@@ -19445,7 +19447,7 @@ ol.interaction.TouchCursor.prototype.addButton = function (b) {
     className: ((b.className||'')+' ol-button').trim(),
     html: ol.ext.element.create('DIV', { html: b.html }),
     click: b.click,
-    on: b.on,
+    on: b.on
   });
   if (!b.before || buttons.length===0) this.getOverlayElement().appendChild(button);
   else this.getOverlayElement().insertBefore(button, buttons[0]);

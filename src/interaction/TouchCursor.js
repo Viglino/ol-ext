@@ -20,6 +20,7 @@ import ol_Overlay_Fixed from '../overlay/Fixed'
  *  @param {string} options.className cursor class name
  *  @param {ol.coordinate} options.coordinate position of the cursor
  *  @param {Array<*>} options.buttons an array of buttons
+ *  @param {number} options.maxButtons maximum number of buttons (default 5)
  */
 var ol_interaction_TouchCursor = function(options) {
   options = options || {};
@@ -66,10 +67,11 @@ var ol_interaction_TouchCursor = function(options) {
     overlays: this.overlay
   });
 
+  this.setPosition(options.coordinate, true);
   this.set('maxButtons', options.maxButtons || 5);
 
-  this.setPosition(options.coordinate, true);
   if (options.buttons) {
+    if (buttons.length > this.get('maxButtons')) this.set('maxButtons', buttons.length);
     var elt = this.overlay.element;
     var begin = options.buttons.length > 4 ? 0 : 1;
     options.buttons.forEach((function (b, i) {
@@ -311,7 +313,7 @@ ol_interaction_TouchCursor.prototype.addButton = function (b) {
     className: ((b.className||'')+' ol-button').trim(),
     html: ol_ext_element.create('DIV', { html: b.html }),
     click: b.click,
-    on: b.on,
+    on: b.on
   });
   if (!b.before || buttons.length===0) this.getOverlayElement().appendChild(button);
   else this.getOverlayElement().insertBefore(button, buttons[0]);
