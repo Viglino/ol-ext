@@ -63,6 +63,20 @@
   top: 118%;
   left: -18%;
 }
+/* extra buttons */
+.ol-overlaycontainer .ol-touch-cursor.active .ol-button-5 {
+  top: 50%;
+  left: -40%;
+}
+.ol-overlaycontainer .ol-touch-cursor.active .ol-button-6 {
+  top: -18%;
+  left: -18%;
+}
+.ol-overlaycontainer .ol-touch-cursor.active .ol-button-7 {
+  top: -40%;
+  left: 50%;
+}
+
 .ol-overlaycontainer .ol-touch-cursor .ol-button:before {
   content: "";
   width: 1.5em;
