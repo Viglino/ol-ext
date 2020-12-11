@@ -97,15 +97,19 @@
     <br/>
     Interaction coordinates are shifted to the top left corner of a cursor that can be move with the finger.
     <br/>
-    You can add your own buttons (up to 5) to the cursor to handle optional functionnalities.
+    You can add your own buttons (up to 5 / 8) to the cursor to handle optional functionnalities.
     <ul>
       <li>
         It modifies map browser event coordinate and pixel properties to force pointer on the cursor.
       </li>
       <li>
-        The coordinate modification is deported on the top of the interaction queue and other can be used after then (a snap interaction is used in this example).
+        The coordinate modification is deported on the top of the interaction queue and other can be used after then 
+        (a snap interaction is used in this example).
       </li>
     </ul>
+    <i>ol.interaction/TouchCursorSelect</i> is an interaction to select features under the cursor. 
+    Add you own buttons to do tomething with the selection...
+    <br/>
     <i>ol.interaction/TouchCursorModify</i> combines a ModifyFeature interaction with a TouchCursor
     and lets you see what you do when you modify features on mobile without hidding it with finger.
     You can also access functionnality usually handled by option keys (delete a point on a linestring).

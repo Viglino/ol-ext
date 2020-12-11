@@ -71,7 +71,7 @@ var ol_interaction_TouchCursor = function(options) {
   this.set('maxButtons', options.maxButtons || 5);
 
   if (options.buttons) {
-    if (buttons.length > this.get('maxButtons')) this.set('maxButtons', buttons.length);
+    if (options.buttons.length > this.get('maxButtons')) this.set('maxButtons', options.buttons.length);
     var elt = this.overlay.element;
     var begin = options.buttons.length > 4 ? 0 : 1;
     options.buttons.forEach((function (b, i) {

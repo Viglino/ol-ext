@@ -18,11 +18,17 @@ import {ol_coordinate_dist2d} from "../geom/GeomUtils";
 
 /**
  * @classdesc OpenLayers 3 Profil Control.
- * Draw a profil of a feature (with a 3D geometry)
+ * Draw a profile of a feature (with a 3D geometry)
  *
  * @constructor
  * @extends {ol_control_Control}
- * @fires  over, out, show
+ * @fires over
+ * @fires out
+ * @fires show
+ * @fires dragstart
+ * @fires dragging
+ * @fires dragend
+ * @fires dragcancel
  * @param {Object=} options
  *  @param {string} options.className
  *  @param {ol.style.Style} options.style style to draw the profil
@@ -31,9 +37,10 @@ import {ol_coordinate_dist2d} from "../geom/GeomUtils";
  *  @param {number} options.height
  *  @param {ol.Feature} options.feature the feature to draw profil
  *  @param {boolean} options.selectable enable selection on the profil, default false
+ *  @param {boolean} options.zoomable can zoom in the profil
  */
-var ol_control_Profil = function(opt_options) {
-  var options = opt_options || {};
+var ol_control_Profil = function(options) {
+  options = options || {};
   this.info = options.info || ol_control_Profil.prototype.info;
   var self = this;
 
@@ -110,14 +117,15 @@ var ol_control_Profil = function(opt_options) {
   div_to_canvas.appendChild(this.canvas_);
   div_to_canvas.addEventListener('pointerdown', this.onMove.bind(this));
   document.addEventListener('pointerup', this.onMove.bind(this));
-  div_to_canvas.addEventListener('pointermove', this.onMove.bind(this));
+  div_to_canvas.addEventListener('mousemove', this.onMove.bind(this));
+  div_to_canvas.addEventListener('touchmove', this.onMove.bind(this));
 
   ol_control_Control.call(this, {
     element: element,
     target: options.target
   });
 
-  this.set('selectable', options.selectable)
+  this.set('selectable', options.selectable);
 
   // Offset in px
   this.margin_ = { top:10*ratio, left:40*ratio, bottom:30*ratio, right:10*ratio };
@@ -180,6 +188,38 @@ var ol_control_Profil = function(opt_options) {
   // Show feature
   if (options.feature) {
     this.setGeometry (options.feature);
+  }
+
+  // Zoom on profile
+  if (options.zoomable) {
+    this.set('selectable', true);
+    var start, geom;
+    this.on('change:geometry', function() {
+      geom = null;
+    });
+    this.on('dragstart', function(e) {
+      start = e.index;
+    })
+    this.on('dragend', function(e) {
+      if (Math.abs(start - e.index) > 10) {
+        if (!geom) {
+          var bt = ol_ext_element.create('BUTTON', {
+            parent: element,
+            className: 'ol-zoom-out',
+            click: function(e) {
+              e.stopPropagation();
+              e.preventDefault();
+              if (geom) this.setGeometry(geom, this._geometry[1]);
+              element.removeChild(bt);
+            }.bind(this)
+          })
+        }
+        var saved = geom || this._geometry[0];
+        var g = new ol.geom.LineString(this.getSelection(start, e.index));
+        this.setGeometry(g, this._geometry[1]);
+        geom = saved;
+      }
+    }.bind(this));
   }
 };
 ol_ext_inherits(ol_control_Profil, ol_control_Control);
@@ -323,7 +363,7 @@ ol_control_Profil.prototype.pointAtTime = function(time) {
 };
 
 /** Mouse move over canvas
-*/
+ */
 ol_control_Profil.prototype.onMove = function(e) {
   if (!this.tab_.length) return;
   var box_canvas = this.canvas_.getBoundingClientRect();
@@ -332,8 +372,15 @@ ol_control_Profil.prototype.onMove = function(e) {
     left: box_canvas.left + window.pageXOffset - document.documentElement.clientLeft
   };
 
-  var dx = e.pageX -pos.left;
-  var dy = e.pageY -pos.top;
+  var pageX = e.pageX 
+    || (e.touches && e.touches.length && e.touches[0].pageX) 
+    || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageX);
+  var pageY = e.pageY 
+    || (e.touches && e.touches.length && e.touches[0].pageY) 
+    || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageY);
+
+  var dx = pageX -pos.left;
+  var dy = pageY -pos.top;
   var ratio = this.ratio;
   if (dx>this.margin_.left/ratio && dx<(this.canvas_.width-this.margin_.right)/ratio
     && dy>this.margin_.top/ratio && dy<(this.canvas_.height-this.margin_.bottom)/ratio) {
@@ -356,14 +403,14 @@ ol_control_Profil.prototype.onMove = function(e) {
       case 'pointerdown': {
         this._dragging = {
           event: { type:'dragstart', index: index, coord: p[3], time: p[2], distance: p[0] },
-          pageX: e.pageX,
-          pageY: e.pageY
+          pageX: pageX,
+          pageY: pageY
         }
         break;
       }
       case 'pointerup': {
         if (this._dragging && this._dragging.pageX) {
-          if (Math.abs(this._dragging.pageX - e.pageX)<3 && Math.abs(this._dragging.pageY - e.pageY) < 3) {
+          if (Math.abs(this._dragging.pageX - pageX)<3 && Math.abs(this._dragging.pageY - pageY) < 3) {
             this.dispatchEvent({ type:'click', index: index, coord: p[3], time: p[2], distance: p[0] });
             this.refresh();
           }
@@ -376,7 +423,7 @@ ol_control_Profil.prototype.onMove = function(e) {
       default: {
         if (this._dragging) {
           if (this._dragging.pageX) {
-            if (Math.abs(this._dragging.pageX - e.pageX)>3 || Math.abs(this._dragging.pageY - e.pageY) > 3) {
+            if (Math.abs(this._dragging.pageX - pageX)>3 || Math.abs(this._dragging.pageY - pageY) > 3) {
               this._dragging.pageX = this._dragging.pageY = false;
               this.dispatchEvent(this._dragging.event);
             }
@@ -397,7 +444,7 @@ ol_control_Profil.prototype.onMove = function(e) {
       this.dispatchEvent({ type:'out' });
     }
     if (e.type === 'pointerup' && this._dragging) {
-      this.dispatchEvent({ type:'canceldrag' });
+      this.dispatchEvent({ type:'dragcancel' });
       this._dragging = false;
     }
   }
@@ -453,6 +500,7 @@ ol_control_Profil.prototype.getSelection = function(start, end) {
  * @private
  */
 ol_control_Profil.prototype._drawGraph = function(t, style) {
+  if (!t.length) return;
   var ctx = this.canvas_.getContext('2d');
   var scx = this.scale_[0];
   var scy = this.scale_[1];
@@ -498,6 +546,7 @@ ol_control_Profil.prototype._drawGraph = function(t, style) {
 ol_control_Profil.prototype.setGeometry = function(g, options) {
   if (!options) options = {};
   if (g instanceof ol_Feature) g = g.getGeometry();
+  this._geometry = [g, options];
 
   // No Z
   if (!/Z/.test(g.getLayout())) return;
@@ -551,6 +600,8 @@ ol_control_Profil.prototype.setGeometry = function(g, options) {
   this.set('amplitude', options.amplitude);
   this.set('unit', options.unit);
   this.set('zunit', options.zunit);
+
+  this.dispatchEvent({ type: 'change:geometry', geometry: g })
   
   this.refresh();
 };
@@ -568,9 +619,14 @@ ol_control_Profil.prototype.refresh = function() {
   var zmin = this._z[0];
   var zmax = this._z[1];
   var t = this.tab_;
+
   var d = t[t.length-1][0];
   var ti = t[t.length-1][2];
   var i;
+
+  if (!d) {
+    console.error('[ol/control/Profil] no data...', t);
+  }
 
   // Margin
   ctx.setTransform(1, 0, 0, 1, this.margin_.left, h-this.margin_.bottom);
