@@ -19209,6 +19209,11 @@ ol.interaction.TouchCursor = function(options) {
     element: ol.ext.element.create('DIV', {}),
     stopEvent: false,
   });
+  ol.interaction.DragOverlay.call(this, {
+    centerOnClick: false,
+    //offset: [-20,-20],
+    overlays: this.overlay
+  });
   this.setPosition(options.coordinate, true);
   if (options.buttons) {
     var elt = this.overlay.element;
@@ -19225,11 +19230,6 @@ ol.interaction.TouchCursor = function(options) {
       }
     }))
   }
-  ol.interaction.DragOverlay.call(this, {
-    centerOnClick: false,
-    //offset: [-20,-20],
-    overlays: this.overlay
-  });
   // Replace events to handle click
   var dragging = false;
   var start = false;
@@ -19334,26 +19334,26 @@ ol.interaction.TouchCursor.prototype.setMap = function(map) {
  */
 ol.interaction.TouchCursor.prototype.setActive = function(b, position) {
   if (b!==this.getActive()) {
-    ol.interaction.DragOverlay.prototype.setActive.call (this, b);
     this.ctouch.setActive(b);
     if (!b) {
       this.setPosition();
       this.overlay.element.classList.remove('active');
       if (this._activate) clearTimeout(this._activate);
       if (this.getMap()) this.getMap().removeOverlay(this.overlay);
-      return;
-    } 
-    if (this.getMap()) {
-      this.getMap().addOverlay(this.overlay);
+    } else {
+      if (this.getMap()) {
+        this.getMap().addOverlay(this.overlay);
+      }
+      if (position) {
+        this.setPosition(position);
+      } else if (this.getMap()) {
+        this.setPosition(this.getMap().getView().getCenter());
+      }
+      this._activate = setTimeout(function() {
+        this.overlay.element.classList.add('active');
+      }.bind(this), 100);
     }
-    if (position) {
-      this.setPosition(position);
-    } else if (this.getMap()) {
-      this.setPosition(this.getMap().getView().getCenter());
-    }
-    this._activate = setTimeout(function() {
-      this.overlay.element.classList.add('active');
-    }.bind(this), 100);
+    ol.interaction.DragOverlay.prototype.setActive.call (this, b);
   } else if (position) {
     this.setPosition(position);
   } else if (this.getMap()) {
@@ -19381,6 +19381,12 @@ ol.interaction.TouchCursor.prototype.offsetPosition = function (coord) {
  */
 ol.interaction.TouchCursor.prototype.getPosition = function () {
   return this.overlay.getPosition(); 
+};
+/** Get pixel position
+ * @return {ol.pixel}
+ */
+ol.interaction.TouchCursor.prototype.getPixel = function () {
+  if (this.getMap()) return this.getMap().getPixelFromCoordinate(this.getPosition());
 };
 /** Get cursor overlay
  * @return {ol.Overlay}
@@ -19527,6 +19533,7 @@ ol.interaction.TouchCursorDraw.prototype.setMap = function(map) {
 ol.interaction.TouchCursorDraw.prototype.setActive = function(b, position) {
   ol.interaction.TouchCursor.prototype.setActive.call (this, b, position);
   this.sketch.abortDrawing();
+  this.sketch.setPosition(position);
   this.sketch.setVisible(b);
 };
 /**
@@ -19738,6 +19745,101 @@ ol.interaction.TouchCursorModify.prototype.setActive = function(b, position) {
  */
 ol.interaction.TouchCursorModify.prototype.getInteraction = function() {
   return this._modify;
+};
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** A TouchCursor to select objects on hovering the cursor
+ * @constructor
+ * @extends {ol.interaction.DragOverlay}
+ * @param {olx.interaction.InteractionOptions} options Options
+ *  @param {string} options.className cursor class name
+ *  @param {ol.coordinate} options.coordinate position of the cursor
+ */
+ol.interaction.TouchCursorSelect = function(options) {
+  options = options || {};
+  ol.interaction.TouchCursor.call(this, {
+    className: 'ol-select '+(options.className || ''),
+    coordinate: options.coordinate
+  });
+  this._selection = null;
+  this._layerFilter = options.layerFilter;
+  this._filter = options._filter;
+  this._style = options.style || ol.style.Style.defaultStyle(true);
+  this.set('hitTolerance', options.hitTolerance || 0);
+  this.on(['change:active', 'dragging'], function() { this.select() });
+};
+ol.ext.inherits(ol.interaction.TouchCursorSelect, ol.interaction.TouchCursor);
+/**
+ * Remove the interaction from its current map, if any,  and attach it to a new
+ * map, if any. Pass `null` to just remove the interaction from the current map.
+ * @param {_ol_Map_} map Map.
+ * @api stable
+ */
+ol.interaction.TouchCursorSelect.prototype.setMap = function(map) {
+  ol.interaction.TouchCursor.prototype.setMap.call (this, map);
+  if (map) {
+    // Select on move end
+    this._listeners.movend = map.on('moveend', function() {
+      this.select()
+    }.bind(this))
+  }
+};
+/** Get current selection
+ * @return {ol.Feature|null}
+ */
+ol.interaction.TouchCursorSelect.prototype.getSelection = function() {
+  return this._selection ? this._selection.feature : null;
+};
+/** Set position
+ * @param {ol.coordinate} coord
+ */
+ol.interaction.TouchCursorSelect.prototype.setPosition = function(coord) {
+  ol.interaction.TouchCursor.prototype.setPosition.call (this, coord);
+  this.select();
+};
+/** Select feature 
+ * @param {ol.Feature|undefined} f a feature to select or select at the cursor position
+ */
+ol.interaction.TouchCursorSelect.prototype.select = function(f) {
+  var current = this._selection;
+  if (this.getActive() && this.getPosition()) {
+    if (!f) {
+      var sel = this.getMap().getFeaturesAtPixel(this.getPixel(), {
+        layerFilter: this._layerFilter,
+        filter: this._filter,
+        hitTolerance: this.get('hitTolerance')
+      });
+      f = sel ? sel[0] : null;
+    }
+    if (f) {
+      if (current && f === current.feature) {
+        current = null;
+      } else {
+        this._selection = {
+          feature: f,
+          style: f.getStyle()
+        }
+        f.setStyle(this._style);
+        this.dispatchEvent({ type:'select', selected: [f], deselected: current ? [current.feature] : [] });
+      }
+    } else {
+      this._selection = null;
+      this.dispatchEvent({ type:'select', selected: [], deselected: current ? [current.feature] : [] });
+    }
+  } else {
+    this._selection = null;
+    this.dispatchEvent({ type:'select', selected: [], deselected: current ? [current.feature] : [] });
+  }
+  // Restore current style
+  if (current) {
+    current.feature.setStyle(current.style);
+  }
+  // 
+  if (this._selection) this.getOverlayElement().classList.remove('disable');
+  else this.getOverlayElement().classList.add('disable');
 };
 
 /** Interaction rotate
