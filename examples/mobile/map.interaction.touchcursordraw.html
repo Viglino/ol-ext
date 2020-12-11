@@ -63,6 +63,10 @@
       content: "\f0e2";
       font-family: "FontAwesome";
     }
+    #map .ol-touch-cursor .ol-button.delete:before {
+      content: "\f1f8";
+      font-family: "FontAwesome";
+    }
     #map .ol-touch-cursor.Circle:before,
     #map .ol-touch-cursor .Circle:before {
       content: "\f10c";
@@ -117,7 +121,8 @@
     Options:
     <ul>
       <li>
-        <label><input type="radio" name="mode" onchange="setActive('Modify')" checked="checked"> Modify</label>
+        <label><input type="radio" name="mode" onchange="setActive('Select')" checked="checked"> Select</label>
+        <label><input type="radio" name="mode" onchange="setActive('Modify')"> Modify</label>
         <label><input type="radio" name="mode" onchange="setActive('Draw')"> Draw</label>
       </li>
       <li>
@@ -147,6 +152,19 @@
     vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[270318,6247293],[271226,6247178],[271799,6247933],[271083,6248945],[271952,6249108]])))
 
     var cursor = {};
+
+    // Select cursor interaction
+    cursor.Select = new ol.interaction.TouchCursorSelect();
+    map.addInteraction(cursor.Select);
+    // Add a delete
+    cursor.Select.addButton({
+      className: 'delete',
+      click: function() {
+        var f = cursor.Select.getSelection();
+        if (f) vector.getSource().removeFeature(f);
+      }
+    })
+
     // Draw tools
     cursor.Draw = new ol.interaction.TouchCursorDraw({
       className: 'draw',
@@ -155,7 +173,6 @@
       types: ['Point', 'LineString', 'Polygon', 'Circle'],
       source: vector.getSource()
     });
-    cursor.Draw.setActive(false);
     map.addInteraction(cursor.Draw);
     // Add a button to remove last feature
     var feature = null;
@@ -171,7 +188,7 @@
     })
 
     // Modify
-    var active = cursor.Modify = new ol.interaction.TouchCursorModify({
+    cursor.Modify = new ol.interaction.TouchCursorModify({
       className: 'Modify',
       coordinate: map.getView().getCenter(),
       source: vector.getSource()
@@ -179,15 +196,19 @@
     map.addInteraction(cursor.Modify);
 
     // Activate mode
+    var active;
     function setActive(mode) {
       var coord;
       if (active) {
         coord = active.getPosition();
         active.setActive(false);
+      } else {
+        for (let i in cursor) cursor[i].setActive(false);
       }
       active = cursor[mode];
       if (active) active.setActive(true, coord);
     }
+    setActive('Select');
 
     // Add a snap interaction
 /**/

@@ -60,6 +60,12 @@ var ol_interaction_TouchCursor = function(options) {
     stopEvent: false,
   });
 
+  ol_interaction_DragOverlay.call(this, {
+    centerOnClick: false,
+    //offset: [-20,-20],
+    overlays: this.overlay
+  });
+
   this.setPosition(options.coordinate, true);
   if (options.buttons) {
     var elt = this.overlay.element;
@@ -76,12 +82,6 @@ var ol_interaction_TouchCursor = function(options) {
       }
     }))
   }
-
-  ol_interaction_DragOverlay.call(this, {
-    centerOnClick: false,
-    //offset: [-20,-20],
-    overlays: this.overlay
-  });
 
   // Replace events to handle click
   var dragging = false;
