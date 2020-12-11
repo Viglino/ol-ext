@@ -7544,8 +7544,8 @@ ol.control.Profil.prototype.onMove = function(e) {
     && dy>this.margin_.top/ratio && dy<(this.canvas_.height-this.margin_.bottom)/ratio) {
     var d = (dx*ratio-this.margin_.left)/this.scale_[0];
     var p0 = this.tab_[0];
-    var index;
-    for (index=1, p; p=this.tab_[index]; index++) {
+    var index, p;
+    for (index=1; p=this.tab_[index]; index++) {
       if (p[0]>=d) {
         if (d < (p[0]+p0[0])/2) {
           index = 0;
@@ -7657,6 +7657,7 @@ ol.control.Profil.prototype._drawGraph = function(t, style) {
   var scy = this.scale_[1];
   var dy = this.dy_;
   var ratio = this.ratio;
+  var i, p;
   // Draw Path
   ctx.beginPath();
   for (i=0; p=t[i]; i++) {
@@ -7756,6 +7757,7 @@ ol.control.Profil.prototype.refresh = function() {
   var t = this.tab_;
   var d = t[t.length-1][0];
   var ti = t[t.length-1][2];
+  var i;
   // Margin
   ctx.setTransform(1, 0, 0, 1, this.margin_.left, h-this.margin_.bottom);
   var ratio = this.ratio;
@@ -16806,7 +16808,7 @@ ol.interaction.ModifyFeature.prototype.getNearestCoord = function(pt, geom) {
  */
 ol.interaction.ModifyFeature.prototype.getArcs = function(geom, coord) {
   var arcs = false;
-  var coords, i, s, l;
+  var coords, i, s, l, g;
   switch(geom.getType()) {
     case 'Point': {
       if (ol.coordinate.equal(coord, geom.getCoordinates())) {
@@ -16844,7 +16846,7 @@ ol.interaction.ModifyFeature.prototype.getArcs = function(geom, coord) {
         var split;
         // Split the line in two
         if (geom.getType() === 'LinearRing') {
-          var g = new ol.geom.LineString(geom.getCoordinates());
+          g = new ol.geom.LineString(geom.getCoordinates());
           split = g.splitAt(coord, this.tolerance_);
         } else {
           split = geom.splitAt(coord, this.tolerance_);
@@ -16946,7 +16948,7 @@ ol.interaction.ModifyFeature.prototype.getArcs = function(geom, coord) {
       break;
     }
     case 'GeometryCollection': {
-      var g = geom.getGeometries();
+      g = geom.getGeometries();
       for (i=0; l=g[i]; i++) {
         arcs = this.getArcs(l, coord);
         if (arcs) {
@@ -19697,7 +19699,7 @@ ol.interaction.TouchCursorModify = function(options) {
     }
   }.bind(this));
   // Handle dragging, prevent drag outside the control
-  this.on('dragstart', function(e) {
+  this.on('dragstart', function() {
     if (drag) {
       mod.handleDownEvent(this._lastEvent);
     }

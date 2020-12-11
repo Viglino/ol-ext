@@ -298,7 +298,7 @@ ol_interaction_ModifyFeature.prototype.getNearestCoord = function(pt, geom) {
  */
 ol_interaction_ModifyFeature.prototype.getArcs = function(geom, coord) {
   var arcs = false;
-  var coords, i, s, l;
+  var coords, i, s, l, g;
   switch(geom.getType()) {
     case 'Point': {
       if (ol_coordinate_equal(coord, geom.getCoordinates())) {
@@ -336,7 +336,7 @@ ol_interaction_ModifyFeature.prototype.getArcs = function(geom, coord) {
         var split;
         // Split the line in two
         if (geom.getType() === 'LinearRing') {
-          var g = new ol_geom_LineString(geom.getCoordinates());
+          g = new ol_geom_LineString(geom.getCoordinates());
           split = g.splitAt(coord, this.tolerance_);
         } else {
           split = geom.splitAt(coord, this.tolerance_);
@@ -438,7 +438,7 @@ ol_interaction_ModifyFeature.prototype.getArcs = function(geom, coord) {
       break;
     }
     case 'GeometryCollection': {
-      var g = geom.getGeometries();
+      g = geom.getGeometries();
       for (i=0; l=g[i]; i++) {
         arcs = this.getArcs(l, coord);
         if (arcs) {

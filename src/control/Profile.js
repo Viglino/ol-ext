@@ -9,6 +9,7 @@ import {getDistance as ol_sphere_getDistance} from 'ol/sphere'
 import {transform as ol_proj_transform} from 'ol/proj'
 import ol_control_Control from 'ol/control/Control'
 import ol_Feature from 'ol/Feature'
+import ol_style_Fill from 'ol/style/Fill'
 
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Stroke from 'ol/style/Stroke'
@@ -338,8 +339,8 @@ ol_control_Profil.prototype.onMove = function(e) {
     && dy>this.margin_.top/ratio && dy<(this.canvas_.height-this.margin_.bottom)/ratio) {
     var d = (dx*ratio-this.margin_.left)/this.scale_[0];
     var p0 = this.tab_[0];
-    var index;
-    for (index=1, p; p=this.tab_[index]; index++) {
+    var index, p;
+    for (index=1; p=this.tab_[index]; index++) {
       if (p[0]>=d) {
         if (d < (p[0]+p0[0])/2) {
           index = 0;
@@ -457,6 +458,7 @@ ol_control_Profil.prototype._drawGraph = function(t, style) {
   var scy = this.scale_[1];
   var dy = this.dy_;
   var ratio = this.ratio;
+  var i, p;
 
   // Draw Path
   ctx.beginPath();
@@ -568,6 +570,7 @@ ol_control_Profil.prototype.refresh = function() {
   var t = this.tab_;
   var d = t[t.length-1][0];
   var ti = t[t.length-1][2];
+  var i;
 
   // Margin
   ctx.setTransform(1, 0, 0, 1, this.margin_.left, h-this.margin_.bottom);
