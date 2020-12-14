@@ -11496,6 +11496,7 @@ ol.control.Toggle.prototype.getInteraction = function() {
 */
 /** WMSCapabilities
  * @constructor
+ * @fire load
  * @param {*} options
  *  @param {string|Element} options.target the target to set the dialog, use document.body to have fullwindow dialog
  *  @param {string} options.proxy proxy to use when requesting Getcapabilites, default none (suppose the service use CORS)
@@ -11510,19 +11511,20 @@ ol.control.Toggle.prototype.getInteraction = function() {
  *  @param {boolean} options.trace Log layer info, default false
  */
 ol.control.WMSCapabilities = function (options) {
-  options = Object.assign({}, options || {});
+  options = options || {};
+  var buttonOptions = Object.assign({}, options || {});
   this._proxy = options.proxy;
-  if (options.target===document.body) delete options.target;
-  if (options.target) {
-    options.className = ((options.className||'') + ' ol-wmscapabilities ol-hidden').trim();
-    delete options.target;
+  if (buttonOptions.target===document.body) delete buttonOptions.target;
+  if (buttonOptions.target) {
+    buttonOptions.className = ((buttonOptions.className||'') + ' ol-wmscapabilities ol-hidden').trim();
+    delete buttonOptions.target;
   } else {
-    options.className = ((options.className||'') + ' ol-wmscapabilities').trim();
-    options.handleClick = function () {
+    buttonOptions.className = ((buttonOptions.className||'') + ' ol-wmscapabilities').trim();
+    buttonOptions.handleClick = function () {
       this.showDialog();
     }.bind(this)
   }
-  ol.control.Button.call(this, options);
+  ol.control.Button.call(this, buttonOptions);
   // Dialog
   this.createDialog(options);
   // WMS options
