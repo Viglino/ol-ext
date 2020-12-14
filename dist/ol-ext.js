@@ -11512,7 +11512,6 @@ ol.control.Toggle.prototype.getInteraction = function() {
 ol.control.WMSCapabilities = function (options) {
   options = Object.assign({}, options || {});
   this._proxy = options.proxy;
-  this.createDialog(options);
   if (options.target===document.body) delete options.target;
   if (options.target) {
     options.className = ((options.className||'') + ' ol-wmscapabilities ol-hidden').trim();
@@ -11524,6 +11523,8 @@ ol.control.WMSCapabilities = function (options) {
     }.bind(this)
   }
   ol.control.Button.call(this, options);
+  // Dialog
+  this.createDialog(options);
   // WMS options
   this.set('srs', options.srs || []);
   this.set('cors', options.cors);

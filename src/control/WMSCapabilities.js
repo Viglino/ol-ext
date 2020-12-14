@@ -34,8 +34,6 @@ var ol_control_WMSCapabilities = function (options) {
   options = Object.assign({}, options || {});
   this._proxy = options.proxy;
 
-  this.createDialog(options);
-
   if (options.target===document.body) delete options.target;
   if (options.target) {
     options.className = ((options.className||'') + ' ol-wmscapabilities ol-hidden').trim();
@@ -47,6 +45,9 @@ var ol_control_WMSCapabilities = function (options) {
     }.bind(this)
   }
   ol_control_Button.call(this, options);
+
+  // Dialog
+  this.createDialog(options);
 
   // WMS options
   this.set('srs', options.srs || []);
