@@ -133,10 +133,6 @@
   });
   map.addControl(cap);
 
-  var print = new ol.control.Print();
-  map.addControl(print);
-  print.on('print', function(e) { console.log(e); })
-
   cap.on('load', function(e) {
     map.addLayer(e.layer)
   })
