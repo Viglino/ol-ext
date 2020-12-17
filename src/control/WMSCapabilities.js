@@ -17,7 +17,6 @@ import '../layer/GetPreview';
 
 /** WMSCapabilities
  * @constructor
- * @fire load
  * @param {*} options
  *  @param {string|Element} options.target the target to set the dialog, use document.body to have fullwindow dialog
  *  @param {string} options.proxy proxy to use when requesting Getcapabilites, default none (suppose the service use CORS)
@@ -25,6 +24,7 @@ import '../layer/GetPreview';
  *  @param {string} options.title dialog title, default 'WMS'
  *  @param {string} options.searchLabel Label for search button, default 'search'
  *  @param {string} options.loadLabel Label for load button, default 'load'
+ *  @param {boolean} options.popupLayer Use a popup for the layers, default false
  *  @param {*} options.services a key/url object of services for quick access in a menu
  *  @param {Array<string>} options.srs an array of supported srs, default map projection code or 'EPSG:3857'
  *  @param {number} options.timeout Timeout for getCapabilities request, default 1000
@@ -48,15 +48,15 @@ var ol_control_WMSCapabilities = function (options) {
   }
   ol_control_Button.call(this, buttonOptions);
 
-  // Dialog
-  this.createDialog(options);
-
   // WMS options
   this.set('srs', options.srs || []);
   this.set('cors', options.cors);
   this.set('trace', options.trace);
   this.set('title', options.title);
   this.set('loadLabel', options.loadLabel);
+
+  // Dialog
+  this.createDialog(options);
 
   // Ajax request
   var parser = new ol_format_WMSCapabilities();
@@ -132,7 +132,7 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
     parent: target
   });
   this._elements = {
-    element: element
+    element: target || element
   };
   var inputdiv = ol_ext_element.create('DIV', {
     className: 'ol-url',
@@ -141,6 +141,8 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
   var input = this._elements.input = ol_ext_element.create('INPUT', {
     className: 'url',
     placeholder: options.placeholder || 'service url...',
+    autocorrect: 'off',
+    autocapitalize: 'off',
     parent: inputdiv
   });
   input.addEventListener('keyup', function(e) {
@@ -210,7 +212,7 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
   // Select list
   var select = this._elements.select = ol_ext_element.create('SELECT', {
     className: 'ol-select-list',
-    size: 10,
+    size: options.popupLayer ? 0 : 10,
     on: {
       change: function () {
         select.options[select.selectedIndex].click();
@@ -552,6 +554,18 @@ ol_control_WMSCapabilities.prototype.showCapabilitis = function(caps) {
     }.bind(this));
   }.bind(this);
   this._elements.select.innerHTML = '';
+  ol_ext_element.create('OPTION', {
+    html: 'layer...',
+    className: 'ol-info',
+    parent: this._elements.select,
+    click: () => {
+      this._elements.buttons.innerHTML = '';
+      this._elements.data.innerHTML = '';
+      this._elements.legend.src = '';
+      this._elements.legend.classList.remove('visible');
+      this._elements.preview.src = '';
+    }
+  });
   addLayers(caps.Capability.Layer);
 };
 
