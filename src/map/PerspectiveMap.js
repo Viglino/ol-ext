@@ -8,6 +8,7 @@ import ol_ext_element from '../util/element';
 import ol_Overlay from 'ol/Overlay'
 import { inAndOut as ol_easing_inAndOut } from 'ol/easing'
 import ol_matrix3D from '../util/matrix3D'
+import { altKeyOnly as ol_events_condition_altKeyOnly } from 'ol/events/condition'
 
 /** A map with a perspective
  * @constructor 
@@ -107,12 +108,43 @@ ol_PerspectiveMap.prototype._animatePerpective = function(t0, t, style, fromAngl
  * @param {MapBrowserEvent} mapBrowserEvent The event to handle.
  */
 ol_PerspectiveMap.prototype.handleMapBrowserEvent = function(e) {
+  
+
   e.pixel = [
     e.originalEvent.offsetX / this.getPixelRatio(), 
     e.originalEvent.offsetY / this.getPixelRatio()
   ];
   e.coordinate = this.getCoordinateFromPixel(e.pixel);
   ol_Map.prototype.handleMapBrowserEvent.call (this, e);
+
+  // AltKeyOnly event
+  if (ol_events_condition_altKeyOnly(e)) {
+    if (e.type === 'pointerdown') {
+      this._isHandleActive = true;
+      this._originY = e.originalEvent.offsetY;
+      this._angle = this._angle || 0;
+    } else if (e.type === 'pointerup') {
+      this._isHandleActive = false;
+      this._moveAngle = 0;
+      if (this._originY === e.originalEvent.offsetY) clearTimeout()
+    }
+    if (this._isHandleActive) { 
+      // throttling...
+      if (!this._perspectivehandleTimer) {
+        var angle = parseInt(e.originalEvent.offsetY - this._originY, 10) / 10;
+        this._perspectivehandleTimer = setTimeout(() => {
+          this._perspectivehandleTimer = null;
+          if (this._originY !== e.originalEvent.offsetY) {
+            this.setPerspective(this._angle + angle);
+          }
+        }, 100);
+      }
+    }
+  } else {
+    this._isHandleActive = false;
+    this._moveAngle = this._angle;
+  }
+
 };
 
 /** Get map full teansform matrix3D
