@@ -83,14 +83,19 @@
     format: new ol.format.GeoJSON(),
     attributions: [ "&copy; <a href='http://professionnels.ign.fr/bdtopo'>ign.fr</a>" ]
   });
-  var vector = new ol.layer.Vector({
+  var vector = new ol.layer.VectorImage({
     source: vectorSource,
     maxResolution: 2
   });
   map.addLayer(vector);
 
   // Select and draw interaction
-  map.addInteraction(new ol.interaction.Select({ layers: [vector], condition: ol.events.condition.pointerMove }));
+  map.addInteraction(new ol.interaction.Select({ 
+    layers: [vector], 
+    condition: function (e) {
+      return (ol.events.condition.pointerMove(e) && !ol.events.condition.altKeyOnly(e))
+    }
+  }));
   map.addInteraction(new ol.interaction.Draw({ type: 'LineString' }))
 
   // An overlay
