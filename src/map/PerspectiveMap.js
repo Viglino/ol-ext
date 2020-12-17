@@ -226,7 +226,10 @@ ol_Overlay.prototype.updatePixelPosition = function () {
     // Get pixel at screen
     var pixel = map.getPixelScreenFromCoordinate(position);
     var mapSize = map.getSize();
-    // Offset according poqsitioning
+    pixel[0] -= mapSize[0]/4
+    pixel[1] -= mapSize[1]/4
+    /* for ol v6.2.x
+    // Offset according positioning
     var pos = this.getPositioning();
     if (/bottom/.test(pos)) {
       pixel[1] += mapSize[1]/4
@@ -238,13 +241,16 @@ ol_Overlay.prototype.updatePixelPosition = function () {
     } else {
       pixel[0] -= mapSize[0]/4
     }
+    */
     // Update
     this.updateRenderedPosition(pixel , mapSize);
   } else {
     _updatePixelPosition.call(this);
   }
 };
+/**/
 
 })();
+
 
 export default ol_PerspectiveMap
