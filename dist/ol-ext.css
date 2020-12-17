@@ -3774,6 +3774,9 @@
   padding-left: 3em;
 }
 
+.ol-wmscapabilities .ol-select-list .ol-info {
+  font-style: italic;
+}
 .ol-wmscapabilities .ol-select-list .ol-title {
   background-color: rgba(0,60,136,.1);
 }
