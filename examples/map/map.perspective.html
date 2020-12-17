@@ -53,8 +53,9 @@
     <ul>
       <li>
         <label>Perspective:</label>
-        <input type="range" step=1 min=0 max=30 onchange="map.setPerspective(this.value)" value=0 style="vertical-align: middle;" />
+        <input id="angle" type="range" step=1 min=0 max=30 onchange="map.setPerspective(this.value)" value=0 style="vertical-align: middle;" />
       </li>
+      <li><i>use alt + drag to tilt the map...</i></li>
     </ul>
   </div>
   
@@ -71,6 +72,10 @@
     interactions: ol.interaction.defaults(),
     layers: [ layer ]
   });
+
+  map.on('change:perspective', function(e) {
+    if (!e.animating) $('#angle').val(e.angle);
+  })
 
   // Create vector layer for select
   var vectorSource = new ol.source.Vector({

@@ -13,8 +13,9 @@ import { altKeyOnly as ol_events_condition_altKeyOnly } from 'ol/events/conditio
 /** A map with a perspective
  * @constructor 
  * @extends {ol.Map}
- * @param {olx.MapOptions=} options 
  * @fires change:perspective
+ * @param {olx.MapOptions=} options 
+ *  @param {ol.events.condition} tiltCondition , default altKeyOnly
  */
 var ol_PerspectiveMap = function(options) {
 
@@ -37,6 +38,8 @@ var ol_PerspectiveMap = function(options) {
   //opts.pixelRatio = 2;
   ol_Map.call (this, opts);
 
+  this._tiltCondition = options.tiltCondition || ol_events_condition_altKeyOnly;
+
 };
 ol_ext_inherits (ol_PerspectiveMap, ol_Map);
 
@@ -58,11 +61,11 @@ ol_PerspectiveMap.prototype.setPerspective = function(angle, options) {
   if (angle > 30) angle = 30;
   else if (angle<0) angle = 0;
   var fromAngle = this._angle || 0;
-  var toAngle = Math.round(angle);
+  var toAngle = Math.round(angle*10)/10;
   var style = this.getTarget().querySelector('.ol-layers').style;
   cancelAnimationFrame(this._animatedPerspective)
   requestAnimationFrame(function(t) {
-    this._animatePerpective(t, t, style, fromAngle, toAngle, options.duration||500, options.easing||ol_easing_inAndOut);
+    this._animatePerpective(t, t, style, fromAngle, toAngle, options.duration, options.easing||ol_easing_inAndOut);
   }.bind(this))
 };
 
@@ -77,8 +80,14 @@ ol_PerspectiveMap.prototype.setPerspective = function(angle, options) {
  * @private
  */
 ol_PerspectiveMap.prototype._animatePerpective = function(t0, t, style, fromAngle, toAngle, duration, easing ) {
-  var dt = (t-t0)/(duration||500);
-  var end = (dt>=1);
+  var dt, end;
+  if (duration === 0) {
+    dt = 1;
+    end = true;
+  } else {
+    dt = (t-t0)/(duration||500);
+    end = (dt>=1);
+  }
   dt = easing(dt);
   var angle;
   if (end) {
@@ -108,8 +117,6 @@ ol_PerspectiveMap.prototype._animatePerpective = function(t0, t, style, fromAngl
  * @param {MapBrowserEvent} mapBrowserEvent The event to handle.
  */
 ol_PerspectiveMap.prototype.handleMapBrowserEvent = function(e) {
-  
-
   e.pixel = [
     e.originalEvent.offsetX / this.getPixelRatio(), 
     e.originalEvent.offsetY / this.getPixelRatio()
@@ -117,32 +124,30 @@ ol_PerspectiveMap.prototype.handleMapBrowserEvent = function(e) {
   e.coordinate = this.getCoordinateFromPixel(e.pixel);
   ol_Map.prototype.handleMapBrowserEvent.call (this, e);
 
-  // AltKeyOnly event
-  if (ol_events_condition_altKeyOnly(e)) {
-    if (e.type === 'pointerdown') {
-      this._isHandleActive = true;
-      this._originY = e.originalEvent.offsetY;
-      this._angle = this._angle || 0;
-    } else if (e.type === 'pointerup') {
-      this._isHandleActive = false;
-      this._moveAngle = 0;
-      if (this._originY === e.originalEvent.offsetY) clearTimeout()
-    }
-    if (this._isHandleActive) { 
-      // throttling...
-      if (!this._perspectivehandleTimer) {
-        var angle = parseInt(e.originalEvent.offsetY - this._originY, 10) / 10;
-        this._perspectivehandleTimer = setTimeout(() => {
-          this._perspectivehandleTimer = null;
-          if (this._originY !== e.originalEvent.offsetY) {
-            this.setPerspective(this._angle + angle);
+  // Change perspective on tilt condition
+  if (this._tiltCondition(e)) {
+    switch(e.type) {
+      case 'pointerdown': {
+        this._dragging = e.originalEvent.offsetY;
+        break;
+      }
+      case 'pointerup': {
+        this._dragging = false;
+        break;
+      }
+      case 'pointerdrag': {
+        if (this._dragging !== false) { 
+          var angle = e.originalEvent.offsetY > this._dragging ? .5 : -.5;
+          if (angle) {
+            this.setPerspective((this._angle||0) + angle, { duration: 0 });
           }
-        }, 100);
+          this._dragging = e.originalEvent.offsetY;
+        }
+        break;
       }
     }
   } else {
-    this._isHandleActive = false;
-    this._moveAngle = this._angle;
+    this._dragging = false;
   }
 
 };
