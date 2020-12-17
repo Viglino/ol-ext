@@ -24671,8 +24671,9 @@ ol.layer.SketchOverlay.prototype.drawSketch = function() {
 /** A map with a perspective
  * @constructor 
  * @extends {ol.Map}
- * @param {olx.MapOptions=} options 
  * @fires change:perspective
+ * @param {olx.MapOptions=} options 
+ *  @param {ol.events.condition} tiltCondition , default altKeyOnly
  */
 ol.PerspectiveMap = function(options) {
   // Map div
@@ -24692,6 +24693,7 @@ ol.PerspectiveMap = function(options) {
   // enhance pixel ratio
   //opts.pixelRatio = 2;
   ol.Map.call (this, opts);
+  this._tiltCondition = options.tiltCondition || ol.events.condition.altKeyOnly;
 };
 ol.ext.inherits (ol.PerspectiveMap, ol.Map);
 /** Get pixel ratio for the map
@@ -24711,11 +24713,11 @@ ol.PerspectiveMap.prototype.setPerspective = function(angle, options) {
   if (angle > 30) angle = 30;
   else if (angle<0) angle = 0;
   var fromAngle = this._angle || 0;
-  var toAngle = Math.round(angle);
+  var toAngle = Math.round(angle*10)/10;
   var style = this.getTarget().querySelector('.ol-layers').style;
   cancelAnimationFrame(this._animatedPerspective)
   requestAnimationFrame(function(t) {
-    this._animatePerpective(t, t, style, fromAngle, toAngle, options.duration||500, options.easing||ol.easing.inAndOut);
+    this._animatePerpective(t, t, style, fromAngle, toAngle, options.duration, options.easing||ol.easing.inAndOut);
   }.bind(this))
 };
 /** Animate the perspective
@@ -24729,8 +24731,14 @@ ol.PerspectiveMap.prototype.setPerspective = function(angle, options) {
  * @private
  */
 ol.PerspectiveMap.prototype._animatePerpective = function(t0, t, style, fromAngle, toAngle, duration, easing ) {
-  var dt = (t-t0)/(duration||500);
-  var end = (dt>=1);
+  var dt, end;
+  if (duration === 0) {
+    dt = 1;
+    end = true;
+  } else {
+    dt = (t-t0)/(duration||500);
+    end = (dt>=1);
+  }
   dt = easing(dt);
   var angle;
   if (end) {
@@ -24765,6 +24773,31 @@ ol.PerspectiveMap.prototype.handleMapBrowserEvent = function(e) {
   ];
   e.coordinate = this.getCoordinateFromPixel(e.pixel);
   ol.Map.prototype.handleMapBrowserEvent.call (this, e);
+  // Change perspective on tilt condition
+  if (this._tiltCondition(e)) {
+    switch(e.type) {
+      case 'pointerdown': {
+        this._dragging = e.originalEvent.offsetY;
+        break;
+      }
+      case 'pointerup': {
+        this._dragging = false;
+        break;
+      }
+      case 'pointerdrag': {
+        if (this._dragging !== false) { 
+          var angle = e.originalEvent.offsetY > this._dragging ? .5 : -.5;
+          if (angle) {
+            this.setPerspective((this._angle||0) + angle, { duration: 0 });
+          }
+          this._dragging = e.originalEvent.offsetY;
+        }
+        break;
+      }
+    }
+  } else {
+    this._dragging = false;
+  }
 };
 /** Get map full teansform matrix3D
  * @return {Array<Array<number>>} 
