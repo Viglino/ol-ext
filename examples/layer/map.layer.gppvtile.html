@@ -37,6 +37,11 @@
 
   <link rel="stylesheet" href="../style.css" />
   <style>
+    .options ul {
+      border: 1px solid #369;
+      padding: .5em;
+      margin: .5em 0;
+    }
     .options > ul > li > label {
       font-weight: bold;
       color: #369;
@@ -62,6 +67,7 @@
   <!-- DIV pour la carte -->
   <div id="map" style="width:600px; height:400px; background: #fff;"></div>
   <div class="options">
+    <label><input id="showSel" type="checkbox" /> show objets geometry</label>
     <ul></ul>
   </div>
   
@@ -83,15 +89,13 @@
     title: "Plan IGN vecteur",
     source: new ol.source.VectorTile({
       tilePixelRatio: 1,
-      tileGrid: ol.tilegrid.createXYZ({maxZoom: 21}),
+      tileGrid: ol.tilegrid.createXYZ({ maxZoom: 18 }),
       format: new ol.format.MVT(),
       projection: new ol.proj.Projection({code:"EPSG:3857"}),
       url: "https://vectortiles.ign.fr/rok4server/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
       // url: "https://vectortiles.ign.fr/rok4server/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
-      attributions: '<a href="https://geoservices.ign.fr/blog/2018/07/08/nouveautes_vecteur.html">&copy; IGN-Géoportail</a>'
+      attributions: '<a href="https://geoservices.ign.fr/blog/2018/07/08/nouveautes_vecteur.html">&copy; IGN-Géoportail</a>',
     }),
-    minResolution : 0,
-    maxResolution : 200000,
     declutter: true
   });
   map.addLayer(vlayer);
@@ -240,42 +244,51 @@
   }
 
   // Selection
-  var select = new ol.interaction.Select({
-    style: new ol.style.Style ({
-      image: new ol.style.Circle({ 
-        radius: 5,
-        fill: new ol.style.Fill({ color: [255,0,0,.5] })
-      }),
-      stroke: new ol.style.Stroke({ width: 1.5, color: [255,0,0,.5] }),
-      fill: new ol.style.Fill({ color: [255,0,0,.5] }),
-    })
+  var selStyle = ol.style.Style.defaultStyle(true)
+  var select = new ol.layer.Vector({ 
+    source: new ol.source.Vector(),
+    style: function(f) {
+      return $('#showSel').prop('checked') ? selStyle : [];
+    }
   });
-  select.setActive(false);
-  map.addInteraction(select);
+  map.addLayer(select);
+
+  map.on('click', function() {
+    var f = select.getSource().getFeatures()[0];
+    if (f) console.log(f.getProperties())
+  })
 
   var tooltip  = new ol.Overlay.Tooltip();
   map.addOverlay(tooltip);
 
-  var hover = new ol.interaction.Hover({ cursor: "pointer" });
+  var hover = new ol.interaction.Hover({ 
+    cursor: "pointer",
+    layers: [vlayer]
+   });
   map.addInteraction(hover);
   hover.on("enter", function(e) {
     // hover.setCursor("pointer");
     var feature = e.feature;
-    select.getFeatures().clear();
+    select.getSource().clear();
     tooltip.setInfo(feature ? feature.get('layer') : '');
-    console.log(feature.getProperties());
-    /* Select feature * /
+    //console.log(feature.getProperties());
+    /* Select feature */
     var coords = [];
     if (feature instanceof ol.Feature) {
-      select.getFeatures().push(feature);
+      select.getSource().addFeature(feature);
     } else {
       var c = feature.getFlatCoordinates();
       for (var i=0; i<c.length; i+=2) {
         coords.push ([c[i],c[i+1]]);
       }
+      console.log(feature.getType())
       switch (feature.getType()) {
         case 'Point': {
           coords = coords.pop();
+          break;
+        }
+        case 'LineString' : {
+          coords = coords;
           break;
         }
         case 'MultiLineString' : 
@@ -286,13 +299,14 @@
       }
       var geom = new ol.geom[feature.getType()](coords)
       var f2 = new ol.Feature(geom);
-      select.getFeatures().push(f2);
+      f2.setProperties(feature.getProperties())
+      select.getSource().addFeature(f2);
     }
     /**/
   });
   hover.on("leave", function(e) {
     tooltip.setInfo('');
-    select.getFeatures().clear();
+    select.getSource().clear();
   });
 
 </script>
