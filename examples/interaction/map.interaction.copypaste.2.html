@@ -28,11 +28,23 @@
   <style>
     #map, 
     #map2 {
+      position: relative;
       border: 3px solid transparent;
     }
     #map.focus, 
     #map2.focus {
       border-color: #369;
+    }
+    #map.focus:before, 
+    #map2.focus:before {
+      content: "focus";
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: #369;
+      color: #fff;
+      z-index: 1000;
+      padding: 0 .5em;
     }
   </style>
 </head>
