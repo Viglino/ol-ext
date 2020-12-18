@@ -1,6 +1,7 @@
 import ol_ext_inherits from '../util/ext'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import ol_Collection from 'ol/Collection'
+import ol_interaction_CurrentMap from './CurrentMap';
 
 /** An interaction to copy/paste features on a map
  * @constructor
@@ -38,30 +39,41 @@ var ol_interaction_CopyPaste = function(options) {
   this.setDestination(options.destination);
   
   // Create intreaction
-  ol_interaction_Interaction.call(this, {
-    handleEvent: function(e) {
-      if (e.type==='keydown' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
-        switch (condition(e)) {
-          case 'copy': {
-            this.copy({ silent: false });
-            break;
-          }
-          case 'cut': {
-            this.copy({ cut: true, silent: false });
-            break;
-          }
-          case 'paste': {
-            this.paste({ silent: false });
-            break;
-          }
-          default: break;
+  ol_interaction_Interaction.call(this, {});
+
+  this._currentMap = new ol_interaction_CurrentMap({
+    onKeyDown: function (e) {
+      switch (condition(e)) {
+        case 'copy': {
+          this.copy({ silent: false });
+          break;
         }
+        case 'cut': {
+          this.copy({ cut: true, silent: false });
+          break;
+        }
+        case 'paste': {
+          this.paste({ silent: false });
+          break;
+        }
+        default: break;
       }
-      return true;
     }.bind(this)
   });
 };
 ol_ext_inherits(ol_interaction_CopyPaste, ol_interaction_Interaction);
+
+/**
+ * Remove the interaction from its current map, if any,  and attach it to a new
+ * map, if any. Pass `null` to just remove the interaction from the current map.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ol_interaction_CopyPaste.prototype.setMap = function(map) {
+  if (this.getMap()) this.getMap().removeInteraction(this._currentMap);
+  if (map) map.addInteraction(this._currentMap);
+  ol_interaction_Interaction.prototype.setMap.call (this, map);
+};
 
 /** Sources to cut feature from
  * @param { ol.source.Vector | Array<ol.source.Vector> } sources
