@@ -96,6 +96,7 @@
     map.addInteraction(transform);
 
     var copy = new ol.interaction.CopyPaste({
+//      condition: function(e) { return e.type==='pointerdown'; },
       destination: vector.getSource(),
       features: transform.getFeatures()
     });
@@ -136,16 +137,11 @@
     });
 
     // Show focus
-    var focus = new ol.interaction.CurrentMap();
-    map.addInteraction(focus);
-    focus.on('focus', function(e) {
+    map.on('focus', function(e) {
       $('#map').addClass('focus');
       $('#map2').removeClass('focus');
     })
-
-    var focus2 = new ol.interaction.CurrentMap();
-    map2.addInteraction(focus2);
-    focus2.on('focus', function(e) {
+    map2.on('focus', function(e) {
       $('#map2').addClass('focus');
       $('#map').removeClass('focus');
     })

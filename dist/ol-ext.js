@@ -14615,14 +14615,16 @@ ol.interaction.Clip.prototype.setActive = function(b) {
   if (this.getMap()) this.getMap().renderSync();
 };
 
-/** An interaction to copy/paste features on a map
+/** An interaction to copy/paste features on a map. 
+ * It will fire a 'focus' event on the map when map is focused (use mapCondition option to handle the condition when the map is focused).
  * @constructor
  * @fires focus
  * @fires copy
  * @fires paste
  * @extends {ol.interaction.Interaction}
  * @param {Object} options Options
- *  @param {function} options.condition a function that take a mapBrowserEvent and return the actio nto perform: 'copy', 'cut' or 'paste', default Ctrl+C / Ctrl+V
+ *  @param {function} options.condition a function that takes a mapBrowserEvent and return the action to perform: 'copy', 'cut' or 'paste', default Ctrl+C / Ctrl+V
+ *  @param {function} options.mapCondition a function that takes a mapBrowserEvent and return true if the map is the active map, default always returns true
  *  @param {ol.Collection<ol.Feature>} options.features list of features to copy
  *  @param {ol.source.Vector | Array<ol.source.Vector>} options.sources the source to copy from (used for cut), if not defined, it will use the destination
  *  @param {ol.source.Vector} options.destination the source to copy to
@@ -14648,7 +14650,9 @@ ol.interaction.CopyPaste = function(options) {
   this.setDestination(options.destination);
   // Create intreaction
   ol.interaction.Interaction.call(this, {});
+  console.log(options)
   this._currentMap = new ol.interaction.CurrentMap({
+    condition: options.mapCondition,
     onKeyDown: function (e) {
       switch (condition(e)) {
         case 'copy': {
@@ -14768,9 +14772,11 @@ ol.interaction.CopyPaste.prototype.paste = function(options) {
 };
 
 /** An interaction to check the current map.
+ * It will fire a 'focus' event on the map when map is focused (use mapCondition option to handle the condition when the map is focused).
  * @constructor
  * @fires focus
  * @param {*} options
+ *  @param {function} condition a function that takes a mapBrowserEvent and returns true if the map must be activated, default always true
  *  @param {function} onKeyDown a function that takes a keydown event is fired on the active map
  *  @param {function} onKeyPress a function that takes a keypress event is fired on the active map
  *  @param {function} onKeyUp a function that takes a keyup event is fired on the active map
@@ -14778,12 +14784,18 @@ ol.interaction.CopyPaste.prototype.paste = function(options) {
  */
 ol.interaction.CurrentMap = function(options) {
   options = options || {};
+  var condition = options.condition || function() {
+    return true;
+  }
   // Check events on the map
   ol.interaction.Interaction.call(this, {
-    handleEvent: function() {
-      if (!this.isCurrentMap()) {
-        this.setCurrentMap(this.getMap());
-        this.dispatchEvent({ type: 'focus', map: this.getMap() });
+    handleEvent: function(e) {
+      if (condition(e)) {
+        if (!this.isCurrentMap()) {
+          this.setCurrentMap(this.getMap());
+          this.dispatchEvent({ type: 'focus', map: this.getMap() });
+          this.getMap().dispatchEvent({ type: 'focus', map: this.getMap() });
+        }
       }
       return true;
     }.bind(this)
@@ -14818,19 +14830,19 @@ ol.interaction.CurrentMap.prototype._currentMap = undefined;
  * @return {boolean}
  */
 ol.interaction.CurrentMap.prototype.isCurrentMap = function() {
-  return this.getMap() === ol.interaction.CopyPaste.prototype._currentMap;
+  return this.getMap() === ol.interaction.CurrentMap.prototype._currentMap;
 };
 /** Get the current map
  * @return {ol.Map}
  */
 ol.interaction.CurrentMap.prototype.getCurrentMap = function() {
-  return ol.interaction.CopyPaste.prototype._currentMap;
+  return ol.interaction.CurrentMap.prototype._currentMap;
 };
 /** Set the current map
  * @param {ol.Map} map
  */
 ol.interaction.CurrentMap.prototype.setCurrentMap = function(map) {
-  ol.interaction.CopyPaste.prototype._currentMap = map;
+  ol.interaction.CurrentMap.prototype._currentMap = map;
 };
 
 /*	Copyright (c) 2018 Jean-Marc VIGLINO, 
