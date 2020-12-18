@@ -14647,30 +14647,39 @@ ol.interaction.CopyPaste = function(options) {
   this.setSources(options.sources);
   this.setDestination(options.destination);
   // Create intreaction
-  ol.interaction.Interaction.call(this, {
-    handleEvent: function(e) {
-      if (e.type==='keydown' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
-        switch (condition(e)) {
-          case 'copy': {
-            this.copy({ silent: false });
-            break;
-          }
-          case 'cut': {
-            this.copy({ cut: true, silent: false });
-            break;
-          }
-          case 'paste': {
-            this.paste({ silent: false });
-            break;
-          }
-          default: break;
+  ol.interaction.Interaction.call(this, {});
+  this._currentMap = new ol.interaction.CurrentMap({
+    onKeyDown: function (e) {
+      switch (condition(e)) {
+        case 'copy': {
+          this.copy({ silent: false });
+          break;
         }
+        case 'cut': {
+          this.copy({ cut: true, silent: false });
+          break;
+        }
+        case 'paste': {
+          this.paste({ silent: false });
+          break;
+        }
+        default: break;
       }
-      return true;
     }.bind(this)
   });
 };
 ol.ext.inherits(ol.interaction.CopyPaste, ol.interaction.Interaction);
+/**
+ * Remove the interaction from its current map, if any,  and attach it to a new
+ * map, if any. Pass `null` to just remove the interaction from the current map.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ol.interaction.CopyPaste.prototype.setMap = function(map) {
+  if (this.getMap()) this.getMap().removeInteraction(this._currentMap);
+  if (map) map.addInteraction(this._currentMap);
+  ol.interaction.Interaction.prototype.setMap.call (this, map);
+};
 /** Sources to cut feature from
  * @param { ol.source.Vector | Array<ol.source.Vector> } sources
  */
@@ -14756,6 +14765,72 @@ ol.interaction.CopyPaste.prototype.paste = function(options) {
   }
   // Send an event
   if (options.silent===false) this.dispatchEvent({ type:'paste', features: features, time: (new Date).getTime() });
+};
+
+/** An interaction to check the current map.
+ * @constructor
+ * @fires focus
+ * @param {*} options
+ *  @param {function} onKeyDown a function that takes a keydown event is fired on the active map
+ *  @param {function} onKeyPress a function that takes a keypress event is fired on the active map
+ *  @param {function} onKeyUp a function that takes a keyup event is fired on the active map
+ * @extends {ol.interaction.Interaction}
+ */
+ol.interaction.CurrentMap = function(options) {
+  options = options || {};
+  // Check events on the map
+  ol.interaction.Interaction.call(this, {
+    handleEvent: function() {
+      if (!this.isCurrentMap()) {
+        this.setCurrentMap(this.getMap());
+        this.dispatchEvent({ type: 'focus', map: this.getMap() });
+      }
+      return true;
+    }.bind(this)
+  });
+  // Add a key listener
+  if (options.onKeyDown) { 
+    document.addEventListener('keydown', function(e) {
+      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+        options.onKeyDown ({ type: e.type, map: this.getMap(), originalEvent: e });
+      }
+    }.bind(this));
+  }
+  if (options.onKeyPress) { 
+    document.addEventListener('keydown', function(e) {
+      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+        options.onKeyPress ({ type: e.type, map: this.getMap(), originalEvent: e });
+      }
+    }.bind(this));
+  }
+  if (options.onKeyUp) { 
+    document.addEventListener('keydown', function(e) {
+      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+        options.onKeyUp ({ type: e.type, map: this.getMap(), originalEvent: e });
+      }
+    }.bind(this));
+  }
+};
+ol.ext.inherits(ol.interaction.CurrentMap, ol.interaction.Interaction);
+/** The current map */
+ol.interaction.CurrentMap.prototype._currentMap = undefined;
+/** Check if is the current map 
+ * @return {boolean}
+ */
+ol.interaction.CurrentMap.prototype.isCurrentMap = function() {
+  return this.getMap() === ol.interaction.CopyPaste.prototype._currentMap;
+};
+/** Get the current map
+ * @return {ol.Map}
+ */
+ol.interaction.CurrentMap.prototype.getCurrentMap = function() {
+  return ol.interaction.CopyPaste.prototype._currentMap;
+};
+/** Set the current map
+ * @param {ol.Map} map
+ */
+ol.interaction.CurrentMap.prototype.setCurrentMap = function(map) {
+  ol.interaction.CopyPaste.prototype._currentMap = map;
 };
 
 /*	Copyright (c) 2018 Jean-Marc VIGLINO, 
