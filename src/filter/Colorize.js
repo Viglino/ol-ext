@@ -95,8 +95,8 @@ ol_filter_Colorize.prototype.setValue = function(v) {
  */
 ol_filter_Colorize.prototype.setColor = function(c) {
   c = ol_color_asArray(c);
-  if (c)
-  {	c[3] = this.get("value");
+  if (c) {
+    c[3] = this.get("value");
     this.set("color", ol_color_asString(c));
   }
 }
