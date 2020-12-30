@@ -279,18 +279,24 @@
   </div>
 
   <script type="text/javascript">
-    var layers = [ new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.MAPS', visible: false, baseLayer:true }) ];
+    var layers = [ 
+      new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.MAPS', visible: false, baseLayer:true }),
+      new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', visible: false, baseLayer:true })
+    ];
 
     // Oil painting source
     var oil = new ol.source.OilPainting({
       sources: [ new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS'}) ]
     });
     var layer = new ol.layer.Image({
-      title: 'OilPainting',
+      title: 'Oil Painting',
       source: oil,
       baseLayer: true
     });
     layers.push(layer);
+    layer.getPreview = function() {
+      return [ "../img/oilpaint.jpg" ];
+    }
 
     // Show waiting
     oil.on('beforeoperations', function() {
@@ -314,7 +320,7 @@
     map.addControl(new ol.control.Permalink({ visible: false }));
     
     // Switcher
-    // map.addControl(new ol.control.LayerSwitcher());
+    map.addControl(new ol.control.LayerSwitcherImage());
 
     // Info
     map.addControl(new ol.control.Button({
@@ -328,8 +334,16 @@
     var bmark = new ol.control.GeoBookmark({	
       namespace: 'oilpaint',
       marks: {
-        "Baie de l'Authie": {"pos":[178343,6510825],"zoom":14.4,"permanent":true},
-        "Honfleur":{"pos":[25944,6346465],"zoom":19.5,"permanent":true,"rot":1}
+        "Baie de l'Authie":{"pos":[178343,6510825],"zoom":14.4,"permanent":true},
+        "Honfleur":{"pos":[25944,6346465],"zoom":19.5,"permanent":true},
+        "Port Grimaud":{"pos":[732138,5353219],"zoom":19.3,"permanent":true},
+        "jardins de Villandry":{"pos":[57211,5997720],"zoom":19.1,"permanent":true},
+        "Collioure":{"pos":[343599,5240060],"zoom":16.8,"permanent":true},
+        "La Réunion":{"pos":[6182310,-2407847],"zoom":10.9,"permanent":true},
+        "Neuf-Brisach":{"pos":[838014,6109780],"zoom":16.5,"permanent":true},
+        "Le Crotoy":{"pos":[179282,6484201],"zoom":12.9,"permanent":true},
+        "Bazoches-les-Gallerandes":{"pos":[229523,6130842],"zoom":13.1,"permanent":true},
+        "Salin de Giraud":{"pos":[525309,5371750],"zoom":13,"permanent":true},
       }
     });
     map.addControl(bmark);
@@ -351,7 +365,7 @@
     map.addControl(search);
     search.on('select', function(e) {
       map.getView().setCenter(e.coordinate);
-      if (map.getView().getZoom()<16) map.getView().setZoom(16);
+      if (map.getView().getZoom()<14) map.getView().setZoom(14);
     })
 
   </script>
