@@ -12,6 +12,7 @@ import ol_filter_Base from './Base'
  */
 
 /** Colorize map or layer
+ * Original idea: https://www.freecodecamp.org/news/sketchify-turn-any-image-into-a-pencil-sketch-with-10-lines-of-code-cf67fa4f68ce/
  * @constructor
  * @requires ol.filter
  * @extends {ol_filter_Base}

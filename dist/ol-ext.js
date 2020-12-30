@@ -4281,6 +4281,7 @@ ol.control.Gauge.prototype.val = function(v) {
  * @extends {ol.control.Control}
  * @fires add
  * @fires remove
+ * @fires select
  * @param {} options Geobookmark's options
  *  @param {string} options.className default ol-bookmark
  *  @param {string} options.placeholder input placeholder, default Add a new geomark...
@@ -4291,8 +4292,8 @@ ol.control.Gauge.prototype.val = function(v) {
  * @example 
 var bm = new GeoBookmark ({ 
   marks: {
-    "Paris": {pos:_ol_proj_.transform([2.351828, 48.856578], 'EPSG:4326', 'EPSG:3857'), zoom:11, permanent: true },
-    "London": {pos:_ol_proj_.transform([-0.1275,51.507222], 'EPSG:4326', 'EPSG:3857'), zoom:12}
+    "Paris": {pos:ol.proj.transform([2.351828, 48.856578], 'EPSG:4326', 'EPSG:3857'), zoom:11, permanent: true },
+    "London": {pos:ol.proj.transform([-0.1275,51.507222], 'EPSG:4326', 'EPSG:3857'), zoom:12}
   }
 });
  */
@@ -4358,17 +4359,26 @@ ol.control.GeoBookmark = function(options) {
   this.set("namespace", options.namespace || 'ol');
   this.set("editable", options.editable !== false);
   // Set default bmark
-  this.setBookmarks(localStorage[this.get('namespace')+"@bookmark"] ? null:options.marks);
+  var bmark = {};
+  if (localStorage[this.get('namespace')+"@bookmark"]) {
+    bmark = JSON.parse(localStorage[this.get('namespace')+"@bookmark"]);
+  }
+  if (options.marks) {
+    for (var i in options.marks) {
+      bmark[i] = options.marks[i];
+    }
+  }
+  this.setBookmarks(bmark);
 };
 ol.ext.inherits(ol.control.GeoBookmark, ol.control.Control);
 /** Set bookmarks
-* @param {} bmark a list of bookmarks, default retreave in the localstorage
-* @example 
+ * @param {} bmark a list of bookmarks, default retreave in the localstorage
+ * @example 
 bm.setBookmarks({ 
   "Paris": {pos:_ol_proj_.transform([2.351828, 48.856578], 'EPSG:4326', 'EPSG:3857'), zoom:11, permanent: true },
   "London": {pos:_ol_proj_.transform([-0.1275,51.507222], 'EPSG:4326', 'EPSG:3857'), zoom:12}
 });
-*/
+ */
 ol.control.GeoBookmark.prototype.setBookmarks = function(bmark) {
   if (!bmark) bmark = JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
   var modify = this.get("editable");
@@ -4380,11 +4390,14 @@ ol.control.GeoBookmark.prototype.setBookmarks = function(bmark) {
     var li = document.createElement('li');
     li.textContent = b;
     li.setAttribute('data-bookmark', JSON.stringify(bmark[b]));
+    li.setAttribute('data-name', b);
     li.addEventListener('click', function() {
       var bm = JSON.parse(this.getAttribute("data-bookmark"));
       self.getMap().getView().setCenter(bm.pos);
       self.getMap().getView().setZoom(bm.zoom);
+      self.getMap().getView().setRotation(bm.rot || 0);
       menu.style.display = 'none';
+      self.dispatchEvent({ type: 'select', name: this.getAttribute("data-name"), bookmark: bm });
     });
     ul.appendChild(li);
     if (modify && !bmark[b].permanent) {
@@ -4402,14 +4415,14 @@ ol.control.GeoBookmark.prototype.setBookmarks = function(bmark) {
   localStorage[this.get('namespace')+"@bookmark"] = JSON.stringify(bmark);
 };
 /** Get Geo bookmarks
-* @return {any} a list of bookmarks : { BM1:{pos:ol.coordinates, zoom: integer}, BM2:{pos:ol.coordinates, zoom: integer} }
-*/
+ * @return {any} a list of bookmarks : { BM1:{pos:ol.coordinates, zoom: integer}, BM2:{pos:ol.coordinates, zoom: integer} }
+ */
 ol.control.GeoBookmark.prototype.getBookmarks = function() {
   return JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
 };
 /** Remove a Geo bookmark
-* @param {string} name
-*/
+ * @param {string} name
+ */
 ol.control.GeoBookmark.prototype.removeBookmark = function(name) {
   if (!name) {
     return;
@@ -4419,14 +4432,22 @@ ol.control.GeoBookmark.prototype.removeBookmark = function(name) {
   this.setBookmarks(bmark);
 };
 /** Add a new Geo bookmark (replace existing one if any)
-* @param {string} name name of the bookmark (display in the menu)
-* @param {_ol_coordinate_} position default current position
-* @param {number} zoom default current map zoom
-* @param {bool} permanent prevent from deletion, default false
-*/
-ol.control.GeoBookmark.prototype.addBookmark = function(name, position, zoom, permanent)
-{
+ * @param {string} name name of the bookmark (display in the menu)
+ * @param {*} options
+ *  @param {ol.coordinate} position default current position
+ *  @param {number} zoom default current map zoom
+ *  @param {number} rotation default current map rotation
+ *  @param {bool} permanent prevent from deletion, default false
+ */
+ol.control.GeoBookmark.prototype.addBookmark = function(name, position, zoom, permanent) {
   if (!name) return;
+  var rot = this.getMap().getView().getRotation();
+  if (position && position.position) {
+    zoom = options.zoom;
+    permanent = options.permanent;
+    rot = options.rotation ;
+    position = options.position;
+  }
   var bmark = this.getBookmarks();
   // Don't override permanent bookmark
   if (bmark[name] && bmark[name].permanent) return;
@@ -4434,8 +4455,11 @@ ol.control.GeoBookmark.prototype.addBookmark = function(name, position, zoom, pe
   bmark[name] = {
     pos: position || this.getMap().getView().getCenter(),
     zoom: zoom || this.getMap().getView().getZoom(),
-	permanent: !!permanent
+	  permanent: !!permanent
   };
+  if (rot) {
+    bmark[name].rot = rot;
+  }
   this.setBookmarks(bmark);
 };
 
@@ -13356,8 +13380,8 @@ ol.filter.Colorize.prototype.setValue = function(v) {
  */
 ol.filter.Colorize.prototype.setColor = function(c) {
   c = ol.color.asArray(c);
-  if (c)
-  {	c[3] = this.get("value");
+  if (c) {
+    c[3] = this.get("value");
     this.set("color", ol.color.asString(c));
   }
 }
@@ -13695,6 +13719,57 @@ ol.filter.Lego.prototype.postcompose = function(e) {
     ctx.fillStyle = this.getPattern (offset[0]/ratio, offset[1]/ratio);
     ctx.rect(0,0, w, h);
     ctx.fill(); 
+  ctx.restore();
+};
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** @typedef {Object} FilterPencilSketchOptions
+ * @property {number} blur blur value in pixel, default 8
+ * @property {number} value intensity value [0,1], default .8
+ */
+/** Colorize map or layer
+ * Original idea: https://www.freecodecamp.org/news/sketchify-turn-any-image-into-a-pencil-sketch-with-10-lines-of-code-cf67fa4f68ce/
+ * @constructor
+ * @requires ol.filter
+ * @extends {ol.filter.Base}
+ * @param {FilterPencilSketchOptions} options
+ */
+ol.filter.PencilSketch = function(options) {
+  options = options || {};
+  ol.filter.Base.call(this, options);
+  this.set('blur', options.blur || 8);
+  this.set('intensity', options.intensity || .8);
+};
+ol.ext.inherits(ol.filter.PencilSketch, ol.filter.Base);
+/** @private 
+ */
+ol.filter.PencilSketch.prototype.precompose = function(/* e */) {
+};
+/** @private 
+ */
+ol.filter.PencilSketch.prototype.postcompose = function(e) {
+  // Set back color hue
+  var ctx = e.context;
+  var canvas = ctx.canvas;
+  var w = canvas.width;
+  var h = canvas.height;
+  // Grayscale image
+  var bwimg = document.createElement('canvas');
+  bwimg.width = w;
+  bwimg.height = h;
+  var bwctx = bwimg.getContext('2d');
+  bwctx.filter = 'invert(1) blur('+this.get('blur')+'px)';
+  bwctx.drawImage(canvas, 0,0, w, h);
+  ctx.save();
+    ctx.filter = 'grayscale(1)';
+    ctx.drawImage(canvas, 0,0, w, h);
+    ctx.filter = '';
+    ctx.globalCompositeOperation = 'color-dodge';
+    ctx.globalAlpha = this.get('intensity');
+    ctx.drawImage(bwimg, 0,0);
   ctx.restore();
 };
 
@@ -22941,6 +23016,118 @@ ol.source.Mapillary.prototype._loaderFn = function(extent, resolution, projectio
 			self.addFeatures(features);
 			*/
     }});
+};
+
+/*	Copyright (c) 2019 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Abstract base class; normally only used for creating subclasses. Bin collector for data
+ * Original idea:  Santhosh G https://www.codeproject.com/Articles/471994/OilPaintEffect
+ * JS implementation: Loktar https://codepen.io/loktar00/full/Fhzot/
+ * @constructor
+ * @extends {ol.source.Vector}
+ * @param {Object} options
+ *  @package {Array<ol/source/Source|ol/layer/Layer>} sources Input sources or layers. For vector data, use an VectorImage layer.
+ */
+ol.source.OilPainting = function (options) {
+  options.operation = this._operation;
+  options.operationType = 'image';
+  ol.source.Raster.call(this, options);
+  this.set('radius', options.radius || 4);
+  this.set('intensity', options.intensity || 25);
+  this.on('beforeoperations', function (event) {
+    var w = Math.round((event.extent[2]-event.extent[0])/event.resolution);
+    var h = Math.round((event.extent[3]-event.extent[1])/event.resolution);
+    event.data.image = new ImageData(w,h);
+    event.data.radius = Number(this.get('radius')) || 1;
+    event.data.intensity = Number(this.get('intensity'));
+  }.bind(this));
+};
+ol.ext.inherits(ol.source.OilPainting, ol.source.Raster);
+/** Set value and force change
+ */
+ol.source.OilPainting.prototype.set = function(key, val) {
+  if (val) {
+    switch (key) {
+      case 'intensity': 
+      case 'radius': {
+        val = Number(val);
+        if (val<1) val = 1;
+        this.changed();
+        break;
+      }
+    }
+  }
+  return ol.source.Raster.prototype.set.call(this, key, val);
+};
+/**
+ * @private
+ */
+ol.source.OilPainting.prototype._operation = function(pixels, data) {
+  var width = pixels[0].width,
+    height = pixels[0].height,
+    imgData = pixels[0],
+    pixData = imgData.data,
+    pixelIntensityCount = [];
+  var destImageData = data.image,
+    destPixData = destImageData.data,
+    intensityLUT = [],
+    rgbLUT = [];
+  for (var y = 0; y < height; y++) {
+    intensityLUT[y] = [];
+    rgbLUT[y] = [];
+    for (var x = 0; x < width; x++) {
+      var idx = (y * width + x) * 4,
+        r = pixData[idx],
+        g = pixData[idx + 1],
+        b = pixData[idx + 2],
+        avg = (r + g + b) / 3;
+      intensityLUT[y][x] = Math.round((avg * data.intensity) / 255);
+      rgbLUT[y][x] = {
+        r: r,
+        g: g,
+        b: b
+      };
+    }
+  }
+  var radius = data.radius;
+  for (y = 0; y < height; y++) {
+    for (x = 0; x < width; x++) {
+      pixelIntensityCount = [];
+      // Find intensities of nearest pixels within radius.
+      for (var yy = -radius; yy <= radius; yy++) {
+        for (var xx = -radius; xx <= radius; xx++) {
+          if (y + yy > 0 && y + yy < height && x + xx > 0 && x + xx < width) {
+            var intensityVal = intensityLUT[y + yy][x + xx];
+            if (!pixelIntensityCount[intensityVal]) {
+              pixelIntensityCount[intensityVal] = {
+                val: 1,
+                r: rgbLUT[y + yy][x + xx].r,
+                g: rgbLUT[y + yy][x + xx].g,
+                b: rgbLUT[y + yy][x + xx].b
+              }
+            } else {
+              pixelIntensityCount[intensityVal].val++;
+              pixelIntensityCount[intensityVal].r += rgbLUT[y + yy][x + xx].r;
+              pixelIntensityCount[intensityVal].g += rgbLUT[y + yy][x + xx].g;
+              pixelIntensityCount[intensityVal].b += rgbLUT[y + yy][x + xx].b;
+            }
+          }
+        }
+      }
+      pixelIntensityCount.sort(function (a, b) {
+        return b.val - a.val;
+      });
+      var curMax = pixelIntensityCount[0].val,
+        dIdx = (y * width + x) * 4;
+      destPixData[dIdx] = ~~ (pixelIntensityCount[0].r / curMax);
+      destPixData[dIdx + 1] = ~~ (pixelIntensityCount[0].g / curMax);
+      destPixData[dIdx + 2] = ~~ (pixelIntensityCount[0].b / curMax);
+      destPixData[dIdx + 3] = 255;
+    }
+  }
+  return destImageData;
 };
 
 /*	Copyright (c) 2018 Jean-Marc VIGLINO, 

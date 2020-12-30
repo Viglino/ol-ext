@@ -7,6 +7,8 @@ import ol_source_Raster from 'ol/source/Raster'
 import {ol_ext_inherits} from '../util/ext'
 
 /** Abstract base class; normally only used for creating subclasses. Bin collector for data
+ * Original idea:  Santhosh G https://www.codeproject.com/Articles/471994/OilPaintEffect
+ * JS implementation: Loktar https://codepen.io/loktar00/full/Fhzot/
  * @constructor
  * @extends {ol.source.Vector}
  * @param {Object} options
