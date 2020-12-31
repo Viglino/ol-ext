@@ -177,8 +177,9 @@ ol_control_GeoBookmark.prototype.removeBookmark = function(name) {
  */
 ol_control_GeoBookmark.prototype.addBookmark = function(name, position, zoom, permanent) {
   if (!name) return;
+  var options = position;
   var rot = this.getMap().getView().getRotation();
-  if (position && position.position) {
+  if (options && options.position) {
     zoom = options.zoom;
     permanent = options.permanent;
     rot = options.rotation ;
@@ -191,7 +192,7 @@ ol_control_GeoBookmark.prototype.addBookmark = function(name, position, zoom, pe
   bmark[name] = {
     pos: position || this.getMap().getView().getCenter(),
     zoom: zoom || this.getMap().getView().getZoom(),
-	  permanent: !!permanent
+    permanent: !!permanent
   };
   if (rot) {
     bmark[name].rot = rot;

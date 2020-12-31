@@ -3,34 +3,40 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
+import {asString as ol_color_asString} from 'ol/color'
 import ol_ext_inherits from '../util/ext'
 import ol_filter_Base from './Base'
 
-/** @typedef {Object} FilterPencilSketchOptions
- * @property {number} blur blur value in pixel, default 8
- * @property {number} value intensity value [0,1], default .8
+/** @typedef {Object} FilterPointillismOptions
+ * @property {number} saturate saturation, default 2
  */
 
-/** Colorize map or layer
- * Original idea: https://www.freecodecamp.org/news/sketchify-turn-any-image-into-a-pencil-sketch-with-10-lines-of-code-cf67fa4f68ce/
+/** A pointillism filter to turn maps into pointillism paintings
  * @constructor
- * @requires ol.filter
  * @extends {ol_filter_Base}
- * @param {FilterPencilSketchOptions} options
+ * @param {FilterPointillismOptions} options
  */
 var ol_filter_Pointillism = function(options) {
   options = options || {};
   ol_filter_Base.call(this, options);
 
-  this.set('blur', options.blur || 8);
-  this.set('intensity', options.intensity || .8);
+  this.set('saturate', options.saturate || 2);
 
   this.pixels = [];
-  for (var i=0; i<1000000; i++) {
-    this.pixels.push([Math.random(), Math.random(), Math.random()*4+2]);
-  }
 };
 ol_ext_inherits(ol_filter_Pointillism, ol_filter_Base);
+
+/** Create points to place on the map
+ * @private
+ */
+ol_filter_Pointillism.prototype._getPixels = function(nb) {
+  if (nb > this.pixels.length) {
+    while (this.pixels.length < nb) {
+      this.pixels.push([Math.random(), Math.random(), Math.random()*4+2]);
+    }
+  }
+  return nb;
+};
 
 /** @private 
  */
@@ -40,6 +46,7 @@ ol_filter_Pointillism.prototype.precompose = function(/* e */) {
 /** @private 
  */
 ol_filter_Pointillism.prototype.postcompose = function(e) {
+  // var ratio = e.frameState.pixelRatio;
   // Set back color hue
   var ctx = e.context;
   var canvas = ctx.canvas;
@@ -51,22 +58,24 @@ ol_filter_Pointillism.prototype.postcompose = function(e) {
   img.width = w;
   img.height = h;
   var ictx = img.getContext('2d');
-  ictx.filter = 'saturate(400%)';
+  ictx.filter = 'saturate('+(2*this.get('saturate'))+'00%)';
   ictx.drawImage(canvas, 0,0, w, h);
 
   ctx.save();
-    ctx.filter = 'blur(3px) saturate(200%)';
+  // Saturate and blur
+    ctx.filter = 'blur(3px) saturate('+this.get('saturate')+'00%)';
     ctx.drawImage(canvas, 0,0);
-    //ctx.clearRect(0,0,w,h)
+    // ctx.clearRect(0,0,w,h); // debug
+    // Draw points
     ctx.filter = 'none';
-    for (var i=0; i<w*h/50 && i<1000000; i++) {
+    ctx.opacity = .5;
+    var max = this._getPixels(w*h/50);
+    for (var i=0; i<max; i++) {
       var x = Math.floor(this.pixels[i][0]*w);
       var y = Math.floor(this.pixels[i][1]*h);
-      var px = ictx.getImageData(x, y, 1, 1).data;
-      ctx.fillStyle = ol.color.asString(px);
-      ctx.opacity = .5;
+      ctx.fillStyle = ol_color_asString(ictx.getImageData(x, y, 1, 1).data);
       ctx.beginPath();
-      ctx.arc(x,y,this.pixels[i][2],0, 2*Math.PI);
+      ctx.arc(x,y, this.pixels[i][2], 0, 2*Math.PI);
       ctx.fill();
     }
   ctx.restore();

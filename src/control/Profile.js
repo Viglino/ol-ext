@@ -14,7 +14,10 @@ import ol_style_Fill from 'ol/style/Fill'
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Stroke from 'ol/style/Stroke'
 import ol_style_Text from 'ol/style/Text'
+import ol_geom_LineString from 'ol/geom/LineString'
+
 import {ol_coordinate_dist2d} from "../geom/GeomUtils";
+import ol_ext_element from '../util/element'
 
 /**
  * @classdesc OpenLayers 3 Profil Control.
@@ -215,7 +218,7 @@ var ol_control_Profil = function(options) {
           })
         }
         var saved = geom || this._geometry[0];
-        var g = new ol.geom.LineString(this.getSelection(start, e.index));
+        var g = new ol_geom_LineString(this.getSelection(start, e.index));
         this.setGeometry(g, this._geometry[1]);
         geom = saved;
       }

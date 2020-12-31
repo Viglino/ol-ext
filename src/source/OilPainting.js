@@ -6,13 +6,15 @@ import ol_source_Raster from 'ol/source/Raster'
 
 import {ol_ext_inherits} from '../util/ext'
 
-/** Abstract base class; normally only used for creating subclasses. Bin collector for data
+/** A source to turn your maps into oil paintings...
  * Original idea:  Santhosh G https://www.codeproject.com/Articles/471994/OilPaintEffect
  * JS implementation: Loktar https://codepen.io/loktar00/full/Fhzot/
  * @constructor
  * @extends {ol.source.Vector}
  * @param {Object} options
- *  @package {Array<ol/source/Source|ol/layer/Layer>} sources Input sources or layers. For vector data, use an VectorImage layer.
+ *  @param {Array<ol/source/Source|ol/layer/Layer>} sources Input sources or layers. For vector data, use an VectorImage layer.
+ *  @param {number} radius default 4
+ *  @param {number} intensity default 25
  */
 var ol_source_OilPainting = function (options) {
   options.operation = this._operation;
