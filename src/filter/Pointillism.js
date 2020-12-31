@@ -18,23 +18,28 @@ import ol_filter_Base from './Base'
  * @extends {ol_filter_Base}
  * @param {FilterPencilSketchOptions} options
  */
-var ol_filter_PencilSketch = function(options) {
+var ol_filter_Pointillism = function(options) {
   options = options || {};
   ol_filter_Base.call(this, options);
 
   this.set('blur', options.blur || 8);
   this.set('intensity', options.intensity || .8);
+
+  this.pixels = [];
+  for (var i=0; i<1000000; i++) {
+    this.pixels.push([Math.random(), Math.random(), Math.random()*4+2]);
+  }
 };
-ol_ext_inherits(ol_filter_PencilSketch, ol_filter_Base);
+ol_ext_inherits(ol_filter_Pointillism, ol_filter_Base);
 
 /** @private 
  */
-ol_filter_PencilSketch.prototype.precompose = function(/* e */) {
+ol_filter_Pointillism.prototype.precompose = function(/* e */) {
 };
 
 /** @private 
  */
-ol_filter_PencilSketch.prototype.postcompose = function(e) {
+ol_filter_Pointillism.prototype.postcompose = function(e) {
   // Set back color hue
   var ctx = e.context;
   var canvas = ctx.canvas;
@@ -42,26 +47,29 @@ ol_filter_PencilSketch.prototype.postcompose = function(e) {
   var h = canvas.height;
   
   // Grayscale image
-  var bwimg = document.createElement('canvas');
-  bwimg.width = w;
-  bwimg.height = h;
-  var bwctx = bwimg.getContext('2d');
-  bwctx.filter = 'grayscale(1) invert(1) blur('+this.get('blur')+'px)';
-  bwctx.drawImage(canvas, 0,0);
+  var img = document.createElement('canvas');
+  img.width = w;
+  img.height = h;
+  var ictx = img.getContext('2d');
+  ictx.filter = 'saturate(400%)';
+  ictx.drawImage(canvas, 0,0, w, h);
 
   ctx.save();
-    if (!this.get('color')) {
-      ctx.filter = 'grayscale(1)';
-      ctx.drawImage(canvas, 0,0);
-    } else {
-      ctx.globalCompositeOperation = 'darken';
-      ctx.globalAlpha = .3;
-      ctx.drawImage(canvas, 0,0);
+    ctx.filter = 'blur(3px) saturate(200%)';
+    ctx.drawImage(canvas, 0,0);
+    //ctx.clearRect(0,0,w,h)
+    ctx.filter = 'none';
+    for (var i=0; i<w*h/50 && i<1000000; i++) {
+      var x = Math.floor(this.pixels[i][0]*w);
+      var y = Math.floor(this.pixels[i][1]*h);
+      var px = ictx.getImageData(x, y, 1, 1).data;
+      ctx.fillStyle = ol.color.asString(px);
+      ctx.opacity = .5;
+      ctx.beginPath();
+      ctx.arc(x,y,this.pixels[i][2],0, 2*Math.PI);
+      ctx.fill();
     }
-    ctx.globalCompositeOperation = 'color-dodge';
-    ctx.globalAlpha = this.get('intensity');
-    ctx.drawImage(bwimg, 0,0);
   ctx.restore();
 };
 
-export default ol_filter_PencilSketch
+export default ol_filter_Pointillism

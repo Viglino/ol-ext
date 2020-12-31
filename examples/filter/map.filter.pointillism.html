@@ -91,7 +91,8 @@
     ];
 
     // Oil painting source
-    var oil = new ol.source.OilPainting({
+/** /
+    var oil = new ol.source.Pointillism({
       sources: [ new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS'}) ]
     });
     var layer = new ol.layer.Image({
@@ -99,11 +100,18 @@
       source: oil,
       baseLayer: true
     });
+/*/
+    var layer = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS'});
+    var filter = new ol.filter.Pointillism();
+    layer.addFilter(filter);
+/**/
+
     layers.push(layer);
     layer.getPreview = function() {
       return [ "../img/oilpaint.jpg" ];
     }
 
+    /*
     // Show waiting when processing
     oil.on('beforeoperations', function() {
       $('body').addClass('waiting');
@@ -111,6 +119,7 @@
     oil.on('afteroperations', function() {
       $('body').removeClass('waiting');
     });
+    */
 
     // The map
     var map = new ol.Map({
