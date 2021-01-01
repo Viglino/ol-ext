@@ -20,7 +20,7 @@ var ol_filter_Pointillism = function(options) {
   options = options || {};
   ol_filter_Base.call(this, options);
 
-  this.set('saturate', options.saturate || 2);
+  this.set('saturate', Number(options.saturate) || 2);
 
   this.pixels = [];
 };
@@ -58,12 +58,12 @@ ol_filter_Pointillism.prototype.postcompose = function(e) {
   img.width = w;
   img.height = h;
   var ictx = img.getContext('2d');
-  ictx.filter = 'saturate('+(2*this.get('saturate'))+'00%)';
+  ictx.filter = 'saturate('+Math.round(2*this.get('saturate')*100)+'%)';
   ictx.drawImage(canvas, 0,0, w, h);
 
   ctx.save();
-  // Saturate and blur
-    ctx.filter = 'blur(3px) saturate('+this.get('saturate')+'00%)';
+    // Saturate and blur
+    ctx.filter = 'blur(3px) saturate('+(this.get('saturate')*100)+'%)';
     ctx.drawImage(canvas, 0,0);
     // ctx.clearRect(0,0,w,h); // debug
     // Draw points
