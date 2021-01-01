@@ -21,6 +21,7 @@ import ol_interaction_GeolocationDraw from '../interaction/GeolocationDraw'
  * @param {Object=} options Control bar options.
  *  @param {String} options.className class of the control
  *  @param {String} options.centerLabel label for center button, default center
+ *  @param {String} options.position position of the control, default bottom-right
  */
 var ol_control_GeolocationBar = function(options) {
   if (!options) options = {};
