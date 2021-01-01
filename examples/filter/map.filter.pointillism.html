@@ -28,6 +28,8 @@
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <script type="text/javascript" src="https://cdn.rawgit.com/Viglino/Geoportail-KISS/gh-pages/apikey.js"></script>
+
   <!-- filesaver-js -->
   <script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
 
@@ -57,7 +59,7 @@
 
   <div class="options visible" >
     <h2 style="text-align: center; max-width: 18em; margin: 1em auto;">
-      <i class="fa fa-paint-brush"></i> Turn your maps into pointyillism paintings!
+      <i class="fa fa-paint-brush"></i> Turn your maps into pointillism paintings!
     </h2>
     <small>
       Openlayers ol/filter/Pointillism by <a href="https://github.com/Viglino/ol-ext/blob/master/src/source/OilPainting.js">
@@ -68,92 +70,27 @@
     <h2><i class="fa fa-list"></i> Options</h2>
     <ul>
       <li>
-        <label>saturate: </label><input onchange="filter.set('saturate', this.value);" type="number" min="0" max="5" value="2" />
+        <label>saturate: </label><input onchange="filter.set('saturate', this.value);" type="number" min="0" max="20" value="2" />
       </li>
     </ul>
     <i class="fa fa-times" onclick="$('.options').removeClass('visible');"></i>
     <button onclick="print.print();"><i class="fa fa-download"></i> download painting...</button>
   </div>
 
-  <script type="text/javascript">
-    var layers = [ 
-      new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.MAPS', visible: false, baseLayer:true }),
-      new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', visible: false, baseLayer:true })
-    ];
+<script type="text/javascript" src="./paint.js"></script>
+<script type="text/javascript">
 
-    // Pointillism filter
-    var layer = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', baseLayer: true });
-    var filter = new ol.filter.Pointillism();
-    layer.addFilter(filter);
+  // Pointillism filter
+  var layer = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', baseLayer: true });
+  var filter = new ol.filter.Pointillism();
+  layer.addFilter(filter);
 
-    layers.push(layer);
-    layer.getPreview = function() {
-      return [ "../img/pointillism.jpg" ];
-    }
+  map.addLayer(layer);
+  layer.getPreview = function() {
+    return [ "../img/pointillism.jpg" ];
+  }
 
-    // The map
-    var map = new ol.Map({
-      target: 'map',
-      view: new ol.View({
-        zoom: 8,
-        center: [247044, 6549736.]
-      }),
-      layers: layers
-    });
-
-    // Permalink
-    map.addControl(new ol.control.Permalink({ visible: false }));
-    
-    // Info
-    map.addControl(new ol.control.Button({
-      html: '?',
-      handleClick: function() {
-        $('.options').toggleClass('visible');
-      }
-    }));
-
-    // Bookmarks
-    var bmark = new ol.control.GeoBookmark({	
-      namespace: 'oilpaint',
-      marks: {
-        "Baie de l'Authie":{"pos":[178343,6510825],"zoom":14.4,"permanent":true},
-        "Honfleur":{"pos":[25944,6346465],"zoom":19.5,"permanent":true},
-        "Port Grimaud":{"pos":[732138,5353219],"zoom":19.3,"permanent":true},
-        "jardins de Villandry":{"pos":[57211,5997720],"zoom":19.1,"permanent":true},
-        "Collioure":{"pos":[343599,5240060],"zoom":16.8,"permanent":true},
-        "La Réunion":{"pos":[6182310,-2407847],"zoom":10.9,"permanent":true},
-        "Neuf-Brisach":{"pos":[838014,6109780],"zoom":16.5,"permanent":true},
-        "Le Crotoy":{"pos":[179282,6484201],"zoom":12.9,"permanent":true},
-        "Bazoches-les-Gallerandes":{"pos":[229523,6130842],"zoom":13.1,"permanent":true},
-        "Salin de Giraud":{"pos":[525309,5371750],"zoom":13,"permanent":true},
-      }
-    });
-    map.addControl(bmark);
-    bmark.on(['add','select'], function(e) {
-      $('.frame h2').text(e.name);
-    });
-
-    // Print control
-    var print = new ol.control.Print();
-    map.addControl(print);
-    print.on('print', function(e) {
-      e.canvas.toBlob(function(blob) {
-        saveAs(blob, 'map.'+e.imageType.replace('image/',''));
-      }, e.imageType);
-    })
-
-    // Search control
-    var search = new ol.control.SearchBAN();
-    map.addControl(search);
-    search.on('select', function(e) {
-      map.getView().setCenter(e.coordinate);
-      if (map.getView().getZoom()<14) map.getView().setZoom(14);
-    })
-
-    // Switcher
-    map.addControl(new ol.control.LayerSwitcherImage());
-
-  </script>
+</script>
 
 </body>
 </html>

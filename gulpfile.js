@@ -121,7 +121,7 @@ gulp.task("js", function() {
   return gulp.src([
     "./src/util/ext.js", "./src/util/*.js",
     "!./src/util/getVectorContext.js", 
-    "./src/control/CanvasBase.js","./src/control/SelectBase.js","./src/control/Search.js","./src/control/SearchJSON.js","./src/control/SearchPhoton.js","./src/control/SearchGeoportail.js",
+    "./src/control/CanvasBase.js","./src/control/SelectBase.js","./src/control/Button.js","./src/control/Toggle.js","./src/control/Search.js","./src/control/SearchJSON.js","./src/control/SearchPhoton.js","./src/control/SearchGeoportail.js",
     "./src/control/LayerSwitcher.js", "./src/control/*.js", 
     "!./src/control/PirateMap.js", "!./src/control/Cloud.js",
     "./src/featureanimation/FeatureAnimation.js", "./src/featureanimation/*.js",

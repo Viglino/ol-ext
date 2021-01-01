@@ -93,11 +93,11 @@ small {
 .ol-search > * {
   max-width: 100%;
 }
-.ol-button {
+.ol-button.help {
   top: .5em;
   left: 3em;
 }
-.ol-touch .ol-button {
+.ol-touch .ol-button.help {
   left: 3.5em;
 }
 .ol-zoom {

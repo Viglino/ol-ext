@@ -1082,6 +1082,217 @@ ol.control.SelectBase.prototype.doSelect = function (options) {
   return features;
 };
 
+/*	Copyright (c) 2016 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** A simple push button control
+ * @constructor
+ * @extends {ol.control.Control}
+ * @param {Object=} options Control options.
+ *  @param {String} options.className class of the control
+ *  @param {String} options.title title of the control
+ *  @param {String} options.name an optional name, default none
+ *  @param {String} options.html html to insert in the control
+ *  @param {function} options.handleClick callback when control is clicked (or use change:active event)
+ */
+ol.control.Button = function(options){
+  options = options || {};
+  var element = document.createElement("div");
+  element.className = (options.className || '') + " ol-button ol-unselectable ol-control";
+  var self = this;
+  var bt = this.button_ = document.createElement(/ol-text-button/.test(options.className) ? "div": "button");
+  bt.type = "button";
+  if (options.title) bt.title = options.title;
+  if (options.html instanceof Element) bt.appendChild(options.html)
+  else bt.innerHTML = options.html || "";
+  var evtFunction = function(e) {
+    if (e && e.preventDefault) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (options.handleClick) {
+      options.handleClick.call(self, e);
+    }
+  };
+  bt.addEventListener("click", evtFunction);
+  bt.addEventListener("touchstart", evtFunction);
+  element.appendChild(bt);
+  // Try to get a title in the button content
+  if (!options.title && bt.firstElementChild) {
+    bt.title = bt.firstElementChild.title;
+  }
+  ol.control.Control.call(this, {
+    element: element,
+    target: options.target
+  });
+  if (options.title) {
+    this.set("title", options.title);
+  }
+  if (options.title) this.set("title", options.title);
+  if (options.name) this.set("name", options.name);
+};
+ol.ext.inherits(ol.control.Button, ol.control.Control);
+/** Set the control visibility
+* @param {boolean} b 
+*/
+ol.control.Button.prototype.setVisible = function (val) {
+  if (val) ol.ext.element.show(this.element);
+  else ol.ext.element.hide(this.element);
+};
+/**
+ * Set the button title
+ * @param {string} title
+ * @returns {undefined}
+ */
+ol.control.Button.prototype.setTitle = function(title) {
+  this.button_.setAttribute('title', title);
+};
+/**
+ * Set the button html
+ * @param {string} html
+ * @returns {undefined}
+ */
+ol.control.Button.prototype.setHtml = function(html) {
+  ol.ext.element.setHTML (this.button_, html);
+};
+/**
+ * Get the button element
+ * @returns {undefined}
+ */
+ol.control.Button.prototype.getButtonElement = function() {
+  return this.button_;
+};
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** A simple toggle control
+ * The control can be created with an interaction to control its activation.
+ *
+ * @constructor
+ * @extends {ol.control.Button}
+ * @fires change:active, change:disable
+ * @param {Object=} options Control options.
+ *  @param {String} options.className class of the control
+ *  @param {String} options.title title of the control
+ *  @param {String} options.html html to insert in the control
+ *  @param {ol.interaction} options.interaction interaction associated with the control
+ *  @param {bool} options.active the control is created active, default false
+ *  @param {bool} options.disable the control is created disabled, default false
+ *  @param {ol.control.Bar} options.bar a subbar associated with the control (drawn when active if control is nested in a ol.control.Bar)
+ *  @param {bool} options.autoActive the control will activate when shown in an ol.control.Bar, default false
+ *  @param {function} options.onToggle callback when control is clicked (or use change:active event)
+ */
+ol.control.Toggle = function(options) {
+  options = options || {};
+  var self = this;
+  this.interaction_ = options.interaction;
+  if (this.interaction_) {
+    this.interaction_.setActive(options.active);
+    this.interaction_.on("change:active", function() {
+      self.setActive(self.interaction_.getActive());
+    });
+  }
+  if (options.toggleFn) options.onToggle = options.toggleFn; // compat old version
+  options.handleClick = function() {
+    self.toggle();
+    if (options.onToggle) options.onToggle.call(self, self.getActive());
+  };
+  options.className = (options.className||"") + " ol-toggle";
+  ol.control.Button.call(this, options);
+  this.set("title", options.title);
+  this.set ("autoActivate", options.autoActivate);
+  if (options.bar) {
+    this.subbar_ = options.bar;
+    this.subbar_.setTarget(this.element);
+    this.subbar_.element.classList.add("ol-option-bar");
+  }
+  this.setActive (options.active);
+  this.setDisable (options.disable);
+};
+ol.ext.inherits(ol.control.Toggle, ol.control.Button);
+/**
+ * Set the map instance the control is associated with
+ * and add interaction attached to it to this map.
+ * @param {_ol_Map_} map The map instance.
+ */
+ol.control.Toggle.prototype.setMap = function(map) {
+  if (!map && this.getMap()) {
+    if (this.interaction_) {
+      this.getMap().removeInteraction (this.interaction_);
+    }
+    if (this.subbar_) this.getMap().removeControl (this.subbar_);
+  }
+  ol.control.Button.prototype.setMap.call(this, map);
+  if (map) {
+    if (this.interaction_) map.addInteraction (this.interaction_);
+    if (this.subbar_) map.addControl (this.subbar_);
+  }
+};
+/** Get the subbar associated with a control
+ * @return {ol.control.Bar}
+ */
+ol.control.Toggle.prototype.getSubBar = function () {
+  return this.subbar_;
+};
+/**
+ * Test if the control is disabled.
+ * @return {bool}.
+ * @api stable
+ */
+ol.control.Toggle.prototype.getDisable = function() {
+  var button = this.element.querySelector("button");
+  return button && button.disabled;
+};
+/** Disable the control. If disable, the control will be deactivated too.
+* @param {bool} b disable (or enable) the control, default false (enable)
+*/
+ol.control.Toggle.prototype.setDisable = function(b) {
+  if (this.getDisable()==b) return;
+  this.element.querySelector("button").disabled = b;
+  if (b && this.getActive()) this.setActive(false);
+  this.dispatchEvent({ type:'change:disable', key:'disable', oldValue:!b, disable:b });
+};
+/**
+ * Test if the control is active.
+ * @return {bool}.
+ * @api stable
+ */
+ol.control.Toggle.prototype.getActive = function() {
+  return this.element.classList.contains("ol-active");
+};
+/** Toggle control state active/deactive
+ */
+ol.control.Toggle.prototype.toggle = function() {
+  if (this.getActive()) this.setActive(false);
+  else this.setActive(true);
+};
+/** Change control state
+ * @param {bool} b activate or deactivate the control, default false
+ */
+ol.control.Toggle.prototype.setActive = function(b) {	
+  if (this.interaction_) this.interaction_.setActive (b);
+  if (this.subbar_) this.subbar_.setActive(b);
+  if (this.getActive()===b) return;
+  if (b) this.element.classList.add("ol-active");
+  else this.element.classList.remove("ol-active");
+  this.dispatchEvent({ type:'change:active', key:'active', oldValue:!b, active:b });
+};
+/** Set the control interaction
+* @param {_ol_interaction_} i interaction to associate with the control
+*/
+ol.control.Toggle.prototype.setInteraction = function(i) {
+  this.interaction_ = i;
+};
+/** Get the control interaction
+* @return {_ol_interaction_} interaction associated with the control
+*/
+ol.control.Toggle.prototype.getInteraction = function() {
+  return this.interaction_;
+};
+
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -2937,88 +3148,6 @@ ol.control.Bar.prototype.getControlsByName = function(name) {
   );
 };
 
-/*	Copyright (c) 2016 Jean-Marc VIGLINO,
-  released under the CeCILL-B license (French BSD license)
-  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-/** A simple push button control
- * @constructor
- * @extends {ol.control.Control}
- * @param {Object=} options Control options.
- *  @param {String} options.className class of the control
- *  @param {String} options.title title of the control
- *  @param {String} options.name an optional name, default none
- *  @param {String} options.html html to insert in the control
- *  @param {function} options.handleClick callback when control is clicked (or use change:active event)
- */
-ol.control.Button = function(options){
-  options = options || {};
-  var element = document.createElement("div");
-  element.className = (options.className || '') + " ol-button ol-unselectable ol-control";
-  var self = this;
-  var bt = this.button_ = document.createElement(/ol-text-button/.test(options.className) ? "div": "button");
-  bt.type = "button";
-  if (options.title) bt.title = options.title;
-  if (options.html instanceof Element) bt.appendChild(options.html)
-  else bt.innerHTML = options.html || "";
-  var evtFunction = function(e) {
-    if (e && e.preventDefault) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    if (options.handleClick) {
-      options.handleClick.call(self, e);
-    }
-  };
-  bt.addEventListener("click", evtFunction);
-  bt.addEventListener("touchstart", evtFunction);
-  element.appendChild(bt);
-  // Try to get a title in the button content
-  if (!options.title && bt.firstElementChild) {
-    bt.title = bt.firstElementChild.title;
-  }
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  if (options.title) {
-    this.set("title", options.title);
-  }
-  if (options.title) this.set("title", options.title);
-  if (options.name) this.set("name", options.name);
-};
-ol.ext.inherits(ol.control.Button, ol.control.Control);
-/** Set the control visibility
-* @param {boolean} b 
-*/
-ol.control.Button.prototype.setVisible = function (val) {
-  if (val) ol.ext.element.show(this.element);
-  else ol.ext.element.hide(this.element);
-};
-/**
- * Set the button title
- * @param {string} title
- * @returns {undefined}
- */
-ol.control.Button.prototype.setTitle = function(title) {
-  this.button_.setAttribute('title', title);
-};
-/**
- * Set the button html
- * @param {string} html
- * @returns {undefined}
- */
-ol.control.Button.prototype.setHtml = function(html) {
-  ol.ext.element.setHTML (this.button_, html);
-};
-/**
- * Get the button element
- * @returns {undefined}
- */
-ol.control.Button.prototype.getButtonElement = function() {
-  return this.button_;
-};
-
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -4477,6 +4606,7 @@ ol.control.GeoBookmark.prototype.addBookmark = function(name, position, zoom, pe
  * @param {Object=} options Control bar options.
  *  @param {String} options.className class of the control
  *  @param {String} options.centerLabel label for center button, default center
+ *  @param {String} options.position position of the control, default bottom-right
  */
 ol.control.GeolocationBar = function(options) {
   if (!options) options = {};
@@ -4579,6 +4709,62 @@ ol.control.GeolocationBar.prototype.setMap = function (map) {
 ol.control.GeolocationBar.prototype.getInteraction = function () {
   return this._geolocBt.getInteraction();
 };
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO,
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Geolocation bar
+ * The control bar is a container for other controls. It can be used to create toolbars.
+ * Control bars can be nested and combined with ol.control.Toggle to handle activate/deactivate.
+ *
+ * @constructor
+ * @extends {ol.control.Toggle}
+ * @param {Object=} options ol.interaction.GeolocationDraw option.
+ *  @param {String} options.className class of the control
+ *  @param {number} options.delay delay before removing the location in ms, delfaut 3000 (3s)
+ */
+ol.control.GeolocationButton = function(options) {
+  if (!options) options = {};
+  // Geolocation draw interaction
+  options.followTrack = options.followTrack || 'auto';
+  options.zoom = options.zoom || 16;
+  //options.minZoom = options.minZoom || 16;
+  var interaction = new ol.interaction.GeolocationDraw(options);
+  ol.control.Toggle.call (this, {
+    className: options.className = ((options.className || '') + ' ol-geobt').trim(),
+    interaction: interaction,
+    onToggle: function() {
+      interaction.pause(true);
+      interaction.setFollowTrack(options.followTrack || 'auto');
+    }
+  });
+  this.setActive(false);
+  // Timeout delay
+  var tout;
+  interaction.on('change:active', function() {
+    if (tout) {
+      clearTimeout(tout);
+      tout = null;
+    }
+    if (interaction.getActive()) {
+      tout = setTimeout(function() {
+        interaction.setActive(false);
+        tout = null;
+      }, options.delay || 3000);
+    }
+  });
+  // Activate
+  var element = this.element;
+  this.on('change:active', function(e) {
+    if (e.active) {
+      element.classList.add('ol-active');
+    } else {
+      element.classList.remove('ol-active');
+    }
+  });
+};
+ol.ext.inherits(ol.control.GeolocationButton, ol.control.Toggle);
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -11384,135 +11570,6 @@ ol.control.Timeline.prototype.getStartDate = function() {
 ol.control.Timeline.prototype.getEndDate = function() {
   return new Date(this.get('maxDate'));
 }
-
-/*	Copyright (c) 2016 Jean-Marc VIGLINO,
-  released under the CeCILL-B license (French BSD license)
-  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-/** A simple toggle control
- * The control can be created with an interaction to control its activation.
- *
- * @constructor
- * @extends {ol.control.Button}
- * @fires change:active, change:disable
- * @param {Object=} options Control options.
- *  @param {String} options.className class of the control
- *  @param {String} options.title title of the control
- *  @param {String} options.html html to insert in the control
- *  @param {ol.interaction} options.interaction interaction associated with the control
- *  @param {bool} options.active the control is created active, default false
- *  @param {bool} options.disable the control is created disabled, default false
- *  @param {ol.control.Bar} options.bar a subbar associated with the control (drawn when active if control is nested in a ol.control.Bar)
- *  @param {bool} options.autoActive the control will activate when shown in an ol.control.Bar, default false
- *  @param {function} options.onToggle callback when control is clicked (or use change:active event)
- */
-ol.control.Toggle = function(options) {
-  options = options || {};
-  var self = this;
-  this.interaction_ = options.interaction;
-  if (this.interaction_) {
-    this.interaction_.setActive(options.active);
-    this.interaction_.on("change:active", function() {
-      self.setActive(self.interaction_.getActive());
-    });
-  }
-  if (options.toggleFn) options.onToggle = options.toggleFn; // compat old version
-  options.handleClick = function() {
-    self.toggle();
-    if (options.onToggle) options.onToggle.call(self, self.getActive());
-  };
-  options.className = (options.className||"") + " ol-toggle";
-  ol.control.Button.call(this, options);
-  this.set("title", options.title);
-  this.set ("autoActivate", options.autoActivate);
-  if (options.bar) {
-    this.subbar_ = options.bar;
-    this.subbar_.setTarget(this.element);
-    this.subbar_.element.classList.add("ol-option-bar");
-  }
-  this.setActive (options.active);
-  this.setDisable (options.disable);
-};
-ol.ext.inherits(ol.control.Toggle, ol.control.Button);
-/**
- * Set the map instance the control is associated with
- * and add interaction attached to it to this map.
- * @param {_ol_Map_} map The map instance.
- */
-ol.control.Toggle.prototype.setMap = function(map) {
-  if (!map && this.getMap()) {
-    if (this.interaction_) {
-      this.getMap().removeInteraction (this.interaction_);
-    }
-    if (this.subbar_) this.getMap().removeControl (this.subbar_);
-  }
-  ol.control.Button.prototype.setMap.call(this, map);
-  if (map) {
-    if (this.interaction_) map.addInteraction (this.interaction_);
-    if (this.subbar_) map.addControl (this.subbar_);
-  }
-};
-/** Get the subbar associated with a control
- * @return {ol.control.Bar}
- */
-ol.control.Toggle.prototype.getSubBar = function () {
-  return this.subbar_;
-};
-/**
- * Test if the control is disabled.
- * @return {bool}.
- * @api stable
- */
-ol.control.Toggle.prototype.getDisable = function() {
-  var button = this.element.querySelector("button");
-  return button && button.disabled;
-};
-/** Disable the control. If disable, the control will be deactivated too.
-* @param {bool} b disable (or enable) the control, default false (enable)
-*/
-ol.control.Toggle.prototype.setDisable = function(b) {
-  if (this.getDisable()==b) return;
-  this.element.querySelector("button").disabled = b;
-  if (b && this.getActive()) this.setActive(false);
-  this.dispatchEvent({ type:'change:disable', key:'disable', oldValue:!b, disable:b });
-};
-/**
- * Test if the control is active.
- * @return {bool}.
- * @api stable
- */
-ol.control.Toggle.prototype.getActive = function() {
-  return this.element.classList.contains("ol-active");
-};
-/** Toggle control state active/deactive
- */
-ol.control.Toggle.prototype.toggle = function() {
-  if (this.getActive()) this.setActive(false);
-  else this.setActive(true);
-};
-/** Change control state
- * @param {bool} b activate or deactivate the control, default false
- */
-ol.control.Toggle.prototype.setActive = function(b) {	
-  if (this.interaction_) this.interaction_.setActive (b);
-  if (this.subbar_) this.subbar_.setActive(b);
-  if (this.getActive()===b) return;
-  if (b) this.element.classList.add("ol-active");
-  else this.element.classList.remove("ol-active");
-  this.dispatchEvent({ type:'change:active', key:'active', oldValue:!b, active:b });
-};
-/** Set the control interaction
-* @param {_ol_interaction_} i interaction to associate with the control
-*/
-ol.control.Toggle.prototype.setInteraction = function(i) {
-  this.interaction_ = i;
-};
-/** Get the control interaction
-* @return {_ol_interaction_} interaction associated with the control
-*/
-ol.control.Toggle.prototype.getInteraction = function() {
-  return this.interaction_;
-};
 
 /* 
   WMS Layer with EPSG:4326 projection.
