@@ -208,7 +208,7 @@ small {
 .frame:before {
   background-repeat: repeat-y;
   background-image: 
-    linear-gradient(#492004 50px, transparent 180px),
+    linear-gradient(#492004 50px, transparent 180px, rgba(252, 205, 105, .5) 35%, transparent 60%),
     linear-gradient(0deg, #492004, transparent 130px),
     url(../img/frame-l.png);
   left: 0;
@@ -216,7 +216,7 @@ small {
 .frame:after {
   background-repeat: repeat-y;
   background-image: 
-    linear-gradient(#492004, transparent 130px),
+    linear-gradient(#492004, transparent 25%),
     linear-gradient(0deg, #492004, transparent 130px),
     url(../img/frame-r.png);
   right: 0;

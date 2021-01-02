@@ -61,7 +61,7 @@ print.on('print', function(e) {
 var search = new ol.control.SearchGeoportail({
   apiKey: apiKey
 });
-// var search = new ol.control.SearchBAN();
+var search = new ol.control.SearchBAN();
 map.addControl(search);
 search.on('select', function(e) {
   map.getView().setCenter(e.coordinate);
