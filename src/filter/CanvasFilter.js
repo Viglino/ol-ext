@@ -30,8 +30,28 @@ import ol_filter_Base from './Base'
  */
 var ol_filter_CanvasFilter = function(options) {
   ol_filter_Base.call(this, options);
+
+  this._svg = {};
 };
 ol_ext_inherits(ol_filter_CanvasFilter, ol_filter_Base);
+
+/** Add a new svg filter
+ * @param {string|ol.ext.SVGFilter} url IRI pointing to an SVG filter element
+ */
+ol_filter_CanvasFilter.prototype.addSVGFilter = function(url) {
+  if (url.getId) url = '#'+url.getId();
+  this._svg[url] = 1;
+  this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
+};
+
+/** Remove a svg filter
+ * @param {string|ol.ext.SVGFilter} url IRI pointing to an SVG filter element
+ */
+ol_filter_CanvasFilter.prototype.removeSVGFilter = function(url) {
+  if (url.getId) url = '#'+url.getId();
+  delete this._svg[url]
+  this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
+};
 
 /**
  * @private
@@ -46,6 +66,9 @@ ol_filter_CanvasFilter.prototype.postcompose = function(e) {
   var filter = []
   // Set filters
   if (this.get('url')!==undefined) filter.push('url('+this.get('url')+')'); 
+  for (var f in this._svg) {
+    filter.push('url('+f+')'); 
+  }
   if (this.get('blur')!==undefined) filter.push('blur('+this.get('blur')+'px)'); 
   if (this.get('brightness')!==undefined) filter.push('brightness('+this.get('brightness')+'%)'); 
   if (this.get('contrast')!==undefined) filter.push('contrast('+this.get('contrast')+'%)'); 

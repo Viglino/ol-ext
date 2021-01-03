@@ -70,7 +70,7 @@ function postcompose_(e) {
 * @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
 * @private
 */
-function filterRedraw_() {
+function filterRedraw_(e) {
   if (this.renderSync) this.renderSync();
   else this.changed(); 
 }
