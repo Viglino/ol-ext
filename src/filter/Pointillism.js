@@ -59,7 +59,7 @@ ol_filter_Pointillism.prototype.postcompose = function(e) {
   img.height = h;
   var ictx = img.getContext('2d');
   ictx.filter = 'saturate('+Math.round(2*this.get('saturate')*100)+'%)';
-  ictx.drawImage(canvas, 0,0, w, h);
+  ictx.drawImage(canvas, 0,0);
 
   ctx.save();
     // Saturate and blur

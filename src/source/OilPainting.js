@@ -8,7 +8,7 @@ import {ol_ext_inherits} from '../util/ext'
 
 /** A source to turn your maps into oil paintings...
  * Original idea:  Santhosh G https://www.codeproject.com/Articles/471994/OilPaintEffect
- * JS implementation: Loktar https://codepen.io/loktar00/full/Fhzot/
+ * JS implementation: Loktar (https://github.com/loktar00) https://codepen.io/loktar00/full/Fhzot/
  * @constructor
  * @extends {ol.source.Vector}
  * @param {Object} options

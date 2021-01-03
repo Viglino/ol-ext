@@ -70,3 +70,6 @@ search.on('select', function(e) {
 
 // Switcher
 map.addControl(new ol.control.LayerSwitcherImage());
+
+// Geooc
+map.addControl(new ol.control.GeolocationButton());

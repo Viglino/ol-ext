@@ -14,21 +14,21 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  border: .2em solid currentColor;
-  width: .5em;
-  height: .5em;
+  border: .16em solid currentColor;
+  width: .4em;
+  height: .4em;
   border-radius: 50%;
 }
 .ol-control.ol-geobt button:after {
   content: "";
   position: absolute;
-  width: .25em;
-  height: .25em;
+  width: .2em;
+  height: .2em;
   background: transparent;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  box-shadow: .55em 0, -.55em 0, 0 .55em, 0 -.55em;
+  box-shadow: .42em 0, -.42em 0, 0 .42em, 0 -.42em;
 }
 
 .ol-control.ol-bar.ol-geobar .ol-control {

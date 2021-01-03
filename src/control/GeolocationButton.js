@@ -12,6 +12,7 @@ import ol_interaction_GeolocationDraw from '../interaction/GeolocationDraw'
  * Control bars can be nested and combined with ol.control.Toggle to handle activate/deactivate.
  *
  * @constructor
+ * @fires tracking
  * @extends {ol_control_Toggle}
  * @param {Object=} options ol.interaction.GeolocationDraw option.
  *  @param {String} options.className class of the control
@@ -35,9 +36,15 @@ var ol_control_GeolocationButton = function(options) {
   });
   this.setActive(false);
 
+  interaction.on('tracking', function(e) {
+    this.dispatchEvent({ type: 'position', coordinate: e.geolocation.getPosition() });
+  }.bind(this));
+
+
   // Timeout delay
   var tout;
   interaction.on('change:active', function() {
+    this.dispatchEvent({ type:'position' });
     if (tout) {
       clearTimeout(tout);
       tout = null;
@@ -46,19 +53,10 @@ var ol_control_GeolocationButton = function(options) {
       tout = setTimeout(function() {
         interaction.setActive(false);
         tout = null;
-      }, options.delay || 3000);
+      }.bind(this), options.delay || 3000);
     }
-  });
+  }.bind(this));
   
-  // Activate
-  var element = this.element;
-  this.on('change:active', function(e) {
-    if (e.active) {
-      element.classList.add('ol-active');
-    } else {
-      element.classList.remove('ol-active');
-    }
-  });
 };
 ol_ext_inherits(ol_control_GeolocationButton, ol_control_Toggle);
 

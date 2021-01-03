@@ -11,8 +11,8 @@
   <title>ol-ext: Color filter on map</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-  <meta name="description" content="Crop and mask filter on an ol map or layer." />
-  <meta name="keywords" content="ol3, filter, crop, mask" />
+  <meta name="description" content="Color filter on an ol map or layer." />
+  <meta name="keywords" content="ol, openlayers, filter, color, contrast, lunilosity, hue, saturation" />
 
   <link rel="stylesheet" href="../style.css" />
 
@@ -33,6 +33,9 @@
   <style>
     input[type="range"] {
       vertical-align: middle;
+      display: block;
+      width: 20em;
+      margin: 0;
     }
     input[type="number"] {
       width:4em;
@@ -87,9 +90,23 @@
       G:<input id="green" type="number" min="0" max="255" value="102" />
       B:<input id="blue" type="number" min="0" max="255" value="51" />
     </li><li>
-      Value: <input id="val" type="range" min="0" max="1" step="0.1" value="1" />
+      Value: <input id="val" list="marks" type="range" min="0" max="1" step="0.1" value="1" />
     </li></ul>
   </div>
+
+  <datalist id="marks">
+    <option value="0" label="0">
+    <option value=".1">
+    <option value=".2">
+    <option value=".3">
+    <option value=".4">
+    <option value=".5" label=".5">
+    <option value=".6">
+    <option value=".7">
+    <option value=".8">
+    <option value=".9">
+    <option value="1" label="1">
+  </datalist>
 
   <script type="text/javascript">
     $("input").on('change', setFilter);
@@ -136,7 +153,7 @@
     }
     setFilter();
 
-    map.addControl(new ol.control.Permalink());
+    map.addControl(new ol.control.Permalink({ visible: false }));
 
   </script>
 
