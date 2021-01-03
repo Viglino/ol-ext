@@ -4719,6 +4719,7 @@ ol.control.GeolocationBar.prototype.getInteraction = function () {
  * Control bars can be nested and combined with ol.control.Toggle to handle activate/deactivate.
  *
  * @constructor
+ * @fires tracking
  * @extends {ol.control.Toggle}
  * @param {Object=} options ol.interaction.GeolocationDraw option.
  *  @param {String} options.className class of the control
@@ -4740,9 +4741,13 @@ ol.control.GeolocationButton = function(options) {
     }
   });
   this.setActive(false);
+  interaction.on('tracking', function(e) {
+    this.dispatchEvent({ type: 'position', coordinate: e.geolocation.getPosition() });
+  }.bind(this));
   // Timeout delay
   var tout;
   interaction.on('change:active', function() {
+    this.dispatchEvent({ type:'position' });
     if (tout) {
       clearTimeout(tout);
       tout = null;
@@ -4751,18 +4756,9 @@ ol.control.GeolocationButton = function(options) {
       tout = setTimeout(function() {
         interaction.setActive(false);
         tout = null;
-      }, options.delay || 3000);
+      }.bind(this), options.delay || 3000);
     }
-  });
-  // Activate
-  var element = this.element;
-  this.on('change:active', function(e) {
-    if (e.active) {
-      element.classList.add('ol-active');
-    } else {
-      element.classList.remove('ol-active');
-    }
-  });
+  }.bind(this));
 };
 ol.ext.inherits(ol.control.GeolocationButton, ol.control.Toggle);
 
@@ -13952,7 +13948,7 @@ ol.filter.Pointillism.prototype.postcompose = function(e) {
   img.height = h;
   var ictx = img.getContext('2d');
   ictx.filter = 'saturate('+Math.round(2*this.get('saturate')*100)+'%)';
-  ictx.drawImage(canvas, 0,0, w, h);
+  ictx.drawImage(canvas, 0,0);
   ctx.save();
     // Saturate and blur
     ctx.filter = 'blur(3px) saturate('+(this.get('saturate')*100)+'%)';
@@ -23224,7 +23220,7 @@ ol.source.Mapillary.prototype._loaderFn = function(extent, resolution, projectio
 */
 /** A source to turn your maps into oil paintings...
  * Original idea:  Santhosh G https://www.codeproject.com/Articles/471994/OilPaintEffect
- * JS implementation: Loktar https://codepen.io/loktar00/full/Fhzot/
+ * JS implementation: Loktar (https://github.com/loktar00) https://codepen.io/loktar00/full/Fhzot/
  * @constructor
  * @extends {ol.source.Vector}
  * @param {Object} options
