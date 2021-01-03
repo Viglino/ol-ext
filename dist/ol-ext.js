@@ -193,6 +193,58 @@ ol.ext.Ajax.prototype.send = function (url, data, options){
   ajax.send();
 };
 
+/** SVG filter 
+ * @param {string} filter filter name
+ * @param {*} options
+ *  @param {string} options.auth Authorisation as btoa("username:password");
+ *  @param {string} options.dataType The type of data that you're expecting back from the server, default JSON
+ */
+ol.ext.SVGFilter = function(name, options) {
+  ol.Object.call(this);
+  if (!ol.ext.SVGFilter.prototype.svg) {
+    ol.ext.SVGFilter.prototype.svg = document.createElementNS( this.NS, 'svg' );
+    document.body.appendChild( ol.ext.SVGFilter.prototype.svg );
+  }
+  this._name = name;
+  this._filter = document.createElementNS( this.NS, 'filter' );
+  this._id = '_ol_SVGFilter_' + (ol.ext.SVGFilter.prototype._id++);
+  this._filter.setAttribute( 'id', this._id );
+  this._data = document.createElementNS( this.NS, name );
+  this.setAttributes(options);
+  this._filter.appendChild( this._data );
+  ol.ext.SVGFilter.prototype.svg.appendChild( this._filter );
+};
+ol.ext.inherits(ol.ext.SVGFilter, ol.Object);
+ol.ext.SVGFilter.prototype.NS = "http://www.w3.org/2000/svg";
+ol.ext.SVGFilter.prototype.svg = null;
+ol.ext.SVGFilter.prototype._id = 0;
+/** Get filter ID
+ * @return {string}
+ */
+ol.ext.SVGFilter.prototype.getId = function() {
+  return this._id;
+};
+/** Get filter name
+ * @return {string}
+ */
+ol.ext.SVGFilter.prototype.getName = function() {
+  return this._name;
+};
+/** Set Filter attributes
+ * @param {*} options
+ */
+ol.ext.SVGFilter.prototype.setAttributes = function(options) {
+  options = options || {};
+  for (var i in options) {
+    if (i!=='id') this._data.setAttribute( i, options[i] );
+  }
+};
+/** Remove from DOM
+ */
+ol.ext.SVGFilter.prototype.remove = function() {
+  this._filter.remove();
+};
+
 /** Vanilla JS helper to manipulate DOM without jQuery
  * @see https://github.com/nefe/You-Dont-Need-jQuery
  * @see https://plainjs.com/javascript/
@@ -13046,7 +13098,7 @@ function postcompose_(e) {
 * @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
 * @private
 */
-function filterRedraw_() {
+function filterRedraw_(e) {
   if (this.renderSync) this.renderSync();
   else this.changed(); 
 }
@@ -13250,8 +13302,25 @@ ol.filter.Mask.prototype.postcompose = function(e) {
  */
 ol.filter.CanvasFilter = function(options) {
   ol.filter.Base.call(this, options);
+  this._svg = {};
 };
 ol.ext.inherits(ol.filter.CanvasFilter, ol.filter.Base);
+/** Add a new svg filter
+ * @param {string|ol.ext.SVGFilter} url IRI pointing to an SVG filter element
+ */
+ol.filter.CanvasFilter.prototype.addSVGFilter = function(url) {
+  if (url.getId) url = '#'+url.getId();
+  this._svg[url] = 1;
+  this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
+};
+/** Remove a svg filter
+ * @param {string|ol.ext.SVGFilter} url IRI pointing to an SVG filter element
+ */
+ol.filter.CanvasFilter.prototype.removeSVGFilter = function(url) {
+  if (url.getId) url = '#'+url.getId();
+  delete this._svg[url]
+  this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
+};
 /**
  * @private
  */
@@ -13264,6 +13333,9 @@ ol.filter.CanvasFilter.prototype.postcompose = function(e) {
   var filter = []
   // Set filters
   if (this.get('url')!==undefined) filter.push('url('+this.get('url')+')'); 
+  for (var f in this._svg) {
+    filter.push('url('+f+')'); 
+  }
   if (this.get('blur')!==undefined) filter.push('blur('+this.get('blur')+'px)'); 
   if (this.get('brightness')!==undefined) filter.push('brightness('+this.get('brightness')+'%)'); 
   if (this.get('contrast')!==undefined) filter.push('contrast('+this.get('contrast')+'%)'); 
