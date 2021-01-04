@@ -77,7 +77,7 @@
     <h2><i class="fa fa-list"></i> Options</h2>
     <ul>
       <li>
-        <label>radius: </label><input id="radius" onchange="oil.set('radius', this.value); plink.setUrlParam('r', this.value);" type="number" min="1" max="10" value="4" />
+        <label>radius: </label><input id="radius" onchange="oil.set('radius', this.value); plink.setUrlParam('rd', this.value);" type="number" min="1" max="10" value="4" />
       </li>
       <li>
         <label>intensity: </label><input id="intensity" onchange="oil.set('intensity', this.value); plink.setUrlParam('i', this.value);" type="number" min="1" max="50" value="25" />
@@ -123,9 +123,9 @@
   layer.addFilter(filter);
 
   // Permalilnk
-  if (plink.getUrlParam('r') !== '') {
-    oil.set('radius', plink.getUrlParam('r'));
-    $('#radius').val(plink.getUrlParam('r'));
+  if (plink.getUrlParam('rd') !== '') {
+    oil.set('radius', plink.getUrlParam('rd'));
+    $('#radius').val(plink.getUrlParam('rd'));
   }
   if (plink.getUrlParam('i') !== '') {
     oil.set('intensity', plink.getUrlParam('i'));
