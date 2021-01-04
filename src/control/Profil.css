@@ -1,5 +1,6 @@
 .ol-profil {
   position: relative;
+  user-select: none;
 }
 .ol-control.ol-profil {
   position: absolute;

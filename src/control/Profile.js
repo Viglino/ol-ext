@@ -212,7 +212,10 @@ var ol_control_Profil = function(options) {
             click: function(e) {
               e.stopPropagation();
               e.preventDefault();
-              if (geom) this.setGeometry(geom, this._geometry[1]);
+              if (geom) {
+                this.dispatchEvent({ type:'zoom' });
+                this.setGeometry(geom, this._geometry[1]);
+              }
               element.removeChild(bt);
             }.bind(this)
           })
@@ -221,6 +224,7 @@ var ol_control_Profil = function(options) {
         var g = new ol_geom_LineString(this.getSelection(start, e.index));
         this.setGeometry(g, this._geometry[1]);
         geom = saved;
+        this.dispatchEvent({ type:'zoom', geometry: g, start: start, end: e.index });
       }
     }.bind(this));
   }
@@ -629,6 +633,7 @@ ol_control_Profil.prototype.refresh = function() {
 
   if (!d) {
     console.error('[ol/control/Profil] no data...', t);
+    return;
   }
 
   // Margin

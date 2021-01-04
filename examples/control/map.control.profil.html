@@ -66,6 +66,11 @@
         The <i>popup</i> function lets you show a popup when cursor fly over the profil.
       </li>
     </ul>
+    Use <i>selectable</i> option to enable selection on the profile. 
+    Listen to <i>dragstart</i>, <i>dragging</i> and <i>dragend</i> events.
+    Use <i>getSelection()</i> to retrieve the selection.
+    <br/>
+    <i>zoomable</i> option lets you zoom into the track.
   </div>
 
   <!-- DIV pour la carte -->
@@ -98,6 +103,7 @@
   var profil2 = new ol.control.Profil({
     target: document.querySelector(".options"),
     selectable: true,
+    // zoomable: true,
     style: new ol.style.Style({
       fill: new ol.style.Fill({ color: '#ccc' })
     }),
@@ -188,7 +194,6 @@
       source.removeFeature(selection);
       selection = false;
     }
-    
   });
 	profil2.on('dragstart', function(e){
     start = e.index;
@@ -203,7 +208,18 @@
       source.addFeature(selection);
     }
   });
-
+  profil2.on('zoom', function(e) {
+    setTimeout(function() {
+      if (selection) source.removeFeature(selection);
+      if (e.geometry) {
+        selection = new ol.Feature(e.geometry);
+        selection.set('select', true);
+        source.addFeature(selection);
+      } else {
+        selection = null;
+      }
+    })
+  });
 
   // Show on map over
   var hover = new ol.interaction.Hover({ cursor: "pointer", hitTolerance:10 });
