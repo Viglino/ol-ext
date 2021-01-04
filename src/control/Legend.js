@@ -273,10 +273,12 @@ ol_control_Legend.prototype.getStyleImage = function(options, theCanvas, row) {
     switch (typeGeom) {
       case ol_geom_Point:
       case 'Point':
+      case 'MultiPoint':
         vectorContext.drawGeometry(new ol_geom_Point([cx, cy]));
         break;
       case ol_geom_LineString:
       case 'LineString':
+      case 'MultiLineString': 
         ctx.save();
           ctx.rect(this.get('margin') * ratio, 0, size[0] *  ratio, canvas.height);
           ctx.clip();
@@ -285,6 +287,7 @@ ol_control_Legend.prototype.getStyleImage = function(options, theCanvas, row) {
         break;
       case ol_geom_Polygon:
       case 'Polygon':
+      case 'MultiPolygon': 
         vectorContext.drawGeometry(new ol_geom_Polygon([[[cx-sx, cy-sy], [cx+sx, cy-sy], [cx+sx, cy+sy], [cx-sx, cy+sy], [cx-sx, cy-sy]]]));
         break;
     }
