@@ -77,6 +77,10 @@
         <input id="hueRotate" style="width:12em;" onchange="filter2.set('hueRotate', this.value); plink.setUrlParam('h',this.value); layer.changed();" type="range" min="0" max="360" value="0" />
         <div style="width: 10em;height: 1em;background-image: linear-gradient(90deg, red, magenta, blue, cyan, green, yellow, red);margin: 0 0 .5em 6em;"></div>
       </li>
+      <li>
+        <label>pastel: </label>
+        <input id="pastel" style="width:12em;" onchange="pastel.setValue(this.value); plink.setUrlParam('p',this.value); layer.changed();" type="range" min="0" max=".6" step=".05" value="0" />
+      </li>
     </ul>
     <i class="fa fa-times" onclick="$('.options').removeClass('visible');"></i>
     <button onclick="print.print();"><i class="fa fa-download"></i> download painting...</button>
@@ -93,6 +97,11 @@
   var filter2 = new ol.filter.CanvasFilter();
   layer.addFilter(filter2);
 
+  var pastel = new ol.filter.Colorize({ operation: 'luminosity', value:1 });
+  pastel.setColor([255,192,255]);
+  pastel.setValue(0);
+  layer.addFilter(pastel);
+
   // Permalilnk
   if (plink.getUrlParam('s') !== '') {
     filter.set('saturate', plink.getUrlParam('s'));
@@ -101,6 +110,10 @@
   if (plink.getUrlParam('h') !== '') {
     filter2.set('hueRotate', plink.getUrlParam('h'));
     $('#hueRotate').val(plink.getUrlParam('h'));
+  }
+  if (plink.getUrlParam('p') !== '') {
+    pastel.setValue(plink.getUrlParam('p'));
+    $('#pastel').val(plink.getUrlParam('p'));
   }
   if (plink.getUrlParam('title') !== '') {
     $('.frame h2').text(plink.getUrlParam('title'));
