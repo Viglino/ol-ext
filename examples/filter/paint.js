@@ -13,8 +13,17 @@ var map = new ol.Map({
   layers: layers
 });
 
+// Handle hover
+$("#map").on('mouseenter', function() {
+  $('body').removeClass('out')
+})
+$("#map").on('mouseleave', function() {
+  $('body').addClass('out')
+})
+
 // Permalink
-map.addControl(new ol.control.Permalink({ visible: false }));
+var plink = new ol.control.Permalink({ visible: false });
+map.addControl(plink);
 
 // Info
 map.addControl(new ol.control.Button({
@@ -61,7 +70,7 @@ print.on('print', function(e) {
 var search = new ol.control.SearchGeoportail({
   apiKey: apiKey
 });
-var search = new ol.control.SearchBAN();
+// var search = new ol.control.SearchBAN();
 map.addControl(search);
 search.on('select', function(e) {
   map.getView().setCenter(e.coordinate);

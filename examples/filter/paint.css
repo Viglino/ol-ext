@@ -6,6 +6,12 @@
   right: 0;
   margin: 40px;
 }
+#map .ol-control {
+  transition: opacity .5s;
+}
+.out #map .ol-control {
+  opacity: 0;
+}
 h1 {
   position: fixed;
   top: 0;
