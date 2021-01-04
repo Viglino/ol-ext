@@ -2431,6 +2431,10 @@
 }
 .ol-profil {
   position: relative;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
 }
 .ol-control.ol-profil {
   position: absolute;

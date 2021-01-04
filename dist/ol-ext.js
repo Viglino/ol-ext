@@ -6388,10 +6388,12 @@ ol.control.Legend.prototype.getStyleImage = function(options, theCanvas, row) {
     switch (typeGeom) {
       case ol.geom.Point:
       case 'Point':
+      case 'MultiPoint':
         vectorContext.drawGeometry(new ol.geom.Point([cx, cy]));
         break;
       case ol.geom.LineString:
       case 'LineString':
+      case 'MultiLineString': 
         ctx.save();
           ctx.rect(this.get('margin') * ratio, 0, size[0] *  ratio, canvas.height);
           ctx.clip();
@@ -6400,6 +6402,7 @@ ol.control.Legend.prototype.getStyleImage = function(options, theCanvas, row) {
         break;
       case ol.geom.Polygon:
       case 'Polygon':
+      case 'MultiPolygon': 
         vectorContext.drawGeometry(new ol.geom.Polygon([[[cx-sx, cy-sy], [cx+sx, cy-sy], [cx+sx, cy+sy], [cx-sx, cy+sy], [cx-sx, cy-sy]]]));
         break;
     }
@@ -7680,7 +7683,10 @@ ol.control.Profil = function(options) {
             click: function(e) {
               e.stopPropagation();
               e.preventDefault();
-              if (geom) this.setGeometry(geom, this._geometry[1]);
+              if (geom) {
+                this.dispatchEvent({ type:'zoom' });
+                this.setGeometry(geom, this._geometry[1]);
+              }
               element.removeChild(bt);
             }.bind(this)
           })
@@ -7689,6 +7695,7 @@ ol.control.Profil = function(options) {
         var g = new ol.geom.LineString(this.getSelection(start, e.index));
         this.setGeometry(g, this._geometry[1]);
         geom = saved;
+        this.dispatchEvent({ type:'zoom', geometry: g, start: start, end: e.index });
       }
     }.bind(this));
   }
@@ -8067,6 +8074,7 @@ ol.control.Profil.prototype.refresh = function() {
   var i;
   if (!d) {
     console.error('[ol/control/Profil] no data...', t);
+    return;
   }
   // Margin
   ctx.setTransform(1, 0, 0, 1, this.margin_.left, h-this.margin_.bottom);
