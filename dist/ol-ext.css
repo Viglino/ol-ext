@@ -4089,6 +4089,7 @@
           transform: translateY(0) perspective(200px) rotateX(0deg) scaleY(1);
 }
 
+.ol-perspective-map .ol-overlaycontainer,
 .ol-perspective-map .ol-overlaycontainer-stopevent {
   width: 50%!important;
   height: 50%!important;

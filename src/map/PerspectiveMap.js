@@ -224,6 +224,7 @@ ol_Overlay.prototype.updatePixelPosition = function () {
       return;
     }
     // Get pixel at screen
+    
     var pixel = map.getPixelScreenFromCoordinate(position);
     var mapSize = map.getSize();
     pixel[0] -= mapSize[0]/4
@@ -251,6 +252,5 @@ ol_Overlay.prototype.updatePixelPosition = function () {
 /**/
 
 })();
-
 
 export default ol_PerspectiveMap
