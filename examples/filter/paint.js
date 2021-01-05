@@ -7,8 +7,8 @@ var layers = [
 var map = new ol.Map({
   target: 'map',
   view: new ol.View({
-    zoom: 8,
-    center: [247044, 6549736.]
+    zoom: center ? center[2] : 8,
+    center: center || [247044, 6549736]
   }),
   layers: layers
 });

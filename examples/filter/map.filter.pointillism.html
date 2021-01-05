@@ -86,11 +86,11 @@
     <button onclick="print.print();"><i class="fa fa-download"></i> download painting...</button>
   </div>
 
+<script type="text/javascript">
+  var center = [343598, 5240059, 17];
+</script>
 <script type="text/javascript" src="./paint.js"></script>
 <script type="text/javascript">
-  map.getView().setCenter([343598, 5240059]);
-  map.getView().setZoom(17);
-
   // Pointillism filter
   var layer = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', baseLayer: true });
   var filter = new ol.filter.Pointillism();
