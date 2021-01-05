@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="./paint.css" />
 
 </head>
-<body >
+<body>
   <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
   <div class="frame">
@@ -88,6 +88,8 @@
 
 <script type="text/javascript" src="./paint.js"></script>
 <script type="text/javascript">
+  map.getView().setCenter([343598, 5240059]);
+  map.getView().setZoom(17);
 
   // Pointillism filter
   var layer = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', baseLayer: true });

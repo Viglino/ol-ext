@@ -14,16 +14,23 @@ var map = new ol.Map({
 });
 
 // Handle hover
+$('body').addClass('out');
 $("#map").on('mouseenter', function() {
-  $('body').removeClass('out')
+  $('body').removeClass('out');
 })
 $("#map").on('mouseleave', function() {
-  $('body').addClass('out')
+  $('body').addClass('out');
 })
 
 // Permalink
 var plink = new ol.control.Permalink({ visible: false });
 map.addControl(plink);
+
+$('.frame h2').click(function() {
+  var name = prompt('Title', $(this).text());
+  plink.setUrlParam('title', name || '');
+  $(this).text(name || 'ol-ext');
+});
 
 // Info
 map.addControl(new ol.control.Button({
@@ -55,6 +62,7 @@ var bmark = new ol.control.GeoBookmark({
 map.addControl(bmark);
 bmark.on(['add','select'], function(e) {
   $('.frame h2').text(e.name);
+  plink.setUrlParam('title', e.name);
 });
 
 // Print control

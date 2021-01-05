@@ -169,6 +169,8 @@ small {
   font-weight: 700;
   white-space: nowrap;
   color: rgba(0,0,0,.7);
+  pointer-events: all;
+  cursor: pointer;
 }
 .frame h2:after, .frame h2:before {
   content: "";
