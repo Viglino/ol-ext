@@ -110,7 +110,8 @@
 
   // Oil painting source
   var oil = new ol.source.OilPainting({
-    sources: [ new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS'}) ]
+    // sources: [ new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS'}) ]
+    sources: [ photoLayer ]
   });
   var layer = new ol.layer.Image({
     title: 'Painting',

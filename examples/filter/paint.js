@@ -1,6 +1,7 @@
+var photoLayer = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', visible: false, baseLayer:true });
 var layers = [ 
   new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.MAPS', visible: false, baseLayer:true }),
-  new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', visible: false, baseLayer:true })
+  photoLayer
 ];
 
 // The map

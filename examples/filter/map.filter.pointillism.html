@@ -100,12 +100,18 @@
 <script type="text/javascript">
   // Pointillism filter
   var layer = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', baseLayer: true });
+  // Use same source to load images once
+  layer.setSource(photoLayer.getSource());
+
+  // Add filter
   var filter = new ol.filter.Pointillism();
   layer.addFilter(filter);
-
+  
+  // Add hueRotate filter
   var filter2 = new ol.filter.CanvasFilter();
   layer.addFilter(filter2);
 
+  // Add pastel filter
   var pastel = new ol.filter.Colorize({ operation: 'luminosity', value:1 });
   pastel.setColor([255,192,255]);
   pastel.setValue(0);
