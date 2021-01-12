@@ -6172,16 +6172,16 @@ ol.control.Legend = function(options) {
     var button = document.createElement('button');
     button.setAttribute('type', 'button');
     button.addEventListener('click', function() {
-      element.classList.toggle('ol-collapsed');
-    });
+      this.toggle();
+    }.bind(this));
     element.appendChild(button);
     // Hide on click
     button = document.createElement('button');
     button.setAttribute('type', 'button');
     button.className = 'ol-closebox';
     button.addEventListener('click', function() {
-      element.classList.toggle('ol-collapsed');
-    });
+      this.toggle();
+    }.bind(this));
     element.appendChild(button);
   }
   // The legend
@@ -6219,6 +6219,7 @@ ol.control.Legend.prototype.setStyle = function(style) {
  * - or a style and a geometry type
  * @param {*} options a list of parameters 
  *  @param {ol.Feature} options.feature a feature to draw
+ *  @param {string} options.className class name for the row
  *  @param {ol.style.Style} options.style the style to use if no feature is provided
  *  @param {*} options.properties properties to use with a style function
  *  @param {string} options.typeGeom type geom to draw with the style or the properties
@@ -6256,7 +6257,7 @@ ol.control.Legend.prototype.refresh = function() {
   var width = this.get('size')[0] + 2*this.get('margin');
   var height = this.get('size')[1] + 2*this.get('margin');
   // Add a new row
-  function addRow(str, title, r, i){
+  function addRow(str, classname, r, i){
     var row = document.createElement('li');
     row.style.height = height + 'px';
     row.addEventListener('click', function() {
@@ -6266,8 +6267,8 @@ ol.control.Legend.prototype.refresh = function() {
     row.appendChild(col);
     col.style.height = height + 'px';
     col = document.createElement('div');
-    if (title) {
-      row.className = 'ol-title';
+    if (classname) {
+      row.className = classname;
     } else {
       col.style.paddingLeft = width + 'px';
     }
@@ -6276,7 +6277,7 @@ ol.control.Legend.prototype.refresh = function() {
     table.appendChild(row);
   }
   if (this.get('title')) {
-    addRow(this.get('title'), true, {}, -1);
+    addRow(this.get('title'), 'ol-title', {}, -1);
   }
   var canvas = document.createElement('canvas');
   canvas.width = 5*width;
@@ -6285,24 +6286,31 @@ ol.control.Legend.prototype.refresh = function() {
   this._imgElement.appendChild(canvas);
   this._imgElement.style.height = (this._rows.length+1)*height + 'px';
   for (var i=0, r; r = this._rows[i]; i++) {
-    addRow(r.title, false, r, i);
+    addRow(r.title, r.className, r, i);
     canvas = this.getStyleImage(r, canvas, i+(this.get('title')?1:0));
   }
 };
 /** Show control
  */
 ol.control.Legend.prototype.show = function() {
-  this.element.classList.remove('ol-collapsed');
+  if (this.element.classList.contains('ol-collapsed')) {
+    this.element.classList.remove('ol-collapsed');
+    this.dispatchEvent({ type:'change:collapse', collapsed: false });
+  }
 };
 /** Hide control
  */
 ol.control.Legend.prototype.hide = function() {
-  this.element.classList.add('ol-collapsed');
+  if (!this.element.classList.contains('ol-collapsed')) {
+    this.element.classList.add('ol-collapsed');
+    this.dispatchEvent({ type:'change:collapse', collapsed: true });
+  }
 };
 /** Toggle control
  */
 ol.control.Legend.prototype.toggle = function() {
   this.element.classList.toggle('ol-collapsed');
+  this.dispatchEvent({ type:'change:collapse', collapsed: this.element.classList.contains('ol-collapsed') });
 };
 /** Get the image for a style 
  * You can provide in options:
