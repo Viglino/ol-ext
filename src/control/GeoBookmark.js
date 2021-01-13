@@ -10,6 +10,7 @@ import ol_control_Control from 'ol/control/Control'
  * @fires select
  * @param {} options Geobookmark's options
  *  @param {string} options.className default ol-bookmark
+ *  @param {string | undefined} options.title Title to use for the button tooltip, default "Geobookmarks"
  *  @param {string} options.placeholder input placeholder, default Add a new geomark...
  *  @param {bool} options.editable enable modification, default true
  *  @param {string} options.namespace a namespace to save the boolmark (if more than one on a page), default ol
@@ -39,10 +40,12 @@ var ol_control_GeoBookmark = function(options) {
       }
     });
     // Show bookmarks on click
-    this.button = document.createElement('button');
-    this.button.setAttribute('type', 'button');
-    this.button.addEventListener('click', function() {
-      menu.style.display = (menu.style.display === '' || menu.style.display === 'none' ? 'block': 'none');
+    this.button = ol_ext_element.create('BUTTON', {
+      type: 'button',
+      title: options.title || 'Geobookmarks',
+      click: function() {
+        menu.style.display = (menu.style.display === '' || menu.style.display === 'none' ? 'block': 'none');
+      }
     });
     element.appendChild(this.button);
   }

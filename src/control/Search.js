@@ -21,7 +21,7 @@ import ol_ext_element from '../util/element'
  * @param {Object=} options
  *  @param {string} options.className control class name
  *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *  @param {string | undefined} options.label Text label to use for the search button, default "search"
+ *  @param {string | undefined} options.title Title to use for the search button tooltip, default "Search"
  *  @param {string | undefined} options.placeholder placeholder, default "Search..."
  *  @param {boolean | undefined} options.reverse enable reverse geocoding, default false
  *  @param {string | undefined} options.inputLabel label for the input, default none
@@ -47,16 +47,16 @@ var ol_control_Search = function(options) {
     className: classNames + ' ol-collapsed'
   })
   if (!options.target) {
-    this.button = document.createElement("BUTTON");
-    this.button.setAttribute("type", "button");
-    this.button.setAttribute("title", options.label||"search");
-    this.button.addEventListener("click", function() {
-      element.classList.toggle("ol-collapsed");
-      if (!element.classList.contains("ol-collapsed")) {
-        element.querySelector("input.search").focus();
-        var listElements = element.querySelectorAll("li");
+    this.button = document.createElement('BUTTON');
+    this.button.setAttribute('type', 'button');
+    this.button.setAttribute('title', options.title || options.label || 'Search');
+    this.button.addEventListener('click', function() {
+      element.classList.toggle('ol-collapsed');
+      if (!element.classList.contains('ol-collapsed')) {
+        element.querySelector('input.search').focus();
+        var listElements = element.querySelectorAll('li');
         for (var i = 0; i < listElements.length; i++) {
-          listElements[i].classList.remove("select");
+          listElements[i].classList.remove('select');
         }
         // Display history
         if (!input.value) {

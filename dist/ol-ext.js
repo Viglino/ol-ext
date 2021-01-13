@@ -1362,7 +1362,7 @@ ol.control.Toggle.prototype.getInteraction = function() {
  * @param {Object=} options
  *  @param {string} options.className control class name
  *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *  @param {string | undefined} options.label Text label to use for the search button, default "search"
+ *  @param {string | undefined} options.title Title to use for the search button tooltip, default "Search"
  *  @param {string | undefined} options.placeholder placeholder, default "Search..."
  *  @param {boolean | undefined} options.reverse enable reverse geocoding, default false
  *  @param {string | undefined} options.inputLabel label for the input, default none
@@ -1386,16 +1386,16 @@ ol.control.Search = function(options) {
     className: classNames + ' ol-collapsed'
   })
   if (!options.target) {
-    this.button = document.createElement("BUTTON");
-    this.button.setAttribute("type", "button");
-    this.button.setAttribute("title", options.label||"search");
-    this.button.addEventListener("click", function() {
-      element.classList.toggle("ol-collapsed");
-      if (!element.classList.contains("ol-collapsed")) {
-        element.querySelector("input.search").focus();
-        var listElements = element.querySelectorAll("li");
+    this.button = document.createElement('BUTTON');
+    this.button.setAttribute('type', 'button');
+    this.button.setAttribute('title', options.title || options.label || 'Search');
+    this.button.addEventListener('click', function() {
+      element.classList.toggle('ol-collapsed');
+      if (!element.classList.contains('ol-collapsed')) {
+        element.querySelector('input.search').focus();
+        var listElements = element.querySelectorAll('li');
         for (var i = 0; i < listElements.length; i++) {
-          listElements[i].classList.remove("select");
+          listElements[i].classList.remove('select');
         }
         // Display history
         if (!input.value) {
@@ -4465,6 +4465,7 @@ ol.control.Gauge.prototype.val = function(v) {
  * @fires select
  * @param {} options Geobookmark's options
  *  @param {string} options.className default ol-bookmark
+ *  @param {string | undefined} options.title Title to use for the button tooltip, default "Geobookmarks"
  *  @param {string} options.placeholder input placeholder, default Add a new geomark...
  *  @param {bool} options.editable enable modification, default true
  *  @param {string} options.namespace a namespace to save the boolmark (if more than one on a page), default ol
@@ -4493,10 +4494,12 @@ ol.control.GeoBookmark = function(options) {
       }
     });
     // Show bookmarks on click
-    this.button = document.createElement('button');
-    this.button.setAttribute('type', 'button');
-    this.button.addEventListener('click', function() {
-      menu.style.display = (menu.style.display === '' || menu.style.display === 'none' ? 'block': 'none');
+    this.button = ol.ext.element.create('BUTTON', {
+      type: 'button',
+      title: options.title || 'Geobookmarks',
+      click: function() {
+        menu.style.display = (menu.style.display === '' || menu.style.display === 'none' ? 'block': 'none');
+      }
     });
     element.appendChild(this.button);
   }
