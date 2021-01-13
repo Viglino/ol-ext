@@ -49,9 +49,10 @@ api.setAPI({
   },
   // Set the polygon
   setPolygon: function(p) {
+    console.log(p)
     polygon.getSource().clear();
     try {
-      var f = api.fet('format').readFeature(p, { featureProjection: map.getView().getProjection() });
+      var f = api.get('format').readFeature(p, { featureProjection: map.getView().getProjection() });
       polygon.getSource().addFeature(f);
       map.getView().fit(f.getGeometry().getExtent());
     } catch(e) {}
