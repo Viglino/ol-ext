@@ -34,7 +34,6 @@ function getJSONPoly(feature) {
 api.setAPI({
   // Activate draw
   drawPolygon: function() {
-    console.log('draw')
     if (draw.getActive()) {
       draw.setActive(false);
     } else {
@@ -50,7 +49,6 @@ api.setAPI({
   },
   // Set the polygon
   setPolygon: function(p) {
-    console.log(p)
     polygon.getSource().clear();
     try {
       var f = api.get('format').readFeature(p, { featureProjection: map.getView().getProjection() });
