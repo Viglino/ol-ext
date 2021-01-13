@@ -64,10 +64,11 @@
   <!-- iframe id="map2" src="./map.iframe.html"></iframe -->
 
   <div class="options">
-    <button onclick="mapAPI.drawPolygon()">Draw Polygon</button>
-    <button onclick="mapAPI.selectBy({id:93})">Select 93</button>
+    Draw a polygon in the IFrame: <button onclick="mapAPI.drawPolygon()">Draw Polygon</button>
+    <br/>
+    Select an object in the IFrame: <button onclick="mapAPI.selectBy({id:93})">Select 93</button>
     <hr/>
-    Placemark:<br/>
+    Get/set placemark position:<br/>
     <label>Lon:</label>
     <input id="lon" />
     <label>Lat:</label>

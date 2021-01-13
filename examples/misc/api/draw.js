@@ -34,6 +34,7 @@ function getJSONPoly(feature) {
 api.setAPI({
   // Activate draw
   drawPolygon: function() {
+    console.log('draw')
     if (draw.getActive()) {
       draw.setActive(false);
     } else {
@@ -65,8 +66,10 @@ api.addListener('drawPolygon', function() {
   draw.on('drawend', function (e) {
     polygon.getSource().clear();
     polygon.getSource().addFeature(e.feature);
-    api.postMessage('drawPolygon', getJSONPoly(e.feature));
-    draw.setActive(false);
+    setTimeout(function() {
+      draw.setActive(false);
+      api.postMessage('drawPolygon', getJSONPoly(e.feature));
+    })
   });
   // Modify a polygon
   modify.on('modifyend', function(e){
