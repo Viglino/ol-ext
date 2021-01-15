@@ -2,78 +2,76 @@
 
 <html>
 <head>
-<!----------------------------------------------------------
- 
-	Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
------------------------------------------------------------->	
-	<title>ol-ext: Modify interaction for touch device</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!--
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->	
+  <title>ol-ext: Modify interaction for touch device</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="transform interaction for OL3" />
-	<meta name="keywords" content="ol3, vector, transform, rotate, scale, stretch" />
+  <meta name="description" content="transform interaction for OL3" />
+  <meta name="keywords" content="ol3, vector, transform, rotate, scale, stretch" />
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-	<!-- FontAwesome -->
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-    <link rel="stylesheet" href="../../dist/ol-ext.css" />
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
-	<style>
-		.ol-popup.modifytouch a:before {
-			content: "\274C";
-			margin-right:.2em;
-		}
-	</style>
+  <style>
+    .ol-popup.modifytouch a:before {
+      content: "\274C";
+      margin-right:.2em;
+    }
+  </style>
 
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Modify interaction for touch device</h1>
-	</a>
-	<div class="info">
-		<b>ol.interaction.ModifyTouch</b> is a modify interaction for touch devices 
-		that display a poppup to delete a point when click on it.
-		<br/>
-		You can customize the popup using the <i>setPopupContent()</i> function.
-		<br/>
-		You can overide the <i>showDeleteBt()</i> function to do have a different behavior tha a popup (display a button on the map).
-	</div>
+  <a href="../../index.html">
+    <h1>ol-ext: Modify interaction for touch device</h1>
+  </a>
+  <div class="info">
+    <b>ol.interaction.ModifyTouch</b> is a modify interaction for touch devices 
+    that display a poppup to delete a point when click on it.
+    <br/>
+    You can customize the popup using the <i>setPopupContent()</i> function.
+    <br/>
+    You can overide the <i>showDeleteBt()</i> function to do have a different behavior tha a popup (display a button on the map).
+  </div>
 
-	<!-- Map div -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options" >
+  <div class="options" >
     <h2>Options:</h2>
     <label><input id="menu" type="checkbox" onclick="showmenu();" checked="checked" /> 
       show popup/show menu
     </label>
-	</div>
+  </div>
 
-	<script type="text/javascript">
-		// Layers
-		var layers = [
-			new ol.layer.Tile({
-				title:'terrain-background',
-				source: new ol.source.Stamen({ layer: 'terrain' })
-			})
-		];
-		// The map
-		var map = new ol.Map ({
+  <script type="text/javascript">
+    // Layers
+    var layers = [
+      new ol.layer.Tile({
+        title:'terrain-background',
+        source: new ol.source.Stamen({ layer: 'terrain' })
+      })
+    ];
+    // The map
+    var map = new ol.Map ({
       target: 'map',
       view: new ol.View ({
         zoom: 5,
@@ -82,67 +80,67 @@
       layers: layers
     });
 
-		// New vector layer
-		var vector = new ol.layer.Vector({
+    // New vector layer
+    var vector = new ol.layer.Vector({
       name: 'Vecteur',
-			source: new ol.source.Vector(),
-		})
-		map.addLayer(vector);
-		vector.getSource().addFeature(new ol.Feature(new ol.geom.Polygon([[[34243, 6305749], [-288626, 6000000], [-288626, 5757848], [-200000, 5500000], [210354, 5576845], [210354, 6000000], [34243, 6305749]]])));
-		vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[400000, 5664901], [480000, 5600000], [650000, 5718712], [700000, 6000000], [600000, 6200000], [425601, 6183449]])));
-		vector.getSource().addFeature(new ol.Feature(new ol.geom.Point(	[269914, 6248592])));
+      source: new ol.source.Vector(),
+    })
+    map.addLayer(vector);
+    vector.getSource().addFeature(new ol.Feature(new ol.geom.Polygon([[[34243, 6305749], [-288626, 6000000], [-288626, 5757848], [-200000, 5500000], [210354, 5576845], [210354, 6000000], [34243, 6305749]]])));
+    vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[400000, 5664901], [480000, 5600000], [650000, 5718712], [700000, 6000000], [600000, 6200000], [425601, 6183449]])));
+    vector.getSource().addFeature(new ol.Feature(new ol.geom.Point(	[269914, 6248592])));
 
 
-		var select = new ol.interaction.Select({
-			layers: [ vector ],
-			hitTolerance: 5
-		});
+    var select = new ol.interaction.Select({
+      layers: [ vector ],
+      hitTolerance: 5
+    });
     map.addInteraction(select);
-		
+    
     // Interaction
     var modify = new ol.interaction.ModifyTouch({
-		// source: vector.getSource(),
-		features: select.getFeatures()
+      // source: vector.getSource(),
+      features: select.getFeatures()
     });
-	map.addInteraction(modify);
-	
-	//
-	var bar = new ol.control.Bar();
-	map.addControl(bar);
-	var removeBt = new ol.control.Toggle({
+  map.addInteraction(modify);
+  
+  //
+  var bar = new ol.control.Bar();
+  map.addControl(bar);
+  var removeBt = new ol.control.Toggle({
     html: '<i class="fa fa-trash"></i>',
     onToggle: function(b) { 
       // Prevent openning on click
       removeBt.setActive(false);
     },
-		bar: new ol.control.Bar({
-			controls: [
-				new ol.control.TextButton({
-					html:"remove&nbsp;point", 
-					handleClick: function(b) { 
-						modify.removePoint();
-					}
-				})
-			]
-		})
-	});
-	bar.addControl(removeBt);
+    bar: new ol.control.Bar({
+      controls: [
+        new ol.control.TextButton({
+          html:"remove&nbsp;point", 
+          handleClick: function(b) { 
+            modify.removePoint();
+          }
+        })
+      ]
+    })
+  });
+  bar.addControl(removeBt);
 
-	// Handle bar
-	modify.on('showpopup', function(e) {
-		//console.log(e)
-		if (!modify.get('usePopup')) removeBt.setActive(true);
-	});
-	modify.on('hidepopup', function(e) {
-		//console.log(e)
-		removeBt.setActive(false);
+  // Handle bar
+  modify.on('showpopup', function(e) {
+    //console.log(e)
+    if (!modify.get('usePopup')) removeBt.setActive(true);
+  });
+  modify.on('hidepopup', function(e) {
+    //console.log(e)
+    removeBt.setActive(false);
   });
 
   function showmenu () {
     modify.set('usePopup', $("#menu").prop('checked'));
     modify.setActive(true);
   }
-	
+  
 </script>
 
 </body>

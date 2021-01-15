@@ -46,7 +46,7 @@ var ol_interaction_ModifyTouch = function(options) {
 
   // Check if there is a feature to select
   options.condition = function(e) {
-		var features = this.getMap().getFeaturesAtPixel(e.pixel,{
+    var features = this.getMap().getFeaturesAtPixel(e.pixel,{
       hitTolerance: searchDist
     });
     var p0, p1, found = false;
@@ -75,11 +75,8 @@ var ol_interaction_ModifyTouch = function(options) {
     }
     // Show popup if any
     this.showDeleteBt(found ? { type:'show', feature:f, coordinate: e.coordinate } : { type:'hide' });
-    // Prevent click on the popup
-    e.preventDefault();
-    e.stopPropagation();
 
-		return true;
+    return true;
   };
 
   // Hide popup on insert
