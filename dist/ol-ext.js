@@ -194,25 +194,23 @@ ol.ext.Ajax.prototype.send = function (url, data, options){
 };
 
 /** SVG filter 
- * @param {string} filter filter name
- * @param {*} options
- *  @param {string} options.auth Authorisation as btoa("username:password");
- *  @param {string} options.dataType The type of data that you're expecting back from the server, default JSON
+ * @param {ol.ext.SVGOperation} operation
  */
-ol.ext.SVGFilter = function(name, options) {
+ol.ext.SVGFilter = function(operation) {
   ol.Object.call(this);
   if (!ol.ext.SVGFilter.prototype.svg) {
     ol.ext.SVGFilter.prototype.svg = document.createElementNS( this.NS, 'svg' );
+    ol.ext.SVGFilter.prototype.svg.setAttribute('version','1.1');
+    ol.ext.SVGFilter.prototype.svg.setAttribute('width',0);
+    ol.ext.SVGFilter.prototype.svg.setAttribute('height',0);
+    ol.ext.SVGFilter.prototype.svg.style.position = 'absolute';
     document.body.appendChild( ol.ext.SVGFilter.prototype.svg );
   }
-  this._name = name;
-  this._filter = document.createElementNS( this.NS, 'filter' );
+  this.element = document.createElementNS( this.NS, 'filter' );
   this._id = '_ol_SVGFilter_' + (ol.ext.SVGFilter.prototype._id++);
-  this._filter.setAttribute( 'id', this._id );
-  this._data = document.createElementNS( this.NS, name );
-  this.setAttributes(options);
-  this._filter.appendChild( this._data );
-  ol.ext.SVGFilter.prototype.svg.appendChild( this._filter );
+  this.element.setAttribute( 'id', this._id );
+  this.addOperation(operation);
+  ol.ext.SVGFilter.prototype.svg.appendChild( this.element );
 };
 ol.ext.inherits(ol.ext.SVGFilter, ol.Object);
 ol.ext.SVGFilter.prototype.NS = "http://www.w3.org/2000/svg";
@@ -224,25 +222,81 @@ ol.ext.SVGFilter.prototype._id = 0;
 ol.ext.SVGFilter.prototype.getId = function() {
   return this._id;
 };
-/** Get filter name
- * @return {string}
- */
-ol.ext.SVGFilter.prototype.getName = function() {
-  return this._name;
-};
-/** Set Filter attributes
- * @param {*} options
- */
-ol.ext.SVGFilter.prototype.setAttributes = function(options) {
-  options = options || {};
-  for (var i in options) {
-    if (i!=='id') this._data.setAttribute( i, options[i] );
-  }
-};
 /** Remove from DOM
  */
 ol.ext.SVGFilter.prototype.remove = function() {
-  this._filter.remove();
+  this.element.remove();
+};
+/** Add a new operation
+ * @param {ol.ext.SVGOperation} operation
+ */
+ol.ext.SVGFilter.prototype.addOperation = function(operation) {
+  if (operation instanceof Array) {
+    operation.forEach(function(o) { this.addOperation(o) }.bind(this));
+  } else {
+    if (!(operation instanceof ol.ext.SVGOperation)) operation = new ol.ext.SVGOperation(operation);
+    this.element.appendChild( operation.geElement() );
+  }
+};
+
+/** SVG filter 
+ * @param {string | *} attributes a list of attributes or fe operation
+ *  @param {string} attributes.feoperation filter primitive tag name
+ */
+ol.ext.SVGOperation = function(attributes) {
+  if (typeof(attributes)==='string') attributes = { feoperation: attributes };
+  if (!attributes || !attributes.feoperation) {
+    console.error('[SVGOperation]: no operation defined.')
+    return;
+  }
+  ol.Object.call(this);
+  this._name = attributes.feoperation;
+  this.element = document.createElementNS( this.NS, this._name );
+  this.setProperties(attributes);
+  if (attributes.operation instanceof Array) this.appendChild(attributes.operation);
+};
+ol.ext.inherits(ol.ext.SVGOperation, ol.Object);
+ol.ext.SVGOperation.prototype.NS = "http://www.w3.org/2000/svg";
+/** Get filter name
+ * @return {string}
+ */
+ol.ext.SVGOperation.prototype.getName = function() {
+  return this._name;
+};
+/** Set Filter attribute
+ * @param {*} attributes
+ */
+ol.ext.SVGOperation.prototype.set = function(k, val) {
+  if (!/^feoperation$|^operation$/.test(k)) {
+    ol.Object.prototype.set.call(this, k, val);
+    this.element.setAttribute( k, val );
+  }
+};
+/** Set Filter attributes
+ * @param {*} attributes
+ */
+ol.ext.SVGOperation.prototype.setProperties = function(attributes) {
+  attributes = attributes || {};
+  for (var k in attributes) {
+    this.set(k, attributes[k])
+  }
+};
+/** Get SVG  element
+ * @return {Element}
+ */
+ol.ext.SVGOperation.prototype.geElement = function() {
+  return this.element;
+};
+/** Append a new operation
+ * @param {ol.ext.SVGOperation} operation
+ */
+ol.ext.SVGOperation.prototype.appendChild = function(operation) {
+  if (operation instanceof Array) {
+    operation.forEach(function(o) { this.addOperation(o) }.bind(this));
+  } else {
+    if (!(operation instanceof ol.ext.SVGOperation)) operation = new ol.ext.SVGOperation(operation);
+    this.element.appendChild( operation.geElement() );
+  }
 };
 
 /** Vanilla JS helper to manipulate DOM without jQuery
@@ -14058,6 +14112,66 @@ ol.filter.Pointillism.prototype.postcompose = function(e) {
       ctx.fill();
     }
   ctx.restore();
+};
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Add a canvas Context2D SVG filter to a layer
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/filter
+ * @constructor
+ * @requires ol.filter
+ * @extends {ol.filter.Base}
+ * @param {ol.ext.SVGFilter|Array<ol.ext.SVGFilter>} filters
+ */
+ol.filter.SVGFilter = function(filters) {
+  ol.filter.Base.call(this);
+  this._svg = {};
+  if (!(filters instanceof Array)) filters = [filters];
+  filters.forEach(function(f) {
+    this.addSVGFilter(f);
+  }.bind(this));
+};
+ol.ext.inherits(ol.filter.SVGFilter, ol.filter.Base);
+/** Add a new svg filter
+ * @param {ol.ext.SVGFilter} filter
+ */
+ol.filter.SVGFilter.prototype.addSVGFilter = function(filter) {
+  var url = '#'+filter.getId();
+  this._svg[url] = 1;
+  this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
+};
+/** Remove a svg filter
+ * @param {ol.ext.SVGFilter} filter
+ */
+ol.filter.SVGFilter.prototype.removeSVGFilter = function(filter) {
+  var url = '#'+filter.getId();
+  delete this._svg[url]
+  this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
+};
+/**
+ * @private
+ */
+ol.filter.SVGFilter.prototype.precompose = function() {
+};
+/**
+ * @private
+ */
+ol.filter.SVGFilter.prototype.postcompose = function(e) {
+  var filter = []
+  // Set filters
+  for (var f in this._svg) {
+    filter.push('url('+f+')'); 
+  }
+  filter = filter.join(' ');
+  // Apply filter
+  if (filter) {
+    e.context.save();
+    e.context.filter = filter;
+    e.context.drawImage(e.context.canvas, 0,0);
+    e.context.restore();
+  }
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 

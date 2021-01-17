@@ -154,34 +154,33 @@
     osm.addFilter(filter);
 
     // Emboss filter
-    var emboss = new ol.ext.SVGFilter('feConvolveMatrix');
+    var emboss = new ol.ext.SVGOperation('feConvolveMatrix');
+    var embossFilter = new ol.ext.SVGFilter(emboss);
     function setEmboss(v) {
       if (v==0) {
-        filter.removeSVGFilter(emboss);
+        filter.removeSVGFilter(embossFilter);
       } else {
-        var pow = v
-        emboss.setAttributes({
-          kernelMatrix: [
-            v,  v, -v,
-            v,  1, -v,
-            v, -v, -v
-          ],
-        })
-        filter.addSVGFilter(emboss);
+        emboss.set('kernelMatrix', [
+          v,  v, -v,
+          v,  1, -v,
+          v, -v, -v
+        ]);
+        filter.addSVGFilter(embossFilter);
       }
     }
 
     // Erode filter
-    var erode = new ol.ext.SVGFilter('feMorphology', {
+    var erode = new ol.ext.SVGOperation({
+      tagName: 'feMorphology',
       operator: 'erode',
-      in: 'SourceGraphic',
       radius: 1
     });
+    var erodeFilter = new ol.ext.SVGFilter(erode);
     function setErode(val) {
-      if (val==0) filter.removeSVGFilter(erode);
+      if (val==0) filter.removeSVGFilter(erodeFilter);
       else {
-        erode.setAttributes({ radius: val });
-        filter.addSVGFilter(erode);
+        erode.set('radius', val);
+        filter.addSVGFilter(erodeFilter);
       }
     }
 

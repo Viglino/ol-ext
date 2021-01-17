@@ -1,0 +1,92 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+<!--
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Canvas filters</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="This filter apply a composite operation on layer drawing." />
+  <meta name="keywords" content="ol3, filter, canvas, blur, huerotate, saturation, invert sepia" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <style>
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Canvas filter</h1>
+  </a>
+  <div class="info">
+    <i>ol/filter/CanvasFilter</i> applies a canvas filter on layer drawing.
+    <br/>
+    See <a href="https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/filter#Browser_compatibility">
+    browser compatibility</a> or use <a href="map.filter.colorize.html">color filters</a>.
+  </div>
+
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options" >
+    Operations:
+    <ul></ul>
+  </div>
+
+  <script type="text/javascript">
+    var layer = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' });
+
+    // The map
+    var map = new ol.Map ({
+      target: 'map',
+      view: new ol.View ({
+        zoom: 13,
+        center: [340705, 6556400]
+      }),
+      layers: [ layer ]
+    });
+
+    var filter = new ol.filter.SVGFilter(new ol.ext.SVGFilter([
+      {
+        feoperation: 'feConvolveMatrix',
+        order: "3 3",
+        preserveAlpha: "true",
+        kernelMatrix: [-1, -1, -1, 
+                      -1,  8, -1,
+                      -1, -1, -1]
+      },
+      {
+        feoperation: 'feColorMatrix',
+        type: "saturate",
+        values: "0"
+      }
+    ]));
+    layer.addFilter(filter);
+
+    
+
+    map.addControl(new ol.control.Permalink({ visible: false }));
+
+  </script>
+
+</body>
+</html>
