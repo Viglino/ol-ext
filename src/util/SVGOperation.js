@@ -17,7 +17,7 @@ var ol_ext_SVGOperation = function(attributes) {
   this._name = attributes.feoperation;
   this.element = document.createElementNS( this.NS, this._name );
   this.setProperties(attributes);
-  if (attributes.operation instanceof Array) this.appendChild(attributes.operation);
+  if (attributes.operations instanceof Array) this.appendChild(attributes.operations);
 };
 ol_ext_inherits(ol_ext_SVGOperation, ol_Object);
 
@@ -34,7 +34,7 @@ ol_ext_SVGOperation.prototype.getName = function() {
  * @param {*} attributes
  */
 ol_ext_SVGOperation.prototype.set = function(k, val) {
-  if (!/^feoperation$|^operation$/.test(k)) {
+  if (!/^feoperation$|^operations$/.test(k)) {
     ol_Object.prototype.set.call(this, k, val);
     this.element.setAttribute( k, val );
   }
@@ -61,8 +61,9 @@ ol_ext_SVGOperation.prototype.geElement = function() {
  * @param {ol_ext_SVGOperation} operation
  */
 ol_ext_SVGOperation.prototype.appendChild = function(operation) {
+  console.log(operation)
   if (operation instanceof Array) {
-    operation.forEach(function(o) { this.addOperation(o) }.bind(this));
+    operation.forEach(function(o) { this.appendChild(o) }.bind(this));
   } else {
     if (!(operation instanceof ol_ext_SVGOperation)) operation = new ol_ext_SVGOperation(operation);
     this.element.appendChild( operation.geElement() );

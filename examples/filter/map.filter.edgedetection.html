@@ -25,6 +25,7 @@
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
   
   <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
   <style>
@@ -53,7 +54,10 @@
   </div>
 
   <script type="text/javascript">
-    var layer = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' });
+    var photo = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', className: 'photo', visible: false });
+    var plan = new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', className: 'photo' });
+    var layer = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', className: 'edge', title: 'Edges', opacity: 1 });
+    //layer.setSource(photo.getSource())
 
     // The map
     var map = new ol.Map ({
@@ -62,27 +66,56 @@
         zoom: 13,
         center: [340705, 6556400]
       }),
-      layers: [ layer ]
+      layers: [ photo, /* plan, */ layer ]
     });
+    map.addControl(new ol.control.LayerSwitcher)
 
     var filter = new ol.filter.SVGFilter(new ol.ext.SVGFilter([
       {
         feoperation: 'feConvolveMatrix',
-        order: "3 3",
-        preserveAlpha: "true",
-        kernelMatrix: [-1, -1, -1, 
-                      -1,  8, -1,
-                      -1, -1, -1]
+        preserveAlpha: true,
+        kernelMatrix: [
+          -1, -1, -1, 
+          -1,  8, -1, 
+          -1, -1, -1
+        ]
       },
+      /** /
       {
         feoperation: 'feColorMatrix',
-        type: "saturate",
-        values: "0"
-      }
+        type: 'saturate',
+        values: 0
+      },
+      /* Get alpha channel */
+      {
+        feoperation: 'feColorMatrix',
+        type: 'luminanceToAlpha'
+      },
+      /* enhance * /
+      {
+        feoperation: 'feComponentTransfer',
+        operations: [{
+          feoperation: 'feFuncA',
+          type: 'gamma', 
+          amplitude: 4,
+          exponent: 1,
+          offset: 0
+        }]
+      },
+      /* change color * /
+      {
+        feoperation: 'feColorMatrix',
+        type: 'matrix',
+        values: [
+          0, 0, 0, 1, 0,
+          0, 0, 0, 1, 0,
+          0, 0, 0, 0, 0,
+          0, 0, 0, 1, 0
+        ]
+      },
+      /**/
     ]));
     layer.addFilter(filter);
-
-    
 
     map.addControl(new ol.control.Permalink({ visible: false }));
 

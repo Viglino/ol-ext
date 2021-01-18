@@ -25,6 +25,7 @@
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
   
   <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
   <style>
@@ -171,7 +172,7 @@
 
     // Erode filter
     var erode = new ol.ext.SVGOperation({
-      tagName: 'feMorphology',
+      feoperation: 'feMorphology',
       operator: 'erode',
       radius: 1
     });

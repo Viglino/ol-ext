@@ -58,11 +58,16 @@ ol_filter_SVGFilter.prototype.postcompose = function(e) {
     filter.push('url('+f+')'); 
   }
   filter = filter.join(' ');
+  var canvas = document.createElement('canvas');
+  canvas.width = e.context.canvas.width;
+  canvas.height = e.context.canvas.height;
+  canvas.getContext('2d').drawImage(e.context.canvas,0,0);
   // Apply filter
   if (filter) {
     e.context.save();
+    e.context.clearRect(0,0,canvas.width, canvas.height);
     e.context.filter = filter;
-    e.context.drawImage(e.context.canvas, 0,0);
+    e.context.drawImage(canvas, 0,0);
     e.context.restore();
   }
 };
