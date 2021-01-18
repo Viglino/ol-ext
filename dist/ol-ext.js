@@ -253,7 +253,7 @@ ol.ext.SVGOperation = function(attributes) {
   this._name = attributes.feoperation;
   this.element = document.createElementNS( this.NS, this._name );
   this.setProperties(attributes);
-  if (attributes.operation instanceof Array) this.appendChild(attributes.operation);
+  if (attributes.operations instanceof Array) this.appendChild(attributes.operations);
 };
 ol.ext.inherits(ol.ext.SVGOperation, ol.Object);
 ol.ext.SVGOperation.prototype.NS = "http://www.w3.org/2000/svg";
@@ -267,7 +267,7 @@ ol.ext.SVGOperation.prototype.getName = function() {
  * @param {*} attributes
  */
 ol.ext.SVGOperation.prototype.set = function(k, val) {
-  if (!/^feoperation$|^operation$/.test(k)) {
+  if (!/^feoperation$|^operations$/.test(k)) {
     ol.Object.prototype.set.call(this, k, val);
     this.element.setAttribute( k, val );
   }
@@ -291,8 +291,9 @@ ol.ext.SVGOperation.prototype.geElement = function() {
  * @param {ol.ext.SVGOperation} operation
  */
 ol.ext.SVGOperation.prototype.appendChild = function(operation) {
+  console.log(operation)
   if (operation instanceof Array) {
-    operation.forEach(function(o) { this.addOperation(o) }.bind(this));
+    operation.forEach(function(o) { this.appendChild(o) }.bind(this));
   } else {
     if (!(operation instanceof ol.ext.SVGOperation)) operation = new ol.ext.SVGOperation(operation);
     this.element.appendChild( operation.geElement() );
@@ -14165,11 +14166,16 @@ ol.filter.SVGFilter.prototype.postcompose = function(e) {
     filter.push('url('+f+')'); 
   }
   filter = filter.join(' ');
+  var canvas = document.createElement('canvas');
+  canvas.width = e.context.canvas.width;
+  canvas.height = e.context.canvas.height;
+  canvas.getContext('2d').drawImage(e.context.canvas,0,0);
   // Apply filter
   if (filter) {
     e.context.save();
+    e.context.clearRect(0,0,canvas.width, canvas.height);
     e.context.filter = filter;
-    e.context.drawImage(e.context.canvas, 0,0);
+    e.context.drawImage(canvas, 0,0);
     e.context.restore();
   }
 };
