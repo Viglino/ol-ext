@@ -6,11 +6,11 @@
   Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
   released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 -->
-  <title>ol-ext: Canvas filters</title>
+  <title>ol-ext: DetectEdge filter</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-  <meta name="description" content="This filter apply a composite operation on layer drawing." />
-  <meta name="keywords" content="ol3, filter, canvas, blur, huerotate, saturation, invert sepia" />
+  <meta name="description" content="This filter apply a filter to detect edge on images." />
+  <meta name="keywords" content="openlayers, ol, filter, canvas, edge, detect" />
 
   <link rel="stylesheet" href="../style.css" />
 
@@ -29,6 +29,18 @@
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
 
   <style>
+    #map {
+      background: #fff;
+      position: fixed;
+      top: 8em;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin: 0;
+    }
+    .options {
+      display: none;
+    }
   </style>
 
 </head>
@@ -36,25 +48,20 @@
   <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
   <a href="../../index.html">
-    <h1>ol-ext: Canvas filter</h1>
+    <h1>ol-ext: DetectEdge filter</h1>
   </a>
   <div class="info">
-    <i>ol/filter/CanvasFilter</i> applies a canvas filter on layer drawing.
-    <br/>
-    See <a href="https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/filter#Browser_compatibility">
-    browser compatibility</a> or use <a href="map.filter.colorize.html">color filters</a>.
+    <i>ol/ext/SVGFilter/DetectEdge</i> is a simple edge detector filter to detect edges on images.
   </div>
 
   <!-- Map div -->
-  <div id="map" style="width:600px; height:400px;"></div>
+  <div id="map"></div>
 
   <div class="options" >
-    Operations:
-    <ul></ul>
   </div>
 
   <script type="text/javascript">
-    var photo = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', className: 'photo', visible: false });
+    var photo = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', className: 'photo', opacity: .4 });
     var plan = new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', className: 'photo' });
     var layer = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', className: 'edge', title: 'Edges', opacity: 1 });
     //layer.setSource(photo.getSource())
@@ -63,58 +70,19 @@
     var map = new ol.Map ({
       target: 'map',
       view: new ol.View ({
-        zoom: 13,
-        center: [340705, 6556400]
+        zoom: 18,
+        maxZoom: 19,
+        center: [343183, 6554838]
       }),
       layers: [ photo, /* plan, */ layer ]
     });
     map.addControl(new ol.control.LayerSwitcher)
 
-    var filter = new ol.filter.SVGFilter(new ol.ext.SVGFilter([
-      {
-        feoperation: 'feConvolveMatrix',
-        preserveAlpha: true,
-        kernelMatrix: [
-          -1, -1, -1, 
-          -1,  8, -1, 
-          -1, -1, -1
-        ]
-      },
-      /** /
-      {
-        feoperation: 'feColorMatrix',
-        type: 'saturate',
-        values: 0
-      },
-      /* Get alpha channel */
-      {
-        feoperation: 'feColorMatrix',
-        type: 'luminanceToAlpha'
-      },
-      /* enhance * /
-      {
-        feoperation: 'feComponentTransfer',
-        operations: [{
-          feoperation: 'feFuncA',
-          type: 'gamma', 
-          amplitude: 4,
-          exponent: 1,
-          offset: 0
-        }]
-      },
-      /* change color * /
-      {
-        feoperation: 'feColorMatrix',
-        type: 'matrix',
-        values: [
-          0, 0, 0, 1, 0,
-          0, 0, 0, 1, 0,
-          0, 0, 0, 0, 0,
-          0, 0, 0, 1, 0
-        ]
-      },
-      /**/
-    ]));
+    /** /
+    var filter = new ol.filter.SVGFilter(new ol.ext.SVGFilter.DetectEdge({ alpha: true }));
+    /*/
+    var filter = new ol.filter.SVGFilter(new ol.ext.SVGFilter.Sobel({ alpha: true }));
+    /**/
     layer.addFilter(filter);
 
     map.addControl(new ol.control.Permalink({ visible: false }));

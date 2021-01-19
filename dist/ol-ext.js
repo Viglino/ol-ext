@@ -209,7 +209,7 @@ ol.ext.SVGFilter = function(operation) {
   this.element = document.createElementNS( this.NS, 'filter' );
   this._id = '_ol_SVGFilter_' + (ol.ext.SVGFilter.prototype._id++);
   this.element.setAttribute( 'id', this._id );
-  this.addOperation(operation);
+  if (operation) this.addOperation(operation);
   ol.ext.SVGFilter.prototype.svg.appendChild( this.element );
 };
 ol.ext.inherits(ol.ext.SVGFilter, ol.Object);
@@ -853,6 +853,176 @@ if (window.ol && !ol.sphere) {
   ol.sphere.getArea = ol.Sphere.getArea;
   ol.sphere.getLength = ol.Sphere.getLength;
 }
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** A filter to detecte edge on images
+ * @constructor
+ * @requires ol.filter
+ * @extends {ol.ext.SVGFilter}
+ * @param {*} options
+ *  @param {boolean} options.grayscale get grayscale image, default false,
+ *  @param {boolean} options.alpha get alpha channel, default false
+ */
+ol.ext.SVGFilter.DetectEdge = function(options) {
+  options = options || {};
+  ol.ext.SVGFilter.call(this);
+  this.addOperation({
+    feoperation: 'feConvolveMatrix',
+    preserveAlpha: true,
+    kernelMatrix: [
+      -1, -1, -1, 
+      -1,  8, -1, 
+      -1, -1, -1
+    ]
+  });
+  if (options.grayscale) {
+    this.addOperation({
+      feoperation: 'feColorMatrix',
+      type: 'saturate',
+      values: 0
+    });
+  } else if (options.alpha) {
+    this.addOperation({
+      feoperation: 'feColorMatrix',
+      type: 'luminanceToAlpha'
+    });
+  }
+  /* enhance * /
+    {
+      feoperation: 'feComponentTransfer',
+      operations: [{
+        feoperation: 'feFuncA',
+        type: 'gamma', 
+        amplitude: 4,
+        exponent: 1,
+        offset: 0
+      }]
+    },
+  /**/
+};
+ol.ext.inherits(ol.ext.SVGFilter.DetectEdge, ol.ext.SVGFilter);
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Apply a sobel filter on an image
+ * @constructor
+ * @requires ol.filter
+ * @extends {ol.ext.SVGFilter}
+ * @param {*} options
+ *  @param {boolean} options.grayscale get grayscale image, default false,
+ *  @param {boolean} options.alpha get alpha channel, default false
+ */
+ol.ext.SVGFilter.Sobel = function(options) {
+  options = options || {};
+  ol.ext.SVGFilter.call(this);
+  // Red channel
+  this._addColorSobel('red');
+  // Green channel
+  this._addColorSobel('green');
+  // Blue channel
+  this._addColorSobel('blue');
+  // Combine
+  this.addOperation({
+    feoperation: 'feComposite',
+    operator: 'arithmetic',
+    in: 'rededge',
+    in2: 'greenedge',
+    k2: 1,
+    k3: 1
+  });
+  this.addOperation({
+    feoperation: 'feComposite',
+    operator: 'arithmetic',
+    in2: 'blueedge',
+    k2: 1,
+    k3: 1,
+    result: 'finaledges'
+  });
+  if (options.grayscale) {
+    this.addOperation({
+      feoperation: 'feColorMatrix',
+      type: 'saturate',
+      values: 0
+    });
+  } else if (options.alpha) {
+    this.addOperation({
+      feoperation: 'feColorMatrix',
+      type: 'luminanceToAlpha'
+    });
+  }
+};
+ol.ext.inherits(ol.ext.SVGFilter.Sobel, ol.ext.SVGFilter);
+/** Sobel filter on a color
+ * @param {ol.ext.SVGFilter} filter
+ * @param {string} color color name : red/green/blue
+ * @private
+ */
+ol.ext.SVGFilter.Sobel.prototype._addColorSobel = function(color) {
+  var r = (color==='red' ? 1:0);
+  var g = (color==='green' ? 1:0);
+  var b = (color==='blue' ? 1:0);
+  // Color channel
+  this.addOperation(new ol.ext.SVGOperation({
+    feoperation: 'feColorMatrix',
+    in: 'SourceGraphic',
+    type: 'matrix',
+    values:[
+      0, 0, 0, 0, 1,
+      0, 0, 0, 0, 1,
+      0, 0, 0, 0, 1,
+      r, g, b, 0, 0
+    ],
+    result: color+'Chan'
+  }));
+  // Horizontal 
+  this.addOperation(new ol.ext.SVGOperation({
+    feoperation: 'feConvolveMatrix',
+    in: color+'Chan',
+    order: 3,
+    kernelMatrix: [
+      -1, -2, -1,
+       0,  0,  0,
+       1,  2,  1],
+    result: color+'Hor'
+  }));
+  // Vertical
+  this.addOperation(new ol.ext.SVGOperation({
+    feoperation: 'feConvolveMatrix',
+    in: color+'Chan',
+    order: 3,
+    kernelMatrix: [
+      -1,  0,  1,
+      -2,  0,  2,
+      -1,  0,  1],
+    result: color+'Ver'
+  }));
+  // Combine
+  this.addOperation(new ol.ext.SVGOperation({
+    feoperation: 'feComposite',
+    operator: 'arithmetic',
+    k2: 1,
+    k3: 1,
+    in: color+'Hor',
+    in2: color+'Ver'
+  }));
+  // Edges
+  this.addOperation(new ol.ext.SVGOperation({
+    feoperation: 'feColorMatrix',
+    type: 'matrix',
+    values: [
+      0, 0, 0, r, 0,
+      0, 0, 0, g, 0,
+      0, 0, 0, b, 0,
+      0, 0, 0, 0, 1
+    ],
+    result: color+'edge'
+  }));
+};
+
 /**
  * @classdesc 
  *   Attribution Control integrated in the canvas (for jpeg/png 
@@ -14129,10 +14299,12 @@ ol.filter.Pointillism.prototype.postcompose = function(e) {
 ol.filter.SVGFilter = function(filters) {
   ol.filter.Base.call(this);
   this._svg = {};
-  if (!(filters instanceof Array)) filters = [filters];
-  filters.forEach(function(f) {
-    this.addSVGFilter(f);
-  }.bind(this));
+  if (filters) {
+    if (!(filters instanceof Array)) filters = [filters];
+    filters.forEach(function(f) {
+      this.addSVGFilter(f);
+    }.bind(this));
+  }
 };
 ol.ext.inherits(ol.filter.SVGFilter, ol.filter.Base);
 /** Add a new svg filter

@@ -17,10 +17,12 @@ import ol_ext_SVGFilter from '../util/SVGFilter'
 var ol_filter_SVGFilter = function(filters) {
   ol_filter_Base.call(this);
   this._svg = {};
-  if (!(filters instanceof Array)) filters = [filters];
-  filters.forEach(function(f) {
-    this.addSVGFilter(f);
-  }.bind(this));
+  if (filters) {
+    if (!(filters instanceof Array)) filters = [filters];
+    filters.forEach(function(f) {
+      this.addSVGFilter(f);
+    }.bind(this));
+  }
 };
 ol_ext_inherits(ol_filter_SVGFilter, ol_filter_Base);
 

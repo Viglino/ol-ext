@@ -22,7 +22,7 @@ var ol_ext_SVGFilter = function(operation) {
   this._id = '_ol_SVGFilter_' + (ol_ext_SVGFilter.prototype._id++);
   this.element.setAttribute( 'id', this._id );
 
-  this.addOperation(operation);
+  if (operation) this.addOperation(operation);
 
   ol_ext_SVGFilter.prototype.svg.appendChild( this.element );
 };
