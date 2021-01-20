@@ -194,9 +194,12 @@ ol.ext.Ajax.prototype.send = function (url, data, options){
 };
 
 /** SVG filter 
- * @param {ol.ext.SVGOperation} operation
+ * @param {*} options
+ *  @param {ol.ext.SVGOperation} option.operation
+ *  @param {string} option.color color interpolation filters, linear or sRGB
  */
-ol.ext.SVGFilter = function(operation) {
+ol.ext.SVGFilter = function(options) {
+  options = options || {};
   ol.Object.call(this);
   if (!ol.ext.SVGFilter.prototype.svg) {
     ol.ext.SVGFilter.prototype.svg = document.createElementNS( this.NS, 'svg' );
@@ -209,7 +212,8 @@ ol.ext.SVGFilter = function(operation) {
   this.element = document.createElementNS( this.NS, 'filter' );
   this._id = '_ol_SVGFilter_' + (ol.ext.SVGFilter.prototype._id++);
   this.element.setAttribute( 'id', this._id );
-  if (operation) this.addOperation(operation);
+  if (options.color) this.element.setAttribute( 'color-interpolation-filters', options.color );
+  if (options.operation) this.addOperation(options.operation);
   ol.ext.SVGFilter.prototype.svg.appendChild( this.element );
 };
 ol.ext.inherits(ol.ext.SVGFilter, ol.Object);

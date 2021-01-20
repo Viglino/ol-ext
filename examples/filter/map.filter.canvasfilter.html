@@ -156,7 +156,7 @@
 
     // Emboss filter
     var emboss = new ol.ext.SVGOperation('feConvolveMatrix');
-    var embossFilter = new ol.ext.SVGFilter(emboss);
+    var embossFilter = new ol.ext.SVGFilter({ operation: emboss });
     function setEmboss(v) {
       if (v==0) {
         filter.removeSVGFilter(embossFilter);
@@ -176,7 +176,7 @@
       operator: 'erode',
       radius: 1
     });
-    var erodeFilter = new ol.ext.SVGFilter(erode);
+    var erodeFilter = new ol.ext.SVGFilter({ operation: erode });
     function setErode(val) {
       if (val==0) filter.removeSVGFilter(erodeFilter);
       else {

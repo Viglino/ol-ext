@@ -3,10 +3,13 @@ import ol_Object from 'ol/Object'
 import ol_ext_SVGOperation from './SVGOperation'
 
 /** SVG filter 
- * @param {ol_ext_SVGOperation} operation
+ * @param {*} options
+ *  @param {ol_ext_SVGOperation} option.operation
+ *  @param {string} option.color color interpolation filters, linear or sRGB
  */
-var ol_ext_SVGFilter = function(operation) {
-
+var ol_ext_SVGFilter = function(options) {
+  options = options || {};
+  
   ol_Object.call(this);
 
   if (!ol_ext_SVGFilter.prototype.svg) {
@@ -21,8 +24,9 @@ var ol_ext_SVGFilter = function(operation) {
   this.element = document.createElementNS( this.NS, 'filter' );
   this._id = '_ol_SVGFilter_' + (ol_ext_SVGFilter.prototype._id++);
   this.element.setAttribute( 'id', this._id );
+  if (options.color) this.element.setAttribute( 'color-interpolation-filters', options.color );
 
-  if (operation) this.addOperation(operation);
+  if (options.operation) this.addOperation(options.operation);
 
   ol_ext_SVGFilter.prototype.svg.appendChild( this.element );
 };
