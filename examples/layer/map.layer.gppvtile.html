@@ -323,16 +323,18 @@
         <option value="red">red</option>
         <option value="green">green</option>
         <option value="blue">blue</option>
+        <option value="color" style="display: none;">user color</option>
         <option value="color">user color</option>
         `)
         .on('change', function(){
           color = $(this).val();
           if (color==='color') {
-            color = prompt('Enter a color code (#rrggbb):');
+            color = prompt('Enter a color code (#rrggbb):') || '';
             if (color.charAt(0)!=='#') color = '#'+color;
             if (!/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color)) {
               color = '';
             }
+            $(this).val('color');
           }
           $(this).data('color', color);
           $('input', ul2).each(function() {
