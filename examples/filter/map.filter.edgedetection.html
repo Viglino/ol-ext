@@ -64,7 +64,7 @@
     var photo = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', className: 'photo', opacity: .4 });
     var plan = new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', className: 'photo' });
     var layer = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', className: 'edge', title: 'Edges', opacity: 1 });
-    //layer.setSource(photo.getSource())
+    layer.setSource(photo.getSource())
 
     // The map
     var map = new ol.Map ({
