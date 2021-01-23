@@ -47,16 +47,15 @@
       <li>
         <label>typeName :</label>
         <select id="typename" onchange="setWFS()">
-          <option value="BDTOPO_BDD_WLD_WGS84G:route">route</option>
-          <option value="BDTOPO_BDD_WLD_WGS84G:chemin">chemin</option>
-          <option value="ADMINEXPRESS_COG_2018:commune">commune</option>
-          <option value="BDPARCELLAIRE-VECTEUR_WLD_BDD_WGS84G:parcelle">parcelle</option>
+          <option value="BDTOPO_V3:troncon_de_route">route</option>
+          <option value="CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle">parcelle</option>
+          <!--
           <option value="BDPARCELLAIRE-VECTEUR_WLD_BDD_WGS84G:divcad">divcad</option>
-          <option value="BDTOPO_BDD_WLD_WGS84G:bati_indifferencie">bati_indifferencie</option>
-          <option value="BDTOPO_BDD_WLD_WGS84G:bati_industriel">bati_industriel</option>
-          <option value="BDTOPO_BDD_WLD_WGS84G:bati_remarquable">bati_remarquable</option>
+          -->
+          <option value="BDTOPO_V3:batiment">batiments</option>
         </select>
       </li>
+    <!--
       <li>
         <label>minZoom:</label>
         <select id="zoom" onchange="setWFS()">
@@ -66,8 +65,9 @@
           <option value="12">12</option> 
         </select>
       </li>
+    -->
       <li>
-        <button onclick="vectorSource.clear()">Clear</button>
+        <button onclick="vectorSource.refresh()">refresh</button>
       </li>
     </ul>
     <p id="curZoom"></p>
@@ -104,7 +104,7 @@
     })
   }));
 */
-  map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGN', {
+  map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', {
     gppKey: 'choisirgeoportail',
     visible: true,
     opacity: .5
@@ -113,7 +113,7 @@
   var vectorSource;
   var vectorLayer = new ol.layer.Vector({
     title: 'WFS-IGN',
-    maxResolution: 10,
+    maxResolution: 10,  // prevent load on small zoom 
     style: new ol.style.Style({
       stroke: new ol.style.Stroke({
         color: 'rgba(0, 0, 255, 1.0)',
@@ -130,8 +130,8 @@
   function setWFS() {
     var zoom = parseInt($("#zoom").val());
     var type = $('#typename').val();
-    if (/bati/.test(type)) zoom = 14;
-    if (/route|indif|parcelle/.test(type)) zoom = 16;
+    if (/bati/.test(type)) zoom = 16;
+    if (/route|indif|parcelle/.test(type)) zoom = 15;
     if (/divcad/.test(type)) zoom = 13;
     curZoom = zoom;
     console.log(type, zoom);
@@ -148,24 +148,32 @@
       strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: zoom, maxZoom: zoom, tileSize:512  }))
     });
     vectorLayer.setSource(vectorSource);
+    /*
     var v = new ol.View({ zoom: zoom-1 });
     vectorLayer.setMaxResolution(v.getResolution());
-    $('#curZoom').text(map.getView().getZoom()+' / '+curZoom);
+    */
+    vectorLayer.setMinZoom(zoom-1);
+    $('#curZoom').text(map.getView().getZoom().toFixed(1)+' / '+curZoom);
   }
   setWFS();
 
   map.on('moveend', function(e) {
-    $('#curZoom').text(map.getView().getZoom()+' / '+curZoom);
+    $('#curZoom').text(map.getView().getZoom().toFixed(1)+' / '+curZoom);
     if (map.getView().getZoom()<curZoom) $('#zoomTo').show();
     else $('#zoomTo').hide();
   });
 
+  // Selection
   var sel = new ol.interaction.Select({
     multi: true,
     condition: ol.events.condition.click,
     hitTolerance: 3
   })
-  map.addInteraction(sel)
+  map.addInteraction(sel);
+  sel.on('select', function(e) {
+    var f = e.selected[0];
+    if (f) console.log(f.getProperties());
+  })
 
   // Save Vector layer
   function save() {

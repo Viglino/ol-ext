@@ -126,12 +126,13 @@
     gppKey: 'choisirgeoportail',
     className: 'photo',
   }));
-  map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGN', {
+  map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', {
     gppKey: 'choisirgeoportail',
     className: 'plan',
     visible: true,
     opacity: .5
   }));
+/*
   map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.MAPS', {
     gppKey: 'choisirgeoportail',
     className: 'map',
@@ -142,7 +143,8 @@
     className: 'express',
     visible: false
   }));
-  map.addLayer (new ol.layer.Geoportail('CADASTRALPARCELS.PARCELS', {
+*/
+  map.addLayer (new ol.layer.Geoportail('CADASTRALPARCELS.PARCELLAIRE_EXPRESS', {
     gppKey: 'choisirgeoportail',
     className: 'parcel',
     visible: false
