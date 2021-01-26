@@ -85,6 +85,16 @@ ol_control_SearchNominatim.prototype.select = function (f){
   this.dispatchEvent({ type:"select", search:f, coordinate: c });
 };
 
+/**
+ * Handle server response to pass the features array to the display list
+ * @param {any} response server response
+ * @return {Array<any>} an array of feature
+ * @api
+ */
+ol_control_SearchJSON.prototype.handleResponse = function (response) {
+  return response.results || response;
+};
+
 /** Reverse geocode
  * @param {ol.coordinate} coord
  * @api
