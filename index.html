@@ -21,7 +21,6 @@
   <meta property="og:type" content="article" />
   <meta property="og:title" content="ol-ext: cool ol extensions" />
   <meta property="og:description" content="ol-ext is a set of extensions, controls, interactions, popup to use with Openlayers (ol)." />
-  
 
 <style>
   div.icss-github-corner {
@@ -206,6 +205,17 @@
     color:#693;
     margin: 0;
   }
+  .example p.tag a {
+    cursor: pointer;
+    color: #693;
+  }
+  .example p.tag a:before {
+    content: ', '
+  }
+  .example p.tag a:first-child:before {
+    content: '';
+  }
+
   .example img {
     display:none;
     margin:auto;
@@ -252,6 +262,22 @@
           .appendTo($('.container'));
       }
 
+      // Click on tags
+      function search() {
+        $('#keywords').val($(this).text()).change();
+      }
+      $('.tag').each(function() {
+        var tags = $(this).text().split(',');
+        var div = $(this).html('');
+        console.log(div)
+        tags.forEach(function(t) {
+          $('<a>').text(t.trim())
+            .click(search)
+            .appendTo(div);
+        })
+      })
+
+      // Search 
       $('#keywords').on('keyup change search', function() {
         var s = new RegExp ( $(this).val() , "i");
         var k = 0;

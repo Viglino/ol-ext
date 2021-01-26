@@ -9759,6 +9759,15 @@ ol.control.SearchNominatim.prototype.select = function (f){
   } catch(e) { /* ok */}
   this.dispatchEvent({ type:"select", search:f, coordinate: c });
 };
+/**
+ * Handle server response to pass the features array to the display list
+ * @param {any} response server response
+ * @return {Array<any>} an array of feature
+ * @api
+ */
+ol.control.SearchJSON.prototype.handleResponse = function (response) {
+  return response.results || response;
+};
 /** Reverse geocode
  * @param {ol.coordinate} coord
  * @api

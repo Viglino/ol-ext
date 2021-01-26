@@ -217,7 +217,7 @@
   function setWFS() {
     var type = $('#typename').val();
     minZoom = /bati/.test(type) ? 16 : 15;
-    /*
+    /* Standard WFS
     vectorSource = new ol.source.Vector({
       format: new ol.format.GeoJSON(),
       url: function(extent) {
@@ -231,8 +231,8 @@
       strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: minZoom, maxZoom: minZoom, tileSize:512  }))
     });
     */
-    var loading = 0;
-    var loaded = 0;
+    // Loading bar
+    var loading = 0, loaded = 0;
     var progressbar = document.getElementById('progressbar');
     var draw = function() {
       if (loading === loaded) {
