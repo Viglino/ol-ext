@@ -1602,8 +1602,12 @@ ol.control.Toggle.prototype.getInteraction = function() {
  *  @param {integer | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
  *  @param {function} options.getTitle a function that takes a feature and return the name to display in the index.
  *  @param {function} options.autocomplete a function that take a search string and callback function to send an array
+ *  @param {function} options.onselect a function called when a search is selected
+ *  @param {boolean} options.centerOnSelect center map on search, default false
+ *  @param {number|boolean} options.zoomOnSelect center map on search and zoom to value if zoom < value, default false
  */
 ol.control.Search = function(options) {
+  console.log(options)
   var self = this;
   if (!options) options = {};
   if (options.typing == undefined) options.typing = 300;
@@ -1756,6 +1760,23 @@ ol.control.Search = function(options) {
   this.set('minLength', options.minLength || 1);
   this.set('maxItems', options.maxItems || 10);
   this.set('maxHistory', options.maxHistory || options.maxItems || 10);
+  // Select
+  if (options.onselect) this.on('select', options.onselect);
+  // Center on select
+  if (options.centerOnSelect) this.on('select', function(e) {
+    var map = this.getMap();
+    if (map) {
+      map.getView().setCenter(e.coordinate);
+    }
+  }.bind(this));
+  // Zoom on select
+  if (options.zoomOnSelect) this.on('select', function(e) {
+    var map = this.getMap();
+    if (map) {
+      map.getView().setCenter(e.coordinate);
+      if (map.getView().getZoom() < options.zoomOnSelect) map.getView().setZoom(options.zoomOnSelect);
+    }
+  }.bind(this));
   // History
   this.restoreHistory();
   this.drawList_();

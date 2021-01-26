@@ -5,14 +5,16 @@
 	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
 	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 -->
-	<title>ol-ext: Geoportail layer</title>
+	<title>ol-ext: Geoportail WFS</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="Geoportail layer for ol" />
-	<meta name="keywords" content="ol, openlayers, layer, source, geoportail" />
+	<meta name="description" content="Geoportail WFS" />
+	<meta name="keywords" content="ol, openlayers, layer, source, geoportail, WFS" />
 
 	<!-- jQuery -->
 	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 	<!-- Openlayers -->
   <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
@@ -26,76 +28,162 @@
   <!-- filesaver-js -->
 	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
+  
+  <style>
+    #map {
+      position: absolute;
+      top: 4em;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      margin: 0;
+    }
+    #progressbar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      background-color: teal;
+      height: .5em;
+      width: 0;
+    }
+    .zoom {
+      position: absolute;
+      bottom:0;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0,0,0,.5);
+      color: #fff;
+      margin: .5em;
+      pointer-events: none;
+      padding: .5em  1em;
+      border-radius: 1em;
+    }
+    button i {
+      color: #000;
+    }
+    .options {
+      position: absolute;
+      top: 3.6em;
+      left: 50%;
+      transform: translateX(-50%);
+      margin: 0;
+      border-radius: 0 0 2em 2em;
+      background: #1f6b75;
+      color: #fff;
+      padding: .2em 1.5em;
+    }
+    .info {
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -30%);
+      background-color: #fff;
+      padding: 1em 2em;
+      box-shadow: 0 0 0.5em rgba(0,0,0,.8);
+      z-index: 1;
+      max-width: 90%;
+      width: 40em;
+      box-sizing: border-box;
+      cursor: pointer;
+    }
+    .info img {
+      height: 4em;
+      vertical-align: middle;
+    }
+    .info span {
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .info p {
+      margin: 1em 0;
+    }
+    .info > img {
+      display: block;
+      margin: auto;
+    }
+    #loading {
+      display: none;
+      animation: blinker .8s linear infinite;
+    }
+
+    @keyframes blinker {
+      49% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0;
+      }
+    }
+  </style>
 </head>
 <body >
 	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
 	<a href="../../index.html">
-		<h1>ol-ext: Geoportail layer</h1>
+		<h1>ol-ext: Geoportail WFS</h1>
 	</a>
-	<div class="info">
+	<div class="info" onclick="$('.info').hide();">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a0/IGN_logo_2012.svg" />
     <p>
+      Cet exemple affiche les flux WFS du Géoportail et permet de télécharger les données IGN au format GeoJSON. 
+      <ol>
+        <li>Sélectionner la couche</li>
+        <li>parcourez la zone à charger</li>
+        <li>télécharger...</li>
+      </ol>
     </p>
+    <p>
+      Les bases de données de l'IGN sont diffusées selon les termes de la 
+      <a href="https://geoservices.ign.fr/documentation/diffusion/telechargement-donnees-libres.html">
+        licence ouverte Etalab 2.0
+      </a>
+    </p>
+    <div style="text-align: center;">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/1/18/Logo-licence-ouverte2.svg" />
+      <span>
+        licence ouverte
+        <br/>Openlicence
+      </span>
+    </div>
   </div>
 
 	<!-- DIV pour la carte -->
-	<div id="map" style="width: 600px; height: 400px;"></div>
+  <div id="map"></div>
+  <div id="progressbar"></div>
 	<div class="options">
-    <h2>WFS</h2>
-    <ul>
-      <li>
-        <label>typeName :</label>
-        <select id="typename" onchange="setWFS()">
-          <option value="BDTOPO_V3:troncon_de_route">route</option>
-          <option value="CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle">parcelle</option>
-          <!--
-          <option value="BDPARCELLAIRE-VECTEUR_WLD_BDD_WGS84G:divcad">divcad</option>
-          -->
-          <option value="BDTOPO_V3:batiment">batiments</option>
-        </select>
-      </li>
-    <!--
-      <li>
-        <label>minZoom:</label>
-        <select id="zoom" onchange="setWFS()">
-          <option value="15">15</option> 
-          <option value="14">14</option> 
-          <option value="13">13</option> 
-          <option value="12">12</option> 
-        </select>
-      </li>
-    -->
-      <li>
-        <button onclick="vectorSource.refresh()">refresh</button>
-      </li>
-    </ul>
-    <p id="curZoom"></p>
-    <p id="zoomTo" style="background: yellow; color: red; margin: 0; padding: .5em;">Zoom to display features</p>
+    <label>typeName:</label>
+    <select id="typename" onchange="setWFS()">
+      <option value="BDTOPO_V3:troncon_de_route">route</option>
+      <option value="CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle">parcelle</option>
+      <option value="BDTOPO_V3:batiment">batiments</option>
+    </select>
+    <button onclick="vectorSource.refresh()"><i class="fa fa-refresh"></i> refresh</button>
+    <button onclick="save()"><i class="fa fa-download"></i> download</button>
+  </div>
+  <div class="zoom">
+    <span id="curZoom"></span>
+    <span id="loading">- loading</span>
+    <span id="zoomTo">- Zoom to display features</span>
 	</div>
 	
   <script type="text/javascript">
-  // Key Capabilities
-  if (!window.geoportailConfig) window.geoportailConfig = { capabilities: {} };
-  window.geoportailConfig.capabilities['h1osiyvfm7c4wu976jv6gpum'] = {
-    "INSEE.FILOSOFI.NIVEAU.DE.VIE.SECRET": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.NIVEAU.DE.VIE.SECRET","title":"Niveau de vie winsorisé des individus (secret signalé)","format":"image/png","style":"CARROYAGE INSEE NIVEAU DE VIE SECRET","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Niveau de vie des individus, retraité des valeurs extrêmes (les cases hachurées correspondent aux données secrétisées)","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
-    "INSEE.FILOSOFI.ENFANTS.0.17.ANS.SECRET": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.ENFANTS.0.17.ANS.SECRET","title":"% des 0-17 ans  (secret signalé)","format":"image/png","style":"CARROYAGE INSEE PART ENFANTS 0 A 17 ANS SECRET","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Nombre d’individus âgés de 0 à 17 ans dans la population (les cases hachurées correspondent aux données secrétisées)","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
-    "INSEE.FILOSOFI.PART.PLUS.65.ANS.SECRET": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.PART.PLUS.65.ANS.SECRET","title":"% des plus de 65 ans (secret signalé)","format":"image/png","style":"CARROYAGE INSEE PART PLUS 65 ANS SECRET","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Nombre d’individus âgés de plus de 65 ans dans la population (les cases hachurées correspondent aux données secrétisées)","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
-    "INSEE.FILOSOFI.POPULATION": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.POPULATION","title":"Densité de population","format":"image/png","style":"CARROYAGE INSEE POPULATION","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Nombre d'individus par km²","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
-    "Aire-Parcellaire": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"Aire-Parcellaire","title":"Délimitation parcellaire AOC viticole","format":"image/png","style":"normal","queryable":true,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-5.1504726,41.32521,9.570543,51.099052],"desc":"<![CDATA[Selon les règlements européens n°110/2008 du 15 janvier 2008, n°1151/2012 du 21 novembre 2012 et n°1308/2013 de l’OCM , le cahier des charges des appellations définit l’aire géographique. Le terme de « délimitation parcellaire » désigne une aire qui repose sur les limites administratives du cadastre (les parcelles) et dont le maillage suffisamment fin permet de tenir compte de variations très localisées des éléments du milieu physique. Elle correspond à l'aire de production de la matière première. Elle est incluse dans l'aire géographique.\n\nDonnées produites par l'Institut National des Origines et la Qualité (INAO)]]>","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-5.1504726,41.32521,9.570543,51.099052]}]}}},
-  };
+  var minZoom = 15;
 	// The map
 	var map = new ol.Map ({
     target: 'map',
     view: new ol.View ({
-      zoom: 15,
+      zoom: minZoom,
       center: [261204.43490751847, 6250258.191535994]
     })
   });
 
   map.addControl(new ol.control.LayerSwitcher());
-  map.addControl(new ol.control.Permalink());
+  map.addControl(new ol.control.Permalink({ visible: false }));
   map.addControl(new ol.control.ScaleLine());
+  map.addControl(new ol.control.SearchBAN({
+    zoomOnSelect: 15
+  }))
 
 /*
   map.addLayer(new ol.layer.Tile({
@@ -107,7 +195,7 @@
   map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', {
     gppKey: 'choisirgeoportail',
     visible: true,
-    opacity: .5
+    opacity: 1
   }));
 
   var vectorSource;
@@ -126,15 +214,10 @@
   })
   map.addLayer(vectorLayer);
 
-  var curZoom;
   function setWFS() {
-    var zoom = parseInt($("#zoom").val());
     var type = $('#typename').val();
-    if (/bati/.test(type)) zoom = 16;
-    if (/route|indif|parcelle/.test(type)) zoom = 15;
-    if (/divcad/.test(type)) zoom = 13;
-    curZoom = zoom;
-    console.log(type, zoom);
+    minZoom = /bati/.test(type) ? 16 : 15;
+    /*
     vectorSource = new ol.source.Vector({
       format: new ol.format.GeoJSON(),
       url: function(extent) {
@@ -145,21 +228,66 @@
           'bbox=' + extent.join(',') + ',EPSG:3857';
       },
       //strategy: ol.loadingstrategy.bbox
-      strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: zoom, maxZoom: zoom, tileSize:512  }))
+      strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: minZoom, maxZoom: minZoom, tileSize:512  }))
+    });
+    */
+    var loading = 0;
+    var loaded = 0;
+    var progressbar = document.getElementById('progressbar');
+    var draw = function() {
+      if (loading === loaded) {
+        loading = loaded = 0;
+        ol.ext.element.setStyle(progressbar, { width: 0 });// layer.layerswitcher_progress.width(0);
+        $('#loading').hide();
+      } else {
+        ol.ext.element.setStyle(progressbar, { width: (loaded / loading * 100).toFixed(1) + '%' });// layer.layerswitcher_progress.css('width', (loaded / loading * 100).toFixed(1) + '%');
+        $('#loading').show();
+      }
+    }
+    var format = new ol.format.GeoJSON();
+    vectorSource = new ol.source.Vector({
+      loader: function (extent, resolution, projection) {
+        loading++;
+        draw();
+        $.ajax({
+          url: 'https://wxs.ign.fr/choisirgeoportail/geoportail/wfs?service=WFS&' +
+            'version=1.1.0&request=GetFeature&' +
+            'typename='+type+'&' +
+            'outputFormat=application/json&srsname=EPSG:3857&' +
+            'bbox=' + extent.join(',') + ',EPSG:3857',
+          dataType: 'json',
+          success: function (response) {
+            if (response.error) {
+              alert(
+                response.error.message + '\n' + response.error.details.join('\n')
+              );
+            } else {
+              // dataProjection will be read from document
+              var features = format.readFeatures(response, {
+                featureProjection: projection,
+              });
+              if (features.length > 0) {
+                vectorSource.addFeatures(features);
+              }
+            }
+          },
+          complete: function () {
+            loaded++;
+            draw();
+          }
+        });
+      },
+      strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: minZoom, maxZoom: minZoom, tileSize:512  }))
     });
     vectorLayer.setSource(vectorSource);
-    /*
-    var v = new ol.View({ zoom: zoom-1 });
-    vectorLayer.setMaxResolution(v.getResolution());
-    */
-    vectorLayer.setMinZoom(zoom-1);
-    $('#curZoom').text(map.getView().getZoom().toFixed(1)+' / '+curZoom);
+    vectorLayer.setMinZoom(minZoom);
+    $('#curZoom').text(map.getView().getZoom().toFixed(1)+' / '+minZoom);
   }
   setWFS();
 
   map.on('moveend', function(e) {
-    $('#curZoom').text(map.getView().getZoom().toFixed(1)+' / '+curZoom);
-    if (map.getView().getZoom()<curZoom) $('#zoomTo').show();
+    $('#curZoom').text(map.getView().getZoom().toFixed(1)+' / '+minZoom);
+    if (map.getView().getZoom() < minZoom) $('#zoomTo').show();
     else $('#zoomTo').hide();
   });
 
