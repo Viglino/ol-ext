@@ -24,6 +24,7 @@
 	<!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
 	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <script type="text/javascript" src="../../dist/extra/FontAwesomeDef.js"></script>
 
   <!-- filesaver-js -->
 	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
@@ -185,32 +186,21 @@
     zoomOnSelect: 15
   }))
 
-/*
-  map.addLayer(new ol.layer.Tile({
-    source: new ol.source.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS', {
-      gppKey: 'choisirgeoportail'
-    })
+  map.addLayer(new ol.layer.Geoportail({
+    layer: 'ORTHOIMAGERY.ORTHOPHOTOS',
+    visible: true
   }));
-*/
-  map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', {
-    gppKey: 'choisirgeoportail',
-    visible: true,
-    opacity: 1
+  map.addLayer (new ol.layer.Geoportail({
+    layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 
+    visible: false
   }));
 
   var vectorSource;
   var vectorLayer = new ol.layer.Vector({
     title: 'WFS-IGN',
     maxResolution: 10,  // prevent load on small zoom 
-    style: new ol.style.Style({
-      stroke: new ol.style.Stroke({
-        color: 'rgba(0, 0, 255, 1.0)',
-        width: 2
-      }),
-      fill: new ol.style.Fill({
-        color: 'rgba(255,255,255, .2)'
-      })
-    })
+    style: ol.style.geoportailStyle('BDTOPO_V3:troncon_de_route'),
+    declutter: true
   })
   map.addLayer(vectorLayer);
 
@@ -281,15 +271,17 @@
     });
     vectorLayer.setSource(vectorSource);
     vectorLayer.setMinZoom(minZoom);
-    $('#curZoom').text(map.getView().getZoom().toFixed(1)+' / '+minZoom);
+    vectorLayer.setStyle(ol.style.geoportailStyle(type, { sens : true, section: true }))
+    testZoom();
   }
   setWFS();
 
-  map.on('moveend', function(e) {
+  map.on('moveend', testZoom)
+  function testZoom() {
     $('#curZoom').text(map.getView().getZoom().toFixed(1)+' / '+minZoom);
-    if (map.getView().getZoom() < minZoom) $('#zoomTo').show();
+    if (map.getView().getZoom() <= minZoom) $('#zoomTo').show();
     else $('#zoomTo').hide();
-  });
+  }
 
   // Selection
   var sel = new ol.interaction.Select({
@@ -300,7 +292,8 @@
   map.addInteraction(sel);
   sel.on('select', function(e) {
     var f = e.selected[0];
-    if (f) console.log(f.getProperties());
+    if (f) console.log(f);
+    if (f) console.log('NATURE: '+f.get('nature'), 'USAGE: '+f.get('usage_1'));
   })
 
   // Save Vector layer

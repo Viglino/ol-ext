@@ -5,7 +5,6 @@
 
 import ol_ext_inherits from '../util/ext'
 import ol_filter_Base from './Base'
-import ol_ext_SVGFilter from '../util/SVGFilter'
 
 /** Add a canvas Context2D SVG filter to a layer
  * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/filter
