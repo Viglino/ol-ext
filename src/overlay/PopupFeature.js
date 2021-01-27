@@ -6,6 +6,7 @@ import ol_Feature from 'ol/Feature'
 import ol_ext_inherits from '../util/ext'
 import ol_Overlay_Popup from './Popup'
 import ol_ext_element from '../util/element'
+import { toStringHDMS } from 'ol/coordinate';
 
 
 /** Template attributes for popup
@@ -93,12 +94,14 @@ ol_Overlay_PopupFeature.prototype.show = function(coordinate, features) {
   // Calculate html upon feaures attributes
   this._count = 1;
   var html = this._getHtml(features[0]);
-  this.hide();
   if (html) {
+    if (!this.element.classList.contains('ol-fixed')) this.hide();
     if (!coordinate || features[0].getGeometry().getType()==='Point') {
       coordinate = features[0].getGeometry().getFirstCoordinate();
     }
     ol_Overlay_Popup.prototype.show.call(this, coordinate, html);
+  } else {
+    this.hide();
   }
 };
 
@@ -139,42 +142,45 @@ ol_Overlay_PopupFeature.prototype._getHtml = function(feature) {
   if (template.attributes) {
     var tr, table = ol_ext_element.create('TABLE', { parent: html });
     var atts = template.attributes;
+    var featureAtts = feature.getProperties();
     for (var att in atts) {
-      var a = atts[att];
-      var content, val = feature.get(att);
-      // Get calculated value
-      if (typeof(a.format)==='function') {
-        val = a.format(val, feature);
-      }
-
-      // Is entry visible?
-      var visible = true;
-      if (typeof(a.visible)==='boolean') {
-        visible = a.visible;
-      } else if (typeof(a.visible)==='function') {
-        visible = a.visible(feature, val);
-      }
-
-      if (visible) {
-        tr = ol_ext_element.create('TR', { parent: table });
-        ol_ext_element.create('TD', { html: a.title || att, parent: tr });
-
-        // Show image or content
-        if (this.get('showImage') && /(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)/.test(val)) {
-          content = ol_ext_element.create('IMG',{
-            src: val
-          });
-        } else {
-          content = (a.before||'') + val + (a.after||'');
-          var maxc = this.get('maxChar') || 200;
-          if (typeof(content) === 'string' && content.length>maxc) content = content.substr(0,maxc)+'[...]';
+      if (featureAtts.hasOwnProperty(att)) {
+        var a = atts[att];
+        var content, val = featureAtts[att];
+        // Get calculated value
+        if (typeof(a.format)==='function') {
+          val = a.format(val, feature);
         }
 
-        // Add value
-        ol_ext_element.create('TD', {
-          html: content,
-          parent: tr
-        });
+        // Is entry visible?
+        var visible = true;
+        if (typeof(a.visible)==='boolean') {
+          visible = a.visible;
+        } else if (typeof(a.visible)==='function') {
+          visible = a.visible(feature, val);
+        }
+
+        if (visible) {
+          tr = ol_ext_element.create('TR', { parent: table });
+          ol_ext_element.create('TD', { html: a.title || att, parent: tr });
+
+          // Show image or content
+          if (this.get('showImage') && /(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)/.test(val)) {
+            content = ol_ext_element.create('IMG',{
+              src: val
+            });
+          } else {
+            content = (a.before||'') + val + (a.after||'');
+            var maxc = this.get('maxChar') || 200;
+            if (typeof(content) === 'string' && content.length>maxc) content = content.substr(0,maxc)+'[...]';
+          }
+
+          // Add value
+          ol_ext_element.create('TD', {
+            html: content,
+            parent: tr
+          });
+        }
       }
     }
   }
