@@ -1,13 +1,13 @@
-/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
-  released under the CeCILL-B license (French BSD license)
-  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+/*
+* Copyright (c) 2015 Jean-Marc VIGLINO, 
+* released under the CeCILL-B license (French BSD license)
+* (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Text from 'ol/style/Text';
 import ol_style_Stroke from 'ol/style/Stroke'
 import ol_style_Fill from 'ol/style/Fill'
-import ol_style_FontSymbol from './FontSymbol';
 
 /**
  * Get a style for Geoportail WFS features
@@ -21,6 +21,8 @@ import ol_style_FontSymbol from './FontSymbol';
 var ol_style_geoportailStyle;
 
 (function(){
+var cache = {};
+var styleCount = 0;
 
 // Troncon de route
 function troncon_de_route(options) {
@@ -32,6 +34,9 @@ function troncon_de_route(options) {
       else return [0, 128, 0, 1];
     }
     if (!feature.get('importance')) return "magenta";
+    if (feature.get('nature') === 'Piste cyclable') {
+      return [27,177,27,.5]
+    }
     if (feature.get('position_par_rapport_au_sol') != "0") {
       var col;
       switch(feature.get('importance')) {
@@ -95,60 +100,91 @@ function troncon_de_route(options) {
         textAlign: 'center',
         fill: new ol_style_Fill({ color: [0,0,0,.3] }),
         stroke: new ol_style_Stroke({ color: [0,0,0,.3], width: 1.5 }),
-        rotation: lrot(feature.getGeometry()),
         rotateWithView: true
       })
     }
     return null;
   }
+  var getDash = function(feature) {
+    switch (feature.get('nature')) {
+      case 'Escalier': {
+        return [1,4]
+      }
+      case 'Sentier': {
+        return [8,10]
+      }
+    }
+  }
 
+  var styleId = 'ROUT-'+(styleCount++)+'-'
   return function (feature) {
-    return [	
-      new ol_style_Style ({
-        text: getSens(feature),
-        stroke: new ol_style_Stroke({
-          color: getColor(feature),
-          width: getWidth(feature)
-        }),
-        zIndex: getZindex(feature)-100
-      })
-    ];
+    var id = styleId
+      + feature.get('nature') + '-'
+      + feature.get('position_par_rapport_au_sol') + '-'
+      + feature.get('sens_de_circulation') + '-'
+      + feature.get('position_par_rapport_au_sol') + '-'
+      + feature.get('importance') + '-'
+      + feature.get('largeur_de_chaussee') + '-'
+      + feature.get('itineraire_vert');
+    var style = cache[id];
+    if (!style) {
+      style = cache[id] = [	
+        new ol_style_Style ({
+          text: getSens(feature),
+          stroke: new ol_style_Stroke({
+            color: getColor(feature),
+            width: getWidth(feature),
+            lineDash: getDash(feature)
+          }),
+          zIndex: getZindex(feature)-100
+        })
+      ];
+    }
+    // Rotation
+    if (style[0].getText()) style[0].getText().setRotation(lrot(feature.getGeometry()));
+    return style;
   };
 }
 
 function batiment(options) {
-  {
-    var getBatiColor = function (feature) {
-      switch (feature.get('nature')) {
-        case "Industriel, agricole ou commercial": return [51, 102, 153,1];
-        case "Remarquable": return [0,192,0,1];
-        default: 
-          switch ( feature.get('usage_1') ) {
-            case 'Résidentiel':
-            case 'Indifférencié': 
-              return [128,128,128,1];
-            case 'Industriel':
-            case 'Commercial et services': 
-              return [51, 102, 153,1];
-            case "Sportif": 
-              return [51,153,102,1];
-            case "Religieux": 
-              return [153,102,51,1];
-            default: return [153,51,51,1];
-          }
-      }
+  var getBatiColor = function (feature) {
+    switch (feature.get('nature')) {
+      case "Industriel, agricole ou commercial": return [51, 102, 153,1];
+      case "Remarquable": return [0,192,0,1];
+      default: 
+        switch ( feature.get('usage_1') ) {
+          case 'Résidentiel':
+          case 'Indifférencié': 
+            return [128,128,128,1];
+          case 'Industriel':
+          case 'Commercial et services': 
+            return [51, 102, 153,1];
+          case "Sportif": 
+            return [51,153,102,1];
+          case "Religieux": 
+            return [153,102,51,1];
+          default: return [153,51,51,1];
+        }
     }
+  }
+
+  var getSymbol = function (feature) {
+    switch ( feature.get('usage_1') ) {
+      case "Commercial et services": return "\uf217";
+      case "Sportif": return "\uf1e3";
+      default: return null;
+    }
+  }
   
-    var getSymbol = function (feature) {
-      switch ( feature.get('usage_1') ) {
-        case "Commercial et services": return "\uf217";
-        case "Sportif": return "\uf1e3";
-        default: return null;
-      }
-    }
-    
-    return function (feature) {
-      if (feature.get('detruit')) return [];
+  var styleId = 'BATI-'+(styleCount++)+'-'
+  return function (feature) {
+    if (feature.get('detruit')) return [];
+    var id = styleId 
+      + feature.get('usage_1') + '-'
+      + feature.get('nature') + '-'
+      + feature.get('etat_de_l_objet');
+    var style = cache[id];
+    if (!style) {
       var col = getBatiColor(feature);
       var colfill = [col[0], col[1], col[1], .5]
       var projet = !/en service/i.test(feature.get('etat_de_l_objet'));
@@ -173,9 +209,10 @@ function batiment(options) {
           })
         })
       ]
-    };
+    }
+    return style
   }
-}
+};
 
 // Parcelle / cadastre
 function parcelle(options) {

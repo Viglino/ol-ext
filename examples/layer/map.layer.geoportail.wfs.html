@@ -60,6 +60,27 @@
       padding: .5em  1em;
       border-radius: 1em;
     }
+    .ol-popup {
+      z-index: 99;
+    }
+    .ol-popup.hasclosebox .ol-popup-content {
+      margin: 0;
+    }
+    .ol-popup .ol-fix {
+      margin: 4px 22px 0 0;
+    }
+    .ol-popup.hasclosebox .closeBox {
+      position: absolute;
+      right: 1em;
+      background: #666;
+      border: 1.5px solid #fff;
+      border-radius: 0;
+      box-sizing: border-box;
+      margin: 8px 6px 0 0;
+      width: 13px;
+      height: 13px;
+      font-size: .5em;
+    }
     button i {
       color: #000;
     }
@@ -74,6 +95,13 @@
       color: #fff;
       padding: .2em 1.5em;
     }
+    .options > i {
+      color: #fff;
+      margin: 0 0 0 .4em;
+      font-size: 1.3em;
+      vertical-align: middle;
+    }
+    #commune,
     .info {
       position: absolute;
       top: 30%;
@@ -82,19 +110,43 @@
       background-color: #fff;
       padding: 1em 2em;
       box-shadow: 0 0 0.5em rgba(0,0,0,.8);
-      z-index: 1;
+      z-index: 999;
       max-width: 90%;
       width: 40em;
       box-sizing: border-box;
       cursor: pointer;
+      transition: .5s;
+    }
+    #commune.hidden,
+    .info.hidden {
+      top: -20%;
+      opacity: 0;
+      pointer-events: none;
+    }
+    #commune {
+      width: fit-content;
+    }
+    #commune h2 {
+      margin: 0;
+    }
+    #commune p {
+      margin-top: 0;
     }
     .info img {
       height: 4em;
       vertical-align: middle;
     }
     .info span {
+      display: block;
+      margin: auto;
+      width: fit-content;
+    }
+    .info span span {
       display: inline-block;
       vertical-align: middle;
+    }
+    .info hr {
+      margin: .3em 0;
     }
     .info p {
       margin: 1em 0;
@@ -124,7 +176,7 @@
 	<a href="../../index.html">
 		<h1>ol-ext: Geoportail WFS</h1>
 	</a>
-	<div class="info" onclick="$('.info').hide();">
+	<div class="info" onclick="$('.info').addClass('hidden');">
     <img src="https://upload.wikimedia.org/wikipedia/commons/a/a0/IGN_logo_2012.svg" />
     <p>
       Cet exemple affiche les flux WFS du Géoportail et permet de télécharger les données IGN au format GeoJSON. 
@@ -140,11 +192,13 @@
         licence ouverte Etalab 2.0
       </a>
     </p>
-    <div style="text-align: center;">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/1/18/Logo-licence-ouverte2.svg" />
+    <div>
       <span>
-        licence ouverte
-        <br/>Openlicence
+        <img src="https://upload.wikimedia.org/wikipedia/commons/1/18/Logo-licence-ouverte2.svg" />
+        <span>
+          Licence Ouverte
+          <hr/>Open Licence
+        </span>
       </span>
     </div>
   </div>
@@ -156,19 +210,35 @@
     <label>typeName:</label>
     <select id="typename" onchange="setWFS()">
       <option value="BDTOPO_V3:troncon_de_route">route</option>
-      <option value="CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle">parcelle</option>
       <option value="BDTOPO_V3:batiment">batiments</option>
+      <option value="CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle">parcelle</option>
     </select>
-    <button onclick="vectorSource.refresh()"><i class="fa fa-refresh"></i> refresh</button>
-    <button onclick="save()"><i class="fa fa-download"></i> download</button>
+    <button onclick="vectorSource.refresh(); commune.clear(); loadLayer.getSource().clear();"><i class="fa fa-refresh"></i> reset</button>
+    <button onclick="save()"><i class="fa fa-download"></i> charger</button>
+    <button onclick="$('#commune').removeClass('hidden')"><i class="fa fa-upload"></i></button>
+    <i class="fa fa-info-circle" onclick="$('.info').removeClass('hidden');"></i>
   </div>
   <div class="zoom">
     <span id="curZoom"></span>
-    <span id="loading">- loading</span>
+    <span id="loading">- loading <span></span></span>
     <span id="zoomTo">- Zoom to display features</span>
-	</div>
+  </div>
+  
+  <div id="commune" class="hidden">
+    <h2>Charger une commune</h2>
+    <p>avec <a href="https://api.gouv.fr/documentation/api-geo">l'API Geo</a></p>
+    <form>
+      <input placeholder="INSEE" />
+      <button type="submit">charger</button>
+      <button type="reset" onclick="$('#commune').addClass('hidden')">annuler</button>
+    </form>
+  </div>
 	
   <script type="text/javascript">
+  String.prototype.capitalize = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+  }
+
   var minZoom = 15;
 	// The map
 	var map = new ol.Map ({
@@ -179,7 +249,8 @@
     })
   });
 
-  map.addControl(new ol.control.LayerSwitcher());
+  var switcher = new ol.control.LayerSwitcher();
+  map.addControl(switcher);
   map.addControl(new ol.control.Permalink({ visible: false }));
   map.addControl(new ol.control.ScaleLine());
   map.addControl(new ol.control.SearchBAN({
@@ -195,6 +266,18 @@
     visible: false
   }));
 
+  var loadLayer = new ol.layer.Vector({
+    title: 'chargement',
+    source: new ol.source.Vector(),
+    style: new ol.style.Style({
+      stroke: new ol.style.Stroke({
+        color: [0,192,255,.5],
+        width: 1
+      })
+    })
+  })
+  map.addLayer(loadLayer);
+
   var vectorSource;
   var vectorLayer = new ol.layer.Vector({
     title: 'WFS-IGN',
@@ -205,7 +288,12 @@
   map.addLayer(vectorLayer);
 
   function setWFS() {
+    loadLayer.getSource().clear();
+    if (vectorSource) vectorSource.clear();
+    popup.hide();
     var type = $('#typename').val();
+    vectorLayer.set('title', type.split(':')[1].replace(/_/g,' ').capitalize());
+    switcher.drawPanel();
     minZoom = /bati/.test(type) ? 16 : 15;
     /* Standard WFS
     vectorSource = new ol.source.Vector({
@@ -232,10 +320,11 @@
       } else {
         ol.ext.element.setStyle(progressbar, { width: (loaded / loading * 100).toFixed(1) + '%' });// layer.layerswitcher_progress.css('width', (loaded / loading * 100).toFixed(1) + '%');
         $('#loading').show();
+        $('#loading span').text(loaded+'/'+loading)
       }
     }
     var format = new ol.format.GeoJSON();
-    vectorSource = new ol.source.Vector({
+    var source = vectorSource = new ol.source.Vector({
       loader: function (extent, resolution, projection) {
         loading++;
         draw();
@@ -252,18 +341,19 @@
                 response.error.message + '\n' + response.error.details.join('\n')
               );
             } else {
-              // dataProjection will be read from document
               var features = format.readFeatures(response, {
                 featureProjection: projection,
               });
               if (features.length > 0) {
-                vectorSource.addFeatures(features);
+                source.addFeatures(features);
               }
             }
           },
           complete: function () {
             loaded++;
             draw();
+            var f = new ol.Feature(ol.geom.Polygon.fromExtent(extent));
+            loadLayer.getSource().addFeature(f);
           }
         });
       },
@@ -274,7 +364,6 @@
     vectorLayer.setStyle(ol.style.geoportailStyle(type, { sens : true, section: true }))
     testZoom();
   }
-  setWFS();
 
   map.on('moveend', testZoom)
   function testZoom() {
@@ -283,29 +372,101 @@
     else $('#zoomTo').hide();
   }
 
+  // Chargement d'une commune
+  var commune = new ol.source.Vector();
+  map.addLayer(new ol.layer.Vector({
+    title: 'Communes',
+    source: commune,
+    style: new ol.style.Style({
+      stroke: new ol.style.Stroke({
+        color: [255,0,255,.7],
+        width: 5,
+        lineDash: [0, 15, 15, 15]
+      })
+    })
+  }));
+  $('#commune form').on('submit', function(e) {
+    e.preventDefault();
+    $('#commune').addClass('hidden');
+    var code = $('#commune input').val();
+    if (code) {
+      $.ajax({
+        url: 'https://geo.api.gouv.fr/communes?code='+code+'&fields=nom,code,contour&format=geojson&geometry=contour',
+        success: function(data) {
+          var f = new ol.format.GeoJSON().readFeatures(data, { featureProjection: map.getView().getProjection() });
+          commune.addFeatures(f);
+          map.getView().fit(f[0].getGeometry().getExtent())
+          if (map.getView().getZoom()>15) map.getView().setZoom(15)
+        }
+      })
+    }
+  })
+
   // Selection
   var sel = new ol.interaction.Select({
     multi: true,
+    layers: [vectorLayer],
     condition: ol.events.condition.click,
     hitTolerance: 3
   })
   map.addInteraction(sel);
   sel.on('select', function(e) {
     var f = e.selected[0];
-    if (f) console.log(f);
-    if (f) console.log('NATURE: '+f.get('nature'), 'USAGE: '+f.get('usage_1'));
+    if (f) console.log(f.getProperties());
   })
+
+  // Popup
+  var popup = new ol.Overlay.PopupFeature({
+    popupClass: 'default anim',
+    closeBox: true,
+    select: sel,
+    canFix: true,
+    template: {
+      title: function(feature) {
+        return vectorLayer.get('title');
+      },
+      attributes: [
+        'nature', 'nom_1_droite', 'code_postal_droit', 'etat_de_l_objet', 'urbain',
+        'cpx_classement_administratif', 'cpx_numero',
+        'usage_1', 'origine_du_batiment',
+        'nom_com', 'code_insee', 'code_arr', 'section', 'numero'
+      ]
+    }
+  });
+  map.addOverlay(popup)
+
+  setWFS();
 
   // Save Vector layer
   function save() {
     var format = new ol.format.GeoJSON();
     var features = vectorSource.getFeatures();
-		var data = format.writeFeatures(features, {
-			dataProjection: 'EPSG:4326',
-			featureProjection: map.getView().getProjection()
-    });
-		var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
-		saveAs(blob, "map.geojson");
+    if (features.length) {
+      var data = format.writeFeatures(features, {
+        dataProjection: 'EPSG:4326',
+        featureProjection: map.getView().getProjection()
+      });
+      var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
+      saveAs(blob, "map.geojson");
+    }
+    // commune
+    features = commune.getFeatures();
+    if (features.length) {
+      if (features.length === 1) {
+        var geom = ol.geom.Polygon.fromExtent(ol.extent.buffer(features[0].getGeometry().getExtent(), 1000));
+        geom = geom.getCoordinates();
+        features[0].getGeometry().getCoordinates().forEach(function(p) {
+          geom.push(p);
+        });
+        features.push(new ol.Feature(new ol.geom.Polygon(geom)))
+      }
+      var data = format.writeFeatures(features, {
+        dataProjection: 'EPSG:4326',
+        featureProjection: map.getView().getProjection()
+      });
+      var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
+      saveAs(blob, "commune.geojson");
+    }
   }
 
 	</script>

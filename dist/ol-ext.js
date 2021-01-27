@@ -26895,12 +26895,14 @@ ol.Overlay.PopupFeature.prototype.show = function(coordinate, features) {
   // Calculate html upon feaures attributes
   this._count = 1;
   var html = this._getHtml(features[0]);
-  this.hide();
   if (html) {
+    if (!this.element.classList.contains('ol-fixed')) this.hide();
     if (!coordinate || features[0].getGeometry().getType()==='Point') {
       coordinate = features[0].getGeometry().getFirstCoordinate();
     }
     ol.Overlay.Popup.prototype.show.call(this, coordinate, html);
+  } else {
+    this.hide();
   }
 };
 /**
@@ -26940,38 +26942,41 @@ ol.Overlay.PopupFeature.prototype._getHtml = function(feature) {
   if (template.attributes) {
     var tr, table = ol.ext.element.create('TABLE', { parent: html });
     var atts = template.attributes;
+    var featureAtts = feature.getProperties();
     for (var att in atts) {
-      var a = atts[att];
-      var content, val = feature.get(att);
-      // Get calculated value
-      if (typeof(a.format)==='function') {
-        val = a.format(val, feature);
-      }
-      // Is entry visible?
-      var visible = true;
-      if (typeof(a.visible)==='boolean') {
-        visible = a.visible;
-      } else if (typeof(a.visible)==='function') {
-        visible = a.visible(feature, val);
-      }
-      if (visible) {
-        tr = ol.ext.element.create('TR', { parent: table });
-        ol.ext.element.create('TD', { html: a.title || att, parent: tr });
-        // Show image or content
-        if (this.get('showImage') && /(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)/.test(val)) {
-          content = ol.ext.element.create('IMG',{
-            src: val
-          });
-        } else {
-          content = (a.before||'') + val + (a.after||'');
-          var maxc = this.get('maxChar') || 200;
-          if (typeof(content) === 'string' && content.length>maxc) content = content.substr(0,maxc)+'[...]';
+      if (featureAtts.hasOwnProperty(att)) {
+        var a = atts[att];
+        var content, val = featureAtts[att];
+        // Get calculated value
+        if (typeof(a.format)==='function') {
+          val = a.format(val, feature);
         }
-        // Add value
-        ol.ext.element.create('TD', {
-          html: content,
-          parent: tr
-        });
+        // Is entry visible?
+        var visible = true;
+        if (typeof(a.visible)==='boolean') {
+          visible = a.visible;
+        } else if (typeof(a.visible)==='function') {
+          visible = a.visible(feature, val);
+        }
+        if (visible) {
+          tr = ol.ext.element.create('TR', { parent: table });
+          ol.ext.element.create('TD', { html: a.title || att, parent: tr });
+          // Show image or content
+          if (this.get('showImage') && /(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)/.test(val)) {
+            content = ol.ext.element.create('IMG',{
+              src: val
+            });
+          } else {
+            content = (a.before||'') + val + (a.after||'');
+            var maxc = this.get('maxChar') || 200;
+            if (typeof(content) === 'string' && content.length>maxc) content = content.substr(0,maxc)+'[...]';
+          }
+          // Add value
+          ol.ext.element.create('TD', {
+            html: content,
+            parent: tr
+          });
+        }
       }
     }
   }
@@ -31720,9 +31725,10 @@ ol.style.Style.defaultStyle = function(edit) {
 };
 })();
 
-/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
-  released under the CeCILL-B license (French BSD license)
-  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+/*
+* Copyright (c) 2015 Jean-Marc VIGLINO, 
+* released under the CeCILL-B license (French BSD license)
+* (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
  * Get a style for Geoportail WFS features
@@ -31735,6 +31741,8 @@ ol.style.Style.defaultStyle = function(edit) {
  */
 ol.style.geoportailStyle;
 (function(){
+var cache = {};
+var styleCount = 0;
 // Troncon de route
 function troncon_de_route(options) {
   // Get color according to road properties
@@ -31745,6 +31753,9 @@ function troncon_de_route(options) {
       else return [0, 128, 0, 1];
     }
     if (!feature.get('importance')) return "magenta";
+    if (feature.get('nature') === 'Piste cyclable') {
+      return [27,177,27,.5]
+    }
     if (feature.get('position_par_rapport_au_sol') != "0") {
       var col;
       switch(feature.get('importance')) {
@@ -31805,56 +31816,87 @@ function troncon_de_route(options) {
         textAlign: 'center',
         fill: new ol.style.Fill({ color: [0,0,0,.3] }),
         stroke: new ol.style.Stroke({ color: [0,0,0,.3], width: 1.5 }),
-        rotation: lrot(feature.getGeometry()),
         rotateWithView: true
       })
     }
     return null;
   }
+  var getDash = function(feature) {
+    switch (feature.get('nature')) {
+      case 'Escalier': {
+        return [1,4]
+      }
+      case 'Sentier': {
+        return [8,10]
+      }
+    }
+  }
+  var styleId = 'ROUT-'+(styleCount++)+'-'
   return function (feature) {
-    return [	
-      new ol.style.Style ({
-        text: getSens(feature),
-        stroke: new ol.style.Stroke({
-          color: getColor(feature),
-          width: getWidth(feature)
-        }),
-        zIndex: getZindex(feature)-100
-      })
-    ];
+    var id = styleId
+      + feature.get('nature') + '-'
+      + feature.get('position_par_rapport_au_sol') + '-'
+      + feature.get('sens_de_circulation') + '-'
+      + feature.get('position_par_rapport_au_sol') + '-'
+      + feature.get('importance') + '-'
+      + feature.get('largeur_de_chaussee') + '-'
+      + feature.get('itineraire_vert');
+    var style = cache[id];
+    if (!style) {
+      style = cache[id] = [	
+        new ol.style.Style ({
+          text: getSens(feature),
+          stroke: new ol.style.Stroke({
+            color: getColor(feature),
+            width: getWidth(feature),
+            lineDash: getDash(feature)
+          }),
+          zIndex: getZindex(feature)-100
+        })
+      ];
+    }
+    // Rotation
+    if (style[0].getText()) style[0].getText().setRotation(lrot(feature.getGeometry()));
+    return style;
   };
 }
 function batiment(options) {
-  {
-    var getBatiColor = function (feature) {
-      switch (feature.get('nature')) {
-        case "Industriel, agricole ou commercial": return [51, 102, 153,1];
-        case "Remarquable": return [0,192,0,1];
-        default: 
-          switch ( feature.get('usage_1') ) {
-            case 'Résidentiel':
-            case 'Indifférencié': 
-              return [128,128,128,1];
-            case 'Industriel':
-            case 'Commercial et services': 
-              return [51, 102, 153,1];
-            case "Sportif": 
-              return [51,153,102,1];
-            case "Religieux": 
-              return [153,102,51,1];
-            default: return [153,51,51,1];
-          }
-      }
+  var getBatiColor = function (feature) {
+    switch (feature.get('nature')) {
+      case "Industriel, agricole ou commercial": return [51, 102, 153,1];
+      case "Remarquable": return [0,192,0,1];
+      default: 
+        switch ( feature.get('usage_1') ) {
+          case 'Résidentiel':
+          case 'Indifférencié': 
+            return [128,128,128,1];
+          case 'Industriel':
+          case 'Commercial et services': 
+            return [51, 102, 153,1];
+          case "Sportif": 
+            return [51,153,102,1];
+          case "Religieux": 
+            return [153,102,51,1];
+          default: return [153,51,51,1];
+        }
     }
-    var getSymbol = function (feature) {
-      switch ( feature.get('usage_1') ) {
-        case "Commercial et services": return "\uf217";
-        case "Sportif": return "\uf1e3";
-        default: return null;
-      }
+  }
+  var getSymbol = function (feature) {
+    switch ( feature.get('usage_1') ) {
+      case "Commercial et services": return "\uf217";
+      case "Sportif": return "\uf1e3";
+      default: return null;
     }
-    return function (feature) {
-      if (feature.get('detruit')) return [];
+  }
+  var styleId = 'BATI-'+(styleCount++)+'-'
+  return function (feature) {
+    if (feature.get('detruit')) return [];
+    var id = styleId 
+      + feature.get('usage_1') + '-'
+      + feature.get('nature') + '-'
+      + feature.get('etat_de_l_objet');
+    var style = cache[id];
+    if (!style) {
       var col = getBatiColor(feature);
       var colfill = [col[0], col[1], col[1], .5]
       var projet = !/en service/i.test(feature.get('etat_de_l_objet'));
@@ -31879,9 +31921,10 @@ function batiment(options) {
           })
         })
       ]
-    };
+    }
+    return style
   }
-}
+};
 // Parcelle / cadastre
 function parcelle(options) {
   var style = new ol.style.Style({
