@@ -24550,8 +24550,8 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
   tileoptions = tileoptions || {};
   // use function(options, tileoption) when layer is set in options
   if (layer.layer) {
-    options = layer;
     tileoptions = options;
+    options = layer;
     layer = options.layer;
   }
   var maxZoom = options.maxZoom;
