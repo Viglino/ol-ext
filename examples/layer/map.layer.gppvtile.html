@@ -25,6 +25,9 @@
 
   <!-- chroma.js -->
   <script type="text/javascript" src="https://gka.github.io/chroma.js/libs/chroma.min.js"></script>
+  <!-- Spectrum -->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.6.2/spectrum.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.6.1/spectrum.min.css" />
   <!-- filesaver-js -->
   <script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
 
@@ -94,7 +97,7 @@
       color: #369;
     }
     .options ul ul label {
-      width: 10em;
+      width: 100%;
       display: inline-block;
       text-overflow: ellipsis;
       overflow: hidden;
@@ -104,6 +107,28 @@
       float: right;
     }
     .ol-permalink {
+      display: none;
+    }
+    #color > div {
+      position: fixed;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -30%);
+      background-color: #fff;
+      box-shadow: 0 0 .1em;
+      padding: .5em 1em;
+      width: fit-content;
+      max-width: calc(100% - 2em);
+      box-sizing: border-box;
+    }
+    #color {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      background-color: rgba(0,0,0,.5);
+      z-index: 999;
       display: none;
     }
   </style>
@@ -123,13 +148,48 @@
   <label style="display: block; clear: both;"><input id="showSel" type="checkbox" /> show objets geometry</label>
 
   <div class="options">
-    <label>Base style:</label><select id="styles" onchange="setBaseStyle(this.value)"></select>
-    <button onclick="reset()">reset</button>
+    <label>Style de base :</label><select id="styles" onchange="setBaseStyle(this.value)"></select>
+    <button onclick="reset()">réinit.</button>
     <ul></ul>
     <button onclick="save()"><i class="fa fa-download"></i> download styles</button>
   </div>
+
+  <div id="color">
+    <div>
+      <h2>Choisir une couleur</h2>
+      <input />
+    </div>
+  </div>
   
 <script type="text/javascript">
+
+  var perma = new ol.control.Permalink();
+  if (perma.getUrlParam('embed')) {
+    $('body > a').hide();
+    $('.info').hide();
+    $('#map').css('top', 0);
+    $('.options').css('top', 0);
+  }
+
+  // Color
+  var onChangeColor = function() {}
+  $('#color input').spectrum({
+    flat: true,
+    localStorageKey: 'spectrum',
+    showAlpha: false,
+    showPalette: true,
+    showInitial: true,
+    showInput: true,
+    chooseText: "choisir",
+    cancelText: "annuler",
+    preferredFormat: "hex3",
+    clickoutFiresChange: true,
+    change: function(color) {
+      console.log('change')
+      onChangeColor(color.toHexString());
+      onChangeColor = function() {};
+    }
+  });
 
   // The map
   var map = new ol.Map({
@@ -141,7 +201,7 @@
     interactions: ol.interaction.defaults(),
     // layers: [ new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS')]
   });
-  map.addControl(new ol.control.Permalink());
+  map.addControl(perma);
 
   var vlayer = new ol.layer.VectorTile({
     title: "Plan IGN vecteur",
@@ -329,12 +389,43 @@
         .on('change', function(){
           color = $(this).val();
           if (color==='color') {
+            /*
             color = prompt('Enter a color code (#rrggbb):') || '';
             if (color.charAt(0)!=='#') color = '#'+color;
             if (!/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color)) {
               color = '';
             }
             $(this).val('color');
+            */
+            var self = this;
+            $(this).val('color');
+            console.log('ok')
+            $('#color').show();
+            $("#color .sp-cancel").off();
+            $("#color .sp-cancel").on('click', function() { $('#color').hide(); })
+            setTimeout(function() {
+              onChangeColor = function(c) {
+                color = c;
+                $(self).data('color', color);
+                $('input', ul2).each(function() {
+                  $(this).change();
+                })
+                $('#color').hide();
+              }
+            })
+
+            /*
+            $("#color .sp-choose").off('click');
+            $("#color .sp-choose").on('click', function() { 
+              color = $('#color input').spectrum('get').toHexString();
+              $(self).data('color', color);
+              $('input', ul2).each(function() {
+                $(this).change();
+              })
+              $('#color').hide();
+            })
+            */
+            return;
           }
           $(this).data('color', color);
           $('input', ul2).each(function() {
