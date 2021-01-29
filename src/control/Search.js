@@ -37,7 +37,6 @@ import ol_ext_element from '../util/element'
  *  @param {number|boolean} options.zoomOnSelect center map on search and zoom to value if zoom < value, default false
  */
 var ol_control_Search = function(options) {
-  console.log(options)
   var self = this;
   if (!options) options = {};
   if (options.typing == undefined) options.typing = 300;

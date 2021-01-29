@@ -1607,7 +1607,6 @@ ol.control.Toggle.prototype.getInteraction = function() {
  *  @param {number|boolean} options.zoomOnSelect center map on search and zoom to value if zoom < value, default false
  */
 ol.control.Search = function(options) {
-  console.log(options)
   var self = this;
   if (!options) options = {};
   if (options.typing == undefined) options.typing = 300;
