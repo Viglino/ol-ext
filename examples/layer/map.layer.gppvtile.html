@@ -266,63 +266,66 @@
   // Apply color
   function setStyleColor(l, vis, color) {
     l.layout.visibility = vis;
-    // l.paint[l.type+'-color'] = '#ff0000';
-    if (l.savePaintColor) {
-      if (l.savePaintColor.stops) l.paint[l.type+'-color'] = $.extend(true, {}, l.savePaintColor);
-      else l.paint[l.type+'-color'] = l.savePaintColor;
-    }
-    if (color && l.paint) {
-      if (!l.savePaintColor) {
-        if (l.paint[l.type+'-color'] && l.paint[l.type+'-color'].stops) l.savePaintColor = $.extend(true, {}, l.paint[l.type+'-color']);
-        else l.savePaintColor = l.paint[l.type+'-color'];
+    ['text-color', /*'text-halo-color',*/ 'fill-color', 'fill-outline-color', 'line-color', 'circle-color', 'circle-stroke-color', 'icon-color'].forEach(function(c) {
+      if (!l.paint[c]) return;
+      if (!l.savePaintColor) l.savePaintColor = {};
+      if (l.savePaintColor[c]) {
+        if (l.savePaintColor[c].stops) l.paint[c] = $.extend(true, {}, l.savePaintColor[c]);
+        else l.paint[c] = l.savePaintColor[c];
       }
-      switch(color) {
-        case 'brighten':
-        case 'darken':
-        case 'brighten2':
-        case 'darken2':
-        case 'saturate':
-        case 'desaturate':
-        case 'saturate2':
-        case 'desaturate2':
-        case 'gray': {
-          var opt = parseInt(color.replace(/([^0-9])/g,'')) || .5;
-          var operation = color.replace(/[0-9]$/, '');
-          if (color==='gray') {
-            opt = 4;
-            operation = 'desaturate';
+      if (color && l.paint) {
+        if (!l.savePaintColor[c]) {
+          if (l.paint[c] && l.paint[c].stops) l.savePaintColor[c] = $.extend(true, {}, l.paint[c]);
+          else l.savePaintColor[c] = l.paint[c];
+        }
+        switch(color) {
+          case 'brighten':
+          case 'darken':
+          case 'brighten2':
+          case 'darken2':
+          case 'saturate':
+          case 'desaturate':
+          case 'saturate2':
+          case 'desaturate2':
+          case 'gray': {
+            var opt = parseInt(color.replace(/([^0-9])/g,'')) || .5;
+            var operation = color.replace(/[0-9]$/, '');
+            if (color==='gray') {
+              opt = 4;
+              operation = 'desaturate';
+            }
+            //console.log(operation,opt)
+            try {
+              if (l.paint[c].stops) {
+                l.paint[c].stops.forEach(function (s) {
+                  s[1] = chroma(s[1])[operation](opt).hex(); 
+                  // console.log('STOP:',s)
+                })
+              } else {
+                l.paint[c] = chroma(l.savePaintColor[c])[operation](opt).hex(); 
+              }
+            } catch(e){};
+            break; //'#cccccc'; break;
           }
-          //console.log(operation,opt)
-          try {
-            if (l.paint[l.type+'-color'].stops) {
-              l.paint[l.type+'-color'].stops.forEach(function (s) {
-                s[1] = chroma(s[1])[operation](opt).hex(); 
-                // console.log('STOP:',s)
-              })
-            } else {
-              l.paint[l.type+'-color'] = chroma(l.savePaintColor)[operation](opt).hex(); 
-            }
-          } catch(e){};
-          break; //'#cccccc'; break;
+          case 'red':
+          case 'green':
+          case 'blue':
+          default: {
+            try {
+              if (l.paint[c].stops) {
+                l.paint[c].stops.forEach(function (s) {
+                  s[1] = chroma.mix(s[1],color).hex(); 
+                })
+              } else {
+                l.paint[c] = chroma.mix(l.savePaintColor[c],color).hex(); 
+              }
+            } catch(e){};
+            break; 
+          }
         }
-        case 'red':
-        case 'green':
-        case 'blue':
-        default: {
-          try {
-            if (l.paint[l.type+'-color'].stops) {
-              l.paint[l.type+'-color'].stops.forEach(function (s) {
-                s[1] = chroma.mix(s[1],color).hex(); 
-              })
-            } else {
-              l.paint[l.type+'-color'] = chroma.mix(l.savePaintColor,color).hex(); 
-            }
-          } catch(e){};
-          break; 
-        }
+        // console.log(l.savePaintColor, l.paint[l.type+'-color']);
       }
-      // console.log(l.savePaintColor, l.paint[l.type+'-color']);
-    }
+    })
   }
 
   function getVisibleStyle(check, color) {
