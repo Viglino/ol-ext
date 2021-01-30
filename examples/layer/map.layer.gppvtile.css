@@ -1,0 +1,87 @@
+﻿body {}
+#map {
+  position: fixed;
+  background: rgb(255, 255, 255);
+  top: 7em;
+  left: 0;
+  bottom: 0;
+  right: 16.5em;
+  margin: .5em;
+}
+h1 {
+  overflow: hidden;
+  white-space: nowrap;
+}
+.options button {
+  float: right;
+  font-size: 0.9em;
+  clear: both;
+  min-width: 6em;
+  margin: 0 0 .5em;
+}
+.options button i {
+  color: #000;
+}
+.info {
+  margin: 0;
+}
+.ol-popup h2 {
+  display: inline;
+  margin: 0;
+}
+.options {
+  position: fixed;
+  top: 4em;
+  bottom: 0;
+  right: 0;
+  margin: 0;
+  overflow-y: auto;
+  height: auto;
+  display: block;
+  width: 15.5em;
+}
+.options ul {
+  border: 1px solid #369;
+  padding: .5em;
+  margin: .5em 0;
+  clear: both;
+}
+.options > ul > li > label {
+  font-weight: bold;
+  color: #369;
+}
+.options ul ul label {
+  width: 100%;
+  display: inline-block;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.options select {
+  float: right;
+}
+.ol-permalink {
+  display: none;
+}
+#color > div {
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -30%);
+  background-color: #fff;
+  box-shadow: 0 0 .1em;
+  padding: .5em 1em;
+  width: fit-content;
+  max-width: calc(100% - 2em);
+  box-sizing: border-box;
+}
+#color {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background-color: rgba(0,0,0,.5);
+  z-index: 999;
+  display: none;
+}
