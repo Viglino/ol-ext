@@ -14,8 +14,6 @@ h1 {
 }
 .options button {
   float: right;
-  font-size: 0.9em;
-  clear: both;
   min-width: 6em;
   margin: 0 0 .5em;
 }
@@ -45,10 +43,44 @@ h1 {
   padding: .5em;
   margin: .5em 0;
   clear: both;
+  transition: .3s;
+}
+.options > ul i {
+  width: .7em;
+  height: .7em;
+  transform: translateX(-.3em) rotate(45deg);
+  box-shadow: inset -.3em -.3em;
+  float: left;
+  margin: .1em;
+  cursor: pointer;
+  transition: .3s;
+}
+.options li.collapse i {
+  transform: translateX(-.3em) rotate(-45deg);
+}
+.options ul ul {
+  overflow: hidden;
+  transition: .3s;
+}
+.options li li {
+  height: 1.3em;
+  transition: .3s;
+  overflow: hidden;
+}
+.options li.collapse li {
+  height: 0;
+}
+.options li.collapse ul {
+  padding: 0 .5em;
 }
 .options > ul > li > label {
   font-weight: bold;
   color: #369;
+}
+.options label.toponyme {
+  float: right;
+  font-weight: normal;
+  margin: .5em 0;
 }
 .options ul ul label {
   width: 100%;
@@ -84,4 +116,14 @@ h1 {
   background-color: rgba(0,0,0,.5);
   z-index: 999;
   display: none;
+}
+
+@media (max-width: 800px) {
+  .options {
+    width: 12.5em;
+    letter-spacing: -.06em;
+  }
+  #map {
+    right: 13.5em;
+  }
 }

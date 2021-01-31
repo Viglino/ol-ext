@@ -1,4 +1,8 @@
-﻿var perma = new ol.control.Permalink();
+﻿// Get operations select
+var operations = $('#operations').remove().html();
+
+// Permalink
+var perma = new ol.control.Permalink();
 if (perma.getUrlParam('embed')) {
   $('body > a').hide();
   $('.info').hide();
@@ -6,7 +10,7 @@ if (perma.getUrlParam('embed')) {
   $('.options').css('top', 0);
 }
 
-// Color
+// Color input
 var onChangeColor = function() {}
 $('#color input').spectrum({
   flat: true,
@@ -20,7 +24,6 @@ $('#color input').spectrum({
   preferredFormat: "hex3",
   clickoutFiresChange: true,
   change: function(color) {
-    console.log('change')
     onChangeColor(color.toHexString());
     onChangeColor = function() {};
   }
@@ -38,6 +41,7 @@ var map = new ol.Map({
 });
 map.addControl(perma);
 
+// Vector layer
 var vlayer = new ol.layer.VectorTile({
   title: "Plan IGN vecteur",
   renderMode: 'hybrid',
@@ -56,7 +60,11 @@ var vlayer = new ol.layer.VectorTile({
 map.addLayer(vlayer);
 
 // Lecture du fichier de style
-var globalStyle, baseStyles={}, currentStyle;
+var currentStyle;
+var config = {};
+// IGN base style
+var baseStyles = {};
+
 ol.ext.Ajax.get({
   //url: './styles/planign.json',
   url: 'https://wxs.ign.fr/choisirgeoportail/static/vectorTiles/styles/PLAN.IGN/standard.json',
@@ -70,7 +78,7 @@ ol.ext.Ajax.get({
     style.layers.push(rdirect);
     style.layers.push(rinvers);
     /**/
-    globalStyle = currentStyle = style;
+    currentStyle = style;
     olms.applyStyle(vlayer, style, 'plan_ign').then(function () {});
     showLayers();
   }
@@ -91,197 +99,197 @@ ol.ext.Ajax.get({
     }
   })
 });
+
 // Set base style
 function setBaseStyle(n) {
-  globalStyle = currentStyle = baseStyles[n];
-  $('.options .theme').change();
-  //olms.applyStyle(vlayer, currentStyle, "plan_ign")
-}
-
-// Apply color
-function setStyleColor(l, vis, color) {
-  l.layout.visibility = vis;
-  ['text-color', /*'text-halo-color',*/ 'fill-color', 'fill-outline-color', 'line-color', 'circle-color', 'circle-stroke-color', 'icon-color'].forEach(function(c) {
-    if (!l.paint[c]) return;
-    if (!l.savePaintColor) l.savePaintColor = {};
-    if (l.savePaintColor[c]) {
-      if (l.savePaintColor[c].stops) l.paint[c] = $.extend(true, {}, l.savePaintColor[c]);
-      else l.paint[c] = l.savePaintColor[c];
+  currentStyle = baseStyles[n];
+  // reset config
+  for (var theme in config) {
+    for (var s in config[theme].style) {
+      config[theme].style[s].layers = [];
+      config[theme].style[s].savePaintColor = [];
     }
-    if (color && l.paint) {
-      if (!l.savePaintColor[c]) {
-        if (l.paint[c] && l.paint[c].stops) l.savePaintColor[c] = $.extend(true, {}, l.paint[c]);
-        else l.savePaintColor[c] = l.paint[c];
-      }
-      switch(color) {
-        case 'brighten':
-        case 'darken':
-        case 'brighten2':
-        case 'darken2':
-        case 'saturate':
-        case 'desaturate':
-        case 'saturate2':
-        case 'desaturate2':
-        case 'gray': {
-          var opt = parseInt(color.replace(/([^0-9])/g,'')) || .5;
-          var operation = color.replace(/[0-9]$/, '');
-          if (color==='gray') {
-            opt = 4;
-            operation = 'desaturate';
-          }
-          //console.log(operation,opt)
-          try {
-            if (l.paint[c].stops) {
-              l.paint[c].stops.forEach(function (s) {
-                s[1] = chroma(s[1])[operation](opt).hex(); 
-                // console.log('STOP:',s)
-              })
-            } else {
-              l.paint[c] = chroma(l.savePaintColor[c])[operation](opt).hex(); 
-            }
-          } catch(e){};
-          break; //'#cccccc'; break;
-        }
-        case 'red':
-        case 'green':
-        case 'blue':
-        default: {
-          try {
-            if (l.paint[c].stops) {
-              l.paint[c].stops.forEach(function (s) {
-                s[1] = chroma.mix(s[1],color).hex(); 
-              })
-            } else {
-              l.paint[c] = chroma.mix(l.savePaintColor[c],color).hex(); 
-            }
-          } catch(e){};
-          break; 
-        }
-      }
-      // console.log(l.savePaintColor, l.paint[l.type+'-color']);
-    }
+  }
+  currentStyle.layers.forEach(function(l) {
+    var source = l['source-layer'];
+    var theme = source.split('_')[0];
+    config[theme].style[source].layers.push(l);
   })
+  applyStyle();
 }
 
-function getVisibleStyle(check, color) {
-  var vis = $(check).prop('checked') ? 'visible' : 'hidden';
-  var style = currentStyle = $.extend({}, globalStyle);
-  style.layers = [];
-  var layer = $(check).data('layer');
-  globalStyle.layers.forEach(function(l) {
-    if (l.layout) {
-      if (l['source-layer'] === layer) setStyleColor(l, vis, color);
-      if (l.layout.visibility !== 'hidden') style.layers.push(l);
+/** Apply current Style
+ */
+function applyStyle() {
+  for (var theme in config) {
+    var vis = config[theme].visible;
+    var color0 = config[theme].color;
+    for (var st in config[theme].style) {
+      var color = color0;
+      if (config[theme].useTheme) {
+        var th2 = st.split('_')[1];
+        if (config[th2]) {
+          color = config[th2].color;
+        }
+      }
+      style = config[theme].style[st];
+      if (!style.savePaintColor) style.savePaintColor = [];
+      style.layers.forEach(function(l, i) {
+        l.layout.visibility = (vis && style.visible) ? 'visible' : 'none';
+        ['text-color', /*'text-halo-color',*/ 'fill-color', 'fill-outline-color', 'line-color', 'circle-color', 'circle-stroke-color', 'icon-color'].forEach(function(c) {
+          if (!l.paint[c]) return;
+          if (!style.savePaintColor[i]) style.savePaintColor[i] = {};
+          var savePaintColor = style.savePaintColor[i];
+          // Init
+          if (!savePaintColor[c]) {
+            if (l.paint[c] && l.paint[c].stops) savePaintColor[c] = $.extend(true, {}, l.paint[c]);
+            else savePaintColor[c] = l.paint[c];
+          }
+          // Reset
+          if (savePaintColor[c]) {
+            if (savePaintColor[c].stops) l.paint[c] = $.extend(true, {}, savePaintColor[c]);
+            else l.paint[c] = savePaintColor[c];
+          }
+          if (color && l.paint) {
+            switch(color) {
+              case 'brighten':
+              case 'darken':
+              case 'brighten2':
+              case 'darken2':
+              case 'saturate':
+              case 'desaturate':
+              case 'saturate2':
+              case 'desaturate2':
+              case 'gray': {
+                var opt = parseInt(color.replace(/([^0-9])/g,'')) || .5;
+                var operation = color.replace(/[0-9]$/, '');
+                if (color==='gray') {
+                  opt = 4;
+                  operation = 'desaturate';
+                }
+                //console.log(operation,opt)
+                try {
+                  if (l.paint[c].stops) {
+                    l.paint[c].stops.forEach(function (s) {
+                      s[1] = chroma(s[1])[operation](opt).hex(); 
+                      // console.log('STOP:',s)
+                    })
+                  } else {
+                    l.paint[c] = chroma(l.paint[c])[operation](opt).hex(); 
+                  }
+                } catch(e){};
+                break; //'#cccccc'; break;
+              }
+              case 'red':
+              case 'green':
+              case 'blue':
+              default: {
+                try {
+                  if (l.paint[c].stops) {
+                    l.paint[c].stops.forEach(function (s) {
+                      s[1] = chroma.mix(s[1],color).hex(); 
+                    })
+                  } else {
+                    l.paint[c] = chroma.mix(l.paint[c],color).hex(); 
+                  }
+                } catch(e) {};
+                break; 
+              }
+            }
+          }
+        });
+      })
     }
-  });
-  return style;
+  }
+  olms.applyStyle(vlayer, currentStyle, "plan_ign");
 }
 
-// Apply the layers style
+/** Show layers
+ */
 function showLayers() {
+  config = {};
   var sources = {};
-  globalStyle.layers.forEach(function(l) {
+  currentStyle.layers.forEach(function(l) {
     var name = l['source-layer'];
     if (name) {
       var theme = name.split('_').shift();
       if (!sources[theme]) sources[theme] = [];
-      sources[theme][name] = l;
+      if (!sources[theme][name]) sources[theme][name] = [];
+      sources[theme][name].push(l);
     }
   });
   var ul = $('.options ul');
   console.log(sources)
   Object.keys(sources).forEach(function(s) {
-    var li = $('<li>').appendTo(ul);
+    config[s] = {
+      visible: true,
+      color: undefined,
+      style: {}
+    }
+    var li = $('<li>').addClass('collapse').appendTo(ul);
     var label = $('<label>').text(s).appendTo(li);
     $('<input type="checkbox">')
       .addClass('theme')
       .prop('checked', true)
       .on('change', function() {
-        var vis = $(this).prop('checked');
-        var style;
+        var vis = config[s].visible = $(this).prop('checked');
         $('input', ul2).each(function() {
-          $(this).prop('checked', vis);//.change();
-          style = getVisibleStyle(this, color);
+          $(this).prop('disabled', !vis);//.change();
         })
-        olms.applyStyle(vlayer, style, "plan_ign");
+        applyStyle()
       })
       .prependTo(label);
-    var color;
-    $('<select>').html(`
-      <option value="">normal</option>
-      <option value="gray">gray</option>
-      <option value="saturate">saturate</option>
-      <option value="saturate2">saturate2</option>
-      <option value="desaturate">desaturate</option>
-      <option value="desaturate2">desaturate2</option>
-      <option value="darken">darken</option>
-      <option value="darken2">darken2</option>
-      <option value="brighten">brighten</option>
-      <option value="brighten2">brighten2</option>
-      <option value="red">red</option>
-      <option value="green">green</option>
-      <option value="blue">blue</option>
-      <option value="color" style="display: none;">user color</option>
-      <option value="color">user color</option>
-      `)
+    $('<i>').addClass('fa fa-carret-down')
+      .click(function() {
+        $(this).parent().toggleClass('collapse');
+      })
+      .appendTo(li);
+    $('<select>').html(operations)
       .on('change', function(){
-        color = $(this).val();
-        if (color==='color') {
-          /*
-          color = prompt('Enter a color code (#rrggbb):') || '';
-          if (color.charAt(0)!=='#') color = '#'+color;
-          if (!/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color)) {
-            color = '';
-          }
-          $(this).val('color');
-          */
-          var self = this;
-          $(this).val('color');
-          console.log('ok')
+        if ($(this).val()==='color') {
           $('#color').show();
           $("#color .sp-cancel").off();
           $("#color .sp-cancel").on('click', function() { $('#color').hide(); })
           setTimeout(function() {
             onChangeColor = function(c) {
-              color = c;
-              $(self).data('color', color);
-              $('input', ul2).each(function() {
-                $(this).change();
-              })
+              config[s].color = c;
+              applyStyle();
               $('#color').hide();
             }
           })
-
-          /*
-          $("#color .sp-choose").off('click');
-          $("#color .sp-choose").on('click', function() { 
-            color = $('#color input').spectrum('get').toHexString();
-            $(self).data('color', color);
-            $('input', ul2).each(function() {
-              $(this).change();
-            })
-            $('#color').hide();
-          })
-          */
           return;
+        } else {
+          config[s].color = $(this).val();
+          applyStyle();
         }
-        $(this).data('color', color);
-        $('input', ul2).each(function() {
-          $(this).change();
-        })
       })
       .appendTo(li);
+    if (/toponyme/.test(s)) {
+      label = $('<label>').addClass('toponyme')
+        .html('couleur du thème')
+        .appendTo(li);
+      $('<input type="checkbox">')
+        .change(function() {
+          config[s].useTheme = $(this).prop('checked');
+          applyStyle();
+        })
+        .prependTo(label);
+    }
     var ul2 = $("<ul>").appendTo(li);
     Object.keys(sources[s]).forEach(function(i) {
       var li = $('<li>').appendTo(ul2);
-      var source = sources[s][i];
+      var source = sources[s][i][0];
       var label = $('<label>').text(i.replace(/toponyme_|routier_|ocs_|hydro_|parcellaire_/, '')).attr('title', i).appendTo(li);
+      config[s].style[i] = {
+        visible: source.layout.visibility!=='none',
+        layers: sources[s][i]
+      };
       $('<input type="checkbox">')
         .prop('checked', source.layout.visibility!=='hidden' ? 'checked':'')
         .data('layer', i)
         .on('change', function() {
-          var style = getVisibleStyle(this, color);
-          olms.applyStyle(vlayer, style, "plan_ign");
+          config[s].style[i].visible = $(this).prop('checked');
+          applyStyle();
         })
         .prependTo(label);
     });
@@ -305,18 +313,20 @@ var select = new ol.layer.Vector({
 });
 map.addLayer(select);
 
+// Log properties
 map.on('click', function() {
   var f = select.getSource().getFeatures()[0];
   if (f) console.log(f.getProperties())
 })
 
+// Show tooltip on hover
 var tooltip  = new ol.Overlay.Tooltip({ className: 'default', positioning: 'bottom-center' });
 map.addOverlay(tooltip);
 
 var hover = new ol.interaction.Hover({ 
   cursor: "pointer",
   layers: [vlayer]
-  });
+});
 map.addInteraction(hover);
 hover.on("enter", function(e) {
   var showGeom = $('#showSel').prop('checked');
@@ -332,7 +342,7 @@ hover.on("enter", function(e) {
   }
   tooltip.setInfo(info);
   //console.log(feature.getProperties());
-  /* Select feature */
+  // Select feature 
   if (showGeom) {
     var coords = [];
     if (feature instanceof ol.Feature) {
@@ -364,14 +374,15 @@ hover.on("enter", function(e) {
       select.getSource().addFeature(f2);
     }
   }
-  /**/
 });
 hover.on("leave", function(e) {
   tooltip.setInfo('');
   select.getSource().clear();
 });
 
-
+/** [Debug] get layer style
+ * @param {string} lanyer layer name
+ */
 function getLayerStyle(layer) {
   var styles = [];
   currentStyle.layers.forEach(function(style) {
@@ -384,18 +395,28 @@ function getLayerStyle(layer) {
 
 // Reset styles
 function reset() {
-  $('.options ul select').val('').change();
-  $('.options .theme').each(function() {
-    $(this).prop('checked', true).change()
-  });
+  $('.options input').prop('checked', true)
+  $('.options .toponyme input').prop('checked', false);
+  for (theme in config) {
+    config[theme].color = '';
+    config[theme].visible = true;
+    if (/toponyme/.test(theme)) config[theme].useTheme = false;
+    for (i in config[theme].style) {
+      config[theme].style[i].visible = true;
+    }
+  }
+  $('.options ul select').val('');
+  applyStyle();
 }
 
+// Save to JSON file
 function save() {
   var data = JSON.stringify(currentStyle);
   var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
   saveAs(blob, "custom.json");
 }
 
+// Add sens de circulation
 var sens = {
   "id": "Routier - sens direct",
   "type": "symbol",

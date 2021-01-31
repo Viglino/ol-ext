@@ -10,13 +10,16 @@
   
   Documentation:
   https://geoservices.ign.fr/documentation/services_betas/vecteur-tuile.html
-  
 -->
   <title>ol-ext: Geoportail vector tile</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="icon" type="image/png" href="https://openlayers.org/assets/theme/img/logo70.png" />
 
-  <meta name="description" content="DBPedia layer for OL3" />
-  <meta name="keywords" content="ol3, layer, source, vector, wikipedia, dbpedia" />
+  <meta name="description" content="Geoportail vector tile" />
+  <meta name="keywords" content="openlayers, ol, geoportail, layer, source, vector, tile, style" />
+
+  <meta name="msapplication-tap-highlight" content="no" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
 
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
@@ -62,7 +65,7 @@
 
   <div class="options">
     <label>Style de base :</label><select id="styles" onchange="setBaseStyle(this.value)"></select>
-    <button onclick="reset()">réinit.</button>
+    <button onclick="reset()"><i class="fa fa-refresh"></i> réinitialiser</button>
     <ul></ul>
     <button onclick="save()"><i class="fa fa-download"></i> download styles</button>
   </div>
@@ -73,6 +76,24 @@
       <input />
     </div>
   </div>
+
+  <select id="operations">
+    <option value="">normal</option>
+    <option value="gray">gray</option>
+    <option value="saturate">saturate</option>
+    <option value="saturate2">saturate2</option>
+    <option value="desaturate">desaturate</option>
+    <option value="desaturate2">desaturate2</option>
+    <option value="darken">darken</option>
+    <option value="darken2">darken2</option>
+    <option value="brighten">brighten</option>
+    <option value="brighten2">brighten2</option>
+    <option value="red">red</option>
+    <option value="green">green</option>
+    <option value="blue">blue</option>
+    <option value="color" style="display: none;">user color</option>
+    <option value="color">user color</option>
+  </select>
   
   <script src="./map.layer.gppvtile.js"></script>
 

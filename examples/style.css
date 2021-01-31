@@ -162,7 +162,8 @@ h2 {
 #map {
   float:left;
 	margin-right:1em;
-	background:#ddd;
+  background:#ddd;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #map button {
