@@ -269,7 +269,6 @@
       $('.tag').each(function() {
         var tags = $(this).text().split(',');
         var div = $(this).html('');
-        console.log(div)
         tags.forEach(function(t) {
           $('<a>').text(t.trim())
             .click(search)
@@ -1638,6 +1637,14 @@
         </a>
         <p class="description">An exemple to change colors on a VectorTile</p>
         <p class="tag">source, layer, geoportail, vectortile, style</p>
+      </div>
+
+      <div class="example" data-date="2021-01-31">
+        <a class="mainlink" href="examples/layer/map.layer.geoportail.wfs.html">
+          <strong>Download IGN Geoportail Opendata</strong><br>
+        </a>
+        <p class="description">An exemple to download data using a WFS.</p>
+        <p class="tag">source, layer, geoportail, WFS, opendata</p>
       </div>
 
     </div>

@@ -46,11 +46,11 @@ var vectorSource;
 var vectorLayer = new ol.layer.Vector({
   title: 'WFS-IGN',
   maxResolution: 10,  // prevent load on small zoom 
-  style: ol.style.geoportailStyle('BDTOPO_V3:troncon_de_route'),
   declutter: true
 })
 map.addLayer(vectorLayer);
 
+var style;
 function setWFS() {
   loadLayer.getSource().clear();
   if (vectorSource) vectorSource.clear();
@@ -125,7 +125,8 @@ function setWFS() {
   });
   vectorLayer.setSource(vectorSource);
   vectorLayer.setMinZoom(minZoom);
-  vectorLayer.setStyle(ol.style.geoportailStyle(type, { sens : true, section: true }))
+  style = ol.style.geoportailStyle(type, { sens : true, section: true });
+  vectorLayer.setStyle(style);
   testZoom();
 }
 
@@ -202,16 +203,28 @@ map.addOverlay(popup)
 setWFS();
 
 // Save Vector layer
-function save() {
-  var format = new ol.format.GeoJSON();
+function save(what) {
+  var format;
+  switch(what) {
+    case 'kml':{
+      format = new ol.format.KML({writeStyles: true})
+      break;
+    }
+    default: {
+      format = new ol.format.GeoJSON();
+    }
+  }
   var features = vectorSource.getFeatures();
+  features.forEach(function(f) {
+    f.setStyle(style(f));
+  })
   if (features.length) {
     var data = format.writeFeatures(features, {
       dataProjection: 'EPSG:4326',
       featureProjection: map.getView().getProjection()
     });
     var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
-    saveAs(blob, "map.geojson");
+    saveAs(blob, 'map.'+(what || 'geojson'));
   }
   // commune
   features = commune.getFeatures();
