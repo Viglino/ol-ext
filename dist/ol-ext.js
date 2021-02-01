@@ -1232,7 +1232,8 @@ ol.control.SelectBase.prototype.operationsList = {
   '>': '>',
   'contain': '⊂', // ∈
   '!contain': '⊄',	// ∉
-  'regexp': '≈'
+  'regexp': '≃',
+  '!regexp': '≄'
 };
 /** Escape string for regexp
  * @param {string} search
@@ -1280,6 +1281,9 @@ ol.control.SelectBase.prototype._checkCondition = function (f, condition, usecas
     case 'regexp':
       rex = new RegExp(condition.val, usecase ? '' : 'i');
       return rex.test(val);
+    case '!regexp':
+      rex = new RegExp(condition.val, usecase ? '' : 'i');
+      return !rex.test(val);
     default:
       return false;
   }
@@ -10060,12 +10064,12 @@ ol.control.Select.prototype._autocomplete = function (val, ul) {
     if (a==='geometry') continue;
     if (rex.test(a)) {
       var li = document.createElement('li');
-    li.textContent = a;
-    li.addEventListener("click", function() {
-          ul.previousElementSibling.value = this.textContent;
-      var event = document.createEvent('HTMLEvents');
-      event.initEvent('change', true, false);
-      ul.previousElementSibling.dispatchEvent(event);
+      li.textContent = a;
+      li.addEventListener("click", function() {
+        ul.previousElementSibling.value = this.textContent;
+        var event = document.createEvent('HTMLEvents');
+        event.initEvent('change', true, false);
+        ul.previousElementSibling.dispatchEvent(event);
           ul.classList.add('ol-hidden');
         });
         ul.appendChild(li);
@@ -15059,6 +15063,80 @@ ol.format.GeoRSS.prototype.getDocumentItemsTagName = function(xmlDoc) {
   }
 }
 
+/** An interaction to check the current map and add key events listeners.
+ * It will fire a 'focus' event on the map when map is focused (use mapCondition option to handle the condition when the map is focused).
+ * @constructor
+ * @fires focus
+ * @param {*} options
+ *  @param {function} condition a function that takes a mapBrowserEvent and returns true if the map must be activated, default always true
+ *  @param {function} onKeyDown a function that takes a keydown event is fired on the active map
+ *  @param {function} onKeyPress a function that takes a keypress event is fired on the active map
+ *  @param {function} onKeyUp a function that takes a keyup event is fired on the active map
+ * @extends {ol.interaction.Interaction}
+ */
+ol.interaction.CurrentMap = function(options) {
+  options = options || {};
+  var condition = options.condition || function() {
+    return true;
+  }
+  // Check events on the map
+  ol.interaction.Interaction.call(this, {
+    handleEvent: function(e) {
+      if (condition(e)) {
+        if (!this.isCurrentMap()) {
+          this.setCurrentMap(this.getMap());
+          this.dispatchEvent({ type: 'focus', map: this.getMap() });
+          this.getMap().dispatchEvent({ type: 'focus', map: this.getMap() });
+        }
+      }
+      return true;
+    }.bind(this)
+  });
+  // Add a key listener
+  if (options.onKeyDown) { 
+    document.addEventListener('keydown', function(e) {
+      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+        options.onKeyDown ({ type: e.type, map: this.getMap(), originalEvent: e });
+      }
+    }.bind(this));
+  }
+  if (options.onKeyPress) { 
+    document.addEventListener('keydown', function(e) {
+      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+        options.onKeyPress ({ type: e.type, map: this.getMap(), originalEvent: e });
+      }
+    }.bind(this));
+  }
+  if (options.onKeyUp) { 
+    document.addEventListener('keydown', function(e) {
+      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+        options.onKeyUp ({ type: e.type, map: this.getMap(), originalEvent: e });
+      }
+    }.bind(this));
+  }
+};
+ol.ext.inherits(ol.interaction.CurrentMap, ol.interaction.Interaction);
+/** The current map */
+ol.interaction.CurrentMap.prototype._currentMap = undefined;
+/** Check if is the current map 
+ * @return {boolean}
+ */
+ol.interaction.CurrentMap.prototype.isCurrentMap = function() {
+  return this.getMap() === ol.interaction.CurrentMap.prototype._currentMap;
+};
+/** Get the current map
+ * @return {ol.Map}
+ */
+ol.interaction.CurrentMap.prototype.getCurrentMap = function() {
+  return ol.interaction.CurrentMap.prototype._currentMap;
+};
+/** Set the current map
+ * @param {ol.Map} map
+ */
+ol.interaction.CurrentMap.prototype.setCurrentMap = function(map) {
+  ol.interaction.CurrentMap.prototype._currentMap = map;
+};
+
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -15336,9 +15414,7 @@ ol.interaction.CopyPaste = function(options) {
   this.setSources(options.sources);
   this.setDestination(options.destination);
   // Create intreaction
-  ol.interaction.Interaction.call(this, {});
-  console.log(options)
-  this._currentMap = new ol.interaction.CurrentMap({
+  ol.interaction.CurrentMap.call(this, {
     condition: options.mapCondition,
     onKeyDown: function (e) {
       switch (condition(e)) {
@@ -15359,18 +15435,7 @@ ol.interaction.CopyPaste = function(options) {
     }.bind(this)
   });
 };
-ol.ext.inherits(ol.interaction.CopyPaste, ol.interaction.Interaction);
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.interaction.CopyPaste.prototype.setMap = function(map) {
-  if (this.getMap()) this.getMap().removeInteraction(this._currentMap);
-  if (map) map.addInteraction(this._currentMap);
-  ol.interaction.Interaction.prototype.setMap.call (this, map);
-};
+ol.ext.inherits(ol.interaction.CopyPaste, ol.interaction.CurrentMap);
 /** Sources to cut feature from
  * @param { ol.source.Vector | Array<ol.source.Vector> } sources
  */
@@ -15456,80 +15521,6 @@ ol.interaction.CopyPaste.prototype.paste = function(options) {
   }
   // Send an event
   if (options.silent===false) this.dispatchEvent({ type:'paste', features: features, time: (new Date).getTime() });
-};
-
-/** An interaction to check the current map.
- * It will fire a 'focus' event on the map when map is focused (use mapCondition option to handle the condition when the map is focused).
- * @constructor
- * @fires focus
- * @param {*} options
- *  @param {function} condition a function that takes a mapBrowserEvent and returns true if the map must be activated, default always true
- *  @param {function} onKeyDown a function that takes a keydown event is fired on the active map
- *  @param {function} onKeyPress a function that takes a keypress event is fired on the active map
- *  @param {function} onKeyUp a function that takes a keyup event is fired on the active map
- * @extends {ol.interaction.Interaction}
- */
-ol.interaction.CurrentMap = function(options) {
-  options = options || {};
-  var condition = options.condition || function() {
-    return true;
-  }
-  // Check events on the map
-  ol.interaction.Interaction.call(this, {
-    handleEvent: function(e) {
-      if (condition(e)) {
-        if (!this.isCurrentMap()) {
-          this.setCurrentMap(this.getMap());
-          this.dispatchEvent({ type: 'focus', map: this.getMap() });
-          this.getMap().dispatchEvent({ type: 'focus', map: this.getMap() });
-        }
-      }
-      return true;
-    }.bind(this)
-  });
-  // Add a key listener
-  if (options.onKeyDown) { 
-    document.addEventListener('keydown', function(e) {
-      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
-        options.onKeyDown ({ type: e.type, map: this.getMap(), originalEvent: e });
-      }
-    }.bind(this));
-  }
-  if (options.onKeyPress) { 
-    document.addEventListener('keydown', function(e) {
-      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
-        options.onKeyPress ({ type: e.type, map: this.getMap(), originalEvent: e });
-      }
-    }.bind(this));
-  }
-  if (options.onKeyUp) { 
-    document.addEventListener('keydown', function(e) {
-      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
-        options.onKeyUp ({ type: e.type, map: this.getMap(), originalEvent: e });
-      }
-    }.bind(this));
-  }
-};
-ol.ext.inherits(ol.interaction.CurrentMap, ol.interaction.Interaction);
-/** The current map */
-ol.interaction.CurrentMap.prototype._currentMap = undefined;
-/** Check if is the current map 
- * @return {boolean}
- */
-ol.interaction.CurrentMap.prototype.isCurrentMap = function() {
-  return this.getMap() === ol.interaction.CurrentMap.prototype._currentMap;
-};
-/** Get the current map
- * @return {ol.Map}
- */
-ol.interaction.CurrentMap.prototype.getCurrentMap = function() {
-  return ol.interaction.CurrentMap.prototype._currentMap;
-};
-/** Set the current map
- * @param {ol.Map} map
- */
-ol.interaction.CurrentMap.prototype.setCurrentMap = function(map) {
-  ol.interaction.CurrentMap.prototype._currentMap = map;
 };
 
 /*	Copyright (c) 2018 Jean-Marc VIGLINO, 
@@ -18623,7 +18614,7 @@ ol.interaction.Ripple.prototype.postcompose_ = function(e) {
  * 	@param {boolean} options.selectCluster false if you don't want to get cluster selected
  * 	@param {Number} options.pointRadius to calculate distance between the features
  * 	@param {bool} options.spiral means you want the feature to be placed on a spiral (or a circle)
- * 	@param {Number} options.circleMaxObject number of object that can be place on a circle
+ * 	@param {Number} options.circleMaxObjects number of object that can be place on a circle
  * 	@param {Number} options.maxObjects number of object that can be drawn, other are hidden
  * 	@param {bool} options.animate if the cluster will animate when features spread out, default is false
  * 	@param {Number} options.animationDuration animation duration in ms, default is 500ms
