@@ -37,7 +37,7 @@ import { extend as ol_extent_extend } from 'ol/extent'
  * 	@param {boolean} options.selectCluster false if you don't want to get cluster selected
  * 	@param {Number} options.pointRadius to calculate distance between the features
  * 	@param {bool} options.spiral means you want the feature to be placed on a spiral (or a circle)
- * 	@param {Number} options.circleMaxObject number of object that can be place on a circle
+ * 	@param {Number} options.circleMaxObjects number of object that can be place on a circle
  * 	@param {Number} options.maxObjects number of object that can be drawn, other are hidden
  * 	@param {bool} options.animate if the cluster will animate when features spread out, default is false
  * 	@param {Number} options.animationDuration animation duration in ms, default is 500ms
