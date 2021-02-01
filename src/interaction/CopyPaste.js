@@ -41,10 +41,7 @@ var ol_interaction_CopyPaste = function(options) {
   this.setDestination(options.destination);
   
   // Create intreaction
-  ol_interaction_Interaction.call(this, {});
-
-  console.log(options)
-  this._currentMap = new ol_interaction_CurrentMap({
+  ol_interaction_CurrentMap.call(this, {
     condition: options.mapCondition,
     onKeyDown: function (e) {
       switch (condition(e)) {
@@ -65,19 +62,7 @@ var ol_interaction_CopyPaste = function(options) {
     }.bind(this)
   });
 };
-ol_ext_inherits(ol_interaction_CopyPaste, ol_interaction_Interaction);
-
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol_interaction_CopyPaste.prototype.setMap = function(map) {
-  if (this.getMap()) this.getMap().removeInteraction(this._currentMap);
-  if (map) map.addInteraction(this._currentMap);
-  ol_interaction_Interaction.prototype.setMap.call (this, map);
-};
+ol_ext_inherits(ol_interaction_CopyPaste, ol_interaction_CurrentMap);
 
 /** Sources to cut feature from
  * @param { ol.source.Vector | Array<ol.source.Vector> } sources

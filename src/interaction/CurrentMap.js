@@ -1,7 +1,7 @@
 import ol_ext_inherits from '../util/ext'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
 
-/** An interaction to check the current map.
+/** An interaction to check the current map and add key events listeners.
  * It will fire a 'focus' event on the map when map is focused (use mapCondition option to handle the condition when the map is focused).
  * @constructor
  * @fires focus
