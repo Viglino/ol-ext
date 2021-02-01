@@ -4,6 +4,8 @@ String.prototype.capitalize = function() {
 }
 
 var minZoom = 15;
+var jstsParser = new jsts.io.OL3Parser();
+
 // The map
 var map = new ol.Map ({
   target: 'map',
@@ -30,6 +32,7 @@ map.addLayer (new ol.layer.Geoportail({
   visible: false
 }));
 
+// Grid layer for loaded features
 var loadLayer = new ol.layer.Vector({
   title: 'chargement',
   source: new ol.source.Vector(),
@@ -42,6 +45,7 @@ var loadLayer = new ol.layer.Vector({
 })
 map.addLayer(loadLayer);
 
+// WFS source / layer
 var vectorSource;
 var vectorLayer = new ol.layer.Vector({
   title: 'WFS-IGN',
@@ -124,12 +128,24 @@ function setWFS() {
     strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: minZoom, maxZoom: minZoom, tileSize:512  }))
   });
   vectorLayer.setSource(vectorSource);
+  selectCtrl.setSources(vectorSource);
   vectorLayer.setMinZoom(minZoom);
   style = ol.style.geoportailStyle(type, { sens : true, section: true });
   vectorLayer.setStyle(style);
   testZoom();
 }
 
+// Selection tool
+var selectCtrl = new ol.control.Select();
+map.addControl (selectCtrl);
+selectCtrl.on('select', function(e) {
+  sel.getFeatures().clear();
+  for (var i=0, f; f=e.features[i]; i++) {
+    sel.getFeatures().push(f);
+  }
+});
+
+// Show zoom info
 map.on('moveend', testZoom)
 function testZoom() {
   $('#curZoom').text(map.getView().getZoom().toFixed(1)+' / '+minZoom);
@@ -203,45 +219,66 @@ map.addOverlay(popup)
 setWFS();
 
 // Save Vector layer
-function save(what) {
-  var format;
-  switch(what) {
-    case 'kml':{
-      format = new ol.format.KML({writeStyles: true})
-      break;
-    }
-    default: {
-      format = new ol.format.GeoJSON();
-    }
-  }
-  var features = vectorSource.getFeatures();
-  features.forEach(function(f) {
-    f.setStyle(style(f));
-  })
-  if (features.length) {
-    var data = format.writeFeatures(features, {
-      dataProjection: 'EPSG:4326',
-      featureProjection: map.getView().getProjection()
-    });
-    var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
-    saveAs(blob, 'map.'+(what || 'geojson'));
-  }
-  // commune
-  features = commune.getFeatures();
-  if (features.length) {
-    if (features.length === 1) {
-      var geom = ol.geom.Polygon.fromExtent(ol.extent.buffer(features[0].getGeometry().getExtent(), 1000));
-      geom = geom.getCoordinates();
-      features[0].getGeometry().getCoordinates().forEach(function(p) {
-        geom.push(p);
-      });
-      features.push(new ol.Feature(new ol.geom.Polygon(geom)))
-    }
-    var data = format.writeFeatures(features, {
-      dataProjection: 'EPSG:4326',
-      featureProjection: map.getView().getProjection()
-    });
-    var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
-    saveAs(blob, "commune.geojson");
-  }
+function save() {
+  $('.dialog').addClass('hidden');
+  $('#save').removeClass('hidden');
+  $('#save input.select').prop('disabled', !sel.getFeatures().getLength());
+  $('#save input.clip').prop('disabled', commune.getFeatures().length !== 1);
 }
+
+$('#save form').on('submit', function(e) {
+  e.preventDefault();
+  $('#save').addClass('hidden');
+  $('body').addClass('wait');
+
+  setTimeout(function() {
+    var ext = $('#save select').val();
+
+    var format;
+    switch(ext) {
+      case 'kml':{
+        format = new ol.format.KML({writeStyles: true})
+        break;
+      }
+      default: {
+        format = new ol.format.GeoJSON();
+      }
+    }
+
+    var com;
+    if ($('#save .clip').prop('checked')) com = jstsParser.read(commune.getFeatures()[0].getGeometry());
+    var datalist = ($('#save .select').prop('checked') ? sel.getFeatures() : vectorSource.getFeatures());
+    var features = [];
+    datalist.forEach(function(f) {
+      f.setStyle(style(f));
+      if (!com || com.intersects(jstsParser.read(f.getGeometry()))) features.push(f)
+    })
+    if (features.length) {
+      var data = format.writeFeatures(features, {
+        dataProjection: 'EPSG:4326',
+        featureProjection: map.getView().getProjection()
+      });
+      var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
+      saveAs(blob, 'map.'+(ext || 'geojson'));
+    }
+    // commune
+    features = commune.getFeatures();
+    if (features.length) {
+      if (features.length === 1) {
+        var geom = ol.geom.Polygon.fromExtent(ol.extent.buffer(features[0].getGeometry().getExtent(), 1000));
+        geom = geom.getCoordinates();
+        features[0].getGeometry().getCoordinates().forEach(function(p) {
+          geom.push(p);
+        });
+        features.push(new ol.Feature(new ol.geom.Polygon(geom)))
+      }
+      var data = format.writeFeatures(features, {
+        dataProjection: 'EPSG:4326',
+        featureProjection: map.getView().getProjection()
+      });
+      var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
+      saveAs(blob, "commune.geojson");
+    }
+    $('body').removeClass('wait');
+  },300);
+});

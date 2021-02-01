@@ -30,6 +30,9 @@
 	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <script type="text/javascript" src="../../dist/extra/FontAwesomeDef.js"></script>
 
+  <!-- JSTS -->
+  <script type="text/javascript" src="https://unpkg.com/jsts@1.6.1/dist/jsts.min.js"></script>
+  
   <!-- filesaver-js -->
 	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
 
@@ -38,12 +41,13 @@
   
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <i class="wait fa fa-spinner fa-pulse"></i>
 
 	<a href="../../index.html">
 		<h1>ol-ext: Geoportail WFS</h1>
 	</a>
-	<div class="info" onclick="$('.info').addClass('hidden');">
+	<div class="info dialog" onclick="$('.info').addClass('hidden');">
     <img src="https://upload.wikimedia.org/wikipedia/commons/a/a0/IGN_logo_2012.svg" />
     <p>
       Cet exemple affiche les flux WFS du Géoportail et permet de télécharger les données IGN au format GeoJSON. 
@@ -82,7 +86,7 @@
     </select>
     <button onclick="vectorSource.refresh(); commune.clear(); loadLayer.getSource().clear();"><i class="fa fa-refresh"></i> reset</button>
     <button onclick="save()"><i class="fa fa-download"></i> charger</button>
-    <button onclick="$('#commune').removeClass('hidden')"><i class="fa fa-upload"></i></button>
+    <button onclick="$('.dialog').addClass('hidden'); $('#commune').removeClass('hidden')"><i class="fa fa-upload"></i></button>
     <i class="fa fa-info-circle" onclick="$('.info').removeClass('hidden');"></i>
   </div>
   <div class="zoom">
@@ -91,13 +95,37 @@
     <span id="zoomTo">- Zoom to display features</span>
   </div>
   
-  <div id="commune" class="hidden">
+  <div id="commune" class="dialog hidden">
     <h2>Charger une commune</h2>
     <p>avec <a href="https://api.gouv.fr/documentation/api-geo" target="_new">l'API Geo</a></p>
     <form>
       <input placeholder="INSEE" />
-      <button type="submit">charger</button>
-      <button type="reset" onclick="$('#commune').addClass('hidden')">annuler</button>
+      <div class="buttons">
+        <button type="submit">charger</button>
+        <button type="reset" onclick="$('#commune').addClass('hidden')">annuler</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="save" class="dialog hidden">
+    <h2>Enregistrer</h2>
+    <form>
+      <ul>
+        <li>
+          Format: <select>
+            <option value="geojson">GeoJSON</option>
+            <option value="kml">KML</option>
+          </select>
+        </li><li>
+          <label><input type="checkbox" class="select" /><span> seulement la sélection</span></label>
+        </li><li>
+          <label><input type="checkbox" class="clip" /><span> dans à la commune</span></label>
+        </li>
+      </ul>
+      <div class="buttons">
+        <button type="submit">enregistrer</button>
+        <button type="reset" onclick="$('#save').addClass('hidden')">annuler</button>
+      </div>
     </form>
   </div>
 	

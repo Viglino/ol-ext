@@ -26,6 +26,9 @@
   padding: .5em  1em;
   border-radius: 1em;
 }
+.ol-control.ol-select {
+  top: 2.5em;
+}
 .ol-popup {
   z-index: 99;
 }
@@ -67,8 +70,7 @@ button i {
   font-size: 1.3em;
   vertical-align: middle;
 }
-#commune,
-.info {
+.dialog {
   position: absolute;
   top: 30%;
   left: 50%;
@@ -83,14 +85,49 @@ button i {
   cursor: pointer;
   transition: .5s;
 }
-#commune.hidden,
-.info.hidden {
+.dialog.hidden {
   top: -20%;
   opacity: 0;
   pointer-events: none;
 }
-#commune {
+.dialog .buttons {
+  text-align: right;
+  margin: 1em -1em 0;
+  padding: .5em 0 0;
+  border-top: 1px solid #369;
+}
+.dialog ul {
+  list-style: none;
+  padding: 0;
+}
+.dialog ul li {
+  padding: .1em 0;
+}
+[type="checkbox"]:disabled + span {
+  color: #aaa;
+}
+.wait > * {
+  opacity: .5;
+  pointer-events: none;
+}
+body > .wait {
+  display: none;
+  color: #fff;
+  font-size: 5em;
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -30%);
+  z-index: 9999;
+}
+.wait .wait {
+  display: block;
+  opacity: .8;
+}
+#commune,
+#save {
   width: fit-content;
+  cursor: default;
 }
 #commune h2 {
   margin: 0;
