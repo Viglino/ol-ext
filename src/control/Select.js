@@ -157,15 +157,15 @@ ol_control_Select.prototype._autocomplete = function (val, ul) {
     if (a==='geometry') continue;
     if (rex.test(a)) {
       var li = document.createElement('li');
-    li.textContent = a;
-    li.addEventListener("click", function() {
-          ul.previousElementSibling.value = this.textContent;
-      var event = document.createEvent('HTMLEvents');
-      event.initEvent('change', true, false);
-      ul.previousElementSibling.dispatchEvent(event);
-          ul.classList.add('ol-hidden');
-        });
-        ul.appendChild(li);
+      li.textContent = a;
+      li.addEventListener("click", function() {
+        ul.previousElementSibling.value = this.textContent;
+        var event = document.createEvent('HTMLEvents');
+        event.initEvent('change', true, false);
+        ul.previousElementSibling.dispatchEvent(event);
+        ul.classList.add('ol-hidden');
+      });
+      ul.appendChild(li);
     }
   }
 };

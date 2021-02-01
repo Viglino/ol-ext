@@ -102,7 +102,8 @@ ol_control_SelectBase.prototype.operationsList = {
   '>': '>',
   'contain': '⊂', // ∈
   '!contain': '⊄',	// ∉
-  'regexp': '≈'
+  'regexp': '≃',
+  '!regexp': '≄'
 };
 
 /** Escape string for regexp
@@ -152,6 +153,9 @@ ol_control_SelectBase.prototype._checkCondition = function (f, condition, usecas
     case 'regexp':
       rex = new RegExp(condition.val, usecase ? '' : 'i');
       return rex.test(val);
+    case '!regexp':
+      rex = new RegExp(condition.val, usecase ? '' : 'i');
+      return !rex.test(val);
     default:
       return false;
   }
