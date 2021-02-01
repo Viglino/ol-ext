@@ -86,7 +86,7 @@
     </select>
     <button onclick="vectorSource.refresh(); commune.clear(); loadLayer.getSource().clear();"><i class="fa fa-refresh"></i> reset</button>
     <button onclick="save()"><i class="fa fa-download"></i> charger</button>
-    <button onclick="$('.dialog').addClass('hidden'); $('#commune').removeClass('hidden')"><i class="fa fa-upload"></i></button>
+    <button onclick="$('.dialog').addClass('hidden'); $('#commune').removeClass('hidden'); $('#commune input').focus();"><i class="fa fa-upload"></i></button>
     <i class="fa fa-info-circle" onclick="$('.info').removeClass('hidden');"></i>
   </div>
   <div class="zoom">
