@@ -10070,9 +10070,9 @@ ol.control.Select.prototype._autocomplete = function (val, ul) {
         var event = document.createEvent('HTMLEvents');
         event.initEvent('change', true, false);
         ul.previousElementSibling.dispatchEvent(event);
-          ul.classList.add('ol-hidden');
-        });
-        ul.appendChild(li);
+        ul.classList.add('ol-hidden');
+      });
+      ul.appendChild(li);
     }
   }
 };
@@ -18737,14 +18737,14 @@ ol.interaction.SelectCluster.prototype.selectCluster = function (e) {
   var center = feature.getGeometry().getCoordinates();
   // Pixel size in map unit
   var pix = this.getMap().getView().getResolution();
-  var r = pix * this.pointRadius * (0.5 + cluster.length / 4);
-  var a, i, max;
+  var r, a, i, max;
   var p, cf, lk;
   // The features
   var features = [];
   // Draw on a circle
   if (!this.spiral || cluster.length <= this.circleMaxObjects) {
     max = Math.min(cluster.length, this.circleMaxObjects);
+    r = pix * this.pointRadius * (0.5 + max / 4);
     for (i=0; i<max; i++) {
       a = 2*Math.PI*i/max;
       if (max==2 || max == 4) a += Math.PI/4;
@@ -18760,7 +18760,6 @@ ol.interaction.SelectCluster.prototype.selectCluster = function (e) {
   else {
     // Start angle
     a = 0;
-    r;
     var d = 2*this.pointRadius;
     max = Math.min (this.maxObjects, cluster.length);
     // Feature on a spiral
