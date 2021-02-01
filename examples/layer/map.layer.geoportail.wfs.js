@@ -33,7 +33,7 @@ map.addLayer (new ol.layer.Geoportail({
 }));
 
 // Grid layer for loaded features
-var loadLayer = new ol.layer.Vector({
+var loadLayer = new ol.layer.VectorImage({
   title: 'chargement',
   source: new ol.source.Vector(),
   style: new ol.style.Style({
@@ -47,7 +47,7 @@ map.addLayer(loadLayer);
 
 // WFS source / layer
 var vectorSource;
-var vectorLayer = new ol.layer.Vector({
+var vectorLayer = new ol.layer.VectorImage({
   title: 'WFS-IGN',
   maxResolution: 10,  // prevent load on small zoom 
   declutter: true

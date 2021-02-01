@@ -6,13 +6,33 @@
   left: 3.5em;
 }
 .ol-search button {
-  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAABPUlEQVQoU41SwXHCQAzUHh58eoUOIBWEDkI6oAToIKkg7iAuwakgpAIowXRACcnrzp6BzchjMx4wE/S6kW5XK60gvQghzJIkmVoqSZI9gJ9+/fINS5Cc1HX9QXIlIr/tpwcRyb33b7cIGnAIYQdg4pxbjcfj0nJ1Xc+Px+PGObdN03Q9RIAQwgpAnqbp7FKmjQGgJLlU1d2V7BjjRkQO3vvXIXarkyxVNbsCm2QR2Q0V7XOMMReRmfd+OQQubN6hYgs22ZtbnRcAtiRfLueqqmpJ8ovko6oeBq0KIWQA3gFkzrlmMafTaUEyI/mpqmbhVTRWWbRdbClPbeobQNES5KPRqOxs7DBn8K1DsAOKMZYApiTXqlrcDe4d0XN7jWeCfzt351tVle2iGalTcBd4gGDvvZ/fDe4RmCOFLe8Pr7mvEP2N9PQAAAAASUVORK5CYII=");
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: 1em;
   top: 2px;
   left: 2px;
   float: left;
+}
+.ol-control.ol-search > button:before {
+  content: "";
+  position: absolute;
+  box-sizing: border-box;
+  width: .7em;
+  height: .7em;
+  background-color: transparent;
+  border: .12em solid currentColor;
+  border-radius: 100%;
+  top: .35em;
+  left: .35em;
+}
+.ol-control.ol-search > button:after {
+  content: "";
+  position: absolute;
+  top: 1.1em;
+  left: .95em;
+  width: .45em;
+  height: .15em;
+  background-color: currentColor;
+  border-radius: .05em;
+  transform: rotate(45deg);
+  box-shadow: -0.18em 0 0 -0.03em;
 }
 
 .ol-search button.ol-revers {

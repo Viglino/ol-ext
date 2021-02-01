@@ -26,6 +26,9 @@
   padding: .5em  1em;
   border-radius: 1em;
 }
+.ol-search {
+  z-index: 1;
+}
 .ol-control.ol-select {
   top: 2.5em;
 }
