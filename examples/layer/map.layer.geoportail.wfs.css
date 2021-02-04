@@ -87,6 +87,8 @@ button i {
   box-sizing: border-box;
   cursor: pointer;
   transition: .5s;
+  max-height: calc(100% - 2em);
+  overflow-y: auto;
 }
 .dialog.hidden {
   top: -20%;
@@ -173,4 +175,58 @@ body > .wait {
   50% {
     opacity: 0;
   }
+}
+
+#options {
+  width: fit-content;
+  cursor: auto;
+}
+#options .fa-close {
+  position: absolute;
+  font-size: 1.5em;
+  top: 0;
+  right: 0;
+  padding: .5em;
+}
+#options a {
+  cursor: pointer;
+}
+#options li i {
+  background-color: #f52;
+  color: #fff;
+  padding: .5em 1em;
+}
+
+#options > input[type="number"] {
+  width: 5em;
+  text-align: right;
+}
+#options li {
+  clear: both;
+}
+#options li.small {
+  font-size: .8em;
+}
+#options ul {
+  margin: .5em 0 0 1em;
+  width: fit-content;
+  border: 1px solid #369;
+  padding: .5em 1em;
+}
+#options .disabled {
+  pointer-events: none;
+  opacity: .5;
+}
+
+#options li input {
+  margin-right: .5em;
+}
+#options li label {
+  display: inline-block;
+  width: 12em;
+  margin-right: .5em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: -.03em;
 }

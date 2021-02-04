@@ -120,15 +120,36 @@
           <label><input type="checkbox" class="select" /><span> seulement la sélection</span></label>
         </li><li>
           <label><input type="checkbox" class="clip" /><span> dans à la commune</span></label>
+        </li><li>
+          <label><input type="checkbox" class="null" checked="checked" /><span> supprimer les attributs null</span></label>
+        </li><li style="text-align: right;">
+          <button type="button" onclick="showOptions()"><i class="fa fa-list"></i> options...</button>
         </li>
       </ul>
       <div class="buttons">
-        <button type="submit">enregistrer</button>
+        <button type="submit"><i class="fa fa-map-o"></i> enregistrer</button>
+        <button class="commune" type="button" onclick="saveCommune();"><i class="fa fa-download"></i> commune</button>
         <button type="reset" onclick="$('#save').addClass('hidden')">annuler</button>
       </div>
     </form>
   </div>
-	
+  
+  <div id="options" class="dialog hidden">
+    <h2>Options</h2>
+    <i class="fa fa-close" onclick="$('#options').addClass('hidden');"></i>
+    <label><input type="checkbox" class="filter" /> Filtrage géométrique: </label><input class="geom" type="number" value=0 step=".5" min="0" /> m<br/>
+    <label><input type="checkbox" class="limit" /> Limiter les attributs:</label>
+    <div class="buttons">
+      <button class="valid">OK</button>
+      <button onclick="$('#options').addClass('hidden')">Annuler</button>
+    </div>
+    <ul class='disabled'></ul>
+    <div class="buttons">
+      <button class="valid">OK</button>
+      <button onclick="$('#options').addClass('hidden')">Annuler</button>
+    </div>
+  </div>
+
 	<script type="text/javascript" src="./map.layer.geoportail.wfs.js"></script>
 
 </body>
