@@ -186,14 +186,21 @@ ol_control_Select.prototype._getLiCondition = function (i) {
       li.appendChild(autocomplete);
   var input_attr = document.createElement('input');
       input_attr.classList.add('ol-attr');
-      input_attr.setAttribute('type', 'text');
+      input_attr.setAttribute('type', 'search');
       input_attr.setAttribute('placeholder', this.get('attrPlaceHolder'));
       input_attr.addEventListener('keyup', function () {
         self._autocomplete( this.value, this.nextElementSibling );
       })
+      input_attr.addEventListener('focusout', function() {
+        setTimeout(function() {
+          autocomplete.querySelector('ul'). classList.add('ol-hidden');
+        }, 300);
+      });
       input_attr.addEventListener('click', function(){
-        self._autocomplete( this.value, this.nextElementSibling );
-        this.nextElementSibling.classList.remove('ol-hidden')
+        setTimeout(function() {
+          self._autocomplete( this.value, this.nextElementSibling );
+          this.nextElementSibling.classList.remove('ol-hidden');
+        }.bind(this));
       })
       input_attr.addEventListener('change', function() {
         self._conditions[i].attr = this.value;
