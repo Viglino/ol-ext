@@ -1,16 +1,19 @@
 ﻿<!DOCTYPE html>
-
 <html>
 <head>
 <!--
   Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
   released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 -->
-  <title>ol-ext: DetectEdge filter</title>
+  <title>ol-ext: Fast edge detection filter</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="icon" type="image/png" href="https://openlayers.org/assets/theme/img/logo70.png" />
 
   <meta name="description" content="This filter apply a filter to detect edge on images." />
-  <meta name="keywords" content="openlayers, ol, filter, canvas, edge, detect" />
+  <meta name="keywords" content="openlayers, ol, canvas, filter, SVG, edge, operator, sobel, prewitt, laplace, roberts" />
+
+  <meta name="msapplication-tap-highlight" content="no" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
 
   <link rel="stylesheet" href="../style.css" />
 
@@ -38,8 +41,60 @@
       bottom: 0;
       margin: 0;
     }
-    .options {
-      display: none;
+    h1 {
+      box-shadow: 0 .2em .5em rgba(0,0,0,.3);
+      z-index: 1;
+      position: relative;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .info {
+      margin: 0;
+      width: calc(100% - 1em);
+      z-index: 10;
+      background: #fff;
+      border-radius: 0 0 .5em .5em;
+    }
+    .info:hover {
+      position: fixed;
+      width: calc(100% - 2em);
+      box-shadow: .5em .5em 2em rgba(0,0,0,.5);
+    }
+    .info ul {
+      padding: 0;
+      list-style: none;
+      margin: .5em 0;
+      padding: .5em 1em;
+      border: 1px solid #369;
+    }
+    .info .table {
+      display: inline-block;
+      vertical-align: middle;
+      position: relative;
+      font-family: monospace;
+      padding: 0 .5em;
+      margin: 0;
+    }
+    .info .table:before,
+    .info .table:after {
+      content: "";
+      position: absolute;
+      border: 2px solid currentColor;
+      height: 100%;
+      width: .25em;
+      top: 0;
+    }
+    .info .table:before {
+      left: 0;
+      border-right: 0;
+    }
+    .info .table:after {
+      right: 0;
+      border-left: 0;
+    }
+    .info p {
+      margin: 0;
     }
   </style>
 
@@ -48,17 +103,98 @@
   <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
   <a href="../../index.html">
-    <h1>ol-ext: DetectEdge filter</h1>
+    <h1>ol-ext: Fast edge detection filter</h1>
   </a>
   <div class="info">
-    <i>ol/ext/SVGFilter/DetectEdge</i> is a simple edge detector filter to detect edges on images.
+    <p>
+      SVG filter comes with a set of fast operators to detect edge on map layers.
+      <br/>
+      Filter: <select onchange="setFilter(this.value);">
+        <option value="laplacian-8">Laplacian-8</option>
+        <option value="laplacian-4">Laplacian-4</option>
+        <option value="prewitt">Prewitt</option>
+        <option value="roberts">Roberts cross</option>
+        <option value="sobel">Sobel like</option>
+      </select>
+    </p>
+    <ul>
+      <li class='laplacian-8 laplacian-4'>
+        <i>ol/ext/SVGFilter/Laplacian</i> is a <a href="https://en.wikipedia.org/wiki/Laplace_operator">simple edge detector</a> 
+        filter to detect edges on images.
+        <p>
+          The Laplacian operator uses a single 3×3 kernel to detect edges.
+        </p>
+<pre class="table">
+-1 -1 -1
+-1  8 -1
+-1 -1 -1
+</pre>
+or
+<pre class="table">
+ 0 -1  0
+-1  4 -1
+ 0 -1  0
+</pre>
+      </li>
+      <li class='prewitt'>
+        <i>ol/ext/SVGFilter/Prewitt</i> is a <a href="https://en.wikipedia.org/wiki/Prewitt_operator">Prewitt like operator</a>.
+        <p>
+          the operator uses two 3×3 kernels which are convolved with the original image to calculate 
+          approximations of the derivatives - one for horizontal changes, and one for vertical.
+        </p>
+<pre class="table">
++1  0 -1
++1  0 -1
++1  0 -1
+</pre>
+&
+<pre class="table">
++1 +1 +1
+ 0  0  0
+-1 -1 -1
+</pre>
+      </li>
+      <li class='roberts'>
+        <i>ol/ext/SVGFilter/Roberts</i> is <a href="https://en.wikipedia.org/wiki/Roberts_cross">Roberts cross like operator</a>.
+        <p>
+          the operator the following two kernels.
+        </p>
+<pre class="table">
++1  0  0
+ 0  0  0
+ 0  0 -1
+</pre>
+&
+<pre class="table">
+ 0  0 +1
+ 0  0  0
+-1  0  0
+</pre>
+      </li>
+      <li class='sobel'>
+        <i>ol/ext/SVGFilter/Sobel</i> is <a href="https://en.wikipedia.org/wiki/Sobel_operator">Sobel like operator</a>.
+        <p>
+          The operator uses two 3×3 kernels which are convolved with the original image to calculate 
+          approximations of the derivatives – one for horizontal changes, and one for vertical
+        </p>
+<pre class="table">
++1  0 -1
++2  0 -2
++1  0 -1
+</pre>
+&
+<pre class="table">
++1 +2 +1
+ 0  0  0
+-1 -2 -1
+</pre>
+      </li>
+    </ul>
+    @See: <a href="./SVGFilterComparison.html">SVG filter comparison</a>
   </div>
 
   <!-- Map div -->
   <div id="map"></div>
-
-  <div class="options" >
-  </div>
 
   <script type="text/javascript">
     var photo = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', className: 'photo', opacity: .4 });
@@ -77,16 +213,24 @@
       layers: [ photo, /* plan, */ layer ]
     });
     map.addControl(new ol.control.LayerSwitcher)
-
-    /** /
-    var filter = new ol.filter.SVGFilter(new ol.ext.SVGFilter.DetectEdge({ alpha: true }));
-    /*/
-    var filter = new ol.filter.SVGFilter(new ol.ext.SVGFilter.Sobel({ alpha: true }));
-    /**/
-    layer.addFilter(filter);
-
     map.addControl(new ol.control.Permalink({ visible: false }));
 
+    var filter, filters = {
+      "laplacian-8": new ol.filter.SVGFilter(new ol.ext.SVGFilter.Laplacian({ alpha: true })),
+      "laplacian-4": new ol.filter.SVGFilter(new ol.ext.SVGFilter.Laplacian({ neighbours: 4, alpha: true, gamma: 2 })),
+      prewitt: new ol.filter.SVGFilter(new ol.ext.SVGFilter.Prewitt({ alpha: true })),
+      roberts: new ol.filter.SVGFilter(new ol.ext.SVGFilter.Roberts({ alpha: true })),
+      sobel: new ol.filter.SVGFilter(new ol.ext.SVGFilter.Sobel({ alpha: true }))
+    }
+
+    function setFilter(name) {
+      $('.info li').hide();
+      $('.info li.'+name).show();
+      if (filter) layer.removeFilter(filter);
+      filter = filters[name];
+      layer.addFilter(filter);
+    }
+    setFilter('laplacian-8');
   </script>
 
 </body>

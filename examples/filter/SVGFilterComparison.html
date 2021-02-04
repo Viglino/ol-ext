@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2021 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: SVG filters comparison</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="icon" type="image/png" href="https://openlayers.org/assets/theme/img/logo70.png" />
+
+  <meta name="description" content="This filter apply a filter to detect edge on images." />
+  <meta name="keywords" content="SVG, canvas, filter, edge, detection, operator, sobel, prewitt, laplace, roberts, image processin, computer vision" />
+
+  <meta name="msapplication-tap-highlight" content="no" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <style>
+    body {
+      display: block;
+      margin: auto;
+      max-width: min(100%, 42em);
+    }
+    h2 {
+      font-size: 1.5em;
+      margin: 1.5em 0 0;
+      border-bottom: 2px solid #369;
+    }
+    .bottom {
+      display: block;
+      border-top: 2px solid #369;
+      margin: 1em 0 2em;
+      padding: .5em 0;
+    }
+    img, canvas {
+      max-width: 20em;
+    }
+    table {
+      text-align: center;
+      margin: auto;
+    }
+    .block {
+      display: inline-block;
+      max-width: 22em;
+      text-align: center;
+      font-size: .9em;
+      padding: .5em;
+      box-shadow: 0 0 3px #000;
+      vertical-align: text-top;
+      margin: 0;
+    }
+    .compare {
+      text-align: center;
+    }
+    .compare .block {
+      max-width: 18em;
+    }
+    .block p {
+      margin: 0;
+    }
+    .block canvas,
+    .block img {
+      display: block;
+      max-width: 100%;
+    }
+
+    .Sobel {
+      filter: url(#Sobel);
+    }
+    .Prewit {
+      filter: url(#Prewit);
+    }
+    .Roberts {
+      filter: url(#Roberts);
+    }
+
+  </style>
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: SVG Filters comparison</h1>
+  </a>
+
+  <h2>SVG filters</h2>
+  <p>
+    SVG or Scalable Vector Graphics are mainly concerned with vector graphic shapes.
+    However, SVG can be used to manipulate images and apply cool effects. 
+    This guide shows you how to build SVG image processing filters to create 
+    interesting visual effects and compare resulting outputs with image refrences.
+  </p>
+  <p>
+    SVG filters can be used in image processing and computer vision, within edge detection algorithms 
+    where it creates an image emphasising edges and provide an approximation of the image gradient
+    <br/>
+    It can be used on aerial photo for <a href="./map.filter.edgedetection.html">fast edge detection</a>.
+  </p>
+
+  <h2>Sobel filter</h2>
+  <p>
+    We use reference images from the <a href="https://en.wikipedia.org/wiki/Sobel_operator">Wikipedia Sobel operator page</a>
+    to compare the magnitude of the gradient between test images and SVG filter results.
+  </p>
+  <div class="block">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/f/f0/Valve_original_%281%29.PNG" />
+    Wikipedia reference image
+  </div>
+  <br/>
+  <div class="block">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/d/d4/Valve_sobel_%283%29.PNG" />
+    Wikipedia Sobel
+  </div>
+  <div class="block">
+    <img class="Sobel" src="https://upload.wikimedia.org/wikipedia/commons/f/f0/Valve_original_%281%29.PNG" />
+    SVG Sobel filter
+  </div>
+
+
+  <h2><a href="https://en.wikipedia.org/wiki/Sobel_operator#Example_comparisons">Example comparisons</a></h2>
+  <p>
+    Here, four different gradient operators are used to estimate the magnitude of the gradient 
+    of the test image from <a href="https://en.wikipedia.org/wiki/Sobel_operator#Example_comparisons">wikipedia</a>.
+  </p>
+
+  <div class="compare">
+    <div class="block">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Bikesgray.jpg" />
+      <p>Grayscale test image of brick wall and bike rack</p>
+    </div>
+    <div class="block">
+      <img class="Laplacian" src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Bikesgray.jpg" />
+      <p>SVG Laplacian filter</p>
+    </div>
+    <br/>
+    <div class="block">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Bikesgray_sobel.JPG" />
+      <p>Wikipedia Sobel–Feldman operator</p>
+    </div>
+    <div class="block">
+      <img class="Sobel" src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Bikesgray.jpg" />
+      <p>SVG Sobel filter</p>
+    </div>
+
+    <br/>
+    <div class="block">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/6/62/Bikesgray_roberts.JPG" />
+      <p>Wikipedia Roberts cross operator</p>
+    </div>
+    <div class="block">
+      <img class="Roberts" src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Bikesgray.jpg" />
+      <p>SVG Roberts filter</p>
+    </div>
+
+    <br/>
+    <div class="block">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/3/3e/Bikesgray_prewitt.JPG" />
+      <p>Wikipedia Prewitt operator</p>
+    </div>
+    <div class="block">
+      <img class="Prewitt" src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Bikesgray.jpg" />
+      <p>SVG Prewitt filter</p>
+    </div>
+  </div>
+  <a class="bottom" href="https://github.com/Viglino/ol-ext/tree/master/src/util/SVGFilter">Fork me on Github!</a>
+
+  <script>
+    function loadFilter(name) {
+      var filter = new ol.ext.SVGFilter[name]({ id:name, grayscale: true });
+      $('.'+name).each(function() {
+        if (this.naturalWidth) {
+          var c = filter.applyTo(this);
+          $(c).insertAfter(this);
+          $(this).hide();
+        } else {
+          $(this).on('load', function() {
+            var c = filter.applyTo(this);
+            $(c).insertAfter(this);
+            $(this).hide()
+          })
+        }
+      });
+    }
+
+    setTimeout(function() {
+      loadFilter('Laplacian');
+      loadFilter('Sobel');
+      loadFilter('Prewitt');
+      loadFilter('Roberts');
+    }, 300);
+  </script>
+</body>
+</html>
