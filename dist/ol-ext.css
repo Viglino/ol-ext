@@ -3128,23 +3128,27 @@
   left: 3em;
 }
 .ol-control.ol-select > button:before {
-  content: "";
+  content: "A";
+  font-size: .6em;
+  font-weight: normal;
   position: absolute;
-  -webkit-box-sizing: border-box;
-          box-sizing: border-box;
-  width: .7em;
-  height: .7em;
+  -webkit-box-sizing: content-box;
+          box-sizing: content-box;
+  width: 1em;
+  height: 1em;
   background-color: transparent;
-  border: .12em solid currentColor;
+  border: .2em solid currentColor;
   border-radius: 100%;
-  top: .35em;
-  left: .35em;
+  top: .5em;
+  left: .5em;
+  line-height: 1em;
+  text-align: center;
 }
 .ol-control.ol-select > button:after {
   content: "";
   position: absolute;
-  top: 1.1em;
-  left: .95em;
+  top: 1.15em;
+  left: 1em;
   width: .45em;
   height: .15em;
   background-color: currentColor;
@@ -3293,6 +3297,7 @@
   margin: 0;
   padding: 0;
 }
+.ol-control.ol-select input[type="search"],
 .ol-control.ol-select input[type="text"]  {
   width: 8em;
 }

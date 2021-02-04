@@ -196,6 +196,7 @@ ol.ext.Ajax.prototype.send = function (url, data, options){
 /** SVG filter 
  * @param {*} options
  *  @param {ol.ext.SVGOperation} option.operation
+ *  @param {string} option.id filter id, only to use if you want to adress the filter directly or var the lib create one, if none create a unique id
  *  @param {string} option.color color interpolation filters, linear or sRGB
  */
 ol.ext.SVGFilter = function(options) {
@@ -210,7 +211,7 @@ ol.ext.SVGFilter = function(options) {
     document.body.appendChild( ol.ext.SVGFilter.prototype.svg );
   }
   this.element = document.createElementNS( this.NS, 'filter' );
-  this._id = '_ol_SVGFilter_' + (ol.ext.SVGFilter.prototype._id++);
+  this._id = options.id || '_ol_SVGFilter_' + (ol.ext.SVGFilter.prototype._id++);
   this.element.setAttribute( 'id', this._id );
   if (options.color) this.element.setAttribute( 'color-interpolation-filters', options.color );
   if (options.operation) this.addOperation(options.operation);
@@ -241,6 +242,47 @@ ol.ext.SVGFilter.prototype.addOperation = function(operation) {
     if (!(operation instanceof ol.ext.SVGOperation)) operation = new ol.ext.SVGOperation(operation);
     this.element.appendChild( operation.geElement() );
   }
+};
+/** Add a grayscale operation
+ * @param {number} value
+ */
+ol.ext.SVGFilter.prototype.grayscale = function(value) {
+  this.addOperation({
+    feoperation: 'feColorMatrix',
+    type: 'saturate',
+    values: value || 0
+  });
+};
+/** Add a luminanceToAlpha operation
+ * @param {*} options
+ *  @param {number} options.gamma enhance gamma, default 0
+ */
+ol.ext.SVGFilter.prototype.luminanceToAlpha = function(options) {
+  options = options || {};
+  this.addOperation({
+    feoperation: 'feColorMatrix',
+    type: 'luminanceToAlpha'
+  });
+  if (options.gamma) {
+    this.addOperation({
+      feoperation: 'feComponentTransfer',
+      operations: [{
+        feoperation: 'feFuncA',
+        type: 'gamma', 
+        amplitude: options.gamma,
+        exponent: 1,
+        offset: 0
+      }]
+    });
+  }
+};
+ol.ext.SVGFilter.prototype.applyTo = function(img) {
+  var canvas = document.createElement('CANVAS');
+  canvas.width = img.naturalWidth || img.width;
+  canvas.height = img.naturalHeight || img.height;
+  canvas.getContext('2d').filter = 'url(#'+this.getId()+')';
+  canvas.getContext('2d').drawImage(img, 0, 0);
+  return canvas;
 };
 
 /** SVG filter 
@@ -295,7 +337,6 @@ ol.ext.SVGOperation.prototype.geElement = function() {
  * @param {ol.ext.SVGOperation} operation
  */
 ol.ext.SVGOperation.prototype.appendChild = function(operation) {
-  console.log(operation)
   if (operation instanceof Array) {
     operation.forEach(function(o) { this.appendChild(o) }.bind(this));
   } else {
@@ -861,7 +902,48 @@ if (window.ol && !ol.sphere) {
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/** A filter to detecte edge on images
+/** A simple filter to detect edges on images
+ * @constructor
+ * @requires ol.filter
+ * @extends {ol.ext.SVGFilter}
+ * @param {*} options
+ *  @param {number} options.neighbours nb of neighbour (4 or 8), default 8
+ *  @param {boolean} options.grayscale get grayscale image, default false,
+ *  @param {boolean} options.alpha get alpha channel, default false
+ */
+ol.ext.SVGFilter.Laplacian = function(options) {
+  options = options || {};
+  ol.ext.SVGFilter.call(this, { id: options.id });
+  var operation = {
+    feoperation: 'feConvolveMatrix',
+    in: 'SourceGraphic',
+    preserveAlpha: true,
+    result: 'C1'
+  };
+  if (options.neighbours===4) {
+    operation.kernelMatrix = [
+       0, -1,  0, 
+      -1,  4, -1, 
+       0, -1,  0
+    ];
+  } else {
+    operation.kernelMatrix = [
+      -1, -1, -1, 
+      -1,  8, -1, 
+      -1, -1, -1
+    ];
+  }
+  this.addOperation(operation);
+  if (options.grayscale) this.grayscale();
+  else if (options.alpha) this.luminanceToAlpha({ gamma: options.gamma });
+};
+ol.ext.inherits(ol.ext.SVGFilter.Laplacian, ol.ext.SVGFilter);
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Apply a Prewitt filter on an image
  * @constructor
  * @requires ol.filter
  * @extends {ol.ext.SVGFilter}
@@ -869,44 +951,159 @@ if (window.ol && !ol.sphere) {
  *  @param {boolean} options.grayscale get grayscale image, default false,
  *  @param {boolean} options.alpha get alpha channel, default false
  */
-ol.ext.SVGFilter.DetectEdge = function(options) {
+ol.ext.SVGFilter.Prewitt = function(options) {
   options = options || {};
-  ol.ext.SVGFilter.call(this);
-  this.addOperation({
+  ol.ext.SVGFilter.call(this, { id: options.id, color: 'sRGB' });
+  var operation = {
     feoperation: 'feConvolveMatrix',
+    in: 'SourceGraphic',
     preserveAlpha: true,
-    kernelMatrix: [
-      -1, -1, -1, 
-      -1,  8, -1, 
-      -1, -1, -1
-    ]
+    order: 3
+  };
+  // Vertical
+  operation.kernelMatrix = [
+    -1, -1, -1, 
+     0,  0,  0,
+     1,  1,  1
+  ];
+  operation.result = 'V1';
+  this.addOperation(operation);
+  operation.kernelMatrix = [
+     1,  1,  1, 
+     0,  0,  0,
+    -1, -1, -1
+  ];
+  operation.result = 'V2';
+  this.addOperation(operation);
+  // Horizontal
+  operation.kernelMatrix = [
+    -1,  0,  1, 
+    -1,  0,  1,
+    -1,  0,  1
+  ];
+  operation.result = 'H1';
+  this.addOperation(operation);
+  operation.kernelMatrix = [
+     1, -0, -1, 
+     1,  0, -1,
+     1,  0, -1
+  ];
+  operation.result = 'H2';
+  this.addOperation(operation);
+  // Compose V
+  this.addOperation({
+    feoperation: 'feComposite',
+    operator: 'arithmetic',
+    in: 'V1',
+    in2: 'V2',
+    k2: 1,
+    k3: 1,
+    result: 'V'
   });
-  if (options.grayscale) {
-    this.addOperation({
-      feoperation: 'feColorMatrix',
-      type: 'saturate',
-      values: 0
-    });
-  } else if (options.alpha) {
-    this.addOperation({
-      feoperation: 'feColorMatrix',
-      type: 'luminanceToAlpha'
-    });
-  }
-  /* enhance * /
-    {
-      feoperation: 'feComponentTransfer',
-      operations: [{
-        feoperation: 'feFuncA',
-        type: 'gamma', 
-        amplitude: 4,
-        exponent: 1,
-        offset: 0
-      }]
-    },
-  /**/
+  // Compose H
+  this.addOperation({
+    feoperation: 'feComposite',
+    operator: 'arithmetic',
+    in: 'H1',
+    in2: 'H2',
+    k2: 1,
+    k3: 1,
+    result: 'H'
+  });
+  // Merge
+  this.addOperation({
+    feoperation: 'feBlend',
+    mode: 'lighten',
+    in: 'H',
+    in: 'V'
+  });
+  if (options.grayscale) this.grayscale();
+  else if (options.alpha) this.luminanceToAlpha();
 };
-ol.ext.inherits(ol.ext.SVGFilter.DetectEdge, ol.ext.SVGFilter);
+ol.ext.inherits(ol.ext.SVGFilter.Prewitt, ol.ext.SVGFilter);
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Apply a Roberts filter on an image
+ * @constructor
+ * @requires ol.filter
+ * @extends {ol.ext.SVGFilter}
+ * @param {*} options
+ *  @param {boolean} options.grayscale get grayscale image, default false,
+ *  @param {boolean} options.alpha get alpha channel, default false
+ */
+ol.ext.SVGFilter.Roberts = function(options) {
+  options = options || {};
+  ol.ext.SVGFilter.call(this, { id: options.id, color: 'sRGB' });
+  var operation = {
+    feoperation: 'feConvolveMatrix',
+    in: 'SourceGraphic',
+    preserveAlpha: true,
+    order: 3
+  };
+  // Vertical
+  operation.kernelMatrix = [
+    -1,  0,  0, 
+     0,  0,  0,
+    0,   0,  1
+  ];
+  operation.result = 'V1';
+  this.addOperation(operation);
+  operation.kernelMatrix = [
+     1,  0,  0, 
+     0,  0,  0,
+     0,  0, -1
+  ];
+  operation.result = 'V2';
+  this.addOperation(operation);
+  // Horizontal
+  operation.kernelMatrix = [
+     0,  0,  1, 
+     0,  0,  0,
+    -1,  0,  0
+  ];
+  operation.result = 'H1';
+  this.addOperation(operation);
+  operation.kernelMatrix = [
+     0, -0, -1, 
+     0,  0,  0,
+     1,  0,  0
+  ];
+  operation.result = 'H2';
+  this.addOperation(operation);
+  // Compose V
+  this.addOperation({
+    feoperation: 'feComposite',
+    operator: 'arithmetic',
+    in: 'V1',
+    in2: 'V2',
+    k2: 1,
+    k3: 1,
+    result: 'V'
+  });
+  // Compose H
+  this.addOperation({
+    feoperation: 'feComposite',
+    operator: 'arithmetic',
+    in: 'H1',
+    in2: 'H2',
+    k2: 1,
+    k3: 1,
+    result: 'H'
+  });
+  // Merge
+  this.addOperation({
+    feoperation: 'feBlend',
+    mode: 'lighten',
+    in: 'H',
+    in: 'V'
+  });
+  if (options.grayscale) this.grayscale();
+  else if (options.alpha) this.luminanceToAlpha();
+};
+ol.ext.inherits(ol.ext.SVGFilter.Roberts, ol.ext.SVGFilter);
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -922,110 +1119,75 @@ ol.ext.inherits(ol.ext.SVGFilter.DetectEdge, ol.ext.SVGFilter);
  */
 ol.ext.SVGFilter.Sobel = function(options) {
   options = options || {};
-  ol.ext.SVGFilter.call(this);
-  // Red channel
-  this._addColorSobel('red');
-  // Green channel
-  this._addColorSobel('green');
-  // Blue channel
-  this._addColorSobel('blue');
-  // Combine
+  ol.ext.SVGFilter.call(this, { id: options.id, color: 'sRGB' });
+  var operation = {
+    feoperation: 'feConvolveMatrix',
+    in: 'SourceGraphic',
+    preserveAlpha: true,
+    order: 3
+  };
+  // Vertical
+  operation.kernelMatrix = [
+    -1, -2, -1, 
+     0,  0,  0,
+     1,  2,  1
+  ];
+  operation.result = 'V1';
+  this.addOperation(operation);
+  operation.kernelMatrix = [
+     1,  2,  1, 
+     0,  0,  0,
+    -1, -2, -1
+  ];
+  operation.result = 'V2';
+  this.addOperation(operation);
+  // Horizontal
+  operation.kernelMatrix = [
+    -1,  0,  1, 
+    -2,  0,  2,
+    -1,  0,  1
+  ];
+  operation.result = 'H1';
+  this.addOperation(operation);
+  operation.kernelMatrix = [
+     1, -0, -1, 
+     2,  0, -2,
+     1,  0, -1
+  ];
+  operation.result = 'H2';
+  this.addOperation(operation);
+  // Compose V
   this.addOperation({
     feoperation: 'feComposite',
     operator: 'arithmetic',
-    in: 'rededge',
-    in2: 'greenedge',
-    k2: 1,
-    k3: 1
-  });
-  this.addOperation({
-    feoperation: 'feComposite',
-    operator: 'arithmetic',
-    in2: 'blueedge',
+    in: 'V1',
+    in2: 'V2',
     k2: 1,
     k3: 1,
-    result: 'finaledges'
+    result: 'V'
   });
-  if (options.grayscale) {
-    this.addOperation({
-      feoperation: 'feColorMatrix',
-      type: 'saturate',
-      values: 0
-    });
-  } else if (options.alpha) {
-    this.addOperation({
-      feoperation: 'feColorMatrix',
-      type: 'luminanceToAlpha'
-    });
-  }
+  // Compose H
+  this.addOperation({
+    feoperation: 'feComposite',
+    operator: 'arithmetic',
+    in: 'H1',
+    in2: 'H2',
+    k2: 1,
+    k3: 1,
+    result: 'H'
+  });
+  // Merge
+  this.addOperation({
+    feoperation: 'feBlend',
+    mode: 'lighten',
+    in: 'H',
+    in: 'V'
+  });
+  if (options.grayscale) this.grayscale();
+  else if (options.alpha) this.luminanceToAlpha();
+  if (options.gamma) this.ge
 };
 ol.ext.inherits(ol.ext.SVGFilter.Sobel, ol.ext.SVGFilter);
-/** Sobel filter on a color
- * @param {ol.ext.SVGFilter} filter
- * @param {string} color color name : red/green/blue
- * @private
- */
-ol.ext.SVGFilter.Sobel.prototype._addColorSobel = function(color) {
-  var r = (color==='red' ? 1:0);
-  var g = (color==='green' ? 1:0);
-  var b = (color==='blue' ? 1:0);
-  // Color channel
-  this.addOperation(new ol.ext.SVGOperation({
-    feoperation: 'feColorMatrix',
-    in: 'SourceGraphic',
-    type: 'matrix',
-    values:[
-      0, 0, 0, 0, 1,
-      0, 0, 0, 0, 1,
-      0, 0, 0, 0, 1,
-      r, g, b, 0, 0
-    ],
-    result: color+'Chan'
-  }));
-  // Horizontal 
-  this.addOperation(new ol.ext.SVGOperation({
-    feoperation: 'feConvolveMatrix',
-    in: color+'Chan',
-    order: 3,
-    kernelMatrix: [
-      -1, -2, -1,
-       0,  0,  0,
-       1,  2,  1],
-    result: color+'Hor'
-  }));
-  // Vertical
-  this.addOperation(new ol.ext.SVGOperation({
-    feoperation: 'feConvolveMatrix',
-    in: color+'Chan',
-    order: 3,
-    kernelMatrix: [
-      -1,  0,  1,
-      -2,  0,  2,
-      -1,  0,  1],
-    result: color+'Ver'
-  }));
-  // Combine
-  this.addOperation(new ol.ext.SVGOperation({
-    feoperation: 'feComposite',
-    operator: 'arithmetic',
-    k2: 1,
-    k3: 1,
-    in: color+'Hor',
-    in2: color+'Ver'
-  }));
-  // Edges
-  this.addOperation(new ol.ext.SVGOperation({
-    feoperation: 'feColorMatrix',
-    type: 'matrix',
-    values: [
-      0, 0, 0, r, 0,
-      0, 0, 0, g, 0,
-      0, 0, 0, b, 0,
-      0, 0, 0, 0, 1
-    ],
-    result: color+'edge'
-  }));
-};
 
 /**
  * @classdesc 
@@ -10092,14 +10254,21 @@ ol.control.Select.prototype._getLiCondition = function (i) {
       li.appendChild(autocomplete);
   var input_attr = document.createElement('input');
       input_attr.classList.add('ol-attr');
-      input_attr.setAttribute('type', 'text');
+      input_attr.setAttribute('type', 'search');
       input_attr.setAttribute('placeholder', this.get('attrPlaceHolder'));
       input_attr.addEventListener('keyup', function () {
         self._autocomplete( this.value, this.nextElementSibling );
       })
+      input_attr.addEventListener('focusout', function() {
+        setTimeout(function() {
+          autocomplete.querySelector('ul'). classList.add('ol-hidden');
+        }, 300);
+      });
       input_attr.addEventListener('click', function(){
-        self._autocomplete( this.value, this.nextElementSibling );
-        this.nextElementSibling.classList.remove('ol-hidden')
+        setTimeout(function() {
+          self._autocomplete( this.value, this.nextElementSibling );
+          this.nextElementSibling.classList.remove('ol-hidden');
+        }.bind(this));
       })
       input_attr.addEventListener('change', function() {
         self._conditions[i].attr = this.value;
