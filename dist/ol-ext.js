@@ -25108,6 +25108,7 @@ ol.layer.Vector.prototype.setRender3D = function (r) {
  * @param {Object} param
  *  @param {ol.layer.Vector} param.layer the layer to display in 3D
  *  @param {ol.style.Style} options.style drawing style
+ *  @param {function|boolean} param.active a function that returns a boolean or a boolean ,default true
  *  @param {boolean} param.ghost use ghost style
  *  @param {number} param.maxResolution  max resolution to render 3D
  *  @param {number} param.defaultHeight default height if none is return by a propertie
@@ -25120,6 +25121,7 @@ ol.render3D = function (options) {
   ol.Object.call (this, options);
   this.setStyle(options.style);
   this.set('ghost', options.ghost);
+  this.setActive(options.active || options.active!==false);
   this.height_ = options.height = this.getHfn (options.height);
   if (options.layer) this.setLayer(options.layer);
 }
@@ -25159,9 +25161,28 @@ ol.render3D.prototype.setStyle = function(s) {
 ol.render3D.prototype.getStyle = function() {
   return this._style;
 };
+/** Set active
+ * @param {function|boolean} active
+ */
+ol.render3D.prototype.setActive = function(active) {
+  if (typeof(active)==='function') {
+    this._active = active;
+  }
+  else {
+    this._active = function() { return active; };
+  }
+  if (this.layer_) this.layer_.changed();
+};
+/** Get active
+ * @return {boolean} 
+ */
+ol.render3D.prototype.getActive = function() {
+  return this._active();
+};
 /** Calculate 3D at potcompose
 */
 ol.render3D.prototype.onPostcompose_ = function(e) {
+  if (!this.getActive()) return;
   var res = e.frameState.viewState.resolution;
   if (res > this.get('maxResolution')) return;
   this.res_ = res*400;
@@ -25197,7 +25218,8 @@ ol.render3D.prototype.onPostcompose_ = function(e) {
     ctx.fillStyle = ol.color.asString(s.getFill().getColor());
     var builds = [];
     for (var i=0; i<f.length; i++) {
-      builds.push (this.getFeature3D_ (f[i], this.getFeatureHeight(f[i])));
+      var h = this.getFeatureHeight(f[i])
+      if (h) builds.push (this.getFeature3D_ (f[i], h));
     }
     if (this.get('ghost')) this.drawGhost3D_ (ctx, builds);
     else this.drawFeature3D_ (ctx, builds);
