@@ -17,6 +17,20 @@ var map = new ol.Map ({
 
 var switcher = new ol.control.LayerSwitcher();
 map.addControl(switcher);
+switcher.on('drawlist', function(li) {
+  if (li.layer.get('title')==='Batiment') {
+    $('<button>')
+      .addClass('r3d')
+      .html('<i class="fa fa-cube"></i>')
+      .attr('title', '2.5D')
+      .click(function() {
+        r3D.setActive(!r3D.getActive())
+      })
+      .appendTo($('.ol-layerswitcher-buttons', li.li));
+  } else {
+    r3D.setActive(false);
+  }
+})
 map.addControl(new ol.control.Permalink({ visible: false }));
 map.addControl(new ol.control.ScaleLine());
 map.addControl(new ol.control.SearchBAN({
@@ -45,14 +59,26 @@ var loadLayer = new ol.layer.VectorImage({
 })
 map.addLayer(loadLayer);
 
+
 // WFS source / layer
 var vectorSource;
-var vectorLayer = new ol.layer.VectorImage({
+var zFactor = 2.5;
+var vectorLayer = new ol.layer.Vector({
   title: 'WFS-IGN',
   maxResolution: 10,  // prevent load on small zoom 
   declutter: true
 })
 map.addLayer(vectorLayer);
+var r3D = new ol.render3D({ 
+  height: function(f) {
+    return f.get('hauteur')/zFactor;
+  }, 
+  //ghost: true,
+  active: false,
+  maxResolution: 1.5, 
+  defaultHeight: 3.5 
+});
+vectorLayer.setRender3D(r3D);
 
 var style;
 function setWFS() {

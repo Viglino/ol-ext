@@ -230,3 +230,7 @@ body > .wait {
   white-space: nowrap;
   letter-spacing: -.03em;
 }
+
+.ol-layerswitcher .panel li .r3d i {
+  color: #fff;
+}

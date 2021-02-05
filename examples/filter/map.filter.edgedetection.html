@@ -214,6 +214,7 @@ or
     });
     map.addControl(new ol.control.LayerSwitcher)
     map.addControl(new ol.control.Permalink({ visible: false }));
+    map.addControl(new ol.control.SearchBAN({ centerOnSelect: true }));
 
     var filter, filters = {
       "laplacian-8": new ol.filter.SVGFilter(new ol.ext.SVGFilter.Laplacian({ alpha: true })),
