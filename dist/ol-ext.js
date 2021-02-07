@@ -196,6 +196,7 @@ ol.ext.Ajax.prototype.send = function (url, data, options){
 /** SVG filter 
  * @param {*} options
  *  @param {ol.ext.SVGOperation} option.operation
+ *  @param {string} option.id filter id, only to use if you want to adress the filter directly or var the lib create one, if none create a unique id
  *  @param {string} option.color color interpolation filters, linear or sRGB
  */
 ol.ext.SVGFilter = function(options) {
@@ -210,7 +211,7 @@ ol.ext.SVGFilter = function(options) {
     document.body.appendChild( ol.ext.SVGFilter.prototype.svg );
   }
   this.element = document.createElementNS( this.NS, 'filter' );
-  this._id = '_ol_SVGFilter_' + (ol.ext.SVGFilter.prototype._id++);
+  this._id = options.id || '_ol_SVGFilter_' + (ol.ext.SVGFilter.prototype._id++);
   this.element.setAttribute( 'id', this._id );
   if (options.color) this.element.setAttribute( 'color-interpolation-filters', options.color );
   if (options.operation) this.addOperation(options.operation);
@@ -241,6 +242,47 @@ ol.ext.SVGFilter.prototype.addOperation = function(operation) {
     if (!(operation instanceof ol.ext.SVGOperation)) operation = new ol.ext.SVGOperation(operation);
     this.element.appendChild( operation.geElement() );
   }
+};
+/** Add a grayscale operation
+ * @param {number} value
+ */
+ol.ext.SVGFilter.prototype.grayscale = function(value) {
+  this.addOperation({
+    feoperation: 'feColorMatrix',
+    type: 'saturate',
+    values: value || 0
+  });
+};
+/** Add a luminanceToAlpha operation
+ * @param {*} options
+ *  @param {number} options.gamma enhance gamma, default 0
+ */
+ol.ext.SVGFilter.prototype.luminanceToAlpha = function(options) {
+  options = options || {};
+  this.addOperation({
+    feoperation: 'feColorMatrix',
+    type: 'luminanceToAlpha'
+  });
+  if (options.gamma) {
+    this.addOperation({
+      feoperation: 'feComponentTransfer',
+      operations: [{
+        feoperation: 'feFuncA',
+        type: 'gamma', 
+        amplitude: options.gamma,
+        exponent: 1,
+        offset: 0
+      }]
+    });
+  }
+};
+ol.ext.SVGFilter.prototype.applyTo = function(img) {
+  var canvas = document.createElement('CANVAS');
+  canvas.width = img.naturalWidth || img.width;
+  canvas.height = img.naturalHeight || img.height;
+  canvas.getContext('2d').filter = 'url(#'+this.getId()+')';
+  canvas.getContext('2d').drawImage(img, 0, 0);
+  return canvas;
 };
 
 /** SVG filter 
@@ -295,7 +337,6 @@ ol.ext.SVGOperation.prototype.geElement = function() {
  * @param {ol.ext.SVGOperation} operation
  */
 ol.ext.SVGOperation.prototype.appendChild = function(operation) {
-  console.log(operation)
   if (operation instanceof Array) {
     operation.forEach(function(o) { this.appendChild(o) }.bind(this));
   } else {
@@ -861,7 +902,48 @@ if (window.ol && !ol.sphere) {
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/** A filter to detecte edge on images
+/** A simple filter to detect edges on images
+ * @constructor
+ * @requires ol.filter
+ * @extends {ol.ext.SVGFilter}
+ * @param {*} options
+ *  @param {number} options.neighbours nb of neighbour (4 or 8), default 8
+ *  @param {boolean} options.grayscale get grayscale image, default false,
+ *  @param {boolean} options.alpha get alpha channel, default false
+ */
+ol.ext.SVGFilter.Laplacian = function(options) {
+  options = options || {};
+  ol.ext.SVGFilter.call(this, { id: options.id });
+  var operation = {
+    feoperation: 'feConvolveMatrix',
+    in: 'SourceGraphic',
+    preserveAlpha: true,
+    result: 'C1'
+  };
+  if (options.neighbours===4) {
+    operation.kernelMatrix = [
+       0, -1,  0, 
+      -1,  4, -1, 
+       0, -1,  0
+    ];
+  } else {
+    operation.kernelMatrix = [
+      -1, -1, -1, 
+      -1,  8, -1, 
+      -1, -1, -1
+    ];
+  }
+  this.addOperation(operation);
+  if (options.grayscale) this.grayscale();
+  else if (options.alpha) this.luminanceToAlpha({ gamma: options.gamma });
+};
+ol.ext.inherits(ol.ext.SVGFilter.Laplacian, ol.ext.SVGFilter);
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Apply a Prewitt filter on an image
  * @constructor
  * @requires ol.filter
  * @extends {ol.ext.SVGFilter}
@@ -869,44 +951,159 @@ if (window.ol && !ol.sphere) {
  *  @param {boolean} options.grayscale get grayscale image, default false,
  *  @param {boolean} options.alpha get alpha channel, default false
  */
-ol.ext.SVGFilter.DetectEdge = function(options) {
+ol.ext.SVGFilter.Prewitt = function(options) {
   options = options || {};
-  ol.ext.SVGFilter.call(this);
-  this.addOperation({
+  ol.ext.SVGFilter.call(this, { id: options.id, color: 'sRGB' });
+  var operation = {
     feoperation: 'feConvolveMatrix',
+    in: 'SourceGraphic',
     preserveAlpha: true,
-    kernelMatrix: [
-      -1, -1, -1, 
-      -1,  8, -1, 
-      -1, -1, -1
-    ]
+    order: 3
+  };
+  // Vertical
+  operation.kernelMatrix = [
+    -1, -1, -1, 
+     0,  0,  0,
+     1,  1,  1
+  ];
+  operation.result = 'V1';
+  this.addOperation(operation);
+  operation.kernelMatrix = [
+     1,  1,  1, 
+     0,  0,  0,
+    -1, -1, -1
+  ];
+  operation.result = 'V2';
+  this.addOperation(operation);
+  // Horizontal
+  operation.kernelMatrix = [
+    -1,  0,  1, 
+    -1,  0,  1,
+    -1,  0,  1
+  ];
+  operation.result = 'H1';
+  this.addOperation(operation);
+  operation.kernelMatrix = [
+     1, -0, -1, 
+     1,  0, -1,
+     1,  0, -1
+  ];
+  operation.result = 'H2';
+  this.addOperation(operation);
+  // Compose V
+  this.addOperation({
+    feoperation: 'feComposite',
+    operator: 'arithmetic',
+    in: 'V1',
+    in2: 'V2',
+    k2: 1,
+    k3: 1,
+    result: 'V'
   });
-  if (options.grayscale) {
-    this.addOperation({
-      feoperation: 'feColorMatrix',
-      type: 'saturate',
-      values: 0
-    });
-  } else if (options.alpha) {
-    this.addOperation({
-      feoperation: 'feColorMatrix',
-      type: 'luminanceToAlpha'
-    });
-  }
-  /* enhance * /
-    {
-      feoperation: 'feComponentTransfer',
-      operations: [{
-        feoperation: 'feFuncA',
-        type: 'gamma', 
-        amplitude: 4,
-        exponent: 1,
-        offset: 0
-      }]
-    },
-  /**/
+  // Compose H
+  this.addOperation({
+    feoperation: 'feComposite',
+    operator: 'arithmetic',
+    in: 'H1',
+    in2: 'H2',
+    k2: 1,
+    k3: 1,
+    result: 'H'
+  });
+  // Merge
+  this.addOperation({
+    feoperation: 'feBlend',
+    mode: 'lighten',
+    in: 'H',
+    in: 'V'
+  });
+  if (options.grayscale) this.grayscale();
+  else if (options.alpha) this.luminanceToAlpha();
 };
-ol.ext.inherits(ol.ext.SVGFilter.DetectEdge, ol.ext.SVGFilter);
+ol.ext.inherits(ol.ext.SVGFilter.Prewitt, ol.ext.SVGFilter);
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Apply a Roberts filter on an image
+ * @constructor
+ * @requires ol.filter
+ * @extends {ol.ext.SVGFilter}
+ * @param {*} options
+ *  @param {boolean} options.grayscale get grayscale image, default false,
+ *  @param {boolean} options.alpha get alpha channel, default false
+ */
+ol.ext.SVGFilter.Roberts = function(options) {
+  options = options || {};
+  ol.ext.SVGFilter.call(this, { id: options.id, color: 'sRGB' });
+  var operation = {
+    feoperation: 'feConvolveMatrix',
+    in: 'SourceGraphic',
+    preserveAlpha: true,
+    order: 3
+  };
+  // Vertical
+  operation.kernelMatrix = [
+    -1,  0,  0, 
+     0,  0,  0,
+    0,   0,  1
+  ];
+  operation.result = 'V1';
+  this.addOperation(operation);
+  operation.kernelMatrix = [
+     1,  0,  0, 
+     0,  0,  0,
+     0,  0, -1
+  ];
+  operation.result = 'V2';
+  this.addOperation(operation);
+  // Horizontal
+  operation.kernelMatrix = [
+     0,  0,  1, 
+     0,  0,  0,
+    -1,  0,  0
+  ];
+  operation.result = 'H1';
+  this.addOperation(operation);
+  operation.kernelMatrix = [
+     0, -0, -1, 
+     0,  0,  0,
+     1,  0,  0
+  ];
+  operation.result = 'H2';
+  this.addOperation(operation);
+  // Compose V
+  this.addOperation({
+    feoperation: 'feComposite',
+    operator: 'arithmetic',
+    in: 'V1',
+    in2: 'V2',
+    k2: 1,
+    k3: 1,
+    result: 'V'
+  });
+  // Compose H
+  this.addOperation({
+    feoperation: 'feComposite',
+    operator: 'arithmetic',
+    in: 'H1',
+    in2: 'H2',
+    k2: 1,
+    k3: 1,
+    result: 'H'
+  });
+  // Merge
+  this.addOperation({
+    feoperation: 'feBlend',
+    mode: 'lighten',
+    in: 'H',
+    in: 'V'
+  });
+  if (options.grayscale) this.grayscale();
+  else if (options.alpha) this.luminanceToAlpha();
+};
+ol.ext.inherits(ol.ext.SVGFilter.Roberts, ol.ext.SVGFilter);
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -922,110 +1119,75 @@ ol.ext.inherits(ol.ext.SVGFilter.DetectEdge, ol.ext.SVGFilter);
  */
 ol.ext.SVGFilter.Sobel = function(options) {
   options = options || {};
-  ol.ext.SVGFilter.call(this);
-  // Red channel
-  this._addColorSobel('red');
-  // Green channel
-  this._addColorSobel('green');
-  // Blue channel
-  this._addColorSobel('blue');
-  // Combine
+  ol.ext.SVGFilter.call(this, { id: options.id, color: 'sRGB' });
+  var operation = {
+    feoperation: 'feConvolveMatrix',
+    in: 'SourceGraphic',
+    preserveAlpha: true,
+    order: 3
+  };
+  // Vertical
+  operation.kernelMatrix = [
+    -1, -2, -1, 
+     0,  0,  0,
+     1,  2,  1
+  ];
+  operation.result = 'V1';
+  this.addOperation(operation);
+  operation.kernelMatrix = [
+     1,  2,  1, 
+     0,  0,  0,
+    -1, -2, -1
+  ];
+  operation.result = 'V2';
+  this.addOperation(operation);
+  // Horizontal
+  operation.kernelMatrix = [
+    -1,  0,  1, 
+    -2,  0,  2,
+    -1,  0,  1
+  ];
+  operation.result = 'H1';
+  this.addOperation(operation);
+  operation.kernelMatrix = [
+     1, -0, -1, 
+     2,  0, -2,
+     1,  0, -1
+  ];
+  operation.result = 'H2';
+  this.addOperation(operation);
+  // Compose V
   this.addOperation({
     feoperation: 'feComposite',
     operator: 'arithmetic',
-    in: 'rededge',
-    in2: 'greenedge',
-    k2: 1,
-    k3: 1
-  });
-  this.addOperation({
-    feoperation: 'feComposite',
-    operator: 'arithmetic',
-    in2: 'blueedge',
+    in: 'V1',
+    in2: 'V2',
     k2: 1,
     k3: 1,
-    result: 'finaledges'
+    result: 'V'
   });
-  if (options.grayscale) {
-    this.addOperation({
-      feoperation: 'feColorMatrix',
-      type: 'saturate',
-      values: 0
-    });
-  } else if (options.alpha) {
-    this.addOperation({
-      feoperation: 'feColorMatrix',
-      type: 'luminanceToAlpha'
-    });
-  }
+  // Compose H
+  this.addOperation({
+    feoperation: 'feComposite',
+    operator: 'arithmetic',
+    in: 'H1',
+    in2: 'H2',
+    k2: 1,
+    k3: 1,
+    result: 'H'
+  });
+  // Merge
+  this.addOperation({
+    feoperation: 'feBlend',
+    mode: 'lighten',
+    in: 'H',
+    in: 'V'
+  });
+  if (options.grayscale) this.grayscale();
+  else if (options.alpha) this.luminanceToAlpha();
+  if (options.gamma) this.ge
 };
 ol.ext.inherits(ol.ext.SVGFilter.Sobel, ol.ext.SVGFilter);
-/** Sobel filter on a color
- * @param {ol.ext.SVGFilter} filter
- * @param {string} color color name : red/green/blue
- * @private
- */
-ol.ext.SVGFilter.Sobel.prototype._addColorSobel = function(color) {
-  var r = (color==='red' ? 1:0);
-  var g = (color==='green' ? 1:0);
-  var b = (color==='blue' ? 1:0);
-  // Color channel
-  this.addOperation(new ol.ext.SVGOperation({
-    feoperation: 'feColorMatrix',
-    in: 'SourceGraphic',
-    type: 'matrix',
-    values:[
-      0, 0, 0, 0, 1,
-      0, 0, 0, 0, 1,
-      0, 0, 0, 0, 1,
-      r, g, b, 0, 0
-    ],
-    result: color+'Chan'
-  }));
-  // Horizontal 
-  this.addOperation(new ol.ext.SVGOperation({
-    feoperation: 'feConvolveMatrix',
-    in: color+'Chan',
-    order: 3,
-    kernelMatrix: [
-      -1, -2, -1,
-       0,  0,  0,
-       1,  2,  1],
-    result: color+'Hor'
-  }));
-  // Vertical
-  this.addOperation(new ol.ext.SVGOperation({
-    feoperation: 'feConvolveMatrix',
-    in: color+'Chan',
-    order: 3,
-    kernelMatrix: [
-      -1,  0,  1,
-      -2,  0,  2,
-      -1,  0,  1],
-    result: color+'Ver'
-  }));
-  // Combine
-  this.addOperation(new ol.ext.SVGOperation({
-    feoperation: 'feComposite',
-    operator: 'arithmetic',
-    k2: 1,
-    k3: 1,
-    in: color+'Hor',
-    in2: color+'Ver'
-  }));
-  // Edges
-  this.addOperation(new ol.ext.SVGOperation({
-    feoperation: 'feColorMatrix',
-    type: 'matrix',
-    values: [
-      0, 0, 0, r, 0,
-      0, 0, 0, g, 0,
-      0, 0, 0, b, 0,
-      0, 0, 0, 0, 1
-    ],
-    result: color+'edge'
-  }));
-};
 
 /**
  * @classdesc 
@@ -1232,7 +1394,8 @@ ol.control.SelectBase.prototype.operationsList = {
   '>': '>',
   'contain': '⊂', // ∈
   '!contain': '⊄',	// ∉
-  'regexp': '≈'
+  'regexp': '≃',
+  '!regexp': '≄'
 };
 /** Escape string for regexp
  * @param {string} search
@@ -1280,6 +1443,9 @@ ol.control.SelectBase.prototype._checkCondition = function (f, condition, usecas
     case 'regexp':
       rex = new RegExp(condition.val, usecase ? '' : 'i');
       return rex.test(val);
+    case '!regexp':
+      rex = new RegExp(condition.val, usecase ? '' : 'i');
+      return !rex.test(val);
     default:
       return false;
   }
@@ -10060,15 +10226,15 @@ ol.control.Select.prototype._autocomplete = function (val, ul) {
     if (a==='geometry') continue;
     if (rex.test(a)) {
       var li = document.createElement('li');
-    li.textContent = a;
-    li.addEventListener("click", function() {
-          ul.previousElementSibling.value = this.textContent;
-      var event = document.createEvent('HTMLEvents');
-      event.initEvent('change', true, false);
-      ul.previousElementSibling.dispatchEvent(event);
-          ul.classList.add('ol-hidden');
-        });
-        ul.appendChild(li);
+      li.textContent = a;
+      li.addEventListener("click", function() {
+        ul.previousElementSibling.value = this.textContent;
+        var event = document.createEvent('HTMLEvents');
+        event.initEvent('change', true, false);
+        ul.previousElementSibling.dispatchEvent(event);
+        ul.classList.add('ol-hidden');
+      });
+      ul.appendChild(li);
     }
   }
 };
@@ -10088,14 +10254,21 @@ ol.control.Select.prototype._getLiCondition = function (i) {
       li.appendChild(autocomplete);
   var input_attr = document.createElement('input');
       input_attr.classList.add('ol-attr');
-      input_attr.setAttribute('type', 'text');
+      input_attr.setAttribute('type', 'search');
       input_attr.setAttribute('placeholder', this.get('attrPlaceHolder'));
       input_attr.addEventListener('keyup', function () {
         self._autocomplete( this.value, this.nextElementSibling );
       })
+      input_attr.addEventListener('focusout', function() {
+        setTimeout(function() {
+          autocomplete.querySelector('ul'). classList.add('ol-hidden');
+        }, 300);
+      });
       input_attr.addEventListener('click', function(){
-        self._autocomplete( this.value, this.nextElementSibling );
-        this.nextElementSibling.classList.remove('ol-hidden')
+        setTimeout(function() {
+          self._autocomplete( this.value, this.nextElementSibling );
+          this.nextElementSibling.classList.remove('ol-hidden');
+        }.bind(this));
       })
       input_attr.addEventListener('change', function() {
         self._conditions[i].attr = this.value;
@@ -15059,6 +15232,80 @@ ol.format.GeoRSS.prototype.getDocumentItemsTagName = function(xmlDoc) {
   }
 }
 
+/** An interaction to check the current map and add key events listeners.
+ * It will fire a 'focus' event on the map when map is focused (use mapCondition option to handle the condition when the map is focused).
+ * @constructor
+ * @fires focus
+ * @param {*} options
+ *  @param {function} condition a function that takes a mapBrowserEvent and returns true if the map must be activated, default always true
+ *  @param {function} onKeyDown a function that takes a keydown event is fired on the active map
+ *  @param {function} onKeyPress a function that takes a keypress event is fired on the active map
+ *  @param {function} onKeyUp a function that takes a keyup event is fired on the active map
+ * @extends {ol.interaction.Interaction}
+ */
+ol.interaction.CurrentMap = function(options) {
+  options = options || {};
+  var condition = options.condition || function() {
+    return true;
+  }
+  // Check events on the map
+  ol.interaction.Interaction.call(this, {
+    handleEvent: function(e) {
+      if (condition(e)) {
+        if (!this.isCurrentMap()) {
+          this.setCurrentMap(this.getMap());
+          this.dispatchEvent({ type: 'focus', map: this.getMap() });
+          this.getMap().dispatchEvent({ type: 'focus', map: this.getMap() });
+        }
+      }
+      return true;
+    }.bind(this)
+  });
+  // Add a key listener
+  if (options.onKeyDown) { 
+    document.addEventListener('keydown', function(e) {
+      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+        options.onKeyDown ({ type: e.type, map: this.getMap(), originalEvent: e });
+      }
+    }.bind(this));
+  }
+  if (options.onKeyPress) { 
+    document.addEventListener('keydown', function(e) {
+      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+        options.onKeyPress ({ type: e.type, map: this.getMap(), originalEvent: e });
+      }
+    }.bind(this));
+  }
+  if (options.onKeyUp) { 
+    document.addEventListener('keydown', function(e) {
+      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+        options.onKeyUp ({ type: e.type, map: this.getMap(), originalEvent: e });
+      }
+    }.bind(this));
+  }
+};
+ol.ext.inherits(ol.interaction.CurrentMap, ol.interaction.Interaction);
+/** The current map */
+ol.interaction.CurrentMap.prototype._currentMap = undefined;
+/** Check if is the current map 
+ * @return {boolean}
+ */
+ol.interaction.CurrentMap.prototype.isCurrentMap = function() {
+  return this.getMap() === ol.interaction.CurrentMap.prototype._currentMap;
+};
+/** Get the current map
+ * @return {ol.Map}
+ */
+ol.interaction.CurrentMap.prototype.getCurrentMap = function() {
+  return ol.interaction.CurrentMap.prototype._currentMap;
+};
+/** Set the current map
+ * @param {ol.Map} map
+ */
+ol.interaction.CurrentMap.prototype.setCurrentMap = function(map) {
+  ol.interaction.CurrentMap.prototype._currentMap = map;
+};
+
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -15336,9 +15583,7 @@ ol.interaction.CopyPaste = function(options) {
   this.setSources(options.sources);
   this.setDestination(options.destination);
   // Create intreaction
-  ol.interaction.Interaction.call(this, {});
-  console.log(options)
-  this._currentMap = new ol.interaction.CurrentMap({
+  ol.interaction.CurrentMap.call(this, {
     condition: options.mapCondition,
     onKeyDown: function (e) {
       switch (condition(e)) {
@@ -15359,18 +15604,7 @@ ol.interaction.CopyPaste = function(options) {
     }.bind(this)
   });
 };
-ol.ext.inherits(ol.interaction.CopyPaste, ol.interaction.Interaction);
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.interaction.CopyPaste.prototype.setMap = function(map) {
-  if (this.getMap()) this.getMap().removeInteraction(this._currentMap);
-  if (map) map.addInteraction(this._currentMap);
-  ol.interaction.Interaction.prototype.setMap.call (this, map);
-};
+ol.ext.inherits(ol.interaction.CopyPaste, ol.interaction.CurrentMap);
 /** Sources to cut feature from
  * @param { ol.source.Vector | Array<ol.source.Vector> } sources
  */
@@ -15456,80 +15690,6 @@ ol.interaction.CopyPaste.prototype.paste = function(options) {
   }
   // Send an event
   if (options.silent===false) this.dispatchEvent({ type:'paste', features: features, time: (new Date).getTime() });
-};
-
-/** An interaction to check the current map.
- * It will fire a 'focus' event on the map when map is focused (use mapCondition option to handle the condition when the map is focused).
- * @constructor
- * @fires focus
- * @param {*} options
- *  @param {function} condition a function that takes a mapBrowserEvent and returns true if the map must be activated, default always true
- *  @param {function} onKeyDown a function that takes a keydown event is fired on the active map
- *  @param {function} onKeyPress a function that takes a keypress event is fired on the active map
- *  @param {function} onKeyUp a function that takes a keyup event is fired on the active map
- * @extends {ol.interaction.Interaction}
- */
-ol.interaction.CurrentMap = function(options) {
-  options = options || {};
-  var condition = options.condition || function() {
-    return true;
-  }
-  // Check events on the map
-  ol.interaction.Interaction.call(this, {
-    handleEvent: function(e) {
-      if (condition(e)) {
-        if (!this.isCurrentMap()) {
-          this.setCurrentMap(this.getMap());
-          this.dispatchEvent({ type: 'focus', map: this.getMap() });
-          this.getMap().dispatchEvent({ type: 'focus', map: this.getMap() });
-        }
-      }
-      return true;
-    }.bind(this)
-  });
-  // Add a key listener
-  if (options.onKeyDown) { 
-    document.addEventListener('keydown', function(e) {
-      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
-        options.onKeyDown ({ type: e.type, map: this.getMap(), originalEvent: e });
-      }
-    }.bind(this));
-  }
-  if (options.onKeyPress) { 
-    document.addEventListener('keydown', function(e) {
-      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
-        options.onKeyPress ({ type: e.type, map: this.getMap(), originalEvent: e });
-      }
-    }.bind(this));
-  }
-  if (options.onKeyUp) { 
-    document.addEventListener('keydown', function(e) {
-      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
-        options.onKeyUp ({ type: e.type, map: this.getMap(), originalEvent: e });
-      }
-    }.bind(this));
-  }
-};
-ol.ext.inherits(ol.interaction.CurrentMap, ol.interaction.Interaction);
-/** The current map */
-ol.interaction.CurrentMap.prototype._currentMap = undefined;
-/** Check if is the current map 
- * @return {boolean}
- */
-ol.interaction.CurrentMap.prototype.isCurrentMap = function() {
-  return this.getMap() === ol.interaction.CurrentMap.prototype._currentMap;
-};
-/** Get the current map
- * @return {ol.Map}
- */
-ol.interaction.CurrentMap.prototype.getCurrentMap = function() {
-  return ol.interaction.CurrentMap.prototype._currentMap;
-};
-/** Set the current map
- * @param {ol.Map} map
- */
-ol.interaction.CurrentMap.prototype.setCurrentMap = function(map) {
-  ol.interaction.CurrentMap.prototype._currentMap = map;
 };
 
 /*	Copyright (c) 2018 Jean-Marc VIGLINO, 
@@ -18623,7 +18783,7 @@ ol.interaction.Ripple.prototype.postcompose_ = function(e) {
  * 	@param {boolean} options.selectCluster false if you don't want to get cluster selected
  * 	@param {Number} options.pointRadius to calculate distance between the features
  * 	@param {bool} options.spiral means you want the feature to be placed on a spiral (or a circle)
- * 	@param {Number} options.circleMaxObject number of object that can be place on a circle
+ * 	@param {Number} options.circleMaxObjects number of object that can be place on a circle
  * 	@param {Number} options.maxObjects number of object that can be drawn, other are hidden
  * 	@param {bool} options.animate if the cluster will animate when features spread out, default is false
  * 	@param {Number} options.animationDuration animation duration in ms, default is 500ms
@@ -18746,14 +18906,14 @@ ol.interaction.SelectCluster.prototype.selectCluster = function (e) {
   var center = feature.getGeometry().getCoordinates();
   // Pixel size in map unit
   var pix = this.getMap().getView().getResolution();
-  var r = pix * this.pointRadius * (0.5 + cluster.length / 4);
-  var a, i, max;
+  var r, a, i, max;
   var p, cf, lk;
   // The features
   var features = [];
   // Draw on a circle
   if (!this.spiral || cluster.length <= this.circleMaxObjects) {
     max = Math.min(cluster.length, this.circleMaxObjects);
+    r = pix * this.pointRadius * (0.5 + max / 4);
     for (i=0; i<max; i++) {
       a = 2*Math.PI*i/max;
       if (max==2 || max == 4) a += Math.PI/4;
@@ -18769,7 +18929,6 @@ ol.interaction.SelectCluster.prototype.selectCluster = function (e) {
   else {
     // Start angle
     a = 0;
-    r;
     var d = 2*this.pointRadius;
     max = Math.min (this.maxObjects, cluster.length);
     // Feature on a spiral
@@ -24949,6 +25108,7 @@ ol.layer.Vector.prototype.setRender3D = function (r) {
  * @param {Object} param
  *  @param {ol.layer.Vector} param.layer the layer to display in 3D
  *  @param {ol.style.Style} options.style drawing style
+ *  @param {function|boolean} param.active a function that returns a boolean or a boolean ,default true
  *  @param {boolean} param.ghost use ghost style
  *  @param {number} param.maxResolution  max resolution to render 3D
  *  @param {number} param.defaultHeight default height if none is return by a propertie
@@ -24961,6 +25121,7 @@ ol.render3D = function (options) {
   ol.Object.call (this, options);
   this.setStyle(options.style);
   this.set('ghost', options.ghost);
+  this.setActive(options.active || options.active!==false);
   this.height_ = options.height = this.getHfn (options.height);
   if (options.layer) this.setLayer(options.layer);
 }
@@ -25000,9 +25161,28 @@ ol.render3D.prototype.setStyle = function(s) {
 ol.render3D.prototype.getStyle = function() {
   return this._style;
 };
+/** Set active
+ * @param {function|boolean} active
+ */
+ol.render3D.prototype.setActive = function(active) {
+  if (typeof(active)==='function') {
+    this._active = active;
+  }
+  else {
+    this._active = function() { return active; };
+  }
+  if (this.layer_) this.layer_.changed();
+};
+/** Get active
+ * @return {boolean} 
+ */
+ol.render3D.prototype.getActive = function() {
+  return this._active();
+};
 /** Calculate 3D at potcompose
 */
 ol.render3D.prototype.onPostcompose_ = function(e) {
+  if (!this.getActive()) return;
   var res = e.frameState.viewState.resolution;
   if (res > this.get('maxResolution')) return;
   this.res_ = res*400;
@@ -25038,7 +25218,8 @@ ol.render3D.prototype.onPostcompose_ = function(e) {
     ctx.fillStyle = ol.color.asString(s.getFill().getColor());
     var builds = [];
     for (var i=0; i<f.length; i++) {
-      builds.push (this.getFeature3D_ (f[i], this.getFeatureHeight(f[i])));
+      var h = this.getFeatureHeight(f[i])
+      if (h) builds.push (this.getFeature3D_ (f[i], h));
     }
     if (this.get('ghost')) this.drawGhost3D_ (ctx, builds);
     else this.drawFeature3D_ (ctx, builds);

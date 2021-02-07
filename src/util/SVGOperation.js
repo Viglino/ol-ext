@@ -61,7 +61,6 @@ ol_ext_SVGOperation.prototype.geElement = function() {
  * @param {ol_ext_SVGOperation} operation
  */
 ol_ext_SVGOperation.prototype.appendChild = function(operation) {
-  console.log(operation)
   if (operation instanceof Array) {
     operation.forEach(function(o) { this.appendChild(o) }.bind(this));
   } else {

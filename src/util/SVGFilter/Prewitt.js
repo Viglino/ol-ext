@@ -6,7 +6,7 @@
 import ol_ext_inherits from '../util/ext'
 import ol_ext_SVGFilter from '../../util/SVGFilter'
 
-/** Apply a sobel filter on an image
+/** Apply a Prewitt filter on an image
  * @constructor
  * @requires ol.filter
  * @extends {ol_ext_SVGFilter}
@@ -14,7 +14,7 @@ import ol_ext_SVGFilter from '../../util/SVGFilter'
  *  @param {boolean} options.grayscale get grayscale image, default false,
  *  @param {boolean} options.alpha get alpha channel, default false
  */
-var ol_ext_SVGFilter_Sobel = function(options) {
+var ol_ext_SVGFilter_Prewitt = function(options) {
   options = options || {};
 
   ol_ext_SVGFilter.call(this, { id: options.id, color: 'sRGB' });
@@ -27,30 +27,30 @@ var ol_ext_SVGFilter_Sobel = function(options) {
   };
   // Vertical
   operation.kernelMatrix = [
-    -1, -2, -1, 
+    -1, -1, -1, 
      0,  0,  0,
-     1,  2,  1
+     1,  1,  1
   ];
   operation.result = 'V1';
   this.addOperation(operation);
   operation.kernelMatrix = [
-     1,  2,  1, 
+     1,  1,  1, 
      0,  0,  0,
-    -1, -2, -1
+    -1, -1, -1
   ];
   operation.result = 'V2';
   this.addOperation(operation);
   // Horizontal
   operation.kernelMatrix = [
     -1,  0,  1, 
-    -2,  0,  2,
+    -1,  0,  1,
     -1,  0,  1
   ];
   operation.result = 'H1';
   this.addOperation(operation);
   operation.kernelMatrix = [
      1, -0, -1, 
-     2,  0, -2,
+     1,  0, -1,
      1,  0, -1
   ];
   operation.result = 'H2';
@@ -84,8 +84,7 @@ var ol_ext_SVGFilter_Sobel = function(options) {
   });
   if (options.grayscale) this.grayscale();
   else if (options.alpha) this.luminanceToAlpha();
-  if (options.gamma) this.ge
 };
-ol_ext_inherits(ol_ext_SVGFilter_Sobel, ol_ext_SVGFilter);
+ol_ext_inherits(ol_ext_SVGFilter_Prewitt, ol_ext_SVGFilter);
 
-export default ol_ext_SVGFilter_Sobel
+export default ol_ext_SVGFilter_Prewitt

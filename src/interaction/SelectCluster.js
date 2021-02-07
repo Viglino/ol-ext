@@ -37,7 +37,7 @@ import { extend as ol_extent_extend } from 'ol/extent'
  * 	@param {boolean} options.selectCluster false if you don't want to get cluster selected
  * 	@param {Number} options.pointRadius to calculate distance between the features
  * 	@param {bool} options.spiral means you want the feature to be placed on a spiral (or a circle)
- * 	@param {Number} options.circleMaxObject number of object that can be place on a circle
+ * 	@param {Number} options.circleMaxObjects number of object that can be place on a circle
  * 	@param {Number} options.maxObjects number of object that can be drawn, other are hidden
  * 	@param {bool} options.animate if the cluster will animate when features spread out, default is false
  * 	@param {Number} options.animationDuration animation duration in ms, default is 500ms
@@ -178,8 +178,7 @@ ol_interaction_SelectCluster.prototype.selectCluster = function (e) {
   var center = feature.getGeometry().getCoordinates();
   // Pixel size in map unit
   var pix = this.getMap().getView().getResolution();
-  var r = pix * this.pointRadius * (0.5 + cluster.length / 4);
-  var a, i, max;
+  var r, a, i, max;
   var p, cf, lk;
 
   // The features
@@ -188,6 +187,7 @@ ol_interaction_SelectCluster.prototype.selectCluster = function (e) {
   // Draw on a circle
   if (!this.spiral || cluster.length <= this.circleMaxObjects) {
     max = Math.min(cluster.length, this.circleMaxObjects);
+    r = pix * this.pointRadius * (0.5 + max / 4);
     for (i=0; i<max; i++) {
       a = 2*Math.PI*i/max;
       if (max==2 || max == 4) a += Math.PI/4;
@@ -203,7 +203,6 @@ ol_interaction_SelectCluster.prototype.selectCluster = function (e) {
   else {
     // Start angle
     a = 0;
-    r;
     var d = 2*this.pointRadius;
     max = Math.min (this.maxObjects, cluster.length);
     // Feature on a spiral

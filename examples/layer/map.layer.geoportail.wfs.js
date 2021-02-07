@@ -4,6 +4,8 @@ String.prototype.capitalize = function() {
 }
 
 var minZoom = 15;
+var jstsParser = new jsts.io.OL3Parser();
+
 // The map
 var map = new ol.Map ({
   target: 'map',
@@ -15,6 +17,20 @@ var map = new ol.Map ({
 
 var switcher = new ol.control.LayerSwitcher();
 map.addControl(switcher);
+switcher.on('drawlist', function(li) {
+  if (li.layer.get('title')==='Batiment') {
+    $('<button>')
+      .addClass('r3d')
+      .html('<i class="fa fa-cube"></i>')
+      .attr('title', '2.5D')
+      .click(function() {
+        r3D.setActive(!r3D.getActive())
+      })
+      .appendTo($('.ol-layerswitcher-buttons', li.li));
+  } else {
+    r3D.setActive(false);
+  }
+})
 map.addControl(new ol.control.Permalink({ visible: false }));
 map.addControl(new ol.control.ScaleLine());
 map.addControl(new ol.control.SearchBAN({
@@ -30,7 +46,8 @@ map.addLayer (new ol.layer.Geoportail({
   visible: false
 }));
 
-var loadLayer = new ol.layer.Vector({
+// Grid layer for loaded features
+var loadLayer = new ol.layer.VectorImage({
   title: 'chargement',
   source: new ol.source.Vector(),
   style: new ol.style.Style({
@@ -42,13 +59,26 @@ var loadLayer = new ol.layer.Vector({
 })
 map.addLayer(loadLayer);
 
+
+// WFS source / layer
 var vectorSource;
+var zFactor = 2.5;
 var vectorLayer = new ol.layer.Vector({
   title: 'WFS-IGN',
   maxResolution: 10,  // prevent load on small zoom 
   declutter: true
 })
 map.addLayer(vectorLayer);
+var r3D = new ol.render3D({ 
+  height: function(f) {
+    return f.get('hauteur')/zFactor;
+  }, 
+  //ghost: true,
+  active: false,
+  maxResolution: 1.5, 
+  defaultHeight: 3.5 
+});
+vectorLayer.setRender3D(r3D);
 
 var style;
 function setWFS() {
@@ -124,12 +154,24 @@ function setWFS() {
     strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: minZoom, maxZoom: minZoom, tileSize:512  }))
   });
   vectorLayer.setSource(vectorSource);
+  selectCtrl.setSources(vectorSource);
   vectorLayer.setMinZoom(minZoom);
   style = ol.style.geoportailStyle(type, { sens : true, section: true });
   vectorLayer.setStyle(style);
   testZoom();
 }
 
+// Selection tool
+var selectCtrl = new ol.control.Select();
+map.addControl (selectCtrl);
+selectCtrl.on('select', function(e) {
+  sel.getFeatures().clear();
+  for (var i=0, f; f=e.features[i]; i++) {
+    sel.getFeatures().push(f);
+  }
+});
+
+// Show zoom info
 map.on('moveend', testZoom)
 function testZoom() {
   $('#curZoom').text(map.getView().getZoom().toFixed(1)+' / '+minZoom);
@@ -194,7 +236,7 @@ var popup = new ol.Overlay.PopupFeature({
     attributes: [
       'nature', 'nom_1_droite', 'code_postal_droit', 'etat_de_l_objet', 'urbain',
       'cpx_classement_administratif', 'cpx_numero',
-      'usage_1', 'origine_du_batiment',
+      'usage_1', 'origine_du_batiment', 'hauteur', 'nombre_d_etages', 'nombre_de_logements',
       'nom_com', 'code_insee', 'code_arr', 'section', 'numero'
     ]
   }
@@ -204,32 +246,90 @@ map.addOverlay(popup)
 setWFS();
 
 // Save Vector layer
-function save(what) {
-  var format;
-  switch(what) {
-    case 'kml':{
-      format = new ol.format.KML({writeStyles: true})
-      break;
+function save() {
+  $('.dialog').addClass('hidden');
+  $('#save').removeClass('hidden');
+  $('#save input.select').prop('disabled', !sel.getFeatures().getLength());
+  $('#save input.clip').prop('disabled', commune.getFeatures().length !== 1);
+  $('#save .commune').css('display', commune.getFeatures().length ? '' : 'none');
+}
+
+$('#save form').on('submit', function(e) {
+  e.preventDefault();
+  $('#save').addClass('hidden');
+  $('body').addClass('wait');
+
+  setTimeout(function() {
+    var ext = $('#save select').val();
+
+    var format;
+    switch(ext) {
+      case 'kml':{
+        format = new ol.format.KML({writeStyles: true})
+        break;
+      }
+      default: {
+        format = new ol.format.GeoJSON();
+      }
     }
-    default: {
-      format = new ol.format.GeoJSON();
+
+    // Clip geometry
+    var com;
+    if ($('#save .clip').prop('checked')) com = jstsParser.read(commune.getFeatures()[0].getGeometry());
+    // Features to export
+    var featureList = ($('#save .select').prop('checked') ? sel.getFeatures() : vectorSource.getFeatures());
+    // remove null props
+    var nonull = $('#save .null').prop('checked');
+    // filter attributes
+    var limit = $('#options .limit').prop('checked');
+    // filter geom
+    var geom = $('#options .filter').prop('checked') ? Number($('#options input.geom').val())||.01 : false;
+    var options = params[$('.options option:selected').text()];
+    // export features
+    var features = [];
+    featureList.forEach(function(f) {
+      if (!com || com.intersects(jstsParser.read(f.getGeometry()))) {
+        f.setStyle(style(f));
+        if (geom || limit || nonull) {
+          f = f.clone();
+          var prop = f.getProperties();
+          for (p in prop) {
+            if (nonull && !prop[p]) {
+              f.unset(p);
+            } else if (limit && options[p]) {
+              f.unset(p);
+              if (options[p].checked) {
+                f.set(options[p].name, prop[p]);
+              }
+            }
+          }
+          if (geom) f.setGeometry(f.getGeometry().simplify(geom));
+        }
+        features.push(f)
+      }
+    })
+    // save as
+    if (features.length) {
+      var data = format.writeFeatures(features, {
+        dataProjection: 'EPSG:4326',
+        featureProjection: map.getView().getProjection()
+      });
+      var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
+      saveAs(blob, 'map.'+(ext || 'geojson'));
     }
-  }
-  var features = vectorSource.getFeatures();
-  features.forEach(function(f) {
-    f.setStyle(style(f));
-  })
-  if (features.length) {
-    var data = format.writeFeatures(features, {
-      dataProjection: 'EPSG:4326',
-      featureProjection: map.getView().getProjection()
-    });
-    var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
-    saveAs(blob, 'map.'+(what || 'geojson'));
-  }
+    $('body').removeClass('wait');
+  },300);
+});
+
+// Save commune feature
+function saveCommune() {
+  $('.dialog').addClass('hidden');
+  var format = new ol.format.GeoJSON();
+
   // commune
   features = commune.getFeatures();
   if (features.length) {
+    // Get outer 
     if (features.length === 1) {
       var geom = ol.geom.Polygon.fromExtent(ol.extent.buffer(features[0].getGeometry().getExtent(), 1000));
       geom = geom.getCoordinates();
@@ -238,11 +338,78 @@ function save(what) {
       });
       features.push(new ol.Feature(new ol.geom.Polygon(geom)))
     }
+    // save as
     var data = format.writeFeatures(features, {
       dataProjection: 'EPSG:4326',
       featureProjection: map.getView().getProjection()
     });
     var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
     saveAs(blob, "commune.geojson");
+  }
+}
+
+/* Gestion des options */
+var params = JSON.parse(localStorage.dataOptions||'{}');
+if (!params.route) params.route = {};
+if (!params.batiment) params.batiments = {};
+if (!params.parcelle) params.parcelle = {};
+
+$('#options .limit').on('change', function() {
+  if ($(this).prop('checked')) {
+    $('#options ul').removeClass('disabled');
+  } else {
+    $('#options ul').addClass('disabled');
+  }
+});
+
+$('#options .valid').click(function() {
+  var options = params[$('.options option:selected').text()];
+  $('#options ul li').each(function() {
+    var p = $(this).data('prop');
+    if (p) {
+      options[p] = {
+        checked: $('input[type="checkbox"]', this).prop('checked'),
+        name: $('input[type="text"]', this).val()
+      }
+    }
+  })
+  localStorage.dataOptions = JSON.stringify(params);
+  $('#options').addClass('hidden');
+});
+
+function showOptions() {
+  var options = params[$('.options option:selected').text()];
+  if (!options) {
+    options = params[$('.options option:selected').text()] = {};
+  }
+  $('#options').removeClass('hidden');
+  var f = vectorSource.getFeatures()[0];
+  var label, ul = $('ul', $('#options')).html('');
+  if (!f) {
+    $('<li>').html('<i>Aune données à charger...</i>').appendTo(ul);
+    $('#options .valid').hide();
+    return;
+  }
+  $('#options .valid').show();
+  var prop = f.getProperties()
+  var li = $('<li>').addClass('small').appendTo(ul);
+  $('<a>').text('aucun')
+    .click(function() {
+      $('input[type="checkbox"]').prop('checked', false);
+    })
+    .appendTo(li)
+  $('<span>').text('/').appendTo(li);
+  $('<a>').text('tous')
+    .click(function() {
+      $('input[type="checkbox"]', ul).prop('checked', true);
+    })
+    .appendTo(li)
+  var options = params[$('.options option:selected').text()];
+  for (p in prop) if (p!=='geometry') {
+    var o = options[p];
+    li = $('<li>').data('prop', p).appendTo(ul);
+    label = $('<label>').attr('title',p).text(p).appendTo(li);
+    $('<input type="checkbox">').prop('checked', o ? o.checked : true).prependTo(label);
+    $('<input type="text">').val(o ? o.name : p).appendTo(li);
   }
 }

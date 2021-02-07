@@ -5,6 +5,7 @@ import ol_ext_SVGOperation from './SVGOperation'
 /** SVG filter 
  * @param {*} options
  *  @param {ol_ext_SVGOperation} option.operation
+ *  @param {string} option.id filter id, only to use if you want to adress the filter directly or let the lib create one, if none create a unique id
  *  @param {string} option.color color interpolation filters, linear or sRGB
  */
 var ol_ext_SVGFilter = function(options) {
@@ -22,7 +23,7 @@ var ol_ext_SVGFilter = function(options) {
   }
 
   this.element = document.createElementNS( this.NS, 'filter' );
-  this._id = '_ol_SVGFilter_' + (ol_ext_SVGFilter.prototype._id++);
+  this._id = options.id || '_ol_SVGFilter_' + (ol_ext_SVGFilter.prototype._id++);
   this.element.setAttribute( 'id', this._id );
   if (options.color) this.element.setAttribute( 'color-interpolation-filters', options.color );
 
@@ -59,6 +60,50 @@ ol_ext_SVGFilter.prototype.addOperation = function(operation) {
     if (!(operation instanceof ol_ext_SVGOperation)) operation = new ol_ext_SVGOperation(operation);
     this.element.appendChild( operation.geElement() );
   }
+};
+
+/** Add a grayscale operation
+ * @param {number} value
+ */
+ol_ext_SVGFilter.prototype.grayscale = function(value) {
+  this.addOperation({
+    feoperation: 'feColorMatrix',
+    type: 'saturate',
+    values: value || 0
+  });
+};
+
+/** Add a luminanceToAlpha operation
+ * @param {*} options
+ *  @param {number} options.gamma enhance gamma, default 0
+ */
+ol_ext_SVGFilter.prototype.luminanceToAlpha = function(options) {
+  options = options || {};
+  this.addOperation({
+    feoperation: 'feColorMatrix',
+    type: 'luminanceToAlpha'
+  });
+  if (options.gamma) {
+    this.addOperation({
+      feoperation: 'feComponentTransfer',
+      operations: [{
+        feoperation: 'feFuncA',
+        type: 'gamma', 
+        amplitude: options.gamma,
+        exponent: 1,
+        offset: 0
+      }]
+    });
+  }
+};
+
+ol_ext_SVGFilter.prototype.applyTo = function(img) {
+  var canvas = document.createElement('CANVAS');
+  canvas.width = img.naturalWidth || img.width;
+  canvas.height = img.naturalHeight || img.height;
+  canvas.getContext('2d').filter = 'url(#'+this.getId()+')';
+  canvas.getContext('2d').drawImage(img, 0, 0);
+  return canvas;
 };
 
 export default ol_ext_SVGFilter
