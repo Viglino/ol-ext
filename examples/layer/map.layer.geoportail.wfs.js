@@ -245,8 +245,8 @@ var popup = new ol.Overlay.PopupFeature({
 });
 map.addOverlay(popup)
 
-console.log('LINBK',plink.getUrlParam('layer'))
 setWFS(plink.getUrlParam('layer') || 'BDTOPO_V3:troncon_de_route');
+$('#typename').val(plink.getUrlParam('layer') || 'BDTOPO_V3:troncon_de_route')
 
 // Save Vector layer
 function save() {
