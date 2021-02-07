@@ -89,7 +89,7 @@ function setWFS(type) {
   popup.hide();
   vectorLayer.set('title', type.split(':')[1].replace(/_/g,' ').capitalize());
   switcher.drawPanel();
-  minZoom = /bati/.test(type) ? 16 : 15;
+  minZoom = /bati|parcelle/.test(type) ? 16 : 15;
   /* Standard WFS
   vectorSource = new ol.source.Vector({
     format: new ol.format.GeoJSON(),
