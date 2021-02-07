@@ -32,6 +32,7 @@ switcher.on('drawlist', function(li) {
   }
 })
 var plink = new ol.control.Permalink({ visible: false })
+console.log(plink)
 map.addControl(plink);
 map.addControl(new ol.control.ScaleLine());
 map.addControl(new ol.control.SearchBAN({
@@ -83,7 +84,7 @@ vectorLayer.setRender3D(r3D);
 
 var style;
 function setWFS(type) {
-  plink.setUrlParam('l', type)
+  plink.setUrlParam('layer', type)
   loadLayer.getSource().clear();
   if (vectorSource) vectorSource.clear();
   popup.hide();
@@ -244,7 +245,8 @@ var popup = new ol.Overlay.PopupFeature({
 });
 map.addOverlay(popup)
 
-setWFS(plink.getUrlParam('l') || 'BDTOPO_V3:troncon_de_route');
+console.log('LINBK',plink.getUrlParam('layer'))
+setWFS(plink.getUrlParam('layer') || 'BDTOPO_V3:troncon_de_route');
 
 // Save Vector layer
 function save() {
