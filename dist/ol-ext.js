@@ -26100,6 +26100,8 @@ popup.hide();
 *
 * @constructor
 * @extends {ol.Overlay}
+* @fires show
+* @fires hide
 * @param {} options Extend Overlay options 
 *	@param {String} options.popupClass the a class of the overlay to style the popup.
 *	@param {bool} options.closeBox popup has a close box, default false.
@@ -26333,6 +26335,7 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html) {
     // Set visible class (wait to compute the size/position first)
     this.element.parentElement.style.display = '';
     if (typeof (this.onshow) == 'function') this.onshow();
+    this.dispatchEvent({ type: 'show' })
     this._tout = setTimeout (function() {
       self.element.classList.add("visible"); 
     }, 0);
@@ -26348,6 +26351,7 @@ ol.Overlay.Popup.prototype.hide = function () {
   this.setPosition(undefined);
   if (this._tout) clearTimeout(this._tout);
   this.element.classList.remove("visible");
+  this.dispatchEvent({ type: 'hide' });
 };
 
 /*	Copyright (c) 2020 Jean-Marc VIGLINO,
@@ -26835,6 +26839,9 @@ ol.Overlay.Placemark.prototype.setRadius = function(size) {
  *
  * @constructor
  * @extends {ol.Overlay.Popup}
+ * @fires show
+ * @fires hide
+ * @fires select
  * @param {} options Extend Popup options 
  *  @param {String} options.popupClass the a class of the overlay to style the popup.
  *  @param {bool} options.closeBox popup has a close box, default false.
@@ -26844,6 +26851,8 @@ ol.Overlay.Placemark.prototype.setRadius = function(size) {
  *  @param {ol.OverlayPositioning | string | undefined} options.positionning 
  *    the 'auto' positioning var the popup choose its positioning to stay on the map.
  *  @param {Template|function} options.template A template with a list of properties to use in the popup or a function that takes a feature and returns a Template
+ *  @param {ol.interaction.Select} options.select a select interaction to get features from
+ *  @param {boolean} options.keepSelection keep original selection, otherwise set selection to the current popup feature and add a counter to change current feature, default false
  *  @param {boolean} options.canFix Enable popup to be fixed, default false
  *  @param {boolean} options.showImage display image url as image, default false
  *  @param {boolean} options.maxChar max char to display in a cell, default 200
@@ -26856,11 +26865,18 @@ ol.Overlay.PopupFeature = function (options) {
   this.set('canFix', options.canFix)
   this.set('showImage', options.showImage)
   this.set('maxChar', options.maxChar||200)
+  this.set('keepSelection', options.keepSelection)
   // Bind with a select interaction
   if (options.select && (typeof options.select.on ==='function')) {
     this._select = options.select;
     options.select.on('select', function(e){
-      if (!this._noselect) this.show(e.mapBrowserEvent.coordinate, options.select.getFeatures().getArray());
+      if (!this._noselect) {
+        if (e.selected[0]) {
+          this.show(e.mapBrowserEvent.coordinate, options.select.getFeatures().getArray(), e.selected[0]);
+        } else {
+          this.hide();
+        }
+      }
     }.bind(this));
   }
 };
@@ -26881,8 +26897,9 @@ ol.Overlay.PopupFeature.prototype.setTemplate = function(template) {
 /** Show the popup on the map
  * @param {ol.coordinate|undefined} coordinate Position of the popup
  * @param {ol.Feature|Array<ol.Feature>} features The features on the popup
+ * @param {ol.Feature} current The current feature if keepSelection = true, otherwise get the first feature
  */
-ol.Overlay.PopupFeature.prototype.show = function(coordinate, features) {
+ol.Overlay.PopupFeature.prototype.show = function(coordinate, features, current) {
   if (coordinate instanceof ol.Feature 
     || (coordinate instanceof Array && coordinate[0] instanceof ol.Feature)) {
     features = coordinate;
@@ -26893,7 +26910,8 @@ ol.Overlay.PopupFeature.prototype.show = function(coordinate, features) {
   if (!this._count) this._count = 1;
   // Calculate html upon feaures attributes
   this._count = 1;
-  var html = this._getHtml(features[0]);
+  var f = this.get('keepSelection') ? current || features[0] : features[0];
+  var html = this._getHtml(f);
   if (html) {
     if (!this.element.classList.contains('ol-fixed')) this.hide();
     if (!coordinate || features[0].getGeometry().getType()==='Point') {
@@ -26993,7 +27011,7 @@ ol.Overlay.PopupFeature.prototype._getHtml = function(feature) {
       }
     }.bind(this));
   // Counter
-  if (this._features.length > 1) {
+  if (!this.get('keepSelection') && this._features.length > 1) {
     var div = ol.ext.element.create('DIV', { className: 'ol-count', parent: html });
     ol.ext.element.create('DIV', { 
       className: 'ol-prev', 
@@ -27022,12 +27040,13 @@ ol.Overlay.PopupFeature.prototype._getHtml = function(feature) {
     });
   }
   // Use select interaction
-  if (this._select) {
+  if (this._select && !this.get('keepSelection')) {
     this._noselect = true;
     this._select.getFeatures().clear();
     this._select.getFeatures().push(feature);
     this._noselect = false;
   }
+  this.dispatchEvent({ type: 'select', feature: feature, index: this._count })
   return html;
 };
 /** Fix the popup

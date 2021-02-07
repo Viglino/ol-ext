@@ -185,6 +185,7 @@ var popup = new ol.Overlay.PopupFeature({
   popupClass: 'default anim',
   closeBox: true,
   select: sel,
+  keepSelection: true,
   canFix: true,
   template: {
     title: function(feature) {
