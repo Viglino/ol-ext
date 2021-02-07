@@ -3127,6 +3127,9 @@
   top: .5em;
   left: 3em;
 }
+.ol-touch .ol-control.ol-select {
+  left: 3.5em;
+}
 .ol-control.ol-select > button:before {
   content: "A";
   font-size: .6em;
