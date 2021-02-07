@@ -113,7 +113,6 @@
   });
 
   map.addControl(new ol.control.LayerSwitcher());
-  map.addControl(new ol.control.Permalink());
 
 /*
   map.addLayer(new ol.layer.Tile({
@@ -124,10 +123,12 @@
 */
   map.addLayer (new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS', {
     gppKey: 'choisirgeoportail',
+    permalink: 'ortho',
     className: 'photo',
   }));
   map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', {
     gppKey: 'choisirgeoportail',
+    permalink: 'plan',
     className: 'plan',
     visible: true,
     opacity: .5
@@ -146,21 +147,25 @@
 */
   map.addLayer (new ol.layer.Geoportail('CADASTRALPARCELS.PARCELLAIRE_EXPRESS', {
     gppKey: 'choisirgeoportail',
+    permalink: 'parcel',
     className: 'parcel',
     visible: false
   }));
   map.addLayer (new ol.layer.Geoportail('INSEE.FILOSOFI.POPULATION', {
     gppKey: 'h1osiyvfm7c4wu976jv6gpum',
+    permalink: 'insee',
     className: 'insee',
     visible: false
   }));
   map.addLayer (new ol.layer.Geoportail('Aire-Parcellaire', {
     gppKey: 'h1osiyvfm7c4wu976jv6gpum',
+    permalink: 'AOC',
     className: 'AOC',
     title: 'Délimitation AOC viticole',
     opacity: .5,
     visible: false
   }));
+  map.addControl(new ol.control.Permalink());
 
   var vector = new ol.layer.Vector({ title: 'vector', className: 'vector', source: new ol.source.Vector() });
   map.addLayer(vector);
@@ -177,7 +182,7 @@
       if (l.get('queryable')) {
         var layers = map.getLayers().getArray();
         // Get info in a popup
-        if (/INSEE|ORTHOIMAGERY|GEOGRAPHICALGRIDSYSTEMS/.test(l.get('name'))) {
+        if (/INSEE|ORTHOIMAGERY|GEOGRAPHICALGRIDSYSTEMS|PARCELLE/.test(l.get('name'))) {
           l.getSource().getFeatureInfo(
             e.coordinate, 
             map.getView().getResolution(), {
