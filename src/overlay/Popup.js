@@ -7,7 +7,6 @@ import ol_ext_inherits from '../util/ext'
 import ol_Overlay from 'ol/Overlay'
 import ol_ext_element from '../util/element'
 
-
 /**
  * @classdesc
  * A popup element to be displayed over the map and attached to a single map
@@ -21,6 +20,8 @@ popup.hide();
 *
 * @constructor
 * @extends {ol_Overlay}
+* @fires show
+* @fires hide
 * @param {} options Extend Overlay options 
 *	@param {String} options.popupClass the a class of the overlay to style the popup.
 *	@param {bool} options.closeBox popup has a close box, default false.
@@ -272,6 +273,7 @@ ol_Overlay_Popup.prototype.show = function (coordinate, html) {
     // Set visible class (wait to compute the size/position first)
     this.element.parentElement.style.display = '';
     if (typeof (this.onshow) == 'function') this.onshow();
+    this.dispatchEvent({ type: 'show' })
     this._tout = setTimeout (function() {
       self.element.classList.add("visible"); 
     }, 0);
@@ -288,6 +290,7 @@ ol_Overlay_Popup.prototype.hide = function () {
   this.setPosition(undefined);
   if (this._tout) clearTimeout(this._tout);
   this.element.classList.remove("visible");
+  this.dispatchEvent({ type: 'hide' });
 };
 
 export  default ol_Overlay_Popup

@@ -6,7 +6,6 @@ import ol_Feature from 'ol/Feature'
 import ol_ext_inherits from '../util/ext'
 import ol_Overlay_Popup from './Popup'
 import ol_ext_element from '../util/element'
-import { toStringHDMS } from 'ol/coordinate';
 
 
 /** Template attributes for popup
@@ -29,6 +28,9 @@ import { toStringHDMS } from 'ol/coordinate';
  *
  * @constructor
  * @extends {ol_Overlay_Popup}
+ * @fires show
+ * @fires hide
+ * @fires select
  * @param {} options Extend Popup options 
  *  @param {String} options.popupClass the a class of the overlay to style the popup.
  *  @param {bool} options.closeBox popup has a close box, default false.
@@ -38,6 +40,8 @@ import { toStringHDMS } from 'ol/coordinate';
  *  @param {ol.OverlayPositioning | string | undefined} options.positionning 
  *    the 'auto' positioning var the popup choose its positioning to stay on the map.
  *  @param {Template|function} options.template A template with a list of properties to use in the popup or a function that takes a feature and returns a Template
+ *  @param {ol.interaction.Select} options.select a select interaction to get features from
+ *  @param {boolean} options.keepSelection keep original selection, otherwise set selection to the current popup feature and add a counter to change current feature, default false
  *  @param {boolean} options.canFix Enable popup to be fixed, default false
  *  @param {boolean} options.showImage display image url as image, default false
  *  @param {boolean} options.maxChar max char to display in a cell, default 200
@@ -52,12 +56,19 @@ var ol_Overlay_PopupFeature = function (options) {
   this.set('canFix', options.canFix)
   this.set('showImage', options.showImage)
   this.set('maxChar', options.maxChar||200)
+  this.set('keepSelection', options.keepSelection)
 
   // Bind with a select interaction
   if (options.select && (typeof options.select.on ==='function')) {
     this._select = options.select;
     options.select.on('select', function(e){
-      if (!this._noselect) this.show(e.mapBrowserEvent.coordinate, options.select.getFeatures().getArray());
+      if (!this._noselect) {
+        if (e.selected[0]) {
+          this.show(e.mapBrowserEvent.coordinate, options.select.getFeatures().getArray(), e.selected[0]);
+        } else {
+          this.hide();
+        }
+      }
     }.bind(this));
   }
 };
@@ -80,8 +91,9 @@ ol_Overlay_PopupFeature.prototype.setTemplate = function(template) {
 /** Show the popup on the map
  * @param {ol.coordinate|undefined} coordinate Position of the popup
  * @param {ol.Feature|Array<ol.Feature>} features The features on the popup
+ * @param {ol.Feature} current The current feature if keepSelection = true, otherwise get the first feature
  */
-ol_Overlay_PopupFeature.prototype.show = function(coordinate, features) {
+ol_Overlay_PopupFeature.prototype.show = function(coordinate, features, current) {
   if (coordinate instanceof ol_Feature 
     || (coordinate instanceof Array && coordinate[0] instanceof ol_Feature)) {
     features = coordinate;
@@ -93,7 +105,8 @@ ol_Overlay_PopupFeature.prototype.show = function(coordinate, features) {
 
   // Calculate html upon feaures attributes
   this._count = 1;
-  var html = this._getHtml(features[0]);
+  var f = this.get('keepSelection') ? current || features[0] : features[0];
+  var html = this._getHtml(f);
   if (html) {
     if (!this.element.classList.contains('ol-fixed')) this.hide();
     if (!coordinate || features[0].getGeometry().getType()==='Point') {
@@ -199,7 +212,7 @@ ol_Overlay_PopupFeature.prototype._getHtml = function(feature) {
     }.bind(this));
 
   // Counter
-  if (this._features.length > 1) {
+  if (!this.get('keepSelection') && this._features.length > 1) {
     var div = ol_ext_element.create('DIV', { className: 'ol-count', parent: html });
     ol_ext_element.create('DIV', { 
       className: 'ol-prev', 
@@ -228,12 +241,13 @@ ol_Overlay_PopupFeature.prototype._getHtml = function(feature) {
     });
   }
   // Use select interaction
-  if (this._select) {
+  if (this._select && !this.get('keepSelection')) {
     this._noselect = true;
     this._select.getFeatures().clear();
     this._select.getFeatures().push(feature);
     this._noselect = false;
   }
+  this.dispatchEvent({ type: 'select', feature: feature, index: this._count })
   return html;
 };
 
