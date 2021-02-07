@@ -31,7 +31,8 @@ switcher.on('drawlist', function(li) {
     r3D.setActive(false);
   }
 })
-map.addControl(new ol.control.Permalink({ visible: false }));
+var plink = new ol.control.Permalink({ visible: false })
+map.addControl(plink);
 map.addControl(new ol.control.ScaleLine());
 map.addControl(new ol.control.SearchBAN({
   zoomOnSelect: 15
@@ -81,11 +82,11 @@ var r3D = new ol.render3D({
 vectorLayer.setRender3D(r3D);
 
 var style;
-function setWFS() {
+function setWFS(type) {
+  plink.setUrlParam('l', type)
   loadLayer.getSource().clear();
   if (vectorSource) vectorSource.clear();
   popup.hide();
-  var type = $('#typename').val();
   vectorLayer.set('title', type.split(':')[1].replace(/_/g,' ').capitalize());
   switcher.drawPanel();
   minZoom = /bati/.test(type) ? 16 : 15;
@@ -243,7 +244,7 @@ var popup = new ol.Overlay.PopupFeature({
 });
 map.addOverlay(popup)
 
-setWFS();
+setWFS(plink.getUrlParam('l') || 'BDTOPO_V3:troncon_de_route');
 
 // Save Vector layer
 function save() {
