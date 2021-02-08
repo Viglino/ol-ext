@@ -246,6 +246,8 @@
   </div>
 
 <script type="text/javascript">
+  var osm = new ol.layer.Tile({ source: new ol.source.OSM() });
+  osm.addFilter(new ol.filter.Colorize({ operation: 'grayscale' }))
   // The map
   var map = new ol.Map({
     target: 'map',
@@ -253,7 +255,7 @@
       zoom: 4,
       center: [166326, 5992663]
     }),
-    layers: [ new ol.layer.Tile({ source: new ol.source.OSM() })]
+    layers: [ osm ]
   });
 
   var select  = new ol.interaction.Select();
