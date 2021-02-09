@@ -50,6 +50,43 @@ var ol_control_Print = function(options) {
 };
 ol_ext_inherits(ol_control_Print, ol_control_Control);
 
+/** Helper function to copy result to clipboard
+ * @param {Event} e print event
+ * @return {boolean}
+ */
+ol_control_Print.prototype.toClipboard = function(e, callback) {
+  try {
+    e.canvas.toBlob(function(blob) {
+      try {
+        navigator.clipboard.write([
+          new ClipboardItem(
+            Object.defineProperty({}, blob.type, {
+              value: blob,
+              enumerable: true
+            })
+          )
+        ])
+        if (typeof(callback) === 'function') callback(true);
+      } catch (err) {
+        if (typeof(callback) === 'function') callback(false);
+      }
+    });
+  } catch(err) {
+    if (typeof(callback) === 'function') callback(false);
+  }
+};
+
+/** Helper function to copy result to clipboard
+ * @param {any} options print options
+ * @param {function} callback a callback function that takes a boolean if copy
+ */
+ol_control_Print.prototype.copyMap = function(options, callback) {
+  this.once('print', function(e) {
+    this.toClipboard(e, callback);
+  }.bind(this));
+  this.print(options);
+};
+
 /** Print the map
  * @param {function} cback a callback function that take a string containing the requested data URI.
  * @param {Object} options
