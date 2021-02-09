@@ -51,7 +51,7 @@ var vlayer = new ol.layer.VectorTile({
     format: new ol.format.MVT(),
     projection: new ol.proj.Projection({code:"EPSG:3857"}),
     //url: "https://vectortiles.ign.fr/rok4server/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
-    url : "https://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/geoportail/tms/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
+    url : "https://wxs.ign.fr/choisirgeoportail/geoportail/tms/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
     // url: "https://vectortiles.ign.fr/rok4server/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
     attributions: '<a href="https://geoservices.ign.fr/blog/2018/07/08/nouveautes_vecteur.html">&copy; IGN-Géoportail</a>',
   }),
@@ -250,6 +250,7 @@ function showLayers() {
           $('#color').show();
           $("#color .sp-cancel").off();
           $("#color .sp-cancel").on('click', function() { $('#color').hide(); })
+          $(this).val('color');
           setTimeout(function() {
             onChangeColor = function(c) {
               config[s].color = c;
