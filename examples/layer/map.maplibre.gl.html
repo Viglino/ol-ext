@@ -1,10 +1,13 @@
 ﻿<html>
 <head>
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <link rel="icon" type="image/png" href="https://avatars.githubusercontent.com/u/75709127" />
 
   <script src="https://unpkg.com/maplibre-gl@1.13.0-rc.4/dist/mapbox-gl.js"></script>
   <link href="https://unpkg.com/maplibre-gl@1.13.0-rc.4/dist/mapbox-gl.css" rel="stylesheet" />
-  
+
+  <script src="https://unpkg.com/three@0.106.2/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.106.2/examples/js/loaders/GLTFLoader.js"></script>
 
   <link rel="stylesheet" href="../style.css" />
 
@@ -20,14 +23,14 @@
     h1  {
       background-image: url("https://avatars.githubusercontent.com/u/75709127");
     }
-    button {
+    .b3D {
       position: fixed;
       bottom: .5em;
       left: 50%;
       transform: translateX(-50%);
       display: none;
     }
-    button.visible {
+    .b3D.visible {
       display: block;
     }
   </style>
@@ -42,7 +45,11 @@
   </a>
 
   <div id="map"></div>
-  <button class="b3D" onclick="rotate(!rotation)">rotate</button>
+  <div class="b3D">
+    <button onclick="rotate(!rotation)">↶ Rotate</button>
+    <button onclick="map.setCenter([1.4878665303150522, 48.4478465456651])">↦ Chartres</button>
+    <button onclick="map.setCenter([2.2946113076545354, 48.8581625251])">↦ Paris</button>
+  </div>
   
 <script>
 
@@ -56,14 +63,14 @@ var map = new mapboxgl.Map({
 * + replace : Source Sans Pro => Open Sans
 */
   style: './standard.json',
-  center: d3 ? [2.34, 48.845] : [3, 47],
+  center: d3 ? [2.2946113076545354, 48.8581625251] : [3, 47],
   zoom: d3 ? 14 : 5,
   pitch: d3 ? 90 : 0,
   antialias: true
 });
 
 // Map rotation
-if (d3) document.querySelector('.b3D').className = 'visible';
+if (d3) document.querySelector('.b3D').className = 'b3D visible';
 var start, rotation;
 function rotateCamera(timestamp) {
   if (!timestamp) {
@@ -95,6 +102,7 @@ map.on('wheel',function() {
   rotate(false)
 });
 
+// 3D Buildings
 map.on('load', function () {
   if (!d3) return;
   map.addLayer({
@@ -114,6 +122,126 @@ map.on('load', function () {
   });
 });
 
+
+/* 3D Model */
+function add3DModel (name, modelOrigin, modelRotate, modelScale, modelAltitude) {
+
+  var modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(
+    modelOrigin,
+    modelAltitude || 0
+  );
+  
+  // transformation parameters to position, rotate and scale the 3D model onto the map
+  var modelTransform = {
+    translateX: modelAsMercatorCoordinate.x,
+    translateY: modelAsMercatorCoordinate.y,
+    translateZ: modelAsMercatorCoordinate.z,
+    rotateX: modelRotate[0],
+    rotateY: modelRotate[1],
+    rotateZ: modelRotate[2],
+    /* Since our 3D model is in real world meters, a scale transform needs to be
+    * applied since the CustomLayerInterface expects units in MercatorCoordinates.
+    */
+    scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits() * modelScale
+  };
+  
+  var THREE = window.THREE;
+  
+  // configuration of the custom layer for a 3D model per the CustomLayerInterface
+  var customLayer = {
+    id: '3d-model-'+name,
+    type: 'custom',
+    renderingMode: '3d',
+    onAdd: function (map, gl) {
+      this.camera = new THREE.Camera();
+      this.scene = new THREE.Scene();
+      
+      // create two three.js lights to illuminate the model
+      var directionalLight = new THREE.DirectionalLight(0xffffff);
+      directionalLight.position.set(0, 1, 0).normalize();
+      this.scene.add(directionalLight);
+
+      var directionalLight2 = new THREE.DirectionalLight(0xffffff);
+      directionalLight2.position.set(0, -1, 0).normalize();
+      this.scene.add(directionalLight2);
+
+      var directionalLight3 = new THREE.DirectionalLight(0xffffff);
+      directionalLight3.position.set(1, 0, 1).normalize();
+      this.scene.add(directionalLight3);
+
+      var directionalLight4 = new THREE.DirectionalLight(0xeeeeee);
+      directionalLight4.position.set(-1, 0, -.5).normalize();
+      this.scene.add(directionalLight4);
+
+      // use the three.js GLTF loader to add the 3D model to the three.js scene
+      var loader = new THREE.GLTFLoader();
+      loader.load(
+        './'+name+'/scene.gltf',
+        function (gltf) {
+          this.scene.add(gltf.scene);
+        }.bind(this)
+      );
+      this.map = map;
+  
+      // use the Mapbox GL JS map canvas for three.js
+      this.renderer = new THREE.WebGLRenderer({
+        canvas: map.getCanvas(),
+        context: gl,
+        antialias: true
+      });
+    
+      this.renderer.autoClear = false;
+    },
+    render: function (gl, matrix) {
+      var rotationX = new THREE.Matrix4().makeRotationAxis(
+        new THREE.Vector3(1, 0, 0),
+        modelTransform.rotateX
+      );
+      var rotationY = new THREE.Matrix4().makeRotationAxis(
+        new THREE.Vector3(0, 1, 0),
+        modelTransform.rotateY
+      );
+      var rotationZ = new THREE.Matrix4().makeRotationAxis(
+        new THREE.Vector3(0, 0, 1),
+        modelTransform.rotateZ
+      );
+    
+      var m = new THREE.Matrix4().fromArray(matrix);
+      var l = new THREE.Matrix4()
+        .makeTranslation(
+          modelTransform.translateX,
+          modelTransform.translateY,
+          modelTransform.translateZ
+        )
+        .scale(
+          new THREE.Vector3(
+            modelTransform.scale,
+            -modelTransform.scale,
+            modelTransform.scale
+          )
+        )
+        .multiply(rotationX)
+        .multiply(rotationY)
+        .multiply(rotationZ);
+    
+      this.camera.projectionMatrix = m.multiply(l);
+      this.renderer.state.reset();
+      this.renderer.render(this.scene, this.camera);
+      this.map.triggerRepaint();
+    }
+  };
+
+  map.on('style.load', function () {
+    map.addLayer(customLayer);
+  });
+}
+
+
+// parameters to ensure the model is georeferenced correctly on the map
+add3DModel('eiffel_tower', [2.2944896899799634, 48.85826252188846], [Math.PI / 2, Math.PI / 4, 0], 2.8 )
+add3DModel('chartres', [1.4878665303150522, 48.4478465456651], [Math.PI / 2, Math.PI / 4, 0], .026 )
+add3DModel('pyramid', [2.3358513575402458, 48.861008625150845], [Math.PI / 2, 4.34, 0], 1.1 )
+add3DModel('notre_dame', [2.349701118570193, 48.853114650748665], [0, 0, 4.25], .65 )
 
 </script>
 </body>
