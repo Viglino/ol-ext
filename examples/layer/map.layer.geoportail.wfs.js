@@ -21,7 +21,6 @@ switcher.on('drawlist', function(li) {
   if (li.layer.get('title')==='Batiment') {
     $('<button>')
       .addClass('r3d')
-      .html('<i class="fa fa-cube"></i>')
       .attr('title', '2.5D')
       .click(function() {
         r3D.setActive(!r3D.getActive())

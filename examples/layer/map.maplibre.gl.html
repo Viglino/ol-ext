@@ -20,6 +20,16 @@
     h1  {
       background-image: url("https://avatars.githubusercontent.com/u/75709127");
     }
+    button {
+      position: fixed;
+      bottom: .5em;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+    }
+    button.visible {
+      display: block;
+    }
   </style>
 
 </head>
@@ -32,9 +42,12 @@
   </a>
 
   <div id="map"></div>
+  <button class="b3D" onclick="rotate(!rotation)">rotate</button>
   
 <script>
-  
+
+var d3 = (document.location.search === '?3D')
+
 // Mapbox map
 var map = new mapboxgl.Map({
   container: 'map',
@@ -43,10 +56,64 @@ var map = new mapboxgl.Map({
 * + replace : Source Sans Pro => Open Sans
 */
   style: './standard.json',
-  center: [3, 47],
-  zoom: 5,
-  pitch: 0
+  center: d3 ? [2.34, 48.845] : [3, 47],
+  zoom: d3 ? 14 : 5,
+  pitch: d3 ? 90 : 0,
+  antialias: true
 });
+
+// Map rotation
+if (d3) document.querySelector('.b3D').className = 'visible';
+var start, rotation;
+function rotateCamera(timestamp) {
+  if (!timestamp) {
+    requestAnimationFrame(rotateCamera);
+    return;
+  }
+  if (!start) start = timestamp;
+  // clamp the rotation between 0 -360 degrees
+  // Divide timestamp by 100 to slow rotation to ~10 degrees / sec
+  map.rotateTo(((timestamp-start) / 100) % 360, { duration: 0 });
+  // Request the next frame of the animation.
+  if (rotation) requestAnimationFrame(rotateCamera);
+}
+
+function rotate(b) {
+  if (b===false) {
+    rotation = false;
+  } else {
+    if (!rotation) {
+      rotation = true;
+      rotateCamera();
+    }
+  }
+}
+map.on('click',function() {
+  rotate(false)
+});
+map.on('wheel',function() {
+  rotate(false)
+});
+
+map.on('load', function () {
+  if (!d3) return;
+  map.addLayer({
+    "id":"bati 3D",
+    "type":"fill-extrusion",
+    "source":"plan_ign",
+    "source-layer":"bati_surf",
+    "minzoom": 14,
+    "filter": [">","hauteur",0],
+    "layout":{"visibility":"visible"},
+    "paint":{
+      "fill-extrusion-color": "#aaa",
+      "fill-extrusion-height": ["get", "hauteur"],
+      "fill-extrusion-base": 0,
+      "fill-extrusion-opacity": 0.8
+    }
+  });
+});
+
 
 </script>
 </body>

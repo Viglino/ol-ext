@@ -235,6 +235,9 @@ body > .wait {
   letter-spacing: -.03em;
 }
 
-.ol-layerswitcher .panel li .r3d i {
+.ol-layerswitcher .panel li .r3d:before {
+  content: "3D";
   color: #fff;
+  display: block;
+  transform: scaleX(.7);
 }

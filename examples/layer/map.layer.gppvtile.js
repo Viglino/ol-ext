@@ -431,7 +431,7 @@ var sens = {
   "layout": {
     "visibility": "visible",
     "text-field": "→",
-    "symbol-placement": "line",
+    "symbol-placement": "line-center",
     "text-size": 15,
     "text-anchor": "center",
     "text-keep-upright": false,
