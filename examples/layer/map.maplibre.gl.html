@@ -33,6 +33,11 @@
     .b3D.visible {
       display: block;
     }
+    .b3D b {
+      transform: scale(1.8) rotate(-45deg);
+      display: inline-block;
+      margin: .2em .5em;
+    }
   </style>
 
 </head>
@@ -46,9 +51,9 @@
 
   <div id="map"></div>
   <div class="b3D">
-    <button onclick="rotate(!rotation)">↶ Rotate</button>
-    <button onclick="map.setCenter([1.4878665303150522, 48.4478465456651])">↦ Chartres</button>
-    <button onclick="map.setCenter([2.2946113076545354, 48.8581625251])">↦ Paris</button>
+    <button onclick="rotate(!rotation)"><b>↶</b> Rotate</button>
+    <button onclick="map.setCenter([1.4878665303150522, 48.4478465456651])"><b>↦</b> Chartres</button>
+    <button onclick="map.setCenter([2.2946113076545354, 48.8581625251])"><b>↦</b> Paris</button>
   </div>
   
 <script>
@@ -71,14 +76,18 @@ var map = new mapboxgl.Map({
 
 // Map rotation
 if (d3) document.querySelector('.b3D').className = 'b3D visible';
-var start, rotation;
+var start=null, rotation;
 function rotateCamera(timestamp) {
   if (!timestamp) {
+    start = null;
     requestAnimationFrame(rotateCamera);
     return;
   }
-  if (!start) start = timestamp;
-  // clamp the rotation between 0 -360 degrees
+  if (start === null) {
+    var rot = map.getBearing();
+    start = timestamp - rot*100;
+  }
+  // clamp the rotation between 0-360 degrees
   // Divide timestamp by 100 to slow rotation to ~10 degrees / sec
   map.rotateTo(((timestamp-start) / 100) % 360, { duration: 0 });
   // Request the next frame of the animation.
