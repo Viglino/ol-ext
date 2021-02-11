@@ -399,6 +399,7 @@
   "type": "symbol",
   "source": "plan_ign",
   "source-layer": "routier_route",
+  "minzoom": 15,
   "filter": [
     "==",
     "sens_circu",
@@ -409,9 +410,9 @@
     "text-field": "→",
     "symbol-placement": "line-center",
     "text-size": 15,
-	"text-font":["Klokantech Noto Sans Regular"],
+	  "text-font":["Klokantech Noto Sans Regular"],
     "text-anchor": "center",
-	"text-offset": [0, -0.2],
+	  "text-offset": [0, -0.2],
     "text-keep-upright": false,
     "text-rotation-alignment":"map",
     "text-pitch-alignment": "viewport"
@@ -425,6 +426,7 @@
   "type": "symbol",
   "source": "plan_ign",
   "source-layer": "routier_route",
+  "minzoom": 15,
   "filter": [
     "==",
     "sens_circu",
@@ -435,9 +437,9 @@
     "text-field": "←",
     "symbol-placement": "line-center",
     "text-size": 15,
-	"text-font":["Klokantech Noto Sans Regular"],
+	  "text-font":["Klokantech Noto Sans Regular"],
     "text-anchor": "center",
-	"text-offset": [0, -0.2],
+	  "text-offset": [0, -0.2],
     "text-keep-upright": false,
     "text-rotation-alignment":"map",
     "text-pitch-alignment": "viewport"

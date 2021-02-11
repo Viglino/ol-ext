@@ -53,6 +53,10 @@
   <div class="b3D">
     <button onclick="rotate(!rotation)"><b>↶</b> Rotate</button>
     <button onclick="map.setCenter([1.4878665303150522, 48.4478465456651])"><b>↦</b> Chartres</button>
+    <button onclick="map.setCenter([2.302271838508859, 49.89451774505622])"><b>↦</b> Amiens</button>
+    <button onclick="map.setCenter([4.5235815682583, 47.561461240064546])"><b>↦</b> Bussy</button>
+    <button onclick="map.setCenter([-1.213779049957067, 45.99938504729681])"><b>↦</b> Boyard</button>
+    <button onclick="map.setCenter([1.2690675412045567, 45.78153467509836])"><b>↦</b> Borrie</button>
     <button onclick="map.setCenter([2.2946113076545354, 48.8581625251])"><b>↦</b> Paris</button>
   </div>
   
@@ -68,7 +72,7 @@ var map = new mapboxgl.Map({
 * + replace : Source Sans Pro => Open Sans
 */
   style: './standard.json',
-  center: d3 ? [2.2946113076545354, 48.8581625251] : [3, 47],
+  center: d3 ? [2.324, 48.847] : [3, 47],
   zoom: d3 ? 14 : 5,
   pitch: d3 ? 90 : 0,
   antialias: true
@@ -104,12 +108,8 @@ function rotate(b) {
     }
   }
 }
-map.on('click',function() {
-  rotate(false)
-});
-map.on('wheel',function() {
-  rotate(false)
-});
+map.on('click',function() { rotate(false) });
+map.on('wheel',function() { rotate(false) });
 
 // 3D Buildings
 map.on('load', function () {
@@ -245,12 +245,26 @@ function add3DModel (name, modelOrigin, modelRotate, modelScale, modelAltitude) 
   });
 }
 
-
+map.setCenter([2.329482647421081, 48.867454200543165])
+map.setZoom(16)
 // parameters to ensure the model is georeferenced correctly on the map
-add3DModel('eiffel_tower', [2.2944896899799634, 48.85826252188846], [Math.PI / 2, Math.PI / 4, 0], 2.8 )
-add3DModel('chartres', [1.4878665303150522, 48.4478465456651], [Math.PI / 2, Math.PI / 4, 0], .026 )
+// add3DModel('eiffel_tower', [2.2944896899799634, 48.85826252188846], [Math.PI / 2, Math.PI / 4, 0], 2.8 )
+add3DModel('eiffel_tower', [2.294459855651654, 48.85824232475784], [Math.PI / 2, 0, 0], 1.1 )
+// add3DModel('arche', [2.2357847603874803, 48.892606204283226], [Math.PI / 2, .05, 0], 1.1 )
+add3DModel('arche', [2.2360603428345245, 48.89269253586659], [Math.PI / 2, .01, 0], 1.05 )
+add3DModel('vendome', [2.329482647421081, 48.867454200543165], [Math.PI / 2, 0.05, 0], 1.1 )
+add3DModel('triomphe', [2.2951802632238634, 48.873866580329434], [Math.PI / 2, 0, 0], 1.05 )
+add3DModel('pompidou', [2.352630112094751, 48.86051032864336], [Math.PI / 2, 0.03, 0], 1, 5)
+add3DModel('pantheon', [2.3460668702475336, 48.84614243277852], [Math.PI / 2, 0, 0], .95 )
 add3DModel('pyramid', [2.3358513575402458, 48.861008625150845], [Math.PI / 2, 4.34, 0], 1.1 )
+add3DModel('louvre', [2.3328678003637155, 48.86172059175101], [Math.PI / 2, 0, 0], 1.2, -5 )
 add3DModel('notre_dame', [2.349701118570193, 48.853114650748665], [0, 0, 4.25], .65 )
+add3DModel('boyard', [-1.213779049957067, 45.99938504729681], [Math.PI / 2, 0.05, 0], 1.1 )
+add3DModel('chartres', [1.4878665303150522, 48.4478465456651], [Math.PI / 2, Math.PI / 4, 0], .026 )
+add3DModel('bussy', [4.5235815682583, 47.561461240064546], [Math.PI / 2, -.03, 0], 1, -1.5 )
+add3DModel('borrie', [1.2690675412045567, 45.78153467509836], [Math.PI / 2, .05, 0], 1, 0 )
+add3DModel('amiens', [2.302271838508859, 49.89451774505622], [Math.PI / 2, .05, 0], 1.05, -2 )
+add3DModel('vincennes', [2.434727693750097, 48.84263156699075], [Math.PI / 2, 0, 0], 1, 3 )
 
 </script>
 </body>
