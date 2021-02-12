@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--
+	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+	<title>ol-ext: Geoportail Loader</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="icon" type="image/png" href="https://openlayers.org/assets/theme/img/logo70.png" />
+
+	<meta name="description" content="Geoportail WFS" />
+	<meta name="keywords" content="ol, openlayers, layer, source, geoportail, WFS" />
+
+  <meta name="msapplication-tap-highlight" content="no" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+	<!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+	
+	<!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <script type="text/javascript" src="../../dist/extra/FontAwesomeDef.js"></script>
+
+  <!-- JSTS -->
+  <script type="text/javascript" src="https://unpkg.com/jsts@1.6.1/dist/jsts.min.js"></script>
+  
+  <!-- filesaver-js -->
+	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+
+  <link rel="stylesheet" href="./geoportail.loader.css" />
+  
+</head>
+<body >
+<!--
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+-->
+  <i class="wait fa fa-spinner fa-pulse"></i>
+
+	<div class="info dialog" onclick="$('.info').addClass('hidden');">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a0/IGN_logo_2012.svg" />
+    <p>
+      Cet exemple affiche les flux WFS du Géoportail et permet de télécharger les données IGN au format GeoJSON. 
+      <ol>
+        <li>Choisissez la couche</li>
+        <li>Visualisez la zone à charger</li>
+        <li>Téléchargez...</li>
+      </ol>
+    </p>
+    <p>
+      Les bases de données de l'IGN sont diffusées selon les termes de la 
+      <a href="https://geoservices.ign.fr/documentation/diffusion/telechargement-donnees-libres.html" target="_new">
+        licence ouverte Etalab 2.0
+      </a>
+    </p>
+    <div>
+      <span>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/1/18/Logo-licence-ouverte2.svg" />
+        <span>
+          Licence Ouverte
+          <hr/>Open Licence
+        </span>
+      </span>
+    </div>
+  </div>
+
+	<!-- DIV pour la carte -->
+  <div id="map"></div>
+  <div id="progressbar"></div>
+	<div class="options">
+    <label>Couche :</label>
+    <select id="typename" onchange="setWFS(this.value)">
+      <option value="BDTOPO_V3:troncon_de_route">route</option>
+      <option value="BDTOPO_V3:batiment">batiments</option>
+      <option value="CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle">parcelle</option>
+    </select>
+    <button onclick="vectorSource.refresh(); commune.clear(); selectTile.getFeatures().clear();"><i class="fa fa-refresh"></i></button>
+    <button onclick="loadTiles()"><i class="fa fa-upload"></i> charger</button>
+    <button onclick="save()"><i class="fa fa-download"></i> enregistrer</button>
+    <button onclick="$('.dialog').addClass('hidden'); $('#commune').removeClass('hidden'); $('#commune input').focus();"><i class="fa fa-upload"></i></button>
+    <i class="fa fa-info-circle" onclick="$('.info').removeClass('hidden');"></i>
+  </div>
+  <div id="loading">
+    Chargement <span></span>
+  </div>
+  
+  <div id="commune" class="dialog hidden">
+    <h2>Charger une commune</h2>
+    <p>avec <a href="https://api.gouv.fr/documentation/api-geo" target="_new">l'API Geo</a></p>
+    <form>
+      <input placeholder="INSEE" />
+      <div class="buttons">
+        <button type="submit">charger</button>
+        <button type="reset" onclick="$('#commune').addClass('hidden')">annuler</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="save" class="dialog hidden">
+    <h2>Enregistrer</h2>
+    <form>
+      <ul>
+        <li>
+          Format: <select>
+            <option value="geojson">GeoJSON</option>
+            <option value="kml">KML</option>
+          </select>
+        </li><li>
+          <label><input type="checkbox" class="select" /><span> seulement la sélection</span></label>
+        </li><li>
+          <label><input type="checkbox" class="clip" /><span> dans à la commune</span></label>
+        </li><li>
+          <label><input type="checkbox" class="null" checked="checked" /><span> supprimer les attributs null</span></label>
+        </li><li style="text-align: right;">
+          <button type="button" onclick="showOptions()"><i class="fa fa-list"></i> options...</button>
+        </li>
+      </ul>
+      <div class="buttons">
+        <button type="submit"><i class="fa fa-map-o"></i> enregistrer</button>
+        <button class="commune" type="button" onclick="saveCommune();"><i class="fa fa-download"></i> commune</button>
+        <button type="reset" onclick="$('#save').addClass('hidden')">annuler</button>
+      </div>
+    </form>
+  </div>
+  
+  <div id="options" class="dialog hidden">
+    <h2>Options</h2>
+    <i class="fa fa-close" onclick="$('#options').addClass('hidden');"></i>
+    <label><input type="checkbox" class="filter" /> Filtrage géométrique: </label><input class="geom" type="number" value=0 step=".5" min="0" /> m<br/>
+    <label><input type="checkbox" class="limit" /> Limiter les attributs:</label>
+    <div class="buttons">
+      <button class="valid">OK</button>
+      <button onclick="$('#options').addClass('hidden')">Annuler</button>
+    </div>
+    <ul class='disabled'></ul>
+    <div class="buttons">
+      <button class="valid">OK</button>
+      <button onclick="$('#options').addClass('hidden')">Annuler</button>
+    </div>
+  </div>
+
+	<script type="text/javascript" src="./geoportail.loader.js"></script>
+
+</body>
+</html>

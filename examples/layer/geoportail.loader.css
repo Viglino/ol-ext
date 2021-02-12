@@ -1,0 +1,252 @@
+body {
+  font-family: 'Lucida Grande',Verdana,Geneva,Lucida,Arial,Helvetica,sans-serif;
+	font-size: 16px;
+}
+a, i, b {
+  color: #337ab7;
+	text-decoration: none;
+}
+
+#map {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  margin: 0;
+}
+#progressbar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  background-color: #337ab7;
+  height: .5em;
+  width: 0;
+}
+#loading {
+  position: absolute;
+  bottom:0;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0,0,0,.5);
+  color: #fff;
+  margin: .5em;
+  pointer-events: none;
+  padding: .5em  1em;
+  border-radius: 1em;
+  display: none;
+}
+.ol-search {
+  z-index: 1;
+}
+.ol-control.ol-select {
+  top: 2.5em;
+}
+.ol-touch .ol-control.ol-select {
+  top: 3.5em;
+}
+
+.ol-popup {
+  z-index: 99;
+}
+.ol-popup.hasclosebox .ol-popup-content {
+  margin: 0;
+}
+.ol-popup .ol-fix {
+  margin: 4px 22px 0 0;
+}
+.ol-popup.hasclosebox .closeBox {
+  position: absolute;
+  right: 1em;
+  background: #666;
+  border: 1.5px solid #fff;
+  border-radius: 0;
+  box-sizing: border-box;
+  margin: 8px 6px 0 0;
+  width: 13px;
+  height: 13px;
+  font-size: .5em;
+}
+button i {
+  color: #000;
+}
+.options {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  border-radius: 0 0 2em 2em;
+  background: #337ab7;
+  color: #fff;
+  padding: .2em 1.5em;
+}
+.options > i {
+  color: #fff;
+  margin: 0 0 0 .4em;
+  font-size: 1.3em;
+  vertical-align: middle;
+}
+.dialog {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -30%);
+  background-color: #fff;
+  padding: 1em 2em;
+  box-shadow: 0 0 0.5em rgba(0,0,0,.8);
+  z-index: 999;
+  max-width: 90%;
+  width: 40em;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: .5s;
+  max-height: calc(100% - 2em);
+  overflow-y: auto;
+}
+.dialog.hidden {
+  top: -20%;
+  opacity: 0;
+  pointer-events: none;
+}
+.dialog .buttons {
+  text-align: right;
+  margin: 1em -1em 0;
+  padding: .5em 0 0;
+  border-top: 1px solid #369;
+}
+.dialog ul {
+  list-style: none;
+  padding: 0;
+}
+.dialog ul li {
+  padding: .1em 0;
+}
+[type="checkbox"]:disabled + span {
+  color: #aaa;
+}
+.wait > * {
+  opacity: .8;
+  pointer-events: none;
+}
+.wait > #loading {
+  opacity: 1;
+}
+body > .wait {
+  display: none;
+  color: #fff;
+  font-size: 5em;
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -30%);
+  z-index: 9999;
+}
+.wait .wait {
+  display: block;
+  opacity: .8;
+}
+#commune,
+#save {
+  width: fit-content;
+  cursor: default;
+}
+#commune h2 {
+  margin: 0;
+}
+#commune p {
+  margin-top: 0;
+}
+.info img {
+  height: 4em;
+  vertical-align: middle;
+}
+.info span {
+  display: block;
+  margin: auto;
+  width: fit-content;
+}
+.info span span {
+  display: inline-block;
+  vertical-align: middle;
+}
+.info hr {
+  margin: .3em 0;
+}
+.info p {
+  margin: 1em 0;
+}
+.info > img {
+  display: block;
+  margin: auto;
+}
+
+@keyframes blinker {
+  49% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+#options {
+  width: fit-content;
+  cursor: auto;
+}
+#options .fa-close {
+  position: absolute;
+  font-size: 1.5em;
+  top: 0;
+  right: 0;
+  padding: .5em;
+}
+#options a {
+  cursor: pointer;
+}
+#options li i {
+  background-color: #f52;
+  color: #fff;
+  padding: .5em 1em;
+}
+
+#options > input[type="number"] {
+  width: 5em;
+  text-align: right;
+}
+#options li {
+  clear: both;
+}
+#options li.small {
+  font-size: .8em;
+}
+#options ul {
+  margin: .5em 0 0 1em;
+  width: fit-content;
+  border: 1px solid #369;
+  padding: .5em 1em;
+}
+#options .disabled {
+  pointer-events: none;
+  opacity: .5;
+}
+
+#options li input {
+  margin-right: .5em;
+}
+#options li label {
+  display: inline-block;
+  width: 12em;
+  margin-right: .5em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: -.03em;
+}
+
+.ol-layerswitcher .panel li .r3d:before {
+  content: "3D";
+  color: #fff;
+  display: block;
+  transform: scaleX(.7);
+}
