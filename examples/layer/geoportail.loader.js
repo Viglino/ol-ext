@@ -224,7 +224,7 @@ function loadTiles() {
 var selectCtrl = new ol.control.Select({
   source: vectorSource
 });
-//map.addControl (selectCtrl);
+map.addControl (selectCtrl);
 selectCtrl.on('select', function(e) {
   sel.getFeatures().clear();
   for (var i=0, f; f=e.features[i]; i++) {
