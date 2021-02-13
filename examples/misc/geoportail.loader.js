@@ -17,19 +17,6 @@ var map = new ol.Map ({
 
 var switcher = new ol.control.LayerSwitcher();
 map.addControl(switcher);
-switcher.on('drawlist', function(li) {
-  if (li.layer.get('title')==='Batiment') {
-    $('<button>')
-      .addClass('r3d')
-      .attr('title', '2.5D')
-      .click(function() {
-        r3D.setActive(!r3D.getActive())
-      })
-      .appendTo($('.ol-layerswitcher-buttons', li.li));
-  } else {
-    r3D.setActive(false);
-  }
-})
 var plink = new ol.control.Permalink({ visible: false })
 console.log(plink)
 map.addControl(plink);
@@ -51,6 +38,14 @@ map.addLayer (new ol.layer.Geoportail({
 var loadLayer = new ol.layer.VectorImage({
   title: 'chargement',
   displayInLayerSwitcher: false,
+  minZoom: 11,
+  source: new ol.source.Vector({
+    loader: function (extent, resolution, projection) {
+      var f = new ol.Feature(ol.geom.Polygon.fromExtent(extent));
+      loadLayer.getSource().addFeature(f);
+    },
+    strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: minZoom, maxZoom: minZoom, tileSize:512  }))
+  }),
   style: ol.style.Style.defaultStyle({ fillColor: [0,0,0,.5]})
 })
 map.addLayer(loadLayer);
@@ -58,22 +53,12 @@ map.addLayer(loadLayer);
 // WFS source / layer
 var vectorSource = new ol.source.Vector();
 var zFactor = 2.5;
-var vectorLayer = new ol.layer.Vector({
+var vectorLayer = new ol.layer.VectorImage({
   title: 'IGN',
   source: vectorSource,
   declutter: true
 })
 map.addLayer(vectorLayer);
-var r3D = new ol.render3D({ 
-  height: function(f) {
-    return f.get('hauteur')/zFactor;
-  }, 
-  //ghost: true,
-  active: false,
-  maxResolution: 1.5, 
-  defaultHeight: 3.5 
-});
-vectorLayer.setRender3D(r3D);
 
 var style, typeName;
 function setWFS(type) {
@@ -81,6 +66,8 @@ function setWFS(type) {
   plink.setUrlParam('layer', type)
   minZoom = /bati|parcelle/.test(type) ? 16 : 15;
   // Load layer
+/*
+  selectTile.getFeatures().clear();
   var source = new ol.source.Vector({
     loader: function (extent, resolution, projection) {
       var f = new ol.Feature(ol.geom.Polygon.fromExtent(extent));
@@ -89,70 +76,18 @@ function setWFS(type) {
     strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: minZoom, maxZoom: minZoom, tileSize:512  }))
   });
   loadLayer.setSource(source);
-
+*/
   // Vecror layer
   vectorSource.clear();
   if (popup) popup.hide();
   vectorLayer.set('title', type.split(':')[1].replace(/_/g,' ').capitalize());
   switcher.drawPanel();
-  /*
-  // Loading bar
-  var loading = 0, loaded = 0;
-  var progressbar = document.getElementById('progressbar');
-  var draw = function() {
-    if (loading === loaded) {
-      loading = loaded = 0;
-      ol.ext.element.setStyle(progressbar, { width: 0 });// layer.layerswitcher_progress.width(0);
-      $('#loading').hide();
-    } else {
-      ol.ext.element.setStyle(progressbar, { width: (loaded / loading * 100).toFixed(1) + '%' });// layer.layerswitcher_progress.css('width', (loaded / loading * 100).toFixed(1) + '%');
-      $('#loading').show();
-      $('#loading span').text(loaded+'/'+loading)
-    }
-  }
-  var format = new ol.format.GeoJSON();
-  var source = vectorSource = new ol.source.Vector({
-    loader: function (extent, resolution, projection) {
-      loading++;
-      draw();
-      $.ajax({
-        url: 'https://wxs.ign.fr/choisirgeoportail/geoportail/wfs?service=WFS&' +
-          'version=1.1.0&request=GetFeature&' +
-          'typename='+type+'&' +
-          'outputFormat=application/json&srsname=EPSG:3857&' +
-          'bbox=' + extent.join(',') + ',EPSG:3857',
-        dataType: 'json',
-        success: function (response) {
-          if (response.error) {
-            alert(
-              response.error.message + '\n' + response.error.details.join('\n')
-            );
-          } else {
-            var features = format.readFeatures(response, {
-              featureProjection: projection,
-            });
-            if (features.length > 0) {
-              source.addFeatures(features);
-            }
-          }
-        },
-        complete: function () {
-          loaded++;
-          draw();
-          var f = new ol.Feature(ol.geom.Polygon.fromExtent(extent));
-          loadLayer.getSource().addFeature(f);
-        }
-      });
-    },
-    strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: minZoom, maxZoom: minZoom, tileSize:512  }))
-  });
-  vectorLayer.setSource(vectorSource);
-  selectCtrl.setSources(vectorSource);
-  */
   // Change layer
   //vectorLayer.setMinZoom(minZoom);
   style = ol.style.geoportailStyle(type, { sens : true, section: true });
   vectorLayer.setStyle(style);
+  sel.getFeatures().clear();
+  showInfo();
 }
 
 // Select Tile to add Features
@@ -168,7 +103,6 @@ map.addInteraction (selectTile);
 
 // Load tiles
 function loadTiles() {
-  $('body').addClass('wait');
   // Loading bar
   var loading = 0, loaded = 0;
   var progressbar = document.getElementById('progressbar');
@@ -183,41 +117,48 @@ function loadTiles() {
       $('#loading').show();
       $('#loading span').text(loaded+'/'+loading)
     }
+    showInfo();
   }
   var tiles = selectTile.getFeatures().getArray();
-  vectorSource.clear();
-  tiles.forEach(function (f) {
-    loading++;
-    draw();
-    var extent = f.getGeometry().getExtent();
-    var format = new ol.format.GeoJSON();
-    $.ajax({
-      url: 'https://wxs.ign.fr/choisirgeoportail/geoportail/wfs?service=WFS&' +
-        'version=1.1.0&request=GetFeature&' +
-        'typename='+typeName+'&' +
-        'outputFormat=application/json&srsname=EPSG:3857&' +
-        'bbox=' + extent.join(',') + ',EPSG:3857',
-      dataType: 'json',
-      success: function (response) {
-        if (response.error) {
-          alert(
-            response.error.message + '\n' + response.error.details.join('\n')
-          );
-        } else {
-          var features = format.readFeatures(response, {
-            featureProjection: map.getView().getProjection(),
-          });
-          if (features.length > 0) {
-            vectorSource.addFeatures(features);
-          }
-        }
-      },
-      complete: function () {
-        loaded++;
+  if (tiles.length) {
+    $('body').addClass('wait');
+    loading = tiles.length;
+    vectorSource.clear();
+    draw()
+    setTimeout(function() {
+      tiles.forEach(function (f) {
         draw();
-      }
-    });
-  });
+        var extent = f.getGeometry().getExtent();
+        var format = new ol.format.GeoJSON();
+        $.ajax({
+          url: 'https://wxs.ign.fr/choisirgeoportail/geoportail/wfs?service=WFS&' +
+            'version=1.1.0&request=GetFeature&' +
+            'typename='+typeName+'&' +
+            'outputFormat=application/json&srsname=EPSG:3857&' +
+            'bbox=' + extent.join(',') + ',EPSG:3857',
+          dataType: 'json',
+          success: function (response) {
+            if (response.error) {
+              alert(
+                response.error.message + '\n' + response.error.details.join('\n')
+              );
+            } else {
+              var features = format.readFeatures(response, {
+                featureProjection: map.getView().getProjection(),
+              });
+              if (features.length > 0) {
+                vectorSource.addFeatures(features);
+              }
+            }
+          },
+          complete: function () {
+            loaded++;
+            draw();
+          }
+        });
+      });
+    },300);
+  }
 }
 
 // Selection tool
@@ -230,6 +171,7 @@ selectCtrl.on('select', function(e) {
   for (var i=0, f; f=e.features[i]; i++) {
     sel.getFeatures().push(f);
   }
+  showInfo();
 });
 
 // Chargement d'une commune
@@ -262,9 +204,6 @@ $('#commune form').on('submit', function(e) {
   }
 })
 
-setWFS(plink.getUrlParam('layer') || 'BDTOPO_V3:troncon_de_route');
-$('#typename').val(plink.getUrlParam('layer') || 'BDTOPO_V3:troncon_de_route')
-
 // Save Vector layer
 function save() {
   $('.dialog').addClass('hidden');
@@ -284,8 +223,12 @@ $('#save form').on('submit', function(e) {
 
     var format;
     switch(ext) {
-      case 'kml':{
+      case 'kml': {
         format = new ol.format.KML({writeStyles: true})
+        break;
+      }
+      case 'esrijson': {
+        format = new ol.format.EsriJSON()
         break;
       }
       default: {
@@ -335,7 +278,8 @@ $('#save form').on('submit', function(e) {
         featureProjection: map.getView().getProjection()
       });
       var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
-      saveAs(blob, 'map.'+(ext || 'geojson'));
+      var fileName = typeName.replace(/(.*)\:(.*)/,'$2').replace(/^(.*)_/,'');
+      saveAs(blob, (fileName||'map')+'.'+(ext || 'geojson'));
     }
     $('body').removeClass('wait');
   },300);
@@ -415,7 +359,7 @@ function showOptions() {
   var li = $('<li>').addClass('small').appendTo(ul);
   $('<a>').text('aucun')
     .click(function() {
-      $('input[type="checkbox"]').prop('checked', false);
+      $('input[type="checkbox"]', ul).prop('checked', false);
     })
     .appendTo(li)
   $('<span>').text('/').appendTo(li);
@@ -425,6 +369,10 @@ function showOptions() {
     })
     .appendTo(li)
   var options = params[$('.options option:selected').text()];
+  li = $('<li>')
+    .append($('<label>').text('Attribut'))
+    .append($('<span>').text('Nom exporté'))
+    .appendTo(ul);
   for (p in prop) if (p!=='geometry') {
     var o = options[p];
     li = $('<li>').data('prop', p).appendTo(ul);
@@ -447,6 +395,24 @@ sel.on('select', function(e) {
   if (f) console.log(f.getProperties());
   selectTile.setActive(false);
   setTimeout(function() { selectTile.setActive(true); });
+  showInfo();
+})
+
+var del = false;
+var draw = new ol.interaction.Draw({
+  type: 'Polygon',
+  condition: ol.events.condition.altKeyOnly,
+  freehandCondition: function(e) { 
+    del = e.originalEvent.shiftKey;
+    return e.originalEvent.metakey || e.originalEvent.ctrlKey;
+  },
+  style: new ol.style.Style({
+    fill: new ol.style.Fill({ color: [255,255,255,.5]})
+  })
+})
+map.addInteraction(draw);
+draw.on('drawend', function(e) {
+  tilesIntersectGeom(e.feature.getGeometry(), del);
 })
 
 // Popup
@@ -469,3 +435,57 @@ var popup = new ol.Overlay.PopupFeature({
   }
 });
 map.addOverlay(popup)
+
+function showDialog(d) {
+  $('.dialog').addClass('hidden'); 
+  $('#'+d).removeClass('hidden');
+}
+function showAlert(info) {
+  $('#alert').removeClass('hidden');
+  $('#alert .content').html(info);
+}
+
+function reset() {
+  vectorSource.refresh(); 
+  commune.clear(); 
+  selectTile.getFeatures().clear();
+}
+
+function selScreen() {
+  if (map.getView().getZoom()<13) {
+    showAlert ('Zone trop importante...<br/>Zoomer pour charger des données.')
+  }
+  var x = $(map.getViewport()).width();
+  var y = $(map.getViewport()).height();
+  var topleft = map.getCoordinateFromPixel([0,0]);
+  var topright = map.getCoordinateFromPixel([x,0]);
+  var bottomleft = map.getCoordinateFromPixel([0,y]);
+  var bottomright = map.getCoordinateFromPixel([x,y]);
+  var extent = new ol.geom.Polygon([[topleft, topright, bottomright, bottomleft, topleft]]);
+  tilesIntersectGeom(extent);
+}
+
+function tileCommune() {
+  commune.getFeatures().forEach(function(c) {
+    tilesIntersectGeom(c.getGeometry())
+  });
+}
+
+function tilesIntersectGeom(geom, del) {
+  var g = jstsParser.read(geom);
+  loadLayer.getSource().getFeatures().forEach(function(f) {
+    if (g.intersects(jstsParser.read(f.getGeometry()))) {
+      if (del) selectTile.getFeatures().remove(f);
+      else selectTile.getFeatures().push(f);
+    }
+  });
+}
+
+function showInfo() {
+  var nsel = sel.getFeatures().getLength();
+  var nb = vectorSource.getFeatures().length;
+  $('.info').text((nsel?nsel+'/':'')+nb+' objet'+(nb>1?'s':''))
+}
+
+setWFS(plink.getUrlParam('layer') || 'BDTOPO_V3:troncon_de_route');
+$('#typename').val(plink.getUrlParam('layer') || 'BDTOPO_V3:troncon_de_route')

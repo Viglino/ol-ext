@@ -7,7 +7,7 @@
 -->
 	<title>ol-ext: Geoportail Loader</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <link rel="icon" type="image/png" href="https://openlayers.org/assets/theme/img/logo70.png" />
+  <link rel="icon" type="image/png" href="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/IGN_logo_2012.svg/218px-IGN_logo_2012.svg.png" />
 
 	<meta name="description" content="Geoportail WFS" />
 	<meta name="keywords" content="ol, openlayers, layer, source, geoportail, WFS" />
@@ -45,15 +45,19 @@
 -->
   <i class="wait fa fa-spinner fa-pulse"></i>
 
-	<div class="info dialog" onclick="$('.info').addClass('hidden');">
+	<div id="info" class="dialog" onclick="$('#info').addClass('hidden');">
     <img src="https://upload.wikimedia.org/wikipedia/commons/a/a0/IGN_logo_2012.svg" />
     <p>
-      Cet exemple affiche les flux WFS du Géoportail et permet de télécharger les données IGN au format GeoJSON. 
+      Outil de chargement de données IGN à travers les flux Géoportail. 
       <ol>
         <li>Choisissez la couche</li>
-        <li>Visualisez la zone à charger</li>
-        <li>Téléchargez...</li>
+        <li>Sélectionner la zone à charger</li>
+        <li>Charger les données</li>
+        <li>Enregistrer...</li>
       </ol>
+      Cliquez sur le carroyage pour sélectionner un carreau à charger. 
+      <kbd>Ctrl</kbd>+clic+drag pour sélectionner une zone à charger.
+      <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+clic+drag pour désélectionner une zone à charger.
     </p>
     <p>
       Les bases de données de l'IGN sont diffusées selon les termes de la 
@@ -74,24 +78,56 @@
 
 	<!-- DIV pour la carte -->
   <div id="map"></div>
-  <div id="progressbar"></div>
 	<div class="options">
-    <label>Couche :</label>
-    <select id="typename" onchange="setWFS(this.value)">
-      <option value="BDTOPO_V3:troncon_de_route">route</option>
-      <option value="BDTOPO_V3:batiment">batiments</option>
-      <option value="CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle">parcelle</option>
-    </select>
-    <button onclick="vectorSource.refresh(); commune.clear(); selectTile.getFeatures().clear();"><i class="fa fa-refresh"></i></button>
-    <button onclick="loadTiles()"><i class="fa fa-upload"></i> charger</button>
-    <button onclick="save()"><i class="fa fa-download"></i> enregistrer</button>
-    <button onclick="$('.dialog').addClass('hidden'); $('#commune').removeClass('hidden'); $('#commune input').focus();"><i class="fa fa-upload"></i></button>
-    <i class="fa fa-info-circle" onclick="$('.info').removeClass('hidden');"></i>
+    <div>
+      <label>Couche :</label>
+      <select id="typename" onchange="setWFS(this.value)">
+        <option value="BDTOPO_V3:troncon_de_route">route</option>
+        <option value="BDTOPO_V3:batiment">batiments</option>
+        <option value="CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle">parcelle</option>
+      </select>
+      <button onclick="showDialog('tiles')"><i class="fa fa-hand-o-up"></i></button>
+      <button onclick="loadTiles()"><i class="fa fa-upload"></i> charger</button>
+      <button onclick="save()"><i class="fa fa-download"></i> enregistrer</button>
+      <i class="fa fa-info-circle" onclick="showDialog('info')"></i>
+    </div>
   </div>
   <div id="loading">
     Chargement <span></span>
+    <div>
+      <div id="progressbar"></div>
+    </div>
   </div>
   
+  <div id="tiles" class="dialog hidden">
+    <h2>Zone de chargement</h2>
+    <i class="fa fa-close" onclick="$('#tiles').addClass('hidden');"></i>
+    <p>
+      <button onclick="reset()">
+        <i class="fa fa-refresh"></i> Réinitialiser la zone
+      </button>
+      <i>Retour à zéro : les données seront perdues, la zone de chargement réinitialisée.</i>
+    </p>
+    <!--p>
+      <button onclick="selScreen()">
+        <i class="fa fa-clone"></i> Zone visible
+      </button>
+      <i>Sélectionner la zone visible pour un chargement.</i>
+    </p-->
+    <p>
+      <button onclick="showDialog('commune'); $('#commune input').focus();">
+        <i class="fa fa-upload"></i> Charger une commune
+      </button>
+      <i>Charger une commune avec son numéro INSEE</i>
+    </p>
+    <p>
+      <button onclick="tileCommune();">
+        <i class="fa fa-clone"></i> Dans la commune
+      </button>
+      <i>Charger les dalles intersectant la commune</i>
+    </p>
+  </div>
+
   <div id="commune" class="dialog hidden">
     <h2>Charger une commune</h2>
     <p>avec <a href="https://api.gouv.fr/documentation/api-geo" target="_new">l'API Geo</a></p>
@@ -112,6 +148,7 @@
           Format: <select>
             <option value="geojson">GeoJSON</option>
             <option value="kml">KML</option>
+            <option value="esrijson">EsriJSON</option>
           </select>
         </li><li>
           <label><input type="checkbox" class="select" /><span> seulement la sélection</span></label>
@@ -145,6 +182,21 @@
       <button class="valid">OK</button>
       <button onclick="$('#options').addClass('hidden')">Annuler</button>
     </div>
+  </div>
+
+  <div id="alert" class="dialog hidden">
+    <div>
+      <h2>Options</h2>
+      <i class="fa fa-close" onclick="$('#alert').addClass('hidden');"></i>
+      <div class='content'></div>
+      <div class="buttons">
+        <button onclick="$('#alert').addClass('hidden')">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="info">
+    xxx objets
   </div>
 
 	<script type="text/javascript" src="./geoportail.loader.js"></script>
