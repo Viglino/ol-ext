@@ -420,6 +420,27 @@
 .ol-ext-dialog > form .ol-buttons input[type=submit] {
   font-weight: bold;
 }
+
+.ol-ext-dialog .ol-progress-bar {
+  border: 1px solid #369;
+  width: 20em;
+  height: 1em;
+  max-width: 100%;
+  padding: 2px;
+  margin: .5em auto;
+  overflow: hidden;
+}
+.ol-ext-dialog .ol-progress-bar > div {
+  background: #369;
+  height: 100%;
+  width: 50%;
+  -webkit-transition: width .3s;
+  transition: width .3s;
+}
+.ol-ext-dialog .ol-progress-bar > div.notransition {
+  -webkit-transition: unset;
+  transition: unset;
+}
 .ol-editbar .ol-button button {
   position: relative;
   display: inline-block;
