@@ -427,7 +427,7 @@ var draw = new ol.interaction.Draw({
     return e.originalEvent.metakey || e.originalEvent.ctrlKey;
   },
   style: new ol.style.Style({
-    fill: new ol.style.Fill({ color: [255,255,255,.5]})
+    fill: new ol.style.Fill({ color: [255,192,0,.5]})
   })
 })
 map.addInteraction(draw);
