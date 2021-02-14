@@ -4272,6 +4272,7 @@ ol.control.Dialog = function(options) {
   // Progress
   this._progress = ol.ext.element.create('DIV', {
     className: 'ol-progress-bar',
+    style: { display: 'none' },
     parent: form
   });
   this._progressbar = ol.ext.element.create('DIV', {
@@ -4291,7 +4292,7 @@ ol.control.Dialog = function(options) {
   this.set('hideOnClick', options.hideOnClick);
   this.set('className', options.className);
   this.set('closeOnSubmit', options.closeOnSubmit);
-  this.setProgress(0, options.max);
+  this.setContent(options)
 };
 ol.ext.inherits(ol.control.Dialog, ol.control.Control);
 /** Show a new dialog 
@@ -4306,6 +4307,8 @@ ol.control.Dialog.prototype.show = function(options) {
   }
   this.setContent(options);
   this.element.classList.add('ol-visible');
+  var input = this.element.querySelector('input[type="text"],input[type="search"],input[type="number"]');
+  if (input) input.focus();
   this.dispatchEvent ({ type: 'show' });
 };
 /** Open the dialog
@@ -4324,9 +4327,13 @@ ol.control.Dialog.prototype.open = function() {
  */
 ol.control.Dialog.prototype.setContent = function(options) {
   if (!options) return;
+  if (typeof(options) === 'string') options = { content: options };
+  options = options || {};
   if (options.max) this.setProgress(0, options.max);
   if (options.progress !== undefined) this.setProgress(options.progress);
-  this.element.className = 'ol-ext-dialog' + (this.get('zoom') ? ' ol-zoom' : '');
+  //this.element.className = 'ol-ext-dialog' + (this.get('zoom') ? ' ol-zoom' : '');
+  if (this.get('zoom')) this.element.classList.add('ol-zoom');
+  else this.element.classList.remove('ol-zoom');
   if (options.className) {
     this.element.classList.add(options.className);
   } else if (this.get('className')) {
