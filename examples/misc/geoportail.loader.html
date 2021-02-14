@@ -92,12 +92,6 @@
       <i class="fa fa-info-circle" onclick="showDialog('info')"></i>
     </div>
   </div>
-  <div id="loading">
-    Chargement <span></span>
-    <div>
-      <div id="progressbar"></div>
-    </div>
-  </div>
   
   <div id="tiles" class="dialog hidden">
     <h2>Zone de chargement</h2>
@@ -115,7 +109,7 @@
       <i>Sélectionner la zone visible pour un chargement.</i>
     </p-->
     <p>
-      <button onclick="showDialog('commune'); $('#commune input').focus();">
+      <button onclick="communeDialog.show()">
         <i class="fa fa-upload"></i> Charger une commune
       </button>
       <i>Charger une commune avec son numéro INSEE</i>
@@ -126,18 +120,6 @@
       </button>
       <i>Charger les dalles intersectant la commune</i>
     </p>
-  </div>
-
-  <div id="commune" class="dialog hidden">
-    <h2>Charger une commune</h2>
-    <p>avec <a href="https://api.gouv.fr/documentation/api-geo" target="_new">l'API Geo</a></p>
-    <form>
-      <input placeholder="INSEE" />
-      <div class="buttons">
-        <button type="submit">charger</button>
-        <button type="reset" onclick="$('#commune').addClass('hidden')">annuler</button>
-      </div>
-    </form>
   </div>
 
   <div id="save" class="dialog hidden">

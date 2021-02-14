@@ -101,29 +101,65 @@ var selectTile = new ol.interaction.Select({
 });
 map.addInteraction (selectTile);
 
+// Progress bar
+var progress = new ol.control.Dialog({
+  target: document.body,
+  content: 'Chargement',
+  max: 1
+});
+map.addControl(progress);
+
+// Progress bar
+console.log('commune dialog')
+var communeDialog = new ol.control.Dialog({
+  target: document.body,
+  title: 'Charger un commune',
+  content: 'avec <a href="https://api.gouv.fr/documentation/api-geo" target="_new">l\'API Geo</a><br/>'
+    +'<input class="commune" type="text" placeholder="INSEE" />',
+    buttons:{ submit:'ok', cancel:'cancel' }
+});
+communeDialog.on('button', function(e) {
+  if (e.button === 'submit') {
+    console.log(e.inputs.commune.value)
+    var code = e.inputs.commune.value;
+    if (code) {
+      $.ajax({
+        url: 'https://geo.api.gouv.fr/communes?code='+code+'&fields=nom,code,contour&format=geojson&geometry=contour',
+        success: function(data) {
+          var f = new ol.format.GeoJSON().readFeatures(data, { featureProjection: map.getView().getProjection() });
+          commune.addFeatures(f);
+          map.getView().fit(f[0].getGeometry().getExtent())
+          if (map.getView().getZoom()>15) map.getView().setZoom(15)
+        }
+      })
+    }
+  }
+});
+communeDialog.on('show', function() {
+});
+map.addControl(communeDialog);
+
 // Load tiles
 function loadTiles() {
   // Loading bar
   var loading = 0, loaded = 0;
-  var progressbar = document.getElementById('progressbar');
   var draw = function() {
     if (loading === loaded) {
       loading = loaded = 0;
-      $('body').removeClass('wait');
-      ol.ext.element.setStyle(progressbar, { width: 0 });// layer.layerswitcher_progress.width(0);
-      $('#loading').hide();
+      progress.hide();
     } else {
-      ol.ext.element.setStyle(progressbar, { width: (loaded / loading * 100).toFixed(1) + '%' });// layer.layerswitcher_progress.css('width', (loaded / loading * 100).toFixed(1) + '%');
-      $('#loading').show();
-      $('#loading span').text(loaded+'/'+loading)
+      progress.setContent('Chargement ('+loaded+'/'+loading+')')
+      progress.setProgress(loaded, loading);
     }
     showInfo();
   }
   var tiles = selectTile.getFeatures().getArray();
   if (tiles.length) {
-    $('body').addClass('wait');
     loading = tiles.length;
+    loaded = 0;
     vectorSource.clear();
+    progress.show();
+    console.log('show')
     draw()
     setTimeout(function() {
       tiles.forEach(function (f) {
@@ -187,22 +223,6 @@ map.addLayer(new ol.layer.Vector({
     })
   })
 }));
-$('#commune form').on('submit', function(e) {
-  e.preventDefault();
-  $('#commune').addClass('hidden');
-  var code = $('#commune input').val();
-  if (code) {
-    $.ajax({
-      url: 'https://geo.api.gouv.fr/communes?code='+code+'&fields=nom,code,contour&format=geojson&geometry=contour',
-      success: function(data) {
-        var f = new ol.format.GeoJSON().readFeatures(data, { featureProjection: map.getView().getProjection() });
-        commune.addFeatures(f);
-        map.getView().fit(f[0].getGeometry().getExtent())
-        if (map.getView().getZoom()>15) map.getView().setZoom(15)
-      }
-    })
-  }
-})
 
 // Save Vector layer
 function save() {

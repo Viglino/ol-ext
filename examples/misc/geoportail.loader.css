@@ -48,12 +48,15 @@ kbd {
   height: 100%;
   width: 0;
 }
-
 .ol-search {
   z-index: 1;
 }
 .ol-control.ol-select {
   top: 2.5em;
+}
+.ol-control.ol-select ul  {
+  max-height: calc(100vh - 9em);
+  overflow-y: auto;
 }
 .ol-touch .ol-control.ol-select {
   top: 3.5em;
