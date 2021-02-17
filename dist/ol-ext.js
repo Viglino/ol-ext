@@ -1761,6 +1761,7 @@ ol.control.Toggle.prototype.getInteraction = function() {
  *  @param {string | undefined} options.placeholder placeholder, default "Search..."
  *  @param {boolean | undefined} options.reverse enable reverse geocoding, default false
  *  @param {string | undefined} options.inputLabel label for the input, default none
+ *  @param {string | undefined} options.collapsed search is collapsed on start, default true
  *  @param {string | undefined} options.noCollapse prevent collapsing on input blur, default false
  *  @param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
  *  @param {integer | undefined} options.minLength minimum length to start searching, default 1
@@ -1779,10 +1780,11 @@ ol.control.Search = function(options) {
   // Class name for history
   this._classname = options.className || 'search';
   var classNames = (options.className||'')+ ' ol-search'
-    + (options.target ? '' : ' ol-unselectable ol-control ol-collapsed');
+    + (options.target ? '' : ' ol-unselectable ol-control');
   var element = ol.ext.element.create('DIV',{
-    className: classNames + ' ol-collapsed'
+    className: classNames 
   })
+  if (options.collapsed!==false) element.classList.add('ol-collapsed');
   if (!options.target) {
     this.button = document.createElement('BUTTON');
     this.button.setAttribute('type', 'button');
@@ -1962,6 +1964,14 @@ ol.control.Search.prototype.setMap = function (map) {
 		this._listener = map.on('click', this._handleClick.bind(this));
 	}
 };
+/** Collapse the search
+ * @param {boolean} [b=true]
+ * @api
+ */
+ol.control.Search.prototype.collapse = function (b) {
+  if (b===false) this.element.classList.remove('ol-collapsed')
+  else this.element.classList.add('ol-collapsed')
+};
 /** Get the input field
 *	@return {Element} 
 *	@api
@@ -1970,12 +1980,23 @@ ol.control.Search.prototype.getInputField = function () {
   return this._input;
 };
 /** Returns the text to be displayed in the menu
-*	@param {any} f feature to be displayed
-*	@return {string} the text to be displayed in the index, default f.name
-*	@api
-*/
+ *	@param {any} f feature to be displayed
+ *	@return {string} the text to be displayed in the index, default f.name
+ *	@api
+ */
 ol.control.Search.prototype.getTitle = function (f) {
   return f.name || "No title";
+};
+/** Returns title as text
+ *	@param {any} f feature to be displayed
+ *	@return {string} 
+ *	@api
+ */
+ol.control.Search.prototype._getTitleTxt = function (f) {
+  console.log(f)
+  return ol.ext.element.create('DIV', {
+    html: this.getTitle(f)
+  }).innerText;
 };
 /** Force search to refresh
  */
@@ -2071,7 +2092,11 @@ ol.control.Search.prototype._handleSelect = function (f, reverse, options) {
   this.saveHistory();
   // Select feature
   this.select(f, reverse, null, options);
-  //this.drawList_();
+  if (reverse) {
+    this.setInput(this._getTitleTxt(f));
+    this.drawList_();
+    setTimeout(function() { this.collapse(false); }.bind(this), 300);
+  }
 };
 /** Current history */
 ol.control.Search.prototype._history = {};
@@ -2312,7 +2337,7 @@ ol.control.SearchJSON.prototype.handleResponse = function (response) {
 ol.control.SearchPhoton = function(options) {
   options = options || {};
   options.className = options.className || 'photon';
-  options.url = options.url || 'http://photon.komoot.de/api/';
+  options.url = options.url || 'https://photon.komoot.io/api/';
   options.copy = options.copy || '<a href="http://www.openstreetmap.org/copyright" target="new">&copy; OpenStreetMap contributors</a>';
   ol.control.SearchJSON.call(this, options);
   this.set('lang', options.lang);
@@ -2484,12 +2509,12 @@ ol.control.SearchGeoportail.prototype.reverseGeocode = function (coord, options)
     function(xml) {
       var f = {};
       if (!xml) {
-        f = { x: lonlat[0], y: lonlat[1], fulltext: String(lonlat) }
+        f = { x: lonlat[0], y: lonlat[1], fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) }
       } else {
         xml = xml.replace(/\n|\r/g,'');
         var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
         if (!Number(p[1]) && !Number(p[0])) {
-          f = { x: lonlat[0], y: lonlat[1], fulltext: String(lonlat) }
+          f = { x: lonlat[0], y: lonlat[1], fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) }
         } else {
           f.x = lonlat[0];
           f.y = lonlat[1];
@@ -2513,6 +2538,7 @@ ol.control.SearchGeoportail.prototype.reverseGeocode = function (coord, options)
       if (typeof(options)==='function') {
         options.call(this, [f]);
       } else {
+        this.getHistory().shift();
         this._handleSelect(f, true, options);
         // this.setInput('', true);
         // this.drawList_();
@@ -2529,8 +2555,7 @@ ol.control.SearchGeoportail.prototype.reverseGeocode = function (coord, options)
  *	@api
  */
 ol.control.SearchGeoportail.prototype.getTitle = function (f) {
-  var title = f.fulltext;
-  return (title);
+  return (f.fulltext);
 };
 /** 
  * @param {string} s the search string
