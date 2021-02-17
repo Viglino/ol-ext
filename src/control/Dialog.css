@@ -109,10 +109,31 @@
   font-size: 1em;
   color: rgba(0,60,136,1);
   cursor: pointer;
+  border-radius: .25em;
+  outline-width: 0;
 }
 .ol-ext-dialog > form .ol-buttons input:hover {
   background-color:  rgba(0,60,136,.1);
 }
 .ol-ext-dialog > form .ol-buttons input[type=submit] {
   font-weight: bold;
+}
+
+.ol-ext-dialog .ol-progress-bar {
+  border: 1px solid #369;
+  width: 20em;
+  height: 1em;
+  max-width: 100%;
+  padding: 2px;
+  margin: .5em auto;
+  overflow: hidden;
+}
+.ol-ext-dialog .ol-progress-bar > div {
+  background: #369;
+  height: 100%;
+  width: 50%;
+  transition: width .3s;
+}
+.ol-ext-dialog .ol-progress-bar > div.notransition {
+  transition: unset;
 }

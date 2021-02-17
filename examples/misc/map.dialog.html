@@ -90,6 +90,8 @@
     </li><li>
       <button onclick="dialogPrompt.show()">Show a prompt dialog...</button>
     </li><li>
+      <button onclick="if (!dialogProgress.isOpen()) dialogProgress.show({ progress : 0 })">Show a progress dialog...</button>
+    </li><li>
       <button onclick="alert.show('This is an alert!<br/>Nothing goes wrong...')">Show an alert!</button>
     </li></ul>
     <p>
@@ -135,7 +137,7 @@
   // Prompt dialog
   var dialogPrompt = new ol.control.Dialog();
   dialogPrompt.setContent({
-    content: 'Enter a value:<br/><input class="value" placeholder="Enter a value" />',
+    content: 'Enter a value:<br/><input class="value" type="text" placeholder="Enter a value" />',
     title: 'Prompt', 
     buttons:{ submit:'ok', cancel:'cancel' }
   });
@@ -148,6 +150,31 @@
     dialogMap.close();
   });
   map.addControl(dialogPrompt);
+
+  // Progress dialog
+  var dialogProgress = new ol.control.Dialog();
+  dialogProgress.setContent({
+    content: 'Processing...',
+    title: 'Progress', 
+    max: 10
+  });
+  dialogProgress.on('show', function() {
+    dialogMap.close();
+    function step(i) {
+      dialogProgress.setProgress(i);
+      if (i<10) {
+        setTimeout(function() {
+          step(i+1);
+        }, 500);
+      } else {
+        dialogMap.show('End of progress...');
+        dialogProgress.hide();
+      }
+    }
+    step(0);
+  });
+  map.addControl(dialogProgress);
+
 
   // Alert
   var alert = new ol.control.Dialog({ className: 'alert', hideOnClick: true, closeBox: true });
