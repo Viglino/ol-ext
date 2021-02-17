@@ -1993,7 +1993,6 @@ ol.control.Search.prototype.getTitle = function (f) {
  *	@api
  */
 ol.control.Search.prototype._getTitleTxt = function (f) {
-  console.log(f)
   return ol.ext.element.create('DIV', {
     html: this.getTitle(f)
   }).innerText;

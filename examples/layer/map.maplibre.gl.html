@@ -23,13 +23,18 @@
     h1  {
       background-image: url("https://avatars.githubusercontent.com/u/75709127");
     }
+    .b2D,
     .b3D {
       position: fixed;
-      bottom: .5em;
+      bottom: 3.5em;
       left: 50%;
       transform: translateX(-50%);
       display: none;
+      width: 100%;
+      text-align: center;
+      height: 0;
     }
+    .b2D.visible,
     .b3D.visible {
       display: block;
     }
@@ -37,6 +42,14 @@
       transform: scale(1.8) rotate(-45deg);
       display: inline-block;
       margin: .2em .5em;
+    }
+    .b2D a {
+      background: #337ab7;
+      padding: .5em;
+      color: #fff;
+      text-decoration: none;
+      top: 1em;
+      position: relative;
     }
   </style>
 
@@ -59,6 +72,9 @@
     <button onclick="map.setCenter([1.2690675412045567, 45.78153467509836])"><b>↦</b> Borrie</button>
     <button onclick="map.setCenter([2.2946113076545354, 48.8581625251])"><b>↦</b> Paris</button>
   </div>
+  <div class="b2D">
+    <a href="?3D">3D</a>
+  </div>
   
 <script>
 
@@ -80,6 +96,7 @@ var map = new mapboxgl.Map({
 
 // Map rotation
 if (d3) document.querySelector('.b3D').className = 'b3D visible';
+else document.querySelector('.b2D').className = 'b2D visible';
 var start=null, rotation;
 function rotateCamera(timestamp) {
   if (!timestamp) {
@@ -113,22 +130,23 @@ map.on('wheel',function() { rotate(false) });
 
 // 3D Buildings
 map.on('load', function () {
-  if (!d3) return;
-  map.addLayer({
-    "id":"bati 3D",
-    "type":"fill-extrusion",
-    "source":"plan_ign",
-    "source-layer":"bati_surf",
-    "minzoom": 14,
-    "filter": [">","hauteur",0],
-    "layout":{"visibility":"visible"},
-    "paint":{
-      "fill-extrusion-color": "#aaa",
-      "fill-extrusion-height": ["get", "hauteur"],
-      "fill-extrusion-base": 0,
-      "fill-extrusion-opacity": 0.8
-    }
-  });
+  if (d3) {
+    map.addLayer({
+      "id":"bati 3D",
+      "type":"fill-extrusion",
+      "source":"plan_ign",
+      "source-layer":"bati_surf",
+      "minzoom": 14,
+      "filter": [">","hauteur",0],
+      "layout":{"visibility":"visible"},
+      "paint":{
+        "fill-extrusion-color": "#aaa",
+        "fill-extrusion-height": ["get", "hauteur"],
+        "fill-extrusion-base": 0,
+        "fill-extrusion-opacity": 0.8
+      }
+    });
+  }
 });
 
 

@@ -273,7 +273,6 @@ ol_control_Search.prototype.getTitle = function (f) {
  *	@api
  */
 ol_control_Search.prototype._getTitleTxt = function (f) {
-  console.log(f)
   return ol_ext_element.create('DIV', {
     html: this.getTitle(f)
   }).innerText;
