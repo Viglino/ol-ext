@@ -56,22 +56,23 @@
   border: .1em solid currentColor;
   position: absolute;
   left: 50%;
-  right: 50%;
+  top: 50%;
   transform: translate(-50%,-50%);
   border-radius: 50%;
   width: .55em;
   height: .55em;
+  box-sizing: border-box;
 }
 .ol-search button.ol-revers:after {
   content: "";
   position: absolute;
   left: 50%;
-  right: 50%;
+  top: 50%;
   transform: translate(-50%,-50%);
   width: .2em;
   height: .2em;
   background-color: transparent;
-  box-shadow: .4em 0 currentColor, 0 .4em currentColor, -.4em 0 currentColor, 0 -.4em currentColor;
+  box-shadow: .35em 0 currentColor, 0 .35em currentColor, -.35em 0 currentColor, 0 -.35em currentColor;
 }
 
 .ol-search input {

@@ -25,6 +25,7 @@ import ol_ext_element from '../util/element'
  *  @param {string | undefined} options.placeholder placeholder, default "Search..."
  *  @param {boolean | undefined} options.reverse enable reverse geocoding, default false
  *  @param {string | undefined} options.inputLabel label for the input, default none
+ *  @param {string | undefined} options.collapsed search is collapsed on start, default true
  *  @param {string | undefined} options.noCollapse prevent collapsing on input blur, default false
  *  @param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
  *  @param {integer | undefined} options.minLength minimum length to start searching, default 1
@@ -45,10 +46,11 @@ var ol_control_Search = function(options) {
   this._classname = options.className || 'search';
 
   var classNames = (options.className||'')+ ' ol-search'
-    + (options.target ? '' : ' ol-unselectable ol-control ol-collapsed');
+    + (options.target ? '' : ' ol-unselectable ol-control');
   var element = ol_ext_element.create('DIV',{
-    className: classNames + ' ol-collapsed'
+    className: classNames 
   })
+  if (options.collapsed!==false) element.classList.add('ol-collapsed');
   if (!options.target) {
     this.button = document.createElement('BUTTON');
     this.button.setAttribute('type', 'button');
@@ -238,6 +240,15 @@ ol_control_Search.prototype.setMap = function (map) {
 	}
 };
 
+/** Collapse the search
+ * @param {boolean} [b=true]
+ * @api
+ */
+ol_control_Search.prototype.collapse = function (b) {
+  if (b===false) this.element.classList.remove('ol-collapsed')
+  else this.element.classList.add('ol-collapsed')
+};
+
 /** Get the input field
 *	@return {Element} 
 *	@api
@@ -247,12 +258,25 @@ ol_control_Search.prototype.getInputField = function () {
 };
 
 /** Returns the text to be displayed in the menu
-*	@param {any} f feature to be displayed
-*	@return {string} the text to be displayed in the index, default f.name
-*	@api
-*/
+ *	@param {any} f feature to be displayed
+ *	@return {string} the text to be displayed in the index, default f.name
+ *	@api
+ */
 ol_control_Search.prototype.getTitle = function (f) {
   return f.name || "No title";
+};
+
+
+/** Returns title as text
+ *	@param {any} f feature to be displayed
+ *	@return {string} 
+ *	@api
+ */
+ol_control_Search.prototype._getTitleTxt = function (f) {
+  console.log(f)
+  return ol_ext_element.create('DIV', {
+    html: this.getTitle(f)
+  }).innerText;
 };
 
 /** Force search to refresh
@@ -355,7 +379,11 @@ ol_control_Search.prototype._handleSelect = function (f, reverse, options) {
   this.saveHistory();
   // Select feature
   this.select(f, reverse, null, options);
-  //this.drawList_();
+  if (reverse) {
+    this.setInput(this._getTitleTxt(f));
+    this.drawList_();
+    setTimeout(function() { this.collapse(false); }.bind(this), 300);
+  }
 };
 
 /** Current history */

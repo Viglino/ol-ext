@@ -76,12 +76,12 @@ ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, options)
     function(xml) {
       var f = {};
       if (!xml) {
-        f = { x: lonlat[0], y: lonlat[1], fulltext: String(lonlat) }
+        f = { x: lonlat[0], y: lonlat[1], fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) }
       } else {
         xml = xml.replace(/\n|\r/g,'');
         var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
         if (!Number(p[1]) && !Number(p[0])) {
-          f = { x: lonlat[0], y: lonlat[1], fulltext: String(lonlat) }
+          f = { x: lonlat[0], y: lonlat[1], fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) }
         } else {
           f.x = lonlat[0];
           f.y = lonlat[1];
@@ -105,6 +105,7 @@ ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, options)
       if (typeof(options)==='function') {
         options.call(this, [f]);
       } else {
+        this.getHistory().shift();
         this._handleSelect(f, true, options);
         // this.setInput('', true);
         // this.drawList_();
@@ -122,8 +123,7 @@ ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, options)
  *	@api
  */
 ol_control_SearchGeoportail.prototype.getTitle = function (f) {
-  var title = f.fulltext;
-  return (title);
+  return (f.fulltext);
 };
 
 /** 
