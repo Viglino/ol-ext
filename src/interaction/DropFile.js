@@ -66,7 +66,7 @@ ol_interaction_DropFile.prototype.ondrop = function(e) {
     var pat = /\.([0-9a-z]+)(?=[?#])|(\.)(?:[\w]+)$/;
     for (var i=0; file=files[i]; i++) {
       var ex = file.name.match(pat)[0];
-      self.dispatchEvent({ type:'loadstart', file: file, filesize: file.size, filetype: file.type, fileextension: ex, projection: projection, target: self });
+      self.dispatchEvent({ type:'loadstart', file: file, filesize: file.size, filetype: file.type, fileextension: ex, projection: projection });
 
       // Load file
       var reader = new FileReader();
@@ -90,12 +90,12 @@ ol_interaction_DropFile.prototype.ondrop = function(e) {
           var format = new formatConstructor();
           features = tryReadFeatures(format, result, { featureProjection: projection });
           if (features && features.length > 0) {
-            self.dispatchEvent({ type:'addfeatures', features: features, file: theFile, projection: projection, target: self });
-            self.dispatchEvent({ type:'loadend', features: features, file: theFile, projection: projection, target: self });
+            self.dispatchEvent({ type:'addfeatures', features: features, file: theFile, projection: projection });
+            self.dispatchEvent({ type:'loadend', features: features, file: theFile, projection: projection });
             return;
           }
         }
-        self.dispatchEvent({ type:'loadend', file: theFile, target: self });
+        self.dispatchEvent({ type:'loadend', file: theFile, result: result });
       };
       reader.readAsText(file);
     }
