@@ -52,6 +52,20 @@ ol_interaction_Hover.prototype.setMap = function(map) {
   ol_interaction_Interaction.prototype.setMap.call (this, map);
 };
 
+/** Activate / deactivate interaction
+ * @param {boolean} b
+ */
+ol_interaction_Hover.prototype.setActive = function(b) {
+  ol_interaction_Interaction.prototype.setActive.call (this, b);
+  if (this.cursor_) {
+    var style = map.getTargetElement().style;
+    if (this.previousCursor_ !== undefined) {
+      style.cursor = this.previousCursor_;
+      this.previousCursor_ = undefined;
+    }
+  }
+};
+
 /**
  * Set cursor on hover
  * @param { string } cursor css cursor propertie or a function that gets a feature, default: none
