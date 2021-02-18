@@ -16704,7 +16704,7 @@ ol.interaction.DropFile.prototype.ondrop = function(e) {
     var pat = /\.([0-9a-z]+)(?=[?#])|(\.)(?:[\w]+)$/;
     for (var i=0; file=files[i]; i++) {
       var ex = file.name.match(pat)[0];
-      self.dispatchEvent({ type:'loadstart', file: file, filesize: file.size, filetype: file.type, fileextension: ex, projection: projection, target: self });
+      self.dispatchEvent({ type:'loadstart', file: file, filesize: file.size, filetype: file.type, fileextension: ex, projection: projection });
       // Load file
       var reader = new FileReader();
       var projection = this.projection_ || (this.getMap() ? this.getMap().getView().getProjection() : null);
@@ -16725,12 +16725,12 @@ ol.interaction.DropFile.prototype.ondrop = function(e) {
           var format = new formatConstructor();
           features = tryReadFeatures(format, result, { featureProjection: projection });
           if (features && features.length > 0) {
-            self.dispatchEvent({ type:'addfeatures', features: features, file: theFile, projection: projection, target: self });
-            self.dispatchEvent({ type:'loadend', features: features, file: theFile, projection: projection, target: self });
+            self.dispatchEvent({ type:'addfeatures', features: features, file: theFile, projection: projection });
+            self.dispatchEvent({ type:'loadend', features: features, file: theFile, projection: projection });
             return;
           }
         }
-        self.dispatchEvent({ type:'loadend', file: theFile, target: self });
+        self.dispatchEvent({ type:'loadend', file: theFile, result: result });
       };
       reader.readAsText(file);
     }
@@ -17480,6 +17480,19 @@ ol.interaction.Hover.prototype.setMap = function(map) {
     this.previousCursor_ = undefined;
   }
   ol.interaction.Interaction.prototype.setMap.call (this, map);
+};
+/** Activate / deactivate interaction
+ * @param {boolean} b
+ */
+ol.interaction.Hover.prototype.setActive = function(b) {
+  ol.interaction.Interaction.prototype.setActive.call (this, b);
+  if (this.cursor_) {
+    var style = map.getTargetElement().style;
+    if (this.previousCursor_ !== undefined) {
+      style.cursor = this.previousCursor_;
+      this.previousCursor_ = undefined;
+    }
+  }
 };
 /**
  * Set cursor on hover
