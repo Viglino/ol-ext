@@ -131,6 +131,39 @@ map.on('wheel',function() { rotate(false) });
 // 3D Buildings
 map.on('load', function () {
   if (d3) {
+    // Load bati json to get color style
+    var ajax = new XMLHttpRequest();
+    ajax.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        var styles = JSON.parse(this.responseText);
+        var done = {};
+        styles.layers.forEach(function(s) {
+          if (s['source-layer'] === "bati_surf" && s.type==='fill') {
+            var id = s.id.split('-')[0];
+            if (id && !done[id]) {
+              done[id] = true;
+              s.id = id + ' - 3D';
+              s.type = 'fill-extrusion';
+              s.filter = ['all', s.filter, [">","hauteur",0]];
+              s.minzoom = 14;
+              delete s.maxzoom;
+              s.paint = {
+                "fill-extrusion-color": s.paint['fill-color'],
+                "fill-extrusion-height": ["get", "hauteur"],
+                "fill-extrusion-base": 0,
+                "fill-extrusion-opacity": 0.8
+              }
+              if (s.paint['fill-extrusion-color']) {
+                map.addLayer(s);
+              }
+            }
+          }
+        });
+      }
+    };
+    ajax.open("GET", "./standard.json", true);
+    ajax.send();
+    /* One color for all
     map.addLayer({
       "id":"bati 3D",
       "type":"fill-extrusion",
@@ -146,6 +179,7 @@ map.on('load', function () {
         "fill-extrusion-opacity": 0.8
       }
     });
+    */
   }
 });
 
