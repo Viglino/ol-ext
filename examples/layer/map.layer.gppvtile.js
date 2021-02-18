@@ -28,6 +28,9 @@ $('#color input').spectrum({
     onChangeColor = function() {};
   }
 });
+$('#color .sp-choose').click(function() {
+  onChangeColor($('#color input').val());
+});
 
 // The map
 var map = new ol.Map({
@@ -78,31 +81,46 @@ ol.ext.Ajax.get({
     style.layers.push(rdirect);
     style.layers.push(rinvers);
     /**/
-    currentStyle = style;
-    olms.applyStyle(vlayer, style, 'plan_ign').then(function () {});
+    currentStyle = $.extend(true, {}, style);
+    if (perma.getUrlParam('style')!=='0') olms.applyStyle(vlayer, style, 'plan_ign').then(function () {});
     showLayers();
   }
 });
 
 // Load base styles
-['standard', 'gris', 'accentue', 'attenue', 'classique'].forEach(function(s) {
+['standard', 'gris', 'accentue', 'attenue', 'classique', 'epure'].forEach(function(s) {
+  var sel = document.getElementById('styles');
+  ol.ext.element.create('OPTION', {
+    value: s,
+    html: s,
+    parent: sel
+  })
   ol.ext.Ajax.get({
     url: 'https://wxs.ign.fr/choisirgeoportail/static/vectorTiles/styles/PLAN.IGN/'+s+'.json',
     success: function(style) {
       baseStyles[s] = style;
-      var sel = document.getElementById('styles');
-      ol.ext.element.create('OPTION', {
-        value: s,
-        html: s,
-        parent: sel
-      })
     }
   })
 });
 
+// Upload custom style
+  onChangeColor = function() {};
+var drop = new ol.interaction.DropFile({ formatConstructors: [] });
+map.addInteraction(drop);
+drop.on('loadend', function(e) {
+  try {
+    var json = JSON.parse(e.result);
+    reset();
+    setBaseStyle(json);
+  } catch(e) { /* ok */ }
+})
+
 // Set base style
 function setBaseStyle(n) {
-  currentStyle = baseStyles[n];
+  if (typeof(n) === 'string') currentStyle = $.extend(true, {}, baseStyles[n]);
+  else if (n.sprite) currentStyle = n;
+  else return;
+  $('#police select').val('Source Sans Pro').css('font-family', 'Source Sans Pro');
   // reset config
   for (var theme in config) {
     for (var s in config[theme].style) {
@@ -114,6 +132,29 @@ function setBaseStyle(n) {
     var source = l['source-layer'];
     var theme = source.split('_')[0];
     config[theme].style[source].layers.push(l);
+    config[theme].style[source].visible = l.layout.visibility!=='none';
+    $('.options input.'+source).prop('checked', l.layout.visibility!=='none')
+    // console.log(source,l.layout.visibility)
+  })
+  $('.options input.theme').each(function() {
+    var checked = $('ul input:checked', $(this).parent().parent())
+    $(this).attr('checked', checked.length>0);
+  })
+  applyStyle();
+}
+
+// Change font
+function setFont(font0) {
+  $('#police select').css('font-family', font0);
+  currentStyle.layers.forEach(function(l) {
+    if (l.layout['text-font']) {
+      var italic = /Italic/.test(l.layout['text-font'][0]);
+      var bold = /Bold/.test(l.layout['text-font'][0]);
+      var font = font0.split(',');
+      if (italic) font[0] += ' Italic';
+      if (bold) font[0] += ' Bold';
+      l.layout['text-font'] = font;
+    }
   })
   applyStyle();
 }
@@ -164,18 +205,24 @@ function applyStyle() {
                 var opt = parseInt(color.replace(/([^0-9])/g,'')) || .5;
                 var operation = color.replace(/[0-9]$/, '');
                 if (color==='gray') {
+                  console.log('gray')
                   opt = 4;
                   operation = 'desaturate';
                 }
-                //console.log(operation,opt)
+                // console.log(operation, opt, l.paint[c])
                 try {
                   if (l.paint[c].stops) {
                     l.paint[c].stops.forEach(function (s) {
-                      s[1] = chroma(s[1])[operation](opt).hex(); 
+                      if (!(/#ffffff/i.test(s[1]) && /^saturate/.test(operation))) {
+                        s[1] = chroma(s[1])[operation](opt).hex(); 
+                      }
                       // console.log('STOP:',s)
                     })
                   } else {
-                    l.paint[c] = chroma(l.paint[c])[operation](opt).hex(); 
+                    // bug on saturate white gets red
+                    if (!(/#ffffff/i.test(l.paint[c]) && /^saturate/.test(operation))) {
+                      l.paint[c] = chroma(l.paint[c])[operation](opt).hex();
+                    }
                   }
                 } catch(e){};
                 break; //'#cccccc'; break;
@@ -287,6 +334,7 @@ function showLayers() {
       };
       $('<input type="checkbox">')
         .prop('checked', source.layout.visibility!=='hidden' ? 'checked':'')
+        .addClass(i)
         .data('layer', i)
         .on('change', function() {
           config[s].style[i].visible = $(this).prop('checked');
@@ -328,7 +376,12 @@ var hover = new ol.interaction.Hover({
   cursor: "pointer",
   layers: [vlayer]
 });
+hover.setActive(false);
 map.addInteraction(hover);
+function showPopup(b) {
+  tooltip.setInfo('');
+  hover.setActive(b);
+}
 hover.on("enter", function(e) {
   var showGeom = $('#showSel').prop('checked');
   // hover.setCursor("pointer");
@@ -381,22 +434,10 @@ hover.on("leave", function(e) {
   select.getSource().clear();
 });
 
-/** [Debug] get layer style
- * @param {string} lanyer layer name
- */
-function getLayerStyle(layer) {
-  var styles = [];
-  currentStyle.layers.forEach(function(style) {
-    if (style['source-layer']===layer) {
-      styles.push(style);
-    }
-  })
-  return styles;
-}
-
 // Reset styles
 function reset() {
-  $('.options input').prop('checked', true)
+  $('.options input').prop('checked', true);
+  $('.options input').prop('disabled', false);
   $('.options .toponyme input').prop('checked', false);
   for (theme in config) {
     config[theme].color = '';
@@ -408,6 +449,19 @@ function reset() {
   }
   $('.options ul select').val('');
   applyStyle();
+}
+
+/** [Debug] get layer style
+ * @param {string} lanyer layer name
+ */
+function getLayerStyle(layer) {
+  var styles = [];
+  currentStyle.layers.forEach(function(style) {
+    if (style['source-layer']===layer) {
+      styles.push(style);
+    }
+  })
+  return styles;
 }
 
 // Save to JSON file
@@ -423,6 +477,7 @@ var sens = {
   "type": "symbol",
   "source": "plan_ign",
   "source-layer": "routier_route",
+  "minzoom": 15,
   "filter": [
     "==",
     "sens_circu",
@@ -434,6 +489,7 @@ var sens = {
     "symbol-placement": "line-center",
     "text-size": 15,
     "text-anchor": "center",
+	  "text-offset": [0, -0.2],
     "text-keep-upright": false,
     "text-rotation-alignment":"map",
     "text-pitch-alignment": "viewport",

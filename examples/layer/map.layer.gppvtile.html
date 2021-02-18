@@ -66,8 +66,21 @@
   <div class="options">
     <label>Style de base :</label><select id="styles" onchange="setBaseStyle(this.value)"></select>
     <button onclick="reset()"><i class="fa fa-refresh"></i> réinitialiser</button>
+    <div id="police">
+      <label>Police :&nbsp;</label>
+      <select onchange="setFont(this.value)">
+        <option value="Source Sans Pro" style="font-family: Source Sans Pro">Source Sans Pro</option>
+        <option value="Arial, Helvetica, sans-serif" style="font-family: Arial, Helvetica, sans-serif">Arial</option>
+        <option value="Arial Black,Gadget,sans-serif" style="font-family: Arial Black,Gadget,sans-serif">Arial Black</option>
+        <option value="Open Sans Regular,Arial Unicode MS Regular" style="font-family: Open Sans Regular,Arial Unicode MS Regular">Open Sans Regular</option>
+        <option value="Tahoma,Geneva,sans-serif" style="font-family: Tahoma,Geneva,sans-serif">Tahoma</option>
+        <option value="Comic Sans MS,cursive,sans-serif" style="font-family: Comic Sans MS,cursive,sans-serif">Comic Sans MS</option>
+      </select>
+    </div>
     <ul></ul>
-    <button onclick="save()"><i class="fa fa-download"></i> download styles</button>
+    <label class="bulle"><input type="checkbox" onclick="showPopup($(this).prop('checked'))" /> Bulle au survol</label>
+    <button onclick="save()"><i class="fa fa-download"></i> Charger le styles</button>
+    <i style="display: block; clear:both; text-align: right;">(déposez un fichier de style sur la carte pour l'afficher)</i>
   </div>
 
   <div id="color">

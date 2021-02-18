@@ -118,6 +118,11 @@ h1 {
   display: none;
 }
 
+#police {
+  display: block;
+  text-align: right;
+  clear: both;
+}
 @media (max-width: 800px) {
   .options {
     width: 12.5em;
