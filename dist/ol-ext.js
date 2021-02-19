@@ -208,6 +208,9 @@ ol.ext.SVGFilter = function(options) {
     ol.ext.SVGFilter.prototype.svg.setAttribute('width',0);
     ol.ext.SVGFilter.prototype.svg.setAttribute('height',0);
     ol.ext.SVGFilter.prototype.svg.style.position = 'absolute';
+    /* Firefox doesn't process hidden svg
+    ol.ext.SVGFilter.prototype.svg.style.display = 'none';
+    */
     document.body.appendChild( ol.ext.SVGFilter.prototype.svg );
   }
   this.element = document.createElementNS( this.NS, 'filter' );

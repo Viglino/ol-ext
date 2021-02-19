@@ -12,6 +12,12 @@
   <meta name="description" content="This filter apply a filter to detect edge on images." />
   <meta name="keywords" content="SVG, canvas, filter, edge, detection, operator, sobel, prewitt, laplace, roberts, image processin, computer vision" />
 
+  <meta name="twitter:image" content="https://viglino.github.io/ol-ext/examples/img/edgedetection.jpg" />
+  <meta name="twitter:site" content="@viglino" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Using SVG filter to detect edges on images" />
+  <meta name="twitter:description" content="SVG filters can be used in image processing and computer vision, within edge detection algorithms where it creates an image emphasising edges and provide an approximation of the image gradient." />
+
   <meta name="msapplication-tap-highlight" content="no" />
   <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
 
@@ -35,16 +41,25 @@
       margin: auto;
       max-width: min(100%, 42em);
     }
-    h2 {
+    h2,
+    h3 {
+      color: #337ab7;
       font-size: 1.5em;
       margin: 1.5em 0 0;
-      border-bottom: 2px solid #369;
+      border-bottom: 2px solid #337ab7;
+    }
+    h3 {
+      margin: 1em 0 .5em;
+      font-size: 1em;
     }
     .bottom {
       display: block;
-      border-top: 2px solid #369;
       margin: 1em 0 2em;
+    }
+    .bottom a {
+      border-top: 2px solid #369;
       padding: .5em 0;
+      display: block;
     }
     img, canvas {
       max-width: 20em;
@@ -77,7 +92,37 @@
       display: block;
       max-width: 100%;
     }
-
+    .fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      background: rgba(0,0,0,.8);
+      color: #fff;
+      max-width: unset!important;
+      z-index: 9999;
+    }
+    .fullscreen img,
+    .fullscreen canvas {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      max-width: 100%;
+      max-height: 100%;
+    }
+    #download textarea {
+      min-width: 100%;
+      max-width: 100%;
+      height: 5em;
+      box-sizing: border-box;
+    }
+    #download ul {
+      padding: 0;
+      list-style: none;
+    }
+/*
     .Sobel {
       filter: url(#Sobel);
     }
@@ -87,7 +132,7 @@
     .Roberts {
       filter: url(#Roberts);
     }
-
+*/
   </style>
 </head>
 <body >
@@ -106,9 +151,9 @@
   </p>
   <p>
     SVG filters can be used in image processing and computer vision, within edge detection algorithms 
-    where it creates an image emphasising edges and provide an approximation of the image gradient
+    where it creates an image emphasising edges and provide an approximation of the image gradient.
     <br/>
-    It can be used on aerial photo for <a href="./map.filter.edgedetection.html">fast edge detection</a>.
+    See Openlayers implementation on aerial photo for <a href="./map.filter.edgedetection.html">fast edge detection</a>.
   </p>
 
   <h2>Sobel filter</h2>
@@ -126,7 +171,7 @@
     Wikipedia Sobel
   </div>
   <div class="block">
-    <img class="Sobel" src="https://upload.wikimedia.org/wikipedia/commons/f/f0/Valve_original_%281%29.PNG" />
+    <img class="Sobel" data-src="https://upload.wikimedia.org/wikipedia/commons/f/f0/Valve_original_%281%29.PNG" />
     SVG Sobel filter
   </div>
 
@@ -143,7 +188,7 @@
       <p>Grayscale test image of brick wall and bike rack</p>
     </div>
     <div class="block">
-      <img class="Laplacian" src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Bikesgray.jpg" />
+      <img class="Laplacian" data-src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Bikesgray.jpg" />
       <p>SVG Laplacian filter</p>
     </div>
     <br/>
@@ -152,7 +197,7 @@
       <p>Wikipedia Sobel–Feldman operator</p>
     </div>
     <div class="block">
-      <img class="Sobel" src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Bikesgray.jpg" />
+      <img class="Sobel" data-src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Bikesgray.jpg" />
       <p>SVG Sobel filter</p>
     </div>
 
@@ -162,7 +207,7 @@
       <p>Wikipedia Roberts cross operator</p>
     </div>
     <div class="block">
-      <img class="Roberts" src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Bikesgray.jpg" />
+      <img class="Roberts" data-src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Bikesgray.jpg" />
       <p>SVG Roberts filter</p>
     </div>
 
@@ -172,36 +217,56 @@
       <p>Wikipedia Prewitt operator</p>
     </div>
     <div class="block">
-      <img class="Prewitt" src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Bikesgray.jpg" />
+      <img class="Prewitt" data-src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Bikesgray.jpg" />
       <p>SVG Prewitt filter</p>
     </div>
   </div>
-  <a class="bottom" href="https://github.com/Viglino/ol-ext/tree/master/src/util/SVGFilter">Fork me on Github!</a>
+  <div id="download">
+    <h2>Filter definition:</h2>
+    <ul></ul>
+  </div>
+  <div class="bottom">
+    <a href="https://github.com/Viglino/ol-ext/issues">Report an issue / ask a question...</a>
+    <a href="https://github.com/Viglino/ol-ext/tree/master/src/util/SVGFilter">Fork me on Github!</a>
+  </div>
 
   <script>
+    $('img').click(function(e) { e.stopPropagation(); $(this).parent().toggleClass('fullscreen')})
+    $('.block').click(function() { $(this).removeClass('fullscreen'); })
     function loadFilter(name) {
       var filter = new ol.ext.SVGFilter[name]({ id:name, grayscale: true });
+      // Format for export
+      var filterHTML = '';
+      $(filter.element).children().each(function(e) {
+        filterHTML += '\n    '+this.outerHTML;
+      })
+      filterHTML = '<svg version="1.1" width="0" height="0" style="position: absolute;">\n'
+        + '  <filter id="'+name+'">'
+        + filterHTML
+        + '\n  </filter>\n</svg>';
+      var li = $('<li>').appendTo($('#download ul'));
+      $('<h3>').text(name).appendTo(li);
+      $('<textarea>').val(filterHTML).appendTo(li);
       $('.'+name).each(function() {
-        if (this.naturalWidth) {
+        $(this).on('load', function() {
+          // Insert filtered image
           var c = filter.applyTo(this);
-          $(c).insertAfter(this);
-          $(this).hide();
-        } else {
-          $(this).on('load', function() {
-            var c = filter.applyTo(this);
-            $(c).insertAfter(this);
-            $(this).hide()
-          })
-        }
+          $(c).insertAfter(this)
+            .click(function(e) {
+              e.stopPropagation();
+              $(this).parent().toggleClass('fullscreen')
+            });
+        })
+        $(this).attr('src', $(this).data('src'));
+        // Hide original
+        $(this).hide();
       });
     }
 
-    setTimeout(function() {
-      loadFilter('Laplacian');
-      loadFilter('Sobel');
-      loadFilter('Prewitt');
-      loadFilter('Roberts');
-    }, 300);
+    loadFilter('Laplacian');
+    loadFilter('Sobel');
+    loadFilter('Prewitt');
+    loadFilter('Roberts');
   </script>
 </body>
 </html>

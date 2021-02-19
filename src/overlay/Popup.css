@@ -201,7 +201,7 @@
 }
 .ol-popup-middle.ol-popup-right.default {
   margin:0 -10px;
-  transform: translate(-20, 0);
+  transform: translate(-20px, 0);
 }
 
 .ol-popup.default .anchor {

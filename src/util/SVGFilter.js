@@ -19,6 +19,9 @@ var ol_ext_SVGFilter = function(options) {
     ol_ext_SVGFilter.prototype.svg.setAttribute('width',0);
     ol_ext_SVGFilter.prototype.svg.setAttribute('height',0);
     ol_ext_SVGFilter.prototype.svg.style.position = 'absolute';
+    /* Firefox doesn't process hidden svg
+    ol_ext_SVGFilter.prototype.svg.style.display = 'none';
+    */
     document.body.appendChild( ol_ext_SVGFilter.prototype.svg );
   }
 
