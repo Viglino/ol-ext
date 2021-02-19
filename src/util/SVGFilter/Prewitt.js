@@ -80,7 +80,7 @@ var ol_ext_SVGFilter_Prewitt = function(options) {
     feoperation: 'feBlend',
     mode: 'lighten',
     in: 'H',
-    in: 'V'
+    in2: 'V'
   });
   if (options.grayscale) this.grayscale();
   else if (options.alpha) this.luminanceToAlpha();

@@ -1,5 +1,4 @@
 import ol_ext_inherits from '../util/ext'
-import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import ol_Collection from 'ol/Collection'
 import ol_interaction_CurrentMap from './CurrentMap';
 

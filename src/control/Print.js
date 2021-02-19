@@ -59,7 +59,7 @@ ol_control_Print.prototype.toClipboard = function(e, callback) {
     e.canvas.toBlob(function(blob) {
       try {
         navigator.clipboard.write([
-          new ClipboardItem(
+          new window.ClipboardItem(
             Object.defineProperty({}, blob.type, {
               value: blob,
               enumerable: true

@@ -212,7 +212,7 @@ function batiment(options) {
     }
     return style
   }
-};
+}
 
 // Parcelle / cadastre
 function parcelle(options) {
@@ -247,7 +247,7 @@ function parcelle(options) {
     }
     return style;
   }
-};
+}
 
 ol_style_geoportailStyle = function(typeName, options) {
   options = options || {};

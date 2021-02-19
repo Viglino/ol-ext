@@ -1018,7 +1018,7 @@ ol.ext.SVGFilter.Prewitt = function(options) {
     feoperation: 'feBlend',
     mode: 'lighten',
     in: 'H',
-    in: 'V'
+    in2: 'V'
   });
   if (options.grayscale) this.grayscale();
   else if (options.alpha) this.luminanceToAlpha();
@@ -1101,7 +1101,7 @@ ol.ext.SVGFilter.Roberts = function(options) {
     feoperation: 'feBlend',
     mode: 'lighten',
     in: 'H',
-    in: 'V'
+    in2: 'V'
   });
   if (options.grayscale) this.grayscale();
   else if (options.alpha) this.luminanceToAlpha();
@@ -1184,11 +1184,10 @@ ol.ext.SVGFilter.Sobel = function(options) {
     feoperation: 'feBlend',
     mode: 'lighten',
     in: 'H',
-    in: 'V'
+    in2: 'V'
   });
   if (options.grayscale) this.grayscale();
-  else if (options.alpha) this.luminanceToAlpha();
-  if (options.gamma) this.ge
+  else if (options.alpha) this.luminanceToAlpha({ gamma: options.gamma });
 };
 ol.ext.inherits(ol.ext.SVGFilter.Sobel, ol.ext.SVGFilter);
 
@@ -7892,7 +7891,7 @@ ol.control.Print.prototype.toClipboard = function(e, callback) {
     e.canvas.toBlob(function(blob) {
       try {
         navigator.clipboard.write([
-          new ClipboardItem(
+          new window.ClipboardItem(
             Object.defineProperty({}, blob.type, {
               value: blob,
               enumerable: true
@@ -15414,8 +15413,8 @@ ol.interaction.CurrentMap.prototype.setCurrentMap = function(map) {
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Handles coordinates on the center of the viewport.
  * It can be used as abstract base class used for creating subclasses. 
@@ -15427,36 +15426,36 @@ ol.interaction.CurrentMap.prototype.setCurrentMap = function(map) {
  *  @param {ol.style.Style|Array<ol.style.Style>} options.targetStyle a style to draw the target point, default cross style
  *  @param {string} options.composite composite operation for the target : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
  */
-ol.interaction.CenterTouch = function(options)
-{	options = options || {};
-	// LIst of listerner on the object
-	this._listener = {};
-	// Filter event
-	var rex = /^pointermove$|^pointerup$/;
-	// Interaction to defer center on top of the interaction 
-	// this is done to enable other coordinates manipulation inserted after the interaction (snapping)
-	this.ctouch = new ol.interaction.Interaction(
-		{	handleEvent: function(e) 
-				{	if (rex.test(e.type) && this.getMap()) 
-					{	e.coordinate = this.getMap().getView().getCenter();
-						e.pixel = this.getMap().getSize();
-						e.pixel = [ e.pixel[0]/2, e.pixel[1]/2 ];
-					}
-					return true; 
-				}
-		});
-	// Target on map center
-	this._target = new ol.control.Target({
-		style: options.targetStyle,
-		composite: options.composite
-	});
-	ol.interaction.Interaction.call(this,
-		{	handleEvent: function(e) 
-			{	if (rex.test(e.type)) this.pos_ = e.coordinate;
-				if (options.handleEvent) return options.handleEvent.call (this,e);
-				return true; 
-			}
-		});
+ol.interaction.CenterTouch = function(options) {
+  options = options || {};
+  // LIst of listerner on the object
+  this._listener = {};
+  // Filter event
+  var rex = /^pointermove$|^pointerup$/;
+  // Interaction to defer center on top of the interaction 
+  // this is done to enable other coordinates manipulation inserted after the interaction (snapping)
+  this.ctouch = new ol.interaction.Interaction({
+    handleEvent: function(e) {
+      if (rex.test(e.type) && this.getMap()) {
+        e.coordinate = this.getMap().getView().getCenter();
+        e.pixel = this.getMap().getSize();
+        e.pixel = [ e.pixel[0]/2, e.pixel[1]/2 ];
+      }
+      return true; 
+    }
+  });
+  // Target on map center
+  this._target = new ol.control.Target({
+    style: options.targetStyle,
+    composite: options.composite
+  });
+  ol.interaction.Interaction.call(this, {
+    handleEvent: function(e) {
+      if (rex.test(e.type)) this.pos_ = e.coordinate;
+      if (options.handleEvent) return options.handleEvent.call (this,e);
+      return true; 
+    }
+  });
 };
 ol.ext.inherits(ol.interaction.CenterTouch, ol.interaction.Interaction);
 /**
@@ -15465,18 +15464,18 @@ ol.ext.inherits(ol.interaction.CenterTouch, ol.interaction.Interaction);
  * @param {_ol_Map_} map Map.
  * @api stable
  */
-ol.interaction.CenterTouch.prototype.setMap = function(map)
-{	if (this.getMap())
-	{	this.getMap().removeInteraction(this.ctouch);
-		this.getMap().removeInteraction(this._target);
-	}
-	ol.interaction.Interaction.prototype.setMap.call (this, map);
-	if (this.getMap())
-	{	if (this.getActive()) {
-			this.getMap().addInteraction(this.ctouch);
-			this.getMap().addControl(this._target);
-		}
-	}
+ol.interaction.CenterTouch.prototype.setMap = function(map) {
+  if (this.getMap()) {
+    this.getMap().removeInteraction(this.ctouch);
+    this.getMap().removeInteraction(this._target);
+  }
+  ol.interaction.Interaction.prototype.setMap.call (this, map);
+  if (this.getMap()) {
+    if (this.getActive()) {
+      this.getMap().addInteraction(this.ctouch);
+      this.getMap().addControl(this._target);
+    }
+  }
 };
 /**
  * Activate or deactivate the interaction.
@@ -15484,30 +15483,29 @@ ol.interaction.CenterTouch.prototype.setMap = function(map)
  * @observable
  * @api
  */
-ol.interaction.CenterTouch.prototype.setActive = function(b)
-{	ol.interaction.Interaction.prototype.setActive.call (this, b);
-	this.pos_ = null;
-	if (this.getMap())
-	{	if (this.getActive()) 
-		{	this.getMap().addInteraction(this.ctouch);
-			this.getMap().addControl(this._target);
-		}
-		else {
-			this.getMap().removeInteraction(this.ctouch);
-			this.getMap().removeControl(this._target);
-		}
-	}
+ol.interaction.CenterTouch.prototype.setActive = function(b) {
+  ol.interaction.Interaction.prototype.setActive.call (this, b);
+  this.pos_ = null;
+  if (this.getMap()) {
+    if (this.getActive()) {
+      this.getMap().addInteraction(this.ctouch);
+      this.getMap().addControl(this._target);
+    } else {
+      this.getMap().removeInteraction(this.ctouch);
+      this.getMap().removeControl(this._target);
+    }
+  }
 };
 /** Get the position of the target
  * @return {ol.coordinate}
  */
-ol.interaction.CenterTouch.prototype.getPosition = function ()
-{	if (!this.pos_) 
-	{	var px =this.getMap().getSize();
-		px = [ px[0]/2, px[1]/2 ];
-		this.pos_ = this.getMap().getCoordinateFromPixel(px);
-	}
-	return this.pos_; 
+ol.interaction.CenterTouch.prototype.getPosition = function () {
+  if (!this.pos_) {
+    var px =this.getMap().getSize();
+    px = [ px[0]/2, px[1]/2 ];
+    this.pos_ = this.getMap().getCoordinateFromPixel(px);
+  }
+  return this.pos_; 
 };
 
 /** Clip interaction to clip layers in a circle
@@ -17489,8 +17487,8 @@ ol.interaction.Hover.prototype.setMap = function(map) {
  */
 ol.interaction.Hover.prototype.setActive = function(b) {
   ol.interaction.Interaction.prototype.setActive.call (this, b);
-  if (this.cursor_) {
-    var style = map.getTargetElement().style;
+  if (this.cursor_ && this.getMap()) {
+    var style = this.getMap().getTargetElement().style;
     if (this.previousCursor_ !== undefined) {
       style.cursor = this.previousCursor_;
       this.previousCursor_ = undefined;
@@ -32243,7 +32241,7 @@ function batiment(options) {
     }
     return style
   }
-};
+}
 // Parcelle / cadastre
 function parcelle(options) {
   var style = new ol.style.Style({
@@ -32276,7 +32274,7 @@ function parcelle(options) {
     }
     return style;
   }
-};
+}
 ol.style.geoportailStyle = function(typeName, options) {
   options = options || {};
   switch (typeName) {

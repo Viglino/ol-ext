@@ -80,11 +80,10 @@ var ol_ext_SVGFilter_Sobel = function(options) {
     feoperation: 'feBlend',
     mode: 'lighten',
     in: 'H',
-    in: 'V'
+    in2: 'V'
   });
   if (options.grayscale) this.grayscale();
-  else if (options.alpha) this.luminanceToAlpha();
-  if (options.gamma) this.ge
+  else if (options.alpha) this.luminanceToAlpha({ gamma: options.gamma });
 };
 ol_ext_inherits(ol_ext_SVGFilter_Sobel, ol_ext_SVGFilter);
 
