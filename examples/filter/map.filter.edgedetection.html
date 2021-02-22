@@ -200,6 +200,7 @@ or
     var photo = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', className: 'photo', opacity: .4 });
     var plan = new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', className: 'photo' });
     var layer = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', className: 'edge', title: 'Edges', opacity: 1 });
+    // Load source only once
     layer.setSource(photo.getSource())
 
     // The map
@@ -232,6 +233,18 @@ or
       layer.addFilter(filter);
     }
     setFilter('laplacian-8');
+
+
+    map.addInteraction(new ol.interaction.Draw({ 
+      type: 'LineString',
+      condition: function(e) { 
+        return ol.events.condition.noModifierKeys(e) || ol.events.condition.altKeyOnly(e)
+      }
+    }))
+    var snapPixel = new ol.interaction.SnapLayerPixel({
+      layer: layer
+    })
+    map.addInteraction(snapPixel)
   </script>
 
 </body>
