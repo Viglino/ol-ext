@@ -32116,8 +32116,9 @@ ol.style.Style.defaultStyle = function(edit) {
  *
  * @param {String} options.typeName 
  * @param {any} options
- *  @param {boolean} options.sens
- *  @param {boolean} options.symbol
+ *  @param {boolean|number} options.sens true show flow direction or a max resolution to show it, default false
+ *  @param {boolean} options.vert 'vert' road section (troncon_de_route) style, default false
+ *  @param {boolean} options.symbol show symbol on buildings (batiment), default false
  * @return {Array<ol.style.Style}
  */
 ol.style.geoportailStyle;
@@ -32213,11 +32214,12 @@ function troncon_de_route(options) {
     }
   }
   var styleId = 'ROUT-'+(styleCount++)+'-'
-  return function (feature) {
+  return function (feature, res) {
+    var useSens = (options.sens === true || res < options.sens);
     var id = styleId
       + feature.get('nature') + '-'
       + feature.get('position_par_rapport_au_sol') + '-'
-      + feature.get('sens_de_circulation') + '-'
+      + (useSens ? feature.get('sens_de_circulation') : 'Sans objet') + '-'
       + feature.get('position_par_rapport_au_sol') + '-'
       + feature.get('importance') + '-'
       + feature.get('largeur_de_chaussee') + '-'
@@ -32226,7 +32228,7 @@ function troncon_de_route(options) {
     if (!style) {
       style = cache[id] = [	
         new ol.style.Style ({
-          text: getSens(feature),
+          text: useSens ? getSens(feature) : null,
           stroke: new ol.style.Stroke({
             color: getColor(feature),
             width: getWidth(feature),
@@ -32348,6 +32350,11 @@ ol.style.geoportailStyle = function(typeName, options) {
     case 'BDTOPO_V3:batiment': return batiment(options);
     // Parcelles
     case 'CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle': return parcelle(options);
+    // Default style
+    default: {
+      console.warn('[ol/style/geoportailStyle] no style defined for type: ' + typeName)
+      return defaultStyle(); 
+    }
   }
 };
 })();

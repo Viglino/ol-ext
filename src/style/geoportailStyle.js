@@ -8,14 +8,15 @@ import ol_style_Style from 'ol/style/Style'
 import ol_style_Text from 'ol/style/Text';
 import ol_style_Stroke from 'ol/style/Stroke'
 import ol_style_Fill from 'ol/style/Fill'
-
+import defaultStyle from '../style/defaultStyle'
 /**
  * Get a style for Geoportail WFS features
  *
  * @param {String} options.typeName 
  * @param {any} options
- *  @param {boolean} options.sens
- *  @param {boolean} options.symbol
+ *  @param {boolean|number} options.sens true show flow direction or a max resolution to show it, default false
+ *  @param {boolean} options.vert 'vert' road section (troncon_de_route) style, default false
+ *  @param {boolean} options.symbol show symbol on buildings (batiment), default false
  * @return {Array<ol.style.Style}
  */
 var ol_style_geoportailStyle;
@@ -117,11 +118,12 @@ function troncon_de_route(options) {
   }
 
   var styleId = 'ROUT-'+(styleCount++)+'-'
-  return function (feature) {
+  return function (feature, res) {
+    var useSens = (options.sens === true || res < options.sens);
     var id = styleId
       + feature.get('nature') + '-'
       + feature.get('position_par_rapport_au_sol') + '-'
-      + feature.get('sens_de_circulation') + '-'
+      + (useSens ? feature.get('sens_de_circulation') : 'Sans objet') + '-'
       + feature.get('position_par_rapport_au_sol') + '-'
       + feature.get('importance') + '-'
       + feature.get('largeur_de_chaussee') + '-'
@@ -130,7 +132,7 @@ function troncon_de_route(options) {
     if (!style) {
       style = cache[id] = [	
         new ol_style_Style ({
-          text: getSens(feature),
+          text: useSens ? getSens(feature) : null,
           stroke: new ol_style_Stroke({
             color: getColor(feature),
             width: getWidth(feature),
@@ -258,6 +260,11 @@ ol_style_geoportailStyle = function(typeName, options) {
     case 'BDTOPO_V3:batiment': return batiment(options);
     // Parcelles
     case 'CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle': return parcelle(options);
+    // Default style
+    default: {
+      console.warn('[ol/style/geoportailStyle] no style defined for type: ' + typeName)
+      return defaultStyle(); 
+    }
   }
 };
 
