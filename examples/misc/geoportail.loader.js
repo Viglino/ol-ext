@@ -3,7 +3,7 @@ String.prototype.capitalize = function() {
   return this.charAt(0).toUpperCase() + this.slice(1);
 }
 
-var minZoom = 15;
+var minZoom = 16;
 var jstsParser = new jsts.io.OL3Parser();
 
 // The map
@@ -109,8 +109,7 @@ var progress = new ol.control.Dialog({
 });
 map.addControl(progress);
 
-// Progress bar
-console.log('commune dialog')
+// Dialogue de chargement d'une commune
 var communeDialog = new ol.control.Dialog({
   target: document.body,
   title: 'Charger un commune',
@@ -139,8 +138,28 @@ communeDialog.on('show', function() {
 });
 map.addControl(communeDialog);
 
+// Drag'n'drop commune
+var drop = new ol.interaction.DropFile();
+drop.on('addfeatures', function(e) {
+  e.features.forEach(function(f) {
+    if (/polygon/i.test(f.getGeometry().getType())) {
+      commune.addFeature(f);
+    } else {
+      commune.addFeature(f);
+    }
+  })
+  map.getView().fit(commune.getExtent());
+});
+map.addInteraction(drop);
+
 // Load tiles
+var maxlimit = 800;
 function loadTiles() {
+  var tiles = selectTile.getFeatures().getArray();
+  if (tiles.length > maxlimit) {
+    showAlert('Trop de tuiles à charger ('+tiles.length+'/'+maxlimit+')...<br/>Diminuer la zone à charger...')
+    return;
+  }
   // Loading bar
   var loading = 0, loaded = 0;
   var draw = function() {
@@ -153,7 +172,6 @@ function loadTiles() {
     }
     showInfo();
   }
-  var tiles = selectTile.getFeatures().getArray();
   if (tiles.length) {
     loading = tiles.length;
     loaded = 0;
@@ -216,6 +234,10 @@ map.addLayer(new ol.layer.Vector({
   title: 'Communes',
   source: commune,
   style: new ol.style.Style({
+    image: new ol.style.Circle({
+      fill: new ol.style.Fill({ color: [0,153,255,0.4] }),
+      radius: 5
+    }),
     stroke: new ol.style.Stroke({
       color: [255,0,255,.7],
       width: 5,
@@ -229,7 +251,7 @@ function save() {
   $('.dialog').addClass('hidden');
   $('#save').removeClass('hidden');
   $('#save input.select').prop('disabled', !sel.getFeatures().getLength());
-  $('#save input.clip').prop('disabled', commune.getFeatures().length !== 1);
+  $('#save input.clip').prop('disabled', commune.getFeatures().length < 1);
   $('#save .commune').css('display', commune.getFeatures().length ? '' : 'none');
 }
 
@@ -257,8 +279,12 @@ $('#save form').on('submit', function(e) {
     }
 
     // Clip geometry
-    var com;
-    if ($('#save .clip').prop('checked')) com = jstsParser.read(commune.getFeatures()[0].getGeometry());
+    var com = [];
+    if ($('#save .clip').prop('checked')) {
+      commune.getFeatures().forEach(function(c){
+        com.push(jstsParser.read(c.getGeometry()));
+      })
+    }
     // Features to export
     var featureList = ($('#save .select').prop('checked') ? sel.getFeatures() : vectorSource.getFeatures());
     // remove null props
@@ -271,7 +297,15 @@ $('#save form').on('submit', function(e) {
     // export features
     var features = [];
     featureList.forEach(function(f) {
-      if (!com || com.intersects(jstsParser.read(f.getGeometry()))) {
+      var g = jstsParser.read(f.getGeometry());
+      intersect = (com.length === 0);
+      for (var i=0, c; c = com[i]; i++) {
+        if (c.intersects(g) || g.intersects(c)) {
+          intersect = true;
+          break;
+        }
+      }
+      if (intersect) {
         f.setStyle(style(f));
         if (geom || limit || nonull) {
           f = f.clone();
@@ -486,17 +520,21 @@ function selScreen() {
 }
 
 function tileCommune() {
-  commune.getFeatures().forEach(function(c) {
-    tilesIntersectGeom(c.getGeometry())
-  });
+  $('body').addClass('wait');
+  setTimeout(function() {
+    commune.getFeatures().forEach(function(c) {
+      tilesIntersectGeom(c.getGeometry())
+    });
+    $('body').removeClass('wait');
+  }, 300)
 }
 
 function tilesIntersectGeom(geom, del) {
   var g = jstsParser.read(geom);
   loadLayer.getSource().getFeatures().forEach(function(f) {
     if (g.intersects(jstsParser.read(f.getGeometry()))) {
-      if (del) selectTile.getFeatures().remove(f);
-      else selectTile.getFeatures().push(f);
+      selectTile.getFeatures().remove(f);
+      if (!del) selectTile.getFeatures().push(f);
     }
   });
 }

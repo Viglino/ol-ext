@@ -58,6 +58,7 @@
       Cliquez sur le carroyage pour sélectionner un carreau à charger. 
       <kbd>Ctrl</kbd>+clic+drag pour sélectionner une zone à charger.
       <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+clic+drag pour désélectionner une zone à charger.
+      Glisser-déposer un fichier (GeoJSON, KML, etc.) à ajouter à la zone de chargement...
     </p>
     <p>
       Les bases de données de l'IGN sont diffusées selon les termes de la 
@@ -94,7 +95,7 @@
   </div>
   
   <div id="tiles" class="dialog hidden">
-    <h2>Zone de chargement</h2>
+    <h2>Dalles de chargement</h2>
     <i class="fa fa-close" onclick="$('#tiles').addClass('hidden');"></i>
     <p>
       <button onclick="reset()">
@@ -112,13 +113,13 @@
       <button onclick="communeDialog.show()">
         <i class="fa fa-upload"></i> Charger une commune
       </button>
-      <i>Charger une commune avec son numéro INSEE</i>
+      <i>Charger une commune avec son numéro INSEE comme zone de chargement ou glissez-déposez un fichier sur la carte</i>
     </p>
     <p>
       <button onclick="tileCommune();">
-        <i class="fa fa-clone"></i> Dans la commune
+        <i class="fa fa-clone"></i> Dans la zone de chargement
       </button>
-      <i>Charger les dalles intersectant la commune</i>
+      <i>Charger les dalles intersectant la zone de chargement</i>
     </p>
   </div>
 
@@ -135,7 +136,7 @@
         </li><li>
           <label><input type="checkbox" class="select" /><span> seulement la sélection</span></label>
         </li><li>
-          <label><input type="checkbox" class="clip" /><span> dans à la commune</span></label>
+          <label><input type="checkbox" class="clip" /><span> intersecte la zone de chargement</span></label>
         </li><li>
           <label><input type="checkbox" class="null" checked="checked" /><span> supprimer les attributs null</span></label>
         </li><li style="text-align: right;">
