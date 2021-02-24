@@ -233,7 +233,8 @@ var commune = new ol.source.Vector();
 map.addLayer(new ol.layer.Vector({
   title: 'Communes',
   source: commune,
-  style: new ol.style.Style({
+  style: ol.style.Style.defaultStyle()
+  /*new ol.style.Style({
     image: new ol.style.Circle({
       fill: new ol.style.Fill({ color: [0,153,255,0.4] }),
       radius: 5
@@ -244,6 +245,7 @@ map.addLayer(new ol.layer.Vector({
       lineDash: [0, 15, 15, 15]
     })
   })
+  */
 }));
 
 // Save Vector layer
@@ -369,7 +371,7 @@ function saveCommune() {
 /* Gestion des options */
 var params = JSON.parse(localStorage.dataOptions||'{}');
 if (!params.route) params.route = {};
-if (!params.batiment) params.batiments = {};
+if (!params.batiments) params.batiments = {};
 if (!params.parcelle) params.parcelle = {};
 
 $('#options .limit').on('change', function() {
@@ -536,6 +538,14 @@ function tilesIntersectGeom(geom, del) {
       selectTile.getFeatures().remove(f);
       if (!del) selectTile.getFeatures().push(f);
     }
+  });
+}
+
+function buffer() {
+  var s = $('#buffer').val();
+  commune.getFeatures().forEach(function(f) {
+    var g = jstsParser.read(f.getGeometry())
+    f.setGeometry(jstsParser.write(g.buffer(s)));
   });
 }
 
