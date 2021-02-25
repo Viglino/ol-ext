@@ -28,6 +28,10 @@
 
   <link rel="stylesheet" href="../style.css" />
   <style>
+    #map {
+      width: 100%;
+      height: 60vh;
+    }
     .ol-wmscapabilities ul {
       padding: 0;
     }
@@ -52,7 +56,7 @@
   </div>
 
   <!-- DIV pour la carte -->
-  <div id="map" style="width:600px; height:400px;"></div>
+  <div id="map"></div>
   <div class="options">
     <ul>
       <li>
@@ -67,7 +71,6 @@
       </li>
     </ul>
   </div>
-  <div id="select" class="options" >Select an item.</div>
   
 <script type="text/javascript">
   // http services load on http
@@ -105,6 +108,7 @@
     cors: true,
     services: {
       BRGM: 'https://geoservices.brgm.fr/geologie',
+      OSM: 'https://wms.openstreetmap.fr/wms',
       Sandre: 'http://services.sandre.eaufrance.fr/geo/eth_FXX',
       Cartorisque: 'https://mapsref.brgm.fr/wxs/refcom-env/refign',
       'Swiss Topo': 'https://wms.geo.admin.ch/',

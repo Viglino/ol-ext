@@ -547,6 +547,7 @@ function buffer() {
     var g = jstsParser.read(f.getGeometry())
     f.setGeometry(jstsParser.write(g.buffer(s)));
   });
+  $('.dialog').addClass('hidden'); 
 }
 
 function showInfo() {
