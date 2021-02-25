@@ -105,7 +105,8 @@ ol_control_WMSCapabilities.prototype.labels = {
   formExtent: 'Extent:',
   formProjection: 'Projection:',
   formCrossOrigin: 'CrossOrigin:',
-  formVersion: 'Version:'
+  formVersion: 'Version:',
+  formAttribution: 'Attribution'
 };
 
 /** Create dialog
@@ -282,6 +283,7 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
   addLine('formProjection', '');
   addLine('formCrossOrigin', false);
   addLine('formVersion', '1.3.0');
+  addLine('formAttribution', '');
 
   ol_ext_element.create('BUTTON', {
     html: this.get('loadLabel') || 'Load',
@@ -302,6 +304,8 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
         })
       }
       if (ext.length !== 4) ext = undefined;
+      var attributions = []
+      if (this._elements.formAttribution.value) attributions.push(this._elements.formAttribution.value);
       var options = {
         layer: {
           title: this._elements.formTitle.value,
@@ -313,6 +317,7 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
           url: this._elements.input.value,
           crossOrigin: this._elements.formCrossOrigin.checked ? 'anonymous' : null,
           projection: this._elements.formProjection.value,
+          attributions: attributions,
           params: {
             FORMAT: this._elements.formFormat.options[this._elements.formFormat.selectedIndex].value,
             LAYERS: this._elements.formLayer.value,
@@ -687,6 +692,7 @@ ol_control_WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) 
   this._elements.formMinZoom.value = Math.round(view.getZoom());
   this._elements.formExtent.value = bbox ? bbox.join(',') : '';
   this._elements.formProjection.value = source_opt.projection;
+  this._elements.formAttribution.value = source_opt.attributions[0] || '';
 
   // Trace
   if (this.get('trace')) {

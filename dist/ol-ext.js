@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.1.18
+ * @version v3.1.19
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -12263,7 +12263,8 @@ ol.control.WMSCapabilities.prototype.labels = {
   formExtent: 'Extent:',
   formProjection: 'Projection:',
   formCrossOrigin: 'CrossOrigin:',
-  formVersion: 'Version:'
+  formVersion: 'Version:',
+  formAttribution: 'Attribution'
 };
 /** Create dialog
  * @private
@@ -12439,6 +12440,7 @@ ol.control.WMSCapabilities.prototype.createDialog = function (options) {
   addLine('formProjection', '');
   addLine('formCrossOrigin', false);
   addLine('formVersion', '1.3.0');
+  addLine('formAttribution', '');
   ol.ext.element.create('BUTTON', {
     html: this.get('loadLabel') || 'Load',
     click: function() {
@@ -12458,6 +12460,8 @@ ol.control.WMSCapabilities.prototype.createDialog = function (options) {
         })
       }
       if (ext.length !== 4) ext = undefined;
+      var attributions = []
+      if (this._elements.formAttribution.value) attributions.push(this._elements.formAttribution.value);
       var options = {
         layer: {
           title: this._elements.formTitle.value,
@@ -12469,6 +12473,7 @@ ol.control.WMSCapabilities.prototype.createDialog = function (options) {
           url: this._elements.input.value,
           crossOrigin: this._elements.formCrossOrigin.checked ? 'anonymous' : null,
           projection: this._elements.formProjection.value,
+          attributions: attributions,
           params: {
             FORMAT: this._elements.formFormat.options[this._elements.formFormat.selectedIndex].value,
             LAYERS: this._elements.formLayer.value,
@@ -12818,6 +12823,7 @@ ol.control.WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) 
   this._elements.formMinZoom.value = Math.round(view.getZoom());
   this._elements.formExtent.value = bbox ? bbox.join(',') : '';
   this._elements.formProjection.value = source_opt.projection;
+  this._elements.formAttribution.value = source_opt.attributions[0] || '';
   // Trace
   if (this.get('trace')) {
     var tso = JSON.stringify([ source_opt ], null, "\t").replace(/\\"/g,'"');
