@@ -122,8 +122,9 @@ var ol_control_Search = function(options) {
       if (cur) {
         // prevent searching on each typing
         if (tout) clearTimeout(tout);
+        var minLength = self.get("minLength");
         tout = setTimeout(function() {
-          if (cur.length >= self.get("minLength")) {
+          if (cur.length >= minLength) {
             var s = self.autocomplete (cur, function(auto) { self.drawList_(auto); });
             if (s) self.drawList_(s);
           }
