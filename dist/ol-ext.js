@@ -25369,7 +25369,8 @@ ol.render3D.prototype.getActive = function() {
   return this._active();
 };
 /** Calculate 3D at potcompose
-*/
+ * @private
+ */
 ol.render3D.prototype.onPostcompose_ = function(e) {
   if (!this.getActive()) return;
   var res = e.frameState.viewState.resolution;
@@ -25415,7 +25416,7 @@ ol.render3D.prototype.onPostcompose_ = function(e) {
   ctx.restore();
 };
 /** Set layer to render 3D
-*/
+ */
 ol.render3D.prototype.setLayer = function(l) {
   if (this._listener) {
     this._listener.forEach( function(l) { 
@@ -25426,9 +25427,9 @@ ol.render3D.prototype.setLayer = function(l) {
   this._listener = l.on (['postcompose', 'postrender'], this.onPostcompose_.bind(this));
 }
 /** Create a function that return height of a feature
-*	@param {function|string|number} h a height function or a popertie name or a fixed value
-*	@return {function} function(f) return height of the feature f
-*/
+ *	@param {function|string|number} h a height function or a popertie name or a fixed value
+ *	@return {function} function(f) return height of the feature f
+ */
 ol.render3D.prototype.getHfn= function(h) {
   switch (typeof(h)) {
     case 'function': return h;
@@ -25459,16 +25460,17 @@ ol.render3D.prototype.animate = function(options) {
   this.layer_.changed();
 }
 /** Check if animation is on
-*	@return {bool}
-*/
+ *	@return {bool}
+ */
 ol.render3D.prototype.animating = function() {
   if (this.animate_ && new Date().getTime() - this.animate_ > this.animateDuration_) {
     this.animate_ = false;
   }
   return !!this.animate_;
 }
-/** 
-*/
+/** Get feature height
+ * @param {ol.Feature} f
+ */
 ol.render3D.prototype.getFeatureHeight = function (f) {
   if (this.animate_) {
     var h1 = this.height_(f);
@@ -25477,8 +25479,9 @@ ol.render3D.prototype.getFeatureHeight = function (f) {
   }
   else return this.height_(f);
 };
-/**
-*/
+/** Get elevation line
+ * @private
+ */
 ol.render3D.prototype.hvector_ = function (pt, h) {
   var p0 = [
     pt[0]*this.matrix_[0] + pt[1]*this.matrix_[1] + this.matrix_[4],
@@ -25492,8 +25495,9 @@ ol.render3D.prototype.hvector_ = function (pt, h) {
     ]
   };
 };
-/**
-*/
+/** Get drawing
+ * @private
+ */
 ol.render3D.prototype.getFeature3D_ = function (f, h) {
   var geom = this.get('geometry')(f);
   var c = geom.getCoordinates();
@@ -25518,8 +25522,11 @@ ol.render3D.prototype.getFeature3D_ = function (f, h) {
     default: return {};
   }
 }
-/**
-*/
+/** Draw a feature
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {ol.Feature} build
+ * @private
+ */
 ol.render3D.prototype.drawFeature3D_ = function(ctx, build) {
   var i,j, b, k;
   // Construct
@@ -25596,6 +25603,9 @@ ol.render3D.prototype.drawFeature3D_ = function(ctx, build) {
     }
   }
 };
+/**
+ * @private
+ */
 ol.render3D.prototype.drawGhost3D_ = function(ctx, build) {
   var i,j, b, k;
   // Construct

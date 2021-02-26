@@ -119,7 +119,21 @@
   map.addLayer(dbp);
   
   // Set 3D renderer
-  var r3D = new ol.render3D({ height:0, maxResolution:0.6, defaultHeight:3.5 });
+  var r3D = new ol.render3D({
+    /** /
+    style: new ol.style.Style({
+      stroke: new ol.style.Stroke({
+        color: 'blue',
+        width: 2
+      }),
+      fill: new ol.style.Fill({ color: 'red' })
+    }),
+    /**/
+    // ghost: true,
+    height:0, 
+    maxResolution:0.6, 
+    defaultHeight:3.5 
+  });
   vector.setRender3D(r3D);
   var listenerKey = vectorSource.on('change', function(e) {
     if (vectorSource.getState() == 'ready') {
