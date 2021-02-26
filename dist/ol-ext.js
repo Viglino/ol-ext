@@ -10053,7 +10053,9 @@ ol.control.SearchNominatim.prototype.reverseGeocode = function (coord, cback) {
       if (cback) {
         cback.call(this, [resp]);
       } else {
-        this._handleSelect(resp, true);
+        if (resp && !resp.error) {
+          this._handleSelect(resp, true);
+        }
         //this.setInput('', true);
       }
     }.bind(this)
