@@ -5265,6 +5265,7 @@ ol.control.GeolocationBar.prototype.getInteraction = function () {
  * @extends {ol.control.Toggle}
  * @param {Object=} options ol.interaction.GeolocationDraw option.
  *  @param {String} options.className class of the control
+ *  @param {String} options.title title of the control to display as tooltip, default Geolocation
  *  @param {number} options.delay delay before removing the location in ms, delfaut 3000 (3s)
  */
 ol.control.GeolocationButton = function(options) {
@@ -5277,6 +5278,7 @@ ol.control.GeolocationButton = function(options) {
   ol.control.Toggle.call (this, {
     className: options.className = ((options.className || '') + ' ol-geobt').trim(),
     interaction: interaction,
+    title: options.title || 'Geolocation',
     onToggle: function() {
       interaction.pause(true);
       interaction.setFollowTrack(options.followTrack || 'auto');
@@ -17007,7 +17009,7 @@ ol.interaction.FocusMap.prototype.setMap = function(map) {
  *  @param { ol.source.Vector | undefined } options.source Destination source for the drawn features.
  *  @param {ol.geom.GeometryType} options.type Drawing type ('Point', 'LineString', 'Polygon'), default LineString.
  *  @param {Number | undefined} options.minAccuracy minimum accuracy underneath a new point will be register (if no condition), default 20
- *  @param {function | undefined} options.condition a function that take a ol.Geolocation object and return a boolean to indicate whether location should be handled or not, default return true if accuraty < minAccuraty
+ *  @param {function | undefined} options.condition a function that take a ol.Geolocation object and return a boolean to indicate whether location should be handled or not, default return true if accuracy < minAccuracy
  *  @param {Object} options.attributes a list of attributes to register as Point properties: {accuracy:true,accuracyGeometry:true,heading:true,speed:true}, default none.
  *  @param {Number} options.tolerance tolerance to add a new point (in meter), default 5
  *  @param {Number} options.zoom zoom for tracking, default 16

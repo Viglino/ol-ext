@@ -16,6 +16,7 @@ import ol_interaction_GeolocationDraw from '../interaction/GeolocationDraw'
  * @extends {ol_control_Toggle}
  * @param {Object=} options ol.interaction.GeolocationDraw option.
  *  @param {String} options.className class of the control
+ *  @param {String} options.title title of the control to display as tooltip, default Geolocation
  *  @param {number} options.delay delay before removing the location in ms, delfaut 3000 (3s)
  */
 var ol_control_GeolocationButton = function(options) {
@@ -29,6 +30,7 @@ var ol_control_GeolocationButton = function(options) {
   ol_control_Toggle.call (this, {
     className: options.className = ((options.className || '') + ' ol-geobt').trim(),
     interaction: interaction,
+    title: options.title || 'Geolocation',
     onToggle: function() {
       interaction.pause(true);
       interaction.setFollowTrack(options.followTrack || 'auto');
