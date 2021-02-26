@@ -31,7 +31,7 @@ import {getDistance as ol_sphere_getDistance} from 'ol/sphere'
  *  @param { ol.source.Vector | undefined } options.source Destination source for the drawn features.
  *  @param {ol.geom.GeometryType} options.type Drawing type ('Point', 'LineString', 'Polygon'), default LineString.
  *  @param {Number | undefined} options.minAccuracy minimum accuracy underneath a new point will be register (if no condition), default 20
- *  @param {function | undefined} options.condition a function that take a ol_Geolocation object and return a boolean to indicate whether location should be handled or not, default return true if accuraty < minAccuraty
+ *  @param {function | undefined} options.condition a function that take a ol_Geolocation object and return a boolean to indicate whether location should be handled or not, default return true if accuracy < minAccuracy
  *  @param {Object} options.attributes a list of attributes to register as Point properties: {accuracy:true,accuracyGeometry:true,heading:true,speed:true}, default none.
  *  @param {Number} options.tolerance tolerance to add a new point (in meter), default 5
  *  @param {Number} options.zoom zoom for tracking, default 16
