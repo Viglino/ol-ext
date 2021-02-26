@@ -14403,7 +14403,7 @@ ol.filter.Lego.prototype.setBrick = function (width, img, crossOrigin) {
   this.pattern.ctx = this.pattern.canvas.getContext("2d");
   this.pattern.ctx.fillStyle = this.pattern.ctx.createPattern (this.pattern.img, 'repeat');
   this.set("brickSize", width);
-  this.set("img", img.src);
+  if (img) this.set("img", img.src);
 };
 /** Get translated pattern
 *	@param {number} offsetX x offset

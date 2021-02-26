@@ -53,6 +53,8 @@
     and you may have to use a proxy to access the getCapabilities...
     <br/>
     Listen to the <i>load</i> event to get the selected layer or options to create it.
+    <br/>
+    Look at the console for the layer definition to insert into your code.
   </div>
 
   <!-- DIV pour la carte -->
@@ -133,6 +135,7 @@
       'Venise*': 'http://cigno.atlantedellalaguna.it/geoserver/ows?SERVICE=WMS&VERSION=1.3.0&FORMAT=image%2Fpng&LAYERS=carta_base',
       Geoportail: 'https://wxs.ign.fr/choisirgeoportail/geoportail/r/wms'
     },
+    // Show trace in the console
     trace: true
   });
   map.addControl(cap);
