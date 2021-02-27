@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
 <!----------------------------------------------------------
@@ -70,7 +70,7 @@
 			font-size: 1.5em;
 			padding: 0.2em 0em 0.2em 2em;
 		}
-		#accuraty
+		#accuracy
 		{	display: block;
 			background: #f00;
 			height:10px;
@@ -143,7 +143,7 @@
 		Options:
 		<ul>
 			<li>
-				You can define a <i>minAccuraty</i> overneath the location will be skipped or a <i>condition</i> function 
+				You can define a <i>minAccuracy</i> overneath the location will be skipped or a <i>condition</i> function 
 				to decide if the point should be registered.
 			</li>
 			<li>
@@ -186,7 +186,7 @@
 			<li>
 				Accurraty:
 				<div style="border:1px solid #000; width:200px;">
-					<div id="accuraty"></div>
+					<div id="accuracy"></div>
 				</div>
 			</li>
 			<li>
@@ -236,7 +236,7 @@
 		map.addInteraction(draw);
 
 		draw.on("tracking", function(e)
-		{	$("#accuraty").width((e.geolocation.getAccuracy()));
+		{	$("#accuracy").width((e.geolocation.getAccuracy()));
 			gauge.val(e.geolocation.getAccuracy());
 			$("#heading").val(e.geolocation.getHeading());
 			$("#z").val(e.geolocation.getAltitude());
