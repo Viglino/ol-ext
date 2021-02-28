@@ -1,6 +1,11 @@
 # ol-ext
 *Cool extensions for [OpenLayers](https://github.com/openlayers/openlayers) (ol)*.
 
+![](https://img.shields.io/npm/v/ol-ext.svg)
+![](https://img.shields.io/npm/dt/ol-ext.svg)
+![](https://img.shields.io/npm/dw/ol-ext)
+![](https://img.shields.io/npm/l/ol-ext.svg)
+
 [ol-ext](https://github.com/Viglino/ol-ext) is a set of extensions, controls, interactions, popup to use with Openlayers.    
 [View live examples online](http://viglino.github.io/ol-ext/) or the [API documentation](http://viglino.github.io/ol-ext/doc/doc-pages/).
 
