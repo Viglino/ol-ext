@@ -5098,6 +5098,17 @@
   border-width: 5px 10px;
   margin: -5px -21px;
 }
+
+.ol-popup-center.ol-popup-middle { 
+  margin: 0;
+}
+
+.ol-popup-top.ol-popup-left.ol-fixPopup,
+.ol-popup-top.ol-popup-right.ol-fixPopup,
+.ol-popup.ol-fixPopup {
+  margin: 0;
+}
+
 .ol-fixedoverlay {
     position: absolute;
     top: 0;
