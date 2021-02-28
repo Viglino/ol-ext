@@ -103,7 +103,7 @@
   </a>
 
   <div class="info">
-    Display fixed popup is an <a href="./map.popup.html">Openlayers popup</a> that has 
+    Fixed popups are <a href="./map.popup.html">Openlayers popups</a> that have 
     a fixed position on the map viewport. 
     You can drag the popup to place it on the map. 
     A link is drawn to attache the popup with its position on the map.
@@ -164,6 +164,11 @@
     // anim: true,
     closeBox: true
   });
+  var popup2 = new ol.Overlay.FixedPopup ({
+    popupClass: "default", //"tooltips", "warning" "black" "default", "tips", "shadow",
+    // anim: true,
+    closeBox: true
+  });
     
   // The map
   var map = new ol.Map ({
@@ -173,7 +178,7 @@
       center: [166326, 5992663]
     }),
     layers: layers,
-    overlays: [popup]
+    overlays: [popup, popup2]
   });
 
   // GeoJSON layer
@@ -202,13 +207,17 @@
     content += "<img src='"+feature.get("img")+"'/>";
     content += feature.get("text");
     content += '<br/><i>powered by <a href="https://github.com/Viglino/ol-ext">ol-ext</a></i>';
-    popup.show(feature.getGeometry().getFirstCoordinate(), content); 
+    if (select.getFeatures().getLength()>1) {
+      popup2.show(feature.getGeometry().getFirstCoordinate(), content); 
+    } else {
+      popup.show(feature.getGeometry().getFirstCoordinate(), content); 
+    }
   });
   select.getFeatures().on(['remove'], function(e) {
     popup.hide(); 
+    popup2.hide(); 
   })
 
-  
   function setStyle(st) {
     popup.setPopupClass(st);
     var color;
