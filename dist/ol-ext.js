@@ -27109,34 +27109,34 @@ ol.Overlay.FixedPopup = function (options) {
   this.element.addEventListener('pointerdown', function(e) {
     e.preventDefault();
     e.stopPropagation();
-    pointerEvents[e.id] = e;
+    pointerEvents[e.pointerId] = e;
     pixelPosition = this._pixel;
     rotIni = this.get('rotation');
     angleIni = angle(pointerEvents);
     move = false;
   }.bind(this));
   this.element.addEventListener('click', function(e) {
+    // Prevent click
     if (move) {
       e.preventDefault();
       e.stopPropagation();
     }
   }, true);
-  document.addEventListener('pointerup', function(e) {
-    if (pointerEvents[e.id]) {
-      delete pointerEvents[e.id];
+  var removePointer = function(e) {
+    if (pointerEvents[e.pointerId]) {
+      delete pointerEvents[e.pointerId];
       e.preventDefault();
     }
-  }.bind(this));
-  document.addEventListener('pointercancel', function(e) {
-    if (pointerEvents[e.id]) {
-      delete pointerEvents[e.id];
-      e.preventDefault();
+    if (pointerEvents2[e.pointerId]) {
+      delete pointerEvents2[e.pointerId];
     }
-  }.bind(this));
+  }.bind(this);
+  document.addEventListener('pointerup', removePointer);
+  document.addEventListener('pointercancel', removePointer);
   document.addEventListener('pointermove', function(e) {
-    if (pointerEvents[e.id]) {
+    if (pointerEvents[e.pointerId]) {
       e.preventDefault();
-      pointerEvents2[e.id] = e;
+      pointerEvents2[e.pointerId] = e;
       var c1 = centroid(pointerEvents);
       var c2 = centroid(pointerEvents2);
       var dx = c2[0] - c1[0];
@@ -27144,9 +27144,8 @@ ol.Overlay.FixedPopup = function (options) {
       move = move || (Math.abs(dx) < 3 && Math.abs(dy) < 3);
       this.setPixelPosition([pixelPosition[0]+dx, pixelPosition[1]+dy]);
       var a = angle(pointerEvents2);
-      if (a) {
-        var da = a - angleIni;
-        this.setRotation(rotIni+da);
+      if (a!==false && angleIni!==false) {
+        this.setRotation(rotIni + a - angleIni);
       }
     }
   }.bind(this));
