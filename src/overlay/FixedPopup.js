@@ -117,8 +117,8 @@ var ol_Overlay_FixedPopup = function (options) {
     e.stopPropagation();
     pointerEvents[e.pointerId] = e;
     pixelPosition = this._pixel;
-    rotIni = this.get('rotation');
-    angleIni = angle(pointerEvents) || 0;
+    rotIni = this.get('rotation') || 0;
+    angleIni = angle(pointerEvents);
     move = false;
   }.bind(this));
   this.element.addEventListener('click', function(e) {
@@ -151,7 +151,7 @@ var ol_Overlay_FixedPopup = function (options) {
       this.setPixelPosition([pixelPosition[0]+dx, pixelPosition[1]+dy]);
       var a = angle(pointerEvents2);
       if (a!==false && angleIni!==false) {
-        this.setRotation(rotIni + a - angleIni);
+        this.setRotation(rotIni + (a - angleIni)*2);
       }
     }
   }.bind(this));
