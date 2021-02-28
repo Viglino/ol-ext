@@ -27099,7 +27099,7 @@ ol.Overlay.FixedPopup = function (options) {
     if (v.length<2) return false;
     var touch0 = pevents[v[0]];
     var touch1 = pevents[v[1]];
-    return Math.atan2(touch1.clientY - touch0.clientY, touch1.clientX - touch0.clientX);
+    return Math.atan2(touch1.clientY - touch0.clientY, touch1.clientX - touch0.clientX) * 180 / Math.PI;
   }
   // Handle popup move
   var pointerEvents = {};
@@ -27112,7 +27112,7 @@ ol.Overlay.FixedPopup = function (options) {
     pointerEvents[e.pointerId] = e;
     pixelPosition = this._pixel;
     rotIni = this.get('rotation');
-    angleIni = angle(pointerEvents);
+    angleIni = angle(pointerEvents) || 0;
     move = false;
   }.bind(this));
   this.element.addEventListener('click', function(e) {
