@@ -1,7 +1,7 @@
 # ol-ext
 *Cool extensions for [OpenLayers](https://github.com/openlayers/openlayers) (ol)*.
 
-![](https://img.shields.io/npm/v/ol-ext.svg)
+[![](https://img.shields.io/npm/v/ol-ext.svg)](https://www.npmjs.com/package/ol-ext)
 ![](https://img.shields.io/npm/dt/ol-ext.svg)
 ![](https://img.shields.io/npm/dw/ol-ext)
 ![](https://img.shields.io/npm/l/ol-ext.svg)
