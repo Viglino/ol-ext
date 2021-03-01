@@ -50,7 +50,7 @@ var ol_Overlay_Popup = function (options) {
   ol_ext_element.create('BUTTON', {
     className: 'closeBox' + (options.closeBox ? ' hasclosebox':''),
     type: 'button',
-    click: function(e) {
+    click: function() {
       this.hide();
     }.bind(this),
     parent: element

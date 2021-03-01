@@ -5,6 +5,7 @@
 
 import ol_ext_inherits from '../util/ext'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
+import {altKeyOnly as ol_events_condition_altKeyOnly} from 'ol/events/condition'
 
 /** An interaction to snap on pixel on a layer
  * The CenterTouch interaction modifies map browser event coordinate and pixel properties to force pointer on the viewport center to any interaction that them.

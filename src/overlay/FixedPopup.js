@@ -3,8 +3,17 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_layer_Image from 'ol/layer/Image'
+import ol_source_ImageCanvas from 'ol/source/ImageCanvas'
+import ol_style_Style from 'ol/style/Style'
+import ol_style_Fill from 'ol/style/Fill'
+import {asString as ol_color_asString} from 'ol/color'
+
 import ol_ext_inherits from '../util/ext'
 import ol_ext_element from '../util/element'
+import ol_Overlay_Popup from './Popup'
+import {ol_coordinate_dist2d} from "../geom/GeomUtils";
 
 /**
  * A popup element to be displayed over the map and attached to a single map
@@ -17,6 +26,8 @@ import ol_ext_element from '../util/element'
  * @param {} options Extend Overlay options 
  *	@param {String} options.popupClass the a class of the overlay to style the popup.
  *	@param {ol.style.Style} options.style a style to style the link on the map.
+ *	@param {number} options.minScale min scale for the popup, default .5
+ *	@param {number} options.maxScale max scale for the popup, default 2
  *	@param {bool} options.closeBox popup has a close box, default false.
  *	@param {function|undefined} options.onclose: callback function when popup is closed
  *	@param {function|undefined} options.onshow callback function when popup is shown
@@ -31,11 +42,14 @@ var ol_Overlay_FixedPopup = function (options) {
   options.className = (options.className || '') + ' ol-fixPopup';
   ol_Overlay_Popup.call(this, options);
 
+  this.set('minScale', options.minScale || .5);
+  this.set('maxScale', options.maxScale || 2);
+
   var canvas = document.createElement('canvas');
    
   this._overlay = new ol_layer_Image({
     source: new ol_source_ImageCanvas({
-      canvasFunction: function(extent, res, ratio, size, proj) {
+      canvasFunction: function(extent, res, ratio, size) {
         canvas.width  = size[0];
         canvas.height = size[1];
         return canvas
@@ -106,28 +120,38 @@ var ol_Overlay_FixedPopup = function (options) {
     var touch1 = pevents[v[1]];
     return Math.atan2(touch1.clientY - touch0.clientY, touch1.clientX - touch0.clientX) * 180 / Math.PI;
   }
+  // Get distance beetween events
+  function distance(pevents) {
+    var v = Object.keys(pevents);
+    if (v.length<2) return false;
+    return ol_coordinate_dist2d(pevents[v[0]], pevents[v[1]]);
+  }
 
   // Handle popup move
   var pointerEvents = {};
   var pointerEvents2 = {};
   var pixelPosition = [];
-  var angleIni, rotIni, move;
+  var angleIni, distIni, rotIni, scaleIni, move;
+  // down
   this.element.addEventListener('pointerdown', function(e) {
     e.preventDefault();
     e.stopPropagation();
     pointerEvents[e.pointerId] = e;
     pixelPosition = this._pixel;
     rotIni = this.get('rotation') || 0;
+    scaleIni = this.get('scale') || 1;
     angleIni = angle(pointerEvents);
+    distIni = distance(pointerEvents);
     move = false;
   }.bind(this));
+  // Prevent click when move
   this.element.addEventListener('click', function(e) {
-    // Prevent click
     if (move) {
       e.preventDefault();
       e.stopPropagation();
     }
   }, true);
+  // up / cancel
   var removePointer = function(e) {
     if (pointerEvents[e.pointerId]) {
       delete pointerEvents[e.pointerId];
@@ -139,6 +163,7 @@ var ol_Overlay_FixedPopup = function (options) {
   }.bind(this);
   document.addEventListener('pointerup', removePointer);
   document.addEventListener('pointercancel', removePointer);
+  // move
   document.addEventListener('pointermove', function(e) {
     if (pointerEvents[e.pointerId]) {
       e.preventDefault();
@@ -152,6 +177,10 @@ var ol_Overlay_FixedPopup = function (options) {
       var a = angle(pointerEvents2);
       if (a!==false && angleIni!==false) {
         this.setRotation(rotIni + (a - angleIni)*2);
+      }
+      var d = distance(pointerEvents2);
+      if (d!==false && distIni) {
+        this.setScale(scaleIni * d / distIni);
       }
     }
   }.bind(this));
@@ -203,6 +232,7 @@ ol_Overlay_FixedPopup.prototype.updatePixelPosition = function () {
 ol_Overlay_FixedPopup.prototype.updateRenderedPosition = function (pixel, mapsize) {
   ol_Overlay_Popup.prototype.updateRenderedPosition.call(this, pixel, mapsize);
   this.setRotation();
+  this.setScale()
 };
 
 /** Set pixel position
@@ -273,9 +303,23 @@ ol_Overlay_FixedPopup.prototype.setPopupClass = function (c) {
 ol_Overlay_FixedPopup.prototype.setRotation = function (angle) {
   if (typeof(angle) === 'number') this.set('rotation', angle);
   if (/rotate/.test(this.element.style.transform)) {
-    this.element.style.transform = this.element.style.transform.replace(/rotate\((-?\d+)deg\)/,'rotate('+(this.get('rotation')||0)+'deg)')
+    this.element.style.transform = this.element.style.transform.replace(/rotate\((-?[\d,.]+)deg\)/,'rotate('+(this.get('rotation')||0)+'deg)')
   } else {
     this.element.style.transform = this.element.style.transform + ' rotate('+(this.get('rotation')||0)+'deg)';
+  }
+};
+
+/** Set poppup scale
+ * @param {number} scale
+ * @api
+ */
+ol_Overlay_FixedPopup.prototype.setScale = function (scale) {
+  if (typeof(scale) === 'number') this.set('scale', scale);
+  scale = Math.min(Math.max(this.get('minScale')||0, this.get('scale')||1 ), this.get('maxScale')||2);
+  if (/scale/.test(this.element.style.transform)) {
+    this.element.style.transform = this.element.style.transform.replace(/scale\(([\d,.]+)\)/,'scale('+(scale)+')')
+  } else {
+    this.element.style.transform = this.element.style.transform + ' scale('+(scale)+')';
   }
 };
 
