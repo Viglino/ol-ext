@@ -27185,15 +27185,16 @@ ol.Overlay.FixedPopup = function (options) {
       var dx = c2[0] - c1[0];
       var dy = c2[1] - c1[1];
       move = move || Math.abs(dx) > 3 || Math.abs(dy) > 3;
-      this.setPixelPosition([pixelPosition[0]+dx, pixelPosition[1]+dy]);
       var a = angle();
       if (a) {
-        this.setRotation(rotIni + a*1.5);
+        this.setRotation(rotIni + a*1.5, false);
       }
       var d = distance(pointerEvents2);
       if (d!==false && distIni) {
-        this.setScale(scaleIni * d / distIni);
+        this.setScale(scaleIni * d / distIni, false);
+        distIni = scaleIni * d / this.get('scale');
       }
+      this.setPixelPosition([pixelPosition[0]+dx, pixelPosition[1]+dy]);
     }
   }.bind(this));
 };
@@ -27303,28 +27304,34 @@ ol.Overlay.FixedPopup.prototype.setPopupClass = function (c) {
 };
 /** Set poppup rotation
  * @param {number} angle
+ * @param {booelan} update update popup, default true
  * @api
  */
-ol.Overlay.FixedPopup.prototype.setRotation = function (angle) {
+ol.Overlay.FixedPopup.prototype.setRotation = function (angle, update) {
   if (typeof(angle) === 'number') this.set('rotation', angle);
-  if (/rotate/.test(this.element.style.transform)) {
-    this.element.style.transform = this.element.style.transform.replace(/rotate\((-?[\d,.]+)deg\)/,'rotate('+(this.get('rotation')||0)+'deg)')
-  } else {
-    this.element.style.transform = this.element.style.transform + ' rotate('+(this.get('rotation')||0)+'deg)';
+  if (update!==false) {
+    if (/rotate/.test(this.element.style.transform)) {
+      this.element.style.transform = this.element.style.transform.replace(/rotate\((-?[\d,.]+)deg\)/,'rotate('+(this.get('rotation')||0)+'deg)')
+    } else {
+      this.element.style.transform = this.element.style.transform + ' rotate('+(this.get('rotation')||0)+'deg)';
+    }
   }
 };
 /** Set poppup scale
  * @param {number} scale
+ * @param {booelan} update update popup, default true
  * @api
  */
-ol.Overlay.FixedPopup.prototype.setScale = function (scale) {
+ol.Overlay.FixedPopup.prototype.setScale = function (scale, update) {
   if (typeof(scale) === 'number') this.set('scale', scale);
   scale = Math.min(Math.max(this.get('minScale')||0, this.get('scale')||1 ), this.get('maxScale')||2);
   this.set('scale', scale);
-  if (/scale/.test(this.element.style.transform)) {
-    this.element.style.transform = this.element.style.transform.replace(/scale\(([\d,.]+)\)/,'scale('+(scale)+')')
-  } else {
-    this.element.style.transform = this.element.style.transform + ' scale('+(scale)+')';
+  if (update!==false) {
+    if (/scale/.test(this.element.style.transform)) {
+      this.element.style.transform = this.element.style.transform.replace(/scale\(([\d,.]+)\)/,'scale('+(scale)+')')
+    } else {
+      this.element.style.transform = this.element.style.transform + ' scale('+(scale)+')';
+    }
   }
 };
 /** Set link style
