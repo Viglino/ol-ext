@@ -17607,8 +17607,8 @@ ol.interaction.Hover.prototype.handleMove_ = function(e) {
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Interaction to handle longtouch events
  * @constructor
@@ -17616,43 +17616,45 @@ ol.interaction.Hover.prototype.handleMove_ = function(e) {
  * @param {olx.interaction.LongTouchOptions} 
  * 	@param {function | undefined} options.handleLongTouchEvent Function handling "longtouch" events, it will receive a mapBrowserEvent.
  *	@param {interger | undefined} options.delay The delay for a long touch in ms, default is 1000
- */
-ol.interaction.LongTouch = function(options)
-{	if (!options) options = {};
-	this.delay_ = options.delay || 1000;
-	var ltouch = options.handleLongTouchEvent || function(){};
-	var _timeout = null;
-	ol.interaction.Interaction.call(this,
-	{	handleEvent: function(e)
-		{	if (this.getActive())
-			{	switch (e.type)
-				{	case 'pointerdown': 
-						if (_timeout) clearTimeout(_timeout);
-						_timeout = setTimeout (function()
-							{	e.type = "longtouch";
-								ltouch(e) 
-							}, this.delay_);
-						break;
-					/* case 'pointermove': */
-					case 'pointerdrag':
-					case 'pointerup':
-						if (_timeout) 
-						{	clearTimeout(_timeout);
-							_timeout = null;
-						}
-						break;
-					default: break;
-				}
-			}
-			else
-			{	if (_timeout) 
-				{	clearTimeout(_timeout);
-					_timeout = null;
-				}
-			}
-			return true;
-		}
-	});
+*/
+ol.interaction.LongTouch = function(options) {
+  if (!options) options = {};
+  this.delay_ = options.delay || 1000;
+  var ltouch = options.handleLongTouchEvent || function(){};
+  var _timeout = null;
+  ol.interaction.Interaction.call(this, {
+    handleEvent: function(e) {
+      console.log(e)
+      if (this.getActive()) {
+        switch (e.type) {
+          case 'pointerdown': {
+            if (_timeout) clearTimeout(_timeout);
+            _timeout = setTimeout (function() {
+              e.type = "longtouch";
+              ltouch(e) 
+            }, this.delay_);
+            break;
+          }
+          /* case 'pointermove': */
+          case 'pointerdrag':
+          case 'pointerup': {
+            if (_timeout) {
+              clearTimeout(_timeout);
+              _timeout = null;
+            }
+            break;
+          }
+          default: break;
+        }
+      } else {
+        if (_timeout) {
+          clearTimeout(_timeout);
+          _timeout = null;
+        }
+      }
+      return true;
+    }
+  });
 };
 ol.ext.inherits(ol.interaction.LongTouch, ol.interaction.Interaction);
 
