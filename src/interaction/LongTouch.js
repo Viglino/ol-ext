@@ -22,7 +22,6 @@ var ol_interaction_LongTouch = function(options) {
   var _timeout = null;
   ol_interaction_Interaction.call(this, {
     handleEvent: function(e) {
-      console.log(e)
       if (this.getActive()) {
         switch (e.type) {
           case 'pointerdown': {

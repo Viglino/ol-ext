@@ -63,7 +63,9 @@
     source: new ol.source.XYZ({
       url: 'https://wxs.ign.fr/pratique/geoportail/wmts?layer=ORTHOIMAGERY.ORTHOPHOTOS&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fjpeg&TileMatrix={z}&TileCol={x}}&TileRow={y}',
       attributions: '<a href="https://www.geoportail.gouv.fr/">&copy; IGN-Geoportail</a>'
-		})
+		}),
+    updateWhileAnimating: true,
+    updateWhileInteracting: true
   });
 
 	// The map

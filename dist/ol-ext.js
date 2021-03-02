@@ -17624,7 +17624,6 @@ ol.interaction.LongTouch = function(options) {
   var _timeout = null;
   ol.interaction.Interaction.call(this, {
     handleEvent: function(e) {
-      console.log(e)
       if (this.getActive()) {
         switch (e.type) {
           case 'pointerdown': {
@@ -31821,7 +31820,8 @@ ol.style.Profile.prototype._renderLine = function(geom, g, l, e) {
   var i, p, ctx = e.context;
   var cos = Math.cos(e.rotation)
   var sin = Math.sin(e.rotation)
-  var a = e.pixelRatio / e.resolution;
+  // var a = e.pixelRatio / e.resolution;
+  var a = ol.coordinate.dist2d(geom[0],geom[1]) / ol.coordinate.dist2d(g[0],g[1])
   var dx = geom[0][0] - g[0][0] * a *cos - g[0][1] * a *sin ;
   var dy = geom[0][1] - g[0][0] * a * sin + g[0][1] * a * cos;
   geom = l.getCoordinates();
