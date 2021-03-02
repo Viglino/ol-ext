@@ -124,7 +124,7 @@ var ol_Overlay_FixedPopup = function (options) {
   function distance(pevents) {
     var v = Object.keys(pevents);
     if (v.length<2) return false;
-    return ol_coordinate_dist2d(pevents[v[0]], pevents[v[1]]);
+    return ol_coordinate_dist2d([pevents[v[0]].clientX, pevents[v[0]].clientY], [pevents[v[1]].clientX, pevents[v[1]].clientY]);
   }
 
   // Handle popup move
@@ -136,7 +136,19 @@ var ol_Overlay_FixedPopup = function (options) {
   this.element.addEventListener('pointerdown', function(e) {
     e.preventDefault();
     e.stopPropagation();
+    // Reset events to this position
+    for (let i in pointerEvents) {
+      if (pointerEvents2[i]) {
+        pointerEvents[i] = pointerEvents2[i];
+      }
+    }
     pointerEvents[e.pointerId] = e;
+    /* Simulate a second touch event * /
+    window.touchDebug = function() {
+      pointerEvents['touch'] = e;
+      pointerEvents2['touch'] = e;
+    }
+    /**/
     pixelPosition = this._pixel;
     rotIni = this.get('rotation') || 0;
     scaleIni = this.get('scale') || 1;
@@ -172,11 +184,13 @@ var ol_Overlay_FixedPopup = function (options) {
       var c2 = centroid(pointerEvents2);
       var dx = c2[0] - c1[0];
       var dy = c2[1] - c1[1];
-      move = move || (Math.abs(dx) < 3 && Math.abs(dy) < 3);
+      move = move || Math.abs(dx) > 3 || Math.abs(dy) > 3;
       this.setPixelPosition([pixelPosition[0]+dx, pixelPosition[1]+dy]);
       var a = angle(pointerEvents2);
       if (a!==false && angleIni!==false) {
-        this.setRotation(rotIni + (a - angleIni)*2);
+        if (angleIni > 0 && a < 0) a += 360;
+        else if (angleIni < 0 && a > 0) a -= 360;
+        this.setRotation(rotIni + (a - angleIni)*1.5);
       }
       var d = distance(pointerEvents2);
       if (d!==false && distIni) {
@@ -316,6 +330,7 @@ ol_Overlay_FixedPopup.prototype.setRotation = function (angle) {
 ol_Overlay_FixedPopup.prototype.setScale = function (scale) {
   if (typeof(scale) === 'number') this.set('scale', scale);
   scale = Math.min(Math.max(this.get('minScale')||0, this.get('scale')||1 ), this.get('maxScale')||2);
+  this.set('scale', scale);
   if (/scale/.test(this.element.style.transform)) {
     this.element.style.transform = this.element.style.transform.replace(/scale\(([\d,.]+)\)/,'scale('+(scale)+')')
   } else {

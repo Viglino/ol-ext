@@ -116,12 +116,12 @@
       width: 100%;
     }
   }
-  @media (max-width: 950px) {
+  @media (max-width: 1000px) {
     header h1 span {
       display: none;
     }
   }
-  @media (max-width: 500px) {
+  @media (max-width: 580px) {
     .navbar {
       height: 6.5em;
     }
@@ -132,7 +132,9 @@
       margin-top: 7em;
     }
     .navbar .news {
-      display: none;
+      position: absolute;
+      right: 2em;
+      top: .15em;
     }
   }
 
@@ -145,9 +147,12 @@
     height: 9em;
     overflow: hidden;
   }
+  .desc p {
+    max-width: 50em;
+    margin: .5em auto 1em;
+    display: block;
+  }
   #examples > div.desc {
-    margin:-0.5em 0 1em;
-    padding:1em 1em 0;
     width:100%;
     box-sizing: border-box;
   }

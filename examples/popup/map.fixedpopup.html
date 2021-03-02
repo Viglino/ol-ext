@@ -120,7 +120,6 @@
       <option value="bottom-left">bottom-left</option>
       <option value="bottom-center">bottom-center</option>
       <option value="bottom-right">bottom-right</option>
-      <option value="top-auto">top-auto</option>
       <option value="top-left">top-left</option>
       <option value="top-center">top-center</option>
       <option value="top-right">top-right</option>
@@ -147,7 +146,7 @@
     <input id="cb" type="checkbox" checked onchange="popup.setClosebox(this.checked);" />
     <label for="cb">hasclosebox</label>
   </div>
-  <p>Click on the points to show a popup !</p>
+  <p>Click on the points to show a popup ! (shift+click for a new one)</p>
   
   <script type="text/javascript">
   // Layers
@@ -206,7 +205,7 @@
     var content = "";
     content += "<img src='"+feature.get("img")+"'/>";
     content += feature.get("text");
-    content += '<br/><i>powered by <a href="https://github.com/Viglino/ol-ext">ol-ext</a></i>';
+    content += '<br/><i>powered by <a href="https://github.com/Viglino/ol-ext" target="ol">ol-ext</a></i>';
     if (select.getFeatures().getLength()>1) {
       popup2.show(feature.getGeometry().getFirstCoordinate(), content); 
     } else {
