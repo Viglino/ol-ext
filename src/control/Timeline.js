@@ -528,18 +528,23 @@ ol_control_Timeline.prototype._drawTime = function(div, min, max, scale) {
           day = dday;
         } else {
           if (d > this._maxDate) break;
-          ol_ext_element.create('DIV', {
-            className: 'ol-time ol-day',
-            style: {
-              left: this._getOffsetFromDate(d) - dx
-            },
-            html: day,
-            parent: tdiv
-          });
+          if (day>1) {
+            var offdate = this._getOffsetFromDate(d);
+            if (this._getOffsetFromDate(new Date(year, month+1, 1)) - offdate > heigth) {
+              ol_ext_element.create('DIV', {
+                className: 'ol-time ol-day',
+                style: {
+                  left: offdate - dx
+                },
+                html: day,
+                parent: tdiv
+              });
+            }
+          }
           year = d.getFullYear();
           month = d.getMonth();
           day = d.getDate() + dday;
-          if (day+dday/2>31) {
+          if (day > new Date(year, month+1, 0).getDate()) {
             month++;
             day = dday;
           }

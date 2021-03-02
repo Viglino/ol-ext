@@ -12031,18 +12031,23 @@ ol.control.Timeline.prototype._drawTime = function(div, min, max, scale) {
           day = dday;
         } else {
           if (d > this._maxDate) break;
-          ol.ext.element.create('DIV', {
-            className: 'ol-time ol-day',
-            style: {
-              left: this._getOffsetFromDate(d) - dx
-            },
-            html: day,
-            parent: tdiv
-          });
+          if (day>1) {
+            var offdate = this._getOffsetFromDate(d);
+            if (this._getOffsetFromDate(new Date(year, month+1, 1)) - offdate > heigth) {
+              ol.ext.element.create('DIV', {
+                className: 'ol-time ol-day',
+                style: {
+                  left: offdate - dx
+                },
+                html: day,
+                parent: tdiv
+              });
+            }
+          }
           year = d.getFullYear();
           month = d.getMonth();
           day = d.getDate() + dday;
-          if (day+dday/2>31) {
+          if (day > new Date(year, month+1, 0).getDate()) {
             month++;
             day = dday;
           }
@@ -27099,12 +27104,20 @@ ol.Overlay.FixedPopup = function (options) {
     return [clientX / length, clientY / length];
   }
   // Get events angle
-  function angle(pevents) {
-    var v = Object.keys(pevents);
+  function angle() {
+    var p1,p2, v = Object.keys(pointerEvents);
     if (v.length<2) return false;
-    var touch0 = pevents[v[0]];
-    var touch1 = pevents[v[1]];
-    return Math.atan2(touch1.clientY - touch0.clientY, touch1.clientX - touch0.clientX) * 180 / Math.PI;
+    p1 = pointerEvents[v[0]];
+    p2 = pointerEvents[v[1]];
+    var v1 = [p2.clientX - p1.clientX, p2.clientY - p1.clientY];
+    p1 = pointerEvents2[v[0]];
+    p2 = pointerEvents2[v[1]];
+    var v2 = [p2.clientX - p1.clientX, p2.clientY - p1.clientY];
+    var d1 = Math.sqrt(v1[0]*v1[0]+v1[1]*v1[1]);
+    var d2 = Math.sqrt(v2[0]*v2[0]+v2[1]*v2[1]);
+    var a = Math.acos((v1[0]*v2[0]+v1[1]*v2[1]) / (d1*d2)) * 360 / Math.PI;
+    if (v1[0]*v2[1]-v1[1]*v2[0] < 0) return -a;
+    else return a;
   }
   // Get distance beetween events
   function distance(pevents) {
@@ -27116,7 +27129,7 @@ ol.Overlay.FixedPopup = function (options) {
   var pointerEvents = {};
   var pointerEvents2 = {};
   var pixelPosition = [];
-  var angleIni, distIni, rotIni, scaleIni, move;
+  var distIni, rotIni, scaleIni, move;
   // down
   this.element.addEventListener('pointerdown', function(e) {
     e.preventDefault();
@@ -27128,16 +27141,9 @@ ol.Overlay.FixedPopup = function (options) {
       }
     }
     pointerEvents[e.pointerId] = e;
-    /* Simulate a second touch event * /
-    window.touchDebug = function() {
-      pointerEvents['touch'] = e;
-      pointerEvents2['touch'] = e;
-    }
-    /**/
     pixelPosition = this._pixel;
     rotIni = this.get('rotation') || 0;
     scaleIni = this.get('scale') || 1;
-    angleIni = angle(pointerEvents);
     distIni = distance(pointerEvents);
     move = false;
   }.bind(this));
@@ -27157,6 +27163,15 @@ ol.Overlay.FixedPopup = function (options) {
     if (pointerEvents2[e.pointerId]) {
       delete pointerEvents2[e.pointerId];
     }
+    /* Simulate a second touch pointer * /
+    if (e.metaKey || e.ctrlKey) {
+      pointerEvents['touch'] = e;
+      pointerEvents2['touch'] = e;
+    } else {
+      delete pointerEvents['touch'];
+      delete pointerEvents2['touch'];
+    }
+    /**/
   }.bind(this);
   document.addEventListener('pointerup', removePointer);
   document.addEventListener('pointercancel', removePointer);
@@ -27171,11 +27186,9 @@ ol.Overlay.FixedPopup = function (options) {
       var dy = c2[1] - c1[1];
       move = move || Math.abs(dx) > 3 || Math.abs(dy) > 3;
       this.setPixelPosition([pixelPosition[0]+dx, pixelPosition[1]+dy]);
-      var a = angle(pointerEvents2);
-      if (a!==false && angleIni!==false) {
-        if (angleIni > 0 && a < 0) a += 360;
-        else if (angleIni < 0 && a > 0) a -= 360;
-        this.setRotation(rotIni + (a - angleIni)*1.5);
+      var a = angle();
+      if (a) {
+        this.setRotation(rotIni + a*1.5);
       }
       var d = distance(pointerEvents2);
       if (d!==false && distIni) {
