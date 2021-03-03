@@ -16004,6 +16004,7 @@ ol.interaction.DragOverlay.prototype.removeOverlay = function (ov) {
  * @fires modifyend
  * @param {olx.interaction.DrawHoleOptions} options extend olx.interaction.DrawOptions
  * 	@param {Array<ol.layer.Vector> | function | undefined} options.layers A list of layers from which polygons should be selected. Alternatively, a filter function can be provided. default: all visible layers
+ * 	@param {Array<ol.Feature> | ol.Collection<ol.Feature> | function | undefined} options.features An array or a collection of features the interaction applies on or a function that takes a feature and a layer and returns true if the feature is a candidate
  * 	@param { ol.style.Style | Array<ol.style.Style> | StyleFunction | undefined }	Style for the selected features, default: default edit style
  */
 ol.interaction.DrawHole = function(options) {
@@ -16035,6 +16036,21 @@ ol.interaction.DrawHole = function(options) {
         return (options.layers.indexOf(l) >= 0); 
       };
     }
+  }
+  // Features to apply on 
+  if (typeof(options.features) === 'function') {
+    this._features = options.features;
+  } else if (options.features) {
+    var features = options.features;
+    this._features = function(f) {
+      if (features.indexOf) {
+        return !!features[features.indexOf(f)];
+      } else {
+        return !!features.item(features.getArray().indexOf(f));
+      }
+    }
+  } else {
+    this._features = function() { return true }
   }
   // Start drawing if inside a feature
   this.on('drawstart', this._startDrawing.bind(this));
@@ -16086,39 +16102,36 @@ ol.interaction.DrawHole.prototype.getPolygon = function() {
  */
 ol.interaction.DrawHole.prototype._startDrawing = function(e) {
   var map = this.getMap();
-  var layersFilter = this.layers_;
   this._feature = e.feature;
   var coord = e.feature.getGeometry().getCoordinates()[0][0];
-  // Check object under the pointer
-  var features = map.getFeaturesAtPixel(
-    map.getPixelFromCoordinate(coord), {
-      layerFilter: layersFilter
-    }
-  );
   this._current = null;
-  if (features) {
-    for (var k=0; k<features.length; k++) {
-      var poly = features[k].getGeometry();
-      if (poly.getType() === "Polygon"
-        && poly.intersectsCoordinate(coord)) {
-        this._polygonIndex = false;
-        this._polygon = poly;
-        this._current = features[k];
-      }
-      else if (poly.getType() === "MultiPolygon"
-        && poly.intersectsCoordinate(coord)) {
-        for (var i=0, p; p=poly.getPolygon(i); i++) {
-          if (p.intersectsCoordinate(coord)) {
-            this._polygonIndex = i;
-            this._polygon = p;
-            this._current = features[k];
-            break;
+  // Check object under the pointer
+  map.forEachFeatureAtPixel(
+    map.getPixelFromCoordinate(coord),
+    function(feature, layer) {
+      if (this._features(feature, layer)) {
+        var poly = feature.getGeometry();
+        if (poly.getType() === "Polygon"
+          && poly.intersectsCoordinate(coord)) {
+          this._polygonIndex = false;
+          this._polygon = poly;
+          this._current = feature;
+        } else if (poly.getType() === "MultiPolygon"
+          && poly.intersectsCoordinate(coord)) {
+          for (var i=0, p; p=poly.getPolygon(i); i++) {
+            if (p.intersectsCoordinate(coord)) {
+              this._polygonIndex = i;
+              this._polygon = p;
+              this._current = feature;
+              break;
+            }
           }
         }
       }
-      if (this._current) break;
+    }.bind(this), {
+      layerFilter: this.layers_
     }
-  }
+  );
   this._select.getFeatures().clear();
   if (!this._current) {
     this.setActive(false);
