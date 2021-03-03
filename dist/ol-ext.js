@@ -1212,7 +1212,7 @@ ol.ext.inherits(ol.control.CanvasBase, ol.control.Control);
  * Remove the control from its current map and attach it to the new map.
  * Subclasses may set up event handlers to get notified about changes to
  * the map here.
- * @param {o.Map} map Map.
+ * @param {import('ol/Map')} map Map.
  * @api stable
  */
 ol.control.CanvasBase.prototype.setMap = function (map) {
@@ -1288,7 +1288,7 @@ ol.control.CanvasBase.prototype.getTextStroke = function() {
 ol.control.CanvasBase.prototype.getTextFill = function() {
   var t = this._style.getText();
   if (!t) t = new ol.style.Text({});
-  if (!t.getFill()) t.setFill(new ol.style.Fill ({ color:'#fff', width:3 }));
+  if (!t.getFill()) t.setFill(new ol.style.Fill ({ color:'#fff' }));
   return t.getFill();
 };
 /** Get text font
@@ -1301,7 +1301,7 @@ ol.control.CanvasBase.prototype.getTextFont = function() {
   return t.getFont();
 };
 /** Draw the control on canvas
- * @private
+ * @protected
  */
 ol.control.CanvasBase.prototype._draw = function(/* e */) {
   console.warn('[CanvasBase] draw function not implemented.');
@@ -1592,7 +1592,6 @@ ol.control.Button.prototype.setVisible = function (val) {
 /**
  * Set the button title
  * @param {string} title
- * @returns {undefined}
  */
 ol.control.Button.prototype.setTitle = function(title) {
   this.button_.setAttribute('title', title);
@@ -1600,14 +1599,13 @@ ol.control.Button.prototype.setTitle = function(title) {
 /**
  * Set the button html
  * @param {string} html
- * @returns {undefined}
  */
 ol.control.Button.prototype.setHtml = function(html) {
   ol.ext.element.setHTML (this.button_, html);
 };
 /**
  * Get the button element
- * @returns {undefined}
+ * @returns {Element}
  */
 ol.control.Button.prototype.getButtonElement = function() {
   return this.button_;
@@ -3470,15 +3468,15 @@ ol.control.LayerSwitcher.prototype.setprogress_ = function(layer) {
 /** Control bar for OL3
  * The control bar is a container for other controls. It can be used to create toolbars.
  * Control bars can be nested and combined with ol.control.Toggle to handle activate/deactivate.
- *
+ * @class
  * @constructor
- * @extends {ol.control.Control}
+ * @extends ol.control.Control
  * @param {Object=} options Control options.
  *  @param {String} options.className class of the control
- *  @param {bool} options.group is a group, default false
- *  @param {bool} options.toggleOne only one toggle control is active at a time, default false
- *  @param {bool} options.autoDeactivate used with subbar to deactivate all control when top level control deactivate, default false
- *  @param {Array<_ol_control_>} options.controls a list of control to add to the bar
+ *  @param {boolean} options.group is a group, default false
+ *  @param {boolean} options.toggleOne only one toggle control is active at a time, default false
+ *  @param {boolean} options.autoDeactivate used with subbar to deactivate all control when top level control deactivate, default false
+ *  @param {Array<ol.control.Control> } options.controls a list of control to add to the bar
  */
 ol.control.Bar = function(options) {
   if (!options) options={};
@@ -3506,7 +3504,7 @@ ol.control.Bar = function(options) {
 };
 ol.ext.inherits(ol.control.Bar, ol.control.Control);
 /** Set the control visibility
- * @param {boolean} b
+ * @param {boolean} val
  */
 ol.control.Bar.prototype.setVisible = function (val) {
   if (val) this.element.style.display = '';
@@ -3521,7 +3519,7 @@ ol.control.Bar.prototype.getVisible = function () {
 /**
  * Set the map instance the control is associated with
  * and add its controls associated to this map.
- * @param {_ol_Map_} map The map instance.
+ * @param {import('ol/Map')} map The map instance.
  */
 ol.control.Bar.prototype.setMap = function (map) {
   ol.control.Control.prototype.setMap.call(this, map);
@@ -3532,17 +3530,17 @@ ol.control.Bar.prototype.setMap = function (map) {
   }
 };
 /** Get controls in the panel
- *	@param {Array<_ol_control_>}
+ *	@param {Array<import('ol/control/Control')>}
  */
 ol.control.Bar.prototype.getControls = function () {
   return this.controls_;
 };
 /** Set tool bar position
- *	@param {top|left|bottom|right} pos
+ * @param {string} pos a combinaison of top|left|bottom|right
  */
 ol.control.Bar.prototype.setPosition = function (pos) {
   this.element.classList.remove('ol-left', 'ol-top', 'ol-bottom', 'ol-right');
-  pos=pos.split ('-');
+  pos = pos.split ('-');
   for (var i=0; i<pos.length; i++) {
     switch (pos[i]) {
       case 'top':
@@ -3556,7 +3554,7 @@ ol.control.Bar.prototype.setPosition = function (pos) {
   }
 };
 /** Add a control to the bar
- *	@param {_ol_control_} c control to add
+ *	@param {ol.control.Control} c control to add
  */
 ol.control.Bar.prototype.addControl = function (c) {
   this.controls_.push(c);
@@ -3572,7 +3570,7 @@ ol.control.Bar.prototype.addControl = function (c) {
   }
 };
 /** Deativate all controls in a bar
- * @param {_ol_control_} except a control
+ * @param {import('ol/control/Control')} [except] a control
  */
 ol.control.Bar.prototype.deactivateControls = function (except) {
   for (var i=0; i<this.controls_.length; i++) {
@@ -3652,7 +3650,7 @@ ol.control.Bar.prototype.getControlsByName = function(name) {
  * @see http://www.kreidefossilien.de/webgis/dokumentation/beispiele/export-map-to-png-with-scale
  *
  * @constructor
- * @extends {ol.control.Attribution}
+ * @extends ol.control.Attribution
  * @param {Object=} options extend the ol.control.Attribution options.
  * 	@param {ol.style.Style} options.style  option is usesd to draw the text.
  */
@@ -3759,8 +3757,8 @@ ol.control.CanvasAttribution.prototype.drawAttribution_ = function(e) {
 };
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
  * @classdesc 
@@ -3774,11 +3772,11 @@ ol.control.CanvasAttribution.prototype.drawAttribution_ = function(e) {
  */
 ol.control.CanvasScaleLine = function(options)
 {	ol.control.ScaleLine.call(this, options);
-	this.scaleHeight_ = 6;
-	// Get style options
-	if (!options) options={};
-	if (!options.style) options.style = new ol.style.Style();
-	this.setStyle(options.style);
+  this.scaleHeight_ = 6;
+  // Get style options
+  if (!options) options={};
+  if (!options.style) options.style = new ol.style.Style();
+  this.setStyle(options.style);
 }
 ol.ext.inherits(ol.control.CanvasScaleLine, ol.control.ScaleLine);
 /** Get map Canvas
@@ -3789,92 +3787,92 @@ ol.control.CanvasScaleLine.prototype.getContext = ol.control.CanvasBase.prototyp
  * Remove the control from its current map and attach it to the new map.
  * Subclasses may set up event handlers to get notified about changes to
  * the map here.
- * @param {_ol_Map_} map Map.
+ * @param {import('ol/Map')} map Map.
  * @api stable
  */
-ol.control.CanvasScaleLine.prototype.setMap = function (map)
-{	
-	ol.control.CanvasBase.prototype.getCanvas.call(this, map);
-	var oldmap = this.getMap();
-	if (this._listener) ol.Observable.unByKey(this._listener);
-	this._listener = null;
-	ol.control.ScaleLine.prototype.setMap.call(this, map);
-	if (oldmap) oldmap.renderSync();
-	// Add postcompose on the map
-	if (map) {
-		this._listener = map.on('postcompose', this.drawScale_.bind(this));
-	} 
-	// Hide the default DOM element
-	this.element.style.visibility = 'hidden';
-	this.olscale = this.element.querySelector(".ol-scale-line-inner");
+ol.control.CanvasScaleLine.prototype.setMap = function (map) {	
+  ol.control.CanvasBase.prototype.getCanvas.call(this, map);
+  var oldmap = this.getMap();
+  if (this._listener) ol.Observable.unByKey(this._listener);
+  this._listener = null;
+  ol.control.ScaleLine.prototype.setMap.call(this, map);
+  if (oldmap) oldmap.renderSync();
+  // Add postcompose on the map
+  if (map) {
+    this._listener = map.on('postcompose', this.drawScale_.bind(this));
+  } 
+  // Hide the default DOM element
+  this.element.style.visibility = 'hidden';
+  this.olscale = this.element.querySelector(".ol-scale-line-inner");
 }
 /**
  * Change the control style
- * @param {_ol_style_Style_} style
+ * @param {import('ol/style/Style')} style
  */
-ol.control.CanvasScaleLine.prototype.setStyle = function (style)
-{	var stroke = style.getStroke();
-	this.strokeStyle_ = stroke ? ol.color.asString(stroke.getColor()) : "#000";
-	this.strokeWidth_ = stroke ? stroke.getWidth() : 2;
-	var fill = style.getFill();
-	this.fillStyle_ = fill ? ol.color.asString(fill.getColor()) : "#fff";
-	var text = style.getText();
-	this.font_ = text ? text.getFont() : "10px Arial";
-	stroke = text ? text.getStroke() : null;
-	fill = text ? text.getFill() : null;
-	this.fontStrokeStyle_ = stroke ? ol.color.asString(stroke.getColor()) : this.fillStyle_;
-	this.fontStrokeWidth_ = stroke ? stroke.getWidth() : 3;
-	this.fontFillStyle_ = fill ? ol.color.asString(fill.getColor()) : this.strokeStyle_;
-	// refresh
-	if (this.getMap()) this.getMap().render();
+ol.control.CanvasScaleLine.prototype.setStyle = function (style) {
+  var stroke = style.getStroke();
+  this.strokeStyle_ = stroke ? ol.color.asString(stroke.getColor()) : "#000";
+  this.strokeWidth_ = stroke ? stroke.getWidth() : 2;
+  var fill = style.getFill();
+  this.fillStyle_ = fill ? ol.color.asString(fill.getColor()) : "#fff";
+  var text = style.getText();
+  this.font_ = text ? text.getFont() : "10px Arial";
+  stroke = text ? text.getStroke() : null;
+  fill = text ? text.getFill() : null;
+  this.fontStrokeStyle_ = stroke ? ol.color.asString(stroke.getColor()) : this.fillStyle_;
+  this.fontStrokeWidth_ = stroke ? stroke.getWidth() : 3;
+  this.fontFillStyle_ = fill ? ol.color.asString(fill.getColor()) : this.strokeStyle_;
+  // refresh
+  if (this.getMap()) this.getMap().render();
 }
 /** 
  * Draw attribution in the final canvas
+ * @param {import('ol/render/Event')} e
  * @private
  */
-ol.control.CanvasScaleLine.prototype.drawScale_ = function(e)
-{	if ( this.element.style.visibility!=="hidden" ) return;
-	var ctx = this.getContext(e);
-	if (!ctx) return;
-	// Get size of the scale div
-	var scalewidth = parseInt(this.olscale.style.width);
-	if (!scalewidth) return;
-	var text = this.olscale.textContent;
-	var position = {left: this.element.offsetLeft, top: this.element.offsetTop};
-	// Retina device
-	var ratio = e.frameState.pixelRatio;
-	ctx.save();
-	ctx.scale(ratio,ratio);
-	// On top
-	position.top += this.element.clientHeight - this.scaleHeight_;
-	// Draw scale text
-	ctx.beginPath();
+ol.control.CanvasScaleLine.prototype.drawScale_ = function(e) {
+  if ( this.element.style.visibility!=="hidden" ) return;
+  var ctx = this.getContext(e);
+  if (!ctx) return;
+  // Get size of the scale div
+  var scalewidth = parseInt(this.olscale.style.width);
+  if (!scalewidth) return;
+  var text = this.olscale.textContent;
+  var position = {left: this.element.offsetLeft, top: this.element.offsetTop};
+  // Retina device
+  var ratio = e.frameState.pixelRatio;
+  ctx.save();
+  ctx.scale(ratio,ratio);
+  // On top
+  position.top += this.element.clientHeight - this.scaleHeight_;
+  // Draw scale text
+  ctx.beginPath();
     ctx.strokeStyle = this.fontStrokeStyle_;
     ctx.fillStyle = this.fontFillStyle_;
     ctx.lineWidth = this.fontStrokeWidth_;
     ctx.textAlign = "center";
-	ctx.textBaseline ="bottom";
+  ctx.textBaseline ="bottom";
     ctx.font = this.font_;
-	ctx.strokeText(text, position.left+scalewidth/2, position.top);
+  ctx.strokeText(text, position.left+scalewidth/2, position.top);
     ctx.fillText(text, position.left+scalewidth/2, position.top);
-	ctx.closePath();
-	// Draw scale bar
-	position.top += 2;
-	ctx.lineWidth = this.strokeWidth_;
-	ctx.strokeStyle = this.strokeStyle_;
-	var max = 4;
-	var n = parseInt(text);
-	while (n%10 === 0) n/=10;
-	if (n%5 === 0) max = 5;
-	for (var i=0; i<max; i++)
-	{	ctx.beginPath();
-		ctx.fillStyle = i%2 ? this.fillStyle_ : this.strokeStyle_;
-		ctx.rect(position.left+i*scalewidth/max, position.top, scalewidth/max, this.scaleHeight_);
-		ctx.stroke();
-		ctx.fill();
-		ctx.closePath();
-	}
-	ctx.restore();
+  ctx.closePath();
+  // Draw scale bar
+  position.top += 2;
+  ctx.lineWidth = this.strokeWidth_;
+  ctx.strokeStyle = this.strokeStyle_;
+  var max = 4;
+  var n = parseInt(text);
+  while (n%10 === 0) n/=10;
+  if (n%5 === 0) max = 5;
+  for (var i=0; i<max; i++)
+  {	ctx.beginPath();
+    ctx.fillStyle = i%2 ? this.fillStyle_ : this.strokeStyle_;
+    ctx.rect(position.left+i*scalewidth/max, position.top, scalewidth/max, this.scaleHeight_);
+    ctx.stroke();
+    ctx.fill();
+    ctx.closePath();
+  }
+  ctx.restore();
 }
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 

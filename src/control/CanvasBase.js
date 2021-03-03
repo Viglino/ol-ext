@@ -31,7 +31,7 @@ ol_ext_inherits(ol_control_CanvasBase, ol_control_Control);
  * Remove the control from its current map and attach it to the new map.
  * Subclasses may set up event handlers to get notified about changes to
  * the map here.
- * @param {o.Map} map Map.
+ * @param {import('ol/Map')} map Map.
  * @api stable
  */
 ol_control_CanvasBase.prototype.setMap = function (map) {
@@ -118,7 +118,7 @@ ol_control_CanvasBase.prototype.getTextStroke = function() {
 ol_control_CanvasBase.prototype.getTextFill = function() {
   var t = this._style.getText();
   if (!t) t = new ol_style_Text({});
-  if (!t.getFill()) t.setFill(new ol_style_Fill ({ color:'#fff', width:3 }));
+  if (!t.getFill()) t.setFill(new ol_style_Fill ({ color:'#fff' }));
   return t.getFill();
 };
 
@@ -133,7 +133,7 @@ ol_control_CanvasBase.prototype.getTextFont = function() {
 };
 
 /** Draw the control on canvas
- * @private
+ * @protected
  */
 ol_control_CanvasBase.prototype._draw = function(/* e */) {
   console.warn('[CanvasBase] draw function not implemented.');

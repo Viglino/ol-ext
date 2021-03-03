@@ -71,7 +71,6 @@ ol_control_Button.prototype.setVisible = function (val) {
 /**
  * Set the button title
  * @param {string} title
- * @returns {undefined}
  */
 ol_control_Button.prototype.setTitle = function(title) {
   this.button_.setAttribute('title', title);
@@ -80,7 +79,6 @@ ol_control_Button.prototype.setTitle = function(title) {
 /**
  * Set the button html
  * @param {string} html
- * @returns {undefined}
  */
 ol_control_Button.prototype.setHtml = function(html) {
   ol_ext_element.setHTML (this.button_, html);
@@ -88,7 +86,7 @@ ol_control_Button.prototype.setHtml = function(html) {
 
 /**
  * Get the button element
- * @returns {undefined}
+ * @returns {Element}
  */
 ol_control_Button.prototype.getButtonElement = function() {
   return this.button_;
