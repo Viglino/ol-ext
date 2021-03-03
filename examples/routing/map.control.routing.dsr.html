@@ -1,0 +1,230 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Geoportail routing control</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="Add a routing control to your map." />
+  <meta name="keywords" content="ol3, control, search, routing" />
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/master/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/master/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <!-- filesaver-js -->
+	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+
+  <script type="text/javascript" src="https://cdn.rawgit.com/Viglino/Geoportail-KISS/gh-pages/apikey.js"></script>
+  
+  <link rel="stylesheet" href="../style.css"/>
+  <style>
+    .ol-search ul {
+      color: #333;
+      font-size:0.85em;
+      max-width: 21em;
+    }
+    .ol-search ul i {
+      display: block;
+      color: #333;
+      font-size:0.85em;
+    }
+    .info a img {
+      display: inline-block;
+      height: 100px;
+      max-width: 150px;
+      margin: .5em;
+    }
+  </style>
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Geoportail routing control</h1>
+  </a>
+
+  <div class="info">
+    <button style="float:right" onclick="$('.info').hide(); $('#map').height(800); map.updateSize();">hide</button>
+    <i>ol.control.SearchGeoportail</i> is a control to search place using the 
+    <a href="https://geoservices.ign.fr/documentation/geoservices/geocodage.html">Geoportail API</a>.
+    <div style="text-align: center">
+      <b>In partnership with:</b><br/>
+      <a href="https://www.geoportail.gouv.fr/"><img src="https://www.geoportail.gouv.fr/assets/images/logo-geoportail.svg" alt="Geoportail"></a>
+      <a href="http://ign.fr"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a0/IGN_logo_2012.svg" alt="IGN" class="jsx-3503728609 logo"></a>
+    </div>	
+    <ul>
+      <li>
+        You need an API key (<a href="http://professionnels.ign.fr/ign/contrats">get a key</a> 
+        see <a href="https://geoservices.ign.fr/documentation/services-acces.html">documentation page</a>).
+      </li>
+      <li>
+        Use <i>shift-click</i> ±  button to add a new line in the destination list.
+      </li>
+      <li>
+        Use <i>ctrl-click</i> ± button to remove a destination.
+      </li>
+    </ul>
+    <br/>
+    <i>ol.control.SearchGeoportail</i> use the <a href="../search/map.control.search.html">ol.control.Search</a> control.
+  </div>
+
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:100%; height:400px;"></div>
+
+  <div class="options">
+    <i>Use the search control to start a new search.</i>
+    <ul>
+      <li>
+        <label><input type="checkbox" class="merge">merge</label>
+      </li>
+      <li>
+        <label><input type="checkbox" class="remove" checked="checked">remove previous search</label>
+      </li>
+      <li>
+        <button onclick="save()">export</button>
+      </li>
+    </ul>
+  </div>
+  
+  <script type="text/javascript">
+  // Layers
+  // var layers = [ new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }) ];
+  var layers = [ new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2') ];
+
+  // The map
+  var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 5,
+      center: [166326, 5992663]
+    }),
+    interactions: ol.interaction.defaults({ altShiftDragRotate:false, pinchRotate:false }),
+    layers: layers
+  });
+
+  map.addControl(new ol.control.Permalink({ hidden: true }));
+
+  // Set the control grid reference
+  var search = new ol.control.RoutingDSR({
+    apiKey: apiKey
+  });
+  map.addControl (search);
+  
+  var vector = new ol.layer.Vector({
+    title: 'trajet',
+    source: new ol.source.Vector(),
+    style: [
+      new ol.style.Style({ stroke: new ol.style.Stroke({ color:[255,255,255,.5], width: 10 })}),
+      new ol.style.Style({ stroke: new ol.style.Stroke({ color:[255,0,0,1], width: 7 }), zIndex:1 })
+    ]
+  });
+  map.addLayer(vector);
+
+  // Preocess result
+  search.on('routing', function(routing) {
+    if ($('.remove').prop('checked')) vector.getSource().clear();
+    vector.getSource().addFeature(routing.feature);
+    setTimeout(function() {
+      map.getView().fit(vector.getSource().getExtent(), { duration:1000 });
+    }, 500);
+  });
+
+  var steps = new ol.layer.Vector({ 
+    title: 'Steps', 
+    style: //ol.style.Style.defaultStyle,
+      function (f) {
+        return new ol.style.Style ({
+          image: new ol.style.Circle({
+            stroke: new ol.style.Stroke({ 
+              width: 2, 
+              color: f.get('pos')==='start' ? 'green' : f.get('pos')==='end' ? 'red' : 'blue'
+            }),
+            fill: new ol.style.Fill({ color: '#fff' }),
+            radius: 8
+          }),
+          text: new ol.style.Text({
+            text: String(f.get('step')+1),
+            font: 'bold 12px sans-serif',
+            offsetY: 2
+          })
+        })
+      },
+    source: search.getSource() 
+  });
+  map.addLayer(steps);
+  map.addControl(new ol.control.LayerSwitcher());
+  var modify = new ol.interaction.Modify({ source: search.getSource() });
+  map.addInteraction(modify);
+  // is modifying
+  var modif = false;
+  modify.on('modifystart', function() { 
+    popup.hide();
+    modif = true; 
+  });
+  modify.on('modifyend', function() { 
+    modif = false; 
+    search.calculate();
+  })
+
+  // Dispkay information on hover
+  var select = new ol.interaction.Select(ol.style.Style.defaultStyle);
+  map.addInteraction(select);
+  var hover = new ol.interaction.Hover({ 
+    layers: [vector, steps],
+    cursor: 'pointer', 
+    hitTolerance: 5 
+  });
+  hover.on('enter', function(e) {
+    if (modif) return;
+    select.getFeatures().clear();
+    if (e.feature.get('distance')) {
+      select.getFeatures().push(e.feature);
+      var content = e.feature.get('distance')+' - '+ e.feature.get('duration');
+      popup.show(e.coordinate, content);
+    } else {
+      popup.hide();
+    }
+  });
+  hover.on('hover', function(e) {
+    if (!modif && e.feature.get('distance')) popup.show(e.coordinate);
+  });
+  hover.on('leave', function(e) {
+    if (!modif) select.getFeatures().clear();
+    popup.hide();
+  });
+  map.addInteraction(hover);
+  var popup = new ol.Overlay.Popup({
+    popupClass: 'black',
+    positioning:'bottom-center'
+  });
+  map.addOverlay(popup);
+
+	function save () {
+		var format = new ol.format.GeoJSON();
+		var data = format.writeFeatures(vector.getSource().getFeatures(), {
+			dataProjection: 'EPSG:4326',
+			featureProjection: map.getView().getProjection()
+		})
+		var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
+		saveAs(blob, "route.geojson");
+	}
+
+  </script>
+  
+</body>
+</html>

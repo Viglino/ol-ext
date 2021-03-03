@@ -390,6 +390,7 @@ ol_control_RoutingGeoportail.prototype.handleResponse = function (data, start, e
   // console.log(data, routing);
   this.dispatchEvent(routing);
   this.path = routing;
+  console.log(routing)
   return routing;
 };
 
