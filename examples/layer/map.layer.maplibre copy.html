@@ -1,0 +1,244 @@
+﻿<html>
+<head>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <link rel="icon" type="image/png" href="https://avatars.githubusercontent.com/u/75709127" />
+
+  <!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+	<link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+	
+	<!-- ol-ext -->
+	<link rel="stylesheet" href="../../dist/ol-ext.css" />
+	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <!-- MapLibre-GL -->
+  <script src="https://unpkg.com/maplibre-gl@1.13.0-rc.4/dist/mapbox-gl.js"></script>
+  <link href="https://unpkg.com/maplibre-gl@1.13.0-rc.4/dist/mapbox-gl.css" rel="stylesheet" />
+
+  <script src="https://unpkg.com/three@0.106.2/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.106.2/examples/js/loaders/GLTFLoader.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    #map {
+      position: absolute; 
+      top: 5em; 
+      right: 0; 
+      bottom: 0; 
+      left: 0;
+      margin: 0;
+    }
+    .ol-maplibre-gl {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      transform: translateY(-200%);
+      pointer-events: none;
+    }
+    .mapboxgl-canvas {
+      transform-origin: 0 0;
+    }
+    .mapboxgl-canvas:focus {
+      outline: none;
+    }
+  </style>
+
+</head>
+
+<body> 
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>Layer MaplibreGL</h1>
+  </a>
+
+  <div id="map"></div>
+  
+<script>
+
+ol.layer.MaplibreGL = function(options) {
+  options = options || {};
+  options.render = function (frameState) {
+    if (!this._container) {
+      this.create();
+    } 
+    /**/
+    var fac = 1
+    var dzoom = 1
+    //fac = Math.pow(2,.5);
+    //dzoom = .5;
+    /*/
+    var fac = 2
+    var dzoom = 0
+    /**/
+    this._container.style.width = fac*frameState.size[0]+'px';
+    this._container.style.height = fac*frameState.size[1]+'px';
+
+    var mbMap = this.mbMap;
+    if (!mbMap) return null;
+
+    var canvas = mbMap.getCanvas();
+    canvas.style.transform = 'scale('+(1/fac)+')';
+
+    // Force map to resize
+    if (frameState.size[0] !== canvas.width || frameState.size[1] !== canvas.height) {
+      mbMap.resize();
+    }
+
+    canvas.style.display = mbLayer.getVisible() ? 'block' : 'none';
+    canvas.style.opacity = mbLayer.getOpacity();
+
+    // adjust view parameters in mapbox
+    var viewState = frameState.viewState;
+    mbMap.jumpTo({
+      center: ol.proj.toLonLat(viewState.center),
+      zoom: viewState.zoom - dzoom,
+      bearing: (-viewState.rotation * 180) / Math.PI,
+      animate: false,
+    });
+    // cancel the scheduled update & trigger synchronous redraw
+    // see https://github.com/mapbox/mapbox-gl-js/issues/7893#issue-408992184
+    // NOTE: THIS MIGHT BREAK IF UPDATING THE MAPBOX VERSION
+    // see https://github.com/mapbox/mapbox-gl-js/issues/7893
+    if (mbMap._frame) {
+      mbMap._frame.cancel();
+      mbMap._frame = null;
+    }
+    mbMap._render();
+
+    return canvas;
+  }
+  ol.layer.Layer.call(this, options);
+}
+ol.ext.inherits(ol.layer.MaplibreGL, ol.layer.Layer);
+
+/*
+ol.layer.MaplibreGL.prototype.setMap = function(map) {
+  ol.layer.Layer.prototype.setMap.call(this, map);
+}
+*/
+ol.layer.MaplibreGL.prototype.getMapGL = function() {
+  return this.mbMap;
+}
+
+ol.layer.MaplibreGL.prototype.setStyle = function(style) {
+  this.set('style', style);
+  if (this.getMapGL()) {
+    this.getMapGL().setStyle(style);
+  }
+  this.changed();
+}
+ol.layer.MaplibreGL.prototype.getStyle = function() {
+  return this.get('style');
+}
+
+ol.layer.MaplibreGL.prototype.create = function(size) {
+  this._container = ol.ext.element.create('DIV', {
+    className: 'ol-maplibre-gl',
+    style: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      transform: 'translateY(-200%)',
+      'pointer-events': 'none'
+    },
+    parent: document.body
+  })
+  this.mbMap = new mapboxgl.Map({
+    container: this._container,
+    style: this.getStyle(),
+    center: [3, 47],
+    zoom: 5,
+    pitch: 0,
+    antialias: true,
+
+    attributionControl: false,
+    boxZoom: false,
+    doubleClickZoom: false,
+    dragPan: false,
+    dragRotate: false,
+    interactive: false,
+    keyboard: false,
+    pitchWithRotate: false,
+    scrollZoom: false,
+    touchZoomRotate: false,
+  });
+}
+
+var mbLayer = new ol.layer.MaplibreGL({
+  // style: './custom.json'
+  style: './standard.json'
+});
+
+
+var planv2 = new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2');
+//
+var map = new ol.Map({
+  target: 'map',
+  view: new ol.View({
+    center: [166326, 5992663],
+    zoom: 4,
+  }),
+  layers: [mbLayer, planv2],
+});
+
+map.addControl(new ol.control.Swipe({ layers: planv2 }));
+map.addControl(new ol.control.Permalink({visible: false}));
+
+
+function gpStyle2glStyle(fileName) {
+  function replace(font) {
+    font.forEach(function(f, i){
+      font[i] = f.replace('Source Sans Pro', 'Open Sans');
+    })
+  }
+  function setZoom(t) {
+    if (t) {
+      if (t.minzoom) t.minzoom -= 1;
+      if (t.maxzoom) t.maxzoom -= 1;
+      if (t.stops) {
+        t.stops.forEach(function(s) {
+          s[0] -= 1;
+        });
+      }
+    }
+  }
+  $.ajax({
+    url: fileName,
+    success: function(r) {
+      r.glyphs = "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf";
+      r.layers.forEach(function(l) {
+        /*
+        setZoom(l);
+        setZoom(l.paint['line-color']);
+        setZoom(l.paint['line-width']);
+        setZoom(l.paint['fill-color']);
+        */
+        if (l.layout['text-font']) {
+          if (l.layout['text-font'].stops) {
+            l.layout['text-font'].stops.forEach(function(s, i) {
+              replace(l.layout['text-font'].stops[i][1]);
+            })
+          } else {
+            replace(l.layout['text-font'])
+          }
+        }
+      });
+      /**/
+      console.log(r);
+      /*/
+      console.log(JSON.stringify(r));
+      /**/
+    }
+  })
+}
+
+
+</script>
+</body>
+</html>
