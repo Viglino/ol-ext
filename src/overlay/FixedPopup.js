@@ -68,9 +68,9 @@ var ol_Overlay_FixedPopup = function (options) {
       var r1 = this.element.getBoundingClientRect()
       var r2 = this.getMap().getTargetElement().getBoundingClientRect();
       var pixel2 = [r1.left-r2.left+r1.width/2, r1.top-r2.top+r1.height/2]
-      var ratio = e.frameState.pixelRatio;
       e.context.save();
-        e.context.scale(ratio,ratio);
+        var tr = e.inversePixelTransform;
+        e.context.transform(tr[0],tr[1],tr[2],tr[3],tr[4],tr[5])
         e.context.beginPath();
         e.context.moveTo(pixel[0], pixel[1]);
         if (Math.abs(pixel2[0]-pixel[0]) > Math.abs(pixel2[1]-pixel[1])) {
