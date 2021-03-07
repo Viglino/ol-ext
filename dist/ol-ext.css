@@ -4127,6 +4127,10 @@
 
 
 
+/* remove outline on focus */
+.mapboxgl-canvas:focus {
+  outline: none;
+}
 .ol-perspective-map {
   position: absolute;
   left: 50%;

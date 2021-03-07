@@ -226,7 +226,6 @@ ol_control_Swipe.prototype._drawRect = function(e, pts) {
   }
 };
 
-
 /** @private
 */
 ol_control_Swipe.prototype.precomposeLeft = function(e) {
