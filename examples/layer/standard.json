@@ -436,7 +436,7 @@
     "text-field": "→",
     "symbol-placement": "line-center",
     "text-ignore-placement": true,
-    "text-size": 15,
+    "text-size": 16,
 	  "text-font":["Klokantech Noto Sans Regular"],
     "text-anchor": "center",
 	  "text-offset": [0, -0.2],
@@ -445,7 +445,9 @@
     "text-pitch-alignment": "viewport"
   },
   "paint": {
-    "text-color": "#000000"
+    "text-color": "#aaa",
+    "text-halo-width": 0.5,
+    "text-halo-color": "#aaa"
   }
 },
 {
@@ -464,7 +466,7 @@
     "text-field": "←",
     "symbol-placement": "line-center",
     "text-ignore-placement": true,
-    "text-size": 15,
+    "text-size": 16,
 	  "text-font":["Klokantech Noto Sans Regular"],
     "text-anchor": "center",
 	  "text-offset": [0, -0.2],
@@ -473,7 +475,9 @@
     "text-pitch-alignment": "viewport"
   },
   "paint": {
-    "text-color": "#000000"
+    "text-color": "#aaa",
+    "text-halo-width": 0.5,
+    "text-halo-color": "#aaa"
   }
 }
 ],

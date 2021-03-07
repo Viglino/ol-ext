@@ -25,165 +25,119 @@
   <link rel="stylesheet" href="../style.css" />
 
   <style>
-    #map {
+    #map,
+    #map2 {
       position: absolute; 
-      top: 5em; 
-      right: 0; 
-      bottom: 0; 
-      left: 0;
       margin: 0;
+      top: 4em; 
+      left: 0;
+      width: 100%;
+      bottom: 0;
     }
-    .ol-maplibre-gl {
+    #map2 {
+      display: none;
+    }
+    .sync #map {
+      left: 50%;
+      width: 50%;
+    }
+    .sync #map2 {
+      left: 0;
+      display: block;
+      width: calc(50% - 4px);
+    }
+    .sync #map  .ol-zoom,
+    .sync #map2  .ol-rotate {
+      display: none;
+    }
+    .menu {
+      background: #1f6b75;
       position: absolute;
-      top: 0px;
-      left: 0px;
-      transform: translateY(-200%);
-      pointer-events: none;
+      top: 3.5em;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 0 0 1.5em 1.5em;
+      z-index: 1;
+      padding: 0 1em;
     }
-    .mapboxgl-canvas {
-      transform-origin: 0 0;
+    .menu i {
+      width: 2em;
+      height: 2em;
+      display: inline-block;
+      position: relative;
     }
-    .mapboxgl-canvas:focus {
-      outline: none;
+    .menu i:before{
+      content: "";
+      position: absolute;
+      background-color: #fff;
+      height: 1.5em;
+      width: .75em;
+      top: 50%;
+      left: .2em;
+      transform: translateY(-50%);
+      box-shadow: 0.9em 0 #fff;
+    }
+    .menu i:after{
+      content: "";
+      width: .5em;
+      height: .5em;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: .2em;
+      border: 2px solid #1f6b75;
+      background-color: #fff;
+      position: absolute;
+    }
+    .menu .sync:after{
+      content: unset;
+    }
+    .menu .splith:before{
+      width: 1.65em;
+      height: .75em;
+      top: .5em;
+      box-shadow: 0 0.9em #fff;
+    }
+    .menu .circle:before {
+      width: 1.65em;
+      box-shadow: unset;
+    }
+    .menu .circle:after {
+      width: .6em;
+      height: .6em;
+      border-radius: 50%;
     }
   </style>
 
 </head>
 
-<body> 
+<body class="splitv"> 
   <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
   <a href="../../index.html">
     <h1>Layer MaplibreGL</h1>
   </a>
 
+  <div class="menu">
+    <i class="sync" onclick="sync('sync');"></i>
+    <i class="splitv" onclick="sync('splitv');"></i>
+    <i class="splith" onclick="sync('splith');"></i>
+    <i class="circle" onclick="sync('circle');"></i>
+  </div>
+
   <div id="map"></div>
+  <div id="map2"></div>
   
 <script>
 
-ol.source.MaplibreGL = function(options) {
-  options.canvasFunction = function() {
-
-  }
-  ol.source.ImageCanvas.call(this, options);
-}
-
-ol.layer.MaplibreGL = function(options) {
-  options = options || {};
-  options.render = function(frameState) { 
-    return this._render(frameState.size, frameState.viewState.center, frameState.viewState.zoom, frameState.viewState.rotation); 
-  };
-  ol.layer.Layer.call(this, options);
-}
-ol.ext.inherits(ol.layer.MaplibreGL, ol.layer.Layer);
-
-/*
-ol.layer.MaplibreGL.prototype.setMap = function(map) {
-  ol.layer.Layer.prototype.setMap.call(this, map);
-}
-*/
-ol.layer.MaplibreGL.prototype.getMapGL = function() {
-  return this.mbMap;
-}
-
-ol.layer.MaplibreGL.prototype._render = function(size, center, zoom, rotation) {
-  if (!this._container) {
-    this.create();
-  } 
-  /**/
-  var fac = 1
-  var dzoom = 1
-  //fac = Math.pow(2,.5);
-  //dzoom = .5;
-  /*/
-  var fac = 2
-  var dzoom = 0
-  /**/
-  this._container.style.width = fac*size[0]+'px';
-  this._container.style.height = fac*size[1]+'px';
-
-  var mbMap = this.mbMap;
-  if (!mbMap) return null;
-
-  var canvas = mbMap.getCanvas();
-  canvas.style.transform = 'scale('+(1/fac)+')';
-
-  // Force map to resize
-  if (size[0] !== canvas.width || size[1] !== canvas.height) {
-    mbMap.resize();
-  }
-
-  canvas.style.display = mbLayer.getVisible() ? 'block' : 'none';
-  canvas.style.opacity = mbLayer.getOpacity();
-
-  // adjust view parameters in mapbox
-  mbMap.jumpTo({
-    center: ol.proj.toLonLat(center),
-    zoom: zoom - dzoom,
-    bearing: (-rotation * 180) / Math.PI,
-    animate: false,
-  });
-  // cancel the scheduled update & trigger synchronous redraw
-  // see https://github.com/mapbox/mapbox-gl-js/issues/7893#issue-408992184
-  // NOTE: THIS MIGHT BREAK IF UPDATING THE MAPBOX VERSION
-  if (mbMap._frame) {
-    mbMap._frame.cancel();
-    mbMap._frame = null;
-  }
-  mbMap._render();
-
-  return canvas;
-};
-
-ol.layer.MaplibreGL.prototype.setStyle = function(style) {
-  this.set('style', style);
-  if (this.getMapGL()) {
-    this.getMapGL().setStyle(style);
-  }
-  this.changed();
-}
-ol.layer.MaplibreGL.prototype.getStyle = function() {
-  return this.get('style');
-}
-
-ol.layer.MaplibreGL.prototype.create = function(size) {
-  this._container = ol.ext.element.create('DIV', {
-    className: 'ol-maplibre-gl',
-    style: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      transform: 'translateY(-200%)',
-      'pointer-events': 'none'
-    },
-    parent: document.body
+var mbLayer = new ol.layer.Maplibre({
+  title: 'Plan IGN MVT',
+  className: 'GL',
+  style: './standard.json',
+  source: new ol.source.Source({
+    attributions : '<a href="http://www.geoportail.gouv.fr/">Géoportail</a> &copy; <a href="http://www.ign.fr/">IGN-France</a>'
   })
-  this.mbMap = new mapboxgl.Map({
-    container: this._container,
-    style: this.getStyle(),
-    center: [3, 47],
-    zoom: 5,
-    pitch: 0,
-    antialias: true,
-
-    attributionControl: false,
-    boxZoom: false,
-    doubleClickZoom: false,
-    dragPan: false,
-    dragRotate: false,
-    interactive: false,
-    keyboard: false,
-    pitchWithRotate: false,
-    scrollZoom: false,
-    touchZoomRotate: false,
-  });
-}
-
-var mbLayer = new ol.layer.MaplibreGL({
-  // style: './custom.json'
-  style: './standard.json'
 });
-
 
 var planv2 = new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2');
 //
@@ -196,10 +150,54 @@ var map = new ol.Map({
   layers: [mbLayer, planv2],
 });
 
-map.addControl(new ol.control.Swipe({ layers: planv2 }));
+var swipeCtrl = new ol.control.Swipe({ layers: planv2 });
+map.addControl(swipeCtrl);
 map.addControl(new ol.control.Permalink({visible: false}));
+map.addControl(new ol.control.LayerSwitcher());
 
+var clipInter = new ol.interaction.Clip({ radius: 200, layers:planv2 });
 
+var map2 = new ol.Map({
+  target: 'map2',
+  view: new ol.View({
+    center: [166326, 5992663],
+    zoom: 4,
+  }),
+  layers: [new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2')],
+});
+
+map.addInteraction(new ol.interaction.Synchronize({ maps: [map2] }))
+map2.addInteraction(new ol.interaction.Synchronize({ maps: [map] }))
+
+function sync(what) {
+  planv2.setVisible(true);
+  switch(document.body.className) {
+    case 'splith': 
+    case 'splitv': map.removeControl(swipeCtrl); break;
+    case 'circle': map.removeInteraction(clipInter); break;
+  }
+  switch(what) {
+    case 'sync': {
+      planv2.setVisible(false);
+      break;
+    }
+    case 'circle': {
+      map.addInteraction(clipInter);
+      break;
+    }
+    default: {
+      map.addControl(swipeCtrl);
+      if (what==='splith') swipeCtrl.set('orientation', 'horizontal');
+      else swipeCtrl.set('orientation', 'vertical');
+      break;
+    }
+  }
+  document.body.className = what;
+  map2.updateSize();
+  map.updateSize();
+}
+
+/* update Geoportail style * /
 function gpStyle2glStyle(fileName) {
   function replace(font) {
     font.forEach(function(f, i){
@@ -222,12 +220,10 @@ function gpStyle2glStyle(fileName) {
     success: function(r) {
       r.glyphs = "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf";
       r.layers.forEach(function(l) {
-        /*
         setZoom(l);
         setZoom(l.paint['line-color']);
         setZoom(l.paint['line-width']);
         setZoom(l.paint['fill-color']);
-        */
         if (l.layout['text-font']) {
           if (l.layout['text-font'].stops) {
             l.layout['text-font'].stops.forEach(function(s, i) {
@@ -238,15 +234,11 @@ function gpStyle2glStyle(fileName) {
           }
         }
       });
-      /**/
-      console.log(r);
-      /*/
       console.log(JSON.stringify(r));
-      /**/
     }
   })
 }
-
+*/
 
 </script>
 </body>
