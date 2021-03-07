@@ -70,7 +70,12 @@ var ol_Overlay_FixedPopup = function (options) {
       var pixel2 = [r1.left-r2.left+r1.width/2, r1.top-r2.top+r1.height/2]
       e.context.save();
         var tr = e.inversePixelTransform;
-        e.context.transform(tr[0],tr[1],tr[2],tr[3],tr[4],tr[5])
+        if (tr) {
+          e.context.transform(tr[0],tr[1],tr[2],tr[3],tr[4],tr[5]);
+        } else {
+          // ol ~ v5.3.0
+          e.context.scale(e.frameState.pixelRatio,e.frameState.pixelRatio)
+        }
         e.context.beginPath();
         e.context.moveTo(pixel[0], pixel[1]);
         if (Math.abs(pixel2[0]-pixel[0]) > Math.abs(pixel2[1]-pixel[1])) {
@@ -237,8 +242,8 @@ ol_Overlay_FixedPopup.prototype.updatePixelPosition = function () {
   var map = this.getMap();
   var position = this.getPosition();
   if (!map || !map.isRendered() || !position) {
-      this.setVisible(false);
-      return;
+    this.setVisible(false);
+    return;
   }
   if (!this._pixel) {
     this._pixel = map.getPixelFromCoordinate(position);
