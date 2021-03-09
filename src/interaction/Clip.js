@@ -113,6 +113,7 @@ ol_interaction_Clip.prototype.setPosition = function(e) {
 /* @private
 */
 ol_interaction_Clip.prototype.precompose_ = function(e) {
+  if (!this.getActive()) return;
   var ctx = e.context;
   var ratio = e.frameState.pixelRatio;
 
@@ -138,6 +139,7 @@ ol_interaction_Clip.prototype.precompose_ = function(e) {
 /* @private
 */
 ol_interaction_Clip.prototype.postcompose_ = function(e) {
+  if (!this.getActive()) return;
   e.context.restore();
 };
 
