@@ -3575,10 +3575,13 @@ ol.control.Bar.prototype.addControl = function (c) {
 ol.control.Bar.prototype.deactivateControls = function (except) {
   for (var i=0; i<this.controls_.length; i++) {
   if (this.controls_[i] !== except && this.controls_[i].setActive) {
-    this.controls_[i].setActive(false);
+      this.controls_[i].setActive(false);
     }
   }
 };
+/** Get active control in the bar
+ * @returns {Array<ol.control.Control>}
+ */
 ol.control.Bar.prototype.getActiveControls = function () {
   var active = [];
   for (var i=0, c; c=this.controls_[i]; i++) {
@@ -14105,6 +14108,9 @@ ol.filter.Clip.prototype.clipPath_ = function(e) {
   }
   ctx.moveTo ( pt[0], pt[1] );
 };
+/**
+ * @private
+ */
 ol.filter.Clip.prototype.precompose = function(e) {
   if (!this.get("color")){
     e.context.save();
@@ -14113,6 +14119,9 @@ ol.filter.Clip.prototype.precompose = function(e) {
     e.context.clip();
   }
 };
+/**
+ * @private
+ */
 ol.filter.Clip.prototype.postcompose = function(e) {
   if (this.get("color")) {
     var ctx = e.context;
@@ -15695,6 +15704,7 @@ ol.interaction.Clip.prototype.setPosition = function(e) {
 /* @private
 */
 ol.interaction.Clip.prototype.precompose_ = function(e) {
+  if (!this.getActive()) return;
   var ctx = e.context;
   var ratio = e.frameState.pixelRatio;
   ctx.save();
@@ -15718,6 +15728,7 @@ ol.interaction.Clip.prototype.precompose_ = function(e) {
 /* @private
 */
 ol.interaction.Clip.prototype.postcompose_ = function(e) {
+  if (!this.getActive()) return;
   e.context.restore();
 };
 /**

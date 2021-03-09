@@ -50,23 +50,20 @@
     .sync #map2  .ol-rotate {
       display: none;
     }
-    .menu {
-      background: #1f6b75;
+    #menu {
       position: absolute;
       top: 3.5em;
       left: 50%;
       transform: translateX(-50%);
-      border-radius: 0 0 1.5em 1.5em;
       z-index: 1;
-      padding: 0 1em;
     }
-    .menu i {
+    #menu button {
       width: 2em;
       height: 2em;
       display: inline-block;
       position: relative;
     }
-    .menu i:before{
+    #menu button:before{
       content: "";
       position: absolute;
       background-color: #fff;
@@ -77,35 +74,40 @@
       transform: translateY(-50%);
       box-shadow: 0.9em 0 #fff;
     }
-    .menu i:after{
+    #menu button:after{
       content: "";
-      width: .5em;
-      height: .5em;
+      width: 6px;
+      height: 8px;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      border-radius: .2em;
-      border: 2px solid #1f6b75;
+      border-radius: 1px;
+      border: 2px solid rgba(51, 102, 153, .7);
       background-color: #fff;
       position: absolute;
+      border-width: 0 2px;
+      box-sizing: border-box;
+      box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(51, 102, 153, .7);
     }
-    .menu .sync:after{
+    #menu .sync button:after{
       content: unset;
     }
-    .menu .splith:before{
+    #menu .splith button:before{
       width: 1.65em;
       height: .75em;
       top: .5em;
       box-shadow: 0 0.9em #fff;
     }
-    .menu .circle:before {
+    #menu .clip button:before {
       width: 1.65em;
       box-shadow: unset;
     }
-    .menu .circle:after {
-      width: .6em;
-      height: .6em;
+    #menu .clip button:after {
+      width: 17px;
+      height: 17px;
       border-radius: 50%;
+      border-width: 2px;
+      box-shadow: none;
     }
   </style>
 
@@ -118,12 +120,7 @@
     <h1>Layer MaplibreGL</h1>
   </a>
 
-  <div class="menu">
-    <i class="sync" onclick="sync('sync');"></i>
-    <i class="splitv" onclick="sync('splitv');"></i>
-    <i class="splith" onclick="sync('splith');"></i>
-    <i class="circle" onclick="sync('circle');"></i>
-  </div>
+  <div id="menu"></div>
 
   <div id="map"></div>
   <div id="map2"></div>
@@ -151,11 +148,11 @@ var map = new ol.Map({
 });
 
 var swipeCtrl = new ol.control.Swipe({ layers: planv2 });
-map.addControl(swipeCtrl);
 map.addControl(new ol.control.Permalink({visible: false}));
 map.addControl(new ol.control.LayerSwitcher());
 
-var clipInter = new ol.interaction.Clip({ radius: 200, layers:planv2 });
+var clipInter = new ol.interaction.Clip({ radius: 200, layers:[planv2] });
+clipInter.setActive(false);
 
 var map2 = new ol.Map({
   target: 'map2',
@@ -169,33 +166,61 @@ var map2 = new ol.Map({
 map.addInteraction(new ol.interaction.Synchronize({ maps: [map2] }))
 map2.addInteraction(new ol.interaction.Synchronize({ maps: [map] }))
 
-function sync(what) {
-  planv2.setVisible(true);
-  switch(document.body.className) {
-    case 'splith': 
-    case 'splitv': map.removeControl(swipeCtrl); break;
-    case 'circle': map.removeInteraction(clipInter); break;
+// sync maps
+var sync = new ol.control.Toggle({ className: 'sync' });
+sync.on('change:active', function(e) {
+  if (e.active) {
+    planv2.setVisible(false);
+    document.body.className = 'sync';
+  } else {
+    document.body.className = '';
+    planv2.setVisible(true);
   }
-  switch(what) {
-    case 'sync': {
-      planv2.setVisible(false);
-      break;
-    }
-    case 'circle': {
-      map.addInteraction(clipInter);
-      break;
-    }
-    default: {
-      map.addControl(swipeCtrl);
-      if (what==='splith') swipeCtrl.set('orientation', 'horizontal');
-      else swipeCtrl.set('orientation', 'vertical');
-      break;
-    }
-  }
-  document.body.className = what;
   map2.updateSize();
   map.updateSize();
-}
+});
+// split
+var splitv = new ol.control.Toggle({ className: 'splitv' });
+splitv.on ('change:active', function(e) {
+  if (splitv.getActive() || splith.getActive()) {
+    planv2.setVisible(true);
+    map.addControl(swipeCtrl);
+  } else {
+    map.removeControl(swipeCtrl);
+  }
+  if (e.active) {
+    swipeCtrl.set('orientation', 'vertical');
+    swipeCtrl.set('position', .5);
+  }
+});
+var splith = new ol.control.Toggle({ className: 'splith' });
+splith.on ('change:active', function(e) {
+  if (splitv.getActive() || splith.getActive()) {
+    planv2.setVisible(true);
+    map.addControl(swipeCtrl);
+  } else {
+    map.removeControl(swipeCtrl);
+  }
+  if (e.active) {
+    swipeCtrl.set('orientation', 'horizontal');
+    swipeCtrl.set('position', .5);
+  }
+});
+// clip
+var clip = new ol.control.Toggle({
+  className: 'clip',
+  interaction: clipInter
+});
+clip.on ('change:active', function(e) {
+  if (e.active) planv2.setVisible(true);
+});
+
+map.addControl(new ol.control.Bar({
+  target: 'menu',
+  className: 'menu',
+  toggleOne: true,
+  controls: [sync, splitv, splith, clip]
+}));
 
 /* update Geoportail style * /
 function gpStyle2glStyle(fileName) {
