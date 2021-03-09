@@ -126,12 +126,14 @@ ol_control_Bar.prototype.addControl = function (c) {
 ol_control_Bar.prototype.deactivateControls = function (except) {
   for (var i=0; i<this.controls_.length; i++) {
   if (this.controls_[i] !== except && this.controls_[i].setActive) {
-    this.controls_[i].setActive(false);
+      this.controls_[i].setActive(false);
     }
   }
 };
 
-
+/** Get active control in the bar
+ * @returns {Array<ol_control_Control>}
+ */
 ol_control_Bar.prototype.getActiveControls = function () {
   var active = [];
   for (var i=0, c; c=this.controls_[i]; i++) {

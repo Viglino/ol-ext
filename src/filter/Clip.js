@@ -104,6 +104,9 @@ ol_filter_Clip.prototype.clipPath_ = function(e) {
   ctx.moveTo ( pt[0], pt[1] );
 };
 
+/**
+ * @private
+ */
 ol_filter_Clip.prototype.precompose = function(e) {
   if (!this.get("color")){
     e.context.save();
@@ -113,6 +116,9 @@ ol_filter_Clip.prototype.precompose = function(e) {
   }
 };
 
+/**
+ * @private
+ */
 ol_filter_Clip.prototype.postcompose = function(e) {
   if (this.get("color")) {
     var ctx = e.context;

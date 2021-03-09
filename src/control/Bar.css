@@ -1,17 +1,17 @@
 .ol-control i {
-	cursor: default;
+  cursor: default;
 }
 
 /* Bar style */
 .ol-control.ol-bar {
   left: 50%;
-	min-height: 1em;
-	min-width: 1em;
-	position: absolute;
-	top: 0.5em;
-	transform: translate(-50%,0);
-	-webkit-transform: translate(-50%,0);
-	white-space: nowrap;
+  min-height: 1em;
+  min-width: 1em;
+  position: absolute;
+  top: 0.5em;
+  transform: translate(-50%,0);
+  -webkit-transform: translate(-50%,0);
+  white-space: nowrap;
 }
 
 /* Hide subbar when not inserted in a parent bar */
@@ -25,30 +25,31 @@
 }
 .ol-control.ol-bar .ol-control {
   position: relative;
-	top: auto;
-	left:auto;
-	right:auto;
-	bottom: auto;
-	display: inline-block;
-	vertical-align: middle;
-	background: none;
-	padding: 0;
-	margin: 0;
-	transform: none;
-	-webkit-transform: none;
+  top: auto;
+  left:auto;
+  right:auto;
+  bottom: auto;
+  display: inline-block;
+  vertical-align: middle;
+  background: none;
+  padding: 0;
+  margin: 0;
+  transform: none;
+  -webkit-transform: none;
 }
 .ol-control.ol-bar .ol-bar {
   position: static;
 }
 .ol-control.ol-bar .ol-control button {
   margin:2px 1px;
+  outline: none;
 }
 
 /* Positionning */
 .ol-control.ol-bar.ol-left {
   left: 0.5em;
-	top: 50%;
-	transform: translate(0px, -50%);
+  top: 50%;
+  transform: translate(0px, -50%);
 }
 .ol-control.ol-bar.ol-left .ol-control {
   display: block;
@@ -56,9 +57,9 @@
 
 .ol-control.ol-bar.ol-right {
   left: auto;
-	right: 0.5em;
-	top: 50%;
-	transform: translate(0px, -50%);
+  right: 0.5em;
+  top: 50%;
+  transform: translate(0px, -50%);
 }
 .ol-control.ol-bar.ol-right .ol-control {
   display: block;
@@ -66,13 +67,13 @@
 
 .ol-control.ol-bar.ol-bottom {
   top: auto;
-	bottom: 0.5em;
+  bottom: 0.5em;
 }
 
 .ol-control.ol-bar.ol-top.ol-left,
 .ol-control.ol-bar.ol-top.ol-right {
   top: 4.5em;
-	transform:none;
+  transform:none;
 }
 .ol-touch .ol-control.ol-bar.ol-top.ol-left,
 .ol-touch .ol-control.ol-bar.ol-top.ol-right {
@@ -81,8 +82,8 @@
 .ol-control.ol-bar.ol-bottom.ol-left,
 .ol-control.ol-bar.ol-bottom.ol-right {
   top: auto;
-	bottom: 0.5em;
-	transform:none;
+  bottom: 0.5em;
+  transform:none;
 }
 
 /* Group buttons */
@@ -96,7 +97,7 @@
 
 .ol-control.ol-bar.ol-group button {
   border-radius:0;
-	margin: 0 0 0 1px;
+  margin: 0 0 0 1px;
 }
 .ol-control.ol-bar.ol-right.ol-group button,
 .ol-control.ol-bar.ol-left.ol-group button,
@@ -126,7 +127,7 @@
 /* */
 .ol-control.ol-bar .ol-rotate {
   opacity:1;
-	visibility: visible;
+  visibility: visible;
 }
 .ol-control.ol-bar .ol-rotate button {
   display: block
@@ -146,23 +147,23 @@
 /* Subbar toolbar */
 .ol-control.ol-bar .ol-control.ol-option-bar {
   display: none;
-	position:absolute;
-	top:100%;
-	left:0;
-	margin: 5px 0;
-	border-radius: 0;
-	background: rgba(255,255,255, 0.8);
-	/* border: 1px solid rgba(0, 60, 136, 0.5); */
-	box-shadow: 0 0 0 1px rgba(0, 60, 136, 0.5), 1px 1px 2px rgba(0, 0, 0, 0.5);
+  position:absolute;
+  top:100%;
+  left:0;
+  margin: 5px 0;
+  border-radius: 0;
+  background: rgba(255,255,255, 0.8);
+  /* border: 1px solid rgba(0, 60, 136, 0.5); */
+  box-shadow: 0 0 0 1px rgba(0, 60, 136, 0.5), 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .ol-control.ol-bar .ol-option-bar:before {
   content: "";
-	border: 0.5em solid transparent;
-	border-color: transparent transparent rgba(0, 60, 136, 0.5);
-	position: absolute;
-	bottom: 100%;
-	left: 0.3em;
+  border: 0.5em solid transparent;
+  border-color: transparent transparent rgba(0, 60, 136, 0.5);
+  position: absolute;
+  bottom: 100%;
+  left: 0.3em;
 }
 
 .ol-control.ol-bar .ol-option-bar .ol-control {
@@ -182,25 +183,25 @@
 .ol-control.ol-bar .ol-control.ol-text-button > div:hover,
 .ol-control.ol-bar .ol-control.ol-text-button > div {
   background: none;
-	color: rgba(0, 60, 136, 0.5);
-	width: auto;
-	min-width: 1.375em;
-	margin: 0;
+  color: rgba(0, 60, 136, 0.5);
+  width: auto;
+  min-width: 1.375em;
+  margin: 0;
 }
 
 .ol-control.ol-bar .ol-control.ol-text-button {
   font-size:0.9em;
-	border-left: 1px solid rgba(0, 60, 136, 0.8);
-	border-radius: 0;
+  border-left: 1px solid rgba(0, 60, 136, 0.8);
+  border-radius: 0;
 }
 .ol-control.ol-bar .ol-control.ol-text-button:first-child {
   border-left:0;
 }
 .ol-control.ol-bar .ol-control.ol-text-button > div {
-	padding: .11em 0.3em;
-	font-weight: normal;
-	font-size: 1.14em;
-	font-family: Arial,Helvetica,sans-serif;
+  padding: .11em 0.3em;
+  font-weight: normal;
+  font-size: 1.14em;
+  font-family: Arial,Helvetica,sans-serif;
 }
 .ol-control.ol-bar .ol-control.ol-text-button div:hover {
   color: rgba(0, 60, 136, 1);
@@ -208,62 +209,62 @@
 
 .ol-control.ol-bar.ol-bottom .ol-option-bar {
   top: auto;
-	bottom: 100%;
+  bottom: 100%;
 }
 .ol-control.ol-bar.ol-bottom .ol-option-bar:before {
   border-color: rgba(0, 60, 136, 0.5) transparent transparent ;
-	bottom: auto;
-	top: 100%;
+  bottom: auto;
+  top: 100%;
 }
 
 .ol-control.ol-bar.ol-left .ol-option-bar {
   left:100%;
-	top: 0;
-	bottom: auto;
-	margin: 0 5px;
+  top: 0;
+  bottom: auto;
+  margin: 0 5px;
 }
 .ol-control.ol-bar.ol-left .ol-option-bar:before {
   border-color: transparent rgba(0, 60, 136, 0.5) transparent transparent;
-	bottom: auto;
-	right: 100%;
-	left: auto;
-	top: 0.3em;
+  bottom: auto;
+  right: 100%;
+  left: auto;
+  top: 0.3em;
 }
 .ol-control.ol-bar.ol-right .ol-option-bar {
   right:100%;
-	left:auto;
-	top: 0;
-	bottom: auto;
-	margin: 0 5px;
+  left:auto;
+  top: 0;
+  bottom: auto;
+  margin: 0 5px;
 }
 .ol-control.ol-bar.ol-right .ol-option-bar:before {
   border-color: transparent transparent transparent rgba(0, 60, 136, 0.5);
-	bottom: auto;
-	left: 100%;
-	top: 0.3em;
+  bottom: auto;
+  left: 100%;
+  top: 0.3em;
 }
 
 .ol-control.ol-bar.ol-left .ol-option-bar .ol-option-bar,
 .ol-control.ol-bar.ol-right .ol-option-bar .ol-option-bar {
   top: 100%;
-	bottom: auto;
-	left: 0.3em;
-	right: auto;
-	margin: 5px 0;
+  bottom: auto;
+  left: 0.3em;
+  right: auto;
+  margin: 5px 0;
 }
 .ol-control.ol-bar.ol-right .ol-option-bar .ol-option-bar {
   right: 0.3em;
-	left: auto;
+  left: auto;
 }
 .ol-control.ol-bar.ol-left .ol-option-bar .ol-option-bar:before,
 .ol-control.ol-bar.ol-right .ol-option-bar .ol-option-bar:before {
   border-color: transparent transparent rgba(0, 60, 136, 0.5);
-	bottom: 100%;
-	top: auto;
-	left: 0.3em;
-	right: auto;
+  bottom: 100%;
+  top: auto;
+  left: 0.3em;
+  right: auto;
 }
 .ol-control.ol-bar.ol-right .ol-option-bar .ol-option-bar:before {
   right: 0.3em;
-	left: auto;
+  left: auto;
 }
