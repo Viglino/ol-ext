@@ -376,9 +376,7 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function(simulate, coord, accur
     // Current location
     loc = this.geolocation;
     accu = loc.getAccuracy();
-    pos = loc.getPosition();
-    pos.push (Math.round((loc.getAltitude()||0)*100)/100);
-    pos.push (Math.round((new Date()).getTime()/1000));
+    pos = this.getPosition(loc);
     p = loc.getAccuracyGeometry();
     heading = loc.getHeading();
   }
@@ -467,7 +465,7 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function(simulate, coord, accur
         var attr = this.get('attributes');
         if (attr.heading) f.set("heading",loc.getHeading());
         if (attr.accuracy) f.set("accuracy",loc.getAccuracy());
-        if (attr.altitudeAccuracy) f.set("altitudeAccuracy",loc.getAltitudeAccuracy());
+        if (attr.altitudeAccuracy) f.set("altitudeAccuracy", loc.getAltitudeAccuracy());
         if (attr.speed) f.set("speed",loc.getSpeed());
         break;
       case "LineString":
@@ -495,5 +493,17 @@ ol_interaction_GeolocationDraw.prototype.draw_ = function(simulate, coord, accur
   // Drawing
   this.dispatchEvent({ type:'tracking', feature: this.sketch_[1], geolocation: loc });
 };
+
+/** Get a position according to the geolocation
+ * @param {Geolocation} loc
+ * @returns {Array<any>} an array of measure X,Y,Z,T
+ * @api
+ */
+ol_interaction_GeolocationDraw.prototype.getPosition = function (loc) {
+  var pos = loc.getPosition();
+  pos.push (Math.round((loc.getAltitude()||0)*100)/100);
+  pos.push (Math.round((new Date()).getTime()/1000));
+  return pos;
+}
 
 export default ol_interaction_GeolocationDraw
