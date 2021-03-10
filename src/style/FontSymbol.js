@@ -23,7 +23,7 @@ import {asString as ol_color_asString} from 'ol/color'
  *  @param {number} options.radius
  *  @param {number} options.rotation
  *  @param {boolean} options.rotateWithView
- *  @param {number} options.opacity
+ *  @param {number} [options.opacity]
  *  @param {number} [options.fontSize] default 1
  *  @param {string} [options.fontStyle] the font style (bold, italic, bold italic, etc), default none
  *  @param {boolean} options.gradient true to display a gradient on the symbol
