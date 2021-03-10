@@ -14,6 +14,7 @@ import {asString as ol_color_asString} from 'ol/color'
  *
  * @constructor
  * @param {} options Options.
+ *  @param {string} [options.color] default #000
  *  @param {string} options.glyph the glyph name or a char to display as symbol. 
  *    The name must be added using the {@link ol.style.FontSymbol.addDefs} function.
  *  @param {string} options.form 
