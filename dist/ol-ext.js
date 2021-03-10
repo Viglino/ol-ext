@@ -20613,7 +20613,9 @@ ol.interaction.TouchCursor.prototype.setMap = function(map) {
     this.getMap().removeInteraction(this.ctouch);
     if (this.getActive()) this.getMap().removeOverlay(this.overlay);
   }
-  for (var l in this._listeners) ol.Observable.unByKey(l);
+  for (var l in this._listeners) {
+    ol.Observable.unByKey(this._listeners[l]);
+  }
   this._listeners = {};
   ol.interaction.DragOverlay.prototype.setMap.call (this, map);
   // Set listeners
@@ -31289,18 +31291,21 @@ ol.style.FlowLine.prototype._splitInto = function(geom, nb, min) {
  *
  * @constructor
  * @param {} options Options.
- *  @param {number} options.glyph the glyph name or a char to display as symbol. 
+ *  @param {string} [options.color] default #000
+ *  @param {string} options.glyph the glyph name or a char to display as symbol. 
  *    The name must be added using the {@link ol.style.FontSymbol.addDefs} function.
  *  @param {string} options.form 
  * 	  none|circle|poi|bubble|marker|coma|shield|blazon|bookmark|hexagon|diamond|triangle|sign|ban|lozenge|square
  * 	  a form that will enclose the glyph, default none
  *  @param {number} options.radius
  *  @param {number} options.rotation
- *  @param {number} options.rotateWithView
- *  @param {number} options.opacity
- *  @param {number} options.fontSize, default 1
- *  @param {string} options.fontStyle the font style (bold, italic, bold italic, etc), default none
+ *  @param {boolean} options.rotateWithView
+ *  @param {number} [options.opacity]
+ *  @param {number} [options.fontSize] default 1
+ *  @param {string} [options.fontStyle] the font style (bold, italic, bold italic, etc), default none
  *  @param {boolean} options.gradient true to display a gradient on the symbol
+ *  @param {number} [options.offsetX] default 0
+ *  @param {number} [options.offsetY] default 0
  *  @param {_ol_style_Fill_} options.fill
  *  @param {_ol_style_Stroke_} options.stroke
  * @extends {ol.style.RegularShape}
