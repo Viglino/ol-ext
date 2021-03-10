@@ -8,7 +8,8 @@ import ol_style_Style from 'ol/style/Style'
 import ol_style_Text from 'ol/style/Text';
 import ol_style_Stroke from 'ol/style/Stroke'
 import ol_style_Fill from 'ol/style/Fill'
-import defaultStyle from '../style/defaultStyle'
+import ol_style_Style_defaultStyle from '../style/defaultStyle'
+
 /**
  * Get a style for Geoportail WFS features
  *
@@ -148,6 +149,7 @@ function troncon_de_route(options) {
   };
 }
 
+/** Style for batiments */
 function batiment(options) {
   var getBatiColor = function (feature) {
     switch (feature.get('nature')) {
@@ -249,8 +251,77 @@ function parcelle(options) {
     }
     return style;
   }
-}
+};
 
+// Corine Land Cover Style
+var clcColors = {
+  111: { color: [230,0,77,255], title: 'Continuous urban fabric'},
+  112: { color: [255,0,0,255], title: 'Discontinuous urban fabric'},
+  121: { color: [204,77,242,255], title: 'Industrial or commercial units'},
+  122: { color: [204,0,0,255], title: 'Road and rail networks and associated land'},
+  123: { color: [230,204,204,255], title: 'Port areas'},
+  124: { color: [230,204,230,255], title: 'Airports'},
+  131: { color: [166,0,204,255], title: 'Mineral extraction sites'},
+  132: { color: [166,77,0,255], title: 'Dump sites'},
+  133: { color: [255,77,255,255], title: 'Construction sites'},
+  141: { color: [255,166,255,255], title: 'Green urban areas'},
+  142: { color: [255,230,255,255], title: 'Sport and leisure facilities'},
+  211: { color: [255,255,168,255], title: 'Non-irrigated arable land'},
+  212: { color: [255,255,0,255], title: 'Permanently irrigated land'},
+  213: { color: [230,230,0,255], title: 'Rice fields'},
+  221: { color: [230,128,0,255], title: 'Vineyards'},
+  222: { color: [242,166,77,255], title: 'Fruit trees and berry plantations'},
+  223: { color: [230,166,0,255], title: 'Olive groves'},
+  231: { color: [230,230,77,255], title: 'Pastures'},
+  241: { color: [255,230,166,255], title: 'Annual crops associated with permanent crops'},
+  242: { color: [255,230,77,255], title: 'Complex cultivation patterns'},
+  243: { color: [230,204,77,255], title: 'Land principally occupied by agriculture with significant areas of natural vegetation'},
+  244: { color: [242,204,166,255], title: 'Agro-forestry areas'},
+  311: { color: [128,255,0,255], title: 'Broad-leaved forest'},
+  312: { color: [0,166,0,255], title: 'Coniferous forest'},
+  313: { color: [77,255,0,255], title: 'Mixed forest'},
+  321: { color: [204,242,77,255], title: 'Natural grasslands'},
+  322: { color: [166,255,128,255], title: 'Moors and heathland'},
+  323: { color: [166,230,77,255], title: 'Sclerophyllous vegetation'},
+  324: { color: [166,242,0,255], title: 'Transitional woodland-shrub'},
+  331: { color: [230,230,230,255], title: 'Beaches dunes sands'},
+  332: { color: [204,204,204,255], title: 'Bare rocks'},
+  333: { color: [204,255,204,255], title: 'Sparsely vegetated areas'},
+  334: { color: [0,0,0,255], title: 'Burnt areas'},
+  335: { color: [166,230,204,255], title: 'Glaciers and perpetual snow'},
+  411: { color: [166,166,255,255], title: 'Inland marshes'},
+  412: { color: [77,77,255,255], title: 'Peat bogs'},
+  421: { color: [204,204,255,255], title: 'Salt marshes'},
+  422: { color: [230,230,255,255], title: 'Salines'},
+  423: { color: [166,166,230,255], title: 'Intertidal flats'},
+  511: { color: [0,204,242,255], title: 'Water courses'},
+  512: { color: [128,242,230,255], title: 'Water bodies'},
+  521: { color: [0,255,166,255], title: 'Coastal lagoons'},
+  522: { color: [166,255,230,255], title: 'Estuaries'},
+  523: { color: [230,242,255,255], title: 'Sea and ocean'},
+};
+
+function corineLandCover (options) {
+  return function(feature, resolution) {
+    var code = feature.get('code_'+options.date);
+    var style = cache['CLC-'+code];
+    if (!style) {
+      var color = clcColors[code].color.slice();
+      color[3] = options.opacity || 1;
+      style = cache['CLC-'+code] = new ol_style_Style({
+        fill: new ol_style_Fill({
+          color: color || [255,255,255,.5]
+        })
+      })
+    }
+    return style;
+  }
+};
+
+/** Get ol style for an IGN WFS layer
+ * @param {string} typeName
+ * @param {Object} options
+ */
 ol_style_geoportailStyle = function(typeName, options) {
   options = options || {};
   switch (typeName) {
@@ -260,13 +331,21 @@ ol_style_geoportailStyle = function(typeName, options) {
     case 'BDTOPO_V3:batiment': return batiment(options);
     // Parcelles
     case 'CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle': return parcelle(options);
-    // Default style
     default: {
-      console.warn('[ol/style/geoportailStyle] no style defined for type: ' + typeName)
-      return defaultStyle(); 
+      // CLC
+      if (/LANDCOVER/.test(typeName)) {
+        options.date = typeName.replace(/[^\d]*(\d*).*/,'$1');
+        return (corineLandCover(options));
+      } else {
+        // Default style
+        console.warn('[ol/style/geoportailStyle] no style defined for type: ' + typeName)
+        return ol_style_Style_defaultStyle(); 
+      }
     }
   }
 };
+
+ol_style_geoportailStyle.clcColors = JSON.parse(JSON.stringify(clcColors));
 
 })();
 

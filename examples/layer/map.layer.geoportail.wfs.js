@@ -31,7 +31,6 @@ switcher.on('drawlist', function(li) {
   }
 })
 var plink = new ol.control.Permalink({ visible: false })
-console.log(plink)
 map.addControl(plink);
 map.addControl(new ol.control.ScaleLine());
 map.addControl(new ol.control.SearchBAN({
@@ -89,7 +88,7 @@ function setWFS(type) {
   popup.hide();
   vectorLayer.set('title', type.split(':')[1].replace(/_/g,' ').capitalize());
   switcher.drawPanel();
-  minZoom = /bati|parcelle/.test(type) ? 16 : 15;
+  minZoom = /bati|parcelle/.test(type) ? 16 : /LANDCOVER/.test(type) ? 13 : 15;
   /* Standard WFS
   vectorSource = new ol.source.Vector({
     format: new ol.format.GeoJSON(),
@@ -119,12 +118,13 @@ function setWFS(type) {
     }
   }
   var format = new ol.format.GeoJSON();
+  var key = /LANDCOVER/.test(type) ? 'corinelandcover' : 'choisirgeoportail';
   var source = vectorSource = new ol.source.Vector({
     loader: function (extent, resolution, projection) {
       loading++;
       draw();
       $.ajax({
-        url: 'https://wxs.ign.fr/choisirgeoportail/geoportail/wfs?service=WFS&' +
+        url: 'https://wxs.ign.fr/'+key+'/geoportail/wfs?service=WFS&' +
           'version=1.1.0&request=GetFeature&' +
           'typename='+type+'&' +
           'outputFormat=application/json&srsname=EPSG:3857&' +
@@ -157,7 +157,7 @@ function setWFS(type) {
   vectorLayer.setSource(vectorSource);
   selectCtrl.setSources(vectorSource);
   vectorLayer.setMinZoom(minZoom);
-  style = ol.style.geoportailStyle(type, { sens : true, section: true });
+  style = ol.style.geoportailStyle(type, { sens : true, section: true, opacity: .4 });
   vectorLayer.setStyle(style);
   testZoom();
 }
@@ -238,7 +238,8 @@ var popup = new ol.Overlay.PopupFeature({
       'nature', 'nom_1_droite', 'code_postal_droit', 'etat_de_l_objet', 'urbain',
       'cpx_classement_administratif', 'cpx_numero',
       'usage_1', 'origine_du_batiment', 'hauteur', 'nombre_d_etages', 'nombre_de_logements',
-      'nom_com', 'code_insee', 'code_arr', 'section', 'numero'
+      'nom_com', 'code_insee', 'code_arr', 'section', 'numero',
+      'id', 'area_ha', 'code_06', 'code_12'
     ]
   }
 });

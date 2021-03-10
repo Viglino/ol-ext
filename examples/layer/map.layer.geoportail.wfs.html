@@ -83,6 +83,11 @@
       <option value="BDTOPO_V3:troncon_de_route">route</option>
       <option value="BDTOPO_V3:batiment">batiments</option>
       <option value="CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle">parcelle</option>
+      <!-- http://wxs.ign.fr/corinelandcover/geoportail/wfs?service=WFS&request=GetCapabilities -->
+      <option value="LANDCOVER.CLC90_FR:clc90_fr">CLandCover 1990</option>
+      <option value="LANDCOVER.CLC00_FR:clc00_fr">CLandCover 2000</option>
+      <option value="LANDCOVER.CLC06R_FR:clc06r_fr">CLandCover 2006</option>
+      <option value="LANDCOVER.CLC12_FR:clc12_fr">CLandCover 2012</option>
     </select>
     <button onclick="vectorSource.refresh(); commune.clear(); loadLayer.getSource().clear();"><i class="fa fa-refresh"></i> reset</button>
     <button onclick="save()"><i class="fa fa-download"></i> charger</button>
