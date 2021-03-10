@@ -162,7 +162,7 @@ ol_interaction_TouchCursor.prototype.setMap = function(map) {
     this.getMap().removeInteraction(this.ctouch);
     if (this.getActive()) this.getMap().removeOverlay(this.overlay);
   }
-  for (let l in this._listeners) ol_Observable_unByKey(l);
+  for (let l in this._listeners) ol_Observable_unByKey(this._listeners[l]);
   this._listeners = {};
 
   ol_interaction_DragOverlay.prototype.setMap.call (this, map);
