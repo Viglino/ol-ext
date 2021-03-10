@@ -106,6 +106,9 @@
 .ol-popup.tooltips .anchor {
   display: none;
 }
+.CLC {
+  mix-blend-mode: multiply;
+}
 
   </style>
   
@@ -160,22 +163,57 @@ map.addControl(new ol.control.SearchBAN({
 var switcher = new ol.control.LayerSwitcher();
 map.addControl(switcher);
 
+// Calculate new statistics
 var jstsParser = new jsts.io.OL3Parser();
 function calculate(b) {
   if (b) {
-    var extent = map.getView().calculateExtent(map.getSize());
-    var features = clc12.getSource().getFeaturesInExtent(extent);
-    extent = jstsParser.read(ol.geom.Polygon.fromExtent(extent));
+    var t = new Date();
+    console.log('calculating...')
+    var ext = map.getView().calculateExtent(map.getSize());
+    var features = clc12.getSource().getFeaturesInExtent(ext);
     var codes = {};
+    var optimization = true;
+    // var extent = jstsParser.read(ol.geom.Polygon.fromExtent(ext));
     features.forEach(function(f) {
       var c = f.get('code_12');
       if (!codes[c]) codes[c] = 0;
-      var inter = extent.intersection(jstsParser.read(f.getGeometry()));
-      if (!inter.isEmpty()) {
-        codes[c] += Math.round(ol.sphere.getArea(jstsParser.write(inter), { projection: map.getView().getProjection() }));
+      if (ol.extent.containsExtent(ext, f.getGeometry().getExtent())) {
+        codes[c] += Math.round(f.get('area_ha')*10000);
+      } else {
+        // Calculate intersection
+        if (optimization) {
+          var typ = f.getGeometry().getType();
+          var geom = f.getGeometry().getCoordinates();
+          if (typ === 'Polygon') {
+            geom = [geom];
+          }
+          // Snap geom to the extent (approximation of intersection...)
+          geom.forEach(function(g) {
+            g.forEach(function(c) {
+              c.forEach(function(p) {
+                if (p[0]<ext[0]) p[0] = ext[0];
+                else if (p[0]>ext[2]) p[0] = ext[2];
+                if (p[1]<ext[1]) p[1] = ext[1];
+                else if (p[1]>ext[3]) p[1] = ext[3];
+              })
+            })
+            codes[c] += Math.round(ol.sphere.getArea(new ol.geom.MultiPolygon(geom), { 
+              projection: map.getView().getProjection() 
+            }));
+          })
+        } else {
+          // Using jsts for accurate intersection (complex operation)
+          var inter = extent.intersection(jstsParser.read(f.getGeometry()));
+          if (!inter.isEmpty()) {
+            codes[c] += Math.round(ol.sphere.getArea(jstsParser.write(inter), { 
+              projection: map.getView().getProjection() 
+            }));
+          }
+        }
       }
     })
     drawChart(codes);
+    console.log(((new Date() - t)/1000).toFixed(2)+'s');
   } else {
 
   }
@@ -257,12 +295,13 @@ function getSource(type) {
 }
 var clc12 = new ol.layer.Vector({
   title: 'CorineLandCover 2012',
+  className: 'CLC',
   source: getSource('LANDCOVER.CLC12_FR:clc12_fr'),
   style: ol.style.geoportailStyle('LANDCOVER.CLC12_FR:clc12_fr', { opacity: 1 }),
   opacity: 1,
   minZoom: 12  // prevent load on small zoom 
 })
-clc12.addFilter(new ol.filter.Composite({ operation: 'multiply' }));
+//clc12.addFilter(new ol.filter.Composite({ operation: 'multiply' }));
 map.addLayer(clc12);
 
 /* draw chart */
