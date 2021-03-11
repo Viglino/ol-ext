@@ -191,6 +191,7 @@ ol_control_Graticule.prototype._draw = function (e) {
       ctx.fillStyle = this.getStyle().getText().getFill().getColor();
       ctx.strokeStyle = this.getStyle().getText().getStroke().getColor();
       ctx.lineWidth = this.getStyle().getText().getStroke().getWidth();
+      ctx.font = this.getStyle().getText().getFont();
       ctx.textAlign = 'center';
       ctx.textBaseline = 'hanging';
       var t, tf;
