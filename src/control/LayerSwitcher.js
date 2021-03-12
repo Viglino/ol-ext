@@ -14,12 +14,13 @@ import {intersects as ol_extent_intersects} from 'ol/extent'
 
 import ol_ext_element from '../util/element'
 
-/**
- * @classdesc OpenLayers 3 Layer Switcher Control.
+/** Layer Switcher Control.
  * @fires drawlist
  * @fires toggle
  * @fires reorder-start
  * @fires reorder-end
+ * @fires layer:visible
+ * @fires layer:opacity
  * 
  * @constructor
  * @extends {ol_control_Control}
@@ -38,7 +39,7 @@ import ol_ext_element from '../util/element'
  *
  * Layers attributes that control the switcher
  *	- allwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false
- *	- displayInLayerSwitcher {boolean} display in switcher, default true
+ *	- displayInLayerSwitcher {boolean} display the layer in switcher, default true
  *	- noSwitcherDelete {boolean} to prevent layer deletion (w. trash option = true), default false
  */
 var ol_control_LayerSwitcher = function(options) {
@@ -318,6 +319,7 @@ ol_control_LayerSwitcher.prototype._setLayerForLI = function(li, layer) {
 ol_control_LayerSwitcher.prototype.setLayerOpacity = function(layer, li) {
   var i = li.querySelector('.layerswitcher-opacity-cursor')
   if (i) i.style.left = (layer.getOpacity()*100)+"%"
+  this.dispatchEvent({ type: 'layer:opacity', layer: layer });
 };
 
 /** Set visibility for a layer
@@ -330,6 +332,7 @@ ol_control_LayerSwitcher.prototype.setLayerVisibility = function(layer, li) {
   if (i) i.checked = layer.getVisible();
   if (layer.getVisible()) li.classList.add('ol-visible');
   else li.classList.remove('ol-visible');
+  this.dispatchEvent({ type: 'layer:visible', layer: layer });
 };
 
 /** Clear layers associated with li

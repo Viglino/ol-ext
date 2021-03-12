@@ -2667,12 +2667,13 @@ ol.control.SearchGeoportail.prototype.searchCommune = function (f, cback) {
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/**
- * @classdesc OpenLayers 3 Layer Switcher Control.
+/** Layer Switcher Control.
  * @fires drawlist
  * @fires toggle
  * @fires reorder-start
  * @fires reorder-end
+ * @fires layer:visible
+ * @fires layer:opacity
  * 
  * @constructor
  * @extends {ol.control.Control}
@@ -2691,7 +2692,7 @@ ol.control.SearchGeoportail.prototype.searchCommune = function (f, cback) {
  *
  * Layers attributes that control the switcher
  *	- allwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false
- *	- displayInLayerSwitcher {boolean} display in switcher, default true
+ *	- displayInLayerSwitcher {boolean} display the layer in switcher, default true
  *	- noSwitcherDelete {boolean} to prevent layer deletion (w. trash option = true), default false
  */
 ol.control.LayerSwitcher = function(options) {
@@ -2947,6 +2948,7 @@ ol.control.LayerSwitcher.prototype._setLayerForLI = function(li, layer) {
 ol.control.LayerSwitcher.prototype.setLayerOpacity = function(layer, li) {
   var i = li.querySelector('.layerswitcher-opacity-cursor')
   if (i) i.style.left = (layer.getOpacity()*100)+"%"
+  this.dispatchEvent({ type: 'layer:opacity', layer: layer });
 };
 /** Set visibility for a layer
  * @param {ol.layer.Layer} layer
@@ -2958,6 +2960,7 @@ ol.control.LayerSwitcher.prototype.setLayerVisibility = function(layer, li) {
   if (i) i.checked = layer.getVisible();
   if (layer.getVisible()) li.classList.add('ol-visible');
   else li.classList.remove('ol-visible');
+  this.dispatchEvent({ type: 'layer:visible', layer: layer });
 };
 /** Clear layers associated with li
  */
