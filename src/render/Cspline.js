@@ -90,11 +90,11 @@ var ol_coordinate_cspline = function(line, options) {
   })
   var resolution = options.resolution || (length / line.length / (options.pointsPerSeg || 10));
 
-  var pts, res = [],			// clone array
-    x, y,					// our x,y coords
-    t1x, t2x, t1y, t2y,		// tension vectors
-    c1, c2, c3, c4,			// cardinal points
-    st, t, i;				// steps based on num. of segments
+  var pts, res = [],    // clone array
+    x, y,               // our x,y coords
+    t1x, t2x, t1y, t2y,	// tension vectors
+    c1, c2, c3, c4,     // cardinal points
+    st, t, i;           // steps based on num. of segments
 
   // clone array so we don't change the original
   //
@@ -103,7 +103,7 @@ var ol_coordinate_cspline = function(line, options) {
   // The algorithm require a previous and next point to the actual point array.
   // Check if we will draw closed or open curve.
   // If closed, copy end points to beginning and first points to end
-  // If open, duplicate first points to befinning, end points to end
+  // If open, duplicate first points to beginning, end points to end
   if (line.length>2 && line[0][0]==line[line.length-1][0] && line[0][1]==line[line.length-1][1]) {
     pts.unshift(line[line.length-2]);
     pts.push(line[1]);
@@ -145,14 +145,14 @@ var ol_coordinate_cspline = function(line, options) {
       st = t / numOfSegments;
 
       // calc cardinals
-      c1 =   2 * Math.pow(st, 3) 	- 3 * Math.pow(st, 2) + 1; 
+      c1 =   2 * Math.pow(st, 3)  - 3 * Math.pow(st, 2) + 1; 
       c2 = -(2 * Math.pow(st, 3)) + 3 * Math.pow(st, 2); 
-      c3 = 	   Math.pow(st, 3)	- 2 * Math.pow(st, 2) + st; 
-      c4 = 	   Math.pow(st, 3)	- 	  Math.pow(st, 2);
+      c3 = 	   Math.pow(st, 3)    - 2 * Math.pow(st, 2) + st; 
+      c4 = 	   Math.pow(st, 3)    - 	  Math.pow(st, 2);
 
       // calc x and y cords with common control vectors
-      x = c1 * pts[i][0]	+ c2 * pts[i+1][0] + c3 * t1x + c4 * t2x;
-      y = c1 * pts[i][1]	+ c2 * pts[i+1][1] + c3 * t1y + c4 * t2y;
+      x = c1 * pts[i][0] + c2 * pts[i+1][0] + c3 * t1x + c4 * t2x;
+      y = c1 * pts[i][1] + c2 * pts[i+1][1] + c3 * t1y + c4 * t2y;
 
       //store points in array
       if (x && y) res.push([x,y]);

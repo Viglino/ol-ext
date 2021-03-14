@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.1.19
+ * @version v3.1.20
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -28809,8 +28809,8 @@ ol.coordinate.getGeomCenter = function(geom) {
     case 'Point': 
       return geom.getCoordinates();
     case "MultiPolygon":
-            geom = geom.getPolygon(0);
-            // fallthrough
+      geom = geom.getPolygon(0);
+      // fallthrough
     case "Polygon":
       return geom.getInteriorPoint().getCoordinates();
     default:
@@ -28969,6 +28969,64 @@ ol.coordinate.getIntersectionPoint = function (d1, d2) {
     return false;
   }
 };
+ol.extent.intersection;
+(function() {
+// Split at x
+function splitX(pts, x) {
+  var pt;
+  for (var i=pts.length-1; i>0; i--) {
+    if ((pts[i][0]>x && pts[i-1][0]<x) || (pts[i][0]<x && pts[i-1][0]>x)) {
+      pt = [ x, (x - pts[i][0]) / (pts[i-1][0]-pts[i][0]) * (pts[i-1][1]-pts[i][1]) + pts[i][1]];
+      pts.splice(i, 0, pt);
+    }
+  }
+};
+// Split at y
+function splitY(pts, y) {
+  var pt;
+  for (var i=pts.length-1; i>0; i--) {
+    if ((pts[i][1]>y && pts[i-1][1]<y) || (pts[i][1]<y && pts[i-1][1]>y)) {
+      pt = [ (y - pts[i][1]) / (pts[i-1][1]-pts[i][1]) * (pts[i-1][0]-pts[i][0]) + pts[i][0], y];
+      pts.splice(i, 0, pt);
+    }
+  }
+};
+/** Fast polygon intersection with an extent (used for area calculation)
+ * @param {import(ol/extent/Extent)} extent
+ * @param {import(ol/geom/Polygon)|import(ol/geom/MultiPolygon)} polygon
+ * @returns {import(ol/geom/Polygon)|import(ol/geom/MultiPolygon)|null} return null if not a polygon geometry
+ */
+ol.extent.intersection = function(extent, polygon) {
+  var poly = (polygon.getType() === 'Polygon');
+  if (!poly && polygon.getType() !== 'MultiPolygon') return null;
+  var geom = polygon.getCoordinates();
+  if (poly) geom = [geom];
+  geom.forEach(function(g) {
+    g.forEach(function(c) {
+      splitX(c, extent[0])
+      splitX(c, extent[2])
+      splitY(c, extent[1])
+      splitY(c, extent[3])
+    });
+  })
+  // Snap geom to the extent 
+  geom.forEach(function(g) {
+    g.forEach(function(c) {
+      c.forEach(function(p) {
+        if (p[0]<extent[0]) p[0] = extent[0];
+        else if (p[0]>extent[2]) p[0] = extent[2];
+        if (p[1]<extent[1]) p[1] = extent[1];
+        else if (p[1]>extent[3]) p[1] = extent[3];
+      })
+    })
+  })
+  if (poly) {
+    return new ol.geom.Polygon(geom[0]);
+  } else {
+    return new ol.geom.MultiPolygon(geom);
+  }
+};
+})();
 
 /** Split a lineString by a point or a list of points
  *	NB: points must be on the line, use getClosestPoint() to get one
@@ -29536,18 +29594,18 @@ ol.coordinate.cspline = function(line, options) {
     p0 = p;
   })
   var resolution = options.resolution || (length / line.length / (options.pointsPerSeg || 10));
-  var pts, res = [],			// clone array
-    x, y,					// our x,y coords
-    t1x, t2x, t1y, t2y,		// tension vectors
-    c1, c2, c3, c4,			// cardinal points
-    st, t, i;				// steps based on num. of segments
+  var pts, res = [],    // clone array
+    x, y,               // our x,y coords
+    t1x, t2x, t1y, t2y,	// tension vectors
+    c1, c2, c3, c4,     // cardinal points
+    st, t, i;           // steps based on num. of segments
   // clone array so we don't change the original
   //
   pts = line.slice(0);
   // The algorithm require a previous and next point to the actual point array.
   // Check if we will draw closed or open curve.
   // If closed, copy end points to beginning and first points to end
-  // If open, duplicate first points to befinning, end points to end
+  // If open, duplicate first points to beginning, end points to end
   if (line.length>2 && line[0][0]==line[line.length-1][0] && line[0][1]==line[line.length-1][1]) {
     pts.unshift(line[line.length-2]);
     pts.push(line[1]);
@@ -29582,13 +29640,13 @@ ol.coordinate.cspline = function(line, options) {
       // calc step
       st = t / numOfSegments;
       // calc cardinals
-      c1 =   2 * Math.pow(st, 3) 	- 3 * Math.pow(st, 2) + 1; 
+      c1 =   2 * Math.pow(st, 3)  - 3 * Math.pow(st, 2) + 1; 
       c2 = -(2 * Math.pow(st, 3)) + 3 * Math.pow(st, 2); 
-      c3 = 	   Math.pow(st, 3)	- 2 * Math.pow(st, 2) + st; 
-      c4 = 	   Math.pow(st, 3)	- 	  Math.pow(st, 2);
+      c3 = 	   Math.pow(st, 3)    - 2 * Math.pow(st, 2) + st; 
+      c4 = 	   Math.pow(st, 3)    - 	  Math.pow(st, 2);
       // calc x and y cords with common control vectors
-      x = c1 * pts[i][0]	+ c2 * pts[i+1][0] + c3 * t1x + c4 * t2x;
-      y = c1 * pts[i][1]	+ c2 * pts[i+1][1] + c3 * t1y + c4 * t2y;
+      x = c1 * pts[i][0] + c2 * pts[i+1][0] + c3 * t1x + c4 * t2x;
+      y = c1 * pts[i][1] + c2 * pts[i+1][1] + c3 * t1y + c4 * t2y;
       //store points in array
       if (x && y) res.push([x,y]);
     }

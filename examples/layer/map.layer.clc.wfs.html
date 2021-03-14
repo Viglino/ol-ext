@@ -206,6 +206,12 @@ function calculate() {
     } else {
       // Calculate intersection
       if (optimization) {
+        var geom = ol.extent.intersection(ext, f.getGeometry());
+        codes[c] += Math.round(ol.sphere.getArea(geom, { 
+          projection: map.getView().getProjection() 
+        }));
+        
+        /*
         var typ = f.getGeometry().getType();
         var geom = f.getGeometry().getCoordinates();
         if (typ === 'Polygon') {
@@ -225,6 +231,7 @@ function calculate() {
             projection: map.getView().getProjection() 
           }));
         })
+        */
       } else {
         // Using jsts for accurate intersection (complex operation)
         var inter = extent.intersection(jstsParser.read(f.getGeometry()));
