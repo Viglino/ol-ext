@@ -29027,7 +29027,21 @@ ol.extent.intersection = function(extent, polygon) {
   }
 };
 })();
-
+/** Sample a list of point at a distance
+ * @param {Array<import(ol/coordinate).Coordinate>} geom
+ * @param {number} d
+ * @returns {Array<import(ol/coordinate).Coordinate>}
+ */
+ol.geom.sampleAt = function(geom, d) {
+  switch (geom.getType) {
+    case 'LineString':
+    case 'MultiLineString':
+    case 'Polygon':
+    case 'MultiPolygon':
+      break;
+  }
+  return geom;
+};
 /** Split a lineString by a point or a list of points
  *	NB: points must be on the line, use getClosestPoint() to get one
 * @param {ol.Coordinate | Array<ol.Coordinate>} pt points to split the line

@@ -297,7 +297,7 @@ import a from 'ol/coordinate'
  * @param {number} d
  * @returns {Array<import(ol/coordinate).Coordinate>}
  */
-var ol_geom_sampleAt(geom, d) {
+var ol_geom_sampleAt = function(geom, d) {
   switch (geom.getType) {
     case 'LineString':
     case 'MultiLineString':
