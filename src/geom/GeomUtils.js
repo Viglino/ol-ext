@@ -46,8 +46,8 @@ var ol_coordinate_getGeomCenter = function(geom) {
     case 'Point': 
       return geom.getCoordinates();
     case "MultiPolygon":
-            geom = geom.getPolygon(0);
-            // fallthrough
+      geom = geom.getPolygon(0);
+      // fallthrough
     case "Polygon":
       return geom.getInteriorPoint().getCoordinates();
     default:
@@ -227,3 +227,83 @@ var ol_coordinate_getIntersectionPoint = function (d1, d2) {
 };
 
 export { ol_coordinate_getIntersectionPoint }
+
+var ol_extent_intersection;
+
+(function() {
+// Split at x
+function splitX(pts, x) {
+  var pt;
+  for (let i=pts.length-1; i>0; i--) {
+    if ((pts[i][0]>x && pts[i-1][0]<x) || (pts[i][0]<x && pts[i-1][0]>x)) {
+      pt = [ x, (x - pts[i][0]) / (pts[i-1][0]-pts[i][0]) * (pts[i-1][1]-pts[i][1]) + pts[i][1]];
+      pts.splice(i, 0, pt);
+    }
+  }
+};
+// Split at y
+function splitY(pts, y) {
+  var pt;
+  for (let i=pts.length-1; i>0; i--) {
+    if ((pts[i][1]>y && pts[i-1][1]<y) || (pts[i][1]<y && pts[i-1][1]>y)) {
+      pt = [ (y - pts[i][1]) / (pts[i-1][1]-pts[i][1]) * (pts[i-1][0]-pts[i][0]) + pts[i][0], y];
+      pts.splice(i, 0, pt);
+    }
+  }
+};
+
+/** Fast polygon intersection with an extent (used for area calculation)
+ * @param {import(ol/extent/Extent)} extent
+ * @param {import(ol/geom/Polygon)|import(ol/geom/MultiPolygon)} polygon
+ * @returns {import(ol/geom/Polygon)|import(ol/geom/MultiPolygon)|null} return null if not a polygon geometry
+ */
+ol_extent_intersection = function(extent, polygon) {
+  var poly = (polygon.getType() === 'Polygon');
+  if (!poly && polygon.getType() !== 'MultiPolygon') return null;
+  var geom = polygon.getCoordinates();
+  if (poly) geom = [geom];
+  geom.forEach(function(g) {
+    g.forEach(function(c) {
+      splitX(c, extent[0])
+      splitX(c, extent[2])
+      splitY(c, extent[1])
+      splitY(c, extent[3])
+    });
+  })
+  // Snap geom to the extent 
+  geom.forEach(function(g) {
+    g.forEach(function(c) {
+      c.forEach(function(p) {
+        if (p[0]<extent[0]) p[0] = extent[0];
+        else if (p[0]>extent[2]) p[0] = extent[2];
+        if (p[1]<extent[1]) p[1] = extent[1];
+        else if (p[1]>extent[3]) p[1] = extent[3];
+      })
+    })
+  })
+  if (poly) {
+    return new ol_geom_Polygon(geom[0]);
+  } else {
+    return new ol_geom_MultiPolygon(geom);
+  }
+};
+})();
+
+export {ol_extent_intersection}
+
+import a from 'ol/coordinate'
+/** Sample a list of point at a distance
+ * @param {Array<import(ol/coordinate).Coordinate>} geom
+ * @param {number} d
+ * @returns {Array<import(ol/coordinate).Coordinate>}
+ */
+var ol_geom_sampleAt(geom, d) {
+  switch (geom.getType) {
+    case 'LineString':
+    case 'MultiLineString':
+    case 'Polygon':
+    case 'MultiPolygon':
+      break;
+  }
+  return geom;
+};
