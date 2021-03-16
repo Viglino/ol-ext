@@ -5,6 +5,14 @@
   Usefull function to handle geometric operations
 */
 
+import ol_geom_LineString from 'ol/geom/LineString'
+import ol_geom_LinearRing from 'ol/geom/LinearRing'
+import ol_geom_MultiLineString from 'ol/geom/MultiLineString'
+import ol_geom_MultiPoint from 'ol/geom/MultiPoint'
+import ol_geom_MultiPolygon from 'ol/geom/MultiPolygon'
+import ol_geom_Point from 'ol/geom/Point'
+import ol_geom_Polygon from 'ol/geom/Polygon'
+
 import {getCenter as ol_extent_getCenter} from 'ol/extent'
 
 /** Distance beetween 2 points
@@ -181,14 +189,6 @@ var ol_coordinate_splitH = function (geom, y, n) {
   return result;
 };
 
-import ol_geom_LineString from 'ol/geom/LineString'
-import ol_geom_LinearRing from 'ol/geom/LinearRing'
-import ol_geom_MultiLineString from 'ol/geom/MultiLineString'
-import ol_geom_MultiPoint from 'ol/geom/MultiPoint'
-import ol_geom_MultiPolygon from 'ol/geom/MultiPolygon'
-import ol_geom_Point from 'ol/geom/Point'
-import ol_geom_Polygon from 'ol/geom/Polygon'
-
 /** Create a geometry given a type and coordinates */
 var ol_geom_createFromType = function (type, coordinates) {
   switch (type) {
@@ -291,19 +291,24 @@ ol_extent_intersection = function(extent, polygon) {
 
 export {ol_extent_intersection}
 
-import a from 'ol/coordinate'
-/** Sample a list of point at a distance
- * @param {Array<import(ol/coordinate).Coordinate>} geom
- * @param {number} d
- * @returns {Array<import(ol/coordinate).Coordinate>}
+/**
+ * 
+ * @param {ol_Coordinate} p1 
+ * @param {ol_Coordinate} p2 
+ * @param {number} d 
+ * @returns {Array<ol_Coordinate>}
  */
-var ol_geom_sampleAt = function(geom, d) {
-  switch (geom.getType) {
-    case 'LineString':
-    case 'MultiLineString':
-    case 'Polygon':
-    case 'MultiPolygon':
-      break;
-  }
-  return geom;
+var ol_coordinate_sampleAt = function(p1, p2, d) {
+  var pts = [p1];
+  var dl = d / ol_coordinate_dist2d(p1,2);
+  
+  pts.push(p2);
+};
+export {ol_coordinate_sampleAt}
+
+/** Sample a geometry at a distance
+ * @param {number} d
+ * @returns {ol_geom_Polygon}
+ */
+ol_geom_Polygon.prototype.sampleAt = function(d) {
 };
