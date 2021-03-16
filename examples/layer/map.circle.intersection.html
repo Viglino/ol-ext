@@ -5,7 +5,7 @@
 	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
 	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 -->
-	<title>ol-ext: extent intersection</title>
+	<title>ol-ext: Circle intersection</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <link rel="icon" type="image/png" href="https://openlayers.org/assets/theme/img/logo70.png" />
 
@@ -59,14 +59,14 @@
   <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
 	<a href="../../index.html">
-		<h1>ol-ext: extent intersection</h1>
+		<h1>ol-ext: Circle intersection</h1>
 	</a>
 
   <div class="info">
-    <i>ol/extend.intersection</i> is a fast polygon intersection calculation with an extent (mainly used to calculate area intersection).
+    <i>ol/Circle~intersection</i> is a fast polygon intersection calculation with a circle (mainly used to calculate area intersection).
     It produces unnecessary points.
     <br/>
-    It can be used to compute <a href='../layer/map.layer.clc.wfs.html'>statistics on visible area</a>.
+    It can be used to compute <a href='../layer/map.layer.clc.wfs.html'>statistics on the map</a>.
   </div>
 
 	<!-- DIV pour la carte -->
@@ -81,7 +81,7 @@ var map = new ol.Map ({
   target: 'map',
   view: new ol.View ({
     zoom: 10,
-    center: [261204.43490751847, 6250258.191535994]
+    center: [261204, 6250258]
   }),
   layers: [
     new ol.layer.Geoportail({
@@ -92,12 +92,11 @@ var map = new ol.Map ({
 });
 
 var extent = [241380, 6237740, 285037, 6265025];
-var extentFeature = new ol.Feature(ol.geom.Polygon.fromExtent(extent));
-extentFeature.set('extent', true);
+var circle = new ol.Feature(new ol.geom.Circle([261204, 6250258], 20000));
 var vector = new ol.layer.Vector({
   source: new ol.source.Vector(),
   style: function(f) {
-    if (f.get('extent')) {
+    if (f.getGeometry().getType() === 'Circle') {
       return new ol.style.Style({
         stroke: new ol.style.Stroke({
           width: 1.5,
@@ -116,37 +115,40 @@ var vector = new ol.layer.Vector({
   }
 });
 map.addLayer(vector);
-vector.getSource().addFeature(extentFeature);
+vector.getSource().addFeature(circle);
 
 var draw = new ol.interaction.Draw({ type: 'Polygon' });
 map.addInteraction(draw);
 
 var jstsParser = new jsts.io.OL3Parser();
-var jstsExtent = jstsParser.read(extentFeature.getGeometry());
-var extentArea = ol.sphere.getArea(extentFeature.getGeometry());
+var polyCircle = ol.geom.Polygon.fromCircle(circle.getGeometry(), Math.round(circle.getGeometry().getRadius()/20));
+var jstsCircle = jstsParser.read(polyCircle);
+var circleArea = ol.sphere.getArea(polyCircle);
 
 // Calculate intersection on drawend
 draw.on('drawend', function(e) {
   var dt = new Date();
-  var g = ol.extent.intersection(extent, e.feature.getGeometry());
+  var g = circle.getGeometry().intersection(e.feature.getGeometry(), 1000);
   dt = new Date() - dt;
   // Using jsts
+  var jstsclip;
   var dt2 = new Date();
   try {
-    jstsExtent.intersection(jstsParser.read(e.feature.getGeometry()));
+    jstsclip = jstsCircle.intersection(jstsParser.read(e.feature.getGeometry()));
   } catch(e) {}
   dt2 = new Date() - dt2;
 
   vector.getSource().clear();
-  vector.getSource().addFeature(extentFeature);
-  vector.getSource().addFeature(new ol.Feature(g));
-  var a = ol.sphere.getArea(g);
+  vector.getSource().addFeature(circle);
+  if (g) vector.getSource().addFeature(new ol.Feature(g));
+  var a = g ? ol.sphere.getArea(g) : 0;
   var polyArea = ol.sphere.getArea(e.feature.getGeometry());
   $('.options').html(
-    '<label>Extent area:</label>'+(extentArea/10000).toFixed(2)+' ha<br/>'+
+    '<label>Circle area:</label>'+(circleArea/10000).toFixed(2)+' ha<br/>'+
     '<label>Polygon area:</label>'+(polyArea/10000).toFixed(2)+' ha<br/>'+
     '<label>Intersection area:</label>'+(a/10000).toFixed(2)+' ha - '+
-    ((a/extentArea)*100).toFixed(0)+'%<br/>'+
+    ((a/circleArea)*100).toFixed(0)+'%<br/>'+
+    '<label>JSTS area:</label>'+(jstsclip ? (jstsclip.isEmpty() ? '0.00' : (ol.sphere.getArea(jstsParser.write(jstsclip))/10000).toFixed(2)) : '')+' ha<br/>'+
     '<hr/>'+
     '<label>time:</label>'+dt+' ms<br/>'+
     '<label>jsts time:</label>'+dt2+' ms<br/>'

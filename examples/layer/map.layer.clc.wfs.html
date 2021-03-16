@@ -139,13 +139,18 @@
 
   <div id="data">
     <h2>Statistiques:</h2>
+    <p>
+      <label><input type="checkbox" onchange="clip.setActive($(this).prop('checked')); calculate();"> stats on a circle.</label>
+      <br/>
+      radius: <input type="range" min=50 max=400 value=200 onchange="clip.setRadius(parseInt(this.value)); calculate();" style="vertical-align: middle;" />
+    </p>
     <p class="nodata">
       Pas de données à cette échelle...
       <br/>
       Zoomer pour afficher des données.
     </p>
     <div>
-      <p id="loading"><i class="fa fa-spinner fa-pulse"></i> Chargement</p>
+      <p id="loading"><i class="fa fa-spinner fa-pulse"></i> loading...</p>
       <canvas id="stat"></canvas>
     </div>
     <div id="progressbar"></div>
@@ -182,9 +187,22 @@ map.addControl(new ol.control.SearchBAN({
 var switcher = new ol.control.LayerSwitcher();
 map.addControl(switcher);
 
+// Clip interaction
+var clip = new ol.interaction.Clip({
+  radius: 200
+});
+clip.setActive(false);
+
+/* debug
+var v = new ol.layer.Vector({source: new ol.source.Vector})
+map.addLayer(v)
+*/
+
 // Calculate new statistics
 var jstsParser = new jsts.io.OL3Parser();
+var circle = new ol.geom.Circle([0,0], 0);
 function calculate() {
+  var isCircle = clip.getActive();
   if (map.getView().getZoom() <= clc12.getMinZoom()) {
     $('body').addClass('nodata');
     return;
@@ -193,61 +211,50 @@ function calculate() {
   }
   var t = new Date();
   console.log('calculating...')
-  var ext = map.getView().calculateExtent(map.getSize());
+  var ext;
+  if (isCircle) {
+    circle.setRadius(clip.getRadius()*map.getView().getResolution());
+    ext = ol.extent.buffer(circle.getCenter().concat(circle.getCenter()), circle.getRadius());
+    /*
+    v.getSource().clear();
+    v.getSource().addFeature(new ol.Feature(ol.geom.Polygon.fromExtent(ext)))
+    */
+  } else {
+    ext = map.getView().calculateExtent(map.getSize());
+  }
   var features = clc12.getSource().getFeaturesInExtent(ext);
   var codes = {};
-  var optimization = true;
   // var extent = jstsParser.read(ol.geom.Polygon.fromExtent(ext));
   features.forEach(function(f) {
     var c = f.get('code_12');
     if (!codes[c]) codes[c] = 0;
-    if (ol.extent.containsExtent(ext, f.getGeometry().getExtent())) {
+    if (!isCircle && ol.extent.containsExtent(ext, f.getGeometry().getExtent())) {
       codes[c] += Math.round(f.get('area_ha')*10000);
     } else {
-      // Calculate intersection
-      if (optimization) {
-        var geom = ol.extent.intersection(ext, f.getGeometry());
-        codes[c] += Math.round(ol.sphere.getArea(geom, { 
-          projection: map.getView().getProjection() 
-        }));
-        
-        /*
-        var typ = f.getGeometry().getType();
-        var geom = f.getGeometry().getCoordinates();
-        if (typ === 'Polygon') {
-          geom = [geom];
-        }
-        // Snap geom to the extent (approximation of intersection...)
-        geom.forEach(function(g) {
-          g.forEach(function(c) {
-            c.forEach(function(p) {
-              if (p[0]<ext[0]) p[0] = ext[0];
-              else if (p[0]>ext[2]) p[0] = ext[2];
-              if (p[1]<ext[1]) p[1] = ext[1];
-              else if (p[1]>ext[3]) p[1] = ext[3];
-            })
-          })
-          codes[c] += Math.round(ol.sphere.getArea(new ol.geom.MultiPolygon(geom), { 
-            projection: map.getView().getProjection() 
-          }));
-        })
-        */
+      // Using fast extent intersection
+      var geom;
+      if (isCircle) {
+        geom = circle.intersection(f.getGeometry(), 10);
       } else {
-        // Using jsts for accurate intersection (complex operation)
+        geom = ol.extent.intersection(ext, f.getGeometry());
+      }
+      codes[c] += Math.round(ol.sphere.getArea(geom, { 
+        projection: map.getView().getProjection() 
+      }));
+      /* Using jsts for accurate intersection (complex operation)
         var inter = extent.intersection(jstsParser.read(f.getGeometry()));
         if (!inter.isEmpty()) {
           codes[c] += Math.round(ol.sphere.getArea(jstsParser.write(inter), { 
             projection: map.getView().getProjection() 
           }));
         }
-      }
+      */
     }
   })
   drawChart(codes);
   console.log(((new Date() - t)/1000).toFixed(2)+'s');
-}
-
-map.on('moveend', calculate);
+//  if (tout) clearTimeout(tout);
+};
 
 var tip = new ol.Overlay.Tooltip();
 map.addOverlay(tip);
@@ -320,6 +327,7 @@ function getSource(type) {
   });
   return source;
 }
+
 var clc12 = new ol.layer.Vector({
   title: 'CorineLandCover 2012',
   className: 'CLC',
@@ -330,6 +338,23 @@ var clc12 = new ol.layer.Vector({
 })
 //clc12.addFilter(new ol.filter.Composite({ operation: 'multiply' }));
 map.addLayer(clc12);
+
+// Set clip interaction
+clip.addLayer(clc12);
+map.addInteraction(clip);
+circle.setRadius(200);
+
+// Display chart on move end 
+map.on('moveend', calculate);
+
+var tout;
+map.on('pointermove', function(e) { 
+  if (clip.getActive()) {
+    circle.setCenter(e.coordinate);
+    if (tout) clearTimeout(tout);
+    tout = setTimeout(function() { calculate(); }, 100);
+  }
+});
 
 /* draw chart */
 var stat = document.getElementById('stat');
