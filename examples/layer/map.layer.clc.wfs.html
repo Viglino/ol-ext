@@ -123,6 +123,14 @@
   display: block;
 }
 
+.clip span {
+  display: block;
+  opacity: .25;
+  margin: .5em 0 1em;
+}
+p input:checked ~ span {
+  opacity: 1;
+}
 
   </style>
   
@@ -139,10 +147,12 @@
 
   <div id="data">
     <h2>Statistiques:</h2>
-    <p>
-      <label><input type="checkbox" onchange="clip.setActive($(this).prop('checked')); calculate();"> stats on a circle.</label>
-      <br/>
-      radius: <input type="range" min=50 max=400 value=200 onchange="clip.setRadius(parseInt(this.value)); calculate();" style="vertical-align: middle;" />
+    <p class="clip">
+      <input id="clip" type="checkbox" onchange="clip.setActive($(this).prop('checked')); calculate();"> 
+      <label for="clip">stats on a circle.</label>
+      <span>
+        radius: <input type="range" min=50 max=400 value=200 onchange="clip.setRadius(parseInt(this.value)); calculate();" style="vertical-align: middle;" />
+      </span>
     </p>
     <p class="nodata">
       Pas de données à cette échelle...
