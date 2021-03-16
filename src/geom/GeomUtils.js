@@ -264,10 +264,10 @@ ol_extent_intersection = function(extent, polygon) {
   if (poly) geom = [geom];
   geom.forEach(function(g) {
     g.forEach(function(c) {
-      splitX(c, extent[0])
-      splitX(c, extent[2])
-      splitY(c, extent[1])
-      splitY(c, extent[3])
+      splitX(c, extent[0]);
+      splitX(c, extent[2]);
+      splitY(c, extent[1]);
+      splitY(c, extent[3]);
     });
   })
   // Snap geom to the extent 
@@ -296,19 +296,120 @@ export {ol_extent_intersection}
  * @param {ol_Coordinate} p1 
  * @param {ol_Coordinate} p2 
  * @param {number} d 
+ * @param {boolean} start include starting point, default false
  * @returns {Array<ol_Coordinate>}
  */
-var ol_coordinate_sampleAt = function(p1, p2, d) {
-  var pts = [p1];
-  var dl = d / ol_coordinate_dist2d(p1,2);
-  
+var ol_coordinate_sampleAt = function(p1, p2, d, start) {
+  var pts = [];
+  if (start!==false) pts.push(p1);
+  var dl = ol_coordinate_dist2d(p1,p2);
+  if (dl) {
+    var nb = Math.round(dl/d);
+    if (nb>1) {
+      var dx = (p2[0]-p1[0]) / nb;
+      var dy = (p2[1]-p1[1]) / nb;
+      for (var i=1; i<nb; i++) {
+        pts.push([p1[0] + dx*i, p1[1] + dy*i])
+      }
+    }
+  }
   pts.push(p2);
+  return pts;
 };
-export {ol_coordinate_sampleAt}
+export { ol_coordinate_sampleAt }
 
-/** Sample a geometry at a distance
+/** Sample a Polygon at a distance
  * @param {number} d
  * @returns {ol_geom_Polygon}
  */
-ol_geom_Polygon.prototype.sampleAt = function(d) {
+ol_geom_Polygon.prototype.sampleAt = function(res) {
+  var poly = this.getCoordinates();
+  var result = [];
+  poly.forEach(function(p) {
+    var l = [];
+    for (var i=1; i<p.length; i++) {
+      l = l.concat(ol_coordinate_sampleAt(p[i-1], p[i], res, i===1));
+    }
+    result.push(l);
+  })
+  return new ol_geom_Polygon(result);
+};
+
+/** Sample a MultiPolygon at a distance
+ * @param {number} res
+ * @returns {ol_geom_MultiPolygon}
+ */
+ol_geom_MultiPolygon.prototype.sampleAt = function(res) {
+  var mpoly = this.getCoordinates();
+  var result = [];
+  mpoly.forEach(function(poly) {
+    var a = [];
+    result.push(a);
+    poly.forEach(function(p) {
+      var l = [];
+      for (var i=1; i<p.length; i++) {
+        l = l.concat(ol_coordinate_sampleAt(p[i-1], p[i], res, i===1));
+      }
+      a.push(l);
+    })
+  });
+  return new ol_geom_MultiPolygon(result);
+};
+
+/** Intersect a geometry using a circle
+ * @param {ol_geom_Geometry} geom
+ * @param {number} resolution circle resolution to sample the polygon on the circle, default 1
+ * @returns {ol_geom_Geometry}
+ */
+ol_geom_Circle.prototype.intersection = function(geom, resolution) {
+  if (geom.sampleAt) {
+    var ext = ol.extent.buffer(this.getCenter().concat(this.getCenter()), this.getRadius());
+    geom = ol_extent_intersection(ext, geom);
+    geom = geom.simplify(resolution);
+    var c = this.getCenter();
+    var r = this.getRadius();
+    //var res = (resolution||1) * r / 100;
+    var g = geom.sampleAt(resolution).getCoordinates();
+    switch (geom.getType()) {
+      case 'Polygon': {
+        g = [g];
+        // fallthrough
+      }
+      case 'MultiPolygon': {
+        var hasout = false;
+        var hasin = false;
+        var result = [];
+        g.forEach(function(poly) {
+          var a = [];
+          result.push(a);
+          poly.forEach(function(ring) {
+            var l = [];
+            a.push(l);
+            ring.forEach(function(p) {
+              var d = ol_coordinate_dist2d(c, p);
+              if (d > r) {
+                hasout = true;
+                l.push([
+                  c[0] + r / d * (p[0]-c[0]),
+                  c[1] + r / d * (p[1]-c[1])
+                ]);
+              } else {
+                hasin = true;
+                l.push(p);
+              }
+            });
+          })
+        });
+        if (!hasout) return geom;
+        if (geom.getType() === 'Polygon') {
+          return new ol_geom_Polygon(result[0]);
+        } else {
+          return new ol_geom_MultiPolygon(result);
+        }
+      }
+    }
+  } else {
+    console.warn('[ol/geom/Circle~intersection] Unsupported geometry type: '+geom.getType());
+  }
+  return geom;
 };

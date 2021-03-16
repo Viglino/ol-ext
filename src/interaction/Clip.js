@@ -51,15 +51,22 @@ ol_interaction_Clip.prototype.setMap = function(map) {
     }
     map.renderSync();
   }
-}
+};
 
 /** Set clip radius
  *	@param {integer} radius
-*/
+ */
 ol_interaction_Clip.prototype.setRadius = function(radius) {
   this.radius = radius;
   if (this.getMap()) this.getMap().renderSync();
-}
+};
+
+/** Get clip radius
+ *	@returns {integer} radius
+ */
+ol_interaction_Clip.prototype.getRadius = function() {
+  return this.radius;
+};
 
 /** Add a layer to clip
  *	@param {ol.layer|Array<ol.layer>} layer to clip
