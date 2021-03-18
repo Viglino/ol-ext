@@ -18,11 +18,11 @@ import {ol_coordinate_equal} from '../geom/GeomUtils';
  * @param {olx.interaction.DrawOptions} options
  *  @param {ol.source.Vector | undefined} options.source Destination source for the drawn features.
  *  @param {ol.geom.GeometryType} options.type Drawing type ('Point', 'LineString', 'Polygon') not ('MultiPoint', 'MultiLineString', 'MultiPolygon' or 'Circle'). Required.
- *	@param {boolean} options.tap enable on tap, default true
- *  @param {ol.style.Style|Array<ol.style.Style>} options.style Drawing style
- *  @param {ol.style.Style|Array<ol.style.Style>} options.sketchStyle Sketch style
- *  @param {ol.style.Style|Array<ol.style.Style>} options.targetStyle a style to draw the target point, default cross style
- *  @param {string} options.composite composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
+ *	@param {boolean} [options.tap=true] enable point insertion on tap, default true
+ *  @param {ol.style.Style|Array<ol.style.Style>} [options.style] Drawing style
+ *  @param {ol.style.Style|Array<ol.style.Style>} [options.sketchStyle] Sketch style
+ *  @param {ol.style.Style|Array<ol.style.Style>} [options.targetStyle] a style to draw the target point, default cross style
+ *  @param {string} [options.composite] composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
  */
 var ol_interaction_DrawTouch = function(options) {
   options = options||{};
@@ -59,6 +59,7 @@ var ol_interaction_DrawTouch = function(options) {
 
   ol_interaction_CenterTouch.call(this, options);
   this._source = options.source;
+  this.set('tap', options.tap!==false);
 };
 ol_ext_inherits(ol_interaction_DrawTouch, ol_interaction_CenterTouch);
 
