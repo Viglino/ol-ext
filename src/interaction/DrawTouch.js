@@ -9,7 +9,8 @@ import ol_style_Style_defaultStyle from '../style/defaultStyle'
 import ol_layer_SketchOverlay from '../layer/SketchOverlay'
 import {ol_coordinate_equal} from '../geom/GeomUtils';
 
-/** Interaction DrawTouch :
+/** Interaction DrawTouch : pointer is deferred to the center of the viewport and a target is drawn to materialize this point
+ * The interaction modifies map browser event coordinate and pixel properties to force pointer on the viewport center to any interaction that them.
  * @constructor
  * @fires drawstart
  * @fires drawend

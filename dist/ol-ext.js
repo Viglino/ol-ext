@@ -16669,7 +16669,8 @@ ol.interaction.DrawRegular.prototype.end_ = function(evt) {
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/** Interaction DrawTouch :
+/** Interaction DrawTouch : pointer is deferred to the center of the viewport and a target is drawn to materialize this point
+ * The interaction modifies map browser event coordinate and pixel properties to force pointer on the viewport center to any interaction that them.
  * @constructor
  * @fires drawstart
  * @fires drawend
