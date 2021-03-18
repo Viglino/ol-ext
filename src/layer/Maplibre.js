@@ -17,6 +17,9 @@ import * as mapboxgl from 'maplibre-gl';
  *  @param {olx.source.WMTSOptions=} tileoptions WMTS options if not defined default are used
  */
 var ol_layer_Maplibre = function(options) {
+  if (!ol_layer_Layer) {
+    console.error('[ol/layer/MapLibre] bad ol version (need ol@6+)');
+  }
   options = options || {};
   options.render = function (frameState) {
 
@@ -70,6 +73,7 @@ var ol_layer_Maplibre = function(options) {
   }
   ol_layer_Layer.call(this, options);
 };
+if (!ol_layer_Layer) ol_layer_Layer = function() {};
 ol_ext_inherits (ol_layer_Maplibre, ol_layer_Layer);
 
 /** Get the Maplibre map

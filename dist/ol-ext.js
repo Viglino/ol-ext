@@ -25425,6 +25425,9 @@ ol.layer.Group.prototype.getPreview = function(lonlat, resolution) {
  *  @param {olx.source.WMTSOptions=} tileoptions WMTS options if not defined default are used
  */
 ol.layer.Maplibre = function(options) {
+  if (!ol.layer.Layer) {
+    console.error('[ol/layer/MapLibre] bad ol version (need ol@6+)');
+  }
   options = options || {};
   options.render = function (frameState) {
     // Create map if not exists
@@ -25471,6 +25474,7 @@ ol.layer.Maplibre = function(options) {
   }
   ol.layer.Layer.call(this, options);
 };
+if (!ol.layer.Layer) ol.layer.Layer = function() {};
 ol.ext.inherits (ol.layer.Maplibre, ol.layer.Layer);
 /** Get the Maplibre map
  * @return {Object}
