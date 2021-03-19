@@ -15056,7 +15056,7 @@ ol.format.GeoJSONX.prototype.encodeCoordinates = function(v, decimal) {
         }
       }
       // Almost 2 points...
-      if (xy.length<2) xy.push('A,A');
+      // if (xy.length<2) xy.push('A,A');
       return xy.join(';');
     } else {
       for (i=0; i<v.length; i++) {
@@ -15141,6 +15141,15 @@ ol.format.GeoJSONX.prototype.writeFeatureObject = function(source, options) {
   // Encode geometry
   if (f0.geometry.type==='Point') {
     f.push(this.encodeCoordinates(f0.geometry.coordinates, this._decimals));
+  } else if (f0.geometry.type==='MultiPoint') {
+    var pts = [];
+    f0.geometry.coordinates.forEach(function(p) {
+      pts.push(this.encodeCoordinates(p, this._decimals));
+    }.bind(this));
+    f.push ([
+      this._type[f0.geometry.type],
+      pts.join(';')
+    ]);
   } else {
     if (!this._type[f0.geometry.type]) {
       throw 'GeoJSONX doesn\'t support '+f0.geometry.type+'.';
@@ -15231,8 +15240,17 @@ ol.format.GeoJSONX.prototype.readFeatureFromObject = function (f0, options) {
     }  
   } else {
     f.geometry = {
-      type: this._toType[f0[0][0]],
-      coordinates: this.decodeCoordinates(f0[0][1], typeof(options.decimals) === 'number' ? options.decimals : this.decimals)
+      type: this._toType[f0[0][0]]
+    }
+    if (f.geometry.type === 'MultiPoint') {
+      var g = f.geometry.coordinates = [];
+      var coords = f0[0][1].split(';');
+      coords.forEach(function(c) {
+        c = c.split(',');
+        g.push([this.decodeNumber(c[0], options.decimals), this.decodeNumber(c[1], options.decimals)])
+      }.bind(this));
+    } else {
+      f.geometry.coordinates = this.decodeCoordinates(f0[0][1], typeof(options.decimals) === 'number' ? options.decimals : this.decimals)
     }
   }
   if (this._hashProperties && f0[1]) {
