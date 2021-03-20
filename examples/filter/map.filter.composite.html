@@ -6,7 +6,7 @@
   Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
   released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 -->
-  <title>ol-ext: Crop composite</title>
+  <title>ol-ext: Composite filter</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
   <meta name="description" content="This filter apply a composite operation on layer drawing." />
@@ -20,12 +20,14 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
   <!-- Openlayers -->
-  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <link rel="stylesheet" href="https://openlayers.org/en/v5.3.0/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/v5.3.0/build/ol.js"></script>
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
   
   <!-- ol-ext -->
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
   <style>
   </style>
@@ -35,10 +37,15 @@
   <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
   <a href="../../index.html">
-    <h1>ol-ext: Crop composite</h1>
+    <h1>ol-ext: Composite filter</h1>
   </a>
   <div class="info">
-    <i>ol.filter.Composite</i> apply a composite operation on layer drawing.
+    <i>ol/filter/Composite</i> apply a composite operation on layer drawing.
+    <p>
+      <span class="experimental">deprecated</span> Composite doesn't work on ol > v.5.
+      <br/> 
+      Use layer with className option and add a CSS filter for ol@6+.
+    </p>
   </div>
 
   <!-- Map div -->

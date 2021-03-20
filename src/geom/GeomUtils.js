@@ -291,12 +291,11 @@ ol_extent_intersection = function(extent, polygon) {
 
 export {ol_extent_intersection}
 
-/**
- * 
+/** Add points along a segment
  * @param {ol_Coordinate} p1 
  * @param {ol_Coordinate} p2 
  * @param {number} d 
- * @param {boolean} start include starting point, default false
+ * @param {boolean} start include starting point, default true
  * @returns {Array<ol_Coordinate>}
  */
 var ol_coordinate_sampleAt = function(p1, p2, d, start) {
