@@ -251,7 +251,7 @@ function parcelle(options) {
     }
     return style;
   }
-};
+}
 
 // Corine Land Cover Style
 var clcColors = {
@@ -302,7 +302,7 @@ var clcColors = {
 };
 
 function corineLandCover (options) {
-  return function(feature, resolution) {
+  return function(feature) {
     var code = feature.get('code_'+options.date);
     var style = cache['CLC-'+code];
     if (!style) {
@@ -316,7 +316,7 @@ function corineLandCover (options) {
     }
     return style;
   }
-};
+}
 
 /** Get ol style for an IGN WFS layer
  * @param {string} typeName

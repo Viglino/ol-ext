@@ -12,8 +12,9 @@ import ol_geom_MultiPoint from 'ol/geom/MultiPoint'
 import ol_geom_MultiPolygon from 'ol/geom/MultiPolygon'
 import ol_geom_Point from 'ol/geom/Point'
 import ol_geom_Polygon from 'ol/geom/Polygon'
-
+import ol_geom_Circle from 'ol/geom/Circle'
 import {getCenter as ol_extent_getCenter} from 'ol/extent'
+import {buffer as ol_extent_buffer} from 'ol/extent'
 
 /** Distance beetween 2 points
  *	Usefull geometric functions
@@ -240,7 +241,7 @@ function splitX(pts, x) {
       pts.splice(i, 0, pt);
     }
   }
-};
+}
 // Split at y
 function splitY(pts, y) {
   var pt;
@@ -250,7 +251,7 @@ function splitY(pts, y) {
       pts.splice(i, 0, pt);
     }
   }
-};
+}
 
 /** Fast polygon intersection with an extent (used for area calculation)
  * @param {import(ol/extent/Extent)} extent
@@ -362,7 +363,7 @@ ol_geom_MultiPolygon.prototype.sampleAt = function(res) {
  */
 ol_geom_Circle.prototype.intersection = function(geom, resolution) {
   if (geom.sampleAt) {
-    var ext = ol.extent.buffer(this.getCenter().concat(this.getCenter()), this.getRadius());
+    var ext = ol_extent_buffer(this.getCenter().concat(this.getCenter()), this.getRadius());
     geom = ol_extent_intersection(ext, geom);
     geom = geom.simplify(resolution);
     var c = this.getCenter();
@@ -370,13 +371,11 @@ ol_geom_Circle.prototype.intersection = function(geom, resolution) {
     //var res = (resolution||1) * r / 100;
     var g = geom.sampleAt(resolution).getCoordinates();
     switch (geom.getType()) {
-      case 'Polygon': {
-        g = [g];
+      case 'Polygon': g = [g];
         // fallthrough
-      }
       case 'MultiPolygon': {
         var hasout = false;
-        var hasin = false;
+        // var hasin = false;
         var result = [];
         g.forEach(function(poly) {
           var a = [];
@@ -393,7 +392,7 @@ ol_geom_Circle.prototype.intersection = function(geom, resolution) {
                   c[1] + r / d * (p[1]-c[1])
                 ]);
               } else {
-                hasin = true;
+                // hasin = true;
                 l.push(p);
               }
             });

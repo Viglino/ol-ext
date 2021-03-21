@@ -3,14 +3,9 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 import ol_ext_inherits from '../util/ext'
-import ol_control_Control from 'ol/control/Control'
-import ol_geom_LineString from 'ol/geom/LineString';
-import ol_Feature from 'ol/Feature'
 import ol_ext_element from '../util/element';
-import ol_control_SearchGeoportail from './SearchGeoportail'
-import ol_source_Vector from 'ol/source/Vector'
-import ol_geom_Point from 'ol/geom/Point'
-import {transform as ol_proj_transform} from 'ol/proj'
+import ol_control_RoutingGeoportail from './RoutingGeoportail'
+import ol_format_GeoJSON from 'ol/format/GeoJSON'
 
 /**
  * Geoportail routing Control.
@@ -51,7 +46,7 @@ var ol_control_RoutingDSR = function(options) {
 ol_ext_inherits(ol_control_RoutingDSR, ol_control_RoutingGeoportail);
 
 
-ol_control_RoutingDSR.prototype.handleResponse = function (data, start, end) {
+ol_control_RoutingDSR.prototype.handleResponse = function (data /*, start, end*/) {
   if (data.status === 'ERROR') {
     this.dispatchEvent({
       type: 'errror',
@@ -60,7 +55,7 @@ ol_control_RoutingDSR.prototype.handleResponse = function (data, start, end) {
     })
     return;
   }
-  var format = new ol.format.GeoJSON();
+  var format = new ol_format_GeoJSON();
   var routing  = format.readFeature(data.features[0], {
     featureProjection: this.getMap().getView().getProjection()
   })

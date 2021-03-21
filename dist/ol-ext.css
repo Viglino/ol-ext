@@ -1969,12 +1969,15 @@
   overflow-x: hidden;
   overflow-y: auto;
 }
+.ol-control.ol-legend.ol-collapsed {
+  overflow: hidden;
+}
 .ol-control.ol-legend button {
   position: relative;
   display: none;
 }
 .ol-control.ol-legend.ol-collapsed button {
-    display: block;
+  display: block;
 }
 .ol-control.ol-legend.ol-uncollapsible button {
   display: none;
@@ -2007,15 +2010,11 @@
   position: absolute;
   z-index: -1;
 }
-.ol-control.ol-legend.ol-collapsed .ol-legendImg {
+.ol-control.ol-legend.ol-collapsed .ol-legend {
   display: none;
 }
-.ol-control.ol-legend.ol-uncollapsible .ol-legendImg {
-  display: block  ;
-}
-
-.ol-control.ol-legend .ol-legendImg canvas {
-  height: 100%;;
+.ol-control.ol-legend.ol-uncollapsible .ol-legend {
+  display: block;
 }
 
 .ol-control.ol-legend > button:first-child:before,
@@ -2037,7 +2036,7 @@
   width: .6em;
 }
 
-.ol-legend ul {
+ul.ol-legend {
   min-width: 1.5em;
   min-height: 1.5em;
   margin: 0 0 2px;
@@ -2051,15 +2050,18 @@
 .ol-control.ol-legend.ol-uncollapsible ul {
   display: block;
 }
-.ol-legend ul li.ol-title {
+ul.ol-legend li.ol-title {
   text-align: center;
   font-weight: bold;
 }
-.ol-legend ul li {
+ul.ol-legend li.ol-title > div:first-child {
+  width: 0!important;
+}
+ul.ol-legend li {
   overflow: hidden;
   padding: 0 .5em;
 }
-.ol-legend ul li div {
+ul.ol-legend li div {
     display: inline-block;
   vertical-align: middle;
 }

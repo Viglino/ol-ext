@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.1.20
+ * @version v3.2.1
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -1190,6 +1190,301 @@ ol.ext.SVGFilter.Sobel = function(options) {
   else if (options.alpha) this.luminanceToAlpha({ gamma: options.gamma });
 };
 ol.ext.inherits(ol.ext.SVGFilter.Sobel, ol.ext.SVGFilter);
+
+/** @namespace  ol.legend
+ */
+/*global ol*/
+if (window.ol && !ol.legend) {
+  ol.legend = {};
+}
+/** Legend class to draw features in a legend element
+ * @constructor
+ * @fires select
+ * @param {*} options
+ *  @param {String} options.title Legend title
+ *  @param {ol.size | undefined} options.size Size of the symboles in the legend, default [40, 25]
+ *  @param {number | undefined} options.margin Size of the symbole's margin, default 10
+ *  @param { ol.style.Style | Array<ol.style.Style> | ol.StyleFunction | undefined	} options.style a style or a style function to use with features
+ */
+ol.legend.Legend = function(options) {
+  options = options || {};
+  ol.Object.call(this);
+  this._items = new ol.Collection();
+  this._items.on(['add','remove','change'], function() {
+    this.refresh();
+  }.bind(this));
+  this._listElement = ol.ext.element.create('UL', {
+    className: 'ol-legend'
+  });
+  this._canvas = document.createElement('canvas');
+  this.set('size', options.size || [40, 25]);
+  this.set('margin', options.margin===0 ? 0 : options.margin || 10);
+//  this.set('title', options.title || '');
+  this._title = new ol.legend.Item({ title: options.title || '', className: 'ol-title' });
+  this.setStyle(options.style);
+  this.refresh();
+};
+ol.ext.inherits(ol.legend.Legend, ol.Object);
+/** Set legend title
+ * @param {string} title
+ */
+ol.legend.Legend.prototype.setTitle = function(title) {
+  this._title.setTitle(title);
+};
+/** Get legend title
+ * @returns {string}
+ */
+ol.legend.Legend.prototype.getTitle = function() {
+  return this._title.get('title');
+};
+/** Get legend list element
+ * @returns {Element}
+ */
+ol.legend.Legend.prototype.getListElement = function() {
+  return this._listElement;
+};
+/** Get legend canvas
+ * @returns {HTMLCanvasElement}
+ */
+ol.legend.Legend.prototype.getCanvas = function() {
+  return this._canvas;
+};
+/** Set the style
+ * @param { ol.style.Style | Array<ol.style.Style> | ol.StyleFunction | undefined	} style a style or a style function to use with features
+ */
+ ol.legend.Legend.prototype.setStyle = function(style) {
+  this._style = style;
+  this.refresh();
+};
+/** Add a new item to the legend
+ * @param {import('./legend/Item').LegendItemOptions|ol.legend.Item} item 
+ */
+ ol.legend.Legend.prototype.addItem = function(item) {
+  if (item instanceof ol.legend.Item) {
+    this._items.push(item);
+  } else {
+    this._items.push(new ol.legend.Item(item));
+  }
+};
+/** Get item collection
+ * @param {ol.Collection} 
+ */
+ol.legend.Legend.prototype.getItems = function() {
+  return this._items;
+};
+/** Refresh the legend
+ */
+ol.legend.Legend.prototype.refresh = function() {
+  var table = this._listElement;
+  table.innerHTML = '';
+  var width = this.get('size')[0] + 2*this.get('margin');
+  var height = this.get('size')[1] + 2*this.get('margin');
+  // Add a new row
+  /*
+  function addRow(str, classname, r, i) {
+    var row = ol.ext.element.create('LI', {
+      style: { height: height },
+      className : classname,
+      click: function () {
+        this.dispatchEvent({ type:'select', title: str, row: r, index: i });
+      }.bind(this),
+      parent: table
+    });
+    ol.ext.element.create ('DIV', {
+      style: { height: height },
+      parent: row
+    });
+    ol.ext.element.create ('DIV', {
+      html: str || '',
+      style: { paddingLeft: classname ? undefined : width + 'px' },
+      parent: row
+    })
+  }
+  */
+  // Add Title
+  if (this.getTitle()) {
+    table.appendChild(this._title.getElement([width, height]));
+  }
+  var canvas = this.getCanvas();
+  canvas.width = 10 * width * ol.has.DEVICE_PIXEL_RATIO;
+  canvas.height = (this._items.getLength()+1) * height * ol.has.DEVICE_PIXEL_RATIO;
+  this._items.forEach(function(r,i) {
+    table.appendChild(r.getElement([width, height]));
+    canvas = this.getLegendImage(r.getProperties(), canvas, i + (this.getTitle() ? 1 : 0));
+    canvas.style.height = (this._items.length+1)*height + 'px';
+  }.bind(this));
+  this.dispatchEvent({
+    type: 'refresh',
+    width: width,
+    height: (this._items.length+1)*height
+  });
+};
+/** Get the image for a style 
+ * You can provide in options:
+ * - a feature width a style 
+ * - or a feature that will use the legend style function
+ * - or properties and a geometry type that will use the legend style function
+ * - or a style and a geometry type
+ * @param {*} options
+ *  @param {ol.Feature} options.feature a feature to draw
+ *  @param {ol.style.Style} options.style the style to use if no feature is provided
+ *  @param {*} options.properties properties to use with a style function
+ *  @param {string} options.typeGeom type geom to draw with the style or the properties
+ * @param {Canvas|undefined} canvas a canvas to draw in
+ * @param {int|undefined} row row number to draw in canvas
+ * @return {CanvasElement}
+ */
+ ol.legend.Legend.prototype.getLegendImage = function(options, canvas, row) {
+  options = options || {};
+  var size = this.get('size');
+  var width = size[0] + 2*this.get('margin');
+  var height = size[1] + 2*this.get('margin');
+  var ratio = ol.has.DEVICE_PIXEL_RATIO;
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.width = width * ratio;
+    canvas.height = height * ratio;
+    row = 0;
+  }
+  var ctx = canvas.getContext('2d');
+  ctx.save();
+  var vectorContext = ol.render.toContext(ctx);
+  var typeGeom = options.typeGeom;
+  var style;
+  var feature = options.feature;
+  if (!feature && options.properties && typeGeom) {
+    if (/Point/.test(typeGeom)) feature = new ol.Feature(new ol.geom.Point([0,0]));
+    else if (/LineString/.test(typeGeom)) feature = new ol.Feature(new ol.geom.LineString([0,0]));
+    else feature = new ol.Feature(new ol.geom.Polygon([[0,0]]));
+    feature.setProperties(options.properties);
+  }
+  if (feature) {
+    style = feature.getStyle();
+    if (typeof(style)==='function') style = style(feature);
+    if (!style) {
+      style = typeof(this._style) === 'function' ? this._style(feature) : this._style || [];
+    }
+    typeGeom = feature.getGeometry().getType();
+  } else {
+    style = options.style;
+  }
+  if (!(style instanceof Array)) style = [style];
+  var cx = width/2;
+  var cy = height/2;
+  var sx = size[0]/2;
+  var sy = size[1]/2;
+  var i, s;
+  // Get point offset
+  if (typeGeom === 'Point') {
+    var extent = null;
+    for (i=0; s= style[i]; i++) {
+      var img = s.getImage();
+      if (img && img.getAnchor) {
+        var anchor = img.getAnchor();
+        var si = img.getSize();
+        var dx = anchor[0] - si[0];
+        var dy = anchor[1] - si[1];
+        if (!extent) {
+          extent = [dx, dy, dx+si[0], dy+si[1]];
+        } else {
+          ol.extent.extend(extent, [dx, dy, dx+si[0], dy+si[1]]);
+        }
+      }
+    }
+    if (extent) {
+      cx = cx + (extent[2] + extent[0])/2;
+      cy = cy + (extent[3] + extent[1])/2;
+    }
+  }
+  // Draw image
+  cy += row*height || 0;
+  for (i=0; s= style[i]; i++) {
+    vectorContext.setStyle(s);
+    switch (typeGeom) {
+      case ol.geom.Point:
+      case 'Point':
+      case 'MultiPoint':
+        vectorContext.drawGeometry(new ol.geom.Point([cx, cy]));
+        break;
+      case ol.geom.LineString:
+      case 'LineString':
+      case 'MultiLineString': 
+        ctx.save();
+          ctx.rect(this.get('margin') * ratio, 0, size[0] *  ratio, canvas.height);
+          ctx.clip();
+          vectorContext.drawGeometry(new ol.geom.LineString([[cx-sx, cy], [cx+sx, cy]]));
+        ctx.restore();
+        break;
+      case ol.geom.Polygon:
+      case 'Polygon':
+      case 'MultiPolygon': 
+        vectorContext.drawGeometry(new ol.geom.Polygon([[[cx-sx, cy-sy], [cx+sx, cy-sy], [cx+sx, cy+sy], [cx-sx, cy+sy], [cx-sx, cy-sy]]]));
+        break;
+    }
+  }
+  ctx.restore();
+  return canvas;
+};
+
+/** ol/legend/Item options
+ * @typedef {Object} olLegendItemOptions
+ * @property {string} options.title row title
+ * @property {className} options.className
+ * @property {import(ol/Feature)} options.feature a feature to draw on the legend
+ * @property {import('ol/style/Style').styleLike} options.style a style or a style function to use to draw the legend
+ * @property {*} options.properties a set of properties to use with a style function
+ * @property {string} options.typeGeom type geom to draw with the style or the properties
+ */
+/** A class for legend items
+ * @constructor
+ * @fires select
+ * @param {olLegendItemOptions} options
+ */
+ol.legend.Item = function(options) {
+  options = options || {};
+  ol.Object.call(this, options);
+  if (options.feature) this.set('feature', options.feature.clone());
+  this.element = ol.ext.element.create('LI', {
+    className : this.get('className')
+  });
+  this._box = ol.ext.element.create ('DIV', {
+    click: function() {
+      this.dispatchEvent({
+        type: 'select',
+        symbol : true
+      })
+    }.bind(this),
+    parent: this.element
+  });
+  this._title = ol.ext.element.create ('DIV', {
+    html: this.get('title') || '',
+    click: function() {
+      this.dispatchEvent({
+        type: 'select',
+        symbol : true
+      })
+    }.bind(this),
+    parent: this.element
+  });
+};
+ol.ext.inherits(ol.legend.Item, ol.Object);
+/** Set the legend title
+ * @param {string} title
+ */
+ol.legend.Item.prototype.setTitle = function(title) {
+  this.set('title', title || '')
+  this._title.innerHTML = this.get('title') || '';
+};
+/** Get element
+ * @param {ol.size} size symbol size
+ */
+ol.legend.Item.prototype.getElement = function(size) {
+  this._title.innerHTML = this.get('title') || '';
+  this.element.style.height = size[1] + 'px';
+  this._box.style.width = size[0] + 'px';
+  this._box.style.height = size[1] + 'px';
+  return this.element;
+};
 
 /**
  * @classdesc 
@@ -6644,27 +6939,24 @@ ol.control.LayerSwitcherImage.prototype.overflow = function(){};
 
 /** Create a legend for styles
  * @constructor
+ * @extends {ol.control.Control}
  * @fires select
  * @param {*} options
  *  @param {String} options.className class of the control
- *  @param {String} options.title Legend title
- *  @param {ol.size | undefined} options.size Size of the symboles in the legend, default [40, 25]
- *  @param {int | undefined} options.margin Size of the symbole's margin, default 10
+ *  @param {import('../legend/Legend')} options.legend
  *  @param {boolean | undefined} options.collapsed Specify if attributions should be collapsed at startup. Default is true.
- *  @param {boolean | undefined} options.collapsible Specify if attributions can be collapsed, default true.
+ *  @param {boolean | undefined} options.collapsible Specify if legend can be collapsed, default true.
  *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *  @param { ol.style.Style | Array<ol.style.Style> | ol.StyleFunction | undefined	} options.style a style or a style function to use with features
- * @extends {ol.control.Control}
  */
 ol.control.Legend = function(options) {
   options = options || {};
   var element = document.createElement('div');
   if (options.target) {
-    element.className = options.className || "ol-legend";
+    element.className = options.className || 'ol-legend';
   } else {
-    element.className = (options.className || "ol-legend")
-      +" ol-unselectable ol-control ol-collapsed"
-      +(options.collapsible===false ? ' ol-uncollapsible': '');
+    element.className = (options.className || 'ol-legend')
+      +' ol-unselectable ol-control'
+      +(options.collapsible===false ? ' ol-uncollapsible': ' ol-collapsed');
     // Show on click
     var button = document.createElement('button');
     button.setAttribute('type', 'button');
@@ -6681,112 +6973,21 @@ ol.control.Legend = function(options) {
     }.bind(this));
     element.appendChild(button);
   }
-  // The legend
-  this._imgElement = document.createElement('div');
-  this._imgElement.className = 'ol-legendImg';
-  element.appendChild(this._imgElement);
-  this._tableElement = document.createElement('ul');
-  element.appendChild(this._tableElement);
-	ol.control.Control.call(this, {
+  ol.control.Control.call(this, {
     element: element,
 		target: options.target
 	});
-  this._rows = [];
-  this.set('size', options.size || [40, 25]);
-  this.set('margin', options.margin===0 ? 0 : options.margin || 10);
-  this.set('title', options.title || '');
-  // Set the style
-  this._style = options.style;
-  if (options.collapsed===false) this.show();
-  this.refresh();
+  // The legend
+  this._legend = options.legend;
+  this._legend.getCanvas().className = 'ol-legendImg';
+  element.appendChild(this._legend.getCanvas());
+  element.appendChild(this._legend.getListElement());
+  if (options.collapsible!==false || options.collapsed===false) this.show();
+  this._legend.on('select', function(e) {
+    this.dispatchEvent(e);
+  }.bind(this));
 };
 ol.ext.inherits(ol.control.Legend, ol.control.Control);
-/** Set the style
- * @param { ol.style.Style | Array<ol.style.Style> | ol.StyleFunction | undefined	} style a style or a style function to use with features
- */
-ol.control.Legend.prototype.setStyle = function(style) {
-  this._style = style;
-  this.refresh();
-};
-/** Add a new row to the legend
- *  * You can provide in options:
- * - a feature width a style 
- * - or a feature that will use the legend style function
- * - or properties ans a geometry type that will use the legend style function
- * - or a style and a geometry type
- * @param {*} options a list of parameters 
- *  @param {ol.Feature} options.feature a feature to draw
- *  @param {string} options.className class name for the row
- *  @param {ol.style.Style} options.style the style to use if no feature is provided
- *  @param {*} options.properties properties to use with a style function
- *  @param {string} options.typeGeom type geom to draw with the style or the properties
- */
-ol.control.Legend.prototype.addRow = function(row) {
-  this._rows.push(row||{});
-  this.refresh();
-};
-/** Remove a row from the legend
- *  @param {int} index
- */
-ol.control.Legend.prototype.removeRow = function(index) {
-  this._rows.splice(index,1);
-  this.refresh();
-};
-/** Get a legend row
- * @param {int} index
- * @return {*}
- */
-ol.control.Legend.prototype.getRow = function(index) {
-  return this._rows[index];
-};
-/** Get a legend row
- * @return {int}
- */
-ol.control.Legend.prototype.getLength = function() {
-  return this._rows.length;
-};
-/** Refresh the legend
- */
-ol.control.Legend.prototype.refresh = function() {
-  var self = this;
-  var table = this._tableElement
-  table.innerHTML = '';
-  var width = this.get('size')[0] + 2*this.get('margin');
-  var height = this.get('size')[1] + 2*this.get('margin');
-  // Add a new row
-  function addRow(str, classname, r, i){
-    var row = document.createElement('li');
-    row.style.height = height + 'px';
-    row.addEventListener('click', function() {
-      self.dispatchEvent({ type:'select', title: str, row: r, index: i });
-    });
-    var col = document.createElement('div');
-    row.appendChild(col);
-    col.style.height = height + 'px';
-    col = document.createElement('div');
-    if (classname) {
-      row.className = classname;
-    } else {
-      col.style.paddingLeft = width + 'px';
-    }
-    col.innerHTML = str || '';
-    row.appendChild(col);
-    table.appendChild(row);
-  }
-  if (this.get('title')) {
-    addRow(this.get('title'), 'ol-title', {}, -1);
-  }
-  var canvas = document.createElement('canvas');
-  canvas.width = 5*width;
-  canvas.height = (this._rows.length+1) * height * ol.has.DEVICE_PIXEL_RATIO;
-  this._imgElement.innerHTML = '';
-  this._imgElement.appendChild(canvas);
-  this._imgElement.style.height = (this._rows.length+1)*height + 'px';
-  for (var i=0, r; r = this._rows[i]; i++) {
-    addRow(r.title, r.className, r, i);
-    canvas = this.getStyleImage(r, canvas, i+(this.get('title')?1:0));
-  }
-};
 /** Show control
  */
 ol.control.Legend.prototype.show = function() {
@@ -6808,112 +7009,6 @@ ol.control.Legend.prototype.hide = function() {
 ol.control.Legend.prototype.toggle = function() {
   this.element.classList.toggle('ol-collapsed');
   this.dispatchEvent({ type:'change:collapse', collapsed: this.element.classList.contains('ol-collapsed') });
-};
-/** Get the image for a style 
- * You can provide in options:
- * - a feature width a style 
- * - or a feature that will use the legend style function
- * - or properties and a geometry type that will use the legend style function
- * - or a style and a geometry type
- * @param {*} options
- *  @param {ol.Feature} options.feature a feature to draw
- *  @param {ol.style.Style} options.style the style to use if no feature is provided
- *  @param {*} options.properties properties to use with a style function
- *  @param {string} options.typeGeom type geom to draw with the style or the properties
- * @param {Canvas|undefined} canvas a canvas to draw in
- * @param {int|undefined} row row number to draw in canvas
- * @return {CanvasElement}
- */
-ol.control.Legend.prototype.getStyleImage = function(options, theCanvas, row) {
-  options = options || {};
-  var size = this.get('size');
-  var width = size[0] + 2*this.get('margin');
-  var height = size[1] + 2*this.get('margin');
-  var canvas = theCanvas;
-  var ratio = ol.has.DEVICE_PIXEL_RATIO;
-  if (!canvas) {
-    canvas = document.createElement('canvas');
-    canvas.width = width * ratio;
-    canvas.height = height * ratio;
-  }
-  var ctx = canvas.getContext('2d');
-  ctx.save();
-  var vectorContext = ol.render.toContext(ctx);
-  var typeGeom = options.typeGeom;
-  var style;
-  var feature = options.feature;
-  if (!feature && options.properties && typeGeom) {
-    if (/Point/.test(typeGeom)) feature = new ol.Feature(new ol.geom.Point([0,0]));
-    else if (/LineString/.test(typeGeom)) feature = new ol.Feature(new ol.geom.LineString([0,0]));
-    else feature = new ol.Feature(new ol.geom.Polygon([[0,0]]));
-    feature.setProperties(options.properties);
-  }
-  if (feature) {
-    style = feature.getStyle();
-    if (typeof(style)==='function') style = style(feature);
-    if (!style) {
-      style = typeof(this._style) === 'function' ? this._style(feature) : this._style || [];
-    }
-    typeGeom = feature.getGeometry().getType();
-  } else {
-    style = options.style;
-  }
-  if (!(style instanceof Array)) style = [style];
-  var cx = width/2;
-  var cy = height/2;
-  var sx = size[0]/2;
-  var sy = size[1]/2;
-  var i, s;
-  // Get point offset
-  if (typeGeom === 'Point') {
-    var extent = null;
-    for (i=0; s= style[i]; i++) {
-      var img = s.getImage();
-      if (img && img.getAnchor) {
-        var anchor = img.getAnchor();
-        var si = img.getSize();
-        var dx = anchor[0] - si[0];
-        var dy = anchor[1] - si[1];
-        if (!extent) {
-          extent = [dx, dy, dx+si[0], dy+si[1]];
-        } else {
-          ol.extent.extend(extent, [dx, dy, dx+si[0], dy+si[1]]);
-        }
-      }
-    }
-    if (extent) {
-      cx = cx + (extent[2] + extent[0])/2;
-      cy = cy + (extent[3] + extent[1])/2;
-    }
-  }
-  // Draw image
-  cy += (theCanvas ? row*height : 0);
-  for (i=0; s= style[i]; i++) {
-    vectorContext.setStyle(s);
-    switch (typeGeom) {
-      case ol.geom.Point:
-      case 'Point':
-      case 'MultiPoint':
-        vectorContext.drawGeometry(new ol.geom.Point([cx, cy]));
-        break;
-      case ol.geom.LineString:
-      case 'LineString':
-      case 'MultiLineString': 
-        ctx.save();
-          ctx.rect(this.get('margin') * ratio, 0, size[0] *  ratio, canvas.height);
-          ctx.clip();
-          vectorContext.drawGeometry(new ol.geom.LineString([[cx-sx, cy], [cx+sx, cy]]));
-        ctx.restore();
-        break;
-      case ol.geom.Polygon:
-      case 'Polygon':
-      case 'MultiPolygon': 
-        vectorContext.drawGeometry(new ol.geom.Polygon([[[cx-sx, cy-sy], [cx+sx, cy-sy], [cx+sx, cy+sy], [cx-sx, cy+sy], [cx-sx, cy-sy]]]));
-        break;
-    }
-  }
-  ctx.restore();
-  return canvas;
 };
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
@@ -9190,7 +9285,7 @@ ol.control.RoutingDSR = function(options) {
   */
 };
 ol.ext.inherits(ol.control.RoutingDSR, ol.control.RoutingGeoportail);
-ol.control.RoutingDSR.prototype.handleResponse = function (data, start, end) {
+ol.control.RoutingDSR.prototype.handleResponse = function (data /*, start, end*/) {
   if (data.status === 'ERROR') {
     this.dispatchEvent({
       type: 'errror',
@@ -29010,7 +29105,7 @@ function splitX(pts, x) {
       pts.splice(i, 0, pt);
     }
   }
-};
+}
 // Split at y
 function splitY(pts, y) {
   var pt;
@@ -29020,7 +29115,7 @@ function splitY(pts, y) {
       pts.splice(i, 0, pt);
     }
   }
-};
+}
 /** Fast polygon intersection with an extent (used for area calculation)
  * @param {import(ol/extent/Extent)} extent
  * @param {import(ol/geom/Polygon)|import(ol/geom/MultiPolygon)} polygon
@@ -29057,12 +29152,11 @@ ol.extent.intersection = function(extent, polygon) {
   }
 };
 })();
-/**
- * 
+/** Add points along a segment
  * @param {ol.Coordinate} p1 
  * @param {ol.Coordinate} p2 
  * @param {number} d 
- * @param {boolean} start include starting point, default false
+ * @param {boolean} start include starting point, default true
  * @returns {Array<ol.Coordinate>}
  */
 ol.coordinate.sampleAt = function(p1, p2, d, start) {
@@ -29133,13 +29227,11 @@ ol.geom.Circle.prototype.intersection = function(geom, resolution) {
     //var res = (resolution||1) * r / 100;
     var g = geom.sampleAt(resolution).getCoordinates();
     switch (geom.getType()) {
-      case 'Polygon': {
-        g = [g];
+      case 'Polygon': g = [g];
         // fallthrough
-      }
       case 'MultiPolygon': {
         var hasout = false;
-        var hasin = false;
+        // var hasin = false;
         var result = [];
         g.forEach(function(poly) {
           var a = [];
@@ -29156,7 +29248,7 @@ ol.geom.Circle.prototype.intersection = function(geom, resolution) {
                   c[1] + r / d * (p[1]-c[1])
                 ]);
               } else {
-                hasin = true;
+                // hasin = true;
                 l.push(p);
               }
             });
@@ -33159,7 +33251,7 @@ function parcelle(options) {
     }
     return style;
   }
-};
+}
 // Corine Land Cover Style
 var clcColors = {
   111: { color: [230,0,77,255], title: 'Continuous urban fabric'},
@@ -33208,7 +33300,7 @@ var clcColors = {
   523: { color: [230,242,255,255], title: 'Sea and ocean'},
 };
 function corineLandCover (options) {
-  return function(feature, resolution) {
+  return function(feature) {
     var code = feature.get('code_'+options.date);
     var style = cache['CLC-'+code];
     if (!style) {
@@ -33222,7 +33314,7 @@ function corineLandCover (options) {
     }
     return style;
   }
-};
+}
 /** Get ol style for an IGN WFS layer
  * @param {string} typeName
  * @param {Object} options
