@@ -72,24 +72,29 @@
   });
 
   // Define a new legend
-  var legend = new ol.control.Legend({ 
+  var legend = new ol.legend.Legend({ 
     title: 'Legend',
-    margin: 5,
+    margin: 5
+  });
+  var legendCtrl = new ol.control.Legend({
+    legend: legend,
     collapsed: false
   });
-  map.addControl(legend);
-
+  map.addControl(legendCtrl);
+  
   // Add a new one
-  var legend2 = new ol.control.Legend({ 
-    title: ' ',
-    margin: 5,
-    target: legend.element
+  var legend2 = new ol.legend.Legend({ 
+    title: ' ', // no title
+    margin: 5
   });
-  map.addControl(legend2);
+  map.addControl(new ol.control.Legend({
+    legend: legend2,
+    target: legendCtrl.element
+  }));
 
   var form = { Trianle:3, Square:4, Pentagon: 5, Hexagon: 6 };
   for (var i in form) {
-    legend.addRow({ 
+    legend.addItem({ 
       title: i, 
       typeGeom: 'Point',
       style: new ol.style.Style({
@@ -101,7 +106,7 @@
         })
       })
     });
-    legend2.addRow({ 
+    legend2.addItem({ 
       title: i, 
       typeGeom: 'Point',
       style: new ol.style.Style({

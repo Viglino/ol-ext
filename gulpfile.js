@@ -86,6 +86,8 @@ gulp.task('css0', function () {
     "./src/map/*.css",
     "./src/overlay/*.css", 
     "./src/style/*.css",
+    "./src/legend/*.css",
+    "./src/ext/*.css",
     "./src/util/*.css",
     "./src/utils/*.css"
     ])
@@ -105,6 +107,7 @@ gulp.task('cssmin', function () {
     "./src/map/*.css",
     "./src/overlay/*.css", 
     "./src/style/*.css",
+    "./src/legend/*.css",
     "./src/util/*.css",
     "./src/utils/*.css"
     ])
@@ -121,6 +124,8 @@ gulp.task("js", function() {
   return gulp.src([
     "./src/util/ext.js", "./src/util/*.js", "./src/util/SVGFilter/*.js",
     "!./src/util/getVectorContext.js", 
+    "./src/ext/*.js",
+    "./src/legend/Legend.js","./src/legend/*.js",
     "./src/control/CanvasBase.js","./src/control/SelectBase.js","./src/control/Button.js","./src/control/Toggle.js","./src/control/Search.js","./src/control/SearchJSON.js","./src/control/SearchPhoton.js","./src/control/SearchGeoportail.js",
     "./src/control/LayerSwitcher.js", "./src/control/*.js", 
     "!./src/control/PirateMap.js", "!./src/control/Cloud.js",
@@ -190,7 +195,7 @@ gulp.task("extrajs", function() {
 
 // Build files to be used individually
 gulp.task("lib", function() {
-  var src = ['control','featureanimation','filter','format','geom','interaction','layer','overlay','render','source','style','util','utils'];
+  var src = ['control','featureanimation','filter','format','geom','interaction','layer','overlay','render','source','style','util','utils','ext'];
   for (var i=0; i<src.length; i++) {
     gulp.src("./src/"+src[i]+"/*.js")
       .pipe(transform())
@@ -230,6 +235,7 @@ gulp.task ("postpublish", function(){
       "./render",
       "./source",
       "./style",
+      "./ext",
       "./util",
       "./utils"
     ])

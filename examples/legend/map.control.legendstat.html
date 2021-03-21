@@ -114,25 +114,27 @@
   }));
 
   // Define a new legend
-  var legend = new ol.control.Legend({ 
+  var legend = new ol.legend.Legend({ 
     title: 'Legend',
     style: getFeatureStyle,
-    collapsible: false,
     margin: 0,
     size: [40, 10]
   });
-  map.addControl(legend);
+  map.addControl(new ol.control.Legend({ 
+    collapsible: false,
+    legend: legend
+  }));
 
   // Add empty row to 
-  legend.addRow();
-  legend.addRow();
-  legend.addRow({ title:'2.600.000' });
-  legend.addRow({ title:'', properties: { pop: 2600000 }, typeGeom: 'Point'});
-  legend.addRow({ title:'100.000', properties: { pop: 1000000 }, typeGeom: 'Point'});
-  legend.addRow({ title:'', properties: { pop: 100000 }, typeGeom: 'Point'});
+  legend.addItem();
+  legend.addItem();
+  legend.addItem({ title:'2.600.000' });
+  legend.addItem({ title:'', properties: { pop: 2600000 }, typeGeom: 'Point'});
+  legend.addItem({ title:'100.000', properties: { pop: 1000000 }, typeGeom: 'Point'});
+  legend.addItem({ title:'', properties: { pop: 100000 }, typeGeom: 'Point'});
   /*
   [2600000, 1000000, 100000].forEach(function(pop) {
-    legend.addRow({ 
+    legend.addItem({ 
       title: pop,
       properties: { pop: pop },
       typeGeom: 'Point'

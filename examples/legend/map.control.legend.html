@@ -69,7 +69,7 @@
   <div class="options">
     <p>
       Title: 
-      <input type="text" value="Legend" placeholder="Legend title" onchange="legend.set('title', this.value); legend.refresh();" />
+      <input type="text" value="Legend" placeholder="Legend title" onchange="legend.setTitle(this.value);" />
       <br/><br/>
       <i>Select an object on the map and add it to the legend...</i>
     </p>
@@ -191,19 +191,22 @@
   /* */
 
   // Define a new legend
-  var legend = new ol.control.Legend({ 
+  var legend = new ol.legend.Legend({
     title: 'Legend',
-    style: getFeatureStyle,
+    style: getFeatureStyle
+  })
+  var legendCtrl = new ol.control.Legend({ 
+    legend: legend,
     collapsed: false
   });
-  map.addControl(legend);
+  map.addControl(legendCtrl);
   legend.on('select', function(e) {
     if (e.index >= 0) console.log('You click on row: '+e.title+' ('+e.index+')');
     else console.log('You click on the title: '+e.title);
   });
-  legend.addRow({ title: 'Car placemark', feature: f0 });
+  legend.addItem({ title: 'Car placemark', feature: f0 });
 
-  // Dsiplay the style on select
+  // Display the style on select
   var select = new ol.interaction.Select({ hitTolerance: 3 });
   map.addInteraction(select);
 
@@ -212,20 +215,20 @@
     // Remove feature from select (to get its style back) BUG ol6 ?
     select.getFeatures().remove(f);
     if (f) {
-      var img = legend.getStyleImage({
+      var img = legend.getLegendImage({
         /* given a style  and a geom type
         style: f.getStyle() || getFeatureStyle(f),
         typeGeom: f.getGeometry().getType()
         */
         /* or given a feature */
-        feature: f
+        feature: f.clone()
       });
       $('.options .img').html('').append(img);
       $('.options .row').show();
     } else {
       $('.options .row').hide();
     }
-    select.getFeatures().push(f);
+    if (f) select.getFeatures().push(f);
   });
 
   // Add selection to legend
@@ -234,7 +237,7 @@
     // Remove feature from select (to get its style back) BUG ol6 ?
     select.getFeatures().remove(f);
     if (f) {
-      legend.addRow({
+      legend.addItem({
         title: $(".options .row input").val(),
         /* given a style  and a geom type
         style: f.getStyle() || getFeatureStyle(f),
