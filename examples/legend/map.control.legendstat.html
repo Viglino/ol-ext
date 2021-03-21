@@ -143,7 +143,11 @@
   */
 
   // Display the style on select
-  var popup = new ol.Overlay.Popup({ popupClass: 'tooltips', offsetBox:15 });
+  var popup = new ol.Overlay.Popup({ 
+    popupClass: 'tooltips', 
+    positioning: 'top-auto',
+    offsetBox: [-10,0,15,0]
+  });
   map.addOverlay(popup);
   var hover = new ol.interaction.Hover();
   map.addInteraction(hover);
