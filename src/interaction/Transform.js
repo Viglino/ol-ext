@@ -168,14 +168,20 @@ ol_interaction_Transform.prototype.setActive = function(b) {
   ol_interaction_Pointer.prototype.setActive.call (this, b);
 };
 
-/** Set efault sketch style
-*/
-ol_interaction_Transform.prototype.setDefaultStyle = function() {
+/** Set default sketch style
+ * @param {Object|undefined} options
+ *  @param {ol_style_Stroke} stroke stroke style for selection rectangle
+ *  @param {ol_style_Fill} fill fill style for selection rectangle
+ *  @param {ol_style_Stroke} pointStroke stroke style for handles
+ *  @param {ol_style_Fill} pointFill fill style for handles
+ */
+ol_interaction_Transform.prototype.setDefaultStyle = function(options) {
+  options = options || {}
   // Style
-  var stroke = new ol_style_Stroke({ color: [255,0,0,1], width: 1 });
-  var strokedash = new ol_style_Stroke({ color: [255,0,0,1], width: 1, lineDash:[4,4] });
-  var fill0 = new ol_style_Fill({ color:[255,0,0,0.01] });
-  var fill = new ol_style_Fill({ color:[255,255,255,0.8] });
+  var stroke = options.pointStroke || new ol_style_Stroke({ color: [255,0,0,1], width: 1 });
+  var strokedash = options.stroke || new ol_style_Stroke({ color: [255,0,0,1], width: 1, lineDash:[4,4] });
+  var fill0 = options.fill || new ol_style_Fill({ color:[255,0,0,0.01] });
+  var fill = options.pointFill || new ol_style_Fill({ color:[255,255,255,0.8] });
   var circle = new ol_style_RegularShape({
       fill: fill,
       stroke: stroke,
