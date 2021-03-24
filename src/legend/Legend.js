@@ -222,13 +222,15 @@ ol_legend_Legend.prototype.refresh = function() {
       var img = s.getImage();
       if (img && img.getAnchor) {
         var anchor = img.getAnchor();
-        var si = img.getSize();
-        var dx = anchor[0] - si[0];
-        var dy = anchor[1] - si[1];
-        if (!extent) {
-          extent = [dx, dy, dx+si[0], dy+si[1]];
-        } else {
-          ol_extent_extend(extent, [dx, dy, dx+si[0], dy+si[1]]);
+        if (anchor) {
+          var si = img.getSize();
+          var dx = anchor[0] - si[0];
+          var dy = anchor[1] - si[1];
+          if (!extent) {
+            extent = [dx, dy, dx+si[0], dy+si[1]];
+          } else {
+            ol_extent_extend(extent, [dx, dy, dx+si[0], dy+si[1]]);
+          }
         }
       }
     }
