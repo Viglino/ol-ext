@@ -83,7 +83,15 @@
   
 <script type="text/javascript">
   // Layers
-  var layers = [ new ol.layer.Tile({ source: new ol.source.OSM() }) ];
+  var layers = [ 
+    new ol.layer.Tile({ title: 'OSM', source: new ol.source.OSM(), visible: false }),
+    new ol.layer.Geoportail({
+      layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 
+    }), new ol.layer.Geoportail({
+      layer: 'CADASTRALPARCELS.PARCELLAIRE_EXPRESS',
+      visible: false
+    })
+  ];
 
   // The map
   var map = new ol.Map ({
@@ -95,6 +103,7 @@
     interactions: ol.interaction.defaults({ altShiftDragRotate:false, pinchRotate:false }),
     layers: layers
   });
+  map.addControl(new ol.control.LayerSwitcher());
 
   // Set the control grid reference
   var search = new ol.control.SearchBAN({
