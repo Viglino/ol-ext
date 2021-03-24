@@ -1364,6 +1364,7 @@ ol.legend.Legend.prototype.refresh = function() {
           imgElt.addEventListener('load', function() {
             setTimeout(function() { this.refresh(); }.bind(this), 200);
           }.bind(this), 200);
+          img.load();
         }
         // Check anchor to center the image
         if (img.getAnchor) {
