@@ -114,30 +114,6 @@ ol_legend_Legend.prototype.refresh = function() {
   var width = this.get('size')[0] + 2*this.get('margin');
   var height = this.get('size')[1] + 2*this.get('margin');
 
-  // Add a new row
-  /*
-  function addRow(str, classname, r, i) {
-    var row = ol_ext_element.create('LI', {
-      style: { height: height },
-      className : classname,
-      click: function () {
-        this.dispatchEvent({ type:'select', title: str, row: r, index: i });
-      }.bind(this),
-      parent: table
-    });
-
-    ol_ext_element.create ('DIV', {
-      style: { height: height },
-      parent: row
-    });
-    ol_ext_element.create ('DIV', {
-      html: str || '',
-      style: { paddingLeft: classname ? undefined : width + 'px' },
-      parent: row
-    })
-  }
-  */
-
   // Add Title
   if (this.getTitle()) {
     table.appendChild(this._title.getElement([width, height]));
@@ -220,16 +196,26 @@ ol_legend_Legend.prototype.refresh = function() {
     var extent = null;
     for (i=0; s= style[i]; i++) {
       var img = s.getImage();
-      if (img && img.getAnchor) {
-        var anchor = img.getAnchor();
-        if (anchor) {
-          var si = img.getSize();
-          var dx = anchor[0] - si[0];
-          var dy = anchor[1] - si[1];
-          if (!extent) {
-            extent = [dx, dy, dx+si[0], dy+si[1]];
-          } else {
-            ol_extent_extend(extent, [dx, dy, dx+si[0], dy+si[1]]);
+      // Refresh legend when loaded
+      if (img) {
+        var imgElt = img.getImage();
+        if (imgElt && imgElt.addEventListener) {
+          imgElt.addEventListener('load', function() {
+            setTimeout(function() { this.refresh(); }.bind(this), 200);
+          }.bind(this), 200);
+        }
+        // Check anchor to center the image
+        if (img.getAnchor) {
+          var anchor = img.getAnchor();
+          if (anchor) {
+            var si = img.getSize();
+            var dx = anchor[0] - si[0];
+            var dy = anchor[1] - si[1];
+            if (!extent) {
+              extent = [dx, dy, dx+si[0], dy+si[1]];
+            } else {
+              ol_extent_extend(extent, [dx, dy, dx+si[0], dy+si[1]]);
+            }
           }
         }
       }
