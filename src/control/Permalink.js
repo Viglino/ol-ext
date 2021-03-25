@@ -38,7 +38,11 @@ var ol_control_Permalink = function(opt_options) {
   this.fixed_ = options.fixed || 6;
   this.hash_ = options.anchor ? "#" : "?";
   this._localStorage = options.localStorage;
-  if (!this._localStorage) localStorage.removeItem('ol@parmalink');
+  if (!this._localStorage) {
+    try {
+      localStorage.removeItem('ol@parmalink');
+    } catch(e) { console.warn('Failed to access localStorage...'); }
+  }
   
   function linkto() {
     if (typeof(options.onclick) == 'function') options.onclick(self.getLink());
@@ -65,7 +69,9 @@ var ol_control_Permalink = function(opt_options) {
   var hash = this.replaceState_ ? document.location.hash || document.location.search : '';
 //  console.log('hash', hash)
   if (!hash && this._localStorage) {
-    hash = localStorage['ol@parmalink'];
+    try {
+      hash = localStorage['ol@parmalink'];
+    } catch(e) { console.warn('Failed to access localStorage...'); }
   }
   if (hash) {
     hash = hash.replace(/(^#|^\?)/,"").split("&");
@@ -145,7 +151,9 @@ ol_control_Permalink.prototype.setPosition = function() {
 
   var hash = this.replaceState_ ? document.location.hash || document.location.search : '';
   if (!hash && this._localStorage) {
-    hash = localStorage['ol@parmalink'];
+    try {
+      hash = localStorage['ol@parmalink'];
+    } catch(e) { console.warn('Failed to access localStorage...'); }
   }
   if (!hash) return;
   
@@ -299,7 +307,9 @@ ol_control_Permalink.prototype.viewChange_ = function() {
     if (this.replaceState_) window.history.replaceState (null,null, this.getLink());
   } catch(e) {/* ok */}
   if (this._localStorage) {
-    localStorage['ol@parmalink'] = this.getLink(true);
+    try {
+      localStorage['ol@parmalink'] = this.getLink(true);
+    } catch(e) { console.warn('Failed to access localStorage...'); }
   }
 };
 

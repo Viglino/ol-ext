@@ -392,13 +392,13 @@ ol_control_Search.prototype._history = {};
 /** Save history (in the localstorage)
  */
 ol_control_Search.prototype.saveHistory = function () {
-  if (this.get('maxHistory')>=0) {
-    try {
+  try {
+    if (this.get('maxHistory')>=0) {
       localStorage["ol@search-"+this._classname] = JSON.stringify(this.get('history'));
-    } catch (e) { /* ok */ }
-  } else {
-    localStorage.removeItem("ol@search-"+this._classname);
-  }
+    } else {
+      localStorage.removeItem("ol@search-"+this._classname);
+    }
+  } catch(e) { console.warn('Failed to access localStorage...'); }
 };
 
 /** Restore history (from the localstorage) 

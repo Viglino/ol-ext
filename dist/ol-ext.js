@@ -2389,13 +2389,13 @@ ol.control.Search.prototype._history = {};
 /** Save history (in the localstorage)
  */
 ol.control.Search.prototype.saveHistory = function () {
-  if (this.get('maxHistory')>=0) {
-    try {
+  try {
+    if (this.get('maxHistory')>=0) {
       localStorage["ol@search-"+this._classname] = JSON.stringify(this.get('history'));
-    } catch (e) { /* ok */ }
-  } else {
-    localStorage.removeItem("ol@search-"+this._classname);
-  }
+    } else {
+      localStorage.removeItem("ol@search-"+this._classname);
+    }
+  } catch(e) { console.warn('Failed to access localStorage...'); }
 };
 /** Restore history (from the localstorage) 
  */
@@ -5321,9 +5321,11 @@ ol.control.GeoBookmark = function(options) {
   this.set("editable", options.editable !== false);
   // Set default bmark
   var bmark = {};
-  if (localStorage[this.get('namespace')+"@bookmark"]) {
-    bmark = JSON.parse(localStorage[this.get('namespace')+"@bookmark"]);
-  }
+  try {
+    if (localStorage[this.get('namespace')+"@bookmark"]) {
+      bmark = JSON.parse(localStorage[this.get('namespace')+"@bookmark"]);
+    }
+  } catch(e) { console.warn('Failed to access localStorage...'); }
   if (options.marks) {
     for (var i in options.marks) {
       bmark[i] = options.marks[i];
@@ -5341,7 +5343,12 @@ bm.setBookmarks({
 });
  */
 ol.control.GeoBookmark.prototype.setBookmarks = function(bmark) {
-  if (!bmark) bmark = JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
+  if (!bmark) {
+    bmark = {};
+    try {
+      bmark = JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
+    } catch(e) { console.warn('Failed to access localStorage...'); }
+  }
   var modify = this.get("editable");
   var ul = this.element.querySelector("ul");
   var menu = this.element.querySelector("div");
@@ -5373,13 +5380,19 @@ ol.control.GeoBookmark.prototype.setBookmarks = function(bmark) {
       li.appendChild(button);
     }
   }
-  localStorage[this.get('namespace')+"@bookmark"] = JSON.stringify(bmark);
+  try {
+    localStorage[this.get('namespace')+"@bookmark"] = JSON.stringify(bmark);
+  } catch(e) { console.warn('Failed to access localStorage...'); }
 };
 /** Get Geo bookmarks
  * @return {any} a list of bookmarks : { BM1:{pos:ol.coordinates, zoom: integer}, BM2:{pos:ol.coordinates, zoom: integer} }
  */
 ol.control.GeoBookmark.prototype.getBookmarks = function() {
-  return JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
+  var bm = {};
+  try {
+    bm = JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
+  } catch(e) { console.warn('Failed to access localStorage...'); }
+  return bm;
 };
 /** Remove a Geo bookmark
  * @param {string} name
@@ -7665,7 +7678,11 @@ ol.control.Permalink = function(opt_options) {
   this.fixed_ = options.fixed || 6;
   this.hash_ = options.anchor ? "#" : "?";
   this._localStorage = options.localStorage;
-  if (!this._localStorage) localStorage.removeItem('ol@parmalink');
+  if (!this._localStorage) {
+    try {
+      localStorage.removeItem('ol@parmalink');
+    } catch(e) { console.warn('Failed to access localStorage...'); }
+  }
   function linkto() {
     if (typeof(options.onclick) == 'function') options.onclick(self.getLink());
     else self.setUrlReplace(!self.replaceState_);
@@ -7687,7 +7704,9 @@ ol.control.Permalink = function(opt_options) {
   var hash = this.replaceState_ ? document.location.hash || document.location.search : '';
 //  console.log('hash', hash)
   if (!hash && this._localStorage) {
-    hash = localStorage['ol@parmalink'];
+    try {
+      hash = localStorage['ol@parmalink'];
+    } catch(e) { console.warn('Failed to access localStorage...'); }
   }
   if (hash) {
     hash = hash.replace(/(^#|^\?)/,"").split("&");
@@ -7759,7 +7778,9 @@ ol.control.Permalink.prototype.setPosition = function() {
   if (!map) return;
   var hash = this.replaceState_ ? document.location.hash || document.location.search : '';
   if (!hash && this._localStorage) {
-    hash = localStorage['ol@parmalink'];
+    try {
+      hash = localStorage['ol@parmalink'];
+    } catch(e) { console.warn('Failed to access localStorage...'); }
   }
   if (!hash) return;
   var i, t, param = {};
@@ -7900,7 +7921,9 @@ ol.control.Permalink.prototype.viewChange_ = function() {
     if (this.replaceState_) window.history.replaceState (null,null, this.getLink());
   } catch(e) {/* ok */}
   if (this._localStorage) {
-    localStorage['ol@parmalink'] = this.getLink(true);
+    try {
+      localStorage['ol@parmalink'] = this.getLink(true);
+    } catch(e) { console.warn('Failed to access localStorage...'); }
   }
 };
 /**
@@ -9588,7 +9611,9 @@ ol.control.SearchFeature.prototype.restoreHistory = function () {
 /** No history avaliable on features
  */
 ol.control.SearchFeature.prototype.saveHistory = function () {
-  localStorage.removeItem("ol@search-"+this._classname);
+  try {
+    localStorage.removeItem("ol@search-"+this._classname);
+  } catch(e) { console.warn('Failed to access localStorage...'); }
 }
 /** Returns the text to be displayed in the menu
 *	@param {ol.Feature} f the feature

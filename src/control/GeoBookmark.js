@@ -95,9 +95,11 @@ var ol_control_GeoBookmark = function(options) {
   
   // Set default bmark
   var bmark = {};
-  if (localStorage[this.get('namespace')+"@bookmark"]) {
-    bmark = JSON.parse(localStorage[this.get('namespace')+"@bookmark"]);
-  }
+  try {
+    if (localStorage[this.get('namespace')+"@bookmark"]) {
+      bmark = JSON.parse(localStorage[this.get('namespace')+"@bookmark"]);
+    }
+  } catch(e) { console.warn('Failed to access localStorage...'); }
   if (options.marks) {
     for (var i in options.marks) {
       bmark[i] = options.marks[i];
@@ -116,7 +118,12 @@ bm.setBookmarks({
 });
  */
 ol_control_GeoBookmark.prototype.setBookmarks = function(bmark) {
-  if (!bmark) bmark = JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
+  if (!bmark) {
+    bmark = {};
+    try {
+      bmark = JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
+    } catch(e) { console.warn('Failed to access localStorage...'); }
+  }
   var modify = this.get("editable");
   var ul = this.element.querySelector("ul");
   var menu = this.element.querySelector("div");
@@ -149,14 +156,20 @@ ol_control_GeoBookmark.prototype.setBookmarks = function(bmark) {
       li.appendChild(button);
     }
   }
-  localStorage[this.get('namespace')+"@bookmark"] = JSON.stringify(bmark);
+  try {
+    localStorage[this.get('namespace')+"@bookmark"] = JSON.stringify(bmark);
+  } catch(e) { console.warn('Failed to access localStorage...'); }
 };
 
 /** Get Geo bookmarks
  * @return {any} a list of bookmarks : { BM1:{pos:ol.coordinates, zoom: integer}, BM2:{pos:ol.coordinates, zoom: integer} }
  */
 ol_control_GeoBookmark.prototype.getBookmarks = function() {
-  return JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
+  var bm = {};
+  try {
+    bm = JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
+  } catch(e) { console.warn('Failed to access localStorage...'); }
+  return bm;
 };
 
 /** Remove a Geo bookmark

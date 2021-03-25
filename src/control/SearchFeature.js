@@ -47,7 +47,9 @@ ol_control_SearchFeature.prototype.restoreHistory = function () {
 /** No history avaliable on features
  */
 ol_control_SearchFeature.prototype.saveHistory = function () {
-  localStorage.removeItem("ol@search-"+this._classname);
+  try {
+    localStorage.removeItem("ol@search-"+this._classname);
+  } catch(e) { console.warn('Failed to access localStorage...'); }
 }
 
 /** Returns the text to be displayed in the menu
