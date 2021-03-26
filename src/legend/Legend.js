@@ -199,8 +199,10 @@ ol_legend_Legend.prototype.refresh = function() {
       // Refresh legend when loaded
       if (img) {
         var imgElt = img.getImage();
-        if (imgElt && imgElt.addEventListener) {
+        // Check image is load
+        if (imgElt && imgElt.complete && !imgElt.naturalWidth) {
           imgElt.addEventListener('load', function() {
+            // Force refresh
             setTimeout(function() { this.refresh(); }.bind(this), 200);
           }.bind(this), 200);
           img.load();
