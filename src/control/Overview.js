@@ -195,16 +195,24 @@ ol_control_Overview.prototype.setPosition = function(align){
  * @param {ol.Map} map The map instance.
  */
 ol_control_Overview.prototype.setMap = function(map) {
-  if (this._listener) ol_Observable_unByKey(this._listener);
-  this._listener = null;
+  if (this._listener) {
+    for (let i in this._listener) {
+      ol_Observable_unByKey(this._listener[i]);
+    }
+  }
+  this._listener = {};
 
   ol_control_Control.prototype.setMap.call(this, map);
+  
   if (map) {
-    map.on('change:view', ()=>{
-      if (this._listener) ol_Observable_unByKey(this._listener);
-      this._listener = map.getView().on('propertychange', this.setView.bind(this));
-    })
-    this._listener = map.getView().on('propertychange', this.setView.bind(this));
+    this._listener.map = map.on('change:view', function() {
+      if (this._listener.view) ol_Observable_unByKey(this._listener.view);
+      if (map.getView()) {
+        this._listener.view = map.getView().on('propertychange', this.setView.bind(this));
+        this.setView();
+      }
+    }.bind(this));
+    this._listener.view = map.getView().on('propertychange', this.setView.bind(this));
     this.setView();
   }
 
