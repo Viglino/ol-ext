@@ -200,6 +200,10 @@ ol_control_Overview.prototype.setMap = function(map) {
 
   ol_control_Control.prototype.setMap.call(this, map);
   if (map) {
+    map.on('change:view', ()=>{
+      if (this._listener) ol_Observable_unByKey(this._listener);
+      this._listener = map.getView().on('propertychange', this.setView.bind(this));
+    })
     this._listener = map.getView().on('propertychange', this.setView.bind(this));
     this.setView();
   }
