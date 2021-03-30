@@ -13007,13 +13007,13 @@ ol.control.WMSCapabilities.prototype.showCapabilitis = function(caps) {
     html: 'layer...',
     className: 'ol-info',
     parent: this._elements.select,
-    click: () => {
+    click: function() {
       this._elements.buttons.innerHTML = '';
       this._elements.data.innerHTML = '';
       this._elements.legend.src = '';
       this._elements.legend.classList.remove('visible');
       this._elements.preview.src = '';
-    }
+    }.bind(this)
   });
   addLayers(caps.Capability.Layer);
 };
