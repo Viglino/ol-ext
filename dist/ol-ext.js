@@ -1204,22 +1204,40 @@ if (window.ol && !ol.legend) {
  *  @param {String} options.title Legend title
  *  @param {ol.size | undefined} options.size Size of the symboles in the legend, default [40, 25]
  *  @param {number | undefined} options.margin Size of the symbole's margin, default 10
+ *  @param { ol.style.Text | undefined } options.textStyle a text style for the legend, default 16px sans-serif
  *  @param { ol.style.Style | Array<ol.style.Style> | ol.StyleFunction | undefined	} options.style a style or a style function to use with features
  */
 ol.legend.Legend = function(options) {
   options = options || {};
   ol.Object.call(this);
   this._items = new ol.Collection();
-  this._items.on(['add','remove','change'], function() {
+  var listeners = [];
+  this._items.on('add', function(e) {
+    listeners.push({
+      item: e.element,
+      on: e.element.on('change', function() {
+        this.refresh();
+      }.bind(this))
+    });
+    this.refresh();
+  }.bind(this));
+  this._items.on('remove', function(e) {
+    for (var i=0; i<listeners; i++) {
+      if (e.element === listeners[i].item) {
+        ol.Observable.unByKey(listeners[i].on);
+        listeners.splice(i, 1);
+        break;
+      }
+    }
     this.refresh();
   }.bind(this));
   this._listElement = ol.ext.element.create('UL', {
     className: 'ol-legend'
   });
   this._canvas = document.createElement('canvas');
-  this.set('size', options.size || [40, 25]);
-  this.set('margin', options.margin===0 ? 0 : options.margin || 10);
-//  this.set('title', options.title || '');
+  this.set('size', options.size || [40, 25], true);
+  this.set('margin', options.margin===0 ? 0 : options.margin || 10, true);
+  this._font = options.font || new ol.style.Text({ font: '16px sans-serif' });
   this._title = new ol.legend.Item({ title: options.title || '', className: 'ol-title' });
   this.setStyle(options.style);
   this.refresh();
@@ -1230,12 +1248,20 @@ ol.ext.inherits(ol.legend.Legend, ol.Object);
  */
 ol.legend.Legend.prototype.setTitle = function(title) {
   this._title.setTitle(title);
+  this.refresh();
 };
 /** Get legend title
  * @returns {string}
  */
 ol.legend.Legend.prototype.getTitle = function() {
   return this._title.get('title');
+};
+/** Set legend size
+ * @param {ol.size} size
+ */
+ ol.legend.Legend.prototype.set = function(key, value, opt_silent) {
+  ol.Object.prototype.set.call(this, key, value, opt_silent);
+  if (!opt_silent) this.refresh();
 };
 /** Get legend list element
  * @returns {Element}
@@ -1272,25 +1298,92 @@ ol.legend.Legend.prototype.getCanvas = function() {
 ol.legend.Legend.prototype.getItems = function() {
   return this._items;
 };
+/** Draw legend text
+ * @private
+ */
+ol.legend.Legend.prototype._drawText = function(ctx, text, x, y) {
+  ctx.save();
+    ctx.scale(ol.has.DEVICE_PIXEL_RATIO, ol.has.DEVICE_PIXEL_RATIO);
+    text = text || '';
+    var txt = text.split('\n');
+    if (txt.length===1) {
+      ctx.fillText(text, x, y);
+    } else {
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(txt[0], x, y);
+      ctx.textBaseline = 'top';
+      ctx.fillText(txt[1], x, y);
+    }
+  ctx.restore();
+};
+/** Draw legend text 
+ * @private
+ */
+ol.legend.Legend.prototype._measureText = function(ctx, text) {
+  var txt = (text || '').split('\n');
+  if (txt.length===1) {
+    return ctx.measureText(text);
+  } else {
+    var m1 = ctx.measureText(txt[0]);
+    var m2 = ctx.measureText(txt[1]);
+    return { width: Math.max(m1.width, m2.width), height: m1.height + m2.height }
+  }
+};
 /** Refresh the legend
  */
 ol.legend.Legend.prototype.refresh = function() {
   var table = this._listElement;
   table.innerHTML = '';
-  var width = this.get('size')[0] + 2*this.get('margin');
-  var height = this.get('size')[1] + 2*this.get('margin');
+  var margin = this.get('margin');
+  var width = this.get('size')[0] + 2 * margin;
+  var height = this.get('size')[1] + 2 * margin;
+  var canvas = this.getCanvas();
+  var ctx = canvas.getContext('2d');
+  ctx.font = this._font.getFont();
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  var ratio = ol.has.DEVICE_PIXEL_RATIO;
+  // Calculate width
+  var textWidth = this._measureText(ctx, this.get('title')).width;
+  this._items.forEach(function(r) {
+    var w = this._measureText(ctx, r.get('title')).width;
+    textWidth = Math.max(textWidth, width + w);
+  }.bind(this));
+  canvas.width = (textWidth + 2*margin) * ratio;
+  canvas.height = (this._items.getLength()+1) * height * ratio;
+  canvas.style.height = ((this._items.getLength()+1) * height) + 'px';
+  ctx.textBaseline = 'middle';
   // Add Title
   if (this.getTitle()) {
-    table.appendChild(this._title.getElement([width, height]));
+    table.appendChild(this._title.getElement([width, height], function(b) {
+      this.dispatchEvent({
+        type: 'select', 
+        index: -1,
+        symbol: b,
+        item: this._title
+      });
+    }.bind(this)));
+    ctx.font = 'bold ' + this._font.getFont();
+    ctx.textAlign = 'center';
+    this._drawText(ctx, this.getTitle(), canvas.width/2, height/2);
   }
-  var canvas = this.getCanvas();
-  canvas.width = 10 * width * ol.has.DEVICE_PIXEL_RATIO;
-  canvas.height = (this._items.getLength()+1) * height * ol.has.DEVICE_PIXEL_RATIO;
+  // Add items
+  ctx.font = this._font.getFont();
+  ctx.textAlign = 'left';
   this._items.forEach(function(r,i) {
-    table.appendChild(r.getElement([width, height]));
-    canvas = this.getLegendImage(r.getProperties(), canvas, i + (this.getTitle() ? 1 : 0));
-    canvas.style.height = (this._items.length+1)*height + 'px';
+    var index = i + (this.getTitle() ? 1 : 0);
+    table.appendChild(r.getElement([width, height], function(b) {
+      this.dispatchEvent({
+        type: 'select', 
+        index: i,
+        symbol: b,
+        item: r
+      });
+    }.bind(this)));
+    canvas = this.getLegendImage(r.getProperties(), canvas, index);
+    this._drawText(ctx, r.get('title'), width + margin, (i+1.5)*height);
   }.bind(this));
+  // Done
   this.dispatchEvent({
     type: 'refresh',
     width: width,
@@ -1319,10 +1412,10 @@ ol.legend.Legend.prototype.refresh = function() {
   var height = size[1] + 2*this.get('margin');
   var ratio = ol.has.DEVICE_PIXEL_RATIO;
   if (!canvas) {
+    row = 0;
     canvas = document.createElement('canvas');
     canvas.width = width * ratio;
     canvas.height = height * ratio;
-    row = 0;
   }
   var ctx = canvas.getContext('2d');
   ctx.save();
@@ -1437,46 +1530,40 @@ ol.legend.Item = function(options) {
   options = options || {};
   ol.Object.call(this, options);
   if (options.feature) this.set('feature', options.feature.clone());
-  this.element = ol.ext.element.create('LI', {
-    className : this.get('className')
-  });
-  this._box = ol.ext.element.create ('DIV', {
-    click: function() {
-      this.dispatchEvent({
-        type: 'select',
-        symbol : true
-      })
-    }.bind(this),
-    parent: this.element
-  });
-  this._title = ol.ext.element.create ('DIV', {
-    html: this.get('title') || '',
-    click: function() {
-      this.dispatchEvent({
-        type: 'select',
-        symbol : true
-      })
-    }.bind(this),
-    parent: this.element
-  });
 };
 ol.ext.inherits(ol.legend.Item, ol.Object);
 /** Set the legend title
  * @param {string} title
  */
 ol.legend.Item.prototype.setTitle = function(title) {
-  this.set('title', title || '')
-  this._title.innerHTML = this.get('title') || '';
+  this.set('title', title || '');
+  this.changed();
 };
 /** Get element
  * @param {ol.size} size symbol size
  */
-ol.legend.Item.prototype.getElement = function(size) {
-  this._title.innerHTML = this.get('title') || '';
-  this.element.style.height = size[1] + 'px';
-  this._box.style.width = size[0] + 'px';
-  this._box.style.height = size[1] + 'px';
-  return this.element;
+ol.legend.Item.prototype.getElement = function(size, onclick) {
+  var element = ol.ext.element.create('LI', {
+    className : this.get('className'),
+    click: function(e) {
+      onclick(false);
+      e.stopPropagation();
+    },
+    style: { height: size[1] + 'px' },
+    alt: this.get('title')
+  });
+  ol.ext.element.create ('DIV', {
+    click: function(e) {
+      onclick(true);
+      e.stopPropagation();
+    },
+    style: {
+      width: size[0] + 'px',
+      height: size[1] + 'px'
+    },
+    parent: element
+  });
+  return element;
 };
 
 /**
@@ -23554,41 +23641,7 @@ ol.source.GeoImage = function(opt_options) {
   }
   if (!opt_options.image) this._image.src = opt_options.url;
   // Draw image on canvas
-  options.canvasFunction = function(extent, resolution, pixelRatio, size /*, projection*/ ) {
-    var canvas = document.createElement('canvas');
-    canvas.width = size[0];
-    canvas.height = size[1];
-    var ctx = canvas.getContext('2d');
-    if (!this._imageSize) return canvas;
-    // transform coords to pixel
-    function tr(xy) {
-      return [
-        (xy[0]-extent[0])/(extent[2]-extent[0]) * size[0],
-        (xy[1]-extent[3])/(extent[1]-extent[3]) * size[1]
-      ];
-    }
-    // Clipping mask
-    if (this.mask) {
-      ctx.beginPath();
-      var p = tr(this.mask[0]);
-      ctx.moveTo(p[0],p[1]);
-      for (var i=1; i<this.mask.length; i++) {
-        p = tr(this.mask[i]);
-        ctx.lineTo(p[0],p[1]);
-      }
-      ctx.clip();
-    }
-    // Draw
-    var pixel = tr(this.center);
-    var dx = (this._image.naturalWidth/2 - this.crop[0]) *this.scale[0] /resolution *pixelRatio;
-    var dy = (this._image.naturalHeight/2 - this.crop[1]) *this.scale[1] /resolution *pixelRatio;
-    var sx = this._imageSize[0]*this.scale[0]/resolution *pixelRatio;
-    var sy = this._imageSize[1]*this.scale[1]/resolution *pixelRatio;
-    ctx.translate(pixel[0],pixel[1]);
-    if (this.rotate) ctx.rotate(this.rotate);
-    ctx.drawImage(this._image, this.crop[0], this.crop[1], this._imageSize[0], this._imageSize[1], -dx, -dy, sx,sy);
-    return canvas;
-  }
+  options.canvasFunction = this.calculateImage;
   ol.source.ImageCanvas.call (this, options);	
   this.setCrop (this.crop);
   // Calculate extent on change
@@ -23597,6 +23650,48 @@ ol.source.GeoImage = function(opt_options) {
   }.bind(this));
 };
 ol.ext.inherits(ol.source.GeoImage, ol.source.ImageCanvas);
+/** calculate image at extent / resolution
+ * @param {ol/extent/Extent} extent
+ * @param {number} resolution
+ * @param {number} pixelRatio
+ * @param {ol/size/Size} size
+ * @return {HTMLCanvasElement}
+ */
+ol.source.GeoImage.prototype.calculateImage = function(extent, resolution, pixelRatio, size) {
+  var canvas = document.createElement('canvas');
+  canvas.width = size[0];
+  canvas.height = size[1];
+  var ctx = canvas.getContext('2d');
+  if (!this._imageSize) return canvas;
+  // transform coords to pixel
+  function tr(xy) {
+    return [
+      (xy[0]-extent[0])/(extent[2]-extent[0]) * size[0],
+      (xy[1]-extent[3])/(extent[1]-extent[3]) * size[1]
+    ];
+  }
+  // Clipping mask
+  if (this.mask) {
+    ctx.beginPath();
+    var p = tr(this.mask[0]);
+    ctx.moveTo(p[0],p[1]);
+    for (var i=1; i<this.mask.length; i++) {
+      p = tr(this.mask[i]);
+      ctx.lineTo(p[0],p[1]);
+    }
+    ctx.clip();
+  }
+  // Draw
+  var pixel = tr(this.center);
+  var dx = (this._image.naturalWidth/2 - this.crop[0]) *this.scale[0] /resolution *pixelRatio;
+  var dy = (this._image.naturalHeight/2 - this.crop[1]) *this.scale[1] /resolution *pixelRatio;
+  var sx = this._imageSize[0]*this.scale[0]/resolution *pixelRatio;
+  var sy = this._imageSize[1]*this.scale[1]/resolution *pixelRatio;
+  ctx.translate(pixel[0],pixel[1]);
+  if (this.rotate) ctx.rotate(this.rotate);
+  ctx.drawImage(this._image, this.crop[0], this.crop[1], this._imageSize[0], this._imageSize[1], -dx, -dy, sx,sy);
+  return canvas;
+}
 /**
  * Get coordinate of the image center.
  * @return {ol.Coordinate} coordinate of the image center.
@@ -23724,15 +23819,15 @@ ol.source.GeoImage.prototype.setCrop = function(crop) {
  * @return {ol.extent}
  */
 ol.source.GeoImage.prototype.getExtent = function(opt_extent) {
+  var ext = this.get('extent');
+  if (!ext) ext = this.calculateExtent();
   if (opt_extent) {
     var ext = this.get('extent');
     for (var i=0; i<opt_extent.length; i++) {
       opt_extent[i] = ext[i];
     }
-    return ext;
-  } else {
-    return this.get('extent');
   }
+  return ext;
 };
 /** Calculate the extent of the source image.
  * @param {boolean} usemask return the mask extent, default return the image extent
