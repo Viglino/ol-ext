@@ -21,28 +21,6 @@ var ol_legend_Item = function(options) {
   options = options || {};
   ol_Object.call(this, options);
   if (options.feature) this.set('feature', options.feature.clone());
-  this.element = ol_ext_element.create('LI', {
-    className : this.get('className')
-  });
-  this._box = ol_ext_element.create ('DIV', {
-    click: function() {
-      this.dispatchEvent({
-        type: 'select',
-        symbol : true
-      })
-    }.bind(this),
-    parent: this.element
-  });
-  this._title = ol_ext_element.create ('DIV', {
-    html: this.get('title') || '',
-    click: function() {
-      this.dispatchEvent({
-        type: 'select',
-        symbol : true
-      })
-    }.bind(this),
-    parent: this.element
-  });
 };
 ol_ext_inherits(ol_legend_Item, ol_Object);
 
@@ -50,19 +28,35 @@ ol_ext_inherits(ol_legend_Item, ol_Object);
  * @param {string} title
  */
 ol_legend_Item.prototype.setTitle = function(title) {
-  this.set('title', title || '')
-  this._title.innerHTML = this.get('title') || '';
+  this.set('title', title || '');
+  this.changed();
 };
 
 /** Get element
  * @param {ol.size} size symbol size
  */
-ol_legend_Item.prototype.getElement = function(size) {
-  this._title.innerHTML = this.get('title') || '';
-  this.element.style.height = size[1] + 'px';
-  this._box.style.width = size[0] + 'px';
-  this._box.style.height = size[1] + 'px';
-  return this.element;
+ol_legend_Item.prototype.getElement = function(size, onclick) {
+  var element = ol_ext_element.create('LI', {
+    className : this.get('className'),
+    click: function(e) {
+      onclick(false);
+      e.stopPropagation();
+    },
+    style: { height: size[1] + 'px' },
+    alt: this.get('title')
+  });
+  ol_ext_element.create ('DIV', {
+    click: function(e) {
+      onclick(true);
+      e.stopPropagation();
+    },
+    style: {
+      width: size[0] + 'px',
+      height: size[1] + 'px'
+    },
+    parent: element
+  });
+  return element;
 };
 
 export default ol_legend_Item

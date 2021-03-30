@@ -31,11 +31,11 @@
   <script type="text/javascript" src="../../dist/extra/FontAwesomeDef.js"></script>
 
   <style>
-  .ol-legend ul li.ol-title > div:last-child {
-    position:absolute;
-    left:0;
-    right:0;
-    top: 10px
+  .ol-legend > canvas {
+    float: left;
+  }
+  .ol-legend > div.ol-legend {
+    position: relative;
   }
   </style>
 </head>
@@ -81,6 +81,7 @@
     collapsed: false
   });
   map.addControl(legendCtrl);
+  //legend.on('select', function(e){ console.log(e) });
   
   // Add a new one
   var legend2 = new ol.legend.Legend({ 

@@ -75,12 +75,17 @@
     </p>
     <form class="row" style="display: none;">
       <div class="img" style="display: inline-block; vertical-align: middle; margin-right: .5em;"></div>
-      <input type="text" value="title" placeholder="title" />
+      <textarea style="vertical-align: middle;" placeholder="title">Title</textarea>
       <br/>
       <button type="submit" onclick="addToLegend(); event.preventDefault();" style="margin-left: 11em;">Add to Legend</button>
     </form>
   </div>
 
+  <style>
+    .ol-legend li:hover {
+      background-color: rgba(0,60,136,.5);
+    }
+  </style>
 
 <script type="text/javascript">
   
@@ -201,8 +206,8 @@
   });
   map.addControl(legendCtrl);
   legend.on('select', function(e) {
-    if (e.index >= 0) console.log('You click on row: '+e.title+' ('+e.index+')');
-    else console.log('You click on the title: '+e.title);
+    if (e.index >= 0) console.log((e.symbol ? 'You click on symbol: ':'You click on row: ')+e.item.get('title')+' ('+e.index+')');
+    else console.log('You click on the title: '+e.item.get('title'));
   });
   legend.addItem({ title: 'Car placemark', feature: f0 });
 
@@ -238,7 +243,7 @@
     select.getFeatures().remove(f);
     if (f) {
       legend.addItem({
-        title: $(".options .row input").val(),
+        title: $(".options .row textarea").val(),
         /* given a style  and a geom type
         style: f.getStyle() || getFeatureStyle(f),
         typeGeom: f.getGeometry().getType()

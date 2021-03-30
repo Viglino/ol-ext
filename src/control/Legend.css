@@ -43,15 +43,13 @@
 .ol-control.ol-legend button.ol-closebox:hover:before {
   color: rgba(0,60,136,1);
 }
-.ol-control.ol-legend.ol-uncollapsible .ol-legendImg,
 .ol-control.ol-legend .ol-legendImg {
-  position: absolute;
-  z-index: -1;
+  display: block;
 }
-.ol-control.ol-legend.ol-collapsed .ol-legend {
+.ol-control.ol-legend.ol-collapsed .ol-legendImg {
   display: none;
 }
-.ol-control.ol-legend.ol-uncollapsible .ol-legend {
+.ol-control.ol-legend.ol-uncollapsible .ol-legendImg {
   display: block;
 }
 
@@ -74,12 +72,13 @@
 }
 
 ul.ol-legend {
-  min-width: 1.5em;
-  min-height: 1.5em;
-  margin: 0 0 2px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  margin: 0;
   padding: 0;
   list-style: none;
-  display: inline-block;
 }
 .ol-control.ol-legend.ol-collapsed ul {
   display: none;
@@ -96,10 +95,11 @@ ul.ol-legend li.ol-title > div:first-child {
 }
 ul.ol-legend li {
   overflow: hidden;
-  padding: 0 .5em;
+  padding: 0;
+  white-space: nowrap;
 }
 ul.ol-legend li div {
-    display: inline-block;
+  display: inline-block;
   vertical-align: middle;
 }
 

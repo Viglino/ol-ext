@@ -31,13 +31,6 @@
   <script type="text/javascript" src="../../dist/extra/FontAwesomeDef.js"></script>
 
   <style>
-    .ol-legend ul {
-      margin-bottom: 7px;
-    }
-    .ol-legend ul li {
-      overflow: visible;
-      text-align: right;
-    }
   </style>
 </head>
 <body >
@@ -118,7 +111,7 @@
     title: 'Legend',
     style: getFeatureStyle,
     margin: 0,
-    size: [40, 10]
+    size: [50, 16]
   });
   map.addControl(new ol.control.Legend({ 
     collapsible: false,
@@ -127,20 +120,9 @@
 
   // Add empty row to 
   legend.addItem();
-  legend.addItem();
-  legend.addItem({ title:'2.600.000' });
-  legend.addItem({ title:'', properties: { pop: 2600000 }, typeGeom: 'Point'});
+  legend.addItem({ title:'2.600.000', properties: { pop: 2600000 }, typeGeom: 'Point'});
   legend.addItem({ title:'100.000', properties: { pop: 1000000 }, typeGeom: 'Point'});
-  legend.addItem({ title:'', properties: { pop: 100000 }, typeGeom: 'Point'});
-  /*
-  [2600000, 1000000, 100000].forEach(function(pop) {
-    legend.addItem({ 
-      title: pop,
-      properties: { pop: pop },
-      typeGeom: 'Point'
-    })
-  })
-  */
+  legend.addItem({ title:'0', properties: { pop: 100000 }, typeGeom: 'Point'});
 
   // Display the style on select
   var popup = new ol.Overlay.Popup({ 
