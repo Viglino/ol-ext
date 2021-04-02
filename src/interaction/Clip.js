@@ -13,8 +13,8 @@ var ol_interaction_Clip = function(options) {
   this.layers_ = [];
   
   ol_interaction_Pointer.call(this, {
-    handleDownEvent: this.setPosition,
-    handleMoveEvent: this.setPosition
+    handleDownEvent: this._setPosition,
+    handleMoveEvent: this._setPosition
   });
 
   this.precomposeBind_ = this.precompose_.bind(this);
@@ -106,13 +106,46 @@ ol_interaction_Clip.prototype.removeLayer = function(layers) {
 };
 
 /** Set position of the clip
-*	@param {ol.Pixel|ol.MapBrowserEvent}
-*/
-ol_interaction_Clip.prototype.setPosition = function(e) {
-  if (e.pixel) this.pos = e.pixel;
-  else {
-    if (e && e instanceof Array) this.pos = e;
-    else e = [-10000000,-10000000];
+ * @param {ol.coordinate} coord
+ */
+ol_interaction_Clip.prototype.setPosition = function(coord) {
+  if (this.getMap()) {
+    this.pos = this.getMap().getPixelFromCoordinate(coord);
+    this.getMap().renderSync();
+  }
+};
+
+/** Get position of the clip
+ * @returns {ol.coordinate}
+ */
+ol_interaction_Clip.prototype.getPosition = function() {
+  if (this.pos) return this.getMap().getCoordinateFromPixel(this.pos);
+  return null;
+};
+
+/** Set position of the clip
+ * @param {ol.Pixel} pixel
+ */
+ ol_interaction_Clip.prototype.setPixelPosition = function(pixel) {
+  this.pos = pixel;
+  if (this.getMap()) this.getMap().renderSync();
+};
+
+/** Set position of the clip
+ * @returns {ol.Pixel} pixel
+ */
+ ol_interaction_Clip.prototype.setPixelPosition = function() {
+  return this.pos;
+};
+
+/** Set position of the clip
+ * @param {ol.MapBrowserEvent} e
+ * @privata
+ */
+ol_interaction_Clip.prototype._setPosition = function(e) {
+  if (e.type==='pointermove' && this.get('action')==='onclick') return;
+  if (e.pixel) {
+    this.pos = e.pixel;
   }
   if (this.getMap()) this.getMap().renderSync();
 };

@@ -1,6 +1,6 @@
 .vscode
 *.npmignore
-.VSCodeCounter
+.VSCodeCounter/*
 # ignore examples
 examples
 # ignore doc pages
