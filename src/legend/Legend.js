@@ -207,7 +207,7 @@ ol_legend_Legend.prototype.refresh = function() {
     }.bind(this)));
     ctx.font = 'bold ' + this._font.getFont();
     ctx.textAlign = 'center';
-    this._drawText(ctx, this.getTitle(), canvas.width/2, height/2);
+    this._drawText(ctx, this.getTitle(), canvas.width/ratio/2, height/2);
   }
   // Add items
   ctx.font = this._font.getFont();
