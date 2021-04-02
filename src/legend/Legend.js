@@ -1,5 +1,6 @@
 import ol_ext_inherits from '../util/ext'
 import ol_Object from 'ol/Object'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_Collection from 'ol/Collection'
 import {DEVICE_PIXEL_RATIO as ol_has_DEVICE_PIXEL_RATIO} from 'ol/has'
 import {toContext as ol_render_toContext} from 'ol/render'
@@ -10,6 +11,7 @@ import ol_geom_Polygon from 'ol/geom/Polygon'
 import {extend as ol_extent_extend} from 'ol/extent'
 import ol_legend_Item from './Item'
 import ol_ext_element from '../util/element'
+import ol_style_Text from 'ol/style/Text'
 
 /** @namespace  ol.legend
  */

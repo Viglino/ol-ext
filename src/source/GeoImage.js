@@ -254,7 +254,6 @@ ol_source_GeoImage.prototype.getExtent = function(opt_extent) {
   var ext = this.get('extent');
   if (!ext) ext = this.calculateExtent();
   if (opt_extent) {
-    var ext = this.get('extent');
     for (var i=0; i<opt_extent.length; i++) {
       opt_extent[i] = ext[i];
     }
