@@ -197,12 +197,10 @@ ol_legend_Legend.prototype.refresh = function() {
   this._items.forEach(function(r) {
     if (r.get('feature') || r.get('typeGeom') ) {
       ctx.font = this._font.getFont();
-      var w = this._measureText(ctx, r.get('title')).width;
-      textWidth = Math.max(textWidth, w + width);
+      textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width + width);
     } else {
       ctx.font = 'bold ' + this._font.getFont();
-      var w = this._measureText(ctx, r.get('title')).width;
-      textWidth = Math.max(textWidth, w);
+      textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width);
     }
   }.bind(this));
   canvas.width = (textWidth + 2*margin) * ratio;

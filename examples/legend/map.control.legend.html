@@ -86,6 +86,7 @@
       <input type="number" value="25" onchange="legend.set('size', [legend.get('size')[0],Number(this.value)]);" />
       <br/>
       <button onclick="legend.getItems().clear()">Clear Legend</button>
+      <label><input type="checkbox" onclick="legendCtrl.setCanvas($(this).prop('checked'));"/> draw in map</label>
       <br/>
       <i>Select an object on the map and add it to the legend...</i>
     </p>

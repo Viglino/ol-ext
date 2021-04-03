@@ -10,7 +10,7 @@ import {asString as ol_color_asString} from 'ol/color'
 import ol_control_CanvasBase from './CanvasBase'
 /**
  * @classdesc 
- *    OpenLayers 3 Scale Line Control integrated in the canvas (for jpeg/png export purposes).
+ *    OpenLayers Scale Line Control integrated in the canvas (for jpeg/png export purposes).
  * @see http://www.kreidefossilien.de/webgis/dokumentation/beispiele/export-map-to-png-with-scale
  *
  * @constructor
@@ -18,8 +18,8 @@ import ol_control_CanvasBase from './CanvasBase'
  * @param {Object=} options extend the ol_control_ScaleLine options.
  * 	@param {ol_style_Style} options.style used to draw the scale line (default is black/white, 10px Arial).
  */
-var ol_control_CanvasScaleLine = function(options)
-{	ol_control_ScaleLine.call(this, options);
+var ol_control_CanvasScaleLine = function(options) {
+  ol_control_ScaleLine.call(this, options);
   
   this.scaleHeight_ = 6;
 
@@ -61,7 +61,6 @@ ol_control_CanvasScaleLine.prototype.setMap = function (map) {
   this.element.style.visibility = 'hidden';
   this.olscale = this.element.querySelector(".ol-scale-line-inner");
 }
-
 
 /**
  * Change the control style
@@ -129,8 +128,8 @@ ol_control_CanvasScaleLine.prototype.drawScale_ = function(e) {
   var n = parseInt(text);
   while (n%10 === 0) n/=10;
   if (n%5 === 0) max = 5;
-  for (var i=0; i<max; i++)
-  {	ctx.beginPath();
+  for (var i=0; i<max; i++) {
+    ctx.beginPath();
     ctx.fillStyle = i%2 ? this.fillStyle_ : this.strokeStyle_;
     ctx.rect(position.left+i*scalewidth/max, position.top, scalewidth/max, this.scaleHeight_);
     ctx.stroke();

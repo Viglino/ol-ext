@@ -7,7 +7,6 @@ import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_control_Attribution from 'ol/control/Attribution'
 import ol_style_Style from 'ol/style/Style'
 import {asString as ol_color_asString} from 'ol/color'
-import ol_control_ScaleLine from 'ol/control/Scaleline'
 import ol_control_CanvasBase from './CanvasBase'
 
 /**
@@ -42,7 +41,7 @@ ol_control_CanvasAttribution.prototype.setCanvas = function (b) {
   this.isCanvas_ = b;
   if (b) this.setCollapsed(false);
   this.element.style.visibility = b ? "hidden":"visible";
-  if (this.map_) this.map_.renderSync();
+  if (this.getMap()) this.getMap().renderSync();
 };
 
 
@@ -80,14 +79,13 @@ ol_control_CanvasAttribution.prototype.setMap = function (map) {
   if (this._listener) ol_Observable_unByKey(this._listener);
   this._listener = null;
   
-  ol_control_ScaleLine.prototype.setMap.call(this, map);
+  ol_control_Attribution.prototype.setMap.call(this, map);
   if (oldmap) oldmap.renderSync();
 
   // Get change (new layer added or removed)
   if (map) {
     this._listener = map.on('postcompose', this.drawAttribution_.bind(this));
   }
-  this.map_ = map;
   
   this.setCanvas (this.isCanvas_);
 };

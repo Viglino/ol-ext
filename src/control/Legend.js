@@ -1,9 +1,9 @@
 import ol_ext_inherits from '../util/ext'
-import ol_control_Control from 'ol/control/Control'
+import ol_control_CanvasBase from './CanvasBase'
 
 /** Create a legend for styles
  * @constructor
- * @extends {ol_control_Control}
+ * @extends {ol_control_CanvasBase}
  * @fires select
  * @param {*} options
  *  @param {String} options.className class of the control
@@ -39,7 +39,7 @@ var ol_control_Legend = function(options) {
     element.appendChild(button);
   }
 
-  ol_control_Control.call(this, {
+  ol_control_CanvasBase.call(this, {
     element: element,
 		target: options.target
 	});
@@ -55,9 +55,48 @@ var ol_control_Legend = function(options) {
   this._legend.on('select', function(e) {
     this.dispatchEvent(e);
   }.bind(this));
+  this._legend.on('refresh', function() {
+    if (this._onCanvas && this.getMap()) this.getMap().renderSync();
+  }.bind(this));
 };
-ol_ext_inherits(ol_control_Legend, ol_control_Control);
+ol_ext_inherits(ol_control_Legend, ol_control_CanvasBase);
 
+/** Get the legend associated with the control
+ * @returns {ol_legend_Legend}
+ */
+ol_control_Legend.prototype.getLegend = function () {
+  return this._legend;
+};
+
+/** Draw control on canvas
+ * @param {boolean} b draw on canvas.
+ */
+ ol_control_Legend.prototype.setCanvas = function (b) {
+  this._onCanvas = b;
+  this.element.style.visibility = b ? "hidden":"visible";
+  if (this.getMap()) this.getMap().renderSync();
+};
+
+/** Draw legend on canvas
+ * @private
+ */
+ol_control_Legend.prototype._draw = function (e) {
+  if (this._onCanvas && !this.element.classList.contains('ol-collapsed')) {
+    var canvas = this._legend.getCanvas();
+    var ctx = this.getContext(e);
+    var h = ctx.canvas.height - canvas.height;
+    ctx.save();
+      ctx.rect(0, h, canvas.width, canvas.height);
+      ctx.fillStyle = '#fff';
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 10;
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+      ctx.fill();
+      ctx.drawImage(canvas, 0, h);
+      ctx.restore();
+  }
+};
 
 /** Show control
  */
@@ -65,6 +104,7 @@ ol_control_Legend.prototype.show = function() {
   if (this.element.classList.contains('ol-collapsed')) {
     this.element.classList.remove('ol-collapsed');
     this.dispatchEvent({ type:'change:collapse', collapsed: false });
+    if (this.getMap()) this.getMap().renderSync();
   }
 };
 
@@ -74,13 +114,16 @@ ol_control_Legend.prototype.hide = function() {
   if (!this.element.classList.contains('ol-collapsed')) {
     this.element.classList.add('ol-collapsed');
     this.dispatchEvent({ type:'change:collapse', collapsed: true });
+    if (this.getMap()) this.getMap().renderSync();
   }
 };
+
 /** Toggle control
  */
 ol_control_Legend.prototype.toggle = function() {
   this.element.classList.toggle('ol-collapsed');
   this.dispatchEvent({ type:'change:collapse', collapsed: this.element.classList.contains('ol-collapsed') });
+  if (this.getMap()) this.getMap().renderSync();
 };
 
 export default ol_control_Legend
