@@ -1212,6 +1212,7 @@ ol.legend.Legend = function(options) {
   ol.Object.call(this);
   this._items = new ol.Collection();
   var listeners = [];
+  var tout;
   this._items.on('add', function(e) {
     listeners.push({
       item: e.element,
@@ -1219,7 +1220,11 @@ ol.legend.Legend = function(options) {
         this.refresh();
       }.bind(this))
     });
-    this.refresh();
+    if (tout) {
+      clearTimeout(tout);
+      tout = null;
+    }
+    tout = setTimeout(function() { this.refresh(); }.bind(this), 0);
   }.bind(this));
   this._items.on('remove', function(e) {
     for (var i=0; i<listeners; i++) {
@@ -1229,7 +1234,11 @@ ol.legend.Legend = function(options) {
         break;
       }
     }
-    this.refresh();
+    if (tout) {
+      clearTimeout(tout);
+      tout = null;
+    }
+    tout = setTimeout(function() { this.refresh(); }.bind(this), 0);
   }.bind(this));
   this._listElement = ol.ext.element.create('UL', {
     className: 'ol-legend'
@@ -1278,14 +1287,14 @@ ol.legend.Legend.prototype.getCanvas = function() {
 /** Set the style
  * @param { ol.style.Style | Array<ol.style.Style> | ol.StyleFunction | undefined	} style a style or a style function to use with features
  */
- ol.legend.Legend.prototype.setStyle = function(style) {
+ol.legend.Legend.prototype.setStyle = function(style) {
   this._style = style;
   this.refresh();
 };
 /** Add a new item to the legend
- * @param {import('./legend/Item').LegendItemOptions|ol.legend.Item} item 
+ * @param {import('./legend/Item').olLegendItemOptions|ol.legend.Item} item 
  */
- ol.legend.Legend.prototype.addItem = function(item) {
+ol.legend.Legend.prototype.addItem = function(item) {
   if (item instanceof ol.legend.Item) {
     this._items.push(item);
   } else {
@@ -1339,15 +1348,22 @@ ol.legend.Legend.prototype.refresh = function() {
   var height = this.get('size')[1] + 2 * margin;
   var canvas = this.getCanvas();
   var ctx = canvas.getContext('2d');
-  ctx.font = this._font.getFont();
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
   var ratio = ol.has.DEVICE_PIXEL_RATIO;
   // Calculate width
-  var textWidth = this._measureText(ctx, this.get('title')).width;
+  ctx.font = 'bold ' + this._font.getFont();
+  var textWidth = this._measureText(ctx, this.getTitle('title')).width;
   this._items.forEach(function(r) {
-    var w = this._measureText(ctx, r.get('title')).width;
-    textWidth = Math.max(textWidth, width + w);
+    if (r.get('feature') || r.get('typeGeom') ) {
+      ctx.font = this._font.getFont();
+      var w = this._measureText(ctx, r.get('title')).width;
+      textWidth = Math.max(textWidth, w + width);
+    } else {
+      ctx.font = 'bold ' + this._font.getFont();
+      var w = this._measureText(ctx, r.get('title')).width;
+      textWidth = Math.max(textWidth, w);
+    }
   }.bind(this));
   canvas.width = (textWidth + 2*margin) * ratio;
   canvas.height = (this._items.getLength()+1) * height * ratio;
@@ -1368,8 +1384,6 @@ ol.legend.Legend.prototype.refresh = function() {
     this._drawText(ctx, this.getTitle(), canvas.width/ratio/2, height/2);
   }
   // Add items
-  ctx.font = this._font.getFont();
-  ctx.textAlign = 'left';
   this._items.forEach(function(r,i) {
     var index = i + (this.getTitle() ? 1 : 0);
     table.appendChild(r.getElement([width, height], function(b) {
@@ -1380,8 +1394,21 @@ ol.legend.Legend.prototype.refresh = function() {
         item: r
       });
     }.bind(this)));
-    canvas = this.getLegendImage(r.getProperties(), canvas, index);
-    this._drawText(ctx, r.get('title'), width + margin, (i+1.5)*height);
+    var item = r.getProperties();
+    ctx.textAlign = 'left';
+    if (item.feature || item.typeGeom) {
+      canvas = this.getLegendImage(item, canvas, index);
+      ctx.font = this._font.getFont();
+      this._drawText(ctx, r.get('title'), width + margin, (i+1.5)*height);
+    } else {
+      ctx.font = 'bold ' + this._font.getFont();
+      if (/\bcenter\b/.test(item.className)) {
+        ctx.textAlign = 'center';
+        this._drawText(ctx, r.get('title'), canvas.width/ratio/2, (i+1.5)*height);
+      } else {
+        this._drawText(ctx, r.get('title'), margin, (i+1.5)*height);
+      }
+    }
   }.bind(this));
   // Done
   this.dispatchEvent({
@@ -1391,25 +1418,43 @@ ol.legend.Legend.prototype.refresh = function() {
   });
 };
 /** Get the image for a style 
- * You can provide in options:
- * - a feature width a style 
- * - or a feature that will use the legend style function
- * - or properties and a geometry type that will use the legend style function
- * - or a style and a geometry type
- * @param {*} options
- *  @param {ol.Feature} options.feature a feature to draw
- *  @param {ol.style.Style} options.style the style to use if no feature is provided
- *  @param {*} options.properties properties to use with a style function
- *  @param {string} options.typeGeom type geom to draw with the style or the properties
- * @param {Canvas|undefined} canvas a canvas to draw in
- * @param {int|undefined} row row number to draw in canvas
+ * @param {import('./legend/Item').olLegendItemOptions} item 
+ * @param {Canvas|undefined} canvas a canvas to draw in, if none creat one
+ * @param {int|undefined} row row number to draw in canvas, default 0
  * @return {CanvasElement}
  */
- ol.legend.Legend.prototype.getLegendImage = function(options, canvas, row) {
+ol.legend.Legend.prototype.getLegendImage = function(options, canvas, row) {
   options = options || {};
-  var size = this.get('size');
-  var width = size[0] + 2*this.get('margin');
-  var height = size[1] + 2*this.get('margin');
+  return ol.legend.Legend.getLegendImage({
+    className: options.className,
+    feature: options.feature,
+    typeGeom: options.typeGeom,
+    style: options.style || this._style,
+    properties: options.properties,
+    margin: options.margin || this.get('margin'),
+    size: options.size || this.get('size'),
+    onload: function() {
+      // Force refresh
+      this.refresh();
+    }.bind(this)
+  }, canvas, row);
+};
+/** Get a symbol image for a given legend item
+ * @param {import('./legend/Item').olLegendItemOptions} item 
+ * @param {Canvas|undefined} canvas a canvas to draw in, if none creat one
+ * @param {int|undefined} row row number to draw in canvas, default 0
+ */
+ol.legend.Legend.getLegendImage = function(item, canvas, row) {
+  item = item || {};
+  if (typeof(item.margin) === 'undefined') item.margin = 10;
+  var size = item.size || [40,25];
+  item.onload = item.onload || function() {
+    setTimeout(function() { 
+      ol.legend.Legend.getLegendImage(item, canvas, row);
+    }, 100);
+  };
+  var width = size[0] + 2 * item.margin;
+  var height = size[1] + 2 * item.margin;
   var ratio = ol.has.DEVICE_PIXEL_RATIO;
   if (!canvas) {
     row = 0;
@@ -1420,24 +1465,24 @@ ol.legend.Legend.prototype.refresh = function() {
   var ctx = canvas.getContext('2d');
   ctx.save();
   var vectorContext = ol.render.toContext(ctx);
-  var typeGeom = options.typeGeom;
+  var typeGeom = item.typeGeom;
   var style;
-  var feature = options.feature;
-  if (!feature && options.properties && typeGeom) {
+  var feature = item.feature;
+  if (!feature && typeGeom) {
     if (/Point/.test(typeGeom)) feature = new ol.Feature(new ol.geom.Point([0,0]));
     else if (/LineString/.test(typeGeom)) feature = new ol.Feature(new ol.geom.LineString([0,0]));
     else feature = new ol.Feature(new ol.geom.Polygon([[0,0]]));
-    feature.setProperties(options.properties);
+    if (item.properties) feature.setProperties(item.properties);
   }
   if (feature) {
     style = feature.getStyle();
     if (typeof(style)==='function') style = style(feature);
     if (!style) {
-      style = typeof(this._style) === 'function' ? this._style(feature) : this._style || [];
+      style = typeof(item.style) === 'function' ? item.style(feature) : item.style || [];
     }
     typeGeom = feature.getGeometry().getType();
   } else {
-    style = options.style;
+    style = [];
   }
   if (!(style instanceof Array)) style = [style];
   var cx = width/2;
@@ -1450,15 +1495,18 @@ ol.legend.Legend.prototype.refresh = function() {
     var extent = null;
     for (i=0; s= style[i]; i++) {
       var img = s.getImage();
-      // Refresh legend when loaded
+      // Refresh legend on image load
       if (img) {
         var imgElt = img.getImage();
-        // Check image is load
+        // Check image is loaded
         if (imgElt && imgElt.complete && !imgElt.naturalWidth) {
-          imgElt.addEventListener('load', function() {
-            // Force refresh
-            setTimeout(function() { this.refresh(); }.bind(this), 200);
-          }.bind(this), 200);
+          if (typeof(item.onload) === 'function') {
+            imgElt.addEventListener('load', function() {
+              setTimeout(function() { 
+                item.onload()
+              }, 100);
+            });
+          }
           img.load();
         }
         // Check anchor to center the image
@@ -1496,7 +1544,7 @@ ol.legend.Legend.prototype.refresh = function() {
       case 'LineString':
       case 'MultiLineString': 
         ctx.save();
-          ctx.rect(this.get('margin') * ratio, 0, size[0] *  ratio, canvas.height);
+          ctx.rect(item.margin * ratio, 0, size[0] *  ratio, canvas.height);
           ctx.clip();
           vectorContext.drawGeometry(new ol.geom.LineString([[cx-sx, cy], [cx+sx, cy]]));
         ctx.restore();
@@ -1517,9 +1565,11 @@ ol.legend.Legend.prototype.refresh = function() {
  * @property {string} options.title row title
  * @property {className} options.className
  * @property {import(ol/Feature)} options.feature a feature to draw on the legend
+ * @property {string} options.typeGeom type geom to draw with the style or the properties if no feature is provided
+ * @property {Object} options.properties a set of properties to use with a style function
  * @property {import('ol/style/Style').styleLike} options.style a style or a style function to use to draw the legend
- * @property {*} options.properties a set of properties to use with a style function
- * @property {string} options.typeGeom type geom to draw with the style or the properties
+ * @property {ol.size|undefined} options.size
+ * @property {number|undefined} options.margin
  */
 /** A class for legend items
  * @constructor
