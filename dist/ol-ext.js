@@ -1357,12 +1357,10 @@ ol.legend.Legend.prototype.refresh = function() {
   this._items.forEach(function(r) {
     if (r.get('feature') || r.get('typeGeom') ) {
       ctx.font = this._font.getFont();
-      var w = this._measureText(ctx, r.get('title')).width;
-      textWidth = Math.max(textWidth, w + width);
+      textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width + width);
     } else {
       ctx.font = 'bold ' + this._font.getFont();
-      var w = this._measureText(ctx, r.get('title')).width;
-      textWidth = Math.max(textWidth, w);
+      textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width);
     }
   }.bind(this));
   canvas.width = (textWidth + 2*margin) * ratio;
@@ -4104,7 +4102,7 @@ ol.control.CanvasAttribution.prototype.setCanvas = function (b) {
   this.isCanvas_ = b;
   if (b) this.setCollapsed(false);
   this.element.style.visibility = b ? "hidden":"visible";
-  if (this.map_) this.map_.renderSync();
+  if (this.getMap()) this.getMap().renderSync();
 };
 /** Get map Canvas
  * @private
@@ -4136,13 +4134,12 @@ ol.control.CanvasAttribution.prototype.setMap = function (map) {
   var oldmap = this.getMap();
   if (this._listener) ol.Observable.unByKey(this._listener);
   this._listener = null;
-  ol.control.ScaleLine.prototype.setMap.call(this, map);
+  ol.control.Attribution.prototype.setMap.call(this, map);
   if (oldmap) oldmap.renderSync();
   // Get change (new layer added or removed)
   if (map) {
     this._listener = map.on('postcompose', this.drawAttribution_.bind(this));
   }
-  this.map_ = map;
   this.setCanvas (this.isCanvas_);
 };
 /** 
@@ -4193,7 +4190,7 @@ ol.control.CanvasAttribution.prototype.drawAttribution_ = function(e) {
 */
 /**
  * @classdesc 
- *    OpenLayers 3 Scale Line Control integrated in the canvas (for jpeg/png 
+ *    OpenLayers Scale Line Control integrated in the canvas (for jpeg/png 
  * @see http://www.kreidefossilien.de/webgis/dokumentation/beispiele/export-map-to-png-with-scale
  *
  * @constructor
@@ -4201,8 +4198,8 @@ ol.control.CanvasAttribution.prototype.drawAttribution_ = function(e) {
  * @param {Object=} options extend the ol.control.ScaleLine options.
  * 	@param {ol.style.Style} options.style used to draw the scale line (default is black/white, 10px Arial).
  */
-ol.control.CanvasScaleLine = function(options)
-{	ol.control.ScaleLine.call(this, options);
+ol.control.CanvasScaleLine = function(options) {
+  ol.control.ScaleLine.call(this, options);
   this.scaleHeight_ = 6;
   // Get style options
   if (!options) options={};
@@ -4295,8 +4292,8 @@ ol.control.CanvasScaleLine.prototype.drawScale_ = function(e) {
   var n = parseInt(text);
   while (n%10 === 0) n/=10;
   if (n%5 === 0) max = 5;
-  for (var i=0; i<max; i++)
-  {	ctx.beginPath();
+  for (var i=0; i<max; i++) {
+    ctx.beginPath();
     ctx.fillStyle = i%2 ? this.fillStyle_ : this.strokeStyle_;
     ctx.rect(position.left+i*scalewidth/max, position.top, scalewidth/max, this.scaleHeight_);
     ctx.stroke();
@@ -7082,7 +7079,7 @@ ol.control.LayerSwitcherImage.prototype.overflow = function(){};
 
 /** Create a legend for styles
  * @constructor
- * @extends {ol.control.Control}
+ * @extends {ol.control.CanvasBase}
  * @fires select
  * @param {*} options
  *  @param {String} options.className class of the control
@@ -7116,7 +7113,7 @@ ol.control.Legend = function(options) {
     }.bind(this));
     element.appendChild(button);
   }
-  ol.control.Control.call(this, {
+  ol.control.CanvasBase.call(this, {
     element: element,
 		target: options.target
 	});
@@ -7129,14 +7126,52 @@ ol.control.Legend = function(options) {
   this._legend.on('select', function(e) {
     this.dispatchEvent(e);
   }.bind(this));
+  this._legend.on('refresh', function() {
+    if (this._onCanvas && this.getMap()) this.getMap().renderSync();
+  }.bind(this));
 };
-ol.ext.inherits(ol.control.Legend, ol.control.Control);
+ol.ext.inherits(ol.control.Legend, ol.control.CanvasBase);
+/** Get the legend associated with the control
+ * @returns {ol.legend.Legend}
+ */
+ol.control.Legend.prototype.getLegend = function () {
+  return this._legend;
+};
+/** Draw control on canvas
+ * @param {boolean} b draw on canvas.
+ */
+ ol.control.Legend.prototype.setCanvas = function (b) {
+  this._onCanvas = b;
+  this.element.style.visibility = b ? "hidden":"visible";
+  if (this.getMap()) this.getMap().renderSync();
+};
+/** Draw legend on canvas
+ * @private
+ */
+ol.control.Legend.prototype._draw = function (e) {
+  if (this._onCanvas && !this.element.classList.contains('ol-collapsed')) {
+    var canvas = this._legend.getCanvas();
+    var ctx = this.getContext(e);
+    var h = ctx.canvas.height - canvas.height;
+    ctx.save();
+      ctx.rect(0, h, canvas.width, canvas.height);
+      ctx.fillStyle = '#fff';
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 10;
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+      ctx.fill();
+      ctx.drawImage(canvas, 0, h);
+      ctx.restore();
+  }
+};
 /** Show control
  */
 ol.control.Legend.prototype.show = function() {
   if (this.element.classList.contains('ol-collapsed')) {
     this.element.classList.remove('ol-collapsed');
     this.dispatchEvent({ type:'change:collapse', collapsed: false });
+    if (this.getMap()) this.getMap().renderSync();
   }
 };
 /** Hide control
@@ -7145,6 +7180,7 @@ ol.control.Legend.prototype.hide = function() {
   if (!this.element.classList.contains('ol-collapsed')) {
     this.element.classList.add('ol-collapsed');
     this.dispatchEvent({ type:'change:collapse', collapsed: true });
+    if (this.getMap()) this.getMap().renderSync();
   }
 };
 /** Toggle control
@@ -7152,6 +7188,7 @@ ol.control.Legend.prototype.hide = function() {
 ol.control.Legend.prototype.toggle = function() {
   this.element.classList.toggle('ol-collapsed');
   this.dispatchEvent({ type:'change:collapse', collapsed: this.element.classList.contains('ol-collapsed') });
+  if (this.getMap()) this.getMap().renderSync();
 };
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
