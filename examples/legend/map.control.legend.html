@@ -35,6 +35,12 @@
       background-color: #fff;
       width: 60px;
     }
+    button {
+      margin: .5em 0;
+    }
+    input[type="number"] {
+      width: 4em;
+    }
   </style>
 </head>
 <body >
@@ -70,14 +76,25 @@
     <p>
       Title: 
       <input type="text" value="Legend" placeholder="Legend title" onchange="legend.setTitle(this.value);" />
-      <br/><br/>
+      <br/>
+      margin:
+      <input type="number" value="10" onchange="legend.set('margin', Number(this.value));" />
+      <br/>
+      symbol:
+      <input type="number" value="40" onchange="legend.set('size', [Number(this.value),legend.get('size')[1]]);" />
+      x
+      <input type="number" value="25" onchange="legend.set('size', [legend.get('size')[0],Number(this.value)]);" />
+      <br/>
+      <button onclick="legend.getItems().clear()">Clear Legend</button>
+      <br/>
       <i>Select an object on the map and add it to the legend...</i>
     </p>
-    <form class="row" style="display: none;">
+    <form class="row">
       <div class="img" style="display: inline-block; vertical-align: middle; margin-right: .5em;"></div>
       <textarea style="vertical-align: middle;" placeholder="title">Title</textarea>
       <br/>
-      <button type="submit" onclick="addToLegend(); event.preventDefault();" style="margin-left: 11em;">Add to Legend</button>
+      <button type="submit" onclick="addToLegend(); event.preventDefault();">Add to Legend</button>
+      <label id="center"><input type="checkbox"> center title</label>
     </form>
   </div>
 
@@ -156,6 +173,7 @@
   /* */
   var f0 = new ol.Feature(new ol.geom.Point(	[269914, 6248592]));
   vector.getSource().addFeature(f0);
+
   /* */
   // Add features with style
   f = new ol.Feature(new ol.geom.Point(	[500000, 6300000]));
@@ -219,19 +237,21 @@
     var f = e.selected[0];
     // Remove feature from select (to get its style back) BUG ol6 ?
     select.getFeatures().remove(f);
+    $('.options .img').html('');
     if (f) {
-      var img = legend.getLegendImage({
+      var img = ol.legend.Legend.getLegendImage({
         /* given a style  and a geom type
         style: f.getStyle() || getFeatureStyle(f),
         typeGeom: f.getGeometry().getType()
         */
         /* or given a feature */
-        feature: f.clone()
+        feature: f.clone(),
+        style: getFeatureStyle
       });
-      $('.options .img').html('').append(img);
-      $('.options .row').show();
+      $('.options .img').append(img);
+      $('#center').hide();
     } else {
-      $('.options .row').hide();
+      $('#center').show();
     }
     if (f) select.getFeatures().push(f);
   });
@@ -239,20 +259,19 @@
   // Add selection to legend
   function addToLegend() {
     var f = select.getFeatures().item(0);
-    // Remove feature from select (to get its style back) BUG ol6 ?
-    select.getFeatures().remove(f);
-    if (f) {
-      legend.addItem({
-        title: $(".options .row textarea").val(),
-        /* given a style  and a geom type
-        style: f.getStyle() || getFeatureStyle(f),
-        typeGeom: f.getGeometry().getType()
-        */
-        /* or given a feature */
-        feature: f
-      });
-    }
-    select.getFeatures().push(f);
+    // Remove feature from select (to get its style back with ol6) 
+    if (f) select.getFeatures().remove(f);
+    legend.addItem({
+      className: $('#center input').prop('checked') ? 'center': '',
+      title: $('.options .row textarea').val(),
+      /* given a style  and a geom type
+      style: f.getStyle() || getFeatureStyle(f),
+      typeGeom: f.getGeometry().getType()
+      */
+      /* or given a feature */
+      feature: f
+    });
+    if (f) select.getFeatures().push(f);
   }
 
 	$(window).on("load", function(){ legend.refresh(); vector.changed(); });

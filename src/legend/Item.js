@@ -7,9 +7,11 @@ import ol_ext_element from '../util/element'
  * @property {string} options.title row title
  * @property {className} options.className
  * @property {import(ol/Feature)} options.feature a feature to draw on the legend
+ * @property {string} options.typeGeom type geom to draw with the style or the properties if no feature is provided
+ * @property {Object} options.properties a set of properties to use with a style function
  * @property {import('ol/style/Style').styleLike} options.style a style or a style function to use to draw the legend
- * @property {*} options.properties a set of properties to use with a style function
- * @property {string} options.typeGeom type geom to draw with the style or the properties
+ * @property {ol.size|undefined} options.size
+ * @property {number|undefined} options.margin
  */
 
 /** A class for legend items
