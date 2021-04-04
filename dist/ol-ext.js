@@ -8411,9 +8411,15 @@ ol.control.PrintDialog = function(options) {
     className: 'ol-print-param',
     parent: content
   });
-  var printMap = this.printElement = ol.ext.element.create('DIV');
+  this._pages = [ ol.ext.element.create('DIV', { 
+    className: 'ol-page'
+  })];
+  var printMap = ol.ext.element.create('DIV', {
+    className: 'ol-map',
+    parent: this._pages[0]
+  });
   ol.ext.element.create('DIV', {
-    html: printMap,
+    html: this._pages[0],
     className: 'ol-print-map',
     parent: content
   });
@@ -8488,6 +8494,27 @@ ol.control.PrintDialog = function(options) {
       parent: margin
     });
   }
+  // Scale
+  li = ol.ext.element.create('LI',{ 
+    html: ol.ext.element.create('LABEL', {
+      html: options.scaleLabel || 'Scale',
+    }),
+    className: 'ol-scale',
+    parent: ul 
+  });
+  var scale = this._select.scale = ol.ext.element.create('SELECT', {
+    on: { change: function() {
+      this.setScale(parseInt(scale.value))
+    }.bind(this) },
+    parent: li
+  });
+  Object.keys(this.scales).forEach(function(s) {
+    ol.ext.element.create('OPTION', {
+      html: this.scales[s],
+      value: s,
+      parent: scale
+    });
+  }.bind(this));
   // Save as
   li = ol.ext.element.create('LI',{ 
     className: 'ol-saveas',
@@ -8533,20 +8560,27 @@ ol.control.PrintDialog = function(options) {
   // Handle dialog show/hide
   var originalTarget;
   var originalSize;
+  var scalelistener;
   printDialog.on('show', function() {
     var map = this.getMap();
     if (!map) return;
     document.body.classList.add('ol-print-document');
     originalTarget = map.getTargetElement();
     originalSize = map.getSize();
-    this.setSize(this._size || originalSize);
+    if (typeof(this.size) === 'string') this.setSize(this._size);
+    else this.setSize(originalSize);
     map.setTarget(printMap);
+    if (scalelistener) ol.Observable.unByKey(scalelistener);
+    scalelistener = map.on('moveend', function() {
+      this.setScale(ol.sphere.getMapScale(map));
+    }.bind(this));
   }.bind(this));
   printDialog.on('hide', function() {
     document.body.classList.remove('ol-print-document');
     if (!originalTarget) return;
     this.getMap().setTarget(originalTarget);
     originalTarget = null;
+    if (scalelistener) ol.Observable.unByKey(scalelistener);
   }.bind(this));
   // Update preview on resize
   window.addEventListener('resize', function() {
@@ -8577,6 +8611,17 @@ ol.control.PrintDialog.prototype.formats = {
   jpeg: 'save as jpeg',
   png: 'save as png',
   pdf: 'save as pdf'
+};
+/** List of print scale */
+ol.control.PrintDialog.prototype.scales = {
+  '': '',
+  ' 5000': '1/5.000',
+  ' 10000': '1/10.000',
+  ' 25000': '1/25.000',
+  ' 50000': '1/50.000',
+  ' 100000': '1/100.000',
+  ' 250000': '1/250.000',
+  ' 1000000': '1/1.000.000'
 };
 /** Get print orientation
  * @returns {string}
@@ -8630,23 +8675,32 @@ ol.control.PrintDialog.prototype.setSize = function (size) {
       size = [size[1], size[0]];
     }
     this._select.orientation.disabled = false;
+    this.getPage().classList.remove('margin');
   } else {
     this._select.size.value = '';
     this._select.orientation.disabled = true;
+    this.getPage().classList.add('margin');
   }
-  var s = this.printElement.parentNode.getBoundingClientRect();
+  var printElement = this.getPage();
+  var s = printElement.parentNode.getBoundingClientRect();
   var scx = (s.width - 40) / size[0];
   var scy = (s.height - 40) / size[1];
   var sc = Math.min(scx, scy, 1);
-  this.printElement.style.width = size[0]+'px';
-  this.printElement.style.height = size[1]+'px';
-  this.printElement.style['-webkit-transform'] = 
-  this.printElement.style.transform = 'translate(-50%,-50%) scale('+sc+')';
+  printElement.style.width = size[0]+'px';
+  printElement.style.height = size[1]+'px';
+  printElement.style['-webkit-transform'] = 
+  printElement.style.transform = 'translate(-50%,-50%) scale('+sc+')';
   var px = Math.round(5/sc);
-  this.printElement.style['-webkit-box-shadow'] = 
-  this.printElement.style['box-shadow'] = px+'px '+px+'px '+px+'px rgba(0,0,0,.6)';
-  this.printElement.style['padding'] = (this.getMargin() * 96/25.4)+'px';
+  printElement.style['-webkit-box-shadow'] = 
+  printElement.style['box-shadow'] = px+'px '+px+'px '+px+'px rgba(0,0,0,.6)';
+  printElement.style['padding'] = (this.getMargin() * 96/25.4)+'px';
   this.getMap().updateSize();
+};
+/** Get page element
+ * @api
+ */
+ol.control.PrintDialog.prototype.getPage = function () {
+  return this._pages[0]
 };
 /**
  * Remove the control from its current map and attach it to the new map.
@@ -8665,6 +8719,19 @@ ol.control.PrintDialog.prototype.setMap = function (map) {
     this.getMap().addControl(this._printCtrl);
     this.getMap().addControl(this._printDialog);
   }
+};
+/** Set the current scale (will change the scale of the map)
+ * @param {number|string} value the scale factor or a scale string as 1/xxx
+ */
+ol.control.PrintDialog.prototype.setScale = function (value) {
+  ol.sphere.setMapScale(this.getMap(), value);
+  this._select.scale.value = ' '+(Math.round(value/100) * 100);
+};
+/** Get the current map scale factor
+ * @return {number} 
+ */
+ol.control.PrintDialog.prototype.getScale = function () {
+  return ol.sphere.getMapScale(this.getMap());
 };
 /** Show print dialog */
 ol.control.PrintDialog.prototype.print = function() {
@@ -9904,25 +9971,17 @@ ol.control.Scale.prototype.setMap = function (map) {
   ol.control.Control.prototype.setMap.call(this, map);
   // Get change (new layer added or removed)
   if (map) {
-    this._listener = map.on('moveend', this._showScale.bind(this));
+    this._listener = map.on('moveend', this.getScale.bind(this));
   }
 };
 /** Display the scale
  */
-ol.control.Scale.prototype._showScale = function () {
+ol.control.Scale.prototype.getScale = function () {
   var map = this.getMap();
   if (map) {
-    var view = map.getView();
-    var proj = view.getProjection();
-    var center = view.getCenter();
-    var px = map.getPixelFromCoordinate(center);
-    px[1] += 1;
-    var coord = map.getCoordinateFromPixel(px);
-    var d = ol.sphere.getDistance(
-      ol.proj.transform(center, proj, 'EPSG:4326'),
-      ol.proj.transform(coord, proj, 'EPSG:4326'));
-    d *= this.get('ppi')/.0254
+    var d = ol.sphere.getMapScale(map, this.get('ppi'));
     this._input.value = this.formatScale(d);
+    return d;
   }
 };
 /** Format the scale 1/d
@@ -9941,27 +10000,9 @@ ol.control.Scale.prototype.setScale = function (value) {
   var map = this.getMap();
   if (map && value) {
     if (value.target) value = value.target.value;
-    var fac = value;
-    if (typeof(value)==='string') {
-      fac = value.split('/')[1];
-      if (!fac) fac = value;
-      fac = fac.replace(/[^\d]/g,'');
-      fac = parseInt(fac);
-    }
-    // Calculate new resolution
-    var view = map.getView();
-    var proj = view.getProjection();
-    var center = view.getCenter();
-    var px = map.getPixelFromCoordinate(center);
-    px[1] += 1;
-    var coord = map.getCoordinateFromPixel(px);
-    var d = ol.sphere.getDistance(
-      ol.proj.transform(center, proj, 'EPSG:4326'),
-      ol.proj.transform(coord, proj, 'EPSG:4326'));
-    d *= this.get('ppi')/.0254
-    view.setResolution(view.getResolution()*fac/d);
+    ol.sphere.setMapScale(map, value, this.get('ppi'));
   }
-  this._showScale();
+  this.getScale();
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
@@ -30394,6 +30435,55 @@ ol.sphere.greatCircleTrack = function(origin, destination, options) {
   } 
   geom.push(destination);
   return geom;
+};
+/** Get map scale factor
+ * @param {ol.Map} map
+ * @param {number} [dpi=96] dpi, default 96
+ * @return {number}
+ */
+ol.sphere.getMapScale = function (map, dpi) {
+  var view = map.getView();
+  var proj = view.getProjection();
+  var center = view.getCenter();
+  var px = map.getPixelFromCoordinate(center);
+  px[1] += 1;
+  var coord = map.getCoordinateFromPixel(px);
+  var d = ol.sphere.getDistance(
+    ol.proj.transform(center, proj, 'EPSG:4326'),
+    ol.proj.transform(coord, proj, 'EPSG:4326'));
+  d *= (dpi||96) /.0254
+  return d;
+};
+/** Set map scale factor
+ * @param {ol.Map} map
+ * @param {number|string} scale the scale factor or a scale string as 1/xxx
+ * @param {number} [dpi=96] dpi, default 96
+ * @return {number} scale factor
+ */
+ol.sphere.setMapScale = function (map, scale, dpi) {
+  if (map && scale) {
+    var fac = scale;
+    if (typeof(scale)==='string') {
+      fac = scale.split('/')[1];
+      if (!fac) fac = scale;
+      fac = fac.replace(/[^\d]/g,'');
+      fac = parseInt(fac);
+    }
+    if (!fac) return;
+    // Calculate new resolution
+    var view = map.getView();
+    var proj = view.getProjection();
+    var center = view.getCenter();
+    var px = map.getPixelFromCoordinate(center);
+    px[1] += 1;
+    var coord = map.getCoordinateFromPixel(px);
+    var d = ol.sphere.getDistance(
+      ol.proj.transform(center, proj, 'EPSG:4326'),
+      ol.proj.transform(coord, proj, 'EPSG:4326'));
+    d *= (dpi || 96) /.0254
+    view.setResolution(view.getResolution()*fac/d);
+    return fac;
+  }
 };
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 

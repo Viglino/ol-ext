@@ -2489,13 +2489,21 @@ ul.ol-legend li div {
   width: calc(100% - 18em);
   overflow: hidden;
 }
-.ol-ext-print-dialog .ol-print-map > div {
+.ol-ext-print-dialog .ol-print-map .ol-page {
   position: absolute;
   left: 50%;
   top: 50%;
   background: #fff;
   -webkit-box-sizing: border-box;
           box-sizing: border-box;
+}
+.ol-ext-print-dialog .ol-print-map .ol-page.margin {
+  -webkit-box-sizing: content-box;
+          box-sizing: content-box;
+}
+.ol-ext-print-dialog .ol-map {
+  width: 100%;
+  height: 100%;
 }
 .ol-ext-print-dialog .ol-print-map .ol-control {
   display: none!important;
@@ -2600,12 +2608,12 @@ ul.ol-legend li div {
     background: none;
   }
   .ol-ext-print-dialog .ol-print-map {
-    position: unset;
+    position: unset; 
     background: none;
     width: auto;
     overflow: visible;
   }
-  .ol-ext-print-dialog .ol-print-map > div {
+  .ol-ext-print-dialog .ol-print-map .ol-page {
     -webkit-transform: none!important;
             transform: none!important;
     -webkit-box-shadow: none!important;
