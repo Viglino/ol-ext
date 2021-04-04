@@ -237,7 +237,7 @@ ol_ext_element.offsetRect = function(elt) {
     top: rect.top + (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0),
     left: rect.left + (window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft || 0),
     height: rect.height || (rect.bottom - rect.top),
-    width: rect.widtth || (rect.right - rect.left)
+    width: rect.width || (rect.right - rect.left)
   }
 };
 
