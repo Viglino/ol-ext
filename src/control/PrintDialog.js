@@ -4,10 +4,13 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_ext_inherits from '../util/ext'
 import ol_control_Control from 'ol/control/Control'
 import ol_ext_element from '../util/element'
 import ol_control_Dialog from './Dialog';
+import {getMapScale as ol_sphere_getMapScale} from '../geom/sphere'
+import {setMapScale as ol_sphere_setMapScale} from '../geom/sphere'
 
 /** Print control to get an image of the map
  * @constructor
@@ -53,9 +56,15 @@ var ol_control_PrintDialog = function(options) {
     className: 'ol-print-param',
     parent: content
   });
-  var printMap = this.printElement = ol_ext_element.create('DIV');
+  this._pages = [ ol_ext_element.create('DIV', { 
+    className: 'ol-page'
+  })];
+  var printMap = ol_ext_element.create('DIV', {
+    className: 'ol-map',
+    parent: this._pages[0]
+  });
   ol_ext_element.create('DIV', {
-    html: printMap,
+    html: this._pages[0],
     className: 'ol-print-map',
     parent: content
   });
@@ -134,6 +143,28 @@ var ol_control_PrintDialog = function(options) {
     });
   }
 
+  // Scale
+  li = ol_ext_element.create('LI',{ 
+    html: ol_ext_element.create('LABEL', {
+      html: options.scaleLabel || 'Scale',
+    }),
+    className: 'ol-scale',
+    parent: ul 
+  });
+  var scale = this._select.scale = ol_ext_element.create('SELECT', {
+    on: { change: function() {
+      this.setScale(parseInt(scale.value))
+    }.bind(this) },
+    parent: li
+  });
+  Object.keys(this.scales).forEach(function(s) {
+    ol_ext_element.create('OPTION', {
+      html: this.scales[s],
+      value: s,
+      parent: scale
+    });
+  }.bind(this));
+
   // Save as
   li = ol_ext_element.create('LI',{ 
     className: 'ol-saveas',
@@ -181,15 +212,20 @@ var ol_control_PrintDialog = function(options) {
   // Handle dialog show/hide
   var originalTarget;
   var originalSize;
-  
+  var scalelistener;
   printDialog.on('show', function() {
     var map = this.getMap();
     if (!map) return;
     document.body.classList.add('ol-print-document');
     originalTarget = map.getTargetElement();
     originalSize = map.getSize();
-    this.setSize(this._size || originalSize);
+    if (typeof(this.size) === 'string') this.setSize(this._size);
+    else this.setSize(originalSize);
     map.setTarget(printMap);
+    if (scalelistener) ol_Observable_unByKey(scalelistener);
+    scalelistener = map.on('moveend', function() {
+      this.setScale(ol_sphere_getMapScale(map));
+    }.bind(this));
   }.bind(this));
 
   printDialog.on('hide', function() {
@@ -197,6 +233,7 @@ var ol_control_PrintDialog = function(options) {
     if (!originalTarget) return;
     this.getMap().setTarget(originalTarget);
     originalTarget = null;
+    if (scalelistener) ol_Observable_unByKey(scalelistener);
   }.bind(this));
 
   // Update preview on resize
@@ -231,6 +268,18 @@ ol_control_PrintDialog.prototype.formats = {
   jpeg: 'save as jpeg',
   png: 'save as png',
   pdf: 'save as pdf'
+};
+
+/** List of print scale */
+ol_control_PrintDialog.prototype.scales = {
+  '': '',
+  ' 5000': '1/5.000',
+  ' 10000': '1/10.000',
+  ' 25000': '1/25.000',
+  ' 50000': '1/50.000',
+  ' 100000': '1/100.000',
+  ' 250000': '1/250.000',
+  ' 1000000': '1/1.000.000'
 };
 
 /** Get print orientation
@@ -291,24 +340,34 @@ ol_control_PrintDialog.prototype.setSize = function (size) {
       size = [size[1], size[0]];
     }
     this._select.orientation.disabled = false;
+    this.getPage().classList.remove('margin');
   } else {
     this._select.size.value = '';
     this._select.orientation.disabled = true;
+    this.getPage().classList.add('margin');
   }
 
-  var s = this.printElement.parentNode.getBoundingClientRect();
+  var printElement = this.getPage();
+  var s = printElement.parentNode.getBoundingClientRect();
   var scx = (s.width - 40) / size[0];
   var scy = (s.height - 40) / size[1];
   var sc = Math.min(scx, scy, 1);
-  this.printElement.style.width = size[0]+'px';
-  this.printElement.style.height = size[1]+'px';
-  this.printElement.style['-webkit-transform'] = 
-  this.printElement.style.transform = 'translate(-50%,-50%) scale('+sc+')';
+  printElement.style.width = size[0]+'px';
+  printElement.style.height = size[1]+'px';
+  printElement.style['-webkit-transform'] = 
+  printElement.style.transform = 'translate(-50%,-50%) scale('+sc+')';
   var px = Math.round(5/sc);
-  this.printElement.style['-webkit-box-shadow'] = 
-  this.printElement.style['box-shadow'] = px+'px '+px+'px '+px+'px rgba(0,0,0,.6)';
-  this.printElement.style['padding'] = (this.getMargin() * 96/25.4)+'px';
+  printElement.style['-webkit-box-shadow'] = 
+  printElement.style['box-shadow'] = px+'px '+px+'px '+px+'px rgba(0,0,0,.6)';
+  printElement.style['padding'] = (this.getMargin() * 96/25.4)+'px';
   this.getMap().updateSize();
+};
+
+/** Get page element
+ * @api
+ */
+ol_control_PrintDialog.prototype.getPage = function () {
+  return this._pages[0]
 };
 
 /**
@@ -328,6 +387,21 @@ ol_control_PrintDialog.prototype.setMap = function (map) {
     this.getMap().addControl(this._printCtrl);
     this.getMap().addControl(this._printDialog);
   }
+};
+
+/** Set the current scale (will change the scale of the map)
+ * @param {number|string} value the scale factor or a scale string as 1/xxx
+ */
+ol_control_PrintDialog.prototype.setScale = function (value) {
+  ol_sphere_setMapScale(this.getMap(), value);
+  this._select.scale.value = ' '+(Math.round(value/100) * 100);
+};
+
+/** Get the current map scale factor
+ * @return {number} 
+ */
+ol_control_PrintDialog.prototype.getScale = function () {
+  return ol_sphere_getMapScale(this.getMap());
 };
 
 /** Show print dialog */
