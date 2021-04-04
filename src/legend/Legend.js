@@ -23,6 +23,7 @@ if (window.ol && !ol.legend) {
 /** Legend class to draw features in a legend element
  * @constructor
  * @fires select
+ * @fires refresh
  * @param {*} options
  *  @param {String} options.title Legend title
  *  @param {ol.size | undefined} options.size Size of the symboles in the legend, default [40, 25]
@@ -71,7 +72,15 @@ var ol_legend_Legend = function(options) {
 
   this.set('size', options.size || [40, 25], true);
   this.set('margin', options.margin===0 ? 0 : options.margin || 10, true);
-  this._font = options.font || new ol_style_Text({ font: '16px sans-serif' });
+  this._textStyle = options.textStyle || new ol_style_Text({ 
+    font: '16px sans-serif',
+    fill: new ol_style_Fill({
+      color: '#333'
+    }),
+    backgroundFill: new ol_style_Fill({
+      color: 'rgba(255,255,255,.8)'
+    })
+  });
   this._title = new ol_legend_Item({ title: options.title || '', className: 'ol-title' });
 
   this.setStyle(options.style);
@@ -93,6 +102,13 @@ ol_legend_Legend.prototype.setTitle = function(title) {
  */
 ol_legend_Legend.prototype.getTitle = function() {
   return this._title.get('title');
+};
+
+/** Get text Style
+ * @returns {ol_style_Text}
+ */
+ol_legend_Legend.prototype.getTextStyle = function() {
+  return this._textStyle;
 };
 
 /** Set legend size
@@ -192,14 +208,14 @@ ol_legend_Legend.prototype.refresh = function() {
   var ratio = ol_has_DEVICE_PIXEL_RATIO;
 
   // Calculate width
-  ctx.font = 'bold ' + this._font.getFont();
+  ctx.font = 'bold ' + this._textStyle.getFont();
   var textWidth = this._measureText(ctx, this.getTitle('title')).width;
   this._items.forEach(function(r) {
     if (r.get('feature') || r.get('typeGeom') ) {
-      ctx.font = this._font.getFont();
+      ctx.font = this._textStyle.getFont();
       textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width + width);
     } else {
-      ctx.font = 'bold ' + this._font.getFont();
+      ctx.font = 'bold ' + this._textStyle.getFont();
       textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width);
     }
   }.bind(this));
@@ -208,6 +224,7 @@ ol_legend_Legend.prototype.refresh = function() {
   canvas.style.height = ((this._items.getLength()+1) * height) + 'px';
 
   ctx.textBaseline = 'middle';
+  ctx.fillStyle = ol_color_asString(this._textStyle.getFill().getColor());
   
   // Add Title
   if (this.getTitle()) {
@@ -219,7 +236,7 @@ ol_legend_Legend.prototype.refresh = function() {
         item: this._title
       });
     }.bind(this)));
-    ctx.font = 'bold ' + this._font.getFont();
+    ctx.font = 'bold ' + this._textStyle.getFont();
     ctx.textAlign = 'center';
     this._drawText(ctx, this.getTitle(), canvas.width/ratio/2, height/2);
   }
@@ -238,10 +255,10 @@ ol_legend_Legend.prototype.refresh = function() {
     ctx.textAlign = 'left';
     if (item.feature || item.typeGeom) {
       canvas = this.getLegendImage(item, canvas, index);
-      ctx.font = this._font.getFont();
+      ctx.font = this._textStyle.getFont();
       this._drawText(ctx, r.get('title'), width + margin, (i+1.5)*height);
     } else {
-      ctx.font = 'bold ' + this._font.getFont();
+      ctx.font = 'bold ' + this._textStyle.getFont();
       if (/\bcenter\b/.test(item.className)) {
         ctx.textAlign = 'center';
         this._drawText(ctx, r.get('title'), canvas.width/ratio/2, (i+1.5)*height);

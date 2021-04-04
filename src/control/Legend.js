@@ -87,11 +87,15 @@ ol_control_Legend.prototype._draw = function (e) {
     var h = ctx.canvas.height - canvas.height;
     ctx.save();
       ctx.rect(0, h, canvas.width, canvas.height);
-      ctx.fillStyle = '#fff';
-      ctx.strokeStyle = '#fff';
+      var col = '#fff';
+      if (this._legend.getTextStyle().getBackgroundFill()) {
+        col = ol_color_asString(this._legend.getTextStyle().getBackgroundFill().getColor());
+      }
+      ctx.fillStyle = ctx.strokeStyle = col;
       ctx.lineWidth = 10;
       ctx.lineJoin = 'round';
       ctx.stroke();
+      ctx.clearRect(0, h, canvas.width, canvas.height);
       ctx.fill();
       ctx.drawImage(canvas, 0, h);
       ctx.restore();
