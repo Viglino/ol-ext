@@ -2455,6 +2455,165 @@ ul.ol-legend li div {
   -webkit-box-shadow: inset 0 0 0 0.15em;
           box-shadow: inset 0 0 0 0.15em;
 }
+.ol-ext-print-dialog {
+  width: 100%;
+  height: 100%;
+}
+.ol-ext-print-dialog > form .ol-closebox {
+  right: auto;
+  left: 16.5em;
+  z-index: 1;
+  color: #999;
+}
+
+.ol-ext-print-dialog > form,
+.ol-ext-print-dialog.ol-visible > form {
+  -webkit-transition: none;
+  transition: none;
+  top: 1em;
+  left: 1em;
+  bottom: 1em;
+  right: 1em;
+  -webkit-transform: none;
+          transform: none;
+  max-width: 100%;
+  max-height: 100%;
+  background-color: #eee;
+  padding: 0;
+}
+.ol-ext-print-dialog .ol-print-map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: calc(100% - 18em);
+  overflow: hidden;
+}
+.ol-ext-print-dialog .ol-print-map > div {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: #fff;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+}
+.ol-ext-print-dialog .ol-print-map .ol-control {
+  display: none!important;
+}
+
+.ol-ext-print-dialog .ol-print-param {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 18em;
+  background-color: #fff;
+  padding: 1em;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+}
+.ol-ext-print-dialog .ol-print-param h2 {
+  display: block;
+  color: rgba(0,60,136,.7);
+  font-size: 1.1em;
+}
+.ol-ext-print-dialog .ol-print-param ul {
+  padding: 0;
+  list-style: none;
+}
+.ol-ext-print-dialog .ol-print-param li {
+  margin: .5em 0;
+  font-size: .9em;
+}
+.ol-ext-print-dialog .ol-print-param label {
+  width: 7em;
+  display: inline-block;
+}
+
+.ol-ext-print-dialog select {
+  outline: none;
+}
+
+.ol-ext-print-dialog .ol-saveas {
+  text-align: center;
+}
+.ol-ext-print-dialog .ol-saveas select {
+  background-color: rgba(0,60,136,.7);
+  color: #fff;
+  padding: .5em 1em;
+  font-size: 1em;
+  border: 0;
+  font-weight: bold;
+}
+.ol-ext-print-dialog .ol-saveas select option {
+  background-color: #fff;
+  color: #666;
+}
+
+.ol-ext-print-dialog .ol-ext-buttons {
+  text-align: right;
+  border-top: 1px solid #ccc;
+  padding: .8em .5em;
+  margin: 0 -1em;
+}
+.ol-ext-print-dialog button {
+  font-size: 1em;
+  margin: 0 .2em;
+  border: 1px solid #999;
+  background: none;
+  padding: .3em 1em;
+  color: #333;
+}
+.ol-ext-print-dialog button[type="submit"] {
+  background-color: rgba(0,60,136,.7);
+  color: #fff;
+  font-weight: bold;
+}
+
+@media print {
+  body.ol-print-document {
+    margin: 0!important;
+    padding: 0!important;
+  }
+  body.ol-print-document > * {
+    display: none!important;
+  }
+  body.ol-print-document > .ol-ext-print-dialog {
+    display: block!important;
+  }
+  .ol-ext-print-dialog > form,
+  .ol-ext-print-dialog {
+    position: unset;
+    -webkit-box-shadow: none;
+            box-shadow: none;
+    background: none!important;
+    border: 0;
+  }
+  .ol-ext-print-dialog > form > *,
+  .ol-ext-print-dialog .ol-print-param {
+    display: none!important;
+    background: none;
+  } 
+  .ol-ext-print-dialog .ol-content {
+    display: block!important;
+    border: 0;
+    background: none;
+  }
+  .ol-ext-print-dialog .ol-print-map {
+    position: unset;
+    background: none;
+    width: auto;
+    overflow: visible;
+  }
+  .ol-ext-print-dialog .ol-print-map > div {
+    -webkit-transform: none!important;
+            transform: none!important;
+    -webkit-box-shadow: none!important;
+            box-shadow: none!important;
+    position: unset;
+  }
+}
+
 .ol-profil {
   position: relative;
   -webkit-user-select: none;

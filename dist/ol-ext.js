@@ -573,7 +573,7 @@ ol.ext.element.offsetRect = function(elt) {
     top: rect.top + (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0),
     left: rect.left + (window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft || 0),
     height: rect.height || (rect.bottom - rect.top),
-    width: rect.widtth || (rect.right - rect.left)
+    width: rect.width || (rect.right - rect.left)
   }
 };
 /** Make a div scrollable without scrollbar.
@@ -1200,6 +1200,7 @@ if (window.ol && !ol.legend) {
 /** Legend class to draw features in a legend element
  * @constructor
  * @fires select
+ * @fires refresh
  * @param {*} options
  *  @param {String} options.title Legend title
  *  @param {ol.size | undefined} options.size Size of the symboles in the legend, default [40, 25]
@@ -1246,7 +1247,15 @@ ol.legend.Legend = function(options) {
   this._canvas = document.createElement('canvas');
   this.set('size', options.size || [40, 25], true);
   this.set('margin', options.margin===0 ? 0 : options.margin || 10, true);
-  this._font = options.font || new ol.style.Text({ font: '16px sans-serif' });
+  this._textStyle = options.textStyle || new ol.style.Text({ 
+    font: '16px sans-serif',
+    fill: new ol.style.Fill({
+      color: '#333'
+    }),
+    backgroundFill: new ol.style.Fill({
+      color: 'rgba(255,255,255,.8)'
+    })
+  });
   this._title = new ol.legend.Item({ title: options.title || '', className: 'ol-title' });
   this.setStyle(options.style);
   this.refresh();
@@ -1264,6 +1273,12 @@ ol.legend.Legend.prototype.setTitle = function(title) {
  */
 ol.legend.Legend.prototype.getTitle = function() {
   return this._title.get('title');
+};
+/** Get text Style
+ * @returns {ol.style.Text}
+ */
+ol.legend.Legend.prototype.getTextStyle = function() {
+  return this._textStyle;
 };
 /** Set legend size
  * @param {ol.size} size
@@ -1352,14 +1367,14 @@ ol.legend.Legend.prototype.refresh = function() {
   ctx.textBaseline = 'middle';
   var ratio = ol.has.DEVICE_PIXEL_RATIO;
   // Calculate width
-  ctx.font = 'bold ' + this._font.getFont();
+  ctx.font = 'bold ' + this._textStyle.getFont();
   var textWidth = this._measureText(ctx, this.getTitle('title')).width;
   this._items.forEach(function(r) {
     if (r.get('feature') || r.get('typeGeom') ) {
-      ctx.font = this._font.getFont();
+      ctx.font = this._textStyle.getFont();
       textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width + width);
     } else {
-      ctx.font = 'bold ' + this._font.getFont();
+      ctx.font = 'bold ' + this._textStyle.getFont();
       textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width);
     }
   }.bind(this));
@@ -1367,6 +1382,7 @@ ol.legend.Legend.prototype.refresh = function() {
   canvas.height = (this._items.getLength()+1) * height * ratio;
   canvas.style.height = ((this._items.getLength()+1) * height) + 'px';
   ctx.textBaseline = 'middle';
+  ctx.fillStyle = ol.color.asString(this._textStyle.getFill().getColor());
   // Add Title
   if (this.getTitle()) {
     table.appendChild(this._title.getElement([width, height], function(b) {
@@ -1377,7 +1393,7 @@ ol.legend.Legend.prototype.refresh = function() {
         item: this._title
       });
     }.bind(this)));
-    ctx.font = 'bold ' + this._font.getFont();
+    ctx.font = 'bold ' + this._textStyle.getFont();
     ctx.textAlign = 'center';
     this._drawText(ctx, this.getTitle(), canvas.width/ratio/2, height/2);
   }
@@ -1396,10 +1412,10 @@ ol.legend.Legend.prototype.refresh = function() {
     ctx.textAlign = 'left';
     if (item.feature || item.typeGeom) {
       canvas = this.getLegendImage(item, canvas, index);
-      ctx.font = this._font.getFont();
+      ctx.font = this._textStyle.getFont();
       this._drawText(ctx, r.get('title'), width + margin, (i+1.5)*height);
     } else {
-      ctx.font = 'bold ' + this._font.getFont();
+      ctx.font = 'bold ' + this._textStyle.getFont();
       if (/\bcenter\b/.test(item.className)) {
         ctx.textAlign = 'center';
         this._drawText(ctx, r.get('title'), canvas.width/ratio/2, (i+1.5)*height);
@@ -4830,6 +4846,12 @@ ol.control.Dialog.prototype.setContent = function(options) {
     form.classList.remove('ol-button');
   }
 };
+/** Get dialog content element 
+ * @returns {Element}
+ */
+ol.control.Dialog.prototype.getContentElement = function() {
+  return this.element.querySelector('form .ol-content')
+};
 /** Set progress
  * @param {number} val
  * @param {number} max
@@ -7155,11 +7177,15 @@ ol.control.Legend.prototype._draw = function (e) {
     var h = ctx.canvas.height - canvas.height;
     ctx.save();
       ctx.rect(0, h, canvas.width, canvas.height);
-      ctx.fillStyle = '#fff';
-      ctx.strokeStyle = '#fff';
+      var col = '#fff';
+      if (this._legend.getTextStyle().getBackgroundFill()) {
+        col = ol.color.asString(this._legend.getTextStyle().getBackgroundFill().getColor());
+      }
+      ctx.fillStyle = ctx.strokeStyle = col;
       ctx.lineWidth = 10;
       ctx.lineJoin = 'round';
       ctx.stroke();
+      ctx.clearRect(0, h, canvas.width, canvas.height);
       ctx.fill();
       ctx.drawImage(canvas, 0, h);
       ctx.restore();
@@ -8150,7 +8176,6 @@ ol.control.Permalink.prototype.layerChange_ = function() {
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Print control to get an image of the map
- *
  * @constructor
  * @fire print
  * @fire error
@@ -8338,6 +8363,312 @@ ol.control.Print.prototype.print = function(options) {
     }.bind(this));
     this.getMap().render();
   }
+};
+
+/*
+  Copyright (c) 2019 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Print control to get an image of the map
+ * @constructor
+ * @fire print
+ * @fire error
+ * @fire printing
+ * @extends {ol.control.Control}
+ * @param {Object=} options Control options.
+ *	@param {String} options.className class of the control
+ *	@param {string} options.imageType A string indicating the image format, default image/jpeg
+ *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
+ *	@param {string} options.orientation Page orientation (landscape/portrait), default guest the best one
+ *	@param {boolean} options.immediate force print even if render is not complete,  default false
+ */
+ol.control.PrintDialog = function(options) {
+  if (!options) options = {};
+  var element = ol.ext.element.create('DIV', {
+    className: (options.className || 'ol-print') + ' ol-unselectable ol-control'
+  });
+  ol.ext.element.create('BUTTON', {
+    type: 'button',
+    click: function() { this.print(); }.bind(this),
+    parent: element
+  });
+  ol.control.Control.call(this, {
+    element: element
+  });
+  // Print control
+  options.target = ol.ext.element.create('DIV');
+  var printCtrl = this._printCtrl = new ol.control.Print(options);
+  // Print dialog
+  var printDialog = this._printDialog = new ol.control.Dialog({
+    target: document.body,
+    closeBox: true,
+    className: 'ol-ext-print-dialog'
+  });
+  var content = printDialog.getContentElement();
+  this._select = {};
+  var param = ol.ext.element.create('DIV',{
+    className: 'ol-print-param',
+    parent: content
+  });
+  var printMap = this.printElement = ol.ext.element.create('DIV');
+  ol.ext.element.create('DIV', {
+    html: printMap,
+    className: 'ol-print-map',
+    parent: content
+  });
+  ol.ext.element.create('H2',{
+    html: options.printLabel || 'Print',
+    parent: param
+  });
+  var ul = ol.ext.element.create('UL',{ parent: param });
+  // Orientation
+  var li = ol.ext.element.create('LI', { 
+    html: ol.ext.element.create('LABEL', {
+      html: options.orientationLabel || 'Orientation'
+    }),
+    className: 'ol-orientation',
+    parent: ul 
+  });
+  var ori = this._select.orientation = ol.ext.element.create('SELECT', {
+    parent: li,
+    on: { change: function(e) { 
+      this.setOrientation(e.target.value);
+    }.bind(this) }
+  });
+  ol.ext.element.create('OPTION',{
+    html: options.portraitLabel || 'Portrait',
+    value: 'portrait',
+    parent: ori
+  });
+  ol.ext.element.create('OPTION',{
+    html: options.portraitLabel || 'Landscape',
+    value: 'landscape',
+    parent: ori
+  });
+  // Page size
+  li = ol.ext.element.create('LI',{ 
+    html: ol.ext.element.create('LABEL', {
+      html: options.orientationLabel || 'Page size',
+    }),
+    className: 'ol-size',
+    parent: ul 
+  });
+  var size = this._select.size = ol.ext.element.create('SELECT', {
+    on: { change: function(){
+      this.setSize(size.value || originalSize);
+    }.bind(this) },
+    parent: li
+  });
+  for (var s in this.paperSize) {
+    ol.ext.element.create('OPTION', {
+      html: s + (this.paperSize[s] ? ' - '+this.paperSize[s][0]+'x'+this.paperSize[s][1]+' mm' : ''),
+      value: s,
+      parent: size
+    });
+  }
+  // Margin
+  li = ol.ext.element.create('LI',{ 
+    html: ol.ext.element.create('LABEL', {
+      html: options.marginLabel || 'Margin',
+    }),
+    className: 'ol-margin',
+    parent: ul 
+  });
+  var margin = this._select.margin = ol.ext.element.create('SELECT', {
+    on: { change: function(){
+      this.setMargin(margin.value);
+    }.bind(this) },
+    parent: li
+  });
+  for (var s in this.marginSize) {
+    ol.ext.element.create('OPTION', {
+      html: s + ' - ' + this.marginSize[s] + ' mm',
+      value: this.marginSize[s],
+      parent: margin
+    });
+  }
+  // Save as
+  li = ol.ext.element.create('LI',{ 
+    className: 'ol-saveas',
+    parent: ul 
+  });
+  var save = ol.ext.element.create('SELECT', {
+    on: { change: function() {
+      console.log(save.value)
+      save.value = '';
+    }.bind(this) },
+    parent: li
+  });
+  ol.ext.element.create('OPTION', {
+    html: options.saveasLabel || 'Save as...',
+    style: { display: 'none' },
+    value: '',
+    parent: save
+  });
+  for (var s in this.formats) {
+    ol.ext.element.create('OPTION', {
+      html: this.formats[s],
+      value: s,
+      parent: save
+    });
+  }
+  // Print
+  var prButtons = ol.ext.element.create('DIV', {
+    className: 'ol-ext-buttons',
+    parent: param
+  });
+  ol.ext.element.create('BUTTON', {
+    html: options.printLabelBt || 'Print...',
+    type: 'submit',
+    click: function() { window.print(); },
+    parent: prButtons
+  });
+  ol.ext.element.create('BUTTON', {
+    html: options.cancelLabelBt || 'cancel',
+    type: 'reset',
+    click: function() { printDialog.hide(); },
+    parent: prButtons
+  });
+  // Handle dialog show/hide
+  var originalTarget;
+  var originalSize;
+  printDialog.on('show', function() {
+    var map = this.getMap();
+    if (!map) return;
+    document.body.classList.add('ol-print-document');
+    originalTarget = map.getTargetElement();
+    originalSize = map.getSize();
+    this.setSize(this._size || originalSize);
+    map.setTarget(printMap);
+  }.bind(this));
+  printDialog.on('hide', function() {
+    document.body.classList.remove('ol-print-document');
+    if (!originalTarget) return;
+    this.getMap().setTarget(originalTarget);
+    originalTarget = null;
+  }.bind(this));
+  // Update preview on resize
+  window.addEventListener('resize', function() {
+    this.setSize();
+  }.bind(this));
+};
+ol.ext.inherits(ol.control.PrintDialog, ol.control.Control);
+/** List of paper size */
+ol.control.PrintDialog.prototype.paperSize = {
+  '': null,
+  'A0': [841,1189],
+  'A1': [594,841],
+  'A2': [420,594],
+  'A3': [297,420],
+  'A4': [210,297],
+  'A5': [148,210],
+  'B4': [257,364],
+  'B5': [182,257]
+};
+/** List of margin size */
+ol.control.PrintDialog.prototype.marginSize = {
+  none: 0,
+  small: 5,
+  large: 10
+};
+/** List of print formats */
+ol.control.PrintDialog.prototype.formats = {
+  jpeg: 'save as jpeg',
+  png: 'save as png',
+  pdf: 'save as pdf'
+};
+/** Get print orientation
+ * @returns {string}
+ */
+ol.control.PrintDialog.prototype.getOrientation = function () {
+  return this._orientation;
+};
+/** Set print orientation
+ * @param {string}
+ */
+ol.control.PrintDialog.prototype.setOrientation = function (ori) {
+  this._orientation = (ori==='landscape' ? 'landscape' : 'portrait');
+  this._select.orientation.value = this._orientation;
+  this.setSize();
+};
+/** Get print margin
+ * @returns {number}
+ */
+ol.control.PrintDialog.prototype.getMargin = function () {
+  return this._margin;
+};
+/** Set print margin
+ * @param {number}
+ */
+ol.control.PrintDialog.prototype.setMargin = function (margin) {
+  this._margin = margin;
+  this._select.margin.value = margin;
+  this.setSize();
+};
+/** Get print size
+ * @returns {ol.size}
+ */
+ol.control.PrintDialog.prototype.getSize = function () {
+  return this._size;
+};
+/** Set map print size
+ * @param {ol/size} size
+ */
+ol.control.PrintDialog.prototype.setSize = function (size) {
+  if (size) this._size = size;
+  else size = this._size;
+  if (!size) return;
+  if (typeof(size) === 'string') {
+    if (!this.paperSize[size]) size = this._size = 'A4';
+    this._select.size.value = size;
+    size = [
+      Math.trunc(this.paperSize[size][0]* 96/25.4),
+      Math.trunc(this.paperSize[size][1]* 96/25.4)
+    ]
+    if (this._orientation === 'landscape') {
+      size = [size[1], size[0]];
+    }
+    this._select.orientation.disabled = false;
+  } else {
+    this._select.size.value = '';
+    this._select.orientation.disabled = true;
+  }
+  var s = this.printElement.parentNode.getBoundingClientRect();
+  var scx = (s.width - 40) / size[0];
+  var scy = (s.height - 40) / size[1];
+  var sc = Math.min(scx, scy, 1);
+  this.printElement.style.width = size[0]+'px';
+  this.printElement.style.height = size[1]+'px';
+  this.printElement.style['-webkit-transform'] = 
+  this.printElement.style.transform = 'translate(-50%,-50%) scale('+sc+')';
+  var px = Math.round(5/sc);
+  this.printElement.style['-webkit-box-shadow'] = 
+  this.printElement.style['box-shadow'] = px+'px '+px+'px '+px+'px rgba(0,0,0,.6)';
+  this.printElement.style['padding'] = (this.getMargin() * 96/25.4)+'px';
+  this.getMap().updateSize();
+};
+/**
+ * Remove the control from its current map and attach it to the new map.
+ * Subclasses may set up event handlers to get notified about changes to
+ * the map here.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ol.control.PrintDialog.prototype.setMap = function (map) {
+  if (this.getMap()) {
+    this.getMap().removeControl(this._printCtrl);
+    this.getMap().removeControl(this._printDialog);
+  }
+  ol.control.Control.prototype.setMap.call(this, map);
+  if (this.getMap()) {
+    this.getMap().addControl(this._printCtrl);
+    this.getMap().addControl(this._printDialog);
+  }
+};
+/** Show print dialog */
+ol.control.PrintDialog.prototype.print = function() {
+  this._printDialog.show();
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
