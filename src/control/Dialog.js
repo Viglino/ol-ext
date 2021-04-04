@@ -161,6 +161,13 @@ ol_control_Dialog.prototype.setContent = function(options) {
   }
 };
 
+/** Get dialog content element 
+ * @returns {Element}
+ */
+ol_control_Dialog.prototype.getContentElement = function() {
+  return this.element.querySelector('form .ol-content')
+};
+
 /** Set progress
  * @param {number} val
  * @param {number} max

@@ -9,7 +9,6 @@ import ol_control_Control from 'ol/control/Control'
 import ol_ext_element from '../util/element'
 
 /** Print control to get an image of the map
- *
  * @constructor
  * @fire print
  * @fire error

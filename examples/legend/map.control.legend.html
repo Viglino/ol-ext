@@ -119,6 +119,17 @@
     }),
     layers: [layer]
   });
+  // Print control
+  var printControl = new ol.control.PrintDialog();
+  map.addControl(printControl);
+  printControl.on('print', function(e) {
+    // Print success
+    if (e.canvas) {
+      window.open().document.write('<img src="'+e.canvas.toDataURL()+'"/>');
+    } else {
+      console.warn('No canvas to export');
+    }
+  });
 
   // Style function
   function getFeatureStyle (feature) {
