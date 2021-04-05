@@ -8588,9 +8588,12 @@ ol.control.PrintDialog = function(options) {
     on: { change: function() {
       // Copy to clipboard
       if (this.formats[save.value].clipboard) {
-        printCtrl.copyMap(this.formats[save.value]);
-        copied.classList.add('visible');
-        setTimeout(function() { copied.classList.remove('visible'); }, 1000);
+        printCtrl.copyMap(this.formats[save.value], function(isok) {
+          if (isok) {
+            copied.classList.add('visible');
+            setTimeout(function() { copied.classList.remove('visible'); }, 1000);
+          }
+        });
       } else {
         // Print to file
         var format = (typeof(this.getSize())==='string' ? this.getSize() : null);
@@ -8713,6 +8716,7 @@ ol.control.PrintDialog.prototype.labels = {
   size: 'Page size',
   margin: 'Margin',
   scale: 'Scale',
+  legend: 'Legend',
   saveas: 'Save as...',
   copied: '✔ Copied to clipboard',
   errorMsg: 'Can\'t save map canvas...',
