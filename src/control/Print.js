@@ -52,6 +52,7 @@ ol_ext_inherits(ol_control_Print, ol_control_Control);
 /** Helper function to copy result to clipboard
  * @param {Event} e print event
  * @return {boolean}
+ * @private
  */
 ol_control_Print.prototype.toClipboard = function(e, callback) {
   try {
@@ -92,6 +93,10 @@ ol_control_Print.prototype.copyMap = function(options, callback) {
  *	@param {string} options.imageType A string indicating the image format, default the control one
  *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
  *  @param {boolean} options.immediate true to prevent delay for printing
+ *  @param {boolean} [options.size=[210,297]] 
+ *  @param {boolean} [options.format=a4]
+ *  @param {boolean} [options.orient] default control orientation
+ *  @param {boolean} [options.margin=10]
  *  @param {*} options.any any options passed to the print event when fired
  * @api
  */
@@ -155,10 +160,11 @@ ol_control_Print.prototype.print = function(options) {
         }.bind(this));
       }
       // Calculate print format
-      var size = [210,297], format = 'a4';
+      var size = options.size || [210,297];
+      var format = options.format || 'a4';
       var w, h, position;
       var orient = options.orient || this.get('orientation');
-      var margin = options.margin || 10;
+      var margin = typeof(options.margin)==='number' ? options.margin : 10;
       if (canvas) {
         // Calculate size
         if (orient!=='landscape' && orient!=='portrait') {

@@ -9,6 +9,7 @@ import ol_ext_inherits from '../util/ext'
 import ol_control_Control from 'ol/control/Control'
 import ol_ext_element from '../util/element'
 import ol_control_Dialog from './Dialog';
+import ol_control_Print from './Print'
 import {getMapScale as ol_sphere_getMapScale} from '../geom/sphere'
 import {setMapScale as ol_sphere_setMapScale} from '../geom/sphere'
 
@@ -33,7 +34,9 @@ var ol_control_PrintDialog = function(options) {
   });
   ol_ext_element.create('BUTTON', {
     type: 'button',
-    click: function() { this.print(); }.bind(this),
+    click: function() { 
+      this.print(); 
+    }.bind(this),
     parent: element
   });
   ol_control_Control.call(this, {
@@ -43,6 +46,12 @@ var ol_control_PrintDialog = function(options) {
   // Print control
   options.target = ol_ext_element.create('DIV');
   var printCtrl = this._printCtrl = new ol_control_Print(options);
+  printCtrl.on(['print','error','printing'], function(e) {
+    content.setAttribute('data-status', e.type);
+    if (!e.clipboard) {
+      this.dispatchEvent(e);
+    }
+  }.bind(this));
 
   // Print dialog
   var printDialog = this._printDialog = new ol_control_Dialog({
@@ -69,7 +78,7 @@ var ol_control_PrintDialog = function(options) {
     parent: content
   });
   ol_ext_element.create('H2',{
-    html: options.printLabel || 'Print',
+    html: this.labels.title || 'Print',
     parent: param
   });
   var ul = ol_ext_element.create('UL',{ parent: param });
@@ -77,7 +86,7 @@ var ol_control_PrintDialog = function(options) {
   // Orientation
   var li = ol_ext_element.create('LI', { 
     html: ol_ext_element.create('LABEL', {
-      html: options.orientationLabel || 'Orientation'
+      html: this.labels.orientation || 'Orientation'
     }),
     className: 'ol-orientation',
     parent: ul 
@@ -89,12 +98,12 @@ var ol_control_PrintDialog = function(options) {
     }.bind(this) }
   });
   ol_ext_element.create('OPTION',{
-    html: options.portraitLabel || 'Portrait',
+    html: this.labels.portrait || 'Portrait',
     value: 'portrait',
     parent: ori
   });
   ol_ext_element.create('OPTION',{
-    html: options.portraitLabel || 'Landscape',
+    html: this.labels.landscape || 'Landscape',
     value: 'landscape',
     parent: ori
   });
@@ -102,7 +111,7 @@ var ol_control_PrintDialog = function(options) {
   // Page size
   li = ol_ext_element.create('LI',{ 
     html: ol_ext_element.create('LABEL', {
-      html: options.orientationLabel || 'Page size',
+      html: this.labels.size || 'Page size',
     }),
     className: 'ol-size',
     parent: ul 
@@ -124,7 +133,7 @@ var ol_control_PrintDialog = function(options) {
   // Margin
   li = ol_ext_element.create('LI',{ 
     html: ol_ext_element.create('LABEL', {
-      html: options.marginLabel || 'Margin',
+      html: this.labels.margin || 'Margin',
     }),
     className: 'ol-margin',
     parent: ul 
@@ -146,7 +155,7 @@ var ol_control_PrintDialog = function(options) {
   // Scale
   li = ol_ext_element.create('LI',{ 
     html: ol_ext_element.create('LABEL', {
-      html: options.scaleLabel || 'Scale',
+      html: this.labels.scale || 'Scale',
     }),
     className: 'ol-scale',
     parent: ul 
@@ -170,26 +179,46 @@ var ol_control_PrintDialog = function(options) {
     className: 'ol-saveas',
     parent: ul 
   });
+  var copied = ol_ext_element.create('DIV', {
+    html: this.labels.copied || 'Copied to clipboard',
+    className: 'ol-clipboard-copy',
+    parent: li
+  });
   var save = ol_ext_element.create('SELECT', {
     on: { change: function() {
-      console.log(save.value)
+      // Copy to clipboard
+      if (this.formats[save.value].clipboard) {
+        printCtrl.copyMap(this.formats[save.value]);
+        copied.classList.add('visible');
+        setTimeout(function() { copied.classList.remove('visible'); }, 1000);
+      } else {
+        // Print to file
+        var format = (typeof(this.getSize())==='string' ? this.getSize() : null);
+        var opt = Object.assign({
+          format: format,
+          size: format ? this.paperSize[format] : null,
+          orient: this.getOrientation(),
+          margin: this.getMargin(),
+        }, this.formats[save.value]);
+        printCtrl.print(opt);
+      }
       save.value = '';
     }.bind(this) },
     parent: li
   });
   ol_ext_element.create('OPTION', {
-    html: options.saveasLabel || 'Save as...',
+    html: this.labels.saveas || 'Save as...',
     style: { display: 'none' },
     value: '',
     parent: save
   });
-  for (var s in this.formats) {
+  this.formats.forEach(function(format, i) {
     ol_ext_element.create('OPTION', {
-      html: this.formats[s],
-      value: s,
+      html: format.title,
+      value: i,
       parent: save
     });
-  }
+  });
 
   // Print
   var prButtons = ol_ext_element.create('DIV', {
@@ -197,16 +226,24 @@ var ol_control_PrintDialog = function(options) {
     parent: param
   });
   ol_ext_element.create('BUTTON', {
-    html: options.printLabelBt || 'Print...',
+    html: this.labels.print || 'Print...',
     type: 'submit',
-    click: function() { window.print(); },
+    click: function(e) { 
+      e.preventDefault();
+      window.print();
+    },
     parent: prButtons
   });
   ol_ext_element.create('BUTTON', {
-    html: options.cancelLabelBt || 'cancel',
+    html: this.labels.cancel || 'cancel',
     type: 'reset',
     click: function() { printDialog.hide(); },
     parent: prButtons
+  });
+  var prButtons = ol_ext_element.create('DIV', {
+    html: this.labels.errorMsg,
+    className: 'ol-error',
+    parent: param
   });
 
   // Handle dialog show/hide
@@ -219,7 +256,7 @@ var ol_control_PrintDialog = function(options) {
     document.body.classList.add('ol-print-document');
     originalTarget = map.getTargetElement();
     originalSize = map.getSize();
-    if (typeof(this.size) === 'string') this.setSize(this._size);
+    if (typeof(this.getSize()) === 'string') this.setSize(this.getSize());
     else this.setSize(originalSize);
     map.setTarget(printMap);
     if (scalelistener) ol_Observable_unByKey(scalelistener);
@@ -240,8 +277,28 @@ var ol_control_PrintDialog = function(options) {
   window.addEventListener('resize', function() {
     this.setSize();
   }.bind(this));
+  // Close on after print 
+  window.addEventListener('afterprint', function() {
+    printDialog.hide();
+  });
 };
 ol_ext_inherits(ol_control_PrintDialog, ol_control_Control);
+
+/** Print dialog labels (for customisation) */
+ol_control_PrintDialog.prototype.labels = {
+  title: 'Print',
+  orientation: 'Orientation',
+  portrait: 'Portrait',
+  landscape: 'Landscape',
+  size: 'Page size',
+  margin: 'Margin',
+  scale: 'Scale',
+  saveas: 'Save as...',
+  copied: '✔ Copied to clipboard',
+  errorMsg: 'Can\'t save map canvas...',
+  printBt: 'Print...',
+  cancel: 'cancel'
+};
 
 /** List of paper size */
 ol_control_PrintDialog.prototype.paperSize = {
@@ -263,16 +320,29 @@ ol_control_PrintDialog.prototype.marginSize = {
   large: 10
 };
 
-/** List of print formats */
-ol_control_PrintDialog.prototype.formats = {
-  jpeg: 'save as jpeg',
-  png: 'save as png',
-  pdf: 'save as pdf'
-};
+/** List of print image file formats */
+ol_control_PrintDialog.prototype.formats = [{
+    title: 'copy to clipboard',
+    imageType: 'image/png',
+    clipboard: true
+  }, {
+    title: 'save as jpeg',
+    imageType: 'image/jpeg',
+    quality: .8
+  }, {
+    title: 'save as png',
+    imageType: 'image/png',
+    quality: .8
+  }, {
+    title: 'save as pdf',
+    imageType: 'image/jpeg',
+    pdf: true
+  }
+];
 
 /** List of print scale */
 ol_control_PrintDialog.prototype.scales = {
-  '': '',
+  '': '',   // Use default map scale
   ' 5000': '1/5.000',
   ' 10000': '1/10.000',
   ' 25000': '1/25.000',
@@ -286,7 +356,7 @@ ol_control_PrintDialog.prototype.scales = {
  * @returns {string}
  */
 ol_control_PrintDialog.prototype.getOrientation = function () {
-  return this._orientation;
+  return this._orientation || 'portrait';
 };
 
 /** Set print orientation
@@ -302,7 +372,7 @@ ol_control_PrintDialog.prototype.setOrientation = function (ori) {
  * @returns {number}
  */
 ol_control_PrintDialog.prototype.getMargin = function () {
-  return this._margin;
+  return this._margin || 0;
 };
 
 /** Set print margin
@@ -325,6 +395,9 @@ ol_control_PrintDialog.prototype.getSize = function () {
  * @param {ol/size} size
  */
 ol_control_PrintDialog.prototype.setSize = function (size) {
+  // reset status
+  this._printDialog.getContentElement().setAttribute('data-status','');
+  
   if (size) this._size = size;
   else size = this._size;
   if (!size) return;
@@ -360,7 +433,7 @@ ol_control_PrintDialog.prototype.setSize = function (size) {
   printElement.style['-webkit-box-shadow'] = 
   printElement.style['box-shadow'] = px+'px '+px+'px '+px+'px rgba(0,0,0,.6)';
   printElement.style['padding'] = (this.getMargin() * 96/25.4)+'px';
-  this.getMap().updateSize();
+  if (this.getMap()) this.getMap().updateSize();
 };
 
 /** Get page element

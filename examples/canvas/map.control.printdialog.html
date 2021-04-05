@@ -5,7 +5,7 @@
   Copyright (c) 2019 Jean-Marc VIGLINO, 
   released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 -->
-  <title>ol-ext: print control</title>
+  <title>ol-ext: print dialog</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 	<meta name="description" content="Print control for Openlayers" />
@@ -46,10 +46,10 @@
   <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
   <a href="../../index.html">
-    <h1>ol-ext: print control</h1>
+    <h1>ol-ext: print dialog</h1>
   </a>
   <div class="info">
-    The <b>ol.control.Print</b> is a control to export a map as an image.
+    The <b>ol.control.PrintDialog</b> is a control to export a map as an image.
     <br/>
     Use <a href="https://github.com/eligrey/FileSaver.js/">eligrey/FileSaver</a> 
     or <a href="https://github.com/MrRio/jsPDF">MrRio/jsPDF</a>
@@ -66,72 +66,32 @@
   </div>
 
   <!-- Map div -->
-  <div id="map" style="width:600px; height:400px;"></div>
-
-  <div class="options">
-    <h2>Options:</h2>
-    <ul><li>
-        <label><input id="file" type="checkbox" /> save as file</label>
-    </li></ul>
-    <a id="export-jpg" class="btn" download="map.jpg" target="_new" onclick="printControl.print({ imageType: 'image/jpeg'})">
-      Export JPEG
-    </a>
-    <a id="export-png" class="btn" download="map.png" target="_new" onclick="printControl.print({ imageType: 'image/png'})">
-      Export PNG
-    </a>
-    <a id="export-pdf" class="btn" download="map.pdf" data-margin="10" target="_new" onclick="printControl.print({ imageType: 'image/jpeg', pdf:true })">
-      Export PDF
-    </a>
-    <a id="copy" class="btn" download="map.pdf" data-margin="10" target="_new" onclick="printControl.copyMap({ imageType: 'image/jpeg' })">
-      Copy to Clipboard
-    </a>
-  </div>
-  <div id='image'>
-    <h2>Resulting image</h2>
-    <img/>
-  </div>
+  <div id="map" style="width:100%; height:calc(100vh - 5em);"></div>
 
   <script type="text/javascript">
 
     // The map
     var map = new ol.Map({
-        target: 'map',
-        view: new ol.View ({
-          zoom: 5,
-          center: [266812, 5960201]
-        }),
-        controls: ol.control.defaults({ "attribution": false }),
-        layers: [
-          new ol.layer.Tile({ title:'Waterolor', source: new ol.source.Stamen({ layer: 'watercolor' }) }),
-          new ol.layer.Tile({ title:'Labels', source: new ol.source.Stamen({ layer: 'toner-labels' }) })
-        ]
-      });
-
+      target: 'map',
+      view: new ol.View ({
+        zoom: 5,
+        center: [266812, 5960201]
+      }),
+      controls: ol.control.defaults({ "attribution": false }),
+      layers: [
+        new ol.layer.Tile({ title:'Waterolor', source: new ol.source.Stamen({ layer: 'watercolor' }) }),
+        new ol.layer.Tile({ title:'Labels', source: new ol.source.Stamen({ layer: 'toner-labels' }) })
+      ]
+    });
     map.addControl(new ol.control.LayerSwitcher());
 
-    // GeoJSON vector layer
-    var vector = new ol.layer.Vector({
-      name: '1914-18',
-      source: new ol.source.Vector({
-        url: '../data/fond_guerre.geojson',
-        projection: 'EPSG:3857',
-        format: new ol.format.GeoJSON(),
-        attributions: [ '&copy; <a href="https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire">data.culture.gouv.fr</a>' ]
-      })
-    });
-
-    map.addLayer(vector);
-
     // Print control
-    var printControl = new ol.control.Print();
+    var printControl = new ol.control.PrintDialog();
+    printControl.setSize('A4');
     map.addControl(printControl);
 
     /* On print > save image file */
-    printControl.on('printing', function(e) {
-      $('body').css('opacity', .5);
-    });
     printControl.on(['print', 'error'], function(e) {
-      $('body').css('opacity', 1);
       // Print success
       if (e.image) {
         if (e.pdf) {
@@ -142,15 +102,12 @@
             format: e.print.size
           });
           pdf.addImage(e.image, 'JPEG', e.print.position[0], e.print.position[0], e.print.imageWidth, e.print.imageHeight);
-          pdf.save();
+          pdf.save('map.pdf');
         } else  {
-          if ($('#file').prop('checked')) {
-            e.canvas.toBlob(function(blob) {
-              saveAs(blob, 'map.'+e.imageType.replace('image/',''));
-            }, e.imageType);
-          } else {
-            $('#image img').attr('src', e.image);
-          }
+          // Save image as file
+          e.canvas.toBlob(function(blob) {
+            saveAs(blob, 'map.'+e.imageType.replace('image/',''));
+          }, e.imageType);
         }
       } else {
         console.warn('No canvas to export');
