@@ -2475,7 +2475,7 @@ ul.ol-legend li div {
   text-align: center;
   padding: 1em .5em;
   font-weight: bold;
-  border: 2px solid orange;
+  margin: 0 -1em;
 }
 .ol-ext-print-dialog .ol-content[data-status="error"] .ol-error {
   display: block;
@@ -2527,6 +2527,7 @@ ul.ol-legend li div {
 
 .ol-ext-print-dialog .ol-print-param {
   position: absolute;
+  overflow: hidden;
   top: 0;
   bottom: 0;
   left: 0;

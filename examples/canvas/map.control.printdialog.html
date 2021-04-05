@@ -87,7 +87,7 @@
     legend.addItem({ title: 'Line', typeGeom: 'LineString', style: ol.style.Style.defaultStyle() });
     legend.addItem({ title: 'Polygon', typeGeom: 'Polygon', style: ol.style.Style.defaultStyle() });
     var legendCtrl = new ol.control.Legend({ legend: legend });
-    //map.addControl(legendCtrl);
+    map.addControl(legendCtrl);
 
     // Print control
     var printControl = new ol.control.PrintDialog();
