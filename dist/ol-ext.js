@@ -7162,10 +7162,16 @@ ol.control.Legend.prototype.getLegend = function () {
 /** Draw control on canvas
  * @param {boolean} b draw on canvas.
  */
- ol.control.Legend.prototype.setCanvas = function (b) {
+ol.control.Legend.prototype.setCanvas = function (b) {
   this._onCanvas = b;
   this.element.style.visibility = b ? "hidden":"visible";
   if (this.getMap()) this.getMap().renderSync();
+};
+/** Is control on canvas
+ * @returns {boolean}
+ */
+ol.control.Legend.prototype.onCanvas = function () {
+  return !!this._onCanvas;
 };
 /** Draw legend on canvas
  * @private
@@ -7208,6 +7214,19 @@ ol.control.Legend.prototype.hide = function() {
     this.dispatchEvent({ type:'change:collapse', collapsed: true });
     if (this.getMap()) this.getMap().renderSync();
   }
+};
+/** Show/hide control
+ * @returns {boolean}
+ */
+ol.control.Legend.prototype.collapse = function(b) {
+  if (b===false) this.show();
+  else this.hide();
+};
+/** Is control collapsed
+ * @returns {boolean}
+ */
+ol.control.Legend.prototype.isCollapsed = function() {
+  return (this.element.classList.contains('ol-collapsed'));
 };
 /** Toggle control
  */
@@ -8529,6 +8548,32 @@ ol.control.PrintDialog = function(options) {
       parent: scale
     });
   }.bind(this));
+  // Legend
+  li = ol.ext.element.create('LI',{ 
+    html: ol.ext.element.create('LABEL', {
+      html: this.labels.legend || 'Legend',
+    }),
+    className: 'ol-legend',
+    parent: ul 
+  });
+  var legend = ol.ext.element.create('SELECT', {
+    on: { change: function() {
+      legendCtrl.setCanvas(legend.value === 'on');
+    }.bind(this) },
+    parent: li
+  });
+  for (s in this.legendOptions) {
+    ol.ext.element.create('OPTION', {
+      html: this.legendOptions[s],
+      value: s,
+      parent: legend
+    });
+  };
+  // User div element
+  ol.ext.element.create('DIV', {
+    className: 'ol-user-param',
+    parent: param
+  });
   // Save as
   li = ol.ext.element.create('LI',{ 
     className: 'ol-saveas',
@@ -8603,19 +8648,39 @@ ol.control.PrintDialog = function(options) {
   var originalTarget;
   var originalSize;
   var scalelistener;
+  var extraCtrl = {};
   printDialog.on('show', function() {
     var map = this.getMap();
     if (!map) return;
+    // Print document
     document.body.classList.add('ol-print-document');
     originalTarget = map.getTargetElement();
     originalSize = map.getSize();
     if (typeof(this.getSize()) === 'string') this.setSize(this.getSize());
     else this.setSize(originalSize);
     map.setTarget(printMap);
+    // Refresh on move end
     if (scalelistener) ol.Observable.unByKey(scalelistener);
     scalelistener = map.on('moveend', function() {
       this.setScale(ol.sphere.getMapScale(map));
     }.bind(this));
+    // Get extra controls
+    this.getMap().getControls().forEach(function(c) {
+      if (c instanceof ol.control.Legend) {
+        extraCtrl.legend = { control: c };
+      }
+    }.bind(this));
+    // Show hide legend
+    if (extraCtrl.legend) {
+      extraCtrl.legend.ison = legendCtrl.onCanvas();
+      extraCtrl.legend.collapsed = legendCtrl.isCollapsed();
+      legendCtrl.collapse(false);
+      legend.parentNode.classList.add('visible');
+      legend.value = extraCtrl.legend.collapsed ? 'off' : 'on';
+      legendCtrl.setCanvas(!extraCtrl.legend.collapsed);
+    } else {
+      legend.parentNode.classList.remove('visible');
+    }
   }.bind(this));
   printDialog.on('hide', function() {
     document.body.classList.remove('ol-print-document');
@@ -8623,6 +8688,11 @@ ol.control.PrintDialog = function(options) {
     this.getMap().setTarget(originalTarget);
     originalTarget = null;
     if (scalelistener) ol.Observable.unByKey(scalelistener);
+    // restore
+    if (extraCtrl.legend) {
+      legendCtrl.setCanvas(extraCtrl.legend.ison);
+      legendCtrl.collapse(extraCtrl.legend.collapsed);
+    }
   }.bind(this));
   // Update preview on resize
   window.addEventListener('resize', function() {
@@ -8666,6 +8736,11 @@ ol.control.PrintDialog.prototype.marginSize = {
   none: 0,
   small: 5,
   large: 10
+};
+/** List of legeng options */
+ol.control.PrintDialog.prototype.legendOptions = {
+  off: 'Hide legend',
+  on: 'Show legend'
 };
 /** List of print image file formats */
 ol.control.PrintDialog.prototype.formats = [{
@@ -8770,10 +8845,25 @@ ol.control.PrintDialog.prototype.setSize = function (size) {
   printElement.style['-webkit-box-shadow'] = 
   printElement.style['box-shadow'] = px+'px '+px+'px '+px+'px rgba(0,0,0,.6)';
   printElement.style['padding'] = (this.getMargin() * 96/25.4)+'px';
-  if (this.getMap()) this.getMap().updateSize();
+  if (this.getMap()) {
+    this.getMap().updateSize();
+  };
+  this.dispatchEvent({ type: 'dialog:refresh' });
+};
+/** Get dialog content element 
+ * @return {Element}
+ */
+ol.control.PrintDialog.prototype.getContentElement = function () {
+  return this._printDialog.getContentElement();
+};
+/** Get dialog user element 
+ * @return {Element}
+ */
+ol.control.PrintDialog.prototype.getUserElement = function () {
+  return this._printDialog.getContentElement().querySelector('.ol-user-param');
 };
 /** Get page element
- * @api
+ * @return {Element}
  */
 ol.control.PrintDialog.prototype.getPage = function () {
   return this._pages[0]
