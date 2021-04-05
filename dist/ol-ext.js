@@ -8214,6 +8214,7 @@ ol.ext.inherits(ol.control.Print, ol.control.Control);
 /** Helper function to copy result to clipboard
  * @param {Event} e print event
  * @return {boolean}
+ * @private
  */
 ol.control.Print.prototype.toClipboard = function(e, callback) {
   try {
@@ -8252,6 +8253,10 @@ ol.control.Print.prototype.copyMap = function(options, callback) {
  *	@param {string} options.imageType A string indicating the image format, default the control one
  *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
  *  @param {boolean} options.immediate true to prevent delay for printing
+ *  @param {boolean} [options.size=[210,297]] 
+ *  @param {boolean} [options.format=a4]
+ *  @param {boolean} [options.orient] default control orientation
+ *  @param {boolean} [options.margin=10]
  *  @param {*} options.any any options passed to the print event when fired
  * @api
  */
@@ -8315,10 +8320,11 @@ ol.control.Print.prototype.print = function(options) {
         }.bind(this));
       }
       // Calculate print format
-      var size = [210,297], format = 'a4';
+      var size = options.size || [210,297];
+      var format = options.format || 'a4';
       var w, h, position;
       var orient = options.orient || this.get('orientation');
-      var margin = options.margin || 10;
+      var margin = typeof(options.margin)==='number' ? options.margin : 10;
       if (canvas) {
         // Calculate size
         if (orient!=='landscape' && orient!=='portrait') {
@@ -8390,7 +8396,9 @@ ol.control.PrintDialog = function(options) {
   });
   ol.ext.element.create('BUTTON', {
     type: 'button',
-    click: function() { this.print(); }.bind(this),
+    click: function() { 
+      this.print(); 
+    }.bind(this),
     parent: element
   });
   ol.control.Control.call(this, {
@@ -8399,6 +8407,12 @@ ol.control.PrintDialog = function(options) {
   // Print control
   options.target = ol.ext.element.create('DIV');
   var printCtrl = this._printCtrl = new ol.control.Print(options);
+  printCtrl.on(['print','error','printing'], function(e) {
+    content.setAttribute('data-status', e.type);
+    if (!e.clipboard) {
+      this.dispatchEvent(e);
+    }
+  }.bind(this));
   // Print dialog
   var printDialog = this._printDialog = new ol.control.Dialog({
     target: document.body,
@@ -8424,14 +8438,14 @@ ol.control.PrintDialog = function(options) {
     parent: content
   });
   ol.ext.element.create('H2',{
-    html: options.printLabel || 'Print',
+    html: this.labels.title || 'Print',
     parent: param
   });
   var ul = ol.ext.element.create('UL',{ parent: param });
   // Orientation
   var li = ol.ext.element.create('LI', { 
     html: ol.ext.element.create('LABEL', {
-      html: options.orientationLabel || 'Orientation'
+      html: this.labels.orientation || 'Orientation'
     }),
     className: 'ol-orientation',
     parent: ul 
@@ -8443,19 +8457,19 @@ ol.control.PrintDialog = function(options) {
     }.bind(this) }
   });
   ol.ext.element.create('OPTION',{
-    html: options.portraitLabel || 'Portrait',
+    html: this.labels.portrait || 'Portrait',
     value: 'portrait',
     parent: ori
   });
   ol.ext.element.create('OPTION',{
-    html: options.portraitLabel || 'Landscape',
+    html: this.labels.landscape || 'Landscape',
     value: 'landscape',
     parent: ori
   });
   // Page size
   li = ol.ext.element.create('LI',{ 
     html: ol.ext.element.create('LABEL', {
-      html: options.orientationLabel || 'Page size',
+      html: this.labels.size || 'Page size',
     }),
     className: 'ol-size',
     parent: ul 
@@ -8476,7 +8490,7 @@ ol.control.PrintDialog = function(options) {
   // Margin
   li = ol.ext.element.create('LI',{ 
     html: ol.ext.element.create('LABEL', {
-      html: options.marginLabel || 'Margin',
+      html: this.labels.margin || 'Margin',
     }),
     className: 'ol-margin',
     parent: ul 
@@ -8497,7 +8511,7 @@ ol.control.PrintDialog = function(options) {
   // Scale
   li = ol.ext.element.create('LI',{ 
     html: ol.ext.element.create('LABEL', {
-      html: options.scaleLabel || 'Scale',
+      html: this.labels.scale || 'Scale',
     }),
     className: 'ol-scale',
     parent: ul 
@@ -8520,42 +8534,70 @@ ol.control.PrintDialog = function(options) {
     className: 'ol-saveas',
     parent: ul 
   });
+  var copied = ol.ext.element.create('DIV', {
+    html: this.labels.copied || 'Copied to clipboard',
+    className: 'ol-clipboard-copy',
+    parent: li
+  });
   var save = ol.ext.element.create('SELECT', {
     on: { change: function() {
-      console.log(save.value)
+      // Copy to clipboard
+      if (this.formats[save.value].clipboard) {
+        printCtrl.copyMap(this.formats[save.value]);
+        copied.classList.add('visible');
+        setTimeout(function() { copied.classList.remove('visible'); }, 1000);
+      } else {
+        // Print to file
+        var format = (typeof(this.getSize())==='string' ? this.getSize() : null);
+        var opt = Object.assign({
+          format: format,
+          size: format ? this.paperSize[format] : null,
+          orient: this.getOrientation(),
+          margin: this.getMargin(),
+        }, this.formats[save.value]);
+        printCtrl.print(opt);
+      }
       save.value = '';
     }.bind(this) },
     parent: li
   });
   ol.ext.element.create('OPTION', {
-    html: options.saveasLabel || 'Save as...',
+    html: this.labels.saveas || 'Save as...',
     style: { display: 'none' },
     value: '',
     parent: save
   });
-  for (var s in this.formats) {
+  this.formats.forEach(function(format, i) {
     ol.ext.element.create('OPTION', {
-      html: this.formats[s],
-      value: s,
+      html: format.title,
+      value: i,
       parent: save
     });
-  }
+  });
   // Print
   var prButtons = ol.ext.element.create('DIV', {
     className: 'ol-ext-buttons',
     parent: param
   });
   ol.ext.element.create('BUTTON', {
-    html: options.printLabelBt || 'Print...',
+    html: this.labels.print || 'Print...',
     type: 'submit',
-    click: function() { window.print(); },
+    click: function(e) { 
+      e.preventDefault();
+      window.print();
+    },
     parent: prButtons
   });
   ol.ext.element.create('BUTTON', {
-    html: options.cancelLabelBt || 'cancel',
+    html: this.labels.cancel || 'cancel',
     type: 'reset',
     click: function() { printDialog.hide(); },
     parent: prButtons
+  });
+  var prButtons = ol.ext.element.create('DIV', {
+    html: this.labels.errorMsg,
+    className: 'ol-error',
+    parent: param
   });
   // Handle dialog show/hide
   var originalTarget;
@@ -8567,7 +8609,7 @@ ol.control.PrintDialog = function(options) {
     document.body.classList.add('ol-print-document');
     originalTarget = map.getTargetElement();
     originalSize = map.getSize();
-    if (typeof(this.size) === 'string') this.setSize(this._size);
+    if (typeof(this.getSize()) === 'string') this.setSize(this.getSize());
     else this.setSize(originalSize);
     map.setTarget(printMap);
     if (scalelistener) ol.Observable.unByKey(scalelistener);
@@ -8586,8 +8628,27 @@ ol.control.PrintDialog = function(options) {
   window.addEventListener('resize', function() {
     this.setSize();
   }.bind(this));
+  // Close on after print 
+  window.addEventListener('afterprint', function() {
+    printDialog.hide();
+  });
 };
 ol.ext.inherits(ol.control.PrintDialog, ol.control.Control);
+/** Print dialog labels (for customisation) */
+ol.control.PrintDialog.prototype.labels = {
+  title: 'Print',
+  orientation: 'Orientation',
+  portrait: 'Portrait',
+  landscape: 'Landscape',
+  size: 'Page size',
+  margin: 'Margin',
+  scale: 'Scale',
+  saveas: 'Save as...',
+  copied: '✔ Copied to clipboard',
+  errorMsg: 'Can\'t save map canvas...',
+  printBt: 'Print...',
+  cancel: 'cancel'
+};
 /** List of paper size */
 ol.control.PrintDialog.prototype.paperSize = {
   '': null,
@@ -8606,15 +8667,28 @@ ol.control.PrintDialog.prototype.marginSize = {
   small: 5,
   large: 10
 };
-/** List of print formats */
-ol.control.PrintDialog.prototype.formats = {
-  jpeg: 'save as jpeg',
-  png: 'save as png',
-  pdf: 'save as pdf'
-};
+/** List of print image file formats */
+ol.control.PrintDialog.prototype.formats = [{
+    title: 'copy to clipboard',
+    imageType: 'image/png',
+    clipboard: true
+  }, {
+    title: 'save as jpeg',
+    imageType: 'image/jpeg',
+    quality: .8
+  }, {
+    title: 'save as png',
+    imageType: 'image/png',
+    quality: .8
+  }, {
+    title: 'save as pdf',
+    imageType: 'image/jpeg',
+    pdf: true
+  }
+];
 /** List of print scale */
 ol.control.PrintDialog.prototype.scales = {
-  '': '',
+  '': '',   // Use default map scale
   ' 5000': '1/5.000',
   ' 10000': '1/10.000',
   ' 25000': '1/25.000',
@@ -8627,7 +8701,7 @@ ol.control.PrintDialog.prototype.scales = {
  * @returns {string}
  */
 ol.control.PrintDialog.prototype.getOrientation = function () {
-  return this._orientation;
+  return this._orientation || 'portrait';
 };
 /** Set print orientation
  * @param {string}
@@ -8641,7 +8715,7 @@ ol.control.PrintDialog.prototype.setOrientation = function (ori) {
  * @returns {number}
  */
 ol.control.PrintDialog.prototype.getMargin = function () {
-  return this._margin;
+  return this._margin || 0;
 };
 /** Set print margin
  * @param {number}
@@ -8661,6 +8735,8 @@ ol.control.PrintDialog.prototype.getSize = function () {
  * @param {ol/size} size
  */
 ol.control.PrintDialog.prototype.setSize = function (size) {
+  // reset status
+  this._printDialog.getContentElement().setAttribute('data-status','');
   if (size) this._size = size;
   else size = this._size;
   if (!size) return;
@@ -8694,7 +8770,7 @@ ol.control.PrintDialog.prototype.setSize = function (size) {
   printElement.style['-webkit-box-shadow'] = 
   printElement.style['box-shadow'] = px+'px '+px+'px '+px+'px rgba(0,0,0,.6)';
   printElement.style['padding'] = (this.getMargin() * 96/25.4)+'px';
-  this.getMap().updateSize();
+  if (this.getMap()) this.getMap().updateSize();
 };
 /** Get page element
  * @api
