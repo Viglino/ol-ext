@@ -8,14 +8,22 @@ import ol_coordinate_cspline from '../render/Cspline'
  * @param {*} options blob  options
  *  @param {number} options.radius radius of the clip, default 100
  *	@param {ol.layer|Array<ol.layer>} options.layers layers to clip
+ *	@param {number} [options.stiffness=20] spring stiffness coef, default 20
+ *	@param {number} [options.damping=7] spring damping coef
+ *	@param {number} [options.mass=1] blob mass
+ *	@param {number} [options.points=10] number of points for the blob polygon
+ *	@param {number} [options.tension=.5] blob polygon spline tension 
+ *	@param {number} [options.fuss] bob fussing factor
+ *	@param {number} [options.amplitude=1] blob deformation amplitude factor
  */
 var ol_interaction_Blob = function(options) {
   ol_interaction_Clip.call(this, options);
 };
 ol_ext_inherits(ol_interaction_Blob, ol_interaction_Clip);
 
-/* @private
-*/
+/** Animate the blob
+ * @private
+ */
 ol_interaction_Blob.prototype.precompose_ = function(e) {
   if (!this.getActive()) return;
   var ctx = e.context;
@@ -27,7 +35,6 @@ ol_interaction_Blob.prototype.precompose_ = function(e) {
     return;
   }
 
-  ctx.beginPath();
   var pt = [ this.pos[0], this.pos[1] ];
   var tr = e.inversePixelTransform;
   if (tr) {
@@ -50,6 +57,7 @@ ol_interaction_Blob.prototype.precompose_ = function(e) {
   var blob = this._calculate(dt);
   // Draw
   var p = blob[0];
+  ctx.beginPath();
   ctx.moveTo (pt[0] + p[0], pt[1] + p[1]);
   for (var i=1; p=blob[i]; i++) {
     ctx.lineTo (pt[0] + p[0], pt[1] + p[1]);
@@ -67,8 +75,8 @@ ol_interaction_Blob.prototype._getCenter = function(pt, dt0) {
     this._center = pt;
     this._velocity = [0, 0];
   } else {
-    var k = this.get('stiffness') || 20;    // stiffness
-    var d = -1* (this.get('daping') || 7);  // damping
+    var k = this.get('stiffness') || 20;     // stiffness
+    var d = -1* (this.get('damping') || 7);  // damping
     var mass = Math.max(this.get('mass') || 1, .1);
     var dt = Math.min(dt0/1000, 1/30);
 
