@@ -174,6 +174,34 @@ var ol_control_PrintDialog = function(options) {
     });
   }.bind(this));
 
+  // Legend
+  li = ol_ext_element.create('LI',{ 
+    html: ol_ext_element.create('LABEL', {
+      html: this.labels.legend || 'Legend',
+    }),
+    className: 'ol-legend',
+    parent: ul 
+  });
+  var legend = ol_ext_element.create('SELECT', {
+    on: { change: function() {
+      legendCtrl.setCanvas(legend.value === 'on');
+    }.bind(this) },
+    parent: li
+  });
+  for (s in this.legendOptions) {
+    ol_ext_element.create('OPTION', {
+      html: this.legendOptions[s],
+      value: s,
+      parent: legend
+    });
+  };
+
+  // User div element
+  ol_ext_element.create('DIV', {
+    className: 'ol-user-param',
+    parent: param
+  });
+
   // Save as
   li = ol_ext_element.create('LI',{ 
     className: 'ol-saveas',
@@ -219,7 +247,7 @@ var ol_control_PrintDialog = function(options) {
       parent: save
     });
   });
-
+  
   // Print
   var prButtons = ol_ext_element.create('DIV', {
     className: 'ol-ext-buttons',
@@ -250,19 +278,39 @@ var ol_control_PrintDialog = function(options) {
   var originalTarget;
   var originalSize;
   var scalelistener;
+  var extraCtrl = {};
   printDialog.on('show', function() {
     var map = this.getMap();
     if (!map) return;
+    // Print document
     document.body.classList.add('ol-print-document');
     originalTarget = map.getTargetElement();
     originalSize = map.getSize();
     if (typeof(this.getSize()) === 'string') this.setSize(this.getSize());
     else this.setSize(originalSize);
     map.setTarget(printMap);
+    // Refresh on move end
     if (scalelistener) ol_Observable_unByKey(scalelistener);
     scalelistener = map.on('moveend', function() {
       this.setScale(ol_sphere_getMapScale(map));
     }.bind(this));
+    // Get extra controls
+    this.getMap().getControls().forEach(function(c) {
+      if (c instanceof ol_control_Legend) {
+        extraCtrl.legend = { control: c };
+      }
+    }.bind(this));
+    // Show hide legend
+    if (extraCtrl.legend) {
+      extraCtrl.legend.ison = legendCtrl.onCanvas();
+      extraCtrl.legend.collapsed = legendCtrl.isCollapsed();
+      legendCtrl.collapse(false);
+      legend.parentNode.classList.add('visible');
+      legend.value = extraCtrl.legend.collapsed ? 'off' : 'on';
+      legendCtrl.setCanvas(!extraCtrl.legend.collapsed);
+    } else {
+      legend.parentNode.classList.remove('visible');
+    }
   }.bind(this));
 
   printDialog.on('hide', function() {
@@ -271,6 +319,11 @@ var ol_control_PrintDialog = function(options) {
     this.getMap().setTarget(originalTarget);
     originalTarget = null;
     if (scalelistener) ol_Observable_unByKey(scalelistener);
+    // restore
+    if (extraCtrl.legend) {
+      legendCtrl.setCanvas(extraCtrl.legend.ison);
+      legendCtrl.collapse(extraCtrl.legend.collapsed);
+    }
   }.bind(this));
 
   // Update preview on resize
@@ -318,6 +371,12 @@ ol_control_PrintDialog.prototype.marginSize = {
   none: 0,
   small: 5,
   large: 10
+};
+
+/** List of legeng options */
+ol_control_PrintDialog.prototype.legendOptions = {
+  off: 'Hide legend',
+  on: 'Show legend'
 };
 
 /** List of print image file formats */
@@ -433,11 +492,30 @@ ol_control_PrintDialog.prototype.setSize = function (size) {
   printElement.style['-webkit-box-shadow'] = 
   printElement.style['box-shadow'] = px+'px '+px+'px '+px+'px rgba(0,0,0,.6)';
   printElement.style['padding'] = (this.getMargin() * 96/25.4)+'px';
-  if (this.getMap()) this.getMap().updateSize();
+
+  if (this.getMap()) {
+    this.getMap().updateSize();
+  };
+
+  this.dispatchEvent({ type: 'dialog:refresh' });
+};
+
+/** Get dialog content element 
+ * @return {Element}
+ */
+ol_control_PrintDialog.prototype.getContentElement = function () {
+  return this._printDialog.getContentElement();
+};
+
+/** Get dialog user element 
+ * @return {Element}
+ */
+ol_control_PrintDialog.prototype.getUserElement = function () {
+  return this._printDialog.getContentElement().querySelector('.ol-user-param');
 };
 
 /** Get page element
- * @api
+ * @return {Element}
  */
 ol_control_PrintDialog.prototype.getPage = function () {
   return this._pages[0]

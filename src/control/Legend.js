@@ -71,10 +71,17 @@ ol_control_Legend.prototype.getLegend = function () {
 /** Draw control on canvas
  * @param {boolean} b draw on canvas.
  */
- ol_control_Legend.prototype.setCanvas = function (b) {
+ol_control_Legend.prototype.setCanvas = function (b) {
   this._onCanvas = b;
   this.element.style.visibility = b ? "hidden":"visible";
   if (this.getMap()) this.getMap().renderSync();
+};
+
+/** Is control on canvas
+ * @returns {boolean}
+ */
+ol_control_Legend.prototype.onCanvas = function () {
+  return !!this._onCanvas;
 };
 
 /** Draw legend on canvas
@@ -120,6 +127,21 @@ ol_control_Legend.prototype.hide = function() {
     this.dispatchEvent({ type:'change:collapse', collapsed: true });
     if (this.getMap()) this.getMap().renderSync();
   }
+};
+
+/** Show/hide control
+ * @returns {boolean}
+ */
+ol_control_Legend.prototype.collapse = function(b) {
+  if (b===false) this.show();
+  else this.hide();
+};
+
+/** Is control collapsed
+ * @returns {boolean}
+ */
+ol_control_Legend.prototype.isCollapsed = function() {
+  return (this.element.classList.contains('ol-collapsed'));
 };
 
 /** Toggle control

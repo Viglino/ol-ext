@@ -40,6 +40,10 @@
       display: inline-block;
       margin: 1em 0;
     }
+    #map {
+      width:100%; 
+      height:calc(100vh - 10em);
+    }
   </style>
 </head>
 <body >
@@ -49,24 +53,15 @@
     <h1>ol-ext: print dialog</h1>
   </a>
   <div class="info">
-    The <b>ol.control.PrintDialog</b> is a control to export a map as an image.
+    The <b>ol.control.PrintDialog</b> is dialog to print or export a map.
     <br/>
     Use <a href="https://github.com/eligrey/FileSaver.js/">eligrey/FileSaver</a> 
     or <a href="https://github.com/MrRio/jsPDF">MrRio/jsPDF</a>
     to save resulting image.
-    <ul><li>
-      The <i>print()</i> method can be used to get an image programmatically.
-    </li><li>
-      Use the <i>imageType</i> and <i>quality</i> options to adjust image properties.
-    </li><li>
-      Listen to the <i>print</i> event to do something when image is ready.
-    </li><li>
-      The <i>printing</i> event is send when loading.
-    </li></ul>
   </div>
 
   <!-- Map div -->
-  <div id="map" style="width:100%; height:calc(100vh - 5em);"></div>
+  <div id="map"></div>
 
   <script type="text/javascript">
 
@@ -84,6 +79,15 @@
       ]
     });
     map.addControl(new ol.control.LayerSwitcher());
+
+    // Legend
+    var legend = new ol.legend.Legend({ title: 'Legend', margin: 5 });
+    legend.addItem({ title: 'Church', typeGeom: 'Point', style: new ol.style.Style({ image: new ol.style.Icon({ src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Eglise_icone_2.svg/30px-Eglise_icone_2.svg.png' })}) });
+    legend.addItem({ title: 'Photo', typeGeom: 'Point', style: new ol.style.Style({ image: new ol.style.Icon({ src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Icone_appareil_photo.svg/30px-Icone_appareil_photo.svg.png' })}) });
+    legend.addItem({ title: 'Line', typeGeom: 'LineString', style: ol.style.Style.defaultStyle() });
+    legend.addItem({ title: 'Polygon', typeGeom: 'Polygon', style: ol.style.Style.defaultStyle() });
+    var legendCtrl = new ol.control.Legend({ legend: legend });
+    //map.addControl(legendCtrl);
 
     // Print control
     var printControl = new ol.control.PrintDialog();

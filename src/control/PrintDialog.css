@@ -97,6 +97,13 @@
   outline: none;
 }
 
+.ol-ext-print-dialog .ol-legend {
+  display: none;
+}
+.ol-ext-print-dialog .ol-legend.visible {
+  display: block;
+}
+
 .ol-ext-print-dialog .ol-saveas {
   text-align: center;
 }
