@@ -12,6 +12,7 @@ import {extend as ol_extent_extend} from 'ol/extent'
 import ol_legend_Item from './Item'
 import ol_ext_element from '../util/element'
 import ol_style_Text from 'ol/style/Text'
+import ol_style_Fill from 'ol/style/Fill'
 
 /** @namespace  ol.legend
  */
