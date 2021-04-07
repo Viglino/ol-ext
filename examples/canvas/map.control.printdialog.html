@@ -160,16 +160,21 @@
       imageType: 'image/png',
       clipboard: true
     }, {
-      title: 'Enregistrer en jpeg',
+      title: 'Enregistrer en jpeg (qualité supérieure)',
       imageType: 'image/jpeg',
       quality: .8
+    }, {
+      title: 'Enregistrer en jpeg (qualité maximale)',
+      imageType: 'image/jpeg',
+      quality: 1
     }, {
       title: 'Enregistrer en png',
       imageType: 'image/png',
-      quality: .8
+      quality: .92
     }, {
       title: 'Enregistrer en pdf',
       imageType: 'image/jpeg',
+      quality: .92,
       pdf: true
     }
   ];
@@ -202,7 +207,7 @@
         // Save image as file
         e.canvas.toBlob(function(blob) {
           saveAs(blob, 'map.'+e.imageType.replace('image/',''));
-        }, e.imageType);
+        }, e.imageType, e.quality);
       }
     } else {
       console.warn('No canvas to export');

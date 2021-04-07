@@ -8487,6 +8487,7 @@ ol.control.Print.prototype.print = function(options) {
         },
         image: image,
         imageType: imageType,
+        quality: quality,
         canvas: canvas
       }, options);
       this.dispatchEvent(e);

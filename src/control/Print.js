@@ -102,6 +102,7 @@ ol_control_Print.prototype.copyMap = function(options, callback) {
  */
 ol_control_Print.prototype.print = function(options) {
   options = options || {};
+
   var imageType = options.imageType || this.get('imageType');
   var quality = options.quality || this.get('quality');
   if (this.getMap()) {
@@ -203,6 +204,7 @@ ol_control_Print.prototype.print = function(options) {
         },
         image: image,
         imageType: imageType,
+        quality: quality,
         canvas: canvas
       }, options);
       this.dispatchEvent(e);
