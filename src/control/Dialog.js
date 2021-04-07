@@ -15,7 +15,7 @@ import ol_ext_element from '../util/element'
  *  @param {boolean} options.closeBox add a close button
  *  @param {number} options.max if not null add a progress bar to the dialog, default null
  *  @param {boolean} options.hideOnClick close dialog when click the background
- *  @param {boolean} options.noSubmit Prevent closing the dialog on submit
+ *  @param {boolean} options.closeOnSubmit Prevent closing the dialog on submit
  */
 var ol_control_Dialog = function(options) {
   options = options || {};

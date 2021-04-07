@@ -90,18 +90,75 @@
   font-size: .9em;
 }
 .ol-ext-print-dialog .ol-print-param label {
-  width: 7em;
+  width: 8em;
   display: inline-block;
+  vertical-align: middle;
 }
 
 .ol-ext-print-dialog select {
   outline: none;
+  vertical-align: middle;
 }
 
-.ol-ext-print-dialog .ol-legend {
+.ol-ext-print-dialog .ol-orientation {
+  text-align: center;
+}
+.ol-ext-print-dialog .ol-orientation label {
+  position: relative;
+  width: 7em;
+  cursor: pointer;
+}
+.ol-ext-print-dialog .ol-orientation input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.ol-ext-print-dialog .ol-orientation span {
+  position: relative;
+  width: 80%;
+  display: block;
+  padding: 3.5em 0 .2em;
+}
+.ol-ext-print-dialog .ol-orientation span:before {
+  content: "";
+  position: absolute;
+  width: 2em;
+  height: 2.6em;
+  bottom: 1.5em;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #333;
+  background-color: currentColor;
+  border: 1px solid currentColor;
+  border-radius: 0 1em 0 0;
+  opacity: .5;
+  overflow: hidden;
+  box-shadow: inset 1.3em -1.9em #ddd;
+}
+
+.ol-ext-print-dialog .ol-orientation .landscape span:before {
+  width: 2.6em;
+  height: 2em;
+  margin: .2em 0;
+  box-shadow: inset 1.9em -1.3em #ddd;
+}
+.ol-ext-print-dialog .ol-orientation input:checked + span {
+  opacity: 1;
+  box-shadow: 0 0 .2em rgba(0,0,0,.5);
+}
+
+.ol-print-title input[type=text] {
+  margin-top: .5em;
+  width: calc(100% - 6em);
+  margin-left: 6em;
+}
+
+
+.ol-ext-print-dialog .ol-legend label {
   display: none;
 }
-.ol-ext-print-dialog .ol-legend.visible {
+.ol-ext-print-dialog .ol-legend label.visible {
   display: block;
 }
 
@@ -111,7 +168,8 @@
 .ol-ext-print-dialog .ol-saveas select {
   background-color: rgba(0,60,136,.7);
   color: #fff;
-  padding: .5em 1em;
+  padding: .5em;
+  margin: 1em 0 0;
   font-size: 1em;
   border: 0;
   font-weight: bold;
@@ -158,6 +216,18 @@
 .ol-ext-print-dialog .ol-clipboard-copy.visible {
   animation: 1s ol-clipboard-copy;
 }
+.ol-ext-print-dialog .ol-print-map .ol-control.ol-attribution {
+  display: block!important;
+}
+.ol-ext-print-dialog .ol-print-map .ol-control.ol-print-compass {
+  display: block!important;
+  top: 0;
+  right: 0;
+  width: 60px;
+  height: 60px;
+  margin: 20px;
+}
+
 @keyframes ol-clipboard-copy { 
   0% { opacity: 0; top: 0; }
   80% { opacity: 1; top: -3em; }

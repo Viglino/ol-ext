@@ -86,6 +86,12 @@ var ol_legend_Legend = function(options) {
 
   this.setStyle(options.style);
 
+  if (options.items instanceof Array) {
+    options.items.forEach(function(item){
+      this.addItem(item);
+    }.bind(this));
+  }
+
   this.refresh();
 };
 ol_ext_inherits(ol_legend_Legend, ol_Object);

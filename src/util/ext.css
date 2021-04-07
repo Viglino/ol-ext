@@ -1,0 +1,42 @@
+.ol-ext-toggle-switch {
+  position: relative;
+  padding-right: 2.2em;
+}
+.ol-ext-toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.ol-ext-toggle-switch span {
+  position: absolute;
+  cursor: pointer;
+  background-color: #ccc;
+  top: 50%;
+  right: 0;
+  width: 2.2em;
+  height: 1.2em;
+  border-radius: 1em;
+  transform: translateY(-50%);
+  transition: .4s;
+}
+.ol-ext-toggle-switch span:before {
+  position: absolute;
+  content: "";
+  height: .8em;
+  width: .8em;
+  left: .2em;
+  top: 50%;
+  background-color: white;
+  border-radius: 1em;
+  transition: .4s;
+  transform: translate(0,-50%);
+}
+
+.ol-ext-toggle-switch input:checked + span {
+  background-color: rgba(0,60,136,.7);
+}
+
+.ol-ext-toggle-switch input:checked + span:before {
+  transform: translate(1em, -50%);
+}
+

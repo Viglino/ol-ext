@@ -18,6 +18,7 @@ import ol_control_CanvasBase from './CanvasBase'
  * @extends ol_control_Attribution
  * @param {Object=} options extend the ol_control_Attribution options.
  * 	@param {ol_style_Style} options.style  option is usesd to draw the text.
+ *  @paream {boolean} [options.canvas=false] draw on canvas
  */
 var ol_control_CanvasAttribution = function(options) {
   if (!options) options = {};
@@ -121,15 +122,30 @@ ol_control_CanvasAttribution.prototype.drawAttribution_ = function(e) {
   
   var h = this.element.clientHeight;
   var w = this.element.clientWidth;
-  var left = w/2 + this.element.querySelectorAll('button')[0].clientWidth;
+  var textAlign = ol.ext.element.getStyle(this.element, 'textAlign') || 'center';
+  var left;
+  switch(textAlign) {
+    case 'left': {
+      left = 0;
+      break;
+    }
+    case 'right': {
+      left = w;
+      break;
+    }
+    default: {
+      left = w/2;
+      break;
+    }
+  }
   
   // Draw scale text
   ctx.beginPath();
     ctx.strokeStyle = this.fontStrokeStyle_;
     ctx.fillStyle = this.fontFillStyle_;
     ctx.lineWidth = this.fontStrokeWidth_;
-    ctx.textAlign = "center";
-    ctx.textBaseline ="middle";
+    ctx.textAlign = textAlign;
+    ctx.textBaseline = 'middle';
     ctx.font = this.font_;
     ctx.strokeText(text, left, h/2);
     ctx.fillText(text, left, h/2);
