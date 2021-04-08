@@ -4613,7 +4613,7 @@ ol.ext.inherits(ol.control.Compass, ol.control.CanvasBase);
 ol.control.Compass.prototype.setImage = function (img) {
   // The image
   if (img instanceof Image) {
-    this.img_ = options.image;
+    this.img_ = img;
     this.img_.onload = function(){ 
       if (this.getMap()) this.getMap().renderSync(); 
     }.bind(this);
@@ -4633,7 +4633,7 @@ ol.control.Compass.prototype.setImage = function (img) {
         this.img_.onload = function(){ 
           if (this.getMap()) this.getMap().renderSync(); 
         }.bind(this);
-        this.img_.src = options.src;
+        this.img_.src = img;
         break;
       }
     }
@@ -4752,8 +4752,8 @@ ol.control.Compass.prototype._draw = function(e) {
   if (!ctx || !this.get('visible')) return;
   var canvas = ctx.canvas;
   // 8 angles
-  var da = [];
-  for (var i=0; i<8; i++) da[i] = [ Math.cos(Math.PI*i/8), Math.sin(Math.PI*i/8) ];
+  var i, da = [];
+  for (i=0; i<8; i++) da[i] = [ Math.cos(Math.PI*i/8), Math.sin(Math.PI*i/8) ];
   // Retina device
   var ratio = e.frameState.pixelRatio;
   ctx.save();
@@ -4771,7 +4771,7 @@ ol.control.Compass.prototype._draw = function(e) {
         ctx.strokeStyle = this.getStroke().getColor();
         ctx.lineWidth = this.getStroke().getWidth();
         var m = Math.max(canvas.width, canvas.height);
-        for (var i=0; i<8; i++) {
+        for (i=0; i<8; i++) {
           ctx.moveTo (-da[i][0]*m, -da[i][1]*m);
           ctx.lineTo (da[i][0]*m, da[i][1]*m);
         }
@@ -8621,6 +8621,7 @@ ol.control.PrintDialog = function(options) {
     parent: label 
   });
   // Page size
+  var s; 
   li = ol.ext.element.create('LI',{ 
     html: ol.ext.element.create('LABEL', {
       html: this.labels.size || 'Page size',
@@ -8634,7 +8635,7 @@ ol.control.PrintDialog = function(options) {
     }.bind(this) },
     parent: li
   });
-  for (var s in this.paperSize) {
+  for (s in this.paperSize) {
     ol.ext.element.create('OPTION', {
       html: s + (this.paperSize[s] ? ' - '+this.paperSize[s][0]+'x'+this.paperSize[s][1]+' mm' : ''),
       value: s,
@@ -8655,7 +8656,7 @@ ol.control.PrintDialog = function(options) {
     }.bind(this) },
     parent: li
   });
-  for (var s in this.marginSize) {
+  for (s in this.marginSize) {
     ol.ext.element.create('OPTION', {
       html: s + ' - ' + this.marginSize[s] + ' mm',
       value: this.marginSize[s],
@@ -8688,7 +8689,7 @@ ol.control.PrintDialog = function(options) {
     className: 'ol-legend',
     parent: ul 
   });
-  var label = ol.ext.element.create('LABEL',{ 
+  label = ol.ext.element.create('LABEL',{ 
     html: (this.labels.legend || 'Legend'),
     className: 'ol-ext-toggle-switch',
     parent: li
@@ -8727,7 +8728,7 @@ ol.control.PrintDialog = function(options) {
     className: 'ol-print-title',
     parent: ul 
   });
-  var label = ol.ext.element.create('LABEL',{ 
+  label = ol.ext.element.create('LABEL',{ 
     html: (this.labels.mapTitle || 'Title'),
     className: 'ol-ext-toggle-switch',
     parent: li
@@ -8747,7 +8748,7 @@ ol.control.PrintDialog = function(options) {
       keydown: function(e) { 
         if (e.keyCode === 13) e.preventDefault();
       },
-      keyup: function(e) { 
+      keyup: function() { 
         extraCtrl.title.control.setTitle(titleText.value);
       },
       change: function() {
@@ -8830,7 +8831,7 @@ ol.control.PrintDialog = function(options) {
     click: function() { printDialog.hide(); },
     parent: prButtons
   });
-  var prButtons = ol.ext.element.create('DIV', {
+  ol.ext.element.create('DIV', {
     html: this.labels.errorMsg,
     className: 'ol-error',
     parent: param
@@ -9058,7 +9059,7 @@ ol.control.PrintDialog.prototype.setSize = function (size) {
   printElement.style['padding'] = (this.getMargin() * 96/25.4)+'px';
   if (this.getMap()) {
     this.getMap().updateSize();
-  };
+  }
   this.dispatchEvent({ type: 'dialog:refresh' });
 };
 /** Get dialog content element 

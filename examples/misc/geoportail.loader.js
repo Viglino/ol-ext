@@ -185,7 +185,7 @@ function loadTiles() {
         var extent = f.getGeometry().getExtent();
         var format = new ol.format.GeoJSON();
         $.ajax({
-          url: 'https://wxs.ign.fr/choisirgeoportail/geoportail/wfs?service=WFS&' +
+          url: 'https://wxs.ign.fr/'+(/eau/.test(typeName) ? 'h1osiyvfm7c4wu976jv6gpum' : 'choisirgeoportail')+'/geoportail/wfs?service=WFS&' +
             'version=1.1.0&request=GetFeature&' +
             'typename='+typeName+'&' +
             'outputFormat=application/json&srsname=EPSG:3857&' +

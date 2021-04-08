@@ -96,7 +96,7 @@ export {ol_sphere_greatCircleTrack as greatCircleTrack}
  * @param {number} [dpi=96] dpi, default 96
  * @return {number}
  */
-ol_sphere_getMapScale = function (map, dpi) {
+var ol_sphere_getMapScale = function (map, dpi) {
   var view = map.getView();
   var proj = view.getProjection();
   var center = view.getCenter();
@@ -117,7 +117,7 @@ export {ol_sphere_getMapScale as getMapScale}
  * @param {number} [dpi=96] dpi, default 96
  * @return {number} scale factor
  */
-ol_sphere_setMapScale = function (map, scale, dpi) {
+var ol_sphere_setMapScale = function (map, scale, dpi) {
   if (map && scale) {
     var fac = scale;
     if (typeof(scale)==='string') {

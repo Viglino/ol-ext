@@ -8,6 +8,7 @@ import ol_control_Attribution from 'ol/control/Attribution'
 import ol_style_Style from 'ol/style/Style'
 import {asString as ol_color_asString} from 'ol/color'
 import ol_control_CanvasBase from './CanvasBase'
+import ol_ext_element from '../util/element'
 
 /**
  * @classdesc 
@@ -122,7 +123,7 @@ ol_control_CanvasAttribution.prototype.drawAttribution_ = function(e) {
   
   var h = this.element.clientHeight;
   var w = this.element.clientWidth;
-  var textAlign = ol.ext.element.getStyle(this.element, 'textAlign') || 'center';
+  var textAlign = ol_ext_element.getStyle(this.element, 'textAlign') || 'center';
   var left;
   switch(textAlign) {
     case 'left': {

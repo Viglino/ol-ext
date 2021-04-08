@@ -5,11 +5,14 @@
 */
 
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_ext_inherits from '../util/ext'
 import ol_control_Control from 'ol/control/Control'
+import ol_style_Stroke from 'ol/style/Stroke'
+import ol_ext_inherits from '../util/ext'
 import ol_ext_element from '../util/element'
-import ol_control_Dialog from './Dialog';
+import ol_control_Dialog from './Dialog'
+import ol_control_Legend from './Legend'
 import ol_control_Print from './Print'
+import ol_control_CanvasTitle from './CanvasTitle'
 import {getMapScale as ol_sphere_getMapScale} from '../geom/sphere'
 import {setMapScale as ol_sphere_setMapScale} from '../geom/sphere'
 import ol_control_Compass from './Compass';
@@ -142,6 +145,7 @@ var ol_control_PrintDialog = function(options) {
   });
 
   // Page size
+  var s; 
   li = ol_ext_element.create('LI',{ 
     html: ol_ext_element.create('LABEL', {
       html: this.labels.size || 'Page size',
@@ -155,7 +159,7 @@ var ol_control_PrintDialog = function(options) {
     }.bind(this) },
     parent: li
   });
-  for (var s in this.paperSize) {
+  for (s in this.paperSize) {
     ol_ext_element.create('OPTION', {
       html: s + (this.paperSize[s] ? ' - '+this.paperSize[s][0]+'x'+this.paperSize[s][1]+' mm' : ''),
       value: s,
@@ -177,7 +181,7 @@ var ol_control_PrintDialog = function(options) {
     }.bind(this) },
     parent: li
   });
-  for (var s in this.marginSize) {
+  for (s in this.marginSize) {
     ol_ext_element.create('OPTION', {
       html: s + ' - ' + this.marginSize[s] + ' mm',
       value: this.marginSize[s],
@@ -212,7 +216,7 @@ var ol_control_PrintDialog = function(options) {
     className: 'ol-legend',
     parent: ul 
   });
-  var label = ol_ext_element.create('LABEL',{ 
+  label = ol_ext_element.create('LABEL',{ 
     html: (this.labels.legend || 'Legend'),
     className: 'ol-ext-toggle-switch',
     parent: li
@@ -253,7 +257,7 @@ var ol_control_PrintDialog = function(options) {
     className: 'ol-print-title',
     parent: ul 
   });
-  var label = ol_ext_element.create('LABEL',{ 
+  label = ol_ext_element.create('LABEL',{ 
     html: (this.labels.mapTitle || 'Title'),
     className: 'ol-ext-toggle-switch',
     parent: li
@@ -273,7 +277,7 @@ var ol_control_PrintDialog = function(options) {
       keydown: function(e) { 
         if (e.keyCode === 13) e.preventDefault();
       },
-      keyup: function(e) { 
+      keyup: function() { 
         extraCtrl.title.control.setTitle(titleText.value);
       },
       change: function() {
@@ -359,7 +363,7 @@ var ol_control_PrintDialog = function(options) {
     click: function() { printDialog.hide(); },
     parent: prButtons
   });
-  var prButtons = ol_ext_element.create('DIV', {
+  ol_ext_element.create('DIV', {
     html: this.labels.errorMsg,
     className: 'ol-error',
     parent: param
@@ -606,7 +610,7 @@ ol_control_PrintDialog.prototype.setSize = function (size) {
 
   if (this.getMap()) {
     this.getMap().updateSize();
-  };
+  }
 
   this.dispatchEvent({ type: 'dialog:refresh' });
 };

@@ -52,7 +52,7 @@ ol_ext_inherits(ol_control_Compass, ol_control_CanvasBase);
 ol_control_Compass.prototype.setImage = function (img) {
   // The image
   if (img instanceof Image) {
-    this.img_ = options.image;
+    this.img_ = img;
     this.img_.onload = function(){ 
       if (this.getMap()) this.getMap().renderSync(); 
     }.bind(this);
@@ -72,7 +72,7 @@ ol_control_Compass.prototype.setImage = function (img) {
         this.img_.onload = function(){ 
           if (this.getMap()) this.getMap().renderSync(); 
         }.bind(this);
-        this.img_.src = options.src;
+        this.img_.src = img;
         break;
       }
     }
@@ -206,8 +206,8 @@ ol_control_Compass.prototype._draw = function(e) {
   var canvas = ctx.canvas;
 
   // 8 angles
-  var da = [];
-  for (var i=0; i<8; i++) da[i] = [ Math.cos(Math.PI*i/8), Math.sin(Math.PI*i/8) ];
+  var i, da = [];
+  for (i=0; i<8; i++) da[i] = [ Math.cos(Math.PI*i/8), Math.sin(Math.PI*i/8) ];
 
   // Retina device
   var ratio = e.frameState.pixelRatio;
@@ -229,7 +229,7 @@ ol_control_Compass.prototype._draw = function(e) {
         ctx.strokeStyle = this.getStroke().getColor();
         ctx.lineWidth = this.getStroke().getWidth();
         var m = Math.max(canvas.width, canvas.height);
-        for (var i=0; i<8; i++) {
+        for (i=0; i<8; i++) {
           ctx.moveTo (-da[i][0]*m, -da[i][1]*m);
           ctx.lineTo (da[i][0]*m, da[i][1]*m);
         }
