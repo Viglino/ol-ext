@@ -28,8 +28,7 @@ var ol_control_Storymap = function(options) {
   // New element
   var element = ol_ext_element.create('DIV', {
     className: (options.className || '') + ' ol-storymap'
-      + (options.target ? '': ' ol-unselectable ol-control')
-      + ('ontouchstart' in window ? ' ol-touch' : ''),
+      + (options.target ? '': ' ol-unselectable ol-control'),
     html: options.html
   });
   element.querySelectorAll('.chapter').forEach(function(c) {

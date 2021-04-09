@@ -18,9 +18,6 @@
 .ol-storymap.ol-move {
   scroll-behavior: unset;
 }
-.ol-storymap.ol-touch {
-  overflow-y: auto;
-}
 
 .ol-control.ol-storymap .chapter {
   padding: .5em;

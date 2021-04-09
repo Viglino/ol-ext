@@ -34,7 +34,6 @@ var ol_control_Timeline = function(options) {
     className: (options.className || '') + ' ol-timeline'
       + (options.target ? '': ' ol-unselectable ol-control')
       + (options.zoomButton ? ' ol-hasbutton':'')
-      + ('ontouchstart' in window ? ' ol-touch' : '')
   });
 
   // Initialize
