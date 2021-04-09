@@ -87,6 +87,61 @@ ol_control_Print.prototype.copyMap = function(options, callback) {
   this.print(options);
 };
 
+/** Get map canvas
+ * @private
+ */
+ol_control_Print.prototype._getCanvas = function(event, imageType, canvas) {
+  var ctx;
+  // ol <= 5 : get the canvas
+  if (event.context) {
+    canvas = event.context.canvas;
+  } else {
+    // Create a canvas if none
+    if (!canvas) {
+      canvas = document.createElement('canvas');
+      var size = this.getMap().getSize();
+      canvas.width = size[0];
+      canvas.height = size[1];
+      ctx = canvas.getContext('2d');
+      if (/jp.*g$/.test(imageType)) {
+        ctx.fillStyle = this.get('bgColor') || 'white';
+        ctx.fillRect(0,0,canvas.width,canvas.height);		
+      }
+    } else {
+      ctx = canvas.getContext('2d');
+    }
+    // ol6+ : create canvas using layer canvas
+    this.getMap().getViewport().querySelectorAll('.ol-layer canvas, canvas.ol-fixedoverlay').forEach(function(c) {
+      if (c.width) {
+        ctx.save();
+        // opacity
+        if (c.parentNode.style.opacity==='0') return;
+        ctx.globalAlpha = parseFloat(c.parentNode.style.opacity) || 1;
+        // transform
+        var tr = ol_ext_element.getStyle(c,'transform') || ol_ext_element.getStyle(c,'-webkit-transform');
+        if (/^matrix/.test(tr)) {
+          tr = tr.replace(/^matrix\(|\)$/g,'').split(',');
+          tr.forEach(function(t,i) { tr[i] = parseFloat(t); });
+          ctx.transform(tr[0],tr[1],tr[2],tr[3],tr[4],tr[5]);
+          ctx.drawImage(c, 0, 0);
+        } else {
+          ctx.drawImage(c, 0, 0, ol_ext_element.getStyle(c,'width'), ol_ext_element.getStyle(c,'height'));
+        }
+        ctx.restore();
+      }
+    }.bind(this));
+  }
+  return canvas;
+};
+
+ol_control_Print.prototype.fastPrint = function(options, callback) {
+  options = options||{};
+  this.getMap().once('postcompose', function(event) {
+    callback(this._getCanvas(event, options.imageType, options.canvas));
+  }.bind(this));
+  this.getMap().render();
+};
+
 /** Print the map
  * @param {function} cback a callback function that take a string containing the requested data URI.
  * @param {Object} options
@@ -122,44 +177,7 @@ ol_control_Print.prototype.print = function(options) {
     }
     // Run printing
     this.getMap().once(this.get('immediate') ? 'postcompose' : 'rendercomplete', function(event) {
-      var canvas, ctx;
-      // ol <= 5 : get the canvas
-      if (event.context) {
-        canvas = event.context.canvas;
-      } else {
-        // ol6+ : create canvas using layer canvas
-        this.getMap().getViewport().querySelectorAll('.ol-layer canvas, canvas.ol-fixedoverlay').forEach(function(c) {
-          if (c.width) {
-            // Create a canvas if none
-            if (!canvas) {
-              canvas = document.createElement('canvas');
-              var size = this.getMap().getSize();
-              canvas.width = size[0];
-              canvas.height = size[1];
-              ctx = canvas.getContext('2d');
-              if (/jp.*g$/.test(imageType)) {
-                ctx.fillStyle = this.get('bgColor') || 'white';
-                ctx.fillRect(0,0,canvas.width,canvas.height);		
-              }
-            }
-            ctx.save();
-            // opacity
-            if (c.parentNode.style.opacity==='0') return;
-            ctx.globalAlpha = parseFloat(c.parentNode.style.opacity) || 1;
-            // transform
-            var tr = ol_ext_element.getStyle(c,'transform') || ol_ext_element.getStyle(c,'-webkit-transform');
-            if (/^matrix/.test(tr)) {
-              tr = tr.replace(/^matrix\(|\)$/g,'').split(',');
-              tr.forEach(function(t,i) { tr[i] = parseFloat(t); });
-              ctx.transform(tr[0],tr[1],tr[2],tr[3],tr[4],tr[5]);
-              ctx.drawImage(c, 0, 0);
-            } else {
-              ctx.drawImage(c, 0, 0, ol_ext_element.getStyle(c,'width'), ol_ext_element.getStyle(c,'height'));
-            }
-            ctx.restore();
-          }
-        }.bind(this));
-      }
+      var canvas = this._getCanvas(event, imageType);
       // Calculate print format
       var size = options.size || [210,297];
       var format = options.format || 'a4';
