@@ -8386,6 +8386,59 @@ ol.control.Print.prototype.copyMap = function(options, callback) {
   }.bind(this));
   this.print(options);
 };
+/** Get map canvas
+ * @private
+ */
+ol.control.Print.prototype._getCanvas = function(event, imageType, canvas) {
+  var ctx;
+  // ol <= 5 : get the canvas
+  if (event.context) {
+    canvas = event.context.canvas;
+  } else {
+    // Create a canvas if none
+    if (!canvas) {
+      canvas = document.createElement('canvas');
+      var size = this.getMap().getSize();
+      canvas.width = size[0];
+      canvas.height = size[1];
+      ctx = canvas.getContext('2d');
+      if (/jp.*g$/.test(imageType)) {
+        ctx.fillStyle = this.get('bgColor') || 'white';
+        ctx.fillRect(0,0,canvas.width,canvas.height);		
+      }
+    } else {
+      ctx = canvas.getContext('2d');
+    }
+    // ol6+ : create canvas using layer canvas
+    this.getMap().getViewport().querySelectorAll('.ol-layer canvas, canvas.ol-fixedoverlay').forEach(function(c) {
+      if (c.width) {
+        ctx.save();
+        // opacity
+        if (c.parentNode.style.opacity==='0') return;
+        ctx.globalAlpha = parseFloat(c.parentNode.style.opacity) || 1;
+        // transform
+        var tr = ol.ext.element.getStyle(c,'transform') || ol.ext.element.getStyle(c,'-webkit-transform');
+        if (/^matrix/.test(tr)) {
+          tr = tr.replace(/^matrix\(|\)$/g,'').split(',');
+          tr.forEach(function(t,i) { tr[i] = parseFloat(t); });
+          ctx.transform(tr[0],tr[1],tr[2],tr[3],tr[4],tr[5]);
+          ctx.drawImage(c, 0, 0);
+        } else {
+          ctx.drawImage(c, 0, 0, ol.ext.element.getStyle(c,'width'), ol.ext.element.getStyle(c,'height'));
+        }
+        ctx.restore();
+      }
+    }.bind(this));
+  }
+  return canvas;
+};
+ol.control.Print.prototype.fastPrint = function(options, callback) {
+  options = options||{};
+  this.getMap().once('postcompose', function(event) {
+    callback(this._getCanvas(event, options.imageType, options.canvas));
+  }.bind(this));
+  this.getMap().render();
+};
 /** Print the map
  * @param {function} cback a callback function that take a string containing the requested data URI.
  * @param {Object} options
@@ -8420,44 +8473,7 @@ ol.control.Print.prototype.print = function(options) {
     }
     // Run printing
     this.getMap().once(this.get('immediate') ? 'postcompose' : 'rendercomplete', function(event) {
-      var canvas, ctx;
-      // ol <= 5 : get the canvas
-      if (event.context) {
-        canvas = event.context.canvas;
-      } else {
-        // ol6+ : create canvas using layer canvas
-        this.getMap().getViewport().querySelectorAll('.ol-layer canvas, canvas.ol-fixedoverlay').forEach(function(c) {
-          if (c.width) {
-            // Create a canvas if none
-            if (!canvas) {
-              canvas = document.createElement('canvas');
-              var size = this.getMap().getSize();
-              canvas.width = size[0];
-              canvas.height = size[1];
-              ctx = canvas.getContext('2d');
-              if (/jp.*g$/.test(imageType)) {
-                ctx.fillStyle = this.get('bgColor') || 'white';
-                ctx.fillRect(0,0,canvas.width,canvas.height);		
-              }
-            }
-            ctx.save();
-            // opacity
-            if (c.parentNode.style.opacity==='0') return;
-            ctx.globalAlpha = parseFloat(c.parentNode.style.opacity) || 1;
-            // transform
-            var tr = ol.ext.element.getStyle(c,'transform') || ol.ext.element.getStyle(c,'-webkit-transform');
-            if (/^matrix/.test(tr)) {
-              tr = tr.replace(/^matrix\(|\)$/g,'').split(',');
-              tr.forEach(function(t,i) { tr[i] = parseFloat(t); });
-              ctx.transform(tr[0],tr[1],tr[2],tr[3],tr[4],tr[5]);
-              ctx.drawImage(c, 0, 0);
-            } else {
-              ctx.drawImage(c, 0, 0, ol.ext.element.getStyle(c,'width'), ol.ext.element.getStyle(c,'height'));
-            }
-            ctx.restore();
-          }
-        }.bind(this));
-      }
+      var canvas = this._getCanvas(event, imageType);
       // Calculate print format
       var size = options.size || [210,297];
       var format = options.format || 'a4';
@@ -13339,6 +13355,159 @@ ol.control.Timeline.prototype.getStartDate = function() {
 ol.control.Timeline.prototype.getEndDate = function() {
   return new Date(this.get('maxDate'));
 }
+
+/*
+  Copyright (c) 2019 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Print control to get an image of the map
+ * @constructor
+ * @fire print
+ * @fire error
+ * @fire printing
+ * @extends {ol.control.Control}
+ * @param {Object=} options Control options.
+ *	@param {String} options.className class of the control
+ *	@param {number} [options.framerate=30] framerate for the video
+ *	@param {number} [options.videoBitsPerSecond=5000000] bitrate for the video
+ */
+ol.control.VideoRecorder = function(options) {
+  if (!options) options = {};
+  var element = ol.ext.element.create('DIV', {
+    className: (options.className || 'ol-videorec') + ' ol-unselectable ol-control'
+  });
+  // buttons
+  ol.ext.element.create('BUTTON', {
+    type: 'button',
+    className: 'ol-start',
+    title: 'start',
+    click: function() { 
+      this.start();
+    }.bind(this),
+    parent: element
+  });
+  ol.ext.element.create('BUTTON', {
+    type: 'button',
+    className: 'ol-stop',
+    title: 'stop',
+    click: function() { 
+      this.stop();
+    }.bind(this),
+    parent: element
+  });
+  ol.ext.element.create('BUTTON', {
+    type: 'button',
+    className: 'ol-pause',
+    title: 'pause',
+    click: function() { 
+      this.pause();
+    }.bind(this),
+    parent: element
+  });
+  ol.ext.element.create('BUTTON', {
+    type: 'button',
+    className: 'ol-resume',
+    title: 'resume',
+    click: function() {
+      this.resume();
+    }.bind(this),
+    parent: element
+  });
+  // Start
+  ol.control.Control.call(this, {
+    element: element
+  });
+  this.set('framerate', 30);
+  this.set('videoBitsPerSecond', 5000000);
+  // Print control
+  this._printCtrl = new ol.control.Print({
+    target: ol.ext.element.create('DIV')
+  });
+}
+ol.ext.inherits(ol.control.VideoRecorder, ol.control.Control);
+/**
+ * Remove the control from its current map and attach it to the new map.
+ * Subclasses may set up event handlers to get notified about changes to
+ * the map here.
+ * @param {ol.Map} map Map.
+ * @api stable
+ */
+ ol.control.VideoRecorder.prototype.setMap = function (map) {
+  if (this.getMap()) {
+    this.getMap().removeControl(this._printCtrl);
+  }
+  ol.control.Control.prototype.setMap.call(this, map);
+  if (this.getMap()) {
+    this.getMap().addControl(this._printCtrl);
+  }
+};
+/** Start recording */
+ol.control.VideoRecorder.prototype.start = function () {
+  var print = this._printCtrl;
+  var stop = false;
+  function capture(canvas) {
+    if (stop) return;
+    print.fastPrint({
+      canvas: canvas
+    }, capture);
+  }
+  print.fastPrint({}, function(canvas) {
+    var videoStream = canvas.captureStream(this.get('framerate') || 30); // the parameter is the desired framerate, see the MDN doc for more info
+    this._mediaRecorder = new MediaRecorder(videoStream, {
+      videoBitsPerSecond : this.get('videoBitsPerSecond') || 5000000
+    });
+    var chunks = [];
+    this._mediaRecorder.ondataavailable = function(e) {
+      chunks.push(e.data);
+    };
+    this._mediaRecorder.onstop = function() {
+      stop = true;
+      var blob = new Blob(chunks, { 'type' : 'video/mp4' }); // other types are available such as 'video/webm' for instance, see the doc for more info
+      chunks = [];
+      this.dispatchEvent({ type: 'stop', videoURL: URL.createObjectURL(blob) });
+    }.bind(this);
+    this._mediaRecorder.onpause = function() {
+      stop = true;
+      this.dispatchEvent({ type: 'pause' });
+    }.bind(this);
+    this._mediaRecorder.onresume = function() {
+      stop = false;
+      capture(canvas);
+      this.dispatchEvent({ type: 'resume' });
+    }.bind(this);
+    this._mediaRecorder.onerror = function(e) {
+      this.dispatchEvent({ type: 'error', error: e });
+    }.bind(this);
+    stop = false;
+    capture(canvas);
+    this._mediaRecorder.start();
+    this.dispatchEvent({ type: 'start' });
+  }.bind(this))
+  this.element.setAttribute('data-state', 'rec');
+};
+/** Stop recording */
+ol.control.VideoRecorder.prototype.stop = function () {
+  if (this._mediaRecorder) {
+    this._mediaRecorder.stop();
+    this._mediaRecorder = null;
+    this.element.setAttribute('data-state', 'inactive');
+  }
+};
+/** Pause recording */
+ol.control.VideoRecorder.prototype.pause = function () {
+  if (this._mediaRecorder) {
+    this._mediaRecorder.pause();
+    this.element.setAttribute('data-state', 'pause');
+  }
+};
+/** Resume recording after pause */
+ol.control.VideoRecorder.prototype.resume = function () {
+  if (this._mediaRecorder) {
+    this._mediaRecorder.resume();
+    this.element.setAttribute('data-state', 'rec');
+  }
+};
 
 /* 
   WMS Layer with EPSG:4326 projection.
