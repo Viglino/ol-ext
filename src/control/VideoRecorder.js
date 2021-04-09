@@ -8,11 +8,13 @@ import ol_ext_inherits from '../util/ext'
 import ol_ext_element from '../util/element'
 import ol_control_Print from './Print'
 
-/** Print control to get an image of the map
+/** Record map canvas as video
  * @constructor
- * @fire print
+ * @fire start
  * @fire error
- * @fire printing
+ * @fire stop
+ * @fire pause
+ * @fire resume
  * @extends {ol.control.Control}
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
@@ -84,7 +86,7 @@ ol_ext_inherits(ol_control_VideoRecorder, ol_control_Control);
  * @param {ol.Map} map Map.
  * @api stable
  */
- ol_control_VideoRecorder.prototype.setMap = function (map) {
+ol_control_VideoRecorder.prototype.setMap = function (map) {
   if (this.getMap()) {
     this.getMap().removeControl(this._printCtrl);
   }
@@ -135,7 +137,7 @@ ol_control_VideoRecorder.prototype.start = function () {
     stop = false;
     capture(canvas);
     this._mediaRecorder.start();
-    this.dispatchEvent({ type: 'start' });
+    this.dispatchEvent({ type: 'start', canvas: canvas });
   }.bind(this))
   this.element.setAttribute('data-state', 'rec');
 };

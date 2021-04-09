@@ -13361,11 +13361,13 @@ ol.control.Timeline.prototype.getEndDate = function() {
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/** Print control to get an image of the map
+/** Record map canvas as video
  * @constructor
- * @fire print
+ * @fire start
  * @fire error
- * @fire printing
+ * @fire stop
+ * @fire pause
+ * @fire resume
  * @extends {ol.control.Control}
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
@@ -13433,7 +13435,7 @@ ol.ext.inherits(ol.control.VideoRecorder, ol.control.Control);
  * @param {ol.Map} map Map.
  * @api stable
  */
- ol.control.VideoRecorder.prototype.setMap = function (map) {
+ol.control.VideoRecorder.prototype.setMap = function (map) {
   if (this.getMap()) {
     this.getMap().removeControl(this._printCtrl);
   }
@@ -13482,7 +13484,7 @@ ol.control.VideoRecorder.prototype.start = function () {
     stop = false;
     capture(canvas);
     this._mediaRecorder.start();
-    this.dispatchEvent({ type: 'start' });
+    this.dispatchEvent({ type: 'start', canvas: canvas });
   }.bind(this))
   this.element.setAttribute('data-state', 'rec');
 };
