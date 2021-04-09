@@ -438,10 +438,10 @@ ol.ext.element.appendText = function(element, text) {
  * @param {string|Array<string>} eventType
  * @param {function} fn
  */
-ol.ext.element.addListener = function (element, eventType, fn) {
+ol.ext.element.addListener = function (element, eventType, fn, useCapture ) {
   if (typeof eventType === 'string') eventType = eventType.split(' ');
   eventType.forEach(function(e) {
-    element.addEventListener(e, fn);
+    element.addEventListener(e, fn, useCapture);
   });
 };
 /**
@@ -579,7 +579,10 @@ ol.ext.element.offsetRect = function(elt) {
 /** Make a div scrollable without scrollbar.
  * On touch devices the default behavior is preserved
  * @param {DOMElement} elt
- * @param {function} onmove a function that takes a boolean indicating that the div is scrolling
+ * @param {*} options
+ *  @param {function} options.onmove a function that takes a boolean indicating that the div is scrolling
+ *  @param {boolean} [options.vertical=false] 
+ *  @param {boolean} [options.animate=true] add kinetic to scroll
  */
 ol.ext.element.scrollDiv = function(elt, options) {
   var pos = false;
@@ -593,15 +596,16 @@ ol.ext.element.scrollDiv = function(elt, options) {
   elt.querySelectorAll('img').forEach(function(i) {
     i.ondragstart = function(){ return false; };
   });
+  elt.style['touch-action'] = 'none';
   // Start scrolling
-  ol.ext.element.addListener(elt, ['mousedown'], function(e) {
+  ol.ext.element.addListener(elt, ['pointerdown'], function(e) {
     moving = false;
     pos = e[page];
     dt = new Date();
     elt.classList.add('ol-move');
   });
   // Register scroll
-  ol.ext.element.addListener(window, ['mousemove'], function(e) {
+  ol.ext.element.addListener(window, ['pointermove'], function(e) {
     moving = true;
     if (pos !== false) {
       var delta = pos - e[page];
@@ -619,11 +623,23 @@ ol.ext.element.scrollDiv = function(elt, options) {
       onmove(false);
     }
   });
+  // Animate scroll
+  var animate = function(to) {
+    var step = (to>0) ? Math.min(100, to/2) : Math.max(-100, to/2);
+    to -= step;
+    elt[scroll] += step;
+    if (-1 < to && to < 1) {
+      if (moving) setTimeout(function() { elt.classList.remove('ol-move'); });
+      else elt.classList.remove('ol-move');
+      moving = false;
+    } else {
+      setTimeout(function() {
+        animate(to);
+      }, 40);
+    }
+  }
   // Stop scrolling
-  ol.ext.element.addListener(window, ['mouseup'], function(e) {
-    if (moving) setTimeout (function() { elt.classList.remove('ol-move'); });
-    else elt.classList.remove('ol-move');
-    moving = false;
+  ol.ext.element.addListener(window, ['pointerup','pointercancel'], function(e) {
     dt = new Date() - dt;
     if (dt>100) {
       // User stop: no speed
@@ -632,13 +648,13 @@ ol.ext.element.scrollDiv = function(elt, options) {
       // Calculate new speed
       speed = ((speed||0) + (pos - e[page]) / dt) / 2;
     }
-    elt[scroll] += speed*100;
+    animate(options.animate===false ? 0 : speed*200);
     pos = false;
     speed = 0;
     dt = 0;
   });
   // Handle mousewheel
-  if (options.mousewheel && !elt.classList.contains('ol-touch')) {
+  if (options.mousewheel) { // && !elt.classList.contains('ol-touch')) {
     ol.ext.element.addListener(elt, 
       ['mousewheel', 'DOMMouseScroll', 'onmousewheel'], 
       function(e) {
@@ -12187,8 +12203,7 @@ ol.control.Storymap = function(options) {
   // New element
   var element = ol.ext.element.create('DIV', {
     className: (options.className || '') + ' ol-storymap'
-      + (options.target ? '': ' ol-unselectable ol-control')
-      + ('ontouchstart' in window ? ' ol-touch' : ''),
+      + (options.target ? '': ' ol-unselectable ol-control'),
     html: options.html
   });
   element.querySelectorAll('.chapter').forEach(function(c) {
@@ -12718,7 +12733,6 @@ ol.control.Timeline = function(options) {
     className: (options.className || '') + ' ol-timeline'
       + (options.target ? '': ' ol-unselectable ol-control')
       + (options.zoomButton ? ' ol-hasbutton':'')
-      + ('ontouchstart' in window ? ' ol-touch' : '')
   });
   // Initialize
   ol.control.Control.call(this, {

@@ -1090,9 +1090,6 @@
   overflow: hidden;
   width: 100%;
 }
-.ol-imageline.ol-touch > div {
-  overflow-x: auto;
-}
 .ol-imageline > div.ol-move {
   scroll-behavior: unset;
 }
@@ -3735,9 +3732,6 @@ ul.ol-legend li div {
 .ol-storymap.ol-move {
   scroll-behavior: unset;
 }
-.ol-storymap.ol-touch {
-  overflow-y: auto;
-}
 
 .ol-control.ol-storymap .chapter {
   padding: .5em;
@@ -3898,9 +3892,6 @@ ul.ol-legend li div {
 }
 .ol-timeline .ol-scroll.ol-move {
   scroll-behavior: unset;
-}
-.ol-timeline.ol-touch .ol-scroll{
-  overflow-x: auto;
 }
 
 .ol-timeline.ol-hasbutton .ol-scroll {
