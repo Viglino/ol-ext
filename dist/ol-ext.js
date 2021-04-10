@@ -348,6 +348,73 @@ ol.ext.SVGOperation.prototype.appendChild = function(operation) {
   }
 };
 
+// Prevent overwrite
+if (ol.View.prototype.flyTo)  {
+  console.warn('[OL-EXT] View.flyTo redefinition')
+};
+/** FlyTo animation
+ * @param {*} options
+ *  @param {number} [duration=2000]
+ *  @param {ol.coordinate} [center=] destination coordinate, default current center
+ *  @param {number} [zoom=] destination zoom, current zoom
+ *  @param {number} [zoomAt=] zoom to fly to, default min (current zoom & zoom) -2
+ * @param {function} done callback function called at the end of an animation, called with true if the animation completed
+ */
+ol.View.prototype.flyTo = function(options, done) {
+  options = options || {};
+  // Start new anim
+  this.cancelAnimations();
+  var callback = (typeof(done) === 'function' ? done : function(){});
+  // Fly to destination
+  var duration = options.duration || 2000;
+  var zoomAt = options.zoomAt || (Math.min(options.zoom||100, this.getZoom())-2);
+  var zoomTo = options.zoom || this.getZoom();
+  var coord = options.center || this.getCenter();
+  // Move to
+  this.animate ({
+    center: coord,
+    duration: duration
+  });
+  // Zoom to
+  this.animate ({
+    zoom: zoomAt,
+    duration: duration/2
+  },{
+    zoom: zoomTo,
+    duration: duration/2
+  },
+  callback);
+}
+/** Start a tour on the map
+ * @param {Array<*>} destinations
+ * @param {*} options
+ *  @param {number} [delay=750] delay between destinations
+ * @param {function} done callback function called at the end of an animation,called with true if the tour completed
+ */
+ol.View.prototype.takeTour = function(destinations, options, done) {
+  options = options || {};
+  if (typeof(options)==='function') {
+    done = options;
+    options = {}
+  }
+  var index = -1;
+  function next(more) {
+    if (more) {
+      var dest = destinations[++index];
+      if (dest) {
+        var delay = index === 0 ? 0 : (options.delay || 750);
+        setTimeout(function () {
+          map.getView().flyTo(dest, next);
+        }, delay);
+      } else {
+        if (typeof(done)==='function') done(true);
+      }
+    } else {
+      if (typeof(done)==='function') done(false);
+    }
+  }
+  next(true);
+};
 /** Vanilla JS helper to manipulate DOM without jQuery
  * @see https://github.com/nefe/You-Dont-Need-jQuery
  * @see https://plainjs.com/javascript/
@@ -8432,12 +8499,24 @@ ol.control.Print.prototype._getCanvas = function(event, imageType, canvas) {
   }
   return canvas;
 };
+/** Fast print
+ * @param {*} options print options
+ *  @param {HTMLCanvasElement|undefined} [options.canvas] if none create one, only for ol@6+
+ *  @parama {string} options.imageType
+ */
 ol.control.Print.prototype.fastPrint = function(options, callback) {
-  options = options||{};
-  this.getMap().once('postcompose', function(event) {
-    callback(this._getCanvas(event, options.imageType, options.canvas));
-  }.bind(this));
-  this.getMap().render();
+  options = options || {};
+  if (this._ol6) {
+    requestAnimationFrame(function() {
+      callback(this._getCanvas({}, options.imageType, options.canvas));
+    }.bind(this));
+  } else {
+    this.getMap().once('postcompose', function(event) {
+      if (!event.context) this._ol6 = true;
+      callback(this._getCanvas(event, options.imageType, options.canvas));
+    }.bind(this));
+    this.getMap().render();
+  }
 };
 /** Print the map
  * @param {function} cback a callback function that take a string containing the requested data URI.
@@ -12194,6 +12273,7 @@ ol.control.Status.prototype.isShown = function() {
   return this.element.style.display==='none';
 };
 
+// Add flyTo
 /** A control with scroll-driven navigation to create narrative maps
  *
  * @constructor
@@ -12324,18 +12404,10 @@ ol.control.Storymap = function(options) {
       view.cancelAnimations();
       switch (currentDiv.getAttribute('data-animation')) {
         case 'flyto': {
-          // Fly to destination
-          var duration = 2000;
-          view.animate ({
+          view.flyTo({
             center: e.coordinate,
-            duration: duration
-          });
-          view.animate ({
-            zoom: Math.min(view.getZoom(), e.zoom)-1,
-            duration: duration/2
-          },{
-            zoom: e.zoom,
-            duration: duration/2
+            zoomAt: Math.min(view.getZoom(), e.zoom)-1,
+            zoom: e.zoom
           });
           break;
         }
