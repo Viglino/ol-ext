@@ -134,12 +134,24 @@ ol_control_Print.prototype._getCanvas = function(event, imageType, canvas) {
   return canvas;
 };
 
+/** Fast print
+ * @param {*} options print options
+ *  @param {HTMLCanvasElement|undefined} [options.canvas] if none create one, only for ol@6+
+ *  @parama {string} options.imageType
+ */
 ol_control_Print.prototype.fastPrint = function(options, callback) {
-  options = options||{};
-  this.getMap().once('postcompose', function(event) {
-    callback(this._getCanvas(event, options.imageType, options.canvas));
-  }.bind(this));
-  this.getMap().render();
+  options = options || {};
+  if (this._ol6) {
+    requestAnimationFrame(function() {
+      callback(this._getCanvas({}, options.imageType, options.canvas));
+    }.bind(this));
+  } else {
+    this.getMap().once('postcompose', function(event) {
+      if (!event.context) this._ol6 = true;
+      callback(this._getCanvas(event, options.imageType, options.canvas));
+    }.bind(this));
+    this.getMap().render();
+  }
 };
 
 /** Print the map
