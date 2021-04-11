@@ -392,8 +392,9 @@ ol.View.prototype.flyTo = function(options, done) {
 /** Start a tour on the map
  * @param {Array<ol.viewTourDestinations>|Array<Array>} destinations an array of destinations or an array of [x,y,zoom,type]
  * @param {function} done callback function called at the end of an animation, called with true if the tour completed
+ * @param {function} step callback function called when a destination is reached with the step index as param
  */
-ol.View.prototype.takeTour = function(destinations, options, done) {
+ol.View.prototype.takeTour = function(destinations, options, done, step) {
   options = options || {};
   if (typeof(options)==='function') {
     done = options;
@@ -403,6 +404,7 @@ ol.View.prototype.takeTour = function(destinations, options, done) {
   var next = function(more) {
     if (more) {
       var dest = destinations[++index];
+      if (typeof(step) === 'function') step(index, destinations);
       if (dest) {
         if (dest instanceof Array) dest = { center: [dest[0],dest[1]], zoom: dest[2], type: dest[3] };
         var delay = index === 0 ? 0 : (options.delay || 750);

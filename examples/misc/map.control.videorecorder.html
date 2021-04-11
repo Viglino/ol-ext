@@ -174,7 +174,8 @@
           rec.stop();
           $('body').removeClass('noPointerEvent')
         }, 1000)
-      }
+      },
+      function(step) { console.log('step: ',step); }
     );
   }
 
