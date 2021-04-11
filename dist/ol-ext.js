@@ -350,14 +350,18 @@ ol.ext.SVGOperation.prototype.appendChild = function(operation) {
 
 // Prevent overwrite
 if (ol.View.prototype.flyTo)  {
-  console.warn('[OL-EXT] View.flyTo redefinition')
-};
-/** FlyTo animation
- * @param {*} options
- *  @param {number} [duration=2000]
+  console.warn('[OL-EXT] ol/View~View.flyTo redefinition')
+}
+/** Destination
+ * @typedef {Object} ol.viewTourDestinations
+ *  @param {number} [duration=2000] animation duration
+ *  @param {string} [type=flyto] animation type (flyTo, moveTo), default flyTo
  *  @param {ol.coordinate} [center=] destination coordinate, default current center
- *  @param {number} [zoom=] destination zoom, current zoom
- *  @param {number} [zoomAt=] zoom to fly to, default min (current zoom & zoom) -2
+ *  @param {number} [zoom=] destination zoom, default current zoom
+ *  @param {number} [zoomAt=] zoom to fly to, default min (current zoom, zoom) -2
+ */
+/** FlyTo animation
+ * @param {ol.viewTourDestinations} options
  * @param {function} done callback function called at the end of an animation, called with true if the animation completed
  */
 ol.View.prototype.flyTo = function(options, done) {
@@ -384,12 +388,10 @@ ol.View.prototype.flyTo = function(options, done) {
     duration: duration/2
   },
   callback);
-}
+};
 /** Start a tour on the map
- * @param {Array<*>} destinations
- * @param {*} options
- *  @param {number} [delay=750] delay between destinations
- * @param {function} done callback function called at the end of an animation,called with true if the tour completed
+ * @param {Array<ol.viewTourDestinations>|Array<Array>} destinations an array of destinations or an array of [x,y,zoom,type]
+ * @param {function} done callback function called at the end of an animation, called with true if the tour completed
  */
 ol.View.prototype.takeTour = function(destinations, options, done) {
   options = options || {};
@@ -398,23 +400,35 @@ ol.View.prototype.takeTour = function(destinations, options, done) {
     options = {}
   }
   var index = -1;
-  function next(more) {
+  var next = function(more) {
     if (more) {
       var dest = destinations[++index];
       if (dest) {
+        if (dest instanceof Array) dest = { center: [dest[0],dest[1]], zoom: dest[2], type: dest[3] };
         var delay = index === 0 ? 0 : (options.delay || 750);
         setTimeout(function () {
-          map.getView().flyTo(dest, next);
-        }, delay);
+          switch(dest.type) {
+            case 'moveTo': {
+              this.animate(dest, next);
+              break;
+            }
+            case 'flightTo': 
+            default: {
+              this.flyTo(dest, next);
+              break;
+            }
+          }
+        }.bind(this), delay);
       } else {
         if (typeof(done)==='function') done(true);
       }
     } else {
       if (typeof(done)==='function') done(false);
     }
-  }
+  }.bind(this)
   next(true);
 };
+
 /** Vanilla JS helper to manipulate DOM without jQuery
  * @see https://github.com/nefe/You-Dont-Need-jQuery
  * @see https://plainjs.com/javascript/
@@ -17060,6 +17074,8 @@ ol.interaction.Blob.prototype.precompose_ = function(e) {
   var ratio = e.frameState.pixelRatio;
   ctx.save();
   if (!this.pos) {
+    ctx.beginPath();
+    ctx.moveTo (0,0);
     ctx.clip();
     return;
   }
