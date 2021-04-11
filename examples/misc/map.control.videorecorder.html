@@ -160,20 +160,22 @@
   function tour() {
     $('body').addClass('noPointerEvent')
     rec.start();
-    map.getView().takeTour([
-      [268923, 6248865, 15],
-      [262707, 6262016, 16],
-      [255386, 6250791, 16],
-      [259984, 6251327, 16],
-      [260022, 6251045, 12, 'moveTo']
-    ], { delay: 750 },
-    function () {
-      // Wait 1s before stop
-      setTimeout(function() {
-        rec.stop();
-        $('body').removeClass('noPointerEvent')
-      }, 1000)
-    });
+    map.getView().takeTour(
+      [
+        [268923, 6248865, 15],
+        [262707, 6262016, 16],
+        [255386, 6250791, 16],
+        [259984, 6251327, 16],
+        [260022, 6251045, 13, 'moveTo']
+      ], { delay: 750 },
+      function () {
+        // Wait 1s before stop
+        setTimeout(function() {
+          rec.stop();
+          $('body').removeClass('noPointerEvent')
+        }, 1000)
+      }
+    );
   }
 
 </script>
