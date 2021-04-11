@@ -158,7 +158,8 @@
 
   // Take a tour
   function tour() {
-    $('body').addClass('noPointerEvent')
+    $('body').addClass('noPointerEvent');
+    carte.setVisible(false);
     rec.start();
     map.getView().takeTour(
       [
@@ -173,7 +174,8 @@
         setTimeout(function() {
           rec.stop();
           $('body').removeClass('noPointerEvent')
-        }, 1000)
+          carte.setVisible(true);
+        }, 1000);
       },
       function(step) { console.log('step: ',step); }
     );
