@@ -7,9 +7,17 @@
 -->
   <title>ol-ext: Capture map video!</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+  <link rel="icon" type="image/png" href="https://openlayers.org/assets/theme/img/logo70.png" />
 
   <meta name="description" content="Record your maps!" />
-  <meta name="keywords" content="OpenLayers,ol,canvas,animation,video" />
+  <meta name="keywords" content="OpenLayers,ol,control,canvas,animation,video,record" />
+
+  <meta name="twitter:image" content="https://viglino.github.io/ol-ext/img/map.control.videorecorder.jpg" />
+  <meta name="twitter:site" content="@viglino" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="ol-ext: Capture map video!" />
+  <meta name="twitter:description" content="Record map vidio using Openlayers and ol-ext." />
 
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
@@ -28,6 +36,9 @@
   <link rel="stylesheet" href="../style.css" />
 
   <style>
+    .noPointerEvent * {
+      pointer-events: none;
+    }
     #video {
       position: fixed;
       top: 0;
@@ -77,6 +88,7 @@
       top: -5px;
       background: #369;
       box-shadow: 560px 0 #369, 560px 360px #369, 0 360px #369;
+      z-index: -1;
     }
     @keyframes blink {
       0%, 50% { opacity: 0; }
@@ -92,7 +104,8 @@
     <h1>ol-ext: Record your maps as video!</h1>
   </a>
   <p class="info">
-    The <i>ol/control/VideoRecorder</i> is a control to record the map. 
+    The <i>ol/control/VideoRecorder</i> is a control to record the map as video.
+    <br/>
     Use start, stop, pause and resume methods to record.
   </p>
 
@@ -113,14 +126,8 @@
 
 <script type="text/javascript">
   // Layers
-  var terrain = new ol.layer.Tile({
-    title:'terrain-background',
-    source: new ol.source.Stamen({ layer: 'terrain' })
-  });
-  terrain.addFilter(new ol.filter.Colorize({ operation:'luminosity', value: .45 }))
-  var stamen = new ol.layer.Tile({
-    source: new ol.source.Stamen({ layer: 'watercolor' }) 
-  });
+  var photo = new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS');
+  var carte = new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', opacity: .8 });
 
   // The map
   var map = new ol.Map({
@@ -129,11 +136,11 @@
       zoom: 10,
       center: [256697, 6249708]
     }),
-    layers: [terrain, stamen]
+    layers: [photo, carte]
   });
 
   // Blob interaction
-  var blob = new ol.interaction.Blob({ radius: 50, layers:stamen });
+  var blob = new ol.interaction.Blob({ radius: 50, layers:carte });
   map.addInteraction(blob);
 
   // Record control
@@ -151,16 +158,21 @@
 
   // Take a tour
   function tour() {
+    $('body').addClass('noPointerEvent')
     rec.start();
     map.getView().takeTour([
-      { center: [268923, 6248865], zoom: 15 },
-      { center: [262707, 6262016], zoom: 16 },
-      { center: [255386, 6250791], zoom: 16 },
-      { center: [259984, 6251327], zoom: 16 },
-      { center: [260022, 6251045], zoom: 12 },
+      [268923, 6248865, 15],
+      [262707, 6262016, 16],
+      [255386, 6250791, 16],
+      [259984, 6251327, 16],
+      [260022, 6251045, 12, 'moveTo']
     ], { delay: 750 },
     function () {
-      rec.stop();
+      // Wait 1s before stop
+      setTimeout(function() {
+        rec.stop();
+        $('body').removeClass('noPointerEvent')
+      }, 1000)
     });
   }
 

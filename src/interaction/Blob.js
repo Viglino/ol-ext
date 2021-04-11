@@ -31,6 +31,8 @@ ol_interaction_Blob.prototype.precompose_ = function(e) {
 
   ctx.save();
   if (!this.pos) {
+    ctx.beginPath();
+    ctx.moveTo (0,0);
     ctx.clip();
     return;
   }

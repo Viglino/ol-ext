@@ -2,15 +2,20 @@ import ol_View from 'ol/View'
 
 // Prevent overwrite
 if (ol_View.prototype.flyTo)  {
-  console.warn('[OL-EXT] View.flyTo redefinition')
-};
+  console.warn('[OL-EXT] ol/View~View.flyTo redefinition')
+}
+
+/** Destination
+ * @typedef {Object} ol.viewTourDestinations
+ *  @param {number} [duration=2000] animation duration
+ *  @param {string} [type=flyto] animation type (flyTo, moveTo), default flyTo
+ *  @param {ol_coordinate} [center=] destination coordinate, default current center
+ *  @param {number} [zoom=] destination zoom, default current zoom
+ *  @param {number} [zoomAt=] zoom to fly to, default min (current zoom, zoom) -2
+ */
 
 /** FlyTo animation
- * @param {*} options
- *  @param {number} [duration=2000]
- *  @param {ol_coordinate} [center=] destination coordinate, default current center
- *  @param {number} [zoom=] destination zoom, current zoom
- *  @param {number} [zoomAt=] zoom to fly to, default min (current zoom & zoom) -2
+ * @param {ol.viewTourDestinations} options
  * @param {function} done callback function called at the end of an animation, called with true if the animation completed
  */
 ol_View.prototype.flyTo = function(options, done) {
@@ -37,13 +42,11 @@ ol_View.prototype.flyTo = function(options, done) {
     duration: duration/2
   },
   callback);
-}
+};
 
 /** Start a tour on the map
- * @param {Array<*>} destinations
- * @param {*} options
- *  @param {number} [delay=750] delay between destinations
- * @param {function} done callback function called at the end of an animation,called with true if the tour completed
+ * @param {Array<ol.viewTourDestinations>|Array<Array>} destinations an array of destinations or an array of [x,y,zoom,type]
+ * @param {function} done callback function called at the end of an animation, called with true if the tour completed
  */
 ol_View.prototype.takeTour = function(destinations, options, done) {
   options = options || {};
@@ -52,20 +55,33 @@ ol_View.prototype.takeTour = function(destinations, options, done) {
     options = {}
   }
   var index = -1;
-  function next(more) {
+  var next = function(more) {
     if (more) {
       var dest = destinations[++index];
       if (dest) {
+        if (dest instanceof Array) dest = { center: [dest[0],dest[1]], zoom: dest[2], type: dest[3] };
         var delay = index === 0 ? 0 : (options.delay || 750);
         setTimeout(function () {
-          map.getView().flyTo(dest, next);
-        }, delay);
+          switch(dest.type) {
+            case 'moveTo': {
+              this.animate(dest, next);
+              break;
+            }
+            case 'flightTo': 
+            default: {
+              this.flyTo(dest, next);
+              break;
+            }
+          }
+        }.bind(this), delay);
       } else {
         if (typeof(done)==='function') done(true);
       }
     } else {
       if (typeof(done)==='function') done(false);
     }
-  }
+  }.bind(this)
   next(true);
 };
+
+export default ol_View
