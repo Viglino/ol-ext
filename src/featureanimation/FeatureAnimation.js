@@ -19,7 +19,7 @@ import ol_source_Vector from 'ol/source/Vector'
 import ol_render_getVectorContext from '../util/getVectorContext';
 
 /** Feature animation base class
- * Use the {@link _ol_Map_#animateFeature} or {@link _ol_layer_Vector_#animateFeature} to animate a feature
+ * Use the {@link ol.Map#animateFeature} or {@link ol.layer.Vector#animateFeature} to animate a feature
  * on postcompose in a map or a layer
 * @constructor
 * @fires animationstart
