@@ -46,7 +46,6 @@ ol_filter_Colorize.prototype.setFilter = function(options) {
   this.set ('value', options.value||1);
   var v;
   switch (options.operation){
-    case 'color':
     case 'hue':
     case 'difference':
     case 'color-dodge':
@@ -75,6 +74,7 @@ ol_filter_Colorize.prototype.setFilter = function(options) {
     }
     default: {
       this.set ('operation', 'color');
+      this.setValue(options.value||1);
       break;
     }
   }
@@ -112,7 +112,6 @@ ol_filter_Colorize.prototype.postcompose = function(e) {
   // Set back color hue
   var ctx = e.context;
   var canvas = ctx.canvas;
-  
   ctx.save();
     if (this.get('operation')=='enhance') {
       var v = this.get('value');

@@ -14291,7 +14291,7 @@ ol.control.WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) 
   released under the CeCILL license (http://www.cecill.info/).
 */
 /** Feature animation base class
- * Use the {@link _ol_Map_#animateFeature} or {@link _ol_layer_Vector_#animateFeature} to animate a feature
+ * Use the {@link ol.Map#animateFeature} or {@link ol.layer.Vector#animateFeature} to animate a feature
  * on postcompose in a map or a layer
 * @constructor
 * @fires animationstart
@@ -15517,7 +15517,6 @@ ol.filter.Colorize.prototype.setFilter = function(options) {
   this.set ('value', options.value||1);
   var v;
   switch (options.operation){
-    case 'color':
     case 'hue':
     case 'difference':
     case 'color-dodge':
@@ -15546,6 +15545,7 @@ ol.filter.Colorize.prototype.setFilter = function(options) {
     }
     default: {
       this.set ('operation', 'color');
+      this.setValue(options.value||1);
       break;
     }
   }
