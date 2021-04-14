@@ -160,6 +160,8 @@ window.geoportailConfig.capabilities['h1osiyvfm7c4wu976jv6gpum'] = window.geopor
     className: 'cadastre',
     gppKey: 'choisirgeoportail',
   });
+  cadastre.addFilter(new ol.filter.Colorize({ operation:'hue', color: [0,0,0], value:1, preserveAlpha: true }))
+  cadastre.addFilter(new ol.filter.Colorize({ operation:'enhance', value:.1, preserveAlpha: true }))
   createMap('cadastre', new ol.layer.Geoportail({
       layer : 'CADASTRALPARCELS.PARCELS',
       gppKey: 'h1osiyvfm7c4wu976jv6gpum'

@@ -13,6 +13,7 @@ import {asArray as ol_color_asArray} from 'ol/color'
  * @property {string} operation 'enhance' or a CanvasRenderingContext2D.globalCompositeOperation
  * @property {number} value a value to modify the effect value [0-1]
  * @property {boolean} inner mask inner, default false
+ * @property {boolean} preserveAlpha preserve alpha channel, default false
  */
 
 /** Colorize map or layer
@@ -44,6 +45,7 @@ ol_filter_Colorize.prototype.setFilter = function(options) {
   var color = options.color ? ol_color_asArray(options.color) : [ options.red, options.green, options.blue, options.value];
   this.set('color', ol_color_asString(color))
   this.set ('value', options.value||1);
+  this.set ('preserveAlpha', options.preserveAlpha);
   var v;
   switch (options.operation){
     case 'hue':
@@ -118,16 +120,45 @@ ol_filter_Colorize.prototype.postcompose = function(e) {
       if (v) {
         var w = canvas.width;
         var h = canvas.height;
-        ctx.globalCompositeOperation = 'color-burn'
-        ctx.globalAlpha = v;
-        ctx.drawImage (canvas, 0, 0, w, h);
-        ctx.drawImage (canvas, 0, 0, w, h);
-        ctx.drawImage (canvas, 0, 0, w, h);
+        if (this.get('preserveAlpha')) {
+          var c2 = document.createElement('CANVAS');
+          c2.width = canvas.width;
+          c2.height = canvas.height;
+          var ctx2 = c2.getContext('2d');
+          ctx2.drawImage (canvas, 0, 0, w, h);
+          ctx2.globalCompositeOperation = 'color-burn';
+          console.log(v)
+          ctx2.globalAlpha = v;
+          ctx2.drawImage (c2, 0, 0, w, h);
+          ctx2.drawImage (c2, 0, 0, w, h);
+          ctx2.drawImage (c2, 0, 0, w, h);
+          ctx.globalCompositeOperation = 'source-in';
+          ctx.drawImage(c2, 0,0);
+        } else {  
+          ctx.globalCompositeOperation = 'color-burn'
+          ctx.globalAlpha = v;
+          ctx.drawImage (canvas, 0, 0, w, h);
+          ctx.drawImage (canvas, 0, 0, w, h);
+          ctx.drawImage (canvas, 0, 0, w, h);
+        }
       }
     } else {
-      ctx.globalCompositeOperation = this.get('operation');
-      ctx.fillStyle = this.get('color');
-      ctx.fillRect(0,0,canvas.width,canvas.height);  
+      if (this.get('preserveAlpha')) {
+        var c2 = document.createElement('CANVAS');
+        c2.width = canvas.width;
+        c2.height = canvas.height;
+        var ctx2 = c2.getContext('2d');
+        ctx2.drawImage(canvas, 0,0);
+        ctx2.globalCompositeOperation = this.get('operation');
+        ctx2.fillStyle = this.get('color');
+        ctx2.fillRect(0,0,canvas.width,canvas.height);
+        ctx.globalCompositeOperation = 'source-in';
+        ctx.drawImage(c2, 0,0);
+      } else {
+        ctx.globalCompositeOperation = this.get('operation');
+        ctx.fillStyle = this.get('color');
+        ctx.fillRect(0,0,canvas.width,canvas.height);  
+      }
     }
   ctx.restore();
 }
