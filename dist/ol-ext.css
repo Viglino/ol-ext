@@ -2611,6 +2611,14 @@ ul.ol-legend li div {
           box-shadow: 0 0 .2em rgba(0,0,0,.5);
 }
 
+.ol-ext-print-dialog .ol-ext-toggle-switch span {
+  position: absolute;
+  right: -2em;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+          transform: translateY(-50%);
+}
+
 .ol-print-title input[type=text] {
   margin-top: .5em;
   width: calc(100% - 6em);
@@ -3318,9 +3326,17 @@ ul.ol-legend li div {
 }
 .ol-control.ol-searchgps > button:first-child:before {
   content: "x/y";
+  position: unset;
   display: block;
   -webkit-transform: scaleX(.8);
           transform: scaleX(.8);
+  border: unset;
+  border-radius: 0;
+  width: auto;
+  height: auto;
+}
+.ol-control.ol-searchgps > button:first-child:after {
+  content: unset;
 }
 .ol-control.ol-searchgps .ol-latitude,
 .ol-control.ol-searchgps .ol-longitude {
@@ -3342,59 +3358,16 @@ ul.ol-legend li div {
   max-width: 10em;
 }
 
-.ol-control.ol-searchgps .ol-switch {
+.ol-control.ol-searchgps .ol-ext-toggle-switch {
   cursor: pointer;
   float: right;
   margin: .5em;
   font-size: .9em;
 }
-.ol-control.ol-searchgps .ol-switch input {
-  display: none;
-}
-.ol-control.ol-searchgps .ol-switch span {
-  color: rgba(0,60,136,.5);
-  position: relative;
-  cursor: pointer;
-  background-color: #ccc;
-  -webkit-transition: .4s;
-  transition: .4s;
-  width: 1.6em;
-  height: 1em;
-  display: inline-block;
-  border-radius: 1em;
-  font-size: 1.3em;
-  vertical-align: middle;
-  margin: 0 .2em;
-}
-.ol-control.ol-searchgps .ol-switch span:before {
-  position: absolute;
-  content: "";
-  height: 1em;
-  width: 1em;
-  left: 0;
-  top: 50%;
-  background-color: #fff;
-  -webkit-transition: .4s;
-  transition: .4s;
-  border-radius: 1em;
-  display: block;
-  -webkit-transform: translateY(-50%);
-          transform: translateY(-50%);
-  border: 2px solid #ccc;
-  -webkit-box-sizing: border-box;
-          box-sizing: border-box;
-}
-.ol-control.ol-searchgps .ol-switch input:checked + span {
-  background-color: currentColor;
-}
-.ol-control.ol-searchgps .ol-switch input:checked + span:before {
-  -webkit-transform: translate(.6em,-50%);
-          transform: translate(.6em,-50%);
-  border-color: currentColor;
-}
 
 .ol-searchgps .ol-decimal{
   display: inline-block;
+  margin-right: .7em;
 }
 .ol-searchgps .ol-dms,
 .ol-searchgps.ol-dms .ol-decimal {
@@ -3407,7 +3380,8 @@ ul.ol-legend li div {
 }
 
 .ol-searchgps span.ol-dms {
-  width: auto;
+  width: .5em;
+  text-align: left;
 }
 .ol-searchgps.ol-control.ol-collapsed button.ol-geoloc {
   display: none;
@@ -3528,96 +3502,15 @@ ul.ol-legend li div {
 .ol-control.ol-select.ol-collapsed > div {
   display: none;
 }
+
 .ol-control.ol-select.ol-select-check {
   max-width: 20em;
 }
-.ol-control.ol-select.ol-select-check label,
-.ol-control.ol-select-check div {
-  position: relative;
-  display: inline-block;
+.ol-control.ol-select label.ol-ext-check {
+  margin-right: 1em;
 }
-.ol-control.ol-select.ol-select-condition input,
-.ol-control.ol-select.ol-select-check input {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-  height: 0;
-  width: 0;
-}
-.ol-control.ol-select.ol-select-condition label div {
-  position: relative;
-  padding: 0 1em 0 2em;
-}
-.ol-control.ol-select.ol-select-condition label div:before {
-  content: "";
-  position: absolute;
-  left: 0;
-  height: 1.1em;
-  width: 1.8em;
-  background-color: rgba(192,192,192,.7);
-  -webkit-box-sizing: border-box;
-          box-sizing: border-box;
-  border-radius: 1em;
-}
-.ol-control.ol-select.ol-select-condition label div:after {
-  content: "";
-  position: absolute;
-  left: .1em;
-  top: .1em;
-  height: .9em;
-  width: .9em;
-  background-color: #fff;
-  -webkit-box-sizing: border-box;
-          box-sizing: border-box;
-  border-radius: 1em;
-  -webkit-transition: .3s;
-  transition: .3s;
-}
-.ol-control.ol-select.ol-select-condition input:checked ~ div:after {
-  left: .7em;
-}
-
-.ol-control.ol-select.ol-select-check label > div {
-  padding: 0 1em 0 1.5em;
-}
-.ol-control.ol-select.ol-select-check label > div:before {
-  content: "";
-  position: absolute;
-  width: 1.1em;
-  height: 1.1em;
-  left: .2em;
-  background-color: rgba(192,192,192,.7);
-  -webkit-box-sizing: border-box;
-          box-sizing: border-box;
-}
-.ol-control.ol-select.ol-select-check label.ol-radio > div:before {
-  border-radius: 50%;
-}
-.ol-control.ol-select.ol-select-condition label > div:hover:before,
-.ol-control.ol-select.ol-select-check label > div:hover:before {
-  background-color: rgba(128,128,128,.7);
-}
-.ol-control.ol-select.ol-select-condition input:checked ~ div:before,
-.ol-control.ol-select.ol-select-check input:checked ~ div:before {
-  background-color: rgba(0,60,136,.7);
-}
-.ol-control.ol-select.ol-select-check label.ol-checkbox input:checked ~ div:after {
-  content: "";
-  position: absolute;
-  width: .5em;
-  height: .8em;
-  top: .05em;
-  left: .5em;
-  border: 2px solid #fff;
-  border-width: 0 3px 3px 0;
-  -webkit-transform: rotate(45deg);
-          transform: rotate(45deg);
-  -webkit-box-sizing: border-box;
-          box-sizing: border-box;
-}
-.ol-control.ol-select.ol-select-check label.ol-radio input:checked ~ div:before {
-  border: .3em solid rgba(0,60,136,.7);
-  background-color: #fff;
+.ol-control.ol-select label.ol-ext-toggle-switch span {
+  font-size: 1.1em;
 }
 
 .ol-select ul {
@@ -5468,51 +5361,102 @@ ul.ol-legend li div {
   margin: 0;
 }
 
+/* Toggle Switch */
 .ol-ext-toggle-switch {
+  cursor: pointer;
   position: relative;
-  padding-right: 2.2em;
 }
 .ol-ext-toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
+  display: none;
 }
 .ol-ext-toggle-switch span {
-  position: absolute;
+  color: rgba(0,60,136,.5);
+  position: relative;
   cursor: pointer;
   background-color: #ccc;
-  top: 50%;
-  right: 0;
-  width: 2.2em;
-  height: 1.2em;
+  -webkit-transition: .4s, background-color 0s, border-color 0s;
+  transition: .4s, background-color 0s, border-color 0s;
+  width: 1.6em;
+  height: 1em;
+  display: inline-block;
   border-radius: 1em;
-  -webkit-transform: translateY(-50%);
-          transform: translateY(-50%);
-  -webkit-transition: .4s;
-  transition: .4s;
+  font-size: 1.3em;
+  vertical-align: middle;
+  margin: -.15em .2em .15em;
 }
 .ol-ext-toggle-switch span:before {
   position: absolute;
   content: "";
-  height: .8em;
-  width: .8em;
-  left: .2em;
+  height: 1em;
+  width: 1em;
+  left: 0;
   top: 50%;
-  background-color: white;
-  border-radius: 1em;
+  background-color: #fff;
   -webkit-transition: .4s;
   transition: .4s;
-  -webkit-transform: translate(0,-50%);
-          transform: translate(0,-50%);
+  border-radius: 1em;
+  display: block;
+  -webkit-transform: translateY(-50%);
+          transform: translateY(-50%);
+  border: 2px solid #ccc;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+}
+.ol-ext-toggle-switch:hover span {
+  background-color: #999;
+}
+.ol-ext-toggle-switch:hover span:before {
+  border-color: #999;
 }
 
 .ol-ext-toggle-switch input:checked + span {
-  background-color: rgba(0,60,136,.7);
+  background-color: currentColor;
+}
+.ol-ext-toggle-switch input:checked + span:before {
+  -webkit-transform: translate(.6em,-50%);
+          transform: translate(.6em,-50%);
+  border-color: currentColor;
 }
 
-.ol-ext-toggle-switch input:checked + span:before {
-  -webkit-transform: translate(1em, -50%);
-          transform: translate(1em, -50%);
+/* Check/radio buttons */
+.ol-ext-check {
+  position: relative;
+  display: inline-block;
+}
+.ol-ext-check input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+.ol-ext-check span {
+  color: rgba(0,60,136,.5);
+  position: relative;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin: -.2em .5em .2em;
+  background-color: #ccc;
+  vertical-align: middle;
+}
+.ol-ext-check:hover span {
+  background-color: #999;
+}
+.ol-ext-check input:checked ~ span {
+  background-color: currentColor;
+}
+.ol-ext-check input:checked ~ span:before {
+  content: "";
+  position: absolute;
+  width: .5em;
+  height: .8em;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translateY(-.1em) translate(-50%, -50%) rotate(45deg);
+          transform: translateY(-.1em) translate(-50%, -50%) rotate(45deg);
+  -webkit-box-shadow: inset -0.2em -0.2em #fff;
+          box-shadow: inset -0.2em -0.2em #fff;
 }
 
 

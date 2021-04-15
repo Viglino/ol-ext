@@ -500,6 +500,71 @@ ol.ext.element.create = function (tagName, options) {
   }
   return elt;
 };
+/** Create a toggle switch input
+ * @param {*} options
+ *  @param {string|Element} options.html
+ *  @param {string|Element} options.after
+ *  @param {boolean} options.checked
+ *  @param {*} [options.on] a list of actions
+ *  @param {function} [options.click]
+ *  @param {function} [options.change]
+ *  @param {Element} options.parent
+ */
+ol.ext.element.createSwitch = function (options) {
+  var label = ol.ext.element.create('LABEL',{ 
+    html: options.html,
+    className: 'ol-ext-toggle-switch',
+    parent: options.parent
+  });
+  var input = ol.ext.element.create('INPUT', {
+    type: 'checkbox',
+    checked: options.checked,
+    click: options.click,
+    change: options.change,
+    on: options.on,
+    parent: label
+  });
+  ol.ext.element.create('SPAN', { parent: label });
+  if (options.after) {
+    label.appendChild(document.createTextNode(options.after));
+  }
+  return input;
+};
+/** Create a toggle switch input
+ * @param {*} options
+ *  @param {string|Element} options.html
+ *  @param {string|Element} options.after
+ *  @param {string} [options.name=] input name
+ *  @param {string} [options.type=checkbox] input type: radio or checkbox
+ *  @param {string} options.value input value
+ *  @param {*} [options.on] a list of actions
+ *  @param {function} [options.click]
+ *  @param {function} [options.change]
+ *  @param {Element} options.parent
+ */
+ol.ext.element.createCheck = function (options) {
+  var label = ol.ext.element.create('LABEL', {
+    className: 'ol-ext-check ' + (options.type==='radio' ? 'ol-ext-radio' : 'ol-ext-checkbox'),
+    html: options.html,
+    parent: options.parent
+  });
+  var input = ol.ext.element.create('INPUT', {
+    name: options.name,
+    type: (options.type==='radio' ? 'radio' : 'checkbox'),
+    value: options.val,
+    change: options.change,
+    click: options.click,
+    on: options.on,
+    parent: label
+  });
+  ol.ext.element.create('SPAN', {
+    parent: label
+  });
+  if (options.after) {
+    label.appendChild(document.createTextNode(options.after));
+  }
+  return input;
+};
 /** Set inner html or append a child element to an element
  * @param {Element} element
  * @param {Element|string} html Content of the element
@@ -8815,57 +8880,39 @@ ol.control.PrintDialog = function(options) {
     className: 'ol-legend',
     parent: ul 
   });
-  label = ol.ext.element.create('LABEL',{ 
+  var legend = ol.ext.element.createSwitch({ 
     html: (this.labels.legend || 'Legend'),
-    className: 'ol-ext-toggle-switch',
-    parent: li
-  });
-  var legend = ol.ext.element.create('INPUT', {
-    type: 'checkbox',
     checked: false,
     on: { change: function() {
       extraCtrl.legend.control.setCanvas(legend.checked);
     }.bind(this) },
-    parent: label
+    parent: li 
   });
-  ol.ext.element.create('SPAN', { parent: label });
   // North
   li = ol.ext.element.create('LI',{ 
     className: 'ol-print-north',
     parent: ul 
   });
-  label = ol.ext.element.create('LABEL',{ 
+  var north = this._input.north = ol.ext.element.createSwitch({ 
     html: this.labels.north || 'North arrow',
-    className: 'ol-ext-toggle-switch',
-    parent: li
-  });
-  var north = this._input.north = ol.ext.element.create('INPUT',{ 
-    html: this.labels.north || 'North arrow',
-    type: 'checkbox',
     on:  { change: function() {
       this._compass.set('visible', north.checked);
       this.getMap().render();
     }.bind(this)},
-    parent: label
+    parent: li 
   });
-  ol.ext.element.create('SPAN', { parent: label });
-  // North
+  // Title
   li = ol.ext.element.create('LI',{ 
     className: 'ol-print-title',
     parent: ul 
   });
-  label = ol.ext.element.create('LABEL',{ 
+  var title = ol.ext.element.createSwitch({ 
     html: (this.labels.mapTitle || 'Title'),
-    className: 'ol-ext-toggle-switch',
-    parent: li
-  });
-  var title = ol.ext.element.create('INPUT', {
-    type: 'checkbox',
     checked: false,
     on: { change: function(e) {
       extraCtrl.title.control.setVisible(e.target.checked);
     }.bind(this) },
-    parent: label
+    parent: li 
   });
   var titleText = ol.ext.element.create('INPUT', {
     type: 'text',
@@ -8883,7 +8930,6 @@ ol.control.PrintDialog = function(options) {
     },
     parent: li
   });
-  ol.ext.element.create('SPAN', { parent: label });
   // User div element
   var userElt = ol.ext.element.create('DIV', {
     className: 'ol-user-param',
@@ -10790,30 +10836,14 @@ ol.control.SearchGPS = function(options) {
     }.bind(this)
   })
   // DMS switcher
-  var dms = ol.ext.element.create('LABEL', {
-    className: 'ol-switch',
-    parent: this.element
-  });
-  ol.ext.element.create('TEXT', {
+  ol.ext.element.createSwitch({
     html: 'decimal',
-    parent: dms
-  });
-  ol.ext.element.create('INPUT', {
-    type: 'checkbox',
-    parent: dms,
-    on: {
-      'change': function(e) {
-        if (e.target.checked) this.element.classList.add('ol-dms');
-        else this.element.classList.remove('ol-dms');
-      }.bind(this)
-    }
-  });
-  ol.ext.element.create ('SPAN', {
-    parent: dms
-  });
-  ol.ext.element.create('TEXT', {
-    html: 'DMS',
-    parent: dms
+    after: 'DMS',
+    change: function(e) {
+      if (e.target.checked) this.element.classList.add('ol-dms');
+      else this.element.classList.remove('ol-dms');
+    }.bind(this),
+    parent: this.element
   });
   this._createForm();
   // Move list to the end
@@ -11757,7 +11787,11 @@ ol.control.SelectCheck = function(options) {
   this._selectAll = options.selectAll;
   this._onchoice = options.onchoice;
   // Set select options
-  this.setValues();
+  if (options.values) {
+    this.setValues({ values: options.values, sort: true });
+  } else {
+    this.setValues();
+  }
 };
 ol.ext.inherits(ol.control.SelectCheck, ol.control.SelectBase);
 /**
@@ -11803,7 +11837,6 @@ ol.control.SelectCheck.prototype.doSelect = function(options) {
  */
 ol.control.SelectCheck.prototype.setValues = function(options) {
   options = options || {};
-  console.log(options)
   var values, vals;
   if (options.values) {
     if (options.values instanceof Array) {
@@ -11837,26 +11870,21 @@ ol.control.SelectCheck.prototype.setValues = function(options) {
   this._checks = [];
   var id = 'radio_'+(new Date().getTime());
   var addCheck = function(val, info) {
-    var label = ol.ext.element.create('LABEL', {
-      className: (this.get('type')==='radio' ? 'ol-radio' : 'ol-checkbox'),
-      parent: this._input
-    });
-    this._checks.push( ol.ext.element.create('INPUT', {
+    this._checks.push( ol.ext.element.createCheck({
+      after: info,
       name: id,
-      type: (this.get('type')==='radio' ? 'radio' : 'checkbox'),
-      value: val,
+      val: val,
+      type: this.get('type'),
       change: function () { 
         if (this._onchoice) this._onchoice()
         else this.doSelect();
       }.bind(this),
-      parent: label
+      parent: this._input
     }));
-    ol.ext.element.create('DIV', {
-      html: info,
-      parent: label
-    });
   }.bind(this);
-  if (this.get('defaultLabel') && this.get('type')==='radio') addCheck('', this.get('defaultLabel'));
+  if (this.get('defaultLabel') && this.get('type')==='radio') {
+    addCheck('', this.get('defaultLabel'));
+  }
   for (var k in values) addCheck(k, values[k]);
 };
 
@@ -11883,21 +11911,14 @@ ol.control.SelectCondition = function(options) {
   if (!options) options = {};
   // Container
   var div = options.content = ol.ext.element.create('DIV');
-  var label = ol.ext.element.create('LABEL', {
-    parent: div
-  });
-  this._check = ol.ext.element.create('INPUT', {
-    type: 'checkbox',
+  this._check = ol.ext.element.createSwitch({
+    after: options.label || 'condition',
     change: function () { 
       if (this._onchoice) this._onchoice()
       else this.doSelect();
     }.bind(this),
-    parent: label
-  });
-  ol.ext.element.create('DIV', {
-    html: options.label || 'condition',
-    parent: label
-  });
+    parent: div
+  })
   // Input div
   this._input = ol.ext.element.create('DIV', {
     parent: div
