@@ -28,8 +28,8 @@ function getDMS(l) {
 // Constructor
 exif2geojson = function (img, options) {
   options = options || {};
-  if (typeof(options.loading) != "function") options.loading = function(){};
-  if (typeof(options.onLoad) != "function") options.onLoad = function(json){ console.log(json); };
+  if (typeof(options.loading) !== "function") options.loading = function(){};
+  if (typeof(options.onLoad) !== "function") options.onLoad = function(json){ console.log(json); };
   //
   var json = {
     "type": "FeatureCollection",
