@@ -216,59 +216,41 @@ var ol_control_PrintDialog = function(options) {
     className: 'ol-legend',
     parent: ul 
   });
-  label = ol_ext_element.create('LABEL',{ 
+  var legend = ol_ext_element.createSwitch({ 
     html: (this.labels.legend || 'Legend'),
-    className: 'ol-ext-toggle-switch',
-    parent: li
-  });
-  var legend = ol_ext_element.create('INPUT', {
-    type: 'checkbox',
     checked: false,
     on: { change: function() {
       extraCtrl.legend.control.setCanvas(legend.checked);
     }.bind(this) },
-    parent: label
+    parent: li 
   });
-  ol_ext_element.create('SPAN', { parent: label });
 
   // North
   li = ol_ext_element.create('LI',{ 
     className: 'ol-print-north',
     parent: ul 
   });
-  label = ol_ext_element.create('LABEL',{ 
+  var north = this._input.north = ol_ext_element.createSwitch({ 
     html: this.labels.north || 'North arrow',
-    className: 'ol-ext-toggle-switch',
-    parent: li
-  });
-  var north = this._input.north = ol_ext_element.create('INPUT',{ 
-    html: this.labels.north || 'North arrow',
-    type: 'checkbox',
     on:  { change: function() {
       this._compass.set('visible', north.checked);
       this.getMap().render();
     }.bind(this)},
-    parent: label
+    parent: li 
   });
-  ol_ext_element.create('SPAN', { parent: label });
 
-  // North
+  // Title
   li = ol_ext_element.create('LI',{ 
     className: 'ol-print-title',
     parent: ul 
   });
-  label = ol_ext_element.create('LABEL',{ 
+  var title = ol_ext_element.createSwitch({ 
     html: (this.labels.mapTitle || 'Title'),
-    className: 'ol-ext-toggle-switch',
-    parent: li
-  });
-  var title = ol_ext_element.create('INPUT', {
-    type: 'checkbox',
     checked: false,
     on: { change: function(e) {
       extraCtrl.title.control.setVisible(e.target.checked);
     }.bind(this) },
-    parent: label
+    parent: li 
   });
   var titleText = ol_ext_element.create('INPUT', {
     type: 'text',
@@ -286,7 +268,8 @@ var ol_control_PrintDialog = function(options) {
     },
     parent: li
   });
-  ol_ext_element.create('SPAN', { parent: label });
+
+
   
   // User div element
   var userElt = ol_ext_element.create('DIV', {

@@ -136,7 +136,14 @@
       }),
       new ol.control.SelectCheck({
         label: 'Author:',
-        property: 'author'
+        property: 'author',
+        // type: 'radio',
+        values: {
+          'Opérateur D ; Brissy, Edouard': 'Brissy, Edouard',
+          'Opérateur D ; Sélince': 'Sélince',
+          'Opérateur Théta (code armée, photographe)': 'Théta'
+        },
+        sort: true 
       }),
       new ol.control.SelectCondition({
         label: 'before 1918',
@@ -146,6 +153,7 @@
   });
   // Add control
   map.addControl (selectCtrl);
+  /* 
   // Fill control values
   selectCtrl.getControls()[2].setValues({
     values: {
@@ -155,6 +163,7 @@
     },
     sort: true 
   });
+  */
   // Do something on select
   selectCtrl.on('select', function(e) {
     selecti.getFeatures().clear();

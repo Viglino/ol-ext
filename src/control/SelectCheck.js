@@ -51,7 +51,11 @@ var ol_control_SelectCheck = function(options) {
   this._onchoice = options.onchoice;
 
   // Set select options
-  this.setValues();
+  if (options.values) {
+    this.setValues({ values: options.values, sort: true });
+  } else {
+    this.setValues();
+  }
 };
 ol_ext_inherits(ol_control_SelectCheck, ol_control_SelectBase);
 
@@ -100,7 +104,6 @@ ol_control_SelectCheck.prototype.doSelect = function(options) {
  */
 ol_control_SelectCheck.prototype.setValues = function(options) {
   options = options || {};
-  console.log(options)
   var values, vals;
   if (options.values) {
     if (options.values instanceof Array) {
@@ -134,26 +137,21 @@ ol_control_SelectCheck.prototype.setValues = function(options) {
   this._checks = [];
   var id = 'radio_'+(new Date().getTime());
   var addCheck = function(val, info) {
-    var label = ol_ext_element.create('LABEL', {
-      className: (this.get('type')==='radio' ? 'ol-radio' : 'ol-checkbox'),
-      parent: this._input
-    });
-    this._checks.push( ol_ext_element.create('INPUT', {
+    this._checks.push( ol_ext_element.createCheck({
+      after: info,
       name: id,
-      type: (this.get('type')==='radio' ? 'radio' : 'checkbox'),
-      value: val,
+      val: val,
+      type: this.get('type'),
       change: function () { 
         if (this._onchoice) this._onchoice()
         else this.doSelect();
       }.bind(this),
-      parent: label
+      parent: this._input
     }));
-    ol_ext_element.create('DIV', {
-      html: info,
-      parent: label
-    });
   }.bind(this);
-  if (this.get('defaultLabel') && this.get('type')==='radio') addCheck('', this.get('defaultLabel'));
+  if (this.get('defaultLabel') && this.get('type')==='radio') {
+    addCheck('', this.get('defaultLabel'));
+  }
   for (var k in values) addCheck(k, values[k]);
 };
 

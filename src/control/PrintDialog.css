@@ -148,6 +148,13 @@
   box-shadow: 0 0 .2em rgba(0,0,0,.5);
 }
 
+.ol-ext-print-dialog .ol-ext-toggle-switch span {
+  position: absolute;
+  right: -2em;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 .ol-print-title input[type=text] {
   margin-top: .5em;
   width: calc(100% - 6em);

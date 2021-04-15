@@ -74,90 +74,15 @@
 .ol-control.ol-select.ol-collapsed > div {
   display: none;
 }
+
 .ol-control.ol-select.ol-select-check {
   max-width: 20em;
 }
-.ol-control.ol-select.ol-select-check label,
-.ol-control.ol-select-check div {
-  position: relative;
-  display: inline-block;
+.ol-control.ol-select label.ol-ext-check {
+  margin-right: 1em;
 }
-.ol-control.ol-select.ol-select-condition input,
-.ol-control.ol-select.ol-select-check input {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-  height: 0;
-  width: 0;
-}
-.ol-control.ol-select.ol-select-condition label div {
-  position: relative;
-  padding: 0 1em 0 2em;
-}
-.ol-control.ol-select.ol-select-condition label div:before {
-  content: "";
-  position: absolute;
-  left: 0;
-  height: 1.1em;
-  width: 1.8em;
-  background-color: rgba(192,192,192,.7);
-  box-sizing: border-box;
-  border-radius: 1em;
-}
-.ol-control.ol-select.ol-select-condition label div:after {
-  content: "";
-  position: absolute;
-  left: .1em;
-  top: .1em;
-  height: .9em;
-  width: .9em;
-  background-color: #fff;
-  box-sizing: border-box;
-  border-radius: 1em;
-  transition: .3s;
-}
-.ol-control.ol-select.ol-select-condition input:checked ~ div:after {
-  left: .7em;
-}
-
-.ol-control.ol-select.ol-select-check label > div {
-  padding: 0 1em 0 1.5em;
-}
-.ol-control.ol-select.ol-select-check label > div:before {
-  content: "";
-  position: absolute;
-  width: 1.1em;
-  height: 1.1em;
-  left: .2em;
-  background-color: rgba(192,192,192,.7);
-  box-sizing: border-box;
-}
-.ol-control.ol-select.ol-select-check label.ol-radio > div:before {
-  border-radius: 50%;
-}
-.ol-control.ol-select.ol-select-condition label > div:hover:before,
-.ol-control.ol-select.ol-select-check label > div:hover:before {
-  background-color: rgba(128,128,128,.7);
-}
-.ol-control.ol-select.ol-select-condition input:checked ~ div:before,
-.ol-control.ol-select.ol-select-check input:checked ~ div:before {
-  background-color: rgba(0,60,136,.7);
-}
-.ol-control.ol-select.ol-select-check label.ol-checkbox input:checked ~ div:after {
-  content: "";
-  position: absolute;
-  width: .5em;
-  height: .8em;
-  top: .05em;
-  left: .5em;
-  border: 2px solid #fff;
-  border-width: 0 3px 3px 0;
-  transform: rotate(45deg);
-  box-sizing: border-box;
-}
-.ol-control.ol-select.ol-select-check label.ol-radio input:checked ~ div:before {
-  border: .3em solid rgba(0,60,136,.7);
-  background-color: #fff;
+.ol-control.ol-select label.ol-ext-toggle-switch span {
+  font-size: 1.1em;
 }
 
 .ol-select ul {

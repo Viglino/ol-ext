@@ -218,8 +218,16 @@
 }
 .ol-control.ol-searchgps > button:first-child:before {
   content: "x/y";
+  position: unset;
   display: block;
   transform: scaleX(.8);
+  border: unset;
+  border-radius: 0;
+  width: auto;
+  height: auto;
+}
+.ol-control.ol-searchgps > button:first-child:after {
+  content: unset;
 }
 .ol-control.ol-searchgps .ol-latitude,
 .ol-control.ol-searchgps .ol-longitude {
@@ -239,54 +247,16 @@
   max-width: 10em;
 }
 
-.ol-control.ol-searchgps .ol-switch {
+.ol-control.ol-searchgps .ol-ext-toggle-switch {
   cursor: pointer;
   float: right;
   margin: .5em;
   font-size: .9em;
 }
-.ol-control.ol-searchgps .ol-switch input {
-  display: none;
-}
-.ol-control.ol-searchgps .ol-switch span {
-  color: rgba(0,60,136,.5);
-  position: relative;
-  cursor: pointer;
-  background-color: #ccc;
-  transition: .4s;
-  width: 1.6em;
-  height: 1em;
-  display: inline-block;
-  border-radius: 1em;
-  font-size: 1.3em;
-  vertical-align: middle;
-  margin: 0 .2em;
-}
-.ol-control.ol-searchgps .ol-switch span:before {
-  position: absolute;
-  content: "";
-  height: 1em;
-  width: 1em;
-  left: 0;
-  top: 50%;
-  background-color: #fff;
-  transition: .4s;
-  border-radius: 1em;
-  display: block;
-  transform: translateY(-50%);
-  border: 2px solid #ccc;
-  box-sizing: border-box;
-}
-.ol-control.ol-searchgps .ol-switch input:checked + span {
-  background-color: currentColor;
-}
-.ol-control.ol-searchgps .ol-switch input:checked + span:before {
-  transform: translate(.6em,-50%);
-  border-color: currentColor;
-}
 
 .ol-searchgps .ol-decimal{
   display: inline-block;
+  margin-right: .7em;
 }
 .ol-searchgps .ol-dms,
 .ol-searchgps.ol-dms .ol-decimal {
@@ -299,7 +269,8 @@
 }
 
 .ol-searchgps span.ol-dms {
-  width: auto;
+  width: .5em;
+  text-align: left;
 }
 .ol-searchgps.ol-control.ol-collapsed button.ol-geoloc {
   display: none;

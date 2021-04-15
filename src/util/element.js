@@ -69,6 +69,74 @@ ol_ext_element.create = function (tagName, options) {
   return elt;
 };
 
+/** Create a toggle switch input
+ * @param {*} options
+ *  @param {string|Element} options.html
+ *  @param {string|Element} options.after
+ *  @param {boolean} options.checked
+ *  @param {*} [options.on] a list of actions
+ *  @param {function} [options.click]
+ *  @param {function} [options.change]
+ *  @param {Element} options.parent
+ */
+ol_ext_element.createSwitch = function (options) {
+  var label = ol_ext_element.create('LABEL',{ 
+    html: options.html,
+    className: 'ol-ext-toggle-switch',
+    parent: options.parent
+  });
+  var input = ol_ext_element.create('INPUT', {
+    type: 'checkbox',
+    checked: options.checked,
+    click: options.click,
+    change: options.change,
+    on: options.on,
+    parent: label
+  });
+  ol_ext_element.create('SPAN', { parent: label });
+  if (options.after) {
+    label.appendChild(document.createTextNode(options.after));
+  }
+  return input;
+};
+
+/** Create a toggle switch input
+ * @param {*} options
+ *  @param {string|Element} options.html
+ *  @param {string|Element} options.after
+ *  @param {string} [options.name=] input name
+ *  @param {string} [options.type=checkbox] input type: radio or checkbox
+ *  @param {string} options.value input value
+ *  @param {*} [options.on] a list of actions
+ *  @param {function} [options.click]
+ *  @param {function} [options.change]
+ *  @param {Element} options.parent
+ */
+ol_ext_element.createCheck = function (options) {
+  var label = ol_ext_element.create('LABEL', {
+    className: 'ol-ext-check ' + (options.type==='radio' ? 'ol-ext-radio' : 'ol-ext-checkbox'),
+    html: options.html,
+    parent: options.parent
+  });
+  var input = ol_ext_element.create('INPUT', {
+    name: options.name,
+    type: (options.type==='radio' ? 'radio' : 'checkbox'),
+    value: options.val,
+    change: options.change,
+    click: options.click,
+    on: options.on,
+    parent: label
+  });
+  ol_ext_element.create('SPAN', {
+    parent: label
+  });
+  if (options.after) {
+    label.appendChild(document.createTextNode(options.after));
+  }
+  return input;
+};
+
+
 /** Set inner html or append a child element to an element
  * @param {Element} element
  * @param {Element|string} html Content of the element
