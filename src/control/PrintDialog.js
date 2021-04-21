@@ -205,8 +205,8 @@ var ol_control_PrintDialog = function(options) {
     }.bind(this) },
     parent: li
   });
-  Object.keys(this.scales).forEach(function(s, i) {
-    var opt = ol_ext_element.create('OPTION', {
+  Object.keys(this.scales).forEach(function(s) {
+    ol_ext_element.create('OPTION', {
       html: this.scales[s],
       value: s,
       parent: scale

@@ -142,7 +142,7 @@ ol_interaction_FillAttribute.prototype.fill = function(features, properties) {
         if (f.get(p) !== properties[p]) changes = true;
       }
       if (changes) break;
-    };
+    }
 
     // Set Attributes
     if (changes) {

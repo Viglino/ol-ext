@@ -8869,8 +8869,8 @@ ol.control.PrintDialog = function(options) {
     }.bind(this) },
     parent: li
   });
-  Object.keys(this.scales).forEach(function(s, i) {
-    var opt = ol.ext.element.create('OPTION', {
+  Object.keys(this.scales).forEach(function(s) {
+    ol.ext.element.create('OPTION', {
       html: this.scales[s],
       value: s,
       parent: scale
@@ -15639,6 +15639,7 @@ ol.filter.Colorize.prototype.precompose = function(/* e */) {
  */
 ol.filter.Colorize.prototype.postcompose = function(e) {
   // Set back color hue
+  var c2, ctx2;
   var ctx = e.context;
   var canvas = ctx.canvas;
   ctx.save();
@@ -15648,10 +15649,10 @@ ol.filter.Colorize.prototype.postcompose = function(e) {
         var w = canvas.width;
         var h = canvas.height;
         if (this.get('preserveAlpha')) {
-          var c2 = document.createElement('CANVAS');
+          c2 = document.createElement('CANVAS');
           c2.width = canvas.width;
           c2.height = canvas.height;
-          var ctx2 = c2.getContext('2d');
+          ctx2 = c2.getContext('2d');
           ctx2.drawImage (canvas, 0, 0, w, h);
           ctx2.globalCompositeOperation = 'color-burn';
           console.log(v)
@@ -15671,10 +15672,10 @@ ol.filter.Colorize.prototype.postcompose = function(e) {
       }
     } else {
       if (this.get('preserveAlpha')) {
-        var c2 = document.createElement('CANVAS');
+        c2 = document.createElement('CANVAS');
         c2.width = canvas.width;
         c2.height = canvas.height;
-        var ctx2 = c2.getContext('2d');
+        ctx2 = c2.getContext('2d');
         ctx2.drawImage(canvas, 0,0);
         ctx2.globalCompositeOperation = this.get('operation');
         ctx2.fillStyle = this.get('color');
@@ -18249,8 +18250,6 @@ ol.interaction.DrawRegular.prototype.start_ = function(evt) {
 ol.interaction.DrawRegular.prototype.end_ = function(evt) {
   this.coord_ = evt.coordinate;
   this.started_ = false;
-  var g = this.getGeom_();
-  // Add new feature
   if (this.coord_ && (this.center_[0]!==this.coord_[0] || this.center_[1]!==this.coord_[1])) {
     var f = this.feature_;
     if (this.geometryName_) f.setGeometryName(this.geometryName_)
@@ -18591,7 +18590,7 @@ ol.interaction.FillAttribute.prototype.fill = function(features, properties) {
         if (f.get(p) !== properties[p]) changes = true;
       }
       if (changes) break;
-    };
+    }
     // Set Attributes
     if (changes) {
       this.dispatchEvent({ 
@@ -23657,7 +23656,7 @@ ol.interaction.UndoRedo.prototype.push = function(action, prop, name) {
     });
     return true;
   } else {
-    console.warn('[UndoRedoInteraction]: "'+e.type+'" is not defined.');
+    console.warn('[UndoRedoInteraction]: "'+action+'" is not defined.');
     return false;
   }
 };

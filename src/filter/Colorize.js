@@ -112,6 +112,7 @@ ol_filter_Colorize.prototype.precompose = function(/* e */) {
  */
 ol_filter_Colorize.prototype.postcompose = function(e) {
   // Set back color hue
+  var c2, ctx2;
   var ctx = e.context;
   var canvas = ctx.canvas;
   ctx.save();
@@ -121,10 +122,10 @@ ol_filter_Colorize.prototype.postcompose = function(e) {
         var w = canvas.width;
         var h = canvas.height;
         if (this.get('preserveAlpha')) {
-          var c2 = document.createElement('CANVAS');
+          c2 = document.createElement('CANVAS');
           c2.width = canvas.width;
           c2.height = canvas.height;
-          var ctx2 = c2.getContext('2d');
+          ctx2 = c2.getContext('2d');
           ctx2.drawImage (canvas, 0, 0, w, h);
           ctx2.globalCompositeOperation = 'color-burn';
           console.log(v)
@@ -144,10 +145,10 @@ ol_filter_Colorize.prototype.postcompose = function(e) {
       }
     } else {
       if (this.get('preserveAlpha')) {
-        var c2 = document.createElement('CANVAS');
+        c2 = document.createElement('CANVAS');
         c2.width = canvas.width;
         c2.height = canvas.height;
-        var ctx2 = c2.getContext('2d');
+        ctx2 = c2.getContext('2d');
         ctx2.drawImage(canvas, 0,0);
         ctx2.globalCompositeOperation = this.get('operation');
         ctx2.fillStyle = this.get('color');

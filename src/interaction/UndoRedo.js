@@ -1,4 +1,5 @@
 import ol_ext_inherits from '../util/ext'
+import ol_Collection from 'ol/Collection'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import ol_layer_Vector from 'ol/layer/Vector'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
@@ -164,7 +165,7 @@ ol_interaction_UndoRedo.prototype.push = function(action, prop, name) {
     });
     return true;
   } else {
-    console.warn('[UndoRedoInteraction]: "'+e.type+'" is not defined.');
+    console.warn('[UndoRedoInteraction]: "'+action+'" is not defined.');
     return false;
   }
 };
