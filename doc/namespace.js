@@ -2,8 +2,8 @@
  * @see {@link https://openlayers.org/en/latest/apidoc/module-ol.html}
  */
 /* @namespace olx
- * @see {@link https://openlayers.org/en/master/apidoc/olx.html}
- */
+* @see {@link https://openlayers.org/en/master/apidoc/olx.html}
+*/
 /** @namespace ol.coordinate
  * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_coordinate.html}
  */
@@ -78,7 +78,7 @@
  * @namespace ol.graph
  */
 /** Vector feature rendering styles. 
- * @namespace ol.style
+ * @namespace ol.style.Style
  * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_style_Style-Style.html}
  */
 /** A base class used for creating subclasses and not instantiated in apps (Icons, Circcle, RegularShape...) 
@@ -90,7 +90,11 @@
  * For a map to render, a view, one or more layers, and a target container are needed:
  * @namespace ol.Map 
  * @see {@link http://openlayers.org/en/latest/apidoc/module-ol_Map.html}
-*/
+ */
+/** A View object represents a simple 2D view of the map.
+ * @namespace ol.View
+ * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_View.html}
+ */
 /** Openlayers Overlay.    
  * An element to be displayed over the map and attached to a single map location. 
  * @namespace ol.Overlay
@@ -103,13 +107,13 @@
  * @see {@link http://openlayers.org/en/latest/apidoc/module-ol_control_Control.html}
  */
 
- /**
+/**
  * Easing functions.
  * @namespace ol.easing
  * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_easing.html}
  */
 
- /** 2D rendering context for the Canvas API
+/** 2D rendering context for the Canvas API
   * @namespace CanvasRenderingContext2D
   * @see {@link https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D}
   */
