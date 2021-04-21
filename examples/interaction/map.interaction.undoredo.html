@@ -2,10 +2,8 @@
 <html>
 <head>
 <!--
-
   Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
   released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-  
 -->
   <title>ol-ext: Undo/redo</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -57,6 +55,26 @@
       background-color: currentColor!important;
       border-color: #000;
     }
+    .options ul {
+      cursor: pointer;
+      margin: 0;
+      padding: 0;
+    }
+    .options li {
+      padding: 0 .5em;
+    }
+    .options li:hover {
+      background-color: #369;
+      color: #fff;
+    }
+    .options .redo li {
+      opacity: .4;
+    }
+    .options button {
+      margin: auto;
+      display: block;
+    }
+
   </style>
 
 </head>
@@ -77,14 +95,27 @@
     <p>
       Just add the interaction to the map to get it working.
       It will watch all vector sources and all interactions in the map.
-      Use the <i>undo</i> and <i>redo</i> method to undo the last recorded operations.
-      <br/>
-      Undo can be stacked in a block to make them undoing at a time. 
-      Just enclose the operation between a <i>blockStart()</i> and <i>blockEnd()</i>.
-      <br/>
-      You can stack operation on a map by enclosing operations beetween 
-      <i>undoblockstart</i> and <i>undoblockend</i> events
-      (<i>map.dispatchEvent('undoblockstart')</i> and <i>map.dispatchEvent('undoblockend')</i>).
+      <ul>
+        <li>
+          Use the <i>undo()</i> and <i>redo()</i> method to undo the last recorded operations.
+        </li><li>
+          The <i>shift()</i> method lets you remove an operation from the undo stack.
+        </li><li>
+          Use the <i>getStack()</i> method to have a list of current undo actions in the stack.
+        </li><li>
+          <i>change:add</i>, <i>change:remove</i> or <i>change:clear</i> events 
+          are triggered when the undo stack change.
+        </li><li>
+          Undo can be stacked in a block to make them undoing at a time. 
+          Just enclose the operation between a <i>blockStart()</i> and <i>blockEnd()</i>.
+        </li><li>
+          You can stack operation on a map by enclosing operations beetween 
+          <i>undoblockstart</i> and <i>undoblockend</i> events
+          (<i>map.dispatchEvent('undoblockstart')</i> and <i>map.dispatchEvent('undoblockend')</i>).
+        </li><li>
+          Use <i>setMaxLength()</i> and <i>setMaxSize()</i> methods to set the max stack length and max heap size.
+        </li>
+      </ul>
     </p>
     Cancelable operations:
     <ul>
@@ -134,16 +165,25 @@
         </a>
       </li>
       <li>
-        <b>ol/interaction/FillAttribute</b>
+        <b>ol/interaction/FillAttribute</b> (see <a href="./map.interaction.undoredo2.html">example</a>)
       </li>
     </ul>
+    <p>
+      To add your own cancelable actions, look at  
+      <a href="./map.interaction.undocustom.html">this example</a>.
+    </p>
   </div>
 
   <!-- Map div -->
   <div id="map" style="width:600px; height:400px;"></div>
 
   <div class="options" >
-    <div id="info"></div>
+    <h2>Undo stack</h2>
+    <button onclick="undoInteraction.clear()">clear stack...</button>
+    <hr/>
+    <ul class="undo"></ul>
+    <hr/>
+    <ul class="redo"></ul>
   </div>
 
   <script type="text/javascript">
@@ -177,7 +217,6 @@
         ]
       });
 
-
     // Main control bar
     var mainbar = new ol.control.Bar();
     map.addControl(mainbar);
@@ -189,8 +228,8 @@
     });
     mainbar.addControl(editbar);
 
-    // Add a fill interaction toset color attribute
-    var fill = new ol.interaction.FillAttribute({}, { color: [255,0,0] });
+    // Add a fill interaction to set color attribute
+    var fill = new ol.interaction.FillAttribute({ name: 'fill color' }, { color: [255,0,0] });
     editbar.addControl(new ol.control.Toggle({
       html: '<i class="fa fa-paint-brush"></i>',
       title: 'fill color attribut',
@@ -228,6 +267,43 @@
         editbar.getInteraction('Select').getFeatures().clear();
         editbar.getInteraction('Transform').select();
       }
+    });
+
+    // Handle undo/redo stack
+    undoInteraction.on('stack:add', function (e) {
+      // New action element
+      if (!e.action.element) {
+        var elt = e.action.element = $('<li>').text(e.action.name || e.action.type);
+        elt.click(function() {
+          // undo or redo stack
+          if (elt.parent().hasClass('undo')) {
+            undoInteraction.undo();
+          } else {
+            undoInteraction.redo();
+          }
+        })
+      }
+      // Append to undo stack
+      $('.options .undo').append(e.action.element);
+      e.action.element.attr('title', 'undo');
+      if (!undoInteraction.hasRedo()) $('.options .redo').html('');
+      console.log(undoInteraction.length()+' undo | '+undoInteraction.length('redo')+' redo')
+    });
+    // Append to redo stack
+    undoInteraction.on('stack:remove', function (e) {
+      if (e.shift) {
+        $('.options .undo li').first().remove();
+      } else {
+        $('.options .redo').prepend($('.options .undo li').last());
+      }
+      e.action.element.attr('title', 'redo');
+      console.log(undoInteraction.length()+' undo | '+undoInteraction.length('redo')+' redo')
+    });
+    // Clear stack
+    undoInteraction.on('stack:clear', function (e) {
+      $('.options .undo').html('');
+      $('.options .redo').html('');
+      console.log(undoInteraction.length()+' undo | '+undoInteraction.length('redo')+' redo')
     });
 
     // Add buttons to the bar

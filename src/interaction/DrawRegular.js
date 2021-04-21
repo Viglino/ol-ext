@@ -401,8 +401,9 @@ ol_interaction_DrawRegular.prototype.start_ = function(evt) {
 ol_interaction_DrawRegular.prototype.end_ = function(evt) {
   this.coord_ = evt.coordinate;
   this.started_ = false;
+  var g = this.getGeom_();
   // Add new feature
-  if (this.coord_ && this.center_[0]!=this.coord_[0] && this.center_[1]!=this.coord_[1]) {
+  if (this.coord_ && (this.center_[0]!==this.coord_[0] || this.center_[1]!==this.coord_[1])) {
     var f = this.feature_;
     if (this.geometryName_) f.setGeometryName(this.geometryName_)
 

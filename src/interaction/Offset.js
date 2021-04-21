@@ -130,13 +130,14 @@ ol_interaction_Offset.prototype.handleDownEvent_ = function(e) {
   this.current_ = this.getFeatureAtPixel_(e);
   if (this.current_) {
     this.currentStyle_ = this.current_.feature.getStyle();
-    this.current_.feature.setStyle(this._style(this.current_.feature));
     if (this.source_ && (this.get('duplicate') || e.originalEvent.ctrlKey)) {
       this.current_.feature = this.current_.feature.clone();
+      this.current_.feature.setStyle(this._style(this.current_.feature));
       this.source_.addFeature(this.current_.feature);
     } else {
       // Modify the current feature
-      this.dispatchEvent({ type:'modifystart', features: [ this.current_.feature ] });
+      this.current_.feature.setStyle(this._style(this.current_.feature));
+      this._modifystart = true;
     }
     this.dispatchEvent({ type:'offsetstart', feature: this.current_.feature, offset: 0 });
     return true;
@@ -150,6 +151,10 @@ ol_interaction_Offset.prototype.handleDownEvent_ = function(e) {
  * @private
  */
 ol_interaction_Offset.prototype.handleDragEvent_ = function(e) {
+  if (this._modifystart) {
+    this.dispatchEvent({ type:'modifystart', features: [ this.current_.feature ] });
+    this._modifystart = false;
+  }
   var p = this.current_.geom.getClosestPoint(e.coordinate);
   var d = ol_coordinate_dist2d(p, e.coordinate);
   var seg, v1, v2, offset;
@@ -196,7 +201,9 @@ ol_interaction_Offset.prototype.handleDragEvent_ = function(e) {
  * @private
  */
 ol_interaction_Offset.prototype.handleUpEvent_ = function(e) {
-  this.dispatchEvent({ type:'offsetend', feature: this.current_.feature, coordinate: e.coordinate }); 
+  if (!this._modifystart) {
+    this.dispatchEvent({ type:'offsetend', feature: this.current_.feature, coordinate: e.coordinate }); 
+  }
   this.current_.feature.setStyle(this.currentStyle_);
   this.current_ = false;
 };
