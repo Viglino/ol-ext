@@ -136,25 +136,6 @@
       }]
     });
 
-    // i18n
-    ol.control.PrintDialog.prototype.labels = {
-      title: 'Imprimer',
-      orientation: 'Orientation',
-      portrait: 'Portrait',
-      landscape: 'Paysage',
-      size: 'Taille du papier',
-      margin: 'Marges',
-      scale: 'Echelle',
-      legend: 'Légende',
-      north: 'Flèche du nord',
-      mapTitle: 'Titre de la carte',
-      saveas: 'Enregistrer sous...',
-      copied: '✔ Carte copiée',
-      errorMsg: 'Impossible d\'enregistrer la carte',
-      printBt: 'Imprimer',
-      cancel: 'annuler'
-    };
-
     ol.control.PrintDialog.prototype.formats = [{
       title: 'Copier dans le presse-papier',
       imageType: 'image/png',
@@ -186,7 +167,7 @@
   map.addControl(new ol.control.CanvasScaleLine());
 
   // Print control
-  var printControl = new ol.control.PrintDialog();
+  var printControl = new ol.control.PrintDialog({ lang: 'fr' });
   printControl.setSize('A4');
   map.addControl(printControl);
 

@@ -24,7 +24,8 @@ import ol_control_Compass from './Compass';
  * @fire printing
  * @extends {ol.control.Control}
  * @param {Object=} options Control options.
- *	@param {String} options.className class of the control
+ *	@param {string} options.className class of the control
+ *  @param {string} [options.lang=en] control language, default en
  *	@param {string} options.imageType A string indicating the image format, default image/jpeg
  *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
  *	@param {string} options.orientation Page orientation (landscape/portrait), default guest the best one
@@ -32,6 +33,7 @@ import ol_control_Compass from './Compass';
  */
 var ol_control_PrintDialog = function(options) {
   if (!options) options = {};
+  this._lang = options.lang;
 
   var element = ol_ext_element.create('DIV', {
     className: (options.className || 'ol-print') + ' ol-unselectable ol-control'
@@ -90,7 +92,7 @@ var ol_control_PrintDialog = function(options) {
     parent: content
   });
   ol_ext_element.create('H2',{
-    html: this.labels.title || 'Print',
+    html: this.i18n('title'),
     parent: param
   });
   var ul = ol_ext_element.create('UL',{ parent: param });
@@ -99,7 +101,7 @@ var ol_control_PrintDialog = function(options) {
   var li = ol_ext_element.create('LI', { 
     /*
     html: ol_ext_element.create('LABEL', {
-      html: this.labels.orientation || 'Orientation'
+      html: this.18n('orientation')
     }),
     */
     className: 'ol-orientation',
@@ -122,7 +124,7 @@ var ol_control_PrintDialog = function(options) {
     parent: label
   });
   ol_ext_element.create('SPAN', { 
-    html: this.labels.portrait || 'Portrait',
+    html: this.i18n('portrait'),
     parent: label
   });
 
@@ -140,7 +142,7 @@ var ol_control_PrintDialog = function(options) {
     parent: label
   });
   ol_ext_element.create('SPAN', { 
-    html: this.labels.landscape || 'Landscape',
+    html: this.i18n('landscape'),
     parent: label 
   });
 
@@ -148,7 +150,7 @@ var ol_control_PrintDialog = function(options) {
   var s; 
   li = ol_ext_element.create('LI',{ 
     html: ol_ext_element.create('LABEL', {
-      html: this.labels.size || 'Page size',
+      html: this.i18n('size'),
     }),
     className: 'ol-size',
     parent: ul 
@@ -161,7 +163,7 @@ var ol_control_PrintDialog = function(options) {
   });
   for (s in this.paperSize) {
     ol_ext_element.create('OPTION', {
-      html: s + (this.paperSize[s] ? ' - '+this.paperSize[s][0]+'x'+this.paperSize[s][1]+' mm' : ''),
+      html: s + (this.paperSize[s] ? ' - '+this.paperSize[s][0]+'x'+this.paperSize[s][1]+' mm' : this.i18n('custom')),
       value: s,
       parent: size
     });
@@ -170,7 +172,7 @@ var ol_control_PrintDialog = function(options) {
   // Margin
   li = ol_ext_element.create('LI',{ 
     html: ol_ext_element.create('LABEL', {
-      html: this.labels.margin || 'Margin',
+      html: this.i18n('margin'),
     }),
     className: 'ol-margin',
     parent: ul 
@@ -192,7 +194,7 @@ var ol_control_PrintDialog = function(options) {
   // Scale
   li = ol_ext_element.create('LI',{ 
     html: ol_ext_element.create('LABEL', {
-      html: this.labels.scale || 'Scale',
+      html: this.i18n('scale'),
     }),
     className: 'ol-scale',
     parent: ul 
@@ -203,8 +205,8 @@ var ol_control_PrintDialog = function(options) {
     }.bind(this) },
     parent: li
   });
-  Object.keys(this.scales).forEach(function(s) {
-    ol_ext_element.create('OPTION', {
+  Object.keys(this.scales).forEach(function(s, i) {
+    var opt = ol_ext_element.create('OPTION', {
       html: this.scales[s],
       value: s,
       parent: scale
@@ -217,7 +219,7 @@ var ol_control_PrintDialog = function(options) {
     parent: ul 
   });
   var legend = ol_ext_element.createSwitch({ 
-    html: (this.labels.legend || 'Legend'),
+    html: (this.i18n('legend')),
     checked: false,
     on: { change: function() {
       extraCtrl.legend.control.setCanvas(legend.checked);
@@ -231,7 +233,7 @@ var ol_control_PrintDialog = function(options) {
     parent: ul 
   });
   var north = this._input.north = ol_ext_element.createSwitch({ 
-    html: this.labels.north || 'North arrow',
+    html: this.i18n('north'),
     on:  { change: function() {
       this._compass.set('visible', north.checked);
       this.getMap().render();
@@ -245,7 +247,7 @@ var ol_control_PrintDialog = function(options) {
     parent: ul 
   });
   var title = ol_ext_element.createSwitch({ 
-    html: (this.labels.mapTitle || 'Title'),
+    html: this.i18n('mapTitle'),
     checked: false,
     on: { change: function(e) {
       extraCtrl.title.control.setVisible(e.target.checked);
@@ -254,7 +256,7 @@ var ol_control_PrintDialog = function(options) {
   });
   var titleText = ol_ext_element.create('INPUT', {
     type: 'text',
-    placeholder: (this.labels.mapTitle || 'Map title'),
+    placeholder: this.i18n('mapTitle'),
     on: {
       keydown: function(e) { 
         if (e.keyCode === 13) e.preventDefault();
@@ -268,8 +270,6 @@ var ol_control_PrintDialog = function(options) {
     },
     parent: li
   });
-
-
   
   // User div element
   var userElt = ol_ext_element.create('DIV', {
@@ -283,7 +283,7 @@ var ol_control_PrintDialog = function(options) {
     parent: ul 
   });
   var copied = ol_ext_element.create('DIV', {
-    html: this.labels.copied || 'Copied to clipboard',
+    html: this.i18n('copied'),
     className: 'ol-clipboard-copy',
     parent: li
   });
@@ -313,7 +313,7 @@ var ol_control_PrintDialog = function(options) {
     parent: li
   });
   ol_ext_element.create('OPTION', {
-    html: this.labels.saveas || 'Save as...',
+    html: this.i18n('saveas'),
     style: { display: 'none' },
     value: '',
     parent: save
@@ -332,7 +332,7 @@ var ol_control_PrintDialog = function(options) {
     parent: param
   });
   ol_ext_element.create('BUTTON', {
-    html: this.labels.printBt || 'Print...',
+    html: this.i18n('printBt'),
     type: 'submit',
     click: function(e) {
       e.preventDefault();
@@ -341,13 +341,13 @@ var ol_control_PrintDialog = function(options) {
     parent: prButtons
   });
   ol_ext_element.create('BUTTON', {
-    html: this.labels.cancel || 'cancel',
+    html: this.i18n('cancel'),
     type: 'button',
     click: function() { printDialog.hide(); },
     parent: prButtons
   });
   ol_ext_element.create('DIV', {
-    html: this.labels.errorMsg,
+    html: this.i18n('errorMsg'),
     className: 'ol-error',
     parent: param
   });
@@ -433,23 +433,64 @@ var ol_control_PrintDialog = function(options) {
 };
 ol_ext_inherits(ol_control_PrintDialog, ol_control_Control);
 
+/** Add a new language
+ * @param {string} lang lang id
+ * @param {Objetct} labels
+ */
+ol_control_PrintDialog.addLang = function(lang, labels) {
+  ol_control_PrintDialog.prototype._labels[lang] = labels;
+};
+
+/** Translate 
+ * @param {string} what
+ * @returns {string}
+ */
+ol_control_PrintDialog.prototype.i18n = function(what) {
+  var rep = this._labels.en[what] || 'bad param';
+  if (this._labels[this._lang] && this._labels[this._lang][what]) {
+    rep = this._labels[this._lang][what];
+  }
+  return rep;
+};
+
 /** Print dialog labels (for customisation) */
-ol_control_PrintDialog.prototype.labels = {
-  title: 'Print',
-  orientation: 'Orientation',
-  portrait: 'Portrait',
-  landscape: 'Landscape',
-  size: 'Page size',
-  margin: 'Margin',
-  scale: 'Scale',
-  legend: 'Legend',
-  north: 'North arrow',
-  mapTitle: 'Map title',
-  saveas: 'Save as...',
-  copied: '✔ Copied to clipboard',
-  errorMsg: 'Can\'t save map canvas...',
-  printBt: 'Print...',
-  cancel: 'cancel'
+ol_control_PrintDialog.prototype._labels = {
+  en: {
+    title: 'Print',
+    orientation: 'Orientation',
+    portrait: 'Portrait',
+    landscape: 'Landscape',
+    size: 'Page size',
+    custom: 'custom',
+    margin: 'Margin',
+    scale: 'Scale',
+    legend: 'Legend',
+    north: 'North arrow',
+    mapTitle: 'Map title',
+    saveas: 'Save as...',
+    copied: '✔ Copied to clipboard',
+    errorMsg: 'Can\'t save map canvas...',
+    printBt: 'Print...',
+    cancel: 'cancel'
+  },
+  fr: {
+    title: 'Imprimer',
+    orientation: 'Orientation',
+    portrait: 'Portrait',
+    landscape: 'Paysage',
+    size: 'Taille du papier',
+    custom: 'par défaut',
+    margin: 'Marges',
+    scale: 'Echelle',
+    legend: 'Légende',
+    north: 'Flèche du nord',
+    mapTitle: 'Titre de la carte',
+    saveas: 'Enregistrer sous...',
+    copied: '✔ Carte copiée',
+    errorMsg: 'Impossible d\'enregistrer la carte',
+    printBt: 'Imprimer',
+    cancel: 'annuler'
+  }
 };
 
 /** List of paper size */
@@ -500,7 +541,6 @@ ol_control_PrintDialog.prototype.formats = [{
 
 /** List of print scale */
 ol_control_PrintDialog.prototype.scales = {
-  '': '',   // Use current map scale
   ' 5000': '1/5.000',
   ' 10000': '1/10.000',
   ' 25000': '1/25.000',
