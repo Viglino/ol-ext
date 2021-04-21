@@ -5286,7 +5286,6 @@ ol.control.EditBar.prototype._setSelectInteraction = function (options) {
       handleClick: function(e) {
         // Delete selection
         del.delete(selectCtrl.getInteraction().getFeatures());
-        console.log('del')
         var evt = {
           type: 'select',
           selected: [],
@@ -8699,7 +8698,8 @@ ol.control.Print.prototype.print = function(options) {
  * @fire printing
  * @extends {ol.control.Control}
  * @param {Object=} options Control options.
- *	@param {String} options.className class of the control
+ *	@param {string} options.className class of the control
+ *  @param {string} [options.lang=en] control language, default en
  *	@param {string} options.imageType A string indicating the image format, default image/jpeg
  *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
  *	@param {string} options.orientation Page orientation (landscape/portrait), default guest the best one
@@ -8707,6 +8707,7 @@ ol.control.Print.prototype.print = function(options) {
  */
 ol.control.PrintDialog = function(options) {
   if (!options) options = {};
+  this._lang = options.lang;
   var element = ol.ext.element.create('DIV', {
     className: (options.className || 'ol-print') + ' ol-unselectable ol-control'
   });
@@ -8761,7 +8762,7 @@ ol.control.PrintDialog = function(options) {
     parent: content
   });
   ol.ext.element.create('H2',{
-    html: this.labels.title || 'Print',
+    html: this.i18n('title'),
     parent: param
   });
   var ul = ol.ext.element.create('UL',{ parent: param });
@@ -8769,7 +8770,7 @@ ol.control.PrintDialog = function(options) {
   var li = ol.ext.element.create('LI', { 
     /*
     html: ol.ext.element.create('LABEL', {
-      html: this.labels.orientation || 'Orientation'
+      html: this.18n('orientation')
     }),
     */
     className: 'ol-orientation',
@@ -8791,7 +8792,7 @@ ol.control.PrintDialog = function(options) {
     parent: label
   });
   ol.ext.element.create('SPAN', { 
-    html: this.labels.portrait || 'Portrait',
+    html: this.i18n('portrait'),
     parent: label
   });
   label = ol.ext.element.create('LABEL', {
@@ -8808,14 +8809,14 @@ ol.control.PrintDialog = function(options) {
     parent: label
   });
   ol.ext.element.create('SPAN', { 
-    html: this.labels.landscape || 'Landscape',
+    html: this.i18n('landscape'),
     parent: label 
   });
   // Page size
   var s; 
   li = ol.ext.element.create('LI',{ 
     html: ol.ext.element.create('LABEL', {
-      html: this.labels.size || 'Page size',
+      html: this.i18n('size'),
     }),
     className: 'ol-size',
     parent: ul 
@@ -8828,7 +8829,7 @@ ol.control.PrintDialog = function(options) {
   });
   for (s in this.paperSize) {
     ol.ext.element.create('OPTION', {
-      html: s + (this.paperSize[s] ? ' - '+this.paperSize[s][0]+'x'+this.paperSize[s][1]+' mm' : ''),
+      html: s + (this.paperSize[s] ? ' - '+this.paperSize[s][0]+'x'+this.paperSize[s][1]+' mm' : this.i18n('custom')),
       value: s,
       parent: size
     });
@@ -8836,7 +8837,7 @@ ol.control.PrintDialog = function(options) {
   // Margin
   li = ol.ext.element.create('LI',{ 
     html: ol.ext.element.create('LABEL', {
-      html: this.labels.margin || 'Margin',
+      html: this.i18n('margin'),
     }),
     className: 'ol-margin',
     parent: ul 
@@ -8857,7 +8858,7 @@ ol.control.PrintDialog = function(options) {
   // Scale
   li = ol.ext.element.create('LI',{ 
     html: ol.ext.element.create('LABEL', {
-      html: this.labels.scale || 'Scale',
+      html: this.i18n('scale'),
     }),
     className: 'ol-scale',
     parent: ul 
@@ -8868,8 +8869,8 @@ ol.control.PrintDialog = function(options) {
     }.bind(this) },
     parent: li
   });
-  Object.keys(this.scales).forEach(function(s) {
-    ol.ext.element.create('OPTION', {
+  Object.keys(this.scales).forEach(function(s, i) {
+    var opt = ol.ext.element.create('OPTION', {
       html: this.scales[s],
       value: s,
       parent: scale
@@ -8881,7 +8882,7 @@ ol.control.PrintDialog = function(options) {
     parent: ul 
   });
   var legend = ol.ext.element.createSwitch({ 
-    html: (this.labels.legend || 'Legend'),
+    html: (this.i18n('legend')),
     checked: false,
     on: { change: function() {
       extraCtrl.legend.control.setCanvas(legend.checked);
@@ -8894,7 +8895,7 @@ ol.control.PrintDialog = function(options) {
     parent: ul 
   });
   var north = this._input.north = ol.ext.element.createSwitch({ 
-    html: this.labels.north || 'North arrow',
+    html: this.i18n('north'),
     on:  { change: function() {
       this._compass.set('visible', north.checked);
       this.getMap().render();
@@ -8907,7 +8908,7 @@ ol.control.PrintDialog = function(options) {
     parent: ul 
   });
   var title = ol.ext.element.createSwitch({ 
-    html: (this.labels.mapTitle || 'Title'),
+    html: this.i18n('mapTitle'),
     checked: false,
     on: { change: function(e) {
       extraCtrl.title.control.setVisible(e.target.checked);
@@ -8916,7 +8917,7 @@ ol.control.PrintDialog = function(options) {
   });
   var titleText = ol.ext.element.create('INPUT', {
     type: 'text',
-    placeholder: (this.labels.mapTitle || 'Map title'),
+    placeholder: this.i18n('mapTitle'),
     on: {
       keydown: function(e) { 
         if (e.keyCode === 13) e.preventDefault();
@@ -8941,7 +8942,7 @@ ol.control.PrintDialog = function(options) {
     parent: ul 
   });
   var copied = ol.ext.element.create('DIV', {
-    html: this.labels.copied || 'Copied to clipboard',
+    html: this.i18n('copied'),
     className: 'ol-clipboard-copy',
     parent: li
   });
@@ -8971,7 +8972,7 @@ ol.control.PrintDialog = function(options) {
     parent: li
   });
   ol.ext.element.create('OPTION', {
-    html: this.labels.saveas || 'Save as...',
+    html: this.i18n('saveas'),
     style: { display: 'none' },
     value: '',
     parent: save
@@ -8989,7 +8990,7 @@ ol.control.PrintDialog = function(options) {
     parent: param
   });
   ol.ext.element.create('BUTTON', {
-    html: this.labels.printBt || 'Print...',
+    html: this.i18n('printBt'),
     type: 'submit',
     click: function(e) {
       e.preventDefault();
@@ -8998,13 +8999,13 @@ ol.control.PrintDialog = function(options) {
     parent: prButtons
   });
   ol.ext.element.create('BUTTON', {
-    html: this.labels.cancel || 'cancel',
+    html: this.i18n('cancel'),
     type: 'button',
     click: function() { printDialog.hide(); },
     parent: prButtons
   });
   ol.ext.element.create('DIV', {
-    html: this.labels.errorMsg,
+    html: this.i18n('errorMsg'),
     className: 'ol-error',
     parent: param
   });
@@ -9086,23 +9087,62 @@ ol.control.PrintDialog = function(options) {
   }.bind(this));
 };
 ol.ext.inherits(ol.control.PrintDialog, ol.control.Control);
+/** Add a new language
+ * @param {string} lang lang id
+ * @param {Objetct} labels
+ */
+ol.control.PrintDialog.addLang = function(lang, labels) {
+  ol.control.PrintDialog.prototype._labels[lang] = labels;
+};
+/** Translate 
+ * @param {string} what
+ * @returns {string}
+ */
+ol.control.PrintDialog.prototype.i18n = function(what) {
+  var rep = this._labels.en[what] || 'bad param';
+  if (this._labels[this._lang] && this._labels[this._lang][what]) {
+    rep = this._labels[this._lang][what];
+  }
+  return rep;
+};
 /** Print dialog labels (for customisation) */
-ol.control.PrintDialog.prototype.labels = {
-  title: 'Print',
-  orientation: 'Orientation',
-  portrait: 'Portrait',
-  landscape: 'Landscape',
-  size: 'Page size',
-  margin: 'Margin',
-  scale: 'Scale',
-  legend: 'Legend',
-  north: 'North arrow',
-  mapTitle: 'Map title',
-  saveas: 'Save as...',
-  copied: '✔ Copied to clipboard',
-  errorMsg: 'Can\'t save map canvas...',
-  printBt: 'Print...',
-  cancel: 'cancel'
+ol.control.PrintDialog.prototype._labels = {
+  en: {
+    title: 'Print',
+    orientation: 'Orientation',
+    portrait: 'Portrait',
+    landscape: 'Landscape',
+    size: 'Page size',
+    custom: 'custom',
+    margin: 'Margin',
+    scale: 'Scale',
+    legend: 'Legend',
+    north: 'North arrow',
+    mapTitle: 'Map title',
+    saveas: 'Save as...',
+    copied: '✔ Copied to clipboard',
+    errorMsg: 'Can\'t save map canvas...',
+    printBt: 'Print...',
+    cancel: 'cancel'
+  },
+  fr: {
+    title: 'Imprimer',
+    orientation: 'Orientation',
+    portrait: 'Portrait',
+    landscape: 'Paysage',
+    size: 'Taille du papier',
+    custom: 'par défaut',
+    margin: 'Marges',
+    scale: 'Echelle',
+    legend: 'Légende',
+    north: 'Flèche du nord',
+    mapTitle: 'Titre de la carte',
+    saveas: 'Enregistrer sous...',
+    copied: '✔ Carte copiée',
+    errorMsg: 'Impossible d\'enregistrer la carte',
+    printBt: 'Imprimer',
+    cancel: 'annuler'
+  }
 };
 /** List of paper size */
 ol.control.PrintDialog.prototype.paperSize = {
@@ -9148,7 +9188,6 @@ ol.control.PrintDialog.prototype.formats = [{
 ];
 /** List of print scale */
 ol.control.PrintDialog.prototype.scales = {
-  '': '',   // Use current map scale
   ' 5000': '1/5.000',
   ' 10000': '1/10.000',
   ' 25000': '1/25.000',
@@ -18210,8 +18249,9 @@ ol.interaction.DrawRegular.prototype.start_ = function(evt) {
 ol.interaction.DrawRegular.prototype.end_ = function(evt) {
   this.coord_ = evt.coordinate;
   this.started_ = false;
+  var g = this.getGeom_();
   // Add new feature
-  if (this.coord_ && this.center_[0]!=this.coord_[0] && this.center_[1]!=this.coord_[1]) {
+  if (this.coord_ && (this.center_[0]!==this.coord_[0] || this.center_[1]!==this.coord_[1])) {
     var f = this.feature_;
     if (this.geometryName_) f.setGeometryName(this.geometryName_)
     f.setGeometry(this.getGeom_());
@@ -18432,7 +18472,8 @@ ol.interaction.DropFile.prototype.ondrop = function(e) {
  * @fires setattributeend
  * @param {*} options extentol.interaction.Select options
  *  @param {boolean} options.active activate the interaction on start, default true
- *  @param {boolean} options.cursor use a paint bucket cursor, default true
+ *  @param {string=} options.name 
+ *  @param {boolean|string} options.cursor interaction cursor if false use default, default use a paint bucket cursor
  * @param {*} properties The properties as key/value
  */
 ol.interaction.FillAttribute = function(options, properties) {
@@ -18440,12 +18481,13 @@ ol.interaction.FillAttribute = function(options, properties) {
   if (!options.condition) options.condition = ol.events.condition.click;
   ol.interaction.Select.call(this, options);
   this.setActive(options.active!==false)
+  this.set('name', options.name);
   this._attributes = properties;
   this.on('select', function(e) {
     this.getFeatures().clear();
     this.fill(e.selected, this._attributes);
   }.bind(this));
-  if (options.cursor!==false) {
+  if (options.cursor === undefined) {
     var canvas = document.createElement('CANVAS');
     canvas.width = canvas.height = 32;
     var ctx = canvas.getContext("2d");
@@ -18476,8 +18518,23 @@ ol.interaction.FillAttribute = function(options, properties) {
     ctx.stroke();
     this._cursor = 'url('+canvas.toDataURL()+') 0 13, auto';
   }
+  if (options.cursor) {
+    this._cursor = options.cursor;
+  }
 };
 ol.ext.inherits(ol.interaction.FillAttribute, ol.interaction.Select);
+/** Define the interaction cursor
+ * @param {string} cursor CSS cursor
+ */
+ol.interaction.FillAttribute.prototype.setCursor = function(cursor) {
+  this._cursor = cursor;
+};
+/** Get the interaction cursor
+ * @return {string} cursor
+ */
+ol.interaction.FillAttribute.prototype.getCursor = function() {
+  return this._cursor;
+};
 /** Activate the interaction
  * @param {boolean} active
  */
@@ -18527,13 +18584,32 @@ ol.interaction.FillAttribute.prototype.getAttribute = function(key) {
  */
 ol.interaction.FillAttribute.prototype.fill = function(features, properties) {
   if (features.length && properties) {
-    this.dispatchEvent({ type: 'setattributestart', features: features, properties: properties });
-    features.forEach(function(f) {
+    // Test changes
+    var changes = false;
+    for (var i=0, f; f = features[i]; i++) {
       for (var p in properties) {
-        f.set(p, properties[p]);
+        if (f.get(p) !== properties[p]) changes = true;
       }
-    });
-    this.dispatchEvent({ type: 'setattributeend', features: features, properties: properties });
+      if (changes) break;
+    };
+    // Set Attributes
+    if (changes) {
+      this.dispatchEvent({ 
+        type: 'setattributestart', 
+        features: features, 
+        properties: properties 
+      });
+      features.forEach(function(f) {
+        for (var p in properties) {
+          f.set(p, properties[p]);
+        }
+      });
+      this.dispatchEvent({ 
+        type: 'setattributeend', 
+        features: features, 
+        properties: properties 
+      });
+    }
   }
 };
 
@@ -20344,13 +20420,14 @@ ol.interaction.Offset.prototype.handleDownEvent_ = function(e) {
   this.current_ = this.getFeatureAtPixel_(e);
   if (this.current_) {
     this.currentStyle_ = this.current_.feature.getStyle();
-    this.current_.feature.setStyle(this._style(this.current_.feature));
     if (this.source_ && (this.get('duplicate') || e.originalEvent.ctrlKey)) {
       this.current_.feature = this.current_.feature.clone();
+      this.current_.feature.setStyle(this._style(this.current_.feature));
       this.source_.addFeature(this.current_.feature);
     } else {
       // Modify the current feature
-      this.dispatchEvent({ type:'modifystart', features: [ this.current_.feature ] });
+      this.current_.feature.setStyle(this._style(this.current_.feature));
+      this._modifystart = true;
     }
     this.dispatchEvent({ type:'offsetstart', feature: this.current_.feature, offset: 0 });
     return true;
@@ -20363,6 +20440,10 @@ ol.interaction.Offset.prototype.handleDownEvent_ = function(e) {
  * @private
  */
 ol.interaction.Offset.prototype.handleDragEvent_ = function(e) {
+  if (this._modifystart) {
+    this.dispatchEvent({ type:'modifystart', features: [ this.current_.feature ] });
+    this._modifystart = false;
+  }
   var p = this.current_.geom.getClosestPoint(e.coordinate);
   var d = ol.coordinate.dist2d(p, e.coordinate);
   var seg, v1, v2, offset;
@@ -20407,7 +20488,9 @@ ol.interaction.Offset.prototype.handleDragEvent_ = function(e) {
  * @private
  */
 ol.interaction.Offset.prototype.handleUpEvent_ = function(e) {
-  this.dispatchEvent({ type:'offsetend', feature: this.current_.feature, coordinate: e.coordinate }); 
+  if (!this._modifystart) {
+    this.dispatchEvent({ type:'offsetend', feature: this.current_.feature, coordinate: e.coordinate }); 
+  }
   this.current_.feature.setStyle(this.currentStyle_);
   this.current_ = false;
 };
@@ -23429,7 +23512,11 @@ ol.interaction.Transform.prototype.getFeatures = function() {
  * @extends {ol.interaction.Interaction}
  * @fires undo
  * @fires redo
- * @param {*} options
+ * @fires change:add
+ * @fires change:remove
+ * @fires change:clear
+ * @param {Object} options
+ *  @param {number=} options.maxLength max undo stack length (0=Infinity), default Infinity
  */
 ol.interaction.UndoRedo = function(options) {
   if (!options) options = {};
@@ -23438,10 +23525,53 @@ ol.interaction.UndoRedo = function(options) {
       return true; 
     }
   });
-  this._undoStack = [];
-  this._redoStack = [];
+  this._undoStack = new ol.Collection();
+  this._redoStack = new ol.Collection();
+  // Zero level stack
+  this._undo = [];
+  this._redo = [];
+  this._undoStack.on('add', function(e) {
+    if (e.element.level === undefined) {
+      e.element.level = this._level;
+      if (!e.element.level) {
+        e.element.view = {
+          center: this.getMap().getView().getCenter(),
+          zoom: this.getMap().getView().getZoom()
+        };
+        this._undo.push(e.element);
+      }
+    } else {
+      if (!e.element.level) this._undo.push(this._redo.shift());
+    }
+    if (!e.element.level) {
+      this.dispatchEvent({ 
+        type: 'stack:add', 
+        action: e.element
+      });
+    }
+    this._reduce();
+  }.bind(this));
+  this._undoStack.on('remove', function(e) {
+    if (!e.element.level) {
+      if (this._doShift) {
+        this._undo.shift();
+      } else {
+        if (this._undo.length) this._redo.push(this._undo.pop());
+      }
+      if (!this._doClear) {
+        this.dispatchEvent({ 
+          type: 'stack:remove', 
+          action: e.element,
+          shift: this._doShift
+        });
+      }
+    }
+  }.bind(this));
   // Block counter
   this._block = 0;
+  this._level = 0;
+  // Shift an undo action ?
+  this._doShift = false;
   // Start recording
   this._record = true;
   // Custom definitions
@@ -23455,19 +23585,96 @@ ol.ext.inherits(ol.interaction.UndoRedo, ol.interaction.Interaction);
  * @api
  */
 ol.interaction.UndoRedo.prototype.define = function(action, undoFn, redoFn) {
-  this._defs['_'+action] = { undo: undoFn, redo: redoFn };
+  this._defs[action] = { undo: undoFn, redo: redoFn };
 };
-/** Set a custom undo/redo
+/** Get first level undo / redo length
+ * @param {string} [type=] get redo stack length, default get undo
+ * @return {number}
+ */
+ol.interaction.UndoRedo.prototype.length = function(type) {
+  return (type==='redo') ? this._redo.length : this._undo.length;
+};
+/** Set undo stack max length
+ * @param {number} length
+ */
+ol.interaction.UndoRedo.prototype.setMaxLength = function(length) {
+  length = parseInt(length);
+  if (length && length<0) length = 0;
+  this.set('maxLength', length);
+  this._reduce();
+};
+/** Get undo / redo size (includes all block levels)
+ * @param {string} [type=] get redo stack length, default get undo
+ * @return {number}
+ */
+ol.interaction.UndoRedo.prototype.size = function(type) {
+  return (type==='redo') ? this._redoStack.getLength() : this._undoStack.getLength();
+};
+/** Set undo stack max size
+ * @param {number} size
+ */
+ol.interaction.UndoRedo.prototype.setMaxSize = function(size) {
+  size = parseInt(size);
+  if (size && size<0) size = 0;
+  this.set('maxSize', size);
+  this._reduce();
+};
+/** Reduce stack: shift undo to set size
+ * @private
+ */
+ol.interaction.UndoRedo.prototype._reduce = function() {
+  if (this.get('maxLength')) {
+    while (this.length() > this.get('maxLength')) {
+      this.shift();
+    }
+  }
+  if (this.get('maxSize')) {
+    while (this.length() > 1 && this.size() > this.get('maxSize')) {
+      this.shift();
+    }
+  }
+};
+/** Get first level undo / redo first level stack
+ * @param {string} [type=] get redo stack, default get undo
+ * @return {Array<*>}
+ */
+ol.interaction.UndoRedo.prototype.getStack = function(type) {
+  return (type==='redo') ? this._redo : this._undo;
+};
+/** Add a new custom undo/redo
  * @param {string} action the action key name
- * @param {any} prop an object that will be passed in the undo/redo fucntions of the action
+ * @param {any} prop an object that will be passed in the undo/redo functions of the action
+ * @param {string} name action name
  * @return {boolean} true if the action is defined
  */
-ol.interaction.UndoRedo.prototype.push = function(action, prop) {
-  if (this._defs['_'+action]) {
-    this._undoStack.push({type: '_'+action, prop: prop });
+ol.interaction.UndoRedo.prototype.push = function(action, prop, name) {
+  if (this._defs[action]) {
+    this._undoStack.push({ 
+      type: action,
+      name: name,
+      custom: true,
+      prop: prop 
+    });
     return true;
   } else {
+    console.warn('[UndoRedoInteraction]: "'+e.type+'" is not defined.');
     return false;
+  }
+};
+/** Remove undo action from the beginning of the stack. 
+ * The action is not returned.
+ */
+ol.interaction.UndoRedo.prototype.shift = function() {
+  this._doShift = true;
+  var a = this._undoStack.removeAt(0);
+  this._doShift = false;
+  // Remove all block
+  if (a.type==='blockstart') {
+    a = this._undoStack.item(0);
+    while (this._undoStack.getLength() && a.level>0) {
+      this._undoStack.removeAt(0);
+      a = this._undoStack.item(0);
+    }
   }
 };
 /** Activate or deactivate the interaction, ie. records or not events on the map.
@@ -23527,7 +23734,9 @@ ol.interaction.UndoRedo.prototype._watchSources = function() {
     vectors.forEach((function(l) {
       var s = l.getSource();
       this._sourceListener.push( s.on(['addfeature', 'removefeature'], this._onAddRemove.bind(this)) );
-      this._sourceListener.push( s.on('clearstart', this.blockStart.bind(this)) );
+      this._sourceListener.push( s.on('clearstart', function() {
+        this.blockStart('clear')
+      }.bind(this)));
       this._sourceListener.push( s.on('clearend', this.blockEnd.bind(this)) );
     }).bind(this));
     // Watch new inserted/removed
@@ -23563,10 +23772,18 @@ ol.interaction.UndoRedo.prototype._watchInteractions = function() {
  */
 ol.interaction.UndoRedo.prototype._onAddRemove = function(e) {
   if (this._record) {
-    this._undoStack.push({type: e.type, source: e.target, feature: e.feature });
-    this._redoStack = [];
+    this._redoStack.clear();
+    this._redo.length = 0;
+    this._undoStack.push({
+      type: e.type, 
+      source: e.target, 
+      feature: e.feature
+    });
   }
 };
+/** Perform an interaction
+ * @private
+ */
 ol.interaction.UndoRedo.prototype._onInteraction = function(e) {
   var fn = this._onInteraction[e.type];
   if (fn) fn.call(this,e);
@@ -23575,7 +23792,7 @@ ol.interaction.UndoRedo.prototype._onInteraction = function(e) {
  * @private
  */
 ol.interaction.UndoRedo.prototype._onInteraction.setattributestart = function(e) {
-  this.blockStart();
+  this.blockStart(e.target.get('name') || 'setattribute');
   var newp = Object.assign({}, e.properties);
   e.features.forEach(function(f) {
     var oldp = {};
@@ -23584,7 +23801,7 @@ ol.interaction.UndoRedo.prototype._onInteraction.setattributestart = function(e)
     }
     this._undoStack.push({
       type: 'changeattribute', 
-      feature: f, 
+      feature: f,
       newProperties: newp,
       oldProperties: oldp
     });
@@ -23595,29 +23812,43 @@ ol.interaction.UndoRedo.prototype._onInteraction.rotatestart =
 ol.interaction.UndoRedo.prototype._onInteraction.translatestart = 
 ol.interaction.UndoRedo.prototype._onInteraction.scalestart = 
 ol.interaction.UndoRedo.prototype._onInteraction.modifystart = function (e) {
-  this.blockStart();
+  this.blockStart(e.type.replace(/start$/,''));
   e.features.forEach(function(m) {
-    this._undoStack.push({type: 'changefeature', feature: m, oldFeature: m.clone()  });
+    this._undoStack.push({ 
+      type: 'changegeometry', 
+      feature: m, 
+      oldGeom: m.getGeometry().clone() 
+    });
   }.bind(this));
   this.blockEnd();
 };
 /** Start an undo block
+ * @param {string} [name] name f the action
  * @api
  */
-ol.interaction.UndoRedo.prototype.blockStart = function () {
-  this._undoStack.push({ type: 'blockstart' });
-  this._redoStack = [];
+ol.interaction.UndoRedo.prototype.blockStart = function (name) {
+  this._redoStack.clear();
+  this._redo.length = 0;
+  this._undoStack.push({ 
+    type: 'blockstart', 
+    name: name
+  });
+  this._level++;
 };
 /** @private
  */
-ol.interaction.UndoRedo.prototype._onInteraction.beforesplit =
-ol.interaction.UndoRedo.prototype._onInteraction.deletestart =
-ol.interaction.UndoRedo.prototype.blockStart;
+ol.interaction.UndoRedo.prototype._onInteraction.beforesplit = function() {
+  this.blockStart('split');
+};
+ol.interaction.UndoRedo.prototype._onInteraction.deletestart = function() {
+  this.blockStart('delete');
+}
 /** End an undo block
  * @api
  */
 ol.interaction.UndoRedo.prototype.blockEnd = function () {
   this._undoStack.push({ type: 'blockend' });
+  this._level--;
 };
 /** @private
  */
@@ -23632,48 +23863,52 @@ ol.interaction.UndoRedo.prototype._handleDo = function(e, undo) {
   if (!this.getActive()) return;
   // Stop recording while undoing
   this._record = false;
-  switch (e.type) {
-    case 'addfeature': {
-      if (undo) e.source.removeFeature(e.feature);
-      else e.source.addFeature(e.feature);
-      break;
+  if (e.custom) {
+    if (this._defs[e.type]) {
+      if (undo) this._defs[e.type].undo(e.prop);
+      else this._defs[e.type].redo(e.prop);
+    } else {
+      console.warn('[UndoRedoInteraction]: "'+e.type+'" is not defined.');
     }
-    case 'removefeature': {
-      if (undo) e.source.addFeature(e.feature);
-      else e.source.removeFeature(e.feature);
-      break;
-    }
-    case 'changefeature': {
-      var geom = e.feature.getGeometry();
-      e.feature.setGeometry(e.oldFeature.getGeometry());
-      e.oldFeature.setGeometry(geom);
-      break;
-    }
-    case 'changeattribute': {
-      var newp = e.newProperties;
-      var oldp = e.oldProperties;
-      for (var p in oldp) {
-        if (oldp === undefined) e.feature.unset(p);
-        else e.feature.set(p, oldp[p]);
+  } else {
+    switch (e.type) {
+      case 'addfeature': {
+        if (undo) e.source.removeFeature(e.feature);
+        else e.source.addFeature(e.feature);
+        break;
       }
-      e.oldProperties = newp;
-      e.newProperties = oldp;
-      break;
-    }
-    case 'blockstart': {
-      this._block += undo ? -1 : 1;
-      break;
-    }
-    case 'blockend': {
-      this._block += undo ? 1 : -1;
-      break;
-    }
-    default: {
-      if (this._defs[e.type]) {
-        if (undo) this._defs[e.type].undo(e.prop);
-        else this._defs[e.type].redo(e.prop);
-      } else {
-        console.warn('[UndoRedoInteraction]: "'+e.type.substr(1)+'" is not defined.');
+      case 'removefeature': {
+        if (undo) e.source.addFeature(e.feature);
+        else e.source.removeFeature(e.feature);
+        break;
+      }
+      case 'changegeometry': {
+        var geom = e.feature.getGeometry();
+        e.feature.setGeometry(e.oldGeom);
+        e.oldGeom = geom;
+        break;
+      }
+      case 'changeattribute': {
+        var newp = e.newProperties;
+        var oldp = e.oldProperties;
+        for (var p in oldp) {
+          if (oldp === undefined) e.feature.unset(p);
+          else e.feature.set(p, oldp[p]);
+        }
+        e.oldProperties = newp;
+        e.newProperties = oldp;
+        break;
+      }
+      case 'blockstart': {
+        this._block += undo ? -1 : 1;
+        break;
+      }
+      case 'blockend': {
+        this._block += undo ? 1 : -1;
+        break;
+      }
+      default: {
+        console.warn('[UndoRedoInteraction]: "'+e.type+'" is not defined.');
       }
     }
   }
@@ -23694,40 +23929,46 @@ ol.interaction.UndoRedo.prototype._handleDo = function(e, undo) {
  * @api
  */
 ol.interaction.UndoRedo.prototype.undo = function() {
-  var e = this._undoStack.pop();
+  var e = this._undoStack.item(this._undoStack.getLength() - 1);
   if (!e) return;
   this._redoStack.push(e);
+  this._undoStack.pop();
   this._handleDo(e, true);
 };
 /** Redo last operation
  * @api
  */
 ol.interaction.UndoRedo.prototype.redo = function() {
-  var e = this._redoStack.pop();
+  var e = this._redoStack.item(this._redoStack.getLength() - 1);
   if (!e) return;
   this._undoStack.push(e);
+  this._redoStack.pop();
   this._handleDo(e, false);
 };
 /** Clear undo stack
  * @api
  */
 ol.interaction.UndoRedo.prototype.clear = function() {
-  this._undoStack = [];
-  this._redoStack = [];
+  this._doClear = true;
+  this._undo.length = this._redo.length = 0;
+  this._undoStack.clear();
+  this._redoStack.clear();
+  this._doClear = false;
+  this.dispatchEvent({ type: 'stack:clear' });
 };
 /** Check if undo is avaliable
  * @return {number} the number of undo 
  * @api
  */
 ol.interaction.UndoRedo.prototype.hasUndo = function() {
-  return this._undoStack.length;
+  return this._undoStack.getLength();
 };
 /** Check if redo is avaliable
  * @return {number} the number of redo
  * @api
  */
 ol.interaction.UndoRedo.prototype.hasRedo = function() {
-  return this._redoStack.length;
+  return this._redoStack.getLength();
 };
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,

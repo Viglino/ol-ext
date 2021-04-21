@@ -2625,7 +2625,9 @@ ul.ol-legend li div {
   margin-left: 6em;
 }
 
-
+.ol-ext-print-dialog .ol-size option:first-child {
+  font-style: italic;
+}
 .ol-ext-print-dialog .ol-legend label {
   display: none;
 }
