@@ -18,12 +18,17 @@ var map = new ol.Map ({
 var switcher = new ol.control.LayerSwitcher();
 map.addControl(switcher);
 var plink = new ol.control.Permalink({ visible: false })
-console.log(plink)
 map.addControl(plink);
 map.addControl(new ol.control.ScaleLine());
 map.addControl(new ol.control.SearchBAN({
   zoomOnSelect: 15
 }))
+
+if (plink.getUrlParam('layer') ==='BDTOPO_V3:cours_d_eau') {
+  minZoom = 13;
+  $('#typename option').hide();
+  $('#typename option.hydro').show();
+}
 
 map.addLayer(new ol.layer.Geoportail({
   layer: 'ORTHOIMAGERY.ORTHOPHOTOS',
@@ -38,7 +43,7 @@ map.addLayer (new ol.layer.Geoportail({
 var loadLayer = new ol.layer.VectorImage({
   title: 'chargement',
   displayInLayerSwitcher: false,
-  minZoom: 11,
+  minZoom: minZoom - 5,
   source: new ol.source.Vector({
     loader: function (extent, resolution, projection) {
       var f = new ol.Feature(ol.geom.Polygon.fromExtent(extent));
