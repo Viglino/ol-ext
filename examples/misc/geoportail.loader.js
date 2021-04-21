@@ -23,8 +23,7 @@ map.addControl(new ol.control.ScaleLine());
 map.addControl(new ol.control.SearchBAN({
   zoomOnSelect: 15
 }))
-
-if (plink.getUrlParam('layer') ==='BDTOPO_V3:cours_d_eau') {
+if (/cours_d_eau/.test(plink.getUrlParam('layer'))) {
   minZoom = 13;
   $('#typename option').hide();
   $('#typename option.hydro').show();
