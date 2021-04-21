@@ -104,7 +104,7 @@ ol_ext_element.createSwitch = function (options) {
  * @param {*} options
  *  @param {string|Element} options.html
  *  @param {string|Element} options.after
- *  @param {string} [options.name=] input name
+ *  @param {string} [options.name] input name
  *  @param {string} [options.type=checkbox] input type: radio or checkbox
  *  @param {string} options.value input value
  *  @param {*} [options.on] a list of actions

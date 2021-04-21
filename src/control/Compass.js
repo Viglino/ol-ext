@@ -15,7 +15,7 @@ import ol_style_Stroke from 'ol/style/Stroke'
  * @extends {ol_control_CanvasBase}
  * @param {Object=} options Control options. The style {_ol_style_Stroke_} option is usesd to draw the text.
  *  @param {string} options.className class name for the control
- *  @param {boolena} [options.visible=true]
+ *  @param {boolean} [options.visible=true]
  *  @param {Image} options.image an image, default use the src option or a default image
  *  @param {string} options.src image src or 'default' or 'compact', default use the image option or a default image
  *  @param {boolean} options.rotateVithView rotate vith view (false to show watermark), default true

@@ -150,7 +150,7 @@ ol_legend_Legend.prototype.setStyle = function(style) {
 };
 
 /** Add a new item to the legend
- * @param {import('./legend/Item').olLegendItemOptions|ol_legend_Item} item 
+ * @param {ol_legend_Item.olLegendItemOptions|ol_legend_Item} item 
  */
 ol_legend_Legend.prototype.addItem = function(item) {
   if (item instanceof ol_legend_Item) {
@@ -285,7 +285,7 @@ ol_legend_Legend.prototype.refresh = function() {
 };
 
 /** Get the image for a style 
- * @param {import('./legend/Item').olLegendItemOptions} item 
+ * @param {ol_legend_Item.olLegendItemOptions} item 
  * @param {Canvas|undefined} canvas a canvas to draw in, if none creat one
  * @param {int|undefined} row row number to draw in canvas, default 0
  * @return {CanvasElement}
@@ -308,7 +308,7 @@ ol_legend_Legend.prototype.getLegendImage = function(options, canvas, row) {
 };
 
 /** Get a symbol image for a given legend item
- * @param {import('./legend/Item').olLegendItemOptions} item 
+ * @param {ol_legend_Item.olLegendItemOptions} item 
  * @param {Canvas|undefined} canvas a canvas to draw in, if none creat one
  * @param {int|undefined} row row number to draw in canvas, default 0
  */

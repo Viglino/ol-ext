@@ -1,6 +1,7 @@
 import {asString as ol_color_asString} from 'ol/color'
 import ol_ext_inherits from '../util/ext'
 import ol_control_CanvasBase from './CanvasBase'
+import ol_legend_Legend from '../legend/Legend'
 
 /** Create a legend for styles
  * @constructor
@@ -8,7 +9,7 @@ import ol_control_CanvasBase from './CanvasBase'
  * @fires select
  * @param {*} options
  *  @param {String} options.className class of the control
- *  @param {import('../legend/Legend')} options.legend
+ *  @param {ol_legend_Legend} options.legend
  *  @param {boolean | undefined} options.collapsed Specify if attributions should be collapsed at startup. Default is true.
  *  @param {boolean | undefined} options.collapsible Specify if legend can be collapsed, default true.
  *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.

@@ -6,16 +6,16 @@ if (ol_View.prototype.flyTo)  {
 }
 
 /** Destination
- * @typedef {Object} ol.viewTourDestinations
- *  @param {number} [duration=2000] animation duration
- *  @param {string} [type=flyto] animation type (flyTo, moveTo), default flyTo
- *  @param {ol_coordinate} [center=] destination coordinate, default current center
- *  @param {number} [zoom=] destination zoom, default current zoom
- *  @param {number} [zoomAt=] zoom to fly to, default min (current zoom, zoom) -2
+ * @typedef {Object} viewTourDestinations
+ *  @property {number} [duration=2000] animation duration
+ *  @property {string} [type=flyto] animation type (flyTo, moveTo), default flyTo
+ *  @property {ol_coordinate} [center=] destination coordinate, default current center
+ *  @property {number} [zoom] destination zoom, default current zoom
+ *  @property {number} [zoomAt=-2] zoom to fly to, default min (current zoom, zoom) -2
  */
 
 /** FlyTo animation
- * @param {ol.viewTourDestinations} options
+ * @param {viewTourDestinations} options
  * @param {function} done callback function called at the end of an animation, called with true if the animation completed
  */
 ol_View.prototype.flyTo = function(options, done) {
@@ -45,7 +45,7 @@ ol_View.prototype.flyTo = function(options, done) {
 };
 
 /** Start a tour on the map
- * @param {Array<ol.viewTourDestinations>|Array<Array>} destinations an array of destinations or an array of [x,y,zoom,type]
+ * @param {Array<viewTourDestinations>|Array<Array>} destinations an array of destinations or an array of [x,y,zoom,type]
  * @param {function} done callback function called at the end of an animation, called with true if the tour completed
  * @param {function} step callback function called when a destination is reached with the step index as param
  */

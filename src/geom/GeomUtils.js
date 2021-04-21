@@ -254,9 +254,9 @@ function splitY(pts, y) {
 }
 
 /** Fast polygon intersection with an extent (used for area calculation)
- * @param {import(ol/extent/Extent)} extent
- * @param {import(ol/geom/Polygon)|import(ol/geom/MultiPolygon)} polygon
- * @returns {import(ol/geom/Polygon)|import(ol/geom/MultiPolygon)|null} return null if not a polygon geometry
+ * @param {ol_extent_Extent} extent
+ * @param {ol_geom_Polygon|ol_geom_MultiPolygon} polygon
+ * @returns {ol_geom_Polygon|ol_geom_MultiPolygon|null} return null if not a polygon geometry
  */
 ol_extent_intersection = function(extent, polygon) {
   var poly = (polygon.getType() === 'Polygon');

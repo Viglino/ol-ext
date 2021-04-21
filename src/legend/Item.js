@@ -4,14 +4,14 @@ import ol_ext_element from '../util/element'
 
 /** ol/legend/Item options
  * @typedef {Object} olLegendItemOptions
- * @property {string} options.title row title
- * @property {className} options.className
- * @property {import(ol/Feature)} options.feature a feature to draw on the legend
- * @property {string} options.typeGeom type geom to draw with the style or the properties if no feature is provided
- * @property {Object} options.properties a set of properties to use with a style function
- * @property {import('ol/style/Style').styleLike} options.style a style or a style function to use to draw the legend
- * @property {ol.size|undefined} options.size
- * @property {number|undefined} options.margin
+ *  @property {string} title row title
+ *  @property {className} className
+ *  @property {ol_Feature} feature a feature to draw on the legend
+ *  @property {string} typeGeom type geom to draw with the style or the properties if no feature is provided
+ *  @property {Object} properties a set of properties to use with a style function
+ *  @property {ol_style_Style.styleLike} style a style or a style function to use to draw the legend
+ *  @property {ol.size|undefined} size
+ *  @property {number|undefined} margin
  */
 
 /** A class for legend items

@@ -65,7 +65,7 @@ ol_control_Bar.prototype.getVisible = function () {
 /**
  * Set the map instance the control is associated with
  * and add its controls associated to this map.
- * @param {import('ol/Map')} map The map instance.
+ * @param {ol_Map} map The map instance.
  */
 ol_control_Bar.prototype.setMap = function (map) {
   ol_control_Control.prototype.setMap.call(this, map);
@@ -78,7 +78,7 @@ ol_control_Bar.prototype.setMap = function (map) {
 };
 
 /** Get controls in the panel
- *	@param {Array<import('ol/control/Control')>}
+ *	@param {Array<ol_control_Control>}
  */
 ol_control_Bar.prototype.getControls = function () {
   return this.controls_;
@@ -121,7 +121,7 @@ ol_control_Bar.prototype.addControl = function (c) {
 };
 
 /** Deativate all controls in a bar
- * @param {import('ol/control/Control')} [except] a control
+ * @param {ol_control_Control} [except] a control
  */
 ol_control_Bar.prototype.deactivateControls = function (except) {
   for (var i=0; i<this.controls_.length; i++) {

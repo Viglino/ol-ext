@@ -353,15 +353,15 @@ if (ol.View.prototype.flyTo)  {
   console.warn('[OL-EXT] ol/View~View.flyTo redefinition')
 }
 /** Destination
- * @typedef {Object} ol.viewTourDestinations
- *  @param {number} [duration=2000] animation duration
- *  @param {string} [type=flyto] animation type (flyTo, moveTo), default flyTo
- *  @param {ol.coordinate} [center=] destination coordinate, default current center
- *  @param {number} [zoom=] destination zoom, default current zoom
- *  @param {number} [zoomAt=] zoom to fly to, default min (current zoom, zoom) -2
+ * @typedef {Object} viewTourDestinations
+ *  @property {number} [duration=2000] animation duration
+ *  @property {string} [type=flyto] animation type (flyTo, moveTo), default flyTo
+ *  @property {ol.coordinate} [center=] destination coordinate, default current center
+ *  @property {number} [zoom] destination zoom, default current zoom
+ *  @property {number} [zoomAt=-2] zoom to fly to, default min (current zoom, zoom) -2
  */
 /** FlyTo animation
- * @param {ol.viewTourDestinations} options
+ * @param {viewTourDestinations} options
  * @param {function} done callback function called at the end of an animation, called with true if the animation completed
  */
 ol.View.prototype.flyTo = function(options, done) {
@@ -390,7 +390,7 @@ ol.View.prototype.flyTo = function(options, done) {
   callback);
 };
 /** Start a tour on the map
- * @param {Array<ol.viewTourDestinations>|Array<Array>} destinations an array of destinations or an array of [x,y,zoom,type]
+ * @param {Array<viewTourDestinations>|Array<Array>} destinations an array of destinations or an array of [x,y,zoom,type]
  * @param {function} done callback function called at the end of an animation, called with true if the tour completed
  * @param {function} step callback function called when a destination is reached with the step index as param
  */
@@ -534,7 +534,7 @@ ol.ext.element.createSwitch = function (options) {
  * @param {*} options
  *  @param {string|Element} options.html
  *  @param {string|Element} options.after
- *  @param {string} [options.name=] input name
+ *  @param {string} [options.name] input name
  *  @param {string} [options.type=checkbox] input type: radio or checkbox
  *  @param {string} options.value input value
  *  @param {*} [options.on] a list of actions
@@ -1476,7 +1476,7 @@ ol.legend.Legend.prototype.setStyle = function(style) {
   this.refresh();
 };
 /** Add a new item to the legend
- * @param {import('./legend/Item').olLegendItemOptions|ol.legend.Item} item 
+ * @param {ol.legend.Item.olLegendItemOptions|ol.legend.Item} item 
  */
 ol.legend.Legend.prototype.addItem = function(item) {
   if (item instanceof ol.legend.Item) {
@@ -1601,7 +1601,7 @@ ol.legend.Legend.prototype.refresh = function() {
   });
 };
 /** Get the image for a style 
- * @param {import('./legend/Item').olLegendItemOptions} item 
+ * @param {ol.legend.Item.olLegendItemOptions} item 
  * @param {Canvas|undefined} canvas a canvas to draw in, if none creat one
  * @param {int|undefined} row row number to draw in canvas, default 0
  * @return {CanvasElement}
@@ -1623,7 +1623,7 @@ ol.legend.Legend.prototype.getLegendImage = function(options, canvas, row) {
   }, canvas, row);
 };
 /** Get a symbol image for a given legend item
- * @param {import('./legend/Item').olLegendItemOptions} item 
+ * @param {ol.legend.Item.olLegendItemOptions} item 
  * @param {Canvas|undefined} canvas a canvas to draw in, if none creat one
  * @param {int|undefined} row row number to draw in canvas, default 0
  */
@@ -1745,14 +1745,14 @@ ol.legend.Legend.getLegendImage = function(item, canvas, row) {
 
 /** ol/legend/Item options
  * @typedef {Object} olLegendItemOptions
- * @property {string} options.title row title
- * @property {className} options.className
- * @property {import(ol/Feature)} options.feature a feature to draw on the legend
- * @property {string} options.typeGeom type geom to draw with the style or the properties if no feature is provided
- * @property {Object} options.properties a set of properties to use with a style function
- * @property {import('ol/style/Style').styleLike} options.style a style or a style function to use to draw the legend
- * @property {ol.size|undefined} options.size
- * @property {number|undefined} options.margin
+ *  @property {string} title row title
+ *  @property {className} className
+ *  @property {ol.Feature} feature a feature to draw on the legend
+ *  @property {string} typeGeom type geom to draw with the style or the properties if no feature is provided
+ *  @property {Object} properties a set of properties to use with a style function
+ *  @property {ol.style.Style.styleLike} style a style or a style function to use to draw the legend
+ *  @property {ol.size|undefined} size
+ *  @property {number|undefined} margin
  */
 /** A class for legend items
  * @constructor
@@ -1820,7 +1820,7 @@ ol.ext.inherits(ol.control.CanvasBase, ol.control.Control);
  * Remove the control from its current map and attach it to the new map.
  * Subclasses may set up event handlers to get notified about changes to
  * the map here.
- * @param {import('ol/Map')} map Map.
+ * @param {ol.Map} map Map.
  * @api stable
  */
 ol.control.CanvasBase.prototype.setMap = function (map) {
@@ -4130,7 +4130,7 @@ ol.control.Bar.prototype.getVisible = function () {
 /**
  * Set the map instance the control is associated with
  * and add its controls associated to this map.
- * @param {import('ol/Map')} map The map instance.
+ * @param {ol.Map} map The map instance.
  */
 ol.control.Bar.prototype.setMap = function (map) {
   ol.control.Control.prototype.setMap.call(this, map);
@@ -4141,7 +4141,7 @@ ol.control.Bar.prototype.setMap = function (map) {
   }
 };
 /** Get controls in the panel
- *	@param {Array<import('ol/control/Control')>}
+ *	@param {Array<ol.control.Control>}
  */
 ol.control.Bar.prototype.getControls = function () {
   return this.controls_;
@@ -4181,7 +4181,7 @@ ol.control.Bar.prototype.addControl = function (c) {
   }
 };
 /** Deativate all controls in a bar
- * @param {import('ol/control/Control')} [except] a control
+ * @param {ol.control.Control} [except] a control
  */
 ol.control.Bar.prototype.deactivateControls = function (except) {
   for (var i=0; i<this.controls_.length; i++) {
@@ -4416,7 +4416,7 @@ ol.control.CanvasScaleLine.prototype.getContext = ol.control.CanvasBase.prototyp
  * Remove the control from its current map and attach it to the new map.
  * Subclasses may set up event handlers to get notified about changes to
  * the map here.
- * @param {import('ol/Map')} map Map.
+ * @param {ol.Map} map Map.
  * @api stable
  */
 ol.control.CanvasScaleLine.prototype.setMap = function (map) {	
@@ -4436,7 +4436,7 @@ ol.control.CanvasScaleLine.prototype.setMap = function (map) {
 }
 /**
  * Change the control style
- * @param {import('ol/style/Style')} style
+ * @param {ol.style.Style} style
  */
 ol.control.CanvasScaleLine.prototype.setStyle = function (style) {
   var stroke = style.getStroke();
@@ -4456,7 +4456,7 @@ ol.control.CanvasScaleLine.prototype.setStyle = function (style) {
 }
 /** 
  * Draw attribution in the final canvas
- * @param {import('ol/render/Event')} e
+ * @param {ol.render.Event} e
  * @private
  */
 ol.control.CanvasScaleLine.prototype.drawScale_ = function(e) {
@@ -4745,7 +4745,7 @@ ol.control.CenterPosition.prototype._draw = function(e) {
  * @extends {ol.control.CanvasBase}
  * @param {Object=} options Control options. The style {_ol_style_Stroke_} option is usesd to draw the text.
  *  @param {string} options.className class name for the control
- *  @param {boolena} [options.visible=true]
+ *  @param {boolean} [options.visible=true]
  *  @param {Image} options.image an image, default use the src option or a default image
  *  @param {string} options.src image src or 'default' or 'compact', default use the image option or a default image
  *  @param {boolean} options.rotateVithView rotate vith view (false to show watermark), default true
@@ -7372,7 +7372,7 @@ ol.control.LayerSwitcherImage.prototype.overflow = function(){};
  * @fires select
  * @param {*} options
  *  @param {String} options.className class of the control
- *  @param {import('../legend/Legend')} options.legend
+ *  @param {ol.legend.Legend} options.legend
  *  @param {boolean | undefined} options.collapsed Specify if attributions should be collapsed at startup. Default is true.
  *  @param {boolean | undefined} options.collapsible Specify if legend can be collapsed, default true.
  *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
@@ -14422,7 +14422,7 @@ ol.featureAnimation.prototype.animate = function (/* e */) {
 };
 /** An animation controler object an object to control animation with start, stop and isPlaying function.    
  * To be used with {@link olx.Map#animateFeature} or {@link ol.layer.Vector#animateFeature}
- * @typedef {Object} ol.animationControler
+ * @typedef {Object} animationControler
  * @property {function} start - start animation.
  * @property {function} stop - stop animation option arguments can be passed in animationend event.
  * @property {function} isPlaying - return true if animation is playing.
@@ -14431,7 +14431,7 @@ ol.featureAnimation.prototype.animate = function (/* e */) {
  * @function 
  * @param {ol.Feature} feature Feature to animate
  * @param {ol.featureAnimation|Array<ol.featureAnimation>} fanim the animation to play
- * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
+ * @return {animationControler} an object to control animation with start, stop and isPlaying function
  */
 ol.Map.prototype.animateFeature = function(feature, fanim) {
   // Get or create an animation layer associated with the map 
@@ -14456,7 +14456,7 @@ ol.Map.prototype.animateFeature = function(feature, fanim) {
  * @param {ol.Feature} feature Feature to animate
  * @param {ol.featureAnimation|Array<ol.featureAnimation>} fanim the animation to play
  * @param {boolean} useFilter use the filters of the layer
- * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
+ * @return {animationControler} an object to control animation with start, stop and isPlaying function
  */
 ol.layer.Base.prototype.animateFeature = function(feature, fanim, useFilter) {
   var self = this;
@@ -23587,7 +23587,7 @@ ol.interaction.UndoRedo.prototype.define = function(action, undoFn, redoFn) {
   this._defs[action] = { undo: undoFn, redo: redoFn };
 };
 /** Get first level undo / redo length
- * @param {string} [type=] get redo stack length, default get undo
+ * @param {string} [type] get redo stack length, default get undo
  * @return {number}
  */
 ol.interaction.UndoRedo.prototype.length = function(type) {
@@ -23603,7 +23603,7 @@ ol.interaction.UndoRedo.prototype.setMaxLength = function(length) {
   this._reduce();
 };
 /** Get undo / redo size (includes all block levels)
- * @param {string} [type=] get redo stack length, default get undo
+ * @param {string} [type] get redo stack length, default get undo
  * @return {number}
  */
 ol.interaction.UndoRedo.prototype.size = function(type) {
@@ -23634,7 +23634,7 @@ ol.interaction.UndoRedo.prototype._reduce = function() {
   }
 };
 /** Get first level undo / redo first level stack
- * @param {string} [type=] get redo stack, default get undo
+ * @param {string} [type] get redo stack, default get undo
  * @return {Array<*>}
  */
 ol.interaction.UndoRedo.prototype.getStack = function(type) {
@@ -30817,9 +30817,9 @@ function splitY(pts, y) {
   }
 }
 /** Fast polygon intersection with an extent (used for area calculation)
- * @param {import(ol/extent/Extent)} extent
- * @param {import(ol/geom/Polygon)|import(ol/geom/MultiPolygon)} polygon
- * @returns {import(ol/geom/Polygon)|import(ol/geom/MultiPolygon)|null} return null if not a polygon geometry
+ * @param {ol.extent.Extent} extent
+ * @param {ol.geom.Polygon|ol.geom.MultiPolygon} polygon
+ * @returns {ol.geom.Polygon|ol.geom.MultiPolygon|null} return null if not a polygon geometry
  */
 ol.extent.intersection = function(extent, polygon) {
   var poly = (polygon.getType() === 'Polygon');
@@ -34778,7 +34778,7 @@ ol.style.Style.defaultStyle = function(edit) {
  *  @param {boolean|number} options.sens true show flow direction or a max resolution to show it, default false
  *  @param {boolean} options.vert 'vert' road section (troncon_de_route) style, default false
  *  @param {boolean} options.symbol show symbol on buildings (batiment), default false
- * @return {Array<ol.style.Style}
+ * @return {Array<ol.style.Style>}
  */
 ol.style.geoportailStyle;
 (function(){

@@ -90,7 +90,7 @@ ol_interaction_UndoRedo.prototype.define = function(action, undoFn, redoFn) {
 };
 
 /** Get first level undo / redo length
- * @param {string} [type=] get redo stack length, default get undo
+ * @param {string} [type] get redo stack length, default get undo
  * @return {number}
  */
 ol_interaction_UndoRedo.prototype.length = function(type) {
@@ -108,7 +108,7 @@ ol_interaction_UndoRedo.prototype.setMaxLength = function(length) {
 };
 
 /** Get undo / redo size (includes all block levels)
- * @param {string} [type=] get redo stack length, default get undo
+ * @param {string} [type] get redo stack length, default get undo
  * @return {number}
  */
 ol_interaction_UndoRedo.prototype.size = function(type) {
@@ -142,7 +142,7 @@ ol_interaction_UndoRedo.prototype._reduce = function() {
 };
 
 /** Get first level undo / redo first level stack
- * @param {string} [type=] get redo stack, default get undo
+ * @param {string} [type] get redo stack, default get undo
  * @return {Array<*>}
  */
 ol_interaction_UndoRedo.prototype.getStack = function(type) {

@@ -18,7 +18,7 @@ import ol_style_Style_defaultStyle from '../style/defaultStyle'
  *  @param {boolean|number} options.sens true show flow direction or a max resolution to show it, default false
  *  @param {boolean} options.vert 'vert' road section (troncon_de_route) style, default false
  *  @param {boolean} options.symbol show symbol on buildings (batiment), default false
- * @return {Array<ol.style.Style}
+ * @return {Array<ol.style.Style>}
  */
 var ol_style_geoportailStyle;
 
