@@ -19417,9 +19417,10 @@ ol.interaction.LongTouch = function(options) {
 ol.ext.inherits(ol.interaction.LongTouch, ol.interaction.Interaction);
 
 // Use ol.getUid for Openlayers < v6
-/* Extent the ol/interaction/Modify with a getModifyFeatures
+/** Extent the ol/interaction/Modify with a getModifyFeatures
  * Get the features modified by the interaction
  * @return {Array<ol.Feature>} the modified features
+ * @deprecated
  */
 ol.interaction.Modify.prototype.getModifiedFeatures = function() {
   var featuresById = {};

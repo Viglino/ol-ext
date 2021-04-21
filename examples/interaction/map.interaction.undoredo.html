@@ -61,7 +61,7 @@
       padding: 0;
     }
     .options li {
-      padding: 0 .5em;
+      padding: .1em .5em;
     }
     .options li:hover {
       background-color: #369;
@@ -74,7 +74,43 @@
       margin: auto;
       display: block;
     }
-
+    .options li:before {
+      font-family: FontAwesome;
+      display: inline-block;
+      width: 1.4em;
+      height: 1.4em;
+      border-radius: .3em;
+      background-color: #369;
+      color: #fff;
+      padding: .2em;
+      text-align: center;
+      box-sizing: border-box;
+      margin-right: .3em;
+    }
+    .options li.addfeature:before {
+      content: "\f067";
+    }
+    .options li.modify:before {
+      content: "\f040";
+    }
+    .options li.translate:before {
+      content: "\f0b2";
+    }
+    .options li.rotate:before {
+      content: "\f01e";
+    }
+    .options li.scale:before {
+      content: "\f047";
+    }
+    .options li.delete:before {
+      content: "\f1f8";
+    }
+    .options li.split:before {
+      content: "\f0c4";
+    }
+    .options li.color:before {
+      content: "\f1fc";
+    }
   </style>
 
 </head>
@@ -273,7 +309,8 @@
     undoInteraction.on('stack:add', function (e) {
       // New action element
       if (!e.action.element) {
-        var elt = e.action.element = $('<li>').text(e.action.name || e.action.type);
+        var elt = e.action.element = $('<li>').text(e.action.name || e.action.type)
+        elt.addClass(e.action.name || e.action.type);
         elt.click(function() {
           // undo or redo stack
           if (elt.parent().hasClass('undo')) {

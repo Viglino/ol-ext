@@ -222,7 +222,7 @@
   setInteraction = function () {
     var name = $('[name="op"]:checked').val();
     for (var i in interactions) {
-      interactions[i].set("active", (i==name));
+      interactions[i].setActive(i===name);
     }
   }
   setInteraction();

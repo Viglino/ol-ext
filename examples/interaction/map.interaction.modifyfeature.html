@@ -62,9 +62,18 @@
     <h2>Options:</h2>
     <ul><li>
       Operation: 
-      <label><input type="radio" name="op" value="draw" /> Draw</label>
-      <label><input type="radio" name="op" value="modify" /> Modify</label>
-      <label><input type="radio" name="op" value="modifyfeature" checked="checked" /> ModifyFeature</label>
+      <label>
+        <input type="radio" name="op" value="draw" />
+        Draw
+      </label>
+      <label>
+        <input type="radio" name="op" value="modify" />
+        Modify
+      </label>
+      <label>
+        <input type="radio" name="op" value="modifyfeature" checked="checked" />
+        ModifyFeature
+      </label>
     </li></ul>
     <div style="background:white; padding:0 0.45em;"><span id="info"></span>&nbsp;</div>
     <p class='modifystart' style='margin:0; font-size: .8em; color:green'></p>
@@ -88,7 +97,6 @@
         zoom: 5,
         center: [261720, 5951081]
       }),
-      controls: ol.control.defaults({ "attribution": false }),
       layers: layers
     });
 
@@ -108,7 +116,7 @@
     // New vector layer
     var vector = new ol.layer.Vector({
       name: 'Vecteur',
-      source: new ol.source.Vector({ features: new ol.Collection() }),
+      source: new ol.source.Vector(),
       style: getStyle
     })
     map.addLayer(vector);
@@ -141,10 +149,11 @@
     var interactions = {
       draw: new ol.interaction.Draw({
         source: vector.getSource(),
-        type: "LineString"
+        type: 'LineString'
       }),
       modify: new ol.interaction.Modify ({
         source: vector.getSource(),
+        //features: vector.getSource().getFeaturesCollection(),
         // insertVertexCondition: function(){ return false; }
       }),
       modifyfeature: new ol.interaction.ModifyFeature ({ 
@@ -155,17 +164,15 @@
     }
     for (var i in interactions) map.addInteraction(interactions[i]);
 
-    setInteraction = function (){
-      $(".options > div").html("");
+    setInteraction = function () {
+      $('.options > div').html('');
       var name = $('[name="op"]:checked').val();
       for (var i in interactions) {
-        interactions[i].set("active", (i==name));
+        interactions[i].set('active', (i===name));
       }
     }
     setInteraction();
-
-    $("label").click(function(){$(this).prev().click();});
-    $("input:radio").on("change",setInteraction);
+    $('input:radio').on('change', setInteraction);
 
     // Add snap to get multi modification
     map.addInteraction(new ol.interaction.Snap({ 
@@ -185,9 +192,9 @@
     });
     interactions.modify.on(['modifystart', 'modifyend', 'modifying'], function(e) {
       // Try to get the modified features
-      var f = interactions.modify.getModifiedFeatures()[0];
+      var f = e.features.item(0); // interactions.modify.getModifiedFeatures()[0];
       if (e.type==='modifystart') $('.options p').html('');
-      var info = e.type + ' '+ (e.features.length||'??') + ' feature(s) : '; 
+      var info = e.type + ' '+ (e.features.getLength()||'??') + ' feature(s) : '; 
       info += (f ? f.getGeometry().getType() : '');
       if (f && f.getGeometry().flatCoordinates) info += ' '+(f ? (f.getGeometry().flatCoordinates.length/2) : '?') + ' point(s)'
       $('.options .'+e.type).text(info);
