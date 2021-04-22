@@ -46,7 +46,6 @@ import { extend as ol_extent_extend } from 'ol/extent'
  */
 var ol_interaction_SelectCluster = function(options) {
   options = options || {};
-  var fn; 
 
   this.pointRadius = options.pointRadius || 12;
   this.circleMaxObjects = options.circleMaxObjects || 10;
@@ -73,9 +72,9 @@ var ol_interaction_SelectCluster = function(options) {
   // Add the overlay to selection
   if (options.layers) {
     if (typeof(options.layers) == "function") {
-      fn = options.layers;
+      var fnLayers = options.layers;
       options.layers = function(layer) {
-        return (layer===overlay || fn(layer));
+        return (layer===overlay || fnLayers(layer));
       };
     } else if (options.layers.push) {
       options.layers.push(this.overlayLayer_);
@@ -84,11 +83,11 @@ var ol_interaction_SelectCluster = function(options) {
 
   // Don't select links
   if (options.filter) {
-    fn = options.filter;
+    var fnFilter = options.filter;
     options.filter = function(f,l){
       //if (l===overlay && f.get("selectclusterlink")) return false;
       if (!l && f.get("selectclusterlink")) return false;
-      else return fn(f,l);
+      else return fnFilter(f,l);
     };
   } else options.filter = function(f,l) {
     //if (l===overlay && f.get("selectclusterlink")) return false; 
