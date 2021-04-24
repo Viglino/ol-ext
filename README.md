@@ -92,7 +92,7 @@ Please use the [GitHub issue tracker](https://github.com/Viglino/ol-ext/issues) 
 ## License
 
 ol-ext is licensed under the French Opensource **BSD** compatible CeCILL-B FREE SOFTWARE LICENSE.  
- (c) 2016-2019 - Jean-Marc Viglino
+ (c) 2016-20 - Jean-Marc Viglino
 
 Some resources (mapping services and API) used in this sofware may have a specific license.  
 You must check before use.
