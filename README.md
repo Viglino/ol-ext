@@ -23,28 +23,7 @@ search,
 animations,
 undo/redo mechanisms
 
-> [
-![Font style](img/map.style.font.jpg?raw=true)
-![Charts](img/map.style.chart.jpg?raw=true)
-![](img/map.style.pattern.jpg?raw=true)
-![](img/map.style.photo.jpg?raw=true)
-![](img/map.filter.colorize.jpg?raw=true)
-![](img/map.filter.pointillism.jpg?raw=true)
-![](img/map.control.compass.jpg?raw=true)
-![](img/map.control.graticule.jpg?raw=true)
-![](img/map.interaction.transform.jpg?raw=true)
-![](img/map.control.editbar.jpg?raw=true)
-![](img/map.switcher.image.jpg?raw=true)
-![](img/map.control.profil.jpg?raw=true)
-![](img/map.control.swipe.jpg?raw=true)
-![](img/map.popup.anim.jpg?raw=true)
-![](img/map.layer.hexbin.jpg?raw=true)
-![](img/map.geom.cspline.jpg?raw=true)
-![](img/map.cluster.convexhull.jpg?raw=true)
-![](img/map.overlay.magnify.jpg?raw=true)
-![](img/map.filter.lego.jpg?raw=true)
-![](img/map.interaction.synchronize.jpg?raw=true)
-](http://viglino.github.io/ol-ext/)
+![](http://viglino.github.io/ol-ext/img/ol-ext.jpg)
 
 ## Getting Started
 
