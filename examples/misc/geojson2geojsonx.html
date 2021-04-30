@@ -1,0 +1,438 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>GeoJSONX</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="Convert CSV file to GeoJSON." />
+  <meta name="keywords" content="openlayers, geojson, topojson, online, minify, compress" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- ol3 to show the map -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
+  <!-- filesaver-js -->
+  <script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+  <!-- Papaparse -->
+  <script type="text/javascript" src="https://unpkg.com/papaparse@4.6.3/papaparse.min.js"></script>
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <!-- TopoJSON Writer -->
+  <script src="https://unpkg.com/topojson@3"></script>
+
+  <!-- exif2geojson -->
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    body {	
+      max-width: 800px;
+      margin: 0.5em auto;
+      background: #ddc;
+      font-family: 'Open Sans Condensed',Arial,Helvetica,Verdana,sans-serif;
+      color: #775;
+    }
+    h1 {
+      background: #886;
+    }
+    h1 .fa {
+      color: #fff;
+      font-size:1.8em;
+      vertical-align: middle;
+    }
+    .info {
+      padding:1em 2em;
+      background: #fff;
+      border-radius: 6px;
+      clear: both;
+    }
+    .globe {
+      text-align:center;
+      float:left;
+      font-size: 5em;
+      width:40%;
+    }
+    .globe .fa {
+      vertical-align: middle;
+      margin:0 5px;
+      color:#664;
+    }
+    .globe .fa-file-excel-o	{
+      font-size: 0.75em;
+    }
+    .globe .fa-arrow-circle-right	{
+      font-size: 0.5em;
+    }
+
+    #dropfile	{
+      font-size:1.2em;
+      width:55%; 
+      float: right;
+      border:3px dashed #997; 
+      padding:1em 3.5em;
+      text-align:center;
+      box-sizing: border-box;
+      margin: 0 3em 1em -3em;
+      font-weight: bold;
+    }
+    #dropfile.hover{
+      border-color: #664;
+      background: #e6e6d6;
+    }
+
+    #pbar {	
+      display: none; 
+      width:200px; 
+      border:1px solid #664; 
+      margin: 0.5em;
+      float:left;
+    }
+    #pbar > div {	
+      height: 15px; 
+      width: 0; 
+      background: #664;
+    }
+    label,
+    input {
+      vertical-align: middle;
+    }
+    textarea {
+      width:100%; 
+      height:15em; 
+      box-sizing:border-box;
+      white-space: nowrap;
+      min-width: 100%;
+      max-width: 100%;
+    }
+    .loading {
+      font-weight: bold;
+      margin: 0;
+      padding:0.5em;
+      height:1em;
+    }
+    .info > button {
+      float: right;
+      background: #887;
+      color: #fff;
+      border: 0;
+      margin: 0 2em;
+      font-size: 1.3em;
+      padding: 0.25em 1em;
+      display: none;
+      cursor: pointer;
+    }
+    .info > button	i {
+      color:#fff;
+    }
+    #map {
+      float: none;
+      width: 100%;
+      height: 400px;
+    }
+    .warn {
+      background: #fe0;
+      color: #800;
+      padding: 0 1em;
+    }
+    body.isloading > .info > *,
+    body.isloading > * {
+      opacity: .5;
+    }
+    body.isloading > .info .loading,
+    body.isloading > .info {
+      opacity: 1;
+    }
+    .saved {
+      float: left;
+      margin-right: 1em;
+      color: #fff;
+      background: #0af;
+      padding: .5em 1em;
+    }
+    .nosave .saved {
+      background: #800;
+    }
+    #map .ol-zoombt {
+      display: none!important;
+    }
+    .help {
+      display: none;
+      padding: .5em 1em .5em 3em;
+      background-color: #eee;
+      margin: 0 -1em .5em -3em;
+    }
+    .geojson .help.geojson,
+    .topojson .help.topojson,
+    .geojsonp .help.geojsonp,
+    .geojsonx .help.geojsonx {
+      display: block;
+    }
+    .info li input[type="text"] {
+      width: 100%;
+    }
+    li .warning {
+      margin: 0;
+      padding: .5em 1em;
+      background-color: #d70;
+      color: yellow;
+    }
+    .topojson .x,
+    .geojson .x {
+      display: none;
+    }
+</style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a class="title" href="../../index.html">
+    <h1><i class="fa fa-file-excel-o"></i> GeoJSONX</h1>
+  </a>
+
+  <div class="info">
+    <b>Compress (minify) GeoJSON.</b><br/>
+    Choose your format, compare resulting file size and look at result on the map.
+  </div>
+  
+  <div class="globe">
+    <i class="fa fa-globe"></i><i class="fa fa-arrow-circle-right"></i><i class="fa fa-file-excel-o"></i>
+  </div>
+
+  <div id="dropfile">
+    Drag & drop GeoJSON file to convert.
+  </div>
+
+  <div class="info">
+    <p>Options:</p>
+    <ul style="list-style:none;">
+      <li>
+        <label>Format:</label>
+        <select id="format" onchange="setFormat()">
+          <option value='geojson'>GeoJSON</option>
+          <option value='topojson'>TopoJSON</option>
+          <option value='geojsonx' selected="selected">GeoJSONX</option>
+          <option value='geojsonp'>GeoJSONP</option>
+        </select>
+      </li>
+      <li class="help geojson">
+        Standard <a href="https://en.wikipedia.org/wiki/GeoJSON">GeoJSON</a> format.
+      </li>
+      <li class="help topojson">
+        <a href="https://en.wikipedia.org/wiki/GeoJSON#TopoJSON">TopoJSON</a> is an extension 
+        of GeoJSON that encodes geospatial topology and that typically provides smaller file sizes.
+      </li>
+      <li class="help geojsonx">
+        <b>ol/format/GeoJSONX</b> encode features properties and geometry to minimize the file size.
+        <br/>
+        Properties keys are stored in a dictionnary to minimize the redondances.
+      </li>
+      <li class="help geojsonp">
+        <b>ol/format/GeoJSONP</b> encode features geometry using
+        <a href="https://developers.google.com/maps/documentation/utilities/polylinealgorithm">Encoded Polyline Algorithm Format</a>.
+        <br/>
+        Properties keys are stored in a dictionnary to minimize the redondances.
+        <p class="warning">EPA only support 5/6 decimals precision. Using more digits may lead to invalid geometry.</p>
+      </li>
+      <li>
+        <label>Decimals:</label>
+        <input id="decimals" type="number" value="6" min="-2" max="20" onchange="setFormat()" />
+        <label>Reduce the precision of the data (to x digits).</label>
+      </li>
+      <li class="x">
+        <label>
+          <input id="nonull" type="checkbox" checked="checked" onchange="setFormat()" />
+          Remove null properties:
+        </label>
+      </li>
+      <li class="x">
+        <label>
+          <input id="extended" type="checkbox" onchange="setFormat()" />
+          Extract extended properties on fearures (id, bbox, etc.):
+        </label>
+      </li>
+      <li class="x">
+        <label>White list (a list of properties separtated with ','):</label>
+        <input id="whitel" type="text" onchange="setFormat()" />
+      </li>
+      <li class="x">
+        <label>Black list (a list of properties separtated with ','):</label>
+        <input id="blackl" type="text" onchange="setFormat()" />
+      </li>
+    </ul>
+  
+    <p style="margin-bottom:0;">Result:</p>
+    <div id="pbar"><div></div></div>
+    <button onclick="download()"><i class="fa fa-download"></i> Download</button>
+    <div class="loading"></div>
+
+    <textarea id="result"></textarea>
+
+    <div id="map"></div>
+      
+  </div>
+
+<script>
+  var name, fileSize, features, geojson, result;
+  var format;
+
+  function setFormat() {
+    var v = $('#format').val();
+    document.body.className = v;
+    if ($('#decimals').val()<6) $('.geojsonp .warning').hide();
+    else $('.geojsonp .warning').show();
+    switch(v) {
+      case 'topojson': {
+        format = new ol.format.TopoJSON();
+        format.writeFeaturesObject = function (features) {
+          var fmt = new ol.format.GeoJSON()
+          var geojson = fmt.writeFeaturesObject(features, { decimals: $('#decimals').val() });
+          return topojson.topology({ layer: geojson });
+        }
+        break;
+      }
+      case 'geojsonx': {
+        format = new ol.format.GeoJSONX({ 
+          deleteNullProperties: $('#nonull').prop('checked'),
+          decimals: $('#decimals').val(),
+          extended: $('#extended').prop('checked'),
+          whiteList: $('#whitel').val() ? $('#whitel').val().split(',') : null,
+          blackList: $('#blackl').val() ? $('#blackl').val().split(',') : null
+        });
+        break;
+      }
+      case 'geojsonp': {
+        format = new ol.format.GeoJSONP({ 
+          deleteNullProperties: $('#nonull').prop('checked'),
+          decimals: $('#decimals').val(),
+          extended: $('#extended').prop('checked'),
+          whiteList: $('#whitel').val() ? $('#whitel').val().split(',') : null,
+          blackList: $('#blackl').val() ? $('#blackl').val().split(',') : null
+        });
+        break;
+      }
+      default: {
+        format = new ol.format.GeoJSON();
+        break;
+      }
+    }
+    encode();
+  }
+  setFormat();
+
+  /** Save file */
+  function download() {
+    var blob = new Blob([result], {type: "text/plain;charset=utf-8"});
+    saveAs(blob, name+'.'+$('#format').val());
+  }
+
+  // Add feature on drop
+  var dd = new ol.interaction.DropFile({ projection: 'EPSG:4326' });
+  dd.on('loadstart', function () { 
+    $('#dropfile').removeClass('hover');
+    $('body').addClass('isloading');
+    $('.loading').html(' loading...');
+  });
+  dd.on('loadend', function (e) { 
+    if (!e.features) {
+      $('.loading').html('<span class="warn">No valid file...</span>');
+      return;
+    } else {
+      features = e.features;
+      showFeatures(origin, features);
+      name = e.file.name.replace(/\..+$/, '');
+      fileSize = e.file.size;
+      encode();
+    }
+  });
+
+  function showFeatures(layer, features) {
+    layer.getSource().clear();
+    features.forEach(function (f) {
+      f = f.clone();
+      f.getGeometry().transform('EPSG:4326', map.getView().getProjection())
+      layer.getSource().addFeature(f);
+    });
+  }
+
+  function encode() {
+    if (!features) return;
+    if (!$('body').hasClass('isloading')) {
+      $('body').addClass('isloading');
+      $('.loading').html(' loading...');
+      setTimeout(encode, 100);
+      return;
+    }
+    geojson = format.writeFeaturesObject(features, { decimals: $('#decimals').val() });
+    showFeatures(encoded, format.readFeaturesFromObject(geojson));
+    result = JSON.stringify(geojson);
+    $("#result").val(JSON.stringify(geojson,null,' ').substr(0,50000)+(result.length>50000? '\n...':''));
+    var size;
+    if (result.length > 1024*1024) {
+      size = (result.length/1024/1024).toFixed(2) +' Mo / '+ (fileSize/1024/1024).toFixed(2) + ' Mo'
+    } else {
+      size = (result.length/1024).toFixed(0) +' Ko / '+ (fileSize/1024).toFixed(0) + ' Ko';
+    }
+    $(".loading").html(
+      '<div class="saved">' + (100*(fileSize-result.length)/fileSize).toFixed(0) + '% saved</div>'
+      + features.length+' feature(s) loaded.'
+      +'<br/>'+ size
+    );
+    $('body').removeClass('isloading');
+    if (fileSize<result.length) $('body').addClass('nosave');
+    $("button").show();
+  }
+
+  $(document).on('dragover dragleave', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type=='dragover') $("#dropfile").addClass('hover');
+    else $("#dropfile").removeClass('hover');
+    return false;
+  });
+
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 1,
+      center: [270055, 3528229.]
+    }),
+    layers: [new ol.layer.Tile({ title: 'OSM', source: new ol.source.OSM() })]
+  });
+  map.addControl(new ol.control.Permalink({ visible: false, geohash: true }));
+
+  var origin = new ol.layer.Vector({
+    title: 'Origin',
+    source: new ol.source.Vector(),
+    style: ol.style.Style.defaultStyle({color:[255,0,0]})
+  });
+  map.addLayer(origin);
+  var encoded = new ol.layer.Vector({
+    title: 'Encoded',
+    source: new ol.source.Vector(),
+    // style: ol.style.Style.defaultStyle({color:[0,255,0]})
+  });
+  map.addLayer(encoded);
+  map.addControl(new ol.control.LayerSwitcher);
+
+  var select = new ol.interaction.Select();
+  map.addInteraction(select);
+  var popup = new ol.Overlay.PopupFeature({ 
+    className: 'default anim',
+    canFix: true,
+    select: select
+  });
+  map.addOverlay(popup);
+</script>
+</body>
+</html>

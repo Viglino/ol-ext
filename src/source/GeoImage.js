@@ -58,44 +58,7 @@ var ol_source_GeoImage = function(opt_options) {
   if (!opt_options.image) this._image.src = opt_options.url;
 
   // Draw image on canvas
-  options.canvasFunction = function(extent, resolution, pixelRatio, size /*, projection*/ ) {
-    var canvas = document.createElement('canvas');
-    canvas.width = size[0];
-    canvas.height = size[1];
-    var ctx = canvas.getContext('2d');
-
-    if (!this._imageSize) return canvas;
-    // transform coords to pixel
-    function tr(xy) {
-      return [
-        (xy[0]-extent[0])/(extent[2]-extent[0]) * size[0],
-        (xy[1]-extent[3])/(extent[1]-extent[3]) * size[1]
-      ];
-    }
-    // Clipping mask
-    if (this.mask) {
-      ctx.beginPath();
-      var p = tr(this.mask[0]);
-      ctx.moveTo(p[0],p[1]);
-      for (var i=1; i<this.mask.length; i++) {
-        p = tr(this.mask[i]);
-        ctx.lineTo(p[0],p[1]);
-      }
-      ctx.clip();
-    }
-    
-    // Draw
-    var pixel = tr(this.center);
-    var dx = (this._image.naturalWidth/2 - this.crop[0]) *this.scale[0] /resolution *pixelRatio;
-    var dy = (this._image.naturalHeight/2 - this.crop[1]) *this.scale[1] /resolution *pixelRatio;
-    var sx = this._imageSize[0]*this.scale[0]/resolution *pixelRatio;
-    var sy = this._imageSize[1]*this.scale[1]/resolution *pixelRatio;
-
-    ctx.translate(pixel[0],pixel[1]);
-    if (this.rotate) ctx.rotate(this.rotate);
-    ctx.drawImage(this._image, this.crop[0], this.crop[1], this._imageSize[0], this._imageSize[1], -dx, -dy, sx,sy);
-    return canvas;
-  }
+  options.canvasFunction = this.calculateImage;
 
   ol_source_ImageCanvas.call (this, options);	
   this.setCrop (this.crop);
@@ -105,6 +68,52 @@ var ol_source_GeoImage = function(opt_options) {
   }.bind(this));
 };
 ol_ext_inherits(ol_source_GeoImage, ol_source_ImageCanvas);
+
+/** calculate image at extent / resolution
+ * @param {ol/extent/Extent} extent
+ * @param {number} resolution
+ * @param {number} pixelRatio
+ * @param {ol/size/Size} size
+ * @return {HTMLCanvasElement}
+ */
+ol_source_GeoImage.prototype.calculateImage = function(extent, resolution, pixelRatio, size) {
+  var canvas = document.createElement('canvas');
+  canvas.width = size[0];
+  canvas.height = size[1];
+  var ctx = canvas.getContext('2d');
+
+  if (!this._imageSize) return canvas;
+  // transform coords to pixel
+  function tr(xy) {
+    return [
+      (xy[0]-extent[0])/(extent[2]-extent[0]) * size[0],
+      (xy[1]-extent[3])/(extent[1]-extent[3]) * size[1]
+    ];
+  }
+  // Clipping mask
+  if (this.mask) {
+    ctx.beginPath();
+    var p = tr(this.mask[0]);
+    ctx.moveTo(p[0],p[1]);
+    for (var i=1; i<this.mask.length; i++) {
+      p = tr(this.mask[i]);
+      ctx.lineTo(p[0],p[1]);
+    }
+    ctx.clip();
+  }
+  
+  // Draw
+  var pixel = tr(this.center);
+  var dx = (this._image.naturalWidth/2 - this.crop[0]) *this.scale[0] /resolution *pixelRatio;
+  var dy = (this._image.naturalHeight/2 - this.crop[1]) *this.scale[1] /resolution *pixelRatio;
+  var sx = this._imageSize[0]*this.scale[0]/resolution *pixelRatio;
+  var sy = this._imageSize[1]*this.scale[1]/resolution *pixelRatio;
+
+  ctx.translate(pixel[0],pixel[1]);
+  if (this.rotate) ctx.rotate(this.rotate);
+  ctx.drawImage(this._image, this.crop[0], this.crop[1], this._imageSize[0], this._imageSize[1], -dx, -dy, sx,sy);
+  return canvas;
+}
 
 /**
  * Get coordinate of the image center.
@@ -242,15 +251,14 @@ ol_source_GeoImage.prototype.setCrop = function(crop) {
  * @return {ol.extent}
  */
 ol_source_GeoImage.prototype.getExtent = function(opt_extent) {
+  var ext = this.get('extent');
+  if (!ext) ext = this.calculateExtent();
   if (opt_extent) {
-    var ext = this.get('extent');
     for (var i=0; i<opt_extent.length; i++) {
       opt_extent[i] = ext[i];
     }
-    return ext;
-  } else {
-    return this.get('extent');
   }
+  return ext;
 };
 
 /** Calculate the extent of the source image.

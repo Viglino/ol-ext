@@ -24,7 +24,31 @@
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
+  <style>
+    #map, 
+    #map2 {
+      position: relative;
+      border: 3px solid transparent;
+    }
+    #map.focus, 
+    #map2.focus {
+      border-color: #369;
+    }
+    #map.focus:before, 
+    #map2.focus:before {
+      content: "focus";
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: #369;
+      color: #fff;
+      z-index: 1000;
+      padding: 0 .5em;
+    }
+  </style>
 </head>
 <body >
   <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
@@ -34,6 +58,8 @@
   </a>
   <div class="info">
     This example shows how to used <b>ol/interaction/CopyPaste</b> to copy / paste features from one map to another.
+    <br/>
+    The <b>ol/interaction/CurrentMap</b> is used to trigger focus events on the maps (use <i>mapCondition</i> option to handle the condition when the map is focused).
     <br/><br/>
     Look at <a href="map.interaction.copypaste.html">this example</a> for more information on the the interaction itself.
   </div>
@@ -79,10 +105,6 @@
     var vector2 = new ol.layer.Vector({ source: new ol.source.Vector() });
     map2.addLayer(vector2);
 
-    // Important: add a focus interaction on the map to enable keyboard events
-    map.addInteraction(new ol.interaction.FocusMap());
-    map2.addInteraction(new ol.interaction.FocusMap());
-
     // Interactions
     var transform = new ol.interaction.Transform ({
       addCondition: ol.events.condition.shiftKeyOnly
@@ -90,6 +112,7 @@
     map.addInteraction(transform);
 
     var copy = new ol.interaction.CopyPaste({
+//      condition: function(e) { return e.type==='pointerdown'; },
       destination: vector.getSource(),
       features: transform.getFeatures()
     });
@@ -129,7 +152,15 @@
       });
     });
 
-    
+    // Show focus
+    map.on('focus', function(e) {
+      $('#map').addClass('focus');
+      $('#map2').removeClass('focus');
+    })
+    map2.on('focus', function(e) {
+      $('#map2').addClass('focus');
+      $('#map').removeClass('focus');
+    })
 
   </script>
 

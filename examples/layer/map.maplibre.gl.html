@@ -1,0 +1,323 @@
+﻿<html>
+<head>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <link rel="icon" type="image/png" href="https://avatars.githubusercontent.com/u/75709127" />
+
+  <script src="https://unpkg.com/maplibre-gl@1.13.0-rc.4/dist/mapbox-gl.js"></script>
+  <link href="https://unpkg.com/maplibre-gl@1.13.0-rc.4/dist/mapbox-gl.css" rel="stylesheet" />
+
+  <script src="https://unpkg.com/three@0.106.2/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.106.2/examples/js/loaders/GLTFLoader.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    #map {
+      position: absolute; 
+      top: 5em; 
+      right: 0; 
+      bottom: 0; 
+      left: 0;
+      margin: 0;
+    }
+    h1  {
+      background-image: url("https://avatars.githubusercontent.com/u/75709127");
+    }
+    .b2D,
+    .b3D {
+      position: fixed;
+      bottom: 3.5em;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      width: 100%;
+      text-align: center;
+      height: 0;
+    }
+    .b2D.visible,
+    .b3D.visible {
+      display: block;
+    }
+    .b3D b {
+      transform: scale(1.8) rotate(-45deg);
+      display: inline-block;
+      margin: .2em .5em;
+    }
+    .b2D a {
+      background: #337ab7;
+      padding: .5em;
+      color: #fff;
+      text-decoration: none;
+      top: 1em;
+      position: relative;
+    }
+  </style>
+
+</head>
+
+<body> 
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>MapLibre-GL + Geoportail</h1>
+  </a>
+
+  <div id="map"></div>
+  <div class="b3D">
+    <button onclick="rotate(!rotation)"><b>↶</b> Rotate</button>
+    <button onclick="map.setCenter([1.4878665303150522, 48.4478465456651])"><b>↦</b> Chartres</button>
+    <button onclick="map.setCenter([2.302271838508859, 49.89451774505622])"><b>↦</b> Amiens</button>
+    <button onclick="map.setCenter([4.5235815682583, 47.561461240064546])"><b>↦</b> Bussy</button>
+    <button onclick="map.setCenter([-1.213779049957067, 45.99938504729681])"><b>↦</b> Boyard</button>
+    <button onclick="map.setCenter([1.2690675412045567, 45.78153467509836])"><b>↦</b> Borrie</button>
+    <button onclick="map.setCenter([2.2946113076545354, 48.8581625251])"><b>↦</b> Paris</button>
+  </div>
+  <div class="b2D">
+    <a href="?3D">3D</a>
+  </div>
+  
+<script>
+
+var d3 = (document.location.search === '?3D')
+
+// Mapbox map
+var map = new mapboxgl.Map({
+  container: 'map',
+/* style: 'https://wxs.ign.fr/choisirgeoportail/static/vectorTiles/styles/PLAN.IGN/standard.json',
+* + add : glyphs = "http://fonts.openmaptiles.org/{fontstack}/{range}.pbf"
+* + replace : Source Sans Pro => Open Sans
+*/
+  style: './standard.json',
+  center: d3 ? [2.324, 48.847] : [3, 47],
+  zoom: d3 ? 14 : 5,
+  pitch: d3 ? 90 : 0,
+  antialias: true
+});
+
+// Map rotation
+if (d3) document.querySelector('.b3D').className = 'b3D visible';
+else document.querySelector('.b2D').className = 'b2D visible';
+var start=null, rotation;
+function rotateCamera(timestamp) {
+  if (!timestamp) {
+    start = null;
+    requestAnimationFrame(rotateCamera);
+    return;
+  }
+  if (start === null) {
+    var rot = map.getBearing();
+    start = timestamp - rot*100;
+  }
+  // clamp the rotation between 0-360 degrees
+  // Divide timestamp by 100 to slow rotation to ~10 degrees / sec
+  map.rotateTo(((timestamp-start) / 100) % 360, { duration: 0 });
+  // Request the next frame of the animation.
+  if (rotation) requestAnimationFrame(rotateCamera);
+}
+
+function rotate(b) {
+  if (b===false) {
+    rotation = false;
+  } else {
+    if (!rotation) {
+      rotation = true;
+      rotateCamera();
+    }
+  }
+}
+map.on('click',function() { rotate(false) });
+map.on('wheel',function() { rotate(false) });
+
+// 3D Buildings
+map.on('load', function () {
+  if (d3) {
+    // Load bati json to get color style
+    var ajax = new XMLHttpRequest();
+    ajax.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        var styles = JSON.parse(this.responseText);
+        var done = {};
+        styles.layers.forEach(function(s) {
+          if (s['source-layer'] === "bati_surf" && s.type==='fill') {
+            var id = s.id.split('-')[0];
+            if (id && !done[id]) {
+              done[id] = true;
+              s.id = id + ' - 3D';
+              s.type = 'fill-extrusion';
+              s.filter = ['all', s.filter, [">","hauteur",0]];
+              s.minzoom = 14;
+              delete s.maxzoom;
+              s.paint = {
+                "fill-extrusion-color": s.paint['fill-color'],
+                "fill-extrusion-height": ["get", "hauteur"],
+                "fill-extrusion-base": 0,
+                "fill-extrusion-opacity": 0.8
+              }
+              if (s.paint['fill-extrusion-color']) {
+                map.addLayer(s);
+              }
+            }
+          }
+        });
+      }
+    };
+    ajax.open("GET", "./standard.json", true);
+    ajax.send();
+    /* One color for all
+    map.addLayer({
+      "id":"bati 3D",
+      "type":"fill-extrusion",
+      "source":"plan_ign",
+      "source-layer":"bati_surf",
+      "minzoom": 14,
+      "filter": [">","hauteur",0],
+      "layout":{"visibility":"visible"},
+      "paint":{
+        "fill-extrusion-color": "#aaa",
+        "fill-extrusion-height": ["get", "hauteur"],
+        "fill-extrusion-base": 0,
+        "fill-extrusion-opacity": 0.8
+      }
+    });
+    */
+  }
+});
+
+
+/* 3D Model */
+function add3DModel (name, modelOrigin, modelRotate, modelScale, modelAltitude) {
+
+  var modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(
+    modelOrigin,
+    modelAltitude || 0
+  );
+  
+  // transformation parameters to position, rotate and scale the 3D model onto the map
+  var modelTransform = {
+    translateX: modelAsMercatorCoordinate.x,
+    translateY: modelAsMercatorCoordinate.y,
+    translateZ: modelAsMercatorCoordinate.z,
+    rotateX: modelRotate[0],
+    rotateY: modelRotate[1],
+    rotateZ: modelRotate[2],
+    /* Since our 3D model is in real world meters, a scale transform needs to be
+    * applied since the CustomLayerInterface expects units in MercatorCoordinates.
+    */
+    scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits() * modelScale
+  };
+  
+  var THREE = window.THREE;
+  
+  // configuration of the custom layer for a 3D model per the CustomLayerInterface
+  var customLayer = {
+    id: '3d-model-'+name,
+    type: 'custom',
+    renderingMode: '3d',
+    onAdd: function (map, gl) {
+      this.camera = new THREE.Camera();
+      this.scene = new THREE.Scene();
+      
+      // create two three.js lights to illuminate the model
+      var directionalLight = new THREE.DirectionalLight(0xffffff);
+      directionalLight.position.set(0, 1, 0).normalize();
+      this.scene.add(directionalLight);
+
+      var directionalLight2 = new THREE.DirectionalLight(0xffffff);
+      directionalLight2.position.set(0, -1, 0).normalize();
+      this.scene.add(directionalLight2);
+
+      var directionalLight3 = new THREE.DirectionalLight(0xffffff);
+      directionalLight3.position.set(1, 0, 1).normalize();
+      this.scene.add(directionalLight3);
+
+      var directionalLight4 = new THREE.DirectionalLight(0xeeeeee);
+      directionalLight4.position.set(-1, 0, -.5).normalize();
+      this.scene.add(directionalLight4);
+
+      // use the three.js GLTF loader to add the 3D model to the three.js scene
+      var loader = new THREE.GLTFLoader();
+      loader.load(
+        './'+name+'/scene.gltf',
+        function (gltf) {
+          this.scene.add(gltf.scene);
+        }.bind(this)
+      );
+      this.map = map;
+  
+      // use the Mapbox GL JS map canvas for three.js
+      this.renderer = new THREE.WebGLRenderer({
+        canvas: map.getCanvas(),
+        context: gl,
+        antialias: true
+      });
+    
+      this.renderer.autoClear = false;
+    },
+    render: function (gl, matrix) {
+      var rotationX = new THREE.Matrix4().makeRotationAxis(
+        new THREE.Vector3(1, 0, 0),
+        modelTransform.rotateX
+      );
+      var rotationY = new THREE.Matrix4().makeRotationAxis(
+        new THREE.Vector3(0, 1, 0),
+        modelTransform.rotateY
+      );
+      var rotationZ = new THREE.Matrix4().makeRotationAxis(
+        new THREE.Vector3(0, 0, 1),
+        modelTransform.rotateZ
+      );
+    
+      var m = new THREE.Matrix4().fromArray(matrix);
+      var l = new THREE.Matrix4()
+        .makeTranslation(
+          modelTransform.translateX,
+          modelTransform.translateY,
+          modelTransform.translateZ
+        )
+        .scale(
+          new THREE.Vector3(
+            modelTransform.scale,
+            -modelTransform.scale,
+            modelTransform.scale
+          )
+        )
+        .multiply(rotationX)
+        .multiply(rotationY)
+        .multiply(rotationZ);
+    
+      this.camera.projectionMatrix = m.multiply(l);
+      this.renderer.state.reset();
+      this.renderer.render(this.scene, this.camera);
+      this.map.triggerRepaint();
+    }
+  };
+
+  map.on('style.load', function () {
+    map.addLayer(customLayer);
+  });
+}
+
+map.setCenter([2.329482647421081, 48.867454200543165])
+map.setZoom(16)
+// parameters to ensure the model is georeferenced correctly on the map
+// add3DModel('eiffel_tower', [2.2944896899799634, 48.85826252188846], [Math.PI / 2, Math.PI / 4, 0], 2.8 )
+add3DModel('eiffel_tower', [2.294459855651654, 48.85824232475784], [Math.PI / 2, 0, 0], 1.1 )
+// add3DModel('arche', [2.2357847603874803, 48.892606204283226], [Math.PI / 2, .05, 0], 1.1 )
+add3DModel('arche', [2.2360603428345245, 48.89269253586659], [Math.PI / 2, .01, 0], 1.05 )
+add3DModel('vendome', [2.329482647421081, 48.867454200543165], [Math.PI / 2, 0.05, 0], 1.1 )
+add3DModel('triomphe', [2.2951802632238634, 48.873866580329434], [Math.PI / 2, 0, 0], 1.05 )
+add3DModel('pompidou', [2.352630112094751, 48.86051032864336], [Math.PI / 2, 0.03, 0], 1, 5)
+add3DModel('pantheon', [2.3460668702475336, 48.84614243277852], [Math.PI / 2, 0, 0], .95 )
+add3DModel('pyramid', [2.3358513575402458, 48.861008625150845], [Math.PI / 2, 4.34, 0], 1.1 )
+add3DModel('louvre', [2.3328678003637155, 48.86172059175101], [Math.PI / 2, 0, 0], 1.2, -5 )
+add3DModel('notre_dame', [2.349701118570193, 48.853114650748665], [0, 0, 4.25], .65 )
+add3DModel('boyard', [-1.213779049957067, 45.99938504729681], [Math.PI / 2, 0.05, 0], 1.1 )
+add3DModel('chartres', [1.4878665303150522, 48.4478465456651], [Math.PI / 2, Math.PI / 4, 0], .026 )
+add3DModel('bussy', [4.5235815682583, 47.561461240064546], [Math.PI / 2, -.03, 0], 1, -1.5 )
+add3DModel('borrie', [1.2690675412045567, 45.78153467509836], [Math.PI / 2, .05, 0], 1, 0 )
+add3DModel('amiens', [2.302271838508859, 49.89451774505622], [Math.PI / 2, .05, 0], 1.05, -2 )
+add3DModel('vincennes', [2.434727693750097, 48.84263156699075], [Math.PI / 2, 0, 0], 1, 3 )
+
+</script>
+</body>
+</html>

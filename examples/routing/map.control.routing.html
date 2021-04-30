@@ -18,13 +18,15 @@
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
   <!-- Openlayers -->
-  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <link rel="stylesheet" href="https://openlayers.org/en/master/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/master/build/ol.js"></script>
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
   <!-- filesaver-js -->
 	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
@@ -65,7 +67,7 @@
     <div style="text-align: center">
       <b>In partnership with:</b><br/>
       <a href="https://www.geoportail.gouv.fr/"><img src="https://www.geoportail.gouv.fr/assets/images/logo-geoportail.svg" alt="Geoportail"></a>
-      <a href="http://ign.fr"><img src="https://upload.wikimedia.org/wikipedia/fr/thumb/a/a0/IGN_logo_2012.svg/545px-IGN_logo_2012.svg.png" alt="IGN" class="jsx-3503728609 logo"></a>
+      <a href="http://ign.fr"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a0/IGN_logo_2012.svg" alt="IGN" class="jsx-3503728609 logo"></a>
     </div>	
     <ul>
       <li>
@@ -93,7 +95,7 @@
         <label><input type="checkbox" class="merge">merge</label>
       </li>
       <li>
-        <label><input type="checkbox" class="remove">remove previous search</label>
+        <label><input type="checkbox" class="remove" checked="checked">remove previous search</label>
       </li>
       <li>
         <button onclick="save()">export</button>
@@ -104,7 +106,7 @@
   <script type="text/javascript">
   // Layers
   // var layers = [ new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }) ];
-  var layers = [ new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.MAPS') ];
+  var layers = [ new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2') ];
 
   // The map
   var map = new ol.Map ({
@@ -126,6 +128,7 @@
   map.addControl (search);
   
   var vector = new ol.layer.Vector({
+    title: 'trajet',
     source: new ol.source.Vector(),
     style: [
       new ol.style.Style({ stroke: new ol.style.Stroke({ color:[255,255,255,.5], width: 10 })}),
@@ -144,44 +147,87 @@
     }, 500);
   });
 
-  // Dispkay information on hover
-  var select = new ol.interaction.Select({
-    style: [
-      new ol.style.Style({ stroke: new ol.style.Stroke({ color:[255,255,255,.5], width: 10 })}),
-      new ol.style.Style({ stroke: new ol.style.Stroke({ color:[0,128,255,1], width: 7 })})
-    ]
+  var steps = new ol.layer.Vector({ 
+    title: 'Steps', 
+    style: //ol.style.Style.defaultStyle,
+      function (f) {
+        return new ol.style.Style ({
+          image: new ol.style.Circle({
+            stroke: new ol.style.Stroke({ 
+              width: 2, 
+              color: f.get('pos')==='start' ? 'green' : f.get('pos')==='end' ? 'red' : 'blue'
+            }),
+            fill: new ol.style.Fill({ color: '#fff' }),
+            radius: 8
+          }),
+          text: new ol.style.Text({
+            text: String(f.get('step')+1),
+            font: 'bold 12px sans-serif',
+            offsetY: 2
+          })
+        })
+      },
+    source: search.getSource() 
   });
+  map.addLayer(steps);
+  map.addControl(new ol.control.LayerSwitcher());
+  var modify = new ol.interaction.Modify({ source: search.getSource() });
+  map.addInteraction(modify);
+  // is modifying
+  var modif = false;
+  modify.on('modifystart', function() { 
+    popup.hide();
+    modif = true; 
+  });
+  modify.on('modifyend', function() { 
+    modif = false; 
+    search.calculate();
+  })
+
+  // Dispkay information on hover
+  var select = new ol.interaction.Select(ol.style.Style.defaultStyle);
   map.addInteraction(select);
-  var hover = new ol.interaction.Hover({ cursor: 'pointer', hitTolerance: 5 });
+  var hover = new ol.interaction.Hover({ 
+    layers: [vector, steps],
+    cursor: 'pointer', 
+    hitTolerance: 5 
+  });
   hover.on('enter', function(e) {
+    if (modif) return;
     select.getFeatures().clear();
     select.getFeatures().push(e.feature);
-    var t = e.feature.get('durationT');
-    var content;
-    if (t) {
+    if (e.feature.get('step') !== undefined) {
       content = e.feature.get('name')+'<br/>'
-        +(e.feature.get('distanceT')>1000 ? (e.feature.get('distanceT')/1000).toFixed(2)+'km' : e.feature.get('distanceT')+'m')
-        +' - '
-        + ( t>3600 ? Math.floor(t/3600)+'h '+((t%36000)/60).toFixed()+'mn' 
-        : Math.floor(t/60)+'mn '+Math.floor(t%60)+'s')
-        ;
+        +'Step: '+(e.feature.get('step')+1)
+        +(e.feature.get('pos') ? ' ('+e.feature.get('pos')+')' : '');
     } else {
-      t = e.feature.get('duration');
-      content = e.feature.get('start')+'<br/>'
-        + e.feature.get('end')+'<br/>'
-        +(e.feature.get('distance')>1000 ? (e.feature.get('distance')/1000).toFixed(2)+'km' : e.feature.get('distance')+'m')
-        +' - '
-        + ( t>3600 ? Math.floor(t/3600)+'h '+((t%36000)/60).toFixed()+'mn' 
-        : Math.floor(t/60)+'mn '+Math.floor(t%60)+'s')
-        ;
+      var t = e.feature.get('durationT');
+      var content;
+      if (t) {
+        content = e.feature.get('name')+'<br/>'
+          +(e.feature.get('distanceT')>1000 ? (e.feature.get('distanceT')/1000).toFixed(2)+'km' : e.feature.get('distanceT')+'m')
+          +' - '
+          + ( t>3600 ? Math.floor(t/3600)+'h '+((t%36000)/60).toFixed()+'mn' 
+          : Math.floor(t/60)+'mn '+Math.floor(t%60)+'s')
+          ;
+      } else {
+        t = e.feature.get('duration');
+        content = e.feature.get('start')+'<br/>'
+          + e.feature.get('end')+'<br/>'
+          +(e.feature.get('distance')>1000 ? (e.feature.get('distance')/1000).toFixed(2)+'km' : e.feature.get('distance')+'m')
+          +' - '
+          + ( t>3600 ? Math.floor(t/3600)+'h '+((t%36000)/60).toFixed()+'mn' 
+          : Math.floor(t/60)+'mn '+Math.floor(t%60)+'s')
+          ;
+      }
     }
     popup.show(e.coordinate, content);
   });
   hover.on('hover', function(e) {
-    popup.show(e.coordinate);
+    if (!modif) popup.show(e.coordinate);
   });
   hover.on('leave', function(e) {
-    select.getFeatures().clear();
+    if (!modif) select.getFeatures().clear();
     popup.hide();
   });
   map.addInteraction(hover);

@@ -26,6 +26,8 @@
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
   <style>
     .ol-legend {
@@ -128,8 +130,7 @@
     url: '../data/2009-09-04_rando.gpx',
     format: new ol.format.GPX()
   });
-	var vector = new ol.layer.Vector({
-    renderMode: 'image',
+	var vector = new ol.layer.VectorImage({
     source: source,
     style: styleFn
 	});
@@ -152,13 +153,16 @@
       fill: new ol.style.Fill({ color: 'blue' })
     })
   });
+  var overlay = new ol.layer.Vector({ source: new ol.source.Vector() });
+  overlay.getSource().addFeature(pt);
+  overlay.setMap(map);
+
 
 	source.once('change',function(e) {
     if (source.getState() === 'ready'){
       getMinMax (source.getFeatures()[0]);
       createLegend ();
       profil.setGeometry(source.getFeatures()[0]);
-			source.addFeature(pt);
 		}
   });
   // Show a popup on over

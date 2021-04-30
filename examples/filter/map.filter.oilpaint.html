@@ -1,0 +1,165 @@
+﻿
+<!DOCTYPE html>
+
+<html>
+<head>
+<!--
+  Copyright (c) 2016-2017 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->	
+  <title>ol-ext: Oil painting map</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+
+  <meta name="description" content="Turn ol maps or layers into a oil paintings." />
+  <meta name="keywords" content="ol, openlayers, filter, artistic, painting, oil" />
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@viglino">
+  <meta name="twitter:creator" content="@viglino">
+  <meta name="twitter:title" content="ol-ext - Oil painting maps">
+  <meta name="twitter:description" content="Turn french Géoportail aerial photos into artistic oil painting using Openlayers.">
+  <meta name="twitter:image" content="https://viglino.github.io/ol-ext/examples/img/oilpaint.jpg">
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+  <script type="text/javascript" src="https://cdn.rawgit.com/Viglino/Geoportail-KISS/gh-pages/apikey.js"></script>
+
+  <!-- filesaver-js -->
+  <script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+
+  <link rel="stylesheet" href="./paint.css" />
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <div class="frame">
+    <div class="top"></div>
+    <div class="bottom"></div>
+    <h2>ol-ext</h2>
+  </div>
+
+  <div class="wait">
+    <i class="fa fa-spinner fa-pulse"></i><br/>
+    Processing...
+  </div>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Oil painting map</h1>
+  </a>
+
+  <!-- Map div -->
+  <div id="map"></div>
+
+  <div class="options visible" >
+    <h2 style="text-align: center; max-width: 18em; margin: 1em auto;">
+      <i class="fa fa-paint-brush"></i> Turn your maps into artistic oil painting!
+    </h2>
+    
+    <small>
+      Oil painting effect based on <a href="https://www.codeproject.com/Articles/471994/OilPaintEffect">
+      Santhosh G_ algorithm</a>. 
+      <br/>
+      Javascript implementation by <a href="https://github.com/loktar00">Loktar</a> on <a href="https://codepen.io/loktar00/full/Fhzot/">CodePen</a>.
+      <br/>
+      Openlayers ol/source/OilPainting by <a href="https://github.com/Viglino/ol-ext/blob/master/src/source/OilPainting.js">
+      JM Viglino on Github</a>.
+    </small>
+    <h2><i class="fa fa-map"></i> Image </h2>
+    &copy; IGN-Géoportail
+    <h2><i class="fa fa-list"></i> Options</h2>
+    <ul>
+      <li>
+        <label>radius: </label><input id="radius" onchange="oil.set('radius', this.value); plink.setUrlParam('rd', this.value);" type="number" min="1" max="10" value="4" />
+      </li>
+      <li>
+        <label>intensity: </label><input id="intensity" onchange="oil.set('intensity', this.value); plink.setUrlParam('i', this.value);" type="number" min="1" max="50" value="25" />
+      </li>
+      <li>
+        <label>hue: </label>
+        <input id="hueRotate" style="width:12em;" onchange="filter.set('hueRotate', this.value);  plink.setUrlParam('h', this.value); layer.changed();" type="range" min="0" max="360" value="0" />
+        <div style="width: 10em;height: 1em;background-image: linear-gradient(90deg, red, magenta, blue, cyan, green, yellow, red);margin: 0 0 .5em 6em;"></div>
+      </li>
+      <li>
+        <label>saturate: </label><input id="saturate" onchange="filter.set('saturate', this.value*100); plink.setUrlParam('s', this.value); layer.changed();" type="number" min="0" max="10" value="1" step=".1" />
+      </li>
+    </ul>
+    <i class="fa fa-times" onclick="$('.options').removeClass('visible');"></i>
+    <button onclick="print.print();"><i class="fa fa-download"></i> download painting...</button>
+  </div>
+
+<script type="text/javascript">
+  var center = [178343, 6510825, 14];
+</script>
+<script type="text/javascript" src="./paint.js"></script>
+<script type="text/javascript">
+
+  // Oil painting source
+  var oil = new ol.source.OilPainting({
+    // sources: [ new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS'}) ]
+    sources: [ photoLayer ]
+  });
+  var layer = new ol.layer.Image({
+    title: 'Painting',
+    source: oil,
+    baseLayer: true
+  });
+  layer.getPreview = function() {
+    return [ "../img/oilpaint.jpg" ];
+  }
+
+  // Show waiting when processing
+  oil.on('beforeoperations', function() {
+    $('body').addClass('waiting');
+  });
+  oil.on('afteroperations', function() {
+    $('body').removeClass('waiting');
+  });
+
+  var filter = new ol.filter.CanvasFilter();
+  layer.addFilter(filter);
+
+  // Permalilnk
+  if (plink.getUrlParam('rd') !== '') {
+    oil.set('radius', plink.getUrlParam('rd'));
+    $('#radius').val(plink.getUrlParam('rd'));
+  }
+  if (plink.getUrlParam('i') !== '') {
+    oil.set('intensity', plink.getUrlParam('i'));
+    $('#intensity').val(plink.getUrlParam('i'));
+  }
+  if (plink.getUrlParam('s') !== '') {
+    filter.set('saturate', plink.getUrlParam('s')*100);
+    $('#saturate').val(plink.getUrlParam('s'));
+  }
+  if (plink.getUrlParam('h') !== '') {
+    filter.set('hueRotate', plink.getUrlParam('h'));
+    $('#hueRotate').val(plink.getUrlParam('h'));
+  }
+  if (plink.getUrlParam('title') !== '') {
+    $('.frame h2').text(plink.getUrlParam('title'));
+    $('.options').removeClass('visible');
+  }
+
+  map.addLayer(layer);
+
+</script>
+
+</body>
+</html>

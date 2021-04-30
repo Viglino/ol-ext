@@ -22,6 +22,8 @@
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
   <link rel="stylesheet" href="../style.css" />
   <style>
@@ -53,8 +55,9 @@
     <ul>
       <li>
         <label>Perspective:</label>
-        <input type="range" step=1 min=0 max=30 onchange="map.setPerspective(this.value)" value=0 style="vertical-align: middle;" />
+        <input id="angle" type="range" step=1 min=0 max=30 onchange="map.setPerspective(this.value)" value=0 style="vertical-align: middle;" />
       </li>
+      <li><i>use alt + drag to tilt the map...</i></li>
     </ul>
   </div>
   
@@ -72,20 +75,29 @@
     layers: [ layer ]
   });
 
+  map.on('change:perspective', function(e) {
+    if (!e.animating) $('#angle').val(e.angle);
+  })
+
   // Create vector layer for select
   var vectorSource = new ol.source.Vector({
     url: '../data/ignf.json',
     format: new ol.format.GeoJSON(),
     attributions: [ "&copy; <a href='http://professionnels.ign.fr/bdtopo'>ign.fr</a>" ]
   });
-  var vector = new ol.layer.Vector({
+  var vector = new ol.layer.VectorImage({
     source: vectorSource,
     maxResolution: 2
   });
   map.addLayer(vector);
 
   // Select and draw interaction
-  map.addInteraction(new ol.interaction.Select({ layers: [vector], condition: ol.events.condition.pointerMove }));
+  map.addInteraction(new ol.interaction.Select({ 
+    layers: [vector], 
+    condition: function (e) {
+      return (ol.events.condition.pointerMove(e) && !ol.events.condition.altKeyOnly(e))
+    }
+  }));
   map.addInteraction(new ol.interaction.Draw({ type: 'LineString' }))
 
   // An overlay

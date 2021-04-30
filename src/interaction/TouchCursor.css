@@ -1,0 +1,126 @@
+.ol-overlaycontainer .ol-touch-cursor {
+  /* human fingertips are typically 16x20 mm = 45x57 pixels
+    source: http://touchlab.mit.edu/publications/2003_009.pdf
+  */
+  width: 56px;
+  height: 56px;
+  margin: 6px;
+  border-radius: 50%;
+  cursor: pointer;
+  background: rgba(255,255,255,.4);
+  box-shadow: inset 0 0 0 5px #369;
+}
+
+.ol-overlaycontainer .ol-touch-cursor:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 50%;
+  background: radial-gradient(circle at 100% 100%, transparent, transparent 70%, #369 70%, #369)
+}
+
+.ol-overlaycontainer .ol-touch-cursor .ol-button {
+  position: absolute;
+  color: #369;
+  height: 55%;
+  width: 55%;
+  border-radius: 50%;
+  cursor: pointer;
+  background: rgba(255,255,255,.4);
+  box-shadow: inset 0 0 0 3px currentColor;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: all .5s, opacity 0s, background 0s;
+  overflow: hidden;
+}
+.ol-overlaycontainer .ol-touch-cursor.active.disable .ol-button {
+  opacity: .8;
+  background: rgba(51, 102, 153, .2);
+}
+.ol-overlaycontainer .ol-touch-cursor.active .ol-button {
+  transform: translate(-50%, -50%) scale(1);
+}
+.ol-overlaycontainer .ol-touch-cursor.active .ol-button-0 {
+  top: -18%;
+  left: 118%;
+}
+.ol-overlaycontainer .ol-touch-cursor.active .ol-button-1 {
+  top: 50%;
+  left: 140%;
+}
+.ol-overlaycontainer .ol-touch-cursor.active .ol-button-2 {
+  top: 120%;
+  left: 120%;
+}
+.ol-overlaycontainer .ol-touch-cursor.active .ol-button-3 {
+  top: 140%;
+  left: 50%;
+}
+.ol-overlaycontainer .ol-touch-cursor.active .ol-button-4 {
+  top: 118%;
+  left: -18%;
+}
+/* extra buttons */
+.ol-overlaycontainer .ol-touch-cursor.active .ol-button-5 {
+  top: 50%;
+  left: -40%;
+}
+.ol-overlaycontainer .ol-touch-cursor.active .ol-button-6 {
+  top: -18%;
+  left: -18%;
+}
+.ol-overlaycontainer .ol-touch-cursor.active .ol-button-7 {
+  top: -40%;
+  left: 50%;
+}
+
+.ol-overlaycontainer .ol-touch-cursor .ol-button:before {
+  content: "";
+  width: 1.5em;
+  height: 1em;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  line-height: 1em;
+  text-align: center;
+}
+.ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-add:before,
+.ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-remove:before {
+  content: "−";
+  line-height: .95em;
+  font-size: 1.375em;
+  font-weight: bold;
+}
+.ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-add:before {
+  content: "+";
+}
+.ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-x:before {
+  content: "\00D7";
+  font-size: 1.2em;
+  font-weight: bold;
+}
+.ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-move:before {
+  content: "\2725";
+  font-size: 1.2em;
+}
+.ol-overlaycontainer .ol-touch-cursor .ol-button.ol-button-check:before {
+  content: "\2713";
+  font-weight: bold;
+}
+.ol-overlaycontainer .ol-touch-cursor .ol-button > div {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.ol-overlaycontainer .ol-touch-cursor .ol-button-type:before {
+  content: "\21CE";
+  font-weight: bold;
+}
+
+

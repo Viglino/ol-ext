@@ -49,10 +49,12 @@ var ol_control_SearchJSON = function(options) {
     if (resp.status >= 200 && resp.status < 400) {
       if (typeof(this._callback) === 'function') this._callback(resp.response);
     } else {
+      if (typeof(this._callback) === 'function') this._callback(false, 'error');
       console.log('AJAX ERROR', arguments);
     }
   }.bind(this));
   this._ajax.on('error', function() {
+    if (typeof(this._callback) === 'function') this._callback(false, 'error');
     console.log('AJAX ERROR', arguments);
   }.bind(this));
   // Handle searchin

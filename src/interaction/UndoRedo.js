@@ -1,4 +1,5 @@
 import ol_ext_inherits from '../util/ext'
+import ol_Collection from 'ol/Collection'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import ol_layer_Vector from 'ol/layer/Vector'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
@@ -9,7 +10,11 @@ import '../source/Vector'
  * @extends {ol_interaction_Interaction}
  * @fires undo
  * @fires redo
- * @param {*} options
+ * @fires change:add
+ * @fires change:remove
+ * @fires change:clear
+ * @param {Object} options
+ *  @param {number=} options.maxLength max undo stack length (0=Infinity), default Infinity
  */
 var ol_interaction_UndoRedo = function(options) {
   if (!options) options = {};
@@ -20,10 +25,53 @@ var ol_interaction_UndoRedo = function(options) {
     }
   });
 
-  this._undoStack = [];
-  this._redoStack = [];
+  this._undoStack = new ol_Collection();
+  this._redoStack = new ol_Collection();
+  // Zero level stack
+  this._undo = [];
+  this._redo = [];
+  this._undoStack.on('add', function(e) {
+    if (e.element.level === undefined) {
+      e.element.level = this._level;
+      if (!e.element.level) {
+        e.element.view = {
+          center: this.getMap().getView().getCenter(),
+          zoom: this.getMap().getView().getZoom()
+        };
+        this._undo.push(e.element);
+      }
+    } else {
+      if (!e.element.level) this._undo.push(this._redo.shift());
+    }
+    if (!e.element.level) {
+      this.dispatchEvent({ 
+        type: 'stack:add', 
+        action: e.element
+      });
+    }
+    this._reduce();
+  }.bind(this));
+  this._undoStack.on('remove', function(e) {
+    if (!e.element.level) {
+      if (this._doShift) {
+        this._undo.shift();
+      } else {
+        if (this._undo.length) this._redo.push(this._undo.pop());
+      }
+      if (!this._doClear) {
+        this.dispatchEvent({ 
+          type: 'stack:remove', 
+          action: e.element,
+          shift: this._doShift
+        });
+      }
+    }
+  }.bind(this));
   // Block counter
   this._block = 0;
+  this._level = 0;
+  // Shift an undo action ?
+  this._doShift = false;
   // Start recording
   this._record = true;
   // Custom definitions
@@ -38,20 +86,104 @@ ol_ext_inherits(ol_interaction_UndoRedo, ol_interaction_Interaction);
  * @api
  */
 ol_interaction_UndoRedo.prototype.define = function(action, undoFn, redoFn) {
-  this._defs['_'+action] = { undo: undoFn, redo: redoFn };
+  this._defs[action] = { undo: undoFn, redo: redoFn };
 };
 
-/** Set a custom undo/redo
+/** Get first level undo / redo length
+ * @param {string} [type] get redo stack length, default get undo
+ * @return {number}
+ */
+ol_interaction_UndoRedo.prototype.length = function(type) {
+  return (type==='redo') ? this._redo.length : this._undo.length;
+};
+
+/** Set undo stack max length
+ * @param {number} length
+ */
+ol_interaction_UndoRedo.prototype.setMaxLength = function(length) {
+  length = parseInt(length);
+  if (length && length<0) length = 0;
+  this.set('maxLength', length);
+  this._reduce();
+};
+
+/** Get undo / redo size (includes all block levels)
+ * @param {string} [type] get redo stack length, default get undo
+ * @return {number}
+ */
+ol_interaction_UndoRedo.prototype.size = function(type) {
+  return (type==='redo') ? this._redoStack.getLength() : this._undoStack.getLength();
+};
+
+/** Set undo stack max size
+ * @param {number} size
+ */
+ol_interaction_UndoRedo.prototype.setMaxSize = function(size) {
+  size = parseInt(size);
+  if (size && size<0) size = 0;
+  this.set('maxSize', size);
+  this._reduce();
+};
+
+/** Reduce stack: shift undo to set size
+ * @private
+ */
+ol_interaction_UndoRedo.prototype._reduce = function() {
+  if (this.get('maxLength')) {
+    while (this.length() > this.get('maxLength')) {
+      this.shift();
+    }
+  }
+  if (this.get('maxSize')) {
+    while (this.length() > 1 && this.size() > this.get('maxSize')) {
+      this.shift();
+    }
+  }
+};
+
+/** Get first level undo / redo first level stack
+ * @param {string} [type] get redo stack, default get undo
+ * @return {Array<*>}
+ */
+ol_interaction_UndoRedo.prototype.getStack = function(type) {
+  return (type==='redo') ? this._redo : this._undo;
+};
+
+/** Add a new custom undo/redo
  * @param {string} action the action key name
- * @param {any} prop an object that will be passed in the undo/redo fucntions of the action
+ * @param {any} prop an object that will be passed in the undo/redo functions of the action
+ * @param {string} name action name
  * @return {boolean} true if the action is defined
  */
-ol_interaction_UndoRedo.prototype.push = function(action, prop) {
-  if (this._defs['_'+action]) {
-    this._undoStack.push({type: '_'+action, prop: prop });
+ol_interaction_UndoRedo.prototype.push = function(action, prop, name) {
+  if (this._defs[action]) {
+    this._undoStack.push({ 
+      type: action,
+      name: name,
+      custom: true,
+      prop: prop 
+    });
     return true;
   } else {
+    console.warn('[UndoRedoInteraction]: "'+action+'" is not defined.');
     return false;
+  }
+};
+
+/** Remove undo action from the beginning of the stack. 
+ * The action is not returned.
+ */
+ol_interaction_UndoRedo.prototype.shift = function() {
+  this._doShift = true;
+  var a = this._undoStack.removeAt(0);
+  this._doShift = false;
+  // Remove all block
+  if (a.type==='blockstart') {
+    a = this._undoStack.item(0);
+    while (this._undoStack.getLength() && a.level>0) {
+      this._undoStack.removeAt(0);
+      a = this._undoStack.item(0);
+    }
   }
 };
 
@@ -71,7 +203,16 @@ ol_interaction_UndoRedo.prototype.setActive = function(active) {
  * @api stable
  */
 ol_interaction_UndoRedo.prototype.setMap = function(map) {
+  if (this._mapListener) {
+    this._mapListener.forEach(function(l) { ol_Observable_unByKey(l); })
+  }
+  this._mapListener = [];
   ol_interaction_Interaction.prototype.setMap.call (this, map);
+  // Watch blocks
+  if (map) {
+    this._mapListener.push(map.on('undoblockstart', this.blockStart.bind(this)));
+    this._mapListener.push(map.on('undoblockend', this.blockEnd.bind(this)));
+  }
   // Watch sources
   this._watchSources();
   this._watchInteractions();
@@ -107,7 +248,9 @@ ol_interaction_UndoRedo.prototype._watchSources = function() {
     vectors.forEach((function(l) {
       var s = l.getSource();
       this._sourceListener.push( s.on(['addfeature', 'removefeature'], this._onAddRemove.bind(this)) );
-      this._sourceListener.push( s.on('clearstart', this.blockStart.bind(this)) );
+      this._sourceListener.push( s.on('clearstart', function() {
+        this.blockStart('clear')
+      }.bind(this)));
       this._sourceListener.push( s.on('clearend', this.blockEnd.bind(this)) );
     }).bind(this));
 
@@ -148,11 +291,19 @@ ol_interaction_UndoRedo.prototype._watchInteractions = function() {
  */
 ol_interaction_UndoRedo.prototype._onAddRemove = function(e) {
   if (this._record) {
-    this._undoStack.push({type: e.type, source: e.target, feature: e.feature });
-    this._redoStack = [];
+    this._redoStack.clear();
+    this._redo.length = 0;
+    this._undoStack.push({
+      type: e.type, 
+      source: e.target, 
+      feature: e.feature
+    });
   }
 };
 
+/** Perform an interaction
+ * @private
+ */
 ol_interaction_UndoRedo.prototype._onInteraction = function(e) {
   var fn = this._onInteraction[e.type];
   if (fn) fn.call(this,e);
@@ -162,7 +313,7 @@ ol_interaction_UndoRedo.prototype._onInteraction = function(e) {
  * @private
  */
 ol_interaction_UndoRedo.prototype._onInteraction.setattributestart = function(e) {
-  this.blockStart();
+  this.blockStart(e.target.get('name') || 'setattribute');
   var newp = Object.assign({}, e.properties);
   e.features.forEach(function(f) {
     var oldp = {};
@@ -171,7 +322,7 @@ ol_interaction_UndoRedo.prototype._onInteraction.setattributestart = function(e)
     }
     this._undoStack.push({
       type: 'changeattribute', 
-      feature: f, 
+      feature: f,
       newProperties: newp,
       oldProperties: oldp
     });
@@ -183,32 +334,46 @@ ol_interaction_UndoRedo.prototype._onInteraction.rotatestart =
 ol_interaction_UndoRedo.prototype._onInteraction.translatestart = 
 ol_interaction_UndoRedo.prototype._onInteraction.scalestart = 
 ol_interaction_UndoRedo.prototype._onInteraction.modifystart = function (e) {
-  this.blockStart();
+  this.blockStart(e.type.replace(/start$/,''));
   e.features.forEach(function(m) {
-    this._undoStack.push({type: 'changefeature', feature: m, oldFeature: m.clone()  });
+    this._undoStack.push({ 
+      type: 'changegeometry', 
+      feature: m, 
+      oldGeom: m.getGeometry().clone() 
+    });
   }.bind(this));
   this.blockEnd();
 };
 
 /** Start an undo block
+ * @param {string} [name] name f the action
  * @api
  */
-ol_interaction_UndoRedo.prototype.blockStart = function () {
-  this._undoStack.push({ type: 'blockstart' });
-  this._redoStack = [];
+ol_interaction_UndoRedo.prototype.blockStart = function (name) {
+  this._redoStack.clear();
+  this._redo.length = 0;
+  this._undoStack.push({ 
+    type: 'blockstart', 
+    name: name
+  });
+  this._level++;
 };
 
 /** @private
  */
-ol_interaction_UndoRedo.prototype._onInteraction.beforesplit =
-ol_interaction_UndoRedo.prototype._onInteraction.deletestart =
-ol_interaction_UndoRedo.prototype.blockStart;
+ol_interaction_UndoRedo.prototype._onInteraction.beforesplit = function() {
+  this.blockStart('split');
+};
+ol_interaction_UndoRedo.prototype._onInteraction.deletestart = function() {
+  this.blockStart('delete');
+}
 
 /** End an undo block
  * @api
  */
 ol_interaction_UndoRedo.prototype.blockEnd = function () {
   this._undoStack.push({ type: 'blockend' });
+  this._level--;
 };
 
 /** @private
@@ -226,48 +391,52 @@ ol_interaction_UndoRedo.prototype._handleDo = function(e, undo) {
 
   // Stop recording while undoing
   this._record = false;
-  switch (e.type) {
-    case 'addfeature': {
-      if (undo) e.source.removeFeature(e.feature);
-      else e.source.addFeature(e.feature);
-      break;
+  if (e.custom) {
+    if (this._defs[e.type]) {
+      if (undo) this._defs[e.type].undo(e.prop);
+      else this._defs[e.type].redo(e.prop);
+    } else {
+      console.warn('[UndoRedoInteraction]: "'+e.type+'" is not defined.');
     }
-    case 'removefeature': {
-      if (undo) e.source.addFeature(e.feature);
-      else e.source.removeFeature(e.feature);
-      break;
-    }
-    case 'changefeature': {
-      var geom = e.feature.getGeometry();
-      e.feature.setGeometry(e.oldFeature.getGeometry());
-      e.oldFeature.setGeometry(geom);
-      break;
-    }
-    case 'changeattribute': {
-      var newp = e.newProperties;
-      var oldp = e.oldProperties;
-      for (var p in oldp) {
-        if (oldp === undefined) e.feature.unset(p);
-        else e.feature.set(p, oldp[p]);
+  } else {
+    switch (e.type) {
+      case 'addfeature': {
+        if (undo) e.source.removeFeature(e.feature);
+        else e.source.addFeature(e.feature);
+        break;
       }
-      e.oldProperties = newp;
-      e.newProperties = oldp;
-      break;
-    }
-    case 'blockstart': {
-      this._block += undo ? -1 : 1;
-      break;
-    }
-    case 'blockend': {
-      this._block += undo ? 1 : -1;
-      break;
-    }
-    default: {
-      if (this._defs[e.type]) {
-        if (undo) this._defs[e.type].undo(e.prop);
-        else this._defs[e.type].redo(e.prop);
-      } else {
-        console.warn('[UndoRedoInteraction]: "'+e.type.substr(1)+'" is not defined.');
+      case 'removefeature': {
+        if (undo) e.source.addFeature(e.feature);
+        else e.source.removeFeature(e.feature);
+        break;
+      }
+      case 'changegeometry': {
+        var geom = e.feature.getGeometry();
+        e.feature.setGeometry(e.oldGeom);
+        e.oldGeom = geom;
+        break;
+      }
+      case 'changeattribute': {
+        var newp = e.newProperties;
+        var oldp = e.oldProperties;
+        for (var p in oldp) {
+          if (oldp === undefined) e.feature.unset(p);
+          else e.feature.set(p, oldp[p]);
+        }
+        e.oldProperties = newp;
+        e.newProperties = oldp;
+        break;
+      }
+      case 'blockstart': {
+        this._block += undo ? -1 : 1;
+        break;
+      }
+      case 'blockend': {
+        this._block += undo ? 1 : -1;
+        break;
+      }
+      default: {
+        console.warn('[UndoRedoInteraction]: "'+e.type+'" is not defined.');
       }
     }
   }
@@ -291,9 +460,10 @@ ol_interaction_UndoRedo.prototype._handleDo = function(e, undo) {
  * @api
  */
 ol_interaction_UndoRedo.prototype.undo = function() {
-  var e = this._undoStack.pop();
+  var e = this._undoStack.item(this._undoStack.getLength() - 1);
   if (!e) return;
   this._redoStack.push(e);
+  this._undoStack.pop();
   this._handleDo(e, true);
 };
 
@@ -301,9 +471,10 @@ ol_interaction_UndoRedo.prototype.undo = function() {
  * @api
  */
 ol_interaction_UndoRedo.prototype.redo = function() {
-  var e = this._redoStack.pop();
+  var e = this._redoStack.item(this._redoStack.getLength() - 1);
   if (!e) return;
   this._undoStack.push(e);
+  this._redoStack.pop();
   this._handleDo(e, false);
 };
 
@@ -311,8 +482,12 @@ ol_interaction_UndoRedo.prototype.redo = function() {
  * @api
  */
 ol_interaction_UndoRedo.prototype.clear = function() {
-  this._undoStack = [];
-  this._redoStack = [];
+  this._doClear = true;
+  this._undo.length = this._redo.length = 0;
+  this._undoStack.clear();
+  this._redoStack.clear();
+  this._doClear = false;
+  this.dispatchEvent({ type: 'stack:clear' });
 };
 
 /** Check if undo is avaliable
@@ -320,7 +495,7 @@ ol_interaction_UndoRedo.prototype.clear = function() {
  * @api
  */
 ol_interaction_UndoRedo.prototype.hasUndo = function() {
-  return this._undoStack.length;
+  return this._undoStack.getLength();
 };
 
 /** Check if redo is avaliable
@@ -328,7 +503,7 @@ ol_interaction_UndoRedo.prototype.hasUndo = function() {
  * @api
  */
 ol_interaction_UndoRedo.prototype.hasRedo = function() {
-  return this._redoStack.length;
+  return this._redoStack.getLength();
 };
 
 export default ol_interaction_UndoRedo

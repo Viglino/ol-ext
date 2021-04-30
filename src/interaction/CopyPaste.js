@@ -1,15 +1,17 @@
 import ol_ext_inherits from '../util/ext'
-import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import ol_Collection from 'ol/Collection'
+import ol_interaction_CurrentMap from './CurrentMap';
 
-/** An interaction to copy/paste features on a map
+/** An interaction to copy/paste features on a map. 
+ * It will fire a 'focus' event on the map when map is focused (use mapCondition option to handle the condition when the map is focused).
  * @constructor
  * @fires focus
  * @fires copy
  * @fires paste
  * @extends {ol_interaction_Interaction}
  * @param {Object} options Options
- *  @param {function} options.condition a function that take a mapBrowserEvent and return the actio nto perform: 'copy', 'cut' or 'paste', default Ctrl+C / Ctrl+V
+ *  @param {function} options.condition a function that takes a mapBrowserEvent and return the action to perform: 'copy', 'cut' or 'paste', default Ctrl+C / Ctrl+V
+ *  @param {function} options.mapCondition a function that takes a mapBrowserEvent and return true if the map is the active map, default always returns true
  *  @param {ol.Collection<ol.Feature>} options.features list of features to copy
  *  @param {ol.source.Vector | Array<ol.source.Vector>} options.sources the source to copy from (used for cut), if not defined, it will use the destination
  *  @param {ol.source.Vector} options.destination the source to copy to
@@ -38,30 +40,28 @@ var ol_interaction_CopyPaste = function(options) {
   this.setDestination(options.destination);
   
   // Create intreaction
-  ol_interaction_Interaction.call(this, {
-    handleEvent: function(e) {
-      if (e.type==='keydown' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
-        switch (condition(e)) {
-          case 'copy': {
-            this.copy({ silent: false });
-            break;
-          }
-          case 'cut': {
-            this.copy({ cut: true, silent: false });
-            break;
-          }
-          case 'paste': {
-            this.paste({ silent: false });
-            break;
-          }
-          default: break;
+  ol_interaction_CurrentMap.call(this, {
+    condition: options.mapCondition,
+    onKeyDown: function (e) {
+      switch (condition(e)) {
+        case 'copy': {
+          this.copy({ silent: false });
+          break;
         }
+        case 'cut': {
+          this.copy({ cut: true, silent: false });
+          break;
+        }
+        case 'paste': {
+          this.paste({ silent: false });
+          break;
+        }
+        default: break;
       }
-      return true;
     }.bind(this)
   });
 };
-ol_ext_inherits(ol_interaction_CopyPaste, ol_interaction_Interaction);
+ol_ext_inherits(ol_interaction_CopyPaste, ol_interaction_CurrentMap);
 
 /** Sources to cut feature from
  * @param { ol.source.Vector | Array<ol.source.Vector> } sources

@@ -26,21 +26,14 @@ var ol_control_SelectCondition = function(options) {
 
   // Container
   var div = options.content = ol_ext_element.create('DIV');
-  var label = ol_ext_element.create('LABEL', {
-    parent: div
-  });
-  this._check = ol_ext_element.create('INPUT', {
-    type: 'checkbox',
+  this._check = ol_ext_element.createSwitch({
+    after: options.label || 'condition',
     change: function () { 
       if (this._onchoice) this._onchoice()
       else this.doSelect();
     }.bind(this),
-    parent: label
-  });
-  ol_ext_element.create('DIV', {
-    html: options.label || 'condition',
-    parent: label
-  });
+    parent: div
+  })
   // Input div
   this._input = ol_ext_element.create('DIV', {
     parent: div

@@ -111,7 +111,6 @@ ol_control_EditBar.prototype._setSelectInteraction = function (options) {
       handleClick: function(e) {
         // Delete selection
         del.delete(selectCtrl.getInteraction().getFeatures());
-        console.log('del')
         var evt = {
           type: 'select',
           selected: [],

@@ -35,8 +35,10 @@ import '../geom/LineStringSplitAt'
  * @fires modifystart
  * @fires modifying
  * @fires modifyend
+ * @fires select
  * @param {*} options
- *	@param {ol.source.Vector|Array<ol.source.Vector>} options.source a list of source to modify (configured with useSpatialIndex set to true)
+ *	@param {ol.source.Vector} options.source a source to modify (configured with useSpatialIndex set to true)
+ *	@param {ol.source.Vector|Array<ol.source.Vector>} options.sources a list of source to modify (configured with useSpatialIndex set to true)
  *  @param {ol.Collection.<ol.Feature>} options.features collection of feature to modify
  *  @param {integer} options.pixelTolerance Pixel tolerance for considering the pointer close enough to a segment or vertex for editing. Default is 10.
  *  @param {function|undefined} options.filter a filter that takes a feature and return true if it can be modified, default always true.
@@ -44,6 +46,7 @@ import '../geom/LineStringSplitAt'
  *  @param {ol.EventsConditionType | undefined} options.condition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event will be considered to add or move a vertex to the sketch. Default is ol.events.condition.primaryAction.
  *  @param {ol.EventsConditionType | undefined} options.deleteCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled. By default, ol.events.condition.singleClick with ol.events.condition.altKeyOnly results in a vertex deletion.
  *  @param {ol.EventsConditionType | undefined} options.insertVertexCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether a new vertex can be added to the sketch features. Default is ol.events.condition.always
+ *  @param {boolean} options.wrapX Wrap the world horizontally on the sketch overlay, default false
  */
 var ol_interaction_ModifyFeature = function(options){
   if (!options) options = {};
@@ -94,10 +97,8 @@ var ol_interaction_ModifyFeature = function(options){
 
   // List of source to split
   this.sources_ = options.sources ? (options.sources instanceof Array) ? options.sources:[options.sources] : [];
-
-  if (options.features) {
-    this.sources_.push (new ol_source_Vector({ features: options.features }));
-  }
+  if (options.source) this.sources_.push (options.source);
+  if (options.features) this.sources_.push (new ol_source_Vector({ features: options.features }));
 
   // Get all features candidate
   this.filterSplit_ = options.filter || function(){ return true; };
@@ -134,7 +135,8 @@ var ol_interaction_ModifyFeature = function(options){
     }),
     name:'Modify overlay',
     displayInLayerSwitcher: false,
-    style: sketchStyle
+    style: sketchStyle,
+    wrapX: options.wrapX
   });
 
 };
@@ -183,6 +185,8 @@ ol_interaction_ModifyFeature.prototype.getClosestFeature = function(e) {
     }
   }
   if (d > this.snapDistance_) {
+    if (this.currentFeature) this.dispatchEvent({ type: 'select', selected: [], deselected: [this.currentFeature] })
+    this.currentFeature = null;
     return false;
   } else {
     // Snap to node
@@ -194,6 +198,8 @@ ol_interaction_ModifyFeature.prototype.getClosestFeature = function(e) {
         c = coord;
       }
       //
+      if (this.currentFeature !== f) this.dispatchEvent({ type: 'select', selected: [f], deselected: [this.currentFeature] })
+      this.currentFeature = f;
       return { source:source, feature:f, coord: c };
     }
   }
@@ -292,7 +298,7 @@ ol_interaction_ModifyFeature.prototype.getNearestCoord = function(pt, geom) {
  */
 ol_interaction_ModifyFeature.prototype.getArcs = function(geom, coord) {
   var arcs = false;
-  var coords, i, s, l;
+  var coords, i, s, l, g;
   switch(geom.getType()) {
     case 'Point': {
       if (ol_coordinate_equal(coord, geom.getCoordinates())) {
@@ -330,7 +336,7 @@ ol_interaction_ModifyFeature.prototype.getArcs = function(geom, coord) {
         var split;
         // Split the line in two
         if (geom.getType() === 'LinearRing') {
-          var g = new ol_geom_LineString(geom.getCoordinates());
+          g = new ol_geom_LineString(geom.getCoordinates());
           split = g.splitAt(coord, this.tolerance_);
         } else {
           split = geom.splitAt(coord, this.tolerance_);
@@ -432,7 +438,7 @@ ol_interaction_ModifyFeature.prototype.getArcs = function(geom, coord) {
       break;
     }
     case 'GeometryCollection': {
-      // var g = geom.getGeometries();
+      g = geom.getGeometries();
       for (i=0; l=g[i]; i++) {
         arcs = this.getArcs(l, coord);
         if (arcs) {
@@ -461,7 +467,7 @@ ol_interaction_ModifyFeature.prototype.getArcs = function(geom, coord) {
 ol_interaction_ModifyFeature.prototype.handleDownEvent = function(evt) {
   if (!this.getActive()) return false;
 
-  // Something to split ?
+  // Something to move ?
   var current = this.getClosestFeature(evt);
 
   if (current && (this._condition(evt) || this._deleteCondition(evt))) {
@@ -497,7 +503,10 @@ ol_interaction_ModifyFeature.prototype.handleDownEvent = function(evt) {
           originalEvent: evt.originalEvent,
           features: this._modifiedFeatures
         });
-        this.handleDragEvent({ coordinate: current.coord })
+        this.handleDragEvent({ 
+          coordinate: current.coord,
+          originalEvent: evt.originalEvent
+        })
         return true;
       }
     } else {
@@ -769,6 +778,13 @@ ol_interaction_ModifyFeature.prototype.handleMoveEvent = function(e) {
       this.previousCursor_ = undefined;
     }
   }
+};
+
+/** Get the current feature to modify
+ * @return {ol.Feature} 
+ */
+ol_interaction_ModifyFeature.prototype.getCurrentFeature = function() {
+  return this.currentFeature;
 };
 
 export default ol_interaction_ModifyFeature

@@ -7,7 +7,7 @@ import ol_interaction_Interaction from 'ol/interaction/Interaction'
  * @fires hover, enter, leave
  * @param {olx.interaction.HoverOptions} 
  *  @param { string | undefined } options.cursor css cursor propertie or a function that gets a feature, default: none
- *  @param {function | undefined} optionsfeatureFilter filter a function with two arguments, the feature and the layer of the feature. Return true to select the feature 
+ *  @param {function | undefined} options.featureFilter filter a function with two arguments, the feature and the layer of the feature. Return true to select the feature 
  *  @param {function | undefined} options.layerFilter filter a function with one argument, the layer to test. Return true to test the layer
  *  @param {Array<ol.layer> | undefined} options.layers a set of layers to test
  *  @param {number | undefined} options.hitTolerance Hit-detection tolerance in pixels.
@@ -50,6 +50,20 @@ ol_interaction_Hover.prototype.setMap = function(map) {
     this.previousCursor_ = undefined;
   }
   ol_interaction_Interaction.prototype.setMap.call (this, map);
+};
+
+/** Activate / deactivate interaction
+ * @param {boolean} b
+ */
+ol_interaction_Hover.prototype.setActive = function(b) {
+  ol_interaction_Interaction.prototype.setActive.call (this, b);
+  if (this.cursor_ && this.getMap()) {
+    var style = this.getMap().getTargetElement().style;
+    if (this.previousCursor_ !== undefined) {
+      style.cursor = this.previousCursor_;
+      this.previousCursor_ = undefined;
+    }
+  }
 };
 
 /**

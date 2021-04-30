@@ -1,0 +1,56 @@
+.ol-control.ol-videorec {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.ol-control.ol-videorec button {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.ol-control.ol-videorec button:before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: .8em;
+  height: .8em;
+  transform: translate(-50%, -50%);
+  background-color: currentColor;
+}
+.ol-control.ol-videorec button.ol-start:before {
+  width: .9em;
+  height: .9em;
+  border-radius: 50%;
+  background-color: #c00;
+}
+.ol-control.ol-videorec button.ol-pause:before {
+  width: .2em;
+  background-color: transparent;
+  box-shadow: -.2em 0, .2em 0;
+}
+.ol-control.ol-videorec button.ol-resume:before {
+  border-style: solid;
+  background: transparent;
+  width: auto;
+  border-width: .4em 0 .4em .6em;
+  border-color: transparent transparent transparent currentColor;
+  box-sizing: border-box;
+}
+
+.ol-control.ol-videorec button.ol-stop,
+.ol-control.ol-videorec button.ol-pause,
+.ol-control.ol-videorec button.ol-resume,
+.ol-control.ol-videorec[data-state="rec"] .ol-start,
+.ol-control.ol-videorec[data-state="pause"] .ol-start {
+  display: none;
+}
+.ol-control.ol-videorec[data-state="rec"] .ol-stop,
+.ol-control.ol-videorec[data-state="pause"] .ol-stop,
+.ol-control.ol-videorec[data-state="rec"] .ol-pause,
+.ol-control.ol-videorec[data-state="pause"] .ol-resume {
+  display: inline-block;
+}

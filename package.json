@@ -1,6 +1,6 @@
 {
   "name": "ol-ext",
-  "version": "3.1.10",
+  "version": "3.2.1",
   "description": "A set of cool extensions for OpenLayers (ol) in node modules structure",
   "main": "dist/ol-ext.js",
   "style": "dist/ol-ext.css",
@@ -9,14 +9,16 @@
   },
   "devDependencies": {
     "eslint": "^5.10.0",
-    "gulp": "^3.9.1",
+    "gulp": "^4.0.2",
     "gulp-autoprefixer": "^5.0.0",
     "gulp-clean": "^0.4.0",
+    "gulp-cli": "^2.2.0",
     "gulp-concat": "^2.6.1",
     "gulp-cssmin": "^0.2.0",
     "gulp-header": "^2.0.5",
     "gulp-minify": "^3.1.0",
     "gulp-watch": "^5.0.1",
+    "gulp-jsdoc3": "^2.0.0",
     "live-server": "^1.2.0",
     "minimist": "^1.2.0",
     "plugin-error": "^1.0.1",
@@ -71,6 +73,5 @@
   },
   "license": "BSD-3-Clause",
   "dependencies": {
-    "gulp-jsdoc3": "^2.0.0"
   }
 }

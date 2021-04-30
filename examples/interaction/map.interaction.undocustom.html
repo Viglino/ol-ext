@@ -26,6 +26,8 @@
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
   <style>
     .options label {
@@ -186,8 +188,8 @@
         style = s.before;
         vector.changed();
       },
-      // redo function: set next style
-      function(s){
+      // redo function: reset the style
+      function(s) {
         style = s.after;
         vector.changed();
       }
@@ -204,7 +206,7 @@
       // use blockStart / blockEnd to stack many undo in a same action
       // undoInteraction.blockStart();
       // Add undo style action
-      undoInteraction.push("style", { before: before, after: style });
+      undoInteraction.push('style', { before: before, after: style });
       // undoInteraction.blockEnd();
     }
     setStyle();

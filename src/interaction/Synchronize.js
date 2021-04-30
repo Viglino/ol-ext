@@ -12,8 +12,8 @@ import ol_Overlay from 'ol/Overlay'
 /** Interaction synchronize
  * @constructor
  * @extends {ol_interaction_Interaction}
- * @param {olx.interaction.SynchronizeOptions} 
- *  - maps {Array<ol.Map>} An array of maps to synchronize with the map of the interaction
+ * @param {*} options
+ *  @param {Array<ol.Map>} options maps An array of maps to synchronize with the map of the interaction
  */
 var ol_interaction_Synchronize = function(options) {
   if (!options) options={};
@@ -27,7 +27,6 @@ var ol_interaction_Synchronize = function(options) {
   });
 
   this.maps = options.maps;
-
 };
 ol_ext_inherits(ol_interaction_Synchronize, ol_interaction_Interaction);
 
@@ -65,9 +64,11 @@ ol_interaction_Synchronize.prototype.setMap = function(map) {
 */
 ol_interaction_Synchronize.prototype.syncMaps = function(e) {
   var map = this.getMap();
+  if (map.get('lockView')) return;
   if (!e) e = { type:'all' };
   if (map) {
     for (var i=0; i<this.maps.length; i++) {
+      this.maps[i].set('lockView', true);
       switch (e.type) {
         case 'change:rotation': {
           if (this.maps[i].getView().getRotation() != map.getView().getRotation())
@@ -93,6 +94,7 @@ ol_interaction_Synchronize.prototype.syncMaps = function(e) {
           break;
         }
       }
+      this.maps[i].set('lockView', false);
     }
   }
 };
@@ -107,13 +109,12 @@ ol_interaction_Synchronize.prototype.handleMove_ = function(e) {
   this.getMap().showTarget();
 };
 
-
 /** Cursor out of map > tells other maps to hide the cursor
 * @param {event} e "mouseOut" event
 */
 ol_interaction_Synchronize.prototype.handleMouseOut_ = function(/*e*/) {
   for (var i=0; i<this.maps.length; i++) {
-    this.maps[i].targetOverlay_.setPosition(undefined);
+    if (this.maps[i]._targetOverlay) this.maps[i]._targetOverlay.setPosition(undefined);
   }
 };
 
@@ -121,24 +122,24 @@ ol_interaction_Synchronize.prototype.handleMouseOut_ = function(/*e*/) {
 * @param {ol.coordinate} coord
 */
 ol_Map.prototype.showTarget = function(coord) {
-  if (!this.targetOverlay_) {
+  if (!this._targetOverlay) {
     var elt = document.createElement("div");
     elt.classList.add("ol-target");
-    this.targetOverlay_ = new ol_Overlay({ element: elt });
-    this.targetOverlay_.setPositioning('center-center');
-    this.addOverlay(this.targetOverlay_);
+    this._targetOverlay = new ol_Overlay({ element: elt });
+    this._targetOverlay.setPositioning('center-center');
+    this.addOverlay(this._targetOverlay);
     elt.parentElement.classList.add("ol-target-overlay");
     // hack to render targetOverlay before positioning it
-    this.targetOverlay_.setPosition([0,0]);
+    this._targetOverlay.setPosition([0,0]);
   }
-  this.targetOverlay_.setPosition(coord);
+  this._targetOverlay.setPosition(coord);
 };
 
 /** Hide the target overlay
 */
 ol_Map.prototype.hideTarget = function() {
-  this.removeOverlay(this.targetOverlay_);
-  this.targetOverlay_ = undefined;
+  this.removeOverlay(this._targetOverlay);
+  this._targetOverlay = undefined;
 };
 
 export default ol_interaction_Synchronize

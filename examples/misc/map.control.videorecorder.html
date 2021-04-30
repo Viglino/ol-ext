@@ -1,0 +1,187 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2016-2021 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Capture map video!</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+  <link rel="icon" type="image/png" href="https://openlayers.org/assets/theme/img/logo70.png" />
+
+  <meta name="description" content="Record your maps!" />
+  <meta name="keywords" content="OpenLayers,ol,control,canvas,animation,video,record" />
+
+  <meta name="twitter:image" content="https://viglino.github.io/ol-ext/img/map.control.videorecorder.jpg" />
+  <meta name="twitter:site" content="@viglino" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="ol-ext: Capture map video!" />
+  <meta name="twitter:description" content="Record your Openlayers maps as video with ol-ext VideoRecorder control. Record view animation and take a tour on your maps." />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    .noPointerEvent * {
+      pointer-events: none;
+    }
+    #video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      background-color: rgba(0,0,0,.7);
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: .5s;
+    }
+    #video.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+    #video > div {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+    #video span {
+      position: absolute;
+      top: 0;
+      right: 0;
+      margin: .25em;
+      font-size: 1.5em;
+      color: #fff;
+      cursor: pointer;
+      text-shadow: 1px 1px #000;
+      width: 1em;
+      height: 1em;
+      line-height: 1em;
+      text-align: center;
+    }
+    #map {
+      position: relative;
+    }
+    #map.recording:before {
+      content: "";
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      animation: blink .25s alternate infinite;
+      left: -5px;
+      top: -5px;
+      background: #369;
+      box-shadow: 560px 0 #369, 560px 360px #369, 0 360px #369;
+      z-index: -1;
+    }
+    @keyframes blink {
+      0%, 50% { opacity: 0; }
+      51%, 100%   { opacity: 1;  }
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Record your maps as video!</h1>
+  </a>
+  <p class="info">
+    The <i>ol/control/VideoRecorder</i> is a control to record the map as video.
+    <br/>
+    Use start, stop, pause and resume methods to record.
+  </p>
+
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options">
+    <h2>Outpt video:</h2>
+    <p><i>Use control buttons to start/stop recording the map...</i></p>
+    <button onclick="tour();">Take a tour...</button>
+  </div>
+  <div id="video">
+    <div>
+      <video controls></video>
+      <span onclick="$('#video').removeClass('visible');">✖</span>
+    </div>
+  </div>
+
+<script type="text/javascript">
+  // Layers
+  var photo = new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS');
+  var carte = new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', opacity: .8 });
+
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 10,
+      center: [256697, 6249708]
+    }),
+    layers: [photo, carte]
+  });
+
+  // Blob interaction
+  var blob = new ol.interaction.Blob({ radius: 50, layers:carte });
+  map.addInteraction(blob);
+
+  // Record control
+  var rec = new ol.control.VideoRecorder();
+  map.addControl(rec);
+  rec.on('stop', function(e) {
+    document.querySelector('video').src = e.videoURL;
+    $('#video').addClass('visible');
+    $('#map').removeClass('recording');
+  });
+  rec.on('start', function(e) {
+    // $('body').append(e.canvas);
+    $('#map').addClass('recording');
+  })
+
+  // Take a tour
+  function tour() {
+    $('body').addClass('noPointerEvent');
+    carte.setVisible(false);
+    rec.start();
+    map.getView().takeTour(
+      [
+        [268923, 6248865, 15],
+        [262707, 6262016, 16],
+        [255386, 6250791, 16],
+        [259984, 6251327, 16],
+        [260022, 6251045, 13, 'moveTo']
+      ], { delay: 750 },
+      function () {
+        // Wait 1s before stop
+        setTimeout(function() {
+          rec.stop();
+          $('body').removeClass('noPointerEvent')
+          carte.setVisible(true);
+        }, 1000);
+      },
+      function(step) { console.log('step: ',step); }
+    );
+  }
+
+</script>
+  
+</body>
+</html>

@@ -52,30 +52,14 @@ var ol_control_SearchGPS = function(options) {
   })
   
   // DMS switcher
-  var dms = ol_ext_element.create('LABEL', {
-    className: 'ol-switch',
-    parent: this.element
-  });
-  ol_ext_element.create('TEXT', {
+  ol_ext_element.createSwitch({
     html: 'decimal',
-    parent: dms
-  });
-  ol_ext_element.create('INPUT', {
-    type: 'checkbox',
-    parent: dms,
-    on: {
-      'change': function(e) {
-        if (e.target.checked) this.element.classList.add('ol-dms');
-        else this.element.classList.remove('ol-dms');
-      }.bind(this)
-    }
-  });
-  ol_ext_element.create ('SPAN', {
-    parent: dms
-  });
-  ol_ext_element.create('TEXT', {
-    html: 'DMS',
-    parent: dms
+    after: 'DMS',
+    change: function(e) {
+      if (e.target.checked) this.element.classList.add('ol-dms');
+      else this.element.classList.remove('ol-dms');
+    }.bind(this),
+    parent: this.element
   });
 
   this._createForm();

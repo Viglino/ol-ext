@@ -34,7 +34,8 @@ var ol_control_CanvasTitle = function(options) {
     style: options.style
   });
 
-  this.setTitle(options.title || 'Title');
+  this.setTitle(options.title || '');
+  this.setVisible(options.visible);
   this.element.style.font = this.getTextFont();
 };
 ol_ext_inherits(ol_control_CanvasTitle, ol_control_CanvasBase);
@@ -108,7 +109,10 @@ ol_control_CanvasTitle.prototype._draw = function(e) {
   var eltRect = this.element.getBoundingClientRect();
   var mapRect = this.getMap().getViewport().getBoundingClientRect();
   var sc = this.getMap().getSize()[0] / mapRect.width;
-  ctx.translate((eltRect.left-mapRect.left)*sc, (eltRect.top-mapRect.top)*sc);
+  ctx.translate(
+    Math.round((eltRect.left-mapRect.left)*sc), 
+    Math.round((eltRect.top-mapRect.top)*sc)
+  );
 
   var h = this.element.clientHeight;
   var w = this.element.clientWidth;

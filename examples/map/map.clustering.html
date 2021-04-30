@@ -1,11 +1,9 @@
 ﻿<!DOCTYPE html>
 <html>
-<!----------------------------------------------------------
-
+<!--
 	Copyright (c) 2018 Jean-Marc VIGLINO,
 	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-
------------------------------------------------------------->
+-->
 <head>
 	<title>ol-ext: Clustering map</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -21,7 +19,9 @@
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
 	
 	<!-- ol-ext -->
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
 	<!-- ol-ext maki and fontawesome defintions used in fontsymbol -->
 	<link rel="stylesheet" href="../css/fontmaki.css" />
@@ -193,6 +193,7 @@
     // Point radius: to calculate distance between the features
     pointRadius:10,
     animate: $("#animatesel").prop('checked'),
+    condition: ol.events.condition.click,
     // Feature style when it springs apart
     featureStyle: featureStyle,
     selectCluster: false,	// disable cluster selection

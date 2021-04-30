@@ -1,3 +1,36 @@
+.ol-control.ol-geobt {
+  top: auto;
+  left: auto;
+  right: .5em;
+  bottom: 3em;
+}
+.ol-touch .ol-control.ol-geobt {
+  bottom: 3.5em;
+}
+.ol-control.ol-geobt button:before {
+  content: "";
+  position: absolute;
+  background: transparent;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: .16em solid currentColor;
+  width: .4em;
+  height: .4em;
+  border-radius: 50%;
+}
+.ol-control.ol-geobt button:after {
+  content: "";
+  position: absolute;
+  width: .2em;
+  height: .2em;
+  background: transparent;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: .42em 0, -.42em 0, 0 .42em, 0 -.42em;
+}
+
 .ol-control.ol-bar.ol-geobar .ol-control {
 	display: inline-block;
 	vertical-align: middle;

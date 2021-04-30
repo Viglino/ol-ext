@@ -13,6 +13,8 @@
 
 	<!-- jQuery -->
 	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 	<!-- Openlayers -->
   <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
@@ -21,10 +23,18 @@
 
 	<!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
-	<link rel="stylesheet" href="../style.css" />
-	</head>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .debug {
+      right: .5em;
+      top: 2em;
+    }
+  </style>
+</head>
 <body >
 	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
@@ -54,12 +64,6 @@
       <li>
         <input id="info" value ="Information" />
         <button onclick="ctrl.status($('#info').val())">Show</button>
-      </li>
-      <li>
-        <label>
-          <input type="checkbox" onchange="ctrl.show($(this).prop('checked'))" checked="checked" />
-          Show/hide
-        </label>
       </li>
     </ul>
 	</div>
@@ -94,6 +98,15 @@
       animate: e.frameState.animate
     });
   });
+
+  var toggle = new ol.control.Toggle({
+    html: '<i class="fa fa-bug"></i>',
+    className: 'debug',
+    onToggle: function(b) {
+      ctrl.setVisible(!b);
+    }
+  })
+  map.addControl(toggle)
 
 	</script>
 	

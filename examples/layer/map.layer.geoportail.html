@@ -21,7 +21,9 @@
 	
 	<!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
   <!-- filesaver-js -->
 	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
@@ -113,7 +115,6 @@
   });
 
   map.addControl(new ol.control.LayerSwitcher());
-  map.addControl(new ol.control.Permalink());
 
 /*
   map.addLayer(new ol.layer.Tile({
@@ -124,14 +125,17 @@
 */
   map.addLayer (new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS', {
     gppKey: 'choisirgeoportail',
+    permalink: 'ortho',
     className: 'photo',
   }));
-  map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGN', {
+  map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', {
     gppKey: 'choisirgeoportail',
+    permalink: 'plan',
     className: 'plan',
     visible: true,
     opacity: .5
   }));
+/*
   map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.MAPS', {
     gppKey: 'choisirgeoportail',
     className: 'map',
@@ -142,23 +146,28 @@
     className: 'express',
     visible: false
   }));
-  map.addLayer (new ol.layer.Geoportail('CADASTRALPARCELS.PARCELS', {
+*/
+  map.addLayer (new ol.layer.Geoportail('CADASTRALPARCELS.PARCELLAIRE_EXPRESS', {
     gppKey: 'choisirgeoportail',
+    permalink: 'parcel',
     className: 'parcel',
     visible: false
   }));
   map.addLayer (new ol.layer.Geoportail('INSEE.FILOSOFI.POPULATION', {
     gppKey: 'h1osiyvfm7c4wu976jv6gpum',
+    permalink: 'insee',
     className: 'insee',
     visible: false
   }));
   map.addLayer (new ol.layer.Geoportail('Aire-Parcellaire', {
     gppKey: 'h1osiyvfm7c4wu976jv6gpum',
+    permalink: 'AOC',
     className: 'AOC',
     title: 'Délimitation AOC viticole',
     opacity: .5,
     visible: false
   }));
+  map.addControl(new ol.control.Permalink());
 
   var vector = new ol.layer.Vector({ title: 'vector', className: 'vector', source: new ol.source.Vector() });
   map.addLayer(vector);
@@ -175,7 +184,7 @@
       if (l.get('queryable')) {
         var layers = map.getLayers().getArray();
         // Get info in a popup
-        if (/INSEE|ORTHOIMAGERY|GEOGRAPHICALGRIDSYSTEMS/.test(l.get('name'))) {
+        if (/INSEE|ORTHOIMAGERY|GEOGRAPHICALGRIDSYSTEMS|PARCELLE/.test(l.get('name'))) {
           l.getSource().getFeatureInfo(
             e.coordinate, 
             map.getView().getResolution(), {

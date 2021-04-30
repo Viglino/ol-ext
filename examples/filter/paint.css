@@ -1,0 +1,317 @@
+#map {
+  position: fixed;
+  top: 3em;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  margin: 40px;
+}
+#map .ol-control {
+  transition: opacity .5s;
+}
+.out #map .ol-control {
+  opacity: 0;
+}
+h1 {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1em;
+}
+h2 {
+  margin: 1em 0 0;
+}
+small {
+  display: block;
+}
+.fa-times {
+  font-size: 1.5em;
+  position: absolute;
+  top: .5em;
+  right: .5em;
+}
+.fa-download {
+  font-size: 1.5em;
+  margin: 0 .3em;
+  vertical-align: middle;
+}
+.wait {
+  position: fixed;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  z-index: 100;
+  font-size: 6em;
+  opacity: .8;
+  display: none;
+  text-align: center;
+  pointer-events: none;
+  color: #fff;
+}
+.wait i {
+  color: #fff;
+}
+.waiting .wait {
+  display: block;
+}
+.options {
+  position: fixed;
+  top: -100%;
+  left: 50%;
+  transform: translate(-50%, -30%);
+  background: #fff;
+  box-shadow: 0.3em 0.3em 0.6em rgba(0,0,0,.5);
+  max-width: 90%;
+  margin: 0;
+  z-index: 1001;
+  transition: .5s;
+}
+.options.visible {
+  top: 30%;
+}
+.options ul {
+  margin: 0;
+}
+.options label {
+  display: inline-block;
+  width: 5em;
+  text-align: right;
+  margin-right: .5em;
+}
+.options button {
+  display: block;
+  font-size: 1em;
+  margin: 1em auto;
+  min-width: 5em;
+  background: #369;
+  color: #fff;
+  border: 0;
+  padding: .5em;
+}
+.ol-search {
+  left: .5em!important;
+}
+.ol-search {
+  max-width: calc(100% - 1em);
+}
+.ol-search > * {
+  max-width: 100%;
+}
+.ol-button.help {
+  top: .5em;
+  left: 3em;
+}
+.ol-touch .ol-button.help {
+  left: 3.5em;
+}
+.ol-zoom {
+  display: none;
+}
+#map .ol-bookmark {
+  left: .5em;
+  top: 3em;
+}
+#map .ol-touch .ol-bookmark {
+  top: 3.5em;
+}
+.ol-print {
+  display: none;
+}
+
+#map .ol-control button {
+  background-color: transparent!important;
+  color: rgba(0,0,0,.7);
+  text-shadow: 1px 1px 1px rgba(255,187,120,.6);
+}
+#map .ol-control button:before {
+  color: rgba(0,0,0,.7);
+  text-shadow: 1px 1px 1px rgba(255,187,120,.6);
+}
+.ol-search button {
+  background: none;
+}
+.ol-search button:before {
+  content: "\f002";
+  font-family: FontAwesome;
+}
+.ol-control.ol-bookmark > button::before {
+  content: "\f02e";
+  font-family: FontAwesome;
+  border: 0;
+  height: auto;
+}
+.ol-control a,
+.ol-control.ol-bookmark li {
+  color: rgba(0,0,0,.7);
+  text-shadow: 1px 1px rgba(255,187,120,.6)
+}
+.ol-control,
+.ol-attribution:not(.ol-collapsed),
+.frame h2 {
+  background-image: linear-gradient(45deg,#492004,#8E4E08 15%,#B07024 20%,#FCCD69 40%,#B07024 70%,#8E4E08 85%,#492004);
+  box-shadow: inset 2px 2px 1px #100, 0 0 0.5em #100;
+  text-shadow: 1px 1px 1px rgba(255,187,120,.6);
+  border: .1em solid #FCCD69;
+  color: #100;
+}
+.frame h2 {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  z-index: 101;
+  transform: translateX(-50%);
+  text-align: center;
+  padding: .35em 1.7em .25em;
+  max-width: 100%;
+  letter-spacing: -.035em;
+  font-weight: 700;
+  white-space: nowrap;
+  color: rgba(0,0,0,.7);
+  pointer-events: all;
+  cursor: pointer;
+}
+.frame h2:after, .frame h2:before {
+  content: "";
+  position: absolute;
+  width: .3em;
+  height: .3em;
+  top: 50%;
+  transform: translateY(-50%);
+  background-image: linear-gradient(45deg,#492004,#8E4E08 15%,#B07024 44%,#FCCD69 45%,#FCCD69 55%,#B07024 56%,#8E4E08 85%,#492004);
+  z-index: 1000;
+  box-shadow: -0.5px -0.5px 1px #FCCD69, 0.05em 0.05em 0.05em 0.05em #492004;
+  border-radius: 50%;
+}
+.frame h2:after {
+  left: .5em;
+}    
+.frame h2:before {
+  right: .5em;
+}
+
+
+.frame {
+  position: fixed;
+  top: 3em;
+  left: 0;
+  right: 0;
+  bottom:0;
+  z-index: 1;
+  pointer-events: none;
+}
+.frame > * {
+  position: absolute;
+  z-index: 1;
+}
+.frame:before,
+.frame:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 43px;
+}
+.frame:before {
+  background-repeat: repeat-y;
+  background-image: 
+    linear-gradient(#492004 50px, transparent 180px, rgba(252, 205, 105, .5) 35%, transparent 60%),
+    linear-gradient(0deg, #492004, transparent 130px),
+    url(../img/frame-l.png);
+  left: 0;
+}
+.frame:after {
+  background-repeat: repeat-y;
+  background-image: 
+    linear-gradient(#492004, transparent 25%),
+    linear-gradient(0deg, #492004, transparent 130px),
+    url(../img/frame-r.png);
+  right: 0;
+}
+
+.frame .top,
+.frame .bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 43px;
+}
+.frame .top {
+  background-repeat: repeat-x;
+  background-image: 
+    linear-gradient(90deg, transparent 25%, rgba(252, 205, 105, .5), transparent 70%),
+    linear-gradient(90deg, #492004, transparent 180px),
+    linear-gradient(270deg, #492004, transparent 130px),
+    url(../img/frame-t.png);
+  top: 0;
+}
+.frame .bottom {
+  background-repeat: repeat-x;
+  background-image: 
+    linear-gradient(90deg, transparent 30%, rgba(252, 205, 105, .5), transparent 75%),
+    linear-gradient(90deg, #492004, transparent 130px),
+  linear-gradient(270deg, #492004, transparent 130px),
+    url(../img/frame-b.png);
+  bottom: 0;
+}
+
+.frame .top:before,
+.frame .top:after,
+.frame .bottom:before,
+.frame .bottom:after {
+  content: "";
+  position: absolute;
+  width: 90px;
+  height: 90px;
+}
+.frame .top:before {
+  background-image: url(../img/frame-tl.png);
+  top: 0;
+  left: 0; 
+}
+.frame .top:after {
+  background-image: url(../img/frame-tr.png);
+  top: 0;
+  right: 0; 
+}
+.frame .bottom:before {
+  background-image: url(../img/frame-bl.png);
+  bottom: 0;
+  left: 0; 
+}
+.frame .bottom:after {
+  background-image: url(../img/frame-br.png);
+  bottom: 0;
+  right: 0; 
+}
+
+@media (max-width: 640px) {
+  #map {
+    margin: 20px;
+  }
+  .frame h2 {
+    font-size: 1em;
+  }
+  .wait {
+    font-size: 4em;
+  }
+  .frame .top:before,
+  .frame .top:after,
+  .frame .bottom:before,
+  .frame .bottom:after {
+    width: 45px;
+    height: 45px;
+    background-size: contain;
+  }
+  .frame .top,
+  .frame .bottom {
+    height: 23px;
+    background-size: contain;
+  }
+  .frame:before,
+  .frame:after {
+    width: 23px;
+    background-size: contain;
+  }
+}

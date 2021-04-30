@@ -1,0 +1,230 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: interaction TouchCursor</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+
+  <meta name="description" content="An interactioon for drawing feature on a touch device." />
+  <meta name="keywords" content="openlayers, ol, interaction, touch, mobile, modify, draw, vector" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <style>
+    #map .ol-touch-cursor.Modify .ol-button-x:after {
+      content: none;
+    }
+    #map .ol-touch-cursor.Modify .ol-button-move:before {
+      content: "\f047";
+      font-family: "FontAwesome";
+      font-size: 1em;
+    }
+    #map .ol-touch-cursor .ol-button-type {
+      background-color: rgba(51,102,153, .5);
+    }
+    #map .ol-touch-cursor.draw:before,
+    #map .ol-touch-cursor .ol-button-type:before {
+      content: "\f041";
+      font-family: "FontAwesome";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      text-align: center;
+      transform: translate(-50%, -50%);
+      color: #369;
+      font-size: 1.5em;
+      opacity: .8;
+    }
+    #map .ol-touch-cursor .ol-button-type:before {
+      color: #fff;
+    }
+    #map .ol-touch-cursor .ol-button-type:before {
+      font-size: 1.2em;
+    }
+    #map .ol-touch-cursor .ol-button.del:before {
+      content: "\f0e2";
+      font-family: "FontAwesome";
+    }
+    #map .ol-touch-cursor .ol-button.delete:before {
+      content: "\f1f8";
+      font-family: "FontAwesome";
+    }
+    #map .ol-touch-cursor.Circle:before,
+    #map .ol-touch-cursor .Circle:before {
+      content: "\f10c";
+      font-weight: normal;
+    }
+    #map .ol-touch-cursor.LineString:before,
+    #map .ol-touch-cursor .LineString:before {
+      content: "\f1e0";
+      font-weight: normal;
+    }
+    #map .ol-touch-cursor.Polygon:before,
+    #map .ol-touch-cursor .Polygon:before {
+      content: "\f097";
+      transform: translate(-50%, -50%) rotate(-90deg);
+      font-weight: bold;
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: interaction TouchCursor</h1>
+  </a>
+  <div class="info">
+    <i>ol/interaction/TouchCursor</i> is an interaction that shift the finger position to let the cursor visible when interacting on the map.
+    <br/>
+    Interaction coordinates are shifted to the top left corner of a cursor that can be move with the finger.
+    <br/>
+    You can add your own buttons (up to 5 / 8) to the cursor to handle optional functionnalities.
+    <ul>
+      <li>
+        It modifies map browser event coordinate and pixel properties to force pointer on the cursor.
+      </li>
+      <li>
+        The coordinate modification is deported on the top of the interaction queue and other can be used after then 
+        (a snap interaction is used in this example).
+      </li>
+    </ul>
+    <i>ol/interaction/TouchCursorSelect</i> is an interaction to select features under the cursor. 
+    Add you own buttons to do tomething with the selection...
+    <br/>
+    <i>ol/interaction/TouchCursorModify</i> combines a ModifyFeature interaction with a TouchCursor
+    and lets you see what you do when you modify features on mobile without hidding it with finger.
+    You can also access functionnality usually handled by option keys (delete a point on a linestring).
+    <br/>
+    <i>ol/interaction/TouchCursorDraw</i> combines a Draw interaction with a TouchCursor to lets you draw precisely on mobile.
+    You can also access functionnality usually handled by option keys (remove last point, cancel drawing).
+  </div>
+
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options" >
+    Options:
+    <ul>
+      <li>
+        <label><input type="radio" name="mode" onchange="setActive('Select')" checked="checked"> Select</label>
+        <label><input type="radio" name="mode" onchange="setActive('Modify')"> Modify</label>
+        <label><input type="radio" name="mode" onchange="setActive('Draw')"> Draw</label>
+      </li>
+      <li>
+        <button onclick="active.setActive(true);">Center cursor</button>
+      </li>
+    </ul>
+  </div>
+
+  <script type="text/javascript">
+
+    //  Vector layer
+    var vector = new ol.layer.Vector( { source: new ol.source.Vector() })
+
+    // The map
+    var map = new ol.Map ({
+      target: 'map',
+      view: new ol.View ({
+        zoom: 14,
+        center: [270701, 6247637]
+      }),
+      layers: [
+        new ol.layer.Tile({ source: new ol.source.OSM() }),
+        vector
+      ]
+    });
+
+    vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[270318,6247293],[271226,6247178],[271799,6247933],[271083,6248945],[271952,6249108]])))
+
+    var cursor = {};
+
+    // Select cursor interaction
+    cursor.Select = new ol.interaction.TouchCursorSelect();
+    map.addInteraction(cursor.Select);
+    // Add a delete
+    cursor.Select.addButton({
+      className: 'delete',
+      click: function() {
+        var f = cursor.Select.getSelection();
+        if (f) vector.getSource().removeFeature(f);
+      }
+    })
+
+    // Draw tools
+    cursor.Draw = new ol.interaction.TouchCursorDraw({
+      className: 'draw',
+      coordinate: map.getView().getCenter(),
+      type: 'Point',
+      types: ['Point', 'LineString', 'Polygon', 'Circle'],
+      source: vector.getSource()
+    });
+    map.addInteraction(cursor.Draw);
+    // Add a button to remove last feature
+    var feature = null;
+    cursor.Draw.on('drawend', function(e) {
+      cursor.Draw.removeButton('del');
+      cursor.Draw.addButton({
+        className: 'del', 
+        click: function() {
+          vector.getSource().removeFeature(e.feature);
+          cursor.Draw.removeButton('del');
+        }
+      })
+    })
+
+    // Modify
+    cursor.Modify = new ol.interaction.TouchCursorModify({
+      className: 'Modify',
+      coordinate: map.getView().getCenter(),
+      source: vector.getSource()
+    });
+    map.addInteraction(cursor.Modify);
+
+    // Activate mode
+    var active;
+    function setActive(mode) {
+      var coord;
+      if (active) {
+        coord = active.getPosition();
+        active.setActive(false);
+      } else {
+        for (let i in cursor) cursor[i].setActive(false);
+      }
+      active = cursor[mode];
+      if (active) active.setActive(true, coord);
+    }
+    setActive('Select');
+
+    // Add a snap interaction
+/**/
+    map.addInteraction(new ol.interaction.Snap({
+      source: vector.getSource(),
+      pixelTolerance: 10
+    }));
+/**/
+
+  </script>
+
+</body>
+</html>

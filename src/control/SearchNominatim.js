@@ -85,6 +85,16 @@ ol_control_SearchNominatim.prototype.select = function (f){
   this.dispatchEvent({ type:"select", search:f, coordinate: c });
 };
 
+/**
+ * Handle server response to pass the features array to the display list
+ * @param {any} response server response
+ * @return {Array<any>} an array of feature
+ * @api
+ */
+ol_control_SearchJSON.prototype.handleResponse = function (response) {
+  return response.results || response;
+};
+
 /** Reverse geocode
  * @param {ol.coordinate} coord
  * @api
@@ -98,7 +108,9 @@ ol_control_SearchNominatim.prototype.reverseGeocode = function (coord, cback) {
       if (cback) {
         cback.call(this, [resp]);
       } else {
-        this._handleSelect(resp, true);
+        if (resp && !resp.error) {
+          this._handleSelect(resp, true);
+        }
         //this.setInput('', true);
       }
     }.bind(this)

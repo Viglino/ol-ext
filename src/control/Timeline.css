@@ -22,9 +22,6 @@
 .ol-timeline .ol-scroll.ol-move {
   scroll-behavior: unset;
 }
-.ol-timeline.ol-touch .ol-scroll{
-  overflow-x: auto;
-}
 
 .ol-timeline.ol-hasbutton .ol-scroll {
   margin-left: 1.5em;

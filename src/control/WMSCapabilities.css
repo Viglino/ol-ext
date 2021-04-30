@@ -1,0 +1,192 @@
+﻿.ol-control.ol-wmscapabilities {
+  top: .5em;
+  right: 2.5em;
+}
+.ol-touch .ol-control.ol-wmscapabilities {
+  right: 3em;
+}
+.ol-control.ol-wmscapabilities.ol-hidden {
+  display: none;
+}
+.ol-control.ol-wmscapabilities button:before {
+  content: "+";
+  position: absolute;
+  top: calc(50% - .35em);
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.ol-control.ol-wmscapabilities button:after {
+  content: "";
+  width: .75em;
+  height: .75em;
+  position: absolute;
+  background: transparent;
+  top: calc(50% - .05em);
+  left: 50%;
+  transform: scaleY(.6) translate(-50%, -50%) rotate(45deg);
+  box-shadow: inset -.18em -.18em currentColor, -.4em .1em 0 -.25em currentColor, .1em -.35em 0 -.25em currentColor, .15em .15em currentColor;
+  border-radius: .1em 0;
+  border: .15em solid transparent;
+  border-width: 0 .15em .15em 0;
+}
+
+.ol-wmscapabilities .ol-searching {
+  opacity: .5;
+}
+.ol-wmscapabilities .ol-searching .ol-url:after{
+  content: "";
+  width: .7em;
+  height: .7em;
+  background-color: currentColor;
+  position: absolute;
+  top: 6em;
+  border-radius: 50%;
+  display: block;
+  left: calc(50% - .35em);
+  box-shadow: 0 1em currentColor, 0 -1em currentColor, 1em 0 currentColor, -1em 0 currentColor;
+  animation:ol-wmscapabilities-rotate 2s linear infinite;
+}
+@keyframes ol-wmscapabilities-rotate { 
+  100% { transform:rotate(360deg); } 
+}
+
+.ol-wmscapabilities .ol-url input {
+  width: calc(100% - 10em);
+  box-sizing: border-box;
+  min-width: min(100%, 20em);
+}
+.ol-wmscapabilities .ol-url select {
+  width: 2em;
+  text-align: center;
+  height: 100%;
+  padding: 1px;
+}
+.ol-wmscapabilities .ol-url button {
+  width: 7.5em;
+  margin-left: .5em;
+}
+.ol-wmscapabilities .ol-result {
+  display: none;
+  margin-top: .5em;
+}
+.ol-wmscapabilities .ol-result.ol-visible {
+  display: block;
+}
+
+.ol-wmscapabilities .ol-select-list {
+  border: 1px solid #369;
+  overflow-x: hidden;
+  width: calc(100% - 120px);
+  min-width: min(200px, 100%);
+}
+.ol-wmscapabilities .ol-select-list options {
+  padding: 0 .5em;
+}
+.ol-wmscapabilities .ol-select-list .level-1 {
+  padding-left: 1em;
+}
+.ol-wmscapabilities .ol-select-list .level-2 {
+  padding-left: 1.5em;
+}
+.ol-wmscapabilities .ol-select-list .level-3 {
+  padding-left: 2em;
+}
+.ol-wmscapabilities .ol-select-list .level-4 {
+  padding-left: 2.5em;
+}
+.ol-wmscapabilities .ol-select-list .level-5 {
+  padding-left: 3em;
+}
+
+.ol-wmscapabilities .ol-select-list .ol-info {
+  font-style: italic;
+}
+.ol-wmscapabilities .ol-select-list .ol-title {
+  background-color: rgba(0,60,136,.1);
+}
+.ol-wmscapabilities .ol-select-list option:hover {
+  background-color: rgba(0,60,136,.5);
+  color: #fff;
+}
+.ol-wmscapabilities .ol-select-list option.selected {
+  background-color: rgba(0,60,136,.7);
+  color: #fff;
+}
+
+.ol-wmscapabilities .ol-preview {
+  width: 100px;
+  float: right;
+  background: rgba(0,60,136,.1);
+  color: #666;
+  padding: 0 5px 5px;
+  text-align: center;
+  margin-left: 10px;
+}
+.ol-wmscapabilities .ol-preview.tainted {
+  width: 100px;
+  float: right;
+  background: rgba(136,0,60,.1);
+  color: #666;
+  padding: 0 5px 5px;
+  text-align: center;
+  margin-left: 10px;
+}
+.ol-wmscapabilities .ol-preview img {
+  width: 100%;
+  display: block;
+  background: #fff;
+}
+.ol-wmscapabilities .ol-legend {
+  max-width: 100%;
+  display: none;
+}
+.ol-wmscapabilities .ol-legend.visible {
+  display: block;
+}
+.ol-wmscapabilities .ol-buttons {
+  clear: both;
+  text-align: right;
+}
+.ol-wmscapabilities .ol-data p {
+  margin: 0;
+}
+.ol-wmscapabilities .ol-data p.ol-title {
+  font-weight: bold;
+  margin: 1em 0 .5em;
+}
+.ol-wmscapabilities .ol-error {
+  color: #800;
+}
+
+.ol-wmscapabilities ul.ol-wmsform {
+  display: none;
+}
+.ol-wmscapabilities ul.ol-wmsform.visible {
+  display: block;
+}
+.ol-wmscapabilities .ol-wmsform label {
+  display: inline-block;
+  text-align: right;
+  width: calc(40% - .5em);
+  margin-right: .5em;
+}
+.ol-wmscapabilities .ol-wmsform input {
+  display: inline-block;
+  width: 60%;
+  box-sizing: border-box;
+}
+.ol-wmscapabilities .ol-wmsform input[type="checkbox"] {
+  width: auto;
+}
+.ol-wmscapabilities .ol-wmsform button {
+  float: right;
+  margin: 1em 0;
+}
+
+.ol-ext-dialog.ol-wmscapabilities form {
+  max-height: calc(85% - 1em);
+  width: 600px;
+  min-height: 15em;
+  top: 15%;
+  transform: translate(-50%, 0);
+}

@@ -1,127 +1,127 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
- 
-	Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
------------------------------------------------------------->
-	<title>ol-ext: Hover interaction</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!--
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Hover interaction</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="OL3 interaction hover" />
-	<meta name="keywords" content="ol3, interaction, hover, cursor" />
+  <meta name="description" content="OL3 interaction hover" />
+  <meta name="keywords" content="ol3, interaction, hover, cursor" />
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-    <link rel="stylesheet" href="../../dist/ol-ext.css" />
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
-	<style>
-		#info
-		{	background: #fff;
-			border: 1px solid #369;
-			display: block;
-			padding:0 1em;
-			min-height: 1.4em;
-			font-size:0.8em;
-			width: 12em;
-		}
-	</style>
+  <style>
+    #info {
+      background: #fff;
+      border: 1px solid #369;
+      display: block;
+      padding:0 1em;
+      min-height: 1.4em;
+      font-size:0.8em;
+      width: 12em;
+    }
+  </style>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Hover interaction</h1>
-	</a>
-	<div class="info">
+  <a href="../../index.html">
+    <h1>ol-ext: Hover interaction</h1>
+  </a>
+  <div class="info">
 
-		<b>ol.interaction.Hover</b> is an interaction to do something when hovering a feature.  
-		<ul><li>
-			The <i>cursor</i> options lets you spécify the cursor when hovering (or use <i>setCursor()</i>)
-		</li><li>
-			The <i>featureFilter</i> and <i>layerFilter</i> lets you specify which features / layers are concerned.
-		</li><li>
-			You can use <i>handleEvent</i> options of the <i>ol.interaction.Interaction</i> to extend the interaction.
-		</li><li>
-			The interaction fires <i>hover</i>, <i>enter</i>, <i>leave</i> events 
-			you can use to get the feature/layer that is hovering and do some stuff (show a popup, display information, change cursor, ...).
-		</li></ul>
-	</div>
+    <b>ol.interaction.Hover</b> is an interaction to do something when hovering a feature.  
+    <ul><li>
+      The <i>cursor</i> options lets you spécify the cursor when hovering (or use <i>setCursor()</i>)
+    </li><li>
+      The <i>featureFilter</i> and <i>layerFilter</i> lets you specify which features / layers are concerned.
+    </li><li>
+      You can use <i>handleEvent</i> options of the <i>ol.interaction.Interaction</i> to extend the interaction.
+    </li><li>
+      The interaction fires <i>hover</i>, <i>enter</i>, <i>leave</i> events 
+      you can use to get the feature/layer that is hovering and do some stuff (show a popup, display information, change cursor, ...).
+    </li></ul>
+  </div>
 
-	<!-- Map div -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options" >
-		<h2>Options:</h2>
-		<ul><li>
-		</li></ul>
-		<div id="info"></div>
-	</div>
+  <div class="options" >
+    <h2>Options:</h2>
+    <ul><li>
+    </li></ul>
+    <div id="info"></div>
+  </div>
 
-	<script type="text/javascript">
-		// Layers
-		var layers = [
-			new ol.layer.Tile({
-				title:'terrain-background',
-				source: new ol.source.Stamen({ layer: 'terrain' })
-			})
-		];
-		// The map
-		var map = new ol.Map
-			({	target: 'map',
-				view: new ol.View
-				({	zoom: 5,
-					center: [261720, 5951081]
-				}),
-				controls: ol.control.defaults({ "attribution": false }),
-				layers: layers
-			});
+  <script type="text/javascript">
+    // Layers
+    var layers = [
+      new ol.layer.Tile({
+        title:'terrain-background',
+        source: new ol.source.Stamen({ layer: 'terrain' })
+      })
+    ];
+    // The map
+    var map = new ol.Map ({
+      target: 'map',
+      view: new ol.View ({
+        zoom: 5,
+        center: [261720, 5951081]
+      }),
+      controls: ol.control.defaults({ "attribution": false }),
+      layers: layers
+    });
 
-		// New vector layer
-		var vector = new ol.layer.Vector(
-		{	name: 'Vecteur',
-			source: new ol.source.Vector(),
-		})
-		map.addLayer(vector);
-		vector.getSource().addFeature(new ol.Feature(new ol.geom.Polygon([[[34243, 6305749], [-288626, 5757848], [210354, 5576845], [34243, 6305749]]])));
-		vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[406033, 5664901], [689767, 5718712], [699551, 6149206], [425601, 6183449]])));
-		vector.getSource().addFeature(new ol.Feature(new ol.geom.Point(	[269914, 6248592])));
+    // New vector layer
+    var vector = new ol.layer.Vector({
+      name: 'Vecteur',
+      source: new ol.source.Vector(),
+    })
+    map.addLayer(vector);
+    vector.getSource().addFeature(new ol.Feature(new ol.geom.Polygon([[[34243, 6305749], [-288626, 5757848], [210354, 5576845], [34243, 6305749]]])));
+    vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[406033, 5664901], [689767, 5718712], [699551, 6149206], [425601, 6183449]])));
+    vector.getSource().addFeature(new ol.Feature(new ol.geom.Point(	[269914, 6248592])));
 
 
-		var hover = new ol.interaction.Hover({ cursor: "pointer" });
-		map.addInteraction(hover);
-		hover.on("enter", function(e) 
-			{	switch (e.feature.getGeometry().getType())
-				{	case "LineString":
-						hover.setCursor("copy");
-						break;
-					case "Polygon":
-						hover.setCursor("help");
-						break;
-					default:
-						hover.setCursor("pointer");
-						break;
-				}
-				$("#info").html("Feature is: "+e.feature.getGeometry().getType()); 
-			});
-		hover.on("leave", function(e) 
-			{	$("#info").html(""); 
-			});
-		
-	</script>
+    var hover = new ol.interaction.Hover({ cursor: "pointer" });
+    map.addInteraction(hover);
+    hover.on("enter", function(e) {
+      switch (e.feature.getGeometry().getType()) {
+        case "LineString":
+          hover.setCursor("copy");
+          break;
+        case "Polygon":
+          hover.setCursor("help");
+          break;
+        default:
+          hover.setCursor("pointer");
+          break;
+      }
+      $("#info").html("Feature is: "+e.feature.getGeometry().getType()); 
+    });
+    hover.on("leave", function(e) {
+      $("#info").html(""); 
+    });
+    
+  </script>
 
 </body>
 </html>

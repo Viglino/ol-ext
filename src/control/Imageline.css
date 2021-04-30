@@ -17,9 +17,6 @@
   overflow: hidden;
   width: 100%;
 }
-.ol-imageline.ol-touch > div {
-  overflow-x: auto;
-}
 .ol-imageline > div.ol-move {
   scroll-behavior: unset;
 }

@@ -1,102 +1,112 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-	<title>ol-ext: DrawHole interaction</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>ol-ext: DrawHole interaction</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="an OL3 interaction to draw holes in polygons" />
-	<meta name="keywords" content="ol3, interaction, draw, hole, polygon, donut" />
+  <meta name="description" content="an OL3 interaction to draw holes in polygons" />
+  <meta name="keywords" content="ol3, interaction, draw, hole, polygon, donut" />
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-    <link rel="stylesheet" href="../../dist/ol-ext.css" />
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: DrawHole interaction</h1>
-	</a>
-	<div class="info">
-		<b>ol.interaction.DrawHole</b> is an interaction to draw holes in a polygon.
-		<p>
-			NB: The interaction prevents to add points outside the polygon but 
-			does not ensure the result polygon is consistent.
-			<br/>
-			Non convexe polygons may result in drawing holes that cross the frontiers. 
-		</p>
-	</div>
+  <a href="../../index.html">
+    <h1>ol-ext: DrawHole interaction</h1>
+  </a>
+  <div class="info">
+    <b>ol.interaction.DrawHole</b> is an interaction to draw holes in a polygon.
+    <br/>You can limit the interaction to a set layer (<i>layers</i> option) or a set of feature (<i>features</i> options).
+    <p>
+      NB: The interaction prevents to add points outside the polygon but 
+      does not ensure the result polygon is consistent.
+      <br/>
+      Non convexe polygons may result in drawing holes that cross the frontiers. 
+    </p>
+  </div>
 
-	<!-- Map div -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options" >
-		<h2>Options:</h2>
-		<ul>
-			<input id="draw" type="radio" name="toggle" checked="checked" onchange="toggle(!$(this).prop('checked'))" />
-			<label for="draw"> draw polygon</label>
-			<br/>
-			<input id="drawhole" type="radio" name="toggle" onchange="toggle($(this).prop('checked'))" />
-			<label for="drawhole"> draw hole</label>
-		</ul>
-	</div>
-	
+  <div class="options" >
+    <h2>Options:</h2>
+    <ul>
+      <input id="draw" type="radio" name="toggle" checked="checked" onchange="toggle(!$(this).prop('checked'))" />
+      <label for="draw"> draw polygon</label>
+      <br/>
+      <input id="drawhole" type="radio" name="toggle" onchange="toggle($(this).prop('checked'))" />
+      <label for="drawhole"> draw hole</label>
+    </ul>
+  </div>
+  
 
-	<script type="text/javascript">
-		// Layers
-		var layers = [
-			new ol.layer.Tile({
-				title:'terrain-background',
-				source: new ol.source.Stamen({ layer: 'terrain' })
-			})
-		];
-		// The map
-		var map = new ol.Map
-			({	target: 'map',
-				view: new ol.View
-				({	zoom: 5,
-					center: [261720, 5951081]
-				}),
-				controls: ol.control.defaults({ "attribution": false }),
-				layers: layers
-			});
+  <script type="text/javascript">
+    // Layers
+    var layers = [
+      new ol.layer.Tile({
+        title:'terrain-background',
+        source: new ol.source.Stamen({ layer: 'terrain' })
+      })
+    ];
+    // The map
+    var map = new ol.Map({
+      target: 'map',
+      view: new ol.View({
+        zoom: 5,
+        center: [261720, 5951081]
+      }),
+      controls: ol.control.defaults({ "attribution": false }),
+      layers: layers
+    });
 
-		// New vector layer
-		var vector = new ol.layer.Vector(
-		{	name: 'Vecteur',
-			source: new ol.source.Vector()
-		})
-		map.addLayer(vector);
-		vector.getSource().addFeature(new ol.Feature(new ol.geom.Polygon([[[34243, 6305749], [-288626, 5757848], [210354, 5576845], [34243, 6305749]]])));
+    // New vector layer
+    var vector = new ol.layer.Vector({
+      name: 'Vecteur',
+      source: new ol.source.Vector()
+    })
+    map.addLayer(vector);
+    vector.getSource().addFeature(new ol.Feature(new ol.geom.Polygon([[[34243, 6305749], [-288626, 5757848], [210354, 5576845], [34243, 6305749]]])));
+    /*
+    var select = new ol.interaction.Select();
+    function setSelect(b) {
+      select.setActive(b);
+      draw.setActive(!b);
+      drawhole.setActive(false);
+    }
+    map.addInteraction(select)
+    */
+    var draw = new ol.interaction.Draw ({
+      source: vector.getSource(),
+      type:'Polygon'
+    });
+    map.addInteraction(draw);
+    var drawhole = new ol.interaction.DrawHole ({
+      layers: [ vector ]
+    });
+    drawhole.setActive(false);
+    map.addInteraction(drawhole);
+    
+    function toggle(active) {
+      draw.setActive(!active);
+      drawhole.setActive(active);
+    }
 
-		var draw = new ol.interaction.Draw (
-			{	source: vector.getSource(),
-				type:'Polygon'
-			});
-		map.addInteraction(draw);
-		var drawhole = new ol.interaction.DrawHole (
-			{	layers: [ vector ]
-			});
-		drawhole.setActive(false);
-		map.addInteraction(drawhole);
-		
-		function toggle(active)
-		{	draw.setActive(!active);
-			drawhole.setActive(active);
-		}
-
-	</script>
-
+  </script>
 </body>
 </html>

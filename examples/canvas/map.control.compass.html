@@ -24,6 +24,8 @@
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
   <style>
     /* Define the size and position in the css */
@@ -80,7 +82,12 @@
         </select>
       </li>
       <li>
-        <input id="default" type="checkbox" onchange="setCompass();" /><label for="default"> default image</label>
+        Image: 
+        <select id="image" onchange="setCompass();">
+          <option value="../data/piratecontrol.png">Pirate</option>
+          <option value="default">default</option>
+          <option value="compact">compact</option>
+        </select>
       </li>
       <li>
         <input id="line" type="checkbox" onchange="setCompass();" checked="checked" /><label for="line"> showlines</label>
@@ -120,7 +127,7 @@
       if ($("#top").prop("checked")) {
         compass = new ol.control.Compass ({
           className: "top",
-          src: ($("#default").prop("checked") ? undefined : "../data/piratecontrol.png"),
+          src: $("#image").val(),
           // rotateWithView: $("#rotate").prop("checked"),
           style: new ol.style.Stroke ({ color: $("#color").val(), width: ($("#line").prop("checked") ? 1 : 0) })
         });
@@ -129,7 +136,7 @@
       else compass = false;
       compassBottom = new ol.control.Compass ({
         className: "bottom",
-        src: ($("#default").prop("checked") ? undefined : "../data/piratecontrol.png"),
+        src: $("#image").val(),
         rotateWithView: $("#rotate").prop("checked"),
         style: new ol.style.Stroke ({ color: $("#color").val(), width: ($("#line").prop("checked") ? 1 : 0) })
       });

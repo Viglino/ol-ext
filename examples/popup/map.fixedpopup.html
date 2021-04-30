@@ -1,0 +1,244 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: FixedPopup overlay</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+
+  <meta name="description" content="Display fixed popup on the map" />
+  <meta name="keywords" content="openlayers, ol, popup, overlay, fix" />
+
+  <!-- Prevent image error on load with https -->
+	<script>
+		if (location.protocol == 'https:' && !/^localhost/.test(location.host)) {
+      location.href = window.location.href.replace(/^https:/,'http:');
+		}
+	</script>
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    /* popup style */
+    .ol-popup {
+      max-width:300px;
+      min-width:100px;
+      min-height:1em;
+    }
+    /* Image on popup */
+    .ol-popup img {
+      float: left;
+      margin: 0 0.5em 0 0;
+      max-width: 100px;
+      max-height: 100px;
+    }
+    /* no image content tooltips */
+    .ol-popup.tooltips img {
+      display:none;
+    }
+    /* Custom red style (tips) */
+    .ol-popup.red > div {
+      background-color: red;
+    }
+    .ol-popup.red .anchor {
+      color: red;
+    }
+
+    /* Custom orange style (tips) */
+    .ol-popup.tips.orange > div {
+      border-color:#da7;
+      background-color:#eca;
+    }
+    .ol-popup.tips.orange .anchor {
+      color: #da7;
+    }
+
+    /* orange style (default) */
+    .ol-popup.default.orange > div {
+      border:4px solid #f96;
+    }
+    .ol-popup.default.orange .anchor {
+      margin: -10px 22px;
+    }
+    .ol-popup.default.orange .anchor::after {
+      margin: 5px -11px; 
+    }
+    .ol-popup-middle.default.orange .anchor::after {
+      margin: -10.5px -27px /*border:4 +2 px */; 
+    }
+    .ol-popup.default.orange .anchor {
+      color: #f96;
+    }
+    .ol-popup.default.orange .closeBox {
+      background-color: rgba(255, 153, 102, 0.7);
+    }
+    .ol-popup.default.orange .closeBox:hover {
+      background-color: rgba(255, 153, 102, 1);
+    }
+    .ol-popup i {
+      color: #666;
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: FixedPopup overlay</h1>
+  </a>
+
+  <div class="info">
+    Fixed popups are <a href="./map.popup.html">Openlayers popups</a> that have 
+    a fixed position on the map viewport. 
+    You can drag the popup to place it on the map. 
+    A link is drawn to attache the popup with its position on the map.
+  </div>
+
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:100%; height:60vh;"></div>
+
+  <div class="options">
+    <h2>Options:</h2>
+    Position:
+    <select onchange="popup.setPixelPosition([10,10], this.value);">
+      <option value="auto">auto</option>
+      <option value="bottom-left">bottom-left</option>
+      <option value="bottom-center">bottom-center</option>
+      <option value="bottom-right">bottom-right</option>
+      <option value="top-left">top-left</option>
+      <option value="top-center">top-center</option>
+      <option value="top-right">top-right</option>
+      <option value="center-left">center-left</option>
+      <option value="center-right">center-right</option>
+      <option value="center-center">center-center</option>
+    </select>
+    <br />
+    Form:
+    <select onchange="setStyle(this.value)">
+      <option value="default">default</option>
+      <option value="default orange">orange</option>
+      <option value="black">black</option>
+      <option value="red black">red</option>
+      <option value="tips">green tips</option>
+      <option value="tips orange">orange tips</option>
+      <option value="warning">warning</option>
+      <option value="tooltips">tooltips</option>
+    </select>
+    <br />
+    <input id="ck" type="checkbox" onchange="if (this.checked) popup.addPopupClass('shadow'); else popup.removePopupClass('shadow');" />
+    <label for="ck">shadow</label>
+    <br />
+    <input id="cb" type="checkbox" checked onchange="popup.setClosebox(this.checked);" />
+    <label for="cb">hasclosebox</label>
+  </div>
+  <p>Click on the points to show a popup ! (shift+click for a new one)</p>
+  
+  <script type="text/javascript">
+  // Layers
+  var layers = [
+    new ol.layer.Tile({
+      title:'terrain-background',
+      source: new ol.source.Stamen({ layer: 'terrain' })
+    })
+  ];
+
+  // Popup overlay
+  var popup = new ol.Overlay.FixedPopup ({
+    popupClass: "default", //"tooltips", "warning" "black" "default", "tips", "shadow",
+    // anim: true,
+    closeBox: true
+  });
+  var popup2 = new ol.Overlay.FixedPopup ({
+    popupClass: "default", //"tooltips", "warning" "black" "default", "tips", "shadow",
+    // anim: true,
+    closeBox: true
+  });
+    
+  // The map
+  var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View({
+      zoom: 5,
+      center: [166326, 5992663]
+    }),
+    layers: layers,
+    overlays: [popup, popup2]
+  });
+
+  // GeoJSON layer
+  var vectorSource = new ol.source.Vector({
+    url: '../data/fond_guerre.geojson',
+    projection: 'EPSG:3857',
+    format: new ol.format.GeoJSON(),
+    attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
+    logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+  });
+
+  map.addLayer(new ol.layer.Vector({
+    name: 'Fonds de guerre 14-18',
+    source: vectorSource,
+    style: new ol.style.Style({ image: new ol.style.Icon({ src:"../data/camera.png", scale: 0.8 }) })
+  }));
+
+  // Control Select 
+  var select = new ol.interaction.Select({});
+  map.addInteraction(select);
+
+  // On selected => show/hide popup
+  select.getFeatures().on(['add'], function(e) {
+    var feature = e.element;
+    var content = "";
+    content += "<img src='"+feature.get("img")+"'/>";
+    content += feature.get("text");
+    content += '<br/><i>powered by <a href="https://github.com/Viglino/ol-ext" target="ol">ol-ext</a></i>';
+    if (select.getFeatures().getLength()>1) {
+      popup2.show(feature.getGeometry().getFirstCoordinate(), content); 
+    } else {
+      popup.show(feature.getGeometry().getFirstCoordinate(), content); 
+    }
+  });
+  select.getFeatures().on(['remove'], function(e) {
+    popup.hide(); 
+    popup2.hide(); 
+  })
+
+  function setStyle(st) {
+    popup.setPopupClass(st);
+    var color;
+    switch(st) {
+      case 'default orange':
+      case 'tips orange': color = '#f96'; break;
+      case 'black': color = [0,0,0,.5]; break;
+      case 'red black':
+      case 'warning': color = 'red'; break;
+      case 'tips': color = '#ad7'; break;
+      case 'tooltips': color = '#ffa'; break;
+      default: color = [102,153,255]; break;
+    }
+    popup.setLinkStyle (new ol.style.Style({
+      fill: new ol.style.Fill({ color: color })
+    }));
+    if($('#ck').prop('checked')) popup.addPopupClass('shadow'); 
+  }
+
+  </script>
+  
+</body>
+</html>

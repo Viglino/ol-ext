@@ -76,8 +76,8 @@ var banner = ['/**',
   ''].join('\n');
 
 // Build css. Use --debug to build in debug mode
-gulp.task('css', function () {
-  gulp.src([
+gulp.task('css0', function () {
+  return gulp.src([
     "./src/control/*.css", "!./src/control/PirateMap.css",
     "./src/featureanimation/*.css", 
     "./src/filter/*.css",
@@ -86,14 +86,19 @@ gulp.task('css', function () {
     "./src/map/*.css",
     "./src/overlay/*.css", 
     "./src/style/*.css",
+    "./src/legend/*.css",
+    "./src/ext/*.css",
     "./src/util/*.css",
     "./src/utils/*.css"
     ])
   .pipe(autoprefixer('last 2 versions'))
   .pipe(concat(name+'.css'))
   .pipe(gulp.dest('./dist'));
+});
 
-  gulp.src([
+gulp.task('cssmin', function () {
+
+  return gulp.src([
     "./src/control/*.css", "!./src/control/PirateMap.css",
     "./src/featureanimation/*.css", 
     "./src/filter/*.css",
@@ -102,6 +107,7 @@ gulp.task('css', function () {
     "./src/map/*.css",
     "./src/overlay/*.css", 
     "./src/style/*.css",
+    "./src/legend/*.css",
     "./src/util/*.css",
     "./src/utils/*.css"
     ])
@@ -111,17 +117,22 @@ gulp.task('css', function () {
   .pipe(gulp.dest('./dist'));
 });
 
+gulp.task('css', gulp.parallel('css0','cssmin'));
+
 // Build js
 gulp.task("js", function() {
-  gulp.src([
-    "!./src/util/getVectorContext.js", "./src/util/ext.js", "./src/util/*.js",
-    "./src/control/CanvasBase.js","./src/control/SelectBase.js","./src/control/Search.js","./src/control/SearchJSON.js","./src/control/SearchPhoton.js","./src/control/SearchGeoportail.js",
+  return gulp.src([
+    "./src/util/ext.js", "./src/util/*.js", "./src/util/SVGFilter/*.js",
+    "!./src/util/getVectorContext.js", 
+    "./src/ext/*.js",
+    "./src/legend/Legend.js","./src/legend/*.js",
+    "./src/control/CanvasBase.js","./src/control/SelectBase.js","./src/control/Button.js","./src/control/Toggle.js","./src/control/Search.js","./src/control/SearchJSON.js","./src/control/SearchPhoton.js","./src/control/SearchGeoportail.js",
     "./src/control/LayerSwitcher.js", "./src/control/*.js", 
     "!./src/control/PirateMap.js", "!./src/control/Cloud.js",
     "./src/featureanimation/FeatureAnimation.js", "./src/featureanimation/*.js",
     "./src/filter/Base.js", "./src/filter/Mask.js", "./src/filter/*.js",
-    "./src/format/*.js",
-    "./src/interaction/*.js",
+    "./src/format/GeoJSONX.js", "./src/format/*.js",
+    "./src/interaction/Clip.js", "./src/interaction/CurrentMap.js", "./src/interaction/*.js",
     "./src/source/*.js",
     "./src/layer/*.js",
     "./src/map/*.js",
@@ -149,11 +160,6 @@ gulp.task("js", function() {
   .on('end', function(){ console.log('\x1b[32m','\n>>> Terminated...','\x1b[0m')});
 });
 
-/* Watch for modification to recreate the dist */
-gulp.task('watch', function() {
-  gulp.watch(['./src/*/*.js','./src/*/*.css'], ['default']);
-});
-
 /* Start a server and watch for modification for live reload */
 gulp.task('serve', function() {
   var liveServer = require("live-server");
@@ -170,13 +176,14 @@ gulp.task('serve', function() {
   };
   liveServer.start(params);
 
-  gulp.watch(['./src/*/*.js','./src/*/*.css'], ['default']);
+  //return gulp.watch(['./src/*/*.js','./src/*/*.css'], gulp.series('default'));
+  return gulp.watch(['src/*/*', 'src/*/*/*'], gulp.series('default'));
 });
 
 
 // Build extra js files to be used individually
 gulp.task("extrajs", function() {
-  gulp.src([
+  return gulp.src([
     "./src/control/Cloud.js",
     "./src/style/FontMakiDef.js", "./src/style/FontMaki2Def.js", "./src/style/FontAwesomeDef.js",
     "./src/utils/*.js",
@@ -188,7 +195,7 @@ gulp.task("extrajs", function() {
 
 // Build files to be used individually
 gulp.task("lib", function() {
-  var src = ['control','featureanimation','filter','format','geom','interaction','layer','overlay','render','source','style','util','utils'];
+  var src = ['control','featureanimation','filter','format','geom','interaction','layer','overlay','render','source','style','util','utils','ext'];
   for (var i=0; i<src.length; i++) {
     gulp.src("./src/"+src[i]+"/*.js")
       .pipe(transform())
@@ -205,7 +212,7 @@ gulp.task("lib", function() {
  * for packaging
  */
 gulp.task ("prepublish", function(){
-  gulp.src(["./src/*/*.*"], { base: './src' })
+  return gulp.src(["./src/*/*.*"], { base: './src' })
     .pipe(gulp.dest('./'));
 });
 
@@ -214,7 +221,7 @@ gulp.task ("prepublish", function(){
  */
 gulp.task ("postpublish", function(){
   var clean = require('gulp-clean');
-  gulp.src([
+  return gulp.src([
       "./control",
       "./featureanimation",
       "./filter",
@@ -228,6 +235,7 @@ gulp.task ("postpublish", function(){
       "./render",
       "./source",
       "./style",
+      "./ext",
       "./util",
       "./utils"
     ])
@@ -238,8 +246,8 @@ gulp.task ("postpublish", function(){
 /** Build the doc */
 gulp.task('doc', function (cb) {
   var jsdoc = require('gulp-jsdoc3');
-    var config = require('./doc/jsdoc.json');
-    gulp.src([
+  var config = require('./doc/jsdoc.json');
+  return gulp.src([
     "doc/doc.md", "doc/namespace.js",
     "./dist/ol-ext.js"
     ], {read: false})
@@ -247,7 +255,7 @@ gulp.task('doc', function (cb) {
 });
 
 // build the dist
-gulp.task("dist", ["js","extrajs","css"]);
+gulp.task("dist", gulp.parallel("js","extrajs","css"));
 
 // The default task that will be run if no task is supplied
-gulp.task("default", ["js","extrajs","css"]);
+gulp.task("default", gulp.parallel("js","extrajs","css"));

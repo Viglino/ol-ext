@@ -1,0 +1,4 @@
+/* remove outline on focus */
+.mapboxgl-canvas:focus {
+  outline: none;
+}

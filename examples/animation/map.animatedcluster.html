@@ -20,6 +20,8 @@
 
   <!-- ol-ext -->
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
   <link rel="stylesheet" href="../style.css" />
 
@@ -173,6 +175,8 @@
     var selectCluster = new ol.interaction.SelectCluster({
       // Point radius: to calculate distance between the features
       pointRadius:7,
+      // circleMaxObjects: 40,
+      // spiral: false,
       animate: $("#animatesel").prop('checked'),
       // Feature style when it springs apart
       featureStyle: function(){

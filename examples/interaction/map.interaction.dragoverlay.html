@@ -23,7 +23,9 @@
 	
 	<!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
   <link rel="stylesheet" href="../style.css" />
 
@@ -60,7 +62,7 @@
 
 	<div class="info">
     <p>
-      <i>ol/interaction/Drag</i> is an interaction to drag an Overlay over the map.
+      <i>ol/interaction/DragOverlay</i> is an interaction to drag an Overlay over the map.
     </p>
 		<p>
       <b>NB</b>: the Overlay must be created with a <i>stopEvent</i> parameter set to 
@@ -69,8 +71,8 @@
       <b>NB2</b>: <i>ol/Overlay</i> are not intended to be used on large data sets.
     </p>
     <p>
-      It can be applied to an ol.Overlay, an <a href="../popup/map.popup.html">ol.Overlay.Popup</a>
-      or an <a href="../popup/map.placemark.html">ol.Overlay.Placemark</a>.
+      It can be applied to ol.Overlay, <a href="../popup/map.popup.html">ol.Overlay.Popup</a>
+      or <a href="../popup/map.placemark.html">ol.Overlay.Placemark</a>.
     </p>
     </div>
 

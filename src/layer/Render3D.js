@@ -25,6 +25,7 @@ ol_layer_Vector.prototype.setRender3D = function (r) {
  * @param {Object} param
  *  @param {ol.layer.Vector} param.layer the layer to display in 3D
  *  @param {ol.style.Style} options.style drawing style
+ *  @param {function|boolean} param.active a function that returns a boolean or a boolean ,default true
  *  @param {boolean} param.ghost use ghost style
  *  @param {number} param.maxResolution  max resolution to render 3D
  *  @param {number} param.defaultHeight default height if none is return by a propertie
@@ -39,6 +40,7 @@ var ol_render3D = function (options) {
 
   this.setStyle(options.style);
   this.set('ghost', options.ghost);
+  this.setActive(options.active || options.active!==false);
 
   this.height_ = options.height = this.getHfn (options.height);
   if (options.layer) this.setLayer(options.layer);
@@ -82,9 +84,31 @@ ol_render3D.prototype.getStyle = function() {
   return this._style;
 };
 
+/** Set active
+ * @param {function|boolean} active
+ */
+ol_render3D.prototype.setActive = function(active) {
+  if (typeof(active)==='function') {
+    this._active = active;
+  }
+  else {
+    this._active = function() { return active; };
+  }
+  if (this.layer_) this.layer_.changed();
+};
+
+/** Get active
+ * @return {boolean} 
+ */
+ol_render3D.prototype.getActive = function() {
+  return this._active();
+};
+
 /** Calculate 3D at potcompose
-*/
+ * @private
+ */
 ol_render3D.prototype.onPostcompose_ = function(e) {
+  if (!this.getActive()) return;
   var res = e.frameState.viewState.resolution;
   if (res > this.get('maxResolution')) return;
   this.res_ = res*400;
@@ -124,7 +148,8 @@ ol_render3D.prototype.onPostcompose_ = function(e) {
     ctx.fillStyle = ol_color_asString(s.getFill().getColor());
     var builds = [];
     for (var i=0; i<f.length; i++) {
-      builds.push (this.getFeature3D_ (f[i], this.getFeatureHeight(f[i])));
+      var h = this.getFeatureHeight(f[i])
+      if (h) builds.push (this.getFeature3D_ (f[i], h));
     }
     if (this.get('ghost')) this.drawGhost3D_ (ctx, builds);
     else this.drawFeature3D_ (ctx, builds);
@@ -132,7 +157,7 @@ ol_render3D.prototype.onPostcompose_ = function(e) {
 };
 
 /** Set layer to render 3D
-*/
+ */
 ol_render3D.prototype.setLayer = function(l) {
   if (this._listener) {
     this._listener.forEach( function(l) { 
@@ -144,9 +169,9 @@ ol_render3D.prototype.setLayer = function(l) {
 }
 
 /** Create a function that return height of a feature
-*	@param {function|string|number} h a height function or a popertie name or a fixed value
-*	@return {function} function(f) return height of the feature f
-*/
+ *	@param {function|string|number} h a height function or a popertie name or a fixed value
+ *	@return {function} function(f) return height of the feature f
+ */
 ol_render3D.prototype.getHfn= function(h) {
   switch (typeof(h)) {
     case 'function': return h;
@@ -179,8 +204,8 @@ ol_render3D.prototype.animate = function(options) {
 }
 
 /** Check if animation is on
-*	@return {bool}
-*/
+ *	@return {bool}
+ */
 ol_render3D.prototype.animating = function() {
   if (this.animate_ && new Date().getTime() - this.animate_ > this.animateDuration_) {
     this.animate_ = false;
@@ -188,8 +213,9 @@ ol_render3D.prototype.animating = function() {
   return !!this.animate_;
 }
 
-/** 
-*/
+/** Get feature height
+ * @param {ol.Feature} f
+ */
 ol_render3D.prototype.getFeatureHeight = function (f) {
   if (this.animate_) {
     var h1 = this.height_(f);
@@ -199,8 +225,9 @@ ol_render3D.prototype.getFeatureHeight = function (f) {
   else return this.height_(f);
 };
 
-/**
-*/
+/** Get elevation line
+ * @private
+ */
 ol_render3D.prototype.hvector_ = function (pt, h) {
   var p0 = [
     pt[0]*this.matrix_[0] + pt[1]*this.matrix_[1] + this.matrix_[4],
@@ -215,8 +242,9 @@ ol_render3D.prototype.hvector_ = function (pt, h) {
   };
 };
 
-/**
-*/
+/** Get drawing
+ * @private
+ */
 ol_render3D.prototype.getFeature3D_ = function (f, h) {
   var geom = this.get('geometry')(f);
   var c = geom.getCoordinates();
@@ -242,8 +270,11 @@ ol_render3D.prototype.getFeature3D_ = function (f, h) {
   }
 }
 
-/**
-*/
+/** Draw a feature
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {ol.Feature} build
+ * @private
+ */
 ol_render3D.prototype.drawFeature3D_ = function(ctx, build) {
   var i,j, b, k;
   // Construct
@@ -321,6 +352,9 @@ ol_render3D.prototype.drawFeature3D_ = function(ctx, build) {
   }
 };
 
+/**
+ * @private
+ */
 ol_render3D.prototype.drawGhost3D_ = function(ctx, build) {
   var i,j, b, k;
   // Construct

@@ -13,10 +13,13 @@ import ol_layer_Base from 'ol/layer/Base'
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Circle from 'ol/style/Circle'
 import ol_style_Stroke from 'ol/style/Stroke'
+import ol_layer_Vector from 'ol/layer/Vector'
+import ol_source_Vector from 'ol/source/Vector'
+
 import ol_render_getVectorContext from '../util/getVectorContext';
 
 /** Feature animation base class
- * Use the {@link _ol_Map_#animateFeature} or {@link _ol_layer_Vector_#animateFeature} to animate a feature
+ * Use the {@link ol.Map#animateFeature} or {@link ol.layer.Vector#animateFeature} to animate a feature
  * on postcompose in a map or a layer
 * @constructor
 * @fires animationstart
@@ -96,7 +99,7 @@ ol_featureAnimation.prototype.animate = function (/* e */) {
 
 /** An animation controler object an object to control animation with start, stop and isPlaying function.    
  * To be used with {@link olx.Map#animateFeature} or {@link ol.layer.Vector#animateFeature}
- * @typedef {Object} ol.animationControler
+ * @typedef {Object} animationControler
  * @property {function} start - start animation.
  * @property {function} stop - stop animation option arguments can be passed in animationend event.
  * @property {function} isPlaying - return true if animation is playing.
@@ -104,27 +107,27 @@ ol_featureAnimation.prototype.animate = function (/* e */) {
 
 /** Animate feature on a map
  * @function 
- * @fires animationstart, animationend
  * @param {ol.Feature} feature Feature to animate
  * @param {ol_featureAnimation|Array<ol_featureAnimation>} fanim the animation to play
- * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
+ * @return {animationControler} an object to control animation with start, stop and isPlaying function
  */
 ol_Map.prototype.animateFeature = function(feature, fanim) {
-  // Animate on last visible layer
-  function animLayer(layers) {
-    for (var l, i=layers.length-1; l=layers[i]; i--) {
-      if (l.getVisible()) {
-        if (l.getLayers) {
-          if (animLayer(l.getLayers().getArray())) return true;
-        } else {
-          l.animateFeature(feature, fanim);
-          return true;
-        }
-      }
-    }
-    return false;
+  // Get or create an animation layer associated with the map 
+  var layer = this._featureAnimationLayer;
+  if (!layer) {
+    layer = this._featureAnimationLayer = new ol_layer_Vector({ source: new ol_source_Vector() });
+    layer.setMap(this);
   }
-  animLayer(this.getLayers().getArray());
+  // Animate feature on this layer
+  layer.getSource().addFeature(feature);
+  var listener = fanim.on('animationend', function(e) {
+    if (e.feature===feature) {
+      // Remove feature on end
+      layer.getSource().removeFeature(feature);
+      ol_Observable_unByKey(listener);
+    }
+  });
+  layer.animateFeature(feature, fanim);
 };
 
 /** Animate feature on a vector layer 
@@ -132,7 +135,7 @@ ol_Map.prototype.animateFeature = function(feature, fanim) {
  * @param {ol.Feature} feature Feature to animate
  * @param {ol_featureAnimation|Array<ol_featureAnimation>} fanim the animation to play
  * @param {boolean} useFilter use the filters of the layer
- * @return {olx.animationControler} an object to control animation with start, stop and isPlaying function
+ * @return {animationControler} an object to control animation with start, stop and isPlaying function
  */
 ol_layer_Base.prototype.animateFeature = function(feature, fanim, useFilter) {
   var self = this;

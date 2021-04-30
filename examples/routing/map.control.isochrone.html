@@ -29,6 +29,8 @@
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
   <!-- jsts for buffer -->
   <script src="https://unpkg.com/jsts@2.0.2/dist/jsts.min.js"></script>
@@ -62,7 +64,7 @@
     <div style="text-align: center">
       <b>In partnership with:</b><br/>
       <a href="https://www.geoportail.gouv.fr/"><img src="https://www.geoportail.gouv.fr/assets/images/logo-geoportail.svg" alt="Geoportail"></a>
-      <a href="http://ign.fr"><img src="https://upload.wikimedia.org/wikipedia/fr/thumb/a/a0/IGN_logo_2012.svg/545px-IGN_logo_2012.svg.png" alt="IGN" class="jsx-3503728609 logo"></a>
+      <a href="http://ign.fr"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a0/IGN_logo_2012.svg" alt="IGN" class="jsx-3503728609 logo"></a>
     </div>	
     <ul>
       <li>
@@ -88,7 +90,7 @@
   
 <script type="text/javascript">
   // Layers
-  var layers = [ new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }) ];
+  var layers = [ new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' }) ];
 
   // The map
   var map = new ol.Map ({

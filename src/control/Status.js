@@ -10,6 +10,7 @@ import ol_ext_element from '../util/element'
  *	@param {String} options.className class of the control
  *  @param {string} options.status status, default none
  *  @param {string} options.position position of the status 'top', 'left', 'bottom' or 'right', default top
+ *  @param {boolean} options.visible default true
  */
 var ol_control_Status = function(options) {
   options = options || {};
@@ -26,10 +27,19 @@ var ol_control_Status = function(options) {
     target: options.target
   });
 
+  this.setVisible(options.visible!==false);
   if (options.position) this.setPosition(options.position);
   this.status(options.status || '');
 };
 ol_ext_inherits(ol_control_Status, ol_control_Control);
+
+/** Set visiblitity 
+ * @param {boolean} visible
+ */
+ol_control_Status.prototype.setVisible = function(visible) {
+  if (visible) this.element.classList.add ('ol-visible');
+  else this.element.classList.remove('ol-visible');
+};
 
 /** Show status on the map
  * @param {string|Element} html status text or DOM element

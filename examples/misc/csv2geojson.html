@@ -24,6 +24,8 @@
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
   <!-- exif2geojson -->
   <link rel="stylesheet" href="../style.css" />
@@ -55,6 +57,7 @@
       float:left;
       font-size: 5em;
       width:40%;
+      line-height: 1em;
     }
     .globe .fa {
       vertical-align: middle;
@@ -76,7 +79,7 @@
       padding:1em 3.5em;
       text-align:center;
       box-sizing: border-box;
-      margin: 0 3em 1em -3em;
+      margin: .5em 3em 1em -3em;
       font-weight: bold;
     }
     #dropfile.hover{
@@ -109,6 +112,23 @@
       padding:0.5em;
       height:1em;
     }
+    label.radio {
+      display: inline-flex;
+    }
+    #lonlat, #geom {
+      float: left;
+      margin: .3em 1em 1em 0;
+    }
+    #lonlat ~ div,
+    #geom ~ div {
+      opacity: .5;
+      pointer-events: none;
+    }
+    #lonlat:checked ~ .lonlat,
+    #geom:checked ~ .geom {
+      opacity: 1;
+      pointer-events: all;
+    }
     .info > button {
       float: right;
       background: #887;
@@ -135,6 +155,26 @@
       color: #800;
       padding: 0 1em;
     }
+    @media (max-height: 450px) {
+      body {
+        margin: 0 auto;
+      }
+      .globe {
+        font-size: 3em;
+      }
+      #dropfile {
+        margin: 0 3em 0 -3em;
+        padding: .5em;
+      }
+      .info {
+        margin: 0;
+        padding: .3em 2em;
+      }
+      .loading {
+        margin: 0;
+        padding: .1em .5em;
+      }
+    }
   </style>
 
 </head>
@@ -160,9 +200,24 @@
   <div class="info">
 
     <div id="pbar"><div></div></div>
-    <label class='lon'>longitude: <select></select></label>
+    <label class="radio">
+      <input id="lonlat" name="geom" type="radio" checked="checked" />
+      <div class="lonlat">
+        <label class='lon'>longitude: <select></select></label>
+        <br/>
+        <label class='lat'>latitude: <select></select></label>
+      </div>
+    </label>
     <br/>
-    <label class='lat'>latitude: <select></select></label>
+    <label class="radio">
+      <input id="geom" name="geom" type="radio" />
+      <div class="geom">
+        <label class='type'>type: <select></select></label>
+        <br/>
+        <label class='geometry'>geometry: <select></select></label>
+      </div>
+    </label>
+
     <button onclick="download()"><i class="fa fa-download"></i> Download</button>
     <div class="loading"></div>
 
@@ -178,19 +233,36 @@
         type: 'FeatureCollection',
         features: []
       };
+      var point = $("#lonlat").prop("checked");
       var lon = $('label.lon select').val();
       var lat = $('label.lat select').val();
-      result.data.forEach(function (d) {
-        var f = {
-          type: 'Feature',
-          geometry: {
-            coordinates: [ parseFloat(d[lon]), parseFloat(d[lat])],
-            type: 'Point'
-          },
-          properties: d
-        }
-        json.features.push(f);
-      });
+      var type = $('label.type select').val();
+      var geom = $('label.geometry select').val();
+      try {
+        result.data.forEach(function (d) {
+          var f = {
+            type: 'Feature',
+            properties: $.extend({},d)
+          }
+          if (point)  {
+            delete f.properties[lon];
+            delete f.properties[lat];
+            f.geometry = {
+              type: 'Point',
+              coordinates: [ parseFloat(d[lon]), parseFloat(d[lat])]
+            };
+          } else {
+            delete f.properties[type];
+            delete f.properties[geom];
+            f.geometry = {
+              type: d[type],
+              coordinates: JSON.parse(d[geom])
+            };
+          }
+          json.features.push(f);
+        });
+      } catch(e) {}
+      console.log(json)
       var res = JSON.stringify(json, null, ' ');
       if (res.length>5000) {
         $('textarea').html(res.substr(0,5000)+'\n...');
@@ -213,20 +285,27 @@
       return false;
     });
 
-    $('label.lon select').on('change', function() {
+    function showLonlat()  {
       if ($('label.lon select').val() && $('label.lat select').val()) {
         $('button').show();
         getGeoJSON();
       }
       else $('button').hide();
-    });
-    $('label.lat select').on('change', function() {
-      if ($('label.lon select').val() && $('label.lat select').val()) {
+    }
+    $('#lonlat').on('click', showGeom);
+    $('label.lon select').on('change', showLonlat);
+    $('label.lat select').on('change', showLonlat);
+    
+    function showGeom() {
+      if ($('label.type select').val() && $('label.geometry select').val()) {
         $('button').show();
         getGeoJSON();
       }
       else $('button').hide();
-    });
+    }
+    $('#geom').on('click', showGeom);
+    $('label.type select').on('change', showGeom);
+    $('label.geometry select').on('change', showGeom);
 
     $(document).on('drop', function (e) {
       if (e.originalEvent.dataTransfer) {
@@ -245,9 +324,13 @@
               result = results;
               $('label.lon select').html('');
               $('label.lat select').html('');
+              $('label.type select').html('');
+              $('label.geometry select').html('');
               results.meta.fields.forEach(function(att, i) {
-                $('<option>').val(att).text(att).prop('selected',/^long?$|longitude/.test(att)).appendTo($('label.lon select'));
-                $('<option>').val(att).text(att).prop('selected',/^lat$|latitude/.test(att)).appendTo($('label.lat select'));
+                $('<option>').val(att).text(att).prop('selected',/^long?$|longitude/i.test(att)).appendTo($('label.lon select'));
+                $('<option>').val(att).text(att).prop('selected',/^lat$|latitude/i.test(att)).appendTo($('label.lat select'));
+                $('<option>').val(att).text(att).prop('selected',/^type$/i.test(att)).appendTo($('label.type select'));
+                $('<option>').val(att).text(att).prop('selected',/^geom|^coord/i.test(att)).appendTo($('label.geometry select'));
               });
               $(".loading").html("");
               $('label.lon select').change();

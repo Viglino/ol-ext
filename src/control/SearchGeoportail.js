@@ -4,7 +4,8 @@
 */
 import ol_ext_inherits from '../util/ext'
 import {transform as ol_proj_transform} from 'ol/proj'
-import ol_control_SearchJSON from './SearchJSON';
+import ol_control_Search from './Search'
+import ol_control_SearchJSON from './SearchJSON'
 
 /**
  * Search places using the French National Base Address (BAN) API.
@@ -14,7 +15,7 @@ import ol_control_SearchJSON from './SearchJSON';
  * @fires select
  * @param {any} options extend ol.control.SearchJSON options
  *	@param {string} options.className control class name
- *	@param {boolean | undefined} options.apiKey the service api key.
+ *	@param {string | undefined} options.apiKey the service api key.
  *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
@@ -35,7 +36,7 @@ var ol_control_SearchGeoportail = function(options) {
   options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
   ol_control_SearchJSON.call(this, options);
   this.set('type', options.type || 'StreetAddress,PositionOfInterest');
-
+  this.set('timeout', options.timeout || 2000);
   // Authentication
   // this._auth = options.authentication;
 };
@@ -43,13 +44,20 @@ ol_ext_inherits(ol_control_SearchGeoportail, ol_control_SearchJSON);
 
 /** Reverse geocode
  * @param {ol.coordinate} coord
+ * @param {function|*} options callback function called when revers located or options passed to the select event
  * @api
  */
-ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, cback) {
+ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, options) {
+  var lonlat = ol_proj_transform(coord, this.getMap().getView().getProjection(), 'EPSG:4326');
+  this._handleSelect({ 
+    x: lonlat[0], 
+    y: lonlat[1], 
+    fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) 
+  }, true, options);
+
   // Search type
   var type = this.get('type')==='Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress';
-  type = 'StreetAddress';
-  var lonlat = ol_proj_transform(coord, this.getMap().getView().getProjection(), 'EPSG:4326');
+  if (/,/.test(type)) type = 'StreetAddress';
   // request
   var request = '<?xml version="1.0" encoding="UTF-8"?>'
     +'<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
@@ -66,12 +74,14 @@ ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, cback) {
   this.ajax (this.get('url').replace('ols/apis/completion','geoportail/ols'), 
     { xls: request },
     function(xml) {
-      if (xml) {
+      var f = {};
+      if (!xml) {
+        f = { x: lonlat[0], y: lonlat[1], fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) }
+      } else {
         xml = xml.replace(/\n|\r/g,'');
         var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
-        var f = {};
         if (!Number(p[1]) && !Number(p[0])) {
-          f = { x: lonlat[0], y: lonlat[1], fulltext: String(lonlat) }
+          f = { x: lonlat[0], y: lonlat[1], fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) }
         } else {
           f.x = lonlat[0];
           f.y = lonlat[1];
@@ -91,16 +101,19 @@ ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, cback) {
             f.fulltext = f.zipcode+' '+f.city;
           }
         }
-        if (cback) {
-          cback.call(this, [f]);
-        } else {
-          this._handleSelect(f, true);
-          // this.setInput('', true);
-          // this.drawList_();
-        }
       }
-    }.bind(this),
-    { dataType: 'XML' }
+      if (typeof(options)==='function') {
+        options.call(this, [f]);
+      } else {
+        this.getHistory().shift();
+        this._handleSelect(f, true, options);
+        // this.setInput('', true);
+        // this.drawList_();
+      }
+    }.bind(this), {
+      timeout: this.get('timeout'),
+      dataType: 'XML'
+    }
   );
 };
 
@@ -110,8 +123,7 @@ ol_control_SearchGeoportail.prototype.reverseGeocode = function (coord, cback) {
  *	@api
  */
 ol_control_SearchGeoportail.prototype.getTitle = function (f) {
-  var title = f.fulltext;
-  return (title);
+  return (f.fulltext);
 };
 
 /** 
@@ -147,10 +159,13 @@ ol_control_SearchGeoportail.prototype.handleResponse = function (response) {
 };
 
 /** A ligne has been clicked in the menu > dispatch event
- *	@param {any} f the feature, as passed in the autocomplete
+ * @param {any} f the feature, as passed in the autocomplete
+ * @param {boolean} reverse true if reverse geocode
+ * @param {ol.coordinate} coord
+ * @param {*} options options passed to the event
  *	@api
  */
-ol_control_SearchGeoportail.prototype.select = function (f){
+ol_control_SearchGeoportail.prototype.select = function (f, reverse, coord, options){
   if (f.x || f.y) {
     var c = [Number(f.x), Number(f.y)];
     // Add coordinate to the event
@@ -160,10 +175,12 @@ ol_control_SearchGeoportail.prototype.select = function (f){
     // Get insee commune ?
     if (this.get('type')==='Commune') {
       this.searchCommune(f, function () {
-        this.dispatchEvent({ type:"select", search:f, coordinate: c });
+        ol_control_Search.prototype.select.call(this, f, reverse, c, options);
+        //this.dispatchEvent({ type:"select", search:f, coordinate: c, revers: reverse, options: options });
       });
     } else {
-      this.dispatchEvent({ type:"select", search:f, coordinate: c });
+        ol_control_Search.prototype.select.call(this, f, reverse, c, options);
+        //this.dispatchEvent({ type:"select", search:f, coordinate: c, revers: reverse, options: options });
     }
   } else {
     this.searchCommune(f);

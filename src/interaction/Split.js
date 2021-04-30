@@ -148,17 +148,24 @@ ol_interaction_Split.prototype.setMap = function(map) {
  * @private
  */
 ol_interaction_Split.prototype.getClosestFeature = function(e) {
-  var f, c, g, d = this.snapDistance_+1;
-  for (var i=0; i<this.sources_.length; i++) {
-    var source = this.sources_[i];
-    f = source.getClosestFeatureToCoordinate(e.coordinate);
-    if (f && f.getGeometry().splitAt) {
-      c = f.getGeometry().getClosestPoint(e.coordinate);
-      g = new ol_geom_LineString([e.coordinate,c]);
-      d = g.getLength() / e.frameState.viewState.resolution;
-      break;
+  var source, f, c, g, d = this.snapDistance_+1;
+  // Look for closest point in the sources
+  this.sources_.forEach(function(si) {
+    var fi = si.getClosestFeatureToCoordinate(e.coordinate);
+    if (fi && fi.getGeometry().splitAt) {
+      var ci = fi.getGeometry().getClosestPoint(e.coordinate);
+      var gi = new ol_geom_LineString([e.coordinate,ci]);
+      var di = gi.getLength() / e.frameState.viewState.resolution;
+      if (di < d) {
+        source = si;
+        d = di;
+        f = fi;
+        g = gi;
+        c = ci;
+      }
     }
-  }
+  });
+  // Snap ?
   if (d > this.snapDistance_) {
     return false;
   } else {

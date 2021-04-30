@@ -2,6 +2,8 @@ import ol_ext_inherits from '../util/ext'
 import ol_control_Control from 'ol/control/Control'
 import ol_ext_element from '../util/element'
 import {fromLonLat as ol_proj_fromLonLat} from 'ol/proj'
+// Add flyTo
+import '../util/View'
 
 /** A control with scroll-driven navigation to create narrative maps
  *
@@ -28,8 +30,7 @@ var ol_control_Storymap = function(options) {
   // New element
   var element = ol_ext_element.create('DIV', {
     className: (options.className || '') + ' ol-storymap'
-      + (options.target ? '': ' ol-unselectable ol-control')
-      + ('ontouchstart' in window ? ' ol-touch' : ''),
+      + (options.target ? '': ' ol-unselectable ol-control'),
     html: options.html
   });
   element.querySelectorAll('.chapter').forEach(function(c) {
@@ -142,18 +143,10 @@ var ol_control_Storymap = function(options) {
       view.cancelAnimations();
       switch (currentDiv.getAttribute('data-animation')) {
         case 'flyto': {
-          // Fly to destination
-          var duration = 2000;
-          view.animate ({
+          view.flyTo({
             center: e.coordinate,
-            duration: duration
-          });
-          view.animate ({
-            zoom: Math.min(view.getZoom(), e.zoom)-1,
-            duration: duration/2
-          },{
-            zoom: e.zoom,
-            duration: duration/2
+            zoomAt: Math.min(view.getZoom(), e.zoom)-1,
+            zoom: e.zoom
           });
           break;
         }

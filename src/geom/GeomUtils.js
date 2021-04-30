@@ -5,7 +5,16 @@
   Usefull function to handle geometric operations
 */
 
+import ol_geom_LineString from 'ol/geom/LineString'
+import ol_geom_LinearRing from 'ol/geom/LinearRing'
+import ol_geom_MultiLineString from 'ol/geom/MultiLineString'
+import ol_geom_MultiPoint from 'ol/geom/MultiPoint'
+import ol_geom_MultiPolygon from 'ol/geom/MultiPolygon'
+import ol_geom_Point from 'ol/geom/Point'
+import ol_geom_Polygon from 'ol/geom/Polygon'
+import ol_geom_Circle from 'ol/geom/Circle'
 import {getCenter as ol_extent_getCenter} from 'ol/extent'
+import {buffer as ol_extent_buffer} from 'ol/extent'
 
 /** Distance beetween 2 points
  *	Usefull geometric functions
@@ -46,8 +55,8 @@ var ol_coordinate_getGeomCenter = function(geom) {
     case 'Point': 
       return geom.getCoordinates();
     case "MultiPolygon":
-            geom = geom.getPolygon(0);
-            // fallthrough
+      geom = geom.getPolygon(0);
+      // fallthrough
     case "Polygon":
       return geom.getInteriorPoint().getCoordinates();
     default:
@@ -181,14 +190,6 @@ var ol_coordinate_splitH = function (geom, y, n) {
   return result;
 };
 
-import ol_geom_LineString from 'ol/geom/LineString'
-import ol_geom_LinearRing from 'ol/geom/LinearRing'
-import ol_geom_MultiLineString from 'ol/geom/MultiLineString'
-import ol_geom_MultiPoint from 'ol/geom/MultiPoint'
-import ol_geom_MultiPolygon from 'ol/geom/MultiPolygon'
-import ol_geom_Point from 'ol/geom/Point'
-import ol_geom_Polygon from 'ol/geom/Polygon'
-
 /** Create a geometry given a type and coordinates */
 var ol_geom_createFromType = function (type, coordinates) {
   switch (type) {
@@ -227,3 +228,186 @@ var ol_coordinate_getIntersectionPoint = function (d1, d2) {
 };
 
 export { ol_coordinate_getIntersectionPoint }
+
+var ol_extent_intersection;
+
+(function() {
+// Split at x
+function splitX(pts, x) {
+  var pt;
+  for (let i=pts.length-1; i>0; i--) {
+    if ((pts[i][0]>x && pts[i-1][0]<x) || (pts[i][0]<x && pts[i-1][0]>x)) {
+      pt = [ x, (x - pts[i][0]) / (pts[i-1][0]-pts[i][0]) * (pts[i-1][1]-pts[i][1]) + pts[i][1]];
+      pts.splice(i, 0, pt);
+    }
+  }
+}
+// Split at y
+function splitY(pts, y) {
+  var pt;
+  for (let i=pts.length-1; i>0; i--) {
+    if ((pts[i][1]>y && pts[i-1][1]<y) || (pts[i][1]<y && pts[i-1][1]>y)) {
+      pt = [ (y - pts[i][1]) / (pts[i-1][1]-pts[i][1]) * (pts[i-1][0]-pts[i][0]) + pts[i][0], y];
+      pts.splice(i, 0, pt);
+    }
+  }
+}
+
+/** Fast polygon intersection with an extent (used for area calculation)
+ * @param {ol_extent_Extent} extent
+ * @param {ol_geom_Polygon|ol_geom_MultiPolygon} polygon
+ * @returns {ol_geom_Polygon|ol_geom_MultiPolygon|null} return null if not a polygon geometry
+ */
+ol_extent_intersection = function(extent, polygon) {
+  var poly = (polygon.getType() === 'Polygon');
+  if (!poly && polygon.getType() !== 'MultiPolygon') return null;
+  var geom = polygon.getCoordinates();
+  if (poly) geom = [geom];
+  geom.forEach(function(g) {
+    g.forEach(function(c) {
+      splitX(c, extent[0]);
+      splitX(c, extent[2]);
+      splitY(c, extent[1]);
+      splitY(c, extent[3]);
+    });
+  })
+  // Snap geom to the extent 
+  geom.forEach(function(g) {
+    g.forEach(function(c) {
+      c.forEach(function(p) {
+        if (p[0]<extent[0]) p[0] = extent[0];
+        else if (p[0]>extent[2]) p[0] = extent[2];
+        if (p[1]<extent[1]) p[1] = extent[1];
+        else if (p[1]>extent[3]) p[1] = extent[3];
+      })
+    })
+  })
+  if (poly) {
+    return new ol_geom_Polygon(geom[0]);
+  } else {
+    return new ol_geom_MultiPolygon(geom);
+  }
+};
+})();
+
+export {ol_extent_intersection}
+
+/** Add points along a segment
+ * @param {ol_Coordinate} p1 
+ * @param {ol_Coordinate} p2 
+ * @param {number} d 
+ * @param {boolean} start include starting point, default true
+ * @returns {Array<ol_Coordinate>}
+ */
+var ol_coordinate_sampleAt = function(p1, p2, d, start) {
+  var pts = [];
+  if (start!==false) pts.push(p1);
+  var dl = ol_coordinate_dist2d(p1,p2);
+  if (dl) {
+    var nb = Math.round(dl/d);
+    if (nb>1) {
+      var dx = (p2[0]-p1[0]) / nb;
+      var dy = (p2[1]-p1[1]) / nb;
+      for (var i=1; i<nb; i++) {
+        pts.push([p1[0] + dx*i, p1[1] + dy*i])
+      }
+    }
+  }
+  pts.push(p2);
+  return pts;
+};
+export { ol_coordinate_sampleAt }
+
+/** Sample a Polygon at a distance
+ * @param {number} d
+ * @returns {ol_geom_Polygon}
+ */
+ol_geom_Polygon.prototype.sampleAt = function(res) {
+  var poly = this.getCoordinates();
+  var result = [];
+  poly.forEach(function(p) {
+    var l = [];
+    for (var i=1; i<p.length; i++) {
+      l = l.concat(ol_coordinate_sampleAt(p[i-1], p[i], res, i===1));
+    }
+    result.push(l);
+  })
+  return new ol_geom_Polygon(result);
+};
+
+/** Sample a MultiPolygon at a distance
+ * @param {number} res
+ * @returns {ol_geom_MultiPolygon}
+ */
+ol_geom_MultiPolygon.prototype.sampleAt = function(res) {
+  var mpoly = this.getCoordinates();
+  var result = [];
+  mpoly.forEach(function(poly) {
+    var a = [];
+    result.push(a);
+    poly.forEach(function(p) {
+      var l = [];
+      for (var i=1; i<p.length; i++) {
+        l = l.concat(ol_coordinate_sampleAt(p[i-1], p[i], res, i===1));
+      }
+      a.push(l);
+    })
+  });
+  return new ol_geom_MultiPolygon(result);
+};
+
+/** Intersect a geometry using a circle
+ * @param {ol_geom_Geometry} geom
+ * @param {number} resolution circle resolution to sample the polygon on the circle, default 1
+ * @returns {ol_geom_Geometry}
+ */
+ol_geom_Circle.prototype.intersection = function(geom, resolution) {
+  if (geom.sampleAt) {
+    var ext = ol_extent_buffer(this.getCenter().concat(this.getCenter()), this.getRadius());
+    geom = ol_extent_intersection(ext, geom);
+    geom = geom.simplify(resolution);
+    var c = this.getCenter();
+    var r = this.getRadius();
+    //var res = (resolution||1) * r / 100;
+    var g = geom.sampleAt(resolution).getCoordinates();
+    switch (geom.getType()) {
+      case 'Polygon': g = [g];
+        // fallthrough
+      case 'MultiPolygon': {
+        var hasout = false;
+        // var hasin = false;
+        var result = [];
+        g.forEach(function(poly) {
+          var a = [];
+          result.push(a);
+          poly.forEach(function(ring) {
+            var l = [];
+            a.push(l);
+            ring.forEach(function(p) {
+              var d = ol_coordinate_dist2d(c, p);
+              if (d > r) {
+                hasout = true;
+                l.push([
+                  c[0] + r / d * (p[0]-c[0]),
+                  c[1] + r / d * (p[1]-c[1])
+                ]);
+              } else {
+                // hasin = true;
+                l.push(p);
+              }
+            });
+          })
+        });
+        if (!hasout) return geom;
+        if (geom.getType() === 'Polygon') {
+          return new ol_geom_Polygon(result[0]);
+        } else {
+          return new ol_geom_MultiPolygon(result);
+        }
+      }
+    }
+  } else {
+    console.warn('[ol/geom/Circle~intersection] Unsupported geometry type: '+geom.getType());
+  }
+  return geom;
+};

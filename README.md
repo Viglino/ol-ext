@@ -1,6 +1,11 @@
 # ol-ext
 *Cool extensions for [OpenLayers](https://github.com/openlayers/openlayers) (ol)*.
 
+[![](https://img.shields.io/npm/v/ol-ext.svg)](https://www.npmjs.com/package/ol-ext)
+![](https://img.shields.io/npm/dt/ol-ext.svg)
+![](https://img.shields.io/npm/dw/ol-ext)
+![](https://img.shields.io/npm/l/ol-ext.svg)
+
 [ol-ext](https://github.com/Viglino/ol-ext) is a set of extensions, controls, interactions, popup to use with Openlayers.    
 [View live examples online](http://viglino.github.io/ol-ext/) or the [API documentation](http://viglino.github.io/ol-ext/doc/doc-pages/).
 
@@ -18,28 +23,7 @@ search,
 animations,
 undo/redo mechanisms
 
-> [
-![Font style](img/map.style.font.jpg?raw=true)
-![Charts](img/map.style.chart.jpg?raw=true)
-![](img/map.style.pattern.jpg?raw=true)
-![](img/map.style.photo.jpg?raw=true)
-![](img/map.style.textpath.jpg?raw=true)
-![](img/map.filter.colorize.jpg?raw=true)
-![](img/map.control.compass.jpg?raw=true)
-![](img/map.control.graticule.jpg?raw=true)
-![](img/map.interaction.transform.jpg?raw=true)
-![](img/map.control.editbar.jpg?raw=true)
-![](img/map.switcher.image.jpg?raw=true)
-![](img/map.control.profil.jpg?raw=true)
-![](img/map.control.swipe.jpg?raw=true)
-![](img/map.popup.anim.jpg?raw=true)
-![](img/map.layer.hexbin.jpg?raw=true)
-![](img/map.geom.cspline.jpg?raw=true)
-![](img/map.cluster.convexhull.jpg?raw=true)
-![](img/map.overlay.magnify.jpg?raw=true)
-![](img/map.filter.lego.jpg?raw=true)
-![](img/map.interaction.synchronize.jpg?raw=true)
-](http://viglino.github.io/ol-ext/)
+![](http://viglino.github.io/ol-ext/img/ol-ext.jpg)
 
 ## Getting Started
 
@@ -108,7 +92,7 @@ Please use the [GitHub issue tracker](https://github.com/Viglino/ol-ext/issues) 
 ## License
 
 ol-ext is licensed under the French Opensource **BSD** compatible CeCILL-B FREE SOFTWARE LICENSE.  
- (c) 2016-2019 - Jean-Marc Viglino
+ (c) 2016-20 - Jean-Marc Viglino
 
 Some resources (mapping services and API) used in this sofware may have a specific license.  
 You must check before use.

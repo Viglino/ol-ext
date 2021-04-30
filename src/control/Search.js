@@ -21,10 +21,11 @@ import ol_ext_element from '../util/element'
  * @param {Object=} options
  *  @param {string} options.className control class name
  *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *  @param {string | undefined} options.label Text label to use for the search button, default "search"
+ *  @param {string | undefined} options.title Title to use for the search button tooltip, default "Search"
  *  @param {string | undefined} options.placeholder placeholder, default "Search..."
  *  @param {boolean | undefined} options.reverse enable reverse geocoding, default false
  *  @param {string | undefined} options.inputLabel label for the input, default none
+ *  @param {string | undefined} options.collapsed search is collapsed on start, default true
  *  @param {string | undefined} options.noCollapse prevent collapsing on input blur, default false
  *  @param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
  *  @param {integer | undefined} options.minLength minimum length to start searching, default 1
@@ -32,6 +33,9 @@ import ol_ext_element from '../util/element'
  *  @param {integer | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
  *  @param {function} options.getTitle a function that takes a feature and return the name to display in the index.
  *  @param {function} options.autocomplete a function that take a search string and callback function to send an array
+ *  @param {function} options.onselect a function called when a search is selected
+ *  @param {boolean} options.centerOnSelect center map on search, default false
+ *  @param {number|boolean} options.zoomOnSelect center map on search and zoom to value if zoom < value, default false
  */
 var ol_control_Search = function(options) {
   var self = this;
@@ -42,21 +46,22 @@ var ol_control_Search = function(options) {
   this._classname = options.className || 'search';
 
   var classNames = (options.className||'')+ ' ol-search'
-    + (options.target ? '' : ' ol-unselectable ol-control ol-collapsed');
+    + (options.target ? '' : ' ol-unselectable ol-control');
   var element = ol_ext_element.create('DIV',{
-    className: classNames + ' ol-collapsed'
+    className: classNames 
   })
+  if (options.collapsed!==false) element.classList.add('ol-collapsed');
   if (!options.target) {
-    this.button = document.createElement("BUTTON");
-    this.button.setAttribute("type", "button");
-    this.button.setAttribute("title", options.label||"search");
-    this.button.addEventListener("click", function() {
-      element.classList.toggle("ol-collapsed");
-      if (!element.classList.contains("ol-collapsed")) {
-        element.querySelector("input.search").focus();
-        var listElements = element.querySelectorAll("li");
+    this.button = document.createElement('BUTTON');
+    this.button.setAttribute('type', 'button');
+    this.button.setAttribute('title', options.title || options.label || 'Search');
+    this.button.addEventListener('click', function() {
+      element.classList.toggle('ol-collapsed');
+      if (!element.classList.contains('ol-collapsed')) {
+        element.querySelector('input.search').focus();
+        var listElements = element.querySelectorAll('li');
         for (var i = 0; i < listElements.length; i++) {
-          listElements[i].classList.remove("select");
+          listElements[i].classList.remove('select');
         }
         // Display history
         if (!input.value) {
@@ -117,8 +122,9 @@ var ol_control_Search = function(options) {
       if (cur) {
         // prevent searching on each typing
         if (tout) clearTimeout(tout);
+        var minLength = self.get("minLength");
         tout = setTimeout(function() {
-          if (cur.length >= self.get("minLength")) {
+          if (cur.length >= minLength) {
             var s = self.autocomplete (cur, function(auto) { self.drawList_(auto); });
             if (s) self.drawList_(s);
           }
@@ -159,7 +165,7 @@ var ol_control_Search = function(options) {
   // Reverse geocode
   if (options.reverse) {
     var reverse = ol_ext_element.create('BUTTON', {
-      tyoe: 'button',
+      type: 'button',
       class: 'ol-revers',
       title: 'click on the map',
       click: function() {
@@ -192,6 +198,25 @@ var ol_control_Search = function(options) {
   this.set('minLength', options.minLength || 1);
   this.set('maxItems', options.maxItems || 10);
   this.set('maxHistory', options.maxHistory || options.maxItems || 10);
+
+  // Select
+  if (options.onselect) this.on('select', options.onselect);
+  // Center on select
+  if (options.centerOnSelect) this.on('select', function(e) {
+    var map = this.getMap();
+    if (map) {
+      map.getView().setCenter(e.coordinate);
+    }
+  }.bind(this));
+  // Zoom on select
+  if (options.zoomOnSelect) this.on('select', function(e) {
+    var map = this.getMap();
+    if (map) {
+      map.getView().setCenter(e.coordinate);
+      if (map.getView().getZoom() < options.zoomOnSelect) map.getView().setZoom(options.zoomOnSelect);
+    }
+  }.bind(this));
+
   // History
   this.restoreHistory();
   this.drawList_();
@@ -216,6 +241,15 @@ ol_control_Search.prototype.setMap = function (map) {
 	}
 };
 
+/** Collapse the search
+ * @param {boolean} [b=true]
+ * @api
+ */
+ol_control_Search.prototype.collapse = function (b) {
+  if (b===false) this.element.classList.remove('ol-collapsed')
+  else this.element.classList.add('ol-collapsed')
+};
+
 /** Get the input field
 *	@return {Element} 
 *	@api
@@ -225,12 +259,24 @@ ol_control_Search.prototype.getInputField = function () {
 };
 
 /** Returns the text to be displayed in the menu
-*	@param {any} f feature to be displayed
-*	@return {string} the text to be displayed in the index, default f.name
-*	@api
-*/
+ *	@param {any} f feature to be displayed
+ *	@return {string} the text to be displayed in the index, default f.name
+ *	@api
+ */
 ol_control_Search.prototype.getTitle = function (f) {
   return f.name || "No title";
+};
+
+
+/** Returns title as text
+ *	@param {any} f feature to be displayed
+ *	@return {string} 
+ *	@api
+ */
+ol_control_Search.prototype._getTitleTxt = function (f) {
+  return ol_ext_element.create('DIV', {
+    html: this.getTitle(f)
+  }).innerText;
 };
 
 /** Force search to refresh
@@ -281,21 +327,31 @@ ol_control_Search.prototype.setInput = function (value, search) {
   if (search) this._triggerCustomEvent("keyup", input);
 };
 
-/** A ligne has been clicked in the menu > dispatch event
-*	@param {any} f the feature, as passed in the autocomplete
-*	@api * @param {boolean} reverse true if reverse geocode
-*/
-ol_control_Search.prototype.select = function (f, reverse) {
-  this.dispatchEvent({ type:"select", search:f, reverse: !!reverse });
+/** A line has been clicked in the menu > dispatch event
+ * @param {any} f the feature, as passed in the autocomplete
+ * @param {boolean} reverse true if reverse geocode
+ * @param {ol.coordinate} coord
+ * @param {*} options options passed to the event
+ *	@api
+ */
+ol_control_Search.prototype.select = function (f, reverse, coord, options) {
+  var event = { type:"select", search:f, reverse: !!reverse, coordinate: coord };
+  if (options) {
+    for (var i in options) {
+      event[i] = options[i];
+    }
+  }
+  this.dispatchEvent(event);
 };
 
 /**
  * Save history and select
  * @param {*} f 
  * @param {boolean} reverse true if reverse geocode
+ * @param {*} options options send in the event 
  * @private
  */
-ol_control_Search.prototype._handleSelect = function (f, reverse) {
+ol_control_Search.prototype._handleSelect = function (f, reverse, options) {
   if (!f) return;
   // Save input in history
   var hist = this.get('history');
@@ -316,13 +372,18 @@ ol_control_Search.prototype._handleSelect = function (f, reverse) {
     }
   }
   hist.unshift(f);
-  while (hist.length > (this.get('maxHistory')||10)) {
+  var size = Math.max(0, this.get('maxHistory')||10) || 0;
+  while (hist.length > size) {
     hist.pop();
   } 
   this.saveHistory();
   // Select feature
-  this.select(f, reverse);
-  //this.drawList_();
+  this.select(f, reverse, null, options);
+  if (reverse) {
+    this.setInput(this._getTitleTxt(f));
+    this.drawList_();
+    setTimeout(function() { this.collapse(false); }.bind(this), 300);
+  }
 };
 
 /** Current history */
@@ -331,13 +392,13 @@ ol_control_Search.prototype._history = {};
 /** Save history (in the localstorage)
  */
 ol_control_Search.prototype.saveHistory = function () {
-  if (this.get('maxHistory')>=0) {
-    try {
+  try {
+    if (this.get('maxHistory')>=0) {
       localStorage["ol@search-"+this._classname] = JSON.stringify(this.get('history'));
-    } catch (e) { /* ok */ }
-  } else {
-    localStorage.removeItem("ol@search-"+this._classname);
-  }
+    } else {
+      localStorage.removeItem("ol@search-"+this._classname);
+    }
+  } catch(e) { console.warn('Failed to access localStorage...'); }
 };
 
 /** Restore history (from the localstorage) 

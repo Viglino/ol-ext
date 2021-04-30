@@ -25,6 +25,8 @@
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
   <!-- filesaver-js -->
 	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
@@ -146,6 +148,9 @@
       border: 0;
       padding: .2em 1em;
     }
+    input[type="number"] {
+      width: 5em;
+    }
   </style>
 
 </head>
@@ -232,6 +237,9 @@
           <div class="legend maxi"></div>
           <span class="max"></span>+
         </li>
+        <li>
+          Interval: <input class="interval imin" type="number"/>-<input class="interval imax" type="number"/>
+        </li>
       </ul>
     </div>
     <div class="info">Selection: <span>0</span> feature(s)</div>
@@ -244,8 +252,11 @@
       </label>
     </div>
   </div>
+  <div id="image"><img/></div>
 
 <script type="text/javascript">
+  var osm = new ol.layer.Tile({ source: new ol.source.OSM() });
+  osm.addFilter(new ol.filter.Colorize({ operation: 'grayscale' }))
   // The map
   var map = new ol.Map({
     target: 'map',
@@ -253,7 +264,7 @@
       zoom: 4,
       center: [166326, 5992663]
     }),
-    layers: [ new ol.layer.Tile({ source: new ol.source.OSM() })]
+    layers: [ osm ]
   });
 
   var select  = new ol.interaction.Select();
@@ -289,6 +300,15 @@
     source.clear(true);
     source.addFeatures(features);
   }
+
+  // Print control
+  var printControl = new ol.control.Print({ copyToClipboard: true });
+  printControl.on('print', function(e) { 
+    printControl.toClipboard(e, function(b) {
+      if (b) console.log('Map has been copied...')
+    });
+  });
+  // map.addControl(printControl);
 
   // Vector source
   var source = new ol.source.Vector();
@@ -353,11 +373,11 @@
       source: source,		// source of the bin
       size: size			// hexagon size (in map unit)
     });
-    layer = new ol.layer.Vector({ 
+    var vClass = ($("#image").prop('checked') ? ol.layer.VectorImage : ol.layer.Vector) 
+    layer = new vClass({ 
       source: hexbin, 
       opacity:0.5, 
-      style: styleFn, 
-      renderMode: $("#image").prop('checked')?'image':'vector' 
+      style: styleFn
     });
     features = hexbin.getFeatures();
     // Calculate min/ max value
@@ -374,11 +394,21 @@
     max = Math.round(max - dl/3);
     $(".min").text(min);
     $(".max").text(max);
+    $('.imin').val(min);
+    $('.imax').val(max);
 
     // Add layer
     map.addLayer(layer);
   }
   reset (Number($("#size").val()));
+
+  $('.interval').on('change', function() {
+    min = Number($('.imin').val()) || min;
+    max = Number($('.imax').val()) || max;
+    $(".min").text(min);
+    $(".max").text(max);
+    hexbin.changed();
+  })
 
   // Add feature on drop
   var dd = new ol.interaction.DropFile();

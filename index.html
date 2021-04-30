@@ -4,12 +4,25 @@
   <title>ol-ext</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+  <link rel="icon" type="image/png" href="https://openlayers.org/assets/theme/img/logo70.png" />
   
   <meta name="description" content="Cool extensions to use with Openlayers (ol)." />
   <meta name="keywords" content="ol,extension,canvas,3D,animation,layer,selection,control,openlayers,popup" />
 
   <link rel="stylesheet" href="examples/githubcorner.css" />
   
+  <meta name="twitter:image" content="https://raw.githubusercontent.com/Viglino/ol-ext/master/img/ol-ext.jpg" />
+  <meta name="twitter:site" content="@viglino" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="ol-ext: cool ol extensions" />
+  <meta name="twitter:description" content="ol-ext is a set of extensions, controls, interactions, popup to use with Openlayers (ol)." />
+  
+  <meta property="og:image" content="https://raw.githubusercontent.com/Viglino/ol-ext/master/img/ol-ext.jpg" />
+  <meta property="og:site_name" content="ol-ext" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="ol-ext: cool ol extensions" />
+  <meta property="og:description" content="ol-ext is a set of extensions, controls, interactions, popup to use with Openlayers (ol)." />
+
 <style>
   div.icss-github-corner {
     position: fixed;
@@ -29,6 +42,9 @@
     font-family: 'Lucida Grande',Verdana,Geneva,Lucida,Arial,Helvetica,sans-serif;
     font-size: 16px;
     margin: 0.5em;
+  }
+  input:focus {
+    outline-width: 0;
   }
   a {
     color: #337ab7;
@@ -66,7 +82,11 @@
   input[type="search"] {
     font-size: 1em;
     padding: .3em 1em;
-    border-radius: 1em;;
+    border-radius: 1em;
+    border:0;
+    box-shadow: inset 1px 1px 2px 1px rgba(0,0,0,.5), 
+    1px 1px 2px 0px rgba(255,255,255,.5), 
+    -1px -1px 2px 0px rgba(0,0,0,.5);
   }
   .container {
     width:1170px;
@@ -97,12 +117,12 @@
       width: 100%;
     }
   }
-  @media (max-width: 950px) {
+  @media (max-width: 1000px) {
     header h1 span {
       display: none;
     }
   }
-  @media (max-width: 500px) {
+  @media (max-width: 580px) {
     .navbar {
       height: 6.5em;
     }
@@ -113,7 +133,9 @@
       margin-top: 7em;
     }
     .navbar .news {
-      display: none;
+      position: absolute;
+      right: 2em;
+      top: .15em;
     }
   }
 
@@ -126,9 +148,12 @@
     height: 9em;
     overflow: hidden;
   }
+  .desc p {
+    max-width: 50em;
+    margin: .5em auto 1em;
+    display: block;
+  }
   #examples > div.desc {
-    margin:-0.5em 0 1em;
-    padding:1em;
     width:100%;
     box-sizing: border-box;
   }
@@ -186,6 +211,17 @@
     color:#693;
     margin: 0;
   }
+  .example p.tag a {
+    cursor: pointer;
+    color: #693;
+  }
+  .example p.tag a:before {
+    content: ', '
+  }
+  .example p.tag a:first-child:before {
+    content: '';
+  }
+
   .example img {
     display:none;
     margin:auto;
@@ -232,6 +268,21 @@
           .appendTo($('.container'));
       }
 
+      // Click on tags
+      function search() {
+        $('#keywords').val($(this).text()).change();
+      }
+      $('.tag').each(function() {
+        var tags = $(this).text().split(',');
+        var div = $(this).html('');
+        tags.forEach(function(t) {
+          $('<a>').text(t.trim())
+            .click(search)
+            .appendTo(div);
+        })
+      })
+
+      // Search 
       $('#keywords').on('keyup change search', function() {
         var s = new RegExp ( $(this).val() , "i");
         var k = 0;
@@ -298,9 +349,24 @@
         <img src="https://angular.io/assets/images/logos/angular/angular.svg" style="height:2em; vertical-align:middle;" />Angular
       </a>
     <br/>
-      If you like this, you may like <a href="https://github.com/Viglino/ol-games">
+      If you like this, you may like <a href="https://viglino.github.io/ol-games/">
         <img src="https://raw.githubusercontent.com/Viglino/ol-games/master/img/ol3-games.png" style="height:1.6em; vertical-align: middle;"> ol-games
       </a>.
+    </p>
+    <p style="text-align: center;">
+      <a class="github-button" href="https://github.com/viglino/ol-ext" data-icon="octicon-star" data-show-count="true" aria-label="Star viglino/ol-ext on GitHub">Star</a>
+      <a class="github-button" href="https://github.com/viglino/ol-ext/fork" data-icon="octicon-repo-forked" data-show-count="true" aria-label="Fork viglino/ol-ext on GitHub">Fork</a>
+      <a class="github-button" href="https://github.com/viglino/ol-ext/issues" data-icon="octicon-issue-opened" data-show-count="true" aria-label="Issue viglino/ol-ext on GitHub">Issue</a>
+      <a class="github-button" href="https://github.com/viglino/ol-ext/subscription" data-icon="octicon-eye" data-show-count="true" aria-label="Watch viglino/ol-ext on GitHub">Watch</a>
+    <br/>
+      <a class="twitter-share-button" 
+        href="https://twitter.com/intent/tweet" 
+        data-url="https://viglino.github.io/ol-ext/"
+        data-text="Awesome extensions for #Openlayers @jmviglino">
+        Tweet
+      </a>
+      <a class="github-button" href="https://github.com/viglino" data-show-count="true" aria-label="Follow @viglino on GitHub">@viglino</a>
+      <a class="github-button" href="https://github.com/viglino/ol-ext/archive/master.zip" data-icon="octicon-download" aria-label="Download viglino/ol-ext on GitHub">Download</a>
     </p>
   </div>
 
@@ -377,6 +443,16 @@
         <p class="tag">style, vector, flow, color, sankey</p>
       </div>
 
+      <div class="example" data-date="2020-10">
+        <a class="mainlink" href="examples/style/map.style.flowarrow.html">
+          <strong>Flow arrow style</strong><br>
+        </a>
+        <p class="description">
+          With the <i>ol.style.FlowLine</i> you can add arrows to draw Sankey maps.
+        </p>
+        <p class="tag">style, vector, flow, color, arrow, sankey</p>
+      </div>
+
       <div class="example" data-date="2019-02-05">
         <a class="mainlink" href="examples/style/map.style.gpxline.html">
           <strong>FlowLine style</strong><br>
@@ -386,6 +462,16 @@
           elevation along the line as a color.
         </p>
         <p class="tag">style, vector, flow, color, gpx</p>
+      </div>
+
+      <div class="example" data-date="2020-10-25">
+        <a class="mainlink" href="examples/style/map.style.profile.html">
+          <strong>Profile style</strong><br>
+        </a>
+        <p class="description">
+          <i>ol/style/Profile</i> is a style to draw line profiles on a map.
+        </p>
+        <p class="tag">style, vector, profile, 3D, gpx</p>
       </div>
 
       <div class="example">
@@ -502,8 +588,16 @@
         <a class="mainlink" href="examples/filter/map.filter.composite.html">
           <strong>Composite filter</strong><br>
         </a>
-        <p class="description">This filter apply a composite operation on layer drawing.</p>
+        <p class="description">This filter applies a composite operation on layer drawing.</p>
         <p class="tag">filter, effect, composite, color, canvas</p>
+      </div>
+
+      <div class="example" data-date="2021-01-03">
+        <a class="mainlink" href="examples/filter/map.filter.canvasfilter.html">
+          <strong>Canvas filter</strong><br>
+        </a>
+        <p class="description">Apply canvas filter on layer drawing.</p>
+        <p class="tag">filter, effect, svg, blur, huerotate, canvas</p>
       </div>
 
       <div class="example">
@@ -512,6 +606,22 @@
         </a>
         <p class="description">This filter creates a folding effect on the map.</p>
         <p class="tag">filter, effect, fold, folding, map, canvas</p>
+      </div>
+
+      <div class="example" data-date="2021-01">
+        <a class="mainlink" href="examples/filter/map.filter.pencilsketch.html">
+          <strong>Pencil sketch filter</strong><br>
+        </a>
+        <p class="description">A filter to turn your maps into pencil sketchs.</p>
+        <p class="tag">filter, pencil, sketch, map, canvas</p>
+      </div>
+
+      <div class="example" data-date="2021-04">
+        <a class="mainlink" href="examples/filter/map.filter.edgedetection.html">
+          <strong>Edge detection filter</strong><br>
+        </a>
+        <p class="description">A set of filters to turn detect edges on map layers.</p>
+        <p class="tag">filter, SVG, map, canvas, Sobel, Roberts, Prewitt</p>
       </div>
     </div>
 
@@ -547,6 +657,14 @@
         </a>
         <p class="description">A simple layer switcher as a menu.</p>
         <p class="tag">layerswitcher, control</p>
+      </div>
+
+      <div class="example" data-date="2020-10-21">
+        <a class="mainlink" href="examples/layer/map.wmscapabilities.html">
+          <strong>WMS Capabilities control</strong><br>
+        </a>
+        <p class="description">A control to help adding WMS on your maps.</p>
+        <p class="tag">map, control, layer, WMS, capabilities, getCapabilities</p>
       </div>
 
       <div class="example" data-date="2019-02-09">
@@ -687,7 +805,7 @@
         <a class="mainlink" href="examples/canvas/map.canvas.control.html">
           <strong>Canvas control</strong><br>
         </a>
-        <p class="description">Example of canvas controls, ie. controls that are drawn on the canvas to use with export (jepg/png) functions.</p>
+        <p class="description">Example of canvas controls, ie. controls that are drawn on the canvas to use with export (jpeg/png) functions.</p>
         <p class="tag">control, canvas, scale line, attribution, title, export</p>
       </div>
 
@@ -1049,6 +1167,14 @@
         <p class="tag">popup, overlay, feature, attribute, select</p>
       </div>
 
+      <div class="example" data-date="2021-02-28">
+        <a class="mainlink" href="examples/popup/map.fixedpopup.html">
+          <strong>Fixed popup</strong><br>
+        </a>
+        <p class="description">Popup on a fixed place in the map viewport.</p>
+        <p class="tag">popup, overlay</p>
+      </div>
+
       <div class="example" data-date="2019-06-29">
         <a class="mainlink" href="examples/popup/map.tooltip.measure.html">
           <strong>Tooltips</strong><br>
@@ -1152,7 +1278,7 @@
           <strong>French IGN's layer and source</strong><br>
         </a>
         <p class="description"><i>ol/source/Geoportail</i> abd <i>ol/layer/Geoportail</i> handle french Geoportail layers and API key.</p>
-        <p class="tag">source, layer, geoprotail</p>
+        <p class="tag">source, layer, geoportail</p>
       </div>
 
       <div class="example">
@@ -1207,12 +1333,23 @@
         <p class="description">
           <i>ol.source.Delaunay</i> computes a Delaunay triangulation of a vector source.
         </p>
-        <p class="tag">source, vector, Delaynay, triangulation</p>
+        <p class="tag">source, vector, Delaynay, Voronoi, triangulation, TIN</p>
       </div>
+
     </div>
 
   <h2>Mobile</h2>
     <div>
+      <div class="example" data-date="2021-01">
+        <a class="mainlink" href="examples/mobile/map.control.geolocationbt.html">
+          <strong>GPS control button</strong><br>
+        </a>
+        <p class="description">
+          The <i>ol/interaction/GeolocationButton</i> is a simple button to handle geolocation.
+        </p>
+        <p class="tag">interaction, mobile, GPS, location</p>
+      </div>
+
       <div class="example">
         <a class="mainlink" href="examples/mobile/map.interaction.geolocationdraw.html">
           <strong>Draw feature using GPS</strong><br>
@@ -1244,16 +1381,6 @@
       </div>
 
       <div class="example">
-        <a class="mainlink" href="examples/mobile/map.interaction.drawtouch.html">
-          <strong>Touch draw interaction</strong><br>
-        </a>
-        <p class="description">
-          An interactioon for drawing feature geometry on a touch device.
-        </p>
-        <p class="tag">interaction, touch, draw, vector</p>
-      </div>
-
-      <div class="example">
         <a class="mainlink" href="examples/mobile/map.interaction.longtouch.html">
           <strong>Long touch interaction</strong><br>
         </a>
@@ -1261,6 +1388,16 @@
           The LongTouch interaction is an interaction to handle a long touch event.
         </p>
         <p class="tag">interaction, touch, long</p>
+      </div>
+
+      <div class="example">
+        <a class="mainlink" href="examples/mobile/map.interaction.drawtouch.html">
+          <strong>Touch draw interaction</strong><br>
+        </a>
+        <p class="description">
+          An interactioon for drawing feature geometry on a touch device.
+        </p>
+        <p class="tag">interaction, touch, draw, vector</p>
       </div>
 
       <div class="example">
@@ -1272,6 +1409,17 @@
           to remove a vertex on touch devices.
         </p>
         <p class="tag">interaction, touch, modify, remove, vector</p>
+      </div>
+
+      <div class="example" data-date="2020-12-01">
+        <a class="mainlink" href="examples/mobile/map.interaction.touchcursordraw.html">
+          <strong>TouchCursor interaction</strong><br>
+        </a>
+        <p class="description">
+          An interaction specially designed to work on mobile, with a cursor to shift the finger position 
+          and lets it visible when drawing.
+        </p>
+        <p class="tag">interaction, mobile, touch, modify, draw, vector</p>
       </div>
     </div>
 
@@ -1286,6 +1434,17 @@
           to draw smooth curves that goes through the points.
         </p>
         <p class="tag">geom, linestring, spline, smooth, curve</p>
+      </div>
+
+      <div class="example" data-date="2020-04-21">
+        <a class="mainlink" href="examples/geom/map.geohash.html" >
+          <strong>Geohash</strong><br>
+        </a>
+        <p class="description">
+        The <i>ol/geohash</i> adds functions to convert a geohash to/from a latitude/longitude point,
+        and to determine bounds of a geohash cell and find neighbours of a geohash.
+        </p>
+        <p class="tag">geom, geohash</p>
       </div>
 
       <div class="example" data-date="2019-08-16">
@@ -1413,6 +1572,16 @@
       </div>
 
       <div class="example">
+        <a class="mainlink" href="examples/misc/map.control.videorecorder.html">
+          <strong>Record map as video!</strong><br>
+        </a>
+        <p class="description">
+          Add some magic on your maps.
+        </p>
+        <p class="tag">control, canvas, animation, video, record</p>
+      </div>
+
+      <div class="example">
         <a class="mainlink" href="examples/misc/map.interaction.tinkerbell.html">
           <strong>Thinker Bell animation</strong><br>
         </a>
@@ -1420,6 +1589,16 @@
           Add some magic on your maps.
         </p>
         <p class="tag">interaction, Tinker Bell, sparkle, cursor</p>
+      </div>
+
+      <div class="example" data-date="2021-04-01">
+        <a class="mainlink" href="examples/misc/map.interaction.blob.html" data-img="gif">
+          <strong>There is a Blob on my map!</strong><br>
+        </a>
+        <p class="description">
+          Add a blob interaction on your maps.
+        </p>
+        <p class="tag">interaction, blob, clip, cursor</p>
       </div>
 
       <div class="example">
@@ -1465,6 +1644,26 @@
         <p class="tag">filter, effect, lego, brick</p>
       </div>
 
+      <div class="example" data-date="2021-01">
+        <a class="mainlink" href="examples/filter/map.filter.oilpaint.html">
+          <strong>OilPainting source</strong><br>
+        </a>
+        <p class="description">
+          <i>ol/source/OilPainting</i> turns an image layer into artistic oil painting.
+        </p>
+        <p class="tag">source, filter, oil, painting</p>
+      </div>
+
+      <div class="example" data-date="2021-01">
+        <a class="mainlink" href="examples/filter/map.filter.pointillism.html">
+          <strong>Pointillism filter</strong><br>
+        </a>
+        <p class="description">
+          <i>ol/filter/Poinitillism</i> turns an image layer into artistic impressionnist pointillist painting.
+        </p>
+        <p class="tag">source, filter, impressionnism, pointillism, painting</p>
+      </div>
+
       <div class="example">
         <a class="mainlink" href="examples/misc/map.interaction.ripple.html" data-img="gif">
           <strong>Watter ripple</strong><br>
@@ -1488,6 +1687,23 @@
         <p class="description">Synchronize maps in different windows.</p>
         <p class="tag">synchronization, map, window, comparison</p>
       </div>
+      
+      <div class="example" data-date="2021-01-21">
+        <a class="mainlink" href="examples/layer/map.layer.gppvtile.html">
+          <strong>Playing with VectorTile styles</strong><br>
+        </a>
+        <p class="description">An exemple to change colors on a VectorTile</p>
+        <p class="tag">source, layer, geoportail, vectortile, style</p>
+      </div>
+
+      <div class="example" data-date="2021-01-31">
+        <a class="mainlink" href="examples/layer/map.layer.geoportail.wfs.html">
+          <strong>Download IGN Geoportail Opendata</strong><br>
+        </a>
+        <p class="description">An exemple to download data using a WFS.</p>
+        <p class="tag">source, layer, geoportail, WFS, opendata</p>
+      </div>
+
     </div>
 
   <h2>Tools</h2>
@@ -1571,5 +1787,7 @@
 
   </div>
 
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+  <script async="" src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 </body>
 </html>

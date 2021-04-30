@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--
+	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+	<title>ol-ext: extent intersection</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="icon" type="image/png" href="https://openlayers.org/assets/theme/img/logo70.png" />
+
+	<meta name="description" content="Geoportail WFS" />
+	<meta name="keywords" content="ol, openlayers, layer, source, geoportail, WFS" />
+
+  <meta name="msapplication-tap-highlight" content="no" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- ChartJS -->
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- JSTS -->
+  <script type="text/javascript" src="https://unpkg.com/jsts@1.6.1/dist/jsts.min.js"></script>
+
+	<!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+	
+	<!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+  <script type="text/javascript" src="../../dist/extra/FontAwesomeDef.js"></script>
+
+  <!-- JSTS -->
+  <script type="text/javascript" src="https://unpkg.com/jsts@1.6.1/dist/jsts.min.js"></script>
+  
+  <!-- filesaver-js -->
+	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    label {
+      display: inline-block;
+      width: 10em;
+      text-align: right;
+      margin-right: .5em;
+    }
+    .options {
+      white-space: nowrap;
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+	<a href="../../index.html">
+		<h1>ol-ext: extent intersection</h1>
+	</a>
+
+  <div class="info">
+    <i>ol/extend.intersection</i> is a fast polygon intersection calculation with an extent (mainly used to calculate area intersection).
+    It produces unnecessary points.
+    <br/>
+    It can be used to compute <a href='../layer/map.layer.clc.wfs.html'>statistics on visible area</a>.
+  </div>
+
+	<!-- DIV pour la carte -->
+  <div id="map" style="width:640px; height:400px"></div>
+
+  <div class="options">
+
+  <script>
+
+// The map
+var map = new ol.Map ({
+  target: 'map',
+  view: new ol.View ({
+    zoom: 10,
+    center: [261204.43490751847, 6250258.191535994]
+  }),
+  layers: [
+    new ol.layer.Geoportail({
+      layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 
+      visible: true
+    })
+  ]
+});
+
+var extent = [241380, 6237740, 285037, 6265025];
+var extentFeature = new ol.Feature(ol.geom.Polygon.fromExtent(extent));
+extentFeature.set('extent', true);
+var vector = new ol.layer.Vector({
+  source: new ol.source.Vector(),
+  style: function(f) {
+    if (f.get('extent')) {
+      return new ol.style.Style({
+        stroke: new ol.style.Stroke({
+          width: 1.5,
+          color: '#f00',
+          lineDash: [4,5]
+        })
+      })
+    } else {
+      var style = ol.style.Style.defaultStyle({ color: '#05f', fillColor: [0,128,255,.5]});
+      style.push(new ol.style.Style({
+        image: new ol.style.Circle({ stroke: new ol.style.Stroke({color:'red', width:4}), radius: 2 }),
+        geometry: new ol.geom.MultiPoint(f.getGeometry().getCoordinates()[0])
+      }))
+      return style;
+    }
+  }
+});
+map.addLayer(vector);
+vector.getSource().addFeature(extentFeature);
+
+var draw = new ol.interaction.Draw({ type: 'Polygon' });
+map.addInteraction(draw);
+
+var jstsParser = new jsts.io.OL3Parser();
+var jstsExtent = jstsParser.read(extentFeature.getGeometry());
+var extentArea = ol.sphere.getArea(extentFeature.getGeometry());
+
+// Calculate intersection on drawend
+draw.on('drawend', function(e) {
+  var dt = new Date();
+  var g = ol.extent.intersection(extent, e.feature.getGeometry());
+  dt = new Date() - dt;
+  // Using jsts
+  var dt2 = new Date();
+  try {
+    jstsExtent.intersection(jstsParser.read(e.feature.getGeometry()));
+  } catch(e) {}
+  dt2 = new Date() - dt2;
+
+  vector.getSource().clear();
+  vector.getSource().addFeature(extentFeature);
+  vector.getSource().addFeature(new ol.Feature(g));
+  var a = ol.sphere.getArea(g);
+  var polyArea = ol.sphere.getArea(e.feature.getGeometry());
+  $('.options').html(
+    '<label>Extent area:</label>'+(extentArea/10000).toFixed(2)+' ha<br/>'+
+    '<label>Polygon area:</label>'+(polyArea/10000).toFixed(2)+' ha<br/>'+
+    '<label>Intersection area:</label>'+(a/10000).toFixed(2)+' ha - '+
+    ((a/extentArea)*100).toFixed(0)+'%<br/>'+
+    '<hr/>'+
+    '<label>time:</label>'+dt+' ms<br/>'+
+    '<label>jsts time:</label>'+dt2+' ms<br/>'
+  );
+})
+
+  </script>
+</body>
+</html>

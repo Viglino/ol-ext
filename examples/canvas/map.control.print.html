@@ -24,6 +24,8 @@
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
   <!-- https://github.com/MrRio/jsPDF -->
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
@@ -80,6 +82,9 @@
     <a id="export-pdf" class="btn" download="map.pdf" data-margin="10" target="_new" onclick="printControl.print({ imageType: 'image/jpeg', pdf:true })">
       Export PDF
     </a>
+    <a id="copy" class="btn" download="map.pdf" data-margin="10" target="_new" onclick="printControl.copyMap({ imageType: 'image/jpeg' })">
+      Copy to Clipboard
+    </a>
   </div>
   <div id='image'>
     <h2>Resulting image</h2>
@@ -122,9 +127,8 @@
     map.addControl(printControl);
 
     /* On print > save image file */
-    printControl.on('print', function(e) {
-      $('body').css('opacity', .1);
-      console.log('printing')
+    printControl.on('printing', function(e) {
+      $('body').css('opacity', .5);
     });
     printControl.on(['print', 'error'], function(e) {
       $('body').css('opacity', 1);
@@ -135,7 +139,7 @@
           var pdf = new jsPDF({
             orientation: e.print.orientation,
             unit: e.print.unit,
-            format: e.print.format
+            format: e.print.size
           });
           pdf.addImage(e.image, 'JPEG', e.print.position[0], e.print.position[0], e.print.imageWidth, e.print.imageHeight);
           pdf.save();

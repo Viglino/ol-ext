@@ -24,18 +24,13 @@
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
   <!-- ol-ext maki and fontawesome defintions used in fontsymbol -->
   <script type="text/javascript" src="../../dist/extra/FontAwesomeDef.js"></script>
 
   <style>
-    .ol-legend ul {
-      margin-bottom: 7px;
-    }
-    .ol-legend ul li {
-      overflow: visible;
-      text-align: right;
-    }
   </style>
 </head>
 <body >
@@ -112,34 +107,29 @@
   }));
 
   // Define a new legend
-  var legend = new ol.control.Legend({ 
+  var legend = new ol.legend.Legend({ 
     title: 'Legend',
     style: getFeatureStyle,
-    collapsible: false,
     margin: 0,
-    size: [40, 10]
+    size: [50, 16]
   });
-  map.addControl(legend);
+  map.addControl(new ol.control.Legend({ 
+    collapsible: false,
+    legend: legend
+  }));
 
   // Add empty row to 
-  legend.addRow();
-  legend.addRow();
-  legend.addRow({ title:'2.600.000' });
-  legend.addRow({ title:'', properties: { pop: 2600000 }, typeGeom: 'Point'});
-  legend.addRow({ title:'100.000', properties: { pop: 1000000 }, typeGeom: 'Point'});
-  legend.addRow({ title:'', properties: { pop: 100000 }, typeGeom: 'Point'});
-  /*
-  [2600000, 1000000, 100000].forEach(function(pop) {
-    legend.addRow({ 
-      title: pop,
-      properties: { pop: pop },
-      typeGeom: 'Point'
-    })
-  })
-  */
+  legend.addItem();
+  legend.addItem({ title:'2.600.000', properties: { pop: 2600000 }, typeGeom: 'Point'});
+  legend.addItem({ title:'100.000', properties: { pop: 1000000 }, typeGeom: 'Point'});
+  legend.addItem({ title:'0', properties: { pop: 100000 }, typeGeom: 'Point'});
 
   // Display the style on select
-  var popup = new ol.Overlay.Popup({ popupClass: 'tooltips', offsetBox:15 });
+  var popup = new ol.Overlay.Popup({ 
+    popupClass: 'tooltips', 
+    positioning: 'top-auto',
+    offsetBox: [-10,0,15,0]
+  });
   map.addOverlay(popup);
   var hover = new ol.interaction.Hover();
   map.addInteraction(hover);

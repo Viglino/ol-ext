@@ -273,6 +273,6 @@ ol_style_StrokePattern.prototype.getPattern_ = function(options)
 		}
 	}
 	return pat
-}
+};
 
 export default ol_style_StrokePattern

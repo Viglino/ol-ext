@@ -24,16 +24,18 @@
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
   <!-- ol-ext maki and fontawesome defintions used in fontsymbol -->
   <script type="text/javascript" src="../../dist/extra/FontAwesomeDef.js"></script>
 
   <style>
-  .ol-legend ul li.ol-title > div:last-child {
-    position:absolute;
-    left:0;
-    right:0;
-    top: 10px
+  .ol-legend > canvas {
+    float: left;
+  }
+  .ol-legend > div.ol-legend {
+    position: relative;
   }
   </style>
 </head>
@@ -70,24 +72,30 @@
   });
 
   // Define a new legend
-  var legend = new ol.control.Legend({ 
+  var legend = new ol.legend.Legend({ 
     title: 'Legend',
-    margin: 5,
+    margin: 5
+  });
+  var legendCtrl = new ol.control.Legend({
+    legend: legend,
     collapsed: false
   });
-  map.addControl(legend);
-
+  map.addControl(legendCtrl);
+  //legend.on('select', function(e){ console.log(e) });
+  
   // Add a new one
-  var legend2 = new ol.control.Legend({ 
-    title: ' ',
-    margin: 5,
-    target: legend.element
+  var legend2 = new ol.legend.Legend({ 
+    title: ' ', // no title
+    margin: 5
   });
-  map.addControl(legend2);
+  map.addControl(new ol.control.Legend({
+    legend: legend2,
+    target: legendCtrl.element
+  }));
 
   var form = { Trianle:3, Square:4, Pentagon: 5, Hexagon: 6 };
   for (var i in form) {
-    legend.addRow({ 
+    legend.addItem({ 
       title: i, 
       typeGeom: 'Point',
       style: new ol.style.Style({
@@ -99,7 +107,7 @@
         })
       })
     });
-    legend2.addRow({ 
+    legend2.addItem({ 
       title: i, 
       typeGeom: 'Point',
       style: new ol.style.Style({

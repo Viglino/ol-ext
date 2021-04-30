@@ -61,7 +61,7 @@ var ol_control_GridReference = function(options) {
     this.setIndex(options.source.getFeatures(), options);
     // reload on ready
     options.source.once('change',function() {
-      if (options.source.getState() === 'ready'){
+      if (options.source.getState() === 'ready') {
         this.setIndex(options.source.getFeatures(), options);
       }
     }.bind(this));
@@ -76,6 +76,15 @@ var ol_control_GridReference = function(options) {
   this.set('filterLabel', options.filterLabel || 'filter');
 };
 ol_ext_inherits(ol_control_GridReference, ol_control_CanvasBase);
+
+/**
+ * Set the map instance the control is associated with.
+ * @param {ol_Map} map The map instance.
+ */
+ ol_control_GridReference.prototype.setMap = function(map) {
+  ol_control_CanvasBase.prototype.setMap.call(this, map);
+  this.setIndex(this.source_.getFeatures());
+ };
 
 /** Returns the text to be displayed in the index
  * @param {ol.Feature} f the feature
@@ -123,7 +132,8 @@ ol_control_GridReference.prototype.setIndex = function (features) {
     var v = this.value.replace(/^\*/,'');
     // console.log(v)
     var r = new RegExp (v, 'i');
-    ul.querySelectorAll('li').forEach(function(li) {
+    var list = ul.querySelectorAll('li');
+    Array.prototype.forEach.call(list, function(li) {
       if (li.classList.contains('ol-title')) {
         li.style.display = '';
       } else {
@@ -131,14 +141,20 @@ ol_control_GridReference.prototype.setIndex = function (features) {
         else li.style.display = 'none';
       }
     });
-    ul.querySelectorAll("li.ol-title").forEach(function(li) {
-      var nextAll = false;
-      nextAll = [].filter.call(li.parentNode.children, function (htmlElement) {
-        return (htmlElement.previousElementSibling === li) ? nextAll = true : nextAll;
-      });
-      console.log(nextAll);
-      var nextVisible = nextAll[0];
-      if (nextVisible.length && !nextVisible.classList.contains('ol-title')) li.style.display = '';
+    Array.prototype.forEach.call(ul.querySelectorAll("li.ol-title"), function(li) {
+      var nextVisible;
+      var start = false;
+      for (var i=0; i<list.length; i++) {
+        if (start) {
+          if (list[i].classList.contains('ol-title')) break;
+          if (!list[i].style.display) {
+            nextVisible = list[i];
+            break;
+          }
+        }
+        if (list[i] === li) start = true;
+      }
+      if (nextVisible) li.style.display = '';
       else li.style.display = 'none';
     });
   };
@@ -149,37 +165,35 @@ ol_control_GridReference.prototype.setIndex = function (features) {
   var ul = document.createElement("ul");
   elt.appendChild(ul);
   var r, title;
-  for (var i=0, f; f=features[i]; i++) {
-    (function(feat) {
-      r = self.getReference(feat.getGeometry().getFirstCoordinate());
-      if (r) {
-        var name = self.getFeatureName(feat);
-        var c = self.indexTitle(feat);
-        if (c != title) {
-          var li_title = document.createElement("li");
-          li_title.classList.add('ol-title');
-          li_title.textContent = c;
-          ul.appendChild(li_title);
-        }
-        title = c;
-        var li_ref_name = document.createElement("li");
-        var span_name = document.createElement("span");
-            span_name.classList.add("ol-name");
-            span_name.textContent = name;
-        li_ref_name.appendChild(span_name);
-        var span_ref = document.createElement("span");
-            span_ref.classList.add("ol-ref");
-            span_ref.textContent = r;
-        li_ref_name.appendChild(span_ref);
-        var feature = feat;
-        li_ref_name.addEventListener("click", function() {
-          self.dispatchEvent({ type:"select", feature: feature });
-        });
-
-        ul.appendChild(li_ref_name);
+  features.forEach(function(feat) {
+    r = this.getReference(feat.getGeometry().getFirstCoordinate());
+    if (r) {
+      var name = this.getFeatureName(feat);
+      var c = this.indexTitle(feat);
+      if (c != title) {
+        var li_title = document.createElement("li");
+        li_title.classList.add('ol-title');
+        li_title.textContent = c;
+        ul.appendChild(li_title);
       }
-    })(f);
-  }
+      title = c;
+      var li_ref_name = document.createElement("li");
+      var span_name = document.createElement("span");
+          span_name.classList.add("ol-name");
+          span_name.textContent = name;
+      li_ref_name.appendChild(span_name);
+      var span_ref = document.createElement("span");
+          span_ref.classList.add("ol-ref");
+          span_ref.textContent = r;
+      li_ref_name.appendChild(span_ref);
+      var feature = feat;
+      li_ref_name.addEventListener("click", function() {
+        this.dispatchEvent({ type:"select", feature: feature });
+      }.bind(this));
+
+      ul.appendChild(li_ref_name);
+    }
+  }.bind(this));
 };
 
 /** Get reference for a coord

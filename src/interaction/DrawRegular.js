@@ -5,10 +5,7 @@
 
 import ol_ext_inherits from '../util/ext'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
-import ol_style_Style from 'ol/style/Style'
-import ol_style_Circle from 'ol/style/Circle'
-import ol_style_Stroke from 'ol/style/Stroke'
-import ol_style_Fill from 'ol/style/Fill'
+import ol_style_Style_defaultStyle from '../style/defaultStyle'
 import ol_Collection from 'ol/Collection'
 import ol_layer_Vector from 'ol/layer/Vector'
 import ol_source_Vector from 'ol/source/Vector'
@@ -57,25 +54,7 @@ var ol_interaction_DrawRegular = function(options) {
   this.setSides(options.sides);
 
   // Style
-  var white = [255, 255, 255, 1];
-  var blue = [0, 153, 255, 1];
-  var width = 3;
-  var defaultStyle = [
-    new ol_style_Style({
-      stroke: new ol_style_Stroke({ color: white, width: width + 2 })
-    }),
-    new ol_style_Style({
-      image: new ol_style_Circle({
-        radius: width * 2,
-        fill: new ol_style_Fill({ color: blue }),
-        stroke: new ol_style_Stroke({ color: white, width: width / 2 })
-      }),
-      stroke: new ol_style_Stroke({ color: blue, width: width }),
-      fill: new ol_style_Fill({
-        color: [255, 255, 255, 0.5]
-      })
-    })
-  ];
+  var defaultStyle = ol_style_Style_defaultStyle(true);
 
   // Create a new overlay layer for the sketch
   this.sketch_ = new ol_Collection();
@@ -422,8 +401,7 @@ ol_interaction_DrawRegular.prototype.start_ = function(evt) {
 ol_interaction_DrawRegular.prototype.end_ = function(evt) {
   this.coord_ = evt.coordinate;
   this.started_ = false;
-  // Add new feature
-  if (this.coord_ && this.center_[0]!=this.coord_[0] && this.center_[1]!=this.coord_[1]) {
+  if (this.coord_ && (this.center_[0]!==this.coord_[0] || this.center_[1]!==this.coord_[1])) {
     var f = this.feature_;
     if (this.geometryName_) f.setGeometryName(this.geometryName_)
 

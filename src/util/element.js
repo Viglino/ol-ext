@@ -37,7 +37,7 @@ ol_ext_element.create = function (tagName, options) {
           break;
         }
         case 'parent': {
-          options.parent.appendChild(elt);
+          if (options.parent) options.parent.appendChild(elt);
           break;
         }
         case 'style': {
@@ -69,6 +69,74 @@ ol_ext_element.create = function (tagName, options) {
   return elt;
 };
 
+/** Create a toggle switch input
+ * @param {*} options
+ *  @param {string|Element} options.html
+ *  @param {string|Element} options.after
+ *  @param {boolean} options.checked
+ *  @param {*} [options.on] a list of actions
+ *  @param {function} [options.click]
+ *  @param {function} [options.change]
+ *  @param {Element} options.parent
+ */
+ol_ext_element.createSwitch = function (options) {
+  var label = ol_ext_element.create('LABEL',{ 
+    html: options.html,
+    className: 'ol-ext-toggle-switch',
+    parent: options.parent
+  });
+  var input = ol_ext_element.create('INPUT', {
+    type: 'checkbox',
+    checked: options.checked,
+    click: options.click,
+    change: options.change,
+    on: options.on,
+    parent: label
+  });
+  ol_ext_element.create('SPAN', { parent: label });
+  if (options.after) {
+    label.appendChild(document.createTextNode(options.after));
+  }
+  return input;
+};
+
+/** Create a toggle switch input
+ * @param {*} options
+ *  @param {string|Element} options.html
+ *  @param {string|Element} options.after
+ *  @param {string} [options.name] input name
+ *  @param {string} [options.type=checkbox] input type: radio or checkbox
+ *  @param {string} options.value input value
+ *  @param {*} [options.on] a list of actions
+ *  @param {function} [options.click]
+ *  @param {function} [options.change]
+ *  @param {Element} options.parent
+ */
+ol_ext_element.createCheck = function (options) {
+  var label = ol_ext_element.create('LABEL', {
+    className: 'ol-ext-check ' + (options.type==='radio' ? 'ol-ext-radio' : 'ol-ext-checkbox'),
+    html: options.html,
+    parent: options.parent
+  });
+  var input = ol_ext_element.create('INPUT', {
+    name: options.name,
+    type: (options.type==='radio' ? 'radio' : 'checkbox'),
+    value: options.val,
+    change: options.change,
+    click: options.click,
+    on: options.on,
+    parent: label
+  });
+  ol_ext_element.create('SPAN', {
+    parent: label
+  });
+  if (options.after) {
+    label.appendChild(document.createTextNode(options.after));
+  }
+  return input;
+};
+
+
 /** Set inner html or append a child element to an element
  * @param {Element} element
  * @param {Element|string} html Content of the element
@@ -92,10 +160,10 @@ ol_ext_element.appendText = function(element, text) {
  * @param {string|Array<string>} eventType
  * @param {function} fn
  */
-ol_ext_element.addListener = function (element, eventType, fn) {
+ol_ext_element.addListener = function (element, eventType, fn, useCapture ) {
   if (typeof eventType === 'string') eventType = eventType.split(' ');
   eventType.forEach(function(e) {
-    element.addEventListener(e, fn);
+    element.addEventListener(e, fn, useCapture);
   });
 };
 
@@ -237,14 +305,17 @@ ol_ext_element.offsetRect = function(elt) {
     top: rect.top + (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0),
     left: rect.left + (window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft || 0),
     height: rect.height || (rect.bottom - rect.top),
-    width: rect.widtth || (rect.right - rect.left)
+    width: rect.width || (rect.right - rect.left)
   }
 };
 
 /** Make a div scrollable without scrollbar.
  * On touch devices the default behavior is preserved
  * @param {DOMElement} elt
- * @param {function} onmove a function that takes a boolean indicating that the div is scrolling
+ * @param {*} options
+ *  @param {function} options.onmove a function that takes a boolean indicating that the div is scrolling
+ *  @param {boolean} [options.vertical=false] 
+ *  @param {boolean} [options.animate=true] add kinetic to scroll
  */
 ol_ext_element.scrollDiv = function(elt, options) {
   var pos = false;
@@ -260,9 +331,10 @@ ol_ext_element.scrollDiv = function(elt, options) {
   elt.querySelectorAll('img').forEach(function(i) {
     i.ondragstart = function(){ return false; };
   });
+  elt.style['touch-action'] = 'none';
   
   // Start scrolling
-  ol_ext_element.addListener(elt, ['mousedown'], function(e) {
+  ol_ext_element.addListener(elt, ['pointerdown'], function(e) {
     moving = false;
     pos = e[page];
     dt = new Date();
@@ -270,7 +342,7 @@ ol_ext_element.scrollDiv = function(elt, options) {
   });
   
   // Register scroll
-  ol_ext_element.addListener(window, ['mousemove'], function(e) {
+  ol_ext_element.addListener(window, ['pointermove'], function(e) {
     moving = true;
     if (pos !== false) {
       var delta = pos - e[page];
@@ -289,11 +361,24 @@ ol_ext_element.scrollDiv = function(elt, options) {
     }
   });
   
+  // Animate scroll
+  var animate = function(to) {
+    var step = (to>0) ? Math.min(100, to/2) : Math.max(-100, to/2);
+    to -= step;
+    elt[scroll] += step;
+    if (-1 < to && to < 1) {
+      if (moving) setTimeout(function() { elt.classList.remove('ol-move'); });
+      else elt.classList.remove('ol-move');
+      moving = false;
+    } else {
+      setTimeout(function() {
+        animate(to);
+      }, 40);
+    }
+  }
+
   // Stop scrolling
-  ol_ext_element.addListener(window, ['mouseup'], function(e) {
-    if (moving) setTimeout (function() { elt.classList.remove('ol-move'); });
-    else elt.classList.remove('ol-move');
-    moving = false;
+  ol_ext_element.addListener(window, ['pointerup','pointercancel'], function(e) {
     dt = new Date() - dt;
     if (dt>100) {
       // User stop: no speed
@@ -302,14 +387,14 @@ ol_ext_element.scrollDiv = function(elt, options) {
       // Calculate new speed
       speed = ((speed||0) + (pos - e[page]) / dt) / 2;
     }
-    elt[scroll] += speed*100;
+    animate(options.animate===false ? 0 : speed*200);
     pos = false;
     speed = 0;
     dt = 0;
   });
 
   // Handle mousewheel
-  if (options.mousewheel && !elt.classList.contains('ol-touch')) {
+  if (options.mousewheel) { // && !elt.classList.contains('ol-touch')) {
     ol_ext_element.addListener(elt, 
       ['mousewheel', 'DOMMouseScroll', 'onmousewheel'], 
       function(e) {

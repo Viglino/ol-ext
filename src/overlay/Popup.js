@@ -7,7 +7,6 @@ import ol_ext_inherits from '../util/ext'
 import ol_Overlay from 'ol/Overlay'
 import ol_ext_element from '../util/element'
 
-
 /**
  * @classdesc
  * A popup element to be displayed over the map and attached to a single map
@@ -21,18 +20,20 @@ popup.hide();
 *
 * @constructor
 * @extends {ol_Overlay}
+* @fires show
+* @fires hide
 * @param {} options Extend Overlay options 
-*	@param {String} options.popupClass the a class of the overlay to style the popup.
-*	@param {bool} options.closeBox popup has a close box, default false.
-*	@param {function|undefined} options.onclose: callback function when popup is closed
-*	@param {function|undefined} options.onshow callback function when popup is shown
-*	@param {Number|Array<number>} options.offsetBox an offset box
-*	@param {ol.OverlayPositioning | string | undefined} options.positioning 
+*	 @param {String} options.popupClass the a class of the overlay to style the popup.
+*	 @param {boolean} options.anim Animate the popup the popup, default false.
+*	 @param {bool} options.closeBox popup has a close box, default false.
+*	 @param {function|undefined} options.onclose: callback function when popup is closed
+*	 @param {function|undefined} options.onshow callback function when popup is shown
+*	 @param {Number|Array<number>} options.offsetBox an offset box
+*	 @param {ol.OverlayPositioning | string | undefined} options.positioning 
 *		the 'auto' positioning var the popup choose its positioning to stay on the map.
 * @api stable
 */
 var ol_Overlay_Popup = function (options) {
-  var self = this;
   options = options || {};
   
   if (typeof(options.offsetBox)==='number') this.offsetBox = [options.offsetBox,options.offsetBox,options.offsetBox,options.offsetBox];
@@ -42,10 +43,25 @@ var ol_Overlay_Popup = function (options) {
   var element = document.createElement("div");
   //element.classList.add('ol-overlaycontainer-stopevent');
   options.element = element;
+  // Closebox
+  this.closeBox = options.closeBox;
+  this.onclose = options.onclose;
+  this.onshow = options.onshow;
+  ol_ext_element.create('BUTTON', {
+    className: 'closeBox' + (options.closeBox ? ' hasclosebox':''),
+    type: 'button',
+    click: function() {
+      this.hide();
+    }.bind(this),
+    parent: element
+  });
   // Anchor div
-  var anchorElement = document.createElement("div");
-  anchorElement.classList.add("anchor");
-  element.appendChild(anchorElement);
+  if (options.anchor!==false) {
+    ol_ext_element.create('DIV', {
+      className: 'anchor',
+      parent: element
+    })
+  }
 
   // Content
   this.content = ol_ext_element.create("div", { 
@@ -53,18 +69,7 @@ var ol_Overlay_Popup = function (options) {
     className: "ol-popup-content",
     parent: element
   });
-  // Closebox
-  this.closeBox = options.closeBox;
-  this.onclose = options.onclose;
-  this.onshow = options.onshow;
-  var button = document.createElement("button");
-  button.classList.add("closeBox");
-  if (options.closeBox) button.classList.add('hasclosebox');
-  button.setAttribute('type', 'button');
-  element.insertBefore(button, anchorElement);
-  button.addEventListener("click", function() {
-    self.hide();
-  });
+
   // Stop event
   if (options.stopEvent) {
     element.addEventListener("mousedown", function(e){ e.stopPropagation(); });
@@ -72,11 +77,12 @@ var ol_Overlay_Popup = function (options) {
   }
 
   ol_Overlay.call(this, options);
-  this._elt = this.element;
+  this._elt = element;
 
   // call setPositioning first in constructor so getClassPositioning is called only once
   this.setPositioning(options.positioning || 'auto');
   this.setPopupClass(options.popupClass || options.className || 'default');
+  if (options.anim) this.addPopupClass('anim');
 
   // Show popup on timeout (for animation purposes)
   if (options.position) {
@@ -108,8 +114,8 @@ ol_Overlay_Popup.prototype.getClassPositioning = function () {
  */
 ol_Overlay_Popup.prototype.setClosebox = function (b) {
   this.closeBox = b;
-  if (b) this._elt.classList.add("hasclosebox");
-  else this._elt.classList.remove("hasclosebox");
+  if (b) this.element.classList.add("hasclosebox");
+  else this.element.classList.remove("hasclosebox");
 };
 
 /**
@@ -118,29 +124,30 @@ ol_Overlay_Popup.prototype.setClosebox = function (b) {
  * @api stable
  */
 ol_Overlay_Popup.prototype.setPopupClass = function (c) {
-  this._elt.className = "";
-    var classesPositioning = this.getClassPositioning().split(' ')
-      .filter(function(className) {
-        return className.length > 0;
-      });
-    var classes = ["ol-popup"];
-    if (c) {
-      c.split(' ').filter(function(className) {
-        return className.length > 0;
-      })
-      .forEach(function(className) {
-        classes.push(className);
-      });
-    } else {
-      classes.push("default");
-    }
-      classesPositioning.forEach(function(className) {
-        classes.push(className);
-      });
-    if (this.closeBox) {
-      classes.push("hasclosebox");
-    }
-    this._elt.classList.add.apply(this._elt.classList, classes);
+  var classes = ["ol-popup"];
+  if (this.getVisible()) classes.push('visible');
+  this.element.className = "";
+  var classesPositioning = this.getClassPositioning().split(' ')
+    .filter(function(className) {
+      return className.length > 0;
+    });
+  if (c) {
+    c.split(' ').filter(function(className) {
+      return className.length > 0;
+    })
+    .forEach(function(className) {
+      classes.push(className);
+    });
+  } else {
+    classes.push("default");
+  }
+  classesPositioning.forEach(function(className) {
+    classes.push(className);
+  });
+  if (this.closeBox) {
+    classes.push("hasclosebox");
+  }
+  this.element.classList.add.apply(this.element.classList, classes);
 };
 
 /**
@@ -149,7 +156,7 @@ ol_Overlay_Popup.prototype.setPopupClass = function (c) {
  * @api stable
  */
 ol_Overlay_Popup.prototype.addPopupClass = function (c) {
-  this._elt.classList.add(c);
+  this.element.classList.add(c);
 };
 
 /**
@@ -158,7 +165,7 @@ ol_Overlay_Popup.prototype.addPopupClass = function (c) {
  * @api stable
  */
 ol_Overlay_Popup.prototype.removePopupClass = function (c) {
-  this._elt.classList.remove(c);
+  this.element.classList.remove(c);
 };
 
 /**
@@ -173,8 +180,9 @@ ol_Overlay_Popup.prototype.setPositioning = function (pos) {
   if (/auto/.test(pos)) {
     this.autoPositioning = pos.split('-');
     if (this.autoPositioning.length==1) this.autoPositioning[1]="auto";
+  } else {
+    this.autoPositioning = false;
   }
-  else this.autoPositioning = false;
   pos = pos.replace(/auto/g,"center");
   if (pos=="center") pos = "bottom-center";
   this.setPositioning_(pos);
@@ -184,14 +192,14 @@ ol_Overlay_Popup.prototype.setPositioning = function (pos) {
  * @param {ol.OverlayPositioning | string | undefined} pos
  */
 ol_Overlay_Popup.prototype.setPositioning_ = function (pos) {
-  if (this._elt) {
+  if (this.element) {
     ol_Overlay.prototype.setPositioning.call(this, pos);
-    this._elt.classList.remove("ol-popup-top", "ol-popup-bottom", "ol-popup-left", "ol-popup-right", "ol-popup-center", "ol-popup-middle");
+    this.element.classList.remove("ol-popup-top", "ol-popup-bottom", "ol-popup-left", "ol-popup-right", "ol-popup-center", "ol-popup-middle");
     var classes = this.getClassPositioning().split(' ')
       .filter(function(className) {
         return className.length > 0;
       });
-    this._elt.classList.add.apply(this._elt.classList, classes);
+    this.element.classList.add.apply(this.element.classList, classes);
   }
 };
 
@@ -199,7 +207,7 @@ ol_Overlay_Popup.prototype.setPositioning_ = function (pos) {
 * @return {boolean}
 */
 ol_Overlay_Popup.prototype.getVisible = function () {
-  return this._elt.classList.contains("visible");
+  return this.element.classList.contains("visible");
 };
 
 /**
@@ -270,10 +278,11 @@ ol_Overlay_Popup.prototype.show = function (coordinate, html) {
     // Show
     this.setPosition(coordinate);
     // Set visible class (wait to compute the size/position first)
-    this._elt.parentElement.style.display = '';
+    this.element.parentElement.style.display = '';
     if (typeof (this.onshow) == 'function') this.onshow();
+    this.dispatchEvent({ type: 'show' })
     this._tout = setTimeout (function() {
-      self._elt.classList.add("visible"); 
+      self.element.classList.add('visible'); 
     }, 0);
   }
 };
@@ -287,7 +296,8 @@ ol_Overlay_Popup.prototype.hide = function () {
   if (typeof (this.onclose) == 'function') this.onclose();
   this.setPosition(undefined);
   if (this._tout) clearTimeout(this._tout);
-  this._elt.classList.remove("visible");
+  this.element.classList.remove("visible");
+  this.dispatchEvent({ type: 'hide' });
 };
 
 export  default ol_Overlay_Popup

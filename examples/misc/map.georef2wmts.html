@@ -1,0 +1,158 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2017-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: </title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="ol.source.HexBin is a source to display hexagonal binning on a map." />
+  <meta name="keywords" content="ol3, layer, hexbin, cluster, hexagon, binning, heatmap" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <!-- filesaver-js -->
+	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    #map {
+      width: 600px;
+      height: 400px;
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: </h1>
+  </a>
+
+  <div class="info">
+  </div>
+
+  <!-- Map DIV -->
+  <div id="map"></div>
+
+  <div class="options">
+  </div>
+
+<script type="text/javascript">
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 4,
+      center: [166326, 5992663]
+    }),
+    layers: [ 
+      new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', visible: false }),
+      new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.MAPS', gppKey: 'h1osiyvfm7c4wu976jv6gpum' }),
+      new ol.layer.Tile({ title: 'OSM', source: new ol.source.OSM(), visible: false })
+    ]
+  });
+  map.addControl(new ol.control.LayerSwitcher());
+  map.addControl(new ol.control.Permalink({visible: false}));
+
+  var tileSize = 512;
+  var geoImage;
+  var ddrop = new ol.interaction.DropFile({
+    formatConstructors: [] 
+  });
+  ddrop.on('loadend', function(e) {
+    var data = JSON.parse(e.result);
+    var layer;
+    data.layers.forEach((function(l) {
+      if (l.type==='GeoImage') {
+        console.log(l)
+        if (geoImage) map.removeLayer(geoImage);
+        var source = new ol.source.GeoImage (l);
+        geoImage = new ol.layer.Image({ title: l.name, source: source });
+        map.addLayer(geoImage);
+        // Get GeoIMage info
+        var ext = geoImage.getSource().getExtent();
+        map.getView().fit(ext);
+        var z = map.getView().getZoomForResolution(l.imageScale[0]);
+        // map.getView().setZoom(z);
+        console.log('Zoom: ',z.toFixed(2));
+        console.log('Extent: ',[Math.round(ext[0]),Math.round(ext[1]),Math.round(ext[2]),Math.round(ext[3])]);
+      }
+    }))
+  });
+  map.addInteraction(ddrop);
+
+  var tgrid = ol.tilegrid.createXYZ({ tileSize: tileSize });
+  function loadFiles(tiles) {
+    var t = tiles.pop();
+    if (t) {
+      var z = t[0];
+      var x = t[1];
+      var y = t[2];
+      var canvas = geoImage.getSource().calculateImage(
+        tgrid.getTileCoordExtent([z,x,y]), 
+        tgrid.getResolution(z), 
+        1, 
+        [tileSize,tileSize]
+      );
+      var dt = canvas.toDataURL('image/jpeg');
+      canvas.toBlob(function(blob) {
+        saveAs(blob, geoImage.get('title')+'_'+z+'-'+x+'-'+y+'.png');
+      }, 'image/png', .5);
+    }
+    console.log(tiles.length)
+    if (tiles.length) setTimeout(function() { loadFiles(tiles); }, 1000);
+  }
+  function saveExtent (res, extent) {
+    if (!extent) extent = geoImage.getSource().getExtent();
+    if (!res) res = map.getView().getResolution();
+    var tl = tgrid.getTileCoordForCoordAndResolution([extent[0],extent[1]], res);
+    var br = tgrid.getTileCoordForCoordAndResolution([extent[2],extent[3]], res);
+    var z = tl[0];
+    var x1 = Math.min(tl[1],br[1]);
+    var x2 = Math.max(tl[1],br[1]);
+    var y1 = Math.min(tl[2],br[2]);
+    var y2 = Math.max(tl[2],br[2]);
+    var tiles = [];
+    var name = geoImage.get('title');
+    for (var x=x1; x<=x2; x++) {
+      for (var y=y1; y<=y2; y++) {
+        tiles.push([z,x,y]);
+      }
+    }
+    return tiles;
+  };
+  function save(zoom) {
+    var z1 = Math.round(map.getView().getZoom());
+    if (!zoom) zoom = Math.round(map.getView().getZoomForResolution(geoImage.getSource().getScale()[0]));
+    console.log('LOADING...',z1,zoom);
+    var tiles = [];
+    for (var z=z1; z<=zoom; z++) {
+      tiles = tiles.concat(saveExtent(new ol.View({zoom: z}).getResolution()));
+    }
+    loadFiles(tiles);
+  }
+
+</script>
+
+</body>
+</html>

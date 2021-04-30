@@ -3,9 +3,10 @@ import {getUid as ol_util_getUid} from 'ol/util'
 // Use ol.getUid for Openlayers < v6
 import {getUid as ol_getUid} from 'ol/util'
 
-/* Extent the ol/interaction/Modify with a getModifyFeatures
+/** Extent the ol/interaction/Modify with a getModifyFeatures
  * Get the features modified by the interaction
  * @return {Array<ol.Feature>} the modified features
+ * @deprecated
  */
 ol_interaction_Modify.prototype.getModifiedFeatures = function() {
   var featuresById = {};

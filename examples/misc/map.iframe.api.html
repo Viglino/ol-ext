@@ -1,0 +1,133 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>ol-ext: Iframe API</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="description" content="Use OlIframeAPI to control a map in an iframe" />
+  <meta name="keywords" content="Openlayers, ol, iframe, API" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- API -->
+  <script type="text/javascript" src="../../dist/extra/MapIFrameAPI.js"></script>
+
+  <style>
+    #map {
+      width: 600px;
+      height: 400px;
+      border: 0;
+    }
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 99;
+    }
+    #loading > div {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      border: 2px solid #369;
+      box-shadow: 2px 2px 4px rgba(0,0,0,.5);
+      padding: 1em 2em;
+    }
+    label {
+      display: inline-block;
+      min-width: 3em;
+      text-align: right;
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Openlayers iFrame API</h1>
+  </a>
+  <div class="info">
+    The ol/ext/IFrameAPI lets you embed an ol map on your website and control the map using JavaScript.
+    It is a bidirectional API communication between parent window and map iframe.
+    <br/>
+    You don't need to include Openlayers js or css in your main page, 
+    just add the <a href='../../dist/extra/MapIFrameAPI.js'>API code</a> and embed the widget (as an IFrame)...
+    <br/>
+    The API provides a controlled mechanism to securely (if used properly) access script from different orign in you page.
+  </div>
+
+  <!-- Map div -->
+  <iframe id="map" src="./map.iframe.html?lon=2&lat=46.5&z=5&layer=OSM"></iframe>
+  <!-- iframe id="map" src="https://viglino.github.io/ol-ext/examples/misc/map.iframe.html"></iframe -->
+  <!-- iframe id="map2" src="./map.iframe.html"></iframe -->
+
+  <div class="options">
+    Draw a polygon in the IFrame: <button onclick="mapAPI.drawPolygon()">Draw Polygon</button>
+    <br/>
+    Select an object in the IFrame: <button onclick="mapAPI.selectBy({id:93})">Select 93</button>
+    <hr/>
+    Get/set placemark position:<br/>
+    <label>Lon:</label>
+    <input id="lon" />
+    <label>Lat:</label>
+    <input id="lat" />
+    <p style="text-align: right;">
+      <button onclick="mapAPI.getCenter((d)=>mapAPI.setLonLat(d))">
+        Center
+      </button>
+    </p>
+    <hr/>
+    <i>Look messages in the console...</i>
+    <hr/>
+    <a href="https://codepen.io/viglino/pen/KKMPwxo">See example on CodePen</a>
+  </div>
+
+  <div id="loading">
+    <div>Connecting API...</div>
+  </div>
+
+
+  <script type="text/javascript">
+var mapAPI;
+
+/*
+MapIFrameAPI.ready('map2', function(api) {
+  api.addIFrameListener('select', function(data) { 
+    console.log('Select on Map2'); 
+  })
+});
+*/
+
+// Get API
+MapIFrameAPI.ready('map', function(api) {
+  document.getElementById('loading').style.display = 'none';
+  mapAPI = api;
+  // mapAPI.setLayer('geoportail');
+  // Center map
+  // mapAPI.setCenter([2,45]);
+  // mapAPI.setZoom(10);
+  // Get on move
+  mapAPI.on('move', function(data) { 
+    console.log('Move: ' + data.center[0] +','+ data.center[1] + '-' + data.zoom); 
+  });
+  // Get selection
+  mapAPI.on('select', function(data) { 
+    console.log('Select:', data.selected[0]); 
+  });
+  // Get selection
+  mapAPI.on('drawPolygon', function(data) { 
+    console.log('Draw:', data); 
+  });
+  // Connect lonlat input 
+  mapAPI.mapInput('getLon', document.getElementById('lon'));
+  mapAPI.mapInput('getLat', 'lat');
+});
+
+  </script>
+
+</body>
+</html>

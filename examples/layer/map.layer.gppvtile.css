@@ -1,0 +1,134 @@
+﻿body {}
+#map {
+  position: fixed;
+  background: rgb(255, 255, 255);
+  top: 7em;
+  left: 0;
+  bottom: 0;
+  right: 16.5em;
+  margin: .5em;
+}
+h1 {
+  overflow: hidden;
+  white-space: nowrap;
+}
+.options button {
+  float: right;
+  min-width: 6em;
+  margin: 0 0 .5em;
+}
+.options button i {
+  color: #000;
+}
+.info {
+  margin: 0;
+}
+.ol-popup h2 {
+  display: inline;
+  margin: 0;
+}
+.options {
+  position: fixed;
+  top: 4em;
+  bottom: 0;
+  right: 0;
+  margin: 0;
+  overflow-y: auto;
+  height: auto;
+  display: block;
+  width: 15.5em;
+}
+.options ul {
+  border: 1px solid #369;
+  padding: .5em;
+  margin: .5em 0;
+  clear: both;
+  transition: .3s;
+}
+.options > ul i {
+  width: .7em;
+  height: .7em;
+  transform: translateX(-.3em) rotate(45deg);
+  box-shadow: inset -.3em -.3em;
+  float: left;
+  margin: .1em;
+  cursor: pointer;
+  transition: .3s;
+}
+.options li.collapse i {
+  transform: translateX(-.3em) rotate(-45deg);
+}
+.options ul ul {
+  overflow: hidden;
+  transition: .3s;
+}
+.options li li {
+  height: 1.3em;
+  transition: .3s;
+  overflow: hidden;
+}
+.options li.collapse li {
+  height: 0;
+}
+.options li.collapse ul {
+  padding: 0 .5em;
+}
+.options > ul > li > label {
+  font-weight: bold;
+  color: #369;
+}
+.options label.toponyme {
+  float: right;
+  font-weight: normal;
+  margin: .5em 0;
+}
+.options ul ul label {
+  width: 100%;
+  display: inline-block;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.options select {
+  float: right;
+}
+.ol-permalink {
+  display: none;
+}
+#color > div {
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -30%);
+  background-color: #fff;
+  box-shadow: 0 0 .1em;
+  padding: .5em 1em;
+  width: fit-content;
+  max-width: calc(100% - 2em);
+  box-sizing: border-box;
+}
+#color {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background-color: rgba(0,0,0,.5);
+  z-index: 999;
+  display: none;
+}
+
+#police {
+  display: block;
+  text-align: right;
+  clear: both;
+}
+@media (max-width: 800px) {
+  .options {
+    width: 12.5em;
+    letter-spacing: -.06em;
+  }
+  #map {
+    right: 13.5em;
+  }
+}

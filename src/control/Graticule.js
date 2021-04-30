@@ -25,8 +25,9 @@ import ol_control_CanvasBase from './CanvasBase'
  *  @param {number} options.step step beetween lines (in proj units), default 1
  *  @param {number} options.stepCoord show a coord every stepCoord, default 1
  *  @param {number} options.spacing spacing beetween lines (in px), default 40px 
- *  @param {number} options.borderWidthwidth of the border (in px), default 5px 
- *  @param {number} options.marginmargin of the border (in px), default 0px 
+ *  @param {number} options.borderWidth width of the border (in px), default 5px 
+ *  @param {number} options.margin margin of the border (in px), default 0px 
+ *  @param {number} options.formatCoord a function that takes a coordinate and a position and return the formated coordinate
  */
 var ol_control_Graticule = function(options) {
   if (!options) options = {};
@@ -190,31 +191,32 @@ ol_control_Graticule.prototype._draw = function (e) {
       ctx.fillStyle = this.getStyle().getText().getFill().getColor();
       ctx.strokeStyle = this.getStyle().getText().getStroke().getColor();
       ctx.lineWidth = this.getStyle().getText().getStroke().getWidth();
+      ctx.font = this.getStyle().getText().getFont();
       ctx.textAlign = 'center';
       ctx.textBaseline = 'hanging';
       var t, tf;
       var offset = (hasBorder ? borderWidth : 0) + margin + 2;
       for (i=0; t = txt.top[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
-      {	tf = this.formatCoord(t[0]);
+      {	tf = this.formatCoord(t[0], 'top');
         ctx.strokeText(tf, t[1][0], offset);
         ctx.fillText(tf, t[1][0], offset);
       }
       ctx.textBaseline = 'alphabetic';
       for (i=0; t = txt.bottom[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
-      {	tf = this.formatCoord(t[0]);
+      {	tf = this.formatCoord(t[0], 'bottom');
         ctx.strokeText(tf, t[1][0], h-offset);
         ctx.fillText(tf, t[1][0], h-offset);
       }
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'left';
       for (i=0; t = txt.left[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
-      {	tf = this.formatCoord(t[0]);
+      {	tf = this.formatCoord(t[0], 'left');
         ctx.strokeText(tf, offset, t[1][1]);
         ctx.fillText(tf, offset, t[1][1]);
       }
       ctx.textAlign = 'right';
       for (i=0; t = txt.right[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
-      {	tf = this.formatCoord(t[0]);
+      {	tf = this.formatCoord(t[0], 'right');
         ctx.strokeText(tf, w-offset, t[1][1]);
         ctx.fillText(tf, w-offset, t[1][1]);
       }

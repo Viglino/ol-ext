@@ -180,6 +180,7 @@ ol_source_BinBase.prototype.reset = function () {
   for (var i = 0, f; f = features[i]; i++) {
     this._onAddFeature({ feature: f });
   }
+  this.changed();
 };
 
 /**

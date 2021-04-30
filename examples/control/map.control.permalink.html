@@ -1,12 +1,10 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
-
+<!--
   Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
   released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-  
------------------------------------------------------------->
+-->
   <title>ol-ext: Premalinkl control</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
@@ -26,6 +24,8 @@
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
 </head>
 <body >
@@ -40,6 +40,9 @@
     The href is updated as the map is zoomed, panned, rotated and whilst layers are switched or opacity is changed 
     (as soon as the layer has a <i>permalink</i> propertie).
     <ul><li>
+      Use <i>geohash</i> options to use a <a href="../geom/map.geohash.html">geohash</a> 
+      instead of lonlat coordinates in url.
+    </li><li>
       Use <i>urlReplace</i> option to activate the url replacement.
     </li><li>
       Use <i>localStorage</i> option to save the the current map view in the localstorage.
@@ -66,7 +69,15 @@
 
   <div class="options" >
     <ul><li>
-      <input id="url" type="checkbox" checked="checked" onchange="ctrl.setUrlReplace($(this).prop('checked'))" /><label for="url"> urlReplace (replace url in the browser bar).</label>
+      <label>
+        <input id="url" type="checkbox" checked="checked" onchange="ctrl.setUrlReplace($(this).prop('checked'))" />
+        urlReplace (replace url in the browser bar).
+      </label>
+    </li><li>
+      <label>
+        <input id="geohash" type="checkbox" onchange="ctrl.setGeohash ($(this).prop('checked'))" /> 
+        use geohash in the url.
+      </label>
     </li><li>
       OSM opacity: <input id="opacity" type="range" min="0" max="1" step="0.1" value="1" onchange="osm.setOpacity(Number(this.value))" style="vertical-align:middle;"/>
     </li><li>
@@ -97,6 +108,7 @@
 
     // Control
     var ctrl = new ol.control.Permalink({	
+      geohash: /gh=/.test(document.location.href),
       // urlReplace: false,
       localStorage: true,	// Save permalink in localStorage if no url provided
       onclick: function(url) {
@@ -104,6 +116,7 @@
       }
     });
     map.addControl(ctrl);
+    $('#geohash').prop('checked', /gh=/.test(document.location.href));
 
     // Handle user parameter
     $("#user").val(ctrl.getUrlParam('user'))

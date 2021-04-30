@@ -9,7 +9,8 @@ import {click as ol_events_condition_click} from 'ol/events/condition'
  * @fires setattributeend
  * @param {*} options extentol.interaction.Select options
  *  @param {boolean} options.active activate the interaction on start, default true
- *  @param {boolean} options.cursor use a paint bucket cursor, default true
+ *  @param {string=} options.name 
+ *  @param {boolean|string} options.cursor interaction cursor if false use default, default use a paint bucket cursor
  * @param {*} properties The properties as key/value
  */
 var ol_interaction_FillAttribute = function(options, properties) {
@@ -18,6 +19,7 @@ var ol_interaction_FillAttribute = function(options, properties) {
   if (!options.condition) options.condition = ol_events_condition_click;
   ol_interaction_Select.call(this, options);
   this.setActive(options.active!==false)
+  this.set('name', options.name);
 
   this._attributes = properties;
   this.on('select', function(e) {
@@ -25,7 +27,7 @@ var ol_interaction_FillAttribute = function(options, properties) {
     this.fill(e.selected, this._attributes);
   }.bind(this));
 
-  if (options.cursor!==false) {
+  if (options.cursor === undefined) {
     var canvas = document.createElement('CANVAS');
     canvas.width = canvas.height = 32;
     var ctx = canvas.getContext("2d");
@@ -59,8 +61,25 @@ var ol_interaction_FillAttribute = function(options, properties) {
 
     this._cursor = 'url('+canvas.toDataURL()+') 0 13, auto';
   }
+  if (options.cursor) {
+    this._cursor = options.cursor;
+  }
 };
 ol_ext_inherits(ol_interaction_FillAttribute, ol_interaction_Select);
+
+/** Define the interaction cursor
+ * @param {string} cursor CSS cursor
+ */
+ol_interaction_FillAttribute.prototype.setCursor = function(cursor) {
+  this._cursor = cursor;
+};
+
+/** Get the interaction cursor
+ * @return {string} cursor
+ */
+ol_interaction_FillAttribute.prototype.getCursor = function() {
+  return this._cursor;
+};
 
 /** Activate the interaction
  * @param {boolean} active
@@ -116,15 +135,35 @@ ol_interaction_FillAttribute.prototype.getAttribute = function(key) {
  */
 ol_interaction_FillAttribute.prototype.fill = function(features, properties) {
   if (features.length && properties) {
-    this.dispatchEvent({ type: 'setattributestart', features: features, properties: properties });
-
-    features.forEach(function(f) {
+    // Test changes
+    var changes = false;
+    for (var i=0, f; f = features[i]; i++) {
       for (var p in properties) {
-        f.set(p, properties[p]);
+        if (f.get(p) !== properties[p]) changes = true;
       }
-    });
+      if (changes) break;
+    }
 
-    this.dispatchEvent({ type: 'setattributeend', features: features, properties: properties });
+    // Set Attributes
+    if (changes) {
+      this.dispatchEvent({ 
+        type: 'setattributestart', 
+        features: features, 
+        properties: properties 
+      });
+  
+      features.forEach(function(f) {
+        for (var p in properties) {
+          f.set(p, properties[p]);
+        }
+      });
+  
+      this.dispatchEvent({ 
+        type: 'setattributeend', 
+        features: features, 
+        properties: properties 
+      });
+    }
   }
 };
 

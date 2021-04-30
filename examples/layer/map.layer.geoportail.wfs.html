@@ -5,14 +5,20 @@
 	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
 	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 -->
-	<title>ol-ext: Geoportail layer</title>
+	<title>ol-ext: Geoportail WFS</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="icon" type="image/png" href="https://openlayers.org/assets/theme/img/logo70.png" />
 
-	<meta name="description" content="Geoportail layer for ol" />
-	<meta name="keywords" content="ol, openlayers, layer, source, geoportail" />
+	<meta name="description" content="Geoportail WFS" />
+	<meta name="keywords" content="ol, openlayers, layer, source, geoportail, WFS" />
+
+  <meta name="msapplication-tap-highlight" content="no" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
 
 	<!-- jQuery -->
 	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 	<!-- Openlayers -->
   <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
@@ -21,164 +27,137 @@
 	
 	<!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+  <script type="text/javascript" src="../../dist/extra/FontAwesomeDef.js"></script>
 
+  <!-- JSTS -->
+  <script type="text/javascript" src="https://unpkg.com/jsts@1.6.1/dist/jsts.min.js"></script>
+  
   <!-- filesaver-js -->
 	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="./map.layer.geoportail.wfs.css" />
+  
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <i class="wait fa fa-spinner fa-pulse"></i>
 
 	<a href="../../index.html">
-		<h1>ol-ext: Geoportail layer</h1>
+		<h1>ol-ext: Geoportail WFS</h1>
 	</a>
-	<div class="info">
+	<div class="info dialog" onclick="$('.info').addClass('hidden');">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a0/IGN_logo_2012.svg" />
     <p>
+      Cet exemple affiche les flux WFS du Géoportail et permet de télécharger les données IGN au format GeoJSON. 
+      <ol>
+        <li>Choisissez la couche</li>
+        <li>Visualisez la zone à charger</li>
+        <li>Téléchargez...</li>
+      </ol>
     </p>
+    <p>
+      Les bases de données de l'IGN sont diffusées selon les termes de la 
+      <a href="https://geoservices.ign.fr/documentation/diffusion/telechargement-donnees-libres.html" target="_new">
+        licence ouverte Etalab 2.0
+      </a>
+    </p>
+    <div>
+      <span>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/1/18/Logo-licence-ouverte2.svg" />
+        <span>
+          Licence Ouverte
+          <hr/>Open Licence
+        </span>
+      </span>
+    </div>
   </div>
 
 	<!-- DIV pour la carte -->
-	<div id="map" style="width: 600px; height: 400px;"></div>
+  <div id="map"></div>
+  <div id="progressbar"></div>
 	<div class="options">
-    <h2>WFS</h2>
-    <ul>
-      <li>
-        <label>typeName :</label>
-        <select id="typename" onchange="setWFS()">
-          <option value="BDTOPO_BDD_WLD_WGS84G:route">route</option>
-          <option value="BDTOPO_BDD_WLD_WGS84G:chemin">chemin</option>
-          <option value="ADMINEXPRESS_COG_2018:commune">commune</option>
-          <option value="BDPARCELLAIRE-VECTEUR_WLD_BDD_WGS84G:parcelle">parcelle</option>
-          <option value="BDPARCELLAIRE-VECTEUR_WLD_BDD_WGS84G:divcad">divcad</option>
-          <option value="BDTOPO_BDD_WLD_WGS84G:bati_indifferencie">bati_indifferencie</option>
-          <option value="BDTOPO_BDD_WLD_WGS84G:bati_industriel">bati_industriel</option>
-          <option value="BDTOPO_BDD_WLD_WGS84G:bati_remarquable">bati_remarquable</option>
-        </select>
-      </li>
-      <li>
-        <label>minZoom:</label>
-        <select id="zoom" onchange="setWFS()">
-          <option value="15">15</option> 
-          <option value="14">14</option> 
-          <option value="13">13</option> 
-          <option value="12">12</option> 
-        </select>
-      </li>
-      <li>
-        <button onclick="vectorSource.clear()">Clear</button>
-      </li>
-    </ul>
-    <p id="curZoom"></p>
-    <p id="zoomTo" style="background: yellow; color: red; margin: 0; padding: .5em;">Zoom to display features</p>
-	</div>
-	
-  <script type="text/javascript">
-  // Key Capabilities
-  if (!window.geoportailConfig) window.geoportailConfig = { capabilities: {} };
-  window.geoportailConfig.capabilities['h1osiyvfm7c4wu976jv6gpum'] = {
-    "INSEE.FILOSOFI.NIVEAU.DE.VIE.SECRET": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.NIVEAU.DE.VIE.SECRET","title":"Niveau de vie winsorisé des individus (secret signalé)","format":"image/png","style":"CARROYAGE INSEE NIVEAU DE VIE SECRET","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Niveau de vie des individus, retraité des valeurs extrêmes (les cases hachurées correspondent aux données secrétisées)","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
-    "INSEE.FILOSOFI.ENFANTS.0.17.ANS.SECRET": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.ENFANTS.0.17.ANS.SECRET","title":"% des 0-17 ans  (secret signalé)","format":"image/png","style":"CARROYAGE INSEE PART ENFANTS 0 A 17 ANS SECRET","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Nombre d’individus âgés de 0 à 17 ans dans la population (les cases hachurées correspondent aux données secrétisées)","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
-    "INSEE.FILOSOFI.PART.PLUS.65.ANS.SECRET": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.PART.PLUS.65.ANS.SECRET","title":"% des plus de 65 ans (secret signalé)","format":"image/png","style":"CARROYAGE INSEE PART PLUS 65 ANS SECRET","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Nombre d’individus âgés de plus de 65 ans dans la population (les cases hachurées correspondent aux données secrétisées)","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
-    "INSEE.FILOSOFI.POPULATION": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.POPULATION","title":"Densité de population","format":"image/png","style":"CARROYAGE INSEE POPULATION","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Nombre d'individus par km²","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
-    "Aire-Parcellaire": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"Aire-Parcellaire","title":"Délimitation parcellaire AOC viticole","format":"image/png","style":"normal","queryable":true,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-5.1504726,41.32521,9.570543,51.099052],"desc":"<![CDATA[Selon les règlements européens n°110/2008 du 15 janvier 2008, n°1151/2012 du 21 novembre 2012 et n°1308/2013 de l’OCM , le cahier des charges des appellations définit l’aire géographique. Le terme de « délimitation parcellaire » désigne une aire qui repose sur les limites administratives du cadastre (les parcelles) et dont le maillage suffisamment fin permet de tenir compte de variations très localisées des éléments du milieu physique. Elle correspond à l'aire de production de la matière première. Elle est incluse dans l'aire géographique.\n\nDonnées produites par l'Institut National des Origines et la Qualité (INAO)]]>","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-5.1504726,41.32521,9.570543,51.099052]}]}}},
-  };
-	// The map
-	var map = new ol.Map ({
-    target: 'map',
-    view: new ol.View ({
-      zoom: 15,
-      center: [261204.43490751847, 6250258.191535994]
-    })
-  });
+    <label>typeName:</label>
+    <select id="typename" onchange="setWFS(this.value)">
+      <option value="BDTOPO_V3:troncon_de_route">route</option>
+      <option value="BDTOPO_V3:batiment">batiments</option>
+      <option value="CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle">parcelle</option>
+      <!-- http://wxs.ign.fr/corinelandcover/geoportail/wfs?service=WFS&request=GetCapabilities -->
+      <option value="LANDCOVER.CLC90_FR:clc90_fr">CLandCover 1990</option>
+      <option value="LANDCOVER.CLC00_FR:clc00_fr">CLandCover 2000</option>
+      <option value="LANDCOVER.CLC06R_FR:clc06r_fr">CLandCover 2006</option>
+      <option value="LANDCOVER.CLC12_FR:clc12_fr">CLandCover 2012</option>
+    </select>
+    <button onclick="vectorSource.refresh(); commune.clear(); loadLayer.getSource().clear();"><i class="fa fa-refresh"></i> reset</button>
+    <button onclick="save()"><i class="fa fa-download"></i> charger</button>
+    <button onclick="$('.dialog').addClass('hidden'); $('#commune').removeClass('hidden'); $('#commune input').focus();"><i class="fa fa-upload"></i></button>
+    <i class="fa fa-info-circle" onclick="$('.info').removeClass('hidden');"></i>
+  </div>
+  <div class="zoom">
+    <span id="curZoom"></span>
+    <span id="loading">- loading <span></span></span>
+    <span id="zoomTo">- Zoom to display features</span>
+  </div>
+  
+  <div id="commune" class="dialog hidden">
+    <h2>Charger une commune</h2>
+    <p>avec <a href="https://api.gouv.fr/documentation/api-geo" target="_new">l'API Geo</a></p>
+    <form>
+      <input placeholder="INSEE" />
+      <div class="buttons">
+        <button type="submit">charger</button>
+        <button type="reset" onclick="$('#commune').addClass('hidden')">annuler</button>
+      </div>
+    </form>
+  </div>
 
-  map.addControl(new ol.control.LayerSwitcher());
-  map.addControl(new ol.control.Permalink());
-  map.addControl(new ol.control.ScaleLine());
+  <div id="save" class="dialog hidden">
+    <h2>Enregistrer</h2>
+    <form>
+      <ul>
+        <li>
+          Format: <select>
+            <option value="geojson">GeoJSON</option>
+            <option value="kml">KML</option>
+          </select>
+        </li><li>
+          <label><input type="checkbox" class="select" /><span> seulement la sélection</span></label>
+        </li><li>
+          <label><input type="checkbox" class="clip" /><span> dans à la commune</span></label>
+        </li><li>
+          <label><input type="checkbox" class="null" checked="checked" /><span> supprimer les attributs null</span></label>
+        </li><li style="text-align: right;">
+          <button type="button" onclick="showOptions()"><i class="fa fa-list"></i> options...</button>
+        </li>
+      </ul>
+      <div class="buttons">
+        <button type="submit"><i class="fa fa-map-o"></i> enregistrer</button>
+        <button class="commune" type="button" onclick="saveCommune();"><i class="fa fa-download"></i> commune</button>
+        <button type="reset" onclick="$('#save').addClass('hidden')">annuler</button>
+      </div>
+    </form>
+  </div>
+  
+  <div id="options" class="dialog hidden">
+    <h2>Options</h2>
+    <i class="fa fa-close" onclick="$('#options').addClass('hidden');"></i>
+    <label><input type="checkbox" class="filter" /> Filtrage géométrique: </label><input class="geom" type="number" value=0 step=".5" min="0" /> m<br/>
+    <label><input type="checkbox" class="limit" /> Limiter les attributs:</label>
+    <div class="buttons">
+      <button class="valid">OK</button>
+      <button onclick="$('#options').addClass('hidden')">Annuler</button>
+    </div>
+    <ul class='disabled'></ul>
+    <div class="buttons">
+      <button class="valid">OK</button>
+      <button onclick="$('#options').addClass('hidden')">Annuler</button>
+    </div>
+  </div>
 
-/*
-  map.addLayer(new ol.layer.Tile({
-    source: new ol.source.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS', {
-      gppKey: 'choisirgeoportail'
-    })
-  }));
-*/
-  map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGN', {
-    gppKey: 'choisirgeoportail',
-    visible: true,
-    opacity: .5
-  }));
+	<script type="text/javascript" src="./map.layer.geoportail.wfs.js"></script>
 
-  var vectorSource;
-  var vectorLayer = new ol.layer.Vector({
-    title: 'WFS-IGN',
-    maxResolution: 10,
-    style: new ol.style.Style({
-      stroke: new ol.style.Stroke({
-        color: 'rgba(0, 0, 255, 1.0)',
-        width: 2
-      }),
-      fill: new ol.style.Fill({
-        color: 'rgba(255,255,255, .2)'
-      })
-    })
-  })
-  map.addLayer(vectorLayer);
-
-  var curZoom;
-  function setWFS() {
-    var zoom = parseInt($("#zoom").val());
-    var type = $('#typename').val();
-    if (/bati/.test(type)) zoom = 14;
-    if (/route|indif|parcelle/.test(type)) zoom = 16;
-    if (/divcad/.test(type)) zoom = 13;
-    curZoom = zoom;
-    console.log(type, zoom);
-    vectorSource = new ol.source.Vector({
-      format: new ol.format.GeoJSON(),
-      url: function(extent) {
-        return 'https://wxs.ign.fr/choisirgeoportail/geoportail/wfs?service=WFS&' +
-          'version=1.1.0&request=GetFeature&' +
-          'typename='+type+'&' +
-          'outputFormat=application/json&srsname=EPSG:3857&' +
-          'bbox=' + extent.join(',') + ',EPSG:3857';
-      },
-      //strategy: ol.loadingstrategy.bbox
-      strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: zoom, maxZoom: zoom, tileSize:512  }))
-    });
-    vectorLayer.setSource(vectorSource);
-    var v = new ol.View({ zoom: zoom-1 });
-    vectorLayer.setMaxResolution(v.getResolution());
-    $('#curZoom').text(map.getView().getZoom()+' / '+curZoom);
-  }
-  setWFS();
-
-  map.on('moveend', function(e) {
-    $('#curZoom').text(map.getView().getZoom()+' / '+curZoom);
-    if (map.getView().getZoom()<curZoom) $('#zoomTo').show();
-    else $('#zoomTo').hide();
-  });
-
-  var sel = new ol.interaction.Select({
-    multi: true,
-    condition: ol.events.condition.click,
-    hitTolerance: 3
-  })
-  map.addInteraction(sel)
-
-  // Save Vector layer
-  function save() {
-    var format = new ol.format.GeoJSON();
-    var features = vectorSource.getFeatures();
-		var data = format.writeFeatures(features, {
-			dataProjection: 'EPSG:4326',
-			featureProjection: map.getView().getProjection()
-    });
-		var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
-		saveAs(blob, "map.geojson");
-  }
-
-	</script>
 </body>
 </html>

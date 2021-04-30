@@ -22,6 +22,8 @@
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
   <style>
     #map {
@@ -88,10 +90,9 @@
 
   map.addLayer(new ol.layer.Vector({
     source: vectorSource,
-    opacity: .5,
     style: new ol.style.Style({
       fill: new ol.style.Fill({
-        color: [0,0,0]
+        color: [0,0,50,.5]
       })
     })
   }));

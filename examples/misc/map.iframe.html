@@ -1,0 +1,103 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>ol-ext: iframe map</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="ol mapIFrameAPI." />
+  <meta name="keywords" content="Openlayers, ol, iframe, API" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+  <script type="text/javascript" src="../../dist/extra/IFrameAPI.js"></script>
+
+  <style>
+    #map {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width:100%;
+    }
+  </style>
+
+</head>
+<body >
+  <!-- Map div -->
+  <div id="map" ></div>
+
+  <!-- API loader -->
+<script type="text/javascript">
+
+/* Create map */
+var osm = new ol.layer.Tile({
+  title: 'OSM',
+  visible: false,
+  source: new ol.source.OSM()
+});
+var geoportail = new ol.layer.Geoportail({
+  layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2'
+});
+
+var layers = [ osm, geoportail ];
+
+// The map
+var map = new ol.Map({
+  target: 'map',
+  view: new ol.View({
+    zoom: 0,
+    center: [0,0]
+  }),
+  layers: layers
+});
+
+// Permalink
+var permalink = new ol.control.Permalink({ visible: false }); 
+map.addControl(permalink);
+if (permalink.getUrlParam('layer') === 'OSM') {
+  osm.setVisible(true);
+  geoportail.setVisible(false);
+}
+
+// Notification
+var notification = new ol.control.Notification();
+map.addControl(notification);
+
+// NEW API
+var api = new ol.ext.IFrameAPI();
+api.set('map', map);
+api.set('format', new ol.format.GeoJSON());
+api.set('notification', notification);
+
+// API setter
+api.setAPI({
+  // Show Geoportail layer
+  setLayer: function(name) {
+    geoportail.setVisible(name==='geoportail');
+    osm.setVisible(name!=='geoportail')
+  },
+  // Show notification on the map
+  notification: function (note) {
+    notification.show(note);
+  }
+});
+</script>
+<!-- Load API -->
+<script src="./api/center.js"></script>
+<script src="./api/placemark.js"></script>
+<script src="./api/select.js"></script>
+<script src="./api/draw.js"></script>
+
+</body>
+</html>

@@ -2,8 +2,7 @@
   Copyright (c) 2015 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (http://www.cecill.info/).
   
-  ol.interaction.SelectCluster is an interaction for selecting vector features in a cluster.
-  
+  ol/interaction/SelectCluster is an interaction for selecting vector features in a cluster.
 */
 
 import ol_ext_inherits from '../util/ext'
@@ -20,6 +19,8 @@ import ol_geom_Point from 'ol/geom/Point'
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Circle from 'ol/style/Circle'
 import ol_render_getVectorContext from '../util/getVectorContext';
+import { createEmpty as ol_extent_createEmpty } from 'ol/extent'
+import { extend as ol_extent_extend } from 'ol/extent'
 
 /**
  * @classdesc
@@ -36,7 +37,7 @@ import ol_render_getVectorContext from '../util/getVectorContext';
  * 	@param {boolean} options.selectCluster false if you don't want to get cluster selected
  * 	@param {Number} options.pointRadius to calculate distance between the features
  * 	@param {bool} options.spiral means you want the feature to be placed on a spiral (or a circle)
- * 	@param {Number} options.circleMaxObject number of object that can be place on a circle
+ * 	@param {Number} options.circleMaxObjects number of object that can be place on a circle
  * 	@param {Number} options.maxObjects number of object that can be drawn, other are hidden
  * 	@param {bool} options.animate if the cluster will animate when features spread out, default is false
  * 	@param {Number} options.animationDuration animation duration in ms, default is 500ms
@@ -177,8 +178,7 @@ ol_interaction_SelectCluster.prototype.selectCluster = function (e) {
   var center = feature.getGeometry().getCoordinates();
   // Pixel size in map unit
   var pix = this.getMap().getView().getResolution();
-  var r = pix * this.pointRadius * (0.5 + cluster.length / 4);
-  var a, i, max;
+  var r, a, i, max;
   var p, cf, lk;
 
   // The features
@@ -187,6 +187,7 @@ ol_interaction_SelectCluster.prototype.selectCluster = function (e) {
   // Draw on a circle
   if (!this.spiral || cluster.length <= this.circleMaxObjects) {
     max = Math.min(cluster.length, this.circleMaxObjects);
+    r = pix * this.pointRadius * (0.5 + max / 4);
     for (i=0; i<max; i++) {
       a = 2*Math.PI*i/max;
       if (max==2 || max == 4) a += Math.PI/4;
@@ -202,7 +203,6 @@ ol_interaction_SelectCluster.prototype.selectCluster = function (e) {
   else {
     // Start angle
     a = 0;
-    r;
     var d = 2*this.pointRadius;
     max = Math.min (this.maxObjects, cluster.length);
     // Feature on a spiral
@@ -292,6 +292,7 @@ ol_interaction_SelectCluster.prototype.animateCluster_ = function(center, featur
       return;
     }
 
+    
     // tell OL3 to continue postcompose animation
     event.frameState.animate = true;
   }
@@ -302,6 +303,21 @@ ol_interaction_SelectCluster.prototype.animateCluster_ = function(center, featur
   var feature = new ol_Feature(new ol_geom_Point(this.getMap().getView().getCenter()));
   feature.setStyle(new ol_style_Style({ image: new ol_style_Circle({}) }));
   this.overlayLayer_.getSource().addFeature(feature);
+};
+
+
+/** Helper function to get the extent of a cluster
+ * @param {ol.feature} feature
+ * @return {ol.extent|null} the extent or null if extent is empty (no cluster or superimposed points)
+ */
+ol_interaction_SelectCluster.prototype.getClusterExtent = function(feature) {
+  if (!feature.get('features')) return null;
+  var extent = ol_extent_createEmpty();
+  feature.get('features').forEach(function(f) {
+    extent = ol_extent_extend(extent, f.getGeometry().getExtent());
+  });
+  if (extent[0]===extent[2] && extent[1]===extent[3]) return null;
+  return extent;
 };
 
 export default ol_interaction_SelectCluster

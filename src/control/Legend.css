@@ -7,12 +7,15 @@
   overflow-x: hidden;
   overflow-y: auto;
 }
+.ol-control.ol-legend.ol-collapsed {
+  overflow: hidden;
+}
 .ol-control.ol-legend button {
   position: relative;
   display: none;
 }
 .ol-control.ol-legend.ol-collapsed button {
-    display: block;
+  display: block;
 }
 .ol-control.ol-legend.ol-uncollapsible button {
   display: none;
@@ -40,20 +43,14 @@
 .ol-control.ol-legend button.ol-closebox:hover:before {
   color: rgba(0,60,136,1);
 }
-.ol-control.ol-legend.ol-uncollapsible .ol-legendImg,
 .ol-control.ol-legend .ol-legendImg {
-  position: absolute;
-  z-index: -1;
+  display: block;
 }
 .ol-control.ol-legend.ol-collapsed .ol-legendImg {
   display: none;
 }
 .ol-control.ol-legend.ol-uncollapsible .ol-legendImg {
-  display: block  ;
-}
-
-.ol-control.ol-legend .ol-legendImg canvas {
-  height: 100%;;
+  display: block;
 }
 
 .ol-control.ol-legend > button:first-child:before,
@@ -74,13 +71,14 @@
   width: .6em;
 }
 
-.ol-legend ul {
-  min-width: 1.5em;
-  min-height: 1.5em;
-  margin: 0 0 2px;
+ul.ol-legend {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  margin: 0;
   padding: 0;
   list-style: none;
-  display: inline-block;
 }
 .ol-control.ol-legend.ol-collapsed ul {
   display: none;
@@ -88,16 +86,20 @@
 .ol-control.ol-legend.ol-uncollapsible ul {
   display: block;
 }
-.ol-legend ul li.ol-title {
+ul.ol-legend li.ol-title {
   text-align: center;
   font-weight: bold;
 }
-.ol-legend ul li {
-  overflow: hidden;
-  padding: 0 .5em;
+ul.ol-legend li.ol-title > div:first-child {
+  width: 0!important;
 }
-.ol-legend ul li div {
-    display: inline-block;
+ul.ol-legend li {
+  overflow: hidden;
+  padding: 0;
+  white-space: nowrap;
+}
+ul.ol-legend li div {
+  display: inline-block;
   vertical-align: middle;
 }
 

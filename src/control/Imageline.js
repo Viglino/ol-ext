@@ -27,7 +27,6 @@ var ol_control_Imageline = function(options) {
     className: (options.className || '') + ' ol-imageline'
       + (options.target ? '': ' ol-unselectable ol-control')
       + (options.collapsed && options.collapsible ? 'ol-collapsed' : '')
-      + ('ontouchstart' in window ? ' ol-touch' : '')
   });
 
   if (!options.target && options.collapsible) {

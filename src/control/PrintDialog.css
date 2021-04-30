@@ -1,0 +1,285 @@
+.ol-ext-print-dialog {
+  width: 100%;
+  height: 100%;
+}
+.ol-ext-print-dialog > form .ol-closebox {
+  right: auto;
+  left: 16.5em;
+  z-index: 1;
+  color: #999;
+}
+.ol-ext-print-dialog .ol-content[data-status="printing"] {
+  opacity: .5;
+}
+.ol-ext-print-dialog .ol-content .ol-error {
+  display: none;
+  background: #b00;
+  color: yellow;
+  text-align: center;
+  padding: 1em .5em;
+  font-weight: bold;
+  margin: 0 -1em;
+}
+.ol-ext-print-dialog .ol-content[data-status="error"] .ol-error {
+  display: block;
+}
+
+
+.ol-ext-print-dialog > form,
+.ol-ext-print-dialog.ol-visible > form {
+  transition: none;
+  top: 1em;
+  left: 1em;
+  bottom: 1em;
+  right: 1em;
+  transform: none;
+  max-width: 100%;
+  max-height: 100%;
+  background-color: #eee;
+  padding: 0;
+}
+.ol-ext-print-dialog .ol-print-map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: calc(100% - 18em);
+  overflow: hidden;
+}
+.ol-ext-print-dialog .ol-print-map .ol-page {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: #fff;
+  box-sizing: border-box;
+}
+.ol-ext-print-dialog .ol-print-map .ol-page.margin {
+  box-sizing: content-box;
+}
+.ol-ext-print-dialog .ol-map {
+  width: 100%;
+  height: 100%;
+}
+.ol-ext-print-dialog .ol-print-map .ol-control {
+  display: none!important;
+}
+
+.ol-ext-print-dialog .ol-print-param {
+  position: absolute;
+  overflow: hidden;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 18em;
+  background-color: #fff;
+  padding: 1em;
+  box-sizing: border-box;
+}
+.ol-ext-print-dialog .ol-print-param h2 {
+  display: block;
+  color: rgba(0,60,136,.7);
+  font-size: 1.1em;
+}
+.ol-ext-print-dialog .ol-print-param ul {
+  padding: 0;
+  list-style: none;
+}
+.ol-ext-print-dialog .ol-print-param li {
+  position: relative;
+  margin: .5em 0;
+  font-size: .9em;
+}
+.ol-ext-print-dialog .ol-print-param label {
+  width: 8em;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.ol-ext-print-dialog select {
+  outline: none;
+  vertical-align: middle;
+}
+
+.ol-ext-print-dialog .ol-orientation {
+  text-align: center;
+}
+.ol-ext-print-dialog .ol-orientation label {
+  position: relative;
+  width: 7em;
+  cursor: pointer;
+}
+.ol-ext-print-dialog .ol-orientation input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.ol-ext-print-dialog .ol-orientation span {
+  position: relative;
+  width: 80%;
+  display: block;
+  padding: 3.5em 0 .2em;
+}
+.ol-ext-print-dialog .ol-orientation span:before {
+  content: "";
+  position: absolute;
+  width: 2em;
+  height: 2.6em;
+  bottom: 1.5em;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #333;
+  background-color: currentColor;
+  border: 1px solid currentColor;
+  border-radius: 0 1em 0 0;
+  opacity: .5;
+  overflow: hidden;
+  box-shadow: inset 1.3em -1.9em #ddd;
+}
+
+.ol-ext-print-dialog .ol-orientation .landscape span:before {
+  width: 2.6em;
+  height: 2em;
+  margin: .2em 0;
+  box-shadow: inset 1.9em -1.3em #ddd;
+}
+.ol-ext-print-dialog .ol-orientation input:checked + span {
+  opacity: 1;
+  box-shadow: 0 0 .2em rgba(0,0,0,.5);
+}
+
+.ol-ext-print-dialog .ol-ext-toggle-switch span {
+  position: absolute;
+  right: -2em;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.ol-print-title input[type=text] {
+  margin-top: .5em;
+  width: calc(100% - 6em);
+  margin-left: 6em;
+}
+
+.ol-ext-print-dialog .ol-size option:first-child {
+  font-style: italic;
+}
+.ol-ext-print-dialog .ol-legend label {
+  display: none;
+}
+.ol-ext-print-dialog .ol-legend label.visible {
+  display: block;
+}
+
+.ol-ext-print-dialog .ol-saveas {
+  text-align: center;
+}
+.ol-ext-print-dialog .ol-saveas select {
+  background-color: rgba(0,60,136,.7);
+  color: #fff;
+  padding: .5em;
+  margin: 1em 0 0;
+  font-size: 1em;
+  border: 0;
+  font-weight: bold;
+}
+.ol-ext-print-dialog .ol-saveas select option {
+  background-color: #fff;
+  color: #666;
+}
+
+.ol-ext-print-dialog .ol-ext-buttons {
+  text-align: right;
+  border-top: 1px solid #ccc;
+  padding: .8em .5em;
+  margin: 0 -1em;
+}
+.ol-ext-print-dialog button {
+  font-size: 1em;
+  margin: 0 .2em;
+  border: 1px solid #999;
+  background: none;
+  padding: .3em 1em;
+  color: #333;
+}
+.ol-ext-print-dialog button[type="submit"] {
+  background-color: rgba(0,60,136,.7);
+  color: #fff;
+  font-weight: bold;
+}
+
+.ol-ext-print-dialog .ol-clipboard-copy {
+  position: absolute;
+  pointer-events: none;
+  top: 0;
+  background-color: rgba(0,0,0,.5);
+  color: #fff;
+  padding: .5em 1em;
+  border-radius: 1em;
+  left: 50%;
+  transform: translateX(-50%);
+  width: fit-content;
+  transition: 0s;
+  opacity: 0;
+}
+.ol-ext-print-dialog .ol-clipboard-copy.visible {
+  animation: 1s ol-clipboard-copy;
+}
+.ol-ext-print-dialog .ol-print-map .ol-control.ol-attribution {
+  display: block!important;
+}
+.ol-ext-print-dialog .ol-print-map .ol-control.ol-print-compass {
+  display: block!important;
+  top: 0;
+  right: 0;
+  width: 60px;
+  height: 60px;
+  margin: 20px;
+}
+
+@keyframes ol-clipboard-copy { 
+  0% { opacity: 0; top: 0; }
+  80% { opacity: 1; top: -3em; }
+  100% { opacity: 0; top: -3em; }  
+}
+
+@media print {
+  body.ol-print-document {
+    margin: 0!important;
+    padding: 0!important;
+  }
+  body.ol-print-document > * {
+    display: none!important;
+  }
+  body.ol-print-document > .ol-ext-print-dialog {
+    display: block!important;
+  }
+  .ol-ext-print-dialog > form,
+  .ol-ext-print-dialog {
+    position: unset;
+    box-shadow: none;
+    background: none!important;
+    border: 0;
+  }
+  .ol-ext-print-dialog > form > *,
+  .ol-ext-print-dialog .ol-print-param {
+    display: none!important;
+    background: none;
+  } 
+  .ol-ext-print-dialog .ol-content {
+    display: block!important;
+    border: 0;
+    background: none;
+  }
+  .ol-ext-print-dialog .ol-print-map {
+    position: unset; 
+    background: none;
+    width: auto;
+    overflow: visible;
+  }
+  .ol-ext-print-dialog .ol-print-map .ol-page {
+    transform: none!important;
+    box-shadow: none!important;
+    position: unset;
+  }
+}

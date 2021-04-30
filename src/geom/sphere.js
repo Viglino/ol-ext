@@ -1,4 +1,5 @@
 import {getDistance as ol_sphere_getDistance} from 'ol/sphere'
+import {transform as ol_proj_transform} from 'ol/proj'
 
 /** Compute great circle bearing of two points.
  * @See http://www.movable-type.co.uk/scripts/latlong.html for the original code
@@ -89,3 +90,56 @@ var ol_sphere_greatCircleTrack = function(origin, destination, options) {
 };
 
 export {ol_sphere_greatCircleTrack as greatCircleTrack}
+
+/** Get map scale factor
+ * @param {ol_Map} map
+ * @param {number} [dpi=96] dpi, default 96
+ * @return {number}
+ */
+var ol_sphere_getMapScale = function (map, dpi) {
+  var view = map.getView();
+  var proj = view.getProjection();
+  var center = view.getCenter();
+  var px = map.getPixelFromCoordinate(center);
+  px[1] += 1;
+  var coord = map.getCoordinateFromPixel(px);
+  var d = ol_sphere_getDistance(
+    ol_proj_transform(center, proj, 'EPSG:4326'),
+    ol_proj_transform(coord, proj, 'EPSG:4326'));
+  d *= (dpi||96) /.0254
+  return d;
+};
+export {ol_sphere_getMapScale as getMapScale}
+
+/** Set map scale factor
+ * @param {ol_Map} map
+ * @param {number|string} scale the scale factor or a scale string as 1/xxx
+ * @param {number} [dpi=96] dpi, default 96
+ * @return {number} scale factor
+ */
+var ol_sphere_setMapScale = function (map, scale, dpi) {
+  if (map && scale) {
+    var fac = scale;
+    if (typeof(scale)==='string') {
+      fac = scale.split('/')[1];
+      if (!fac) fac = scale;
+      fac = fac.replace(/[^\d]/g,'');
+      fac = parseInt(fac);
+    }
+    if (!fac) return;
+    // Calculate new resolution
+    var view = map.getView();
+    var proj = view.getProjection();
+    var center = view.getCenter();
+    var px = map.getPixelFromCoordinate(center);
+    px[1] += 1;
+    var coord = map.getCoordinateFromPixel(px);
+    var d = ol_sphere_getDistance(
+      ol_proj_transform(center, proj, 'EPSG:4326'),
+      ol_proj_transform(coord, proj, 'EPSG:4326'));
+    d *= (dpi || 96) /.0254
+    view.setResolution(view.getResolution()*fac/d);
+    return fac;
+  }
+};
+export {ol_sphere_setMapScale as setMapScale}

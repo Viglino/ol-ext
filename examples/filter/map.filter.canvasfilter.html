@@ -1,0 +1,195 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+<!--
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Canvas filters</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="This filter apply a composite operation on layer drawing." />
+  <meta name="keywords" content="ol3, filter, canvas, blur, huerotate, saturation, invert sepia" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <style>
+    label {
+      display: block;
+    }
+    input[type="range"] {
+      width: 20em;
+      vertical-align: middle;
+      margin: 0 .5em .5em 0;
+    }
+    .options ul {
+      background: #fff;
+      box-shadow: 0 0 3px #369;
+      padding: .5em;
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Canvas filter</h1>
+  </a>
+  <div class="info">
+    <i>ol/filter/CanvasFilter</i> applies a canvas filter on layer drawing.
+    <br/>
+    See <a href="https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/filter#Browser_compatibility">
+    browser compatibility</a> or use <a href="map.filter.colorize.html">color filters</a>.
+  </div>
+
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options" >
+    Operations:
+    <ul>
+      <li>
+        <label>emboss:</label><input onchange="setEmboss(this.value);" type="range" value=0 min=0 max=2 step=".1">px
+      </li><li>
+        <label>erode:</label><input onchange="setErode(this.value);" type="range" value=0 min=0 max=10>px
+      </li><li>
+        <label>blur:</label><input onchange="filter.set('blur', this.value);" list="20marks" type="range" value=0 min=0 max=20>px
+      </li><li>
+        <label>brightness:</label><input onchange="filter.set('brightness', this.value);" list="200marks" type="range" value=100 min=0 max=200>%
+      </li><li>
+        <label>contrast:</label><input onchange="filter.set('contrast', this.value);" list="200marks" type="range" value=100 min=0 max=200>%
+      </li><li>
+        <label>grayscale:</label><input onchange="filter.set('grayscale', this.value);" list="100marks" type="range" value=0 min=0 max=100>%
+      </li><li>
+        <label>hueRotate:</label><input onchange="filter.set('hueRotate', this.value);" list="360marks" type="range" value=0 min=0 max=360>
+      </li><li>
+        <label>invert:</label><input onchange="filter.set('invert', this.value);" list="100marks" type="range" value=0 min=0 max=100>%
+      </li><li>
+        <label>saturate:</label><input onchange="filter.set('saturate', this.value);" list="200marks" type="range" value=100 min=0 max=200>%
+      </li><li>
+        <label>sepia:</label><input onchange="filter.set('sepia', this.value);" list="100marks" type="range" value=0 min=0 max=100>%
+      </li>
+    </ul>
+  </div>
+  <datalist id="20marks">
+    <option value="0" label="0">
+    <option value="2">
+    <option value="4">
+    <option value="6">
+    <option value="8">
+    <option value="10" label="10">
+    <option value="12">
+    <option value="14">
+    <option value="16">
+    <option value="18">
+    <option value="20" label="20">
+  </datalist>  
+  <datalist id="360marks">
+    <option value="0" label="0">
+    <option value="90">
+    <option value="180" label="10">
+    <option value="270">
+    <option value="360" label="360">
+  </datalist>  
+  <datalist id="100marks">
+    <option value="0" label="0%">
+    <option value="10">
+    <option value="20">
+    <option value="30">
+    <option value="40">
+    <option value="50" label="50%">
+    <option value="60">
+    <option value="70">
+    <option value="80">
+    <option value="90">
+    <option value="100" label="100%">
+  </datalist>  
+  <datalist id="200marks">
+    <option value="0" label="0%">
+    <option value="20">
+    <option value="40">
+    <option value="60">
+    <option value="80">
+    <option value="100" label="100%">
+    <option value="120">
+    <option value="140">
+    <option value="160">
+    <option value="180">
+    <option value="200" label="200%">
+  </datalist>
+
+  <script type="text/javascript">
+    $('.options input').each(function(){
+      var span = $('<span>').text(this.value).insertAfter(this);
+      $(this).on('change', function() { span.text(this.value) });
+    })
+
+    var osm = new ol.layer.Tile({ source: new ol.source.OSM() });
+    // The map
+    var map = new ol.Map ({
+      target: 'map',
+      view: new ol.View ({
+        zoom: 13,
+        center: [340705, 6556400]
+      }),
+      layers: [ osm ]
+    });
+
+    var filter = new ol.filter.CanvasFilter();
+    osm.addFilter(filter);
+
+    // Emboss filter
+    var emboss = new ol.ext.SVGOperation('feConvolveMatrix');
+    var embossFilter = new ol.ext.SVGFilter({ operation: emboss });
+    function setEmboss(v) {
+      if (v==0) {
+        filter.removeSVGFilter(embossFilter);
+      } else {
+        emboss.set('kernelMatrix', [
+          v,  v, -v,
+          v,  1, -v,
+          v, -v, -v
+        ]);
+        filter.addSVGFilter(embossFilter);
+      }
+    }
+
+    // Erode filter
+    var erode = new ol.ext.SVGOperation({
+      feoperation: 'feMorphology',
+      operator: 'erode',
+      radius: 1
+    });
+    var erodeFilter = new ol.ext.SVGFilter({ operation: erode });
+    function setErode(val) {
+      if (val==0) filter.removeSVGFilter(erodeFilter);
+      else {
+        erode.set('radius', val);
+        filter.addSVGFilter(erodeFilter);
+      }
+    }
+
+    map.addControl(new ol.control.Permalink({ visible: false }));
+
+  </script>
+
+</body>
+</html>

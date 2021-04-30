@@ -1,0 +1,272 @@
+﻿<html>
+<head>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <link rel="icon" type="image/png" href="https://avatars.githubusercontent.com/u/75709127" />
+
+  <!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+	<link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+	
+	<!-- ol-ext -->
+	<link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <!-- MapLibre-GL -->
+  <script src="https://unpkg.com/maplibre-gl@1.13.0-rc.4/dist/mapbox-gl.js"></script>
+  <link href="https://unpkg.com/maplibre-gl@1.13.0-rc.4/dist/mapbox-gl.css" rel="stylesheet" />
+
+  <script src="https://unpkg.com/three@0.106.2/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.106.2/examples/js/loaders/GLTFLoader.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    #map,
+    #map2 {
+      position: absolute; 
+      margin: 0;
+      top: 4em; 
+      left: 0;
+      width: 100%;
+      bottom: 0;
+    }
+    #map2 {
+      display: none;
+    }
+    .sync #map {
+      left: 50%;
+      width: 50%;
+    }
+    .sync #map2 {
+      left: 0;
+      display: block;
+      width: calc(50% - 4px);
+    }
+    .sync #map  .ol-zoom,
+    .sync #map2  .ol-rotate {
+      display: none;
+    }
+    #menu {
+      position: absolute;
+      top: 3.5em;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1;
+    }
+    #menu button {
+      width: 2em;
+      height: 2em;
+      display: inline-block;
+      position: relative;
+    }
+    #menu button:before{
+      content: "";
+      position: absolute;
+      background-color: #fff;
+      height: 1.5em;
+      width: .75em;
+      top: 50%;
+      left: .2em;
+      transform: translateY(-50%);
+      box-shadow: 0.9em 0 #fff;
+    }
+    #menu button:after{
+      content: "";
+      width: 6px;
+      height: 8px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 1px;
+      border: 2px solid rgba(51, 102, 153, .7);
+      background-color: #fff;
+      position: absolute;
+      border-width: 0 2px;
+      box-sizing: border-box;
+      box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(51, 102, 153, .7);
+    }
+    #menu .sync button:after{
+      content: unset;
+    }
+    #menu .splith button:before{
+      width: 1.65em;
+      height: .75em;
+      top: .5em;
+      box-shadow: 0 0.9em #fff;
+    }
+    #menu .clip button:before {
+      width: 1.65em;
+      box-shadow: unset;
+    }
+    #menu .clip button:after {
+      width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      border-width: 2px;
+      box-shadow: none;
+    }
+  </style>
+
+</head>
+
+<body class="splitv"> 
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>Layer MaplibreGL</h1>
+  </a>
+
+  <div id="menu"></div>
+
+  <div id="map"></div>
+  <div id="map2"></div>
+  
+<script>
+
+var mbLayer = new ol.layer.Maplibre({
+  title: 'Plan IGN MVT',
+  className: 'GL',
+  style: './standard.json',
+  source: new ol.source.Source({
+    attributions : '<a href="http://www.geoportail.gouv.fr/">Géoportail</a> &copy; <a href="http://www.ign.fr/">IGN-France</a>'
+  })
+});
+
+var planv2 = new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2');
+//
+var map = new ol.Map({
+  target: 'map',
+  view: new ol.View({
+    center: [166326, 5992663],
+    zoom: 4,
+  }),
+  layers: [mbLayer, planv2],
+});
+
+var swipeCtrl = new ol.control.Swipe({ layers: planv2 });
+map.addControl(new ol.control.Permalink({visible: false}));
+map.addControl(new ol.control.LayerSwitcher());
+
+var clipInter = new ol.interaction.Clip({ radius: 200, layers:[planv2] });
+clipInter.setActive(false);
+
+var map2 = new ol.Map({
+  target: 'map2',
+  view: new ol.View({
+    center: [166326, 5992663],
+    zoom: 4,
+  }),
+  layers: [new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2')],
+});
+
+map.addInteraction(new ol.interaction.Synchronize({ maps: [map2] }))
+map2.addInteraction(new ol.interaction.Synchronize({ maps: [map] }))
+
+// sync maps
+var sync = new ol.control.Toggle({ className: 'sync' });
+sync.on('change:active', function(e) {
+  if (e.active) {
+    planv2.setVisible(false);
+    document.body.className = 'sync';
+  } else {
+    document.body.className = '';
+    planv2.setVisible(true);
+  }
+  map2.updateSize();
+  map.updateSize();
+});
+// split
+var splitv = new ol.control.Toggle({ className: 'splitv' });
+splitv.on ('change:active', function(e) {
+  if (splitv.getActive() || splith.getActive()) {
+    planv2.setVisible(true);
+    map.addControl(swipeCtrl);
+  } else {
+    map.removeControl(swipeCtrl);
+  }
+  if (e.active) {
+    swipeCtrl.set('orientation', 'vertical');
+    swipeCtrl.set('position', .5);
+  }
+});
+var splith = new ol.control.Toggle({ className: 'splith' });
+splith.on ('change:active', function(e) {
+  if (splitv.getActive() || splith.getActive()) {
+    planv2.setVisible(true);
+    map.addControl(swipeCtrl);
+  } else {
+    map.removeControl(swipeCtrl);
+  }
+  if (e.active) {
+    swipeCtrl.set('orientation', 'horizontal');
+    swipeCtrl.set('position', .5);
+  }
+});
+// clip
+var clip = new ol.control.Toggle({
+  className: 'clip',
+  interaction: clipInter
+});
+clip.on ('change:active', function(e) {
+  if (e.active) planv2.setVisible(true);
+});
+
+map.addControl(new ol.control.Bar({
+  target: 'menu',
+  className: 'menu',
+  toggleOne: true,
+  controls: [sync, splitv, splith, clip]
+}));
+
+/* update Geoportail style * /
+function gpStyle2glStyle(fileName) {
+  function replace(font) {
+    font.forEach(function(f, i){
+      font[i] = f.replace('Source Sans Pro', 'Open Sans');
+    })
+  }
+  function setZoom(t) {
+    if (t) {
+      if (t.minzoom) t.minzoom -= 1;
+      if (t.maxzoom) t.maxzoom -= 1;
+      if (t.stops) {
+        t.stops.forEach(function(s) {
+          s[0] -= 1;
+        });
+      }
+    }
+  }
+  $.ajax({
+    url: fileName,
+    success: function(r) {
+      r.glyphs = "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf";
+      r.layers.forEach(function(l) {
+        setZoom(l);
+        setZoom(l.paint['line-color']);
+        setZoom(l.paint['line-width']);
+        setZoom(l.paint['fill-color']);
+        if (l.layout['text-font']) {
+          if (l.layout['text-font'].stops) {
+            l.layout['text-font'].stops.forEach(function(s, i) {
+              replace(l.layout['text-font'].stops[i][1]);
+            })
+          } else {
+            replace(l.layout['text-font'])
+          }
+        }
+      });
+      console.log(JSON.stringify(r));
+    }
+  })
+}
+*/
+
+</script>
+</body>
+</html>

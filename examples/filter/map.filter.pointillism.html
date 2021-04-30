@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+<!--
+  Copyright (c) 2016-2017 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->	
+  <title>ol-ext: Pointillism filter</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+
+  <meta name="description" content="Turn an ol map or layer into a pointillist painting." />
+  <meta name="keywords" content="ol, openlayers, filter, artistic, painting, pointillism" />
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@viglino">
+  <meta name="twitter:creator" content="@viglino">
+  <meta name="twitter:title" content="ol-ext - Pointillism filter">
+  <meta name="twitter:description" content="Turn french Géoportail aerial photos into pointillist painting using Openlayers.">
+  <meta name="twitter:image" content="https://viglino.github.io/ol-ext/examples/img/pointillism.jpg">
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+  <script type="text/javascript" src="https://cdn.rawgit.com/Viglino/Geoportail-KISS/gh-pages/apikey.js"></script>
+
+  <!-- filesaver-js -->
+  <script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+
+  <link rel="stylesheet" href="./paint.css" />
+
+</head>
+<body>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <div class="frame">
+    <div class="top"></div>
+    <div class="bottom"></div>
+    <h2>ol-ext</h2>
+  </div>
+
+  <div class="wait">
+    <i class="fa fa-spinner fa-pulse"></i><br/>
+    Processing...
+  </div>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Pointillism filter</h1>
+  </a>
+
+  <!-- Map div -->
+  <div id="map"></div>
+
+  <div class="options visible" >
+    <h2 style="text-align: center; max-width: 18em; margin: 1em auto;">
+      <i class="fa fa-paint-brush"></i> Turn your maps into pointillism paintings!
+    </h2>
+    <small>
+      Openlayers ol/filter/Pointillism by <a href="https://github.com/Viglino/ol-ext/blob/master/src/source/OilPainting.js">
+      JM Viglino on Github</a>.
+    </small>
+    <h2><i class="fa fa-map"></i> Image </h2>
+    &copy; IGN-Géoportail
+    <h2><i class="fa fa-list"></i> Options</h2>
+    <ul>
+      <li>
+        <label>saturate: </label><input id="saturate" onchange="filter.set('saturate', this.value); plink.setUrlParam('s',this.value);" type="number" min="0" max="20" value="2" />
+      </li>
+      <li>
+        <label>hue: </label>
+        <input id="hueRotate" style="width:12em;" onchange="filter2.set('hueRotate', this.value); plink.setUrlParam('h',this.value); layer.changed();" type="range" min="0" max="360" value="0" />
+        <div style="width: 10em;height: 1em;background-image: linear-gradient(90deg, red, magenta, blue, cyan, green, yellow, red);margin: 0 0 .5em 6em;"></div>
+      </li>
+      <li>
+        <label>pastel: </label>
+        <input id="pastel" style="width:12em;" onchange="pastel.setValue(this.value); plink.setUrlParam('p',this.value); layer.changed();" type="range" min="0" max=".6" step=".05" value="0" />
+      </li>
+    </ul>
+    <i class="fa fa-times" onclick="$('.options').removeClass('visible');"></i>
+    <button onclick="print.print();"><i class="fa fa-download"></i> download painting...</button>
+  </div>
+
+<script type="text/javascript">
+  var center = [343598, 5240059, 17];
+</script>
+<script type="text/javascript" src="./paint.js"></script>
+<script type="text/javascript">
+  // Pointillism filter
+  var layer = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', baseLayer: true });
+  // Use same source to load images once
+  layer.setSource(photoLayer.getSource());
+
+  // Add filter
+  var filter = new ol.filter.Pointillism();
+  layer.addFilter(filter);
+  
+  // Add hueRotate filter
+  var filter2 = new ol.filter.CanvasFilter();
+  layer.addFilter(filter2);
+
+  // Add pastel filter
+  var pastel = new ol.filter.Colorize({ operation: 'luminosity', value:1 });
+  pastel.setColor([255,192,255]);
+  pastel.setValue(0);
+  layer.addFilter(pastel);
+
+  // Permalilnk
+  if (plink.getUrlParam('s') !== '') {
+    filter.set('saturate', plink.getUrlParam('s'));
+    $('#saturate').val(plink.getUrlParam('s'));
+  }
+  if (plink.getUrlParam('h') !== '') {
+    filter2.set('hueRotate', plink.getUrlParam('h'));
+    $('#hueRotate').val(plink.getUrlParam('h'));
+  }
+  if (plink.getUrlParam('p') !== '') {
+    pastel.setValue(plink.getUrlParam('p'));
+    $('#pastel').val(plink.getUrlParam('p'));
+  }
+  if (plink.getUrlParam('title') !== '') {
+    $('.frame h2').text(plink.getUrlParam('title'));
+    $('.options').removeClass('visible');
+  }
+
+  map.addLayer(layer);
+  layer.getPreview = function() {
+    return [ "../img/pointillism.jpg" ];
+  }
+
+</script>
+
+</body>
+</html>

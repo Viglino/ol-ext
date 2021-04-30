@@ -70,7 +70,7 @@ ol_Overlay_Placemark.prototype.setColor = function(color) {
  * @param {string} color
  */
 ol_Overlay_Placemark.prototype.setBackgroundColor = function(color) {
-  this.element.style.backgroundColor = color;
+  this._elt.style.backgroundColor = color;
 };
 
 /**

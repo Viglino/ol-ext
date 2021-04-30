@@ -14,12 +14,13 @@ import {intersects as ol_extent_intersects} from 'ol/extent'
 
 import ol_ext_element from '../util/element'
 
-/**
- * @classdesc OpenLayers 3 Layer Switcher Control.
+/** Layer Switcher Control.
  * @fires drawlist
  * @fires toggle
  * @fires reorder-start
  * @fires reorder-end
+ * @fires layer:visible
+ * @fires layer:opacity
  * 
  * @constructor
  * @extends {ol_control_Control}
@@ -38,7 +39,7 @@ import ol_ext_element from '../util/element'
  *
  * Layers attributes that control the switcher
  *	- allwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false
- *	- displayInLayerSwitcher {boolean} display in switcher, default true
+ *	- displayInLayerSwitcher {boolean} display the layer in switcher, default true
  *	- noSwitcherDelete {boolean} to prevent layer deletion (w. trash option = true), default false
  */
 var ol_control_LayerSwitcher = function(options) {
@@ -157,7 +158,7 @@ ol_control_LayerSwitcher.prototype.tip = {
  * @return {boolean} true if the layer is displayed
  */
 ol_control_LayerSwitcher.prototype.displayInLayerSwitcher = function(layer) {
-  return (layer.get("displayInLayerSwitcher")!==false);
+  return (layer.get('displayInLayerSwitcher')!==false);
 };
 
 /**
@@ -183,10 +184,10 @@ ol_control_LayerSwitcher.prototype.setMap = function(map) {
     }
     // Listen to a layer group
     if (this._layerGroup) {
-      this._listener.change = this._layerGroup.on('change', this.drawPanel.bind(this));
+      this._listener.change = this._layerGroup.getLayers().on('change:length', this.drawPanel.bind(this));
     } else  {
       //Listen to all layers
-      this._listener.change = map.getLayerGroup().on('change', this.drawPanel.bind(this));
+      this._listener.change = map.getLayerGroup().getLayers().on('change:length', this.drawPanel.bind(this));
     }
   }
 };
@@ -286,7 +287,63 @@ ol_control_LayerSwitcher.prototype.overflow = function(dir) {
  * @param {ol.layer} layer
  */
 ol_control_LayerSwitcher.prototype._setLayerForLI = function(li, layer) {
-  this._layers.push({ li:li, layer:layer });
+  var listeners = [];
+  if (layer.getLayers) {
+    listeners.push(layer.getLayers().on('change:length', this.drawPanel.bind(this)));
+  }
+  if (li) {
+    // Handle opacity change
+    listeners.push(layer.on('change:opacity', (function() {
+      this.setLayerOpacity(layer, li);
+    }).bind(this)));
+    // Handle visibility chage
+    listeners.push(layer.on('change:visible', (function() {
+      this.setLayerVisibility(layer, li);
+    }).bind(this)));
+  }
+  // Other properties
+  listeners.push(layer.on('propertychange', (function(e) {
+    if (e.key === 'displayInLayerSwitcher'
+      || e.key === 'openInLayerSwitcher') {
+      this.drawPanel(e);
+    }
+  }).bind(this)));
+  this._layers.push({ li:li, layer:layer, listeners: listeners });
+};
+
+/** Set opacity for a layer
+ * @param {ol.layer.Layer} layer
+ * @param {Element} li the list element
+ * @api
+ */
+ol_control_LayerSwitcher.prototype.setLayerOpacity = function(layer, li) {
+  var i = li.querySelector('.layerswitcher-opacity-cursor')
+  if (i) i.style.left = (layer.getOpacity()*100)+"%"
+  this.dispatchEvent({ type: 'layer:opacity', layer: layer });
+};
+
+/** Set visibility for a layer
+ * @param {ol.layer.Layer} layer
+ * @param {Element} li the list element
+ * @api
+ */
+ol_control_LayerSwitcher.prototype.setLayerVisibility = function(layer, li) {
+  var i = li.querySelector('.ol-visibility');
+  if (i) i.checked = layer.getVisible();
+  if (layer.getVisible()) li.classList.add('ol-visible');
+  else li.classList.remove('ol-visible');
+  this.dispatchEvent({ type: 'layer:visible', layer: layer });
+};
+
+/** Clear layers associated with li
+ */
+ol_control_LayerSwitcher.prototype._clearLayerForLI = function() {
+  this._layers.forEach(function (li) {
+    li.listeners.forEach(function(l) {
+      ol_Observable_unByKey(l);
+    });
+  })
+  this._layers = [];
 };
 
 /** Get the layer associated with a li
@@ -331,7 +388,7 @@ ol_control_LayerSwitcher.prototype.drawPanel = function() {
 ol_control_LayerSwitcher.prototype.drawPanel_ = function() {
   if (--this.dcount || this.dragging_) return;
   // Remove existing layers
-  this._layers = [];
+  this._clearLayerForLI();
   this.panel_.querySelectorAll('li').forEach (function(li) {
     if (!li.classList.contains('ol-header')) li.remove();
   }.bind(this));
@@ -619,7 +676,11 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection) {
   // Add the layer list
   for (var i=layers.length-1; i>=0; i--) {
     var layer = layers[i];
-    if (!self.displayInLayerSwitcher(layer)) continue;
+
+    if (!self.displayInLayerSwitcher(layer)) {
+      this._setLayerForLI(null, layer);
+      continue;
+    } 
 
     var li = ol_ext_element.create('LI', {
       className: (layer.getVisible()?"visible ":" ")+(layer.get('baseLayer')?"baselayer":""),
@@ -641,6 +702,7 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection) {
     // Visibility
     ol_ext_element.create('INPUT', {
       type: layer.get('baseLayer') ? 'radio' : 'checkbox',
+      className: 'ol-visibility',
       checked: layer.getVisible(),
       click: setVisibility,
       parent: d

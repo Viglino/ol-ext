@@ -26,6 +26,8 @@
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
 
   <style>
     .options label {
@@ -118,8 +120,7 @@
   }
 
   // Nouvelle source de donnee
-  var vector = new ol.layer.Vector({
-    renderMode: 'image',
+  var vector = new ol.layer.VectorImage({
     source: new ol.source.Vector({ features: new ol.Collection() }),
     style: getStyle
   })

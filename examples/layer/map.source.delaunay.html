@@ -5,7 +5,7 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 	<meta name="description" content="Calculate the Delaunay triangulation of a Point vector source." />
-	<meta name="keywords" content="ol, openlayers tirangulation, delaunay" />
+	<meta name="keywords" content="ol, openlayers, source, vector, tirangulation, delaunay, voronoi, TIN" />
 
 	<!-- jQuery -->
 	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
@@ -17,7 +17,12 @@
 	
 	<!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
-	<script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <!-- filesaver-js -->
+	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
 
   <link rel="stylesheet" href="../style.css" />
   
@@ -57,7 +62,7 @@
       <br/>
       You can add/remove vertex from the point source and get the resulting triangles directly in the triangle source.
       <br/>
-      If you're looking for you'd better see an other algorithme like 
+      If you're looking for more efficient algorithm you'd better look at something like 
       <a href="https://github.com/mapbox/delaunator#performance">
         mapbox/delaunator
       </a>
@@ -71,11 +76,24 @@
 	<div id="map" style="width:600px; height:400px;"></div>
 	
 	<div class="options">
-    <input type="number" value="20" />
-    <button onclick="generate(Number($(this).prev().val()))">Generate!</button>
-    <br/>
-    Generated triangles
-    <ul class='triangles'></ul>
+    <ul>
+      <li>
+        <input type="number" value="20" />
+        <button onclick="generate(Number($(this).prev().val()))">Generate!</button>
+      </li>
+      <li>
+        <label><input type="checkbox" id="voronoi"/> show Voronoi</label>
+        (<label><input type="checkbox" id="border"/> border</label>)
+      </li>
+      <li>
+        <button onclick="save('delaunay')">Save Delaunay</button>
+        <button onclick="save('voronoi')">Save Voronoi</button>
+      </li>
+      <li>
+        Generated triangles
+        <ul class='triangles'></ul>
+      </li>
+    </ul>
 	</div>
 
 <script type="text/javascript">
@@ -138,6 +156,10 @@
   
   var redStyle = new ol.style.Style({
     fill: new ol.style.Fill({ color: [255,0,0,.2] })
+  });
+  var voroStyle = new ol.style.Style({
+    stroke: new ol.style.Stroke({ color: [128,0,0,.5], width: 1.25 }),
+    fill: new ol.style.Fill({ color: [128,0,0,.1] })
   });
 
   // Node source
@@ -225,6 +247,34 @@
   });
   map.addLayer(circle);
 
+  // Voronoi
+  var voronoi = new ol.layer.Vector({
+    name: 'Voronoi',
+    source: new ol.source.Vector(),
+    style: voroStyle
+  });
+  map.addLayer(voronoi);
+
+  var tout
+  delaunay.on('addfeature', function() { 
+    if (tout) clearTimeout(tout);
+    tout = setTimeout(calculateVoronoi, 500);
+  });
+
+  function calculateVoronoi () {
+    voronoi.getSource().clear();
+    if ($('#voronoi').prop('checked')) {
+      var features = [];
+      delaunay.calculateVoronoi($('#border').prop('checked')).forEach(function(f) {
+        features.push (f);
+      });
+      voronoi.getSource().addFeatures(features);
+    }
+  }
+  $('#voronoi').on('change', calculateVoronoi);
+  $('#border').on('change', calculateVoronoi);
+
+
   // Show circumcircle on hover
 	var hover = new ol.interaction.Hover({
     layers: [triangle]
@@ -249,6 +299,35 @@
     html: 'circle',
     interaction: hover
   }));
+
+  // Import / export data
+  var dd = new ol.interaction.DropFile();
+  map.addInteraction (dd);
+  dd.on('loadstart', function () { $('body').addClass('waiting'); });
+  dd.on('loadend', function () { $('body').removeClass('waiting'); });
+	dd.on ('addfeatures', function(event) {
+    var features = [];
+    delaunay.clear();
+    event.features.forEach(function(f) {
+      if (f.getGeometry().getType()==='Point') nodes.addFeature(f);
+    });
+  });
+
+  function save(what) {
+    var format = new ol.format.GeoJSON();
+    var features;
+    if (what === 'delaunay') {
+      features = delaunay.getFeatures();
+    } else {
+      features = voronoi.getSource().getFeatures();
+    }
+		var data = format.writeFeatures(features, {
+			dataProjection: 'EPSG:4326',
+			featureProjection: map.getView().getProjection()
+		});
+		var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
+		saveAs(blob, what+'.geojson');
+	}
 
 </script>
 	
