@@ -312,7 +312,7 @@ $('#save form').on('submit', function(e) {
         }
       }
       if (intersect) {
-        f.setStyle(style(f));
+        if (typeof(style)==='function') f.setStyle(style(f));
         if (geom || limit || nonull) {
           f = f.clone();
           var prop = f.getProperties();
