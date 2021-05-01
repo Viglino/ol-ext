@@ -354,11 +354,14 @@ if (ol.View.prototype.flyTo)  {
 }
 /** Destination
  * @typedef {Object} viewTourDestinations
- *  @property {number} [duration=2000] animation duration
  *  @property {string} [type=flyto] animation type (flyTo, moveTo), default flyTo
+ *  @property {number} [duration=2000] animation duration
  *  @property {ol.coordinate} [center=] destination coordinate, default current center
  *  @property {number} [zoom] destination zoom, default current zoom
  *  @property {number} [zoomAt=-2] zoom to fly to, default min (current zoom, zoom) -2
+ *  @property {function} [easing] easing function used during the animation, defaults ol/easing~inAndOut
+ *  @property {number} [rotation] The rotation of the view at the end of the animation
+ *  @property {anchor} [anchor] Optional anchor to remain fixed during a rotation or resolution animation.
  */
 /** FlyTo animation
  * @param {viewTourDestinations} options
@@ -377,37 +380,46 @@ ol.View.prototype.flyTo = function(options, done) {
   // Move to
   this.animate ({
     center: coord,
-    duration: duration
+    duration: duration,
+    easing: options.easing,
+    anchor: options.anchor,
+    rotation: options.rotation
   });
   // Zoom to
   this.animate ({
     zoom: zoomAt,
-    duration: duration/2
+    duration: duration/2,
+    easing: options.easing,
+    anchor: options.anchor
   },{
     zoom: zoomTo,
-    duration: duration/2
+    duration: duration/2,
+    easing: options.easing,
+    anchor: options.anchor
   },
   callback);
 };
 /** Start a tour on the map
- * @param {Array<viewTourDestinations>|Array<Array>} destinations an array of destinations or an array of [x,y,zoom,type]
- * @param {function} done callback function called at the end of an animation, called with true if the tour completed
- * @param {function} step callback function called when a destination is reached with the step index as param
+ * @param {Array<viewTourDestinations>|Array<Array>} destinations an array of destinations or an array of [x,y,zoom,destinationType]
+ * @param {Object} options 
+ *  @param {number} [options.delay=750] delay between 2 destination
+ *  @param {string} [options.type] animation type (flyTo, moveTo) to use if not defined in destinations
+ *  @param {function} [options.easing] easing function used during the animation if not defined in destinations
+ *  @param {function} [options.done] callback function called at the end of an animation, called with true if the tour completed
+ *  @param {function} [options.step] callback function called when a destination is reached with the step index as param
  */
-ol.View.prototype.takeTour = function(destinations, options, done, step) {
+ol.View.prototype.takeTour = function(destinations, options) {
   options = options || {};
-  if (typeof(options)==='function') {
-    done = options;
-    options = {}
-  }
   var index = -1;
   var next = function(more) {
     if (more) {
       var dest = destinations[++index];
-      if (typeof(step) === 'function') step(index, destinations);
+      if (typeof(options.step) === 'function') options.step(index, destinations);
       if (dest) {
         if (dest instanceof Array) dest = { center: [dest[0],dest[1]], zoom: dest[2], type: dest[3] };
         var delay = index === 0 ? 0 : (options.delay || 750);
+        if (!dest.easing) dest.easing = options.easing;
+        if (!dest.type) dest.type = options.type;
         setTimeout(function () {
           switch(dest.type) {
             case 'moveTo': {
@@ -422,10 +434,10 @@ ol.View.prototype.takeTour = function(destinations, options, done, step) {
           }
         }.bind(this), delay);
       } else {
-        if (typeof(done)==='function') done(true);
+        if (typeof(options.done)==='function') options.done(true);
       }
     } else {
-      if (typeof(done)==='function') done(false);
+      if (typeof(options.done)==='function') options.done(false);
     }
   }.bind(this)
   next(true);
@@ -1476,7 +1488,7 @@ ol.legend.Legend.prototype.setStyle = function(style) {
   this.refresh();
 };
 /** Add a new item to the legend
- * @param {ol.legend.Item.olLegendItemOptions|ol.legend.Item} item 
+ * @param {olLegendItemOptions|ol.legend.Item} item 
  */
 ol.legend.Legend.prototype.addItem = function(item) {
   if (item instanceof ol.legend.Item) {
@@ -1601,7 +1613,7 @@ ol.legend.Legend.prototype.refresh = function() {
   });
 };
 /** Get the image for a style 
- * @param {ol.legend.Item.olLegendItemOptions} item 
+ * @param {olLegendItemOptions} item 
  * @param {Canvas|undefined} canvas a canvas to draw in, if none creat one
  * @param {int|undefined} row row number to draw in canvas, default 0
  * @return {CanvasElement}
@@ -1623,7 +1635,7 @@ ol.legend.Legend.prototype.getLegendImage = function(options, canvas, row) {
   }, canvas, row);
 };
 /** Get a symbol image for a given legend item
- * @param {ol.legend.Item.olLegendItemOptions} item 
+ * @param {olLegendItemOptions} item 
  * @param {Canvas|undefined} canvas a canvas to draw in, if none creat one
  * @param {int|undefined} row row number to draw in canvas, default 0
  */
@@ -13521,6 +13533,7 @@ ol.control.Timeline.prototype.getEndDate = function() {
  *	@param {String} options.className class of the control
  *	@param {number} [options.framerate=30] framerate for the video
  *	@param {number} [options.videoBitsPerSecond=5000000] bitrate for the video
+ *	@param {DOMElement} [options.target] video element or the container to add the video when finished, default none
  */
 ol.control.VideoRecorder = function(options) {
   if (!options) options = {};
@@ -13566,10 +13579,12 @@ ol.control.VideoRecorder = function(options) {
   });
   // Start
   ol.control.Control.call(this, {
-    element: element
+    element: element,
+    target: options.target
   });
   this.set('framerate', 30);
   this.set('videoBitsPerSecond', 5000000);
+  this._videoTarget = options.videoTarget;
   // Print control
   this._printCtrl = new ol.control.Print({
     target: ol.ext.element.create('DIV')
@@ -13603,7 +13618,17 @@ ol.control.VideoRecorder.prototype.start = function () {
     }, capture);
   }
   print.fastPrint({}, function(canvas) {
-    var videoStream = canvas.captureStream(this.get('framerate') || 30); // the parameter is the desired framerate, see the MDN doc for more info
+    var videoStream;
+    try {
+      videoStream = canvas.captureStream(this.get('framerate') || 30);
+    } catch(e) {
+      this.dispatchEvent({
+        type: 'error',
+        error: e
+      });
+      // console.warn(e);
+      return;
+    }
     this._mediaRecorder = new MediaRecorder(videoStream, {
       videoBitsPerSecond : this.get('videoBitsPerSecond') || 5000000
     });
@@ -13615,7 +13640,24 @@ ol.control.VideoRecorder.prototype.start = function () {
       stop = true;
       var blob = new Blob(chunks, { 'type' : 'video/mp4' }); // other types are available such as 'video/webm' for instance, see the doc for more info
       chunks = [];
-      this.dispatchEvent({ type: 'stop', videoURL: URL.createObjectURL(blob) });
+      if (this._videoTarget) {
+        var video;
+        if (this._videoTarget.tagName === 'VIDEO') {
+          video = this._videoTarget;
+        } else {
+          video = this._videoTarget.querySelector('video');
+          if (!video) {
+            video = ol.ext.element.create('VIDEO', {
+              controls: '',
+              parent: this._videoTarget
+            });
+          }
+        }
+        video.src = URL.createObjectURL(blob);
+        this.dispatchEvent({ type: 'stop', videoURL: video.src });
+      } else {
+        this.dispatchEvent({ type: 'stop', videoURL: URL.createObjectURL(blob) });
+      }
     }.bind(this);
     this._mediaRecorder.onpause = function() {
       stop = true;
@@ -13633,8 +13675,8 @@ ol.control.VideoRecorder.prototype.start = function () {
     capture(canvas);
     this._mediaRecorder.start();
     this.dispatchEvent({ type: 'start', canvas: canvas });
+    this.element.setAttribute('data-state', 'rec');
   }.bind(this))
-  this.element.setAttribute('data-state', 'rec');
 };
 /** Stop recording */
 ol.control.VideoRecorder.prototype.stop = function () {
