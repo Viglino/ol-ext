@@ -2173,6 +2173,7 @@ ol.control.Button = function(options){
   var bt = this.button_ = document.createElement(/ol-text-button/.test(options.className) ? "div": "button");
   bt.type = "button";
   if (options.title) bt.title = options.title;
+  if (options.name) bt.name = options.name;
   if (options.html instanceof Element) bt.appendChild(options.html)
   else bt.innerHTML = options.html || "";
   var evtFunction = function(e) {
