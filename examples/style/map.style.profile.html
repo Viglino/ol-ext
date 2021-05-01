@@ -61,13 +61,8 @@
 <script type="text/javascript">
   
 	// Layers
-	var layer = new ol.layer.Tile({
-    source: new ol.source.XYZ({
-      url: 'https://wxs.ign.fr/pratique/geoportail/wmts?layer=ORTHOIMAGERY.ORTHOPHOTOS&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fjpeg&TileMatrix={z}&TileCol={x}}&TileRow={y}',
-      attributions: '<a href="https://www.geoportail.gouv.fr/">&copy; IGN-Geoportail</a>'
-		}),
-    updateWhileAnimating: true,
-    updateWhileInteracting: true
+	var layer = new ol.layer.Geoportail({
+    layer: 'ORTHOIMAGERY.ORTHOPHOTOS'
   });
 
 	// The map
@@ -80,7 +75,6 @@
     }),
     layers: [layer]
   });
-
 
   // GPX vetor layer
 	var source = new ol.source.Vector({

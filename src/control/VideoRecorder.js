@@ -20,6 +20,7 @@ import ol_control_Print from './Print'
  *	@param {String} options.className class of the control
  *	@param {number} [options.framerate=30] framerate for the video
  *	@param {number} [options.videoBitsPerSecond=5000000] bitrate for the video
+ *	@param {DOMElement} [options.target] video element or the container to add the video when finished, default none
  */
 var ol_control_VideoRecorder = function(options) {
   if (!options) options = {};
@@ -67,10 +68,12 @@ var ol_control_VideoRecorder = function(options) {
 
   // Start
   ol_control_Control.call(this, {
-    element: element
+    element: element,
+    target: options.target
   });
   this.set('framerate', 30);
   this.set('videoBitsPerSecond', 5000000);
+  this._videoTarget = options.videoTarget;
 
   // Print control
   this._printCtrl = new ol_control_Print({
@@ -107,7 +110,17 @@ ol_control_VideoRecorder.prototype.start = function () {
     }, capture);
   }
   print.fastPrint({}, function(canvas) {
-    var videoStream = canvas.captureStream(this.get('framerate') || 30); // the parameter is the desired framerate, see the MDN doc for more info
+    var videoStream;
+    try {
+      videoStream = canvas.captureStream(this.get('framerate') || 30);
+    } catch(e) {
+      this.dispatchEvent({
+        type: 'error',
+        error: e
+      });
+      // console.warn(e);
+      return;
+    }
     this._mediaRecorder = new MediaRecorder(videoStream, {
       videoBitsPerSecond : this.get('videoBitsPerSecond') || 5000000
     });
@@ -119,7 +132,24 @@ ol_control_VideoRecorder.prototype.start = function () {
       stop = true;
       var blob = new Blob(chunks, { 'type' : 'video/mp4' }); // other types are available such as 'video/webm' for instance, see the doc for more info
       chunks = [];
-      this.dispatchEvent({ type: 'stop', videoURL: URL.createObjectURL(blob) });
+      if (this._videoTarget) {
+        var video;
+        if (this._videoTarget.tagName === 'VIDEO') {
+          video = this._videoTarget;
+        } else {
+          video = this._videoTarget.querySelector('video');
+          if (!video) {
+            video = ol_ext_element.create('VIDEO', {
+              controls: '',
+              parent: this._videoTarget
+            });
+          }
+        }
+        video.src = URL.createObjectURL(blob);
+        this.dispatchEvent({ type: 'stop', videoURL: video.src });
+      } else {
+        this.dispatchEvent({ type: 'stop', videoURL: URL.createObjectURL(blob) });
+      }
     }.bind(this);
     this._mediaRecorder.onpause = function() {
       stop = true;
@@ -138,8 +168,8 @@ ol_control_VideoRecorder.prototype.start = function () {
     capture(canvas);
     this._mediaRecorder.start();
     this.dispatchEvent({ type: 'start', canvas: canvas });
+    this.element.setAttribute('data-state', 'rec');
   }.bind(this))
-  this.element.setAttribute('data-state', 'rec');
 };
 
 /** Stop recording */
