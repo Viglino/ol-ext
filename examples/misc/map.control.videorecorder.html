@@ -168,16 +168,18 @@
         [255386, 6250791, 16],
         [259984, 6251327, 16],
         [260022, 6251045, 13, 'moveTo']
-      ], { delay: 750 },
-      function () {
-        // Wait 1s before stop
-        setTimeout(function() {
-          rec.stop();
-          $('body').removeClass('noPointerEvent')
-          carte.setVisible(true);
-        }, 1000);
-      },
-      function(step) { console.log('step: ',step); }
+      ], { 
+        delay: 750, 
+        done: function () {
+          // Wait 1s before stop
+          setTimeout(function() {
+            rec.stop();
+            $('body').removeClass('noPointerEvent')
+            carte.setVisible(true);
+          }, 1000);
+        },
+        step: function(step) { console.log('step: ',step); }
+      }
     );
   }
 
