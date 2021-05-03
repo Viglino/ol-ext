@@ -2284,11 +2284,7 @@ ol.control.Toggle = function(options) {
   ol.control.Button.call(this, options);
   this.set("title", options.title);
   this.set ("autoActivate", options.autoActivate);
-  if (options.bar) {
-    this.subbar_ = options.bar;
-    this.subbar_.setTarget(this.element);
-    this.subbar_.element.classList.add("ol-option-bar");
-  }
+  if (options.bar) this.SetSubBar(options.bar);
   this.setActive (options.active);
   this.setDisable (options.disable);
 };
@@ -2316,6 +2312,17 @@ ol.control.Toggle.prototype.setMap = function(map) {
  */
 ol.control.Toggle.prototype.getSubBar = function () {
   return this.subbar_;
+};
+/** Set the subbar associated with a control
+ * @param {ol.control.Bar} bar a subbar
+ */
+ol.control.Toggle.prototype.SetSubBar = function (bar) {
+  var map = this.getMap();
+  if (map && this.subbar_) map.removeControl (this.subbar_);
+  this.subbar_ = bar;
+  this.subbar_.setTarget(this.element);
+  this.subbar_.element.classList.add("ol-option-bar");
+  if (map) map.addControl (this.subbar_);
 };
 /**
  * Test if the control is disabled.
@@ -5308,6 +5315,7 @@ ol.control.EditBar.prototype._setSelectInteraction = function (options) {
     sbar.addControl (new ol.control.Button({
       className: 'ol-delete',
       title: this._getTitle(options.interactions.Delete) || "Delete",
+      name: 'Delete',
       handleClick: function(e) {
         // Delete selection
         del.delete(selectCtrl.getInteraction().getFeatures());
@@ -5326,6 +5334,7 @@ ol.control.EditBar.prototype._setSelectInteraction = function (options) {
   if (options.interactions.Info !== false) {
     sbar.addControl (new ol.control.Button({
       className: 'ol-info',
+      name: 'Info',
       title: this._getTitle(options.interactions.Info) || "Show informations",
       handleClick: function() {
         self.dispatchEvent({ 
@@ -5347,6 +5356,7 @@ ol.control.EditBar.prototype._setSelectInteraction = function (options) {
     var sel = this._interactions.Select;
     selectCtrl = new ol.control.Toggle({
       className: 'ol-selection',
+      name: 'Select',
       title: this._getTitle(options.interactions.Select) || "Select",
       interaction: sel,
       bar: sbar.getControls().length ? sbar : undefined,
@@ -5374,6 +5384,7 @@ ol.control.EditBar.prototype._setEditInteraction = function (options) {
     }
     var pedit = new ol.control.Toggle({
       className: 'ol-drawpoint',
+      name: 'DrawPoint',
       title: this._getTitle(options.interactions.DrawPoint) || 'Point',
       interaction: this._interactions.DrawPoint
     });
@@ -5398,6 +5409,7 @@ ol.control.EditBar.prototype._setEditInteraction = function (options) {
     var ledit = new ol.control.Toggle({
       className: 'ol-drawline',
       title: this._getTitle(options.interactions.DrawLine) || 'LineString',
+      name: 'DrawLine',
       interaction: this._interactions.DrawLine,
       // Options bar associated with the control
       bar: new ol.control.Bar ({
@@ -5442,6 +5454,7 @@ ol.control.EditBar.prototype._setEditInteraction = function (options) {
       'ol-drawpolygon', 
       this._interactions.DrawPolygon, 
       this._getTitle(options.interactions.DrawPolygon) || 'Polygon', 
+      'DrawPolygon',
       options
     );
   }
@@ -5455,7 +5468,8 @@ ol.control.EditBar.prototype._setEditInteraction = function (options) {
     this._setDrawPolygon(
       'ol-drawhole', 
       this._interactions.DrawHole, 
-      this._getTitle(options.interactions.DrawHole) || 'Hole', 
+      this._getTitle(options.interactions.DrawHole) || 'Hole',
+      'DrawHole', 
       options
     );
   }
@@ -5489,6 +5503,7 @@ ol.control.EditBar.prototype._setEditInteraction = function (options) {
     var ctrl = new ol.control.Toggle({
       className: 'ol-drawregular',
       title: this._getTitle(options.interactions.DrawRegular) || 'Regular',
+      name: 'DrawRegular',
       interaction: this._interactions.DrawRegular,
       // Options bar associated with the control
       bar: new ol.control.Bar ({
@@ -5505,9 +5520,10 @@ ol.control.EditBar.prototype._setEditInteraction = function (options) {
 /**
  * @private
  */
-ol.control.EditBar.prototype._setDrawPolygon = function (className, interaction, title, options) {
+ol.control.EditBar.prototype._setDrawPolygon = function (className, interaction, title, name, options) {
   var fedit = new ol.control.Toggle ({
     className: className,
+    name: name,
     title: title,
     interaction: interaction,
     // Options bar associated with the control
@@ -5532,6 +5548,7 @@ ol.control.EditBar.prototype._setDrawPolygon = function (className, interaction,
     }) 
   });
   this.addControl (fedit);
+  return fedit;
 };
 /** Add modify tools
  * @private
@@ -5565,6 +5582,7 @@ ol.control.EditBar.prototype._setModifyInteraction = function (options) {
       html: '<i></i>',
       className: 'ol-transform',
       title: this._getTitle(options.interactions.Transform) || 'Transform',
+      name: 'Transform',
       interaction: this._interactions.Transform
     });
     this.addControl (transform);
@@ -5580,6 +5598,7 @@ ol.control.EditBar.prototype._setModifyInteraction = function (options) {
     var split = new ol.control.Toggle ({
       className: 'ol-split',
       title: this._getTitle(options.interactions.Split) || 'Split',
+      name: 'Split', 
       interaction: this._interactions.Split
     });
     this.addControl (split);
@@ -5596,6 +5615,7 @@ ol.control.EditBar.prototype._setModifyInteraction = function (options) {
       html: '<i></i>',
       className: 'ol-offset',
       title: this._getTitle(options.interactions.Offset) || 'Offset',
+      name: 'Offset',
       interaction: this._interactions.Offset
     });
     this.addControl (offset);
