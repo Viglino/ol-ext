@@ -128,21 +128,33 @@ ol_control_SelectBase.prototype._escape = function (s) {
 ol_control_SelectBase.prototype._checkCondition = function (f, condition, usecase) {
   if (!condition.attr) return true;
   var val = f.get(condition.attr);
+  // Try to test numeric values
+  var isNumber = (Number(val) == val && Number(condition.val) == condition.val);
+  if (isNumber) val = Number(val);
+  // Check
   var rex;
   switch (condition.op) {
     case '=':
-      rex = new RegExp('^'+this._escape(condition.val)+'$', usecase ? '' : 'i');
-      return rex.test(val);
+      if (isNumber) {
+        return val == condition.val;
+      } else {
+        rex = new RegExp('^'+this._escape(condition.val)+'$', usecase ? '' : 'i');
+        return rex.test(val);
+      }
     case '!=':
-      rex = new RegExp('^'+this._escape(condition.val)+'$', usecase ? '' : 'i');
-      return !rex.test(val);
+      if (isNumber) {
+        return val != condition.val;
+      } else {
+        rex = new RegExp('^'+this._escape(condition.val)+'$', usecase ? '' : 'i');
+        return !rex.test(val);
+      }
     case '<':
       return val < condition.val;
     case '<=':
       return val <= condition.val;
     case '>':
       return val > condition.val;
-      case '>=':
+    case '>=':
       return val >= condition.val;
     case 'contain':
       rex = new RegExp(this._escape(condition.val), usecase ? '' : 'i');
