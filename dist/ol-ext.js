@@ -2040,21 +2040,33 @@ ol.control.SelectBase.prototype._escape = function (s) {
 ol.control.SelectBase.prototype._checkCondition = function (f, condition, usecase) {
   if (!condition.attr) return true;
   var val = f.get(condition.attr);
+  // Try to test numeric values
+  var isNumber = (Number(val) == val && Number(condition.val) == condition.val);
+  if (isNumber) val = Number(val);
+  // Check
   var rex;
   switch (condition.op) {
     case '=':
-      rex = new RegExp('^'+this._escape(condition.val)+'$', usecase ? '' : 'i');
-      return rex.test(val);
+      if (isNumber) {
+        return val == condition.val;
+      } else {
+        rex = new RegExp('^'+this._escape(condition.val)+'$', usecase ? '' : 'i');
+        return rex.test(val);
+      }
     case '!=':
-      rex = new RegExp('^'+this._escape(condition.val)+'$', usecase ? '' : 'i');
-      return !rex.test(val);
+      if (isNumber) {
+        return val != condition.val;
+      } else {
+        rex = new RegExp('^'+this._escape(condition.val)+'$', usecase ? '' : 'i');
+        return !rex.test(val);
+      }
     case '<':
       return val < condition.val;
     case '<=':
       return val <= condition.val;
     case '>':
       return val > condition.val;
-      case '>=':
+    case '>=':
       return val >= condition.val;
     case 'contain':
       rex = new RegExp(this._escape(condition.val), usecase ? '' : 'i');
@@ -20732,7 +20744,6 @@ ol.interaction.Ripple.prototype.postcompose_ = function(e) {
  */
 ol.interaction.SelectCluster = function(options) {
   options = options || {};
-  var fn; 
   this.pointRadius = options.pointRadius || 12;
   this.circleMaxObjects = options.circleMaxObjects || 10;
   this.maxObjects = options.maxObjects || 60;
@@ -20756,9 +20767,9 @@ ol.interaction.SelectCluster = function(options) {
   // Add the overlay to selection
   if (options.layers) {
     if (typeof(options.layers) == "function") {
-      fn = options.layers;
+      var fnLayers = options.layers;
       options.layers = function(layer) {
-        return (layer===overlay || fn(layer));
+        return (layer===overlay || fnLayers(layer));
       };
     } else if (options.layers.push) {
       options.layers.push(this.overlayLayer_);
@@ -20766,11 +20777,11 @@ ol.interaction.SelectCluster = function(options) {
   }
   // Don't select links
   if (options.filter) {
-    fn = options.filter;
+    var fnFilter = options.filter;
     options.filter = function(f,l){
       //if (l===overlay && f.get("selectclusterlink")) return false;
       if (!l && f.get("selectclusterlink")) return false;
-      else return fn(f,l);
+      else return fnFilter(f,l);
     };
   } else options.filter = function(f,l) {
     //if (l===overlay && f.get("selectclusterlink")) return false; 
