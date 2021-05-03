@@ -46,11 +46,7 @@ var ol_control_Toggle = function(options) {
   this.set("title", options.title);
 
   this.set ("autoActivate", options.autoActivate);
-  if (options.bar) {
-    this.subbar_ = options.bar;
-    this.subbar_.setTarget(this.element);
-    this.subbar_.element.classList.add("ol-option-bar");
-  }
+  if (options.bar) this.SetSubBar(options.bar);
 
   this.setActive (options.active);
   this.setDisable (options.disable);
@@ -83,6 +79,18 @@ ol_control_Toggle.prototype.setMap = function(map) {
  */
 ol_control_Toggle.prototype.getSubBar = function () {
   return this.subbar_;
+};
+
+/** Set the subbar associated with a control
+ * @param {ol_control_Bar} bar a subbar
+ */
+ol_control_Toggle.prototype.SetSubBar = function (bar) {
+  var map = this.getMap();
+  if (map && this.subbar_) map.removeControl (this.subbar_);
+  this.subbar_ = bar;
+  this.subbar_.setTarget(this.element);
+  this.subbar_.element.classList.add("ol-option-bar");
+  if (map) map.addControl (this.subbar_);
 };
 
 /**
