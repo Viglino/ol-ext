@@ -22,12 +22,18 @@ var ol_layer_Geoportail = function(layer, options, tileoptions) {
   options = options || {};
   tileoptions = tileoptions || {};
   // use function(options, tileoption) when layer is set in options
-  if (layer.layer) {
-    tileoptions = options;
+  if (typeof(layer)!=='string') {
+    tileoptions = options || {};
     options = layer;
     layer = options.layer;
   }
   var maxZoom = options.maxZoom;
+
+  // A source is defined
+  if (options.source) {
+    layer = options.source.getLayer();
+    options.gppKey = options.source.getGPPKey();
+  }
 
   var capabilities = window.geoportailConfig ? window.geoportailConfig.capabilities[options.gppKey || options.key] || window.geoportailConfig.capabilities["default"] || ol_layer_Geoportail.capabilities : ol_layer_Geoportail.capabilities;
   capabilities = capabilities[layer];
@@ -43,7 +49,7 @@ var ol_layer_Geoportail = function(layer, options, tileoptions) {
   this._originators = capabilities.originators;
 
   if (!tileoptions.gppKey) tileoptions.gppKey = options.gppKey || options.key;
-  options.source = new ol_source_Geoportail(layer, tileoptions);
+  if (!options.source) options.source = new ol_source_Geoportail(layer, tileoptions);
   if (!options.title) options.title = capabilities.title;
   if (!options.name) options.name = layer;
   options.layer = layer;
