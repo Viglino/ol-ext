@@ -30,15 +30,8 @@
   <script src="https://unpkg.com/elm-pep"></script>
 
   <style>
-    .ol-legend {
-      background: #fff;
-      padding: 2px 1em;
-    }
-    .ol-legend ul {
-      margin-bottom: 12px;
-    }
-    .ol-legend ul li {
-      overflow: visible;
+    .ol-control.ol-legend {
+      background-color: #fff;
     }
   </style>
 </head>
@@ -68,12 +61,7 @@
 <script type="text/javascript">
   
 	// Layers
-	var layer = new ol.layer.Tile({
-    source: new ol.source.XYZ({
-      url: 'https://wxs.ign.fr/pratique/geoportail/wmts?layer=ORTHOIMAGERY.ORTHOPHOTOS&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fjpeg&TileMatrix={z}&TileCol={x}}&TileRow={y}',
-      attributions: '<a href="https://www.geoportail.gouv.fr/">&copy; IGN-Geoportail</a>'
-		})
-  });
+	var layer = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' });
 
 	// The map
 	var map = new ol.Map({
@@ -221,8 +209,7 @@
 
   // Define a new legend
   function createLegend () {
-    var legend = new ol.control.Legend({ 
-      title: 'Altitude',
+    var legend = window.legend = new ol.legend.Legend({ 
       style: function(f) {
         var dh = f.get('dh');
         return [ new ol.style.Style({
@@ -231,26 +218,28 @@
           })
         })];
       },
-      collapsible: false,
+      textStyle: new ol.style.Text({
+        font: '12px sans-serif',
+      }),
       margin: 0,
       size: [10, 5]
     });
-    map.addControl(legend);
+    map.addControl(new ol.control.Legend({ legend: legend, collapsible: false }));
 
-    legend.addRow();
-    legend.addRow();
-    legend.addRow();
-    legend.addRow();
-    legend.addRow({ title:max+'m' });
-    legend.addRow({ title:'', properties: { dh: 255 }, typeGeom: 'Polygon'});
-    legend.addRow({ title:'', properties: { dh: 224 }, typeGeom: 'Polygon'});
-    legend.addRow({ title:'', properties: { dh: 192 }, typeGeom: 'Polygon'});
-    legend.addRow({ title:'', properties: { dh: 160 }, typeGeom: 'Polygon'});
-    legend.addRow({ title:'', properties: { dh: 128 }, typeGeom: 'Polygon'});
-    legend.addRow({ title:min+'m', properties: { dh: 96 }, typeGeom: 'Polygon'});
-    legend.addRow({ title:'', properties: { dh: 64 }, typeGeom: 'Polygon'});
-    legend.addRow({ title:'', properties: { dh: 32 }, typeGeom: 'Polygon'});
-    legend.addRow({ title:'', properties: { dh: 0 }, typeGeom: 'Polygon'});
+    legend.addItem();
+    legend.addItem( { title: ' Altitude ' } );
+    legend.addItem();
+    legend.addItem();
+    legend.addItem();
+    legend.addItem({ title: '  '+ max+'m', properties: { dh: 255 }, typeGeom: 'Polygon'});
+    legend.addItem({ title:'', properties: { dh: 224 }, typeGeom: 'Polygon'});
+    legend.addItem({ title:'', properties: { dh: 192 }, typeGeom: 'Polygon'});
+    legend.addItem({ title:'', properties: { dh: 160 }, typeGeom: 'Polygon'});
+    legend.addItem({ title:'', properties: { dh: 128 }, typeGeom: 'Polygon'});
+    legend.addItem({ title: '', properties: { dh: 96 }, typeGeom: 'Polygon'});
+    legend.addItem({ title:'', properties: { dh: 64 }, typeGeom: 'Polygon'});
+    legend.addItem({ title:'  '+ min+'m', properties: { dh: 32 }, typeGeom: 'Polygon'});
+    legend.addItem({ title:'', properties: { dh: 0 }, typeGeom: 'Polygon'});
   }
 </script>
 
