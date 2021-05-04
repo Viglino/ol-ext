@@ -84,7 +84,7 @@ ol_control_Toggle.prototype.getSubBar = function () {
 /** Set the subbar associated with a control
  * @param {ol_control_Bar} bar a subbar
  */
-ol_control_Toggle.prototype.SetSubBar = function (bar) {
+ol_control_Toggle.prototype.setSubBar = function (bar) {
   var map = this.getMap();
   if (map && this.subbar_) map.removeControl (this.subbar_);
   this.subbar_ = bar;
