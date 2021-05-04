@@ -73,12 +73,7 @@
   <script type="text/javascript">
 
   // Two base layers
-  var ign = new ol.layer.Tile({
-    source: new ol.source.XYZ({
-      url: 'https://wxs.ign.fr/pratique/geoportail/wmts?layer=GEOGRAPHICALGRIDSYSTEMS.MAPS&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fjpeg&TileMatrix={z}&TileCol={x}}&TileRow={y}',
-      attributions: '<a href="https://www.geoportail.gouv.fr/">&copy; IGN-Geoportail</a>'
-		})
-  });
+  var ign = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' });
 
   // The map
   var map = new ol.Map({
@@ -91,21 +86,19 @@
   });
 
   var zone = new ol.control.MapZone({
-    layer: new ol.layer.Tile({
-      source: new ol.source.XYZ({
-        url: 'https://wxs.ign.fr/pratique/geoportail/wmts?layer=ORTHOIMAGERY.ORTHOPHOTOS&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fjpeg&TileMatrix={z}&TileCol={x}}&TileRow={y}'
-      })
-    }),
-    zones: ol.control.MapZone.zones.DOMTOM
+    layer: function(z) { return new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' }) },
+    zones: [{
+      title: 'Métropole',
+      extent: [ -5.318421740712579, 41.16082274292913, 9.73284186155716, 51.21957336557702 ]
+    }].concat(ol.control.MapZone.zones.DOM)
   });
   map.addControl(zone);
+  zone.on('select', function(e) {
+    console.log('click ' + e.zone.title +' ('+e.index+')');
+  });
 
   map.addControl( new ol.control.MapZone({
-    layer: new ol.layer.Tile({
-      source: new ol.source.XYZ({
-        url: 'https://wxs.ign.fr/pratique/geoportail/wmts?layer=ORTHOIMAGERY.ORTHOPHOTOS&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fjpeg&TileMatrix={z}&TileCol={x}}&TileRow={y}'
-      })
-    }),
+    layer: function() { return new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' }) },
     zones: ol.control.MapZone.zones.DOMTOM,
     target: $('.zones').get(0)
   }));

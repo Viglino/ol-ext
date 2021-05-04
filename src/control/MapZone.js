@@ -13,16 +13,15 @@ import {ol_ext_inherits} from '../util/ext'
 import ol_ext_element from 'ol-ext/util/element'
 
 /** A control to jump from one zone to another.
- *
  * @constructor
  * @fires select
  * @extends {ol_control_Control}
  * @param {Object=} options Control options.
  *	@param {string} options.className class name
- *	@param {ol.layer.Layer} options.layer layer to display in the control
- *	@param {ol.ProjectionLike} options.projection projection of the control, Default is EPSG:3857 (Spherical Mercator).
  *  @param {Array<any>} options.zone an array of zone: { name, extent (in EPSG:4326) }
- *  @param {bolean} options.centerOnClick center on click when click on zones, default true
+ *	@param {ol.layer.Layer|function} options.layer layer to display in the control or a function that takes a zone and returns a layer to add to the control
+ *	@param {ol.ProjectionLike} options.projection projection of the control, Default is EPSG:3857 (Spherical Mercator).
+ *  @param {bolean} options.centerOnClick center on click when a zone is clicked (or listen to 'select' event to do something), default true
  */
 var ol_control_MapZone = function(options) {
   if (!options) options={};
@@ -58,46 +57,13 @@ var ol_control_MapZone = function(options) {
     element: element,
     target: options.target
   });
-  
+  this.set('centerOnClick', options.centerOnClick);
+
   // Create maps
   var maps = this._maps = [];
-  options.zones.forEach(function(z) {
-    var view = new ol_View({ zoom: 6, center: [0,0], projection: options.projection });
-    var extent = ol_proj_transformExtent(z.extent, 'EPSG:4326', view.getProjection());
-    console.log(extent, z.extent)
-    var div = ol_ext_element.create('DIV', {
-      className: 'ol-mapzonezone',
-      parent: element,
-      click : function() {
-        this.dispatchEvent({
-          type: 'select',
-          coordinate: ol_extent_getCenter(extent),
-          extent: extent
-        });
-        if (options.centerOnClick !== false) {
-          this.getMap().getView().fit(extent);
-        }
-        this.setVisible(false);
-      }.bind(this)
-    });
-    var layer = new options.layer.constructor({
-      source: options.layer.getSource()
-    });
-    var map = new ol_Map({
-      target: div,
-      view: view,
-      controls: [],
-      interactions:[],
-      layers: [layer]
-    });
-    maps.push(map);
-    view.fit(extent);
-    // Nmae
-    ol_ext_element.create('P', {
-      html: z.title,
-      parent: div
-    });
-  }.bind(this));
+  this._projection = options.projection;
+  this._layer = options.layer;
+  options.zones.forEach(this.addZone.bind(this));
 
   // Refresh the maps
   setTimeout(function() {
@@ -128,7 +94,91 @@ ol_control_MapZone.prototype.setVisible = function (b) {
  * @return {ol.Map}
  */
 ol_control_MapZone.prototype.getMaps = function () {
-  return this._maps
+  return this._maps;
+};
+
+/** Add a new zone to the control 
+ * @param {Object} z 
+ *  @param {string} title
+ *  @param {ol.extent} extent if map is not defined
+ *  @param {ol.Map} map if map is defined use the map extent 
+ *  @param {ol.layer.Layer} [layer] layer of the zone, default use default control layer
+ */
+ol_control_MapZone.prototype.addZone = function (z) {
+  var view = new ol_View({ zoom: 6, center: [0,0], projection: this._projection });
+  var extent;
+  if (z.map) {
+    extent = ol.proj.transformExtent(z.map.getView().calculateExtent(), z.map.getView().getProjection(), view.getProjection()) ;
+  } else {
+    extent = ol_proj_transformExtent(z.extent, 'EPSG:4326', view.getProjection());
+  }
+  // console.log(extent, z.extent)
+  var div = ol_ext_element.create('DIV', {
+    className: 'ol-mapzonezone',
+    parent: this.element,
+    click : function() {
+      // Get index
+      var index = -1;
+      this._maps.forEach(function(m, i) {
+        if (m.get('zone') === z) {
+          index = i;
+        }
+      })
+      this.dispatchEvent({
+        type: 'select',
+        zone: z,
+        index: index,
+        coordinate: ol_extent_getCenter(extent),
+        extent: extent
+      });
+      if (this.get('centerOnClick') !== false) {
+        this.getMap().getView().fit(extent);
+      }
+      this.setVisible(false);
+    }.bind(this)
+  });
+  var layer;
+  if (z.layer) {
+    layer = z.layer;
+  } else if (typeof(this._layer) === 'function') {
+    layer = this._layer(z);
+  } else {
+    // Try to clone the layer
+    layer = new this._layer.constructor({
+      source: this._layer.getSource()
+    });
+  }
+  var map = new ol_Map({
+    target: div,
+    view: view,
+    controls: [],
+    interactions:[],
+    layers: [layer]
+  });
+  map.set('zone', z);
+  this._maps.push(map);
+  view.fit(extent);
+  // Name
+  ol_ext_element.create('P', {
+    html: z.title,
+    parent: div
+  });
+};
+
+/** Get nb zone */
+ol_control_MapZone.prototype.getLength = function () {
+  return this._maps.length;
+};
+
+/** Remove a zone from the control 
+ * @param {number} index
+ */
+ol_control_MapZone.prototype.removeZone = function (index) {
+  var z = zone.element.querySelectorAll('.ol-mapzonezone')[index];
+  if (z) {
+    z.remove();
+    this._maps.splice(index, 1);
+  }
 };
 
 /** Pre-defined zones */
@@ -174,6 +224,6 @@ ol_control_MapZone.zones.TOM = [{
 ol_control_MapZone.zones.DOMTOM = [{
   title: 'Métropole',
   extent: [ -5.318421740712579, 41.16082274292913, 9.73284186155716, 51.21957336557702 ]
-}].concat(ol_control_MapZone.zones.DOM,ol_control_MapZone.zones.TOM);
+}].concat(ol_control_MapZone.zones.DOM, ol_control_MapZone.zones.TOM);
 
 export default ol_control_MapZone

@@ -83,12 +83,7 @@
       zoom: 18,
       center: [269889, 6248507]
     }),
-    layers: [ new ol.layer.Tile({
-      source: new ol.source.XYZ({
-        url: 'https://wxs.ign.fr/pratique/geoportail/wmts?layer=ORTHOIMAGERY.ORTHOPHOTOS&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fjpeg&TileMatrix={z}&TileCol={x}}&TileRow={y}',
-        attributions: '<a href="https://www.geoportail.gouv.fr/">&copy; IGN-Geoportail</a>'
-      })
-    })]
+    layers: [ new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' }) ]
   });
 
   var histo = [
