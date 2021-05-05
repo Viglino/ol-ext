@@ -182,6 +182,7 @@
   font-size: 1em;
   border: 0;
   font-weight: bold;
+  max-width: 12em;
 }
 .ol-ext-print-dialog .ol-saveas select option {
   background-color: #fff;

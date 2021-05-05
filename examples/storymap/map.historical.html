@@ -1,0 +1,208 @@
+﻿<DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2015 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>Historical maps</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="Historical maps of IGN France" />
+  <meta name="keywords" content="openlayers, timemap, historical, IGN" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    #map {
+      position:fixed;
+      top: 4em;
+      left: 0;
+      right:0;
+      bottom:0;
+      margin:0;
+    }
+    .info {
+      position: fixed;
+      right: 0.5em;
+      top: 4em;
+      width: 300px;
+      z-index: 1;
+    }
+    .ol-timeline .ol-scroll {
+      height: 3em;
+    }
+    .ol-timeline .ol-feature {
+      transform: translateX(-50%);
+    }
+    .ol-timeline.ol-zoomhover .ol-scroll .ol-feature:hover, 
+    .ol-timeline.ol-zoomhover .ol-scroll .ol-feature.ol-select {
+      transform: translateX(-50%) scale(2);
+    }
+    .date {
+      position: fixed;
+      left: 50%;
+      bottom: 1.5em;
+      background: rgba(255,255,255,.5);
+      transform: translateX(-50%);
+      font-size: 2rem;
+      margin-bottom: .05em;
+    }
+  </style>
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="../../index.html">
+    <h1>Historical map</h1>
+  </a>
+
+  <!-- DIV pour la carte -->
+  <div id="map"></div>
+  <div class='date'></div>
+  
+<script type="text/javascript">
+  // The map
+  var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View({
+      zoom: 18,
+      center: [269889, 6248507]
+    }),
+    // layers: [ new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' }) ]
+  });
+  // Capabilities
+  ol.layer.Geoportail.capabilities["ORTHOIMAGERY.ORTHOPHOTOS2006-2010"] = {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"ORTHOIMAGERY.ORTHOPHOTOS2006-2010","title":"Photographies aériennes 2006-2010","format":"image/jpeg","style":"normal","queryable":false,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-179.5,-75,179.5,75],"desc":"Prises de vues aériennes des territoires disponibles à la fin des années 2006 à 2010","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CG06":{"href":"http://www.cg06.fr","attribution":"Département Alpes Maritimes (06) en partenariat avec : Groupement Orthophoto 06 (NCA, Ville de Cannes, CARF, CASA,CG06, CA de Grasse) ","logo":"https://wxs.ign.fr/static/logos/CG06/CG06.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CG45":{"href":"http://www.loiret.com","attribution":"Le conseil général du Loiret","logo":"https://wxs.ign.fr/static/logos/CG45/CG45.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"CRAIG":{"href":"http://www.craig.fr","attribution":"Centre Régional Auvergnat de l'Information Géographique (CRAIG)","logo":"https://wxs.ign.fr/static/logos/CRAIG/CRAIG.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]},"RGD_SAVOIE":{"href":"http://www.rgd.fr","attribution":"Régie de Gestion de Données des Pays de Savoie (RGD 73-74)","logo":"https://wxs.ign.fr/static/logos/RGD_SAVOIE/RGD_SAVOIE.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]}}};
+  ol.layer.Geoportail.capabilities["ORTHOIMAGERY.ORTHOPHOTOS.1965-1980"] = {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"ORTHOIMAGERY.ORTHOPHOTOS.1965-1980","title":"BDOrtho Historique 1965-1980","format":"image/png","style":"BDORTHOHISTORIQUE","queryable":false,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-2.2752295,47.083138,2.619632,49.01929],"desc":"<![CDATA[Couverture en photographies aériennes de la France des années 1965 à 1980. Cette couverture a été réalisée à partir des photographies aériennes historiques numérisées par l'IGN. Elle est disponible sur la France métropolitaine, les départements et régions d'Outre-Mer (la Guyane n'est que partiellement couverte) et les collectivités d'Outre-Mer sauf la Polynésie française.\nLes photographies sont orthorectifiées, c'est-à-dire corrigées des déformations dues à la prise de vue et au relief du terrain, et assemblées pour fournir une visualisation continue superposable avec le Référentiel à Grande Echelle (RGE®) ou les cartes.]]>","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":3,"maxZoom":18,"constraint":[{"minZoom":3,"maxZoom":18,"bbox":[-2.2752295,47.083138,2.619632,49.01929]}]}}};
+  ol.layer.Geoportail.capabilities["ORTHOIMAGERY.ORTHOPHOTOS.1950-1965"] = {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"ORTHOIMAGERY.ORTHOPHOTOS.1950-1965","title":"Photographies aériennes historiques 1950-1965","format":"image/png","style":"BDORTHOHISTORIQUE","queryable":false,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-67.72138,-21.401262,55.84643,51.094486],"desc":"<![CDATA[Couverture en photographies aériennes de la France des années 50, telle qu'elle se présentait avant les grands aménagements des années 60. Cette couverture a été réalisée à partir des photographies aériennes historiques numérisées par l'IGN. Elle est disponible sur la France métropolitaine, les départements et régions d'Outre-Mer (la Guyane n'est que partiellement couverte) et les collectivités d'Outre-Mer sauf la Polynésie française.\nLes photographies sont orthorectifiées, c'est-à-dire corrigées des déformations dues à la prise de vue et au relief du terrain, et assemblées pour fournir une visualisation continue superposable avec le Référentiel à Grande Echelle (RGE®) ou les cartes.]]>","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]}}};
+
+  var histo = [
+    new ol.layer.Geoportail({ 
+      name: (new Date()).getFullYear().toString(),
+      title: (new Date()).getFullYear().toString(),
+      layer: 'ORTHOIMAGERY.ORTHOPHOTOS' 
+    }),
+    new ol.layer.Geoportail({ 
+      name: '2008',
+      title: '2006-2010',
+      key: 'h1osiyvfm7c4wu976jv6gpum',
+      layer: 'ORTHOIMAGERY.ORTHOPHOTOS2006-2010' 
+    }),
+    new ol.layer.Geoportail({ 
+      name: '1970',
+      title: '1965-1980',
+      key: 'h1osiyvfm7c4wu976jv6gpum',
+      layer: 'ORTHOIMAGERY.ORTHOPHOTOS.1965-1980' 
+    }),
+    new ol.layer.Geoportail({ 
+      name: '1960',
+      title: '1950-1965',
+      key: 'h1osiyvfm7c4wu976jv6gpum',
+      layer: 'ORTHOIMAGERY.ORTHOPHOTOS.1950-1965' 
+    }),
+    new ol.layer.Image({
+      name: "1924",
+      source: new ol.source.GeoImage({
+        "url": "../data/INGF/IGNF_PVA_1-0__1924-08-11__C2314-1541_1924_NP9_13007.jpg",
+        "imageCenter": [269892.63568257954,6248535.314175406],
+        "imageRotate": 3.1401654995959856,
+        "imageScale": [0.2670215718130227,0.2670215718130227]
+      })
+    }),
+    new ol.layer.Image({
+      name: "1931",
+      source: new ol.source.GeoImage({
+        "url": "../data/INGF/IGNF_PVA_1-0__1931__CCF0H-2361_1931_CAF_H-236_0003.jpg",
+        "imageCenter": [269917.11527094606,6248564.182321039],
+        "imageRotate": -1.4887750967772184,
+        "imageScale": [0.5916825640700804,0.5916825640700804]
+      })
+    }),
+    new ol.layer.Image({
+      name: "1934",
+      source: new ol.source.GeoImage({
+        "url": "../data/INGF/IGNF_PVA_1-0__1934__CCF0F-54B1_1934_CAF_F-54_0011.jpg",
+        "imageCenter": [269884.7536107674,6248543.448601998],
+        "imageRotate": -3.136726258048235,
+        "imageScale": [0.6375976820489188,0.6375976820489188]
+      })
+    }),
+    new ol.layer.Image({
+      name: "1936",
+      source: new ol.source.GeoImage({
+        "url": "../data/INGF/IGNF_PVA_1-0__1936-07-17__C2314-1501_1936_NP2_3010.jpg?raw=true",
+        "imageCenter": [269937.2514666198,6248523.183442762],
+        "imageRotate": -2.778805073301242,
+        "imageScale": [0.47915761377123306,0.47915761377123306]
+      })
+    }),
+    new ol.layer.Image({
+      name: "1944",
+      source: new ol.source.GeoImage({
+        "url": "../data/INGF/IGNF_PVA_1-0__1944-08-11__C2214-1091_1944_106G2130_3199.jpg?raw=true",
+        "imageCenter": [269998.3656072118,6248506.391443234],
+        "imageRotate": 2.362938966984174,
+        "imageScale": [0.473608899531087,0.4768894853951739]
+      })
+    }),
+    new ol.layer.Image({
+      name: "1950",
+      source: new ol.source.GeoImage({
+        "url": "../data/INGF/IGNF_PVA_1-0__1950-05-30__C2314-1851_1950_CDP3505_0242.jpg?raw=true",
+        "imageCenter": [269869.74402191263,6248527.808891151],
+        "imageRotate": -0.028335836913955807,
+        "imageScale": [0.3267839610026342,0.326366151015898]
+      })
+    })
+  ];
+
+  histo.forEach(function(l) { map.addLayer(l); });
+
+  // Create timeline
+  var tline = new ol.control.Timeline({
+    className: 'ol-pointer ol-zoomhover',
+    features: histo,
+    minDate: new Date('1923'),
+    maxDate: new Date(),
+    getFeatureDate: function(l) { return l.get('name'); },
+    getHTML: function(l) { return l.get('name'); }
+  });
+
+  tline.on('scroll', function(e) {
+    var layer, dmin = Infinity;
+    histo.forEach(function(l, i) {
+      var d = new Date(l.get('name'));
+      var dt = Math.abs(e.date-d);
+      if (dt < dmin) {
+        layer = l;
+        dmin = dt;
+      }
+      if (i!==0) l.setVisible(false);
+    });
+    layer.setVisible(true);
+    $('.date').text(layer.get('title') || layer.get('name'));
+  });
+  tline.on('select', function(e) {
+    tline.setDate(e.feature);
+  });
+
+  map.addControl (tline);
+  tline.setDate(1924);
+
+
+</script>
+
+</body>
+</html>

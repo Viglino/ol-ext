@@ -778,9 +778,6 @@ ol.ext.element.scrollDiv = function(elt, options) {
       dt = d;
       // Tell we are moving
       if (delta) onmove(true);
-    } else {
-      // Not moving yet
-      onmove(false);
     }
   });
   // Animate scroll
@@ -792,6 +789,7 @@ ol.ext.element.scrollDiv = function(elt, options) {
       if (moving) setTimeout(function() { elt.classList.remove('ol-move'); });
       else elt.classList.remove('ol-move');
       moving = false;
+      onmove(false);
     } else {
       setTimeout(function() {
         animate(to);
@@ -7610,10 +7608,10 @@ ol.control.MapZone = function(options) {
   });
 };
 ol.ext.inherits(ol.control.MapZone, ol.control.Control);
-/** Set the control visibility
-* @param {boolean} b
-*/
-ol.control.MapZone.prototype.setVisible = function (b) {
+/** Collapse the control
+ * @param {boolean} b
+ */
+ol.control.MapZone.prototype.setCollapsed = function (b) {
   if (b) {
     this.element.classList.remove('ol-collapsed');
     // Force map rendering
@@ -7624,11 +7622,26 @@ ol.control.MapZone.prototype.setVisible = function (b) {
     this.element.classList.add('ol-collapsed');
   }
 };
+/** Get control collapsed
+ * @return {boolean} 
+ */
+ol.control.MapZone.prototype.setCollapsed = function (b) {
+  return this.element.classList.contains('ol-collapsed');
+};
+/** Set the control visibility (collapsed)
+ * @param {boolean} b
+ * @deprecated use setCollapsed instead
+ */
+ol.control.MapZone.prototype.setVisible = ol.control.MapZone.prototype.setCollapsed;
 /** Get associated maps
  * @return {ol.Map}
  */
 ol.control.MapZone.prototype.getMaps = function () {
   return this._maps;
+};
+/** Get nb zone */
+ol.control.MapZone.prototype.getLength = function () {
+  return this._maps.length;
 };
 /** Add a new zone to the control 
  * @param {Object} z 
@@ -7696,10 +7709,6 @@ ol.control.MapZone.prototype.addZone = function (z) {
     html: z.title,
     parent: div
   });
-};
-/** Get nb zone */
-ol.control.MapZone.prototype.getLength = function () {
-  return this._maps.length;
 };
 /** Remove a zone from the control 
  * @param {number} index
@@ -13062,7 +13071,7 @@ ol.control.Timeline = function(options) {
     }.bind(this), options.scrollTimeout || 15);
   }.bind(this));
   // Magic to give "live" scroll events on touch devices
-  this._scrollDiv.addEventListener('gesturechange', function() {});
+  // this._scrollDiv.addEventListener('gesturechange', function() {});
   // Scroll timeline
   ol.ext.element.scrollDiv(this._scrollDiv, {
     onmove: function(b) {
@@ -13297,7 +13306,7 @@ ol.control.Timeline.prototype.refresh = function(zoom, first) {
     }
     var left = ol.ext.element.getStyle(t, 'left');
     // Select on click
-    t.addEventListener('click', function(){
+    t.addEventListener('click', function() {
       if (!this._moving) {
         this.dispatchEvent({type: 'select', feature: f.feature });
       }

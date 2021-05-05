@@ -257,6 +257,7 @@
           nb++;
           $(this).addClass('new');
           $(".tag", this).text($(".tag", this).text()+', new');
+          // console.log($(this).data('date'));
         }
       });
       if (nb) {
@@ -799,6 +800,14 @@
         </a>
         <p class="description">A control to print the map.</p>
         <p class="tag">control, canvas, print, map, export</p>
+      </div>
+
+      <div class="example" data-date="2021-05">
+        <a class="mainlink" href="examples/canvas/map.control.printdialog.html">
+          <strong>Print dialog control</strong><br>
+        </a>
+        <p class="description">Add a dialog to print the map.</p>
+        <p class="tag">control, canvas, print, map, export, dialog</p>
       </div>
 
       <div class="example">
@@ -1534,6 +1543,16 @@
           This example use a <i>ol/control/Timeline</i> as a time slider.
         </p>
         <p class="tag">storymap, timeline, slider, date, time, control, earthquake</p>
+      </div>
+
+      <div class="example" data-date="2021-05-05">
+        <a class="mainlink" href="examples/storymap/map.historical.html">
+          <strong>Historical map</strong><br>
+        </a>
+        <p class="description">
+          This example use a <i>ol/control/Timeline</i> to control layer visibility.
+        </p>
+        <p class="tag">storymap, timeline, layer, date, time, control, historic</p>
       </div>
 
       <div class="example" data-date="2018-12-25">
