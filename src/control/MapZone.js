@@ -74,10 +74,10 @@ var ol_control_MapZone = function(options) {
 };
 ol_ext_inherits(ol_control_MapZone, ol_control_Control);
 
-/** Set the control visibility
-* @param {boolean} b
-*/
-ol_control_MapZone.prototype.setVisible = function (b) {
+/** Collapse the control
+ * @param {boolean} b
+ */
+ol_control_MapZone.prototype.setCollapsed = function (b) {
   if (b) {
     this.element.classList.remove('ol-collapsed');
     // Force map rendering
@@ -89,12 +89,29 @@ ol_control_MapZone.prototype.setVisible = function (b) {
   }
 };
 
+/** Get control collapsed
+ * @return {boolean} 
+ */
+ol_control_MapZone.prototype.setCollapsed = function (b) {
+  return this.element.classList.contains('ol-collapsed');
+};
 
+/** Set the control visibility (collapsed)
+ * @param {boolean} b
+ * @deprecated use setCollapsed instead
+ */
+ol_control_MapZone.prototype.setVisible = ol_control_MapZone.prototype.setCollapsed;
+ 
 /** Get associated maps
  * @return {ol.Map}
  */
 ol_control_MapZone.prototype.getMaps = function () {
   return this._maps;
+};
+
+/** Get nb zone */
+ol_control_MapZone.prototype.getLength = function () {
+  return this._maps.length;
 };
 
 /** Add a new zone to the control 
@@ -163,11 +180,6 @@ ol_control_MapZone.prototype.addZone = function (z) {
     html: z.title,
     parent: div
   });
-};
-
-/** Get nb zone */
-ol_control_MapZone.prototype.getLength = function () {
-  return this._maps.length;
 };
 
 /** Remove a zone from the control 

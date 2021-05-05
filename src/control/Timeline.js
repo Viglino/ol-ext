@@ -114,7 +114,7 @@ var ol_control_Timeline = function(options) {
     }.bind(this), options.scrollTimeout || 15);
   }.bind(this));
   // Magic to give "live" scroll events on touch devices
-  this._scrollDiv.addEventListener('gesturechange', function() {});
+  // this._scrollDiv.addEventListener('gesturechange', function() {});
 
   // Scroll timeline
   ol_ext_element.scrollDiv(this._scrollDiv, {
@@ -375,7 +375,7 @@ ol_control_Timeline.prototype.refresh = function(zoom, first) {
     }
     var left = ol_ext_element.getStyle(t, 'left');
     // Select on click
-    t.addEventListener('click', function(){
+    t.addEventListener('click', function() {
       if (!this._moving) {
         this.dispatchEvent({type: 'select', feature: f.feature });
       }

@@ -355,9 +355,6 @@ ol_ext_element.scrollDiv = function(elt, options) {
       dt = d;
       // Tell we are moving
       if (delta) onmove(true);
-    } else {
-      // Not moving yet
-      onmove(false);
     }
   });
   
@@ -370,6 +367,7 @@ ol_ext_element.scrollDiv = function(elt, options) {
       if (moving) setTimeout(function() { elt.classList.remove('ol-move'); });
       else elt.classList.remove('ol-move');
       moving = false;
+      onmove(false);
     } else {
       setTimeout(function() {
         animate(to);
