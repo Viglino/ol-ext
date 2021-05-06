@@ -2282,7 +2282,7 @@ ol.control.Toggle = function(options) {
   ol.control.Button.call(this, options);
   this.set("title", options.title);
   this.set ("autoActivate", options.autoActivate);
-  if (options.bar) this.SetSubBar(options.bar);
+  if (options.bar) this.setSubBar(options.bar);
   this.setActive (options.active);
   this.setDisable (options.disable);
 };

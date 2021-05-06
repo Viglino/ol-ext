@@ -46,7 +46,7 @@ var ol_control_Toggle = function(options) {
   this.set("title", options.title);
 
   this.set ("autoActivate", options.autoActivate);
-  if (options.bar) this.SetSubBar(options.bar);
+  if (options.bar) this.setSubBar(options.bar);
 
   this.setActive (options.active);
   this.setDisable (options.disable);
