@@ -251,21 +251,27 @@
       <li class="x">
         <label>
           <input id="nonull" type="checkbox" checked="checked" onchange="setFormat()" />
-          Remove null properties:
+          Remove null properties.
+        </label>
+      </li>
+      <li class="x">
+        <label>
+          <input id="layout" type="checkbox" onchange="setFormat()" />
+          Use 3D layout.
         </label>
       </li>
       <li class="x">
         <label>
           <input id="extended" type="checkbox" onchange="setFormat()" />
-          Extract extended properties on fearures (id, bbox, etc.):
+          Extract extended properties on features (id, bbox, etc.)
         </label>
       </li>
       <li class="x">
-        <label>White list (a list of properties separtated with ','):</label>
+        <label>White list (a list of properties to keep separated with ','):</label>
         <input id="whitel" type="text" onchange="setFormat()" />
       </li>
       <li class="x">
-        <label>Black list (a list of properties separtated with ','):</label>
+        <label>Black list (a list of properties to remove separated with ','):</label>
         <input id="blackl" type="text" onchange="setFormat()" />
       </li>
     </ul>
@@ -303,6 +309,7 @@
       case 'geojsonx': {
         format = new ol.format.GeoJSONX({ 
           deleteNullProperties: $('#nonull').prop('checked'),
+          layout: $('#layout').prop('checked') ? 'XYZM' : null,
           decimals: $('#decimals').val(),
           extended: $('#extended').prop('checked'),
           whiteList: $('#whitel').val() ? $('#whitel').val().split(',') : null,
@@ -411,13 +418,13 @@
   });
   map.addControl(new ol.control.Permalink({ visible: false, geohash: true }));
 
-  var origin = new ol.layer.Vector({
+  var origin = new ol.layer.VectorImage({
     title: 'Origin',
     source: new ol.source.Vector(),
     style: ol.style.Style.defaultStyle({color:[255,0,0]})
   });
   map.addLayer(origin);
-  var encoded = new ol.layer.Vector({
+  var encoded = new ol.layer.VectorImage({
     title: 'Encoded',
     source: new ol.source.Vector(),
     // style: ol.style.Style.defaultStyle({color:[0,255,0]})
