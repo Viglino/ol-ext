@@ -16489,6 +16489,7 @@ ol.filter.Texture.prototype.postcompose = function(e)
  *  @param {boolean|Array<*>} options.extended Decode/encode extended GeoJSON with foreign members (id, bbox, title, etc.), default false
  *  @param {Array<string>|function} options.whiteList A list of properties to keep on features when encoding or a function that takes a property name and retrun true if the property is whitelisted
  *  @param {Array<string>|function} options.blackList A list of properties to remove from features when encoding or a function that takes a property name and retrun true if the property is blacklisted
+ *  @param {string} [options.layout='XY'] layout layout (XY or XYZ or XYZM)
  *  @param {ol.ProjectionLike} options.dataProjection Projection of the data we are reading. If not provided `EPSG:4326`
  *  @param {ol.ProjectionLike} options.featureProjection Projection of the feature geometries created by the format reader. If not provided, features will be returned in the dataProjection.
  */
@@ -16517,6 +16518,7 @@ ol.format.GeoJSONX = function(options) {
   if (!options.dataProjection || options.dataProjection === 'EPSG:4326') decimals = 7;
   if (!isNaN(parseInt(options.decimals))) decimals = parseInt(options.decimals);
   this._decimals = decimals;
+  this.setLayout(options.layout || 'XY');
 };
 ol.ext.inherits(ol.format.GeoJSONX, ol.format.GeoJSON);
 /** Radix */
@@ -16543,6 +16545,28 @@ ol.format.GeoJSONX.prototype._toType = [
   "MultiLineString",
   "MultiPolygon"
 ];
+/** Set geometry layout
+ * @param {string} layout the geometry layout (XY or XYZ or XYZM)
+ */
+ol.format.GeoJSONX.prototype.setLayout = function(layout) {
+  switch(layout) {
+    case 'XYZ': 
+    case 'XYZM': {
+      this._layout = layout;
+      break;
+    }
+    default:  {
+      this._layout = 'XY';
+      break;
+    }
+  }
+};
+/** Get geometry layout
+ * @return {string} layout 
+ */
+ol.format.GeoJSONX.prototype.getLayout = function() {
+  return this._layout;
+};
 /** Encode a number
  * @param {number} number Number to encode
  * @param {number} decimals Number of decimals
@@ -16592,22 +16616,34 @@ ol.format.GeoJSONX.prototype.decodeNumber = function(s, decimals) {
  * @api
  */
 ol.format.GeoJSONX.prototype.encodeCoordinates = function(v, decimal) {
-  var i;
+  var i, p, tp;
   if (typeof(v[0]) === 'number') {
-    return this.encodeNumber(v[0], decimal) +','+ this.encodeNumber(v[1], decimal);
+    p = this.encodeNumber(v[0], decimal) +','+ this.encodeNumber(v[1], decimal);
+    if (this._layout[2]=='Z' && v.length > 2) p += ',' + this.encodeNumber(v[i][2], 2);
+    if (this._layout[3]=='M' && v.length > 3) p += ',' + this.encodeNumber(v[i][3], 0);
+    return p;
   } else if (v.length && v[0]) {
     if (typeof(v[0][0]) === 'number') {
-      var dxy=[0,0];
+      var dxy = [0,0,0,0];
       var xy = [];
+      var hasZ = (this._layout[2]=='Z' && v[0].length > 2);
+      var hasM = (this._layout[3]=='M' && v[0].length > 3);
       for (i=0; i<v.length; i++) {
-        v[i] = [
+        tp = [
           Math.round( v[i][0] * Math.pow(10, decimal)),
           Math.round( v[i][1] * Math.pow(10, decimal))
         ];
-        var dx = v[i][0]-dxy[0];
-        var dy = v[i][1]-dxy[1];
+        if (hasZ) tp[2] = v[i][2];
+        if (hasM) tp[3] = v[i][3];
+        v[i] = tp;
+        var dx = v[i][0] - dxy[0];
+        var dy = v[i][1] - dxy[1];
         if (i==0 || (dx!==0 || dy!==0)) {
-          xy.push(this.encodeNumber(dx, 0) +','+ this.encodeNumber(dy, 0));
+          p = this.encodeNumber(dx, 0) +','
+            + this.encodeNumber(dy, 0)
+            + (hasZ ? ',' + this.encodeNumber(v[i][2] - dxy[2], 2) : '')
+            + (hasM ? ',' + this.encodeNumber(v[i][3] - dxy[3], 0) : '');
+          xy.push(p);
           dxy = v[i];
         }
       }
@@ -16635,17 +16671,22 @@ ol.format.GeoJSONX.prototype.decodeCoordinates = function(v, decimals) {
   if (typeof(v) === 'string') {
     v = v.split(';');
     if (v.length>1) {
-      var dxy=[0,0];
+      var dxy = [0,0,0,0];
       v.forEach(function(vi, i) {
         v[i] = vi.split(',');
         v[i][0] = this.decodeNumber(v[i][0], decimals) + dxy[0];
         v[i][1] = this.decodeNumber(v[i][1], decimals) + dxy[1];
+        if (v[i].length > 2) v[i][2] = this.decodeNumber(v[i][2], 2) + dxy[2];
+        if (v[i].length > 3) v[i][3] = this.decodeNumber(v[i][3], 0) + dxy[3];
         dxy = v[i];
       }.bind(this));
       return v;
     } else {
       v = v[0].split(',');
-      return [ this.decodeNumber(v[0], decimals), this.decodeNumber(v[1], decimals) ];
+      p = [ this.decodeNumber(v[0], decimals), this.decodeNumber(v[1], decimals) ];
+      if (v[i].length > 2) p[2] = this.decodeNumber(v[i][2], 2);
+      if (v[i].length > 3) p[3] = this.decodeNumber(v[i][3], 0);
+      return p;
     }
   } else if (v.length) {
     var r = [];
