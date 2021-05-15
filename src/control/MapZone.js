@@ -92,7 +92,7 @@ ol_control_MapZone.prototype.setCollapsed = function (b) {
 /** Get control collapsed
  * @return {boolean} 
  */
-ol_control_MapZone.prototype.setCollapsed = function (b) {
+ol_control_MapZone.prototype.getCollapsed = function () {
   return this.element.classList.contains('ol-collapsed');
 };
 
@@ -125,7 +125,7 @@ ol_control_MapZone.prototype.addZone = function (z) {
   var view = new ol_View({ zoom: 6, center: [0,0], projection: this._projection });
   var extent;
   if (z.map) {
-    extent = ol.proj.transformExtent(z.map.getView().calculateExtent(), z.map.getView().getProjection(), view.getProjection()) ;
+    extent = ol_proj_transformExtent(z.map.getView().calculateExtent(), z.map.getView().getProjection(), view.getProjection()) ;
   } else {
     extent = ol_proj_transformExtent(z.extent, 'EPSG:4326', view.getProjection());
   }
@@ -186,7 +186,7 @@ ol_control_MapZone.prototype.addZone = function (z) {
  * @param {number} index
  */
 ol_control_MapZone.prototype.removeZone = function (index) {
-  var z = zone.element.querySelectorAll('.ol-mapzonezone')[index];
+  var z = this.element.querySelectorAll('.ol-mapzonezone')[index];
   if (z) {
     z.remove();
     this._maps.splice(index, 1);

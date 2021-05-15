@@ -7409,6 +7409,7 @@ ol.control.LayerSwitcherImage.prototype.drawList = function(ul, layers) {
 */
 ol.control.LayerSwitcherImage.prototype.overflow = function(){};
 
+// eslint-disable-next-line no-unused-vars
 /** Create a legend for styles
  * @constructor
  * @extends {ol.control.CanvasBase}
@@ -7625,7 +7626,7 @@ ol.control.MapZone.prototype.setCollapsed = function (b) {
 /** Get control collapsed
  * @return {boolean} 
  */
-ol.control.MapZone.prototype.setCollapsed = function (b) {
+ol.control.MapZone.prototype.getCollapsed = function () {
   return this.element.classList.contains('ol-collapsed');
 };
 /** Set the control visibility (collapsed)
@@ -7714,7 +7715,7 @@ ol.control.MapZone.prototype.addZone = function (z) {
  * @param {number} index
  */
 ol.control.MapZone.prototype.removeZone = function (index) {
-  var z = zone.element.querySelectorAll('.ol-mapzonezone')[index];
+  var z = this.element.querySelectorAll('.ol-mapzonezone')[index];
   if (z) {
     z.remove();
     this._maps.splice(index, 1);
@@ -16677,7 +16678,7 @@ ol.format.GeoJSONX.prototype.encodeCoordinates = function(v, decimal) {
  * @api
  */
 ol.format.GeoJSONX.prototype.decodeCoordinates = function(v, decimals) {
-  var i;
+  var i, p;
   if (typeof(v) === 'string') {
     v = v.split(';');
     if (v.length>1) {

@@ -201,7 +201,7 @@ ol_format_GeoJSONX.prototype.encodeCoordinates = function(v, decimal) {
  * @api
  */
 ol_format_GeoJSONX.prototype.decodeCoordinates = function(v, decimals) {
-  var i;
+  var i, p;
   if (typeof(v) === 'string') {
     v = v.split(';');
     if (v.length>1) {

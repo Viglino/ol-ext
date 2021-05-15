@@ -1,6 +1,7 @@
 import {asString as ol_color_asString} from 'ol/color'
 import ol_ext_inherits from '../util/ext'
 import ol_control_CanvasBase from './CanvasBase'
+// eslint-disable-next-line no-unused-vars
 import ol_legend_Legend from '../legend/Legend'
 
 /** Create a legend for styles
