@@ -183,6 +183,19 @@
   margin: 1em 0;
 }
 
+.ol-wmscapabilities ul.ol-wmsform li.extent input {
+  width: calc(60% - 2em);
+}
+.ol-wmscapabilities ul.ol-wmsform li.extent button {
+  width: 2em;
+  margin: 0;
+  vertical-align: middle;
+  float: revert;
+}
+.ol-wmscapabilities ul.ol-wmsform li.extent button:before {
+  content: "M";
+}
+
 .ol-ext-dialog.ol-wmscapabilities form {
   max-height: calc(85% - 1em);
   width: 600px;

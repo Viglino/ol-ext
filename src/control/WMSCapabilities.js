@@ -103,6 +103,7 @@ ol_control_WMSCapabilities.prototype.labels = {
   formMinZoom: 'Min zoom level:',
   formMaxZoom: 'Max zoom level:',
   formExtent: 'Extent:',
+  mapExtent: 'use map extent...',
   formProjection: 'Projection:',
   formCrossOrigin: 'CrossOrigin:',
   formVersion: 'Version:',
@@ -272,6 +273,7 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
         parent: li
       });
     }
+    return li;
   }.bind(this);
   addLine('formTitle');
   addLine('formLayer', '', 'layer1,layer2,...');
@@ -279,7 +281,15 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
   addLine('formFormat', ['image/png', 'image/jpeg']);
   addLine('formMinZoom', 0);
   addLine('formMaxZoom', 20);
-  addLine('formExtent', '', 'xmin,ymin,xmax,ymax');
+  var li = addLine('formExtent', '', 'xmin,ymin,xmax,ymax');
+  li.className = 'extent';
+  ol_ext_element.create('BUTTON', {
+    title: this.labels.mapExtent,
+    click: function() {
+      li.querySelector('input').value = this.getMap().getView().calculateExtent(this.getMap().getSize()).join(',');
+    }.bind(this),
+    parent: li
+  });
   addLine('formProjection', '');
   addLine('formCrossOrigin', false);
   addLine('formVersion', '1.3.0');

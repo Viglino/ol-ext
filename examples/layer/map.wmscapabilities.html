@@ -27,6 +27,8 @@
 
   <!-- Proj4 -->
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.3.14/proj4.js"></script>
+  <!-- filesaver-js -->
+  <script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
 
   <link rel="stylesheet" href="../style.css" />
   <style>
@@ -74,6 +76,7 @@
         <button onclick="cap.showDialog('http://services.sandre.eaufrance.fr/geo/eth_FXX');">Sandre</button>
       </li>
     </ul>
+    <button onclick="exportCarte()" style="display: none;">exportCarte</button>
   </div>
   
 <script type="text/javascript">
@@ -143,8 +146,65 @@
   map.addControl(cap);
 
   cap.on('load', function(e) {
-    map.addLayer(e.layer)
+    e.layer.set('WMS', true);
+    map.addLayer(e.layer);
   })
+
+  function exportCarte() {
+    var lonlat = ol.proj.toLonLat(map.getView().getCenter());
+    var carte = {
+      "param": {
+        "lon": lonlat[0],
+        "lat": lonlat[1],
+        "rot": 0,
+        "zoom": map.getView().getZoom(),
+        "titre": "WMS",
+        "description": ""
+      },
+      "layers": []
+    }
+    map.getLayers().getArray().forEach(function(l) {
+      if (l.get('WMS')) {
+        carte.layers.push({
+          "wms": true,
+          "type": "WMS",
+          "name": l.get('title'),
+          "titre": l.get('title'),
+          "visibility": l.getVisible(),
+          "opacity": l.getOpacity(),
+          "copyright": l.getSource().getAttributions()()[0] || '&copy;',
+          "wmsparam": {
+            "layer": {
+              "title": l.get('title'),
+              "extent": l.get('extent'),
+              "minResolution": l.getMinResolution(),
+              "maxResolution": l.getMaxResolution()
+            },
+            "source": {
+            "url": l.getSource().getUrls()[0],
+            "projection": "EPSG:3857",
+            "crossOrigin": "anonymous",
+            "params": {
+              "LAYERS": l.getSource().getParams().LAYERS,
+              "FORMAT": l.getSource().getParams().FORMAT,
+              "VERSION": l.getSource().getParams().VERSION,
+              "MAP": l.getSource().getParams().MAP || ''
+            }
+            },
+            "attribution": {
+              "html": l.getSource().getAttributions()()[0] || '&copy;'
+            },
+            "originator": [],
+            "legend": []
+          },
+          "maxZoomCluster": 20,
+          "radiusCluster": 40
+        })
+      }
+    });
+    var blob = new Blob([JSON.stringify(carte, null, ' ')], {type: 'text/plain;charset=utf-8'});
+    saveAs(blob, 'carte.carte');
+  }
 
 </script>
 
