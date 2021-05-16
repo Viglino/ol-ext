@@ -13792,7 +13792,7 @@ ol.control.VideoRecorder.prototype.resume = function () {
 };
 
 /* 
-  WMS Layer with EPSG:4326 projection.
+  Using WMS Layer with EPSG:4326 projection.
   The tiles will be reprojected to map pojection (EPSG:3857).
   NB: reduce tileSize to minimize deformations on small scales.
 */
@@ -13915,6 +13915,8 @@ ol.control.WMSCapabilities.prototype.createDialog = function (options) {
   });
   var input = this._elements.input = ol.ext.element.create('INPUT', {
     className: 'url',
+    type: 'text',
+    tabIndex: 1,
     placeholder: options.placeholder || 'service url...',
     autocorrect: 'off',
     autocapitalize: 'off',
@@ -13980,13 +13982,16 @@ ol.control.WMSCapabilities.prototype.createDialog = function (options) {
   this._img.crossOrigin = 'Anonymous';
   this._img.addEventListener('error', function() {
     preview.className = 'ol-preview tainted';
+    this._elements.formCrossOrigin.checked = false;
   }.bind(this));
   this._img.addEventListener('load', function() {
     preview.className = 'ol-preview ok';
+    this._elements.formCrossOrigin.checked = true;
   }.bind(this));
   // Select list
   var select = this._elements.select = ol.ext.element.create('SELECT', {
     className: 'ol-select-list',
+    tabIndex: 2,
     size: options.popupLayer ? 0 : 10,
     on: {
       change: function () {
