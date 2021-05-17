@@ -235,7 +235,7 @@ gulp.task ("postpublish", function(){
       "./render",
       "./source",
       "./style",
-      "./ext",
+      "./legend",
       "./util",
       "./utils"
     ])
