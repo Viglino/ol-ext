@@ -1,5 +1,5 @@
 import ol_ext_inherits from '../util/ext'
-import ol_Object from 'ol/ol_Object'
+import ol_Object from 'ol/Object'
 import ol_ext_element from '../util/element'
 
 /** ol/legend/Item options
