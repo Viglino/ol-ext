@@ -11,7 +11,7 @@ import ol_legend_Legend from '../legend/Legend'
  * @param {*} options
  *  @param {String} options.className class of the control
  *  @param {ol_legend_Legend} options.legend
- *  @param {boolean | undefined} options.collapsed Specify if attributions should be collapsed at startup. Default is true.
+ *  @param {boolean | undefined} options.collapsed Specify if legend should be collapsed at startup. Default is true.
  *  @param {boolean | undefined} options.collapsible Specify if legend can be collapsed, default true.
  *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  */
@@ -53,7 +53,7 @@ var ol_control_Legend = function(options) {
   element.appendChild(this._legend.getCanvas());
   element.appendChild(this._legend.getListElement());
 
-  if (options.collapsible!==false || options.collapsed===false) this.show();
+  if (options.collapsible!==false && options.collapsed===false) this.show();
 
   this._legend.on('select', function(e) {
     this.dispatchEvent(e);
