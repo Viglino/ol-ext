@@ -142,6 +142,14 @@ communeDialog.on('show', function() {
 });
 map.addControl(communeDialog);
 
+// Zone circulaire
+function circularZone(r) {
+  var center = map.getView().getCenter();
+  var res = ol.proj.getPointResolution(map.getView().getProjection(), 1, map.getView().getCenter())
+  var p = ol.geom.Polygon.fromCircle(new ol.geom.Circle(center, 1000 * r / res));
+  commune.addFeature(new ol.Feature(p));
+}
+
 // Drag'n'drop commune
 var drop = new ol.interaction.DropFile();
 drop.on('addfeatures', function(e) {
@@ -322,7 +330,12 @@ $('#save form').on('submit', function(e) {
             } else if (limit && options[p]) {
               f.unset(p);
               if (options[p].checked) {
-                f.set(options[p].name, prop[p]);
+                if (options[p].integer) {
+                  if (prop[p]===null) f.set(options[p].name, -1);
+                  else f.set(options[p].name, parseFloat(prop[p]) || 0);
+                } else {
+                  f.set(options[p].name, prop[p]);
+                }
               }
             }
           }
@@ -392,7 +405,8 @@ $('#options .valid').click(function() {
     var p = $(this).data('prop');
     if (p) {
       options[p] = {
-        checked: $('input[type="checkbox"]', this).prop('checked'),
+        checked: $('input.check', this).prop('checked'),
+        integer: $('input.int', this).prop('checked'),
         name: $('input[type="text"]', this).val()
       }
     }
@@ -432,13 +446,15 @@ function showOptions() {
   li = $('<li>')
     .append($('<label>').text('Attribut'))
     .append($('<span>').text('Nom exporté'))
+    .append($('<span>').text('toInt').css('float','right').attr('title','tranformer en nombre...'))
     .appendTo(ul);
   for (p in prop) if (p!=='geometry') {
     var o = options[p];
     li = $('<li>').data('prop', p).appendTo(ul);
     label = $('<label>').attr('title',p).text(p).appendTo(li);
-    $('<input type="checkbox">').prop('checked', o ? o.checked : true).prependTo(label);
+    $('<input type="checkbox">').addClass('check').prop('checked', o ? o.checked : true).prependTo(label);
     $('<input type="text">').val(o ? o.name : p).appendTo(li);
+    $('<input type="checkbox">').addClass('int').prop('checked', o ? o.integer : false).appendTo(li);
   }
 }
 

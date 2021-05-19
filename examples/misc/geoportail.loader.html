@@ -116,7 +116,14 @@
       <button onclick="communeDialog.show()">
         <i class="fa fa-upload"></i> Charger une commune
       </button>
-      <i>Charger une commune avec son numéro INSEE comme zone de chargement ou glissez-déposez un fichier sur la carte</i>
+      <i>Charger une commune avec son numéro INSEE comme zone de chargement ou glissez-déposez un fichier sur la carte.</i>
+    </p>
+    <p>
+      <button onclick="circularZone($(this).next().val())">
+        <i class="fa fa-circle-o"></i> Zone circulaire...
+      </button>
+      <input type="number" step="" value="3" min="0" style="width:5em;" /> km
+      <i>Créer une zone de chargement circulaire centrée sur la carte.</i>
     </p>
     <p>
       <button onclick="buffer()">
