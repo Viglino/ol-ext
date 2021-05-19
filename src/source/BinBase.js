@@ -210,6 +210,13 @@ ol_source_BinBase.prototype.getGridFeatures = function () {
 ol_source_BinBase.prototype._flatAttributes = function(/*bin, features*/) {
 };
 
+/** Set the flatAttribute function
+ * @param {function} fn Function that takes a bin and the features it contains and aggragate the features in the bin attributes when saving
+ */
+ ol_source_BinBase.prototype.setFlatAttributesFn = function(fn) {
+  if (typeof(fn)==='function') this._flatAttributes = fn;
+};
+
 /**
  * Get the orginal source
  * @return {ol_source_Vector}

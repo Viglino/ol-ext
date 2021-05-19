@@ -248,7 +248,7 @@
   // Save
   function save (point) {
     var format = new ol.format.GeoJSON();
-    var features = collector.getSource().getcollectorFeatures();
+    var features = collector.getSource().getGridFeatures();
     if (point) {
       features.forEach(function (f) {
         var g = f.getGeometry().getInteriorPoint();
@@ -285,12 +285,12 @@
       }
     });
   }
-  collector.getSource()._flatAttributes = function (bin, features) {
+  collector.getSource().setFlatAttributesFn(function (bin, features) {
     var pc = Number($('#percent').val());
     if (bin.get('pop')) {
       bin.set('nb_pop',pc*bin.get('nb')/bin.get('pop'));
     }
-  }
+  });
 
 </script>
 

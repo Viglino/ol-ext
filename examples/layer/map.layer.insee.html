@@ -328,7 +328,7 @@
   }
 
   // Flatten attributes on save
-  grid.getSource()._flatAttributes = function (bin, features) {
+  grid.getSource().setFlatAttributesFn(function (bin, features) {
     /*
     if (bin.get('pop')) {
       bin.set('nb_pop',100*bin.get('nb')/bin.get('pop'));
@@ -379,7 +379,7 @@
         }
       }
     });
-  }
+  });
 
 </script>
 
