@@ -1,0 +1,158 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2021 Jean-Marc VIGLINO,
+-->
+  <title>ol-ext: Geoportail elevation service</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="Use the French Geoportail service to get elevations on geometry." />
+  <meta name="keywords" content="openlayers, profil, 3D, Z, altitude, elevation" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    body.calculating {
+      opacity: .5;
+    }
+  </style>
+  </head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: ol control profil</h1>
+  </a>
+  <div class="info">
+    <i>ol/geom/GPAltiCode</i> use the French Geoportail service to get elevations on geometry (LineString or Point).
+    <br/>
+    <ul>
+      <li>
+        Use <i>success</i>and <i>error</i> callback to get the resulting geometry
+      </li>
+      <li>
+        <i>sampling</i> lets you specify a number of point to sample the line (default use existing points)
+      </li>
+      <li>
+        <i>samplingDist</i> lets you set a distance beetween points for sampling 
+        (it use the sampling options as a min an add more if necessary).
+      </li>
+      <li>
+        You have to get an <a href="https://geoservices.ign.fr/documentation/diffusion/index.html">API key</a> 
+        to access the service. The default key is provided for development only.
+      </li>
+    </ul>
+  </div>
+
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options">
+    <i>Draw a line on the map...</i>
+    <h2>Profil:</h2>
+  </div>
+
+  <script type="text/javascript">
+  // Layers
+  var layer = new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' });
+
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 12,
+      center: [527172, 5691685]
+    }),
+    layers: [layer]
+  });
+  map.addControl(new ol.control.Permalink({ visible: false }));
+
+  // New profil outside the map
+  var profil = new ol.control.Profil({
+    target: document.querySelector(".options"),
+    // zoomable: true,
+    style: new ol.style.Style({
+      fill: new ol.style.Fill({ color: '#ccc' })
+    }),
+    width:400, height:200
+  });
+  map.addControl(profil);
+
+  // Vector layer
+  var source = new ol.source.Vector();
+  var vector = new ol.layer.Vector({
+    source: source
+  });
+  map.addLayer(vector);
+
+  // Show feature profile when loaded
+  var pt, feature;
+  pt = new ol.Feature(new ol.geom.Point([0,0]));
+  pt.setStyle([]);
+  source.addFeature(pt);
+
+  // Draw a point on the map when mouse fly over profil
+  function drawPoint(e) {
+    if (!pt) return;
+    if (e.type=="over"){
+      // Show point at coord
+      pt.setGeometry(new ol.geom.Point(e.coord));
+      pt.setStyle(null);
+    } else {
+      // hide point
+      pt.setStyle([]);
+    }
+  };
+  // Show a popup on over
+  profil.on(["over","out"], function(e) {
+    if (e.type=="over") profil.popup(e.coord[2]+" m");
+    drawPoint(e);
+  });
+
+  var drawline = new ol.interaction.Draw({ type: 'LineString' });
+  map.addInteraction(drawline);
+  drawline.on('drawend', function(e) {
+    $('body').addClass('calculating');
+    ol.geom.GPAltiCode(e.feature.getGeometry(), {
+      sampling: 100,       // at least 30
+      samplingDist: 500,   // or one point per 500 unit length
+      success: function(g) {
+        $('body').removeClass('calculating');
+        if (feature) source.removeFeature(feature);
+        feature = new ol.Feature(g);
+        source.addFeature(feature);
+        profil.setGeometry(feature, {
+          amplitude: 500,
+          zmin: 0
+        });
+      },
+      error: function(e) {
+        $('body').removeClass('calculating');
+        console.error(e)
+      }
+    });
+  })
+
+  map.on('click', function(e) {
+    ol.coordinate.GPAltiCode(e.coordinate, {
+      success: function(p) { console.log(p); }
+    });
+  })
+  </script>
+  
+</body>
+</html>

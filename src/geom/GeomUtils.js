@@ -47,7 +47,7 @@ var ol_coordinate_getFeatureCenter = function(f) {
 };
 
 /** Get center coordinate of a geometry
-* @param {ol.Feature} geom
+* @param {ol.geom.Geometry} geom
 * @return {ol.Coordinate} the center
 */
 var ol_coordinate_getGeomCenter = function(geom) {
