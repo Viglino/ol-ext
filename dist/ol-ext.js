@@ -25965,6 +25965,126 @@ ol.source.HexBin.prototype.getHexFeatures = function () {
   return ol.source.BinBase.prototype.getGridFeatures.call(this);
 };
 
+/*	Copyright (c) 2021 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+*/
+/** Inverse distance weighting interpolated source - Shepard's method
+ * @see https://en.wikipedia.org/wiki/Inverse_distance_weighting
+ * @constructor 
+ * @extends {ol.source.ImageCanvas}
+ * @param {olx.source.GeoImageOptions=} options
+ *  @param {number} [options.scale=4] scale factor, use large factor to enhance performances (but minor accuracy)
+ *  @param {string|function} weight The feature attribute to use for the weight or a function that returns a weight from a feature. Weight values should range from 0 to 100.
+ */
+ol.source.IDW = function(options) {
+  options = options || {};
+  // Draw image on canvas
+  options.canvasFunction = this.calculateImage;
+  this._source = options.source;
+  this._canvas = document.createElement('CANVAS');
+  this._source.on(['addfeature','removefeature','clear','removefeature'], function() {
+    this.changed();
+  }.bind(this));
+  ol.source.ImageCanvas.call (this, options);
+  this.set('scale', options.scale || 4);
+  this._weight = typeof(options.weight) === 'function' ? options.weight : function(f) { return f.get(options.weight||'weight'); }
+};
+ol.ext.inherits(ol.source.IDW, ol.source.ImageCanvas);
+/** Get the source
+ */
+ol.source.IDW.prototype.getSource = function() {
+  return this._source;
+};
+/** Convert hue to rgb factor
+ * @param {number} h
+ */
+ol.source.IDW.prototype.hue2rgb = function(h) {
+  h = (h + 6) % 6;
+  if (h < 1) return Math.round(h * 255);
+  if (h < 3) return 255;
+  if (h < 4) return Math.round((4 - h) * 255);
+  return 0;
+};
+/** Apply the value to the map RGB
+ * @param {number} v value
+ * @param {Uint8ClampedArray} data
+ * @param {number} i index
+ * @api
+ */
+ol.source.IDW.prototype.setData = function(v, data, i) {
+  // Get hue
+  var h = 4 - (0.04 * v);
+  // Convert to RGB
+  data[i] = this.hue2rgb(h + 2);
+  data[i+1] = this.hue2rgb(h);
+  data[i+2] = this.hue2rgb(h - 2);
+  data[i+3] = 255;
+};
+/** Calculate IDW at extent / resolution
+ * @param {ol/extent/Extent} extent
+ * @param {number} resolution
+ * @param {number} pixelRatio
+ * @param {ol/size/Size} size
+ * @return {HTMLCanvasElement}
+ */
+ol.source.IDW.prototype.calculateImage = function(extent, resolution, pixelRatio, size) {
+  if (!this._source) return this._canvas;
+  // Calculation canvas at small resolution
+  var canvas = document.createElement('CANVAS');
+  var width = canvas.width = Math.round(size[0] / (this.get('scale')*pixelRatio));
+  var height = canvas.height = Math.round(size[1] / (this.get('scale')*pixelRatio));
+  var ctx = canvas.getContext('2d');
+  var imageData = ctx.getImageData(0, 0, width, height);
+  // Transform coords to pixel / value
+  var pts = [];
+  var dw = width / (extent[2]-extent[0]);
+  var dh = height / (extent[1]-extent[3]);
+  function tr(xy, v) {
+    return [
+      (xy[0]-extent[0]) * dw,
+      (xy[1]-extent[3]) * dh,
+      v
+    ];
+  }
+  // Get features / weight
+  this._source.getFeatures().forEach(function(f) {
+    pts.push(tr(f.getGeometry().getFirstCoordinate(), this._weight(f)));
+  }.bind(this));
+  // Compute image
+  var x, y;
+  for (y = 0; y < height; y++) {
+    for (x = 0; x < width; x++) {
+      var t = 0, b = 0;
+      for(var i = 0; i < pts.length; ++i) {
+        var dx = x -  pts[i][0];
+        var dy = y -  pts[i][1];
+        var d = dx*dx + dy*dy;
+        // Inverse distance weighting - Shepard's method
+        if (d === 0) {
+          b = 1; 
+          t = pts[i][2];
+          break;
+        }
+        var inv = 1 / (d*d);
+        t += inv * pts[i][2];
+        b += inv;
+      }
+      this.setData(t/b, imageData.data, (y*width + x)*4);
+    }
+  }
+  ctx.putImageData(imageData, 0, 0);
+  /* DEBUG : Draw points * /
+  pts.forEach(function(p) {
+    ctx.fillRect(p[0], p[1], 1, 1);
+  });
+  /**/
+  // Draw full resolution canvas
+  this._canvas.width = Math.round(size[0]);
+  this._canvas.height = Math.round(size[1]);
+  this._canvas.getContext('2d').drawImage(canvas, 0, 0, size[0], size[1]);
+  return this._canvas;
+}
+
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -26991,6 +27111,31 @@ ol.layer.AnimatedCluster.prototype.postanimate = function(e) {
     this.clip_ = false;
   }
 };
+
+/*	Copyright (c) 2019 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * @classdesc
+ * Image layer to use with a GeoImage source and return the extent calcaulted with this source.
+ * @extends {ol.layer.Image}
+ * @param {Object=} options Layer Image options.
+ * @api
+ */
+ol.layer.GeoImage = function(options) {
+  ol.layer.Image.call(this, options);
+}
+ol.ext.inherits (ol.layer.GeoImage, ol.layer.Image);
+/**
+ * Return the {@link module:ol/extent~Extent extent} of the source associated with the layer.
+ * @return {ol.Extent} The layer extent.
+ * @observable
+ * @api
+ */
+ol.layer.GeoImage.prototype.getExtent = function() {
+  return this.getSource().getExtent();
+}
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
