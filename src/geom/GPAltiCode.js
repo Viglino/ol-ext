@@ -1,5 +1,7 @@
 import ol_ext_Ajax from '../util/Ajax'
 import { ol_geom_createFromType } from './GeomUtils'
+import ol_geom_Point from 'ol/geom/Point'
+import ol_geom_LineString from 'ol/geom/LineString'
 
 /** French Geoportail alti coding
  * @param {ol.geom.Geometry} geom

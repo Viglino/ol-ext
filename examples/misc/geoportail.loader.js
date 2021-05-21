@@ -505,7 +505,7 @@ var popup = new ol.Overlay.PopupFeature({
     attributes: [
       'nature', 'nom_1_droite', 'code_postal_droit', 'etat_de_l_objet', 'urbain',
       'cpx_classement_administratif', 'cpx_numero',
-      'usage_1', 'origine_du_batiment', 'hauteur', 'nombre_d_etages', 'nombre_de_logements',
+      'usage_1', 'origine_du_batiment', 'hauteur', 'nombre_d_etages', 'nombre_de_logements', 'date_d_apparition',
       'nom_com', 'code_insee', 'code_arr', 'section', 'numero'
     ]
   }
