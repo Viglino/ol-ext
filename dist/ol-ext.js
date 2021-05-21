@@ -16700,8 +16700,8 @@ ol.format.GeoJSONX.prototype.decodeCoordinates = function(v, decimals) {
     } else {
       v = v[0].split(',');
       p = [ this.decodeNumber(v[0], decimals), this.decodeNumber(v[1], decimals) ];
-      if (v[i].length > 2) p[2] = this.decodeNumber(v[i][2], 2);
-      if (v[i].length > 3) p[3] = this.decodeNumber(v[i][3], 0);
+      if (v.length > 2) p[2] = this.decodeNumber(v[2], 2);
+      if (v.length > 3) p[3] = this.decodeNumber(v[3], 0);
       return p;
     }
   } else if (v.length) {
@@ -26020,6 +26020,15 @@ ol.source.IDW.prototype.setData = function(v, data, i) {
   data[i+2] = this.hue2rgb(h - 2);
   data[i+3] = 255;
 };
+/** Get image value at pixel
+ * 
+ */
+ol.source.IDW.prototype.getValue = function(coord) {
+  if (!this._canvas) return null
+  var pt = this.transform(coord);
+  var v = this._canvas.getContext('2d').getImageData(Math.round(pt[0]), Math.round(pt[1]), 1, 1).data;
+  console.log(v);
+};
 /** Calculate IDW at extent / resolution
  * @param {ol/extent/Extent} extent
  * @param {number} resolution
@@ -26039,7 +26048,7 @@ ol.source.IDW.prototype.calculateImage = function(extent, resolution, pixelRatio
   var pts = [];
   var dw = width / (extent[2]-extent[0]);
   var dh = height / (extent[1]-extent[3]);
-  function tr(xy, v) {
+  var tr = this.transform = function(xy, v) {
     return [
       (xy[0]-extent[0]) * dw,
       (xy[1]-extent[3]) * dh,

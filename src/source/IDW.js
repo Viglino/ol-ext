@@ -64,6 +64,16 @@ ol_source_IDW.prototype.setData = function(v, data, i) {
   data[i+3] = 255;
 };
 
+/** Get image value at pixel
+ * 
+ */
+ol_source_IDW.prototype.getValue = function(coord) {
+  if (!this._canvas) return null
+  var pt = this.transform(coord);
+  var v = this._canvas.getContext('2d').getImageData(Math.round(pt[0]), Math.round(pt[1]), 1, 1).data;
+  console.log(v);
+};
+
 /** Calculate IDW at extent / resolution
  * @param {ol/extent/Extent} extent
  * @param {number} resolution
@@ -85,7 +95,7 @@ ol_source_IDW.prototype.calculateImage = function(extent, resolution, pixelRatio
   var pts = [];
   var dw = width / (extent[2]-extent[0]);
   var dh = height / (extent[1]-extent[3]);
-  function tr(xy, v) {
+  var tr = this.transform = function(xy, v) {
     return [
       (xy[0]-extent[0]) * dw,
       (xy[1]-extent[3]) * dh,

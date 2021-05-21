@@ -218,8 +218,8 @@ ol_format_GeoJSONX.prototype.decodeCoordinates = function(v, decimals) {
     } else {
       v = v[0].split(',');
       p = [ this.decodeNumber(v[0], decimals), this.decodeNumber(v[1], decimals) ];
-      if (v[i].length > 2) p[2] = this.decodeNumber(v[i][2], 2);
-      if (v[i].length > 3) p[3] = this.decodeNumber(v[i][3], 0);
+      if (v.length > 2) p[2] = this.decodeNumber(v[2], 2);
+      if (v.length > 3) p[3] = this.decodeNumber(v[3], 0);
       return p;
     }
   } else if (v.length) {
