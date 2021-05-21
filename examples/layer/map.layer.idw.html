@@ -63,6 +63,9 @@
     <p>
       <i>ol/source/IDW</i> is an Inverse Distance Weighting (IDW) interpolated source that use the
       <a href="https://en.wikipedia.org/wiki/Inverse_distance_weighting">Shepard's method</a>.
+      <br/>
+      The default weight convertion function converts values from 0 (blue) to 100 (red). 
+      You can use values up to 128 (magenta). Upper values turns around the color wheel.
     </p>
     <ul>
     </ul>
@@ -75,7 +78,7 @@
     <br/> Value:
     <input id="value" type="number" value="50" min="0" max="100" />
     <label><input id="random" type="checkbox" checked="checked" /> random</label>
-    <br/>
+    <button onclick="idw.getSource().clear()">clear</button>
     <button onclick="$('body').toggleClass('fullscreen'); map.updateSize()">FullScreen</button>
 	</div>
 	
