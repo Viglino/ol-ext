@@ -12522,7 +12522,9 @@ ol.control.Status.prototype.status = function(html) {
   var s = html || '';
   if (s) {
     ol.ext.element.show(this.element);
-    if (typeof(s)==='object' && !(s instanceof String)) {
+    if (s instanceof Element || typeof(s) === 'string') {
+      ol.ext.element.setHTML(this.element, s)
+    } else {
       s = '';
       for (var i in html) {
         s += '<label>'+i+':</label> '+html[i]+'<br/>';

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--
+	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+	<title>ol-ext: WhereTheHellIsThomas</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="icon" type="image/png" href="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/IGN_logo_2012.svg/218px-IGN_logo_2012.svg.png" />
+
+	<meta name="description" content="Geoportail layer for ol" />
+	<meta name="keywords" content="ol, openlayers, layer, source, geoportail" />
+
+  <meta name="msapplication-tap-highlight" content="no" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@viglino">
+  <meta name="twitter:creator" content="@viglino">
+  <meta name="twitter:title" content="ol-ext - Where the hell is Thomas?">
+  <meta name="twitter:description" content="Get the real-time position of Thomas Pesquet on the ISS using 'Where The ISS At?' API and Openlayers.">
+  <meta name="twitter:image" content="https://viglino.github.io/ol-ext/examples/img/wthit.jpg">
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+	
+	<!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+	<link rel="stylesheet" href="../style.css" />
+  <style>
+    #map {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #0a3b59;
+    }
+    #status * {
+      color: #fff;
+      margin: 0;
+    }
+    .ol-zoom {
+      display: none;
+    }
+    .ol-control.ol-status {
+      padding: .3em 1em;
+    }
+  </style>
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+	<!-- DIV pour la carte -->
+	<div id="map"></div>
+  <div id="status">
+    <h2>Where the hell is Thomas?</h2>
+    <p>Date: <span class='date'></span></p>
+    <p>Position: <span class='lonlat'></span></p>
+    <p>Altitude: <span class='alt'></span> km</p>
+    <p>Vélocity: <span class='speed'></span> km/h</p>
+  </div>
+
+	
+<script type="text/javascript">
+	// The map
+	var map = new ol.Map ({
+    target: 'map',
+    interactions: ol.interaction.defaults({altShiftDragRotate:false, pinchRotate:false}),
+    view: new ol.View ({
+      zoom: 5,
+      center: [0,0],
+      maxZoom: 10,
+      projection:'EPSG:4326'
+    })
+  });
+
+  // Earth photo
+  map.addLayer (new ol.layer.Geoportail({
+    layer: 'ORTHOIMAGERY.ORTHOPHOTOS'
+  }));
+  // Day/night
+  var daynight = new ol.source.DayNight({ });
+  map.addLayer(new ol.layer.Vector({
+    source: daynight,
+    style: new ol.style.Style({
+      fill: new ol.style.Fill({
+        color: [0,0,50,.5]
+      })
+    })
+  }));
+
+  var issSource = new ol.source.Vector({
+    attributions: [ '&copy; <a href="https://wheretheiss.at/">WhereTheISS.at</a>' ]
+  });
+  map.addLayer(
+    new ol.layer.Vector({ 
+      title: 'ISS', 
+      className: 'vector', 
+      source: issSource,
+      style: new ol.style.Style({
+        image: new ol.style.Circle({
+          radius: 2,
+          fill: new ol.style.Fill({ color: '#fff' })
+        }),
+        stroke: new ol.style.Stroke({
+          color: [255,255,255,.75],
+          width: 1.25
+        })
+      })
+    })
+  );
+  var iss = new ol.Feature(new ol.geom.Point([0,0]));
+  issSource.addFeature(iss);
+  issImage = new ol.style.Icon({ src: '../img/iss.png', scale: 0 });
+  iss.setStyle (new ol.style.Style({
+    image: issImage
+  }));
+  var track = new ol.Feature(new ol.geom.LineString([]));
+  issSource.addFeature(track);
+
+  // Get older 
+  // https://api.wheretheiss.at/v1/satellites/25544/positions?timestamps=1436029892,1436029902
+
+  var start, current, destination;
+  var delay = 50;
+
+  // Get ISS position
+  function trackISS() {
+    // Next position in delay mn later
+    var date = new Date();
+    var stamp = Math.round(date.getTime()/1000) + delay;
+    $.ajax({
+      url: 'https://api.wheretheiss.at/v1/satellites/25544/positions?timestamps='+stamp,
+      success: function(pos) {
+        // console.log('load destination');
+        if (destination) start = destination;
+        destination = pos[0];
+        setTimeout(trackISS, (delay-1) * 1000)
+        // issSource.addFeature(new ol.Feature(new ol.geom.Point([pos[0].longitude, pos[0].latitude])))
+      }
+    });
+  }
+  $.ajax({
+    url: 'https://api.wheretheiss.at/v1/satellites/25544/',
+    success: function(pos) {
+      start = current = pos;
+      // Start tracking
+      trackISS();
+    }
+  });
+
+  function drawISS() {
+    //var date = new Date((new Date()).getTime() - 1*60*60*1000);
+    var date = new Date();
+    // 25 img/s
+    if (!current || date.getTime() - current.timestamp > 1000/25)  {
+      var stamp = Math.round(date.getTime()/1000);
+      // Interpolate position
+      if (start && destination) {
+        var sc = (stamp - start.timestamp) / (destination.timestamp - start.timestamp);
+        current = {
+          position: [
+            start.longitude + sc*(destination.longitude - start.longitude),
+            start.latitude + sc*(destination.latitude - start.latitude),
+          ],
+          timestamp: date.getTime()
+        }
+        var res = map.getView().getResolution();
+        issImage.setScale(Math.max(.1, .025/Math.sqrt(map.getView().getResolution())));
+        issImage.setRotation(Math.PI/2+Math.atan2(destination.latitude-start.latitude,start.longitude-destination.longitude));
+        iss.getGeometry().setCoordinates(current.position);
+        var t = track.getGeometry().getCoordinates();
+        t.push(current.position)
+        track.getGeometry().setCoordinates(t);
+        //map.getView().animate({ center: current.position } );
+        // Show info
+        $('#status .lonlat').text(ol.coordinate.toStringHDMS(current.position));
+        $('#status .alt').text((start.altitude + sc*(destination.altitude - start.altitude)).toFixed(1));
+        $('#status .speed').text((start.velocity + sc*(destination.velocity - start.velocity)).toFixed(1));
+        $('#status .date').text(date.toLocaleString());
+        // Center if not interacting
+        if (!interacting) map.getView().setCenter(current.position);
+        // Update day/night
+        daynight.setTime(date);
+      }
+    }
+    requestAnimationFrame(drawISS);
+  }
+  drawISS();
+
+  var interacting = false;
+  var tout;
+  map.addInteraction(new ol.interaction.Interaction({
+    handleEvent: function(e) {
+      if (e.type!=='pointermove') {
+        interacting = true;
+        clearTimeout(tout);
+        tout = setTimeout(function() { interacting = false; }, 500);
+      }
+      return true;  
+    }
+  }));
+
+  map.addControl(new ol.control.ScaleLine());
+
+  var ctrl = new ol.control.Status();
+  map.addControl(ctrl);
+  ctrl.status($('#status').get(0))
+
+</script>
+</body>
+</html>
