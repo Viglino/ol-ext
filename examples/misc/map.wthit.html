@@ -177,7 +177,7 @@
           timestamp: date.getTime()
         }
         var res = map.getView().getResolution();
-        issImage.setScale(Math.max(.1, .025/Math.sqrt(map.getView().getResolution())));
+        issImage.setScale(Math.max(.15, .025/Math.sqrt(map.getView().getResolution())));
         issImage.setRotation(Math.PI/2+Math.atan2(destination.latitude-start.latitude,start.longitude-destination.longitude));
         iss.getGeometry().setCoordinates(current.position);
         var t = track.getGeometry().getCoordinates();
