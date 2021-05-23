@@ -291,6 +291,15 @@
   padding: .1em 1em;
 }
 
+.ol-compassctrl {
+  display: none;
+  top: 1em;
+  left: auto;
+  right: 1em;
+}
+.ol-compassctrl.ol-visible {
+  display: block!important;
+}
 .ol-ext-dialog {
   position: fixed;
   top: -100%;
@@ -2548,6 +2557,9 @@ ul.ol-legend li div {
   margin: .5em 0;
   font-size: .9em;
 }
+.ol-ext-print-dialog .ol-print-param li.hidden {
+  display: none;
+}
 .ol-ext-print-dialog .ol-print-param label {
   width: 8em;
   display: inline-block;
@@ -2628,17 +2640,13 @@ ul.ol-legend li div {
 .ol-ext-print-dialog .ol-size option:first-child {
   font-style: italic;
 }
-.ol-ext-print-dialog .ol-legend label {
-  display: none;
-}
-.ol-ext-print-dialog .ol-legend label.visible {
-  display: block;
-}
 
-.ol-ext-print-dialog .ol-saveas {
+.ol-ext-print-dialog .ol-saveas,
+.ol-ext-print-dialog .ol-savelegend {
   text-align: center;
 }
-.ol-ext-print-dialog .ol-saveas select {
+.ol-ext-print-dialog .ol-saveas select,
+.ol-ext-print-dialog .ol-savelegend select {
   background-color: rgba(0,60,136,.7);
   color: #fff;
   padding: .5em;
@@ -2648,9 +2656,13 @@ ul.ol-legend li div {
   font-weight: bold;
   max-width: 12em;
 }
-.ol-ext-print-dialog .ol-saveas select option {
+.ol-ext-print-dialog .ol-saveas select option,
+.ol-ext-print-dialog .ol-savelegend select option {
   background-color: #fff;
   color: #666;
+}
+.ol-ext-print-dialog .ol-savelegend select {
+  margin-top: 0;
 }
 
 .ol-ext-print-dialog .ol-ext-buttons {
@@ -2700,6 +2712,8 @@ ul.ol-legend li div {
 }
 .ol-ext-print-dialog .ol-print-map .ol-control.ol-print-compass {
   display: block!important;
+}
+.ol-ext-print-dialog .ol-print-map .ol-control.olext-print-compass {
   top: 0;
   right: 0;
   width: 60px;
