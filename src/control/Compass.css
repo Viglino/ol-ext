@@ -1,0 +1,9 @@
+.ol-compassctrl {
+  display: none;
+  top: 1em;
+  left: auto;
+  right: 1em;
+}
+.ol-compassctrl.ol-visible {
+  display: block!important;
+}
