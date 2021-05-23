@@ -162,11 +162,12 @@ printControl.on(['print', 'error'], function(e) {
         format: e.print.size
       });
       pdf.addImage(e.image, 'JPEG', e.print.position[0], e.print.position[0], e.print.imageWidth, e.print.imageHeight);
-      pdf.save('map.pdf');
+      pdf.save(e.print.legend ? 'legend.pdf' : 'map.pdf');
     } else  {
       // Save image as file
       e.canvas.toBlob(function(blob) {
-        saveAs(blob, 'map.'+e.imageType.replace('image/',''));
+        var name = (e.print.legend ? 'legend.' : 'map.')+e.imageType.replace('image/','');
+        saveAs(blob, name);
       }, e.imageType, e.quality);
     }
   } else {

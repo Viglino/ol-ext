@@ -7,6 +7,7 @@ import ol_ext_inherits from '../util/ext'
 import ol_control_CanvasBase from './CanvasBase'
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Stroke from 'ol/style/Stroke'
+import ol_ext_element from '../util/element';
 
 /**
  * Draw a compass on the map. The position/size of the control is defined in the css.
@@ -40,7 +41,7 @@ var ol_control_Compass = function(options) {
   });
 
   this.set('rotateVithView', options.rotateWithView!==false);
-  this.set('visible', options.visible!==false);
+  this.setVisible(options.visible!==false);
 
   this.setImage(options.image || options.src);
 };
@@ -100,7 +101,9 @@ ol_control_Compass.prototype.compactCompass_ = function (s, color) {
   ctx.textBaseline = 'bottom';
   ctx.textAlign = 'center';
   ctx.strokeStyle = '#fff';
+  ctx.globalAlpha = .75;
   ctx.strokeText('N', 0,-r/2);
+  ctx.globalAlpha = 1;
   ctx.fillText('N', 0,-r/2);
   ctx.beginPath();
     ctx.moveTo(0,r/4);
@@ -109,9 +112,13 @@ ol_control_Compass.prototype.compactCompass_ = function (s, color) {
     ctx.lineTo(-r/3,r/2);
     ctx.lineTo(0,r/4);
   ctx.lineWidth = 12;
+  ctx.fillStyle = "#fff";
+  ctx.globalAlpha = .75;
+  ctx.fill();
   ctx.stroke();
+  ctx.globalAlpha = 1;
 
-  ctx.strokeStyle = color || '#963';
+  ctx.fillStyle = ctx.strokeStyle = color || '#963';
   ctx.lineWidth = 5;
   ctx.beginPath();
   ctx.moveTo(0,r/4);
@@ -127,9 +134,6 @@ ol_control_Compass.prototype.compactCompass_ = function (s, color) {
   ctx.lineTo(-r/3,r/2);
   ctx.lineTo(0,r/4);
   ctx.stroke();
-  ctx.globalCompositeOperation = "destination-out";
-  ctx.fillStyle = "#fff";
-  ctx.fill();
 
   return canvas;
 };
@@ -196,13 +200,29 @@ ol_control_Compass.prototype.defaultCompass_ = function (s, color) {
   return canvas;
 };
 
+/** Get control visibility
+ * @return {boolean}
+ */
+ol_control_Compass.prototype.getVisible = function() {
+  return ol_ext_element.getStyle(this.element, 'display') === 'block';
+};
+
+/** Set visibility
+ * @param {boolean} b
+ */
+ol_control_Compass.prototype.setVisible = function(b) {
+  if (b) this.element.classList.add('ol-visible');
+  else this.element.classList.remove('ol-visible');
+  if (this.getMap()) this.getMap().render();
+};
+
 /** Draw compass
 * @param {ol.event} e postcompose event
 * @private
 */
 ol_control_Compass.prototype._draw = function(e) {
   var ctx = this.getContext(e);
-  if (!ctx || !this.get('visible')) return;
+  if (!ctx || !this.getVisible()) return;
   var canvas = ctx.canvas;
 
   // 8 angles

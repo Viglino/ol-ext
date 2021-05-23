@@ -63,7 +63,7 @@ var ol_control_PrintDialog = function(options) {
   this._compass = new ol_control_Compass({ 
     src: options.northImage || 'compact', 
     visible: false, 
-    className: 'ol-print-compass', 
+    className: 'olext-print-compass',
     style: new ol_style_Stroke({ color: '#333', width: 0 })
   });
 
@@ -234,8 +234,10 @@ var ol_control_PrintDialog = function(options) {
   });
   var north = this._input.north = ol_ext_element.createSwitch({ 
     html: this.i18n('north'),
+    checked: 'checked',
     on:  { change: function() {
-      this._compass.set('visible', north.checked);
+      if (north.checked) this._compass.element.classList.add('ol-print-compass');
+      else this._compass.element.classList.remove('ol-print-compass');
       this.getMap().render();
     }.bind(this)},
     parent: li 
@@ -325,7 +327,96 @@ var ol_control_PrintDialog = function(options) {
       parent: save
     });
   });
-  
+
+  // Save Legend
+  li = ol_ext_element.create('LI',{ 
+    className: 'ol-savelegend',
+    parent: ul 
+  });
+  var copylegend = ol_ext_element.create('DIV', {
+    html: this.i18n('copied'),
+    className: 'ol-clipboard-copy',
+    parent: li
+  });
+  var saveLegend = ol_ext_element.create('SELECT', {
+    on: { change: function() {
+      // Print canvas (with white background)
+      var clegend = extraCtrl.legend.control.getLegend().getCanvas();
+      var canvas = document.createElement('CANVAS');
+      canvas.width = clegend.width;
+      canvas.height = clegend.height;
+      var ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(clegend, 0, 0);
+
+      // Copy to clipboard
+      if (this.formats[saveLegend.value].clipboard) {
+        canvas.toBlob(function(blob) {
+          try {
+            navigator.clipboard.write([
+              new window.ClipboardItem(
+                Object.defineProperty({}, blob.type, {
+                  value: blob,
+                  enumerable: true
+                })
+              )
+            ])
+            copylegend.classList.add('visible');
+            setTimeout(function() { copylegend.classList.remove('visible'); }, 1000);
+          } catch (err) { /* errror */ }
+        }, 'image/png');
+      } else {
+        var image;
+        try {
+          image = canvas.toDataURL(this.formats[saveLegend.value].imageType, this.formats[saveLegend.value].quality);
+          var format = (typeof(this.getSize())==='string' ? this.getSize() : 'A4');
+          var w = canvas.width / 96 * 25.4;
+          var h = canvas.height / 96 * 25.4;
+          var size = this.paperSize[format];
+          if (this.getOrientation()==='landscape') size = [size[1], size[0]];
+          var position = [
+            (size[0] - w) /2,
+            (size[1] - h) /2
+          ]; 
+          this.dispatchEvent({
+            type: 'print',
+            print: {
+              legend: true,
+              format: format,
+              orientation: this.getOrientation(),
+              unit: 'mm',
+              size: this.paperSize[format],
+              position: position,
+              imageWidth: w,
+              imageHeight: h
+            },
+            image: image,
+            imageType: this.formats[saveLegend.value].imageType,
+            pdf: this.formats[saveLegend.value].pdf,
+            quality: this.formats[saveLegend.value].quality,
+            canvas: canvas
+          })
+        } catch(err) { /* error */ }
+      }
+      saveLegend.value = '';
+    }.bind(this) },
+    parent: li
+  });
+  ol_ext_element.create('OPTION', {
+    html: this.i18n('saveLegend'),
+    style: { display: 'none' },
+    value: '',
+    parent: saveLegend
+  });
+  this.formats.forEach(function(format, i) {
+    ol_ext_element.create('OPTION', {
+      html: format.title,
+      value: i,
+      parent: saveLegend
+    });
+  });
+
   // Print
   var prButtons = ol_ext_element.create('DIV', {
     className: 'ol-ext-buttons',
@@ -372,9 +463,8 @@ var ol_control_PrintDialog = function(options) {
     scalelistener = map.on('moveend', function() {
       this.setScale(ol_sphere_getMapScale(map));
     }.bind(this));
-    // Compass
-    this._compass.set('visible', this._input.north.checked);
     // Get extra controls
+    extraCtrl = {};
     this.getMap().getControls().forEach(function(c) {
       if (c instanceof ol_control_Legend) {
         extraCtrl.legend = { control: c };
@@ -382,33 +472,43 @@ var ol_control_PrintDialog = function(options) {
       if (c instanceof ol_control_CanvasTitle) {
         extraCtrl.title = { control: c };
       }
+      if (c instanceof ol_control_Compass) {
+        if (extraCtrl.compass) {
+          c.element.classList.remove('ol-print-compass')
+        } else {
+          if (this._input.north.checked) c.element.classList.add('ol-print-compass')
+          else c.element.classList.remove('ol-print-compass')
+          this._compass = c;
+          extraCtrl.compass = { control: c };
+        }
+      }
     }.bind(this));
     // Show hide title
     if (extraCtrl.title) {
       title.checked = extraCtrl.title.isVisible = extraCtrl.title.control.getVisible();
       titleText.value = extraCtrl.title.control.getTitle();
-      title.parentNode.classList.add('visible');
+      title.parentNode.parentNode.classList.remove('hidden');
     } else {
-      title.parentNode.classList.remove('visible');
+      title.parentNode.parentNode.classList.add('hidden');
     }
     // Show hide legend
     if (extraCtrl.legend) {
       extraCtrl.legend.ison = extraCtrl.legend.control.onCanvas();
       extraCtrl.legend.collapsed = extraCtrl.legend.control.isCollapsed();
       extraCtrl.legend.control.collapse(false);
-      legend.parentNode.classList.add('visible');
+      saveLegend.parentNode.classList.remove('hidden');
+      legend.parentNode.parentNode.classList.remove('hidden');
       legend.checked = !extraCtrl.legend.collapsed;
       extraCtrl.legend.control.setCanvas(!extraCtrl.legend.collapsed);
     } else {
-      legend.parentNode.classList.remove('visible');
+      saveLegend.parentNode.classList.add('hidden');
+      legend.parentNode.parentNode.classList.add('hidden');
     }
     // hide
     this.dispatchEvent({ type: 'show', userElement: userElt, dialog: this._printDialog, page: this.getPage() });
   }.bind(this));
 
   printDialog.on('hide', function() {
-    // North arrow
-    this._compass.set('visible', false);
     // No print
     document.body.classList.remove('ol-print-document');
     if (!originalTarget) return;
@@ -468,6 +568,7 @@ ol_control_PrintDialog.prototype._labels = {
     north: 'North arrow',
     mapTitle: 'Map title',
     saveas: 'Save as...',
+    saveLegend: 'Save legend...',
     copied: '✔ Copied to clipboard',
     errorMsg: 'Can\'t save map canvas...',
     printBt: 'Print...',
@@ -486,6 +587,7 @@ ol_control_PrintDialog.prototype._labels = {
     north: 'Flèche du nord',
     mapTitle: 'Titre de la carte',
     saveas: 'Enregistrer sous...',
+    saveLegend: 'Enregistrer la légende...',
     copied: '✔ Carte copiée',
     errorMsg: 'Impossible d\'enregistrer la carte',
     printBt: 'Imprimer',
