@@ -8676,7 +8676,7 @@ ol.control.Print.prototype._getCanvas = function(event, imageType, canvas) {
       ctx = canvas.getContext('2d');
     }
     // ol6+ : create canvas using layer canvas
-    this.getMap().getViewport().querySelectorAll('.ol-layer canvas, canvas.ol-fixedoverlay').forEach(function(c) {
+    this.getMap().getViewport().querySelectorAll('.ol-layers canvas, canvas.ol-fixedoverlay').forEach(function(c) {
       if (c.width) {
         ctx.save();
         // opacity
@@ -13742,7 +13742,7 @@ ol.control.Timeline.prototype.getEndDate = function() {
  *	@param {String} options.className class of the control
  *	@param {number} [options.framerate=30] framerate for the video
  *	@param {number} [options.videoBitsPerSecond=5000000] bitrate for the video
- *	@param {DOMElement} [options.target] video element or the container to add the video when finished, default none
+ *	@param {DOMElement} [options.videoTarget] video element or the container to add the video when finished, default none
  */
 ol.control.VideoRecorder = function(options) {
   if (!options) options = {};

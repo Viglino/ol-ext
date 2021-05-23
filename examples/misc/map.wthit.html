@@ -122,7 +122,11 @@
   );
   var iss = new ol.Feature(new ol.geom.Point([0,0]));
   issSource.addFeature(iss);
-  issImage = new ol.style.Icon({ src: '../img/iss.png', scale: 0 });
+  issImage = new ol.style.Icon({ 
+    src: '../img/iss.png', 
+    scale: 0,
+    crossOrigin: 'anonymous'
+  });
   iss.setStyle (new ol.style.Style({
     image: issImage
   }));

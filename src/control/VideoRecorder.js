@@ -20,7 +20,7 @@ import ol_control_Print from './Print'
  *	@param {String} options.className class of the control
  *	@param {number} [options.framerate=30] framerate for the video
  *	@param {number} [options.videoBitsPerSecond=5000000] bitrate for the video
- *	@param {DOMElement} [options.target] video element or the container to add the video when finished, default none
+ *	@param {DOMElement} [options.videoTarget] video element or the container to add the video when finished, default none
  */
 var ol_control_VideoRecorder = function(options) {
   if (!options) options = {};

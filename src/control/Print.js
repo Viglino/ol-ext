@@ -111,7 +111,7 @@ ol_control_Print.prototype._getCanvas = function(event, imageType, canvas) {
       ctx = canvas.getContext('2d');
     }
     // ol6+ : create canvas using layer canvas
-    this.getMap().getViewport().querySelectorAll('.ol-layer canvas, canvas.ol-fixedoverlay').forEach(function(c) {
+    this.getMap().getViewport().querySelectorAll('.ol-layers canvas, canvas.ol-fixedoverlay').forEach(function(c) {
       if (c.width) {
         ctx.save();
         // opacity
