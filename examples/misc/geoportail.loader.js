@@ -25,8 +25,10 @@ map.addControl(new ol.control.SearchBAN({
 }))
 if (/cours_d_eau/.test(plink.getUrlParam('layer'))) {
   minZoom = 13;
-  $('#typename option').hide();
-  $('#typename option.hydro').show();
+  $('#typename option.standard').remove();
+  plink.setUrlParam('layer', $('#typename').val());
+} else {
+  $('#typename option.hydro').remove();
 }
 
 map.addLayer(new ol.layer.Geoportail({
@@ -167,63 +169,66 @@ map.addInteraction(drop);
 // Load tiles
 var maxlimit = 800;
 function loadTiles() {
-  var tiles = selectTile.getFeatures().getArray();
+  var tiles = selectTile.getFeatures().getArray().slice();
   if (tiles.length > maxlimit) {
     showAlert('Trop de tuiles à charger ('+tiles.length+'/'+maxlimit+')...<br/>Diminuer la zone à charger...')
     return;
   }
   // Loading bar
-  var loading = 0, loaded = 0;
+  var loading = 0;
   var draw = function() {
-    if (loading === loaded) {
-      loading = loaded = 0;
+    if (!tiles.length) {
+      loading = 0;
       progress.hide();
     } else {
-      progress.setContent('Chargement ('+loaded+'/'+loading+')')
-      progress.setProgress(loaded, loading);
+      progress.setContent('Chargement ('+(loading-tiles.length)+'/'+loading+')')
+      progress.setProgress((loading-tiles.length), loading);
     }
     showInfo();
   }
   if (tiles.length) {
     loading = tiles.length;
-    loaded = 0;
     vectorSource.clear();
     progress.show();
-    console.log('show')
-    draw()
-    setTimeout(function() {
-      tiles.forEach(function (f) {
-        draw();
-        var extent = f.getGeometry().getExtent();
-        var format = new ol.format.GeoJSON();
-        $.ajax({
-          url: 'https://wxs.ign.fr/'+(/eau/.test(typeName) ? 'h1osiyvfm7c4wu976jv6gpum' : 'choisirgeoportail')+'/geoportail/wfs?service=WFS&' +
-            'version=1.1.0&request=GetFeature&' +
-            'typename='+typeName+'&' +
-            'outputFormat=application/json&srsname=EPSG:3857&' +
-            'bbox=' + extent.join(',') + ',EPSG:3857',
-          dataType: 'json',
-          success: function (response) {
-            if (response.error) {
-              alert(
-                response.error.message + '\n' + response.error.details.join('\n')
-              );
-            } else {
-              var features = format.readFeatures(response, {
-                featureProjection: map.getView().getProjection(),
-              });
-              if (features.length > 0) {
-                vectorSource.addFeatures(features);
-              }
+    draw();
+    var format = new ol.format.GeoJSON();
+    // Load next tile
+    function load() {
+      draw();
+      var f = tiles.pop();
+      // No more tile
+      if (!f) return;
+      // Read tile
+      var extent = f.getGeometry().getExtent();
+      $.ajax({
+        url: 'https://wxs.ign.fr/'+(/eau/.test(typeName) ? 'h1osiyvfm7c4wu976jv6gpum' : 'choisirgeoportail')+'/geoportail/wfs?service=WFS&' +
+          'version=1.1.0&request=GetFeature&' +
+          'typename='+typeName+'&' +
+          'outputFormat=application/json&srsname=EPSG:3857&' +
+          'bbox=' + extent.join(',') + ',EPSG:3857',
+        dataType: 'json',
+        success: function (response) {
+          if (response.error) {
+            alert(
+              response.error.message + '\n' + response.error.details.join('\n')
+            );
+          } else {
+            var features = format.readFeatures(response, {
+              featureProjection: map.getView().getProjection(),
+            });
+            if (features.length > 0) {
+              vectorSource.addFeatures(features);
             }
-          },
-          complete: function () {
-            loaded++;
-            draw();
           }
-        });
+        },
+        complete: function () {
+          draw();
+          load();
+        }
       });
-    },300);
+    }
+    // Start loading
+    load();
   }
 }
 
