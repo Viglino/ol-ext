@@ -107,8 +107,7 @@ ol_interaction_Hover.prototype.handleMove_ = function(e) {
     var b = map.forEachFeatureAtPixel(
       e.pixel, 
       function(f, l) {
-        if (self.layerFilter_.call(null, l) 
-        && self.featureFilter_.call(null,f,l)) {
+        if (self.featureFilter_.call(null,f,l)) {
           feature = f;
           layer = l;
           return true;
@@ -117,7 +116,8 @@ ol_interaction_Hover.prototype.handleMove_ = function(e) {
           return false;
         }
       },{ 
-        hitTolerance: this.get('hitTolerance') 
+        hitTolerance: this.get('hitTolerance'),
+        layerFilter: self.layerFilter_ 
       }
     );
 
