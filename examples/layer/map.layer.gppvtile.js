@@ -104,7 +104,7 @@ ol.ext.Ajax.get({
 });
 
 // Upload custom style
-  onChangeColor = function() {};
+onChangeColor = function() {};
 var drop = new ol.interaction.DropFile({ formatConstructors: [] });
 map.addInteraction(drop);
 drop.on('loadend', function(e) {
@@ -159,6 +159,14 @@ function setFont(font0) {
   applyStyle();
 }
 
+
+function getChromaColor(color) {
+  var c = color.hex()
+  if (c.length>7)  {
+    c = color.css();
+  }
+  return c;
+}
 /** Apply current Style
  */
 function applyStyle() {
@@ -214,14 +222,14 @@ function applyStyle() {
                   if (l.paint[c].stops) {
                     l.paint[c].stops.forEach(function (s) {
                       if (!(/#ffffff/i.test(s[1]) && /^saturate/.test(operation))) {
-                        s[1] = chroma(s[1])[operation](opt).hex(); 
+                        s[1] = getChromaColor(chroma(s[1])[operation](opt)); 
                       }
                       // console.log('STOP:',s)
                     })
                   } else {
                     // bug on saturate white gets red
                     if (!(/#ffffff/i.test(l.paint[c]) && /^saturate/.test(operation))) {
-                      l.paint[c] = chroma(l.paint[c])[operation](opt).hex();
+                      l.paint[c] = getChromaColor(chroma(l.paint[c])[operation](opt));
                     }
                   }
                 } catch(e){};
@@ -234,10 +242,10 @@ function applyStyle() {
                 try {
                   if (l.paint[c].stops) {
                     l.paint[c].stops.forEach(function (s) {
-                      s[1] = chroma.mix(s[1],color).hex(); 
+                      s[1] = getChromaColor(chroma.mix(s[1],color)); 
                     })
                   } else {
-                    l.paint[c] = chroma.mix(l.paint[c],color).hex(); 
+                    l.paint[c] = getChromaColor(chroma.mix(l.paint[c],color)); 
                   }
                 } catch(e) {};
                 break; 
