@@ -474,9 +474,9 @@ function getLayerStyle(layer) {
 
 // Save to JSON file
 function save() {
-  var data = JSON.stringify(currentStyle);
-  var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
-  saveAs(blob, "custom.json");
+  var data = JSON.stringify(currentStyle, null, ' ');
+  var blob = new Blob([data], {type: 'text/plain;charset=utf-8'});
+  saveAs(blob, 'custom.json');
 }
 
 // Add sens de circulation
