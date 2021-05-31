@@ -16,7 +16,8 @@ import ol_ext_Ajax from '../util/Ajax';
  * @param {any} options extend ol.control.Search options
  *  @param {string} options.className control class name
  *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *  @param {string | undefined} options.label Text label to use for the search button, default "search"
+ *  @param {string | undefined} options.title Title to use for the search button tooltip, default "Search"
+ *  @param {string | undefined} options.reverseTitle Title to use for the reverse geocoding button tooltip, default "Click on the map..."
  *  @param {string | undefined} options.placeholder placeholder, default "Search..."
  *  @param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
  *  @param {integer | undefined} options.minLength minimum length to start searching, default 3

@@ -2396,6 +2396,7 @@ ol.control.Toggle.prototype.getInteraction = function() {
  *  @param {string} options.className control class name
  *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *  @param {string | undefined} options.title Title to use for the search button tooltip, default "Search"
+ *  @param {string | undefined} options.reverseTitle Title to use for the reverse geocoding button tooltip, default "Click on the map..."
  *  @param {string | undefined} options.placeholder placeholder, default "Search..."
  *  @param {boolean | undefined} options.reverse enable reverse geocoding, default false
  *  @param {string | undefined} options.inputLabel label for the input, default none
@@ -2538,7 +2539,7 @@ ol.control.Search = function(options) {
     var reverse = ol.ext.element.create('BUTTON', {
       type: 'button',
       class: 'ol-revers',
-      title: 'click on the map',
+      title: options.reverseTitle || 'click on the map',
       click: function() {
         if (!this.get('reverse')) {
           this.set('reverse', !this.get('reverse'));
@@ -2856,7 +2857,8 @@ ol.control.Search.prototype.equalFeatures = function (/* f1, f2 */) {
  * @param {any} options extend ol.control.Search options
  *  @param {string} options.className control class name
  *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *  @param {string | undefined} options.label Text label to use for the search button, default "search"
+ *  @param {string | undefined} options.title Title to use for the search button tooltip, default "Search"
+ *  @param {string | undefined} options.reverseTitle Title to use for the reverse geocoding button tooltip, default "Click on the map..."
  *  @param {string | undefined} options.placeholder placeholder, default "Search..."
  *  @param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
  *  @param {integer | undefined} options.minLength minimum length to start searching, default 3
@@ -2960,7 +2962,8 @@ ol.control.SearchJSON.prototype.handleResponse = function (response) {
  * @param {Object=} Control options.
  *  @param {string} options.className control class name
  *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *  @param {string | undefined} options.label Text label to use for the search button, default "search"
+ *  @param {string | undefined} options.title Title to use for the search button tooltip, default "Search"
+ *  @param {string | undefined} options.reverseTitle Title to use for the reverse geocoding button tooltip, default "Click on the map..."
  *  @param {string | undefined} options.placeholder placeholder, default "Search..."
  *  @param {number | undefined} options.typing a delay on each typing to start searching (ms), default 1000.
  *  @param {integer | undefined} options.minLength minimum length to start searching, default 3
@@ -10839,6 +10842,7 @@ ol.control.Scale.prototype.setScale = function (value) {
  * @param {Object=} Control options.
  *  @param {string} options.className control class name
  *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
+ *  @param {string | undefined} options.reverseTitle Title to use for the reverse geocoding button tooltip, default "Click on the map..."
  *  @param {string | undefined} options.label Text label to use for the search button, default "search"
  *  @param {string | undefined} options.placeholder placeholder, default "Search..."
  *  @param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
@@ -11526,7 +11530,8 @@ ol.control.SearchGeoportailParcelle.prototype._handleParcelle = function(parc) {
  *  @param {Array<Number> | undefined} options.viewbox The preferred area to find search results. Any two corner points of the box are accepted in any order as long as they span a real box, default none.
  *  @param {boolean | undefined} options.bounded Restrict the results to only items contained with the bounding box. Restricting the results to the bounding box also enables searching by amenity only. default false
  *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *  @param {string | undefined} options.label Text label to use for the search button, default "search"
+ *  @param {string | undefined} options.title Title to use for the search button tooltip, default "Search"
+ *  @param {string | undefined} options.reverseTitle Title to use for the reverse geocoding button tooltip, default "Click on the map..."
  *  @param {string | undefined} options.placeholder placeholder, default "Search..."
  *  @param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
  *  @param {integer | undefined} options.minLength minimum length to start searching, default 3

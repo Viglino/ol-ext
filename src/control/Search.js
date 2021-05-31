@@ -22,6 +22,7 @@ import ol_ext_element from '../util/element'
  *  @param {string} options.className control class name
  *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *  @param {string | undefined} options.title Title to use for the search button tooltip, default "Search"
+ *  @param {string | undefined} options.reverseTitle Title to use for the reverse geocoding button tooltip, default "Click on the map..."
  *  @param {string | undefined} options.placeholder placeholder, default "Search..."
  *  @param {boolean | undefined} options.reverse enable reverse geocoding, default false
  *  @param {string | undefined} options.inputLabel label for the input, default none
@@ -167,7 +168,7 @@ var ol_control_Search = function(options) {
     var reverse = ol_ext_element.create('BUTTON', {
       type: 'button',
       class: 'ol-revers',
-      title: 'click on the map',
+      title: options.reverseTitle || 'click on the map',
       click: function() {
         if (!this.get('reverse')) {
           this.set('reverse', !this.get('reverse'));
