@@ -74,13 +74,20 @@
 }
 
 .ol-wmscapabilities .ol-select-list {
+  position: relative;
   border: 1px solid #369;
   overflow-x: hidden;
   width: calc(100% - 120px);
-  min-width: min(200px, 100%);
+  box-sizing: border-box;
+  max-height: 14.5em;
 }
-.ol-wmscapabilities .ol-select-list options {
+.ol-wmscapabilities .ol-select-list div {
   padding: 0 .5em;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 .ol-wmscapabilities .ol-select-list .level-1 {
   padding-left: 1em;
@@ -104,11 +111,11 @@
 .ol-wmscapabilities .ol-select-list .ol-title {
   background-color: rgba(0,60,136,.1);
 }
-.ol-wmscapabilities .ol-select-list option:hover {
+.ol-wmscapabilities .ol-select-list div:hover {
   background-color: rgba(0,60,136,.5);
   color: #fff;
 }
-.ol-wmscapabilities .ol-select-list option.selected {
+.ol-wmscapabilities .ol-select-list div.selected {
   background-color: rgba(0,60,136,.7);
   color: #fff;
 }

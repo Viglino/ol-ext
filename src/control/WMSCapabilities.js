@@ -216,15 +216,9 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
     this._elements.formCrossOrigin.checked = true;
   }.bind(this));
   // Select list
-  var select = this._elements.select = ol_ext_element.create('SELECT', {
+  this._elements.select = ol_ext_element.create('DIV', {
     className: 'ol-select-list',
     tabIndex: 2,
-    size: options.popupLayer ? 0 : 10,
-    on: {
-      change: function () {
-        select.options[select.selectedIndex].click();
-      }.bind(this)
-    },
     parent: rdiv
   });
   // Info data
@@ -246,7 +240,7 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
     parent: element
   });
   var addLine = function(label, val, pholder) {
-    var li = ol_ext_element.create('li', {
+    var li = ol_ext_element.create('LI', {
       parent: form
     });
     ol_ext_element.create('LABEL', {
@@ -374,28 +368,39 @@ ol_control_WMSCapabilities.prototype.setMap = function (map) {
   if (this._dialog) this._dialog.setMap(map);
 };
 
-/** Show dialog for url */
+/** Show dialog for url
+ * @param {string} [url] service url, default ask for an url
+ * @param {*} options capabilities options
+ *  @param {string} options.map WMS map or get map in url?map=xxx
+ *  @param {string} options.version WMS version (yet only 1.3.0 is implemented), default 1.3.0
+ *  @param {number} options.timeout timout to get the capabilities, default 10000
+ */
 ol_control_WMSCapabilities.prototype.showDialog = function(url, options) {
   if (url) this.showError();
   if (!this._elements.formProjection.value) {
     this._elements.formProjection.value = this.getMap().getView().getProjection().getCode();
   }
-  this._dialog.show({
-    title: this.get('title')===undefined ? 'WMS' : this.get('title'),
-    content: this._elements.element
-  });
+  if (this._dialog) {
+    this._dialog.show({
+      title: this.get('title')===undefined ? 'WMS' : this.get('title'),
+      content: this._elements.element
+    });
+  }
   this.getCapabilities(url, options);
+  // Center on selection
+  var sel = this._elements.select.querySelector('.selected');
+  if (sel) {
+    this._elements.select.scrollTop = sel.offsetTop - 20;
+  }
 };
 
 /** Get WMS capabilities for a server
  * @fire load
  * @param {string} url service url
  * @param {*} options 
- *  @param {string} options.version WMS version, default 1.3.0
- *  @param {Number} options.timeout
  *  @param {string} options.map WMS map or get map in url?map=xxx
  *  @param {string} options.version WMS version (yet only 1.3.0 is implemented), default 1.3.0
- *  @param {number} options.timeout timout to get the capabilities
+ *  @param {number} options.timeout timout to get the capabilities, default 10000
  */
 ol_control_WMSCapabilities.prototype.getCapabilities = function(url, options) {
   if (!url) return;
@@ -510,11 +515,10 @@ ol_control_WMSCapabilities.prototype.showCapabilitis = function(caps) {
     parent.Layer.forEach(function(l) {
       if (!l.Attribution) l.Attribution = parent.Attribution;
       if (!l.EX_GeographicBoundingBox) l.EX_GeographicBoundingBox = parent.EX_GeographicBoundingBox;
-      var li = ol_ext_element.create('OPTION', {
+      var li = ol_ext_element.create('DIV', {
         className: (l.Layer ? 'ol-title ' : '') + 'level-'+level,
         html: l.Name || l.Title,
-        click: function(e) {
-          if (e.isTrusted) return;
+        click: function() {
           // Load layer
           var options = this.getOptionsFromCap(l, caps);
           var layer = this.getLayerFromOptions(options);
@@ -574,18 +578,6 @@ ol_control_WMSCapabilities.prototype.showCapabilitis = function(caps) {
     }.bind(this));
   }.bind(this);
   this._elements.select.innerHTML = '';
-  ol_ext_element.create('OPTION', {
-    html: 'layer...',
-    className: 'ol-info',
-    parent: this._elements.select,
-    click: function() {
-      this._elements.buttons.innerHTML = '';
-      this._elements.data.innerHTML = '';
-      this._elements.legend.src = '';
-      this._elements.legend.classList.remove('visible');
-      this._elements.preview.src = '';
-    }.bind(this)
-  });
   addLayers(caps.Capability.Layer);
 };
 
