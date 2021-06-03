@@ -16761,6 +16761,8 @@ ol.format.GeoJSONX.prototype.encodeCoordinates = function(v, decimal) {
       var hasZ = (this._layout[2]=='Z' && v[0].length > 2);
       var hasM = (this._layout[3]=='M' && v[0].length > 3);
       for (i=0; i<v.length; i++) {
+        // Last point
+        if (i===v.length-1) dxy = [0,0,0,0];
         tp = [
           Math.round( v[i][0] * Math.pow(10, decimal)),
           Math.round( v[i][1] * Math.pow(10, decimal))
@@ -16805,6 +16807,8 @@ ol.format.GeoJSONX.prototype.decodeCoordinates = function(v, decimals) {
     if (v.length>1) {
       var dxy = [0,0,0,0];
       v.forEach(function(vi, i) {
+        // Last point
+        if (i===v.length-1) dxy = [0,0,0,0];
         v[i] = vi.split(',');
         v[i][0] = this.decodeNumber(v[i][0], decimals) + dxy[0];
         v[i][1] = this.decodeNumber(v[i][1], decimals) + dxy[1];
@@ -16979,7 +16983,7 @@ ol.format.GeoJSONX.prototype.readFeatureFromObject = function (f0, options) {
         g.push([this.decodeNumber(c[0], options.decimals), this.decodeNumber(c[1], options.decimals)])
       }.bind(this));
     } else {
-      f.geometry.coordinates = this.decodeCoordinates(f0[0][1], typeof(options.decimals) === 'number' ? options.decimals : this.decimals)
+      f.geometry.coordinates = this.decodeCoordinates(f0[0][1], typeof(options.decimals) === 'number' ? options.decimals : this.decimals);
     }
   }
   if (this._hashProperties && f0[1]) {
@@ -19531,14 +19535,13 @@ ol.interaction.Hover = function(options) {
       return true; 
     }
   });
+  this.setLayerFilter (options.layerFilter);
   if (options.layers && options.layers.length) {
-    this.setFeatureFilter(function(f, l) {
+    this.setLayerFilter(function(l) {
       return (options.layers.indexOf(l) >= 0);
     })
-  } else {
-    this.setFeatureFilter (options.featureFilter);
-  }
-  this.setLayerFilter (options.layerFilter);
+  } 
+  this.setFeatureFilter (options.featureFilter);
   this.set('hitTolerance', options.hitTolerance)
   this.setCursor (options.cursor);
 };

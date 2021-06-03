@@ -129,6 +129,7 @@
   display: block;
   opacity: .25;
   margin: .5em 0 1em;
+  font-style: italic;
 }
 p input:checked ~ span {
   opacity: 1;
@@ -150,11 +151,25 @@ p input:checked ~ span {
   <div id="data">
     <h2>Statistiques:</h2>
     <p class="clip">
-      <input id="clip" type="checkbox" onchange="clip.setActive($(this).prop('checked')); calculate();"> 
-      <label for="clip">stats on a circle.</label>
+      <label>
+        <input name="mode" type="radio" onchange="setMode('map'); clip.setActive(false); calculate();" checked="checked"> 
+        Statistique sur la carte
+      </label>
+      <br/>
+      <input id="clip" name="mode" type="radio" onchange="setMode('clip'); clip.setActive(true); calculate();"> 
+      <label for="clip">
+        Statistique autour du pointer
+      </label>
       <span>
         radius: <input type="range" min=50 max=400 value=200 onchange="clip.setRadius(parseInt(this.value)); calculate();" style="vertical-align: middle;" />
       </span>
+      <label>
+        <input name="mode" type="radio" onchange="setMode('com'); clip.setActive(false); calculate();"> 
+        Statistiques à la commune
+        <span style="font-size: .8em; text-align: center;">
+          <i class="fa fa-spinner fa-pulse fa-lg" style="display: none;"></i> Sélectionnez une commune sur la carte
+        </span>
+      </label>
     </p>
     <p class="nodata">
       Pas de données à cette échelle...
@@ -213,8 +228,14 @@ map.addLayer(v)
 // Calculate new statistics
 var jstsParser = new jsts.io.OL3Parser();
 var circle = new ol.geom.Circle([0,0], 0);
-function calculate() {
-  var isCircle = clip.getActive();
+function calculate(b) {
+  if (mode==='com') {
+    if (b!==true) {
+      if (b===false) drawChart([]);
+      return;
+    }
+  }
+
   if (map.getView().getZoom() <= carhab.getMinZoom()) {
     $('body').addClass('nodata');
     return;
@@ -223,39 +244,69 @@ function calculate() {
   }
   var t = new Date();
   console.log('calculating...')
-  var ext;
-  if (isCircle) {
-    circle.setRadius(clip.getRadius()*map.getView().getResolution());
-    // carhab.changed();
-    ext = ol.extent.buffer(circle.getCenter().concat(circle.getCenter()), circle.getRadius());
-    /*
-    v.getSource().clear();
-    v.getSource().addFeature(new ol.Feature(ol.geom.Polygon.fromExtent(ext)))
-    */
-  } else {
-    ext = map.getView().calculateExtent(map.getSize());
+  var ext, gcom;
+  switch (mode) {
+    case 'clip': {
+      circle.setRadius(clip.getRadius()*map.getView().getResolution());
+      // carhab.changed();
+      ext = ol.extent.buffer(circle.getCenter().concat(circle.getCenter()), circle.getRadius());
+      break;
+    }
+    case 'com': {
+      var f = commune.getSource().getFeatures()[0];
+      if (f) {
+        ext = f.getGeometry().getExtent();
+        gcom = jstsParser.read(f.getGeometry());
+      } else {
+        ext = ol.extent.createEmpty();
+        gcom = null;
+      }
+      break;
+    } 
+    default: {
+      ext = map.getView().calculateExtent(map.getSize());
+      break;
+    }
   }
   var features = carhab.getSource().getFeaturesInExtent(ext);
-  var codes = {};
-  // var extent = jstsParser.read(ol.geom.Polygon.fromExtent(ext));
+  var codes = {}, error=0;
   features.forEach(function(f) {
     var c = f.get('physio');
     if (!codes[c]) codes[c] = 0;
-    if (!isCircle && ol.extent.containsExtent(ext, f.getGeometry().getExtent())) {
+    if (mode==='map' && ol.extent.containsExtent(ext, f.getGeometry().getExtent())) {
       codes[c] += Math.round(ol.sphere.getArea(f.getGeometry(), { 
         projection: map.getView().getProjection() 
       }));
     } else {
       // Using fast extent intersection
       var geom;
-      if (isCircle) {
-        geom = circle.intersection(f.getGeometry(), 10);
-      } else {
-        geom = ol.extent.intersection(ext, f.getGeometry());
+      switch(mode) {
+        case 'clip': {
+          geom = circle.intersection(f.getGeometry(), 10);
+          break;
+        }
+        case 'com': {
+          if (gcom) {
+            var inter;
+            try {
+              inter = gcom.intersection(jstsParser.read(f.getGeometry()));
+              if (!inter.isEmpty()) {
+                geom = jstsParser.write(inter);
+              }
+            } catch(e) { error++; }
+          }
+          break;
+        }
+        default: {
+          geom = ol.extent.intersection(ext, f.getGeometry());
+          break;
+        }
       }
-      codes[c] += Math.round(ol.sphere.getArea(geom, { 
-        projection: map.getView().getProjection() 
-      }));
+      if (geom) {
+        codes[c] += Math.round(ol.sphere.getArea(geom, { 
+          projection: map.getView().getProjection() 
+        }));
+      }
       /* Using jsts for accurate intersection (complex operation)
         var inter = extent.intersection(jstsParser.read(f.getGeometry()));
         if (!inter.isEmpty()) {
@@ -267,21 +318,10 @@ function calculate() {
     }
   })
   drawChart(codes);
+  if (error) console.log('ERROR:', error);
   console.log(((new Date() - t)/1000).toFixed(2)+'s');
 //  if (tout) clearTimeout(tout);
 };
-
-var tip = new ol.Overlay.Tooltip();
-map.addOverlay(tip);
-var hover = new ol.interaction.Hover({ cursor: 'pointer', offsetBox: 5 });
-map.addInteraction(hover);
-hover.on(['enter', 'leave'], function(e) {
-  if (e.feature) {
-    tip.setInfo(e.feature.get('physio'));
-  } else {
-    tip.setInfo();
-  }
-})
 
 var styleCache = {};
 var carhab = new ol.layer.VectorImage({
@@ -396,6 +436,62 @@ function drawChart(codes) {
     chart = new Chart(ctx, config);
   }
 }
+
+var commune = new ol.layer.Vector({
+  title: 'Commune',
+  source: new ol.source.Vector()
+});
+map.addLayer(commune)
+map.on('click', function(e) {
+  if (mode!=='com') return;
+  var coord = ol.proj.transform(e.coordinate, map.getView().getProjection(), 'EPSG:4326');
+  commune.getSource().clear();
+  $('.fa-spinner').show();
+  $('#data').css('opacity', .5);
+  $.ajax({
+    url: 'https://geo.api.gouv.fr/communes?lat='+coord[1]+'&lon='+coord[0]+'&fields=&format=geojson&geometry=contour',
+    success: function(resp) {
+      var format = new ol.format.GeoJSON();
+      var features = format.readFeatures(resp, {featureProjection: map.getView().getProjection(), dataProjection: 'EPSG:4326' });
+      commune.getSource().addFeatures(features);
+      $('.fa-spinner').hide();
+      $('#data').css('opacity', 1);
+      calculate(true);
+    }
+  })
+});
+
+
+var mode = 'map';
+function setMode(k) {
+  mode = k;
+  switch (mode) {
+    case 'clip': {
+      clip.setActive(true); 
+      break;
+    }
+    default:  {
+      clip.setActive(false); 
+      break;
+    }
+  }
+  commune.getSource().clear();
+  calculate(false);
+}
+
+var tip = new ol.Overlay.Tooltip();
+map.addOverlay(tip);
+var hover = new ol.interaction.Hover({ layers: [carhab], cursor: 'pointer', offsetBox: 5 });
+map.addInteraction(hover);
+hover.on(['enter', 'leave'], function(e) {
+  if (e.feature) {
+    tip.setInfo(e.feature.get('physio'));
+  } else {
+    tip.setInfo();
+  }
+})
+
+
   </script>
 </body>
 </html>
