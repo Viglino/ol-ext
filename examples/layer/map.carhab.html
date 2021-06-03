@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--
+	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+	<title>ol-ext: Carhab</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="icon" type="image/png" href="https://openlayers.org/assets/theme/img/logo70.png" />
+
+	<meta name="description" content="Geoportail WFS" />
+	<meta name="keywords" content="ol, openlayers, layer, source, geoportail, WFS" />
+
+  <meta name="msapplication-tap-highlight" content="no" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- ChartJS -->
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+	<!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+	
+	<!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+  <script type="text/javascript" src="../../dist/extra/FontAwesomeDef.js"></script>
+
+  <!-- JSTS -->
+  <script type="text/javascript" src="https://unpkg.com/jsts@1.6.1/dist/jsts.min.js"></script>
+  
+  <!-- filesaver-js -->
+	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+#map {
+  position: fixed;
+  top: 4em;
+  left: 20em;
+  bottom: 0;
+  right: 0;
+  margin: 0;
+}
+#data {
+  position: fixed;
+  top: 4em;
+  left: 0;
+  bottom: 0;
+  width: 20em;
+  margin: 0;
+  padding: .5em;
+  box-sizing: border-box;
+}
+#stat {
+  display: none!important;
+  max-width: 20em;
+}
+#stat.visible {
+  display: block!important;
+}
+#data > div {
+  position: relative;
+  height: 22em;
+  max-height: calc(100% - 3em);
+}
+#progressbar {
+/*
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+*/
+  height: .5em!important;
+  background-color: #0f0;
+  transition: .5s;
+}
+#loading i {
+  font-size: 2em;
+  vertical-align: middle;
+  color: currentColor;
+}
+#loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  font-size: 1.5em;
+  width: 100%;
+  text-align: center;
+  opacity: .5;
+  background: #fff;
+  padding: 1em 0;
+}
+.ol-popup.tooltips.black {
+  margin: 30px 15px;
+}
+.ol-popup.tooltips .anchor {
+  display: none;
+}
+.blend {
+  mix-blend-mode: multiply;
+}
+.nodata #data > div {
+  display: none;
+}
+#data > .nodata {
+  display: none;
+  font-size: 1.2em;
+  text-align: center;
+  font-weight: bold;
+  margin-top: 2em;
+}
+.nodata #data > .nodata {
+  display: block;
+}
+
+.clip span {
+  display: block;
+  opacity: .25;
+  margin: .5em 0 1em;
+}
+p input:checked ~ span {
+  opacity: 1;
+}
+
+  </style>
+  
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+	<a href="../../index.html">
+		<h1>ol-ext: Carhab</h1>
+	</a>
+
+	<!-- DIV pour la carte -->
+  <div id="map"></div>
+
+  <div id="data">
+    <h2>Statistiques:</h2>
+    <p class="clip">
+      <input id="clip" type="checkbox" onchange="clip.setActive($(this).prop('checked')); calculate();"> 
+      <label for="clip">stats on a circle.</label>
+      <span>
+        radius: <input type="range" min=50 max=400 value=200 onchange="clip.setRadius(parseInt(this.value)); calculate();" style="vertical-align: middle;" />
+      </span>
+    </p>
+    <p class="nodata">
+      Pas de données à cette échelle...
+      <br/>
+      Zoomer pour afficher des données.
+    </p>
+    <div>
+      <p id="loading"><i class="fa fa-spinner fa-pulse"></i> loading...</p>
+      <canvas id="stat"></canvas>
+    </div>
+    <div id="progressbar"></div>
+  </div>
+
+  <script>
+
+// The map
+var map = new ol.Map ({
+  target: 'map',
+  view: new ol.View ({
+    zoom: 14,
+    center: [696785, 5896331]
+  }),
+  layers: [
+    new ol.layer.Geoportail({
+      layer: 'ORTHOIMAGERY.ORTHOPHOTOS',
+      visible: false
+    }),
+    new ol.layer.Geoportail({
+      layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 
+      visible: true
+    })
+  ]
+});
+map.getLayers().item(0).addFilter(new ol.filter.Colorize('grayscale'));
+map.getLayers().item(1).addFilter(new ol.filter.Colorize('grayscale'));
+var plink = new ol.control.Permalink({ visible: false })
+map.addControl(plink);
+map.addControl(new ol.control.ScaleLine());
+map.addControl(new ol.control.SearchBAN({
+  zoomOnSelect: 15
+}));
+var switcher = new ol.control.LayerSwitcher();
+map.addControl(switcher);
+
+// Clip interaction
+var clip = new ol.interaction.Clip({
+  radius: 200
+});
+clip.setActive(false);
+
+/* debug
+var v = new ol.layer.Vector({source: new ol.source.Vector})
+map.addLayer(v)
+*/
+
+// Calculate new statistics
+var jstsParser = new jsts.io.OL3Parser();
+var circle = new ol.geom.Circle([0,0], 0);
+function calculate() {
+  var isCircle = clip.getActive();
+  if (map.getView().getZoom() <= carhab.getMinZoom()) {
+    $('body').addClass('nodata');
+    return;
+  } else {
+    $('body').removeClass('nodata');
+  }
+  var t = new Date();
+  console.log('calculating...')
+  var ext;
+  if (isCircle) {
+    circle.setRadius(clip.getRadius()*map.getView().getResolution());
+    // carhab.changed();
+    ext = ol.extent.buffer(circle.getCenter().concat(circle.getCenter()), circle.getRadius());
+    /*
+    v.getSource().clear();
+    v.getSource().addFeature(new ol.Feature(ol.geom.Polygon.fromExtent(ext)))
+    */
+  } else {
+    ext = map.getView().calculateExtent(map.getSize());
+  }
+  var features = carhab.getSource().getFeaturesInExtent(ext);
+  var codes = {};
+  // var extent = jstsParser.read(ol.geom.Polygon.fromExtent(ext));
+  features.forEach(function(f) {
+    var c = f.get('physio');
+    if (!codes[c]) codes[c] = 0;
+    if (!isCircle && ol.extent.containsExtent(ext, f.getGeometry().getExtent())) {
+      codes[c] += Math.round(ol.sphere.getArea(f.getGeometry(), { 
+        projection: map.getView().getProjection() 
+      }));
+    } else {
+      // Using fast extent intersection
+      var geom;
+      if (isCircle) {
+        geom = circle.intersection(f.getGeometry(), 10);
+      } else {
+        geom = ol.extent.intersection(ext, f.getGeometry());
+      }
+      codes[c] += Math.round(ol.sphere.getArea(geom, { 
+        projection: map.getView().getProjection() 
+      }));
+      /* Using jsts for accurate intersection (complex operation)
+        var inter = extent.intersection(jstsParser.read(f.getGeometry()));
+        if (!inter.isEmpty()) {
+          codes[c] += Math.round(ol.sphere.getArea(jstsParser.write(inter), { 
+            projection: map.getView().getProjection() 
+          }));
+        }
+      */
+    }
+  })
+  drawChart(codes);
+  console.log(((new Date() - t)/1000).toFixed(2)+'s');
+//  if (tout) clearTimeout(tout);
+};
+
+var tip = new ol.Overlay.Tooltip();
+map.addOverlay(tip);
+var hover = new ol.interaction.Hover({ cursor: 'pointer', offsetBox: 5 });
+map.addInteraction(hover);
+hover.on(['enter', 'leave'], function(e) {
+  if (e.feature) {
+    tip.setInfo(e.feature.get('physio'));
+  } else {
+    tip.setInfo();
+  }
+})
+
+var styleCache = {};
+var carhab = new ol.layer.VectorImage({
+  title: 'Carhab',
+  className: 'blend',
+  source: new ol.source.Vector({
+    format: new ol.format.GeoJSONX(),
+    url: '../data/habitats_doubs.geojsonx'
+  }),
+  style: function(f) {
+    var physio = f.get('physio');
+    var style = styleCache[physio];
+    if (!style) {
+      style = styleCache[physio] = new ol.style.Style({
+        fill: new ol.style.Fill({
+          color: carhabStyle[physio]
+        })
+      })
+    }
+    return style;
+  },
+  opacity: 1,
+  minZoom: 0  // prevent load on small zoom 
+});
+map.addLayer(carhab);
+$('#loading').hide();
+carhab.once('change', function() {
+  calculate();
+})
+
+// Set clip interaction
+//clip.addLayer(carhab);
+clip.addLayer(map.getLayers().item(1));
+map.addInteraction(clip);
+circle.setRadius(200);
+
+// Display chart on move end 
+map.on('moveend', calculate);
+
+var tout;
+map.on('pointermove', function(e) { 
+  if (clip.getActive()) {
+    circle.setCenter(e.coordinate);
+    // carhab.changed();
+    if (tout) clearTimeout(tout);
+    tout = setTimeout(function() { calculate(); }, 100);
+  }
+});
+
+/* draw chart */
+var stat = document.getElementById('stat');
+var config = {
+  type: 'pie',
+  data: {
+    datasets: [{
+      data: [],
+      backgroundColor: []
+    }],
+    // These labels appear in the legend and in the tooltips when hovering different arcs
+    labels: [],
+  },
+  options: {
+    title: { display: true, text: 'Habitats' },
+    legend: { display: false },
+    responsive: true,
+    maintainAspectRatio: false
+  }
+};
+var chart;
+var carhabStyle = {
+ "Melange de conifères prep et feuillu": "#36F",
+ "arbustif frutice fourre mixte": "#3F6",
+ "Melange de feuillus prep et coniferes": "#63F",
+ "Hetres": "#6F3",
+ "Forestier pionnier": "#F36",
+ "Prairie paturee": "#F63",
+ "Prairie fauchee": "#036",
+ "Pelouse": "#039",
+ "Sapin ou epicea": "#069",
+ "Foret mature": "#096",
+ "Pre-bois": "#306",
+ "Herbace haut": "#309",
+ "Mineral vegetalise": "#603",
+ "Aquatique": "#609",
+ "Mineral non vegetalise": "#906",
+ "Melange de feuillus": "#903",
+ "Coniferes en ilot": "#360",
+ "Cultures annuelles": "#390",
+ "Feuillus en ilot": "#630",
+ "arbustif frutice fourre dense": "#690",
+ "Melange de coniferes": "#930",
+ "Autre feuillu pur": "#960",
+ "Prairie": "#369"
+}
+for (var i in carhabStyle) {
+  config.data.datasets[0].data.push(0);
+  config.data.datasets[0].backgroundColor.push(ol.color.asString(carhabStyle[i]));
+  config.data.labels.push(i);
+}
+function drawChart(codes) {
+  stat.className = 'visible';
+  var data = [];
+  for (var i in carhabStyle) {
+    data.push(codes[i]||0);
+  }
+  config.data.datasets[0].data = data;
+  if (chart) {
+    chart.update();
+  } else {
+    var ctx = stat.getContext('2d');
+    chart = new Chart(ctx, config);
+  }
+}
+  </script>
+</body>
+</html>
