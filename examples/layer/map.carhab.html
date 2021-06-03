@@ -314,6 +314,7 @@ carhab.once('change', function() {
 
 // Set clip interaction
 //clip.addLayer(carhab);
+clip.addLayer(map.getLayers().item(0));
 clip.addLayer(map.getLayers().item(1));
 map.addInteraction(clip);
 circle.setRadius(200);
