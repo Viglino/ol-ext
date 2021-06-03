@@ -456,7 +456,11 @@ map.on('click', function(e) {
       commune.getSource().addFeatures(features);
       $('.fa-spinner').hide();
       $('#data').css('opacity', 1);
-      calculate(true);
+      $('#loading').show();
+      setTimeout(function() { 
+        calculate(true); 
+        $('#loading').hide();
+      }, 200);
     }
   })
 });
