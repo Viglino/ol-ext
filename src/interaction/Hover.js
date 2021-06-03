@@ -25,14 +25,13 @@ var ol_interaction_Hover = function(options) {
     }
   });
 
+  this.setLayerFilter (options.layerFilter);
   if (options.layers && options.layers.length) {
-    this.setFeatureFilter(function(f, l) {
+    this.setLayerFilter(function(l) {
       return (options.layers.indexOf(l) >= 0);
     })
-  } else {
-    this.setFeatureFilter (options.featureFilter);
-  }
-  this.setLayerFilter (options.layerFilter);
+  } 
+  this.setFeatureFilter (options.featureFilter);
   this.set('hitTolerance', options.hitTolerance)
   this.setCursor (options.cursor);
 };
