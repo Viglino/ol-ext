@@ -342,6 +342,7 @@ var carhab = new ol.layer.VectorImage({
     var physio = f.get('physio');
     var style = styleCache[physio];
     if (!style) {
+      if (!carhabStyle[physio]) console.log('INCONNU: ',physio);
       style = styleCache[physio] = new ol.style.Style({
         fill: new ol.style.Fill({
           color: carhabStyle[physio]
@@ -400,29 +401,50 @@ var config = {
 };
 var chart;
 var carhabStyle = {
- "Melange de conifères prep et feuillu": "#36F",
- "arbustif frutice fourre mixte": "#3F6",
- "Melange de feuillus prep et coniferes": "#63F",
- "Hetres": "#6F3",
- "Forestier pionnier": "#F36",
- "Prairie paturee": "#F63",
- "Prairie fauchee": "#036",
- "Pelouse": "#039",
- "Sapin ou epicea": "#069",
- "Foret mature": "#096",
- "Pre-bois": "#306",
- "Herbace haut": "#309",
- "Mineral vegetalise": "#603",
- "Aquatique": "#609",
- "Mineral non vegetalise": "#906",
- "Melange de feuillus": "#903",
- "Coniferes en ilot": "#360",
- "Cultures annuelles": "#390",
- "Feuillus en ilot": "#630",
- "arbustif frutice fourre dense": "#690",
- "Melange de coniferes": "#930",
- "Autre feuillu pur": "#960",
- "Prairie": "#369"
+  "Feuillus en ilot":[0,140,77],
+  "Chenes decidus":[0,77,46],
+  "Chenes sempervirents":[102,128,64],
+  "Hetres":[0,255,128],
+  "Chataignier":[64,255,38],
+  "Robinier":[145,86,51],
+  "Autre feuillu pur":[175,202,89],
+  "Melange de feuillus":[0,217,47],
+  "Coniferes en ilot":[128,128,255],
+  "Pin maritime pur":[191,38,255],
+  "Pin sylvestre ":[153,38,255],
+  "Pin laricio ou pin noir":[77,51,255],
+  "Pin d'Alep pur":[255,26,255],
+  "Pin à crochets ou pin cembro":[115,77,230],
+  "Autre pin":[166,102,255],
+  "Melange de pins purs":[217,153,255],
+  "Sapin ou epicea":[26,230,230],
+  "Meleze":[77,128,255],
+  "Douglas":[51,153,255],
+  "Autre conifere autre que pin":[89,255,255],
+  "Melange d'autres coniferes autres que pins":[1,146,159],
+  "Melange de coniferes":[64,77,255],
+  "Melange de feuillus prep et coniferes":[255,102,51],
+  "Melange de conifères prep et feuillu":[255,64,51],
+  "Peupleraie":[255,255,0],
+  "Mineral non vegetalise":[191,191,191],
+  "Mineral vegetalise":[178,178,178],
+  "Pelouse":[214,227,188],
+  "Herbace haut":[75,172,198],
+  "Prairie":[170,255,0],
+  "Prairie fauchee":[155,187,89],
+  "Prairie paturee":[0,176,80],
+  "arbustif frutice fourre dense":[229,184,183],
+  "arbustif frutice fourre mixte":[214,138,188],
+  "Forestier pionnier":[102,153,0],
+  "Foret mature":[0,102,0],
+  "Plantation":[148,138,84],
+  "Aquatique":[84,141,212],
+  "Pre-bois":[168,112,0],
+  "Cultures permanentes indeterminees":[255,230,191],
+  "vergers":[255,0,255],
+  "Vignes":[95,73,122],
+  "Cultures annuelles":[255,255,153],
+  "Prairie temporaire":[152,230,0]
 }
 for (var i in carhabStyle) {
   config.data.datasets[0].data.push(0);
