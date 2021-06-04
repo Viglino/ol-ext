@@ -473,8 +473,10 @@ var commune = new ol.layer.Vector({
 map.addLayer(commune)
 map.on('click', function(e) {
   if (mode!=='com') {
-    circle.setCenter(e.coordinate);
-    calculate();
+    if (mode==='clip') {
+      circle.setCenter(e.coordinate);
+      calculate();
+    }
     return;
   }
   var coord = ol.proj.transform(e.coordinate, map.getView().getProjection(), 'EPSG:4326');
