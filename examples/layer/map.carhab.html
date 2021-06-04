@@ -225,16 +225,24 @@ var v = new ol.layer.Vector({source: new ol.source.Vector})
 map.addLayer(v)
 */
 
-// Calculate new statistics
 var jstsParser = new jsts.io.OL3Parser();
 var circle = new ol.geom.Circle([0,0], 0);
+
+// Calculate new statistics
 function calculate(b) {
+  var com = commune.getSource().getFeatures()[0];
+  config.options.title.text = 'Habitat';
+
   if (mode==='com') {
     if (b!==true) {
       if (b===false) drawChart([]);
       return;
     }
-  }
+    if (com) {
+      console.log(com.getProperties())
+      config.options.title.text = ['Habitat',com.get('nom')];
+    }
+  } 
 
   if (map.getView().getZoom() <= carhab.getMinZoom()) {
     $('body').addClass('nodata');
@@ -253,10 +261,9 @@ function calculate(b) {
       break;
     }
     case 'com': {
-      var f = commune.getSource().getFeatures()[0];
-      if (f) {
-        ext = f.getGeometry().getExtent();
-        gcom = jstsParser.read(f.getGeometry());
+      if (com) {
+        ext = com.getGeometry().getExtent();
+        gcom = jstsParser.read(com.getGeometry());
       } else {
         ext = ol.extent.createEmpty();
         gcom = null;
@@ -447,7 +454,6 @@ map.on('click', function(e) {
   var coord = ol.proj.transform(e.coordinate, map.getView().getProjection(), 'EPSG:4326');
   commune.getSource().clear();
   $('.fa-spinner').show();
-  $('#data').css('opacity', .5);
   $.ajax({
     url: 'https://geo.api.gouv.fr/communes?lat='+coord[1]+'&lon='+coord[0]+'&fields=&format=geojson&geometry=contour',
     success: function(resp) {
@@ -455,7 +461,6 @@ map.on('click', function(e) {
       var features = format.readFeatures(resp, {featureProjection: map.getView().getProjection(), dataProjection: 'EPSG:4326' });
       commune.getSource().addFeatures(features);
       $('.fa-spinner').hide();
-      $('#data').css('opacity', 1);
       $('#loading').show();
       setTimeout(function() { 
         calculate(true); 
