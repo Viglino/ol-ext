@@ -228,8 +228,8 @@ ol_interaction_GeolocationDraw.prototype.setActive = function(active) {
     if (f.getGeometry()) {
       if (this.features_) this.features_.push(f);
       if (this.source_) this.source_.addFeature(f);
-      this.dispatchEvent({ type:'drawend', feature: f});
     }
+    this.dispatchEvent({ type:'drawend', feature: f});
   }
 };
 
