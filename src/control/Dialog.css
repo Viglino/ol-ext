@@ -137,3 +137,31 @@
 .ol-ext-dialog .ol-progress-bar > div.notransition {
   transition: unset;
 }
+
+/* full screen */
+.ol-ext-dialog.ol-fullscreen-dialog form {
+  top: 1em;
+  transform: none;
+  left: 1em;
+  bottom: 1em;
+  right: 1em;
+  max-width: calc(66.6% - 2em);
+  text-align: center;
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  color: #fff;
+}
+.ol-ext-dialog.ol-fullscreen-dialog form .ol-closebox {
+  top: 0;
+  right: 0;
+  font-size: 2em;
+}
+.ol-ext-dialog.ol-fullscreen-dialog .ol-closebox:before,
+.ol-ext-dialog.ol-fullscreen-dialog .ol-closebox:after {
+  border: .1em solid currentColor;
+}
+.ol-ext-dialog.ol-fullscreen-dialog img,
+.ol-ext-dialog.ol-fullscreen-dialog video {
+  max-width: 100%;
+}
