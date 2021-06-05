@@ -13747,7 +13747,7 @@ ol.control.Timeline.prototype.getEndDate = function() {
  *	@param {String} options.className class of the control
  *	@param {number} [options.framerate=30] framerate for the video
  *	@param {number} [options.videoBitsPerSecond=5000000] bitrate for the video
- *	@param {DOMElement} [options.videoTarget] video element or the container to add the video when finished, default none
+ *	@param {DOMElement|string} [options.videoTarget] video element or the container to add the video when finished or 'DIALOG' to show it in a dialog, default none
  */
 ol.control.VideoRecorder = function(options) {
   if (!options) options = {};
@@ -13798,7 +13798,16 @@ ol.control.VideoRecorder = function(options) {
   });
   this.set('framerate', 30);
   this.set('videoBitsPerSecond', 5000000);
-  this._videoTarget = options.videoTarget;
+  if (options.videoTarget === 'DIALOG') {
+    this._dialog = new ol.control.Dialog({ 
+      className: 'ol-fullscreen-dialog', 
+      target: document.body, 
+      closeBox: true 
+    });
+    this._videoTarget = this._dialog.getContentElement();
+  } else {
+    this._videoTarget = options.videoTarget;
+  }
   // Print control
   this._printCtrl = new ol.control.Print({
     target: ol.ext.element.create('DIV')
@@ -13815,10 +13824,12 @@ ol.ext.inherits(ol.control.VideoRecorder, ol.control.Control);
 ol.control.VideoRecorder.prototype.setMap = function (map) {
   if (this.getMap()) {
     this.getMap().removeControl(this._printCtrl);
+    if (this._dialog) this.getMap().removeControl(this._dialog);
   }
   ol.control.Control.prototype.setMap.call(this, map);
   if (this.getMap()) {
     this.getMap().addControl(this._printCtrl);
+    if (this._dialog) this.getMap().addControl(this._dialog);
   }
 };
 /** Start recording */
@@ -13854,7 +13865,7 @@ ol.control.VideoRecorder.prototype.start = function () {
       stop = true;
       var blob = new Blob(chunks, { 'type' : 'video/mp4' }); // other types are available such as 'video/webm' for instance, see the doc for more info
       chunks = [];
-      if (this._videoTarget) {
+      if (this._videoTarget instanceof Element) {
         var video;
         if (this._videoTarget.tagName === 'VIDEO') {
           video = this._videoTarget;
@@ -13867,6 +13878,7 @@ ol.control.VideoRecorder.prototype.start = function () {
             });
           }
         }
+        if (this._dialog) this._dialog.show();
         video.src = URL.createObjectURL(blob);
         this.dispatchEvent({ type: 'stop', videoURL: video.src });
       } else {
