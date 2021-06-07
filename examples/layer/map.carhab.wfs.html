@@ -341,7 +341,7 @@ function getSource(type) {
       loading = loaded = 0;
       ol.ext.element.setStyle(progressbar, { width: 0 });
       $('#loading').hide();
-      calculate();
+      calculate(true);
     } else {
       ol.ext.element.setStyle(progressbar, { width: (loaded / loading * 100).toFixed(1) + '%' });
       $('#loading').show();
@@ -469,7 +469,7 @@ var carhabStyle = {
   "Melange de feuillus":[0,217,47],
   "Coniferes en ilot":[128,128,255],
   "Pin maritime pur":[191,38,255],
-  "Pin sylvestre ":[153,38,255],
+  "Pin sylvestre":[153,38,255],
   "Pin laricio ou pin noir":[77,51,255],
   "Pin d'Alep pur":[255,26,255],
   "Pin à crochets ou pin cembro":[115,77,230],
@@ -499,7 +499,7 @@ var carhabStyle = {
   "Aquatique":[84,141,212],
   "Pre-bois":[168,112,0],
   "Cultures permanentes indeterminees":[255,230,191],
-  "vergers":[255,0,255],
+  "Vergers":[255,0,255],
   "Vignes":[95,73,122],
   "Cultures annuelles":[255,255,153],
   "Prairie temporaire":[152,230,0]
@@ -580,6 +580,7 @@ var hover = new ol.interaction.Hover({ layers: [carhab], cursor: 'pointer', offs
 map.addInteraction(hover);
 hover.on(['enter', 'leave'], function(e) {
   if (e.feature) {
+    // console.log(e.feature.get('physio'), carhabStyle[e.feature.get('physio')]);
     tip.setInfo(e.feature.get('physio'));
   } else {
     tip.setInfo();
