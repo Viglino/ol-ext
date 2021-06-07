@@ -454,7 +454,15 @@ var config = {
     title: { display: true, text: 'Habitats' },
     legend: { display: false },
     responsive: true,
-    maintainAspectRatio: false
+    maintainAspectRatio: false,
+    // cutoutPercentage: 80,
+    tooltips: {
+      callbacks: {
+        label: function(tooltipItem, data) {
+          return data['labels'][tooltipItem['index']] + ': ' + Math.round(data['datasets'][0]['data'][tooltipItem['index']]/data.datasets[0].sum*1000)/10 + '%';
+        }
+      }
+    }
   }
 };
 var chart;
@@ -509,13 +517,17 @@ for (var i in carhabStyle) {
   config.data.datasets[0].backgroundColor.push(ol.color.asString(carhabStyle[i]));
   config.data.labels.push(i);
 }
+config.data.datasets[0].sum = 1;
 function drawChart(codes) {
   stat.className = 'visible';
   var data = [];
+  var sum = 0;
   for (var i in carhabStyle) {
     data.push(codes[i]||0);
+    sum += codes[i]||0;
   }
   config.data.datasets[0].data = data;
+  config.data.datasets[0].sum = sum || 1;
   if (chart) {
     chart.update();
   } else {
