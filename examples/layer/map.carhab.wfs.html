@@ -470,7 +470,7 @@ var carhabStyle = {
   "Coniferes en ilot":[128,128,255],
   "Pin maritime pur":[191,38,255],
   "Pin sylvestre":[153,38,255],
-  "Pin laricio ou pin noir":[77,51,255],
+  "Pin laricio ou noir":[77,51,255],
   "Pin d'Alep pur":[255,26,255],
   "Pin à crochets ou pin cembro":[115,77,230],
   "Autre pin":[166,102,255],
@@ -478,8 +478,8 @@ var carhabStyle = {
   "Sapin ou epicea":[26,230,230],
   "Meleze":[77,128,255],
   "Douglas":[51,153,255],
-  "Autre conifere autre que pin":[89,255,255],
-  "Melange d'autres coniferes autres que pins":[1,146,159],
+  "Autres coniferes autre que pin":[89,255,255],
+  "Melange autres coniferes":[1,146,159],
   "Melange de coniferes":[64,77,255],
   "Melange de feuillus prep et coniferes":[255,102,51],
   "Melange de coniferes prep et feuillu":[255,64,51],
@@ -580,7 +580,9 @@ var hover = new ol.interaction.Hover({ layers: [carhab], cursor: 'pointer', offs
 map.addInteraction(hover);
 hover.on(['enter', 'leave'], function(e) {
   if (e.feature) {
-    // console.log(e.feature.get('physio'), carhabStyle[e.feature.get('physio')]);
+    if (!carhabStyle[e.feature.get('physio')]) {
+      console.log('Code inconnu: "'+e.feature.get('physio')+'"');
+    }
     tip.setInfo(e.feature.get('physio'));
   } else {
     tip.setInfo();
