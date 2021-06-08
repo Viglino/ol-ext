@@ -2740,6 +2740,9 @@ ul.ol-legend li div {
 .ol-ext-print-dialog .ol-print-map .ol-control.ol-canvas-control {
   display: block!important;
 }
+.ol-ext-print-dialog .ol-print-map .ol-control.ol-print-compass {
+  display: block!important;
+}
 .ol-ext-print-dialog .ol-print-map .ol-control.olext-print-compass {
   top: 0;
   right: 0;

@@ -205,8 +205,10 @@ var map = new ol.Map ({
     })
   ]
 });
-map.getLayers().item(0).addFilter(new ol.filter.Colorize('grayscale'));
-map.getLayers().item(1).addFilter(new ol.filter.Colorize('grayscale'));
+// var filter = new ol.filter.Colorize('grayscale');
+var filter = new ol.filter.CanvasFilter({ grayscale: 100 });
+map.getLayers().item(0).addFilter(filter);
+map.getLayers().item(1).addFilter(filter);
 var plink = new ol.control.Permalink({ visible: false })
 map.addControl(plink);
 map.addControl(new ol.control.CanvasScaleLine());
@@ -607,6 +609,22 @@ var pDialog = new ol.control.PrintDialog({ lang: 'fr', saveAs: saveAs, jsPDF: js
 pDialog.setSize('A4');
 map.addControl(pDialog);
 
+/*
+var select = new ol.interaction.Select({
+  style: new ol.style.Style({
+    image: new ol.style.Circle({
+      radius: 2,
+      fill: new ol.style.Fill({color: 'red'})
+    }),
+    geometry: function (feature) {
+      // return the coordinates of the first ring of the polygon
+      var coordinates = feature.getGeometry().getCoordinates()[0][0];
+      return new ol.geom.MultiPoint(coordinates);
+    }
+  })
+})
+map.addInteraction(select)
+*/
   </script>
 </body>
 </html>

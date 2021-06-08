@@ -27,7 +27,7 @@ export {ol_filter};
  *  @param {boolean} [options.active]
  */
 var ol_filter_Base = function(options) {
-  ol_Object.call(this);
+  ol_Object.call(this, options);
   // Array of postcompose listener
   this._listener = [];
   if (options && options.active===false) this.set('active', false);
