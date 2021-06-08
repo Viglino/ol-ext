@@ -231,7 +231,7 @@ var circle = new ol.geom.Circle([0,0], 0);
 // Calculate new statistics
 function calculate(b) {
   var com = commune.getSource().getFeatures()[0];
-  config.options.title.text = 'Habitat';
+  config.options.title.text = 'Physionomie';
 
   if (mode==='com') {
     if (b!==true) {
@@ -240,7 +240,7 @@ function calculate(b) {
     }
     if (com) {
       console.log(com.getProperties())
-      config.options.title.text = ['Habitat',com.get('nom')];
+      config.options.title.text = ['Physionomie',com.get('nom')];
     }
   } 
 
