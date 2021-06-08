@@ -24,6 +24,7 @@ import ol_ext_element from '../util/element'
 var ol_control_CanvasAttribution = function(options) {
   if (!options) options = {};
   ol_control_Attribution.call(this, options);
+  this.element.classList.add('ol-canvas-control');
 
   // Draw in canvas
   this.setCanvas(!!options.canvas);

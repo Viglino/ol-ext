@@ -229,10 +229,7 @@
 .ol-ext-print-dialog .ol-clipboard-copy.visible {
   animation: 1s ol-clipboard-copy;
 }
-.ol-ext-print-dialog .ol-print-map .ol-control.ol-attribution {
-  display: block!important;
-}
-.ol-ext-print-dialog .ol-print-map .ol-control.ol-print-compass {
+.ol-ext-print-dialog .ol-print-map .ol-control.ol-canvas-control {
   display: block!important;
 }
 .ol-ext-print-dialog .ol-print-map .ol-control.olext-print-compass {

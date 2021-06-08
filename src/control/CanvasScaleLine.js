@@ -20,6 +20,7 @@ import ol_control_CanvasBase from './CanvasBase'
  */
 var ol_control_CanvasScaleLine = function(options) {
   ol_control_ScaleLine.call(this, options);
+  this.element.classList.add('ol-canvas-control');
   
   this.scaleHeight_ = 6;
 

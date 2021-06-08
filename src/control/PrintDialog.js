@@ -30,6 +30,8 @@ import ol_control_Compass from './Compass';
  *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
  *	@param {string} options.orientation Page orientation (landscape/portrait), default guest the best one
  *	@param {boolean} options.immediate force print even if render is not complete,  default false
+ *	@param {function} [options.saveAs] a function to save the image as blob
+ *	@param {*} [options.jsPDF] jsPDF object to save map as pdf
  */
 var ol_control_PrintDialog = function(options) {
   if (!options) options = {};
@@ -530,8 +532,43 @@ var ol_control_PrintDialog = function(options) {
   window.addEventListener('resize', function() {
     this.setSize();
   }.bind(this));
+
+  // Save or print
+  if (options.saveAs) {
+    this.on('print', function(e) {
+      if (!e.pdf) {
+        // Save image as file
+        e.canvas.toBlob(function(blob) {
+          var name = (e.print.legend ? 'legend.' : 'map.')+e.imageType.replace('image/','');
+          options.saveAs(blob, name);
+        }, e.imageType, e.quality);
+      }
+    })
+  }
+  // Save or print
+  if (options.jsPDF) {
+    this.on('print', function(e) {
+      if (e.pdf) {
+        // Export pdf using the print info
+        var pdf = new jsPDF({
+          orientation: e.print.orientation,
+          unit: e.print.unit,
+          format: e.print.size
+        });
+        pdf.addImage(e.image, 'JPEG', e.print.position[0], e.print.position[0], e.print.imageWidth, e.print.imageHeight);
+        pdf.save(e.print.legend ? 'legend.pdf' : 'map.pdf');
+      }
+    })
+  }
 };
 ol_ext_inherits(ol_control_PrintDialog, ol_control_Control);
+
+/** Check if the dialog is oprn
+ * @return {boolean}
+ */
+ ol_control_PrintDialog.prototype.isOpen = function() {
+  return this._printDialog.isOpen();
+};
 
 /** Add a new language
  * @param {string} lang lang id
@@ -561,7 +598,7 @@ ol_control_PrintDialog.prototype._labels = {
     portrait: 'Portrait',
     landscape: 'Landscape',
     size: 'Page size',
-    custom: 'custom',
+    custom: 'screen size',
     margin: 'Margin',
     scale: 'Scale',
     legend: 'Legend',
@@ -580,7 +617,7 @@ ol_control_PrintDialog.prototype._labels = {
     portrait: 'Portrait',
     landscape: 'Paysage',
     size: 'Taille du papier',
-    custom: 'par défaut',
+    custom: 'taille écran',
     margin: 'Marges',
     scale: 'Echelle',
     legend: 'Légende',
@@ -615,7 +652,7 @@ ol_control_PrintDialog.prototype.marginSize = {
   large: 10
 };
 
-/** List of legeng options */
+/** List of legeng options * /
 ol_control_PrintDialog.prototype.legendOptions = {
   off: 'Hide legend',
   on: 'Show legend'
