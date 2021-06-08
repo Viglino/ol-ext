@@ -117,6 +117,10 @@ ol_control_Print.prototype._getCanvas = function(event, imageType, canvas) {
         // opacity
         if (c.parentNode.style.opacity==='0') return;
         ctx.globalAlpha = parseFloat(c.parentNode.style.opacity) || 1;
+        // Blend mode ?
+        if (ol.ext.element.getStyle(c.parentNode, 'mix-blend-mode') === 'multiply') {
+          ctx.globalCompositeOperation = 'multiply';
+        }
         // transform
         var tr = ol_ext_element.getStyle(c,'transform') || ol_ext_element.getStyle(c,'-webkit-transform');
         if (/^matrix/.test(tr)) {
