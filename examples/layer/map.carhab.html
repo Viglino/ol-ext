@@ -300,7 +300,10 @@ function calculate(b) {
               if (!inter.isEmpty()) {
                 geom = jstsParser.write(inter);
               }
-            } catch(e) { error++; }
+            } catch(e) { 
+              // console.log(f.getGeometry().getCoordinates())
+              error++; 
+            }
           }
           break;
         }

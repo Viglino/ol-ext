@@ -16814,8 +16814,6 @@ ol.format.GeoJSONX.prototype.encodeCoordinates = function(v, decimal) {
       var hasZ = (this._layout[2]=='Z' && v[0].length > 2);
       var hasM = (this._layout[3]=='M' && v[0].length > 3);
       for (i=0; i<v.length; i++) {
-        // Last point
-        if (i===v.length-1) dxy = [0,0,0,0];
         tp = [
           Math.round( v[i][0] * Math.pow(10, decimal)),
           Math.round( v[i][1] * Math.pow(10, decimal))
@@ -16858,15 +16856,14 @@ ol.format.GeoJSONX.prototype.decodeCoordinates = function(v, decimals) {
   if (typeof(v) === 'string') {
     v = v.split(';');
     if (v.length>1) {
+      var pow = Math.pow(10,decimals);
       var dxy = [0,0,0,0];
       v.forEach(function(vi, i) {
-        // Last point
-        if (i===v.length-1) dxy = [0,0,0,0];
         v[i] = vi.split(',');
-        v[i][0] = this.decodeNumber(v[i][0], decimals) + dxy[0];
-        v[i][1] = this.decodeNumber(v[i][1], decimals) + dxy[1];
-        if (v[i].length > 2) v[i][2] = this.decodeNumber(v[i][2], 2) + dxy[2];
-        if (v[i].length > 3) v[i][3] = this.decodeNumber(v[i][3], 0) + dxy[3];
+        v[i][0] = Math.round((this.decodeNumber(v[i][0], decimals) + dxy[0]) * pow) / pow;
+        v[i][1] = Math.round((this.decodeNumber(v[i][1], decimals) + dxy[1]) * pow) / pow;
+        if (v[i].length > 2) v[i][2] = Math.round((this.decodeNumber(v[i][2], 2) + dxy[2]) * pow) / pow;
+        if (v[i].length > 3) v[i][3] = Math.round((this.decodeNumber(v[i][3], 0) + dxy[3]) * pow) / pow;
         dxy = v[i];
       }.bind(this));
       return v;
