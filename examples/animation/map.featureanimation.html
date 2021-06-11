@@ -1,241 +1,242 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-	<title>ol-ext: OL3 feature animation</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>ol-ext: OL3 feature animation</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="ol.featureAnimation are used to play animations on ol3 maps." />
-	<meta name="keywords" content="ol3, animation, drop, slide, throw, fade, bounce, easing" />
+  <meta name="description" content="ol.featureAnimation are used to play animations on ol3 maps." />
+  <meta name="keywords" content="ol3, animation, drop, slide, throw, fade, bounce, easing" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
+  <!-- Openlayers -->
     <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: OL3 feature animation</h1>
-	</a>
-	<p class="info">
-		<i>ol.featureAnimation</i> provides animations to animate features on an OL3 map.
-		Animation can be chained. 
-		<br />
-		Style with a zIndex of -1 are viewed as shadows and animated on the ground (drop or throw animation).
-		<br />
-		They are used with <i>animateFeature</i> function on <i>ol.layer.Vector</i> or <i>ol.Map</i>.
-		<br /> 
-		The animation is rendered in a postcompose frame.
-	</p>
+  <a href="../../index.html">
+    <h1>ol-ext: OL3 feature animation</h1>
+  </a>
+  <p class="info">
+    <i>ol.featureAnimation</i> provides animations to animate features on an OL3 map.
+    Animation can be chained. 
+    <br />
+    Style with a zIndex of -1 are viewed as shadows and animated on the ground (drop or throw animation).
+    <br />
+    They are used with <i>animateFeature</i> function on <i>ol.layer.Vector</i> or <i>ol.Map</i>.
+    <br /> 
+    The animation is rendered in a postcompose frame.
+  </p>
 
-	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options">
-		<h2>Options:</h2>
-		<ul><li>
-			animation 1: 
-			<select id="anim" onchange="add10()">
-				<option value="Drop">Drop</option>
-				<option value="Slide">Slide</option>
-				<option value="Throw">Throw</option>
-				<option value="Fade">Fade</option>
-				<option value="Zoom">Zoom</option>
-				<option value="ZoomOut">Zoom out</option>
-				<option value="Show">Show</option>
-				<option value="Teleport">Teleport</option>
-			</select>
-		</li><li>
-		 	animation 2:
-			<select id="anim2" onchange="add10()">
-				<option value="Null">Null</option>
-				<option value="Bounce">Bounce</option>
-				<option value="Shake">Shake</option>
-			</select>
-		</li><li>
-			geometry: 
-			<select id="geom" onchange="add10()">
-				<option value="Point">Point</option>
-				<option value="LineString">LineString</option>
-				<option value="Polygon">Polygon</option>
-			</select>
-		</li><!-- <li>
-			Easing:
-			<select id="easing" >
-				<option value="easeOut">easeOut</option>
-				<option value="upAndDown">upAndDown</option>
-				<option value="bounce">bounce</option>
-			</select>
-		</li>--><li>
-			<input id="side" type="checkbox" /><label for="side"> other side</label>
-		</li><li>
-			speed: <input id="speed" type="range" min="0" max="3" step="0.1" value="0.8" style="vertical-align:middle" />
-		</li></ul>
-		<i>Click on the map to drop a features / click on a feature to remove it!</i>
-	</div>
-	
-	<script type="text/javascript">
-	// Layers
-	var layer = new ol.layer.Tile({
+  <div class="options">
+    <h2>Options:</h2>
+    <ul><li>
+      animation 1: 
+      <select id="anim" onchange="add10()">
+        <option value="Drop">Drop</option>
+        <option value="Slide">Slide</option>
+        <option value="Throw">Throw</option>
+        <option value="Fade">Fade</option>
+        <option value="Zoom">Zoom</option>
+        <option value="ZoomOut">Zoom out</option>
+        <option value="Show">Show</option>
+        <option value="Teleport">Teleport</option>
+      </select>
+    </li><li>
+      animation 2:
+      <select id="anim2" onchange="add10()">
+        <option value="Null">Null</option>
+        <option value="Bounce">Bounce</option>
+        <option value="Shake">Shake</option>
+      </select>
+    </li><li>
+      geometry: 
+      <select id="geom" onchange="add10()">
+        <option value="Point">Point</option>
+        <option value="LineString">LineString</option>
+        <option value="Polygon">Polygon</option>
+      </select>
+    </li><!-- <li>
+      Easing:
+      <select id="easing" >
+        <option value="easeOut">easeOut</option>
+        <option value="upAndDown">upAndDown</option>
+        <option value="bounce">bounce</option>
+      </select>
+    </li>--><li>
+      <input id="side" type="checkbox" /><label for="side"> other side</label>
+    </li><li>
+      speed: <input id="speed" type="range" min="0" max="3" step="0.1" value="0.8" style="vertical-align:middle" />
+    </li></ul>
+    <i>Click on the map to drop a features / click on a feature to remove it!</i>
+  </div>
+  
+  <script type="text/javascript">
+  // Layers
+  var layer = new ol.layer.Tile({
         title:'terrain-background',
         source: new ol.source.Stamen({ layer: 'terrain' })
-	});
+  });
 
-	// The map
-	var map = new ol.Map
-		({	target: 'map',
-			view: new ol.View
-			({	zoom: 5,
-				center: [166326, 5992663]
-			}),
-			layers: [layer]
-		});
+  // The map
+  var map = new ol.Map
+    ({	target: 'map',
+      view: new ol.View
+      ({	zoom: 5,
+        center: [166326, 5992663]
+      }),
+      layers: [layer]
+    });
 
-	var style = 
-	[	new ol.style.Style(
-			{	image: new ol.style.Shadow(
-				{	radius: 15,
-				}),
-				stroke: new ol.style.Stroke(
-				{	color: [0,0,0,0.3],
-					width: 2
-				}),
-				fill: new ol.style.Fill(
-					{	color: [0,0,0,0.3]
-					}),
-				zIndex: -1
-			}),
-		new ol.style.Style(
-			{	/* image: new ol.style.Icon({ src:"data/camera.png", scale: 0.8 }), */
-				image: new ol.style.RegularShape(
-				{	radius: 10,
-					radius2: 5,
-					points: 5,
-					fill: new ol.style.Fill({ color: 'blue' })
-				}),
-			stroke: new ol.style.Stroke(
-				{	color: [0,0,255],
-					width: 2
-				}),
-			fill: new ol.style.Fill(
-				{	color: [0,0,255,0.3]
-				})
-			})
-	];
-	style[1].getImage().getAnchor()[1] += 10;
+  var style = 
+  [	new ol.style.Style(
+      {	image: new ol.style.Shadow(
+        {	radius: 15,
+        }),
+        stroke: new ol.style.Stroke(
+        {	color: [0,0,0,0.3],
+          width: 2
+        }),
+        fill: new ol.style.Fill(
+          {	color: [0,0,0,0.3]
+          }),
+        zIndex: -1
+      }),
+    new ol.style.Style(
+      {	/* image: new ol.style.Icon({ src:"data/camera.png", scale: 0.8 }), */
+        image: new ol.style.RegularShape(
+        {	radius: 10,
+          radius2: 5,
+          points: 5,
+          fill: new ol.style.Fill({ color: 'blue' })
+        }),
+      stroke: new ol.style.Stroke(
+        {	color: [0,0,255],
+          width: 2
+        }),
+      fill: new ol.style.Fill(
+        {	color: [0,0,255,0.3]
+        })
+      })
+  ];
+  style[1].getImage().getAnchor()[1] += 10;
 
-	// Vector layer
-	var source = new ol.source.Vector();
-	var vector = new ol.layer.Vector(
-	{	source: source,
-		style: style
-	});
-	map.addLayer(vector);
+  // Vector layer
+  var source = new ol.source.Vector();
+  var vector = new ol.layer.Vector(
+  {	source: source,
+    style: style
+  });
+  map.addLayer(vector);
 
-	/* Use filter or opacity * /
-	var c = map.getView().getCenter()
-	var g = ol.geom.Polygon.fromExtent(ol.extent.buffer(ol.extent.boundingExtent([c]),500000));
-	vector.addFilter(new ol.filter.Crop({
-		feature: new ol.Feature(g),
-		fill: new ol.style.Fill({color: [255,0,0,.5]})
-	}));
-	vector.setOpacity(.5)
-	/**/
+  /* Use filter or opacity * /
+  var c = map.getView().getCenter()
+  var g = ol.geom.Polygon.fromExtent(ol.extent.buffer(ol.extent.boundingExtent([c]),500000));
+  vector.addFilter(new ol.filter.Crop({
+    feature: new ol.Feature(g),
+    fill: new ol.style.Fill({color: [255,0,0,.5]})
+  }));
+  vector.setOpacity(.5)
+  /**/
 
-	// Add a feature on the map
-	function addFeatureAt(p)
-	{	var f, r = map.getView().getResolution() *10;
-		switch ($("#geom").val())
-		{	case 'LineString':
-				f = new ol.Feature(new ol.geom.LineString(
-					[	[p[0]-8*r,p[1]-3*r], 
-						[p[0]-2*r,p[1]+1*r], 
-						[p[0]+2*r,p[1]-1*r], 
-						[p[0]+8*r,p[1]+3*r]
-					]));
-				break;
-			case 'Polygon':
-				f = new ol.Feature(new ol.geom.Polygon(
-					[[	[p[0]-4*r,p[1]-2*r], 
-						[p[0]+3*r,p[1]-2*r], 
-						[p[0]+1*r,p[1]-0.5*r], 
-						[p[0]+4*r,p[1]+2*r], 
-						[p[0]-2*r,p[1]+2*r], 
-						[p[0]-4*r,p[1]-2*r]
-					]]));
-				break;
-			case 'Point':
-			default:
-				f = new ol.Feature(new ol.geom.Point(p));
-				break;
-		}
-		vector.getSource().addFeature(f);
-		vector.animateFeature (f, 
-			[	new ol.featureAnimation[$('#anim').val()](
-				{	speed: Number($("#speed").val()), 
-					duration: Number(1000-$("#speed").val()*300),
-					side: $("#side").prop('checked')
-				}),
-				new ol.featureAnimation[$('#anim2').val()](
-				{	speed: Number($("#speed").val()), 
-					duration: Number(1000-$("#speed").val()*300),
-					horizontal: /Slide/.test($('#anim').val())
-				})
-			]);
-	}
+  // Add a feature on the map
+  function addFeatureAt(p)
+  {	var f, r = map.getView().getResolution() *10;
+    switch ($("#geom").val())
+    {	case 'LineString':
+        f = new ol.Feature(new ol.geom.LineString(
+          [	[p[0]-8*r,p[1]-3*r], 
+            [p[0]-2*r,p[1]+1*r], 
+            [p[0]+2*r,p[1]-1*r], 
+            [p[0]+8*r,p[1]+3*r]
+          ]));
+        break;
+      case 'Polygon':
+        f = new ol.Feature(new ol.geom.Polygon(
+          [[	[p[0]-4*r,p[1]-2*r], 
+            [p[0]+3*r,p[1]-2*r], 
+            [p[0]+1*r,p[1]-0.5*r], 
+            [p[0]+4*r,p[1]+2*r], 
+            [p[0]-2*r,p[1]+2*r], 
+            [p[0]-4*r,p[1]-2*r]
+          ]]));
+        break;
+      case 'Point':
+      default:
+        f = new ol.Feature(new ol.geom.Point(p));
+        break;
+    }
+    vector.getSource().addFeature(f);
+    vector.animateFeature (f, 
+      [	new ol.featureAnimation[$('#anim').val()](
+        {	speed: Number($("#speed").val()), 
+          duration: Number(1000-$("#speed").val()*300),
+          side: $("#side").prop('checked')
+        }),
+        new ol.featureAnimation[$('#anim2').val()](
+        {	speed: Number($("#speed").val()), 
+          duration: Number(1000-$("#speed").val()*300),
+          horizontal: /Slide/.test($('#anim').val())
+        })
+      ]);
+  }
 
-	// Add 10 random features
-	function add10()
-	{	vector.getSource().clear();
-		var ex = map.getView().calculateExtent(map.getSize());
-		for (var i=0; i<10; i++)
-		{	setTimeout(function()
-				{	addFeatureAt(
-						[	ex[0] +Math.random()*(ex[2]-ex[0]),
-							ex[1] +Math.random()*(ex[3]-ex[1])
-						])
-				}, 100*i);
-		}
-	}
-	add10();
+  // Add 10 random features
+  function add10()
+  {	vector.getSource().clear();
+    var ex = map.getView().calculateExtent(map.getSize());
+    for (var i=0; i<10; i++)
+    {	setTimeout(function()
+        {	addFeatureAt(
+            [	ex[0] +Math.random()*(ex[2]-ex[0]),
+              ex[1] +Math.random()*(ex[3]-ex[1])
+            ])
+        }, 100*i);
+    }
+  }
+  add10();
 
-	// Drop a feature on click 
-	map.on('singleclick', function(evt) 
-	{	var f, revers=false;
-		map.forEachFeatureAtPixel (evt.pixel, function(feature)
-			{	f = feature;
-				return true;
-			});
-		if (f)
-		{	// Remove feature
-			vector.getSource().removeFeature(f);
-			// Show animation 
-			vector.animateFeature (f, 
-				[	new ol.featureAnimation[$('#anim').val()](
-					{	speed: Number($("#speed").val()), 
-						duration: Number(1000-$("#speed").val()*300),
-						side: $("#side").prop('checked'),
-						revers: true 
-					})
-				]);
-		}
-		else
-		{	addFeatureAt (evt.coordinate);
-		}
-	});
+  // Drop a feature on click 
+  map.on('singleclick', function(evt) 
+  {	var f, revers=false;
+    map.forEachFeatureAtPixel (evt.pixel, function(feature)
+      {	f = feature;
+        return true;
+      });
+    if (f)
+    {	// Remove feature
+      vector.getSource().removeFeature(f);
+      // Show animation 
+      vector.animateFeature (f, 
+        [	new ol.featureAnimation[$('#anim').val()](
+          {	speed: Number($("#speed").val()), 
+            duration: Number(1000-$("#speed").val()*300),
+            side: $("#side").prop('checked'),
+            revers: true 
+          })
+        ]);
+    }
+    else
+    {	addFeatureAt (evt.coordinate);
+    }
+  });
 
-	</script>
-	
+  </script>
+  
 </body>
 </html>
