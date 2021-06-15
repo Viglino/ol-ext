@@ -543,22 +543,22 @@ var ol_control_PrintDialog = function(options) {
           options.saveAs(blob, name);
         }, e.imageType, e.quality);
       }
-    })
+    });
   }
   // Save or print
   if (options.jsPDF) {
     this.on('print', function(e) {
       if (e.pdf) {
         // Export pdf using the print info
-        var pdf = new jsPDF({
+        var pdf = new options.jsPDF({
           orientation: e.print.orientation,
           unit: e.print.unit,
           format: e.print.size
         });
         pdf.addImage(e.image, 'JPEG', e.print.position[0], e.print.position[0], e.print.imageWidth, e.print.imageHeight);
         pdf.save(e.print.legend ? 'legend.pdf' : 'map.pdf');
-      }
-    })
+      } 
+    });
   }
 };
 ol_ext_inherits(ol_control_PrintDialog, ol_control_Control);

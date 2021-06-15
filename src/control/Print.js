@@ -118,7 +118,7 @@ ol_control_Print.prototype._getCanvas = function(event, imageType, canvas) {
         if (c.parentNode.style.opacity==='0') return;
         ctx.globalAlpha = parseFloat(c.parentNode.style.opacity) || 1;
         // Blend mode ?
-        if (ol.ext.element.getStyle(c.parentNode, 'mix-blend-mode') === 'multiply') {
+        if (ol_ext_element.getStyle(c.parentNode, 'mix-blend-mode') === 'multiply') {
           ctx.globalCompositeOperation = 'multiply';
         }
         // transform
