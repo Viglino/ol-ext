@@ -10,9 +10,10 @@ import ol_interaction_Interaction from 'ol/interaction/Interaction'
  * @constructor
  * @extends {ol_interaction_Interaction}
  * @param {olx.interaction.LongTouchOptions} 
- * 	@param {function | undefined} options.handleLongTouchEvent Function handling "longtouch" events, it will receive a mapBrowserEvent.
- *	@param {interger | undefined} options.delay The delay for a long touch in ms, default is 1000
-*/
+ * 	@param {function | undefined} options.handleLongTouchEvent Function handling 'longtouch' events, it will receive a mapBrowserEvent. Or listen to the map 'longtouch' event.
+ *	@param {integer | undefined} [options.pixelTolerance=0] pixel tolerance before drag, default 0
+ *	@param {integer | undefined} [options.delay=1000] The delay for a long touch in ms, default is 1000
+ */
 var ol_interaction_LongTouch = function(options) {
   if (!options) options = {};
 
@@ -20,20 +21,37 @@ var ol_interaction_LongTouch = function(options) {
   var ltouch = options.handleLongTouchEvent || function(){};
   
   var _timeout = null;
+  var position, event;
+  var tol = options.pixelTolerance || 0;
   ol_interaction_Interaction.call(this, {
     handleEvent: function(e) {
       if (this.getActive()) {
         switch (e.type) {
           case 'pointerdown': {
             if (_timeout) clearTimeout(_timeout);
+            position = e.pixel;
+            event = {
+              type: 'longtouch',
+              originalEvent: e.originalEvent,
+              frameState: e.frameState,
+              pixel: e.pixel,
+              coordinate: e.coordinate,
+              map: this.getMap()
+            }
             _timeout = setTimeout (function() {
-              e.type = "longtouch";
-              ltouch(e) 
+              ltouch(event);
+              event.map.dispatchEvent(event);
             }, this.delay_);
             break;
           }
-          /* case 'pointermove': */
-          case 'pointerdrag':
+          case 'pointerdrag': {
+            // Check if dragging over tolerance
+            if (_timeout && (Math.abs(e.pixel[0] - position[0]) > tol || Math.abs(e.pixel[1] - position[1]) > tol)) {
+              clearTimeout(_timeout);
+              _timeout = null;
+            }
+            break;
+          }
           case 'pointerup': {
             if (_timeout) {
               clearTimeout(_timeout);
