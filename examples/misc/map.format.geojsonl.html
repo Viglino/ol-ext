@@ -1,0 +1,180 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2016-2021 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Streaming GeoJSONL</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="Streaming GeoJSONL" />
+  <meta name="keywords" content="OpenLayers,ol,file,GeoJSONL" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    .options b {
+      display: block;
+      width: 100%;
+      border-bottom: 2px solid currentColor;
+      margin: 1em 0 .5em;
+    }
+  </style>
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Streaming GeoJSONL</h1>
+  </a>
+  <p class="info">
+  </p>
+
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options">
+    <h2>Options:</h2>
+  </div>
+  
+  <script type="text/javascript">
+  // Layers
+  var stamen = new ol.layer.Tile({
+    source: new ol.source.Stamen({ layer: 'watercolor' }) 
+  });
+
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 10,
+      center: [256697, 6249708]
+    }),
+    layers: [stamen]
+  });
+
+  var source = new ol.source.Vector();
+  map.addLayer(new ol.layer.VectorImage({  source: source }));
+
+/* */
+function readOnline() {
+  var last_index = 0;
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "https://s3.amazonaws.com/vtiles/honolulu_hawaii.geojsonl");
+  xhr.onprogress = function () {
+      var curr_index = xhr.responseText.length;
+      if (last_index == curr_index) return; 
+      var s = xhr.responseText.substring(last_index, curr_index);
+      last_index = curr_index;
+      console.log("PROGRESS:", s);
+  };
+  xhr.send();
+}
+
+/** Read file line by line
+ * https://gist.github.com/alediaferia/cfb3a7503039f9278381
+ * @param {File} file
+ * @param {*} options
+ *  @param {function} onRead a function that take the current line
+ *  @param {function} onError a function called on error
+ *  @param {number} [chunkSize=60*1024]
+ */
+function parseFile(file, options) {
+  options = options || {};
+  var fileSize   = file.size;
+  var chunkSize  = options.chunkSize || 64 * 1024;
+  var offset     = 0;
+  var self       = this; // we need a reference to the current object
+  var format = new ol.format.GeoJSON();
+  var onRead = function(f, opt) {
+    var feature = null;
+    try {
+      feature = format.readFeatureFromObject(JSON.parse(f));
+    } catch(e) { /* ok */ }
+    if (options.onRead) options.onRead(feature, opt);
+  }
+  var onError = options.onError || function() {};
+
+  var readChunk = function(file, offset) {
+    var r = new FileReader();
+    var blob = file.slice(offset, chunkSize + offset);
+    r.onload = loadHandler;
+    r.readAsText(blob);
+  }
+
+  // Current line
+  var lineFragment = '';
+
+  var loadHandler = function(evt) {
+    if (evt.target.error) {
+      onError(evt.target.error);
+      return;
+    }
+    var text = evt.target.result.replace(/\r/g, '').split('\n');
+    var curOffset = offset;
+    while (text.length > 1) {
+      var l = text.shift();
+      curOffset += l.length +1;
+      onRead(lineFragment+l, { position: curOffset / fileSize, last: false });
+      lineFragment = '';
+    }
+    lineFragment += text.shift();
+    offset += chunkSize;
+    if (offset >= fileSize) {
+      // Last line
+      onRead(lineFragment, { position: 1, last: true });
+      return;
+    }
+
+    readChunk(file, offset);
+  }
+
+  readChunk(file, offset);
+}
+
+var select = new ol.interaction.Select({ condition: ol.events.condition.click });
+map.addInteraction(select)
+map.addOverlay(new ol.Overlay.PopupFeature({
+  select: select
+}))
+
+var ddrop = new ol.interaction.DropFile({ formatConstructors: [] });
+map.addInteraction(ddrop);
+ddrop.on('loadstart', function(e) {
+  var types = {};
+  parseFile(e.file, {
+    // chunkSize: 1024,
+    onRead: function(feature, opt) {
+      //else console.log('[READ] ',(s*100).toFixed(2)+'%')
+      if (feature) {
+        types[feature.get('@type')] = true;
+        feature.getGeometry().transform('EPSG:4326', map.getView().getProjection())
+        source.addFeature(feature);
+      }
+      if (opt.last) {
+        console.log(types)
+        map.getView().setCenter(source.getFeatures()[0].getGeometry().getFirstCoordinate());
+      }
+    }
+  })
+})
+
+  </script>
+  
+</body>
+</html>

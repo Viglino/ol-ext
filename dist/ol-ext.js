@@ -18746,7 +18746,7 @@ ol.interaction.DrawTouch.prototype.setActive = function(b) {
  *  @param {string} options.zone selector for the drop zone, default document
  *  @param{ol.projection} options.projection default projection of the map
  *  @param {Array<function(new:ol.format.Feature)>|undefined} options.formatConstructors Format constructors, default [ ol.format.GPX, ol.format.GeoJSONX, ol.format.GeoJSONP, ol.format.GeoJSON, ol.format.IGC, ol.format.KML, ol.format.TopoJSON ]
- *  @param {Array<string>|undefined} options.accept list of eccepted format, default ["gpx","json","geojsonx","geojsonp","geojson","igc","kml","topojson"]
+ *  @param {Array<string>|undefined} options.accept list of accepted format, default ["gpx","json","geojsonx","geojsonp","geojson","igc","kml","topojson"]
  */
 ol.interaction.DropFile = function(options) {
   options = options||{};
@@ -18781,6 +18781,7 @@ ol.interaction.DropFile.prototype.ondrop = function(e) {
   e.preventDefault();
   if (e.dataTransfer && e.dataTransfer.files.length) {
     var self = this;
+    var projection = this.projection_ || (this.getMap() ? this.getMap().getView().getProjection() : null);
     // fetch FileList object
     var files = e.dataTransfer.files; // e.originalEvent.target.files ?
     // process all File objects
@@ -18788,10 +18789,12 @@ ol.interaction.DropFile.prototype.ondrop = function(e) {
     var pat = /\.([0-9a-z]+)(?=[?#])|(\.)(?:[\w]+)$/;
     for (var i=0; file=files[i]; i++) {
       var ex = file.name.match(pat)[0];
-      self.dispatchEvent({ type:'loadstart', file: file, filesize: file.size, filetype: file.type, fileextension: ex, projection: projection });
+      var isok = (this.accept_.indexOf(ex.toLocaleLowerCase()) >= 0);
+      self.dispatchEvent({ type:'loadstart', file: file, filesize: file.size, filetype: file.type, fileextension: ex, projection: projection, isok: isok });
+      // Don't load file
+      if (!this.formatConstructors_.length) continue;
       // Load file
       var reader = new FileReader();
-      var projection = this.projection_ || (this.getMap() ? this.getMap().getView().getProjection() : null);
       var formatConstructors = this.formatConstructors_
       //if (!projection) return;
       var tryReadFeatures = function (format, result, options) {
