@@ -19680,6 +19680,7 @@ ol.interaction.Hover.prototype.handleMove_ = function(e) {
       coordinate: e.coordinate, 
       pixel: e.pixel, 
       map: e.map, 
+      originalEvent: e.originalEvent,
       dragging: e.dragging 
     });
     if (this.feature_===feature && this.layer_===layer){
@@ -19695,6 +19696,7 @@ ol.interaction.Hover.prototype.handleMove_ = function(e) {
           coordinate: e.coordinate, 
           pixel: e.pixel, 
           map: e.map, 
+          originalEvent: e.originalEvent,
           dragging: e.dragging 
         });
       } else {
@@ -19703,6 +19705,7 @@ ol.interaction.Hover.prototype.handleMove_ = function(e) {
           coordinate: e.coordinate, 
           pixel: e.pixel, 
           map: e.map, 
+          originalEvent: e.originalEvent,
           dragging: e.dragging 
         });
       }
