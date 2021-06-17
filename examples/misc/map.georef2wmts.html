@@ -77,7 +77,7 @@
   var tileSize = 512;
   var geoImage;
   var ddrop = new ol.interaction.DropFile({
-    formatConstructors: [] 
+    formatConstructors: ['none'] 
   });
   ddrop.on('loadend', function(e) {
     var data = JSON.parse(e.result);
