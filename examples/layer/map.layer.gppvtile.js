@@ -105,7 +105,7 @@ ol.ext.Ajax.get({
 
 // Upload custom style
 onChangeColor = function() {};
-var drop = new ol.interaction.DropFile({ formatConstructors: [] });
+var drop = new ol.interaction.DropFile({ formatConstructors: ['none'] });
 map.addInteraction(drop);
 drop.on('loadend', function(e) {
   try {

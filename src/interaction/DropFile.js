@@ -78,11 +78,6 @@ ol_interaction_DropFile.prototype.ondrop = function(e) {
       var formatConstructors = this.formatConstructors_
 
       //if (!projection) return;
-      var tryReadFeatures = function (format, result, options) {
-        try {
-          return format.readFeatures(result, options);
-        } catch (e) { /* ok */ }
-      }
       var theFile = file;
       reader.onload = function(e) {
         var result = e.target.result;
@@ -91,13 +86,15 @@ ol_interaction_DropFile.prototype.ondrop = function(e) {
         var i, ii;
         for (i = 0, ii = formatConstructors.length; i < ii; ++i) {
           var formatConstructor = formatConstructors[i];
-          var format = new formatConstructor();
-          features = tryReadFeatures(format, result, { featureProjection: projection });
-          if (features && features.length > 0) {
-            self.dispatchEvent({ type:'addfeatures', features: features, file: theFile, projection: projection });
-            self.dispatchEvent({ type:'loadend', features: features, file: theFile, projection: projection });
-            return;
-          }
+          try {
+            var format = new formatConstructor();
+            features = format.readFeatures(result, { featureProjection: projection });
+            if (features && features.length > 0) {
+              self.dispatchEvent({ type:'addfeatures', features: features, file: theFile, projection: projection });
+              self.dispatchEvent({ type:'loadend', features: features, file: theFile, projection: projection });
+              return;
+            }
+          } catch(e) { /* ok */ }
         }
         self.dispatchEvent({ type:'loadend', file: theFile, result: result });
       };
