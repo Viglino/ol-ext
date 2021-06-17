@@ -77,7 +77,6 @@ ol_interaction_DropFile.prototype.ondrop = function(e) {
       var reader = new FileReader();
       var formatConstructors = this.formatConstructors_
 
-      //if (!projection) return;
       var theFile = file;
       reader.onload = function(e) {
         var result = e.target.result;
@@ -96,8 +95,10 @@ ol_interaction_DropFile.prototype.ondrop = function(e) {
             }
           } catch(e) { /* ok */ }
         }
+        // Nothing match, try to load by yourself
         self.dispatchEvent({ type:'loadend', file: theFile, result: result });
       };
+      // Start loading
       reader.readAsText(file);
     }
   }
