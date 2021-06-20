@@ -101,7 +101,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="IDW"><span class="type-signature"></span>new IDW( [options], weight)</h4>
+    <h4 class="name" id="IDW"><span class="type-signature"></span>new IDW( [options])</h4>
     
     
 </dt>
@@ -152,7 +152,7 @@
             <td class="type">
             
                 
-<span class="param-type">olx.source.GeoImageOptions</span>
+<span class="param-type">*</span>
 
 
 
@@ -203,6 +203,42 @@
 
         <tr>
             
+                <td class="name"><code>source</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">ol.source.vector</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>a source to interpolate</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
                 <td class="name"><code>scale</code></td>
             
 
@@ -240,13 +276,6 @@
         </tr>
 
     
-    </tbody>
-</table>
-
-            </td>
-        </tr>
-
-    
 
         <tr>
             
@@ -277,8 +306,19 @@
             
 
             
+                <td class="default">
+                
+                </td>
+            
 
-            <td class="description last"><p>The feature attribute to use for the weight or a function that returns a weight from a feature. Weight values should range from 0 to 100.</p></td>
+            <td class="description last"><p>The feature attribute to use for the weight or a function that returns a weight from a feature. Weight values should range from 0 to 100. Default use the weight attribute of the feature.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -382,7 +422,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="calculateImage"><span class="type-signature"></span>calculateImage(extent, resolution, pixelRatio, size)</h4>
+    <h4 class="name" id="getSource"><span class="type-signature"></span>getSource()</h4>
     
     
 </dt>
@@ -390,7 +430,85 @@
 
     
     <div class="description">
-        <p>Calculate IDW at extent / resolution</p>
+        <p>Get the source</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="getValue"><span class="type-signature"></span>getValue(coord)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Get image value at coord (RGBA)</p>
     </div>
     
 
@@ -425,85 +543,13 @@
 
         <tr>
             
-                <td class="name"><code>extent</code></td>
+                <td class="name"><code>coord</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">ol/extent/Extent</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>resolution</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>pixelRatio</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>size</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">ol/size/Size</span>
+<span class="param-type">l.coordinate</span>
 
 
 
@@ -585,7 +631,7 @@
     </dt>
     <dd>
         
-<span class="param-type">HTMLCanvasElement</span>
+<span class="param-type">Uint8ClampedArray</span>
 
 
 
@@ -602,290 +648,6 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="getSource"><span class="type-signature"></span>getSource()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Get the source</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="getValue"><span class="type-signature"></span>getValue()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Get image value at pixel</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="hue2rgb"><span class="type-signature"></span>hue2rgb(h)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Convert hue to rgb factor</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>h</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
     <h4 class="name" id="setData"><span class="type-signature"></span>setData(v, data, i)</h4>
     
     
@@ -894,7 +656,7 @@
 
     
     <div class="description">
-        <p>Apply the value to the map RGB</p>
+        <p>Apply the value to the map RGB. Overwrite this function to set your own colors.</p>
     </div>
     
 
@@ -970,7 +732,7 @@
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>RGBA array</p></td>
         </tr>
 
     
@@ -994,7 +756,7 @@
 
             
 
-            <td class="description last"><p>index</p></td>
+            <td class="description last"><p>index in the RGBA array</p></td>
         </tr>
 
     

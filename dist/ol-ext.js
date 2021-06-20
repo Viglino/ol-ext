@@ -26163,9 +26163,10 @@ ol.source.HexBin.prototype.getHexFeatures = function () {
  * @see https://en.wikipedia.org/wiki/Inverse_distance_weighting
  * @constructor 
  * @extends {ol.source.ImageCanvas}
- * @param {olx.source.GeoImageOptions=} options
+ * @param {*} [options]
+ *  @param {ol.source.vector} options.source a source to interpolate
  *  @param {number} [options.scale=4] scale factor, use large factor to enhance performances (but minor accuracy)
- *  @param {string|function} weight The feature attribute to use for the weight or a function that returns a weight from a feature. Weight values should range from 0 to 100.
+ *  @param {string|function} options.weight The feature attribute to use for the weight or a function that returns a weight from a feature. Weight values should range from 0 to 100. Default use the weight attribute of the feature.
  */
 ol.source.IDW = function(options) {
   options = options || {};
@@ -26188,6 +26189,8 @@ ol.source.IDW.prototype.getSource = function() {
 };
 /** Convert hue to rgb factor
  * @param {number} h
+ * @return {number}
+ * @private
  */
 ol.source.IDW.prototype.hue2rgb = function(h) {
   h = (h + 6) % 6;
@@ -26196,10 +26199,10 @@ ol.source.IDW.prototype.hue2rgb = function(h) {
   if (h < 4) return Math.round((4 - h) * 255);
   return 0;
 };
-/** Apply the value to the map RGB
+/** Apply the value to the map RGB. Overwrite this function to set your own colors.
  * @param {number} v value
- * @param {Uint8ClampedArray} data
- * @param {number} i index
+ * @param {Uint8ClampedArray} data RGBA array
+ * @param {number} i index in the RGBA array
  * @api
  */
 ol.source.IDW.prototype.setData = function(v, data, i) {
@@ -26211,14 +26214,15 @@ ol.source.IDW.prototype.setData = function(v, data, i) {
   data[i+2] = this.hue2rgb(h - 2);
   data[i+3] = 255;
 };
-/** Get image value at pixel
- * 
+/** Get image value at coord (RGBA)
+ * @param {l.coordinate} coord
+ * @return {Uint8ClampedArray}
  */
 ol.source.IDW.prototype.getValue = function(coord) {
   if (!this._canvas) return null
   var pt = this.transform(coord);
   var v = this._canvas.getContext('2d').getImageData(Math.round(pt[0]), Math.round(pt[1]), 1, 1).data;
-  console.log(v);
+  return (v);
 };
 /** Calculate IDW at extent / resolution
  * @param {ol/extent/Extent} extent
@@ -26226,6 +26230,7 @@ ol.source.IDW.prototype.getValue = function(coord) {
  * @param {number} pixelRatio
  * @param {ol/size/Size} size
  * @return {HTMLCanvasElement}
+ * @private
  */
 ol.source.IDW.prototype.calculateImage = function(extent, resolution, pixelRatio, size) {
   if (!this._source) return this._canvas;
