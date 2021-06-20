@@ -74,7 +74,7 @@ var ol_geom_GPAltiCode = function(geom, options) {
 export { ol_geom_GPAltiCode }
 
 /** Calculate elevation on coordinates or on a set of coordinates
- * @param {ol.coordinate||Array<ol.coordinate>} coord coordinate or an array of coordinates
+ * @param {ol.coordinate|Array<ol.coordinate>} coord coordinate or an array of coordinates
  * @param {Object} options
  *  @param {ol/proj~ProjectionLike} [options.projection='EPSG:3857'] geometry projection, default 'EPSG:3857'
  *  @param {string} [options.apiKey='choisirgeoportail'] Geoportail API key
