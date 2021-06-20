@@ -254,7 +254,12 @@
     <i class="standard" onclick="setFont('&#x2604;')">&#x2604;</i>
     <i class="standard" onclick="setFont('&#x263A;')">&#x263A;</i>
     <i class="standard" onclick="setFont('&#x2639;')">&#x2639;</i>
+    <h2>Text</h2>
+    <i class="standard" onclick="setText('12')">12</i>
+    <i class="standard" onclick="setText('25')">25</i>
+    <i class="standard" onclick="setText('ab')">ab</i>
   </div>
+
 
 
   <script type="text/javascript">
@@ -277,10 +282,17 @@
 
 
   // Get font glyph
-  var theGlyph = "maki-building";
+  var theGlyph = 'maki-building';
+  var theText = '';
   function setFont(g) {
-    if (typeof(g)=='string') theGlyph = g;
+    if (typeof(g)==='string') theGlyph = g;
     else theGlyph = $(this).data("glyph");
+    theText = '';
+    vector.changed();
+  }
+  function setText(t) {
+    theText = t;
+    theGlyph = null;
     vector.changed();
   }
   // Fill font glyphs
@@ -298,7 +310,6 @@
       }
     }
   }
-  
   
   // Style function
   function getFeatureStyle (feature) {
@@ -320,7 +331,9 @@
       image: new ol.style.FontSymbol({
         form: $("#form").val(), //"hexagone", 
           gradient: $("#gradient").prop('checked'),
-          glyph: theGlyph,//car[Math.floor(Math.random()*car.length)], 
+          glyph: theGlyph,
+          text: theText,    // text to use if no glyph is defined
+          font: 'sans-serif',
           fontSize: Number($("#fontsize").val()),
           fontStyle: $("#style").val(),
           radius: Number($("#radius").val()), 
@@ -380,6 +393,7 @@
   //
   function setOptions(glyph, form, color, scolor, fcolor, border, radius, fsize, offset, gradient, shadow) {
     theGlyph = glyph;
+    theText = '';
     $("#style").val('');
     $("#color").val(color);
     $("#form").val(form);

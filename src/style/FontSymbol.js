@@ -17,18 +17,20 @@ import {asString as ol_color_asString} from 'ol/color'
  *  @param {string} [options.color] default #000
  *  @param {string} options.glyph the glyph name or a char to display as symbol. 
  *    The name must be added using the {@link ol.style.FontSymbol.addDefs} function.
+ *  @param {string} [options.text] a text to display as a glyph
+ *  @param {string} [options.font] font to use with the text option
  *  @param {string} options.form 
  * 	  none|circle|poi|bubble|marker|coma|shield|blazon|bookmark|hexagon|diamond|triangle|sign|ban|lozenge|square
  * 	  a form that will enclose the glyph, default none
  *  @param {number} options.radius
  *  @param {number} options.rotation
  *  @param {boolean} options.rotateWithView
- *  @param {number} [options.opacity]
- *  @param {number} [options.fontSize] default 1
+ *  @param {number} [options.opacity=1]
+ *  @param {number} [options.fontSize=1] default 1
  *  @param {string} [options.fontStyle] the font style (bold, italic, bold italic, etc), default none
  *  @param {boolean} options.gradient true to display a gradient on the symbol
- *  @param {number} [options.offsetX] default 0
- *  @param {number} [options.offsetY] default 0
+ *  @param {number} [options.offsetX=0] default 0
+ *  @param {number} [options.offsetY=0] default 0
  *  @param {_ol_style_Fill_} options.fill
  *  @param {_ol_style_Stroke_} options.stroke
  * @extends {ol_style_RegularShape}
@@ -59,14 +61,15 @@ var ol_style_FontSymbol = function(options) {
   this.gradient_ = options.gradient;
   this.offset_ = [options.offsetX ? options.offsetX :0, options.offsetY ? options.offsetY :0];
 
-  this.glyph_ = this.getGlyph(options.glyph) || "";
-  
+  if (options.glyph) this.glyph_ = this.getGlyph(options.glyph);
+  else this.glyph_ = this.getTextGlyph(options.text||'', options.font);
+
   this.renderMarker_();
 };
 ol_ext_inherits(ol_style_FontSymbol, ol_style_RegularShape);
 
 /** Cool stuff to get the image symbol for a style
-*/
+ */
 ol_style_Image.prototype.getImagePNG = function() {
   var canvas = this.getImage();
   if (canvas) {
@@ -77,9 +80,8 @@ ol_style_Image.prototype.getImagePNG = function() {
   }
 }
 
-/** 
- *	Font defs
-*/
+/** Font defs
+ */
 ol_style_FontSymbol.prototype.defs = { 'fonts':{}, 'glyphs':{} };
 
 /** Static function : add new font defs 
@@ -91,34 +93,33 @@ ol_style_FontSymbol.prototype.defs = { 'fonts':{}, 'glyphs':{} };
  */
 ol_style_FontSymbol.addDefs = function(font, glyphs) {
   var thefont = font;
-  if (typeof(font) == "string") thefont = {"font":font, "name":font, "copyright":"" };
-  if (!thefont.font || typeof(thefont.font) != "string") {
-    console.log("bad font def");
+  if (typeof(font) == 'string') thefont = { font:font, name:font, copyright:'' };
+  if (!thefont.font || typeof(thefont.font) !== 'string') {
+    console.log('bad font def');
     return;
   }
   var fontname = thefont.font;
   ol_style_FontSymbol.prototype.defs.fonts[fontname] = thefont;
   for (var i in glyphs) {
     var g = glyphs[i];
-    if (typeof(g) == "string" && g.length==1) g = { char: g };
+    if (typeof(g) === 'string' && g.length==1) g = { char: g };
     ol_style_FontSymbol.prototype.defs.glyphs[i] = {
       font: thefont.font,
-      char: g.char || ""+String.fromCharCode(g.code) || "",
+      char: g.char || ''+String.fromCharCode(g.code) || '',
       theme: g.theme || thefont.name,
       name: g.name || i,
-      search: g.search || ""
+      search: g.search || ''
     };
   }
 };
 
 
-/**
- * Clones the style. 
+/** Clones the style. 
  * @return {ol_style_FontSymbol}
  */
 ol_style_FontSymbol.prototype.clone = function() {
   var g = new ol_style_FontSymbol({
-    glyph: "",
+    glyph: '',
     color: this.color_,
     fontSize: this.fontSize_,
     fontStyle: this.fontStyle_,
@@ -139,8 +140,7 @@ ol_style_FontSymbol.prototype.clone = function() {
   return g;
 };
 
-/**
- * Get the fill style for the symbol.
+/** Get the fill style for the symbol.
  * @return {ol_style_Fill} Fill style.
  * @api
  */
@@ -148,8 +148,7 @@ ol_style_FontSymbol.prototype.getFill = function() {
   return this.fill_;
 };
 
-/**
- * Get the stroke style for the symbol.
+/** Get the stroke style for the symbol.
  * @return {_ol_style_Stroke_} Stroke style.
  * @api
  */
@@ -157,15 +156,24 @@ ol_style_FontSymbol.prototype.getStroke = function() {
   return this.stroke_;
 };
 
-/**
- * Get the glyph definition for the symbol.
+/** Get the glyph definition for the symbol.
  * @param {string|undefined} name a glyph name to get the definition, default return the glyph definition for the style.
- * @return {_ol_style_Stroke_} Stroke style.
+ * @return {*}
  * @api
  */
 ol_style_FontSymbol.prototype.getGlyph = function(name) {
-  if (name) return ol_style_FontSymbol.prototype.defs.glyphs[name] || { "font":"none","char":name.charAt(0),"theme":"none","name":"none", "search":""};
+  if (name) return ol_style_FontSymbol.prototype.defs.glyphs[name] || { font:'sans-serif', char:name.charAt(0), theme:'none', name:'none', search:'' };
   else return this.glyph_;
+};
+
+/** Get glyph definition given a text and a font
+ * @param {string|undefined} text
+ * @param {string} [font] the font for the text
+ * @return {*}
+ * @api
+ */
+ol_style_FontSymbol.prototype.getTextGlyph = function(text, font) {
+  return { font: font || 'sans-serif', char:String(text), theme:'none', name:'none', search:'' };
 };
 
 /**
@@ -177,7 +185,7 @@ ol_style_FontSymbol.prototype.getGlyphName = function() {
   for (var i in ol_style_FontSymbol.prototype.defs.glyphs) {
     if (ol_style_FontSymbol.prototype.defs.glyphs[i] === this.glyph_) return i;
   }
-  return "";
+  return '';
 };
 
 /**
