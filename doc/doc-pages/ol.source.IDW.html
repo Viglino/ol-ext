@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>ol-ext Class: TextButton</title>
+	<title>ol-ext Class: IDW</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -80,15 +80,15 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: TextButton</h1>
+	<h1 class="page-title">Class: IDW</h1>
 <section>
 
 <header>
     
         <h2>
-            <span class="ancestors"><a href="ol.html">ol</a><a href="ol.control.html">.control</a>.</span>
+            <span class="ancestors"><a href="ol.html">ol</a><a href="ol.source.html">.source</a>.</span>
         
-        TextButton
+        IDW
         </h2>
         
     
@@ -101,7 +101,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="TextButton"><span class="type-signature"></span>new TextButton( [options])</h4>
+    <h4 class="name" id="IDW"><span class="type-signature"></span>new IDW( [options], weight)</h4>
     
     
 </dt>
@@ -109,7 +109,7 @@
 
     
     <div class="description">
-        <p>A simple push button control drawn as text</p>
+        <p>Inverse distance weighting interpolated source - Shepard's method</p>
     </div>
     
 
@@ -152,7 +152,7 @@
             <td class="type">
             
                 
-<span class="param-type">Object</span>
+<span class="param-type">olx.source.GeoImageOptions</span>
 
 
 
@@ -173,7 +173,7 @@
 
             
 
-            <td class="description last"><p>Control options.</p>
+            <td class="description last">
                 <h6 class="method-params-label method-subparams-label">Properties</h6>
                 
 
@@ -187,7 +187,11 @@
         <th>Type</th>
 
         
+        <th>Argument</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -199,13 +203,13 @@
 
         <tr>
             
-                <td class="name"><code>className</code></td>
+                <td class="name"><code>scale</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">number</span>
 
 
 
@@ -213,70 +217,48 @@
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"><p>class of the control</p></td>
+            
+                <td class="default">
+                
+                    4
+                
+                </td>
+            
+
+            <td class="description last"><p>scale factor, use large factor to enhance performances (but minor accuracy)</p></td>
         </tr>
 
     
+    </tbody>
+</table>
 
-        <tr>
-            
-                <td class="name"><code>title</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-
-            
             </td>
-
-            
-
-            
-
-            <td class="description last"><p>title of the control</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>html</code></td>
+                <td class="name"><code>weight</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
+|
 
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>html to insert in the control</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>handleClick</code></td>
-            
-
-            <td class="type">
-            
-                
 <span class="param-type">function</span>
 
 
@@ -285,17 +267,18 @@
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
-            <td class="description last"><p>callback when control is clicked (or use change:active event)</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-            </td>
+            <td class="description last"><p>The feature attribute to use for the weight or a function that returns a weight from a feature. Weight values should range from 0 to 100.</p></td>
         </tr>
 
     
@@ -338,6 +321,13 @@
 
 	
 
+	
+	<dt class="tag-see method-doc-label method-doc-details-label">See:</dt>
+	<dd class="tag-see">
+		<ul>
+			<li><a href="https://en.wikipedia.org/wiki/Inverse_distance_weighting">https://en.wikipedia.org/wiki/Inverse_distance_weighting</a></li>
+			</ul>
+	</dd>
 	
 
 	
@@ -369,7 +359,7 @@
 
 
     <ul>
-        <li><a href="ol.control.Button.html">ol.control.Button</a></li>
+        <li>ol.source.ImageCanvas</li>
     </ul>
 
 
@@ -392,7 +382,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="getButtonElement"><span class="type-signature"></span>getButtonElement()</h4>
+    <h4 class="name" id="calculateImage"><span class="type-signature"></span>calculateImage(extent, resolution, pixelRatio, size)</h4>
     
     
 </dt>
@@ -400,7 +390,7 @@
 
     
     <div class="description">
-        <p>Get the button element</p>
+        <p>Calculate IDW at extent / resolution</p>
     </div>
     
 
@@ -409,6 +399,128 @@
     
 
     
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>extent</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">ol/extent/Extent</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>resolution</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>pixelRatio</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>size</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">ol/size/Size</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
     
 
     
@@ -419,15 +531,6 @@
 
 	
 
-	
-	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
-	<dd class="inherited-from">
-		<ul class="dummy">
-			<li>
-				<a href="ol.control.Button.html#getButtonElement">ol.control.Button#getButtonElement</a>
-			</li>
-		</ul>
-	</dd>
 	
 
     
@@ -482,7 +585,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Element</span>
+<span class="param-type">HTMLCanvasElement</span>
 
 
 
@@ -499,7 +602,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="setHtml"><span class="type-signature"></span>setHtml(html)</h4>
+    <h4 class="name" id="getSource"><span class="type-signature"></span>getSource()</h4>
     
     
 </dt>
@@ -507,7 +610,7 @@
 
     
     <div class="description">
-        <p>Set the button html</p>
+        <p>Get the source</p>
     </div>
     
 
@@ -516,56 +619,6 @@
     
 
     
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>html</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
     
 
     
@@ -576,15 +629,6 @@
 
 	
 
-	
-	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
-	<dd class="inherited-from">
-		<ul class="dummy">
-			<li>
-				<a href="ol.control.Button.html#setHtml">ol.control.Button#setHtml</a>
-			</li>
-		</ul>
-	</dd>
 	
 
     
@@ -636,7 +680,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="setTitle"><span class="type-signature"></span>setTitle(title)</h4>
+    <h4 class="name" id="getValue"><span class="type-signature"></span>getValue()</h4>
     
     
 </dt>
@@ -644,7 +688,7 @@
 
     
     <div class="description">
-        <p>Set the button title</p>
+        <p>Get image value at pixel</p>
     </div>
     
 
@@ -653,56 +697,6 @@
     
 
     
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>title</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
     
 
     
@@ -713,15 +707,6 @@
 
 	
 
-	
-	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
-	<dd class="inherited-from">
-		<ul class="dummy">
-			<li>
-				<a href="ol.control.Button.html#setTitle">ol.control.Button#setTitle</a>
-			</li>
-		</ul>
-	</dd>
 	
 
     
@@ -773,7 +758,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="setVisible"><span class="type-signature"></span>setVisible(b)</h4>
+    <h4 class="name" id="hue2rgb"><span class="type-signature"></span>hue2rgb(h)</h4>
     
     
 </dt>
@@ -781,7 +766,7 @@
 
     
     <div class="description">
-        <p>Set the control visibility</p>
+        <p>Convert hue to rgb factor</p>
     </div>
     
 
@@ -816,13 +801,13 @@
 
         <tr>
             
-                <td class="name"><code>b</code></td>
+                <td class="name"><code>h</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">boolean</span>
+<span class="param-type">number</span>
 
 
 
@@ -851,14 +836,181 @@
 	
 
 	
-	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
-	<dd class="inherited-from">
-		<ul class="dummy">
-			<li>
-				<a href="ol.control.Button.html#setVisible">ol.control.Button#setVisible</a>
-			</li>
-		</ul>
-	</dd>
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="setData"><span class="type-signature"></span>setData(v, data, i)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Apply the value to the map RGB</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>v</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>value</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Uint8ClampedArray</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>i</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>index</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
 	
 
     
