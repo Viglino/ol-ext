@@ -194,7 +194,7 @@ gulp.task("extrajs", function() {
 });
 
 // Build files to be used individually
-gulp.task("lib", function() {
+gulp.task("lib", function(done) {
   var src = ['control','featureanimation','filter','format','geom','interaction','layer','overlay','render','source','style','util','utils','ext'];
   for (var i=0; i<src.length; i++) {
     gulp.src("./src/"+src[i]+"/*.js")
@@ -204,6 +204,7 @@ gulp.task("lib", function() {
       .pipe(autoprefixer('last 2 versions'))
       .pipe(gulp.dest("lib/"+src[i]));
   }
+  done();
 });
 
 
