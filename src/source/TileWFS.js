@@ -3,6 +3,9 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 import ol_source_Vector from 'ol/source/Vector'
+import {tile as ol_loadingstrategy_tile} from 'ol/loadingstrategy'
+import {createXYZ as ol_tilegrid_createXYZ} from 'ol/tilegrid'
+import ol_format_GeoJSON from 'ol/format/GeoJSON'
 import {ol_ext_inherits} from '../util/ext'
 import ol_ext_Ajax from '../util/Ajax'
 
@@ -29,7 +32,7 @@ var ol_source_TileWFS = function (options) {
   };
 
   // Loading params
-  var format = new ol.format.GeoJSON();
+  var format = new ol_format_GeoJSON();
   var url = options.url
     + '?service=WFS'
     + '&request=GetFeature'

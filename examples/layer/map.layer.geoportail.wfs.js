@@ -104,56 +104,25 @@ function setWFS(type) {
   });
   */
   // Loading bar
-  var loading = 0, loaded = 0;
   var progressbar = document.getElementById('progressbar');
-  var draw = function() {
-    if (loading === loaded) {
+  var progress = function(e) {
+    if (e.loading === e.loaded) {
       loading = loaded = 0;
       ol.ext.element.setStyle(progressbar, { width: 0 });// layer.layerswitcher_progress.width(0);
       $('#loading').hide();
     } else {
-      ol.ext.element.setStyle(progressbar, { width: (loaded / loading * 100).toFixed(1) + '%' });// layer.layerswitcher_progress.css('width', (loaded / loading * 100).toFixed(1) + '%');
+      ol.ext.element.setStyle(progressbar, { width: (e.loaded / e.loading * 100).toFixed(1) + '%' });// layer.layerswitcher_progress.css('width', (loaded / loading * 100).toFixed(1) + '%');
       $('#loading').show();
-      $('#loading span').text(loaded+'/'+loading)
+      $('#loading span').text(e.loaded+'/'+e.loading)
     }
   }
-  var format = new ol.format.GeoJSON();
   var key = /LANDCOVER/.test(type) ? 'corinelandcover' : 'choisirgeoportail';
-  var source = vectorSource = new ol.source.Vector({
-    loader: function (extent, resolution, projection) {
-      loading++;
-      draw();
-      $.ajax({
-        url: 'https://wxs.ign.fr/'+key+'/geoportail/wfs?service=WFS&' +
-          'version=1.1.0&request=GetFeature&' +
-          'typename='+type+'&' +
-          'outputFormat=application/json&srsname=EPSG:3857&' +
-          'bbox=' + extent.join(',') + ',EPSG:3857',
-        dataType: 'json',
-        success: function (response) {
-          if (response.error) {
-            alert(
-              response.error.message + '\n' + response.error.details.join('\n')
-            );
-          } else {
-            var features = format.readFeatures(response, {
-              featureProjection: projection,
-            });
-            if (features.length > 0) {
-              source.addFeatures(features);
-            }
-          }
-        },
-        complete: function () {
-          loaded++;
-          draw();
-          var f = new ol.Feature(ol.geom.Polygon.fromExtent(extent));
-          loadLayer.getSource().addFeature(f);
-        }
-      });
-    },
-    strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: minZoom, maxZoom: minZoom, tileSize:512  }))
+  vectorSource = new ol.source.TileWFS({
+    url: 'https://wxs.ign.fr/'+key+'/geoportail/wfs',
+    typeName: type,
+    tileZoom: minZoom
   });
+  vectorSource.on(['tileloadstart','tileloadend','tileloaderror'], progress)
   vectorLayer.setSource(vectorSource);
   selectCtrl.setSources(vectorSource);
   vectorLayer.setMinZoom(minZoom);

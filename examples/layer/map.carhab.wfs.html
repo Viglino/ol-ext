@@ -358,8 +358,7 @@ function getSource(type) {
     tileZoom: 14,
     maxFeatures: 20000
   });
-  source.on('tileloadstart', progress);
-  source.on(['tileloadend', 'tileloaderror'], progress);
+  source.on(['tileloadstart','tileloadend', 'tileloaderror'], progress);
   return source;
 }
 
