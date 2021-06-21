@@ -9,7 +9,7 @@ import {ol_ext_inherits} from '../util/ext'
 /** A source that use a set of feature to collect data on it.
  * If a binSource is provided the bin is recalculated when features change.
  * @constructor
- * @extends {ol.source.Vector}
+ * @extends {ol_source_BinBase}
  * @param {Object} options ol_source_VectorOptions + grid option
  *  @param {ol.source.Vector} options.source source to collect in the bin
  *  @param {ol.source.Vector} options.binSource a source to use as bin collector, default none
