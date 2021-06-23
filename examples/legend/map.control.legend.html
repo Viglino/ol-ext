@@ -243,13 +243,13 @@
     else console.log('You click on the title: '+e.item.get('title'));
   });
   legend.addItem({ title: 'Car placemark', feature: f0 });
-  function addSVG() {
+  function addSVG(svg) {
     legend.addItem({ 
       title: 'SVG icon', 
       typeGeom: 'Point',
       style: new ol.style.Style({
         image: new ol.style.Icon({
-          src: 'https://upload.wikimedia.org/wikipedia/commons/6/67/OpenLayers_logo.svg',
+          src: svg || 'https://upload.wikimedia.org/wikipedia/commons/6/67/OpenLayers_logo.svg',
           scale: .3
         })
       })
