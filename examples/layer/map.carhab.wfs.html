@@ -356,7 +356,7 @@ function getSource(type) {
     url: 'https://wxs.ign.fr/qvo9gdluu6vvf98hplg8iz5n/geoportail/wfs',
     typeName: type,
     tileZoom: 14,
-    maxFeatures: 20000
+    featureLimit: 20000
   });
   source.on(['tileloadstart','tileloadend', 'tileloaderror'], progress);
   return source;
