@@ -26657,16 +26657,18 @@ ol.source.Overpass.prototype.hasFeature = function(feature) {
  * @fires tileloadstart
  * @fires tileloadend
  * @fires tileloaderror
+ * @fires overload
  * @extends {ol.source.Vector}
  * @param {Object} options
  *  @param {string} [options.version=1.1.0] WFS version to use. Can be either 1.0.0, 1.1.0 or 2.0.0.
  *  @param {string} options.typeName WFS type name parameter
  *  @param {number} options.tileZoom zoom to load the tiles
- *  @param {number} options.maxFeatures maximum feature in the source before refresh, default Infinity
+ *  @param {number} options.maxFeatures maximum features returned in the WFS
+ *  @param {number} options.featureLimit maximum features in the source before refresh, default Infinity
  */
 ol.source.TileWFS = function (options) {
   options = options || {};
-  if (!options.maxFeatures) options.maxFeatures = Infinity;
+  if (!options.featureLimit) options.featureLimit = Infinity;
   // Tile loading strategy
   var zoom = options.tileZoom || 14;
   var sourceOpt = {
@@ -26680,6 +26682,9 @@ ol.source.TileWFS = function (options) {
     + '&version=' + (options.version || '1.1.0')
     + '&typename=' + (options.typeName || '')
     + '&outputFormat=application/json';
+  if (options.maxFeatures) {
+    url += '&maxFeatures=' + options.maxFeatures + '&count=' + options.maxFeatures;
+  }
   var loading = 0;
   var loaded = 0;
   // Loading fn
@@ -26719,6 +26724,9 @@ ol.source.TileWFS = function (options) {
           var features = format.readFeatures(response, {
             featureProjection: projection
           });
+          if (response.totalFeatures && response.totalFeatures !== response.numberReturned) {
+            this.dispatchEvent({ type: 'overload', total: response.totalFeatures, returned: response.numberReturned });
+          }
           if (features.length > 0) {
             this.addFeatures(features);
           }

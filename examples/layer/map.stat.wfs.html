@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--
+	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+	<title>ol-ext: stat WFS</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="icon" type="image/png" href="https://openlayers.org/assets/theme/img/logo70.png" />
+
+	<meta name="description" content="Geoportail WFS" />
+	<meta name="keywords" content="ol, openlayers, layer, source, geoportail, WFS" />
+
+  <meta name="msapplication-tap-highlight" content="no" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- ChartJS -->
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+	<!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+	
+	<!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+  <script type="text/javascript" src="../../dist/extra/FontAwesomeDef.js"></script>
+
+  <!-- JSTS -->
+  <script type="text/javascript" src="https://unpkg.com/jsts@1.6.1/dist/jsts.min.js"></script>
+  
+  <!-- https://github.com/MrRio/jsPDF -->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
+  <!-- filesaver-js -->
+	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+#map {
+  position: fixed;
+  top: 4em;
+  left: 20em;
+  bottom: 0;
+  right: 0;
+  margin: 0;
+  background-color: #000;
+}
+#data {
+  position: fixed;
+  top: 4em;
+  left: 0;
+  bottom: 0;
+  width: 20em;
+  margin: 0;
+  padding: .5em;
+  box-sizing: border-box;
+}
+#stat {
+  display: none!important;
+  max-width: 20em;
+}
+#stat.visible {
+  display: block!important;
+}
+#data > div {
+  position: relative;
+  height: 22em;
+  max-height: calc(100% - 3em);
+}
+#progressbar {
+/*
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+*/
+  height: .5em!important;
+  background-color: #0f0;
+  transition: .5s;
+}
+#nbbati {
+  text-align: center;
+  color: #369;
+  font-size: 2.5em;
+  transform: scaleY(2.5);
+  font-weight: bold;
+  margin: .5em 0;
+}
+#loading i {
+  font-size: 2em;
+  vertical-align: middle;
+  color: currentColor;
+}
+#loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  font-size: 1.5em;
+  width: 100%;
+  text-align: center;
+  opacity: .5;
+  background: #fff;
+  padding: 1em 0;
+}
+.ol-popup.tooltips.black {
+  margin: 30px 15px;
+}
+.ol-popup.tooltips .anchor {
+  display: none;
+}
+.blend {
+  mix-blend-mode: multiply;
+}
+.nodata #data > div {
+  display: none;
+}
+#data > .nodata {
+  display: none;
+  font-size: 1.2em;
+  text-align: center;
+  font-weight: bold;
+  margin-top: 2em;
+}
+.nodata #data > .nodata {
+  display: block;
+}
+
+.clip span {
+  display: block;
+  opacity: .25;
+  margin: .5em 0 1em;
+  font-style: italic;
+}
+p input:checked ~ span {
+  opacity: 1;
+}
+
+  </style>
+  
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+	<a href="../../index.html">
+		<h1>ol-ext: stat WFS</h1>
+	</a>
+
+	<!-- DIV pour la carte -->
+  <div id="map"></div>
+
+  <div id="data">
+    <h2>Statistiques:</h2>
+    <p class="clip">
+      <label>
+        <input name="mode" type="radio" onchange="setMode('map'); clip.setActive(false); calculate();" checked="checked"> 
+        Statistique sur la carte
+      </label>
+      <br/>
+      <input id="clip" name="mode" type="radio" onchange="setMode('clip'); clip.setActive(true); calculate();"> 
+      <label for="clip">
+        Statistique autour du pointer
+      </label>
+      <span>
+        radius: <input type="range" min=50 max=400 value=200 onchange="clip.setRadius(parseInt(this.value)); calculate();" style="vertical-align: middle;" />
+      </span>
+      <label>
+        <input name="mode" type="radio" onchange="setMode('com'); clip.setActive(false); calculate();"> 
+        Statistiques à la commune
+        <span style="font-size: .8em; text-align: center;">
+          <i class="fa fa-spinner fa-pulse fa-lg" style="display: none;"></i> Sélectionnez une commune sur la carte
+        </span>
+      </label>
+    </p>
+    <p class="nodata">
+      Pas de données à cette échelle...
+      <br/>
+      Zoomer pour afficher des données.
+    </p>
+    <div>
+      <p style="text-align: center; font-size: 2em; color: #369; margin: 0;">Bâtiments</p>
+      <p id="nbbati"></p>
+      <p id="loading"><i class="fa fa-spinner fa-pulse"></i> loading...</p>
+      <canvas id="stat"></canvas>
+    </div>
+    <div id="progressbar"></div>
+  </div>
+
+  <script>
+
+// The map
+var map = new ol.Map ({
+  target: 'map',
+  view: new ol.View ({
+    zoom: 14,
+    center: [696785, 5896331]
+  }),
+  layers: [
+    new ol.layer.Geoportail({
+      layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2',
+      visible: true,
+      opacity: .2
+    }),
+    new ol.layer.Geoportail({
+      layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 
+      visible: true
+    })
+  ]
+});
+// var filter = new ol.filter.Colorize('grayscale');
+var filter = new ol.filter.CanvasFilter({ grayscale: 100 });
+map.getLayers().item(0).addFilter(filter);
+//map.getLayers().item(1).addFilter(filter);
+var plink = new ol.control.Permalink({ visible: false })
+map.addControl(plink);
+map.addControl(new ol.control.CanvasScaleLine());
+map.addControl(new ol.control.SearchBAN({
+  zoomOnSelect: 15
+}));
+var switcher = new ol.control.LayerSwitcher();
+map.addControl(switcher);
+
+// Clip interaction
+var clip = new ol.interaction.Clip({
+  radius: 200
+});
+clip.setActive(false);
+
+/* debug
+var v = new ol.layer.Vector({source: new ol.source.Vector})
+map.addLayer(v)
+*/
+
+var jstsParser = new jsts.io.OL3Parser();
+var circle = new ol.geom.Circle([0,0], 0);
+
+// Calculate new statistics
+function calculate(b) {
+  var com = commune.getSource().getFeatures()[0];
+  config.options.title.text = '';
+
+  if (mode==='com') {
+    if (b!==true) {
+      if (b===false) drawChart([]);
+      return;
+    }
+    if (com) {
+      console.log(com.getProperties())
+      config.options.title.text = com.get('nom');
+    }
+  } 
+
+  if (map.getView().getZoom() <= carhab.getMinZoom()) {
+    $('body').addClass('nodata');
+    return;
+  } else {
+    $('body').removeClass('nodata');
+  }
+  var t = new Date();
+  console.log('calculating...')
+  var ext, gcom;
+  switch (mode) {
+    case 'clip': {
+      circle.setRadius(clip.getRadius()*map.getView().getResolution());
+      // carhab.changed();
+      ext = ol.extent.buffer(circle.getCenter().concat(circle.getCenter()), circle.getRadius());
+      break;
+    }
+    case 'com': {
+      if (com) {
+        ext = com.getGeometry().getExtent();
+        gcom = jstsParser.read(com.getGeometry());
+      } else {
+        ext = ol.extent.createEmpty();
+        gcom = null;
+      }
+      break;
+    } 
+    default: {
+      ext = map.getView().calculateExtent(map.getSize());
+      break;
+    }
+  }
+  var features = carhab.getSource().getFeaturesInExtent(ext);
+  var codes = {}, error=0;
+  var nb = 0;
+  features.forEach(function(f) {
+    var c = lesusages[f.get('usage_1')] || 'autre';
+    if (!codes[c]) codes[c] = 0;
+    if (mode==='map' && ol.extent.containsExtent(ext, f.getGeometry().getExtent())) {
+      codes[c] += Math.round(ol.sphere.getArea(f.getGeometry(), { 
+        projection: map.getView().getProjection() 
+      }));
+      nb++;
+    } else {
+      // Using fast extent intersection
+      var geom;
+      switch(mode) {
+        case 'clip': {
+          // geom = circle.intersection(f.getGeometry(), 10);
+          if (ol.coordinate.dist2d(circle.getCenter(), ol.extent.getCenter(f.getGeometry().getExtent())) < circle.getRadius()) {
+            geom = f.getGeometry();
+          }
+          break;
+        }
+        case 'com': {
+          if (gcom) {
+            /*
+            var inter;
+            try {
+              inter = gcom.intersection(jstsParser.read(f.getGeometry()));
+              if (!inter.isEmpty()) {
+                geom = jstsParser.write(inter);
+              }
+            } catch(e) { error++; }
+            */
+            // center in gcom
+            if (com.getGeometry().intersectsCoordinate(ol.extent.getCenter(f.getGeometry().getExtent()))) {
+              geom = f.getGeometry();
+            }
+          }
+          break;
+        }
+        default: {
+          geom = ol.extent.intersection(ext, f.getGeometry());
+          break;
+        }
+      }
+      if (geom) {
+        codes[c] += Math.round(ol.sphere.getArea(geom, { 
+          projection: map.getView().getProjection() 
+        }));
+        nb++;
+      }
+      /* Using jsts for accurate intersection (complex operation)
+        var inter = extent.intersection(jstsParser.read(f.getGeometry()));
+        if (!inter.isEmpty()) {
+          codes[c] += Math.round(ol.sphere.getArea(jstsParser.write(inter), { 
+            projection: map.getView().getProjection() 
+          }));
+        }
+      */
+    }
+  })
+  $('#nbbati').text(nb.toLocaleString());
+  drawChart(codes);
+  if (error) console.log('ERROR:', error);
+  console.log(((new Date() - t)/1000).toFixed(2)+'s');
+//  if (tout) clearTimeout(tout);
+};
+
+// get source source
+function getSource(type, zoom) {
+  // Loading bar
+  var progressbar = document.getElementById('progressbar');
+  var progress = function(e) {
+    if (e.loading === e.loaded) {
+      ol.ext.element.setStyle(progressbar, { width: 0 });
+      $('#loading').hide();
+      calculate(true);
+    } else {
+      ol.ext.element.setStyle(progressbar, { width: (e.loaded / e.loading * 100).toFixed(1) + '%' });
+      $('#loading').show();
+      $('#loading span').text(e.loaded+'/'+e.loading)
+    }
+  }
+  var source = new ol.source.TileWFS({
+    url: 'https://wxs.ign.fr/choisirgeoportail/geoportail/wfs',
+    typeName: type,
+    tileZoom: zoom || 14,
+    featureLimit: 100000,
+    //maxFeatures: 2000
+  });
+  source.on(['tileloadstart','tileloadend', 'tileloaderror'], progress);
+  return source;
+}
+
+// Layer
+var styleCache = {};
+var type = 'BDTOPO_V3:batiment';
+var ignStyle = ol.style.geoportailStyle(type, { sens : true, section: true });
+var carhab = new ol.layer.VectorImage({
+  title: 'Carhab',
+  className: 'blend',
+  source: getSource(type, 16),
+  style: function(f,r) {
+    if (r < 5) {
+      return ignStyle(f);
+    } else {
+      return [];
+    }
+  },
+  opacity: 1,
+  minZoom: 13  // prevent load on small zoom 
+});
+map.addLayer(carhab);
+$('#loading').hide();
+carhab.once('change', function() {
+  calculate();
+})
+
+// Set clip interaction
+// clip.addLayer(carhab);
+//clip.addLayer(map.getLayers().item(0));
+clip.addLayer(map.getLayers().item(1));
+map.addInteraction(clip);
+circle.setRadius(200);
+
+// Display chart on move end 
+map.on('moveend', calculate);
+
+var tout;
+map.on('pointermove', function(e) { 
+  if (clip.getActive()) {
+    circle.setCenter(e.coordinate);
+    // carhab.changed();
+    if (tout) clearTimeout(tout);
+    tout = setTimeout(function() { calculate(); }, 100);
+  }
+});
+
+/* draw chart */
+var stat = document.getElementById('stat');
+var config = {
+  type: 'pie',
+  data: {
+    datasets: [{
+      data: [],
+      backgroundColor: []
+    }],
+    // These labels appear in the legend and in the tooltips when hovering different arcs
+    labels: [],
+  },
+  options: {
+    title: { display: true, text: 'Habitats' },
+    legend: { display: false },
+    responsive: true,
+    maintainAspectRatio: false,
+    // cutoutPercentage: 80,
+    tooltips: {
+      callbacks: {
+        label: function(tooltipItem, data) {
+          return data['labels'][tooltipItem['index']] + ': ' + Math.round(data['datasets'][0]['data'][tooltipItem['index']]/data.datasets[0].sum*1000)/10 + '%';
+        }
+      }
+    }
+  }
+};
+var chart;
+var usages = {
+  'Résidentiel': {
+    vals: ['Résidentiel','Indifférencié'],
+    color: [128,128,128,1]
+  },
+  'Industriel et commercial': {
+    vals: ['Industriel','Commercial et services'],
+    color: [51, 102, 153,1]
+  },
+  "Sportif": {
+    vals: ['Sportif'],
+    color: [51,153,102,1]
+  },
+  "Religieux": {
+    vals: ['Religieux'],
+    color: [153,102,51,1]
+  },
+  autre: {
+    vals: [],
+    color: [153,51,51,1]
+  }
+}
+var lesusages = {};
+for (var i in usages) {
+  usages[i].vals.forEach(function(u){
+    lesusages[u] = i;
+  })
+  config.data.datasets[0].data.push(0);
+  config.data.datasets[0].backgroundColor.push(ol.color.asString(usages[i].color));
+  config.data.labels.push(i);
+}
+config.data.datasets[0].sum = 1;
+function drawChart(codes) {
+  stat.className = 'visible';
+  var data = [];
+  var sum = 0;
+  for (var i in usages) {
+    data.push(codes[i]||0);
+    sum += codes[i]||0;
+  }
+  config.data.datasets[0].data = data;
+  config.data.datasets[0].sum = sum || 1;
+  if (chart) {
+    chart.update();
+  } else {
+    var ctx = stat.getContext('2d');
+    chart = new Chart(ctx, config);
+  }
+}
+
+var commune = new ol.layer.Vector({
+  title: 'Commune',
+  source: new ol.source.Vector()
+});
+map.addLayer(commune)
+map.on('click', function(e) {
+  if (mode!=='com') {
+    if (mode==='clip') {
+      circle.setCenter(e.coordinate);
+      calculate();
+    }
+    return;
+  }
+  var coord = ol.proj.transform(e.coordinate, map.getView().getProjection(), 'EPSG:4326');
+  commune.getSource().clear();
+  $('.fa-spinner').show();
+  $.ajax({
+    url: 'https://geo.api.gouv.fr/communes?lat='+coord[1]+'&lon='+coord[0]+'&fields=&format=geojson&geometry=contour',
+    success: function(resp) {
+      var format = new ol.format.GeoJSON();
+      var features = format.readFeatures(resp, {featureProjection: map.getView().getProjection(), dataProjection: 'EPSG:4326' });
+      commune.getSource().addFeatures(features);
+      if (features[0]) map.getView().fit(features[0].getGeometry());
+      if (map.getView().getZoom() < carhab.getMinZoom()) {
+        map.getView().setZoom(carhab.getMinZoom()+.1);
+      }
+      $('.fa-spinner').hide();
+      $('#loading').show();
+      setTimeout(function() { 
+        calculate(true); 
+        $('#loading').hide();
+      }, 200);
+    }
+  })
+});
+
+
+var mode = 'map';
+function setMode(k) {
+  mode = k;
+  switch (mode) {
+    case 'clip': {
+      clip.setActive(true); 
+      break;
+    }
+    default:  {
+      clip.setActive(false); 
+      break;
+    }
+  }
+  commune.getSource().clear();
+  calculate(false);
+}
+
+var tip = new ol.Overlay.Tooltip();
+map.addOverlay(tip);
+map.on(['pointermove'], function(e) {
+  var f = carhab.getSource().getClosestFeatureToCoordinate(e.coordinate);
+  if (f) {
+    tip.setInfo(f.get('usage_1')+'<br/>'+f.get('nature'));
+  } else {
+    tip.setInfo();
+  }
+})
+
+</script>
+</body>
+</html>
