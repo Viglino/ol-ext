@@ -243,6 +243,18 @@
     else console.log('You click on the title: '+e.item.get('title'));
   });
   legend.addItem({ title: 'Car placemark', feature: f0 });
+  function addSVG() {
+    legend.addItem({ 
+      title: 'SVG icon', 
+      typeGeom: 'Point',
+      style: new ol.style.Style({
+        image: new ol.style.Icon({
+          src: 'https://upload.wikimedia.org/wikipedia/commons/6/67/OpenLayers_logo.svg',
+          scale: .3
+        })
+      })
+    });
+  }
 
   // Display the style on select
   var select = new ol.interaction.Select({ hitTolerance: 3 });
