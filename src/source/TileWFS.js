@@ -22,6 +22,7 @@ import ol_ext_Ajax from '../util/Ajax'
  *  @param {number} options.tileZoom zoom to load the tiles
  *  @param {number} options.maxFeatures maximum features returned in the WFS
  *  @param {number} options.featureLimit maximum features in the source before refresh, default Infinity
+ *  @param {boolean} [options.pagination] experimental enable pagination, default no pagination
  */
 var ol_source_TileWFS = function (options) {
   options = options || {};
@@ -45,68 +46,94 @@ var ol_source_TileWFS = function (options) {
     url += '&maxFeatures=' + options.maxFeatures + '&count=' + options.maxFeatures;
   }
 
-  var loading = 0;
-  var loaded = 0;
+  var loader = { loading: 0, loaded: 0 };
 
   // Loading fn
   sourceOpt.loader = function(extent, resolution, projection) {
-    if (loading===loaded) {
-      loading = loaded = 0;
+    if (loader.loading === loader.loaded) {
+      loader.loading = loader.loaded = 0;
       if (this.getFeatures().length > options.maxFeatures) {
         this.clear();
         this.refresh();
       }
     }
-    loading++;
+    loader.loading++;
     this.dispatchEvent({ 
       type: 'tileloadstart',
-      loading: loading, 
-      loaded: loaded
+      loading: loader.loading, 
+      loaded: loader.loaded
     });
-    ol_ext_Ajax.get({
-      url: url 
-        + '&srsname=' + projection.getCode()
-        + '&bbox=' + extent.join(',') + ',' + projection.getCode(),
-      success: function(response) {
-        loaded++;
-        if (response.error) {
-          this.dispatchEvent({ 
-            type: 'tileloaderror', 
-            error: response, 
-            loading: loading, 
-            loaded: loaded 
-          });
-        } else {
-          this.dispatchEvent({ 
-            type: 'tileloadend', 
-            loading: loading, 
-            loaded: loaded 
-          });
-          var features = format.readFeatures(response, {
-            featureProjection: projection
-          });
-          if (response.totalFeatures && response.totalFeatures !== response.numberReturned) {
-            this.dispatchEvent({ type: 'overload', total: response.totalFeatures, returned: response.numberReturned });
-          }
-          if (features.length > 0) {
-            this.addFeatures(features);
-          }
-        }
-      }.bind(this),
-      error: function(e) {
-        loaded++;
-        this.dispatchEvent({
-          type: 'tileloaderror',
-          error: e,
-          loading: loading, 
-          loaded: loaded
-        });
-      }.bind(this)
-    })
+    this._loadTile(url, extent, projection, format, loader);
   }
 
   ol_source_Vector.call(this, sourceOpt);
+
+  this.set('pagination', options.pagination);
 };
 ol_ext_inherits(ol_source_TileWFS, ol_source_Vector);
+
+/**
+ * 
+ */
+ol_source_TileWFS.prototype._loadTile = function(url, extent, projection, format, loader) {
+  ol_ext_Ajax.get({
+    url: url 
+      + '&srsname=' + projection.getCode()
+      + '&bbox=' + extent.join(',') + ',' + projection.getCode(),
+    success: function(response, e) {
+      loader.loaded++;
+      if (response.error) {
+        this.dispatchEvent({ 
+          type: 'tileloaderror', 
+          error: response, 
+          loading: loader.loading, 
+          loaded: loader.loaded 
+        });
+      } else {
+        let pos = response.numberReturned || 0;
+        if (/&startIndex/.test(url)) {
+          pos += parseInt(url.replace(/.*&startIndex=(\d*).*/, '$1'));
+          url = url.replace(/&startIndex=(\d*)/, '');
+        }
+        // Still something to load ?
+        if (pos < response.totalFeatures) {
+          if (!this.get('pagination')) {
+            this.dispatchEvent({ type: 'overload', total: response.totalFeatures, returned: response.numberReturned });
+            this.dispatchEvent({ 
+              type: 'tileloadend', 
+              loading: loader.loading, 
+              loaded: loader.loaded 
+            });
+          } else {
+            url += '&startIndex='+pos;
+            loader.loaded--;
+            this._loadTile(url, extent, projection, format, loader);
+          }
+        } else {
+          this.dispatchEvent({ 
+            type: 'tileloadend', 
+            loading: loader.loading, 
+            loaded: loader.loaded 
+          });
+        }
+        var features = format.readFeatures(response, {
+          featureProjection: projection
+        });
+        if (features.length > 0) {
+          this.addFeatures(features);
+        }
+      }
+    }.bind(this),
+    error: function(e) {
+      loader.loaded++;
+      this.dispatchEvent({
+        type: 'tileloaderror',
+        error: e,
+        loading: loader.loading, 
+        loaded: loader.loaded
+      });
+    }.bind(this)
+  })
+};
 
 export default ol_source_TileWFS
