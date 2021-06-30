@@ -80,7 +80,7 @@ ol_source_TileWFS.prototype._loadTile = function(url, extent, projection, format
     url: url 
       + '&srsname=' + projection.getCode()
       + '&bbox=' + extent.join(',') + ',' + projection.getCode(),
-    success: function(response, e) {
+    success: function(response) {
       loader.loaded++;
       if (response.error) {
         this.dispatchEvent({ 
