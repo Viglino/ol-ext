@@ -10279,6 +10279,91 @@ ol.control.Profil.prototype.getImage = function(type, encoderOptions) {
   return this.canvas_.toDataURL(type, encoderOptions);
 };
 
+/*	Copyright (c) 2016 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** A simple push button control
+ * @constructor
+ * @extends {ol.control.Control}
+ * @param {Object=} options Control options.
+ *  @param {String} [options.className] class of the control
+ *  @param {String} [options.label] waiting label
+ *  @param {ol.layer.Layer} [options.layers] a tile layer with tileload envents
+ */
+ol.control.ProgressBar = function(options) {
+  options = options || {};
+  var element = ol.ext.element.create('DIV', {
+    className: ((options.className || '') + ' ol-progress-bar ol-unselectable ol-control').trim()
+  });
+  this._waiting = ol.ext.element.create('DIV', {
+    html: options.label || '',
+    className: 'ol-waiting',
+    parent: element
+  });
+  this._bar = ol.ext.element.create('DIV', {
+    className: 'ol-bar',
+    parent: element
+  });
+  ol.control.Control.call(this, {
+    element: element,
+    target: options.target
+  });
+  this._layerlistener = [];
+  this.setLayers(options.layers);
+};
+ol.ext.inherits(ol.control.ProgressBar, ol.control.Control);
+/** Set the control visibility
+ * @param {Number} [n=0] progress percentage, a number beetween 0,1, default 0
+ */
+ol.control.ProgressBar.prototype.setPercent = function (n) {
+  n = Number(n) || 0;
+  this._bar.style.width = (n * 100)+'%';
+  if (!n) {
+    ol.ext.element.hide(this.element);
+  } else {
+    ol.ext.element.show(this.element);
+  }
+};
+/** Set waiting text
+ * @param {string} label
+ */
+ol.control.ProgressBar.prototype.setLabel = function (label) {
+  this._waiting.innerHTML = label;
+};
+/** Use a list of tile layer to shown tile load
+ * @param {ol.layer.Layer|Array<ol.layer.Layer>} layers a layer or a list of layer
+ */
+ol.control.ProgressBar.prototype.setLayers = function (layers) {
+  // reset
+  this._layerlistener.forEach(function (l) {
+    ol.Observable.unByKey(l);
+  });
+  this._layerlistener = [];
+  this.setPercent(0);
+  var loading=0, loaded=0;
+  if (layers instanceof ol.layer.Layer) layers = [layers];
+  if (!layers || !layers.forEach) return;
+  // Listeners
+  layers.forEach(function(layer) {
+    if (layer instanceof ol.layer.Layer) {
+      this._layerlistener.push(layer.getSource().on('tileloadstart', function () {
+        loading++;
+        this.setPercent(loaded/loading);
+      }.bind(this)));
+      this._layerlistener.push(layer.getSource().on(['tileloadend', 'tileloaderror'], function () {
+        loaded++;
+        if (loaded === loading) {
+          loading = loaded = 0;
+          this.setPercent(0);
+        } else {
+          this.setPercent(loaded/loading);
+        }
+      }.bind(this)));
+    }
+  }.bind(this));
+}
+
 /*	Copyright (c) 2018 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -26720,7 +26805,7 @@ ol.source.TileWFS.prototype._loadTile = function(url, extent, projection, format
     url: url 
       + '&srsname=' + projection.getCode()
       + '&bbox=' + extent.join(',') + ',' + projection.getCode(),
-    success: function(response, e) {
+    success: function(response) {
       loader.loaded++;
       if (response.error) {
         this.dispatchEvent({ 

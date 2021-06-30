@@ -2942,6 +2942,63 @@ ul.ol-legend li div {
   margin:0;
 }
 
+.ol-control.ol-progress-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0;
+  pointer-events: none!important;
+  background-color: transparent;
+}
+
+.ol-control.ol-progress-bar > .ol-bar {
+  position: absolute;
+  background-color: rgba(0,60,136,.5);
+  left: 0;
+  bottom: 0;
+  height: .5em;
+  width: 0;
+  -webkit-transition: width .2s;
+  transition: width .2s;
+}
+
+.ol-progress-bar > .ol-waiting {
+  display: none;
+}
+
+.ol-viewport .ol-control.ol-progress-bar > .ol-waiting {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 2em;
+  display: block;
+  -webkit-animation: 1s linear infinite ol-progress-bar-blink;
+          animation: 1s linear infinite ol-progress-bar-blink;
+}
+
+@-webkit-keyframes ol-progress-bar-blink {
+  0%, 30% {
+    visibility: hidden;
+  }
+  100% {
+    visibility: visible;
+  }
+}
+
+@keyframes ol-progress-bar-blink {
+  0%, 30% {
+    visibility: hidden;
+  }
+  100% {
+    visibility: visible;
+  }
+}
+
 .ol-control.ol-routing {
   top: 0.5em;
   left: 3em;
