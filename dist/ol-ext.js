@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.3
+ * @version v3.2.4
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -9623,7 +9623,8 @@ ol.control.PrintDialog.prototype.print = function(options) {
  * @fires dragcancel
  * @param {Object=} options
  *  @param {string} options.className
- *  @param {ol.style.Style} options.style style to draw the profil
+ *  @param {ol.style.Style} [options.style] style to draw the profil, default darkblue
+ *  @param {ol.style.Style} [options.selectStyle] style for selection, default darkblue fill
  *  @param {*} options.info keys/values for i19n
  *  @param {number} options.width
  *  @param {number} options.height
@@ -10099,6 +10100,7 @@ ol.control.Profil.prototype._drawGraph = function(t, style) {
  *  @param {string} options.unit 'm' or 'km', default km
  *  @param {Number|undefined} options.zmin default 0
  *  @param {Number|undefined} options.zmax default max Z of the feature
+ *  @param {integer|undefined} options.zDigits number of digits for z graduation, default 0
  *  @param {Number|undefined} options.graduation z graduation default 100
  *  @param {integer|undefined} options.amplitude amplitude of the altitude, default zmax-zmin
  * @api stable
@@ -10153,6 +10155,7 @@ ol.control.Profil.prototype.setGeometry = function(g, options) {
   this.set('amplitude', options.amplitude);
   this.set('unit', options.unit);
   this.set('zunit', options.zunit);
+  this.set('zDigits', options.zDigits);
   this.dispatchEvent({ type: 'change:geometry', geometry: g })
   this.refresh();
 };
@@ -10227,8 +10230,9 @@ ol.control.Profil.prototype.refresh = function() {
   ctx.fillStyle = this._style.getText().getFill().getColor() || '#000';
   // Scale Z
   ctx.beginPath();
+  var fix = this.get('zDigits') || 0;
   for (i=zmin; i<=zmax; i+=grad) {
-    if (this.get('zunit')!="km") ctx.fillText(i, -4*ratio, i*scy+dy);
+    if (this.get('zunit') != 'km') ctx.fillText(i.toFixed(fix), -4*ratio, i*scy+dy);
     else ctx.fillText((i/1000).toFixed(1), -4*ratio, i*scy+dy);
     ctx.moveTo (-2*ratio, i*scy+dy);
     if (i!=0) ctx.lineTo (d*scx, i*scy+dy);
