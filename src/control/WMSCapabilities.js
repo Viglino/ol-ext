@@ -394,6 +394,29 @@ ol_control_WMSCapabilities.prototype.showDialog = function(url, options) {
   }
 };
 
+/** Test url and return true if it is a valid url string
+ * @param {string} url
+ * @return {bolean}
+ * @api
+ */
+ol_control_WMSCapabilities.prototype.testUrl = function(url) {
+  // var pattern = /(https?:\/\/)([\da-z.-]+)\.([a-z]{2,6})([/\w.-]*)*\/?/.test(url)
+  var pattern = new RegExp(
+    // protocol
+    '^(https?:\\/\\/)'+ 
+    // domain name
+    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+
+    // OR ip (v4) address
+    '((\\d{1,3}\\.){3}\\d{1,3}))'+
+    // port and path
+    '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+
+    // query string
+    '(\\?[;&a-z\\d%_.~+=-]*)?'+
+    // fragment locator
+    '(\\#[-a-z\\d_]*)?$','i');
+  return !!pattern.test(url);
+};
+
 /** Get WMS capabilities for a server
  * @fire load
  * @param {string} url service url
@@ -405,7 +428,7 @@ ol_control_WMSCapabilities.prototype.showDialog = function(url, options) {
 ol_control_WMSCapabilities.prototype.getCapabilities = function(url, options) {
   if (!url) return;
 
-  if (!/(https?:\/\/)([\da-z.-]+)\.([a-z]{2,6})([/\w.-]*)*\/?/g.test(url)) {
+  if (!this.testUrl(url)) {
     this.showError({
       type: 'badUrl'
     })

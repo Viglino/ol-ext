@@ -73,7 +73,7 @@
       <li>
         Services : 
         <button onclick="cap.showDialog('https://geoservices.brgm.fr/geologie'); ">BRGM</button>
-        <button onclick="cap.showDialog('http://services.sandre.eaufrance.fr/geo/eth_FXX');">Sandre</button>
+        <button onclick="cap.showDialog('https://services.sandre.eaufrance.fr/geo/sandre');">Sandre</button>
       </li>
     </ul>
     <button onclick="exportCarte()" style="display: none;">exportCarte</button>
@@ -114,31 +114,31 @@
     srs: ['EPSG:2154'],
     cors: true,
     services: {
-      BRGM: 'https://geoservices.brgm.fr/geologie',
-      OSM: 'https://wms.openstreetmap.fr/wms',
-      Sandre: 'http://services.sandre.eaufrance.fr/geo/eth_FXX',
-      Cartorisque: 'https://mapsref.brgm.fr/wxs/refcom-env/refign',
+      'BRGM': 'https://geoservices.brgm.fr/geologie',
+      'OSM': 'https://wms.openstreetmap.fr/wms',
+      'Sandre': 'https://services.sandre.eaufrance.fr/geo/sandre', //'http://services.sandre.eaufrance.fr/geo/eth_FXX',
+      'Cartorisque': 'https://mapsref.brgm.fr/wxs/refcom-env/refign',
       'Swiss Topo': 'https://wms.geo.admin.ch/',
       'IFREMER*': 'http://tds0.ifremer.fr/thredds/wms/CORIOLIS-GLOBAL-NRTOA-OBS_TIME_SERIE?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&FORMAT=image%2Fpng&LAYERS=PSAL&CRS=EPSG%3A3857',
-      Géorisque: 'https://mapsref.brgm.fr/wxs/georisques/risques',
-      BDRisques: 'https://mapsref.brgm.fr/wxs/risques/bdrisques',
-      Risques: 'https://geoservices.brgm.fr/risques',
+      'Géorisque': 'https://mapsref.brgm.fr/wxs/georisques/risques',
+      'BDRisques': 'https://mapsref.brgm.fr/wxs/risques/bdrisques',
+      'Risques': 'https://geoservices.brgm.fr/risques',
       'Natura 2000*': 'http://ws.carmencarto.fr/WMS/119/fxx_inpn?language=fre&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&FORMAT=image%2Fpng&LAYERS=Zones_de_protection_speciale&CRS=EPSG%3A3857',
       // https://www.cigalsace.org/portail/fr/page/723/flux-donnees -->
-      Cigalsace: 'https://www.cigalsace.org/geoserver/cigal/ows',
+      'Cigalsace': 'https://www.cigalsace.org/geoserver/cigal/ows',
       'CG93-raster': 'https://geoportail93.fr/cgi-bin/mapserv?map=SIGD/raster.map',
       'CG93-fond': 'https://geoportail93.fr/cgi-bin/mapserv?map=SIGD/fond_SIGD.map',
       'CG94*': 'https://geo.valdemarne.fr/viewer/index.php?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&FORMAT=image%2Fpng&LAYERS=parcelles&CRS=EPSG%3A2154',
-      GeoFoncier:'https://api.geofoncier.fr/referentielsoge/ogc/wxs',
+      'GeoFoncier':'https://api.geofoncier.fr/referentielsoge/ogc/wxs',
       // http://www.geolittoral.equipement.gouv.fr/rubrique.php3?id_rubrique=39 -->
       // 'GeoLittoral*': 'http://geolittoral.application.equipement.gouv.fr/wms/metropole',
       // http://www.sogefi-sig.com/sogefi-diffuse-des-donnees-en-wms/ -->
-      SOGEFI: 'http://ws.sogefi-web.com/wms',
+      'SOGEFI': 'http://ws.sogefi-web.com/wms',
       // http://inspire-geoportal.ec.europa.eu/discovery/ -->
       'Photos anciennes litto': 'http://www.ifremer.fr/services/photos_anciennes',
-      Geobretagne: 'https://geobretagne.fr/geoserver/dir_ouest/wms',
+      'Geobretagne': 'https://geobretagne.fr/geoserver/dir_ouest/wms',
       'Venise*': 'http://cigno.atlantedellalaguna.it/geoserver/ows?SERVICE=WMS&VERSION=1.3.0&FORMAT=image%2Fpng&LAYERS=carta_base',
-      Geoportail: 'https://wxs.ign.fr/choisirgeoportail/geoportail/r/wms'
+      'Geoportail': 'https://wxs.ign.fr/choisirgeoportail/geoportail/r/wms'
     },
     // Show trace in the console
     trace: true
