@@ -43,12 +43,11 @@ var ol_control_ProgressBar = function(options) {
 ol_ext_inherits(ol_control_ProgressBar, ol_control_Control);
 
 /** Set the control visibility
- * @param {Number} [n=0] progress percentage, a number beetween 0,1, default 0
+ * @param {Number} [n] progress percentage, a number beetween 0,1, default hide progress bar
  */
 ol_control_ProgressBar.prototype.setPercent = function (n) {
-  n = Number(n) || 0;
-  this._bar.style.width = (n * 100)+'%';
-  if (!n) {
+  this._bar.style.width = ((Number(n) || 0) * 100)+'%';
+  if (n===undefined) {
     ol_ext_element.hide(this.element);
   } else {
     ol_ext_element.show(this.element);
@@ -71,23 +70,26 @@ ol_control_ProgressBar.prototype.setLayers = function (layers) {
     ol_Observable_unByKey(l);
   });
   this._layerlistener = [];
-  this.setPercent(0);
+  this.setPercent();
 
   var loading=0, loaded=0;
   if (layers instanceof ol_layer_Layer) layers = [layers];
   if (!layers || !layers.forEach) return;
+  var tout;
   // Listeners
   layers.forEach(function(layer) {
     if (layer instanceof ol_layer_Layer) {
       this._layerlistener.push(layer.getSource().on('tileloadstart', function () {
         loading++;
         this.setPercent(loaded/loading);
+        clearTimeout(tout);
       }.bind(this)));
       this._layerlistener.push(layer.getSource().on(['tileloadend', 'tileloaderror'], function () {
         loaded++;
         if (loaded === loading) {
           loading = loaded = 0;
-          this.setPercent(0);
+          this.setPercent(1);
+          tout = setTimeout(this.setPercent.bind(this), 300);
         } else {
           this.setPercent(loaded/loading);
         }

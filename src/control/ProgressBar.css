@@ -17,6 +17,7 @@
   height: .5em;
   width: 0;
   transition: width .2s;
+  box-sizing: border-box;
 }
 
 .ol-progress-bar > .ol-waiting {
