@@ -10314,12 +10314,11 @@ ol.control.ProgressBar = function(options) {
 };
 ol.ext.inherits(ol.control.ProgressBar, ol.control.Control);
 /** Set the control visibility
- * @param {Number} [n=0] progress percentage, a number beetween 0,1, default 0
+ * @param {Number} [n] progress percentage, a number beetween 0,1, default hide progress bar
  */
 ol.control.ProgressBar.prototype.setPercent = function (n) {
-  n = Number(n) || 0;
-  this._bar.style.width = (n * 100)+'%';
-  if (!n) {
+  this._bar.style.width = ((Number(n) || 0) * 100)+'%';
+  if (n===undefined) {
     ol.ext.element.hide(this.element);
   } else {
     ol.ext.element.show(this.element);
@@ -10340,22 +10339,25 @@ ol.control.ProgressBar.prototype.setLayers = function (layers) {
     ol.Observable.unByKey(l);
   });
   this._layerlistener = [];
-  this.setPercent(0);
+  this.setPercent();
   var loading=0, loaded=0;
   if (layers instanceof ol.layer.Layer) layers = [layers];
   if (!layers || !layers.forEach) return;
+  var tout;
   // Listeners
   layers.forEach(function(layer) {
     if (layer instanceof ol.layer.Layer) {
       this._layerlistener.push(layer.getSource().on('tileloadstart', function () {
         loading++;
         this.setPercent(loaded/loading);
+        clearTimeout(tout);
       }.bind(this)));
       this._layerlistener.push(layer.getSource().on(['tileloadend', 'tileloaderror'], function () {
         loaded++;
         if (loaded === loading) {
           loading = loaded = 0;
-          this.setPercent(0);
+          this.setPercent(1);
+          tout = setTimeout(this.setPercent.bind(this), 300);
         } else {
           this.setPercent(loaded/loading);
         }
@@ -14427,6 +14429,28 @@ ol.control.WMSCapabilities.prototype.showDialog = function(url, options) {
     this._elements.select.scrollTop = sel.offsetTop - 20;
   }
 };
+/** Test url and return true if it is a valid url string
+ * @param {string} url
+ * @return {bolean}
+ * @api
+ */
+ol.control.WMSCapabilities.prototype.testUrl = function(url) {
+  // var pattern = /(https?:\/\/)([\da-z.-]+)\.([a-z]{2,6})([/\w.-]*)*\/?/.test(url)
+  var pattern = new RegExp(
+    // protocol
+    '^(https?:\\/\\/)'+ 
+    // domain name
+    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+
+    // OR ip (v4) address
+    '((\\d{1,3}\\.){3}\\d{1,3}))'+
+    // port and path
+    '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+
+    // query string
+    '(\\?[;&a-z\\d%_.~+=-]*)?'+
+    // fragment locator
+    '(\\#[-a-z\\d_]*)?$','i');
+  return !!pattern.test(url);
+};
 /** Get WMS capabilities for a server
  * @fire load
  * @param {string} url service url
@@ -14437,7 +14461,7 @@ ol.control.WMSCapabilities.prototype.showDialog = function(url, options) {
  */
 ol.control.WMSCapabilities.prototype.getCapabilities = function(url, options) {
   if (!url) return;
-  if (!/(https?:\/\/)([\da-z.-]+)\.([a-z]{2,6})([/\w.-]*)*\/?/g.test(url)) {
+  if (!this.testUrl(url)) {
     this.showError({
       type: 'badUrl'
     })

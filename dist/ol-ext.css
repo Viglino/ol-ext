@@ -2962,6 +2962,8 @@ ul.ol-legend li div {
   width: 0;
   -webkit-transition: width .2s;
   transition: width .2s;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
 }
 
 .ol-progress-bar > .ol-waiting {
