@@ -4495,7 +4495,7 @@ ol.control.CanvasScaleLine.prototype.setStyle = function (style) {
  * @private
  */
 ol.control.CanvasScaleLine.prototype.drawScale_ = function(e) {
-  if ( this.element.style.visibility!=="hidden" ) return;
+  if ( this.element.style.visibility !== 'hidden' || ol.ext.element.getStyle(this.element, 'display') === 'none' ) return;
   var ctx = this.getContext(e);
   if (!ctx) return;
   // Get size of the scale div
@@ -17467,10 +17467,10 @@ ol.interaction.Clip.prototype.getPosition = function() {
   this.pos = pixel;
   if (this.getMap()) this.getMap().renderSync();
 };
-/** Set position of the clip
+/** Get position of the clip
  * @returns {ol.Pixel} pixel
  */
- ol.interaction.Clip.prototype.setPixelPosition = function() {
+ ol.interaction.Clip.prototype.getPixelPosition = function() {
   return this.pos;
 };
 /** Set position of the clip

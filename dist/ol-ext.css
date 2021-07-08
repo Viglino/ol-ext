@@ -5494,7 +5494,8 @@ ul.ol-legend li div {
   cursor: pointer;
   position: relative;
 }
-.ol-ext-toggle-switch input {
+.ol-ext-toggle-switch input[type="radio"],
+.ol-ext-toggle-switch input[type="checkbox"] {
   display: none;
 }
 .ol-ext-toggle-switch span {
