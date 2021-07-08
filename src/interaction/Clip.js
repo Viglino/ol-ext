@@ -131,10 +131,10 @@ ol_interaction_Clip.prototype.getPosition = function() {
   if (this.getMap()) this.getMap().renderSync();
 };
 
-/** Set position of the clip
+/** Get position of the clip
  * @returns {ol.Pixel} pixel
  */
- ol_interaction_Clip.prototype.setPixelPosition = function() {
+ ol_interaction_Clip.prototype.getPixelPosition = function() {
   return this.pos;
 };
 
