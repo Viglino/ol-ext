@@ -8,6 +8,7 @@ import ol_control_ScaleLine from 'ol/control/ScaleLine'
 import ol_style_Style from 'ol/style/Style'
 import {asString as ol_color_asString} from 'ol/color'
 import ol_control_CanvasBase from './CanvasBase'
+import ol_ext_element from '../util/element'
 /**
  * @classdesc 
  *    OpenLayers Scale Line Control integrated in the canvas (for jpeg/png export purposes).
@@ -92,7 +93,7 @@ ol_control_CanvasScaleLine.prototype.setStyle = function (style) {
  * @private
  */
 ol_control_CanvasScaleLine.prototype.drawScale_ = function(e) {
-  if ( this.element.style.visibility!=="hidden" ) return;
+  if ( this.element.style.visibility !== 'hidden' || ol_ext_element.getStyle(this.element, 'display') === 'none' ) return;
   var ctx = this.getContext(e);
   if (!ctx) return;
   
