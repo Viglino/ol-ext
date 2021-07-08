@@ -8395,11 +8395,12 @@ ol.control.Permalink.prototype.setGeohash = function(b) {
   this.setUrlParam();
 };
 /** Set map position according to the current link 
+ * @param {boolean} [force=false] if true set the position even if urlReplace is disabled
  */
-ol.control.Permalink.prototype.setPosition = function() {
+ol.control.Permalink.prototype.setPosition = function(force) {
   var map = this.getMap();
   if (!map) return;
-  var hash = this.replaceState_ ? document.location.hash || document.location.search : '';
+  var hash = (this.replaceState_ || force) ? document.location.hash || document.location.search : '';
   if (!hash && this._localStorage) {
     try {
       hash = localStorage['ol@parmalink'];
@@ -8511,6 +8512,12 @@ ol.control.Permalink.prototype.getLink = function(param) {
   if (param) return anchor;
   //return document.location.origin+document.location.pathname+this.hash_+anchor;
   return document.location.protocol+"//"+document.location.host+document.location.pathname+this.hash_+anchor;
+};
+/** Check if urlreplace is on
+ * @return {boolean}
+ */
+ol.control.Permalink.prototype.getUrlReplace = function() {
+  return this.replaceState_;
 };
 /**
  * Enable / disable url replacement (replaceSate)
