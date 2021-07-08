@@ -144,12 +144,13 @@ ol_control_Permalink.prototype.setGeohash = function(b) {
 };
 
 /** Set map position according to the current link 
+ * @param {boolean} [force=false] if true set the position even if urlReplace is disabled
  */
-ol_control_Permalink.prototype.setPosition = function() {
+ol_control_Permalink.prototype.setPosition = function(force) {
   var map = this.getMap();
   if (!map) return;
 
-  var hash = this.replaceState_ ? document.location.hash || document.location.search : '';
+  var hash = (this.replaceState_ || force) ? document.location.hash || document.location.search : '';
   if (!hash && this._localStorage) {
     try {
       hash = localStorage['ol@parmalink'];
@@ -272,6 +273,13 @@ ol_control_Permalink.prototype.getLink = function(param) {
 
   //return document.location.origin+document.location.pathname+this.hash_+anchor;
   return document.location.protocol+"//"+document.location.host+document.location.pathname+this.hash_+anchor;
+};
+
+/** Check if urlreplace is on
+ * @return {boolean}
+ */
+ol_control_Permalink.prototype.getUrlReplace = function() {
+  return this.replaceState_;
 };
 
 /**
