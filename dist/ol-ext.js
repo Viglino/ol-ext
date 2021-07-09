@@ -5012,7 +5012,8 @@ ol.control.Compass.prototype._draw = function(e) {
  *  @param {boolean} options.zoom add a zoom effect
  *  @param {boolean} options.closeBox add a close button
  *  @param {number} options.max if not null add a progress bar to the dialog, default null
- *  @param {boolean} options.hideOnClick close dialog when click the background
+ *  @param {boolean} options.hideOnClick close dialog when click
+ *  @param {boolean} options.hideOnBack close dialog when click the background
  *  @param {boolean} options.closeOnSubmit Prevent closing the dialog on submit
  */
 ol.control.Dialog = function(options) {
@@ -5020,7 +5021,8 @@ ol.control.Dialog = function(options) {
   // Constructor
   var element = ol.ext.element.create('DIV', {
     className: ((options.className || '') + (options.zoom ? ' ol-zoom':'') + ' ol-ext-dialog').trim(),
-    click: function() {
+    click: function(e) {
+      if (this.get('hideOnBack') && e.target===element) this.close();
       if (this.get('hideOnClick')) this.close();
     }.bind(this)
   });
@@ -5064,9 +5066,10 @@ ol.control.Dialog = function(options) {
     element: element,
     target: options.target
   });
-  this.set('closeBox', options.closeBox);
-  this.set('zoom', options.zoom);
-  this.set('hideOnClick', options.hideOnClick);
+  this.set('closeBox', !!options.closeBox);
+  this.set('zoom', !!options.zoom);
+  this.set('hideOnClick', !!options.hideOnClick);
+  this.set('hideOnBack', !!options.hideOnBack);
   this.set('className', options.className);
   this.set('closeOnSubmit', options.closeOnSubmit);
   this.setContent(options)
