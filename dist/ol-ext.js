@@ -5199,7 +5199,7 @@ ol.control.Dialog.prototype._onButton = function(button, callback) {
       if (input.className) inputs[input.className] = input;
     });
     this.dispatchEvent ({ type: 'button', button: button, inputs: inputs });
-    callback(button, inputs);
+    if (typeof(callback) === 'function') callback(button, inputs);
   }.bind(this);
   return fn;
 };
