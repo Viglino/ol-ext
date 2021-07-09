@@ -5074,9 +5074,13 @@ ol.control.Dialog = function(options) {
 ol.ext.inherits(ol.control.Dialog, ol.control.Control);
 /** Show a new dialog 
  * @param { * | Element | string } options options or a content to show
- *  @param {Element | string} options.content dialog content
+ *  @param {Element | String} options.content dialog content
  *  @param {string} options.title title of the dialog
+ *  @param {string} options.className dialog class name
+ *  @param {number} options.max if not null add a progress bar to the dialog
+ *  @param {number} options.progress set the progress bar value
  *  @param {Object} options.buttons a key/value list of button to show 
+ *  @param {function} [options.onButton] a function that takes the button id and a list of input by className
  */
 ol.control.Dialog.prototype.show = function(options) {
   if (options instanceof Element || typeof(options) === 'string') {
@@ -5101,6 +5105,7 @@ ol.control.Dialog.prototype.open = function() {
  *  @param {number} options.max if not null add a progress bar to the dialog
  *  @param {number} options.progress set the progress bar value
  *  @param {Object} options.buttons a key/value list of button to show 
+ *  @param {function} [options.onButton] a function that takes the button id and a list of input by className
  */
 ol.control.Dialog.prototype.setContent = function(options) {
   if (!options) return;
@@ -5146,7 +5151,7 @@ ol.control.Dialog.prototype.setContent = function(options) {
       ol.ext.element.create ('INPUT', {
         type: (i==='submit' ? 'submit':'button'),
         value: options.buttons[i],
-        click: this._onButton(i),
+        click: this._onButton(i, options.onButton),
         parent: buttons
       });
     }
@@ -5180,9 +5185,11 @@ ol.control.Dialog.prototype.setProgress = function(val, max) {
   }
 };
 /** Do something on button click
+ * @param {strnig} button button id
+ * @param {function} callback
  * @private
  */
-ol.control.Dialog.prototype._onButton = function(button) {
+ol.control.Dialog.prototype._onButton = function(button, callback) {
   // Dispatch a button event
   var fn = function(e) {
     e.preventDefault();
@@ -5192,6 +5199,7 @@ ol.control.Dialog.prototype._onButton = function(button) {
       if (input.className) inputs[input.className] = input;
     });
     this.dispatchEvent ({ type: 'button', button: button, inputs: inputs });
+    callback(button, inputs);
   }.bind(this);
   return fn;
 };
