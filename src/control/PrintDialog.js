@@ -19,6 +19,7 @@ import ol_control_Compass from './Compass';
 
 /** Print control to get an image of the map
  * @constructor
+ * @fire show
  * @fire print
  * @fire error
  * @fire printing
@@ -451,6 +452,9 @@ var ol_control_PrintDialog = function(options) {
   var scalelistener;
   var extraCtrl = {};
   printDialog.on('show', function() {
+    // Dialog is showing
+    this.dispatchEvent({ type: 'show', userElement: userElt, dialog: this._printDialog, page: this.getPage() });
+    //
     var map = this.getMap();
     if (!map) return;
     // Print document
@@ -506,8 +510,6 @@ var ol_control_PrintDialog = function(options) {
       saveLegend.parentNode.classList.add('hidden');
       legend.parentNode.parentNode.classList.add('hidden');
     }
-    // hide
-    this.dispatchEvent({ type: 'show', userElement: userElt, dialog: this._printDialog, page: this.getPage() });
   }.bind(this));
 
   printDialog.on('hide', function() {
@@ -849,5 +851,12 @@ ol_control_PrintDialog.prototype.print = function(options) {
   if (options.margin) this.setMargin(options.margin);
   this._printDialog.show();
 };
+
+/** Get print control
+ * @returns {ol_control_Print}
+ */
+ol_control_PrintDialog.prototype.getrintControl = function() {
+  return this._printCtrl;
+}
 
 export default ol_control_PrintDialog

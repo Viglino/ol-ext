@@ -66,7 +66,7 @@
 
 .ol-ext-print-dialog .ol-print-param {
   position: absolute;
-  overflow: hidden;
+  overflow-x: hidden;
   top: 0;
   bottom: 0;
   left: 0;
@@ -75,6 +75,7 @@
   padding: 1em;
   box-sizing: border-box;
 }
+
 .ol-ext-print-dialog .ol-print-param h2 {
   display: block;
   color: rgba(0,60,136,.7);
@@ -137,14 +138,14 @@
   border-radius: 0 1em 0 0;
   opacity: .5;
   overflow: hidden;
-  box-shadow: inset 1.3em -1.9em #ddd;
+  box-shadow: inset 1.3em -1.91em #ddd;
 }
 
 .ol-ext-print-dialog .ol-orientation .landscape span:before {
   width: 2.6em;
   height: 2em;
   margin: .2em 0;
-  box-shadow: inset 1.9em -1.3em #ddd;
+  box-shadow: inset 1.91em -1.3em #ddd;
 }
 .ol-ext-print-dialog .ol-orientation input:checked + span {
   opacity: 1;
@@ -287,5 +288,18 @@
     transform: none!important;
     box-shadow: none!important;
     position: unset;
+  }
+}
+
+@media (max-width: 25em) {
+  .ol-ext-print-dialog .ol-print-param {
+    width: 13em;
+  }
+  .ol-ext-print-dialog .ol-print-map {
+    width: calc(100% - 13em);
+  }
+  .ol-ext-print-dialog .ol-print-param .ol-print-title input[type="text"] {
+    width: 100%;
+    margin: 0;
   }
 }
