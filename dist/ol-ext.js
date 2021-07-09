@@ -8839,6 +8839,7 @@ ol.control.Print.prototype.print = function(options) {
 */
 /** Print control to get an image of the map
  * @constructor
+ * @fire show
  * @fire print
  * @fire error
  * @fire printing
@@ -9252,6 +9253,9 @@ ol.control.PrintDialog = function(options) {
   var scalelistener;
   var extraCtrl = {};
   printDialog.on('show', function() {
+    // Dialog is showing
+    this.dispatchEvent({ type: 'show', userElement: userElt, dialog: this._printDialog, page: this.getPage() });
+    //
     var map = this.getMap();
     if (!map) return;
     // Print document
@@ -9307,8 +9311,6 @@ ol.control.PrintDialog = function(options) {
       saveLegend.parentNode.classList.add('hidden');
       legend.parentNode.parentNode.classList.add('hidden');
     }
-    // hide
-    this.dispatchEvent({ type: 'show', userElement: userElt, dialog: this._printDialog, page: this.getPage() });
   }.bind(this));
   printDialog.on('hide', function() {
     // No print
@@ -9620,6 +9622,12 @@ ol.control.PrintDialog.prototype.print = function(options) {
   if (options.margin) this.setMargin(options.margin);
   this._printDialog.show();
 };
+/** Get print control
+ * @returns {ol.control.Print}
+ */
+ol.control.PrintDialog.prototype.getrintControl = function() {
+  return this._printCtrl;
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
