@@ -31,7 +31,7 @@
   bottom: auto;
   display: inline-block;
   vertical-align: middle;
-  background: none;
+  background-color: transparent;
   padding: 0;
   margin: 0;
   transform: none;
@@ -77,7 +77,7 @@
 }
 .ol-touch .ol-control.ol-bar.ol-top.ol-left,
 .ol-touch .ol-control.ol-bar.ol-top.ol-right {
-  top: 5.5em; 
+  top: 5.5em;
 }
 .ol-control.ol-bar.ol-bottom.ol-left,
 .ol-control.ol-bar.ol-bottom.ol-right {
@@ -135,13 +135,13 @@
 
 /* Active buttons */
 .ol-control.ol-bar .ol-toggle.ol-active > button {
-  background: rgba(60, 136, 0, 0.7)
+  background-color: rgba(60, 136, 0, 0.7)
 }
 .ol-control.ol-bar .ol-toggle.ol-active button:hover {
-  background: rgba(60, 136, 0, 0.7)
+  background-color: rgba(60, 136, 0, 0.7)
 }
 .ol-control.ol-toggle button:disabled {
-  background: rgba(0,60,136,.3);
+  background-color: rgba(0,60,136,.3);
 }
 
 /* Subbar toolbar */
@@ -152,7 +152,7 @@
   left:0;
   margin: 5px 0;
   border-radius: 0;
-  background: rgba(255,255,255, 0.8);
+  background-color: rgba(255,255,255, 0.8);
   /* border: 1px solid rgba(0, 60, 136, 0.5); */
   box-shadow: 0 0 0 1px rgba(0, 60, 136, 0.5), 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
@@ -182,7 +182,7 @@
 
 .ol-control.ol-bar .ol-control.ol-text-button > div:hover,
 .ol-control.ol-bar .ol-control.ol-text-button > div {
-  background: none;
+  background-color: transparent;
   color: rgba(0, 60, 136, 0.5);
   width: auto;
   min-width: 1.375em;
