@@ -221,26 +221,31 @@
             var n = 0;
             var isPt = true;
             features.forEach(function(f) {
-              for (var p in f.properties) {
-                if (header[p]===undefined) {
-                  header[p] = n++;
+              if (f && f.geometry) {
+                for (var p in f.properties) {
+                  if (header[p]===undefined) {
+                    header[p] = n++;
+                  }
                 }
+                if (f.geometry.type!=='Point') isPt = false;
               }
-              if (f.geometry.type!=='Point') isPt = false;
             });
             features.forEach(function(f) {
-              var row = [];
-              for (var p in header) {
-                row[header[p]] = f.properties[p];
+              if (f && f.geometry) {
+                var row = [];
+                for (var p in header) {
+                  var r = row[header[p]] = f.properties[p];
+                  if (String(r) === '[object Object]') row[header[p]] = JSON.stringify(f.properties[p])
+                }
+                if (isPt) {
+                  row.push(f.geometry.coordinates[0]);
+                  row.push(f.geometry.coordinates[1]);
+                } else {
+                  row.push(f.geometry.type);
+                  row.push(JSON.stringify(f.geometry.coordinates));
+                }
+                csv.push(row);
               }
-              if (isPt) {
-                row.push(f.geometry.coordinates[0]);
-                row.push(f.geometry.coordinates[1]);
-              } else {
-                row.push(f.geometry.type);
-                row.push(JSON.stringify(f.geometry.coordinates));
-              }
-              csv.push(row);
             });
             var cols = []
             for (var p in header) {
