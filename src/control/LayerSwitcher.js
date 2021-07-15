@@ -15,6 +15,7 @@ import {intersects as ol_extent_intersects} from 'ol/extent'
 import ol_ext_element from '../util/element'
 
 /** Layer Switcher Control.
+ * @fires select
  * @fires drawlist
  * @fires toggle
  * @fires reorder-start
@@ -25,6 +26,7 @@ import ol_ext_element from '../util/element'
  * @constructor
  * @extends {ol_control_Control}
  * @param {Object=} options
+ *  @param {boolean} options.selection enable layer selection when click on the title
  *  @param {function} options.displayInLayerSwitcher function that takes a layer and return a boolean if the layer is displayed in the switcher, default test the displayInLayerSwitcher layer attribute
  *  @param {boolean} options.show_progress show a progress bar on tile layers, default false
  *  @param {boolean} options.mouseover show the panel on mouseover, default false
@@ -672,14 +674,12 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection) {
       self.getMap().removeLayer(self._getLayerForLI(li));
     }
   }
-  
-  // Add the layer list
-  for (var i=layers.length-1; i>=0; i--) {
-    var layer = layers[i];
 
-    if (!self.displayInLayerSwitcher(layer)) {
+  // Create a list for a layer
+  function createLi(layer) {
+    if (!this.displayInLayerSwitcher(layer)) {
       this._setLayerForLI(null, layer);
-      continue;
+      return;
     } 
 
     var li = ol_ext_element.create('LI', {
@@ -687,6 +687,9 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection) {
       parent: ul
     });
     this._setLayerForLI(li, layer);
+    if (this._selectedLayer === layer) {
+      li.classList.add('select');
+    }
 
     var layer_buttons = ol_ext_element.create('DIV', {
       className: 'ol-layerswitcher-buttons',
@@ -708,16 +711,27 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection) {
       parent: d
     });
     // Label
-    ol_ext_element.create('LABEL', {
-      html: layer.get("title") || layer.get("name"),
-      title: layer.get("title") || layer.get("name"),
+    var label = ol_ext_element.create('LABEL', {
+      title: layer.get('title') || layer.get('name'),
       click: setVisibility,
       unselectable: 'on',
       style: {
         userSelect: 'none'
       },
       parent: d
-    }).addEventListener('selectstart', function(){ return false; });
+    });
+    label.addEventListener('selectstart', function(){ return false; });
+    ol_ext_element.create('SPAN', {
+      html: layer.get('title') || layer.get('name'),
+      click: function(e) {
+        if (this.get('selection')) {
+          e.stopPropagation();
+          this.selectLayer(layer);
+          this.dispatchEvent({ type: 'select', layer: layer });
+        }
+      }.bind(this),
+      parent: label
+    });
 
     //  up/down
     if (this.reordering) {
@@ -841,9 +855,28 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection) {
     this.dispatchEvent({ type:'drawlist', layer:layer, li:li });
   }
 
+  // Add the layer list
+  for (var i=layers.length-1; i>=0; i--) { createLi.call(this, layers[i]); }
+
   this.viewChange();
 
   if (ul === this.panel_) this.overflow();
+};
+
+/** Select a layer
+ * @param {ol.layer.Layer} layer
+ * @api
+ */
+ol_control_LayerSwitcher.prototype.selectLayer = function(layer) {
+  this._selectedLayer = layer;
+  this.drawPanel();
+};
+
+/** Get selected layer
+ * @returns {ol.layer.Layer}
+ */
+ol_control_LayerSwitcher.prototype.getSelection = function() {
+  return this._selectedLayer;
 };
 
 /** Handle progress bar for a layer

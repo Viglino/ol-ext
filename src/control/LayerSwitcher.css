@@ -1,5 +1,5 @@
-﻿.ol-control.ol-layerswitcher
-{	position: absolute;
+﻿.ol-control.ol-layerswitcher {
+  position: absolute;
 	right: 0.5em;
 	text-align: left;
 	top: 3em;
@@ -8,21 +8,21 @@
 	overflow: hidden;
 }
 .ol-control.ol-layerswitcher .ol-switchertopdiv,
-.ol-control.ol-layerswitcher .ol-switcherbottomdiv
-{	display: block
+.ol-control.ol-layerswitcher .ol-switcherbottomdiv {
+  display: block
 }
 .ol-control.ol-layerswitcher.ol-collapsed .ol-switchertopdiv,
-.ol-control.ol-layerswitcher.ol-collapsed .ol-switcherbottomdiv
-{	display: none;
+.ol-control.ol-layerswitcher.ol-collapsed .ol-switcherbottomdiv {
+  display: none;
 }
 .ol-layerswitcher.ol-forceopen.ol-collapsed .ol-switchertopdiv,
-.ol-layerswitcher.ol-forceopen.ol-collapsed .ol-switcherbottomdiv
-{	display: block;
+.ol-layerswitcher.ol-forceopen.ol-collapsed .ol-switcherbottomdiv {
+	display: block;
 }
 
 .ol-control.ol-layerswitcher .ol-switchertopdiv,
-.ol-control.ol-layerswitcher .ol-switcherbottomdiv
-{	position: absolute;
+.ol-control.ol-layerswitcher .ol-switcherbottomdiv {
+  position: absolute;
 	top:0;
 	left:0;
 	right:0;
@@ -36,16 +36,16 @@
 	margin:0 2px;
 	box-sizing: border-box;
 }
-.ol-control.ol-layerswitcher .ol-switcherbottomdiv
-{	top: auto;
+.ol-control.ol-layerswitcher .ol-switcherbottomdiv {
+  top: auto;
 	bottom: 0;
 	height: 2em;
 	border-top:2px solid #369;
 	border-bottom:2px solid transparent;
 }
 .ol-control.ol-layerswitcher .ol-switchertopdiv:before,
-.ol-control.ol-layerswitcher .ol-switcherbottomdiv:before
-{	content:"";
+.ol-control.ol-layerswitcher .ol-switcherbottomdiv:before {
+  content:"";
 	position: absolute;
 	left:50%;
 	top:50%;
@@ -58,27 +58,27 @@
 }
 
 .ol-control.ol-layerswitcher .ol-switchertopdiv:hover:before,
-.ol-control.ol-layerswitcher .ol-switcherbottomdiv:hover:before
-{	opacity:1;
+.ol-control.ol-layerswitcher .ol-switcherbottomdiv:hover:before {
+  opacity:1;
 }
-.ol-control.ol-layerswitcher .ol-switchertopdiv:before
-{	border-bottom-color: #369;
+.ol-control.ol-layerswitcher .ol-switchertopdiv:before {
+  border-bottom-color: #369;
 	border-top: 0;
 }
-.ol-control.ol-layerswitcher .ol-switcherbottomdiv:before
-{	border-top-color: #369;
+.ol-control.ol-layerswitcher .ol-switcherbottomdiv:before {
+  border-top-color: #369;
 	border-bottom: 0;
 }
 
-.ol-control.ol-layerswitcher .panel 
-{	background-color: #fff;
+.ol-control.ol-layerswitcher .panel {
+  background-color: #fff;
 	border-radius: 0 0 2px 2px;
 	clear: both;
 	display: block; /* display:block to show panel on over */
 }
 
-.ol-layerswitcher .panel
-{	list-style: none;
+.ol-layerswitcher .panel {
+  list-style: none;
 	padding: 0.5em 0.5em 0;
 	margin:0;
 	overflow: hidden;
@@ -90,8 +90,8 @@
 	top:0;
 }
 
-.ol-layerswitcher .panel ul
-{	list-style: none;
+.ol-layerswitcher .panel ul {
+  list-style: none;
 	padding: 0 0 0 20px;
 	overflow: hidden;
 	clear: both;
@@ -100,70 +100,83 @@
 /** Customize checkbox
 */
 .ol-layerswitcher input[type="radio"],
-.ol-layerswitcher input[type="checkbox"]
-{	display:none;
+.ol-layerswitcher input[type="checkbox"] {
+  display:none;
 }
 
-.ol-layerswitcher .panel li
-{	-weblit-transition: -webkit-transform 0.2s linear;
+.ol-layerswitcher .panel li {
+  -weblit-transition: -webkit-transform 0.2s linear;
 	transition: transform 0.2s linear;
 	clear: both;
 	display: block;
 	border:1px solid transparent;
 	box-sizing: border-box;
 }
+.ol-layerswitcher .panel li.select {
+  background-color: rgba(0,60,136,.2);
+  margin: 0 -.5em;
+  padding: 0 .5em
+}
 /* drag and drop */
-.ol-layerswitcher .panel li.drag
-{	opacity: 0.5;
+.ol-layerswitcher .panel li.drag {
+  opacity: 0.5;
 	transform:scale(0.8);
 	-webkit-transform:scale(0.8);
 }
-.ol-dragover
-{	background:rgba(51,102,153,0.5);
+.ol-dragover {
+  background:rgba(51,102,153,0.5);
 	opacity:0.8;
 }
 .ol-layerswitcher .panel li.forbidden,
 .forbidden .ol-layerswitcher-buttons div,
-.forbidden .layerswitcher-opacity div
-{	background:rgba(255,0,0,0.5);
+.forbidden .layerswitcher-opacity div {
+  background:rgba(255,0,0,0.5);
 	color:#f00!important;
 }
 
 /* cursor management */
 .ol-layerswitcher.drag,
-.ol-layerswitcher.drag *
-{	cursor:not-allowed!important;
+.ol-layerswitcher.drag * {
+  cursor:not-allowed!important;
 	cursor:no-drop!important;
 }
 .ol-layerswitcher.drag .panel li.dropover,
-.ol-layerswitcher.drag .panel li.dropover *
-{	cursor: pointer!important;
+.ol-layerswitcher.drag .panel li.dropover * {
+  cursor: pointer!important;
 	cursor: n-resize!important;
 	cursor: ns-resize!important;
 	cursor: grab!important;
 	cursor: grabbing!important;
 }
 
-.ol-layerswitcher .panel li.dropover
-{	background: rgba(51, 102, 153, 0.5);
+.ol-layerswitcher .panel li.dropover {
+  background: rgba(51, 102, 153, 0.5);
 }
 
-.ol-layerswitcher .panel li label
-{	display: inline-block;
+.ol-layerswitcher .panel li label {
+  display: inline-block;
 	height: 1.4em;
 	max-width: 12em;
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
-	padding: 0 0.2em 0 1.7em;
+	padding: 0 0 0 1.7em;
 	position: relative;
 }
 
+.ol-layerswitcher .panel li label span {
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: .2em;
+}
 .ol-layerswitcher [type="radio"] + label:before,
 .ol-layerswitcher [type="checkbox"] + label:before,
 .ol-layerswitcher [type="radio"]:checked + label:after,
-.ol-layerswitcher [type="checkbox"]:checked + label:after
-{	content: '';
+.ol-layerswitcher [type="checkbox"]:checked + label:after {
+  content: '';
 	position: absolute;
 	left: 0.1em; top: 0.1em;
 	width: 1.2em; height: 1.2em; 
@@ -173,20 +186,20 @@
 }
 
 .ol-layerswitcher [type="radio"] + label:before,
-.ol-layerswitcher [type="radio"] + label:after
-{	border-radius: 50%;
+.ol-layerswitcher [type="radio"] + label:after {
+  border-radius: 50%;
 }
 
-.ol-layerswitcher [type="radio"]:checked + label:after
-{	background: #369 none repeat scroll 0 0;
+.ol-layerswitcher [type="radio"]:checked + label:after {
+  background: #369 none repeat scroll 0 0;
 	margin: 0.3em;
 	width: 0.6em;
 	height: 0.6em;
 }
 
-.ol-layerswitcher [type="checkbox"]:checked + label:after
-{	background: transparent;
-    border-width: 0 3px 3px 0;
+.ol-layerswitcher [type="checkbox"]:checked + label:after {
+  background: transparent;
+  border-width: 0 3px 3px 0;
 	border-style: solid;
 	border-color: #369;
     width: 0.7em;
@@ -198,15 +211,15 @@
     box-shadow: 1px 0px 1px 1px #fff;
 }
 
-.ol-layerswitcher .panel li.ol-layer-hidden
-{	opacity: 0.6;
+.ol-layerswitcher .panel li.ol-layer-hidden {
+  opacity: 0.6;
 }
 
-.ol-layerswitcher.ol-collapsed .panel
-{	display:none;
+.ol-layerswitcher.ol-collapsed .panel {
+  display:none;
 }
-.ol-layerswitcher.ol-forceopen .panel
-{	display:block;
+.ol-layerswitcher.ol-forceopen .panel {
+  display:block;
 }
 
 .ol-layerswitcher > button {
@@ -234,25 +247,25 @@
 .ol-layerswitcher > button:before {
 	background: #e2e4e1;
 	top: .32em;
-    left: .34em;
+  left: .34em;
 	-webkit-box-shadow: 0.1em 0.1em #325158;
 	box-shadow: 0.1em 0.1em #325158;
 }
 .ol-layerswitcher > button:after {
 	top: .22em;
-    left: .34em;
+  left: .34em;
 	background: #83bcc5;
 	background-image: -webkit-radial-gradient( .85em .6em, circle, #70b3be 0, #70b3be .65em, #83bcc5 .65em);
 	background-image: -o-radial-gradient( .85em .6em, circle, #70b3be 0, #70b3be .65em, #83bcc5 .65em);
 	background-image: radial-gradient( circle at .85em .6em, #70b3be 0, #70b3be .65em, #83bcc5 .65em);
 }
-.ol-layerswitcher-buttons 
-{	display:block;
+.ol-layerswitcher-buttons {
+  display:block;
 	float: right;
 	text-align:right;
 }
-.ol-layerswitcher-buttons > div
-{	display: inline-block;
+.ol-layerswitcher-buttons > div {
+  display: inline-block;
 	position: relative;
 	cursor: pointer;
 	height:1em;
@@ -265,22 +278,22 @@
     color: #fff;
 }
 
-.ol-layerswitcher .panel li > div
-{	display: inline-block;
+.ol-layerswitcher .panel li > div {
+  display: inline-block;
 	position: relative;
 }
 
 /* line break */
-.ol-layerswitcher .ol-separator
-{	display:block;
+.ol-layerswitcher .ol-separator {
+  display:block;
 	width:0;
 	height:0;
 	padding:0;
 	margin:0;
 }
 
-.ol-layerswitcher .layerup
-{	float: right;
+.ol-layerswitcher .layerup {
+  float: right;
 	height:2.5em;
 	background-color: #369;
 	opacity: 0.5;
@@ -289,8 +302,8 @@
 }
 
 .ol-layerswitcher .layerup:before,
-.ol-layerswitcher .layerup:after
-{	border-color: #fff transparent;
+.ol-layerswitcher .layerup:after {
+  border-color: #fff transparent;
 	border-style: solid;
 	border-width: 0.4em 0.4em 0;
 	content: "";
@@ -300,18 +313,18 @@
 	left: 0.1em;
 	width: 0;
 }
-.ol-layerswitcher .layerup:after
-{	border-width: 0 0.4em 0.4em;
+.ol-layerswitcher .layerup:after {
+  border-width: 0 0.4em 0.4em;
 	top:3px;
 	bottom: auto;
 }
 
-.ol-layerswitcher .layerInfo
-{	background: #369;
+.ol-layerswitcher .layerInfo {
+  background: #369;
 	border-radius: 100%;
 }
-.ol-layerswitcher .layerInfo:before
-{	color: #fff;
+.ol-layerswitcher .layerInfo:before {
+  color: #fff;
 	content: "i";
 	display: block;
 	font-size: 0.8em;
@@ -323,11 +336,11 @@
 	top: 0;
 }
 
-.ol-layerswitcher .layerTrash
-{	background: #369;
+.ol-layerswitcher .layerTrash {
+  background: #369;
 }
-.ol-layerswitcher .layerTrash:before
-{	color: #fff;
+.ol-layerswitcher .layerTrash:before {
+  color: #fff;
 	content: "\00d7";
 	font-size:1em;
 	top: 50%;
@@ -339,11 +352,11 @@
 	position: absolute;
 }
 
-.ol-layerswitcher .layerExtent
-{	background: #369;
+.ol-layerswitcher .layerExtent {
+  background: #369;
 }
-.ol-layerswitcher .layerExtent:before
-{	border-right: 1px solid #fff;
+.ol-layerswitcher .layerExtent:before {
+  border-right: 1px solid #fff;
 	border-bottom: 1px solid #fff;
 	content: "";
 	display: block;
@@ -353,8 +366,8 @@
 	top: 6px;
 	bottom: 3px;
 }
-.ol-layerswitcher .layerExtent:after
-{	border-left: 1px solid #fff;
+.ol-layerswitcher .layerExtent:after {
+  border-left: 1px solid #fff;
 	border-top: 1px solid #fff;
 	content: "";
 	display: block;
@@ -366,13 +379,13 @@
 }
 
 .ol-layerswitcher .expend-layers,
-.ol-layerswitcher .collapse-layers
-{	margin: 0 2px;
+.ol-layerswitcher .collapse-layers {
+  margin: 0 2px;
 	background-color: transparent;
 }
 .ol-layerswitcher .expend-layers:before,
-.ol-layerswitcher .collapse-layers:before
-{	content:"";
+.ol-layerswitcher .collapse-layers:before {
+  content:"";
 	position:absolute;
 	top:50%;
 	left:0;
@@ -381,8 +394,8 @@
 	width:100%;
 	background:#369;
 }
-.ol-layerswitcher .expend-layers:after
-{	content:"";
+.ol-layerswitcher .expend-layers:after {
+  content:"";
 	position:absolute;
 	left:50%;
 	top:0;
@@ -392,15 +405,15 @@
 	background:#369;
 }
 /*
-.ol-layerswitcher .collapse-layers:before
-{	content:"";
+.ol-layerswitcher .collapse-layers:before {
+  content:"";
 	position:absolute;
 	border:0.5em solid #369;
 	border-color: #369 transparent transparent;
 	margin-top:0.25em;
 }
-.ol-layerswitcher .expend-layers:before
-{	content:"";
+.ol-layerswitcher .expend-layers:before {
+  content:"";
 	position:absolute;
 	border:0.5em solid #369;
 	border-color: transparent transparent transparent #369 ;
@@ -408,8 +421,8 @@
 }
 */
 
-.ol-layerswitcher .layerswitcher-opacity
-{	position:relative;
+.ol-layerswitcher .layerswitcher-opacity {
+  position:relative;
 	border: 1px solid #369;
 	height: 3px;
 	width: 120px;
@@ -424,8 +437,8 @@
 }
 
 .ol-layerswitcher .layerswitcher-opacity .layerswitcher-opacity-cursor,
-.ol-layerswitcher .layerswitcher-opacity .layerswitcher-opacity-cursor:before
-{	position: absolute;
+.ol-layerswitcher .layerswitcher-opacity .layerswitcher-opacity-cursor:before {
+  position: absolute;
 	width: 20px;
 	height: 20px;
 	top: 50%;
@@ -436,35 +449,35 @@
 	transform: translate(-50%, -50%);
 	z-index: 1;
 }
-.ol-layerswitcher .layerswitcher-opacity .layerswitcher-opacity-cursor:before
-{	content: "";
+.ol-layerswitcher .layerswitcher-opacity .layerswitcher-opacity-cursor:before {
+  content: "";
 	position: absolute;
 	width: 50%;
 	height: 50%;
 }
-.ol-touch .ol-layerswitcher .layerswitcher-opacity .layerswitcher-opacity-cursor
-{	width: 26px;
+.ol-touch .ol-layerswitcher .layerswitcher-opacity .layerswitcher-opacity-cursor {
+  width: 26px;
 	height: 26px;
 }
 
 .ol-layerswitcher .layerswitcher-opacity-label { 
 	display:none;
 	position: absolute;
-    right: -2.5em;
-    bottom: 5px;
-    font-size: 0.8em;
+  right: -2.5em;
+  bottom: 5px;
+  font-size: 0.8em;
 }
 .ol-layerswitcher .layerswitcher-opacity-label::after {
 	content:"%";
 }
 
-.ol-layerswitcher .layerswitcher-progress
-{	display:block;
+.ol-layerswitcher .layerswitcher-progress {
+  display:block;
 	margin:-4px 1em 2px 7px;
 	width: 120px;
 }
-.ol-layerswitcher .layerswitcher-progress div
-{	background-color: #369;
+.ol-layerswitcher .layerswitcher-progress div {
+  background-color: #369;
 	height:2px;
 	display:block;
 	width:0;
