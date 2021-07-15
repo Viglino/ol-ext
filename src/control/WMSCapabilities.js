@@ -400,7 +400,8 @@ ol_control_WMSCapabilities.prototype.showDialog = function(url, options) {
  * @api
  */
 ol_control_WMSCapabilities.prototype.testUrl = function(url) {
-  // var pattern = /(https?:\/\/)([\da-z.-]+)\.([a-z]{2,6})([/\w.-]*)*\/?/.test(url)
+  console.log(url)
+  // var pattern = /(https?:\/\/)([\da-z.-]+)\.([a-z]{2,6})([/\w.-]*)*\/?/
   var pattern = new RegExp(
     // protocol
     '^(https?:\\/\\/)'+ 
@@ -411,9 +412,10 @@ ol_control_WMSCapabilities.prototype.testUrl = function(url) {
     // port and path
     '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+
     // query string
-    '(\\?[;&a-z\\d%_.~+=-]*)?'+
+    '(\\?[;&a-z\\d%_.~+=\\/-]*)?'+
     // fragment locator
     '(\\#[-a-z\\d_]*)?$','i');
+  console.log(pattern)
   return !!pattern.test(url);
 };
 
