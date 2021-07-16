@@ -33259,6 +33259,9 @@ ol.style.Chart.prototype.renderChart_ = function(pixelratio) {
   var canvas = this.getImage(pixelratio);
   // draw the circle on the canvas
   var context = (canvas.getContext('2d'));
+  context.save();
+  // reset transform
+  context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.lineJoin = 'round';
   var sum=0;
@@ -33266,9 +33269,6 @@ ol.style.Chart.prototype.renderChart_ = function(pixelratio) {
   for (i=0; i<this._data.length; i++) {
     sum += this._data[i];
   }
-  context.save();
-  // reset transform
-  context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
   // then move to (x, y)
   context.translate(0,0);
   var step = this._animation.animate ? this._animation.step : 1;
