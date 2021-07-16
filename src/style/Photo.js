@@ -43,24 +43,31 @@ var ol_style_Photo = function(options) {
   options.stroke.setWidth(strokeWidth);
   ol_style_RegularShape.call (this, {
     radius: options.radius + strokeWidth + this.sanchor_/2 + this._shadow/2, 
-    points:0
-  //	fill:new ol.style.Fill({color:"red"}) // No fill to create a hit detection Image
+    points: 0,
+    // No fill to create a hit detection Image (v5) or transparent (v6) 
+    fill: ol_style_RegularShape.prototype.render ? new ol.style.Fill({ color: [0,0,0,0] }) : null
   });
-  // Hack to get the hit detection Image (no API exported)
-  var img = this.getImage();
-  if (!this.hitDetectionCanvas_) {
-    for (var i in this) {
-      if (this[i] && this[i].getContext && this[i]!==img) {
-        this.hitDetectionCanvas_ = this[i];
-        break;
+  // Hack to get the hit detection Image (v4.6.5 ?)
+  if (!this.getHitDetectionImage) {
+    var img = this.getImage();
+    if (!this.hitDetectionCanvas_) {
+      for (var i in this) {
+        if (this[i] && this[i].getContext && this[i]!==img) {
+          this.hitDetectionCanvas_ = this[i];
+          break;
+        }
       }
     }
+    // Clone canvas for hit detection (old versions)
+    this.hitDetectionCanvas_ = document.createElement('canvas');
+    this.hitDetectionCanvas_.width = img.width;
+    this.hitDetectionCanvas_.height = img.height;
+    var hit = this.hitDetectionCanvas_
+    this.getHitDetectionImage = function() {
+      return hit;
+    }
   }
-  // Clone canvas for hit detection
-  this.hitDetectionCanvas_ = document.createElement('canvas');
-  this.hitDetectionCanvas_.width = img.width;
-  this.hitDetectionCanvas_.height = img.height;
-  
+
   this._stroke = options.stroke;
   this._fill = options.fill;
   this._crop = options.crop;
@@ -225,16 +232,19 @@ ol_style_Photo.prototype.renderPhoto_ = function(pixelratio) {
   var canvas = this.getImage(pixelratio);
 
   // Draw hitdetection image
-  var context = this.hitDetectionCanvas_.getContext('2d');
+  var context = this.getHitDetectionImage().getContext('2d');
+  context.save();
+  context.setTransform(1,0,0,1,0,0)
   this.drawBack_(context,"#000",strokeWidth, 1);
   context.fill();
+  context.restore();
 
   // Draw the image
   context = canvas.getContext('2d');
   context.save();
   context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
   this.drawBack_(context,strokeStyle,strokeWidth, pixelratio);
-  
+
   // Draw a shadow
   if (this._shadow) {
     context.shadowColor = 'rgba(0,0,0,0.5)';
@@ -244,7 +254,7 @@ ol_style_Photo.prototype.renderPhoto_ = function(pixelratio) {
   }
   context.fill();
   context.restore();
-    
+
   var self = this;
   var img = this.img_ = new Image();
   if (this._crossOrigin) img.crossOrigin = this._crossOrigin;
@@ -278,6 +288,7 @@ ol_style_Photo.prototype.renderPhoto_ = function(pixelratio) {
  */
 ol_style_Photo.prototype.drawImage_ = function(img) {
   var pixelratio = window.devicePixelRatio;
+
   var canvas = this.getImage(pixelratio);
   // Remove the circle on the canvas
   var context = (canvas.getContext('2d'));
@@ -287,6 +298,7 @@ ol_style_Photo.prototype.drawImage_ = function(img) {
   var size = 2*this._radius;
 
   context.save();
+  if (ol_style_RegularShape.prototype.render) context.setTransform(pixelratio,0,0,pixelratio,0,0);
   if (this._kind=='circle') {
     context.beginPath();
     context.arc(this._radius+strokeWidth, this._radius+strokeWidth, this._radius, 0, 2 * Math.PI, false);
@@ -318,7 +330,6 @@ ol_style_Photo.prototype.drawImage_ = function(img) {
   y += strokeWidth;
 
   context.drawImage(img, sx, sy, sw, sh, x, y, w, h);
-  context.restore();
 
   // Draw a circle to avoid aliasing on clip
   if (this._kind=='circle' && strokeWidth) {
@@ -328,6 +339,7 @@ ol_style_Photo.prototype.drawImage_ = function(img) {
     context.arc(this._radius+strokeWidth, this._radius+strokeWidth, this._radius, 0, 2 * Math.PI, false);
     context.stroke();
   }
+  context.restore();
 };
 
 export default ol_style_Photo
