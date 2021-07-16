@@ -167,6 +167,8 @@
 
 .ol-wmscapabilities ul.ol-wmsform {
   display: none;
+  list-style: none;
+  padding: 0;
 }
 .ol-wmscapabilities ul.ol-wmsform.visible {
   display: block;

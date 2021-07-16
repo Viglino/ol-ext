@@ -59,6 +59,12 @@
       box-shadow: 0 0 0 3px rgba(255,255,255,.5);
       background-color: #fff;
     }
+    .ol-control.ol-layerswitcher .ol-top-bar button,
+    .ol-control.ol-layerswitcher .ol-bottom-bar button {
+      font-size: .9em;
+      display: inline-block;
+    }
+
     .ol-control.ol-layerswitcher.ol-collapsed .ol-top-bar,
     .ol-control.ol-layerswitcher.ol-collapsed .ol-bottom-bar {
       border-width: 2px 0 0;
@@ -90,6 +96,11 @@
       max-width: unset;
       transform: scaleY(1.1);
     }
+
+    .ol-control.hidden {
+      display: none;
+    }
+
 
   </style>
 </head>
@@ -174,6 +185,39 @@
     if (e.element === ctrl.getSelection()) {
       ctrl.selectLayer(map.getLayers().item(map.getLayers().getLength()-1))
     }
+  })
+  // Add button
+  ol.ext.element.create('BUTTON', { 
+    className: 'ol-button',
+    html: '-',
+    click: function() {
+      ctrl.getMap().removeLayer(ctrl.getSelection())
+    },
+    parent: topbar
+  })
+  var wms = new ol.control.WMSCapabilities({ 
+    className: 'hidden',
+    target: document.body,
+    services: {
+      'BRGM': 'https://geoservices.brgm.fr/geologie',
+      'OSM': 'https://wms.openstreetmap.fr/wms'
+    }
+  });
+  map.addControl(wms)
+  wms.on('load', function(e) {
+    e.layer.set('WMS', true);
+    var index = map.getLayers().getArray().indexOf(ctrl.getSelection());
+    map.getLayers().insertAt(index+1, e.layer);
+    ctrl.selectLayer(e.layer);
+  })
+
+  ol.ext.element.create('BUTTON', { 
+    className: 'ol-button',
+    html: '+',
+    click: function() {
+      wms.showDialog();
+    },
+    parent: topbar
   })
   </script>
   
