@@ -3332,6 +3332,7 @@ ol.control.SearchGeoportail.prototype.searchCommune = function (f, cback) {
  *  @param {number} options.drawDelay delay in ms to redraw the layer (usefull to prevent flickering when manipulating the layers)
  *  @param {boolean} options.collapsed collapse the layerswitcher at beginning, default true
  *  @param {ol.layer.Group} options.layerGroup a layer group to display in the switcher, default display all layers of the map
+ *  @param {boolean} options.noScroll prevent handle scrolling, default false
  *
  * Layers attributes that control the switcher
  *	- allwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false
@@ -3391,31 +3392,37 @@ ol.control.LayerSwitcher = function(options) {
         self.dispatchEvent({ type: 'toggle', collapsed: false });
       });
     }
-    this.topv = ol.ext.element.create('DIV', {
-      className: 'ol-switchertopdiv',
-      parent: element,
-      click: function() {
-        self.overflow("+50%");
-      }
-    });
-    this.botv = ol.ext.element.create('DIV', {
-      className: 'ol-switcherbottomdiv',
-      parent: element,
-      click: function() {
-        self.overflow("-50%");
-      }
-    });
+    if (!options.noScroll) {
+      this.topv = ol.ext.element.create('DIV', {
+        className: 'ol-switchertopdiv',
+        parent: element,
+        click: function() {
+          self.overflow("+50%");
+        }
+      });
+      this.botv = ol.ext.element.create('DIV', {
+        className: 'ol-switcherbottomdiv',
+        parent: element,
+        click: function() {
+          self.overflow("-50%");
+        }
+      });
+    }
+    this._noScroll = options.noScroll;
   }
   this.panel_ = ol.ext.element.create ('UL', {
     className: 'panel',
     parent: element
   });
-  ol.ext.element.addListener (this.panel_, 'mousewheel DOMMouseScroll onmousewheel', function(e) {
-    if (self.overflow(Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail))))) {
-      e.stopPropagation();
-      e.preventDefault();
-    }
-  });
+  // Handle mousewheel
+  if (!options.target && !options.noScroll) {
+    ol.ext.element.addListener (this.panel_, 'mousewheel DOMMouseScroll onmousewheel', function(e) {
+      if (self.overflow(Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail))))) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    });
+  }
   this.header_ = ol.ext.element.create('LI', {
     className: 'ol-header',
     parent: this.panel_
@@ -3425,6 +3432,7 @@ ol.control.LayerSwitcher = function(options) {
     target: options.target
   });
   this.set('drawDelay',options.drawDelay||0);
+  this.set('selection', options.selection);
 };
 ol.ext.inherits(ol.control.LayerSwitcher, ol.control.Control);
 /** List of tips for internationalization purposes
@@ -3506,7 +3514,7 @@ ol.control.LayerSwitcher.prototype.setHeader = function(html) {
  *	@param {Number} dir scroll direction -1|0|1|'+50%'|'-50%'
  */
 ol.control.LayerSwitcher.prototype.overflow = function(dir) {	
-  if (this.button) {
+  if (this.button && !this._noScroll) {
     // Nothing to show
     if (ol.ext.element.hidden(this.panel_)) {
       ol.ext.element.setStyle(this.element, { height: 'auto' });
@@ -3931,7 +3939,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection) {
     });
     this._setLayerForLI(li, layer);
     if (this._selectedLayer === layer) {
-      li.classList.add('select');
+      li.classList.add('ol-layer-select');
     }
     var layer_buttons = ol.ext.element.create('DIV', {
       className: 'ol-layerswitcher-buttons',
@@ -3967,7 +3975,6 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection) {
         if (this.get('selection')) {
           e.stopPropagation();
           this.selectLayer(layer);
-          this.dispatchEvent({ type: 'select', layer: layer });
         }
       }.bind(this),
       parent: label
@@ -4099,6 +4106,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection) {
 ol.control.LayerSwitcher.prototype.selectLayer = function(layer) {
   this._selectedLayer = layer;
   this.drawPanel();
+  this.dispatchEvent({ type: 'select', layer: layer });
 };
 /** Get selected layer
  * @returns {ol.layer.Layer}
@@ -26371,6 +26379,22 @@ ol.source.IDW.prototype.hue2rgb = function(h) {
   if (h < 4) return Math.round((4 - h) * 255);
   return 0;
 };
+/** Get color for a value. Return an array of RGBA values.
+ * @param {number} v value
+ * @returns {Array<number>} 
+ * @api
+ */
+ol.source.IDW.prototype.getColor = function(v) {
+  // Get hue
+  var h = 4 - (0.04 * v);
+  // Convert to RGB
+  return [
+    this.hue2rgb(h + 2), 
+    this.hue2rgb(h),
+    this.hue2rgb(h - 2),
+    255
+  ]
+};
 /** Apply the value to the map RGB. Overwrite this function to set your own colors.
  * @param {number} v value
  * @param {Uint8ClampedArray} data RGBA array
@@ -26378,13 +26402,13 @@ ol.source.IDW.prototype.hue2rgb = function(h) {
  * @api
  */
 ol.source.IDW.prototype.setData = function(v, data, i) {
-  // Get hue
-  var h = 4 - (0.04 * v);
+  // Get color
+  var color = this.getColor(v)
   // Convert to RGB
-  data[i] = this.hue2rgb(h + 2);
-  data[i+1] = this.hue2rgb(h);
-  data[i+2] = this.hue2rgb(h - 2);
-  data[i+3] = 255;
+  data[i] = color[0];
+  data[i+1] = color[1];
+  data[i+2] = color[2];
+  data[i+3] = color[3];
 };
 /** Get image value at coord (RGBA)
  * @param {l.coordinate} coord

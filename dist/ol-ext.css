@@ -1535,7 +1535,7 @@
 	-webkit-box-sizing: border-box;
 	        box-sizing: border-box;
 }
-.ol-layerswitcher .panel li.select {
+.ol-layerswitcher .panel li.ol-layer-select {
   background-color: rgba(0,60,136,.2);
   margin: 0 -.5em;
   padding: 0 .5em
