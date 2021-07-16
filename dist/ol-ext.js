@@ -34713,23 +34713,30 @@ ol.style.Photo = function(options) {
   options.stroke.setWidth(strokeWidth);
   ol.style.RegularShape.call (this, {
     radius: options.radius + strokeWidth + this.sanchor_/2 + this._shadow/2, 
-    points:0
-  //	fill:new ol.style.Fill({color:"red"}) // No fill to create a hit detection Image
+    points: 0,
+    // No fill to create a hit detection Image (v5) or transparent (v6) 
+    fill: ol.style.RegularShape.prototype.render ? new ol.style.Fill({ color: [0,0,0,0] }) : null
   });
-  // Hack to get the hit detection Image (no API exported)
-  var img = this.getImage();
-  if (!this.hitDetectionCanvas_) {
-    for (var i in this) {
-      if (this[i] && this[i].getContext && this[i]!==img) {
-        this.hitDetectionCanvas_ = this[i];
-        break;
+  // Hack to get the hit detection Image (v4.6.5 ?)
+  if (!this.getHitDetectionImage) {
+    var img = this.getImage();
+    if (!this.hitDetectionCanvas_) {
+      for (var i in this) {
+        if (this[i] && this[i].getContext && this[i]!==img) {
+          this.hitDetectionCanvas_ = this[i];
+          break;
+        }
       }
     }
+    // Clone canvas for hit detection (old versions)
+    this.hitDetectionCanvas_ = document.createElement('canvas');
+    this.hitDetectionCanvas_.width = img.width;
+    this.hitDetectionCanvas_.height = img.height;
+    var hit = this.hitDetectionCanvas_
+    this.getHitDetectionImage = function() {
+      return hit;
+    }
   }
-  // Clone canvas for hit detection
-  this.hitDetectionCanvas_ = document.createElement('canvas');
-  this.hitDetectionCanvas_.width = img.width;
-  this.hitDetectionCanvas_.height = img.height;
   this._stroke = options.stroke;
   this._fill = options.fill;
   this._crop = options.crop;
@@ -34882,9 +34889,12 @@ ol.style.Photo.prototype.renderPhoto_ = function(pixelratio) {
   }
   var canvas = this.getImage(pixelratio);
   // Draw hitdetection image
-  var context = this.hitDetectionCanvas_.getContext('2d');
+  var context = this.getHitDetectionImage().getContext('2d');
+  context.save();
+  context.setTransform(1,0,0,1,0,0)
   this.drawBack_(context,"#000",strokeWidth, 1);
   context.fill();
+  context.restore();
   // Draw the image
   context = canvas.getContext('2d');
   context.save();
@@ -34936,6 +34946,7 @@ ol.style.Photo.prototype.drawImage_ = function(img) {
   if (this._stroke) strokeWidth = this._stroke.getWidth();
   var size = 2*this._radius;
   context.save();
+  if (ol.style.RegularShape.prototype.render) context.setTransform(pixelratio,0,0,pixelratio,0,0);
   if (this._kind=='circle') {
     context.beginPath();
     context.arc(this._radius+strokeWidth, this._radius+strokeWidth, this._radius, 0, 2 * Math.PI, false);
@@ -34964,7 +34975,6 @@ ol.style.Photo.prototype.drawImage_ = function(img) {
   x += strokeWidth + this.sanchor_/2;
   y += strokeWidth;
   context.drawImage(img, sx, sy, sw, sh, x, y, w, h);
-  context.restore();
   // Draw a circle to avoid aliasing on clip
   if (this._kind=='circle' && strokeWidth) {
     context.beginPath();
@@ -34973,6 +34983,7 @@ ol.style.Photo.prototype.drawImage_ = function(img) {
     context.arc(this._radius+strokeWidth, this._radius+strokeWidth, this._radius, 0, 2 * Math.PI, false);
     context.stroke();
   }
+  context.restore();
 };
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO, 
