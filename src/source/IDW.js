@@ -51,6 +51,23 @@ ol_source_IDW.prototype.hue2rgb = function(h) {
   return 0;
 };
 
+/** Get color for a value. Return an array of RGBA values.
+ * @param {number} v value
+ * @returns {Array<number>} 
+ * @api
+ */
+ol_source_IDW.prototype.getColor = function(v) {
+  // Get hue
+  var h = 4 - (0.04 * v);
+  // Convert to RGB
+  return [
+    this.hue2rgb(h + 2), 
+    this.hue2rgb(h),
+    this.hue2rgb(h - 2),
+    255
+  ]
+};
+
 /** Apply the value to the map RGB. Overwrite this function to set your own colors.
  * @param {number} v value
  * @param {Uint8ClampedArray} data RGBA array
@@ -58,13 +75,13 @@ ol_source_IDW.prototype.hue2rgb = function(h) {
  * @api
  */
 ol_source_IDW.prototype.setData = function(v, data, i) {
-  // Get hue
-  var h = 4 - (0.04 * v);
+  // Get color
+  var color = this.getColor(v)
   // Convert to RGB
-  data[i] = this.hue2rgb(h + 2);
-  data[i+1] = this.hue2rgb(h);
-  data[i+2] = this.hue2rgb(h - 2);
-  data[i+3] = 255;
+  data[i] = color[0];
+  data[i+1] = color[1];
+  data[i+2] = color[2];
+  data[i+3] = color[3];
 };
 
 /** Get image value at coord (RGBA)
