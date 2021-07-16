@@ -40,7 +40,7 @@
     .ol-control.ol-layerswitcher > * {
       pointer-events: auto;
     }
-    .ol-control.ol-layerswitcher button,
+    .ol-control.ol-layerswitcher > button,
     .ol-control.ol-layerswitcher .panel {
       box-shadow: 0 0 0 3px rgba(255,255,255,.5);
     }
@@ -58,11 +58,13 @@
       clear: both;
       box-shadow: 0 0 0 3px rgba(255,255,255,.5);
       background-color: #fff;
+      text-align: right;
     }
-    .ol-control.ol-layerswitcher .ol-top-bar button,
-    .ol-control.ol-layerswitcher .ol-bottom-bar button {
+    .ol-control.ol-layerswitcher .ol-top-bar > *,
+    .ol-control.ol-layerswitcher .ol-bottom-bar > * {
       font-size: .9em;
       display: inline-block;
+      vertical-align: middle;
     }
 
     .ol-control.ol-layerswitcher.ol-collapsed .ol-top-bar,
@@ -193,7 +195,7 @@
     click: function() {
       ctrl.getMap().removeLayer(ctrl.getSelection())
     },
-    parent: topbar
+    parent: bottombar
   })
   var wms = new ol.control.WMSCapabilities({ 
     className: 'hidden',
@@ -217,8 +219,23 @@
     click: function() {
       wms.showDialog();
     },
-    parent: topbar
+    parent: bottombar
   })
+
+  var sel = ol.ext.element.create('SELECT', { 
+    parent: topbar
+  });
+  ol.ext.element.create('OPTION', { 
+    html: 'option1',
+    value: 1,
+    parent: sel
+  });
+  ol.ext.element.create('OPTION', { 
+    html: 'option2',
+    value: 2,
+    parent: sel
+  });
+
   </script>
   
 </body>
