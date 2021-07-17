@@ -8650,6 +8650,7 @@ ol.control.Permalink.prototype.layerChange_ = function() {
  * @extends {ol.control.Control}
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
+ *	@param {String} options.title button title
  *	@param {string} options.imageType A string indicating the image format, default image/jpeg
  *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
  *	@param {string} options.orientation Page orientation (landscape/portrait), default guest the best one
@@ -8664,6 +8665,7 @@ ol.control.Print = function(options) {
     element.classList.add('ol-unselectable', 'ol-control');
     ol.ext.element.create('BUTTON', {
       type: 'button',
+      title: options.title || 'Print',
       click: function() { this.print(); }.bind(this),
       parent: element
     });
@@ -8885,6 +8887,7 @@ ol.control.Print.prototype.print = function(options) {
  * @extends {ol.control.Control}
  * @param {Object=} options Control options.
  *	@param {string} options.className class of the control
+ *	@param {String} options.title button title
  *  @param {string} [options.lang=en] control language, default en
  *	@param {string} options.imageType A string indicating the image format, default image/jpeg
  *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
@@ -8901,6 +8904,7 @@ ol.control.PrintDialog = function(options) {
   });
   ol.ext.element.create('BUTTON', {
     type: 'button',
+    title: options.title || 'Print',
     click: function() { 
       this.print(); 
     }.bind(this),
@@ -9688,6 +9692,7 @@ ol.control.PrintDialog.prototype.getrintControl = function() {
  * @fires dragcancel
  * @param {Object=} options
  *  @param {string} options.className
+ *	@param {String} options.title button title
  *  @param {ol.style.Style} [options.style] style to draw the profil, default darkblue
  *  @param {ol.style.Style} [options.selectStyle] style for selection, default darkblue fill
  *  @param {*} options.info keys/values for i19n
@@ -9709,6 +9714,7 @@ ol.control.Profil = function(options) {
     element = document.createElement("div");
     element.className = ((options.className || 'ol-profil') +' ol-unselectable ol-control ol-collapsed').trim();
     this.button = document.createElement("button");
+    this.button.title =  options.title || 'Profile',
     this.button.setAttribute('type','button');
     var click_touchstart_function = function(e) {
       self.toggle();
