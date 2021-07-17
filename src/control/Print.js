@@ -16,6 +16,7 @@ import ol_ext_element from '../util/element'
  * @extends {ol.control.Control}
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
+ *	@param {String} options.title button title
  *	@param {string} options.imageType A string indicating the image format, default image/jpeg
  *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
  *	@param {string} options.orientation Page orientation (landscape/portrait), default guest the best one
@@ -32,6 +33,7 @@ var ol_control_Print = function(options) {
     element.classList.add('ol-unselectable', 'ol-control');
     ol_ext_element.create('BUTTON', {
       type: 'button',
+      title: options.title || 'Print',
       click: function() { this.print(); }.bind(this),
       parent: element
     });

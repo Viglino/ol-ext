@@ -34,6 +34,7 @@ import ol_ext_element from '../util/element'
  * @fires dragcancel
  * @param {Object=} options
  *  @param {string} options.className
+ *	@param {String} options.title button title
  *  @param {ol.style.Style} [options.style] style to draw the profil, default darkblue
  *  @param {ol.style.Style} [options.selectStyle] style for selection, default darkblue fill
  *  @param {*} options.info keys/values for i19n
@@ -56,6 +57,7 @@ var ol_control_Profil = function(options) {
     element = document.createElement("div");
     element.className = ((options.className || 'ol-profil') +' ol-unselectable ol-control ol-collapsed').trim();
     this.button = document.createElement("button");
+    this.button.title =  options.title || 'Profile',
     this.button.setAttribute('type','button');
     var click_touchstart_function = function(e) {
       self.toggle();

@@ -26,6 +26,7 @@ import ol_control_Compass from './Compass';
  * @extends {ol.control.Control}
  * @param {Object=} options Control options.
  *	@param {string} options.className class of the control
+ *	@param {String} options.title button title
  *  @param {string} [options.lang=en] control language, default en
  *	@param {string} options.imageType A string indicating the image format, default image/jpeg
  *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
@@ -43,6 +44,7 @@ var ol_control_PrintDialog = function(options) {
   });
   ol_ext_element.create('BUTTON', {
     type: 'button',
+    title: options.title || 'Print',
     click: function() { 
       this.print(); 
     }.bind(this),
