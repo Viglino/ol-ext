@@ -180,9 +180,7 @@ ol_control_LayerSwitcher.prototype.setMap = function(map) {
   this.drawPanel();
   
   if (this._listener) {
-    if (this._listener) ol_Observable_unByKey(this._listener.change);
-    if (this._listener) ol_Observable_unByKey(this._listener.moveend);
-    if (this._listener) ol_Observable_unByKey(this._listener.size);
+    for (var i in this._listener) ol_Observable_unByKey(this._listener[i]);
   }
   this._listener = null;
 
@@ -381,9 +379,16 @@ ol_control_LayerSwitcher.prototype.viewChange = function() {
   }.bind(this));
 };
 
-/**
- *	Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
-*/
+/** Get control panel
+ * @api
+ */
+ol_control_LayerSwitcher.prototype.getPanel = function() {
+  return this.panel_;
+};
+
+/** Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
+ * @api
+ */
 ol_control_LayerSwitcher.prototype.drawPanel = function() {
   if (!this.getMap()) return;
   var self = this;
@@ -646,6 +651,9 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection) {
     e.preventDefault();
     var l = self._getLayerForLI(this.parentNode.parentNode);
     self.switchLayerVisibility(l, collection);
+    if (l.getVisible()) {
+      self.selectLayer(l);
+    }
   };
   // Info button click
   function onInfo(e) {
@@ -852,22 +860,35 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection) {
         this.drawList (ul2, layer.getLayers());
       }
     }
-    else if (layer instanceof ol_layer_Vector) li.classList.add('ol-layer-vector');
-    else if (layer instanceof ol_layer_VectorTile) li.classList.add('ol-layer-vector');
-    else if (layer instanceof ol_layer_Tile) li.classList.add('ol-layer-tile');
-    else if (layer instanceof ol_layer_Image) li.classList.add('ol-layer-image');
-    else if (layer instanceof ol_layer_Heatmap) li.classList.add('ol-layer-heatmap');
+    li.classList.add(this.getLayerClass(layer));
 
     // Dispatch a dralist event to allow customisation
     this.dispatchEvent({ type:'drawlist', layer:layer, li:li });
   }
 
   // Add the layer list
-  for (var i=layers.length-1; i>=0; i--) { createLi.call(this, layers[i]); }
+  for (var i=layers.length-1; i>=0; i--) { 
+    createLi.call(this, layers[i]); 
+  }
 
   this.viewChange();
 
   if (ul === this.panel_) this.overflow();
+};
+
+/** Select a layer
+ * @param {ol.layer.Layer} layer
+ * @api
+ */
+ol_control_LayerSwitcher.prototype.getLayerClass = function(layer) {
+  if (!layer) return '';
+  if (layer.getLayers) return 'ol-layer-group';
+  if (layer instanceof ol_layer_Vector) return 'ol-layer-vector';
+  if (layer instanceof ol_layer_VectorTile) return 'ol-layer-vectortile';
+  if (layer instanceof ol_layer_Tile) return 'ol-layer-tile';
+  if (layer instanceof ol_layer_Image) return 'ol-layer-image';
+  if (layer instanceof ol_layer_Heatmap) return 'ol-layer-heatmap';
+  return '';
 };
 
 /** Select a layer

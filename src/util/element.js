@@ -12,6 +12,7 @@
  *  @param {string} options.className className The element class name 
  *  @param {Element} options.parent Parent to append the element as child
  *  @param {Element|string} options.html Content of the element
+ *  @param {Element|string} [options.options] when tagName = SELECT a list of options as key:value to add to the select
  *  @param {string} options.* Any other attribut to add to the element
  */
 ol_ext_element.create = function (tagName, options) {
@@ -38,6 +39,19 @@ ol_ext_element.create = function (tagName, options) {
         }
         case 'parent': {
           if (options.parent) options.parent.appendChild(elt);
+          break;
+        }
+        case 'options': {
+          console.log('options', options.options)
+          if (/select/i.test(tagName)) {
+            for (var i in options.options) {
+              ol_ext_element.create('OPTION', {
+                html: i,
+                value: options.options[i],
+                parent: elt          
+              })
+            }
+          }
           break;
         }
         case 'style': {
@@ -135,7 +149,6 @@ ol_ext_element.createCheck = function (options) {
   }
   return input;
 };
-
 
 /** Set inner html or append a child element to an element
  * @param {Element} element

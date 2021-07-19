@@ -17,6 +17,7 @@ import '../layer/GetPreview';
 
 /** WMSCapabilities
  * @constructor
+ * @fires load
  * @param {*} options
  *  @param {string|Element} options.target the target to set the dialog, use document.body to have fullwindow dialog
  *  @param {string} options.proxy proxy to use when requesting Getcapabilites, default none (suppose the service use CORS)
@@ -400,7 +401,6 @@ ol_control_WMSCapabilities.prototype.showDialog = function(url, options) {
  * @api
  */
 ol_control_WMSCapabilities.prototype.testUrl = function(url) {
-  console.log(url)
   // var pattern = /(https?:\/\/)([\da-z.-]+)\.([a-z]{2,6})([/\w.-]*)*\/?/
   var pattern = new RegExp(
     // protocol
@@ -415,7 +415,6 @@ ol_control_WMSCapabilities.prototype.testUrl = function(url) {
     '(\\?[;&a-z\\d%_.~+=\\/-]*)?'+
     // fragment locator
     '(\\#[-a-z\\d_]*)?$','i');
-  console.log(pattern)
   return !!pattern.test(url);
 };
 

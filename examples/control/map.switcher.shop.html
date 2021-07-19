@@ -13,6 +13,8 @@
 
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
   <!-- Openlayers -->
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
@@ -27,83 +29,17 @@
 
   <link rel="stylesheet" href="../style.css" />
   <style>
-    .ol-control.ol-layerswitcher {
-      height: calc(100% - 4em);
-      max-height: unset;
-      background-color: transparent;
-      pointer-events: none!important;
-      overflow: visible;
+    .ol-layer-shop i {
+      color: inherit;
+      font-size: 1.3em;
     }
-    .ol-touch .ol-layerswitcher > button {
-      font-size: 1.7em;
+    textarea:focus, input:focus, select:focus {
+      outline: none;
     }
-    .ol-control.ol-layerswitcher > * {
-      pointer-events: auto;
+    [data-layerClass="ol-layer-group"] .ol-bar select {
+      opacity: .5;
+      pointer-events: none;
     }
-    .ol-control.ol-layerswitcher > button,
-    .ol-control.ol-layerswitcher .panel {
-      box-shadow: 0 0 0 3px rgba(255,255,255,.5);
-    }
-    .ol-control.ol-layerswitcher .panel {
-      overflow-y: scroll;
-      max-height: calc(100% - 6em);
-      padding: .5em;
-      box-sizing: border-box;
-      border: 2px solid #369;
-      border-width: 2px 0;
-    }
-    .ol-control.ol-layerswitcher .ol-top-bar,
-    .ol-control.ol-layerswitcher .ol-bottom-bar {
-      height: 1.5em;
-      clear: both;
-      box-shadow: 0 0 0 3px rgba(255,255,255,.5);
-      background-color: #fff;
-      text-align: right;
-    }
-    .ol-control.ol-layerswitcher .ol-top-bar > *,
-    .ol-control.ol-layerswitcher .ol-bottom-bar > * {
-      font-size: .9em;
-      display: inline-block;
-      vertical-align: middle;
-    }
-
-    .ol-control.ol-layerswitcher.ol-collapsed .ol-top-bar,
-    .ol-control.ol-layerswitcher.ol-collapsed .ol-bottom-bar {
-      border-width: 2px 0 0;
-      display: none;
-    }
-    .ol-control.ol-layerswitcher.ol-forceopen .ol-top-bar,
-    .ol-control.ol-layerswitcher.ol-forceopen .ol-bottom-bar {
-      display: block;
-    }
-
-    .ol-control.ol-layerswitcher .ol-title-bar {
-      background: rgba(255,255,255,.5);
-      font-size: .9em;
-      height: calc(2.8em - 4px);
-      padding: .7em .5em;
-      box-sizing: border-box;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      text-align: right;
-      transition: .1s;
-    }
-    .ol-control.ol-layerswitcher.ol-collapsed .ol-title-bar {
-      max-width: 10em;
-      transform: scale(.9, 1.1);
-      transform-origin: 100% 0;
-    }
-    .ol-control.ol-layerswitcher.ol-forceopen .ol-title-bar {
-      max-width: unset;
-      transform: scaleY(1.1);
-    }
-
-    .ol-control.hidden {
-      display: none;
-    }
-
-
   </style>
 </head>
 <body >
@@ -117,7 +53,7 @@
   </div>
 
   <!-- Map div -->
-  <div id="map" style="width:600px; height:400px;"></div>
+  <div id="map" style="width: 100%; height: 400px;"></div>
   <div class="external layerSwitcher"><b>External layer switcher</b></div>
 
   <div class="options">
@@ -132,17 +68,20 @@
     layers: [
       new ol.layer.Tile({
         title: "Watercolor",
+        className: "Watercolor",
         baseLayer: true,
         source: new ol.source.Stamen({ layer: 'watercolor' })
       }),
       new ol.layer.Tile({
         title: "Toner",
+        className: "Toner",
         baseLayer: true,
         visible: false,
         source: new ol.source.Stamen({ layer: 'toner' })
       }),
       new ol.layer.Tile({
         title: "OSM",
+        className: "OSM",
         baseLayer: true,
         source: new ol.source.OSM(),
         visible: false
@@ -158,84 +97,97 @@
     }),
     layers: [ 
       baseLayers, 
-      new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', visible: false }),
-      new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', className: 'test' }),
-      new ol.layer.Geoportail({ layer: 'CADASTRALPARCELS.PARCELLAIRE_EXPRESS' }),
+      new ol.layer.Geoportail({ 
+        layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 
+        className: 'PLANIGNV2',
+        visible: false 
+      }),
+      new ol.layer.Geoportail({ 
+        layer: 'ORTHOIMAGERY.ORTHOPHOTOS', 
+        className: 'ORTHOPHOTOS' 
+      }),
+      new ol.layer.Geoportail({ 
+        layer: 'CADASTRALPARCELS.PARCELLAIRE_EXPRESS',
+        className: 'PARCELLAIRE_EXPRESS' 
+      }),
       new ol.layer.Tile({
         title: "Labels",
+        className: 'Labels',
         source: new ol.source.Stamen({ layer: 'terrain-labels' })
       }) 
     ]
   });
 
   // Add control inside the map
-  var ctrl = new ol.control.LayerSwitcher({
-    selection: true,
-    noScroll: true
-  });
+  var ctrl = new ol.control.LayerShop();
   map.addControl(ctrl);
   
-  // Top/bottom bar
-  var title = ctrl.element.insertBefore(ol.ext.element.create('DIV', { className: 'ol-title-bar' }), ctrl.panel_)
-  var topbar = ctrl.element.insertBefore(ol.ext.element.create('DIV', { className: 'ol-top-bar' }), ctrl.panel_)
-  var bottombar = ol.ext.element.create('DIV', { parent: ctrl.element, className: 'ol-bottom-bar' })
-  ctrl.on('select', function(e) {
-   title.innerText = e.layer ? e.layer.get('title') : '';
-  })
-  ctrl.selectLayer(map.getLayers().item(0));
-  map.getLayers().on('remove', function(e) {
-    if (e.element === ctrl.getSelection()) {
-      ctrl.selectLayer(map.getLayers().item(map.getLayers().getLength()-1))
-    }
-  })
-  // Add button
-  ol.ext.element.create('BUTTON', { 
-    className: 'ol-button',
-    html: '-',
-    click: function() {
-      ctrl.getMap().removeLayer(ctrl.getSelection())
-    },
-    parent: bottombar
-  })
+  // WMS control
   var wms = new ol.control.WMSCapabilities({ 
-    className: 'hidden',
     target: document.body,
+    title: 'Add WMS',
     services: {
       'BRGM': 'https://geoservices.brgm.fr/geologie',
       'OSM': 'https://wms.openstreetmap.fr/wms'
     }
   });
-  map.addControl(wms)
   wms.on('load', function(e) {
-    e.layer.set('WMS', true);
     var index = map.getLayers().getArray().indexOf(ctrl.getSelection());
     map.getLayers().insertAt(index+1, e.layer);
     ctrl.selectLayer(e.layer);
   })
+  ctrl.addControl(wms);
 
-  ol.ext.element.create('BUTTON', { 
-    className: 'ol-button',
-    html: '+',
-    click: function() {
-      wms.showDialog();
-    },
-    parent: bottombar
-  })
+  // Remove button
+  ctrl.addControl(new ol.control.Button({
+    html: '<i class="fa fa-trash-o"></i>',
+    title: 'Remove layer',
+    handleClick: function() {
+      map.removeLayer(ctrl.getSelection());
+    }
+  }));
+  
+  // Info dialogue
+  var dlg = new ol.control.Dialog({ closeBox: true, hideOnBack: true });
+  map.addControl(dlg);
+  ctrl.addControl(new ol.control.Button({
+    html: '<i class="fa fa-info-circle"></i>',
+    title: 'Information',
+    handleClick: function() {
+      var d = $('<div>');
+      var layer = ctrl.getSelection();
+      console.log(layer.getProperties())
+      if (layer) {
+        $('<h2>').text(layer.get('title')).appendTo(d);
+        $('<p>').text(layer.get('desc') || layer.get('abstract')).appendTo(d);
+        if (layer.getSource && layer.getSource()) {
+          $('<div>').html(layer.getSource().getAttributions()()[0]).appendTo(d);
+        }
+        dlg.show(d.get(0));
+      }
+    }
+  }));
 
+  // Grayscale filter menu
+  var filter = new ol.filter.Colorize('grayscale');
+  filter.set('preserveAlpha', true);
   var sel = ol.ext.element.create('SELECT', { 
-    parent: topbar
+    options: {
+      'normal' : 'normal',
+      'grayscale' : 'grayscale'
+    },
+    on: {
+      change: function() {
+        if (ctrl.getSelection().getFilters().length) ctrl.getSelection().removeFilter(filter);
+        else ctrl.getSelection().addFilter(filter);
+      }
+    },
+    parent: ctrl.getBarElement('bottom')
   });
-  ol.ext.element.create('OPTION', { 
-    html: 'option1',
-    value: 1,
-    parent: sel
-  });
-  ol.ext.element.create('OPTION', { 
-    html: 'option2',
-    value: 2,
-    parent: sel
-  });
-
+  ctrl.on('select', function(e) {
+    if (ctrl.getSelection().getFilters().length) sel.value = 'grayscale';
+    else sel.value = 'normal';
+  })
   </script>
   
 </body>

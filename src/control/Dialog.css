@@ -20,12 +20,12 @@
 .ol-viewport .ol-ext-dialog {
   position: absolute;
 }
-.ol-ext-dialog h2 {
+.ol-ext-dialog > form > h2 {
   margin: 0 .5em .5em 0;
   display: none;
 }
-.ol-ext-dialog > form.ol-title h2 {
-  display: block;;
+.ol-ext-dialog > form.ol-title > h2 {
+  display: block;
 }
 .ol-ext-dialog > form {
   position: absolute;
