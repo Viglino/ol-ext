@@ -4136,10 +4136,14 @@ ol.control.LayerSwitcher.prototype.getLayerClass = function(layer) {
  * @param {ol.layer.Layer} layer
  * @api
  */
-ol.control.LayerSwitcher.prototype.selectLayer = function(layer) {
+ol.control.LayerSwitcher.prototype.selectLayer = function(layer, silent) {
+  if (!layer) {
+    if (!this.getMap()) return;
+    layer = this.getMap().getLayers().item(this.getMap().getLayers().getLength()-1)
+  }
   this._selectedLayer = layer;
   this.drawPanel();
-  this.dispatchEvent({ type: 'select', layer: layer });
+  if (!silent) this.dispatchEvent({ type: 'select', layer: layer });
 };
 /** Get selected layer
  * @returns {ol.layer.Layer}
@@ -7525,12 +7529,12 @@ ol.control.LayerShop.prototype.setMap = function(map) {
   ol.control.LayerSwitcher.prototype.setMap.call(this, map);
   if (map) {
     // Select first layer
-    this.selectLayer(map.getLayers().item(0));
+    this.selectLayer();
     // Remove a layer
     this._listener.removeLayer = map.getLayers().on('remove', function(e) {
       // Select first layer
       if (e.element === this.getSelection()) {
-        this.selectLayer(map.getLayers().item(map.getLayers().getLength()-1))
+        this.selectLayer();
       }
     }.bind(this));
     // Add controls
