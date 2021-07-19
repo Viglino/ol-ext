@@ -324,12 +324,12 @@
 .ol-viewport .ol-ext-dialog {
   position: absolute;
 }
-.ol-ext-dialog h2 {
+.ol-ext-dialog > form > h2 {
   margin: 0 .5em .5em 0;
   display: none;
 }
-.ol-ext-dialog > form.ol-title h2 {
-  display: block;;
+.ol-ext-dialog > form.ol-title > h2 {
+  display: block;
 }
 .ol-ext-dialog > form {
   position: absolute;
@@ -1413,6 +1413,102 @@
 .ol-layerswitcher-popup li:hover {
   background:rgba(0, 60, 136, 0.9);
   color:#fff;
+}
+
+.ol-control.ol-layerswitcher.ol-layer-shop {
+  height: calc(100% - 4em);
+  max-height: unset;
+  max-width: 16em;
+  background-color: transparent;
+  pointer-events: none!important;
+  overflow: visible;
+}
+.ol-touch .ol-layer-shop > button {
+  font-size: 1.7em;
+}
+.ol-control.ol-layerswitcher > * {
+  pointer-events: auto;
+}
+
+.ol-control.ol-layer-shop > button,
+.ol-control.ol-layer-shop .panel {
+  -webkit-box-shadow: 0 0 0 3px rgba(255,255,255,.5);
+          box-shadow: 0 0 0 3px rgba(255,255,255,.5);
+}
+.ol-control.ol-layer-shop .panel {
+  overflow-y: scroll;
+  max-height: calc(100% - 6.5em);
+  padding: .5em;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  border: 2px solid #369;
+  border-width: 2px 0;
+}
+
+.ol-control.ol-layer-shop .ol-title-bar {
+  background: rgba(255,255,255,.5);
+  font-size: .9em;
+  height: calc(2.8em - 4px);
+  max-width: 100%;
+  padding: .7em .5em;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+  -webkit-transition: width 0s, -webkit-transform .1s;
+  transition: width 0s, -webkit-transform .1s;
+  transition: transform .1s, width 0s;
+  transition: transform .1s, width 0s, -webkit-transform .1s;
+}
+.ol-control.ol-layer-shop.ol-collapsed .ol-title-bar {
+  max-width: 10em;
+  -webkit-transform: scale(.9, 1.1);
+          transform: scale(.9, 1.1);
+  -webkit-transform-origin: 100% 0;
+          transform-origin: 100% 0;
+}
+.ol-control.ol-layer-shop.ol-forceopen .ol-title-bar {
+  max-width: 100%;
+  -webkit-transform: scaleY(1.1);
+          transform: scaleY(1.1);
+}
+
+.ol-control.ol-layer-shop .ol-bar {
+  height: 1.75em;
+  clear: both;
+  -webkit-box-shadow: 0 0 0 3px rgba(255,255,255,.5);
+          box-shadow: 0 0 0 3px rgba(255,255,255,.5);
+  background-color: #fff;
+  text-align: right;
+}
+.ol-control.ol-layer-shop.ol-collapsed .ol-bar {
+  border-width: 2px 0 0;
+  display: none;
+}
+.ol-control.ol-layer-shop.ol-forceopen .ol-bar  {
+  display: block;
+}
+.ol-control.ol-layer-shop .ol-bar > * {
+  font-size: .9em;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.ol-layer-shop .ol-bar .ol-button {
+  position: relative;
+  top: unset;
+  left: unset;
+  bottom: unset;
+  right: unset;
+}
+.ol-layer-shop .ol-bar button {
+  background-color: #fff;
+  color: rgba(0,60,136,1)
+}
+.ol-layer-shop .ol-bar button:hover {
+  background-color: rgba(0,60,136,.2);
 }
 
 .ol-control.ol-layerswitcher {

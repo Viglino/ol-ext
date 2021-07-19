@@ -456,6 +456,7 @@ ol.View.prototype.takeTour = function(destinations, options) {
  *  @param {string} options.className className The element class name 
  *  @param {Element} options.parent Parent to append the element as child
  *  @param {Element|string} options.html Content of the element
+ *  @param {Element|string} [options.options] when tagName = SELECT a list of options as key:value to add to the select
  *  @param {string} options.* Any other attribut to add to the element
  */
 ol.ext.element.create = function (tagName, options) {
@@ -482,6 +483,19 @@ ol.ext.element.create = function (tagName, options) {
         }
         case 'parent': {
           if (options.parent) options.parent.appendChild(elt);
+          break;
+        }
+        case 'options': {
+          console.log('options', options.options)
+          if (/select/i.test(tagName)) {
+            for (var i in options.options) {
+              ol.ext.element.create('OPTION', {
+                html: i,
+                value: options.options[i],
+                parent: elt          
+              })
+            }
+          }
           break;
         }
         case 'style': {
@@ -3460,9 +3474,7 @@ ol.control.LayerSwitcher.prototype.setMap = function(map) {
   ol.control.Control.prototype.setMap.call(this, map);
   this.drawPanel();
   if (this._listener) {
-    if (this._listener) ol.Observable.unByKey(this._listener.change);
-    if (this._listener) ol.Observable.unByKey(this._listener.moveend);
-    if (this._listener) ol.Observable.unByKey(this._listener.size);
+    for (var i in this._listener) ol.Observable.unByKey(this._listener[i]);
   }
   this._listener = null;
   // Get change (new layer added or removed)
@@ -3646,9 +3658,15 @@ ol.control.LayerSwitcher.prototype.viewChange = function() {
     }
   }.bind(this));
 };
-/**
- *	Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
-*/
+/** Get control panel
+ * @api
+ */
+ol.control.LayerSwitcher.prototype.getPanel = function() {
+  return this.panel_;
+};
+/** Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
+ * @api
+ */
 ol.control.LayerSwitcher.prototype.drawPanel = function() {
   if (!this.getMap()) return;
   var self = this;
@@ -3891,6 +3909,9 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection) {
     e.preventDefault();
     var l = self._getLayerForLI(this.parentNode.parentNode);
     self.switchLayerVisibility(l, collection);
+    if (l.getVisible()) {
+      self.selectLayer(l);
+    }
   };
   // Info button click
   function onInfo(e) {
@@ -4086,18 +4107,30 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection) {
         this.drawList (ul2, layer.getLayers());
       }
     }
-    else if (layer instanceof ol.layer.Vector) li.classList.add('ol-layer-vector');
-    else if (layer instanceof ol.layer.VectorTile) li.classList.add('ol-layer-vector');
-    else if (layer instanceof ol.layer.Tile) li.classList.add('ol-layer-tile');
-    else if (layer instanceof ol.layer.Image) li.classList.add('ol-layer-image');
-    else if (layer instanceof ol.layer.Heatmap) li.classList.add('ol-layer-heatmap');
+    li.classList.add(this.getLayerClass(layer));
     // Dispatch a dralist event to allow customisation
     this.dispatchEvent({ type:'drawlist', layer:layer, li:li });
   }
   // Add the layer list
-  for (var i=layers.length-1; i>=0; i--) { createLi.call(this, layers[i]); }
+  for (var i=layers.length-1; i>=0; i--) { 
+    createLi.call(this, layers[i]); 
+  }
   this.viewChange();
   if (ul === this.panel_) this.overflow();
+};
+/** Select a layer
+ * @param {ol.layer.Layer} layer
+ * @api
+ */
+ol.control.LayerSwitcher.prototype.getLayerClass = function(layer) {
+  if (!layer) return '';
+  if (layer.getLayers) return 'ol-layer-group';
+  if (layer instanceof ol.layer.Vector) return 'ol-layer-vector';
+  if (layer instanceof ol.layer.VectorTile) return 'ol-layer-vectortile';
+  if (layer instanceof ol.layer.Tile) return 'ol-layer-tile';
+  if (layer instanceof ol.layer.Image) return 'ol-layer-image';
+  if (layer instanceof ol.layer.Heatmap) return 'ol-layer-heatmap';
+  return '';
 };
 /** Select a layer
  * @param {ol.layer.Layer} layer
@@ -7419,6 +7452,110 @@ ol.control.LayerPopup.prototype.drawList = function(ul, layers) {
 			if (layer.getVisible()) d.classList.add('ol-visible');
 		}
 	});
+};
+
+/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** LayerShop a layer switcher with special controls to handle operation on layers.
+ * @fires select
+ * @fires drawlist
+ * @fires toggle
+ * @fires reorder-start
+ * @fires reorder-end
+ * @fires layer:visible
+ * @fires layer:opacity
+ * 
+ * @constructor
+ * @extends {ol.control.LayerSwitcher}
+ * @param {Object=} options
+ *  @param {boolean} options.selection enable layer selection when click on the title
+ *  @param {function} options.displayInLayerSwitcher function that takes a layer and return a boolean if the layer is displayed in the switcher, default test the displayInLayerSwitcher layer attribute
+ *  @param {boolean} options.show_progress show a progress bar on tile layers, default false
+ *  @param {boolean} options.mouseover show the panel on mouseover, default false
+ *  @param {boolean} options.reordering allow layer reordering, default true
+ *  @param {boolean} options.trash add a trash button to delete the layer, default false
+ *  @param {function} options.oninfo callback on click on info button, if none no info button is shown DEPRECATED: use on(info) instead
+ *  @param {boolean} options.extent add an extent button to zoom to the extent of the layer
+ *  @param {function} options.onextent callback when click on extent, default fits view to extent
+ *  @param {number} options.drawDelay delay in ms to redraw the layer (usefull to prevent flickering when manipulating the layers)
+ *  @param {boolean} options.collapsed collapse the layerswitcher at beginning, default true
+ *  @param {ol.layer.Group} options.layerGroup a layer group to display in the switcher, default display all layers of the map
+ *  @param {boolean} options.noScroll prevent handle scrolling, default false
+ *
+ * Layers attributes that control the switcher
+ *	- allwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false
+ *	- displayInLayerSwitcher {boolean} display the layer in switcher, default true
+ *	- noSwitcherDelete {boolean} to prevent layer deletion (w. trash option = true), default false
+ */
+ol.control.LayerShop = function(options) {
+  options = options || {};
+  options.selection = true;
+  options.noScroll = true;
+  ol.control.LayerSwitcher.call (this, options);
+  this.element.classList.add('ol-layer-shop');
+  // Control title (selected layer)
+  var title = this.element.insertBefore(ol.ext.element.create('DIV', { className: 'ol-title-bar' }), this.getPanel());
+  this.on('select', function(e) {
+    title.innerText = e.layer ? e.layer.get('title') : '';
+    this.element.setAttribute('data-layerClass', this.getLayerClass(e.layer));
+  }.bind(this));
+  // Top/bottom bar
+  this._topbar = this.element.insertBefore(ol.ext.element.create('DIV', { 
+    className: 'ol-bar ol-top-bar'
+  }), this.getPanel());
+  this._bottombar = ol.ext.element.create('DIV', { 
+    className: 'ol-bar ol-bottom-bar',
+    parent: this.element
+  });
+  this._controls = [];
+};
+ol.ext.inherits(ol.control.LayerShop, ol.control.LayerSwitcher);
+/** Set the map instance the control is associated with.
+ * @param {_ol_Map_} map The map instance.
+ */
+ol.control.LayerShop.prototype.setMap = function(map) {
+  if (this.getMap()) {
+    // Remove map controls
+    this._controls.forEach(function(c) {
+      this.getMap().removeControl(c)
+    }.bind(this));
+  }
+  ol.control.LayerSwitcher.prototype.setMap.call(this, map);
+  if (map) {
+    // Select first layer
+    this.selectLayer(map.getLayers().item(0));
+    // Remove a layer
+    this._listener.removeLayer = map.getLayers().on('remove', function(e) {
+      // Select first layer
+      if (e.element === this.getSelection()) {
+        this.selectLayer(map.getLayers().item(map.getLayers().getLength()-1))
+      }
+    }.bind(this));
+    // Add controls
+    this._controls.forEach(function(c) {
+      this.getMap().addControl(c)
+    }.bind(this));
+  }
+};
+/** Add a control to the panel
+ * @param {string} [position='top'] bar position bottom or top, default top
+ * @returns {Element}
+ */
+ol.control.LayerShop.prototype.getBarElement = function(position) {
+  return position==='bottom' ? this._bottombar : this._topbar;
+};
+/** Add a control to the panel
+ * @param {ol.control.Control} control
+ * @param {string} [position='top'] bar position bottom or top, default top
+ */
+ol.control.LayerShop.prototype.addControl = function(control, position) {
+  this._controls.push(control);
+  control.setTarget(position==='bottom' ? this._bottombar : this._topbar);
+  if (this.getMap()) {
+    this.getMap().addControl(control);
+  }
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -14137,6 +14274,7 @@ ol.control.VideoRecorder.prototype.resume = function () {
 */
 /** WMSCapabilities
  * @constructor
+ * @fires load
  * @param {*} options
  *  @param {string|Element} options.target the target to set the dialog, use document.body to have fullwindow dialog
  *  @param {string} options.proxy proxy to use when requesting Getcapabilites, default none (suppose the service use CORS)
@@ -14506,7 +14644,6 @@ ol.control.WMSCapabilities.prototype.showDialog = function(url, options) {
  * @api
  */
 ol.control.WMSCapabilities.prototype.testUrl = function(url) {
-  console.log(url)
   // var pattern = /(https?:\/\/)([\da-z.-]+)\.([a-z]{2,6})([/\w.-]*)*\/?/
   var pattern = new RegExp(
     // protocol
@@ -14521,7 +14658,6 @@ ol.control.WMSCapabilities.prototype.testUrl = function(url) {
     '(\\?[;&a-z\\d%_.~+=\\/-]*)?'+
     // fragment locator
     '(\\#[-a-z\\d_]*)?$','i');
-  console.log(pattern)
   return !!pattern.test(url);
 };
 /** Get WMS capabilities for a server
