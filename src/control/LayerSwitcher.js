@@ -895,10 +895,14 @@ ol_control_LayerSwitcher.prototype.getLayerClass = function(layer) {
  * @param {ol.layer.Layer} layer
  * @api
  */
-ol_control_LayerSwitcher.prototype.selectLayer = function(layer) {
+ol_control_LayerSwitcher.prototype.selectLayer = function(layer, silent) {
+  if (!layer) {
+    if (!this.getMap()) return;
+    layer = this.getMap().getLayers().item(this.getMap().getLayers().getLength()-1)
+  }
   this._selectedLayer = layer;
   this.drawPanel();
-  this.dispatchEvent({ type: 'select', layer: layer });
+  if (!silent) this.dispatchEvent({ type: 'select', layer: layer });
 };
 
 /** Get selected layer

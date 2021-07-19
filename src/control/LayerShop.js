@@ -83,12 +83,12 @@ ol_control_LayerShop.prototype.setMap = function(map) {
 
   if (map) {
     // Select first layer
-    this.selectLayer(map.getLayers().item(0));
+    this.selectLayer();
     // Remove a layer
     this._listener.removeLayer = map.getLayers().on('remove', function(e) {
       // Select first layer
       if (e.element === this.getSelection()) {
-        this.selectLayer(map.getLayers().item(map.getLayers().getLength()-1))
+        this.selectLayer();
       }
     }.bind(this));
     // Add controls
