@@ -40,6 +40,12 @@
       opacity: .5;
       pointer-events: none;
     }
+    .layerswitcher-opacity {
+      display: none;
+    }
+    .ol-layer-shop .layerup {
+      height: 1.5em;
+    }
   </style>
 </head>
 <body >
@@ -187,7 +193,26 @@
   ctrl.on('select', function(e) {
     if (ctrl.getSelection().getFilters().length) sel.value = 'grayscale';
     else sel.value = 'normal';
-  })
+  });
+
+  var opacity = ol.ext.element.create('input', { 
+    type: 'number',
+    min: 0,
+    max: 100,
+    on: {
+      change: function(e) {
+        ctrl.getSelection().setOpacity(parseInt(e.target.value)/100);
+      }
+    },
+    parent: ctrl.getBarElement('bottom')
+  });
+  ctrl.on(['layer:opacity', 'select'], function(e) {
+    if (e.layer === ctrl.getSelection()) {
+      opacity.value = Math.round(e.layer.getOpacity()*100);
+    }
+  });
+
+  ctrl.selectLayer();
   </script>
   
 </body>
