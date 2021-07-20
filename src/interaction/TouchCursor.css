@@ -111,6 +111,14 @@
   content: "\2713";
   font-weight: bold;
 }
+
+.ol-overlaycontainer .ol-touch-cursor.nodrawing .ol-button.ol-button-x,
+.ol-overlaycontainer .ol-touch-cursor.nodrawing .ol-button.ol-button-remove,
+.ol-overlaycontainer .ol-touch-cursor.nodrawing .ol-button.ol-button-check {
+  opacity: .8;
+  background: rgba(51, 102, 153, .2);
+}
+
 .ol-overlaycontainer .ol-touch-cursor .ol-button > div {
   position: absolute;
   top: 50%;

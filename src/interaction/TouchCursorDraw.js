@@ -39,12 +39,15 @@ var ol_interaction_TouchCursorDraw = function(options) {
 
   sketch.on('drawend', function(e) {
     if (e.valid && options.source) options.source.addFeature(e.feature);
+    this.getOverlayElement().classList.add('nodrawing');
     this.dispatchEvent(e);
   }.bind(this));
   sketch.on('drawstart', function(e) {
+    this.getOverlayElement().classList.remove('nodrawing');
     this.dispatchEvent(e);
   }.bind(this));
   sketch.on('drawabort', function(e) {
+    this.getOverlayElement().classList.add('nodrawing');
     this.dispatchEvent(e);
   }.bind(this));
 
@@ -53,6 +56,7 @@ var ol_interaction_TouchCursorDraw = function(options) {
     className: options.className,
     coordinate: options.coordinate,
   });
+  this.getOverlayElement().classList.add('nodrawing');
 
   this.set('types', options.types);
   this.setType(options.type);
