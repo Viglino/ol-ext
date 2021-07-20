@@ -15797,6 +15797,7 @@ function filterRedraw_(/* e */) {
 function addFilter_(filter) {
   if (!this.filters_) this.filters_ = [];
   this.filters_.push(filter);
+  if (filter.addToLayer) filter.addToLayer(this);
   if (filter.precompose) filter._listener.push ( { listener: this.on(['precompose','prerender'], precompose_.bind(filter)), target: this });
   if (filter.postcompose) filter._listener.push ( { listener: this.on(['postcompose','postrender'], postcompose_.bind(filter)), target: this });
   filter._listener.push ( { listener: filter.on('propertychange', filterRedraw_.bind(this)), target: this });
@@ -15815,6 +15816,7 @@ function removeFilter_(filter) {
   for (i=filter._listener.length-1; i>=0; i--) {
     // Remove listener on this object
     if (filter._listener[i].target === this) {
+      if (filter.removeFromLayer) filter.removeFromLayer(this);
       ol.Observable.unByKey(filter._listener[i].listener);
       filter._listener.splice(i,1);
     }
@@ -15961,6 +15963,37 @@ ol.filter.Mask.prototype.postcompose = function(e) {
     ctx.fillStyle = this.fillColor_;
     ctx.fill("evenodd");
   ctx.restore();
+};
+
+/** Add a mix-blend-mode CSS filter (not working with IE or ol<6)
+ * With ol < 6 use ol/filter/Composite instead.
+ * @constructor
+ * @extends {ol.Object}
+ * @param {Object} options 
+ *  @params {string} options.filters a list of filter to apply (as in CSS)
+ */
+ol.filter.MixBlendCSS = function(options) {
+  ol.filter.Base.call(this, options);
+};
+ol.ext.inherits(ol.filter.MixBlendCSS, ol.filter.Base);
+/** Add CSS filter to the layer
+ * @param {ol/layer/Base} layer 
+ */
+ ol.filter.MixBlendCSS.prototype.addToLayer = function(layer) {
+  layer.once('postrender', function(e) {
+    e.context.canvas.parentNode.style['mix-blend-mode'] = this.get('filters') || '';
+  }.bind(this));
+  layer.changed();
+  // layer.getRenderer().getImage().parentNode.style['mix-blend-mode'] = 'multiply';
+};
+/** Remove CSS filter from the layer
+ * @param {ol/layer/Base} layer 
+ */
+ol.filter.MixBlendCSS.prototype.removeFromLayer = function(layer) {
+  layer.once('postrender', function(e) {
+    e.context.canvas.parentNode.style['mix-blend-mode'] = '';
+  }.bind(this));
+  layer.changed();
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -23156,12 +23189,15 @@ ol.interaction.TouchCursorDraw = function(options) {
   });
   sketch.on('drawend', function(e) {
     if (e.valid && options.source) options.source.addFeature(e.feature);
+    this.getOverlayElement().classList.add('nodrawing');
     this.dispatchEvent(e);
   }.bind(this));
   sketch.on('drawstart', function(e) {
+    this.getOverlayElement().classList.remove('nodrawing');
     this.dispatchEvent(e);
   }.bind(this));
   sketch.on('drawabort', function(e) {
+    this.getOverlayElement().classList.add('nodrawing');
     this.dispatchEvent(e);
   }.bind(this));
   // Create cursor
@@ -23169,6 +23205,7 @@ ol.interaction.TouchCursorDraw = function(options) {
     className: options.className,
     coordinate: options.coordinate,
   });
+  this.getOverlayElement().classList.add('nodrawing');
   this.set('types', options.types);
   this.setType(options.type);
   this.on('click', function() {
