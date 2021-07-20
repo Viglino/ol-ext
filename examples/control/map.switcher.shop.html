@@ -5,11 +5,11 @@
   Copyright (c) 2015 Jean-Marc VIGLINO,
   released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 -->
-  <title>ol-ext: Layerswitcher</title>
+  <title>ol-ext: LayerShop</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
   <meta name="description" content="An OL3 layerswitcher." />
-  <meta name="keywords" content="ol3, layer, layerswitcher, control,jQuery" />
+  <meta name="keywords" content="openlayers, ol, layer, layerswitcher, control" />
 
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
@@ -43,8 +43,8 @@
     .layerswitcher-opacity {
       display: none;
     }
-    .ol-layer-shop .layerup {
-      height: 1.5em;
+    .ol-layer-shop .ol-bar input[type="number"] {
+      width: 3em;
     }
   </style>
 </head>
@@ -52,16 +52,14 @@
   <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
   <a href="../../index.html">
-    <h1>ol-ext: LayerSwitcher control</h1>
+    <h1>ol-ext: LayerShop control</h1>
   </a>
   <div class="info">
-
+    <b>ol/control/LayerShop</b> is a layer switcher integrating tool bars to handle layers properties.
   </div>
 
   <!-- Map div -->
   <div id="map" style="width: 100%; height: 400px;"></div>
-  <div class="external layerSwitcher"><b>External layer switcher</b></div>
-
   <div class="options">
   </div>
   
@@ -94,6 +92,31 @@
       })
     ]
   });
+  var clc = new ol.layer.Tile ({
+    title: 'CORINE Land Cover - France métropolitaine - 2018',
+    className: 'CLC',
+    extent: [
+      -1099999.9999649636,
+      4949999.999934867,
+      1300000.000049673,
+      6699999.999949973
+    ],
+    queryable: true,
+    abstract: "Inventaire biophysique de l'occupation des sols en 2018 en 44 postes.",
+    minResolution: 0.09449404761899723,
+    maxResolution: 197231.79878968254,
+    source: new ol.source.TileWMS({
+      url: 'https://wxs.ign.fr/corinelandcover/geoportail/r/wms',
+      projection: 'EPSG:3857',
+      attributions: [],
+      crossOrigin: 'anonymous',
+      params: {
+        LAYERS: 'LANDCOVER.CLC18_FR',
+        FORMAT: 'image/png',
+        VERSION: '1.3.0'
+      }
+    })
+  });
   // The Map
   var map = new ol.Map({
     target: 'map',
@@ -116,8 +139,9 @@
         layer: 'CADASTRALPARCELS.PARCELLAIRE_EXPRESS',
         className: 'PARCELLAIRE_EXPRESS' 
       }),
+      clc,
       new ol.layer.Tile({
-        title: "Labels",
+        title: 'Labels',
         className: 'Labels',
         source: new ol.source.Stamen({ layer: 'terrain-labels' })
       }) 
@@ -134,7 +158,8 @@
     title: 'Add WMS',
     services: {
       'BRGM': 'https://geoservices.brgm.fr/geologie',
-      'OSM': 'https://wms.openstreetmap.fr/wms'
+      'OSM': 'https://wms.openstreetmap.fr/wms',
+      'CorineLandCover': 'https://wxs.ign.fr/corinelandcover/geoportail/r/wms'
     }
   });
   wms.on('load', function(e) {
@@ -142,7 +167,7 @@
     map.getLayers().insertAt(index+1, e.layer);
     ctrl.selectLayer(e.layer);
   })
-  ctrl.addControl(wms);
+  ctrl.addControl(wms, 'bottom');
 
   // Remove button
   ctrl.addControl(new ol.control.Button({
@@ -151,7 +176,7 @@
     handleClick: function() {
       map.removeLayer(ctrl.getSelection());
     }
-  }));
+  }), 'bottom');
   
   // Info dialogue
   var dlg = new ol.control.Dialog({ closeBox: true, hideOnBack: true });
@@ -172,27 +197,62 @@
         dlg.show(d.get(0));
       }
     }
-  }));
+  }), 'bottom');
+
+  // Mix blend Menu
+  var blendFilter = {
+    multiply: new ol.filter.MixBlendCSS({ filters: 'multiply' }),
+    luminosity: new ol.filter.MixBlendCSS({ filters: 'luminosity' }),
+    color: new ol.filter.MixBlendCSS({ filters: 'color' }),
+    'color-burn': new ol.filter.MixBlendCSS({ filters: 'color-burn' }),
+    difference: new ol.filter.MixBlendCSS({ filters: 'difference' }),
+    overlay: new ol.filter.MixBlendCSS({ filters: 'overlay' })
+  };
+  clc.addFilter(blendFilter.multiply);
+  var blend = ol.ext.element.create('SELECT', { 
+    options: {
+      'Mode' : '',
+      'Multiply' : 'multiply',
+      'Luminosity' : 'luminosity',
+      'Color' : 'color',
+      'Color burn' : 'color-burn',
+      'Difference' : 'difference',
+      'Overlay' : 'overlay'
+    },
+    on: {
+      change: function(e) {
+        for (var i in blendFilter) ctrl.getSelection().removeFilter(blendFilter[i]);
+        if (blendFilter[blend.value]) ctrl.getSelection().addFilter(blendFilter[blend.value]);
+      }
+    },
+    parent: ctrl.getBarElement()
+  });
+  ctrl.on('select', function(e) {
+    blend.value = '';
+    for (var i in blendFilter) {
+      if (ctrl.getSelection().getFilters().indexOf(blendFilter[i]) >= 0) blend.value = i;
+    }
+  });
 
   // Grayscale filter menu
   var filter = new ol.filter.Colorize('grayscale');
   filter.set('preserveAlpha', true);
   var sel = ol.ext.element.create('SELECT', { 
     options: {
-      'normal' : 'normal',
-      'grayscale' : 'grayscale'
+      'Filter' : 'normal',
+      'Grayscale' : 'grayscale'
     },
     on: {
       change: function() {
-        if (ctrl.getSelection().getFilters().length) ctrl.getSelection().removeFilter(filter);
-        else ctrl.getSelection().addFilter(filter);
+        if (ctrl.getSelection().getFilters().indexOf(filter) < 0) ctrl.getSelection().addFilter(filter);
+        else ctrl.getSelection().removeFilter(filter);
       }
     },
-    parent: ctrl.getBarElement('bottom')
+    parent: ctrl.getBarElement()
   });
   ctrl.on('select', function(e) {
-    if (ctrl.getSelection().getFilters().length) sel.value = 'grayscale';
-    else sel.value = 'normal';
+    if (ctrl.getSelection().getFilters().indexOf(filter) < 0) sel.value = 'normal';
+    else sel.value = 'grayscale';
   });
 
   var opacity = ol.ext.element.create('input', { 
@@ -204,7 +264,7 @@
         ctrl.getSelection().setOpacity(parseInt(e.target.value)/100);
       }
     },
-    parent: ctrl.getBarElement('bottom')
+    parent: ctrl.getBarElement()
   });
   ctrl.on(['layer:opacity', 'select'], function(e) {
     if (e.layer === ctrl.getSelection()) {
@@ -212,6 +272,7 @@
     }
   });
 
+  // Select first layer
   ctrl.selectLayer();
   </script>
   

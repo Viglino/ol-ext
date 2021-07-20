@@ -6,9 +6,6 @@
   pointer-events: none!important;
   overflow: visible;
 }
-.ol-touch .ol-layer-shop > button {
-  font-size: 1.7em;
-}
 .ol-control.ol-layerswitcher > * {
   pointer-events: auto;
 }
@@ -25,36 +22,71 @@
   border: 2px solid #369;
   border-width: 2px 0;
 }
+.ol-layerswitcher.ol-layer-shop ul.panel li {
+  margin-right: 0;
+  padding-right: 0;
+}
+.ol-layerswitcher.ol-layer-shop .layerup {
+  height: 1.5em;
+  width: 1.4em;
+  margin: 0;
+  box-sizing: border-box;
+  border-radius: 3px;
+  background-color: transparent;
+  color: rgba(0,60,136,1);
+}
+.ol-layerswitcher.ol-layer-shop .layerup:hover {
+  background-color: rgba(0,60,136,.3);
+}
+.ol-layerswitcher.ol-layer-shop .layerup:before {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 0;
+  background-color: currentColor;
+  width: 1em;
+  height: 2px;
+  box-shadow: 0 -4px, 0 4px;
+}
+.ol-layerswitcher.ol-layer-shop .layerup:after {
+  content: unset;
+}
 
 .ol-control.ol-layer-shop .ol-title-bar {
-  background: rgba(255,255,255,.5);
+  background-color: rgba(255,255,255,.5);
   font-size: .9em;
   height: calc(2.8em - 4px);
-  max-width: 100%;
+  max-width: 14.6em;
   padding: .7em .5em;
   box-sizing: border-box;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   text-align: right;
+  transform: scaleY(1.1);
   transition: transform .1s, width 0s;
+  transform-origin: 100% 0;
+}
+.ol-control.ol-layer-shop:hover .ol-title-bar {
+  background-color: rgba(255,255,255,.7);
 }
 .ol-control.ol-layer-shop.ol-collapsed .ol-title-bar {
   max-width: 10em;
   transform: scale(.9, 1.1);
-  transform-origin: 100% 0;
 }
 .ol-control.ol-layer-shop.ol-forceopen .ol-title-bar {
-  max-width: 100%;
+  max-width: 14.6em;
   transform: scaleY(1.1);
 }
 
 .ol-control.ol-layer-shop .ol-bar {
+  position: relative;
   height: 1.75em;
   clear: both;
   box-shadow: 0 0 0 3px rgba(255,255,255,.5);
   background-color: #fff;
   text-align: right;
+  z-index: 1;
 }
 .ol-control.ol-layer-shop.ol-collapsed .ol-bar {
   border-width: 2px 0 0;
@@ -67,14 +99,18 @@
   font-size: .9em;
   display: inline-block;
   vertical-align: middle;
+  margin-top: .25em;
+  background-color: transparent;
 }
 
-.ol-layer-shop .ol-bar .ol-button {
+.ol-layer-shop .ol-bar .ol-button,
+.ol-touch .ol-layer-shop .ol-bar .ol-button {
   position: relative;
   top: unset;
   left: unset;
   bottom: unset;
   right: unset;
+  margin: 0;
 }
 .ol-layer-shop .ol-bar button {
   background-color: #fff;
@@ -82,4 +118,30 @@
 }
 .ol-layer-shop .ol-bar button:hover {
   background-color: rgba(0,60,136,.2);
+}
+
+/* Touch device */
+.ol-touch .ol-layerswitcher.ol-layer-shop > button {
+  font-size: 1.7em;
+}
+.ol-touch .ol-layer-shop .ol-bar {
+  height: 2em;
+}
+.ol-touch .ol-layer-shop .ol-control button {
+  font-size: 1.4em;
+}
+.ol-touch .ol-control.ol-layer-shop .panel {
+  max-height: calc(100% - 7em);
+}
+.ol-touch .ol-control.ol-layer-shop .panel label {
+  height: 1.8em;
+}
+.ol-touch .ol-control.ol-layer-shop .panel label span {
+  margin-left: .5em;
+  padding-top: .25em;
+}
+.ol-touch .ol-control.ol-layer-shop .panel label:before,
+.ol-touch .ol-control.ol-layer-shop .panel label:after {
+  font-size: 1.3em;
+  z-index: 1;
 }

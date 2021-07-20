@@ -82,6 +82,7 @@ function filterRedraw_(/* e */) {
 function addFilter_(filter) {
   if (!this.filters_) this.filters_ = [];
   this.filters_.push(filter);
+  if (filter.addToLayer) filter.addToLayer(this);
   if (filter.precompose) filter._listener.push ( { listener: this.on(['precompose','prerender'], precompose_.bind(filter)), target: this });
   if (filter.postcompose) filter._listener.push ( { listener: this.on(['postcompose','postrender'], postcompose_.bind(filter)), target: this });
   filter._listener.push ( { listener: filter.on('propertychange', filterRedraw_.bind(this)), target: this });
@@ -101,6 +102,7 @@ function removeFilter_(filter) {
   for (i=filter._listener.length-1; i>=0; i--) {
     // Remove listener on this object
     if (filter._listener[i].target === this) {
+      if (filter.removeFromLayer) filter.removeFromLayer(this);
       ol_Observable_unByKey(filter._listener[i].listener);
       filter._listener.splice(i,1);
     }
