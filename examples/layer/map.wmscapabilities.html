@@ -105,7 +105,8 @@
     extent: true,
     collapsed: false 
   }));
-  map.addControl(new ol.control.Permalink({ visible: false, localStorage: true }));
+  var plink = new ol.control.Permalink({ visible: false, localStorage: true });
+  map.addControl(plink);
   map.addControl(new ol.control.Attribution());
 
   var cap = new ol.control.WMSCapabilities({ 
@@ -146,9 +147,25 @@
   map.addControl(cap);
 
   cap.on('load', function(e) {
-    e.layer.set('WMS', true);
+    e.layer.set('legend', e.options.data.legend);
     map.addLayer(e.layer);
-  })
+    plink.setUrlParam('url', e.options.source.url);
+    plink.setUrlParam('layer', e.options.source.params.LAYERS);
+  });
+
+  var url = plink.getUrlParam('url');
+  var layerName = plink.getUrlParam('layer');
+  if (url) {
+    cap.once('capabilities', function(e) {
+      e.capabilities.Capability.Layer.Layer.forEach(function(l, i) {
+        if (l.Name===layerName) {
+          cap.getDialog().element.querySelectorAll('.ol-select-list div')[i].click();
+          cap.getDialog().element.querySelectorAll('button')[1].click()
+        }
+      })
+    })
+    cap.showDialog(url);
+  }
 
   function exportCarte() {
     var lonlat = ol.proj.toLonLat(map.getView().getCenter());
