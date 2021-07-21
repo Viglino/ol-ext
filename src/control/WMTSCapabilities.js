@@ -159,7 +159,6 @@ ol_control_WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
     console.log(t);
     delete layer_opt.source;
   }
-  console.log(caps)
   return ({ 
     layer: layer_opt, 
     source: source_opt,
