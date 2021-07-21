@@ -212,3 +212,11 @@
   top: 15%;
   transform: translate(-50%, 0);
 }
+
+.ol-ext-dialog.ol-wmtscapabilities .ol-map-param {
+  display: none;
+}
+.ol-ext-dialog.ol-wmtscapabilities .ol-proj-param {
+  opacity: .5;
+  pointer-events: none;
+}

@@ -288,11 +288,12 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
   }.bind(this);
   addLine('formTitle');
   addLine('formLayer', '', 'layer1,layer2,...');
-  addLine('formMap');
+  var li = addLine('formMap');
+  li.className = 'ol-map-param';
   addLine('formFormat', ['image/png', 'image/jpeg']);
   addLine('formMinZoom', 0);
   addLine('formMaxZoom', 20);
-  var li = addLine('formExtent', '', 'xmin,ymin,xmax,ymax');
+  li = addLine('formExtent', '', 'xmin,ymin,xmax,ymax');
   li.className = 'extent';
   ol_ext_element.create('BUTTON', {
     title: this.labels.mapExtent,
@@ -301,7 +302,8 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
     }.bind(this),
     parent: li
   });
-  addLine('formProjection', '');
+  li = addLine('formProjection', '');
+  li.className = 'ol-proj-param';
   addLine('formCrossOrigin', false);
   addLine('formVersion', '1.3.0');
   addLine('formAttribution', '');
