@@ -1,4 +1,5 @@
 import ol_ext_inherits from '../util/ext'
+import ol_filter_Base from './Base'
 
 /** Add a mix-blend-mode CSS filter (not working with IE or ol<6)
  * With ol < 6 use ol/filter/Composite instead.

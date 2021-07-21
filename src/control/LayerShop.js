@@ -3,7 +3,6 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 import ol_ext_inherits from '../util/ext'
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 
 import ol_ext_element from '../util/element'
 import ol_control_LayerSwitcher from '../control/LayerSwitcher'
@@ -49,14 +48,14 @@ var ol_control_LayerShop = function(options) {
   this.element.classList.add('ol-layer-shop');
 
   // Control title (selected layer)
-  var title = this.element.insertBefore(ol.ext.element.create('DIV', { className: 'ol-title-bar' }), this.getPanel());
+  var title = this.element.insertBefore(ol_ext_element.create('DIV', { className: 'ol-title-bar' }), this.getPanel());
   this.on('select', function(e) {
     title.innerText = e.layer ? e.layer.get('title') : '';
     this.element.setAttribute('data-layerClass', this.getLayerClass(e.layer));
   }.bind(this));
 
   // Top/bottom bar
-  this._topbar = this.element.insertBefore(ol.ext.element.create('DIV', { 
+  this._topbar = this.element.insertBefore(ol_ext_element.create('DIV', { 
     className: 'ol-bar ol-top-bar'
   }), this.getPanel());
   this._bottombar = ol_ext_element.create('DIV', { 

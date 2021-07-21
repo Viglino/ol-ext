@@ -9,6 +9,7 @@ import ol_ext_inherits from '../util/ext'
 import ol_style_RegularShape from 'ol/style/RegularShape'
 import {asString as ol_color_asString} from 'ol/color'
 import ol_style_Stroke from 'ol/style/Stroke'
+import ol_style_Fill from 'ol/style/Fill'
 
 /**
  * @classdesc
@@ -45,7 +46,7 @@ var ol_style_Photo = function(options) {
     radius: options.radius + strokeWidth + this.sanchor_/2 + this._shadow/2, 
     points: 0,
     // No fill to create a hit detection Image (v5) or transparent (v6) 
-    fill: ol_style_RegularShape.prototype.render ? new ol.style.Fill({ color: [0,0,0,0] }) : null
+    fill: ol_style_RegularShape.prototype.render ? new ol_style_Fill({ color: [0,0,0,0] }) : null
   });
   // Hack to get the hit detection Image (v4.6.5 ?)
   if (!this.getHitDetectionImage) {
