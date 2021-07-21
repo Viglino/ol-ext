@@ -14323,13 +14323,16 @@ ol.control.WMSCapabilities = function (options) {
   this._ajax.on('success', function (e) {
     try {
       var caps = parser.read(e.response);
-      this.showCapabilitis(caps)
+      this.showCapabilitis(caps);
+      this.dispatchEvent({ type: 'capabilities', capabilities: caps });
     } catch (e) {
       this.showError({ type: 'load', error: e });
+      this.dispatchEvent({ type: 'capabilities' });
     }
   }.bind(this));
   this._ajax.on('error', function(e) {
     this.showError({ type: 'load', error: e });
+    this.dispatchEvent({ type: 'capabilities' });
   }.bind(this));
   // Handle waiting
   this._ajax.on('loadstart', function() {
@@ -14632,7 +14635,7 @@ ol.control.WMSCapabilities.prototype.getDialog = function() {
  *  @param {number} options.timeout timout to get the capabilities, default 10000
  */
 ol.control.WMSCapabilities.prototype.showDialog = function(url, options) {
-  if (url) this.showError();
+  this.showError();
   if (!this._elements.formProjection.value) {
     this._elements.formProjection.value = this.getMap().getView().getProjection().getCode();
   }
@@ -14848,7 +14851,6 @@ ol.control.WMSCapabilities.prototype.showCapabilitis = function(caps) {
   // Show layers
   this._elements.select.innerHTML = '';
   addLayers(caps.Capability.Layer);
-  this.dispatchEvent({ type: 'capabilities', capabilities: caps });
 };
 /** Get resolution for a layer
  * @param {string} 'min' or 'max'
@@ -14995,6 +14997,25 @@ ol.control.WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) 
       queryable: caps.queryable
     } 
   });
+};
+/** Load a layer using service
+ * @param {string} url service url
+ * @param {string} layername
+ */
+ol.control.WMSCapabilities.prototype.loadLayer = function(url, layerName) {
+  this.once('capabilities', function(e) {
+    if (e.capabilities) {
+      e.capabilities.Capability.Layer.Layer.forEach(function(l) {
+        if (l.Name===layerName) {
+          var options = cap.getOptionsFromCap(l, e.capabilities);
+          var layer = cap.getLayerFromOptions(options);
+          this.dispatchEvent({ type: 'load', layer: layer, options: options });
+        }
+      }.bind(this))
+    }
+  }.bind(this))
+  //cap.showDialog()
+  this.getCapabilities(url);
 };
 
 /*
