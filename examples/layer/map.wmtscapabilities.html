@@ -5,11 +5,11 @@
   Copyright (c) 2015-2020 Jean-Marc VIGLINO, 
   released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 -->
-  <title>ol-ext: WMS Capabilities control</title>
+  <title>ol-ext: WMTS Capabilities control</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
   <meta name="description" content="DBPedia layer for OL3" />
-  <meta name="keywords" content="openlayers, control, source, WMS, getCapabilities, capabilites" />
+  <meta name="keywords" content="openlayers, control, source, WMTS, getCapabilities, capabilites" />
 
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
@@ -45,10 +45,10 @@
   <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
   <a href="../../index.html">
-    <h1>ol-ext: WMS Capabilities control</h1>
+    <h1>ol-ext: WMTS Capabilities control</h1>
   </a>
   <div class="info">
-    <b>ol/control/WMSCapabilities</b> is a control to load WMS layers on ol maps.
+    <b>ol/control/WMTSCapabilities</b> is a control to load WMTS layers on ol maps.
     <br/>
     It displays a dialog to select the service you want to add using getCapabilities of the service.
     <br/>
@@ -67,13 +67,13 @@
     <ul>
       <li>
         url: 
-        <input id="url" type="text" value="http://geoservices.brgm.fr/geologie" />
+        <input id="url" type="text" value="https://wxs.ign.fr/cartes/geoportail/wmts" />
         <button onclick="cap.showDialog($('#url').val())">search</button>
       </li>
       <li>
         Services : 
-        <button onclick="cap.showDialog('https://geoservices.brgm.fr/geologie'); ">BRGM</button>
-        <button onclick="cap.showDialog('https://services.sandre.eaufrance.fr/geo/sandre');">Sandre</button>
+        <button onclick="cap.showDialog('https://wxs.ign.fr/cartes/geoportail/wmts'); ">Geoportail maps</button>
+        <button onclick="cap.showDialog('https://wxs.ign.fr/clc/geoportail/wmts'); ">CorineLandCover</button>
       </li>
     </ul>
     <button onclick="exportCarte()" style="display: none;">exportCarte</button>
@@ -109,37 +109,26 @@
   map.addControl(plink);
   map.addControl(new ol.control.SearchNominatim({ zoomOnSelect: 13 }));
 
-  var cap = new ol.control.WMSCapabilities({ 
+  var cap = new ol.control.WMTSCapabilities({ 
     // target: $('.options').get(0),
     target: document.body,
     srs: ['EPSG:2154'],
     cors: true,
     services: {
-      'BRGM': 'https://geoservices.brgm.fr/geologie',
-      'OSM': 'https://wms.openstreetmap.fr/wms',
-      'Sandre': 'https://services.sandre.eaufrance.fr/geo/sandre', //'http://services.sandre.eaufrance.fr/geo/eth_FXX',
-      'Cartorisque': 'https://mapsref.brgm.fr/wxs/refcom-env/refign',
-      'Swiss Topo': 'https://wms.geo.admin.ch/',
-      'IFREMER*': 'http://tds0.ifremer.fr/thredds/wms/CORIOLIS-GLOBAL-NRTOA-OBS_TIME_SERIE?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&FORMAT=image%2Fpng&LAYERS=PSAL&CRS=EPSG%3A3857',
-      'Géorisque': 'https://mapsref.brgm.fr/wxs/georisques/risques',
-      'BDRisques': 'https://mapsref.brgm.fr/wxs/risques/bdrisques',
-      'Risques': 'https://geoservices.brgm.fr/risques',
-      'Natura 2000*': 'http://ws.carmencarto.fr/WMS/119/fxx_inpn?language=fre&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&FORMAT=image%2Fpng&LAYERS=Zones_de_protection_speciale&CRS=EPSG%3A3857',
-      // https://www.cigalsace.org/portail/fr/page/723/flux-donnees -->
-      'Cigalsace': 'https://www.cigalsace.org/geoserver/cigal/ows',
-      'CG93-raster': 'https://geoportail93.fr/cgi-bin/mapserv?map=SIGD/raster.map',
-      'CG93-fond': 'https://geoportail93.fr/cgi-bin/mapserv?map=SIGD/fond_SIGD.map',
-      'CG94*': 'https://geo.valdemarne.fr/viewer/index.php?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&FORMAT=image%2Fpng&LAYERS=parcelles&CRS=EPSG%3A2154',
-      'GeoFoncier':'https://api.geofoncier.fr/referentielsoge/ogc/wxs',
-      // http://www.geolittoral.equipement.gouv.fr/rubrique.php3?id_rubrique=39 -->
-      // 'GeoLittoral*': 'http://geolittoral.application.equipement.gouv.fr/wms/metropole',
-      // http://www.sogefi-sig.com/sogefi-diffuse-des-donnees-en-wms/ -->
-      'SOGEFI': 'http://ws.sogefi-web.com/wms',
-      // http://inspire-geoportal.ec.europa.eu/discovery/ -->
-      'Photos anciennes litto': 'http://www.ifremer.fr/services/photos_anciennes',
-      'Geobretagne': 'https://geobretagne.fr/geoserver/dir_ouest/wms',
-      'Venise*': 'http://cigno.atlantedellalaguna.it/geoserver/ows?SERVICE=WMS&VERSION=1.3.0&FORMAT=image%2Fpng&LAYERS=carta_base',
-      'Geoportail': 'https://wxs.ign.fr/choisirgeoportail/geoportail/r/wms'
+      'Géoportail-cartes' : 'https://wxs.ign.fr/cartes/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
+      'Géoportail-ortho' : 'https://wxs.ign.fr/ortho/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
+      'Géoportail-orthohisto' : 'https://wxs.ign.fr/orthohisto/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
+      'Géoportail-satellite' : 'https://wxs.ign.fr/satellite/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
+      'Géoportail-cartovecto' : 'https://wxs.ign.fr/cartovecto/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
+      'Géoportail-economie' : 'https://wxs.ign.fr/economie/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
+      'Géoportail-environnement' : 'https://wxs.ign.fr/environnement/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
+      'Géoportail-sol' : 'https://wxs.ign.fr/sol/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
+      'Géoportail-parcellaire' : 'https://wxs.ign.fr/parcellaire/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
+      'Géoportail-transports' : 'https://wxs.ign.fr/transports/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
+      'Géoportail-administratif' : 'https://wxs.ign.fr/administratif/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
+      'Géoportail-altimetrie' : 'https://wxs.ign.fr/altimetrie/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
+      'Géoportail-agriculture' : 'https://wxs.ign.fr/agriculture/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
+      'Géoportail-CLC' : 'https://wxs.ign.fr/clc/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities'
     },
     // Show trace in the console
     trace: true
@@ -150,12 +139,13 @@
     map.addLayer(e.layer);
     e.layer.set('legend', e.options.data.legend);
     plink.setUrlParam('url', e.options.source.url);
-    plink.setUrlParam('layer', e.options.source.params.LAYERS);
+    plink.setUrlParam('layer', e.options.source.layer);
   });
 
   var url = plink.getUrlParam('url');
   var layerName = plink.getUrlParam('layer');
   if (url) {
+    console.log(layerName)
     cap.loadLayer(url, layerName);
   }
 

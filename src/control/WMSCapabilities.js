@@ -19,6 +19,7 @@ import '../layer/GetPreview';
  * @constructor
  * @fires load
  * @fires capabilities
+ * @extends {ol_control_Button}
  * @param {*} options
  *  @param {string|Element} options.target the target to set the dialog, use document.body to have fullwindow dialog
  *  @param {string} options.proxy proxy to use when requesting Getcapabilites, default none (suppose the service use CORS)
@@ -61,7 +62,7 @@ var ol_control_WMSCapabilities = function (options) {
   this.createDialog(options);
 
   // Ajax request
-  var parser = new ol_format_WMSCapabilities();
+  var parser = this._getParser();
   this._ajax = new ol_ext_Ajax({ dataType:'text', auth: options.authentication });
   this._ajax.on('success', function (e) {
     try {
@@ -87,6 +88,12 @@ var ol_control_WMSCapabilities = function (options) {
   }.bind(this));
 };
 ol_ext_inherits(ol_control_WMSCapabilities, ol_control_Button);
+
+/** Get service parser
+ */
+ol_control_WMSCapabilities.prototype._getParser = function() {
+  return  new ol_format_WMSCapabilities();
+};
 
 /** Error list: a key/value list of error to display in the dialog 
  * Overwrite it to handle internationalization
@@ -429,6 +436,17 @@ ol_control_WMSCapabilities.prototype.testUrl = function(url) {
   return !!pattern.test(url);
 };
 
+/** Get Capabilities request parameters
+ * @param {*} options
+ */
+ol_control_WMSCapabilities.prototype.getRequestParam = function(options) {
+  return {
+    SERVICE: 'WMS',
+    REQUEST: 'GetCapabilities',
+    VERSION: options.version || '1.3.0'
+  }
+};
+
 /** Get WMS capabilities for a server
  * @fire load
  * @param {string} url service url
@@ -490,11 +508,7 @@ ol_control_WMSCapabilities.prototype.getCapabilities = function(url, options) {
   this._elements.input.value = (url || '') + (map ? '?map='+map : '');
   this.clearForm();
 
-  var request = {
-    SERVICE: 'WMS',
-    REQUEST: 'GetCapabilities',
-    VERSION: options.version || '1.3.0'
-  }
+  var request = this.getRequestParam(options);
   if (map) request.MAP = map;
 
   if (this._proxy) {
@@ -715,7 +729,29 @@ ol_control_WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) 
     }
   }
 
+  // Resolution to zoom
+  var view = new ol_View({
+    projection: this.getMap().getView().getProjection()
+  })
+  view.setResolution(layer_opt.minResolution);
+  var maxZoom = Math.round(view.getZoom());
+  view.setResolution(layer_opt.maxResolution);
+  var minZoom = Math.round(view.getZoom());
+
   // Fill form
+  this._fillForm({
+    title: layer_opt.title,
+    layers: source_opt.params.LAYERS,
+    format: source_opt.params.FORMAT,
+    minZoom: minZoom,
+    maxZoom: maxZoom,
+    extent: bbox ? bbox.join(',') : '',
+    projection: source_opt.projection,
+    attribution: source_opt.attributions[0] || '',
+    version: source_opt.params.VERSION
+  });
+
+/*
   this._elements.formTitle.value = layer_opt.title;
   this._elements.formLayer.value = source_opt.params.LAYERS;
   var o;
@@ -725,6 +761,7 @@ ol_control_WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) 
       break;
     }
   }
+  
   var view = new ol_View({
     projection: this.getMap().getView().getProjection()
   })
@@ -735,15 +772,15 @@ ol_control_WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) 
   this._elements.formExtent.value = bbox ? bbox.join(',') : '';
   this._elements.formProjection.value = source_opt.projection;
   this._elements.formAttribution.value = source_opt.attributions[0] || '';
+*/
 
   // Trace
   if (this.get('trace')) {
     var tso = JSON.stringify([ source_opt ], null, "\t").replace(/\\"/g,'"');
-    layer_opt.source = "new ol.source.TileWMS("+tso+")";
+    layer_opt.source = "SOURCE"; 
     var t = "new ol.layer.Tile (" +JSON.stringify(layer_opt, null, "\t")+ ")" 
     t = t.replace(/\\"/g,'"')
-      .replace(/"new/g,'new')
-      .replace(/\)"/g,')')
+      .replace('"SOURCE"', "new ol.source.TileWMS("+tso+")")
       .replace(/\\t/g,"\t").replace(/\\n/g,"\n")
       .replace("([\n\t","(")
       .replace("}\n])","})");
@@ -776,6 +813,26 @@ ol_control_WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) 
   });
 };
 
+/** Fill dialog form
+ * @private
+ */
+ol_control_WMSCapabilities.prototype._fillForm = function(opt) {
+  this._elements.formTitle.value = opt.title;
+  this._elements.formLayer.value = opt.layers;
+  var o, i;
+  for (i=0; o=this._elements.formFormat.options[i]; i++) {
+    if (o.value === opt.format) {
+      this._elements.formFormat.selectedIndex = i;
+      break;
+    }
+  }
+  this._elements.formMaxZoom.value = opt.maxZoom;
+  this._elements.formMinZoom.value = opt.minZoom;
+  this._elements.formProjection.value = opt.projection;
+  this._elements.formAttribution.value = opt.attribution;
+  this._elements.formVersion.value = opt.version;
+};
+
 /** Load a layer using service
  * @param {string} url service url
  * @param {string} layername
@@ -784,9 +841,9 @@ ol_control_WMSCapabilities.prototype.loadLayer = function(url, layerName) {
   this.once('capabilities', function(e) {
     if (e.capabilities) {
       e.capabilities.Capability.Layer.Layer.forEach(function(l) {
-        if (l.Name===layerName) {
-          var options = cap.getOptionsFromCap(l, e.capabilities);
-          var layer = cap.getLayerFromOptions(options);
+        if (l.Name===layerName || l.Identifier===layerName) {
+          var options = this.getOptionsFromCap(l, e.capabilities);
+          var layer = this.getLayerFromOptions(options);
           this.dispatchEvent({ type: 'load', layer: layer, options: options });
         }
       }.bind(this))
