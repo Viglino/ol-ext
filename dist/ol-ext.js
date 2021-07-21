@@ -14280,6 +14280,7 @@ ol.control.VideoRecorder.prototype.resume = function () {
  * @constructor
  * @fires load
  * @fires capabilities
+ * @extends {ol.control.Button}
  * @param {*} options
  *  @param {string|Element} options.target the target to set the dialog, use document.body to have fullwindow dialog
  *  @param {string} options.proxy proxy to use when requesting Getcapabilites, default none (suppose the service use CORS)
@@ -14318,7 +14319,7 @@ ol.control.WMSCapabilities = function (options) {
   // Dialog
   this.createDialog(options);
   // Ajax request
-  var parser = new ol.format.WMSCapabilities();
+  var parser = this._getParser();
   this._ajax = new ol.ext.Ajax({ dataType:'text', auth: options.authentication });
   this._ajax.on('success', function (e) {
     try {
@@ -14343,6 +14344,11 @@ ol.control.WMSCapabilities = function (options) {
   }.bind(this));
 };
 ol.ext.inherits(ol.control.WMSCapabilities, ol.control.Button);
+/** Get service parser
+ */
+ol.control.WMSCapabilities.prototype._getParser = function() {
+  return  new ol.format.WMSCapabilities();
+};
 /** Error list: a key/value list of error to display in the dialog 
  * Overwrite it to handle internationalization
  */
@@ -14534,11 +14540,12 @@ ol.control.WMSCapabilities.prototype.createDialog = function (options) {
   }.bind(this);
   addLine('formTitle');
   addLine('formLayer', '', 'layer1,layer2,...');
-  addLine('formMap');
+  var li = addLine('formMap');
+  li.className = 'ol-map-param';
   addLine('formFormat', ['image/png', 'image/jpeg']);
   addLine('formMinZoom', 0);
   addLine('formMaxZoom', 20);
-  var li = addLine('formExtent', '', 'xmin,ymin,xmax,ymax');
+  li = addLine('formExtent', '', 'xmin,ymin,xmax,ymax');
   li.className = 'extent';
   ol.ext.element.create('BUTTON', {
     title: this.labels.mapExtent,
@@ -14547,7 +14554,8 @@ ol.control.WMSCapabilities.prototype.createDialog = function (options) {
     }.bind(this),
     parent: li
   });
-  addLine('formProjection', '');
+  li = addLine('formProjection', '');
+  li.className = 'ol-proj-param';
   addLine('formCrossOrigin', false);
   addLine('formVersion', '1.3.0');
   addLine('formAttribution', '');
@@ -14674,6 +14682,16 @@ ol.control.WMSCapabilities.prototype.testUrl = function(url) {
     '(\\#[-a-z\\d_]*)?$','i');
   return !!pattern.test(url);
 };
+/** Get Capabilities request parameters
+ * @param {*} options
+ */
+ol.control.WMSCapabilities.prototype.getRequestParam = function(options) {
+  return {
+    SERVICE: 'WMS',
+    REQUEST: 'GetCapabilities',
+    VERSION: options.version || '1.3.0'
+  }
+};
 /** Get WMS capabilities for a server
  * @fire load
  * @param {string} url service url
@@ -14731,11 +14749,7 @@ ol.control.WMSCapabilities.prototype.getCapabilities = function(url, options) {
   // Fill form
   this._elements.input.value = (url || '') + (map ? '?map='+map : '');
   this.clearForm();
-  var request = {
-    SERVICE: 'WMS',
-    REQUEST: 'GetCapabilities',
-    VERSION: options.version || '1.3.0'
-  }
+  var request = this.getRequestParam(options);
   if (map) request.MAP = map;
   if (this._proxy) {
     var q = '';
@@ -14941,7 +14955,27 @@ ol.control.WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) 
       'VERSION': parent.version || '1.3.0'
     }
   }
+  // Resolution to zoom
+  var view = new ol.View({
+    projection: this.getMap().getView().getProjection()
+  })
+  view.setResolution(layer_opt.minResolution);
+  var maxZoom = Math.round(view.getZoom());
+  view.setResolution(layer_opt.maxResolution);
+  var minZoom = Math.round(view.getZoom());
   // Fill form
+  this._fillForm({
+    title: layer_opt.title,
+    layers: source_opt.params.LAYERS,
+    format: source_opt.params.FORMAT,
+    minZoom: minZoom,
+    maxZoom: maxZoom,
+    extent: bbox ? bbox.join(',') : '',
+    projection: source_opt.projection,
+    attribution: source_opt.attributions[0] || '',
+    version: source_opt.params.VERSION
+  });
+/*
   this._elements.formTitle.value = layer_opt.title;
   this._elements.formLayer.value = source_opt.params.LAYERS;
   var o;
@@ -14961,14 +14995,14 @@ ol.control.WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) 
   this._elements.formExtent.value = bbox ? bbox.join(',') : '';
   this._elements.formProjection.value = source_opt.projection;
   this._elements.formAttribution.value = source_opt.attributions[0] || '';
+*/
   // Trace
   if (this.get('trace')) {
     var tso = JSON.stringify([ source_opt ], null, "\t").replace(/\\"/g,'"');
-    layer_opt.source = "new ol.source.TileWMS("+tso+")";
+    layer_opt.source = "SOURCE"; 
     var t = "new ol.layer.Tile (" +JSON.stringify(layer_opt, null, "\t")+ ")" 
     t = t.replace(/\\"/g,'"')
-      .replace(/"new/g,'new')
-      .replace(/\)"/g,')')
+      .replace('"SOURCE"', "new ol.source.TileWMS("+tso+")")
       .replace(/\\t/g,"\t").replace(/\\n/g,"\n")
       .replace("([\n\t","(")
       .replace("}\n])","})");
@@ -14998,6 +15032,25 @@ ol.control.WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) 
     } 
   });
 };
+/** Fill dialog form
+ * @private
+ */
+ol.control.WMSCapabilities.prototype._fillForm = function(opt) {
+  this._elements.formTitle.value = opt.title;
+  this._elements.formLayer.value = opt.layers;
+  var o, i;
+  for (i=0; o=this._elements.formFormat.options[i]; i++) {
+    if (o.value === opt.format) {
+      this._elements.formFormat.selectedIndex = i;
+      break;
+    }
+  }
+  this._elements.formMaxZoom.value = opt.maxZoom;
+  this._elements.formMinZoom.value = opt.minZoom;
+  this._elements.formProjection.value = opt.projection;
+  this._elements.formAttribution.value = opt.attribution;
+  this._elements.formVersion.value = opt.version;
+};
 /** Load a layer using service
  * @param {string} url service url
  * @param {string} layername
@@ -15006,9 +15059,9 @@ ol.control.WMSCapabilities.prototype.loadLayer = function(url, layerName) {
   this.once('capabilities', function(e) {
     if (e.capabilities) {
       e.capabilities.Capability.Layer.Layer.forEach(function(l) {
-        if (l.Name===layerName) {
-          var options = cap.getOptionsFromCap(l, e.capabilities);
-          var layer = cap.getLayerFromOptions(options);
+        if (l.Name===layerName || l.Identifier===layerName) {
+          var options = this.getOptionsFromCap(l, e.capabilities);
+          var layer = this.getLayerFromOptions(options);
           this.dispatchEvent({ type: 'load', layer: layer, options: options });
         }
       }.bind(this))
@@ -15016,6 +15069,169 @@ ol.control.WMSCapabilities.prototype.loadLayer = function(url, layerName) {
   }.bind(this))
   //cap.showDialog()
   this.getCapabilities(url);
+};
+
+/** WMTSCapabilities
+ * @constructor
+ * @fires load
+ * @fires capabilities
+ * @extends {ol.control.WMSCapabilities}
+ * @param {*} options
+ *  @param {string|Element} options.target the target to set the dialog, use document.body to have fullwindow dialog
+ *  @param {string} options.proxy proxy to use when requesting Getcapabilites, default none (suppose the service use CORS)
+ *  @param {string} options.placeholder input placeholder, default 'service url...'
+ *  @param {string} options.title dialog title, default 'WMS'
+ *  @param {string} options.searchLabel Label for search button, default 'search'
+ *  @param {string} options.loadLabel Label for load button, default 'load'
+ *  @param {boolean} options.popupLayer Use a popup for the layers, default false
+ *  @param {*} options.services a key/url object of services for quick access in a menu
+ *  @param {Array<string>} options.srs an array of supported srs, default map projection code or 'EPSG:3857'
+ *  @param {number} options.timeout Timeout for getCapabilities request, default 1000
+ *  @param {boolean} options.cors Use CORS, default false
+ *  @param {boolean} options.trace Log layer info, default false
+ */
+ol.control.WMTSCapabilities = function (options) {
+  options = options || {};
+  options.title = options.title || 'WMTS';
+  ol.control.WMSCapabilities.call(this, options);
+  this.getDialog().element.classList.add('ol-wmtscapabilities');
+};
+ol.ext.inherits(ol.control.WMTSCapabilities, ol.control.WMSCapabilities);
+/** Get service parser
+ */
+ ol.control.WMTSCapabilities.prototype._getParser = function() {
+  var pars = new ol.format.WMTSCapabilities();
+  return {
+    read: function(data) {
+      var resp = pars.read(data);
+      resp.Capability = {
+        Layer: resp.Contents,
+      }
+      // Generic attribution for layers
+      resp.Capability.Layer.Attribution = {
+        Title: resp.ServiceProvider.ProviderName
+      }
+      // Remove non image format
+      var layers = [];
+      resp.Contents.Layer.forEach(function(l) {
+        if (l.Format && /jpeg|png/.test(l.Format[0])) {
+          layers.push(l);
+        }
+      })
+      resp.Contents.Layer = layers;
+      return resp;
+    }
+  }
+};
+/** Get Capabilities request parameters
+ * @param {*} options
+ */
+ ol.control.WMTSCapabilities.prototype.getRequestParam = function(options) {
+  return {
+    SERVICE: 'WMTS',
+    REQUEST: 'GetCapabilities',
+    VERSION: options.version || '1.0.0'
+  }
+};
+/** Return a WMTS options for the given capabilities
+ * @param {*} caps layer capabilities (read from the capabilities)
+ * @param {*} parent capabilities
+ * @return {*} options
+ */
+ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent) {
+  var bbox = caps.WGS84BoundingBox;
+  if (bbox) bbox = ol.proj.transformExtent(bbox, 'EPSG:4326', this.getMap().getView().getProjection());
+  // Tilematrix zoom
+  var minZoom = Infinity, maxZoom = -Infinity;
+  caps.TileMatrixSetLink[0].TileMatrixSetLimits.forEach(function(tm) {
+    minZoom = Math.min(minZoom, parseInt(tm.TileMatrix));
+    maxZoom = Math.max(maxZoom, parseInt(tm.TileMatrix));
+  });
+  // Tilematrix
+  var matrixIds = new Array();
+  var resolutions = new Array();
+  var size = ol.extent.getWidth(ol.proj.get('EPSG:3857').getExtent()) / 256;
+  for (var z=0; z <= (maxZoom ? maxZoom : 20) ; z++) {
+    matrixIds[z] = z ; 
+    resolutions[z] = size / Math.pow(2, z);
+  }
+  var tg = {
+    origin: [-20037508, 20037508],
+    resolutions: resolutions,
+    matrixIds: matrixIds,
+    minZoom: (minZoom ? minZoom : 0)
+  }
+  var view = new ol.View();
+  view.setZoom(minZoom);
+  var layer_opt = {
+    title: caps.Title,
+    extent: bbox,
+    abstract: caps.Abstract,
+    maxResolution: view.getResolution()
+  };
+  var source_opt = {
+    url: parent.OperationsMetadata.GetTile.DCP.HTTP.Get[0].href,
+    layer: caps.Identifier,
+    matrixSet: 'PM',
+    format: caps.Format[0] || 'image/jpeg',
+    projection: 'EPSG:3857',
+    tileGrid: tg,
+    style: caps.Style ? caps.Style[0].Identifier : 'normal',
+    attributions: caps.Attribution.Title,
+    crossOrigin: this.get('cors') ? 'anonymous' : null,
+    wrapX: (this.get('wrapX') !== false),
+  };
+  // Fill form
+  this._fillForm({
+    title: layer_opt.title,
+    layers: source_opt.layer,
+    format: source_opt.format,
+    minZoom: minZoom,
+    maxZoom: maxZoom,
+    extent: bbox ? bbox.join(',') : '',
+    projection: source_opt.projection,
+    attribution: source_opt.attributions || '',
+    version: '1.0.0'
+  });
+  // Trace
+  if (this.get('trace')) {
+    var tso = JSON.stringify([ source_opt ], null, "\t").replace(/\\"/g,'"');
+    layer_opt.source = "SOURCE";
+    layer_opt.source.tileGrid = "new ol.tilegrid.WMTS("+layer_opt.source.tileGrid+")";
+    var t = "new ol.layer.Tile (" +JSON.stringify(layer_opt, null, "\t")+ ")" 
+    t = t.replace(/\\"/g,'"')
+      .replace('"SOURCE"', "new ol.source.WMTS("+tso+")")
+      .replace(/\\t/g,"\t").replace(/\\n/g,"\n")
+      .replace(/"tileGrid": {/g, '"tileGrid": new ol.tilegrid.WMTS({')
+      .replace(/},\n(\t*)"style"/g, '}),\n$1"style"')
+      .replace("([\n\t","(")
+      .replace("}\n])","})");
+    console.log(t);
+    delete layer_opt.source;
+  }
+  console.log(caps)
+  return ({ 
+    layer: layer_opt, 
+    source: source_opt,
+    data: {
+      title: caps.Title,
+      abstract: caps.Abstract,
+      legend: caps.Style ? [ caps.Style[0].LegendURL[0].href ] : undefined,
+    } 
+  });
+};
+/** Create a new layer using options received by getOptionsFromCap method
+ * @param {*} options
+ */
+ol.control.WMTSCapabilities.prototype.getLayerFromOptions = function (options) {
+  var tg = options.source.tileGrid;
+  options.source.tileGrid = new ol.tilegrid.WMTS(tg);
+  options.layer.source = new ol.source.WMTS(options.source);
+  var layer = new ol.layer.Tile(options.layer);
+  // Restore options
+  delete options.layer.source;
+  options.source.tileGrid = tg;
+  return layer;
 };
 
 /*

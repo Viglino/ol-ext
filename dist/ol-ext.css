@@ -4529,6 +4529,14 @@ ul.ol-legend li div {
   -webkit-transform: translate(-50%, 0);
           transform: translate(-50%, 0);
 }
+
+.ol-ext-dialog.ol-wmtscapabilities .ol-map-param {
+  display: none;
+}
+.ol-ext-dialog.ol-wmtscapabilities .ol-proj-param {
+  opacity: .5;
+  pointer-events: none;
+}
 .ol-target-overlay .ol-target 
 {	border: 1px solid transparent;
 	-webkit-box-shadow: 0 0 1px 1px #fff;
