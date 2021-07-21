@@ -14279,6 +14279,7 @@ ol.control.VideoRecorder.prototype.resume = function () {
 /** WMSCapabilities
  * @constructor
  * @fires load
+ * @fires capabilities
  * @param {*} options
  *  @param {string|Element} options.target the target to set the dialog, use document.body to have fullwindow dialog
  *  @param {string} options.proxy proxy to use when requesting Getcapabilites, default none (suppose the service use CORS)
@@ -14617,6 +14618,12 @@ ol.control.WMSCapabilities.prototype.setMap = function (map) {
   ol.control.Button.prototype.setMap.call(this, map);
   if (this._dialog) this._dialog.setMap(map);
 };
+/** Get the dialog
+ * @returns {ol.control.Dialog}
+ */
+ol.control.WMSCapabilities.prototype.getDialog = function() {
+  return this._dialog;
+};
 /** Show dialog for url
  * @param {string} [url] service url, default ask for an url
  * @param {*} options capabilities options
@@ -14838,8 +14845,10 @@ ol.control.WMSCapabilities.prototype.showCapabilitis = function(caps) {
       }
     }.bind(this));
   }.bind(this);
+  // Show layers
   this._elements.select.innerHTML = '';
   addLayers(caps.Capability.Layer);
+  this.dispatchEvent({ type: 'capabilities', capabilities: caps });
 };
 /** Get resolution for a layer
  * @param {string} 'min' or 'max'
