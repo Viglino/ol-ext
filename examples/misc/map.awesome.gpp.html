@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--
+	Copyright (c) 2015-2021 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+	<title>ol-ext: Awesome Geoportail</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="icon" type="image/png" href="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/IGN_logo_2012.svg/218px-IGN_logo_2012.svg.png" />
+
+	<meta name="description" content="Geoportail WFS" />
+	<meta name="keywords" content="ol, openlayers, layer, source, geoportail, WFS" />
+
+  <meta name="msapplication-tap-highlight" content="no" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+	<!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+	
+	<!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+  <script type="text/javascript" src="../../dist/extra/FontAwesomeDef.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    #map {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      margin: 0;
+    }
+    .ol-control.ol-wmscapabilities {
+      display: none;
+    }
+    #info > div {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      background: #fff;
+      box-shadow: 1px 1px 5px 1px #000;
+      transform: translate(-50%, -50%);
+      padding: 1em;
+      width: 500px;
+      max-width: 80%;
+    }
+    #info {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 1;
+    }
+    #info a,
+    #info button {
+      float: right; 
+      clear: both;
+      margin: 0 1em;
+    }
+    #info button {
+      margin: .5em 1em;
+    }
+    .logo {
+      display: block;
+      margin: auto;
+      width: 7em;
+      max-width: 100%;
+    }
+  </style>
+  
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <div id="info">
+    <div>
+      <h2>Awesome Géoportail</h2>
+      <img src="https://geoservices.ign.fr/themes/custom/ignpro/logo.svg"/>
+      <p>
+        Accéder gratuitement et librement à un riche catalogue de services web reposant 
+        sur nos données publiques..
+      </p>
+      <img class="logo" src="https://geoservices.ign.fr/themes/custom/ignpro/images/svg/logo-rf.svg">
+      <a href="https://geoservices.ign.fr/services-web-experts">en savoir plus...</a>
+      <button onclick="$('#info').hide();">OK</button>
+    </div>
+  </div>
+
+  <div id="map"></div>
+
+<script>
+ol.source.Geoportail.prototype.attribution = '&copy; <a href="https://geoservices.ign.fr/services-web-experts" target="_new">Géoservices IGN-France</a>';
+$('#info').on('click', function() {
+  $('#info').hide();
+});
+$('#info > div').on('click', function(e) {
+  e.stopPropagation();  
+});
+
+var map = new ol.Map({
+  target: 'map',
+  view: new ol.View ({
+    zoom: 8.42,
+    center: [266978, 5885807]
+  }),
+  interactions: ol.interaction.defaults(),
+  layers: [ new ol.layer.Geoportail({
+    layer: 'ORTHOIMAGERY.ORTHOPHOTOS'
+  })]
+});
+var wmts = new ol.control.WMTSCapabilities();
+map.addControl(wmts);
+map.addControl(new ol.control.SearchBAN({ zoomOnSelect: 10.42 }))
+
+var url = 'https://wxs.ign.fr/KEY/geoportail/wmts';
+var layers = {
+  clc: [ 'LANDCOVER.CLC18', 'LANDCOVER.HR.IMD.CLC15', 'LANDCOVER.HR.TCD.CLC12' ],
+  cartes: ["GEOGRAPHICALGRIDSYSTEMS.1900TYPEMAPS", /* "GEOGRAPHICALGRIDSYSTEMS.BONNE", */ "GEOGRAPHICALGRIDSYSTEMS.ETATMAJOR10","GEOGRAPHICALGRIDSYSTEMS.ETATMAJOR40","GEOGRAPHICALGRIDSYSTEMS.MAPS.BDUNI.J1",/*"GEOGRAPHICALGRIDSYSTEMS.MAPS.OVERVIEW"*/,"GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN50.1950","GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2","GEOGRAPHICALGRIDSYSTEMS.TERRIER_V1","GEOGRAPHICALGRIDSYSTEMS.TERRIER_V2"],
+  economie: [/* "AREAMANAGEMENT.ZFU", "AREAMANAGEMENT.ZUS", "COMMUNES.PRIORITYDISCTRICT", "DREAL.ZONAGE_PINEL", */ "INSEE.FILOSOFI.ENFANTS.0.17.ANS.SECRET", "INSEE.FILOSOFI.LOGEMENTS.SURFACE.MOYENNE.SECRET", "INSEE.FILOSOFI.NIVEAU.DE.VIE.SECRET", /* "INSEE.FILOSOFI.PART.FAMILLES.MONOPARENTALES.SECRET", "INSEE.FILOSOFI.PART.INDIVIDUS.25.39.ANS.SECRET", "INSEE.FILOSOFI.PART.INDIVIDUS.40.54.ANS.SECRET", "INSEE.FILOSOFI.PART.INDIVIDUS.55.64.ANS.SECRET", */ "INSEE.FILOSOFI.PART.LOGEMENTS.APRES.1990.SECRET", "INSEE.FILOSOFI.PART.LOGEMENTS.AVANT.1945.SECRET", "INSEE.FILOSOFI.PART.LOGEMENTS.COLLECTIFS.SECRET", "INSEE.FILOSOFI.PART.LOGEMENTS.CONSTRUITS.1945.1970.SECRET", "INSEE.FILOSOFI.PART.LOGEMENTS.CONSTRUITS.1970.1990.SECRET", "INSEE.FILOSOFI.PART.LOGEMENTS.SOCIAUX.SECRET", "INSEE.FILOSOFI.PART.MENAGES.1.PERSONNE.SECRET", "INSEE.FILOSOFI.PART.MENAGES.5.PERSONNES.OUPLUS.SECRET", "INSEE.FILOSOFI.PART.MENAGES.MAISON.SECRET", "INSEE.FILOSOFI.PART.MENAGES.PAUVRES.SECRET", "INSEE.FILOSOFI.PART.MENAGES.PROPRIETAIRES.SECRET", "INSEE.FILOSOFI.PART.PLUS.65.ANS.SECRET", "INSEE.FILOSOFI.POPULATION"],
+  parcellaire: ["Aire-Parcellaire", "CADASTRALPARCELS.HEATMAP", "CADASTRALPARCELS.HISTO.2008-2013.PARCELS", "CADASTRALPARCELS.PARCELLAIRE_EXPRESS", "CADASTRALPARCELS.PARCELS"],
+  environnement: ["FORETS.PUBLIQUES", "GEOGRAPHICALGRIDSYSTEM.DFCI", "LANDCOVER.FORESTAREAS", "LANDCOVER.FORESTINVENTORY.V1", "LANDCOVER.FORESTINVENTORY.V2", "LANDCOVER.SYLVOECOREGIONS", "LANDCOVER.SYLVOECOREGIONS.ALLUVIUM", "PROTECTEDAREAS.APB", "PROTECTEDAREAS.APG", /* "PROTECTEDAREAS.APHN", "PROTECTEDAREAS.BIOS", "PROTECTEDAREAS.GP", "PROTECTEDAREAS.MNHN.CDL.PARCELS", "PROTECTEDAREAS.MNHN.CDL.PERIMETER", "PROTECTEDAREAS.MNHN.CONSERVATOIRES", "PROTECTEDAREAS.MNHN.RN.PERIMETER", "PROTECTEDAREAS.PN", "PROTECTEDAREAS.PNM", "PROTECTEDAREAS.PNR", "PROTECTEDAREAS.PRSF", "PROTECTEDAREAS.RAMSAR", "PROTECTEDAREAS.RB", "PROTECTEDAREAS.RIPN", "PROTECTEDAREAS.RN", "PROTECTEDAREAS.RNC", "PROTECTEDAREAS.RNCF", "PROTECTEDAREAS.SIC", "PROTECTEDAREAS.ZNIEFF1", "PROTECTEDAREAS.ZNIEFF1.SEA", "PROTECTEDAREAS.ZNIEFF2", "PROTECTEDAREAS.ZNIEFF2.SEA", "PROTECTEDAREAS.ZPS" */],
+  agriculture: ["GEOGRAPHICALGRIDSYSTEMS.SLOPES.PAC", "HYDROGRAPHY.BCAE.2021", "LANDUSE.AGRICULTURE2019"],
+  transports: ['SECUROUTE.TE.1TE', 'SECUROUTE.TE.TE72', 'TRANSPORTS.DRONES.RESTRICTIONS' ], 
+}
+
+// List of layers
+var gppLayers = [];
+var nbload = 0;
+wmts.on('load', function(e) {
+  nbload--;
+  if (e.layer) {
+    var ext = e.layer.getExtent()
+    if (ext[2]-ext[0] > 1000000) gppLayers.push(e.layer);
+    if (gppLayers.length && !nbload) {
+      map.addLayer(gpp);
+      map.addLayer(gpp2);
+    }
+  }
+});
+// Load layers
+for (var i in layers) {
+  layers[i].forEach(function(l) {
+    nbload++;
+    var layer = wmts.loadLayer(url.replace('KEY', i), l);
+  });
+}
+
+// 2 random layers 
+var gpp = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' });
+var gpp2 = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' });
+
+// Random tile function
+var getUrl = gpp.getSource().getTileUrlFunction()
+function randomTile(tileCoord, pixelRatio, projection) {
+  var url = getUrl(tileCoord, pixelRatio, projection);
+  var pos = Math.round(Math.random()*gppLayers.length) -1;
+  var l, nb = 0;
+  var extent = gpp.getSource().getTileGrid().getTileCoordExtent(tileCoord);
+  while (true) {
+    l = gppLayers[pos];
+    if (l && l.getMinZoom() < map.getView().getZoom() && l.getMaxZoom() > map.getView().getZoom()) {
+      if (ol.extent.intersects(extent, l.getExtent())) {
+        var u = l.getSource().getTileUrlFunction()(tileCoord, pixelRatio, projection);
+        if (/TILEMATRIX/i.test(u)) {
+          return u;
+        }
+      }
+    }
+    if (nb++>5) break;
+  } 
+  return url;
+}
+gpp.getSource().setTileUrlFunction(randomTile);
+gpp2.getSource().setTileUrlFunction(randomTile);
+
+</script>
+
+</body>
+</html>

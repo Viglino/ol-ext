@@ -105,7 +105,7 @@
     extent: true,
     collapsed: false 
   }));
-  var plink = new ol.control.Permalink({ visible: false, localStorage: true });
+  var plink = new ol.control.Permalink({ visible: false, localStorage: 'position' });
   map.addControl(plink);
   map.addControl(new ol.control.SearchNominatim({ zoomOnSelect: 13 }));
 

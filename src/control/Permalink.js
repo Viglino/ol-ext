@@ -21,7 +21,7 @@ import { fromLonLat as ol_geohash_fromLonLat } from '../geom/geohash'
  * @extends {ol_control_Control}
  * @param {Object=} options
  *  @param {boolean} options.urlReplace replace url or not, default true
- *  @param {boolean} options.localStorage save current map view in localStorage, default false
+ *  @param {boolean|string} [options.localStorage=false] save current map view in localStorage, if 'position' only store map position
  *  @param {boolean} options.geohash use geohash instead of lonlat, default false
  *  @param {integer} options.fixed number of digit in coords, default 6
  *  @param {boolean} options.anchor use "#" instead of "?" in href
@@ -249,18 +249,19 @@ ol_control_Permalink.prototype.hasUrlParam = function(key) {
   return this.search_.hasOwnProperty(encodeURIComponent(key));
 };
 
-/**
- * Get the permalink
+/** Get the permalink
+ * @param {boolean|string} [search=false] false: return full link | true: return the search string only | 'position': return position string
  * @return {permalink}
  */
-ol_control_Permalink.prototype.getLink = function(param) {
+ol_control_Permalink.prototype.getLink = function(search) {
   var map = this.getMap();
   var c = ol_proj_transform(map.getView().getCenter(), map.getView().getProjection(), 'EPSG:4326');
   var z = Math.round(map.getView().getZoom()*10)/10;
   var r = map.getView().getRotation();
   var l = this.layerStr_;
+  
   // Change anchor
-  var anchor = (r?"&r="+(Math.round(r*10000)/10000):"")+(l?"&l="+l:"");
+  var anchor = (r ? "&r="+(Math.round(r*10000)/10000) : "") + (l ? "&l="+l : "");
   if (this.get('geohash')) {
     var ghash = ol_geohash_fromLonLat(c,8);
     anchor = "gh=" + ghash + '-' + z + anchor;
@@ -268,8 +269,11 @@ ol_control_Permalink.prototype.getLink = function(param) {
     anchor = "lon="+c[0].toFixed(this.fixed_)+"&lat="+c[1].toFixed(this.fixed_)+"&z="+z + anchor;
   }
 
+  if (search === 'position') return anchor;
+  
+  // Add other params
   for (var i in this.search_) anchor += "&"+i+"="+this.search_[i];
-  if (param) return anchor;
+  if (search) return anchor;
 
   //return document.location.origin+document.location.pathname+this.hash_+anchor;
   return document.location.protocol+"//"+document.location.host+document.location.pathname+this.hash_+anchor;
@@ -282,10 +286,9 @@ ol_control_Permalink.prototype.getUrlReplace = function() {
   return this.replaceState_;
 };
 
-/**
- * Enable / disable url replacement (replaceSate)
+/** Enable / disable url replacement (replaceSate)
  *	@param {bool}
-*/
+ */
 ol_control_Permalink.prototype.setUrlReplace = function(replace) {
   try {
     this.replaceState_ = replace;
@@ -316,7 +319,7 @@ ol_control_Permalink.prototype.viewChange_ = function() {
   } catch(e) {/* ok */}
   if (this._localStorage) {
     try {
-      localStorage['ol@parmalink'] = this.getLink(true);
+      localStorage['ol@parmalink'] = this.getLink(this._localStorage);
     } catch(e) { console.warn('Failed to access localStorage...'); }
   }
 };

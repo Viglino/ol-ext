@@ -64,19 +64,21 @@ var ol_control_WMSCapabilities = function (options) {
   // Ajax request
   var parser = this._getParser();
   this._ajax = new ol_ext_Ajax({ dataType:'text', auth: options.authentication });
-  this._ajax.on('success', function (e) {
+  this._ajax.on('success', function (evt) {
+    var caps;
     try {
-      var caps = parser.read(e.response);
-      this.showCapabilitis(caps);
-      this.dispatchEvent({ type: 'capabilities', capabilities: caps });
+      caps = parser.read(evt.response);
     } catch (e) {
       this.showError({ type: 'load', error: e });
-      this.dispatchEvent({ type: 'capabilities' });
     }
+    if (caps) this.showCapabilitis(caps);
+    this.dispatchEvent({ type: 'capabilities', capabilities: caps });
+    if (typeof(evt.options.callback) === 'function') evt.options.callback(caps);
   }.bind(this));
-  this._ajax.on('error', function(e) {
-    this.showError({ type: 'load', error: e });
+  this._ajax.on('error', function(evt) {
+    this.showError({ type: 'load', error: evt });
     this.dispatchEvent({ type: 'capabilities' });
+    if (typeof(evt.options.callback) === 'function') false;
   }.bind(this));
 
   // Handle waiting
@@ -454,8 +456,9 @@ ol_control_WMSCapabilities.prototype.getRequestParam = function(options) {
  * @param {string} url service url
  * @param {*} options 
  *  @param {string} options.map WMS map or get map in url?map=xxx
- *  @param {string} options.version WMS version (yet only 1.3.0 is implemented), default 1.3.0
- *  @param {number} options.timeout timout to get the capabilities, default 10000
+ *  @param {string} [options.version=1.3.0] WMS version (yet only 1.3.0 is implemented), default 1.3.0
+ *  @param {number} [options.timeout=10000] timout to get the capabilities, default 10000
+ *  @param {function} [options.onload] callback function
  */
 ol_control_WMSCapabilities.prototype.getCapabilities = function(url, options) {
   if (!url) return;
@@ -519,11 +522,15 @@ ol_control_WMSCapabilities.prototype.getCapabilities = function(url, options) {
     this._ajax.send(this._proxy, {
       url: q
     }, {
-      timeout: options.timeout || 10000
+      timeout: options.timeout || 10000,
+      callback: options.onload,
+      abort: false
     });
   } else {
     this._ajax.send(url, request, {
-      timeout: options.timeout || 10000
+      timeout: options.timeout || 10000,
+      callback: options.onload,
+      abort: false
     });
   }
 };
@@ -580,6 +587,7 @@ ol_control_WMSCapabilities.prototype.showCapabilitis = function(caps) {
           this._elements.buttons.innerHTML = '';
           ol_ext_element.create('BUTTON', {
             html: this.get('loadLabel') || 'Load',
+            className: 'ol-load',
             click: function() {
               this.dispatchEvent({type: 'load', layer: layer, options: options });
               if (this._dialog) this._dialog.hide();
@@ -590,8 +598,8 @@ ol_control_WMSCapabilities.prototype.showCapabilitis = function(caps) {
             html: '+',
             className: 'ol-wmsform',
             click: function() {
-              this._elements.form.classList.toggle('visible');
-              this._elements.legend.classList.toggle('visible');
+              console.log(this._elements.element)
+              this._elements.element.classList.toggle('ol-form');
             }.bind(this),
             parent: this._elements.buttons
           });
@@ -838,21 +846,25 @@ ol_control_WMSCapabilities.prototype._fillForm = function(opt) {
 /** Load a layer using service
  * @param {string} url service url
  * @param {string} layername
+ * @param {function} [onload] callback function (or listen to 'load' event)
  */
-ol_control_WMSCapabilities.prototype.loadLayer = function(url, layerName) {
-  this.once('capabilities', function(e) {
-    if (e.capabilities) {
-      e.capabilities.Capability.Layer.Layer.forEach(function(l) {
-        if (l.Name===layerName || l.Identifier===layerName) {
-          var options = this.getOptionsFromCap(l, e.capabilities);
-          var layer = this.getLayerFromOptions(options);
-          this.dispatchEvent({ type: 'load', layer: layer, options: options });
-        }
-      }.bind(this))
-    }
-  }.bind(this))
-  //cap.showDialog()
-  this.getCapabilities(url);
+ol_control_WMSCapabilities.prototype.loadLayer = function(url, layerName, onload) {
+  this.getCapabilities(url, {
+    onload: function(cap) {
+      if (cap) {
+        cap.Capability.Layer.Layer.forEach(function(l) {
+          if (l.Name===layerName || l.Identifier===layerName) {
+            var options = this.getOptionsFromCap(l, cap);
+            var layer = this.getLayerFromOptions(options);
+            this.dispatchEvent({ type: 'load', layer: layer, options: options });
+            if (typeof(onload) === 'function') onload({ layer: layer, options: options });
+          }
+        }.bind(this))
+      } else {
+        this.dispatchEvent({ type: 'load', error: true });
+      }
+    }.bind(this)
+  });
 };
 
 export default ol_control_WMSCapabilities

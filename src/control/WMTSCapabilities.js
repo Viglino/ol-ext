@@ -62,7 +62,7 @@ ol_ext_inherits(ol_control_WMTSCapabilities, ol_control_WMSCapabilities);
       })
       resp.Contents.Layer = layers;
       return resp;
-    }
+    }.bind(this)
   }
 };
 

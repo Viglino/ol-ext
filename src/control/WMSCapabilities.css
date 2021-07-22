@@ -220,3 +220,11 @@
   opacity: .5;
   pointer-events: none;
 }
+
+.ol-ext-dialog.ol-wmscapabilities .ol-form button.ol-load,
+.ol-ext-dialog.ol-wmscapabilities .ol-form .ol-legend {
+  display: none;
+}
+.ol-ext-dialog.ol-wmscapabilities .ol-form ul.ol-wmsform {
+  display: block;
+}
