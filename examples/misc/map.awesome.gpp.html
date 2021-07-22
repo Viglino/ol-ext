@@ -19,7 +19,7 @@
   <meta name="twitter:site" content="@viglino">
   <meta name="twitter:creator" content="@viglino">
   <meta name="twitter:title" content="ol-ext - Awesome Géoservices">
-  <meta name="twitter:description" content="Visualisation des services web reposant sur nos données publiques d'IGN-France.">
+  <meta name="twitter:description" content="Visualisation des services web reposant sur les données publiques @IGN-France.">
   <meta name="twitter:image" content="https://viglino.github.io/ol-ext/examples/img/awesome.jpg">
 
 	<!-- jQuery -->
@@ -145,6 +145,14 @@ var layers = {
   transports: ['SECUROUTE.TE.1TE', 'SECUROUTE.TE.TE72', 'TRANSPORTS.DRONES.RESTRICTIONS' ], 
 }
 
+function addLayers() {
+  if (map.getLayers().getLength()<3) {
+    map.addLayer(gpp);
+    map.addLayer(gpp2);
+  }
+}
+setTimeout(addLayers, 10000);
+
 // List of layers
 var gppLayers = [];
 var nbload = 0;
@@ -153,10 +161,7 @@ wmts.on('load', function(e) {
   if (e.layer) {
     var ext = e.layer.getExtent()
     if (ext[2]-ext[0] > 1000000) gppLayers.push(e.layer);
-    if (gppLayers.length && !nbload) {
-      map.addLayer(gpp);
-      map.addLayer(gpp2);
-    }
+    if (gppLayers.length && !nbload) addLayers()
   }
 });
 // Load layers
