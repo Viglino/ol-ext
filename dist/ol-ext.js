@@ -8476,7 +8476,7 @@ ol.control.Overview.prototype.setView = function(e){
  * @extends {ol.control.Control}
  * @param {Object=} options
  *  @param {boolean} options.urlReplace replace url or not, default true
- *  @param {boolean} options.localStorage save current map view in localStorage, default false
+ *  @param {boolean|string} [options.localStorage=false] save current map view in localStorage, if 'position' only store map position
  *  @param {boolean} options.geohash use geohash instead of lonlat, default false
  *  @param {integer} options.fixed number of digit in coords, default 6
  *  @param {boolean} options.anchor use "#" instead of "?" in href
@@ -8681,26 +8681,28 @@ ol.control.Permalink.prototype.getUrlParam = function(key) {
 ol.control.Permalink.prototype.hasUrlParam = function(key) {
   return this.search_.hasOwnProperty(encodeURIComponent(key));
 };
-/**
- * Get the permalink
+/** Get the permalink
+ * @param {boolean|string} [search=false] false: return full link | true: return the search string only | 'position': return position string
  * @return {permalink}
  */
-ol.control.Permalink.prototype.getLink = function(param) {
+ol.control.Permalink.prototype.getLink = function(search) {
   var map = this.getMap();
   var c = ol.proj.transform(map.getView().getCenter(), map.getView().getProjection(), 'EPSG:4326');
   var z = Math.round(map.getView().getZoom()*10)/10;
   var r = map.getView().getRotation();
   var l = this.layerStr_;
   // Change anchor
-  var anchor = (r?"&r="+(Math.round(r*10000)/10000):"")+(l?"&l="+l:"");
+  var anchor = (r ? "&r="+(Math.round(r*10000)/10000) : "") + (l ? "&l="+l : "");
   if (this.get('geohash')) {
     var ghash = ol.geohash.fromLonLat(c,8);
     anchor = "gh=" + ghash + '-' + z + anchor;
   } else {
     anchor = "lon="+c[0].toFixed(this.fixed_)+"&lat="+c[1].toFixed(this.fixed_)+"&z="+z + anchor;
   }
+  if (search === 'position') return anchor;
+  // Add other params
   for (var i in this.search_) anchor += "&"+i+"="+this.search_[i];
-  if (param) return anchor;
+  if (search) return anchor;
   //return document.location.origin+document.location.pathname+this.hash_+anchor;
   return document.location.protocol+"//"+document.location.host+document.location.pathname+this.hash_+anchor;
 };
@@ -8710,10 +8712,9 @@ ol.control.Permalink.prototype.getLink = function(param) {
 ol.control.Permalink.prototype.getUrlReplace = function() {
   return this.replaceState_;
 };
-/**
- * Enable / disable url replacement (replaceSate)
+/** Enable / disable url replacement (replaceSate)
  *	@param {bool}
-*/
+ */
 ol.control.Permalink.prototype.setUrlReplace = function(replace) {
   try {
     this.replaceState_ = replace;
@@ -8743,7 +8744,7 @@ ol.control.Permalink.prototype.viewChange_ = function() {
   } catch(e) {/* ok */}
   if (this._localStorage) {
     try {
-      localStorage['ol@parmalink'] = this.getLink(true);
+      localStorage['ol@parmalink'] = this.getLink(this._localStorage);
     } catch(e) { console.warn('Failed to access localStorage...'); }
   }
 };
@@ -14321,19 +14322,21 @@ ol.control.WMSCapabilities = function (options) {
   // Ajax request
   var parser = this._getParser();
   this._ajax = new ol.ext.Ajax({ dataType:'text', auth: options.authentication });
-  this._ajax.on('success', function (e) {
+  this._ajax.on('success', function (evt) {
+    var caps;
     try {
-      var caps = parser.read(e.response);
-      this.showCapabilitis(caps);
-      this.dispatchEvent({ type: 'capabilities', capabilities: caps });
+      caps = parser.read(evt.response);
     } catch (e) {
       this.showError({ type: 'load', error: e });
-      this.dispatchEvent({ type: 'capabilities' });
     }
+    if (caps) this.showCapabilitis(caps);
+    this.dispatchEvent({ type: 'capabilities', capabilities: caps });
+    if (typeof(evt.options.callback) === 'function') evt.options.callback(caps);
   }.bind(this));
-  this._ajax.on('error', function(e) {
-    this.showError({ type: 'load', error: e });
+  this._ajax.on('error', function(evt) {
+    this.showError({ type: 'load', error: evt });
     this.dispatchEvent({ type: 'capabilities' });
+    if (typeof(evt.options.callback) === 'function') false;
   }.bind(this));
   // Handle waiting
   this._ajax.on('loadstart', function() {
@@ -14697,8 +14700,9 @@ ol.control.WMSCapabilities.prototype.getRequestParam = function(options) {
  * @param {string} url service url
  * @param {*} options 
  *  @param {string} options.map WMS map or get map in url?map=xxx
- *  @param {string} options.version WMS version (yet only 1.3.0 is implemented), default 1.3.0
- *  @param {number} options.timeout timout to get the capabilities, default 10000
+ *  @param {string} [options.version=1.3.0] WMS version (yet only 1.3.0 is implemented), default 1.3.0
+ *  @param {number} [options.timeout=10000] timout to get the capabilities, default 10000
+ *  @param {function} [options.onload] callback function
  */
 ol.control.WMSCapabilities.prototype.getCapabilities = function(url, options) {
   if (!url) return;
@@ -14757,11 +14761,15 @@ ol.control.WMSCapabilities.prototype.getCapabilities = function(url, options) {
     this._ajax.send(this._proxy, {
       url: q
     }, {
-      timeout: options.timeout || 10000
+      timeout: options.timeout || 10000,
+      callback: options.onload,
+      abort: false
     });
   } else {
     this._ajax.send(url, request, {
-      timeout: options.timeout || 10000
+      timeout: options.timeout || 10000,
+      callback: options.onload,
+      abort: false
     });
   }
 };
@@ -14815,6 +14823,7 @@ ol.control.WMSCapabilities.prototype.showCapabilitis = function(caps) {
           this._elements.buttons.innerHTML = '';
           ol.ext.element.create('BUTTON', {
             html: this.get('loadLabel') || 'Load',
+            className: 'ol-load',
             click: function() {
               this.dispatchEvent({type: 'load', layer: layer, options: options });
               if (this._dialog) this._dialog.hide();
@@ -14825,8 +14834,8 @@ ol.control.WMSCapabilities.prototype.showCapabilitis = function(caps) {
             html: '+',
             className: 'ol-wmsform',
             click: function() {
-              this._elements.form.classList.toggle('visible');
-              this._elements.legend.classList.toggle('visible');
+              console.log(this._elements.element)
+              this._elements.element.classList.toggle('ol-form');
             }.bind(this),
             parent: this._elements.buttons
           });
@@ -15054,21 +15063,25 @@ ol.control.WMSCapabilities.prototype._fillForm = function(opt) {
 /** Load a layer using service
  * @param {string} url service url
  * @param {string} layername
+ * @param {function} [onload] callback function (or listen to 'load' event)
  */
-ol.control.WMSCapabilities.prototype.loadLayer = function(url, layerName) {
-  this.once('capabilities', function(e) {
-    if (e.capabilities) {
-      e.capabilities.Capability.Layer.Layer.forEach(function(l) {
-        if (l.Name===layerName || l.Identifier===layerName) {
-          var options = this.getOptionsFromCap(l, e.capabilities);
-          var layer = this.getLayerFromOptions(options);
-          this.dispatchEvent({ type: 'load', layer: layer, options: options });
-        }
-      }.bind(this))
-    }
-  }.bind(this))
-  //cap.showDialog()
-  this.getCapabilities(url);
+ol.control.WMSCapabilities.prototype.loadLayer = function(url, layerName, onload) {
+  this.getCapabilities(url, {
+    onload: function(cap) {
+      if (cap) {
+        cap.Capability.Layer.Layer.forEach(function(l) {
+          if (l.Name===layerName || l.Identifier===layerName) {
+            var options = this.getOptionsFromCap(l, cap);
+            var layer = this.getLayerFromOptions(options);
+            this.dispatchEvent({ type: 'load', layer: layer, options: options });
+            if (typeof(onload) === 'function') onload({ layer: layer, options: options });
+          }
+        }.bind(this))
+      } else {
+        this.dispatchEvent({ type: 'load', error: true });
+      }
+    }.bind(this)
+  });
 };
 
 /** WMTSCapabilities
@@ -15120,7 +15133,7 @@ ol.ext.inherits(ol.control.WMTSCapabilities, ol.control.WMSCapabilities);
       })
       resp.Contents.Layer = layers;
       return resp;
-    }
+    }.bind(this)
   }
 };
 /** Get Capabilities request parameters

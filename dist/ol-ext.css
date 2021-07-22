@@ -4537,6 +4537,14 @@ ul.ol-legend li div {
   opacity: .5;
   pointer-events: none;
 }
+
+.ol-ext-dialog.ol-wmscapabilities .ol-form button.ol-load,
+.ol-ext-dialog.ol-wmscapabilities .ol-form .ol-legend {
+  display: none;
+}
+.ol-ext-dialog.ol-wmscapabilities .ol-form ul.ol-wmsform {
+  display: block;
+}
 .ol-target-overlay .ol-target 
 {	border: 1px solid transparent;
 	-webkit-box-shadow: 0 0 1px 1px #fff;
