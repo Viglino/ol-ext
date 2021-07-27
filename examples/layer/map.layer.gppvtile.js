@@ -98,7 +98,7 @@ ol.ext.Ajax.get({
   })
   ol.ext.Ajax.get({
     //url: 'https://wxs.ign.fr/choisirgeoportail/static/vectorTiles/styles/PLAN.IGN/'+s+'.json',
-    url: 'https://wxs.ign.fr/essentiel/static/vectorTiles/styles/PLAN.IGN/'+s+'.json',
+    url: 'https://wxs.ign.fr/essentiels/static/vectorTiles/styles/PLAN.IGN/'+s+'.json',
     success: function(style) {
       baseStyles[s] = style;
     }
