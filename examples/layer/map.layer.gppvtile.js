@@ -54,7 +54,8 @@ var vlayer = new ol.layer.VectorTile({
     format: new ol.format.MVT(),
     projection: new ol.proj.Projection({code:"EPSG:3857"}),
     //url: "https://vectortiles.ign.fr/rok4server/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
-    url : "https://wxs.ign.fr/choisirgeoportail/geoportail/tms/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
+    //url : "https://wxs.ign.fr/choisirgeoportail/geoportail/tms/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
+    url : "https://wxs.ign.fr/essentiels/geoportail/tms/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
     // url: "https://vectortiles.ign.fr/rok4server/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
     attributions: '<a href="https://geoservices.ign.fr/blog/2018/07/08/nouveautes_vecteur.html">&copy; IGN-Géoportail</a>',
   }),
@@ -96,7 +97,8 @@ ol.ext.Ajax.get({
     parent: sel
   })
   ol.ext.Ajax.get({
-    url: 'https://wxs.ign.fr/choisirgeoportail/static/vectorTiles/styles/PLAN.IGN/'+s+'.json',
+    //url: 'https://wxs.ign.fr/choisirgeoportail/static/vectorTiles/styles/PLAN.IGN/'+s+'.json',
+    url: 'https://wxs.ign.fr/essentiel/static/vectorTiles/styles/PLAN.IGN/'+s+'.json',
     success: function(style) {
       baseStyles[s] = style;
     }
@@ -475,6 +477,7 @@ function getLayerStyle(layer) {
 // Save to JSON file
 function save() {
   var data = JSON.stringify(currentStyle, null, ' ');
+  data = data.replace(/an7nvfzojv5wa96dsga5nk8w/g, 'essentiels')
   var blob = new Blob([data], {type: 'text/plain;charset=utf-8'});
   saveAs(blob, 'custom.json');
 }
