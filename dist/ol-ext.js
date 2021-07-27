@@ -4123,14 +4123,14 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection) {
  * @api
  */
 ol.control.LayerSwitcher.prototype.getLayerClass = function(layer) {
-  if (!layer) return '';
+  if (!layer) return 'none';
   if (layer.getLayers) return 'ol-layer-group';
   if (layer instanceof ol.layer.Vector) return 'ol-layer-vector';
   if (layer instanceof ol.layer.VectorTile) return 'ol-layer-vectortile';
   if (layer instanceof ol.layer.Tile) return 'ol-layer-tile';
   if (layer instanceof ol.layer.Image) return 'ol-layer-image';
   if (layer instanceof ol.layer.Heatmap) return 'ol-layer-heatmap';
-  return '';
+  return 'unknown';
 };
 /** Select a layer
  * @param {ol.layer.Layer} layer
