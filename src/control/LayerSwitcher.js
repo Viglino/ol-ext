@@ -881,14 +881,14 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection) {
  * @api
  */
 ol_control_LayerSwitcher.prototype.getLayerClass = function(layer) {
-  if (!layer) return '';
+  if (!layer) return 'none';
   if (layer.getLayers) return 'ol-layer-group';
   if (layer instanceof ol_layer_Vector) return 'ol-layer-vector';
   if (layer instanceof ol_layer_VectorTile) return 'ol-layer-vectortile';
   if (layer instanceof ol_layer_Tile) return 'ol-layer-tile';
   if (layer instanceof ol_layer_Image) return 'ol-layer-image';
   if (layer instanceof ol_layer_Heatmap) return 'ol-layer-heatmap';
-  return '';
+  return 'unknown';
 };
 
 /** Select a layer
