@@ -8,6 +8,8 @@ import ol_control_Control from 'ol/control/Control'
 import ol_layer_Tile from 'ol/layer/Tile'
 import ol_layer_Vector from 'ol/layer/Vector'
 import ol_layer_VectorTile from 'ol/layer/VectorTile'
+// ol < 6 compatibility VectorImage is not defined
+// import ol_layer_VectorImage from 'ol/layer/VectorImage'
 import ol_layer_Image from 'ol/layer/Image'
 import ol_layer_Heatmap from 'ol/layer/Heatmap'
 import {intersects as ol_extent_intersects} from 'ol/extent'
@@ -888,6 +890,10 @@ ol_control_LayerSwitcher.prototype.getLayerClass = function(layer) {
   if (layer instanceof ol_layer_Tile) return 'ol-layer-tile';
   if (layer instanceof ol_layer_Image) return 'ol-layer-image';
   if (layer instanceof ol_layer_Heatmap) return 'ol-layer-heatmap';
+  /* ol < 6 compatibility VectorImage is not defined */
+  // if (layer instanceof ol_layer_VectorImage) return 'ol-layer-vectorimage';
+  if (layer.getFeatures) return 'ol-layer-vectorimage';
+  /* */
   return 'unknown';
 };
 
