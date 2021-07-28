@@ -88,9 +88,22 @@ ol_control_WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
 
   // Tilematrix zoom
   var minZoom = Infinity, maxZoom = -Infinity;
-  caps.TileMatrixSetLink[0].TileMatrixSetLimits.forEach(function(tm) {
-    minZoom = Math.min(minZoom, parseInt(tm.TileMatrix));
-    maxZoom = Math.max(maxZoom, parseInt(tm.TileMatrix));
+  var tmatrix;
+  console.log(caps)
+  caps.TileMatrixSetLink.forEach(function(tm) {
+    if (tm.TileMatrixSet === 'PM' || tm.TileMatrixSet === 'EPSG:3857') {
+      tmatrix = tm;
+      caps.TileMatrixSet = tm.TileMatrixSet;
+    }
+  });
+  if (!tmatrix) {
+    this.showError({ type: 'TileMatrix' });
+    return;
+  }
+  tmatrix.TileMatrixSetLimits.forEach(function(tm) {
+    var zoom = tm.TileMatrix.split(':').pop();
+    minZoom = Math.min(minZoom, parseInt(zoom));
+    maxZoom = Math.max(maxZoom, parseInt(zoom));
   });
 
   // Tilematrix
@@ -98,7 +111,8 @@ ol_control_WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
   var resolutions = new Array();
   var size = ol_extent_getWidth(ol_proj_get('EPSG:3857').getExtent()) / 256;
   for (var z=0; z <= (maxZoom ? maxZoom : 20) ; z++) {
-    matrixIds[z] = z ; 
+    var id = caps.TileMatrixSet !== 'PM' ? caps.TileMatrixSet+':'+z : z;
+    matrixIds[z] = id ; 
     resolutions[z] = size / Math.pow(2, z);
   }
   var tg = {
@@ -120,7 +134,7 @@ ol_control_WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
   var source_opt = {
     url: parent.OperationsMetadata.GetTile.DCP.HTTP.Get[0].href,
     layer: caps.Identifier,
-    matrixSet: 'PM',
+    matrixSet: caps.TileMatrixSet,
     format: caps.Format[0] || 'image/jpeg',
     projection: 'EPSG:3857',
     tileGrid: tg,
@@ -174,6 +188,7 @@ ol_control_WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
  * @param {*} options
  */
 ol_control_WMTSCapabilities.prototype.getLayerFromOptions = function (options) {
+  if (!options) return;
   var tg = options.source.tileGrid;
   options.source.tileGrid = new ol_tilegrid_WMTS(tg);
   options.layer.source = new ol_source_WMTS(options.source);

@@ -103,6 +103,7 @@ ol_control_WMSCapabilities.prototype._getParser = function() {
 ol_control_WMSCapabilities.prototype.error = {
   load: 'Can\'t retrieve service capabilities, try to add it manually...',
   badUrl: 'The input value is not a valid url...',
+  TileMatrix: 'No TileMatrixSet supported...',
   srs: 'The service projection looks different from that of your map, it may not display correctly...'
 };
 
@@ -297,10 +298,11 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
   addLine('formMaxZoom', 20);
   li = addLine('formExtent', '', 'xmin,ymin,xmax,ymax');
   li.className = 'extent';
+  var extent = li.querySelector('input');
   ol_ext_element.create('BUTTON', {
     title: this.labels.mapExtent,
     click: function() {
-      li.querySelector('input').value = this.getMap().getView().calculateExtent(this.getMap().getSize()).join(',');
+      extent.value = this.getMap().getView().calculateExtent(this.getMap().getSize()).join(',');
     }.bind(this),
     parent: li
   });
@@ -576,6 +578,11 @@ ol_control_WMSCapabilities.prototype.showCapabilitis = function(caps) {
         className: (l.Layer ? 'ol-title ' : '') + 'level-'+level,
         html: l.Name || l.Title,
         click: function() {
+          // Reset
+          this._elements.buttons.innerHTML = '';
+          this._elements.data.innerHTML = '';
+          this._elements.legend.src = this._elements.preview.src = '';
+          this.showError();
           // Load layer
           var options = this.getOptionsFromCap(l, caps);
           var layer = this.getLayerFromOptions(options);
@@ -584,47 +591,49 @@ ol_control_WMSCapabilities.prototype.showCapabilitis = function(caps) {
             i.classList.remove('selected');
           })
           li.classList.add('selected');
-          this._elements.buttons.innerHTML = '';
-          ol_ext_element.create('BUTTON', {
-            html: this.get('loadLabel') || 'Load',
-            className: 'ol-load',
-            click: function() {
-              this.dispatchEvent({type: 'load', layer: layer, options: options });
-              if (this._dialog) this._dialog.hide();
-            }.bind(this),
-            parent: this._elements.buttons
-          });
-          ol_ext_element.create('BUTTON', {
-            html: '+',
-            className: 'ol-wmsform',
-            click: function() {
-              console.log(this._elements.element)
-              this._elements.element.classList.toggle('ol-form');
-            }.bind(this),
-            parent: this._elements.buttons
-          });
-          // Show preview
-          var reso = this.getMap().getView().getResolution();
-          var center = this.getMap().getView().getCenter();
-          this._elements.preview.src = layer.getPreview(center, reso, this.getMap().getView().getProjection());
-          this._img.src = this._elements.preview.src;
-          // ShowInfo
-          this._elements.data.innerHTML = '';
-          ol_ext_element.create('p', {
-            className: 'ol-title',
-            html: options.data.title,
-            parent: this._elements.data
-          });
-          ol_ext_element.create('p', {
-            html: options.data.abstract,
-            parent: this._elements.data
-          });
-          if (options.data.legend.length) {
-            this._elements.legend.src = options.data.legend[0];
-            this._elements.legend.classList.add('visible');
-          } else {
-            this._elements.legend.src = '';
-            this._elements.legend.classList.remove('visible');
+          // Fill form
+          if (layer) {
+            ol_ext_element.create('BUTTON', {
+              html: this.get('loadLabel') || 'Load',
+              className: 'ol-load',
+              click: function() {
+                this.dispatchEvent({type: 'load', layer: layer, options: options });
+                if (this._dialog) this._dialog.hide();
+              }.bind(this),
+              parent: this._elements.buttons
+            });
+            ol_ext_element.create('BUTTON', {
+              html: '+',
+              className: 'ol-wmsform',
+              click: function() {
+                console.log(this._elements.element)
+                this._elements.element.classList.toggle('ol-form');
+              }.bind(this),
+              parent: this._elements.buttons
+            });
+            // Show preview
+            var reso = this.getMap().getView().getResolution();
+            var center = this.getMap().getView().getCenter();
+            this._elements.preview.src = layer.getPreview(center, reso, this.getMap().getView().getProjection());
+            this._img.src = this._elements.preview.src;
+
+            // ShowInfo
+            ol_ext_element.create('p', {
+              className: 'ol-title',
+              html: options.data.title,
+              parent: this._elements.data
+            });
+            ol_ext_element.create('p', {
+              html: options.data.abstract,
+              parent: this._elements.data
+            });
+            if (options.data.legend.length) {
+              this._elements.legend.src = options.data.legend[0];
+              this._elements.legend.classList.add('visible');
+            } else {
+              this._elements.legend.src = '';
+              this._elements.legend.classList.remove('visible');
+            }
           }
         }.bind(this),
         parent: this._elements.select
