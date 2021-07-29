@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>ol-ext Class: Teleport</title>
+	<title>ol-ext Class: CSS</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -80,15 +80,15 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: Teleport</h1>
+	<h1 class="page-title">Class: CSS</h1>
 <section>
 
 <header>
     
         <h2>
-            <span class="ancestors"><a href="ol.html">ol</a><a href="ol.featureAnimation.html">.featureAnimation</a>.</span>
+            <span class="ancestors"><a href="ol.html">ol</a><a href="ol.filter.html">.filter</a>.</span>
         
-        Teleport
+        CSS
         </h2>
         
     
@@ -101,7 +101,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="Teleport"><span class="type-signature"></span>new Teleport(options)</h4>
+    <h4 class="name" id="CSS"><span class="type-signature"></span>new CSS(options)</h4>
     
     
 </dt>
@@ -109,7 +109,10 @@
 
     
     <div class="description">
-        <p>Teleport a feature at a given place</p>
+        <p>Add a mix-blend-mode CSS filter (not working with IE or ol&lt;6).
+Add a className to the layer to apply the filter to a specific layer.<br>
+With ol&lt;6 use <a href="ol.filter.Composite.html">ol.filter.Composite</a> instead.<br>
+Use <a href="ol.layer.Base.html#addFilter">ol.layer.Base#addFilter</a>, <a href="ol.layer.Base.html#removeFilter">ol.layer.Base#removeFilter</a> or <a href="ol.layer.Base.html#getFilters">ol.layer.Base#getFilters</a></p>
     </div>
     
 
@@ -150,7 +153,214 @@
             <td class="type">
             
                 
-<span class="param-type">ol.featureAnimationOptions</span>
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                <h6 class="method-params-label method-subparams-label">Properties</h6>
+                
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>blend</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>a list of mix-blend-mode to apply (as <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode">CSS property</a>)</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+    
+    </div>
+
+    
+        <h3 class="subsection-title">Extends</h3>
+
+        
+
+
+    <ul>
+        <li>ol.Object</li>
+    </ul>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        <dl>
+            
+<hr>
+<dt>
+    <h4 class="name" id="addToLayer"><span class="type-signature"></span>addToLayer(layer)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Add CSS filter to the layer</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>layer</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ol.layer.Base.html">ol.layer.Base</a></span>
 
 
 
@@ -225,40 +435,11 @@
     
 </dd>
 
-    
-    </div>
-
-    
-        <h3 class="subsection-title">Extends</h3>
-
         
-
-
-    <ul>
-        <li><a href="ol.featureAnimation.html">ol.featureAnimation</a></li>
-    </ul>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Methods</h3>
-
-        <dl>
             
 <hr>
 <dt>
-    <h4 class="name" id="animate"><span class="type-signature"></span>animate(e)</h4>
+    <h4 class="name" id="removeFromLayer"><span class="type-signature"></span>removeFromLayer(layer)</h4>
     
     
 </dt>
@@ -266,7 +447,7 @@
 
     
     <div class="description">
-        <p>Animate</p>
+        <p>Remove CSS filter from the layer</p>
     </div>
     
 
@@ -301,13 +482,13 @@
 
         <tr>
             
-                <td class="name"><code>e</code></td>
+                <td class="name"><code>layer</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">ol.featureAnimationEvent</span>
+<span class="param-type"><a href="ol.layer.Base.html">ol.layer.Base</a></span>
 
 
 
@@ -337,11 +518,6 @@
 
 	
 
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="ol.featureAnimation.html#animate">ol.featureAnimation#animate</a>
-    </li></ul></dd>
     
 
     

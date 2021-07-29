@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>ol-ext Class: GeolocationButton</title>
+	<title>ol-ext Class: LayerShop</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -80,7 +80,7 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: GeolocationButton</h1>
+	<h1 class="page-title">Class: LayerShop</h1>
 <section>
 
 <header>
@@ -88,7 +88,7 @@
         <h2>
             <span class="ancestors"><a href="ol.html">ol</a><a href="ol.control.html">.control</a>.</span>
         
-        GeolocationButton
+        LayerShop
         </h2>
         
     
@@ -101,7 +101,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="GeolocationButton"><span class="type-signature"></span>new GeolocationButton( [options])</h4>
+    <h4 class="name" id="LayerShop"><span class="type-signature"></span>new LayerShop( [options])</h4>
     
     
 </dt>
@@ -109,9 +109,7 @@
 
     
     <div class="description">
-        <p>Geolocation bar
-The control bar is a container for other controls. It can be used to create toolbars.
-Control bars can be nested and combined with ol.control.Toggle to handle activate/deactivate.</p>
+        <p>LayerShop a layer switcher with special controls to handle operation on layers.</p>
     </div>
     
 
@@ -175,7 +173,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
             
 
-            <td class="description last"><p>ol.interaction.GeolocationDraw option.</p>
+            <td class="description last">
                 <h6 class="method-params-label method-subparams-label">Properties</h6>
                 
 
@@ -201,13 +199,13 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
         <tr>
             
-                <td class="name"><code>className</code></td>
+                <td class="name"><code>selection</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">boolean</span>
 
 
 
@@ -218,20 +216,20 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
             
 
-            <td class="description last"><p>class of the control</p></td>
+            <td class="description last"><p>enable layer selection when click on the title</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>title</code></td>
+                <td class="name"><code>displayInLayerSwitcher</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">function</span>
 
 
 
@@ -242,14 +240,182 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
             
 
-            <td class="description last"><p>title of the control to display as tooltip, default Geolocation</p></td>
+            <td class="description last"><p>function that takes a layer and return a boolean if the layer is displayed in the switcher, default test the displayInLayerSwitcher layer attribute</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>delay</code></td>
+                <td class="name"><code>show_progress</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>show a progress bar on tile layers, default false</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>mouseover</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>show the panel on mouseover, default false</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>reordering</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>allow layer reordering, default true</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>trash</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>add a trash button to delete the layer, default false</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>oninfo</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>callback on click on info button, if none no info button is shown DEPRECATED: use on(info) instead</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>extent</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>add an extent button to zoom to the extent of the layer</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>onextent</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>callback when click on extent, default fits view to extent</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>drawDelay</code></td>
             
 
             <td class="type">
@@ -266,7 +432,83 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
             
 
-            <td class="description last"><p>delay before removing the location in ms, delfaut 3000 (3s)</p></td>
+            <td class="description last"><p>delay in ms to redraw the layer (usefull to prevent flickering when manipulating the layers)</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>collapsed</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>collapse the layerswitcher at beginning, default true</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>layerGroup</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ol.layer.Group.html">ol.layer.Group</a></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>a layer group to display in the switcher, default display all layers of the map</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>noScroll</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>prevent handle scrolling, default false</p>
+<p>Layers attributes that control the switcher
+- allwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false
+- displayInLayerSwitcher {boolean} display the layer in switcher, default true
+- noSwitcherDelete {boolean} to prevent layer deletion (w. trash option = true), default false</p></td>
         </tr>
 
     
@@ -327,7 +569,19 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
     
     <h5>Fires:</h5>
     <ul>
-        <li>event:tracking</li>
+        <li>event:select</li>
+    
+        <li>event:drawlist</li>
+    
+        <li>event:toggle</li>
+    
+        <li>event:reorder-start</li>
+    
+        <li>event:reorder-end</li>
+    
+        <li>layer:visible</li>
+    
+        <li>layer:opacity</li>
     </ul>
     
 
@@ -352,7 +606,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
 
     <ul>
-        <li><a href="ol.control.Toggle.html">ol.control.Toggle</a></li>
+        <li><a href="ol.control.LayerSwitcher.html">ol.control.LayerSwitcher</a></li>
     </ul>
 
 
@@ -367,31 +621,23 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
     
 
     
-
-    
-        <h3 class="subsection-title">Methods</h3>
+        <h3 class="subsection-title">Members</h3>
 
         <dl>
             
 <hr>
-<dt>
-    <h4 class="name" id="getActive"><span class="type-signature"></span>getActive()</h4>
-    
+<dt class="name" id="tip">
+    <h4 id="tip"><span class="type-signature"></span>tip<span class="type-signature"></span></h4>
+
     
 </dt>
 <dd>
-
     
     <div class="description">
-        <p>Test if the control is active.</p>
+        <p>List of tips for internationalization purposes</p>
     </div>
     
 
-    
-
-    
-
-    
     
 
     
@@ -407,7 +653,322 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 	<dd class="inherited-from">
 		<ul class="dummy">
 			<li>
-				<a href="ol.control.Toggle.html#getActive">ol.control.Toggle#getActive</a>
+				<a href="ol.control.LayerSwitcher.html#tip">ol.control.LayerSwitcher#tip</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+</dd>
+
+        </dl>
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        <dl>
+            
+<hr>
+<dt>
+    <h4 class="name" id="addControl"><span class="type-signature"></span>addControl(control [, position])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Add a control to the panel</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>control</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ol.control.Control.html">ol.control.Control</a></span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>position</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'top'
+                
+                </td>
+            
+
+            <td class="description last"><p>bar position bottom or top, default top</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="displayInLayerSwitcher"><span class="type-signature"></span>displayInLayerSwitcher(layer)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Test if a layer should be displayed in the switcher</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>layer</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ol.layer.html">ol.layer</a></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.LayerSwitcher.html#displayInLayerSwitcher">ol.control.LayerSwitcher#displayInLayerSwitcher</a>
 			</li>
 		</ul>
 	</dd>
@@ -458,7 +1019,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
     
             
 <div class="param-desc">
-    <p>.</p>
+    <p>true if the layer is displayed</p>
 </div>
 
 
@@ -469,7 +1030,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
     </dt>
     <dd>
         
-<span class="param-type">bool</span>
+<span class="param-type">boolean</span>
 
 
 
@@ -486,7 +1047,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
             
 <hr>
 <dt>
-    <h4 class="name" id="getButtonElement"><span class="type-signature"></span>getButtonElement()</h4>
+    <h4 class="name" id="drawPanel"><span class="type-signature"></span>drawPanel()</h4>
     
     
 </dt>
@@ -494,7 +1055,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
     
     <div class="description">
-        <p>Get the button element</p>
+        <p>Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)</p>
     </div>
     
 
@@ -518,10 +1079,158 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 	<dd class="inherited-from">
 		<ul class="dummy">
 			<li>
-				<a href="ol.control.Button.html#getButtonElement">ol.control.Button#getButtonElement</a>
+				<a href="ol.control.LayerSwitcher.html#drawPanel">ol.control.LayerSwitcher#drawPanel</a>
 			</li>
 		</ul>
 	</dd>
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="getBarElement"><span class="type-signature"></span>getBarElement( [position])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Get the bar element (to add new element in it)</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>position</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'top'
+                
+                </td>
+            
+
+            <td class="description last"><p>bar position bottom or top, default top</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
 	
 
     
@@ -593,7 +1302,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
             
 <hr>
 <dt>
-    <h4 class="name" id="getDisable"><span class="type-signature"></span>getDisable()</h4>
+    <h4 class="name" id="getLayerClass"><span class="type-signature"></span>getLayerClass(layer)</h4>
     
     
 </dt>
@@ -601,7 +1310,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
     
     <div class="description">
-        <p>Test if the control is disabled.</p>
+        <p>Select a layer</p>
     </div>
     
 
@@ -610,6 +1319,56 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
     
 
     
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>layer</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">ol.layer.Layer</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
     
 
     
@@ -625,7 +1384,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 	<dd class="inherited-from">
 		<ul class="dummy">
 			<li>
-				<a href="ol.control.Toggle.html#getDisable">ol.control.Toggle#getDisable</a>
+				<a href="ol.control.LayerSwitcher.html#getLayerClass">ol.control.LayerSwitcher#getLayerClass</a>
 			</li>
 		</ul>
 	</dd>
@@ -676,7 +1435,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
     
             
 <div class="param-desc">
-    <p>.</p>
+    <p>the layer classname</p>
 </div>
 
 
@@ -687,7 +1446,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
     </dt>
     <dd>
         
-<span class="param-type">bool</span>
+<span class="param-type">string</span>
 
 
 
@@ -704,7 +1463,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
             
 <hr>
 <dt>
-    <h4 class="name" id="getInteraction"><span class="type-signature"></span>getInteraction()</h4>
+    <h4 class="name" id="getPanel"><span class="type-signature"></span>getPanel()</h4>
     
     
 </dt>
@@ -712,7 +1471,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
     
     <div class="description">
-        <p>Get the control interaction</p>
+        <p>Get control panel</p>
     </div>
     
 
@@ -736,7 +1495,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 	<dd class="inherited-from">
 		<ul class="dummy">
 			<li>
-				<a href="ol.control.Toggle.html#getInteraction">ol.control.Toggle#getInteraction</a>
+				<a href="ol.control.LayerSwitcher.html#getPanel">ol.control.LayerSwitcher#getPanel</a>
 			</li>
 		</ul>
 	</dd>
@@ -783,30 +1542,6 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
     
 
     
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    <p>interaction associated with the control</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">_ol_interaction_</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
 
     
 </dd>
@@ -815,7 +1550,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
             
 <hr>
 <dt>
-    <h4 class="name" id="getSubBar"><span class="type-signature"></span>getSubBar()</h4>
+    <h4 class="name" id="getSelection"><span class="type-signature"></span>getSelection()</h4>
     
     
 </dt>
@@ -823,7 +1558,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
     
     <div class="description">
-        <p>Get the subbar associated with a control</p>
+        <p>Get selected layer</p>
     </div>
     
 
@@ -847,7 +1582,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 	<dd class="inherited-from">
 		<ul class="dummy">
 			<li>
-				<a href="ol.control.Toggle.html#getSubBar">ol.control.Toggle#getSubBar</a>
+				<a href="ol.control.LayerSwitcher.html#getSelection">ol.control.LayerSwitcher#getSelection</a>
 			</li>
 		</ul>
 	</dd>
@@ -905,7 +1640,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
     </dt>
     <dd>
         
-<span class="param-type"><a href="ol.control.Bar.html">ol.control.Bar</a></span>
+<span class="param-type">ol.layer.Layer</span>
 
 
 
@@ -922,7 +1657,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
             
 <hr>
 <dt>
-    <h4 class="name" id="setActive"><span class="type-signature"></span>setActive(b)</h4>
+    <h4 class="name" id="hide"><span class="type-signature"></span>hide()</h4>
     
     
 </dt>
@@ -930,7 +1665,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
     
     <div class="description">
-        <p>Change control state</p>
+        <p>Hide control</p>
     </div>
     
 
@@ -939,56 +1674,6 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
     
 
     
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>b</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">bool</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>activate or deactivate the control, default false</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
     
 
     
@@ -1004,7 +1689,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 	<dd class="inherited-from">
 		<ul class="dummy">
 			<li>
-				<a href="ol.control.Toggle.html#setActive">ol.control.Toggle#setActive</a>
+				<a href="ol.control.LayerSwitcher.html#hide">ol.control.LayerSwitcher#hide</a>
 			</li>
 		</ul>
 	</dd>
@@ -1059,7 +1744,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
             
 <hr>
 <dt>
-    <h4 class="name" id="setDisable"><span class="type-signature"></span>setDisable(b)</h4>
+    <h4 class="name" id="isOpen"><span class="type-signature"></span>isOpen()</h4>
     
     
 </dt>
@@ -1067,7 +1752,114 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
     
     <div class="description">
-        <p>Disable the control. If disable, the control will be deactivated too.</p>
+        <p>Is control open</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.LayerSwitcher.html#isOpen">ol.control.LayerSwitcher#isOpen</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="selectLayer"><span class="type-signature"></span>selectLayer(layer)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Select a layer</p>
     </div>
     
 
@@ -1102,13 +1894,13 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
         <tr>
             
-                <td class="name"><code>b</code></td>
+                <td class="name"><code>layer</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">bool</span>
+<span class="param-type">ol.layer.Layer</span>
 
 
 
@@ -1119,7 +1911,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
             
 
-            <td class="description last"><p>disable (or enable) the control, default false (enable)</p></td>
+            <td class="description last"></td>
         </tr>
 
     
@@ -1141,7 +1933,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 	<dd class="inherited-from">
 		<ul class="dummy">
 			<li>
-				<a href="ol.control.Toggle.html#setDisable">ol.control.Toggle#setDisable</a>
+				<a href="ol.control.LayerSwitcher.html#selectLayer">ol.control.LayerSwitcher#selectLayer</a>
 			</li>
 		</ul>
 	</dd>
@@ -1196,7 +1988,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
             
 <hr>
 <dt>
-    <h4 class="name" id="setHtml"><span class="type-signature"></span>setHtml(html)</h4>
+    <h4 class="name" id="setHeader"><span class="type-signature"></span>setHeader(html)</h4>
     
     
 </dt>
@@ -1204,7 +1996,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
     
     <div class="description">
-        <p>Set the button html</p>
+        <p>Add a custom header</p>
     </div>
     
 
@@ -1245,6 +2037,9 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
             <td class="type">
             
                 
+<span class="param-type">Element</span>
+|
+
 <span class="param-type">string</span>
 
 
@@ -1256,7 +2051,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>content html</p></td>
         </tr>
 
     
@@ -1278,7 +2073,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 	<dd class="inherited-from">
 		<ul class="dummy">
 			<li>
-				<a href="ol.control.Button.html#setHtml">ol.control.Button#setHtml</a>
+				<a href="ol.control.LayerSwitcher.html#setHeader">ol.control.LayerSwitcher#setHeader</a>
 			</li>
 		</ul>
 	</dd>
@@ -1333,7 +2128,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
             
 <hr>
 <dt>
-    <h4 class="name" id="setInteraction"><span class="type-signature"></span>setInteraction(i)</h4>
+    <h4 class="name" id="setLayerVisibility"><span class="type-signature"></span>setLayerVisibility(layer, li)</h4>
     
     
 </dt>
@@ -1341,7 +2136,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
     
     <div class="description">
-        <p>Set the control interaction</p>
+        <p>Set visibility for a layer</p>
     </div>
     
 
@@ -1376,13 +2171,13 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
         <tr>
             
-                <td class="name"><code>i</code></td>
+                <td class="name"><code>layer</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">_ol_interaction_</span>
+<span class="param-type">ol.layer.Layer</span>
 
 
 
@@ -1393,7 +2188,31 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
             
 
-            <td class="description last"><p>interaction to associate with the control</p></td>
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>li</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Element</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>the list element</p></td>
         </tr>
 
     
@@ -1415,7 +2234,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 	<dd class="inherited-from">
 		<ul class="dummy">
 			<li>
-				<a href="ol.control.Toggle.html#setInteraction">ol.control.Toggle#setInteraction</a>
+				<a href="ol.control.LayerSwitcher.html#setLayerVisibility">ol.control.LayerSwitcher#setLayerVisibility</a>
 			</li>
 		</ul>
 	</dd>
@@ -1478,8 +2297,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
     
     <div class="description">
-        <p>Set the map instance the control is associated with
-and add interaction attached to it to this map.</p>
+        <p>Set the map instance the control is associated with.</p>
     </div>
     
 
@@ -1549,16 +2367,12 @@ and add interaction attached to it to this map.</p>
 	
 
 	
-	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
-	<dd class="inherited-from">
-		<ul class="dummy">
-			<li>
-				<a href="ol.control.Toggle.html#setMap">ol.control.Toggle#setMap</a>
-			</li>
-		</ul>
-	</dd>
-	
 
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.LayerSwitcher.html#setMap">ol.control.LayerSwitcher#setMap</a>
+    </li></ul></dd>
     
 
     
@@ -1608,7 +2422,7 @@ and add interaction attached to it to this map.</p>
             
 <hr>
 <dt>
-    <h4 class="name" id="setSubBar"><span class="type-signature"></span>setSubBar(bar)</h4>
+    <h4 class="name" id="show"><span class="type-signature"></span>show()</h4>
     
     
 </dt>
@@ -1616,7 +2430,7 @@ and add interaction attached to it to this map.</p>
 
     
     <div class="description">
-        <p>Set the subbar associated with a control</p>
+        <p>Show control</p>
     </div>
     
 
@@ -1625,56 +2439,6 @@ and add interaction attached to it to this map.</p>
     
 
     
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>bar</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="ol.control.Bar.html">ol.control.Bar</a></span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>a subbar</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
     
 
     
@@ -1690,281 +2454,7 @@ and add interaction attached to it to this map.</p>
 	<dd class="inherited-from">
 		<ul class="dummy">
 			<li>
-				<a href="ol.control.Toggle.html#setSubBar">ol.control.Toggle#setSubBar</a>
-			</li>
-		</ul>
-	</dd>
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="setTitle"><span class="type-signature"></span>setTitle(title)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Set the button title</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>title</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
-	<dd class="inherited-from">
-		<ul class="dummy">
-			<li>
-				<a href="ol.control.Button.html#setTitle">ol.control.Button#setTitle</a>
-			</li>
-		</ul>
-	</dd>
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="setVisible"><span class="type-signature"></span>setVisible(b)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Set the control visibility</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>b</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
-	<dd class="inherited-from">
-		<ul class="dummy">
-			<li>
-				<a href="ol.control.Button.html#setVisible">ol.control.Button#setVisible</a>
+				<a href="ol.control.LayerSwitcher.html#show">ol.control.LayerSwitcher#show</a>
 			</li>
 		</ul>
 	</dd>
@@ -2027,7 +2517,7 @@ and add interaction attached to it to this map.</p>
 
     
     <div class="description">
-        <p>Toggle control state active/deactive</p>
+        <p>Toggle control</p>
     </div>
     
 
@@ -2051,7 +2541,7 @@ and add interaction attached to it to this map.</p>
 	<dd class="inherited-from">
 		<ul class="dummy">
 			<li>
-				<a href="ol.control.Toggle.html#toggle">ol.control.Toggle#toggle</a>
+				<a href="ol.control.LayerSwitcher.html#toggle">ol.control.LayerSwitcher#toggle</a>
 			</li>
 		</ul>
 	</dd>

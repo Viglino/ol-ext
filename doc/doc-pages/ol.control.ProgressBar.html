@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>ol-ext Class: Teleport</title>
+	<title>ol-ext Class: ProgressBar</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -80,15 +80,15 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: Teleport</h1>
+	<h1 class="page-title">Class: ProgressBar</h1>
 <section>
 
 <header>
     
         <h2>
-            <span class="ancestors"><a href="ol.html">ol</a><a href="ol.featureAnimation.html">.featureAnimation</a>.</span>
+            <span class="ancestors"><a href="ol.html">ol</a><a href="ol.control.html">.control</a>.</span>
         
-        Teleport
+        ProgressBar
         </h2>
         
     
@@ -101,7 +101,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="Teleport"><span class="type-signature"></span>new Teleport(options)</h4>
+    <h4 class="name" id="ProgressBar"><span class="type-signature"></span>new ProgressBar( [options])</h4>
     
     
 </dt>
@@ -109,7 +109,306 @@
 
     
     <div class="description">
-        <p>Teleport a feature at a given place</p>
+        <p>A simple push button control</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>Control options.</p>
+                <h6 class="method-params-label method-subparams-label">Properties</h6>
+                
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>className</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>class of the control</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>label</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>waiting label</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>layers</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">ol.layer.Layer</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>a tile layer with tileload events</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+    
+    </div>
+
+    
+        <h3 class="subsection-title">Extends</h3>
+
+        
+
+
+    <ul>
+        <li><a href="ol.control.Control.html">ol.control.Control</a></li>
+    </ul>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        <dl>
+            
+<hr>
+<dt>
+    <h4 class="name" id="setLabel"><span class="type-signature"></span>setLabel(label)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Set waiting text</p>
     </div>
     
 
@@ -144,13 +443,13 @@
 
         <tr>
             
-                <td class="name"><code>options</code></td>
+                <td class="name"><code>label</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">ol.featureAnimationOptions</span>
+<span class="param-type">string</span>
 
 
 
@@ -225,40 +524,11 @@
     
 </dd>
 
-    
-    </div>
-
-    
-        <h3 class="subsection-title">Extends</h3>
-
         
-
-
-    <ul>
-        <li><a href="ol.featureAnimation.html">ol.featureAnimation</a></li>
-    </ul>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Methods</h3>
-
-        <dl>
             
 <hr>
 <dt>
-    <h4 class="name" id="animate"><span class="type-signature"></span>animate(e)</h4>
+    <h4 class="name" id="setLayers"><span class="type-signature"></span>setLayers(layers)</h4>
     
     
 </dt>
@@ -266,7 +536,7 @@
 
     
     <div class="description">
-        <p>Animate</p>
+        <p>Use a list of tile layer to shown tile load</p>
     </div>
     
 
@@ -301,13 +571,16 @@
 
         <tr>
             
-                <td class="name"><code>e</code></td>
+                <td class="name"><code>layers</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">ol.featureAnimationEvent</span>
+<span class="param-type">ol.layer.Layer</span>
+|
+
+<span class="param-type">Array.&lt;ol.layer.Layer></span>
 
 
 
@@ -318,7 +591,7 @@
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>a layer or a list of layer</p></td>
         </tr>
 
     
@@ -338,10 +611,145 @@
 	
 
     
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="ol.featureAnimation.html#animate">ol.featureAnimation#animate</a>
-    </li></ul></dd>
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="setPercent"><span class="type-signature"></span>setPercent( [n])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Set the control visibility</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>n</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>progress percentage, a number beetween 0,1, default hide progress bar</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
     
 
     

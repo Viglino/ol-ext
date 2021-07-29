@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>ol-ext Class: GeolocationButton</title>
+	<title>ol-ext Class: WMTSCapabilities</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -80,7 +80,7 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: GeolocationButton</h1>
+	<h1 class="page-title">Class: WMTSCapabilities</h1>
 <section>
 
 <header>
@@ -88,7 +88,7 @@
         <h2>
             <span class="ancestors"><a href="ol.html">ol</a><a href="ol.control.html">.control</a>.</span>
         
-        GeolocationButton
+        WMTSCapabilities
         </h2>
         
     
@@ -101,7 +101,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="GeolocationButton"><span class="type-signature"></span>new GeolocationButton( [options])</h4>
+    <h4 class="name" id="WMTSCapabilities"><span class="type-signature"></span>new WMTSCapabilities(options)</h4>
     
     
 </dt>
@@ -109,9 +109,7 @@
 
     
     <div class="description">
-        <p>Geolocation bar
-The control bar is a container for other controls. It can be used to create toolbars.
-Control bars can be nested and combined with ol.control.Toggle to handle activate/deactivate.</p>
+        <p>WMTSCapabilities</p>
     </div>
     
 
@@ -134,8 +132,6 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
         <th>Type</th>
 
         
-        <th>Argument</th>
-        
 
         
 
@@ -154,7 +150,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
             <td class="type">
             
                 
-<span class="param-type">Object</span>
+<span class="param-type">*</span>
 
 
 
@@ -162,20 +158,10 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
             </td>
 
             
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
 
             
 
-            <td class="description last"><p>ol.interaction.GeolocationDraw option.</p>
+            <td class="description last">
                 <h6 class="method-params-label method-subparams-label">Properties</h6>
                 
 
@@ -201,13 +187,16 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
         <tr>
             
-                <td class="name"><code>className</code></td>
+                <td class="name"><code>target</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
+|
+
+<span class="param-type">Element</span>
 
 
 
@@ -218,7 +207,55 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
             
 
-            <td class="description last"><p>class of the control</p></td>
+            <td class="description last"><p>the target to set the dialog, use document.body to have fullwindow dialog</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>proxy</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>proxy to use when requesting Getcapabilites, default none (suppose the service use CORS)</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>placeholder</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>input placeholder, default 'service url...'</p></td>
         </tr>
 
     
@@ -231,7 +268,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 
 
 
@@ -242,14 +279,134 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
             
 
-            <td class="description last"><p>title of the control to display as tooltip, default Geolocation</p></td>
+            <td class="description last"><p>dialog title, default 'WMS'</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>delay</code></td>
+                <td class="name"><code>searchLabel</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Label for search button, default 'search'</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>loadLabel</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Label for load button, default 'load'</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>popupLayer</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Use a popup for the layers, default false</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>services</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>a key/url object of services for quick access in a menu</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>srs</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;string></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>an array of supported srs, default map projection code or 'EPSG:3857'</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>timeout</code></td>
             
 
             <td class="type">
@@ -266,7 +423,55 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
             
 
-            <td class="description last"><p>delay before removing the location in ms, delfaut 3000 (3s)</p></td>
+            <td class="description last"><p>Timeout for getCapabilities request, default 1000</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>cors</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Use CORS, default false</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>trace</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Log layer info, default false</p></td>
         </tr>
 
     
@@ -327,7 +532,9 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
     
     <h5>Fires:</h5>
     <ul>
-        <li>event:tracking</li>
+        <li>event:load</li>
+    
+        <li>event:capabilities</li>
     </ul>
     
 
@@ -352,7 +559,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
 
     <ul>
-        <li><a href="ol.control.Toggle.html">ol.control.Toggle</a></li>
+        <li><a href="ol.control.WMSCapabilities.html">ol.control.WMSCapabilities</a></li>
     </ul>
 
 
@@ -367,6 +574,150 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
     
 
     
+        <h3 class="subsection-title">Members</h3>
+
+        <dl>
+            
+<hr>
+<dt class="name" id="error">
+    <h4 id="error"><span class="type-signature"></span>error<span class="type-signature"></span></h4>
+
+    
+</dt>
+<dd>
+    
+    <div class="description">
+        <p>Error list: a key/value list of error to display in the dialog
+Overwrite it to handle internationalization</p>
+    </div>
+    
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.WMSCapabilities.html#error">ol.control.WMSCapabilities#error</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt class="name" id="labels">
+    <h4 id="labels"><span class="type-signature"></span>labels<span class="type-signature"></span></h4>
+
+    
+</dt>
+<dd>
+    
+    <div class="description">
+        <p>Form labels: a key/value list of form labels to display in the dialog
+Overwrite it to handle internationalization</p>
+    </div>
+    
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.WMSCapabilities.html#labels">ol.control.WMSCapabilities#labels</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+</dd>
+
+        </dl>
+    
 
     
         <h3 class="subsection-title">Methods</h3>
@@ -375,7 +726,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
             
 <hr>
 <dt>
-    <h4 class="name" id="getActive"><span class="type-signature"></span>getActive()</h4>
+    <h4 class="name" id="clearForm"><span class="type-signature"></span>clearForm()</h4>
     
     
 </dt>
@@ -383,7 +734,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
     
     <div class="description">
-        <p>Test if the control is active.</p>
+        <p>Clear form</p>
     </div>
     
 
@@ -407,7 +758,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 	<dd class="inherited-from">
 		<ul class="dummy">
 			<li>
-				<a href="ol.control.Toggle.html#getActive">ol.control.Toggle#getActive</a>
+				<a href="ol.control.WMSCapabilities.html#clearForm">ol.control.WMSCapabilities#clearForm</a>
 			</li>
 		</ul>
 	</dd>
@@ -454,30 +805,6 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
     
 
     
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    <p>.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">bool</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
 
     
 </dd>
@@ -593,7 +920,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
             
 <hr>
 <dt>
-    <h4 class="name" id="getDisable"><span class="type-signature"></span>getDisable()</h4>
+    <h4 class="name" id="getCapabilities"><span class="type-signature"></span>getCapabilities(url, options)</h4>
     
     
 </dt>
@@ -601,7 +928,352 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
     
     <div class="description">
-        <p>Test if the control is disabled.</p>
+        <p>Get WMS capabilities for a server</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>url</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>service url</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                <h6 class="method-params-label method-subparams-label">Properties</h6>
+                
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>map</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>WMS map or get map in url?map=xxx</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>version</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    1.3.0
+                
+                </td>
+            
+
+            <td class="description last"><p>WMS version (yet only 1.3.0 is implemented), default 1.3.0</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>timeout</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    10000
+                
+                </td>
+            
+
+            <td class="description last"><p>timout to get the capabilities, default 10000</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>onload</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>callback function</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.WMSCapabilities.html#getCapabilities">ol.control.WMSCapabilities#getCapabilities</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="getDialog"><span class="type-signature"></span>getDialog()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Get the dialog</p>
     </div>
     
 
@@ -625,12 +1297,322 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 	<dd class="inherited-from">
 		<ul class="dummy">
 			<li>
-				<a href="ol.control.Toggle.html#getDisable">ol.control.Toggle#getDisable</a>
+				<a href="ol.control.WMSCapabilities.html#getDialog">ol.control.WMSCapabilities#getDialog</a>
 			</li>
 		</ul>
 	</dd>
 	
 
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="ol.control.Dialog.html">ol.control.Dialog</a></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="getLayerFromOptions"><span class="type-signature"></span>getLayerFromOptions(options)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Create a new layer using options received by getOptionsFromCap method</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.WMSCapabilities.html#getLayerFromOptions">ol.control.WMSCapabilities#getLayerFromOptions</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="getOptionsFromCap"><span class="type-signature"></span>getOptionsFromCap(caps, parent)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Return a WMTS options for the given capabilities</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>caps</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>layer capabilities (read from the capabilities)</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>parent</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>capabilities</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.WMSCapabilities.html#getOptionsFromCap">ol.control.WMSCapabilities#getOptionsFromCap</a>
+    </li></ul></dd>
     
 
     
@@ -676,7 +1658,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
     
             
 <div class="param-desc">
-    <p>.</p>
+    <p>options</p>
 </div>
 
 
@@ -687,7 +1669,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
     </dt>
     <dd>
         
-<span class="param-type">bool</span>
+<span class="param-type">*</span>
 
 
 
@@ -704,7 +1686,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
             
 <hr>
 <dt>
-    <h4 class="name" id="getInteraction"><span class="type-signature"></span>getInteraction()</h4>
+    <h4 class="name" id="getRequestParam"><span class="type-signature"></span>getRequestParam(options)</h4>
     
     
 </dt>
@@ -712,225 +1694,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
     
     <div class="description">
-        <p>Get the control interaction</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
-	<dd class="inherited-from">
-		<ul class="dummy">
-			<li>
-				<a href="ol.control.Toggle.html#getInteraction">ol.control.Toggle#getInteraction</a>
-			</li>
-		</ul>
-	</dd>
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    <p>interaction associated with the control</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">_ol_interaction_</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="getSubBar"><span class="type-signature"></span>getSubBar()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Get the subbar associated with a control</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
-	<dd class="inherited-from">
-		<ul class="dummy">
-			<li>
-				<a href="ol.control.Toggle.html#getSubBar">ol.control.Toggle#getSubBar</a>
-			</li>
-		</ul>
-	</dd>
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="ol.control.Bar.html">ol.control.Bar</a></span>
-
-
-
-    </dd>
-</dl>
-
-
-        
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="setActive"><span class="type-signature"></span>setActive(b)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Change control state</p>
+        <p>Get Capabilities request parameters</p>
     </div>
     
 
@@ -965,13 +1729,13 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
         <tr>
             
-                <td class="name"><code>b</code></td>
+                <td class="name"><code>options</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">bool</span>
+<span class="param-type">*</span>
 
 
 
@@ -982,7 +1746,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
             
 
-            <td class="description last"><p>activate or deactivate the control, default false</p></td>
+            <td class="description last"></td>
         </tr>
 
     
@@ -1000,16 +1764,12 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 	
 
 	
-	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
-	<dd class="inherited-from">
-		<ul class="dummy">
-			<li>
-				<a href="ol.control.Toggle.html#setActive">ol.control.Toggle#setActive</a>
-			</li>
-		</ul>
-	</dd>
-	
 
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.WMSCapabilities.html#getRequestParam">ol.control.WMSCapabilities#getRequestParam</a>
+    </li></ul></dd>
     
 
     
@@ -1059,7 +1819,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
             
 <hr>
 <dt>
-    <h4 class="name" id="setDisable"><span class="type-signature"></span>setDisable(b)</h4>
+    <h4 class="name" id="loadLayer"><span class="type-signature"></span>loadLayer(url, layername [, onload])</h4>
     
     
 </dt>
@@ -1067,7 +1827,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
     
     <div class="description">
-        <p>Disable the control. If disable, the control will be deactivated too.</p>
+        <p>Load a layer using service</p>
     </div>
     
 
@@ -1090,6 +1850,8 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
         <th>Type</th>
 
         
+        <th>Argument</th>
+        
 
         
 
@@ -1102,13 +1864,13 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 
         <tr>
             
-                <td class="name"><code>b</code></td>
+                <td class="name"><code>url</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">bool</span>
+<span class="param-type">string</span>
 
 
 
@@ -1116,10 +1878,84 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
-            <td class="description last"><p>disable (or enable) the control, default false (enable)</p></td>
+            <td class="description last"><p>service url</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>layername</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>onload</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>callback function (or listen to 'load' event)</p></td>
         </tr>
 
     
@@ -1141,7 +1977,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
 	<dd class="inherited-from">
 		<ul class="dummy">
 			<li>
-				<a href="ol.control.Toggle.html#setDisable">ol.control.Toggle#setDisable</a>
+				<a href="ol.control.WMSCapabilities.html#loadLayer">ol.control.WMSCapabilities#loadLayer</a>
 			</li>
 		</ul>
 	</dd>
@@ -1333,143 +2169,6 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
             
 <hr>
 <dt>
-    <h4 class="name" id="setInteraction"><span class="type-signature"></span>setInteraction(i)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Set the control interaction</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>i</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">_ol_interaction_</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>interaction to associate with the control</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
-	<dd class="inherited-from">
-		<ul class="dummy">
-			<li>
-				<a href="ol.control.Toggle.html#setInteraction">ol.control.Toggle#setInteraction</a>
-			</li>
-		</ul>
-	</dd>
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
     <h4 class="name" id="setMap"><span class="type-signature"></span>setMap(map)</h4>
     
     
@@ -1479,7 +2178,7 @@ Control bars can be nested and combined with ol.control.Toggle to handle activat
     
     <div class="description">
         <p>Set the map instance the control is associated with
-and add interaction attached to it to this map.</p>
+and add its controls associated to this map.</p>
     </div>
     
 
@@ -1553,144 +2252,7 @@ and add interaction attached to it to this map.</p>
 	<dd class="inherited-from">
 		<ul class="dummy">
 			<li>
-				<a href="ol.control.Toggle.html#setMap">ol.control.Toggle#setMap</a>
-			</li>
-		</ul>
-	</dd>
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="setSubBar"><span class="type-signature"></span>setSubBar(bar)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Set the subbar associated with a control</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>bar</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="ol.control.Bar.html">ol.control.Bar</a></span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>a subbar</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
-	<dd class="inherited-from">
-		<ul class="dummy">
-			<li>
-				<a href="ol.control.Toggle.html#setSubBar">ol.control.Toggle#setSubBar</a>
+				<a href="ol.control.WMSCapabilities.html#setMap">ol.control.WMSCapabilities#setMap</a>
 			</li>
 		</ul>
 	</dd>
@@ -2019,7 +2581,7 @@ and add interaction attached to it to this map.</p>
             
 <hr>
 <dt>
-    <h4 class="name" id="toggle"><span class="type-signature"></span>toggle()</h4>
+    <h4 class="name" id="showCapabilitis"><span class="type-signature"></span>showCapabilitis(caps)</h4>
     
     
 </dt>
@@ -2027,7 +2589,7 @@ and add interaction attached to it to this map.</p>
 
     
     <div class="description">
-        <p>Toggle control state active/deactive</p>
+        <p>Display capabilities in the dialog</p>
     </div>
     
 
@@ -2036,6 +2598,56 @@ and add interaction attached to it to this map.</p>
     
 
     
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>caps</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>JSON capabilities</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
     
 
     
@@ -2051,7 +2663,7 @@ and add interaction attached to it to this map.</p>
 	<dd class="inherited-from">
 		<ul class="dummy">
 			<li>
-				<a href="ol.control.Toggle.html#toggle">ol.control.Toggle#toggle</a>
+				<a href="ol.control.WMSCapabilities.html#showCapabilitis">ol.control.WMSCapabilities#showCapabilitis</a>
 			</li>
 		</ul>
 	</dd>
@@ -2098,6 +2710,579 @@ and add interaction attached to it to this map.</p>
     
 
     
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="showDialog"><span class="type-signature"></span>showDialog( [url], options)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Show dialog for url</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>url</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>service url, default ask for an url</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>capabilities options</p>
+                <h6 class="method-params-label method-subparams-label">Properties</h6>
+                
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>map</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>WMS map or get map in url?map=xxx</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>version</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>WMS version (yet only 1.3.0 is implemented), default 1.3.0</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>timeout</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>timout to get the capabilities, default 10000</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.WMSCapabilities.html#showDialog">ol.control.WMSCapabilities#showDialog</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="showError"><span class="type-signature"></span>showError(error)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Display error</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>error</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>event</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.WMSCapabilities.html#showError">ol.control.WMSCapabilities#showError</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="testUrl"><span class="type-signature"></span>testUrl(url)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Test url and return true if it is a valid url string</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>url</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.WMSCapabilities.html#testUrl">ol.control.WMSCapabilities#testUrl</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">bolean</span>
+
+
+
+    </dd>
+</dl>
+
+
+        
 
     
 </dd>
