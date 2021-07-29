@@ -14,7 +14,7 @@ import ol_ext_inherits from '../util/ext'
  * @param {Object=} options Control options.
  *  @param {String} [options.className] class of the control
  *  @param {String} [options.label] waiting label
- *  @param {ol_layer_Layer} [options.layers] a tile layer with tileload envents
+ *  @param {ol_layer_Layer} [options.layers] a tile layer with tileload events
  */
 var ol_control_ProgressBar = function(options) {
   options = options || {};

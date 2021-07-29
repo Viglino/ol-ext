@@ -1,137 +1,133 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
+<!--
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Magnify overlay</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	Copyright (c) 2016-2018 Jean-Marc VIGLINO,
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+  <meta name="description" content="iconic font and scalable vector icons for OL3" />
+  <meta name="keywords" content="ol3, overlay, magnify, glass, zoom" />
 
------------------------------------------------------------->
-	<title>ol-ext: Magnify overlay</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-
-	<meta name="description" content="iconic font and scalable vector icons for OL3" />
-	<meta name="keywords" content="ol3, overlay, magnify, glass, zoom" />
-
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-	
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-    <link rel="stylesheet" href="../../dist/ol-ext.min.css" />
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.min.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
 
-	<style>
-		.oview {
-			color: #fff;
-			background: #369;
-			padding: 0.5em;
-			display: inline-block;
-			margin-right: 0.5em;
-		}
-	</style>
+  <style>
+    .oview {
+      color: #fff;
+      background: #369;
+      padding: 0.5em;
+      display: inline-block;
+      margin-right: 0.5em;
+    }
+  </style>
 </head>
 <body>
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Magnify overlay</h1>
-	</a>
-	<div class="info">
-		The <i>ol.control.Magnify</i> add a "magnifying glass" effect to an OL3 map that displays 
-		a portion of the map in a different zoom (and actually display different content).
-		<br/>
-		The magnifying glass can be placed outside the map's viewport using the target ad for a control.
+  <a href="../../index.html">
+    <h1>ol-ext: Magnify overlay</h1>
+  </a>
+  <div class="info">
+    The <i>ol/Overlay/Magnify</i> add a "magnifying glass" effect to a map that displays 
+    a portion of the map at a different zoom (and actually display different content).
+    <br/>
+    The magnifying glass can be placed outside the map's viewport using the target as for a control.
+  </div>
 
-	</div>
+  <!-- the map -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<!-- the map -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <div>
+    <div class="oview">
+      External magnify
+      <div class="overview" style="width:150px; height:150px;"></div>
+    </div>
+  </div>
+  
+  <div class="options">
+    Zoom offset: <input id="zoom" type="number" value="1" step="0.5" style="width:4em" />
+    <br />
+    Layer: 
+    <select onchange="setOVLayer(this.value)">
+      <option value="0">OSM</option>
+      <option value="1" selected>Stamen</option>
+    </select>
+  </div>
 
-	<div>
-		<div class="oview">
-			External magnify
-			<div class="overview" style="width:150px; height:150px;"></div>
-		</div>
-	</div>
-	
-	<div class="options">
-		Zoom offset: <input id="zoom" type="number" value="1" step="0.5" style="width:4em" />
-		<br />
-		Layer: 
-		<select onchange="setOVLayer(this)">
-			<option value="0">OSM</option>
-			<option value="1" selected>Stamen</option>
-		</select>
-	</div>
+  <script type="text/javascript">
+    // The map
+    var map=new ol.Map ({
+      target: 'map',
+      view: new ol.View ({
+        zoom: 15,
+        center: [270148, 6247782]
+      }),
+      layers: [ new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }) ]
+    });
 
-	<script type="text/javascript">
-		// The map
-		var map=new ol.Map
-			({
-				target: 'map',
-				view: new ol.View
-				({	zoom: 15,
-					center: [270148, 6247782]
-				}),
-				layers: [ new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }) ]
-			});
+    // Layers for the overview
+    var layersOV1 = [
+      new ol.layer.Tile({	source: new ol.source.OSM()	}),
+      new ol.layer.Tile({
+        source: new ol.source.Stamen({
+        layer: 'watercolor'
+        })
+      })
+    ];
+    var layersOV2 = [
+      new ol.layer.Tile({	source: new ol.source.OSM()	}),
+      new ol.layer.Tile({
+        source: new ol.source.Stamen({
+        layer: 'watercolor'
+        })
+      })
+    ];
+    setOVLayer($(".options select").val());
 
-		// Layers for the overview
-		var layersOV1 =
-		[	new ol.layer.Tile({	source: new ol.source.OSM()	}),
-			new ol.layer.Tile(
-				{	source: new ol.source.Stamen({
-					layer: 'watercolor'
-				  })
-				})
-		];
-		var layersOV2 =
-		[	new ol.layer.Tile({	source: new ol.source.OSM()	}),
-			new ol.layer.Tile(
-				{	source: new ol.source.Stamen({
-					layer: 'watercolor'
-				  })
-				})
-		];
-		setOVLayer($(".options select"));
+    // New control on the map
+    var ov = new ol.Overlay.Magnify({
+      layers: layersOV1,
+      zoomOffset: $("#zoom").val(),
+    });
+    map.addOverlay(ov);
 
-		// New control on the map
-		var ov = new ol.Overlay.Magnify(
-			{	layers: layersOV1,
-				zoomOffset: $("#zoom").val(),
-			});
-		map.addOverlay(ov);
+    var ov2 = new ol.Overlay.Magnify({
+      layers: layersOV2,
+      target: $(".overview").get(0),
+      zoomOffset: $("#zoom").val(),
+    });
+    map.addOverlay(ov2);
 
-		var ov2 = new ol.Overlay.Magnify(
-			{	layers: layersOV2,
-				target: $(".overview").get(0),
-				zoomOffset: $("#zoom").val(),
-			});
-		map.addOverlay(ov2);
+    // Options changes
+    function setOVLayer (n) {
+      layersOV1[n].setVisible(true);
+      layersOV1[1-n].setVisible(false);
+      layersOV2[n].setVisible(true);
+      layersOV2[1-n].setVisible(false);
+    }
 
-		// Options changes
-		function setOVLayer (e)
-		{	layersOV1[$(e).val()].setVisible(true);
-			layersOV1[1-$(e).val()].setVisible(false);
-			layersOV2[$(e).val()].setVisible(true);
-			layersOV2[1-$(e).val()].setVisible(false);
-		}
+    $("#zoom").on("change", function () {
+      ov.set("zoomOffset", Number($("#zoom").val()));
+      ov2.set("zoomOffset", Number($("#zoom").val()));
+    });
 
-		$("#zoom").on("change", function ()
-		{	ov.set("zoomOffset", Number($("#zoom").val()));
-			ov2.set("zoomOffset", Number($("#zoom").val()));
-		});
-
-	</script>
+  </script>
 
 </body>
 </html>
