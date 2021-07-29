@@ -4508,17 +4508,34 @@ ul.ol-legend li div {
   margin: 1em 0;
 }
 
-.ol-wmscapabilities ul.ol-wmsform li.extent input {
+.ol-wmscapabilities ul.ol-wmsform li[data-param="extent"] input {
   width: calc(60% - 2em);
 }
-.ol-wmscapabilities ul.ol-wmsform li.extent button {
+.ol-wmscapabilities ul.ol-wmsform li[data-param="extent"] button {
+  position: relative;
   width: 2em;
+  height: 1.6em;
   margin: 0;
   vertical-align: middle;
-  float: revert;
+  color: #444;
 }
-.ol-wmscapabilities ul.ol-wmsform li.extent button:before {
-  content: "M";
+.ol-wmscapabilities ul.ol-wmsform li[data-param="extent"] button:before,
+.ol-wmscapabilities ul.ol-wmsform li[data-param="extent"] button:after {
+  content: "";
+  position: absolute;
+  width: .25em;
+  height: .9em;
+  border: .1em solid currentColor;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%) skewY(-15deg);
+          transform: translate(-50%, -50%) skewY(-15deg);
+}
+.ol-wmscapabilities ul.ol-wmsform li[data-param="extent"] button:after {
+  -webkit-transform: translateX(.4em) translate(-50%, -50%) skewY(15deg);
+          transform: translateX(.4em) translate(-50%, -50%) skewY(15deg);
+  -webkit-box-shadow: -0.8em 0.25em;
+          box-shadow: -0.8em 0.25em;
 }
 
 .ol-ext-dialog.ol-wmscapabilities form {
@@ -4530,12 +4547,24 @@ ul.ol-legend li div {
           transform: translate(-50%, 0);
 }
 
-.ol-ext-dialog.ol-wmtscapabilities .ol-map-param {
+.ol-ext-dialog.ol-wmtscapabilities [data-param="map"] {
   display: none;
 }
-.ol-ext-dialog.ol-wmtscapabilities .ol-proj-param {
-  opacity: .5;
+.ol-ext-dialog.ol-wmtscapabilities [data-param="proj"],
+.ol-ext-dialog.ol-wmtscapabilities [data-param="version"] {
+  opacity: .6;
   pointer-events: none;
+}
+
+.ol-ext-dialog.ol-wmscapabilities button.ol-wmsform {
+  width: 1.8em;
+  text-align: center;
+}
+.ol-ext-dialog.ol-wmscapabilities button.ol-wmsform:before {
+  content: "+";
+}
+.ol-ext-dialog.ol-wmscapabilities .ol-form button.ol-wmsform:before {
+  content: "-";
 }
 
 .ol-ext-dialog.ol-wmscapabilities .ol-form button.ol-load,
@@ -4544,6 +4573,7 @@ ul.ol-legend li div {
 }
 .ol-ext-dialog.ol-wmscapabilities .ol-form ul.ol-wmsform {
   display: block;
+  clear: both;
 }
 .ol-target-overlay .ol-target 
 {	border: 1px solid transparent;

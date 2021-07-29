@@ -3525,7 +3525,8 @@ ol.control.LayerSwitcher.prototype.setHeader = function(html) {
   ol.ext.element.setHTML(this.header_, html);
 };
 /** Calculate overflow and add scrolls
- *	@param {Number} dir scroll direction -1|0|1|'+50%'|'-50%'
+ * @param {Number} dir scroll direction -1|0|1|'+50%'|'-50%'
+ * @private
  */
 ol.control.LayerSwitcher.prototype.overflow = function(dir) {	
   if (this.button && !this._noScroll) {
@@ -3580,6 +3581,7 @@ ol.control.LayerSwitcher.prototype.overflow = function(dir) {
 /** Set the layer associated with a li
  * @param {Element} li
  * @param {ol.layer} layer
+ * @private
  */
 ol.control.LayerSwitcher.prototype._setLayerForLI = function(li, layer) {
   var listeners = [];
@@ -3608,7 +3610,7 @@ ol.control.LayerSwitcher.prototype._setLayerForLI = function(li, layer) {
 /** Set opacity for a layer
  * @param {ol.layer.Layer} layer
  * @param {Element} li the list element
- * @api
+ * @private
  */
 ol.control.LayerSwitcher.prototype.setLayerOpacity = function(layer, li) {
   var i = li.querySelector('.layerswitcher-opacity-cursor')
@@ -3628,6 +3630,7 @@ ol.control.LayerSwitcher.prototype.setLayerVisibility = function(layer, li) {
   this.dispatchEvent({ type: 'layer:visible', layer: layer });
 };
 /** Clear layers associated with li
+ * @private
  */
 ol.control.LayerSwitcher.prototype._clearLayerForLI = function() {
   this._layers.forEach(function (li) {
@@ -3640,6 +3643,7 @@ ol.control.LayerSwitcher.prototype._clearLayerForLI = function() {
 /** Get the layer associated with a li
  * @param {Element} li
  * @return {ol.layer}
+ * @private
  */
 ol.control.LayerSwitcher.prototype._getLayerForLI = function(li) {
   for (var i=0, l; l=this._layers[i]; i++) {
@@ -3692,6 +3696,7 @@ ol.control.LayerSwitcher.prototype.drawPanel_ = function() {
 /** Change layer visibility according to the baselayer option
  * @param {ol.layer}
  * @param {Array<ol.layer>} related layers
+ * @private
  */
 ol.control.LayerSwitcher.prototype.switchLayerVisibility = function(l, layers) {
   if (!l.get('baseLayer')) {
@@ -3706,6 +3711,7 @@ ol.control.LayerSwitcher.prototype.switchLayerVisibility = function(l, layers) {
 /** Check if layer is on the map (depending on zoom and extent)
  * @param {ol.layer}
  * @return {boolean}
+ * @private
  */
 ol.control.LayerSwitcher.prototype.testLayerVisibility = function(layer) {
   if (!this.getMap()) return true;
@@ -3901,6 +3907,7 @@ ol.control.LayerSwitcher.prototype.dragOpacity_ = function(e) {
  * @param {Elemen} element to render
  * @layers {Array{ol.layer}} list of layer to show
  * @api stable
+ * @private
  */
 ol.control.LayerSwitcher.prototype.drawList = function(ul, collection) {
   var self = this;
@@ -4122,6 +4129,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection) {
 };
 /** Select a layer
  * @param {ol.layer.Layer} layer
+ * @returns {string} the layer classname
  * @api
  */
 ol.control.LayerSwitcher.prototype.getLayerClass = function(layer) {
@@ -7549,7 +7557,7 @@ ol.control.LayerShop.prototype.setMap = function(map) {
     }.bind(this));
   }
 };
-/** Add a control to the panel
+/** Get the bar element (to add new element in it)
  * @param {string} [position='top'] bar position bottom or top, default top
  * @returns {Element}
  */
@@ -10508,7 +10516,7 @@ ol.control.Profil.prototype.getImage = function(type, encoderOptions) {
  * @param {Object=} options Control options.
  *  @param {String} [options.className] class of the control
  *  @param {String} [options.label] waiting label
- *  @param {ol.layer.Layer} [options.layers] a tile layer with tileload envents
+ *  @param {ol.layer.Layer} [options.layers] a tile layer with tileload events
  */
 ol.control.ProgressBar = function(options) {
   options = options || {};
@@ -14551,12 +14559,12 @@ ol.control.WMSCapabilities.prototype.createDialog = function (options) {
   addLine('formTitle');
   addLine('formLayer', '', 'layer1,layer2,...');
   var li = addLine('formMap');
-  li.className = 'ol-map-param';
+  li.setAttribute('data-param', 'map');
   addLine('formFormat', ['image/png', 'image/jpeg']);
   addLine('formMinZoom', 0);
   addLine('formMaxZoom', 20);
   li = addLine('formExtent', '', 'xmin,ymin,xmax,ymax');
-  li.className = 'extent';
+  li.setAttribute('data-param', 'extent');
   var extent = li.querySelector('input');
   ol.ext.element.create('BUTTON', {
     title: this.labels.mapExtent,
@@ -14566,56 +14574,17 @@ ol.control.WMSCapabilities.prototype.createDialog = function (options) {
     parent: li
   });
   li = addLine('formProjection', '');
-  li.className = 'ol-proj-param';
+  li.setAttribute('data-param', 'proj');
   addLine('formCrossOrigin', false);
-  addLine('formVersion', '1.3.0');
+  li = addLine('formVersion', '1.3.0');
+  li.setAttribute('data-param', 'version');
   addLine('formAttribution', '');
   ol.ext.element.create('BUTTON', {
     html: this.get('loadLabel') || 'Load',
     click: function() {
-      var minZoom = parseInt(this._elements.formMinZoom.value);
-      var maxZoom = parseInt(this._elements.formMaxZoom.value);
-      var view = new ol.View({
-        projection: this.getMap().getView().getProjection()
-      })
-      view.setZoom(minZoom);
-      var maxResolution = view.getResolution();
-      view.setZoom(maxZoom);
-      var minResolution = view.getResolution();
-      var ext = [];
-      if (this._elements.formExtent.value) {
-        this._elements.formExtent.value.split(',').forEach(function(b) {
-          ext.push(parseFloat(b));
-        })
-      }
-      if (ext.length !== 4) ext = undefined;
-      var attributions = []
-      if (this._elements.formAttribution.value) attributions.push(this._elements.formAttribution.value);
-      var options = {
-        layer: {
-          title: this._elements.formTitle.value,
-          extent: ext,
-          maxResolution: maxResolution,
-          minResolution: minResolution
-        },
-        source: {
-          url: this._elements.input.value,
-          crossOrigin: this._elements.formCrossOrigin.checked ? 'anonymous' : null,
-          projection: this._elements.formProjection.value,
-          attributions: attributions,
-          params: {
-            FORMAT: this._elements.formFormat.options[this._elements.formFormat.selectedIndex].value,
-            LAYERS: this._elements.formLayer.value,
-            VERSION: this._elements.formVersion.value
-          }
-        },
-        data: {
-          title: this._elements.formTitle.value
-        }
-      }
-      if (this._elements.formMap.value) options.source.param.MAP = this._elements.formMap.value;
-      var layer = this.getLayerFromOptions(options);
-      this.dispatchEvent({ type: 'load', layer: layer, options: options });
+      var opt = this._getFormOptions();
+      var layer = this.getLayerFromOptions(opt);
+      this.dispatchEvent({ type: 'load', layer: layer, options: opt });
       this._dialog.hide();
     }.bind(this),
     parent: form
@@ -14824,10 +14793,12 @@ ol.control.WMSCapabilities.prototype.showCapabilitis = function(caps) {
           this._elements.buttons.innerHTML = '';
           this._elements.data.innerHTML = '';
           this._elements.legend.src = this._elements.preview.src = '';
+          this._elements.element.classList.remove('ol-form');
           this.showError();
           // Load layer
           var options = this.getOptionsFromCap(l, caps);
           var layer = this.getLayerFromOptions(options);
+          this._currentOptions = options;
           //
           list.forEach(function(i) {
             i.classList.remove('selected');
@@ -14845,10 +14816,8 @@ ol.control.WMSCapabilities.prototype.showCapabilitis = function(caps) {
               parent: this._elements.buttons
             });
             ol.ext.element.create('BUTTON', {
-              html: '+',
               className: 'ol-wmsform',
               click: function() {
-                console.log(this._elements.element)
                 this._elements.element.classList.toggle('ol-form');
               }.bind(this),
               parent: this._elements.buttons
@@ -14998,27 +14967,6 @@ ol.control.WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) 
     attribution: source_opt.attributions[0] || '',
     version: source_opt.params.VERSION
   });
-/*
-  this._elements.formTitle.value = layer_opt.title;
-  this._elements.formLayer.value = source_opt.params.LAYERS;
-  var o;
-  for (i=0; o=this._elements.formFormat.options[i]; i++) {
-    if (o.value===source_opt.params.FORMAT) {
-      this._elements.formFormat.selectedIndex = i;
-      break;
-    }
-  }
-  var view = new ol.View({
-    projection: this.getMap().getView().getProjection()
-  })
-  view.setResolution(layer_opt.minResolution);
-  this._elements.formMaxZoom.value = Math.round(view.getZoom());
-  view.setResolution(layer_opt.maxResolution);
-  this._elements.formMinZoom.value = Math.round(view.getZoom());
-  this._elements.formExtent.value = bbox ? bbox.join(',') : '';
-  this._elements.formProjection.value = source_opt.projection;
-  this._elements.formAttribution.value = source_opt.attributions[0] || '';
-*/
   // Trace
   if (this.get('trace')) {
     var tso = JSON.stringify([ source_opt ], null, "\t").replace(/\\"/g,'"');
@@ -15055,6 +15003,54 @@ ol.control.WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) 
     } 
   });
 };
+/** Get WMS options from control form
+ * @return {*} options
+ * @private
+ */
+ol.control.WMSCapabilities.prototype._getFormOptions = function() {
+  var minZoom = parseInt(this._elements.formMinZoom.value);
+  var maxZoom = parseInt(this._elements.formMaxZoom.value);
+  var view = new ol.View({
+    projection: this.getMap().getView().getProjection()
+  })
+  view.setZoom(minZoom);
+  var maxResolution = view.getResolution();
+  view.setZoom(maxZoom);
+  var minResolution = view.getResolution();
+  var ext = [];
+  if (this._elements.formExtent.value) {
+    this._elements.formExtent.value.split(',').forEach(function(b) {
+      ext.push(parseFloat(b));
+    })
+  }
+  if (ext.length !== 4) ext = undefined;
+  var attributions = []
+  if (this._elements.formAttribution.value) attributions.push(this._elements.formAttribution.value);
+  var options = {
+    layer: {
+      title: this._elements.formTitle.value,
+      extent: ext,
+      maxResolution: maxResolution,
+      minResolution: minResolution
+    },
+    source: {
+      url: this._elements.input.value,
+      crossOrigin: this._elements.formCrossOrigin.checked ? 'anonymous' : null,
+      projection: this._elements.formProjection.value,
+      attributions: attributions,
+      params: {
+        FORMAT: this._elements.formFormat.options[this._elements.formFormat.selectedIndex].value,
+        LAYERS: this._elements.formLayer.value,
+        VERSION: this._elements.formVersion.value
+      }
+    },
+    data: {
+      title: this._elements.formTitle.value
+    }
+  }
+  if (this._elements.formMap.value) options.source.param.MAP = this._elements.formMap.value;
+  return options;
+};
 /** Fill dialog form
  * @private
  */
@@ -15068,6 +15064,7 @@ ol.control.WMSCapabilities.prototype._fillForm = function(opt) {
       break;
     }
   }
+  this._elements.formExtent.value = opt.extent || '';
   this._elements.formMaxZoom.value = opt.maxZoom;
   this._elements.formMinZoom.value = opt.minZoom;
   this._elements.formProjection.value = opt.projection;
@@ -15125,6 +15122,7 @@ ol.control.WMTSCapabilities = function (options) {
 };
 ol.ext.inherits(ol.control.WMTSCapabilities, ol.control.WMSCapabilities);
 /** Get service parser
+ * @private
  */
  ol.control.WMTSCapabilities.prototype._getParser = function() {
   var pars = new ol.format.WMTSCapabilities();
@@ -15160,6 +15158,26 @@ ol.ext.inherits(ol.control.WMTSCapabilities, ol.control.WMSCapabilities);
     VERSION: options.version || '1.0.0'
   }
 };
+/** Get tile matrix
+ * @returns {*}
+ * @private
+ */
+ol.control.WMTSCapabilities.prototype._getTG = function(tileMatrixSet, minZoom, maxZoom) {
+  var matrixIds = new Array();
+  var resolutions = new Array();
+  var size = ol.extent.getWidth(ol.proj.get('EPSG:3857').getExtent()) / 256;
+  for (var z=0; z <= (maxZoom ? maxZoom : 20) ; z++) {
+    var id = tileMatrixSet !== 'PM' ? tileMatrixSet+':'+z : z;
+    matrixIds[z] = id ; 
+    resolutions[z] = size / Math.pow(2, z);
+  }
+  return {
+    origin: [-20037508, 20037508],
+    resolutions: resolutions,
+    matrixIds: matrixIds,
+    minZoom: (minZoom ? minZoom : 0)
+  }
+}
 /** Return a WMTS options for the given capabilities
  * @param {*} caps layer capabilities (read from the capabilities)
  * @param {*} parent capabilities
@@ -15188,20 +15206,7 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
     maxZoom = Math.max(maxZoom, parseInt(zoom));
   });
   // Tilematrix
-  var matrixIds = new Array();
-  var resolutions = new Array();
-  var size = ol.extent.getWidth(ol.proj.get('EPSG:3857').getExtent()) / 256;
-  for (var z=0; z <= (maxZoom ? maxZoom : 20) ; z++) {
-    var id = caps.TileMatrixSet !== 'PM' ? caps.TileMatrixSet+':'+z : z;
-    matrixIds[z] = id ; 
-    resolutions[z] = size / Math.pow(2, z);
-  }
-  var tg = {
-    origin: [-20037508, 20037508],
-    resolutions: resolutions,
-    matrixIds: matrixIds,
-    minZoom: (minZoom ? minZoom : 0)
-  }
+  var tg = this._getTG(caps.TileMatrixSet, minZoom, maxZoom);
   var view = new ol.View();
   view.setZoom(minZoom);
   var layer_opt = {
@@ -15257,6 +15262,56 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
       title: caps.Title,
       abstract: caps.Abstract,
       legend: caps.Style ? [ caps.Style[0].LegendURL[0].href ] : undefined,
+    } 
+  });
+};
+/** Get WMS options from control form
+ * @return {*} original original options 
+ * @return {*} options
+ * @private
+ */
+ol.control.WMTSCapabilities.prototype._getFormOptions = function() {
+  var options = this._currentOptions;
+  var minZoom = parseInt(this._elements.formMinZoom.value);
+  var maxZoom = parseInt(this._elements.formMaxZoom.value);
+  var ext = [];
+  if (this._elements.formExtent.value) {
+    this._elements.formExtent.value.split(',').forEach(function(b) {
+      ext.push(parseFloat(b));
+    })
+  }
+  if (ext.length !== 4) ext = undefined;
+  var attributions = []
+  if (this._elements.formAttribution.value) attributions.push(this._elements.formAttribution.value);
+  var view = new ol.View({
+    projection: this.getMap().getView().getProjection()
+  })
+  view.setZoom(minZoom);
+  var layer_opt = {
+    title: this._elements.formTitle.value,
+    extent: ext,
+    abstract: options.layer.abstract,
+    maxResolution: view.getResolution()
+  }
+  var source_opt = {
+    url: this._elements.input.value,
+    layer: this._elements.formLayer.value,
+    matrixSet: options.source.matrixSet || 'PM',
+    format: this._elements.formFormat.options[this._elements.formFormat.selectedIndex].value,
+    projection: 'EPSG:3857',
+    tileGrid: this._getTG(options.source.matrixSet || 'PM', minZoom, maxZoom),
+    style: options.source.style || 'normal',
+    attributions: attributions,
+    crossOrigin: this._elements.formCrossOrigin.checked ? 'anonymous' : null,
+    wrapX: (this.get('wrapX') !== false),
+  }
+  return ({ 
+    layer: layer_opt, 
+    source: source_opt,
+    data: {
+      title: this._elements.formTitle.value,
+      abstract: options.data.abstract,
+      legend: options.data.legend,
     } 
   });
 };
@@ -16025,7 +16080,6 @@ ol.filter = {};
  * @classdesc 
  * Abstract base class; normally only used for creating subclasses and not instantiated in apps.    
  * Used to create filters    
- * Use {@link _ol_Map_#addFilter}, {@link _ol_Map_#removeFilter} or {@link _ol_Map_#getFilters} to handle filters on a map.
  * Use {@link ol.layer.Base#addFilter}, {@link ol.layer.Base#removeFilter} or {@link ol.layer.Base#getFilters}
  * to handle filters on layers.
  *
@@ -16252,31 +16306,33 @@ ol.filter.Mask.prototype.postcompose = function(e) {
   ctx.restore();
 };
 
-/** Add a mix-blend-mode CSS filter (not working with IE or ol<6)
- * With ol < 6 use ol/filter/Composite instead.
+/** Add a mix-blend-mode CSS filter (not working with IE or ol<6).
+ * Add a className to the layer to apply the filter to a specific layer.    
+ * With ol<6 use {@link ol.filter.Composite} instead.    
+ * Use {@link ol.layer.Base#addFilter}, {@link ol.layer.Base#removeFilter} or {@link ol.layer.Base#getFilters}
  * @constructor
  * @extends {ol.Object}
- * @param {Object} options 
- *  @params {string} options.filters a list of filter to apply (as in CSS)
+ * @param {Object} options
+ *  @param {string} options.blend a list of mix-blend-mode to apply (as {@link https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode CSS property})
  */
-ol.filter.MixBlendCSS = function(options) {
+ol.filter.CSS = function(options) {
   ol.filter.Base.call(this, options);
 };
-ol.ext.inherits(ol.filter.MixBlendCSS, ol.filter.Base);
+ol.ext.inherits(ol.filter.CSS, ol.filter.Base);
 /** Add CSS filter to the layer
- * @param {ol/layer/Base} layer 
+ * @param {ol.layer.Base} layer 
  */
- ol.filter.MixBlendCSS.prototype.addToLayer = function(layer) {
+ ol.filter.CSS.prototype.addToLayer = function(layer) {
   layer.once('postrender', function(e) {
-    e.context.canvas.parentNode.style['mix-blend-mode'] = this.get('filters') || '';
+    e.context.canvas.parentNode.style['mix-blend-mode'] = this.get('blend') || '';
   }.bind(this));
   layer.changed();
   // layer.getRenderer().getImage().parentNode.style['mix-blend-mode'] = 'multiply';
 };
 /** Remove CSS filter from the layer
- * @param {ol/layer/Base} layer 
+ * @param {ol.layer.Base} layer 
  */
-ol.filter.MixBlendCSS.prototype.removeFromLayer = function(layer) {
+ol.filter.CSS.prototype.removeFromLayer = function(layer) {
   layer.once('postrender', function(e) {
     e.context.canvas.parentNode.style['mix-blend-mode'] = '';
   }.bind(this));
@@ -16657,13 +16713,15 @@ ol.filter.Colorize.prototype.postcompose = function(e) {
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/** Add a composite filter on a layer
+/** Add a composite filter on a layer.    
+ * With ol6+ you'd better use {@link ol.filter.CSS} instead.    
+ * Use {@link ol.layer.Base#addFilter}, {@link ol.layer.Base#removeFilter} or {@link ol.layer.Base#getFilters}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
  * @constructor
  * @requires ol.filter
  * @extends {ol.filter.Base}
  * @param {Object} options
- *   @param {string} options.operation composite operation
+ *  @param {string} options.operation composite operation
  */
 ol.filter.Composite = function(options) {
   ol.filter.Base.call(this, options);
