@@ -17,7 +17,6 @@ export {ol_filter};
  * @classdesc 
  * Abstract base class; normally only used for creating subclasses and not instantiated in apps.    
  * Used to create filters    
- * Use {@link _ol_Map_#addFilter}, {@link _ol_Map_#removeFilter} or {@link _ol_Map_#getFilters} to handle filters on a map.
  * Use {@link ol_layer_Base#addFilter}, {@link ol_layer_Base#removeFilter} or {@link ol_layer_Base#getFilters}
  * to handle filters on layers.
  *

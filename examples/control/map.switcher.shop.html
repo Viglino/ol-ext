@@ -201,12 +201,12 @@
 
   // Mix blend Menu
   var blendFilter = {
-    multiply: new ol.filter.MixBlendCSS({ filters: 'multiply' }),
-    luminosity: new ol.filter.MixBlendCSS({ filters: 'luminosity' }),
-    color: new ol.filter.MixBlendCSS({ filters: 'color' }),
-    'color-burn': new ol.filter.MixBlendCSS({ filters: 'color-burn' }),
-    difference: new ol.filter.MixBlendCSS({ filters: 'difference' }),
-    overlay: new ol.filter.MixBlendCSS({ filters: 'overlay' })
+    multiply: new ol.filter.CSS({ blend: 'multiply' }),
+    luminosity: new ol.filter.CSS({ blend: 'luminosity' }),
+    color: new ol.filter.CSS({ blend: 'color' }),
+    'color-burn': new ol.filter.CSS({ blend: 'color-burn' }),
+    difference: new ol.filter.CSS({ blend: 'difference' }),
+    overlay: new ol.filter.CSS({ blend: 'overlay' })
   };
   clc.addFilter(blendFilter.multiply);
   var blend = ol.ext.element.create('SELECT', { 

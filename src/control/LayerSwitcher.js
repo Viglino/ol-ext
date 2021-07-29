@@ -238,7 +238,8 @@ ol_control_LayerSwitcher.prototype.setHeader = function(html) {
 };
 
 /** Calculate overflow and add scrolls
- *	@param {Number} dir scroll direction -1|0|1|'+50%'|'-50%'
+ * @param {Number} dir scroll direction -1|0|1|'+50%'|'-50%'
+ * @private
  */
 ol_control_LayerSwitcher.prototype.overflow = function(dir) {	
   if (this.button && !this._noScroll) {
@@ -295,6 +296,7 @@ ol_control_LayerSwitcher.prototype.overflow = function(dir) {
 /** Set the layer associated with a li
  * @param {Element} li
  * @param {ol.layer} layer
+ * @private
  */
 ol_control_LayerSwitcher.prototype._setLayerForLI = function(li, layer) {
   var listeners = [];
@@ -324,7 +326,7 @@ ol_control_LayerSwitcher.prototype._setLayerForLI = function(li, layer) {
 /** Set opacity for a layer
  * @param {ol.layer.Layer} layer
  * @param {Element} li the list element
- * @api
+ * @private
  */
 ol_control_LayerSwitcher.prototype.setLayerOpacity = function(layer, li) {
   var i = li.querySelector('.layerswitcher-opacity-cursor')
@@ -346,6 +348,7 @@ ol_control_LayerSwitcher.prototype.setLayerVisibility = function(layer, li) {
 };
 
 /** Clear layers associated with li
+ * @private
  */
 ol_control_LayerSwitcher.prototype._clearLayerForLI = function() {
   this._layers.forEach(function (li) {
@@ -359,6 +362,7 @@ ol_control_LayerSwitcher.prototype._clearLayerForLI = function() {
 /** Get the layer associated with a li
  * @param {Element} li
  * @return {ol.layer}
+ * @private
  */
 ol_control_LayerSwitcher.prototype._getLayerForLI = function(li) {
   for (var i=0, l; l=this._layers[i]; i++) {
@@ -416,6 +420,7 @@ ol_control_LayerSwitcher.prototype.drawPanel_ = function() {
 /** Change layer visibility according to the baselayer option
  * @param {ol.layer}
  * @param {Array<ol.layer>} related layers
+ * @private
  */
 ol_control_LayerSwitcher.prototype.switchLayerVisibility = function(l, layers) {
   if (!l.get('baseLayer')) {
@@ -431,6 +436,7 @@ ol_control_LayerSwitcher.prototype.switchLayerVisibility = function(l, layers) {
 /** Check if layer is on the map (depending on zoom and extent)
  * @param {ol.layer}
  * @return {boolean}
+ * @private
  */
 ol_control_LayerSwitcher.prototype.testLayerVisibility = function(layer) {
   if (!this.getMap()) return true;
@@ -642,6 +648,7 @@ ol_control_LayerSwitcher.prototype.dragOpacity_ = function(e) {
  * @param {Elemen} element to render
  * @layers {Array{ol.layer}} list of layer to show
  * @api stable
+ * @private
  */
 ol_control_LayerSwitcher.prototype.drawList = function(ul, collection) {
   var self = this;
@@ -880,6 +887,7 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection) {
 
 /** Select a layer
  * @param {ol.layer.Layer} layer
+ * @returns {string} the layer classname
  * @api
  */
 ol_control_LayerSwitcher.prototype.getLayerClass = function(layer) {

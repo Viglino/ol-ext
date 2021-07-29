@@ -6,13 +6,15 @@
 import ol_ext_inherits from '../util/ext'
 import ol_filter_Base from './Base'
 
-/** Add a composite filter on a layer
+/** Add a composite filter on a layer.    
+ * With ol6+ you'd better use {@link ol_filter_CSS} instead.    
+ * Use {@link ol_layer_Base#addFilter}, {@link ol_layer_Base#removeFilter} or {@link ol_layer_Base#getFilters}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
  * @constructor
  * @requires ol.filter
  * @extends {ol_filter_Base}
  * @param {Object} options
- *   @param {string} options.operation composite operation
+ *  @param {string} options.operation composite operation
  */
 var ol_filter_Composite = function(options) {
   ol_filter_Base.call(this, options);

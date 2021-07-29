@@ -97,7 +97,7 @@ ol_control_LayerShop.prototype.setMap = function(map) {
   }
 };
 
-/** Add a control to the panel
+/** Get the bar element (to add new element in it)
  * @param {string} [position='top'] bar position bottom or top, default top
  * @returns {Element}
  */
