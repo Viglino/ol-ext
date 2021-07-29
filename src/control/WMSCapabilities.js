@@ -292,12 +292,12 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
   addLine('formTitle');
   addLine('formLayer', '', 'layer1,layer2,...');
   var li = addLine('formMap');
-  li.className = 'ol-map-param';
+  li.setAttribute('data-param', 'map');
   addLine('formFormat', ['image/png', 'image/jpeg']);
   addLine('formMinZoom', 0);
   addLine('formMaxZoom', 20);
   li = addLine('formExtent', '', 'xmin,ymin,xmax,ymax');
-  li.className = 'extent';
+  li.setAttribute('data-param', 'extent');
   var extent = li.querySelector('input');
   ol_ext_element.create('BUTTON', {
     title: this.labels.mapExtent,
@@ -307,57 +307,18 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
     parent: li
   });
   li = addLine('formProjection', '');
-  li.className = 'ol-proj-param';
+  li.setAttribute('data-param', 'proj');
   addLine('formCrossOrigin', false);
-  addLine('formVersion', '1.3.0');
+  li = addLine('formVersion', '1.3.0');
+  li.setAttribute('data-param', 'version');
   addLine('formAttribution', '');
 
   ol_ext_element.create('BUTTON', {
     html: this.get('loadLabel') || 'Load',
     click: function() {
-      var minZoom = parseInt(this._elements.formMinZoom.value);
-      var maxZoom = parseInt(this._elements.formMaxZoom.value);
-      var view = new ol_View({
-        projection: this.getMap().getView().getProjection()
-      })
-      view.setZoom(minZoom);
-      var maxResolution = view.getResolution();
-      view.setZoom(maxZoom);
-      var minResolution = view.getResolution();
-      var ext = [];
-      if (this._elements.formExtent.value) {
-        this._elements.formExtent.value.split(',').forEach(function(b) {
-          ext.push(parseFloat(b));
-        })
-      }
-      if (ext.length !== 4) ext = undefined;
-      var attributions = []
-      if (this._elements.formAttribution.value) attributions.push(this._elements.formAttribution.value);
-      var options = {
-        layer: {
-          title: this._elements.formTitle.value,
-          extent: ext,
-          maxResolution: maxResolution,
-          minResolution: minResolution
-        },
-        source: {
-          url: this._elements.input.value,
-          crossOrigin: this._elements.formCrossOrigin.checked ? 'anonymous' : null,
-          projection: this._elements.formProjection.value,
-          attributions: attributions,
-          params: {
-            FORMAT: this._elements.formFormat.options[this._elements.formFormat.selectedIndex].value,
-            LAYERS: this._elements.formLayer.value,
-            VERSION: this._elements.formVersion.value
-          }
-        },
-        data: {
-          title: this._elements.formTitle.value
-        }
-      }
-      if (this._elements.formMap.value) options.source.param.MAP = this._elements.formMap.value;
-      var layer = this.getLayerFromOptions(options);
-      this.dispatchEvent({ type: 'load', layer: layer, options: options });
+      var opt = this._getFormOptions();
+      var layer = this.getLayerFromOptions(opt);
+      this.dispatchEvent({ type: 'load', layer: layer, options: opt });
       this._dialog.hide();
     }.bind(this),
     parent: form
@@ -582,10 +543,12 @@ ol_control_WMSCapabilities.prototype.showCapabilitis = function(caps) {
           this._elements.buttons.innerHTML = '';
           this._elements.data.innerHTML = '';
           this._elements.legend.src = this._elements.preview.src = '';
+          this._elements.element.classList.remove('ol-form');
           this.showError();
           // Load layer
           var options = this.getOptionsFromCap(l, caps);
           var layer = this.getLayerFromOptions(options);
+          this._currentOptions = options;
           //
           list.forEach(function(i) {
             i.classList.remove('selected');
@@ -603,10 +566,8 @@ ol_control_WMSCapabilities.prototype.showCapabilitis = function(caps) {
               parent: this._elements.buttons
             });
             ol_ext_element.create('BUTTON', {
-              html: '+',
               className: 'ol-wmsform',
               click: function() {
-                console.log(this._elements.element)
                 this._elements.element.classList.toggle('ol-form');
               }.bind(this),
               parent: this._elements.buttons
@@ -770,29 +731,6 @@ ol_control_WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) 
     version: source_opt.params.VERSION
   });
 
-/*
-  this._elements.formTitle.value = layer_opt.title;
-  this._elements.formLayer.value = source_opt.params.LAYERS;
-  var o;
-  for (i=0; o=this._elements.formFormat.options[i]; i++) {
-    if (o.value===source_opt.params.FORMAT) {
-      this._elements.formFormat.selectedIndex = i;
-      break;
-    }
-  }
-  
-  var view = new ol_View({
-    projection: this.getMap().getView().getProjection()
-  })
-  view.setResolution(layer_opt.minResolution);
-  this._elements.formMaxZoom.value = Math.round(view.getZoom());
-  view.setResolution(layer_opt.maxResolution);
-  this._elements.formMinZoom.value = Math.round(view.getZoom());
-  this._elements.formExtent.value = bbox ? bbox.join(',') : '';
-  this._elements.formProjection.value = source_opt.projection;
-  this._elements.formAttribution.value = source_opt.attributions[0] || '';
-*/
-
   // Trace
   if (this.get('trace')) {
     var tso = JSON.stringify([ source_opt ], null, "\t").replace(/\\"/g,'"');
@@ -832,6 +770,55 @@ ol_control_WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) 
   });
 };
 
+/** Get WMS options from control form
+ * @return {*} options
+ * @private
+ */
+ol_control_WMSCapabilities.prototype._getFormOptions = function() {
+  var minZoom = parseInt(this._elements.formMinZoom.value);
+  var maxZoom = parseInt(this._elements.formMaxZoom.value);
+  var view = new ol_View({
+    projection: this.getMap().getView().getProjection()
+  })
+  view.setZoom(minZoom);
+  var maxResolution = view.getResolution();
+  view.setZoom(maxZoom);
+  var minResolution = view.getResolution();
+  var ext = [];
+  if (this._elements.formExtent.value) {
+    this._elements.formExtent.value.split(',').forEach(function(b) {
+      ext.push(parseFloat(b));
+    })
+  }
+  if (ext.length !== 4) ext = undefined;
+  var attributions = []
+  if (this._elements.formAttribution.value) attributions.push(this._elements.formAttribution.value);
+  var options = {
+    layer: {
+      title: this._elements.formTitle.value,
+      extent: ext,
+      maxResolution: maxResolution,
+      minResolution: minResolution
+    },
+    source: {
+      url: this._elements.input.value,
+      crossOrigin: this._elements.formCrossOrigin.checked ? 'anonymous' : null,
+      projection: this._elements.formProjection.value,
+      attributions: attributions,
+      params: {
+        FORMAT: this._elements.formFormat.options[this._elements.formFormat.selectedIndex].value,
+        LAYERS: this._elements.formLayer.value,
+        VERSION: this._elements.formVersion.value
+      }
+    },
+    data: {
+      title: this._elements.formTitle.value
+    }
+  }
+  if (this._elements.formMap.value) options.source.param.MAP = this._elements.formMap.value;
+  return options;
+};
+
 /** Fill dialog form
  * @private
  */
@@ -845,6 +832,7 @@ ol_control_WMSCapabilities.prototype._fillForm = function(opt) {
       break;
     }
   }
+  this._elements.formExtent.value = opt.extent || '';
   this._elements.formMaxZoom.value = opt.maxZoom;
   this._elements.formMinZoom.value = opt.minZoom;
   this._elements.formProjection.value = opt.projection;

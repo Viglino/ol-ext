@@ -40,6 +40,7 @@ var ol_control_WMTSCapabilities = function (options) {
 ol_ext_inherits(ol_control_WMTSCapabilities, ol_control_WMSCapabilities);
 
 /** Get service parser
+ * @private
  */
  ol_control_WMTSCapabilities.prototype._getParser = function() {
   var pars = new ol_format_WMTSCapabilities();
@@ -77,6 +78,27 @@ ol_ext_inherits(ol_control_WMTSCapabilities, ol_control_WMSCapabilities);
   }
 };
 
+/** Get tile matrix
+ * @returns {*}
+ * @private
+ */
+ol_control_WMTSCapabilities.prototype._getTG = function(tileMatrixSet, minZoom, maxZoom) {
+  var matrixIds = new Array();
+  var resolutions = new Array();
+  var size = ol_extent_getWidth(ol_proj_get('EPSG:3857').getExtent()) / 256;
+  for (var z=0; z <= (maxZoom ? maxZoom : 20) ; z++) {
+    var id = tileMatrixSet !== 'PM' ? tileMatrixSet+':'+z : z;
+    matrixIds[z] = id ; 
+    resolutions[z] = size / Math.pow(2, z);
+  }
+  return {
+    origin: [-20037508, 20037508],
+    resolutions: resolutions,
+    matrixIds: matrixIds,
+    minZoom: (minZoom ? minZoom : 0)
+  }
+}
+
 /** Return a WMTS options for the given capabilities
  * @param {*} caps layer capabilities (read from the capabilities)
  * @param {*} parent capabilities
@@ -107,20 +129,7 @@ ol_control_WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
   });
 
   // Tilematrix
-  var matrixIds = new Array();
-  var resolutions = new Array();
-  var size = ol_extent_getWidth(ol_proj_get('EPSG:3857').getExtent()) / 256;
-  for (var z=0; z <= (maxZoom ? maxZoom : 20) ; z++) {
-    var id = caps.TileMatrixSet !== 'PM' ? caps.TileMatrixSet+':'+z : z;
-    matrixIds[z] = id ; 
-    resolutions[z] = size / Math.pow(2, z);
-  }
-  var tg = {
-    origin: [-20037508, 20037508],
-    resolutions: resolutions,
-    matrixIds: matrixIds,
-    minZoom: (minZoom ? minZoom : 0)
-  }
+  var tg = this._getTG(caps.TileMatrixSet, minZoom, maxZoom);
 
   var view = new ol_View();
   view.setZoom(minZoom);
@@ -180,6 +189,61 @@ ol_control_WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
       title: caps.Title,
       abstract: caps.Abstract,
       legend: caps.Style ? [ caps.Style[0].LegendURL[0].href ] : undefined,
+    } 
+  });
+};
+
+/** Get WMS options from control form
+ * @return {*} original original options 
+ * @return {*} options
+ * @private
+ */
+ol_control_WMTSCapabilities.prototype._getFormOptions = function() {
+  var options = this._currentOptions;
+
+  var minZoom = parseInt(this._elements.formMinZoom.value);
+  var maxZoom = parseInt(this._elements.formMaxZoom.value);
+  var ext = [];
+  if (this._elements.formExtent.value) {
+    this._elements.formExtent.value.split(',').forEach(function(b) {
+      ext.push(parseFloat(b));
+    })
+  }
+  if (ext.length !== 4) ext = undefined;
+  var attributions = []
+  if (this._elements.formAttribution.value) attributions.push(this._elements.formAttribution.value);
+
+  var view = new ol_View({
+    projection: this.getMap().getView().getProjection()
+  })
+  view.setZoom(minZoom);
+  var layer_opt = {
+    title: this._elements.formTitle.value,
+    extent: ext,
+    abstract: options.layer.abstract,
+    maxResolution: view.getResolution()
+  }
+
+  var source_opt = {
+    url: this._elements.input.value,
+    layer: this._elements.formLayer.value,
+    matrixSet: options.source.matrixSet || 'PM',
+    format: this._elements.formFormat.options[this._elements.formFormat.selectedIndex].value,
+    projection: 'EPSG:3857',
+    tileGrid: this._getTG(options.source.matrixSet || 'PM', minZoom, maxZoom),
+    style: options.source.style || 'normal',
+    attributions: attributions,
+    crossOrigin: this._elements.formCrossOrigin.checked ? 'anonymous' : null,
+    wrapX: (this.get('wrapX') !== false),
+  }
+
+  return ({ 
+    layer: layer_opt, 
+    source: source_opt,
+    data: {
+      title: this._elements.formTitle.value,
+      abstract: options.data.abstract,
+      legend: options.data.legend,
     } 
   });
 };
