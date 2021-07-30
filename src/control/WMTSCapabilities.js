@@ -78,7 +78,7 @@ ol_ext_inherits(ol_control_WMTSCapabilities, ol_control_WMSCapabilities);
   }
 };
 
-/** Get tile matrix
+/** Get tile grid options
  * @returns {*}
  * @private
  */
@@ -97,7 +97,18 @@ ol_control_WMTSCapabilities.prototype._getTG = function(tileMatrixSet, minZoom, 
     matrixIds: matrixIds,
     minZoom: (minZoom ? minZoom : 0)
   }
-}
+};
+
+/** Get WMTS tile grid
+ * @param {sting} tileMatrixSet
+ * @param {number} minZoom
+ * @param {number} maxZoom
+ * @returns {ol_tilegrid_WMTS}
+ * @private
+ */
+ ol_control_WMTSCapabilities.prototype.getTileGrid = function(tileMatrixSet, minZoom, maxZoom) {
+  return new ol_tilegrid_WMTS(this._getTG(tileMatrixSet, minZoom, maxZoom));
+};
 
 /** Return a WMTS options for the given capabilities
  * @param {*} caps layer capabilities (read from the capabilities)
@@ -111,7 +122,6 @@ ol_control_WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
   // Tilematrix zoom
   var minZoom = Infinity, maxZoom = -Infinity;
   var tmatrix;
-  console.log(caps)
   caps.TileMatrixSetLink.forEach(function(tm) {
     if (tm.TileMatrixSet === 'PM' || tm.TileMatrixSet === 'EPSG:3857') {
       tmatrix = tm;
@@ -128,9 +138,6 @@ ol_control_WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
     maxZoom = Math.max(maxZoom, parseInt(zoom));
   });
 
-  // Tilematrix
-  var tg = this._getTG(caps.TileMatrixSet, minZoom, maxZoom);
-
   var view = new ol_View();
   view.setZoom(minZoom);
   var layer_opt = {
@@ -146,7 +153,9 @@ ol_control_WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
     matrixSet: caps.TileMatrixSet,
     format: caps.Format[0] || 'image/jpeg',
     projection: 'EPSG:3857',
-    tileGrid: tg,
+    //tileGrid: tg,
+    minZoom: minZoom,
+    maxZoom: maxZoom,
     style: caps.Style ? caps.Style[0].Identifier : 'normal',
     attributions: caps.Attribution.Title,
     crossOrigin: this.get('cors') ? 'anonymous' : null,
@@ -157,6 +166,7 @@ ol_control_WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
   this._fillForm({
     title: layer_opt.title,
     layers: source_opt.layer,
+    style: source_opt.style,
     format: source_opt.format,
     minZoom: minZoom,
     maxZoom: maxZoom,
@@ -168,9 +178,16 @@ ol_control_WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
   
   // Trace
   if (this.get('trace')) {
+    // Source
+    source_opt.tileGrid = 'TILEGRID';
     var tso = JSON.stringify([ source_opt ], null, "\t").replace(/\\"/g,'"');
+    tso = tso.replace('"TILEGRID"', 'new ol_tilegrid_WMTS('
+      + JSON.stringify(this._getTG(source_opt.matrixSet, source_opt.minZoom, source_opt.maxZoom), null, '\t').replace(/\n/g, '\n\t\t')
+      + ')'
+    );
+    delete source_opt.tileGrid;
+    // Layer
     layer_opt.source = "SOURCE";
-    layer_opt.source.tileGrid = "new ol_tilegrid_WMTS("+layer_opt.source.tileGrid+")";
     var t = "new ol.layer.Tile (" +JSON.stringify(layer_opt, null, "\t")+ ")" 
     t = t.replace(/\\"/g,'"')
       .replace('"SOURCE"', "new ol.source.WMTS("+tso+")")
@@ -199,10 +216,13 @@ ol_control_WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
  * @private
  */
 ol_control_WMTSCapabilities.prototype._getFormOptions = function() {
-  var options = this._currentOptions;
+  var options = this._currentOptions || {};
+  if (!options.layer) options.layer = {};
+  if (!options.source) options.source = {};
+  if (!options.data) options.data = {};
 
-  var minZoom = parseInt(this._elements.formMinZoom.value);
-  var maxZoom = parseInt(this._elements.formMaxZoom.value);
+  var minZoom = parseInt(this._elements.formMinZoom.value) || 0;
+  var maxZoom = parseInt(this._elements.formMaxZoom.value) || 20;
   var ext = [];
   if (this._elements.formExtent.value) {
     this._elements.formExtent.value.split(',').forEach(function(b) {
@@ -220,7 +240,7 @@ ol_control_WMTSCapabilities.prototype._getFormOptions = function() {
   var layer_opt = {
     title: this._elements.formTitle.value,
     extent: ext,
-    abstract: options.layer.abstract,
+    abstract: options.layer.abstract || '',
     maxResolution: view.getResolution()
   }
 
@@ -230,8 +250,10 @@ ol_control_WMTSCapabilities.prototype._getFormOptions = function() {
     matrixSet: options.source.matrixSet || 'PM',
     format: this._elements.formFormat.options[this._elements.formFormat.selectedIndex].value,
     projection: 'EPSG:3857',
-    tileGrid: this._getTG(options.source.matrixSet || 'PM', minZoom, maxZoom),
-    style: options.source.style || 'normal',
+    minZoom: minZoom,
+    maxZoom: maxZoom,
+    // tileGrid: this._getTG(options.source.matrixSet || 'PM', minZoom, maxZoom),
+    style: this._elements.formStyle.value || 'normal',
     attributions: attributions,
     crossOrigin: this._elements.formCrossOrigin.checked ? 'anonymous' : null,
     wrapX: (this.get('wrapX') !== false),
@@ -253,13 +275,12 @@ ol_control_WMTSCapabilities.prototype._getFormOptions = function() {
  */
 ol_control_WMTSCapabilities.prototype.getLayerFromOptions = function (options) {
   if (!options) return;
-  var tg = options.source.tileGrid;
-  options.source.tileGrid = new ol_tilegrid_WMTS(tg);
+  options.source.tileGrid = this.getTileGrid(options.source.matrixSet, options.source.minZoom, options.source.maxZoom);
   options.layer.source = new ol_source_WMTS(options.source);
   var layer = new ol_layer_Tile(options.layer);
   // Restore options
   delete options.layer.source;
-  options.source.tileGrid = tg;
+  delete options.source.tileGrid;
   return layer;
 };
 

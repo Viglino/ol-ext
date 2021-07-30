@@ -60,6 +60,8 @@ var ol_control_WMSCapabilities = function (options) {
 
   // Dialog
   this.createDialog(options);
+  // Default version
+  this._elements.formVersion.value = '1.0.0';
 
   // Ajax request
   var parser = this._getParser();
@@ -114,6 +116,7 @@ ol_control_WMSCapabilities.prototype.labels = {
   formTitle: 'Title:',
   formLayer: 'Layers:',
   formMap: 'Map:',
+  formStyle: 'Style:',
   formFormat: 'Format:',
   formMinZoom: 'Min zoom level:',
   formMaxZoom: 'Max zoom level:',
@@ -122,7 +125,7 @@ ol_control_WMSCapabilities.prototype.labels = {
   formProjection: 'Projection:',
   formCrossOrigin: 'CrossOrigin:',
   formVersion: 'Version:',
-  formAttribution: 'Attribution'
+  formAttribution: 'Attribution:'
 };
 
 /** Create dialog
@@ -293,6 +296,8 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
   addLine('formLayer', '', 'layer1,layer2,...');
   var li = addLine('formMap');
   li.setAttribute('data-param', 'map');
+  li = addLine('formStyle');
+  li.setAttribute('data-param', 'style');
   addLine('formFormat', ['image/png', 'image/jpeg']);
   addLine('formMinZoom', 0);
   addLine('formMaxZoom', 20);
@@ -441,6 +446,7 @@ ol_control_WMSCapabilities.prototype.getCapabilities = function(url, options) {
   // reset
   this._elements.formMap.value = '';
   this._elements.formLayer.value = '';
+  this._elements.formStyle.value = '';
   this._elements.formTitle.value = '';
   this._elements.formProjection.value = this.getMap().getView().getProjection().getCode();
   this._elements.formFormat.selectedIndex = 0;
@@ -457,6 +463,9 @@ ol_control_WMSCapabilities.prototype.getCapabilities = function(url, options) {
       if (/^layers$/i.test(s[0])) {
         this._elements.formLayer.value = s[1];
         this._elements.formTitle.value = s[1].split(',')[0];
+      }
+      if (/^style$/i.test(s[0])) {
+        this._elements.formStyle.value = s[1];
       }
       if (/^crs$/i.test(s[0])) {
         this._elements.formProjection.value = s[1];
@@ -825,6 +834,7 @@ ol_control_WMSCapabilities.prototype._getFormOptions = function() {
 ol_control_WMSCapabilities.prototype._fillForm = function(opt) {
   this._elements.formTitle.value = opt.title;
   this._elements.formLayer.value = opt.layers;
+  this._elements.formStyle.value = opt.style;
   var o, i;
   for (i=0; o=this._elements.formFormat.options[i]; i++) {
     if (o.value === opt.format) {
