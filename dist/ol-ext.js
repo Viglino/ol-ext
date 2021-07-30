@@ -3918,7 +3918,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection) {
     e.preventDefault();
     var l = self._getLayerForLI(this.parentNode.parentNode);
     self.switchLayerVisibility(l, collection);
-    if (l.getVisible()) {
+    if (self.get('selection') && l.getVisible()) {
       self.selectLayer(l);
     }
   };
