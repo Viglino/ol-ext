@@ -4550,6 +4550,12 @@ ul.ol-legend li div {
 .ol-ext-dialog.ol-wmtscapabilities [data-param="map"] {
   display: none;
 }
+.ol-ext-dialog [data-param="style"] {
+  display: none;
+}
+.ol-ext-dialog.ol-wmtscapabilities [data-param="style"] {
+  display: list-item;
+}
 .ol-ext-dialog.ol-wmtscapabilities [data-param="proj"],
 .ol-ext-dialog.ol-wmtscapabilities [data-param="version"] {
   opacity: .6;

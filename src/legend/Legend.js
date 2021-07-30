@@ -313,7 +313,6 @@ ol_legend_Legend.prototype.getLegendImage = function(options, canvas, row) {
  * @param {int|undefined} row row number to draw in canvas, default 0
  */
 ol_legend_Legend.getLegendImage = function(item, canvas, row) {
-  console.log('ok')
   item = item || {};
   if (typeof(item.margin) === 'undefined') item.margin = 10;
   var size = item.size || [40,25];

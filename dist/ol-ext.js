@@ -1652,7 +1652,6 @@ ol.legend.Legend.prototype.getLegendImage = function(options, canvas, row) {
  * @param {int|undefined} row row number to draw in canvas, default 0
  */
 ol.legend.Legend.getLegendImage = function(item, canvas, row) {
-  console.log('ok')
   item = item || {};
   if (typeof(item.margin) === 'undefined') item.margin = 10;
   var size = item.size || [40,25];
@@ -14334,6 +14333,8 @@ ol.control.WMSCapabilities = function (options) {
   this.set('loadLabel', options.loadLabel);
   // Dialog
   this.createDialog(options);
+  // Default version
+  this._elements.formVersion.value = '1.0.0';
   // Ajax request
   var parser = this._getParser();
   this._ajax = new ol.ext.Ajax({ dataType:'text', auth: options.authentication });
@@ -14383,6 +14384,7 @@ ol.control.WMSCapabilities.prototype.labels = {
   formTitle: 'Title:',
   formLayer: 'Layers:',
   formMap: 'Map:',
+  formStyle: 'Style:',
   formFormat: 'Format:',
   formMinZoom: 'Min zoom level:',
   formMaxZoom: 'Max zoom level:',
@@ -14391,7 +14393,7 @@ ol.control.WMSCapabilities.prototype.labels = {
   formProjection: 'Projection:',
   formCrossOrigin: 'CrossOrigin:',
   formVersion: 'Version:',
-  formAttribution: 'Attribution'
+  formAttribution: 'Attribution:'
 };
 /** Create dialog
  * @private
@@ -14561,6 +14563,8 @@ ol.control.WMSCapabilities.prototype.createDialog = function (options) {
   addLine('formLayer', '', 'layer1,layer2,...');
   var li = addLine('formMap');
   li.setAttribute('data-param', 'map');
+  li = addLine('formStyle');
+  li.setAttribute('data-param', 'style');
   addLine('formFormat', ['image/png', 'image/jpeg']);
   addLine('formMinZoom', 0);
   addLine('formMaxZoom', 20);
@@ -14698,6 +14702,7 @@ ol.control.WMSCapabilities.prototype.getCapabilities = function(url, options) {
   // reset
   this._elements.formMap.value = '';
   this._elements.formLayer.value = '';
+  this._elements.formStyle.value = '';
   this._elements.formTitle.value = '';
   this._elements.formProjection.value = this.getMap().getView().getProjection().getCode();
   this._elements.formFormat.selectedIndex = 0;
@@ -14714,6 +14719,9 @@ ol.control.WMSCapabilities.prototype.getCapabilities = function(url, options) {
       if (/^layers$/i.test(s[0])) {
         this._elements.formLayer.value = s[1];
         this._elements.formTitle.value = s[1].split(',')[0];
+      }
+      if (/^style$/i.test(s[0])) {
+        this._elements.formStyle.value = s[1];
       }
       if (/^crs$/i.test(s[0])) {
         this._elements.formProjection.value = s[1];
@@ -15058,6 +15066,7 @@ ol.control.WMSCapabilities.prototype._getFormOptions = function() {
 ol.control.WMSCapabilities.prototype._fillForm = function(opt) {
   this._elements.formTitle.value = opt.title;
   this._elements.formLayer.value = opt.layers;
+  this._elements.formStyle.value = opt.style;
   var o, i;
   for (i=0; o=this._elements.formFormat.options[i]; i++) {
     if (o.value === opt.format) {
@@ -15159,7 +15168,7 @@ ol.ext.inherits(ol.control.WMTSCapabilities, ol.control.WMSCapabilities);
     VERSION: options.version || '1.0.0'
   }
 };
-/** Get tile matrix
+/** Get tile grid options
  * @returns {*}
  * @private
  */
@@ -15178,7 +15187,17 @@ ol.control.WMTSCapabilities.prototype._getTG = function(tileMatrixSet, minZoom, 
     matrixIds: matrixIds,
     minZoom: (minZoom ? minZoom : 0)
   }
-}
+};
+/** Get WMTS tile grid
+ * @param {sting} tileMatrixSet
+ * @param {number} minZoom
+ * @param {number} maxZoom
+ * @returns {ol.tilegrid.WMTS}
+ * @private
+ */
+ ol.control.WMTSCapabilities.prototype.getTileGrid = function(tileMatrixSet, minZoom, maxZoom) {
+  return new ol.tilegrid.WMTS(this._getTG(tileMatrixSet, minZoom, maxZoom));
+};
 /** Return a WMTS options for the given capabilities
  * @param {*} caps layer capabilities (read from the capabilities)
  * @param {*} parent capabilities
@@ -15190,7 +15209,6 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
   // Tilematrix zoom
   var minZoom = Infinity, maxZoom = -Infinity;
   var tmatrix;
-  console.log(caps)
   caps.TileMatrixSetLink.forEach(function(tm) {
     if (tm.TileMatrixSet === 'PM' || tm.TileMatrixSet === 'EPSG:3857') {
       tmatrix = tm;
@@ -15206,8 +15224,6 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
     minZoom = Math.min(minZoom, parseInt(zoom));
     maxZoom = Math.max(maxZoom, parseInt(zoom));
   });
-  // Tilematrix
-  var tg = this._getTG(caps.TileMatrixSet, minZoom, maxZoom);
   var view = new ol.View();
   view.setZoom(minZoom);
   var layer_opt = {
@@ -15222,7 +15238,9 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
     matrixSet: caps.TileMatrixSet,
     format: caps.Format[0] || 'image/jpeg',
     projection: 'EPSG:3857',
-    tileGrid: tg,
+    //tileGrid: tg,
+    minZoom: minZoom,
+    maxZoom: maxZoom,
     style: caps.Style ? caps.Style[0].Identifier : 'normal',
     attributions: caps.Attribution.Title,
     crossOrigin: this.get('cors') ? 'anonymous' : null,
@@ -15232,6 +15250,7 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
   this._fillForm({
     title: layer_opt.title,
     layers: source_opt.layer,
+    style: source_opt.style,
     format: source_opt.format,
     minZoom: minZoom,
     maxZoom: maxZoom,
@@ -15242,9 +15261,16 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
   });
   // Trace
   if (this.get('trace')) {
+    // Source
+    source_opt.tileGrid = 'TILEGRID';
     var tso = JSON.stringify([ source_opt ], null, "\t").replace(/\\"/g,'"');
+    tso = tso.replace('"TILEGRID"', 'new ol.tilegrid.WMTS('
+      + JSON.stringify(this._getTG(source_opt.matrixSet, source_opt.minZoom, source_opt.maxZoom), null, '\t').replace(/\n/g, '\n\t\t')
+      + ')'
+    );
+    delete source_opt.tileGrid;
+    // Layer
     layer_opt.source = "SOURCE";
-    layer_opt.source.tileGrid = "new ol.tilegrid.WMTS("+layer_opt.source.tileGrid+")";
     var t = "new ol.layer.Tile (" +JSON.stringify(layer_opt, null, "\t")+ ")" 
     t = t.replace(/\\"/g,'"')
       .replace('"SOURCE"', "new ol.source.WMTS("+tso+")")
@@ -15272,9 +15298,12 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
  * @private
  */
 ol.control.WMTSCapabilities.prototype._getFormOptions = function() {
-  var options = this._currentOptions;
-  var minZoom = parseInt(this._elements.formMinZoom.value);
-  var maxZoom = parseInt(this._elements.formMaxZoom.value);
+  var options = this._currentOptions || {};
+  if (!options.layer) options.layer = {};
+  if (!options.source) options.source = {};
+  if (!options.data) options.data = {};
+  var minZoom = parseInt(this._elements.formMinZoom.value) || 0;
+  var maxZoom = parseInt(this._elements.formMaxZoom.value) || 20;
   var ext = [];
   if (this._elements.formExtent.value) {
     this._elements.formExtent.value.split(',').forEach(function(b) {
@@ -15291,7 +15320,7 @@ ol.control.WMTSCapabilities.prototype._getFormOptions = function() {
   var layer_opt = {
     title: this._elements.formTitle.value,
     extent: ext,
-    abstract: options.layer.abstract,
+    abstract: options.layer.abstract || '',
     maxResolution: view.getResolution()
   }
   var source_opt = {
@@ -15300,8 +15329,10 @@ ol.control.WMTSCapabilities.prototype._getFormOptions = function() {
     matrixSet: options.source.matrixSet || 'PM',
     format: this._elements.formFormat.options[this._elements.formFormat.selectedIndex].value,
     projection: 'EPSG:3857',
-    tileGrid: this._getTG(options.source.matrixSet || 'PM', minZoom, maxZoom),
-    style: options.source.style || 'normal',
+    minZoom: minZoom,
+    maxZoom: maxZoom,
+    // tileGrid: this._getTG(options.source.matrixSet || 'PM', minZoom, maxZoom),
+    style: this._elements.formStyle.value || 'normal',
     attributions: attributions,
     crossOrigin: this._elements.formCrossOrigin.checked ? 'anonymous' : null,
     wrapX: (this.get('wrapX') !== false),
@@ -15321,13 +15352,12 @@ ol.control.WMTSCapabilities.prototype._getFormOptions = function() {
  */
 ol.control.WMTSCapabilities.prototype.getLayerFromOptions = function (options) {
   if (!options) return;
-  var tg = options.source.tileGrid;
-  options.source.tileGrid = new ol.tilegrid.WMTS(tg);
+  options.source.tileGrid = this.getTileGrid(options.source.matrixSet, options.source.minZoom, options.source.maxZoom);
   options.layer.source = new ol.source.WMTS(options.source);
   var layer = new ol.layer.Tile(options.layer);
   // Restore options
   delete options.layer.source;
-  options.source.tileGrid = tg;
+  delete options.source.tileGrid;
   return layer;
 };
 
