@@ -313,6 +313,7 @@ ol_legend_Legend.prototype.getLegendImage = function(options, canvas, row) {
  * @param {int|undefined} row row number to draw in canvas, default 0
  */
 ol_legend_Legend.getLegendImage = function(item, canvas, row) {
+  console.log('ok')
   item = item || {};
   if (typeof(item.margin) === 'undefined') item.margin = 10;
   var size = item.size || [40,25];
@@ -333,7 +334,7 @@ ol_legend_Legend.getLegendImage = function(item, canvas, row) {
 
   var ctx = canvas.getContext('2d');
   ctx.save();
-  var vectorContext = ol_render_toContext(ctx);
+  var vectorContext = ol_render_toContext(ctx, { pixelRatio: ratio });
 
   var typeGeom = item.typeGeom;
   var style;
