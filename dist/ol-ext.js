@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.4
+ * @version v3.2.5
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -1652,6 +1652,7 @@ ol.legend.Legend.prototype.getLegendImage = function(options, canvas, row) {
  * @param {int|undefined} row row number to draw in canvas, default 0
  */
 ol.legend.Legend.getLegendImage = function(item, canvas, row) {
+  console.log('ok')
   item = item || {};
   if (typeof(item.margin) === 'undefined') item.margin = 10;
   var size = item.size || [40,25];
@@ -1671,7 +1672,7 @@ ol.legend.Legend.getLegendImage = function(item, canvas, row) {
   }
   var ctx = canvas.getContext('2d');
   ctx.save();
-  var vectorContext = ol.render.toContext(ctx);
+  var vectorContext = ol.render.toContext(ctx, { pixelRatio: ratio });
   var typeGeom = item.typeGeom;
   var style;
   var feature = item.feature;
