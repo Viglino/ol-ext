@@ -18,7 +18,7 @@ ol_ext_inherits(ol_filter_CSS, ol_filter_Base);
 /** Add CSS filter to the layer
  * @param {ol_layer_Base} layer 
  */
- ol_filter_CSS.prototype.addToLayer = function(layer) {
+ol_filter_CSS.prototype.addToLayer = function(layer) {
   layer.once('postrender', function(e) {
     e.context.canvas.parentNode.style['mix-blend-mode'] = this.get('blend') || '';
   }.bind(this));
