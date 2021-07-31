@@ -48,7 +48,7 @@ var ol_source_Geoportail = function (layer, options) {
   if (options.attributions) attr = options.attributions;
 
   this._server = options.server || 'https://wxs.ign.fr/geoportail/wmts';
-  this._gppKey = options.gppKey || 'choisirgeoportail';
+  this._gppKey = options.gppKey || options.key || 'choisirgeoportail';
 
   var wmts_options = {
     url: this.serviceURL(),

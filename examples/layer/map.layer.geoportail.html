@@ -29,6 +29,39 @@
 	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
 
 	<link rel="stylesheet" href="../style.css" />
+  <style>
+    button {
+      margin: .5em;
+    }
+    .result {
+      max-width: 100%;
+      width: 30em;
+      box-sizing: border-box;
+      overflow: hidden;
+      display: block;
+      margin: 0;
+    }
+    pre {
+      margin: 0;
+      background-color: #fff;
+      width: 100%;
+      overflow: auto;
+    }
+    .result ul {
+      background-color: #fff;
+      border: 1px solid #369;
+      display: table;
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
+    }
+    .result li {
+      padding: 0 1em;
+    }
+    .result li:hover {
+      background-color: rgb(51, 102, 153, .3);
+    }
+  </style>
 </head>
 <body >
 	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
@@ -38,14 +71,14 @@
 	</a>
 	<div class="info">
     <p>
-      <i>ol.source.Geoportail</i> is IGN's <a href="https://www.geoportail.gouv.fr/">Géoportail</a> WMTS source.
+      <b>ol/source/Geoportail</b> is IGN's <a href="https://www.geoportail.gouv.fr/">Géoportail</a> WMTS source.
       <br/>
-      <i>ol.layer.Geoportail</i> gets information on the service to handle the layer visibility 
+      <b>ol/layer/Geoportail</b> gets information on the service to handle the layer visibility 
       and source attribution according to the view.
     </p>
     <ul>
       <li>
-        ol-ext provide capabilities for the main layers. 
+        ol-ext provide layer capabilities for the main layers. 
       </li>
       <li>
         If you want to access other capabilities :
@@ -58,22 +91,25 @@
                 from the server for a specific key.
               </li>
               <li>
-                Use the <i>ol.layer.Geoportail.loadCapabilities()</i> function to load the capabilities of your key in the lib.
+                Use the <i>ol.layer.Geoportail.loadCapabilities()</i> function to load the capabilities 
+                of your key in your code.
               </li>
             </ul>
           </li>
           <li>
-            Synchronous way: use the form below to get a js file for your key.
+            Synchronous way: use the form below to get the code for a layer or 
+            a js file with definitions for your key.
           </li>
         </ul>
       </li>
       <li>
-        You have to get <a href="http://professionnels.ign.fr/ign/contrats">an API key</a>
-        to access the service. 
-        <br/>
-        The <a href="https://geoservices.ign.fr/documentation/">default key</a> is provided for development only and access to a limited set of layers.
+        For more information, see <a href="https://geoservices.ign.fr/services-web">IGN 
+        Geoservices documentation</a>.
       </li>
     </ul>
+    <p>
+      You can also <b><a href="./map.geoportail.wmts.html">search within the full list of layer</a></b>.
+    </p>
   </div>
 
 	<!-- DIV pour la carte -->
@@ -81,29 +117,53 @@
 	<div class="options">
     Click on the map to get info (photo or INSEE layer only).
 	</div>
-	<div class="options">
-    Get capabilities for your key (as js file):
-    <br/>
-    <i>(then just add the file in your project)</i>
-    <ul style="text-align: right;">
-      <li>
-          <input id="key" type="text" placeholder="your_key" style="width:100%" />
-      </li>
-      <li>
-        <button onclick="loadCapabilities()">Load</button>
-      </li>
-    </ul>
+	<div class="options result">
+    <p>
+      Use the form below to get code to register a layer or to load your key capabilities as js.
+    </p>
+    <form onsubmit="loadCapabilities(); return false;">
+      <input id="key" 
+        type="text" 
+        placeholder="your key" 
+        style="width: calc(100% - 1.5em); box-sizing: border-box;" 
+      /><select style="width: 1.5em;" onchange="$('#key').val(this.value); loadCapabilities()">
+        <option value=""></option>
+        <option value="cartes">cartes</option>
+        <option value="ortho">ortho</option>
+        <option value="orthohisto">orthohisto</option>
+        <option value="satellite">satellite</option>
+        <option value="cartovecto">cartovecto</option>
+        <option value="economie">economie</option>
+        <option value="environnement">environnement</option>
+        <option value="sol">sol</option>
+        <option value="parcellaire">parcellaire</option>
+        <option value="transports">transports</option>
+        <option value="administratif">administratif</option>
+        <option value="altimetrie">altimetrie</option>
+        <option value="agriculture">agriculture</option>
+        <option value="clc">clc</option>
+      </select>
+    </form>
+    <div id="result" style="display: none;">
+      <label style="display: block; margin-top:.5em;">Code: <span></span></label>
+      <pre id="code"></pre>
+      <button id="layer" onclick='addLayer()' style="float: right;">Add layer...</button>
+      <p style="margin:0; clear:both;">Select a layer</p>
+      <ul>
+      </ul>
+      <button type="button" onclick="loadCapabilities(true)" style="float: right;">Load capabilities</button>
+    </div>
 	</div>
 	
   <script type="text/javascript">
   // Key Capabilities
   if (!window.geoportailConfig) window.geoportailConfig = { capabilities: {} };
-  window.geoportailConfig.capabilities['h1osiyvfm7c4wu976jv6gpum'] = {
-    "INSEE.FILOSOFI.NIVEAU.DE.VIE.SECRET": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.NIVEAU.DE.VIE.SECRET","title":"Niveau de vie winsorisé des individus (secret signalé)","format":"image/png","style":"CARROYAGE INSEE NIVEAU DE VIE SECRET","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Niveau de vie des individus, retraité des valeurs extrêmes (les cases hachurées correspondent aux données secrétisées)","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
-    "INSEE.FILOSOFI.ENFANTS.0.17.ANS.SECRET": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.ENFANTS.0.17.ANS.SECRET","title":"% des 0-17 ans  (secret signalé)","format":"image/png","style":"CARROYAGE INSEE PART ENFANTS 0 A 17 ANS SECRET","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Nombre d’individus âgés de 0 à 17 ans dans la population (les cases hachurées correspondent aux données secrétisées)","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
-    "INSEE.FILOSOFI.PART.PLUS.65.ANS.SECRET": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.PART.PLUS.65.ANS.SECRET","title":"% des plus de 65 ans (secret signalé)","format":"image/png","style":"CARROYAGE INSEE PART PLUS 65 ANS SECRET","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Nombre d’individus âgés de plus de 65 ans dans la population (les cases hachurées correspondent aux données secrétisées)","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
-    "INSEE.FILOSOFI.POPULATION": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.POPULATION","title":"Densité de population","format":"image/png","style":"CARROYAGE INSEE POPULATION","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Nombre d'individus par km²","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
-    "Aire-Parcellaire": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"Aire-Parcellaire","title":"Délimitation parcellaire AOC viticole","format":"image/png","style":"normal","queryable":true,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-5.1504726,41.32521,9.570543,51.099052],"desc":"<![CDATA[Selon les règlements européens n°110/2008 du 15 janvier 2008, n°1151/2012 du 21 novembre 2012 et n°1308/2013 de l’OCM , le cahier des charges des appellations définit l’aire géographique. Le terme de « délimitation parcellaire » désigne une aire qui repose sur les limites administratives du cadastre (les parcelles) et dont le maillage suffisamment fin permet de tenir compte de variations très localisées des éléments du milieu physique. Elle correspond à l'aire de production de la matière première. Elle est incluse dans l'aire géographique.\n\nDonnées produites par l'Institut National des Origines et la Qualité (INAO)]]>","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-5.1504726,41.32521,9.570543,51.099052]}]}}},
+  window.geoportailConfig.capabilities['default'] = {
+    "INSEE.FILOSOFI.NIVEAU.DE.VIE.SECRET": { "key":"economie", "server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.NIVEAU.DE.VIE.SECRET","title":"Niveau de vie winsorisé des individus (secret signalé)","format":"image/png","style":"CARROYAGE INSEE NIVEAU DE VIE SECRET","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Niveau de vie des individus, retraité des valeurs extrêmes (les cases hachurées correspondent aux données secrétisées)","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
+    "INSEE.FILOSOFI.ENFANTS.0.17.ANS.SECRET": { "key":"economie", "server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.ENFANTS.0.17.ANS.SECRET","title":"% des 0-17 ans  (secret signalé)","format":"image/png","style":"CARROYAGE INSEE PART ENFANTS 0 A 17 ANS SECRET","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Nombre d’individus âgés de 0 à 17 ans dans la population (les cases hachurées correspondent aux données secrétisées)","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
+    "INSEE.FILOSOFI.PART.PLUS.65.ANS.SECRET": { "key":"economie", "server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.PART.PLUS.65.ANS.SECRET","title":"% des plus de 65 ans (secret signalé)","format":"image/png","style":"CARROYAGE INSEE PART PLUS 65 ANS SECRET","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Nombre d’individus âgés de plus de 65 ans dans la population (les cases hachurées correspondent aux données secrétisées)","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
+    "INSEE.FILOSOFI.POPULATION": { "key":"economie", "server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.POPULATION","title":"Densité de population","format":"image/png","style":"CARROYAGE INSEE POPULATION","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Nombre d'individus par km²","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
+    "Aire-Parcellaire": { "key":"parcellaire", "server":"https://wxs.ign.fr/geoportail/wmts","layer":"Aire-Parcellaire","title":"Délimitation parcellaire AOC viticole","format":"image/png","style":"normal","queryable":true,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-5.1504726,41.32521,9.570543,51.099052],"desc":"<![CDATA[Selon les règlements européens n°110/2008 du 15 janvier 2008, n°1151/2012 du 21 novembre 2012 et n°1308/2013 de l’OCM , le cahier des charges des appellations définit l’aire géographique. Le terme de « délimitation parcellaire » désigne une aire qui repose sur les limites administratives du cadastre (les parcelles) et dont le maillage suffisamment fin permet de tenir compte de variations très localisées des éléments du milieu physique. Elle correspond à l'aire de production de la matière première. Elle est incluse dans l'aire géographique.\n\nDonnées produites par l'Institut National des Origines et la Qualité (INAO)]]>","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-5.1504726,41.32521,9.570543,51.099052]}]}}},
   };
 	// The map
 	var map = new ol.Map ({
@@ -114,53 +174,32 @@
     })
   });
 
-  map.addControl(new ol.control.LayerSwitcher());
+  map.addControl(new ol.control.LayerSwitcher({ trash: true, extent:true }));
 
-/*
-  map.addLayer(new ol.layer.Tile({
-    source: new ol.source.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS', {
-      gppKey: 'choisirgeoportail'
-    })
-  }));
-*/
   map.addLayer (new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS', {
-    gppKey: 'choisirgeoportail',
     permalink: 'ortho',
     className: 'photo',
   }));
-  map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', {
-    gppKey: 'choisirgeoportail',
+  map.addLayer (new ol.layer.Geoportail({
+    layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2',
     permalink: 'plan',
     className: 'plan',
     visible: true,
     opacity: .5
   }));
-/*
-  map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.MAPS', {
-    gppKey: 'choisirgeoportail',
-    className: 'map',
-    visible: false
-  }));
-  map.addLayer (new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD', {
-    gppKey: 'choisirgeoportail',
-    className: 'express',
-    visible: false
-  }));
-*/
   map.addLayer (new ol.layer.Geoportail('CADASTRALPARCELS.PARCELLAIRE_EXPRESS', {
-    gppKey: 'choisirgeoportail',
     permalink: 'parcel',
     className: 'parcel',
     visible: false
   }));
-  map.addLayer (new ol.layer.Geoportail('INSEE.FILOSOFI.POPULATION', {
-    gppKey: 'h1osiyvfm7c4wu976jv6gpum',
+  map.addLayer (new ol.layer.Geoportail({
+    layer: 'INSEE.FILOSOFI.POPULATION',
     permalink: 'insee',
     className: 'insee',
     visible: false
   }));
-  map.addLayer (new ol.layer.Geoportail('Aire-Parcellaire', {
-    gppKey: 'h1osiyvfm7c4wu976jv6gpum',
+  map.addLayer (new ol.layer.Geoportail({
+    layer: 'Aire-Parcellaire',
     permalink: 'AOC',
     className: 'AOC',
     title: 'Délimitation AOC viticole',
@@ -219,19 +258,50 @@
     });
   });
 
-  function loadCapabilities() {
+  var currentLayer;
+  function addLayer() {
+    if (currentLayer) map.addLayer(currentLayer);
+  }
+  function loadCapabilities(save) {
+    $('#result').hide();
+    $('#layer').hide();
+    $('#code').text('');
     var k = $('#key').val();
     if (true) {
       ol.layer.Geoportail.getCapabilities(k).then(function(cap) {
-        var js = '// Define global\n'
-          + 'if (!window.geoportailConfig) window.geoportailConfig = { capabilities: {} };\n'
-          + 'window.geoportailConfig.capabilities[\'default\'] = window.geoportailConfig.capabilities[\''+k+'\'] = {';
-        for (var c in cap) {
-          js += '\n  "'+c+'": '+JSON.stringify(cap[c])+',';
+        $('#result').show();
+        var ul = $('.options ul').html('');
+        Object.keys(cap).forEach(function(l) {
+          var c = cap[l];
+          $('<li>').text(l)
+            .click(function() {
+              var ck = { key: k };
+              for (var i in c) ck[i] = c[i]
+              $('#code').text(
+                'ol.layer.Geoportail.register('
+                + '"' + l + '", '
+                + JSON.stringify(ck)
+                + ');\n'
+                + 'var layer = new ol.layer.Geoportail({ layer: \''+l+'\' });');
+              $('#layer').show();
+              $('#result label span').text(l);
+              ol.layer.Geoportail.register(l, ck);
+              currentLayer = new ol.layer.Geoportail(l);
+            })
+            .appendTo(ul)
+        });
+        if (save) {
+          // Export JS
+          var js = '// Define global\n'
+            + 'if (!window.geoportailConfig) window.geoportailConfig = { capabilities: {} };\n'
+            + 'window.geoportailConfig.capabilities[\'default\'] = window.geoportailConfig.capabilities[\''+k+'\'] = {';
+          for (var c in cap) {
+            js += '\n  "'+c+'": '+JSON.stringify(cap[c])+',';
+          }
+          js += '\n};'
+          var blob = new Blob([js], {type: "text/plain;charset=utf-8"});
+          saveAs(blob, 'capabilities.js');
         }
-        js += '\n};'
-        var blob = new Blob([js], {type: "text/plain;charset=utf-8"});
-        saveAs(blob, 'capabilities.js');
       }).catch(function(e) {
         alert ('Error while loading capabilities for key "'+k+'".');
       });
