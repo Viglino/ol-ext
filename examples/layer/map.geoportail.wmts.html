@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--
+	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+	<title>ol-ext: IGN Géoservices</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="Geoportail layer for ol" />
+	<meta name="keywords" content="ol, openlayers, layer, source, geoportail" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+	
+	<!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <!-- filesaver-js -->
+	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+
+	<link rel="stylesheet" href="../style.css" />
+  <style>
+    h1 {
+      white-space: nowrap;
+    }
+    #nb {
+      margin-left: .5em;
+      font-weight: bold;
+      color: #369;
+    }
+    #top {
+      position: fixed;
+      background: #fff;
+      z-index: 1;
+      top: 0;
+      left: 0;
+      right: 0;
+      box-shadow: 0 0 10px;
+      padding-bottom: .5em;
+    }
+    #top p {
+      margin: .5em 0 0;
+    }
+    input[type="search"] {
+      font-size: 1em;
+      margin-left: 1em;
+      width: 10em;
+    }
+    #code {
+      margin: 0;
+      background: no-repeat;
+      border: 0;
+      overflow: hidden;
+      width: 100%;
+      white-space: nowrap;
+      font-size: 1em;
+      min-height: 2.3em;
+      max-height: 2.3em;
+      min-width: 100%;
+      max-width: 100%;
+      padding: 0;
+    }
+    .info {
+      margin: 0;
+    }
+    ul {
+      margin: 0;
+      padding: 0;
+      list-style-type: none;
+    }
+    #geoportail {
+      margin-top: 11em;
+    }
+    #geoportail > li > p {
+      background-color: #369;
+      color: #fff;
+      padding: .5em 1em;
+      text-transform: capitalize;
+      font-size: 1.1em;
+      font-weight: bold;
+    }
+    #geoportail p {
+      margin: 0;
+    }
+    #geoportail img {
+      height: 150px;
+      display: block;
+      margin: auto;
+    }
+    #geoportail ul li {
+      position: relative;
+      display: inline-block;
+      width: 300px;
+      text-align: center;
+      overflow: hidden;
+      padding: .5em;
+      cursor: pointer;
+    }
+    #geoportail .desc {
+      display: none;
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      width: 100%;
+      max-height: 100%;
+      transform: translate(-50%, -30%);
+      padding: .5em;
+      background-color: rgba(255,255,255,.5);
+      cursor: pointer;
+    }
+    #geoportail ul li:hover .desc {
+      display: block;
+    }
+  </style>
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <div id="top">
+    <a href="../../index.html">
+      <h1>ol-ext: IGN Géoservices</h1>
+    </a>
+    <p>Code :</p>
+    <div class="info">
+      <textarea id="code"></textarea>
+    </div>
+    <button type="button" style="float: right;" onclick="copy();">Copy</button>
+    <input id="search" type="search" placeholder="rechercher..." /><span id="nb"></span>
+  </div>
+
+	<!-- DIV pour la carte -->
+  <ul id="geoportail"></ul>
+    <div id="result" style="display: none;">
+      <label style="display: block; margin-top:.5em;">Code: <span></span></label>
+      <pre id="code"></pre>
+      <button id="layer" onclick='addLayer()' style="float: right;">Add layer...</button>
+      <p style="margin:0; clear:both;">Select a layer</p>
+      <ul>
+      </ul>
+      <button type="button" onclick="loadCapabilities(true)" style="float: right;">Load capabilities</button>
+    </div>
+	</div>
+	
+<script type="text/javascript">
+
+var services = [
+  'cartes',
+  'cartovecto',
+  'ortho',
+  'orthohisto',
+  'satellite',
+  'economie',
+  'environnement',
+  'sol',
+  'parcellaire',
+  'transports',
+  'administratif',
+  'altimetrie',
+  'agriculture',
+  'clc'
+];
+
+var ul = $('#geoportail')
+services.forEach(function(k) {
+  ol.layer.Geoportail.getCapabilities(k).then(function(caps) {
+    var li = $('<li>').append($('<p>').text(k)).appendTo(ul);
+    var ul2 = $('<ul>').appendTo(li);
+    Object.keys(caps).forEach(function(c) {
+      caps[c].key = k;
+      var cap = { key: k };
+      for (var i in caps[c]) cap[i] = caps[c][i];
+      cap.desc = cap.desc.replace(/^\<\!\[CDATA\[|\]\]>$/g,'');
+      ol.layer.Geoportail.register(c, cap);
+      var l = new ol.layer.Geoportail({ layer: c });
+      var li = $('<li>')
+        .click(function() {
+          $('#code').text(
+            'ol.layer.Geoportail.register('
+            + '"' + c + '", '
+            + JSON.stringify(cap)
+            + ');\n'
+            + 'var layer = new ol.layer.Geoportail({ layer: \''+c+'\' });'
+          );
+        })
+        .appendTo(ul2);
+      $('<img>').attr('src', l.getPreview()[0]).appendTo(li);
+      $('<p>').text(cap.title).appendTo(li);
+      $('<p>').text(c).appendTo(li);
+      $('<p class="desc">').html(cap.desc).appendTo(li);
+    })
+    $('#nb').text($('#geoportail ul li:visible').length)
+  });
+});
+
+function copy() {
+  $("textarea").select();
+  document.execCommand('copy');
+  $("textarea").blur();
+}
+
+$('#search').on('keyup blur change search', function () {
+  var st = $('#search').val();
+  var reg = new RegExp(st,'i');
+  $('#geoportail ul li').each(function() {
+    if (reg.test($(this).text())) {
+      $(this).show();
+    } else {
+      $(this).hide();
+    }
+  });
+  $('#nb').text($('#geoportail ul li:visible').length);
+});
+
+</script>
+</body>
+</html>
