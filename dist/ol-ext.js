@@ -16344,12 +16344,25 @@ ol.filter.Mask.prototype.postcompose = function(e) {
  * @constructor
  * @extends {ol.Object}
  * @param {Object} options
- *  @param {string} options.blend a list of mix-blend-mode to apply (as {@link https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode CSS property})
+ *  @param {string} options.blend mix-blend-mode to apply (as {@link https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode CSS property})
  */
 ol.filter.CSS = function(options) {
   ol.filter.Base.call(this, options);
+  this._layers = [];
 };
 ol.ext.inherits(ol.filter.CSS, ol.filter.Base);
+/** Modify blend mode
+ * @param {string} blend mix-blend-mode to apply (as {@link https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode CSS property})
+ */
+ol.filter.CSS.prototype.setBlend = function(blend) {
+  this.set('blend', blend);
+  this._layers.forEach(function(layer) {
+    layer.once('postrender', function(e) {
+      e.context.canvas.parentNode.style['mix-blend-mode'] = blend || '';
+    }.bind(this));
+    layer.changed();
+  });
+};
 /** Add CSS filter to the layer
  * @param {ol.layer.Base} layer 
  */
@@ -16358,6 +16371,7 @@ ol.filter.CSS.prototype.addToLayer = function(layer) {
     e.context.canvas.parentNode.style['mix-blend-mode'] = this.get('blend') || '';
   }.bind(this));
   layer.changed();
+  this._layers.push(layer);
   // layer.getRenderer().getImage().parentNode.style['mix-blend-mode'] = 'multiply';
 };
 /** Remove CSS filter from the layer
@@ -16368,6 +16382,8 @@ ol.filter.CSS.prototype.removeFromLayer = function(layer) {
     e.context.canvas.parentNode.style['mix-blend-mode'] = '';
   }.bind(this));
   layer.changed();
+  var pos = this._layers.indexOf(layer);
+  this._layers.splice(pos, 1);
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
