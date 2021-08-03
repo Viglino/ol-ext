@@ -1,0 +1,113 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+<!--
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Composite filter</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="This filter apply a css blend mode on layers." />
+  <meta name="keywords" content="ol3, filter, composite, canvas" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <style>
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Composite filter</h1>
+  </a>
+  <div class="info">
+    <i>ol/filter/CSS</i> apply a <a href="https://developer.mozilla.org/fr/docs/Web/CSS/mix-blend-mode">
+    CSS mix blend mode</a> on layers <b>with ol6+</b>.
+    <br/>
+    Layer must be created with a <i>className</i> to apply filter on it.
+    <p>
+      <span class="experimental">Warning</span>
+      With ol<6 you'd better use <a href="./map.filter.composite.html">Composite filter</a>.
+    </p>
+  </div>
+
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options" >
+    <ul><li>
+      Operation:
+      <select id="operation" onchange="setOperation(this.value);">
+        <option value="normal">normal</option>
+        <option value="multiply">multiply</option>
+        <option value="screen">screen</option>
+        <option value="overlay">overlay</option>
+        <option value="darken">darken</option>
+        <option value="lighten">lighten</option>
+        <option value="color-dodge">color-dodge</option>
+        <option value="color-burn">color-burn</option>
+        <option value="hard-light">hard-light</option>
+        <option value="soft-light">soft-light</option>
+        <option value="difference">difference</option>
+        <option value="exclusion">exclusion</option>
+        <option value="hue">hue</option>
+        <option value="saturation">saturation</option>
+        <option value="color">color</option>
+        <option value="luminosity">luminosity</option>
+      </select>
+    </li></ul>
+  </div>
+
+  <script type="text/javascript">
+    var osm = new ol.layer.Tile({ source: new ol.source.OSM() });
+    var plan = new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' });
+    ol.layer.Geoportail.capabilities['LANDCOVER.CLC18'] = { key: "clc", "server":"https://wxs.ign.fr/geoportail/wmts","layer":"LANDCOVER.CLC18","title":"CORINE Land Cover - 2018","format":"image/png","style":"CORINE Land Cover","queryable":true,"tilematrix":"PM","minZoom":0,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.442818],"desc":"<![CDATA[Inventaire biophysique de l'occupation des sols en 2018 en 50 postes pour les DOM et 44 postes pour la Métropole.\nCORINE Land Cover est une base de données d’occupation des sols produite dans le cadre du programme européen d’observation de la Terre Copernicus. Cet inventaire biophysique de l’occupation des terres fournit une information géographique de référence pour 39 États européens. La continuité du programme et la diffusion des données CORINE Land Cover sont pilotées par l'Agence européenne pour l'environnement. Le producteur pour la France est le  Service de la donnée et des études statistiques du ministère chargé de l’écologie.\nL'utilisation de cette base de données permet des applications variées adaptées aux problématiques de l'environnement et à celles de l'aménagement du territoire : production cartographique, exploitation à des fins statistiques ou bien encore analyses géographiques en combinaison avec d'autres bases de données. Outil de connaissance et d'analyse, CORINE Land Cover apporte également une aide à la décision comme instrument de suivi, de surveillance et de gestion de l'environnement, des milieux naturels et de l'aménagement de l'espace.\nLa base de données CORINE Land Cover 2018 a été réalisée à partir de CORINE Land Cover 2012 révisée et de la base des changements 2012-2018.]]>","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":16,"constraint":[{"minZoom":0,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.442818]}]}}};
+    var clc = new ol.layer.Geoportail({ 
+      layer: 'LANDCOVER.CLC18', 
+      className: 'clc' 
+    });
+
+    // The map
+    var map = new ol.Map ({
+      target: 'map',
+      view: new ol.View ({
+        zoom: 10,
+        center: [259580, 6250255]
+      }),
+      layers: [ plan, clc ]
+    });
+
+    map.addControl(new ol.control.LayerSwitcher);
+
+    var filter;
+    function setOperation(val) {
+      console.log(val)
+      if (filter) clc.removeFilter(filter);
+      filter = new ol.filter.CSS({ blend: val });
+      clc.addFilter(filter);
+    }
+
+  </script>
+
+</body>
+</html>
