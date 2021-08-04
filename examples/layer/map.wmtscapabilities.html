@@ -97,7 +97,7 @@
       center: [261204.43490751847, 6250258.191535994]
     }),
     interactions: ol.interaction.defaults(),
-    layers: [ new ol.layer.Tile({ name:"OSM", source: new ol.source.OSM() })]
+    layers: [ ]
   });
 
   map.addControl(new ol.control.LayerSwitcher({ 
@@ -142,11 +142,14 @@
     plink.setUrlParam('layer', e.options.source.layer);
   });
 
+  // Permalink
   var url = plink.getUrlParam('url');
   var layerName = plink.getUrlParam('layer');
   if (url) {
     console.log(layerName)
     cap.loadLayer(url, layerName);
+  } else {
+    map.addLayer(new ol.layer.Tile({ name:"OSM", source: new ol.source.OSM() }));
   }
 
   /* Export .carte file */
