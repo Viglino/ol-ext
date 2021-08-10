@@ -14345,7 +14345,13 @@ ol.control.WMSCapabilities = function (options) {
     } catch (e) {
       this.showError({ type: 'load', error: e });
     }
-    if (caps) this.showCapabilitis(caps);
+    if (caps) {
+      if (!caps.Capability.Layer.Layer) {
+        this.showError({ type: 'noLayer' });
+      } else {
+        this.showCapabilities(caps);
+      }
+    } 
     this.dispatchEvent({ type: 'capabilities', capabilities: caps });
     if (typeof(evt.options.callback) === 'function') evt.options.callback(caps);
   }.bind(this));
@@ -14375,6 +14381,7 @@ ol.control.WMSCapabilities.prototype.error = {
   load: 'Can\'t retrieve service capabilities, try to add it manually...',
   badUrl: 'The input value is not a valid url...',
   TileMatrix: 'No TileMatrixSet supported...',
+  noLayer: 'No layer available for this service...',
   srs: 'The service projection looks different from that of your map, it may not display correctly...'
 };
 /** Form labels: a key/value list of form labels to display in the dialog
@@ -14785,7 +14792,8 @@ ol.control.WMSCapabilities.prototype.clearForm = function() {
 /** Display capabilities in the dialog
  * @param {*} caps JSON capabilities
  */
-ol.control.WMSCapabilities.prototype.showCapabilitis = function(caps) {
+ol.control.WMSCapabilities.prototype.showCapabilities = function(caps) {
+  console.log(caps)
   this._elements.result.classList.add('ol-visible')
 //  console.log(caps)
   var list = [];
@@ -16345,6 +16353,7 @@ ol.filter.Mask.prototype.postcompose = function(e) {
  * @extends {ol.Object}
  * @param {Object} options
  *  @param {string} options.blend mix-blend-mode to apply (as {@link https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode CSS property})
+ *  @param {string} options.filter filter to apply (as {@link https://developer.mozilla.org/en-US/docs/Web/CSS/filter CSS property})
  */
 ol.filter.CSS = function(options) {
   ol.filter.Base.call(this, options);
@@ -16363,12 +16372,25 @@ ol.filter.CSS.prototype.setBlend = function(blend) {
     layer.changed();
   });
 };
+/** Modify filter mode
+ * @param {string} filter filter to apply (as {@link https://developer.mozilla.org/en-US/docs/Web/CSS/filter CSS property})
+ */
+ol.filter.CSS.prototype.setFilter = function(filter) {
+  this.set('filter', filter);
+  this._layers.forEach(function(layer) {
+    layer.once('postrender', function(e) {
+      e.context.canvas.parentNode.style['filter'] = filter || '';
+    }.bind(this));
+    layer.changed();
+  });
+};
 /** Add CSS filter to the layer
  * @param {ol.layer.Base} layer 
  */
 ol.filter.CSS.prototype.addToLayer = function(layer) {
   layer.once('postrender', function(e) {
     e.context.canvas.parentNode.style['mix-blend-mode'] = this.get('blend') || '';
+    e.context.canvas.parentNode.style['filter'] = this.get('filter') || '';
   }.bind(this));
   layer.changed();
   this._layers.push(layer);
@@ -16378,12 +16400,15 @@ ol.filter.CSS.prototype.addToLayer = function(layer) {
  * @param {ol.layer.Base} layer 
  */
 ol.filter.CSS.prototype.removeFromLayer = function(layer) {
-  layer.once('postrender', function(e) {
-    e.context.canvas.parentNode.style['mix-blend-mode'] = '';
-  }.bind(this));
-  layer.changed();
   var pos = this._layers.indexOf(layer);
-  this._layers.splice(pos, 1);
+  if (pos>=0) {
+    layer.once('postrender', function(e) {
+      e.context.canvas.parentNode.style['mix-blend-mode'] = '';
+      e.context.canvas.parentNode.style['filter'] = '';
+    }.bind(this));
+    layer.changed();
+    this._layers.splice(pos, 1);
+  }
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
