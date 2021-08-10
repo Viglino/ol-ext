@@ -84,8 +84,8 @@ var map = new ol.Map ({
     center: [261204.43490751847, 6250258.191535994]
   })
 });
-
 map.addControl(new ol.control.LayerSwitcher());
+map.addControl(new ol.control.Permalink({ visible: false }));
 
 // Use raster source
 var gp = new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2');
@@ -103,6 +103,7 @@ var raster = new ol.source.Raster({
 })
 map.addLayer(new ol.layer.Image({ 
   title: gp.get('title')+' - Raster',
+  visible: false,
   minResolution: gp.getMinResolution(),
   maxResolution: gp.getMaxResolution(),
   extent: gp.getExtent(),
@@ -114,19 +115,22 @@ map.addLayer(gp);
 // Modify tiles on the flow
 var gpbw = new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2');
 // var gpbw = new ol.layer.Geoportail('CADASTRALPARCELS.PARCELLAIRE_EXPRESS');
+gpbw.set('title', gpbw.get('title') + ' - Tile')
 gpbw.getSource().setTileLoadFunction(function(tile, src) {
+  // Load image data
   var xhr = new XMLHttpRequest();
   xhr.responseType = 'blob';
   xhr.addEventListener('loadend', function (evt) {
     var data = this.response;
     if (data !== undefined) {
       var canvas = document.createElement('canvas');
-      canvas.width = canvas.height = 256;
       var ctx = canvas.getContext('2d');
       var img = new Image();
       img.onload = function() {
+        // Convert to grayscale
+        var size = canvas.width = canvas.height = img.naturalWidth;
         ctx.drawImage(img, 0, 0);
-        var imgData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+        var imgData = ctx.getImageData(0, 0, size, size);
         var pixels = imgData.data;
         for (var i = 0; i < pixels.length; i += 4) {
           pixels[i] = pixels[i + 1] = pixels[i + 2] = parseInt(3*pixels[i] + 4*pixels[i + 1] + pixels[i + 2] >>> 3);
