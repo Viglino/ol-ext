@@ -15142,7 +15142,7 @@ ol.ext.inherits(ol.control.WMTSCapabilities, ol.control.WMSCapabilities);
 /** Get service parser
  * @private
  */
- ol.control.WMTSCapabilities.prototype._getParser = function() {
+ol.control.WMTSCapabilities.prototype._getParser = function() {
   var pars = new ol.format.WMTSCapabilities();
   return {
     read: function(data) {
@@ -15169,14 +15169,14 @@ ol.ext.inherits(ol.control.WMTSCapabilities, ol.control.WMSCapabilities);
 /** Get Capabilities request parameters
  * @param {*} options
  */
- ol.control.WMTSCapabilities.prototype.getRequestParam = function(options) {
+ol.control.WMTSCapabilities.prototype.getRequestParam = function(options) {
   return {
     SERVICE: 'WMTS',
     REQUEST: 'GetCapabilities',
     VERSION: options.version || '1.0.0'
   }
 };
-/** Get tile grid options
+/** Get tile grid options only for EPSG:3857 projection
  * @returns {*}
  * @private
  */
@@ -15196,14 +15196,14 @@ ol.control.WMTSCapabilities.prototype._getTG = function(tileMatrixSet, minZoom, 
     minZoom: (minZoom ? minZoom : 0)
   }
 };
-/** Get WMTS tile grid
+/** Get WMTS tile grid (only EPSG:3857)
  * @param {sting} tileMatrixSet
  * @param {number} minZoom
  * @param {number} maxZoom
  * @returns {ol.tilegrid.WMTS}
  * @private
  */
- ol.control.WMTSCapabilities.prototype.getTileGrid = function(tileMatrixSet, minZoom, maxZoom) {
+ol.control.WMTSCapabilities.prototype.getTileGrid = function(tileMatrixSet, minZoom, maxZoom) {
   return new ol.tilegrid.WMTS(this._getTG(tileMatrixSet, minZoom, maxZoom));
 };
 /** Return a WMTS options for the given capabilities
