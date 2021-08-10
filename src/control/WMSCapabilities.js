@@ -73,7 +73,13 @@ var ol_control_WMSCapabilities = function (options) {
     } catch (e) {
       this.showError({ type: 'load', error: e });
     }
-    if (caps) this.showCapabilitis(caps);
+    if (caps) {
+      if (!caps.Capability.Layer.Layer) {
+        this.showError({ type: 'noLayer' });
+      } else {
+        this.showCapabilities(caps);
+      }
+    } 
     this.dispatchEvent({ type: 'capabilities', capabilities: caps });
     if (typeof(evt.options.callback) === 'function') evt.options.callback(caps);
   }.bind(this));
@@ -106,6 +112,7 @@ ol_control_WMSCapabilities.prototype.error = {
   load: 'Can\'t retrieve service capabilities, try to add it manually...',
   badUrl: 'The input value is not a valid url...',
   TileMatrix: 'No TileMatrixSet supported...',
+  noLayer: 'No layer available for this service...',
   srs: 'The service projection looks different from that of your map, it may not display correctly...'
 };
 
@@ -535,7 +542,8 @@ ol_control_WMSCapabilities.prototype.clearForm = function() {
 /** Display capabilities in the dialog
  * @param {*} caps JSON capabilities
  */
-ol_control_WMSCapabilities.prototype.showCapabilitis = function(caps) {
+ol_control_WMSCapabilities.prototype.showCapabilities = function(caps) {
+  console.log(caps)
   this._elements.result.classList.add('ol-visible')
 //  console.log(caps)
   var list = [];
