@@ -433,7 +433,7 @@ ol_control_LayerSwitcher.prototype.switchLayerVisibility = function(l, layers) {
   }
 };
 
-/** Check if layer is on the map (depending on zoom and extent)
+/** Check if layer is on the map (depending on resolution / zoom and extent)
  * @param {ol.layer}
  * @return {boolean}
  * @private
@@ -441,9 +441,14 @@ ol_control_LayerSwitcher.prototype.switchLayerVisibility = function(l, layers) {
 ol_control_LayerSwitcher.prototype.testLayerVisibility = function(layer) {
   if (!this.getMap()) return true;
   var res = this.getMap().getView().getResolution();
+  var zoom = this.getMap().getView().getZoom();
+  // Calculate visibility on resolution or zoom
   if (layer.getMaxResolution()<=res || layer.getMinResolution()>=res) {
     return false;
+  } else if (layer.getMinZoom && (layer.getMinZoom()>=zoom || layer.getMaxZoom()<zoom)) {
+    return false;
   } else {
+    // Check extent
     var ex0 = layer.getExtent();
     if (ex0) {
       var ex = this.getMap().getView().calculateExtent(this.getMap().getSize());
