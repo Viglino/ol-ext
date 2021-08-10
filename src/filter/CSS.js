@@ -9,6 +9,7 @@ import ol_filter_Base from './Base'
  * @extends {ol.Object}
  * @param {Object} options
  *  @param {string} options.blend mix-blend-mode to apply (as {@link https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode CSS property})
+ *  @param {string} options.filter filter to apply (as {@link https://developer.mozilla.org/en-US/docs/Web/CSS/filter CSS property})
  */
 var ol_filter_CSS = function(options) {
   ol_filter_Base.call(this, options);
@@ -29,12 +30,26 @@ ol_filter_CSS.prototype.setBlend = function(blend) {
   });
 };
 
+/** Modify filter mode
+ * @param {string} filter filter to apply (as {@link https://developer.mozilla.org/en-US/docs/Web/CSS/filter CSS property})
+ */
+ol_filter_CSS.prototype.setFilter = function(filter) {
+  this.set('filter', filter);
+  this._layers.forEach(function(layer) {
+    layer.once('postrender', function(e) {
+      e.context.canvas.parentNode.style['filter'] = filter || '';
+    }.bind(this));
+    layer.changed();
+  });
+};
+
 /** Add CSS filter to the layer
  * @param {ol_layer_Base} layer 
  */
 ol_filter_CSS.prototype.addToLayer = function(layer) {
   layer.once('postrender', function(e) {
     e.context.canvas.parentNode.style['mix-blend-mode'] = this.get('blend') || '';
+    e.context.canvas.parentNode.style['filter'] = this.get('filter') || '';
   }.bind(this));
   layer.changed();
   this._layers.push(layer);
@@ -45,12 +60,15 @@ ol_filter_CSS.prototype.addToLayer = function(layer) {
  * @param {ol_layer_Base} layer 
  */
 ol_filter_CSS.prototype.removeFromLayer = function(layer) {
-  layer.once('postrender', function(e) {
-    e.context.canvas.parentNode.style['mix-blend-mode'] = '';
-  }.bind(this));
-  layer.changed();
   var pos = this._layers.indexOf(layer);
-  this._layers.splice(pos, 1);
+  if (pos>=0) {
+    layer.once('postrender', function(e) {
+      e.context.canvas.parentNode.style['mix-blend-mode'] = '';
+      e.context.canvas.parentNode.style['filter'] = '';
+    }.bind(this));
+    layer.changed();
+    this._layers.splice(pos, 1);
+  }
 };
 
 export default ol_filter_CSS
