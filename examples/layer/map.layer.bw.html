@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--
+	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+	<title>ol-ext: Geoportail layer</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="Geoportail layer for ol" />
+	<meta name="keywords" content="ol, openlayers, layer, source, geoportail" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+	
+	<!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <!-- filesaver-js -->
+	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+
+	<link rel="stylesheet" href="../style.css" />
+  <style>
+    button {
+      margin: .5em;
+    }
+    .result {
+      max-width: 100%;
+      width: 30em;
+      box-sizing: border-box;
+      overflow: hidden;
+      display: block;
+      margin: 0;
+    }
+    pre {
+      margin: 0;
+      background-color: #fff;
+      width: 100%;
+      overflow: auto;
+    }
+    .result ul {
+      background-color: #fff;
+      border: 1px solid #369;
+      display: table;
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
+    }
+    .result li {
+      padding: 0 1em;
+    }
+    .result li:hover {
+      background-color: rgb(51, 102, 153, .3);
+    }
+  </style>
+</head>
+<body >
+	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+	<a href="../../index.html">
+		<h1>ol-ext: BW layer</h1>
+	</a>
+	<div class="info">
+  </div>
+
+	<!-- DIV pour la carte -->
+	<div id="map" style="width: 600px; height: 400px;"></div>
+
+<script>
+// The map
+var map = new ol.Map ({
+  target: 'map',
+  view: new ol.View ({
+    zoom: 15,
+    center: [261204.43490751847, 6250258.191535994]
+  })
+});
+
+map.addControl(new ol.control.LayerSwitcher());
+
+// Use raster source
+var gp = new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2');
+var raster = new ol.source.Raster({
+  sources: [ gp.getSource() ],
+  operation: function(pixels, data) {
+    var pixel = pixels[0];
+    // Luma https://en.wikipedia.org/wiki/Grayscale
+    // var lightness =  parseInt(pixel[0]*.299 + pixel[1]*.587 + pixel[2]*.114);
+    // Linear Luminance https://en.wikipedia.org/wiki/Grayscale
+    // var lightness = 0.2126 * pixel[0] + 0.715 * pixel[1] + 0.0722 * pixel[2];
+    var lightness = parseInt(3*pixel[0] + 4*pixel[1] + pixel[2] >>> 3);
+    return [lightness, lightness, lightness, pixel[3]];
+  }
+})
+map.addLayer(new ol.layer.Image({ 
+  title: gp.get('title')+' - Raster',
+  minResolution: gp.getMinResolution(),
+  maxResolution: gp.getMaxResolution(),
+  extent: gp.getExtent(),
+  source: raster
+}));
+gp.setVisible(false);
+map.addLayer(gp);
+
+// Modify tiles on the flow
+var gpbw = new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2');
+// var gpbw = new ol.layer.Geoportail('CADASTRALPARCELS.PARCELLAIRE_EXPRESS');
+gpbw.getSource().setTileLoadFunction(function(tile, src) {
+  var xhr = new XMLHttpRequest();
+  xhr.responseType = 'blob';
+  xhr.addEventListener('loadend', function (evt) {
+    var data = this.response;
+    if (data !== undefined) {
+      var canvas = document.createElement('canvas');
+      canvas.width = canvas.height = 256;
+      var ctx = canvas.getContext('2d');
+      var img = new Image();
+      img.onload = function() {
+        ctx.drawImage(img, 0, 0);
+        var imgData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+        var pixels = imgData.data;
+        for (var i = 0; i < pixels.length; i += 4) {
+          pixels[i] = pixels[i + 1] = pixels[i + 2] = parseInt(3*pixels[i] + 4*pixels[i + 1] + pixels[i + 2] >>> 3);
+        }
+        ctx.putImageData(imgData, 0, 0);
+        // tile.getImage().src = canvas.toDataURL();
+        tile.setImage(canvas);
+      }
+      img.src = URL.createObjectURL(data);
+      // tile.getImage().src = URL.createObjectURL(data);
+    } else {
+      tile.setState(3);
+    }
+  });
+  xhr.addEventListener('error', function () {
+    tile.setState(3);
+  });
+  xhr.open('GET', src);
+  xhr.send();
+});
+map.addLayer(gpbw);
+
+
+</script>
+</body>
+</html>
