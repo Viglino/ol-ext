@@ -10,6 +10,7 @@ import ol_filter_Base from './Base'
  * @param {Object} options
  *  @param {string} options.blend mix-blend-mode to apply (as {@link https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode CSS property})
  *  @param {string} options.filter filter to apply (as {@link https://developer.mozilla.org/en-US/docs/Web/CSS/filter CSS property})
+ *  @param {boolan} options.display show/hide layer from CSS (but keep it in layer list)
  */
 var ol_filter_CSS = function(options) {
   ol_filter_Base.call(this, options);
@@ -43,6 +44,19 @@ ol_filter_CSS.prototype.setFilter = function(filter) {
   });
 };
 
+/** Modify layer visibility (but keep it in the layer list)
+ * @param {bolean} display
+ */
+ ol_filter_CSS.prototype.setFilter = function(display) {
+  this.set('display', display);
+  this._layers.forEach(function(layer) {
+    layer.once('postrender', function(e) {
+      e.context.canvas.parentNode.style['display'] = display ? '' : 'none';
+    }.bind(this));
+    layer.changed();
+  });
+};
+
 /** Add CSS filter to the layer
  * @param {ol_layer_Base} layer 
  */
@@ -50,6 +64,7 @@ ol_filter_CSS.prototype.addToLayer = function(layer) {
   layer.once('postrender', function(e) {
     e.context.canvas.parentNode.style['mix-blend-mode'] = this.get('blend') || '';
     e.context.canvas.parentNode.style['filter'] = this.get('filter') || '';
+    e.context.canvas.parentNode.style['display'] = this.get('display')!==false ?  '' : 'none';
   }.bind(this));
   layer.changed();
   this._layers.push(layer);
@@ -65,6 +80,7 @@ ol_filter_CSS.prototype.removeFromLayer = function(layer) {
     layer.once('postrender', function(e) {
       e.context.canvas.parentNode.style['mix-blend-mode'] = '';
       e.context.canvas.parentNode.style['filter'] = '';
+      e.context.canvas.parentNode.style['display'] = '';
     }.bind(this));
     layer.changed();
     this._layers.splice(pos, 1);

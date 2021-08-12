@@ -2,33 +2,33 @@
 <html>
 <head>
 <!--
-	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 -->
-	<title>ol-ext: Geoportail layer</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>ol-ext: Geoportail layer</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="Geoportail layer for ol" />
-	<meta name="keywords" content="ol, openlayers, layer, source, geoportail" />
+  <meta name="description" content="Geoportail layer for ol" />
+  <meta name="keywords" content="ol, openlayers, layer, source, geoportail" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
+  <!-- Openlayers -->
   <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
 
   <!-- filesaver-js -->
-	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+  <script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
   <style>
     button {
       margin: .5em;
@@ -61,26 +61,30 @@
     .result li:hover {
       background-color: rgb(51, 102, 153, .3);
     }
-    .ol-layers .alti {
-      display: none;
-    }
   </style>
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: x-bil layer</h1>
-	</a>
-	<div class="info">
+  <a href="../../index.html">
+    <h1>ol-ext: x-bil layer</h1>
+  </a>
+  <div class="info">
   </div>
 
-	<!-- DIV pour la carte -->
-	<div id="map" style="width: 600px; height: 400px;"></div>
-  <input type="range" min=0 max=3 step=".1" value=0 onchange="elev.getSource().setTileLoadFunction(levelMap(parseFloat(this.value)))"/>
+  <!-- DIV pour la carte -->
+  <div id="map" style="width: 600px; height: 400px;"></div>
+  <input type="range" min=0 max=3 step=".1" value=0 onchange="$('#level').text(this.value); elev.getSource().setTileLoadFunction(ol.ext.imageLoader.seaLevelMap(parseFloat(this.value)))"/>
   <span id="level"></span>
 
 <script>
+/*
+@see 
+- https://github.com/awoodruff/canvas-shaded-relief
+- https://github.com/GeodanDemo/hillshaderjs
+- https://github.com/slutske22/leaflet-topography
+- https://observablehq.com/@awoodruff/diy-hillshade
+*/
 var plan = new ol.layer.Geoportail({
   layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2',
   className: 'plan',
@@ -99,220 +103,136 @@ map.addControl(new ol.control.LayerSwitcher());
 map.addControl(new ol.control.Permalink({ visible: false }));
 
 var elev = new ol.layer.Tile ({
-	"title": "MNT SRTM3",
-	"extent": [
-		-20037554.725947514,
-		-7558498.603143567,
-		20037554.725947514,
-		8625918.87376409
-	],
-	"queryable": false,
-	"abstract": "MNT SRTM3 construit par la NASA et le NGA.",
-	"minResolution": 0,
-	"maxResolution": 197231.79878968254,
-	"source": new ol.source.TileWMS({
-		"url": "https://wxs.ign.fr/altimetrie/geoportail/r/wms?",
-		"projection": "EPSG:3857",
-		"attributions": [],
-		"crossOrigin": "anonymous",
-		"params": {
-			"LAYERS": "ELEVATION.ELEVATIONGRIDCOVERAGE.SRTM3",
-			//"FORMAT": "image/png",
-			"FORMAT": "image/x-bil;bits=32",
-			"VERSION": "1.3.0"
-		}
-	})
+  "title": "MNT SRTM3",
+  "extent": [
+    -20037554.725947514,
+    -7558498.603143567,
+    20037554.725947514,
+    8625918.87376409
+  ],
+  "queryable": false,
+  "abstract": "MNT SRTM3 construit par la NASA et le NGA.",
+  "minResolution": 0,
+  "maxResolution": 197231.79878968254,
+  "source": new ol.source.TileWMS({
+    "url": "https://wxs.ign.fr/altimetrie/geoportail/r/wms?",
+    "projection": "EPSG:3857",
+    "attributions": [],
+    "crossOrigin": "anonymous",
+    "params": {
+      "LAYERS": "ELEVATION.ELEVATIONGRIDCOVERAGE.SRTM3",
+      //"FORMAT": "image/png",
+      "FORMAT": "image/x-bil;bits=32",
+      "VERSION": "1.3.0"
+    }
+  })
 });
 var elev0 = new ol.layer.Tile ({
-	"title": "Modèle numérique de surface",
-	"extent": [
-		-578959.605490584,
-		5203133.393641367,
-		921974.2487313666,
-		6643289.75487211
-	],
-	"queryable": false,
-	"abstract": "Modèle numérique de surface (MNS)",
-	"minResolution": 0,
-	"maxResolution": 197231.79878968254,
-	"source": new ol.source.TileWMS({
-		"url": "https://wxs.ign.fr/altimetrie/geoportail/r/wms?",
-		"projection": "EPSG:3857",
-		"attributions": [],
-		"crossOrigin": "anonymous",
-		"params": {
-			"LAYERS": "ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES.MNS",
-			"FORMAT": "image/x-bil;bits=32",//"image/png",
-			"VERSION": "1.3.0"
-		}
-	})
+  "title": "Modèle numérique de surface",
+  "extent": [
+    -578959.605490584,
+    5203133.393641367,
+    921974.2487313666,
+    6643289.75487211
+  ],
+  "queryable": false,
+  "abstract": "Modèle numérique de surface (MNS)",
+  "minResolution": 0,
+  "maxResolution": 197231.79878968254,
+  "source": new ol.source.TileWMS({
+    "url": "https://wxs.ign.fr/altimetrie/geoportail/r/wms?",
+    "projection": "EPSG:3857",
+    "attributions": [],
+    "crossOrigin": "anonymous",
+    "params": {
+      "LAYERS": "ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES.MNS",
+      "FORMAT": "image/x-bil;bits=32",//"image/png",
+      "VERSION": "1.3.0"
+    }
+  })
 });
-var elev = new ol.layer.Tile ({
-	"title": "Modèle Numérique de Terrain issu du RGEALTI",
-	"extent": [
-		-7007874.496280316,
-		-1460624.494037931,
-		5043253.3127169,
-		6639937.650114076
-	],
+var elev0 = new ol.layer.Tile ({
+  "title": "Modèle Numérique de Terrain issu du RGEALTI",
+  "extent": [
+    -7007874.496280316,
+    -1460624.494037931,
+    5043253.3127169,
+    6639937.650114076
+  ],
   opacity: .65,
-	"abstract": "Modèle Numérique de Terrain issu du RGEALTI",
-	"minResolution": 0.09449404761899723,
-	"maxResolution": 197231.79878968254,
-	"source": new ol.source.TileWMS({
-		"url": "https://wxs.ign.fr/altimetrie/geoportail/r/wms?",
-		"projection": "EPSG:3857",
-		"attributions": [],
-		"crossOrigin": "anonymous",
-		"params": {
-			"LAYERS": "ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES",
-			"FORMAT": "image/x-bil;bits=32",//"image/png",
-			"VERSION": "1.3.0"
-		}
-	})
+  "abstract": "Modèle Numérique de Terrain issu du RGEALTI",
+  "minResolution": 0.09449404761899723,
+  "maxResolution": 197231.79878968254,
+  "source": new ol.source.TileWMS({
+    "url": "https://wxs.ign.fr/altimetrie/geoportail/r/wms?",
+    "projection": "EPSG:3857",
+    "attributions": [],
+    "crossOrigin": "anonymous",
+    "params": {
+      "LAYERS": "ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES",
+      "FORMAT": "image/x-bil;bits=32",//"image/png",
+      "VERSION": "1.3.0"
+    }
+  })
 });
 var elev = new ol.layer.Tile ({
-	"title": "MNT BDAlti V1",
+  "title": "MNT BDAlti V1",
   className: 'alti',
-	"extent": [
-		-7124447.410769509,
-		-2632018.6375864255,
-		18701674.453269962,
-		6800125.454397307
-	],
-	"opacity": 1,
-	"abstract": "BDAlti V1 au pas de 25m",
-	"minResolution": 0,
-	"maxResolution": 197231.79878968254,
-	"source": new ol.source.TileWMS({
-		"url": "https://wxs.ign.fr/altimetrie/geoportail/r/wms?",
-		"projection": "EPSG:3857",
-		"attributions": [],
-		"crossOrigin": "anonymous",
-		"params": {
-			"LAYERS": "ELEVATION.ELEVATIONGRIDCOVERAGE",
-			"FORMAT": "image/x-bil;bits=32",//"image/png",
-			"VERSION": "1.3.0"
-		}
-	})
+  "extent": [
+    -7124447.410769509,
+    -2632018.6375864255,
+    18701674.453269962,
+    6800125.454397307
+  ],
+  "opacity": 1,
+  "abstract": "BDAlti V1 au pas de 25m",
+  "minResolution": 0,
+  "maxResolution": 197231.79878968254,
+  "source": new ol.source.TileWMS({
+    "url": "https://wxs.ign.fr/altimetrie/geoportail/r/wms?",
+    "projection": "EPSG:3857",
+    "attributions": [],
+    "crossOrigin": "anonymous",
+    "params": {
+      "LAYERS": "ELEVATION.ELEVATIONGRIDCOVERAGE",
+      "FORMAT": "image/x-bil;bits=32",//"image/png",
+      "VERSION": "1.3.0"
+    }
+  })
 });
 
-function levelMap(h0) {
-  $('#level').text(h0);
-  h0 = Math.max( h0 + .01, .01);
-  return function (tile, src) {
-    // Load image data
-    var xhr = new XMLHttpRequest();
-    xhr.responseType = 'blob';
-    xhr.addEventListener('loadend', function (evt) {
-      var data = this.response;
-      if (data !== undefined) {
-        const reader = new FileReader();
-        // Get as array
-        reader.addEventListener('loadend', (e) => {
-          var blob = new Float32Array(e.target.result);
-          var size = Math.sqrt(blob.length);
-          var canvas = document.createElement('canvas');
-          var ctx = canvas.getContext('2d');
-          canvas.width = canvas.height = size;
-          var imgData = ctx.getImageData(0, 0, size, size);
-          var pixels = imgData.data;
-          for (var i=0; i<blob.length; i++) {
-            var h = blob[i];
-            if (h < h0 && h>-99999) {
-              pixels[4*i] = 135;
-              pixels[4*i+1] = 203;
-              pixels[4*i+2] = 249;
-              pixels[4*i+3] = 255 * (h0-h) / h0;
-            } else {
-              pixels[4*i+3] = 0;
-            }
-          }
-          ctx.putImageData(imgData, 0, 0);
-          tile.setImage(canvas);
-        });
-        // Start reading the blob
-        reader.readAsArrayBuffer(data);
-        // tile.getImage().src = URL.createObjectURL(data);
-      } else {
-        tile.setState(3);
-      }
-    });
-    xhr.addEventListener('error', function () {
-      tile.setState(3);
-    });
-    xhr.open('GET', src);
-    xhr.send();
-  };
-}
-//elev.getSource().setTileLoadFunction(levelMap(0))
-elev.getSource().setTileLoadFunction(alti)
 map.addLayer(elev);
 
-var maxh = 0;
-function alti(tile, src) {
-  // Load image data
-  var xhr = new XMLHttpRequest();
-  xhr.responseType = 'blob';
-  xhr.addEventListener('loadend', function (evt) {
-    var data = this.response;
-    if (data !== undefined) {
-      const reader = new FileReader();
-      // Get as array
-      reader.addEventListener('loadend', (e) => {
-        var blob = new Float32Array(e.target.result);
-        var size = Math.sqrt(blob.length);
-        var canvas = document.createElement('canvas');
-        var ctx = canvas.getContext('2d');
-        canvas.width = canvas.height = size;
-        var imgData = ctx.getImageData(0, 0, size, size);
-        var pixels = imgData.data;
-        for (var i=0; i<blob.length; i++) {
-          var p = getPixel(blob[i]);
-          if (maxh<blob[i]) maxh = blob[i];
-          pixels[4*i] = p[0];
-          pixels[4*i+1] = p[1];
-          pixels[4*i+2] = p[2];
-          pixels[4*i+3] = p[3];
-        }
-        ctx.putImageData(imgData, 0, 0);
-        tile.setImage(canvas);
-      });
-      // Start reading the blob
-      reader.readAsArrayBuffer(data);
-      // tile.getImage().src = URL.createObjectURL(data);
-    } else {
-      tile.setState(3);
-    }
-  });
-  xhr.addEventListener('error', function () {
-    tile.setState(3);
-  });
-  xhr.open('GET', src);
-  xhr.send();
-};
+//elev.getSource().setTileLoadFunction(levelMap(0))
+var alti = ol.ext.imageLoader.elevationMap();
 
-/* Convert height to pixel 
-Encode elevation data in raster tiles
-@see https://docs.mapbox.com/help/troubleshooting/access-elevation-data/
-Deep watter trench min > -12000 m https://en.wikipedia.org/wiki/Mariana_Trench
-2 digits (0.01 m)
-*/
-function getPixel(height) {
-  var h = Math.round(height*100 + 1200000);
-  var pixel = [
-    h >> 16, 
-    (h % 65536) >> 8, 
-    h % 256, 
-    255
-  ];
-  return pixel;
-}
-/* Convert pixel to height */
-function getHeight(pixel) {
-  // return -10000 + (pixel[0] * 65536 + pixel[1] * 256 + pixel[2]) * 0.01;
-  return -12000 + ((pixel[0] << 16) + (pixel[1] << 8) + pixel[2]) * 0.01;
-}
+var tints = [[0,59,0],[0,61,0],[0,62,0],[0,64,0],[2,66,2],[4,67,4],[6,69,6],[8,70,8],[10,72,10],[12,74,12],[14,75,14],[16,77,16],[19,79,19],[21,80,21],[23,82,23],[25,83,25],[27,85,27],[29,87,29],[31,88,31],[33,90,33],[35,92,35],[37,93,37],[39,95,39],[41,96,41],[43,98,43],[45,100,45],[47,101,47],[49,103,49],[52,105,52],[54,106,54],[56,108,56],[58,109,58],[60,111,60],[62,113,62],[64,114,64],[66,116,66],[68,117,68],[70,119,70],[72,121,72],[74,122,74],[76,124,76],[78,126,78],[80,127,80],[82,129,82],[84,130,84],[87,132,87],[89,134,89],[91,135,91],[93,137,93],[95,139,95],[97,140,97],[99,142,99],[101,143,101],[103,145,103],[104,146,103],[104,146,104],[105,147,104],[105,148,104],[106,148,105],[106,149,105],[107,150,106],[107,150,106],[108,151,106],[108,152,107],[109,152,107],[109,153,107],[110,154,108],[110,154,108],[111,155,108],[111,156,109],[112,156,109],[112,157,109],[113,158,110],[113,158,110],[114,159,111],[114,160,111],[115,160,111],[115,161,112],[116,162,112],[117,162,112],[117,163,113],[118,163,113],[118,164,113],[119,165,114],[119,165,114],[120,166,115],[120,167,115],[121,167,115],[121,168,116],[122,169,116],[122,169,116],[123,170,117],[123,171,117],[124,171,117],[124,172,118],[125,173,118],[125,173,118],[126,174,119],[126,175,119],[127,175,120],[127,176,120],[128,177,120],[128,177,121],[129,178,121],[130,179,122],[131,180,123],[133,181,124],[134,182,125],[135,183,126],[136,183,127],[138,184,128],[139,185,129],[140,186,129],[141,187,130],[143,188,131],[144,189,132],[145,190,133],[146,191,134],[148,192,135],[149,192,136],[150,193,137],[151,194,138],[153,195,139],[154,196,140],[155,197,141],[156,198,142],[158,199,143],[159,200,144],[160,201,145],[161,201,145],[162,202,146],[164,203,147],[165,204,148],[166,205,149],[167,206,150],[169,207,151],[170,208,152],[171,209,153],[172,210,154],[174,210,155],[175,211,156],[176,212,157],[177,213,158],[179,214,159],[180,215,160],[181,216,160],[182,217,161],[184,218,162],[185,219,163],[186,219,164],[187,220,165],[189,221,166],[190,222,167],[191,223,168],[191,222,168],[192,221,168],[192,221,168],[192,220,168],[193,219,168],[193,218,168],[193,218,168],[194,217,168],[194,216,168],[194,215,168],[195,214,168],[195,214,168],[195,213,169],[196,212,169],[196,211,169],[196,211,169],[197,210,169],[197,209,169],[197,208,169],[198,207,169],[198,207,169],[198,206,169],[199,205,169],[199,204,169],[200,204,169],[200,203,169],[200,202,169],[201,201,169],[201,200,169],[201,200,169],[202,199,169],[202,198,169],[202,197,169],[203,196,169],[203,196,169],[203,195,169],[204,194,169],[204,193,170],[204,193,170],[205,192,170],[205,191,170],[205,190,170],[206,189,170],[206,189,170],[206,188,170],[207,187,170],[207,186,170],[207,186,170],[208,185,170],[208,184,170],[209,185,172],[210,187,173],[211,188,175],[212,189,177],[213,191,178],[213,192,180],[214,194,181],[215,195,183],[216,196,185],[217,198,186],[218,199,188],[219,200,190],[220,202,191],[221,203,193],[222,204,195],[222,206,196],[223,207,198],[224,209,199],[225,210,201],[226,211,203],[227,213,204],[228,214,206],[229,215,208],[230,217,209],[231,218,211],[232,220,213],[232,221,214],[233,222,216],[234,224,217],[235,225,219],[236,226,221],[237,228,222],[238,229,224],[239,230,226],[240,232,227],[241,233,229],[241,235,230],[242,236,232],[243,237,234],[244,239,235],[245,240,237],[246,241,239],[247,243,240],[248,244,242],[249,245,244],[250,247,245],[250,248,247],[251,250,248],[252,251,250],[253,252,252],[254,254,253],[255,255,255]];
+var alti = ol.ext.imageLoader.elevationMap(function(z) {
+  /* rgb * /
+  var z = z/5000;
+  return ol.source.IDW.prototype.getColor(180*(z+.1))
+  /**/
+  if (z<=0) return [ 140, 177, 228, 255 ];
+  var pos = Math.round(z/5000 * 255);
+  var t = tints[pos];
+  t[3] = 255;
+  return t;
+});
+
+/**/
+elev.getSource().setTileLoadFunction(alti)
+var hide = new ol.filter.CSS({ display: false });
+//elev.addFilter(hide);
+// Prevent layer smoothing
+elev.once('prerender', function(evt) {
+  evt.context.imageSmoothingEnabled = false;
+  evt.context.webkitImageSmoothingEnabled = false;
+  evt.context.mozImageSmoothingEnabled = false;
+  evt.context.msImageSmoothingEnabled = false;
+});
+/*/
+elev.getSource().setTileLoadFunction(new ol.ext.imageLoader.shadedRelief());
+/**/
 
 var popup = new ol.Overlay.Tooltip();
 map.addOverlay(popup)
@@ -321,8 +241,8 @@ map.on('pointermove', function(e) {
     e.pixel, 
     function(layer, p) {
       if (layer===elev) {
-        var h = getHeight(p);
-        popup.setInfo(h>-5000 ? getHeight(p).toFixed(2)+' m' : '');
+        var h = ol.ext.getElevationFromPixel(p);
+        popup.setInfo(h>-5000 ? h.toFixed(2)+' m' : '');
       }
     }),{
       layerFilter: function(l) {
