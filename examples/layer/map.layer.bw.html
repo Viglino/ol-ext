@@ -116,43 +116,35 @@ map.addLayer(gp);
 var gpbw = new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2');
 // var gpbw = new ol.layer.Geoportail('CADASTRALPARCELS.PARCELLAIRE_EXPRESS');
 gpbw.set('title', gpbw.get('title') + ' - Tile')
-gpbw.getSource().setTileLoadFunction(function(tile, src) {
-  // Load image data
-  var xhr = new XMLHttpRequest();
-  xhr.responseType = 'blob';
-  xhr.addEventListener('loadend', function (evt) {
-    var data = this.response;
-    if (data !== undefined) {
-      var canvas = document.createElement('canvas');
-      var ctx = canvas.getContext('2d');
-      var img = new Image();
-      img.onload = function() {
-        // Convert to grayscale
-        var size = canvas.width = canvas.height = img.naturalWidth;
-        ctx.drawImage(img, 0, 0);
-        var imgData = ctx.getImageData(0, 0, size, size);
-        var pixels = imgData.data;
-        for (var i = 0; i < pixels.length; i += 4) {
-          pixels[i] = pixels[i + 1] = pixels[i + 2] = parseInt(3*pixels[i] + 4*pixels[i + 1] + pixels[i + 2] >>> 3);
-        }
-        ctx.putImageData(imgData, 0, 0);
-        // tile.getImage().src = canvas.toDataURL();
-        tile.setImage(canvas);
-      }
-      img.src = URL.createObjectURL(data);
-      // tile.getImage().src = URL.createObjectURL(data);
-    } else {
-      tile.setState(3);
-    }
-  });
-  xhr.addEventListener('error', function () {
-    tile.setState(3);
-  });
-  xhr.open('GET', src);
-  xhr.send();
-});
+gpbw.getSource().setTileLoadFunction(ol.ext.imageLoader.grayscale());
 map.addLayer(gpbw);
 
+ol.layer.Geoportail.register("ORTHOIMAGERY.ORTHOPHOTOS.URGENCE.ALEX", {"key":"orthohisto","server":"https://wxs.ign.fr/geoportail/wmts","layer":"ORTHOIMAGERY.ORTHOPHOTOS.URGENCE.ALEX","title":"Orthophotographie d’urgence Alex","format":"image/jpeg","style":"normal","queryable":false,"tilematrix":"PM","minZoom":6,"maxZoom":20,"bbox":[7.079166,43.80946,7.6419926,44.19026],"desc":"Orthophotographie réalisée suite au passage de la tempête Alex dans les Alpes Maritimes","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":20,"constraint":[{"minZoom":6,"maxZoom":20,"bbox":[7.079166,43.80946,7.6419926,44.19026]}]}}});
+var layer = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS.URGENCE.ALEX' });
+layer.getSource().setTileLoadFunction(ol.ext.imageLoader.transparent([250,250,250],[255,255,255]));
+/** /
+var w = 250;
+layer.getSource().setTileLoadFunction(ol.ext.imageLoader.pixelTransform(function(pixels, i, size){
+  var p = i/4;
+  var y = Math.floor(p/size[0]);
+  var x = p - y*size[0];
+  var nbor = [
+    [x,y],
+    [Math.min(x+1, size[0]-1), y],
+    [Math.max(x-1, 0), y],
+    [x, Math.min(y+1, size[1]-1)],
+    [x, Math.max(y-1, 0)]
+  ]
+  var t = 0;
+  for (var k=0; k<nbor.length; k++) {
+    p = (nbor[k][0] + nbor[k][1]*size[0])*4;
+    if (pixels[p]<w || pixels[p+1]<w || pixels[p+2]<w) t++;
+  }
+  if (t>=4) return;
+  pixels[i+3] = 0;
+}));
+/**/
+map.addLayer(layer);
 
 </script>
 </body>

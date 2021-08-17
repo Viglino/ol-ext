@@ -36,6 +36,98 @@ var ol_ext_imageLoader_loadBILImage = function(src, onload, onerror) {
   xhr.send();
 };
 
+/** Helper for loading image
+ * @param {string} src
+ * @param {function} onload a function that takes a an image and a size
+ * @param {function} onerror
+ */
+var ol_ext_imageLoader_loadImage = function(src, onload, onerror) {
+  var xhr = new XMLHttpRequest();
+  xhr.responseType = 'blob';
+  xhr.addEventListener('loadend', function () {
+    var resp = this.response;
+    if (resp !== undefined) {
+      var img = new Image();
+      img.onload = function() {
+        onload(img, [img.naturalWidth, img.naturalHeight]);
+      }
+      img.src = URL.createObjectURL(resp);
+    } else {
+      onerror();
+    }
+  });
+  xhr.addEventListener('error', function () {
+    onerror();
+  });
+  xhr.open('GET', src);
+  xhr.send();
+};
+
+/** Transform tiles images
+ * @param {function} setPixel a function that takes a Uint8ClampedArray and the pixel position to transform
+ */
+var ol_ext_imageLoader_pixelTransform = function(setPixel) {
+  return function(tile, src) {
+    ol_ext_imageLoader_loadImage(
+      src, 
+      function(img, size) {
+        var canvas = document.createElement('canvas');
+        canvas.width = size[0];
+        canvas.height = size[1];
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        var imgData = ctx.getImageData(0, 0, size[0], size[1]);
+        var pixels = imgData.data;
+        for (var i = 0; i < pixels.length; i += 4) {
+          setPixel(pixels, i, size);
+        }
+        ctx.putImageData(imgData, 0, 0);
+        tile.setImage(canvas);
+      },
+      function() {
+        tile.setState(3);
+      }
+    );
+  }
+};
+
+/** Transform tiles into grayscale images */
+var ol_ext_imageLoader_grayscale = function() {
+  return ol_ext_imageLoader_pixelTransform(function(pixels, i) {
+    pixels[i] = pixels[i + 1] = pixels[i + 2] = parseInt(3*pixels[i] + 4*pixels[i + 1] + pixels[i + 2] >>> 3);
+  })
+};
+
+/** Turns color or a color range transparent
+ * @param {ol.color.Color|Array<ol.color.Color>} colors color or color range to turn transparent
+ */
+var ol_ext_imageLoader_transparent = function(colors) {
+  var color1, color2;
+  if (colors instanceof Array) {
+    color1 = colors[0];
+    color2 = colors[1];
+  }
+  var color = color1 = ol_color_asArray(color1);
+  if (!color2) {
+    return ol_ext_imageLoader_pixelTransform(function(pixels, i) {
+      if (pixels[i]===color[0] && pixels[i+1]===color[1] && pixels[i+2]===color[2]) {
+        pixels[i+3] = 0;
+      }
+    })
+  } else {
+    color2 = ol_color_asArray(color2);
+    color = [Math.min(color1[0], color2[0]), Math.min(color1[1], color2[1]), Math.min(color1[2], color2[2])];
+    color2 = [Math.max(color1[0], color2[0]), Math.max(color1[1], color2[1]), Math.max(color1[2], color2[2])];
+    return ol_ext_imageLoader_pixelTransform(function(pixels, i) {
+      if (pixels[i]>=color1[0] && pixels[i]<=color2[0] 
+        && pixels[i+1]>=color[1] && pixels[i+1]<=color2[1] 
+        && pixels[i+2]>=color[2] && pixels[i+2]<=color2[2]) {
+        pixels[i+3] = 0;
+      }
+    })
+  }
+};
+
 /** Returns an Imageloader function to load an x-bil-32 image as sea level map 
  * to use as a ol/Tile~LoadFunction or ol/Image~LoadFunction
  * @param { number } level
@@ -185,3 +277,5 @@ var ol_ext_getElevationFromPixel = function(pixel) {
 export { ol_ext_imageLoader_loadBILImage as loadBILImage }
 export { ol_ext_imageLoader_seaLevelMap as seaLevelMap, ol_ext_imageLoader_elevationMap as elevationMap }
 export { ol_ext_getPixelFromElevation as getPixelFromElevation, ol_ext_getElevationFromPixel as getElevationFromPixel }
+export { ol_ext_imageLoader_grayscale as grayscale, ol_ext_imageLoader_transparent as transparent }
+export { ol_ext_imageLoader_pixelTransform as pixelTransform }
