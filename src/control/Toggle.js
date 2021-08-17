@@ -88,9 +88,11 @@ ol_control_Toggle.prototype.setSubBar = function (bar) {
   var map = this.getMap();
   if (map && this.subbar_) map.removeControl (this.subbar_);
   this.subbar_ = bar;
-  this.subbar_.setTarget(this.element);
-  this.subbar_.element.classList.add("ol-option-bar");
-  if (map) map.addControl (this.subbar_);
+  if (bar) {
+    this.subbar_.setTarget(this.element);
+    this.subbar_.element.classList.add("ol-option-bar");
+    if (map) map.addControl (this.subbar_);
+  }
 };
 
 /**
@@ -133,7 +135,7 @@ ol_control_Toggle.prototype.toggle = function() {
 /** Change control state
  * @param {bool} b activate or deactivate the control, default false
  */
-ol_control_Toggle.prototype.setActive = function(b) {	
+ol_control_Toggle.prototype.setActive = function(b) {
   if (this.interaction_) this.interaction_.setActive (b);
   if (this.subbar_) this.subbar_.setActive(b);
   if (this.getActive()===b) return;
