@@ -914,6 +914,94 @@ ol.ext.imageLoader.loadBILImage = function(src, onload, onerror) {
   xhr.open('GET', src);
   xhr.send();
 };
+/** Helper for loading image
+ * @param {string} src
+ * @param {function} onload a function that takes a an image and a size
+ * @param {function} onerror
+ */
+ol.ext.imageLoader.loadImage = function(src, onload, onerror) {
+  var xhr = new XMLHttpRequest();
+  xhr.responseType = 'blob';
+  xhr.addEventListener('loadend', function () {
+    var resp = this.response;
+    if (resp !== undefined) {
+      var img = new Image();
+      img.onload = function() {
+        onload(img, [img.naturalWidth, img.naturalHeight]);
+      }
+      img.src = URL.createObjectURL(resp);
+    } else {
+      onerror();
+    }
+  });
+  xhr.addEventListener('error', function () {
+    onerror();
+  });
+  xhr.open('GET', src);
+  xhr.send();
+};
+/** Transform tiles images
+ * @param {function} setPixel a function that takes a Uint8ClampedArray and the pixel position to transform
+ */
+ol.ext.imageLoader.pixelTransform = function(setPixel) {
+  return function(tile, src) {
+    ol.ext.imageLoader.loadImage(
+      src, 
+      function(img, size) {
+        var canvas = document.createElement('canvas');
+        canvas.width = size[0];
+        canvas.height = size[1];
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        var imgData = ctx.getImageData(0, 0, size[0], size[1]);
+        var pixels = imgData.data;
+        for (var i = 0; i < pixels.length; i += 4) {
+          setPixel(pixels, i, size);
+        }
+        ctx.putImageData(imgData, 0, 0);
+        tile.setImage(canvas);
+      },
+      function() {
+        tile.setState(3);
+      }
+    );
+  }
+};
+/** Transform tiles into grayscale images */
+ol.ext.imageLoader.grayscale = function() {
+  return ol.ext.imageLoader.pixelTransform(function(pixels, i) {
+    pixels[i] = pixels[i + 1] = pixels[i + 2] = parseInt(3*pixels[i] + 4*pixels[i + 1] + pixels[i + 2] >>> 3);
+  })
+};
+/** Turns color or a color range transparent
+ * @param {ol.color.Color|Array<ol.color.Color>} colors color or color range to turn transparent
+ */
+ol.ext.imageLoader.transparent = function(colors) {
+  var color1, color2;
+  if (colors instanceof Array) {
+    color1 = colors[0];
+    color2 = colors[1];
+  }
+  var color = color1 = ol.color.asArray(color1);
+  if (!color2) {
+    return ol.ext.imageLoader.pixelTransform(function(pixels, i) {
+      if (pixels[i]===color[0] && pixels[i+1]===color[1] && pixels[i+2]===color[2]) {
+        pixels[i+3] = 0;
+      }
+    })
+  } else {
+    color2 = ol.color.asArray(color2);
+    color = [Math.min(color1[0], color2[0]), Math.min(color1[1], color2[1]), Math.min(color1[2], color2[2])];
+    color2 = [Math.max(color1[0], color2[0]), Math.max(color1[1], color2[1]), Math.max(color1[2], color2[2])];
+    return ol.ext.imageLoader.pixelTransform(function(pixels, i) {
+      if (pixels[i]>=color1[0] && pixels[i]<=color2[0] 
+        && pixels[i+1]>=color[1] && pixels[i+1]<=color2[1] 
+        && pixels[i+2]>=color[2] && pixels[i+2]<=color2[2]) {
+        pixels[i+3] = 0;
+      }
+    })
+  }
+};
 /** Returns an Imageloader function to load an x-bil-32 image as sea level map 
  * to use as a ol/Tile~LoadFunction or ol/Image~LoadFunction
  * @param { number } level
@@ -1978,7 +2066,7 @@ ol.legend.Item.prototype.getElement = function(size, onclick) {
       e.stopPropagation();
     },
     style: { height: size[1] + 'px' },
-    alt: this.get('title')
+    'aria-label': this.get('title')
   });
   ol.ext.element.create ('DIV', {
     click: function(e) {
@@ -2497,15 +2585,17 @@ ol.control.Toggle.prototype.getSubBar = function () {
   return this.subbar_;
 };
 /** Set the subbar associated with a control
- * @param {ol.control.Bar} bar a subbar
+ * @param {ol.control.Bar} [bar] a subbar if none remove the current subbar
  */
 ol.control.Toggle.prototype.setSubBar = function (bar) {
   var map = this.getMap();
   if (map && this.subbar_) map.removeControl (this.subbar_);
   this.subbar_ = bar;
-  this.subbar_.setTarget(this.element);
-  this.subbar_.element.classList.add("ol-option-bar");
-  if (map) map.addControl (this.subbar_);
+  if (bar) {
+    this.subbar_.setTarget(this.element);
+    this.subbar_.element.classList.add("ol-option-bar");
+    if (map) map.addControl (this.subbar_);
+  }
 };
 /**
  * Test if the control is disabled.
@@ -2542,7 +2632,7 @@ ol.control.Toggle.prototype.toggle = function() {
 /** Change control state
  * @param {bool} b activate or deactivate the control, default false
  */
-ol.control.Toggle.prototype.setActive = function(b) {	
+ol.control.Toggle.prototype.setActive = function(b) {
   if (this.interaction_) this.interaction_.setActive (b);
   if (this.subbar_) this.subbar_.setActive(b);
   if (this.getActive()===b) return;
@@ -22043,7 +22133,7 @@ ol.interaction.SelectCluster = function(options) {
   this.animate = options.animate;
   this.animationDuration = options.animationDuration || 500;
   this.selectCluster_ = (options.selectCluster !== false);
-  this.autoClose = (options.autoClose !== false)
+  this._autoClose = (options.autoClose !== false)
   // Create a new overlay layer for 
   var overlay = this.overlayLayer_ = new ol.layer.Vector({
     source: new ol.source.Vector({
@@ -22082,7 +22172,7 @@ ol.interaction.SelectCluster = function(options) {
     else return true;
   };
   this.filter_ = options.filter;
-  if (!this.autoClose && !options.toggleCondition) {
+  if (!this._autoClose && !options.toggleCondition) {
     options.toggleCondition = ol.events.condition.singleClick;
   }
   ol.interaction.Select.call(this, options);
@@ -22135,7 +22225,7 @@ ol.interaction.SelectCluster.prototype.selectCluster = function (e) {
   }
   // Nothing selected
   if (!e.selected.length) {
-    if (this.autoClose) {
+    if (this._autoClose) {
       this.clear();
     } else {
       var deselectedFeatures = e.deselected;
@@ -22154,7 +22244,7 @@ ol.interaction.SelectCluster.prototype.selectCluster = function (e) {
   if (feature.get('selectclusterfeature')) return;
   // Clic out of the cluster => close it
   var source = this.overlayLayer_.getSource();
-  if (this.autoClose) {
+  if (this._autoClose) {
     source.clear();
   }
   var cluster = feature.get('features');
@@ -22207,9 +22297,6 @@ ol.interaction.SelectCluster.prototype.selectCluster = function (e) {
     }
   }
   feature.set('selectcluserfeatures', features);
-  if (this.autoClose) {
-    source.clear();
-  }
   if (this.animate) {
     this.animateCluster_(center, features);
   } else {

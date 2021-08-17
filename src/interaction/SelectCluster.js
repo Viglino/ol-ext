@@ -56,7 +56,7 @@ var ol_interaction_SelectCluster = function(options) {
   this.animate = options.animate;
   this.animationDuration = options.animationDuration || 500;
   this.selectCluster_ = (options.selectCluster !== false);
-  this.autoClose = (options.autoClose !== false)
+  this._autoClose = (options.autoClose !== false)
 
   // Create a new overlay layer for 
   var overlay = this.overlayLayer_ = new ol_layer_Vector({
@@ -99,7 +99,7 @@ var ol_interaction_SelectCluster = function(options) {
   };
   this.filter_ = options.filter;
 
-  if (!this.autoClose && !options.toggleCondition) {
+  if (!this._autoClose && !options.toggleCondition) {
     options.toggleCondition = ol_events_condition_singleClick;
   }
 
@@ -161,7 +161,7 @@ ol_interaction_SelectCluster.prototype.selectCluster = function (e) {
   }
   // Nothing selected
   if (!e.selected.length) {
-    if (this.autoClose) {
+    if (this._autoClose) {
       this.clear();
     } else {
       const deselectedFeatures = e.deselected;
@@ -182,7 +182,7 @@ ol_interaction_SelectCluster.prototype.selectCluster = function (e) {
 
   // Clic out of the cluster => close it
   var source = this.overlayLayer_.getSource();
-  if (this.autoClose) {
+  if (this._autoClose) {
     source.clear();
   }
 
@@ -241,9 +241,6 @@ ol_interaction_SelectCluster.prototype.selectCluster = function (e) {
   }
 
   feature.set('selectcluserfeatures', features);
-  if (this.autoClose) {
-    source.clear();
-  }
   if (this.animate) {
     this.animateCluster_(center, features);
   } else {

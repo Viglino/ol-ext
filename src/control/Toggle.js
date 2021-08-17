@@ -82,7 +82,7 @@ ol_control_Toggle.prototype.getSubBar = function () {
 };
 
 /** Set the subbar associated with a control
- * @param {ol_control_Bar} bar a subbar
+ * @param {ol_control_Bar} [bar] a subbar if none remove the current subbar
  */
 ol_control_Toggle.prototype.setSubBar = function (bar) {
   var map = this.getMap();

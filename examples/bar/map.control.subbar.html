@@ -1,200 +1,199 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
- 
-	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
------------------------------------------------------------->
-	<title>ol-ext: Control Bar / sub-bar</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!--
+  Copyright (c) 2015 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Control Bar / sub-bar</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="ol.control.Bar is a control bar that contains controls." />
-	<meta name="keywords" content="ol3, control, bar, panel, ol3, openlayers, interaction" />
+  <meta name="description" content="ol.control.Bar is a control bar that contains controls." />
+  <meta name="keywords" content="ol3, control, bar, panel, ol3, openlayers, interaction" />
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-    <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
 
-	<!-- -->
+  <!-- -->
 
-	<style>
-		.ol-button i
-		{	color: inherit;
-		}
-	</style>
+  <style>
+    .ol-button i
+    {	color: inherit;
+    }
+  </style>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: control Bar / sub-bar</h1>
-	</a>
-	<div class="info">
-		<i>ol.control.Bar</i> can be nested in a sub-bar using an <i>ol.control.Toggle</i> to control its activation.
-		<ul>
-			<li>
-				<i>toggleOne</i> option makes only one control activated at once.
-			</li>
-			<li>
-				<i>autoDeactivate</i> option will deactivate all controls in the sub-bar when this is deactivated.
-			</li>
-		</ul>
-		Options of the <i>ol.control.Toggle</i> enables the sub-bar activation:
-		<ul>
-			<li>
-				Use the <i>bar</i> option of the <i>ol.control.Toogle</i> to set the sub-bar you want to display.
-			</li>
-			<li>
-				The <i>autoActive</i> option enable you to automatically activate a control when the sub-bar is shown.
-			</li>
-		</ul>
-	</div>
+  <a href="../../index.html">
+    <h1>ol-ext: control Bar / sub-bar</h1>
+  </a>
+  <div class="info">
+    <i>ol.control.Bar</i> can be nested in a sub-bar using an <i>ol.control.Toggle</i> to control its activation.
+    <ul>
+      <li>
+        <i>toggleOne</i> option makes only one control activated at once.
+      </li>
+      <li>
+        <i>autoDeactivate</i> option will deactivate all controls in the sub-bar when this is deactivated.
+      </li>
+    </ul>
+    Options of the <i>ol.control.Toggle</i> enables the sub-bar activation:
+    <ul>
+      <li>
+        Use the <i>bar</i> option of the <i>ol.control.Toogle</i> to set the sub-bar you want to display.
+      </li>
+      <li>
+        The <i>autoActive</i> option enable you to automatically activate a control when the sub-bar is shown.
+      </li>
+    </ul>
+  </div>
 
-	<!-- Map div -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options" >
-		<ul>
-			<li>
-				Position:
-				<select onchange="mainbar.setPosition(this.value)">
-					<option value="top">top</option>
-					<option value="top-left">top-left</option>
-					<option value="left">left</option>
-					<option value="bottom-left">bottom-left</option>
-					<option value="bottom">bottom</option>
-					<option value="bottom-right">bottom-right</option>
-					<option value="right">right</option>
-					<option value="top-right">top-right</option>
-				</select>
-			</li>
-		</ul>
-		Info:<br />
-		<textarea id="info" style="width:25em; height:10em"></textarea>
-	</div>
+  <div class="options" >
+    <ul>
+      <li>
+        Position:
+        <select onchange="mainbar.setPosition(this.value)">
+          <option value="top">top</option>
+          <option value="top-left">top-left</option>
+          <option value="left">left</option>
+          <option value="bottom-left">bottom-left</option>
+          <option value="bottom">bottom</option>
+          <option value="bottom-right">bottom-right</option>
+          <option value="right">right</option>
+          <option value="top-right">top-right</option>
+        </select>
+      </li>
+    </ul>
+    Info:<br />
+    <textarea id="info" style="width:25em; height:10em"></textarea>
+  </div>
 
-	<script type="text/javascript">
+  <script type="text/javascript">
 
-		//  Vector layer
-		var vector = new ol.layer.Vector( { source: new ol.source.Vector() })
+    //  Vector layer
+    var vector = new ol.layer.Vector( { source: new ol.source.Vector() })
 
-		// The map
-		var map = new ol.Map
-			({	target: 'map',
-				view: new ol.View
-				({	zoom: 14,
-					center: [270701, 6247637]
-				}),
-				layers: 
-					[	new ol.layer.Tile({ source: new ol.source.OSM() }),
-						vector
-					]
-			});
+    // The map
+    var map = new ol.Map({
+      target: 'map',
+      view: new ol.View({
+        zoom: 14,
+        center: [270701, 6247637]
+      }),
+      layers: 
+        [	new ol.layer.Tile({ source: new ol.source.OSM() }),
+          vector
+        ]
+    });
 
-	/* Nested subbar */
-		var sub2 = new ol.control.Bar(
-				{	toggleOne: true,
-					controls:
-					[	new ol.control.TextButton(
-							{	html:"2.1", 
-								handleClick: function(b) { info("Button 2.1 clicked"); } 
-							}),
-						new ol.control.TextButton(
-							{	html:"2.2", 
-								handleClick: function(b) { info("Button 2.2 clicked"); } 
-							})
-					]
-				});
-		var sub1 = new ol.control.Bar(
-						{	toggleOne: true,
-							controls:
-							[	new ol.control.Toggle(
-									{	html:"1", 
-										autoActivate: true,
-										onToggle: function(b) { info("Button 1 "+(b?"activated":"deactivated")); } 
-									}),
-								new ol.control.Toggle(
-									{	html:"2", 
-										onToggle: function(b) { info("Button 2 "+(b?"activated":"deactivated")); },
-										// Second level nested control bar
-										bar: sub2
-									})
-							]
-						});
-		var mainbar = new ol.control.Bar(
-			{	controls: [
-					new ol.control.Toggle(
-					{	html: '0',
-						// First level nested control bar
-						bar: sub1,
-						onToggle: function() { info(); }
-					})]
-			});
-		map.addControl ( mainbar );
-	
-	/*/
-		// inline version
-		map.addControl ( new ol.control.Bar(
-		{	controls:[ new ol.control.Toggle(
-				{	html: '0',
-					onToggle: function() { info(); },
-					// Nested control bar
-					bar: new ol.control.Bar(
-						{	toggleOne: true,
-							controls:
-							[	new ol.control.Toggle(
-									{	html:"1", 
-										autoActivate: true,
-										onToggle: function(b) { info("Button 1 "+(b?"activated":"deactivated")); } 
-									}),
-								new ol.control.Toggle(
-									{	html:"2", 
-										onToggle: function(b) { info("Button 2 "+(b?"activated":"deactivated")); },
-										// Second level nested control bar
-										bar: new ol.control.Bar(
-											{	toggleOne: true,
-												controls:
-												[	new ol.control.Button(
-														{	html:"2.1", 
-															className: "ol-text-button",
-															handleClick: function(b) { info("Button 2.1 clicked"); } 
-														}),
-													new ol.control.Button(
-														{	html:"22", 
-															className: "ol-text-button",
-															handleClick: function(b) { info("Button 2.2 clicked"); } 
-														})
-												]
-											})
-									})
-							]
-						})
-				})
-			]
-		}));
-	/**/
+  /* Nested subbar */
+    var sub2 = new ol.control.Bar({
+      toggleOne: true,
+      controls: [
+        new ol.control.TextButton({
+          html:"2.1", 
+          handleClick: function(b) { info("Button 2.1 clicked"); } 
+        }),
+        new ol.control.TextButton({
+          html:"2.2", 
+          handleClick: function(b) { info("Button 2.2 clicked"); } 
+        })
+      ]
+    });
+    var sub1 = new ol.control.Bar({
+      toggleOne: true,
+      controls:[
+        new ol.control.Toggle({
+          html:"1", 
+          autoActivate: true,
+          onToggle: function(b) { info("Button 1 "+(b?"activated":"deactivated")); } 
+        }),
+        new ol.control.Toggle({
+          html:"2", 
+          onToggle: function(b) { info("Button 2 "+(b?"activated":"deactivated")); },
+          // Second level nested control bar
+          bar: sub2
+        })
+      ]
+    });
+    var mainbar = new ol.control.Bar({
+      controls: [
+        new ol.control.Toggle({
+          html: '0',
+          // First level nested control bar
+          bar: sub1,
+          onToggle: function() { info(); }
+        })
+      ]
+    });
+    map.addControl ( mainbar );
+  
+  /*/
+    // inline version
+    map.addControl ( new ol.control.Bar(
+    {	controls:[ new ol.control.Toggle(
+        {	html: '0',
+          onToggle: function() { info(); },
+          // Nested control bar
+          bar: new ol.control.Bar(
+            {	toggleOne: true,
+              controls:
+              [	new ol.control.Toggle(
+                  {	html:"1", 
+                    autoActivate: true,
+                    onToggle: function(b) { info("Button 1 "+(b?"activated":"deactivated")); } 
+                  }),
+                new ol.control.Toggle(
+                  {	html:"2", 
+                    onToggle: function(b) { info("Button 2 "+(b?"activated":"deactivated")); },
+                    // Second level nested control bar
+                    bar: new ol.control.Bar(
+                      {	toggleOne: true,
+                        controls:
+                        [	new ol.control.Button(
+                            {	html:"2.1", 
+                              className: "ol-text-button",
+                              handleClick: function(b) { info("Button 2.1 clicked"); } 
+                            }),
+                          new ol.control.Button(
+                            {	html:"22", 
+                              className: "ol-text-button",
+                              handleClick: function(b) { info("Button 2.2 clicked"); } 
+                            })
+                        ]
+                      })
+                  })
+              ]
+            })
+        })
+      ]
+    }));
+  /**/
 
-		// Show info
-		function info(i)
-		{	$("#info").html(i||"");
-		}
-		
-	</script>
+    // Show info
+    function info(i) {
+      $("#info").html(i||"");
+    }
+    
+  </script>
 
 </body>
 </html>

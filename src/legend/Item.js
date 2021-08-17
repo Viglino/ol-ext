@@ -45,7 +45,7 @@ ol_legend_Item.prototype.getElement = function(size, onclick) {
       e.stopPropagation();
     },
     style: { height: size[1] + 'px' },
-    alt: this.get('title')
+    'aria-label': this.get('title')
   });
   ol_ext_element.create ('DIV', {
     click: function(e) {
