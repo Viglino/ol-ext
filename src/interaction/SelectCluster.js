@@ -21,6 +21,7 @@ import ol_style_Circle from 'ol/style/Circle'
 import ol_render_getVectorContext from '../util/getVectorContext';
 import { createEmpty as ol_extent_createEmpty } from 'ol/extent'
 import { extend as ol_extent_extend } from 'ol/extent'
+import { singleClick as ol_events_condition_singleClick } from 'ol/events/condition';
 
 /**
  * @classdesc
@@ -41,6 +42,7 @@ import { extend as ol_extent_extend } from 'ol/extent'
  * 	@param {Number} options.maxObjects number of object that can be drawn, other are hidden
  * 	@param {bool} options.animate if the cluster will animate when features spread out, default is false
  * 	@param {Number} options.animationDuration animation duration in ms, default is 500ms
+ * 	@param {boolean} options.autoClose if selecting a cluster should close previously selected clusters. False to get toggle feature. Default is true
  * @fires ol.interaction.SelectEvent
  * @api stable
  */
@@ -54,6 +56,7 @@ var ol_interaction_SelectCluster = function(options) {
   this.animate = options.animate;
   this.animationDuration = options.animationDuration || 500;
   this.selectCluster_ = (options.selectCluster !== false);
+  this.autoClose = (options.autoClose !== false)
 
   // Create a new overlay layer for 
   var overlay = this.overlayLayer_ = new ol_layer_Vector({
@@ -95,6 +98,10 @@ var ol_interaction_SelectCluster = function(options) {
     else return true;
   };
   this.filter_ = options.filter;
+
+  if (!this.autoClose && !options.toggleCondition) {
+    options.toggleCondition = ol_events_condition_singleClick;
+  }
 
   ol_interaction_Select.call(this, options);
   this.on("select", this.selectCluster.bind(this));
@@ -154,7 +161,17 @@ ol_interaction_SelectCluster.prototype.selectCluster = function (e) {
   }
   // Nothing selected
   if (!e.selected.length) {
-    this.clear();
+    if (this.autoClose) {
+      this.clear();
+    } else {
+      const deselectedFeatures = e.deselected;
+      deselectedFeatures.forEach(deselectedFeature => {
+        const selectClusterFeatures = deselectedFeature.get('selectcluserfeatures');
+        selectClusterFeatures.forEach(selectClusterFeature => {
+          this.overlayLayer_.getSource().removeFeature(selectClusterFeature);
+        });
+      });
+    }
     return;
   }
 
@@ -162,10 +179,12 @@ ol_interaction_SelectCluster.prototype.selectCluster = function (e) {
   var feature = e.selected[0];
   // It's one of ours
   if (feature.get('selectclusterfeature')) return;
-  
+
   // Clic out of the cluster => close it
   var source = this.overlayLayer_.getSource();
-  source.clear();
+  if (this.autoClose) {
+    source.clear();
+  }
 
   var cluster = feature.get('features');
   // Not a cluster (or just one feature)
@@ -221,7 +240,10 @@ ol_interaction_SelectCluster.prototype.selectCluster = function (e) {
     }
   }
 
-  source.clear();
+  feature.set('selectcluserfeatures', features);
+  if (this.autoClose) {
+    source.clear();
+  }
   if (this.animate) {
     this.animateCluster_(center, features);
   } else {
