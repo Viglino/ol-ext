@@ -76,10 +76,14 @@ ol_ext_inherits(ol_source_TileWFS, ol_source_Vector);
  * 
  */
 ol_source_TileWFS.prototype._loadTile = function(url, extent, projection, format, loader) {
+  var req = url 
+    + '&srsname=' + projection.getCode()
+    + '&bbox=' + extent.join(',') + ',' + projection.getCode();
+  if (this.get('pagination') && !/&startIndex/.test(url)) {
+    req += '&startIndex=0';
+  }
   ol_ext_Ajax.get({
-    url: url 
-      + '&srsname=' + projection.getCode()
-      + '&bbox=' + extent.join(',') + ',' + projection.getCode(),
+    url: req,
     success: function(response) {
       loader.loaded++;
       if (response.error) {

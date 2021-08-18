@@ -120,7 +120,8 @@ function setWFS(type) {
   vectorSource = new ol.source.TileWFS({
     url: 'https://wxs.ign.fr/'+key+'/geoportail/wfs',
     typeName: type,
-    tileZoom: minZoom
+    tileZoom: minZoom,
+    pagination: true
   });
   vectorSource.on(['tileloadstart','tileloadend','tileloaderror'], progress)
   vectorLayer.setSource(vectorSource);
