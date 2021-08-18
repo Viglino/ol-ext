@@ -885,10 +885,14 @@ ol.ext.getMapCanvas = function(map) {
 if (window.ol) window.ol.ext.imageLoader = {};
 /** Helper for loading BIL-32 (Band Interleaved by Line) image
  * @param {string} src
- * @param {function} onload a function that takes a Float32Array and a number (array size)
+ * @param {function} onload a function that takes a Float32Array and a ol.size.Size (array size)
  * @param {function} onerror
  */
 ol.ext.imageLoader.loadBILImage = function(src, onload, onerror) {
+  var size = [
+    parseInt(src.replace(/.*WIDTH=(\d*).*/i,'$1')), 
+    parseInt(src.replace(/.*HEIGHT=(\d*).*/i,'$1'))
+  ];
   var xhr = new XMLHttpRequest();
   xhr.responseType = 'blob';
   xhr.addEventListener('loadend', function () {
@@ -898,7 +902,6 @@ ol.ext.imageLoader.loadBILImage = function(src, onload, onerror) {
       // Get as array
       reader.addEventListener('loadend', (e) => {
         var data = new Float32Array(e.target.result);
-        var size = Math.sqrt(data.length);
         onload(data, size);
       });
       // Start reading the blob
@@ -916,7 +919,7 @@ ol.ext.imageLoader.loadBILImage = function(src, onload, onerror) {
 };
 /** Helper for loading image
  * @param {string} src
- * @param {function} onload a function that takes a an image and a size
+ * @param {function} onload a function that takes a an image and a ol.size.Size
  * @param {function} onerror
  */
 ol.ext.imageLoader.loadImage = function(src, onload, onerror) {
@@ -1032,14 +1035,14 @@ ol.ext.imageLoader.shadedRelief = function() {
       function(data, size) {
         var canvas = document.createElement('canvas');
         var ctx = canvas.getContext('2d');
-        var width = canvas.width = size;
-        var height = canvas.height = size;
-        var imgData = ctx.getImageData(0, 0, size, size);
+        var width = canvas.width = size[0];
+        var height = canvas.height = size[1];
+        var imgData = ctx.getImageData(0, 0, width, height);
         var pixels = imgData.data;
         function getIndexForCoordinates(x, y) {
-          return x + y*size;
+          return x + y*width;
         }
-        for (var x=0; x<size; x++) for(var y=0; y<size; y++) {
+        for (var x=0; x<width; x++) for(var y=0; y<height; y++) {
           var top = getIndexForCoordinates(x,Math.max(0,y-1))
           var left = getIndexForCoordinates(Math.max(0,x-1),y);
           var right = getIndexForCoordinates(Math.min(width-1,x+1),y);
@@ -1099,8 +1102,9 @@ ol.ext.imageLoader.elevationMap = function(getPixelColor) {
       function(data, size) {
         var canvas = document.createElement('canvas');
         var ctx = canvas.getContext('2d');
-        canvas.width = canvas.height = size;
-        var imgData = ctx.getImageData(0, 0, size, size);
+        canvas.width = size[0];
+        canvas.height = size[1];
+        var imgData = ctx.getImageData(0, 0, size[0], size[1]);
         var pixels = imgData.data;
         for (var i=0; i<data.length; i++) {
           var p = getPixelColor(data[i]);
@@ -36950,5 +36954,6 @@ ol.style.geoportailStyle = function(typeName, options) {
     }
   }
 };
+/** List of clc colors */
 ol.style.geoportailStyle.clcColors = JSON.parse(JSON.stringify(clcColors));
 })();

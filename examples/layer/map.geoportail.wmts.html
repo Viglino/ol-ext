@@ -56,7 +56,7 @@
       margin-left: 1em;
       width: 10em;
     }
-    #code {
+    #code textarea {
       margin: 0;
       background: no-repeat;
       border: 0;
@@ -64,8 +64,8 @@
       width: 100%;
       white-space: nowrap;
       font-size: 1em;
-      min-height: 2.3em;
-      max-height: 2.3em;
+      min-height: 3.5em;
+      max-height: 3.5em;
       min-width: 100%;
       max-width: 100%;
       padding: 0;
@@ -121,6 +121,18 @@
     #geoportail ul li:hover .desc {
       display: block;
     }
+    ul.choice li {
+      display: inline-block;
+      padding: 0 .5em;
+      background-color: #aaa;
+      color: #fff;
+      border-radius: .5em .5em 0 0;
+      margin: .1em .2em 0;
+      cursor: pointer;
+    }
+    ul.choice li.select {
+      background-color: #369;
+    }
   </style>
 </head>
 <body >
@@ -130,9 +142,18 @@
     <a href="../../index.html">
       <h1>ol-ext: IGN Géoservices</h1>
     </a>
-    <p>Code :</p>
+    <ul class="choice">
+      <li class="select" onclick="code(this, 'js5')">
+        code
+      </li><li onclick="code(this, 'es6')">
+        ES6
+      </li>
+    </ul>
     <div class="info">
-      <textarea id="code"></textarea>
+      <div id="code">
+        <textarea class="js5"></textarea>
+        <textarea class="es6" style="display: none;"></textarea>
+      </div>
     </div>
     <button type="button" style="float: right;" onclick="copy();">Copy</button>
     <input id="search" type="search" placeholder="rechercher..." /><span id="nb"></span>
@@ -140,16 +161,6 @@
 
 	<!-- DIV pour la carte -->
   <ul id="geoportail"></ul>
-    <div id="result" style="display: none;">
-      <label style="display: block; margin-top:.5em;">Code: <span></span></label>
-      <pre id="code"></pre>
-      <button id="layer" onclick='addLayer()' style="float: right;">Add layer...</button>
-      <p style="margin:0; clear:both;">Select a layer</p>
-      <ul>
-      </ul>
-      <button type="button" onclick="loadCapabilities(true)" style="float: right;">Load capabilities</button>
-    </div>
-	</div>
 	
 <script type="text/javascript">
 
@@ -184,12 +195,19 @@ services.forEach(function(k) {
       var l = new ol.layer.Geoportail({ layer: c });
       var li = $('<li>')
         .click(function() {
-          $('#code').text(
+          $('#code .js5').text(
             'ol.layer.Geoportail.register('
             + '"' + c + '", '
             + JSON.stringify(cap)
             + ');\n'
             + 'var layer = new ol.layer.Geoportail({ layer: \''+c+'\' });'
+          );
+          $('#code .es6').text(
+            'import Geoportail from \'ol-ext/layer/Geoportail\';\n'
+            + 'Geoportail.register("' + c + '", '
+            + JSON.stringify(cap)
+            + ');\n'
+            + 'const layer = new Geoportail({ layer: \''+c+'\' });'
           );
         })
         .appendTo(ul2);
@@ -202,10 +220,16 @@ services.forEach(function(k) {
   });
 });
 
+function code(elt, type) {
+  $('.choice li').removeClass('select');
+  $(elt).addClass('select');
+  $('#code textarea').hide();
+  $('#code textarea.'+type).show();
+}
 function copy() {
-  $("textarea").select();
+  $("#code textarea:visible").select();
   document.execCommand('copy');
-  $("textarea").blur();
+  $("#code textarea:visible").blur();
 }
 
 $('#search').on('keyup blur change search', function () {

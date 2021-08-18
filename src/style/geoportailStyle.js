@@ -345,6 +345,7 @@ ol_style_geoportailStyle = function(typeName, options) {
   }
 };
 
+/** List of clc colors */
 ol_style_geoportailStyle.clcColors = JSON.parse(JSON.stringify(clcColors));
 
 })();
