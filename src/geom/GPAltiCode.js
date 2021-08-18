@@ -7,7 +7,7 @@ import ol_geom_LineString from 'ol/geom/LineString'
  * @param {ol.geom.Geometry} geom
  * @param {Object} options
  *  @param {ol/proj~ProjectionLike} [options.projection='EPSG:3857'] geometry projection, default 'EPSG:3857'
- *  @param {string} [options.apiKey='choisirgeoportail'] Geoportail API key
+ *  @param {string} [options.apiKey='essentiels'] Geoportail API key
  *  @param {number} [options.sampling=0] number of resulting point, max 5000, if none keep input points or use samplingDist
  *  @param {number} [options.samplingDist=0] distance for sampling the line or use sampling if lesser
  *  @param {string} options.success a function that takes the resulting XYZ geometry
@@ -50,7 +50,7 @@ var ol_geom_GPAltiCode = function(geom, options) {
   var param = 'lon='+lon.join('|')+'&lat='+lat.join('|');
   if (sampling) param += '&sampling='+sampling;
   ol_ext_Ajax.get({
-    url: 'https://wxs.ign.fr/'+(options.apiKey || 'choisirgeoportail')+'/alti/rest/'+(lon.length>1 ? 'elevationLine' : 'elevation')+'.json?'+param,
+    url: 'https://wxs.ign.fr/'+(options.apiKey || 'essentiels')+'/alti/rest/'+(lon.length>1 ? 'elevationLine' : 'elevation')+'.json?'+param,
     success: function(res) {
       var pts = [];
       res.elevations.forEach(function(e, i) {
@@ -77,7 +77,9 @@ export { ol_geom_GPAltiCode }
  * @param {ol.coordinate|Array<ol.coordinate>} coord coordinate or an array of coordinates
  * @param {Object} options
  *  @param {ol/proj~ProjectionLike} [options.projection='EPSG:3857'] geometry projection, default 'EPSG:3857'
- *  @param {string} [options.apiKey='choisirgeoportail'] Geoportail API key
+ *  @param {string} [options.apiKey='essentiels'] Geoportail API key
+ *  @param {number} [options.sampling=0] number of resulting point, max 5000, if none keep input points or use samplingDist
+ *  @param {number} [options.samplingDist=0] distance for sampling the line or use sampling if lesser
  *  @param {string} options.success a function that takes the resulting XYZ coordinates
  *  @param {string} options.error
  */
@@ -88,6 +90,8 @@ var ol_coordinate_GPAltiCode = function(coord, options) {
   ol_geom_GPAltiCode(g, {
     projection: options.projection,
     apiKey: options.apiKey,
+    sampling: options.sampling,
+    samplingDist: options.samplingDist,
     success: function(g) {
       if (typeof(options.success) === 'function') {
         options.success(g.getCoordinates())

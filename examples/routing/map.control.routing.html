@@ -121,9 +121,9 @@
 
   map.addControl(new ol.control.Permalink({ hidden: true }));
 
-  // Set the control grid reference
+  // Set the routing control
   var search = new ol.control.RoutingGeoportail({
-    apiKey: apiKey
+    // apiKey: apiKey // 'essentiels'
   });
   map.addControl (search);
   

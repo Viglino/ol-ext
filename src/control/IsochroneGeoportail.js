@@ -19,6 +19,7 @@ import ol_control_SearchGeoportail from './SearchGeoportail'
  * @fires error
  * @param {Object=} options
  *	@param {string} options.className control class name
+ *	@param {string} [options.apiKey] Geoportail apo key
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
  *	@param {string | undefined} options.placeholder placeholder, default "Search..."
@@ -137,7 +138,7 @@ var ol_control_IsochroneGeoportail = function(options) {
       }
     }.bind(this));
 
-  this.set('url', 'https://wxs.ign.fr/'+options.apiKey+'/isochrone/isochrone.json');
+  this.set('url', 'https://wxs.ign.fr/'+(options.apiKey || 'essentiels')+'/isochrone/isochrone.json');
   this._ajax = new ol_ext_Ajax({ 
     dataType: 'JSON',
     auth: options.auth

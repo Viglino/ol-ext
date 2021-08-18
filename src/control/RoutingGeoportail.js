@@ -20,7 +20,7 @@ import {transform as ol_proj_transform} from 'ol/proj'
  * @fires change:input
  * @param {Object=} options
  *	@param {string} options.className control class name
- *	@param {string | undefined} options.apiKey the service api key.
+ *	@param {string | undefined} [options.apiKey] the service api key.
  *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
@@ -39,6 +39,7 @@ var ol_control_RoutingGeoportail = function(options) {
   var self = this;
   if (!options) options = {};
   if (options.typing == undefined) options.typing = 300;
+  options.apiKey = options.apiKey || 'essentiels';
 
   // Class name for history
   this._classname = options.className || 'search';

@@ -3371,7 +3371,7 @@ ol.control.SearchPhoton.prototype.reverseGeocode = function (coord, cback) {
  * @fires select
  * @param {any} options extend ol.control.SearchJSON options
  *	@param {string} options.className control class name
- *	@param {string | undefined} options.apiKey the service api key.
+ *	@param {string | undefined} [options.apiKey] the service api key.
  *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
@@ -3388,7 +3388,7 @@ ol.control.SearchGeoportail = function(options) {
   options = options || {};
   options.className = options.className || 'IGNF';
   options.typing = options.typing || 500;
-  options.url = "https://wxs.ign.fr/"+options.apiKey+"/ols/apis/completion";
+  options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/ols/apis/completion';
   options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
   ol.control.SearchJSON.call(this, options);
   this.set('type', options.type || 'StreetAddress,PositionOfInterest');
@@ -7426,6 +7426,7 @@ ol.control.Imageline.prototype._drawLink = function(e) {
  * @fires error
  * @param {Object=} options
  *	@param {string} options.className control class name
+ *	@param {string} [options.apiKey] Geoportail apo key
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
  *	@param {string | undefined} options.placeholder placeholder, default "Search..."
@@ -7533,7 +7534,7 @@ ol.control.IsochroneGeoportail = function(options) {
         this.search(this.get('coordinate'), val);
       }
     }.bind(this));
-  this.set('url', 'https://wxs.ign.fr/'+options.apiKey+'/isochrone/isochrone.json');
+  this.set('url', 'https://wxs.ign.fr/'+(options.apiKey || 'essentiels')+'/isochrone/isochrone.json');
   this._ajax = new ol.ext.Ajax({ 
     dataType: 'JSON',
     auth: options.auth
@@ -10875,7 +10876,7 @@ ol.control.ProgressBar.prototype.setLayers = function (layers) {
  * @fires change:input
  * @param {Object=} options
  *	@param {string} options.className control class name
- *	@param {string | undefined} options.apiKey the service api key.
+ *	@param {string | undefined} [options.apiKey] the service api key.
  *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
@@ -10894,6 +10895,7 @@ ol.control.RoutingGeoportail = function(options) {
   var self = this;
   if (!options) options = {};
   if (options.typing == undefined) options.typing = 300;
+  options.apiKey = options.apiKey || 'essentiels';
   // Class name for history
   this._classname = options.className || 'search';
   this._source = new ol.source.Vector();
@@ -11868,7 +11870,7 @@ ol.control.SearchGPS.prototype.autocomplete = function (s) {
  * @fires select
  * @param {any} options extend ol.control.SearchJSON options
  *	@param {string} options.className control class name
- *	@param {boolean | undefined} options.apiKey the service api key.
+ *	@param {boolean | undefined} [options.apiKey] the service api key.
  *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
@@ -32356,7 +32358,7 @@ ol.graph.Dijskra.prototype.getRoute = function(node) {
  * @param {ol.geom.Geometry} geom
  * @param {Object} options
  *  @param {ol/proj~ProjectionLike} [options.projection='EPSG:3857'] geometry projection, default 'EPSG:3857'
- *  @param {string} [options.apiKey='choisirgeoportail'] Geoportail API key
+ *  @param {string} [options.apiKey='essentiels'] Geoportail API key
  *  @param {number} [options.sampling=0] number of resulting point, max 5000, if none keep input points or use samplingDist
  *  @param {number} [options.samplingDist=0] distance for sampling the line or use sampling if lesser
  *  @param {string} options.success a function that takes the resulting XYZ geometry
@@ -32399,7 +32401,7 @@ ol.geom.GPAltiCode = function(geom, options) {
   var param = 'lon='+lon.join('|')+'&lat='+lat.join('|');
   if (sampling) param += '&sampling='+sampling;
   ol.ext.Ajax.get({
-    url: 'https://wxs.ign.fr/'+(options.apiKey || 'choisirgeoportail')+'/alti/rest/'+(lon.length>1 ? 'elevationLine' : 'elevation')+'.json?'+param,
+    url: 'https://wxs.ign.fr/'+(options.apiKey || 'essentiels')+'/alti/rest/'+(lon.length>1 ? 'elevationLine' : 'elevation')+'.json?'+param,
     success: function(res) {
       var pts = [];
       res.elevations.forEach(function(e, i) {
@@ -32423,7 +32425,9 @@ ol.geom.GPAltiCode = function(geom, options) {
  * @param {ol.coordinate|Array<ol.coordinate>} coord coordinate or an array of coordinates
  * @param {Object} options
  *  @param {ol/proj~ProjectionLike} [options.projection='EPSG:3857'] geometry projection, default 'EPSG:3857'
- *  @param {string} [options.apiKey='choisirgeoportail'] Geoportail API key
+ *  @param {string} [options.apiKey='essentiels'] Geoportail API key
+ *  @param {number} [options.sampling=0] number of resulting point, max 5000, if none keep input points or use samplingDist
+ *  @param {number} [options.samplingDist=0] distance for sampling the line or use sampling if lesser
  *  @param {string} options.success a function that takes the resulting XYZ coordinates
  *  @param {string} options.error
  */
@@ -32434,6 +32438,8 @@ ol.coordinate.GPAltiCode = function(coord, options) {
   ol.geom.GPAltiCode(g, {
     projection: options.projection,
     apiKey: options.apiKey,
+    sampling: options.sampling,
+    samplingDist: options.samplingDist,
     success: function(g) {
       if (typeof(options.success) === 'function') {
         options.success(g.getCoordinates())
