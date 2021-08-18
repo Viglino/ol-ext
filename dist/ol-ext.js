@@ -27810,10 +27810,14 @@ ol.ext.inherits(ol.source.TileWFS, ol.source.Vector);
  * 
  */
 ol.source.TileWFS.prototype._loadTile = function(url, extent, projection, format, loader) {
+  var req = url 
+    + '&srsname=' + projection.getCode()
+    + '&bbox=' + extent.join(',') + ',' + projection.getCode();
+  if (this.get('pagination') && !/&startIndex/.test(url)) {
+    req += '&startIndex=0';
+  }
   ol.ext.Ajax.get({
-    url: url 
-      + '&srsname=' + projection.getCode()
-      + '&bbox=' + extent.join(',') + ',' + projection.getCode(),
+    url: req,
     success: function(response) {
       loader.loaded++;
       if (response.error) {
