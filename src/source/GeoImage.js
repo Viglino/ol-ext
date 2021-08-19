@@ -3,17 +3,16 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
   
   ol_source_GeoImage is a layer source with georeferencement to place it on a map.
-  
-  olx.source.GeoImageOptions:
-  {	url: {string} url of the static image
-    image: {image} the static image, if not provided, use url to load an image
-    imageCenter: {ol.Coordinate} of the center of the image
-    imageScale: {ol.Size|Number} [scalex, scaley] of the image
-    imageRotate: {number} angle of the image in radian, default 0
-    imageCrop: {ol.Extent} of the image to be show (in the image) default: [0,0,imageWidth,imageHeight]
-    imageMask: {Array.<ol.Coordinate>} - linestring to mask the image on the map
-  }
 */
+/** @typedef {Object} GeoImageOptions
+ * @property {url} url url of the static image
+ * @property {image} image the static image, if not provided, use url to load an image
+ * @property {ol.Coordinate} imageCenter coordinate of the center of the image
+ * @property {ol.Size|number} imageScale [scalex, scaley] of the image
+ * @property {number} imageRotate angle of the image in radian, default 0
+ * @property {ol.Extent} imageCrop of the image to be show (in the image) default: [0,0,imageWidth,imageHeight]
+ * @property {Array.<ol.Coordinate>} imageMask linestring to mask the image on the map
+ */
 
 import ol_ext_inherits from '../util/ext'
 import ol_source_ImageCanvas from 'ol/source/ImageCanvas'
@@ -22,10 +21,10 @@ import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent'
 import {fromExtent as ol_geom_Polygon_fromExtent} from 'ol/geom/Polygon'
 
 /** Layer source with georeferencement to place it on a map
-* @constructor 
-* @extends {ol_source_ImageCanvas}
-* @param {olx.source.GeoImageOptions=} options
-*/
+ * @constructor 
+ * @extends {ol_source_ImageCanvas}
+ * @param {GeoImageOptions} options
+ */
 var ol_source_GeoImage = function(opt_options) {
   var options = { 
     attributions: opt_options.attributions,
@@ -38,7 +37,7 @@ var ol_source_GeoImage = function(opt_options) {
   // Coordinate of the image center 
   this.center = opt_options.imageCenter;
   // Scale of the image 
-  this.scale = opt_options.imageScale;
+  this.setScale(opt_options.imageScale);
   // Rotation of the image
   this.rotate = opt_options.imageRotate ? opt_options.imageRotate : 0;
   // Crop of the image
