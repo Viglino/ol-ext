@@ -47,7 +47,7 @@ ol_filter_CSS.prototype.setFilter = function(filter) {
 /** Modify layer visibility (but keep it in the layer list)
  * @param {bolean} display
  */
- ol_filter_CSS.prototype.setFilter = function(display) {
+ ol_filter_CSS.prototype.setDisplay = function(display) {
   this.set('display', display);
   this._layers.forEach(function(layer) {
     layer.once('postrender', function(e) {
