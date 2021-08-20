@@ -443,6 +443,69 @@ ol.View.prototype.takeTour = function(destinations, options) {
   next(true);
 };
 
+/** Converts an RGB color value to HSL.
+ * returns hsl as array h:[0,360], s:[0,100], l:[0,100]
+ * @param {ol/color~Color|string} rgb
+ * @returns {Array<number>} hsl as h:[0,360], s:[0,100], l:[0,100]
+ */
+ol.color.toHSL = function(rgb) {
+  if (!Array.isArray(rgb)) rgb = ol.color.asArray(rgb);
+  var r = rgb[0] / 255;
+  var g = rgb[1] / 255;
+  var b = rgb[2] / 255;
+  var max = Math.max(r, g, b);
+  var min = Math.min(r, g, b);
+  var h, s, l = (max + min) / 2;
+  if (max === min) {
+    h = s = 0; // achromatic
+  } else {
+    var d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+  }
+  return [ 
+    Math.round(h*6000)/100, 
+    Math.round(s*10000)/100, 
+    Math.round(l*10000)/100
+  ];
+}
+/** Converts an HSL color value to RGB.
+ * @param {Array<number>} hsl as h:[0,360], s:[0,100], l:[0,100]
+ * @returns {Array<number>} rgb
+ */
+ol.color.fromHSL = function(hsl) {
+  var h = hsl[0] / 360;
+  var s = hsl[1] / 100;
+  var l = hsl[2] / 100;
+  var r, g, b;
+  if (s == 0) {
+    r = g = b = l; // achromatic
+  } else {
+    function hue2rgb(p, q, t) {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q - p) * 6 * t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    }
+    var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    var p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+  return [ 
+    Math.round(r * 255000) / 1000, 
+    Math.round(g * 255000) / 1000, 
+    Math.round(b * 255000) / 1000
+  ];
+}
+
 /** Vanilla JS helper to manipulate DOM without jQuery
  * @see https://github.com/nefe/You-Dont-Need-jQuery
  * @see https://plainjs.com/javascript/
@@ -1011,14 +1074,16 @@ ol.ext.imageLoader.transparent = function(colors) {
  * @param {*} options
  *  @param { ol.Color } [options.color] fill color
  *  @param { boolean } [options.opacity=true] smooth color on border
+ *  @param { number } [options.minValue=-Infinity] minimum level value
  */
 ol.ext.imageLoader.seaLevelMap = function(level, options) {
   options = options || {};
   var h0 = Math.max(level + .01, .01);
   var c = options.color ? ol.color.asArray(options.color) : [135,203,249];
+  var min = typeof(options.minValue) === 'number' ? options.minValue : -Infinity;
   var opacity = options.opacity!==false;
   return ol.ext.imageLoader.elevationMap(function(h) {
-    if (h < h0 && h > -99999) {
+    if (h < h0 && h > min) {
       return [c[0], c[1], c[2], opacity ? 255 * (h0-h) / h0 : 255];
     } else {
       return [0,0,0,0];
@@ -9320,6 +9385,10 @@ ol.control.Print.prototype.print = function(options) {
  *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
  *	@param {string} options.orientation Page orientation (landscape/portrait), default guest the best one
  *	@param {boolean} options.immediate force print even if render is not complete,  default false
+ *	@param {boolean} [options.openWindow=false] open the file in a new window on print
+ *	@param {boolean} [options.copy=true] add a copy select option
+ *	@param {boolean} [options.print=true] add a print select option
+ *	@param {boolean} [options.pdf=true] add a pdf select option
  *	@param {function} [options.saveAs] a function to save the image as blob
  *	@param {*} [options.jsPDF] jsPDF object to save map as pdf
  */
@@ -9340,6 +9409,15 @@ ol.control.PrintDialog = function(options) {
   ol.control.Control.call(this, {
     element: element
   });
+  // Open in a new window
+  if (options.openWindow) {
+    this.on('print', function(e) {
+      // Print success
+      if (e.canvas) {
+        window.open().document.write('<img src="'+e.canvas.toDataURL()+'"/>');
+      }
+    });
+  }
   // Print control
   options.target = ol.ext.element.create('DIV');
   var printCtrl = this._printCtrl = new ol.control.Print(options);
@@ -9599,6 +9677,13 @@ ol.control.PrintDialog = function(options) {
     parent: save
   });
   this.formats.forEach(function(format, i) {
+    if (format.pdf) {
+      if (options.pdf === false) return;
+    } else if (format.clipboard) {
+      if (options.copy === false) return;
+    } else if (options.save === false) {
+      return;
+    }
     ol.ext.element.create('OPTION', {
       html: format.title,
       value: i,
@@ -9740,6 +9825,7 @@ ol.control.PrintDialog = function(options) {
     scalelistener = map.on('moveend', function() {
       this.setScale(ol.sphere.getMapScale(map));
     }.bind(this));
+    this.setScale(ol.sphere.getMapScale(map));
     // Get extra controls
     extraCtrl = {};
     this.getMap().getControls().forEach(function(c) {
@@ -16660,7 +16746,7 @@ ol.filter.CSS.prototype.setFilter = function(filter) {
 /** Modify layer visibility (but keep it in the layer list)
  * @param {bolean} display
  */
- ol.filter.CSS.prototype.setFilter = function(display) {
+ ol.filter.CSS.prototype.setDisplay = function(display) {
   this.set('display', display);
   this._layers.forEach(function(layer) {
     layer.once('postrender', function(e) {

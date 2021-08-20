@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Sea level</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="Sea level map" />
+  <meta name="keywords" content="ol, openlayers, layer, BIL, sea, level" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <!-- filesaver-js -->
+  <script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    #level:before {
+      content: "+";
+    }
+    #level:after {
+      content: " m";
+    }
+    input {
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Sea level</h1>
+  </a>
+  <div class="info">
+    This example use a TileWMS layer with an x-bil (Band Interleaved by Line) image format and a tileLoadFunction 
+    to "flood" areas below the elevation shown on the sea level slider.
+  </div>
+
+  <!-- DIV pour la carte -->
+  <div id="map" style="width: 100%; height: 500px;"></div>
+  Sea level: 
+  <input 
+    type="range" min=0 max=5 step=".1" value=0 
+    onchange="setLevel(parseFloat(this.value))"
+  /> <span id="level">0</span>
+
+<script>
+/*
+@see 
+- https://github.com/awoodruff/canvas-shaded-relief
+- https://github.com/GeodanDemo/hillshaderjs
+- https://github.com/slutske22/leaflet-topography
+- https://observablehq.com/@awoodruff/diy-hillshade
+*/
+var plan = new ol.layer.Geoportail({
+  layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2',
+  className: 'plan',
+});
+plan.addFilter(new ol.filter.CSS({ filter: 'grayscale(1)' }));
+// The map
+var map = new ol.Map ({
+  target: 'map',
+  view: new ol.View ({
+    zoom: 10,
+    center: [497835, 5383773]
+  }),
+  layers: [ plan ]
+});
+map.addControl(new ol.control.LayerSwitcher());
+map.addControl(new ol.control.Permalink({ visible: false }));
+
+// A set of elevation layers
+var layers = [
+  {
+    title: 'MNT SRTM3',
+    url: 'https://wxs.ign.fr/altimetrie/geoportail/r/wms',
+    layer: 'ELEVATION.ELEVATIONGRIDCOVERAGE.SRTM3',
+    //extent: [ -20037554.725947514, -8625918.87376409, 20037554.725947514, 8625918.87376409 ]
+  },{
+    title: 'MNS',
+    url: 'https://wxs.ign.fr/altimetrie/geoportail/r/wms',
+    layer: 'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES.MNS',
+    extent: [ -578959.605490584, 5203133.393641367, 921974.2487313666, 6643289.75487211 ]
+  }, {
+    title: 'RGE-Alti',
+    url: 'https://wxs.ign.fr/altimetrie/geoportail/r/wms',
+    layer: 'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES',
+    extent: [ -7007874.496280316, -1460624.494037931, 5043253.3127169, 6639937.650114076 ]
+  }, {
+    title: 'MNT BDAlti V1',
+    url: 'https://wxs.ign.fr/altimetrie/geoportail/r/wms',
+    layer: 'ELEVATION.ELEVATIONGRIDCOVERAGE',
+    extent: [ -7007874.496280316, -1460624.494037931, 5043253.3127169, 6639937.650114076 ]
+  }
+];
+
+// Add tile layer
+var layer = layers[2];
+var elev = new ol.layer.Tile ({
+  title: 'Sea level ('+layer.title+')',
+  extent: layer.extent,
+  minResolution: 0,
+  maxResolution: 197231.79878968254,
+  source: new ol.source.TileWMS({
+    url: layer.url,
+    projection: 'EPSG:3857',
+    attributions: [ 'Geoservices-IGN' ],
+    crossOrigin: 'anonymous',
+    params: {
+      LAYERS: layer.layer,
+      FORMAT: 'image/x-bil;bits=32',
+      VERSION: '1.3.0'
+    }
+  })
+});
+map.addLayer(elev);
+
+elev.getSource().setTileLoadFunction(ol.ext.imageLoader.seaLevelMap(0));
+
+function setLevel(val) {
+  $('#level').text(val); 
+  elev.getSource().setTileLoadFunction(ol.ext.imageLoader.seaLevelMap(val));
+}
+
+</script>
+</body>
+</html>
