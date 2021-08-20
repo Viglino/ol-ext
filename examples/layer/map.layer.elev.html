@@ -143,6 +143,7 @@ var elev = new ol.layer.Tile ({
     }
   })
 });
+elev.addFilter(new ol.filter.CSS({ blend:'multiply' }));
 map.addLayer(elev);
 elev.on('change', function() {
   switcher.drawPanel();
