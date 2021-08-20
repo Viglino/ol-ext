@@ -137,14 +137,16 @@ var ol_ext_imageLoader_transparent = function(colors) {
  * @param {*} options
  *  @param { ol.Color } [options.color] fill color
  *  @param { boolean } [options.opacity=true] smooth color on border
+ *  @param { number } [options.minValue=-Infinity] minimum level value
  */
 var ol_ext_imageLoader_seaLevelMap = function(level, options) {
   options = options || {};
   var h0 = Math.max(level + .01, .01);
   var c = options.color ? ol_color_asArray(options.color) : [135,203,249];
+  var min = typeof(options.minValue) === 'number' ? options.minValue : -Infinity;
   var opacity = options.opacity!==false;
   return ol_ext_imageLoader_elevationMap(function(h) {
-    if (h < h0 && h > -99999) {
+    if (h < h0 && h > min) {
       return [c[0], c[1], c[2], opacity ? 255 * (h0-h) / h0 : 255];
     } else {
       return [0,0,0,0];
