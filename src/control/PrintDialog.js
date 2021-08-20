@@ -32,6 +32,10 @@ import ol_control_Compass from './Compass';
  *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
  *	@param {string} options.orientation Page orientation (landscape/portrait), default guest the best one
  *	@param {boolean} options.immediate force print even if render is not complete,  default false
+ *	@param {boolean} [options.openWindow=false] open the file in a new window on print
+ *	@param {boolean} [options.copy=true] add a copy select option
+ *	@param {boolean} [options.print=true] add a print select option
+ *	@param {boolean} [options.pdf=true] add a pdf select option
  *	@param {function} [options.saveAs] a function to save the image as blob
  *	@param {*} [options.jsPDF] jsPDF object to save map as pdf
  */
@@ -53,6 +57,16 @@ var ol_control_PrintDialog = function(options) {
   ol_control_Control.call(this, {
     element: element
   });
+  // Open in a new window
+  if (options.openWindow) {
+    this.on('print', function(e) {
+      // Print success
+      if (e.canvas) {
+        window.open().document.write('<img src="'+e.canvas.toDataURL()+'"/>');
+      }
+    });
+  }
+  
 
   // Print control
   options.target = ol_ext_element.create('DIV');
@@ -326,6 +340,13 @@ var ol_control_PrintDialog = function(options) {
     parent: save
   });
   this.formats.forEach(function(format, i) {
+    if (format.pdf) {
+      if (options.pdf === false) return;
+    } else if (format.clipboard) {
+      if (options.copy === false) return;
+    } else if (options.save === false) {
+      return;
+    }
     ol_ext_element.create('OPTION', {
       html: format.title,
       value: i,
@@ -471,6 +492,7 @@ var ol_control_PrintDialog = function(options) {
     scalelistener = map.on('moveend', function() {
       this.setScale(ol_sphere_getMapScale(map));
     }.bind(this));
+    this.setScale(ol_sphere_getMapScale(map));
     // Get extra controls
     extraCtrl = {};
     this.getMap().getControls().forEach(function(c) {
