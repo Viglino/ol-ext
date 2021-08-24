@@ -69,10 +69,10 @@
   </select>
   <br/>
   mode: <select onchange="useRGB = (this.value === 'rgb'); setLayer();">
-    <option value='tints'>tints</option>
+    <option value='tints'>hyspometric</option>
     <option value='rgb'>rgb</option>
   </select>
-  <p>Elevation steps: </p>
+  <p>Color scheme: </p>
   <div id="scale"></div>
 
 <script>
@@ -150,15 +150,45 @@ elev.on('change', function() {
 })
 
 ol.layer.Geoportail.register("ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW", {"key":"altimetrie","server":"https://wxs.ign.fr/geoportail/wmts","layer":"ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW","title":"Estompage","format":"image/png","style":"estompage_grayscale","queryable":false,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-63.186966,-21.406914,55.8884,50.9218],"desc":"Couche d'ombrage calculée à partir des données altimétriques de l'IGN permettant de mieux appréhender le relief. L'estompage proposé est réalisé à partir des données MNT BDAlti au pas de 25m avec deux soleils : un au nord-est de hauteur 45°, l'autre zénithal.","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-63.186966,-21.406914,55.8884,50.9218]}]}}});
-var shadow = new ol.layer.Geoportail({ 
+var shadow = new ol.layer.Geoportail({
+  title: 'Estompage - by IGN-France',
   className: 'blend',
-  layer: 'ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW'
+  layer: 'ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW',
+  visible: false,
 });
 // enhance opacity
 shadow.getSource().setTileLoadFunction(ol.ext.imageLoader.pixelTransform(function(p, i) {
   p[i+3] *= 2.5;
 }));
 map.addLayer(shadow);
+
+var hillshade = new ol.layer.Tile ({
+	"title": "SRTM30 Hillshade - by terrestris",
+  className: 'hillshade',
+  opacity: .4,
+	"extent": [
+		-20037508.342789244,
+		-7558415.656081782,
+		20037508.342789244,
+		8399737.889818361
+	],
+	"queryable": false,
+	"minResolution": 0,
+	"maxResolution": 156543.03392804097,
+	"source": new ol.source.TileWMS({
+		"url": "https://ows.mundialis.de/osm/service?",
+		"projection": "EPSG:3857",
+		"attributions": ['&copy; terrestris'],
+		"crossOrigin": "anonymous",
+		"params": {
+			"LAYERS": "SRTM30-Hillshade",
+			"FORMAT": "image/png",
+			"VERSION": "1.3.0"
+		}
+	})
+});
+hillshade.addFilter(new ol.filter.CSS({ blend:'multiply' }));
+map.addLayer(hillshade);
 
 // http://soliton.vm.bytemark.co.uk/pub/cpt-city/
 var tints0 = [
@@ -181,13 +211,13 @@ var steps = [0,0,.15,2,2,8,8,20,70,50,10];
 var steps = [0, 0, .1, 2, 2, 5, 20, 30, 120, 2, 50]
 var maxAlti = 8600;
 var useRGB = false;
-var tints4;
+var tints;
 function calculateTints() {
-  tints4 = [];
+  tints = [];
   steps.forEach((n0,s) => {
     var n = 10*n0;
     for (var i=0; i<n; i++) {
-      tints4.push([
+      tints.push([
         (tints0[s+1][0]*i+tints0[s][0]*(n-i))/n,
         (tints0[s+1][1]*i+tints0[s][1]*(n-i))/n,
         (tints0[s+1][2]*i+tints0[s][2]*(n-i))/n
@@ -237,8 +267,8 @@ var alti = ol.ext.imageLoader.elevationMap(function(z) {
   if (!useRGB) {
     var pos, t;
     if (z>0) {
-      pos = Math.min(tints4.length-1, Math.round(z/maxAlti * tints4.length));
-      t = tints4[pos];
+      pos = Math.min(tints.length-1, Math.round(z/maxAlti * tints.length));
+      t = tints[pos];
     } else {
       t = tints0[0];
     }
