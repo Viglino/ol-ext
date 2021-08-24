@@ -207,7 +207,7 @@ ol_legend_Legend.prototype.refresh = function() {
   table.innerHTML = '';
   var margin = this.get('margin');
   var width = this.get('size')[0] + 2 * margin;
-  var height = this.get('size')[1] + 2 * margin;
+  var height = this.get('lineHeight') || this.get('size')[1] + 2 * margin;
 
   var canvas = this.getCanvas();
   var ctx = canvas.getContext('2d');
@@ -300,6 +300,7 @@ ol_legend_Legend.prototype.getLegendImage = function(options, canvas, row) {
     properties: options.properties,
     margin: options.margin || this.get('margin'),
     size: options.size || this.get('size'),
+    lineHeight: options.lineHeight || this.get('lineHeight'),
     onload: function() {
       // Force refresh
       this.refresh();
@@ -322,7 +323,7 @@ ol_legend_Legend.getLegendImage = function(item, canvas, row) {
     }, 100);
   };
   var width = size[0] + 2 * item.margin;
-  var height = size[1] + 2 * item.margin;
+  var height = item.lineHeight || (size[1] + 2 * item.margin);
   var ratio = ol_has_DEVICE_PIXEL_RATIO;
   if (!canvas) {
     row = 0;
@@ -403,7 +404,7 @@ ol_legend_Legend.getLegendImage = function(item, canvas, row) {
   }
 
   // Draw image
-  cy += row*height || 0;
+  cy += (row*height) || 0;
   for (i=0; s= style[i]; i++) {
     vectorContext.setStyle(s);
     switch (typeGeom) {
