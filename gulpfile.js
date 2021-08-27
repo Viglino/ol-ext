@@ -89,6 +89,7 @@ gulp.task('css0', function () {
     "./src/legend/*.css",
     "./src/ext/*.css",
     "./src/util/*.css",
+    "./src/util/input/*.css",
     "./src/utils/*.css"
     ])
   .pipe(autoprefixer('last 2 versions'))
@@ -109,6 +110,7 @@ gulp.task('cssmin', function () {
     "./src/style/*.css",
     "./src/legend/*.css",
     "./src/util/*.css",
+    "./src/util/input/*.css",
     "./src/utils/*.css"
     ])
   .pipe(autoprefixer('last 2 versions'))
@@ -122,7 +124,7 @@ gulp.task('css', gulp.parallel('css0','cssmin'));
 // Build js
 gulp.task("js", function() {
   return gulp.src([
-    "./src/util/ext.js", "./src/util/*.js", "./src/util/SVGFilter/*.js",
+    "./src/util/ext.js", "./src/util/*.js", "./src/util/SVGFilter/*.js", "./src/util/input/*.js",
     "!./src/util/getVectorContext.js", 
     "./src/ext/*.js",
     "./src/legend/Legend.js","./src/legend/*.js",

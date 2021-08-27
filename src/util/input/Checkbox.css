@@ -1,0 +1,111 @@
+/* Toggle Switch */
+.ol-ext-toggle-switch {
+  cursor: pointer;
+  position: relative;
+}
+.ol-ext-toggle-switch input[type="radio"],
+.ol-ext-toggle-switch input[type="checkbox"] {
+  display: none;
+}
+.ol-ext-toggle-switch span {
+  color: rgba(0,60,136,.5);
+  position: relative;
+  cursor: pointer;
+  background-color: #ccc;
+  transition: .4s, background-color 0s, border-color 0s;
+  width: 1.6em;
+  height: 1em;
+  display: inline-block;
+  border-radius: 1em;
+  font-size: 1.3em;
+  vertical-align: middle;
+  margin: -.15em .2em .15em;
+}
+.ol-ext-toggle-switch span:before {
+  position: absolute;
+  content: "";
+  height: 1em;
+  width: 1em;
+  left: 0;
+  top: 50%;
+  background-color: #fff;
+  transition: .4s;
+  border-radius: 1em;
+  display: block;
+  transform: translateY(-50%);
+  border: 2px solid #ccc;
+  box-sizing: border-box;
+}
+.ol-ext-toggle-switch:hover span {
+  background-color: #999;
+}
+.ol-ext-toggle-switch:hover span:before {
+  border-color: #999;
+}
+
+.ol-ext-toggle-switch input:checked + span {
+  background-color: currentColor;
+}
+.ol-ext-toggle-switch input:checked + span:before {
+  transform: translate(.6em,-50%);
+  border-color: currentColor;
+}
+
+/* Check/radio buttons */
+.ol-ext-check {
+  position: relative;
+  display: inline-block;
+}
+.ol-ext-check input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+.ol-ext-check span {
+  color: rgba(0,60,136,.5);
+  position: relative;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin: -.1em .5em .1em;
+  background-color: #ccc;
+  vertical-align: middle;
+}
+.ol-ext-check:hover span {
+  background-color: #999;
+}
+.ol-ext-checkbox input:checked ~ span {
+  background-color: currentColor;
+}
+.ol-ext-checkbox input:checked ~ span:before {
+  content: "";
+  position: absolute;
+  width: .5em;
+  height: .8em;
+  top: 50%;
+  left: 50%;
+  transform: translateY(-.1em) translate(-50%, -50%) rotate(45deg);
+  box-shadow: inset -0.2em -0.2em #fff;
+}
+
+.ol-ext-radio span {
+  width: 1.1em;
+  height: 1.1em;
+  border-radius: 50%;
+}
+.ol-ext-radio:hover input:checked ~ span {
+  background-color: #ccc;
+}
+.ol-ext-radio input:checked ~ span:before {
+  content: "";
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background-color: currentColor;
+}

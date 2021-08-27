@@ -446,9 +446,11 @@ ol.View.prototype.takeTour = function(destinations, options) {
 /** Converts an RGB color value to HSL.
  * returns hsl as array h:[0,360], s:[0,100], l:[0,100]
  * @param {ol/color~Color|string} rgb
+ * @param {number} [round=100]
  * @returns {Array<number>} hsl as h:[0,360], s:[0,100], l:[0,100]
  */
-ol.color.toHSL = function(rgb) {
+ol.color.toHSL = function(rgb, round) {
+  if (round===undefined) round = 100;
   if (!Array.isArray(rgb)) rgb = ol.color.asArray(rgb);
   var r = rgb[0] / 255;
   var g = rgb[1] / 255;
@@ -467,17 +469,21 @@ ol.color.toHSL = function(rgb) {
       case b: h = (r - g) / d + 4; break;
     }
   }
-  return [ 
-    Math.round(h*6000)/100, 
-    Math.round(s*10000)/100, 
-    Math.round(l*10000)/100
+  var hsl = [ 
+    Math.round(h*60*round)/round, 
+    Math.round(s*100*round)/round, 
+    Math.round(l*100*round)/round
   ];
+  if (rgb.length>3) hsl[3] = rgb[3];
+  return hsl;
 }
 /** Converts an HSL color value to RGB.
  * @param {Array<number>} hsl as h:[0,360], s:[0,100], l:[0,100]
+ * @param {number} [round=1000]
  * @returns {Array<number>} rgb
  */
-ol.color.fromHSL = function(hsl) {
+ol.color.fromHSL = function(hsl, round) {
+  if (round===undefined) round = 1000
   var h = hsl[0] / 360;
   var s = hsl[1] / 100;
   var l = hsl[2] / 100;
@@ -499,11 +505,85 @@ ol.color.fromHSL = function(hsl) {
     g = hue2rgb(p, q, h);
     b = hue2rgb(p, q, h - 1/3);
   }
-  return [ 
-    Math.round(r * 255000) / 1000, 
-    Math.round(g * 255000) / 1000, 
-    Math.round(b * 255000) / 1000
+  var rgb = [ 
+    Math.round(r * 255*round) / round, 
+    Math.round(g * 255*round) / round, 
+    Math.round(b * 255*round) / round
   ];
+  if (hsl.length>3) rgb[3] = hsl[3];
+  return rgb;
+}
+/** Converts an HSL color value to RGB.
+ * @param {ol/color~Color|string} rgb
+ * @param {number} [round=100]
+ * @returns {Array<number>} hsl as h:[0,360], s:[0,100], l:[0,100]
+ */
+ol.color.toHSV = function(rgb, round) {
+  if (round===undefined) round = 100;
+  if (!Array.isArray(rgb)) rgb = ol.color.asArray(rgb);
+  var r = rgb[0] / 255;
+  var g = rgb[1] / 255;
+  var b = rgb[2] / 255;
+  var max = Math.max(r, g, b);
+  var min = Math.min(r, g, b);
+  var h, s, v = max;
+  var d = max - min;
+  s = max == 0 ? 0 : d / max;
+  if (max == min) {
+    h = 0; // achromatic
+  } else {
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+  }
+  var hsv = [ 
+    Math.round(h*60*round)/round, 
+    Math.round(s*100*round)/round, 
+    Math.round(v*100*round)/round
+  ];
+  if (rgb.length>3) hsv[3] = rgb[3];
+  return hsv;
+}
+/** Converts an HSV color value to RGB.
+ * @param {Array<number>} hsl as h:[0,360], s:[0,100], l:[0,100]
+ * @param {number} [round=1000]
+ * @returns {Array<number>} rgb
+ */
+ol.color.fromHSV = function(hsv, round) {
+  if (round===undefined) round = 1000
+  var h = hsv[0] / 360;
+  var s = hsv[1] / 100;
+  var v = hsv[2] / 100;
+  var r, g, b;
+  var i = Math.floor(h * 6);
+  var f = h * 6 - i;
+  var p = v * (1 - s);
+  var q = v * (1 - f * s);
+  var t = v * (1 - (1 - f) * s);
+  switch (i % 6) {
+    case 0: r = v, g = t, b = p; break;
+    case 1: r = q, g = v, b = p; break;
+    case 2: r = p, g = v, b = t; break;
+    case 3: r = p, g = q, b = v; break;
+    case 4: r = t, g = p, b = v; break;
+    case 5: r = v, g = p, b = q; break;
+  }
+  var rgb = [ 
+    Math.round(r * 255*round) / round, 
+    Math.round(g * 255*round) / round, 
+    Math.round(b * 255*round) / round
+  ];
+  if (hsv.length>3) rgb[3] = hsv[3];
+  return rgb;
+}
+/** Converts an HSL color value to RGB.
+ * @param {ol/color~Color|string} rgb
+ * @returns {string} 
+ */
+ol.color.toHexa = function(rgb) {
+  return '#' + ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1);
 }
 
 /** Vanilla JS helper to manipulate DOM without jQuery
@@ -600,23 +680,12 @@ ol.ext.element.create = function (tagName, options) {
  *  @param {Element} options.parent
  */
 ol.ext.element.createSwitch = function (options) {
-  var label = ol.ext.element.create('LABEL',{ 
-    html: options.html,
-    className: 'ol-ext-toggle-switch',
-    parent: options.parent
-  });
   var input = ol.ext.element.create('INPUT', {
     type: 'checkbox',
-    checked: options.checked,
-    click: options.click,
-    change: options.change,
     on: options.on,
-    parent: label
+    parent: options.parent
   });
-  ol.ext.element.create('SPAN', { parent: label });
-  if (options.after) {
-    label.appendChild(document.createTextNode(options.after));
-  }
+  new ol.ext.input.Switch(input, options);
   return input;
 };
 /** Create a toggle switch input
@@ -632,25 +701,16 @@ ol.ext.element.createSwitch = function (options) {
  *  @param {Element} options.parent
  */
 ol.ext.element.createCheck = function (options) {
-  var label = ol.ext.element.create('LABEL', {
-    className: 'ol-ext-check ' + (options.type==='radio' ? 'ol-ext-radio' : 'ol-ext-checkbox'),
-    html: options.html,
-    parent: options.parent
-  });
   var input = ol.ext.element.create('INPUT', {
     name: options.name,
     type: (options.type==='radio' ? 'radio' : 'checkbox'),
-    value: options.val,
-    change: options.change,
-    click: options.click,
     on: options.on,
-    parent: label
+    parent: options.parent
   });
-  ol.ext.element.create('SPAN', {
-    parent: label
-  });
-  if (options.after) {
-    label.appendChild(document.createTextNode(options.after));
+  if (options.type === 'radio') {
+    new ol.ext.input.Radio(input, options);
+  } else {
+    new ol.ext.input.Checkbox(input, options);
   }
   return input;
 };
@@ -1706,6 +1766,442 @@ ol.ext.SVGFilter.Sobel = function(options) {
   else if (options.alpha) this.luminanceToAlpha({ gamma: options.gamma });
 };
 ol.ext.inherits(ol.ext.SVGFilter.Sobel, ol.ext.SVGFilter);
+
+/** Vanilla JS geographic inputs
+ */
+/** @namespace  ol.ext.input
+ */
+/*global ol*/
+if (window.ol) {
+  ol.ext.input = {};
+}
+/** Abstract base class; normally only used for creating subclasses and not instantiated in apps.    
+ * @constructor
+ * @extends {ol.Object}
+ * @param {Element} input input element
+ */
+ol.ext.input.Base = function(input, options) {
+  options = options || {};
+  ol.Object.call(this);
+  this.input = input;
+  if (options.checked !== undefined) input.checked = !!options.checked;
+  if (options.val !== undefined) input.value = !!options.val;
+  if (options.click) input.addEventListener('click', options.click);
+  if (options.change) input.addEventListener('change', options.change);
+};
+ol.ext.inherits(ol.ext.input.Base, ol.Object);
+/** Listen to drag event
+ * @param {Element} elt 
+ * @param {function} cback when draggin on the element
+ * @private
+ */
+ol.ext.input.Base.prototype._listenDrag = function(elt, cback) {
+  var handle = function(e) {
+    this.moving = true;
+    var listen = function(e) {
+      if (e.type==='pointerup') {
+        document.removeEventListener('pointermove', listen);
+        document.removeEventListener('pointerup', listen);
+        document.removeEventListener('pointercancel', listen);
+        setTimeout(function() {
+          this.moving = false;
+        }.bind(this));
+      }
+      if (e.target === elt) cback(e);
+      e.stopPropagation();
+      e.preventDefault();
+    }.bind(this);
+    document.addEventListener('pointermove', listen, false);
+    document.addEventListener('pointerup', listen, false);
+    document.addEventListener('pointercancel', listen, false);
+    e.stopPropagation();
+    e.preventDefault();
+  }.bind(this)
+  elt.addEventListener('mousedown', handle, false);
+  elt.addEventListener('touchstart', handle, false);
+}
+
+/** Checkbox input
+ * @constructor
+ * @extends {ol.ext.input.Base}
+ */
+ol.ext.input.Checkbox = function(input, options) {
+  options = options || {};
+  ol.ext.input.Base.call(this, input, options);
+  var label = this.element = ol.ext.element.create('LABEL',{ 
+    html: options.html,
+    className: ('ol-ext-check ol-ext-checkbox'  + (options.className || '')).trim()
+  });
+  input.parentNode.insertBefore(label, input);
+  label.appendChild(input);
+  ol.ext.element.create('SPAN', { parent: label });
+  if (options.after) {
+    label.appendChild(document.createTextNode(options.after));
+  }
+};
+ol.ext.inherits(ol.ext.input.Checkbox, ol.ext.input.Base);
+
+/** Color picker
+ * @constructor
+ * @extends {ol.ext.input.Base}
+ * @fires change:color
+ * @fires color
+ * @param {*} options
+ *  @param {boolean} [autoClose=true]
+ *  @param {boolean} [visible=false] display the input
+ */
+ol.ext.input.Color = function(input, options) {
+  options = options || {};
+  ol.ext.input.Base.call(this, input, options);
+  this.set('autoClose', options.autoClose !== false);
+  this.element = ol.ext.element.create('DIV', {
+    className: ('ol-ext-colorpicker'  + (options.className || '')).trim(),
+  });
+  if (!options.fixed) this.element.classList.add('ol-popup');
+  input.parentNode.insertBefore(this.element, input);
+  if (options.visible !== true) input.style.display = 'none';
+  this.element.addEventListener('click', function(e) {
+    this.toggle();
+    e.stopPropagation();
+  }.bind(this));
+  document.addEventListener('click', function() {
+    if (!this.moving) this.collapse(true);
+  }.bind(this));
+  this._elt = {};
+  this._cursor = {};
+  var hsv = this._hsv = {};
+  // Vignet
+  this._elt.vignet = ol.ext.element.create('DIV', { className: 'ol-vignet', parent: this.element });
+  // Popup container
+  this._elt.popup = ol.ext.element.create('DIV', { className: 'ol-popup', parent: this.element });
+  this._elt.popup.addEventListener('click', function(e) { e.stopPropagation(); });
+  var container = ol.ext.element.create('DIV', { className: 'ol-container', parent: this._elt.popup });
+  // Color picker
+  var picker = this._elt.picker = ol.ext.element.create('DIV', { className: 'ol-picker', parent: container });
+  var pickerCursor = this._cursor.picker = ol.ext.element.create('DIV', { className: 'ol-cursor', parent: picker });
+  this._listenDrag(picker, function(e) {
+    var tx = Math.max(0, Math.min(e.offsetX / picker.clientWidth, 1));
+    var ty = Math.max(0, Math.min(e.offsetY / picker.clientHeight, 1));
+    pickerCursor.style.left = Math.round(tx*100) + '%';
+    pickerCursor.style.top = Math.round(ty*100) + '%';
+    hsv.s = tx * 100;
+    hsv.v = 100 - ty * 100;
+    this.setColor();
+  }.bind(this));
+  // Opacity cursor
+  var slider = ol.ext.element.create('DIV', { className: 'ol-slider', parent: container });
+  this._elt.slider = ol.ext.element.create('DIV', { parent: slider });
+  var sliderCursor = this._cursor.slide = ol.ext.element.create('DIV', { className: 'ol-cursor', parent: slider });
+  this._listenDrag(slider, function(e) {
+    var t = Math.max(0, Math.min(e.offsetX / slider.clientWidth, 1));
+    hsv.a = t*100;
+    sliderCursor.style.left = Math.round(t*100) + '%';
+    this.setColor();
+  }.bind(this), function() {
+    this.dispatchEvent({ type:'color', color: this.getColor() });
+  }.bind(this));
+  // Tint cursor
+  var tint = ol.ext.element.create('DIV', { className: 'ol-tint', parent: container });
+  var tintCursor = this._cursor.tint = ol.ext.element.create('DIV', { className: 'ol-cursor', parent: tint });
+  this._listenDrag(tint, function(e) {
+    var t = Math.max(0, Math.min(e.offsetY / tint.clientHeight, 1));
+    hsv.h = t*360;
+    tintCursor.style.top = Math.round(t*100) + '%';
+    this.setColor();
+  }.bind(this), function() {
+    this.dispatchEvent({ type:'color', color: this.getColor() });
+  }.bind(this));
+  // Clear button
+  ol.ext.element.create('DIV', { 
+    className: 'ol-clear', 
+    click: function() {
+      this.setColor([0,0,0,0]);
+    }.bind(this),
+    parent: container
+  });
+  // RVB input
+  var rgb = ol.ext.element.create('DIV', { 
+    className: 'ol-rgb', 
+    parent: container
+  });
+  var changergb = function() {
+    var r = Math.max(0, Math.min(255, parseInt(this._elt.r.value)));
+    var g = Math.max(0, Math.min(255, parseInt(this._elt.g.value)));
+    var b = Math.max(0, Math.min(255, parseInt(this._elt.b.value)));
+    var a = Math.max(0, Math.min(1, parseFloat(this._elt.a.value)));
+    this.setColor([r, g, b, a]);
+  }.bind(this);
+  this._elt.r = ol.ext.element.create('INPUT', { type: 'number', lang:'en-GB', change: changergb, min:0, max:255, parent: rgb });
+  this._elt.g = ol.ext.element.create('INPUT', { type: 'number', lang:'en-GB', change: changergb, min:0, max:255, parent: rgb });
+  this._elt.b = ol.ext.element.create('INPUT', { type: 'number', lang:'en-GB', change: changergb, min:0, max:255, parent: rgb });
+  this._elt.a = ol.ext.element.create('INPUT', { type: 'number', lang:'en-GB', change: changergb, min:0, max:1, step:.1, parent: rgb });
+  // Text color input
+  this._elt.txtColor = ol.ext.element.create('INPUT', { 
+    type: 'text', 
+    className: 'ol-txt-color',
+    change: function(){
+      var color;
+      this._elt.txtColor.classList.remove('ol-error')
+      try {
+        color = ol.color.asArray(this._elt.txtColor.value);
+      } catch(e) {
+        this._elt.txtColor.classList.add('ol-error');
+      }
+      if (color) this.setColor(color)
+    }.bind(this), 
+    parent: container
+  });
+  ol.ext.element.create('BUTTON', { 
+    html: 'OK',
+    click: function() {
+      this.collapse(true);
+    }.bind(this),
+    parent: container
+  });
+  // Color palette
+  this._paletteColor = {};
+  this._elt.palette = ol.ext.element.create('DIV', {
+    className: 'ol-palette',
+    parent: this._elt.popup
+  })
+  for (var i=0; i<8; i++) {
+    var c = Math.round(255 - 255*i/7);
+    this.addPaletteColor([c,c,c]);
+  }
+  var colors = ['#f00', '#f90', '#ff0', '#0f0', '#0ff', '#48e', '#00f', '#f0f']
+  colors.forEach(function(c){
+    this.addPaletteColor(c, ol.color.toHexa(ol.color.asArray(c)));
+  }.bind(this));
+  for (var i=0; i<5; i++) {
+    colors.forEach(function(c){
+      c = ol.color.toHSV(ol.color.asArray(c));
+      c = [c[0], i/4*80+20, 100 - i/4*60];
+      c = ol.color.fromHSV(c,1)
+      this.addPaletteColor(c, ol.color.toHexa(c));
+    }.bind(this));
+  }
+  // Custom colors
+  ol.ext.element.create('HR', { parent: this._elt.palette })
+  this._customColor = [];
+  // Read from localstorage
+  var loc = JSON.parse(localStorage.getItem('ol-ext@colorpicker') || '[]');
+  loc.forEach(function(c) {
+    c = c.split('-');
+    c.forEach(function(v,i){
+      c[i] = parseFloat(v);
+    })
+    this.addPaletteColor(c);
+  }.bind(this))
+  this.setColor(options.color || [0,0,0,0]);
+  // Add new palette color
+  this.on('color', function(e) {
+    this.addPaletteColor(e.color, null, true);
+  }.bind(this))
+};
+ol.ext.inherits(ol.ext.input.Color, ol.ext.input.Base);
+/** Add color to palette
+ * @param {ol.colorLike} color
+ * @param {string} title
+ * @param {boolean} select
+ */
+ol.ext.input.Color.prototype.addPaletteColor = function(color, title, select) {
+  try {
+    color = ol.color.asArray(color);
+  } catch(e) {
+    return;
+  }
+  if (color[3]===undefined) color[3] = 1;
+  var id = color.join('-');
+  // Add new one
+  if (!this._paletteColor[id] && color[3]) {
+    this._paletteColor[id] = {
+      color: color,
+      element: ol.ext.element.create('DIV', {
+        title: title || '',
+        style: {
+          color: 'rgb('+(color.join(','))+')'
+        },
+        click: function() {
+          this.setColor(color);
+          if (this.get('autoClose')) this.collapse(true);
+        }.bind(this),
+        parent: this._elt.palette
+      })
+    }
+    // Custom color
+    if (this._customColor) {
+      this._customColor.push(id);
+      if (this._customColor.length > 24) {
+        var c = this._customColor.shift();
+        this._paletteColor[c].element.remove();
+        delete(this._paletteColor[c]);
+      }
+      localStorage.setItem('ol-ext@colorpicker', JSON.stringify(this._customColor));
+    }
+  }
+  if (select) {
+    this._selectPalette(color);
+  }
+};
+/** Select a color in the palette
+ * @private
+ */
+ol.ext.input.Color.prototype._selectPalette = function(color) {
+  var id = color.join('-');
+  Object.keys(this._paletteColor).forEach(function(c) {
+    this._paletteColor[c].element.className = '';
+  }.bind(this))
+  if (this._paletteColor[id]) {
+    this._paletteColor[id].element.className = 'ol-select';
+  }
+}
+/** Set Color 
+ * @param { Array<number> }
+ */
+ol.ext.input.Color.prototype.setColor = function(color) {
+  var hsv = this._hsv;
+  if (color) {
+    color = ol.color.asArray(color);
+    var hsv2 = ol.color.toHSV(color);
+    hsv.h = hsv2[0];
+    hsv.s = hsv2[1];
+    hsv.v = hsv2[2];
+    if (hsv2.length > 3) hsv.a = hsv2[3]*100;
+    else hsv.a = 100;
+    this._cursor.picker.style.left = hsv.s + '%';
+    this._cursor.picker.style.top = (100-hsv.v) + '%';
+    this._cursor.tint.style.top = (hsv.h / 360 * 100) + '%';
+    this._cursor.slide.style.left = hsv.a + '%';
+    if (this.isCollapsed()) this.dispatchEvent({ type: 'color', color: this.getColor() });
+  } else {
+    hsv.h = Math.round(hsv.h) % 360;
+    hsv.s = Math.round(hsv.s);
+    hsv.v = Math.round(hsv.v);
+    hsv.a = Math.round(hsv.a);
+    color = this.getColor();
+  }
+  var val = 'rgba('+color.join(', ')+')';
+  // Show color
+  this._elt.picker.style.color = 'hsl(' + hsv.h + ', 100%, 50%)';
+  this._elt.slider.style.backgroundImage = 'linear-gradient(45deg, transparent, rgba('+this.getColor(false).join(',')+'))';
+  this._elt.vignet.style.color = val;
+  // RGB
+  this._elt.r.value = color[0];
+  this._elt.g.value = color[1];
+  this._elt.b.value = color[2];
+  this._elt.a.value = color[3];
+  // Txt color
+  this._elt.txtColor.classList.remove('ol-error')
+  if (color[3]===1) {
+    this._elt.txtColor.value = ol.color.toHexa(color);
+  } else {
+    this._elt.txtColor.value = val;
+  }
+  this._selectPalette(color);
+  // Set input value
+  if (this.input.value !== val) {
+    this.input.value = val;
+    this.input.dispatchEvent(new Event('change'));
+  }
+};
+/** Get current color
+ * @param {boolean} [opacity=true]
+ * @return {Array<number>}
+ */
+ol.ext.input.Color.prototype.getColor = function(opacity) {
+  return ol.color.fromHSV([this._hsv.h, this._hsv.s, this._hsv.v, (opacity !== false) ? this._hsv.a/100 : 1], 1);
+}
+/** show/hide color picker
+ * @param {boolean} [b=false]
+ */
+ol.ext.input.Color.prototype.collapse = function(b) {
+  if (b) {
+    if (this.isCollapsed()) return;
+    this._elt.popup.classList.remove('ol-visible');
+    var c = this.getColor();
+    if (this._currentColor !== c.join(',')) {
+      this.dispatchEvent({ type: 'color', color: c })
+    }
+  } else {
+    this._elt.popup.classList.add('ol-visible');
+    this._currentColor = this.getColor().join(',');
+  }
+};
+/** Is the popup collapsed ?
+ * @returns {boolean}
+ */
+ol.ext.input.Color.prototype.isCollapsed = function() {
+  return !this._elt.popup.classList.contains('ol-visible');
+};
+/** Toggle the popup
+ */
+ol.ext.input.Color.prototype.toggle = function() {
+  this.collapse(!this.isCollapsed());
+};
+
+/** Switch input
+ * @constructor
+ * @extends {ol.ext.input.Checkbox}
+ */
+ol.ext.input.Radio = function(input, options) {
+  options = options || {};
+  ol.ext.input.Checkbox.call(this, input, options);
+  this.element.className = ('ol-ext-check ol-ext-radio' + (options.className || '')).trim();
+};
+ol.ext.inherits(ol.ext.input.Radio, ol.ext.input.Checkbox);
+
+/** Checkbox input
+ * @constructor
+ * @extends {ol.ext.input.Base}
+ * @param {*} options
+ *  @param {string} [align=left] align popup left/right
+ */
+ol.ext.input.Size = function(input, options) {
+  options = options || {};
+  ol.ext.input.Base.call(this, input, options);
+  this.element = ol.ext.element.create('DIV', {
+    className: 'ol-input-size'
+  })
+  input.parentNode.insertBefore(this.element, input);
+  this.element.appendChild(input);
+  if (options.align==='right') this.element.classList.add('ol-right');
+  var popup = ol.ext.element.create('DIV', {
+    className: 'ol-popup',
+    parent: this.element
+  })
+  var cursor = ol.ext.element.create('DIV', {
+    parent: popup
+  })
+  var min = parseFloat(input.min) || 0;
+  var max = parseFloat(input.max) || 1;
+  var step = parseFloat(input.step) || 1;
+  // Handle popup drag
+  this._listenDrag(popup, function(e) {
+    var tx = Math.max(0, Math.min(e.offsetX / popup.clientWidth, 1));
+    cursor.style.left = Math.max(0, Math.min(100, Math.round(tx*100) )) + '%';
+    input.value = Math.round((tx * (max - min) + min) / step) * step;
+  }.bind(this));
+  function setValue() {
+    var v = parseFloat(input.value) || 0;
+    if (v != input.value) input.value = v;
+    var tx = (v - min) / (max - min);
+    cursor.style.left = Math.max(0, Math.min(100, Math.round(tx*100) )) + '%';
+  }
+  input.addEventListener('change', setValue);
+  setValue();
+};
+ol.ext.inherits(ol.ext.input.Size, ol.ext.input.Base);
+
+/** Switch input
+ * @constructor
+ * @extends {ol.ext.input.Checkbox}
+ */
+ol.ext.input.Switch = function(input, options) {
+  options = options || {};
+  ol.ext.input.Checkbox.call(this, input, options);
+  this.element.className = ('ol-ext-toggle-switch ' + (options.className || '')).trim();
+};
+ol.ext.inherits(ol.ext.input.Switch, ol.ext.input.Checkbox);
 
 /** @namespace  ol.legend
  */

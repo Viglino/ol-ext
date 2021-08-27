@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2015-2021 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: inputs!</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="Animated canvas Overlay for Openlayers" />
+  <meta name="keywords" content="openlayers, ol, input, color, checkbox, width, pattern" />
+
+  <meta name="msapplication-tap-highlight" content="no" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+  
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    body {
+     user-select: none; 
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: input!</h1>
+  </a>
+
+  <p>
+    Size: <input class='size' type='number' style="width: 3em" value=25 min=0 max=100 />
+  </p><p>
+    <input class='switch' type="checkbox" />
+  </p><p>
+    <input class='check' type="checkbox" />
+  </p>
+    <input class='radio' type="radio" name="radio" />
+    <input class='radio' type="radio" name="radio" />
+  </p><p>
+    Color: <input class='color' />
+  </p>
+
+
+<script type="text/javascript">
+
+  var switcher = new ol.ext.input.Switch($('.switch').get(0), { html: 'Switch: off', after: 'on' });
+  new ol.ext.input.Checkbox($('.check').get(0), { html: 'Checkbox:', after: 'on' });
+  $('.radio').each(function(i) {
+    new ol.ext.input.Radio(this, { html: i? '' : 'Radio:', after: 'radio '+(i+1), checked: !i });
+  });
+  var size = new ol.ext.input.Size($('.size').get(0));
+  var cpicker = new ol.ext.input.Color($('.color').get(0), { color: 'red' });
+  cpicker.on('color', function(e) { console.log(e.color) })
+
+</script>
+  
+</body>
+</html>

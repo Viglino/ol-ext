@@ -1,3 +1,6 @@
+import ol_ext_input_Checkbox from "./input/Checkbox";
+import ol_ext_input_Switch from "./input/Switch";
+
 /** Vanilla JS helper to manipulate DOM without jQuery
  * @see https://github.com/nefe/You-Dont-Need-jQuery
  * @see https://plainjs.com/javascript/
@@ -94,23 +97,12 @@ ol_ext_element.create = function (tagName, options) {
  *  @param {Element} options.parent
  */
 ol_ext_element.createSwitch = function (options) {
-  var label = ol_ext_element.create('LABEL',{ 
-    html: options.html,
-    className: 'ol-ext-toggle-switch',
-    parent: options.parent
-  });
   var input = ol_ext_element.create('INPUT', {
     type: 'checkbox',
-    checked: options.checked,
-    click: options.click,
-    change: options.change,
     on: options.on,
-    parent: label
+    parent: options.parent
   });
-  ol_ext_element.create('SPAN', { parent: label });
-  if (options.after) {
-    label.appendChild(document.createTextNode(options.after));
-  }
+  new ol_ext_input_Switch(input, options);
   return input;
 };
 
@@ -127,25 +119,16 @@ ol_ext_element.createSwitch = function (options) {
  *  @param {Element} options.parent
  */
 ol_ext_element.createCheck = function (options) {
-  var label = ol_ext_element.create('LABEL', {
-    className: 'ol-ext-check ' + (options.type==='radio' ? 'ol-ext-radio' : 'ol-ext-checkbox'),
-    html: options.html,
-    parent: options.parent
-  });
   var input = ol_ext_element.create('INPUT', {
     name: options.name,
     type: (options.type==='radio' ? 'radio' : 'checkbox'),
-    value: options.val,
-    change: options.change,
-    click: options.click,
     on: options.on,
-    parent: label
+    parent: options.parent
   });
-  ol_ext_element.create('SPAN', {
-    parent: label
-  });
-  if (options.after) {
-    label.appendChild(document.createTextNode(options.after));
+  if (options.type === 'radio') {
+    new ol_ext_input_Radio(input, options);
+  } else {
+    new ol_ext_input_Checkbox(input, options);
   }
   return input;
 };
