@@ -1,4 +1,5 @@
 /** Vanilla JS geographic inputs
+ * color, size, font, symboles, width, dash, arrow, pattern
  */
 import ol_Object from 'ol/Object'
 
