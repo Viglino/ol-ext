@@ -2123,9 +2123,14 @@ ol.ext.input.Color.prototype.collapse = function(b) {
       this.dispatchEvent({ type: 'color', color: c })
     }
   } else {
+    if (!this.isCollapsed()) return;
     this._elt.popup.classList.add('ol-visible');
     this._currentColor = this.getColor().join(',');
   }
+  this.dispatchEvent({
+    type: 'change:visible', 
+    visible: !this.isCollapsed()
+  });
 };
 /** Is the popup collapsed ?
  * @returns {boolean}
