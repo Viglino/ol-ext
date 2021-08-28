@@ -124,7 +124,8 @@ gulp.task('css', gulp.parallel('css0','cssmin'));
 // Build js
 gulp.task("js", function() {
   return gulp.src([
-    "./src/util/ext.js", "./src/util/*.js", "./src/util/SVGFilter/*.js", "./src/util/input/*.js",
+    "./src/util/ext.js", "./src/util/*.js", "./src/util/SVGFilter/*.js", 
+    "./src/util/input/Base.js", "./src/util/input/Slider.js", "./src/util/input/*.js",
     "!./src/util/getVectorContext.js", 
     "./src/ext/*.js",
     "./src/legend/Legend.js","./src/legend/*.js",

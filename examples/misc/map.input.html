@@ -46,8 +46,6 @@
   </a>
 
   <p>
-    Size: <input class='size' type='number' style="width: 3em" value=25 min=0 max=100 />
-  </p><p>
     <input class='switch' type="checkbox" />
   </p><p>
     <input class='check' type="checkbox" />
@@ -56,6 +54,18 @@
     <input class='radio' type="radio" name="radio" />
   </p><p>
     Color: <input class='color' />
+  </p><p style="border: 1px solid #999; border-width: 1px 0;">
+    Color (fixed): <input class='color2' />
+  </p><p>
+    Slider: 
+    <span class="opacity" style="display: inline-block; background-color: red; width: 2.5em; height: 1.5em; vertical-align: middle;"></span>
+    <input class='slider' type='number' style="width: 3em" value=25 min=0 max=100 />
+  </p><p>
+    Size: 
+    <i class="fa fa-map-marker" style="line-height: 60px; width: 60px; text-align: center; vertical-align: middle;"></i> 
+    <input class='size' type='number' style="width: 3em" value=50 min=20 max=80 />
+  </p><p>
+    Width: <input class='width' type='number' style="width: 3em" value=25 min=0 max=100 />
   </p>
 
 
@@ -66,9 +76,23 @@
   $('.radio').each(function(i) {
     new ol.ext.input.Radio(this, { html: i? '' : 'Radio:', after: 'radio '+(i+1), checked: !i });
   });
+
+  var slider = new ol.ext.input.Slider($('.slider').get(0));
+  slider.on('change:value', function(e) {
+    $('.opacity').css('opacity', e.value/100);
+  });
+  slider.setValue(25);
+  
   var size = new ol.ext.input.Size($('.size').get(0));
-  var cpicker = new ol.ext.input.Color($('.color').get(0), { color: 'red' });
-  cpicker.on('color', function(e) { console.log(e.color) })
+  size.on('change:value', function(e) {
+    $('.fa-map-marker').css('font-size', e.value+'px');
+  });
+  size.setValue(50);
+
+  var cpicker = new ol.ext.input.Color($('.color').get(0), { color: 'red', fixed: false });
+  cpicker.on('color', function(e) { console.log('Color:', e.color) })
+  var cpicker2 = new ol.ext.input.Color($('.color2').get(0), { color: '#f90', fixed: true });
+  cpicker2.on('color', function(e) { console.log('Color2:', e.color) })
 
 </script>
   

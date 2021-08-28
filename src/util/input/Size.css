@@ -1,34 +1,23 @@
-.ol-input-size {
-  display: inline;
-  position: relative;
+.ol-input-slider.ol-size .ol-slider {
+  height: auto;
+  box-shadow: none;
 }
-.ol-input-size .ol-popup {
-  position: absolute;
-  width: 100px;
-  height: 3px;
-  box-shadow: 1px 1px 3px 1px #999, inset 0 0 0 1px #999;
-  background-color: #fff;
-  z-index: 1;
-  border: 0 solid #fff;
-  border-width: 10px;
-  box-sizing: content-box;
-  display: none;
-  cursor: pointer;
-  left: -5px;
-}
-.ol-input-size.ol-left .ol-popup {
-  left: auto;
-  right: -5px;
-}
-.ol-input-size:hover .ol-popup {
-  display: block;
-}
-.ol-input-size .ol-popup > div {
-  position: absolute;
-  width: 5px;
-  height: 10px;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  background-color: #999;
+.ol-input-slider.ol-size .ol-slider .ol-back {
+  width: 0;
+  color: #aaa;
+  border: 0 solid transparent;
+  border-width: 0 0 20px 100px;
+  border-color: currentColor transparent;
   pointer-events: none;
+}
+
+.ol-input-slider.ol-size .ol-slider > .ol-cursor {
+  width: 2px;
+  height: calc(100% + 4px);
+  border-width: 5px 3px;
+  border-style: solid;
+  border-color: #f00 transparent;
+  border-image: initial;
+  background-color: transparent;
+  box-shadow: inset 3px 0px #f00;
 }

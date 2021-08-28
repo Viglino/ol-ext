@@ -1,0 +1,50 @@
+.ol-input-slider {
+  display: inline-block;
+  position: relative;
+}
+.ol-input-slider .ol-popup {
+  position: absolute;
+  box-shadow: 1px 1px 3px 1px #999;
+  background-color: #fff;
+  z-index: 1;
+  display: none;
+  left: -5px;
+}
+.ol-input-slider.ol-left .ol-popup {
+  left: auto;
+  right: -5px;
+}
+.ol-input-slider:hover .ol-popup {
+  display: block;
+  white-space: nowrap;
+}
+.ol-input-slider:hover .ol-popup > * {
+  display: inline-block;
+  vertical-align: middle;
+}
+.ol-input-slider:hover .ol-popup > .ol-before {
+  margin-left: 10px;
+}
+.ol-input-slider:hover .ol-popup > .ol-after {
+  margin-right: 10px;
+}
+.ol-input-slider .ol-slider {
+  position: relative;
+  width: 100px;
+  height: 3px;
+  border: 0 solid transparent;
+  border-width: 10px 15px;
+  box-shadow: inset 0 0 0 1px #999;
+  box-sizing: content-box;
+  cursor: pointer;
+}
+
+.ol-input-slider .ol-slider > .ol-cursor {
+  position: absolute;
+  width: 5px;
+  height: 10px;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #999;
+  pointer-events: none;
+}

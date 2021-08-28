@@ -1,5 +1,5 @@
 /** Vanilla JS geographic inputs
- * color, size, font, symboles, width, dash, arrow, pattern
+ * color, size, width, font, symboles, dash, arrow, pattern
  */
 import ol_Object from 'ol/Object'
 
@@ -23,8 +23,6 @@ var ol_ext_input_Base = function(input, options) {
   this.input = input;
   if (options.checked !== undefined) input.checked = !!options.checked;
   if (options.val !== undefined) input.value = !!options.val;
-  if (options.click) input.addEventListener('click', options.click);
-  if (options.change) input.addEventListener('change', options.change);
 };
 ol_ext_inherits(ol_ext_input_Base, ol_Object);
 

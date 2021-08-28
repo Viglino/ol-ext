@@ -1,5 +1,6 @@
 .ol-ext-colorpicker {
   display: inline-block;
+  vertical-align: top;
 }
 .ol-ext-colorpicker.ol-popup {
   position: relative;
@@ -30,6 +31,7 @@
   right: -.8em;
   top: 50%;
   transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .ol-ext-colorpicker * {
@@ -45,6 +47,7 @@
   left: 0;
   border: 0;
   background-color: currentColor;
+  pointer-events: none;
 }
 
 .ol-ext-colorpicker.ol-popup .ol-popup {

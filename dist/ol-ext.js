@@ -1768,6 +1768,7 @@ ol.ext.SVGFilter.Sobel = function(options) {
 ol.ext.inherits(ol.ext.SVGFilter.Sobel, ol.ext.SVGFilter);
 
 /** Vanilla JS geographic inputs
+ * color, size, width, font, symboles, dash, arrow, pattern
  */
 /** @namespace  ol.ext.input
  */
@@ -1786,8 +1787,6 @@ ol.ext.input.Base = function(input, options) {
   this.input = input;
   if (options.checked !== undefined) input.checked = !!options.checked;
   if (options.val !== undefined) input.value = !!options.val;
-  if (options.click) input.addEventListener('click', options.click);
-  if (options.change) input.addEventListener('change', options.change);
 };
 ol.ext.inherits(ol.ext.input.Base, ol.Object);
 /** Listen to drag event
@@ -1819,6 +1818,83 @@ ol.ext.input.Base.prototype._listenDrag = function(elt, cback) {
   }.bind(this)
   elt.addEventListener('mousedown', handle, false);
   elt.addEventListener('touchstart', handle, false);
+}
+
+/** Checkbox input
+ * @constructor
+ * @extends {ol.ext.input.Base}
+ * @param {*} options
+ *  @param {string} [align=left] align popup left/right
+ *  @param {number} [min] min value, default use input min
+ *  @param {number} [max] max value, default use input max
+ *  @param {number} [step] step value, default use input step
+ *  @param {boolean} [overflow=false] enable values over min/max
+ *  @param {string|Element} [before] an element to add before the slider
+ *  @param {string|Element} [after] an element to add after the slider
+ */
+ol.ext.input.Slider = function(input, options) {
+  options = options || {};
+  ol.ext.input.Base.call(this, input, options);
+  this.set('overflow', !!options.overflow)
+  this.element = ol.ext.element.create('DIV', {
+    className: 'ol-input-slider'
+  })
+  input.parentNode.insertBefore(this.element, input);
+  this.element.appendChild(input);
+  if (options.align==='right') this.element.classList.add('ol-right');
+  var popup = ol.ext.element.create('DIV', {
+    className: 'ol-popup',
+    parent: this.element
+  })
+  if (options.before) {
+    ol.ext.element.create('DIV', {
+      className: 'ol-before',
+      html: options.before,
+      parent: popup
+    });
+  }
+  var slider = this.slider = ol.ext.element.create('DIV', {
+    className: 'ol-slider',
+    parent: popup
+  });
+  var cursor = ol.ext.element.create('DIV', {
+    className: 'ol-cursor',
+    parent: slider
+  })
+  if (options.after) {
+    ol.ext.element.create('DIV', {
+      className: 'ol-after',
+      html: options.after,
+      parent: popup
+    });
+  }
+  var min = (options.min !== undefined) ? options.min : parseFloat(input.min) || 0;
+  var max = (options.max !== undefined) ? options.max : parseFloat(input.max) || 1;
+  var step = (options.step !== undefined) ? options.step : parseFloat(input.step) || 1;
+  // Handle popup drag
+  this._listenDrag(slider, function(e) {
+    var tx = Math.max(0, Math.min(e.offsetX / slider.clientWidth, 1));
+    cursor.style.left = Math.max(0, Math.min(100, Math.round(tx*100) )) + '%';
+    var v = input.value = Math.round((tx * (max - min) + min) / step) * step;
+    this.dispatchEvent({ type: 'change:value', value: v });
+  }.bind(this));
+  var setValue = function() {
+    var v = parseFloat(input.value) || 0;
+    if (!this.get('overflow')) v = Math.max(min, Math.min(max, v));
+    if (v != input.value) input.value = v;
+    var tx = (v - min) / (max - min);
+    cursor.style.left = Math.max(0, Math.min(100, Math.round(tx*100) )) + '%';
+    this.dispatchEvent({ type: 'change:value', value: v });
+  }.bind(this);
+  input.addEventListener('change', setValue);
+  setValue();
+};
+ol.ext.inherits(ol.ext.input.Slider, ol.ext.input.Base);
+/** Set the slider value
+ */
+ol.ext.input.Slider.prototype.setValue = function(v) {
+  if (v !== undefined) this.input.value = v;
+  this.input.dispatchEvent(new Event('change'));
 }
 
 /** Checkbox input
@@ -1860,9 +1936,8 @@ ol.ext.input.Color = function(input, options) {
   if (!options.fixed) this.element.classList.add('ol-popup');
   input.parentNode.insertBefore(this.element, input);
   if (options.visible !== true) input.style.display = 'none';
-  this.element.addEventListener('click', function(e) {
-    this.toggle();
-    e.stopPropagation();
+  this.element.addEventListener('click', function() {
+    setTimeout( function() { this.toggle(); }.bind(this) );
   }.bind(this));
   document.addEventListener('click', function() {
     if (!this.moving) this.collapse(true);
@@ -1897,8 +1972,6 @@ ol.ext.input.Color = function(input, options) {
     hsv.a = t*100;
     sliderCursor.style.left = Math.round(t*100) + '%';
     this.setColor();
-  }.bind(this), function() {
-    this.dispatchEvent({ type:'color', color: this.getColor() });
   }.bind(this));
   // Tint cursor
   var tint = ol.ext.element.create('DIV', { className: 'ol-tint', parent: container });
@@ -1908,8 +1981,6 @@ ol.ext.input.Color = function(input, options) {
     hsv.h = t*360;
     tintCursor.style.top = Math.round(t*100) + '%';
     this.setColor();
-  }.bind(this), function() {
-    this.dispatchEvent({ type:'color', color: this.getColor() });
   }.bind(this));
   // Clear button
   ol.ext.element.create('DIV', { 
@@ -1954,6 +2025,7 @@ ol.ext.input.Color = function(input, options) {
   ol.ext.element.create('BUTTON', { 
     html: 'OK',
     click: function() {
+      this._addCustomColor(this.getColor());
       this.collapse(true);
     }.bind(this),
     parent: container
@@ -1981,37 +2053,57 @@ ol.ext.input.Color = function(input, options) {
     }.bind(this));
   }
   // Custom colors
-  ol.ext.element.create('HR', { parent: this._elt.palette })
-  this._customColor = [];
-  // Read from localstorage
-  var loc = JSON.parse(localStorage.getItem('ol-ext@colorpicker') || '[]');
-  loc.forEach(function(c) {
-    c = c.split('-');
-    c.forEach(function(v,i){
-      c[i] = parseFloat(v);
+  ol.ext.element.create('HR', { parent: this._elt.palette });
+  // Create custom color list
+  if (!ol.ext.input.Color.customColorList) {
+    ol.ext.input.Color.customColorList = new ol.Collection();
+    var ccolor = JSON.parse(localStorage.getItem('ol-ext@colorpicker') || '[]');
+    ccolor.forEach(function(c) {
+      ol.ext.input.Color.customColorList.push(c);
     })
-    this.addPaletteColor(c);
-  }.bind(this))
+    ol.ext.input.Color.customColorList.on(['add','remove'], function(){
+      localStorage.setItem('ol-ext@colorpicker', JSON.stringify(ol.ext.input.Color.customColorList.getArray()));
+    });
+  }
+  // Handle custom color
+  ol.ext.input.Color.customColorList.on('add', function(e) {
+    this.addPaletteColor(this.getColorFromID(e.element));
+  }.bind(this));
+  ol.ext.input.Color.customColorList.on('remove', function(e) {
+    if (this._paletteColor[e.element]) this._paletteColor[e.element].element.remove();
+    delete this._paletteColor[e.element];
+  }.bind(this));
+  // Add new one
+  ol.ext.input.Color.customColorList.forEach(function(c) {
+    this._addCustomColor(this.getColorFromID(c));
+  }.bind(this));
+  // Current color
   this.setColor(options.color || [0,0,0,0]);
+  this._currentColor = this.getColorID(this.getColor());
   // Add new palette color
   this.on('color', function(e) {
     this.addPaletteColor(e.color, null, true);
+    this._currentColor = this.getColorID(this.getColor());
   }.bind(this))
 };
 ol.ext.inherits(ol.ext.input.Color, ol.ext.input.Base);
+/** Custom color list
+ * @private
+ */
+ol.ext.input.Color.customColorList = null;
 /** Add color to palette
  * @param {ol.colorLike} color
  * @param {string} title
  * @param {boolean} select
  */
 ol.ext.input.Color.prototype.addPaletteColor = function(color, title, select) {
+  // Get color id
   try {
     color = ol.color.asArray(color);
   } catch(e) {
     return;
   }
-  if (color[3]===undefined) color[3] = 1;
-  var id = color.join('-');
+  var id = this.getColorID(color);
   // Add new one
   if (!this._paletteColor[id] && color[3]) {
     this._paletteColor[id] = {
@@ -2028,16 +2120,6 @@ ol.ext.input.Color.prototype.addPaletteColor = function(color, title, select) {
         parent: this._elt.palette
       })
     }
-    // Custom color
-    if (this._customColor) {
-      this._customColor.push(id);
-      if (this._customColor.length > 24) {
-        var c = this._customColor.shift();
-        this._paletteColor[c].element.remove();
-        delete(this._paletteColor[c]);
-      }
-      localStorage.setItem('ol-ext@colorpicker', JSON.stringify(this._customColor));
-    }
   }
   if (select) {
     this._selectPalette(color);
@@ -2047,7 +2129,7 @@ ol.ext.input.Color.prototype.addPaletteColor = function(color, title, select) {
  * @private
  */
 ol.ext.input.Color.prototype._selectPalette = function(color) {
-  var id = color.join('-');
+  var id = this.getColorID(color);
   Object.keys(this._paletteColor).forEach(function(c) {
     this._paletteColor[c].element.className = '';
   }.bind(this))
@@ -2072,7 +2154,9 @@ ol.ext.input.Color.prototype.setColor = function(color) {
     this._cursor.picker.style.top = (100-hsv.v) + '%';
     this._cursor.tint.style.top = (hsv.h / 360 * 100) + '%';
     this._cursor.slide.style.left = hsv.a + '%';
-    if (this.isCollapsed()) this.dispatchEvent({ type: 'color', color: this.getColor() });
+    if (this.isCollapsed()) {
+      this.dispatchEvent({ type: 'color', color: this.getColor() });
+    }
   } else {
     hsv.h = Math.round(hsv.h) % 360;
     hsv.s = Math.round(hsv.s);
@@ -2115,22 +2199,22 @@ ol.ext.input.Color.prototype.getColor = function(opacity) {
  * @param {boolean} [b=false]
  */
 ol.ext.input.Color.prototype.collapse = function(b) {
+  if (b != this.isCollapsed()) {
+    this.dispatchEvent({
+      type: 'change:visible', 
+      visible: !this.isCollapsed()
+    });
+  }
   if (b) {
-    if (this.isCollapsed()) return;
     this._elt.popup.classList.remove('ol-visible');
     var c = this.getColor();
-    if (this._currentColor !== c.join(',')) {
-      this.dispatchEvent({ type: 'color', color: c })
+    if (this._currentColor !== this.getColorID(c)) {
+      this.dispatchEvent({ type: 'color', color: c });
     }
   } else {
-    if (!this.isCollapsed()) return;
     this._elt.popup.classList.add('ol-visible');
-    this._currentColor = this.getColor().join(',');
+    this._currentColor = this.getColorID(this.getColor());
   }
-  this.dispatchEvent({
-    type: 'change:visible', 
-    visible: !this.isCollapsed()
-  });
 };
 /** Is the popup collapsed ?
  * @returns {boolean}
@@ -2142,6 +2226,38 @@ ol.ext.input.Color.prototype.isCollapsed = function() {
  */
 ol.ext.input.Color.prototype.toggle = function() {
   this.collapse(!this.isCollapsed());
+};
+/** 
+ * @private
+ */
+ol.ext.input.Color.prototype._addCustomColor = function(color) {
+  var id = this.getColorID(color);
+  if (this._paletteColor[id]) return;
+  if (!color[3]) return;
+  if (ol.ext.input.Color.customColorList.getArray().indexOf(id) < 0) {
+    ol.ext.input.Color.customColorList.push(id);
+    if (ol.ext.input.Color.customColorList.getLength() > 24) {
+      ol.ext.input.Color.customColorList.removeAt(0)
+    }
+  }
+  this.addPaletteColor(color);
+};
+/** Convert color to id
+ * @param {ol.colorLike} Color
+ * @returns {number}
+ */
+ol.ext.input.Color.prototype.getColorID = function(color) {
+  color = ol.color.asArray(color);
+  if (color[3]===undefined) color[3] = 1;
+  return color.join('-');
+};
+/** Convert color to id
+ * @param {number} id
+ * @returns {Array<number>} Color
+ */
+ ol.ext.input.Color.prototype.getColorFromID = function(id) {
+  var c = id.split('-');
+  return ([parseFloat(c[0]), parseFloat(c[1]), parseFloat(c[2]), parseFloat(c[3])]);
 };
 
 /** Switch input
@@ -2157,45 +2273,20 @@ ol.ext.inherits(ol.ext.input.Radio, ol.ext.input.Checkbox);
 
 /** Checkbox input
  * @constructor
- * @extends {ol.ext.input.Base}
+ * @extends {ol.ext.input.Slider}
  * @param {*} options
  *  @param {string} [align=left] align popup left/right
  */
 ol.ext.input.Size = function(input, options) {
   options = options || {};
-  ol.ext.input.Base.call(this, input, options);
-  this.element = ol.ext.element.create('DIV', {
-    className: 'ol-input-size'
+  ol.ext.input.Slider.call(this, input, options);
+  this.element.classList.add('ol-size');
+  ol.ext.element.create('DIV', {
+    className: 'ol-back',
+    parent: this.slider
   })
-  input.parentNode.insertBefore(this.element, input);
-  this.element.appendChild(input);
-  if (options.align==='right') this.element.classList.add('ol-right');
-  var popup = ol.ext.element.create('DIV', {
-    className: 'ol-popup',
-    parent: this.element
-  })
-  var cursor = ol.ext.element.create('DIV', {
-    parent: popup
-  })
-  var min = parseFloat(input.min) || 0;
-  var max = parseFloat(input.max) || 1;
-  var step = parseFloat(input.step) || 1;
-  // Handle popup drag
-  this._listenDrag(popup, function(e) {
-    var tx = Math.max(0, Math.min(e.offsetX / popup.clientWidth, 1));
-    cursor.style.left = Math.max(0, Math.min(100, Math.round(tx*100) )) + '%';
-    input.value = Math.round((tx * (max - min) + min) / step) * step;
-  }.bind(this));
-  function setValue() {
-    var v = parseFloat(input.value) || 0;
-    if (v != input.value) input.value = v;
-    var tx = (v - min) / (max - min);
-    cursor.style.left = Math.max(0, Math.min(100, Math.round(tx*100) )) + '%';
-  }
-  input.addEventListener('change', setValue);
-  setValue();
 };
-ol.ext.inherits(ol.ext.input.Size, ol.ext.input.Base);
+ol.ext.inherits(ol.ext.input.Size, ol.ext.input.Slider);
 
 /** Switch input
  * @constructor

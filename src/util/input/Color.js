@@ -2,7 +2,7 @@ import ol_ext_element from '../element';
 import ol_ext_input_Base from './Base'
 import { toHSV as ol_color_toHSV, fromHSV as ol_color_fromHSV } from '../color'
 import { toHexa as ol_color_toHexa } from '../color'
-import {asArray as ol_color_asArray} from 'ol/color'
+import { sArray as ol_color_asArray } from 'ol/color'
 
 /** Color picker
  * @constructor
@@ -26,9 +26,8 @@ var ol_ext_input_Color = function(input, options) {
   input.parentNode.insertBefore(this.element, input);
   if (options.visible !== true) input.style.display = 'none';
 
-  this.element.addEventListener('click', function(e) {
-    this.toggle();
-    e.stopPropagation();
+  this.element.addEventListener('click', function() {
+    setTimeout( function() { this.toggle(); }.bind(this) );
   }.bind(this));
   document.addEventListener('click', function() {
     if (!this.moving) this.collapse(true);
@@ -67,8 +66,6 @@ var ol_ext_input_Color = function(input, options) {
     hsv.a = t*100;
     sliderCursor.style.left = Math.round(t*100) + '%';
     this.setColor();
-  }.bind(this), function() {
-    this.dispatchEvent({ type:'color', color: this.getColor() });
   }.bind(this));
   
   // Tint cursor
@@ -79,8 +76,6 @@ var ol_ext_input_Color = function(input, options) {
     hsv.h = t*360;
     tintCursor.style.top = Math.round(t*100) + '%';
     this.setColor();
-  }.bind(this), function() {
-    this.dispatchEvent({ type:'color', color: this.getColor() });
   }.bind(this));
 
   // Clear button
@@ -128,6 +123,7 @@ var ol_ext_input_Color = function(input, options) {
   ol_ext_element.create('BUTTON', { 
     html: 'OK',
     click: function() {
+      this._addCustomColor(this.getColor());
       this.collapse(true);
     }.bind(this),
     parent: container
@@ -156,26 +152,48 @@ var ol_ext_input_Color = function(input, options) {
     }.bind(this));
   }
   // Custom colors
-  ol_ext_element.create('HR', { parent: this._elt.palette })
-  this._customColor = [];
-  // Read from localstorage
-  var loc = JSON.parse(localStorage.getItem('ol-ext@colorpicker') || '[]');
-  loc.forEach(function(c) {
-    c = c.split('-');
-    c.forEach(function(v,i){
-      c[i] = parseFloat(v);
-    })
-    this.addPaletteColor(c);
-  }.bind(this))
+  ol_ext_element.create('HR', { parent: this._elt.palette });
 
+  // Create custom color list
+  if (!ol_ext_input_Color.customColorList) {
+    ol_ext_input_Color.customColorList = new ol_Collection();
+    var ccolor = JSON.parse(localStorage.getItem('ol-ext@colorpicker') || '[]');
+    ccolor.forEach(function(c) {
+      ol_ext_input_Color.customColorList.push(c);
+    })
+    ol_ext_input_Color.customColorList.on(['add','remove'], function(){
+      localStorage.setItem('ol-ext@colorpicker', JSON.stringify(ol_ext_input_Color.customColorList.getArray()));
+    });
+  }
+  // Handle custom color
+  ol_ext_input_Color.customColorList.on('add', function(e) {
+    this.addPaletteColor(this.getColorFromID(e.element));
+  }.bind(this));
+  ol_ext_input_Color.customColorList.on('remove', function(e) {
+    if (this._paletteColor[e.element]) this._paletteColor[e.element].element.remove();
+    delete this._paletteColor[e.element];
+  }.bind(this));
+  // Add new one
+  ol_ext_input_Color.customColorList.forEach(function(c) {
+    this._addCustomColor(this.getColorFromID(c));
+  }.bind(this));
+
+  // Current color
   this.setColor(options.color || [0,0,0,0]);
+  this._currentColor = this.getColorID(this.getColor());
 
   // Add new palette color
   this.on('color', function(e) {
     this.addPaletteColor(e.color, null, true);
+    this._currentColor = this.getColorID(this.getColor());
   }.bind(this))
 };
 ol_ext_inherits(ol_ext_input_Color, ol_ext_input_Base);
+
+/** Custom color list
+ * @private
+ */
+ol_ext_input_Color.customColorList = null;
 
 /** Add color to palette
  * @param {ol.colorLike} color
@@ -183,13 +201,13 @@ ol_ext_inherits(ol_ext_input_Color, ol_ext_input_Base);
  * @param {boolean} select
  */
 ol_ext_input_Color.prototype.addPaletteColor = function(color, title, select) {
+  // Get color id
   try {
     color = ol_color_asArray(color);
   } catch(e) {
     return;
   }
-  if (color[3]===undefined) color[3] = 1;
-  var id = color.join('-');
+  var id = this.getColorID(color);
   // Add new one
   if (!this._paletteColor[id] && color[3]) {
     this._paletteColor[id] = {
@@ -206,16 +224,6 @@ ol_ext_input_Color.prototype.addPaletteColor = function(color, title, select) {
         parent: this._elt.palette
       })
     }
-    // Custom color
-    if (this._customColor) {
-      this._customColor.push(id);
-      if (this._customColor.length > 24) {
-        var c = this._customColor.shift();
-        this._paletteColor[c].element.remove();
-        delete(this._paletteColor[c]);
-      }
-      localStorage.setItem('ol-ext@colorpicker', JSON.stringify(this._customColor));
-    }
   }
   if (select) {
     this._selectPalette(color);
@@ -226,7 +234,7 @@ ol_ext_input_Color.prototype.addPaletteColor = function(color, title, select) {
  * @private
  */
 ol_ext_input_Color.prototype._selectPalette = function(color) {
-  var id = color.join('-');
+  var id = this.getColorID(color);
   Object.keys(this._paletteColor).forEach(function(c) {
     this._paletteColor[c].element.className = '';
   }.bind(this))
@@ -252,7 +260,9 @@ ol_ext_input_Color.prototype.setColor = function(color) {
     this._cursor.picker.style.top = (100-hsv.v) + '%';
     this._cursor.tint.style.top = (hsv.h / 360 * 100) + '%';
     this._cursor.slide.style.left = hsv.a + '%';
-    if (this.isCollapsed()) this.dispatchEvent({ type: 'color', color: this.getColor() });
+    if (this.isCollapsed()) {
+      this.dispatchEvent({ type: 'color', color: this.getColor() });
+    }
   } else {
     hsv.h = Math.round(hsv.h) % 360;
     hsv.s = Math.round(hsv.s);
@@ -303,22 +313,22 @@ ol_ext_input_Color.prototype.getColor = function(opacity) {
  * @param {boolean} [b=false]
  */
 ol_ext_input_Color.prototype.collapse = function(b) {
+  if (b != this.isCollapsed()) {
+    this.dispatchEvent({
+      type: 'change:visible', 
+      visible: !this.isCollapsed()
+    });
+  }
   if (b) {
-    if (this.isCollapsed()) return;
     this._elt.popup.classList.remove('ol-visible');
     var c = this.getColor();
-    if (this._currentColor !== c.join(',')) {
-      this.dispatchEvent({ type: 'color', color: c })
+    if (this._currentColor !== this.getColorID(c)) {
+      this.dispatchEvent({ type: 'color', color: c });
     }
   } else {
-    if (!this.isCollapsed()) return;
     this._elt.popup.classList.add('ol-visible');
-    this._currentColor = this.getColor().join(',');
+    this._currentColor = this.getColorID(this.getColor());
   }
-  this.dispatchEvent({
-    type: 'change:visible', 
-    visible: !this.isCollapsed()
-  });
 };
 
 /** Is the popup collapsed ?
@@ -332,6 +342,41 @@ ol_ext_input_Color.prototype.isCollapsed = function() {
  */
 ol_ext_input_Color.prototype.toggle = function() {
   this.collapse(!this.isCollapsed());
+};
+
+/** 
+ * @private
+ */
+ol_ext_input_Color.prototype._addCustomColor = function(color) {
+  var id = this.getColorID(color);
+  if (this._paletteColor[id]) return;
+  if (!color[3]) return;
+  if (ol_ext_input_Color.customColorList.getArray().indexOf(id) < 0) {
+    ol_ext_input_Color.customColorList.push(id);
+    if (ol_ext_input_Color.customColorList.getLength() > 24) {
+      ol_ext_input_Color.customColorList.removeAt(0)
+    }
+  }
+  this.addPaletteColor(color);
+};
+
+/** Convert color to id
+ * @param {ol.colorLike} Color
+ * @returns {number}
+ */
+ol_ext_input_Color.prototype.getColorID = function(color) {
+  color = ol_color_asArray(color);
+  if (color[3]===undefined) color[3] = 1;
+  return color.join('-');
+};
+
+/** Convert color to id
+ * @param {number} id
+ * @returns {Array<number>} Color
+ */
+ ol_ext_input_Color.prototype.getColorFromID = function(id) {
+  var c = id.split('-');
+  return ([parseFloat(c[0]), parseFloat(c[1]), parseFloat(c[2]), parseFloat(c[3])]);
 };
 
 export default ol_ext_input_Color
