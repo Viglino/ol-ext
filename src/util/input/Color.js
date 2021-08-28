@@ -184,8 +184,9 @@ var ol_ext_input_Color = function(input, options) {
 
   // Add new palette color
   this.on('color', function(e) {
-    this.addPaletteColor(e.color, null, true);
+    this._addCustomColor(this.getColor());
     this._currentColor = this.getColorID(this.getColor());
+    this.setColor();
   }.bind(this))
 };
 ol_ext_inherits(ol_ext_input_Color, ol_ext_input_Base);

@@ -53,9 +53,11 @@
     <input class='radio' type="radio" name="radio" />
     <input class='radio' type="radio" name="radio" />
   </p><p>
-    Color: <input class='color' />
-  </p><p style="border: 1px solid #999; border-width: 1px 0;">
-    Color (fixed): <input class='color2' />
+    Color: <input class='color1' />
+  </p><p style="border: 1px solid #999; border-width: 1px 0; padding: .5em 0;">
+    Color (fixed): 
+    <span class="color" style="display: inline-block; background-color: red; width: 2.5em; height: 1.5em; vertical-align: middle;"></span>
+    <input class='color2' />
   </p><p>
     Slider: 
     <span class="opacity" style="display: inline-block; background-color: red; width: 2.5em; height: 1.5em; vertical-align: middle;"></span>
@@ -89,10 +91,15 @@
   });
   size.setValue(50);
 
-  var cpicker = new ol.ext.input.Color($('.color').get(0), { color: 'red', fixed: false });
+  var cpicker = new ol.ext.input.Color($('.color1').get(0), { color: 'red', fixed: false });
   cpicker.on('color', function(e) { console.log('Color:', e.color) })
-  var cpicker2 = new ol.ext.input.Color($('.color2').get(0), { color: '#f90', fixed: true });
-  cpicker2.on('color', function(e) { console.log('Color2:', e.color) })
+
+  var cpicker2 = new ol.ext.input.Color($('.color2').get(0), { fixed: true });
+  cpicker2.on('color', function(e) { 
+    $('.color').css('background-color', ol.color.asString(e.color));
+  });
+  cpicker2.setColor('#f90');
+
 
 </script>
   

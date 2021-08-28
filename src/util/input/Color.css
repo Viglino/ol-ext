@@ -127,7 +127,6 @@
   left: 0;
   background: transparent;
   transform: translate(-50%, -50%);
-  z-index: 1;
 }
 .ol-ext-colorpicker .ol-tint {
   position: absolute;
