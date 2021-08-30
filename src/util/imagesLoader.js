@@ -285,3 +285,5 @@ export { ol_ext_imageLoader_seaLevelMap as seaLevelMap, ol_ext_imageLoader_eleva
 export { ol_ext_getPixelFromElevation as getPixelFromElevation, ol_ext_getElevationFromPixel as getElevationFromPixel }
 export { ol_ext_imageLoader_grayscale as grayscale, ol_ext_imageLoader_transparent as transparent }
 export { ol_ext_imageLoader_pixelTransform as pixelTransform }
+
+export { ol_ext_imageLoader_shadedRelief }

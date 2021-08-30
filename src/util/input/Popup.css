@@ -1,0 +1,35 @@
+.ol-input-popup {
+  display: inline-block;
+  position: relative;
+}
+.ol-input-popup .ol-popup {
+  position: absolute;
+  box-shadow: 1px 1px 3px 1px #999;
+  background-color: #fff;
+  z-index: 1;
+  display: none;
+  left: -5px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  white-space: nowrap;
+}
+.ol-input-popup:hover .ol-popup {
+  display: block;
+}
+
+.ol-input-popup li {
+  display: table-cell;
+  height: 100%;
+  padding: 5px;
+  vertical-align: middle;
+}
+.ol-input-popup li:hover {
+  background-color: #eee;
+}
+
+.ol-input-popup li > * {
+  background-color: #369;
+  border-radius: 50%;
+}
+

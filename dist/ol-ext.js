@@ -491,7 +491,7 @@ ol.color.fromHSL = function(hsl, round) {
   if (s == 0) {
     r = g = b = l; // achromatic
   } else {
-    function hue2rgb(p, q, t) {
+    var hue2rgb = function(p, q, t) {
       if (t < 0) t += 1;
       if (t > 1) t -= 1;
       if (t < 1/6) return p + (q - p) * 6 * t;
@@ -591,7 +591,8 @@ ol.color.toHexa = function(rgb) {
  * @see https://plainjs.com/javascript/
  * @see http://youmightnotneedjquery.com/
  */
- ol.ext.element = {};
+/** @namespace ol.ext.element */
+ol.ext.element = {};
 /**
  * Create an element
  * @param {string} tagName The element tag, use 'TEXT' to create a text node
@@ -1825,6 +1826,7 @@ ol.ext.input.Base.prototype._listenDrag = function(elt, cback) {
  * @extends {ol.ext.input.Base}
  * @param {*} options
  *  @param {string} [align=left] align popup left/right
+ *  @param {string} [type] a slide type as 'size'
  *  @param {number} [min] min value, default use input min
  *  @param {number} [max] max value, default use input max
  *  @param {number} [step] step value, default use input step
@@ -1837,8 +1839,9 @@ ol.ext.input.Slider = function(input, options) {
   ol.ext.input.Base.call(this, input, options);
   this.set('overflow', !!options.overflow)
   this.element = ol.ext.element.create('DIV', {
-    className: 'ol-input-slider'
-  })
+    className: 'ol-input-slider' + (options.type ? ' ol-'+options.type : '')
+  });
+  if (options.className) this.element.classList.add(options.className);
   input.parentNode.insertBefore(this.element, input);
   this.element.appendChild(input);
   if (options.align==='right') this.element.classList.add('ol-right');
@@ -1846,6 +1849,7 @@ ol.ext.input.Slider = function(input, options) {
     className: 'ol-popup',
     parent: this.element
   })
+  // Before  element
   if (options.before) {
     ol.ext.element.create('DIV', {
       className: 'ol-before',
@@ -1853,14 +1857,21 @@ ol.ext.input.Slider = function(input, options) {
       parent: popup
     });
   }
+  // Slider
   var slider = this.slider = ol.ext.element.create('DIV', {
     className: 'ol-slider',
     parent: popup
   });
+  ol.ext.element.create('DIV', {
+    className: 'ol-back',
+    parent: this.slider
+  })
+  // Cursor
   var cursor = ol.ext.element.create('DIV', {
     className: 'ol-cursor',
     parent: slider
   })
+  // After element
   if (options.after) {
     ol.ext.element.create('DIV', {
       className: 'ol-after',
@@ -1878,6 +1889,7 @@ ol.ext.input.Slider = function(input, options) {
     var v = input.value = Math.round((tx * (max - min) + min) / step) * step;
     this.dispatchEvent({ type: 'change:value', value: v });
   }.bind(this));
+  // Set value
   var setValue = function() {
     var v = parseFloat(input.value) || 0;
     if (!this.get('overflow')) v = Math.max(min, Math.min(max, v));
@@ -2030,13 +2042,14 @@ ol.ext.input.Color = function(input, options) {
     }.bind(this),
     parent: container
   });
+  var i;
   // Color palette
   this._paletteColor = {};
   this._elt.palette = ol.ext.element.create('DIV', {
     className: 'ol-palette',
     parent: this._elt.popup
   })
-  for (var i=0; i<8; i++) {
+  for (i=0; i<8; i++) {
     var c = Math.round(255 - 255*i/7);
     this.addPaletteColor([c,c,c]);
   }
@@ -2044,7 +2057,7 @@ ol.ext.input.Color = function(input, options) {
   colors.forEach(function(c){
     this.addPaletteColor(c, ol.color.toHexa(ol.color.asArray(c)));
   }.bind(this));
-  for (var i=0; i<5; i++) {
+  for (i=0; i<5; i++) {
     colors.forEach(function(c){
       c = ol.color.toHSV(ol.color.asArray(c));
       c = [c[0], i/4*80+20, 100 - i/4*60];
@@ -2081,7 +2094,7 @@ ol.ext.input.Color = function(input, options) {
   this.setColor(options.color || [0,0,0,0]);
   this._currentColor = this.getColorID(this.getColor());
   // Add new palette color
-  this.on('color', function(e) {
+  this.on('color', function() {
     this._addCustomColor(this.getColor());
     this._currentColor = this.getColorID(this.getColor());
     this.setColor();
@@ -2261,6 +2274,35 @@ ol.ext.input.Color.prototype.getColorID = function(color) {
   return ([parseFloat(c[0]), parseFloat(c[1]), parseFloat(c[2]), parseFloat(c[3])]);
 };
 
+/** Checkbox input
+ * @constructor
+ * @extends {ol.ext.input.Base}
+ * @param {*} options
+ *  @param {string} [align=left] align popup left/right
+ */
+ol.ext.input.Popup = function(input, options) {
+  options = options || {};
+  ol.ext.input.Base.call(this, input, options);
+  this.element = ol.ext.element.create('DIV', {
+    className: 'ol-input-popup'
+  });
+  if (options.className) this.element.classList.add(options.className);
+  input.parentNode.insertBefore(this.element, input);
+  this.element.appendChild(input);
+  this.popup = ol.ext.element.create('UL', {
+    className: 'ol-popup',
+    parent: this.element
+  });
+  options.options.forEach(option => {
+    ol.ext.element.create('li', {
+      html: option.html,
+      className: 'ol-option',
+      parent: this.popup
+    });
+  });
+};
+ol.ext.inherits(ol.ext.input.Popup, ol.ext.input.Base);
+
 /** Switch input
  * @constructor
  * @extends {ol.ext.input.Checkbox}
@@ -2280,14 +2322,23 @@ ol.ext.inherits(ol.ext.input.Radio, ol.ext.input.Checkbox);
  */
 ol.ext.input.Size = function(input, options) {
   options = options || {};
-  ol.ext.input.Slider.call(this, input, options);
-  this.element.classList.add('ol-size');
-  ol.ext.element.create('DIV', {
-    className: 'ol-back',
-    parent: this.slider
+  options.options = [];
+  [0,2,3,5,8,13,21,34,55].forEach(function(i) {
+    options.options.push({
+      value: i,
+      html: ol.ext.element.create('DIV', {
+        className: 'ol-option-'+i,
+        style: {
+          width: i,
+          height: i
+        }
+      })
+    })
   })
+  ol.ext.input.Popup.call(this, input, options);
+  this.set('overflow', !!options.overflow)
 };
-ol.ext.inherits(ol.ext.input.Size, ol.ext.input.Slider);
+ol.ext.inherits(ol.ext.input.Size, ol.ext.input.Popup);
 
 /** Switch input
  * @constructor

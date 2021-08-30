@@ -1,12 +1,14 @@
-import ol_ext_input_Checkbox from "./input/Checkbox";
-import ol_ext_input_Switch from "./input/Switch";
-
 /** Vanilla JS helper to manipulate DOM without jQuery
  * @see https://github.com/nefe/You-Dont-Need-jQuery
  * @see https://plainjs.com/javascript/
  * @see http://youmightnotneedjquery.com/
  */
- var ol_ext_element = {};
+import ol_ext_input_Checkbox from './input/Checkbox'
+import ol_ext_input_Switch from './input/Switch'
+import ol_ext_input_Radio from './input/Radio'
+
+/** @namespace ol.ext.element */
+var ol_ext_element = {};
 
 /**
  * Create an element

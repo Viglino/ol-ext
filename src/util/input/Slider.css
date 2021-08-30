@@ -48,3 +48,28 @@
   background-color: #999;
   pointer-events: none;
 }
+
+/* Grow */
+.ol-input-slider.ol-size .ol-slider {
+  height: auto;
+  box-shadow: none;
+}
+.ol-input-slider.ol-size .ol-slider .ol-back {
+  width: 0;
+  color: #aaa;
+  border: 0 solid transparent;
+  border-width: 0 0 20px 100px;
+  border-color: currentColor transparent;
+  pointer-events: none;
+}
+
+.ol-input-slider.ol-size .ol-slider > .ol-cursor {
+  width: 2px;
+  height: calc(100% + 4px);
+  border-width: 5px 3px;
+  border-style: solid;
+  border-color: #f00 transparent;
+  border-image: initial;
+  background-color: transparent;
+  box-shadow: inset 3px 0px #f00;
+}

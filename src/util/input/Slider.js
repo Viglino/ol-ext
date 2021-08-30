@@ -1,3 +1,4 @@
+import ol_ext_inherits from '../ext'
 import ol_ext_element from '../element';
 import ol_ext_input_Base from './Base'
 
@@ -6,6 +7,7 @@ import ol_ext_input_Base from './Base'
  * @extends {ol_ext_input_Base}
  * @param {*} options
  *  @param {string} [align=left] align popup left/right
+ *  @param {string} [type] a slide type as 'size'
  *  @param {number} [min] min value, default use input min
  *  @param {number} [max] max value, default use input max
  *  @param {number} [step] step value, default use input step
@@ -20,8 +22,9 @@ var ol_ext_input_Slider = function(input, options) {
   this.set('overflow', !!options.overflow)
 
   this.element = ol_ext_element.create('DIV', {
-    className: 'ol-input-slider'
-  })
+    className: 'ol-input-slider' + (options.type ? ' ol-'+options.type : '')
+  });
+  if (options.className) this.element.classList.add(options.className);
   input.parentNode.insertBefore(this.element, input);
   this.element.appendChild(input);
   if (options.align==='right') this.element.classList.add('ol-right');
@@ -30,6 +33,7 @@ var ol_ext_input_Slider = function(input, options) {
     className: 'ol-popup',
     parent: this.element
   })
+  // Before  element
   if (options.before) {
     ol_ext_element.create('DIV', {
       className: 'ol-before',
@@ -37,14 +41,21 @@ var ol_ext_input_Slider = function(input, options) {
       parent: popup
     });
   }
+  // Slider
   var slider = this.slider = ol_ext_element.create('DIV', {
     className: 'ol-slider',
     parent: popup
   });
+  ol_ext_element.create('DIV', {
+    className: 'ol-back',
+    parent: this.slider
+  })
+  // Cursor
   var cursor = ol_ext_element.create('DIV', {
     className: 'ol-cursor',
     parent: slider
   })
+  // After element
   if (options.after) {
     ol_ext_element.create('DIV', {
       className: 'ol-after',
@@ -65,6 +76,7 @@ var ol_ext_input_Slider = function(input, options) {
     this.dispatchEvent({ type: 'change:value', value: v });
   }.bind(this));
 
+  // Set value
   var setValue = function() {
     var v = parseFloat(input.value) || 0;
     if (!this.get('overflow')) v = Math.max(min, Math.min(max, v));

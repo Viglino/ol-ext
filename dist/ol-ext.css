@@ -6158,32 +6158,44 @@ ul.ol-legend li div {
   margin: 0;
 }
 
-.ol-input-slider.ol-size .ol-slider {
-  height: auto;
-  -webkit-box-shadow: none;
-          box-shadow: none;
+.ol-input-popup {
+  display: inline-block;
+  position: relative;
 }
-.ol-input-slider.ol-size .ol-slider .ol-back {
-  width: 0;
-  color: #aaa;
-  border: 0 solid transparent;
-  border-width: 0 0 20px 100px;
-  border-color: currentColor transparent;
-  pointer-events: none;
+.ol-input-popup .ol-popup {
+  position: absolute;
+  -webkit-box-shadow: 1px 1px 3px 1px #999;
+          box-shadow: 1px 1px 3px 1px #999;
+  background-color: #fff;
+  z-index: 1;
+  display: none;
+  left: -5px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  white-space: nowrap;
+}
+.ol-input-popup:hover .ol-popup {
+  display: block;
 }
 
-.ol-input-slider.ol-size .ol-slider > .ol-cursor {
-  width: 2px;
-  height: calc(100% + 4px);
-  border-width: 5px 3px;
-  border-style: solid;
-  border-color: #f00 transparent;
-  -o-border-image: initial;
-     border-image: initial;
-  background-color: transparent;
-  -webkit-box-shadow: inset 3px 0px #f00;
-          box-shadow: inset 3px 0px #f00;
+.ol-input-popup li {
+  display: table-cell;
+  height: 100%;
+  padding: 5px;
+  vertical-align: middle;
 }
+.ol-input-popup li:hover {
+  background-color: #eee;
+}
+
+.ol-input-popup li > * {
+  background-color: #369;
+  border-radius: 50%;
+}
+
+
+
 .ol-input-slider {
   display: inline-block;
   position: relative;
@@ -6237,4 +6249,32 @@ ul.ol-legend li div {
           transform: translate(-50%, -50%);
   background-color: #999;
   pointer-events: none;
+}
+
+/* Grow */
+.ol-input-slider.ol-size .ol-slider {
+  height: auto;
+  -webkit-box-shadow: none;
+          box-shadow: none;
+}
+.ol-input-slider.ol-size .ol-slider .ol-back {
+  width: 0;
+  color: #aaa;
+  border: 0 solid transparent;
+  border-width: 0 0 20px 100px;
+  border-color: currentColor transparent;
+  pointer-events: none;
+}
+
+.ol-input-slider.ol-size .ol-slider > .ol-cursor {
+  width: 2px;
+  height: calc(100% + 4px);
+  border-width: 5px 3px;
+  border-style: solid;
+  border-color: #f00 transparent;
+  -o-border-image: initial;
+     border-image: initial;
+  background-color: transparent;
+  -webkit-box-shadow: inset 3px 0px #f00;
+          box-shadow: inset 3px 0px #f00;
 }

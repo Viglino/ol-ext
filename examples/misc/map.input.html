@@ -85,7 +85,7 @@
   });
   slider.setValue(25);
   
-  var size = new ol.ext.input.Size($('.size').get(0));
+  var size = new ol.ext.input.Slider($('.size').get(0), { type: 'size' });
   size.on('change:value', function(e) {
     $('.fa-map-marker').css('font-size', e.value+'px');
   });
@@ -100,6 +100,11 @@
   });
   cpicker2.setColor('#f90');
 
+  var width = new ol.ext.input.Size($('.width').get(0));
+  size.on('change:value', function(e) {
+    $('.fa-map-marker').css('font-size', e.value+'px');
+  });
+  width.setValue(8);
 
 </script>
   

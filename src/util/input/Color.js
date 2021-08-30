@@ -1,5 +1,7 @@
+import ol_ext_inherits from '../ext'
 import ol_ext_element from '../element';
 import ol_ext_input_Base from './Base'
+import ol_Collection from 'ol/Collection';
 import { toHSV as ol_color_toHSV, fromHSV as ol_color_fromHSV } from '../color'
 import { toHexa as ol_color_toHexa } from '../color'
 import { sArray as ol_color_asArray } from 'ol/color'
@@ -129,13 +131,15 @@ var ol_ext_input_Color = function(input, options) {
     parent: container
   });
 
+  var i;
+
   // Color palette
   this._paletteColor = {};
   this._elt.palette = ol_ext_element.create('DIV', {
     className: 'ol-palette',
     parent: this._elt.popup
   })
-  for (var i=0; i<8; i++) {
+  for (i=0; i<8; i++) {
     var c = Math.round(255 - 255*i/7);
     this.addPaletteColor([c,c,c]);
   }
@@ -143,7 +147,7 @@ var ol_ext_input_Color = function(input, options) {
   colors.forEach(function(c){
     this.addPaletteColor(c, ol_color_toHexa(ol_color_asArray(c)));
   }.bind(this));
-  for (var i=0; i<5; i++) {
+  for (i=0; i<5; i++) {
     colors.forEach(function(c){
       c = ol_color_toHSV(ol_color_asArray(c));
       c = [c[0], i/4*80+20, 100 - i/4*60];
@@ -183,7 +187,7 @@ var ol_ext_input_Color = function(input, options) {
   this._currentColor = this.getColorID(this.getColor());
 
   // Add new palette color
-  this.on('color', function(e) {
+  this.on('color', function() {
     this._addCustomColor(this.getColor());
     this._currentColor = this.getColorID(this.getColor());
     this.setColor();

@@ -54,7 +54,7 @@ var ol_color_fromHSL = function(hsl, round) {
   if (s == 0) {
     r = g = b = l; // achromatic
   } else {
-    function hue2rgb(p, q, t) {
+    var hue2rgb = function(p, q, t) {
       if (t < 0) t += 1;
       if (t > 1) t -= 1;
       if (t < 1/6) return p + (q - p) * 6 * t;
