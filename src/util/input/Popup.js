@@ -7,8 +7,9 @@ import ol_ext_input_Base from './Base'
  * @extends {ol_ext_input_Base}
  * @param {*} options
  *  @param {Element} [input] input element, if non create one
- *  @param {Element} [paren] parent element, if create an input
+ *  @param {Element} [parent] parent element, if create an input
  *  @param {string} [align=left] align popup left/right
+ *  @param {boolean} [fixed=false] no pupop
  */
 var ol_ext_input_Popup = function(options) {
   options = options || {};
@@ -19,6 +20,7 @@ var ol_ext_input_Popup = function(options) {
     className: 'ol-input-popup'
   });
   if (options.className) this.element.classList.add(options.className);
+  if (options.fixed) this.element.classList.add('ol-fixed');
 
   var input = this.input;
   if (input.parentNode) input.parentNode.insertBefore(this.element, input);
@@ -38,8 +40,10 @@ var ol_ext_input_Popup = function(options) {
         className: 'ol-option',
         click: function() {
           this.setValue(option.value);
-          popup.style.display = 'none';
-          setTimeout(function() { popup.style.display = ''; }, 200);
+          if (!this.element.classList.contains('ol-fixed')) {
+            popup.style.display = 'none';
+            setTimeout(function() { popup.style.display = ''; }, 200);
+          }
         }.bind(this),
         parent: this.popup
       })

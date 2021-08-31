@@ -16,6 +16,7 @@ import ol_ext_input_Base from './Base'
  *  @param {boolean} [overflow=false] enable values over min/max
  *  @param {string|Element} [before] an element to add before the slider
  *  @param {string|Element} [after] an element to add after the slider
+ *  @param {boolean} [fixed=false] no pupop
  */
 var ol_ext_input_Slider = function(options) {
   options = options || {};
@@ -27,6 +28,7 @@ var ol_ext_input_Slider = function(options) {
     className: 'ol-input-slider' + (options.type ? ' ol-'+options.type : '')
   });
   if (options.className) this.element.classList.add(options.className);
+  if (options.fixed) this.element.classList.add('ol-fixed');
 
   var input = this.input;
   if (input.parentNode) input.parentNode.insertBefore(this.element, input);

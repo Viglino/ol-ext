@@ -18,6 +18,20 @@
   display: block;
 }
 
-.ol-input-popup:hover .ol-popup li {
+.ol-input-popup .ol-popup li {
   position: relative;
 }
+
+.ol-input-popup.ol-fixed:hover .ol-popup,
+.ol-input-popup.ol-fixed .ol-popup {
+  position: relative;
+  left: 0;
+  box-shadow: unset;
+  background-color: transparent;
+  display: inline-block;
+  vertical-align: middle;
+}
+.ol-input-popup.ol-fixed.ol-left .ol-popup {
+  float: left;
+}
+

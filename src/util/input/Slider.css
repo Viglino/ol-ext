@@ -49,6 +49,19 @@
   pointer-events: none;
 }
 
+.ol-input-slider.ol-fixed:hover .ol-popup,
+.ol-input-slider.ol-fixed .ol-popup {
+  position: relative;
+  left: 0;
+  box-shadow: unset;
+  background-color: transparent;
+  display: inline-block;
+  vertical-align: middle;
+}
+.ol-input-slider.ol-fixed.ol-left .ol-popup {
+  float: left;
+}
+
 /* Grow */
 .ol-input-slider.ol-size .ol-slider {
   height: auto;

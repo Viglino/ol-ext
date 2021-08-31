@@ -119,7 +119,7 @@
   });
   cpicker2.setColor('#f90');
 
-  var size = new ol.ext.input.Size({ input: $('.size').get(0) });
+  var size = new ol.ext.input.Size({ input: $('.size').get(0), fixed: false });
   size.on('change:value', function(e) {
     $('.fa-map-pin').css('font-size', e.value+'px');
   });
@@ -128,7 +128,7 @@
   var size2 = new ol.ext.input.Size({ input: $('.size2').get(0), className: 'marker' });
   size2.setValue(8);
 
-  var width = new ol.ext.input.Width({ input: $('.width').get(0) });
+  var width = new ol.ext.input.Width({ input: $('.width').get(0), fixed: false });
   width.on('change:value', function(e) {
     $('.line').height(e.value)
   })

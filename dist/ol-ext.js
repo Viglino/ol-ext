@@ -1852,6 +1852,7 @@ ol.ext.input.Base.prototype.getValue = function() {
  *  @param {boolean} [overflow=false] enable values over min/max
  *  @param {string|Element} [before] an element to add before the slider
  *  @param {string|Element} [after] an element to add after the slider
+ *  @param {boolean} [fixed=false] no pupop
  */
 ol.ext.input.Slider = function(options) {
   options = options || {};
@@ -1861,6 +1862,7 @@ ol.ext.input.Slider = function(options) {
     className: 'ol-input-slider' + (options.type ? ' ol-'+options.type : '')
   });
   if (options.className) this.element.classList.add(options.className);
+  if (options.fixed) this.element.classList.add('ol-fixed');
   var input = this.input;
   if (input.parentNode) input.parentNode.insertBefore(this.element, input);
   this.element.appendChild(input);
@@ -2296,8 +2298,9 @@ ol.ext.input.Color.prototype.getColorID = function(color) {
  * @extends {ol.ext.input.Base}
  * @param {*} options
  *  @param {Element} [input] input element, if non create one
- *  @param {Element} [paren] parent element, if create an input
+ *  @param {Element} [parent] parent element, if create an input
  *  @param {string} [align=left] align popup left/right
+ *  @param {boolean} [fixed=false] no pupop
  */
 ol.ext.input.Popup = function(options) {
   options = options || {};
@@ -2306,6 +2309,7 @@ ol.ext.input.Popup = function(options) {
     className: 'ol-input-popup'
   });
   if (options.className) this.element.classList.add(options.className);
+  if (options.fixed) this.element.classList.add('ol-fixed');
   var input = this.input;
   if (input.parentNode) input.parentNode.insertBefore(this.element, input);
   this.element.appendChild(input);
@@ -2323,8 +2327,10 @@ ol.ext.input.Popup = function(options) {
         className: 'ol-option',
         click: function() {
           this.setValue(option.value);
-          popup.style.display = 'none';
-          setTimeout(function() { popup.style.display = ''; }, 200);
+          if (!this.element.classList.contains('ol-fixed')) {
+            popup.style.display = 'none';
+            setTimeout(function() { popup.style.display = ''; }, 200);
+          }
         }.bind(this),
         parent: this.popup
       })

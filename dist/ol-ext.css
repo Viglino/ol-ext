@@ -6179,9 +6179,24 @@ ul.ol-legend li div {
   display: block;
 }
 
-.ol-input-popup:hover .ol-popup li {
+.ol-input-popup .ol-popup li {
   position: relative;
 }
+
+.ol-input-popup.ol-fixed:hover .ol-popup,
+.ol-input-popup.ol-fixed .ol-popup {
+  position: relative;
+  left: 0;
+  -webkit-box-shadow: unset;
+          box-shadow: unset;
+  background-color: transparent;
+  display: inline-block;
+  vertical-align: middle;
+}
+.ol-input-popup.ol-fixed.ol-left .ol-popup {
+  float: left;
+}
+
 
 .ol-input-popup.ol-size li {
   display: table-cell;
@@ -6283,6 +6298,20 @@ ul.ol-legend li div {
           transform: translate(-50%, -50%);
   background-color: #999;
   pointer-events: none;
+}
+
+.ol-input-slider.ol-fixed:hover .ol-popup,
+.ol-input-slider.ol-fixed .ol-popup {
+  position: relative;
+  left: 0;
+  -webkit-box-shadow: unset;
+          box-shadow: unset;
+  background-color: transparent;
+  display: inline-block;
+  vertical-align: middle;
+}
+.ol-input-slider.ol-fixed.ol-left .ol-popup {
+  float: left;
 }
 
 /* Grow */
