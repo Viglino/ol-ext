@@ -3,6 +3,7 @@
  */
 import ol_ext_inherits from '../ext'
 import ol_Object from 'ol/Object'
+import ol_ext_element from '../element';
 
 /** @namespace  ol.ext.input
  */
@@ -14,16 +15,18 @@ if (window.ol) {
 /** Abstract base class; normally only used for creating subclasses and not instantiated in apps.    
  * @constructor
  * @extends {ol_Object}
- * @param {Element} input input element
+ * @param {*} options
+ *  @param {Element} [input] input element, if non create one
+ *  @param {Element} [paren] parent element, if create an input
  */
-var ol_ext_input_Base = function(input, options) {
+var ol_ext_input_Base = function(options) {
   options = options || {};
-
+  
   ol_Object.call(this);
   
-  this.input = input;
+  var input = this.input = options.input || ol_ext_element.create('INPUT', { parent: options.parent });
   if (options.checked !== undefined) input.checked = !!options.checked;
-  if (options.val !== undefined) input.value = !!options.val;
+  if (options.val !== undefined) input.value = options.val;
 };
 ol_ext_inherits(ol_ext_input_Base, ol_Object);
 

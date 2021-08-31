@@ -686,7 +686,8 @@ ol.ext.element.createSwitch = function (options) {
     on: options.on,
     parent: options.parent
   });
-  new ol.ext.input.Switch(input, options);
+  var opt = Object.assign ({ input: input }, options || {});
+  new ol.ext.input.Switch(opt);
   return input;
 };
 /** Create a toggle switch input
@@ -708,10 +709,12 @@ ol.ext.element.createCheck = function (options) {
     on: options.on,
     parent: options.parent
   });
+  console.log(input)
+  var opt = Object.assign ({ input: input }, options || {});
   if (options.type === 'radio') {
-    new ol.ext.input.Radio(input, options);
+    new ol.ext.input.Radio(opt);
   } else {
-    new ol.ext.input.Checkbox(input, options);
+    new ol.ext.input.Checkbox(opt);
   }
   return input;
 };
@@ -1780,14 +1783,16 @@ if (window.ol) {
 /** Abstract base class; normally only used for creating subclasses and not instantiated in apps.    
  * @constructor
  * @extends {ol.Object}
- * @param {Element} input input element
+ * @param {*} options
+ *  @param {Element} [input] input element, if non create one
+ *  @param {Element} [paren] parent element, if create an input
  */
-ol.ext.input.Base = function(input, options) {
+ol.ext.input.Base = function(options) {
   options = options || {};
   ol.Object.call(this);
-  this.input = input;
+  var input = this.input = options.input || ol.ext.element.create('INPUT', { parent: options.parent });
   if (options.checked !== undefined) input.checked = !!options.checked;
-  if (options.val !== undefined) input.value = !!options.val;
+  if (options.val !== undefined) input.value = options.val;
 };
 ol.ext.inherits(ol.ext.input.Base, ol.Object);
 /** Listen to drag event
@@ -1837,6 +1842,8 @@ ol.ext.input.Base.prototype.getValue = function() {
  * @constructor
  * @extends {ol.ext.input.Base}
  * @param {*} options
+ *  @param {Element} [input] input element, if non create one
+ *  @param {Element} [paren] parent element, if create an input
  *  @param {string} [align=left] align popup left/right
  *  @param {string} [type] a slide type as 'size'
  *  @param {number} [min] min value, default use input min
@@ -1846,15 +1853,16 @@ ol.ext.input.Base.prototype.getValue = function() {
  *  @param {string|Element} [before] an element to add before the slider
  *  @param {string|Element} [after] an element to add after the slider
  */
-ol.ext.input.Slider = function(input, options) {
+ol.ext.input.Slider = function(options) {
   options = options || {};
-  ol.ext.input.Base.call(this, input, options);
-  this.set('overflow', !!options.overflow)
+  ol.ext.input.Base.call(this, options);
+  this.set('overflow', !!options.overflow);
   this.element = ol.ext.element.create('DIV', {
     className: 'ol-input-slider' + (options.type ? ' ol-'+options.type : '')
   });
   if (options.className) this.element.classList.add(options.className);
-  input.parentNode.insertBefore(this.element, input);
+  var input = this.input;
+  if (input.parentNode) input.parentNode.insertBefore(this.element, input);
   this.element.appendChild(input);
   if (options.align==='right') this.element.classList.add('ol-right');
   var popup = ol.ext.element.create('DIV', {
@@ -1919,15 +1927,15 @@ ol.ext.inherits(ol.ext.input.Slider, ol.ext.input.Base);
  * @constructor
  * @extends {ol.ext.input.Base}
  */
-ol.ext.input.Checkbox = function(input, options) {
+ol.ext.input.Checkbox = function(options) {
   options = options || {};
-  ol.ext.input.Base.call(this, input, options);
+  ol.ext.input.Base.call(this, options);
   var label = this.element = ol.ext.element.create('LABEL',{ 
     html: options.html,
     className: ('ol-ext-check ol-ext-checkbox'  + (options.className || '')).trim()
   });
-  input.parentNode.insertBefore(label, input);
-  label.appendChild(input);
+  if (this.input.parentNode) this.input.parentNode.insertBefore(label, this.input);
+  label.appendChild(this.input);
   ol.ext.element.create('SPAN', { parent: label });
   if (options.after) {
     label.appendChild(document.createTextNode(options.after));
@@ -1941,21 +1949,24 @@ ol.ext.inherits(ol.ext.input.Checkbox, ol.ext.input.Base);
  * @fires change:color
  * @fires color
  * @param {*} options
+ *  @param {Element} [input] input element, if non create one
+ *  @param {Element} [paren] parent element, if create an input
  *  @param {boolean} [autoClose=true]
  *  @param {boolean} [visible=false] display the input
  */
-ol.ext.input.Color = function(input, options) {
+ol.ext.input.Color = function(options) {
   options = options || {};
-  ol.ext.input.Base.call(this, input, options);
+  ol.ext.input.Base.call(this, options);
   this.set('autoClose', options.autoClose !== false);
   this.element = ol.ext.element.create('DIV', {
     className: ('ol-ext-colorpicker'  + (options.className || '')).trim(),
   });
   if (!options.fixed) this.element.classList.add('ol-popup');
-  input.parentNode.insertBefore(this.element, input);
+  var input = this.input;
+  if (input.parentNode) input.parentNode.insertBefore(this.element, input);
   if (options.visible !== true) input.style.display = 'none';
   this.element.addEventListener('click', function() {
-    setTimeout( function() { this.toggle(); }.bind(this) );
+    if (this.isCollapsed()) setTimeout( function() { this.collapse(false); }.bind(this) );
   }.bind(this));
   document.addEventListener('click', function() {
     if (!this.moving) this.collapse(true);
@@ -2284,16 +2295,19 @@ ol.ext.input.Color.prototype.getColorID = function(color) {
  * @constructor
  * @extends {ol.ext.input.Base}
  * @param {*} options
+ *  @param {Element} [input] input element, if non create one
+ *  @param {Element} [paren] parent element, if create an input
  *  @param {string} [align=left] align popup left/right
  */
-ol.ext.input.Popup = function(input, options) {
+ol.ext.input.Popup = function(options) {
   options = options || {};
-  ol.ext.input.Base.call(this, input, options);
+  ol.ext.input.Base.call(this, options);
   this.element = ol.ext.element.create('DIV', {
     className: 'ol-input-popup'
   });
   if (options.className) this.element.classList.add(options.className);
-  input.parentNode.insertBefore(this.element, input);
+  var input = this.input;
+  if (input.parentNode) input.parentNode.insertBefore(this.element, input);
   this.element.appendChild(input);
   var popup = this.popup = ol.ext.element.create('UL', {
     className: 'ol-popup',
@@ -2342,9 +2356,11 @@ ol.ext.inherits(ol.ext.input.Radio, ol.ext.input.Checkbox);
  * @constructor
  * @extends {ol.ext.input.Slider}
  * @param {*} options
+ *  @param {Element} [input] input element, if non create one
+ *  @param {Element} [paren] parent element, if create an input
  *  @param {Array<number>} [options.size] a list of size (default 0,2,3,5,8,13,21,34,55)
  */
-ol.ext.input.Size = function(input, options) {
+ol.ext.input.Size = function(options) {
   options = options || {};
   options.options = [];
   (options.size || [0,2,3,5,8,13,21,34,55]).forEach(function(i) {
@@ -2358,7 +2374,7 @@ ol.ext.input.Size = function(input, options) {
       })
     })
   })
-  ol.ext.input.Popup.call(this, input, options);
+  ol.ext.input.Popup.call(this, options);
   this.element.classList.add('ol-size');
 };
 ol.ext.inherits(ol.ext.input.Size, ol.ext.input.Popup);
@@ -2372,10 +2388,13 @@ ol.ext.input.Size.prototype.getValue = function() {
 /** Switch input
  * @constructor
  * @extends {ol.ext.input.Checkbox}
+ * @param {*} options
+ *  @param {Element} [input] input element, if non create one
+ *  @param {Element} [paren] parent element, if create an input
  */
-ol.ext.input.Switch = function(input, options) {
+ol.ext.input.Switch = function(options) {
   options = options || {};
-  ol.ext.input.Checkbox.call(this, input, options);
+  ol.ext.input.Checkbox.call(this, options);
   this.element.className = ('ol-ext-toggle-switch ' + (options.className || '')).trim();
 };
 ol.ext.inherits(ol.ext.input.Switch, ol.ext.input.Checkbox);
@@ -2384,9 +2403,11 @@ ol.ext.inherits(ol.ext.input.Switch, ol.ext.input.Checkbox);
  * @constructor
  * @extends {ol.ext.input.Slider}
  * @param {*} options
+ *  @param {Element} [input] input element, if non create one
+ *  @param {Element} [paren] parent element, if create an input
  *  @param {Array<number>} [options.size] a list of size (default 0,1,2,3,5,10,15,20)
  */
-ol.ext.input.Width = function(input, options) {
+ol.ext.input.Width = function(options) {
   options = options || {};
   options.options = [];
   (options.size || [0,1,2,3,5,10,15,20]).forEach(function(i) {
@@ -2400,7 +2421,7 @@ ol.ext.input.Width = function(input, options) {
       })
     })
   })
-  ol.ext.input.Popup.call(this, input, options);
+  ol.ext.input.Popup.call(this, options);
   this.element.classList.add('ol-width');
 };
 ol.ext.inherits(ol.ext.input.Width, ol.ext.input.Popup);
@@ -13490,6 +13511,7 @@ ol.control.SelectCheck.prototype.setMap = function(map) {
 /** Select features by attributes
  */
 ol.control.SelectCheck.prototype.doSelect = function(options) {
+  console.log('select')
   options = options || {};
   var conditions = [];
   this._checks.forEach(function(c) {

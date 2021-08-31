@@ -12,24 +12,29 @@ import { sArray as ol_color_asArray } from 'ol/color'
  * @fires change:color
  * @fires color
  * @param {*} options
+ *  @param {Element} [input] input element, if non create one
+ *  @param {Element} [paren] parent element, if create an input
  *  @param {boolean} [autoClose=true]
  *  @param {boolean} [visible=false] display the input
  */
-var ol_ext_input_Color = function(input, options) {
+var ol_ext_input_Color = function(options) {
   options = options || {};
 
-  ol_ext_input_Base.call(this, input, options);
+  ol_ext_input_Base.call(this, options);
+
   this.set('autoClose', options.autoClose !== false);
 
   this.element = ol_ext_element.create('DIV', {
     className: ('ol-ext-colorpicker'  + (options.className || '')).trim(),
   });
   if (!options.fixed) this.element.classList.add('ol-popup');
-  input.parentNode.insertBefore(this.element, input);
+
+  var input = this.input;
+  if (input.parentNode) input.parentNode.insertBefore(this.element, input);
   if (options.visible !== true) input.style.display = 'none';
 
   this.element.addEventListener('click', function() {
-    setTimeout( function() { this.toggle(); }.bind(this) );
+    if (this.isCollapsed()) setTimeout( function() { this.collapse(false); }.bind(this) );
   }.bind(this));
   document.addEventListener('click', function() {
     if (!this.moving) this.collapse(true);

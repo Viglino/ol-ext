@@ -104,7 +104,8 @@ ol_ext_element.createSwitch = function (options) {
     on: options.on,
     parent: options.parent
   });
-  new ol_ext_input_Switch(input, options);
+  var opt = Object.assign ({ input: input }, options || {});
+  new ol_ext_input_Switch(opt);
   return input;
 };
 
@@ -127,10 +128,12 @@ ol_ext_element.createCheck = function (options) {
     on: options.on,
     parent: options.parent
   });
+  console.log(input)
+  var opt = Object.assign ({ input: input }, options || {});
   if (options.type === 'radio') {
-    new ol_ext_input_Radio(input, options);
+    new ol_ext_input_Radio(opt);
   } else {
-    new ol_ext_input_Checkbox(input, options);
+    new ol_ext_input_Checkbox(opt);
   }
   return input;
 };

@@ -6,17 +6,17 @@ import ol_ext_input_Base from './Base'
  * @constructor
  * @extends {ol_ext_input_Base}
  */
-var ol_ext_input_Checkbox = function(input, options) {
+var ol_ext_input_Checkbox = function(options) {
   options = options || {};
 
-  ol_ext_input_Base.call(this, input, options);
+  ol_ext_input_Base.call(this, options);
 
   var label = this.element = ol_ext_element.create('LABEL',{ 
     html: options.html,
     className: ('ol-ext-check ol-ext-checkbox'  + (options.className || '')).trim()
   });
-  input.parentNode.insertBefore(label, input);
-  label.appendChild(input);
+  if (this.input.parentNode) this.input.parentNode.insertBefore(label, this.input);
+  label.appendChild(this.input);
   ol_ext_element.create('SPAN', { parent: label });
   if (options.after) {
     label.appendChild(document.createTextNode(options.after));

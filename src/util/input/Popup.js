@@ -6,18 +6,22 @@ import ol_ext_input_Base from './Base'
  * @constructor
  * @extends {ol_ext_input_Base}
  * @param {*} options
+ *  @param {Element} [input] input element, if non create one
+ *  @param {Element} [paren] parent element, if create an input
  *  @param {string} [align=left] align popup left/right
  */
-var ol_ext_input_Popup = function(input, options) {
+var ol_ext_input_Popup = function(options) {
   options = options || {};
 
-  ol_ext_input_Base.call(this, input, options);
+  ol_ext_input_Base.call(this, options);
 
   this.element = ol_ext_element.create('DIV', {
     className: 'ol-input-popup'
   });
   if (options.className) this.element.classList.add(options.className);
-  input.parentNode.insertBefore(this.element, input);
+
+  var input = this.input;
+  if (input.parentNode) input.parentNode.insertBefore(this.element, input);
   this.element.appendChild(input);
 
   var popup = this.popup = ol_ext_element.create('UL', {

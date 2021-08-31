@@ -71,6 +71,7 @@ ol_control_SelectCheck.prototype.setMap = function(map) {
 /** Select features by attributes
  */
 ol_control_SelectCheck.prototype.doSelect = function(options) {
+  console.log('select')
   options = options || {};
   var conditions = [];
   this._checks.forEach(function(c) {

@@ -6,6 +6,8 @@ import ol_ext_input_Base from './Base'
  * @constructor
  * @extends {ol_ext_input_Base}
  * @param {*} options
+ *  @param {Element} [input] input element, if non create one
+ *  @param {Element} [paren] parent element, if create an input
  *  @param {string} [align=left] align popup left/right
  *  @param {string} [type] a slide type as 'size'
  *  @param {number} [min] min value, default use input min
@@ -15,17 +17,19 @@ import ol_ext_input_Base from './Base'
  *  @param {string|Element} [before] an element to add before the slider
  *  @param {string|Element} [after] an element to add after the slider
  */
-var ol_ext_input_Slider = function(input, options) {
+var ol_ext_input_Slider = function(options) {
   options = options || {};
 
-  ol_ext_input_Base.call(this, input, options);
-  this.set('overflow', !!options.overflow)
+  ol_ext_input_Base.call(this, options);
+  this.set('overflow', !!options.overflow);
 
   this.element = ol_ext_element.create('DIV', {
     className: 'ol-input-slider' + (options.type ? ' ol-'+options.type : '')
   });
   if (options.className) this.element.classList.add(options.className);
-  input.parentNode.insertBefore(this.element, input);
+
+  var input = this.input;
+  if (input.parentNode) input.parentNode.insertBefore(this.element, input);
   this.element.appendChild(input);
   if (options.align==='right') this.element.classList.add('ol-right');
 

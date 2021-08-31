@@ -6,9 +6,11 @@ import ol_ext_input_Popup from './Popup'
  * @constructor
  * @extends {ol_ext_input_Slider}
  * @param {*} options
+ *  @param {Element} [input] input element, if non create one
+ *  @param {Element} [paren] parent element, if create an input
  *  @param {Array<number>} [options.size] a list of size (default 0,2,3,5,8,13,21,34,55)
  */
-var ol_ext_input_Size = function(input, options) {
+var ol_ext_input_Size = function(options) {
   options = options || {};
 
   options.options = [];
@@ -23,7 +25,7 @@ var ol_ext_input_Size = function(input, options) {
       })
     })
   })
-  ol_ext_input_Popup.call(this, input, options);
+  ol_ext_input_Popup.call(this, options);
 
   this.element.classList.add('ol-size');
 

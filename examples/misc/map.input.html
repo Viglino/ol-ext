@@ -55,7 +55,7 @@
   </a>
 
   <p>
-    <input class='switch' type="checkbox" />
+    Switch: <input class='switch' type="checkbox" />
   </p><p>
     <input class='check' type="checkbox" />
   </p>
@@ -91,43 +91,44 @@
 
 <script type="text/javascript">
 
-  var switcher = new ol.ext.input.Switch($('.switch').get(0), { html: 'Switch: off', after: 'on' });
-  new ol.ext.input.Checkbox($('.check').get(0), { html: 'Checkbox:', after: 'on' });
+  var switcher = new ol.ext.input.Switch({ input: $('.switch').get(0), html: 'off', after: 'on' });
+
+  new ol.ext.input.Checkbox({ input: $('.check').get(0), html: 'Checkbox:', after: 'on' });
   $('.radio').each(function(i) {
-    new ol.ext.input.Radio(this, { html: i? '' : 'Radio:', after: 'radio '+(i+1), checked: !i });
+    new ol.ext.input.Radio({ input: this, html: i? '' : 'Radio:', after: 'radio '+(i+1), checked: !i });
   });
 
-  var slider = new ol.ext.input.Slider($('.slider').get(0));
+  var slider = new ol.ext.input.Slider({ input: $('.slider').get(0) });
   slider.on('change:value', function(e) {
     $('.opacity').css('opacity', e.value/100);
   });
   slider.setValue(25);
   
-  var slide2 = new ol.ext.input.Slider($('.slide2').get(0), { type: 'size' });
+  var slide2 = new ol.ext.input.Slider({ input: $('.slide2').get(0), type: 'size' });
   slide2.on('change:value', function(e) {
     $('.fa-map-marker').css('font-size', e.value+'px');
   });
   slide2.setValue(50);
 
-  var cpicker = new ol.ext.input.Color($('.color1').get(0), { color: 'red', fixed: false });
+  var cpicker = new ol.ext.input.Color({ input: $('.color1').get(0), color: 'red', fixed: false });
   cpicker.on('color', function(e) { console.log('Color:', e.color) })
 
-  var cpicker2 = new ol.ext.input.Color($('.color2').get(0), { fixed: true });
+  var cpicker2 = new ol.ext.input.Color({ input: $('.color2').get(0), fixed: true });
   cpicker2.on('color', function(e) { 
     $('.color').css('background-color', ol.color.asString(e.color));
   });
   cpicker2.setColor('#f90');
 
-  var size = new ol.ext.input.Size($('.size').get(0));
+  var size = new ol.ext.input.Size({ input: $('.size').get(0) });
   size.on('change:value', function(e) {
     $('.fa-map-pin').css('font-size', e.value+'px');
   });
   size.setValue(8);
 
-  var size2 = new ol.ext.input.Size($('.size2').get(0), { className: 'marker' });
+  var size2 = new ol.ext.input.Size({ input: $('.size2').get(0), className: 'marker' });
   size2.setValue(8);
 
-  var width = new ol.ext.input.Width($('.width').get(0));
+  var width = new ol.ext.input.Width({ input: $('.width').get(0) });
   width.on('change:value', function(e) {
     $('.line').height(e.value)
   })
