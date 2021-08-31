@@ -35,6 +35,15 @@
     body {
      user-select: none; 
     }
+    .ol-input-popup.marker li > * {
+      background-color: transparent;
+      width: .6em;
+    }
+    .marker li > *:before {
+      content: "\f041";
+      font-family: FontAwesome;
+      color: #369;
+    }
   </style>
 
 </head>
@@ -65,9 +74,18 @@
   </p><p>
     Size: 
     <i class="fa fa-map-marker" style="line-height: 60px; width: 60px; text-align: center; vertical-align: middle;"></i> 
-    <input class='size' type='number' style="width: 3em" value=50 min=20 max=80 />
+    <input class='slide2' type='number' style="width: 3em" value=50 min=20 max=80 />
   </p><p>
-    Width: <input class='width' type='number' style="width: 3em" value=25 min=0 max=100 />
+    Size:
+    <i class="fa fa-map-pin" style="line-height: 60px; width: 60px; text-align: center; vertical-align: middle;"></i> 
+    <input class='size' type='number' style="width: 3em" />
+  </p><p>
+    Size (styled):
+    <input class='size2' type='number' style="width: 3em" />
+  </p><p>
+    Width: 
+    <span class="line" style="display: inline-block; background-color: red; width: 2.5em; vertical-align: middle;"></span>
+    <input class='width' type='number' style="width: 3em" />
   </p>
 
 
@@ -85,11 +103,11 @@
   });
   slider.setValue(25);
   
-  var size = new ol.ext.input.Slider($('.size').get(0), { type: 'size' });
-  size.on('change:value', function(e) {
+  var slide2 = new ol.ext.input.Slider($('.slide2').get(0), { type: 'size' });
+  slide2.on('change:value', function(e) {
     $('.fa-map-marker').css('font-size', e.value+'px');
   });
-  size.setValue(50);
+  slide2.setValue(50);
 
   var cpicker = new ol.ext.input.Color($('.color1').get(0), { color: 'red', fixed: false });
   cpicker.on('color', function(e) { console.log('Color:', e.color) })
@@ -100,10 +118,19 @@
   });
   cpicker2.setColor('#f90');
 
-  var width = new ol.ext.input.Size($('.width').get(0));
+  var size = new ol.ext.input.Size($('.size').get(0));
   size.on('change:value', function(e) {
-    $('.fa-map-marker').css('font-size', e.value+'px');
+    $('.fa-map-pin').css('font-size', e.value+'px');
   });
+  size.setValue(8);
+
+  var size2 = new ol.ext.input.Size($('.size2').get(0), { className: 'marker' });
+  size2.setValue(8);
+
+  var width = new ol.ext.input.Width($('.width').get(0));
+  width.on('change:value', function(e) {
+    $('.line').height(e.value)
+  })
   width.setValue(8);
 
 </script>

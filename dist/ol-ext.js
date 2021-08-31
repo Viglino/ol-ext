@@ -1819,6 +1819,18 @@ ol.ext.input.Base.prototype._listenDrag = function(elt, cback) {
   }.bind(this)
   elt.addEventListener('mousedown', handle, false);
   elt.addEventListener('touchstart', handle, false);
+};
+/** Set the current value
+ */
+ ol.ext.input.Base.prototype.setValue = function(v) {
+  if (v !== undefined) this.input.value = v;
+  this.input.dispatchEvent(new Event('change'));
+};
+/** Get the current getValue
+ * @returns {string}
+ */
+ol.ext.input.Base.prototype.getValue = function() {
+  return this.input.value;
 }
 
 /** Checkbox input
@@ -1902,12 +1914,6 @@ ol.ext.input.Slider = function(input, options) {
   setValue();
 };
 ol.ext.inherits(ol.ext.input.Slider, ol.ext.input.Base);
-/** Set the slider value
- */
-ol.ext.input.Slider.prototype.setValue = function(v) {
-  if (v !== undefined) this.input.value = v;
-  this.input.dispatchEvent(new Event('change'));
-}
 
 /** Checkbox input
  * @constructor
@@ -2289,17 +2295,35 @@ ol.ext.input.Popup = function(input, options) {
   if (options.className) this.element.classList.add(options.className);
   input.parentNode.insertBefore(this.element, input);
   this.element.appendChild(input);
-  this.popup = ol.ext.element.create('UL', {
+  var popup = this.popup = ol.ext.element.create('UL', {
     className: 'ol-popup',
     parent: this.element
   });
+  var opts = [];
   options.options.forEach(option => {
-    ol.ext.element.create('li', {
-      html: option.html,
-      className: 'ol-option',
-      parent: this.popup
-    });
+    opts.push({
+      value: option.value,
+      element: ol.ext.element.create('LI', {
+        html: option.html,
+        title: option.value,
+        className: 'ol-option',
+        click: function() {
+          this.setValue(option.value);
+          popup.style.display = 'none';
+          setTimeout(function() { popup.style.display = ''; }, 200);
+        }.bind(this),
+        parent: this.popup
+      })
+    })
   });
+  this.input.addEventListener('change', function() {
+    var v = this.input.value;
+    opts.forEach(function(o) {
+      if (o.value == v) o.element.classList.add('ol-selected');
+      else o.element.classList.remove('ol-selected');
+    });
+    this.dispatchEvent({ type: 'change:value', value: this.getValue() });
+  }.bind(this));
 };
 ol.ext.inherits(ol.ext.input.Popup, ol.ext.input.Base);
 
@@ -2318,27 +2342,32 @@ ol.ext.inherits(ol.ext.input.Radio, ol.ext.input.Checkbox);
  * @constructor
  * @extends {ol.ext.input.Slider}
  * @param {*} options
- *  @param {string} [align=left] align popup left/right
+ *  @param {Array<number>} [options.size] a list of size (default 0,2,3,5,8,13,21,34,55)
  */
 ol.ext.input.Size = function(input, options) {
   options = options || {};
   options.options = [];
-  [0,2,3,5,8,13,21,34,55].forEach(function(i) {
+  (options.size || [0,2,3,5,8,13,21,34,55]).forEach(function(i) {
     options.options.push({
       value: i,
       html: ol.ext.element.create('DIV', {
         className: 'ol-option-'+i,
         style: {
-          width: i,
-          height: i
+          fontSize: i ? i+'px' : undefined
         }
       })
     })
   })
   ol.ext.input.Popup.call(this, input, options);
-  this.set('overflow', !!options.overflow)
+  this.element.classList.add('ol-size');
 };
 ol.ext.inherits(ol.ext.input.Size, ol.ext.input.Popup);
+/** Get the current value
+ * @returns {number}
+ */
+ol.ext.input.Size.prototype.getValue = function() {
+  return parseFloat(ol.ext.input.Base.prototype.getValue.call(this));
+}
 
 /** Switch input
  * @constructor
@@ -2350,6 +2379,37 @@ ol.ext.input.Switch = function(input, options) {
   this.element.className = ('ol-ext-toggle-switch ' + (options.className || '')).trim();
 };
 ol.ext.inherits(ol.ext.input.Switch, ol.ext.input.Checkbox);
+
+/** Checkbox input
+ * @constructor
+ * @extends {ol.ext.input.Slider}
+ * @param {*} options
+ *  @param {Array<number>} [options.size] a list of size (default 0,1,2,3,5,10,15,20)
+ */
+ol.ext.input.Width = function(input, options) {
+  options = options || {};
+  options.options = [];
+  (options.size || [0,1,2,3,5,10,15,20]).forEach(function(i) {
+    options.options.push({
+      value: i,
+      html: ol.ext.element.create('DIV', {
+        className: 'ol-option-'+i,
+        style: {
+          height: i || undefined
+        }
+      })
+    })
+  })
+  ol.ext.input.Popup.call(this, input, options);
+  this.element.classList.add('ol-width');
+};
+ol.ext.inherits(ol.ext.input.Width, ol.ext.input.Popup);
+/** Get the current value
+ * @returns {number}
+ */
+ol.ext.input.Width.prototype.getValue = function() {
+  return parseFloat(ol.ext.input.Base.prototype.getValue.call(this));
+}
 
 /** @namespace  ol.legend
  */

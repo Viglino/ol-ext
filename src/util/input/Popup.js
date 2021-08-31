@@ -20,19 +20,37 @@ var ol_ext_input_Popup = function(input, options) {
   input.parentNode.insertBefore(this.element, input);
   this.element.appendChild(input);
 
-  this.popup = ol_ext_element.create('UL', {
+  var popup = this.popup = ol_ext_element.create('UL', {
     className: 'ol-popup',
     parent: this.element
   });
+  var opts = [];
   options.options.forEach(option => {
-    ol_ext_element.create('li', {
-      html: option.html,
-      className: 'ol-option',
-      parent: this.popup
-    });
+    opts.push({
+      value: option.value,
+      element: ol_ext_element.create('LI', {
+        html: option.html,
+        title: option.value,
+        className: 'ol-option',
+        click: function() {
+          this.setValue(option.value);
+          popup.style.display = 'none';
+          setTimeout(function() { popup.style.display = ''; }, 200);
+        }.bind(this),
+        parent: this.popup
+      })
+    })
   });
 
+  this.input.addEventListener('change', function() {
+    var v = this.input.value;
+    opts.forEach(function(o) {
+      if (o.value == v) o.element.classList.add('ol-selected');
+      else o.element.classList.remove('ol-selected');
+    });
+    this.dispatchEvent({ type: 'change:value', value: this.getValue() });
+  }.bind(this));
 };
 ol_ext_inherits(ol_ext_input_Popup, ol_ext_input_Base);
-  
+
 export default ol_ext_input_Popup

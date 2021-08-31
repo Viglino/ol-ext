@@ -56,5 +56,20 @@ ol_ext_input_Base.prototype._listenDrag = function(elt, cback) {
   }.bind(this)
   elt.addEventListener('mousedown', handle, false);
   elt.addEventListener('touchstart', handle, false);
+};
+
+/** Set the current value
+ */
+ ol_ext_input_Base.prototype.setValue = function(v) {
+  if (v !== undefined) this.input.value = v;
+  this.input.dispatchEvent(new Event('change'));
+};
+
+/** Get the current getValue
+ * @returns {string}
+ */
+ol_ext_input_Base.prototype.getValue = function() {
+  return this.input.value;
 }
+
 export default ol_ext_input_Base

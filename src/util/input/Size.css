@@ -1,0 +1,43 @@
+.ol-input-popup.ol-size li {
+  display: table-cell;
+  height: 100%;
+  padding: 5px;
+  vertical-align: middle;
+}
+.ol-input-popup.ol-size li:hover {
+  background-color: #ccc;
+}
+.ol-input-popup.ol-size li.ol-selected {
+  background-color: #ccc;
+}
+
+.ol-input-popup.ol-size li > * {
+  background-color: #369;
+  border-radius: 50%;
+  vertical-align: middle;
+  width: 1em;
+  height: 1em;
+}
+
+.ol-input-popup.ol-size li > .ol-option-0 {
+  position: relative;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  color: #aaa;
+  background-color: transparent;
+  box-sizing: border-box;
+}
+.ol-input-popup.ol-size li > *:before {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+.ol-input-popup.ol-size li > .ol-option-0:before {
+  content: "";
+  width: 1em;
+  height: 2px;
+  background-color: #aaa;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}

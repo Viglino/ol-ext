@@ -92,12 +92,5 @@ var ol_ext_input_Slider = function(input, options) {
 
 };
 ol_ext_inherits(ol_ext_input_Slider, ol_ext_input_Base);
-
-/** Set the slider value
- */
-ol_ext_input_Slider.prototype.setValue = function(v) {
-  if (v !== undefined) this.input.value = v;
-  this.input.dispatchEvent(new Event('change'));
-}
   
 export default ol_ext_input_Slider

@@ -18,18 +18,6 @@
   display: block;
 }
 
-.ol-input-popup li {
-  display: table-cell;
-  height: 100%;
-  padding: 5px;
-  vertical-align: middle;
+.ol-input-popup:hover .ol-popup li {
+  position: relative;
 }
-.ol-input-popup li:hover {
-  background-color: #eee;
-}
-
-.ol-input-popup li > * {
-  background-color: #369;
-  border-radius: 50%;
-}
-
