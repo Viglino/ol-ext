@@ -1,0 +1,18 @@
+.ol-input-popup.ol-width li {
+  padding: 5px;
+}
+
+
+.ol-input-popup.ol-width li > * {
+  background-color: #369;
+  width: 100px;
+  height: 1em;
+}
+
+.ol-input-popup.ol-width li > .ol-option-0 {
+  position: relative;
+  height: 1px;
+  background-image: linear-gradient(90deg,#aaa 2px, transparent 2px);
+  background-color: transparent;
+  background-size: 4px;
+}
