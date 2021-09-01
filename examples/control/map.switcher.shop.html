@@ -45,6 +45,7 @@
     }
     .ol-layer-shop .ol-bar input[type="number"] {
       width: 3em;
+      height: 1em;
     }
   </style>
 </head>
@@ -256,20 +257,20 @@
     else sel.value = 'grayscale';
   });
 
-  var opacity = ol.ext.element.create('input', { 
+  var opacity = new ol.ext.input.Slider({
+    className: 'opacity',
+    align: 'right',
     type: 'number',
     min: 0,
     max: 100,
-    on: {
-      change: function(e) {
-        ctrl.getSelection().setOpacity(parseInt(e.target.value)/100);
-      }
-    },
     parent: ctrl.getBarElement()
   });
+  opacity.on('change:value', function(e) {
+    ctrl.getSelection().setOpacity(e.value/100);
+  })
   ctrl.on(['layer:opacity', 'select'], function(e) {
     if (e.layer === ctrl.getSelection()) {
-      opacity.value = Math.round(e.layer.getOpacity()*100);
+      opacity.setValue(Math.round(e.layer.getOpacity()*100));
     }
   });
 

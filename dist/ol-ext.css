@@ -6178,9 +6178,26 @@ ul.ol-legend li div {
 .ol-input-popup:hover .ol-popup {
   display: block;
 }
+.ol-input-popup.ol-right .ol-popup {
+  left: auto;
+  right: -5px;
+}
+.ol-input-popup.ol-middle .ol-popup {
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+          transform: translateY(-50%);
+}
+
 
 .ol-input-popup .ol-popup li {
   position: relative;
+}
+
+.ol-input-popup li:hover {
+  background-color: #ccc;
+}
+.ol-input-popup li.ol-selected {
+  background-color: #ccc;
 }
 
 .ol-input-popup.ol-fixed:hover .ol-popup,
@@ -6203,12 +6220,6 @@ ul.ol-legend li div {
   height: 100%;
   padding: 5px;
   vertical-align: middle;
-}
-.ol-input-popup.ol-size li:hover {
-  background-color: #ccc;
-}
-.ol-input-popup.ol-size li.ol-selected {
-  background-color: #ccc;
 }
 
 .ol-input-popup.ol-size li > * {
@@ -6258,7 +6269,7 @@ ul.ol-legend li div {
   display: none;
   left: -5px;
 }
-.ol-input-slider.ol-left .ol-popup {
+.ol-input-slider.ol-right .ol-popup {
   left: auto;
   right: -5px;
 }
@@ -6345,12 +6356,7 @@ ul.ol-legend li div {
 .ol-input-popup.ol-width li {
   padding: 5px;
 }
-.ol-input-popup.ol-width li:hover {
-  background-color: #ccc;
-}
-.ol-input-popup.ol-width li.ol-selected {
-  background-color: #ccc;
-}
+
 
 .ol-input-popup.ol-width li > * {
   background-color: #369;

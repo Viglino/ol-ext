@@ -8,8 +8,8 @@ import ol_ext_input_Base from './Base'
  * @param {*} options
  *  @param {Element} [input] input element, if non create one
  *  @param {Element} [parent] parent element, if create an input
- *  @param {string} [align=left] align popup left/right
- *  @param {boolean} [fixed=false] no pupop
+ *  @param {string} [align=left] align popup left/right/middle
+ *  @param {boolean} [fixed=false] no popup
  */
 var ol_ext_input_Popup = function(options) {
   options = options || {};
@@ -17,11 +17,26 @@ var ol_ext_input_Popup = function(options) {
   ol_ext_input_Base.call(this, options);
 
   this.element = ol_ext_element.create('DIV', {
+    html: options.html,
     className: 'ol-input-popup'
   });
+  this.set('hideOnClick', options.hideOnClick !== false);
   if (options.className) this.element.classList.add(options.className);
-  if (options.fixed) this.element.classList.add('ol-fixed');
-
+  if (options.fixed) {
+    this.element.classList.add('ol-fixed');
+    this.set('hideOnClick', false);
+  }
+  switch (options.align) {
+    case 'middle':
+      this.set('hideOnClick', false);
+    // fall through
+    case 'rigth':
+      this.element.classList.add('ol-' + options.align);
+      break;
+    default: 
+      break;
+  }
+  
   var input = this.input;
   if (input.parentNode) input.parentNode.insertBefore(this.element, input);
   this.element.appendChild(input);
@@ -36,11 +51,11 @@ var ol_ext_input_Popup = function(options) {
       value: option.value,
       element: ol_ext_element.create('LI', {
         html: option.html,
-        title: option.value,
+        title: option.title || option.value,
         className: 'ol-option',
         click: function() {
           this.setValue(option.value);
-          if (!this.element.classList.contains('ol-fixed')) {
+          if (this.get('hideOnClick')) {
             popup.style.display = 'none';
             setTimeout(function() { popup.style.display = ''; }, 200);
           }

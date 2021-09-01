@@ -4,12 +4,6 @@
   padding: 5px;
   vertical-align: middle;
 }
-.ol-input-popup.ol-size li:hover {
-  background-color: #ccc;
-}
-.ol-input-popup.ol-size li.ol-selected {
-  background-color: #ccc;
-}
 
 .ol-input-popup.ol-size li > * {
   background-color: #369;

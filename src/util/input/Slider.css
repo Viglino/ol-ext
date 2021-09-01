@@ -10,7 +10,7 @@
   display: none;
   left: -5px;
 }
-.ol-input-slider.ol-left .ol-popup {
+.ol-input-slider.ol-right .ol-popup {
   left: auto;
   right: -5px;
 }

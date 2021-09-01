@@ -25,9 +25,10 @@ var ol_ext_input_Slider = function(options) {
   this.set('overflow', !!options.overflow);
 
   this.element = ol_ext_element.create('DIV', {
-    className: 'ol-input-slider' + (options.type ? ' ol-'+options.type : '')
+    className: 'ol-input-slider' 
+      + (options.type ? ' ol-'+options.type : '')
+      + (options.className ? ' '+options.className : '')
   });
-  if (options.className) this.element.classList.add(options.className);
   if (options.fixed) this.element.classList.add('ol-fixed');
 
   var input = this.input;

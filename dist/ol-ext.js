@@ -1790,7 +1790,14 @@ if (window.ol) {
 ol.ext.input.Base = function(options) {
   options = options || {};
   ol.Object.call(this);
-  var input = this.input = options.input || ol.ext.element.create('INPUT', { parent: options.parent });
+  var input = this.input = options.input || ol.ext.element.create('INPUT', { 
+    type: options.type,
+    min: options.min,
+    max: options.max,
+    step: options.step,
+    parent: options.parent
+  });
+  if (options.disabled) input.disabled = true;
   if (options.checked !== undefined) input.checked = !!options.checked;
   if (options.val !== undefined) input.value = options.val;
 };
@@ -1859,9 +1866,10 @@ ol.ext.input.Slider = function(options) {
   ol.ext.input.Base.call(this, options);
   this.set('overflow', !!options.overflow);
   this.element = ol.ext.element.create('DIV', {
-    className: 'ol-input-slider' + (options.type ? ' ol-'+options.type : '')
+    className: 'ol-input-slider' 
+      + (options.type ? ' ol-'+options.type : '')
+      + (options.className ? ' '+options.className : '')
   });
-  if (options.className) this.element.classList.add(options.className);
   if (options.fixed) this.element.classList.add('ol-fixed');
   var input = this.input;
   if (input.parentNode) input.parentNode.insertBefore(this.element, input);
@@ -2299,17 +2307,32 @@ ol.ext.input.Color.prototype.getColorID = function(color) {
  * @param {*} options
  *  @param {Element} [input] input element, if non create one
  *  @param {Element} [parent] parent element, if create an input
- *  @param {string} [align=left] align popup left/right
- *  @param {boolean} [fixed=false] no pupop
+ *  @param {string} [align=left] align popup left/right/middle
+ *  @param {boolean} [fixed=false] no popup
  */
 ol.ext.input.Popup = function(options) {
   options = options || {};
   ol.ext.input.Base.call(this, options);
   this.element = ol.ext.element.create('DIV', {
+    html: options.html,
     className: 'ol-input-popup'
   });
+  this.set('hideOnClick', options.hideOnClick !== false);
   if (options.className) this.element.classList.add(options.className);
-  if (options.fixed) this.element.classList.add('ol-fixed');
+  if (options.fixed) {
+    this.element.classList.add('ol-fixed');
+    this.set('hideOnClick', false);
+  }
+  switch (options.align) {
+    case 'middle':
+      this.set('hideOnClick', false);
+    // fall through
+    case 'rigth':
+      this.element.classList.add('ol-' + options.align);
+      break;
+    default: 
+      break;
+  }
   var input = this.input;
   if (input.parentNode) input.parentNode.insertBefore(this.element, input);
   this.element.appendChild(input);
@@ -2323,11 +2346,11 @@ ol.ext.input.Popup = function(options) {
       value: option.value,
       element: ol.ext.element.create('LI', {
         html: option.html,
-        title: option.value,
+        title: option.title || option.value,
         className: 'ol-option',
         click: function() {
           this.setValue(option.value);
-          if (!this.element.classList.contains('ol-fixed')) {
+          if (this.get('hideOnClick')) {
             popup.style.display = 'none';
             setTimeout(function() { popup.style.display = ''; }, 200);
           }
@@ -2388,7 +2411,7 @@ ol.ext.inherits(ol.ext.input.Size, ol.ext.input.Popup);
  * @returns {number}
  */
 ol.ext.input.Size.prototype.getValue = function() {
-  return parseFloat(ol.ext.input.Base.prototype.getValue.call(this));
+  return parseFloat(ol.ext.input.Popup.prototype.getValue.call(this));
 }
 
 /** Switch input
@@ -2435,7 +2458,7 @@ ol.ext.inherits(ol.ext.input.Width, ol.ext.input.Popup);
  * @returns {number}
  */
 ol.ext.input.Width.prototype.getValue = function() {
-  return parseFloat(ol.ext.input.Base.prototype.getValue.call(this));
+  return parseFloat(ol.ext.input.Popup.prototype.getValue.call(this));
 }
 
 /** @namespace  ol.legend

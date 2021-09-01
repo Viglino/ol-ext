@@ -17,9 +17,25 @@
 .ol-input-popup:hover .ol-popup {
   display: block;
 }
+.ol-input-popup.ol-right .ol-popup {
+  left: auto;
+  right: -5px;
+}
+.ol-input-popup.ol-middle .ol-popup {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 
 .ol-input-popup .ol-popup li {
   position: relative;
+}
+
+.ol-input-popup li:hover {
+  background-color: #ccc;
+}
+.ol-input-popup li.ol-selected {
+  background-color: #ccc;
 }
 
 .ol-input-popup.ol-fixed:hover .ol-popup,

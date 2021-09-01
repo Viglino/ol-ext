@@ -36,7 +36,7 @@ ol_ext_inherits(ol_ext_input_Size, ol_ext_input_Popup);
  * @returns {number}
  */
 ol_ext_input_Size.prototype.getValue = function() {
-  return parseFloat(ol_ext_input_Base.prototype.getValue.call(this));
+  return parseFloat(ol_ext_input_Popup.prototype.getValue.call(this));
 }
 
 export default ol_ext_input_Size

@@ -44,6 +44,67 @@
       font-family: FontAwesome;
       color: #369;
     }
+
+    .ol-input-popup.arrow ul {
+      left: 10px;
+    }
+    .ol-input-popup.arrow li {
+      padding: 10px 5px;
+    }
+    .ol-input-popup.arrow i {
+      position: relative;
+      display: block;
+      width: 100px;
+      color: #369;
+      background-color: currentColor;
+      height: 2px;
+    }
+    .ol-input-popup.arrow > div {
+      position: relative;
+      display: inline-block;
+      vertical-align: middle;
+      border-radius: 2px;
+      border: 1px solid #999;
+      padding: 3px 20px 3px 10px
+    }
+    .ol-input-popup.arrow > div:before {
+      position: absolute;
+      content: "";
+      right: 5px;
+      top: 50%;
+      border: 5px solid transparent;
+      border-top: 5px solid #999;
+    }
+    .ol-input-popup.arrow > div > i {
+      display: inline-block;
+      vertical-align: middle;
+      width: 40px;
+    }
+    .ol-input-popup.arrow i:before,
+    .ol-input-popup.arrow i:after {
+      content: "";
+      position: absolute;
+      border: 0 solid transparent;
+      border-color: transparent currentColor;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .ol-input-popup.arrow i.arrow1:before {
+      border-width: 5px 0 5px 10px;
+      right: 0;
+    }
+    .ol-input-popup.arrow i.arrow-1:before {
+      border-width: 5px 10px 5px 0;
+      left: 0;
+    }
+    .ol-input-popup.arrow i.arrow2:before {
+      border-width: 5px 0 5px 10px;
+      right: 0;
+    }
+    .ol-input-popup.arrow i.arrow2:after {
+      border-width: 5px 10px 5px 0;
+      left: 0;
+    }
   </style>
 
 </head>
@@ -55,37 +116,40 @@
   </a>
 
   <p>
-    Switch: <input class='switch' type="checkbox" />
+    Switch: <input class="switch" type="checkbox" />
   </p><p>
-    <input class='check' type="checkbox" />
+    <input class="check" type="checkbox" />
   </p>
-    <input class='radio' type="radio" name="radio" />
-    <input class='radio' type="radio" name="radio" />
+    <input class="radio" type="radio" name="radio" />
+    <input class="radio" type="radio" name="radio" />
   </p><p>
-    Color: <input class='color1' />
+    Color: <input class="color1" />
   </p><p style="border: 1px solid #999; border-width: 1px 0; padding: .5em 0;">
     Color (fixed): 
     <span class="color" style="display: inline-block; background-color: red; width: 2.5em; height: 1.5em; vertical-align: middle;"></span>
-    <input class='color2' />
+    <input class="color2" />
   </p><p>
     Slider: 
     <span class="opacity" style="display: inline-block; background-color: red; width: 2.5em; height: 1.5em; vertical-align: middle;"></span>
-    <input class='slider' type='number' style="width: 3em" value=25 min=0 max=100 />
+    <input class='slider' type="number" style="width: 3em" value=25 min=0 max=100 />
   </p><p>
     Size: 
     <i class="fa fa-map-marker" style="line-height: 60px; width: 60px; text-align: center; vertical-align: middle;"></i> 
-    <input class='slide2' type='number' style="width: 3em" value=50 min=20 max=80 />
+    <input class="slide2" type="number" style="width: 3em" value=50 min=20 max=80 />
   </p><p>
     Size:
     <i class="fa fa-map-pin" style="line-height: 60px; width: 60px; text-align: center; vertical-align: middle;"></i> 
-    <input class='size' type='number' style="width: 3em" />
+    <input class="size" type="number" style="width: 3em" />
   </p><p>
     Size (styled):
-    <input class='size2' type='number' style="width: 3em" />
+    <input class="size2" type="number" style="width: 3em" />
   </p><p>
     Width: 
     <span class="line" style="display: inline-block; background-color: red; width: 2.5em; vertical-align: middle;"></span>
-    <input class='width' type='number' style="width: 3em" />
+    <input class="width" type="number" style="width: 3em" />
+  </p><p>
+    Arrow: 
+    <input class="arrow" style="width: 3em" />
   </p>
 
 
@@ -133,6 +197,35 @@
     $('.line').height(e.value)
   })
   width.setValue(8);
+
+  var arrowElt = document.createElement('I');
+  var arrow = new ol.ext.input.Popup({ 
+    input: $('.arrow').get(0),
+    className: 'arrow',
+    html: $('<DIV>').append(arrowElt).get(0),
+    disabled: true,
+    align: 'middle',
+    options: [{
+      value: 0,
+      title: 'none',
+      html: '<i class="arrow0"></i>'
+    },{
+      value: 1,
+      title: 'direct',
+      html: '<i class="arrow1"></i>'
+    },{
+      value: -1,
+      title: 'revers',
+      html: '<i class="arrow-1"></i>'
+    },{
+      value: 2,
+      title: 'both',
+      html: '<i class="arrow2"></i>'
+    }]
+  });
+  arrow.on('change:value', function(e) {
+    arrowElt.className = 'arrow'+e.value
+  });
 
 </script>
   

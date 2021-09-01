@@ -24,7 +24,14 @@ var ol_ext_input_Base = function(options) {
   
   ol_Object.call(this);
   
-  var input = this.input = options.input || ol_ext_element.create('INPUT', { parent: options.parent });
+  var input = this.input = options.input || ol_ext_element.create('INPUT', { 
+    type: options.type,
+    min: options.min,
+    max: options.max,
+    step: options.step,
+    parent: options.parent
+  });
+  if (options.disabled) input.disabled = true;
   if (options.checked !== undefined) input.checked = !!options.checked;
   if (options.val !== undefined) input.value = options.val;
 };
