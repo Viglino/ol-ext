@@ -216,7 +216,7 @@ gulp.task("lib", function(done) {
  * for packaging
  */
 gulp.task ("prepublish", function(){
-  return gulp.src(["./src/*/*.*"], { base: './src' })
+  return gulp.src(["./src/*/*.*", ["./src/*/*/*.*"], { base: './src' })
     .pipe(gulp.dest('./'));
 });
 
