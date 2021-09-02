@@ -4,7 +4,7 @@ import ol_ext_input_Base from './Base'
 import ol_Collection from 'ol/Collection';
 import { toHSV as ol_color_toHSV, fromHSV as ol_color_fromHSV } from '../color'
 import { toHexa as ol_color_toHexa } from '../color'
-import { sArray as ol_color_asArray } from 'ol/color'
+import { asArray as ol_color_asArray } from 'ol/color'
 
 /** Color picker
  * @constructor
