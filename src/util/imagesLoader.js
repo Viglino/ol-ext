@@ -8,6 +8,7 @@ if (window.ol) window.ol.ext.imageLoader = {};
  * @param {string} src
  * @param {function} onload a function that takes a Float32Array and a ol.size.Size (array size)
  * @param {function} onerror
+ * @private
  */
 var ol_ext_imageLoader_loadBILImage = function(src, onload, onerror) {
   var size = [
@@ -43,6 +44,7 @@ var ol_ext_imageLoader_loadBILImage = function(src, onload, onerror) {
  * @param {string} src
  * @param {function} onload a function that takes a an image and a ol.size.Size
  * @param {function} onerror
+ * @private
  */
 var ol_ext_imageLoader_loadImage = function(src, onload, onerror) {
   var xhr = new XMLHttpRequest();
@@ -66,8 +68,9 @@ var ol_ext_imageLoader_loadImage = function(src, onload, onerror) {
   xhr.send();
 };
 
-/** Transform tiles images
+/** Get a TileLoadFunction to transform tiles images
  * @param {function} setPixel a function that takes a Uint8ClampedArray and the pixel position to transform
+ * @returns {function} an ol/Tile~LoadFunction
  */
 var ol_ext_imageLoader_pixelTransform = function(setPixel) {
   return function(tile, src) {
@@ -94,15 +97,18 @@ var ol_ext_imageLoader_pixelTransform = function(setPixel) {
   }
 };
 
-/** Transform tiles into grayscale images */
+/** Get a TileLoadFunction to transform tiles into grayscale images
+ * @returns {function} an ol/Tile~LoadFunction
+ */
 var ol_ext_imageLoader_grayscale = function() {
   return ol_ext_imageLoader_pixelTransform(function(pixels, i) {
     pixels[i] = pixels[i + 1] = pixels[i + 2] = parseInt(3*pixels[i] + 4*pixels[i + 1] + pixels[i + 2] >>> 3);
   })
 };
 
-/** Turns color or a color range transparent
+/** Get a TileLoadFunction to turn color or a color range transparent
  * @param {ol.color.Color|Array<ol.color.Color>} colors color or color range to turn transparent
+ * @returns {function} an ol/Tile~LoadFunction
  */
 var ol_ext_imageLoader_transparent = function(colors) {
   var color1, color2;
@@ -138,6 +144,7 @@ var ol_ext_imageLoader_transparent = function(colors) {
  *  @param { ol.Color } [options.color] fill color
  *  @param { boolean } [options.opacity=true] smooth color on border
  *  @param { number } [options.minValue=-Infinity] minimum level value
+ * @returns {function} an ol/Tile~LoadFunction
  */
 var ol_ext_imageLoader_seaLevelMap = function(level, options) {
   options = options || {};
@@ -154,7 +161,10 @@ var ol_ext_imageLoader_seaLevelMap = function(level, options) {
   })
 };
 
-/** Shaded relief ? */
+/** Shaded relief ? not/bad working yet...
+ * @returns {function} an ol/Tile~LoadFunction
+ * @private
+ */
 var ol_ext_imageLoader_shadedRelief = function() {
   var sunElev = Math.PI / 4;
   var sunAzimuth = 2*Math.PI - Math.PI / 4;
@@ -225,9 +235,10 @@ var ol_ext_imageLoader_shadedRelief = function() {
   };
 };
 
-/** Returns an Imageloader function to load an x-bil-32 image as elevation map
- * If getPixelColor is not define pixel store elevation as rgb, use ol_ext_getElevationFromPixel to get elevation from pixel
- * @param {function} [getPixelColor] a function that taket an elevation and return a color array [r,g,b,a], default store elevation as pixel
+/** Get a TileLoadFunction to load an x-bil-32 image as elevation map (ie. pixels colors codes elevations as terrain-RGB)
+ * If getPixelColor is not define pixel store elevation as rgb, use {@link ol_ext_getElevationFromPixel} to get elevation from pixel
+ * @param {function} [getPixelColor] a function that taket an elevation and return a color array [r,g,b,a], default store elevation as terrain-RGB
+ * @returns {function} an ol/Tile~LoadFunction
  */
 var ol_ext_imageLoader_elevationMap = function(getPixelColor) {
   if (typeof(getPixelColor) !== 'function') getPixelColor = ol_ext_getPixelFromElevation;
@@ -258,10 +269,12 @@ var ol_ext_imageLoader_elevationMap = function(getPixelColor) {
   };
 };
 
-/** Convert elevation to pixel 
+/** Convert elevation to pixel as terrain-RGB
  * Encode elevation data in raster tiles
  * - max deep watter trench min > -12000 m
  * - 2 digits (0.01 m)
+ * @param {number} height elevation
+ * @returns {Array<number>} pixel value
  */
 var ol_ext_getPixelFromElevation =  function(height) {
   var h = Math.round(height*100 + 1200000);
@@ -274,11 +287,15 @@ var ol_ext_getPixelFromElevation =  function(height) {
   return pixel;
 };
 
-/* Convert pixel to elevation */
+/** Convert pixel (terrain-RGB) to elevation 
+ * @see ol_ext_getPixelFromElevation
+ * @param {Array<number>} pixel the pixel value
+ * @returns {number} elevation
+ */
 var ol_ext_getElevationFromPixel = function(pixel) {
   // return -10000 + (pixel[0] * 65536 + pixel[1] * 256 + pixel[2]) * 0.01;
   return -12000 + ((pixel[0] << 16) + (pixel[1] << 8) + pixel[2]) * 0.01;
-}
+};
 
 export { ol_ext_imageLoader_loadBILImage as loadBILImage }
 export { ol_ext_imageLoader_seaLevelMap as seaLevelMap, ol_ext_imageLoader_elevationMap as elevationMap }

@@ -1014,6 +1014,7 @@ if (window.ol) window.ol.ext.imageLoader = {};
  * @param {string} src
  * @param {function} onload a function that takes a Float32Array and a ol.size.Size (array size)
  * @param {function} onerror
+ * @private
  */
 ol.ext.imageLoader.loadBILImage = function(src, onload, onerror) {
   var size = [
@@ -1048,6 +1049,7 @@ ol.ext.imageLoader.loadBILImage = function(src, onload, onerror) {
  * @param {string} src
  * @param {function} onload a function that takes a an image and a ol.size.Size
  * @param {function} onerror
+ * @private
  */
 ol.ext.imageLoader.loadImage = function(src, onload, onerror) {
   var xhr = new XMLHttpRequest();
@@ -1070,8 +1072,9 @@ ol.ext.imageLoader.loadImage = function(src, onload, onerror) {
   xhr.open('GET', src);
   xhr.send();
 };
-/** Transform tiles images
+/** Get a TileLoadFunction to transform tiles images
  * @param {function} setPixel a function that takes a Uint8ClampedArray and the pixel position to transform
+ * @returns {function} an ol/Tile~LoadFunction
  */
 ol.ext.imageLoader.pixelTransform = function(setPixel) {
   return function(tile, src) {
@@ -1097,14 +1100,17 @@ ol.ext.imageLoader.pixelTransform = function(setPixel) {
     );
   }
 };
-/** Transform tiles into grayscale images */
+/** Get a TileLoadFunction to transform tiles into grayscale images
+ * @returns {function} an ol/Tile~LoadFunction
+ */
 ol.ext.imageLoader.grayscale = function() {
   return ol.ext.imageLoader.pixelTransform(function(pixels, i) {
     pixels[i] = pixels[i + 1] = pixels[i + 2] = parseInt(3*pixels[i] + 4*pixels[i + 1] + pixels[i + 2] >>> 3);
   })
 };
-/** Turns color or a color range transparent
+/** Get a TileLoadFunction to turn color or a color range transparent
  * @param {ol.color.Color|Array<ol.color.Color>} colors color or color range to turn transparent
+ * @returns {function} an ol/Tile~LoadFunction
  */
 ol.ext.imageLoader.transparent = function(colors) {
   var color1, color2;
@@ -1139,6 +1145,7 @@ ol.ext.imageLoader.transparent = function(colors) {
  *  @param { ol.Color } [options.color] fill color
  *  @param { boolean } [options.opacity=true] smooth color on border
  *  @param { number } [options.minValue=-Infinity] minimum level value
+ * @returns {function} an ol/Tile~LoadFunction
  */
 ol.ext.imageLoader.seaLevelMap = function(level, options) {
   options = options || {};
@@ -1154,7 +1161,10 @@ ol.ext.imageLoader.seaLevelMap = function(level, options) {
     }
   })
 };
-/** Shaded relief ? */
+/** Shaded relief ? not/bad working yet...
+ * @returns {function} an ol/Tile~LoadFunction
+ * @private
+ */
 ol.ext.imageLoader.shadedRelief = function() {
   var sunElev = Math.PI / 4;
   var sunAzimuth = 2*Math.PI - Math.PI / 4;
@@ -1219,9 +1229,10 @@ ol.ext.imageLoader.shadedRelief = function() {
     )
   };
 };
-/** Returns an Imageloader function to load an x-bil-32 image as elevation map
- * If getPixelColor is not define pixel store elevation as rgb, use ol.ext.getElevationFromPixel to get elevation from pixel
- * @param {function} [getPixelColor] a function that taket an elevation and return a color array [r,g,b,a], default store elevation as pixel
+/** Get a TileLoadFunction to load an x-bil-32 image as elevation map (ie. pixels colors codes elevations as terrain-RGB)
+ * If getPixelColor is not define pixel store elevation as rgb, use {@link ol.ext.getElevationFromPixel} to get elevation from pixel
+ * @param {function} [getPixelColor] a function that taket an elevation and return a color array [r,g,b,a], default store elevation as terrain-RGB
+ * @returns {function} an ol/Tile~LoadFunction
  */
 ol.ext.imageLoader.elevationMap = function(getPixelColor) {
   if (typeof(getPixelColor) !== 'function') getPixelColor = ol.ext.getPixelFromElevation;
@@ -1251,10 +1262,12 @@ ol.ext.imageLoader.elevationMap = function(getPixelColor) {
     )
   };
 };
-/** Convert elevation to pixel 
+/** Convert elevation to pixel as terrain-RGB
  * Encode elevation data in raster tiles
  * - max deep watter trench min > -12000 m
  * - 2 digits (0.01 m)
+ * @param {number} height elevation
+ * @returns {Array<number>} pixel value
  */
 ol.ext.getPixelFromElevation =  function(height) {
   var h = Math.round(height*100 + 1200000);
@@ -1266,11 +1279,15 @@ ol.ext.getPixelFromElevation =  function(height) {
   ];
   return pixel;
 };
-/* Convert pixel to elevation */
+/** Convert pixel (terrain-RGB) to elevation 
+ * @see ol.ext.getPixelFromElevation
+ * @param {Array<number>} pixel the pixel value
+ * @returns {number} elevation
+ */
 ol.ext.getElevationFromPixel = function(pixel) {
   // return -10000 + (pixel[0] * 65536 + pixel[1] * 256 + pixel[2]) * 0.01;
   return -12000 + ((pixel[0] << 16) + (pixel[1] << 8) + pixel[2]) * 0.01;
-}
+};
 
 /* See 
 https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web
@@ -1784,8 +1801,15 @@ if (window.ol) {
  * @constructor
  * @extends {ol.Object}
  * @param {*} options
- *  @param {Element} [input] input element, if non create one
- *  @param {Element} [paren] parent element, if create an input
+ *  @param {Element} [options.input] input element, if non create one
+ *  @param {string} [options.type] input type, if no input
+ *  @param {number} [options.min] input min, if no input
+ *  @param {number} [options.max] input max, if no input
+ *  @param {number} [options.step] input step, if no input
+ *  @param {string|number} [options.val] input value
+ *  @param {boolean} [options.checked] check input
+ *  @param {boolean} [options.disabled] disable input
+ *  @param {Element} [options.parent] parent element, if no input
  */
 ol.ext.input.Base = function(options) {
   options = options || {};
@@ -1843,23 +1867,30 @@ ol.ext.input.Base.prototype._listenDrag = function(elt, cback) {
  */
 ol.ext.input.Base.prototype.getValue = function() {
   return this.input.value;
-}
+};
+/** Get the input element
+ * @returns {Element}
+ */
+ol.ext.input.Base.prototype.getInputElement = function() {
+  return this.input;
+};
 
 /** Checkbox input
  * @constructor
  * @extends {ol.ext.input.Base}
  * @param {*} options
- *  @param {Element} [input] input element, if non create one
- *  @param {Element} [paren] parent element, if create an input
- *  @param {string} [align=left] align popup left/right
- *  @param {string} [type] a slide type as 'size'
- *  @param {number} [min] min value, default use input min
- *  @param {number} [max] max value, default use input max
- *  @param {number} [step] step value, default use input step
- *  @param {boolean} [overflow=false] enable values over min/max
- *  @param {string|Element} [before] an element to add before the slider
- *  @param {string|Element} [after] an element to add after the slider
- *  @param {boolean} [fixed=false] no pupop
+ *  @param {string} [options.className]
+ *  @param {Element} [options.input] input element, if non create one
+ *  @param {Element} [options.parent] parent element, if create an input
+ *  @param {string} [options.align=left] align popup left/right
+ *  @param {string} [options.type] a slide type as 'size'
+ *  @param {number} [options.min] min value, default use input min
+ *  @param {number} [options.max] max value, default use input max
+ *  @param {number} [options.step] step value, default use input step
+ *  @param {boolean} [options.overflow=false] enable values over min/max
+ *  @param {string|Element} [options.before] an element to add before the slider
+ *  @param {string|Element} [options.after] an element to add after the slider
+ *  @param {boolean} [options.fixed=false] no pupop
  */
 ol.ext.input.Slider = function(options) {
   options = options || {};
@@ -1867,8 +1898,8 @@ ol.ext.input.Slider = function(options) {
   this.set('overflow', !!options.overflow);
   this.element = ol.ext.element.create('DIV', {
     className: 'ol-input-slider' 
-      + (options.type ? ' ol-'+options.type : '')
-      + (options.className ? ' '+options.className : '')
+      + (options.type ? ' ol-' + options.type : '')
+      + (options.className ? ' ' + options.className : '')
   });
   if (options.fixed) this.element.classList.add('ol-fixed');
   var input = this.input;
@@ -1936,6 +1967,15 @@ ol.ext.inherits(ol.ext.input.Slider, ol.ext.input.Base);
 /** Checkbox input
  * @constructor
  * @extends {ol.ext.input.Base}
+ * @fires check
+ * @param {*} options
+ *  @param {string} [options.className]
+ *  @param {Element|string} [options.html] label content
+ *  @param {string} [options.after] label garnish (placed after)
+ *  @param {Element} [options.input] input element, if non create one
+ *  @param {Element} [options.parent] parent element, if create an input
+ *  @param {boolean} [options.autoClose=true]
+ *  @param {boolean} [options.visible=false] display the input
  */
 ol.ext.input.Checkbox = function(options) {
   options = options || {};
@@ -1950,8 +1990,15 @@ ol.ext.input.Checkbox = function(options) {
   if (options.after) {
     label.appendChild(document.createTextNode(options.after));
   }
+  // Handle change
+  this.input.addEventListener('change', function() {
+    this.dispatchEvent({ type: 'check', checked: this.input.checked, value: this.input.value });
+  }.bind(this));
 };
 ol.ext.inherits(ol.ext.input.Checkbox, ol.ext.input.Base);
+ol.ext.input.Checkbox.prototype.isChecked = function () {
+  return this.input.checked;
+};
 
 /** Color picker
  * @constructor
@@ -1959,10 +2006,13 @@ ol.ext.inherits(ol.ext.input.Checkbox, ol.ext.input.Base);
  * @fires change:color
  * @fires color
  * @param {*} options
- *  @param {Element} [input] input element, if non create one
- *  @param {Element} [paren] parent element, if create an input
- *  @param {boolean} [autoClose=true]
- *  @param {boolean} [visible=false] display the input
+ *  @param {string} [options.className]
+ *  @param {ol.colorLike} [options.color] default color
+ *  @param {Element} [options.input] input element, if non create one
+ *  @param {Element} [options.parent] parent element, if create an input
+ *  @param {boolean} [options.fixed=false] don't use a popup, default use a popup
+ *  @param {boolean} [options.autoClose=true] close when click on color
+ *  @param {boolean} [options.visible=false] display the input
  */
 ol.ext.input.Color = function(options) {
   options = options || {};
@@ -2078,7 +2128,7 @@ ol.ext.input.Color = function(options) {
   })
   for (i=0; i<8; i++) {
     var c = Math.round(255 - 255*i/7);
-    this.addPaletteColor([c,c,c]);
+    this.addPaletteColor([c,c,c], c);//ol.color.toHexa([c,c,c]));
   }
   var colors = ['#f00', '#f90', '#ff0', '#0f0', '#0ff', '#48e', '#00f', '#f0f']
   colors.forEach(function(c){
@@ -2196,12 +2246,14 @@ ol.ext.input.Color.prototype.setColor = function(color) {
     this._cursor.tint.style.top = (hsv.h / 360 * 100) + '%';
     this._cursor.slide.style.left = hsv.a + '%';
     if (this.isCollapsed()) {
-      this.dispatchEvent({ type: 'color', color: this.getColor() });
+      this.dispatchEvent({ type: 'color', color: color });
     }
   } else {
+    /*
     hsv.h = Math.round(hsv.h) % 360;
     hsv.s = Math.round(hsv.s);
     hsv.v = Math.round(hsv.v);
+    */
     hsv.a = Math.round(hsv.a);
     color = this.getColor();
   }
@@ -2283,6 +2335,9 @@ ol.ext.input.Color.prototype._addCustomColor = function(color) {
   }
   this.addPaletteColor(color);
 };
+ol.ext.input.Color.prototype.clearCustomColor = function() {
+  ol.ext.input.Color.customColorList.clear();
+};
 /** Convert color to id
  * @param {ol.colorLike} Color
  * @returns {number}
@@ -2305,12 +2360,15 @@ ol.ext.input.Color.prototype.getColorID = function(color) {
  * @constructor
  * @extends {ol.ext.input.Base}
  * @param {*} options
- *  @param {Element} [input] input element, if non create one
- *  @param {Element} [parent] parent element, if create an input
- *  @param {string} [align=left] align popup left/right/middle
- *  @param {boolean} [fixed=false] no popup
+ *  @param {string} [options.className]
+ *  @param {Array<Object>} options.options an array of options to place in the popup { html:, title:, value: }
+ *  @param {Element} [options.input] input element, if non create one
+ *  @param {Element} [options.parent] parent element, if create an input
+ *  @param {boolean} [options.fixed=false] don't use a popup, default use a popup
+ *  @param {string} [options.align=left] align popup left/right/middle
+ *  @param {boolean} [options.fixed=false] no popup
  */
-ol.ext.input.Popup = function(options) {
+ol.ext.input.List = function(options) {
   options = options || {};
   ol.ext.input.Base.call(this, options);
   this.element = ol.ext.element.create('DIV', {
@@ -2368,11 +2426,16 @@ ol.ext.input.Popup = function(options) {
     this.dispatchEvent({ type: 'change:value', value: this.getValue() });
   }.bind(this));
 };
-ol.ext.inherits(ol.ext.input.Popup, ol.ext.input.Base);
+ol.ext.inherits(ol.ext.input.List, ol.ext.input.Base);
 
 /** Switch input
  * @constructor
  * @extends {ol.ext.input.Checkbox}
+ * @fires check
+ * @param {*} options
+ *  @param {string} [options.className]
+ *  @param {Element} [options.input] input element, if non create one
+ *  @param {Element} [options.parent] parent element, if create an input
  */
 ol.ext.input.Radio = function(input, options) {
   options = options || {};
@@ -2385,8 +2448,9 @@ ol.ext.inherits(ol.ext.input.Radio, ol.ext.input.Checkbox);
  * @constructor
  * @extends {ol.ext.input.Slider}
  * @param {*} options
- *  @param {Element} [input] input element, if non create one
- *  @param {Element} [paren] parent element, if create an input
+ *  @param {string} [options.className]
+ *  @param {Element} [options.input] input element, if non create one
+ *  @param {Element} [options.parent] parent element, if create an input
  *  @param {Array<number>} [options.size] a list of size (default 0,2,3,5,8,13,21,34,55)
  */
 ol.ext.input.Size = function(options) {
@@ -2403,23 +2467,25 @@ ol.ext.input.Size = function(options) {
       })
     })
   })
-  ol.ext.input.Popup.call(this, options);
+  ol.ext.input.List.call(this, options);
   this.element.classList.add('ol-size');
 };
-ol.ext.inherits(ol.ext.input.Size, ol.ext.input.Popup);
+ol.ext.inherits(ol.ext.input.Size, ol.ext.input.List);
 /** Get the current value
  * @returns {number}
  */
 ol.ext.input.Size.prototype.getValue = function() {
-  return parseFloat(ol.ext.input.Popup.prototype.getValue.call(this));
-}
+  return parseFloat(ol.ext.input.List.prototype.getValue.call(this));
+};
 
 /** Switch input
  * @constructor
  * @extends {ol.ext.input.Checkbox}
+ * @fires check
  * @param {*} options
- *  @param {Element} [input] input element, if non create one
- *  @param {Element} [paren] parent element, if create an input
+ *  @param {string} [options.className]
+ *  @param {Element} [options.input] input element, if non create one
+ *  @param {Element} [options.parent] parent element, if create an input
  */
 ol.ext.input.Switch = function(options) {
   options = options || {};
@@ -2432,8 +2498,9 @@ ol.ext.inherits(ol.ext.input.Switch, ol.ext.input.Checkbox);
  * @constructor
  * @extends {ol.ext.input.Slider}
  * @param {*} options
- *  @param {Element} [input] input element, if non create one
- *  @param {Element} [paren] parent element, if create an input
+ *  @param {string} [options.className]
+ *  @param {Element} [options.input] input element, if non create one
+ *  @param {Element} [options.parent] parent element, if create an input
  *  @param {Array<number>} [options.size] a list of size (default 0,1,2,3,5,10,15,20)
  */
 ol.ext.input.Width = function(options) {
@@ -2450,15 +2517,15 @@ ol.ext.input.Width = function(options) {
       })
     })
   })
-  ol.ext.input.Popup.call(this, options);
+  ol.ext.input.List.call(this, options);
   this.element.classList.add('ol-width');
 };
-ol.ext.inherits(ol.ext.input.Width, ol.ext.input.Popup);
+ol.ext.inherits(ol.ext.input.Width, ol.ext.input.List);
 /** Get the current value
  * @returns {number}
  */
 ol.ext.input.Width.prototype.getValue = function() {
-  return parseFloat(ol.ext.input.Popup.prototype.getValue.call(this));
+  return parseFloat(ol.ext.input.List.prototype.getValue.call(this));
 }
 
 /** @namespace  ol.legend
@@ -12139,81 +12206,6 @@ ol.control.RoutingGeoportail.prototype.ajax = function (url, onsuccess, onerror)
   };
   // GO!
   ajax.send();
-};
-
-/*	Copyright (c) 2018 Jean-Marc VIGLINO,
-  released under the CeCILL-B license (French BSD license)
-  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-/**
- * Geoportail routing Control.
- * @constructor
- * @extends {ol.control.Control}
- * @fires select
- * @fires change:input
- * @param {Object=} options
- *	@param {string} options.className control class name
- *	@param {string | undefined} options.apiKey the service api key.
- *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
- *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *	@param {string | undefined} options.label Text label to use for the search button, default "search"
- *	@param {string | undefined} options.placeholder placeholder, default "Search..."
- *	@param {string | undefined} options.inputLabel label for the input, default none
- *	@param {string | undefined} options.noCollapse prevent collapsing on input blur, default false
- *	@param {number | undefined} options.typing a delay on each typing to start searching (ms) use -1 to prevent autocompletion, default 300.
- *	@param {integer | undefined} options.minLength minimum length to start searching, default 1
- *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
- *	@param {integer | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
- *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index.
- *	@param {function} options.autocomplete a function that take a search string and callback function to send an array
- *	@param {number} options.timeout default 10s
- */
-ol.control.RoutingDSR = function(options) {
-  ol.control.RoutingGeoportail.call(this, options);
-  this.set('url', 'https://api-dscr.ign.fr/api/v1/route');
-/*
-  https://api-dscr.ign.fr/api/v1/route??gp-access-lib=1.1.0&origin=-1.1645594062499982,47.48751276204655&destination=1.9555577812500002,48.77791251471987&method=time&graphName=Voiture&waypoints=&format=STANDARDEXT
-  https://wxs.ign.fr/h1osiyvfm7c4wu976jv6gpum/itineraire/rest/route.json?gp-access-lib=1.1.0&
-  origin=-1.1466776392462616,47.73963314471081&destination=-0.2856532767853664,47.517200591317135&method=time&
-  graphName=Voiture&waypoints=&format=STANDARDEXT
-  https://api-dscr.ign.fr/api/v1/route?origin=2.423725%2C48.845765&destination=2.428789%2C48.845406&method=time&tolerance=50
-  */
-};
-ol.ext.inherits(ol.control.RoutingDSR, ol.control.RoutingGeoportail);
-ol.control.RoutingDSR.prototype.handleResponse = function (data /*, start, end*/) {
-  if (data.status === 'ERROR') {
-    this.dispatchEvent({
-      type: 'errror',
-      status: '200',
-      statusText: data.message
-    })
-    return;
-  }
-  var format = new ol.format.GeoJSON();
-  var routing  = format.readFeature(data.features[0], {
-    featureProjection: this.getMap().getView().getProjection()
-  })
-  console.log(data, routing);
-  this.dispatchEvent({ type: 'routing', feature: routing });
-  this.path = routing;
-  return routing;
-};
-ol.control.RoutingDSR.prototype.listRouting = function (routing) {
-  this.resultElement.innerHTML = '';
-  ol.ext.element.create('I', {
-    html: routing.get('distance') + ' ('+routing.get('duration')+')',
-    parent: this.resultElement
-  });
-  var ul = document.createElement('ul');
-  this.resultElement.appendChild(ul);
-  var routes = routing.get('routes')
-  routes.forEach(function(r) {
-    var d = this.getDistanceString(r.longueur);
-    ol.ext.element.create('LI', {
-      html: r.numero + ' ' + r.nom_gestionnaire +' ' + '<i>' + d +'</i>',
-      parent: ul
-    })
-  }.bind(this));
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,

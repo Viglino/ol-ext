@@ -5944,7 +5944,6 @@ ul.ol-legend li div {
 }
 .ol-ext-colorpicker .ol-container {
   position: relative;
-  overflow: hidden;
   display: inline-block;
   vertical-align: top;
 }
@@ -6001,10 +6000,9 @@ ul.ol-legend li div {
 }
 .ol-ext-colorpicker .ol-slider .ol-cursor {
   position: absolute;
-  width: 12px;
+  width: 4px;
   height: 12px;
   border: 1px solid #000;
-  border-radius: 50%;
   top: 50%;
   left: 0;
   background: transparent;

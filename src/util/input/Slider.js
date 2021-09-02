@@ -6,17 +6,18 @@ import ol_ext_input_Base from './Base'
  * @constructor
  * @extends {ol_ext_input_Base}
  * @param {*} options
- *  @param {Element} [input] input element, if non create one
- *  @param {Element} [paren] parent element, if create an input
- *  @param {string} [align=left] align popup left/right
- *  @param {string} [type] a slide type as 'size'
- *  @param {number} [min] min value, default use input min
- *  @param {number} [max] max value, default use input max
- *  @param {number} [step] step value, default use input step
- *  @param {boolean} [overflow=false] enable values over min/max
- *  @param {string|Element} [before] an element to add before the slider
- *  @param {string|Element} [after] an element to add after the slider
- *  @param {boolean} [fixed=false] no pupop
+ *  @param {string} [options.className]
+ *  @param {Element} [options.input] input element, if non create one
+ *  @param {Element} [options.parent] parent element, if create an input
+ *  @param {string} [options.align=left] align popup left/right
+ *  @param {string} [options.type] a slide type as 'size'
+ *  @param {number} [options.min] min value, default use input min
+ *  @param {number} [options.max] max value, default use input max
+ *  @param {number} [options.step] step value, default use input step
+ *  @param {boolean} [options.overflow=false] enable values over min/max
+ *  @param {string|Element} [options.before] an element to add before the slider
+ *  @param {string|Element} [options.after] an element to add after the slider
+ *  @param {boolean} [options.fixed=false] no pupop
  */
 var ol_ext_input_Slider = function(options) {
   options = options || {};
@@ -26,8 +27,8 @@ var ol_ext_input_Slider = function(options) {
 
   this.element = ol_ext_element.create('DIV', {
     className: 'ol-input-slider' 
-      + (options.type ? ' ol-'+options.type : '')
-      + (options.className ? ' '+options.className : '')
+      + (options.type ? ' ol-' + options.type : '')
+      + (options.className ? ' ' + options.className : '')
   });
   if (options.fixed) this.element.classList.add('ol-fixed');
 

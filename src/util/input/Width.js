@@ -1,13 +1,14 @@
 import ol_ext_inherits from '../ext'
 import ol_ext_element from '../element';
-import ol_ext_input_Popup from './Popup'
+import ol_ext_input_List from './List'
 
 /** Checkbox input
  * @constructor
  * @extends {ol_ext_input_Slider}
  * @param {*} options
- *  @param {Element} [input] input element, if non create one
- *  @param {Element} [paren] parent element, if create an input
+ *  @param {string} [options.className]
+ *  @param {Element} [options.input] input element, if non create one
+ *  @param {Element} [options.parent] parent element, if create an input
  *  @param {Array<number>} [options.size] a list of size (default 0,1,2,3,5,10,15,20)
  */
 var ol_ext_input_Width = function(options) {
@@ -25,18 +26,18 @@ var ol_ext_input_Width = function(options) {
       })
     })
   })
-  ol_ext_input_Popup.call(this, options);
+  ol_ext_input_List.call(this, options);
 
   this.element.classList.add('ol-width');
 
 };
-ol_ext_inherits(ol_ext_input_Width, ol_ext_input_Popup);
+ol_ext_inherits(ol_ext_input_Width, ol_ext_input_List);
   
 /** Get the current value
  * @returns {number}
  */
 ol_ext_input_Width.prototype.getValue = function() {
-  return parseFloat(ol_ext_input_Popup.prototype.getValue.call(this));
+  return parseFloat(ol_ext_input_List.prototype.getValue.call(this));
 }
 
 export default ol_ext_input_Width

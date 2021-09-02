@@ -16,8 +16,15 @@ if (window.ol) {
  * @constructor
  * @extends {ol_Object}
  * @param {*} options
- *  @param {Element} [input] input element, if non create one
- *  @param {Element} [paren] parent element, if create an input
+ *  @param {Element} [options.input] input element, if non create one
+ *  @param {string} [options.type] input type, if no input
+ *  @param {number} [options.min] input min, if no input
+ *  @param {number} [options.max] input max, if no input
+ *  @param {number} [options.step] input step, if no input
+ *  @param {string|number} [options.val] input value
+ *  @param {boolean} [options.checked] check input
+ *  @param {boolean} [options.disabled] disable input
+ *  @param {Element} [options.parent] parent element, if no input
  */
 var ol_ext_input_Base = function(options) {
   options = options || {};
@@ -80,6 +87,13 @@ ol_ext_input_Base.prototype._listenDrag = function(elt, cback) {
  */
 ol_ext_input_Base.prototype.getValue = function() {
   return this.input.value;
-}
+};
+
+/** Get the input element
+ * @returns {Element}
+ */
+ol_ext_input_Base.prototype.getInputElement = function() {
+  return this.input;
+};
 
 export default ol_ext_input_Base

@@ -120,8 +120,8 @@
   </p><p>
     <input class="check" type="checkbox" />
   </p>
-    <input class="radio" type="radio" name="radio" />
-    <input class="radio" type="radio" name="radio" />
+    <input class="radio" type="radio" name="radio" value=1 />
+    <input class="radio" type="radio" name="radio" value=2 />
   </p><p>
     Color: <input class="color1" />
   </p><p style="border: 1px solid #999; border-width: 1px 0; padding: .5em 0;">
@@ -157,9 +157,9 @@
 
   var switcher = new ol.ext.input.Switch({ input: $('.switch').get(0), html: 'off', after: 'on' });
 
-  new ol.ext.input.Checkbox({ input: $('.check').get(0), html: 'Checkbox:', after: 'on' });
+  var checkbox = new ol.ext.input.Checkbox({ input: $('.check').get(0), html: 'Checkbox:', after: 'on' });
   $('.radio').each(function(i) {
-    new ol.ext.input.Radio({ input: this, html: i? '' : 'Radio:', after: 'radio '+(i+1), checked: !i });
+    window['radio'+(i+1)] = new ol.ext.input.Radio({ input: this, html: i ? '' : 'Radio:', after: 'radio '+(i+1), checked: !i });
   });
 
   var slider = new ol.ext.input.Slider({ input: $('.slider').get(0) });
@@ -199,7 +199,7 @@
   width.setValue(8);
 
   var arrowElt = document.createElement('I');
-  var arrow = new ol.ext.input.Popup({ 
+  var arrow = new ol.ext.input.List({ 
     input: $('.arrow').get(0),
     className: 'arrow',
     html: $('<DIV>').append(arrowElt).get(0),

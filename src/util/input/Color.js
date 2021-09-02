@@ -12,10 +12,13 @@ import { sArray as ol_color_asArray } from 'ol/color'
  * @fires change:color
  * @fires color
  * @param {*} options
- *  @param {Element} [input] input element, if non create one
- *  @param {Element} [paren] parent element, if create an input
- *  @param {boolean} [autoClose=true]
- *  @param {boolean} [visible=false] display the input
+ *  @param {string} [options.className]
+ *  @param {ol.colorLike} [options.color] default color
+ *  @param {Element} [options.input] input element, if non create one
+ *  @param {Element} [options.parent] parent element, if create an input
+ *  @param {boolean} [options.fixed=false] don't use a popup, default use a popup
+ *  @param {boolean} [options.autoClose=true] close when click on color
+ *  @param {boolean} [options.visible=false] display the input
  */
 var ol_ext_input_Color = function(options) {
   options = options || {};
@@ -146,7 +149,7 @@ var ol_ext_input_Color = function(options) {
   })
   for (i=0; i<8; i++) {
     var c = Math.round(255 - 255*i/7);
-    this.addPaletteColor([c,c,c]);
+    this.addPaletteColor([c,c,c], c);//ol_color_toHexa([c,c,c]));
   }
   var colors = ['#f00', '#f90', '#ff0', '#0f0', '#0ff', '#48e', '#00f', '#f0f']
   colors.forEach(function(c){
@@ -271,12 +274,14 @@ ol_ext_input_Color.prototype.setColor = function(color) {
     this._cursor.tint.style.top = (hsv.h / 360 * 100) + '%';
     this._cursor.slide.style.left = hsv.a + '%';
     if (this.isCollapsed()) {
-      this.dispatchEvent({ type: 'color', color: this.getColor() });
+      this.dispatchEvent({ type: 'color', color: color });
     }
   } else {
+    /*
     hsv.h = Math.round(hsv.h) % 360;
     hsv.s = Math.round(hsv.s);
     hsv.v = Math.round(hsv.v);
+    */
     hsv.a = Math.round(hsv.a);
     color = this.getColor();
   }
@@ -368,6 +373,10 @@ ol_ext_input_Color.prototype._addCustomColor = function(color) {
     }
   }
   this.addPaletteColor(color);
+};
+
+ol_ext_input_Color.prototype.clearCustomColor = function() {
+  ol_ext_input_Color.customColorList.clear();
 };
 
 /** Convert color to id

@@ -6,12 +6,15 @@ import ol_ext_input_Base from './Base'
  * @constructor
  * @extends {ol_ext_input_Base}
  * @param {*} options
- *  @param {Element} [input] input element, if non create one
- *  @param {Element} [parent] parent element, if create an input
- *  @param {string} [align=left] align popup left/right/middle
- *  @param {boolean} [fixed=false] no popup
+ *  @param {string} [options.className]
+ *  @param {Array<Object>} options.options an array of options to place in the popup { html:, title:, value: }
+ *  @param {Element} [options.input] input element, if non create one
+ *  @param {Element} [options.parent] parent element, if create an input
+ *  @param {boolean} [options.fixed=false] don't use a popup, default use a popup
+ *  @param {string} [options.align=left] align popup left/right/middle
+ *  @param {boolean} [options.fixed=false] no popup
  */
-var ol_ext_input_Popup = function(options) {
+var ol_ext_input_List = function(options) {
   options = options || {};
 
   ol_ext_input_Base.call(this, options);
@@ -74,6 +77,6 @@ var ol_ext_input_Popup = function(options) {
     this.dispatchEvent({ type: 'change:value', value: this.getValue() });
   }.bind(this));
 };
-ol_ext_inherits(ol_ext_input_Popup, ol_ext_input_Base);
+ol_ext_inherits(ol_ext_input_List, ol_ext_input_Base);
 
-export default ol_ext_input_Popup
+export default ol_ext_input_List
