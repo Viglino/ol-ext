@@ -73,7 +73,7 @@
   </div>
 
 	<!-- DIV pour la carte -->
-	<div id="map" style="width: 600px; height: 400px;"></div>
+	<div id="map" style="width: 100%; height: 600px;"></div>
 
 <script>
 // The map
@@ -84,25 +84,24 @@ var map = new ol.Map ({
     center: [261204.43490751847, 6250258.191535994]
   })
 });
-map.addControl(new ol.control.LayerSwitcher());
+map.addControl(new ol.control.LayerSwitcher({ extent: true }));
 map.addControl(new ol.control.Permalink({ visible: false }));
 
-// Use raster source
+// WMTS layer
 var gp = new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2');
+map.addLayer(gp);
+
+// Use raster source
 var raster = new ol.source.Raster({
   sources: [ gp.getSource() ],
   operation: function(pixels, data) {
     var pixel = pixels[0];
-    // Luma https://en.wikipedia.org/wiki/Grayscale
-    // var lightness =  parseInt(pixel[0]*.299 + pixel[1]*.587 + pixel[2]*.114);
-    // Linear Luminance https://en.wikipedia.org/wiki/Grayscale
-    // var lightness = 0.2126 * pixel[0] + 0.715 * pixel[1] + 0.0722 * pixel[2];
     var lightness = parseInt(3*pixel[0] + 4*pixel[1] + pixel[2] >>> 3);
     return [lightness, lightness, lightness, pixel[3]];
   }
 })
 map.addLayer(new ol.layer.Image({ 
-  title: gp.get('title')+' - Raster',
+  title: gp.get('title')+' - Raster op',
   visible: false,
   minResolution: gp.getMinResolution(),
   maxResolution: gp.getMaxResolution(),
@@ -110,40 +109,20 @@ map.addLayer(new ol.layer.Image({
   source: raster
 }));
 gp.setVisible(false);
-map.addLayer(gp);
 
-// Modify tiles on the flow
+// Modify tiles on the flow using a tileload function
 var gpbw = new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2');
-// var gpbw = new ol.layer.Geoportail('CADASTRALPARCELS.PARCELLAIRE_EXPRESS');
-gpbw.set('title', gpbw.get('title') + ' - Tile')
+gpbw.set('title', gpbw.get('title') + ' - Grayscale')
 gpbw.getSource().setTileLoadFunction(ol.ext.imageLoader.grayscale());
 map.addLayer(gpbw);
 
+// new layer JPG + turns white pixels transparent
 ol.layer.Geoportail.register("ORTHOIMAGERY.ORTHOPHOTOS.URGENCE.ALEX", {"key":"orthohisto","server":"https://wxs.ign.fr/geoportail/wmts","layer":"ORTHOIMAGERY.ORTHOPHOTOS.URGENCE.ALEX","title":"Orthophotographie d’urgence Alex","format":"image/jpeg","style":"normal","queryable":false,"tilematrix":"PM","minZoom":6,"maxZoom":20,"bbox":[7.079166,43.80946,7.6419926,44.19026],"desc":"Orthophotographie réalisée suite au passage de la tempête Alex dans les Alpes Maritimes","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":20,"constraint":[{"minZoom":6,"maxZoom":20,"bbox":[7.079166,43.80946,7.6419926,44.19026]}]}}});
-var layer = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS.URGENCE.ALEX' });
-layer.getSource().setTileLoadFunction(ol.ext.imageLoader.transparent([250,250,250],[255,255,255]));
-/** /
-var w = 250;
-layer.getSource().setTileLoadFunction(ol.ext.imageLoader.pixelTransform(function(pixels, i, size){
-  var p = i/4;
-  var y = Math.floor(p/size[0]);
-  var x = p - y*size[0];
-  var nbor = [
-    [x,y],
-    [Math.min(x+1, size[0]-1), y],
-    [Math.max(x-1, 0), y],
-    [x, Math.min(y+1, size[1]-1)],
-    [x, Math.max(y-1, 0)]
-  ]
-  var t = 0;
-  for (var k=0; k<nbor.length; k++) {
-    p = (nbor[k][0] + nbor[k][1]*size[0])*4;
-    if (pixels[p]<w || pixels[p+1]<w || pixels[p+2]<w) t++;
-  }
-  if (t>=4) return;
-  pixels[i+3] = 0;
-}));
-/**/
+var layer = new ol.layer.Geoportail({ 
+  title: 'JPEG layer + transparent',
+  layer: 'ORTHOIMAGERY.ORTHOPHOTOS.URGENCE.ALEX' 
+});
+layer.getSource().setTileLoadFunction(ol.ext.imageLoader.transparent([[250,250,250],[255,255,255]]));
 map.addLayer(layer);
 
 </script>
