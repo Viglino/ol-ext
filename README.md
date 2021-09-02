@@ -29,7 +29,7 @@ undo/redo mechanisms
 
 ### NPM packages
 
-ol-ext exist as ES6 modules ([ol-ext](https://www.npmjs.com/package/ol-ext)) and as pure js ([openlayers-ext](https://www.npmjs.com/package/openlayers-ext)).
+ol-ext exist as ES6 modules ([ol-ext](https://www.npmjs.com/package/ol-ext)) and as pure js (deprecated! [openlayers-ext](https://www.npmjs.com/package/openlayers-ext)).
 
 ### using ol-ext in a webpack
 
