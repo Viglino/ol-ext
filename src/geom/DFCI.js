@@ -97,7 +97,7 @@ var ol_coordinate_fromDFCI = function (index, projection) {
         coord = [x+step/2, y+step/2];
       } else {
         // Level 3
-        switch (index.charAt(7)) {
+        switch (index.charAt(6)) {
           case '1':
             coord = [x+step/4, y+3*step/4];
             break;
