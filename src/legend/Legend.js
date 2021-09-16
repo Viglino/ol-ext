@@ -83,6 +83,15 @@ var ol_legend_Legend = function(options) {
       color: 'rgba(255,255,255,.8)'
     })
   });
+  this._textItemStyle = options.textItemStyle || new ol_style_Text({ 
+    font: '14px sans-serif',
+    fill: new ol_style_Fill({
+      color: '#333'
+    }),
+    backgroundFill: new ol_style_Fill({
+      color: 'rgba(255,255,255,.8)'
+    })
+  });  
   this._title = new ol_legend_Item({ title: options.title || '', className: 'ol-title' });
 
   this.setStyle(options.style);
@@ -263,10 +272,16 @@ ol_legend_Legend.prototype.refresh = function() {
     ctx.textAlign = 'left';
     if (item.feature || item.typeGeom) {
       canvas = this.getLegendImage(item, canvas, index);
-      ctx.font = this._textStyle.getFont();
+      ctx.font = this._textItemStyle.getFont();
       this._drawText(ctx, r.get('title'), width + margin, (i+1.5)*height);
     } else {
-      ctx.font = 'bold ' + this._textStyle.getFont();
+      ctx.font = this._textItemStyle.getFont();
+      if(/\bitalic\b/.test(item.fontStyle)) {
+        ctx.font = 'italic ' + ctx.font;
+      }
+      if(/\bbold\b/.test(item.fontWeight)) {
+        ctx.font = 'bold ' + ctx.font;
+      }
       if (/\bcenter\b/.test(item.className)) {
         ctx.textAlign = 'center';
         this._drawText(ctx, r.get('title'), canvas.width/ratio/2, (i+1.5)*height);
