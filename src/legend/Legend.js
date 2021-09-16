@@ -276,9 +276,9 @@ ol_legend_Legend.prototype.refresh = function() {
       this._drawText(ctx, r.get('title'), width + margin, (i+1.5)*height);
     } else {
       ctx.font = this._textItemStyle.getFont();
-  	  if(/\bitalic\b/.test(item.fontStyle)) {
-				ctx.font = 'italic ' + ctx.font;
-			}
+      if(/\bitalic\b/.test(item.fontStyle)) {
+        ctx.font = 'italic ' + ctx.font;
+      }
       if(/\bbold\b/.test(item.fontWeight)) {
         ctx.font = 'bold ' + ctx.font;
       }
