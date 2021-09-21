@@ -31,6 +31,7 @@ if (window.ol && !ol.legend) {
  *  @param {ol.size | undefined} options.size Size of the symboles in the legend, default [40, 25]
  *  @param {number | undefined} options.margin Size of the symbole's margin, default 10
  *  @param { ol.style.Text | undefined } options.textStyle a text style for the legend, default 16px sans-serif
+ *  @param { ol.style.Text | undefined } options.titleStyle a text style for the legend title, default textStyle + bold
  *  @param { ol.style.Style | Array<ol.style.Style> | ol.StyleFunction | undefined	} options.style a style or a style function to use with features
  */
 var ol_legend_Legend = function(options) {
@@ -84,6 +85,13 @@ var ol_legend_Legend = function(options) {
     })
   });
   this._title = new ol_legend_Item({ title: options.title || '', className: 'ol-title' });
+
+  if (options.titleStyle) {
+    this._titleStyle = options.titleStyle;
+  } else {
+    this._titleStyle = this._textStyle.clone();
+    this._titleStyle.setFont('bold '+this._titleStyle.getFont());
+  }
 
   this.setStyle(options.style);
 
@@ -216,14 +224,14 @@ ol_legend_Legend.prototype.refresh = function() {
   var ratio = ol_has_DEVICE_PIXEL_RATIO;
 
   // Calculate width
-  ctx.font = 'bold ' + this._textStyle.getFont();
+  ctx.font = this._titleStyle.getFont();
   var textWidth = this._measureText(ctx, this.getTitle('title')).width;
   this._items.forEach(function(r) {
     if (r.get('feature') || r.get('typeGeom') ) {
-      ctx.font = this._textStyle.getFont();
+      ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._textStyle.getFont();
       textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width + width);
     } else {
-      ctx.font = 'bold ' + this._textStyle.getFont();
+      ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont();
       textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width);
     }
   }.bind(this));
@@ -244,7 +252,7 @@ ol_legend_Legend.prototype.refresh = function() {
         item: this._title
       });
     }.bind(this)));
-    ctx.font = 'bold ' + this._textStyle.getFont();
+    ctx.font = this._titleStyle.getFont();
     ctx.textAlign = 'center';
     this._drawText(ctx, this.getTitle(), canvas.width/ratio/2, height/2);
   }
@@ -263,10 +271,10 @@ ol_legend_Legend.prototype.refresh = function() {
     ctx.textAlign = 'left';
     if (item.feature || item.typeGeom) {
       canvas = this.getLegendImage(item, canvas, index);
-      ctx.font = this._textStyle.getFont();
+      ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._textStyle.getFont();
       this._drawText(ctx, r.get('title'), width + margin, (i+1.5)*height);
     } else {
-      ctx.font = 'bold ' + this._textStyle.getFont();
+      ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont();
       if (/\bcenter\b/.test(item.className)) {
         ctx.textAlign = 'center';
         this._drawText(ctx, r.get('title'), canvas.width/ratio/2, (i+1.5)*height);
