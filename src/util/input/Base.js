@@ -23,6 +23,7 @@ if (window.ol) {
  *  @param {number} [options.step] input step, if no input
  *  @param {string|number} [options.val] input value
  *  @param {boolean} [options.checked] check input
+ *  @param {boolean} [options.hidden] the input is display:none
  *  @param {boolean} [options.disabled] disable input
  *  @param {Element} [options.parent] parent element, if no input
  */
@@ -41,6 +42,7 @@ var ol_ext_input_Base = function(options) {
   if (options.disabled) input.disabled = true;
   if (options.checked !== undefined) input.checked = !!options.checked;
   if (options.val !== undefined) input.value = options.val;
+  if (options.hidden) input.style.display = 'none';
 };
 ol_ext_inherits(ol_ext_input_Base, ol_Object);
 

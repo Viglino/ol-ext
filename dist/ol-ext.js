@@ -1808,6 +1808,7 @@ if (window.ol) {
  *  @param {number} [options.step] input step, if no input
  *  @param {string|number} [options.val] input value
  *  @param {boolean} [options.checked] check input
+ *  @param {boolean} [options.hidden] the input is display:none
  *  @param {boolean} [options.disabled] disable input
  *  @param {Element} [options.parent] parent element, if no input
  */
@@ -1824,6 +1825,7 @@ ol.ext.input.Base = function(options) {
   if (options.disabled) input.disabled = true;
   if (options.checked !== undefined) input.checked = !!options.checked;
   if (options.val !== undefined) input.value = options.val;
+  if (options.hidden) input.style.display = 'none';
 };
 ol.ext.inherits(ol.ext.input.Base, ol.Object);
 /** Listen to drag event
@@ -1964,6 +1966,75 @@ ol.ext.input.Slider = function(options) {
 };
 ol.ext.inherits(ol.ext.input.Slider, ol.ext.input.Base);
 
+/** Base class for input popup
+ * @constructor
+ * @extends {ol.ext.input.Base}
+ * @fires change:color
+ * @fires color
+ * @param {*} options
+ *  @param {string} [options.className]
+ *  @param {ol.colorLike} [options.color] default color
+ *  @param {Element} [options.input] input element, if non create one
+ *  @param {Element} [options.parent] parent element, if create an input
+ *  @param {boolean} [options.fixed=false] don't use a popup, default use a popup
+ *  @param {boolean} [options.autoClose=true] close when click on color
+ *  @param {boolean} [options.hidden=false] display the input
+ */
+ol.ext.input.PopupBase = function(options) {
+  options = options || {};
+  options.hidden = options.hidden!==false;
+  ol.ext.input.Base.call(this, options);
+  this.set('autoClose', options.autoClose !== false);
+  this.element = ol.ext.element.create('DIV', {
+    className: ('ol-ext-popup-input '  + (options.className || '')).trim(),
+  });
+  if (!options.fixed) this.element.classList.add('ol-popup');
+  var input = this.input;
+  if (input.parentNode) input.parentNode.insertBefore(this.element, input);
+  this.element.addEventListener('click', function() {
+    if (this.isCollapsed()) setTimeout( function() { this.collapse(false); }.bind(this) );
+  }.bind(this));
+  document.addEventListener('click', function() {
+    if (!this.moving) this.collapse(true);
+  }.bind(this));
+  this._elt = {};
+  // Popup container
+  this._elt.popup = ol.ext.element.create('DIV', { className: 'ol-popup', parent: this.element });
+  this._elt.popup.addEventListener('click', function(e) { e.stopPropagation(); });
+};
+ol.ext.inherits(ol.ext.input.PopupBase, ol.ext.input.Base);
+/** show/hide color picker
+ * @param {boolean} [b=false]
+ */
+ol.ext.input.PopupBase.prototype.collapse = function(b) {
+  if (b != this.isCollapsed()) {
+    this.dispatchEvent({
+      type: 'change:visible', 
+      visible: !this.isCollapsed()
+    });
+  }
+  this.dispatchEvent({
+    type: 'collapse', 
+    visible: !b
+  });
+  if (b) {
+    this._elt.popup.classList.remove('ol-visible');
+  } else {
+    this._elt.popup.classList.add('ol-visible');
+  }
+};
+/** Is the popup collapsed ?
+ * @returns {boolean}
+ */
+ol.ext.input.PopupBase.prototype.isCollapsed = function() {
+  return !this._elt.popup.classList.contains('ol-visible');
+};
+/** Toggle the popup
+ */
+ol.ext.input.PopupBase.prototype.toggle = function() {
+  this.collapse(!this.isCollapsed());
+};
+
 /** Checkbox input
  * @constructor
  * @extends {ol.ext.input.Base}
@@ -2002,7 +2073,7 @@ ol.ext.input.Checkbox.prototype.isChecked = function () {
 
 /** Color picker
  * @constructor
- * @extends {ol.ext.input.Base}
+ * @extends {ol.ext.input.PopupBase}
  * @fires change:color
  * @fires color
  * @param {*} options
@@ -2012,33 +2083,18 @@ ol.ext.input.Checkbox.prototype.isChecked = function () {
  *  @param {Element} [options.parent] parent element, if create an input
  *  @param {boolean} [options.fixed=false] don't use a popup, default use a popup
  *  @param {boolean} [options.autoClose=true] close when click on color
- *  @param {boolean} [options.visible=false] display the input
+ *  @param {boolean} [options.hidden=true] display the input
  */
 ol.ext.input.Color = function(options) {
   options = options || {};
-  ol.ext.input.Base.call(this, options);
-  this.set('autoClose', options.autoClose !== false);
-  this.element = ol.ext.element.create('DIV', {
-    className: ('ol-ext-colorpicker'  + (options.className || '')).trim(),
-  });
-  if (!options.fixed) this.element.classList.add('ol-popup');
-  var input = this.input;
-  if (input.parentNode) input.parentNode.insertBefore(this.element, input);
-  if (options.visible !== true) input.style.display = 'none';
-  this.element.addEventListener('click', function() {
-    if (this.isCollapsed()) setTimeout( function() { this.collapse(false); }.bind(this) );
-  }.bind(this));
-  document.addEventListener('click', function() {
-    if (!this.moving) this.collapse(true);
-  }.bind(this));
-  this._elt = {};
+  options.hidden = options.hidden!==false;
+  options.className = ('ol-ext-colorpicker '  + (options.className || '')).trim();
+  ol.ext.input.PopupBase.call(this, options);
   this._cursor = {};
   var hsv = this._hsv = {};
   // Vignet
   this._elt.vignet = ol.ext.element.create('DIV', { className: 'ol-vignet', parent: this.element });
   // Popup container
-  this._elt.popup = ol.ext.element.create('DIV', { className: 'ol-popup', parent: this.element });
-  this._elt.popup.addEventListener('click', function(e) { e.stopPropagation(); });
   var container = ol.ext.element.create('DIV', { className: 'ol-container', parent: this._elt.popup });
   // Color picker
   var picker = this._elt.picker = ol.ext.element.create('DIV', { className: 'ol-picker', parent: container });
@@ -2175,9 +2231,20 @@ ol.ext.input.Color = function(options) {
     this._addCustomColor(this.getColor());
     this._currentColor = this.getColorID(this.getColor());
     this.setColor();
-  }.bind(this))
+  }.bind(this));
+  // Update color on hide
+  this.on('collapse', function(e) {
+    if (!e.visible) {
+      var c = this.getColor();
+      if (this._currentColor !== this.getColorID(c)) {
+        this.dispatchEvent({ type: 'color', color: c });
+      }
+    } else {
+      this._currentColor = this.getColorID(this.getColor());
+    }
+  }.bind(this));
 };
-ol.ext.inherits(ol.ext.input.Color, ol.ext.input.Base);
+ol.ext.inherits(ol.ext.input.Color, ol.ext.input.PopupBase);
 /** Custom color list
  * @private
  */
@@ -2288,38 +2355,6 @@ ol.ext.input.Color.prototype.setColor = function(color) {
 ol.ext.input.Color.prototype.getColor = function(opacity) {
   return ol.color.fromHSV([this._hsv.h, this._hsv.s, this._hsv.v, (opacity !== false) ? this._hsv.a/100 : 1], 1);
 }
-/** show/hide color picker
- * @param {boolean} [b=false]
- */
-ol.ext.input.Color.prototype.collapse = function(b) {
-  if (b != this.isCollapsed()) {
-    this.dispatchEvent({
-      type: 'change:visible', 
-      visible: !this.isCollapsed()
-    });
-  }
-  if (b) {
-    this._elt.popup.classList.remove('ol-visible');
-    var c = this.getColor();
-    if (this._currentColor !== this.getColorID(c)) {
-      this.dispatchEvent({ type: 'color', color: c });
-    }
-  } else {
-    this._elt.popup.classList.add('ol-visible');
-    this._currentColor = this.getColorID(this.getColor());
-  }
-};
-/** Is the popup collapsed ?
- * @returns {boolean}
- */
-ol.ext.input.Color.prototype.isCollapsed = function() {
-  return !this._elt.popup.classList.contains('ol-visible');
-};
-/** Toggle the popup
- */
-ol.ext.input.Color.prototype.toggle = function() {
-  this.collapse(!this.isCollapsed());
-};
 /** 
  * @private
  */
@@ -2371,8 +2406,9 @@ ol.ext.input.Color.prototype.getColorID = function(color) {
 ol.ext.input.List = function(options) {
   options = options || {};
   ol.ext.input.Base.call(this, options);
+  this._content = ol.ext.element.create('DIV');
   this.element = ol.ext.element.create('DIV', {
-    html: options.html,
+    html: this._content,
     className: 'ol-input-popup'
   });
   this.set('hideOnClick', options.hideOnClick !== false);
@@ -2419,12 +2455,21 @@ ol.ext.input.List = function(options) {
   });
   this.input.addEventListener('change', function() {
     var v = this.input.value;
+    var val;
     opts.forEach(function(o) {
-      if (o.value == v) o.element.classList.add('ol-selected');
-      else o.element.classList.remove('ol-selected');
+      if (o.value == v) {
+        o.element.classList.add('ol-selected');
+        val = o.element;
+      } else {
+        o.element.classList.remove('ol-selected');
+      }
     });
     this.dispatchEvent({ type: 'change:value', value: this.getValue() });
+    this._content.innerHTML = val ? val.innerHTML : '';
   }.bind(this));
+  // Initial value
+  var event = new Event('change');
+  setTimeout(function() { this.input.dispatchEvent(event); }.bind(this));
 };
 ol.ext.inherits(ol.ext.input.List, ol.ext.input.Base);
 
@@ -2468,6 +2513,7 @@ ol.ext.input.Size = function(options) {
     })
   })
   ol.ext.input.List.call(this, options);
+  this._content.remove();
   this.element.classList.add('ol-size');
 };
 ol.ext.inherits(ol.ext.input.Size, ol.ext.input.List);
@@ -2516,8 +2562,9 @@ ol.ext.input.Width = function(options) {
         }
       })
     })
-  })
+  });
   ol.ext.input.List.call(this, options);
+  this._content.remove();
   this.element.classList.add('ol-width');
 };
 ol.ext.inherits(ol.ext.input.Width, ol.ext.input.List);
@@ -35697,6 +35744,7 @@ ol.style.FillPattern.prototype.getChecksum = function()
  *  @param {ol.colorLike} options.arrowColor Color of arrows, if not defined used color or color2
  *  @param {string} options.lineCap CanvasRenderingContext2D.lineCap 'butt' | 'round' | 'square', default 'butt'
  *  @param {number|ol.size} options.arrowSize height and width of the arrow, default 16
+ *  @param {boolean} [options.noOverlap=false] prevent segments overlaping
  *  @param {number} options.offset0 offset at line start
  *  @param {number} options.offset1 offset at line end
  */
@@ -35735,6 +35783,8 @@ ol.style.FlowLine = function(options) {
   this._offset = [0,0];
   this.setOffset(options.offset0, 0);
   this.setOffset(options.offset1, 1);
+  // Overlap
+  this._noOverlap = options.noOverlap;
 };
 ol.ext.inherits(ol.style.FlowLine, ol.style.Style);
 /** Set the initial width
@@ -35989,6 +36039,7 @@ ol.style.FlowLine.prototype._splitAsize = function(geom, asize, end) {
  */
 ol.style.FlowLine.prototype._splitInto = function(geom, nb, min) {
   var i, p;
+  var dt = this._noOverlap ? 1 : .9;
   // Split geom into equal length geoms
   var geoms = [];
   var dl, l = 0;
@@ -36013,8 +36064,8 @@ ol.style.FlowLine.prototype._splitInto = function(geom, nb, min) {
       ]);
       geoms.push(g);
       p0 =[ 
-        p0[0] + dx * d*.9,  
-        p0[1] + dy * d*.9
+        p0[0] + dx * d*dt,  
+        p0[1] + dy * d*dt
       ];
       g = [p0];
       l = 0;

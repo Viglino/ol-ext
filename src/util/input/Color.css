@@ -1,9 +1,4 @@
-.ol-ext-colorpicker {
-  display: inline-block;
-  vertical-align: top;
-}
 .ol-ext-colorpicker.ol-popup {
-  position: relative;
   color: transparent;
   width: 2em;
   height: 1.5em;
@@ -13,29 +8,10 @@
     linear-gradient(45deg, #aaa 25%, transparent 25%, transparent 75%, #aaa 75%);
   background-size: 10px 10px;
   background-position: 0 -1px, 5px 4px;
-  display: inline-block;
-  border: 3px solid #fff;
-  border-right-width: 1em;
-  box-shadow: 0 0 2px 1px #666;
-  border-radius: 2px;
-  box-sizing: content-box;
-  user-select: none;
-  vertical-align: middle;
-}
-.ol-ext-colorpicker.ol-popup:after {
-  content: "";
-  position: absolute;
-  border: .5em solid #aaa;
-  border-width: .5em .3em 0;
-  border-color: #999 transparent;
-  right: -.8em;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
 }
 
-.ol-ext-colorpicker * {
-  box-sizing: content-box;
+.ol-ext-colorpicker.ol-popup .ol-popup {
+  width: 340px;
 }
 
 .ol-ext-colorpicker.ol-popup .ol-vignet {
@@ -50,20 +26,6 @@
   pointer-events: none;
 }
 
-.ol-ext-colorpicker.ol-popup .ol-popup {
-  position: absolute;
-  top: 100%;
-  width: 340px;
-  left: 0;
-  box-shadow: 1px 1px 3px 1px #999;
-  display: block;
-  background-color: #fff;
-  display: none;
-  z-index: 1;
-}
-.ol-ext-colorpicker.ol-popup .ol-popup.ol-visible {
-  display: block;
-}
 .ol-ext-colorpicker .ol-container {
   position: relative;
   display: inline-block;

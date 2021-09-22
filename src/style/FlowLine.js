@@ -27,6 +27,7 @@ import '../geom/LineStringSplitAt'
  *  @param {ol.colorLike} options.arrowColor Color of arrows, if not defined used color or color2
  *  @param {string} options.lineCap CanvasRenderingContext2D.lineCap 'butt' | 'round' | 'square', default 'butt'
  *  @param {number|ol.size} options.arrowSize height and width of the arrow, default 16
+ *  @param {boolean} [options.noOverlap=false] prevent segments overlaping
  *  @param {number} options.offset0 offset at line start
  *  @param {number} options.offset1 offset at line end
  */
@@ -68,6 +69,8 @@ var ol_style_FlowLine = function(options) {
   this._offset = [0,0];
   this.setOffset(options.offset0, 0);
   this.setOffset(options.offset1, 1);
+  // Overlap
+  this._noOverlap = options.noOverlap;
 };
 ol_ext_inherits(ol_style_FlowLine, ol_style_Style);
 
@@ -345,6 +348,7 @@ ol_style_FlowLine.prototype._splitAsize = function(geom, asize, end) {
  */
 ol_style_FlowLine.prototype._splitInto = function(geom, nb, min) {
   var i, p;
+  var dt = this._noOverlap ? 1 : .9;
   // Split geom into equal length geoms
   var geoms = [];
   var dl, l = 0;
@@ -369,8 +373,8 @@ ol_style_FlowLine.prototype._splitInto = function(geom, nb, min) {
       ]);
       geoms.push(g);
       p0 =[ 
-        p0[0] + dx * d*.9,  
-        p0[1] + dy * d*.9
+        p0[0] + dx * d*dt,  
+        p0[1] + dy * d*dt
       ];
       g = [p0];
       l = 0;

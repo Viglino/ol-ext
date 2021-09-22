@@ -44,13 +44,7 @@
       font-family: FontAwesome;
       color: #369;
     }
-
-    .ol-input-popup.arrow ul {
-      left: 10px;
-    }
-    .ol-input-popup.arrow li {
-      padding: 10px 5px;
-    }
+    /* Arrow style */
     .ol-input-popup.arrow i {
       position: relative;
       display: block;
@@ -58,22 +52,6 @@
       color: #369;
       background-color: currentColor;
       height: 2px;
-    }
-    .ol-input-popup.arrow > div {
-      position: relative;
-      display: inline-block;
-      vertical-align: middle;
-      border-radius: 2px;
-      border: 1px solid #999;
-      padding: 3px 20px 3px 10px
-    }
-    .ol-input-popup.arrow > div:before {
-      position: absolute;
-      content: "";
-      right: 5px;
-      top: 50%;
-      border: 5px solid transparent;
-      border-top: 5px solid #999;
     }
     .ol-input-popup.arrow > div > i {
       display: inline-block;
@@ -146,10 +124,13 @@
   </p><p>
     Width: 
     <span class="line" style="display: inline-block; background-color: red; width: 2.5em; vertical-align: middle;"></span>
-    <input class="width" type="number" style="width: 3em" />
+    <input class="width" type="number" style="width: 3em" value=8 />
   </p><p>
     Arrow: 
-    <input class="arrow" style="width: 3em" />
+    <input class="arrow" style="width: 3em" value=1 />
+  </p><p>
+    Popup:
+    <input class="popup" style="width: 3em" value=1 />
   </p>
 
 
@@ -174,7 +155,7 @@
   });
   slide2.setValue(50);
 
-  var cpicker = new ol.ext.input.Color({ input: $('.color1').get(0), color: 'red', fixed: false });
+  var cpicker = new ol.ext.input.Color({ input: $('.color1').get(0), color: 'red', fixed: false, hidden: true });
   cpicker.on('color', function(e) { console.log('Color:', e.color) })
 
   var cpicker2 = new ol.ext.input.Color({ input: $('.color2').get(0), fixed: true });
@@ -196,15 +177,15 @@
   width.on('change:value', function(e) {
     $('.line').height(e.value)
   })
-  width.setValue(8);
+//  width.setValue(8);
 
-  var arrowElt = document.createElement('I');
+  // An arrow list
   var arrow = new ol.ext.input.List({ 
     input: $('.arrow').get(0),
     className: 'arrow',
-    html: $('<DIV>').append(arrowElt).get(0),
     disabled: true,
-    align: 'middle',
+    hidden: true,
+    //align: 'middle',
     options: [{
       value: 0,
       title: 'none',
@@ -224,7 +205,11 @@
     }]
   });
   arrow.on('change:value', function(e) {
-    arrowElt.className = 'arrow'+e.value
+    console.log(e.value)
+  });
+
+  var popup = new ol.ext.input.PopupBase({ 
+    input: $('.popup').get(0),
   });
 
 </script>

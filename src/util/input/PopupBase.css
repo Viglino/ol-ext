@@ -1,0 +1,48 @@
+.ol-ext-popup-input {
+  display: inline-block;
+  vertical-align: top;
+}
+.ol-ext-popup-input.ol-popup {
+  position: relative;
+  width: 2em;
+  height: 1.5em;
+  display: inline-block;
+  border: 3px solid #fff;
+  border-right-width: 1em;
+  box-shadow: 0 0 2px 1px #666;
+  border-radius: 2px;
+  box-sizing: content-box;
+  user-select: none;
+  vertical-align: middle;
+}
+.ol-ext-popup-input.ol-popup:after {
+  content: "";
+  position: absolute;
+  border: .5em solid #aaa;
+  border-width: .5em .3em 0;
+  border-color: #999 transparent;
+  right: -.8em;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.ol-ext-popup-input * {
+  box-sizing: content-box;
+}
+
+.ol-ext-popup-input.ol-popup .ol-popup {
+  position: absolute;
+  top: 100%;
+  min-width: 3em;
+  min-height: 3em;
+  left: 0;
+  box-shadow: 1px 1px 3px 1px #999;
+  display: block;
+  background-color: #fff;
+  display: none;
+  z-index: 1;
+}
+.ol-ext-popup-input.ol-popup .ol-popup.ol-visible {
+  display: block;
+}

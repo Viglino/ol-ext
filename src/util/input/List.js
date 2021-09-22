@@ -19,8 +19,9 @@ var ol_ext_input_List = function(options) {
 
   ol_ext_input_Base.call(this, options);
 
+  this._content = ol_ext_element.create('DIV');
   this.element = ol_ext_element.create('DIV', {
-    html: options.html,
+    html: this._content,
     className: 'ol-input-popup'
   });
   this.set('hideOnClick', options.hideOnClick !== false);
@@ -70,12 +71,22 @@ var ol_ext_input_List = function(options) {
 
   this.input.addEventListener('change', function() {
     var v = this.input.value;
+    var val;
     opts.forEach(function(o) {
-      if (o.value == v) o.element.classList.add('ol-selected');
-      else o.element.classList.remove('ol-selected');
+      if (o.value == v) {
+        o.element.classList.add('ol-selected');
+        val = o.element;
+      } else {
+        o.element.classList.remove('ol-selected');
+      }
     });
     this.dispatchEvent({ type: 'change:value', value: this.getValue() });
+    this._content.innerHTML = val ? val.innerHTML : '';
   }.bind(this));
+
+  // Initial value
+  var event = new Event('change');
+  setTimeout(function() { this.input.dispatchEvent(event); }.bind(this));
 };
 ol_ext_inherits(ol_ext_input_List, ol_ext_input_Base);
 

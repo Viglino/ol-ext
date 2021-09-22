@@ -1,6 +1,6 @@
 import ol_ext_inherits from '../ext'
 import ol_ext_element from '../element';
-import ol_ext_input_Base from './Base'
+import ol_ext_input_PopupBase from './PopupBase'
 import ol_Collection from 'ol/Collection';
 import { toHSV as ol_color_toHSV, fromHSV as ol_color_fromHSV } from '../color'
 import { toHexa as ol_color_toHexa } from '../color'
@@ -8,7 +8,7 @@ import { asArray as ol_color_asArray } from 'ol/color'
 
 /** Color picker
  * @constructor
- * @extends {ol_ext_input_Base}
+ * @extends {ol_ext_input_PopupBase}
  * @fires change:color
  * @fires color
  * @param {*} options
@@ -18,40 +18,21 @@ import { asArray as ol_color_asArray } from 'ol/color'
  *  @param {Element} [options.parent] parent element, if create an input
  *  @param {boolean} [options.fixed=false] don't use a popup, default use a popup
  *  @param {boolean} [options.autoClose=true] close when click on color
- *  @param {boolean} [options.visible=false] display the input
+ *  @param {boolean} [options.hidden=true] display the input
  */
 var ol_ext_input_Color = function(options) {
   options = options || {};
 
-  ol_ext_input_Base.call(this, options);
+  options.hidden = options.hidden!==false;
+  options.className = ('ol-ext-colorpicker '  + (options.className || '')).trim();
+  ol_ext_input_PopupBase.call(this, options);
 
-  this.set('autoClose', options.autoClose !== false);
-
-  this.element = ol_ext_element.create('DIV', {
-    className: ('ol-ext-colorpicker'  + (options.className || '')).trim(),
-  });
-  if (!options.fixed) this.element.classList.add('ol-popup');
-
-  var input = this.input;
-  if (input.parentNode) input.parentNode.insertBefore(this.element, input);
-  if (options.visible !== true) input.style.display = 'none';
-
-  this.element.addEventListener('click', function() {
-    if (this.isCollapsed()) setTimeout( function() { this.collapse(false); }.bind(this) );
-  }.bind(this));
-  document.addEventListener('click', function() {
-    if (!this.moving) this.collapse(true);
-  }.bind(this));
-
-  this._elt = {};
   this._cursor = {};
   var hsv = this._hsv = {};
   // Vignet
   this._elt.vignet = ol_ext_element.create('DIV', { className: 'ol-vignet', parent: this.element });
 
   // Popup container
-  this._elt.popup = ol_ext_element.create('DIV', { className: 'ol-popup', parent: this.element });
-  this._elt.popup.addEventListener('click', function(e) { e.stopPropagation(); });
   var container = ol_ext_element.create('DIV', { className: 'ol-container', parent: this._elt.popup });
 
   // Color picker
@@ -199,9 +180,21 @@ var ol_ext_input_Color = function(options) {
     this._addCustomColor(this.getColor());
     this._currentColor = this.getColorID(this.getColor());
     this.setColor();
-  }.bind(this))
+  }.bind(this));
+
+  // Update color on hide
+  this.on('collapse', function(e) {
+    if (!e.visible) {
+      var c = this.getColor();
+      if (this._currentColor !== this.getColorID(c)) {
+        this.dispatchEvent({ type: 'color', color: c });
+      }
+    } else {
+      this._currentColor = this.getColorID(this.getColor());
+    }
+  }.bind(this));
 };
-ol_ext_inherits(ol_ext_input_Color, ol_ext_input_Base);
+ol_ext_inherits(ol_ext_input_Color, ol_ext_input_PopupBase);
 
 /** Custom color list
  * @private
@@ -323,41 +316,6 @@ ol_ext_input_Color.prototype.setColor = function(color) {
 ol_ext_input_Color.prototype.getColor = function(opacity) {
   return ol_color_fromHSV([this._hsv.h, this._hsv.s, this._hsv.v, (opacity !== false) ? this._hsv.a/100 : 1], 1);
 }
-
-/** show/hide color picker
- * @param {boolean} [b=false]
- */
-ol_ext_input_Color.prototype.collapse = function(b) {
-  if (b != this.isCollapsed()) {
-    this.dispatchEvent({
-      type: 'change:visible', 
-      visible: !this.isCollapsed()
-    });
-  }
-  if (b) {
-    this._elt.popup.classList.remove('ol-visible');
-    var c = this.getColor();
-    if (this._currentColor !== this.getColorID(c)) {
-      this.dispatchEvent({ type: 'color', color: c });
-    }
-  } else {
-    this._elt.popup.classList.add('ol-visible');
-    this._currentColor = this.getColorID(this.getColor());
-  }
-};
-
-/** Is the popup collapsed ?
- * @returns {boolean}
- */
-ol_ext_input_Color.prototype.isCollapsed = function() {
-  return !this._elt.popup.classList.contains('ol-visible');
-};
-
-/** Toggle the popup
- */
-ol_ext_input_Color.prototype.toggle = function() {
-  this.collapse(!this.isCollapsed());
-};
 
 /** 
  * @private

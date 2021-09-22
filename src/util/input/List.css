@@ -29,6 +29,7 @@
 
 .ol-input-popup .ol-popup li {
   position: relative;
+  padding: 10px 5px;
 }
 
 .ol-input-popup li:hover {
@@ -51,3 +52,19 @@
   float: left;
 }
 
+.ol-input-popup > div {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  border-radius: 2px;
+  border: 1px solid #999;
+  padding: 3px 20px 3px 10px
+}
+.ol-input-popup > div:before {
+  position: absolute;
+  content: "";
+  right: 5px;
+  top: 50%;
+  border: 5px solid transparent;
+  border-top: 5px solid #999;
+}

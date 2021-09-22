@@ -25,8 +25,9 @@ var ol_ext_input_Width = function(options) {
         }
       })
     })
-  })
+  });
   ol_ext_input_List.call(this, options);
+  this._content.remove();
 
   this.element.classList.add('ol-width');
 

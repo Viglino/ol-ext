@@ -27,6 +27,7 @@ var ol_ext_input_Size = function(options) {
     })
   })
   ol_ext_input_List.call(this, options);
+  this._content.remove();
 
   this.element.classList.add('ol-size');
 
