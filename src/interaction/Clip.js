@@ -39,7 +39,7 @@ ol_interaction_Clip.prototype.setMap = function(map) {
       this.layers_[i].un(['precompose','prerender'], this.precomposeBind_);
       this.layers_[i].un(['postcompose','postrender'], this.postcomposeBind_);
     }
-    this.getMap().renderSync();
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
   }
 
   ol_interaction_Pointer.prototype.setMap.call(this, map);
@@ -49,7 +49,7 @@ ol_interaction_Clip.prototype.setMap = function(map) {
       this.layers_[i].on(['precompose','prerender'], this.precomposeBind_);
       this.layers_[i].on(['postcompose','postrender'], this.postcomposeBind_);
     }
-    map.renderSync();
+    try { map.renderSync(); } catch(e) { /* ok */ }
   }
 };
 
@@ -58,7 +58,9 @@ ol_interaction_Clip.prototype.setMap = function(map) {
  */
 ol_interaction_Clip.prototype.setRadius = function(radius) {
   this.radius = radius;
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 
 /** Get clip radius
@@ -78,7 +80,7 @@ ol_interaction_Clip.prototype.addLayer = function(layers)  {
       layers[i].on(['precompose','prerender'], this.precomposeBind_);
       layers[i].on(['postcompose','postrender'], this.postcomposeBind_);
 
-      this.getMap().renderSync();
+      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
     }
     this.layers_.push(layers[i]);
   }
@@ -100,7 +102,7 @@ ol_interaction_Clip.prototype.removeLayer = function(layers) {
       this.layers_[k].un(['precompose','prerender'], this.precomposeBind_);
       this.layers_[k].un(['postcompose','postrender'], this.postcomposeBind_);
       this.layers_.splice(k,1);
-      this.getMap().renderSync();
+      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
     }
   }
 };
@@ -111,7 +113,7 @@ ol_interaction_Clip.prototype.removeLayer = function(layers) {
 ol_interaction_Clip.prototype.setPosition = function(coord) {
   if (this.getMap()) {
     this.pos = this.getMap().getPixelFromCoordinate(coord);
-    this.getMap().renderSync();
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
   }
 };
 
@@ -128,7 +130,9 @@ ol_interaction_Clip.prototype.getPosition = function() {
  */
  ol_interaction_Clip.prototype.setPixelPosition = function(pixel) {
   this.pos = pixel;
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 
 /** Get position of the clip
@@ -147,7 +151,9 @@ ol_interaction_Clip.prototype._setPosition = function(e) {
   if (e.pixel) {
     this.pos = e.pixel;
   }
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 
 /* @private
@@ -204,7 +210,9 @@ ol_interaction_Clip.prototype.setActive = function(b) {
       this.layers_[i].un(['postcompose','postrender'], this.postcomposeBind_);
     }
   }
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 
 export default ol_interaction_Clip

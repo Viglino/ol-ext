@@ -53,7 +53,9 @@ ol_interaction_Flashlight.prototype.setMap = function(map) {
 */
 ol_interaction_Flashlight.prototype.setRadius = function(radius) {
   this.radius = radius
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 }
 
 /** Set flashlight color
@@ -75,7 +77,9 @@ ol_interaction_Flashlight.prototype.setColor = function(options) {
   }
   c[3] = 0.1;
   this.midColor = ol_color_asString(c);
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 }
 
 /** Set position of the flashlight
@@ -85,7 +89,7 @@ ol_interaction_Flashlight.prototype.setPosition = function(e) {
   if (e.pixel) this.pos = e.pixel;
   else this.pos = e;
   if (this.getMap()) {
-    this.getMap().renderSync();
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
   }
 }
 

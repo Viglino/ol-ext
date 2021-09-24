@@ -250,7 +250,7 @@ ol_Overlay_Popup.prototype.show = function (coordinate, html) {
     Array.prototype.slice.call(this.content.querySelectorAll('img'))
       .forEach(function(image) {
         image.addEventListener("load", function() {
-          map.renderSync();
+          try { map.renderSync(); } catch(e) { /* ok */ }
         });
       });
   }

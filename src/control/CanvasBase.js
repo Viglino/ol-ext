@@ -44,7 +44,9 @@ ol_control_CanvasBase.prototype.setMap = function (map) {
   }
   
   ol_control_Control.prototype.setMap.call(this, map);
-  if (oldmap) oldmap.renderSync();
+  if (oldmap) {
+    try { oldmap.renderSync(); } catch(e) { /* ok */ }
+  }
 
   if (map) {
     this._listener = map.on('postcompose', this._draw.bind(this));

@@ -59,7 +59,9 @@ var ol_control_Legend = function(options) {
     this.dispatchEvent(e);
   }.bind(this));
   this._legend.on('refresh', function() {
-    if (this._onCanvas && this.getMap()) this.getMap().renderSync();
+    if (this._onCanvas && this.getMap()) {
+      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+    }
   }.bind(this));
 };
 ol_ext_inherits(ol_control_Legend, ol_control_CanvasBase);
@@ -77,7 +79,9 @@ ol_control_Legend.prototype.getLegend = function () {
 ol_control_Legend.prototype.setCanvas = function (b) {
   this._onCanvas = b;
   this.element.style.visibility = b ? "hidden":"visible";
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 
 /** Is control on canvas
@@ -118,7 +122,9 @@ ol_control_Legend.prototype.show = function() {
   if (this.element.classList.contains('ol-collapsed')) {
     this.element.classList.remove('ol-collapsed');
     this.dispatchEvent({ type:'change:collapse', collapsed: false });
-    if (this.getMap()) this.getMap().renderSync();
+    if (this.getMap()) {
+      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+    }
   }
 };
 
@@ -128,7 +134,9 @@ ol_control_Legend.prototype.hide = function() {
   if (!this.element.classList.contains('ol-collapsed')) {
     this.element.classList.add('ol-collapsed');
     this.dispatchEvent({ type:'change:collapse', collapsed: true });
-    if (this.getMap()) this.getMap().renderSync();
+    if (this.getMap()) {
+      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+    }
   }
 };
 
@@ -152,7 +160,9 @@ ol_control_Legend.prototype.isCollapsed = function() {
 ol_control_Legend.prototype.toggle = function() {
   this.element.classList.toggle('ol-collapsed');
   this.dispatchEvent({ type:'change:collapse', collapsed: this.element.classList.contains('ol-collapsed') });
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 
 export default ol_control_Legend

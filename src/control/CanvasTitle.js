@@ -62,7 +62,9 @@ ol_control_CanvasTitle.prototype.setStyle = function (style) {
 ol_control_CanvasTitle.prototype.setTitle = function (title) {
   this.element.textContent = title;
   this.set('title', title);
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 
 /**
@@ -81,7 +83,9 @@ ol_control_CanvasTitle.prototype.getTitle = function () {
  */
 ol_control_CanvasTitle.prototype.setVisible = function (b) {
   this.element.style.display = (b ? 'block' : 'none');
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 
 /**

@@ -29,10 +29,10 @@ var ol_interaction_TouchCompass = function(options) {
 		return (Math.sqrt(dx*dx+dy*dy) < this.size/2);
 	};
 	// Pn drag
-	opt.handleDragEvent = function(e)
-	{	if (!this.pos) 
-		{	this.pos = this.start;
-			this.getMap().renderSync();
+	opt.handleDragEvent = function(e) {
+		if (!this.pos) {
+			this.pos = this.start;
+			try { this.getMap().renderSync(); } catch(e) { /* ok */ }
 		}
 		this.pos = e;
 	};
@@ -115,7 +115,9 @@ ol_interaction_TouchCompass.prototype.setMap = function(map) {
  */
 ol_interaction_TouchCompass.prototype.setActive = function(b)
 {	ol_interaction_Pointer.prototype.setActive.call (this, b);
-	if (this.getMap()) this.getMap().renderSync();
+	if (this.getMap()) {
+		try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+	}
 }
 
 /**

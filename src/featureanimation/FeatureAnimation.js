@@ -263,8 +263,11 @@ ol_layer_Base.prototype.animateFeature = function(feature, fanim, useFilter) {
     if (fanim.length && !listenerKey) {
       listenerKey = self.on(['postcompose','postrender'], animate.bind(self));
       // map or layer?
-      if (self.renderSync) self.renderSync();
-      else self.changed();
+      if (self.renderSync) {
+        try { self.renderSync(); } catch(e) { /* ok */ }
+      } else {
+        self.changed();
+      }
       // Hide feature while animating
       feature.setStyle(fanim[step].hiddenStyle || ol_featureAnimation.hiddenStyle);
       // Send event

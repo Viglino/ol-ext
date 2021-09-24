@@ -73,9 +73,9 @@ var exportMap = function(elements, map, options){
         map.once('postcompose', function(event) {
           saveCanvas (self, event.context.canvas, ext);
           // Redraw map (if dpi change)
-          setTimeout(function(){ map.renderSync() }, 500);
+          setTimeout(function(){ try { map.renderSync(); } catch(e) { /* ok */ } }, 500);
         });
-        map.renderSync();
+        try { map.renderSync(); } catch(e) { /* ok */ }
       });
     } else {
       element.addEventListener('click',function(){ alert ("Export functions are not supported by your browser...");});

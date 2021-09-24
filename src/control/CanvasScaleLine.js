@@ -52,7 +52,9 @@ ol_control_CanvasScaleLine.prototype.setMap = function (map) {
   this._listener = null;
   
   ol_control_ScaleLine.prototype.setMap.call(this, map);
-  if (oldmap) oldmap.renderSync();
+  if (oldmap) {
+    try { oldmap.renderSync(); } catch(e) { /* ok */ }
+  }
 
   // Add postcompose on the map
   if (map) {

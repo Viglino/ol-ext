@@ -67,7 +67,9 @@ ol_control_CenterPosition.prototype.setStyle = function (style) {
 ol_control_CenterPosition.prototype.setCanvas = function (b) {
   this.set('canvas', b);
 	this.element.style.visibility = b ? "hidden":"visible";
-	if (this.getMap()) this.getMap().renderSync();
+	if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 
 /**
@@ -77,7 +79,9 @@ ol_control_CenterPosition.prototype.setCanvas = function (b) {
  */
 ol_control_CenterPosition.prototype.setVisible = function (b) {
   this.element.style.display = (b ? '' : 'none');
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 
 /**

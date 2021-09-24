@@ -55,7 +55,9 @@ ol_control_Compass.prototype.setImage = function (img) {
   if (img instanceof Image) {
     this.img_ = img;
     this.img_.onload = function(){ 
-      if (this.getMap()) this.getMap().renderSync(); 
+      if (this.getMap()) {
+        try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+      }
     }.bind(this);
   } else if (typeof(img) === 'string') {
     // Load source
@@ -71,7 +73,9 @@ ol_control_Compass.prototype.setImage = function (img) {
       default: {
         this.img_ = new Image();
         this.img_.onload = function(){ 
-          if (this.getMap()) this.getMap().renderSync(); 
+          if (this.getMap()) {
+            try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+          }
         }.bind(this);
         this.img_.src = img;
         break;

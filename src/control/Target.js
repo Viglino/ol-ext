@@ -45,7 +45,9 @@ ol_ext_inherits(ol_control_Target, ol_control_CanvasBase);
  */
 ol_control_Target.prototype.setVisible = function (b) {
   this.set("visible",b);
-	if (this.getMap()) this.getMap().renderSync();
+	if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 
 /** Get the control visibility

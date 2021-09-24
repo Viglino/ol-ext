@@ -83,7 +83,9 @@ ol_control_CanvasAttribution.prototype.setMap = function (map) {
   this._listener = null;
   
   ol_control_Attribution.prototype.setMap.call(this, map);
-  if (oldmap) oldmap.renderSync();
+  if (oldmap) {
+    try { oldmap.renderSync(); } catch(e) { /* ok */ }
+  }
 
   // Get change (new layer added or removed)
   if (map) {

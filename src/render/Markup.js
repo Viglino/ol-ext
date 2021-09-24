@@ -75,16 +75,18 @@ ol_Map.prototype.markup = function(coords, options)
 		}
 	}
 			
-	setTimeout (function()
-		{	if (listenerKey) self.renderSync(); 
-		}, delay);
+	setTimeout (function() {
+		if (listenerKey) {
+			try { self.renderSync(); } catch(e) { /* ok */ }
+		}
+	}, delay);
 
 	// Launch animation
 	listenerKey = this.on('postcompose', animate.bind(this));
-	this.renderSync();
+	try { this.renderSync(); } catch(e) { /* ok */ }
 	listenerKey.stop = function()
 	{	delay = duration = 0;
-		this.target.renderSync();
+		try { this.target.renderSync(); } catch(e) { /* ok */ }
 	};
 	return listenerKey;
 }

@@ -3060,7 +3060,9 @@ ol.control.CanvasBase.prototype.setMap = function (map) {
     this._listener = null;
   }
   ol.control.Control.prototype.setMap.call(this, map);
-  if (oldmap) oldmap.renderSync();
+  if (oldmap) {
+    try { oldmap.renderSync(); } catch(e) { /* ok */ }
+  }
   if (map) {
     this._listener = map.on('postcompose', this._draw.bind(this));
     // Get a canvas layer on top of the map
@@ -5657,7 +5659,9 @@ ol.control.CanvasAttribution.prototype.setMap = function (map) {
   if (this._listener) ol.Observable.unByKey(this._listener);
   this._listener = null;
   ol.control.Attribution.prototype.setMap.call(this, map);
-  if (oldmap) oldmap.renderSync();
+  if (oldmap) {
+    try { oldmap.renderSync(); } catch(e) { /* ok */ }
+  }
   // Get change (new layer added or removed)
   if (map) {
     this._listener = map.on('postcompose', this.drawAttribution_.bind(this));
@@ -5762,7 +5766,9 @@ ol.control.CanvasScaleLine.prototype.setMap = function (map) {
   if (this._listener) ol.Observable.unByKey(this._listener);
   this._listener = null;
   ol.control.ScaleLine.prototype.setMap.call(this, map);
-  if (oldmap) oldmap.renderSync();
+  if (oldmap) {
+    try { oldmap.renderSync(); } catch(e) { /* ok */ }
+  }
   // Add postcompose on the map
   if (map) {
     this._listener = map.on('postcompose', this.drawScale_.bind(this));
@@ -5893,7 +5899,9 @@ ol.control.CanvasTitle.prototype.setStyle = function (style) {
 ol.control.CanvasTitle.prototype.setTitle = function (title) {
   this.element.textContent = title;
   this.set('title', title);
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 /**
  * Get the map title 
@@ -5910,7 +5918,9 @@ ol.control.CanvasTitle.prototype.getTitle = function () {
  */
 ol.control.CanvasTitle.prototype.setVisible = function (b) {
   this.element.style.display = (b ? 'block' : 'none');
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 /**
  * Get control visibility
@@ -6015,7 +6025,9 @@ ol.control.CenterPosition.prototype.setStyle = function (style) {
 ol.control.CenterPosition.prototype.setCanvas = function (b) {
   this.set('canvas', b);
 	this.element.style.visibility = b ? "hidden":"visible";
-	if (this.getMap()) this.getMap().renderSync();
+	if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 /**
  * Set control visibility
@@ -6024,7 +6036,9 @@ ol.control.CenterPosition.prototype.setCanvas = function (b) {
  */
 ol.control.CenterPosition.prototype.setVisible = function (b) {
   this.element.style.display = (b ? '' : 'none');
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 /**
  * Get control visibility
@@ -6116,7 +6130,9 @@ ol.control.Compass.prototype.setImage = function (img) {
   if (img instanceof Image) {
     this.img_ = img;
     this.img_.onload = function(){ 
-      if (this.getMap()) this.getMap().renderSync(); 
+      if (this.getMap()) {
+        try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+      }
     }.bind(this);
   } else if (typeof(img) === 'string') {
     // Load source
@@ -6132,7 +6148,9 @@ ol.control.Compass.prototype.setImage = function (img) {
       default: {
         this.img_ = new Image();
         this.img_.onload = function(){ 
-          if (this.getMap()) this.getMap().renderSync(); 
+          if (this.getMap()) {
+            try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+          }
         }.bind(this);
         this.img_.src = img;
         break;
@@ -8900,7 +8918,9 @@ ol.control.Legend = function(options) {
     this.dispatchEvent(e);
   }.bind(this));
   this._legend.on('refresh', function() {
-    if (this._onCanvas && this.getMap()) this.getMap().renderSync();
+    if (this._onCanvas && this.getMap()) {
+      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+    }
   }.bind(this));
 };
 ol.ext.inherits(ol.control.Legend, ol.control.CanvasBase);
@@ -8916,7 +8936,9 @@ ol.control.Legend.prototype.getLegend = function () {
 ol.control.Legend.prototype.setCanvas = function (b) {
   this._onCanvas = b;
   this.element.style.visibility = b ? "hidden":"visible";
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 /** Is control on canvas
  * @returns {boolean}
@@ -8954,7 +8976,9 @@ ol.control.Legend.prototype.show = function() {
   if (this.element.classList.contains('ol-collapsed')) {
     this.element.classList.remove('ol-collapsed');
     this.dispatchEvent({ type:'change:collapse', collapsed: false });
-    if (this.getMap()) this.getMap().renderSync();
+    if (this.getMap()) {
+      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+    }
   }
 };
 /** Hide control
@@ -8963,7 +8987,9 @@ ol.control.Legend.prototype.hide = function() {
   if (!this.element.classList.contains('ol-collapsed')) {
     this.element.classList.add('ol-collapsed');
     this.dispatchEvent({ type:'change:collapse', collapsed: true });
-    if (this.getMap()) this.getMap().renderSync();
+    if (this.getMap()) {
+      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+    }
   }
 };
 /** Show/hide control
@@ -8984,7 +9010,9 @@ ol.control.Legend.prototype.isCollapsed = function() {
 ol.control.Legend.prototype.toggle = function() {
   this.element.classList.toggle('ol-collapsed');
   this.dispatchEvent({ type:'change:collapse', collapsed: this.element.classList.contains('ol-collapsed') });
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
@@ -14288,7 +14316,9 @@ ol.control.Swipe = function(options) {
   if (options.layers) this.addLayer(options.layers, false);
   if (options.rightLayers) this.addLayer(options.rightLayers, true);
   this.on('propertychange', function() {
-    if (this.getMap()) this.getMap().renderSync();
+    if (this.getMap()) {
+      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+    }
     if (this.get('orientation') === "horizontal") {
       this.element.style.top = this.get('position')*100+"%";
       this.element.style.left = "";
@@ -14318,7 +14348,7 @@ ol.control.Swipe.prototype.setMap = function(map) {
       else l.layer.un(['precompose','prerender'], this.precomposeLeft_);
       l.layer.un(['postcompose','postrender'], this.postcompose_);
     }
-    this.getMap().renderSync();
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
   }
   ol.control.Control.prototype.setMap.call(this, map);
   if (map) {
@@ -14329,7 +14359,7 @@ ol.control.Swipe.prototype.setMap = function(map) {
       else l.layer.on(['precompose','prerender'], this.precomposeLeft_);
       l.layer.on(['postcompose','postrender'], this.postcompose_);
     }
-    map.renderSync();
+    try { map.renderSync(); } catch(e) { /* ok */ }
   }
 };
 /** @private
@@ -14354,7 +14384,7 @@ ol.control.Swipe.prototype.addLayer = function(layers, right) {
         if (right) l.on(['precompose','prerender'], this.precomposeRight_);
         else l.on(['precompose','prerender'], this.precomposeLeft_);
         l.on(['postcompose','postrender'], this.postcompose_);
-        this.getMap().renderSync();
+        try { this.getMap().renderSync(); } catch(e) { /* ok */ }
       }
     }
   }
@@ -14371,7 +14401,7 @@ ol.control.Swipe.prototype.removeLayer = function(layers) {
       else layers[i].un(['precompose','prerender'], this.precomposeLeft_);
       layers[i].un(['postcompose','postrender'], this.postcompose_);
       this.layers.splice(k,1);
-      this.getMap().renderSync();
+      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
     }
   }
 };
@@ -14547,7 +14577,9 @@ ol.ext.inherits(ol.control.Target, ol.control.CanvasBase);
  */
 ol.control.Target.prototype.setVisible = function (b) {
   this.set("visible",b);
-	if (this.getMap()) this.getMap().renderSync();
+	if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 /** Get the control visibility
  * @return {boolean} b 
@@ -16756,8 +16788,11 @@ ol.layer.Base.prototype.animateFeature = function(feature, fanim, useFilter) {
     if (fanim.length && !listenerKey) {
       listenerKey = self.on(['postcompose','postrender'], animate.bind(self));
       // map or layer?
-      if (self.renderSync) self.renderSync();
-      else self.changed();
+      if (self.renderSync) {
+        try { self.renderSync(); } catch(e) { /* ok */ }
+      } else {
+        self.changed();
+      }
       // Hide feature while animating
       feature.setStyle(fanim[step].hiddenStyle || ol.featureAnimation.hiddenStyle);
       // Send event
@@ -17328,8 +17363,11 @@ function postcompose_(e) {
 * @private
 */
 function filterRedraw_(/* e */) {
-  if (this.renderSync) this.renderSync();
-  else this.changed(); 
+  if (this.renderSync) {
+    try { this.renderSync(); } catch(e) { /* ok */ }
+  } else {
+    this.changed(); 
+  }
 }
 /** Add a filter to an ol object
 * @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
@@ -19225,7 +19263,7 @@ ol.interaction.Clip.prototype.setMap = function(map) {
       this.layers_[i].un(['precompose','prerender'], this.precomposeBind_);
       this.layers_[i].un(['postcompose','postrender'], this.postcomposeBind_);
     }
-    this.getMap().renderSync();
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
   }
   ol.interaction.Pointer.prototype.setMap.call(this, map);
   if (map) {
@@ -19233,7 +19271,7 @@ ol.interaction.Clip.prototype.setMap = function(map) {
       this.layers_[i].on(['precompose','prerender'], this.precomposeBind_);
       this.layers_[i].on(['postcompose','postrender'], this.postcomposeBind_);
     }
-    map.renderSync();
+    try { map.renderSync(); } catch(e) { /* ok */ }
   }
 };
 /** Set clip radius
@@ -19241,7 +19279,9 @@ ol.interaction.Clip.prototype.setMap = function(map) {
  */
 ol.interaction.Clip.prototype.setRadius = function(radius) {
   this.radius = radius;
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 /** Get clip radius
  *	@returns {integer} radius
@@ -19258,7 +19298,7 @@ ol.interaction.Clip.prototype.addLayer = function(layers)  {
     if (this.getMap()) {
       layers[i].on(['precompose','prerender'], this.precomposeBind_);
       layers[i].on(['postcompose','postrender'], this.postcomposeBind_);
-      this.getMap().renderSync();
+      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
     }
     this.layers_.push(layers[i]);
   }
@@ -19279,7 +19319,7 @@ ol.interaction.Clip.prototype.removeLayer = function(layers) {
       this.layers_[k].un(['precompose','prerender'], this.precomposeBind_);
       this.layers_[k].un(['postcompose','postrender'], this.postcomposeBind_);
       this.layers_.splice(k,1);
-      this.getMap().renderSync();
+      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
     }
   }
 };
@@ -19289,7 +19329,7 @@ ol.interaction.Clip.prototype.removeLayer = function(layers) {
 ol.interaction.Clip.prototype.setPosition = function(coord) {
   if (this.getMap()) {
     this.pos = this.getMap().getPixelFromCoordinate(coord);
-    this.getMap().renderSync();
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
   }
 };
 /** Get position of the clip
@@ -19304,7 +19344,9 @@ ol.interaction.Clip.prototype.getPosition = function() {
  */
  ol.interaction.Clip.prototype.setPixelPosition = function(pixel) {
   this.pos = pixel;
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 /** Get position of the clip
  * @returns {ol.Pixel} pixel
@@ -19321,7 +19363,9 @@ ol.interaction.Clip.prototype._setPosition = function(e) {
   if (e.pixel) {
     this.pos = e.pixel;
   }
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 /* @private
 */
@@ -19374,7 +19418,9 @@ ol.interaction.Clip.prototype.setActive = function(b) {
       this.layers_[i].un(['postcompose','postrender'], this.postcomposeBind_);
     }
   }
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 };
 
 /** An interaction to check the current map and add key events listeners.
@@ -20961,7 +21007,9 @@ ol.interaction.Flashlight.prototype.setMap = function(map) {
 */
 ol.interaction.Flashlight.prototype.setRadius = function(radius) {
   this.radius = radius
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 }
 /** Set flashlight color
  *	@param {ol.flashlight.options} flashlight options param
@@ -20982,7 +21030,9 @@ ol.interaction.Flashlight.prototype.setColor = function(options) {
   }
   c[3] = 0.1;
   this.midColor = ol.color.asString(c);
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
 }
 /** Set position of the flashlight
 *	@param {ol.Pixel|ol.MapBrowserEvent}
@@ -20991,7 +21041,7 @@ ol.interaction.Flashlight.prototype.setPosition = function(e) {
   if (e.pixel) this.pos = e.pixel;
   else this.pos = e;
   if (this.getMap()) {
-    this.getMap().renderSync();
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
   }
 }
 /** Postcompose function
@@ -21240,7 +21290,7 @@ ol.interaction.GeolocationDraw.prototype.setActive = function(active) {
   this.overlayLayer_.setVisible(active);
   if (this.getMap()) {
     this.geolocation.setTracking(active);
-    this.getMap().renderSync();
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
   }
   this.pause(!active);
   if (active) {
@@ -24337,10 +24387,10 @@ ol.interaction.TouchCompass = function(options) {
 		return (Math.sqrt(dx*dx+dy*dy) < this.size/2);
 	};
 	// Pn drag
-	opt.handleDragEvent = function(e)
-	{	if (!this.pos) 
-		{	this.pos = this.start;
-			this.getMap().renderSync();
+	opt.handleDragEvent = function(e) {
+		if (!this.pos) {
+			this.pos = this.start;
+			try { this.getMap().renderSync(); } catch(e) { /* ok */ }
 		}
 		this.pos = e;
 	};
@@ -24414,7 +24464,9 @@ ol.interaction.TouchCompass.prototype.setMap = function(map) {
  */
 ol.interaction.TouchCompass.prototype.setActive = function(b)
 {	ol.interaction.Pointer.prototype.setActive.call (this, b);
-	if (this.getMap()) this.getMap().renderSync();
+	if (this.getMap()) {
+		try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+	}
 }
 /**
  * Get the center of the compass
@@ -31406,7 +31458,7 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html) {
     Array.prototype.slice.call(this.content.querySelectorAll('img'))
       .forEach(function(image) {
         image.addEventListener("load", function() {
-          map.renderSync();
+          try { map.renderSync(); } catch(e) { /* ok */ }
         });
       });
   }
@@ -34248,7 +34300,7 @@ ol.Map.prototype.animExtent = function(extent, options)
 	}
 	// Launch animation
 	listenerKey = this.on('postcompose', animate.bind(this));
-	this.renderSync();
+	try { this.renderSync(); } catch(e) { /* ok */ }
 }
 
 /** Create a cardinal spline version of this geometry.
@@ -34792,15 +34844,17 @@ ol.Map.prototype.markup = function(coords, options)
 			if (elapsed >= delay) frameState.animate = true;
 		}
 	}
-	setTimeout (function()
-		{	if (listenerKey) self.renderSync(); 
-		}, delay);
+	setTimeout (function() {
+		if (listenerKey) {
+			try { self.renderSync(); } catch(e) { /* ok */ }
+		}
+	}, delay);
 	// Launch animation
 	listenerKey = this.on('postcompose', animate.bind(this));
-	this.renderSync();
+	try { this.renderSync(); } catch(e) { /* ok */ }
 	listenerKey.stop = function()
 	{	delay = duration = 0;
-		this.target.renderSync();
+		try { this.target.renderSync(); } catch(e) { /* ok */ }
 	};
 	return listenerKey;
 }
@@ -34913,7 +34967,7 @@ ol.Map.prototype.pulse = function(coords, options)
 	}
 	// Launch animation
 	listenerKey = this.on('postcompose', animate.bind(this));
-	this.renderSync();
+	try { this.renderSync(); } catch(e) { /* ok */ }
 }
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 

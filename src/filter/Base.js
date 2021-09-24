@@ -70,8 +70,11 @@ function postcompose_(e) {
 * @private
 */
 function filterRedraw_(/* e */) {
-  if (this.renderSync) this.renderSync();
-  else this.changed(); 
+  if (this.renderSync) {
+    try { this.renderSync(); } catch(e) { /* ok */ }
+  } else {
+    this.changed(); 
+  }
 }
 
 /** Add a filter to an ol object

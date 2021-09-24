@@ -45,7 +45,9 @@ var ol_control_Swipe = function(options) {
   if (options.rightLayers) this.addLayer(options.rightLayers, true);
 
   this.on('propertychange', function() {
-    if (this.getMap()) this.getMap().renderSync();
+    if (this.getMap()) {
+      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+    }
     if (this.get('orientation') === "horizontal") {
       this.element.style.top = this.get('position')*100+"%";
       this.element.style.left = "";
@@ -78,7 +80,7 @@ ol_control_Swipe.prototype.setMap = function(map) {
       else l.layer.un(['precompose','prerender'], this.precomposeLeft_);
       l.layer.un(['postcompose','postrender'], this.postcompose_);
     }
-    this.getMap().renderSync();
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
   }
 
   ol_control_Control.prototype.setMap.call(this, map);
@@ -91,7 +93,7 @@ ol_control_Swipe.prototype.setMap = function(map) {
       else l.layer.on(['precompose','prerender'], this.precomposeLeft_);
       l.layer.on(['postcompose','postrender'], this.postcompose_);
     }
-    map.renderSync();
+    try { map.renderSync(); } catch(e) { /* ok */ }
   }
 };
 
@@ -118,7 +120,7 @@ ol_control_Swipe.prototype.addLayer = function(layers, right) {
         if (right) l.on(['precompose','prerender'], this.precomposeRight_);
         else l.on(['precompose','prerender'], this.precomposeLeft_);
         l.on(['postcompose','postrender'], this.postcompose_);
-        this.getMap().renderSync();
+        try { this.getMap().renderSync(); } catch(e) { /* ok */ }
       }
     }
   }
@@ -136,7 +138,7 @@ ol_control_Swipe.prototype.removeLayer = function(layers) {
       else layers[i].un(['precompose','prerender'], this.precomposeLeft_);
       layers[i].un(['postcompose','postrender'], this.postcompose_);
       this.layers.splice(k,1);
-      this.getMap().renderSync();
+      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
     }
   }
 };

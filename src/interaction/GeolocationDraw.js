@@ -216,7 +216,7 @@ ol_interaction_GeolocationDraw.prototype.setActive = function(active) {
   this.overlayLayer_.setVisible(active);
   if (this.getMap()) {
     this.geolocation.setTracking(active);
-    this.getMap().renderSync();
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
   }
   this.pause(!active);
   if (active) {

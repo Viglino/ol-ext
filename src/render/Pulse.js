@@ -83,6 +83,6 @@ ol_Map.prototype.pulse = function(coords, options)
 
 	// Launch animation
 	listenerKey = this.on('postcompose', animate.bind(this));
-	this.renderSync();
+	try { this.renderSync(); } catch(e) { /* ok */ }
 }
 
