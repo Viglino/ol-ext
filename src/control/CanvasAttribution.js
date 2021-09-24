@@ -44,7 +44,11 @@ ol_control_CanvasAttribution.prototype.setCanvas = function (b) {
   this.isCanvas_ = b;
   if (b) this.setCollapsed(false);
   this.element.style.visibility = b ? "hidden":"visible";
-  if (this.getMap()) this.getMap().renderSync();
+  if (this.getMap()) {
+    try {
+      this.getMap().renderSync();
+    } catch(e) { /* ok */ }
+  }
 };
 
 
