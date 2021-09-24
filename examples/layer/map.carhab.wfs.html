@@ -367,7 +367,7 @@ var styleCache = {};
 var carhab = new ol.layer.VectorImage({
   title: 'Carhab',
   className: 'blend',
-  source: getSource('CARTOGRAPHIE.PHYSIONOMIES:fond_physio_25_v2_valide'),
+  source: getSource('CARTOGRAPHIE.PHYSIONOMIES:fond_physio_v2_025'),
   style: function(f) {
     var physio = f.get('physio');
     var style = styleCache[physio];
