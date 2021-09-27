@@ -66,9 +66,9 @@ var ol_control_Permalink = function(opt_options) {
 
   // Save search params
   this.search_ = {};
-  var hash = this.replaceState_ ? document.location.hash || document.location.search : '';
+  var hash = document.location.hash || document.location.search || '';
 //  console.log('hash', hash)
-  if (!hash && this._localStorage) {
+  if (this.replaceState_ && !hash && this._localStorage) {
     try {
       hash = localStorage['ol@parmalink'];
     } catch(e) { console.warn('Failed to access localStorage...'); }
@@ -90,7 +90,7 @@ var ol_control_Permalink = function(opt_options) {
   }
   
   // Decode permalink
-  this.setPosition();
+  if (this.replaceState_) this.setPosition();
 };
 ol_ext_inherits(ol_control_Permalink, ol_control_Control);
 
