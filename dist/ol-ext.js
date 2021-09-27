@@ -9960,7 +9960,9 @@ ol.control.Permalink.prototype.getLink = function(search) {
   }
   if (search === 'position') return anchor;
   // Add other params
-  for (var i in this.search_) anchor += "&"+i+"="+this.search_[i];
+  for (var i in this.search_) {
+    anchor += "&" + i + (typeof(this.search_[i])!=='undefined' ? "="+this.search_[i] : '');
+  }
   if (search) return anchor;
   //return document.location.origin+document.location.pathname+this.hash_+anchor;
   return document.location.protocol+"//"+document.location.host+document.location.pathname+this.hash_+anchor;
@@ -9980,7 +9982,7 @@ ol.control.Permalink.prototype.setUrlReplace = function(replace) {
     if (!replace) {
       var s = "";
       for (var i in this.search_) {
-        s += (s==""?"?":"&") + i+"="+this.search_[i];
+        s += (s==""?"?":"&") + i + (typeof(this.search_[i]) !== 'undefined' ? "="+this.search_[i] : '');
       }
       window.history.replaceState (null,null, document.location.origin+document.location.pathname+s);
     }
