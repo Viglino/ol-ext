@@ -170,7 +170,11 @@
     target: 'map',
     view: new ol.View ({
       zoom: 15,
-      center: [261204.43490751847, 6250258.191535994]
+      center: [261204.43490751847, 6250258.191535994],
+      /*
+      center: [9.48, 42.738038240088095],
+      projection: 'EPSG:4326'
+      */
     })
   });
 
@@ -286,7 +290,11 @@
               $('#layer').show();
               $('#result label span').text(l);
               ol.layer.Geoportail.register(l, ck);
-              currentLayer = new ol.layer.Geoportail(l);
+              console.log(l)
+              currentLayer = new ol.layer.Geoportail({
+                layer: l,
+                projection: map.getView().getProjection()
+              });
             })
             .appendTo(ul)
         });
