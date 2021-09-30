@@ -4900,7 +4900,8 @@ ol.control.LayerSwitcher.prototype.drawPanel_ = function() {
     if (!li.classList.contains('ol-header')) li.remove();
   }.bind(this));
   // Draw list
-  this.drawList (this.panel_, this._layerGroup ?  this._layerGroup.getLayers() : this.getMap().getLayers());
+  if (this._layerGroup) this.drawList (this.panel_, this._layerGroup.getLayers());
+  else if (this.getMap()) this.drawList (this.panel_, this.getMap().getLayers());
 };
 /** Change layer visibility according to the baselayer option
  * @param {ol.layer}
@@ -29527,8 +29528,9 @@ ol.layer.GeoImage.prototype.getExtent = function() {
  * @extends {ol.layer.Tile}
  * @param {olx.layer.WMTSOptions=} options WMTS options if not defined default are used
  *  @param {string} options.layer Geoportail layer name
- *  @param {string} options.gppKey Geoportail API key
- *  @param {olx.source.WMTSOptions=} tileoptions WMTS options if not defined default are used
+ *  @param {string} options.gppKey Geoportail API key, default use layer registered key
+ *  @param {ol.projectionLike} [options.projection=EPSG:3857] projection for the extent, default EPSG:3857
+ * @param {olx.source.WMTSOptions=} tileoptions WMTS options if not defined default are used
  */
 ol.layer.Geoportail = function(layer, options, tileoptions) {
   options = options || {};
@@ -29565,7 +29567,8 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
   if (!options.desc) options.desc = capabilities.desc;
   if (!options.extent && capabilities.bbox) {
     if (capabilities.bbox[0]>-170 && capabilities.bbox[2]<170) {
-      options.extent = ol.proj.transformExtent(capabilities.bbox, 'EPSG:4326', 'EPSG:3857');
+      options.extent = ol.proj.transformExtent(capabilities.bbox, 'EPSG:4326', options.projection || 'EPSG:3857');
+      this.set('extent', options.extent);
     }
   }
   options.maxZoom = maxZoom;
