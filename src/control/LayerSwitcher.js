@@ -414,7 +414,8 @@ ol_control_LayerSwitcher.prototype.drawPanel_ = function() {
     if (!li.classList.contains('ol-header')) li.remove();
   }.bind(this));
   // Draw list
-  this.drawList (this.panel_, this._layerGroup ?  this._layerGroup.getLayers() : this.getMap().getLayers());
+  if (this._layerGroup) this.drawList (this.panel_, this._layerGroup.getLayers());
+  else if (this.getMap()) this.drawList (this.panel_, this.getMap().getLayers());
 };
 
 /** Change layer visibility according to the baselayer option
