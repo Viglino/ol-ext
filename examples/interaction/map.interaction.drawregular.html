@@ -86,6 +86,7 @@
 
     var interaction = new ol.interaction.DrawRegular ({
       source: vector.getSource(), 
+      // condition: ol.events.condition.altKeyOnly,
       sides:$("#sides").val() ,
       canRotate: $("#rotation").prop('checked')
     });
