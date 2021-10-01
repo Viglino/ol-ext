@@ -20263,15 +20263,16 @@ ol.interaction.DrawHole.prototype._geometryFn = function(coordinates, geometry) 
  * @extends {ol.interaction.Interaction}
  * @fires drawstart, drawing, drawend, drawcancel
  * @param {olx.interaction.TransformOptions} options
- *  @param {Array<ol.Layer>} source Destination source for the drawn features
- *  @param {ol.Collection<ol.Feature>} features Destination collection for the drawn features 
- *  @param {ol.style.Style | Array.<ol.style.Style> | ol.style.StyleFunction | undefined} style style for the sketch
- *  @param {integer} sides number of sides, default 0 = circle
- *  @param { ol.events.ConditionType | undefined } squareCondition A function that takes an ol.MapBrowserEvent and returns a boolean to draw square features.
- *  @param { ol.events.ConditionType | undefined } centerCondition A function that takes an ol.MapBrowserEvent and returns a boolean to draw centered features.
- *  @param { bool } canRotate Allow rotation when centered + square, default: true
- *  @param { number } clickTolerance click tolerance on touch devices, default: 6
- *  @param { number } maxCircleCoordinates Maximum number of point on a circle, default: 100
+ *  @param {Array<ol.Layer>} options.source Destination source for the drawn features
+ *  @param {ol.Collection<ol.Feature>} options.features Destination collection for the drawn features 
+ *  @param {ol.style.Style | Array.<ol.style.Style> | ol.style.StyleFunction | undefined} options.style style for the sketch
+ *  @param {integer} options.sides number of sides, default 0 = circle
+ *  @param { ol.events.ConditionType | undefined } options.condition A function that takes an ol.MapBrowserEvent and returns a boolean that event should be handled. By default module:ol/events/condition.always.
+ *  @param { ol.events.ConditionType | undefined } options.squareCondition A function that takes an ol.MapBrowserEvent and returns a boolean to draw square features. Default test shift key
+ *  @param { ol.events.ConditionType | undefined } options.centerCondition A function that takes an ol.MapBrowserEvent and returns a boolean to draw centered features. Default check Ctrl key
+ *  @param { bool } options.canRotate Allow rotation when centered + square, default: true
+ *  @param { number } options.clickTolerance click tolerance on touch devices, default: 6
+ *  @param { number } options.maxCircleCoordinates Maximum number of point on a circle, default: 100
  */
 ol.interaction.DrawRegular = function(options) {
   if (!options) options={};
@@ -20281,6 +20282,8 @@ ol.interaction.DrawRegular = function(options) {
   this.features_ = options.features;
   // List of layers to transform 
   this.source_ = options.source;
+  // Square condition
+  this.conditionFn_ = options.condition;
   // Square condition
   this.squareFn_ = options.squareCondition;
   // Centered condition
@@ -20489,6 +20492,7 @@ ol.interaction.DrawRegular.prototype.handleEvent_ = function(evt) {
   this._eventTime = new Date();
   switch (evt.type) {
     case "pointerdown": {
+      if (this.conditionFn_ && !this.conditionFn_(evt)) break;
       this.downPx_ = evt.pixel;
       this.start_(evt);
       // Test long touch
