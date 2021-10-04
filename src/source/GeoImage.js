@@ -34,17 +34,6 @@ var ol_source_GeoImage = function(opt_options) {
   
   // options.projection = opt_options.projection;
 
-  // Coordinate of the image center 
-  this.center = opt_options.imageCenter;
-  // Scale of the image 
-  this.setScale(opt_options.imageScale);
-  // Rotation of the image
-  this.rotate = opt_options.imageRotate ? opt_options.imageRotate : 0;
-  // Crop of the image
-  this.crop = opt_options.imageCrop;
-  // Mask of the image
-  this.mask = opt_options.imageMask;
-
   // Load Image
   this._image = (opt_options.image ? opt_options.image : new Image );
   this._image.crossOrigin = opt_options.crossOrigin; // 'anonymous';
@@ -60,7 +49,20 @@ var ol_source_GeoImage = function(opt_options) {
   options.canvasFunction = this.calculateImage;
 
   ol_source_ImageCanvas.call (this, options);	
+  
+  // Coordinate of the image center 
+  this.center = opt_options.imageCenter;
+  // Image scale 
+  this.setScale(opt_options.imageScale);
+  // Rotation of the image
+  this.rotate = opt_options.imageRotate ? opt_options.imageRotate : 0;
+  // Crop of the image
+  this.crop = opt_options.imageCrop;
+  // Mask of the image
+  this.mask = opt_options.imageMask;
+  // Crop
   this.setCrop (this.crop);
+
   // Calculate extent on change
   this.on('change', function() {
     this.set('extent', this.calculateExtent());
@@ -76,6 +78,7 @@ ol_ext_inherits(ol_source_GeoImage, ol_source_ImageCanvas);
  * @return {HTMLCanvasElement}
  */
 ol_source_GeoImage.prototype.calculateImage = function(extent, resolution, pixelRatio, size) {
+  if (!this.center) return;
   var canvas = document.createElement('canvas');
   canvas.width = size[0];
   canvas.height = size[1];
