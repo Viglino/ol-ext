@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.7
+ * @version v3.2.8
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -27612,16 +27612,6 @@ ol.source.GeoImage = function(opt_options) {
     projection: opt_options.projection
   };
   // options.projection = opt_options.projection;
-  // Coordinate of the image center 
-  this.center = opt_options.imageCenter;
-  // Scale of the image 
-  this.setScale(opt_options.imageScale);
-  // Rotation of the image
-  this.rotate = opt_options.imageRotate ? opt_options.imageRotate : 0;
-  // Crop of the image
-  this.crop = opt_options.imageCrop;
-  // Mask of the image
-  this.mask = opt_options.imageMask;
   // Load Image
   this._image = (opt_options.image ? opt_options.image : new Image );
   this._image.crossOrigin = opt_options.crossOrigin; // 'anonymous';
@@ -27635,6 +27625,17 @@ ol.source.GeoImage = function(opt_options) {
   // Draw image on canvas
   options.canvasFunction = this.calculateImage;
   ol.source.ImageCanvas.call (this, options);	
+  // Coordinate of the image center 
+  this.center = opt_options.imageCenter;
+  // Image scale 
+  this.setScale(opt_options.imageScale);
+  // Rotation of the image
+  this.rotate = opt_options.imageRotate ? opt_options.imageRotate : 0;
+  // Crop of the image
+  this.crop = opt_options.imageCrop;
+  // Mask of the image
+  this.mask = opt_options.imageMask;
+  // Crop
   this.setCrop (this.crop);
   // Calculate extent on change
   this.on('change', function() {
@@ -27650,6 +27651,7 @@ ol.ext.inherits(ol.source.GeoImage, ol.source.ImageCanvas);
  * @return {HTMLCanvasElement}
  */
 ol.source.GeoImage.prototype.calculateImage = function(extent, resolution, pixelRatio, size) {
+  if (!this.center) return;
   var canvas = document.createElement('canvas');
   canvas.width = size[0];
   canvas.height = size[1];
