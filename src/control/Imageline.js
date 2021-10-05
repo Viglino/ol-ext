@@ -12,12 +12,14 @@ import ol_ext_getMapCanvas from '../util/getMapCanvas'
  * @fires collapse
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
- *	@param {ol.source.Vector} options.source a vector source that contains the images
- *	@param {function} options.getImage a function that gets a feature and return the image url, default return the img propertie
+ *	@param {Array<ol.source.Vector>|ol.source.Vector} options.source vector sources that contains the images
+ *	@param {Array<ol.layer.Vector>} options.layers A list of layers to display images. If no source and no layers, all visible layers will be considered.
+ *	@param {function} options.getImage a function that gets a feature and return the image url or false if no image to Show, default return the img propertie
  *	@param {function} options.getTitle a function that gets a feature and return the title, default return an empty string
  *	@param {boolean} options.collapsed the line is collapse, default false
  *	@param {boolean} options.collapsible the line is collapsible, default false
  *	@param {number} options.maxFeatures the maximum image element in the line, default 100
+ *	@param {number} options.useExtent only show feature in the current extent
  *	@param {boolean} options.hover select image on hover, default false
  *	@param {string|boolean} options.linkColor link color or false if no link, default false
  */
@@ -40,8 +42,11 @@ var ol_control_Imageline = function(options) {
   }
 
   // Source 
-  this._source = options.source;
-
+  if (options.source) this._sources = options.source.forEach ? options.source : [options.source];
+  if (options.layers) {
+    this.setLayers(options.layers);
+  }
+  
   // Initialize
   ol_control_Control.call(this, {
     element: element,
@@ -82,14 +87,38 @@ ol_control_Imageline.prototype.setMap = function (map) {
 
 	ol_control_Control.prototype.setMap.call(this, map);
 
-	if (map) {	
+  if (map) {	
     this._listener = [
       map.on('postcompose', this._drawLink.bind(this)),
       map.on('moveend', function() { 
         if (this.get('useExtent')) this.refresh();
       }.bind(this))
     ]
+    this.refresh();
 	}
+};
+
+/** Set layers to use in the control
+ * @param {Array<ol.Layer} layers
+ */
+ol_control_Imageline.prototype.setLayers = function (layers) {
+  this._sources = this._getSources(layers);
+};
+
+/** Get source from a set of layers
+ * @param {Array<ol.Layer} layers
+ * @returns {Array<ol.source.Vector}
+ * @private
+ */
+ol_control_Imageline.prototype._getSources = function (layers) {
+  var sources = [];
+  layers.forEach(function(l) {
+    if (l.getVisible()) {
+      if (l.getSource() && l.getSource().getFeatures) sources.push(l.getSource());
+      else if (l.getLayers) this._getSources(l.getLayers());
+    }
+  }.bind(this));
+  return sources;
 };
 
 /** Set useExtent param and refresh the line
@@ -155,12 +184,20 @@ ol_control_Imageline.prototype._getTitle = function(/* f */) {
  */
 ol_control_Imageline.prototype.getFeatures = function() {
   var map = this.getMap();
-  if (!this.get('useExtent') || !map) {
-    return this._source.getFeatures();
-  } else {
-    var extent = map.getView().calculateExtent(map.getSize());
-    return this._source.getFeaturesInExtent(extent);
-  }
+  if (!map) return [];
+  var features = [];
+  var sources = this._sources || this._getSources(map.getLayers());
+  sources.forEach(function(s) {
+    if (features.length < this.get('maxFeatures')) {
+      if (!this.get('useExtent') || !map) {
+        features.push(s.getFeatures());
+      } else {
+        var extent = map.getView().calculateExtent(map.getSize());
+        features.push(s.getFeaturesInExtent(extent));
+      }
+    }
+  }.bind(this))
+  return features;
 };
 
 /** Set element scrolling with a acceleration effect on desktop
@@ -185,7 +222,7 @@ ol_control_Imageline.prototype._setScrolling = function() {
  */
 ol_control_Imageline.prototype.refresh = function() {
   this._scrolldiv.innerHTML = '';
-  var features = this.getFeatures();
+  var allFeatures = this.getFeatures();
   var current = this._select ? this._select.feature : null;
   
   if (this._select) this._select.elt = null;
@@ -255,10 +292,12 @@ ol_control_Imageline.prototype.refresh = function() {
   
   // Add images 
   var nb = this.get('maxFeatures');
-  for (var i=0, f; f=features[i]; i++) {
-    if (nb--<0) break;
-    addImage(f);
-  }
+  allFeatures.forEach(function(features) {
+    for (var i=0, f; f=features[i]; i++) {
+      if (nb-- < 0) break;
+      addImage(f);
+    }
+  }.bind(this));
   // Add the selected one
   if (this._select && this._select.feature && !this._select.elt) {
     addImage(this._select.feature);
