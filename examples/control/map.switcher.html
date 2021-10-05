@@ -206,7 +206,10 @@
     layers: [ baseLayers, mapbox, brgm, labels ]
   });
   // Add control inside the map
-  var ctrl = new ol.control.LayerSwitcher();
+  var ctrl = new ol.control.LayerSwitcher({
+    // collapsed: false,
+    // mouseover: true
+  });
   map.addControl(ctrl);
   ctrl.on('toggle', function(e) {
     console.log('Collapse layerswitcher', e.collapsed);

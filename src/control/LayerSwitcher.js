@@ -82,12 +82,13 @@ var ol_control_LayerSwitcher = function(options) {
       parent: element
     });
     this.button.addEventListener('touchstart', function(e){
+      element.classList.toggle('ol-forceopen');
       element.classList.toggle('ol-collapsed');
       self.dispatchEvent({ type: 'toggle', collapsed: element.classList.contains('ol-collapsed') });
       e.preventDefault(); 
       self.overflow();
     });
-    this.button.addEventListener('click', function(){
+    this.button.addEventListener('click', function() {
       element.classList.toggle('ol-forceopen');
       element.classList.add('ol-collapsed'); 
       self.dispatchEvent({ type: 'toggle', collapsed: !element.classList.contains('ol-forceopen') });
