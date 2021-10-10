@@ -1,0 +1,243 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Popup overlay</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="Styled popup for Openlayers" />
+  <meta name="keywords" content="ol, openlayers, popup, overlay, style" />
+
+  <!-- Prevent image error on load with https -->
+	<script>
+		if (location.protocol == 'https:' && !/^localhost/.test(location.host)) {
+      location.href = window.location.href.replace(/^https:/,'http:');
+		}
+	</script>
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    /* popup style */
+    .ol-popup-content {
+      max-width:300px;
+      min-width:100px;
+      min-height:1em;
+      max-height: 150px;
+    }
+    /* Image on popup */
+    .ol-popup img {
+      float: left;
+      margin: 0 0.5em 0 0;
+      max-width: 100px;
+      max-height: 100px;
+    }
+    .ol-popup img {
+      float: none;
+      display: block;
+      margin: .5em auto;
+      max-width: 300px;
+      max-height: 300px;
+    }
+    /* no image content tooltips */
+    .ol-popup.tooltips img {
+      display:none;
+    }
+    /* Custom red style (tips) */
+    .ol-popup.red > div {
+      background-color: red;
+    }
+    .ol-popup.red .anchor {
+      color: red;
+    }
+
+    /* Custom orange style (tips) */
+    .ol-popup.tips.orange > div {
+      border-color:#da7;
+      background-color:#eca;
+    }
+    .ol-popup.tips.orange .anchor {
+      color: #da7;
+    }
+
+    /* orange style (default) */
+    .ol-popup.default.orange > div {
+      border:4px solid #f96;
+    }
+    .ol-popup.default.orange .anchor {
+      margin: -10px 22px;
+    }
+    .ol-popup.default.orange .anchor::after {
+      margin: 5px -11px; 
+    }
+    .ol-popup-middle.default.orange .anchor::after {
+      margin: -10.5px -27px /*border:4 +2 px */; 
+    }
+    .ol-popup.default.orange .anchor {
+      color: #f96;
+    }
+    .ol-popup.default.orange .closeBox {
+      background-color: rgba(255, 153, 102, 0.7);
+    }
+    .ol-popup.default.orange .closeBox:hover {
+      background-color: rgba(255, 153, 102, 1);
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Popup overlay</h1>
+  </a>
+
+  <div class="info">
+    Display popup on the map. 
+    <ul>
+      <li>
+        You can use classes to style the popup with a css (or choose an existing one).
+      </li>
+      <li>
+        You can control the position of the popup <i>top|center|bottom|auto</i> - <i>left|center|right|auto</i>.
+      </li>
+      <li>
+        The <i>auto</i> position lets the popup choose a good positioning according to the position on the map.
+      </li>
+      <li>
+        The <i>closeBox</i> option adds a close button to hide the popup.
+      </li>
+      <li>
+        The <i>onclose</i> option is a callback function when the close button is clicked.
+      </li>
+      <li>
+        You can add a bounce animation effect when popup appear just by adding the popupoverlay.anim.css (see <a href="map.popup.anim.html">example</a>)
+      </li>
+    </ul>
+  </div>
+
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options">
+    <h2>Options:</h2>
+    Positioning:
+    <select onchange="popup.setPositioning(this.value); map.renderSync();">
+      <option value="auto">auto</option>
+      <option value="bottom-auto">bottom-auto</option>
+      <option value="bottom-left">bottom-left</option>
+      <option value="bottom-center">bottom-center</option>
+      <option value="bottom-right">bottom-right</option>
+      <option value="top-auto">top-auto</option>
+      <option value="top-left">top-left</option>
+      <option value="top-center">top-center</option>
+      <option value="top-right">top-right</option>
+      <option value="center-auto">center-auto</option>
+      <option value="center-left">center-left</option>
+      <option value="center-right">center-right</option>
+      <option value="center-center">center-center</option>
+    </select>
+    <br />
+    Form:
+    <select onchange="popup.setPopupClass(this.value); if($('#ck').prop('checked')) popup.addPopupClass('shadow'); ">
+      <option value="default">default</option>
+      <option value="default orange">orange</option>
+      <option value="black">black</option>
+      <option value="red black">red</option>
+      <option value="tips">green tips</option>
+      <option value="tips orange">orange tips</option>
+      <option value="warning">warning</option>
+      <option value="tooltips">tooltips</option>
+    </select>
+    <br />
+    <input id="ck" type="checkbox" onchange="if (this.checked) popup.addPopupClass('shadow'); else popup.removePopupClass('shadow');" />
+    <label for="ck">shadow</label>
+    <br />
+    <input id="cb" type="checkbox" checked onchange="popup.setClosebox(this.checked);" />
+    <label for="cb">hasclosebox</label>
+  </div>
+  <p>Click on the points to show a popup !</p>
+  
+  <script type="text/javascript">
+  // Layers
+  var layers = [
+    new ol.layer.Tile({
+      title:'terrain-background',
+      source: new ol.source.Stamen({ layer: 'terrain' })
+    })
+  ];
+
+  // Popup overlay
+  var popup = new ol.Overlay.Popup ({
+    popupClass: "default", //"tooltips", "warning" "black" "default", "tips", "shadow",
+    closeBox: true,
+    onshow: function(){ console.log("You opened the box"); },
+    onclose: function(){ console.log("You close the box"); },
+    positioning: 'auto',
+    autoPan: true,
+    autoPanAnimation: { duration: 250 }
+  });
+    
+  // The map
+  var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View({
+      zoom: 5,
+      center: [166326, 5992663]
+    }),
+    layers: layers,
+    overlays: [popup]
+  });
+
+  // GeoJSON layer
+  var vectorSource = new ol.source.Vector({
+    url: '../data/fond_guerre.geojson',
+    projection: 'EPSG:3857',
+    format: new ol.format.GeoJSON(),
+    attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
+    logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+  });
+
+  map.addLayer(new ol.layer.Vector({
+    name: 'Fonds de guerre 14-18',
+    source: vectorSource,
+    style: new ol.style.Style({ image: new ol.style.Icon({ src:"../data/camera.png", scale: 0.8 }) })
+  }));
+
+  // Control Select 
+  var select = new ol.interaction.Select({});
+  map.addInteraction(select);
+
+  // On selected => show/hide popup
+  select.getFeatures().on(['add'], function(e) {
+    var feature = e.element;
+    var content = "";
+    content += "<img src='"+feature.get("img")+"'/>";
+    content += '<a href="https://www.culture.gouv.fr/" target="new">&copy; Ministère de la Culture</a><br/>';
+    content += feature.get("text");
+    popup.show(feature.getGeometry().getFirstCoordinate(), content); 
+  });
+  select.getFeatures().on(['remove'], function(e) {
+    popup.hide(); 
+  })
+
+  </script>
+  
+</body>
+</html>

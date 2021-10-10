@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.9
+ * @version v3.2.10
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -881,18 +881,60 @@ ol.ext.element.offsetRect = function(elt) {
  * On touch devices the default behavior is preserved
  * @param {DOMElement} elt
  * @param {*} options
- *  @param {function} options.onmove a function that takes a boolean indicating that the div is scrolling
+ *  @param {function} [options.onmove] a function that takes a boolean indicating that the div is scrolling
  *  @param {boolean} [options.vertical=false] 
  *  @param {boolean} [options.animate=true] add kinetic to scroll
+ *  @param {boolean} [options.mousewheel=false] enable mousewheel to scroll
+ *  @param {boolean} [options.minibar=false] add a mini scrollbar to the parent element (only vertical scrolling)
  */
 ol.ext.element.scrollDiv = function(elt, options) {
+  options = options || {};
   var pos = false;
   var speed = 0;
   var d, dt = 0;
   var onmove = (typeof(options.onmove) === 'function' ? options.onmove : function(){});
-  var page = options.vertical ? 'pageY' : 'pageX';
+  //var page = options.vertical ? 'pageY' : 'pageX';
+  var page = options.vertical ? 'screenY' : 'screenX';
   var scroll = options.vertical ? 'scrollTop' : 'scrollLeft';
   var moving = false;
+  //
+  var scrollContainer, scrollbar;
+  if (options.vertical && options.minibar) {
+    var init = function(b) {
+      elt.removeEventListener('pointermove', init);
+      elt.parentNode.classList.add('ol-miniscroll');
+      scrollbar = ol.ext.element.create('DIV');
+      scrollContainer = ol.ext.element.create('DIV', {
+        className: 'ol-scroll',
+        html: scrollbar,
+        parent: elt.parentNode
+      })
+      elt.parentNode.addEventListener('pointerenter', function() {
+        updateMiniscroll();
+      })
+      if (b!==false) updateMiniscroll();
+    };
+    // Inserted in the DOM
+    if (elt.parentNode) init(false);
+    // wait when ready
+    else elt.addEventListener('pointermove', init);
+  }
+  // Update the minibar
+  var updateMiniscroll = function() {
+    if (scrollbar) {
+      var style = getComputedStyle(elt);
+      var pheight = parseFloat(style.height);
+      var height = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+      var children = elt.children;
+      for (var i=0; i<children.length; i++) {
+        style = getComputedStyle(children[i]);
+        height += parseFloat(style.height);
+        height += parseFloat(style.marginTop) + parseFloat(style.marginBottom);
+      }
+      scrollbar.style.height = (pheight / height) * 100 +'%';
+      scrollbar.style.top = elt.scrollTop * (pheight / height) +'px';
+    }
+  }
   // Prevent image dragging
   elt.querySelectorAll('img').forEach(function(i) {
     i.ondragstart = function(){ return false; };
@@ -904,6 +946,8 @@ ol.ext.element.scrollDiv = function(elt, options) {
     pos = e[page];
     dt = new Date();
     elt.classList.add('ol-move');
+    // Prevent elt dragging
+    e.preventDefault();
   });
   // Register scroll
   ol.ext.element.addListener(window, ['pointermove'], function(e) {
@@ -919,6 +963,7 @@ ol.ext.element.scrollDiv = function(elt, options) {
       dt = d;
       // Tell we are moving
       if (delta) onmove(true);
+      updateMiniscroll();
     }
   });
   // Animate scroll
@@ -937,6 +982,13 @@ ol.ext.element.scrollDiv = function(elt, options) {
       }, 40);
     }
   }
+  // Prevet click when moving...
+  elt.addEventListener('click', function(e) {
+    if (elt.classList.contains('ol-move')) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
   // Stop scrolling
   ol.ext.element.addListener(window, ['pointerup','pointercancel'], function(e) {
     dt = new Date() - dt;
@@ -961,6 +1013,7 @@ ol.ext.element.scrollDiv = function(elt, options) {
         elt.classList.add('ol-move');
         elt[scroll] -= delta*30;
         elt.classList.remove('ol-move');
+        updateMiniscroll();
         return false;
       }
     );
@@ -14179,6 +14232,7 @@ ol.control.Status.prototype.isShown = function() {
  *	@param {String} options.className class of the control
  *	@param {Element | string | undefined} options.html The storymap content
  *	@param {Element | string | undefined} options.target The target element to place the story. If no html is provided the content of the target will be used.
+ *	@param {boolean} options.minibar add a mini scroll bar
  */
 ol.control.Storymap = function(options) {
   // Remove or get target content 
@@ -14194,47 +14248,71 @@ ol.control.Storymap = function(options) {
   var element = ol.ext.element.create('DIV', {
     className: (options.className || '') + ' ol-storymap'
       + (options.target ? '': ' ol-unselectable ol-control'),
-    html: options.html
   });
-  element.querySelectorAll('.chapter').forEach(function(c) {
-    c.addEventListener('click', function(e) {
-      // Not moving
-      if (!this.element.classList.contains('ol-move')) {
-        if (!c.classList.contains('ol-select')) {
-          this.element.scrollTop = c.offsetTop - 30;
-          e.preventDefault();
-        } else {
-          if (e.target.tagName==='IMG' && e.target.dataset.title) {
-            this.dispatchEvent({ 
-              coordinate: this.getMap() ? this.getMap().getCoordinateFromPixel([e.layerX,e.layerY]) : null,
-              type: 'clickimage', 
-              img: e.target, 
-              title: e.target.dataset.title, 
-              element: c, 
-              name: c.getAttribute('name'),
-              originalEvent: e
-            });
-          }
-        }
-      }
-    }.bind(this));
-  }.bind(this));
+  this.content = ol.ext.element.create('DIV', {
+    parent: element
+  });
   // Initialize
   ol.control.Control.call(this, {
     element: element,
     target: options.target
   });
   // Make a scroll div
-  ol.ext.element.scrollDiv (this.element, {
+  ol.ext.element.scrollDiv (this.content, {
     vertical: true,
-    mousewheel: true
+    mousewheel: true,
+    minibar: options.minibar
   });
+  this.setStory(options.html);
+};
+ol.ext.inherits(ol.control.Storymap, ol.control.Control);
+/** Scroll to a chapter
+ * @param {string} name Name of the chapter to scroll to
+ */
+ol.control.Storymap.prototype.setChapter = function (name) {
+  var chapter = this.content.querySelectorAll('.chapter');
+  for (var i=0, s; s=chapter[i]; i++) {
+    if (s.getAttribute('name')===name) {
+      this.content.scrollTop = s.offsetTop - 30;
+    }
+  }
+};
+/** Scroll to a chapter
+ * @param {string} name Name of the chapter to scroll to
+ */
+ol.control.Storymap.prototype.setStory = function (html) {
+  if (html instanceof Element) {
+    this.content.innerHTML = '';
+    this.content.appendChild(html);
+  } else {
+    this.content.innerHTML = html;
+  }
+  this.content.querySelectorAll('.chapter').forEach(function(c) {
+    c.addEventListener('click', function(e) {
+      if (!c.classList.contains('ol-select')) {
+        this.content.scrollTop = c.offsetTop - 30;
+        e.preventDefault();
+      } else {
+        if (e.target.tagName==='IMG' && e.target.dataset.title) {
+          this.dispatchEvent({ 
+            coordinate: this.getMap() ? this.getMap().getCoordinateFromPixel([e.layerX,e.layerY]) : null,
+            type: 'clickimage', 
+            img: e.target, 
+            title: e.target.dataset.title, 
+            element: c, 
+            name: c.getAttribute('name'),
+            originalEvent: e
+          });
+        }
+      }
+    }.bind(this));
+  }.bind(this));
   // Scroll to the next chapter
-  var sc = this.element.querySelectorAll('.ol-scroll-next');
+  var sc = this.content.querySelectorAll('.ol-scroll-next');
   sc.forEach(function(s) {
     s.addEventListener('click', function(e) { 
       if (s.parentElement.classList.contains('ol-select')) {
-        var chapter = this.element.querySelectorAll('.chapter');
+        var chapter = this.content.querySelectorAll('.chapter');
         var scrollto = s.offsetTop;
         for (var i=0, c; c=chapter[i]; i++) {
           if (c.offsetTop > scrollto) {
@@ -14242,17 +14320,17 @@ ol.control.Storymap = function(options) {
             break;
           }
         }
-        this.element.scrollTop = scrollto - 30;
+        this.content.scrollTop = scrollto - 30;
         e.stopPropagation();
         e.preventDefault();
       }
     }.bind(this));
   }.bind(this));
   // Scroll top 
-  sc = this.element.querySelectorAll('.ol-scroll-top');
+  sc = this.content.querySelectorAll('.ol-scroll-top');
   sc.forEach(function(i) {
     i.addEventListener('click', function(e){ 
-      this.element.scrollTop = 0;
+      this.content.scrollTop = 0;
       e.stopPropagation();
       e.preventDefault();
     }.bind(this));
@@ -14272,20 +14350,20 @@ ol.control.Storymap = function(options) {
     };
   }.bind(this);
   // Handle scrolling
-  var currentDiv = this.element.querySelectorAll('.chapter')[0];
+  var currentDiv = this.content.querySelectorAll('.chapter')[0];
   setTimeout (function (){
     currentDiv.classList.add('ol-select');
     this.dispatchEvent(getEvent(currentDiv));
   }.bind(this));
   // Trigger change event on scroll
-  this.element.addEventListener('scroll', function() {
-    var current, chapter = this.element.querySelectorAll('.chapter');
-    var height = ol.ext.element.getStyle(this.element, 'height');
-    if (!this.element.scrollTop) {
+  this.content.addEventListener('scroll', function() {
+    var current, chapter = this.content.querySelectorAll('.chapter');
+    var height = ol.ext.element.getStyle(this.content, 'height');
+    if (!this.content.scrollTop) {
       current = chapter[0];
     } else {
       for (var i=0, s; s=chapter[i]; i++) {
-        var p = s.offsetTop - this.element.scrollTop;
+        var p = s.offsetTop - this.content.scrollTop;
         if (p > height/3) break;
         current = s;
       }
@@ -14311,18 +14389,6 @@ ol.control.Storymap = function(options) {
       this.dispatchEvent(e);
     }
   }.bind(this));
-};
-ol.ext.inherits(ol.control.Storymap, ol.control.Control);
-/** Scroll to a chapter
- * @param {string} name Name of the chapter to scroll to
- */
-ol.control.Storymap.prototype.setChapter = function (name) {
-  var chapter = this.element.querySelectorAll('.chapter');
-  for (var i=0, s; s=chapter[i]; i++) {
-    if (s.getAttribute('name')===name) {
-      this.element.scrollTop = s.offsetTop - 30;
-    }
-  }
 };
 
 /*
@@ -31340,7 +31406,7 @@ ol.Overlay.Popup = function (options) {
     })
   }
   // Content
-  this.content = ol.ext.element.create("div", { 
+  this.content = ol.ext.element.create('DIV', { 
     html: options.html || '',
     className: "ol-popup-content",
     parent: element
@@ -31505,7 +31571,12 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html) {
     if (html instanceof Element) {
       this.content.appendChild(html);
     } else {
-      this.content.insertAdjacentHTML('beforeend', html);
+      // this.content.insertAdjacentHTML('beforeend', html);
+      // this.content.innerHTML = html;
+      ol.ext.element.create('DIV', {
+        html: html,
+        parent: this.content
+      })
     }
     // Refresh when loaded (img)
     Array.prototype.slice.call(this.content.querySelectorAll('img'))

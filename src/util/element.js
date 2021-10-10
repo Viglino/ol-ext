@@ -314,19 +314,62 @@ ol_ext_element.offsetRect = function(elt) {
  * On touch devices the default behavior is preserved
  * @param {DOMElement} elt
  * @param {*} options
- *  @param {function} options.onmove a function that takes a boolean indicating that the div is scrolling
+ *  @param {function} [options.onmove] a function that takes a boolean indicating that the div is scrolling
  *  @param {boolean} [options.vertical=false] 
  *  @param {boolean} [options.animate=true] add kinetic to scroll
+ *  @param {boolean} [options.mousewheel=false] enable mousewheel to scroll
+ *  @param {boolean} [options.minibar=false] add a mini scrollbar to the parent element (only vertical scrolling)
  */
 ol_ext_element.scrollDiv = function(elt, options) {
+  options = options || {};
   var pos = false;
   var speed = 0;
   var d, dt = 0;
 
   var onmove = (typeof(options.onmove) === 'function' ? options.onmove : function(){});
-  var page = options.vertical ? 'pageY' : 'pageX';
+  //var page = options.vertical ? 'pageY' : 'pageX';
+  var page = options.vertical ? 'screenY' : 'screenX';
   var scroll = options.vertical ? 'scrollTop' : 'scrollLeft';
   var moving = false;
+
+  //
+  var scrollContainer, scrollbar;
+  if (options.vertical && options.minibar) {
+    var init = function(b) {
+      elt.removeEventListener('pointermove', init);
+      elt.parentNode.classList.add('ol-miniscroll');
+      scrollbar = ol_ext_element.create('DIV');
+      scrollContainer = ol_ext_element.create('DIV', {
+        className: 'ol-scroll',
+        html: scrollbar,
+        parent: elt.parentNode
+      })
+      elt.parentNode.addEventListener('pointerenter', function() {
+        updateMiniscroll();
+      })
+      if (b!==false) updateMiniscroll();
+    };
+    // Inserted in the DOM
+    if (elt.parentNode) init(false);
+    // wait when ready
+    else elt.addEventListener('pointermove', init);
+  }
+  // Update the minibar
+  var updateMiniscroll = function() {
+    if (scrollbar) {
+      var style = getComputedStyle(elt);
+      var pheight = parseFloat(style.height);
+      var height = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+      var children = elt.children;
+      for (var i=0; i<children.length; i++) {
+        style = getComputedStyle(children[i]);
+        height += parseFloat(style.height);
+        height += parseFloat(style.marginTop) + parseFloat(style.marginBottom);
+      }
+      scrollbar.style.height = (pheight / height) * 100 +'%';
+      scrollbar.style.top = elt.scrollTop * (pheight / height) +'px';
+    }
+  }
 
   // Prevent image dragging
   elt.querySelectorAll('img').forEach(function(i) {
@@ -340,6 +383,8 @@ ol_ext_element.scrollDiv = function(elt, options) {
     pos = e[page];
     dt = new Date();
     elt.classList.add('ol-move');
+    // Prevent elt dragging
+    e.preventDefault();
   });
   
   // Register scroll
@@ -356,6 +401,7 @@ ol_ext_element.scrollDiv = function(elt, options) {
       dt = d;
       // Tell we are moving
       if (delta) onmove(true);
+      updateMiniscroll();
     }
   });
   
@@ -375,6 +421,14 @@ ol_ext_element.scrollDiv = function(elt, options) {
       }, 40);
     }
   }
+
+  // Prevet click when moving...
+  elt.addEventListener('click', function(e) {
+    if (elt.classList.contains('ol-move')) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
 
   // Stop scrolling
   ol_ext_element.addListener(window, ['pointerup','pointercancel'], function(e) {
@@ -401,6 +455,7 @@ ol_ext_element.scrollDiv = function(elt, options) {
         elt.classList.add('ol-move');
         elt[scroll] -= delta*30;
         elt.classList.remove('ol-move');
+        updateMiniscroll();
         return false;
       }
     );

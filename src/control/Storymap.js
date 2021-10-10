@@ -15,6 +15,7 @@ import '../util/View'
  *	@param {String} options.className class of the control
  *	@param {Element | string | undefined} options.html The storymap content
  *	@param {Element | string | undefined} options.target The target element to place the story. If no html is provided the content of the target will be used.
+ *	@param {boolean} options.minibar add a mini scroll bar
  */
 var ol_control_Storymap = function(options) {
   // Remove or get target content 
@@ -31,31 +32,11 @@ var ol_control_Storymap = function(options) {
   var element = ol_ext_element.create('DIV', {
     className: (options.className || '') + ' ol-storymap'
       + (options.target ? '': ' ol-unselectable ol-control'),
-    html: options.html
   });
-  element.querySelectorAll('.chapter').forEach(function(c) {
-    c.addEventListener('click', function(e) {
-      // Not moving
-      if (!this.element.classList.contains('ol-move')) {
-        if (!c.classList.contains('ol-select')) {
-          this.element.scrollTop = c.offsetTop - 30;
-          e.preventDefault();
-        } else {
-          if (e.target.tagName==='IMG' && e.target.dataset.title) {
-            this.dispatchEvent({ 
-              coordinate: this.getMap() ? this.getMap().getCoordinateFromPixel([e.layerX,e.layerY]) : null,
-              type: 'clickimage', 
-              img: e.target, 
-              title: e.target.dataset.title, 
-              element: c, 
-              name: c.getAttribute('name'),
-              originalEvent: e
-            });
-          }
-        }
-      }
-    }.bind(this));
-  }.bind(this));
+
+  this.content = ol_ext_element.create('DIV', {
+    parent: element
+  });
 
   // Initialize
   ol_control_Control.call(this, {
@@ -64,17 +45,66 @@ var ol_control_Storymap = function(options) {
   });
 
   // Make a scroll div
-  ol_ext_element.scrollDiv (this.element, {
+  ol_ext_element.scrollDiv (this.content, {
     vertical: true,
-    mousewheel: true
+    mousewheel: true,
+    minibar: options.minibar
   });
 
+  this.setStory(options.html);
+};
+ol_ext_inherits(ol_control_Storymap, ol_control_Control);
+
+/** Scroll to a chapter
+ * @param {string} name Name of the chapter to scroll to
+ */
+ol_control_Storymap.prototype.setChapter = function (name) {
+  var chapter = this.content.querySelectorAll('.chapter');
+  for (var i=0, s; s=chapter[i]; i++) {
+    if (s.getAttribute('name')===name) {
+      this.content.scrollTop = s.offsetTop - 30;
+    }
+  }
+};
+
+/** Scroll to a chapter
+ * @param {string} name Name of the chapter to scroll to
+ */
+ol_control_Storymap.prototype.setStory = function (html) {
+  if (html instanceof Element) {
+    this.content.innerHTML = '';
+    this.content.appendChild(html);
+  } else {
+    this.content.innerHTML = html;
+  }
+
+  this.content.querySelectorAll('.chapter').forEach(function(c) {
+    c.addEventListener('click', function(e) {
+      if (!c.classList.contains('ol-select')) {
+        this.content.scrollTop = c.offsetTop - 30;
+        e.preventDefault();
+      } else {
+        if (e.target.tagName==='IMG' && e.target.dataset.title) {
+          this.dispatchEvent({ 
+            coordinate: this.getMap() ? this.getMap().getCoordinateFromPixel([e.layerX,e.layerY]) : null,
+            type: 'clickimage', 
+            img: e.target, 
+            title: e.target.dataset.title, 
+            element: c, 
+            name: c.getAttribute('name'),
+            originalEvent: e
+          });
+        }
+      }
+    }.bind(this));
+  }.bind(this));
+
   // Scroll to the next chapter
-  var sc = this.element.querySelectorAll('.ol-scroll-next');
+  var sc = this.content.querySelectorAll('.ol-scroll-next');
   sc.forEach(function(s) {
     s.addEventListener('click', function(e) { 
       if (s.parentElement.classList.contains('ol-select')) {
-        var chapter = this.element.querySelectorAll('.chapter');
+        var chapter = this.content.querySelectorAll('.chapter');
         var scrollto = s.offsetTop;
         for (var i=0, c; c=chapter[i]; i++) {
           if (c.offsetTop > scrollto) {
@@ -82,7 +112,7 @@ var ol_control_Storymap = function(options) {
             break;
           }
         }
-        this.element.scrollTop = scrollto - 30;
+        this.content.scrollTop = scrollto - 30;
         e.stopPropagation();
         e.preventDefault();
       }
@@ -90,10 +120,10 @@ var ol_control_Storymap = function(options) {
   }.bind(this));
 
   // Scroll top 
-  sc = this.element.querySelectorAll('.ol-scroll-top');
+  sc = this.content.querySelectorAll('.ol-scroll-top');
   sc.forEach(function(i) {
     i.addEventListener('click', function(e){ 
-      this.element.scrollTop = 0;
+      this.content.scrollTop = 0;
       e.stopPropagation();
       e.preventDefault();
     }.bind(this));
@@ -115,21 +145,21 @@ var ol_control_Storymap = function(options) {
   }.bind(this);
 
   // Handle scrolling
-  var currentDiv = this.element.querySelectorAll('.chapter')[0];
+  var currentDiv = this.content.querySelectorAll('.chapter')[0];
   setTimeout (function (){
     currentDiv.classList.add('ol-select');
     this.dispatchEvent(getEvent(currentDiv));
   }.bind(this));
 
   // Trigger change event on scroll
-  this.element.addEventListener('scroll', function() {
-    var current, chapter = this.element.querySelectorAll('.chapter');
-    var height = ol_ext_element.getStyle(this.element, 'height');
-    if (!this.element.scrollTop) {
+  this.content.addEventListener('scroll', function() {
+    var current, chapter = this.content.querySelectorAll('.chapter');
+    var height = ol_ext_element.getStyle(this.content, 'height');
+    if (!this.content.scrollTop) {
       current = chapter[0];
     } else {
       for (var i=0, s; s=chapter[i]; i++) {
-        var p = s.offsetTop - this.element.scrollTop;
+        var p = s.offsetTop - this.content.scrollTop;
         if (p > height/3) break;
         current = s;
       }
@@ -155,21 +185,6 @@ var ol_control_Storymap = function(options) {
       this.dispatchEvent(e);
     }
   }.bind(this));
-
-  
-};
-ol_ext_inherits(ol_control_Storymap, ol_control_Control);
-
-/** Scroll to a chapter
- * @param {string} name Name of the chapter to scroll to
- */
-ol_control_Storymap.prototype.setChapter = function (name) {
-  var chapter = this.element.querySelectorAll('.chapter');
-  for (var i=0, s; s=chapter[i]; i++) {
-    if (s.getAttribute('name')===name) {
-      this.element.scrollTop = s.offsetTop - 30;
-    }
-  }
 };
 
 export default ol_control_Storymap

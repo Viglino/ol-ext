@@ -12,10 +12,16 @@
   padding: 0;
   height: 100%;
   position: relative;
+}
+.ol-storymap > div {
+  overflow: hidden;
+  padding: 0;
+  height: 100%;
+  position: relative;
   scroll-behavior: smooth;
   user-select: none;
 }
-.ol-storymap.ol-move {
+.ol-storymap >div.ol-move {
   scroll-behavior: unset;
 }
 

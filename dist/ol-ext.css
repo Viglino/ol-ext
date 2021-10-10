@@ -3910,13 +3910,19 @@ ul.ol-legend li div {
   padding: 0;
   height: 100%;
   position: relative;
+}
+.ol-storymap > div {
+  overflow: hidden;
+  padding: 0;
+  height: 100%;
+  position: relative;
   scroll-behavior: smooth;
   -webkit-user-select: none;
      -moz-user-select: none;
       -ms-user-select: none;
           user-select: none;
 }
-.ol-storymap.ol-move {
+.ol-storymap >div.ol-move {
   scroll-behavior: unset;
 }
 
@@ -5739,7 +5745,35 @@ ul.ol-legend li div {
   margin: 0;
 }
 
-
+.ol-miniscroll {
+  position: relative;
+}
+.ol-miniscroll:hover .ol-scroll {
+  opacity: .5;
+  -webkit-transition: opacity 1s;
+  transition: opacity 1s;
+}
+.ol-miniscroll .ol-scroll {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0px;
+  width: 5px;
+  opacity: 0;
+  border-radius: 3px;
+  -webkit-transition: opacity 1s .5s;
+  transition: opacity 1s .5s;
+  overflow: hidden;
+}
+.ol-miniscroll .ol-scroll > div {
+  position: absolute;
+  top: 0;
+  right: 0px;
+  width: 5px;
+  height: 5px;
+  background-color: currentColor;
+  border-radius: 3px;
+}
 .ol-fixedoverlay {
     position: absolute;
     top: 0;

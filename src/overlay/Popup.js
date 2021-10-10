@@ -64,7 +64,7 @@ var ol_Overlay_Popup = function (options) {
   }
 
   // Content
-  this.content = ol_ext_element.create("div", { 
+  this.content = ol_ext_element.create('DIV', { 
     html: options.html || '',
     className: "ol-popup-content",
     parent: element
@@ -244,7 +244,12 @@ ol_Overlay_Popup.prototype.show = function (coordinate, html) {
     if (html instanceof Element) {
       this.content.appendChild(html);
     } else {
-      this.content.insertAdjacentHTML('beforeend', html);
+      // this.content.insertAdjacentHTML('beforeend', html);
+      // this.content.innerHTML = html;
+      ol_ext_element.create('DIV', {
+        html: html,
+        parent: this.content
+      })
     }
     // Refresh when loaded (img)
     Array.prototype.slice.call(this.content.querySelectorAll('img'))
