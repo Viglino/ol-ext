@@ -943,7 +943,7 @@ ol.ext.element.scrollDiv = function(elt, options) {
       scrollbar.style.height = (pheight / height) * 100 +'%';
       scrollbar.style.top = elt.scrollTop * (pheight / height) +'px';
       // No scroll
-      if (pheight === height) {
+      if (pheight >= height) {
         scrollbar.style.display = 'none';
       } else {
         scrollbar.style.display = '';
@@ -31602,7 +31602,6 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html) {
       .forEach(function(image) {
         image.addEventListener('load', function() {
           try { map.renderSync(); } catch(e) { /* ok */ }
-          console.log('load')
           self.content.dispatchEvent(new Event('scroll'));
         });
       });
