@@ -5764,6 +5764,7 @@ ul.ol-legend li div {
   -webkit-transition: opacity 1s .5s;
   transition: opacity 1s .5s;
   overflow: hidden;
+  pointer-events: none;
 }
 .ol-miniscroll .ol-scroll > div {
   position: absolute;

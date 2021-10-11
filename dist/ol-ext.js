@@ -897,10 +897,11 @@ ol.ext.element.scrollDiv = function(elt, options) {
   var page = options.vertical ? 'screenY' : 'screenX';
   var scroll = options.vertical ? 'scrollTop' : 'scrollLeft';
   var moving = false;
-  //
+  // Initialize scroll container for minibar
   var scrollContainer, scrollbar;
   if (options.vertical && options.minibar) {
     var init = function(b) {
+      // only once
       elt.removeEventListener('pointermove', init);
       elt.parentNode.classList.add('ol-miniscroll');
       scrollbar = ol.ext.element.create('DIV');
@@ -910,29 +911,44 @@ ol.ext.element.scrollDiv = function(elt, options) {
         parent: elt.parentNode
       })
       elt.parentNode.addEventListener('pointerenter', function() {
-        updateMiniscroll();
+        updateMinibar();
       })
-      if (b!==false) updateMiniscroll();
+      // Update
+      if (b!==false) updateMinibar();
     };
-    // Inserted in the DOM
+    // Allready inserted in the DOM
     if (elt.parentNode) init(false);
-    // wait when ready
+    // or wait when ready
     else elt.addEventListener('pointermove', init);
+    // Update on scroll
+    elt.addEventListener('scroll', function() {
+      console.log('scroll')
+      updateMinibar();
+    });
   }
   // Update the minibar
-  var updateMiniscroll = function() {
+  var updateMinibar = function() {
     if (scrollbar) {
+      // Container height
       var style = getComputedStyle(elt);
       var pheight = parseFloat(style.height);
-      var height = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+      // Content height
+      var height = 0; // parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
       var children = elt.children;
       for (var i=0; i<children.length; i++) {
         style = getComputedStyle(children[i]);
         height += parseFloat(style.height);
         height += parseFloat(style.marginTop) + parseFloat(style.marginBottom);
       }
+      // Set scrollbar value
       scrollbar.style.height = (pheight / height) * 100 +'%';
       scrollbar.style.top = elt.scrollTop * (pheight / height) +'px';
+      // No scroll
+      if (pheight === height) {
+        scrollbar.style.display = 'none';
+      } else {
+        scrollbar.style.display = '';
+      }
     }
   }
   // Prevent image dragging
@@ -963,7 +979,6 @@ ol.ext.element.scrollDiv = function(elt, options) {
       dt = d;
       // Tell we are moving
       if (delta) onmove(true);
-      updateMiniscroll();
     }
   });
   // Animate scroll
@@ -1013,7 +1028,6 @@ ol.ext.element.scrollDiv = function(elt, options) {
         elt.classList.add('ol-move');
         elt[scroll] -= delta*30;
         elt.classList.remove('ol-move');
-        updateMiniscroll();
         return false;
       }
     );
@@ -14230,9 +14244,9 @@ ol.control.Status.prototype.isShown = function() {
  * @fires clickimage
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
- *	@param {Element | string | undefined} options.html The storymap content
- *	@param {Element | string | undefined} options.target The target element to place the story. If no html is provided the content of the target will be used.
- *	@param {boolean} options.minibar add a mini scroll bar
+ *	@param {Element | string | undefined} [options.html] The storymap content
+ *	@param {Element | string | undefined} [options.target] The target element to place the story. If no html is provided the content of the target will be used.
+ *	@param {boolean} [options.minibar=false] add a mini scroll bar
  */
 ol.control.Storymap = function(options) {
   // Remove or get target content 
@@ -31368,14 +31382,15 @@ popup.hide();
 * @fires show
 * @fires hide
 * @param {} options Extend Overlay options 
-*	 @param {String} options.popupClass the a class of the overlay to style the popup.
-*	 @param {boolean} options.anim Animate the popup the popup, default false.
-*	 @param {bool} options.closeBox popup has a close box, default false.
-*	 @param {function|undefined} options.onclose: callback function when popup is closed
-*	 @param {function|undefined} options.onshow callback function when popup is shown
-*	 @param {Number|Array<number>} options.offsetBox an offset box
+*	 @param {String} [options.popupClass] the a class of the overlay to style the popup.
+*	 @param {boolean} [options.anim Animate=false] the popup the popup, default false.
+*	 @param {bool} [options.closeBox=false] popup has a close box, default false.
+*	 @param {function|undefined} [options.onclose] callback function when popup is closed
+*	 @param {function|undefined} [options.onshow] callback function when popup is shown
+*	 @param {Number|Array<number>} [options.offsetBox] an offset box
 *	 @param {ol.OverlayPositioning | string | undefined} options.positioning 
 *		the 'auto' positioning var the popup choose its positioning to stay on the map.
+*	 @param {boolean} [options.minibar=false] add a mini vertical bar
 * @api stable
 */
 ol.Overlay.Popup = function (options) {
@@ -31411,6 +31426,13 @@ ol.Overlay.Popup = function (options) {
     className: "ol-popup-content",
     parent: element
   });
+  if (options.minibar) {
+    ol.ext.element.scrollDiv(this.content, {
+      vertical: true,
+      mousewheel: true,
+      minibar: true
+    });
+  }
   // Stop event
   if (options.stopEvent) {
     element.addEventListener("mousedown", function(e){ e.stopPropagation(); });
@@ -31567,12 +31589,10 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html) {
   if (html && html !== this.prevHTML) {
     // Prevent flickering effect
     this.prevHTML = html;
-    this.content.innerHTML = "";
+    this.content.innerHTML = '';
     if (html instanceof Element) {
       this.content.appendChild(html);
     } else {
-      // this.content.insertAdjacentHTML('beforeend', html);
-      // this.content.innerHTML = html;
       ol.ext.element.create('DIV', {
         html: html,
         parent: this.content
@@ -31581,8 +31601,10 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html) {
     // Refresh when loaded (img)
     Array.prototype.slice.call(this.content.querySelectorAll('img'))
       .forEach(function(image) {
-        image.addEventListener("load", function() {
+        image.addEventListener('load', function() {
           try { map.renderSync(); } catch(e) { /* ok */ }
+          console.log('load')
+          self.content.dispatchEvent(new Event('scroll'));
         });
       });
   }
