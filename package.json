@@ -72,6 +72,5 @@
     "url": "git+https://github.com/Viglino/ol-ext.git"
   },
   "license": "BSD-3-Clause",
-  "dependencies": {
-  }
+  "dependencies": {}
 }
