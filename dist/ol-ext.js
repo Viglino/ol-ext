@@ -922,7 +922,6 @@ ol.ext.element.scrollDiv = function(elt, options) {
     else elt.addEventListener('pointermove', init);
     // Update on scroll
     elt.addEventListener('scroll', function() {
-      console.log('scroll')
       updateMinibar();
     });
   }
