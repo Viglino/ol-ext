@@ -564,6 +564,15 @@ ol_interaction_Transform.prototype.setCenter = function(c) {
   return this.set('center', c);
 }
 
+function projectVectorOnVector(displacement_vector, base) {
+  var k = (displacement_vector[0] * base[0] + displacement_vector[1] * base[1]) / (base[0] * base[0] + base[1] * base[1]);
+  return [base[0] * k, base[1] * k];
+}
+
+function countVector(start, end) {
+  return [end[0] - start[0], end[1] - start[1]];
+}
+
 /**
  * @param {ol.MapBrowserEvent} evt Map browser event.
  * @private
@@ -651,7 +660,7 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
 
       var scx = ((dragCoordinate)[0] - (center)[0]) / (downCoordinate[0] - (center)[0]);
       var scy = ((dragCoordinate)[1] - (center)[1]) / (downCoordinate[1] - (center)[1]);
-      var displacement_vector = [(dragCoordinate)[0] - (center)[0], (dragCoordinate)[1] - (center)[1]];
+      var displacement_vector = [dragCoordinate[0] - downCoordinate[0], (dragCoordinate)[1] - downCoordinate[1]];
 
       if (this.get('enableRotatedTransform') && viewRotation !== 0) {
         var centerPoint = new ol_geom_Point(center);
@@ -684,19 +693,7 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
               if (scy!=1) g2[j+1] = center[1] + (g1[j+1]-center[1])*scy;
             }
           } else {
-            function projectVectorOnVector(displacement_vector, base) {
-              var k = (displacement_vector[0] * base[0] + displacement_vector[1] * base[1]) / (base[0] * base[0] + base[1] * base[1]);
-              return [base[0] * k, base[1] * k];
-            }
-
-            function countVector(start, end) {
-              return [end[0] - start[0], end[1] - start[1]];
-            }
-
-            var indicesA = [0, 8];
-            var indicesB = [2];
-            var indicesC = [4];
-            var indicesD = [6];
+            var pointArray = [[6], [0, 8], [2], [4]]
             var pointA = [g1[0], g1[1]];
             var pointB = [g1[2], g1[3]];
             var pointC = [g1[4], g1[5]];
@@ -705,10 +702,8 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
             if (stretch) {
               var base = (opt % 2 === 0) ? countVector(pointA, pointB) : countVector(pointD, pointA);
               var projectedVector = projectVectorOnVector(displacement_vector, base);
-              var coordsToChange = opt === 0 ?
-                  [...indicesA, ...indicesD] : opt === 1 ?
-                      [...indicesA, ...indicesB] : (opt === 2) ?
-                          [...indicesB, ...indicesC] : [...indicesC, ...indicesD];
+              var nextIndex = opt+1 < pointArray.length ? opt+1 : 0;
+              var coordsToChange = [...pointArray[opt], ...pointArray[nextIndex]];
 
               for (var j = 0; j < g1.length; j += dim) {
                   g2[j] = coordsToChange.includes(j) ? g1[j] + projectedVector[0] : g1[j];
@@ -735,8 +730,6 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
 
               var projectedLeft = projectVectorOnVector(displacement_vector, left_base);
               var projectedRight = projectVectorOnVector(displacement_vector, right_base);
-
-              var coordsToChange = opt === 0 ? [0, 4, 6, 8] : opt === 1 ? [0, 2, 6, 8] : (opt === 2) ? [0, 2, 4, 8] : [2, 4, 6];
 
               if (opt === 0) {
                 g2[0] = g1[0] + projectedLeft[0];
