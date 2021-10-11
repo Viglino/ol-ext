@@ -332,10 +332,11 @@ ol_ext_element.scrollDiv = function(elt, options) {
   var scroll = options.vertical ? 'scrollTop' : 'scrollLeft';
   var moving = false;
 
-  //
+  // Initialize scroll container for minibar
   var scrollContainer, scrollbar;
   if (options.vertical && options.minibar) {
     var init = function(b) {
+      // only once
       elt.removeEventListener('pointermove', init);
       elt.parentNode.classList.add('ol-miniscroll');
       scrollbar = ol_ext_element.create('DIV');
@@ -345,29 +346,45 @@ ol_ext_element.scrollDiv = function(elt, options) {
         parent: elt.parentNode
       })
       elt.parentNode.addEventListener('pointerenter', function() {
-        updateMiniscroll();
+        updateMinibar();
       })
-      if (b!==false) updateMiniscroll();
+      // Update
+      if (b!==false) updateMinibar();
     };
-    // Inserted in the DOM
+    // Allready inserted in the DOM
     if (elt.parentNode) init(false);
-    // wait when ready
+    // or wait when ready
     else elt.addEventListener('pointermove', init);
+    // Update on scroll
+    elt.addEventListener('scroll', function() {
+      console.log('scroll')
+      updateMinibar();
+    });
   }
+
   // Update the minibar
-  var updateMiniscroll = function() {
+  var updateMinibar = function() {
     if (scrollbar) {
+      // Container height
       var style = getComputedStyle(elt);
       var pheight = parseFloat(style.height);
-      var height = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+      // Content height
+      var height = 0; // parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
       var children = elt.children;
       for (var i=0; i<children.length; i++) {
         style = getComputedStyle(children[i]);
         height += parseFloat(style.height);
         height += parseFloat(style.marginTop) + parseFloat(style.marginBottom);
       }
+      // Set scrollbar value
       scrollbar.style.height = (pheight / height) * 100 +'%';
       scrollbar.style.top = elt.scrollTop * (pheight / height) +'px';
+      // No scroll
+      if (pheight === height) {
+        scrollbar.style.display = 'none';
+      } else {
+        scrollbar.style.display = '';
+      }
     }
   }
 
@@ -401,7 +418,6 @@ ol_ext_element.scrollDiv = function(elt, options) {
       dt = d;
       // Tell we are moving
       if (delta) onmove(true);
-      updateMiniscroll();
     }
   });
   
@@ -455,7 +471,6 @@ ol_ext_element.scrollDiv = function(elt, options) {
         elt.classList.add('ol-move');
         elt[scroll] -= delta*30;
         elt.classList.remove('ol-move');
-        updateMiniscroll();
         return false;
       }
     );

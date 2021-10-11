@@ -13,9 +13,9 @@ import '../util/View'
  * @fires clickimage
  * @param {Object=} options Control options.
  *	@param {String} options.className class of the control
- *	@param {Element | string | undefined} options.html The storymap content
- *	@param {Element | string | undefined} options.target The target element to place the story. If no html is provided the content of the target will be used.
- *	@param {boolean} options.minibar add a mini scroll bar
+ *	@param {Element | string | undefined} [options.html] The storymap content
+ *	@param {Element | string | undefined} [options.target] The target element to place the story. If no html is provided the content of the target will be used.
+ *	@param {boolean} [options.minibar=false] add a mini scroll bar
  */
 var ol_control_Storymap = function(options) {
   // Remove or get target content 

@@ -15,6 +15,7 @@
   border-radius: 3px;
   transition: opacity 1s .5s;
   overflow: hidden;
+  pointer-events: none;
 }
 .ol-miniscroll .ol-scroll > div {
   position: absolute;

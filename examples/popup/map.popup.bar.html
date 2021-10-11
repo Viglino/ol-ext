@@ -109,25 +109,10 @@
   </a>
 
   <div class="info">
-    Display popup on the map. 
+    Add a mini scrollbar to your popup. 
     <ul>
       <li>
-        You can use classes to style the popup with a css (or choose an existing one).
-      </li>
-      <li>
-        You can control the position of the popup <i>top|center|bottom|auto</i> - <i>left|center|right|auto</i>.
-      </li>
-      <li>
-        The <i>auto</i> position lets the popup choose a good positioning according to the position on the map.
-      </li>
-      <li>
-        The <i>closeBox</i> option adds a close button to hide the popup.
-      </li>
-      <li>
-        The <i>onclose</i> option is a callback function when the close button is clicked.
-      </li>
-      <li>
-        You can add a bounce animation effect when popup appear just by adding the popupoverlay.anim.css (see <a href="map.popup.anim.html">example</a>)
+        The <i>minibar</i> option lets you add a mini vertical scrollbar to popups.
       </li>
     </ul>
   </div>
@@ -191,7 +176,8 @@
     onclose: function(){ console.log("You close the box"); },
     positioning: 'auto',
     autoPan: true,
-    autoPanAnimation: { duration: 250 }
+    autoPanAnimation: { duration: 250 },
+    minibar: true
   });
     
   // The map
