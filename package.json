@@ -1,6 +1,6 @@
 {
-  "name": "ol-ext",
-  "version": "3.2.10",
+  "name": "@hurenka/ol-ext",
+  "version": "1.0.0",
   "description": "A set of cool extensions for OpenLayers (ol) in node modules structure",
   "main": "dist/ol-ext.js",
   "style": "dist/ol-ext.css",
@@ -31,19 +31,10 @@
     "prepack": "gulp prepublish",
     "postpack": "gulp postpublish"
   },
-  "author": {
-    "name": "Jean-Marc Viglino",
-    "url": "https://github.com/Viglino"
-  },
+  "author": "Jean-Marc Viglino (https://github.com/Viglino)",
   "contributors": [
-    {
-      "name": "ThomasG77",
-      "url": "https://github.com/ThomasG77"
-    },
-    {
-      "name": "darkscript",
-      "url": "https://github.com/darkscript"
-    }
+    "ThomasG77 (https://github.com/ThomasG77)",
+    "darkscript (https://github.com/darkscript)"
   ],
   "bugs": {
     "url": "https://github.com/Viglino/ol-ext/issues"
@@ -69,7 +60,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Viglino/ol-ext.git"
+    "url": "git+https://github.com/Hurenka/ol-ext.git"
   },
   "license": "BSD-3-Clause",
   "dependencies": {}
