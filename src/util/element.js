@@ -379,7 +379,7 @@ ol_ext_element.scrollDiv = function(elt, options) {
       scrollbar.style.height = (pheight / height) * 100 +'%';
       scrollbar.style.top = elt.scrollTop * (pheight / height) +'px';
       // No scroll
-      if (pheight === height) {
+      if (pheight >= height) {
         scrollbar.style.display = 'none';
       } else {
         scrollbar.style.display = '';

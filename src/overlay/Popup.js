@@ -262,7 +262,6 @@ ol_Overlay_Popup.prototype.show = function (coordinate, html) {
       .forEach(function(image) {
         image.addEventListener('load', function() {
           try { map.renderSync(); } catch(e) { /* ok */ }
-          console.log('load')
           self.content.dispatchEvent(new Event('scroll'));
         });
       });

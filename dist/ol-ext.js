@@ -1,8 +1,8 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.10
- * @author 
+ * @version v3.2.11
+ * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
  */
@@ -943,7 +943,7 @@ ol.ext.element.scrollDiv = function(elt, options) {
       scrollbar.style.height = (pheight / height) * 100 +'%';
       scrollbar.style.top = elt.scrollTop * (pheight / height) +'px';
       // No scroll
-      if (pheight === height) {
+      if (pheight >= height) {
         scrollbar.style.display = 'none';
       } else {
         scrollbar.style.display = '';
@@ -31677,7 +31677,6 @@ ol.Overlay.Popup.prototype.show = function (coordinate, html) {
       .forEach(function(image) {
         image.addEventListener('load', function() {
           try { map.renderSync(); } catch(e) { /* ok */ }
-          console.log('load')
           self.content.dispatchEvent(new Event('scroll'));
         });
       });
