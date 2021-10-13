@@ -1,7 +1,7 @@
 /**
- * @hurenka/ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
+ * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v1.0.0
+ * @version v3.2.10
  * @author 
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
