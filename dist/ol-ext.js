@@ -1,8 +1,8 @@
 /**
- * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
+ * @hurenka/ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.10
- * @author Jean-Marc Viglino
+ * @version v1.0.0
+ * @author 
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
  */
@@ -25861,6 +25861,16 @@ ol.interaction.Transform.prototype.getCenter = function() {
 ol.interaction.Transform.prototype.setCenter = function(c) {
   return this.set('center', c);
 }
+function projectVectorOnVector(displacement_vector, base) {
+  var k = (displacement_vector[0] * base[0] + displacement_vector[1] * base[1]) / (base[0] * base[0] + base[1] * base[1]);
+  return [base[0] * k, base[1] * k];
+}
+function countVector(start, end) {
+  return [end[0] - start[0], end[1] - start[1]];
+}
+function movePoint(point, displacementVector) {
+  return [point[0]+displacementVector[0], point[1]+displacementVector[1]];
+}
 /**
  * @param {ol.MapBrowserEvent} evt Map browser event.
  * @private
@@ -25943,7 +25953,7 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
       }
       var scx = ((dragCoordinate)[0] - (center)[0]) / (downCoordinate[0] - (center)[0]);
       var scy = ((dragCoordinate)[1] - (center)[1]) / (downCoordinate[1] - (center)[1]);
-      var displacement_vector = [(dragCoordinate)[0] - (center)[0], (dragCoordinate)[1] - (center)[1]];
+      var displacementVector = [dragCoordinate[0] - downCoordinate[0], (dragCoordinate)[1] - downCoordinate[1]];
       if (this.get('enableRotatedTransform') && viewRotation !== 0) {
         var centerPoint = new ol.geom.Point(center);
         centerPoint.rotate(viewRotation * -1, this.getMap().getView().getCenter());
@@ -25971,97 +25981,58 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
               if (scy!=1) g2[j+1] = center[1] + (g1[j+1]-center[1])*scy;
             }
           } else {
-            function projectVectorOnVector(displacement_vector, base) {
-              var k = (displacement_vector[0] * base[0] + displacement_vector[1] * base[1]) / (base[0] * base[0] + base[1] * base[1]);
-              return [base[0] * k, base[1] * k];
-            }
-            function countVector(start, end) {
-              return [end[0] - start[0], end[1] - start[1]];
-            }
-            var indicesA = [0, 8];
-            var indicesB = [2];
-            var indicesC = [4];
-            var indicesD = [6];
+            var pointArray = [[6], [0, 8], [2], [4]]
             var pointA = [g1[0], g1[1]];
             var pointB = [g1[2], g1[3]];
             var pointC = [g1[4], g1[5]];
             var pointD = [g1[6], g1[7]];
+            var pointA1 = [g1[8], g1[9]];
             if (stretch) {
               var base = (opt % 2 === 0) ? countVector(pointA, pointB) : countVector(pointD, pointA);
-              var projectedVector = projectVectorOnVector(displacement_vector, base);
-              var coordsToChange = opt === 0 ?
-                  [...indicesA, ...indicesD] : opt === 1 ?
-                      [...indicesA, ...indicesB] : (opt === 2) ?
-                          [...indicesB, ...indicesC] : [...indicesC, ...indicesD];
+              var projectedVector = projectVectorOnVector(displacementVector, base);
+              var nextIndex = opt+1 < pointArray.length ? opt+1 : 0;
+              var coordsToChange = [...pointArray[opt], ...pointArray[nextIndex]];
               for (var j = 0; j < g1.length; j += dim) {
                   g2[j] = coordsToChange.includes(j) ? g1[j] + projectedVector[0] : g1[j];
                   g2[j + 1] = coordsToChange.includes(j) ? g1[j + 1] + projectedVector[1] : g1[j + 1];
               }
             } else {
-              if (opt === 0) {
-                displacement_vector = countVector(pointD, dragCoordinate);
-                var left_base = countVector(pointC, pointD);
-                var right_base = countVector(pointA, pointD);
-              } else if (opt === 1) {
-                displacement_vector = countVector(pointA, dragCoordinate);
-                var left_base = countVector(pointD, pointA);
-                var right_base = countVector(pointB, pointA);
-              } else if (opt === 2) {
-                displacement_vector = countVector(pointB, dragCoordinate);
-                var left_base = countVector(pointA, pointB);
-                var right_base = countVector(pointC, pointB);
-              } else {
-                displacement_vector = countVector(pointC, dragCoordinate);
-                var left_base = countVector(pointB, pointC);
-                var right_base = countVector(pointD, pointC);
-              }
-              var projectedLeft = projectVectorOnVector(displacement_vector, left_base);
-              var projectedRight = projectVectorOnVector(displacement_vector, right_base);
-              var coordsToChange = opt === 0 ? [0, 4, 6, 8] : opt === 1 ? [0, 2, 6, 8] : (opt === 2) ? [0, 2, 4, 8] : [2, 4, 6];
-              if (opt === 0) {
-                g2[0] = g1[0] + projectedLeft[0];
-                g2[1] = g1[1] + projectedLeft[1];
-                g2[2] = g1[2];
-                g2[3] = g1[3];
-                g2[4] = g1[4] + projectedRight[0];
-                g2[5] = g1[5] + projectedRight[1];
-                g2[6] = g1[6] + displacement_vector[0];
-                g2[7] = g1[7] + displacement_vector[1];
-                g2[8] = g1[8] + projectedLeft[0];
-                g2[9] = g1[9] + projectedLeft[1];
-              } else if (opt === 1) {
-                g2[0] = g1[0] + displacement_vector[0];
-                g2[1] = g1[1] + displacement_vector[1];
-                g2[2] = g1[2] + projectedLeft[0];
-                g2[3] = g1[3] + projectedLeft[1];
-                g2[4] = g1[4];
-                g2[5] = g1[5];
-                g2[6] = g1[6] + projectedRight[0];
-                g2[7] = g1[7] + projectedRight[1];
-                g2[8] = g1[8] + displacement_vector[0];
-                g2[9] = g1[9] + displacement_vector[1];
-              } else if (opt === 2) {
-                g2[0] = g1[0] + projectedRight[0];
-                g2[1] = g1[1] + projectedRight[1];
-                g2[2] = g1[2] + displacement_vector[0];
-                g2[3] = g1[3] + displacement_vector[1];
-                g2[4] = g1[4] + projectedLeft[0];
-                g2[5] = g1[5] + projectedLeft[1];
-                g2[6] = g1[6];
-                g2[7] = g1[7];
-                g2[8] = g1[8] + projectedRight[0];
-                g2[9] = g1[9] + projectedRight[1];
-              } else {
-                g2[0] = g1[0];
-                g2[1] = g1[1];
-                g2[2] = g1[2] + projectedRight[0];
-                g2[3] = g1[3] + projectedRight[1];
-                g2[4] = g1[4] + displacement_vector[0];
-                g2[5] = g1[5] + displacement_vector[1];
-                g2[6] = g1[6] + projectedLeft[0];
-                g2[7] = g1[7] + projectedLeft[1];
-                g2[8] = g1[8];
-                g2[9] = g1[9];
+              switch (opt) {
+                case 0:
+                  displacementVector = countVector(pointD, dragCoordinate);
+                  var projectedLeft = projectVectorOnVector(displacementVector, countVector(pointC, pointD));
+                  var projectedRight = projectVectorOnVector(displacementVector, countVector(pointA, pointD));
+                  [g2[0], g2[1]] = movePoint(pointA, projectedLeft);
+                  [g2[4], g2[5]] = movePoint(pointC, projectedRight);
+                  [g2[6], g2[7]] = movePoint(pointD, displacementVector);
+                  [g2[8], g2[9]] = movePoint(pointA1, projectedLeft);
+                  break;
+                case 1:
+                  displacementVector = countVector(pointA, dragCoordinate);
+                  var projectedLeft = projectVectorOnVector(displacementVector, countVector(pointD, pointA));
+                  var projectedRight = projectVectorOnVector(displacementVector, countVector(pointB, pointA));
+                  [g2[0], g2[1]] = movePoint(pointA, displacementVector);
+                  [g2[2], g2[3]] = movePoint(pointB, projectedLeft);
+                  [g2[6], g2[7]] = movePoint(pointD, projectedRight);
+                  [g2[8], g2[9]] = movePoint(pointA1, displacementVector);
+                  break;
+                case 2:
+                  displacementVector = countVector(pointB, dragCoordinate);
+                  var projectedLeft = projectVectorOnVector(displacementVector, countVector(pointA, pointB));
+                  var projectedRight = projectVectorOnVector(displacementVector, countVector(pointC, pointB));
+                  [g2[0], g2[1]] = movePoint(pointA, projectedRight);
+                  [g2[2], g2[3]] = movePoint(pointB, displacementVector);
+                  [g2[4], g2[5]] = movePoint(pointC, projectedLeft);
+                  [g2[8], g2[9]] = movePoint(pointA1, projectedRight);
+                  break;
+                case 3:
+                  displacementVector = countVector(pointC, dragCoordinate);
+                  var projectedLeft = projectVectorOnVector(displacementVector, countVector(pointB, pointC));
+                  var projectedRight = projectVectorOnVector(displacementVector, countVector(pointD, pointC));
+                  [g2[2], g2[3]] = movePoint(pointB, projectedRight);
+                  [g2[4], g2[5]] = movePoint(pointC, displacementVector);
+                  [g2[6], g2[7]] = movePoint(pointD, projectedLeft);
+                  break;
               }
             }
           }
