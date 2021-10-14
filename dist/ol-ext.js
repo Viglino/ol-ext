@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.10
+ * @version v3.2.11
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -25422,6 +25422,8 @@ ol.interaction.Transform = function(options) {
   this.set('hitTolerance', (options.hitTolerance || 0));
   /* Enable view rotated transforms */
   this.set('enableRotatedTransform', (options.enableRotatedTransform || false));
+  /* Keep rectangle angles 90 degrees */
+  this.set('keepAngles', (options.keepAngles || false));
   // Force redraw when changed
   this.on ('propertychange', function() {
     this.drawSketch_();
@@ -25640,6 +25642,8 @@ ol.interaction.Transform.prototype.drawSketch_ = function(center) {
   if (!this.selection_.getLength()) return;
   var viewRotation = this.getMap().getView().getRotation();
   var ext = this.getGeometryRotateToZero_(this.selection_.item(0)).getExtent();
+  var coords = this.getGeometryRotateToZero_(this.selection_.item(0)).getCoordinates()[0].slice(0, 4);
+  coords.unshift(coords[3]);
   // Clone and extend
   ext = ol.extent.buffer(ext, 0);
   this.selection_.forEach(function (f) {
@@ -25665,7 +25669,7 @@ ol.interaction.Transform.prototype.drawSketch_ = function(center) {
         this.getMap().getCoordinateFromPixel([p[0]+10, p[1]+10])
       ]);
     }
-    geom = ol.geom.Polygon.fromExtent(ext);
+    geom = this.get('keepAngles') ? new Polygon([coords]) : ol.geom.Polygon.fromExtent(ext);
     if (this.get('enableRotatedTransform') && viewRotation !== 0) {
       geom.rotate(viewRotation, this.getMap().getView().getCenter())
     }
@@ -25715,7 +25719,7 @@ ol.interaction.Transform.prototype.select = function(feature, add) {
     this.selection_.push(feature);
   } else {
 	var index = this.selection_.getArray().indexOf(feature);
-	this.selection_.removeAt(index);	
+	this.selection_.removeAt(index);
   }
   this.ispt_ = (this.selection_.getLength()===1 ? (this.selection_.item(0).getGeometry().getType() == "Point") : false);
   this.iscircle_ = (this.selection_.getLength()===1 ? (this.selection_.item(0).getGeometry().getType() == "Circle") : false);
@@ -25857,6 +25861,16 @@ ol.interaction.Transform.prototype.getCenter = function() {
 ol.interaction.Transform.prototype.setCenter = function(c) {
   return this.set('center', c);
 }
+function projectVectorOnVector(displacement_vector, base) {
+  var k = (displacement_vector[0] * base[0] + displacement_vector[1] * base[1]) / (base[0] * base[0] + base[1] * base[1]);
+  return [base[0] * k, base[1] * k];
+}
+function countVector(start, end) {
+  return [end[0] - start[0], end[1] - start[1]];
+}
+function movePoint(point, displacementVector) {
+  return [point[0]+displacementVector[0], point[1]+displacementVector[1]];
+}
 /**
  * @param {ol.MapBrowserEvent} evt Map browser event.
  * @private
@@ -25924,6 +25938,9 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
         }
         center = extentCoordinates[(Number(this.opt_)+2)%4];
       }
+      var keepAngles = this.get('keepAngles');
+      var stretch = this.constraint_;
+      var opt = this.opt_;
       var downCoordinate = this.coordinate_;
       var dragCoordinate = evt.coordinate;
       if (this.get('enableRotatedTransform') && viewRotation !== 0) {
@@ -25936,6 +25953,7 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
       }
       var scx = ((dragCoordinate)[0] - (center)[0]) / (downCoordinate[0] - (center)[0]);
       var scy = ((dragCoordinate)[1] - (center)[1]) / (downCoordinate[1] - (center)[1]);
+      var displacementVector = [dragCoordinate[0] - downCoordinate[0], (dragCoordinate)[1] - downCoordinate[1]];
       if (this.get('enableRotatedTransform') && viewRotation !== 0) {
         var centerPoint = new ol.geom.Point(center);
         centerPoint.rotate(viewRotation * -1, this.getMap().getView().getCenter());
@@ -25957,9 +25975,66 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
         geometry = (viewRotation === 0 || !this.get('enableRotatedTransform')) ? this.geoms_[i].clone() : this.rotatedGeoms_[i].clone();
         geometry.applyTransform(function(g1, g2, dim) {
           if (dim<2) return g2;
-          for (var j=0; j<g1.length; j+=dim) {
-            if (scx!=1) g2[j] = center[0] + (g1[j]-center[0])*scx;
-            if (scy!=1) g2[j+1] = center[1] + (g1[j+1]-center[1])*scy;
+          if (!keepAngles) {
+            for (var j=0; j<g1.length; j+=dim) {
+              if (scx!=1) g2[j] = center[0] + (g1[j]-center[0])*scx;
+              if (scy!=1) g2[j+1] = center[1] + (g1[j+1]-center[1])*scy;
+            }
+          } else {
+            var pointArray = [[6], [0, 8], [2], [4]]
+            var pointA = [g1[0], g1[1]];
+            var pointB = [g1[2], g1[3]];
+            var pointC = [g1[4], g1[5]];
+            var pointD = [g1[6], g1[7]];
+            var pointA1 = [g1[8], g1[9]];
+            if (stretch) {
+              var base = (opt % 2 === 0) ? countVector(pointA, pointB) : countVector(pointD, pointA);
+              var projectedVector = projectVectorOnVector(displacementVector, base);
+              var nextIndex = opt+1 < pointArray.length ? opt+1 : 0;
+              var coordsToChange = [...pointArray[opt], ...pointArray[nextIndex]];
+              for (var j = 0; j < g1.length; j += dim) {
+                  g2[j] = coordsToChange.includes(j) ? g1[j] + projectedVector[0] : g1[j];
+                  g2[j + 1] = coordsToChange.includes(j) ? g1[j + 1] + projectedVector[1] : g1[j + 1];
+              }
+            } else {
+              switch (opt) {
+                case 0:
+                  displacementVector = countVector(pointD, dragCoordinate);
+                  var projectedLeft = projectVectorOnVector(displacementVector, countVector(pointC, pointD));
+                  var projectedRight = projectVectorOnVector(displacementVector, countVector(pointA, pointD));
+                  [g2[0], g2[1]] = movePoint(pointA, projectedLeft);
+                  [g2[4], g2[5]] = movePoint(pointC, projectedRight);
+                  [g2[6], g2[7]] = movePoint(pointD, displacementVector);
+                  [g2[8], g2[9]] = movePoint(pointA1, projectedLeft);
+                  break;
+                case 1:
+                  displacementVector = countVector(pointA, dragCoordinate);
+                  var projectedLeft = projectVectorOnVector(displacementVector, countVector(pointD, pointA));
+                  var projectedRight = projectVectorOnVector(displacementVector, countVector(pointB, pointA));
+                  [g2[0], g2[1]] = movePoint(pointA, displacementVector);
+                  [g2[2], g2[3]] = movePoint(pointB, projectedLeft);
+                  [g2[6], g2[7]] = movePoint(pointD, projectedRight);
+                  [g2[8], g2[9]] = movePoint(pointA1, displacementVector);
+                  break;
+                case 2:
+                  displacementVector = countVector(pointB, dragCoordinate);
+                  var projectedLeft = projectVectorOnVector(displacementVector, countVector(pointA, pointB));
+                  var projectedRight = projectVectorOnVector(displacementVector, countVector(pointC, pointB));
+                  [g2[0], g2[1]] = movePoint(pointA, projectedRight);
+                  [g2[2], g2[3]] = movePoint(pointB, displacementVector);
+                  [g2[4], g2[5]] = movePoint(pointC, projectedLeft);
+                  [g2[8], g2[9]] = movePoint(pointA1, projectedRight);
+                  break;
+                case 3:
+                  displacementVector = countVector(pointC, dragCoordinate);
+                  var projectedLeft = projectVectorOnVector(displacementVector, countVector(pointB, pointC));
+                  var projectedRight = projectVectorOnVector(displacementVector, countVector(pointD, pointC));
+                  [g2[2], g2[3]] = movePoint(pointB, projectedRight);
+                  [g2[4], g2[5]] = movePoint(pointC, displacementVector);
+                  [g2[6], g2[7]] = movePoint(pointD, projectedLeft);
+                  break;
+              }
+            }
           }
           // bug: ol, bad calculation circle geom extent
           if (geometry.getType() == 'Circle') geometry.setCenterAndRadius(geometry.getCenter(), geometry.getRadius());
