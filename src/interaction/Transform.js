@@ -12,7 +12,7 @@ import ol_style_RegularShape from 'ol/style/RegularShape'
 import {fromExtent as ol_geom_Polygon_fromExtent} from 'ol/geom/Polygon'
 import {boundingExtent as ol_extent_boundingExtent, buffer as ol_extent_buffer, createEmpty as ol_extent_createEmpty, extend as ol_extent_extend, getCenter as ol_extent_getCenter} from 'ol/extent'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import { Polygon } from 'ol/geom'
+import { ol_geom_Polygon } from 'ol/geom'
 
 /** Interaction rotate
  * @constructor
@@ -328,12 +328,16 @@ ol_interaction_Transform.prototype.getGeometryRotateToZero_ = function(f, clone)
 */
 ol_interaction_Transform.prototype.drawSketch_ = function(center) {
   var i, f, geom;
+  var keepAngles = this.get('keepAngles') && this.selection_.item(0) && (this.selection_.item(0).getGeometry().getType() === 'Polygon');
   this.overlayLayer_.getSource().clear();
   if (!this.selection_.getLength()) return;
   var viewRotation = this.getMap().getView().getRotation();
   var ext = this.getGeometryRotateToZero_(this.selection_.item(0)).getExtent();
-  var coords = this.getGeometryRotateToZero_(this.selection_.item(0)).getCoordinates()[0].slice(0, 4);
-  coords.unshift(coords[3]);
+  var coords;
+  if (keepAngles) {
+    coords = this.getGeometryRotateToZero_(this.selection_.item(0)).getCoordinates()[0].slice(0, 4);
+    coords.unshift(coords[3]);
+  }
   // Clone and extend
   ext = ol_extent_buffer(ext, 0);
   this.selection_.forEach(function (f) {
@@ -351,8 +355,7 @@ ol_interaction_Transform.prototype.drawSketch_ = function(center) {
       f = this.bbox_ = new ol_Feature(geom);
       this.overlayLayer_.getSource().addFeature (f);
     }
-  }
-  else {
+  } else {
     if (this.ispt_) {
       var p = this.getMap().getPixelFromCoordinate([ext[0], ext[1]]);
       ext = ol_extent_boundingExtent([
@@ -360,7 +363,7 @@ ol_interaction_Transform.prototype.drawSketch_ = function(center) {
         this.getMap().getCoordinateFromPixel([p[0]+10, p[1]+10])
       ]);
     }
-    geom = this.get('keepAngles') ? new Polygon([coords]) : ol_geom_Polygon_fromExtent(ext);
+    geom = keepAngles ? new ol_geom_Polygon([coords]) : ol_geom_Polygon_fromExtent(ext);
     if (this.get('enableRotatedTransform') && viewRotation !== 0) {
       geom.rotate(viewRotation, this.getMap().getView().getCenter())
     }
@@ -646,7 +649,7 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
         }
         center = extentCoordinates[(Number(this.opt_)+2)%4];
       }
-      var keepAngles = this.get('keepAngles');
+      var keepAngles = this.get('keepAngles') && this.geoms_.length <= 1 && this.geoms_[0].getType() == 'Polygon';
       var stretch = this.constraint_;
       var opt = this.opt_;
 

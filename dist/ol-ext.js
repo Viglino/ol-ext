@@ -1017,6 +1017,13 @@ ol.ext.element.scrollDiv = function(elt, options) {
     pos = false;
     speed = 0;
     dt = 0;
+    // Add class to handle click (on iframe / double-click)
+    if (!elt.classList.contains('ol-move')) {
+      elt.classList.add('ol-hasClick')
+      setTimeout(function() { elt.classList.remove('ol-hasClick'); }, 500);
+    } else {
+      elt.classList.remove('ol-hasClick');
+    }
   });
   // Handle mousewheel
   if (options.mousewheel) { // && !elt.classList.contains('ol-touch')) {
@@ -25638,12 +25645,16 @@ ol.interaction.Transform.prototype.getGeometryRotateToZero_ = function(f, clone)
 */
 ol.interaction.Transform.prototype.drawSketch_ = function(center) {
   var i, f, geom;
+  var keepAngles = this.get('keepAngles') && this.selection_.item(0) && (this.selection_.item(0).getGeometry().getType() === 'Polygon');
   this.overlayLayer_.getSource().clear();
   if (!this.selection_.getLength()) return;
   var viewRotation = this.getMap().getView().getRotation();
   var ext = this.getGeometryRotateToZero_(this.selection_.item(0)).getExtent();
-  var coords = this.getGeometryRotateToZero_(this.selection_.item(0)).getCoordinates()[0].slice(0, 4);
-  coords.unshift(coords[3]);
+  var coords;
+  if (keepAngles) {
+    coords = this.getGeometryRotateToZero_(this.selection_.item(0)).getCoordinates()[0].slice(0, 4);
+    coords.unshift(coords[3]);
+  }
   // Clone and extend
   ext = ol.extent.buffer(ext, 0);
   this.selection_.forEach(function (f) {
@@ -25660,8 +25671,7 @@ ol.interaction.Transform.prototype.drawSketch_ = function(center) {
       f = this.bbox_ = new ol.Feature(geom);
       this.overlayLayer_.getSource().addFeature (f);
     }
-  }
-  else {
+  } else {
     if (this.ispt_) {
       var p = this.getMap().getPixelFromCoordinate([ext[0], ext[1]]);
       ext = ol.extent.boundingExtent([
@@ -25669,7 +25679,7 @@ ol.interaction.Transform.prototype.drawSketch_ = function(center) {
         this.getMap().getCoordinateFromPixel([p[0]+10, p[1]+10])
       ]);
     }
-    geom = this.get('keepAngles') ? new Polygon([coords]) : ol.geom.Polygon.fromExtent(ext);
+    geom = keepAngles ? new ol.geom.Polygon([coords]) : ol.geom.Polygon.fromExtent(ext);
     if (this.get('enableRotatedTransform') && viewRotation !== 0) {
       geom.rotate(viewRotation, this.getMap().getView().getCenter())
     }
@@ -25938,7 +25948,7 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
         }
         center = extentCoordinates[(Number(this.opt_)+2)%4];
       }
-      var keepAngles = this.get('keepAngles');
+      var keepAngles = this.get('keepAngles') && this.geoms_.length <= 1 && this.geoms_[0].getType() == 'Polygon';
       var stretch = this.constraint_;
       var opt = this.opt_;
       var downCoordinate = this.coordinate_;

@@ -60,35 +60,37 @@
 
   <div class="options" >
     <h2>Options:</h2>
-    <ul><li>
-      <input id="style" type="checkbox" onchange="setHandleStyle()" /><label for="style"> styles transform handles (using fontawesome)</label>
-    </li><li>
-      <input id="scale" type="checkbox" onchange="setPropertie(this.id);" checked="checked" /><label for="scale"> enable scale</label>
-    </li><li>
-      <input id="stretch" type="checkbox" onchange="setPropertie(this.id);" checked="checked" /><label for="stretch"> enable stretch</label>
-    </li><li>
-      <input id="rotate" type="checkbox" onchange="setPropertie(this.id);" checked="checked" /><label for="rotate"> enable rotate</label>
-    </li><li>
-      <input id="translate" type="checkbox" onchange="setPropertie(this.id);" checked="checked" /><label for="translate"> enable translate</label>
-    </li><li>
-      <input id="translateFeature" type="checkbox" onchange="setPropertie(this.id);" /><label for="translateFeature"> translate when click on feature</label>
-    </li><li>
+    <ul>
+      <li>
+        <input id="style" type="checkbox" onchange="setHandleStyle()" /><label for="style"> styles transform handles (using fontawesome)</label>
+      </li><li>
+        <input id="scale" type="checkbox" onchange="setPropertie(this.id);" checked="checked" /><label for="scale"> enable scale</label>
+      </li><li>
+        <input id="stretch" type="checkbox" onchange="setPropertie(this.id);" checked="checked" /><label for="stretch"> enable stretch</label>
+      </li><li>
+        <input id="rotate" type="checkbox" onchange="setPropertie(this.id);" checked="checked" /><label for="rotate"> enable rotate</label>
+      </li><li>
+        <input id="translate" type="checkbox" onchange="setPropertie(this.id);" checked="checked" /><label for="translate"> enable translate</label>
+      </li><li>
+        <input id="translateFeature" type="checkbox" onchange="setPropertie(this.id);" /><label for="translateFeature"> translate when click on feature</label>
+      </li><li>
         <input id="keepAspectRatio" type="checkbox" onchange="setAspectRatio(this.id);" /><label for="keepAspectRatio"> force keepAspectRatio (default use <i>Shift</i>)</label>
       </li><li>
         <input id="enableRotatedTransform" type="checkbox" onchange="setPropertie(this.id);" /><label for="enableRotatedTransform"> force matching the map rotation</label>
       </li><li>
-      SetRotateCenter:
-      <button onclick='firstPoint=false; interaction.setCenter()'>objects</button>
-      <button onclick='firstPoint=false; interaction.setCenter(map.getView().getCenter())'>view center</button>
-      <button onclick='firstPoint=true;'>first point</button>
-    </li><li>
-      <hr/>
-      Use <i>Shift</i> to add object to tranform
-      <hr/>
-      Use <i>Shift</i> key to preserve proportions when scaling (see keepAspectRatio).
-      <br />
-      Use <i>Ctrl</i> key to modify the center when scaling.
-    </li></ul>
+        SetRotateCenter:
+        <button onclick='firstPoint=false; interaction.setCenter()'>objects</button>
+        <button onclick='firstPoint=false; interaction.setCenter(map.getView().getCenter())'>view center</button>
+        <button onclick='firstPoint=true;'>first point</button>
+      </li><li>
+        <hr/>
+        Use <i>Shift</i> to add object to tranform
+        <hr/>
+        Use <i>Shift</i> key to preserve proportions when scaling (see keepAspectRatio).
+        <br />
+        Use <i>Ctrl</i> key to modify the center when scaling.
+      </li>
+    </ul>
     <div style="background:white; padding:0 0.45em;"><span id="info"></span>&nbsp;</div>
   </div>
   
@@ -243,6 +245,7 @@
       scale: $("#scale").prop('checked'),
       rotate: $("#rotate").prop('checked'),
       keepAspectRatio: $("#keepAspectRatio").prop('checked') ? ol.events.condition.always : undefined,
+      keepAngles: false,
       translate: $("#translate").prop('checked'),
       stretch: $("#stretch").prop('checked')
     });
