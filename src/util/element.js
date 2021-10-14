@@ -459,6 +459,13 @@ ol_ext_element.scrollDiv = function(elt, options) {
     pos = false;
     speed = 0;
     dt = 0;
+    // Add class to handle click (on iframe / double-click)
+    if (!elt.classList.contains('ol-move')) {
+      elt.classList.add('ol-hasClick')
+      setTimeout(function() { elt.classList.remove('ol-hasClick'); }, 500);
+    } else {
+      elt.classList.remove('ol-hasClick');
+    }
   });
 
   // Handle mousewheel
