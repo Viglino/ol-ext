@@ -21716,9 +21716,26 @@ ol.interaction.GeolocationDraw.prototype.getPosition = function (loc) {
 ol.interaction.Hover = function(options) {
   if (!options) options={};
   var self = this;
+  var dragging = false;
   ol.interaction.Interaction.call(this, {
     handleEvent: function(e) {
-      if (e.type=="pointermove") { self.handleMove_(e); } 
+      if (!self.getActive()) return true;
+      switch(e.type) {
+        case 'pointerdrag': { 
+          dragging = true;
+          break;
+        } 
+        case 'pointerup': { 
+          dragging = false;
+          break;
+        }
+        case 'pointermove': {
+          if (!dragging) { 
+            self.handleMove_(e); 
+          } 
+          break;
+        }
+      }
       if (options.handleEvent) return options.handleEvent(e);
       return true; 
     }
@@ -21752,7 +21769,7 @@ ol.interaction.Hover.prototype.setMap = function(map) {
  */
 ol.interaction.Hover.prototype.setActive = function(b) {
   ol.interaction.Interaction.prototype.setActive.call (this, b);
-  if (this.cursor_ && this.getMap()) {
+  if (this.cursor_ && this.getMap() && this.getMap().getTargetElement()) {
     var style = this.getMap().getTargetElement().style;
     if (this.previousCursor_ !== undefined) {
       style.cursor = this.previousCursor_;
