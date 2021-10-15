@@ -24310,7 +24310,8 @@ ol.interaction.Synchronize = function(options) {
       return true;
     }
   });
-  this.maps = options.maps;
+  this.maps = options.maps || [];
+  if (options.active === false) this.setActive(false);
 };
 ol.ext.inherits(ol.interaction.Synchronize, ol.interaction.Interaction);
 /**
@@ -24340,39 +24341,31 @@ ol.interaction.Synchronize.prototype.setMap = function(map) {
     this.syncMaps();
   }
 };
+/** Auto activate/deactivate controls in the bar
+ * @param {boolean} b activate/deactivate
+ */
+ol.interaction.Synchronize.prototype.setActive = function (b) {
+  ol.interaction.Interaction.prototype.setActive.call(this, b);
+  this.syncMaps();
+};
 /** Synchronize the maps
-*/
-ol.interaction.Synchronize.prototype.syncMaps = function(e) {
+ */
+ol.interaction.Synchronize.prototype.syncMaps = function() {
+  if (!this.getActive()) return;
   var map = this.getMap();
-  if (map.get('lockView')) return;
-  if (!e) e = { type:'all' };
   if (map) {
+    if (map.get('lockView')) return;
     for (var i=0; i<this.maps.length; i++) {
       this.maps[i].set('lockView', true);
-      switch (e.type) {
-        case 'change:rotation': {
-          if (this.maps[i].getView().getRotation() != map.getView().getRotation())
-            this.maps[i].getView().setRotation(map.getView().getRotation()); 
-          break;
-        }
-        case 'change:center': {
-          if (this.maps[i].getView().getCenter() != map.getView().getCenter()) {
-            this.maps[i].getView().setCenter(map.getView().getCenter()); 
-          }
-          break;
-        }
-        case 'change:resolution': {
-          if (this.maps[i].getView().getResolution() != map.getView().getResolution()) {
-            this.maps[i].getView().setResolution(map.getView().getResolution());
-          }
-          break;
-        }
-        default: {
-          this.maps[i].getView().setRotation(map.getView().getRotation());
-          this.maps[i].getView().setCenter(map.getView().getCenter());
-          this.maps[i].getView().setResolution(map.getView().getResolution());
-          break;
-        }
+      // sync
+      if (this.maps[i].getView().getRotation() != map.getView().getRotation()) {
+        this.maps[i].getView().setRotation(map.getView().getRotation()); 
+      }
+      if (this.maps[i].getView().getCenter() != map.getView().getCenter()) {
+        this.maps[i].getView().setCenter(map.getView().getCenter()); 
+      }
+      if (this.maps[i].getView().getResolution() != map.getView().getResolution()) {
+        this.maps[i].getView().setResolution(map.getView().getResolution());
       }
       this.maps[i].set('lockView', false);
     }
