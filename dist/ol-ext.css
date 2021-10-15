@@ -1116,6 +1116,7 @@
   overflow: visible;
   -webkit-transition: .3s;
   transition: .3s;
+  border-radius: 0;
 }
 .ol-control.ol-imageline.ol-collapsed {
   -webkit-transform: translateY(100%);

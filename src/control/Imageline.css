@@ -5,6 +5,7 @@
   padding: 0;
   overflow: visible;
   transition: .3s;
+  border-radius: 0;
 }
 .ol-control.ol-imageline.ol-collapsed {
   transform: translateY(100%);
