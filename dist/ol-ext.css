@@ -5755,26 +5755,35 @@ ul.ol-legend li div {
   transition: opacity 1s;
 }
 .ol-miniscroll .ol-scroll {
+  -ms-touch-action: none;
+      touch-action: none;
   position: absolute;
   top: 0;
   bottom: 0;
   right: 0px;
-  width: 5px;
+  width: 9px;
   opacity: 0;
-  border-radius: 3px;
+  border-radius: 9px;
   -webkit-transition: opacity 1s .5s;
   transition: opacity 1s .5s;
   overflow: hidden;
-  pointer-events: none;
+  z-index: 1;
 }
 .ol-miniscroll .ol-scroll > div {
+  -ms-touch-action: none;
+      touch-action: none;
   position: absolute;
   top: 0;
   right: 0px;
-  width: 5px;
-  height: 5px;
-  background-color: currentColor;
-  border-radius: 3px;
+  width: 9px;
+  height: 9px;
+  -webkit-box-shadow: inset 10px 0 currentColor;
+          box-shadow: inset 10px 0 currentColor;
+  border-radius: 9px;
+  border: 2px solid transparent;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  cursor: pointer;
 }
 .ol-fixedoverlay {
     position: absolute;

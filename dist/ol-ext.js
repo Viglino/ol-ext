@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.11
+ * @version v3.2.12
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -897,6 +897,8 @@ ol.ext.element.scrollDiv = function(elt, options) {
   var page = options.vertical ? 'screenY' : 'screenX';
   var scroll = options.vertical ? 'scrollTop' : 'scrollLeft';
   var moving = false;
+  // Factor scale content / container
+  var scale, isbar;
   // Initialize scroll container for minibar
   var scrollContainer, scrollbar;
   if (options.vertical && options.minibar) {
@@ -909,7 +911,16 @@ ol.ext.element.scrollDiv = function(elt, options) {
         className: 'ol-scroll',
         html: scrollbar,
         parent: elt.parentNode
-      })
+      });
+      // Move scrollbar
+      scrollContainer.addEventListener('pointerdown', function(e) {
+        isbar = true;
+        moving = false;
+        pos = e[page];
+        dt = new Date();
+        elt.classList.add('ol-move');
+      });
+      // Update on enter
       elt.parentNode.addEventListener('pointerenter', function() {
         updateMinibar();
       })
@@ -940,8 +951,9 @@ ol.ext.element.scrollDiv = function(elt, options) {
         height += parseFloat(style.marginTop) + parseFloat(style.marginBottom);
       }
       // Set scrollbar value
-      scrollbar.style.height = (pheight / height) * 100 +'%';
-      scrollbar.style.top = elt.scrollTop * (pheight / height) +'px';
+      scale = (pheight / height);
+      scrollbar.style.height = scale * 100 +'%';
+      scrollbar.style.top = elt.scrollTop * scale +'px';
       // No scroll
       if (pheight >= height) {
         scrollbar.style.display = 'none';
@@ -957,6 +969,7 @@ ol.ext.element.scrollDiv = function(elt, options) {
   elt.style['touch-action'] = 'none';
   // Start scrolling
   ol.ext.element.addListener(elt, ['pointerdown'], function(e) {
+    isbar = false;
     moving = false;
     pos = e[page];
     dt = new Date();
@@ -968,7 +981,7 @@ ol.ext.element.scrollDiv = function(elt, options) {
   ol.ext.element.addListener(window, ['pointermove'], function(e) {
     moving = true;
     if (pos !== false) {
-      var delta = pos - e[page];
+      var delta = (isbar ? -1/scale : 1) * (pos - e[page]);
       elt[scroll] += delta;
       d = new Date();
       if (d-dt) {
@@ -1006,7 +1019,7 @@ ol.ext.element.scrollDiv = function(elt, options) {
   // Stop scrolling
   ol.ext.element.addListener(window, ['pointerup','pointercancel'], function(e) {
     dt = new Date() - dt;
-    if (dt>100) {
+    if (dt>100 || isbar) {
       // User stop: no speed
       speed = 0;
     } else if (dt>0) {
@@ -1024,6 +1037,7 @@ ol.ext.element.scrollDiv = function(elt, options) {
     } else {
       elt.classList.remove('ol-hasClick');
     }
+    isbar = false;
   });
   // Handle mousewheel
   if (options.mousewheel) { // && !elt.classList.contains('ol-touch')) {
