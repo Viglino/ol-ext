@@ -12,6 +12,7 @@
   bottom: 0;
   right: 0px;
   width: 9px;
+  height: auto;
   opacity: 0;
   border-radius: 9px;
   transition: opacity 1s .5s;
@@ -26,7 +27,7 @@
   width: 9px;
   height: 9px;
   box-shadow: inset 10px 0 currentColor;
-  border-radius: 9px;
+  border-radius: 9px / 12px;
   border: 2px solid transparent;
   box-sizing: border-box;
   cursor: pointer;

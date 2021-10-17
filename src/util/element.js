@@ -388,17 +388,14 @@ ol_ext_element.scrollDiv = function(elt, options) {
         style = getComputedStyle(children[i]);
         height += parseFloat(style.height);
         height += parseFloat(style.marginTop) + parseFloat(style.marginBottom);
+        height += parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
       }
       // Set scrollbar value
-      scale = (pheight / height);
-      scrollbar.style.height = scale * 100 +'%';
-      scrollbar.style.top = elt.scrollTop * scale +'px';
+      scale = pheight / height;
+      scrollbar.style.height = scale * 100 + '%';
+      scrollbar.style.top = (elt.scrollTop / height * 100) + '%';
       // No scroll
-      if (pheight >= height) {
-        scrollbar.style.display = 'none';
-      } else {
-        scrollbar.style.display = '';
-      }
+      scrollbar.style.display = (pheight >= height ? 'none' : '');
     }
   }
 
