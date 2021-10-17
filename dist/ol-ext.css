@@ -5762,6 +5762,7 @@ ul.ol-legend li div {
   bottom: 0;
   right: 0px;
   width: 9px;
+  height: auto;
   opacity: 0;
   border-radius: 9px;
   -webkit-transition: opacity 1s .5s;
@@ -5779,7 +5780,7 @@ ul.ol-legend li div {
   height: 9px;
   -webkit-box-shadow: inset 10px 0 currentColor;
           box-shadow: inset 10px 0 currentColor;
-  border-radius: 9px;
+  border-radius: 9px / 12px;
   border: 2px solid transparent;
   -webkit-box-sizing: border-box;
           box-sizing: border-box;
