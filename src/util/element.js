@@ -354,6 +354,9 @@ ol_ext_element.scrollDiv = function(elt, options) {
         pos = e[page];
         dt = new Date();
         elt.classList.add('ol-move');
+        // Listen move
+        window.addEventListener('pointermove', onPointerMove);
+        ol_ext_element.addListener(window, ['pointerup','pointercancel'], onPointerUp);
       });
       // Update on enter
       elt.parentNode.addEventListener('pointerenter', function() {
@@ -414,10 +417,13 @@ ol_ext_element.scrollDiv = function(elt, options) {
     elt.classList.add('ol-move');
     // Prevent elt dragging
     e.preventDefault();
+    // Listen scroll
+    window.addEventListener('pointermove', onPointerMove);
+    ol_ext_element.addListener(window, ['pointerup','pointercancel'], onPointerUp);
   });
   
   // Register scroll
-  ol_ext_element.addListener(window, ['pointermove'], function(e) {
+  var onPointerMove = function(e) {
     moving = true;
     if (pos !== false) {
       var delta = (isbar ? -1/scale : 1) * (pos - e[page]);
@@ -431,7 +437,7 @@ ol_ext_element.scrollDiv = function(elt, options) {
       // Tell we are moving
       if (delta) onmove(true);
     }
-  });
+  };
   
   // Animate scroll
   var animate = function(to) {
@@ -459,7 +465,7 @@ ol_ext_element.scrollDiv = function(elt, options) {
   }, true);
 
   // Stop scrolling
-  ol_ext_element.addListener(window, ['pointerup','pointercancel'], function(e) {
+  var onPointerUp = function(e) {
     dt = new Date() - dt;
     if (dt>100 || isbar) {
       // User stop: no speed
@@ -480,7 +486,9 @@ ol_ext_element.scrollDiv = function(elt, options) {
       elt.classList.remove('ol-hasClick');
     }
     isbar = false;
-  });
+    window.removeEventListener('pointermove', onPointerMove)
+    ol_ext_element.removeListener(window, ['pointerup','pointercancel'], onPointerUp);
+  };
 
   // Handle mousewheel
   if (options.mousewheel) { // && !elt.classList.contains('ol-touch')) {
