@@ -587,7 +587,7 @@ function movePoint(point, displacementVector) {
 ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
   if (!this._handleEvent(evt, this.features_)) return;
   var viewRotation = this.getMap().getView().getRotation();
-  var i, f, geometry;
+  var i, j, f, geometry;
   var pt0 = [this.coordinate_[0], this.coordinate_[1]];
   var pt = [evt.coordinate[0], evt.coordinate[1]];
   this.isUpdating_ = true;
@@ -695,7 +695,7 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
           if (dim<2) return g2;
 
           if (!keepRectangle) {
-            for (var j=0; j<g1.length; j+=dim) {
+            for (j=0; j<g1.length; j+=dim) {
               if (scx!=1) g2[j] = center[0] + (g1[j]-center[0])*scx;
               if (scy!=1) g2[j+1] = center[1] + (g1[j+1]-center[1])*scy;
             }
@@ -713,16 +713,17 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
               var nextIndex = opt+1 < pointArray.length ? opt+1 : 0;
               var coordsToChange = [...pointArray[opt], ...pointArray[nextIndex]];
 
-              for (var j = 0; j < g1.length; j += dim) {
+              for (j = 0; j < g1.length; j += dim) {
                   g2[j] = coordsToChange.includes(j) ? g1[j] + projectedVector[0] : g1[j];
                   g2[j + 1] = coordsToChange.includes(j) ? g1[j + 1] + projectedVector[1] : g1[j + 1];
               }
             } else {
+              var projectedLeft, projectedRight;
               switch (opt) {
                 case 0:
                   displacementVector = countVector(pointD, dragCoordinate);
-                  var projectedLeft = projectVectorOnVector(displacementVector, countVector(pointC, pointD));
-                  var projectedRight = projectVectorOnVector(displacementVector, countVector(pointA, pointD));
+                  projectedLeft = projectVectorOnVector(displacementVector, countVector(pointC, pointD));
+                  projectedRight = projectVectorOnVector(displacementVector, countVector(pointA, pointD));
                   [g2[0], g2[1]] = movePoint(pointA, projectedLeft);
                   [g2[4], g2[5]] = movePoint(pointC, projectedRight);
                   [g2[6], g2[7]] = movePoint(pointD, displacementVector);
@@ -730,8 +731,8 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
                   break;
                 case 1:
                   displacementVector = countVector(pointA, dragCoordinate);
-                  var projectedLeft = projectVectorOnVector(displacementVector, countVector(pointD, pointA));
-                  var projectedRight = projectVectorOnVector(displacementVector, countVector(pointB, pointA));
+                  projectedLeft = projectVectorOnVector(displacementVector, countVector(pointD, pointA));
+                  projectedRight = projectVectorOnVector(displacementVector, countVector(pointB, pointA));
                   [g2[0], g2[1]] = movePoint(pointA, displacementVector);
                   [g2[2], g2[3]] = movePoint(pointB, projectedLeft);
                   [g2[6], g2[7]] = movePoint(pointD, projectedRight);
@@ -739,8 +740,8 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
                   break;
                 case 2:
                   displacementVector = countVector(pointB, dragCoordinate);
-                  var projectedLeft = projectVectorOnVector(displacementVector, countVector(pointA, pointB));
-                  var projectedRight = projectVectorOnVector(displacementVector, countVector(pointC, pointB));
+                  projectedLeft = projectVectorOnVector(displacementVector, countVector(pointA, pointB));
+                  projectedRight = projectVectorOnVector(displacementVector, countVector(pointC, pointB));
                   [g2[0], g2[1]] = movePoint(pointA, projectedRight);
                   [g2[2], g2[3]] = movePoint(pointB, displacementVector);
                   [g2[4], g2[5]] = movePoint(pointC, projectedLeft);
@@ -748,8 +749,8 @@ ol_interaction_Transform.prototype.handleDragEvent_ = function(evt) {
                   break;
                 case 3:
                   displacementVector = countVector(pointC, dragCoordinate);
-                  var projectedLeft = projectVectorOnVector(displacementVector, countVector(pointB, pointC));
-                  var projectedRight = projectVectorOnVector(displacementVector, countVector(pointD, pointC));
+                  projectedLeft = projectVectorOnVector(displacementVector, countVector(pointB, pointC));
+                  projectedRight = projectVectorOnVector(displacementVector, countVector(pointD, pointC));
                   [g2[2], g2[3]] = movePoint(pointB, projectedRight);
                   [g2[4], g2[5]] = movePoint(pointC, displacementVector);
                   [g2[6], g2[7]] = movePoint(pointD, projectedLeft);

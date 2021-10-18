@@ -1907,13 +1907,15 @@ if (window.ol) {
 ol.ext.input.Base = function(options) {
   options = options || {};
   ol.Object.call(this);
-  var input = this.input = options.input || ol.ext.element.create('INPUT', { 
-    type: options.type,
-    min: options.min,
-    max: options.max,
-    step: options.step,
-    parent: options.parent
-  });
+  var input = this.input = options.input;
+  if (!input) {
+    input = document.createElement('INPUT');
+    if (options.type) input.setAttribute('type', options.type);
+    if (options.min !== undefined) input.setAttribute('min', options.min);
+    if (options.max !== undefined) input.setAttribute('max', options.max);
+    if (options.step !== undefined) input.setAttribute('step', options.step);
+    if (options.parent) options.parent.appendChild(input);
+  } 
   if (options.disabled) input.disabled = true;
   if (options.checked !== undefined) input.checked = !!options.checked;
   if (options.val !== undefined) input.value = options.val;
@@ -2143,13 +2145,13 @@ ol.ext.input.PopupBase.prototype.toggle = function() {
 ol.ext.input.Checkbox = function(options) {
   options = options || {};
   ol.ext.input.Base.call(this, options);
-  var label = this.element = ol.ext.element.create('LABEL',{ 
-    html: options.html,
-    className: ('ol-ext-check ol-ext-checkbox'  + (options.className || '')).trim()
-  });
+  var label = this.element = document.createElement('LABEL');
+  if (options.html instanceof Element) label.appendChild(options.html)
+  else if (options.html !== undefined) label.innerHTML = options.html;
+  label.className = ('ol-ext-check ol-ext-checkbox'  + (options.className || '')).trim();
   if (this.input.parentNode) this.input.parentNode.insertBefore(label, this.input);
   label.appendChild(this.input);
-  ol.ext.element.create('SPAN', { parent: label });
+  label.appendChild(document.createElement('SPAN'));
   if (options.after) {
     label.appendChild(document.createTextNode(options.after));
   }
@@ -25917,7 +25919,7 @@ function movePoint(point, displacementVector) {
 ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
   if (!this._handleEvent(evt, this.features_)) return;
   var viewRotation = this.getMap().getView().getRotation();
-  var i, f, geometry;
+  var i, j, f, geometry;
   var pt0 = [this.coordinate_[0], this.coordinate_[1]];
   var pt = [evt.coordinate[0], evt.coordinate[1]];
   this.isUpdating_ = true;
@@ -26015,7 +26017,7 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
         geometry.applyTransform(function(g1, g2, dim) {
           if (dim<2) return g2;
           if (!keepRectangle) {
-            for (var j=0; j<g1.length; j+=dim) {
+            for (j=0; j<g1.length; j+=dim) {
               if (scx!=1) g2[j] = center[0] + (g1[j]-center[0])*scx;
               if (scy!=1) g2[j+1] = center[1] + (g1[j+1]-center[1])*scy;
             }
@@ -26031,16 +26033,17 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
               var projectedVector = projectVectorOnVector(displacementVector, base);
               var nextIndex = opt+1 < pointArray.length ? opt+1 : 0;
               var coordsToChange = [...pointArray[opt], ...pointArray[nextIndex]];
-              for (var j = 0; j < g1.length; j += dim) {
+              for (j = 0; j < g1.length; j += dim) {
                   g2[j] = coordsToChange.includes(j) ? g1[j] + projectedVector[0] : g1[j];
                   g2[j + 1] = coordsToChange.includes(j) ? g1[j + 1] + projectedVector[1] : g1[j + 1];
               }
             } else {
+              var projectedLeft, projectedRight;
               switch (opt) {
                 case 0:
                   displacementVector = countVector(pointD, dragCoordinate);
-                  var projectedLeft = projectVectorOnVector(displacementVector, countVector(pointC, pointD));
-                  var projectedRight = projectVectorOnVector(displacementVector, countVector(pointA, pointD));
+                  projectedLeft = projectVectorOnVector(displacementVector, countVector(pointC, pointD));
+                  projectedRight = projectVectorOnVector(displacementVector, countVector(pointA, pointD));
                   [g2[0], g2[1]] = movePoint(pointA, projectedLeft);
                   [g2[4], g2[5]] = movePoint(pointC, projectedRight);
                   [g2[6], g2[7]] = movePoint(pointD, displacementVector);
@@ -26048,8 +26051,8 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
                   break;
                 case 1:
                   displacementVector = countVector(pointA, dragCoordinate);
-                  var projectedLeft = projectVectorOnVector(displacementVector, countVector(pointD, pointA));
-                  var projectedRight = projectVectorOnVector(displacementVector, countVector(pointB, pointA));
+                  projectedLeft = projectVectorOnVector(displacementVector, countVector(pointD, pointA));
+                  projectedRight = projectVectorOnVector(displacementVector, countVector(pointB, pointA));
                   [g2[0], g2[1]] = movePoint(pointA, displacementVector);
                   [g2[2], g2[3]] = movePoint(pointB, projectedLeft);
                   [g2[6], g2[7]] = movePoint(pointD, projectedRight);
@@ -26057,8 +26060,8 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
                   break;
                 case 2:
                   displacementVector = countVector(pointB, dragCoordinate);
-                  var projectedLeft = projectVectorOnVector(displacementVector, countVector(pointA, pointB));
-                  var projectedRight = projectVectorOnVector(displacementVector, countVector(pointC, pointB));
+                  projectedLeft = projectVectorOnVector(displacementVector, countVector(pointA, pointB));
+                  projectedRight = projectVectorOnVector(displacementVector, countVector(pointC, pointB));
                   [g2[0], g2[1]] = movePoint(pointA, projectedRight);
                   [g2[2], g2[3]] = movePoint(pointB, displacementVector);
                   [g2[4], g2[5]] = movePoint(pointC, projectedLeft);
@@ -26066,8 +26069,8 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
                   break;
                 case 3:
                   displacementVector = countVector(pointC, dragCoordinate);
-                  var projectedLeft = projectVectorOnVector(displacementVector, countVector(pointB, pointC));
-                  var projectedRight = projectVectorOnVector(displacementVector, countVector(pointD, pointC));
+                  projectedLeft = projectVectorOnVector(displacementVector, countVector(pointB, pointC));
+                  projectedRight = projectVectorOnVector(displacementVector, countVector(pointD, pointC));
                   [g2[2], g2[3]] = movePoint(pointB, projectedRight);
                   [g2[4], g2[5]] = movePoint(pointC, displacementVector);
                   [g2[6], g2[7]] = movePoint(pointD, projectedLeft);
