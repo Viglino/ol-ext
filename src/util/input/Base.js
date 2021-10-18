@@ -3,7 +3,6 @@
  */
 import ol_ext_inherits from '../ext'
 import ol_Object from 'ol/Object'
-import ol_ext_element from '../element';
 
 /** @namespace  ol.ext.input
  */
@@ -32,13 +31,15 @@ var ol_ext_input_Base = function(options) {
   
   ol_Object.call(this);
   
-  var input = this.input = options.input || ol_ext_element.create('INPUT', { 
-    type: options.type,
-    min: options.min,
-    max: options.max,
-    step: options.step,
-    parent: options.parent
-  });
+  var input = this.input = options.input;
+  if (!input) {
+    input = document.createElement('INPUT');
+    if (options.type) input.setAttribute('type', options.type);
+    if (options.min !== undefined) input.setAttribute('min', options.min);
+    if (options.max !== undefined) input.setAttribute('max', options.max);
+    if (options.step !== undefined) input.setAttribute('step', options.step);
+    if (options.parent) options.parent.appendChild(input);
+  } 
   if (options.disabled) input.disabled = true;
   if (options.checked !== undefined) input.checked = !!options.checked;
   if (options.val !== undefined) input.value = options.val;

@@ -1,5 +1,4 @@
 import ol_ext_inherits from '../ext'
-import ol_ext_element from '../element';
 import ol_ext_input_Base from './Base'
 
 /** Checkbox input
@@ -20,13 +19,14 @@ var ol_ext_input_Checkbox = function(options) {
 
   ol_ext_input_Base.call(this, options);
 
-  var label = this.element = ol_ext_element.create('LABEL',{ 
-    html: options.html,
-    className: ('ol-ext-check ol-ext-checkbox'  + (options.className || '')).trim()
-  });
+  var label = this.element = document.createElement('LABEL');
+  if (options.html instanceof Element) label.appendChild(options.html)
+  else if (options.html !== undefined) label.innerHTML = options.html;
+  label.className = ('ol-ext-check ol-ext-checkbox'  + (options.className || '')).trim();
+
   if (this.input.parentNode) this.input.parentNode.insertBefore(label, this.input);
   label.appendChild(this.input);
-  ol_ext_element.create('SPAN', { parent: label });
+  label.appendChild(document.createElement('SPAN'));
   if (options.after) {
     label.appendChild(document.createTextNode(options.after));
   }
