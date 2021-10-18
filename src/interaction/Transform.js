@@ -12,7 +12,7 @@ import ol_style_RegularShape from 'ol/style/RegularShape'
 import {fromExtent as ol_geom_Polygon_fromExtent} from 'ol/geom/Polygon'
 import {boundingExtent as ol_extent_boundingExtent, buffer as ol_extent_buffer, createEmpty as ol_extent_createEmpty, extend as ol_extent_extend, getCenter as ol_extent_getCenter} from 'ol/extent'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import { ol_geom_Polygon } from 'ol/geom'
+import ol_geom_Polygon from 'ol/geom/Polygon'
 
 /** Interaction rotate
  * @constructor
