@@ -106,6 +106,7 @@ var ol_control_LayerSwitcher = function(options) {
       });
     }
 
+    if (options.minibar) options.noScroll = true;
     if (!options.noScroll) {
       this.topv = ol_ext_element.create('DIV', {
         className: 'ol-switchertopdiv',
@@ -128,6 +129,10 @@ var ol_control_LayerSwitcher = function(options) {
 
   this.panel_ = ol_ext_element.create ('UL', {
     className: 'panel',
+  });
+  this.panelContainer_ = ol_ext_element.create ('DIV', {
+    className: 'panel-container',
+    html: this.panel_,
     parent: element
   });
   // Handle mousewheel
@@ -152,6 +157,17 @@ var ol_control_LayerSwitcher = function(options) {
 
   this.set('drawDelay',options.drawDelay||0);
   this.set('selection', options.selection);
+
+  if (options.minibar) {
+    var mbar = ol_ext_element.scrollDiv(this.panelContainer_, {
+      mousewheel: true, 
+      vertical: true, 
+      minibar: true
+    });
+    this.on(['drawlist', 'toggle'], function() {
+      mbar.refresh();
+    })
+  }
 };
 ol_ext_inherits(ol_control_LayerSwitcher, ol_control_Control);
 
@@ -206,15 +222,17 @@ ol_control_LayerSwitcher.prototype.setMap = function(map) {
 /** Show control
  */
 ol_control_LayerSwitcher.prototype.show = function() {
-  this.element.classList.add("ol-forceopen");
+  this.element.classList.add('ol-forceopen');
   this.overflow();
+  self.dispatchEvent({ type: 'toggle', collapsed: false });
 };
 
 /** Hide control
  */
 ol_control_LayerSwitcher.prototype.hide = function() {
-  this.element.classList.remove("ol-forceopen");
+  this.element.classList.remove('ol-forceopen');
   this.overflow();
+  self.dispatchEvent({ type: 'toggle', collapsed: true });
 };
 
 /** Toggle control
@@ -390,7 +408,7 @@ ol_control_LayerSwitcher.prototype.viewChange = function() {
  * @api
  */
 ol_control_LayerSwitcher.prototype.getPanel = function() {
-  return this.panel_;
+  return this.panelContainer_;
 };
 
 /** Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
@@ -409,6 +427,8 @@ ol_control_LayerSwitcher.prototype.drawPanel = function() {
  */
 ol_control_LayerSwitcher.prototype.drawPanel_ = function() {
   if (--this.dcount || this.dragging_) return;
+  var scrollTop = this.panelContainer_.scrollTop;
+
   // Remove existing layers
   this._clearLayerForLI();
   this.panel_.querySelectorAll('li').forEach (function(li) {
@@ -417,6 +437,9 @@ ol_control_LayerSwitcher.prototype.drawPanel_ = function() {
   // Draw list
   if (this._layerGroup) this.drawList (this.panel_, this._layerGroup.getLayers());
   else if (this.getMap()) this.drawList (this.panel_, this.getMap().getLayers());
+
+  // Reset scrolltop
+  this.panelContainer_.scrollTop = scrollTop;
 };
 
 /** Change layer visibility according to the baselayer option
@@ -486,6 +509,7 @@ ol_control_LayerSwitcher.prototype.dragOrdering_ = function(e) {
     if (target) {
       // Get drag on parent
       var drop = layer;
+      isSelected = self.getSelection() === drop;
       if (drop && target) {
         var collection ;
         if (group) collection = group.getLayers();
@@ -499,14 +523,15 @@ ol_control_LayerSwitcher.prototype.dragOrdering_ = function(e) {
           }
         }
         for (var j=0; j<layers.length; j++) {
-          if (layers[j]==target) {
+          if (layers[j] === target) {
             if (i>j) collection.insertAt (j,drop);
             else collection.insertAt (j+1,drop);
             break;
           }
         }
       }
-
+      if (isSelected) self.selectLayer(drop);
+      
       self.dispatchEvent({ type: "reorder-end", layer: drop, group: group });
     }
     
@@ -769,7 +794,7 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection) {
       if ( (i<layers.length-1 && (layer.get("allwaysOnTop") || !layers[i+1].get("allwaysOnTop")) )
       || (i>0 && (!layer.get("allwaysOnTop") || layers[i-1].get("allwaysOnTop")) ) ) {
         ol_ext_element.create('DIV', {
-          className: 'layerup',
+          className: 'layerup ol-noscroll',
           title: this.tip.up,
           on: { 'mousedown touchstart': function(e) { self.dragOrdering_(e) } },
           parent: layer_buttons

@@ -319,6 +319,7 @@ ol_ext_element.offsetRect = function(elt) {
  *  @param {boolean} [options.animate=true] add kinetic to scroll
  *  @param {boolean} [options.mousewheel=false] enable mousewheel to scroll
  *  @param {boolean} [options.minibar=false] add a mini scrollbar to the parent element (only vertical scrolling)
+ * @returns {Object} an object with a refresh function
  */
 ol_ext_element.scrollDiv = function(elt, options) {
   options = options || {};
@@ -350,13 +351,7 @@ ol_ext_element.scrollDiv = function(elt, options) {
       // Move scrollbar
       scrollContainer.addEventListener('pointerdown', function(e) {
         isbar = true;
-        moving = false;
-        pos = e[page];
-        dt = new Date();
-        elt.classList.add('ol-move');
-        // Listen move
-        window.addEventListener('pointermove', onPointerMove);
-        ol_ext_element.addListener(window, ['pointerup','pointercancel'], onPointerUp);
+        onPointerDown(e)
       });
       // Update on enter
       elt.parentNode.addEventListener('pointerenter', function() {
@@ -394,20 +389,27 @@ ol_ext_element.scrollDiv = function(elt, options) {
       scale = pheight / height;
       scrollbar.style.height = scale * 100 + '%';
       scrollbar.style.top = (elt.scrollTop / height * 100) + '%';
+      scrollContainer.style.height = pheight + 'px';
       // No scroll
-      scrollbar.style.display = (pheight >= height ? 'none' : '');
+      if (pheight > height - .5) scrollContainer.classList.add('ol-100pc');
+      else scrollContainer.classList.remove('ol-100pc');
     }
   }
 
-  // Prevent image dragging
-  elt.querySelectorAll('img').forEach(function(i) {
-    i.ondragstart = function(){ return false; };
-  });
+  // Enable scroll
   elt.style['touch-action'] = 'none';
+  elt.classList.add('ol-scrolldiv');
   
   // Start scrolling
   ol_ext_element.addListener(elt, ['pointerdown'], function(e) {
     isbar = false;
+    onPointerDown(e)
+  });
+  
+  var onPointerDown = function(e) {
+    // Prevent scroll
+    if (e.target.classList.contains('ol-noscroll')) return;
+    // Start scrolling
     moving = false;
     pos = e[page];
     dt = new Date();
@@ -417,8 +419,8 @@ ol_ext_element.scrollDiv = function(elt, options) {
     // Listen scroll
     window.addEventListener('pointermove', onPointerMove);
     ol_ext_element.addListener(window, ['pointerup','pointercancel'], onPointerUp);
-  });
-  
+  }
+
   // Register scroll
   var onPointerMove = function(e) {
     moving = true;
@@ -499,6 +501,10 @@ ol_ext_element.scrollDiv = function(elt, options) {
         return false;
       }
     );
+  }
+
+  return { 
+    refresh: updateMinibar
   }
 };
 

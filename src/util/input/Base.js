@@ -33,7 +33,7 @@ var ol_ext_input_Base = function(options) {
   
   var input = this.input = options.input;
   if (!input) {
-    input = document.createElement('INPUT');
+    input = this.input = document.createElement('INPUT');
     if (options.type) input.setAttribute('type', options.type);
     if (options.min !== undefined) input.setAttribute('min', options.min);
     if (options.max !== undefined) input.setAttribute('max', options.max);

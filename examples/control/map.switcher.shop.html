@@ -150,7 +150,9 @@
   });
 
   // Add control inside the map
-  var ctrl = new ol.control.LayerShop();
+  var ctrl = new ol.control.LayerShop({
+    minibar: true
+  });
   map.addControl(ctrl);
   
   // WMS control

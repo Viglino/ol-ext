@@ -11,16 +11,31 @@
 }
 
 .ol-control.ol-layer-shop > button,
-.ol-control.ol-layer-shop .panel {
+.ol-control.ol-layer-shop .panel-container {
   box-shadow: 0 0 0 3px rgba(255,255,255,.5);
 }
-.ol-control.ol-layer-shop .panel {
+.ol-control.ol-layerswitcher.ol-layer-shop .panel-container {
   overflow-y: scroll;
   max-height: calc(100% - 6.5em);
-  padding: .5em;
-  box-sizing: border-box;
   border: 2px solid #369;
   border-width: 2px 0;
+  padding: 0;
+}
+.ol-control.ol-layer-shop .panel {
+  padding: 0;
+  box-sizing: border-box;
+  margin: .25em .5em;
+}
+.ol-control.ol-layerswitcher.ol-layer-shop .panel-container.ol-scrolldiv {
+  overflow: hidden;
+}
+.ol-control.ol-layer-shop .ol-scroll {
+  top: calc(4.3em + 2px);
+  background-color: #ccc;
+  opacity: .5;
+}
+.ol-layerswitcher.ol-layer-shop ul.panel li.ol-header {
+  display: none;
 }
 .ol-layerswitcher.ol-layer-shop ul.panel li {
   margin-right: 0;
@@ -88,10 +103,12 @@
   text-align: right;
   z-index: 1;
 }
+.ol-control.ol-layer-shop.ol-collapsed .ol-scroll,
 .ol-control.ol-layer-shop.ol-collapsed .ol-bar {
   border-width: 2px 0 0;
   display: none;
 }
+.ol-control.ol-layer-shop.ol-forceopen .ol-scroll,
 .ol-control.ol-layer-shop.ol-forceopen .ol-bar  {
   display: block;
 }

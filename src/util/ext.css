@@ -9,10 +9,10 @@
   touch-action: none;
   position: absolute;
   top: 0;
-  bottom: 0;
   right: 0px;
   width: 9px;
   height: auto;
+  max-height: 100%;
   opacity: 0;
   border-radius: 9px;
   transition: opacity 1s .5s;
@@ -31,4 +31,7 @@
   border: 2px solid transparent;
   box-sizing: border-box;
   cursor: pointer;
+}
+.ol-miniscroll .ol-scroll.ol-100pc {
+  opacity: 0;
 }
