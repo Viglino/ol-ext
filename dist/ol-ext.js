@@ -886,6 +886,7 @@ ol.ext.element.offsetRect = function(elt) {
  *  @param {boolean} [options.animate=true] add kinetic to scroll
  *  @param {boolean} [options.mousewheel=false] enable mousewheel to scroll
  *  @param {boolean} [options.minibar=false] add a mini scrollbar to the parent element (only vertical scrolling)
+ * @returns {Object} an object with a refresh function
  */
 ol.ext.element.scrollDiv = function(elt, options) {
   options = options || {};
@@ -915,13 +916,7 @@ ol.ext.element.scrollDiv = function(elt, options) {
       // Move scrollbar
       scrollContainer.addEventListener('pointerdown', function(e) {
         isbar = true;
-        moving = false;
-        pos = e[page];
-        dt = new Date();
-        elt.classList.add('ol-move');
-        // Listen move
-        window.addEventListener('pointermove', onPointerMove);
-        ol.ext.element.addListener(window, ['pointerup','pointercancel'], onPointerUp);
+        onPointerDown(e)
       });
       // Update on enter
       elt.parentNode.addEventListener('pointerenter', function() {
@@ -958,18 +953,24 @@ ol.ext.element.scrollDiv = function(elt, options) {
       scale = pheight / height;
       scrollbar.style.height = scale * 100 + '%';
       scrollbar.style.top = (elt.scrollTop / height * 100) + '%';
+      scrollContainer.style.height = pheight + 'px';
       // No scroll
-      scrollbar.style.display = (pheight >= height ? 'none' : '');
+      if (pheight > height - .5) scrollContainer.classList.add('ol-100pc');
+      else scrollContainer.classList.remove('ol-100pc');
     }
   }
-  // Prevent image dragging
-  elt.querySelectorAll('img').forEach(function(i) {
-    i.ondragstart = function(){ return false; };
-  });
+  // Enable scroll
   elt.style['touch-action'] = 'none';
+  elt.classList.add('ol-scrolldiv');
   // Start scrolling
   ol.ext.element.addListener(elt, ['pointerdown'], function(e) {
     isbar = false;
+    onPointerDown(e)
+  });
+  var onPointerDown = function(e) {
+    // Prevent scroll
+    if (e.target.classList.contains('ol-noscroll')) return;
+    // Start scrolling
     moving = false;
     pos = e[page];
     dt = new Date();
@@ -979,7 +980,7 @@ ol.ext.element.scrollDiv = function(elt, options) {
     // Listen scroll
     window.addEventListener('pointermove', onPointerMove);
     ol.ext.element.addListener(window, ['pointerup','pointercancel'], onPointerUp);
-  });
+  }
   // Register scroll
   var onPointerMove = function(e) {
     moving = true;
@@ -1056,6 +1057,9 @@ ol.ext.element.scrollDiv = function(elt, options) {
         return false;
       }
     );
+  }
+  return { 
+    refresh: updateMinibar
   }
 };
 /** Dispatch an event to an Element 
@@ -1909,7 +1913,7 @@ ol.ext.input.Base = function(options) {
   ol.Object.call(this);
   var input = this.input = options.input;
   if (!input) {
-    input = document.createElement('INPUT');
+    input = this.input = document.createElement('INPUT');
     if (options.type) input.setAttribute('type', options.type);
     if (options.min !== undefined) input.setAttribute('min', options.min);
     if (options.max !== undefined) input.setAttribute('max', options.max);
@@ -4712,6 +4716,7 @@ ol.control.LayerSwitcher = function(options) {
         self.dispatchEvent({ type: 'toggle', collapsed: false });
       });
     }
+    if (options.minibar) options.noScroll = true;
     if (!options.noScroll) {
       this.topv = ol.ext.element.create('DIV', {
         className: 'ol-switchertopdiv',
@@ -4732,6 +4737,10 @@ ol.control.LayerSwitcher = function(options) {
   }
   this.panel_ = ol.ext.element.create ('UL', {
     className: 'panel',
+  });
+  this.panelContainer_ = ol.ext.element.create ('DIV', {
+    className: 'panel-container',
+    html: this.panel_,
     parent: element
   });
   // Handle mousewheel
@@ -4753,6 +4762,16 @@ ol.control.LayerSwitcher = function(options) {
   });
   this.set('drawDelay',options.drawDelay||0);
   this.set('selection', options.selection);
+  if (options.minibar) {
+    var mbar = ol.ext.element.scrollDiv(this.panelContainer_, {
+      mousewheel: true, 
+      vertical: true, 
+      minibar: true
+    });
+    this.on(['drawlist', 'toggle'], function() {
+      mbar.refresh();
+    })
+  }
 };
 ol.ext.inherits(ol.control.LayerSwitcher, ol.control.Control);
 /** List of tips for internationalization purposes
@@ -4801,14 +4820,16 @@ ol.control.LayerSwitcher.prototype.setMap = function(map) {
 /** Show control
  */
 ol.control.LayerSwitcher.prototype.show = function() {
-  this.element.classList.add("ol-forceopen");
+  this.element.classList.add('ol-forceopen');
   this.overflow();
+  self.dispatchEvent({ type: 'toggle', collapsed: false });
 };
 /** Hide control
  */
 ol.control.LayerSwitcher.prototype.hide = function() {
-  this.element.classList.remove("ol-forceopen");
+  this.element.classList.remove('ol-forceopen');
   this.overflow();
+  self.dispatchEvent({ type: 'toggle', collapsed: true });
 };
 /** Toggle control
  */
@@ -4972,7 +4993,7 @@ ol.control.LayerSwitcher.prototype.viewChange = function() {
  * @api
  */
 ol.control.LayerSwitcher.prototype.getPanel = function() {
-  return this.panel_;
+  return this.panelContainer_;
 };
 /** Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
  * @api
@@ -4989,6 +5010,7 @@ ol.control.LayerSwitcher.prototype.drawPanel = function() {
  */
 ol.control.LayerSwitcher.prototype.drawPanel_ = function() {
   if (--this.dcount || this.dragging_) return;
+  var scrollTop = this.panelContainer_.scrollTop;
   // Remove existing layers
   this._clearLayerForLI();
   this.panel_.querySelectorAll('li').forEach (function(li) {
@@ -4997,6 +5019,8 @@ ol.control.LayerSwitcher.prototype.drawPanel_ = function() {
   // Draw list
   if (this._layerGroup) this.drawList (this.panel_, this._layerGroup.getLayers());
   else if (this.getMap()) this.drawList (this.panel_, this.getMap().getLayers());
+  // Reset scrolltop
+  this.panelContainer_.scrollTop = scrollTop;
 };
 /** Change layer visibility according to the baselayer option
  * @param {ol.layer}
@@ -5061,6 +5085,7 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e) {
     if (target) {
       // Get drag on parent
       var drop = layer;
+      isSelected = self.getSelection() === drop;
       if (drop && target) {
         var collection ;
         if (group) collection = group.getLayers();
@@ -5074,13 +5099,14 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e) {
           }
         }
         for (var j=0; j<layers.length; j++) {
-          if (layers[j]==target) {
+          if (layers[j] === target) {
             if (i>j) collection.insertAt (j,drop);
             else collection.insertAt (j+1,drop);
             break;
           }
         }
       }
+      if (isSelected) self.selectLayer(drop);
       self.dispatchEvent({ type: "reorder-end", layer: drop, group: group });
     }
     elt.parentNode.querySelectorAll('li').forEach(function(li){
@@ -5324,7 +5350,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection) {
       if ( (i<layers.length-1 && (layer.get("allwaysOnTop") || !layers[i+1].get("allwaysOnTop")) )
       || (i>0 && (!layer.get("allwaysOnTop") || layers[i-1].get("allwaysOnTop")) ) ) {
         ol.ext.element.create('DIV', {
-          className: 'layerup',
+          className: 'layerup ol-noscroll',
           title: this.tip.up,
           on: { 'mousedown touchstart': function(e) { self.dragOrdering_(e) } },
           parent: layer_buttons
