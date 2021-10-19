@@ -25730,11 +25730,14 @@ ol.interaction.Transform.prototype.drawSketch_ = function(center) {
     }
   } else {
     if (this.ispt_) {
+      // Calculate extent arround the point
       var p = this.getMap().getPixelFromCoordinate([ext[0], ext[1]]);
-      ext = ol.extent.boundingExtent([
-        this.getMap().getCoordinateFromPixel([p[0]-10, p[1]-10]),
-        this.getMap().getCoordinateFromPixel([p[0]+10, p[1]+10])
-      ]);
+      if (p) {
+        ext = ol.extent.boundingExtent([
+          this.getMap().getCoordinateFromPixel([p[0]-10, p[1]-10]),
+          this.getMap().getCoordinateFromPixel([p[0]+10, p[1]+10])
+        ]);
+      }
     }
     geom = keepRectangle ? new ol.geom.Polygon([coords]) : ol.geom.Polygon.fromExtent(ext);
     if (this.get('enableRotatedTransform') && viewRotation !== 0) {
