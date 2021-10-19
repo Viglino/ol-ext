@@ -914,10 +914,21 @@ ol.ext.element.scrollDiv = function(elt, options) {
         parent: elt.parentNode
       });
       // Move scrollbar
-      scrollContainer.addEventListener('pointerdown', function(e) {
+      scrollbar.addEventListener('pointerdown', function(e) {
         isbar = true;
         onPointerDown(e)
       });
+      // Handle mousewheel
+      if (options.mousewheel) {
+        ol.ext.element.addListener(scrollContainer, 
+          ['mousewheel', 'DOMMouseScroll', 'onmousewheel'], 
+          function(e) { onMouseWheel(e) }
+        );
+        ol.ext.element.addListener(scrollbar, 
+          ['mousewheel', 'DOMMouseScroll', 'onmousewheel'], 
+          function(e) { onMouseWheel(e) }
+        );
+      }
       // Update on enter
       elt.parentNode.addEventListener('pointerenter', function() {
         updateMinibar();
@@ -1046,16 +1057,17 @@ ol.ext.element.scrollDiv = function(elt, options) {
     ol.ext.element.removeListener(window, ['pointerup','pointercancel'], onPointerUp);
   };
   // Handle mousewheel
+  var onMouseWheel = function(e) {
+    var delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
+    elt.classList.add('ol-move');
+    elt[scroll] -= delta*30;
+    elt.classList.remove('ol-move');
+    return false;
+  }
   if (options.mousewheel) { // && !elt.classList.contains('ol-touch')) {
     ol.ext.element.addListener(elt, 
       ['mousewheel', 'DOMMouseScroll', 'onmousewheel'], 
-      function(e) {
-        var delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
-        elt.classList.add('ol-move');
-        elt[scroll] -= delta*30;
-        elt.classList.remove('ol-move');
-        return false;
-      }
+      onMouseWheel
     );
   }
   return { 
@@ -1065,7 +1077,7 @@ ol.ext.element.scrollDiv = function(elt, options) {
 /** Dispatch an event to an Element 
  * @param {string} eventName
  * @param {Element} element
-*/
+ */
 ol.ext.element.dispatchEvent = function (eventName, element) {
   var event;
   try {
