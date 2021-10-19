@@ -357,11 +357,14 @@ ol_interaction_Transform.prototype.drawSketch_ = function(center) {
     }
   } else {
     if (this.ispt_) {
+      // Calculate extent arround the point
       var p = this.getMap().getPixelFromCoordinate([ext[0], ext[1]]);
-      ext = ol_extent_boundingExtent([
-        this.getMap().getCoordinateFromPixel([p[0]-10, p[1]-10]),
-        this.getMap().getCoordinateFromPixel([p[0]+10, p[1]+10])
-      ]);
+      if (p) {
+        ext = ol_extent_boundingExtent([
+          this.getMap().getCoordinateFromPixel([p[0]-10, p[1]-10]),
+          this.getMap().getCoordinateFromPixel([p[0]+10, p[1]+10])
+        ]);
+      }
     }
     geom = keepRectangle ? new ol_geom_Polygon([coords]) : ol_geom_Polygon_fromExtent(ext);
     if (this.get('enableRotatedTransform') && viewRotation !== 0) {
