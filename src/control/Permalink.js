@@ -40,7 +40,7 @@ var ol_control_Permalink = function(opt_options) {
   this._localStorage = options.localStorage;
   if (!this._localStorage) {
     try {
-      localStorage.removeItem('ol@parmalink');
+      localStorage.removeItem('ol@permalink');
     } catch(e) { console.warn('Failed to access localStorage...'); }
   }
   
@@ -61,16 +61,18 @@ var ol_control_Permalink = function(opt_options) {
     target: options.target
   });
   this.set('geohash', options.geohash);
+  this.set('initial', false);
 
   this.on ('change', this.viewChange_.bind(this));
 
   // Save search params
   this.search_ = {};
+  var init = {};
   var hash = document.location.hash || document.location.search || '';
 //  console.log('hash', hash)
   if (this.replaceState_ && !hash && this._localStorage) {
     try {
-      hash = localStorage['ol@parmalink'];
+      hash = localStorage['ol@permalink'];
     } catch(e) { console.warn('Failed to access localStorage...'); }
   }
   if (hash) {
@@ -80,19 +82,39 @@ var ol_control_Permalink = function(opt_options) {
       switch(t[0]) {
         case 'lon':
         case 'lat':
-        case 'gh':
-        case 'z':
-        case 'r':
+        case 'z': 
+        case 'r': {
+          init[t[0]] = t[1];
+          break
+        }
+        case 'gh': {
+          const ghash = t[1].split('-');
+          const lonlat = ol_geohash_toLonLat(ghash[0]);
+          init.lon = lonlat[0];
+          init.lat = lonlat[1];
+          init.z = ghash[1];
+          break;
+        }
         case 'l': break;
         default: this.search_[t[0]] = t[1];
       }
     }
+  }
+  if (init.hasOwnProperty('lon')) {
+    this.set('initial', init);
   }
   
   // Decode permalink
   if (this.replaceState_) this.setPosition();
 };
 ol_ext_inherits(ol_control_Permalink, ol_control_Control);
+
+/**
+ * Get the initial position passed by the url
+ */
+ol_control_Permalink.prototype.getInitialPosition = function() {
+  return this.get('initial');
+};
 
 /**
  * Set the map instance the control associated with.
@@ -153,7 +175,7 @@ ol_control_Permalink.prototype.setPosition = function(force) {
   var hash = (this.replaceState_ || force) ? document.location.hash || document.location.search : '';
   if (!hash && this._localStorage) {
     try {
-      hash = localStorage['ol@parmalink'];
+      hash = localStorage['ol@permalink'];
     } catch(e) { console.warn('Failed to access localStorage...'); }
   }
   if (!hash) return;
@@ -305,7 +327,7 @@ ol_control_Permalink.prototype.setUrlReplace = function(replace) {
   } catch(e) {/* ok */}
   /*
   if (this._localStorage) {
-    localStorage['ol@parmalink'] = this.getLink(true);
+    localStorage['ol@permalink'] = this.getLink(true);
   }
   */
 };
@@ -321,7 +343,7 @@ ol_control_Permalink.prototype.viewChange_ = function() {
   } catch(e) {/* ok */}
   if (this._localStorage) {
     try {
-      localStorage['ol@parmalink'] = this.getLink(this._localStorage);
+      localStorage['ol@permalink'] = this.getLink(this._localStorage);
     } catch(e) { console.warn('Failed to access localStorage...'); }
   }
 };
