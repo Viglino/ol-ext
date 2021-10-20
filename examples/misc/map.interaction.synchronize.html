@@ -2,69 +2,69 @@
 <html>
 <head>
 <!--
-	Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 -->
-	<title>ol-ext: Synchronize interaction</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>ol-ext: Synchronize interaction</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="Synchronize OL3 maps." />
-	<meta name="keywords" content="ol3, interaction, synchronize, map" />
+  <meta name="description" content="Synchronize OL3 maps." />
+  <meta name="keywords" content="ol3, interaction, synchronize, map" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
+  <!-- Openlayers -->
   <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
 
-	<link rel="stylesheet" href="../style.css" />
-	<style>
-		#map2
-		{	background: #ddd none repeat scroll 0 0;
-			float: left;
-			margin-right: 1em;
-		}
-	</style>
-	</head>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    #map2
+    {	background: #ddd none repeat scroll 0 0;
+      float: left;
+      margin-right: 1em;
+    }
+  </style>
+  </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Synchronize interaction</h1>
-	</a>
-	<p class="info">
-		The <i>ol.interaction.Synchronize</i> synchronize maps.
-		<br/>
-		An overlay is added on the synchronized map at the cursor position.
-	</p>
+  <a href="../../index.html">
+    <h1>ol-ext: Synchronize interaction</h1>
+  </a>
+  <p class="info">
+    The <i>ol.interaction.Synchronize</i> synchronize maps.
+    <br/>
+    An overlay is added on the synchronized map at the cursor position.
+  </p>
 
-	<!-- DIV for the map -->
-	<div id="map" style="width:600px; height:400px;"></div>
-	<div id="map2" style="width:600px; height:400px;"></div>
+  <!-- DIV for the map -->
+  <div id="map" style="width:600px; height:400px;"></div>
+  <div id="map2" style="width:600px; height:400px;"></div>
 
-	<script type="text/javascript">
-	// Layers
-	var mapbox = new ol.layer.Tile({
+  <script type="text/javascript">
+  // Layers
+  var mapbox = new ol.layer.Tile({
     minResolution: 306,
     source: new ol.source.XYZ({
       url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
       attributions: [ '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' ] 
     })
   });
-	var stamen = new ol.layer.Tile({
+  var stamen = new ol.layer.Tile({
     source: new ol.source.Stamen({ layer: 'watercolor' }) 
   });
 
-	// The map
-	var map = new ol.Map ({
+  // The map
+  var map = new ol.Map ({
     target: 'map',
     view: new ol.View ({
       zoom: 5,
@@ -75,7 +75,7 @@
     })]
   });
 
-	var map2 = new ol.Map ({
+  var map2 = new ol.Map ({
     target: 'map2',
     view: new ol.View ({
       zoom: 5,
@@ -86,11 +86,11 @@
     })]
   });
 
-	// Synchronize the maps 
-	map.addInteraction( new ol.interaction.Synchronize({ maps: [map2] }) );
-	map2.addInteraction( new ol.interaction.Synchronize({ maps: [map] }) );
+  // Synchronize the maps 
+  map.addInteraction( new ol.interaction.Synchronize({ maps: [map2] }) );
+  map2.addInteraction( new ol.interaction.Synchronize({ maps: [map] }) );
 
-	</script>
-	
+  </script>
+  
 </body>
 </html>

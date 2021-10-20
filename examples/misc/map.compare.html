@@ -1,0 +1,153 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Compare maps</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="Synchronize OL3 maps." />
+  <meta name="keywords" content="ol3, interaction, synchronize, map" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    /* Place map2 over map1 */
+    #map,
+    #map2 {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+    }
+    /* Remove controls on map 1 */
+    #compare.swipev #map .ol-control,
+    #compare.swipeh #map .ol-control,
+    #compare.clip #map .ol-control {
+      display: none;
+    }
+    /* Remove cross on swipe */
+    #compare.swipev .ol-target-overlay,
+    #compare.swipeh .ol-target-overlay {
+      display: none;
+    }
+    /* Compare 50% */
+    .compare #map {
+      width: 50%;
+    }
+    .compare #map2 {
+      left: 50%;
+      width: 50%;
+    }
+  </style>
+  </head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Compare maps</h1>
+  </a>
+  <p class="info">
+    This example use a <i>ol/control/Swipe</i> and a <i>ol/interaction/Clip</i> combine with 
+    a <i>ol/interaction/Synchronize</i> to compare 2 maps.
+  </p>
+
+  <!-- DIV for the map -->
+  <div id="compare" class="compare" style="position: relative; height: 500px;">
+    <div id="map""></div>
+    <div id="map2""></div>
+  </div>
+  <button onclick="setMode('compare')">Compare</button>
+  <button onclick="setMode('swipev')">Swipe V</button>
+  <button onclick="setMode('swipeh')">Swipe H</button>
+  <button onclick="setMode('clip')">Clip</button>
+
+  <script type="text/javascript">
+  // Layers
+  var mapbox = new ol.layer.Tile({
+    minResolution: 306,
+    source: new ol.source.XYZ({
+      url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
+      attributions: [ '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' ] 
+    })
+  });
+  var stamen = new ol.layer.Tile({
+    source: new ol.source.Stamen({ layer: 'watercolor' }) 
+  });
+
+  // The map
+  var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 10,
+      center: [262600, 6250704]
+    }),
+    layers: [ new ol.layer.Tile({
+      source: new ol.source.Stamen({ layer: 'watercolor' }) 
+    })]
+  });
+
+  var map2 = new ol.Map ({
+    target: 'map2',
+    view: new ol.View ({
+      zoom: 5,
+      center: [166326, 5992663]
+    }),
+    layers: [ new ol.layer.Tile({
+      source: new ol.source.Stamen({ layer: 'toner' }) 
+    })]
+  });
+
+  // Synchronize the maps 
+  map.addInteraction( new ol.interaction.Synchronize({ maps: [map2] }) );
+  map2.addInteraction( new ol.interaction.Synchronize({ maps: [map] }) );
+
+  // Tools
+  var clip = new ol.interaction.Clip({ radius: 150, layers: map2.getLayers().getArray() });
+  var swipe = new ol.control.Swipe({ rightLayers: map2.getLayers().getArray(),  });
+
+  // Change mode
+  function setMode(mode) {
+    // Remove tools
+    map2.removeControl(swipe);
+    map2.removeInteraction(clip);
+    // Set interactions
+    switch (mode) {
+      case 'swipev':
+      case 'swipeh': {
+        map2.addControl(swipe);
+        swipe.set('orientation', (mode==='swipev' ? 'vertical' : 'horizontal'));
+        break;
+      }
+      case 'clip': {
+        map2.addInteraction(clip);
+        break;
+      }
+    }
+    // Update position
+    document.getElementById("compare").className = mode;
+    map.updateSize();
+    map2.updateSize();
+  }
+
+  </script>
+  
+</body>
+</html>
