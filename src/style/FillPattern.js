@@ -422,7 +422,7 @@ ol_style_FillPattern.prototype.patterns = {
     stroke:1
   },
   "brick": {
-  	width:18,
+    width:18,
     height:16,
     lines:[	[0,1,18,1],[0,10,18,10], [6,1,6,10],[12,10,12,18],[12,0,12,1]],
     stroke:1

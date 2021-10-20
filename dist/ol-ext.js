@@ -5097,7 +5097,7 @@ ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e) {
     if (target) {
       // Get drag on parent
       var drop = layer;
-      isSelected = self.getSelection() === drop;
+      var isSelected = self.getSelection() === drop;
       if (drop && target) {
         var collection ;
         if (group) collection = group.getLayers();
@@ -9924,7 +9924,7 @@ ol.control.Permalink = function(opt_options) {
   this._localStorage = options.localStorage;
   if (!this._localStorage) {
     try {
-      localStorage.removeItem('ol@parmalink');
+      localStorage.removeItem('ol@permalink');
     } catch(e) { console.warn('Failed to access localStorage...'); }
   }
   function linkto() {
@@ -9942,14 +9942,16 @@ ol.control.Permalink = function(opt_options) {
     target: options.target
   });
   this.set('geohash', options.geohash);
+  this.set('initial', false);
   this.on ('change', this.viewChange_.bind(this));
   // Save search params
   this.search_ = {};
+  var init = {};
   var hash = document.location.hash || document.location.search || '';
 //  console.log('hash', hash)
   if (this.replaceState_ && !hash && this._localStorage) {
     try {
-      hash = localStorage['ol@parmalink'];
+      hash = localStorage['ol@permalink'];
     } catch(e) { console.warn('Failed to access localStorage...'); }
   }
   if (hash) {
@@ -9959,18 +9961,37 @@ ol.control.Permalink = function(opt_options) {
       switch(t[0]) {
         case 'lon':
         case 'lat':
-        case 'gh':
-        case 'z':
-        case 'r':
+        case 'z': 
+        case 'r': {
+          init[t[0]] = t[1];
+          break
+        }
+        case 'gh': {
+          var ghash = t[1].split('-');
+          var lonlat = ol.geohash.toLonLat(ghash[0]);
+          init.lon = lonlat[0];
+          init.lat = lonlat[1];
+          init.z = ghash[1];
+          break;
+        }
         case 'l': break;
         default: this.search_[t[0]] = t[1];
       }
     }
   }
+  if (init.hasOwnProperty('lon')) {
+    this.set('initial', init);
+  }
   // Decode permalink
   if (this.replaceState_) this.setPosition();
 };
 ol.ext.inherits(ol.control.Permalink, ol.control.Control);
+/**
+ * Get the initial position passed by the url
+ */
+ol.control.Permalink.prototype.getInitialPosition = function() {
+  return this.get('initial');
+};
 /**
  * Set the map instance the control associated with.
  * @param {ol.Map} map The map instance.
@@ -10024,7 +10045,7 @@ ol.control.Permalink.prototype.setPosition = function(force) {
   var hash = (this.replaceState_ || force) ? document.location.hash || document.location.search : '';
   if (!hash && this._localStorage) {
     try {
-      hash = localStorage['ol@parmalink'];
+      hash = localStorage['ol@permalink'];
     } catch(e) { console.warn('Failed to access localStorage...'); }
   }
   if (!hash) return;
@@ -10161,7 +10182,7 @@ ol.control.Permalink.prototype.setUrlReplace = function(replace) {
   } catch(e) {/* ok */}
   /*
   if (this._localStorage) {
-    localStorage['ol@parmalink'] = this.getLink(true);
+    localStorage['ol@permalink'] = this.getLink(true);
   }
   */
 };
@@ -10176,7 +10197,7 @@ ol.control.Permalink.prototype.viewChange_ = function() {
   } catch(e) {/* ok */}
   if (this._localStorage) {
     try {
-      localStorage['ol@parmalink'] = this.getLink(this._localStorage);
+      localStorage['ol@permalink'] = this.getLink(this._localStorage);
     } catch(e) { console.warn('Failed to access localStorage...'); }
   }
 };
@@ -35923,7 +35944,7 @@ ol.style.FillPattern.prototype.patterns = {
     stroke:1
   },
   "brick": {
-  	width:18,
+    width:18,
     height:16,
     lines:[	[0,1,18,1],[0,10,18,10], [6,1,6,10],[12,10,12,18],[12,0,12,1]],
     stroke:1

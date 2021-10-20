@@ -509,7 +509,7 @@ ol_control_LayerSwitcher.prototype.dragOrdering_ = function(e) {
     if (target) {
       // Get drag on parent
       var drop = layer;
-      isSelected = self.getSelection() === drop;
+      var isSelected = self.getSelection() === drop;
       if (drop && target) {
         var collection ;
         if (group) collection = group.getLayers();
