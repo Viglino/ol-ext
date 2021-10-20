@@ -152,6 +152,7 @@
       <ul>
       </ul>
       <button type="button" onclick="loadCapabilities(true)" style="float: right;">Load capabilities</button>
+      <button type="button" onclick="loadRegister()" style="float: right;">Load register</button>
     </div>
 	</div>
 	
@@ -262,7 +263,7 @@
     });
   });
 
-  var currentLayer;
+  var currentLayer, currentCap;
   function addLayer() {
     if (currentLayer) map.addLayer(currentLayer);
   }
@@ -273,6 +274,7 @@
     var k = $('#key').val();
     if (true) {
       ol.layer.Geoportail.getCapabilities(k).then(function(cap) {
+        currentCap = cap;
         $('#result').show();
         var ul = $('.options ul').html('');
         Object.keys(cap).forEach(function(l) {
@@ -314,6 +316,23 @@
         alert ('Error while loading capabilities for key "'+k+'".');
       });
     }
+  }
+
+  // Load js register
+  function loadRegister() {
+    var register = '';
+    var k = $('#key').val();
+    Object.keys(currentCap).forEach(function(l) {
+      var c = currentCap[l];
+      var ck = { key: k };
+      for (var i in c) ck[i] = c[i];
+      register += 'ol.layer.Geoportail.register('
+        + '"' + l + '", '
+        + JSON.stringify(ck)
+        + ');\n';
+    });
+    var blob = new Blob([register], {type: "text/plain;charset=utf-8"});
+    saveAs(blob, 'register.js');
   }
 
   // Save Vector layer
