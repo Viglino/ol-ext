@@ -25,8 +25,29 @@
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
 
+  <!-- Font-GIS -->
+  <link href="https://viglino.github.io/font-gis/css/font-gis.css" rel="stylesheet" />
+
   <link rel="stylesheet" href="../style.css" />
   <style>
+    .tools {
+      text-align: center;
+      display: inline-block;
+      width: 2.5em;
+      height: 500px;
+      background: #eee;
+    }
+    .tools i {
+      font-size: 2em;
+      cursor: pointer;
+      display: inline-block;
+    }
+    #compare {
+      position: relative;
+      float: left;
+      height: 500px;;
+      width: calc(100% - 2.5em);
+    }
     /* Place map2 over map1 */
     #map,
     #map2 {
@@ -70,14 +91,16 @@
   </p>
 
   <!-- DIV for the map -->
-  <div id="compare" class="compare" style="position: relative; height: 500px;">
+  <div id="compare" class="compare">
     <div id="map""></div>
     <div id="map2""></div>
   </div>
-  <button onclick="setMode('compare')">Compare</button>
-  <button onclick="setMode('swipev')">Swipe V</button>
-  <button onclick="setMode('swipeh')">Swipe H</button>
-  <button onclick="setMode('clip')">Clip</button>
+  <div class="tools">
+    <i class="fg-screen-dub" onclick="setMode('compare')" title="Compare"></i>
+    <i class="fg-screen-split-h" onclick="setMode('swipev')" title="Swipe V"></i>
+    <i class="fg-screen-split-v" onclick="setMode('swipeh')" title="Swipe V"></i>
+    <i class="fg-screen-mag" onclick="setMode('clip')" title="Clip"></i>
+  </div>
 
   <script type="text/javascript">
   // Layers
