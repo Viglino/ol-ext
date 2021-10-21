@@ -7,6 +7,7 @@
 -->
   <title>ol-ext: Compare maps</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
 
   <meta name="description" content="Synchronize OL3 maps." />
   <meta name="keywords" content="ol3, interaction, synchronize, map" />
@@ -48,6 +49,21 @@
       height: 500px;;
       width: calc(100% - 2.5em);
     }
+    .fullscreen .tools {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      padding: 6em 0;
+      touch-action: none;
+    }
+    .fullscreen #compare {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      height: auto;
+    }
     /* Place map2 over map1 */
     #map,
     #map2 {
@@ -88,6 +104,8 @@
   <p class="info">
     This example use a <i>ol/control/Swipe</i> and a <i>ol/interaction/Clip</i> combine with 
     a <i>ol/interaction/Synchronize</i> to compare 2 maps.
+    <br/>
+    <button onclick="$('body').addClass('fullscreen'); setMode();">Fullscreen</button>
   </p>
 
   <!-- DIV for the map -->
@@ -148,24 +166,26 @@
 
   // Change mode
   function setMode(mode) {
-    // Remove tools
-    map2.removeControl(swipe);
-    map2.removeInteraction(clip);
-    // Set interactions
-    switch (mode) {
-      case 'swipev':
-      case 'swipeh': {
-        map2.addControl(swipe);
-        swipe.set('orientation', (mode==='swipev' ? 'vertical' : 'horizontal'));
-        break;
+    if (mode) {
+      // Remove tools
+      map2.removeControl(swipe);
+      map2.removeInteraction(clip);
+      // Set interactions
+      switch (mode) {
+        case 'swipev':
+        case 'swipeh': {
+          map2.addControl(swipe);
+          swipe.set('orientation', (mode==='swipev' ? 'vertical' : 'horizontal'));
+          break;
+        }
+        case 'clip': {
+          map2.addInteraction(clip);
+          break;
+        }
       }
-      case 'clip': {
-        map2.addInteraction(clip);
-        break;
-      }
+      // Update position
+      document.getElementById("compare").className = mode;
     }
-    // Update position
-    document.getElementById("compare").className = mode;
     map.updateSize();
     map2.updateSize();
   }
