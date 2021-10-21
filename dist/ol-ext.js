@@ -14498,7 +14498,7 @@ ol.control.Storymap.prototype.setStory = function (html) {
 */
 /**
  * @classdesc Swipe Control.
- *
+ * @fires moving
  * @constructor
  * @extends {ol.control.Control}
  * @param {Object=} Control options.
@@ -14652,8 +14652,10 @@ ol.control.Swipe.prototype.move = function(e) {
           pageX -= self.getMap().getTargetElement().getBoundingClientRect().left +
             window.pageXOffset - document.documentElement.clientLeft;
           l = self.getMap().getSize()[0];
-          l = Math.min(Math.max(0, 1-(l-pageX)/l), 1);
+          var w = l - Math.min(Math.max(0, l-pageX), l);
+          l = w/l;
           self.set('position', l);
+          self.dispatchEvent({ type: 'moving', size: [w, self.getMap().getSize()[1]], position: [l,0] });
         } else {
           var pageY = e.pageY
             || (e.touches && e.touches.length && e.touches[0].pageY)
@@ -14662,8 +14664,10 @@ ol.control.Swipe.prototype.move = function(e) {
           pageY -= self.getMap().getTargetElement().getBoundingClientRect().top +
             window.pageYOffset - document.documentElement.clientTop;
           l = self.getMap().getSize()[1];
-          l = Math.min(Math.max(0, 1-(l-pageY)/l), 1);
+          var h = l - Math.min(Math.max(0, l-pageY), l);
+          l = h/l;
           self.set('position', l);
+          self.dispatchEvent({ type: 'moving', size: [self.getMap().getSize()[0],h], position: [0,l] });
         }
       }
       break;
@@ -14671,6 +14675,8 @@ ol.control.Swipe.prototype.move = function(e) {
     default: break;
   }
 };
+/** @private
+ */
 ol.control.Swipe.prototype._drawRect = function(e, pts) {
   var tr = e.inversePixelTransform;
   if (tr) {
