@@ -277,7 +277,8 @@ ol_control_LayerSwitcher.prototype.overflow = function(dir) {
     if (hp > h-dh) {
       // Bug IE: need to have an height defined
       ol_ext_element.setStyle(this.element, { height: '100%' });
-      var lh = 2 * ol_ext_element.getStyle(this.panel_.querySelectorAll('li.visible .li-content')[0], 'height');
+      var li = this.panel_.querySelectorAll('li.visible .li-content')[0];
+      var lh = li ? 2 * ol_ext_element.getStyle(li, 'height') : 0;
       switch (dir) {
         case 1: top += lh; break;
         case -1: top -= lh; break;
