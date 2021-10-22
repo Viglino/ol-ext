@@ -74,6 +74,13 @@
       width: 100%;
       height: 100%;
     }
+    /* Map 1 */
+    #compare.view1 #map2 {
+      display: none;
+    }
+    #compare.view2 #map {
+      display: none;
+    }
     /* Remove controls on map 1 */
     #compare.swipev #map .ol-control,
     #compare.swipeh #map .ol-control,
@@ -92,6 +99,20 @@
     .compare #map2 {
       left: 50%;
       width: 50%;
+    }
+    /* popup style */
+    .ol-popup {
+      max-width:300px;
+      min-width:100px;
+      min-height:1em;
+      z-index: 1;
+    }
+    /* Image on popup */
+    .ol-popup img {
+      float: left;
+      margin: 0 0.5em 0 0;
+      max-width: 100px;
+      max-height: 100px;
     }
   </style>
   </head>
@@ -115,9 +136,11 @@
   </div>
   <div class="tools">
     <i class="fg-screen-dub" onclick="setMode('compare')" title="Compare"></i>
+    <i class="fg-screen-dub1" onclick="setMode('view1')" title="Map 1"></i>
+    <i class="fg-screen-dub2" onclick="setMode('view2')" title="Map 2"></i>
     <i class="fg-screen-split-h" onclick="setMode('swipev')" title="Swipe V"></i>
     <i class="fg-screen-split-v" onclick="setMode('swipeh')" title="Swipe V"></i>
-    <i class="fg-screen-mag" onclick="setMode('clip')" title="Clip"></i>
+    <i class="fg-screen-mag-alt" onclick="setMode('clip')" title="Clip"></i>
   </div>
 
   <script type="text/javascript">
@@ -156,6 +179,52 @@
     })]
   });
 
+  function getLayer() {
+    return new ol.layer.Vector({
+      name: '1914-18',
+      source: new ol.source.Vector({
+        url: '../data/fond_guerre.geojson',
+        projection: 'EPSG:3857',
+        format: new ol.format.GeoJSON(),
+        attributions: [ '&copy; <a href="https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire">data.culture.gouv.fr</a>' ]
+      })
+    });
+  }
+  map.addLayer(getLayer());
+  map2.addLayer(getLayer());
+
+  // Select interaction
+  var select1 = new ol.interaction.Select({ condition: ol.events.condition.click });
+  map.addInteraction(select1);
+  var select2 = new ol.interaction.Select({ condition: ol.events.condition.click });
+  map2.addInteraction(select2);
+
+  var popup1 = new ol.Overlay.Popup({ anim: true, closeBox: true });
+  map.addOverlay(popup1);
+  var popup2 = new ol.Overlay.Popup({ anim: true, closeBox: true });
+  map2.addOverlay(popup2);
+
+  function showPopup(e, popup) {
+    var feature = e.element;
+    var content = "";
+    if (!feature.get('text')) return;
+    content += "<img src='"+feature.get("img")+"'/>";
+    content += feature.get("text");
+    if (/swipe/.test(currentMode)) {
+      popup2.show(feature.getGeometry().getFirstCoordinate(), content); 
+    } else {
+      popup.show(feature.getGeometry().getFirstCoordinate(), content);
+    }
+  }
+  function hidePopup() {
+    popup1.hide(); 
+    popup2.hide(); 
+  }
+  select1.getFeatures().on('add', function(e) { showPopup(e, popup1) });
+  select2.getFeatures().on('add', function(e) { showPopup(e, popup2) });
+  select1.getFeatures().on('remove', hidePopup);
+  select2.getFeatures().on('remove', hidePopup);
+
   // Synchronize the maps 
   map.addInteraction( new ol.interaction.Synchronize({ maps: [map2] }) );
   map2.addInteraction( new ol.interaction.Synchronize({ maps: [map] }) );
@@ -165,8 +234,10 @@
   var swipe = new ol.control.Swipe({ rightLayers: map2.getLayers().getArray(),  });
 
   // Change mode
+  var currentMode;
   function setMode(mode) {
     if (mode) {
+      currentMode = mode;
       // Remove tools
       map2.removeControl(swipe);
       map2.removeInteraction(clip);
@@ -185,9 +256,29 @@
       }
       // Update position
       document.getElementById("compare").className = mode;
+      select1.getFeatures().clear();
+      select2.getFeatures().clear();
     }
     map.updateSize();
     map2.updateSize();
+    map2.on('click', function(e) {
+      if (/swipe/.test(currentMode)) {
+        if (ol.extent.containsCoordinate(swipe.getRectangle(), e.pixel)) {
+          // Simulate map1 selection
+          select2.getFeatures().clear();
+          e.stopPropagation();
+          map.forEachFeatureAtPixel(e.pixel, function(f, l) {
+            if (l) {
+              select1.getFeatures().clear();
+              select1.getFeatures().push(f)
+              return true;
+            }
+          })
+        } else {
+          select1.getFeatures().clear();
+        }
+      }
+    });
   }
 
   </script>

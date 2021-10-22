@@ -143,6 +143,19 @@ ol_control_Swipe.prototype.removeLayer = function(layers) {
   }
 };
 
+/** Get visible rectangle
+ * @returns {ol.extent}
+ */
+ol_control_Swipe.prototype.getRectangle = function() {
+  if (this.get('orientation') === 'vertical') {
+    var s = this.getMap().getSize();
+    return [ 0, 0, s[0]*this.get('position'), s[1]];
+  } else {
+    var s = this.getMap().getSize();
+    return [ 0, 0, s[0], s[1]*this.get('position')];
+  }
+};
+
 /** @private
 */
 ol_control_Swipe.prototype.move = function(e) {
@@ -171,7 +184,7 @@ ol_control_Swipe.prototype.move = function(e) {
     case 'mousemove':
     case 'touchmove': {
       if (self.isMoving) {
-        if (self.get('orientation') === "vertical") {
+        if (self.get('orientation') === 'vertical') {
           var pageX = e.pageX
             || (e.touches && e.touches.length && e.touches[0].pageX)
             || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageX);
