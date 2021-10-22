@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.12
+ * @version v3.2.13
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -4881,7 +4881,8 @@ ol.control.LayerSwitcher.prototype.overflow = function(dir) {
     if (hp > h-dh) {
       // Bug IE: need to have an height defined
       ol.ext.element.setStyle(this.element, { height: '100%' });
-      var lh = 2 * ol.ext.element.getStyle(this.panel_.querySelectorAll('li.visible .li-content')[0], 'height');
+      var li = this.panel_.querySelectorAll('li.visible .li-content')[0];
+      var lh = li ? 2 * ol.ext.element.getStyle(li, 'height') : 0;
       switch (dir) {
         case 1: top += lh; break;
         case -1: top -= lh; break;
@@ -14616,6 +14617,18 @@ ol.control.Swipe.prototype.removeLayer = function(layers) {
     }
   }
 };
+/** Get visible rectangle
+ * @returns {ol.extent}
+ */
+ol.control.Swipe.prototype.getRectangle = function() {
+  if (this.get('orientation') === 'vertical') {
+    var s = this.getMap().getSize();
+    return [ 0, 0, s[0]*this.get('position'), s[1]];
+  } else {
+    var s = this.getMap().getSize();
+    return [ 0, 0, s[0], s[1]*this.get('position')];
+  }
+};
 /** @private
 */
 ol.control.Swipe.prototype.move = function(e) {
@@ -14644,7 +14657,7 @@ ol.control.Swipe.prototype.move = function(e) {
     case 'mousemove':
     case 'touchmove': {
       if (self.isMoving) {
-        if (self.get('orientation') === "vertical") {
+        if (self.get('orientation') === 'vertical') {
           var pageX = e.pageX
             || (e.touches && e.touches.length && e.touches[0].pageX)
             || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageX);
