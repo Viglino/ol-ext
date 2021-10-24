@@ -8,7 +8,6 @@
 .ol-miniscroll .ol-scroll {
   touch-action: none;
   position: absolute;
-  top: 0;
   right: 0px;
   width: 9px;
   height: auto;

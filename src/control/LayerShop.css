@@ -30,8 +30,7 @@
   overflow: hidden;
 }
 .ol-control.ol-layer-shop .ol-scroll {
-  top: calc(4.3em + 2px);
-  background-color: #ccc;
+  background-color: rgba(0,0,0,.3);
   opacity: .5;
 }
 .ol-layerswitcher.ol-layer-shop ul.panel li.ol-header {

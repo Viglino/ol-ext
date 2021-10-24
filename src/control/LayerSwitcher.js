@@ -159,14 +159,17 @@ var ol_control_LayerSwitcher = function(options) {
   this.set('selection', options.selection);
 
   if (options.minibar) {
-    var mbar = ol_ext_element.scrollDiv(this.panelContainer_, {
-      mousewheel: true, 
-      vertical: true, 
-      minibar: true
-    });
-    this.on(['drawlist', 'toggle'], function() {
-      mbar.refresh();
-    })
+    // Wait init complete (for child classes)
+    setTimeout(function() {
+      var mbar = ol_ext_element.scrollDiv(this.panelContainer_, {
+        mousewheel: true, 
+        vertical: true, 
+        minibar: true
+      });
+      this.on(['drawlist', 'toggle'], function() {
+        mbar.refresh();
+      })
+    }.bind(this));
   }
 };
 ol_ext_inherits(ol_control_LayerSwitcher, ol_control_Control);
@@ -878,7 +881,7 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection) {
     });
     // Start dragging
     ol_ext_element.create('DIV', {
-      className: 'layerswitcher-opacity-cursor',
+      className: 'layerswitcher-opacity-cursor ol-noscroll',
       style: { left: (layer.getOpacity()*100)+"%" },
       on: {
         'mousedown touchstart': function(e) { self.dragOpacity_ (e); }
