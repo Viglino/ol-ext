@@ -36,10 +36,6 @@
     textarea:focus, input:focus, select:focus {
       outline: none;
     }
-    [data-layerClass="ol-layer-group"] .ol-bar select {
-      opacity: .5;
-      pointer-events: none;
-    }
     /* Remove opacity */
     .layerswitcher-opacity {
       display: none;
@@ -174,7 +170,7 @@
   })
   ctrl.addControl(wms, 'bottom');
 
-  // Remove button
+  // Remove layer button
   ctrl.addControl(new ol.control.Button({
     html: '<i class="fa fa-trash-o"></i>',
     title: 'Remove layer',

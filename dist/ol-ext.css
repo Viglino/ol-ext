@@ -1532,7 +1532,7 @@
           box-shadow: 0 0 0 3px rgba(255,255,255,.5);
   background-color: #fff;
   text-align: right;
-  z-index: 1;
+  z-index: 10;
 }
 .ol-control.ol-layer-shop.ol-collapsed .ol-scroll,
 .ol-control.ol-layer-shop.ol-collapsed .ol-bar {
