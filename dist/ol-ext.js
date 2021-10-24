@@ -630,7 +630,6 @@ ol.ext.element.create = function (tagName, options) {
           break;
         }
         case 'options': {
-          console.log('options', options.options)
           if (/select/i.test(tagName)) {
             for (var i in options.options) {
               ol.ext.element.create('OPTION', {
@@ -900,54 +899,18 @@ ol.ext.element.scrollDiv = function(elt, options) {
   var moving = false;
   // Factor scale content / container
   var scale, isbar;
-  // Initialize scroll container for minibar
-  var scrollContainer, scrollbar;
-  if (options.vertical && options.minibar) {
-    var init = function(b) {
-      // only once
-      elt.removeEventListener('pointermove', init);
-      elt.parentNode.classList.add('ol-miniscroll');
-      scrollbar = ol.ext.element.create('DIV');
-      scrollContainer = ol.ext.element.create('DIV', {
-        className: 'ol-scroll',
-        html: scrollbar,
-        parent: elt.parentNode
-      });
-      // Move scrollbar
-      scrollbar.addEventListener('pointerdown', function(e) {
-        isbar = true;
-        onPointerDown(e)
-      });
-      // Handle mousewheel
-      if (options.mousewheel) {
-        ol.ext.element.addListener(scrollContainer, 
-          ['mousewheel', 'DOMMouseScroll', 'onmousewheel'], 
-          function(e) { onMouseWheel(e) }
-        );
-        ol.ext.element.addListener(scrollbar, 
-          ['mousewheel', 'DOMMouseScroll', 'onmousewheel'], 
-          function(e) { onMouseWheel(e) }
-        );
-      }
-      // Update on enter
-      elt.parentNode.addEventListener('pointerenter', function() {
-        updateMinibar();
-      })
-      // Update
-      if (b!==false) updateMinibar();
-    };
-    // Allready inserted in the DOM
-    if (elt.parentNode) init(false);
-    // or wait when ready
-    else elt.addEventListener('pointermove', init);
-    // Update on scroll
-    elt.addEventListener('scroll', function() {
-      updateMinibar();
-    });
-  }
   // Update the minibar
+  var updateCounter = 0;
   var updateMinibar = function() {
     if (scrollbar) {
+      updateCounter++;
+      setTimeout(updateMinibarDelay);
+    }
+  }
+  var updateMinibarDelay = function() {
+    if (scrollbar) {
+      updateCounter--;
+      if (updateCounter) return;
       // Container height
       var style = getComputedStyle(elt);
       var pheight = parseFloat(style.height);
@@ -970,14 +933,7 @@ ol.ext.element.scrollDiv = function(elt, options) {
       else scrollContainer.classList.remove('ol-100pc');
     }
   }
-  // Enable scroll
-  elt.style['touch-action'] = 'none';
-  elt.classList.add('ol-scrolldiv');
-  // Start scrolling
-  ol.ext.element.addListener(elt, ['pointerdown'], function(e) {
-    isbar = false;
-    onPointerDown(e)
-  });
+  // Handle pointer down
   var onPointerDown = function(e) {
     // Prevent scroll
     if (e.target.classList.contains('ol-noscroll')) return;
@@ -1024,6 +980,59 @@ ol.ext.element.scrollDiv = function(elt, options) {
       }, 40);
     }
   }
+  // Initialize scroll container for minibar
+  var scrollContainer, scrollbar;
+  if (options.vertical && options.minibar) {
+    var init = function(b) {
+      // only once
+      elt.removeEventListener('pointermove', init);
+      elt.parentNode.classList.add('ol-miniscroll');
+      scrollbar = ol.ext.element.create('DIV');
+      scrollContainer = ol.ext.element.create('DIV', {
+        className: 'ol-scroll',
+        html: scrollbar
+      });
+      elt.parentNode.insertBefore(scrollContainer, elt);
+      // Move scrollbar
+      scrollbar.addEventListener('pointerdown', function(e) {
+        isbar = true;
+        onPointerDown(e)
+      });
+      // Handle mousewheel
+      if (options.mousewheel) {
+        ol.ext.element.addListener(scrollContainer, 
+          ['mousewheel', 'DOMMouseScroll', 'onmousewheel'], 
+          function(e) { onMouseWheel(e) }
+        );
+        ol.ext.element.addListener(scrollbar, 
+          ['mousewheel', 'DOMMouseScroll', 'onmousewheel'], 
+          function(e) { onMouseWheel(e) }
+        );
+      }
+      // Update on enter
+      elt.parentNode.addEventListener('pointerenter', updateMinibar);
+      // Update on resize
+      window.addEventListener('resize', updateMinibar);
+      // Update
+      if (b!==false) updateMinibar();
+    };
+    // Allready inserted in the DOM
+    if (elt.parentNode) init(false);
+    // or wait when ready
+    else elt.addEventListener('pointermove', init);
+    // Update on scroll
+    elt.addEventListener('scroll', function() {
+      updateMinibar();
+    });
+  }
+  // Enable scroll
+  elt.style['touch-action'] = 'none';
+  elt.classList.add('ol-scrolldiv');
+  // Start scrolling
+  ol.ext.element.addListener(elt, ['pointerdown'], function(e) {
+    isbar = false;
+    onPointerDown(e)
+  });
   // Prevet click when moving...
   elt.addEventListener('click', function(e) {
     if (elt.classList.contains('ol-move')) {
@@ -4775,14 +4784,17 @@ ol.control.LayerSwitcher = function(options) {
   this.set('drawDelay',options.drawDelay||0);
   this.set('selection', options.selection);
   if (options.minibar) {
-    var mbar = ol.ext.element.scrollDiv(this.panelContainer_, {
-      mousewheel: true, 
-      vertical: true, 
-      minibar: true
-    });
-    this.on(['drawlist', 'toggle'], function() {
-      mbar.refresh();
-    })
+    // Wait init complete (for child classes)
+    setTimeout(function() {
+      var mbar = ol.ext.element.scrollDiv(this.panelContainer_, {
+        mousewheel: true, 
+        vertical: true, 
+        minibar: true
+      });
+      this.on(['drawlist', 'toggle'], function() {
+        mbar.refresh();
+      })
+    }.bind(this));
   }
 };
 ol.ext.inherits(ol.control.LayerSwitcher, ol.control.Control);
@@ -5442,7 +5454,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection) {
     });
     // Start dragging
     ol.ext.element.create('DIV', {
-      className: 'layerswitcher-opacity-cursor',
+      className: 'layerswitcher-opacity-cursor ol-noscroll',
       style: { left: (layer.getOpacity()*100)+"%" },
       on: {
         'mousedown touchstart': function(e) { self.dragOpacity_ (e); }
