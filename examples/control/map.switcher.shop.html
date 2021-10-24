@@ -161,13 +161,13 @@
       'OSM': 'https://wms.openstreetmap.fr/wms',
       'OSM-Mundialis': 'https://ows.mundialis.de/services/service',
       'CorineLandCover': 'https://wxs.ign.fr/corinelandcover/geoportail/r/wms'
+    },
+    onselect: function(layer) {
+      var index = map.getLayers().getArray().indexOf(ctrl.getSelection());
+      map.getLayers().insertAt(index+1, layer);
+      ctrl.selectLayer(layer);
     }
   });
-  wms.on('load', function(e) {
-    var index = map.getLayers().getArray().indexOf(ctrl.getSelection());
-    map.getLayers().insertAt(index+1, e.layer);
-    ctrl.selectLayer(e.layer);
-  })
   ctrl.addControl(wms, 'bottom');
 
   // Remove layer button
@@ -182,18 +182,18 @@
   // Info dialogue
   var dlg = new ol.control.Dialog({ closeBox: true, hideOnBack: true });
   map.addControl(dlg);
+  // Show info
   ctrl.addControl(new ol.control.Button({
     html: '<i class="fa fa-info-circle"></i>',
     title: 'Information',
     handleClick: function() {
       var d = $('<div>');
       var layer = ctrl.getSelection();
-      console.log(layer.getProperties())
       if (layer) {
         $('<h2>').text(layer.get('title')).appendTo(d);
         $('<p>').text(layer.get('desc') || layer.get('abstract')).appendTo(d);
         if (layer.getSource && layer.getSource()) {
-          $('<div>').html(layer.getSource().getAttributions()()[0]).appendTo(d);
+          $('<div>').html(layer.getSource().getAttributions()().join('<br/>')).appendTo(d);
         }
         dlg.show(d.get(0));
       }
@@ -210,6 +210,7 @@
     overlay: new ol.filter.CSS({ blend: 'overlay' })
   };
   clc.addFilter(blendFilter.multiply);
+  // Add selector
   var blend = ol.ext.element.create('SELECT', { 
     options: {
       'Mode' : '',
@@ -228,6 +229,7 @@
     },
     parent: ctrl.getBarElement()
   });
+  // Update filter on select layer
   ctrl.on('select', function(e) {
     blend.value = '';
     for (var i in blendFilter) {
@@ -251,11 +253,13 @@
     },
     parent: ctrl.getBarElement()
   });
+  // Update filter on select layer
   ctrl.on('select', function(e) {
     if (ctrl.getSelection().getFilters().indexOf(filter) < 0) sel.value = 'normal';
     else sel.value = 'grayscale';
   });
 
+  // Opacity slider
   var opacity = new ol.ext.input.Slider({
     className: 'opacity',
     align: 'right',

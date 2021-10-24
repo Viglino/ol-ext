@@ -33,6 +33,7 @@ import '../layer/GetPreview';
  *  @param {number} options.timeout Timeout for getCapabilities request, default 1000
  *  @param {boolean} options.cors Use CORS, default false
  *  @param {boolean} options.trace Log layer info, default false
+ *  @param {function} [options.onselect] callback function that takes a layer and layer options on select layer
  */
 var ol_control_WMSCapabilities = function (options) {
   options = options || {};
@@ -96,6 +97,13 @@ var ol_control_WMSCapabilities = function (options) {
   this._ajax.on('loadend', function() {
     this._elements.element.classList.remove('ol-searching');
   }.bind(this));
+
+  // Load a layer
+  if (options.onselect) {
+    this.on('load', function(e) { 
+      options.onselect(e.layer, e.options); 
+    });
+  }
 };
 ol_ext_inherits(ol_control_WMSCapabilities, ol_control_Button);
 
