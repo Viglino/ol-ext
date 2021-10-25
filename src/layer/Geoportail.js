@@ -60,7 +60,6 @@ var ol_layer_Geoportail = function(layer, options, tileoptions) {
   if (!options.extent && capabilities.bbox) {
     if (capabilities.bbox[0]>-170 && capabilities.bbox[2]<170) {
       options.extent = ol_proj_transformExtent(capabilities.bbox, 'EPSG:4326', options.projection || 'EPSG:3857');
-      this.set('extent', options.extent);
     }
   }
   options.maxZoom = maxZoom;
