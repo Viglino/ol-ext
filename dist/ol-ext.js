@@ -15744,7 +15744,7 @@ ol.control.VideoRecorder.prototype.resume = function () {
  *  @param {number} options.timeout Timeout for getCapabilities request, default 1000
  *  @param {boolean} options.cors Use CORS, default false
  *  @param {boolean} options.trace Log layer info, default false
- *  @param {function} [options.onselect] callback function that take a layer and layer options on select layer
+ *  @param {function} [options.onselect] callback function that takes a layer and layer options on select layer
  */
 ol.control.WMSCapabilities = function (options) {
   options = options || {};
@@ -29908,7 +29908,6 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
   if (!options.extent && capabilities.bbox) {
     if (capabilities.bbox[0]>-170 && capabilities.bbox[2]<170) {
       options.extent = ol.proj.transformExtent(capabilities.bbox, 'EPSG:4326', options.projection || 'EPSG:3857');
-      this.set('extent', options.extent);
     }
   }
   options.maxZoom = maxZoom;
