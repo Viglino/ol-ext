@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.13
+ * @version v3.2.14
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -6480,6 +6480,7 @@ ol.control.Compass.prototype._draw = function(e) {
  *  @param {string} options.className
  *  @param {ol.Map} options.map the map to place the dialog inside
  *  @param {Element} options.target target to place the dialog
+ *  @param {boolean} options.fullscreen view dialog fullscreen (same as options.target = document.body)
  *  @param {boolean} options.zoom add a zoom effect
  *  @param {boolean} options.closeBox add a close button
  *  @param {number} options.max if not null add a progress bar to the dialog, default null
@@ -6489,10 +6490,12 @@ ol.control.Compass.prototype._draw = function(e) {
  */
 ol.control.Dialog = function(options) {
   options = options || {};
+  if (options.fullscreen) options.target = document.body;
   // Constructor
   var element = ol.ext.element.create('DIV', {
     className: ((options.className || '') + (options.zoom ? ' ol-zoom':'') + ' ol-ext-dialog').trim(),
     click: function(e) {
+      console.log('click', this.getProperties())
       if (this.get('hideOnBack') && e.target===element) this.close();
       if (this.get('hideOnClick')) this.close();
     }.bind(this)
@@ -6551,12 +6554,15 @@ ol.ext.inherits(ol.control.Dialog, ol.control.Control);
  *  @param {Element | String} options.content dialog content
  *  @param {string} options.title title of the dialog
  *  @param {string} options.className dialog class name
+ *  @param {number} options.autoclose a delay in ms before auto close
+ *  @param {boolean} options.hideOnBack close dialog when click the background
  *  @param {number} options.max if not null add a progress bar to the dialog
  *  @param {number} options.progress set the progress bar value
  *  @param {Object} options.buttons a key/value list of button to show 
  *  @param {function} [options.onButton] a function that takes the button id and a list of input by className
  */
 ol.control.Dialog.prototype.show = function(options) {
+  options = options || {};
   if (options instanceof Element || typeof(options) === 'string') {
     options = { content: options };
   }
@@ -6565,6 +6571,19 @@ ol.control.Dialog.prototype.show = function(options) {
   var input = this.element.querySelector('input[type="text"],input[type="search"],input[type="number"]');
   if (input) input.focus();
   this.dispatchEvent ({ type: 'show' });
+  // Auto close
+  if (options.autoclose) {
+    var listener = setTimeout(function() { this.hide() }.bind(this), options.autoclose);
+    dialog.once('hide', function(){ clearTimeout(listener); });
+  }
+  // hideOnBack
+  if (options.hideOnBack) {
+    var value = this.get('hideOnBack');
+    this.set('hideOnBack', true);
+    this.once('hide', function() {
+      dialog.set('hideOnBack', value);
+    }.bind(this));
+  }
 };
 /** Open the dialog
  */

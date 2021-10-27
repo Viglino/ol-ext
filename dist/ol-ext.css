@@ -309,14 +309,14 @@
   opacity: 0;
   background-color: rgba(0,0,0,.5);
   z-index: 1000;
-  pointer-events: none;
+  pointer-events: none!important;
   -webkit-transition: opacity .2s, top 0s .2s;
   transition: opacity .2s, top 0s .2s;
 }
 .ol-ext-dialog.ol-visible {
   opacity: 1;
   top: 0;
-  pointer-events: auto;
+  pointer-events: all!important;
   -webkit-transition: opacity .2s, top 0s;
   transition: opacity .2s, top 0s;
 }
@@ -327,6 +327,9 @@
 .ol-ext-dialog > form > h2 {
   margin: 0 .5em .5em 0;
   display: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .ol-ext-dialog > form.ol-title > h2 {
   display: block;
@@ -367,15 +370,15 @@
 
 .ol-ext-dialog.ol-zoom > form {
   top: 30%;
-  -webkit-transform: translate(-30%, -50%) scale(0);
-          transform: translate(-30%, -50%) scale(0);
+  -webkit-transform: translate(-50%, -30%) scale(0);
+          transform: translate(-50%, -30%) scale(0);
 }
 .ol-ext-dialog.ol-visible > form {
   top: 30%;
 }
 .ol-ext-dialog.ol-zoom.ol-visible > form {
-  -webkit-transform: translate(-30%, -50%) scale(1);
-          transform: translate(-30%, -50%) scale(1);
+  -webkit-transform: translate(-50%, -30%) scale(1);
+          transform: translate(-50%, -30%) scale(1);
 }
 
 .ol-ext-dialog > form .ol-content {
@@ -482,6 +485,11 @@
 .ol-ext-dialog.ol-fullscreen-dialog img,
 .ol-ext-dialog.ol-fullscreen-dialog video {
   max-width: 100%;
+}
+
+/* Fullscreen dialog */
+body > .ol-ext-dialog .ol-content {
+  max-height: calc(100vh - 10em);
 }
 .ol-editbar .ol-button button {
   position: relative;
