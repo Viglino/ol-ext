@@ -5,6 +5,9 @@
   opacity: .5;
   transition: opacity 1s;
 }
+.ol-miniscroll .ol-scrolldiv {
+  overflow: hidden!important;
+}
 .ol-miniscroll .ol-scroll {
   touch-action: none;
   position: absolute;

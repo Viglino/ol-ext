@@ -71,6 +71,7 @@
 
 .ol-ext-dialog > form .ol-content {
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .ol-ext-dialog > form .ol-closebox {
