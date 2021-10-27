@@ -24,6 +24,7 @@ var ol_control_Dialog = function(options) {
   var element = ol_ext_element.create('DIV', {
     className: ((options.className || '') + (options.zoom ? ' ol-zoom':'') + ' ol-ext-dialog').trim(),
     click: function(e) {
+      console.log('click', this.getProperties())
       if (this.get('hideOnBack') && e.target===element) this.close();
       if (this.get('hideOnClick')) this.close();
     }.bind(this)
@@ -84,12 +85,15 @@ ol_ext_inherits(ol_control_Dialog, ol_control_Control);
  *  @param {Element | String} options.content dialog content
  *  @param {string} options.title title of the dialog
  *  @param {string} options.className dialog class name
+ *  @param {number} options.autoclose a delay in ms before auto close
+ *  @param {boolean} options.hideOnBack close dialog when click the background
  *  @param {number} options.max if not null add a progress bar to the dialog
  *  @param {number} options.progress set the progress bar value
  *  @param {Object} options.buttons a key/value list of button to show 
  *  @param {function} [options.onButton] a function that takes the button id and a list of input by className
  */
 ol_control_Dialog.prototype.show = function(options) {
+  options = options || {};
   if (options instanceof Element || typeof(options) === 'string') {
     options = { content: options };
   }
@@ -98,6 +102,19 @@ ol_control_Dialog.prototype.show = function(options) {
   var input = this.element.querySelector('input[type="text"],input[type="search"],input[type="number"]');
   if (input) input.focus();
   this.dispatchEvent ({ type: 'show' });
+  // Auto close
+  if (options.autoclose) {
+    var listener = setTimeout(function() { this.hide() }.bind(this), options.autoclose);
+    dialog.once('hide', function(){ clearTimeout(listener); });
+  }
+  // hideOnBack
+  if (options.hideOnBack) {
+    var value = this.get('hideOnBack');
+    this.set('hideOnBack', true);
+    this.once('hide', function() {
+      dialog.set('hideOnBack', value);
+    }.bind(this));
+  }
 };
 
 /** Open the dialog

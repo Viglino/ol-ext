@@ -55,7 +55,7 @@
     <h1>ol-ext: Dialog</h1>
   </a>
   <div class="info">
-    A convenient vay to display dialog on a map.
+    <i>ol/control/Dialog</i> is a convenient vay to display dialog on a map.
     <ul>
       <li>
         Dialog has a dropdown or zoom effect
@@ -95,6 +95,8 @@
       <button onclick="if (!dialogProgress.isOpen()) dialogProgress.show({ progress : 0 })">Show a progress dialog...</button>
     </li><li>
       <button onclick="alert.show('This is an alert!<br/>Nothing goes wrong...')">Show an alert!</button>
+    </li><li>
+      <button onclick="dlarg.show({ content: lorem, title: 'Large dialog', closeBox: true, buttons:['ok','cancel'] })">Large dialog</button>
     </li></ul>
     <p>
     </p>
@@ -182,6 +184,11 @@
   var alert = new ol.control.Dialog({ className: 'alert', hideOnClick: true, closeBox: true });
   map.addControl(alert);
 
+  // Large dialog
+  var dlarg = new ol.control.Dialog({ target: document.body, zoom: true, closeBox: true });
+  map.addControl(dlarg);
+  var lorem = "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed quis massa leo. Sed tempor tristique ligula non tempus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. In eget varius urna. Maecenas dapibus, metus vitae pellentesque gravida, dolor nisi vehicula arcu, vel tincidunt metus arcu tincidunt lectus. Praesent id auctor risus. Nam id molestie tellus, id aliquam ante. Proin imperdiet, velit sed aliquet tempor, libero felis lobortis nisl, vel pretium purus lectus ut velit. Pellentesque vitae luctus mauris. Suspendisse eros magna, vulputate eu ornare id, dictum at mi. Etiam et viverra erat. Maecenas sed elementum lorem, eget posuere quam.</p>";
+  lorem = lorem+lorem+lorem+lorem+lorem+lorem+lorem+lorem+lorem+lorem;
   </script>
   
 </body>
