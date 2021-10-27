@@ -460,6 +460,7 @@ ol_ext_element.scrollDiv = function(elt, options) {
 
   // Enable scroll
   elt.style['touch-action'] = 'none';
+  elt.style['overflow'] = 'hidden';
   elt.classList.add('ol-scrolldiv');
   
   // Start scrolling

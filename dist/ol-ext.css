@@ -5781,9 +5781,6 @@ ul.ol-legend li div {
   -webkit-transition: opacity 1s;
   transition: opacity 1s;
 }
-.ol-miniscroll .ol-scrolldiv {
-  overflow: hidden!important;
-}
 .ol-miniscroll .ol-scroll {
   -ms-touch-action: none;
       touch-action: none;
