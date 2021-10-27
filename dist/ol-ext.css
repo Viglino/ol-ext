@@ -383,6 +383,7 @@
 
 .ol-ext-dialog > form .ol-content {
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .ol-ext-dialog > form .ol-closebox {
@@ -5779,6 +5780,9 @@ ul.ol-legend li div {
   opacity: .5;
   -webkit-transition: opacity 1s;
   transition: opacity 1s;
+}
+.ol-miniscroll .ol-scrolldiv {
+  overflow: hidden!important;
 }
 .ol-miniscroll .ol-scroll {
   -ms-touch-action: none;

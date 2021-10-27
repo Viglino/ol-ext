@@ -910,19 +910,12 @@ ol.ext.element.scrollDiv = function(elt, options) {
   var updateMinibarDelay = function() {
     if (scrollbar) {
       updateCounter--;
+      // Prevent multi call
       if (updateCounter) return;
       // Container height
-      var style = getComputedStyle(elt);
-      var pheight = parseFloat(style.height);
+      var pheight = elt.clientHeight;
       // Content height
-      var height = 0; // parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
-      var children = elt.children;
-      for (var i=0; i<children.length; i++) {
-        style = getComputedStyle(children[i]);
-        height += parseFloat(style.height);
-        height += parseFloat(style.marginTop) + parseFloat(style.marginBottom);
-        height += parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
-      }
+      var height = elt.scrollHeight;
       // Set scrollbar value
       scale = pheight / height;
       scrollbar.style.height = scale * 100 + '%';
