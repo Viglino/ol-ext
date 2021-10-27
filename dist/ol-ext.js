@@ -6495,7 +6495,6 @@ ol.control.Dialog = function(options) {
   var element = ol.ext.element.create('DIV', {
     className: ((options.className || '') + (options.zoom ? ' ol-zoom':'') + ' ol-ext-dialog').trim(),
     click: function(e) {
-      console.log('click', this.getProperties())
       if (this.get('hideOnBack') && e.target===element) this.close();
       if (this.get('hideOnClick')) this.close();
     }.bind(this)
