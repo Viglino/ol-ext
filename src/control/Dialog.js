@@ -11,6 +11,7 @@ import ol_ext_element from '../util/element'
  *  @param {string} options.className
  *  @param {ol.Map} options.map the map to place the dialog inside
  *  @param {Element} options.target target to place the dialog
+ *  @param {boolean} options.fullscreen view dialog fullscreen (same as options.target = document.body)
  *  @param {boolean} options.zoom add a zoom effect
  *  @param {boolean} options.closeBox add a close button
  *  @param {number} options.max if not null add a progress bar to the dialog, default null
@@ -20,6 +21,7 @@ import ol_ext_element from '../util/element'
  */
 var ol_control_Dialog = function(options) {
   options = options || {};
+  if (options.fullscreen) options.target = document.body;
   // Constructor
   var element = ol_ext_element.create('DIV', {
     className: ((options.className || '') + (options.zoom ? ' ol-zoom':'') + ' ol-ext-dialog').trim(),
