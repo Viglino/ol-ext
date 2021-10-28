@@ -6567,14 +6567,17 @@ ol.control.Dialog.prototype.show = function(options) {
   // Auto close
   if (options.autoclose) {
     var listener = setTimeout(function() { this.hide() }.bind(this), options.autoclose);
-    dialog.once('hide', function(){ clearTimeout(listener); });
+    this.once('hide', function(){ 
+      clearTimeout(listener); 
+    });
   }
   // hideOnBack
   if (options.hideOnBack) {
+    // save value
     var value = this.get('hideOnBack');
     this.set('hideOnBack', true);
     this.once('hide', function() {
-      dialog.set('hideOnBack', value);
+      this.set('hideOnBack', value);
     }.bind(this));
   }
 };
@@ -6670,9 +6673,10 @@ ol.control.Dialog.prototype.setProgress = function(val, max) {
     ol.ext.element.setStyle(this._progressbar, { width: p+'%' })
   }
 };
-/** Do something on button click
+/** Returns a function to do something on button click
  * @param {strnig} button button id
  * @param {function} callback
+ * @returns {function}
  * @private
  */
 ol.control.Dialog.prototype._onButton = function(button, callback) {
