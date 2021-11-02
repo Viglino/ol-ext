@@ -28,6 +28,7 @@ var ol_filter_Lego = function(options) {
   this.pattern = {
     canvas: document.createElement('canvas')
   };
+
   this.setBrick (options.brickSize, img);
   this.internal_ = document.createElement('canvas');
 }
@@ -47,7 +48,7 @@ ol_filter_Lego.prototype.img = {
 */
 ol_filter_Lego.prototype.set = function (key, val) {
   ol_filter_Base.prototype.set.call(this, key, val);
-  if (key=="brickSize" && this.pattern.canvas.width!=val) {
+  if (key=="brickSize" && this.pattern && this.pattern.canvas.width!=val) {
     this.setBrick(val);
   }
 }

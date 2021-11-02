@@ -357,27 +357,26 @@ ol_control_Permalink.prototype.layerChange_ = function() {
   if (this._tout) {
     clearTimeout(this._tout);
     this._tout = null;
-  } else {
-    this._tout = setTimeout(function() {
-      this._tout = null;
-      // Get layers
-      var l = "";
-      function getLayers(layers) {
-        for (var i=0; i<layers.length; i++) {
-          if (layers[i].getVisible() && layers[i].get("permalink")) {
-            if (l) l += "|";
-            l += layers[i].get("permalink")+":"+layers[i].get("opacity");
-          }
-          // Layer Group
-          if (layers[i].getLayers) getLayers(layers[i].getLayers().getArray());
-        }
-      }
-      getLayers(this.getMap().getLayers().getArray());
-      this.layerStr_ = l;
-
-      this.viewChange_();
-    }.bind(this), 200);
   }
+  this._tout = setTimeout(function() {
+    this._tout = null;
+    // Get layers
+    var l = "";
+    function getLayers(layers) {
+      for (var i=0; i<layers.length; i++) {
+        if (layers[i].getVisible() && layers[i].get("permalink")) {
+          if (l) l += "|";
+          l += layers[i].get("permalink")+":"+layers[i].get("opacity");
+        }
+        // Layer Group
+        if (layers[i].getLayers) getLayers(layers[i].getLayers().getArray());
+      }
+    }
+    getLayers(this.getMap().getLayers().getArray());
+    this.layerStr_ = l;
+
+    this.viewChange_();
+  }.bind(this), 200);
 };
 
 export default ol_control_Permalink
