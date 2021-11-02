@@ -10235,26 +10235,25 @@ ol.control.Permalink.prototype.layerChange_ = function() {
   if (this._tout) {
     clearTimeout(this._tout);
     this._tout = null;
-  } else {
-    this._tout = setTimeout(function() {
-      this._tout = null;
-      // Get layers
-      var l = "";
-      function getLayers(layers) {
-        for (var i=0; i<layers.length; i++) {
-          if (layers[i].getVisible() && layers[i].get("permalink")) {
-            if (l) l += "|";
-            l += layers[i].get("permalink")+":"+layers[i].get("opacity");
-          }
-          // Layer Group
-          if (layers[i].getLayers) getLayers(layers[i].getLayers().getArray());
-        }
-      }
-      getLayers(this.getMap().getLayers().getArray());
-      this.layerStr_ = l;
-      this.viewChange_();
-    }.bind(this), 200);
   }
+  this._tout = setTimeout(function() {
+    this._tout = null;
+    // Get layers
+    var l = "";
+    function getLayers(layers) {
+      for (var i=0; i<layers.length; i++) {
+        if (layers[i].getVisible() && layers[i].get("permalink")) {
+          if (l) l += "|";
+          l += layers[i].get("permalink")+":"+layers[i].get("opacity");
+        }
+        // Layer Group
+        if (layers[i].getLayers) getLayers(layers[i].getLayers().getArray());
+      }
+    }
+    getLayers(this.getMap().getLayers().getArray());
+    this.layerStr_ = l;
+    this.viewChange_();
+  }.bind(this), 200);
 };
 
 /*
@@ -18431,6 +18430,84 @@ ol.filter.Fold.prototype.postcompose = function(e) {
  * @extends {ol.filter.Base}
  * @param {Object} [options]
  *  @param {string} [options.img]
+ *  @param {number} [options.size] point size, default 30
+ *  @param {null | string | undefined} [options.crossOrigin] crossOrigin attribute for loaded images.
+ */
+ol.filter.Halftone = function(options) {
+  if (!options) options = {};
+  ol.filter.Base.call(this, options);
+  this.internal_ = document.createElement('canvas');
+  this.setSize(options.size);
+  document.body.appendChild(this.internal_)
+}
+ol.ext.inherits(ol.filter.Halftone, ol.filter.Base);
+/** Set the current size
+*	@param {number} width the pattern width, default 30
+*/
+ol.filter.Halftone.prototype.setSize = function (size) {
+  size = Number(size) || 30;
+  this.set("size", size);
+};
+/** Postcompose operation
+*/
+ol.filter.Halftone.prototype.postcompose = function(e) {
+  var ctx = e.context;
+  var canvas = ctx.canvas;
+  var ratio = e.frameState.pixelRatio;
+  // ol v6+
+  if (e.type === 'postrender') {
+    ratio = 1;
+  }
+  ctx.save();
+    // resize 
+    var step = this.get('size')*ratio;
+    var p = e.frameState.extent;
+    var res = e.frameState.viewState.resolution/ratio;
+    var offset = [ -Math.round((p[0]/res)%step), Math.round((p[1]/res)%step) ];
+    var ctx2 = this.internal_.getContext("2d");
+    var w = this.internal_.width = canvas.width;
+    var h = this.internal_.height = canvas.height;
+    // No smoothing please
+    ctx2.webkitImageSmoothingEnabled =
+    ctx2.mozImageSmoothingEnabled =
+    ctx2.msImageSmoothingEnabled =
+    ctx2.imageSmoothingEnabled = false;
+    var w2 = Math.floor((w-offset[0])/step);
+    var h2 = Math.floor((h-offset[1])/step);
+    ctx2.drawImage (canvas, offset[0], offset[1], w2*step, h2*step, 0, 0, w2, h2);
+    var data = ctx2.getImageData(0, 0, w2,h2).data;
+    //
+    ctx.webkitImageSmoothingEnabled =
+    ctx.mozImageSmoothingEnabled =
+    ctx.msImageSmoothingEnabled =
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage (this.internal_, 0,0, w2,h2, offset[0],offset[1], w2*step, h2*step);
+    ctx.fillStyle = this.get('color') || '#000';
+    // Draw tone
+    ctx.clearRect (0, 0, w,h);  
+    for (var x=0; x<w2; x++) for (var y=0; y<h2; y++) {
+      var pix = ol.color.toHSL([data[x*4+y*w2*4], data[x*4+1+y*w2*4], data[x*4+2+y*w2*4]]);
+      var l = (100-pix[2])/140;
+      if (l) {
+        ctx.beginPath();
+        ctx.arc(offset[0]+step/2+x*step, offset[1]+step/2+y*step, step*l, 0, 2 * Math.PI);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+  ctx.restore();
+};
+
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Make a map or layer look like made of a set of Lego bricks.
+ *  @constructor
+ * @requires ol.filter
+ * @extends {ol.filter.Base}
+ * @param {Object} [options]
+ *  @param {string} [options.img]
  *  @param {number} [options.brickSize] size of te brick, default 30
  *  @param {null | string | undefined} [options.crossOrigin] crossOrigin attribute for loaded images.
  */
@@ -18462,7 +18539,7 @@ ol.filter.Lego.prototype.img = {
 */
 ol.filter.Lego.prototype.set = function (key, val) {
   ol.filter.Base.prototype.set.call(this, key, val);
-  if (key=="brickSize" && this.pattern.canvas.width!=val) {
+  if (key=="brickSize" && this.pattern && this.pattern.canvas.width!=val) {
     this.setBrick(val);
   }
 }
@@ -36206,8 +36283,8 @@ ol.style.FillPattern.prototype.patterns = {
  * NB: the FlowLine style doesn't impress the hit-detection.
  * If you want your lines to be sectionable you have to add your own style to handle this.
  * (with transparent line: stroke color opacity to .1 or zero width)
- * @extends {ol.style.Style}
  * @constructor
+ * @extends {ol.style.Style}
  * @param {Object} options
  *  @param {boolean} options.visible draw only the visible part of the line, default true
  *  @param {number|function} options.width Stroke width or a function that gets a feature and the position (beetween [0,1]) and returns current width
