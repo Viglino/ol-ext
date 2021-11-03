@@ -12,7 +12,7 @@ import ol_ext_input_Base from './Base'
  *  @param {ol.colorLike} [options.color] default color
  *  @param {Element} [options.input] input element, if non create one
  *  @param {Element} [options.parent] parent element, if create an input
- *  @param {boolean} [options.fixed=false] don't use a popup, default use a popup
+ *  @param {string} [options.position='popup'] fixed | popup | inline (no popup)
  *  @param {boolean} [options.autoClose=true] close when click on color
  *  @param {boolean} [options.hidden=false] display the input
  */
@@ -27,7 +27,16 @@ var ol_ext_input_PopupBase = function(options) {
   this.element = ol_ext_element.create('DIV', {
     className: ('ol-ext-popup-input '  + (options.className || '')).trim(),
   });
-  if (!options.fixed) this.element.classList.add('ol-popup');
+  switch (options.position) {
+    case 'inline': break;
+    case 'fixed': {
+      this.element.classList.add('ol-popup-fixed');
+    }
+    default: {
+      this.element.classList.add('ol-popup');
+      break;
+    }
+  }
 
   var input = this.input;
   if (input.parentNode) input.parentNode.insertBefore(this.element, input);
@@ -66,6 +75,19 @@ ol_ext_input_PopupBase.prototype.collapse = function(b) {
     this._elt.popup.classList.remove('ol-visible');
   } else {
     this._elt.popup.classList.add('ol-visible');
+    var pos = ol_ext_element.positionRect(this.element, true);
+    var dh = pos.bottom + this._elt.popup.offsetHeight;
+    if (dh > window.innerHeight) {
+      this._elt.popup.style.top = Math.max(window.innerHeight - this._elt.popup.offsetHeight, 0) + 'px';
+    } else {
+      this._elt.popup.style.top = pos.bottom + 'px';
+    }
+    var dw = pos.left + this._elt.popup.offsetWidth;
+    if (dw > window.innerWidth) {
+      this._elt.popup.style.left = Math.max(window.innerWidth - this._elt.popup.offsetWidth, 0) + 'px';
+    } else {
+      this._elt.popup.style.left = pos.left + 'px';
+    }
   }
 };
 

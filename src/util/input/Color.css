@@ -1,5 +1,4 @@
 .ol-ext-colorpicker.ol-popup {
-  color: transparent;
   width: 2em;
   height: 1.5em;
   background-color: transparent;
@@ -8,6 +7,51 @@
     linear-gradient(45deg, #aaa 25%, transparent 25%, transparent 75%, #aaa 75%);
   background-size: 10px 10px;
   background-position: 0 -1px, 5px 4px;
+}
+
+.ol-ext-colorpicker .ol-tabbar {
+  background-color: #eee;
+  border-bottom: 1px solid #999;
+  display: none;
+}
+.ol-ext-colorpicker.ol-tab .ol-tabbar {
+  display: block;
+}
+
+.ol-ext-colorpicker .ol-tabbar > div {
+  display: inline-block;
+  background-color: #fff;
+  padding: 0 .5em;
+  border: 1px solid #999;
+  border-radius: 2px 2px 0 0;
+  position: relative;
+  top: 1px;
+  cursor: pointer;
+}
+.ol-ext-colorpicker .ol-tabbar > div:nth-child(1) {
+  border-bottom-color: #fff;
+}
+.ol-ext-colorpicker.ol-picker-tab .ol-tabbar > div:nth-child(1) {
+  border-bottom-color: #999;
+}
+.ol-ext-colorpicker.ol-picker-tab .ol-tabbar > div:nth-child(2) {
+  border-bottom-color: #fff;
+}
+
+.ol-ext-colorpicker.ol-popup.ol-tab .ol-popup {
+  width: 180px;
+}
+.ol-ext-colorpicker.ol-tab .ol-palette {
+  margin: 0 10px;
+}
+.ol-ext-colorpicker.ol-tab .ol-container {
+  display: none;
+}
+.ol-ext-colorpicker.ol-tab.ol-picker-tab .ol-container {
+  display: block;
+}
+.ol-ext-colorpicker.ol-tab.ol-picker-tab .ol-palette {
+  display: none;
 }
 
 .ol-ext-colorpicker.ol-popup .ol-popup {
@@ -131,6 +175,14 @@
 }
 .ol-ext-colorpicker .ol-clear:after {
   transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.ol-ext-colorpicker.ol-nopacity .ol-slider,
+.ol-ext-colorpicker.ol-nopacity .ol-clear {
+  display: none;
+}
+.ol-ext-colorpicker.ol-nopacity .ol-alpha {
+  display: none;
 }
 
 .ol-ext-colorpicker .ol-rgb {
