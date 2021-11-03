@@ -876,6 +876,35 @@ ol.ext.element.offsetRect = function(elt) {
     width: rect.width || (rect.right - rect.left)
   }
 };
+/** Get element offset rect
+ * @param {DOMElement} elt
+ * @param {boolean} fixed get fixed position
+ * @return {Object} 
+ */
+ol.ext.element.positionRect = function(elt, fixed) {
+  var gleft = 0;
+  var gtop = 0;
+  var getRect = function( parent ) {
+    if (!!parent) {
+      gleft += parent.offsetLeft;
+      gtop += parent.offsetTop;
+      return getRect(parent.offsetParent);
+    } else {
+      var r = {
+        top: elt.offsetTop + gtop,
+        left: elt.offsetLeft + gleft
+      };
+      if (fixed) {
+        r.top -= (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0);
+        r.left -= (window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft || 0);
+      }
+      r.bottom = r.top + elt.offsetHeight;
+      r.right = r.top + elt.offsetWidth;
+      return r;
+    }
+  }; 
+  return getRect(elt.offsetParent);
+}
 /** Make a div scrollable without scrollbar.
  * On touch devices the default behavior is preserved
  * @param {DOMElement} elt
@@ -2089,7 +2118,7 @@ ol.ext.inherits(ol.ext.input.Slider, ol.ext.input.Base);
  *  @param {ol.colorLike} [options.color] default color
  *  @param {Element} [options.input] input element, if non create one
  *  @param {Element} [options.parent] parent element, if create an input
- *  @param {boolean} [options.fixed=false] don't use a popup, default use a popup
+ *  @param {string} [options.position='popup'] fixed | popup | inline (no popup)
  *  @param {boolean} [options.autoClose=true] close when click on color
  *  @param {boolean} [options.hidden=false] display the input
  */
@@ -2101,7 +2130,16 @@ ol.ext.input.PopupBase = function(options) {
   this.element = ol.ext.element.create('DIV', {
     className: ('ol-ext-popup-input '  + (options.className || '')).trim(),
   });
-  if (!options.fixed) this.element.classList.add('ol-popup');
+  switch (options.position) {
+    case 'inline': break;
+    case 'fixed': {
+      this.element.classList.add('ol-popup-fixed');
+    }
+    default: {
+      this.element.classList.add('ol-popup');
+      break;
+    }
+  }
   var input = this.input;
   if (input.parentNode) input.parentNode.insertBefore(this.element, input);
   this.element.addEventListener('click', function() {
@@ -2134,6 +2172,19 @@ ol.ext.input.PopupBase.prototype.collapse = function(b) {
     this._elt.popup.classList.remove('ol-visible');
   } else {
     this._elt.popup.classList.add('ol-visible');
+    var pos = ol.ext.element.positionRect(this.element, true);
+    var dh = pos.bottom + this._elt.popup.offsetHeight;
+    if (dh > window.innerHeight) {
+      this._elt.popup.style.top = Math.max(window.innerHeight - this._elt.popup.offsetHeight, 0) + 'px';
+    } else {
+      this._elt.popup.style.top = pos.bottom + 'px';
+    }
+    var dw = pos.left + this._elt.popup.offsetWidth;
+    if (dw > window.innerWidth) {
+      this._elt.popup.style.left = Math.max(window.innerWidth - this._elt.popup.offsetWidth, 0) + 'px';
+    } else {
+      this._elt.popup.style.left = pos.left + 'px';
+    }
   }
 };
 /** Is the popup collapsed ?
@@ -2194,19 +2245,44 @@ ol.ext.input.Checkbox.prototype.isChecked = function () {
  *  @param {ol.colorLike} [options.color] default color
  *  @param {Element} [options.input] input element, if non create one
  *  @param {Element} [options.parent] parent element, if create an input
- *  @param {boolean} [options.fixed=false] don't use a popup, default use a popup
+ *  @param {boolean} [options.hastab=false] use tabs for palette / picker
+ *  @param {string} [options.paletteLabel="palette"] label for the palette tab
+ *  @param {string} [options.pickerLabel="picker"] label for the picker tab
+ *  @param {string} [options.position='popup'] fixed | popup | inline (no popup)
+ *  @param {boolean} [options.opacity=true] enable opacity
  *  @param {boolean} [options.autoClose=true] close when click on color
  *  @param {boolean} [options.hidden=true] display the input
  */
 ol.ext.input.Color = function(options) {
   options = options || {};
   options.hidden = options.hidden!==false;
-  options.className = ('ol-ext-colorpicker '  + (options.className || '')).trim();
+  options.className = ('ol-ext-colorpicker ' + (options.hastab ? 'ol-tab ' : '') + (options.className || '')).trim();
   ol.ext.input.PopupBase.call(this, options);
+  if (options.opacity===false) {
+    this.element.classList.add('ol-nopacity');
+  }
   this._cursor = {};
   var hsv = this._hsv = {};
   // Vignet
   this._elt.vignet = ol.ext.element.create('DIV', { className: 'ol-vignet', parent: this.element });
+  // Bar 
+  var bar = ol.ext.element.create('DIV', { className: 'ol-tabbar', parent: this._elt.popup });
+  ol.ext.element.create('DIV', { 
+    className: 'ol-tab', 
+    html: options.paletteLabel || 'palette',
+    click: function() {
+      this.element.classList.remove('ol-picker-tab');
+    }.bind(this),
+    parent: bar
+  });
+  ol.ext.element.create('DIV', { 
+    className: 'ol-tab', 
+    html: options.pickerLabel || 'picker',
+    click: function() {
+      this.element.classList.add('ol-picker-tab');
+    }.bind(this),
+    parent: bar
+  });
   // Popup container
   var container = ol.ext.element.create('DIV', { className: 'ol-container', parent: this._elt.popup });
   // Color picker
@@ -2377,10 +2453,12 @@ ol.ext.input.Color.prototype.addPaletteColor = function(color, title, select) {
   var id = this.getColorID(color);
   // Add new one
   if (!this._paletteColor[id] && color[3]) {
+    console.log(color[3]<1)
     this._paletteColor[id] = {
       color: color,
       element: ol.ext.element.create('DIV', {
         title: title || '',
+        className: (color[3]<1 ? 'ol-alpha' : ''),
         style: {
           color: 'rgb('+(color.join(','))+')'
         },
@@ -2396,16 +2474,29 @@ ol.ext.input.Color.prototype.addPaletteColor = function(color, title, select) {
     this._selectPalette(color);
   }
 };
+/** Show palette or picker tab
+ * @param {string} what palette or picker
+ */
+ol.ext.input.Color.prototype.showTab = function(what) {
+  if (what==='palette') this.element.classList.remove('ol-picker-tab');
+  else this.element.classList.add('ol-picker-tab');
+};
+/** Show palette or picker tab
+ * @returns {string} palette or picker
+ */
+ol.ext.input.Color.prototype.getTab = function() {
+  return this.element.classList.contains('ol-picker-tab') ? 'picker' : 'palette';
+};
 /** Select a color in the palette
  * @private
  */
 ol.ext.input.Color.prototype._selectPalette = function(color) {
   var id = this.getColorID(color);
   Object.keys(this._paletteColor).forEach(function(c) {
-    this._paletteColor[c].element.className = '';
+    this._paletteColor[c].element.classList.remove('ol-select')
   }.bind(this))
   if (this._paletteColor[id]) {
-    this._paletteColor[id].element.className = 'ol-select';
+    this._paletteColor[id].element.classList.add('ol-select');
   }
 }
 /** Set Color 
