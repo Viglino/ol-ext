@@ -31,6 +31,7 @@ var ol_ext_input_PopupBase = function(options) {
     case 'inline': break;
     case 'fixed': {
       this.element.classList.add('ol-popup-fixed');
+      this._fixed = true;
     }
     default: {
       this.element.classList.add('ol-popup');
@@ -75,18 +76,20 @@ ol_ext_input_PopupBase.prototype.collapse = function(b) {
     this._elt.popup.classList.remove('ol-visible');
   } else {
     this._elt.popup.classList.add('ol-visible');
-    var pos = ol_ext_element.positionRect(this.element, true);
-    var dh = pos.bottom + this._elt.popup.offsetHeight;
-    if (dh > window.innerHeight) {
-      this._elt.popup.style.top = Math.max(window.innerHeight - this._elt.popup.offsetHeight, 0) + 'px';
-    } else {
-      this._elt.popup.style.top = pos.bottom + 'px';
-    }
-    var dw = pos.left + this._elt.popup.offsetWidth;
-    if (dw > window.innerWidth) {
-      this._elt.popup.style.left = Math.max(window.innerWidth - this._elt.popup.offsetWidth, 0) + 'px';
-    } else {
-      this._elt.popup.style.left = pos.left + 'px';
+    if (this._fixed) {
+      var pos = ol_ext_element.positionRect(this.element, true);
+      var dh = pos.bottom + this._elt.popup.offsetHeight;
+      if (dh > window.innerHeight) {
+        this._elt.popup.style.top = Math.max(window.innerHeight - this._elt.popup.offsetHeight, 0) + 'px';
+      } else {
+        this._elt.popup.style.top = pos.bottom + 'px';
+      }
+      var dw = pos.left + this._elt.popup.offsetWidth;
+      if (dw > window.innerWidth) {
+        this._elt.popup.style.left = Math.max(window.innerWidth - this._elt.popup.offsetWidth, 0) + 'px';
+      } else {
+        this._elt.popup.style.left = pos.left + 'px';
+      }
     }
   }
 };
