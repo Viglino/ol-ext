@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.14
+ * @version v3.2.15
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -2134,6 +2134,7 @@ ol.ext.input.PopupBase = function(options) {
     case 'inline': break;
     case 'fixed': {
       this.element.classList.add('ol-popup-fixed');
+      this._fixed = true;
     }
     default: {
       this.element.classList.add('ol-popup');
@@ -2172,18 +2173,20 @@ ol.ext.input.PopupBase.prototype.collapse = function(b) {
     this._elt.popup.classList.remove('ol-visible');
   } else {
     this._elt.popup.classList.add('ol-visible');
-    var pos = ol.ext.element.positionRect(this.element, true);
-    var dh = pos.bottom + this._elt.popup.offsetHeight;
-    if (dh > window.innerHeight) {
-      this._elt.popup.style.top = Math.max(window.innerHeight - this._elt.popup.offsetHeight, 0) + 'px';
-    } else {
-      this._elt.popup.style.top = pos.bottom + 'px';
-    }
-    var dw = pos.left + this._elt.popup.offsetWidth;
-    if (dw > window.innerWidth) {
-      this._elt.popup.style.left = Math.max(window.innerWidth - this._elt.popup.offsetWidth, 0) + 'px';
-    } else {
-      this._elt.popup.style.left = pos.left + 'px';
+    if (this._fixed) {
+      var pos = ol.ext.element.positionRect(this.element, true);
+      var dh = pos.bottom + this._elt.popup.offsetHeight;
+      if (dh > window.innerHeight) {
+        this._elt.popup.style.top = Math.max(window.innerHeight - this._elt.popup.offsetHeight, 0) + 'px';
+      } else {
+        this._elt.popup.style.top = pos.bottom + 'px';
+      }
+      var dw = pos.left + this._elt.popup.offsetWidth;
+      if (dw > window.innerWidth) {
+        this._elt.popup.style.left = Math.max(window.innerWidth - this._elt.popup.offsetWidth, 0) + 'px';
+      } else {
+        this._elt.popup.style.left = pos.left + 'px';
+      }
     }
   }
 };
