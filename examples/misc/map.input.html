@@ -100,10 +100,10 @@
   </p>
     <input class="radio" type="radio" name="radio" value=1 />
     <input class="radio" type="radio" name="radio" value=2 />
-  </p><p>
+  </p><p style="overflow: hidden; padding: 1em 0;">
     Color: <input class="color1" />
   </p><p style="border: 1px solid #999; border-width: 1px 0; padding: .5em 0;">
-    Color (fixed): 
+    Color (inline): 
     <span class="color" style="display: inline-block; background-color: red; width: 2.5em; height: 1.5em; vertical-align: middle;"></span>
     <input class="color2" />
   </p><p>
@@ -155,10 +155,17 @@
   });
   slide2.setValue(50);
 
-  var cpicker = new ol.ext.input.Color({ input: $('.color1').get(0), color: 'red', fixed: false, hidden: true });
+  var cpicker = new ol.ext.input.Color({ 
+    input: $('.color1').get(0), 
+    color: 'red', 
+    position: 'fixed', 
+    hidden: true,
+    opacity: false,
+    hastab: true 
+  });
   cpicker.on('color', function(e) { console.log('Color:', e.color) })
 
-  var cpicker2 = new ol.ext.input.Color({ input: $('.color2').get(0), fixed: true });
+  var cpicker2 = new ol.ext.input.Color({ input: $('.color2').get(0), position: 'inline' });
   cpicker2.on('color', function(e) { 
     $('.color').css('background-color', ol.color.asString(e.color));
   });

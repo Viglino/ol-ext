@@ -309,6 +309,37 @@ ol_ext_element.offsetRect = function(elt) {
   }
 };
 
+/** Get element offset rect
+ * @param {DOMElement} elt
+ * @param {boolean} fixed get fixed position
+ * @return {Object} 
+ */
+ol_ext_element.positionRect = function(elt, fixed) {
+  var gleft = 0;
+  var gtop = 0;
+
+  var getRect = function( parent ) {
+    if (!!parent) {
+      gleft += parent.offsetLeft;
+      gtop += parent.offsetTop;
+      return getRect(parent.offsetParent);
+    } else {
+      var r = {
+        top: elt.offsetTop + gtop,
+        left: elt.offsetLeft + gleft
+      };
+      if (fixed) {
+        r.top -= (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0);
+        r.left -= (window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft || 0);
+      }
+      r.bottom = r.top + elt.offsetHeight;
+      r.right = r.top + elt.offsetWidth;
+      return r;
+    }
+  }; 
+  return getRect(elt.offsetParent);
+}
+
 /** Make a div scrollable without scrollbar.
  * On touch devices the default behavior is preserved
  * @param {DOMElement} elt

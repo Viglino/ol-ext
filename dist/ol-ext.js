@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.14
+ * @version v3.2.15
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -876,6 +876,35 @@ ol.ext.element.offsetRect = function(elt) {
     width: rect.width || (rect.right - rect.left)
   }
 };
+/** Get element offset rect
+ * @param {DOMElement} elt
+ * @param {boolean} fixed get fixed position
+ * @return {Object} 
+ */
+ol.ext.element.positionRect = function(elt, fixed) {
+  var gleft = 0;
+  var gtop = 0;
+  var getRect = function( parent ) {
+    if (!!parent) {
+      gleft += parent.offsetLeft;
+      gtop += parent.offsetTop;
+      return getRect(parent.offsetParent);
+    } else {
+      var r = {
+        top: elt.offsetTop + gtop,
+        left: elt.offsetLeft + gleft
+      };
+      if (fixed) {
+        r.top -= (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0);
+        r.left -= (window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft || 0);
+      }
+      r.bottom = r.top + elt.offsetHeight;
+      r.right = r.top + elt.offsetWidth;
+      return r;
+    }
+  }; 
+  return getRect(elt.offsetParent);
+}
 /** Make a div scrollable without scrollbar.
  * On touch devices the default behavior is preserved
  * @param {DOMElement} elt
@@ -2089,7 +2118,7 @@ ol.ext.inherits(ol.ext.input.Slider, ol.ext.input.Base);
  *  @param {ol.colorLike} [options.color] default color
  *  @param {Element} [options.input] input element, if non create one
  *  @param {Element} [options.parent] parent element, if create an input
- *  @param {boolean} [options.fixed=false] don't use a popup, default use a popup
+ *  @param {string} [options.position='popup'] fixed | popup | inline (no popup)
  *  @param {boolean} [options.autoClose=true] close when click on color
  *  @param {boolean} [options.hidden=false] display the input
  */
@@ -2101,7 +2130,17 @@ ol.ext.input.PopupBase = function(options) {
   this.element = ol.ext.element.create('DIV', {
     className: ('ol-ext-popup-input '  + (options.className || '')).trim(),
   });
-  if (!options.fixed) this.element.classList.add('ol-popup');
+  switch (options.position) {
+    case 'inline': break;
+    case 'fixed': {
+      this.element.classList.add('ol-popup-fixed');
+      this._fixed = true;
+    }
+    default: {
+      this.element.classList.add('ol-popup');
+      break;
+    }
+  }
   var input = this.input;
   if (input.parentNode) input.parentNode.insertBefore(this.element, input);
   this.element.addEventListener('click', function() {
@@ -2134,6 +2173,21 @@ ol.ext.input.PopupBase.prototype.collapse = function(b) {
     this._elt.popup.classList.remove('ol-visible');
   } else {
     this._elt.popup.classList.add('ol-visible');
+    if (this._fixed) {
+      var pos = ol.ext.element.positionRect(this.element, true);
+      var dh = pos.bottom + this._elt.popup.offsetHeight;
+      if (dh > window.innerHeight) {
+        this._elt.popup.style.top = Math.max(window.innerHeight - this._elt.popup.offsetHeight, 0) + 'px';
+      } else {
+        this._elt.popup.style.top = pos.bottom + 'px';
+      }
+      var dw = pos.left + this._elt.popup.offsetWidth;
+      if (dw > window.innerWidth) {
+        this._elt.popup.style.left = Math.max(window.innerWidth - this._elt.popup.offsetWidth, 0) + 'px';
+      } else {
+        this._elt.popup.style.left = pos.left + 'px';
+      }
+    }
   }
 };
 /** Is the popup collapsed ?
@@ -2194,19 +2248,44 @@ ol.ext.input.Checkbox.prototype.isChecked = function () {
  *  @param {ol.colorLike} [options.color] default color
  *  @param {Element} [options.input] input element, if non create one
  *  @param {Element} [options.parent] parent element, if create an input
- *  @param {boolean} [options.fixed=false] don't use a popup, default use a popup
+ *  @param {boolean} [options.hastab=false] use tabs for palette / picker
+ *  @param {string} [options.paletteLabel="palette"] label for the palette tab
+ *  @param {string} [options.pickerLabel="picker"] label for the picker tab
+ *  @param {string} [options.position='popup'] fixed | popup | inline (no popup)
+ *  @param {boolean} [options.opacity=true] enable opacity
  *  @param {boolean} [options.autoClose=true] close when click on color
  *  @param {boolean} [options.hidden=true] display the input
  */
 ol.ext.input.Color = function(options) {
   options = options || {};
   options.hidden = options.hidden!==false;
-  options.className = ('ol-ext-colorpicker '  + (options.className || '')).trim();
+  options.className = ('ol-ext-colorpicker ' + (options.hastab ? 'ol-tab ' : '') + (options.className || '')).trim();
   ol.ext.input.PopupBase.call(this, options);
+  if (options.opacity===false) {
+    this.element.classList.add('ol-nopacity');
+  }
   this._cursor = {};
   var hsv = this._hsv = {};
   // Vignet
   this._elt.vignet = ol.ext.element.create('DIV', { className: 'ol-vignet', parent: this.element });
+  // Bar 
+  var bar = ol.ext.element.create('DIV', { className: 'ol-tabbar', parent: this._elt.popup });
+  ol.ext.element.create('DIV', { 
+    className: 'ol-tab', 
+    html: options.paletteLabel || 'palette',
+    click: function() {
+      this.element.classList.remove('ol-picker-tab');
+    }.bind(this),
+    parent: bar
+  });
+  ol.ext.element.create('DIV', { 
+    className: 'ol-tab', 
+    html: options.pickerLabel || 'picker',
+    click: function() {
+      this.element.classList.add('ol-picker-tab');
+    }.bind(this),
+    parent: bar
+  });
   // Popup container
   var container = ol.ext.element.create('DIV', { className: 'ol-container', parent: this._elt.popup });
   // Color picker
@@ -2377,10 +2456,12 @@ ol.ext.input.Color.prototype.addPaletteColor = function(color, title, select) {
   var id = this.getColorID(color);
   // Add new one
   if (!this._paletteColor[id] && color[3]) {
+    console.log(color[3]<1)
     this._paletteColor[id] = {
       color: color,
       element: ol.ext.element.create('DIV', {
         title: title || '',
+        className: (color[3]<1 ? 'ol-alpha' : ''),
         style: {
           color: 'rgb('+(color.join(','))+')'
         },
@@ -2396,16 +2477,29 @@ ol.ext.input.Color.prototype.addPaletteColor = function(color, title, select) {
     this._selectPalette(color);
   }
 };
+/** Show palette or picker tab
+ * @param {string} what palette or picker
+ */
+ol.ext.input.Color.prototype.showTab = function(what) {
+  if (what==='palette') this.element.classList.remove('ol-picker-tab');
+  else this.element.classList.add('ol-picker-tab');
+};
+/** Show palette or picker tab
+ * @returns {string} palette or picker
+ */
+ol.ext.input.Color.prototype.getTab = function() {
+  return this.element.classList.contains('ol-picker-tab') ? 'picker' : 'palette';
+};
 /** Select a color in the palette
  * @private
  */
 ol.ext.input.Color.prototype._selectPalette = function(color) {
   var id = this.getColorID(color);
   Object.keys(this._paletteColor).forEach(function(c) {
-    this._paletteColor[c].element.className = '';
+    this._paletteColor[c].element.classList.remove('ol-select')
   }.bind(this))
   if (this._paletteColor[id]) {
-    this._paletteColor[id].element.className = 'ol-select';
+    this._paletteColor[id].element.classList.add('ol-select');
   }
 }
 /** Set Color 
@@ -10239,26 +10333,25 @@ ol.control.Permalink.prototype.layerChange_ = function() {
   if (this._tout) {
     clearTimeout(this._tout);
     this._tout = null;
-  } else {
-    this._tout = setTimeout(function() {
-      this._tout = null;
-      // Get layers
-      var l = "";
-      function getLayers(layers) {
-        for (var i=0; i<layers.length; i++) {
-          if (layers[i].getVisible() && layers[i].get("permalink")) {
-            if (l) l += "|";
-            l += layers[i].get("permalink")+":"+layers[i].get("opacity");
-          }
-          // Layer Group
-          if (layers[i].getLayers) getLayers(layers[i].getLayers().getArray());
-        }
-      }
-      getLayers(this.getMap().getLayers().getArray());
-      this.layerStr_ = l;
-      this.viewChange_();
-    }.bind(this), 200);
   }
+  this._tout = setTimeout(function() {
+    this._tout = null;
+    // Get layers
+    var l = "";
+    function getLayers(layers) {
+      for (var i=0; i<layers.length; i++) {
+        if (layers[i].getVisible() && layers[i].get("permalink")) {
+          if (l) l += "|";
+          l += layers[i].get("permalink")+":"+layers[i].get("opacity");
+        }
+        // Layer Group
+        if (layers[i].getLayers) getLayers(layers[i].getLayers().getArray());
+      }
+    }
+    getLayers(this.getMap().getLayers().getArray());
+    this.layerStr_ = l;
+    this.viewChange_();
+  }.bind(this), 200);
 };
 
 /*
@@ -18435,6 +18528,84 @@ ol.filter.Fold.prototype.postcompose = function(e) {
  * @extends {ol.filter.Base}
  * @param {Object} [options]
  *  @param {string} [options.img]
+ *  @param {number} [options.size] point size, default 30
+ *  @param {null | string | undefined} [options.crossOrigin] crossOrigin attribute for loaded images.
+ */
+ol.filter.Halftone = function(options) {
+  if (!options) options = {};
+  ol.filter.Base.call(this, options);
+  this.internal_ = document.createElement('canvas');
+  this.setSize(options.size);
+  document.body.appendChild(this.internal_)
+}
+ol.ext.inherits(ol.filter.Halftone, ol.filter.Base);
+/** Set the current size
+*	@param {number} width the pattern width, default 30
+*/
+ol.filter.Halftone.prototype.setSize = function (size) {
+  size = Number(size) || 30;
+  this.set("size", size);
+};
+/** Postcompose operation
+*/
+ol.filter.Halftone.prototype.postcompose = function(e) {
+  var ctx = e.context;
+  var canvas = ctx.canvas;
+  var ratio = e.frameState.pixelRatio;
+  // ol v6+
+  if (e.type === 'postrender') {
+    ratio = 1;
+  }
+  ctx.save();
+    // resize 
+    var step = this.get('size')*ratio;
+    var p = e.frameState.extent;
+    var res = e.frameState.viewState.resolution/ratio;
+    var offset = [ -Math.round((p[0]/res)%step), Math.round((p[1]/res)%step) ];
+    var ctx2 = this.internal_.getContext("2d");
+    var w = this.internal_.width = canvas.width;
+    var h = this.internal_.height = canvas.height;
+    // No smoothing please
+    ctx2.webkitImageSmoothingEnabled =
+    ctx2.mozImageSmoothingEnabled =
+    ctx2.msImageSmoothingEnabled =
+    ctx2.imageSmoothingEnabled = false;
+    var w2 = Math.floor((w-offset[0])/step);
+    var h2 = Math.floor((h-offset[1])/step);
+    ctx2.drawImage (canvas, offset[0], offset[1], w2*step, h2*step, 0, 0, w2, h2);
+    var data = ctx2.getImageData(0, 0, w2,h2).data;
+    //
+    ctx.webkitImageSmoothingEnabled =
+    ctx.mozImageSmoothingEnabled =
+    ctx.msImageSmoothingEnabled =
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage (this.internal_, 0,0, w2,h2, offset[0],offset[1], w2*step, h2*step);
+    ctx.fillStyle = this.get('color') || '#000';
+    // Draw tone
+    ctx.clearRect (0, 0, w,h);  
+    for (var x=0; x<w2; x++) for (var y=0; y<h2; y++) {
+      var pix = ol.color.toHSL([data[x*4+y*w2*4], data[x*4+1+y*w2*4], data[x*4+2+y*w2*4]]);
+      var l = (100-pix[2])/140;
+      if (l) {
+        ctx.beginPath();
+        ctx.arc(offset[0]+step/2+x*step, offset[1]+step/2+y*step, step*l, 0, 2 * Math.PI);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+  ctx.restore();
+};
+
+/*	Copyright (c) 2017 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Make a map or layer look like made of a set of Lego bricks.
+ *  @constructor
+ * @requires ol.filter
+ * @extends {ol.filter.Base}
+ * @param {Object} [options]
+ *  @param {string} [options.img]
  *  @param {number} [options.brickSize] size of te brick, default 30
  *  @param {null | string | undefined} [options.crossOrigin] crossOrigin attribute for loaded images.
  */
@@ -18466,7 +18637,7 @@ ol.filter.Lego.prototype.img = {
 */
 ol.filter.Lego.prototype.set = function (key, val) {
   ol.filter.Base.prototype.set.call(this, key, val);
-  if (key=="brickSize" && this.pattern.canvas.width!=val) {
+  if (key=="brickSize" && this.pattern && this.pattern.canvas.width!=val) {
     this.setBrick(val);
   }
 }
@@ -36210,8 +36381,8 @@ ol.style.FillPattern.prototype.patterns = {
  * NB: the FlowLine style doesn't impress the hit-detection.
  * If you want your lines to be sectionable you have to add your own style to handle this.
  * (with transparent line: stroke color opacity to .1 or zero width)
- * @extends {ol.style.Style}
  * @constructor
+ * @extends {ol.style.Style}
  * @param {Object} options
  *  @param {boolean} options.visible draw only the visible part of the line, default true
  *  @param {number|function} options.width Stroke width or a function that gets a feature and the position (beetween [0,1]) and returns current width

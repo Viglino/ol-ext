@@ -16,7 +16,11 @@ import { asArray as ol_color_asArray } from 'ol/color'
  *  @param {ol.colorLike} [options.color] default color
  *  @param {Element} [options.input] input element, if non create one
  *  @param {Element} [options.parent] parent element, if create an input
- *  @param {boolean} [options.fixed=false] don't use a popup, default use a popup
+ *  @param {boolean} [options.hastab=false] use tabs for palette / picker
+ *  @param {string} [options.paletteLabel="palette"] label for the palette tab
+ *  @param {string} [options.pickerLabel="picker"] label for the picker tab
+ *  @param {string} [options.position='popup'] fixed | popup | inline (no popup)
+ *  @param {boolean} [options.opacity=true] enable opacity
  *  @param {boolean} [options.autoClose=true] close when click on color
  *  @param {boolean} [options.hidden=true] display the input
  */
@@ -24,13 +28,36 @@ var ol_ext_input_Color = function(options) {
   options = options || {};
 
   options.hidden = options.hidden!==false;
-  options.className = ('ol-ext-colorpicker '  + (options.className || '')).trim();
+  options.className = ('ol-ext-colorpicker ' + (options.hastab ? 'ol-tab ' : '') + (options.className || '')).trim();
   ol_ext_input_PopupBase.call(this, options);
+
+  if (options.opacity===false) {
+    this.element.classList.add('ol-nopacity');
+  }
 
   this._cursor = {};
   var hsv = this._hsv = {};
   // Vignet
   this._elt.vignet = ol_ext_element.create('DIV', { className: 'ol-vignet', parent: this.element });
+
+  // Bar 
+  var bar = ol_ext_element.create('DIV', { className: 'ol-tabbar', parent: this._elt.popup });
+  ol_ext_element.create('DIV', { 
+    className: 'ol-tab', 
+    html: options.paletteLabel || 'palette',
+    click: function() {
+      this.element.classList.remove('ol-picker-tab');
+    }.bind(this),
+    parent: bar
+  });
+  ol_ext_element.create('DIV', { 
+    className: 'ol-tab', 
+    html: options.pickerLabel || 'picker',
+    click: function() {
+      this.element.classList.add('ol-picker-tab');
+    }.bind(this),
+    parent: bar
+  });
 
   // Popup container
   var container = ol_ext_element.create('DIV', { className: 'ol-container', parent: this._elt.popup });
@@ -216,10 +243,12 @@ ol_ext_input_Color.prototype.addPaletteColor = function(color, title, select) {
   var id = this.getColorID(color);
   // Add new one
   if (!this._paletteColor[id] && color[3]) {
+    console.log(color[3]<1)
     this._paletteColor[id] = {
       color: color,
       element: ol_ext_element.create('DIV', {
         title: title || '',
+        className: (color[3]<1 ? 'ol-alpha' : ''),
         style: {
           color: 'rgb('+(color.join(','))+')'
         },
@@ -236,16 +265,31 @@ ol_ext_input_Color.prototype.addPaletteColor = function(color, title, select) {
   }
 };
 
+/** Show palette or picker tab
+ * @param {string} what palette or picker
+ */
+ol_ext_input_Color.prototype.showTab = function(what) {
+  if (what==='palette') this.element.classList.remove('ol-picker-tab');
+  else this.element.classList.add('ol-picker-tab');
+};
+
+/** Show palette or picker tab
+ * @returns {string} palette or picker
+ */
+ol_ext_input_Color.prototype.getTab = function() {
+  return this.element.classList.contains('ol-picker-tab') ? 'picker' : 'palette';
+};
+
 /** Select a color in the palette
  * @private
  */
 ol_ext_input_Color.prototype._selectPalette = function(color) {
   var id = this.getColorID(color);
   Object.keys(this._paletteColor).forEach(function(c) {
-    this._paletteColor[c].element.className = '';
+    this._paletteColor[c].element.classList.remove('ol-select')
   }.bind(this))
   if (this._paletteColor[id]) {
-    this._paletteColor[id].element.className = 'ol-select';
+    this._paletteColor[id].element.classList.add('ol-select');
   }
 }
 

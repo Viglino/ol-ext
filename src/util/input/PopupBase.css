@@ -46,3 +46,8 @@
 .ol-ext-popup-input.ol-popup .ol-popup.ol-visible {
   display: block;
 }
+
+.ol-ext-popup-input.ol-popup-fixed .ol-popup {
+  position: fixed;
+  top: auto;
+}

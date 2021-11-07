@@ -15,8 +15,8 @@ import '../geom/LineStringSplitAt'
  * NB: the FlowLine style doesn't impress the hit-detection.
  * If you want your lines to be sectionable you have to add your own style to handle this.
  * (with transparent line: stroke color opacity to .1 or zero width)
- * @extends {ol_style_Style}
  * @constructor
+ * @extends {ol_style_Style}
  * @param {Object} options
  *  @param {boolean} options.visible draw only the visible part of the line, default true
  *  @param {number|function} options.width Stroke width or a function that gets a feature and the position (beetween [0,1]) and returns current width
