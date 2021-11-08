@@ -15,6 +15,7 @@ import '../source/Vector'
  * @fires change:clear
  * @param {Object} options
  *  @param {number=} options.maxLength max undo stack length (0=Infinity), default Infinity
+ *  @param {Array<ol.Layer>} options.layers array of layers to undo/redo
  */
 var ol_interaction_UndoRedo = function(options) {
   if (!options) options = {};

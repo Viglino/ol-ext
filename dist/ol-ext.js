@@ -26448,6 +26448,7 @@ ol.interaction.Transform.prototype.getFeatures = function() {
  * @fires change:clear
  * @param {Object} options
  *  @param {number=} options.maxLength max undo stack length (0=Infinity), default Infinity
+ *  @param {Array<ol.Layer>} options.layers array of layers to undo/redo
  */
 ol.interaction.UndoRedo = function(options) {
   if (!options) options = {};
@@ -26456,6 +26457,8 @@ ol.interaction.UndoRedo = function(options) {
       return true; 
     }
   });
+  //array of layers to undo/redo
+  this._layers = options.layers
   this._undoStack = new ol.Collection();
   this._redoStack = new ol.Collection();
   // Zero level stack
@@ -26647,12 +26650,14 @@ ol.interaction.UndoRedo.prototype._watchSources = function() {
     this._sourceListener.forEach(function(l) { ol.Observable.unByKey(l); })
   }
   this._sourceListener = [];
+  var self = this;
   // Ges vector layers 
   function getVectorLayers(layers, init) {
     if (!init) init = [];
     layers.forEach(function(l) {
       if (l instanceof ol.layer.Vector) {
-        init.push(l);
+        if (!self._layers || self._layers.includes(l))
+          init.push(l);
       } else if (l.getLayers) {
         getVectorLayers(l.getLayers(), init);
       }
