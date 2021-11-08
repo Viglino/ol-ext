@@ -80,7 +80,11 @@ ol_control_EditBar.prototype.getInteraction = function (name) {
 
 /** Get the option title */
 ol_control_EditBar.prototype._getTitle = function (option) {
-  return (option && option.title) ? option.title : option;
+  if (option) {
+    if (option.get) return option.get('title');
+    else if (typeof(option) === 'string') return option;
+    else return option.title;
+  } 
 };
 
 /** Add selection tool:
@@ -278,13 +282,20 @@ ol_control_EditBar.prototype._setEditInteraction = function (options) {
 
   // Draw regular
   if (options.interactions.DrawRegular !== false) {
+    var label = { pts: 'pts', circle: 'circle' };
     if (options.interactions.DrawRegular instanceof ol_interaction_DrawRegular) {
-      this._interactions.DrawRegular = options.interactions.DrawRegular
+      this._interactions.DrawRegular = options.interactions.DrawRegular;
+      label.pts = this._interactions.DrawRegular.get('ptsLabel') || label.pts;
+      label.circle = this._interactions.DrawRegular.get('circleLabel') || label.circle;
     } else {
       this._interactions.DrawRegular = new ol_interaction_DrawRegular ({
         source: this._source,
         sides: 4
       });
+      if (options.interactions.DrawRegular) {
+        label.pts = options.interactions.DrawRegular.ptsLabel || label.pts;
+        label.circle = options.interactions.DrawRegular.circleLabel || label.circle;
+      }
     }
     var regular = this._interactions.DrawRegular;
 
@@ -295,17 +306,17 @@ ol_control_EditBar.prototype._setEditInteraction = function (options) {
       var sides = regular.getSides() -1;
       if (sides < 2) sides = 2;
       regular.setSides (sides);
-      text.textContent = sides>2 ? sides+' pts' : 'circle';
+      text.textContent = sides>2 ? sides+' '+label.pts : label.circle;
     }.bind(this));
 
-    var text = ol_ext_element.create('TEXT', { html:'4 pts', parent: div });
+    var text = ol_ext_element.create('TEXT', { html:'4 '+label.pts, parent: div });
     
     var up = ol_ext_element.create('DIV', { parent: div });
     ol_ext_element.addListener(up, ['click', 'touchstart'], function() {
       var sides = regular.getSides() +1;
       if (sides<3) sides=3;
       regular.setSides(sides);
-      text.textContent = sides+' pts';
+      text.textContent = sides+' '+label.pts;
     }.bind(this));
 
     var ctrl = new ol_control_Toggle({
