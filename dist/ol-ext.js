@@ -6627,12 +6627,13 @@ ol.control.Dialog = function(options) {
     element: element,
     target: options.target
   });
-  this.set('closeBox', !!options.closeBox);
+  this.set('closeBox', options.closeBox !== false);
   this.set('zoom', !!options.zoom);
   this.set('hideOnClick', !!options.hideOnClick);
   this.set('hideOnBack', !!options.hideOnBack);
   this.set('className', options.className);
   this.set('closeOnSubmit', options.closeOnSubmit);
+  this.set('buttons', options.buttons);
   this.setContent(options)
 };
 ol.ext.inherits(ol.control.Dialog, ol.control.Control);
@@ -6649,30 +6650,33 @@ ol.ext.inherits(ol.control.Dialog, ol.control.Control);
  *  @param {function} [options.onButton] a function that takes the button id and a list of input by className
  */
 ol.control.Dialog.prototype.show = function(options) {
-  options = options || {};
-  if (options instanceof Element || typeof(options) === 'string') {
-    options = { content: options };
+  if (options) {
+    if (options instanceof Element || typeof(options) === 'string') {
+      options = { content: options };
+    }
+    this.setContent(options);
   }
-  this.setContent(options);
   this.element.classList.add('ol-visible');
   var input = this.element.querySelector('input[type="text"],input[type="search"],input[type="number"]');
   if (input) input.focus();
   this.dispatchEvent ({ type: 'show' });
-  // Auto close
-  if (options.autoclose) {
-    var listener = setTimeout(function() { this.hide() }.bind(this), options.autoclose);
-    this.once('hide', function(){ 
-      clearTimeout(listener); 
-    });
-  }
-  // hideOnBack
-  if (options.hideOnBack) {
-    // save value
-    var value = this.get('hideOnBack');
-    this.set('hideOnBack', true);
-    this.once('hide', function() {
-      this.set('hideOnBack', value);
-    }.bind(this));
+  if (options) {
+    // Auto close
+    if (options.autoclose) {
+      var listener = setTimeout(function() { this.hide() }.bind(this), options.autoclose);
+      this.once('hide', function(){ 
+        clearTimeout(listener); 
+      });
+    }
+    // hideOnBack
+    if (options.hideOnBack) {
+      // save value
+      var value = this.get('hideOnBack');
+      this.set('hideOnBack', true);
+      this.once('hide', function() {
+        this.set('hideOnBack', value);
+      }.bind(this));
+    }
   }
 };
 /** Open the dialog
@@ -6728,13 +6732,14 @@ ol.control.Dialog.prototype.setContent = function(options) {
   // Buttons
   var buttons = this.element.querySelector('.ol-buttons');
   buttons.innerHTML = '';
-  if (options.buttons) {
+  var btn = options.buttons || this.get('buttons');
+  if (btn) {
     form.classList.add('ol-button');
-    for (var i in options.buttons) {
+    for (var i in btn) {
       ol.ext.element.create ('INPUT', {
         type: (i==='submit' ? 'submit':'button'),
-        value: options.buttons[i],
-        click: this._onButton(i, options.onButton),
+        value: btn[i],
+        click: this._onButton(i, btn),
         parent: buttons
       });
     }
@@ -18538,7 +18543,8 @@ ol.filter.Fold.prototype.postcompose = function(e) {
  * @requires ol.filter
  * @extends {ol.filter.Base}
  * @param {Object} [options]
- *  @param {string} [options.img]
+ *  @param {string} [options.channel] RGB channels: 'r', 'g' or 'b', default use intensity
+ *  @param {ol.colorlike} [options.color] color, default black
  *  @param {number} [options.size] point size, default 30
  *  @param {null | string | undefined} [options.crossOrigin] crossOrigin attribute for loaded images.
  */
@@ -18547,7 +18553,7 @@ ol.filter.Halftone = function(options) {
   ol.filter.Base.call(this, options);
   this.internal_ = document.createElement('canvas');
   this.setSize(options.size);
-  document.body.appendChild(this.internal_)
+  this.set('channel', options.channel);
 }
 ol.ext.inherits(ol.filter.Halftone, ol.filter.Base);
 /** Set the current size
@@ -18585,18 +18591,21 @@ ol.filter.Halftone.prototype.postcompose = function(e) {
     var h2 = Math.floor((h-offset[1])/step);
     ctx2.drawImage (canvas, offset[0], offset[1], w2*step, h2*step, 0, 0, w2, h2);
     var data = ctx2.getImageData(0, 0, w2,h2).data;
-    //
-    ctx.webkitImageSmoothingEnabled =
-    ctx.mozImageSmoothingEnabled =
-    ctx.msImageSmoothingEnabled =
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage (this.internal_, 0,0, w2,h2, offset[0],offset[1], w2*step, h2*step);
-    ctx.fillStyle = this.get('color') || '#000';
     // Draw tone
-    ctx.clearRect (0, 0, w,h);  
+    ctx.clearRect (0, 0, w,h);
+    ctx.fillStyle = ol.color.asString(this.get('color') || '#000');
     for (var x=0; x<w2; x++) for (var y=0; y<h2; y++) {
-      var pix = ol.color.toHSL([data[x*4+y*w2*4], data[x*4+1+y*w2*4], data[x*4+2+y*w2*4]]);
-      var l = (100-pix[2])/140;
+      var pix;
+      switch (this.get('channel')) {
+        case 'r': pix = data[x*4+y*w2*4] / 2.55; break;
+        case 'g': pix = data[x*4+1+y*w2*4] / 2.55; break;
+        case 'b': pix = data[x*4+2+y*w2*4] / 2.55; break;
+        default:
+          pix = ol.color.toHSL([data[x*4+y*w2*4], data[x*4+1+y*w2*4], data[x*4+2+y*w2*4]]);
+          pix = pix[2];
+          break;
+      }
+      var l = (100-pix)/140;
       if (l) {
         ctx.beginPath();
         ctx.arc(offset[0]+step/2+x*step, offset[1]+step/2+y*step, step*l, 0, 2 * Math.PI);
