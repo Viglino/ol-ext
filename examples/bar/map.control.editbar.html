@@ -52,7 +52,14 @@
       It is provided with a bunch of editing tools.
     </p>
     <p>
-      The controls 
+      You can give your own interaction to the edit bar using the interactions option.
+    </p><p>
+      You can set your own title in the interactions options by :
+      <ol>
+        <li>passing the title directly</li>
+        <li>passing an object with a title propertie</li>
+        <li>passing an interaction with a title property</li>
+      </ol>
     </p>
   </div>
 
@@ -84,7 +91,20 @@
     map.addControl(note)
 
     // Add the editbar
-    var edit = new ol.control.EditBar({ source: vector.getSource() });
+    var select = new ol.interaction.Select({ title: 'Sélection'});
+    select.set('title', 'Sélection');
+    var edit = new ol.control.EditBar({
+      // Translate interaction title / label 
+      interactions: { 
+        // Use our own interaction > set the title inside
+        Select: select,
+        // Define button title
+        DrawLine: 'Ligne',
+        // Drawregular with label
+        DrawRegular: { title: 'Forme régullière', ptsLabel: 'pts', circleLabel: 'cercle' }
+      },
+      source: vector.getSource() 
+    });
     map.addControl(edit);
 
     // Add a tooltip

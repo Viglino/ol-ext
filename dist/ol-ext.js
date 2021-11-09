@@ -6661,14 +6661,17 @@ ol.control.Dialog.prototype.show = function(options) {
   // Auto close
   if (options.autoclose) {
     var listener = setTimeout(function() { this.hide() }.bind(this), options.autoclose);
-    dialog.once('hide', function(){ clearTimeout(listener); });
+    this.once('hide', function(){ 
+      clearTimeout(listener); 
+    });
   }
   // hideOnBack
   if (options.hideOnBack) {
+    // save value
     var value = this.get('hideOnBack');
     this.set('hideOnBack', true);
     this.once('hide', function() {
-      dialog.set('hideOnBack', value);
+      this.set('hideOnBack', value);
     }.bind(this));
   }
 };
@@ -6764,9 +6767,10 @@ ol.control.Dialog.prototype.setProgress = function(val, max) {
     ol.ext.element.setStyle(this._progressbar, { width: p+'%' })
   }
 };
-/** Do something on button click
+/** Returns a function to do something on button click
  * @param {strnig} button button id
  * @param {function} callback
+ * @returns {function}
  * @private
  */
 ol.control.Dialog.prototype._onButton = function(button, callback) {
@@ -6898,7 +6902,11 @@ ol.control.EditBar.prototype.getInteraction = function (name) {
 };
 /** Get the option title */
 ol.control.EditBar.prototype._getTitle = function (option) {
-  return (option && option.title) ? option.title : option;
+  if (option) {
+    if (option.get) return option.get('title');
+    else if (typeof(option) === 'string') return option;
+    else return option.title;
+  } 
 };
 /** Add selection tool:
  * 1. a toggle control with a select interaction
@@ -7083,13 +7091,20 @@ ol.control.EditBar.prototype._setEditInteraction = function (options) {
   }
   // Draw regular
   if (options.interactions.DrawRegular !== false) {
+    var label = { pts: 'pts', circle: 'circle' };
     if (options.interactions.DrawRegular instanceof ol.interaction.DrawRegular) {
-      this._interactions.DrawRegular = options.interactions.DrawRegular
+      this._interactions.DrawRegular = options.interactions.DrawRegular;
+      label.pts = this._interactions.DrawRegular.get('ptsLabel') || label.pts;
+      label.circle = this._interactions.DrawRegular.get('circleLabel') || label.circle;
     } else {
       this._interactions.DrawRegular = new ol.interaction.DrawRegular ({
         source: this._source,
         sides: 4
       });
+      if (options.interactions.DrawRegular) {
+        label.pts = options.interactions.DrawRegular.ptsLabel || label.pts;
+        label.circle = options.interactions.DrawRegular.circleLabel || label.circle;
+      }
     }
     var regular = this._interactions.DrawRegular;
     var div = document.createElement('DIV');
@@ -7098,15 +7113,15 @@ ol.control.EditBar.prototype._setEditInteraction = function (options) {
       var sides = regular.getSides() -1;
       if (sides < 2) sides = 2;
       regular.setSides (sides);
-      text.textContent = sides>2 ? sides+' pts' : 'circle';
+      text.textContent = sides>2 ? sides+' '+label.pts : label.circle;
     }.bind(this));
-    var text = ol.ext.element.create('TEXT', { html:'4 pts', parent: div });
+    var text = ol.ext.element.create('TEXT', { html:'4 '+label.pts, parent: div });
     var up = ol.ext.element.create('DIV', { parent: div });
     ol.ext.element.addListener(up, ['click', 'touchstart'], function() {
       var sides = regular.getSides() +1;
       if (sides<3) sides=3;
       regular.setSides(sides);
-      text.textContent = sides+' pts';
+      text.textContent = sides+' '+label.pts;
     }.bind(this));
     var ctrl = new ol.control.Toggle({
       className: 'ol-drawregular',
