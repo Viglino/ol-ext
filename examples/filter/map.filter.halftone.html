@@ -73,11 +73,21 @@
         </label>
       </li>
       <li>
+        <label>channel:</label>
+        <select id="color" onchange="filter.set('channel',this.value)">
+          <option value="">intensity</option>
+          <option value="r">red</option>
+          <option value="g">green</option>
+          <option value="b">blue</option>
+        </select>
+      </li>
+      <li>
         <label>color:</label>
         <select id="color" onchange="filter.set('color',this.value)">
           <option value="">black</option>
           <option value="#800">red</option>
           <option value="#080">green</option>
+          <option value="#008">blue</option>
         </select>
       </li>
       <li>

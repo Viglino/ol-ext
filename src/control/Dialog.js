@@ -71,12 +71,13 @@ var ol_control_Dialog = function(options) {
     element: element,
     target: options.target
   });
-  this.set('closeBox', !!options.closeBox);
+  this.set('closeBox', options.closeBox !== false);
   this.set('zoom', !!options.zoom);
   this.set('hideOnClick', !!options.hideOnClick);
   this.set('hideOnBack', !!options.hideOnBack);
   this.set('className', options.className);
   this.set('closeOnSubmit', options.closeOnSubmit);
+  this.set('buttons', options.buttons);
   this.setContent(options)
 };
 ol_ext_inherits(ol_control_Dialog, ol_control_Control);
@@ -94,30 +95,33 @@ ol_ext_inherits(ol_control_Dialog, ol_control_Control);
  *  @param {function} [options.onButton] a function that takes the button id and a list of input by className
  */
 ol_control_Dialog.prototype.show = function(options) {
-  options = options || {};
-  if (options instanceof Element || typeof(options) === 'string') {
-    options = { content: options };
+  if (options) {
+    if (options instanceof Element || typeof(options) === 'string') {
+      options = { content: options };
+    }
+    this.setContent(options);
   }
-  this.setContent(options);
   this.element.classList.add('ol-visible');
   var input = this.element.querySelector('input[type="text"],input[type="search"],input[type="number"]');
   if (input) input.focus();
   this.dispatchEvent ({ type: 'show' });
-  // Auto close
-  if (options.autoclose) {
-    var listener = setTimeout(function() { this.hide() }.bind(this), options.autoclose);
-    this.once('hide', function(){ 
-      clearTimeout(listener); 
-    });
-  }
-  // hideOnBack
-  if (options.hideOnBack) {
-    // save value
-    var value = this.get('hideOnBack');
-    this.set('hideOnBack', true);
-    this.once('hide', function() {
-      this.set('hideOnBack', value);
-    }.bind(this));
+  if (options) {
+    // Auto close
+    if (options.autoclose) {
+      var listener = setTimeout(function() { this.hide() }.bind(this), options.autoclose);
+      this.once('hide', function(){ 
+        clearTimeout(listener); 
+      });
+    }
+    // hideOnBack
+    if (options.hideOnBack) {
+      // save value
+      var value = this.get('hideOnBack');
+      this.set('hideOnBack', true);
+      this.once('hide', function() {
+        this.set('hideOnBack', value);
+      }.bind(this));
+    }
   }
 };
 
@@ -175,13 +179,14 @@ ol_control_Dialog.prototype.setContent = function(options) {
   // Buttons
   var buttons = this.element.querySelector('.ol-buttons');
   buttons.innerHTML = '';
-  if (options.buttons) {
+  var btn = options.buttons || this.get('buttons');
+  if (btn) {
     form.classList.add('ol-button');
-    for (var i in options.buttons) {
+    for (var i in btn) {
       ol_ext_element.create ('INPUT', {
         type: (i==='submit' ? 'submit':'button'),
-        value: options.buttons[i],
-        click: this._onButton(i, options.onButton),
+        value: btn[i],
+        click: this._onButton(i, btn),
         parent: buttons
       });
     }
