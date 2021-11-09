@@ -11222,6 +11222,25 @@ ol.control.PrintDialog.prototype._labels = {
     errorMsg: 'Impossible d\'enregistrer la carte',
     printBt: 'Imprimer',
     cancel: 'annuler'
+  },
+  zh:{
+    title: '打印',
+    orientation: '方向',
+    portrait: '纵向',
+    landscape: '横向',
+    size: '页面大小',
+    custom: '屏幕大小',
+    margin: '外边距',
+    scale: '尺度',
+    legend: '图例',
+    north: '指北针',
+    mapTitle: '地图名字',
+    saveas: '保存为...',
+    saveLegend: '保存图例为...',
+    copied: '✔ 已复制到剪贴板',
+    errorMsg: '无法保存地图...',
+    printBt: '打印...',
+    cancel: '取消'
   }
 };
 /** List of paper size */
@@ -26680,8 +26699,9 @@ ol.interaction.UndoRedo.prototype._watchSources = function() {
     if (!init) init = [];
     layers.forEach(function(l) {
       if (l instanceof ol.layer.Vector) {
-        if (!self._layers || self._layers.includes(l))
+        if (!self._layers || self._layers.indexOf(l) >= 0) {
           init.push(l);
+        }
       } else if (l.getLayers) {
         getVectorLayers(l.getLayers(), init);
       }

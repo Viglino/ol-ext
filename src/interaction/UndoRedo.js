@@ -240,8 +240,9 @@ ol_interaction_UndoRedo.prototype._watchSources = function() {
     if (!init) init = [];
     layers.forEach(function(l) {
       if (l instanceof ol_layer_Vector) {
-        if (!self._layers || self._layers.includes(l))
+        if (!self._layers || self._layers.indexOf(l) >= 0) {
           init.push(l);
+        }
       } else if (l.getLayers) {
         getVectorLayers(l.getLayers(), init);
       }
