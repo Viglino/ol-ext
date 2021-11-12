@@ -17,7 +17,7 @@ import ol_style_Fill from 'ol/style/Fill'
  *
  * @constructor
  * @param {} options
- *  @param { default | square | round | anchored | folio } options.kind
+ *  @param { default | square | circle | anchored | folio } options.kind
  *  @param {boolean} options.crop crop within square, default is false
  *  @param {Number} options.radius symbol size
  *  @param {boolean} options.shadow drop a shadow
