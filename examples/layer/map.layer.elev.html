@@ -284,6 +284,33 @@ var alti = ol.ext.imageLoader.elevationMap(function(z) {
 
 elev.getSource().setTileLoadFunction(alti)
 
+
+// Color pixel / elevation
+tints0.forEach(t => t[3] = 255);
+var seuil = [28,29,33,35,40,48,55,60,80,150,200]
+var alti2 = ol.ext.imageLoader.elevationMap(function(z) {
+  var pos, t;
+  for (var i=0; i<seuil.length; i++) {
+    if (z < seuil[i]) {
+      if (i>0) {
+        var n = Math.round(10*(seuil[i]-z)/(seuil[i]-seuil[i-1]));
+        return [
+          (tints0[i-1][0]*n + tints0[i][0]*(10-n))/10,
+          (tints0[i-1][1]*n + tints0[i][1]*(10-n))/10,
+          (tints0[i-1][2]*n + tints0[i][2]*(10-n))/10,
+          255
+        ]
+      }
+      return tints0[i]
+    }
+  }
+  return tints0 [11]
+});
+/*
+elev.getSource().setTileLoadFunction(alti2)
+elev.getSource().refresh()
+*/
+
 </script>
 </body>
 </html>
