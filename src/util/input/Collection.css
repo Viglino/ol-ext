@@ -1,0 +1,39 @@
+.ol-collection-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ol-collection-list li {
+  position: relative;
+  padding: 0 2em 0 1em;
+}
+.ol-collection-list li:hover {
+  background-color: rgba(0,60,136,.2);
+}
+.ol-collection-list li.ol-select {
+  background-color: rgba(0,60,136,.5);
+  color: #fff;
+}
+
+.ol-collection-list li .ol-order {
+  position: absolute;
+  touch-action: none;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2em;
+  height: 100%;
+  cursor: n-resize;
+}
+.ol-collection-list li .ol-order:before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 18px;
+  height: 2px;
+  background-color: currentColor;
+  box-shadow: 0 5px, 0 -5px;
+  border-radius: 2px;
+}
