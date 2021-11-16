@@ -683,6 +683,8 @@ ol.ext.element.createSwitch = function (options) {
   var input = ol.ext.element.create('INPUT', {
     type: 'checkbox',
     on: options.on,
+    click: options.click,
+    change: options.change,
     parent: options.parent
   });
   var opt = Object.assign ({ input: input }, options || {});

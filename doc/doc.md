@@ -1,5 +1,5 @@
 # ![Font style](https://openlayers.org/assets/theme/img/logo70.png) ol-ext
-*Cool extensions for [OpenLayers](https://github.com/openlayers/openlayers) (ol/ol3/ol4)*.
+*Cool extensions for [OpenLayers](https://github.com/openlayers/openlayers) (ol > 5.3)*.
 
 [ol-ext](https://github.com/Viglino/ol-ext) is a set of extensions, controls, interactions to use with Openlayers.    
 
