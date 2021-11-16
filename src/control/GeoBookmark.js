@@ -59,17 +59,21 @@ var ol_control_GeoBookmark = function(options) {
   menu.appendChild(ul);
   var input = document.createElement('input');
   input.setAttribute("placeholder", options.placeholder || "Add a new geomark...")
-  input.addEventListener("change", function() {
-    var title = this.value;
-    if (title) {
-      self.addBookmark(title);
-      this.value = '';
-      self.dispatchEvent({
-        type: "add",
-        name: title
-      });
+  input.addEventListener("keydown", function(e) {
+    e.stopPropagation();
+    if (e.keyCode === 13) {
+      e.preventDefault();
+      var title = this.value;
+      if (title) {
+        self.addBookmark(title);
+        this.value = '';
+        self.dispatchEvent({
+          type: "add",
+          name: title
+        });
+      }
+      menu.style.display = 'none';
     }
-    menu.style.display = 'none';
   });
   input.addEventListener("blur", function() {
     menu.style.display = 'none';
@@ -149,7 +153,8 @@ ol_control_GeoBookmark.prototype.setBookmarks = function(bmark) {
     if (modify && !bmark[b].permanent) {
       var button = document.createElement('button');
       button.setAttribute('data-name', b);
-      button.setAttribute("title", "Suppr.");
+      button.setAttribute('type', 'button');
+      button.setAttribute('title', 'Suppr.');
       button.addEventListener('click', function(e) {
         self.removeBookmark(this.getAttribute("data-name"));
         self.dispatchEvent({ type: "remove", name: this.getAttribute("data-name") });
