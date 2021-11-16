@@ -45,8 +45,10 @@ var ol_control_GeoBookmark = function(options) {
       type: 'button',
       title: options.title || 'Geobookmarks',
       click: function() {
-        menu.style.display = (menu.style.display === '' || menu.style.display === 'none' ? 'block': 'none');
-      }
+        var show = (menu.style.display === '' || menu.style.display === 'none');
+        menu.style.display = (show ? 'block': 'none');
+        if (show) this.setBookmarks();
+      }.bind(this)
     });
     element.appendChild(this.button);
   }
@@ -195,12 +197,14 @@ ol_control_GeoBookmark.prototype.removeBookmark = function(name) {
 ol_control_GeoBookmark.prototype.addBookmark = function(name, position, zoom, permanent) {
   if (!name) return;
   var options = position;
-  var rot = this.getMap().getView().getRotation();
+  var rot;
   if (options && options.position) {
     zoom = options.zoom;
     permanent = options.permanent;
     rot = options.rotation ;
     position = options.position;
+  } else {
+    rot = this.getMap().getView().getRotation();
   }
   var bmark = this.getBookmarks();
   // Don't override permanent bookmark
