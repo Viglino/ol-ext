@@ -7459,6 +7459,7 @@ ol.control.Gauge.prototype.val = function(v) {
  *  @param {string} options.className default ol-bookmark
  *  @param {string | undefined} options.title Title to use for the button tooltip, default "Geobookmarks"
  *  @param {string} options.placeholder input placeholder, default Add a new geomark...
+ *  @param {string} [options.deleteTitle='Suppr.'] title for delete buttons
  *  @param {bool} options.editable enable modification, default true
  *  @param {string} options.namespace a namespace to save the boolmark (if more than one on a page), default ol
  *  @param {Array<any>} options.marks a list of default bookmarks: 
@@ -7540,6 +7541,7 @@ ol.control.GeoBookmark = function(options) {
   }.bind(this));
   this.set("namespace", options.namespace || 'ol');
   this.set("editable", options.editable !== false);
+  this.set('deleteTitle', options.deleteTitle || 'Suppr.');
   // Set default bmark
   var bmark = {};
   try {
@@ -7593,7 +7595,7 @@ ol.control.GeoBookmark.prototype.setBookmarks = function(bmark) {
       var button = document.createElement('button');
       button.setAttribute('data-name', b);
       button.setAttribute('type', 'button');
-      button.setAttribute('title', 'Suppr.');
+      button.setAttribute('title', this.get('deleteTitle') ||'Suppr.');
       button.addEventListener('click', function(e) {
         self.removeBookmark(this.getAttribute("data-name"));
         self.dispatchEvent({ type: "remove", name: this.getAttribute("data-name") });
@@ -25862,6 +25864,7 @@ ol.interaction.TouchCursorSelect.prototype.select = function(f) {
  *	@param {ol.events.ConditionType | undefined} options.keepAspectRatio A function that takes an ol.MapBrowserEvent and returns a boolean to keep aspect ratio, default ol.events.condition.shiftKeyOnly.
  *	@param {ol.events.ConditionType | undefined} options.modifyCenter A function that takes an ol.MapBrowserEvent and returns a boolean to apply scale & strech from the center, default ol.events.condition.metaKey or ol.events.condition.ctrlKey.
  *	@param {boolean} options.enableRotatedTransform Enable transform when map is rotated
+ *	@param {boolean} [options.keepRectangle=false] keep rectangle when possible
  *	@param {} options.style list of ol.style for handles
  *
  */
