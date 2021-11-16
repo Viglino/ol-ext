@@ -33113,13 +33113,20 @@ ol.ext.inherits(ol.Overlay.PopupFeature, ol.Overlay.Popup);
  */
 ol.Overlay.PopupFeature.prototype.setTemplate = function(template) {
   this._template = template;
-  if (this._template && this._template.attributes instanceof Array) {
+  this._attributeObject(this._template);
+}
+/**
+ * @private
+ */
+ ol.Overlay.PopupFeature.prototype._attributeObject = function (temp) {
+  if (temp && temp.attributes instanceof Array) {
     var att = {};
-    this._template.attributes.forEach(function (a) {
+    temp.attributes.forEach(function (a) {
       att[a] = true;
     });
-    this._template.attributes = att;
+    temp.attributes = att;
   }
+  return temp.attributes;
 };
 /** Show the popup on the map
  * @param {ol.coordinate|undefined} coordinate Position of the popup
@@ -33185,7 +33192,7 @@ ol.Overlay.PopupFeature.prototype._getHtml = function(feature) {
   // Display properties in a table
   if (template.attributes) {
     var tr, table = ol.ext.element.create('TABLE', { parent: html });
-    var atts = template.attributes;
+    var atts = this._attributeObject(template);
     var featureAtts = feature.getProperties();
     for (var att in atts) {
       if (featureAtts.hasOwnProperty(att)) {
