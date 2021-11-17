@@ -2264,10 +2264,13 @@ ol.ext.input.Collection = function(options) {
   this.refresh();
   this.collection.on('change:length', function() { 
     if (!this._reorder) {
-      if (this.getSelect() !== this._currentItem) {
-        this.selectAt(-1);
-      }
       this.refresh();
+      var pos = this.getSelectPosition();
+      if (pos < 0) {
+        this.dispatchEvent({ type: 'item:select', position: -1, item: null });
+      } else {
+        this.dispatchEvent({ type: 'item:order', position: pos, item: this._currentItem });
+      }
     }
   }.bind(this));
 };
@@ -2299,7 +2302,7 @@ ol.ext.input.Collection.prototype.selectAt = function(n) {
  * @returns {*}
  */
 ol.ext.input.Collection.prototype.getSelect = function() {
-  return this.select(this.collection.item(this._currentItem));
+  return this._currentItem;
 };
 /** Get current selection
  * @returns {number}
