@@ -90,11 +90,15 @@ var ul = new ol.ext.input.Collection({
   target: document.getElementById('collection')
 })
 
-ul.on(['select', 'order'], function (e) {
+ul.on(['item:select', 'item:order'], function (e) {
   $('#position').html(e.position)
   if (e.item) $('#result').html(e.item.title);
   else $('#result').html('')
 })
+ul.on('item:dblclick', function (e) {
+  alert (e.item.title.replace('<br/>', ' '));
+})
+
 </script>
   
 </body>

@@ -4,6 +4,9 @@ import ol_ext_inherits from '../ext';
 
 /** A list element synchronize with a Collection. Element in the list can be reordered interactively.
  * @constructor
+ * @fires item:select
+ * @fires item:dblclick
+ * @fires item:order
  * @extends {ol_Object}
  * @param {*} options
  *  @param {Element} [options.target] 
@@ -44,13 +47,8 @@ ol_ext_input_Collection.prototype.select = function(item) {
       pos = i;
     }
   })
-  if (pos >= 0) {
-    this._currentItem = item;
-    this.dispatchEvent({ type: 'select', position: pos, item: item });
-  } else {
-    this._currentItem = null;
-    this.dispatchEvent({ type: 'select', position: pos });
-  }
+  this._currentItem = (pos >= 0 ? item : null);
+  this.dispatchEvent({ type: 'item:select', position: pos, item: this._currentItem });
 };
 
 /** Select an item at
@@ -85,9 +83,14 @@ ol_ext_input_Collection.prototype.refresh = function() {
       html: this._title(item),
       className: this._currentItem === item ? 'ol-select' : '',
       'data-position': pos,
-      click: function() {
-        this.select(item);
-      }.bind(this),
+      on: {
+        click: function() {
+          this.select(item);
+        }.bind(this),
+        dblclick: function() {
+          this.dispatchEvent({ type: 'item:dblclick', position: pos, item: item });
+        }.bind(this),
+      },
       parent: this.element
     });
     this._listElt.push({ li: li, item: item });
@@ -122,7 +125,7 @@ ol_ext_input_Collection.prototype.refresh = function() {
         this.collection.removeAt(pos);
         this.collection.insertAt(current>pos ? current-1 : current, item);
         this._reorder = false;
-        this.dispatchEvent({ type: 'order', position: current>pos ? current-1 : current, oldPosition: pos, item: item })
+        this.dispatchEvent({ type: 'item:order', position: current>pos ? current-1 : current, oldPosition: pos, item: item })
         this.refresh();
       }
     }.bind(this);
