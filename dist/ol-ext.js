@@ -2242,7 +2242,8 @@ ol.ext.input.Checkbox.prototype.isChecked = function () {
   return this.input.checked;
 };
 
-/** A list element synchronize with a Collection. Element in the list can be reordered interactively.
+/** A list element synchronize with a Collection. 
+ * Element in the list can be reordered interactively and the associated Collection is kept up to date.
  * @constructor
  * @fires item:select
  * @fires item:dblclick
