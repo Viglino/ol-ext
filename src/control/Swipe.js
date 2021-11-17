@@ -147,11 +147,12 @@ ol_control_Swipe.prototype.removeLayer = function(layers) {
  * @returns {ol.extent}
  */
 ol_control_Swipe.prototype.getRectangle = function() {
+  var s;
   if (this.get('orientation') === 'vertical') {
-    var s = this.getMap().getSize();
+    s = this.getMap().getSize();
     return [ 0, 0, s[0]*this.get('position'), s[1]];
   } else {
-    var s = this.getMap().getSize();
+    s = this.getMap().getSize();
     return [ 0, 0, s[0], s[1]*this.get('position')];
   }
 };

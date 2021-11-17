@@ -6,6 +6,7 @@
 import ol_ext_inherits from '../util/ext'
 import ol_filter_Base from './Base'
 import {asString as ol_color_asString} from 'ol/color'
+import {toHSL as ol_color_toHSL} from '../util/color'
 
 /** Make a map or layer look like made of a set of Lego bricks.
  *  @constructor

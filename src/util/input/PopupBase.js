@@ -30,8 +30,10 @@ var ol_ext_input_PopupBase = function(options) {
   switch (options.position) {
     case 'inline': break;
     case 'fixed': {
+      this.element.classList.add('ol-popup');
       this.element.classList.add('ol-popup-fixed');
       this._fixed = true;
+      break;
     }
     default: {
       this.element.classList.add('ol-popup');

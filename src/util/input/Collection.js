@@ -1,5 +1,6 @@
-import Collection from 'ol/Collection'
+import ol_Object from 'ol/Object';
 import ol_ext_element from '../element'
+import ol_ext_inherits from '../ext';
 
 /** A list element synchronize with a Collection. Element in the list can be reordered interactively.
  * @constructor
@@ -36,14 +37,14 @@ ol_ext_input_Collection.prototype.select = function(item) {
   if (item === this._currentItem) return;
   var pos = -1;
   this._listElt.forEach(function (l, i) {
-    if (l.item!==item) {
+    if (l.item !== item) {
       l.li.classList.remove('ol-select');
     } else {
       l.li.classList.add('ol-select');
       pos = i;
     }
   })
-  if (i>0) {
+  if (pos >= 0) {
     this._currentItem = item;
     this.dispatchEvent({ type: 'select', position: pos, item: item });
   } else {
@@ -56,7 +57,7 @@ ol_ext_input_Collection.prototype.select = function(item) {
  * @param {number} n
  */
 ol_ext_input_Collection.prototype.selectAt = function(n) {
-  this.select(thid.collection.item(n));
+  this.select(this.collection.item(n));
 };
 
 /** Get current selection

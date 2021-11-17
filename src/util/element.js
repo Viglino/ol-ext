@@ -321,7 +321,7 @@ ol_ext_element.positionRect = function(elt, fixed) {
   var gtop = 0;
 
   var getRect = function( parent ) {
-    if (!!parent) {
+    if (parent) {
       gleft += parent.offsetLeft;
       gtop += parent.offsetTop;
       return getRect(parent.offsetParent);

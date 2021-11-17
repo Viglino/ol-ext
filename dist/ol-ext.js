@@ -887,7 +887,7 @@ ol.ext.element.positionRect = function(elt, fixed) {
   var gleft = 0;
   var gtop = 0;
   var getRect = function( parent ) {
-    if (!!parent) {
+    if (parent) {
       gleft += parent.offsetLeft;
       gtop += parent.offsetTop;
       return getRect(parent.offsetParent);
@@ -2135,8 +2135,10 @@ ol.ext.input.PopupBase = function(options) {
   switch (options.position) {
     case 'inline': break;
     case 'fixed': {
+      this.element.classList.add('ol-popup');
       this.element.classList.add('ol-popup-fixed');
       this._fixed = true;
+      break;
     }
     default: {
       this.element.classList.add('ol-popup');
@@ -2274,14 +2276,14 @@ ol.ext.input.Collection.prototype.select = function(item) {
   if (item === this._currentItem) return;
   var pos = -1;
   this._listElt.forEach(function (l, i) {
-    if (l.item!==item) {
+    if (l.item !== item) {
       l.li.classList.remove('ol-select');
     } else {
       l.li.classList.add('ol-select');
       pos = i;
     }
   })
-  if (i>0) {
+  if (pos >= 0) {
     this._currentItem = item;
     this.dispatchEvent({ type: 'select', position: pos, item: item });
   } else {
@@ -2293,7 +2295,7 @@ ol.ext.input.Collection.prototype.select = function(item) {
  * @param {number} n
  */
 ol.ext.input.Collection.prototype.selectAt = function(n) {
-  this.select(thid.collection.item(n));
+  this.select(this.collection.item(n));
 };
 /** Get current selection
  * @returns {*}
@@ -14917,11 +14919,12 @@ ol.control.Swipe.prototype.removeLayer = function(layers) {
  * @returns {ol.extent}
  */
 ol.control.Swipe.prototype.getRectangle = function() {
+  var s;
   if (this.get('orientation') === 'vertical') {
-    var s = this.getMap().getSize();
+    s = this.getMap().getSize();
     return [ 0, 0, s[0]*this.get('position'), s[1]];
   } else {
-    var s = this.getMap().getSize();
+    s = this.getMap().getSize();
     return [ 0, 0, s[0], s[1]*this.get('position')];
   }
 };
