@@ -182,11 +182,12 @@ ol_control_Dialog.prototype.setContent = function(options) {
   var btn = options.buttons || this.get('buttons');
   if (btn) {
     form.classList.add('ol-button');
+    console.log(options)
     for (var i in btn) {
       ol_ext_element.create ('INPUT', {
         type: (i==='submit' ? 'submit':'button'),
         value: btn[i],
-        click: this._onButton(i, btn),
+        click: this._onButton(i, options.onButton),
         parent: buttons
       });
     }
