@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.15
+ * @version v3.2.16
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -6873,11 +6873,12 @@ ol.control.Dialog.prototype.setContent = function(options) {
   var btn = options.buttons || this.get('buttons');
   if (btn) {
     form.classList.add('ol-button');
+    console.log(options)
     for (var i in btn) {
       ol.ext.element.create ('INPUT', {
         type: (i==='submit' ? 'submit':'button'),
         value: btn[i],
-        click: this._onButton(i, btn),
+        click: this._onButton(i, options.onButton),
         parent: buttons
       });
     }
