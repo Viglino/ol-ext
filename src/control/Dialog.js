@@ -143,7 +143,6 @@ ol_control_Dialog.prototype.open = function() {
  */
 ol_control_Dialog.prototype.setContent = function(options) {
   if (!options) return;
-  console.log('setcontent')
   this.element.className = this.get('className');
   if (typeof(options) === 'string') options = { content: options };
   options = options || {};

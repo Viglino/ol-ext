@@ -6769,7 +6769,7 @@ ol.control.Dialog = function(options) {
   this.set('zoom', !!options.zoom);
   this.set('hideOnClick', !!options.hideOnClick);
   this.set('hideOnBack', !!options.hideOnBack);
-  this.set('className', options.className);
+  this.set('className', element.className);
   this.set('closeOnSubmit', options.closeOnSubmit);
   this.set('buttons', options.buttons);
   this.setContent(options)
@@ -6834,6 +6834,8 @@ ol.control.Dialog.prototype.open = function() {
  */
 ol.control.Dialog.prototype.setContent = function(options) {
   if (!options) return;
+  console.log('setcontent')
+  this.element.className = this.get('className');
   if (typeof(options) === 'string') options = { content: options };
   options = options || {};
   if (options.max) this.setProgress(0, options.max);
@@ -6842,9 +6844,9 @@ ol.control.Dialog.prototype.setContent = function(options) {
   if (this.get('zoom')) this.element.classList.add('ol-zoom');
   else this.element.classList.remove('ol-zoom');
   if (options.className) {
-    this.element.classList.add(options.className);
-  } else if (this.get('className')) {
-    this.element.classList.add(this.get('className'));
+    options.className.split(' ').forEach(function(c) {
+      this.element.classList.add(options.className);
+    }.bind(this));
   }
   var form = this.element.querySelector('form');
   // Content
