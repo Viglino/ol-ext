@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.16
+ * @version v3.2.17
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -6873,7 +6873,6 @@ ol.control.Dialog.prototype.setContent = function(options) {
   var btn = options.buttons || this.get('buttons');
   if (btn) {
     form.classList.add('ol-button');
-    console.log(options)
     for (var i in btn) {
       ol.ext.element.create ('INPUT', {
         type: (i==='submit' ? 'submit':'button'),
@@ -26146,13 +26145,25 @@ ol.interaction.Transform.prototype.getGeometryRotateToZero_ = function(f, clone)
   var rotGeom = origGeom.clone();
   rotGeom.rotate(viewRotation * -1, this.getMap().getView().getCenter());
   return rotGeom;
-}
+};
+/** Test if rectangle
+ * @param {ol.Geometry} geom
+ * @returns {boolean}
+ * @private
+ */
+ol.interaction.Transform.prototype._isRectangle = function(geom) {
+  if (this.get('keepRectangle') && geom.getType() === 'Polygon') {
+    var coords = geom.getCoordinates()[0];
+    return coords.length === 5;
+  }
+  return false;
+};
 /** Draw transform sketch
 * @param {boolean} draw only the center
 */
 ol.interaction.Transform.prototype.drawSketch_ = function(center) {
   var i, f, geom;
-  var keepRectangle = this.get('keepRectangle') && this.selection_.item(0) && (this.selection_.item(0).getGeometry().getType() === 'Polygon');
+  var keepRectangle = this.selection_.item(0) && this._isRectangle(this.selection_.item(0).getGeometry());
   this.overlayLayer_.getSource().clear();
   if (!this.selection_.getLength()) return;
   var viewRotation = this.getMap().getView().getRotation();
@@ -26458,7 +26469,7 @@ ol.interaction.Transform.prototype.handleDragEvent_ = function(evt) {
         }
         center = extentCoordinates[(Number(this.opt_)+2)%4];
       }
-      var keepRectangle = this.get('keepRectangle') && this.geoms_.length <= 1 && this.geoms_[0].getType() == 'Polygon';
+      var keepRectangle = (this.geoms_.length == 1 && this._isRectangle(this.geoms_[0]));
       var stretch = this.constraint_;
       var opt = this.opt_;
       var downCoordinate = this.coordinate_;
