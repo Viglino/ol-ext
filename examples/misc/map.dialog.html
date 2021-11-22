@@ -154,8 +154,7 @@
   map.addControl(dialogMap);
 
   // Prompt dialog
-  var dialogPrompt = new ol.control.Dialog();
-  dialogPrompt.setContent({
+  var dialogPrompt = new ol.control.Dialog({
     content: 'Enter a value:<br/><input class="value" type="text" placeholder="Enter a value" />',
     title: 'Prompt', 
     buttons:{ submit:'ok', cancel:'cancel' }
