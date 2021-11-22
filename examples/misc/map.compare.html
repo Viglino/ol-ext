@@ -261,25 +261,22 @@
     }
     map.updateSize();
     map2.updateSize();
-    map2.on('click', function(e) {
-      if (/swipe/.test(currentMode)) {
-        if (ol.extent.containsCoordinate(swipe.getRectangle(), e.pixel)) {
-          // Simulate map1 selection
-          select2.getFeatures().clear();
-          e.stopPropagation();
-          map.forEachFeatureAtPixel(e.pixel, function(f, l) {
-            if (l) {
-              select1.getFeatures().clear();
-              select1.getFeatures().push(f)
-              return true;
-            }
-          })
-        } else {
-          select1.getFeatures().clear();
-        }
-      }
-    });
   }
+
+  // Check click and dispatch to map
+  map2.on('click', function(e) {
+    if (/swipe/.test(currentMode)) {
+      if (ol.extent.containsCoordinate(swipe.getRectangle(), e.pixel)) {
+        // Simulate map1 selection
+        e.map = map;
+        e.stopPropagation();
+        select2.getFeatures().clear();
+        select1.handleEvent(e);
+      } else {
+        select1.getFeatures().clear();
+      }
+    }
+  });
 
   </script>
   
