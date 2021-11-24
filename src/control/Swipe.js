@@ -126,6 +126,14 @@ ol_control_Swipe.prototype.addLayer = function(layers, right) {
   }
 };
 
+/** Remove all layers
+ */
+ol_control_Swipe.prototype.removeLayers = function(layers) {
+  var layers = [];
+  this.layers.forEach(function(l) { layers.push(l.layer); });
+  this.removeLayer(layers)
+};
+
 /** Remove a layer to clip
  *	@param {ol.layer|Array<ol.layer>} layer to clip
 */
@@ -138,8 +146,10 @@ ol_control_Swipe.prototype.removeLayer = function(layers) {
       else layers[i].un(['precompose','prerender'], this.precomposeLeft_);
       layers[i].un(['postcompose','postrender'], this.postcompose_);
       this.layers.splice(k,1);
-      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
     }
+  }
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
   }
 };
 
