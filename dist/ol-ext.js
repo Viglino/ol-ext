@@ -6834,7 +6834,6 @@ ol.control.Dialog.prototype.open = function() {
  */
 ol.control.Dialog.prototype.setContent = function(options) {
   if (!options) return;
-  console.log('setcontent')
   this.element.className = this.get('className');
   if (typeof(options) === 'string') options = { content: options };
   options = options || {};
@@ -14908,6 +14907,13 @@ ol.control.Swipe.prototype.addLayer = function(layers, right) {
     }
   }
 };
+/** Remove all layers
+ */
+ol.control.Swipe.prototype.removeLayers = function(layers) {
+  var layers = [];
+  this.layers.forEach(function(l) { layers.push(l.layer); });
+  this.removeLayer(layers)
+};
 /** Remove a layer to clip
  *	@param {ol.layer|Array<ol.layer>} layer to clip
 */
@@ -14920,8 +14926,10 @@ ol.control.Swipe.prototype.removeLayer = function(layers) {
       else layers[i].un(['precompose','prerender'], this.precomposeLeft_);
       layers[i].un(['postcompose','postrender'], this.postcompose_);
       this.layers.splice(k,1);
-      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
     }
+  }
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
   }
 };
 /** Get visible rectangle
@@ -19931,6 +19939,11 @@ ol.interaction.Clip.prototype.addLayer = function(layers)  {
     this.layers_.push(layers[i]);
   }
 };
+/** Remove all layers
+ */
+ol.interaction.Clip.prototype.removeLayers = function() {
+  this.removeLayer(this.layers_);
+};
 /** Remove a layer to clip
  *	@param {ol.layer|Array<ol.layer>} layer to clip
 */
@@ -19947,8 +19960,10 @@ ol.interaction.Clip.prototype.removeLayer = function(layers) {
       this.layers_[k].un(['precompose','prerender'], this.precomposeBind_);
       this.layers_[k].un(['postcompose','postrender'], this.postcomposeBind_);
       this.layers_.splice(k,1);
-      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
     }
+  }
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
   }
 };
 /** Set position of the clip
