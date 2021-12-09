@@ -24,7 +24,7 @@ var ol_interaction_TouchCursorSelect = function(options) {
 
   this._selection = null;
   this._layerFilter = options.layerFilter;
-  this._filter = options._filter;
+  this._filter = options.filter;
   this._style = options.style || ol_style_Style_defaultStyle(true);
   this.set('hitTolerance', options.hitTolerance || 0);
 
