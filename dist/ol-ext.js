@@ -6854,6 +6854,7 @@ ol.control.Dialog.prototype.setContent = function(options) {
     ol.ext.element.setHTML(form.querySelector('.ol-content'), options.content || '');
   }
   // Title
+  form.querySelector('h2').innerText = options.title || '';
   if (options.title) {
     form.classList.add('ol-title');
   } else {
