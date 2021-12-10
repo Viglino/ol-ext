@@ -840,7 +840,7 @@ ol_control_WMSCapabilities.prototype._getFormOptions = function() {
       title: this._elements.formTitle.value
     }
   }
-  if (this._elements.formMap.value) options.source.param.MAP = this._elements.formMap.value;
+  if (this._elements.formMap.value) options.source.params.MAP = this._elements.formMap.value;
   return options;
 };
 

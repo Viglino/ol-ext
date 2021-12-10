@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.17
+ * @version v3.2.18
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -16808,7 +16808,7 @@ ol.control.WMSCapabilities.prototype._getFormOptions = function() {
       title: this._elements.formTitle.value
     }
   }
-  if (this._elements.formMap.value) options.source.param.MAP = this._elements.formMap.value;
+  if (this._elements.formMap.value) options.source.params.MAP = this._elements.formMap.value;
   return options;
 };
 /** Fill dialog form
