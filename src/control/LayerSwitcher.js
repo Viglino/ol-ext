@@ -83,7 +83,7 @@ var ol_control_LayerSwitcher = function(options) {
     });
     this.button.addEventListener('touchstart', function(e){
       element.classList.toggle('ol-forceopen');
-      element.classList.toggle('ol-collapsed');
+      element.classList.add('ol-collapsed');
       self.dispatchEvent({ type: 'toggle', collapsed: element.classList.contains('ol-collapsed') });
       e.preventDefault(); 
       self.overflow();
