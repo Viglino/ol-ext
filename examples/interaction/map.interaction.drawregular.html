@@ -85,7 +85,8 @@
     map.addLayer(vector);
 
     var interaction = new ol.interaction.DrawRegular ({
-      source: vector.getSource(), 
+      source: vector.getSource(),
+      // geometryName: 'geom',
       // condition: ol.events.condition.altKeyOnly,
       sides:$("#sides").val() ,
       canRotate: $("#rotation").prop('checked')
