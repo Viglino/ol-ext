@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.18
+ * @version v3.2.19
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -4942,7 +4942,7 @@ ol.control.LayerSwitcher = function(options) {
     });
     this.button.addEventListener('touchstart', function(e){
       element.classList.toggle('ol-forceopen');
-      element.classList.toggle('ol-collapsed');
+      element.classList.add('ol-collapsed');
       self.dispatchEvent({ type: 'toggle', collapsed: element.classList.contains('ol-collapsed') });
       e.preventDefault(); 
       self.overflow();
