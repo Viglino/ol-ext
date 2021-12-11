@@ -20905,6 +20905,7 @@ ol.interaction.DrawHole.prototype._geometryFn = function(coordinates, geometry) 
  *  @param { ol.events.ConditionType | undefined } options.squareCondition A function that takes an ol.MapBrowserEvent and returns a boolean to draw square features. Default test shift key
  *  @param { ol.events.ConditionType | undefined } options.centerCondition A function that takes an ol.MapBrowserEvent and returns a boolean to draw centered features. Default check Ctrl key
  *  @param { bool } options.canRotate Allow rotation when centered + square, default: true
+ *  @param { string } [options.geometryName=geometry] 
  *  @param { number } options.clickTolerance click tolerance on touch devices, default: 6
  *  @param { number } options.maxCircleCoordinates Maximum number of point on a circle, default: 100
  */
@@ -20925,7 +20926,7 @@ ol.interaction.DrawRegular = function(options) {
   // Allow rotation when centered + square
   this.canRotate_ = (options.canRotate !== false);
   // Specify custom geometry name
-  this.geometryName_ = options.geometryName
+  this.geometryName_ = options.geometryName;
   // Number of sides (default=0: circle)
   this.setSides(options.sides);
   // Style
@@ -21098,7 +21099,6 @@ ol.interaction.DrawRegular.prototype.drawSketch_ = function(evt) {
     var g = this.getGeom_();
     if (g) {
       var f = this.feature_;
-      if (this.geometryName_) f.setGeometryName(this.geometryName_)
       //f.setGeometry (g);
       if (g.getType()==='Polygon') f.getGeometry().setCoordinates(g.getCoordinates());
       this.overlayLayer_.getSource().addFeature(f);
@@ -21236,8 +21236,9 @@ ol.interaction.DrawRegular.prototype.start_ = function(evt) {
     this.started_ = true;
     this.center_ = evt.coordinate;
     this.coord_ = null;
-    var geom = new ol.geom.Polygon([[evt.coordinate,evt.coordinate,evt.coordinate]]);
-    var f = this.feature_ = new ol.Feature(geom);
+    var f = this.feature_ = new ol.Feature({});
+    f.setGeometryName(this.geometryName_);
+    f.setGeometry(new ol.geom.Polygon([[evt.coordinate,evt.coordinate,evt.coordinate]]));
     this.drawSketch_(evt);
     this.dispatchEvent({ type:'drawstart', feature: f, pixel: evt.pixel, coordinate: evt.coordinate });
   } else {
@@ -21253,7 +21254,6 @@ ol.interaction.DrawRegular.prototype.end_ = function(evt) {
   this.started_ = false;
   if (this.coord_ && (this.center_[0]!==this.coord_[0] || this.center_[1]!==this.coord_[1])) {
     var f = this.feature_;
-    if (this.geometryName_) f.setGeometryName(this.geometryName_)
     f.setGeometry(this.getGeom_());
     if (this.source_) this.source_.addFeature(f);
     else if (this.features_) this.features_.push(f);
