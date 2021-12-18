@@ -878,6 +878,22 @@ ol.ext.element.offsetRect = function(elt) {
     width: rect.width || (rect.right - rect.left)
   }
 };
+ol.ext.element.getFixedOffset = function(elt) {
+  var offset = {
+    left:0,
+    top:0
+  };
+  var getOffset = function(parent) {
+    if (!parent) return offset;
+    if (ol.ext.element.getStyle(parent, 'position') === 'absolute') {
+      var r = parent.getBoundingClientRect();
+      offset.left += r.left; 
+      offset.top += r.top; 
+    }
+    return getOffset(parent.offsetParent)
+  }
+  return getOffset(elt.offsetParent)
+};
 /** Get element offset rect
  * @param {DOMElement} elt
  * @param {boolean} fixed get fixed position
@@ -2120,7 +2136,7 @@ ol.ext.inherits(ol.ext.input.Slider, ol.ext.input.Base);
  *  @param {ol.colorLike} [options.color] default color
  *  @param {Element} [options.input] input element, if non create one
  *  @param {Element} [options.parent] parent element, if create an input
- *  @param {string} [options.position='popup'] fixed | popup | inline (no popup)
+ *  @param {string} [options.position='popup'] fixed | static | popup | inline (no popup)
  *  @param {boolean} [options.autoClose=true] close when click on color
  *  @param {boolean} [options.hidden=false] display the input
  */
@@ -2134,10 +2150,11 @@ ol.ext.input.PopupBase = function(options) {
   });
   switch (options.position) {
     case 'inline': break;
+    case 'static':
     case 'fixed': {
       this.element.classList.add('ol-popup');
       this.element.classList.add('ol-popup-fixed');
-      this._fixed = true;
+      this._fixed = (options.position === 'fixed');
       break;
     }
     default: {
@@ -2178,6 +2195,25 @@ ol.ext.input.PopupBase.prototype.collapse = function(b) {
   } else {
     this._elt.popup.classList.add('ol-visible');
     if (this._fixed) {
+      var pos = this.element.getBoundingClientRect();
+      var offset = ol.ext.element.getFixedOffset(this.element);
+      pos = {
+        bottom: pos.bottom - offset.top,
+        left: pos.left - offset.left
+      }
+      var dh = pos.bottom + this._elt.popup.offsetHeight;
+      if (dh > window.innerHeight) {
+        this._elt.popup.style.top = Math.max(window.innerHeight - this._elt.popup.offsetHeight, 0) + 'px';
+      } else {
+        this._elt.popup.style.top = pos.bottom + 'px';
+      }
+      var dw = pos.left + this._elt.popup.offsetWidth;
+      if (dw > window.innerWidth) {
+        this._elt.popup.style.left = Math.max(window.innerWidth - this._elt.popup.offsetWidth, 0) + 'px';
+      } else {
+        this._elt.popup.style.left = pos.left + 'px';
+      }
+      /*
       var pos = ol.ext.element.positionRect(this.element, true);
       var dh = pos.bottom + this._elt.popup.offsetHeight;
       if (dh > window.innerHeight) {
@@ -2191,6 +2227,7 @@ ol.ext.input.PopupBase.prototype.collapse = function(b) {
       } else {
         this._elt.popup.style.left = pos.left + 'px';
       }
+      */
     }
   }
 };
@@ -2389,7 +2426,7 @@ ol.ext.input.Collection.prototype.refresh = function() {
  *  @param {boolean} [options.hastab=false] use tabs for palette / picker
  *  @param {string} [options.paletteLabel="palette"] label for the palette tab
  *  @param {string} [options.pickerLabel="picker"] label for the picker tab
- *  @param {string} [options.position='popup'] fixed | popup | inline (no popup)
+ *  @param {string} [options.position='popup'] fixed | static | popup | inline (no popup)
  *  @param {boolean} [options.opacity=true] enable opacity
  *  @param {boolean} [options.autoClose=true] close when click on color
  *  @param {boolean} [options.hidden=true] display the input

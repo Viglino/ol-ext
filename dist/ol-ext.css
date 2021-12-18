@@ -418,6 +418,7 @@
 
 .ol-ext-dialog > form .ol-buttons {
   text-align: right;
+  overflow-x: hidden;
 }
 .ol-ext-dialog > form .ol-buttons input {
   margin-top: .5em;
@@ -491,6 +492,10 @@
 /* Fullscreen dialog */
 body > .ol-ext-dialog .ol-content {
   max-height: calc(100vh - 10em);
+}
+
+body > .ol-ext-dialog > form {
+  overflow: visible;
 }
 .ol-editbar .ol-button button {
   position: relative;
@@ -6416,6 +6421,7 @@ ul.ol-legend li div {
 .ol-ext-popup-input.ol-popup-fixed .ol-popup {
   position: fixed;
   top: auto;
+  left: auto;
 }
 
 .ol-input-popup.ol-size li {
