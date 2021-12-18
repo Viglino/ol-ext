@@ -50,4 +50,5 @@
 .ol-ext-popup-input.ol-popup-fixed .ol-popup {
   position: fixed;
   top: auto;
+  left: auto;
 }

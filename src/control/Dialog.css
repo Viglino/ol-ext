@@ -104,6 +104,7 @@
 
 .ol-ext-dialog > form .ol-buttons {
   text-align: right;
+  overflow-x: hidden;
 }
 .ol-ext-dialog > form .ol-buttons input {
   margin-top: .5em;
@@ -173,4 +174,8 @@
 /* Fullscreen dialog */
 body > .ol-ext-dialog .ol-content {
   max-height: calc(100vh - 10em);
+}
+
+body > .ol-ext-dialog > form {
+  overflow: visible;
 }

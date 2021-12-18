@@ -19,7 +19,7 @@ import { asArray as ol_color_asArray } from 'ol/color'
  *  @param {boolean} [options.hastab=false] use tabs for palette / picker
  *  @param {string} [options.paletteLabel="palette"] label for the palette tab
  *  @param {string} [options.pickerLabel="picker"] label for the picker tab
- *  @param {string} [options.position='popup'] fixed | popup | inline (no popup)
+ *  @param {string} [options.position='popup'] fixed | static | popup | inline (no popup)
  *  @param {boolean} [options.opacity=true] enable opacity
  *  @param {boolean} [options.autoClose=true] close when click on color
  *  @param {boolean} [options.hidden=true] display the input

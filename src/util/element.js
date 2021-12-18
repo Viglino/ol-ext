@@ -311,6 +311,23 @@ ol_ext_element.offsetRect = function(elt) {
   }
 };
 
+ol_ext_element.getFixedOffset = function(elt) {
+  var offset = {
+    left:0,
+    top:0
+  };
+  var getOffset = function(parent) {
+    if (!parent) return offset;
+    if (ol_ext_element.getStyle(parent, 'position') === 'absolute') {
+      var r = parent.getBoundingClientRect();
+      offset.left += r.left; 
+      offset.top += r.top; 
+    }
+    return getOffset(parent.offsetParent)
+  }
+  return getOffset(elt.offsetParent)
+};
+
 /** Get element offset rect
  * @param {DOMElement} elt
  * @param {boolean} fixed get fixed position
