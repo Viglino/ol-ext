@@ -45,11 +45,17 @@ var ol_ext_input_PopupBase = function(options) {
   var input = this.input;
   if (input.parentNode) input.parentNode.insertBefore(this.element, input);
 
+  // Show on element click
   this.element.addEventListener('click', function() {
     if (this.isCollapsed()) setTimeout( function() { this.collapse(false); }.bind(this) );
   }.bind(this));
+  // Hide on click outside
   document.addEventListener('click', function() {
     if (!this.moving) this.collapse(true);
+  }.bind(this));
+  // Hide on window resize
+  window.addEventListener('resize', function() {
+    this.collapse(true);
   }.bind(this));
 
   this._elt = {};
@@ -80,39 +86,26 @@ ol_ext_input_PopupBase.prototype.collapse = function(b) {
   } else {
     this._elt.popup.classList.add('ol-visible');
     if (this._fixed) {
+      // Get fixed position
       var pos = this.element.getBoundingClientRect();
       var offset = ol_ext_element.getFixedOffset(this.element);
       pos = {
         bottom: pos.bottom - offset.top,
         left: pos.left - offset.left
       }
-      var dh = pos.bottom + this._elt.popup.offsetHeight;
-      if (dh > window.innerHeight) {
-        this._elt.popup.style.top = Math.max(window.innerHeight - this._elt.popup.offsetHeight, 0) + 'px';
+      // Test window overflow + recenter
+      var dh = pos.bottom + this._elt.popup.offsetHeight + offset.top;
+      if (dh > document.documentElement.clientHeight) {
+        this._elt.popup.style.top = Math.max(document.documentElement.clientHeight - this._elt.popup.offsetHeight - offset.top, 0) + 'px';
       } else {
         this._elt.popup.style.top = pos.bottom + 'px';
       }
-      var dw = pos.left + this._elt.popup.offsetWidth;
-      if (dw > window.innerWidth) {
-        this._elt.popup.style.left = Math.max(window.innerWidth - this._elt.popup.offsetWidth, 0) + 'px';
+      var dw = pos.left + this._elt.popup.offsetWidth + offset.left;
+      if (dw > document.documentElement.clientWidth) {
+        this._elt.popup.style.left = Math.max(document.documentElement.clientWidth - this._elt.popup.offsetWidth - offset.left, 0) + 'px';
       } else {
         this._elt.popup.style.left = pos.left + 'px';
       }
-      /*
-      var pos = ol_ext_element.positionRect(this.element, true);
-      var dh = pos.bottom + this._elt.popup.offsetHeight;
-      if (dh > window.innerHeight) {
-        this._elt.popup.style.top = Math.max(window.innerHeight - this._elt.popup.offsetHeight, 0) + 'px';
-      } else {
-        this._elt.popup.style.top = pos.bottom + 'px';
-      }
-      var dw = pos.left + this._elt.popup.offsetWidth;
-      if (dw > window.innerWidth) {
-        this._elt.popup.style.left = Math.max(window.innerWidth - this._elt.popup.offsetWidth, 0) + 'px';
-      } else {
-        this._elt.popup.style.left = pos.left + 'px';
-      }
-      */
     }
   }
 };

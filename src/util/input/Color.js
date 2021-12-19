@@ -243,7 +243,6 @@ ol_ext_input_Color.prototype.addPaletteColor = function(color, title, select) {
   var id = this.getColorID(color);
   // Add new one
   if (!this._paletteColor[id] && color[3]) {
-    console.log(color[3]<1)
     this._paletteColor[id] = {
       color: color,
       element: ol_ext_element.create('DIV', {

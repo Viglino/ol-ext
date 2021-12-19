@@ -311,6 +311,10 @@ ol_ext_element.offsetRect = function(elt) {
   }
 };
 
+/** Get element offset 
+ * @param {ELement} elt
+ * @returns {Object} top/left offset
+ */
 ol_ext_element.getFixedOffset = function(elt) {
   var offset = {
     left:0,
@@ -322,7 +326,9 @@ ol_ext_element.getFixedOffset = function(elt) {
       var r = parent.getBoundingClientRect();
       offset.left += r.left; 
       offset.top += r.top; 
+      return offset;
     }
+    console.log(parent, offset)
     return getOffset(parent.offsetParent)
   }
   return getOffset(elt.offsetParent)
