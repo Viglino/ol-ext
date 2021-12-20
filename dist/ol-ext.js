@@ -6878,7 +6878,7 @@ ol.control.Dialog.prototype.setContent = function(options) {
   if (this.get('zoom')) this.element.classList.add('ol-zoom');
   else this.element.classList.remove('ol-zoom');
   if (options.className) {
-    options.className.split(' ').forEach(function(c) {
+    options.className.split(' ').forEach(function() {
       this.element.classList.add(options.className);
     }.bind(this));
   }
@@ -13275,10 +13275,12 @@ ol.control.SearchGPS.prototype._createForm = function () {
   var latd = createInput('ol-dms','°');
   var latm = createInput('ol-dms','\'');
   var lats = createInput('ol-dms','"');
-  // Focus
-  this.button.addEventListener("click", function() {
-    lon.focus();
-  });
+  // Focus on open
+  if (this.button) {
+    this.button.addEventListener("click", function() {
+      lon.focus();
+    });
+  }
   // Change value on click
   this.on('select', function(e){
     lon.value = e.search.gps[0];
@@ -14942,7 +14944,7 @@ ol.control.Swipe.prototype.addLayer = function(layers, right) {
 };
 /** Remove all layers
  */
-ol.control.Swipe.prototype.removeLayers = function(layers) {
+ol.control.Swipe.prototype.removeLayers = function() {
   var layers = [];
   this.layers.forEach(function(l) { layers.push(l.layer); });
   this.removeLayer(layers)

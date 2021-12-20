@@ -154,10 +154,12 @@ ol_control_SearchGPS.prototype._createForm = function () {
   var latm = createInput('ol-dms','\'');
   var lats = createInput('ol-dms','"');
 
-  // Focus
-  this.button.addEventListener("click", function() {
-    lon.focus();
-  });
+  // Focus on open
+  if (this.button) {
+    this.button.addEventListener("click", function() {
+      lon.focus();
+    });
+  }
 
   // Change value on click
   this.on('select', function(e){

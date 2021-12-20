@@ -128,7 +128,7 @@ ol_control_Swipe.prototype.addLayer = function(layers, right) {
 
 /** Remove all layers
  */
-ol_control_Swipe.prototype.removeLayers = function(layers) {
+ol_control_Swipe.prototype.removeLayers = function() {
   var layers = [];
   this.layers.forEach(function(l) { layers.push(l.layer); });
   this.removeLayer(layers)
