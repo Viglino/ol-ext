@@ -152,7 +152,7 @@ ol_control_Dialog.prototype.setContent = function(options) {
   if (this.get('zoom')) this.element.classList.add('ol-zoom');
   else this.element.classList.remove('ol-zoom');
   if (options.className) {
-    options.className.split(' ').forEach(function(c) {
+    options.className.split(' ').forEach(function() {
       this.element.classList.add(options.className);
     }.bind(this));
   }
