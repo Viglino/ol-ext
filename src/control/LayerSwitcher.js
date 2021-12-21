@@ -42,7 +42,6 @@ import ol_ext_element from '../util/element'
  *  @param {ol.layer.Group} options.layerGroup a layer group to display in the switcher, default display all layers of the map
  *  @param {boolean} options.noScroll prevent handle scrolling, default false
  *  @param {function} options.onchangeCheck optional callback on click on checkbox, you can call this method for doing operations after check/uncheck a layer
-
  *
  * Layers attributes that control the switcher
  *	- allwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false
