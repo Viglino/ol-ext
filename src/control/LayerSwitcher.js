@@ -41,6 +41,8 @@ import ol_ext_element from '../util/element'
  *  @param {boolean} options.collapsed collapse the layerswitcher at beginning, default true
  *  @param {ol.layer.Group} options.layerGroup a layer group to display in the switcher, default display all layers of the map
  *  @param {boolean} options.noScroll prevent handle scrolling, default false
+ *  @param {function} options.onchangeCheck optional callback on click on checkbox, you can call this method for doing operations after check/uncheck a layer
+
  *
  * Layers attributes that control the switcher
  *	- allwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false
@@ -59,6 +61,7 @@ var ol_control_LayerSwitcher = function(options) {
   this.reordering = (options.reordering!==false);
   this._layers = [];
   this._layerGroup = (options.layerGroup && options.layerGroup.getLayers) ? options.layerGroup : null;
+  this.onchangeCheck = (typeof (options.onchangeCheck) == "function" ? options.onchangeCheck : null);
 
   // displayInLayerSwitcher
   if (typeof(options.displayInLayerSwitcher) === 'function') {
@@ -698,6 +701,9 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection) {
     self.switchLayerVisibility(l, collection);
     if (self.get('selection') && l.getVisible()) {
       self.selectLayer(l);
+    }
+    if (self.onchangeCheck) {
+      self.onchangeCheck(l);
     }
   };
   // Info button click
