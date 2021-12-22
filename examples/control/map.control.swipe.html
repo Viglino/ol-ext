@@ -63,6 +63,20 @@
     var label = new ol.layer.Tile({
       source: new ol.source.Stamen({ layer: 'terrain-labels' }) 
     });
+    // GeoJSON layer
+    var vectorSource = new ol.source.Vector({
+      url: '../data/fond_guerre.geojson',
+      projection: 'EPSG:3857',
+      format: new ol.format.GeoJSON(),
+      attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
+      logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+    });
+    var vectorLayer = new ol.layer.VectorImage({ 
+      source: vectorSource,
+      style: new ol.style.Style({
+        image: new ol.style.Icon({ src:"../data/camera.png", scale: 2 })
+      })
+    })
 
     // The map
     var map = new ol.Map({
@@ -71,7 +85,7 @@
         zoom: 12,
         center: [270701, 6247637]
       }),
-    layers: [ stamen, osm, label ]
+      layers: [ stamen, osm, label, vectorLayer ]
     });
 
     // Control
@@ -81,6 +95,7 @@
     ctrl.addLayer(stamen);
     // OSM on right
     ctrl.addLayer(osm, true);
+    ctrl.addLayer(vectorLayer, true);
 
   </script>
 
