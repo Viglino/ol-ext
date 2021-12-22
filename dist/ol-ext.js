@@ -14875,7 +14875,7 @@ ol.control.Swipe = function(options) {
   this.layers = [];
   if (options.layers) this.addLayer(options.layers, false);
   if (options.rightLayers) this.addLayer(options.rightLayers, true);
-  this.on('propertychange', function() {
+  this.on('propertychange', function(e) {
     if (this.getMap()) {
       try { this.getMap().renderSync(); } catch(e) { /* ok */ }
     }
@@ -14887,8 +14887,16 @@ ol.control.Swipe = function(options) {
       this.element.style.left = this.get('position')*100+"%";
       this.element.style.top = "";
     }
-    this.element.classList.remove("horizontal", "vertical");
-    this.element.classList.add(this.get('orientation'));
+    if (e.key==='orientation') {
+      this.element.classList.remove("horizontal", "vertical");
+      this.element.classList.add(this.get('orientation'));
+    }
+    // Force VectorImage to refresh
+    if (!this.isMoving) {
+      this.layers.forEach(function(l) {
+        if (l.layer.getImageRatio) l.layer.changed();
+      })
+    }
   }.bind(this));
   this.set('position', options.position || 0.5);
   this.set('orientation', options.orientation || 'vertical');
@@ -14992,6 +15000,7 @@ ol.control.Swipe.prototype.getRectangle = function() {
 ol.control.Swipe.prototype.move = function(e) {
   var self = this;
   var l;
+  if (!this._movefn) this._movefn = this.move.bind(this);
   switch (e.type) {
     case 'touchcancel':
     case 'touchend':
@@ -14999,8 +15008,12 @@ ol.control.Swipe.prototype.move = function(e) {
       self.isMoving = false;
       ["mouseup", "mousemove", "touchend", "touchcancel", "touchmove"]
         .forEach(function(eventName) {
-          document.removeEventListener(eventName, self.move);
+          document.removeEventListener(eventName, self._movefn);
         });
+      // Force VectorImage to refresh
+      this.layers.forEach(function(l) {
+        if (l.layer.getImageRatio) l.layer.changed();
+      })
       break;
     }
     case 'mousedown':
@@ -15008,7 +15021,7 @@ ol.control.Swipe.prototype.move = function(e) {
       self.isMoving = true;
       ["mouseup", "mousemove", "touchend", "touchcancel", "touchmove"]
         .forEach(function(eventName) {
-          document.addEventListener(eventName, self.move.bind(self));
+          document.addEventListener(eventName, self._movefn);
         });
     }
     // fallthrough
