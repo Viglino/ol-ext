@@ -44,6 +44,9 @@
       font-family: FontAwesome;
       color: #369;
     }
+    .ol-ext-dialog .ol-content {
+      padding: .5em;
+    }
     /* Arrow style */
     .ol-input-popup.arrow i {
       position: relative;
@@ -102,6 +105,8 @@
     <input class="radio" type="radio" name="radio" value=2 />
   </p><p style="overflow: hidden; padding: 1em 0;">
     Color: <input class="color1" />
+  </p><p>
+    <button onclick="dialog.show()">Color dialog</button>
   </p><p style="border: 1px solid #999; border-width: 1px 0; padding: .5em 0;">
     Color (inline): 
     <span class="color" style="display: inline-block; background-color: red; width: 2.5em; height: 1.5em; vertical-align: middle;"></span>
@@ -136,6 +141,17 @@
 
 <script type="text/javascript">
 
+  /* A dialog with a color input */ 
+  var fakeMap = new ol.Map();  
+  var dialog = new ol.control.Dialog({ fullscreen: true });
+  fakeMap.addControl(dialog);
+  dialog.setContent({
+    title: 'Color',
+    content: 'Color : '
+  });
+  var inputColor = new ol.ext.input.Color({ position: 'fixed', parent: dialog.getContentElement() })
+
+  /* Set inputs */
   var switcher = new ol.ext.input.Switch({ input: $('.switch').get(0), html: 'off', after: 'on' });
 
   var checkbox = new ol.ext.input.Checkbox({ input: $('.check').get(0), html: 'Checkbox:', after: 'on' });

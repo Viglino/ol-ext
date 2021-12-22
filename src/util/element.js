@@ -322,7 +322,9 @@ ol_ext_element.getFixedOffset = function(elt) {
   };
   var getOffset = function(parent) {
     if (!parent) return offset;
-    if (ol_ext_element.getStyle(parent, 'position') === 'absolute') {
+    // Check position when transform
+    if (ol_ext_element.getStyle(parent, 'position') === 'absolute'
+      && ol_ext_element.getStyle(parent, 'transform') !== "none") {
       var r = parent.getBoundingClientRect();
       offset.left += r.left; 
       offset.top += r.top; 
