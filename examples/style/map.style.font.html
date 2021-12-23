@@ -15,10 +15,8 @@
   <link rel="stylesheet" href="../css/fontmaki.css" />
   <link rel="stylesheet" href="../css/fontmaki2.css" />
   <!-- FontAwesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<!--
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" />
--->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet">
     
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
@@ -371,7 +369,8 @@
 
   // GeoJSON layer
   var vectorSource = new ol.source.Vector({
-    url: '../data/fond_guerre.geojson',
+   // url: '../data/fond_guerre.geojson',
+    url: 'https://viglino.github.io/ol-ext/examples/data/fond_guerre.geojson',
     projection: 'EPSG:3857',
     format: new ol.format.GeoJSON(),
     attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
