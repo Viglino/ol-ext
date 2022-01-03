@@ -209,7 +209,25 @@ ol_control_GridReference.prototype.getReference = function (coords) {
   if (dx<0 || dx>=size[0]) return "";
   var dy = Math.floor ( (extent[3] - coords[1]) / (extent[3]- extent[1]) * size[1] );
   if (dy<0 || dy>=size[1]) return "";
-  return String.fromCharCode(65+dx)+dy;
+  return this.getHIndex(dx)+this.getVIndex(dy);
+};
+
+/** Get vertical index (0,1,2,3...)
+ * @param {number} index
+ * @returns {string}
+ * @api
+ */
+ ol_control_GridReference.prototype.getVIndex = function (index) {
+  return index;
+};
+
+/** Get horizontal index (A,B,C...)
+ * @param {number} index
+ * @returns {string}
+ * @api
+ */
+ ol_control_GridReference.prototype.getHIndex = function (index) {
+  return String.fromCharCode(65 + index);
 };
 
 /** Draw the grid
@@ -265,7 +283,7 @@ ol_control_GridReference.prototype._draw = function (e) {
     ctx.textAlign = 'center';
     var letter, x, y;
     for (i=0; i<size[0]; i++) {
-      letter = String.fromCharCode(65+i);
+      letter = this.getHIndex(i);
       x = p0[0]+i*dx+dx/2;
       y = p0[1]-spacing;
       if (y<0) {
@@ -286,6 +304,7 @@ ol_control_GridReference.prototype._draw = function (e) {
     }
     ctx.textBaseline = 'middle';
     for (i=0; i<size[1]; i++) {
+      letter = this.getVIndex(i);
       y = p0[1]+i*dy+dy/2;
       ctx.textAlign = 'right';
       x = p0[0] - spacing;
@@ -294,16 +313,16 @@ ol_control_GridReference.prototype._draw = function (e) {
         ctx.textAlign = 'left';
       }
       else ctx.textAlign = 'right';
-      ctx.strokeText(i, x, y);
-      ctx.fillText(i, x, y);
+      ctx.strokeText(letter, x, y);
+      ctx.fillText(letter, x, y);
       x = p1[0] + spacing;
       if (x>w) {
         x = w-spacing;
         ctx.textAlign = 'right';
       }
       else ctx.textAlign = 'left';
-      ctx.strokeText(i, x, y);
-      ctx.fillText(i, x, y);
+      ctx.strokeText(letter, x, y);
+      ctx.fillText(letter, x, y);
     }
 
   ctx.restore();
