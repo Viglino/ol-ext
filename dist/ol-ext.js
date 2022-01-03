@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.19
+ * @version v3.2.20
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -15071,6 +15071,14 @@ ol.control.Swipe.prototype._drawRect = function(e, pts) {
       [pts[1][0], pts[0][1]],
       [pts[0][0], pts[0][1]]
     ];
+    e.context.save()
+    // Rotate VectorImages 
+    if (e.target.getImageRatio) {
+      var rot = -Math.atan2(e.frameState.pixelToCoordinateTransform[1], e.frameState.pixelToCoordinateTransform[0]);
+      e.context.translate(e.frameState.size[0]/2, e.frameState.size[1]/2)
+      e.context.rotate(rot)
+      e.context.translate(-e.frameState.size[0]/2, -e.frameState.size[1]/2)
+    }
     r.forEach(function (pt, i) {
       pt = [
         (pt[0]*tr[0] - pt[1]*tr[1] + tr[4]),
@@ -15082,6 +15090,7 @@ ol.control.Swipe.prototype._drawRect = function(e, pts) {
         e.context.lineTo(pt[0], pt[1]);
       }
     });
+    e.context.restore();
   } else {
     var ratio = e.frameState.pixelRatio;
     e.context.rect(pts[0][0]*ratio,pts[0][1]*ratio,pts[1][0]*ratio,pts[1][1]*ratio);
@@ -15097,13 +15106,13 @@ ol.control.Swipe.prototype.precomposeLeft = function(e) {
   var pts = [[0,0],[size[0],size[1]]];
   if (this.get('orientation') === "vertical") {
     pts[1] = [
-      size[0]*this.get('position'), 
+      size[0]*.5 + this.getMap().getSize()[0] * (this.get('position') - .5), 
       size[1]
     ];
   } else {
     pts[1] = [
       size[0],
-      size[1]*this.get('position')
+      size[1]*.5 + this.getMap().getSize()[1] * (this.get('position') - .5)
     ];
   }
   this._drawRect(e, pts);
@@ -15119,13 +15128,13 @@ ol.control.Swipe.prototype.precomposeRight = function(e) {
   var pts = [[0,0],[size[0],size[1]]];
   if (this.get('orientation') === "vertical") {
     pts[0] = [
-      size[0]*this.get('position'), 
+      size[0]*.5 + this.getMap().getSize()[0] * (this.get('position') - .5), 
       0
     ];
   } else {
     pts[0] = [
       0,
-      size[1]*this.get('position')
+      size[1]*.5 + this.getMap().getSize()[1] * (this.get('position') - .5)
     ]
   }
   this._drawRect(e, pts);

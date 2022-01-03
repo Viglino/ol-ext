@@ -5821,14 +5821,13 @@ ul.ol-legend li div {
   opacity: 0;
 }
 
-.ol-fixedoverlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-  }
-  
+.ol-viewport canvas.ol-fixedoverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
 /* Toggle Switch */
 .ol-ext-toggle-switch {
   cursor: pointer;
