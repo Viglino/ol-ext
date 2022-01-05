@@ -4406,7 +4406,7 @@ ul.ol-legend li div {
   width: calc(100% - 10em);
   -webkit-box-sizing: border-box;
           box-sizing: border-box;
-  min-width: min(100%, 20em);
+  min-width: Min(100%, 20em);
 }
 .ol-wmscapabilities .ol-url select {
   width: 2em;
