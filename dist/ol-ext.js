@@ -37317,11 +37317,14 @@ ol.style.FontSymbol.prototype.renderMarker_ = function(pixelratio) {
   var context = (canvas.getContext('2d'));
   context.clearRect(0, 0, canvas.width, canvas.height);
   this.drawMarker_(renderOptions, context, 0, 0, pixelratio);
-  // Set Anchor
-  var a = this.getAnchor();
-  a[0] = canvas.width / 2 - this.offset_[0];
-  a[1] = canvas.width / 2 - this.offset_[1];
-  //this.createMarkerHitDetectionCanvas_(renderOptions);
+  // Set anchor / displacement
+  if (this.setDisplacement) {
+    this.setDisplacement([this.offset_[0], -this.offset_[1]])
+  } else {
+    var a = this.getAnchor();
+    a[0] = canvas.width / 2 - this.offset_[0];
+    a[1] = canvas.width / 2 - this.offset_[1];
+  }
 };
 /**
  * @private
