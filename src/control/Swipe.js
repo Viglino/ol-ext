@@ -244,6 +244,17 @@ ol_control_Swipe.prototype.move = function(e) {
 
 /** @private
  */
+ol_control_Swipe.prototype._transformPt = function(e, pt) {
+  var tr = e.inversePixelTransform;
+  var x = pt[0];
+  var y = pt[1];
+  pt[0] = tr[0] * x + tr[2] * y + tr[4];
+  pt[1] = tr[1] * x + tr[3] * y + tr[5];
+  return pt;
+};
+
+/** @private
+ */
 ol_control_Swipe.prototype._drawRect = function(e, pts) {
   var tr = e.inversePixelTransform;
   if (tr) {
@@ -284,59 +295,120 @@ ol_control_Swipe.prototype._drawRect = function(e, pts) {
 */
 ol_control_Swipe.prototype.precomposeLeft = function(e) {
   var ctx = e.context;
-  var size = e.frameState.size;
-  ctx.save();
-  ctx.beginPath();
-  var pts = [[0,0],[size[0],size[1]]];
-  if (this.get('orientation') === "vertical") {
-    pts[1] = [
-      size[0]*.5 + this.getMap().getSize()[0] * (this.get('position') - .5), 
-      size[1]
-    ];
+  if (ctx instanceof WebGLRenderingContext) {
+    if (e.type === 'prerender') {
+      // Clear
+      ctx.clearColor(0, 0, 0, 0);
+      ctx.clear(ctx.COLOR_BUFFER_BIT);
+
+      // Clip
+      ctx.enable(ctx.SCISSOR_TEST);
+
+      var mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
+    
+      // get render coordinates and dimensions given CSS coordinates
+      var bottomLeft = this._transformPt(e, [0, mapSize[1]]);
+      var topRight = this._transformPt(e, [mapSize[0], 0]);
+    
+      var width = topRight[0] - bottomLeft[0];
+      var height = topRight[1] - bottomLeft[1];
+      if (this.get('orientation') === "vertical") {
+        width = Math.round(width * this.get('position'));
+      } else {
+        height = Math.round(height * this.get('position'));
+        bottomLeft[1] += mapSize[1] - height;
+      }
+      ctx.scissor(bottomLeft[0], bottomLeft[1], width, height); 
+    }
   } else {
-    pts[1] = [
-      size[0],
-      size[1]*.5 + this.getMap().getSize()[1] * (this.get('position') - .5)
-    ];
+    var size = e.frameState.size;
+    ctx.save();
+    ctx.beginPath();
+    var pts = [[0,0],[size[0],size[1]]];
+    if (this.get('orientation') === "vertical") {
+      pts[1] = [
+        size[0]*.5 + this.getMap().getSize()[0] * (this.get('position') - .5), 
+        size[1]
+      ];
+    } else {
+      pts[1] = [
+        size[0],
+        size[1]*.5 + this.getMap().getSize()[1] * (this.get('position') - .5)
+      ];
+    }
+    this._drawRect(e, pts);
+    ctx.clip();
   }
-  this._drawRect(e, pts);
-  ctx.clip();
 };
 
 /** @private
 */
 ol_control_Swipe.prototype.precomposeRight = function(e) {
   var ctx = e.context;
-  var size = e.frameState.size;
-  ctx.save();
-  ctx.beginPath();
-  var pts = [[0,0],[size[0],size[1]]];
-  if (this.get('orientation') === "vertical") {
-    pts[0] = [
-      size[0]*.5 + this.getMap().getSize()[0] * (this.get('position') - .5), 
-      0
-    ];
+  if (ctx instanceof WebGLRenderingContext) {
+    if (e.type === 'prerender') {
+      // Clear
+      ctx.clearColor(0, 0, 0, 0);
+      ctx.clear(ctx.COLOR_BUFFER_BIT);
+
+      // Clip
+      ctx.enable(ctx.SCISSOR_TEST);
+
+      var mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
+    
+      // get render coordinates and dimensions given CSS coordinates
+      var bottomLeft = this._transformPt(e, [0, mapSize[1]]);
+      var topRight = this._transformPt(e, [mapSize[0], 0]);
+    
+      var width = topRight[0] - bottomLeft[0];
+      var height = topRight[1] - bottomLeft[1];
+      if (this.get('orientation') === "vertical") {
+        width = Math.round(width * (1-this.get('position')));
+        bottomLeft[0] += mapSize[0] - width;
+      } else {
+        height = Math.round(height * (1-this.get('position')));
+        }
+      ctx.scissor(bottomLeft[0], bottomLeft[1], width, height); 
+    }
   } else {
-    pts[0] = [
-      0,
-      size[1]*.5 + this.getMap().getSize()[1] * (this.get('position') - .5)
-    ]
+    var size = e.frameState.size;
+    ctx.save();
+    ctx.beginPath();
+    var pts = [[0,0],[size[0],size[1]]];
+    if (this.get('orientation') === "vertical") {
+      pts[0] = [
+        size[0]*.5 + this.getMap().getSize()[0] * (this.get('position') - .5), 
+        0
+      ];
+    } else {
+      pts[0] = [
+        0,
+        size[1]*.5 + this.getMap().getSize()[1] * (this.get('position') - .5)
+      ]
+    }
+    this._drawRect(e, pts);
+    ctx.clip();
   }
-  this._drawRect(e, pts);
-  ctx.clip();
 };
 
 /** @private
 */
 ol_control_Swipe.prototype.postcompose = function(e) {
-  // restore context when decluttering is done (ol>=6)
-  // https://github.com/openlayers/openlayers/issues/10096
-  if (e.target.getClassName && e.target.getClassName()!=='ol-layer' && e.target.get('declutter')) {
-    setTimeout(function () {
-      e.context.restore();
-    }, 0);
+  if (e.context instanceof WebGLRenderingContext) {
+    if (e.type === 'postrender') {
+      var gl = e.context;
+      gl.disable(gl.SCISSOR_TEST);
+    }
   } else {
-    e.context.restore();
+    // restore context when decluttering is done (ol>=6)
+    // https://github.com/openlayers/openlayers/issues/10096
+    if (e.target.getClassName && e.target.getClassName()!=='ol-layer' && e.target.get('declutter')) {
+      setTimeout(function () {
+        e.context.restore();
+      }, 0);
+    } else {
+      e.context.restore();
+    }
   }
 };
 

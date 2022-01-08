@@ -97,6 +97,22 @@
     ctrl.addLayer(osm, true);
     ctrl.addLayer(vectorLayer, true);
 
+    /* WebGLTile * /
+    var cog = new ol.source.GeoTIFF({
+      sources: [
+        { url: 'https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/2020/S2A_36QWD_20200701_0_L2A/TCI.tif' }
+      ]
+    });
+    var gl = new ol.layer.WebGLTile({
+      // className: 'gl',
+      source: cog 
+    });
+    map.addLayer(gl);
+    map.setView(cog.getView());
+    ctrl.addLayer(gl, false);
+    /**/
+
+
   </script>
 
 </body>
