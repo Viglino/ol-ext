@@ -116,8 +116,8 @@ ol_control_Swipe.prototype.isLayer_ = function(layer){
 
 /** Add a layer to clip
  *	@param {ol.layer|Array<ol.layer>} layer to clip
-*	@param {bool} add layer in the right part of the map, default left.
-*/
+ *	@param {bool} add layer in the right part of the map, default left.
+ */
 ol_control_Swipe.prototype.addLayer = function(layers, right) {
   if (!(layers instanceof Array)) layers = [layers];
   for (var i=0; i<layers.length; i++) {
@@ -144,7 +144,7 @@ ol_control_Swipe.prototype.removeLayers = function() {
 
 /** Remove a layer to clip
  *	@param {ol.layer|Array<ol.layer>} layer to clip
-*/
+ */
 ol_control_Swipe.prototype.removeLayer = function(layers) {
   if (!(layers instanceof Array)) layers = [layers];
   for (var i=0; i<layers.length; i++) {
@@ -176,7 +176,7 @@ ol_control_Swipe.prototype.getRectangle = function() {
 };
 
 /** @private
-*/
+ */
 ol_control_Swipe.prototype.move = function(e) {
   var self = this;
   var l;
