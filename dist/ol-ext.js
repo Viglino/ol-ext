@@ -20328,6 +20328,10 @@ ol.interaction.Clip.prototype.precompose_ = function(e) {
       (pt[0]*tr[0] - pt[1]*tr[1] + tr[4]),
       (-pt[0]*tr[2] + pt[1]*tr[3] + tr[5])
     ];
+    // Vector layer
+    if (e.target.getSource().getFeatures) {
+      radius *= ratio;
+    }
   } else {
     pt[0] *= ratio;
     pt[1] *= ratio;
