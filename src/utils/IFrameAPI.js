@@ -15,6 +15,8 @@ var ol_ext_IFrameAPI = function(targetOrigin) {
   this.setter = {};
   // Listener api
   this.listener = {};
+  // Nothing to do there
+  if (window.parent === window) return;
   // Wait for target ready
   window.addEventListener('message', function(e) {
     if (e.data.listener) {
