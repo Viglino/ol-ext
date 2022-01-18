@@ -229,12 +229,36 @@
     width:180px;
   }
 
-</style>
+    .example .date {
+      float: right;
+      /** position date above image */
+      margin-right: -180px;
+      top: calc(-0.85em + -0.7em);
+      position: relative;
+      color: #337ab7;
+      cursor: pointer;
+    }
+  </style>
 
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
   <script type="text/javascript">
+    /** Add date next to title if available */
+    function addDate() {
+        const yearSelection = $("#year-selection");
+        const dates = [];
+        $(".example[data-date]").each(function () {
+            const exampleDate = $(this).data('date');
+            $(this).find(">:first-child").after(`<span class="date"><small>${exampleDate}</small></span>`);
+            $(this).find(".date").click(addToSearchInput);
+        });
+    }
+
+    function addToSearchInput() {
+        $('#keywords').val($(this).text()).change();
+    }
+
     $(document).ready(function() {
       $(".example").wrap($("<div>"));
 
@@ -282,6 +306,8 @@
             .appendTo(div);
         })
       })
+
+      addDate();
 
       // Search 
       $('#keywords').on('keyup change search', function() {
