@@ -229,88 +229,134 @@
     width:180px;
   }
 
-</style>
+    .example .date {
+      float: right;
+      /** position date above image */
+      margin-right: -180px;
+      top: calc(-0.85em + -0.7em);
+      position: relative;
+      color: #337ab7;
+      cursor: pointer;
+    }
+  </style>
 
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
   <script type="text/javascript">
-    $(document).ready(function() {
-      $(".example").wrap($("<div>"));
+    /** Add date next to title if available */
+    function addDate() {
+        const yearSelection = $("#year-selection");
+        const dates = [];
+        $(".example[data-date]").each(function () {
+            const exampleDate = $(this).data('date');
+            $(this).find(">:first-child").after(`<span class="date"><small>${exampleDate}</small></span>`);
+            $(this).find(".date").click(addToSearchInput);
 
-      $(".example a.mainlink").each(function() {
-        var href = /[^\/]*$/.exec( $(this).attr('href') ).pop();
-        $("<small>").text("("+href+")")
-            .appendTo($(this));
-        $("<img>").attr('src',"img/"+href.replace('html',$(this).data('img')||'jpg'))
-          .appendTo($(this))
-          .load(function(e) {
-            $(this).show();
-          })
-      });
+            /** add dates to dropdown */
+            const year = exampleDate.split('-')[0];
+            if (dates.indexOf(year) === -1) {
+                dates.push(year);
+            }
+        });
 
-      // last 2 month
-      var d = new Date((new Date()).getTime()-2*31*24*60*60*1000);
-      var nb = 0;
-      $(".example[data-date]").each(function() {
-        if (new Date($(this).data('date')) > d) {
-          nb++;
-          $(this).addClass('new');
-          $(".tag", this).text($(".tag", this).text()+', new');
-          // console.log($(this).data('date'));
-        }
-      });
-      if (nb) {
-        $('<span>').addClass('news')
-          .text(nb+' NEWS')
-          .click(function(){
-            $('#keywords').val('new').change();
-          })
-          .appendTo($('.container'));
-      }
+        dates.sort(function(a, b){return b-a}).forEach(function (d) {
+            yearSelection.append(`<option value="${d}">Examples from ${d}</option>`);
+        });
+    }
 
-      // Click on tags
-      function search() {
+    function addToSearchInput() {
         $('#keywords').val($(this).text()).change();
-      }
-      $('.tag').each(function() {
-        var tags = $(this).text().split(',');
-        var div = $(this).html('');
-        tags.forEach(function(t) {
-          $('<a>').text(t.trim())
-            .click(search)
-            .appendTo(div);
+    }
+
+    function search() {
+        $('#keywords').on('keyup change search', function () {
+            const s = new RegExp($(this).val(), "i");
+            let k = 0;
+            $(".example").each(function () {
+                const text = $(this).text();
+                const t = s.test(text);
+                if (!t) {
+                    $(this).parent().hide();
+                } else {
+                    k++;
+                    $(this).parent().show();
+                }
+            });
+            $("h2").each(function () {
+                if ($(".example:visible", $(this).next()).length) $(this).show();
+                else $(this).hide();
+            });
+            $("#count").text("(" + k + ")");
+            // Set new url
+            window.history.replaceState(null, null, document.location.origin + document.location.pathname + "?q=" + $(this).val());
+        });
+
+        // Decode url
+        const search = window.location.search.replace(/^\?/, "").split("&");
+        for (let i = 0; i < search.length; i++) if (/^q=/.test(search[i])) {
+            $("#keywords").val(search[i].split("=")[1]).trigger("keyup");
+        }
+    }
+
+    /** Add tags on click to search */
+    function tagOnClick() {
+        $('.tag').each(function () {
+            const tags = $(this).text().split(',');
+            const div = $(this).html('');
+            tags.forEach(function (t) {
+                $('<a>').text(t.trim())
+                    .click(addToSearchInput)
+                    .appendTo(div);
+            })
         })
-      })
+    }
 
-      // Search 
-      $('#keywords').on('keyup change search', function() {
-        var s = new RegExp ( $(this).val() , "i");
-        var k = 0;
-        $(".example").each(function() {
-          var text = $(this).text();
-          var t = s.test(text);
-          if (!t) {
-            $(this).parent().hide();
-          } else {
-            k++;
-            $(this).parent().show();
-          }
+    /** Examples from the last 2 month */
+    function newExamples() {
+        const d = new Date((new Date()).getTime() - 2 * 31 * 24 * 60 * 60 * 1000);
+        let nb = 0;
+        $(".example[data-date]").each(function () {
+            if (new Date($(this).data('date')) > d) {
+                nb++;
+                $(this).addClass('new');
+                $(".tag", this).text($(".tag", this).text() + ', new');
+            }
         });
-        $("h2").each(function() {
-          if ($(".example:visible", $(this).next()).length) $(this).show();
-          else $(this).hide();
-        });
-        $("#count").text("("+k+")");
-        // Set new url
-        window.history.replaceState (null,null, document.location.origin+document.location.pathname+"?q="+$(this).val());
-      });
+        if (nb) {
+            $('<span>').addClass('news')
+                .text(nb + ' NEWS')
+                .click(function () {
+                    $('#keywords').val('new').change();
+                })
+                .appendTo($('.container'));
+        }
+    }
 
-      // Decode url
-      var search = window.location.search.replace(/^\?/,"").split("&");
-      for (var i=0; i<search.length; i++) if (/^q=/.test(search[i])) {
-        $("#keywords").val(search[i].split("=")[1]).trigger("keyup");
-      }
+    /** wrap .example's in div if the don't have a wrapper?? */
+    function wrapExamples() {
+        $(".example").wrap($("<div>"));
+    }
+
+    function appendExampleLinkToTitles() {
+        $(".example a.mainlink").each(function () {
+            let href = /[^\/]*$/.exec($(this).attr('href')).pop();
+            $("<small>").text("(" + href + ")")
+                .appendTo($(this));
+            $("<img>").attr('src', "img/" + href.replace('html', $(this).data('img') || 'jpg'))
+                .appendTo($(this))
+                .load(function (e) {
+                    $(this).show();
+                })
+        });
+    }
+
+    $(document).ready(function() {
+      wrapExamples();
+      appendExampleLinkToTitles();
+      tagOnClick();
+      addDate();
+      search();
     });
   </script>
 </head>
@@ -322,12 +368,14 @@
     
   <header role="navigation" class="navbar navbar-fixed-top">
     <div class="container">
-      <h1><img src="http://openlayers.org/en/master/examples/resources/logo-70x70.png">&nbsp;ol-ext<span>: 
+      <h1><img src="https://openlayers.org/en/latest/examples/resources/logo-70x70.png">&nbsp;ol-ext<span>: 
         Extensions for OpenLayers (ol)</span>
       </h1>
       <p>
-        <input type="search" placeholder="Search" class="search-query" id="keywords" name="q">
+        <input type="search" placeholder="Search" class="search-query" id="keywords" name="q" list="year-selection">
         <span id="count"></span>
+        <datalist id="year-selection">
+        </datalist>
       </p>
     </div>
   </header>
@@ -344,7 +392,7 @@
         <img src="https://camo.githubusercontent.com/d18f4a7a64244f703efcb322bf298dcb4ca38856/68747470733a2f2f7765627061636b2e6a732e6f72672f6173736574732f69636f6e2d7371756172652d6269672e737667" style="height:2em; vertical-align:middle;" />webpack
       </a>
       <a href="https://github.com/Viglino/ol-ext-parcel-bundler">
-        <img src="https://parceljs.org/src/assets/og.png" style="height:2em; vertical-align:middle;" />parcel
+        <img src="https://parceljs.org/parcel.fb905a63.png" style="height:2em; vertical-align:middle;" />parcel
       </a>
       <a href="https://github.com/Viglino/ol-ext-angular">
         <img src="https://angular.io/assets/images/logos/angular/angular.svg" style="height:2em; vertical-align:middle;" />Angular
