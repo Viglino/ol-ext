@@ -269,84 +269,94 @@
         $('#keywords').val($(this).text()).change();
     }
 
-    $(document).ready(function() {
-      $(".example").wrap($("<div>"));
+    function search() {
+        $('#keywords').on('keyup change search', function () {
+            const s = new RegExp($(this).val(), "i");
+            let k = 0;
+            $(".example").each(function () {
+                const text = $(this).text();
+                const t = s.test(text);
+                if (!t) {
+                    $(this).parent().hide();
+                } else {
+                    k++;
+                    $(this).parent().show();
+                }
+            });
+            $("h2").each(function () {
+                if ($(".example:visible", $(this).next()).length) $(this).show();
+                else $(this).hide();
+            });
+            $("#count").text("(" + k + ")");
+            // Set new url
+            window.history.replaceState(null, null, document.location.origin + document.location.pathname + "?q=" + $(this).val());
+        });
 
-      $(".example a.mainlink").each(function() {
-        var href = /[^\/]*$/.exec( $(this).attr('href') ).pop();
-        $("<small>").text("("+href+")")
-            .appendTo($(this));
-        $("<img>").attr('src',"img/"+href.replace('html',$(this).data('img')||'jpg'))
-          .appendTo($(this))
-          .load(function(e) {
-            $(this).show();
-          })
-      });
-
-      // last 2 month
-      var d = new Date((new Date()).getTime()-2*31*24*60*60*1000);
-      var nb = 0;
-      $(".example[data-date]").each(function() {
-        if (new Date($(this).data('date')) > d) {
-          nb++;
-          $(this).addClass('new');
-          $(".tag", this).text($(".tag", this).text()+', new');
-          // console.log($(this).data('date'));
+        // Decode url
+        const search = window.location.search.replace(/^\?/, "").split("&");
+        for (let i = 0; i < search.length; i++) if (/^q=/.test(search[i])) {
+            $("#keywords").val(search[i].split("=")[1]).trigger("keyup");
         }
-      });
-      if (nb) {
-        $('<span>').addClass('news')
-          .text(nb+' NEWS')
-          .click(function(){
-            $('#keywords').val('new').change();
-          })
-          .appendTo($('.container'));
-      }
+    }
 
-      // Click on tags
-      function search() {
-        $('#keywords').val($(this).text()).change();
-      }
-      $('.tag').each(function() {
-        var tags = $(this).text().split(',');
-        var div = $(this).html('');
-        tags.forEach(function(t) {
-          $('<a>').text(t.trim())
-            .click(search)
-            .appendTo(div);
+    /** Add tags on click to search */
+    function tagOnClick() {
+        $('.tag').each(function () {
+            const tags = $(this).text().split(',');
+            const div = $(this).html('');
+            tags.forEach(function (t) {
+                $('<a>').text(t.trim())
+                    .click(addToSearchInput)
+                    .appendTo(div);
+            })
         })
-      })
+    }
 
+    /** Examples from the last 2 month */
+    function newExamples() {
+        const d = new Date((new Date()).getTime() - 2 * 31 * 24 * 60 * 60 * 1000);
+        let nb = 0;
+        $(".example[data-date]").each(function () {
+            if (new Date($(this).data('date')) > d) {
+                nb++;
+                $(this).addClass('new');
+                $(".tag", this).text($(".tag", this).text() + ', new');
+            }
+        });
+        if (nb) {
+            $('<span>').addClass('news')
+                .text(nb + ' NEWS')
+                .click(function () {
+                    $('#keywords').val('new').change();
+                })
+                .appendTo($('.container'));
+        }
+    }
+
+    /** wrap .example's in div if the don't have a wrapper?? */
+    function wrapExamples() {
+        $(".example").wrap($("<div>"));
+    }
+
+    function appendExampleLinkToTitles() {
+        $(".example a.mainlink").each(function () {
+            let href = /[^\/]*$/.exec($(this).attr('href')).pop();
+            $("<small>").text("(" + href + ")")
+                .appendTo($(this));
+            $("<img>").attr('src', "img/" + href.replace('html', $(this).data('img') || 'jpg'))
+                .appendTo($(this))
+                .load(function (e) {
+                    $(this).show();
+                })
+        });
+    }
+
+    $(document).ready(function() {
+      wrapExamples();
+      appendExampleLinkToTitles();
+      tagOnClick();
       addDate();
-
-      // Search 
-      $('#keywords').on('keyup change search', function() {
-        var s = new RegExp ( $(this).val() , "i");
-        var k = 0;
-        $(".example").each(function() {
-          var text = $(this).text();
-          var t = s.test(text);
-          if (!t) {
-            $(this).parent().hide();
-          } else {
-            k++;
-            $(this).parent().show();
-          }
-        });
-        $("h2").each(function() {
-          if ($(".example:visible", $(this).next()).length) $(this).show();
-          else $(this).hide();
-        });
-        $("#count").text("("+k+")");
-        // Set new url
-        window.history.replaceState (null,null, document.location.origin+document.location.pathname+"?q="+$(this).val());
-      });
-
-      // Decode url
-      var search = window.location.search.replace(/^\?/,"").split("&");
-      for (var i=0; i<search.length; i++) if (/^q=/.test(search[i])) {
-        $("#keywords").val(search[i].split("=")[1]).trigger("keyup");
-      }
+      search();
     });
   </script>
 </head>
