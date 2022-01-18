@@ -252,6 +252,16 @@
             const exampleDate = $(this).data('date');
             $(this).find(">:first-child").after(`<span class="date"><small>${exampleDate}</small></span>`);
             $(this).find(".date").click(addToSearchInput);
+
+            /** add dates to dropdown */
+            const year = exampleDate.split('-')[0];
+            if (dates.indexOf(year) === -1) {
+                dates.push(year);
+            }
+        });
+
+        dates.sort(function(a, b){return b-a}).forEach(function (d) {
+            yearSelection.append(`<option value="${d}">Examples from ${d}</option>`);
         });
     }
 
@@ -352,8 +362,10 @@
         Extensions for OpenLayers (ol)</span>
       </h1>
       <p>
-        <input type="search" placeholder="Search" class="search-query" id="keywords" name="q">
+        <input type="search" placeholder="Search" class="search-query" id="keywords" name="q" list="year-selection">
         <span id="count"></span>
+        <datalist id="year-selection">
+        </datalist>
       </p>
     </div>
   </header>
