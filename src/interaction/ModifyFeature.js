@@ -164,6 +164,14 @@ ol_interaction_ModifyFeature.prototype.setActive = function(active) {
   if (this.overlayLayer_) this.overlayLayer_.getSource().clear();
 };
 
+/** Change the filter function
+ * @param {function|undefined} options.filter a filter that takes a feature and return true if it can be modified, default always true.
+ */
+ol_interaction_ModifyFeature.prototype.setFilter = function(filter) {
+  if (typeof(filter) === 'function') this.filterSplit_ = filter;
+  else if (filter === undefined) this.filterSplit_ = function(){ return true; };
+};
+
 /** Get closest feature at pixel
  * @param {ol.Pixel} 
  * @return {*} 
