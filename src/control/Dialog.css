@@ -124,13 +124,18 @@
   font-weight: bold;
 }
 
+.ol-ext-dialog .ol-progress-message {
+  font-size: .9em;
+  text-align: center;
+  padding-bottom: .5em;
+}
 .ol-ext-dialog .ol-progress-bar {
   border: 1px solid #369;
   width: 20em;
   height: 1em;
   max-width: 100%;
   padding: 2px;
-  margin: .5em auto;
+  margin: .5em auto 0;
   overflow: hidden;
 }
 .ol-ext-dialog .ol-progress-bar > div {

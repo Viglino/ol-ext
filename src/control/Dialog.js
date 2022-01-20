@@ -53,12 +53,19 @@ var ol_control_Dialog = function(options) {
     parent: form
   });
   // Progress
-  this._progress = ol_ext_element.create('DIV', {
-    className: 'ol-progress-bar',
+  this._progress = ol_ext_element.create('DIV', { 
     style: { display: 'none' },
     parent: form
   });
+  var bar = ol_ext_element.create('DIV', {
+    className: 'ol-progress-bar',
+    parent: this._progress
+  });
   this._progressbar = ol_ext_element.create('DIV', {
+    parent: bar
+  });
+  this._progressMessage = ol_ext_element.create('DIV', {
+    className: 'ol-progress-message',
     parent: this._progress
   });
   // Buttons
@@ -132,6 +139,30 @@ ol_control_Dialog.prototype.open = function() {
 };
 
 /** Set the dialog content
+ * @param {Element | String} content dialog content
+ */
+ ol_control_Dialog.prototype.setContentMessage = function(content) {
+  if (content !== undefined) {
+    var elt = this.getContentElement();
+    if (content instanceof Element) ol_ext_element.setHTML(elt, '');
+    ol_ext_element.setHTML(elt, content || '');
+  }
+};
+
+/** Set the dialog title
+ * @param {Element | String} content dialog content
+ */
+ol_control_Dialog.prototype.setTitle = function(title) {
+  var form = this.element.querySelector('form');
+  form.querySelector('h2').innerText = title || '';
+  if (title) {
+    form.classList.add('ol-title');
+  } else {
+    form.classList.remove('ol-title');
+  }
+};
+
+/** Set the dialog content
  * @param {*} options
  *  @param {Element | String} options.content dialog content
  *  @param {string} options.title title of the dialog
@@ -163,12 +194,7 @@ ol_control_Dialog.prototype.setContent = function(options) {
     ol_ext_element.setHTML(form.querySelector('.ol-content'), options.content || '');
   }
   // Title
-  form.querySelector('h2').innerText = options.title || '';
-  if (options.title) {
-    form.classList.add('ol-title');
-  } else {
-    form.classList.remove('ol-title');
-  }
+  this.setTitle(options.title);
   // Closebox
   if (options.closeBox || (this.get('closeBox') && options.closeBox !== false)) {
     form.classList.add('ol-closebox');
@@ -202,10 +228,15 @@ ol_control_Dialog.prototype.getContentElement = function() {
 };
 
 /** Set progress
- * @param {number} val
+ * @param {number|boolean} val the progress value or false to hide the progressBar
  * @param {number} max
+ * @param {string|element} message
  */
-ol_control_Dialog.prototype.setProgress = function(val, max) {
+ol_control_Dialog.prototype.setProgress = function(val, max, message) {
+  if (val===false) {
+    ol_ext_element.setStyle(this._progress, { display: 'none' })
+    return;
+  }
   if (max > 0) {
     this.set('max', Number(max));
   } else {
@@ -219,6 +250,8 @@ ol_control_Dialog.prototype.setProgress = function(val, max) {
     this._progressbar.className = p ? '' : 'notransition';
     ol_ext_element.setStyle(this._progressbar, { width: p+'%' })
   }
+  this._progressMessage.innerHTML = '';
+  ol_ext_element.setHTML(this._progressMessage, message || '');
 };
 
 /** Returns a function to do something on button click
