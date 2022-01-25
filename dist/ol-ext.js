@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.21
+ * @version v3.2.22
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -2864,9 +2864,9 @@ ol.ext.inherits(ol.ext.input.List, ol.ext.input.Base);
  *  @param {Element} [options.input] input element, if non create one
  *  @param {Element} [options.parent] parent element, if create an input
  */
-ol.ext.input.Radio = function(input, options) {
+ol.ext.input.Radio = function(options) {
   options = options || {};
-  ol.ext.input.Checkbox.call(this, input, options);
+  ol.ext.input.Checkbox.call(this, options);
   this.element.className = ('ol-ext-check ol-ext-radio' + (options.className || '')).trim();
 };
 ol.ext.inherits(ol.ext.input.Radio, ol.ext.input.Checkbox);
