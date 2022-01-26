@@ -22,7 +22,7 @@ var ol_ext_input_Checkbox = function(options) {
   var label = this.element = document.createElement('LABEL');
   if (options.html instanceof Element) label.appendChild(options.html)
   else if (options.html !== undefined) label.innerHTML = options.html;
-  label.className = ('ol-ext-check ol-ext-checkbox'  + (options.className || '')).trim();
+  label.className = ('ol-ext-check ol-ext-checkbox '  + (options.className || '')).trim();
 
   if (this.input.parentNode) this.input.parentNode.insertBefore(label, this.input);
   label.appendChild(this.input);
