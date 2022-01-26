@@ -2448,6 +2448,19 @@ ul.ol-legend li div {
   cursor: pointer;
 }
 
+.ol-notification .ol-close,
+.ol-notification .ol-close:hover {
+  padding-right: 1.5em;
+}
+
+.ol-notification .closeBox {
+  position: absolute;
+  top: 0;
+  right: 0.3em;
+}
+.ol-notification .closeBox:before {
+  content: '\00d7';
+}
 .ol-overlay {
   position: absolute;
   top: 0;

@@ -2263,7 +2263,7 @@ ol.ext.input.Checkbox = function(options) {
   var label = this.element = document.createElement('LABEL');
   if (options.html instanceof Element) label.appendChild(options.html)
   else if (options.html !== undefined) label.innerHTML = options.html;
-  label.className = ('ol-ext-check ol-ext-checkbox'  + (options.className || '')).trim();
+  label.className = ('ol-ext-check ol-ext-checkbox '  + (options.className || '')).trim();
   if (this.input.parentNode) this.input.parentNode.insertBefore(label, this.input);
   label.appendChild(this.input);
   label.appendChild(document.createElement('SPAN'));
@@ -2867,7 +2867,7 @@ ol.ext.inherits(ol.ext.input.List, ol.ext.input.Base);
 ol.ext.input.Radio = function(options) {
   options = options || {};
   ol.ext.input.Checkbox.call(this, options);
-  this.element.className = ('ol-ext-check ol-ext-radio' + (options.className || '')).trim();
+  this.element.className = ('ol-ext-check ol-ext-radio ' + (options.className || '')).trim();
 };
 ol.ext.inherits(ol.ext.input.Radio, ol.ext.input.Checkbox);
 
@@ -9795,14 +9795,18 @@ ol.control.MapZone.zones.DOMTOM = [{
  * @fire change:visible
  * @param {Object=} options Control options.
  *  @param {string} className class of the control
- *  @param {boolean} hideOnClick hide the control on click, default false
- *  @param {boolean} closeBox add a closeBox to the control, default false
+ *  @param {boolean} options.closeBox add a close button
+ *  @param {boolean} options.hideOnClick close dialog when click
  */
 ol.control.Notification = function(options) {
   options = options || {};
-	var element = document.createElement("DIV");
-  this.contentElement = document.createElement("DIV");
-  element.appendChild(this.contentElement);
+	var element = document.createElement('DIV');
+  this.contentElement = ol.ext.element.create('DIV', {
+    click: function() {
+      if (this.get('hideOnClick')) this.hide();
+    }.bind(this),
+    parent: element
+  });
   var classNames = (options.className||"")+ " ol-notification";
 	if (!options.target) {
     classNames += " ol-unselectable ol-control ol-collapsed";
@@ -9812,6 +9816,8 @@ ol.control.Notification = function(options) {
     element: element,
     target: options.target
   });
+  this.set('closeBox', options.closeBox);
+  this.set('hideOnClick', options.hideOnClick);
 };
 ol.ext.inherits(ol.control.Notification, ol.control.Control);
 /**
@@ -9829,7 +9835,17 @@ ol.control.Notification.prototype.show = function(what, duration) {
     } else {
       this.contentElement.innerHTML = what;
     }
-  }
+    if (this.get('closeBox')) {
+      this.contentElement.classList.add('ol-close')
+      ol.ext.element.create('SPAN', {
+        className: 'closeBox',
+        click: function() { this.hide(); }.bind(this),
+        parent: this.contentElement
+      })
+    } else {
+      this.contentElement.classList.remove('ol-close')
+    }
+  }  
   if (this._listener) {
     clearTimeout(this._listener);
     this._listener = null;
