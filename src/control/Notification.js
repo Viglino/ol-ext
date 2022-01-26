@@ -5,6 +5,7 @@
 
 import ol_ext_inherits from '../util/ext'
 import ol_control_Control from 'ol/control/Control'
+import ol_ext_element from '../util/element';
 
 /** Control overlay for OL3
  * The overlay control is a control that display an overlay over the map
@@ -14,15 +15,19 @@ import ol_control_Control from 'ol/control/Control'
  * @fire change:visible
  * @param {Object=} options Control options.
  *  @param {string} className class of the control
- *  @param {boolean} hideOnClick hide the control on click, default false
- *  @param {boolean} closeBox add a closeBox to the control, default false
+ *  @param {boolean} options.closeBox add a close button
+ *  @param {boolean} options.hideOnClick close dialog when click
  */
 var ol_control_Notification = function(options) {
   options = options || {};
-	var element = document.createElement("DIV");
-  this.contentElement = document.createElement("DIV");
-  element.appendChild(this.contentElement);
-  
+	var element = document.createElement('DIV');
+  this.contentElement = ol_ext_element.create('DIV', {
+    click: function() {
+      if (this.get('hideOnClick')) this.hide();
+    }.bind(this),
+    parent: element
+  });
+
   var classNames = (options.className||"")+ " ol-notification";
 	if (!options.target) {
     classNames += " ol-unselectable ol-control ol-collapsed";
@@ -33,7 +38,9 @@ var ol_control_Notification = function(options) {
     element: element,
     target: options.target
   });
-  
+
+  this.set('closeBox', options.closeBox);
+  this.set('hideOnClick', options.hideOnClick);
 };
 ol_ext_inherits(ol_control_Notification, ol_control_Control);
 
@@ -52,7 +59,18 @@ ol_control_Notification.prototype.show = function(what, duration) {
     } else {
       this.contentElement.innerHTML = what;
     }
-  }
+    if (this.get('closeBox')) {
+      this.contentElement.classList.add('ol-close')
+      ol_ext_element.create('SPAN', {
+        className: 'closeBox',
+        click: function() { this.hide(); }.bind(this),
+        parent: this.contentElement
+      })
+    } else {
+      this.contentElement.classList.remove('ol-close')
+    }
+  }  
+
   if (this._listener) {
     clearTimeout(this._listener);
     this._listener = null;
