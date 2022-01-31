@@ -8,13 +8,14 @@ import ol_layer_Layer from 'ol/layer/Layer'
 import ol_ext_element from '../util/element'
 import ol_ext_inherits from '../util/ext'
 
-/** A simple push button control
+/** Add a progress bar to a map.
+ * Use the layers option listen to tileload event and show the layer loading progress.
  * @constructor
  * @extends {ol_control_Control}
  * @param {Object=} options Control options.
  *  @param {String} [options.className] class of the control
  *  @param {String} [options.label] waiting label
- *  @param {ol_layer_Layer} [options.layers] a tile layer with tileload events
+ *  @param {ol_layer_Layer|Array<ol_layer_Layer>} [options.layers] tile layers with tileload events
  */
 var ol_control_ProgressBar = function(options) {
   options = options || {};
